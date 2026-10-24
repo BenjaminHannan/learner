@@ -133,6 +133,22 @@ def test_th_hits_in_file_order_and_gates_off_is_arm_a():
     assert ev["ref0"]["hits"] == ev["gatesoff8"]["hits"], "gates off must equal the board-free decode of the same batches, row for row"
     assert ev["L16"]["n"] == 6 and len(ev["L16"]["hits"]) == 6, "L16 is scored on the first nmax rows only"
     assert all(len(ev[t]["hits"]) == len(rows) for t in ("swap8", "mean8", "rep1_8"))
+    # arms a / aplus must see eval_board's exact batches: it sorts rows < HEAD and the rest separately, and no batch spans the boundary
+    old_head, seen, real_prefill = K.HEAD, [], B.prefill
+    def spy(runner, ps, *x, **y):
+        seen[-1].append(tuple(tuple(q) for q in ps))
+        return real_prefill(runner, ps, *x, **y)
+    try:
+        K.HEAD, B.prefill = 5, spy
+        assert len(rows) > 5 and (5 % args.eval_bsz) != 0, "the boundary check needs a boundary inside a would-be batch"
+        seen.append([])
+        eg = K.eval_greedy(r, enc, rows, torch.device("cpu"), args, board_path=True)
+        seen.append([])
+        er = K.eval_board(r, board, enc, rows, {"ref0": ("none", 0, None)}, args, torch.device("cpu"))
+    finally:
+        K.HEAD, B.prefill = old_head, real_prefill
+    assert seen[0] == seen[1] and len(seen[0]) > 1, "eval_greedy(board_path) and eval_board batches differ"
+    assert eg["hits"] == er["ref0"]["hits"] == want, "same batches, same code: hits must match row for row"
     mb = [enc.train_example(x) for x in rows[:3]]  # open gates must move the logits, or the gates-off equality above says nothing
     C, mask, p, lt, ans = K.micro_inputs(r, mb, torch.device("cpu"))
     with torch.no_grad():
@@ -140,7 +156,7 @@ def test_th_hits_in_file_order_and_gates_off_is_arm_a():
         on = B.answer_logits(r, board.gate(), C, mask, p, lt, ans, kv)[0]
         off = B.answer_logits(r, torch.zeros_like(board.alpha), C, mask, p, lt, ans, kv)[0]
     assert (on - off).abs().max() > 1e-3, "open gates change nothing: the gates-off check is vacuous"
-    print(f"TH hits in file order (descending and reversed batches); gatesoff8 == arm a on {len(rows)} rows; board hits {ev['swap8']['hits']} (swap), {ev['mean8']['hits']} (mean)")
+    print(f"TH hits in file order (descending and reversed batches); gatesoff8 == arm a on {len(rows)} rows; arm a's batches == eval_board's (HEAD=5); board hits {ev['swap8']['hits']} (swap), {ev['mean8']['hits']} (mean)")
 
 
 def test_tg_mechanics_gate():
@@ -188,6 +204,8 @@ case "$script" in
     while [ $# -gt 0 ]; do case "$1" in --arm) arm=$2;; --seed) seed=$2;; --out) out=$2;; esac; shift; done
     case "$FAIL" in *"$arm"*) exit 1;; esac
     mkdir -p "$out"
+    case ",${FAILONCE:-}," in *",$arm,"*) [ -f "$out/.failed" ] || { touch "$out/.failed"; exit 1; };; esac   # out of memory once, fine on the retry
+    case ",${FAILLATE:-}," in *",$arm,"*) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json"; exit 1;; esac   # adapter saved, then the eval crashed
     case "$arm" in aplus|t|t1|tw) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
                    bplus) [ -f "$out/../b_s$seed/adapter/adapter_config.json" ] || exit 4;; esac
     if [ -n "${PARDIR:-}" ]; then touch "$PARDIR/run.$$"; ls "$PARDIR" | grep -c '^run\.' >> "$PARDIR/counts"; sleep 0.4; fi
@@ -252,7 +270,7 @@ def test_box_script():
             shutil.rmtree(par, ignore_errors=True)
             par.mkdir()
             calls, out = box(jobs, fail=extra.pop("fail", ""), PARALLEL="1", PARDIR=str(par), **extra)
-            peak = max(int(x) for x in (par / "counts").read_text().split())
+            peak = max([int(x) for x in (par / "counts").read_text().split()] if (par / "counts").exists() else [0])
             return calls, out, peak
 
         def at(calls, kind, arm, seed):  # position in the log of a job's start ("think1.py") or end ("end")
@@ -272,11 +290,16 @@ def test_box_script():
         assert peak == 2, peak  # the cap holds in both stages (stage 1: a:1, b:1, a:2 -> 2 at a time; stage 2: bplus, tw, t -> 2 at a time)
         assert sorted(runs(calls)) == sorted([(x, "1") for x in ("a", "b", "bplus", "tw", "t")] + [("a", "2")]), runs(calls)
         assert at(calls, "think1.py", "bplus", "1") > at(calls, "end", "b", "1")
-        calls, out, peak = pbox("t:3,bplus:4,a:5", fail="a", MAXPAR="1")  # no adapter: stage-2 jobs are skipped (a:3 is added and fails), failures are isolated, cap 1
-        assert peak == 1 and sorted(runs(calls)) == [("a", "3"), ("a", "5"), ("b", "4"), ("bplus", "4")] and "t seed 3 skipped: no a adapter" in out, (runs(calls), out)
+        calls, out, peak = pbox("t:3,bplus:4,a:5", fail="a", MAXPAR="1")  # no result: stage-2 jobs are skipped (a:3 is added and fails, and fails again alone), failures are isolated, cap 1
+        assert peak == 1 and sorted(runs(calls)) == [("a", "3"), ("a", "3"), ("a", "5"), ("a", "5"), ("b", "4"), ("bplus", "4")] and "t seed 3 skipped: a seed 3 did not finish" in out, (runs(calls), out)
         calls, out, peak = pbox("a:1,b:1,aplus:1,t:1,a:2")  # a:1, b:1, a:2, t:1 have results: skipped; aplus:1 runs (a_s1/adapter exists)
         assert runs(calls) == [("aplus", "1")] and "skip a seed 1" in (tmp / "out" / "think" / "a_s1" / "run.log").read_text(), runs(calls)
-    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed, CUDA check (exit 2 unless ALLOW_CPU=1), run.log; PARALLEL=1: stage 1 then stage 2, MAXPAR cap, per-job run.log")
+        calls, out, peak = pbox("a:7,aplus:7,t:7", FAILONCE=",aplus,")  # a job that dies once with the others alive is rerun alone and keeps its seed
+        assert sorted(runs(calls)) == [("a", "7"), ("aplus", "7"), ("aplus", "7"), ("t", "7")] and "retry aplus seed 7 alone" in out, (runs(calls), out)
+        assert (tmp / "out" / "think" / "aplus_s7" / "result_aplus_s7.json").exists()
+        calls, out, peak = pbox("a:8,aplus:8,t:8", FAILLATE=",a,")  # a's adapter exists but its eval crashed: no result, so aplus and t must not start
+        assert runs(calls) == [("a", "8"), ("a", "8")] and "aplus seed 8 skipped: a seed 8 did not finish" in out and "t seed 8 skipped" in out, (runs(calls), out)
+    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed, CUDA check (exit 2 unless ALLOW_CPU=1), run.log; PARALLEL=1: stage 1 then stage 2, MAXPAR cap, per-job run.log, a dead job rerun alone once, no dependents on a stage-1 job without a result")
 
 
 # ---------------------------------------------------------------- SM, TS
