@@ -14,3 +14,7 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   have ended, so the burn is these two boxes, $0.296/h plus storage.
 - 21:17Z: s1 a_s1 done: validation 65.8, dev 81.3 (stage-1 A mean 66.72). 21:57Z: s1 b_s1 done: validation 66.5,
   1-pass lesion 60.1, dev 82.5 (stage-1 B mean 67.12); s1 moves to stage 2 (aplus, t, t1). Credit 21:41Z $2.99.
+- 22:23Z: s0 a_s0 done: validation 67.0 (repeat eval 67.0, so eval noise is 0 at this level), dev 81.3.
+- 22:37Z: credit $2.49. Two A100 boxes from another session (claude-sleepb11w/b11c-cqc4bi, $0.94/h) started at
+  ~22:23Z; the account now burns ~$1.35/h, so credit ends ~00:30Z, before s1 (~02:00Z) and s0 (~03:30Z) finish.
+  Asked Ben to top up or pause them; fallback: stop s0 shortly before credit ends so s1 runs longest, then pull results.
