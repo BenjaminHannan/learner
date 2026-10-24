@@ -53,7 +53,7 @@ if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
-if [ -n "${LEAP_ARMS:-}${LEAP_REFS:-}" ]; then   # Leap-1 experiment (backbone/PREREG-leap1.md). LEAP_ARMS="leap:0,self:0" (arm:seed), LEAP_REFS="Qwen/Qwen3.5-4B,..." (HF), LEAP_VLLM_REFS="Qwen/Qwen3.6-35B-A3B" (needs BIG=1 box)
+if [ -n "${LEAP_ARMS:-}${LEAP_REFS:-}${LEAP_VLLM_REFS:-}" ]; then   # Leap-1 experiment (backbone/PREREG-leap1.md). LEAP_ARMS="leap:0,self:0" (arm:seed), LEAP_REFS="Qwen/Qwen3.5-4B,..." (HF), LEAP_VLLM_REFS="Qwen/Qwen3.6-35B-A3B" (needs BIG=1 box)
   for r in ${LEAP_REFS//,/ }; do
     n=${r##*/}
     if [ -f "$OUT/leap/result_ref_$n.json" ]; then echo "-- skip leap ref $n"; continue; fi
