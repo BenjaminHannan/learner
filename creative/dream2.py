@@ -136,7 +136,7 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
     st = stats if stats is not None else {}
     assert not found_lengths or occam, 'found_lengths needs occam'
     tcount = {}
-    for L in (lengths or range(1, max_steps + 1)):
+    for L in (range(1, max_steps + 1) if found_lengths else (lengths or range(1, max_steps + 1))):     # found mode draws lengths target..max_steps
         st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0, occam_dropped=0, found_miss=0, **{f'found_{k}': 0 for k in range(1, OCCAM_MAX_STEPS + 1)}))
     while len(out) < n:
         draws += 1
