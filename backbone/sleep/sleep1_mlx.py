@@ -49,6 +49,7 @@ import re
 import shutil
 import sys
 import time
+import unicodedata
 from pathlib import Path
 
 import mlx.core as mx
@@ -113,7 +114,10 @@ def strip_think(t):
     if "</think>" in t:
         t = t.split("</think>")[-1]
     t = re.sub(r"<think>.*", "", t, flags=re.S)
-    return t.strip()
+    # LFM2.5 writes narrow no-break spaces and non-breaking hyphens (found by the tricks thread); normalise before any matching
+    t = unicodedata.normalize("NFKC", t)
+    t = re.sub(r"[\u2010-\u2015\u2212]", "-", t)
+    return re.sub(r"\s+", " ", t).strip()
 
 
 # ------------------------------------------------------------------ text plumbing
