@@ -59,3 +59,9 @@ Held-out = 100 tasks, check-only scoring (all checks pass = success), greedy dec
 ## Numerical checks
 
 - Softmax Cancellation/Collapse (arXiv 2610.31642) checked 2026-10-24, PR #109: not reachable in _lp_kl; no change to numbers.
+
+## Round 2 notes (not part of the preregistered RLAIF-1 marks)
+
+- Held-out is check-only, so grader bias cannot move the headline number; grader calibration (position/length bias, kappa vs labels) matters for the training signal only.
+- With a base near 25/100, a 5-10 point gap needs ~300 held-out tasks and 3 training seeds per arm (greedy eval has no eval-seed noise). Source: /mnt/project-files/research/dopamine-rlaif-grader.md.
+- JOLT details are verified from the arXiv paper itself (Table 3, Appendix A.1), not only press coverage.
