@@ -58,8 +58,9 @@ if [ -n "${LOOP_ARMS:-}" ]; then   # Loop-1L experiment (backbone/PREREG-loop1L.
   LD=backbone/assistant_data/data; RAW=${LOOP_RAW:-https://raw.githubusercontent.com/BenjaminHannan/learner/claude/project-thread-j59yy5/backbone/assistant_data/data}
   for f in train.jsonl eval.jsonl; do   # a slim pack (vast.py pack --slim) leaves the data out: fetch it from GitHub
     want=$([ "$f" = train.jsonl ] && echo 1792 || echo 200)
-    [ "$(wc -l < "$LD/$f" 2>/dev/null || echo 0)" -ge "$want" ] || { mkdir -p "$LD"; for i in 1 2 3 4; do curl -fsSL "$RAW/$f" -o "$LD/$f" && break; sleep 5; done; }
-    echo "data $f: $(wc -l < "$LD/$f") lines"
+    [ "$(wc -l < "$LD/$f" 2>/dev/null || echo 0)" -ge "$want" ] || { mkdir -p "$LD"; for i in 1 2 3 4; do python3 -c "import sys,urllib.request;urllib.request.urlretrieve(sys.argv[1],sys.argv[2])" "$RAW/$f" "$LD/$f" && break; sleep 5; done; }
+    n=$(wc -l < "$LD/$f" 2>/dev/null || echo 0); echo "data $f: $n lines"
+    [ "$n" -ge "$want" ] || { echo "!! loop data $f missing ($n lines); stopping"; exit 1; }
   done
   python3 - <<PY || echo "!! model prefetch failed (will try again inside the run)"
 from huggingface_hub import snapshot_download
