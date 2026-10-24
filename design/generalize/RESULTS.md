@@ -22,7 +22,9 @@ Caveat (ten-weaknesses audit, PR #99): Q13 answer leaks via place order; Q13 sco
 | fdepth (+47.5k visits with validation difficulty knobs) | 0 | 82.6 | 48.5 |
 | fdepth | 1 | 76.6 | 45.3 |
 | fword (+47.5k visits rendered with bank-v1-aug, 1,779 train-only Claude wordings) | 0 | 76.2 | 52.1 |
-| fword | 1 | box ended early; result not recovered yet | |
+| fword | 1 (rerun) | 72.2 | 54.2 |
+| faug2 (+47.5k visits with bank-v1-aug2: aug + 466 wordings for the 16 fallback-only banks) | 0 | 71.4 | 57.4 |
+| faug2 | 1 | 78.7 | 59.9 |
 Baseline mean validation 46.0 (sd ~3.0, N=|s0-s1|=4.5). Pass = +8 over B, dev >= B-2, gain > 2N.
 - fdepth: +1.4 (s0) / +2.7 (s1): **wrong-if met (< 3): depth is not the bottleneck.**
 - fword s0: +5.0 vs base s0, +4.4 vs fmore; dev -1.6. **Not a pass (< +8), not proved wrong (> 3).** Needs seeds; bank still has 16 banks on 3 fallback wordings (q.where_before, q.who_has, ...).
@@ -31,3 +33,11 @@ Baseline mean validation 46.0 (sd ~3.0, N=|s0-s1|=4.5). Pass = +8 over B, dev >=
 Pword 61.3 vs base0 53.1 (+8.2); wording drop P0-Pword 16.8 vs 24.0 (30% of the wording drop closed). Q11 0 -> 85, Q1 52 -> 82 under new wording.
 Still bad under new wording: Q12 plan (10.6; q.plan_get was a fallback-only bank, not augmented in aug), Q6 33, Q7 6, Q8 54. aug2 fills the 16 fallback-only banks (arms faug2s0/s1 running).
 Box note: three seed-1/2 fword boxes went offline at ~27-29 min (different hosts); seed 0 completed. Unexplained so far.
+
+## Verdicts (paired with same-seed baselines, seeds 0 and 1; base mean val 44.85, dev 75.5; N = 4.5)
+| arm | val mean | gain | dev mean | dev change | pass? |
+|---|---|---|---|---|---|
+| fdepth | 46.9 | +2.0 | 79.6 | +4.1 | no: wrong-if (< +3) |
+| fword (aug) | 53.2 | +8.3 | 74.2 | -1.3 | borderline: +8 met, dev ok, but gain < 2N (9.0) |
+| **faug2** | **58.6** | **+13.8** | 75.0 | -0.5 | **PASS** (>= +8, dev >= -2, > 2N). Caveat: seed 0 dev alone fell 6.4 |
+fwordR1 (aug, seed 1) on probes: Pword 61.4 vs base1 45.1 (+16.3); wording drop P0-Pword 9.9 vs 28.0.
