@@ -29,7 +29,7 @@ from premonition import data as pdata
 from premonition.config import MiniConfig
 from premonition.model import PremonitionMini
 from premonition.train import Curriculum, mini_config_dict, mini_train_config, planned_loops, validation_hook
-from v1 import baselines, ckpt as vckpt, dtrain, g1 as g1mod, guard as vguard
+from v1 import baselines, ckpt as vckpt, dtrain, extra as vextra, g1 as g1mod, guard as vguard
 from v1.joint import Bridge
 
 SEED = 0
@@ -162,7 +162,7 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int
     the creative first-try on creative DEV (latest finished creative stage), the bridge-off lesion of each, W1/W2 pass on dev, and
     the KL-share summary. After an abort it judges the last checkpoint (`aborted` carries the rule)."""
     from v1 import creative_sleep
-    res: dict[str, Any] = {"arm": arm.name, "steps": steps, "aborted": aborted}
+    res: dict[str, Any] = {"arm": arm.name, "steps": steps, "aborted": aborted, **getattr(a, "extra_info", {})}
     bridge.frozen_ctx = True
     for name, cache in (("dev", data.dev), ("validation", data.validation)):
         batches, stops = make_eval_batches(cache, getattr(a, "final_visits", None) or len(cache), data.tokenizer)
@@ -243,6 +243,10 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
     ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
     ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--extra-train", action="append", default=[], metavar="DIR",
+                    help="extra D training shards (repeatable), mixed into the batch stream by token count (see v1/extra.py); none = unchanged")
+    ap.add_argument("--detector-patterns", default=None, metavar="BANK_JSON",
+                    help="sets GEN_DETECTOR_PATTERNS before the data root is opened (the root must have no saved premonition-names.json)")
     ap.add_argument("--deterministic", action="store_true", help="torch deterministic algorithms (warn only) + fixed cuBLAS workspace: the resume re-run")
     ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
     ap.add_argument("--relaunch-adamw", action="store_true", help="A1 relaunch for FULL: resume the last good checkpoint with plain AdamW")
@@ -261,7 +265,13 @@ def main(argv=None) -> int:
         abort_file.rename(out / f"ABORT-{n}.json")
         (out / "deviation.json").write_text(json.dumps({"ack_abort": n, "relaunch_adamw": a.relaunch_adamw, "at": time.strftime("%FT%TZ")}))
     device = torch.device(a.device)
+    vextra.set_detector_patterns(a.detector_patterns)
     data = dtrain.open_data(Path(a.root), Path(a.tokenizer), workers=a.workers, log=lambda s: None)
+    vextra.check_detector_patterns(data.detector, a.detector_patterns)
+    extra = vextra.open_extra([Path(d) for d in a.extra_train], data, out, a.workers)
+    a.extra_info = {"detector_patterns": a.detector_patterns, "detector_sha256": data.detector.digest,
+                    "extra_train": [{"dir": d, "visits": len(c), "tokens": int(c.lengths.sum())} for d, c in zip(a.extra_train, extra)]}
+    (out / "extra_train.json").write_text(json.dumps(a.extra_info, indent=1))
     d_model = build_d(arm, data.tokenizer.vocab_size)
     b2, b2_vocab, b2_meta = load_creative(a.b2, a.device)
     d_model.to(device)
@@ -305,7 +315,10 @@ def main(argv=None) -> int:
     skills_rows = load_rows(os.path.join(a.skills, "train.jsonl"))          # all 200,000 rows (the file is ordered by stage)
     ckpt_every = a.ckpt_every or max(1, int(CKPT_FRACTION * a.steps))
     eval_every = a.eval_every or max(1, int(EVAL_FRACTION * a.steps))
-    stream = dtrain.train_stream(data.train, a.max_tokens, SEED, trainer.step, MAX_VISITS)
+    if extra:
+        stream = vextra.mixed_stream([data.train] + extra, a.max_tokens, SEED, trainer.step, MAX_VISITS)
+    else:
+        stream = dtrain.train_stream(data.train, a.max_tokens, SEED, trainer.step, MAX_VISITS)
 
     def b2_step() -> float:
         rows = __import__("random").Random(f"{SEED}-b2-{trainer.step}").sample(skills_rows, B2_BATCH)   # a function of the step: exact resume

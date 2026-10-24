@@ -127,14 +127,19 @@ def question_allowed(split: str, answer: Answer) -> bool:
 class Village:
     """One village's persistent world, observer and cast, drawn through `view`."""
 
-    def __init__(self, split: str, seed: Any, view: SplitView, number: int = 0, taken: frozenset = frozenset()) -> None:
+    def __init__(self, split: str, seed: Any, view: SplitView, number: int = 0, taken: frozenset = frozenset(),
+                 *, knobs: Optional[str] = None, families: Optional[str] = None) -> None:
+        # `knobs` / `families` let a probe borrow another split's difficulty settings or rule-family set; both
+        # default to `split`, which is the ordinary behaviour (and `split` still seeds every random stream).
         rng = random.Random(_seed("village", split, seed, number))
         self.split = split
+        self.knobs = knobs or split
+        self.family_split = families or split
         self.name = names.draw_village(view, rng, taken)  # unique in its life: the name is the village's id
         self.people = names.draw_people(view, rng, rng.randint(5, 12))  # list order = Zipf rank
         self.weights = names.zipf_weights(len(self.people))
         self.style = view.draw("teacher_style", vocab.STYLES, rng)[0]
-        self.world: World = generate_world(rng, self.people, allowed_families(split), link_rules=split == "test")
+        self.world: World = generate_world(rng, self.people, allowed_families(self.family_split), link_rules=self.knobs == "test")
         self.observer = Observer(self.world)
         self.modes = {}
         for index, rule in enumerate(self.world.rules):
@@ -152,7 +157,7 @@ class Village:
             view.use("name", name)
         view.use("teacher_style", self.style)
         for rule in self.world.rules:
-            view.use("rule_family", family_item(rule.family, self.split))
+            view.use("rule_family", family_item(rule.family, self.family_split))
 
 
 # ---------------------------------------------------------------- one visit
@@ -262,7 +267,7 @@ class _Visit:
         if not self.world.refers(step["slots"]) or (action and not self.world.refers(action["slots"])):
             return False
         answer = ask(self.obs, self.world, step["bank"], step["slots"])
-        if answer is None or not question_allowed(self.v.split, answer):
+        if answer is None or not question_allowed(self.v.knobs, answer):
             return False
         record = self._question(step, answer)
         if step.get("wrapper"):
@@ -399,7 +404,7 @@ def _propose(v: Village, rng: random.Random, person: str) -> list[tuple[float, s
     here = [i for i, it in w.items.items() if it.loc == ("place", place)]
     others = [q for q in v.people if q != person and w.people[q] == place]
     boxes = [c for c in w.containers() if w.reachable(person, c)]
-    deep = v.split != "train" or rng.random() < 0.5
+    deep = v.knobs != "train" or rng.random() < 0.5
     follower = any(r.get("person") == person for _, r in w.rules_of("R2")) or any(
         r.get("person") == person for _, r in w.rules_of("R7"))
     groups: list[tuple[float, list[tuple[str, dict[str, Any]]]]] = [
@@ -657,7 +662,7 @@ def _choose_question(vis: _Visit, rng: random.Random, used: dict[str, int]) -> O
         if (bank, repr(slots)) in asked:
             continue
         answer = ask(vis.obs, vis.world, bank, slots)
-        if answer is not None and question_allowed(vis.v.split, answer) and answer.answer not in shown:
+        if answer is not None and question_allowed(vis.v.knobs, answer) and answer.answer not in shown:
             scored.append((bank, slots, answer))
     if not scored:
         return None
@@ -674,7 +679,7 @@ def _choose_question(vis: _Visit, rng: random.Random, used: dict[str, int]) -> O
         if untold and (not pool or rng.random() < UNTOLD_PICK):
             pool = known = untold
     else:  # steer toward the split's depth distribution
-        target = rng.choices(list(DEPTH_TARGET[vis.v.split]), weights=list(DEPTH_TARGET[vis.v.split].values()))[0]
+        target = rng.choices(list(DEPTH_TARGET[vis.v.knobs]), weights=list(DEPTH_TARGET[vis.v.knobs].values()))[0]
         best = min(abs(c[2].depth - target) for c in known)
         pool = [c for c in known if abs(c[2].depth - target) == best]
     fewest = min(used.get(_kind(c), 0) for c in pool)
@@ -763,7 +768,7 @@ def _run_visit(v: Village, visit_id: str, visit_no: int, rng: random.Random, day
                visible_lines: int) -> _Visit:
     vis = _Visit(v, visit_id, visit_no, visible_lines)
     v.visit_ids[visit_no] = visit_id
-    quiet = 0.5 if v.split == "train" else 0.8
+    quiet = 0.5 if v.knobs == "train" else 0.8
     if v.visits == 0:  # the scene comes before the morning, so "where was it this morning" covers it
         vis.run({"op": "say", "bank": "ev.new_day", "slots": {}})
         for step in _intro_steps(v, rng):
@@ -789,7 +794,7 @@ def _run_visit(v: Village, visit_id: str, visit_no: int, rng: random.Random, day
             # Errands come before the everyday actions, so a question about them is not about the last place named.
             if v.world.rules_of("R8") and rng.random() < 0.3:
                 _errand(vis, rng, quiet)
-            if rng.random() < (0.15 if v.split == "train" else 0.35):
+            if rng.random() < (0.15 if v.knobs == "train" else 0.35):
                 _deepen(vis, rng, quiet)
             for _ in range(rng.randint(3, 7)):
                 _random_action(vis, rng, quiet)
@@ -811,7 +816,7 @@ def _run_visit(v: Village, visit_id: str, visit_no: int, rng: random.Random, day
 def _package(vis: _Visit, view: SplitView, seed: Any) -> dict[str, Any]:
     split = vis.v.split
     if any(len(q["families"]) >= 2 for q in _all_questions(vis.records)):
-        view.use("rule_family", family_item("R9", split))
+        view.use("rule_family", family_item("R9", vis.v.family_split))
     w = vis.world
     return {
         "id": vis.id, "split": split, "seed": seed, "village": vis.v.name, "style": vis.v.style,
@@ -839,10 +844,11 @@ def questions_of(visit: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def _standalone(split: str, seed: int, registry: Optional[SplitRegistry], days: Optional[int],
                 visible_lines: int, script: Optional[list[dict[str, Any]]] = None,
-                visit_id: Optional[str] = None) -> tuple[_Visit, SplitView]:
+                visit_id: Optional[str] = None, *, view: Optional[SplitView] = None,
+                knobs: Optional[str] = None, families: Optional[str] = None) -> tuple[_Visit, SplitView]:
     registry = registry if registry is not None else default_registry()
-    view = registry.view(split)
-    village = Village(split, seed, view)
+    view = view if view is not None else registry.view(split)
+    village = Village(split, seed, view, knobs=knobs, families=families)
     visit_id = visit_id or f"{split}-{seed}"
     if script is None:
         vis = _run_visit(village, visit_id, 0, random.Random(_seed("visit", split, seed)), days, visible_lines)
@@ -855,9 +861,13 @@ def _standalone(split: str, seed: int, registry: Optional[SplitRegistry], days: 
 
 
 def generate_visit(split: str, seed: int, *, registry: Optional[SplitRegistry] = None, days: Optional[int] = None,
-                   visible_lines: int = VISIBLE_LINES) -> dict[str, Any]:
-    """One standalone visit (a first visit to a fresh village), deterministic given (split, seed)."""
-    vis, view = _standalone(split, seed, registry, days, visible_lines)
+                   visible_lines: int = VISIBLE_LINES, view: Optional[SplitView] = None,
+                   knobs: Optional[str] = None, families: Optional[str] = None) -> dict[str, Any]:
+    """One standalone visit (a first visit to a fresh village), deterministic given (split, seed).
+
+    `view`, `knobs` and `families` are for mixed-axis probes (`generalize.probes`): a per-axis view, the split whose
+    difficulty settings apply, and the split whose rule families are allowed. Left out, everything follows `split`."""
+    vis, view = _standalone(split, seed, registry, days, visible_lines, view=view, knobs=knobs, families=families)
     return _package(vis, view, seed)
 
 

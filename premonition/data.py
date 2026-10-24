@@ -50,6 +50,7 @@ from functools import cached_property
 import io
 import json
 import multiprocessing
+import os
 from pathlib import Path
 import random
 import time
@@ -126,6 +127,10 @@ def name_detector(budget: Any, data_rel: str, *, templates: Optional[Iterable[st
     if path.is_file():
         return NameDetector.load(path)
     started = time.perf_counter()
+    extra = os.environ.get("GEN_DETECTOR_PATTERNS")   # generalize F-word arm: also block the extra bank's template words
+    if extra and templates is None:
+        from learnlab.village.render import PatternSource
+        templates = pattern_templates(Path(budget.root) / data_rel / "train") + list(PatternSource.load(Path(extra)).text.values())
     detector = fit_detector(Path(budget.root) / data_rel / "train", templates=templates, workers=workers)
     data = detector.to_json().encode("utf-8")
     budget.atomic_write(relative, len(data), lambda handle: handle.write(data))
