@@ -135,3 +135,26 @@ Plain reading (one seed):
 - ab_ob_rot: the quarters are layers [0,6), [6,12), [12,18) and [18,24) of Qwen3.5-2B's 24 layers. A strided split (layer mod 4) is a candidate for the next round.
 - ab_ob_b2: the dream generation length also scales (400 x s tokens), so 8 paraphrases and 8 Q&A are not cut off. Update-detection checks and REM sampling lengths are not scaled. Read the gate-revert count before reading B1.
 - The new arms record peak GPU memory (`peak_mem_gb`, `peak_mem_train_gb`). The CPU smoke showed that ab_ob and the older arms are bit-identical to before.
+
+## Addendum 2, last arm: fold-in (ab_ob_merge), seed 1
+Box 57548525 (A100 PCIE 40GB Japan) ran it in 0.89 h, about $0.34. The run moved here after three tries stalled on Ben's 16 GB PC. The watcher destroyed the box when the result reached its label.
+
+| arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control (add-on) | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
+| ab_ob_merge (add-on folded in nightly) | 65 | 38 | 0 | 51.5 | 19 | 55 | 67 | 47 | 37 | **86** | 63 | 92.6 |
+
+With the diary, the fold-in arm scored C4 100, C2 90, C1 80, two-hop 19, changed 95 and routine 100.
+
+Verdicts:
+- M1 FAIL: recall is 51.5, against a mark of 66.
+- M2 PASS: diary is 86, against a mark of 77.
+- M3 PASS: ARC is 92.6, against a mark of 87.6.
+- M4 PASS: C1 is 0.
+
+Plain reading (one seed):
+- Folding each night's add-on into the model is safe. General knowledge and note-reading held.
+- It did not store more facts. Recall was 51.5 against 56, a gap about the size of the seed spread.
+- Two-hop from memory was 19 against 4, which is about 5 of 27 questions against 1 (suggested; a small count).
+- The diary score of 86 is the best of any slept arm, and above the plain model with the diary (84.6). But it is within 4 points of the control, so it is not called shown.
+- On the Mac's 4-bit model, fold-in would write into the quantized weights, so it needs the requantization test (`sleep-q4` constraint).
