@@ -91,8 +91,8 @@ def build_pool(depths, seed, held, banned_prompts):
 def pool_depths(arm, f, n, seed):
     if arm != "leap":
         return [1 + i % 6 for i in range(n)]
-    a, b = round(0.4 * n), round(0.3 * n)
-    return ([min(f + 1, 6)] * a + [min(f + 2, 6)] * b + [random.Random(seed).randint(1, max(f, 1)) for _ in range(n - a - b)])
+    a, b, rng = round(0.4 * n), round(0.3 * n), random.Random(seed)
+    return ([min(f + 1, 6)] * a + [min(f + 2, 6)] * b + [rng.randint(1, max(f, 1)) for _ in range(n - a - b)])
 
 
 def frontier(dev_acc):
