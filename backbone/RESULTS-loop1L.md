@@ -35,3 +35,11 @@ Spend: about $2.0 for this box plus about $0.7 on the two failed starts, so abou
 - Untested: longer training, a small loop range (2-4 laps), looping fewer layers, other seeds of B and C.
 
 Raw files: backbone/results/loop1l/.
+
+## Checks for the next loop round (from the research thread, 2026-10-24)
+
+- Training split: 448 chats (train-frac 0.25 of 1,792). Main eval: 100 chats / 322 turns. Lap curve: 50 extra chats. Arms B and C have 1 seed each, so rerun with more seeds before trusting the 40 vs 48 gap.
+- Zero-gate identity check: with gate = 0, logits must match the base to 1e-5 in fp32 on 64 tool prompts, and greedy outputs must be identical.
+- Retrofitting recipe (McLeish et al., arXiv 2511.07384): ramp loops with a 1-sqrt schedule over the first 75% of steps, and backprop only through the last 8 loops.
+- Compare a zero vs a truncated-normal initial state.
+- Notes: /mnt/project-files/research/looped-gate-details.md, looped-latent-papers.md.
