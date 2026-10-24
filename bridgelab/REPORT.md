@@ -20,12 +20,16 @@ Handoff results (dev, 1,000 items, prior 43.7%, seed 0, CPU; count head trained 
 |---|---|---|---|---|---|---|---|---|
 | D registers (run2) | 300 | 35.8 | 35.5 | 23.7 | 34.6 | 35.5 | 45.1 | - |
 | D registers (run3, matched control) | 1200 | 47.4 | 42.2 | 22.3 | 43.5 | 42.2 | 61.1 | 47.8 |
-| **D decoder state at the answer position (run3)** | 1200 | **66.9** | 12.3 | **11.9** | 43.6 | 42.7 | 61.8 | 67.1 |
-**Shown (one seed):** a per-question bridge reading D's decoder state carries the count into the creative model: the amendment's marks all pass (bridgelab/real/PREREG.md, "msg-source decoder"); shuffling messages drops it from 66.9% to 11.9%, the batch-mean message gives the prior level (43.6%). It matches or slightly beats typing D's own answer into the prompt (61.8%), but is capped by D's own count accuracy (65.8%). Original mark (a) (prior + 30) is not met because D itself only reaches prior + 22. Validation: 52.8% vs prior_inject 44.1%.
+| **D decoder state at the answer position (run3), seed 0** | 1200 | **66.9** | 12.3 | **11.9** | 43.6 | 42.7 | 61.8 | 67.1 |
+| same, seed 1 | 1200 | 68.9 | 43.6 | 12.8 | 46.6 | 43.6 | 62.5 | 69.1 |
+| same, seed 2 | 1200 | 69.8 | 12.5 | 10.8 | 45.8 | 43.6 | 63.4 | 70.5 |
+| **decoder, mean of 3 seeds** | | **68.5 ± 1.5** | | **11.8 ± 1.0** | 45.3 | 43.3 | 62.6 | 68.9 |
+| xattn on decoder state, seed 0 | 1200 | 66.1 | 12.2 | 11.4 | 43.7 | 43.5 | 64.6 | 66.6 |
+**Shown (3 seeds; each seed uses a different 3,000/1,000 item subsample):** a per-question bridge reading D's decoder state carries the count into the creative model: the amendment's marks all pass (bridgelab/real/PREREG.md, "msg-source decoder"); shuffling messages drops it from 68.5% to 11.8%, the batch-mean message gives about the prior level (45.3%). It beats typing D's own answer into the prompt in every seed (+5.1, +6.4, +6.4 points; mean 62.6%) and tracks D's own count accuracy on the same items (65.8 / 68.2 / 68.8%). xattn reading the same state gives the same picture (66.1%, shuffle 11.4%). Original mark (a) (prior + 30) is not met because D itself only reaches prior + 22. Validation: 52.8% vs prior_inject 44.1%.
 **Shown:** reading D's think registers carries little (count head 47.8% vs prior 43.7%), matching the probes; where the bridge reads from matters more than its type.
 
 ## Next (one change each)
 1. D retrieval for counts: list-wise ASK loss on gold lines for Q5 (pass: Q5 >= 73%, all-gold-fetched >= 55%, dev >= 80.2%; bridgelab/dcount/RESULT.md).
 2. Run bridgelab/real with pooled vs ema_const vs d_text on GPU, shuffle ablation as the decisive test.
 3. Card A->B: the bottleneck is A's own name lookup, not the bridge (followup_ab/RESULT.md); try a bigger reader or few-entity curriculum.
-4. Real handoff: second seed; xattn on decoder rows; train D and bridge jointly so D learns to put the count where the bridge reads.
+4. Real handoff: train D and bridge jointly so D learns to put the count where the bridge reads.
