@@ -61,6 +61,13 @@ def load_results(root):
             continue
         key = (r["arm"], int(r["seed"]))
         if key in res:
+            old_lab, new_lab = res[key].get("source") == "label", r.get("source") == "label"
+            if old_lab != new_lab:  # from_label.py output (0.1-point rounding, no hits) never replaces a real result file
+                notes.append(f"{key[0]} seed {key[1]}: using the real result file; ignoring the label-rebuilt one ({p if new_lab else stamp[key]})")
+                if new_lab:
+                    continue
+                res[key], stamp[key] = r, str(p)
+                continue
             notes.append(f"two files for {key[0]} seed {key[1]}: using the newer of {stamp[key]} and {p}")
             if p.stat().st_mtime < Path(stamp[key]).stat().st_mtime:
                 continue
@@ -262,7 +269,10 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     out["noise"] = {"a_s0_main": r0, "a_s0_repeat": r1, "diff": noise, "tol": tol}
 
     # row vectors for the paired intervals (mean over the seeds present)
-    rv = lambda arm, tag: R.rowvec(arm, tag)
+    labelled = sorted((ARMS.index(a_) if a_ in ARMS else 99, a_, s_) for (a_, s_), r in res.items() if r.get("source") == "label")
+    if labelled:  # rebuilt from instance labels (from_label.py): no per-row hits, so no intervals at all (a partial set of seeds would not match the point estimates)
+        out["label_sourced"] = [f"{a_} s{s_}" for _, a_, s_ in labelled]
+    rv = (lambda arm, tag: None) if labelled else (lambda arm, tag: R.rowvec(arm, tag))
     v8, v1, v2, vt1 = rv("t", "L8"), rv("t", "L1"), rv("t", "L2"), rv("t1", "L1")
     vrefs = {"a": rv("a", "main"), "ap": rv("aplus", "main"), "b": rv("b", "main"), "bp": rv("bplus", "main")}
     vrefs = {k: v for k, v in vrefs.items() if v is not None}
@@ -466,7 +476,12 @@ def seeds_txt(d):
 def report(o, data_note=""):
     L = []
     P = L.append
+    lab = o.get("label_sourced")
+    ci_txt_ = (lambda c: ci_txt(c) or "  95% n/a") if lab else ci_txt  # label-only results carry no per-row hits: intervals print as n/a
     P("THINK-1 SUMMARY  (accuracy in percent, validation unless said)")
+    if lab:
+        P(f"FROM LABELS: {', '.join(lab)} rebuilt from Vast instance labels (0.1-point rounding, no per-row hits): point estimates only, "
+          f"every 95% interval is n/a; slices, M1/M2 and the row-level lesion checks need the result files.")
     if data_note:
         P(data_note)
     for n in o["notes"]:
@@ -524,9 +539,9 @@ def report(o, data_note=""):
     P("")
     P("== 3. Lesions (arm t, L=8) ==")
     ls = o["lesions"]
-    P(f"swap board     {f2(ls['swap']):>6}   costs {sg(ls['swap_drop'])}{ci_txt(o['intervals']['S8_minus_swap'])}")
+    P(f"swap board     {f2(ls['swap']):>6}   costs {sg(ls['swap_drop'])}{ci_txt_(o['intervals']['S8_minus_swap'])}")
     P(f"mean board     {f2(ls['mean_board']):>6}   costs {sg(ls['mean_drop'])}")
-    P(f"repeat delta1  {f2(ls['repeat_delta1']):>6}   costs {sg(ls['rep_drop'])}{ci_txt(o['intervals']['S8_minus_rep'])}")
+    P(f"repeat delta1  {f2(ls['repeat_delta1']):>6}   costs {sg(ls['rep_drop'])}{ci_txt_(o['intervals']['S8_minus_rep'])}")
     ro = ls["gates_off_rows_differing_from_ref0"]
     P(f"gates off      {f2(ls['gates_off']):>6}   rows unlike the same batches without a board: {'--' if ro is None else ro} (must be 0)")
     if ls["gates_off_rows_differing_from_a"] is not None:
@@ -547,20 +562,22 @@ def report(o, data_note=""):
     P(f"G gain: {g['status']}")
     line(g, f"S(8) {f2(g['value'])} needs >= {f2(g['need'])}  (best floor {g['ref']:.2f} + 3.0)")
     if g["ci"]:
-        P(f"{'':21}S(8) - best floor {sg(g['ci']['value'])}{ci_txt(g['ci'])}")
+        P(f"{'':21}S(8) - best floor {sg(g['ci']['value'])}{ci_txt_(g['ci'])}")
+    elif lab:
+        P(f"{'':21}S(8) - best floor {sg(None if g['value'] is None else g['value'] - g['ref'])}  95% n/a")
     for gid, title in (("R1", "R1 slope"), ("R2", "R2 monotone"), ("R3", "R3 no collapse"), ("R4", "R4 laps, not parameters")):
         P(f"{title}: {o['R_groups'][gid]}")
         for m in o["marks"]:
             if m["id"].startswith(gid):
-                body = {"R1a": lambda m: f"S(8)-S(1) {sg(m['value'])} needs >= {m['need']}{ci_txt(m['ci'])}",
+                body = {"R1a": lambda m: f"S(8)-S(1) {sg(m['value'])} needs >= {m['need']}{ci_txt_(m['ci'])}",
                         "R1b": lambda m: f"per seed {', '.join(sg(v) for v in m['per_seed'].values()) or '--'} each >= {m['need']}",
                         "R2a": lambda m: f"S(2) {f2(m['a'])} vs S(1) {f2(m['b'])} - tol {f2(m['tol'])}",
                         "R2b": lambda m: f"S(4) {f2(m['a'])} vs S(2) {f2(m['b'])} - tol {f2(m['tol'])}",
                         "R2c": lambda m: f"S(8) {f2(m['a'])} vs S(4) {f2(m['b'])} - tol {f2(m['tol'])}",
                         "R3a": lambda m: f"S(12)-S(8) {sg(m['value'])} needs >= {m['need']}",
                         "R3b": lambda m: f"per seed {', '.join(sg(v) for v in m['per_seed'].values()) or '--'} each >= {m['need']}",
-                        "R4a": lambda m: f"S(8)-T1 {sg(m['value'])} needs >= {m['need']}{ci_txt(m['ci'])}",
-                        "R4b": lambda m: f"S(8)-repeat {sg(m['value'])} needs >= {m['need']}{ci_txt(m['ci'])}"}[m["id"]](m)
+                        "R4a": lambda m: f"S(8)-T1 {sg(m['value'])} needs >= {m['need']}{ci_txt_(m['ci'])}",
+                        "R4b": lambda m: f"S(8)-repeat {sg(m['value'])} needs >= {m['need']}{ci_txt_(m['ci'])}"}[m["id"]](m)
                 line(m, body)
     P(f"PASS needs G and R:  G {o['groups']['G']}, R {o['R']}")
     P("")
@@ -580,7 +597,7 @@ def report(o, data_note=""):
     for k in ("M1", "M2"):
         m = o["secondary"][k]
         P(f"{m['status']:<16} {k}   {m['text']} (n={m['n'] or '--'}): S(8)-T1 {sg(m['value'])}"
-          f" needs >= {m['need']:.1f}{ci_txt(m)}")
+          f" needs >= {m['need']:.1f}{ci_txt_(m)}")
     sl = o["secondary"]["slices"]
     if sl:
         P("")
@@ -589,7 +606,7 @@ def report(o, data_note=""):
         for name, r in sl.items():
             d = r["S8_minus_T1"]
             P(f"{name[:25]:<26}{r['n']:>5} {f2(r['a']):>6} {f2(r['T1']):>6} {f2(r['S8']):>6}  "
-              f"{sg(d and d['value'])}{ci_txt(d).replace('  95% ', ' ')}")
+              f"{sg(d and d['value'])}{ci_txt_(d).replace('  95% ', ' ')}")
     P("")
     P(f"VERDICT: {o['verdict']}")
     for w in o["why"]:

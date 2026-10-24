@@ -396,8 +396,9 @@ def run_all(real=False, only=None):
     import test_think1_board as TB
     import test_xent as TX
     import test_summarize as TS
+    import test_from_label as TFL
     tests = [("BOARD", lambda: board_tests(TB, real)),
-             ("XENT", TX.run_all), ("S1", TS.test_s1), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
+             ("XENT", TX.run_all), ("S1", TS.test_s1), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
              ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
