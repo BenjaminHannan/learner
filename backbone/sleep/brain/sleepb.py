@@ -11,7 +11,7 @@ batches; elementwise SHY instead of the SVD one, since an SVD would make the spa
 
 Addendum 4 (PREREG-sleepB-addendum4.md), one change each from ab_ob, all LoRA-only: ab_ob_rot (each night only one quarter of the layers' LoRA
 trains, quarter (night-1) % 4; SHY still trims all), ab_ob_twist (the base model also writes 2 strange dream-like scenes per item, kept if they pass
-the entity / leak / answerable checks, and they join the item's practice texts), ab_ob_ther (salient items: 2x replay priority and loss weight 0.5),
+the entity / leak / no-older-value / answerable checks, and they join the item's practice texts), ab_ob_ther (salient items: 2x replay priority and loss weight 0.5),
 ab_ob_guess (the pre-training probe also gives the first-token confidence c; a right answer with c < 1 multiplies the item's priority by 1 + 2(1 - c)).
 Addendum 5 (PREREG-sleepB-addendum5.md), the night's work scales with the chip: work scale s multiplies the night's training steps, the dreams per
 item (round(4 s) paraphrases and Q&A, and the generation length), the item cap (160 s), REM chains and gist dreams (30 s each). --budget-scale pins s;
@@ -21,7 +21,7 @@ here); with neither, s = 1 and the night is exactly ab_ob's. ab_ob_b2 = ab_ob wi
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -1158,6 +1158,24 @@ def bench_chip(L, pm, args, ref_steps):
     return {"t_step": t_step, "t_gen": t_gen, "ref_steps": ref_steps, "ref_gen_batches": n, "ref_seconds": ref_steps * t_step + n * t_gen}
 
 
+def selftest_stale():
+    """ab_ob_twist's stale-value filter (Brain.stale_hit) on made-up items: a scene naming the value an item replaced is a hit (any case, whole
+    words only), and so is the value that older item replaced in turn; a clean scene, a longer word that merely contains the old value, and an old
+    value that is part of the item's own current name are not."""
+    from types import SimpleNamespace
+    oo = Item(("vrakol", "dunmere"), "Vrakol", "Dunmere", "lives in", 1)
+    o = Item(("vrakol", "skarum"), "Vrakol", "Skarum", "lives in", 2, upd=[{"shared": "Vrakol", "old": "Dunmere", "new": "Skarum", "old_key": oo.key}])
+    n = Item(("vrakol", "tremix"), "Vrakol", "Tremix", "lives in", 3, upd=[{"shared": "Vrakol", "old": "Skarum", "new": "Tremix", "old_key": o.key}])
+    ny = Item(("vrakol", "new york"), "Vrakol", "New York", "lives in", 4, upd=[{"shared": "Vrakol", "old": "York", "new": "New York", "old_key": ("vrakol", "york")}])
+    me = SimpleNamespace(items={i.key: i for i in (oo, o, n, ny)})
+    hit = lambda it, x: Brain.stale_hit(me, it, x)  # noqa: E731
+    assert hit(n, "In a dream Vrakol floated from Skarum to Tremix.") and hit(n, "tremix, vrakol and the SKARUM moon") and hit(n, "Vrakol, Tremix, and Dunmere.")
+    assert not hit(n, "In a dream Vrakol owned a green house in Tremix.") and not hit(n, "Vrakol and Tremix met in Skarumville.")
+    assert not hit(o, "Vrakol and Skarum under a purple sky.") and hit(o, "Vrakol left Dunmere for Skarum.")
+    assert not hit(ny, "Vrakol rode a train through New York, which hummed.") and not hit(oo, "Vrakol and Dunmere at midnight.")
+    return {"stale_filter_ok": True}
+
+
 def selftest_budget():
     """Addendum-5 machinery: (i) plan_scale with fake timings (R = 50 x 1 + 100 x 0.5 = 100 s: budgets 100 / 200 / 50 give s = 1 / 2 / 0.5; far
     outside the range it clips to 4 and 0.25; R <= 0 gives 4); (ii) ref_gen_batches(32) = 154 by hand; (iii) Brain.sc scales steps / items by s
@@ -1497,10 +1515,29 @@ class Brain:
             s.twist(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
         return dict(st)
 
+    def stale_hit(s, it, text):
+        """ab_ob_twist: does the scene restate an older value of this fact, i.e. an u["old"] of it.upd, or of the older item it replaced, and so on
+        down the chain? Whole words, case-insensitive, with the item's own current names blanked out first (an old value inside a current name is no hit)."""
+        low = text.lower()
+        for e in (it.subj, it.obj):
+            low = low.replace(e.lower(), " ")
+        todo, seen = [it], set()
+        while todo:
+            x = todo.pop()
+            if x.key in seen:
+                continue
+            seen.add(x.key)
+            for u in x.upd:
+                if u["old"] and pat(u["old"]).search(low):
+                    return True
+                if u["old_key"] in s.items:
+                    todo.append(s.items[u["old_key"]])
+        return False
+
     def twist(s, d, need, ctxs, st):
         """ab_ob_twist, after all of the night's normal dreaming: the BASE model writes 2 strange dream-like scenes per item (sampled under a fixed
         seed; the global torch RNG state is put back, so later sampling is as in ab_ob). A scene is kept if it names both entities, is not a test
-        leak, and the base model, shown only the scene, answers one of the item's kept dream questions (its probe if none). Kept scenes join it.para."""
+        leak, restates no older value of the fact (stale_hit), and the base model, shown only the scene, answers one of the item's kept dream questions (its probe if none). Kept scenes join it.para."""
         a = s.a
         cur = [it for it in need if a.smoke or it.qa or it.probe]
         st["twist_skipped_no_check"] = len(need) - len(cur)
@@ -1521,6 +1558,8 @@ class Brain:
                     st["twist_dropped_test_leak"] += 1
                 elif not all(e.lower() in x.lower() for e in ents):
                     st["twist_dropped_missing_entities"] += 1
+                elif s.stale_hit(it, x):
+                    st["twist_dropped_stale"] += 1
                 else:
                     cand.append((it, x, *(chk[j % len(chk)] if chk else ("", ""))))
         ver = s.gen([ctx_prompt(s.L, x, q) for _, x, q, _ in cand], 20)
@@ -2120,7 +2159,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation and time-budget unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget and stale-filter unit checks and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
@@ -2156,6 +2195,7 @@ def main():
         print(json.dumps({"weighted": selftest_weighted()}))
         print(json.dumps({"rot": selftest_rot()}))
         print(json.dumps({"budget": selftest_budget()}))
+        print(json.dumps({"stale": selftest_stale()}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -2239,6 +2279,8 @@ def main():
                 result["local_selftest"] = {**selftest_elem(), **selftest_local()} if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
                 log(f"[selftest] local plasticity: {result['local_selftest']}")
                 log(f"[local] K {args.local_k:,} plastic entries per night = {args.local_k / n_delta:.4%} of {n_delta:,} delta entries (LoRA params {lora_n:,}); {args.tag_batches} tagging batches; elementwise SHY")
+        if args.arm == "ab_ob_twist":
+            result["twist_selftest"] = selftest_stale()
         if args.arm == "ab_ob_rot":
             result["rot_selftest"] = selftest_rot() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
             log(f"[selftest] rotating regions: {result['rot_selftest']}")
