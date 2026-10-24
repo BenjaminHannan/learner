@@ -90,7 +90,7 @@ def pack(a):
 
 
 def search(a):
-    q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
+    q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "gpu_ram": {"gte": a.min_vram * 1024}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
          "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}}
     r = call("POST", "/bundles/", q)
     offers = sorted(r.get("offers") or [], key=lambda o: o["dph_total"])
@@ -143,7 +143,7 @@ def cat(a):
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
     x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3); x.add_argument("--slim", action="store_true", help="leave assistant_data/data/*.jsonl out of the pack")
-    x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
+    x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8); x.add_argument("--min-vram", type=int, default=0)
     x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
     x = s.add_parser("logs"); x.add_argument("id"); x.add_argument("--tail", type=int, default=300); x.add_argument("--show", type=int, default=40)
