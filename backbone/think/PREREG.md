@@ -58,7 +58,8 @@ second shuffle (seed s + 1000; about 92% of its rows are new to stage 1), in the
 Board learning rates (gentle, after Loop-1L's divergence at 1e-3): alpha 3e-3 (own group, logged), e0_hat and eta 5e-4,
 refiner 5e-4. Every slot pass and every teacher-forced answer pass runs on its own copy of the
 prompt cache, so no pass can see another pass's tokens (in particular, no lap can see the gold answer).
-Laps in training: L_max = 8 with probability 0.8, 12 with probability 0.2; loss = answer cross-entropy averaged uniformly over every lap t = 0..L_max, plus 0.01 x mean ||delta/rho||^2.
+Laps in training: L_max = 8 with probability 0.8, 12 with probability 0.2; loss = answer cross-entropy averaged uniformly over every lap t = 0..L_max, plus 0.01 x the mean over
+all slot elements of (delta/rho)^2 (an elementwise mean, so at most ~1e-4 with eta ~0.1: a gentle brake, fixed before any run).
 Cross-entropy: every arm uses the fixed cross-entropy of Barron et al. 2026 (arXiv 2610.31642, `backbone/think/xent.py`),
 computed in fp32. In PyTorch 2.14 the standard version zeroes the target gradient once a token's margin passes ~17 in
 fp32 while the other gradients stay non-zero [shown, measured today]. The fix changes nothing else.

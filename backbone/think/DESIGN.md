@@ -51,7 +51,7 @@ signal first, loss at every lap so a weak lap 1 cannot fake a rising curve); D4'
 - Read: at each attention layer l and head h, answer-side queries add tanh(alpha_lh) x SDPA(q, slot K_l, slot V_l) to the
   normal attention output before the layer's sigmoid output gate and o_proj. Slot K/V = the keys/values the slots wrote
   at layer l in the final pass (post-norm, post-RoPE). alpha starts at 0.
-- Loss: mean over t = 0..L_max of the answer cross-entropy read from board t, + 0.01 x mean ||delta/rho||^2.
+- Loss: mean over t = 0..L_max of the answer cross-entropy read from board t, + 0.01 x the elementwise mean of (delta/rho)^2.
   L_max = 8 (p 0.8) or 12 (p 0.2). Backprop through all laps.
 - Parameters: 2,644,016 (e0 16,384; gates 48; eta 1,024; W_in 786,688; blocks 1,576,448; W_out 263,168; norm 256) [shown].
 
