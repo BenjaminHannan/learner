@@ -114,8 +114,13 @@ def build(a):
     d = kdir(a.run)
     d.mkdir(parents=True, exist_ok=True)
     (d / "job.py").write_text(job)
-    meta = {"id": f"{u}/rlaif-{a.run}", "title": f"rlaif-{a.run}", "code_file": "job.py", "language": "python",
-            "kernel_type": "script", "is_private": "true", "enable_gpu": "true", "enable_internet": "true",
+    # Kaggle's website "Save & Run All" (the only path that hands over Secrets) treats the kernel as a notebook,
+    # so ship the same code as a one-cell notebook.
+    nb = {"nbformat": 4, "nbformat_minor": 4, "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}},
+          "cells": [{"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": job}]}
+    (d / "job.ipynb").write_text(json.dumps(nb))
+    meta = {"id": f"{u}/rlaif-{a.run}", "title": f"rlaif-{a.run}", "code_file": "job.ipynb", "language": "python",
+            "kernel_type": "notebook", "is_private": "true", "enable_gpu": "true", "enable_internet": "true",
             "dataset_sources": [] if a.no_key_dataset else [f"{u}/{KEY_SLUG}"], "competition_sources": [], "kernel_sources": []}
     (d / "kernel-metadata.json").write_text(json.dumps(meta, indent=1))
     print(json.dumps({"dir": str(d), "id": meta["id"], "code_files": n, "xz_bytes": len(code), "job_bytes": len(job),
