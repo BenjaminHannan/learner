@@ -55,3 +55,7 @@ Held-out = 100 tasks, check-only scoring (all checks pass = success), greedy dec
 - Grader-gaming alarm: train Sonnet score rises >= 15 points while held-out check success rises < 3 points.
 - Proved wrong / stop: held-out success falls below the untrained model for either arm.
 - Spot-check health: Sonnet vs Opus scores within 2 points on >= 80% of the slice.
+
+## Numerical checks
+
+- Softmax Cancellation/Collapse (arXiv 2610.31642) checked 2026-10-24, PR #109: not reachable in _lp_kl; no change to numbers.
