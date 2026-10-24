@@ -1,0 +1,93 @@
+{
+ "accuracy": {
+  "F": 0.7666666666666667,
+  "R": 0.7166666666666667,
+  "N": 0.5666666666666667,
+  "O": 0.8666666666666667
+ },
+ "by_type": {
+  "F": {
+   "knowledge-update": 0.8,
+   "multi-session": 0.8,
+   "single-session-assistant": 1.0,
+   "single-session-preference": 0.2,
+   "single-session-user": 1.0,
+   "temporal-reasoning": 0.8
+  },
+  "R": {
+   "knowledge-update": 0.9,
+   "multi-session": 0.5,
+   "single-session-assistant": 0.9,
+   "single-session-preference": 0.3,
+   "single-session-user": 0.9,
+   "temporal-reasoning": 0.8
+  },
+  "N": {
+   "knowledge-update": 0.8,
+   "multi-session": 0.4,
+   "single-session-assistant": 0.5,
+   "single-session-preference": 0.4,
+   "single-session-user": 0.8,
+   "temporal-reasoning": 0.5
+  },
+  "O": {
+   "knowledge-update": 1.0,
+   "multi-session": 0.9,
+   "single-session-assistant": 1.0,
+   "single-session-preference": 0.6,
+   "single-session-user": 0.9,
+   "temporal-reasoning": 0.8
+  }
+ },
+ "mean_prompt_tokens": {
+  "F": 167054.13333333333,
+  "R": 7998.933333333333,
+  "N": 1547.7666666666667,
+  "O": 8276.9
+ },
+ "errors": {
+  "F": 0,
+  "R": 0,
+  "N": 0,
+  "O": 0
+ },
+ "paired": {
+  "N_vs_R": {
+   "wins": 7,
+   "losses": 16
+  },
+  "N_vs_F": {
+   "wins": 3,
+   "losses": 15
+  }
+ },
+ "KU_TR_correct": {
+  "N": 13,
+  "R": 17
+ },
+ "verdicts": {
+  "P1": {
+   "pass": false,
+   "N": 0.5666666666666667,
+   "R": 0.7166666666666667,
+   "diff_pts": -15.000000000000002
+  },
+  "P2": {
+   "pass": false,
+   "N": 13,
+   "R": 17
+  },
+  "P3": {
+   "pass": false,
+   "token_ratio": 0.009265060587147001,
+   "N": 0.5666666666666667,
+   "F": 0.7666666666666667
+  },
+  "wrong_if_N_le_R": true
+ },
+ "spend": {
+  "main_run_usd": 4.42,
+  "rerun_usd": 2.29,
+  "not_counted": "smoke run (~$0.25) and an aborted first full run (~$0.5, its writer notes were reused from cache); estimated total ~$7.5, under the $10 cap"
+ }
+}

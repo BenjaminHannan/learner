@@ -37,3 +37,9 @@ building into the assistant in this form.
 
 One seed, 60 questions: differences under ~10 points are within noise (binomial SE ~6 points per arm); report
 paired counts. Cost cap: $10 of Claude API credit.
+
+## Addendum 1 (2026-10-24 ~03:15Z, written after seeing Notebook-1 results, before running 1b)
+Notebook-1 failed P1-P3 (N 56.7 vs R 71.7). Suggested cause: notes drop specifics (single-session-assistant 50 vs 90).
+**Notebook-1b**, one change: arm H (hybrid) = R's top-10 raw turn pairs PLUS N's top-20 notes in one prompt, same reader,
+judge, sample and cached notes. Pass: H >= R + 5 points overall. Wrong if H <= R (notes add nothing even on top of search).
+Cap: $3 extra.
