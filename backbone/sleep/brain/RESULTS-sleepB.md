@@ -183,7 +183,7 @@ Plain reading (one seed):
 - Caution: recall rests on 80 facts. An unpaired arm-to-arm gap has a noise of about 7 points, so +10.5 is about 1.5 noise widths. A second seed or a bigger fact set should confirm it.
 - Not yet split: whether the gain comes from more steps or from more varied dreams.
 
-## Addendum 4: rotating regions and twisted dreams (seed 1); guess + dopamine running; therapy queued on Ben's PC
+## Addendum 4: rotating regions, twisted dreams, guess + dopamine (seed 1); therapy queued on Ben's PC
 Boxes: 57555322 (New York) ran ab_ob_twist in 0.82 h. 57555316 (Japan) ran ab_ob_rot, then ab_ob_guess. Two earlier California boxes, 57552967 and 57552968, never got going and were destroyed at 0.36 h.
 
 | arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy |
@@ -191,10 +191,12 @@ Boxes: 57555322 (New York) ran ab_ob_twist in 0.82 h. 57555316 (Japan) ran ab_ob
 | ab_ob control | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
 | ab_ob_twist (twisted dreams) | 85 | 40 | 0 | 62.5 | 15 | 55 | 67 | 46 | 37 | 84 | 63 | **93.2** |
 | ab_ob_rot (a quarter of the layers each night) | 15 | 2 | 0 | **8.5** | 0 | 0 | 8 | 3 | 5 | 85 | 57 | 90.8 |
+| ab_ob_guess (guess, then dopamine boost) | 78 | 50 | 0 | **64** | 4 | 70 | 67 | 47 | 41 | 84 | 61 | 92.4 |
 
 With the diary:
 - twist: C4 100, C2 92, C1 72, two-hop 22, changed 85, routine 100.
 - rot: C4 100, C2 92, C1 82, two-hop 7, changed 95, routine 100.
+- guess: C4 100, C2 95, C1 82, two-hop 7, changed 80, routine 100.
 
 Verdicts:
 - ab_ob_twist:
@@ -209,3 +211,21 @@ Verdicts:
   - Suggested reasons, to be checked in the result JSON if it can be pulled:
     - The morning gate may have reverted the later nights. Training a new quarter while the trim shrinks the older quarters could drop consolidated recall by more than 10 points, which would leave about one night's learning.
     - Or the trim (x 0.85 each night) may erase a quarter's change before that quarter trains again. Quarter 3 trains only on night 4.
+- ab_ob_guess:
+  - G1 PASS: ARC is 92.4 and diary is 84.
+  - G2 PASS: recall is 64, against a mark of 61. That is +8 over the control.
+  - The wrong-if does not fire.
+- The result JSONs were not recovered. The watcher stopped box 57555316 before trying `cat`, but asked too soon, while the box was still running, and then destroyed it. The watcher now waits for the stopped state. `label_report.py` now writes each night's gate reverts (`rv=`) into the label.
+
+Plain reading of addenda 4 and 5 (one seed each; noise for an unpaired gap on these 80 facts is about 7 points):
+- Four changes raised recall from memory, each with no harm to ARC or diary reading:
+  - 2x night work: 66.5.
+  - Guess + dopamine: 64.
+  - Every weight at a small step: 63.5.
+  - Twisted dreams: 62.5.
+  - The control scored 56. Each gain is 1 to 1.5 noise widths, so none is shown on its own. Four separate arms all pointing up is suggestive.
+- Rotating regions broke memory (8.5).
+- Next:
+  - Confirm with a bigger fact set and paired per-question scoring.
+  - Run the twist control (an equal count of plain paraphrases).
+  - Combine the winners: 2x work + guess + twist.
