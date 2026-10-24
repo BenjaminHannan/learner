@@ -356,7 +356,8 @@ def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
                     skv = rep[L]
                 gen = B.decode(runner, board, C, mask, p, lt, skv, eos=enc.eos, gates=gates)
                 for i, g in zip(chunk, gen):
-                    hits[t][i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
+                    if lim is None or i < lim:
+                        hits[t][i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
             nb += 1
             if nb % 20 == 0:
                 print(f"[eval {name}] {k}/{len(order)} batches {nb} {time.time() - t0:.0f}s", flush=True)
@@ -424,6 +425,11 @@ def run_arm(args):
     if src is not None and not (src / "adapter_config.json").exists():
         raise SystemExit(f"[think1] {arm} needs the stage-1 adapter {src} (run arm {'b' if arm == 'bplus' else 'a'} first)")
     lm, tok = T.load_model(args, device, dtype)
+    if args.smoke:  # the tiny model's padding row is all zeros: a zero slot has a NaN clamp gradient (board.clamp_rms), so give such rows small noise
+        with torch.no_grad():
+            w = lm.model.embed_tokens.weight
+            z = w.abs().sum(-1) == 0
+            w[z] = torch.randn(int(z.sum()), w.shape[1], generator=torch.Generator().manual_seed(0)).to(w) * 0.02
     train_rows, dev_rows, val_rows = load_data(args)
     enc = T.Encoder(tok, args.max_len)
     runner = T.Runner(lm, loops=3 if arm in ("b", "bplus") else 1)
@@ -500,22 +506,25 @@ def run_summarize(root, data):
     return r
 
 
+def smoke_args(args, arm, root, data):
+    """Args of one smoke arm: tiny sizes, 6 steps per stage, own dir OUT/smoke/{arm}_s{seed} (so the stage-1 adapters are found by default)."""
+    a = copy.copy(args)
+    a.arm, a.out, a.data = arm, str(Path(root) / f"{arm}_s{args.seed}"), str(data)
+    a.steps, a.max_len, a.bsz, a.micro_bsz = args.steps or 6, min(args.max_len, 256), min(args.bsz, 8), min(args.micro_bsz, 4)
+    a.steps1 = 6
+    return a
+
+
 def smoke(args):
     """Every arm in sequence (a, b, then aplus, bplus, t, t1, tw taking the stage-1 adapters) into OUT/smoke/, then summarize."""
     root = Path(args.out) / "smoke"
     data = smoke_data(args.data, root)
-    arms = [args.arm] if args.arm else list(ARMS)
-    rcs = {}
-    t0 = time.time()
-    for arm in arms:
-        a = copy.copy(args)
-        a.arm, a.out, a.data = arm, str(root / f"{arm}_s{args.seed}"), str(data)
-        a.steps, a.max_len, a.bsz, a.micro_bsz = args.steps or 6, min(args.max_len, 256), min(args.bsz, 8), min(args.micro_bsz, 4)
-        a.steps1 = 6
+    rcs, t0 = {}, time.time()
+    for arm in [args.arm] if args.arm else ARMS:
         print(f"== smoke arm {arm} {time.time() - t0:.0f}s", flush=True)
-        rcs[arm] = run_arm(a)
+        rcs[arm] = run_arm(smoke_args(args, arm, root, data))
     r = run_summarize(root, data)
-    print(f"== smoke done {time.time() - t0:.0f}s exit codes {rcs}", flush=True)
+    print(f"== smoke done {time.time() - t0:.0f}s exit codes {rcs}" + (f" summarize {r.returncode}" if r else ""), flush=True)
     return 1 if any(rcs.values()) or (r is not None and r.returncode) else 0
 
 
