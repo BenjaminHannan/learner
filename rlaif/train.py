@@ -1,5 +1,6 @@
 """LoRA RL on sandbox tasks with Claude as grader. --algo grpo | jolt_plus. See SPEC.md."""
-import argparse, json, os, random, time
+import argparse, json, os, random, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # sibling imports work under `python -m rlaif.train` too
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftModel, get_peft_model
