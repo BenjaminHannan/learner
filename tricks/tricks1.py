@@ -1,5 +1,5 @@
 """Tricks-1 eval harness (see PREREG-tricks1.md). Inference only. Pure-python helpers up top, vLLM at the bottom."""
-import argparse, json, math, random, re, subprocess, sys, threading, time, urllib.parse, urllib.request
+import argparse, json, math, random, re, subprocess, sys, threading, time, unicodedata, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -93,10 +93,16 @@ def majority(vals, tol_gold=None):
             best = c
     return None if best is None else best[0]
 
+_DASHES = str.maketrans({c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2212"})
+
+def _norm(s):
+    """NFKC (narrow/no-break spaces -> space), one kind of dash, casefold, collapsed spaces."""
+    return " ".join(unicodedata.normalize("NFKC", s or "").translate(_DASHES).casefold().split())
+
 def popqa_match(text, answers):
-    """Any gold alias as a whole word/phrase (so 'US' does not match 'custom')."""
-    t = (text or "").casefold()
-    return any(re.search(r"(?<!\w)" + re.escape(a.casefold()) + r"(?!\w)", t) for a in answers if a.strip())
+    """Any gold alias as a whole word/phrase (so 'US' does not match 'custom'), after Unicode normalisation."""
+    t = _norm(text)
+    return any(re.search(r"(?<!\w)" + re.escape(_norm(a)) + r"(?!\w)", t) for a in answers if a.strip())
 
 def parse_tool_calls(text):
     """Return [(name, args)] from Qwen3.5 XML-ish or Qwen3 JSON tool calls (lenient)."""

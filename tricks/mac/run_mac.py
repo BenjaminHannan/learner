@@ -17,7 +17,7 @@ its template always ends the prompt with an open "<think>" (README: "always thin
 prefill ("<think>" + CLOSE_THINK), which is a hack the model was not trained on (check the [sample] line). Fallbacks: --think on
 --max-tokens 1024 (answers after its reasoning; slow), or the instruct predecessor LiquidAI/LFM2-24B-A2B-MLX-4bit (no reasoning).
 Any <think>...</think> in an output is stripped before scoring; reasoning that never closes counts as no answer."""
-import argparse, json, os, random, re, time
+import argparse, json, os, random, re, time, unicodedata
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -31,10 +31,16 @@ NOUNS = "river stone market engine garden letter winter bridge copper harvest si
 ADJS = "quiet old bright narrow heavy distant early broken simple golden".split()
 
 # ---------------- pure python: scoring, prompts, files ----------------
+_DASHES = str.maketrans({c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2212"})
+
+def _norm(s):
+    """NFKC (narrow/no-break spaces -> space), one kind of dash, casefold, collapsed spaces."""
+    return " ".join(unicodedata.normalize("NFKC", s or "").translate(_DASHES).casefold().split())
+
 def popqa_match(text, answers):
-    """Any gold alias as a whole word/phrase (so 'US' does not match 'custom'). Same as tricks1.popqa_match."""
-    t = (text or "").casefold()
-    return any(re.search(r"(?<!\w)" + re.escape(a.casefold()) + r"(?!\w)", t) for a in answers if a.strip())
+    """Any gold alias as a whole word/phrase (so 'US' does not match 'custom'), after Unicode normalisation."""
+    t = _norm(text)
+    return any(re.search(r"(?<!\w)" + re.escape(_norm(a)) + r"(?!\w)", t) for a in answers if a.strip())
 
 def strip_think(text, thinking=False):
     """Answer part of a generation. The prompt may already have opened <think>, so only the closing tag is reliable."""

@@ -114,7 +114,7 @@ def test_shipped_lookup_file():
     rows = [json.loads(l) for l in f.open()]
     assert len(rows) == 400 and len({r["id"] for r in rows}) == 400
     assert [r["bucket"] for r in rows] == ["rare"] * 200 + ["pop"] * 200
-    assert all(set(r) == {"id", "q", "gold", "bucket", "evidence"} and r["q"] and r["gold"] and r["evidence"] for r in rows)
+    assert all(set(r) == {"id", "q", "gold", "bucket", "query", "evidence"} and r["q"] and r["gold"] and r["evidence"] for r in rows)
     assert not any(r["evidence"].startswith("Error:") for r in rows)
 
 # ---------------- run_lookup end to end with a fake model/tokenizer (needs mlx, no weights) ----------------
