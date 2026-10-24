@@ -243,6 +243,13 @@ def hide_example(prompt, h):
     return f"Examples: {keep}. Now {q} -> ?"
 
 
+SHORTEST = False  # Aha-2 (--shortest): among fitting samples pick the fewest AST nodes, in C16 and for sleep data
+
+
+def size(src):
+    return sum(1 for _ in ast.walk(ast.parse(src.strip(), mode="eval")))
+
+
 def has_branch(src):
     """True if the program contains an if/else, comparison or and/or."""
     try:
@@ -336,7 +343,7 @@ def eval_c16(C, model, rows, name, seed=0):
             f, a = judge(src, r["prompt"])  # always the FULL prompt: must reproduce all 3 examples
             if f and a is not None:
                 nf += 1
-                if chosen is None:
+                if chosen is None or (SHORTEST and size(src) < size(chosen)):
                     chosen, ans, hid = src, a, (i % 3 if AHA else None)
         c = is_correct(r, ans)
         if chosen is not None:
@@ -374,8 +381,10 @@ def collect_fitting(C, model, rows, per_row, log, tag):
             f, a = judge(src, r["prompt"])
             if f and a is not None and src not in kept:
                 kept.append(src)
-            if len(kept) >= per_row:
+            if len(kept) >= per_row and not SHORTEST:
                 break
+        if SHORTEST:
+            kept = sorted(kept, key=size)[:per_row]
         n_with += bool(kept)
         pairs += [(r["prompt"], s) for s in kept]  # full prompt, even under --aha
         n_br += sum(has_branch(s) for s in kept)
@@ -400,10 +409,11 @@ def main():
     ap.add_argument("--gen-bs", type=int, default=128)
     ap.add_argument("--n-dreams", type=int, default=1000)
     ap.add_argument("--no-branch", action="store_true", help="Creative-2: checker rejects branching programs (PREREG-creative2.md)")
+    ap.add_argument("--shortest", action="store_true", help="Aha-2: pick the shortest fitting program (PREREG-aha2.md)")
     ap.add_argument("--aha", action="store_true", help="Aha-1: each C16 sample hides one example (PREREG-aha1.md)")
     args = ap.parse_args()
-    global NO_BRANCH, AHA
-    NO_BRANCH, AHA = args.no_branch, args.aha
+    global NO_BRANCH, AHA, SHORTEST
+    NO_BRANCH, AHA, SHORTEST = args.no_branch, args.aha, args.shortest
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     logf = open(out / f"log_{args.arm}.txt", "a")
@@ -432,7 +442,7 @@ def main():
         dev, pool, hard = dev[:10], pool[:12], hard[:10]
     sets = {"c2_dev": dev, "hard": hard}
     log(f"[data] dev {len(dev)} hard {len(hard)} pool {len(pool)} dreams {len(dreams)}; hard signatures {len({tuple(h['signature']) for h in hard})}")
-    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples, "no_branch": NO_BRANCH, "aha": AHA,
+    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples, "no_branch": NO_BRANCH, "aha": AHA, "shortest": SHORTEST,
               "hard_signatures": len({tuple(h['signature']) for h in hard}), "hard_example_puzzles": [
                   {k: h[k] for k in ("prompt", "answer", "program", "signature")} for h in hard[:5]]}
     model = lm
