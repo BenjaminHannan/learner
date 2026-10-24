@@ -29,3 +29,21 @@ Two-seed reading: val diff -2.15 (s0) and +0.43 (s1), mean -0.86. Loops +0.71 an
 Mean passes the safety mark (>= -1.0) and the loops mark. The +2 success mark is not met, so the switch stays off.
 Seed 1 trained on a different GPU, so its absolute numbers are lower. The comparison within each seed is still fair.
 Files: Ben's Mac ~/learner-ops/v1-weights/ten-weaknesses/halt-seed1/.
+
+## #8/#9 G1 seed 1 (BensPC, 2026-10-24 10:32-11:30Z)
+| arm | harm W1 | harm W2 | FT W1 | FT W2 |
+|---|---|---|---|---|
+| g1_empirical | 1.0 | 1.0 | 20.70% | 33.98% |
+| g1_example | 0.5 | 0.5 | 18.75% | 28.52% |
+| g1_off | 4.0 | 3.0 | 36.33% | 39.45% |
+
+Two-seed W2 means:
+| arm | harm | first-try |
+|---|---|---|
+| empirical | 0.75 | 34.2% |
+| example | 0.25 | 32.2% |
+| off | 2.5 | 39.1% |
+
+- **Mark 1 (example acceptable):** passes on seed 0 and fails on seed 1, where it is 5.47 points worse on first-try. The norm swap is therefore not adopted; the code keeps `none`, and G1 should be described as a variant of NK30 rather than as NK30 itself.
+- **Mark 2 (G1 buys retention):** 1.5 points on seed 0 and 2.0 on seed 1, mean 1.75, which sits right at the 2-point bar. G1 costs about 4.3-5.5 points of first-try on both seeds.
+- **Next single change:** a lighter lock, for example a lower KL weight or a lower energy threshold, with at least 3 seeds.
