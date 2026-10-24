@@ -98,3 +98,32 @@ Plain reading:
 
 ## Checks
 - Softmax Cancellation (arXiv 2610.31642) checked 2026-10-24, PR #109: reachable at night start but negligible (2e-7 of the update); numbers unchanged. The KL guard is in `Trainer.step`, and so is the ab_klctx leash, which uses the same code. When the add-on (or the delta) is fresh, cur == ref and the KL gives a spurious gradient of about 6.6e-7. That is swamped by the CE gradient of 0.14-0.66. For future runs, the drop-in fix is `fixed_kl(cur, ref, reduction="sum")/n` from `backbone/think/xent.py`.
+
+## Addendum 3: gentler every-weight step, and targeted plasticity (prereg `PREREG-sleepB-addendum3.md`, seed 1)
+Boxes: 57543171 (ab_ob_local) and 57543172 (ab_ob_full_s), both A100 80GB. Each was destroyed when its result reached its label. Spend was about $1.80 of a $2.50 cap.
+
+| arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control (add-on) | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
+| ab_ob_full, every weight, lr 2e-5 | 75 | 40 | 0 | 57.5 | 0 | 40 | 58 | 33 | 33 | 47 | 56 | 82.2 |
+| **ab_ob_full_s, every weight, lr 5e-6** | 82 | 45 | 0 | **63.5** | 0 | 65 | 67 | 44 | **41** | 81 | **64** | 92.4 |
+| **ab_ob_local, tagged top-K (K = LoRA size), lr 2e-5** | 72 | 35 | 0 | 53.5 | 7 | 45 | 67 | 40 | 34 | 82 | 56 | **92.0** |
+
+Verdicts:
+- ab_ob_local:
+  - L1 PASS: ARC is 92.0, against a mark of 87.6, and diary is 82, against 77.
+  - L2 FAIL: recall is 53.5, against a mark of 61.
+  - L3 PASS: ARC is 92.0, against ab_ob_full's 82.2 + 5.
+  - Neither wrong-if fires.
+- ab_ob_full_s:
+  - S1 PASS: ARC is 92.4 and diary is 81.
+  - S2 PASS: recall is 63.5, against a mark of 61. That is +7.5 over the same-seed control, which clears the 4-point seed-spread rule. But it is only +3.5 over seed-0 ab_ob (60), so the gain is small (suggested).
+
+Plain reading (one seed):
+- Changing every weight is safe when the step is small. At lr 5e-6, general knowledge and note-reading match the add-on, and recall is a little higher. At lr 2e-5 they broke.
+- Restricting each night's change to the most-tagged 1.2% of weights fully protects general knowledge and note-reading, even at the harmful lr 2e-5 (shown). It stored slightly fewer facts (53.5 vs 56) and fewer updates (changed-new 45 vs 70).
+- Untested:
+  - Targeted plasticity at the small step.
+  - A larger K.
+  - Tagging that also counts the update items.
+- Per-night tag locations (which layers and module types hold the tagged weights) are in the result JSON, which was not recovered (labels only).
