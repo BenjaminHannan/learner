@@ -72,7 +72,7 @@ def pack(a):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as t:
         for f in FILES:
-            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") else i)
+            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") or "/data/raw" in i.name else i)  # raw API caches never run on a box
     b64 = base64.b64encode(buf.getvalue()).decode()
     job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label)
     args = ["bash", "-c", job, "bb"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
