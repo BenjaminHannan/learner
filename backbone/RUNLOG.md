@@ -24,3 +24,4 @@ too few linear-attention state slots).
 - 01:47Z creative1 box 57448229 finished; result JSONs pulled with `vast.py cat` after stopping (cat only works on stopped boxes), then destroyed.
 - 01:58Z claude-bb-creative2 (Slovenia A100, box 57450816): Creative-2 = Creative-1 arms with CREATIVE_FLAGS=--no-branch.
 - 04:45Z claude-sleepb-cqc4bi (57467248, A100 SXM4 UK, $0.54/h, hours=4, cap $3; coordinator OK 03:55Z): Sleep-B arms a0,ad,ab,af,ab_noshy,ab_norem,ab_flatprio,ab_all on Qwen3.5-2B (backbone/sleep/brain/PREREG-sleepB.md). Thread "Design sleep like the human brain", branch claude/project-thread-cqc4bi.
+- 05:50Z claude-sleepb2-cqc4bi (57473371, A100 SXM4 UK, $0.54/h, hours=2): Sleep-B addendum 1 arms ab_ob, ab_klctx (+ router R) with AB's stage-1 schedule. Same thread/branch; thread total cap $3.
