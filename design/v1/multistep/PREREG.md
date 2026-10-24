@@ -119,3 +119,15 @@ Loss check (from the code, 2026-10-24): the oracle's "below 0" school loss is a 
 `custom_io/models/ledger.py` the pointer loss for a commutative op is `-logaddexp(lab, lba)`. When both operands are the same slot
 (x*x, 2+2, x+x) then lab == lba, so the term is `-(lab + log 2)`: it can reach -0.69 per such step, while its gradient is unchanged.
 Oracle programs use these steps often, so the logged loss goes below 0 once the rest is near 0.
+
+# Round 7: composition dreams (pre-registered 2026-10-24, before any round 5/6 number was seen)
+Source: GPT's #2, ranked #3 by the literature note (reviews/multistep-literature-2026-10-24.md). The affine diagnosis
+(reviews/multistep-affine-diagnosis-2026-10-24.md) shows the 3 examples pin each rule down (ambiguity is not the cause), and affine
+spends ~2.6 of its ~4 steps building A and B. Affine and double_add are compositions of the practised skills (mult then add, add then mult).
+One change from nights4: arm `comp4`. Each night, add composition dreams: draw two programs P1, P2 from the model's own programs (the
+warm-up's add/mult records and that night's W records), chain them (P1's answer becomes P2's input), execute on pool-like inputs (x in
+3..29, every output 0..999), and train on (puzzle -> chained program) as forced-label records. Count capped at half the night's W records.
+No answer key or kind of a held-out question is read. Same seeds (0, 1), 4 nights, same OUT dir as rounds 4-6.
+Marks: PASS if comp4 Hard >= nights4 + 4 points AND affine >= 5%, Easy within 5 of base, harm <= 2. Proved wrong: comp4 Hard <= nights4 + 1.
+sq_plus is the control kind (x*x is not a practised skill): report it separately. A pass is "learning by composing practised skills",
+not zero-shot transfer to an unseen structure.
