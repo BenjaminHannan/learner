@@ -95,3 +95,11 @@ tries (W records) have raised the hard kinds, and they grow night over night (ba
 One change: 4 nights instead of 2 (night k samples with night k-1's model, same search, lr, visits). Arm `nights4` vs `base`,
 seeds 0 and 1, full sizes, on Ben's PC. Marks: PASS if nights4 Hard >= base + 8 points with Easy within 5 and skills harm <= 2.
 Proved wrong: nights4 Hard <= base + 2. Reported: Hard after nights 1, 2, 3, 4 (the curve).
+
+## Round 4 result (BensPC, 2026-10-24, 2 seeds, 49 min)
+Hard: base 10.2, nights4 16.9 (+6.6); Easy 80.2 vs 82.0; harm 1.75 vs 1.25 pts. **NO PASS** (+8 needed), not proved wrong (> +2).
+Curve, nights4: 6.2 / 11.3 / 13.4 / 16.9 after nights 1-4, still rising; affine ~0 in every arm and night.
+
+# Round 5: eight nights (pre-registered 2026-10-24, before the run)
+One change from nights4: 8 nights. Same seeds, run in round 4's OUT dir (base and nights4 reused). Marks: PASS if nights8 Hard >= base + 12
+AND >= nights4 + 4, Easy within 5 of base, harm <= 2. Plateau: nights8 Hard <= nights4 + 1.5. Reported: the 8-night curve, affine separately.

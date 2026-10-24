@@ -21,7 +21,7 @@ EASY = ('square', 'last_digit')
 SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
 OCCAM_ARMS = ('occam5', 'occam5_strict')
 DEEP_ARMS = ('occam_deep',)
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4')
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8')
 FOUND_LENGTHS = (1, 2, 3, 4)
 ROUND3_ARMS = ('base', 'occam_deep')
 ROUND4_ARMS = ('base', 'nights4')
@@ -46,6 +46,8 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(eval_each_night=True) if round_ == 4 else {}
     if arm == 'nights4':     # round 4: four nights instead of two, everything else as base; both arms report the per-night curve
         return dict(nights=4, eval_each_night=True)
+    if arm == 'nights8':     # round 5: eight nights (PREREG round 5)
+        return dict(nights=8, eval_each_night=True)
     if arm == 'dream2':
         return dict(dream2=k, dream2_max_steps=2)
     if arm == 'school5':
