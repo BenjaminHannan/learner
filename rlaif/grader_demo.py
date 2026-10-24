@@ -4,7 +4,7 @@ from grader import Grader
 from sandbox import World
 
 rows = [json.loads(l) for l in open("data/tasks_heldout.jsonl")][:int(sys.argv[1]) if len(sys.argv) > 1 else 3]
-g = Grader("runs/grader_demo", max_usd=2.0, spot=0)
+g = Grader("runs/grader_demo", max_usd=2.0, spot=float(sys.argv[2]) if len(sys.argv) > 2 else 0)
 for t in rows:
     w, tr = World.from_json(t["state"]), [{"role": "user", "content": t["user"]}]
     for c in t["reference"]:

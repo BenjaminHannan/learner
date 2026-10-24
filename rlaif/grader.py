@@ -3,7 +3,9 @@ import json, os, random, re, threading, time
 from concurrent.futures import ThreadPoolExecutor
 
 SONNET, OPUS = "claude-sonnet-5-5", "claude-opus-5-5"
-PRICE = {SONNET: (3.0, 15.0), OPUS: (15.0, 75.0)}  # USD per million tokens (assumed): input, output
+PRICE = {SONNET: (2.0, 10.0), OPUS: (4.0, 20.0)}  # USD per million tokens (list prices, Oct 2026): input, output
+# Sonnet 5.5 thinks by default and rejects thinking=disabled; between_tools keeps it off. Opus 5.5 cannot turn thinking off, so it runs at low effort with room to think.
+THINK = {SONNET: dict(thinking={"type": "between_tools"}), OPUS: dict(output_config={"effort": "low"})}
 
 GRADER_SYSTEM = """You are a strict, fair grader of an AI assistant's work. The assistant is a small model that controls a sandboxed
 personal-assistant world (files, email, calendar, notes, reminders) through tools. You are shown the user's request, a grading rubric
@@ -62,13 +64,13 @@ def make_client():
     return anthropic.Anthropic(api_key=os.environ["LEARNER_ANTHROPIC_API_KEY"], max_retries=0)
 
 
-def call_claude(client, ledger, model, system, user, max_tokens=400, tries=8):
+def call_claude(client, ledger, model, system, user, max_tokens=800, tries=8):
     """One message call with prompt-cached system block, 429/5xx backoff, spend accounting. Returns text."""
     import anthropic
     for i in range(tries):
         ledger.check()
         try:
-            r = client.messages.create(model=model, max_tokens=max_tokens,
+            r = client.messages.create(model=model, max_tokens=max_tokens if model == SONNET else max(max_tokens, 4000), **THINK[model],
                                        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
                                        messages=[{"role": "user", "content": user}])
             ledger.add(model, r.usage)
