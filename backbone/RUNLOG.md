@@ -20,3 +20,4 @@ too few linear-attention state slots).
 - 00:08Z Sleep-1 box claude-bb-sleep1 (A100 SXM4 NY, $0.54/h): arms s2,s0,ic,s1 on Qwen3.5-2B.
 - 00:46Z claude-bb-probes2: arm a 418 steps, probes Pname,Pdepth,Prule (requested by the generalization thread).
 - 00:48Z claude-bb-creative1 (NY A100): Creative-1 arms f0,c16,sleep on Qwen3.5-0.8B.
+- 01:17Z sleep1 and creative1 boxes on NY hosts never uploaded logs (S3 403 for 70+ min); destroyed and relaunched (Quebec, Slovenia). Boxes now also write result summaries into their instance label.
