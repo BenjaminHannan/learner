@@ -158,7 +158,7 @@ X1-X4 xent tests above. S1 summarize test above.
 SM `think1.py --smoke` runs all arms end to end and summarize prints a verdict line.
 
 ## Round 2 additions (2026-10-24, after the first build; all must be in before any GPU run)
-1. `--dtype {bf16,fp16,fp32}` for think1.py (default: bf16 on CUDA, fp32 on CPU). fp16 is for Kaggle T4s (no bf16): backbone
+1. (Dropped after the Kaggle T4 probe: T4s are too slow for this pilot.) `--dtype {bf16,fp16,fp32}` for think1.py (default: bf16 on CUDA, fp32 on CPU). fp16 is for Kaggle T4s (no bf16): backbone
    weights in fp16; every trainable parameter (LoRA, ThinkBoard) kept in fp32; forward under torch.autocast("cuda", float16);
    torch.cuda.amp.GradScaler (or torch.amp.GradScaler("cuda")) around backward/step, unscale before the per-group clipping;
    skip-and-log steps whose grads are inf/nan (count them in the result; the divergence guard ignores scaler-skipped steps).
