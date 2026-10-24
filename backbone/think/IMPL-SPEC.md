@@ -103,9 +103,12 @@ Encoder, Runner, greedy, left_pad/right_pad, cosine_lr, load_model, LORA_TARGETS
   clip 1.0 PER GROUP; AdamW wd 0. tw = t1 with K=144.
 - Loss for a/b/aplus/bplus: answer CE with xent.fixed_cross_entropy in fp32 (same selection of positions as train.py's
   answer_loss_sum). Training dtype bf16 on CUDA, fp32 on CPU (as train.py).
-- Mechanics gate (t/t1/tw) at step 150: abort (write result with "aborted": reason, exit code 3) if mean |tanh alpha| < 0.02,
-  mean cross-question slot cosine (final board of the batch) > 0.95, > 90% of slots at the clamp, any NaN loss, or 20-step mean loss
-  > 2 x the first-20-step mean. The divergence and NaN checks run at every step after step 20. Log gate values every 10 steps.
+- Mechanics gate (t/t1/tw): abort (write result with "aborted": reason, exit code 3) if at step 150 mean |tanh alpha| < 0.02, or at
+  any step after 20 a NaN loss/gradient or a 20-step mean loss > 2 x the first-20-step mean. Logged every 10 steps but NOT aborts:
+  cross-question cosine of the final boards and of their updates (e_L - e_0), share of slots at the clamp (amended 2026-10-24: both
+  sit at ~0.99 / ~94% at step 0 on the real model, so they cannot be abort rules).
+- Memory: wrap every slot pass in torch.utils.checkpoint (use_reentrant=False) during training by default (flag --no-lap-ckpt to
+  turn it off); the prompt cache is never mutated, so recomputation is exact. clamp_rms takes an eps inside the sqrt.
 - Logging every 250 steps (t/t1/tw) on the first 256 dev rows: answer CE and greedy accuracy at L = 1 and 8, swap-lesion accuracy at 8,
   |tanh alpha| per layer, refiner grad norm.
 - Evaluation (greedy, <= 24 tokens, exact match after normalise, rows sorted by length into batches by eval_tokens):

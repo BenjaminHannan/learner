@@ -52,7 +52,7 @@ Seeds 0, 1, 2 for a, b, aplus, t, t1. The stage-1 adapters were not kept, so a a
 Fixed settings: batch 16 (micro-batch 4), LoRA lr 2e-4 cosine with warmup min(100, steps/10) (stage 1); stage-2 runs
 (aplus, bplus, t, t1, tw): cosine with 60 warmup steps over 1,254 steps (aplus/bplus re-warm their LoRA to 2e-4), AdamW,
 weight decay 0, grad clip 1.0 per parameter group (the gates are clipped apart from the refiner), rows drawn from a
-second shuffle (seed s + 1000) so stage 2 sees rows stage 1 did not, in the same order for every stage-2 arm.
+second shuffle (seed s + 1000; about 92% of its rows are new to stage 1), in the same order for every stage-2 arm.
 Board learning rates (gentle, after Loop-1L's divergence at 1e-3): alpha 3e-3 (own group, logged), e0_hat and eta 5e-4,
 refiner 5e-4. Every slot pass and every teacher-forced answer pass runs on its own copy of the
 prompt cache, so no pass can see another pass's tokens (in particular, no lap can see the gold answer).
@@ -94,10 +94,13 @@ A_ref = max(66.72, mean of a, mean of aplus); B_ref = max(67.12, mean of b, mean
 the swap lesion costs < 1.0 point at L=8 (the board's content is not used); S(8) < A_ref + 1.0.
 Anything else is **partial**: reported, no scale-up.
 
-**Mechanics gate (every t / t1 / tw run, step 150, automatic):** abort and report if mean |tanh alpha| < 0.02, mean
-cross-question slot cosine > 0.95, more than 90% of slots pinned at the rms clamp, any NaN, or the 20-step mean
-training loss exceeds 2x its first-20-step mean (divergence guard, Loop-1L arm C). Logged but not an abort: the swap
-lesion on the 256 logging rows and the refiner's gradient norm.
+**Mechanics gate (every t / t1 / tw run, automatic):** abort and report if, at step 150, mean |tanh alpha| < 0.02 (the
+gates never opened); or, at any step after 20, a NaN loss or gradient, or a 20-step mean training loss above 2x the
+first-20-step mean (divergence guard, Loop-1L arm C). Logged but not aborts: cross-question cosine of the boards and of
+their updates (e_L - e_0), the share of slots at the rms clamp, the swap lesion on the 256 logging rows, and the
+refiner's gradient norm. (Amended before any run, 2026-10-24: on the real model every board starts from the same e0 at
+the clamp, so board cosine is ~0.99 and ~94% of slots sit at the clamp at step 0 [shown, CPU check]; those two
+conditions would have aborted healthy runs. The swap lesion in the futility stop tests board content instead.)
 
 **Futility stop after seed 0** (a, b, aplus, t, t1 at seed 0): do not run seeds 1-2 if any of
 S_0(8) < 68.0; S_0(8) - T1_0(1) < 1.0; S_0(8) - S_0(2) < 0.5; swap lesion < 1.0. (Same-seed reruns differed by 1.84
