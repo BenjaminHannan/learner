@@ -13,11 +13,15 @@ Addendum 4 (PREREG-sleepB-addendum4.md), one change each from ab_ob, all LoRA-on
 trains, quarter (night-1) % 4; SHY still trims all), ab_ob_twist (the base model also writes 2 strange dream-like scenes per item, kept if they pass
 the entity / leak / answerable checks, and they join the item's practice texts), ab_ob_ther (salient items: 2x replay priority and loss weight 0.5),
 ab_ob_guess (the pre-training probe also gives the first-token confidence c; a right answer with c < 1 multiplies the item's priority by 1 + 2(1 - c)).
+Addendum 5 (PREREG-sleepB-addendum5.md), the night's work scales with the chip: work scale s multiplies the night's training steps, the dreams per
+item (round(4 s) paraphrases and Q&A, and the generation length), the item cap (160 s), REM chains and gist dreams (30 s each). --budget-scale pins s;
+--night-budget-s B instead times a benchmark at the start of each night and uses s = clip(B / R, 0.25, 4) (R: seconds the reference night would take
+here); with neither, s = 1 and the night is exactly ab_ob's. ab_ob_b2 = ab_ob with s = 2.
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -53,8 +57,8 @@ K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS)
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS)  # open-book rehearsal (Brain.qa_ex)
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2")
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2")  # open-book rehearsal (Brain.qa_ex)
 DELTA_ARMS = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
 TRAIN_DELTA_ARMS = ("ab_ob_full", "ab_ob_full_s", "ab_ob_local")  # delta_w trains, LoRA frozen (ab_ob_merge: LoRA trains, delta only changes by the fold)
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
@@ -213,10 +217,10 @@ def upd_prompt(L, do, to, fo, dn, tn, fn, shared):
     return L.render("You compare chat messages carefully.", u)
 
 
-def nrem_prompt(L, ctx, it):
+def nrem_prompt(L, ctx, it, k=K):  # k: paraphrases and Q&A pairs per item (K; round(K s) at work scale s)
     u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
-         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {K} paraphrases of the CURRENT fact (short standalone sentences, "
-         f"different wording, naming both) and {K} question-answer pairs about it. Cover both directions: some questions should ask about one "
+         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {k} paraphrases of the CURRENT fact (short standalone sentences, "
+         f"different wording, naming both) and {k} question-answer pairs about it. Cover both directions: some questions should ask about one "
          f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
          f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
     return L.render("You are a careful assistant that studies facts.", u)
@@ -1098,6 +1102,102 @@ def selftest_rot():
         torch.set_rng_state(rng_state)
 
 
+# ------------------------------------------------------------------ time-budgeted sleep (addendum 5)
+BENCH_LEN = 384  # padded length of the synthetic training batch (an open-book example is about this long)
+
+
+def ref_gen_batches(gen_bs, max_items=160, rem_chains=30, rem_gist=30):
+    """Rough number of 20-new-token generation batches (the unit bench_chip times) in the reference night with every cap full: dreaming (400 new
+    tokens = 20 units per batch of gen_bs items), verifying K candidate Q&A per item, the 2 probes, and in each of the 4 REM cycles one 40-token
+    generation of all chains + gist dreams plus their verification. Tagging, update detection and the 'now' prompts are ignored."""
+    nb = lambda n: -(-n // gen_bs)  # noqa: E731
+    return nb(max_items) * 400 / 20 + nb(max_items * K) + 2 * nb(max_items) + 4 * (nb(rem_chains + rem_gist) * 40 / 20 + nb(rem_chains + rem_gist))
+
+
+def plan_scale(budget_s, t_step, t_gen, ref_steps, ref_gen_batches):
+    """Work scale s = clip(B / R, 0.25, 4), R = ref_steps x t_step + ref_gen_batches x t_gen: the seconds the reference night would take on this chip."""
+    r = ref_steps * t_step + ref_gen_batches * t_gen
+    return min(max(budget_s / r, 0.25), 4.0) if r > 0 else 4.0
+
+
+def bench_chip(L, pm, args, ref_steps):
+    """Time this chip on a fixed synthetic workload built from the tokenizer, touching no weights, optimizer state or RNG stream (torch CPU / CUDA
+    state saved and restored; no Brain rng used; grads zeroed): one untimed and 3 timed forward+backward passes of a batch of bsz examples of BENCH_LEN
+    tokens, micro-batched as Trainer.step does (t_step), and one greedy generation batch of gen_bs prompts, max_new 20 (t_gen). Returns the timings
+    plus ref_gen_batches and R = ref_steps x t_step + ref_gen_batches x t_gen."""
+    sync = torch.cuda.synchronize if L.device.type == "cuda" else (lambda: None)
+    ids = L.ids("The quick brown fox jumps over the lazy dog near the old harbour of Kelmira, where Zelmir works. ")
+    ex = (ids * (BENCH_LEN // len(ids) + 1))[:BENCH_LEN]
+    batch = [(ex, BENCH_LEN // 2)] * args.bsz
+    ntgt = sum(len(e) - max(st, 1) for e, st in batch)
+    prompts = [L.render(SYS, "Question: " + " ".join(["Where does Zelmir live?"] * 8))] * args.gen_bs
+
+    def one():
+        for mb in groups(batch):
+            bi, mask, tm = lm_masks(L, mb)
+            (F.cross_entropy(pm(input_ids=bi, attention_mask=mask).logits[:, :-1][tm].float(), bi[:, 1:][tm], reduction="sum") / ntgt).backward()
+
+    with seeded_rng(0, L.device):
+        pm.train()
+        one()  # warm-up (kernel compilation, allocator)
+        sync()
+        t0 = time.time()
+        for _ in range(3):
+            one()
+        sync()
+        t_step = (time.time() - t0) / 3
+        pm.zero_grad(set_to_none=True)
+        pm.eval()
+        L.generate(pm, prompts[:1], max_new=2, bs=1)  # warm-up of the generation path
+        sync()
+        t0 = time.time()
+        L.generate(pm, prompts, max_new=20, bs=args.gen_bs)
+        sync()
+        t_gen = time.time() - t0
+    n = ref_gen_batches(args.gen_bs)
+    return {"t_step": t_step, "t_gen": t_gen, "ref_steps": ref_steps, "ref_gen_batches": n, "ref_seconds": ref_steps * t_step + n * t_gen}
+
+
+def selftest_budget():
+    """Addendum-5 machinery: (i) plan_scale with fake timings (R = 50 x 1 + 100 x 0.5 = 100 s: budgets 100 / 200 / 50 give s = 1 / 2 / 0.5; far
+    outside the range it clips to 4 and 0.25; R <= 0 gives 4); (ii) ref_gen_batches(32) = 154 by hand; (iii) Brain.sc scales steps / items by s
+    and leaves them untouched at s = 1; (iv) bench_chip on a tiny CPU smoke model changes no weight, no grad, no RNG state and not the train/eval
+    mode, and returns positive timings with R = ref_steps t_step + ref_gen_batches t_gen."""
+    from argparse import Namespace
+    from types import SimpleNamespace
+    from peft import LoraConfig, get_peft_model
+    out = {}
+    for b, want in ((100, 1.0), (200, 2.0), (50, 0.5), (1e6, 4.0), (1, 0.25)):
+        assert plan_scale(b, 1.0, 0.5, 50, 100) == want, (b, want)
+    assert plan_scale(10, 0.0, 0.0, 50, 100) == 4.0
+    assert ref_gen_batches(32) == 154, ref_gen_batches(32)
+    sc = lambda x, n: Brain.sc(SimpleNamespace(scale=x), n)  # noqa: E731
+    assert [sc(1.0, n) for n in (4, 160, 30, 0)] == [4, 160, 30, 0] and all(type(sc(1.0, n)) is int for n in (4, 160))
+    assert [sc(2.0, n) for n in (4, 160, 30, 150, 0)] == [8, 320, 60, 300, 0] and [sc(0.25, n) for n in (4, 160, 2)] == [1, 40, 1] and sc(1.5, 4) == 6
+    out["plan_scale_ok"] = out["sc_ok"] = True
+    rng_state = torch.get_rng_state()
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        for _, m in lora_mods(pm):
+            m.lora_B["default"].weight.data.normal_(0, 0.05)
+        pm.eval()
+        w0 = {n: p.detach().clone() for n, p in pm.named_parameters()}
+        torch.manual_seed(123)
+        state = torch.get_rng_state()
+        b = bench_chip(L, pm, Namespace(bsz=4, gen_bs=4), 100)
+        assert torch.equal(torch.get_rng_state(), state), "bench_chip moved the RNG"
+        assert all(torch.equal(p.detach(), w0[n]) for n, p in pm.named_parameters()), "bench_chip changed a weight"
+        assert all(p.grad is None for p in pm.parameters()) and not pm.training
+        assert b["t_step"] > 0 and b["t_gen"] > 0 and b["ref_gen_batches"] == ref_gen_batches(4) and abs(b["ref_seconds"] - (100 * b["t_step"] + b["ref_gen_batches"] * b["t_gen"])) < 1e-9
+        out["bench"] = {k: round(v, 4) for k, v in b.items()}
+        return out
+    finally:
+        torch.set_rng_state(rng_state)
+
+
 # ------------------------------------------------------------------ the brain-like sleeper (arm ab and ablations)
 @dataclass
 class Item:
@@ -1144,6 +1244,7 @@ class Brain:
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         if args.arm == "ab_ob_twist":
             s.examples["twist"] = []
+        s.set_scale(1.0)
         s.conf, s.boosted = {}, set()  # ab_ob_guess: first-token confidence per probed item key (tonight); keys with rpe > 0.2 last night
         s.rng = random.Random(args.seed + 17)
         s.ob_rng = random.Random(args.seed + 29)  # OB_ARMS only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
@@ -1158,6 +1259,13 @@ class Brain:
     # ---- plumbing
     def mn(s, n):
         return min(n, 24) if s.a.smoke else n
+
+    def sc(s, n):  # addendum 5: a night's knob n at work scale s.scale (untouched at 1, so the reference night is exactly ab_ob's)
+        return n if s.scale == 1 or n <= 0 else max(1, round(n * s.scale))
+
+    def set_scale(s, scale):  # the night's work: dreams per item (and their generation length), item cap, REM chains, gist dreams
+        s.scale = scale
+        s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.sc(K), s.sc(s.a.max_dream_items), s.sc(s.a.rem_chains), s.sc(s.a.rem_gist), s.sc(400)
 
     def gen(s, prompts, max_new, base=True, sample=False, temp=0.8):
         if not prompts:
@@ -1289,13 +1397,13 @@ class Brain:
         s.night_qs = []  # questions kept by tonight's dreaming (ab_klctx leash)
         need = [it for it in E if it.dirty or it.seen_ment < it.nment or (it.fails and not (it.para or it.qa))]  # new, new mentions, or retry after a failed night
         need.sort(key=lambda it: (not it.upd, -it.days, -it.nment))
-        st["backlog"] = max(0, len(need) - a.max_dream_items)
-        need = need[:a.max_dream_items]
+        st["backlog"] = max(0, len(need) - s.cap_items)
+        need = need[:s.cap_items]
         prompts, meta = [], []
         for it in need:
             idx = s.diary.containing(it.subj, it.obj, d)[::-1][:4]
             ctx = s.diary.label(idx)
-            prompts.append(nrem_prompt(s.L, ctx, it))
+            prompts.append(nrem_prompt(s.L, ctx, it, s.k))
             meta.append((it, "dream", ctx))
             if it.upd:
                 u = it.upd[-1]
@@ -1304,7 +1412,7 @@ class Brain:
                 nctx = s.diary.label(sorted(set(idx[:3]) | {oi[-1]}))
                 prompts.append(now_prompt(s.L, nctx, u["shared"], u["new"], u["old"]))
                 meta.append((it, "now", nctx))
-        raw = s.gen(prompts, s.mn(400), sample=True)
+        raw = s.gen(prompts, s.mn(s.dream_new), sample=True)
         s.raw["dream"] = raw[:2]
         cp, cq = [], []  # (item, text) and (item, q, a, ctx, is_now)
         for (it, kind, ctx), txt in zip(meta, raw):
@@ -1316,7 +1424,7 @@ class Brain:
                     qas = [(f"What is linked to {it.subj}?", it.obj), (f"What is linked to {it.obj}?", it.subj)]
                 if not paras and not qas:
                     st["parse_fail"] += 1
-                for p in paras[:K]:
+                for p in paras[:s.k]:
                     st["paraphrases_gen"] += 1
                     if s.leaky(p):
                         st["dropped_test_leak"] += 1
@@ -1324,7 +1432,7 @@ class Brain:
                         st["dropped_missing_entities"] += 1
                     else:
                         cp.append((it, p.strip()))
-                for q, ans in qas[:K]:
+                for q, ans in qas[:s.k]:
                     st["qa_gen"] += 1
                     es = [e for e in ents if e.lower() in ans.lower()]
                     if s.leaky(q):
@@ -1526,11 +1634,11 @@ class Brain:
                     pairs.append((p, q, x))
         s.rng.shuffle(pairs)
         pairs.sort(key=lambda t: s.rem_done[frozenset((t[0].key, t[1].key))])
-        pairs = pairs[:a.rem_chains]
+        pairs = pairs[:s.cap_chains]
         gist = [it for it in E if it.days >= a.gist_min_days]
         s.rng.shuffle(gist)
         gist.sort(key=lambda it: s.gist_done[it.key])
-        gist = gist[:a.rem_gist]
+        gist = gist[:s.cap_gist]
         prompts = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs] + [gist_prompt(s.L, it.fact, it.days) for it in gist]
         raw = s.gen(prompts, s.mn(40), base=False, sample=True)
         s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(pairs):len(pairs) + 1])
@@ -1675,6 +1783,15 @@ class Brain:
         a, t0, rec = s.a, time.time(), {"night": d}
         s.raw, ph, tl = {}, {}, [time.time()]
         s.day = d
+        bench = None
+        if a.budget_scale is not None or a.night_budget_s is not None:  # addendum 5: tonight's work scale (otherwise s = 1 and nothing below differs from ab_ob)
+            ref_steps = sched[d - 1] if sched and d <= len(sched) else 150  # 150: run_af's default night when there is no schedule
+            if a.budget_scale is None:
+                bench = bench_chip(s.L, s.pm, a, ref_steps)
+                s.set_scale(plan_scale(a.night_budget_s, bench["t_step"], bench["t_gen"], ref_steps, bench["ref_gen_batches"]))
+                bench["budget_s"] = a.night_budget_s
+            else:
+                s.set_scale(a.budget_scale)
         track = a.arm in ADD4_ARMS and s.L.device.type == "cuda"  # peak GPU memory of the night and of its training phase (reads only; no RNG)
         pk = []
         if track:
@@ -1683,6 +1800,8 @@ class Brain:
         def lap(name):
             ph[name] = ph.get(name, 0) + time.time() - tl[0]
             tl[0] = time.time()
+        if bench:
+            lap("bench")
         rec["tagging"] = s.tag(d)
         s.refresh(d)
         lap("tag")
@@ -1704,6 +1823,11 @@ class Brain:
         steps = sched[d - 1] if sched and d <= len(sched) else min(300, 40 + 4 * n_act)
         if a.smoke:
             steps = min(steps, 16)
+        ref_n, steps = steps, s.sc(steps)  # the scaled night (the smoke cap applies to the reference night first)
+        if a.budget_scale is not None or a.night_budget_s is not None:
+            rec["budget"] = {"scale": s.scale, "steps": steps, "steps_ref": ref_n, "k": s.k, "max_dream_items": s.cap_items, "rem_chains": s.cap_chains,
+                             "rem_gist": s.cap_gist, "bench": bench}
+            s.log(f"[night {d}] budget {rec['budget']}")
         act = [it for it in E if not it.consol and (it.para or it.qa)]
         con = [it for it in cons if it.para or it.qa]
         cum = list(itertools.accumulate(s.prio(it) for it in act))
@@ -1996,7 +2120,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss and rotation unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation and time-budget unit checks and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
@@ -2004,6 +2128,8 @@ def main():
     ap.add_argument("--full-lr-small", type=float, default=5e-6, help="ab_ob_full_s only: the gentler lr (replaces --lr; otherwise identical to ab_ob_full)")
     ap.add_argument("--local-k-frac", type=float, default=None, help="ab_ob_local: plastic delta entries per night as a fraction of all delta entries (default: as many as there are LoRA parameters)")
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
+    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (ab_ob_b2: 2)")
+    ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or ab_ob_b2 pins s)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -2029,6 +2155,7 @@ def main():
         print(json.dumps({"local": {**selftest_elem(), **selftest_local()}}))
         print(json.dumps({"weighted": selftest_weighted()}))
         print(json.dumps({"rot": selftest_rot()}))
+        print(json.dumps({"budget": selftest_budget()}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -2054,6 +2181,14 @@ def main():
         ap.error("--local-k-frac must be in (0, 1]")
     if args.tag_batches < 1:
         ap.error("--tag-batches must be at least 1")
+    if args.arm == "ab_ob_b2" and args.budget_scale is None:
+        args.budget_scale = 2.0  # ab_ob with twice the night's work, unless --budget-scale says otherwise
+    if args.budget_scale is not None and not args.budget_scale > 0:
+        ap.error("--budget-scale must be positive")
+    if args.night_budget_s is not None and not args.night_budget_s > 0:
+        ap.error("--night-budget-s must be positive")
+    if args.budget_scale is not None and args.night_budget_s is not None:
+        log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
@@ -2069,7 +2204,7 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule")},
+    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in ("budget_scale", "night_budget_s") and v is None)},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True}
 
     def dump(final):
