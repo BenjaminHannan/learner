@@ -26,7 +26,8 @@ from typing import Iterable, Optional
 
 from creative import fewshot as F
 from creative import rules_real as R
-from creative.programs import CONSTS, N_NUM, R0, Try, cone, run, train_form
+from custom_io.models import progparse as pp
+from creative.programs import CONSTS, N_NUM, N_RES, R0, Try, cone, run, train_form
 
 DATA = 'creative/data/c2'
 OPS_DSL = (1, 2, 3, 4, 5, 6, 7)             # ADD SUB MUL DIV MOD MIN MAX
@@ -306,3 +307,96 @@ def kind_overlap(rows, kinds=R.HELD_OUT, practised=R.PRACTISED) -> dict:
     out['any_held_out_same_function'] = sum(
         any(_same_on_domain(k, p, r) for k in kinds for p in R.PARAMS[k] if _fits(k, p, r['dream']['xs'], r['dream']['ys'])) for r in rows) / max(n, 1)
     return out
+
+
+# ---- round 7 (comp4): composition dreams from the model's own programs ----
+def source_program(rec):
+    """-> (steps [(op, a, b)], ans) of a record's forced program with its query slot renamed to the sentinel 'x' (None if it reads any other prompt number or has no cache entry)."""
+    c = pp._CACHE.get(rec['id'])
+    if c is None:
+        return None
+    q = F.parse(rec['prompt'])['q_slot']
+    ren = lambda s: 'x' if s == q else s
+    steps = [(o, ren(a[0]), ren(b[0])) for o, a, b, _v in c['prog']]
+    if any(isinstance(s, int) and s < N_NUM for _o, a, b in steps for s in (a, b)) or c['ans'][0] < R0:
+        return None
+    return steps, c['ans'][0]
+
+
+def chain(p1, p2, q_slot):
+    """P1 then P2: P2's reads of the query go to P1's answer slot, P2's result slots shift by len(P1). -> Try (None if more than N_RES steps)."""
+    (s1, a1), (s2, a2) = p1, p2
+    if len(s1) + len(s2) > N_RES:
+        return None
+    sh = len(s1)
+    fix1 = lambda s: q_slot if s == 'x' else s
+    fix2 = lambda s: a1 if s == 'x' else (s + sh if s >= R0 else s)
+    return Try.make([(o, fix1(a), fix1(b)) for o, a, b in s1] + [(o, fix2(a), fix2(b)) for o, a, b in s2], a2 + sh)
+
+
+def _alone(p, q_slot):
+    return Try.make([(o, q_slot if a == 'x' else a, q_slot if b == 'x' else b) for o, a, b in p[0]], p[1])
+
+
+def _outs(t, xs, q_slot):
+    o = []
+    for x in xs:
+        vals, valid = run([0] * q_slot + [x], t)
+        o.append(vals[t.ans] if valid[t.ans] else None)
+    return o
+
+
+def composition_rows(warm_recs, w_recs, seed: int, night: int, avoid_prompts: Iterable[str] = (), *, data: Optional[str] = DATA, check_real: bool = True, requested: Optional[int] = None):
+    """Round 7 (comp4): chained-program dreams from the model's own programs (warm-up records + this night's W records). Count = min(requested, len(w_recs) // 2) (requested None = the cap).
+    Ordered pairs (P1, P2) are drawn with a seeded rng; the chain runs on x in R.DOMAIN (3 examples + query, as real C2 prompts), every output must be an int in 0..MAX_OUT, not a constant slot value on an example, >= 2 distinct example outputs,
+    not the identity, and differ from P1's and P2's own function on those inputs; the prompt / example-pair set must not match any warm / pool / dev / extra / earlier-dream prompt. The label is the chained program (forced slot ids).
+    Reads no answer key and no kind. -> (records, info = dict(count, requested, cap, by_length, warm_only, with_w, sources, draws))."""
+    cap = len(w_recs) // 2
+    n = cap if requested is None else min(cap, requested)
+    srcs = []
+    for origin, recs in (('warm', warm_recs), ('w', w_recs)):
+        for r in recs:
+            p = source_program(r)
+            if p is not None and p not in [s[0] for s in srcs]:
+                srcs.append((p, origin))
+    avoid_p, avoid_k = real_keys(data=data) if check_real else (set(), set())
+    avoid_p = set(avoid_p) | set(avoid_prompts)
+    for pr in list(avoid_prompts):
+        pp_ = F.parse(pr)
+        if pp_ is not None:
+            avoid_k.add(_example_key(zip(pp_['xs'], pp_['ys'])))
+    rng = random.Random(f'comp7|{seed}|{night}')
+    q_slot, out, seen_p, seen_k, draws = 2 * K_EX, [], set(), set(), 0
+    info = dict(count=0, requested=requested, cap=cap, by_length={}, warm_only=0, with_w=0, sources=len(srcs), sources_w=sum(o == 'w' for _p, o in srcs), draws=0)
+    while len(out) < n and srcs and draws < 300 * n + 1000:
+        draws += 1
+        (p1, o1), (p2, o2) = rng.choice(srcs), rng.choice(srcs)
+        t = chain(p1, p2, q_slot)
+        if t is None or len(cone(t) or ()) != len(p1[0]) + len(p2[0]):
+            continue
+        xs_all = rng.sample(R.DOMAIN, K_EX + 1)
+        outs = _outs(t, xs_all, q_slot)
+        if any(o is None or not 0 <= o <= MAX_OUT for o in outs) or any(y in CONST_VALUES for y in outs[:-1]) or len(set(outs[:-1])) < 2 or outs == xs_all:
+            continue
+        if outs in (_outs(_alone(p1, q_slot), xs_all, q_slot), _outs(_alone(p2, q_slot), xs_all, q_slot)):
+            continue                                                                  # degenerate: the chain is P1 or P2 on these inputs
+        xs, q, ys, ans = xs_all[:K_EX], xs_all[K_EX], outs[:-1], outs[-1]
+        prompt = R.prompt_of(xs, ys, q)
+        key = _example_key(zip(xs, ys))
+        if prompt in avoid_p or prompt in seen_p or key in avoid_k or key in seen_k:
+            continue
+        v = F.verdict(F.parse(prompt), t)
+        if v[0] != 'accept' or v[2] != ans:
+            continue
+        seen_p.add(prompt)
+        seen_k.add(key)
+        row = dict(id=f'comp:{seed}:{night}:{len(out):05d}', prompt=prompt, answer=str(ans), accepted=[str(ans)], family='fewshot_number_rule', level=7, stage=9, variant='', steps=[], nums=F.parse(prompt)['nums'])
+        rec = F._record(row, t, 'C7', 0)
+        rec['nums'] = row['nums']
+        steps, a_slot = train_form(t)
+        rec['dream'] = dict(steps=[tuple(s) for s in steps], ans=a_slot, length=len(steps), xs=xs, ys=ys, q=q)
+        out.append(rec)
+        info['by_length'][len(steps)] = info['by_length'].get(len(steps), 0) + 1
+        info['warm_only' if o1 == o2 == 'warm' else 'with_w'] += 1
+    info.update(count=len(out), draws=draws)
+    return out, info

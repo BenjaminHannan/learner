@@ -114,8 +114,8 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
                  dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False,
-                 nights: int = 2, eval_each_night: bool = False, hindsight: bool = False, op_entropy: bool = False) -> dict[str, Any]:
-    """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. hindsight (round 6): add hindsight_records (no-fit questions, relabelled tries) to each night's records, capped at the W count. op_entropy (report only): step-1 op entropy on the first 200 pool puzzles for Nprime and each W{k} into info['op_entropy']. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
+                 nights: int = 2, eval_each_night: bool = False, hindsight: bool = False, op_entropy: bool = False, composition: bool = False) -> dict[str, Any]:
+    """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. hindsight (round 6): add hindsight_records (no-fit questions, relabelled tries) to each night's records, capped at the W count. composition (round 7): add creative/dream2.composition_rows (chains of the warm-up's and this night's W programs, count capped at half the W count) after the hindsight records. op_entropy (report only): step-1 op entropy on the first 200 pool puzzles for Nprime and each W{k} into info['op_entropy']. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
     dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
     dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
@@ -221,10 +221,17 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             tries, fit1, fit, drawn = c2_stuck.search(base, pool, vocab, device, seeds[night], Tt, n1, n2)
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
             ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
+            Wonly = list(Wn)
             if hindsight:
                 Hn, ninfo["hindsight"] = hindsight_records(pool, tries, cn, seed + night, night, cap=len(Wn))
                 Wn = Wn + Hn
                 info.setdefault("hindsight", {})[str(night)] = ninfo["hindsight"]
+                save()
+            if composition:
+                from creative import dream2 as D
+                Cn, ninfo["composition"] = D.composition_rows(warm_rows, Wonly, seed + night, night, [r["prompt"] for r in pool])
+                Wn = Wn + Cn
+                info.setdefault("composition", {})[str(night)] = ninfo["composition"]
                 save()
             Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps, dream2_strict, dream2_occam)
             if dinfo:

@@ -284,3 +284,54 @@ def test_round6_end_to_end_tiny(tmp_path):
     info = CS.run_creative(str(tmp_path / 'h'), ck, sk, None, device='cpu', seed=0, pool_limit=6, dev_limit=4, n1=2, n2=2, T=1.0, updates_cap=2, nights=2, eval_each_night=True, hindsight=True, op_entropy=True)
     assert info.get('stop') or ('Nprime' in info['op_entropy'] and 'W1' in info['op_entropy'] and all(v >= 0 for v in info['op_entropy'].values()))
     assert 'hindsight' in info and MS.op_entropy(ck, R.load_split(D.DATA, 'pool')[:6], 'cpu') >= 0       # tiny model finds no W records (cap 0), so check the entropy function directly
+
+
+def _prog_rec(rid, steps, ans, q=6):
+    from creative import fewshot as F
+    prompt = 'Examples: 3 -> 0; 4 -> 0; 5 -> 0. Now 6 -> ?'
+    F.register_targets(rid, F.parse(prompt)['nums'], steps, ans)
+    return dict(id=rid, prompt=prompt)
+
+
+def test_composition_chain_and_rows():
+    from creative import dream2 as D
+    from creative.programs import Try, run
+    C1, C2_, ADD_, MUL_ = R0 - 4, R0 - 3, 1, 3                # constants 1 2 10 100 sit at R0-4..R0-1
+    p1 = ([(ADD_, 'x', C1), (ADD_, R0, C2_)], R0 + 1)         # x + 1 + 2 = x + 3
+    p2 = ([(MUL_, 'x', C2_)], R0)                              # x * 2
+    t = D.chain(p1, p2, 6)
+    for x in (3, 7, 12, 29):
+        vals, valid = run([0] * 6 + [x], t)
+        assert valid[t.ans] and vals[t.ans] == (x + 3) * 2
+    assert D.chain(([(ADD_, 'x', C1)] * 4, R0 + 3), ([(ADD_, 'x', C1)] * 4, R0 + 3), 6) is None          # 8 steps > 7
+    warm = [_prog_rec('t:w1', [(ADD_, 6, C1), (ADD_, R0, C2_)], R0 + 1), _prog_rec('t:w2', [(MUL_, 6, C2_)], R0)]
+    wr = [_prog_rec(f't:W{i}', [(ADD_, 6, C1)], R0) for i in range(4)]
+    recs, info = D.composition_rows(warm, wr, 0, 1, check_real=False)
+    assert info['cap'] == 2 and len(recs) == info['count'] == 2 == sum(info['by_length'].values()) and info['warm_only'] + info['with_w'] == 2
+    assert D.composition_rows(warm, wr, 0, 1, check_real=False, requested=1)[1]['count'] == 1
+    assert D.composition_rows(warm, wr, 0, 1, check_real=False)[0] == recs and D.composition_rows(warm, wr, 1, 1, check_real=False)[0] != recs   # seeded
+    for r in recs:
+        d = r['dream']
+        assert 'kind' not in r and all(0 <= y <= 999 for y in d['ys']) and 0 <= int(r['answer']) <= 999 and len(d['xs']) == 3
+        tt = Try.make(d['steps'], d['ans'])
+        for x, y in zip(d['xs'] + [d['q']], d['ys'] + [int(r['answer'])]):
+            vals, valid = run([0] * 6 + [x], tt)
+            assert valid[tt.ans] and vals[tt.ans] == y
+    big, binfo = D.composition_rows(warm, wr[:1], 0, 1, check_real=False)
+    assert big == [] and binfo['cap'] == 0
+
+
+def test_round7_arm_flags_and_verdict():
+    assert inspect.signature(CS.run_creative).parameters['composition'].default is False
+    assert MS.arm_kwargs('comp4', MS.SIZES, round_=7) == dict(nights=4, eval_each_night=True, composition=True, op_entropy=True) and 'comp4' in MS.ARMS
+    A = lambda h, aff=0.06, e=0.9, hm=0.0: dict(hard=h, easy=e, harm=hm, affine=aff, sq_plus=0.02)
+    base, n4 = A(0.10), A(0.15)
+    v = MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.20)))
+    assert v['pass'] and not v['proved_wrong'] and any('sq_plus' in l for l in v['lines'])
+    assert not MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.20, aff=0.04)))['pass']
+    assert not MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.20, e=0.80)))['pass']
+    assert not MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.20, hm=0.03)))['pass']
+    v = MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.16)))
+    assert v['proved_wrong'] and not v['pass']
+    v = MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.18)))
+    assert not v['pass'] and not v['proved_wrong'] and any('BETWEEN' in l for l in v['lines'])

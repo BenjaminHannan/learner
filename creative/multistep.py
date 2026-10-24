@@ -21,12 +21,13 @@ EASY = ('square', 'last_digit')
 SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
 OCCAM_ARMS = ('occam5', 'occam5_strict')
 DEEP_ARMS = ('occam_deep',)
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4')
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4', 'comp4')
 FOUND_LENGTHS = (1, 2, 3, 4)
 ROUND3_ARMS = ('base', 'occam_deep')
 ROUND4_ARMS = ('base', 'nights4')
 ROUND5_ARMS = ('base', 'nights4', 'nights8')
 ROUND6_ARMS = ('base', 'nights4', 'hind4')
+ROUND7_ARMS = ('base', 'nights4', 'comp4')
 ROUND2_ARMS = ('base', 'occam5', 'occam5_strict', 'oracle')
 OCCAM_SIZES = dict(lr=1e-3, visits=4)         # round 2 (PREREG): lr 1e-3, 4 visits
 OCCAM_SHARDS = 128                             # fixed (not the core count): the cache key / stream must not depend on the box
@@ -52,6 +53,8 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(nights=8, eval_each_night=True)
     if arm == 'hind4':       # round 6: nights4 + hindsight records for no-fit questions, + report-only step-1 op entropy
         return dict(nights=4, eval_each_night=True, hindsight=True, op_entropy=True)
+    if arm == 'comp4':       # round 7: nights4 + composition dreams (chains of the model's own programs), + report-only step-1 op entropy
+        return dict(nights=4, eval_each_night=True, composition=True, op_entropy=True)
     if arm == 'dream2':
         return dict(dream2=k, dream2_max_steps=2)
     if arm == 'school5':
@@ -275,6 +278,26 @@ def verdict_round6(arms: dict, curve: dict | None = None) -> dict:
     return out
 
 
+def verdict_round7(arms: dict, curve: dict | None = None) -> dict:
+    """PREREG Round 7. PASS: comp4 Hard >= nights4 + 4 points AND comp4 affine >= 5%, Easy within 5 of base, harm <= 2 points. PROVED WRONG: comp4 Hard <= nights4 + 1. Else between the marks. sq_plus (control kind) is reported separately."""
+    pts = lambda x: round(100.0 * x, 9)
+    b, n4, x = arms['base'], arms['nights4'], arms['comp4']
+    d4, aff = pts(x['hard'] - n4['hard']), x.get('affine')
+    c = dict(hard_ge_nights4_plus_4=d4 >= 4, affine_ge_5=aff is not None and pts(aff) >= 5, easy_ok=pts(x['easy']) >= pts(b['easy']) - 5, harm_ok=pts(x['harm']) <= 2)
+    out = dict(gain_vs_nights4_points=d4, pass_detail=c, **{'pass': all(c.values())}, proved_wrong=d4 <= 1, sq_plus=x.get('sq_plus'), lines=[])
+    out['lines'].append(('PASS: comp4' if out['pass'] else 'NO PASS: comp4') + f" (Hard {pts(x['hard']):.1f}% = nights4 {pts(n4['hard']):.1f} + {d4:.1f}; affine {'n/a' if aff is None else f'{pts(aff):.1f}%'}; Easy {pts(x['easy']):.1f} vs base {pts(b['easy']):.1f}; harm {pts(x['harm']):.1f} pts; failed: {[k for k, v in c.items() if not v]})")
+    out['lines'].append(f"sq_plus (control, reported separately): comp4 {x.get('sq_plus')} vs nights4 {n4.get('sq_plus')}")
+    if out['proved_wrong']:
+        out['lines'].append('PROVED WRONG: comp4 Hard <= nights4 + 1 points')
+    elif not out['pass']:
+        out['lines'].append('BETWEEN THE MARKS: comp4 is not proved wrong but misses a pass mark')
+    if curve:
+        out['hard_by_night'] = curve
+        for a, cv in curve.items():
+            out['lines'].append(f"CURVE {a}: Hard after night " + ', '.join(f"{n}: {pts(h):.1f}%" for n, h in cv.items()))
+    return out
+
+
 def aggregate(per_seed: dict) -> dict:
     """{seed: {arm: eval dict}} -> {arm: dict(per_seed, mean)}."""
     arms = sorted({a for s in per_seed.values() for a in s}, key=ARMS.index)
@@ -307,7 +330,7 @@ def worker(a):
     ev['seconds'] = round(time.time() - t0, 1)
     ev['school'] = info.get('school')
     ev['night_scores'] = info.get('night_scores')
-    ev['hindsight'], ev['op_entropy'] = info.get('hindsight'), info.get('op_entropy')
+    ev['hindsight'], ev['op_entropy'], ev['composition'] = info.get('hindsight'), info.get('op_entropy'), info.get('composition')
     json.dump(ev, open(os.path.join(d, 'arm_result.json'), 'w'), indent=1, default=float)
     log('ARM DONE', d, 'hard', round(ev['hard'], 4), 'easy', round(ev['easy'], 4))
 
@@ -352,7 +375,7 @@ def main():
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--seeds', type=int, nargs='+', default=[0, 1])
     ap.add_argument('--arms', nargs='+', default=None, choices=ARMS)
-    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6), help='6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
+    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6, 7), help='7 = composition dreams: base nights4 comp4; 6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
     ap.add_argument('--compare', default=None, help='round 3: round 2 results.json (for the depth-helps line: its occam5_strict Hard)')
     ap.add_argument('--parallel', type=int, default=1)
     ap.add_argument('--threads', type=int, default=2, help='OMP threads per arm subprocess')
@@ -369,7 +392,7 @@ def main():
     os.makedirs(root, exist_ok=True)
     r2 = a.round == 2
     r3 = a.round == 3
-    arms = [x for x in ARMS if x in (a.arms or (ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
+    arms = [x for x in ARMS if x in (a.arms or (ROUND7_ARMS if a.round == 7 else ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
     ncpu = os.cpu_count() or 1
     per_seed, overlap, failed = {}, {}, []
     for seed in a.seeds:
@@ -414,7 +437,10 @@ def main():
     agg = aggregate(per_seed)
     res = dict(prereg='design/v1/multistep/PREREG.md', round=a.round, smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
                report_only_arms=list(REPORT_ONLY), failed_arms=failed)
-    if a.round == 6 and all(x in agg for x in ROUND6_ARMS):
+    if a.round == 7 and all(x in agg for x in ROUND7_ARMS):
+        res['verdict'] = verdict_round7({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm'], affine=v['mean']['by_kind'].get('affine'), sq_plus=v['mean']['by_kind'].get('sq_plus')) for k, v in agg.items()}, night_curve(agg))
+        res['composition_report'] = {str(sd): dict(composition=r.get('composition'), op_entropy=r.get('op_entropy')) for sd, r in agg['comp4']['per_seed'].items()}
+    elif a.round == 6 and all(x in agg for x in ROUND6_ARMS):
         res['verdict'] = verdict_round6({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()}, night_curve(agg))
         res['hindsight_report'] = {str(sd): dict(hindsight=r.get('hindsight'), op_entropy=r.get('op_entropy')) for sd, r in agg['hind4']['per_seed'].items()}
     elif a.round == 5 and all(x in agg for x in ROUND5_ARMS):
