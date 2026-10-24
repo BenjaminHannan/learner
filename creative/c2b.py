@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from creative import blind_baseline, c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, fewshot, legal, rules_real as R, sleep, stones
 from creative.c2_keep import MULTI
+from creative.programs import cone
 from creative.pilot import skills_eval
 from custom_io.models import progparse as pp
 
@@ -67,6 +68,31 @@ def failing_records(pool, tries, counts, seed, night):
             Rr.append(fewshot._record(row, t, f'R{night}', k))
             Hh.append(fewshot._record(row, t, f'H{night}', k, prompt=fewshot.relabel_prompt(row['prompt'], p, t)))
     return Rr, Hh, short
+
+
+def hindsight_records(pool, tries, counts, seed, night, cap):
+    """Round 6 (hind4): hindsight records for questions search found NO fitting try for (id not in counts). Up to 2 distinct tries that run on every example (the same rule as R/H above),
+    prefer >= 2 real steps, example outputs rewritten to what each computes, answered by its own output. Shuffled, cut at `cap`. Reads no key and no kind (kind only in the info dict).
+    -> (records, info = dict(records, by_kind, multi_step_records, multi_step_share, questions))."""
+    rng = random.Random(seed)
+    out, qs = [], set()
+    for row, tr in zip(pool, tries):
+        if row['id'] in counts:
+            continue
+        p = fewshot.parse(row['prompt'])
+        pick = fewshot._distinct(p, tr, rng, 10 ** 6, lambda rules, full: rules[0] == 'accept' and full[0] == 'reject')
+        pick = [(t, fewshot.relabel_prompt(row['prompt'], p, t)) for t in pick]
+        pick = [(t, q) for t, q in pick if q is not None]
+        pick.sort(key=lambda x: len(cone(x[0])) < 2)                                     # stable: multi-step first, random order within
+        for k, (t, q) in enumerate(pick[:2]):
+            out.append((fewshot._record(row, t, f'HS{night}', k, prompt=q), len(cone(t)) >= 2, row.get('kind')))
+            qs.add(row['id'])
+    rng.shuffle(out)
+    out = out[:cap]
+    kinds = sorted({k for _, _, k in out if k is not None})
+    multi = sum(m for _, m, _ in out)
+    return [r for r, _, _ in out], dict(records=len(out), by_kind={k: sum(1 for _, _, x in out if x == k) for k in kinds}, multi_step_records=multi,
+                                        multi_step_share=multi / len(out) if out else 0.0, questions=len({r['source'] for r, _, _ in out}))
 
 
 def night_info(pool, drawn, recs, counts, fit1=None, fit=None):

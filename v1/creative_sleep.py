@@ -19,7 +19,7 @@ import torch
 
 from creative import c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, sleep, stones
 from creative import rules_real as R
-from creative.c2b import DATA, LR, N1, N2, VISITS, T_GRID, load_recs, night_info, save_recs
+from creative.c2b import DATA, LR, N1, N2, VISITS, T_GRID, hindsight_records, load_recs, night_info, save_recs
 from custom_io.data import load_rows
 from v1.joint import clone_model
 
@@ -114,8 +114,8 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
                  dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False,
-                 nights: int = 2, eval_each_night: bool = False) -> dict[str, Any]:
-    """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
+                 nights: int = 2, eval_each_night: bool = False, hindsight: bool = False, op_entropy: bool = False) -> dict[str, Any]:
+    """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. hindsight (round 6): add hindsight_records (no-fit questions, relabelled tries) to each night's records, capped at the W count. op_entropy (report only): step-1 op entropy on the first 200 pool puzzles for Nprime and each W{k} into info['op_entropy']. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
     dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
     dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
@@ -221,6 +221,11 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             tries, fit1, fit, drawn = c2_stuck.search(base, pool, vocab, device, seeds[night], Tt, n1, n2)
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
             ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
+            if hindsight:
+                Hn, ninfo["hindsight"] = hindsight_records(pool, tries, cn, seed + night, night, cap=len(Wn))
+                Wn = Wn + Hn
+                info.setdefault("hindsight", {})[str(night)] = ninfo["hindsight"]
+                save()
             Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps, dream2_strict, dream2_occam)
             if dinfo:
                 info.setdefault("dream2", {})[str(night)] = dinfo
@@ -248,6 +253,13 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             from creative.multistep import evaluate_w2
             ev = evaluate_w2(P(f"W{night}.pt"), None, device, limit=dev_limit)
             info["night_scores"][str(night)] = {x: ev[x] for x in ("hard", "easy", "by_kind")}
+            save()
+        if op_entropy:
+            from creative.multistep import op_entropy as OE
+            oe = info.setdefault("op_entropy", {})
+            for nm in ("Nprime", f"W{night}"):
+                if nm not in oe:
+                    oe[nm] = OE(P(f"{nm}.pt"), pool, device)
             save()
     json.dump(dict(T=Tt, base5=setup["base5"]), open(P("complete.json"), "w"))
     log("CREATIVE DONE", out)

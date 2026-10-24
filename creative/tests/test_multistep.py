@@ -231,3 +231,56 @@ def test_round4_verdict():
     assert v['pass'] and not v['proved_wrong'] and any('CURVE' in l for l in v['lines'])
     v = MS.verdict_round4(dict(base=dict(hard=0.11, easy=0.9, harm=0.0), nights4=dict(hard=0.12, easy=0.9, harm=0.0)))
     assert not v['pass'] and v['proved_wrong']
+
+
+def _hs_pool():
+    from creative.sampler import TryRec
+    rows = [dict(id=f'q{i}', prompt='3 -> 7; 5 -> 11. Now 4 -> ?', nums=[3, 7, 5, 11, 4]) for i in range(5)]          # no 'kind'
+    one = TryRec(Try.make([(1, 4, 4)], R0))                                    # x+x: runs, does not fit (7 != 6)
+    two = TryRec(Try.make([(1, 4, 4), (1, R0, 4)], R0 + 1))                    # 3x: runs, 2 steps
+    return rows, [[one, two] for _ in rows]
+
+
+def test_hindsight_records_reads_no_kind_skips_counts_and_caps():
+    from creative.c2b import hindsight_records
+    rows, tries = _hs_pool()
+    recs, info = hindsight_records(rows, tries, {'q0': 1}, 0, 3, cap=100)
+    assert recs and all(not r['id'].startswith('HS3:q0') and r['id'].startswith('HS3:') and 'kind' not in r for r in recs)
+    assert info['records'] == len(recs) and info['by_kind'] == {} and info['questions'] == 4
+    assert all(r['prompt'] != rows[0]['prompt'] for r in recs)               # example outputs rewritten
+    assert 0 < info['multi_step_share'] <= 1
+    capped, ci = hindsight_records(rows, tries, {}, 0, 3, cap=3)
+    assert len(capped) == 3 == ci['records']
+    assert hindsight_records(rows, tries, {}, 0, 3, cap=3)[0] == capped      # seeded
+    r2, i2 = hindsight_records([dict(r, kind='affine') for r in rows], tries, {}, 0, 3, cap=100)
+    assert i2['by_kind'] == dict(affine=len(r2))
+
+
+def test_round6_arm_flags_and_verdict():
+    sig = inspect.signature(CS.run_creative).parameters
+    assert sig['hindsight'].default is False and sig['op_entropy'].default is False
+    assert MS.arm_kwargs('hind4', MS.SIZES, round_=6) == dict(nights=4, eval_each_night=True, hindsight=True, op_entropy=True) and 'hind4' in MS.ARMS
+    A = lambda h, e=0.9, hm=0.0: dict(hard=h, easy=e, harm=hm)
+    base = A(0.10)
+    v = MS.verdict_round6(dict(base=base, nights4=A(0.15), hind4=A(0.20)))
+    assert v['pass'] and not v['proved_wrong']
+    assert not MS.verdict_round6(dict(base=base, nights4=A(0.15), hind4=A(0.20, e=0.80)))['pass']
+    assert not MS.verdict_round6(dict(base=base, nights4=A(0.15), hind4=A(0.20, hm=0.03)))['pass']
+    v = MS.verdict_round6(dict(base=base, nights4=A(0.15), hind4=A(0.16)))
+    assert v['proved_wrong'] and not v['pass']
+    v = MS.verdict_round6(dict(base=base, nights4=A(0.15), hind4=A(0.18)))
+    assert not v['pass'] and not v['proved_wrong'] and any('BETWEEN' in l for l in v['lines'])
+
+
+def test_round5_verdict():
+    A = lambda h: dict(hard=h, easy=0.9, harm=0.0)
+    assert MS.verdict_round5(dict(base=A(0.10), nights4=A(0.18), nights8=A(0.23)))['pass']
+    v = MS.verdict_round5(dict(base=A(0.10), nights4=A(0.18), nights8=A(0.19)))
+    assert v['plateau'] and not v['pass']
+
+
+def test_round6_end_to_end_tiny(tmp_path):
+    ck, sk = _tiny_workdir(tmp_path)
+    info = CS.run_creative(str(tmp_path / 'h'), ck, sk, None, device='cpu', seed=0, pool_limit=6, dev_limit=4, n1=2, n2=2, T=1.0, updates_cap=2, nights=2, eval_each_night=True, hindsight=True, op_entropy=True)
+    assert info.get('stop') or ('Nprime' in info['op_entropy'] and 'W1' in info['op_entropy'] and all(v >= 0 for v in info['op_entropy'].values()))
+    assert 'hindsight' in info and MS.op_entropy(ck, R.load_split(D.DATA, 'pool')[:6], 'cpu') >= 0       # tiny model finds no W records (cap 0), so check the entropy function directly
