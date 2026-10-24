@@ -1,0 +1,813 @@
+{
+ "prereg": "design/v1/multistep/PREREG.md",
+ "round": 6,
+ "smoke": false,
+ "seeds": [
+  0,
+  1
+ ],
+ "sizes": {
+  "school_n": 40000,
+  "nightly": 1000,
+  "visits": 2,
+  "lr": 0.0003
+ },
+ "hard_kinds": [
+  "affine",
+  "sq_plus",
+  "double_add"
+ ],
+ "easy_kinds": [
+  "square",
+  "last_digit"
+ ],
+ "arms": {
+  "base": {
+   "per_seed": {
+    "0": {
+     "by_kind": {
+      "affine": 0.0,
+      "double_add": 0.12418300653594772,
+      "last_digit": 0.6535947712418301,
+      "sq_plus": 0.21568627450980393,
+      "square": 0.974025974025974
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.21568627450980393,
+      "last_digit": 0.7647058823529411,
+      "sq_plus": 0.23529411764705882,
+      "square": 0.9607843137254902
+     },
+     "labelled_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.0784313725490196,
+      "last_digit": 0.5980392156862745,
+      "sq_plus": 0.20588235294117646,
+      "square": 0.9805825242718447
+     },
+     "hard": 0.11328976034858389,
+     "easy": 0.8138103726339021,
+     "skills5": 0.965,
+     "model": "W2.pt",
+     "stop": null,
+     "base5": 0.98,
+     "skills_harm_pts": 1.5,
+     "seconds": 541.9,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.06318082788671024,
+       "easy": 0.8432645785586962,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.06535947712418301,
+        "last_digit": 0.7254901960784313,
+        "sq_plus": 0.12418300653594772,
+        "square": 0.961038961038961
+       }
+      },
+      "2": {
+       "hard": 0.11328976034858389,
+       "easy": 0.8138103726339021,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.12418300653594772,
+        "last_digit": 0.6535947712418301,
+        "sq_plus": 0.21568627450980393,
+        "square": 0.974025974025974
+       }
+      }
+     }
+    },
+    "1": {
+     "by_kind": {
+      "affine": 0.0,
+      "double_add": 0.1437908496732026,
+      "last_digit": 0.6339869281045751,
+      "sq_plus": 0.13071895424836602,
+      "square": 0.948051948051948
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.19607843137254902,
+      "last_digit": 0.7254901960784313,
+      "sq_plus": 0.21568627450980393,
+      "square": 0.9215686274509803
+     },
+     "labelled_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.11764705882352941,
+      "last_digit": 0.5882352941176471,
+      "sq_plus": 0.08823529411764706,
+      "square": 0.9611650485436893
+     },
+     "hard": 0.09150326797385622,
+     "easy": 0.7910194380782616,
+     "skills5": 0.965,
+     "model": "W2.pt",
+     "stop": null,
+     "base5": 0.985,
+     "skills_harm_pts": 2.0,
+     "seconds": 570.8,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.0479021716213367,
+       "easy": 0.8629573041337747,
+       "by_kind": {
+        "affine": 0.006451612903225806,
+        "double_add": 0.0915032679738562,
+        "last_digit": 0.7908496732026143,
+        "sq_plus": 0.0457516339869281,
+        "square": 0.935064935064935
+       }
+      },
+      "2": {
+       "hard": 0.09150326797385622,
+       "easy": 0.7910194380782616,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.1437908496732026,
+        "last_digit": 0.6339869281045751,
+        "sq_plus": 0.13071895424836602,
+        "square": 0.948051948051948
+       }
+      }
+     }
+    }
+   },
+   "mean": {
+    "by_kind": {
+     "affine": 0.0,
+     "double_add": 0.13398692810457516,
+     "last_digit": 0.6437908496732025,
+     "sq_plus": 0.17320261437908496,
+     "square": 0.961038961038961
+    },
+    "hard": 0.10239651416122006,
+    "easy": 0.8024149053560818,
+    "harm": 0.017500000000000016,
+    "n_seeds": 2
+   },
+   "report_only": false
+  },
+  "nights4": {
+   "per_seed": {
+    "0": {
+     "by_kind": {
+      "affine": 0.0,
+      "double_add": 0.20261437908496732,
+      "last_digit": 0.6339869281045751,
+      "sq_plus": 0.3137254901960784,
+      "square": 0.9675324675324676
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.19607843137254902,
+      "last_digit": 0.6274509803921569,
+      "sq_plus": 0.37254901960784315,
+      "square": 0.9803921568627451
+     },
+     "labelled_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.20588235294117646,
+      "last_digit": 0.6372549019607843,
+      "sq_plus": 0.28431372549019607,
+      "square": 0.9611650485436893
+     },
+     "hard": 0.17211328976034856,
+     "easy": 0.8007596978185214,
+     "skills5": 0.97,
+     "model": "W4.pt",
+     "stop": null,
+     "base5": 0.98,
+     "skills_harm_pts": 1.0,
+     "seconds": 955.5,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.0588235294117647,
+       "easy": 0.8270520329343858,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.0718954248366013,
+        "last_digit": 0.7320261437908496,
+        "sq_plus": 0.10457516339869281,
+        "square": 0.922077922077922
+       }
+      },
+      "2": {
+       "hard": 0.12418300653594772,
+       "easy": 0.8497793056616586,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.09803921568627451,
+        "last_digit": 0.7320261437908496,
+        "sq_plus": 0.27450980392156865,
+        "square": 0.9675324675324676
+       }
+      },
+      "3": {
+       "hard": 0.13940543959519291,
+       "easy": 0.8269247092776504,
+       "by_kind": {
+        "affine": 0.006451612903225806,
+        "double_add": 0.1503267973856209,
+        "last_digit": 0.6928104575163399,
+        "sq_plus": 0.26143790849673204,
+        "square": 0.961038961038961
+       }
+      },
+      "4": {
+       "hard": 0.17211328976034856,
+       "easy": 0.8007596978185214,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.20261437908496732,
+        "last_digit": 0.6339869281045751,
+        "sq_plus": 0.3137254901960784,
+        "square": 0.9675324675324676
+       }
+      }
+     }
+    },
+    "1": {
+     "by_kind": {
+      "affine": 0.0,
+      "double_add": 0.24836601307189543,
+      "last_digit": 0.7189542483660131,
+      "sq_plus": 0.24836601307189543,
+      "square": 0.961038961038961
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.19607843137254902,
+      "last_digit": 0.7058823529411765,
+      "sq_plus": 0.2549019607843137,
+      "square": 0.9215686274509803
+     },
+     "labelled_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.27450980392156865,
+      "last_digit": 0.7254901960784313,
+      "sq_plus": 0.24509803921568626,
+      "square": 0.9805825242718447
+     },
+     "hard": 0.1655773420479303,
+     "easy": 0.839996604702487,
+     "skills5": 0.97,
+     "model": "W4.pt",
+     "stop": null,
+     "base5": 0.985,
+     "skills_harm_pts": 1.5,
+     "seconds": 967.0,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.06533136552111884,
+       "easy": 0.8302987861811391,
+       "by_kind": {
+        "affine": 0.0064516129032258064,
+        "double_add": 0.09803921568627451,
+        "last_digit": 0.7320261437908496,
+        "sq_plus": 0.0915032679738562,
+        "square": 0.9285714285714286
+       }
+      },
+      "2": {
+       "hard": 0.10239651416122005,
+       "easy": 0.8890374331550802,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.1437908496732026,
+        "last_digit": 0.8235294117647058,
+        "sq_plus": 0.16339869281045752,
+        "square": 0.9545454545454546
+       }
+      },
+      "3": {
+       "hard": 0.12854030501089325,
+       "easy": 0.8596256684491979,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.16993464052287582,
+        "last_digit": 0.7647058823529411,
+        "sq_plus": 0.21568627450980393,
+        "square": 0.9545454545454546
+       }
+      },
+      "4": {
+       "hard": 0.1655773420479303,
+       "easy": 0.839996604702487,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.24836601307189543,
+        "last_digit": 0.7189542483660131,
+        "sq_plus": 0.24836601307189543,
+        "square": 0.961038961038961
+       }
+      }
+     }
+    }
+   },
+   "mean": {
+    "by_kind": {
+     "affine": 0.0,
+     "double_add": 0.22549019607843138,
+     "last_digit": 0.6764705882352942,
+     "sq_plus": 0.28104575163398693,
+     "square": 0.9642857142857143
+    },
+    "hard": 0.16884531590413943,
+    "easy": 0.8203781512605042,
+    "harm": 0.012500000000000011,
+    "n_seeds": 2
+   },
+   "report_only": false
+  },
+  "hind4": {
+   "per_seed": {
+    "0": {
+     "by_kind": {
+      "affine": 0.012903225806451611,
+      "double_add": 0.20915032679738563,
+      "last_digit": 0.6601307189542484,
+      "sq_plus": 0.3790849673202614,
+      "square": 0.948051948051948
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.21568627450980393,
+      "last_digit": 0.7843137254901961,
+      "sq_plus": 0.35294117647058826,
+      "square": 0.9411764705882353
+     },
+     "labelled_by_kind": {
+      "affine": 0.019417475728155338,
+      "double_add": 0.20588235294117646,
+      "last_digit": 0.5980392156862745,
+      "sq_plus": 0.39215686274509803,
+      "square": 0.9514563106796117
+     },
+     "hard": 0.2003795066413662,
+     "easy": 0.8040913335030981,
+     "skills5": 0.97,
+     "model": "W4.pt",
+     "stop": null,
+     "base5": 0.98,
+     "skills_harm_pts": 1.0,
+     "seconds": 1951.7,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.037037037037037035,
+       "easy": 0.742296918767507,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.032679738562091505,
+        "last_digit": 0.6274509803921569,
+        "sq_plus": 0.0784313725490196,
+        "square": 0.8571428571428571
+       }
+      },
+      "2": {
+       "hard": 0.09583245484573759,
+       "easy": 0.7943086325439267,
+       "by_kind": {
+        "affine": 0.006451612903225806,
+        "double_add": 0.10457516339869281,
+        "last_digit": 0.6470588235294118,
+        "sq_plus": 0.17647058823529413,
+        "square": 0.9415584415584416
+       }
+      },
+      "3": {
+       "hard": 0.18945814885093823,
+       "easy": 0.8399329428741193,
+       "by_kind": {
+        "affine": 0.01935483870967742,
+        "double_add": 0.24836601307189543,
+        "last_digit": 0.6993464052287581,
+        "sq_plus": 0.3006535947712418,
+        "square": 0.9805194805194806
+       }
+      },
+      "4": {
+       "hard": 0.2003795066413662,
+       "easy": 0.8040913335030981,
+       "by_kind": {
+        "affine": 0.012903225806451611,
+        "double_add": 0.20915032679738563,
+        "last_digit": 0.6601307189542484,
+        "sq_plus": 0.3790849673202614,
+        "square": 0.948051948051948
+       }
+      }
+     },
+     "hindsight": {
+      "1": {
+       "records": 813,
+       "by_kind": {
+        "affine": 344,
+        "double_add": 206,
+        "sq_plus": 260,
+        "square": 3
+       },
+       "multi_step_records": 813,
+       "multi_step_share": 1.0,
+       "questions": 461
+      },
+      "2": {
+       "records": 670,
+       "by_kind": {
+        "affine": 366,
+        "double_add": 88,
+        "sq_plus": 216
+       },
+       "multi_step_records": 670,
+       "multi_step_share": 1.0,
+       "questions": 335
+      },
+      "3": {
+       "records": 532,
+       "by_kind": {
+        "affine": 348,
+        "double_add": 24,
+        "sq_plus": 160
+       },
+       "multi_step_records": 532,
+       "multi_step_share": 1.0,
+       "questions": 266
+      },
+      "4": {
+       "records": 472,
+       "by_kind": {
+        "affine": 326,
+        "double_add": 10,
+        "sq_plus": 136
+       },
+       "multi_step_records": 472,
+       "multi_step_share": 1.0,
+       "questions": 236
+      }
+     },
+     "op_entropy": {
+      "Nprime": 0.19537585973739624,
+      "W1": 0.17392784357070923,
+      "W2": 0.17538630962371826,
+      "W3": 0.21519087255001068,
+      "W4": 0.21153266727924347
+     }
+    },
+    "1": {
+     "by_kind": {
+      "affine": 0.0,
+      "double_add": 0.27450980392156865,
+      "last_digit": 0.6928104575163399,
+      "sq_plus": 0.21568627450980393,
+      "square": 0.922077922077922
+     },
+     "n_by_kind": {
+      "affine": 155,
+      "double_add": 153,
+      "last_digit": 153,
+      "sq_plus": 153,
+      "square": 154
+     },
+     "dev_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.2549019607843137,
+      "last_digit": 0.7254901960784313,
+      "sq_plus": 0.27450980392156865,
+      "square": 0.8823529411764706
+     },
+     "labelled_by_kind": {
+      "affine": 0.0,
+      "double_add": 0.28431372549019607,
+      "last_digit": 0.6764705882352942,
+      "sq_plus": 0.18627450980392157,
+      "square": 0.941747572815534
+     },
+     "hard": 0.16339869281045752,
+     "easy": 0.807444189797131,
+     "skills5": 0.955,
+     "model": "W4.pt",
+     "stop": null,
+     "base5": 0.985,
+     "skills_harm_pts": 3.0,
+     "seconds": 1918.2,
+     "school": null,
+     "night_scores": {
+      "1": {
+       "hard": 0.0479021716213367,
+       "easy": 0.8304048892284186,
+       "by_kind": {
+        "affine": 0.006451612903225806,
+        "double_add": 0.0915032679738562,
+        "last_digit": 0.7647058823529411,
+        "sq_plus": 0.0457516339869281,
+        "square": 0.8961038961038961
+       }
+      },
+      "2": {
+       "hard": 0.10236840255815588,
+       "easy": 0.8793820558526441,
+       "by_kind": {
+        "affine": 0.006451612903225806,
+        "double_add": 0.16339869281045752,
+        "last_digit": 0.8496732026143791,
+        "sq_plus": 0.13725490196078433,
+        "square": 0.9090909090909091
+       }
+      },
+      "3": {
+       "hard": 0.12412678332981937,
+       "easy": 0.8597105508870215,
+       "by_kind": {
+        "affine": 0.012903225806451613,
+        "double_add": 0.19607843137254902,
+        "last_digit": 0.7908496732026143,
+        "sq_plus": 0.16339869281045752,
+        "square": 0.9285714285714286
+       }
+      },
+      "4": {
+       "hard": 0.16339869281045752,
+       "easy": 0.807444189797131,
+       "by_kind": {
+        "affine": 0.0,
+        "double_add": 0.27450980392156865,
+        "last_digit": 0.6928104575163399,
+        "sq_plus": 0.21568627450980393,
+        "square": 0.922077922077922
+       }
+      }
+     },
+     "hindsight": {
+      "1": {
+       "records": 840,
+       "by_kind": {
+        "affine": 378,
+        "double_add": 138,
+        "last_digit": 4,
+        "sq_plus": 318,
+        "square": 2
+       },
+       "multi_step_records": 840,
+       "multi_step_share": 1.0,
+       "questions": 420
+      },
+      "2": {
+       "records": 606,
+       "by_kind": {
+        "affine": 334,
+        "double_add": 40,
+        "sq_plus": 232
+       },
+       "multi_step_records": 606,
+       "multi_step_share": 1.0,
+       "questions": 303
+      },
+      "3": {
+       "records": 508,
+       "by_kind": {
+        "affine": 318,
+        "double_add": 8,
+        "sq_plus": 182
+       },
+       "multi_step_records": 508,
+       "multi_step_share": 1.0,
+       "questions": 254
+      },
+      "4": {
+       "records": 464,
+       "by_kind": {
+        "affine": 306,
+        "double_add": 2,
+        "sq_plus": 156
+       },
+       "multi_step_records": 464,
+       "multi_step_share": 1.0,
+       "questions": 232
+      }
+     },
+     "op_entropy": {
+      "Nprime": 0.22871428728103638,
+      "W1": 0.18604367971420288,
+      "W2": 0.23892606794834137,
+      "W3": 0.2626841068267822,
+      "W4": 0.3175503611564636
+     }
+    }
+   },
+   "mean": {
+    "by_kind": {
+     "affine": 0.006451612903225806,
+     "double_add": 0.24183006535947715,
+     "last_digit": 0.6764705882352942,
+     "sq_plus": 0.2973856209150327,
+     "square": 0.935064935064935
+    },
+    "hard": 0.18188909972591186,
+    "easy": 0.8057677616501145,
+    "harm": 0.020000000000000018,
+    "n_seeds": 2
+   },
+   "report_only": false
+  }
+ },
+ "kind_overlap": {
+  "0": {},
+  "1": {}
+ },
+ "report_only_arms": [
+  "oracle"
+ ],
+ "failed_arms": [],
+ "verdict": {
+  "gain_vs_nights4_points": 1.304378382,
+  "pass_detail": {
+   "hard_ge_nights4_plus_4": false,
+   "easy_ok": true,
+   "harm_ok": true
+  },
+  "pass": false,
+  "proved_wrong": false,
+  "lines": [
+   "NO PASS: hind4 (Hard 18.2% = nights4 16.9 + 1.3; Easy 80.6 vs base 80.2; harm 2.0 pts; failed: ['hard_ge_nights4_plus_4'])",
+   "BETWEEN THE MARKS: hind4 is not proved wrong but misses a pass mark",
+   "CURVE base: Hard after night 1: 5.6%, 2: 10.2%",
+   "CURVE nights4: Hard after night 1: 6.2%, 2: 11.3%, 3: 13.4%, 4: 16.9%",
+   "CURVE hind4: Hard after night 1: 4.2%, 2: 9.9%, 3: 15.7%, 4: 18.2%"
+  ],
+  "hard_by_night": {
+   "base": {
+    "1": 0.05554149975402347,
+    "2": 0.10239651416122006
+   },
+   "nights4": {
+    "1": 0.06207744746644177,
+    "2": 0.11328976034858387,
+    "3": 0.13397287230304308,
+    "4": 0.16884531590413943
+   },
+   "hind4": {
+    "1": 0.042469604329186866,
+    "2": 0.09910042870194674,
+    "3": 0.1567924660903788,
+    "4": 0.18188909972591186
+   }
+  }
+ },
+ "hindsight_report": {
+  "0": {
+   "hindsight": {
+    "1": {
+     "records": 813,
+     "by_kind": {
+      "affine": 344,
+      "double_add": 206,
+      "sq_plus": 260,
+      "square": 3
+     },
+     "multi_step_records": 813,
+     "multi_step_share": 1.0,
+     "questions": 461
+    },
+    "2": {
+     "records": 670,
+     "by_kind": {
+      "affine": 366,
+      "double_add": 88,
+      "sq_plus": 216
+     },
+     "multi_step_records": 670,
+     "multi_step_share": 1.0,
+     "questions": 335
+    },
+    "3": {
+     "records": 532,
+     "by_kind": {
+      "affine": 348,
+      "double_add": 24,
+      "sq_plus": 160
+     },
+     "multi_step_records": 532,
+     "multi_step_share": 1.0,
+     "questions": 266
+    },
+    "4": {
+     "records": 472,
+     "by_kind": {
+      "affine": 326,
+      "double_add": 10,
+      "sq_plus": 136
+     },
+     "multi_step_records": 472,
+     "multi_step_share": 1.0,
+     "questions": 236
+    }
+   },
+   "op_entropy": {
+    "Nprime": 0.19537585973739624,
+    "W1": 0.17392784357070923,
+    "W2": 0.17538630962371826,
+    "W3": 0.21519087255001068,
+    "W4": 0.21153266727924347
+   }
+  },
+  "1": {
+   "hindsight": {
+    "1": {
+     "records": 840,
+     "by_kind": {
+      "affine": 378,
+      "double_add": 138,
+      "last_digit": 4,
+      "sq_plus": 318,
+      "square": 2
+     },
+     "multi_step_records": 840,
+     "multi_step_share": 1.0,
+     "questions": 420
+    },
+    "2": {
+     "records": 606,
+     "by_kind": {
+      "affine": 334,
+      "double_add": 40,
+      "sq_plus": 232
+     },
+     "multi_step_records": 606,
+     "multi_step_share": 1.0,
+     "questions": 303
+    },
+    "3": {
+     "records": 508,
+     "by_kind": {
+      "affine": 318,
+      "double_add": 8,
+      "sq_plus": 182
+     },
+     "multi_step_records": 508,
+     "multi_step_share": 1.0,
+     "questions": 254
+    },
+    "4": {
+     "records": 464,
+     "by_kind": {
+      "affine": 306,
+      "double_add": 2,
+      "sq_plus": 156
+     },
+     "multi_step_records": 464,
+     "multi_step_share": 1.0,
+     "questions": 232
+    }
+   },
+   "op_entropy": {
+    "Nprime": 0.22871428728103638,
+    "W1": 0.18604367971420288,
+    "W2": 0.23892606794834137,
+    "W3": 0.2626841068267822,
+    "W4": 0.3175503611564636
+   }
+  }
+ }
+}
