@@ -3,7 +3,20 @@
     "allow": [
       "WebFetch",
       "WebSearch",
-      "Bash(git mv handoff/held/*)"
+      "Bash(git mv handoff/held/*)",
+      "Bash(kaggle kernels push *)",
+      "Bash(kaggle kernels status *)",
+      "Bash(kaggle kernels output *)",
+      "Bash(kaggle kernels list *)",
+      "Bash(kaggle datasets create *)",
+      "Bash(kaggle datasets version *)",
+      "Bash(kaggle datasets status *)"
+    ],
+    "deny": [
+      "Read(~/.kaggle/**)",
+      "Bash(*kaggle.json*)",
+      "Bash(*KAGGLE_KEY*)",
+      "Bash(*LEARNER_ANTHROPIC_API_KEY*)"
     ]
   }
 }
