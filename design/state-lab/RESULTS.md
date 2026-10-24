@@ -1,3 +1,25 @@
+# State lab results, final (02:15 UTC 2026-10-24, 23 runs, 4 seeds per main arm)
+
+Validation (held-out names/templates/rules) at 8 loops, per run; Welch t vs base (addendum 4: HELPS needs +2 and p < 0.05).
+
+| arm | runs | mean | vs base | t (df) | verdict |
+|---|---|---|---|---|---|
+| base | 44.3, 43.8, 49.9, 40.9 | 44.7 | | | |
+| mq4 | 49.0, 46.0, 48.6, 44.4 | 47.0 | +2.3 | 1.04 (4.8) | NOT SHOWN (p ~0.17) |
+| lastloss | 46.0, 51.4, 43.3, 49.5 | 47.5 | +2.8 | 1.07 (6.0) | NOT SHOWN (p ~0.16) |
+| all3 | 51.6, 42.1, 43.0, 44.8 | 45.4 | +0.7 | 0.23 | NOT SHOWN |
+| reg16 | 49.4, 42.3, 40.2, 36.5 | 42.1 | -2.6 | -0.79 | NOT SHOWN (worse on average) |
+| inject | 43.3, 45.1 | 44.2 | -0.5 | | no effect |
+| reg16mq4 | 45.4 | | | | one run |
+
+Shown: forcing 8 loops at inference raises dev in 23/23 runs (+8.2 mean) and validation in 17/23 (+1.7 mean).
+
+Exploratory, NOT pre-registered (found after looking): mq4 with normal HALT stopping scored 50.0, 46.9, 47.1, 44.9
+(mean 47.2) vs base 42.5, 42.4, 46.0, 40.1 (mean 42.7): +4.5, Welch t = 2.79, df ~5.9, one-sided p ~0.02. Needs its own
+pre-registered repeat before anyone relies on it. Mixed GPU types in wave 5 (3090, 3090 Ti, 5070 Ti, 4080, 5080).
+
+---
+
 # State lab results (00:20 UTC 2026-10-24, 14 runs; supersedes the 23:15 version below)
 
 **Bottom line: with repeats, no training change is established.** The plain baseline itself spans 43.8-49.9 on validation
