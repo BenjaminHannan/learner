@@ -6,11 +6,15 @@ names, old/new values on the right days, no test wording. Sessions that fail are
 with a stronger reminder). A stricter wording audit of the change cues (strict_check) only picks between accepted attempts; if none passes it,
 the first accepted attempt is kept and the complaint is listed under "warnings" in week1.json. Raw API responses are cached in data/raw/
 (a rerun of --write with the same code costs nothing); cost is tracked from response usage (cap $3, conservatively priced at $3/$15 per M).
+A bigger world (Week-2, PREREG-sleepB-addendum6.md) is the same generator with --seed 2 --scale 2.5 --out data/week2.json --cap 8: C2/C4 facts x scale, C1, changing facts
+and routines grow more slowly (see scaled()), sessions per day grow with the mention load; its raw cache is data/raw_week2/ (Week-1's data/raw/ is untouched).
+--rescue N allows more rescue attempts for a session that has no accepted attempt after the default ones (attempts past the default add a turn-count reminder to the prompt).
 
   python backbone/sleep/brain/week.py --plan-only             # counts + examples, no network
   python backbone/sleep/brain/week.py --prompt 1:1            # print the prompt of day 1, session 1 (no network)
   python backbone/sleep/brain/week.py --only 1:1              # trial: write one session (cached in data/raw/), print it
   python backbone/sleep/brain/week.py --write                 # all 42 sessions -> data/week1.json + week1.json.sha256 (cap $3)
+  python backbone/sleep/brain/week.py --write --seed 2 --scale 2.5 --out backbone/sleep/brain/data/week2.json --cap 8   # Week-2
   from week import build_plan, template_week                  # template_week(): offline tiny week, same schema, for smoke tests
 """
 import argparse
@@ -47,6 +51,7 @@ CHAINS = [("mentor_lives", "mentor_of", "lives_in", "b", "a"),    # (kind, rel1,
           ("owner_born", "owns", "born_in", "b", "a")]
 ACTIVITIES = ["dinner", "lunch", "coffee", "brunch", "a game of tennis", "a game of chess", "a climbing session", "a book club meeting",
               "a pottery class", "a jam session", "game night", "a study session"]
+MORE_ACTIVITIES = ["a movie night", "a long walk", "a bike ride", "a barbecue", "a karaoke night", "a painting session", "breakfast", "a board game afternoon"]  # only when n_rt > 12
 WEEKDAY = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 TOPICS = ["a thank-you email", "a weekend trip itinerary", "a dinner recipe", "a grocery list", "math homework", "a cover letter",
           "a birthday party plan", "packing for a flight", "a gym schedule", "a reply to a landlord", "a book to read next", "meal prep",
@@ -71,8 +76,9 @@ STRONG_OLD = re.compile(STRONG.pattern.replace("finally|", ""), re.I)  # "finall
 
 
 # ----------------------------------------------------------------------------------------------- the plan (no network)
-def build_plan(seed=1, n_days=7, per_rel=20, n_ch=20, n_rt=12, sessions=6, classes=("C1", "C2", "C4"), tie=False):
-    """Items (120 base facts, 20 changing, 12 routines at defaults), schedule (day -> 6 sessions of planned mentions), and tests."""
+def build_plan(seed=1, n_days=7, per_rel=20, n_ch=20, n_rt=12, sessions=6, classes=("C1", "C2", "C4"), tie=False, mix=None):
+    """Items (120 base facts, 20 changing, 12 routines at defaults), schedule (day -> 6 sessions of planned mentions), and tests.
+    mix: {class: number of facts} (sums to 6 * per_rel) instead of equal thirds; each relation gets n // 6 of a class, the remainders go round-robin."""
     assert n_days >= 2 and all(CLASS_DAYS[c] <= n_days for c in classes)
     rng = random.Random(seed)
     s1_names = {e.lower() for f in F.build(0)["facts"] for e in f["entities"]}  # every Sleep-1 (seed 0) name is off limits
@@ -83,8 +89,14 @@ def build_plan(seed=1, n_days=7, per_rel=20, n_ch=20, n_rt=12, sessions=6, class
     pairs = {"mentor_of": list(zip(mentors, students)), "lives_in": list(zip(mentors, cities)), "sibling": list(zip(sibA, sibB)),
              "works_at": list(zip(sibB, companies)), "owns": list(zip(owners, boats)), "born_in": list(zip(owners, towns))}
     items, prev = [], None
+    if mix:
+        assert sum(mix.values()) == 6 * per_rel and set(mix) <= set(classes) and not tie, mix
+        offs, o = {}, 0
+        for c, n in mix.items():
+            offs[c], o = o, o + n % 6
     for r, (rel, ps) in enumerate(pairs.items()):  # stratified by relation: each class gets per_rel/len(classes) (+-1), rotated by relation
-        seq = [classes[(i + r) % len(classes)] for i in range(per_rel)]
+        seq = ([c for c, n in mix.items() for _ in range(n // 6 + ((r - offs[c]) % 6 < n % 6))] if mix
+               else [classes[(i + r) % len(classes)] for i in range(per_rel)])
         rng.shuffle(seq)
         if tie and r % 2:  # (tiny weeks only) both facts of a chain share a class, so two-hop tests exist
             seq = prev
@@ -104,7 +116,7 @@ def build_plan(seed=1, n_days=7, per_rel=20, n_ch=20, n_rt=12, sessions=6, class
                    "old_text": REL[rel][0].format(a=p, b=old), "days": [], "names": [p, old, new]})
     rng.shuffle(ch)
     rt = []
-    acts = rng.sample(ACTIVITIES, n_rt)
+    acts = rng.sample(ACTIVITIES + MORE_ACTIVITIES if n_rt > len(ACTIVITIES) else ACTIVITIES, n_rt)
     for i, (p, pl) in enumerate(zip(make_names(rng, n_rt, taken), make_names(rng, n_rt, taken))):
         rt.append({"kind": "routine", "rel": "routine", "a": p, "b": pl, "activity": acts[i], "class": "RT", "days": [], "names": [p, pl],
                    "text": f"Sam has {acts[i]} with {p} at {pl}."})
@@ -165,6 +177,20 @@ def build_plan(seed=1, n_days=7, per_rel=20, n_ch=20, n_rt=12, sessions=6, class
     return plan
 
 
+def scaled(scale):
+    """build_plan sizes for --scale (1: Week-1, the defaults). C2 and C4 facts x scale; C1 facts and changing facts grow by a third of that growth,
+    routines by 0.45 of it, so 2.5 gives the Week-2 counts (C2 = C4 = 100, C1 64 since 6 relations need whole counts, changing 30, routines 20).
+    Sessions per day grow with the mention load (C1 1 day, C2 2, C4 4, changing 4, routines 3.5 on average), which keeps Week-1's ~9.6 mentions a session."""
+    if scale == 1:
+        return {}
+    rec, c1 = round(40 * scale), round(40 * (1 + (scale - 1) / 3))
+    per_rel = -(-(2 * rec + c1) // 6)
+    c1 = 6 * per_rel - 2 * rec
+    n_ch, n_rt = 2 * round(10 * (1 + (scale - 1) / 3)), 2 * round(6 * (1 + (scale - 1) * 0.45))
+    load = c1 + 2 * rec + 4 * rec + 4 * n_ch + 3.5 * n_rt
+    return {"per_rel": per_rel, "n_ch": n_ch, "n_rt": n_rt, "mix": {"C1": c1, "C2": rec, "C4": rec}, "sessions": max(6, round(6 * load / 402))}
+
+
 def make_tests(items):
     """Fixed templates (facts.py wording). Never shown to Claude."""
     facts = [i for i in items if i["kind"] == "fact"]
@@ -223,7 +249,7 @@ def check_plan(plan, per_rel, n_ch, n_rt, sleep1_names):
 
 
 # ----------------------------------------------------------------------------------------------- prompt, API, validation
-def session_prompt(plan, sc, probs=(), rescue=False):
+def session_prompt(plan, sc, probs=(), rescue=0):  # rescue 1: the stronger reminder; 2 (attempts beyond the default rescues): plus a turn-count check
     by = {it["id"]: it for it in plan["items"]}
     k, f = len(sc["mentions"]), sc["fillers"]
     lines = []
@@ -268,6 +294,10 @@ Output ONLY a JSON array of objects {{"role": "user" or "assistant", "text": "..
         p += (f"\n\nIMPORTANT: this session has been rejected several times. Count carefully: {k} user turns that each hold exactly ONE of the facts above "
               f"(never two facts in one turn, never a fact split over two turns, never a fact turn that is also a filler request), plus {f} separate "
               "filler turns with no names. Do not reuse the same topic for two fact turns, so each fact stays in its own turn.")
+    if rescue > 1:
+        p += (f"\n\nFinal check before you answer: the array must hold exactly {2 * (k + f)} objects, that is {k + f} user turns in all. If your draft has more user "
+              f"turns, delete the extra no-name requests (every user turn is a fact turn or one of the {f} filler turns), and make sure each of the {k} fact turns "
+              "still contains both of its names.")
     return p
 
 
@@ -276,9 +306,9 @@ class BudgetExceeded(RuntimeError):
 
 
 class Budget:
-    def __init__(self, cap=CAP):
+    def __init__(self, cap=CAP, raw=RAW):
         self.lock, self.cap, self.cons, self.listed, self.tin, self.tout = threading.Lock(), cap, 0.0, 0.0, 0, 0
-        for p in RAW.glob("*.json"):
+        for p in raw.glob("*.json"):
             self.add(json.loads(p.read_text())["usage"])
 
     def add(self, u):
@@ -364,13 +394,15 @@ def check_session(turns, sc, plan):
     return men, probs
 
 
-def gen_session(plan, sc, key, bud):
-    """Up to 1+RETRIES+RESCUE attempts. An attempt must pass check_session; strict_check (change-cue wording) is advisory: if no attempt
+def gen_session(plan, sc, key, bud, raw=RAW, rescue=RESCUE):
+    """Up to 1+RETRIES+RESCUE attempts (--rescue: more, but only while no attempt has passed check_session). An attempt must pass check_session; strict_check (change-cue wording) is advisory: if no attempt
     passes both, the first attempt that passed check_session is used and its strict_check complaints are returned as warnings."""
     probs, tag, fb = [], f"d{sc['day']}s{sc['session']}", None
-    for att in range(1 + RETRIES + RESCUE):
-        prompt = session_prompt(plan, sc, probs, rescue=att > RETRIES)
-        path = RAW / f"{tag}_a{att}_{hashlib.sha1(prompt.encode()).hexdigest()[:8]}.json"
+    for att in range(1 + RETRIES + rescue):
+        if att > RETRIES + RESCUE and fb:  # attempts beyond the default only for a session that has no accepted attempt yet
+            break
+        prompt = session_prompt(plan, sc, probs, rescue=(att > RETRIES) + (att > RETRIES + RESCUE))
+        path = raw / f"{tag}_a{att}_{hashlib.sha1(prompt.encode()).hexdigest()[:8]}.json"
         if path.exists():
             rec = json.loads(path.read_text())
         else:
@@ -401,7 +433,7 @@ def gen_session(plan, sc, key, bud):
         if not probs and fb is None:
             fb = {"turns": turns, "mentions": men, "attempts": att + 1, "problems": [], "warnings": warn}
         probs = probs or warn
-    return fb or {"turns": turns, "mentions": men, "attempts": 1 + RETRIES + RESCUE, "problems": probs, "warnings": []}
+    return fb or {"turns": turns, "mentions": men, "attempts": 1 + RETRIES + rescue, "problems": probs, "warnings": []}
 
 
 def strict_check(turns, men, plan):
@@ -507,14 +539,18 @@ def parse_ds(s):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--scale", type=float, default=1.0, help="world size, 1 = Week-1; 2.5 = Week-2 (see scaled())")
+    ap.add_argument("--out", default=str(DATA / "week1.json"), help="output file (its .sha256 goes next to it); the raw cache is data/raw/ for week1.json, else raw_<name>/ beside it")
+    ap.add_argument("--cap", type=float, default=CAP, help="dollar cap on the estimated spend (conservative $3/$15 per M tokens)")
+    ap.add_argument("--rescue", type=int, default=RESCUE, help="rescue attempts per session after the regenerations; beyond the default 3 only for a session with no accepted attempt (cached attempts are reused)")
     ap.add_argument("--plan-only", action="store_true")
     ap.add_argument("--prompt", metavar="D:S", help="print the prompt of one session")
     ap.add_argument("--only", metavar="D:S", help="write one session as a trial (cached) and print it")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--workers", type=int, default=4)
     a = ap.parse_args()
-    plan = build_plan(a.seed)
-    assert json.dumps(plan, sort_keys=True) == json.dumps(build_plan(a.seed), sort_keys=True), "plan is not deterministic"
+    plan = build_plan(a.seed, **scaled(a.scale))
+    assert json.dumps(plan, sort_keys=True) == json.dumps(build_plan(a.seed, **scaled(a.scale)), sort_keys=True), "plan is not deterministic"
     if a.plan_only or not (a.prompt or a.only or a.write):
         summary(plan)
         sc = plan["schedule"][0]
@@ -525,12 +561,16 @@ def main():
         print(session_prompt(plan, next(x for x in plan["schedule"] if (x["day"], x["session"]) == (d, s))))
         return
     key = os.environ["LEARNER_ANTHROPIC_API_KEY"]
-    RAW.mkdir(parents=True, exist_ok=True)
-    bud = Budget()
+    outp = Path(a.out).resolve()
+    if outp == DATA / "week1.json" and (a.seed, a.scale) != (1, 1.0):
+        ap.error("--seed / --scale other than Week-1's need their own --out (week1.json is sealed)")
+    raw = RAW if outp == DATA / "week1.json" else outp.parent / f"raw_{outp.stem}"
+    raw.mkdir(parents=True, exist_ok=True)
+    bud = Budget(a.cap, raw)
     todo = [sc for sc in plan["schedule"] if not a.only or (sc["day"], sc["session"]) == parse_ds(a.only)]
     res, fails = {}, []
     with ThreadPoolExecutor(a.workers) as ex:
-        futs = {ex.submit(gen_session, plan, sc, key, bud): sc for sc in todo}
+        futs = {ex.submit(gen_session, plan, sc, key, bud, raw, a.rescue): sc for sc in todo}
         for fu in as_completed(futs):
             sc = futs[fu]
             try:
@@ -554,12 +594,12 @@ def main():
         sys.exit(2)
     out = finish(plan, res, bud.listed, {"model": MODEL, "tokens": {"input": bud.tin, "output": bud.tout}, "spend_usd_conservative_3_15": round(bud.cons, 4),
                                            "attempts": {f"d{d}s{s}": r["attempts"] for (d, s), r in sorted(res.items())},
-                                           "warnings": {f"d{d}s{s}": r["warnings"] for (d, s), r in sorted(res.items()) if r["warnings"]}})
-    DATA.mkdir(exist_ok=True)
-    p = DATA / "week1.json"
-    p.write_text(json.dumps(out, ensure_ascii=False, indent=1))
-    (DATA / "week1.json.sha256").write_text(hashlib.sha256(p.read_bytes()).hexdigest() + "  week1.json\n")
-    print("wrote", p, "diary turns", len(out["diary"]), "spend", out["spend_usd"])
+                                           "warnings": {f"d{d}s{s}": r["warnings"] for (d, s), r in sorted(res.items()) if r["warnings"]},
+                                           **({"scale": a.scale, "sessions_per_day": plan["sessions"]} if a.scale != 1 else {})})
+    outp.parent.mkdir(parents=True, exist_ok=True)
+    outp.write_text(json.dumps(out, ensure_ascii=False, indent=1))
+    (outp.parent / f"{outp.name}.sha256").write_text(hashlib.sha256(outp.read_bytes()).hexdigest() + f"  {outp.name}\n")
+    print("wrote", outp, "diary turns", len(out["diary"]), "spend", out["spend_usd"])
 
 
 if __name__ == "__main__":
