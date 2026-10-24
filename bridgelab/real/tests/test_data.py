@@ -132,3 +132,22 @@ def test_msg_source_cache_key_is_separate(tmp_path, monkeypatch):
     for s in (None, "registers", "decoder", "decoder"):
         T.get_messages(None, [0], None, "cpu", "tag", "dev", ns(s))
     assert calls == ["registers", "decoder"]                                                 # None and 'registers' share one cache file; decoder has its own; 2nd decoder hit the cache
+
+
+def test_message_cache_key_depends_on_items(tmp_path, monkeypatch):
+    """Different subsamples of the same size (another --seed) must not share a message cache (seeds 1-2 of run3 did; voided)."""
+    import argparse
+    from bridgelab.real import train as T
+    monkeypatch.setattr(T, "HERE", tmp_path)
+    calls = []
+    monkeypatch.setattr(T.dmsg, "extract", lambda *a, **k: calls.append(1) or {"x": torch.zeros(1)})
+    ns = argparse.Namespace(village_root="r", fresh_messages=False, d_max_tokens=1, msg_source="decoder")
+    for qids in (["q1", "q2"], ["q3", "q4"], ["q1", "q2"]):
+        T.get_messages(None, _Sized(qids), None, "cpu", "tag", "dev", ns)
+    assert len(calls) == 2
+
+
+class _Sized(list):
+    @property
+    def qid(self):
+        return list(self)

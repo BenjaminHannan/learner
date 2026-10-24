@@ -66,7 +66,8 @@ def get_messages(dmodel, items, tokenizer, device, tag: str, split: str, args) -
     cache_dir = HERE / "ckpt"
     cache_dir.mkdir(exist_ok=True)
     src = getattr(args, "msg_source", "registers")
-    key = hashlib.sha256(f"{tag}|{args.village_root}|{split}|{len(items)}{'' if src == 'registers' else '|' + src}".encode()).hexdigest()[:12]
+    ids = hashlib.sha256("|".join(map(str, getattr(items, "qid", items))).encode()).hexdigest()[:16]      # the exact items (the subsample depends on --seed)
+    key = hashlib.sha256(f"{tag}|{args.village_root}|{split}|{len(items)}|{ids}{'' if src == 'registers' else '|' + src}".encode()).hexdigest()[:12]
     path = cache_dir / f"dmsg-{key}-{split}.pt"
     if path.exists() and not args.fresh_messages:
         return torch.load(path, weights_only=False)
