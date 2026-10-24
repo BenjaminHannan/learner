@@ -8,3 +8,7 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - Seed 2 and tw:0: Ben's PC (commands in README.md).
 - 19:45Z: box 57553049 (s0, Quebec) never left "created" in 33 min (no log); destroyed. Seed 0 relaunched on offer 55418674
   (RTX 3090, Argentina, the same host family as the working s1 box), new box 57556502, same pack (code 5dc3b08ab).
+- 21:01Z: both boxes alive (their labels carry label_report's "|" suffix, so the job loop is running); no result files yet
+  (stage 1 a and b side by side). Vast's log service gives S3 403 for both boxes (the host never uploads the log), and
+  `cat` works only on stopped boxes, so progress is read from the labels. Credit $3.24; the account's other A100 boxes
+  have ended, so the burn is these two boxes, $0.296/h plus storage.
