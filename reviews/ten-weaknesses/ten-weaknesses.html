@@ -192,9 +192,56 @@ ul.done{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 </section>
 
 <!-- next -->
+<!-- GPU test: HALT -->
+<section class="card">
+  <div class="row"><span class="num">Tested #10</span><span class="pill p-sugg">one run, our best guess</span></div>
+  <h2>Thinking longer helped practice, not new questions</h2>
+  <div class="fig"><svg viewBox="0 0 360 230" role="img" aria-label="Old stop rule versus new: thinking rounds on new questions 2.2 versus 2.9; practice score 80.7 versus 84.8 percent; new-question score 46.1 versus 44.0 percent.">
+    <text x="10" y="18" class="m" font-size="12">thinking rounds on new questions (out of 8)</text>
+    <g font-size="12">
+      <text x="10" y="42">old rule</text><rect x="110" y="31" width="55.5" height="14" rx="3" fill="var(--muted)"/><text x="171" y="42">2.2</text>
+      <text x="10" y="62">new rule</text><rect x="110" y="51" width="73.5" height="14" rx="3" fill="var(--blue)"/><text x="189" y="62">2.9</text>
+    </g>
+    <text x="10" y="96" class="m" font-size="12">practice-exam score</text>
+    <g font-size="12">
+      <text x="10" y="120">old rule</text><rect x="110" y="109" width="161" height="14" rx="3" fill="var(--muted)"/><text x="277" y="120">80.7%</text>
+      <text x="10" y="140">new rule</text><rect x="110" y="129" width="170" height="14" rx="3" fill="var(--green)"/><text x="286" y="140">84.8%</text>
+    </g>
+    <text x="10" y="174" class="m" font-size="12">new-question score</text>
+    <g font-size="12">
+      <text x="10" y="198">old rule</text><rect x="110" y="187" width="92" height="14" rx="3" fill="var(--muted)"/><text x="208" y="198">46.1%</text>
+      <text x="10" y="218">new rule</text><rect x="110" y="207" width="88" height="14" rx="3" fill="var(--red)"/><text x="204" y="218">44.0%</text>
+    </g>
+  </svg></div>
+  <p>The new stop rule works as meant: harder questions now get more rounds. But new questions fell 2.1 points, past the 1-point limit set in advance.</p>
+  <p class="fix"><b>Verdict:</b> keep the switch off. The drop is within normal run-to-run wobble, so a second run would settle it.</p>
+</section>
+
+<!-- GPU test: G1 -->
+<section class="card">
+  <div class="row"><span class="num">Tested #8 · #9</span><span class="pill p-sugg">one run, our best guess</span></div>
+  <h2>The memory lock costs more than it saves</h2>
+  <div class="fig"><svg viewBox="0 0 360 200" role="img" aria-label="Old skills lost after two nights: lock as coded 0.5 points, proven setting 0, no lock 2.0. Puzzle first-try score: 34.4, 35.9 and 38.7 percent.">
+    <text x="10" y="18" class="m" font-size="12">old skills lost after two nights (points)</text>
+    <g font-size="12">
+      <text x="10" y="42">lock as coded</text><rect x="120" y="31" width="20" height="14" rx="3" fill="var(--amber)"/><text x="146" y="42">0.5</text>
+      <text x="10" y="62">proven setting</text><rect x="120" y="51" width="2" height="14" rx="1" fill="var(--green)"/><text x="128" y="62">0</text>
+      <text x="10" y="82">no lock</text><rect x="120" y="71" width="80" height="14" rx="3" fill="var(--red)"/><text x="206" y="82">2.0</text>
+    </g>
+    <text x="10" y="118" class="m" font-size="12">puzzle score, first try</text>
+    <g font-size="12">
+      <text x="10" y="142">lock as coded</text><rect x="120" y="131" width="137.6" height="14" rx="3" fill="var(--muted)"/><text x="263" y="142">34.4%</text>
+      <text x="10" y="162">proven setting</text><rect x="120" y="151" width="143.8" height="14" rx="3" fill="var(--muted)"/><text x="269" y="162">35.9%</text>
+      <text x="10" y="182">no lock</text><rect x="120" y="171" width="154.7" height="14" rx="3" fill="var(--blue)"/><text x="281" y="182">38.7%</text>
+    </g>
+  </svg></div>
+  <p>The proven setting lost no skills and scored about the same, so it passes. Taking the lock away lost only 1.5 more points of skills (the bar was 2) and scored 4 points higher.</p>
+  <p class="fix"><b>Verdict:</b> switch to the proven setting. Test a lighter lock next, with more runs, because one run can't separate gaps this small.</p>
+</section>
+
 <section class="card" id="next">
   <span class="tag">What happens next</span>
-  <h2>Seven fixes built tonight; three need a GPU</h2>
+  <h2>Seven fixes built, three tested on a GPU</h2>
   <ul class="done" id="donelist">
     <li><b>#1</b> coin-flip switch built: first-named answer drops from 97% to 50%.</li>
     <li><b>#2</b> plan questions can now be marked by “does the plan work?”.</li>
@@ -203,7 +250,7 @@ ul.done{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
     <li><b>#6 · #7</b> new questions now scored at every check, full breakdown saved.</li>
     <li>All switched off by default, so v1's numbers stay as they were. 33 tests pass.</li>
   </ul>
-  <p class="fix"><b>Next run:</b> new pass lines, slower ending, full gauges, coin-flip quiz. Fixes #8–#10 need a GPU test.</p>
+  <p class="fix"><b>Next run:</b> new pass lines, slower ending, full gauges, coin-flip quiz, proven lock setting. The GPU tests cost about $1.70 in total.</p>
 </section>
 
 </main>
