@@ -60,4 +60,38 @@ needs the result JSONs (`result_<arm>.json`, `arc_easy`).
 - The "memory when sure" router scores 60, below diary search alone at 85. A confidence of 0.5 or more on the first token does not mean the answer is right.
 
 ## Cost
-GPU (Vast A100s): about $2.70 of the $3 cap, estimated from run times. All four boxes are destroyed. Writing the chat week with the Claude API: $1.85.
+GPU (Vast A100s): about $2.70 of the $3 cap for stage 1 and addendum 1, and about $1.61 of a $2 cap for addendum 2 (estimated from run times). All boxes are destroyed. Writing the chat week with the Claude API: $1.85.
+
+## Addendum 2: sleep that changes the whole model (prereg `PREREG-sleepB-addendum2.md`, seed 1, AB stage-1 schedule)
+Boxes:
+- 57521298 (A100 40GB) ran the control.
+- 57522280 (A100 80GB) ran ab_ob_full. The first try, 57521297, crashed at startup: a CPU-model self-check is refused by the GPU's Triton kernels.
+- ab_ob_merge hit the same crash on 57521298 after the control finished. It is deferred to the next budget.
+
+Scores come from the instance labels.
+
+| arm (seed 1) | C4 | C2 | C1 | recall (C2+C4) | two-hop | changed new | routine | int | pool | + diary pool | ARC-Easy (500) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 92.4 |
+| ab_ob_full (every matrix full-rank, lr 2e-5) | 75 | 40 | 0 | 57.5 | 0 | 40 | 58 | 33 | 33 | 47 | **82.2** |
+| (ab_ob seed 0, addendum 1) | 80 | 40 | 0 | 60 | 11 | 70 | 75 | 52 | 38 | 85 | not read |
+
+The full arm's diary scores were C4 85, C2 55, C1 2, two-hop 7, changed 40 and routine 75. The router scored 56 for it and 54 for the control.
+
+Verdicts:
+- F1 FAIL: recall is 57.5, against a mark of control + 10 = 66.
+- F2 FAIL: diary pooled is 47, against a mark of 77.
+- F3 FAIL: ARC is 82.2, against a mark of 87.6.
+- F4 PASS: C1 is 0.
+- **Wrong-if fires:** ARC 82.2 is below 84.6. The other wrong-if needs the full arm to be no better on both recall and integration. It does not fire, because recall is 57.5 against 56, although integration is 33 against 47.
+- Seed spread on recall is |56 - 60| = 4, under 10, so these results count as shown.
+- M1-M4 (merge) were not run.
+
+Plain reading:
+- Changing every weight at lr 2e-5, with the same steps, the same KL guard and the same morning gate, did not put more facts into memory (57.5 vs 56).
+- It cost general knowledge (82.2 vs 92.4 for the control and 89.6 for base), diary reading (47 vs 82) and updates (changed-new 40 vs 70) (shown, one seed).
+- The 100-item ARC validation gate did not stop this drift. Whether nights were reverted needs the result JSON, which is not recovered.
+- Suggested reasons:
+  - The full-rank change has far more room to drift in directions the generic-prompt KL guard never probes.
+  - lr 2e-5 over 1,596 steps may be too large a step.
+- A smaller step size is untested.
