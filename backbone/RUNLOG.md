@@ -40,3 +40,8 @@ too few linear-attention state slots).
   - claude-sleepb8b-cqc4bi (57552968, A100 SXM4 40GB California, $0.416/h): ab_ob_guess, then ab_ob_twist.
   - claude-sleepb8c-cqc4bi (57552969, A100 SXM4 40GB New York, $0.539/h): ab_ob_b2 (addendum 5, work scale 2).
   - Coordinator OK 18:27Z: $1.50 cap for the four addendum-4 arms. The addendum-5 arm is under $1, which is in the default allowance. Watchers destroy each box after its last arm reports, after 20 min with no progress, or at the cap ($1.50 for 8a+8b, $0.95 for 8c). Vast credit was $6.21 at 18:30Z.
+- 19:32Z the watcher destroyed 57552967 (8a) and 57552968 (8b), both California, at 0.36 h, about $0.32. 8b was still loading. 8a had started its job but had not finished a night, probably because of a slow model download; New York's 8c reached night 1 at 0.33 h. New watcher rule (`guard4`): destroy at 20 min only if the job never started, and at 36 min if no night has finished.
+- 19:33Z relaunch, staying inside the $1.50 addendum-4 cap ($1.18 left):
+  - claude-sleepb9a-cqc4bi (57555316, A100 PCIE 40GB Japan, $0.342/h): ab_ob_rot, then ab_ob_guess.
+  - claude-sleepb9b-cqc4bi (57555322, A100 SXM4 40GB New York, $0.539/h): ab_ob_twist.
+  - ab_ob_ther waits for more budget. The research note expects it to be close to null.
