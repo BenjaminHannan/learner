@@ -273,7 +273,6 @@ def train_board(runner, board, enc, rows, quick_rows, device, args, steps, tr):
             print(f"[dev] step {n} {tr['dev_log'][-1]['acc']} ce {tr['dev_log'][-1]['ce']}", flush=True)
         if n % 50 == 0 or n == steps:
             print(f"[train] step {n}/{steps} loss {tr['loss_curve'][-1][1]:.4f} {time.time() - t0:.0f}s", flush=True)
-    tr["seconds"] = time.time() - t0
     return None
 
 
@@ -453,7 +452,9 @@ def run_arm(args):
         board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots).to(device)
         result["params_trainable"] = sum(p.numel() for p in board.parameters())
         print(f"[board] arm {arm} K={k_slots} params {result['params_trainable']:,} rho {float(board.rho):.5f}", flush=True)
+        t0 = time.time()
         aborted = train_board(runner, board, enc, train_rows, dev_rows[:256], device, args, steps, tr)
+        tr["seconds"] = time.time() - t0
         torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed), out / "think_block.pt")
     else:
         pm = lora_model(lm, src)

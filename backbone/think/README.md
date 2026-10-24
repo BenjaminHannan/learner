@@ -70,6 +70,13 @@ the refiner (5e-4). Logs: a `[gate]` line every 10 steps (|tanh alpha|, cosine a
 per-lap step size) stored in `train.gate_log`; every 250 steps `train.dev_log` gets answer CE and greedy accuracy at L = 1 and 8, the
 swap lesion at 8, |tanh alpha| per layer and the refiner gradient norm, on the first 256 dev rows.
 
+### Memory (t, t1, tw)
+Every lap keeps its backbone activations until the one backward at the end of the micro-batch, so memory grows with micro-batch size x
+(L_max + 1). Measured on the real 0.8B on CPU in fp32 with HF's non-fused linear-attention fallback (no `flash-linear-attention`): about
+0.65 GB per lap for 2 rows, so L_max = 12 with `--micro-bsz 2` ran out of 15 GB. GPU numbers are untested; with the fused kernels they
+should be far smaller. If a board run hits CUDA out-of-memory, rerun with `MICRO=2` (or 1): the loss normaliser is the whole step's
+answer-token count, so a smaller micro-batch gives the same gradient up to rounding. Install `flash-linear-attention` first.
+
 ### Mechanics gate (t, t1, tw), exactly as coded
 At step 150, abort if any of: mean |tanh alpha| over the 48 gates < 0.02; mean cosine of the same slot across the questions of the
 16-row batch, final board (L = 8; L = 1 for t1 and tw), > 0.95; more than 90% of slots pinned at the clamp. At every step: a NaN loss or

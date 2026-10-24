@@ -2,8 +2,8 @@
 
 T1-T7, T9, T10 + TP/TC/TR/TB come from test_think1_board.py, X1-X4 from test_xent.py, S1 from test_summarize.py. Here: T8 (same seed,
 same stage-2 losses), TO (data order = train.py's), TH (hits are stored in file order; gates off = arm a), TG (mechanics gate, incl. the
-abort path), TR (run_box.sh job order and skips, stub python), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
-Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TR, SM.
+abort path), TR (run_box.sh job order and skips, stub python), TS (spec defaults), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
+Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TR, TS, SM.
 Needs the venv with torch CPU, transformers 5.20.2 and peft; `--real` adds the real-0.8B checks (HF_HOME=<cache> HF_HUB_OFFLINE=1).
 """
 from __future__ import annotations
@@ -232,6 +232,30 @@ EXPECT = {
 }
 
 
+def test_ts_spec_defaults():
+    """Per-arm step defaults, learning-rate groups, warm-ups, gate thresholds and eval tags, as in IMPL-SPEC section 3 / PREREG."""
+    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw"}
+    a = K.parse(["--arm", "t", "--out", "x"])
+    assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
+    assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)
+    assert K.GATE == dict(alpha=0.02, cos=0.95, clamp=0.90, div=2.0, window=20)
+    assert min(100, 418 // 10) == 41 and min(100, 6 // 10 or 1) == 1  # stage-1 warm-up rule as coded: min(100, steps // 10 or 1)
+    board = B.ThinkBoard(1024, 0.0195, torch.randn(16, 1024))
+    g = {x["name"]: x for x in K.board_groups(board)}
+    assert [x["base"] for x in g.values()] == [3e-3, 5e-4, 5e-4] and list(g) == ["alpha", "e0eta", "refiner"]
+    assert sum(p.numel() for x in g.values() for p in x["params"]) == sum(p.numel() for p in board.parameters()) == 2_644_016
+    assert len({id(p) for x in g.values() for p in x["params"]}) == len(list(board.parameters()))
+    assert [p.numel() for p in g["alpha"]["params"]] == [48] and sorted(p.numel() for p in g["e0eta"]["params"]) == [1024, 16384]
+    assert abs(T.cosine_lr(0, 1254, 5e-4, 60) - 5e-4 / 60) < 1e-12 and abs(T.cosine_lr(1253, 1254, 5e-4, 60)) < 1e-8
+    t = K.tags_for("t", "validation")
+    assert set(t) == EXPECT["t"]["validation"] and t["L16"][2] == 2000 and t["L24"][2] == 2000 and all(v[2] is None for k, v in t.items() if k not in ("L16", "L24"))
+    assert set(K.tags_for("t", "dev")) == {"L0", "L1", "L8"} and set(K.tags_for("t1", "validation")) == {"L0", "L1", "L8"}
+    assert set(K.tags_for("t1", "dev")) == {"L1"} and set(K.tags_for("tw", "validation")) == {"L1"} and K.tags_for("tw", "dev") == {}
+    assert {k: v[:2] for k, v in t.items() if k in ("swap8", "mean8", "rep1_8", "gatesoff8")} == {"swap8": ("swap", 8), "mean8": ("mean", 8), "rep1_8": ("rep", 8), "gatesoff8": ("off", 8)}
+    print("TS step defaults 418 / 1,254, lr groups 3e-3 / 5e-4 / 5e-4 (each board parameter in exactly one group), gate thresholds and eval tags as in the spec")
+
+
+
 def test_sm_smoke_all_arms():
     src = VILLAGE if Path(VILLAGE).exists() else "/nonexistent"
     with tempfile.TemporaryDirectory() as tmp:
@@ -283,7 +307,7 @@ def run_all(real=False, only=None):
     import test_summarize as TS
     tests = [("BOARD", lambda: board_tests(TB, real)),
              ("XENT", TX.run_all), ("S1", TS.test_s1), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
-             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TR", test_box_script), ("SM", test_sm_smoke_all_arms)]
+             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
         if only and name.lower() not in [o.lower() for o in only]:
