@@ -20,6 +20,9 @@ for f in sorted(Path("out").rglob("result_*.json")):
                      f"{mode}2hop={100 * (m.get('twohop') or {}).get('acc', 0):.0f}", f"{mode}chg={100 * (m.get('changed') or {}).get('new', 0):.0f}",
                      f"{mode}rt={100 * (m.get('routine') or {}).get('acc', 0):.0f}", f"{mode}int={100 * (m.get('integration') or 0):.0f}",
                      f"{mode}pool={100 * (m.get('pooled') or 0):.0f}"]
+    r = sc.get("router")  # Sleep-B addendum 1 arms: router R pooled / integration
+    if isinstance(r, dict):
+        nums += [f"rpool={100 * (r.get('pooled') or 0):.0f}", f"rint={100 * (r.get('integration') or 0):.0f}"]
     for k, v in d.items():
         if isinstance(v, dict) and isinstance(v.get("accuracy"), (int, float)):
             nums.append(f"{k}={100 * v['accuracy']:.1f}")

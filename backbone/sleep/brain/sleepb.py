@@ -1,5 +1,7 @@
 """Sleep-B (see backbone/sleep/brain/PREREG-sleepB.md). Arms: a0 (base), ad (base + diary search), ab (brain-like sleep),
-af (flat sleep, AB's step counts), and one-change ablations ab_norem / ab_noshy / ab_flatprio / ab_all.
+af (flat sleep, AB's step counts), one-change ablations ab_norem / ab_noshy / ab_flatprio / ab_all, and the addendum-1 fixes
+ab_ob (open-book rehearsal) / ab_klctx (read-the-notes KL leash), see PREREG-sleepB-addendum1.md. The two new arms also save every
+per-question row + p_first in each scoring mode and score the router R and the adapter-off diary reader (scores.router, scores.base_diary).
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
@@ -38,7 +40,8 @@ from train import LORA_TARGETS, load_model  # noqa: E402
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
-ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all"]
+NEW_ARMS = ("ab_ob", "ab_klctx")
+ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
 GENERIC = {"sam", "i", "me", "my", "we", "you", "he", "she", "they", "it", "user", "the user", "someone", "somebody"}
 STOP = set("the a an of in is to and where who does what which for at on by with was are do did live lives name s".split())
 IMP_RE = re.compile(r"remember|important|don'?t forget", re.I)
@@ -125,7 +128,7 @@ class Diary:
     def __init__(s, week):
         s.turns = [dict(t, i=i) for i, t in enumerate(x for x in week["diary"] if x["role"] == "user")]
         s.low = [t["text"].lower() for t in s.turns]
-        s.occ_cache, s.tf, s.post = {}, [], defaultdict(list)
+        s.occ_cache, s.tf, s.post, s.sc = {}, [], defaultdict(list), {}
         for i, t in enumerate(s.turns):
             c = Counter(w for w in tokens(t["text"]) if w not in STOP)
             s.tf.append(c)
@@ -147,17 +150,23 @@ class Diary:
     def label(s, idxs, maxc=500):
         return "\n".join(f"[Day {s.turns[i]['day']}] {s.turns[i]['text'][:maxc]}" for i in idxs)
 
-    def search(s, q, k=8):  # BM25 top-k user turns, returned chronologically
-        n, scores = len(s.turns), defaultdict(float)
+    def search(s, q, k=8, upto=None):  # BM25 top-k user turns, returned chronologically; upto: only turns of days <= upto (n, df over those; cached)
+        if upto is not None and (q, k, upto) in s.sc:
+            return s.sc[(q, k, upto)]
+        ok = (lambda i: True) if upto is None else (lambda i: s.turns[i]["day"] <= upto)  # noqa: E731
+        n, scores = sum(1 for i in range(len(s.turns)) if ok(i)), defaultdict(float)
         for w in set(tokens(q)) - STOP:
-            df = len(s.post.get(w, ()))
+            ps = [i for i in s.post.get(w, ()) if ok(i)]
+            df = len(ps)
             if not df:
                 continue
             idf = math.log(1 + (n - df + 0.5) / (df + 0.5))
-            for i in s.post[w]:
+            for i in ps:
                 tf = s.tf[i][w]
                 scores[i] += idf * tf * 2.5 / (tf + 1.5 * (0.25 + 0.75 * s.dl[i] / s.avg))
         top = sorted(scores, key=lambda i: (-scores[i], i))[:k]
+        if upto is not None:
+            s.sc[(q, k, upto)] = sorted(top)
         return sorted(top)
 
 
@@ -168,6 +177,10 @@ def plain_prompt(L, q):
 
 def ctx_prompt(L, ctx, q, head="Messages from Sam's chat history, labelled by day (if they disagree, the latest day is true):"):
     return L.render(SYS, f"{head}\n{ctx}\n\nQuestion: {q}")
+
+
+def diary_prompt(L, diary, q, upto=None):  # the diary-test format; upto: restrict the notes to days <= upto (training), None: whole diary (scoring)
+    return L.render(SYS, "Notes from earlier chats:\n" + diary.label(diary.search(q, 8, upto)) + f"\n\nQuestion: {q}")
 
 
 def tag_prompt(L, text):
@@ -263,26 +276,65 @@ def ex_qa(L, q, a):
     return (p + L.ids(a) + [L.eos], len(p))
 
 
+def ex_qa_ob(L, diary, q, a, d):  # open-book Q&A example: the diary-test prompt (notes of days <= d), loss on the answer only
+    p = L.ids(diary_prompt(L, diary, q, d))
+    return (p + L.ids(a) + [L.eos], len(p))
+
+
 # ------------------------------------------------------------------ scoring
-def score_week(L, model, week, diary, mode, bs, dreamed=None):
-    """mode 'weights' (question only) or 'diary' (BM25 top-8 user turns labelled by day + question). dreamed: bool per twohop test."""
+@torch.no_grad()
+def generate_p(L, model, prompts, max_new=20, bs=8):
+    """Lang.generate (greedy) that also returns p_first: softmax probability of each answer's first generated token (scores[0], taken
+    from model.generate(output_scores=True, return_dict_in_generate=True); greedy has no sampling warpers)."""
+    outs, ps = [None] * len(prompts), [None] * len(prompts)
+    order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
+    for st in range(0, len(order), bs):
+        idx = order[st:st + bs]
+        enc = [L.ids(prompts[i]) for i in idx]
+        n = max(map(len, enc))
+        pad = 0 if L.smoke else (L.tok.pad_token_id if L.tok.pad_token_id is not None else L.eos)
+        ids = torch.full((len(enc), n), pad, dtype=torch.long)
+        mask = torch.zeros((len(enc), n), dtype=torch.long)
+        for r, e in enumerate(enc):
+            ids[r, n - len(e):] = torch.tensor(e)
+            mask[r, n - len(e):] = 1
+        out = model.generate(input_ids=ids.to(L.device), attention_mask=mask.to(L.device), max_new_tokens=max_new, pad_token_id=pad,
+                             eos_token_id=L.eos, do_sample=False, output_scores=True, return_dict_in_generate=True)
+        p0, seq = torch.softmax(out.scores[0].float(), -1), out.sequences
+        for r, i in enumerate(idx):
+            outs[i], ps[i] = L.decode(seq[r, n:].tolist()).strip(), float(p0[r, seq[r, n]])
+    return outs, ps
+
+
+def score_week(L, model, week, diary, mode, bs, dreamed=None, full=False):
+    """mode 'weights' (question only) or 'diary' (BM25 top-8 user turns labelled by day + question). dreamed: bool per twohop test.
+    full: also save every row (not only 8 examples per kind) under 'rows', each with p_first (first answer token's probability)."""
     T, flat, prompts = week["tests"], [], []
     for kind in KINDS:
         for t in T[kind]:
             flat.append((kind, t))
             if mode == "diary":
-                prompts.append(L.render(SYS, "Notes from earlier chats:\n" + diary.label(diary.search(t["q"])) + f"\n\nQuestion: {t['q']}"))
+                prompts.append(diary_prompt(L, diary, t["q"]))
             else:
                 prompts.append(plain_prompt(L, t["q"]))
-    ans = L.generate(model, prompts, max_new=20, bs=bs)
+    ans, pf = generate_p(L, model, prompts, max_new=20, bs=bs) if full else (L.generate(model, prompts, max_new=20, bs=bs), None)
     rows = defaultdict(list)
-    for (kind, t), a in zip(flat, ans):
+    for j, ((kind, t), a) in enumerate(zip(flat, ans)):
         r = {"q": t["q"], "target": t["target"], "answer": a, "ok": has_ans(t["target"], a)}
+        if full:
+            r["p_first"] = pf[j]
         if kind == "changed":
             r["stale"] = has_ans(t["old"], a)
         if "class" in t:
             r["cls"] = t["class"]
         rows[kind].append(r)
+    sc = agg(rows, dreamed)
+    if full:
+        sc["rows"] = {k: rows[k] for k in KINDS}
+    return sc
+
+
+def agg(rows, dreamed=None):  # score_week's summary of scored rows {kind: [row]}
     sc = {}
     for kind in ("forward", "reverse"):
         rs = rows[kind]
@@ -299,6 +351,25 @@ def score_week(L, model, week, diary, mode, bs, dreamed=None):
     sc["pooled"] = acc(r["ok"] for k in KINDS for r in rows[k])
     sc["examples"] = {k: rows[k][:8] for k in KINDS}
     return sc
+
+
+def route(mem, bd, dreamed=None, thr=0.5):
+    """Router R (addendum 1): the slept model's weights-only answer if its first-token probability >= thr, else the base model's diary answer.
+    mem / bd: score_week(full=True) outputs (weights mode of the slept model, diary mode with the adapter off). Same structure as score_week."""
+    rows = {k: [dict(m if m["p_first"] >= thr else b, src="memory" if m["p_first"] >= thr else "base_diary", p_first_mem=m["p_first"])
+                for m, b in zip(mem["rows"][k], bd["rows"][k])] for k in KINDS}
+    assert all(m["q"] == r["q"] for k in KINDS for m, r in zip(mem["rows"][k], rows[k])) and all(len(rows[k]) == len(mem["rows"][k]) for k in KINDS)
+    allr = [r for k in KINDS for r in rows[k]]
+    sc = agg(rows, dreamed)
+    sc.update({"threshold": thr, "frac_memory": acc(r["src"] == "memory" for r in allr), "acc_when_memory": acc(r["ok"] for r in allr if r["src"] == "memory"),
+               "acc_when_diary": acc(r["ok"] for r in allr if r["src"] != "memory"), "rows": rows})
+    return sc
+
+
+def eval_line(sc):
+    return (f"forward {sc['forward']['acc']} (C1 {sc['forward']['C1']} C2 {sc['forward']['C2']} C4 {sc['forward']['C4']}) reverse {sc['reverse']['acc']} "
+            f"twohop {sc['twohop']['acc']} changed new {sc['changed']['new']} stale {sc['changed']['stale']} routine {sc['routine']['acc']} "
+            f"integration {sc['integration']} pooled {sc['pooled']}")
 
 
 def fwd_recall(L, model, week, bs):  # cheap learning-curve probe: weights-only forward recall by ground-truth class
@@ -320,6 +391,9 @@ def load_arc_val(smoke):
 
 
 # ------------------------------------------------------------------ training
+TOK_BUDGET = 8192  # padded tokens per CE forward before splitting into micro-batches of 4
+
+
 class Trainer:
     """One night of LoRA training: fresh AdamW, cosine lr over `steps`, CE on the batch + KL guard on generic replay vs adapter-disabled base."""
 
@@ -338,13 +412,30 @@ class Trainer:
         for g in s.opt.param_groups:
             g["lr"] = lr
         s.pm.train()
-        ids, mask = L.pad_right([b[0] for b in batch])
-        lm = torch.zeros_like(mask)
-        for r, (e, st) in enumerate(batch):
-            lm[r, st:len(e)] = 1
-        tm = lm[:, 1:].bool()
-        ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
-        loss, kl_v = ce, 0.0
+        s.opt.zero_grad(set_to_none=True)
+        if len(batch) * max(len(b[0]) for b in batch) > TOK_BUDGET:  # long open-book examples: same loss, split in micro-batches
+            ntgt = sum(len(e) - max(st, 1) for e, st in batch)
+            ce_sum = 0.0
+            for j in range(0, len(batch), 4):
+                mb = batch[j:j + 4]
+                ids, mask = L.pad_right([b[0] for b in mb])
+                lm = torch.zeros_like(mask)
+                for r, (e, st) in enumerate(mb):
+                    lm[r, st:len(e)] = 1
+                tm = lm[:, 1:].bool()
+                part = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
+                part.backward()
+                ce_sum += float(part.detach())
+            ce = torch.tensor(ce_sum)
+            loss, kl_v = None, 0.0
+        else:
+            ids, mask = L.pad_right([b[0] for b in batch])
+            lm = torch.zeros_like(mask)
+            for r, (e, st) in enumerate(batch):
+                lm[r, st:len(e)] = 1
+            tm = lm[:, 1:].bool()
+            ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
+            loss, kl_v = ce, 0.0
         if s.replay and a.kl_weight > 0:
             rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay)))
             rids, rmask = L.pad_right([r[0] for r in rb])
@@ -356,10 +447,10 @@ class Trainer:
             with torch.no_grad(), s.pm.disable_adapter():
                 ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
             kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
-            loss = ce + a.kl_weight * kl
+            loss = a.kl_weight * kl if loss is None else ce + a.kl_weight * kl
             kl_v = float(kl.detach())
-        s.opt.zero_grad(set_to_none=True)
-        loss.backward()
+        if loss is not None:
+            loss.backward()
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
@@ -495,6 +586,8 @@ class Brain:
         s.rem_pool, s.rem_chains, s.rem_done, s.gist_done = [], [], Counter(), Counter()
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         s.rng = random.Random(args.seed + 17)
+        s.ob_rng = random.Random(args.seed + 29)  # ab_ob only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
+        s.day, s.night_qs = 0, []
         s.gen_t = torch.Generator().manual_seed(args.seed + 5)
         G = []  # ground truth name pairs per item (diagnostics only)
         for g in week["items"]:
@@ -625,6 +718,7 @@ class Brain:
     # ---- 4. NREM dreams (base model, diary turns in context)
     def dream(s, d, E):
         a, st = s.a, Counter()
+        s.night_qs = []  # questions kept by tonight's dreaming (ab_klctx leash)
         need = [it for it in E if it.dirty or it.seen_ment < it.nment or (it.fails and not (it.para or it.qa))]  # new, new mentions, or retry after a failed night
         need.sort(key=lambda it: (not it.upd, -it.days, -it.nment))
         st["backlog"] = max(0, len(need) - a.max_dream_items)
@@ -709,6 +803,7 @@ class Brain:
                 elif it.probe:
                     pool = [x for x in pool if norm(x[0]) != norm(it.probe[0])]
                 it.para, it.qa, it.fails = g["p"], pool, 0
+                s.night_qs += [q for q, _ in pool]
                 st["items_with_dreams"] += 1
                 if len(s.examples["dreams"]) < 20:
                     s.examples["dreams"].append({"night": d, "item": it.fact, "paraphrases": g["p"], "qa": pool, "probe": it.probe, "update": bool(it.upd)})
@@ -748,9 +843,30 @@ class Brain:
                 it.consol = False
 
     # ---- batches
+    def qa_ex(s, q, a):  # ab_ob: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+        if s.a.arm == "ab_ob":
+            ob = s.ob_rng.random() < 0.5
+            s.cov["qa_open_book" if ob else "qa_closed_book"] += 1
+            if ob:
+                if "ob_example" not in s.raw:
+                    s.raw["ob_example"] = {"prompt_tail": diary_prompt(s.L, s.diary, q, s.day)[-600:], "answer": a}
+                return ex_qa_ob(s.L, s.diary, q, a, s.day)
+        return ex_qa(s.L, q, a)
+
     def dream_ex(s, it):
         o = s.rng.choice(it.para + it.qa)
-        return ex_text(s.L, o) if isinstance(o, str) else ex_qa(s.L, o[0], o[1])
+        return ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1])
+
+    def klctx(s, d):
+        """ab_klctx: up to 100 diary-format prompts (notes of days <= d) from tonight's kept dreamed questions, each with the BASE model's
+        greedy answer (max_new 20), as extra KL replay: (prompt + answer + eos, loss from the answer)."""
+        qs = list(dict.fromkeys(s.night_qs))
+        random.Random(s.a.seed * 100 + d + 11).shuffle(qs)
+        ps = [diary_prompt(s.L, s.diary, q, d) for q in qs[:100]]
+        ans = s.gen(ps, 20)
+        s.raw["klctx"] = [{"q": q, "base_answer": x} for q, x in list(zip(qs, ans))[:3]]
+        pis = [s.L.ids(p) for p in ps]
+        return [(pi + s.L.ids(x) + [s.L.eos], len(pi)) for pi, x in zip(pis, ans)]
 
     def nrem(s, act, cum, con, n):
         out = []
@@ -879,6 +995,7 @@ class Brain:
     def night(s, d, sched):
         a, t0, rec = s.a, time.time(), {"night": d}
         s.raw, ph, tl = {}, {}, [time.time()]
+        s.day = d
 
         def lap(name):
             ph[name] = ph.get(name, 0) + time.time() - tl[0]
@@ -907,7 +1024,12 @@ class Brain:
                     "probe_recall_pre": acc(ok for ok, _ in pre.values()), "elig_by_class": s.elig_by_class(E)})
         s.log(f"[night {d}] items {rec['items_total']} eligible {len(E)} (active {n_act}, consolidated {len(cons)}) steps {steps} probe_pre {rec['probe_recall_pre']}")
         snap = s.snapshot()
-        tr = Trainer(s.L, s.pm, a, s.replay, steps, a.seed * 100 + d)
+        kl_pool = s.replay
+        if a.arm == "ab_klctx" and (act or con):  # KL batches are sampled from generic replay + tonight's diary-format prompts
+            kl_pool = s.replay + s.klctx(d)
+            rec["klctx_n"] = len(kl_pool) - len(s.replay)
+            lap("klctx")
+        tr = Trainer(s.L, s.pm, a, kl_pool, steps, a.seed * 100 + d)
         cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
         if not (act or con):
@@ -926,7 +1048,7 @@ class Brain:
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
                     for _ in range(c - n_nrem):
                         nr = round(0.7 * a.bsz) if live else 0
-                        tr.step([ex_qa(s.L, x["q"], x["a"]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
+                        tr.step([s.qa_ex(x["q"], x["a"]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
                     rem_n, done = rem_n + (c - n_nrem), done + (c - n_nrem)
                     s.cov["rem_steps"] += c - n_nrem
         lap("train")
@@ -1251,11 +1373,16 @@ def main():
     dreamed = brain.dreamed_twohop() if brain else None
     result["scores"] = {}
     modes = {"a0": ["weights"], "ad": ["diary"]}.get(args.arm, ["weights", "diary"])
+    full = args.arm in NEW_ARMS  # per-question rows + p_first, router, adapter-off diary reader
     for mode in modes:
-        sc = result["scores"][mode] = score_week(L, model, week, diary, mode, args.gen_bs, dreamed)
-        log(f"[eval:{mode}] forward {sc['forward']['acc']} (C1 {sc['forward']['C1']} C2 {sc['forward']['C2']} C4 {sc['forward']['C4']}) reverse {sc['reverse']['acc']} "
-            f"twohop {sc['twohop']['acc']} changed new {sc['changed']['new']} stale {sc['changed']['stale']} routine {sc['routine']['acc']} "
-            f"integration {sc['integration']} pooled {sc['pooled']}")
+        sc = result["scores"][mode] = score_week(L, model, week, diary, mode, args.gen_bs, dreamed, full)
+        log(f"[eval:{mode}] {eval_line(sc)}")
+    if full:
+        with pm.disable_adapter():
+            bd = result["scores"]["base_diary"] = score_week(L, pm, week, diary, "diary", args.gen_bs, dreamed, True)
+        log(f"[eval:base_diary] {eval_line(bd)}")
+        rt = result["scores"]["router"] = route(result["scores"]["weights"], bd, dreamed)
+        log(f"[eval:router] {eval_line(rt)} frac_memory {rt['frac_memory']} acc_when_memory {rt['acc_when_memory']} acc_when_diary {rt['acc_when_diary']}")
     if args.arm != "ad":
         try:
             result["arc_easy"] = score_arc(L, model, load_arc(args.smoke), bs=max(args.gen_bs // 2, 1))
