@@ -116,7 +116,7 @@ def build(a):
     (d / "job.py").write_text(job)
     meta = {"id": f"{u}/rlaif-{a.run}", "title": f"rlaif-{a.run}", "code_file": "job.py", "language": "python",
             "kernel_type": "script", "is_private": "true", "enable_gpu": "true", "enable_internet": "true",
-            "dataset_sources": [f"{u}/{KEY_SLUG}"], "competition_sources": [], "kernel_sources": []}
+            "dataset_sources": [] if a.no_key_dataset else [f"{u}/{KEY_SLUG}"], "competition_sources": [], "kernel_sources": []}
     (d / "kernel-metadata.json").write_text(json.dumps(meta, indent=1))
     print(json.dumps({"dir": str(d), "id": meta["id"], "code_files": n, "xz_bytes": len(code), "job_bytes": len(job),
                       "deadline_h": round(cfg["deadline_s"] / 3600, 2), "smoke": cfg["smoke"]}))
@@ -229,6 +229,14 @@ def find_key():
             if v:
                 os.environ["LEARNER_ANTHROPIC_API_KEY"] = v
                 return True
+    if not os.environ.get("LEARNER_ANTHROPIC_API_KEY"):
+        try:  # a Kaggle Secret named LEARNER_ANTHROPIC_API_KEY attached to the notebook in the Kaggle UI
+            from kaggle_secrets import UserSecretsClient
+            v = UserSecretsClient().get_secret("LEARNER_ANTHROPIC_API_KEY")
+            if v:
+                os.environ["LEARNER_ANTHROPIC_API_KEY"] = v.strip()
+        except Exception as e:
+            say("no Kaggle secret:", type(e).__name__)
     return bool(os.environ.get("LEARNER_ANTHROPIC_API_KEY"))
 
 
@@ -238,6 +246,11 @@ def sh(cmd, **kw):
 
 def pip_ensure():
     from importlib import metadata
+    try:  # Kaggle ships torchao 0.10; peft 0.20 refuses to build LoRA layers when an old torchao is importable
+        if tuple(int(x) for x in metadata.version("torchao").split(".")[:2]) < (0, 16):
+            r = sh([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"]); say("removed old torchao rc", r.returncode)
+    except Exception:
+        pass
     need = []
     for pkg in ("peft", "anthropic"):
         try:
@@ -278,6 +291,8 @@ def run_step(name, args, gpu, stop_at, outdir):
     os.makedirs(os.path.dirname(log), exist_ok=True)
     script = "stub_train.py" if DRY and os.environ.get("KAGGLE_JOB_REAL") != "1" else "train.py"
     cmd = [sys.executable, "-u", script, *args, "--outdir", outdir]
+    if CFG["smoke"] and not os.environ.get("LEARNER_ANTHROPIC_API_KEY") and "--fake-grader" not in cmd:
+        cmd += ["--fake-grader"]  # smoke without a key still tests GPU/fp16/plumbing
     if DRY and script == "train.py":
         cmd += ["--fake-grader"] + os.environ.get("KAGGLE_JOB_EXTRA", "").split()
     env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu), PYTHONUNBUFFERED="1", TOKENIZERS_PARALLELISM="false",
@@ -355,6 +370,8 @@ def main():
     ngpu, key = preflight()
     if DRY:
         ngpu = 2
+    if not key and not CFG["smoke"] and not DRY:
+        say("ABORT: no LEARNER_ANTHROPIC_API_KEY (attach the Kaggle Secret to this notebook)"); return
     ev = CFG["eval_flags"].split()
     heldout, train = CFG["heldout"], CFG["train"]
     train_args = lambda algo: ["--algo", algo, "--train", train, *CFG["common"].split()]
@@ -436,6 +453,7 @@ def main(argv=None):
         return s
     add("secret", secret, run=False, help="create/version the private key dataset")
     s = add("build", build, help="write the kernel dir")
+    s.add_argument("--no-key-dataset", action="store_true", help="don't mount the key dataset (key via Kaggle Secret, or fake grader in smoke)")
     s.add_argument("--smoke", action="store_true", help="tiny pipeline test (2 steps, n-eval 4, 40 min deadline)")
     s.add_argument("--deadline-h", type=float, help="override the job deadline in hours (default 11)")
     add("push", push)
