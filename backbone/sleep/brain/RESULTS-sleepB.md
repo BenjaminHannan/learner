@@ -268,3 +268,10 @@ Verdicts:
 - H2 FAIL: changed-new is 55, against a mark of 80.
 - **The wrong-if fires:** changed-new is 55, below 60.
 - Plain reading: more replays at half weight for important or corrected facts did not help updates (55 against 70) and lowered note-reading (73 against 82). The research note predicted no gain, because the expected push is the same. The drop in diary reading is unexplained. It may come from the PC numerics or seed-like noise (suggested).
+
+## Addendum 6: Week-2 control (ab_ob, seed 1)
+Box 57572669 (A100 SXM4 UK) ran it in 0.95 h, about $0.64 including a wasted stop wait. The watcher's API stop was accepted, but the box never left "running", so `cat` refused and the result JSON was lost. The watcher now waits for the job's own self-stop, 20 min after DONE.
+
+| arm (Week-2, seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control | 71 | 34 | 0 | 52.5 | 6 | 63 | 55 | 42 | 36 | 84 | 56 | 92.2 | night 4 |
