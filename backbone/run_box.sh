@@ -34,6 +34,8 @@ except Exception as e: print("causal_conv1d missing (torch fallback):", type(e).
 assert torch.cuda.is_available(), "no CUDA"
 PY
 
+if [ -n "${THINK_JOBS:-}" ]; then exec bash backbone/think/run_box.sh; fi   # Think-1 (backbone/think/PREREG.md)
+
 if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1.md): skips the village data build and arms
   for a in ${SLEEP_ARMS//,/ }; do
     if [ -f "$OUT/sleep/$a/result_$a.json" ]; then echo "-- skip sleep $a"; continue; fi
