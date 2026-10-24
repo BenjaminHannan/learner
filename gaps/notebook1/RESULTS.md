@@ -29,3 +29,15 @@ Notes lose specifics, since the writer compresses each session without knowing t
 - No refusals recorded.
 - Judge prompts are my approximation of LongMemEval's per-type grading, not the official script.
 - Spend: see result.json; estimated total about $7.5.
+
+## Notebook-1b (Addendum 1): hybrid arm H
+Arm H = R's top-10 raw turn pairs plus N's top-20 notes (date-sorted, later notes replace earlier) in one prompt; same reader, judge, sample and cached notes. Shown for this sample (Haiku stand-ins, one seed).
+
+| Arm | Overall | KU | MS | SS-asst | SS-pref | SS-user | Temporal | Mean prompt tokens |
+|---|---|---|---|---|---|---|---|---|
+| R | 71.7% | 90 | 50 | 90 | 30 | 90 | 80 | 7,999 |
+| H | 73.3% | 90 | 50 | 90 | 40 | 80 | 90 | 9,430 |
+
+Paired H vs R: H wins 5, loses 4.
+Verdict (H >= R + 5 pts): **FAIL** (H 73.3 vs R 71.7, +1.7 pts). "Wrong if H <= R": not triggered. Differences this size are within noise (SE about 6 pts).
+Extra spend about $0.1 (cap $3). H had no errors.

@@ -72,7 +72,7 @@ RP = ("Below is a memory of past conversations between you (an AI assistant) and
       "Current date: {qd}\nQuestion: {q}\n\nAnswer the question briefly, based on the memory. "
       "If the memory does not contain the answer, say you don't know.\nAnswer:")
 
-def build(arm, q):
+def build_mem(arm, q):
     ss = sessions(q); extra = ""
     if arm == "F":
         mem = "\n\n".join(fmt_session(d, s) for d, _, s in ss)
@@ -101,6 +101,14 @@ def build(arm, q):
         top = sorted(sorted(range(len(notes)), key=lambda i: -sc[i])[:20], key=lambda i: (notes[i][0], i))
         mem = "\n".join(notes[i][1] if notes[i][1].startswith(notes[i][0]) else f"[{notes[i][0]}] {notes[i][1]}" for i in top)
         extra = "These are dated notes, listed oldest to newest. If notes conflict, later notes replace earlier ones.\n\n"
+    return mem, extra
+
+def build(arm, q):
+    if arm == "H":
+        rm, _ = build_mem("R", q); nm, ne = build_mem("N", q)
+        mem = "Raw conversation excerpts:\n\n" + rm + "\n\nDated notes (listed oldest to newest; if notes conflict, later notes replace earlier ones):\n" + nm
+        return RP.format(extra="", mem=mem, qd=q["question_date"], q=q["question"])
+    mem, extra = build_mem(arm, q)
     return RP.format(extra=extra, mem=mem, qd=q["question_date"], q=q["question"])
 
 JP = {
@@ -130,6 +138,19 @@ def work(a):
         return dict(question_id=q["question_id"], type=q["question_type"], pred=f"[ERROR {e}]", gold=q["answer"], correct=False, prompt_tokens=0, error=True)
 
 import sys as _s
+if len(_s.argv)>1 and _s.argv[1]=="H":
+    rows=None
+    with ThreadPoolExecutor(4) as ex: rows=list(ex.map(work,[("H",q) for q in qs]))
+    for it in range(5):
+        bad=[k for k,r in enumerate(rows) if r.get("error")]
+        if not bad: break
+        time.sleep(30)
+        with ThreadPoolExecutor(2) as ex: new=list(ex.map(work,[("H",qs[k]) for k in bad]))
+        for k,r in zip(bad,new): rows[k]=r
+    open(os.path.join(OUT,"rows_H.jsonl"),"w").write("".join(json.dumps(r)+"\n" for r in rows))
+    json.dump({"usage": usage, "spend": spend()}, open(os.path.join(OUT, "usage_H.json"), "w"))
+    print("H",sum(r["correct"] for r in rows),"/",len(rows),"errors",sum(1 for r in rows if r.get("error")),"spend",round(spend(),3))
+    raise SystemExit
 if len(_s.argv)>1 and _s.argv[1]=="rerun":
     for arm in ["F","R","N","O"]:
         p=os.path.join(OUT,f"rows_{arm}.jsonl"); rows=[json.loads(l) for l in open(p)]

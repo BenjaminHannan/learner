@@ -3,7 +3,8 @@
   "F": 0.7666666666666667,
   "R": 0.7166666666666667,
   "N": 0.5666666666666667,
-  "O": 0.8666666666666667
+  "O": 0.8666666666666667,
+  "H": 0.7333333333333333
  },
  "by_type": {
   "F": {
@@ -37,13 +38,22 @@
    "single-session-preference": 0.6,
    "single-session-user": 0.9,
    "temporal-reasoning": 0.8
+  },
+  "H": {
+   "knowledge-update": 0.9,
+   "multi-session": 0.5,
+   "single-session-assistant": 0.9,
+   "single-session-preference": 0.4,
+   "single-session-user": 0.8,
+   "temporal-reasoning": 0.9
   }
  },
  "mean_prompt_tokens": {
   "F": 167054.13333333333,
   "R": 7998.933333333333,
   "N": 1547.7666666666667,
-  "O": 8276.9
+  "O": 8276.9,
+  "H": 9430.116666666667
  },
  "errors": {
   "F": 0,
@@ -59,6 +69,10 @@
   "N_vs_F": {
    "wins": 3,
    "losses": 15
+  },
+  "H_vs_R": {
+   "wins": 5,
+   "losses": 4
   }
  },
  "KU_TR_correct": {
@@ -89,5 +103,12 @@
   "main_run_usd": 4.42,
   "rerun_usd": 2.29,
   "not_counted": "smoke run (~$0.25) and an aborted first full run (~$0.5, its writer notes were reused from cache); estimated total ~$7.5, under the $10 cap"
+ },
+ "notebook_1b": {
+  "pass_H_ge_R_plus_5": false,
+  "wrong_if_H_le_R": false,
+  "H": 0.7333333333333333,
+  "R": 0.7166666666666667,
+  "spend_usd": 0.1
  }
 }

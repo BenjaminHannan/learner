@@ -21,6 +21,8 @@ tricks per size (Python tool, Wikipedia lookup, vote, think). The tricks thread'
 | 7 | Safety for real actions on his Mac | An assistant that edits files or sends email must confirm before irreversible steps and resist instructions hidden in web pages. | AgentDojo small subset: attack success rate and task success for 4B/35B, with and without a "confirm irreversible" rule. |
 | 8 | Several agents sharing one board (v2 bridge) | Ben wants several agents at once; the bridge thread fixes v1's internal bridge, not agents sharing findings. | Two 4B agents split a task, with vs without a shared notes file. Waits on #2. |
 
+Notebook-1 result (shown, stand-in Claude Haiku, 60 questions): full history 76.7, plain search 71.7, notebook 56.7, oracle 86.7; notebook FAILS all marks. Hybrid search+notes (1b) 73.3, +1.7 over search, fails the +5 mark. Lesson: for remembering the user, plain search over the raw chats is the baseline to beat; one-pass notes drop specifics. Next: Notebook-2 with Qwen 4B as reader on the PC.
+
 Ownership update (02:40Z, coordinator): #3 and #5 are handed to the tricks thread (designs sent); #4 (MTP guess-ahead + batching server) is the backbone thread's next step. This thread runs #1 and #2.
 
 Not gaps: routing to the boss (leapfrog thread), sealed test (ten weaknesses), loops at test time (state lab, shown +8.2 dev).
