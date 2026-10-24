@@ -2,6 +2,8 @@
 
   python backbone/creative/creative1.py --arm c16 --model Qwen/Qwen3.5-0.8B --out out/creative/c16
   python backbone/creative/creative1.py --arm sleep --smoke --out /tmp/x      # CPU, tiny random qwen3_5
+  python backbone/creative/creative1.py --arm sleep --aha --model Qwen/Qwen3.5-0.8B --out out/creative/aha   # Aha-1 (PREREG-aha1.md)
+  python backbone/creative/creative1.py --arm sleep --smoke --aha --out /tmp/x
 
 Never reads any test.jsonl. The C2 pool's `answer` field is never used (fit = reproduces the examples shown in the prompt).
 """
@@ -131,6 +133,7 @@ _OK = (ast.Expression, ast.Lambda, ast.arguments, ast.arg, ast.BinOp, ast.UnaryO
        ast.Or, ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Index if hasattr(ast, "Index") else ast.Load)
 
 
+AHA = False  # Aha-1 (--aha): C16 samples are written from prompts that hide one example each (PREREG-aha1.md)
 NO_BRANCH = False  # Creative-2 (--no-branch): reject if/else, comparisons and and/or, so a lookup table of the examples can't "fit"
 _BRANCH = (ast.IfExp, ast.Compare, ast.BoolOp)
 
@@ -233,6 +236,21 @@ def split_prompt(prompt):
     return exs, int(_Q.search(prompt).group(1))
 
 
+def hide_example(prompt, h):
+    """Same puzzle with example h removed (two examples left, same query and format)."""
+    exs, q = split_prompt(prompt)
+    keep = "; ".join(f"{a} -> {b}" for i, (a, b) in enumerate(exs) if i != h)
+    return f"Examples: {keep}. Now {q} -> ?"
+
+
+def has_branch(src):
+    """True if the program contains an if/else, comparison or and/or."""
+    try:
+        return any(isinstance(n, _BRANCH) for n in ast.walk(ast.parse(src.strip(), mode="eval")))
+    except SyntaxError:
+        return False
+
+
 def judge(src, prompt):
     """-> (fits_all_examples, answer string or None) for one program source."""
     if src is None:
@@ -261,6 +279,15 @@ class Ctx:
         ps = self.user_prompts(rows)
         flat = [p for p in ps for _ in range(n)]
         raw = self.L.generate(model, flat, max_new=self.max_new, bs=self.args.gen_bs, sample=sample, temp=0.8)
+        return self._smoke_inject(raw, rows, n, seed)
+
+    def propose_holdout(self, model, rows, n, seed=0):
+        """Aha-1: like propose(sample=True), but sample i of each row sees the prompt with example i % 3 hidden."""
+        flat = [self.L.render(SYS, hide_example(r["prompt"], i % 3)) for r in rows for i in range(n)]
+        raw = self.L.generate(model, flat, max_new=self.max_new, bs=self.args.gen_bs, sample=True, temp=0.8)
+        return self._smoke_inject(raw, rows, n, seed)
+
+    def _smoke_inject(self, raw, rows, n, seed):
         if self.args.smoke:
             rng = random.Random(seed)
             good = ["lambda x: x*x", "lambda x: 2*x+1", "lambda x: x+3", "lambda x: sum(int(d) for d in str(x))", "lambda x: int(str(x)[::-1])",
@@ -299,29 +326,33 @@ def eval_f0(C, model, rows, name):
 
 
 def eval_c16(C, model, rows, name, seed=0):
-    reps = C.propose(model, rows, C.n_samples, sample=True, seed=seed)
+    reps = C.propose_holdout(model, rows, C.n_samples, seed=seed) if AHA else C.propose(model, rows, C.n_samples, sample=True, seed=seed)
     ok, answered, fitany, ex, nfit = [], [], [], [], []
-    ans_all = []
+    ans_all, br = [], []  # br: (answered program has a branch, correct)
     for r, rs in zip(rows, reps):
-        chosen, ans, nf = None, None, 0
-        for rep in rs:
+        chosen, ans, nf, hid = None, None, 0, None
+        for i, rep in enumerate(rs):
             src = parse_program(rep)
-            f, a = judge(src, r["prompt"])
+            f, a = judge(src, r["prompt"])  # always the FULL prompt: must reproduce all 3 examples
             if f and a is not None:
                 nf += 1
                 if chosen is None:
-                    chosen, ans = src, a
+                    chosen, ans, hid = src, a, (i % 3 if AHA else None)
         c = is_correct(r, ans)
+        if chosen is not None:
+            br.append((has_branch(chosen), c))
         ok.append(c); answered.append(ans is not None); nfit.append(nf)
         ans_all.append(ans)
         if len(ex) < 15:
             ex.append({"id": r["id"], "prompt": r["prompt"], "gold": r["answer"], "program": chosen, "answer": ans, "abstained": ans is None,
-                       "correct": c, "n_fitting_of_samples": nf, "sample0": rs[0][:150]})
+                       "correct": c, "n_fitting_of_samples": nf, "hidden": hid, "sample0": rs[0][:150]})
     na = sum(answered)
     wrong_answered = sum(1 for a, c in zip(answered, ok) if a and not c)
+    bc = [c for b, c in br if b]
     out = {"set": name, "arm": "c16", "n": len(rows), "n_samples": C.n_samples, "acc": sum(ok) / len(ok), "answered_rate": na / len(rows),
            "precision_among_answered": (sum(ok) / na) if na else None, "wrong_among_answered_frac_of_all": wrong_answered / len(rows),
-           "mean_fitting_samples": sum(nfit) / len(nfit), "by_kind": tally(rows, ok, "kind"), "examples": ex}
+           "mean_fitting_samples": sum(nfit) / len(nfit), "branch_answered": len(bc),
+           "branch_precision": (sum(bc) / len(bc)) if bc else None, "by_kind": tally(rows, ok, "kind"), "examples": ex}
     if "n_steps" in rows[0]:
         out["by_steps"] = tally(rows, ok, "n_steps")
     return out
@@ -334,8 +365,8 @@ def load_jsonl(p):
 # ------------------------------------------------------------------ sleep data
 def collect_fitting(C, model, rows, per_row, log, tag):
     """Sample n programs per row; keep up to per_row distinct fitting sources per row (fit = reproduces the prompt's own examples)."""
-    reps = C.propose(model, rows, C.n_samples, sample=True, seed=7)
-    pairs, n_with = [], 0
+    reps = C.propose_holdout(model, rows, C.n_samples, seed=7) if AHA else C.propose(model, rows, C.n_samples, sample=True, seed=7)
+    pairs, n_with, n_br = [], 0, 0
     for r, rs in zip(rows, reps):
         kept = []
         for rep in rs:
@@ -346,9 +377,10 @@ def collect_fitting(C, model, rows, per_row, log, tag):
             if len(kept) >= per_row:
                 break
         n_with += bool(kept)
-        pairs += [(r["prompt"], s) for s in kept]
-    log(f"[sleep] {tag}: {n_with}/{len(rows)} puzzles with a fitting program, {len(pairs)} pairs")
-    return pairs, n_with
+        pairs += [(r["prompt"], s) for s in kept]  # full prompt, even under --aha
+        n_br += sum(has_branch(s) for s in kept)
+    log(f"[sleep] {tag}: {n_with}/{len(rows)} puzzles with a fitting program, {len(pairs)} pairs, {n_br} with a branch")
+    return pairs, n_with, n_br
 
 
 def main():
@@ -368,9 +400,10 @@ def main():
     ap.add_argument("--gen-bs", type=int, default=128)
     ap.add_argument("--n-dreams", type=int, default=1000)
     ap.add_argument("--no-branch", action="store_true", help="Creative-2: checker rejects branching programs (PREREG-creative2.md)")
+    ap.add_argument("--aha", action="store_true", help="Aha-1: each C16 sample hides one example (PREREG-aha1.md)")
     args = ap.parse_args()
-    global NO_BRANCH
-    NO_BRANCH = args.no_branch
+    global NO_BRANCH, AHA
+    NO_BRANCH, AHA = args.no_branch, args.aha
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     logf = open(out / f"log_{args.arm}.txt", "a")
@@ -399,7 +432,7 @@ def main():
         dev, pool, hard = dev[:10], pool[:12], hard[:10]
     sets = {"c2_dev": dev, "hard": hard}
     log(f"[data] dev {len(dev)} hard {len(hard)} pool {len(pool)} dreams {len(dreams)}; hard signatures {len({tuple(h['signature']) for h in hard})}")
-    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples, "no_branch": NO_BRANCH,
+    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples, "no_branch": NO_BRANCH, "aha": AHA,
               "hard_signatures": len({tuple(h['signature']) for h in hard}), "hard_example_puzzles": [
                   {k: h[k] for k in ("prompt", "answer", "program", "signature")} for h in hard[:5]]}
     model = lm
@@ -418,12 +451,13 @@ def main():
     elif args.arm == "c16":
         run_evals(lm, "pre", ["c16"])
     else:
-        pairs_pool, n_pool_fit = collect_fitting(C, lm, pool, 2, log, "pool")
-        pairs_dream_q, n_dream_fit = collect_fitting(C, lm, dreams, 1, log, "dreams(qwen)")
+        pairs_pool, n_pool_fit, n_pool_br = collect_fitting(C, lm, pool, 2, log, "pool")
+        pairs_dream_q, n_dream_fit, n_dream_br = collect_fitting(C, lm, dreams, 1, log, "dreams(qwen)")
         pairs_dream_c = [(d["prompt"], d["program"]) for d in dreams]
         pairs = pairs_pool + pairs_dream_c + [p for p in pairs_dream_q]
         result["sleep_data"] = {"pool_puzzles": len(pool), "pool_with_fit": n_pool_fit, "pool_pairs": len(pairs_pool), "dreams": len(dreams),
                                 "dream_canonical_pairs": len(pairs_dream_c), "dream_qwen_fit_puzzles": n_dream_fit, "dream_qwen_pairs": len(pairs_dream_q),
+                                "pool_pairs_with_branch": n_pool_br, "dream_qwen_pairs_with_branch": n_dream_br,
                                 "total_pairs": len(pairs), "examples": [{"prompt": p, "target": t} for p, t in random.Random(0).sample(pairs, min(15, len(pairs)))]}
         (out / "sleep_pairs.json").write_text(json.dumps(pairs, indent=0))
         gp = generic_prompts()[:(6 if args.smoke else 200)]

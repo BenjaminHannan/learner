@@ -53,6 +53,17 @@ if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
+if [ -n "${AHA1:-}" ]; then   # Aha-1 (backbone/PREREG-aha1.md): control nb = Creative-2 sleep, then aha sleep, then aha pre-sleep c16
+  run_c() {  # run_c DIR ARM FLAGS
+    if [ -f "$OUT/aha1/$1/result_$2.json" ]; then echo "-- skip aha1 $1"; return; fi
+    echo "-- aha1 $1 $(date -u +%T)"
+    python3 backbone/creative/creative1.py --arm "$2" --model "${CREATIVE_MODEL:-Qwen/Qwen3.5-0.8B}" --out "$OUT/aha1/$1" $3 || echo "!! aha1 $1 failed"
+  }
+  run_c nb sleep --no-branch; run_c aha sleep --aha; run_c aha_c16 c16 --aha
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
 DATA=$OUT/data
 [ -f "$DATA/DATA_REPORT.json" ] || python3 backbone/build_data.py "$DATA" --workers "$(nproc)"
 
