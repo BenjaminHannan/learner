@@ -688,6 +688,11 @@ def main():
         for name, items in tests.items():
             result[name] = score_qa(L, model, items, ctx, args.gen_bs * 2)
             log(f"[eval] {name} acc {result[name]['acc']:.3f} (n={result[name]['n']})")
+        if arm in ("s1", "s2", "s2t"):  # addendum 2: does the slept model still use notes in context? (Sleep-B saw it get worse)
+            for name, items in tests.items():
+                r = score_qa(L, model, items, world["teaching"], args.gen_bs * 2)
+                result[f"{name}_with_notes"] = r
+                log(f"[eval] {name}_with_notes acc {r['acc']:.3f} (n={r['n']})")
         try:
             if arc_rows is None:
                 arc_rows = load_arc(args.smoke)
