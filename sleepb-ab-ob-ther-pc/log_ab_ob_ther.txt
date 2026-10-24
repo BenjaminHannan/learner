@@ -1,0 +1,44 @@
+[schedule] [0, 136, 260, 300, 300, 300, 300]
+[selftest] weighted loss: {'skipped': 'GPU run (checked on CPU via --selftest and smoke)'}
+[lora] trainable 16,819,200
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
+[base] ARC-Easy validation(100) 0.870
+[night 1] items 54 eligible 0 (active 0, consolidated 0) steps 0 probe_pre None
+[night 1] no dream content; skipping training
+[night 1] ther {'salient_eligible': 0, 'salient_active': 0, 'weighted_steps': 0, 'weighted_examples': 0}
+[night 1] done steps 0 (nrem 0, rem 0) arc_val 0.870 probe_post None reverted False 15s
+[night 2] items 98 eligible 25 (active 25, consolidated 0) steps 136 probe_pre 0.0
+[night 2] ther {'salient_eligible': 2, 'salient_active': 1, 'weighted_steps': 66, 'weighted_examples': 88}
+[night 2] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 119, 'zeroed_frac': 0.039986559139784945, 'energy_ratio': 0.7224656697186029}
+[night 2] done steps 136 (nrem 78, rem 58) arc_val 0.840 probe_post 0.9130434782608695 reverted False 184s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.05, 'C4': 0.175, 'C24': 0.1125, 'all': 0.075}
+[night 3] items 133 eligible 55 (active 55, consolidated 0) steps 260 probe_pre 0.38
+[night 3] ther {'salient_eligible': 1, 'salient_active': 1, 'weighted_steps': 51, 'weighted_examples': 60}
+[night 3] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 57, 'zeroed_frac': 0.019153225806451613, 'energy_ratio': 0.7224992509800081}
+[night 3] done steps 260 (nrem 149, rem 111) arc_val 0.860 probe_post 0.74 reverted False 396s
+[night 4] items 170 eligible 80 (active 67, consolidated 13) steps 300 probe_pre 0.4794520547945205
+[night 4] ther {'salient_eligible': 7, 'salient_active': 7, 'weighted_steps': 196, 'weighted_examples': 363}
+[night 4] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 45, 'zeroed_frac': 0.015120967741935484, 'energy_ratio': 0.722499207364868}
+[night 4] REVERTED: ['arc_val 0.830 < base 0.870 - 0.03']
+[night 4] done steps 300 (nrem 173, rem 127) arc_val 0.830 probe_post 0.4794520547945205 reverted True 462s
+[curve] night 4 forward {'C1': 0.0, 'C2': 0.05, 'C4': 0.4, 'C24': 0.225, 'all': 0.15}
+[night 5] items 195 eligible 104 (active 73, consolidated 31) steps 300 probe_pre 0.3516483516483517
+[night 5] ther {'salient_eligible': 18, 'salient_active': 16, 'weighted_steps': 296, 'weighted_examples': 1245}
+[night 5] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 40, 'zeroed_frac': 0.013440860215053764, 'energy_ratio': 0.722499522247994}
+[night 5] done steps 300 (nrem 173, rem 127) arc_val 0.850 probe_post 0.7692307692307693 reverted False 488s
+[night 6] items 217 eligible 118 (active 90, consolidated 28) steps 300 probe_pre 0.6574074074074074
+[night 6] ther {'salient_eligible': 22, 'salient_active': 21, 'weighted_steps': 286, 'weighted_examples': 969}
+[night 6] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 38, 'zeroed_frac': 0.012768817204301076, 'energy_ratio': 0.7224991660042319}
+[night 6] done steps 300 (nrem 173, rem 127) arc_val 0.870 probe_post 0.7314814814814815 reverted False 493s
+[night 7] items 243 eligible 131 (active 72, consolidated 59) steps 300 probe_pre 0.6504065040650406
+[night 7] ther {'salient_eligible': 28, 'salient_active': 16, 'weighted_steps': 297, 'weighted_examples': 1476}
+[night 7] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 32, 'zeroed_frac': 0.010752688172043012, 'energy_ratio': 0.7224994167908441}
+[night 7] done steps 300 (nrem 173, rem 127) arc_val 0.850 probe_post 0.7804878048780488 reverted False 517s
+[curve] night 7 forward {'C1': 0.0, 'C2': 0.3, 'C4': 0.825, 'C24': 0.5625, 'all': 0.375}
+[diag] {"tagger": {"mention_recall": 0.554726368159204, "mentions": 402, "precision_lower_bound": 0.6685714285714286, "extractions": 350, "recall_by_class": {"CH": 0.625, "C2": 0.5625, "RT": 0.16666666666666666, "C1": 0.575, "C4": 0.6125}}, "eligibility": {"by_class": {"C2": {"n": 40, "extracted": 28, "eligible_now": 27, "eligible_any_value": 27, "superseded_old_value": 0}, "C1": {"n": 40, "extracted": 23, "eligible_now": 0, "eligible_any_value": 0, "superseded_old_value": 0}, "C4": {"n": 40, "extracted": 36, "eligible_now": 35, "eligible_any_value": 35, "superseded_old_value": 0}, "CH": {"n": 20, "extracted": 19, "eligible_now": 13, "eligible_any_value": 16, "superseded_old_value": 12}, "RT": {"n": 12, "extracted": 5, "eligible_now": 5, "eligible_any_value": 5, "superseded_old_value": 0}}, "eligible_items": 127, "eligible_unmatched_to_ground_truth": 39, "eligible_matched_by_class": {"C4": 37, "C2": 28, "RT": 5, "CH": 18}, "eligible_precision_among_matched": 1.0}, "update_detection": {"pairs_judged": 187, "judged_changed": 33, "ch_items": 20, "ch_true_pair_checked": 13, "ch_detected": 11, "ch_detection_recall": 0.55, "false_changed": 21}, "rem": {"chain_pairs_kept_total": 10, "twohop_dreamed": 4, "twohop_total": 27, "pool": 69}}
+[eval:weights] forward 0.375 (C1 0.0 C2 0.3 C4 0.825) reverse 0.4 twohop 0.07407407407407407 changed new 0.55 stale 0.15 routine 0.6666666666666666 integration 0.4302469135802469 pooled 0.38127090301003347
+[eval:diary] forward 0.7416666666666667 (C1 0.35 C2 0.875 C4 1.0) reverse 0.8333333333333334 twohop 0.1111111111111111 changed new 0.75 stale 0.2 routine 0.9166666666666666 integration 0.5925925925925926 pooled 0.7290969899665551
+[eval:base_diary] forward 0.9166666666666666 (C1 0.8 C2 0.95 C4 1.0) reverse 0.9166666666666666 twohop 0.07407407407407407 changed new 1.0 stale 0.0 routine 1.0 integration 0.691358024691358 pooled 0.8494983277591973
+[eval:router] forward 0.575 (C1 0.375 C2 0.475 C4 0.875) reverse 0.6 twohop 0.1111111111111111 changed new 0.65 stale 0.15 routine 0.9166666666666666 integration 0.5592592592592592 pooled 0.5618729096989966 frac_memory 0.7759197324414716 acc_when_memory 0.47844827586206895 acc_when_diary 0.8507462686567164
+[eval] arc_easy acc 0.920 (n=500)
+[done] ab_ob_ther wall 2625s -> out/sleepb/ab_ob_ther/result_ab_ob_ther.json
