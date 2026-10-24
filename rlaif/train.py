@@ -15,14 +15,26 @@ def load_tasks(path, n=None):
     return rows[:n] if n else rows
 
 
+def pick_dtype(name, dev):
+    if name == "auto":
+        name = ("bf16" if torch.cuda.is_bf16_supported() else "fp16") if dev == "cuda" else "fp32"
+    return name, dict(bf16=torch.bfloat16, fp16=torch.float16, fp32=torch.float32)[name]
+
+
 def load_model(a, dev):
     tok = AutoTokenizer.from_pretrained(a.model)
-    model = AutoModelForCausalLM.from_pretrained(a.model, torch_dtype=torch.bfloat16 if dev == "cuda" else torch.float32).to(dev)
+    a.dtype_name, dt = pick_dtype(a.dtype, dev)
+    print(f"dtype: {a.dtype_name}", flush=True)
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=dt).to(dev)
     if a.adapter:
         model = PeftModel.from_pretrained(model, a.adapter, is_trainable=not a.eval_only)
     elif not a.eval_only:
         model = get_peft_model(model, LoraConfig(r=a.lora_r, lora_alpha=2 * a.lora_r, target_modules=TARGETS, lora_dropout=0.0, task_type="CAUSAL_LM"))
     if not a.eval_only:
+        if dt != torch.float32:  # trainable LoRA params stay fp32 (peft autocasts; make it explicit)
+            for p in model.parameters():
+                if p.requires_grad and p.dtype != torch.float32:
+                    p.data = p.data.float()
         base = model.get_base_model()
         base.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
         base.enable_input_require_grads()
@@ -93,6 +105,7 @@ def main(argv=None):
     ap.add_argument("--eval-grade", action="store_true")
     ap.add_argument("--n-eval", type=int, default=None)
     ap.add_argument("--fake-grader", action="store_true")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto")
     ap.add_argument("--save-every", type=int, default=10)
     a = ap.parse_args(argv)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -105,6 +118,7 @@ def main(argv=None):
     tasks = load_tasks(a.train)
     order_rng = random.Random(a.seed)  # same task order for both algos
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
+    scaler = torch.amp.GradScaler("cuda", init_scale=2.0 ** 12, enabled=(a.dtype_name == "fp16" and dev == "cuda"))
     G, jolt, t0, gen_tokens = a.group, a.algo == "jolt_plus", time.time(), 0
     logf = open(os.path.join(a.outdir, "log.jsonl"), "a")
     for step in range(1, a.steps + 1):
@@ -141,17 +155,20 @@ def main(argv=None):
             other = e.view(prompt_ids(tok, e.task, cs[batch.index(e.task)])) if jolt else None
             lp, kl = seq_terms(model, ids, pos, other)
             loss = -A * lp.sum() / Ns + (a.beta_s * kl.sum() / Ns if jolt else 0)
-            loss.backward()
+            scaler.scale(loss).backward()
             pg_s += float((-A * lp.sum() / Ns).detach()); kl_s += float((kl.sum() / Ns).detach()) if jolt else 0
         for e, A in zip(eps_t, A_t if jolt else []):
             ids, pos = e.view(e.ids[:e.prompt_len])
             if not pos:
                 continue
             lp, kl = seq_terms(model, ids, pos, e.view(prompt_ids(tok, e.task, None)))
-            (-A * lp.sum() / Nt + a.beta_t * kl.sum() / Nt).backward()
+            scaler.scale(-A * lp.sum() / Nt + a.beta_t * kl.sum() / Nt).backward()
             pg_t += float((-A * lp.sum() / Nt).detach()); kl_t += float((kl.sum() / Nt).detach())
+        scale0 = scaler.get_scale()
+        scaler.unscale_(opt)  # no-op when the scaler is disabled
         gn = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
-        opt.step(); opt.zero_grad(set_to_none=True)
+        scaler.step(opt); scaler.update(); opt.zero_grad(set_to_none=True)
+        st["skipped_inf"] = bool(scaler.is_enabled() and scaler.get_scale() < scale0)
         st.update(loss_pg_student=pg_s, loss_kl_student=kl_s, loss_pg_teacher=pg_t, loss_kl_teacher=kl_t, grad_norm=float(gn),
                   grader_calls=grader.n_calls - calls0, grader_calls_total=grader.n_calls, usd=grader.ledger.usd, tokens_generated=gen_tokens,
                   spot_agree=grader.spot_agreement(), wall_s=time.time() - t0)
