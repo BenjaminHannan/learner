@@ -18,13 +18,18 @@ for f in sorted(Path("out").rglob("result_*.json")):
     for mode, m in (("w", sc.get("weights")), ("d", sc.get("diary"))):  # Sleep-B results (backbone/sleep/brain/sleepb.py)
         if isinstance(m, dict):
             f = m.get("forward") or {}
-            nums += [f"{mode}C4={100 * f.get('C4', 0):.0f}", f"{mode}C2={100 * f.get('C2', 0):.0f}", f"{mode}C1={100 * f.get('C1', 0):.0f}",
+            nums += [f"{mode}C4={100 * (f.get('C4') or 0):.0f}", f"{mode}C2={100 * (f.get('C2') or 0):.0f}", f"{mode}C1={100 * (f.get('C1') or 0):.0f}",  # None (class absent) -> 0
                      f"{mode}2hop={100 * (m.get('twohop') or {}).get('acc', 0):.0f}", f"{mode}chg={100 * (m.get('changed') or {}).get('new', 0):.0f}",
                      f"{mode}rt={100 * (m.get('routine') or {}).get('acc', 0):.0f}", f"{mode}int={100 * (m.get('integration') or 0):.0f}",
                      f"{mode}pool={100 * (m.get('pooled') or 0):.0f}"]
     r = sc.get("router")  # Sleep-B addendum 1 arms: router R pooled / integration
     if isinstance(r, dict):
         nums += [f"rpool={100 * (r.get('pooled') or 0):.0f}", f"rint={100 * (r.get('integration') or 0):.0f}"]
+    ae = d.get("arc_easy")  # Sleep-B: ARC-Easy accuracy of the slept model
+    if isinstance(ae, dict) and isinstance(ae.get("acc"), (int, float)):
+        nums.append(f"arc={100 * ae['acc']:.1f}")
+    if name.endswith(".partial"):  # unfinished arm: nights done so far
+        nums.append(f"n{len(d.get('nights') or [])}")
     for k, v in d.items():
         if isinstance(v, dict) and isinstance(v.get("accuracy"), (int, float)):
             nums.append(f"{k}={100 * v['accuracy']:.1f}")

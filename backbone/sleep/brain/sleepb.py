@@ -1,12 +1,15 @@
 """Sleep-B (see backbone/sleep/brain/PREREG-sleepB.md). Arms: a0 (base), ad (base + diary search), ab (brain-like sleep),
 af (flat sleep, AB's step counts), one-change ablations ab_norem / ab_noshy / ab_flatprio / ab_all, and the addendum-1 fixes
-ab_ob (open-book rehearsal) / ab_klctx (read-the-notes KL leash), see PREREG-sleepB-addendum1.md. The two new arms also save every
+ab_ob (open-book rehearsal) / ab_klctx (read-the-notes KL leash), see PREREG-sleepB-addendum1.md. The new arms also save every
 per-question row + p_first in each scoring mode and score the router R and the adapter-off diary reader (scores.router, scores.base_diary).
+Full-rank arms, one change each from ab_ob: ab_ob_full (every LoRA-target Linear gets a trainable full-rank delta_w, LoRA frozen, lr
+--full-lr) and ab_ob_merge (LoRA trains as in ab_ob; each night's SHY step folds it into a full-rank delta_w and resets it). delta_w is
+added by a forward hook on the base Linear and switched off inside pm.disable_adapter(), so "base" stays the original pretrained model.
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor unit check
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -16,6 +19,7 @@ DIR/adapter, DIR/log_<arm>.txt. --schedule overrides the per-night step count of
 Each night uses a fresh AdamW with one cosine schedule spanning all of that night's cycles; the LoRA itself is cumulative.
 """
 import argparse
+import contextlib
 import itertools
 import json
 import math
@@ -40,7 +44,9 @@ from train import LORA_TARGETS, load_model  # noqa: E402
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
-NEW_ARMS = ("ab_ob", "ab_klctx")
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge")
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge")  # open-book rehearsal (Brain.qa_ex)
+DELTA_ARMS = ("ab_ob_full", "ab_ob_merge")
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
 GENERIC = {"sam", "i", "me", "my", "we", "you", "he", "she", "they", "it", "user", "the user", "someone", "somebody"}
 STOP = set("the a an of in is to and where who does what which for at on by with was are do did live lives name s".split())
@@ -558,6 +564,140 @@ def selftest_shy(pm=None):
     return out
 
 
+# ------------------------------------------------------------------ full-rank deltas (arms ab_ob_full / ab_ob_merge)
+_DELTA = {"on": True}  # module-level switch: the delta_w hooks add their delta only while it is on
+
+
+def setup_delta(pm, train):
+    """Give every LoRA-target Linear an fp32 zero delta_w (its weight's shape) on its base_layer; a forward hook adds F.linear(x, delta_w)
+    to the layer output while _DELTA["on"]. train: delta_w is trainable (ab_ob_full); else it only changes by the nightly fold (ab_ob_merge).
+    pm.disable_adapter (an instance attribute shadowing the peft method) also switches the deltas off and restores the previous switch on
+    exit (nesting-safe), so every "base" use (dreaming, tagging, KL reference, ARC base, base_diary) stays the original pretrained model."""
+    mods = lora_mods(pm)
+    for _, m in mods:
+        bl = m.base_layer
+        bl.delta_w = torch.nn.Parameter(torch.zeros(bl.weight.shape, dtype=torch.float32, device=bl.weight.device), requires_grad=train)
+
+        def hook(mod, inp, out):
+            return out + F.linear(inp[0], mod.delta_w.to(inp[0].dtype)) if _DELTA["on"] else out
+        bl.register_forward_hook(hook)
+    orig = pm.disable_adapter
+
+    @contextlib.contextmanager
+    def disable_adapter():
+        prev, _DELTA["on"] = _DELTA["on"], False
+        try:
+            with orig():
+                yield
+        finally:
+            _DELTA["on"] = prev
+    pm.disable_adapter = disable_adapter
+    return mods
+
+
+def delta_fro(pm):  # total Frobenius norm of all deltas
+    return math.sqrt(sum(float(m.base_layer.delta_w.detach().float().pow(2).sum()) for _, m in lora_mods(pm)))
+
+
+@torch.no_grad()
+def shy_full(W, factor, thresh):
+    """SHY on a full-rank matrix: fp32 SVD on W's device, singular values x factor, those below thresh x largest zeroed.
+    Returns W', n_zeroed, n_sv, energy_before, energy_after (as shy_core)."""
+    U, S, Vh = torch.linalg.svd(W.float(), full_matrices=False)
+    if float(S.max()) <= 0:
+        return W.float().clone(), 0, 0, 0.0, 0.0
+    zero = S < thresh * S.max()
+    S2 = torch.where(zero, torch.zeros_like(S), S * factor)
+    return (U * S2) @ Vh, int(zero.sum()), S.numel(), float((S ** 2).sum()), float((S2 ** 2).sum())
+
+
+@torch.no_grad()
+def shy_delta_apply(pm, factor, thresh, gen, merge):
+    """Nightly SHY for the delta arms. ab_ob_full: delta_w <- shy_full(delta_w). ab_ob_merge (merge): total = delta_w + scaling x B@A (fp32),
+    delta_w <- shy_full(total), then the LoRA restarts: A fresh uniform(+-1/sqrt(in)) from gen (as shy_core does for dead slots), B zero.
+    Same stats keys as shy_apply (+ fold_fro: Frobenius norm of the folded LoRA, merge only)."""
+    nz = nsv = 0
+    e0 = e1 = fold = 0.0
+    mods = lora_mods(pm)
+    for _, m in mods:
+        dw = m.base_layer.delta_w
+        W = dw.data.float()
+        if merge:
+            A, B = m.lora_A["default"].weight, m.lora_B["default"].weight
+            ba = float(m.scaling["default"]) * (B.data.float() @ A.data.float())
+            fold += float(ba.pow(2).sum())
+            W = W + ba
+        W2, z, n, ea, eb = shy_full(W, factor, thresh)
+        dw.data.copy_(W2)
+        if merge:
+            A.data.copy_(((torch.rand(A.shape, generator=gen) * 2 - 1) / math.sqrt(A.shape[1])).to(A.device))
+            B.data.zero_()
+        nz, nsv, e0, e1 = nz + z, nsv + n, e0 + ea, e1 + eb
+    out = {"modules": len(mods), "sv_total": nsv, "sv_zeroed": nz, "zeroed_frac": nz / max(nsv, 1), "energy_ratio": e1 / max(e0, 1e-12)}
+    if merge:
+        out["fold_fro"] = math.sqrt(fold)
+    return out
+
+
+@torch.no_grad()
+def selftest_delta():
+    """Delta machinery on its own tiny CPU smoke model (the real model is never touched; global RNG and the delta switch are restored):
+    (i) zero deltas -> logits equal the plain model; (ii) random deltas -> equal the plain model inside pm.disable_adapter() (nested too),
+    different outside; (iii) the merge fold with factor 1, thresh 0 leaves logits unchanged and resets the LoRA; (iv) shy_full with
+    thresh 0 reproduces factor x W. The model's deltas / LoRA are put back as found."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state, sw = torch.get_rng_state(), _DELTA["on"]
+    try:
+        worst = 0.0
+        for shape in [(64, 48), (4, 64), (32, 8), (128, 128)]:
+            W = torch.randn(*shape, generator=g)
+            worst = max(worst, float((shy_full(W, 0.85, 0.0)[0] - 0.85 * W).norm() / (0.85 * W).norm()))
+        assert worst < 1e-5, worst
+        out["shy_full_worst_rel_err"] = worst
+        lm, _ = load_model(Namespace(smoke=True, seed=0), torch.device("cpu"), torch.float32)
+        ids = torch.randint(4, 200, (2, 12), generator=g)
+        ref = lm(input_ids=ids).logits  # the plain (pretrained-equivalent) model
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        mods = setup_delta(pm, True)
+        pm.eval()
+        logits = lambda: pm(input_ids=ids).logits  # noqa: E731
+        rel = lambda x, y: float((x - y).norm() / y.norm())  # noqa: E731
+        out["zero_delta_max_abs_diff"] = float((logits() - ref).abs().max())
+        assert out["zero_delta_max_abs_diff"] < 1e-6, out
+        saved = [(m.base_layer.delta_w.data.clone(), m.lora_A["default"].weight.data.clone(), m.lora_B["default"].weight.data.clone()) for _, m in mods]
+        for _, m in mods:
+            m.base_layer.delta_w.data.normal_(0, 0.05, generator=g)
+        on = logits()
+        with pm.disable_adapter():
+            with pm.disable_adapter():
+                nested_off = not _DELTA["on"]
+            still_off = not _DELTA["on"]
+            off = logits()
+        out["disabled_max_abs_diff"], out["enabled_rel_diff"] = float((off - ref).abs().max()), rel(on, ref)
+        out["nesting_ok"] = bool(nested_off and still_off and _DELTA["on"])
+        assert out["disabled_max_abs_diff"] < 1e-6 and out["enabled_rel_diff"] > 1e-3 and out["nesting_ok"], out
+        for _, m in mods:
+            m.lora_B["default"].weight.data.normal_(0, 0.05, generator=g)
+        before = logits()
+        shy_delta_apply(pm, 1.0, 0.0, g, True)
+        out["merge_fold_rel_err"] = rel(logits(), before)
+        out["merge_lora_reset"] = all(float(m.lora_B["default"].weight.abs().max()) == 0 for _, m in mods)
+        assert out["merge_fold_rel_err"] < 1e-4 and out["merge_lora_reset"], out
+        for (_, m), (d, a, b) in zip(mods, saved):
+            m.base_layer.delta_w.data.copy_(d)
+            m.lora_A["default"].weight.data.copy_(a)
+            m.lora_B["default"].weight.data.copy_(b)
+        out["restored_zero_delta_max_abs_diff"] = float((logits() - ref).abs().max())
+        assert out["restored_zero_delta_max_abs_diff"] < 1e-6, out
+        out["modules"] = len(mods)
+        return out
+    finally:
+        torch.set_rng_state(rng_state)
+        _DELTA["on"] = sw
+
+
 # ------------------------------------------------------------------ the brain-like sleeper (arm ab and ablations)
 @dataclass
 class Item:
@@ -602,7 +742,7 @@ class Brain:
         s.rem_pool, s.rem_chains, s.rem_done, s.gist_done = [], [], Counter(), Counter()
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         s.rng = random.Random(args.seed + 17)
-        s.ob_rng = random.Random(args.seed + 29)  # ab_ob only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
+        s.ob_rng = random.Random(args.seed + 29)  # OB_ARMS only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
         s.day, s.night_qs = 0, []
         s.gen_t = torch.Generator().manual_seed(args.seed + 5)
         G = []  # ground truth name pairs per item (diagnostics only)
@@ -859,8 +999,8 @@ class Brain:
                 it.consol = False
 
     # ---- batches
-    def qa_ex(s, q, a):  # ab_ob: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
-        if s.a.arm == "ab_ob":
+    def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+        if s.a.arm in OB_ARMS:
             ob = s.ob_rng.random() < 0.5
             s.cov["qa_open_book" if ob else "qa_closed_book"] += 1
             if ob:
@@ -976,8 +1116,8 @@ class Brain:
         return dict(st)
 
     # ---- 10. gate helpers
-    def snapshot(s):
-        return {n: p.detach().cpu().clone() for n, p in s.pm.named_parameters() if p.requires_grad}
+    def snapshot(s):  # trainable params, plus every delta_w (a frozen buffer in ab_ob_merge) so a reverted night restores the deltas too
+        return {n: p.detach().cpu().clone() for n, p in s.pm.named_parameters() if p.requires_grad or n.endswith("delta_w")}
 
     def restore(s, snap):
         with torch.no_grad():
@@ -1073,10 +1213,16 @@ class Brain:
         if a.arm == "ab_noshy" or not (act or con):
             rec["shy"], rec["shy_zeroed_frac"] = None, None
         else:
-            rec["shy"] = shy_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t)
+            if a.arm in DELTA_ARMS:
+                rec["shy"] = shy_delta_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t, a.arm == "ab_ob_merge")
+            else:
+                rec["shy"] = shy_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t)
             rec["shy_zeroed_frac"] = rec["shy"]["zeroed_frac"]
             s.log(f"[night {d}] SHY {rec['shy']}")
             s.cov["shy"] += 1
+        if a.arm in DELTA_ARMS:
+            rec["delta_fro"] = delta_fro(s.pm)
+            s.log(f"[night {d}] delta_fro {rec['delta_fro']:.6g}")
         rec["cleanup"] = s.cleanup()
         lap("shy_cleanup")
         # 10. morning gate
@@ -1098,11 +1244,14 @@ class Brain:
             s.cov["revert"] += 1
             s.log(f"[night {d}] REVERTED: {why}")
             rec["probe_recall_post"] = rec["probe_recall_pre"]
+        if a.arm in DELTA_ARMS:
+            rec["delta_fro_final"] = delta_fro(s.pm)  # after the gate: a reverted night is back at the previous night's deltas
         rec["rem_pool"] = len(s.rem_pool)
         lap("gate")
         rec["phase_seconds"], rec["raw_samples"] = {k: round(v, 1) for k, v in ph.items()}, s.raw
         rec["time"] = time.time() - t0
-        s.log(f"[night {d}] done steps {done} (nrem {nrem_n}, rem {rem_n}) arc_val {arc:.3f} probe_post {rec['probe_recall_post']} reverted {bool(why)} {rec['time']:.0f}s")
+        s.log(f"[night {d}] done steps {done} (nrem {nrem_n}, rem {rem_n}) arc_val {arc:.3f} probe_post {rec['probe_recall_post']} reverted {bool(why)} {rec['time']:.0f}s"
+               + (f" delta_fro {rec['delta_fro']:.6g} -> {rec['delta_fro_final']:.6g}" if a.arm in DELTA_ARMS else ""))
         return rec
 
     # ---- ground-truth diagnostics (never used by the sleeper)
@@ -1283,10 +1432,11 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor unit check and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor and delta unit checks and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--full-lr", type=float, default=2e-5, help="ab_ob_full only: lr of the full-rank deltas (replaces --lr)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -1305,6 +1455,7 @@ def main():
     args = ap.parse_args()
     if args.selftest:
         print(json.dumps(selftest_shy()))
+        print(json.dumps({"delta": selftest_delta()}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -1323,6 +1474,9 @@ def main():
         logf.write(m + "\n")
         logf.flush()
 
+    if args.arm == "ab_ob_full":
+        args.lr = args.full_lr  # recorded in result["args"]
+        log(f"[full] lr {args.lr} (--full-lr): full-rank deltas train, LoRA frozen")
     t0 = time.time()
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
@@ -1352,7 +1506,17 @@ def main():
     if args.arm not in ("a0", "ad"):
         from peft import LoraConfig, get_peft_model
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
-        log(f"[lora] trainable {sum(p.numel() for p in pm.parameters() if p.requires_grad):,}")
+        if args.arm in DELTA_ARMS:
+            mods = setup_delta(pm, args.arm == "ab_ob_full")
+            if args.arm == "ab_ob_full":
+                for n, p in pm.named_parameters():
+                    if "lora_" in n:
+                        p.requires_grad_(False)
+            result["delta_selftest"] = selftest_delta()
+            log(f"[selftest] delta machinery: {result['delta_selftest']}")
+            log(f"[delta] {len(mods)} modules, delta params {sum(m.base_layer.delta_w.numel() for _, m in mods):,} ({'trainable' if args.arm == 'ab_ob_full' else 'folded in nightly'})")
+        result["trainable_params"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
+        log(f"[lora] trainable {result['trainable_params']:,}")
         model = pm
         result["shy_selftest"] = selftest_shy(pm)  # cheap; randomizes then restores the adapter
         log(f"[selftest] SHY refactor reproduces 0.85 x dW: {result['shy_selftest']}")
