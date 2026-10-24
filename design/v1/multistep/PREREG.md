@@ -103,3 +103,19 @@ Curve, nights4: 6.2 / 11.3 / 13.4 / 16.9 after nights 1-4, still rising; affine 
 # Round 5: eight nights (pre-registered 2026-10-24, before the run)
 One change from nights4: 8 nights. Same seeds, run in round 4's OUT dir (base and nights4 reused). Marks: PASS if nights8 Hard >= base + 12
 AND >= nights4 + 4, Easy within 5 of base, harm <= 2. Plateau: nights8 Hard <= nights4 + 1.5. Reported: the 8-night curve, affine separately.
+
+# Round 6: hindsight records mixed into the nights (pre-registered 2026-10-24, before the run)
+Source: GPT's second opinion on the dream-school results (ranked #1). It differs from C2b's H arm: C2b slept on H records instead of W
+records; here W records stay as they are and hindsight records are added on top.
+One change from nights4: arm `hind4`. Each night, for pool questions where search found NO fitting try, take up to 2 distinct tries
+that run on every example, rewrite the prompt's example outputs to what each try computes (`fewshot.relabel_prompt`), and answer with
+the try's own output. Multi-step tries (>= 2 steps) are preferred. The total is capped at the night's W record count, so W stays at
+least half of the puzzle records. Reads no key and no kind. Same seeds (0, 1), 4 nights, round 4's OUT dir (base and nights4 reused).
+Marks: PASS if hind4 Hard >= nights4 + 4 points, Easy within 5 of base, harm <= 2. Proved wrong: hind4 Hard <= nights4 + 1.
+Reported: per-night curve; per-night W records by kind (does hindsight raise real fits on the hard kinds?); step-1 op entropy on 200
+pool puzzles after N' and after each night.
+
+Loss check (from the code, 2026-10-24): the oracle's "below 0" school loss is a logging offset, not a training bug. In
+`custom_io/models/ledger.py` the pointer loss for a commutative op is `-logaddexp(lab, lba)`. When both operands are the same slot
+(x*x, 2+2, x+x) then lab == lba, so the term is `-(lab + log 2)`: it can reach -0.69 per such step, while its gradient is unchanged.
+Oracle programs use these steps often, so the logged loss goes below 0 once the rest is near 0.
