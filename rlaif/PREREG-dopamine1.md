@@ -52,3 +52,18 @@ second seed before it changes the v2 design.
 
 The other two dopamine jobs (steering what sleep replays, and explore-vs-routine in the creative loop),
 DPO from Ben's corrections, and the LFM2.5 backbone. Those come after, one at a time.
+
+## Addendum 1 (2026-10-24 18:05Z, before any run): the "guessing brain" arm
+
+Ben (18:00Z) asked for the model to predict how a task will go first, with the dopamine coming from doing better
+than it predicted. Arm `d_self` adds this. Before each try, the model answers "how likely are you to complete
+this task fully? 0-100". With its stated chance p, A = r - p. The prediction tokens are not trained. Everything
+else is the same as the other two arms.
+
+- S1 guessing beats plain: d_self >= d_none + 5.
+- S2 own guess vs running average: d_self >= d_value + 5 means the stated guess is the better baseline. A
+  result within 5 points either way is a tie, and then the cheaper running average wins.
+- S3 the guess means something: on the untrained model's held-out run, the correlation between the stated
+  chance and success is >= 0.2. If it is lower, the guesses are noise, and a d_self result says nothing about
+  self-prediction.
+- Proved wrong: d_self <= d_none.
