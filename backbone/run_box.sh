@@ -65,7 +65,7 @@ if [ -n "${LOOP_ARMS:-}" ]; then   # Loop-1L experiment (backbone/PREREG-loop1L.
 from huggingface_hub import snapshot_download
 print("model at", snapshot_download("${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}"))
 PY
-  for s in ${LOOP_SEEDS:-0,1,2,3}; do
+  for s in ${LOOP_SEEDS//,/ }; do
     for a in ${LOOP_ARMS//,/ }; do
       d="$OUT/loop/${a}_s${s}"
       if [ -f "$d/result_${a}_s${s}.json" ]; then echo "-- skip loop $a seed $s"; continue; fi
