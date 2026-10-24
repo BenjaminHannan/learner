@@ -127,3 +127,11 @@ Plain reading (one seed):
   - A larger K.
   - Tagging that also counts the update items.
 - Per-night tag locations (which layers and module types hold the tagged weights) are in the result JSON, which was not recovered (labels only).
+
+## Addenda 4 and 5: choices made after sealing, before any run (2026-10-24 19:10Z)
+- ab_ob_twist: a scene is also dropped if it names an older value of the fact (`twist_dropped_stale`), so a dream never restates a stale fact. The research note `research/sleep-arm-designs-2026-10-24.md` flagged this risk.
+- ab_ob_twist: the arm adds 2 extra texts per item, so it changes both "twisted" and "more texts". A T2 pass is labelled suggested until an equal-count plain-paraphrase control is run.
+- ab_ob_ther: 2x priority times 0.5 loss weight keeps each salient item's expected push the same. H2 therefore tests spreading the push over more steps, and a null result is likely (suggested, from the same note).
+- ab_ob_rot: the quarters are layers [0,6), [6,12), [12,18) and [18,24) of Qwen3.5-2B's 24 layers. A strided split (layer mod 4) is a candidate for the next round.
+- ab_ob_b2: the dream generation length also scales (400 x s tokens), so 8 paraphrases and 8 Q&A are not cut off. Update-detection checks and REM sampling lengths are not scaled. Read the gate-revert count before reading B1.
+- The new arms record peak GPU memory (`peak_mem_gb`, `peak_mem_train_gb`). The CPU smoke showed that ab_ob and the older arms are bit-identical to before.
