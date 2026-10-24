@@ -2,8 +2,33 @@
   python -m v1.decide --floor OUT_FLOOR --full OUT_FULL --out DECISION_DIR
 Rule (V1_PARAMS / consult d4): the arm with the higher dev main-task (D) accuracy, ties to FULL; the seal opens only if that arm meets
 W1 and W2 on dev. Writes DECISION.json, and DEV_PASS.json (the only thing v1.sealed_read accepts) when the seal may open."""
-import argparse, json
+import argparse, json, math
 from pathlib import Path
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score interval for k successes in n (reporting only; treats questions as independent, which understates the
+    uncertainty when several questions share a visit)."""
+    if n <= 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return (max(0.0, c - h), min(1.0, c + h))
+
+
+def mcnemar(a: list, b: list) -> dict:
+    """Exact two-sided McNemar test on paired per-question correctness (same questions, two systems)."""
+    if len(a) != len(b):
+        raise ValueError("paired lists must have the same length")
+    only_a = sum(1 for x, y in zip(a, b) if x and not y)
+    only_b = sum(1 for x, y in zip(a, b) if y and not x)
+    n = only_a + only_b
+    if n == 0:
+        return {"only_a": 0, "only_b": 0, "p_value": 1.0}
+    tail = sum(math.comb(n, i) for i in range(min(only_a, only_b) + 1)) / 2 ** n
+    return {"only_a": only_a, "only_b": only_b, "p_value": min(1.0, 2 * tail)}
 
 
 def decide(floor: dict, full: dict) -> dict:
