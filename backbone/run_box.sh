@@ -54,18 +54,18 @@ if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-
 fi
 
 if [ -n "${LEAP_ARMS:-}${LEAP_REFS:-}${LEAP_VLLM_REFS:-}" ]; then   # Leap-1 experiment (backbone/PREREG-leap1.md). LEAP_ARMS="leap:0,self:0" (arm:seed), LEAP_REFS="Qwen/Qwen3.5-4B,..." (HF), LEAP_VLLM_REFS="Qwen/Qwen3.6-35B-A3B" (needs BIG=1 box)
-  for r in ${LEAP_REFS//,/ }; do
+  for r in $(echo "${LEAP_REFS:-}" | tr , " "); do
     n=${r##*/}
     if [ -f "$OUT/leap/result_ref_$n.json" ]; then echo "-- skip leap ref $n"; continue; fi
     echo "-- leap ref $n $(date -u +%T)"
     python3 backbone/leap/leap1.py --arm ref --c16 --model "$r" --out "$OUT/leap/ref_$n" && cp "$OUT/leap/ref_$n/result_ref_s0.json" "$OUT/leap/result_ref_$n.json" || echo "!! leap ref $n failed"
   done
-  for r in ${LEAP_VLLM_REFS//,/ }; do
+  for r in $(echo "${LEAP_VLLM_REFS:-}" | tr , " "); do
     n=${r##*/}
     if [ -f "$OUT/leap/vllm/result_ref_$n.json" ]; then echo "-- skip leap vllm ref $n"; continue; fi
     python3 backbone/leap/ref_vllm.py --model "$r" --c16 --out "$OUT/leap/vllm" || echo "!! leap vllm ref $n failed"
   done
-  for a in ${LEAP_ARMS//,/ }; do
+  for a in $(echo "${LEAP_ARMS:-}" | tr , " "); do
     arm=${a%%:*}; sd=${a##*:}
     if [ -f "$OUT/leap/$arm/result_${arm}_s$sd.json" ] && python3 -c "import json,sys;sys.exit(0 if len(json.load(open('$OUT/leap/$arm/result_${arm}_s$sd.json'))['rounds'])>=${LEAP_ROUNDS:-5}+1 else 1)"; then echo "-- skip leap $arm s$sd"; continue; fi
     echo "-- leap $arm s$sd $(date -u +%T)"
