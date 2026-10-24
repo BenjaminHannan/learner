@@ -32,9 +32,20 @@ if os.path.exists("resume.json"):                      # A5: continue from check
         print("resume file", f["path"], len(d))
 print("setup ok")
 PYEOF
+XARGS=()                                  # optional (ARM.env EXTRA_CMD / DETECTOR_PATTERNS): extra D training shards, v1/extra.py
+if [ -n "${EXTRA_CMD:-}" ]; then
+  mkdir -p "$J/extra"
+  say "STEP extra shards: $EXTRA_CMD"
+  ( cd "$ROOT" && bash -c "$EXTRA_CMD" ) > "$C/extra_cmd.out" 2>&1 || { tail -20 "$C/extra_cmd.out"; exit 1; }
+  tail -3 "$C/extra_cmd.out"
+  for d in $(ls -d "$J"/extra/*/ 2>/dev/null | sort); do XARGS+=(--extra-train "${d%/}"); done
+  [ ${#XARGS[@]} = 0 ] && { echo "EXTRA_CMD produced no $J/extra/<subdir>/"; exit 1; }
+fi
+[ -n "${DETECTOR_PATTERNS:-}" ] && XARGS+=(--detector-patterns "$ROOT/$DETECTOR_PATTERNS")
+echo "extra args: ${XARGS[*]:-none}"
 say "STEP arm $ARM steps $STEPS at \$$DPH/h, cap \$$CAP"
 $PY -m v1.run --arm "$ARM" --root "$J/data/v1village" --out "$O" --b2 "$J/B2_s200.pt" --skills "$J/skills" --steps "$STEPS" \
-  --price-per-hour "$DPH" --spend-cap "$CAP" --workers "$W" 2>&1 | tee -a "$C/arm_$ARM.out"
+  --price-per-hour "$DPH" --spend-cap "$CAP" --workers "$W" "${XARGS[@]}" 2>&1 | tee -a "$C/arm_$ARM.out"
 RC=${PIPESTATUS[0]}
 echo "arm $ARM rc=$RC"
 [ -f "$O/final_dev.json" ] && head -c 3000 "$O/final_dev.json"

@@ -26,6 +26,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -54,7 +55,7 @@ BOX_SCRIPT = {"dgen": "generalize/box/dgen.sh"}      # every other kind: v1/box/
 def box_script(kind):
     return BOX_SCRIPT.get(kind, f"v1/box/{kind}.sh")
 DATA_FILES = ["data/tokenizer/premonition-tok-v2.json", "data/tokenizer/premonition-tok-v2.manifest.json",
-              "data/village/patterns/bank-v1.json", "design/v1/data/village-SHA256SUMS.txt", "design/v1/V1_PARAMS.md"]
+              "data/village/patterns/bank-v1.json", "data/village/patterns/bank-v1-aug2.json", "design/v1/data/village-SHA256SUMS.txt", "design/v1/V1_PARAMS.md"]
 CHUNK = 100_000
 MAX_ARGS_BYTES = 1_800_000
 START_MIN = PREJOB_S // 60
@@ -191,8 +192,12 @@ exit 0
 # ----------------------------------------------------------------------------- HTTP
 # ----------------------------------------------------------------------------- HTTP
 def call(method, path, body=None, timeout=60):
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    key_file = os.environ.get("VAST_API_KEY_FILE")       # run off the cloud proxy (e.g. the Mac): read the key, never print it
+    if key_file:
+        headers["Authorization"] = "Bearer " + Path(key_file).expanduser().read_text().strip()
     req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json", "Accept": "application/json"})
+                                 headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode() or "{}")
@@ -274,7 +279,7 @@ def pack(a):
         raise SystemExit("--arm floor|full is required for kind arm")
     if kind == "dgen" and not (a.arm and re.fullmatch(r"[A-Za-z0-9_.-]+", a.arm)):
         raise SystemExit("--arm NAME (letters, digits, _ . -) is required for kind dgen")
-    if kind == "dgen" and a.extra_cmd and not re.fullmatch(r"[^\n]*", a.extra_cmd):
+    if a.extra_cmd and not re.fullmatch(r"[^\n]*", a.extra_cmd):
         raise SystemExit("--extra-cmd must be one line")
     HARD_STOP[kind] = float(a.cap)
     deadline = run_deadline(a.dph, kind)
@@ -295,7 +300,9 @@ def pack(a):
             return i
         for f in files:
             t.add(REPO / f, arcname=f, filter=norm)
-        extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n")] if kind == "arm" else []
+        q = lambda v: "'" + str(v).replace("'", "'\\''") + "'"
+        extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n"
+                             f"EXTRA_CMD={q(a.extra_cmd or '')}\nDETECTOR_PATTERNS={q(a.detector_patterns or '')}\n")] if kind == "arm" else []
         if kind == "dgen":    # sourced by generalize/box/dgen.sh; values single-quoted (EXTRA_CMD is a shell command run on the box)
             q = lambda v: "'" + str(v).replace("'", "'\\''") + "'"
             extra = [("ARM.env", f"ARM={q(a.arm)}\nSTEPS={q(a.steps)}\nSEED={q(a.seed)}\nCAP={q(a.cap)}\n"
@@ -703,6 +710,14 @@ def pull(a):
         inner_found, inner_bad = inner_check(out)
     job_done = job_status.startswith("DONE") and "dryrun=1" not in job_status     # a dry run has no out/ dirs
     missing = []
+    if tar_ok and "stage=arm" in job_status and "dryrun=1" not in job_status:
+        # An arm box exists to hand back D-final.pt and creative/W2.pt (a box was once destroyed with the weights on it).
+        if "ckpt.tar.gz" not in res or not res["ckpt.tar.gz"]["sha_ok"]:
+            missing.append("ckpt.tar.gz")
+        if job_status.startswith("DONE"):
+            for need in ("D-final.pt", "creative/W2.pt", "final_dev.json"):
+                if not [p for p in out.glob(f"*/{need}") if p.is_file() and p.stat().st_size > 0]:
+                    missing.append(need)
     if tar_ok and "stage=dgen" in job_status and "dryrun=1" not in job_status:
         # A dgen box exists to hand back D-final.pt and final.json: no passed pull (hence no destroy) without both,
         # the checkpoint tarball (sha256-verified above, it carries D-final.pt) included.
@@ -782,7 +797,8 @@ def main(argv=None):
     p.add_argument("--steps", type=int, default=12000)
     p.add_argument("--seed", type=int, default=0, help="kind dgen")
     p.add_argument("--weight-decay", type=float, default=None, help="kind dgen")
-    p.add_argument("--extra-cmd", default=None, help="kind dgen: one-line shell command run on the box to write extra shards into $J/extra/<subdir>/")
+    p.add_argument("--extra-cmd", default=None, help="kind dgen or arm: one-line shell command run on the box to write extra shards into $J/extra/<subdir>/")
+    p.add_argument("--detector-patterns", default=None, help="kind arm: pattern bank (repo path) for v1.run --detector-patterns")
     p.add_argument("--out", required=True)
     p = add("search", search)
     p.add_argument("--n", type=int, default=12)
