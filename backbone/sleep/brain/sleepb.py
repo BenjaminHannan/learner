@@ -391,7 +391,19 @@ def load_arc_val(smoke):
 
 
 # ------------------------------------------------------------------ training
-TOK_BUDGET = 8192  # padded tokens per CE forward before splitting into micro-batches of 4
+TOK_BUDGET = 4096  # padded tokens per forward; longer batches (open-book / diary-format KL) are split, same loss and gradients
+
+
+def groups(seqs, budget=TOK_BUDGET):  # consecutive micro-batches whose padded size stays within budget
+    out, cur, mx = [], [], 0
+    for x in seqs:
+        m = max(mx, len(x[0]))
+        if cur and (len(cur) + 1) * m > budget:
+            out.append(cur)
+            cur, m = [], len(x[0])
+        cur.append(x)
+        mx = m
+    return out + ([cur] if cur else [])
 
 
 class Trainer:
@@ -404,53 +416,57 @@ class Trainer:
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
 
+    def masks(s, mb):
+        ids, mask = s.L.pad_right([b[0] for b in mb])
+        lm = torch.zeros_like(mask)
+        for r, (e, st) in enumerate(mb):
+            lm[r, st:len(e)] = 1
+        return ids, mask, lm[:, 1:].bool()
+
     def step(s, batch):
         if not batch:
             return
-        L, a = s.L, s.a
+        a = s.a
         lr = a.lr * 0.5 * (1 + math.cos(math.pi * s.i / s.n))
         for g in s.opt.param_groups:
             g["lr"] = lr
         s.pm.train()
+        rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
+        gb, gr = groups(batch), groups(rb)
+        kl_v = 0.0
         s.opt.zero_grad(set_to_none=True)
-        if len(batch) * max(len(b[0]) for b in batch) > TOK_BUDGET:  # long open-book examples: same loss, split in micro-batches
+        if len(gb) == 1 and len(gr) <= 1:  # the stage-1 path (short closed-book examples), unchanged
+            ids, mask, tm = s.masks(batch)
+            ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
+            loss = ce
+            if rb:
+                rids, rmask, rt = s.masks(rb)
+                cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                with torch.no_grad(), s.pm.disable_adapter():
+                    ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
+                loss = ce + a.kl_weight * kl
+                kl_v = float(kl.detach())
+            loss.backward()
+        else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
             ntgt = sum(len(e) - max(st, 1) for e, st in batch)
             ce_sum = 0.0
-            for j in range(0, len(batch), 4):
-                mb = batch[j:j + 4]
-                ids, mask = L.pad_right([b[0] for b in mb])
-                lm = torch.zeros_like(mask)
-                for r, (e, st) in enumerate(mb):
-                    lm[r, st:len(e)] = 1
-                tm = lm[:, 1:].bool()
+            for mb in gb:
+                ids, mask, tm = s.masks(mb)
                 part = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
                 part.backward()
                 ce_sum += float(part.detach())
             ce = torch.tensor(ce_sum)
-            loss, kl_v = None, 0.0
-        else:
-            ids, mask = L.pad_right([b[0] for b in batch])
-            lm = torch.zeros_like(mask)
-            for r, (e, st) in enumerate(batch):
-                lm[r, st:len(e)] = 1
-            tm = lm[:, 1:].bool()
-            ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
-            loss, kl_v = ce, 0.0
-        if s.replay and a.kl_weight > 0:
-            rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay)))
-            rids, rmask = L.pad_right([r[0] for r in rb])
-            rl = torch.zeros_like(rmask)
-            for r, (e, st) in enumerate(rb):
-                rl[r, st:len(e)] = 1
-            rt = rl[:, 1:].bool()
-            cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
-            with torch.no_grad(), s.pm.disable_adapter():
-                ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
-            kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
-            loss = a.kl_weight * kl if loss is None else ce + a.kl_weight * kl
-            kl_v = float(kl.detach())
-        if loss is not None:
-            loss.backward()
+            if rb:
+                npos = sum(len(e) - max(st, 1) for e, st in rb)
+                for mb in gr:
+                    rids, rmask, rt = s.masks(mb)
+                    cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                    with torch.no_grad(), s.pm.disable_adapter():
+                        ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                    part = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="sum") / npos
+                    (a.kl_weight * part).backward()
+                    kl_v += float(part.detach())
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
@@ -1398,4 +1414,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as e:  # leave the error where the Vast label reporter can see it (log service is unreliable)
+        import traceback
+        o = next((sys.argv[i + 1] for i, x in enumerate(sys.argv[:-1]) if x == "--out"), ".")
+        arm = next((sys.argv[i + 1] for i, x in enumerate(sys.argv[:-1]) if x == "--arm"), "x")
+        Path(o).mkdir(parents=True, exist_ok=True)
+        Path(o, f"result_{arm}.error.json").write_text(json.dumps({"error": repr(e)[:300], "trace": traceback.format_exc()[-4000:]}))
+        raise

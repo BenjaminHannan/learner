@@ -12,6 +12,8 @@ for f in sorted(Path("out").rglob("result_*.json")):
         continue
     name = f.stem.replace("result_", "")
     nums = []
+    if "error" in d:
+        nums.append("ERR=" + "".join(c for c in d["error"] if c.isalnum() or c in " _.:()")[:120])
     sc = d.get("scores") if isinstance(d.get("scores"), dict) else {}
     for mode, m in (("w", sc.get("weights")), ("d", sc.get("diary"))):  # Sleep-B results (backbone/sleep/brain/sleepb.py)
         if isinstance(m, dict):
