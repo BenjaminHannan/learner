@@ -1519,7 +1519,8 @@ def main():
                 for n, p in pm.named_parameters():
                     if "lora_" in n:
                         p.requires_grad_(False)
-            result["delta_selftest"] = selftest_delta()
+            # the check builds its own tiny CPU model, which the GPU box's Triton linear-attention kernels refuse; it runs in --selftest / smoke
+            result["delta_selftest"] = selftest_delta() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
             log(f"[selftest] delta machinery: {result['delta_selftest']}")
             log(f"[delta] {len(mods)} modules, delta params {sum(m.base_layer.delta_w.numel() for _, m in mods):,} ({'trainable' if args.arm == 'ab_ob_full' else 'folded in nightly'})")
         result["trainable_params"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
