@@ -70,7 +70,7 @@ PY
       d="$OUT/loop/${a}_s${s}"
       if [ -f "$d/result_${a}_s${s}.json" ]; then echo "-- skip loop $a seed $s"; continue; fi
       echo "-- loop $a seed $s $(date -u +%T)"
-      python3 backbone/loop/loop1l.py --arm "$a" --seed "$s" --model "${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}" --out "$d" ${LOOP_FLAGS//,/ } || echo "!! loop $a seed $s failed"
+      python3 backbone/loop/loop1l.py --arm "$a" --seed "$s" --model "${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}" --out "$d" ${LOOP_FLAGS//+/ } || echo "!! loop $a seed $s failed"
     done
   done
   tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
