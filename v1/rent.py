@@ -49,7 +49,7 @@ MAX_ARGS_BYTES = 1_800_000
 START_MIN = PREJOB_S // 60
 STOP_MARGIN_S = 120
 WATCHDOG_MIN = 10
-WATCHDOG_MIN_STAGE = {"multistep": 60, "multistep2": 60, "multistep3": 60}   # long silent phases (dream generation, school sleep) write no new log line
+WATCHDOG_MIN_STAGE = {"multistep": 300, "multistep2": 300, "multistep3": 300}   # long silent phases (dream generation, school sleep) write no new log line
 CLOSING = re.compile(r"(?:^|\s)=== V1G (DONE|FAIL|GATE)(?=\s|$)")
 PULL_OK = "PULL_OK.json"
 STAGE = "gs"
