@@ -5,6 +5,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftModel, get_peft_model
 from grader import Grader
+from baseline import advantages, baseline_adv
 from rollout import rollout, prompt_ids, hint_block, seq_terms
 
 TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
@@ -33,15 +34,6 @@ def load_model(a, dev):
 def reward(eps, graded):
     fr = [e.check_frac() for e in eps]
     return [0.6 * f + 0.4 * s / 10 for f, (s, _) in zip(fr, graded)], fr
-
-
-def advantages(r, G):
-    out = []
-    for i in range(0, len(r), G):
-        g = r[i:i + G]
-        m = sum(g) / len(g)
-        out += [x - m for x in g]
-    return out
 
 
 def ntok(eps):
@@ -94,11 +86,15 @@ def main(argv=None):
     ap.add_argument("--n-eval", type=int, default=None)
     ap.add_argument("--fake-grader", action="store_true")
     ap.add_argument("--save-every", type=int, default=10)
+    ap.add_argument("--reward", choices=["mix", "checks"], default="mix")  # checks: check fraction only, no grader calls
+    ap.add_argument("--baseline", choices=["group", "none", "value"], default="group")
+    ap.add_argument("--v-init", type=float, default=0.5)
+    ap.add_argument("--v-lr", type=float, default=0.1)
     a = ap.parse_args(argv)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     os.makedirs(a.outdir, exist_ok=True)
     random.seed(a.seed); torch.manual_seed(a.seed)
-    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader, seed=a.seed)
+    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader or (a.reward == "checks" and not a.eval_grade), seed=a.seed)  # checks-only: no API key needed
     tok, model = load_model(a, dev)
     if a.eval_only:
         return evaluate(a, tok, model, grader, dev)
@@ -106,16 +102,22 @@ def main(argv=None):
     order_rng = random.Random(a.seed)  # same task order for both algos
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
     G, jolt, t0, gen_tokens = a.group, a.algo == "jolt_plus", time.time(), 0
+    assert not (jolt and a.baseline != "group"), "baseline none/value needs jolt off"
+    V = {}
     logf = open(os.path.join(a.outdir, "log.jsonl"), "a")
     for step in range(1, a.steps + 1):
         batch = order_rng.sample(tasks, a.tasks_per_step)
         calls0, ts = grader.n_calls, time.time()
         eps_s = rollout(model, tok, [(t, None) for t in batch for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
-        gr_s = grader.grade_many([(e.task, e.transcript) for e in eps_s])
-        r_s, fr_s = reward(eps_s, gr_s)
-        A_s = advantages(r_s, G)
+        gr_s = grader.grade_many([(e.task, e.transcript) for e in eps_s]) if a.reward == "mix" else [(0.0, "")] * len(eps_s)
+        r_s, fr_s = reward(eps_s, gr_s) if a.reward == "mix" else ([e.check_frac() for e in eps_s],) * 2
+        scen = [e.task["scenario"] for e in eps_s]
+        for s_ in scen: V.setdefault(s_, a.v_init)
+        A_s, V = baseline_adv(r_s, scen, G, a.baseline, V, a.v_lr)
         st = dict(step=step, reward=sum(r_s) / len(r_s), check_frac=sum(fr_s) / len(fr_s), success=sum(f == 1 for f in fr_s) / len(fr_s),
                   sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s))
+        if a.baseline != "group":
+            st.update(rpe_mean=sum(A_s) / len(A_s), rpe_abs=sum(map(abs, A_s)) / len(A_s), value=dict(V))
         eps_t = []
         if jolt:
             cs = []
@@ -160,6 +162,8 @@ def main(argv=None):
         if step % a.save_every == 0 or step == a.steps:
             model.save_pretrained(os.path.join(a.outdir, f"adapter_step{step}"))
     model.save_pretrained(os.path.join(a.outdir, "adapter_final"))
+    if a.baseline == "value":
+        json.dump(V, open(os.path.join(a.outdir, "value.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":

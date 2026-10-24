@@ -133,3 +133,17 @@ def test_scripted_tool_loop(tiny):
     assert e.checks() == [True, True]
     assert sum(e.mask) == len(tok(scripts[0], add_special_tokens=False)["input_ids"]) + len(tok(scripts[1], add_special_tokens=False)["input_ids"]) + 2
     assert "<tool_response>" in tok.decode(e.ids) and [t["role"] for t in e.transcript] == ["user", "assistant", "tool", "assistant"]
+
+
+def test_baseline_adv():
+    from baseline import baseline_adv
+    r, sc = [1.0, 0.0, 0.5, 0.5], ["a", "a", "b", "b"]
+    A, _ = baseline_adv(r, sc, 2, "group", {}, 0.1)
+    assert A == [0.5, -0.5, 0.0, 0.0]
+    A, _ = baseline_adv(r, sc, 1, "none", {}, 0.1)
+    assert A == r
+    V0 = {"a": 0.5, "b": 0.2}
+    A, V = baseline_adv(r, sc, 1, "value", V0, 0.1)
+    assert A == pytest.approx([0.5, -0.5, 0.3, 0.3])  # old V
+    assert V["a"] == pytest.approx(0.5 + 0.1 * 0.5 + 0.1 * (0 - 0.55)) and V["b"] == pytest.approx(0.2 + 0.03 + 0.1 * (0.5 - 0.23))
+    assert V0 == {"a": 0.5, "b": 0.2}
