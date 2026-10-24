@@ -95,3 +95,6 @@ Plain reading:
   - The full-rank change has far more room to drift in directions the generic-prompt KL guard never probes.
   - lr 2e-5 over 1,596 steps may be too large a step.
 - A smaller step size is untested.
+
+## Checks
+- Softmax Cancellation (arXiv 2610.31642) checked 2026-10-24, PR #109: reachable at night start but negligible (2e-7 of the update); numbers unchanged. The KL guard is in `Trainer.step`, and so is the ab_klctx leash, which uses the same code. When the add-on (or the delta) is fresh, cur == ref and the KL gives a spurious gradient of about 6.6e-7. That is swamped by the CE gradient of 0.14-0.66. For future runs, the drop-in fix is `fixed_kl(cur, ref, reduction="sum")/n` from `backbone/think/xent.py`.
