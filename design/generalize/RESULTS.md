@@ -57,3 +57,4 @@ Qwen3.5-0.8B (fresh seed-0 rerun) other probes: Pname 81.5, Pdepth 74.5, Prule 8
 
 ## Transfer to full v1 (retrain thread, Vast, 12k steps, aug2 extras; weights branch claude/v1aug2-weights)
 validation 46.05 -> **63.26 (+17.2)**; dev 82.0 -> 79.5; creative dev 34.8 (unchanged). Sealed test untouched.
+Probes, full v1 before / after aug2 (500 visits, one seed): dev 82.2/79.6, validation 45.6/63.1, P0 82.7/79.7, Pname 82.3/79.9, Pstyle 82.6/79.7, Prule 79.5/77.1, Pdepth 74.8/73.2, **Pword 50.6/71.9** (wording drop 32.1 -> 7.7), Pall 46.5/62.9. Rule questions under new wording 18.6 -> 48.6. R8 questions still 0/124: the new rule itself is not learned.
