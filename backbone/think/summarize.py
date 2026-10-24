@@ -257,7 +257,7 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     out["seeds"] = {arm: sorted(s for (a_, s) in res if a_ == arm and not res[(a_, s)].get("aborted")) for arm in ARMS}
     out["floors"] = {"A_ref": a_ref, "B_ref": b_ref, "a": mean(a), "aplus": mean(ap), "b": mean(b), "bplus": mean(bp),
                      "seeds": {"a": sorted(a), "aplus": sorted(ap), "b": sorted(b), "bplus": sorted(bp)}}
-    out["curve"] = {"t": {str(L): {"per_seed": T[L], "mean": S[L], "n": (R.entry("t", 0, "validation", f"L{L}") or {}).get("n")}
+    out["curve"] = {"t": {str(L): {"per_seed": T[L], "mean": S[L], "n": next((e["n"] for sd in SEEDS if (e := R.entry("t", sd, "validation", f"L{L}")) and e.get("n")), None)}
                           for L in LAPS},
                     "t1": {str(L): {"per_seed": d, "mean": mean(d)} for L, d in t1.items()}, "tw": {"L1": tw1},
                     "dev": {f"L{L}": R_dev(R, L) for L in (0, 1, 8)}}
@@ -320,7 +320,8 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
         marks.append({"id": id_, "text": text, "status": status, **kw})
         return marks[-1]
 
-    G = mark("G", "gain", decide(ge(S[8], ref + GAIN) if S[8] is not None and have(T[8]) and have(a) and have(ap) and have(b) else None),
+    G = mark("G", "gain", decide(ge(S[8], ref + GAIN) if S[8] is not None and have(T[8]) and have(a) and have(ap) and have(b)
+                      and (not out["bplus_extend"]["run_seeds_1_2"] or have(bp)) else None),  # bplus on all seeds is owed once the extension rule fired: B_ref uses its mean
              value=S[8], need=ref + GAIN, ref=ref, A_ref=a_ref, B_ref=b_ref, ci=ci_ref)
     d81 = {s: T[8][s] - T[1][s] for s in SEEDS if s in T[8] and s in T[1]}
     d128 = {s: T[12][s] - T[8][s] for s in SEEDS if s in T[12] and s in T[8]}
@@ -406,7 +407,7 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     out["marks"] = marks
     out["groups"] = {"G": G["status"], **Rg, "R": Rall}
     out["wrong_if"] = [m["id"] for m in W if m["status"] == "triggered"]
-    out["futility"] = {"triggered": fut_hit, "only_first": fut_hit == ["F1"]}
+    out["futility"] = {"triggered": fut_hit, "only_first": fut_hit == ["F1"] and all(m["status"] == "clear" for m in F_[1:])}  # "laps are real" needs F2-F4 computed and clear
     out["lap_curve_first2000"] = None
     if v8 is not None:
         first = {}
@@ -423,6 +424,11 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     # verdict
     decided = all(m["status"] != ND for m in [G, *R1, *R2, *R3, *R4, *W])
     why = []
+
+    def _missing():
+        arms = [("t", T[8]), ("t1", t1[1]), ("a", a), ("aplus", ap), ("b", b)] + ([("bplus", bp)] if out["bplus_extend"]["run_seeds_1_2"] else [])
+        return "; ".join(f"{n} {sorted(set(SEEDS) - set(d))}" for n, d in arms if not have(d))
+
     if out["aborted"]:
         why.append("mechanics gate aborted: " + ", ".join(f"{x['arm']} s{x['seed']}" for x in out["aborted"]))
     if excluded:
@@ -441,16 +447,21 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
             why.append("not PASS and no wrong-if rule: reported, no scale-up")
     elif fut_hit:
         verdict = "FUTILE-STOP"
-        why.append("seed-0 futility rule(s): " + ", ".join(fut_hit) + "; do not run seeds 1-2")
+        unstarted = sorted(set(SEEDS) - {s_ for (_, s_) in res})  # no result file of any arm = not started (PREREG amendment 2026-10-24: a stop is for seeds not yet started; completed seeds count)
+        why.append("seed-0 futility rule(s): " + ", ".join(fut_hit) + "; "
+                   + (f"do not start seed(s) {', '.join(map(str, unstarted))}" if unstarted else "no unstarted seeds left to stop")
+                   + "; seeds that completed count (marks are provisional until all seeds are in)")
+        why.append("missing seeds: " + (_missing() or "none") + ("; a seed-0 main_repeat" if tol is None else ""))
         if out["futility"]["only_first"]:
             why.append("only F1 fails: laps real but small; Think-1b gets its own prereg")
     else:
         verdict = "INCOMPLETE"
-        miss = [f"{n} {sorted(set(SEEDS) - set(d))}" for n, d in (("t", T[8]), ("t1", t1[1]), ("a", a), ("aplus", ap), ("b", b))
-                if not have(d)]
-        why.append("missing seeds: " + ("; ".join(miss) if miss else "none") + ("; a seed-0 main_repeat" if tol is None else ""))
-        if any(m["status"] == "clear" for m in F_) and not fut_hit and 0 in T[8]:
+        why.append("missing seeds: " + (_missing() or "none") + ("; a seed-0 main_repeat" if tol is None else ""))
+        if all(m["status"] == "clear" for m in F_):
             why.append("seed-0 futility rules did not fire: go on to seeds 1-2")
+        elif not fut_hit and any(m["status"] == "clear" for m in F_):
+            why.append("seed-0 futility undecided (" + ", ".join(m["id"] for m in F_ if m["status"] != "clear")
+                       + " not computable yet): do not start new seeds on this basis")
     out["verdict"], out["why"] = verdict, why
     return out
 
@@ -586,7 +597,7 @@ def report(o, data_note=""):
         if m["id"].startswith("W"):
             line(m, f"{m['text']}   now {sg(m['value']) if m['id'] != 'W4' else f2(m['value'])}")
     P("")
-    P("== 6. Futility stop (seed 0 only; triggered = skip seeds 1-2) ==")
+    P("== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==")
     for m in o["marks"]:
         if m["id"].startswith("F"):
             line(m, f"{m['text']}   now {f2(m['value'])}")

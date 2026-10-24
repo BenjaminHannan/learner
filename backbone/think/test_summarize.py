@@ -302,5 +302,80 @@ def test_s1():
     tmp.cleanup()
 
 
+def test_s2():
+    """Partial result sets (the realistic ones): a futility rule that could not be computed is not a clear one; stops name only unstarted
+    seeds; bplus on all seeds is owed once the extension rule fired; the lap-table n works without seed 0."""
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    small = dict(t={0: 60.0, 1: 62.0, 2: 64.0, 4: 66.0, 8: 67.5, 12: 67.5}, t1={0: 60.0, 1: 62.0, 8: 62.0}, swap=62.0)
+
+    # F1 fires, F2 cannot be computed (t1 seed 0 missing): not "laps are real but small", and the gap is named
+    lab = scenario(R / "f1_no_t1", seeds=(0,), **small)
+    del lab.res[("t1", 0)]
+    o = run(lab)
+    mk = marks(o)
+    text = SM.report(o)
+    assert o["futility"]["triggered"] == ["F1"] and mk["F2"]["status"] == SM.ND and not o["futility"]["only_first"], o["futility"]
+    assert o["verdict"] == "FUTILE-STOP" and "Think-1b" not in text and not any("laps real" in w for w in o["why"]), (o["why"], text)
+    assert any(w.startswith("missing seeds:") and "t1 [0, 1, 2]" in w for w in o["why"]), o["why"]
+    # the same set with t1 present is the "only F1" case
+    o = run(scenario(R / "f1_with_t1", seeds=(0,), **small))
+    assert o["futility"]["only_first"] and "Think-1b" in SM.report(o)
+
+    # nothing fires but F2 is missing: no "go on", the undecided rule is named
+    lab = scenario(R / "go_no_t1", seeds=(0,))
+    del lab.res[("t1", 0)]
+    o = run(lab)
+    assert o["verdict"] == "INCOMPLETE" and marks(o)["F2"]["status"] == SM.ND and not o["futility"]["triggered"], o["futility"]
+    assert not any("go on" in w for w in o["why"]) and any("undecided (F2" in w for w in o["why"]), o["why"]
+    # t1 seed 0 aborted by the gate: same
+    lab = scenario(R / "go_t1_aborted", seeds=(0,))
+    lab.abort("t1", 0, "gate")
+    o = run(lab)
+    assert not any("go on" in w for w in o["why"]) and any("undecided (F2" in w for w in o["why"]), o["why"]
+
+    # seeds 0 and 1 done, futility fires: only seed 2 is named, completed seeds count, missing arms listed
+    flat = dict(t={0: 66.5, 1: 67.0, 2: 67.4, 4: 67.5, 8: 67.5, 12: 67.4}, t1={0: 66.5, 1: 67.0, 8: 67.0}, swap=66.0)
+    o = run(scenario(R / "futile_s01", seeds=(0, 1), **flat))
+    text = SM.report(o)
+    why = " | ".join(o["why"])
+    assert o["verdict"] == "FUTILE-STOP" and "do not start seed(s) 2;" in why and "1, 2" not in why and "completed count" in why, why
+    for arm in ("t", "t1", "a", "aplus", "b"):
+        assert f"{arm} [2]" in why, why
+    assert "do not run seeds 1-2" not in text and "skip seeds 1-2" not in text and "done seeds count" in text, text
+    # all three seeds started: nothing left to stop
+    o = run(scenario(R / "futile_s012_partial", seeds=(0, 1), **flat))
+    lab = scenario(R / "futile_s2_started", seeds=(0, 1), **flat)
+    lab.put("a", 2, "validation", "main", 66.4)
+    o = run(lab)
+    why = " | ".join(o["why"])
+    assert "no unstarted seeds left to stop" in why and "do not start" not in why, why
+
+    # bplus - b >= 1.0 at seed 0: bplus seeds 1-2 are owed, G waits for them
+    lab = scenario(R / "bp_owed", bp=69.6)
+    o = run(lab)
+    assert o["bplus_extend"]["run_seeds_1_2"] is True
+    assert marks(o)["G"]["status"] == SM.ND and o["verdict"] == "INCOMPLETE" and any("bplus [1, 2]" in w for w in o["why"]), (o["verdict"], o["why"])
+    lab.put("bplus", 1, "validation", "main", 67.0)
+    o = run(lab)
+    assert marks(o)["G"]["status"] == SM.ND and any("bplus [2]" in w for w in o["why"]), o["why"]
+    lab.put("bplus", 2, "validation", "main", 67.52)
+    o = run(lab)
+    assert marks(o)["G"]["status"] != SM.ND and o["verdict"] != "INCOMPLETE", (o["verdict"], o["why"])
+    assert abs(o["floors"]["bplus"] - np.mean([69.6, 67.0, 67.52])) < 1e-6, o["floors"]
+    # extension not triggered: bplus seed 0 alone is final (old behaviour)
+    o = run(scenario(R / "bp_not_owed", bp=67.5))
+    assert o["verdict"] == "PASS" and not any("bplus" in w for w in o["why"] if w.startswith("missing"))
+
+    # lap-table n comes from whichever seed has the entry
+    o = run(scenario(R / "t_s12_only", seeds=(1, 2)))
+    c = o["curve"]["t"]
+    assert c["8"]["n"] == N and c["16"]["n"] == 1000, (c["8"]["n"], c["16"]["n"])
+    assert f" {N} " in SM.report(o)
+    print("S2 ok: undecided futility rules, unstarted-seed wording, bplus owed seeds, lap-table n without seed 0")
+    tmp.cleanup()
+
+
 if __name__ == "__main__":
     test_s1()
+    test_s2()
