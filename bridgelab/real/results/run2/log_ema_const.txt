@@ -1,0 +1,33 @@
+23:45:34 c[train] n=3000 range 0..4 entropy 2.10 bits  prior-baseline 0.442
+23:45:34 c[dev] n=1000 range 0..4 entropy 2.10 bits  prior-baseline 0.437
+23:45:34 c[validation] n=494 range 0..4 entropy 2.06 bits  prior-baseline 0.462
+23:45:34 D's own count accuracy: {'train': 0.669, 'dev': 0.658, 'validation': 0.543}
+23:45:34 ema_const: loaded the saved v1 bridge state from /tmp/claude-0/w/D-final.pt
+23:45:35 bridge=ema_const trainable bridge params 71,445; creative trained; kinds ('add', 'mult')
+/home/user/learner/bridgelab/real/train.py:307: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  hist.append(dict(step=step, loss=float(loss), creative=float(loss_c), ce=float(loss_ce)))
+23:45:39 step 1/300 loss 15.675 creative 12.759 ce 2.915 (3.05s/step)
+23:45:57 step 15/300 loss 9.240 creative 7.312 ce 1.928 (1.45s/step)
+23:46:18 step 30/300 loss 6.593 creative 5.157 ce 1.436 (1.42s/step)
+23:46:40 step 45/300 loss 5.555 creative 4.086 ce 1.469 (1.44s/step)
+23:47:01 step 60/300 loss 5.042 creative 3.592 ce 1.451 (1.43s/step)
+23:47:23 step 75/300 loss 4.677 creative 3.174 ce 1.503 (1.43s/step)
+23:47:44 step 90/300 loss 4.286 creative 2.808 ce 1.479 (1.43s/step)
+23:48:03 step 105/300 loss 4.196 creative 2.721 ce 1.475 (1.41s/step)
+23:48:24 step 120/300 loss 3.943 creative 2.429 ce 1.513 (1.40s/step)
+23:48:44 step 135/300 loss 3.734 creative 2.272 ce 1.462 (1.39s/step)
+23:49:04 step 150/300 loss 3.477 creative 1.994 ce 1.483 (1.39s/step)
+23:49:24 step 165/300 loss 3.460 creative 1.967 ce 1.492 (1.38s/step)
+23:49:43 step 180/300 loss 3.088 creative 1.616 ce 1.472 (1.38s/step)
+23:50:02 step 195/300 loss 3.124 creative 1.622 ce 1.501 (1.37s/step)
+23:50:22 step 210/300 loss 2.806 creative 1.381 ce 1.425 (1.36s/step)
+23:50:41 step 225/300 loss 2.756 creative 1.270 ce 1.486 (1.36s/step)
+23:51:00 step 240/300 loss 2.642 creative 1.166 ce 1.477 (1.35s/step)
+23:51:20 step 255/300 loss 2.700 creative 1.219 ce 1.481 (1.35s/step)
+23:51:41 step 270/300 loss 2.304 creative 0.831 ce 1.473 (1.35s/step)
+23:52:02 step 285/300 loss 2.180 creative 0.740 ce 1.440 (1.36s/step)
+23:52:21 step 300/300 loss 2.046 creative 0.572 ce 1.474 (1.35s/step)
+23:53:10 dev {'real': 0.388, 'oracle_inject': 0.856, 'prior_inject': 0.328, 'oracle_text': 0.656, 'd_text': 0.454}
+23:53:10 validation {'real': 0.399, 'oracle_inject': 0.834, 'prior_inject': 0.334, 'oracle_text': 0.642, 'd_text': 0.381}
+23:53:10 wrote bridgelab/real/results/run2/ema_const-s0.json
