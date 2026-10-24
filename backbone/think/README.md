@@ -13,7 +13,7 @@ makes the Gated DeltaNet layers fast). The first run builds the village data int
 appended to `out/think/run.log`. The script stops with exit 2 if torch sees no CUDA GPU (`ALLOW_CPU=1` overrides: days, and not the same
 hardware as the other arms). Then add the rest of seed 0 and look at `out/think/SUMMARY.txt`:
 ```
-THINK_JOBS=tw:0 bash backbone/think/run_box.sh                       # diagnostic, seed 0 only
+THINK_JOBS=tw:0 bash backbone/think/run_box.sh                       # diagnostic, seed 0 only (if seed 0 ran on Vast: unpack its ckpt.tar.gz + out.tar.gz here first, so a_s0's adapter is the same one)
 THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1,a:2,b:2,aplus:2,t:2,t1:2 bash backbone/think/run_box.sh    # seeds 1 and 2
 THINK_JOBS=bplus:0 bash backbone/think/run_box.sh                    # then, only if SUMMARY.txt says "bplus - b (seed 0) ... : yes", bplus:1,bplus:2
 ```
@@ -46,11 +46,14 @@ Stage-2 arms draw rows from `random.Random(seed + 1000)` (same order for all fiv
 `PARALLEL=1` runs the jobs of one box at the same time on its one GPU: first every listed stage-1 job (`a`, `b`), then, once their adapters
 exist, every listed stage-2 job (`aplus`, `bplus`, `t`, `t1`, `tw`), never more than `MAXPAR` (default 3) processes at a time, with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` set. A stage-2 job starts only if its stage-1 job wrote its result (the adapter alone is saved before that job's eval), and a job with no result at the end of a stage (e.g. out of GPU memory) is run again alone, once. Each job writes
 `out/think/{arm}_s{S}/run.log`; everything is also in `out/think/run.log`. Without `PARALLEL` the jobs run one after another, as before. For seed N
-(N = 0, 1; seed 2 is on Ben's PC). `bplus:0` and `tw:0` are not in seed 0's box: its 10 hours cover the core five (serial estimate 8.4 h) and the box is killed 10 minutes before the end, losing every unfinished job. Run them afterwards (lines above), after unpacking `ckpt.tar.gz` and `out.tar.gz` so `b_s0`'s adapter is reused:
+(N = 0, 1; seed 2 is on Ben's PC). Seed 0's box also runs `bplus:0` (it needs `b_s0`'s adapter, which is on that box); `tw:0` runs on Ben's PC.
+The box is killed 10 minutes before its hours run out, losing every unfinished job, so the boxes get 12 hours:
 ```
-python3 backbone/vast.py pack --out /tmp/think-sN --slim --hours 10 --label claude-think1-compassionate-davinci-sN \
-    --env "THINK_JOBS=a:N,b:N,aplus:N,t:N,t1:N PARALLEL=1"          # the same line for seed 0 and 1
-python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.12      # pick an offer ID; PREREG caps both boxes at $2.50: 2 x 10 h x $0.125/h
+python3 backbone/vast.py pack --out /tmp/think-s0 --slim --hours 12 --label claude-think1-compassionate-davinci-s0 \
+    --env "THINK_JOBS=a:0,b:0,aplus:0,bplus:0,t:0,t1:0 PARALLEL=1 MAXPAR=2"
+python3 backbone/vast.py pack --out /tmp/think-s1 --slim --hours 12 --label claude-think1-compassionate-davinci-s1 \
+    --env "THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1 PARALLEL=1 MAXPAR=2"
+python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.15      # pick an offer ID; PREREG caps the two boxes at $3.60: 2 x 12 h x $0.15/h
 python3 backbone/vast.py create --offer ID --args /tmp/think-sN/args.json --label claude-think1-compassionate-davinci-sN --disk 60
 python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.txt
 ```

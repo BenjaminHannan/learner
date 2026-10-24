@@ -135,6 +135,7 @@ training without putting validation items in it [shown, code], so the laps get a
 
 ## Budget and hardware
 Seeds in parallel: seeds 0 and 1 on Vast (one RTX 3090 per seed, all of that seed's arms side by side on it, boxes labelled
-`claude-think1-compassionate-davinci-sN`, cap $2.50 of this week's credit), seed 2 on Ben's PC (RTX 5070 Ti, one command in
+`claude-think1-compassionate-davinci-sN`, 12 h self-stop, cap $3.60 of this week's credit (raised from $2.50 before any run,
+when Ben asked for the seeds to run in parallel)), seed 2 and `tw` on Ben's PC (RTX 5070 Ti, commands in
 `backbone/think/README.md`) or a third 3090 if credit allows. Estimated per seed on a 3090: a 1.3 h, b 1.6 h, aplus 1.5 h, t 2.5 h,
 t1 1.5 h [suggested].
