@@ -52,3 +52,8 @@ spread from the same seed. inject scored 42.2 (neutral). The base pair (42.5 / 4
 From here the judgement uses ALL runs of an arm: an arm HELPS only if its mean over runs clears the mean of all base runs by
 >= 3 points AND its worst run beats the best base run. Wave 4 adds base-s2, base-s3, lastloss-s2, mq4-s2 to get >= 3 runs each.
 The original per-run marks above are still reported as written.
+
+## Addendum 4 (00:25 UTC 2026-10-24): the steadier test
+Bring base, reg16, mq4, lastloss, all3 to 4 runs each (seeds 0-3; wave 5 = base-s3, mq4-s3, reg16-s1/s2/s3, all3-s1/s2/s3).
+Metric: validation at 8 loops. An arm HELPS if its mean beats base's mean by >= 2 points AND a two-sample Welch t-test on the
+per-run numbers gives p < 0.05 (one-sided). Otherwise NOT SHOWN. Report every run's number with the means.
