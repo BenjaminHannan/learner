@@ -94,8 +94,9 @@ def majority(vals, tol_gold=None):
     return None if best is None else best[0]
 
 def popqa_match(text, answers):
+    """Any gold alias as a whole word/phrase (so 'US' does not match 'custom')."""
     t = (text or "").casefold()
-    return any(a.casefold() in t for a in answers)
+    return any(re.search(r"(?<!\w)" + re.escape(a.casefold()) + r"(?!\w)", t) for a in answers if a.strip())
 
 def parse_tool_calls(text):
     """Return [(name, args)] from Qwen3.5 XML-ish or Qwen3 JSON tool calls (lenient)."""
@@ -222,7 +223,8 @@ def run_tool_loop(eng, tok, convs, tools, rounds, max_tokens, execfn=exec_tool, 
     for r in range(rounds + 1):
         if not active:
             break
-        outs = eng([render(tok, convs[i], tools, False) for i in active], n=1, temperature=0.0, max_tokens=max_tokens)
+        last = r == rounds  # final round offers no tools, so the model must answer
+        outs = eng([render(tok, convs[i], None if last else tools, False) for i in active], n=1, temperature=0.0, max_tokens=max_tokens)
         jobs, nxt = [], []
         for i, o in zip(active, outs):
             text, nt = o[0]

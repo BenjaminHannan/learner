@@ -51,6 +51,7 @@ def test_majority():
 
 def test_popqa_match():
     assert t.popqa_match("It is Paris, France", ["paris"]) and not t.popqa_match("Rome", ["Paris", "Lyon"])
+    assert not t.popqa_match("a custom answer", ["US"]) and t.popqa_match("born in the US.", ["US"])
 
 def test_python_exec():
     assert t.run_python("print(2+3)") == "5"
