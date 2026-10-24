@@ -158,3 +158,27 @@ Plain reading (one seed):
 - Two-hop from memory was 19 against 4, which is about 5 of 27 questions against 1 (suggested; a small count).
 - The diary score of 86 is the best of any slept arm, and above the plain model with the diary (84.6). But it is within 4 points of the control, so it is not called shown.
 - On the Mac's 4-bit model, fold-in would write into the quantized weights, so it needs the requantization test (`sleep-q4` constraint).
+
+## Addendum 5: sleep that scales to the chip, at 2x work (ab_ob_b2, seed 1)
+Box 57552969 (A100 SXM4 40GB New York) ran it in 1.29 h, about $0.76. The watcher destroyed the box when the result reached its label.
+
+| arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control (s = 1) | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
+| **ab_ob_b2 (s = 2)** | 85 | 48 | 0 | **66.5** | 0 | 75 | 67 | 47 | **45** | 83 | 56 | 92.0 |
+
+With the diary, ab_ob_b2 scored C4 100, C2 92, C1 70, two-hop 7, changed 90 and routine 100.
+
+Verdicts:
+- B1 PASS: recall is 66.5, against a mark of 61. That is +10.5 over the same-seed control, which clears the 4-point rule.
+- B2 PASS: ARC is 92.0 (mark 87.6) and diary is 82.9 (mark 77).
+- B3 PASS: integration is 47, against a mark of 43.
+- The wrong-if (recall <= 56) does not fire.
+- The gate-revert count is in the result JSON, which was not recovered (labels only). Recall rose, so the extra nights were clearly not all reverted.
+
+Plain reading (one seed):
+- Twice the night's work (steps, dreams per fact, items, REM chains) stored more recurring facts: 66.5 against 56. That is the best recall from memory so far, above every-weight at the small step (63.5).
+- General knowledge, note-reading and updates held.
+- So a faster chip, given the same hours, gives a better night, not just a shorter one (shown, one seed).
+- Caution: recall rests on 80 facts. An unpaired arm-to-arm gap has a noise of about 7 points, so +10.5 is about 1.5 noise widths. A second seed or a bigger fact set should confirm it.
+- Not yet split: whether the gain comes from more steps or from more varied dreams.
