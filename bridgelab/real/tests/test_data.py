@@ -104,3 +104,31 @@ def test_item_batches_hold_exactly_the_chosen_questions(tiny):
             assert batch.question_ids[k] == items.qid[i]
             seen[i] = True
     assert len(seen) == len(items)
+
+
+def test_msg_source_registers_is_unchanged_and_decoder_is_a_single_row(tiny):
+    tok, splits = tiny
+    items = splits["dev"].take(range(min(6, len(splits["dev"]))))
+    m = dmsg.load_d("random", "cpu", tok.vocab_size)
+    base = dmsg.extract(m, items, tok, "cpu", max_tokens=20000)                              # default = registers
+    reg = dmsg.extract(m, items, tok, "cpu", max_tokens=20000, msg_source="registers")
+    dec = dmsg.extract(m, items, tok, "cpu", max_tokens=20000, msg_source="decoder")
+    for k in ("regs", "reg0", "d_int", "loops"):
+        assert torch.equal(base[k], reg[k]), k
+    assert base["d_text"] == reg["d_text"] == dec["d_text"]
+    assert torch.equal(base["d_int"], dec["d_int"])                                          # capturing the decoder state does not change D's answers
+    assert dec["regs"].shape == (len(items), 1, m.config.d_model) and torch.equal(dec["reg0"], dec["regs"][:, 0])
+    assert dec["regs"].abs().sum() > 0 and not torch.equal(dec["reg0"], base["reg0"])
+    assert "_greedy" not in m.__dict__
+
+
+def test_msg_source_cache_key_is_separate(tmp_path, monkeypatch):
+    import argparse
+    from bridgelab.real import train as T
+    monkeypatch.setattr(T, "HERE", tmp_path)
+    calls = []
+    monkeypatch.setattr(T.dmsg, "extract", lambda *a, **k: calls.append(k.get("msg_source")) or {"x": torch.zeros(1)})
+    ns = lambda s: argparse.Namespace(village_root="r", fresh_messages=False, d_max_tokens=1, **({} if s is None else dict(msg_source=s)))
+    for s in (None, "registers", "decoder", "decoder"):
+        T.get_messages(None, [0], None, "cpu", "tag", "dev", ns(s))
+    assert calls == ["registers", "decoder"]                                                 # None and 'registers' share one cache file; decoder has its own; 2nd decoder hit the cache

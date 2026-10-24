@@ -107,14 +107,19 @@ def item_batches(items: VillageItems, which: Optional[Sequence[int]] = None, max
 
 # ------------------------------------------------------------------ extraction
 @contextmanager
-def capture_final_rows(model: PremonitionMini):
-    """While active, model.answer() records its episode rows when it starts decoding (= after each question's last think loop)."""
+def capture_final_rows(model: PremonitionMini, decoder: bool = False):
+    """While active, model.answer() records its episode rows when it starts decoding (= after each question's last think loop).
+    decoder=True also records box["dec_h"] [Q,128]: the decoder hidden state at the first answer position (the state that emits D's answer word),
+    computed exactly as _greedy does its first step (same as bridgelab/dcount/cap.py)."""
     box = {}
     orig = model._greedy
 
     def wrapped(batch, episode, mentions, stop):
         base = model._register_base
         box["regs"] = episode.x[:, base:base + model.config.registers].detach().float().clone()
+        if decoder:
+            seq = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1].unsqueeze(1)
+            box["dec_h"] = model._decode_logits(episode.x, episode.valid, seq)[:, -1].detach().float().clone()
         return orig(batch, episode, mentions, stop)
 
     model._greedy = wrapped
@@ -125,11 +130,14 @@ def capture_final_rows(model: PremonitionMini):
 
 
 @torch.no_grad()
-def extract(model: PremonitionMini, items: VillageItems, tokenizer, device, max_tokens: int = 60000, max_visits: int = 48, log=None) -> dict:
-    """Run frozen D on every item.  -> dict(regs [N,R,128] fp32 cpu, reg0 [N,128], d_text list[str], d_int [N] (-1 = not a number), d_correct [N] bool, loops [N])."""
+def extract(model: PremonitionMini, items: VillageItems, tokenizer, device, max_tokens: int = 60000, max_visits: int = 48, log=None,
+            msg_source: str = "registers") -> dict:
+    """Run frozen D on every item.  msg_source 'decoder': regs is [N,1,128] = D's decoder hidden state at the first answer position (reg0 = same row).
+    -> dict(regs [N,R,128] fp32 cpu, reg0 [N,128], d_text list[str], d_int [N] (-1 = not a number), d_correct [N] bool, loops [N])."""
     N = len(items)
     R_, d = model.config.registers, model.config.d_model
-    regs = torch.zeros(N, R_, d)
+    assert msg_source in ("registers", "decoder"), msg_source
+    regs = torch.zeros(N, R_ if msg_source == "registers" else 1, d)
     d_int = torch.full((N,), -1, dtype=torch.long)
     d_ok = torch.zeros(N, dtype=torch.bool)
     loops = torch.zeros(N, dtype=torch.long)
@@ -139,14 +147,14 @@ def extract(model: PremonitionMini, items: VillageItems, tokenizer, device, max_
     t0 = time.time()
     for order, batch in item_batches(items, None, max_tokens, max_visits):
         batch = batch.to(device)
-        with capture_final_rows(model) as box:
+        with capture_final_rows(model, decoder=msg_source == "decoder") as box:
             ans = model.answer(batch, stop=stops)
         pred = []
         for q, ids in enumerate(ans.ids()):
             table = batch.names[int(batch.q_visit[q])]
             pred.append(preprocess.prediction_text(ids, table, tokenizer)[0])
         for k, i in enumerate(order):
-            regs[i] = box["regs"][k].cpu()
+            regs[i] = box["regs"][k].cpu() if msg_source == "registers" else box["dec_h"][k].cpu()[None]
             texts[i] = pred[k]
             d_int[i] = word_to_int(pred[k])
             d_ok[i] = d_int[i] == int(items.c[i])

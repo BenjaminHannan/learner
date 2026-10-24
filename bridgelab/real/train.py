@@ -65,12 +65,13 @@ def load_creative(path: str, device, d_ckpt: str = None):
 def get_messages(dmodel, items, tokenizer, device, tag: str, split: str, args) -> dict:
     cache_dir = HERE / "ckpt"
     cache_dir.mkdir(exist_ok=True)
-    key = hashlib.sha256(f"{tag}|{args.village_root}|{split}|{len(items)}".encode()).hexdigest()[:12]
+    src = getattr(args, "msg_source", "registers")
+    key = hashlib.sha256(f"{tag}|{args.village_root}|{split}|{len(items)}{'' if src == 'registers' else '|' + src}".encode()).hexdigest()[:12]
     path = cache_dir / f"dmsg-{key}-{split}.pt"
     if path.exists() and not args.fresh_messages:
         return torch.load(path, weights_only=False)
     log(f"D reading {len(items)} {split} items")
-    out = dmsg.extract(dmodel, items, tokenizer, device, max_tokens=args.d_max_tokens, log=None)
+    out = dmsg.extract(dmodel, items, tokenizer, device, max_tokens=args.d_max_tokens, log=None, msg_source=src)
     torch.save(out, path)
     return out
 
@@ -192,6 +193,8 @@ def main(argv=None):
     ap.add_argument("--tag", default="")
     ap.add_argument("--save-creative", default="", help="write the trained creative (parent-checkpoint format) here")
     ap.add_argument("--ema-state-from", default="", help="ema_const only: load the v1 bridge state (key 'bridge') of this D-final.pt into the control, as saved")
+    ap.add_argument("--msg-source", default="registers", choices=("registers", "decoder"),
+                    help="what D hands over: its final-loop register rows (default) | its decoder hidden state at the first answer position ([N,1,128])")
     ap.add_argument("--fresh-messages", action="store_true")
     ap.add_argument("--bf16", action="store_true")
     a = ap.parse_args(argv)

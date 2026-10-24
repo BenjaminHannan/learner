@@ -35,3 +35,13 @@ simple competitor: report honestly whether the hidden-state bridge beats, ties o
 
 **Labels used in write-ups:** shown = measured by this code in a run listed in results/; suggested = reasoned from the code or a mechanism; untested = not run.
 **One change at a time.** Order of arms: text -> none -> ema_const -> pooled -> xattn; a variant (more rows, other kinds, frozen creative) is a separate run with its own tag.
+
+## Amendment 2026-10-23 (written before any `--msg-source decoder` run): msg-source decoder
+**Why.** run2 `pooled` on D's register 0: real 0.358 vs prior_inject 0.355 (count head ce ~1.2, learned almost nothing). bridgelab/dcount/RESULT.md (shown there): the count is weak in D's registers
+(linear probe 53.6% reg0, prior 48%) but present in D's decoder hidden state at the first answer position (probe 67.9%, about D's own accuracy).
+**Change (one).** `--msg-source decoder`: the message is D's decoder hidden state at the first answer position, [1,128] per item, instead of the 4 register rows. Same pooled bridge (reads that row), same everything else.
+Matched control: `--msg-source registers`, same 1200 steps, 3000 train / 1000 eval items, batch 64, seed 0 (so step count is not the confound). Tag/out: results/run3.
+**Pass marks (fixed now), pooled, dev, seed 0:** (1) count-head dev accuracy (`count_acc` of `real`) >= 0.60; (2) `real` >= `d_text` - 5 points; (3) `shuffle` <= `prior_inject` - 5 points
+(the shuffle must hurt: a head that reads the message is wrong on a shuffled one); (4) `mean` <= `prior_inject` + 5 points.
+**Proved wrong:** `real` <= `prior_inject` + 5 points (the decoder-state message does not carry the count to the creative under this bridge).
+Existing precondition/inconclusive rules apply unchanged. Labels: shown / suggested / untested.
