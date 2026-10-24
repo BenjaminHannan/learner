@@ -45,3 +45,4 @@ too few linear-attention state slots).
   - claude-sleepb9a-cqc4bi (57555316, A100 PCIE 40GB Japan, $0.342/h): ab_ob_rot, then ab_ob_guess.
   - claude-sleepb9b-cqc4bi (57555322, A100 SXM4 40GB New York, $0.539/h): ab_ob_twist.
   - ab_ob_ther waits for more budget. The research note expects it to be close to null.
+- 20:07Z coordinator raised the addendum-4 cap by $0.15 to $1.65, because the relaunched boxes bill above the offer price with storage. The watcher on 57555316 and 57555322 was restarted with $1.33 for those boxes, on top of the $0.32 already spent.
