@@ -3,7 +3,7 @@
 ## Real-jobs scoreboard (tau2-bench retail, tasks 0-39, Haiku 5.5 as user simulator and judge, 1 trial; prereg gaps/scoreboard1/PREREG.md)
 | agent | DB match /40 | Pass^1 |
 |---|---|---|
-| Claude Haiku 5.5 (cloud; Stage A) | 29 | 0.725 |
+| Claude Haiku 5.5 (cloud; Stage A) | 29 | see gaps/scoreboard1 |
 | LFM2.5 thinking on | 30 | 0.725 |
 | LFM2.5 thinking off (chat template ends with `<think>\n</think>\n`) | 23 | 0.525 |
 Thinking off: 9 tasks aborted with too_many_errors (the agent repeated a failing call, e.g. "User not found", 10 times).
