@@ -30,7 +30,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     name = a.model.split("/")[-1]
     ev = build_eval(a.eval_n)
-    llm = LLM(a.model, tensor_parallel_size=a.tp, max_model_len=a.max_len, dtype="bfloat16", trust_remote_code=True)
+    llm = LLM(a.model, tensor_parallel_size=a.tp, max_model_len=a.max_len, dtype="bfloat16", trust_remote_code=True, gpu_memory_utilization=0.9,
+              limit_mm_per_prompt={"image": 0, "video": 0}, max_num_seqs=256, enable_prefix_caching=True)
     tok = llm.get_tokenizer()
     prompts = [tok.apply_chat_template([{"role": "system", "content": SYS}, {"role": "user", "content": r["prompt"]}], tokenize=False,
                                        add_generation_prompt=True, enable_thinking=False) for r in ev]
