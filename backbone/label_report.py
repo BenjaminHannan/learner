@@ -30,6 +30,8 @@ for f in sorted(Path("out").rglob("result_*.json")):
         nums.append(f"arc={100 * ae['acc']:.1f}")
     if name.endswith(".partial"):  # unfinished arm: nights done so far
         nums.append(f"n{len(d.get('nights') or [])}")
+    elif d.get("nights"):  # Sleep-B: which nights the morning gate reverted (1 = reverted)
+        nums.append("rv=" + "".join("1" if isinstance(n, dict) and n.get("reverted") else "0" for n in d["nights"]))
     for k, v in d.items():
         if isinstance(v, dict) and isinstance(v.get("accuracy"), (int, float)):
             nums.append(f"{k}={100 * v['accuracy']:.1f}")
