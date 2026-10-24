@@ -335,3 +335,71 @@ def test_round7_arm_flags_and_verdict():
     assert v['proved_wrong'] and not v['pass']
     v = MS.verdict_round7(dict(base=base, nights4=n4, comp4=A(0.18)))
     assert not v['pass'] and not v['proved_wrong'] and any('BETWEEN' in l for l in v['lines'])
+
+
+def _py(code, consts=None):
+    import os
+    import subprocess
+    import sys
+    env = {k: v for k, v in os.environ.items() if k != 'PREMO_CONSTS'}
+    if consts:
+        env['PREMO_CONSTS'] = consts
+    r = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, env=env, cwd=str(__import__('pathlib').Path(__file__).resolve().parents[2]))
+    return r
+
+
+def test_round8_env_switch_changes_consts_everywhere_and_default_is_unchanged():
+    code = ("import json; from custom_io.models import progparse as pp; from creative import programs as P, dream2 as D, checkers as C, fewshot as F, puzzles as Z; "
+            "print(json.dumps([pp.CONSTS, P.CONSTS, list(D.CONST_VALUES), pp.R0, P.R0, len(C.CONST_SLOTS)]))")
+    d = json.loads(_py(code).stdout)
+    assert d[0] == d[1] == d[2] == [1, 2, 10, 100] and d[3] == d[4] == 20 and d[5] == 4
+    n = json.loads(_py(code, '1,2,10,3').stdout)
+    assert n[0] == n[1] == n[2] == [1, 2, 10, 3] and n[3] == n[4] == 20 and n[5] == 4          # same slot count: shapes unchanged
+    assert json.loads(_py(code, '').stdout) == d
+    assert _py(code, '1,2,10').returncode != 0 and _py(code, '1,2,10,10').returncode != 0 and _py(code, '1,2,x,3').returncode != 0
+    # a program that needs 100 loses it; rows that lose their program under the swap are the ones lost_by_swap names
+    code2 = ("from custom_io.models import progparse as pp; "
+             "r = {'id': 'percent_rate-T1-2', 'family': 'percent_rate', 'prompt': 'What is 20% of 340?', 'answer': '68', 'steps': ['340 * 20 / 100'], 'meta': {'base': 340, 'p': 20}, 'variant': 'percent'}; "
+             "print(pp.lost_by_swap(r), pp.CONSTS)")
+    assert _py(code2).stdout.startswith('False [1, 2, 10, 100]')            # default set: nothing is lost
+    assert _py(code2, '1,2,10,5').stdout.startswith('True [1, 2, 10, 5]')   # "x * p / 100" needs the constant 100: the row is skipped from replay, not trained program-less
+
+
+def test_round8_resume_refuses_a_mixed_constant_set(tmp_path):
+    ck, sk = _tiny_workdir(tmp_path)
+    out = tmp_path / 'm'
+    out.mkdir()
+    json.dump(dict(ckpt=ck, seed=0, stages=['warmup'], seconds={}, g1=False, phases={}, consts=[1, 2, 10, 5]), open(out / 'train.json', 'w'))
+    with pytest.raises(RuntimeError, match='constants'):
+        CS.run_creative(str(out), ck, sk, None, device='cpu', seed=0, pool_limit=6, dev_limit=4, n1=2, n2=2, T=1.0, updates_cap=2)
+
+
+def test_round8_arms_dirs_env_and_verdict():
+    assert MS.arm_kwargs('const_base', MS.SIZES, round_=8) == MS.arm_kwargs('base', MS.SIZES, round_=8) == dict(eval_each_night=True)
+    assert MS.arm_kwargs('const_nights4', MS.SIZES, round_=8) == MS.arm_kwargs('nights4', MS.SIZES, round_=8)
+    assert MS.arm_consts('const_nights4') == '1,2,10,3' and MS.arm_consts('nights4') is None and MS.arm_consts('const_base', '1,2,10,5') == '1,2,10,5'
+    assert MS.group_dir('/o', 0, None) == '/o/s0' and MS.group_dir('/o', 1, '1,2,10,5') == '/o/s1/const5'
+    import os
+    old = os.environ.get('PREMO_CONSTS')
+    os.environ['PREMO_CONSTS'] = '1,2,10,7'
+    try:
+        assert 'PREMO_CONSTS' not in MS.sub_env(None) and MS.sub_env('1,2,10,3')['PREMO_CONSTS'] == '1,2,10,3'
+    finally:
+        os.environ.pop('PREMO_CONSTS') if old is None else os.environ.__setitem__('PREMO_CONSTS', old)
+    A = lambda h, aff=0.06, e=0.9, hm=0.0: dict(hard=h, easy=e, harm=hm, affine=aff)
+    cb, n4 = A(0.10), A(0.169)
+    v = MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.21), nights4=n4))
+    assert v['pass'] and not v['proved_wrong']
+    assert not MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.21, aff=0.04), nights4=n4))['pass']       # affine < 5
+    assert not MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.21, e=0.80), nights4=n4))['pass']           # Easy more than 5 below const_base
+    assert not MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.21, hm=0.03), nights4=n4))['pass']          # harm > 2
+    assert not MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.208), nights4=n4))['pass'] or True
+    assert not MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.208), nights4=n4))['pass']                  # +3.9 < +4
+    v = MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.175, aff=0.01)), ref=dict(hard=0.169))            # nights4 from the flag; +0.6, affine 1%
+    assert v['proved_wrong'] and not v['pass']
+    v = MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.175, aff=0.02), nights4=n4))                        # affine 2% > 1: not proved wrong
+    assert not v['proved_wrong'] and not v['pass'] and any('BETWEEN' in l for l in v['lines'])
+    v = MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.25, aff=0.0), nights4=n4))                          # big Hard gain but affine 0: no pass, not proved wrong
+    assert not v['pass'] and not v['proved_wrong']
+    with pytest.raises(ValueError):
+        MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.2)))

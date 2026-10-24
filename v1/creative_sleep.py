@@ -21,6 +21,7 @@ from creative import c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, sleep, st
 from creative import rules_real as R
 from creative.c2b import DATA, LR, N1, N2, VISITS, T_GRID, hindsight_records, load_recs, night_info, save_recs
 from custom_io.data import load_rows
+from custom_io.models import progparse as pp
 from v1.joint import clone_model
 
 log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)
@@ -130,6 +131,10 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
     path = P("train.json")
     info = json.load(open(path)) if os.path.exists(path) else dict(ckpt=ckpt, seed=seed, stages=[], seconds={}, g1=bool(g1_factory), phases={})
     save = lambda: json.dump(info, open(path, "w"), indent=1, default=float)
+    # the constant set (env PREMO_CONSTS, read when progparse is imported) is part of the run: never mix sets inside one out dir
+    if info["stages"] and info.get("consts", pp.DEFAULT_CONSTS) != list(pp.CONSTS):      # a resumed dir (stages done) keeps the set it was made with; an old train.json without the key is the default set
+        raise RuntimeError(f"{path} was made with constants {info.get('consts')}, this process has {list(pp.CONSTS)}")
+    info["consts"] = list(pp.CONSTS)
 
     def stage(name, secs, extra=None):
         info["seconds"][name] = round(secs, 1)
@@ -145,7 +150,14 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
         for done_stage in [x for x in info["stages"] if x in ("warmup", "Nprime")]:
             on_stage(done_stage, info)
     replay = sleep.load_replay(skills_train, None, seed)
-    warm_rows = R.warm_records(R.load_split(DATA, "warm"))
+    if list(pp.CONSTS) != pp.DEFAULT_CONSTS:      # swapped constants: a replay row whose program needed a missing constant is skipped, not trained program-less
+        n_rep = len(replay)
+        replay = [r for r in replay if not pp.lost_by_swap(r)]
+        info["replay_skipped"] = n_rep - len(replay)
+        log("constants", pp.CONSTS, "replay rows skipped (program needs a missing constant):", info["replay_skipped"], "of", n_rep)
+    warm_src = R.load_split(DATA, "warm")
+    warm_rows = R.warm_records(warm_src)
+    info["warm_skipped"] = len(warm_src) - len(warm_rows)
     pool = c2_stones._with_nums(R.load_split(DATA, "pool")[:pool_limit])
     _load = sleep.load_parent
 

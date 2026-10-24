@@ -159,3 +159,20 @@ Arm `const_nights4` = nights4 with the new constant set, everything else equal, 
 (16.9 Hard, affine 0.0), and base is re-run with the new set too (`const_base`).
 Marks: PASS if const_nights4 Hard >= nights4 + 4 AND affine >= 5%, Easy within 5 of base, harm <= 2.
 Proved wrong: affine <= 1% AND Hard <= nights4 + 1. Reported: shortest-length distribution per kind under each set, and the per-night curve.
+
+## Round 8 constant pick (computed 2026-10-24, before any run; BFS shortest programs, `creative/rules_real.reference`, each set in a fresh subprocess with PREMO_CONSTS)
+Shortest program length (steps) per question, held-out kinds on pool.jsonl (1,024 questions), add/mult on warm.jsonl. Length depends on the rule's parameters only (the canonical program is checked on the whole input domain); nothing was unrepresentable under any set.
+
+| set | affine (n=205) mean | sq_plus mean | double_add mean | square | last_digit | warm add mean | warm mult mean |
+|---|---|---|---|---|---|---|---|
+| {1,2,10,100} (old) | 4.005 | 3.410 | 2.897 | 1.0 | 1.0 | 2.889 | 2.292 |
+| {1,2,10,3} | **3.332** | 2.844 | 2.784 | 1.0 | 1.0 | 2.477 | 1.857 |
+| {1,2,10,5} | 3.454 | 2.898 | 2.897 | 1.0 | 1.0 | 2.581 | 1.861 |
+
+Length distributions (steps: count). Pool affine: old 3:32, 4:140, 5:33; K=3 2:14, 3:109, 4:82; K=5 2:9, 3:94, 4:102. Pool sq_plus: old 3:121, 4:84; K=3 2:32, 3:173; K=5 2:21, 3:184.
+Pool double_add: old 2:21, 3:183; K=3 2:44, 3:160; K=5 2:21, 3:183 (same as old). Square and last_digit: 1 step for all 205, every set.
+Warm add (1,024): old 1:34, 2:291, 3:454, 4:245; K=3 1:68, 2:400, 3:556; K=5 1:59, 2:399, 3:478, 4:88. Warm mult (1,024): old 2:725, 3:299; K=3 1:146, 2:878; K=5 1:142, 2:882.
+Dev and labelled give the same picture (affine mean old 4.15 / 4.03, K=3 3.31 / 3.38, K=5 3.52 / 3.54).
+**Rule result: K = 3** (affine 3.332 < 3.454; no tie). The constant set for Round 8 is {1, 2, 10, 3}.
+Checks: the B2 checkpoint stores no constants (keys: model, name, cfg {copy: True}, chars, step), and the constant slots are value-coded, so B2 loads unchanged. Prompt numbers 3 and 5 now sit next to a constant slot; the data files are unchanged (rules_real still only excludes 2 and 10 as inputs), so a pool number can equal slot 19's value: the pointer then has two correct candidates, which the supervision already allows.
+Skills replay (2,000-row sample of the skills train set; 136 dev in_dist rows): 16 train rows (0.8%) and 1 dev row need the constant 100 (percent rows, `x * p / 100`). Under the swap those rows lose their program; the run skips them from replay and counts them in train.json (`replay_skipped`) instead of training them program-less. Warm records: none fail (0 skipped). Dream caches and the shared setup (warm-up, N', setup.json, dev floors) of the new set live in OUT/s<seed>/const3/, never the old files. The dev/labelled questions all stay representable.

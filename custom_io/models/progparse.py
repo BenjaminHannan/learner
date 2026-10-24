@@ -1,11 +1,25 @@
 """Ledger's supervision: a row's `steps` -> an executable slot program, and the row's talker mode. Hand-written, no search.
-Workspace slots (27): 0..15 prompt numbers (regex \\d+, first 16), 16..19 constants 1 2 10 100, 20..26 results (<= 7 steps).
+Workspace slots (27): 0..15 prompt numbers (regex \\d+, first 16), 16..19 constants 1 2 10 100 (env PREMO_CONSTS swaps the 100), 20..26 results (<= 7 steps).
 A step is (op, cands_a, cands_b, value): the operand slots that hold the operand values (any of them is a correct pointer).
 row_targets(row) -> dict(prog, mode (0 NUM / 1 WORD / 2 GEN), ans (slots), word (word indices)), cached by row id."""
+import os
 import re
 from custom_io.data import word_spans
 
-N_NUM, CONSTS, N_RES, W_MAX = 16, [1, 2, 10, 100], 7, 64
+# Opt-in constant swap (multistep round 8): PREMO_CONSTS="1,2,10,5" replaces the constant set. Read at import, so set it before anything imports this module.
+# Exactly 4 values (the slot count and the model's shapes stay the same). Default unchanged.
+def _consts_from_env(default=(1, 2, 10, 100)):
+    e = os.environ.get('PREMO_CONSTS', '').strip()
+    if not e:
+        return list(default)
+    v = [int(x) for x in e.split(',')]
+    if len(v) != len(default) or len(set(v)) != len(v) or any(x <= 0 for x in v):
+        raise ValueError(f'PREMO_CONSTS must be {len(default)} distinct positive ints, got {e!r}')
+    return v
+
+
+DEFAULT_CONSTS = [1, 2, 10, 100]
+N_NUM, CONSTS, N_RES, W_MAX = 16, _consts_from_env(), 7, 64
 R0 = N_NUM + len(CONSTS)                       # first result slot
 M = R0 + N_RES                                 # 27
 OPS = ['NOOP', 'ADD', 'SUB', 'MUL', 'DIV', 'MOD', 'MIN', 'MAX', 'CMP']
@@ -207,6 +221,21 @@ def _targets(r):
     word = tuple(i for i, w in enumerate(words) if w == a.lower())
     mode = 0 if ans else (1 if word else 2)
     return dict(prog=prog, mode=mode, ans=ans if mode == 0 else (), word=word if mode == 1 else ())
+
+
+def lost_by_swap(r):
+    """True if row r has a program under the default constants {1, 2, 10, 100} but none under the active CONSTS (the swapped set lacks a constant the
+    row needs). Always False under the default set. Such rows are skipped from replay (v1/creative_sleep.run_creative) instead of training as program-less rows."""
+    global CONSTS
+    if CONSTS == DEFAULT_CONSTS:
+        return False
+    if program_for(r)[0] is not None:
+        return False
+    CONSTS, keep = DEFAULT_CONSTS, CONSTS
+    try:
+        return program_for(r)[0] is not None
+    finally:
+        CONSTS = keep
 
 
 def coverage(rows):

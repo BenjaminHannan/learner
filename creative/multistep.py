@@ -21,7 +21,11 @@ EASY = ('square', 'last_digit')
 SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
 OCCAM_ARMS = ('occam5', 'occam5_strict')
 DEEP_ARMS = ('occam_deep',)
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4', 'comp4')
+CONST_ARMS = ('const_base', 'const_nights4')          # round 8: the same arms as base / nights4 with the constant 100 replaced (env PREMO_CONSTS in the arm subprocess)
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4', 'comp4') + CONST_ARMS
+ROUND8_CONSTS = '1,2,10,3'                              # K = 3: picked by the PREREG rule (lower mean shortest affine program on the pool), see PREREG.md "Round 8 constant pick"
+ROUND8_ARMS = ('const_base', 'const_nights4')
+ROUND8_REF = 'nights4'                                  # comparison arm, read from the same OUT dir (old constants) if present
 FOUND_LENGTHS = (1, 2, 3, 4)
 ROUND3_ARMS = ('base', 'occam_deep')
 ROUND4_ARMS = ('base', 'nights4')
@@ -45,6 +49,8 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
     n, k = sizes['school_n'], sizes['nightly']
     ms = sizes.get('max_steps', 5)
     sch = dict(n=n, max_steps=ms, strict=False, curriculum=False, visits=SIZES['visits'], lr=SIZES['lr'], cache=cache, workers=workers)
+    if arm in CONST_ARMS:    # round 8: same kwargs as the plain arm; only the subprocess environment differs
+        return arm_kwargs(arm[len('const_'):], sizes, cache, workers, round_)
     if arm == 'base':
         return dict(eval_each_night=True) if round_ >= 4 else {}
     if arm == 'nights4':     # round 4: four nights instead of two, everything else as base; both arms report the per-night curve
@@ -298,6 +304,53 @@ def verdict_round7(arms: dict, curve: dict | None = None) -> dict:
     return out
 
 
+def verdict_round8(arms: dict, curve: dict | None = None, ref: dict | None = None) -> dict:
+    """PREREG Round 8. arms = {arm: dict(hard, easy, harm, affine)} seed means (fractions); ref = dict(hard=fraction) for round 4's nights4 (old constants) when it is not in arms.
+    PASS: const_nights4 Hard >= nights4 + 4 points AND affine >= 5%, Easy within 5 of const_base, harm <= 2 points. PROVED WRONG: affine <= 1% AND Hard <= nights4 + 1. Else between the marks."""
+    pts = lambda x: round(100.0 * x, 9)
+    b, x = arms['const_base'], arms['const_nights4']
+    n4 = arms.get('nights4') or ref
+    if n4 is None or n4.get('hard') is None:
+        raise ValueError('round 8 needs nights4 Hard: run it in the same OUT dir or pass --ref-nights4-hard')
+    d4, aff = pts(x['hard'] - n4['hard']), x.get('affine')
+    c = dict(hard_ge_nights4_plus_4=d4 >= 4, affine_ge_5=aff is not None and pts(aff) >= 5, easy_ok=pts(x['easy']) >= pts(b['easy']) - 5, harm_ok=pts(x['harm']) <= 2)
+    pw = aff is not None and pts(aff) <= 1 and d4 <= 1
+    out = dict(gain_vs_nights4_points=d4, pass_detail=c, **{'pass': all(c.values())}, proved_wrong=pw, lines=[])
+    out['lines'].append(('PASS: const_nights4' if out['pass'] else 'NO PASS: const_nights4') + f" (Hard {pts(x['hard']):.1f}% = nights4 {pts(n4['hard']):.1f} + {d4:.1f}; affine {'n/a' if aff is None else f'{pts(aff):.1f}%'}; Easy {pts(x['easy']):.1f} vs const_base {pts(b['easy']):.1f}; harm {pts(x['harm']):.1f} pts; failed: {[k for k, v in c.items() if not v]})")
+    if pw:
+        out['lines'].append('PROVED WRONG: const_nights4 affine <= 1% AND Hard <= nights4 + 1 points')
+    elif not out['pass']:
+        out['lines'].append('BETWEEN THE MARKS: const_nights4 is not proved wrong but misses a pass mark')
+    out['lines'].append(f"const_base Hard {pts(b['hard']):.1f}% (report only); nights4 Hard {pts(n4['hard']):.1f}%")
+    if curve:
+        out['hard_by_night'] = curve
+        for a, cv in curve.items():
+            out['lines'].append(f"CURVE {a}: Hard after night " + ', '.join(f"{n}: {pts(h):.1f}%" for n, h in cv.items()))
+    return out
+
+
+def arm_consts(arm: str, consts: str = ROUND8_CONSTS):
+    """The PREMO_CONSTS value of an arm's subprocess (None = the default constants, and the variable is removed)."""
+    return consts if arm in CONST_ARMS else None
+
+
+def group_dir(root: str, seed: int, consts) -> str:
+    """Per-seed directory of a constant set: OUT/s<seed> for the default, OUT/s<seed>/const<K> (K = the value(s) that replace the default ones) otherwise."""
+    d = os.path.join(root, f's{seed}')
+    if consts:
+        tag = ''.join(str(int(c)) for c in consts.split(',') if int(c) not in (1, 2, 10, 100)) or 'x'
+        d = os.path.join(d, f'const{tag}')
+    return d
+
+
+def sub_env(consts, **extra) -> dict:
+    env = dict(os.environ, **extra)
+    env.pop('PREMO_CONSTS', None)               # an arm gets exactly its own set, whatever the driver's environment says
+    if consts:
+        env['PREMO_CONSTS'] = consts
+    return env
+
+
 def aggregate(per_seed: dict) -> dict:
     """{seed: {arm: eval dict}} -> {arm: dict(per_seed, mean)}."""
     arms = sorted({a for s in per_seed.values() for a in s}, key=ARMS.index)
@@ -319,12 +372,18 @@ def worker(a):
     cfg = json.load(open(a.cfg))
     d = a.arm_dir
     t0 = time.time()
+    from custom_io.models import progparse as pp
+    log('constants', pp.CONSTS)
+    if a.shared:        # the shared stage of a constant set (warm-up, N', setup), run in this subprocess so that PREMO_CONSTS is in force before any import
+        CS.run_creative(d, cfg['b2'], os.path.join(cfg['skills'], 'train.jsonl'), cfg['skills'], device=cfg['device'], seed=cfg['seed'], stop_after='setup', **cfg['kwargs'])
+        return
     info = CS.run_creative(d, cfg['b2'], os.path.join(cfg['skills'], 'train.jsonl'), cfg['skills'], device=cfg['device'], seed=cfg['seed'], **cfg['kwargs'])
     # the final model: W2; if a night found no W records (the pipeline stops, e.g. a tiny smoke model) the latest model that exists, recorded in 'model'
     nn = cfg['kwargs'].get('nights', 2)
     model = next((f for f in tuple(f'W{k}.pt' for k in range(nn, 0, -1)) + ('school.pt', 'Nprime.pt') if os.path.exists(os.path.join(d, f))), None)
     ev = evaluate_w2(os.path.join(d, model), cfg['skills'], cfg['device'], limit=cfg['kwargs'].get('dev_limit'))
     ev['model'], ev['stop'] = model, info.get('stop')
+    ev['consts'], ev['replay_skipped'], ev['warm_skipped'] = list(pp.CONSTS), info.get('replay_skipped'), info.get('warm_skipped')
     ev['base5'] = json.load(open(os.path.join(d, 'setup.json')))['base5']
     ev['skills_harm_pts'] = round(100 * (ev['base5'] - ev['skills5']), 2) if ev['skills5'] is not None and ev['base5'] is not None else None
     ev['seconds'] = round(time.time() - t0, 1)
@@ -336,14 +395,25 @@ def worker(a):
 
 
 # ---------------- driver ----------------
-def shared_part(root: str, seed: int, a, kw: dict):
+def shared_part(root: str, seed: int, a, kw: dict, consts=None):
+    """The per-seed shared stage. consts=None: OUT/s<seed>/shared in this process (unchanged). A constant set: its own OUT/s<seed>/const<K>/shared, run in a
+    subprocess with PREMO_CONSTS set (never reuses the old-constant shared files, warm-up N', setup.json, dev floors)."""
     from v1 import creative_sleep as CS
-    d = os.path.join(root, f's{seed}', 'shared')
+    d = os.path.join(group_dir(root, seed, consts), 'shared')
     if os.path.exists(os.path.join(d, 'setup.json')):
         log('shared done', d)
         return d
-    log('shared part: warm-up, N\', setup', d)
-    CS.run_creative(d, a.b2, os.path.join(a.skills, 'train.jsonl'), a.skills, device=a.device, seed=seed, stop_after='setup', **kw)
+    log('shared part: warm-up, N\', setup', d, 'constants', consts or 'default')
+    if consts is None:
+        CS.run_creative(d, a.b2, os.path.join(a.skills, 'train.jsonl'), a.skills, device=a.device, seed=seed, stop_after='setup', **kw)
+        return d
+    os.makedirs(d, exist_ok=True)
+    cfgp = os.path.join(d, 'shared_cfg.json')
+    json.dump(dict(b2=os.path.abspath(a.b2), skills=os.path.abspath(a.skills), device=a.device, seed=seed, kwargs=kw), open(cfgp, 'w'), indent=1)
+    env = sub_env(consts, OMP_NUM_THREADS=str(a.threads), MKL_NUM_THREADS=str(a.threads), PYTHONHASHSEED='0')
+    rc = subprocess.call([sys.executable, '-m', 'creative.multistep', '--worker', '--shared', '--cfg', cfgp, '--arm-dir', d], stdout=open(os.path.join(d, 'log.txt'), 'a'), stderr=subprocess.STDOUT, env=env)
+    if rc != 0 or not os.path.exists(os.path.join(d, 'setup.json')):
+        raise RuntimeError(f'shared stage failed (rc {rc}), see {d}/log.txt')
     return d
 
 
@@ -375,14 +445,16 @@ def main():
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--seeds', type=int, nargs='+', default=[0, 1])
     ap.add_argument('--arms', nargs='+', default=None, choices=ARMS)
-    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6, 7), help='7 = composition dreams: base nights4 comp4; 6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
+    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6, 7, 8), help='8 = constant swap 100 -> K: const_base const_nights4 (nights4 read from the same OUT dir if present); 7 = composition dreams: base nights4 comp4; 6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
     ap.add_argument('--compare', default=None, help='round 3: round 2 results.json (for the depth-helps line: its occam5_strict Hard)')
+    ap.add_argument('--ref-nights4-hard', type=float, default=None, help='round 8: nights4 Hard (percent, e.g. 16.9) when nights4 is not in OUT (round 4 value)')
+    ap.add_argument('--consts', default=ROUND8_CONSTS, help='round 8: PREMO_CONSTS for the const_* arms (default %(default)s)')
     ap.add_argument('--parallel', type=int, default=1)
     ap.add_argument('--threads', type=int, default=2, help='OMP threads per arm subprocess')
     ap.add_argument('--cache-dir', default=None, help='dream cache (default OUT/s<seed>/dreams); keep it out of the exported out/ tree')
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--reduced', action='store_true', help='Mac fallback sizes (REDUCED); every arm alike')
-    ap.add_argument('--worker', action='store_true'), ap.add_argument('--cfg'), ap.add_argument('--arm-dir')
+    ap.add_argument('--worker', action='store_true'), ap.add_argument('--cfg'), ap.add_argument('--arm-dir'), ap.add_argument('--shared', action='store_true')
     a = ap.parse_args()
     if a.worker:
         return worker(a)
@@ -392,16 +464,20 @@ def main():
     os.makedirs(root, exist_ok=True)
     r2 = a.round == 2
     r3 = a.round == 3
-    arms = [x for x in ARMS if x in (a.arms or (ROUND7_ARMS if a.round == 7 else ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
+    arms = [x for x in ARMS if x in (a.arms or (ROUND8_ARMS if a.round == 8 else ROUND7_ARMS if a.round == 7 else ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
     ncpu = os.cpu_count() or 1
     per_seed, overlap, failed = {}, {}, []
     for seed in a.seeds:
-        shared = shared_part(root, seed, a, kw)
+        shareds = {}
+        for cs in sorted({arm_consts(x, a.consts) for x in arms}, key=str):      # one shared stage per constant set (None = the default, as before)
+            shareds[cs] = shared_part(root, seed, a, kw, cs)
         cache = a.cache_dir or os.path.join(root, f's{seed}', 'dreams')
         overlap[str(seed)] = pregen(root, seed, arms, sizes, kw, ncpu, cache)
         todo, running = [], []
         for arm in arms:
-            d = os.path.join(root, f's{seed}', arm)
+            cs = arm_consts(arm, a.consts)
+            shared, d = shareds[cs], os.path.join(group_dir(root, seed, cs), arm)
+            acache = os.path.join(cache, os.path.basename(group_dir(root, seed, cs))) if cs else cache      # dream caches of a constant set stay apart
             if os.path.exists(os.path.join(d, 'arm_result.json')) and 'failed' not in json.load(open(os.path.join(d, 'arm_result.json'))):
                 log('skip finished', seed, arm)
                 continue
@@ -410,13 +486,13 @@ def main():
                 if os.path.exists(os.path.join(shared, f)) and not os.path.exists(os.path.join(d, f)):
                     shutil.copy(os.path.join(shared, f), d)
             cfgp = os.path.join(d, 'arm_cfg.json')
-            json.dump(dict(b2=os.path.abspath(a.b2), skills=os.path.abspath(a.skills), device=a.device, seed=seed, kwargs={**kw, **arm_kwargs(arm, sizes, cache=cache, round_=a.round)}), open(cfgp, 'w'), indent=1)
-            todo.append((arm, d, cfgp))
+            json.dump(dict(b2=os.path.abspath(a.b2), skills=os.path.abspath(a.skills), device=a.device, seed=seed, kwargs={**kw, **arm_kwargs(arm, sizes, cache=acache, round_=a.round)}), open(cfgp, 'w'), indent=1)
+            todo.append((arm, d, cfgp, cs))
         while todo or running:
             while todo and len(running) < a.parallel:
-                arm, d, cfgp = todo.pop(0)
-                log('launch', seed, arm)
-                env = dict(os.environ, OMP_NUM_THREADS=str(a.threads), MKL_NUM_THREADS=str(a.threads), PYTHONHASHSEED='0')
+                arm, d, cfgp, cs = todo.pop(0)
+                log('launch', seed, arm, 'constants', cs or 'default')
+                env = sub_env(cs, OMP_NUM_THREADS=str(a.threads), MKL_NUM_THREADS=str(a.threads), PYTHONHASHSEED='0')
                 p = subprocess.Popen([sys.executable, '-m', 'creative.multistep', '--worker', '--cfg', cfgp, '--arm-dir', d], stdout=open(os.path.join(d, 'log.txt'), 'a'), stderr=subprocess.STDOUT, env=env)
                 running.append((arm, p))
             time.sleep(2)
@@ -424,8 +500,11 @@ def main():
                 if p.poll() is not None:
                     running.remove((arm, p))
                     log('arm finished', seed, arm, 'rc', p.returncode)
-        for arm in arms:
-            f = os.path.join(root, f's{seed}', arm, 'arm_result.json')
+        ref_arms = [ROUND8_REF] if a.round == 8 and ROUND8_REF not in arms else []
+        for arm in arms + ref_arms:
+            f = os.path.join(group_dir(root, seed, arm_consts(arm, a.consts)), arm, 'arm_result.json')
+            if arm in ref_arms and not os.path.exists(f):
+                continue
             if not os.path.exists(f):
                 failed.append(dict(seed=seed, arm=arm, failed='no arm_result.json'))
             else:
@@ -437,7 +516,11 @@ def main():
     agg = aggregate(per_seed)
     res = dict(prereg='design/v1/multistep/PREREG.md', round=a.round, smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
                report_only_arms=list(REPORT_ONLY), failed_arms=failed)
-    if a.round == 7 and all(x in agg for x in ROUND7_ARMS):
+    if a.round == 8 and all(x in agg for x in ROUND8_ARMS):
+        res['consts'] = {x: arm_consts(x, a.consts) for x in arms}
+        ref = dict(hard=a.ref_nights4_hard / 100.0) if a.ref_nights4_hard is not None else None
+        res['verdict'] = verdict_round8({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm'], affine=v['mean']['by_kind'].get('affine')) for k, v in agg.items()}, night_curve(agg), ref if 'nights4' not in agg else None)
+    elif a.round == 7 and all(x in agg for x in ROUND7_ARMS):
         res['verdict'] = verdict_round7({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm'], affine=v['mean']['by_kind'].get('affine'), sq_plus=v['mean']['by_kind'].get('sq_plus')) for k, v in agg.items()}, night_curve(agg))
         res['composition_report'] = {str(sd): dict(composition=r.get('composition'), op_entropy=r.get('op_entropy')) for sd, r in agg['comp4']['per_seed'].items()}
     elif a.round == 6 and all(x in agg for x in ROUND6_ARMS):

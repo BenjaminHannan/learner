@@ -200,7 +200,10 @@ def warm_records(rows, per_question=1, seed=0, allow=PRACTISED):
     out = []
     for r in rows:
         assert r['kind'] in allow, f"{r['kind']} is not allowed in this record set"
-        t, _, qs = reference(r['kind'], tuple(r['params']))
+        ref = reference(r['kind'], tuple(r['params']))
+        if ref is None:                         # no program within the search budget (only possible under a swapped constant set): skipped, counted by the caller
+            continue
+        t, _, qs = ref
         p = fewshot.parse(r['prompt'])
         for k in range(per_question):
             out.append(fewshot._record(r, remap(t, qs, p['q_slot']), 'WU2', k))

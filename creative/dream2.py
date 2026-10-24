@@ -212,7 +212,7 @@ def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, nigh
     avoid = list(avoid_prompts)
     path = None
     if cache_dir:
-        key = hashlib.sha256(repr((n, seed, night, max_steps, strict, shards, sorted(avoid)) + ((occam, occam_max_states) if occam else ()) + ((tuple(found_lengths),) if found_lengths else ())).encode()).hexdigest()[:16]
+        key = hashlib.sha256(repr((n, seed, night, max_steps, strict, shards, sorted(avoid)) + ((occam, occam_max_states) if occam else ()) + ((tuple(found_lengths),) if found_lengths else ()) + ((tuple(CONSTS),) if list(CONSTS) != [1, 2, 10, 100] else ())).encode()).hexdigest()[:16]
         path = os.path.join(cache_dir, f'dreams_{seed}_{night}_{max_steps}_{int(strict)}{"_occam" if occam else ""}{"_f" + "".join(map(str, found_lengths)) if found_lengths else ""}_{n}_{key}.pkl')
         if os.path.exists(path):
             d = pickle.load(open(path, 'rb'))
