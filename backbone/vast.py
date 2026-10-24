@@ -23,6 +23,7 @@ CHUNK = 100_000
 JOB = r'''set -u
 ENVLINE="__ENV__"
 HOURS=__HOURS__
+LABEL0="__LABEL__"
 J=/job; mkdir -p $J && cd $J
 if [ -f $J/.started ]; then echo "=== BB RESTART-REFUSED"; fi
 self_stop() {
@@ -39,9 +40,10 @@ if [ ! -f $J/.started ]; then
   printf '%s' "$@" | tr -d ' ' | base64 -d > pack.tgz && mkdir -p tree && python3 -c "import tarfile;tarfile.open('pack.tgz').extractall('tree')" || { echo "=== BB FAIL unpack"; self_stop; exit 0; }
   cd tree
   echo "=== BB START $(date -u +%FT%TZ) $ENVLINE"
-  ( while sleep 300; do echo "=== TICK $(date -u +%T) $(tail -c 300 out/run_box.log 2>/dev/null | tr '\n' ' ' | tail -c 200)"; done ) &
+  ( while sleep 300; do python3 backbone/label_report.py "$LABEL0" >/dev/null 2>&1; echo "=== TICK $(date -u +%T) $(tail -c 300 out/run_box.log 2>/dev/null | tr '\n' ' ' | tail -c 200)"; done ) &
   env $ENVLINE timeout -k 30 $((HOURS*3600 - 600)) bash backbone/run_box.sh
   echo "=== BB DONE rc=$? $(date -u +%FT%TZ)"
+  python3 backbone/label_report.py "$LABEL0 DONE"
 fi
 sleep 1200   # leave time to pull results before stopping
 self_stop
@@ -72,7 +74,7 @@ def pack(a):
         for f in FILES:
             t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") else i)
     b64 = base64.b64encode(buf.getvalue()).decode()
-    job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours))
+    job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label)
     args = ["bash", "-c", job, "bb"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     (out / "args.json").write_text(json.dumps(args))
@@ -132,7 +134,7 @@ def cat(a):
 
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
-    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
+    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
     x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
     x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
