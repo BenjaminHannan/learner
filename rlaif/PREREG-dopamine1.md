@@ -67,3 +67,13 @@ else is the same as the other two arms.
   chance and success is >= 0.2. If it is lower, the guesses are noise, and a d_self result says nothing about
   self-prediction.
 - Proved wrong: d_self <= d_none.
+
+## Addendum 2 (2026-10-24 19:00Z, before any result): batch-mean control arm `d_batch`
+
+Research (`/mnt/project-files/research/dopamine/lit-baselines.md`; REINFORCE++ 2501.03262, SPO 2509.13232) points
+to a confound. d_value could beat d_none only because subtracting any average centres the rewards, not because
+it carries a per-task-type expectation. `d_batch` uses A = r - mean(r of this step's 16 tries). It is the same
+in every other way.
+- B1: d_batch >= d_none + 5 means centring alone helps.
+- B2: d_value >= d_batch + 5 means the per-type expectation (the dopamine part) adds something beyond centring.
+  If d_value - d_batch is under 5, report that d_value's gain is explained by centring.

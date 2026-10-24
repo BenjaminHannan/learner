@@ -35,6 +35,9 @@ def baseline_adv(r, scen, G, mode, V, v_lr, pred=None):
         return advantages(r, G), V
     if mode == "none":
         return list(r), V
+    if mode == "batch":  # REINFORCE++/SPO-style: mean of this step's tries, no task labels
+        m = sum(r) / len(r)
+        return [x - m for x in r], V
     if mode == "self":
         return [x - p for x, p in zip(r, pred)], V
     V = dict(V)

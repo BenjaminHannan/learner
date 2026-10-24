@@ -107,7 +107,7 @@ def main(argv=None):
     ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto")
     ap.add_argument("--save-every", type=int, default=10)
     ap.add_argument("--reward", choices=["mix", "checks"], default="mix")  # checks: check fraction only, no grader calls
-    ap.add_argument("--baseline", choices=["group", "none", "value", "self"], default="group")
+    ap.add_argument("--baseline", choices=["group", "none", "value", "self", "batch"], default="group")
     ap.add_argument("--v-init", type=float, default=0.5)
     ap.add_argument("--v-lr", type=float, default=0.1)
     a = ap.parse_args(argv)
