@@ -45,7 +45,9 @@ normalisation [shown, train.py].
 | bplus | b's adapter, LoRA trained 1,254 more steps (seed 0; all seeds only if bplus - b >= 1.0) | 418 + 1,254 |
 | tw | as t1 but K=144 slots: one refinement with the same slot-token compute as t at L=8 (seed 0, diagnostic, PC run only) | 418 + 1,254 |
 
-Seeds 0, 1, 2 for a, b, aplus, t, t1. The stage-1 adapters were not kept, so a and b are retrained here; the stage-1
+Seeds 0, 1, 2 for a, b, aplus, t, t1. Every arm of one seed runs on the same GPU type and number format (bf16 on
+RTX 3090 / 5070 Ti; fp16 with a gradient scaler and fp32 trainable weights on Kaggle T4s, which have no bf16), so every
+comparison inside a seed is like for like; seeds may differ in hardware, and each seed's hardware is recorded. The stage-1 adapters were not kept, so a and b are retrained here; the stage-1
 3-seed means (A 66.72, B 67.12) are used only as floors in the marks below. Stage 1's own same-seed rerun spread was
 1.84 points (67.78 vs 65.94) [shown], which is why the arms are not mixed across harnesses.
 
@@ -102,7 +104,10 @@ refiner's gradient norm. (Amended before any run, 2026-10-24: on the real model 
 the clamp, so board cosine is ~0.99 and ~94% of slots sit at the clamp at step 0 [shown, CPU check]; those two
 conditions would have aborted healthy runs. The swap lesion in the futility stop tests board content instead.)
 
-**Futility stop after seed 0** (a, b, aplus, t, t1 at seed 0): do not run seeds 1-2 if any of
+**Futility check on seed 0** (a, b, aplus, t, t1 at seed 0). Amended before any run (2026-10-24, Ben): free hardware
+(Kaggle, Ben's PC) lets seeds 1 and 2 run at the same time as seed 0, so this is no longer a stop that saves money; it is
+computed and reported, and a stop is used only for seeds that have not started yet. Any seed that completes counts.
+The rule fires if any of
 S_0(8) < 68.0; S_0(8) - T1_0(1) < 1.0; S_0(8) - S_0(2) < 0.5; swap lesion < 1.0. (Same-seed reruns differed by 1.84
 points in stage 1, so run sd may be ~1.3; a true mean of 70.12 then lands below 68.0 about 5% of the time [suggested].)
 If only the first condition fails, the laps are real but small: the PASS track stops and Think-1b (below) gets its own prereg.
@@ -127,7 +132,7 @@ Retrain every arm on `generalize.probes.write_training_data(("difficulty",), ...
 training without putting validation items in it [shown, code], so the laps get a job inside the training range.
 
 ## Budget and hardware
-Free first: Ben's PC (RTX 5070 Ti 16 GB) runs everything with one command (`backbone/think/README.md`). Vast only for
-the seed-0 screen, inside this week's remaining credit, cap $2.50, RTX 3090/4090 boxes labelled with the branch
-(`claude-think1-compassionate-davinci-...`). Estimated per seed on a 3090: a 1.3 h, b 1.6 h, aplus 1.5 h, t 2.5 h,
+All seeds in parallel: seed 0 on Vast (RTX 3090 boxes labelled with the branch, `claude-think1-compassionate-davinci-...`,
+cap $2.50 of this week's credit), seed 1 on Kaggle (free 2x T4, fp16), seed 2 on Ben's PC (RTX 5070 Ti, one command in
+`backbone/think/README.md`) or, if the PC is busy, a second free Kaggle session. Estimated per seed on a 3090: a 1.3 h, b 1.6 h, aplus 1.5 h, t 2.5 h,
 t1 1.5 h [suggested].

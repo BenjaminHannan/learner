@@ -156,3 +156,21 @@ T9 No leak: changing the answer tokens leaves the lap-(t+1) board (e_{t+1} and i
 T10 Batch permutation: permuting the rows of a batch permutes the boards and logits the same way (no cross-row mixing).
 X1-X4 xent tests above. S1 summarize test above.
 SM `think1.py --smoke` runs all arms end to end and summarize prints a verdict line.
+
+## Round 2 additions (2026-10-24, after the first build; all must be in before any GPU run)
+1. `--dtype {bf16,fp16,fp32}` for think1.py (default: bf16 on CUDA, fp32 on CPU). fp16 is for Kaggle T4s (no bf16): backbone
+   weights in fp16; every trainable parameter (LoRA, ThinkBoard) kept in fp32; forward under torch.autocast("cuda", float16);
+   torch.cuda.amp.GradScaler (or torch.amp.GradScaler("cuda")) around backward/step, unscale before the per-group clipping;
+   skip-and-log steps whose grads are inf/nan (count them in the result; the divergence guard ignores scaler-skipped steps).
+   Loss/CE always fp32 (xent already casts). Record dtype, GPU name and torch/transformers versions in the result file.
+   Evaluation runs in the same dtype as training. bf16 requested on a GPU without bf16 support must exit with a clear message.
+2. Lap gradient checkpointing (default on in training, `--no-lap-ckpt` to disable) and an eps in clamp_rms (see the gate section).
+3. Mechanics gate as amended above (only gates-shut at step 150, NaN, divergence abort; cosine and clamp share are logs).
+4. run_box.sh: `PARALLEL=1` runs the stage-2 jobs of the job list (aplus, bplus, t, t1, tw) as concurrent processes on the same GPU
+   once their stage-1 adapters exist (stage-1 jobs a and b also run concurrently with each other when both are listed), each with
+   its own log file out/think/{arm}_s{S}/run.log, and waits for all; `WAIT_DEPS=1` makes a job whose stage-1 adapter is missing
+   wait (poll every 60 s, give up after `WAIT_DEPS_HOURS`, default 6) instead of training it, so two Kaggle lanes can share one
+   a-adapter through the shared disk. `DTYPE` env passes `--dtype`. Keep the existing sequential behaviour as the default.
+5. README: add the Kaggle recipe (tools/kaggle_job.py from branch claude/project-thread-ustqtb, 2x T4, lane0 / lane1 job lists,
+   DTYPE=fp16, WAIT_DEPS=1), the Vast recipe (backbone/vast.py pack --slim --env "THINK_JOBS=... PARALLEL=1"), and Ben's PC
+   one-liner (seed 2: THINK_JOBS=a:2,b:2,aplus:2,t:2,t1:2 PARALLEL=1 bash backbone/think/run_box.sh), with expected outputs.
