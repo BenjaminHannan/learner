@@ -47,7 +47,7 @@ if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-
   for a in ${CREATIVE_ARMS//,/ }; do
     if [ -f "$OUT/creative/$a/result_$a.json" ]; then echo "-- skip creative $a"; continue; fi
     echo "-- creative $a $(date -u +%T)"
-    python3 backbone/creative/creative1.py --arm "$a" --model "${CREATIVE_MODEL:-Qwen/Qwen3.5-0.8B}" --out "$OUT/creative/$a" || echo "!! creative $a failed"
+    python3 backbone/creative/creative1.py --arm "$a" --model "${CREATIVE_MODEL:-Qwen/Qwen3.5-0.8B}" --out "$OUT/creative/$a" ${CREATIVE_FLAGS:-} || echo "!! creative $a failed"
   done
   tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0

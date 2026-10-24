@@ -131,6 +131,10 @@ _OK = (ast.Expression, ast.Lambda, ast.arguments, ast.arg, ast.BinOp, ast.UnaryO
        ast.Or, ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Index if hasattr(ast, "Index") else ast.Load)
 
 
+NO_BRANCH = False  # Creative-2 (--no-branch): reject if/else, comparisons and and/or, so a lookup table of the examples can't "fit"
+_BRANCH = (ast.IfExp, ast.Compare, ast.BoolOp)
+
+
 def _check(tree):
     bound = {"x"}
     for n in ast.walk(tree):
@@ -141,7 +145,7 @@ def _check(tree):
         if isinstance(n, ast.arg):
             bound.add(n.arg)
     for n in ast.walk(tree):
-        if not isinstance(n, _OK):
+        if not isinstance(n, _OK) or (NO_BRANCH and isinstance(n, _BRANCH)):
             raise ValueError("node " + type(n).__name__)
         if isinstance(n, ast.Name) and n.id not in bound and n.id not in SAFE:
             raise ValueError("name " + n.id)
@@ -363,7 +367,10 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--gen-bs", type=int, default=128)
     ap.add_argument("--n-dreams", type=int, default=1000)
+    ap.add_argument("--no-branch", action="store_true", help="Creative-2: checker rejects branching programs (PREREG-creative2.md)")
     args = ap.parse_args()
+    global NO_BRANCH
+    NO_BRANCH = args.no_branch
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     logf = open(out / f"log_{args.arm}.txt", "a")
@@ -392,7 +399,7 @@ def main():
         dev, pool, hard = dev[:10], pool[:12], hard[:10]
     sets = {"c2_dev": dev, "hard": hard}
     log(f"[data] dev {len(dev)} hard {len(hard)} pool {len(pool)} dreams {len(dreams)}; hard signatures {len({tuple(h['signature']) for h in hard})}")
-    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples,
+    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "n_samples": C.n_samples, "no_branch": NO_BRANCH,
               "hard_signatures": len({tuple(h['signature']) for h in hard}), "hard_example_puzzles": [
                   {k: h[k] for k in ("prompt", "answer", "program", "signature")} for h in hard[:5]]}
     model = lm
