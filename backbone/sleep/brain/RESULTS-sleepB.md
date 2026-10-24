@@ -243,3 +243,28 @@ Plain reading of addenda 4 and 5 (one seed each; noise for an unpaired gap on th
   - routine: 20.
 - Writing: 205 attempts over 91 sessions, with 0 sessions failed and 3 strict-wording warnings. Cost $4.32 at list price.
 - Arms ab_ob_win and ab_ob_winp (commit 3991980bb3). A CPU smoke showed the 19 older arms are bit-identical to before. Per-question rows are already in every new arm's result JSON (`scores.<mode>.rows`).
+
+## Addendum 4, last arm: therapy replay (ab_ob_ther, seed 1, on Ben's PC)
+This arm ran on the RTX 5070 Ti (bf16, gen-bs 32, tok budget 1024, code b537295cbe) in 2,625 s, not on an A100 like the control. GPU numerics differ a little, so treat it like a different seed. The result JSON and log are on branch `claude/sleepb-ab-ob-ther-pc-results` (commit ba79d6a95212).
+
+| arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new / stale | routine | int | pool | + diary pool | router | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control (A100) | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
+| ab_ob_ther (PC) | 82.5 | 30 | 0 | 56 | 7 | 55 / 15 | 67 | 43 | 38 | **73** | 56 | 92.0 |
+
+Night by night (arc_val, morning probe recall):
+- night 1: no dreams;
+- night 2: 0.84, 0.91;
+- night 3: 0.86, 0.74;
+- night 4: 0.83, 0.48, **reverted** (arc_val below base 0.87 - 0.03);
+- night 5: 0.85, 0.77;
+- night 6: 0.87, 0.73;
+- night 7: 0.85, 0.78.
+
+Weighted (salient) examples per night: 88, 60, 363, 1,245, 969 and 1,476.
+
+Verdicts:
+- H1 FAIL: diary pooled is 72.9, against a mark of 77. ARC (92.0) passes.
+- H2 FAIL: changed-new is 55, against a mark of 80.
+- **The wrong-if fires:** changed-new is 55, below 60.
+- Plain reading: more replays at half weight for important or corrected facts did not help updates (55 against 70) and lowered note-reading (73 against 82). The research note predicted no gain, because the expected push is the same. The drop in diary reading is unexplained. It may come from the PC numerics or seed-like noise (suggested).
