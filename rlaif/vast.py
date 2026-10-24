@@ -54,17 +54,19 @@ CLOSING = re.compile(r"(?:^|\s)=== RLAIF (DONE|FAIL)(?=\s|$)")
 # ---- Box job: edit flags here. Each entry is (step name, shell command, max seconds or 0 for "until the deadline").
 # Runs from the unpacked rlaif/ parent directory (so `python -m rlaif.train` works). $OUT is the box output dir.
 # Steps run in order; a failing step is recorded and the next one still runs. Adapters are not exported.
-HELDOUT = "rlaif/data/heldout.jsonl"
-TRAIN = "rlaif/data/train.jsonl"
+HELDOUT = "rlaif/data/tasks_heldout.jsonl"
+TRAIN = "rlaif/data/tasks_train.jsonl"
+COMMON = "--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 5 --max-usd 14"
+LATEST = "$(ls -d $OUT/{a}/adapter_final 2>/dev/null || ls -dv $OUT/{a}/adapter_step* 2>/dev/null | tail -1)"
 STEPS = [
-    ("eval_base",  f"python -m rlaif.train --eval-only --heldout {HELDOUT} --out $OUT/eval_base", 1800),
-    ("train_grpo", f"python -m rlaif.train --algo grpo --train {TRAIN} --steps 60 --seed 0 --out $OUT/grpo", 0),
-    ("eval_grpo",  f"python -m rlaif.train --eval-only --adapter $OUT/grpo/adapter --heldout {HELDOUT} --out $OUT/eval_grpo", 1800),
-    ("train_jolt", f"python -m rlaif.train --algo jolt_plus --train {TRAIN} --steps 60 --seed 0 --out $OUT/jolt", 0),
-    ("eval_jolt",  f"python -m rlaif.train --eval-only --adapter $OUT/jolt/adapter --heldout {HELDOUT} --out $OUT/eval_jolt", 1800),
+    ("eval_base",  f"python -m rlaif.train --eval-only --eval-grade --heldout {HELDOUT} --outdir $OUT/eval_base", 2400),
+    ("train_grpo", f"python -m rlaif.train --algo grpo --train {TRAIN} {COMMON} --outdir $OUT/grpo", 4800),
+    ("eval_grpo",  f"python -m rlaif.train --eval-only --eval-grade --adapter {LATEST.format(a='grpo')} --heldout {HELDOUT} --outdir $OUT/eval_grpo", 2400),
+    ("train_jolt", f"python -m rlaif.train --algo jolt_plus --train {TRAIN} {COMMON} --outdir $OUT/jolt", 0),
+    ("eval_jolt",  f"python -m rlaif.train --eval-only --eval-grade --adapter {LATEST.format(a='jolt')} --heldout {HELDOUT} --outdir $OUT/eval_jolt", 2400),
 ]
 # small result files exported (names matched anywhere under $OUT, adapter dirs excluded)
-RESULT_GLOBS = ["log.jsonl", "eval*.json", "spend.json", "*.tail.txt", "status.tsv"]
+RESULT_GLOBS = ["log.jsonl", "eval*.json", "eval*.jsonl", "spend.json", "*.tail.txt", "status.tsv"]
 FILE_CAP_BYTES = 300_000       # each exported file is cut to its last this-many bytes
 STDOUT_TAIL_LINES = 80
 
@@ -88,6 +90,16 @@ if [ -z "${__KEY_ENV__:-}" ]; then   # onstart may not inherit instance env vars
 fi
 export PYTHONUNBUFFERED=1 PYTHONUTF8=1 TOKENIZERS_PARALLELISM=false HF_HUB_DISABLE_PROGRESS_BARS=1
 
+self_stop() {   # Vast puts a per-instance key in the container env; stopping ends GPU billing even if waitlog is not running
+  for f in CONTAINER_ID CONTAINER_API_KEY; do
+    [ -z "${!f:-}" ] && { v=$(grep -m1 "^$f=" /etc/environment 2>/dev/null | cut -d= -f2- | tr -d '"'); [ -n "$v" ] && export $f="$v"; }
+  done
+  say "SELF STOP"
+  curl -s -o /dev/null -w "self-stop http %{http_code}\n" -X PUT "https://console.vast.ai/api/v0/instances/${CONTAINER_ID:-0}/" \
+    -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" -H 'Content-Type: application/json' -d '{"state":"stopped"}'
+}
+(sleep $((DEADLINE_S + EXPORT_S + 600 - ($(date +%s) - BOX_START))); self_stop) &   # last-resort watchdog
+
 export_results() {   # prints the results tarball as base64 lines, then the closing marker (last)
   kill $TICK 2>/dev/null
   say "EXPORT start"
@@ -107,7 +119,8 @@ export_results() {   # prints the results tarball as base64 lines, then the clos
   awk '{printf "RB64 %d %s\n", NR, $0}' "$JOB/results.b64"
   echo "=== RESULTS END"
   say "RLAIF $1"
-  sleep 900
+  sleep 300      # give waitlog time to read the log, then the box stops itself (waitlog destroys it)
+  self_stop
   exit 0
 }
 
