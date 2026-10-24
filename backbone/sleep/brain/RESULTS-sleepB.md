@@ -229,3 +229,17 @@ Plain reading of addenda 4 and 5 (one seed each; noise for an unpaired gap on th
   - Confirm with a bigger fact set and paired per-question scoring.
   - Run the twist control (an equal count of plain paraphrases).
   - Combine the winners: 2x work + guess + twist.
+
+## Addendum 6: Week-2, recorded before any run (2026-10-24 22:00Z)
+- `data/week2.json`, sha256 `70db7146ed59d10cbd0d2e8d7a6fc0e245d4b07ec57add0c793db1fdff006e5b`, written by `week.py --seed 2 --scale 2.5 --out data/week2.json --cap 8` (commit 83674e7ce3).
+- Facts: 264 in total (C1 64, C2 100, C4 100), 30 changing facts and 20 routines.
+- Sessions: 91 (13 a day), with 9.4 mentions per session against 9.6 in Week-1.
+- Diary: 2,086 turns, 1,043 of them from the user.
+- Test questions: 656 in total.
+  - forward: 264, of which 200 are C2+C4, the primary measure;
+  - reverse: 264;
+  - two-hop: 78;
+  - changed: 30;
+  - routine: 20.
+- Writing: 205 attempts over 91 sessions, with 0 sessions failed and 3 strict-wording warnings. Cost $4.32 at list price.
+- Arms ab_ob_win and ab_ob_winp (commit 3991980bb3). A CPU smoke showed the 19 older arms are bit-identical to before. Per-question rows are already in every new arm's result JSON (`scores.<mode>.rows`).
