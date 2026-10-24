@@ -17,7 +17,7 @@ two-hop, changed and routine questions together. "int" is the integration score:
 | ab_flatprio | 82 | 32 | 0 | 15 | 65 | 67 | 49 | 39 | - |
 | ab_all (Ben's rule off) | 85 | 55 | 40 | 4 | 65 | 75 | 48 | 53 | - |
 | ab_ob (open-book rehearsal) | 80 | 40 | 0 | 11 | 70 | 75 | 52 | 38 | not read |
-| ab_klctx (KL on diary prompts) | KLC4 | KLC2 | KLC1 | KL2H | KLCHG | KLRT | KLINT | KLPOOL | not read |
+| ab_klctx (KL on diary prompts) | 75 | 42 | 0 | 22 | 60 | 67 | 50 | 38 | not read |
 
 Stage-2 and addendum numbers are rounded integers from the instance labels. The labels do not carry ARC, so ARC for those arms
 needs the result JSONs (`result_<arm>.json`, `arc_easy`).
@@ -33,8 +33,9 @@ needs the result JSONs (`result_<arm>.json`, `arc_easy`).
 | ab_flatprio | 98 | 82 | 72 | 11 | 75 | 100 | 62 | 76 |
 | ab_all | 90 | 92 | 75 | 11 | 80 | 92 | 61 | 77 |
 | ab_ob | 100 | 98 | 80 | 11 | 95 | 100 | 69 | **85** |
-| ab_klctx | KLDC4 | KLDC2 | KLDC1 | KLD2H | KLDCHG | KLDRT | KLDINT | KLDPOOL |
+| ab_klctx | 100 | 90 | 78 | 7 | 100 | 100 | 69 | 83 |
 | router R (ab_ob adapter) | | | | | | | 62 | 60 |
+| router R (ab_klctx adapter) | | | | | | | 60 | 57 |
 
 ## Verdicts (marks fixed before the runs)
 - P1 FAIL. AB C4 is 67.5, short of 70. C2 is 52.5 and passes its mark of 50. The four stage-2 runs reached 82-85 on C4, so 67.5 may be a low draw. This is a guess from one seed.
@@ -43,19 +44,20 @@ needs the result JSONs (`result_<arm>.json`, `arc_easy`).
 - P4 FAIL, and its wrong-if fires. AB with the diary scores 65.9, against 84.6 for AD. Two-hop with the diary is 4 against 7.4.
 - P5 PASS. Changed-new is 70 and stale is 15.
 - Wrong-if on integration (AB <= AF) does not fire: 49 vs 44.
-- Q1 FAIL. ab_ob with the diary scores 85, short of 89.6. It does repair note-reading, from 65.9 to 85, which equals AD.
+- Q1 FAIL. The better fix arm is ab_ob, which scores 85 with the diary; ab_klctx scores 83. Both are short of 89.6. Both repair note-reading, from 65.9 up to the level of AD.
 - Q2 recall part PASS. ab_ob C2+C4 is 60, above the mark of 55. The ARC part has not been read.
 - Q3 FAIL. The router scores 60 pooled.
-- The addendum wrong-if does not fire: ab_ob with the diary is 85, above AB + diary + 5 = 70.9.
+- The addendum wrong-if does not fire. ab_ob scores 85 and ab_klctx 83, both above AB + diary + 5 = 70.9.
 
 ## Plain reading
 - Brain-like sleep moves recurring facts into the weights better than flat sleep at equal steps. C2 and C4 average 60 against 37.5.
 - It keeps one-day facts out, so C1 stays at 0, which is what Ben's rule asks. General knowledge does not move.
 - Closed-book rehearsal hurts reading of the diary: 66 vs 85 for the plain model, and 32 for flat sleep (shown). Our guess is that the model learns to answer from memory and skip the context (suggested).
-- Open-book rehearsal fixes this. Half the practice questions come with the diary pages. The diary score is back to 85, and 80% of C4 is still known from memory (shown, one seed).
+- Both fixes repair this. With the KL leash on diary-format prompts, the diary score is 83 and C4 from memory is 75 (shown, one seed).
+- Open-book rehearsal also fixes it. Half the practice questions come with the diary pages. The diary score is back to 85, and 80% of C4 is still known from memory (shown, one seed).
 - Removing downscaling hurt note-reading the most: 40 vs 66 with the diary (shown, one seed). Switching Ben's rule off scored best overall, 53 from memory and 77 with the diary. But it also trains on more items, so it gets more steps, and the comparison is not at equal compute.
-- Two-hop stays at 0-15 in every arm and mode. Sleep does not make facts chain.
+- Two-hop stays at 0-22 in every arm and mode. The highest, 22, is ab_klctx from memory alone, about 6 of 27 questions. Sleep does not make facts chain.
 - The "memory when sure" router scores 60, below diary search alone at 85. A confidence of 0.5 or more on the first token does not mean the answer is right.
 
 ## Cost
-GPU (Vast A100s): about COST of the $3 cap. Writing the chat week with the Claude API: $1.85.
+GPU (Vast A100s): about $2.70 of the $3 cap, estimated from run times. All four boxes are destroyed. Writing the chat week with the Claude API: $1.85.

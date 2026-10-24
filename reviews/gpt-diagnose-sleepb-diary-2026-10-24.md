@@ -50,6 +50,7 @@ Weights only:
 | AB with uniform replay | 82 | 32 | 0 | 15 | 65 | 67 | 49 | 39 | ? |
 | AB with every item eligible (the 2-day rule off; this also means more steps) | 85 | 55 | 40 | 4 | 65 | 75 | 48 | 53 | ? |
 | AB + open-book rehearsal (50% of Q&A examples show the BM25 top-8 diary turns before the question) | 80 | 40 | 0 | 11 | 70 | 75 | 52 | 38 | ? |
+| AB + KL guard also on ~100 diary-format prompts per night (base model answers as targets) | 75 | 42 | 0 | 22 | 60 | 67 | 50 | 38 | ? |
 
 With diary search:
 | arm | C4 | C2 | C1 | two-hop | changed new | routine | pooled |
@@ -62,15 +63,16 @@ With diary search:
 | AB with uniform replay | 98 | 82 | 72 | 11 | 75 | 100 | 76 |
 | AB, rule off | 90 | 92 | 75 | 11 | 80 | 92 | 77 |
 | AB + open-book rehearsal | 100 | 98 | 80 | 11 | 95 | 100 | **85** |
+| AB + KL on diary prompts | 100 | 90 | 78 | 7 | 100 | 100 | 83 |
 
 A router was also tested. It used the open-book adapter's answer when the first answer token's probability was 0.5 or more,
-and otherwise used base + diary. It scored 60 pooled.
+and otherwise used base + diary. It scored 60 pooled (57 with the KL-on-diary-prompts adapter).
 
 ## 5. Questions
 1. Why does closed-book fine-tuning make the model worse at using facts that are pasted into its prompt, falling from 84.6 to 65.9 and to 32.1 for flat sleep? Rank the candidate mechanisms. Examples: learning to ignore context; parametric answers overriding the context; a format shift; damage to attention or retrieval heads from the LoRA targets. For each one, give the cheapest test that would separate it from the others.
 2. Removing the downscaling step hurt diary use the most, 40 against 66. What would explain downscaling **protecting** in-context reading? Is the gap likely to be real, given one seed?
 3. Turning the 2-day rule off scored best overall, but it trained on more items for more steps. How would you test the rule fairly?
-4. Two-hop stays at 0-15 everywhere, with or without the diary, even though one-hop recall is 80-100 with the diary. What is the most likely bottleneck? Would multi-step retrieval (look up, then look up again) be the right next step, rather than more sleep?
+4. Two-hop stays at 0-22 everywhere, with or without the diary, even though one-hop recall is 80-100 with the diary. What is the most likely bottleneck? Would multi-step retrieval (look up, then look up again) be the right next step, rather than more sleep?
 5. Propose **one change at a time** (at most three changes in total) to raise "slept model + diary" clearly above "base + diary". For each change, give a pass mark fixed in advance and the result that would prove the idea wrong.
 
 ## 6. Plain-language summary for me
