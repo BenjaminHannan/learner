@@ -577,7 +577,7 @@ def selftest_shy(pm=None):
 _DELTA = {"on": True}  # module-level switch: the delta_w hooks add their delta only while it is on
 
 
-def setup_delta(pm, train, masked=False):
+def setup_delta(pm, train, masked=False, dtype=torch.float32):
     """Give every LoRA-target Linear an fp32 zero delta_w (its weight's shape) on its base_layer; a forward hook adds F.linear(x, delta_w)
     to the layer output while _DELTA["on"]. train: delta_w is trainable (ab_ob_full / _full_s / _local); else it only changes by the nightly
     fold (ab_ob_merge). masked (ab_ob_local, needs train): also a tensor hook on each delta_w that multiplies its incoming grad by
@@ -587,7 +587,7 @@ def setup_delta(pm, train, masked=False):
     mods = lora_mods(pm)
     for _, m in mods:
         bl = m.base_layer
-        bl.delta_w = torch.nn.Parameter(torch.zeros(bl.weight.shape, dtype=torch.float32, device=bl.weight.device), requires_grad=train)
+        bl.delta_w = torch.nn.Parameter(torch.zeros(bl.weight.shape, dtype=dtype, device=bl.weight.device), requires_grad=train)
         if masked and train:
             bl.delta_mask = None
             bl.delta_w.register_hook(lambda g, bl=bl: g if bl.delta_mask is None else g * bl.delta_mask)
@@ -1702,6 +1702,7 @@ def main():
     ap.add_argument("--kl-weight", type=float, default=1.0)
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--delta-dtype", choices=["fp32", "bf16"], default="fp32", help="ab_ob_merge only: bf16 halves the folded change buffer to fit a 16 GB card (the forward already uses it in bf16)")
     ap.add_argument("--tok-budget", type=int, default=TOK_BUDGET, help="padded tokens per forward; lower for a 16 GB card (same loss and gradients)")
     ap.add_argument("--gen-bs", type=int, default=32)
     ap.add_argument("--shy-factor", type=float, default=0.85)
@@ -1775,7 +1776,10 @@ def main():
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
         if args.arm in DELTA_ARMS:
             lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
-            mods = setup_delta(pm, args.arm in TRAIN_DELTA_ARMS, masked=args.arm == "ab_ob_local")
+            if args.delta_dtype == "bf16" and args.arm in TRAIN_DELTA_ARMS:
+                ap.error("--delta-dtype bf16 is only for ab_ob_merge (trained deltas need fp32 for small lr steps)")
+            mods = setup_delta(pm, args.arm in TRAIN_DELTA_ARMS, masked=args.arm == "ab_ob_local",
+                               dtype=torch.bfloat16 if args.delta_dtype == "bf16" else torch.float32)
             if args.arm in TRAIN_DELTA_ARMS:
                 for n, p in pm.named_parameters():
                     if "lora_" in n:
