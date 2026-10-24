@@ -11,7 +11,7 @@ from train shards 380-399. Sealed `test` never built or read.
 | B: A + borrowed middle block looped 3x | 418 | 82.15% | 67.57% |
 | B scored with 1 loop (lesion) | 418 | 72.90% | 59.88% |
 | A at 418 steps (equal-steps check) | 418 | 81.30% | 67.78% |
-| A2: Qwen3.5-2B + LoRA | budget | pending | pending |
+| A2: Qwen3.5-2B + LoRA | 418 | 84.27% | 69.81% |
 
 Both 0.8B arms hit their time budget, so steps were cut once at step 20 (RUNLOG.md). Train rows seen: ~8,600 (A),
 ~6,700 (B) of 86,238.
@@ -24,3 +24,16 @@ Marks (PREREG-stage1.md):
   Reading (suggested): B uses its loop, but three passes of the borrowed block buy no more than one pass plus more steps.
 - P4: pending A2.
 - Untrained 27B is below D: the model knows English but not this task's answer conventions. Borrowing needs training.
+
+## Addendum 1 results (PREREG-addendum-1.md; generalization probes, 4,329 questions each)
+
+| Model | P0 (nothing switched) | Pword (wording switched) | drop | validation |
+|---|---:|---:|---:|---:|
+| v1 FULL (generalization thread) | 82.7 | 50.6 | 32.1 | 45.6 |
+| A: 0.8B, 418 steps | 82.42 | 76.25 | 6.2 | 67.78 |
+| A2: 2B, 418 steps | 83.95 | 78.38 | 5.6 | 69.81 |
+
+- W1 (A Pword >= 65.0 and drop <= 16.0): **PASS** (76.25, 6.2). The pretrained reader removes most of the wording gap.
+- P4 (A2 >= A + 3.0 on validation): **FAIL**, +2.03 (A2 is better, so not the "wrong if").
+- Reading (suggested): for the borrowed models, wording is no longer the main gap; validation (67.8) sits ~9 points
+  below Pword, so the rest comes from the other held-out axes (depth / rule families), untested here.
