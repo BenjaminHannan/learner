@@ -35,7 +35,7 @@ HERE = Path(__file__).resolve().parent
 RUNS = HERE / "runs"
 API = "https://console.vast.ai/api/v0"
 
-IMAGE = "pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime"
+IMAGE = "pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime"   # same image v1/rent.py ran on Vast
 LABEL = "claude-project-thread-j5hhcz-rlaif1"
 KEY_ENV = "LEARNER_ANTHROPIC_API_KEY"
 PIP_PKGS = "transformers peft anthropic accelerate"
@@ -129,7 +129,7 @@ TICK=$!
 
 say "BOX START deadline_s=$DEADLINE_S cap=\$$CAP dph=$DPH"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1 | tee "$JOB/preflight.txt"
-printf '%s' '__CODE_B64__' | base64 -d > code.tar.xz || { say "code decode failed"; export_results FAIL; }
+printf '%s' "$@" | base64 -d > code.tar.xz   # code arrives as base64 chunks in the container args (Vast caps onstart/args strings) || { say "code decode failed"; export_results FAIL; }
 tar -xJf code.tar.xz -C "$JOB" || { say "code untar failed"; export_results FAIL; }
 ls "$JOB/rlaif" | head -30
 [ -n "${__KEY_ENV__:-}" ] && echo "anthropic key: present" || echo "anthropic key: MISSING"
@@ -274,10 +274,10 @@ def build_onstart(dph, box_start):
     for k, v in {"__BOX_START__": box_start, "__DEADLINE_S__": deadline_seconds(dph), "__EXPORT_S__": EXPORT_S,
                  "__DPH__": dph, "__CAP__": f"{CAP_USD:.2f}", "__KEY_ENV__": KEY_ENV, "__FIND_NAMES__": names,
                  "__FILE_CAP__": FILE_CAP_BYTES, "__PIP_PKGS__": PIP_PKGS, "__TAIL_LINES__": STDOUT_TAIL_LINES,
-                 "__STARTED__": STARTED, "__RUN_STEPS__": run_steps,
-                 "__CODE_B64__": base64.b64encode(code).decode()}.items():
+                 "__STARTED__": STARTED, "__RUN_STEPS__": run_steps}.items():
         s = s.replace(k, str(v))
-    return s, len(code), nfiles
+    b64 = base64.b64encode(code).decode()
+    return s, [b64[i:i + 12_000] for i in range(0, len(b64), 12_000)], len(code), nfiles
 
 
 def redact(text):
@@ -313,14 +313,15 @@ def create(a):
     if a.dph and not a.dryrun:
         raise SystemExit("--dph is for --dryrun only; the real dph comes from the offer")
     box_start = int(time.time())
-    script, code_bytes, nfiles = build_onstart(dph, box_start)
-    size = len(script.encode())
+    script, chunks, code_bytes, nfiles = build_onstart(dph, box_start)
+    args = ["bash", "-c", script, "rlaif1"] + chunks
+    size = len(json.dumps(args))
     if size > MAX_ONSTART_BYTES:
         raise SystemExit(f"onstart is {size} bytes, over {MAX_ONSTART_BYTES}; shrink the code/data")
     key_set = bool(os.environ.get(KEY_ENV))
     env = {KEY_ENV: os.environ.get(KEY_ENV, "")}
-    body = {"client_id": "me", "image": IMAGE, "disk": DISK_GB, "label": LABEL, "runtype": "ssh",
-            "onstart": script, "env": env, "target_state": "running"}
+    body = {"client_id": "me", "image": IMAGE, "disk": DISK_GB, "label": LABEL, "runtype": "args",
+            "args": args, "env": env, "target_state": "running"}
     dl = deadline_seconds(dph)
     summary = {"offer": int(a.offer) if str(a.offer).isdigit() else a.offer, "dph": dph, "cap_usd": CAP_USD,
                "box_deadline_s": dl, "box_deadline_h": round(dl / 3600, 2), "max_spend_at_deadline": round(dl / 3600 * dph, 3),
@@ -330,7 +331,7 @@ def create(a):
         print(redact(script))
         print("\n----- DRYRUN: nothing was sent -----")
         print(json.dumps({**summary, "request": {"method": "PUT", "path": f"/asks/{a.offer}/",
-                                                 "body": {**body, "onstart": f"<{size} bytes, printed above>",
+                                                 "body": {**body, "args": f"<bash -c script + {len(chunks)} base64 chunks, {size} bytes>",
                                                           "env": {KEY_ENV: "<REDACTED>" if key_set else "<NOT SET>"}}}}, indent=1))
         return
     if not a.yes:
