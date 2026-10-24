@@ -15,10 +15,17 @@ for f in sorted(Path("out").rglob("result_*.json")):
     for k, v in d.items():
         if isinstance(v, dict) and isinstance(v.get("accuracy"), (int, float)):
             nums.append(f"{k}={100 * v['accuracy']:.1f}")
+        elif isinstance(v, dict) and isinstance(v.get("acc"), (int, float)):  # creative1.py evals
+            pr = v.get("precision_among_answered")
+            nums.append(f"{k}={100 * v['acc']:.1f}" + (f"/p{100 * pr:.0f}" if isinstance(pr, (int, float)) else ""))
         elif isinstance(v, (int, float)) and ("acc" in k or k.endswith("_rate")) and not isinstance(v, bool):
             nums.append(f"{k}={100 * v:.1f}" if v <= 1 else f"{k}={v:.1f}")
     parts.append(name + ":" + ",".join(nums))
-text = (LABEL + "|" + ";".join(parts))[:1000]
+try:  # last log line, so progress is visible even when Vast's log service fails
+    tail = [l for l in Path("out/run_box.log").read_text(errors="replace").splitlines() if l.strip()][-1][-150:]
+except Exception:
+    tail = ""
+text = (LABEL + "|" + ";".join(parts) + ("|" + tail if tail else ""))[:1000]
 print("[label]", text, flush=True)
 if os.environ.get("CONTAINER_ID") and os.environ.get("CONTAINER_API_KEY"):
     req = urllib.request.Request(f"https://console.vast.ai/api/v0/instances/{os.environ['CONTAINER_ID']}/",
