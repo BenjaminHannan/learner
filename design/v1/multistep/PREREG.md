@@ -144,3 +144,8 @@ Hard: hind4 18.2 vs nights4 16.9 (+1.3); Easy 80.6 vs base 80.2; harm 2.0. **NO 
 needs <= +1). This is within run-to-run noise (~3-4 points, see round 5). Curve: 4.2 / 9.9 / 15.7 / 18.2. Hindsight records were all
 multi-step and shrank by night (seed 0: 813, 670, 532, 472). By night 4 ~70% of them came from affine questions, yet affine stayed at 0.6.
 Reading (suggested): practice on puzzles the wrong tries happen to solve does not teach how to solve the real affine ones.
+
+## Round 7 result (BensPC, 2026-10-24, 2 seeds; raw files on branch claude/multistep-r7-pc-results @ c641f51eaed8)
+Hard: comp4 14.8 vs nights4 16.9 (-2.1); affine 2.3 (nights4 0.0; mark 5); Easy 80.1; harm 1.2. **PROVED WRONG** (Hard <= nights4 + 1).
+sq_plus control 25.2 vs 28.1; double_add 17.0 vs 22.5. Caveat: the warm-up programs are long reference programs, so most composed
+records were 6-7 steps (seed 0: 406, 651, 770, 836 per night). Composition from short programs only is untested.
