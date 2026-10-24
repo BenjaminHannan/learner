@@ -53,3 +53,4 @@ Suggested: pretraining removes most of the wording gap; Claude wordings recover 
 
 ### faug2 seed 1 on the probes (aug2 detector)
 validation 58.7, P0 79.7, Pword 68.9 (base1 45.1: +23.8), Pdepth 72.4; wording drop 10.7 (base1 28.0). Q12 plan 10.6 -> 70.0 and Q6 32 -> 72 under new wording vs aug; **Q7 still 0.5 under new wording (68.9 with train wording)**: the one question type the paraphrases did not fix (next thing to look at).
+Qwen3.5-0.8B (fresh seed-0 rerun) other probes: Pname 81.5, Pdepth 74.5, Prule 80.4 (P0 82.4, Pword 76.3, validation 65.9). With a pretrained reader, **depth (-8) becomes the largest axis**, then wording (-6); names -1, R8 -2.
