@@ -400,7 +400,8 @@ def load_arc_val(smoke):
 TOK_BUDGET = 4096  # padded tokens per forward; longer batches (open-book / diary-format KL) are split, same loss and gradients
 
 
-def groups(seqs, budget=TOK_BUDGET):  # consecutive micro-batches whose padded size stays within budget
+def groups(seqs, budget=None):  # consecutive micro-batches whose padded size stays within budget (default TOK_BUDGET, set by --tok-budget)
+    budget = budget or TOK_BUDGET
     out, cur, mx = [], [], 0
     for x in seqs:
         m = max(mx, len(x[0]))
@@ -1449,6 +1450,7 @@ def main():
     ap.add_argument("--kl-weight", type=float, default=1.0)
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--tok-budget", type=int, default=TOK_BUDGET, help="padded tokens per forward; lower for a 16 GB card (same loss and gradients)")
     ap.add_argument("--gen-bs", type=int, default=32)
     ap.add_argument("--shy-factor", type=float, default=0.85)
     ap.add_argument("--shy-thresh", type=float, default=0.05)
@@ -1460,6 +1462,7 @@ def main():
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     args = ap.parse_args()
+    globals()["TOK_BUDGET"] = args.tok_budget
     if args.selftest:
         print(json.dumps(selftest_shy()))
         print(json.dumps({"delta": selftest_delta()}))

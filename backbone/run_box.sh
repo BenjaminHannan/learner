@@ -50,7 +50,7 @@ if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/
     SF=${SLEEPB_SCHEDULE:-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box
     if [ "$a" != a0 ] && [ "$a" != ad ] && [ "$a" != ab ] && [ -f "$SF" ]; then SCHED="--schedule $SF"; fi
     echo "-- sleepb $a $(date -u +%T) ${SCHED}"
-    python3 backbone/sleep/brain/sleepb.py --arm "$a" --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} || echo "!! sleepb $a failed"
+    python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} || echo "!! sleepb $a failed"
     # results only (adapters stay on the box), refreshed after every arm so a timed-out run still leaves a pullable tar
     tar czf out.tar.gz --exclude="$OUT/.installed" --exclude="*/adapter" "$OUT" || [ $? -eq 1 ]
   done
