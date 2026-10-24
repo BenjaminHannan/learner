@@ -5,11 +5,14 @@ per-question row + p_first in each scoring mode and score the router R and the a
 Full-rank arms, one change each from ab_ob: ab_ob_full (every LoRA-target Linear gets a trainable full-rank delta_w, LoRA frozen, lr
 --full-lr) and ab_ob_merge (LoRA trains as in ab_ob; each night's SHY step folds it into a full-rank delta_w and resets it). delta_w is
 added by a forward hook on the base Linear and switched off inside pm.disable_adapter(), so "base" stays the original pretrained model.
+Two single changes from ab_ob_full (addendum 3): ab_ob_full_s (gentler step: lr --full-lr-small) and ab_ob_local (targeted plasticity, synaptic
+tagging: each night only K = (number of LoRA parameters) delta entries may change, the ones with the largest |grad| on tonight's own practice
+batches; elementwise SHY instead of the SVD one, since an SVD would make the sparse change dense).
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -44,9 +47,10 @@ from train import LORA_TARGETS, load_model  # noqa: E402
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge")
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge")  # open-book rehearsal (Brain.qa_ex)
-DELTA_ARMS = ("ab_ob_full", "ab_ob_merge")
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")  # open-book rehearsal (Brain.qa_ex)
+DELTA_ARMS = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
+TRAIN_DELTA_ARMS = ("ab_ob_full", "ab_ob_full_s", "ab_ob_local")  # delta_w trains, LoRA frozen (ab_ob_merge: LoRA trains, delta only changes by the fold)
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
 GENERIC = {"sam", "i", "me", "my", "we", "you", "he", "she", "they", "it", "user", "the user", "someone", "somebody"}
 STOP = set("the a an of in is to and where who does what which for at on by with was are do did live lives name s".split())
@@ -413,6 +417,14 @@ def groups(seqs, budget=None):  # consecutive micro-batches whose padded size st
     return out + ([cur] if cur else [])
 
 
+def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start) examples
+    ids, mask = L.pad_right([b[0] for b in mb])
+    lm = torch.zeros_like(mask)
+    for r, (e, st) in enumerate(mb):
+        lm[r, st:len(e)] = 1
+    return ids, mask, lm[:, 1:].bool()
+
+
 class Trainer:
     """One night of LoRA training: fresh AdamW, cosine lr over `steps`, CE on the batch + KL guard on generic replay vs adapter-disabled base."""
 
@@ -424,11 +436,7 @@ class Trainer:
         s.curve = []
 
     def masks(s, mb):
-        ids, mask = s.L.pad_right([b[0] for b in mb])
-        lm = torch.zeros_like(mask)
-        for r, (e, st) in enumerate(mb):
-            lm[r, st:len(e)] = 1
-        return ids, mask, lm[:, 1:].bool()
+        return lm_masks(s.L, mb)
 
     def step(s, batch):
         if not batch:
@@ -569,15 +577,20 @@ def selftest_shy(pm=None):
 _DELTA = {"on": True}  # module-level switch: the delta_w hooks add their delta only while it is on
 
 
-def setup_delta(pm, train):
+def setup_delta(pm, train, masked=False):
     """Give every LoRA-target Linear an fp32 zero delta_w (its weight's shape) on its base_layer; a forward hook adds F.linear(x, delta_w)
-    to the layer output while _DELTA["on"]. train: delta_w is trainable (ab_ob_full); else it only changes by the nightly fold (ab_ob_merge).
+    to the layer output while _DELTA["on"]. train: delta_w is trainable (ab_ob_full / _full_s / _local); else it only changes by the nightly
+    fold (ab_ob_merge). masked (ab_ob_local, needs train): also a tensor hook on each delta_w that multiplies its incoming grad by
+    base_layer.delta_mask (bool, set by the nightly tagging; None = no mask), so masked-out entries get exactly zero grad and zero AdamW update.
     pm.disable_adapter (an instance attribute shadowing the peft method) also switches the deltas off and restores the previous switch on
     exit (nesting-safe), so every "base" use (dreaming, tagging, KL reference, ARC base, base_diary) stays the original pretrained model."""
     mods = lora_mods(pm)
     for _, m in mods:
         bl = m.base_layer
         bl.delta_w = torch.nn.Parameter(torch.zeros(bl.weight.shape, dtype=torch.float32, device=bl.weight.device), requires_grad=train)
+        if masked and train:
+            bl.delta_mask = None
+            bl.delta_w.register_hook(lambda g, bl=bl: g if bl.delta_mask is None else g * bl.delta_mask)
 
         def hook(mod, inp, out):
             return out + F.linear(inp[0], mod.delta_w.to(inp[0].dtype)) if _DELTA["on"] else out
@@ -598,6 +611,10 @@ def setup_delta(pm, train):
 
 def delta_fro(pm):  # total Frobenius norm of all deltas
     return math.sqrt(sum(float(m.base_layer.delta_w.detach().float().pow(2).sum()) for _, m in lora_mods(pm)))
+
+
+def delta_nnz(pm):  # total number of nonzero delta entries
+    return sum(int(m.base_layer.delta_w.detach().count_nonzero()) for _, m in lora_mods(pm))
 
 
 @torch.no_grad()
@@ -645,6 +662,78 @@ def shy_delta_apply(pm, factor, thresh, gen, merge):
     if merge:
         out["fold_fro"] = math.sqrt(fold)
     return out
+
+
+@torch.no_grad()
+def shy_elem(W, factor, thresh):
+    """Elementwise SHY on one delta matrix, in place (ab_ob_local; an SVD would make the sparse change dense): W <- factor x W, then every
+    entry with |W| < thresh x max|W| (of the scaled W) is zeroed. Returns n_zeroed (nonzero entries pruned), nonzero_before, nonzero_after,
+    energy_before, energy_after (sums of squares, float64)."""
+    nb, eb = int(W.count_nonzero()), float(W.double().pow(2).sum())
+    W.mul_(factor)
+    W.masked_fill_(W.abs() < thresh * W.abs().max(), 0)
+    na = int(W.count_nonzero())
+    return nb - na, nb, na, eb, float(W.double().pow(2).sum())
+
+
+@torch.no_grad()
+def shy_elem_apply(pm, factor, thresh):
+    """Nightly SHY for ab_ob_local: shy_elem on every delta_w. Stats like shy_apply: modules, n_nonzero_before / after, zeroed (+ _frac of the
+    nonzero entries pruned), energy_ratio."""
+    nz = nb = na = 0
+    e0 = e1 = 0.0
+    mods = lora_mods(pm)
+    for _, m in mods:
+        z, b, a, ea, eb = shy_elem(m.base_layer.delta_w.data, factor, thresh)
+        nz, nb, na, e0, e1 = nz + z, nb + b, na + a, e0 + ea, e1 + eb
+    return {"modules": len(mods), "n_nonzero_before": nb, "n_nonzero_after": na, "zeroed": nz, "zeroed_frac": nz / max(nb, 1), "energy_ratio": e1 / max(e0, 1e-12)}
+
+
+def tag_grads(L, pm, batches):
+    """ab_ob_local tagging, step 1: |grad| of every delta_w summed over the practice `batches` (lists of (ids, loss_start)). CE exactly as
+    Trainer.step (micro-batch sums / the batch's target count, so memory is the training step's); masks are cleared first, so the plain
+    gradient is seen; grads are zeroed after each batch. Returns ([fp32 |grad| sum per module, lora_mods order], mean CE)."""
+    dws = []
+    for _, m in lora_mods(pm):
+        m.base_layer.delta_mask = None
+        dws.append(m.base_layer.delta_w)
+    acc, ces = [torch.zeros_like(p) for p in dws], []
+    pm.zero_grad(set_to_none=True)  # the last training step's grads are still on the params
+    pm.train()
+    for batch in batches:
+        if not batch:
+            continue
+        ntgt, ce = sum(len(e) - max(st, 1) for e, st in batch), 0.0
+        for mb in groups(batch):
+            ids, mask, tm = lm_masks(L, mb)
+            part = F.cross_entropy(pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
+            part.backward()
+            ce += float(part.detach())
+        ces.append(ce)
+        with torch.no_grad():
+            for a, p in zip(acc, dws):
+                if p.grad is not None:
+                    a += p.grad.abs()
+        pm.zero_grad(set_to_none=True)
+    pm.eval()
+    return acc, mean(ces)
+
+
+@torch.no_grad()
+def pick_mask(accs, k, gen, n_sample=4_000_000):
+    """ab_ob_local tagging, step 2: bool masks keeping about the k largest entries over all of `accs` without sorting them all. Threshold =
+    the (1 - k/total) quantile of the entries themselves (total <= n_sample) or of n_sample entries drawn uniformly over all tensors (count
+    per tensor proportional to its size, torch.randint on the CPU generator gen). Entries with no gradient (0) are never kept. Returns (masks, thr)."""
+    sizes = [a.numel() for a in accs]
+    total = sum(sizes)
+    if k >= total:
+        return [a > 0 for a in accs], 0.0
+    if total <= n_sample:
+        vals = torch.cat([a.flatten() for a in accs])
+    else:
+        vals = torch.cat([a.flatten()[torch.randint(0, n, (max(1, round(n_sample * n / total)),), generator=gen).to(a.device)] for a, n in zip(accs, sizes)])
+    thr = float(vals.kthvalue(min(max(round((1 - k / total) * vals.numel()), 1), vals.numel())).values)
+    return [(a >= thr) if thr > 0 else (a > 0) for a in accs], thr
 
 
 @torch.no_grad()
@@ -704,6 +793,110 @@ def selftest_delta():
     finally:
         torch.set_rng_state(rng_state)
         _DELTA["on"] = sw
+
+
+@torch.no_grad()
+def selftest_elem():
+    """Pure-tensor checks for ab_ob_local: (i) shy_elem with thresh 0 gives exactly factor x W; with thresh 0.05 it zeroes exactly the entries
+    below 0.05 x max of the scaled W, keeps the rest at factor x W, and its stats match; (ii) pick_mask keeps about k entries on the exact
+    path and on the sampled path, and never keeps a zero."""
+    g = torch.Generator().manual_seed(0)
+    out = {}
+    for shape in [(64, 48), (4, 64), (32, 8), (128, 128)]:
+        W = torch.randn(*shape, generator=g)
+        W[0, :3] = 1e-4
+        W0 = W.clone()
+        z, nb, na, _, _ = shy_elem(W0, 0.85, 0.0)
+        assert z == 0 and nb == na == W.numel() and torch.allclose(W0, 0.85 * W, rtol=1e-6, atol=0), (shape, z, nb, na)
+        E = 0.85 * W
+        thr = 0.05 * E.abs().max()
+        E = E.masked_fill(E.abs() < thr, 0)
+        W1 = W.clone()
+        z, nb, na, eb, ea = shy_elem(W1, 0.85, 0.05)
+        assert torch.allclose(W1, E, rtol=1e-6, atol=0) and bool(((W1 != 0) == (E != 0)).all()), shape
+        assert z == nb - na == int((E == 0).sum()) > 0 and abs(ea / eb - float((E.double() ** 2).sum() / (W.double() ** 2).sum())) < 1e-9, (shape, z, ea / eb)
+        assert 0.6 < ea / eb < 0.85 ** 2 + 1e-9, ea / eb  # factor^2 minus the pruned energy
+    out["shy_elem_ok"] = True
+    r = lambda *sh: torch.rand(*sh, generator=g)  # noqa: E731
+    kept = lambda ms: sum(int(m.sum()) for m in ms)  # noqa: E731
+    accs = [r(100, 50), r(30, 70), r(64, 64)]
+    ms, _ = pick_mask(accs, 560, g)
+    out["pick_exact_kept_of_560"] = kept(ms)
+    assert abs(out["pick_exact_kept_of_560"] - 560) <= 2, out
+    accs = [r(400, 500), r(300, 300), r(100, 1000)]
+    ms, _ = pick_mask(accs, 3900, torch.Generator().manual_seed(1), n_sample=20000)
+    out["pick_sampled_kept_of_3900"] = kept(ms)
+    assert abs(out["pick_sampled_kept_of_3900"] - 3900) < 0.4 * 3900, out
+    assert kept(pick_mask([torch.zeros(50), torch.zeros(60)], 10, g)[0]) == 0
+    assert kept(pick_mask([torch.cat([torch.zeros(500), r(500) + 0.1])], 800, g)[0]) == 500  # only entries with a gradient
+    return out
+
+
+def selftest_local():
+    """ab_ob_local machinery on its own tiny CPU smoke model (the real model is never touched; global RNG restored): (i) with no mask the grad
+    hook passes the gradient through; (ii) with a random mask the masked-out entries of every delta_w get exactly zero grad and the masked-in
+    ones keep the plain gradient; (iii) two clipped AdamW steps (weight decay 0, as Trainer) leave masked-out entries bit-identical and move
+    masked-in ones; (iv) tag_grads clears the masks and any stale grads, returns the plain |grad| sums, leaves no .grad, and pick_mask keeps about k."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state = torch.get_rng_state()
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        mods = setup_delta(pm, True, masked=True)
+        for n, p in pm.named_parameters():
+            if "lora_" in n:
+                p.requires_grad_(False)
+        dws = [m.base_layer.delta_w for _, m in mods]
+        ids = torch.randint(4, 200, (2, 12), generator=g)
+
+        def grads():
+            pm.zero_grad(set_to_none=True)
+            lg = pm(input_ids=ids).logits[:, :-1].float()
+            F.cross_entropy(lg.reshape(-1, lg.shape[-1]), ids[:, 1:].reshape(-1)).backward()
+            return [p.grad.clone() for p in dws]
+
+        pm.train()
+        plain = grads()  # no mask yet
+        assert all(m.base_layer.delta_mask is None for _, m in mods) and all(float(x.abs().sum()) > 0 for x in plain)
+        masks = [torch.rand(p.shape, generator=g) < 0.1 for p in dws]
+        for (_, m), mk in zip(mods, masks):
+            m.base_layer.delta_mask = mk
+        got = grads()
+        out["modules"], out["masked_in"], out["entries"] = len(mods), sum(int(mk.sum()) for mk in masks), sum(mk.numel() for mk in masks)
+        for x, y, mk in zip(got, plain, masks):
+            assert bool((x[~mk] == 0).all()) and torch.allclose(x[mk], y[mk], rtol=1e-5, atol=1e-9), "mask hook"
+        out["masked_out_grad_exactly_zero"] = True
+        before = [p.detach().clone() for p in dws]
+        opt = torch.optim.AdamW(dws, lr=1e-2, weight_decay=0.0)
+        for _ in range(2):
+            grads()
+            torch.nn.utils.clip_grad_norm_(dws, 1.0)
+            opt.step()
+        moved = 0
+        for p, b, mk in zip(dws, before, masks):
+            assert torch.equal(p.detach()[~mk], b[~mk]), "AdamW moved a masked-out entry"
+            moved += int((p.detach()[mk] != b[mk]).sum())
+        assert moved > 0
+        out["adamw_masked_out_update_exactly_zero"], out["adamw_masked_in_moved"] = True, moved
+        batches = [[ex_text(L, f"Zelmir lives in Kelmira number {i} and {j}.") for j in range(4)] for i in range(3)]
+        grads()  # leaves masked grads on the params, like the last training step of a night
+        accs, ce = tag_grads(L, pm, batches)  # masks and stale grads still there: tag_grads must clear both
+        assert all(m.base_layer.delta_mask is None for _, m in mods) and all(p.grad is None for p in dws), "tag_grads left a mask / grad"
+        clean, _ = tag_grads(L, pm, batches)
+        assert all(torch.equal(x, y) for x, y in zip(accs, clean)), "tag_grads picked up stale grads"
+        assert all(bool((a >= 0).all()) for a in accs) and any(bool((a[~mk] > 0).any()) for a, mk in zip(accs, masks)), "tag_grads saw a masked grad"
+        total = sum(a.numel() for a in accs)
+        ms, thr = pick_mask(accs, total // 50, g)
+        out["tag_ce"], out["tag_kept_of_k"], out["tag_k"] = ce, sum(int(m.sum()) for m in ms), total // 50
+        assert abs(out["tag_kept_of_k"] - out["tag_k"]) <= 0.05 * out["tag_k"] + 2, out
+        pm.eval()
+        return out
+    finally:
+        torch.set_rng_state(rng_state)
 
 
 # ------------------------------------------------------------------ the brain-like sleeper (arm ab and ablations)
@@ -1123,6 +1316,45 @@ class Brain:
         st["pool"] = len(s.rem_pool)
         return dict(st)
 
+    # ---- 6b. synaptic tagging (ab_ob_local)
+    def tag_plasticity(s, act, cum, con):
+        """Tonight's plastic set: draw a.tag_batches practice batches (s.nrem, open-book coin flips included), then restore s.rng, s.ob_rng and
+        the coverage counters so the training batch stream is the one it would have been. tag_grads sums |grad| of every delta_w over them,
+        pick_mask keeps the entries about a.local_k largest, stored as base_layer.delta_mask (the grad hook applies it). Returns rec["tag"]."""
+        a = s.a
+        st, cov = (s.rng.getstate(), s.ob_rng.getstate()), Counter(s.cov)
+        batches = [s.nrem(act, cum, con, a.bsz) for _ in range(a.tag_batches)]
+        s.rng.setstate(st[0])
+        s.ob_rng.setstate(st[1])
+        s.cov.clear()
+        s.cov.update(cov)
+        mods = lora_mods(s.pm)
+        accs, ce = tag_grads(s.L, s.pm, batches)
+        masks, thr = pick_mask(accs, a.local_k, torch.Generator().manual_seed(a.seed * 100 + s.day + 31))
+        del accs
+        cnt = [int(mk.sum()) for mk in masks]
+        kept = sum(cnt)
+        by_layer, by_type = Counter(), Counter()
+        for (n, m), mk, c in zip(mods, masks, cnt):
+            m.base_layer.delta_mask = mk
+            by_layer[int(re.search(r"layers\.(\d+)\.", n).group(1))] += c
+            by_type[n.rsplit(".", 1)[-1]] += c
+        sh = lambda c: round(c / max(kept, 1), 4)  # noqa: E731
+        return {"batches": len(batches), "examples": sum(map(len, batches)), "ce": ce, "k": a.local_k, "kept": kept, "thr": thr,
+                "top_layers": [[l, sh(c)] for l, c in by_layer.most_common(8)], "by_type": {t: sh(c) for t, c in by_type.most_common()}}
+
+    @torch.no_grad()
+    def mask_check(s, snap):
+        """After training, before SHY: delta entries that changed since the night's snapshot inside / outside tonight's mask (outside must be 0)
+        and the nonzero delta entries."""
+        inside = outside = 0
+        for n, m in lora_mods(s.pm):
+            bl = m.base_layer
+            ch = bl.delta_w.data != snap[f"{n}.base_layer.delta_w"].to(bl.delta_w.device)
+            inside += int((ch & bl.delta_mask).sum())
+            outside += int((ch & ~bl.delta_mask).sum())
+        return {"changed_in_mask": inside, "changed_outside_mask": outside, "delta_nnz_pre_shy": delta_nnz(s.pm)}
+
     # ---- 10. gate helpers
     def snapshot(s):  # trainable params, plus every delta_w (a frozen buffer in ab_ob_merge) so a reverted night restores the deltas too
         return {n: p.detach().cpu().clone() for n, p in s.pm.named_parameters() if p.requires_grad or n.endswith("delta_w")}
@@ -1193,6 +1425,11 @@ class Brain:
             kl_pool = s.replay + s.klctx(d)
             rec["klctx_n"] = len(kl_pool) - len(s.replay)
             lap("klctx")
+        if a.arm == "ab_ob_local":
+            rec["tag"] = s.tag_plasticity(act, cum, con) if (act or con) else None
+            if rec["tag"]:
+                lap("synaptic_tag")
+                s.log(f"[night {d}] tag: kept {rec['tag']['kept']:,} of k {rec['tag']['k']:,} (thr {rec['tag']['thr']:.3g}, ce {rec['tag']['ce']:.3f}) layers {rec['tag']['top_layers']} types {rec['tag']['by_type']}")
         tr = Trainer(s.L, s.pm, a, kl_pool, steps, a.seed * 100 + d)
         cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
@@ -1217,11 +1454,17 @@ class Brain:
                     s.cov["rem_steps"] += c - n_nrem
         lap("train")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
+        if a.arm == "ab_ob_local" and rec["tag"]:
+            mc = s.mask_check(snap)
+            rec["tag"].update(mc)
+            s.log(f"[night {d}] mask check: {mc}")
         # 8. synaptic downscaling
         if a.arm == "ab_noshy" or not (act or con):
             rec["shy"], rec["shy_zeroed_frac"] = None, None
         else:
-            if a.arm in DELTA_ARMS:
+            if a.arm == "ab_ob_local":
+                rec["shy"] = shy_elem_apply(s.pm, a.shy_factor, a.shy_thresh)
+            elif a.arm in DELTA_ARMS:
                 rec["shy"] = shy_delta_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t, a.arm == "ab_ob_merge")
             else:
                 rec["shy"] = shy_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t)
@@ -1231,6 +1474,9 @@ class Brain:
         if a.arm in DELTA_ARMS:
             rec["delta_fro"] = delta_fro(s.pm)
             s.log(f"[night {d}] delta_fro {rec['delta_fro']:.6g}")
+            if a.arm == "ab_ob_local":
+                rec["delta_nnz"] = delta_nnz(s.pm)
+                s.log(f"[night {d}] delta_nnz {rec['delta_nnz']:,}")
         rec["cleanup"] = s.cleanup()
         lap("shy_cleanup")
         # 10. morning gate
@@ -1254,12 +1500,15 @@ class Brain:
             rec["probe_recall_post"] = rec["probe_recall_pre"]
         if a.arm in DELTA_ARMS:
             rec["delta_fro_final"] = delta_fro(s.pm)  # after the gate: a reverted night is back at the previous night's deltas
+            if a.arm == "ab_ob_local":
+                rec["delta_nnz_final"] = delta_nnz(s.pm)
         rec["rem_pool"] = len(s.rem_pool)
         lap("gate")
         rec["phase_seconds"], rec["raw_samples"] = {k: round(v, 1) for k, v in ph.items()}, s.raw
         rec["time"] = time.time() - t0
         s.log(f"[night {d}] done steps {done} (nrem {nrem_n}, rem {rem_n}) arc_val {arc:.3f} probe_post {rec['probe_recall_post']} reverted {bool(why)} {rec['time']:.0f}s"
-               + (f" delta_fro {rec['delta_fro']:.6g} -> {rec['delta_fro_final']:.6g}" if a.arm in DELTA_ARMS else ""))
+               + (f" delta_fro {rec['delta_fro']:.6g} -> {rec['delta_fro_final']:.6g}" if a.arm in DELTA_ARMS else "")
+               + (f" delta_nnz {rec['delta_nnz']:,} -> {rec['delta_nnz_final']:,}" if a.arm == "ab_ob_local" else ""))
         return rec
 
     # ---- ground-truth diagnostics (never used by the sleeper)
@@ -1440,11 +1689,14 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor and delta unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta and local-plasticity unit checks and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
-    ap.add_argument("--full-lr", type=float, default=2e-5, help="ab_ob_full only: lr of the full-rank deltas (replaces --lr)")
+    ap.add_argument("--full-lr", type=float, default=2e-5, help="ab_ob_full / ab_ob_local: lr of the full-rank deltas (replaces --lr)")
+    ap.add_argument("--full-lr-small", type=float, default=5e-6, help="ab_ob_full_s only: the gentler lr (replaces --lr; otherwise identical to ab_ob_full)")
+    ap.add_argument("--local-k-frac", type=float, default=None, help="ab_ob_local: plastic delta entries per night as a fraction of all delta entries (default: as many as there are LoRA parameters)")
+    ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -1466,6 +1718,7 @@ def main():
     if args.selftest:
         print(json.dumps(selftest_shy()))
         print(json.dumps({"delta": selftest_delta()}))
+        print(json.dumps({"local": {**selftest_elem(), **selftest_local()}}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -1484,9 +1737,13 @@ def main():
         logf.write(m + "\n")
         logf.flush()
 
-    if args.arm == "ab_ob_full":
-        args.lr = args.full_lr  # recorded in result["args"]
-        log(f"[full] lr {args.lr} (--full-lr): full-rank deltas train, LoRA frozen")
+    if args.arm in TRAIN_DELTA_ARMS:
+        args.lr = args.full_lr_small if args.arm == "ab_ob_full_s" else args.full_lr  # recorded in result["args"]
+        log(f"[full] lr {args.lr} (--{'full-lr-small' if args.arm == 'ab_ob_full_s' else 'full-lr'}): full-rank deltas train, LoRA frozen")
+    if args.local_k_frac is not None and not 0 < args.local_k_frac <= 1:
+        ap.error("--local-k-frac must be in (0, 1]")
+    if args.tag_batches < 1:
+        ap.error("--tag-batches must be at least 1")
     t0 = time.time()
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
@@ -1517,15 +1774,23 @@ def main():
         from peft import LoraConfig, get_peft_model
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
         if args.arm in DELTA_ARMS:
-            mods = setup_delta(pm, args.arm == "ab_ob_full")
-            if args.arm == "ab_ob_full":
+            lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
+            mods = setup_delta(pm, args.arm in TRAIN_DELTA_ARMS, masked=args.arm == "ab_ob_local")
+            if args.arm in TRAIN_DELTA_ARMS:
                 for n, p in pm.named_parameters():
                     if "lora_" in n:
                         p.requires_grad_(False)
             # the check builds its own tiny CPU model, which the GPU box's Triton linear-attention kernels refuse; it runs in --selftest / smoke
             result["delta_selftest"] = selftest_delta() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
             log(f"[selftest] delta machinery: {result['delta_selftest']}")
-            log(f"[delta] {len(mods)} modules, delta params {sum(m.base_layer.delta_w.numel() for _, m in mods):,} ({'trainable' if args.arm == 'ab_ob_full' else 'folded in nightly'})")
+            n_delta = sum(m.base_layer.delta_w.numel() for _, m in mods)
+            log(f"[delta] {len(mods)} modules, delta params {n_delta:,} ({'trainable' if args.arm in TRAIN_DELTA_ARMS else 'folded in nightly'})")
+            if args.arm == "ab_ob_local":
+                args.local_k = max(1, round(args.local_k_frac * n_delta)) if args.local_k_frac is not None else lora_n
+                result["local_k"], result["local_delta_entries"], result["local_lora_params"] = args.local_k, n_delta, lora_n
+                result["local_selftest"] = {**selftest_elem(), **selftest_local()} if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
+                log(f"[selftest] local plasticity: {result['local_selftest']}")
+                log(f"[local] K {args.local_k:,} plastic entries per night = {args.local_k / n_delta:.4%} of {n_delta:,} delta entries (LoRA params {lora_n:,}); {args.tag_batches} tagging batches; elementwise SHY")
         result["trainable_params"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
         log(f"[lora] trainable {result['trainable_params']:,}")
         model = pm
