@@ -1,4 +1,4 @@
-"""Leap-1 (see backbone/PREREG-leap1.md). Arms: self, leapu, leap (5 rounds of explore -> LoRA sleep -> merge -> score), ref (score only).
+"""Leap-1 (see backbone/PREREG-leap1.md). Arms: self, leapu, leap, leaps (leap + enumerative search creative, PREREG-leap1-addendum-2.md) (5 rounds of explore -> LoRA sleep -> merge -> score), ref (score only).
 
   python backbone/leap/leap1.py --arm leap --model Qwen/Qwen3.5-0.8B --seed 0 --out out/leap
   python backbone/leap/leap1.py --arm leap --smoke --rounds 2 --out /tmp/leapsmoke      # CPU, tiny random qwen3_5
@@ -19,8 +19,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "creative"))
 sys.path.insert(0, str(HERE.parent / "sleep"))
 sys.path.insert(0, str(HERE.parent))
-from creative1 import (PRIMS, SYS, compile_prog, is_correct, judge, make_puzzle, parse_program, rand_step, run_prog,  # noqa: E402
-                       signature, split_prompt)
+from creative1 import (PRIMS, SYS, apply_prim, canon, compile_prog, is_correct, judge, make_puzzle, parse_program, rand_step, run_prog,  # noqa: E402
+                       run_steps, signature, split_prompt)
 
 DEPTHS = range(1, 7)
 HELD_SEED, EVAL_SEED, DEV_SEED = 777, 1000, 2000
@@ -90,7 +90,7 @@ def build_pool(depths, seed, held, banned_prompts):
 
 
 def pool_depths(arm, f, n, seed):
-    if arm != "leap":
+    if arm not in ("leap", "leaps"):
         return [1 + i % 6 for i in range(n)]
     a, b, rng = round(0.4 * n), round(0.3 * n), random.Random(seed)
     return ([min(f + 1, 6)] * a + [min(f + 2, 6)] * b + [rng.randint(1, max(f, 1)) for _ in range(n - a - b)])
@@ -218,6 +218,62 @@ def score_round(L, args, model, ev, dv, tag, r, out, c16, arc, log, rng):
     return res
 
 
+# ------------------------------------------------------------------ enumerative search (LEAPS creative)
+CONSTS = {"add": range(1, 10), "sub": range(1, 10), "mul": range(2, 6), "fdiv": range(2, 6), "mod": range(2, 10)}
+OPTS = [(n, c) for n in PRIMS for c in (CONSTS[n] if n in CONSTS else [None])]  # 37 options per step
+XS = range(1, 31)  # puzzle inputs are always in 1..30 (make_puzzle)
+
+
+class Searcher:
+    """All chains of 1..3 steps (minus consecutive rev,rev and held-out signatures), output vectors precomputed on 1..30,
+    deduped by vector (shortest/first wins); per-input index out -> chain ids. ids are in (length, enumeration) order."""
+    def __init__(self, held):
+        self.chains, self.vecs, self.sig_ok = [], [], True
+        seen, layer = set(), [((), tuple(XS))]
+        for d in (1, 2, 3):
+            nxt = []
+            for ch, vec in layer:
+                for o in OPTS:
+                    if o[0] == "rev" and ch and ch[-1][0] == "rev":
+                        continue
+                    nc = ch + (o,)
+                    if tuple(n for n, _ in nc) in held.get(d, ()):
+                        continue
+                    nv = tuple(None if v is None or not (0 <= (w := apply_prim(o[0], o[1], v)) < 10 ** 6) else w for v in vec)
+                    nxt.append((nc, nv))
+            for nc, nv in nxt:
+                if nv not in seen:
+                    seen.add(nv)
+                    self.chains.append(nc)
+                    self.vecs.append(nv)
+            layer = nxt  # extend all chains (incl. duplicates by vector) so deeper chains are not lost
+        self.idx = {v: {} for v in XS}
+        for i, vec in enumerate(self.vecs):
+            for v, o in zip(XS, vec):
+                if o is not None:
+                    self.idx[v].setdefault(o, []).append(i)
+        self.held = held
+
+    def search(self, prompt, k=2):
+        """-> up to k canonical lambda sources, shortest first, that fit all examples (via judge) and answer the query."""
+        exs, q = split_prompt(prompt)
+        (a1, b1), rest = exs[0], exs[1:]
+        out = []
+        for i in self.idx[a1].get(b1, ()):
+            vec = self.vecs[i]
+            if vec[q - 1] is None or any(vec[a - 1] != b for a, b in rest):
+                continue
+            src = canon(self.chains[i])
+            if verify(src, prompt):
+                out.append(src)
+                if len(out) == k:
+                    break
+        return out
+
+
+SEARCHER = None
+
+
 # ------------------------------------------------------------------ explorers
 def explore(L, args, model, rows, arm, rng):
     """-> pairs [(prompt, program, source, depth)], stats."""
@@ -258,19 +314,27 @@ def explore(L, args, model, rows, arm, rng):
             src = parse_program(rep)
             if src is not None and verify(src, rows[i]["prompt"]) and src not in rep_ver[i]:
                 rep_ver[i].append(src)
-    pairs, from_s, from_r = [], 0, 0
-    vd = {d: 0 for d in DEPTHS}
+    pairs, from_s, from_r, from_c = [], 0, 0, 0
+    vd, vsd = {d: 0 for d in DEPTHS}, {d: 0 for d in DEPTHS}
+    ts = time.time()
+    sr = [SEARCHER.search(r["prompt"]) if arm == "leaps" else [] for r in rows]
+    t_search = time.time() - ts
     for i, r in enumerate(rows):
         got = [(s, "sample") for s in ver[i]] + [(s, "repair") for s in rep_ver[i] if s not in ver[i]]
-        for s, how in got[:2]:
+        # up to 2 LLM programs AND up to 2 search programs per puzzle (search ones only if not already among the LLM's)
+        got = got[:2] + [(s, "search") for s in sr[i] if s not in [g for g, _ in got[:2]]]
+        for s, how in got:
             pairs.append((r["prompt"], s, how, r["depth"]))
             from_s += how == "sample"
             from_r += how == "repair"
+            from_c += how == "search"
         vd[r["depth"]] += bool(got)
+        vsd[r["depth"]] += bool(sr[i])
     nd = {d: sum(1 for r in rows if r["depth"] == d) for d in DEPTHS}
     return pairs, {"n_puzzles": len(rows), "puzzles_by_depth": nd, "verified_by_depth": vd, "verified_puzzles": sum(vd.values()),
                    "verified_by_sample_only": sum(1 for v in ver if v), "repair_puzzles": n_rep_puz, "repair_samples": n_rep_gen,
-                   "pairs": len(pairs), "pairs_from_samples": from_s, "pairs_from_repair": from_r, "samples": len(flat_rows),
+                   "pairs": len(pairs), "pairs_from_samples": from_s, "pairs_from_repair": from_r, "pairs_from_search": from_c,
+                   "verified_by_search_by_depth": vsd, "search_seconds": t_search, "samples": len(flat_rows),
                    "seconds": time.time() - t}
 
 
@@ -290,13 +354,24 @@ def unit_checks(L, args, ev, dv, held):
     p0 = pool[0]
     rp = repair_prompt(L, p0["prompt"], "lambda x: x+1")
     assert "Fix it. Reply with only the lambda." in rp and "lambda x: x+1" in rp and p0["prompt"] in rp and "want" in rp
-    return {"pool_check_n": len(pool)}
+    res = {"pool_check_n": len(pool)}
+    if SEARCHER is not None:
+        assert all(tuple(n for n, _ in c) not in held.get(len(c), ()) for c in SEARCHER.chains), "held-out signature in search chains"
+        assert not any(a == b == "rev" for c in SEARCHER.chains for (a, _), (b, _) in zip(c, c[1:]))
+        sp = build_pool([2, 3] * 25, 6, held, {p["prompt"] for p in ev + dv})
+        got = [SEARCHER.search(p["prompt"]) for p in sp]
+        for g, p in zip(got, sp):
+            assert all(verify(s, p["prompt"]) for s in g)
+        rate = sum(bool(g) for g in got) / len(sp)
+        assert rate > 0.5, f"search finds a fit for only {rate:.2f} of depth-2/3 pool puzzles"
+        res.update({"search_chains": len(SEARCHER.chains), "search_fit_rate_d23": rate})
+    return res
 
 
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", required=True, choices=["self", "leapu", "leap", "ref"])
+    ap.add_argument("--arm", required=True, choices=["self", "leapu", "leap", "leaps", "ref"])
     ap.add_argument("--allow-branch", action="store_true", help="off by default: checker rejects if/else, comparisons, and/or (PREREG-leap1-addendum-1.md)")
     ap.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     ap.add_argument("--seed", type=int, default=0)
@@ -355,6 +430,11 @@ def main():
     L = Lang(tok, args.smoke, device)
     rng = random.Random(args.seed)
     ev, dv, held = build_eval_dev(args.eval_n, args.dev_n)
+    global SEARCHER
+    if args.arm == "leaps":
+        ts = time.time()
+        SEARCHER = Searcher(held)
+        log(f"[search] {len(SEARCHER.chains)} distinct chains indexed in {time.time() - ts:.1f}s")
     checks = unit_checks(L, args, ev, dv, held)
     banned = {p["prompt"] for p in ev + dv}
     arc = None
@@ -383,7 +463,7 @@ def main():
         ex = r.get("explore", {})
         log(f"[round] {tag} r{r['round']} mean {e['mean']:.3f} d={' '.join(f'{v:.2f}' for v in bd.values())} dev_f {r['frontier']} "
             f"arc {r.get('arc_easy')} verified {ex.get('verified_puzzles', '-')}/{ex.get('n_puzzles', '-')} pairs {ex.get('pairs', '-')} "
-            f"(s {ex.get('pairs_from_samples', '-')} r {ex.get('pairs_from_repair', '-')}) wall {time.time() - t0:.0f}s")
+            f"(s {ex.get('pairs_from_samples', '-')} r {ex.get('pairs_from_repair', '-')} c {ex.get('pairs_from_search', '-')}) wall {time.time() - t0:.0f}s")
 
     line(r0)
     if args.arm == "ref":
