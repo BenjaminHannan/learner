@@ -37,3 +37,12 @@ Marks (PREREG-stage1.md):
 - P4 (A2 >= A + 3.0 on validation): **FAIL**, +2.03 (A2 is better, so not the "wrong if").
 - Reading (suggested): for the borrowed models, wording is no longer the main gap; validation (67.8) sits ~9 points
   below Pword, so the rest comes from the other held-out axes (depth / rule families), untested here.
+
+## Seed check (addendum 1, no mark; run on Ben's PC 2026-10-24)
+| arm B, seed 1 | dev | validation | P0 | Pword |
+|---|---|---|---|---|
+| full (2 loops) | 82.45 | 66.33 | 82.88 | 76.88 |
+| 1-loop lesion | 74.15 | 58.42 | 74.59 | 67.68 |
+
+Seed spread on validation for B: |66.33 - 67.57| = 1.24 points. B vs A at equal steps (-0.2) is well inside that, so P3's
+"loop beats no-loop" half stays a FAIL and is no better than a tie. The lesion half replicates: about -8 points on every set.
