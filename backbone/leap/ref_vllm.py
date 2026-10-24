@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--tp", type=int, default=1)
     ap.add_argument("--max-len", type=int, default=2048)
     a = ap.parse_args()
+    import creative1
+    creative1.NO_BRANCH = True  # same checker as leap1 (PREREG-leap1-addendum-1.md)
     from vllm import LLM, SamplingParams
     t0 = time.time()
     out = Path(a.out)

@@ -296,6 +296,7 @@ def unit_checks(L, args, ev, dv, held):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", required=True, choices=["self", "leapu", "leap", "ref"])
+    ap.add_argument("--allow-branch", action="store_true", help="off by default: checker rejects if/else, comparisons, and/or (PREREG-leap1-addendum-1.md)")
     ap.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--rounds", type=int, default=5)
@@ -320,6 +321,8 @@ def main():
     ap.add_argument("--no-arc", action="store_true")
     ap.add_argument("--c16", action="store_true", help="ref arm: also checked search (16 samples T0.8) on EVAL")
     args = ap.parse_args()
+    import creative1
+    creative1.NO_BRANCH = not args.allow_branch
     if args.smoke:
         args.steps, args.bsz, args.replay_bsz, args.pool, args.replay, args.gen_bs = 6, 4, 2, 12, 6, 8
         args.n_self, args.n_leap, args.n_repair, args.max_new, args.eval_n, args.dev_n = 4, 6, 4, 16, 3, 2
