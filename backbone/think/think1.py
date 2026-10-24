@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import random
@@ -32,7 +33,7 @@ ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
 STAGE1, STAGE2, BOARD = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw"), ("t", "t1", "tw")
 STEPS1, STEPS2 = 418, 1254
 LR, LR_ALPHA, LR_BOARD, LAMBDA = 2e-4, 3e-3, 5e-4, 0.01
-GATE = dict(alpha=0.02, cos=0.95, clamp=0.90, div=2.0, window=20)  # PREREG mechanics gate; clamp is judged on clamp5 (see README)
+GATE = dict(alpha=0.02, div=2.0, window=20)  # PREREG mechanics gate: only the gates-shut check at step 150 and NaN / divergence abort; board cosine and clamp share are logs
 HEAD = 2000  # L16 / L24 are scored on the first 2,000 validation rows only
 
 
@@ -186,24 +187,23 @@ def board_groups(board):
 
 
 def probe_summary(sts, board, step, loss):
-    """Gate-log entry from think(stats=True) runs on the micro-batches of one optimizer step (boards concatenated: 'across' = same slot, different questions)."""
+    """Gate-log entry from think(stats=True) runs on the micro-batches of one optimizer step (boards concatenated: 'across' = same slot, different questions).
+    cos_*: final boards; cos_update_*: their updates e_L - e_0 (all boards start from the same e_0, so the update is what can differ between questions)."""
     e = torch.cat([s["e"][-1] for s in sts])
     within, across = B._cos(e)
+    uw, ua = B._cos(torch.cat([s["e"][-1] - s["e"][0] for s in sts]))
     mean = lambda f: float(torch.stack([f(s) for s in sts]).mean())
     gate = board.gate().detach().abs()
     return dict(step=step, loss=loss, alpha_mean=float(gate.mean()), alpha_abs=[[round(float(x), 5) for x in r] for r in gate],
                 step_rms=[round(float(x), 5) for x in torch.stack([torch.stack(s["step"]) for s in sts]).mean(0)],
-                cos_within=float(within), cos_across=float(across), clamp=mean(lambda s: s["clamp"][-1]), clamp5=mean(lambda s: s["clamp5"][-1]))
+                cos_within=float(within), cos_across=float(across), cos_update_within=float(uw), cos_update_across=float(ua),
+                clamp=mean(lambda s: s["clamp"][-1]), clamp5=mean(lambda s: s["clamp5"][-1]))
 
 
 def gate_reason(g):
-    """Step-150 mechanics gate (PREREG). Returns the abort reason or None. g: a probe_summary entry."""
+    """Step-150 mechanics gate (PREREG): abort only if the gates never opened. Board cosine and clamp share (g['cos_across'], g['clamp5'], ...) are logged, never abort."""
     if g["alpha_mean"] < GATE["alpha"]:
         return f"mean |tanh alpha| {g['alpha_mean']:.4f} < {GATE['alpha']}"
-    if g["cos_across"] > GATE["cos"]:
-        return f"cross-question slot cosine {g['cos_across']:.4f} > {GATE['cos']}"
-    if g["clamp5"] > GATE["clamp"]:
-        return f"{100 * g['clamp5']:.0f}% of slots pinned at the clamp > {100 * GATE['clamp']:.0f}%"
     return None
 
 
@@ -234,7 +234,8 @@ def train_board(runner, board, enc, rows, quick_rows, device, args, steps, tr):
         for k in range(0, len(batch), args.micro_bsz):
             mb = batch[k:k + args.micro_bsz]
             C, mask, p, lt, ans = micro_inputs(runner, mb, device)
-            loss, _ = B.train_loss(board, runner, C, mask, p, lt, ans, L_max, n_norm=n_norm, row_frac=len(mb) / len(batch), lam=LAMBDA)
+            loss, _ = B.train_loss(board, runner, C, mask, p, lt, ans, L_max, n_norm=n_norm, row_frac=len(mb) / len(batch), lam=LAMBDA,
+                                   ckpt=not args.no_lap_ckpt)
             loss.backward()
             total += loss.item()
             if probe:
@@ -257,6 +258,7 @@ def train_board(runner, board, enc, rows, quick_rows, device, args, steps, tr):
             g["grad_norm"], g["L_max"] = gn, L_max
             tr["gate_log"].append(g)
             print(f"[gate] step {n} loss {g['loss']:.4f} |tanh a| {g['alpha_mean']:.4f} cos_across {g['cos_across']:.3f} cos_within {g['cos_within']:.3f} "
+                  f"cos_upd_across {g['cos_update_across']:.3f} cos_upd_within {g['cos_update_within']:.3f} "
                   f"clamp {g['clamp']:.2f} clamp5 {g['clamp5']:.2f} step_rms {g['step_rms'][-1]:.3f} gn {gn['refiner']:.3f}", flush=True)
             if n == args.gate_step:
                 reason = gate_reason(g)
@@ -284,7 +286,8 @@ def tags_for(arm, split):
         if split == "dev":
             return {f"L{L}": P(L) for L in (0, 1, 8)}
         return {**{f"L{L}": P(L) for L in (0, 1, 2, 4, 8, 12)}, "L16": P(16, HEAD), "L24": P(24, HEAD), "swap8": ("swap", 8, None),
-                "mean8": ("mean", 8, None), "rep1_8": ("rep", 8, None), "gatesoff8": ("off", 8, None)}
+                "mean8": ("mean", 8, None), "rep1_8": ("rep", 8, None), "gatesoff8": ("off", 8, None),
+                "ref0": ("none", 8, None)}
     if arm == "t1":
         return {f"L{L}": P(L) for L in ((0, 1, 8) if split == "validation" else (1,))}
     return {"L1": P(1)} if split == "validation" else {}
@@ -312,7 +315,7 @@ def swap_kv_for(kv, visits, prev):
 
 @torch.no_grad()
 def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
-    """tags: {tag: (kind, L, nmax)}, kind in plain / swap / mean / rep / off. Each batch is prefilled once, think() runs to the largest L and
+    """tags: {tag: (kind, L, nmax)}, kind in plain / swap / mean / rep / off / none. Each batch is prefilled once, think() runs to the largest L and
     records the slot K/V at every L needed, and every tag is decoded on its own cache clone. Returns {tag: entry} with hits in file order."""
     if not tags:
         return {}
@@ -343,6 +346,8 @@ def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
                     skv = kv[L]
                 elif kind == "off":
                     skv, gates = kv[L], zero
+                elif kind == "none":  # reference: no board read at all, same batches and path as every other tag; gatesoff8 must equal it row for row
+                    skv = None
                 elif kind == "mean":
                     skv = B.mean_kv(kv[L])
                 elif kind == "swap":
@@ -401,6 +406,18 @@ def label_nums(ev):
     return out
 
 
+def adapter_sha(d):
+    """sha256 of an adapter's weights file (None if there is none): ties every stage-2 result to the exact stage-1 adapter it started from."""
+    f = Path(d) / "adapter_model.safetensors"
+    if not f.exists():
+        return None
+    h, buf = hashlib.sha256(), memoryview(bytearray(1 << 20))
+    with open(f, "rb") as fh:
+        while n := fh.readinto(buf):
+            h.update(buf[:n])
+    return h.hexdigest()
+
+
 def default_adapter(args, arm):
     return Path(args.out).parent / f"{arm}_s{args.seed}" / "adapter"
 
@@ -424,11 +441,6 @@ def run_arm(args):
     if src is not None and not (src / "adapter_config.json").exists():
         raise SystemExit(f"[think1] {arm} needs the stage-1 adapter {src} (run arm {'b' if arm == 'bplus' else 'a'} first)")
     lm, tok = T.load_model(args, device, dtype)
-    if args.smoke:  # the tiny model's padding row is all zeros: a zero slot has a NaN clamp gradient (board.clamp_rms), so give such rows small noise
-        with torch.no_grad():
-            w = lm.model.embed_tokens.weight
-            z = w.abs().sum(-1) == 0
-            w[z] = torch.randn(int(z.sum()), w.shape[1], generator=torch.Generator().manual_seed(0)).to(w) * 0.02
     train_rows, dev_rows, val_rows = load_data(args)
     enc = T.Encoder(tok, args.max_len)
     runner = T.Runner(lm, loops=3 if arm in ("b", "bplus") else 1)
@@ -437,7 +449,8 @@ def run_arm(args):
     result = dict(arm=arm, seed=args.seed, model=args.model, smoke=args.smoke, steps_stage1=args.steps1, steps_stage2=steps if stage2 else 0,
                   k_slots=k_slots, params_trainable=0, train=tr, aborted=None, eval={"validation": {}, "dev": {}}, label_nums={},
                   bsz=args.bsz, micro_bsz=args.micro_bsz, max_len=args.max_len, stage1_adapter=str(src) if src else None,
-                  loops=runner.loops, loop_block=[runner.start, runner.start + runner.size] if runner.loops > 1 else None)
+                  loops=runner.loops, loop_block=[runner.start, runner.start + runner.size] if runner.loops > 1 else None,
+                  stage1_adapter_sha=adapter_sha(src) if src else None, adapter_sha=None)
     if not stage2:
         result["steps_stage1"] = steps
     aborted = None
@@ -464,6 +477,7 @@ def run_arm(args):
         warm = min(100, steps // 10 or 1) if not stage2 else (2 if args.smoke else 60)
         train_lora(runner, pm, enc, train_rows, device, args, steps, warm, args.seed + 1000 if stage2 else args.seed, tr)
         pm.save_pretrained(out / "adapter")
+        result["adapter_sha"] = adapter_sha(out / "adapter")
     runner.checkpoint = False
     if aborted:
         result["aborted"] = aborted
@@ -547,6 +561,7 @@ def parse(argv=None):
     ap.add_argument("--eval-tokens", type=int, default=32768)
     ap.add_argument("--no-cache", action="store_true", help="cache-free greedy decoding for arms a/b/aplus/bplus (slow; for checking)")
     ap.add_argument("--no-grad-ckpt", action="store_true")
+    ap.add_argument("--no-lap-ckpt", action="store_true", help="board arms: keep every slot / answer pass's activations instead of recomputing them in backward (more memory, same result)")
     ap.add_argument("--a-adapter", default=None, help="stage-1 arm a adapter for aplus/t/t1/tw (default: <out parent>/a_s{seed}/adapter)")
     ap.add_argument("--b-adapter", default=None, help="stage-1 arm b adapter for bplus (default: <out parent>/b_s{seed}/adapter)")
     ap.add_argument("--steps", type=int, default=None, help="override the per-arm step count (not for the prereg run: 418 stage 1, 1,254 stage 2)")

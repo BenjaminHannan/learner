@@ -15,6 +15,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.checkpoint
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -203,9 +204,9 @@ def full_idx(runner):
 # ---------------------------------------------------------------- board module
 
 def clamp_rms(e, rho):
-    """Scale each slot down to RMS rho if it exceeds it (never up)."""
-    r = e.pow(2).mean(-1, keepdim=True).sqrt()
-    return e * (rho / r.clamp(min=1e-12)).clamp(max=1.0)
+    """Scale each slot down to RMS rho if it exceeds it (never up). The eps sits inside the sqrt so an all-zero slot has a finite gradient."""
+    r = (e.pow(2).mean(-1, keepdim=True) + 1e-12).sqrt()
+    return e * (rho / r).clamp(max=1.0)
 
 
 def f32(x):
@@ -305,8 +306,7 @@ def last_ids(prompts, device):
     return torch.tensor([p[-1] for p in prompts], device=device)
 
 
-def slot_pass(runner, e, C, mask, p):
-    """One backbone pass of the slots e [B,K,d] on their own fork of C. Returns (taps [B,K,3d] fp32, slot K/V per full-attention layer)."""
+def _slot_flat(runner, e, C, mask, p):
     B, K, _ = e.shape
     x = e.to(model_dtype(runner))
     pos = p[:, None].expand(B, K)
@@ -315,8 +315,18 @@ def slot_pass(runner, e, C, mask, p):
     t1, t2 = tap_layers(runner.n)
     h, tap = run_layers(runner, x, mask2, pos, fork, taps=(t1, t2))
     taps = torch.cat([rms_norm(tap[t1]), rms_norm(tap[t2]), f32(h)], -1)
-    kv = [(fork.layers[i].keys[..., -K:, :], fork.layers[i].values[..., -K:, :]) for i in full_idx(runner)]
-    return taps, kv
+    return (taps, *(t for i in full_idx(runner) for t in (fork.layers[i].keys[..., -K:, :], fork.layers[i].values[..., -K:, :])))
+
+
+def slot_pass(runner, e, C, mask, p, ckpt=False):
+    """One backbone pass of the slots e [B,K,d] on their own fork of C. Returns (taps [B,K,3d] fp32, slot K/V per full-attention layer).
+    ckpt (only when a gradient is needed): the pass runs under torch.utils.checkpoint, so its activations are recomputed in backward
+    instead of kept; exact, because C is never written."""
+    if ckpt and torch.is_grad_enabled() and e.requires_grad:
+        out = torch.utils.checkpoint.checkpoint(lambda x: _slot_flat(runner, x, C, mask, p), e, use_reentrant=False)
+    else:
+        out = _slot_flat(runner, e, C, mask, p)
+    return out[0], list(zip(out[1::2], out[2::2]))
 
 
 def _stats(e_prev, pre, e, rho):
@@ -336,11 +346,11 @@ def _cos(e):
         return within, across
 
 
-def think(board, runner, C, mask, p, L, keep=None, swap=None, repeat_delta1=False, stats=True):
+def think(board, runner, C, mask, p, L, keep=None, swap=None, repeat_delta1=False, stats=True, ckpt=False):
     """Laps 0..L. Returns ({lap: slot K/V} for every lap in keep, stats). stats: pen[t] (grad-carrying mean((delta/rho)^2) of each refinement),
     step[t-1] (mean rms(e_t - e_{t-1})/rho), clamp[t-1] (fraction of slots whose rms before the clamp exceeds rho at all; clamp5: by more than 5%), cos_slots[t] / cos_rows[t] (mean pairwise slot cosine
     within a board / of the same slot across rows), e[t] (the boards). swap: LongTensor, row i reads the board of row swap[i].
-    repeat_delta1: the update after pass 0 is reused for every lap; backbone passes only at lap 0 and at the laps in keep."""
+    repeat_delta1: the update after pass 0 is reused for every lap; backbone passes only at lap 0 and at the laps in keep. ckpt: checkpoint every slot pass."""
     keep = {L} if keep is None else set(keep)
     rho = board.rho
     e = board.start(len(p))
@@ -366,9 +376,9 @@ def think(board, runner, C, mask, p, L, keep=None, swap=None, repeat_delta1=Fals
             e = new
             st["e"].append(e)
             if t in keep:
-                out[t] = slot_pass(runner, e, C, mask, p)[1]
+                out[t] = slot_pass(runner, e, C, mask, p, ckpt)[1]
             continue
-        taps, kv = slot_pass(runner, e, C, mask, p)
+        taps, kv = slot_pass(runner, e, C, mask, p, ckpt)
         if t in keep:
             out[t] = kv
         if t == L:
@@ -429,11 +439,20 @@ def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv):
     return f32(runner.logits(h[sel_b, sel_t])), tgt, sel_b
 
 
-def answer_ce(runner, board, C, mask, p, last_tok, ans, slot_kv, gates=None):
-    """Summed fixed CE over the real answer tokens, and their count. gates overrides board.gate() (e.g. zeros)."""
+def answer_ce(runner, board, C, mask, p, last_tok, ans, slot_kv, gates=None, ckpt=False):
+    """Summed fixed CE over the real answer tokens, and their count. gates overrides board.gate() (e.g. zeros).
+    ckpt (only when a gradient is needed): the answer pass runs under torch.utils.checkpoint (activations recomputed in backward)."""
     gate = (board.gate() if gates is None else gates) if board is not None else None
-    logits, tgt, _ = answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv)
-    return fixed_cross_entropy(logits, tgt, reduction="sum"), len(tgt)
+    n = sum(len(a) for a in ans)
+
+    def ce(g, *flat):
+        logits, tgt, _ = answer_logits(runner, g, C, mask, p, last_tok, ans, list(zip(flat[::2], flat[1::2])) if flat else None)
+        return fixed_cross_entropy(logits, tgt, reduction="sum")
+
+    flat = [t for kv in slot_kv for t in kv] if slot_kv is not None else []
+    if ckpt and torch.is_grad_enabled() and flat and gate is not None:
+        return torch.utils.checkpoint.checkpoint(ce, gate, *flat, use_reentrant=False), n
+    return ce(gate, *flat), n
 
 
 @torch.no_grad()
@@ -464,14 +483,15 @@ def decode(runner, board, C, mask, p, last_tok, slot_kv, max_new=MAX_NEW, eos=1,
     return out
 
 
-def train_loss(board, runner, C, mask, p, last_tok, ans, L_max, n_norm=None, row_frac=1.0, lam=0.01):
+def train_loss(board, runner, C, mask, p, last_tok, ans, L_max, n_norm=None, row_frac=1.0, lam=0.01, ckpt=True):
     """Loss of one micro-batch: mean over laps t = 0..L_max of answer CE (read from board t) / n_norm + lam * row_frac * mean penalty.
     n_norm: answer tokens of the whole optimizer-step batch (default: this micro-batch); row_frac: this micro-batch's share of its rows.
+    ckpt: every slot pass and every answer pass runs under torch.utils.checkpoint (same loss and gradients, far less memory).
     Returns (loss, info)."""
-    kv, st = think(board, runner, C, mask, p, L_max, keep=range(L_max + 1), stats=False)
+    kv, st = think(board, runner, C, mask, p, L_max, keep=range(L_max + 1), stats=False, ckpt=ckpt)
     ces, n = [], None
     for t in range(L_max + 1):
-        s, n = answer_ce(runner, board, C, mask, p, last_tok, ans, kv[t])
+        s, n = answer_ce(runner, board, C, mask, p, last_tok, ans, kv[t], ckpt=ckpt)
         ces.append(s)
     ce = torch.stack(ces).mean()
     pen = torch.stack(st["pen"]).mean() if st["pen"] else ce.new_zeros(())

@@ -203,10 +203,30 @@ def group(parts):
 
 # ---------------------------------------------------------------- analysis
 
+PARENT = {"aplus": "a", "t": "a", "t1": "a", "tw": "a", "bplus": "b"}  # the stage-1 arm whose adapter each arm starts from
+BPLUS_EXTEND = 1.0  # PREREG: bplus on all seeds only if bplus - b (seed 0) >= 1.0
+
+
+def drop_unmatched(res):
+    """(kept results, excluded list). A dependent whose recorded stage-1 adapter hash differs from the hash its stage-1 arm's result
+    carries was trained on another copy of that adapter (the stage-1 arm was retrained afterwards): excluded from every mark.
+    Results without hashes are kept."""
+    keep, out = {}, []
+    for (arm, seed), r in res.items():
+        par = res.get((PARENT.get(arm), seed))
+        h, ph = r.get("stage1_adapter_sha"), (par or {}).get("adapter_sha")
+        if h and ph and h != ph:
+            out.append({"arm": arm, "seed": seed, "sha": h[:12], "parent": PARENT[arm], "parent_sha": ph[:12]})
+        else:
+            keep[(arm, seed)] = r
+    return keep, out
+
+
 def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
+    res, excluded = drop_unmatched(res)
     R = Runs(res)
     st = Stats(R, rows, cluster)
-    out = {"notes": list(notes), "arms": [], "aborted": []}
+    out = {"notes": list(notes), "arms": [], "aborted": [], "excluded": excluded}
     for (arm, seed), r in sorted(res.items(), key=lambda kv: (ARMS.index(kv[0][0]) if kv[0][0] in ARMS else 99, kv[0][1])):
         if r.get("aborted"):
             out["aborted"].append({"arm": arm, "seed": seed, "reason": str(r["aborted"])})
@@ -259,17 +279,28 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
 
     # lesions (arm t, L=8, validation)
     sub = lambda x, y: None if x is None or y is None else x - y
-    gm, gs = 0, 0
+    gm, gs, rm, rs = 0, 0, 0, 0  # gates-off rows unlike arm a (other decode path: bf16 noise) / unlike the board-free decode of the same batches (must be 0)
+    gap = []
     for s in SEEDS:
-        ga, gb = R.vec("t", s, "validation", "gatesoff8"), R.vec("a", s, "validation", "main")
+        ga, gb, gr = (R.vec("t", s, "validation", "gatesoff8"), R.vec("a", s, "validation", "main"), R.vec("t", s, "validation", "ref0"))
         al = align(ga, gb) if ga and gb else None
         if al is not None:
             gm, gs = gm + int((al[1][0] != al[1][1]).sum()), gs + 1
-    gm = gm if gs else None
-    out["lesions"] = {"swap": mean(swap), "mean_board": mean(meanb), "repeat_delta1": mean(rep), "gates_off": mean(goff),
+            gap.append(100 * float(al[1][0].mean() - al[1][1].mean()))
+        al = align(ga, gr) if ga and gr else None
+        if al is not None:
+            rm, rs = rm + int((al[1][0] != al[1][1]).sum()), rs + 1
+    gm, rm = gm if gs else None, rm if rs else None
+    ref0 = val("t", "ref0")
+    out["lesions"] = {"swap": mean(swap), "mean_board": mean(meanb), "repeat_delta1": mean(rep), "gates_off": mean(goff), "ref0": mean(ref0),
                       "swap_drop": sub(S[8], mean(swap)), "mean_drop": sub(S[8], mean(meanb)),
                       "rep_drop": sub(S[8], mean(rep)), "gates_off_rows_differing_from_a": gm, "gates_off_seeds_checked": gs,
+                      "gates_off_minus_a_points": mean(dict(enumerate(gap))) if gap else None,
+                      "gates_off_rows_differing_from_ref0": rm, "gates_off_ref0_seeds_checked": rs,
+                      "same_path_gain": sub(S[8], mean(goff)),
                       "b_pass1": mean(val("b", "pass1")), "b_main": mean(b)}
+    d0 = sub(bp.get(0), b.get(0))
+    out["bplus_extend"] = {"bplus_minus_b_s0": d0, "need": BPLUS_EXTEND, "run_seeds_1_2": None if d0 is None else d0 >= BPLUS_EXTEND - EPS}
 
     # marks
     tc = have(T[8])
@@ -384,6 +415,8 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     why = []
     if out["aborted"]:
         why.append("mechanics gate aborted: " + ", ".join(f"{x['arm']} s{x['seed']}" for x in out["aborted"]))
+    if excluded:
+        why.append("excluded (stage-1 adapter differs from the one the dependent was trained on): " + ", ".join(f"{x['arm']} s{x['seed']}" for x in excluded))
     if decided:
         if out["wrong_if"]:
             verdict = "WRONG"
@@ -440,6 +473,9 @@ def report(o, data_note=""):
         P("note: " + n)
     for x in o["aborted"]:
         P(f"ABORTED  {x['arm']} seed {x['seed']}: {x['reason']}")
+    for x in o.get("excluded", []):
+        P(f"EXCLUDED {x['arm']} seed {x['seed']}: trained on stage-1 adapter {x['sha']}, but arm {x['parent']} seed {x['seed']} now has adapter "
+          f"{x['parent_sha']} (stage-1 arm retrained after it); not used in any mark")
     P("")
     P("== 1. What each run scored ==")
     P("arm    seed   dev    val   notes")
@@ -456,6 +492,11 @@ def report(o, data_note=""):
     P(f"  a {f2(fl['a'])}  aplus {f2(fl['aplus'])}  b {f2(fl['b'])}  bplus {f2(fl['bplus'])}")
     P(f"  A_ref = {fl['A_ref']:.2f}  = max(66.72, a, aplus)")
     P(f"  B_ref = {fl['B_ref']:.2f}  = max(67.12, b, bplus)")
+    be = o["bplus_extend"]
+    if be["bplus_minus_b_s0"] is None:
+        P("  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0")
+    else:
+        P(f"  bplus - b (seed 0) = {sg(be['bplus_minus_b_s0'])}; run bplus seeds 1-2 (bplus:1,bplus:2): {'yes' if be['run_seeds_1_2'] else 'no'} (needs >= 1.0)")
     nz = o["noise"]
     P(f"  a seed 0 scored twice: {f2(nz['a_s0_main'])} vs {f2(nz['a_s0_repeat'])}"
       f"  (noise {f2(nz['diff'])}, R2 tol {f2(nz['tol'])})")
@@ -486,7 +527,14 @@ def report(o, data_note=""):
     P(f"swap board     {f2(ls['swap']):>6}   costs {sg(ls['swap_drop'])}{ci_txt(o['intervals']['S8_minus_swap'])}")
     P(f"mean board     {f2(ls['mean_board']):>6}   costs {sg(ls['mean_drop'])}")
     P(f"repeat delta1  {f2(ls['repeat_delta1']):>6}   costs {sg(ls['rep_drop'])}{ci_txt(o['intervals']['S8_minus_rep'])}")
-    P(f"gates off      {f2(ls['gates_off']):>6}   rows unlike arm a: {ls['gates_off_rows_differing_from_a']} (must be 0)")
+    ro = ls["gates_off_rows_differing_from_ref0"]
+    P(f"gates off      {f2(ls['gates_off']):>6}   rows unlike the board-free decode of the same batches: {'--' if ro is None else ro} (must be 0)")
+    if ls["gates_off_rows_differing_from_a"] is not None:
+        gp = ls["gates_off_minus_a_points"]
+        P(f"               rows unlike arm a's main: {ls['gates_off_rows_differing_from_a']} over {ls['gates_off_seeds_checked']} seed(s), "
+          f"accuracy gap {sg(gp)} (bf16 path noise: arm a is decoded by another code path and other batches; 0 expected only in fp32)")
+        if ls["gates_off_rows_differing_from_a"] > 0:
+            P(f"               NOTE: S(8) vs A_ref is path-confounded by up to {abs(gp):.2f} points; the same-path gain S(8) - gates off is {sg(ls['same_path_gain'])}")
     P(f"arm b: 3 loops {f2(ls['b_main'])}, 1 pass {f2(ls['b_pass1'])}")
     P("")
     P("== 4. PASS marks ==")

@@ -62,11 +62,17 @@ def test_x1():
         assert e <= 1e-6 * max(1.0, F.cross_entropy(z, t, reduction=red).abs().max().item()), (red, e)
         assert (mine - ref).abs().max().item() <= 5e-6, (red, (mine - ref).abs().max().item())
     assert mine[t == -100].abs().max().item() == 0.0 and X.fixed_cross_entropy(z, t, reduction="none")[t == -100].abs().max() == 0
+    for dt in (torch.float32, torch.bfloat16, torch.float64):  # an ignored row with far-apart logits: grad exactly 0, never NaN (exp(200) * 0)
+        zi = torch.tensor([[0.0, 0.0, 0.0, 200.0, 0.0], [1.0, 2.0, 3.0, 4.0, 5.0], [0.0, 90.0, 0.0, -90.0, 0.0]], dtype=dt)
+        ti = torch.tensor([-100, 2, -100])
+        gi, li = grad_of(lambda a, b: X.fixed_cross_entropy(a, b, reduction="none").sum(), zi, ti)
+        assert torch.isfinite(gi).all() and gi[0].abs().max() == 0 and gi[2].abs().max() == 0 and li.isfinite(), (dt, gi)
+        assert gi[1].abs().max() > 0 and li.item() == X.fixed_cross_entropy(zi[1:2], ti[1:2], reduction="sum").item()
     big = torch.randn(8, 5000, generator=g) * 2
     tb = torch.randint(0, 5000, (8,), generator=g)
     e = (X.fixed_cross_entropy(big, tb, reduction="none") - F.cross_entropy(big, tb, reduction="none")).abs().max().item()
     assert e <= 1e-6, e
-    print(f"X1 ok: forward/grad match F.cross_entropy (V=300 with ignored rows, V=5000 forward err {e:.1e})")
+    print(f"X1 ok: forward/grad match F.cross_entropy (V=300 with ignored rows, V=5000 forward err {e:.1e}); ignored rows with far-apart logits give exactly 0 grad")
 
 
 def test_x2():

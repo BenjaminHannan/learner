@@ -33,6 +33,7 @@ class _FixedCE(torch.autograd.Function):
         t = target.masked_fill(~valid, 0)
         d = z - z.gather(1, t[:, None])
         d.scatter_(1, t[:, None], float("-inf"))
+        d = d.masked_fill(~valid[:, None], float("-inf"))  # ignored rows: loss 0, never inf * 0
         loss = F.softplus(torch.logsumexp(d, 1)) * valid
         ctx.save_for_backward(logits, t, valid, loss)
         return loss
@@ -43,6 +44,7 @@ class _FixedCE(torch.autograd.Function):
         z = logits.to(loss.dtype)
         d = z - z.gather(1, t[:, None])
         d.scatter_(1, t[:, None], float("-inf"))
+        d = d.masked_fill(~valid[:, None], float("-inf"))  # ignored rows: exp(-inf) = 0, not exp(large) * 0 = NaN
         g = torch.exp(d - loss[:, None])  # other classes only; 0 at the target
         g.scatter_(1, t[:, None], -g.sum(1, keepdim=True))
         g = g * (grad * valid)[:, None]

@@ -552,9 +552,62 @@ def test_real_T1_TP_TC():
     assert worst <= tol, f"real-model T1 max diff {worst:.2e} > {tol:.1e}"
 
 
+def test_TK_lap_checkpoint():
+    """Lap checkpointing (train_loss ckpt=True, the default) gives the same loss and board gradients as ckpt=False and keeps fewer saved tensors;
+    clamp_rms has a finite gradient for an all-zero slot; the delta penalty is the elementwise mean of (delta/rho)^2."""
+    lm, tok = tiny()
+    for p_ in lm.parameters():
+        p_.requires_grad_(False)
+    r = T.Runner(lm, loops=1)
+    prompts, ans = rows()
+    b = make_board(lm, tok, K=4, alpha=0.5)
+    with torch.no_grad():
+        b.w_out.weight.mul_(5.0)  # larger updates, so the laps matter
+
+    def go(ckpt, L_max=3):
+        for q in b.parameters():
+            q.grad = None
+        C, mask, p, lt = setup(r, prompts)
+        saved = [0]
+
+        def pack(x):
+            saved[0] += x.numel() * x.element_size()
+            return x
+        with torch.autograd.graph.saved_tensors_hooks(pack, lambda x: x):
+            loss, info = B.train_loss(b, r, C, mask, p, lt, ans, L_max, ckpt=ckpt)
+        loss.backward()
+        return loss.item(), {n: q.grad.clone() for n, q in b.named_parameters()}, saved[0], info
+
+    l0, g0, m0, i0 = go(False)
+    l1, g1, m1, i1 = go(True)
+    err = max((g0[n] - g1[n]).abs().max().item() / max(g0[n].abs().max().item(), 1e-12) for n in g0)
+    print(f"TK loss {l0:.6f} vs {l1:.6f}; max rel grad diff {err:.1e}; saved-tensor bytes without ckpt {m0:,}, with {m1:,}")
+    assert abs(l0 - l1) <= 1e-6 * abs(l0) and err <= 1e-5, (l0, l1, err)
+    assert all(g0[n].abs().max() > 0 for n in g0), "a board parameter got no gradient"
+    assert m1 < 0.6 * m0, (m0, m1)
+    # default is on, and the explicit off path equals the old behaviour exactly
+    C, mask, p, lt = setup(r, prompts)
+    assert abs(B.train_loss(b, r, C, mask, p, lt, ans, 2)[0].item() - B.train_loss(b, r, C, mask, p, lt, ans, 2, ckpt=False)[0].item()) < 1e-6
+    # zero slot: finite clamp gradient (eps inside the sqrt)
+    z = torch.zeros(1, 2, 8, requires_grad=True)
+    B.clamp_rms(z, 0.02).sum().backward()
+    assert torch.isfinite(z.grad).all()
+    e = torch.randn(2, 3, 8, requires_grad=True)
+    B.clamp_rms(e * 100, 0.02).sum().backward()
+    assert torch.isfinite(e.grad).all() and abs(B.clamp_rms(e * 100, 0.02).pow(2).mean(-1).sqrt() - 0.02).max() < 1e-6
+    # penalty = mean over all slot elements of (delta/rho)^2: at most eta^2 = 0.01 elementwise
+    with torch.no_grad():
+        C, mask, p, lt = setup(r, prompts)
+        taps, _ = B.slot_pass(r, b.start(3), C, mask, p)
+        pen = B.think(b, r, C, mask, p, 1, stats=False)[1]["pen"][0]
+        want = (b.delta(taps) / b.rho).pow(2).mean()
+    print(f"TK penalty {pen.item():.3e} == elementwise mean {want.item():.3e} (<= eta^2 = {b.eta.max().item() ** 2:.3f})")
+    assert abs(pen.item() - want.item()) <= 1e-4 * want.item() and pen.item() <= b.eta.max().item() ** 2 + 1e-9
+
+
 TESTS = [test_TC_param_count, test_TP_patch_identity, test_T1_alpha0_equals_arm_a, test_T2_cache_untouched, test_T3_slot_pass_equals_no_cache, test_TR_think_api, test_TB_bf16_smoke,
          test_T4_cached_decode_equals_no_cache, test_T5_gradients_only_in_board, test_T5_finite_difference_fp64, test_T6_batch_invariance,
-         test_T7_swap_lesion, test_T9_no_leak_from_answer, test_T10_batch_permutation]
+         test_T7_swap_lesion, test_T9_no_leak_from_answer, test_T10_batch_permutation, test_TK_lap_checkpoint]
 REAL_TESTS = [test_real_T1_TP_TC]
 
 

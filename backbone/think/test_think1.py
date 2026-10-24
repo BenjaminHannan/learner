@@ -122,9 +122,10 @@ def test_th_hits_in_file_order_and_gates_off_is_arm_a():
     board = B.ThinkBoard.from_model(r.lm, tok, K=4)
     with torch.no_grad():
         board.alpha.copy_(3 * torch.randn_like(board.alpha))
-    tags = {"gatesoff8": ("off", 8, None), "L16": ("plain", 16, 6), "swap8": ("swap", 8, None), "mean8": ("mean", 8, None), "rep1_8": ("rep", 8, None)}
+    tags = {"gatesoff8": ("off", 8, None), "ref0": ("none", 8, None), "L16": ("plain", 16, 6), "swap8": ("swap", 8, None), "mean8": ("mean", 8, None), "rep1_8": ("rep", 8, None)}
     ev = K.eval_board(r, board, enc, rows, tags, args, torch.device("cpu"))
     assert ev["gatesoff8"]["hits"] == want, "gates off must equal arm a, row for row, in file order"
+    assert ev["ref0"]["hits"] == ev["gatesoff8"]["hits"], "gates off must equal the board-free decode of the same batches, row for row"
     assert ev["L16"]["n"] == 6 and len(ev["L16"]["hits"]) == 6, "L16 is scored on the first nmax rows only"
     assert all(len(ev[t]["hits"]) == len(rows) for t in ("swap8", "mean8", "rep1_8"))
     mb = [enc.train_example(x) for x in rows[:3]]  # open gates must move the logits, or the gates-off equality above says nothing
@@ -140,9 +141,19 @@ def test_th_hits_in_file_order_and_gates_off_is_arm_a():
 def test_tg_mechanics_gate():
     ok = dict(alpha_mean=0.05, cos_across=0.5, clamp5=0.1)
     assert K.gate_reason(ok) is None
-    for k, v, word in (("alpha_mean", 0.019, "alpha"), ("cos_across", 0.951, "cosine"), ("clamp5", 0.91, "pinned")):
-        assert word in K.gate_reason({**ok, k: v}), k
-    assert K.gate_reason({**ok, "alpha_mean": 0.02, "cos_across": 0.95, "clamp5": 0.9}) is None  # thresholds are strict
+    assert "alpha" in K.gate_reason({**ok, "alpha_mean": 0.019})
+    assert K.gate_reason({**ok, "alpha_mean": 0.02}) is None  # threshold is strict
+    # amended before any run: board cosine and clamp share are logs, never aborts (they sit at ~0.99 and ~94% at step 0 on the real model)
+    assert K.gate_reason({**ok, "cos_across": 0.999, "clamp5": 1.0, "clamp": 1.0}) is None
+    assert set(K.GATE) == {"alpha", "div", "window"}
+    # a saturated, question-specific one-lap board (e_1 = clamp(e_0 + rho * eta * sign), eta 0.1): its cross-question cosine stays > 0.95, and the gate lets it through
+    g = torch.Generator().manual_seed(0)
+    rho, e0 = 0.0195, torch.randn(16, 1024, generator=g)
+    e0 = B.clamp_rms(e0 / e0.pow(2).mean(-1, keepdim=True).sqrt() * rho, rho)
+    e1 = B.clamp_rms(e0[None] + rho * 0.1 * torch.sign(torch.randn(16, 16, 1024, generator=g)), rho)
+    cos = float(B._cos(e1)[1])
+    assert cos > 0.95, cos
+    assert K.gate_reason({**ok, "cos_across": cos}) is None
     assert not K.diverged([1.0] * 20) and not K.diverged([1.0] * 20 + [1.9] * 20) and K.diverged([1.0] * 20 + [2.1] * 20)
     assert not K.diverged([1.0] * 19 + [50.0])  # needs more than 20 steps
     fx = fixture()
@@ -158,7 +169,7 @@ def test_tg_mechanics_gate():
              "--gate-enforce", "--steps", "4", "--limit-eval", "4"], capture_output=True, text=True, cwd=str(HERE.parent.parent))
     # the CLI path needs the smoke a adapter in gate2/smoke/a_s0, which does not exist: it must fail loudly, not silently
     assert r.returncode != 0 and "needs the stage-1 adapter" in (r.stdout + r.stderr), r.stderr[-300:]
-    print(f"TG gate thresholds strict; divergence rule; abort path: exit 3, aborted={res['aborted']!r}, no eval; missing adapter -> clear error")
+    print(f"TG only the gates-shut check aborts (a saturated one-lap board with cosine {cos:.3f} passes); divergence rule; abort path: exit 3, aborted={res['aborted']!r}, no eval; missing adapter -> clear error")
 
 
 # ---------------------------------------------------------------- run_box.sh
@@ -227,7 +238,7 @@ EXPECT = {
     "a": {"validation": {"main", "main_repeat"}, "dev": {"main"}},
     "b": {"validation": {"main", "pass1"}, "dev": {"main", "pass1"}},
     "aplus": {"validation": {"main"}, "dev": {"main"}}, "bplus": {"validation": {"main"}, "dev": {"main"}},
-    "t": {"validation": {"L0", "L1", "L2", "L4", "L8", "L12", "L16", "L24", "swap8", "mean8", "rep1_8", "gatesoff8"}, "dev": {"L0", "L1", "L8"}},
+    "t": {"validation": {"L0", "L1", "L2", "L4", "L8", "L12", "L16", "L24", "swap8", "mean8", "rep1_8", "gatesoff8", "ref0"}, "dev": {"L0", "L1", "L8"}},
     "t1": {"validation": {"L0", "L1", "L8"}, "dev": {"L1"}}, "tw": {"validation": {"L1"}, "dev": set()},
 }
 
@@ -238,7 +249,7 @@ def test_ts_spec_defaults():
     a = K.parse(["--arm", "t", "--out", "x"])
     assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
     assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)
-    assert K.GATE == dict(alpha=0.02, cos=0.95, clamp=0.90, div=2.0, window=20)
+    assert K.GATE == dict(alpha=0.02, div=2.0, window=20)
     assert min(100, 418 // 10) == 41 and min(100, 6 // 10 or 1) == 1  # stage-1 warm-up rule as coded: min(100, steps // 10 or 1)
     board = B.ThinkBoard(1024, 0.0195, torch.randn(16, 1024))
     g = {x["name"]: x for x in K.board_groups(board)}
@@ -251,7 +262,9 @@ def test_ts_spec_defaults():
     assert set(t) == EXPECT["t"]["validation"] and t["L16"][2] == 2000 and t["L24"][2] == 2000 and all(v[2] is None for k, v in t.items() if k not in ("L16", "L24"))
     assert set(K.tags_for("t", "dev")) == {"L0", "L1", "L8"} and set(K.tags_for("t1", "validation")) == {"L0", "L1", "L8"}
     assert set(K.tags_for("t1", "dev")) == {"L1"} and set(K.tags_for("tw", "validation")) == {"L1"} and K.tags_for("tw", "dev") == {}
-    assert {k: v[:2] for k, v in t.items() if k in ("swap8", "mean8", "rep1_8", "gatesoff8")} == {"swap8": ("swap", 8), "mean8": ("mean", 8), "rep1_8": ("rep", 8), "gatesoff8": ("off", 8)}
+    assert {k: v[:2] for k, v in t.items() if k in ("swap8", "mean8", "rep1_8", "gatesoff8", "ref0")} == \
+        {"swap8": ("swap", 8), "mean8": ("mean", 8), "rep1_8": ("rep", 8), "gatesoff8": ("off", 8), "ref0": ("none", 8)}
+    assert K.parse(["--arm", "t", "--out", "x"]).no_lap_ckpt is False and K.parse(["--arm", "t", "--out", "x", "--no-lap-ckpt"]).no_lap_ckpt is True
     print("TS step defaults 418 / 1,254, lr groups 3e-3 / 5e-4 / 5e-4 (each board parameter in exactly one group), gate thresholds and eval tags as in the spec")
 
 
@@ -284,6 +297,11 @@ def test_sm_smoke_all_arms():
         assert res["aplus"]["stage1_adapter"].endswith("a_s0/adapter") and res["bplus"]["stage1_adapter"].endswith("b_s0/adapter")
         assert all(res[a]["stage1_adapter"].endswith("a_s0/adapter") for a in ("t", "t1", "tw"))
         assert res["b"]["loops"] == 3 and res["b"]["loop_block"] == [0, 4] and res["a"]["loops"] == 1
+        assert res["a"]["adapter_sha"] and res["b"]["adapter_sha"] and res["aplus"]["adapter_sha"] and res["bplus"]["adapter_sha"]
+        assert all(res[x]["stage1_adapter_sha"] == res["a"]["adapter_sha"] for x in ("aplus", "t", "t1", "tw")) and res["bplus"]["stage1_adapter_sha"] == res["b"]["adapter_sha"]
+        assert res["a"]["stage1_adapter_sha"] is None and res["t"]["adapter_sha"] is None
+        gl = res["t"]["train"]["gate_log"][0]
+        assert all(k in gl for k in ("cos_across", "cos_within", "cos_update_across", "cos_update_within", "clamp", "clamp5"))
         assert len(res["t"]["train"]["gate_log"]) >= 1 and len(res["t"]["train"]["dev_log"]) >= 1 and res["t"]["train"]["gate_check"]["step"] == 4
         if (HERE / "summarize.py").exists():
             m = re.search(r"^VERDICT: (PASS|WRONG|PARTIAL|FUTILE-STOP|INCOMPLETE)\b", out, re.M)
