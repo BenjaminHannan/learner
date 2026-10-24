@@ -102,6 +102,7 @@ def scenario(root, seeds=(0, 1, 2), a=(66.80, 66.60, 66.40), repeat=66.76, b=(67
         lab.put("t", s, "validation", "mean8", 68.5 + off[s])
         lab.put("t", s, "validation", "rep1_8", rep + off[s])
         lab.put_hits("t", s, "validation", "gatesoff8", h)
+        lab.put_hits("t", s, "validation", "ref0", h)
         for L in (0, 1, 8):
             lab.put("t", s, "dev", f"L{L}", t[min(L, 8)] - 1.0, n=min(1000, n))
         for L, v in t1.items():
@@ -140,6 +141,9 @@ def test_s1():
     assert all(mk[k]["status"] == "clear" for k in ("W1", "W2", "W3", "W4", "F1", "F2", "F3", "F4"))
     assert abs(mk["R4a"]["value"] - (72.0 - 68.4)) < 1e-9 and abs(mk["R4b"]["value"] - 1.6) < 1e-9
     assert abs(o["lesions"]["swap_drop"] - 7.0) < 1e-9 and o["lesions"]["gates_off_rows_differing_from_a"] == 0
+    assert o["lesions"]["gates_off_rows_differing_from_ref0"] == 0 and o["lesions"]["gates_off_ref0_seeds_checked"] == 3
+    assert abs(o["bplus_extend"]["bplus_minus_b_s0"] - (acc("bplus", 0) - acc("b", 0))) < 1e-9 and o["bplus_extend"]["run_seeds_1_2"] is False  # 67.9 - 67.0 = 0.9
+    assert "run bplus seeds 1-2" in SM.report(o)
     assert abs(o["noise"]["diff"] - 0.04) < 1e-9 and abs(o["noise"]["tol"] - 0.3) < 1e-9, o["noise"]
     # confidence intervals contain the point estimates, and the paired interval has about the textbook width
     for k in ("R4a", "R1a"):
@@ -216,6 +220,51 @@ def test_s1():
         # the per-seed offsets average to zero, so S(8) is v
         assert abs(marks(o)["G"]["value"] - v) < 1e-6 and abs(marks(o)["G"]["need"] - 70.12) < 1e-9
         assert marks(o)["G"]["status"] == want, (v, marks(o)["G"])
+
+    # ---- gates-off lesion: the board-free decode of the same batches is the exact reference; arm a's path may differ by bf16 noise
+    flip = lambda h, idx: "".join(("1" if c == "0" else "0") if i in idx else c for i, c in enumerate(h))
+    lab = scenario(R / "noise")
+    for sd in (0, 1):
+        e = lab.res[("t", sd)]["eval"]["validation"]
+        for tag in ("gatesoff8", "ref0"):
+            e[tag]["hits"] = flip(e[tag]["hits"], {3, 50, 77})
+    o = run(lab)
+    assert o["lesions"]["gates_off_rows_differing_from_a"] == 6 and o["lesions"]["gates_off_rows_differing_from_ref0"] == 0, o["lesions"]
+    text = SM.report(o)
+    assert "path-confounded" in text and "(must be 0)" in text and max(len(l) for l in text.splitlines()) <= 96, [l for l in text.splitlines() if len(l) > 96]
+    lab = scenario(R / "bug")
+    e = lab.res[("t", 0)]["eval"]["validation"]
+    e["gatesoff8"]["hits"] = flip(e["gatesoff8"]["hits"], {5})
+    o = run(lab)
+    assert o["lesions"]["gates_off_rows_differing_from_ref0"] == 1, o["lesions"]
+
+    # ---- bplus seeds 1-2 only if bplus - b (seed 0) >= 1.0
+    o = run(scenario(R / "bp_low", bp=67.5))
+    assert o["bplus_extend"]["run_seeds_1_2"] is False and "(bplus:1,bplus:2): no (needs" in SM.report(o)
+    o = run(scenario(R / "bp_high", bp=68.1))
+    assert o["bplus_extend"]["run_seeds_1_2"] is True and "(bplus:1,bplus:2): yes (needs" in SM.report(o)
+    o = run(scenario(R / "bp_edge", bp=68.0))
+    assert o["bplus_extend"]["run_seeds_1_2"] is True  # exactly +1.00
+    o = run(scenario(R / "bp_none", seeds=(1, 2)))
+    assert o["bplus_extend"]["run_seeds_1_2"] is None
+
+    # ---- a dependent trained on another copy of its stage-1 adapter is excluded from every mark
+    lab = scenario(R / "sha")
+    for sd in SM.SEEDS:
+        lab.res[("a", sd)]["adapter_sha"] = f"aa{sd}" * 8
+        lab.res[("b", sd)]["adapter_sha"] = f"bb{sd}" * 8
+        for arm in ("t", "t1", "aplus"):
+            lab.res[(arm, sd)]["stage1_adapter_sha"] = f"aa{sd}" * 8
+    lab.res[("bplus", 0)]["stage1_adapter_sha"] = "bb0" * 8
+    o = run(lab)
+    assert o["verdict"] == "PASS" and not o["excluded"], (o["verdict"], o["excluded"])
+    lab.res[("t", 1)]["stage1_adapter_sha"] = "cc" * 16  # a seed 1 was retrained after t seed 1 started from it
+    lab.res[("bplus", 0)]["stage1_adapter_sha"] = "dd" * 16
+    o = run(lab)
+    text = SM.report(o)
+    assert sorted((x["arm"], x["seed"]) for x in o["excluded"]) == [("bplus", 0), ("t", 1)], o["excluded"]
+    assert o["verdict"] == "INCOMPLETE" and marks(o)["G"]["status"] == SM.ND and "EXCLUDED t seed 1" in text and "EXCLUDED bplus seed 0" in text, (o["verdict"], text[:600])
+    assert o["floors"]["bplus"] is None and o["seeds"]["t"] == [0, 2]
 
     # ---- missing arm / aborted run: INCOMPLETE, and the abort is shown
     lab = scenario(R / "miss")

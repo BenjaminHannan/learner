@@ -9,9 +9,17 @@ plain LoRA (a, aplus) and the looped-layers arm (b, bplus). Marks are fixed in `
 THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0 bash backbone/think/run_box.sh
 ```
 Needs Python with CUDA torch and `pip install -r backbone/requirements.txt` (transformers 5.20.2, peft 0.21.2; `flash-linear-attention`
-makes the Gated DeltaNet layers fast). The first run builds the village data into `out/data` (about 12 min on 4 cores). Then add the rest
-of seed 0 (`bplus:0` and the diagnostic `tw:0`), look at `out/think/SUMMARY.txt`, and run seeds 1 and 2 only if the futility rules there
-do not fire. Re-running the same line skips every job whose result file exists.
+makes the Gated DeltaNet layers fast). The first run builds the village data into `out/data` (about 12 min on 4 cores). Everything is also
+appended to `out/think/run.log`. The script stops with exit 2 if torch sees no CUDA GPU (`ALLOW_CPU=1` overrides: days, and not the same
+hardware as the other arms). Then add the rest of seed 0 and look at `out/think/SUMMARY.txt`:
+```
+THINK_JOBS=tw:0 bash backbone/think/run_box.sh                       # diagnostic, seed 0 only
+THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1,a:2,b:2,aplus:2,t:2,t1:2 bash backbone/think/run_box.sh    # seeds 1 and 2
+THINK_JOBS=bplus:0 bash backbone/think/run_box.sh                    # then, only if SUMMARY.txt says "bplus - b (seed 0) ... : yes", bplus:1,bplus:2
+```
+PREREG: bplus runs on all seeds only if bplus - b >= 1.0 at seed 0; `summarize.py` prints that difference and the yes / no. Seeds 1 and 2 may
+run at the same time as seed 0 (PREREG amended 2026-10-24); the seed-0 futility rules are reported, and a stop applies only to seeds that
+have not started. Re-running the same line skips every job whose result file exists.
 
 Jobs are `ARM:SEED`, comma separated, run in the order given. Dependencies are automatic: `aplus`, `t`, `t1`, `tw` need
 `out/think/a_s{S}/adapter`, `bplus` needs `out/think/b_s{S}/adapter`; if it is missing, that stage-1 arm runs first in the same box (a
@@ -33,8 +41,8 @@ Stage-2 arms draw rows from `random.Random(seed + 1000)` (same order for all fiv
 ## Vast (seed-0 screen only, cap $2.50, RTX 3090/4090)
 ```
 python3 backbone/vast.py pack --out /tmp/think0 --label claude-think1-<branch> --hours 8 --env "THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0"
-python3 backbone/vast.py search --max-dph 0.5            # pick an offer
-python3 backbone/vast.py create --offer ID --args /tmp/think0/args.json --label claude-think1-<branch> --hours 8
+python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.5     # pick an offer (repeat with --gpu "RTX 4090")
+python3 backbone/vast.py create --offer ID --args /tmp/think0/args.json --label claude-think1-<branch>   # the hours are set at pack time
 python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.txt
 ```
 `backbone/run_box.sh` installs the dependencies, then hands over to `backbone/think/run_box.sh` when `THINK_JOBS` is set. Extra
@@ -42,14 +50,17 @@ python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.t
 (`adapter/`, `think_block.pt`) in `ckpt.tar.gz`.
 
 ## What comes out (`out/think/{arm}_s{S}/`)
-- `result_{arm}_s{S}.json`: `{arm, seed, model, steps_stage1, steps_stage2, k_slots, params_trainable, train: {loss_curve, seconds,
+- `result_{arm}_s{S}.json`: `{arm, seed, model, steps_stage1, steps_stage2, k_slots, params_trainable, adapter_sha (arms that save an
+  adapter), stage1_adapter_sha (arms that start from one), train: {loss_curve, seconds,
   gate_log, dev_log, step_losses, gate_check}, aborted, eval: {validation|dev: {TAG: {acc, n, hits, row_offset}}}, label_nums}`.
   `hits` is a string of 0/1 in data-file order, so every comparison is paired. by_depth / by_bank / by_qtype are not stored;
   `summarize.py` recomputes them from the hits and the data files.
 - Tags. a: `main` (dev, validation), `main_repeat` (validation, seed 0 only: same checkpoint, batches built shortest-first). b: `main`
   (3 loops) and `pass1` (1 loop). aplus, bplus: `main`. t: validation `L0 L1 L2 L4 L8 L12` (all 8,675 rows), `L16 L24` (first 2,000
-  rows), `swap8 mean8 rep1_8 gatesoff8`; dev `L0 L1 L8`. t1: validation `L0 L1 L8`, dev `L1`. tw: validation `L1`.
-- `adapter/` (a, b, aplus, bplus) or `think_block.pt` (t, t1, tw: board state dict).
+  rows), `swap8 mean8 rep1_8 gatesoff8 ref0` (`ref0`: the same batches decoded with no board read at all; `gatesoff8` must equal it row for row, while its gap to arm a's `main` is bf16 path noise, reported apart); dev `L0 L1 L8`. t1: validation `L0 L1 L8`, dev `L1`. tw: validation `L1`.
+- `adapter/` (a, b, aplus, bplus) or `think_block.pt` (t, t1, tw: board state dict). Every result records the sha256 of the adapter
+  weights it saved and of the stage-1 adapter it started from; `summarize.py` excludes (and says so) any dependent whose stage-1 hash is not
+  the one its stage-1 arm's result carries, e.g. after arm a was retrained following a crash.
 - `python3 backbone/think/summarize.py out/think --data out/data [--json]` prints the report and every PREREG mark; run_box.sh writes it
   to `out/think/SUMMARY.txt`.
 
@@ -57,7 +68,7 @@ python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.t
 ```
 python3 backbone/think/think1.py --arm {a,b,aplus,bplus,t,t1,tw} --seed S --data out/data --out out/think/ARM_sS
     [--model Qwen/Qwen3.5-0.8B] [--max-len 2048] [--bsz 16] [--micro-bsz 4] [--limit-eval N] [--eval-bsz 64] [--eval-tokens 32768]
-    [--a-adapter DIR] [--b-adapter DIR] [--no-cache] [--smoke]
+    [--a-adapter DIR] [--b-adapter DIR] [--no-cache] [--no-lap-ckpt] [--smoke]
 ```
 Default adapters are `<parent of --out>/a_s{S}/adapter` and `.../b_s{S}/adapter`, i.e. `out/think/a_s{S}/adapter` in a normal run.
 Extra flags for tests, not for the prereg run: `--steps N`, `--k N` (slots), `--gate-step N`, `--gate-enforce`, `--log-every N`.
@@ -66,26 +77,28 @@ Exit code 3 means the mechanics gate (or a NaN / divergence guard) aborted a boa
 
 Training dtype is bf16 on CUDA and fp32 on CPU; the board is always fp32; every arm uses `xent.fixed_cross_entropy` in fp32. Board
 runs freeze the backbone and the LoRA and clip the gradient to 1.0 separately for the gates (lr 3e-3), for e0_hat + eta (5e-4) and for
-the refiner (5e-4). Logs: a `[gate]` line every 10 steps (|tanh alpha|, cosine across questions and within a board, clamp fraction,
-per-lap step size) stored in `train.gate_log`; every 250 steps `train.dev_log` gets answer CE and greedy accuracy at L = 1 and 8, the
+the refiner (5e-4). Logs: a `[gate]` line every 10 steps (|tanh alpha|, cosine across questions and within a board, the same cosines of the
+board updates e_L - e_0, clamp fraction, per-lap step size) stored in `train.gate_log`; every 250 steps `train.dev_log` gets answer CE and greedy accuracy at L = 1 and 8, the
 swap lesion at 8, |tanh alpha| per layer and the refiner gradient norm, on the first 256 dev rows.
 
 ### Memory (t, t1, tw)
-Every lap keeps its backbone activations until the one backward at the end of the micro-batch, so memory grows with micro-batch size x
-(L_max + 1). Measured on the real 0.8B on CPU in fp32 with HF's non-fused linear-attention fallback (no `flash-linear-attention`): about
-0.65 GB per lap for 2 rows, so L_max = 12 with `--micro-bsz 2` ran out of 15 GB. GPU numbers are untested; with the fused kernels they
-should be far smaller. If a board run hits CUDA out-of-memory, rerun with `MICRO=2` (or 1): the loss normaliser is the whole step's
-answer-token count, so a smaller micro-batch gives the same gradient up to rounding. Install `flash-linear-attention` first.
+Every slot pass and every answer pass runs under `torch.utils.checkpoint` (non-reentrant) during training, so only the small slot K/V and
+the boards stay alive between laps and each pass is recomputed once in backward; the prompt cache is never written, so the recomputation
+is exact (test TK: same loss and gradients, about 5x fewer saved bytes on the tiny model). `--no-lap-ckpt` turns it off. Before this, every
+lap kept its activations until the one backward, about 0.65 GB per lap for 2 rows on the real 0.8B on CPU in fp32 (HF's non-fused
+linear-attention fallback), and L_max = 12 with `--micro-bsz 2` ran out of 15 GB. GPU numbers are untested. If a board run still hits CUDA
+out-of-memory, rerun with `MICRO=2` (or 1): the loss normaliser is the whole step's answer-token count, so a smaller micro-batch gives the
+same gradient up to rounding. Install `flash-linear-attention` first.
 
 ### Mechanics gate (t, t1, tw), exactly as coded
-At step 150, abort if any of: mean |tanh alpha| over the 48 gates < 0.02; mean cosine of the same slot across the questions of the
-16-row batch, final board (L = 8; L = 1 for t1 and tw), > 0.95; more than 90% of slots pinned at the clamp. At every step: a NaN loss or
-gradient aborts; after step 20, a last-20-step mean loss above 2x the first-20-step mean aborts.
-"Pinned at the clamp" is judged on `clamp5`: the share of slots whose RMS before the clamp exceeds 1.05 x rho, i.e. where the clamp
-removes at least 5% of the update. The plain "any excess" share is also logged (`clamp`), but it is already 0.75-0.94 at initialisation
-on the real model (slots start at about rho, so any update exceeds it), which would trip the gate before training does anything. This
-choice is not spelled out in PREREG.md; fixed here before any run. At initialisation the cross-question cosine on the real model is
-also about 0.993 (board.py probe), so the gate asks training to make the boards question-specific by step 150.
+Aborts (exit 3, result file with `"aborted"`, no evaluation) only on: mean |tanh alpha| over the 48 gates < 0.02 at step 150 (the gates
+never opened); a NaN loss or gradient at any step; after step 20, a last-20-step mean loss above 2x the first-20-step mean.
+Logged every 10 steps, never aborts (PREREG amended 2026-10-24 before any run): the cross-question cosine of the final boards and of their
+updates e_L - e_0 (`cos_across`, `cos_update_across`; within a board: `cos_within`, `cos_update_within`), and the share of slots at the rms
+clamp (`clamp`: any excess; `clamp5`: pre-clamp RMS above 1.05 x rho, where the clamp removes at least 5% of the update). On the real model
+every board starts from the same e_0 at the clamp, so the final-board cosine is about 0.99 and about 94% of slots sit at the clamp at step 0;
+for one refinement (t1, tw) the cosine cannot fall much below 0.97 whatever training does (saturated random-sign updates on the real e_0,
+16 rows: 0.990 at eta 0.10, 0.974 at 0.16, 0.961 at 0.20; `eta` can move only ~0.06 by step 150), so these could not be abort rules. The update cosine is the one that says whether boards are question-specific.
 In `--smoke` the gate is computed (at step 4) and logged but not enforced, unless `--gate-enforce`.
 
 ## Tests (CPU, no GPU, no network)
@@ -94,8 +107,8 @@ HF_HOME=<cache> HF_HUB_OFFLINE=1 python3 backbone/think/test_think1.py [--real] 
 python3 backbone/think/think1.py --smoke --data out/data --out /tmp/think-smoke   # all 7 arms end to end, then summarize
 ```
 `test_think1.py` runs everything: board tests T1-T7, T9, T10 (+ read-patch identity, parameter count, API, bf16 smoke) from
-`test_think1_board.py`, X1-X4 from `test_xent.py`, S1 from `test_summarize.py`, and T8 (same seed, identical 10-step stage-2 losses),
-TO (data order), TH (hits in file order; gates off = arm a), TG (mechanics gate, abort path), TR (run_box.sh with a stub python) and SM
+`test_think1_board.py` (TK: lap checkpointing equals plain, clamp gradient at a zero slot, penalty definition), X1-X4 from `test_xent.py`, S1 from `test_summarize.py`, and T8 (same seed, identical 10-step stage-2 losses),
+TO (data order), TH (hits in file order; gates off = arm a), TG (mechanics gate, abort path), TR (run_box.sh with a stub python, CUDA check) and SM
 (the smoke run). `--real` adds the real-0.8B checks. The smoke run uses a tiny random qwen3_5 (8 layers, 2 full-attention), a byte
 tokenizer, 20 rows of each split, 6 steps per stage, and writes to `OUT/smoke/{arm}_s{S}/`; about 1.5 minutes on 4 CPU cores. Its
 accuracies are 0: it checks wiring, not learning.

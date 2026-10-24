@@ -8,12 +8,17 @@
 # Idempotent: a job whose result file exists is skipped (a gate-aborted run also leaves a result: delete it to run again).
 # Results land in out/think/{arm}_s{S}/result_{arm}_s{S}.json; out/think/SUMMARY.txt is the PREREG report.
 # Env: THINK_JOBS (required)  BSZ=16 MICRO=4 MAXLEN=2048 MODEL=Qwen/Qwen3.5-0.8B  THINK_FLAGS='' (extra think1.py flags, '+'-separated)
-#      PYTHON=python3  OUT=out  TARBALL=1 (0 skips the out.tar.gz / ckpt.tar.gz step)
+#      PYTHON=python3  OUT=out  TARBALL=1 (0 skips the out.tar.gz / ckpt.tar.gz step)  ALLOW_CPU=1 (skip the CUDA check; CPU runs take days)
+# Everything printed here is also appended to out/think/run.log. Without a CUDA GPU the script stops (exit 2): PREREG wants one GPU type per seed.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 BSZ=${BSZ:-16}; MICRO=${MICRO:-4}; MAXLEN=${MAXLEN:-2048}; MODEL=${MODEL:-Qwen/Qwen3.5-0.8B}
 PYTHON=${PYTHON:-python3}; OUT=${OUT:-out}; mkdir -p "$OUT/think"
+exec > >(tee -a "$OUT/think/run.log") 2>&1
 [ -n "${THINK_JOBS:-}" ] || { echo "THINK_JOBS is empty"; exit 2; }
+if [ "${ALLOW_CPU:-0}" != 1 ]; then
+  $PYTHON -c "import torch,sys; sys.exit(0 if torch.cuda.is_available() else 1)" || { echo "!! no CUDA GPU visible to $PYTHON (ALLOW_CPU=1 runs on the CPU anyway: days, and not the same hardware as the other arms)"; exit 2; }
+fi
 echo "== think run_box $(date -u +%FT%TZ) jobs=$THINK_JOBS bsz=$BSZ micro=$MICRO maxlen=$MAXLEN model=$MODEL"
 DATA=$OUT/data
 [ -f "$DATA/DATA_REPORT.json" ] || $PYTHON backbone/build_data.py "$DATA" --workers "$(nproc)"

@@ -176,8 +176,9 @@ def test_tg_mechanics_gate():
 
 STUB = r"""#!/usr/bin/env bash
 script=$1; shift
-echo "$(basename $script) $*" >> "$LOG"
+echo "$(basename -- "$script") $*" >> "$LOG"
 case "$script" in
+  -c) [ -z "${NOCUDA:-}" ] || exit 1;;
   *think1.py)
     while [ $# -gt 0 ]; do case "$1" in --arm) arm=$2;; --seed) seed=$2;; --out) out=$2;; esac; shift; done
     case "$FAIL" in *"$arm"*) exit 1;; esac
@@ -203,11 +204,11 @@ def test_box_script():
         (tmp / "out" / "data").mkdir(parents=True)
         (tmp / "out" / "data" / "DATA_REPORT.json").write_text("{}")
 
-        def box(jobs, fail="", flags=""):
+        def box(jobs, fail="", flags="", rc=0, **extra):
             log.write_text("")
-            env = dict(os.environ, THINK_JOBS=jobs, PYTHON=str(stub), OUT=str(tmp / "out"), TARBALL="0", LOG=str(log), FAIL=fail, THINK_FLAGS=flags)
+            env = dict(os.environ, THINK_JOBS=jobs, PYTHON=str(stub), OUT=str(tmp / "out"), TARBALL="0", LOG=str(log), FAIL=fail, THINK_FLAGS=flags, **extra)
             r = subprocess.run(["bash", str(HERE / "run_box.sh")], env=env, capture_output=True, text=True)
-            assert r.returncode == 0, r.stdout + r.stderr
+            assert r.returncode == rc, r.stdout + r.stderr
             return [l.split() for l in log.read_text().splitlines()], r.stdout
 
         def runs(calls):
@@ -227,9 +228,15 @@ def test_box_script():
         assert runs(calls) == [("a", "5"), ("a", "6")] and "t seed 5 skipped" in out and "unknown arm zz" in out, (runs(calls), out)
         calls, _ = box("t1:7", flags="--limit-eval+10")
         assert [c for c in calls if c[0] == "think1.py" and "t1" in c][0][-2:] == ["--limit-eval", "10"]
+        # no CUDA: stop with exit 2 before any job runs; ALLOW_CPU=1 runs anyway
+        calls, out = box("t1:8", rc=2, NOCUDA="1")
+        assert runs(calls) == [] and "no CUDA" in out, (runs(calls), out)
+        calls, _ = box("a:9", NOCUDA="1", ALLOW_CPU="1")
+        assert runs(calls) == [("a", "9")]
+        assert "== think run_box" in (tmp / "out" / "think" / "run.log").read_text() and "no CUDA" in (tmp / "out" / "think" / "run.log").read_text(), "run.log"
         r = subprocess.run(["bash", "-n", str(HERE / "run_box.sh")], capture_output=True, text=True)
         assert r.returncode == 0, r.stderr
-    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed")
+    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed, CUDA check (exit 2 unless ALLOW_CPU=1), run.log")
 
 
 # ---------------------------------------------------------------- SM, TS

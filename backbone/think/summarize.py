@@ -528,13 +528,12 @@ def report(o, data_note=""):
     P(f"mean board     {f2(ls['mean_board']):>6}   costs {sg(ls['mean_drop'])}")
     P(f"repeat delta1  {f2(ls['repeat_delta1']):>6}   costs {sg(ls['rep_drop'])}{ci_txt(o['intervals']['S8_minus_rep'])}")
     ro = ls["gates_off_rows_differing_from_ref0"]
-    P(f"gates off      {f2(ls['gates_off']):>6}   rows unlike the board-free decode of the same batches: {'--' if ro is None else ro} (must be 0)")
+    P(f"gates off      {f2(ls['gates_off']):>6}   rows unlike the same batches without a board: {'--' if ro is None else ro} (must be 0)")
     if ls["gates_off_rows_differing_from_a"] is not None:
         gp = ls["gates_off_minus_a_points"]
-        P(f"               rows unlike arm a's main: {ls['gates_off_rows_differing_from_a']} over {ls['gates_off_seeds_checked']} seed(s), "
-          f"accuracy gap {sg(gp)} (bf16 path noise: arm a is decoded by another code path and other batches; 0 expected only in fp32)")
+        P(f"               rows unlike arm a's main: {ls['gates_off_rows_differing_from_a']} ({sg(gp)} points); another code path, so bf16 noise")
         if ls["gates_off_rows_differing_from_a"] > 0:
-            P(f"               NOTE: S(8) vs A_ref is path-confounded by up to {abs(gp):.2f} points; the same-path gain S(8) - gates off is {sg(ls['same_path_gain'])}")
+            P(f"               NOTE: S(8) vs A_ref is path-confounded (~{abs(gp):.2f} points); S(8) - gates off = {sg(ls['same_path_gain'])}")
     P(f"arm b: 3 loops {f2(ls['b_main'])}, 1 pass {f2(ls['b_pass1'])}")
     P("")
     P("== 4. PASS marks ==")
