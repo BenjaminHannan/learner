@@ -9,7 +9,7 @@
 # Results land in out/think/{arm}_s{S}/result_{arm}_s{S}.json; out/think/SUMMARY.txt is the PREREG report.
 # Env: THINK_JOBS (required)  BSZ=16 MICRO=4 MAXLEN=2048 MODEL=Qwen/Qwen3.5-0.8B  THINK_FLAGS='' (extra think1.py flags, '+'-separated)
 #      PARALLEL=1 (jobs share the one GPU: all listed stage-1 jobs at once, then all stage-2 jobs at once, at most MAXPAR=3 processes at a time;
-#      each job's output goes to out/think/{arm}_s{S}/run.log; unset = one job after another, as above)  MAXPAR=3
+#      each job's output goes to out/think/{arm}_s{S}/run.log; a job with no result afterwards is rerun alone once; use MAXPAR=2 on a 24 GB card until a real run records peak_gpu_mem_gb; unset = one job after another, as above)  MAXPAR=3
 #      PYTHON=python3  OUT=out  TARBALL=1 (0 skips the out.tar.gz / ckpt.tar.gz step)  ALLOW_CPU=1 (skip the CUDA check; CPU runs take days)
 # Everything printed here is also appended to out/think/run.log. Without a CUDA GPU the script stops (exit 2): PREREG wants one GPU type per seed.
 set -euo pipefail
@@ -49,9 +49,15 @@ par() {       # JOB...: run_job for each ARM:SEED in the background, never more 
     pids+=($!)
   done
   wait "${pids[@]}" || true
+  for job in "$@"; do   # a job that died (typically out of GPU memory with the others alive) gets one more try alone: costs time, not the seed
+    arm=${job%%:*}; s=${job#*:}; d="$OUT/think/${arm}_s${s}"
+    [ -f "$d/result_${arm}_s${s}.json" ] && continue
+    echo "-- retry $arm seed $s alone $(date -u +%T)"; run_job "$arm" "$s" >> "$d/run.log" 2>&1 || echo "!! $arm seed $s failed again"
+  done
 }
 if [ "${PARALLEL:-0}" = 1 ]; then
   MAXPAR=${MAXPAR:-3}; s1=(); s2=()
+  export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}   # less fragmentation: three evals at once are near 24 GB
   for job in ${THINK_JOBS//,/ }; do
     arm=${job%%:*}; s=${job#*:}
     case "$arm" in
@@ -68,7 +74,8 @@ if [ "${PARALLEL:-0}" = 1 ]; then
   for job in "${s2[@]:-}"; do
     [ -n "$job" ] || continue
     arm=${job%%:*}; s=${job#*:}; st=a; [ "$arm" = bplus ] && st=b
-    if [ -f "$OUT/think/${st}_s${s}/adapter/adapter_config.json" ]; then ok+=("$job"); else echo "!! $arm seed $s skipped: no $st adapter"; fi
+    # the adapter is saved before the stage-1 eval, so it exists even if that eval crashed: also need the stage-1 result, or a rerun retrains it under the dependents
+    if [ -f "$OUT/think/${st}_s${s}/adapter/adapter_config.json" ] && [ -f "$OUT/think/${st}_s${s}/result_${st}_s${s}.json" ]; then ok+=("$job"); else echo "!! $arm seed $s skipped: $st seed $s did not finish"; fi
   done
   echo "-- parallel: stage 2 (${ok[*]:-none}), maxpar $MAXPAR"
   [ ${#ok[@]} -eq 0 ] || par "${ok[@]}"

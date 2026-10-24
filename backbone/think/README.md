@@ -17,7 +17,7 @@ THINK_JOBS=tw:0 bash backbone/think/run_box.sh                       # diagnosti
 THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1,a:2,b:2,aplus:2,t:2,t1:2 bash backbone/think/run_box.sh    # seeds 1 and 2
 THINK_JOBS=bplus:0 bash backbone/think/run_box.sh                    # then, only if SUMMARY.txt says "bplus - b (seed 0) ... : yes", bplus:1,bplus:2
 ```
-Seed 2 on Ben's PC with the jobs at once (`MAXPAR=2` on the 16 GB card keeps two processes in memory; the default is 3):
+Seed 2 on Ben's PC with the jobs at once (`MAXPAR=2` on the 16 GB card keeps two processes in memory; the default is 3, which is near the limit of a 24 GB 3090 while three evals overlap: use `MAXPAR=2` there too until a real run records `peak_gpu_mem_gb` for t and tw):
 ```
 THINK_JOBS=a:2,b:2,aplus:2,t:2,t1:2 PARALLEL=1 MAXPAR=2 bash backbone/think/run_box.sh
 ```
@@ -44,13 +44,13 @@ Stage-2 arms draw rows from `random.Random(seed + 1000)` (same order for all fiv
 
 ## Vast (one RTX 3090 per seed, all of that seed's jobs at once)
 `PARALLEL=1` runs the jobs of one box at the same time on its one GPU: first every listed stage-1 job (`a`, `b`), then, once their adapters
-exist, every listed stage-2 job (`aplus`, `bplus`, `t`, `t1`, `tw`), never more than `MAXPAR` (default 3) processes at a time. Each job writes
+exist, every listed stage-2 job (`aplus`, `bplus`, `t`, `t1`, `tw`), never more than `MAXPAR` (default 3) processes at a time, with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` set. A stage-2 job starts only if its stage-1 job wrote its result (the adapter alone is saved before that job's eval), and a job with no result at the end of a stage (e.g. out of GPU memory) is run again alone, once. Each job writes
 `out/think/{arm}_s{S}/run.log`; everything is also in `out/think/run.log`. Without `PARALLEL` the jobs run one after another, as before. For seed N
-(N = 0, 1, 2; seed 0 also adds `bplus:0` and `tw:0`):
+(N = 0, 1; seed 2 is on Ben's PC). `bplus:0` and `tw:0` are not in seed 0's box: its 10 hours cover the core five (serial estimate 8.4 h) and the box is killed 10 minutes before the end, losing every unfinished job. Run them afterwards (lines above), after unpacking `ckpt.tar.gz` and `out.tar.gz` so `b_s0`'s adapter is reused:
 ```
 python3 backbone/vast.py pack --out /tmp/think-sN --slim --hours 10 --label claude-think1-compassionate-davinci-sN \
-    --env "THINK_JOBS=a:N,b:N,aplus:N,t:N,t1:N PARALLEL=1"          # seed 0: "THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0,bplus:0,tw:0 PARALLEL=1"
-python3 backbone/vast.py search --gpu "RTX 3090"                    # pick an offer ID
+    --env "THINK_JOBS=a:N,b:N,aplus:N,t:N,t1:N PARALLEL=1"          # the same line for seed 0 and 1
+python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.12      # pick an offer ID; PREREG caps both boxes at $2.50: 2 x 10 h x $0.125/h
 python3 backbone/vast.py create --offer ID --args /tmp/think-sN/args.json --label claude-think1-compassionate-davinci-sN --disk 60
 python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.txt
 ```
@@ -70,7 +70,7 @@ are not used.
   `hits` is a string of 0/1 in data-file order, so every comparison is paired. by_depth / by_bank / by_qtype are not stored;
   `summarize.py` recomputes them from the hits and the data files.
 - Arms a and aplus are decoded by the board code with no board read (`board.prefill` of prompt[:-1] + `board.decode`, `slot_kv=None`, the same
-  batching as `eval_board`), so S(8) and A_ref are measured by identical code; b and bplus keep `train.greedy` (they need the looped runner).
+  batches as `eval_board`: rows 0-1,999 and the rest sorted longest-first separately, no batch across row 2,000), so S(8) and A_ref are measured by identical code; b and bplus keep `train.greedy` (they need the looped runner).
 - Tags. a: `main` (dev, validation), `main_repeat` (validation, seed 0 only: same checkpoint, batches built shortest-first). b: `main`
   (3 loops) and `pass1` (1 loop). aplus, bplus: `main`. t: validation `L0 L1 L2 L4 L8 L12` (all 8,675 rows), `L16 L24` (first 2,000
   rows), `swap8 mean8 rep1_8 gatesoff8 ref0` (`ref0`: the same batches decoded with no board read at all; `gatesoff8` must equal it row for row, while its gap to arm a's `main` is bf16 path noise, reported apart); dev `L0 L1 L8`. t1: validation `L0 L1 L8`, dev `L1`. tw: validation `L1`.

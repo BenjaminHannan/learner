@@ -150,33 +150,38 @@ def entry(hits):
 def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False):
     """Greedy exact-match hits for arms a/b/aplus/bplus. Batches are built in descending length order, or ascending if reverse
     (different batch composition: used for the eval-noise rerun). Returns the entry with hits in file order.
-    board_path (arms a, aplus): decode with board.prefill of prompt[:-1] + board.decode with no board read, the code eval_board runs, so S(8) and
+    board_path (arms a, aplus): decode with board.prefill of prompt[:-1] + board.decode with no board read, the code eval_board runs on the same batches (same two segments), so S(8) and
     A_ref are measured by identical code; otherwise (b, bplus: they need the looped runner) T.greedy. --no-cache keeps T.greedy for the check."""
     board_path = board_path and not args.no_cache
     order = order or runner.order
     prompts = [enc.prompt(r)[0] for r in rows]
-    idx = sorted(range(len(rows)), key=lambda i: len(prompts[i]), reverse=not reverse)
-    hit, k, t0, nb = ["0"] * len(rows), 0, time.time(), 0
-    while k < len(idx):
-        if reverse:  # ascending: the longest row of a batch is its last one
-            j = k + 1
-            while j < len(idx) and j - k < args.eval_bsz and (j - k + 1) * len(prompts[idx[j]]) <= args.eval_tokens:
-                j += 1
-            chunk = idx[k:j]
-        else:
-            chunk = idx[k:k + max(1, min(args.eval_bsz, args.eval_tokens // len(prompts[idx[k]])))]
-        ps = [prompts[i] for i in chunk]
-        if board_path:
-            C, mask, p = B.prefill(runner, ps)
-            gen = B.decode(runner, None, C, mask, p, B.last_ids(ps, device), None, eos=enc.eos)
-        else:
-            gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order)
-        for i, g in zip(chunk, gen):
-            hit[i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
-        k += len(chunk)
-        nb += 1
-        if nb % 20 == 0:
-            print(f"[eval {name}] {k}/{len(idx)} {time.time() - t0:.0f}s", flush=True)
+    hit, t0, nb, done = ["0"] * len(rows), time.time(), 0, 0
+    h = min(HEAD, len(rows))  # board path: two separately sorted segments (rows < HEAD, rest) and no chunk across the boundary, exactly eval_board's batches
+    segs = (range(h), range(h, len(rows))) if board_path and not reverse else (range(len(rows)),)
+    for seg in segs:
+        idx = sorted(seg, key=lambda i: len(prompts[i]), reverse=not reverse)
+        k = 0
+        while k < len(idx):
+            if reverse:  # ascending: the longest row of a batch is its last one
+                j = k + 1
+                while j < len(idx) and j - k < args.eval_bsz and (j - k + 1) * len(prompts[idx[j]]) <= args.eval_tokens:
+                    j += 1
+                chunk = idx[k:j]
+            else:
+                chunk = idx[k:k + max(1, min(args.eval_bsz, args.eval_tokens // len(prompts[idx[k]])))]
+            ps = [prompts[i] for i in chunk]
+            if board_path:
+                C, mask, p = B.prefill(runner, ps)
+                gen = B.decode(runner, None, C, mask, p, B.last_ids(ps, device), None, eos=enc.eos)
+            else:
+                gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order)
+            for i, g in zip(chunk, gen):
+                hit[i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
+            k += len(chunk)
+            done += len(chunk)
+            nb += 1
+            if nb % 20 == 0:
+                print(f"[eval {name}] {done}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
     return entry(hit)
 
 
