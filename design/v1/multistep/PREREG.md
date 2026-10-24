@@ -81,3 +81,9 @@ school dreams are dealt by FOUND (shortest) length, 1-4 steps, 10,000 each (5 is
 Run with the same seeds against round 2's base (same code path, same seeds; base is re-run on the box for a same-box comparison).
 Marks: PASS if occam_deep Hard >= base + 10 AND >= 20%, Easy within 5, harm <= 2. Depth helps: occam_deep Hard >= occam5_strict Hard + 5.
 Proved wrong: occam_deep Hard <= base + 3. Mechanism: school loss < 2.0.
+
+## Reduced run on the Mac (2026-10-24, before any round-2/3 number was seen)
+The Vast budget was cut to ~$9 shared until Sunday, so both boxes were stopped. Neither had finished an arm: Occam generation of 40,000
+dreams took 96 min on the box, mostly rejection-sampling 5-step draws, which accept 0.14%. Fallback on Ben's Mac (CPU), one seed (0),
+arms base, occam5_strict and occam_deep, `--reduced` (school 8,000 dreams, nightly 300, drawn programs <= 4 steps), every arm alike.
+The same marks apply, read as one-seed evidence ("suggested", not "shown").

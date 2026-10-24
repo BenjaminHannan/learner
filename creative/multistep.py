@@ -30,6 +30,7 @@ OCCAM_SHARDS = 128                             # fixed (not the core count): the
 OCCAM_LOSS_MARK = 2.0                          # mechanism line: school loss after the school must fall below this
 REPORT_ONLY = ('oracle',)
 SIZES = dict(school_n=40000, nightly=1000, visits=2, lr=3e-4)
+REDUCED = dict(school_n=8000, nightly=300, max_steps=4)   # Mac fallback after the Vast budget cut (2026-10-24): smaller school, drawn programs <= 4 steps (5-step draws dominate generation time); disclosed in results.json
 SMOKE = dict(school_n=60, nightly=20, updates_cap=2, pool_limit=64, dev_limit=16, n1=8, n2=16, T=1.0)
 log = lambda *a: print(time.strftime('%H:%M:%S'), *a, flush=True)
 
@@ -38,7 +39,8 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
     """run_creative kwargs for an arm (PREREG table). sizes = SIZES or the smoke sizes."""
     from creative import sleep
     n, k = sizes['school_n'], sizes['nightly']
-    sch = dict(n=n, max_steps=5, strict=False, curriculum=False, visits=SIZES['visits'], lr=SIZES['lr'], cache=cache, workers=workers)
+    ms = sizes.get('max_steps', 5)
+    sch = dict(n=n, max_steps=ms, strict=False, curriculum=False, visits=SIZES['visits'], lr=SIZES['lr'], cache=cache, workers=workers)
     if arm == 'base':
         return {}
     if arm == 'dream2':
@@ -51,10 +53,10 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(school=dict(sch, curriculum=True), dream2=k, dream2_max_steps=5)
     if arm == 'occam_deep':      # round 3: school dealt by FOUND length 1-4 (10,000 each), strict; nightly dreams as occam5_strict (drawn-length dealt)
         oc = dict(sch, occam=True, strict=True, found_lengths=FOUND_LENGTHS, shards=OCCAM_SHARDS if sizes is SIZES else 8, **OCCAM_SIZES)
-        return dict(school=oc, dream2=k, dream2_max_steps=5, dream2_occam=True, dream2_strict=True)
+        return dict(school=oc, dream2=k, dream2_max_steps=ms, dream2_occam=True, dream2_strict=True)
     if arm in OCCAM_ARMS:
         oc = dict(sch, occam=True, strict=(arm == 'occam5_strict'), shards=OCCAM_SHARDS if sizes is SIZES else 8, **OCCAM_SIZES)
-        return dict(school=oc, dream2=k, dream2_max_steps=5, dream2_occam=True, **(dict(dream2_strict=True) if arm == 'occam5_strict' else {}))
+        return dict(school=oc, dream2=k, dream2_max_steps=ms, dream2_occam=True, **(dict(dream2_strict=True) if arm == 'occam5_strict' else {}))
     if arm == 'oracle':       # report only: pool reference programs, update count matched to school5's, no nightly dreams
         return dict(school=dict(oracle=True, updates=sleep.max_updates(n, 64, True, SIZES['visits']), lr=SIZES['lr'], visits=SIZES['visits']))
     raise KeyError(arm)
@@ -266,11 +268,12 @@ def main():
     ap.add_argument('--threads', type=int, default=2, help='OMP threads per arm subprocess')
     ap.add_argument('--cache-dir', default=None, help='dream cache (default OUT/s<seed>/dreams); keep it out of the exported out/ tree')
     ap.add_argument('--smoke', action='store_true')
+    ap.add_argument('--reduced', action='store_true', help='Mac fallback sizes (REDUCED); every arm alike')
     ap.add_argument('--worker', action='store_true'), ap.add_argument('--cfg'), ap.add_argument('--arm-dir')
     a = ap.parse_args()
     if a.worker:
         return worker(a)
-    sizes = {**SIZES, **(SMOKE if a.smoke else {})}
+    sizes = {**SIZES, **(REDUCED if a.reduced else {}), **(SMOKE if a.smoke else {})}
     kw = smoke_kwargs(sizes) if a.smoke else {}
     root = os.path.abspath(a.out)
     os.makedirs(root, exist_ok=True)
