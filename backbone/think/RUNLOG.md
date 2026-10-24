@@ -23,3 +23,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   not computable; FUTILE-STOP wording ignored the 2026-10-24 amendment and named no missing arms; G decided while
   bplus seeds 1-2 were owed; lap-table n read seed 0 only); no mark formula changed; tests S2 and FL added. New
   from_label.py rebuilds point-estimate results from the instance labels in case `cat` cannot copy files off the hosts.
+- 23:35Z: one of the other session's A100s ended (burn ~$0.66/h). 23:48Z: stopped s0 (57556502) by hand, as planned:
+  its stage 2 runs aplus and bplus first (MAXPAR=2), so t_s0 would start ~01:05Z and end ~05:00Z, which the credit
+  ($1.23) cannot reach without a top-up; stopping it leaves the credit to s1 (t_s1 est. ~01:45Z, t1_s1 ~02:15Z).
+  Vast shows cur_state stopped (billing stopped: burn fell to ~$0.54/h) but the host still reports running, and `cat`
+  is refused until it does. a_s0 and b_s0 are kept on its disk and in its label.
