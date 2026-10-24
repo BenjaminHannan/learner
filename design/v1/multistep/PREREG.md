@@ -149,3 +149,13 @@ Reading (suggested): practice on puzzles the wrong tries happen to solve does no
 Hard: comp4 14.8 vs nights4 16.9 (-2.1); affine 2.3 (nights4 0.0; mark 5); Easy 80.1; harm 1.2. **PROVED WRONG** (Hard <= nights4 + 1).
 sq_plus control 25.2 vs 28.1; double_add 17.0 vs 22.5. Caveat: the warm-up programs are long reference programs, so most composed
 records were 6-7 steps (seed 0: 406, 651, 770, 836 per night). Composition from short programs only is untested.
+
+# Round 8: a friendlier constant (pre-registered 2026-10-24, before the run)
+Source: the affine diagnosis. ~2.6 of affine's ~4 steps only build A and B from {1, 2, 10, 100}, and 100 is almost never needed by C2
+(B <= 30, A <= 9, outputs <= 999). One change: the constant set becomes {1, 2, 10, K}, replacing 100, so the slot count and the model's
+shapes stay the same. Constant slots are value-coded, so the new slot's embedding follows from its value. K is 3 or 5, picked BEFORE
+training by this rule: whichever gives the lower mean shortest-program length on the pool's affine questions (tie: 5).
+Arm `const_nights4` = nights4 with the new constant set, everything else equal, seeds 0 and 1. It is compared with round 4's nights4
+(16.9 Hard, affine 0.0), and base is re-run with the new set too (`const_base`).
+Marks: PASS if const_nights4 Hard >= nights4 + 4 AND affine >= 5%, Easy within 5 of base, harm <= 2.
+Proved wrong: affine <= 1% AND Hard <= nights4 + 1. Reported: shortest-length distribution per kind under each set, and the per-night curve.
