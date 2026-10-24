@@ -18,7 +18,7 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 22:37Z: credit $2.49. Two A100 boxes from another session (claude-sleepb11w/b11c-cqc4bi, $0.94/h) started at
   ~22:23Z; the account now burns ~$1.35/h, so credit ends ~00:30Z, before s1 (~02:00Z) and s0 (~03:30Z) finish.
   Asked Ben to top up or pause them; fallback: stop s0 shortly before credit ends so s1 runs longest, then pull results.
-- 23:38Z, before any stage-2 result: summarize.py audited against PREREG (2 independent reviewers, 1 skeptic per finding).
+- 23:14Z, before any stage-2 result: summarize.py audited against PREREG (2 independent reviewers, 1 skeptic per finding).
   6 confirmed report/verdict-wording defects fixed (futility "laps real but small" and "go on" printed while a rule was
   not computable; FUTILE-STOP wording ignored the 2026-10-24 amendment and named no missing arms; G decided while
   bplus seeds 1-2 were owed; lap-table n read seed 0 only); no mark formula changed; tests S2 and FL added. New
