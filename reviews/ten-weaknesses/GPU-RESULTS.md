@@ -19,3 +19,13 @@ Results and checkpoints (D-final.pt): /mnt/project-files/results/ten-weaknesses/
 Verdict: mark 1 passes, so the example norm is acceptable (harm 0 <= 0.5, gap 1.6 points <= 2). Mark 2 fails: G1 buys 1.5 points of retention, below the 2-point bar, so "G1 benefit" is proved wrong on this measure.
 G1 also costs about 4 points of first-try. One seed: 1 dev question = 0.39 points, and harm moves in 0.5-point steps, so the reading is suggested only.
 Results: /mnt/project-files/results/ten-weaknesses/g1/
+
+## #10 HALT seed 1 (BensPC RTX 5070 Ti, 2026-10-24 09:13-10:32Z)
+| arm | dev acc | val acc | val recall@4 | val loops | val halt rate |
+|---|---|---|---|---|---|
+| base | 70.84% | 42.03% | 0.563 | 2.83 | 0.953 |
+| halt_evidence | 75.18% | 42.46% | 0.535 | 3.56 | 0.894 |
+Two-seed reading: val diff -2.15 (s0) and +0.43 (s1), mean -0.86. Loops +0.71 and +0.73, dev +4.1 and +4.3.
+Mean passes the safety mark (>= -1.0) and the loops mark. The +2 success mark is not met, so the switch stays off.
+Seed 1 trained on a different GPU, so its absolute numbers are lower. The comparison within each seed is still fair.
+Files: Ben's Mac ~/learner-ops/v1-weights/ten-weaknesses/halt-seed1/.
