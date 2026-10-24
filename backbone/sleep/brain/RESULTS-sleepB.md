@@ -182,3 +182,30 @@ Plain reading (one seed):
 - So a faster chip, given the same hours, gives a better night, not just a shorter one (shown, one seed).
 - Caution: recall rests on 80 facts. An unpaired arm-to-arm gap has a noise of about 7 points, so +10.5 is about 1.5 noise widths. A second seed or a bigger fact set should confirm it.
 - Not yet split: whether the gain comes from more steps or from more varied dreams.
+
+## Addendum 4: rotating regions and twisted dreams (seed 1); guess + dopamine running; therapy queued on Ben's PC
+Boxes: 57555322 (New York) ran ab_ob_twist in 0.82 h. 57555316 (Japan) ran ab_ob_rot, then ab_ob_guess. Two earlier California boxes, 57552967 and 57552968, never got going and were destroyed at 0.36 h.
+
+| arm (seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control | 80 | 32 | 0 | 56 | 4 | 70 | 67 | 47 | 37 | 82 | 54 | 92.4 |
+| ab_ob_twist (twisted dreams) | 85 | 40 | 0 | 62.5 | 15 | 55 | 67 | 46 | 37 | 84 | 63 | **93.2** |
+| ab_ob_rot (a quarter of the layers each night) | 15 | 2 | 0 | **8.5** | 0 | 0 | 8 | 3 | 5 | 85 | 57 | 90.8 |
+
+With the diary:
+- twist: C4 100, C2 92, C1 72, two-hop 22, changed 85, routine 100.
+- rot: C4 100, C2 92, C1 82, two-hop 7, changed 95, routine 100.
+
+Verdicts:
+- ab_ob_twist:
+  - T1 PASS: ARC is 93.2 and diary is 84.
+  - T2 PASS: recall is 62.5, against a mark of 61. That is +6.5 over the control.
+  - The wrong-if does not fire.
+  - Under the rule written before the run, this stays suggested until an equal-count plain-paraphrase control is run, because the arm adds 2 texts per item. Changed-new fell from 70 to 55, which is 3 of 20 facts.
+- ab_ob_rot:
+  - R1 PASS: ARC is 90.8 and diary is 85.
+  - R2 FAIL: recall is 8.5, against a mark of 52.
+  - **The wrong-if fires** (recall < 46): training one quarter of the layers per night, with the trim applied to all layers every night, did not hold the facts.
+  - Suggested reasons, to be checked in the result JSON if it can be pulled:
+    - The morning gate may have reverted the later nights. Training a new quarter while the trim shrinks the older quarters could drop consolidated recall by more than 10 points, which would leave about one night's learning.
+    - Or the trim (x 0.85 each night) may erase a quarter's change before that quarter trains again. Quarter 3 trains only on night 4.
