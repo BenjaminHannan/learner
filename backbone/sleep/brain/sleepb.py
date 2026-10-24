@@ -17,6 +17,8 @@ Addendum 5 (PREREG-sleepB-addendum5.md), the night's work scales with the chip: 
 item (round(4 s) paraphrases and Q&A, and the generation length), the item cap (160 s), REM chains and gist dreams (30 s each). --budget-scale pins s;
 --night-budget-s B instead times a benchmark at the start of each night and uses s = clip(B / R, 0.25, 4) (R: seconds the reference night would take
 here); with neither, s = 1 and the night is exactly ab_ob's. ab_ob_b2 = ab_ob with s = 2.
+Addendum 6 (PREREG-sleepB-addendum6.md), the winners combined on Week-2: ab_ob_win = s = 2 + ab_ob_guess's priority rule + ab_ob_twist's scenes; ab_ob_winp = the same with
+2 more ORDINARY paraphrases (para2_prompt, same checks, dream_stats["twist_mode"] = "plain") in the scenes' place.
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
@@ -57,8 +59,13 @@ K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2")
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2")  # open-book rehearsal (Brain.qa_ex)
+WIN_ARMS = ("ab_ob_win", "ab_ob_winp")  # addendum 6: work scale 2 + guess priority + extra texts (win: twisted scenes, winp: ordinary paraphrases)
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS)  # open-book rehearsal (Brain.qa_ex)
+GUESS_ARMS = ("ab_ob_guess", *WIN_ARMS)  # first-token confidence and the dopamine priority
+TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the item's texts
+EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
+B2_ARMS = ("ab_ob_b2", *WIN_ARMS)  # work scale 2 unless --budget-scale says otherwise
 DELTA_ARMS = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
 TRAIN_DELTA_ARMS = ("ab_ob_full", "ab_ob_full_s", "ab_ob_local")  # delta_w trains, LoRA frozen (ab_ob_merge: LoRA trains, delta only changes by the fold)
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
@@ -231,6 +238,14 @@ def twist_prompt(L, ctx, it):  # ab_ob_twist (Hoel's overfitted brain): same fac
          f"Focus on the fact \"{it.subj} {it.rel} {it.obj}\". Write 2 short dream-like scenes (1-3 sentences each) in which this fact stays "
          f"true, but the setting and the wording are odd and surreal, the way a dream is. Each scene must name both \"{it.subj}\" and "
          f"\"{it.obj}\". Reply with one scene per line, numbered 1 and 2, and nothing else.")
+    return L.render("You are a careful assistant that studies facts.", u)
+
+
+def para2_prompt(L, ctx, it):  # ab_ob_winp: twist_prompt's control, 2 more ORDINARY paraphrases (same structure and output format)
+    u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+         f"Focus on the fact \"{it.subj} {it.rel} {it.obj}\". Write 2 short ordinary paraphrases (1-3 sentences each) in which this fact stays "
+         f"true, in plain everyday wording and a normal setting, each different from the other. Each paraphrase must name both \"{it.subj}\" and "
+         f"\"{it.obj}\". Reply with one paraphrase per line, numbered 1 and 2, and nothing else.")
     return L.render("You are a careful assistant that studies facts.", u)
 
 
@@ -1260,7 +1275,7 @@ class Brain:
         s.items, s.dropped, s.checked = {}, set(), set()
         s.rem_pool, s.rem_chains, s.rem_done, s.gist_done = [], [], Counter(), Counter()
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
-        if args.arm == "ab_ob_twist":
+        if args.arm in EXTRA_ARMS:
             s.examples["twist"] = []
         s.set_scale(1.0)
         s.conf, s.boosted = {}, set()  # ab_ob_guess: first-token confidence per probed item key (tonight); keys with rpe > 0.2 last night
@@ -1313,7 +1328,7 @@ class Brain:
         p = max(it.days, 1) * (1 + it.imp + it.cor) * (1 + it.surprise) * (2 if it.upd and it.gave_old else 1)
         if s.a.arm == "ab_ob_ther" and s.salient(it):
             p *= 2
-        elif s.a.arm == "ab_ob_guess":  # dopamine: better than predicted (right but unsure) -> up to 3x
+        elif s.a.arm in GUESS_ARMS:  # dopamine: better than predicted (right but unsure) -> up to 3x
             p *= 1 + 2 * max(0.0, it.rpe)
         return p
 
@@ -1511,7 +1526,7 @@ class Brain:
             st["qa_kept"] += len(g["q"]) + len(g["now"])
             st["now_kept"] += len(g["now"])
         st["items"] = len(need)
-        if a.arm == "ab_ob_twist":
+        if a.arm in EXTRA_ARMS:
             s.twist(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
         return dict(st)
 
@@ -1537,19 +1552,23 @@ class Brain:
     def twist(s, d, need, ctxs, st):
         """ab_ob_twist, after all of the night's normal dreaming: the BASE model writes 2 strange dream-like scenes per item (sampled under a fixed
         seed; the global torch RNG state is put back, so later sampling is as in ab_ob). A scene is kept if it names both entities, is not a test
-        leak, restates no older value of the fact (stale_hit), and the base model, shown only the scene, answers one of the item's kept dream questions (its probe if none). Kept scenes join it.para."""
+        leak, restates no older value of the fact (stale_hit), and the base model, shown only the scene, answers one of the item's kept dream questions (its probe if none). Kept scenes join it.para.
+        ab_ob_winp: the same step with para2_prompt (2 more ordinary paraphrases, same sampling seed, checks and stats keys; st["twist_mode"] = "plain")."""
         a = s.a
+        plain = a.arm not in TWIST_ARMS
+        if plain:
+            st["twist_mode"] = "plain"
         cur = [it for it in need if a.smoke or it.qa or it.probe]
         st["twist_skipped_no_check"] = len(need) - len(cur)
         with seeded_rng(a.seed * 100 + d + 41, s.L.device):
-            raw = s.gen([twist_prompt(s.L, ctxs[it.key], it) for it in cur], s.mn(200), sample=True)
+            raw = s.gen([(para2_prompt if plain else twist_prompt)(s.L, ctxs[it.key], it) for it in cur], s.mn(200), sample=True)
         s.raw["twist"] = raw[:2]
         cand = []  # (item, scene, check question, check answer)
         for it, txt in zip(cur, raw):
             ents, chk = [it.subj, it.obj], it.qa or ([it.probe] if it.probe else [])
             scenes = parse_scenes(txt)
             if a.smoke and not scenes:  # tiny random model emits noise: fabricate one scene so the path runs
-                scenes = [f"In a dream, {it.subj} {it.rel} {it.obj} while the sky was green."]
+                scenes = [f"As Sam's notes say, {it.subj} {it.rel} {it.obj}." if plain else f"In a dream, {it.subj} {it.rel} {it.obj} while the sky was green."]
             if not scenes:
                 st["twist_parse_fail"] += 1
             for j, x in enumerate(scenes):
@@ -1604,11 +1623,11 @@ class Brain:
                 it.streak = it.streak + 1 if ok else 0
                 it.consol = it.streak >= 2
                 it.gave_old = (not ok) and any(has_ans(u["old"], a) for u in it.upd)
-                if s.a.arm == "ab_ob_guess":
+                if s.a.arm in GUESS_ARMS:
                     it.rpe = float(ok) - s.conf[it.key]  # reward prediction error: outcome minus the model's own confidence
             else:
                 it.consol = False
-                if s.a.arm == "ab_ob_guess":
+                if s.a.arm in GUESS_ARMS:
                     it.rpe = 0.0
 
     def guess_rec(s, pre):
@@ -1831,7 +1850,7 @@ class Brain:
                 bench["budget_s"] = a.night_budget_s
             else:
                 s.set_scale(a.budget_scale)
-        track = a.arm in ADD4_ARMS and s.L.device.type == "cuda"  # peak GPU memory of the night and of its training phase (reads only; no RNG)
+        track = a.arm in (*ADD4_ARMS, *WIN_ARMS) and s.L.device.type == "cuda"  # peak GPU memory of the night and of its training phase (reads only; no RNG)
         pk = []
         if track:
             s.peak_gb(True)
@@ -1849,12 +1868,12 @@ class Brain:
         E = [it for it in list(s.items.values()) if s.elig(it)]
         rec["dream_stats"] = s.dream(d, E)
         lap("dream")
-        if a.arm == "ab_ob_twist":
+        if a.arm in EXTRA_ARMS:
             s.log(f"[night {d}] twist {({k: v for k, v in rec['dream_stats'].items() if k.startswith('twist')})}")
-        pre = s.probe(E, conf=a.arm == "ab_ob_guess")
+        pre = s.probe(E, conf=a.arm in GUESS_ARMS)
         s.morning(E, pre)
         lap("probe")
-        if a.arm == "ab_ob_guess":
+        if a.arm in GUESS_ARMS:
             rec["guess"] = s.guess_rec(pre)
             s.log(f"[night {d}] guess {rec['guess']}")
         cons = [it for it in E if it.consol]
@@ -2221,7 +2240,7 @@ def main():
         ap.error("--local-k-frac must be in (0, 1]")
     if args.tag_batches < 1:
         ap.error("--tag-batches must be at least 1")
-    if args.arm == "ab_ob_b2" and args.budget_scale is None:
+    if args.arm in B2_ARMS and args.budget_scale is None:
         args.budget_scale = 2.0  # ab_ob with twice the night's work, unless --budget-scale says otherwise
     if args.budget_scale is not None and not args.budget_scale > 0:
         ap.error("--budget-scale must be positive")
@@ -2279,7 +2298,7 @@ def main():
                 result["local_selftest"] = {**selftest_elem(), **selftest_local()} if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
                 log(f"[selftest] local plasticity: {result['local_selftest']}")
                 log(f"[local] K {args.local_k:,} plastic entries per night = {args.local_k / n_delta:.4%} of {n_delta:,} delta entries (LoRA params {lora_n:,}); {args.tag_batches} tagging batches; elementwise SHY")
-        if args.arm == "ab_ob_twist":
+        if args.arm in EXTRA_ARMS:
             result["twist_selftest"] = selftest_stale()
         if args.arm == "ab_ob_rot":
             result["rot_selftest"] = selftest_rot() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}

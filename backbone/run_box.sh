@@ -47,7 +47,7 @@ if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/
   for a in ${SLEEPB_ARMS//,/ }; do
     if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
     SCHED=""   # af and the ablations train the same number of steps per night as ab
-    SF=${SLEEPB_SCHEDULE:-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box
+    SF=${SLEEPB_SCHEDULE-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box; set but empty = no schedule (Week-2 arms use the code's own step formula)
     if [ "$a" != a0 ] && [ "$a" != ad ] && [ "$a" != ab ] && [ -f "$SF" ]; then SCHED="--schedule $SF"; fi
     echo "-- sleepb $a $(date -u +%T) ${SCHED}"
     python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} || echo "!! sleepb $a failed"
