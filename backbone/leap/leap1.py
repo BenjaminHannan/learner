@@ -10,6 +10,7 @@ import itertools
 import json
 import math
 import random
+import signal
 import sys
 import time
 from pathlib import Path
@@ -111,7 +112,7 @@ def feedback(src, prompt):
     fn = compile_prog(src)
     parts = []
     for a, b in exs:
-        got = run_prog(fn, a)
+        got = sys.modules["creative1"].run_prog(fn, a)
         parts.append(f"{a} -> {'error' if got is None else got} (want {b})")
     return "Your program gives " + "; ".join(parts) + ". Fix it. Reply with only the lambda."
 
@@ -323,6 +324,13 @@ def main():
     args = ap.parse_args()
     import creative1
     creative1.NO_BRANCH = not args.allow_branch
+    if not hasattr(signal, "setitimer"):  # Windows: no SIGALRM timer; programs are whitelisted (pow <= 6, no loops but str(x)), so run untimed
+        def _run_untimed(fn, v, limit=0.1):
+            try:
+                return creative1._to_int(fn(v))
+            except Exception:  # noqa: BLE001
+                return None
+        creative1.run_prog = _run_untimed
     if args.smoke:
         args.steps, args.bsz, args.replay_bsz, args.pool, args.replay, args.gen_bs = 6, 4, 2, 12, 6, 8
         args.n_self, args.n_leap, args.n_repair, args.max_new, args.eval_n, args.dev_n = 4, 6, 4, 16, 3, 2
