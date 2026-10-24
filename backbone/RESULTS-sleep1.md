@@ -18,3 +18,7 @@
 
 Plain reading: training on the raw sentences barely teaches the facts (8%). The sleep recipe of rehearsing many question forms,
 checking them against the source, and guarding against drift teaches them almost as well as having the notes open (89 vs 95).
+
+## Numerical check
+
+Softmax Cancellation (arXiv 2610.31642) checked 2026-10-24, PR #109: reachable but negligible; numbers unchanged. (Applies to sleep1.py; sleep1_mlx.py not checked.)
