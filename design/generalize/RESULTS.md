@@ -41,3 +41,12 @@ Box note: three seed-1/2 fword boxes went offline at ~27-29 min (different hosts
 | fword (aug) | 53.2 | +8.3 | 74.2 | -1.3 | borderline: +8 met, dev ok, but gain < 2N (9.0) |
 | **faug2** | **58.6** | **+13.8** | 75.0 | -0.5 | **PASS** (>= +8, dev >= -2, > 2N). Caveat: seed 0 dev alone fell 6.4 |
 fwordR1 (aug, seed 1) on probes: Pword 61.4 vs base1 45.1 (+16.3); wording drop P0-Pword 9.9 vs 28.0.
+
+## Comparison: pretrained reader (backbone thread, branch claude/project-thread-j59yy5; same probes, seed 101, 500 visits)
+| model | P0 | Pword | drop | validation |
+|---|---|---|---|---|
+| Qwen3.5-0.8B LoRA (418 steps, shards 0-39) | 82.4 | 76.3 | 6.2 | 67.8 |
+| Qwen3.5-2B LoRA | 84.0 | 78.4 | 5.6 | 69.8 |
+| v1 FULL | 82.7 | 50.6 | 32.1 | 45.6 |
+| D-only + aug (seed 1) | 71.2 | 61.4 | 9.9 | 53.9 |
+Suggested: pretraining removes most of the wording gap; Claude wordings recover part of it for the from-scratch model.
