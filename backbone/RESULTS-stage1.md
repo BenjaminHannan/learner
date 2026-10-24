@@ -62,3 +62,18 @@ Earlier run (same arm and steps): P0 82.42 and Pword 76.25. New names cost about
 Raw file: `results/probes2/result_a.json`.
 Arm B seed 2 (PC): dev 82.13, validation 67.45, P0 81.96, Pword 75.88; 1-loop lesion: validation 59.98 (-7.5).
 B validation over seeds 0/1/2: 67.57 / 66.33 / 67.45 (mean 67.12). A seed 2 is pending.
+Arm A seed 2 (PC): dev 80.20, validation 66.32, P0 81.73, Pword 76.18.
+
+### Three-seed summary (418 steps, Qwen3.5-0.8B)
+| | seed 0 | seed 1 | seed 2 | mean |
+|---|---|---|---|---|
+| A validation | 67.78 | 66.06 | 66.32 | 66.72 |
+| B validation | 67.57 | 66.33 | 67.45 | 67.12 |
+| B - A validation | -0.21 | +0.27 | +1.13 | +0.40 |
+| A dev | 81.30 | 80.53 | 80.20 | 80.68 |
+| B dev | 82.15 | 82.45 | 82.13 | 82.24 |
+| B - A dev | +0.85 | +1.92 | +1.93 | +1.57 |
+| B 1-loop lesion, validation | 59.88 | 58.42 | 59.98 | 59.43 (-7.7) |
+Reading: the borrowed-layer loop gives a small, consistent gain on dev (+1.6, all three seeds positive) and a tie on validation
+(+0.4, within seed spread). P3 (B >= A + 2) stays FAIL. The lesion (-7.7 every seed) shows the trained model relies on the loop,
+but the loop doesn't buy generalization at this size.
