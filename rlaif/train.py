@@ -5,8 +5,8 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftModel, get_peft_model
 from grader import Grader
-from baseline import advantages, baseline_adv
-from rollout import rollout, prompt_ids, hint_block, seq_terms
+from baseline import advantages, baseline_adv, pearson
+from rollout import rollout, predict_success, prompt_ids, hint_block, seq_terms
 
 TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 
@@ -45,17 +45,23 @@ def evaluate(a, tok, model, grader, dev):
     eps = []
     for i in range(0, len(tasks), a.gen_batch * 2):
         eps += rollout(model, tok, [(t, None) for t in tasks[i:i + a.gen_batch * 2]], greedy=True, gen_batch=a.gen_batch)
+    pred = predict_success(model, tok, tasks, a.gen_batch)[0] if a.eval_predict else None
     graded = grader.grade_many([(e.task, e.transcript) for e in eps]) if a.eval_grade else [(None, "")] * len(eps)
     rows = []
     for e, (s, cr) in zip(eps, graded):
         ch = e.checks()
         rows.append(dict(id=e.task["id"], scenario=e.task["scenario"], checks=ch, success=all(ch), sonnet=s, turns=e.turns, final=e.final[:300]))
     tag = os.path.basename(a.adapter.rstrip("/")) if a.adapter else "base"
+    if pred is not None:
+        for row, p in zip(rows, pred): row["pred"] = p
     with open(os.path.join(a.outdir, f"eval_{tag}.jsonl"), "w") as f:
         f.writelines(json.dumps(r) + "\n" for r in rows)
     summ = dict(adapter=a.adapter, n=len(rows), success_rate=sum(r["success"] for r in rows) / len(rows),
                 mean_check_frac=sum(sum(r["checks"]) / len(r["checks"]) for r in rows) / len(rows),
                 sonnet_mean=(sum(r["sonnet"] for r in rows) / len(rows)) if a.eval_grade else None, usd=grader.ledger.usd)
+    if pred is not None:
+        y = [float(r["success"]) for r in rows]
+        summ.update(pred_mean=sum(pred) / len(pred), pred_corr=pearson(pred, y), brier=sum((p - v) ** 2 for p, v in zip(pred, y)) / len(y))
     json.dump(summ, open(os.path.join(a.outdir, f"eval_{tag}.json"), "w"), indent=1)
     print(summ)
     return summ
@@ -81,13 +87,14 @@ def main(argv=None):
     ap.add_argument("--max-new", type=int, default=384)
     ap.add_argument("--max-total", type=int, default=2048)
     ap.add_argument("--eval-only", action="store_true")
+    ap.add_argument("--eval-predict", action="store_true")
     ap.add_argument("--adapter", default=None)
     ap.add_argument("--eval-grade", action="store_true")
     ap.add_argument("--n-eval", type=int, default=None)
     ap.add_argument("--fake-grader", action="store_true")
     ap.add_argument("--save-every", type=int, default=10)
     ap.add_argument("--reward", choices=["mix", "checks"], default="mix")  # checks: check fraction only, no grader calls
-    ap.add_argument("--baseline", choices=["group", "none", "value"], default="group")
+    ap.add_argument("--baseline", choices=["group", "none", "value", "self"], default="group")
     ap.add_argument("--v-init", type=float, default=0.5)
     ap.add_argument("--v-lr", type=float, default=0.1)
     a = ap.parse_args(argv)
@@ -108,16 +115,24 @@ def main(argv=None):
     for step in range(1, a.steps + 1):
         batch = order_rng.sample(tasks, a.tasks_per_step)
         calls0, ts = grader.n_calls, time.time()
+        pred, pf = None, 0
+        if a.baseline == "self":  # guessing brain: prediction tokens never enter the loss
+            pt, pf = predict_success(model, tok, batch, a.gen_batch)
+            pred = [p for p in pt for _ in range(G)]
         eps_s = rollout(model, tok, [(t, None) for t in batch for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
         gr_s = grader.grade_many([(e.task, e.transcript) for e in eps_s]) if a.reward == "mix" else [(0.0, "")] * len(eps_s)
         r_s, fr_s = reward(eps_s, gr_s) if a.reward == "mix" else ([e.check_frac() for e in eps_s],) * 2
         scen = [e.task["scenario"] for e in eps_s]
         for s_ in scen: V.setdefault(s_, a.v_init)
-        A_s, V = baseline_adv(r_s, scen, G, a.baseline, V, a.v_lr)
+        A_s, V = baseline_adv(r_s, scen, G, a.baseline, V, a.v_lr, pred)
         st = dict(step=step, reward=sum(r_s) / len(r_s), check_frac=sum(fr_s) / len(fr_s), success=sum(f == 1 for f in fr_s) / len(fr_s),
                   sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s))
         if a.baseline != "group":
             st.update(rpe_mean=sum(A_s) / len(A_s), rpe_abs=sum(map(abs, A_s)) / len(A_s), value=dict(V))
+        if pred is not None:
+            st.update(pred_mean=sum(pred) / len(pred), pred_fail=pf, pred_r=pearson(pred, r_s))
+            with open(os.path.join(a.outdir, "predictions.jsonl"), "a") as pf_:
+                pf_.writelines(json.dumps(dict(step=step, pred=p, r=x)) + "\n" for p, x in zip(pred, r_s))
         eps_t = []
         if jolt:
             cs = []

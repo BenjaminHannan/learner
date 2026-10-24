@@ -147,3 +147,11 @@ def test_baseline_adv():
     assert A == pytest.approx([0.5, -0.5, 0.3, 0.3])  # old V
     assert V["a"] == pytest.approx(0.5 + 0.1 * 0.5 + 0.1 * (0 - 0.55)) and V["b"] == pytest.approx(0.2 + 0.03 + 0.1 * (0.5 - 0.23))
     assert V0 == {"a": 0.5, "b": 0.2}
+
+
+def test_baseline_self_and_parse():
+    from baseline import baseline_adv, parse_pct, pearson
+    A, V = baseline_adv([1.0, 0.0, 0.5], ["a", "a", "b"], 1, "self", {}, 0.1, pred=[0.7, 0.2, 0.5])
+    assert A == pytest.approx([0.3, -0.2, 0.0]) and V == {}
+    assert parse_pct("70") == 0.7 and parse_pct("I think 85%") == 0.85 and parse_pct("150") == 1.0 and parse_pct("none") is None
+    assert pearson([1, 2, 3], [2, 4, 6]) == pytest.approx(1.0) and pearson([1, 1], [0, 1]) is None

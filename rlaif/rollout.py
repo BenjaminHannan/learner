@@ -1,5 +1,6 @@
 """Multi-turn sandbox rollouts with Qwen3 chat format, and token-level log-prob / KL helpers."""
 import json, re
+from baseline import parse_pct
 import torch
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
@@ -123,6 +124,35 @@ def rollout(model, tok, jobs, max_turns=6, max_new=384, max_total=2048, gen_batc
     if was_training:
         model.train()
     return eps
+
+
+ASK = "Before you start: how likely are you to complete this task fully and correctly? Reply with only a number from 0 to 100."
+
+
+@torch.no_grad()
+def predict_success(model, tok, tasks, gen_batch=16):
+    """Model's own greedy guess (0..1) that it will fully complete each task. Returns (list of p, n_failed); unparsable -> 0.5."""
+    dev = next(model.parameters()).device
+    eos = tok.convert_tokens_to_ids("<|im_end|>")
+    pad = tok.pad_token_id if tok.pad_token_id is not None else eos
+    ids = [tok.apply_chat_template(build_messages(t) + [{"role": "user", "content": ASK}], tools=TOOLS, add_generation_prompt=True,
+                                   enable_thinking=False, tokenize=True, return_dict=True)["input_ids"] for t in tasks]
+    was_training = model.training
+    model.eval()
+    ps, failed = [], 0
+    for i in range(0, len(ids), gen_batch):
+        b = ids[i:i + gen_batch]
+        L = max(map(len, b))
+        x = torch.tensor([[pad] * (L - len(s)) + s for s in b], device=dev)
+        am = torch.tensor([[0] * (L - len(s)) + [1] * len(s) for s in b], device=dev)
+        out = model.generate(input_ids=x, attention_mask=am, do_sample=False, max_new_tokens=6, pad_token_id=pad, eos_token_id=eos)
+        for g in out[:, L:].tolist():
+            p = parse_pct(tok.decode(g, skip_special_tokens=True))
+            failed += p is None
+            ps.append(0.5 if p is None else p)
+    if was_training:
+        model.train()
+    return ps, failed
 
 
 # ---- log-probs and KL (full vocab, chunked, checkpointed) ----
