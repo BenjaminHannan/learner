@@ -9,10 +9,15 @@ Two single changes from ab_ob_full (addendum 3): ab_ob_full_s (gentler step: lr 
 tagging: each night only K = (number of LoRA parameters) delta entries may change, the ones with the largest |grad| on tonight's own practice
 batches; elementwise SHY instead of the SVD one, since an SVD would make the sparse change dense).
 
+Addendum 4 (PREREG-sleepB-addendum4.md), one change each from ab_ob, all LoRA-only: ab_ob_rot (each night only one quarter of the layers' LoRA
+trains, quarter (night-1) % 4; SHY still trims all), ab_ob_twist (the base model also writes 2 strange dream-like scenes per item, kept if they pass
+the entity / leak / answerable checks, and they join the item's practice texts), ab_ob_ther (salient items: 2x replay priority and loss weight 0.5),
+ab_ob_guess (the pre-training probe also gives the first-token confidence c; a right answer with c < 1 multiplies the item's priority by 1 + 2(1 - c)).
+
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -47,8 +52,9 @@ from train import LORA_TARGETS, load_model  # noqa: E402
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")  # open-book rehearsal (Brain.qa_ex)
+ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS)  # open-book rehearsal (Brain.qa_ex)
 DELTA_ARMS = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
 TRAIN_DELTA_ARMS = ("ab_ob_full", "ab_ob_full_s", "ab_ob_local")  # delta_w trains, LoRA frozen (ab_ob_merge: LoRA trains, delta only changes by the fold)
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
@@ -214,6 +220,23 @@ def nrem_prompt(L, ctx, it):
          f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
          f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
     return L.render("You are a careful assistant that studies facts.", u)
+
+
+def twist_prompt(L, ctx, it):  # ab_ob_twist (Hoel's overfitted brain): same facts, strange dream-like settings
+    u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+         f"Focus on the fact \"{it.subj} {it.rel} {it.obj}\". Write 2 short dream-like scenes (1-3 sentences each) in which this fact stays "
+         f"true, but the setting and the wording are odd and surreal, the way a dream is. Each scene must name both \"{it.subj}\" and "
+         f"\"{it.obj}\". Reply with one scene per line, numbered 1 and 2, and nothing else.")
+    return L.render("You are a careful assistant that studies facts.", u)
+
+
+def parse_scenes(txt):  # numbered lines -> scene texts (at most 2)
+    out = []
+    for ln in txt.splitlines():
+        m = re.match(r"^[\s*#>-]*(?:scene\s*)?\d+\s*[.):*-]+\s*(.+)$", ln, re.I)
+        if m and m.group(1).strip(" *\"'"):
+            out.append(m.group(1).strip(" *\"'"))
+    return out[:2]
 
 
 def now_prompt(L, ctx, shared, new, old):
@@ -417,16 +440,17 @@ def groups(seqs, budget=None):  # consecutive micro-batches whose padded size st
     return out + ([cur] if cur else [])
 
 
-def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start) examples
+def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start[, weight]) examples
     ids, mask = L.pad_right([b[0] for b in mb])
     lm = torch.zeros_like(mask)
-    for r, (e, st) in enumerate(mb):
+    for r, (e, st, *_) in enumerate(mb):
         lm[r, st:len(e)] = 1
     return ids, mask, lm[:, 1:].bool()
 
 
 class Trainer:
-    """One night of LoRA training: fresh AdamW, cosine lr over `steps`, CE on the batch + KL guard on generic replay vs adapter-disabled base."""
+    """One night of LoRA training: fresh AdamW, cosine lr over `steps`, CE on the batch + KL guard on generic replay vs adapter-disabled base.
+    A batch entry is (ids, loss_start) or (ids, loss_start, weight); only a batch with some weight != 1 (or force_w) takes the weighted path."""
 
     def __init__(s, L, pm, args, replay, steps, seed):
         s.L, s.pm, s.a, s.replay = L, pm, args, replay
@@ -434,6 +458,7 @@ class Trainer:
         s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
+        s.force_w, s.wsteps, s.wex = False, 0, 0  # force_w: test hook; wsteps / wex: weighted-path steps and examples with weight != 1
 
     def masks(s, mb):
         return lm_masks(s.L, mb)
@@ -449,8 +474,9 @@ class Trainer:
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
         gb, gr = groups(batch), groups(rb)
         kl_v = 0.0
+        weighted = s.force_w or any(len(x) > 2 and x[2] != 1 for x in batch)
         s.opt.zero_grad(set_to_none=True)
-        if len(gb) == 1 and len(gr) <= 1:  # the stage-1 path (short closed-book examples), unchanged
+        if len(gb) == 1 and len(gr) <= 1 and not weighted:  # the stage-1 path (short closed-book examples), unchanged
             ids, mask, tm = s.masks(batch)
             ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
             loss = ce
@@ -464,16 +490,21 @@ class Trainer:
                 kl_v = float(kl.detach())
             loss.backward()
         else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
-            ntgt = sum(len(e) - max(st, 1) for e, st in batch)
+            ntgt = sum(len(e) - max(st, 1) for e, st, *_ in batch)
             ce_sum = 0.0
             for mb in gb:
                 ids, mask, tm = s.masks(mb)
-                part = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
+                lg = s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float()
+                if weighted:  # sum over examples of weight x (that example's target-token CE sum), / the batch's target count
+                    w = torch.tensor([x[2] if len(x) > 2 else 1.0 for x in mb], device=ids.device)[:, None].expand_as(tm)[tm]
+                    part = (F.cross_entropy(lg, ids[:, 1:][tm], reduction="none") * w).sum() / ntgt
+                else:
+                    part = F.cross_entropy(lg, ids[:, 1:][tm], reduction="sum") / ntgt
                 part.backward()
                 ce_sum += float(part.detach())
             ce = torch.tensor(ce_sum)
             if rb:
-                npos = sum(len(e) - max(st, 1) for e, st in rb)
+                npos = sum(len(e) - max(st, 1) for e, st, *_ in rb)
                 for mb in gr:
                     rids, rmask, rt = s.masks(mb)
                     cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
@@ -485,6 +516,9 @@ class Trainer:
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
+        if weighted:
+            s.wsteps += 1
+            s.wex += sum(1 for x in batch if len(x) > 2 and x[2] != 1)
         if s.i % 10 == 1 or s.i == s.n:
             s.curve.append({"step": s.i, "ce": float(ce.detach()), "kl": kl_v, "lr": lr})
         s.pm.eval()
@@ -493,6 +527,38 @@ class Trainer:
 # ------------------------------------------------------------------ synaptic downscaling (SHY)
 def lora_mods(pm):
     return [(n, m) for n, m in pm.named_modules() if hasattr(m, "lora_A") and "default" in m.lora_A]
+
+
+def layer_of(name):
+    return int(re.search(r"layers\.(\d+)\.", name).group(1))
+
+
+def rot_set(pm, q):
+    """ab_ob_rot: only the LoRA params of layers in quarter q (of 4 equal contiguous blocks, boundaries q * n // 4) keep requires_grad; q None:
+    all LoRA params trainable again. Returns {"quarter", "layers": [lo, hi) half-open, "trainable_params"}; n, the layer count, is read off the LoRA module names."""
+    mods = lora_mods(pm)
+    n = 1 + max(layer_of(nm) for nm, _ in mods)
+    lo, hi = (0, n) if q is None else (q * n // 4, (q + 1) * n // 4)
+    cnt = 0
+    for nm, m in mods:
+        on = lo <= layer_of(nm) < hi
+        for p in (m.lora_A["default"].weight, m.lora_B["default"].weight):
+            p.requires_grad_(on)
+            cnt += p.numel() * on
+    return {"quarter": q, "layers": [lo, hi], "trainable_params": cnt}
+
+
+@contextlib.contextmanager
+def seeded_rng(seed, device):  # sample under a fixed seed; the global torch RNG state (CPU, and CUDA when used) is put back afterwards
+    cpu = torch.get_rng_state()
+    cuda = torch.cuda.get_rng_state_all() if device.type == "cuda" else None
+    torch.manual_seed(seed)
+    try:
+        yield
+    finally:
+        torch.set_rng_state(cpu)
+        if cuda is not None:
+            torch.cuda.set_rng_state_all(cuda)
 
 
 @torch.no_grad()
@@ -703,7 +769,7 @@ def tag_grads(L, pm, batches):
     for batch in batches:
         if not batch:
             continue
-        ntgt, ce = sum(len(e) - max(st, 1) for e, st in batch), 0.0
+        ntgt, ce = sum(len(e) - max(st, 1) for e, st, *_ in batch), 0.0
         for mb in groups(batch):
             ids, mask, tm = lm_masks(L, mb)
             part = F.cross_entropy(pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
@@ -899,6 +965,139 @@ def selftest_local():
         torch.set_rng_state(rng_state)
 
 
+def selftest_weighted():
+    """ab_ob_ther's weighted loss on its own tiny CPU smoke model (the real model is never touched; global RNG and TOK_BUDGET restored). One
+    Trainer step at lr 0 leaves the clipped gradient on the params and its CE in tr.curve. (i) A batch whose weights are all 1 never takes the
+    weighted path and is bit-identical to the same batch without weights; forcing the weighted path with all weights 1 matches the unweighted
+    path to 1e-6 (CE, gradient relative to its largest entry), with and without the KL guard. (ii) All weights 0.5 give half the CE; mixed weights
+    give sum_e w_e x (example e's target CE sum) / (the batch's target count), and the gradient equals the same sum of one-example gradients
+    (clipped alike). (iii) The same with the batch split into micro-batches."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state, tb = torch.get_rng_state(), TOK_BUDGET
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        for _, m in lora_mods(pm):  # B is zero at init: make the LoRA matter, so the gradients reach A as well
+            m.lora_B["default"].weight.data.normal_(0, 0.05, generator=g)
+        params = [p for p in pm.parameters() if p.requires_grad]
+        saved = [p.detach().clone() for p in params]
+        base = [ex_text(L, f"Zelmir lives in Kelmira number {i}, near the old harbour.") if i % 2 else ex_qa(L, f"Where does Zelmir{'x' * i} live?", "Kelmira")
+                for i in range(6)]
+        replay = [ex_text(L, f"A generic sentence number {i} about the weather.") for i in range(3)]
+        ntgt = sum(len(e) - max(st, 1) for e, st in base)
+        mixed = [0.5, 1.0, 1.0, 0.5, 1.0, 0.5]
+
+        def run(batch, kl=False, force=False, budget=None):
+            globals()["TOK_BUDGET"] = budget or tb
+            tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=1.0 if kl else 0.0, replay_bsz=2), replay if kl else [], 1, 0)
+            tr.force_w = force
+            tr.step(batch)
+            with torch.no_grad():
+                for p, s0 in zip(params, saved):
+                    assert torch.equal(p, s0), "lr 0 moved a parameter"
+            return tr.curve[0], [p.grad.clone() for p in params], tr
+
+        def ref(w):  # one-example passes: CE sum x weight / ntgt, gradients summed, clipped as Trainer does
+            pm.zero_grad(set_to_none=True)
+            pm.train()
+            ce = 0.0
+            for (e, st), wi in zip(base, w):
+                ids, mask, tm = lm_masks(L, [(e, st)])
+                part = F.cross_entropy(pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") * wi / ntgt
+                part.backward()
+                ce += float(part.detach())
+            torch.nn.utils.clip_grad_norm_(params, 1.0)
+            pm.eval()
+            return ce, [p.grad.clone() for p in params]
+
+        rel = lambda xs, ys: max(float((x - y).abs().max()) for x, y in zip(xs, ys)) / max(float(y.abs().max()) for y in ys)  # noqa: E731
+        wb = lambda ws: [e + (w,) for e, w in zip(base, ws)]  # noqa: E731
+        for kl in (False, True):
+            c0, g0, t0 = run(base, kl)
+            c1, g1, t1 = run(wb([1.0] * 6), kl)
+            assert t1.wsteps == 0 and c1["ce"] == c0["ce"] and c1["kl"] == c0["kl"] and all(torch.equal(x, y) for x, y in zip(g0, g1)), "all-1 weights left the unweighted path"
+            c2, g2, t2 = run(wb([1.0] * 6), kl, force=True)
+            out[f"force_all1_kl{int(kl)}"] = {"ce_rel": abs(c2["ce"] - c0["ce"]) / c0["ce"], "kl_abs": abs(c2["kl"] - c0["kl"]), "grad_rel": rel(g2, g0)}
+            assert t2.wsteps == 1 and out[f"force_all1_kl{int(kl)}"]["ce_rel"] < 1e-6 and out[f"force_all1_kl{int(kl)}"]["grad_rel"] < 1e-6 and abs(c2["kl"] - c0["kl"]) < 1e-6, out
+        half, _, th = run(wb([0.5] * 6))
+        out["half_ce_ratio"] = half["ce"] / c0["ce"]
+        assert th.wsteps == 1 and th.wex == 6 and abs(out["half_ce_ratio"] - 0.5) < 1e-6, out
+        c_ref, g_ref = ref(mixed)
+        for name, budget in (("mixed", None), ("mixed_split", 2 * max(len(e) for e, _ in base))):
+            if budget:
+                assert len(groups(base, budget)) > 1, "the split check needs several micro-batches"
+            c3, g3, t3 = run(wb(mixed), budget=budget)
+            out[name] = {"ce_vs_reference": abs(c3["ce"] - c_ref) / c_ref, "grad_vs_reference_rel": rel(g3, g_ref), "micro_batches": len(groups(base, budget or tb))}
+            assert t3.wsteps == 1 and t3.wex == 3 and out[name]["ce_vs_reference"] < 1e-5 and out[name]["grad_vs_reference_rel"] < 1e-5, out
+        c_all1, _ = ref([1.0] * 6)
+        assert abs(c_all1 - c0["ce"]) < 1e-5 * c_all1, (c_all1, c0["ce"])  # the reference at weight 1 is the plain CE
+        out["mixed_over_unweighted_ce"] = c_ref / c_all1  # < 1: three of six examples count half
+        assert out["mixed_over_unweighted_ce"] < 1
+        return out
+    finally:
+        globals()["TOK_BUDGET"] = tb
+        torch.set_rng_state(rng_state)
+
+
+def selftest_rot():
+    """ab_ob_rot machinery on its own tiny CPU smoke model (8 layers; the real model is never touched; global RNG restored): (i) quarter q trains
+    exactly layers [q*n//4, (q+1)*n//4) and the four quarters partition the LoRA params; (ii) a Trainer built after rot_set sees only them and two
+    steps move only them; (iii) a snapshot taken before the freeze, then a training step and SHY (which trims EVERY module) and Brain.restore put
+    every LoRA param back (a snapshot taken after the freeze would miss the rest); (iv) rot_set(pm, None) makes all trainable again."""
+    from argparse import Namespace
+    from types import SimpleNamespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state = torch.get_rng_state()
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        for _, m in lora_mods(pm):
+            m.lora_B["default"].weight.data.normal_(0, 0.05, generator=g)
+        ps = [(layer_of(nm), p) for nm, m in lora_mods(pm) for p in (m.lora_A["default"].weight, m.lora_B["default"].weight)]
+        n = 1 + max(l for l, _ in ps)
+        orig = [p.detach().clone() for _, p in ps]
+        brain = SimpleNamespace(pm=pm)
+        snap = Brain.snapshot(brain)  # all LoRA params are trainable here
+        assert len(snap) == len(ps)
+        batch = [ex_text(L, f"Zelmir lives in Kelmira number {i}, near the old harbour.") for i in range(4)]
+        tot = 0
+        for q in range(4):
+            lo, hi = q * n // 4, (q + 1) * n // 4
+            r = rot_set(pm, q)
+            assert r == {"quarter": q, "layers": [lo, hi], "trainable_params": r["trainable_params"]} and r["trainable_params"] > 0, r
+            assert all(p.requires_grad == (lo <= l < hi) for l, p in ps), q
+            assert r["trainable_params"] == sum(p.numel() for l, p in ps if lo <= l < hi)
+            tot += r["trainable_params"]
+            before = [p.detach().clone() for _, p in ps]
+            tr = Trainer(L, pm, Namespace(lr=1e-2, kl_weight=0.0, replay_bsz=2), [], 2, 0)
+            assert sum(p.numel() for p in tr.params) == r["trainable_params"]
+            tr.step(batch)
+            tr.step(batch)
+            moved = [not torch.equal(p.detach(), b) for (_, p), b in zip(ps, before)]
+            assert not any(mv for (l, _), mv in zip(ps, moved) if not lo <= l < hi) and any(mv for (l, _), mv in zip(ps, moved) if lo <= l < hi), q
+            if q == 3:
+                out["snapshot_after_freeze_params"] = len(Brain.snapshot(brain))  # vs len(ps): why the snapshot comes before the freeze
+                assert out["snapshot_after_freeze_params"] < len(ps)
+        assert tot == sum(p.numel() for _, p in ps)
+        shy_apply(pm, 0.85, 0.05, g)
+        assert any(not torch.equal(p.detach(), o) for (_, p), o in zip(ps, orig))
+        Brain.restore(brain, snap)
+        assert all(torch.equal(p.detach(), o) for (_, p), o in zip(ps, orig)), "restore missed a LoRA param"
+        rot_set(pm, None)
+        assert all(p.requires_grad for _, p in ps)
+        out.update({"layers": n, "quarters": [[q * n // 4, (q + 1) * n // 4] for q in range(4)], "lora_params": tot, "lora_tensors": len(ps)})
+        return out
+    finally:
+        torch.set_rng_state(rng_state)
+
+
 # ------------------------------------------------------------------ the brain-like sleeper (arm ab and ablations)
 @dataclass
 class Item:
@@ -921,6 +1120,7 @@ class Item:
     dirty: bool = False
     streak: int = 0
     surprise: int = 1
+    rpe: float = 0.0  # ab_ob_guess: (1 if the probe was right else 0) - the model's first-token confidence
     consol: bool = False
     gave_old: bool = False
     fails: int = 0
@@ -942,6 +1142,9 @@ class Brain:
         s.items, s.dropped, s.checked = {}, set(), set()
         s.rem_pool, s.rem_chains, s.rem_done, s.gist_done = [], [], Counter(), Counter()
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
+        if args.arm == "ab_ob_twist":
+            s.examples["twist"] = []
+        s.conf, s.boosted = {}, set()  # ab_ob_guess: first-token confidence per probed item key (tonight); keys with rpe > 0.2 last night
         s.rng = random.Random(args.seed + 17)
         s.ob_rng = random.Random(args.seed + 29)  # OB_ARMS only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
         s.day, s.night_qs = 0, []
@@ -975,10 +1178,18 @@ class Brain:
         # an update re-opens an existing memory (reconsolidation): the topic has already come up on 2+ days (old + new value)
         return s.a.arm == "ab_all" or it.days >= 2 or it.imp or it.cor or bool(it.upd)
 
+    def salient(s, it):  # ab_ob_ther: flagged important, corrected, or replaced an older value
+        return it.imp or it.cor or bool(it.upd)
+
     def prio(s, it):
         if s.a.arm == "ab_flatprio":
             return 1.0
-        return max(it.days, 1) * (1 + it.imp + it.cor) * (1 + it.surprise) * (2 if it.upd and it.gave_old else 1)
+        p = max(it.days, 1) * (1 + it.imp + it.cor) * (1 + it.surprise) * (2 if it.upd and it.gave_old else 1)
+        if s.a.arm == "ab_ob_ther" and s.salient(it):
+            p *= 2
+        elif s.a.arm == "ab_ob_guess":  # dopamine: better than predicted (right but unsure) -> up to 3x
+            p *= 1 + 2 * max(0.0, it.rpe)
+        return p
 
     # ---- 1. tagging
     def tag(s, d):
@@ -1174,12 +1385,62 @@ class Brain:
             st["qa_kept"] += len(g["q"]) + len(g["now"])
             st["now_kept"] += len(g["now"])
         st["items"] = len(need)
+        if a.arm == "ab_ob_twist":
+            s.twist(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
         return dict(st)
 
+    def twist(s, d, need, ctxs, st):
+        """ab_ob_twist, after all of the night's normal dreaming: the BASE model writes 2 strange dream-like scenes per item (sampled under a fixed
+        seed; the global torch RNG state is put back, so later sampling is as in ab_ob). A scene is kept if it names both entities, is not a test
+        leak, and the base model, shown only the scene, answers one of the item's kept dream questions (its probe if none). Kept scenes join it.para."""
+        a = s.a
+        cur = [it for it in need if a.smoke or it.qa or it.probe]
+        st["twist_skipped_no_check"] = len(need) - len(cur)
+        with seeded_rng(a.seed * 100 + d + 41, s.L.device):
+            raw = s.gen([twist_prompt(s.L, ctxs[it.key], it) for it in cur], s.mn(200), sample=True)
+        s.raw["twist"] = raw[:2]
+        cand = []  # (item, scene, check question, check answer)
+        for it, txt in zip(cur, raw):
+            ents, chk = [it.subj, it.obj], it.qa or ([it.probe] if it.probe else [])
+            scenes = parse_scenes(txt)
+            if a.smoke and not scenes:  # tiny random model emits noise: fabricate one scene so the path runs
+                scenes = [f"In a dream, {it.subj} {it.rel} {it.obj} while the sky was green."]
+            if not scenes:
+                st["twist_parse_fail"] += 1
+            for j, x in enumerate(scenes):
+                st["twist_gen"] += 1
+                if s.leaky(x):
+                    st["twist_dropped_test_leak"] += 1
+                elif not all(e.lower() in x.lower() for e in ents):
+                    st["twist_dropped_missing_entities"] += 1
+                else:
+                    cand.append((it, x, *(chk[j % len(chk)] if chk else ("", ""))))
+        ver = s.gen([ctx_prompt(s.L, x, q) for _, x, q, _ in cand], 20)
+        seen = set()
+        for (it, x, q, ans), v in zip(cand, ver):
+            keep = False
+            if not has_ans(ans, v) and not a.smoke:
+                st["twist_dropped_unverified"] += 1
+            elif (it.key, norm(x)) in seen or any(norm(x) == norm(p) for p in it.para):
+                st["twist_dropped_dup"] += 1
+            else:
+                seen.add((it.key, norm(x)))
+                it.para = [*it.para, x]  # a new list: the night's logged dream examples share the old one
+                st["twist_kept"] += 1
+                keep = True
+            if len(s.examples["twist"]) < 10:
+                s.examples["twist"].append({"night": d, "item": it.fact, "scene": x, "check_q": q, "check_a": ans, "verifier": v, "kept": keep})
+
     # ---- 5. morning probes (weights only, current adapter)
-    def probe(s, E):
+    def probe(s, E, conf=False):
         its = [it for it in E if it.probe]
-        ans = s.gen([plain_prompt(s.L, it.probe[0]) for it in its], 20, base=False)
+        prompts = [plain_prompt(s.L, it.probe[0]) for it in its]
+        if conf:  # ab_ob_guess: the same greedy answers (current adapter) plus the first answer token's probability, kept in s.conf
+            s.pm.eval()
+            ans, pf = generate_p(s.L, s.pm, prompts, 20, s.a.gen_bs)
+            s.conf = {it.key: p for it, p in zip(its, pf)}
+        else:
+            ans = s.gen(prompts, 20, base=False)
         out = {}
         for it, a in zip(its, ans):
             ok = has_ans(it.probe[1], a)
@@ -1196,8 +1457,20 @@ class Brain:
                 it.streak = it.streak + 1 if ok else 0
                 it.consol = it.streak >= 2
                 it.gave_old = (not ok) and any(has_ans(u["old"], a) for u in it.upd)
+                if s.a.arm == "ab_ob_guess":
+                    it.rpe = float(ok) - s.conf[it.key]  # reward prediction error: outcome minus the model's own confidence
             else:
                 it.consol = False
+                if s.a.arm == "ab_ob_guess":
+                    it.rpe = 0.0
+
+    def guess_rec(s, pre):
+        """ab_ob_guess: tonight's guesses (pre-probe, before training) and the recall, in this pre-probe, of the items boosted last night (rpe > 0.2)."""
+        rpe = {k: float(pre[k][0]) - s.conf[k] for k in pre}
+        out = {"probed": len(pre), "share_rpe_gt_0.2": acc(r > 0.2 for r in rpe.values()), "mean_conf": mean(s.conf[k] for k in pre), "mean_rpe": mean(rpe.values()),
+               "prev_boosted_n": sum(1 for k in s.boosted if k in pre), "prev_boosted_recall": acc(pre[k][0] for k in s.boosted if k in pre)}
+        s.boosted = {k for k, r in rpe.items() if r > 0.2}
+        return out
 
     # ---- batches
     def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
@@ -1210,9 +1483,12 @@ class Brain:
                 return ex_qa_ob(s.L, s.diary, q, a, s.day)
         return ex_qa(s.L, q, a)
 
+    def wt(s, ex, its):  # ab_ob_ther: the practice example of a salient item (a REM chain: either of its two) gets loss weight 0.5
+        return ex + (0.5,) if s.a.arm == "ab_ob_ther" and any(s.salient(i) for i in its) else ex
+
     def dream_ex(s, it):
         o = s.rng.choice(it.para + it.qa)
-        return ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1])
+        return s.wt(ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1]), [it])
 
     def klctx(s, d):
         """ab_klctx: up to 100 diary-format prompts (notes of days <= d) from tonight's kept dreamed questions, each with the BASE model's
@@ -1355,6 +1631,13 @@ class Brain:
             outside += int((ch & ~bl.delta_mask).sum())
         return {"changed_in_mask": inside, "changed_outside_mask": outside, "delta_nnz_pre_shy": delta_nnz(s.pm)}
 
+    @staticmethod
+    def peak_gb(reset=False):  # addendum-4 arms on CUDA: peak allocated GB since the last reset
+        v = torch.cuda.max_memory_allocated() / 1e9
+        if reset:
+            torch.cuda.reset_peak_memory_stats()
+        return v
+
     # ---- 10. gate helpers
     def snapshot(s):  # trainable params, plus every delta_w (a frozen buffer in ab_ob_merge) so a reverted night restores the deltas too
         return {n: p.detach().cpu().clone() for n, p in s.pm.named_parameters() if p.requires_grad or n.endswith("delta_w")}
@@ -1392,6 +1675,10 @@ class Brain:
         a, t0, rec = s.a, time.time(), {"night": d}
         s.raw, ph, tl = {}, {}, [time.time()]
         s.day = d
+        track = a.arm in ADD4_ARMS and s.L.device.type == "cuda"  # peak GPU memory of the night and of its training phase (reads only; no RNG)
+        pk = []
+        if track:
+            s.peak_gb(True)
 
         def lap(name):
             ph[name] = ph.get(name, 0) + time.time() - tl[0]
@@ -1404,9 +1691,14 @@ class Brain:
         E = [it for it in list(s.items.values()) if s.elig(it)]
         rec["dream_stats"] = s.dream(d, E)
         lap("dream")
-        pre = s.probe(E)
+        if a.arm == "ab_ob_twist":
+            s.log(f"[night {d}] twist {({k: v for k, v in rec['dream_stats'].items() if k.startswith('twist')})}")
+        pre = s.probe(E, conf=a.arm == "ab_ob_guess")
         s.morning(E, pre)
         lap("probe")
+        if a.arm == "ab_ob_guess":
+            rec["guess"] = s.guess_rec(pre)
+            s.log(f"[night {d}] guess {rec['guess']}")
         cons = [it for it in E if it.consol]
         n_act = sum(1 for it in E if not it.consol)
         steps = sched[d - 1] if sched and d <= len(sched) else min(300, 40 + 4 * n_act)
@@ -1430,7 +1722,12 @@ class Brain:
             if rec["tag"]:
                 lap("synaptic_tag")
                 s.log(f"[night {d}] tag: kept {rec['tag']['kept']:,} of k {rec['tag']['k']:,} (thr {rec['tag']['thr']:.3g}, ce {rec['tag']['ce']:.3f}) layers {rec['tag']['top_layers']} types {rec['tag']['by_type']}")
+        if a.arm == "ab_ob_rot":  # after the snapshot (it holds every LoRA param): tonight only quarter (d - 1) % 4 trains
+            rec["rot"] = rot_set(s.pm, (d - 1) % 4)
+            s.log(f"[night {d}] rot: quarter {rec['rot']['quarter']} layers {rec['rot']['layers']} trainable {rec['rot']['trainable_params']:,}")
         tr = Trainer(s.L, s.pm, a, kl_pool, steps, a.seed * 100 + d)
+        if track:
+            pk.append(s.peak_gb(True))  # the night so far; the peak is then reset for the training phase alone (REM generation included)
         cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
         if not (act or con):
@@ -1449,11 +1746,17 @@ class Brain:
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
                     for _ in range(c - n_nrem):
                         nr = round(0.7 * a.bsz) if live else 0
-                        tr.step([s.qa_ex(x["q"], x["a"]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
+                        tr.step([s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
                     rem_n, done = rem_n + (c - n_nrem), done + (c - n_nrem)
                     s.cov["rem_steps"] += c - n_nrem
         lap("train")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
+        if a.arm == "ab_ob_ther":
+            rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
+                           "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
+            s.log(f"[night {d}] ther {rec['ther']}")
+        if track:
+            rec["peak_mem_train_gb"] = s.peak_gb(True)
         if a.arm == "ab_ob_local" and rec["tag"]:
             mc = s.mask_check(snap)
             rec["tag"].update(mc)
@@ -1502,6 +1805,10 @@ class Brain:
             rec["delta_fro_final"] = delta_fro(s.pm)  # after the gate: a reverted night is back at the previous night's deltas
             if a.arm == "ab_ob_local":
                 rec["delta_nnz_final"] = delta_nnz(s.pm)
+        if a.arm == "ab_ob_rot":
+            rot_set(s.pm, None)  # every LoRA param trainable again (snapshot / restore, SHY and the next night's snapshot as in ab_ob)
+        if track:
+            rec["peak_mem_gb"] = max(*pk, rec["peak_mem_train_gb"], s.peak_gb())
         rec["rem_pool"] = len(s.rem_pool)
         lap("gate")
         rec["phase_seconds"], rec["raw_samples"] = {k: round(v, 1) for k, v in ph.items()}, s.raw
@@ -1689,7 +1996,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta and local-plasticity unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss and rotation unit checks and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
@@ -1720,6 +2027,8 @@ def main():
         print(json.dumps(selftest_shy()))
         print(json.dumps({"delta": selftest_delta()}))
         print(json.dumps({"local": {**selftest_elem(), **selftest_local()}}))
+        print(json.dumps({"weighted": selftest_weighted()}))
+        print(json.dumps({"rot": selftest_rot()}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -1795,6 +2104,12 @@ def main():
                 result["local_selftest"] = {**selftest_elem(), **selftest_local()} if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
                 log(f"[selftest] local plasticity: {result['local_selftest']}")
                 log(f"[local] K {args.local_k:,} plastic entries per night = {args.local_k / n_delta:.4%} of {n_delta:,} delta entries (LoRA params {lora_n:,}); {args.tag_batches} tagging batches; elementwise SHY")
+        if args.arm == "ab_ob_rot":
+            result["rot_selftest"] = selftest_rot() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
+            log(f"[selftest] rotating regions: {result['rot_selftest']}")
+        if args.arm == "ab_ob_ther":
+            result["ther_selftest"] = selftest_weighted() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
+            log(f"[selftest] weighted loss: {result['ther_selftest']}")
         result["trainable_params"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
         log(f"[lora] trainable {result['trainable_params']:,}")
         model = pm
