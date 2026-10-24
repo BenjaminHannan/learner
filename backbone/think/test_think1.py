@@ -190,8 +190,10 @@ case "$script" in
     mkdir -p "$out"
     case "$arm" in aplus|t|t1|tw) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
                    bplus) [ -f "$out/../b_s$seed/adapter/adapter_config.json" ] || exit 4;; esac
+    if [ -n "${PARDIR:-}" ]; then touch "$PARDIR/run.$$"; ls "$PARDIR" | grep -c '^run\.' >> "$PARDIR/counts"; sleep 0.4; fi
     mkdir -p "$out"; echo '{}' > "$out/result_${arm}_s${seed}.json"
-    case "$arm" in a|b) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json";; esac;;
+    case "$arm" in a|b) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json";; esac
+    [ -z "${PARDIR:-}" ] || { echo "end --arm $arm --seed $seed" >> "$LOG"; rm -f "$PARDIR/run.$$"; };;
   *summarize.py) echo "VERDICT: INCOMPLETE";;
 esac
 """
@@ -241,7 +243,40 @@ def test_box_script():
         assert "== think run_box" in (tmp / "out" / "think" / "run.log").read_text() and "no CUDA" in (tmp / "out" / "think" / "run.log").read_text(), "run.log"
         r = subprocess.run(["bash", "-n", str(HERE / "run_box.sh")], capture_output=True, text=True)
         assert r.returncode == 0, r.stderr
-    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed, CUDA check (exit 2 unless ALLOW_CPU=1), run.log")
+        # PARALLEL=1: all stage-1 jobs at once, then all stage-2 jobs once their adapters exist, at most MAXPAR at a time, one run.log per job
+        import shutil
+        shutil.rmtree(tmp / "out" / "think")
+        par = tmp / "par"
+
+        def pbox(jobs, **extra):
+            shutil.rmtree(par, ignore_errors=True)
+            par.mkdir()
+            calls, out = box(jobs, fail=extra.pop("fail", ""), PARALLEL="1", PARDIR=str(par), **extra)
+            peak = max(int(x) for x in (par / "counts").read_text().split())
+            return calls, out, peak
+
+        def at(calls, kind, arm, seed):  # position in the log of a job's start ("think1.py") or end ("end")
+            return next(i for i, c in enumerate(calls) if c[0] == kind and c[c.index("--arm") + 1] == arm and c[c.index("--seed") + 1] == seed)
+
+        calls, out, peak = pbox("aplus:0,t:0,a:0,b:0,t1:0")
+        assert sorted(runs(calls)) == sorted([(x, "0") for x in ("a", "b", "aplus", "t", "t1")]), runs(calls)
+        assert {r[0] for r in runs(calls)[:2]} == {"a", "b"} and peak == 3, (runs(calls), peak)  # stage 1 first, both at once; stage 2 reaches the cap
+        for arm in ("aplus", "t", "t1"):
+            assert at(calls, "think1.py", arm, "0") > at(calls, "end", "a", "0"), f"{arm} started before the a adapter existed"
+        assert max(at(calls, "end", x, "0") for x in "ab") < min(at(calls, "think1.py", x, "0") for x in ("aplus", "t", "t1")), "stage 2 starts only after stage 1"
+        for arm in ("a", "b", "aplus", "t", "t1"):
+            d = tmp / "out" / "think" / f"{arm}_s0"
+            assert (d / f"result_{arm}_s0.json").exists() and (d / "run.log").exists(), arm
+        assert calls[-1][0] == "summarize.py" and "-- done t1 seed 0" in out and "-- parallel: stage 1" in out
+        calls, out, peak = pbox("a:1,b:1,bplus:1,tw:1,t:1,a:2", MAXPAR="2")
+        assert peak == 2, peak  # the cap holds in both stages (stage 1: a:1, b:1, a:2 -> 2 at a time; stage 2: bplus, tw, t -> 2 at a time)
+        assert sorted(runs(calls)) == sorted([(x, "1") for x in ("a", "b", "bplus", "tw", "t")] + [("a", "2")]), runs(calls)
+        assert at(calls, "think1.py", "bplus", "1") > at(calls, "end", "b", "1")
+        calls, out, peak = pbox("t:3,bplus:4,a:5", fail="a", MAXPAR="1")  # no adapter: stage-2 jobs are skipped (a:3 is added and fails), failures are isolated, cap 1
+        assert peak == 1 and sorted(runs(calls)) == [("a", "3"), ("a", "5"), ("b", "4"), ("bplus", "4")] and "t seed 3 skipped: no a adapter" in out, (runs(calls), out)
+        calls, out, peak = pbox("a:1,b:1,aplus:1,t:1,a:2")  # a:1, b:1, a:2, t:1 have results: skipped; aplus:1 runs (a_s1/adapter exists)
+        assert runs(calls) == [("aplus", "1")] and "skip a seed 1" in (tmp / "out" / "think" / "a_s1" / "run.log").read_text(), runs(calls)
+    print("TR run_box.sh: every arm via think1.py, a/b run first when an adapter is missing, finished jobs skipped, failures isolated, flags passed, CUDA check (exit 2 unless ALLOW_CPU=1), run.log; PARALLEL=1: stage 1 then stage 2, MAXPAR cap, per-job run.log")
 
 
 # ---------------------------------------------------------------- SM, TS

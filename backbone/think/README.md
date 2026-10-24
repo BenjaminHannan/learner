@@ -17,6 +17,10 @@ THINK_JOBS=tw:0 bash backbone/think/run_box.sh                       # diagnosti
 THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1,a:2,b:2,aplus:2,t:2,t1:2 bash backbone/think/run_box.sh    # seeds 1 and 2
 THINK_JOBS=bplus:0 bash backbone/think/run_box.sh                    # then, only if SUMMARY.txt says "bplus - b (seed 0) ... : yes", bplus:1,bplus:2
 ```
+Seed 2 on Ben's PC with the jobs at once (`MAXPAR=2` on the 16 GB card keeps two processes in memory; the default is 3):
+```
+THINK_JOBS=a:2,b:2,aplus:2,t:2,t1:2 PARALLEL=1 MAXPAR=2 bash backbone/think/run_box.sh
+```
 PREREG: bplus runs on all seeds only if bplus - b >= 1.0 at seed 0; `summarize.py` prints that difference and the yes / no. Seeds 1 and 2 may
 run at the same time as seed 0 (PREREG amended 2026-10-24); the seed-0 futility rules are reported, and a stop applies only to seeds that
 have not started. Re-running the same line skips every job whose result file exists.
@@ -38,23 +42,35 @@ result file whose adapter is gone is deleted and retrained, so the two always ma
 Stage-2 arms draw rows from `random.Random(seed + 1000)` (same order for all five); stage 1 draws exactly as `backbone/train.py` does
 (`random.Random(seed)`, pop from the end). No `--steps` in a prereg run.
 
-## Vast (seed-0 screen only, cap $2.50, RTX 3090/4090)
+## Vast (one RTX 3090 per seed, all of that seed's jobs at once)
+`PARALLEL=1` runs the jobs of one box at the same time on its one GPU: first every listed stage-1 job (`a`, `b`), then, once their adapters
+exist, every listed stage-2 job (`aplus`, `bplus`, `t`, `t1`, `tw`), never more than `MAXPAR` (default 3) processes at a time. Each job writes
+`out/think/{arm}_s{S}/run.log`; everything is also in `out/think/run.log`. Without `PARALLEL` the jobs run one after another, as before. For seed N
+(N = 0, 1, 2; seed 0 also adds `bplus:0` and `tw:0`):
 ```
-python3 backbone/vast.py pack --out /tmp/think0 --label claude-think1-<branch> --hours 8 --env "THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0"
-python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.5     # pick an offer (repeat with --gpu "RTX 4090")
-python3 backbone/vast.py create --offer ID --args /tmp/think0/args.json --label claude-think1-<branch>   # the hours are set at pack time
+python3 backbone/vast.py pack --out /tmp/think-sN --slim --hours 10 --label claude-think1-compassionate-davinci-sN \
+    --env "THINK_JOBS=a:N,b:N,aplus:N,t:N,t1:N PARALLEL=1"          # seed 0: "THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0,bplus:0,tw:0 PARALLEL=1"
+python3 backbone/vast.py search --gpu "RTX 3090"                    # pick an offer ID
+python3 backbone/vast.py create --offer ID --args /tmp/think-sN/args.json --label claude-think1-compassionate-davinci-sN --disk 60
 python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.txt
 ```
-`backbone/run_box.sh` installs the dependencies, then hands over to `backbone/think/run_box.sh` when `THINK_JOBS` is set. Extra
-`think1.py` flags go in `THINK_FLAGS` joined with `+` (`THINK_FLAGS=--limit-eval+500`). Results: `out.tar.gz` (JSON, logs), weights
-(`adapter/`, `think_block.pt`) in `ckpt.tar.gz`.
+The hours are set at pack time (the box stops itself). Every box is the same GPU type, as PREREG wants per seed. `backbone/run_box.sh` installs
+the dependencies, then hands over to `backbone/think/run_box.sh` when `THINK_JOBS` is set. Extra `think1.py` flags go in `THINK_FLAGS` joined with
+`+` (`THINK_FLAGS=--limit-eval+500`). Results: `out.tar.gz` (JSON, logs), weights (`adapter/`, `think_block.pt`) in `ckpt.tar.gz`. Each result file
+records the GPU name, dtype and the torch / transformers / peft / flash-linear-attention versions (`env`).
+
+Kaggle T4s were probed (`backbone/think/probe_t4/`): fp16 is numerically fine, but a training step takes 28 s against 3.3 s on an A100, so they
+are not used.
 
 ## What comes out (`out/think/{arm}_s{S}/`)
 - `result_{arm}_s{S}.json`: `{arm, seed, model, steps_stage1, steps_stage2, k_slots, params_trainable, adapter_sha (arms that save an
-  adapter), stage1_adapter_sha (arms that start from one), train: {loss_curve, seconds,
+  adapter), stage1_adapter_sha (arms that start from one), env: {gpu (name or "cpu"), dtype, torch, transformers, peft, flash_linear_attention
+  (None if absent)}, train: {loss_curve, seconds,
   gate_log, dev_log, step_losses, gate_check}, aborted, eval: {validation|dev: {TAG: {acc, n, hits, row_offset}}}, label_nums}`.
   `hits` is a string of 0/1 in data-file order, so every comparison is paired. by_depth / by_bank / by_qtype are not stored;
   `summarize.py` recomputes them from the hits and the data files.
+- Arms a and aplus are decoded by the board code with no board read (`board.prefill` of prompt[:-1] + `board.decode`, `slot_kv=None`, the same
+  batching as `eval_board`), so S(8) and A_ref are measured by identical code; b and bplus keep `train.greedy` (they need the looped runner).
 - Tags. a: `main` (dev, validation), `main_repeat` (validation, seed 0 only: same checkpoint, batches built shortest-first). b: `main`
   (3 loops) and `pass1` (1 loop). aplus, bplus: `main`. t: validation `L0 L1 L2 L4 L8 L12` (all 8,675 rows), `L16 L24` (first 2,000
   rows), `swap8 mean8 rep1_8 gatesoff8 ref0` (`ref0`: the same batches decoded with no board read at all; `gatesoff8` must equal it row for row, while its gap to arm a's `main` is bf16 path noise, reported apart); dev `L0 L1 L8`. t1: validation `L0 L1 L8`, dev `L1`. tw: validation `L1`.
@@ -108,7 +124,7 @@ python3 backbone/think/think1.py --smoke --data out/data --out /tmp/think-smoke 
 ```
 `test_think1.py` runs everything: board tests T1-T7, T9, T10 (+ read-patch identity, parameter count, API, bf16 smoke) from
 `test_think1_board.py` (TK: lap checkpointing equals plain, clamp gradient at a zero slot, penalty definition), X1-X4 from `test_xent.py`, S1 from `test_summarize.py`, and T8 (same seed, identical 10-step stage-2 losses),
-TO (data order), TH (hits in file order; gates off = arm a), TG (mechanics gate, abort path), TR (run_box.sh with a stub python, CUDA check) and SM
+TO (data order), TH (hits in file order; gates off = arm a), TG (mechanics gate, abort path), TR (run_box.sh with a stub python, CUDA check, PARALLEL ordering and MAXPAR cap) and SM
 (the smoke run). `--real` adds the real-0.8B checks. The smoke run uses a tiny random qwen3_5 (8 layers, 2 full-attention), a byte
 tokenizer, 20 rows of each split, 6 steps per stage, and writes to `OUT/smoke/{arm}_s{S}/`; about 1.5 minutes on 4 CPU cores. Its
 accuracies are 0: it checks wiring, not learning.

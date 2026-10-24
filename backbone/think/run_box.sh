@@ -8,6 +8,8 @@
 # Idempotent: a job whose result file exists is skipped (a gate-aborted run also leaves a result: delete it to run again).
 # Results land in out/think/{arm}_s{S}/result_{arm}_s{S}.json; out/think/SUMMARY.txt is the PREREG report.
 # Env: THINK_JOBS (required)  BSZ=16 MICRO=4 MAXLEN=2048 MODEL=Qwen/Qwen3.5-0.8B  THINK_FLAGS='' (extra think1.py flags, '+'-separated)
+#      PARALLEL=1 (jobs share the one GPU: all listed stage-1 jobs at once, then all stage-2 jobs at once, at most MAXPAR=3 processes at a time;
+#      each job's output goes to out/think/{arm}_s{S}/run.log; unset = one job after another, as above)  MAXPAR=3
 #      PYTHON=python3  OUT=out  TARBALL=1 (0 skips the out.tar.gz / ckpt.tar.gz step)  ALLOW_CPU=1 (skip the CUDA check; CPU runs take days)
 # Everything printed here is also appended to out/think/run.log. Without a CUDA GPU the script stops (exit 2): PREREG wants one GPU type per seed.
 set -euo pipefail
@@ -37,15 +39,50 @@ need() {      # ARM SEED: succeeds once out/think/{ARM}_s{SEED}/adapter exists, 
   rm -f "$d/result_${1}_s${2}.json"
   run_job "$1" "$2" && [ -f "$d/adapter/adapter_config.json" ]
 }
-for job in ${THINK_JOBS//,/ }; do
-  arm=${job%%:*}; s=${job#*:}
-  case "$arm" in
-    a|b)            run_job "$arm" "$s" || true ;;
-    aplus|t|t1|tw)  if need a "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no a adapter"; fi ;;
-    bplus)          if need b "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no b adapter"; fi ;;
-    *)              echo "!! unknown arm $arm" ;;
-  esac
-done
+par() {       # JOB...: run_job for each ARM:SEED in the background, never more than MAXPAR at a time; each job's output goes to its own run.log
+  local job arm s d pids=()   # wait on the job pids, not bare `wait`: that would also wait for the tee of the exec > >(tee ...) above
+  for job in "$@"; do
+    arm=${job%%:*}; s=${job#*:}; d="$OUT/think/${arm}_s${s}"; mkdir -p "$d"
+    while [ "$(jobs -rp | wc -l)" -ge "$MAXPAR" ]; do wait -n || true; done
+    echo "-- start $arm seed $s $(date -u +%T) (log $d/run.log)"
+    { ( run_job "$arm" "$s" ) >> "$d/run.log" 2>&1 && echo "-- done $arm seed $s $(date -u +%T)" || echo "!! $arm seed $s failed"; } &
+    pids+=($!)
+  done
+  wait "${pids[@]}" || true
+}
+if [ "${PARALLEL:-0}" = 1 ]; then
+  MAXPAR=${MAXPAR:-3}; s1=(); s2=()
+  for job in ${THINK_JOBS//,/ }; do
+    arm=${job%%:*}; s=${job#*:}
+    case "$arm" in
+      a|b)                    s1+=("$job");;
+      aplus|t|t1|tw|bplus)    s2+=("$job"); st=a; [ "$arm" = bplus ] && st=b
+                              if [ ! -f "$OUT/think/${st}_s${s}/adapter/adapter_config.json" ]; then rm -f "$OUT/think/${st}_s${s}/result_${st}_s${s}.json"; s1+=("$st:$s"); fi;;
+      *)                      echo "!! unknown arm $arm";;
+    esac
+  done
+  mapfile -t s1 < <(printf '%s\n' "${s1[@]:-}" | awk 'NF && !seen[$0]++')   # stage 1 first, each arm once (a missing adapter's arm is added)
+  echo "-- parallel: stage 1 (${s1[*]:-none}), maxpar $MAXPAR"
+  [ ${#s1[@]} -eq 0 ] || par "${s1[@]}"
+  ok=()
+  for job in "${s2[@]:-}"; do
+    [ -n "$job" ] || continue
+    arm=${job%%:*}; s=${job#*:}; st=a; [ "$arm" = bplus ] && st=b
+    if [ -f "$OUT/think/${st}_s${s}/adapter/adapter_config.json" ]; then ok+=("$job"); else echo "!! $arm seed $s skipped: no $st adapter"; fi
+  done
+  echo "-- parallel: stage 2 (${ok[*]:-none}), maxpar $MAXPAR"
+  [ ${#ok[@]} -eq 0 ] || par "${ok[@]}"
+else
+  for job in ${THINK_JOBS//,/ }; do
+    arm=${job%%:*}; s=${job#*:}
+    case "$arm" in
+      a|b)            run_job "$arm" "$s" || true ;;
+      aplus|t|t1|tw)  if need a "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no a adapter"; fi ;;
+      bplus)          if need b "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no b adapter"; fi ;;
+      *)              echo "!! unknown arm $arm" ;;
+    esac
+  done
+fi
 $PYTHON backbone/think/summarize.py "$OUT/think" --data "$DATA" > "$OUT/think/SUMMARY.txt" 2>&1 || echo "!! summarize failed"
 cat "$OUT/think/SUMMARY.txt" || true
 cp "$DATA/DATA_REPORT.json" "$OUT/DATA_REPORT.json" 2>/dev/null || true
