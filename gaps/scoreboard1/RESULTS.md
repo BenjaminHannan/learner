@@ -58,3 +58,15 @@ discarded crashed/retried sims and judge calls (est. another $0.5-1.0). Estimate
   model, tau2 version and judge).
 - Wrong-if clause "failures mostly harness": not triggered (10/11 agent errors).
 - Untested: Stage B, trial-to-trial variance (task 0 passed in the 2-task smoke and failed in Stage A, so noise on 40 tasks is large, roughly +/-7 pts per sd).
+
+## Stage B, first local model (2026-10-24 ~08:10Z, run by the backbone thread on Ben's M1 Pro)
+`LiquidAI/LFM2.5-24B-A2B-MLX-4bit`, thinking on, `mlx_lm.server --max-tokens 8192` (the default 512 truncates its thinking),
+same 40 retail tasks, Haiku 5.5 as the customer and judge, concurrency 2, about 5 min per task. File: `sims/lfm25_think_results.json`
+(sha256 77e0c258c5d1...).
+- **Shown:** reward 1 on **29/40 = 72.5% pass^1**, the same as Claude Haiku 5.5 as the agent (29/40). The backbone thread
+  reports DB match on 30/40 and 0 harness errors.
+- **Shown:** the two agents fail different tasks. Haiku fails 0,1,5,11,19,20,27,31,34,38,39 and LFM fails
+  3,5,11,13,16,20,21,23,31,32,37. They share only 4 (5, 11, 20, 31), so 36/40 tasks are solved by at least one of them.
+- Suggested: one trial per task and 40 tasks means a ~7-point standard error, so "tied with Haiku" is the honest reading.
+  Low overlap means a second try or a check-and-retry step could add points. Untested.
+- The thinking-off run stopped at 4/40 when the Mac disk filled.
