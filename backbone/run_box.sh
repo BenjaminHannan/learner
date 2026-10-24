@@ -43,6 +43,20 @@ if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
+if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations)
+  for a in ${SLEEPB_ARMS//,/ }; do
+    if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
+    SCHED=""   # af and the ablations train the same number of steps per night as ab
+    SF=${SLEEPB_SCHEDULE:-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box
+    if [ "$a" != a0 ] && [ "$a" != ad ] && [ "$a" != ab ] && [ -f "$SF" ]; then SCHED="--schedule $SF"; fi
+    echo "-- sleepb $a $(date -u +%T) ${SCHED}"
+    python3 backbone/sleep/brain/sleepb.py --arm "$a" --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED || echo "!! sleepb $a failed"
+    # results only (adapters stay on the box), refreshed after every arm so a timed-out run still leaves a pullable tar
+    tar czf out.tar.gz --exclude="$OUT/.installed" --exclude="*/adapter" "$OUT" || [ $? -eq 1 ]
+  done
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
 if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-creative1.md): arms f0,c16,sleep in that order
   for a in ${CREATIVE_ARMS//,/ }; do
     if [ -f "$OUT/creative/$a/result_$a.json" ]; then echo "-- skip creative $a"; continue; fi
