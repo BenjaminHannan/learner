@@ -312,6 +312,7 @@ def create(a):
         raise SystemExit(f"offer {a.offer} is not in the filtered listing (search); nothing sent")
     if a.dph and not a.dryrun:
         raise SystemExit("--dph is for --dryrun only; the real dph comes from the offer")
+    dph = dph * 1.10    # the offer's dph_total omits disk cost; real instances came back 2-7% higher, so plan with +10%
     box_start = int(time.time())
     script, chunks, code_bytes, nfiles = build_onstart(dph, box_start)
     args = ["bash", "-c", script, "rlaif1"] + chunks
@@ -353,7 +354,7 @@ def create(a):
     time.sleep(10)
     x = inst(iid) or {}
     real = x.get("dph_total")
-    if real is not None and float(real) > dph * 1.02:
+    if real is not None and float(real) > dph:   # dph already carries a +10% allowance
         print(json.dumps({"price_changed": real, "assumed": dph, "action": "destroying"}))
         destroy_instance(iid)
         raise SystemExit(1)
