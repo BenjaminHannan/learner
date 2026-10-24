@@ -138,3 +138,9 @@ Hard: nights8 26.0 vs base 10.2 (+15.8) and nights4 16.9 (+9.1); Easy 83.8 vs 80
 Not a plateau. Mean Hard by night: 4.7 / 12.1 / 16.6 / 20.4 / 24.1 / 26.0 / 25.8 / 26.0. It levels off after night 6.
 Per kind after night 8: sq_plus 48.7, double_add 28.4, affine 1.0. Noise note: nights8's own night-4 score (20.4) differs from the
 nights4 arm's (16.9) at the same settings and seeds (GPU nondeterminism), so differences of ~3-4 points between runs are within noise.
+
+## Round 6 result (BensPC, 2026-10-24, 2 seeds; base and nights4 reused; raw files on branch claude/multistep-r6-pc-results @ 88cb479ef9d1)
+Hard: hind4 18.2 vs nights4 16.9 (+1.3); Easy 80.6 vs base 80.2; harm 2.0. **NO PASS, between the marks** (pass needs +4, proved wrong
+needs <= +1). This is within run-to-run noise (~3-4 points, see round 5). Curve: 4.2 / 9.9 / 15.7 / 18.2. Hindsight records were all
+multi-step and shrank by night (seed 0: 813, 670, 532, 472). By night 4 ~70% of them came from affine questions, yet affine stayed at 0.6.
+Reading (suggested): practice on puzzles the wrong tries happen to solve does not teach how to solve the real affine ones.
