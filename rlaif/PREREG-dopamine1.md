@@ -77,3 +77,11 @@ in every other way.
 - B1: d_batch >= d_none + 5 means centring alone helps.
 - B2: d_value >= d_batch + 5 means the per-type expectation (the dopamine part) adds something beyond centring.
   If d_value - d_batch is under 5, report that d_value's gain is explained by centring.
+
+## Addendum 3 (2026-10-24 19:40Z, before any result): noise
+
+A research note (`/mnt/project-files/research/dopamine-rlaif-grader.md`) points out that two arms on 100 tasks
+differ by about 6 points of noise (1 SE) at a 25% success rate. So a gap that meets a +5 mark is at most
+"suggested", not "shown". The marks above stay as they are. Also report the paired exact McNemar p-value on
+the shared 100 held-out tasks for every comparison. Any mark that passes is then rerun with 3 seeds before
+the v2 design adopts it. A mark that passes with p >= 0.1 is described as "within noise".
