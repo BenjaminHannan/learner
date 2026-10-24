@@ -46,3 +46,17 @@ Marks (PREREG-stage1.md):
 
 Seed spread on validation for B: |66.33 - 67.57| = 1.24 points. B vs A at equal steps (-0.2) is well inside that, so P3's
 "loop beats no-loop" half stays a FAIL and is no better than a tie. The lesion half replicates: about -8 points on every set.
+
+Arm A seed 1 (PC): dev 80.53, validation 66.06, P0 81.68, Pword 75.77. B minus A at seed 1: validation +0.27, dev +1.9.
+Both seeds now give B within noise of A on validation (seed 0: -0.2, seed 1: +0.27). Seed 2 for both arms is running on the PC.
+
+## Probes Pname / Pdepth / Prule (addendum 1, no marks; arm A seed 0, 418 steps, Vast box 57444974)
+| set | n | accuracy |
+|---|---|---|
+| dev | 4000 | 81.60 |
+| validation | 8675 | 65.94 |
+| Pname (new names) | 4294 | 81.51 |
+| Pdepth (deeper stories) | 4367 | 74.47 |
+| Prule (new rules) | 4292 | 80.38 |
+Earlier run (same arm and steps): P0 82.42 and Pword 76.25. New names cost about 1 point and new rules about 2; depth costs about 8.
+Raw file: `results/probes2/result_a.json`.
