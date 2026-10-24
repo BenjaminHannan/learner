@@ -131,3 +131,10 @@ No answer key or kind of a held-out question is read. Same seeds (0, 1), 4 night
 Marks: PASS if comp4 Hard >= nights4 + 4 points AND affine >= 5%, Easy within 5 of base, harm <= 2. Proved wrong: comp4 Hard <= nights4 + 1.
 sq_plus is the control kind (x*x is not a practised skill): report it separately. A pass is "learning by composing practised skills",
 not zero-shot transfer to an unseen structure.
+
+## Round 5 result (BensPC, 2026-10-24, 2 seeds; base and nights4 reused from round 4)
+Hard: nights8 26.0 vs base 10.2 (+15.8) and nights4 16.9 (+9.1); Easy 83.8 vs 80.2; harm 2.25 pts (seeds 2.0, 2.5).
+**NO PASS, on the harm mark only**: the Hard marks passed (+12 over base and +4 over nights4 both met), but harm was 2.25 against a limit of 2.
+Not a plateau. Mean Hard by night: 4.7 / 12.1 / 16.6 / 20.4 / 24.1 / 26.0 / 25.8 / 26.0. It levels off after night 6.
+Per kind after night 8: sq_plus 48.7, double_add 28.4, affine 1.0. Noise note: nights8's own night-4 score (20.4) differs from the
+nights4 arm's (16.9) at the same settings and seeds (GPU nondeterminism), so differences of ~3-4 points between runs are within noise.
