@@ -247,7 +247,17 @@ def score_arc(L, model, rows, bs=4):
                 ex.append({"q": row["question"], "pred": letters[pred], "gold": letters[row["answer"]]})
         if s % 100 == 0:
             clear_cache()
-    return {"acc": correct / len(rows), "n": len(rows), "examples": ex}
+    # addendum 3: the letter-logit score gave base LFM2.5 only 41% (it likely emits a space/newline or other token before the
+    # letter), so the primary ARC score is now a short greedy answer parsed for its first standalone letter; logit score kept.
+    prompts = [L.render(None, r["question"] + "\n" + "\n".join(f"{letters[i]}. {c}" for i, c in enumerate(r["choices"]))
+                        + "\nAnswer with the letter only.") for r in rows]
+    outs = L.generate(model, prompts, max_new=8, bs=16, label="arc")
+    gen_ok = 0
+    for r, o in zip(rows, outs):
+        m = re.search(r"\b([A-E])\b", o)
+        gen_ok += bool(m) and letters.index(m.group(1)) == r["answer"]
+    return {"acc": gen_ok / len(rows), "acc_logit": correct / len(rows), "n": len(rows), "examples": ex,
+            "gen_examples": [{"q": r["question"][:80], "out": o, "gold": letters[r["answer"]]} for r, o in list(zip(rows, outs))[:10]]}
 
 
 def load_arc(smoke):
