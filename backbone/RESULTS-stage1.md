@@ -60,3 +60,5 @@ Both seeds now give B within noise of A on validation (seed 0: -0.2, seed 1: +0.
 | Prule (new rules) | 4292 | 80.38 |
 Earlier run (same arm and steps): P0 82.42 and Pword 76.25. New names cost about 1 point and new rules about 2; depth costs about 8.
 Raw file: `results/probes2/result_a.json`.
+Arm B seed 2 (PC): dev 82.13, validation 67.45, P0 81.96, Pword 75.88; 1-loop lesion: validation 59.98 (-7.5).
+B validation over seeds 0/1/2: 67.57 / 66.33 / 67.45 (mean 67.12). A seed 2 is pending.
