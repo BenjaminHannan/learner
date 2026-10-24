@@ -406,6 +406,7 @@ def parse_args(argv=None):
     p.add_argument("--alpha", type=int, default=32)
     p.add_argument("--loop-start", type=int, default=16)
     p.add_argument("--loop-len", type=int, default=8)
+    p.add_argument("--rand-passes", type=int, default=0, help="addendum 2: sample training passes from 1..K per step (0 = fixed --passes)")
     p.add_argument("--passes", type=int, default=4, help="passes of the looped block in training (arms b, c)")
     p.add_argument("--d-board", type=int, default=256)
     p.add_argument("--eval-passes", type=int, default=None, help="passes for the primary eval (default: the trained passes)")
@@ -511,9 +512,11 @@ def train(lm, groups, tok_rows, args, pad_id, dev):
         ntok = sum(sum(1 for t in l[1:] if t != -100) for _, l in grp)
         for g in opt.param_groups: g["lr"] = lr_at(step, steps, g["base_lr"], warm)
         tot = 0.0
+        # addendum 2: random pass count per step (1..K, weight proportional to the count) so more passes keep helping
+        P = rng.choices(range(1, args.rand_passes + 1), weights=range(1, args.rand_passes + 1))[0] if args.rand_passes and lm.passes > 1 else None
         for mb in range(0, len(grp), args.micro):
             x, y, am = collate(grp[mb:mb + args.micro], pad_id, dev)
-            s, _ = lm.lm_loss(x, y, am)
+            s, _ = lm.lm_loss(x, y, am, passes=P)
             (s / max(ntok, 1)).backward(); tot += float(s); tok_seen += int(am.sum())
         torch.nn.utils.clip_grad_norm_(params, 1.0)
         opt.step(); opt.zero_grad(set_to_none=True)
@@ -554,7 +557,8 @@ def run(args):
     log(f'[model] LoRA wraps {nwrap} linear modules')
     board = Board(core.config.hidden_size, args.d_board).to(dev) if arm == "c" else None
     use_loop = arm in ("b", "c")
-    lm = LoopLM(core, args.loop_start, args.loop_len, args.passes, board, grad_ckpt=True)
+    # arm a must never loop (bug found in review: it used to train with args.passes and evaluate with 1)
+    lm = LoopLM(core, args.loop_start, args.loop_len, args.passes if use_loop else 1, board, grad_ckpt=True)
     if board is not None: log(f"[model] board params {sum(p.numel() for p in board.parameters()) / 1e6:.2f}M (fp32), d_board={args.d_board}")
     if use_loop: log(f"[model] loop: layers {args.loop_start}..{args.loop_start + args.loop_len - 1} x{args.passes} "
                      f"(types {core.config.layer_types[args.loop_start:args.loop_start + args.loop_len]})")
