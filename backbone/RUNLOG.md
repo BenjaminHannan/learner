@@ -24,3 +24,4 @@ too few linear-attention state slots).
 - 01:47Z creative1 box 57448229 finished; result JSONs pulled with `vast.py cat` after stopping (cat only works on stopped boxes), then destroyed.
 - 01:58Z claude-bb-creative2 (Slovenia A100, box 57450816): Creative-2 = Creative-1 arms with CREATIVE_FLAGS=--no-branch.
 - 12:20Z claude-bb-loop1l (Spain A100 PCIE 80GB, $0.47/h, 5 h cap): Loop-1L arms a,b,c x seeds 0-3 (addenda 1-2). First box (57508429) destroyed before start to add random passes.
+- 2026-10-24T12:40:06Z Loop-1L box 57514215 (offer 57072745 A100 80GB FR $0.936/h, --hours 2, disk 120). Third attempt after curl fix.
