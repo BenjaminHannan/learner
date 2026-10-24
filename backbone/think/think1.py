@@ -146,9 +146,13 @@ def entry(hits):
     return {"acc": s.count("1") / len(s) if s else 0.0, "n": len(s), "hits": s, "row_offset": 0}
 
 
-def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name=""):
+@torch.no_grad()
+def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False):
     """Greedy exact-match hits for arms a/b/aplus/bplus. Batches are built in descending length order, or ascending if reverse
-    (different batch composition: used for the eval-noise rerun). Returns the entry with hits in file order."""
+    (different batch composition: used for the eval-noise rerun). Returns the entry with hits in file order.
+    board_path (arms a, aplus): decode with board.prefill of prompt[:-1] + board.decode with no board read, the code eval_board runs, so S(8) and
+    A_ref are measured by identical code; otherwise (b, bplus: they need the looped runner) T.greedy. --no-cache keeps T.greedy for the check."""
+    board_path = board_path and not args.no_cache
     order = order or runner.order
     prompts = [enc.prompt(r)[0] for r in rows]
     idx = sorted(range(len(rows)), key=lambda i: len(prompts[i]), reverse=not reverse)
@@ -161,7 +165,12 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
             chunk = idx[k:j]
         else:
             chunk = idx[k:k + max(1, min(args.eval_bsz, args.eval_tokens // len(prompts[idx[k]])))]
-        gen = T.greedy(runner, [prompts[i] for i in chunk], device, enc.eos, cache=not args.no_cache, order=order)
+        ps = [prompts[i] for i in chunk]
+        if board_path:
+            C, mask, p = B.prefill(runner, ps)
+            gen = B.decode(runner, None, C, mask, p, B.last_ids(ps, device), None, eos=enc.eos)
+        else:
+            gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order)
         for i, g in zip(chunk, gen):
             hit[i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
         k += len(chunk)
@@ -418,6 +427,18 @@ def adapter_sha(d):
     return h.hexdigest()
 
 
+def env_info(device, dtype):
+    """Where and how a result was made: GPU name (or cpu), dtype, library versions (None if absent)."""
+    from importlib.metadata import PackageNotFoundError, version
+    def ver(name):
+        try:
+            return version(name)
+        except PackageNotFoundError:
+            return None
+    return dict(gpu=torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu", dtype=str(dtype).replace("torch.", ""),
+                torch=torch.__version__, transformers=ver("transformers"), peft=ver("peft"), flash_linear_attention=ver("flash-linear-attention"))
+
+
 def default_adapter(args, arm):
     return Path(args.out).parent / f"{arm}_s{args.seed}" / "adapter"
 
@@ -450,7 +471,8 @@ def run_arm(args):
                   k_slots=k_slots, params_trainable=0, train=tr, aborted=None, eval={"validation": {}, "dev": {}}, label_nums={},
                   bsz=args.bsz, micro_bsz=args.micro_bsz, max_len=args.max_len, stage1_adapter=str(src) if src else None,
                   loops=runner.loops, loop_block=[runner.start, runner.start + runner.size] if runner.loops > 1 else None,
-                  stage1_adapter_sha=adapter_sha(src) if src else None, adapter_sha=None)
+                  stage1_adapter_sha=adapter_sha(src) if src else None, adapter_sha=None,
+                  env=env_info(device, dtype))
     if not stage2:
         result["steps_stage1"] = steps
     aborted = None
@@ -489,11 +511,12 @@ def run_arm(args):
                 ev[split] = eval_board(runner, board, enc, rows, tags_for(arm, split), args, device, split)
         else:
             for split, rows in (("dev", dev_rows), ("validation", val_rows)):
-                ev[split]["main"] = eval_greedy(runner, enc, rows, device, args, name=f"{split} main")
+                bp = arm in ("a", "aplus")
+                ev[split]["main"] = eval_greedy(runner, enc, rows, device, args, name=f"{split} main", board_path=bp)
                 if arm == "b":
                     ev[split]["pass1"] = eval_greedy(runner, enc, rows, device, args, order=T.block_order(runner.n, runner.start, 1, runner.size), name=f"{split} pass1")
                 if arm == "a" and split == "validation" and args.seed == 0:
-                    ev[split]["main_repeat"] = eval_greedy(runner, enc, rows, device, args, reverse=True, name="validation repeat")
+                    ev[split]["main_repeat"] = eval_greedy(runner, enc, rows, device, args, reverse=True, name="validation repeat", board_path=bp)
         for split in ev:
             for tag, e in ev[split].items():
                 print(f"[result] {arm} s{args.seed} {split} {tag} acc {100 * e['acc']:.2f} (n={e['n']})", flush=True)
@@ -559,7 +582,7 @@ def parse(argv=None):
     ap.add_argument("--limit-eval", type=int, default=None)
     ap.add_argument("--eval-bsz", type=int, default=64)
     ap.add_argument("--eval-tokens", type=int, default=32768)
-    ap.add_argument("--no-cache", action="store_true", help="cache-free greedy decoding for arms a/b/aplus/bplus (slow; for checking)")
+    ap.add_argument("--no-cache", action="store_true", help="cache-free T.greedy decoding for arms a/b/aplus/bplus (slow; for checking; arms a, aplus then skip the board decode path)")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     ap.add_argument("--no-lap-ckpt", action="store_true", help="board arms: keep every slot / answer pass's activations instead of recomputing them in backward (more memory, same result)")
     ap.add_argument("--a-adapter", default=None, help="stage-1 arm a adapter for aplus/t/t1/tw (default: <out parent>/a_s{seed}/adapter)")

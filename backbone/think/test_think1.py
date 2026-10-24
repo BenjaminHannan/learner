@@ -118,6 +118,11 @@ def test_th_hits_in_file_order_and_gates_off_is_arm_a():
     for rev in (False, True):
         e = K.eval_greedy(r, enc, rows, torch.device("cpu"), args, reverse=rev)
         assert e["hits"] == want and e["n"] == len(rows) and e["row_offset"] == 0, (rev, e["hits"], want)
+        eb = K.eval_greedy(r, enc, rows, torch.device("cpu"), args, reverse=rev, board_path=True)  # arm a / aplus path: board.prefill + board.decode, no board
+        assert eb["hits"] == e["hits"] == want and eb["n"] == e["n"], ("board path != T.greedy", rev, eb["hits"], e["hits"])
+    ids = [T.greedy(r, [p], torch.device("cpu"), enc.eos)[0] for p in prompts[:6]]
+    C, mask, pl = B.prefill(r, prompts[:6])
+    assert B.decode(r, None, C, mask, pl, B.last_ids(prompts[:6], torch.device("cpu")), None, eos=enc.eos) == ids, "decoded ids differ between the two paths"
     torch.manual_seed(0)
     board = B.ThinkBoard.from_model(r.lm, tok, K=4)
     with torch.no_grad():
@@ -295,6 +300,9 @@ def test_sm_smoke_all_arms():
                 for tag, e in r["eval"][split].items():
                     assert e["n"] == len(e["hits"]) and set(e["hits"]) <= {"0", "1"} and e["row_offset"] == 0 and 0 <= e["acc"] <= 1, (arm, split, tag)
             assert r["train"]["loss_curve"] and len(r["train"]["step_losses"]) == 6 and r["label_nums"]
+            ev = r["env"]
+            assert ev["gpu"] == "cpu" and ev["dtype"] == "float32" and ev["torch"] == torch.__version__ and set(ev) == {"gpu", "dtype", "torch", "transformers", "peft", "flash_linear_attention"}, ev
+            assert ev["transformers"] and ev["peft"], ev
             assert r["steps_stage1"] == 6 and r["steps_stage2"] == (0 if arm in ("a", "b") else 6)
         for arm in ("a", "b", "aplus", "bplus"):
             assert (root / f"{arm}_s0" / "adapter" / "adapter_config.json").exists()
