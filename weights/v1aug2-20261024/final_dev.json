@@ -1,0 +1,65 @@
+{
+ "arm": "full",
+ "steps": 12000,
+ "aborted": null,
+ "detector_patterns": "/job/tree/data/village/patterns/bank-v1-aug2.json",
+ "detector_sha256": "a7c084315c51668932ce8d605466db4faa0a5827fa7b955392a78c2535318950",
+ "extra_train": [
+  {
+   "dir": "/job/extra/train+none",
+   "visits": 47500,
+   "tokens": 58198976
+  }
+ ],
+ "d_dev": {
+  "accuracy": 0.7953719550793613,
+  "questions": 42653,
+  "gold_recall_at_4": 0.7653743192919773,
+  "loops_mean": 2.3770895364921576,
+  "bridge_off_accuracy": 0.23557545776381497
+ },
+ "d_validation": {
+  "accuracy": 0.6326224783861671,
+  "questions": 8675,
+  "gold_recall_at_4": 0.6372728037854672,
+  "loops_mean": 2.580749279538905,
+  "bridge_off_accuracy": 0.20622478386167148
+ },
+ "baseline_dev": {
+  "majority_train": 0.08948960213818488,
+  "majority_train_answer_ids": [
+   828,
+   2
+  ],
+  "majority_dev": 0.08948960213818488,
+  "majority_dev_answer_ids": [
+   828,
+   2
+  ],
+  "n_questions": 42653,
+  "best": 0.08948960213818488
+ },
+ "W1_dev_threshold": 0.1894896021381849,
+ "W1_dev_pass": true,
+ "creative_dev": {
+  "first_try": 0.34765625,
+  "fits": 0.34765625,
+  "n": 256,
+  "by_kind": {
+   "affine": 0.0,
+   "double_add": 0.0196078431372549,
+   "last_digit": 0.9607843137254902,
+   "sq_plus": 0.0784313725490196,
+   "square": 0.6862745098039216
+  },
+  "bridge_off_first_try": 0.0078125,
+  "model": "W2.pt"
+ },
+ "W2_dev_pass": true,
+ "kl_share": {
+  "warmup": 0.18803803288103862,
+  "Nprime": 0.14702974341969918,
+  "W1_sleep": 0.241472659425849,
+  "W2_sleep": 0.21125961994092457
+ }
+}
