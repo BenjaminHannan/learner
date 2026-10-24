@@ -601,14 +601,21 @@ def delta_fro(pm):  # total Frobenius norm of all deltas
 
 @torch.no_grad()
 def shy_full(W, factor, thresh):
-    """SHY on a full-rank matrix: fp32 SVD on W's device, singular values x factor, those below thresh x largest zeroed.
+    """SHY on a full-rank matrix, singular values x factor, those below thresh x largest zeroed. Via the eigendecomposition of the small
+    Gram matrix (float64 eigh on W's device; much faster than a full SVD on the GPU): W' = U diag(scale) U^T W, U the left singular vectors.
     Returns W', n_zeroed, n_sv, energy_before, energy_after (as shy_core)."""
-    U, S, Vh = torch.linalg.svd(W.float(), full_matrices=False)
+    Wf = W.float()
+    t = Wf.shape[0] > Wf.shape[1]
+    X = (Wf.T if t else Wf).double()
+    ev, U = torch.linalg.eigh(X @ X.T)
+    S = ev.clamp(min=0).sqrt()
     if float(S.max()) <= 0:
-        return W.float().clone(), 0, 0, 0.0, 0.0
+        return Wf.clone(), 0, 0, 0.0, 0.0
     zero = S < thresh * S.max()
-    S2 = torch.where(zero, torch.zeros_like(S), S * factor)
-    return (U * S2) @ Vh, int(zero.sum()), S.numel(), float((S ** 2).sum()), float((S2 ** 2).sum())
+    sc = torch.where(zero, torch.zeros_like(S), torch.full_like(S, factor))
+    X2 = ((U * sc) @ (U.T @ X)).float()
+    S2 = S * sc
+    return (X2.T if t else X2).contiguous(), int(zero.sum()), S.numel(), float((S ** 2).sum()), float((S2 ** 2).sum())
 
 
 @torch.no_grad()
