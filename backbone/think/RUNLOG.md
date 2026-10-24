@@ -12,3 +12,5 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   (stage 1 a and b side by side). Vast's log service gives S3 403 for both boxes (the host never uploads the log), and
   `cat` works only on stopped boxes, so progress is read from the labels. Credit $3.24; the account's other A100 boxes
   have ended, so the burn is these two boxes, $0.296/h plus storage.
+- 21:17Z: s1 a_s1 done: validation 65.8, dev 81.3 (stage-1 A mean 66.72). 21:57Z: s1 b_s1 done: validation 66.5,
+  1-pass lesion 60.1, dev 82.5 (stage-1 B mean 67.12); s1 moves to stage 2 (aplus, t, t1). Credit 21:41Z $2.99.
