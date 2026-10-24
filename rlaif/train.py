@@ -30,8 +30,11 @@ def load_model(a, dev):
     return tok, model
 
 
-def reward(eps, graded):
+def reward(eps, graded, gate=False):
+    """SPEC reward 0.6*checks + 0.4*Sonnet. gate=True scales it by the check fraction, so a polished reply earns nothing when the end state is wrong."""
     fr = [e.check_frac() for e in eps]
+    if gate:
+        return [f * (0.6 + 0.4 * s / 10) for f, (s, _) in zip(fr, graded)], fr
     return [0.6 * f + 0.4 * s / 10 for f, (s, _) in zip(fr, graded)], fr
 
 
@@ -82,7 +85,8 @@ def main(argv=None):
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--lora-r", type=int, default=32)
     ap.add_argument("--beta-t", type=float, default=0.05)
-    ap.add_argument("--beta-s", type=float, default=1.0)
+    ap.add_argument("--beta-s", type=float, default=1.0)   # paper (arXiv 2610.10447 Table 3): 0.1 everywhere; beta_T 0.001 except GSM8K 0.03
+    ap.add_argument("--reward-gate", action="store_true")
     ap.add_argument("--max-usd", type=float, default=30.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--gen-batch", type=int, default=16)
@@ -112,7 +116,7 @@ def main(argv=None):
         calls0, ts = grader.n_calls, time.time()
         eps_s = rollout(model, tok, [(t, None) for t in batch for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
         gr_s = grader.grade_many([(e.task, e.transcript) for e in eps_s])
-        r_s, fr_s = reward(eps_s, gr_s)
+        r_s, fr_s = reward(eps_s, gr_s, a.reward_gate)
         A_s = advantages(r_s, G)
         st = dict(step=step, reward=sum(r_s) / len(r_s), check_frac=sum(fr_s) / len(fr_s), success=sum(f == 1 for f in fr_s) / len(fr_s),
                   sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s))
@@ -125,7 +129,7 @@ def main(argv=None):
                 cs.append(hint_block(batch[i], gr_s[w][1]))
             eps_t = rollout(model, tok, [(t, cs[i]) for i, t in enumerate(batch) for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
             gr_t = grader.grade_many([(e.task, e.transcript) for e in eps_t])
-            r_t, fr_t = reward(eps_t, gr_t)
+            r_t, fr_t = reward(eps_t, gr_t, a.reward_gate)
             A_t = advantages(r_t, G)
             st.update(teacher_reward=sum(r_t) / len(r_t), teacher_success=sum(f == 1 for f in fr_t) / len(fr_t), teacher_sonnet=sum(s for s, _ in gr_t) / len(gr_t))
         st["gen_s"] = time.time() - ts
