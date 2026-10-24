@@ -21,3 +21,5 @@ too few linear-attention state slots).
 - 00:46Z claude-bb-probes2: arm a 418 steps, probes Pname,Pdepth,Prule (requested by the generalization thread).
 - 00:48Z claude-bb-creative1 (NY A100): Creative-1 arms f0,c16,sleep on Qwen3.5-0.8B.
 - 01:17Z sleep1 and creative1 boxes on NY hosts never uploaded logs (S3 403 for 70+ min); destroyed and relaunched (Quebec, Slovenia). Boxes now also write result summaries into their instance label.
+- 01:47Z creative1 box 57448229 finished; result JSONs pulled with `vast.py cat` after stopping (cat only works on stopped boxes), then destroyed.
+- 01:58Z claude-bb-creative2 (Slovenia A100, box 57450816): Creative-2 = Creative-1 arms with CREATIVE_FLAGS=--no-branch.
