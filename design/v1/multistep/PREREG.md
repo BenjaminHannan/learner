@@ -87,3 +87,11 @@ The Vast budget was cut to ~$9 shared until Sunday, so both boxes were stopped. 
 dreams took 96 min on the box, mostly rejection-sampling 5-step draws, which accept 0.14%. Fallback on Ben's Mac (CPU), one seed (0),
 arms base, occam5_strict and occam_deep, `--reduced` (school 8,000 dreams, nightly 300, drawn programs <= 4 steps), every arm alike.
 The same marks apply, read as one-seed evidence ("suggested", not "shown").
+
+# Round 4: more nights (pre-registered 2026-10-24, before the run)
+Read first: C2b's sealed H arm (hindsight relabelling of near-miss tries) already tested "near-miss practice" and stayed at N's level on
+the hard kinds (s200: double_add first try H 1% vs W 17%; `creative/results/c2b/`), so that idea is not re-run. Only real fitting
+tries (W records) have raised the hard kinds, and they grow night over night (base Hard ~1% before nights, 11-12% after two).
+One change: 4 nights instead of 2 (night k samples with night k-1's model, same search, lr, visits). Arm `nights4` vs `base`,
+seeds 0 and 1, full sizes, on Ben's PC. Marks: PASS if nights4 Hard >= base + 8 points with Easy within 5 and skills harm <= 2.
+Proved wrong: nights4 Hard <= base + 2. Reported: Hard after nights 1, 2, 3, 4 (the curve).
