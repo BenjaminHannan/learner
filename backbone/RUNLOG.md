@@ -17,3 +17,4 @@ comparison; the longer arm a run is reported too. 27B box relaunched with max_nu
 too few linear-attention state slots).
 - 23:12Z claude-bb-probes: arm a, 418 steps (no budget), also scored on the generalization thread's P0 and Pword probes (generalize.probes @21b4d92b7, seed 101, 500 visits each, generated on the box with that commit's learnlab in backbone/genlab).
 - 23:17Z: boxes a2 (57421035) and a418 (57424117) never returned logs (Vast log API failed for that California host the whole run), so their results are lost; destroyed. a2 relaunched in New York at a fixed 418 steps + probes (claude-bb-a2b); a418 is replaced by claude-bb-probes.
+- 00:08Z Sleep-1 box claude-bb-sleep1 (A100 SXM4 NY, $0.54/h): arms s2,s0,ic,s1 on Qwen3.5-2B.
