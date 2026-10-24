@@ -34,13 +34,16 @@ def parse_number(s):
     m = _TOKEN.search(_clean(s or ""))
     try:
         return _num_match(m) if m else None
-    except ValueError:
+    except (ValueError, OverflowError):  # e.g. 5000-digit ints, or a huge int / int
         return None
 
 def last_number(s):
     ms = list(_TOKEN.finditer(_clean(s or "")))
     for m in reversed(ms):
-        v = _num_match(m)
+        try:
+            v = _num_match(m)
+        except (ValueError, OverflowError):
+            continue
         if v is not None:
             return v
     return None

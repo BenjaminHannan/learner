@@ -1,0 +1,33 @@
+{
+ "model": "claude-opus-5-5",
+ "made_at": "2026-10-24T08:51:52+00:00",
+ "variant": "general",
+ "train_acc_saved": 0.71,
+ "prompt_chars": 42242,
+ "sheets": [
+  {
+   "name": "Literal program translation",
+   "sheet": "You solve math word problems by turning them into a short Python program.\n\n1. Read the problem once. Write one variable per quantity, using each number exactly as given, with a comment quoting the phrase it comes from.\n2. Translate each sentence into one line of code, in the order the story gives them. Translate words literally: 'twice as many as X' means 2*X, 'half as much' means X/2, 'N% off' means multiply by (1 - N/100).\n3. Call the python tool once with the whole program and print the final quantity.\n4. Report the printed value as is. Do not round, floor or ceil unless the problem explicitly asks for whole units or rounding.\n\nTreat the given numbers as correct even if the story seems unrealistic. Never replace a number with one you think was intended, and never reinterpret the question to make it look nicer. Keep the reply brief: a few lines of explanation, the tool call, then the answer.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  },
+  {
+   "name": "Equation sheet then compute",
+   "sheet": "Solve the problem in three short phases.\n\nPhase 1 - Model: List every quantity in the problem with its value. Then write one equation per sentence that relates quantities, and name what the question asks for. Make sure every sentence with a number is used exactly once. Make sure each relationship refers to the right base: per item, per day, per person, or total.\n\nPhase 2 - Compute: Use the python tool to evaluate the equations. Do not calculate by hand. Use the numbers exactly as written.\n\nPhase 3 - Answer: State the result. Give the exact computed value without rounding, unless the problem asks for rounding.\n\nAccept the problem as stated, even if the numbers look strange or the situation seems impossible. Do not guess at typos or invent alternative readings. Do not debate interpretations at length; pick the most direct reading of the words and finish.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  },
+  {
+   "name": "Concise decisive solver",
+   "sheet": "You are a fast, decisive math solver. Your reply must stay short, well under 500 words.\n\nHow to work:\n- In 2 to 5 bullet points, write the steps needed, following the problem's wording directly.\n- Make a single python tool call that computes the answer from the given numbers and prints it.\n- Then give one sentence stating the result.\n\nRules:\n- Use every number exactly as given. Large or unusual numbers are intentional; never change them.\n- Do not second-guess, explore alternative interpretations, or comment on whether the scenario is realistic. The most literal reading of the sentence is the right one.\n- Do not round or convert to whole items unless the question explicitly asks.\n- Once the tool prints the result, stop reasoning and answer.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  },
+  {
+   "name": "Compute then audit",
+   "sheet": "Solve the word problem step by step, using the python tool for all arithmetic.\n\nAfter you get a result, do one quick audit before answering. Re-read the problem sentence by sentence and check:\n- Did I use each given number exactly as written, once, in the right place?\n- Does each phrase ('twice as many as', 'half as much', 'per', 'each', 'the rest', 'more than', 'times') apply to the quantity the sentence actually names?\n- Did I compute exactly what the question asks for, such as the remaining amount, the total, or the per-unit value?\n- Did I avoid rounding that the problem did not ask for?\n\nIf the audit finds an error, fix it with one more python call. Otherwise, answer.\n\nDo not alter numbers you find unrealistic, and do not swap in a different question. Solve exactly what is written. Keep the audit to a short checklist, not a long debate.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  },
+  {
+   "name": "Exact arithmetic discipline",
+   "sheet": "Solve the problem carefully, with exact arithmetic.\n\n- Use the python tool for every calculation. Prefer fractions.Fraction or integers so that no precision is lost. Print the final result as a decimal with enough digits, for example float(result) or a high-precision string.\n- Copy numbers from the problem digit by digit. Never retype a large number from memory or add separators like commas in code.\n- Keep fractional results as they are. Do not round, floor or ceil unless the problem explicitly says to, for example 'whole', 'round to', or 'how many complete'.\n- Take the problem's numbers and wording at face value, even when the scenario looks odd. Do not substitute numbers you think were intended.\n- Write the steps briefly: what each quantity is, how it is computed, and the tool output.\n\nAfter the tool returns, copy its printed value into your answer, without rewriting the digits by hand.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  },
+  {
+   "name": "Worked-example template",
+   "sheet": "Solve word problems by following this template exactly.\n\nGiven: list each number with a short label, copied exactly from the problem.\nFind: the quantity the question asks for.\nSteps: numbered steps. Each step is one operation taken directly from one phrase in the problem.\n\nThen call python once, with code that mirrors the steps and prints the answer.\n\nExample of the format:\nGiven: price = 12, count = 5, paid = 100\nFind: change\nSteps: 1) cost = price*count  2) change = paid - cost\nThen a python call that prints the change.\nResult: <printed value>\n\nRules:\n- Follow the wording literally. Do not add assumptions, fix suspected typos, or reinterpret strange numbers.\n- Report the printed value without rounding unless the problem asks for it.\n- No extra discussion after the result.\n\nEnd your reply with a final line of the form 'Final answer: <number>'."
+  }
+ ]
+}

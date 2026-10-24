@@ -13,6 +13,14 @@ SMALL=${SMALL:-Qwen/Qwen3.5-4B}
 BIG=${BIG:-Qwen/Qwen3.6-35B-A3B-FP8}
 LIM=""; [ -n "${LIMIT:-}" ] && LIM="--limit $LIMIT"
 
+if [ "${MODE:-}" = sheet1 ]; then  # instruction-sheet test (PREREG-sheet1.md): one model load, ~30 min
+  python3 tricks/sheet1.py --model "${SMALL:-Qwen/Qwen3.5-4B}" --out out/sheet1 $LIM || echo "!! sheet1 failed"
+  grep '^\[sum\]' out/sheet1/summary.txt | cut -c1-250 || true
+  tar czf out.tar.gz out
+  echo "[done] out.tar.gz"
+  exit 0
+fi
+
 ONLY=${ONLY:-both}   # small | big | both (two boxes can split the work)
 run() {  # model tag arms: one process for all arms (one model load), then per-arm retries; finished sets are skipped
   python3 tricks/tricks1.py --model "$1" --arms "$3" --out "out/$2" $LIM || echo "!! $3 ($2) failed"

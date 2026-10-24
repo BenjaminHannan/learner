@@ -143,3 +143,9 @@ def test_wikipedia_network():
     if r.startswith("Error"):
         pytest.skip(r)
     assert "Eiffel" in r
+
+def test_parse_never_crashes_on_huge_numbers():
+    big = "9" * 400
+    assert t.parse_answer(f"Final answer: {big}/3") is None                 # int / int too large for a float
+    assert t.parse_answer(f"Final answer: {'1' * 5000}/7") is None          # past Python's int-string limit
+    assert t.last_number(f"7 then {big}/3") == 7.0 and t.parse_answer(f"Final answer: 12/{big}") == 0.0

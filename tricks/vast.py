@@ -72,7 +72,8 @@ def pack(a):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as t:
         for f in FILES:
-            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") else i)
+            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith((".pyc", "_prompt.txt"))
+                  or i.name.startswith("tricks/mac") else i)  # the Mac files and saved Claude prompts are not needed on a GPU box
     b64 = base64.b64encode(buf.getvalue()).decode()
     job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label)
     args = ["bash", "-c", job, "bb"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
@@ -83,11 +84,12 @@ def pack(a):
 
 def search(a):
     q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
-         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}}
+         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 13.0}}  # vllm 0.32's torch is cu130
     r = call("POST", "/bundles/", q)
     offers = sorted(r.get("offers") or [], key=lambda o: o["dph_total"])
     for o in offers[:a.n]:
-        print(o["id"], o["gpu_name"], round(o["dph_total"], 3), o["gpu_ram"], o.get("cpu_cores_effective"), round(o.get("inet_down", 0)), o.get("geolocation"))
+        print(o["id"], o["gpu_name"], round(o["dph_total"], 3), o["gpu_ram"], o.get("cpu_cores_effective"), round(o.get("inet_down", 0)), o.get("geolocation"),
+              "cuda", o.get("cuda_max_good"), "driver", o.get("driver_version"))
 
 
 def create(a):
