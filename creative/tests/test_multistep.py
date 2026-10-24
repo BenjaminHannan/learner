@@ -211,3 +211,23 @@ def test_round3_arm_and_verdict():
     v = MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.04)))
     assert v['proved_wrong'] and not v['pass'] and v['depth_helps'] is None and any('n/a' in l for l in v['lines'])
     assert not MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.15)))['pass']
+
+
+def test_round4_nights_default_unchanged_and_four_nights(tmp_path):
+    sig = inspect.signature(CS.run_creative).parameters
+    assert sig['nights'].default == 2 and sig['eval_each_night'].default is False
+    assert MS.arm_kwargs('base', MS.SIZES) == {} and MS.arm_kwargs('base', MS.SIZES, round_=4) == dict(eval_each_night=True)
+    assert MS.arm_kwargs('nights4', MS.SIZES, round_=4) == dict(nights=4, eval_each_night=True)
+    ck, sk = _tiny_workdir(tmp_path)
+    info = CS.run_creative(str(tmp_path / 'n4'), ck, sk, None, device='cpu', seed=0, pool_limit=6, dev_limit=4, n1=2, n2=2, T=1.0, updates_cap=2, nights=4, eval_each_night=True)
+    ns = info.get('night_scores', {})
+    for k in sorted(ns):
+        assert (tmp_path / 'n4' / f'W{k}.pt').exists() and 'hard' in ns[k]
+    assert (tmp_path / 'n4' / 'W4.pt').exists() == (len(ns) == 4) or info.get('stop')
+
+
+def test_round4_verdict():
+    v = MS.verdict_round4(dict(base=dict(hard=0.11, easy=0.9, harm=0.0), nights4=dict(hard=0.20, easy=0.88, harm=0.01)), dict(nights4={'1': .01, '4': .2}))
+    assert v['pass'] and not v['proved_wrong'] and any('CURVE' in l for l in v['lines'])
+    v = MS.verdict_round4(dict(base=dict(hard=0.11, easy=0.9, harm=0.0), nights4=dict(hard=0.12, easy=0.9, harm=0.0)))
+    assert not v['pass'] and v['proved_wrong']

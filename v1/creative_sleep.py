@@ -113,8 +113,10 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
-                 dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False) -> dict[str, Any]:
-    """dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
+                 dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False,
+                 nights: int = 2, eval_each_night: bool = False) -> dict[str, Any]:
+    """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
+    dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
     dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
     stop_after: "setup" returns right after the setup stage (None = whole pipeline).
@@ -209,9 +211,9 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
     if stop_after == "setup":                     # the shared part of a multi-arm experiment (creative/multistep.py)
         return info
     Tt = setup["T"]
-    seeds = {n: seed + 10 * n for n in (1, 2)}
+    seeds = {n: seed + 10 * n for n in range(1, nights + 1)}
 
-    for night, base_name in ((1, "school.pt" if school else "Nprime.pt"), (2, "W1.pt")):
+    for night, base_name in [(1, "school.pt" if school else "Nprime.pt")] + [(k, f"W{k - 1}.pt") for k in range(2, nights + 1)]:
         base, _, _ = load_parent(P(base_name), device)
         base.eval()
         ts = time.time()
@@ -242,6 +244,11 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             m, rs = _sleep_stage(base, recs, replay, warm_rows, vocab, cfgs, device, guard)
             sleep.save_parent(m, meta["name"], meta["cfg"], vocab, P(f"W{night}.pt"), step=(meta["step"] or 0), warmup=True)
             stage(f"W{night}_sleep", time.time() - ts, phase_info(rs))
+        if eval_each_night and str(night) not in info.setdefault("night_scores", {}):
+            from creative.multistep import evaluate_w2
+            ev = evaluate_w2(P(f"W{night}.pt"), None, device, limit=dev_limit)
+            info["night_scores"][str(night)] = {x: ev[x] for x in ("hard", "easy", "by_kind")}
+            save()
     json.dump(dict(T=Tt, base5=setup["base5"]), open(P("complete.json"), "w"))
     log("CREATIVE DONE", out)
     return info
