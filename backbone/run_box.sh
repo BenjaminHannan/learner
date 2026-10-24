@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Stage-1 run on the rented GPU box. Run from the repo root:  bash backbone/run_box.sh
 # Idempotent: finished steps (result files) are skipped. Everything lands under out/; out.tar.gz at the end.
+# Loop-1L: LOOP_ARMS=a,b,c LOOP_SEEDS=0,1,2,3 [LOOP_FLAGS='--train-frac 0.25 --eval-n 100'] [LOOP_MODEL=...]
 # Env: STEPS=3000 BSZ=16 MICRO=4 MAXLEN=1024 RUN_A2=0 WITH_CONV1D=0 MODEL=Qwen/Qwen3.5-0.8B MODEL2=Qwen/Qwen3.5-2B
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -48,6 +49,29 @@ if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-
     if [ -f "$OUT/creative/$a/result_$a.json" ]; then echo "-- skip creative $a"; continue; fi
     echo "-- creative $a $(date -u +%T)"
     python3 backbone/creative/creative1.py --arm "$a" --model "${CREATIVE_MODEL:-Qwen/Qwen3.5-0.8B}" --out "$OUT/creative/$a" ${CREATIVE_FLAGS:-} || echo "!! creative $a failed"
+  done
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${LOOP_ARMS:-}" ]; then   # Loop-1L experiment (backbone/PREREG-loop1L.md): arms a,b,c x seeds, seed-major so pairs finish together
+  LD=backbone/assistant_data/data; RAW=${LOOP_RAW:-https://raw.githubusercontent.com/BenjaminHannan/learner/claude/project-thread-j59yy5/backbone/assistant_data/data}
+  for f in train.jsonl eval.jsonl; do   # a slim pack (vast.py pack --slim) leaves the data out: fetch it from GitHub
+    want=$([ "$f" = train.jsonl ] && echo 1792 || echo 200)
+    [ "$(wc -l < "$LD/$f" 2>/dev/null || echo 0)" -ge "$want" ] || { mkdir -p "$LD"; for i in 1 2 3 4; do curl -fsSL "$RAW/$f" -o "$LD/$f" && break; sleep 5; done; }
+    echo "data $f: $(wc -l < "$LD/$f") lines"
+  done
+  python3 - <<PY || echo "!! model prefetch failed (will try again inside the run)"
+from huggingface_hub import snapshot_download
+print("model at", snapshot_download("${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}"))
+PY
+  for s in ${LOOP_SEEDS:-0,1,2,3}; do
+    for a in ${LOOP_ARMS//,/ }; do
+      d="$OUT/loop/${a}_s${s}"
+      if [ -f "$d/result_${a}_s${s}.json" ]; then echo "-- skip loop $a seed $s"; continue; fi
+      echo "-- loop $a seed $s $(date -u +%T)"
+      python3 backbone/loop/loop1l.py --arm "$a" --seed "$s" --model "${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}" --out "$d" ${LOOP_FLAGS:-} || echo "!! loop $a seed $s failed"
+    done
   done
   tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0

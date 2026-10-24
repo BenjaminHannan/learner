@@ -12,6 +12,9 @@ for f in sorted(Path("out").rglob("result_*.json")):
         continue
     name = f.stem.replace("result_", "")
     nums = []
+    if isinstance(d.get("label_nums"), dict):   # compact override (loop1l.py: m=main M_tool, p1/p8=passes, noboard, sub=main on the extra subset)
+        nums = [f"{k}={v:.1f}" for k, v in d["label_nums"].items() if isinstance(v, (int, float))]
+        d = {}
     for k, v in d.items():
         if isinstance(v, dict) and isinstance(v.get("accuracy"), (int, float)):
             nums.append(f"{k}={100 * v['accuracy']:.1f}")

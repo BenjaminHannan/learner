@@ -2,6 +2,7 @@
 """Stage-1 Vast controller (lean version of v1/rent.py's pattern; the agent proxy adds the Vast key, this never reads it).
 
   pack   --out DIR --env "STEPS=2000 MAXLEN=2048 ARMS=a0,a"        code + job script -> DIR/args.json
+         (Loop-1L: --env "LOOP_ARMS=a,b,c LOOP_SEEDS=0,1,2,3" [--slim] [--hours 4]; create with --disk 120 for the 48 GB model)
   search [--gpu "A100 SXM4"] [--max-dph 0.7]
   create --offer ID --args DIR/args.json --label NAME --hours H     rents; the box stops itself after H hours
   status | logs ID | cat ID PATH | stop ID | destroy ID
@@ -68,11 +69,18 @@ def get(url, timeout=60):
         return r.read()
 
 
+SLIM_SKIP = ("assistant_data/data/train.jsonl", "assistant_data/data/eval.jsonl", "assistant_data/data/sample50.jsonl")
+
+
 def pack(a):
+    # FILES holds the whole backbone/ dir, so the Loop-1L code (backbone/loop/loop1l.py) and its data
+    # (backbone/assistant_data/data/{train,eval}.jsonl, tools.json; ~2.5 MB gz, ~3.3 MB of args) ride along by default.
+    # --slim leaves the jsonl data out (~0.2 MB); run_box.sh then downloads it from GitHub raw.
+    skip = SLIM_SKIP if a.slim else ()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as t:
         for f in FILES:
-            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") else i)
+            t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") or i.name.endswith(skip) else i)
     b64 = base64.b64encode(buf.getvalue()).decode()
     job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label)
     args = ["bash", "-c", job, "bb"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
@@ -134,7 +142,7 @@ def cat(a):
 
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
-    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
+    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3); x.add_argument("--slim", action="store_true", help="leave assistant_data/data/*.jsonl out of the pack")
     x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
     x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
