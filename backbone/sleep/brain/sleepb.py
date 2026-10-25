@@ -28,6 +28,14 @@ how they are related; each answer that is not "no" becomes a triple that goes th
 Addendum 9 (PREREG-sleepB-addendum9.md), on top of work scale 4: ab_ob_b4_nb = ab_ob_b4_names's names re-read pass + ab_ob_b4_bridge's bridge_prompt in REM (both addendum-8 code paths, unchanged).
 Addendum 10 (PREREG-sleepB-addendum10.md), on top of ab_ob_b4_nb: ab_ob_b4_nb_x4 samples every REM chain prompt X4_TRIES = 4 times and keeps, per pair per cycle, only the first sample that passes every check.
 
+Addendum 11 (PREREG-sleepB-addendum11.md), the recipe (ab_ob_b4_nb) on IFM/K2-Horizon-3.7B: --model IFM/K2-Horizon-3.7B --revision <sha> loads K2HorizonForCausalLM with trust_remote_code; Lang(k2=True) ends every prompt with an
+empty think block (thinking off) and ends every turn / training target with <|ifm|im_end|>; --arc-base scores the same 500 ARC-Easy questions on the base before night 1 (result["arc_easy_base"]); --smoke --model IFM/K2-Horizon-3.7B runs
+the smoke on a tiny random K2 (real tokenizer and chat template). Qwen runs are unchanged.
+
+--q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
+nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
+scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
+
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
@@ -61,7 +69,7 @@ for _p in (HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
-from train import LORA_TARGETS, load_model  # noqa: E402
+from train import K2_TYPE, LORA_TARGETS, load_model  # noqa: E402
 
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
@@ -2904,6 +2912,119 @@ def run_af(L, pm, args, week, diary, leak, replay, sched, out, result, log, dump
         dump(False)
 
 
+# ------------------------------------------------------------------ q4 base (MLX affine fake quantization)
+def q4_fake(w, group=64, bits=4, store_dtype=None):
+    """MLX affine quantize-dequantize of a 2-D+ tensor along its last dim; returns w' (same shape and dtype as w) or None if the last dim
+    is not divisible by group. Per group: scale = (max-min)/(2^bits-1) (1e-8-ish safe value when max == min), bias = min, both rounded to
+    store_dtype (default w.dtype); q = clamp(round((w-bias)/scale), 0, 2^bits-1); w' = q*scale + bias. Math in float32."""
+    if w.dim() < 1 or w.shape[-1] % group:
+        return None
+    levels = 2 ** bits - 1
+    x = w.detach().float().reshape(-1, w.shape[-1] // group, group)
+    mx, mn = x.amax(-1, keepdim=True), x.amin(-1, keepdim=True)
+    scale = (mx - mn) / levels
+    scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
+    sd = store_dtype or w.dtype
+    scale, bias = scale.to(sd).float(), mn.to(sd).float()
+    scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)  # a rounded-to-zero scale (underflow) stays safe
+    q = torch.clamp(torch.round((x - bias) / scale), 0, levels)
+    return (q * scale + bias).reshape(w.shape).to(w.dtype)
+
+
+def q4_apply(lm, group=64, bits=4):
+    """Fake-quantize (in place, no grad) the weight of every nn.Linear and nn.Embedding in lm; tied tensors once (by data_ptr). The scale /
+    bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}."""
+    seen, nq, ns, npar, errs = set(), 0, 0, 0, []
+    with torch.no_grad():
+        for _, m in lm.named_modules():
+            if not isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
+                continue
+            w = m.weight
+            if w.data_ptr() in seen:
+                continue
+            seen.add(w.data_ptr())
+            wq = q4_fake(w.data, group, bits)
+            if wq is None:
+                ns += 1
+                continue
+            den = w.data.float().norm().item()
+            errs.append((wq.float() - w.data.float()).norm().item() / den if den > 0 else 0.0)
+            w.data.copy_(wq)
+            nq += 1
+            npar += w.numel()
+    return {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
+
+
+def selftest_q4():
+    """q4_fake on a random 8x128 tensor (own generator; global RNG untouched): (i) at most 2^bits distinct values per group, (ii) elementwise
+    error <= scale/2 (+ tolerance; scale from the fp32 group range), (iii) idempotent to 1e-6 relative, (iv) a non-divisible shape is skipped
+    (also through q4_apply on a tiny Linear / Embedding pair, with a tied tensor counted once)."""
+    g = torch.Generator().manual_seed(0)
+    w = torch.randn(8, 128, generator=g)
+    out = {}
+    for bits in (4, 3):
+        wq = q4_fake(w, 64, bits)
+        gr, gq = w.reshape(8, 2, 64), wq.reshape(8, 2, 64)
+        assert max(len(set(r.tolist())) for r in gq.reshape(-1, 64)) <= 2 ** bits, "more distinct values than levels"
+        scale = (gr.amax(-1, keepdim=True) - gr.amin(-1, keepdim=True)) / (2 ** bits - 1)
+        assert bool(((gq - gr).abs() <= scale / 2 * (1 + 1e-5) + 1e-6).all()), "error above scale/2"
+        w2 = q4_fake(wq, 64, bits)
+        rel = ((w2 - wq).norm() / wq.norm()).item()
+        assert rel < 1e-6, f"not idempotent: {rel}"
+        out[f"bits{bits}"] = {"max_err_over_half_scale": ((gq - gr).abs() / (scale / 2)).max().item(), "idem_rel": rel}
+    assert q4_fake(torch.randn(4, 100, generator=g), 64, 4) is None, "non-divisible shape not skipped"
+    assert torch.equal(q4_fake(torch.zeros(2, 64), 64, 4), torch.zeros(2, 64)), "constant group must reconstruct exactly"
+    wb = torch.randn(8, 128, generator=g).to(torch.bfloat16)
+    assert q4_fake(wb, 64, 4).dtype == torch.bfloat16
+    emb = torch.nn.Embedding(10, 128)
+    lin = torch.nn.Linear(128, 10, bias=False)
+    lin.weight = emb.weight  # tied
+    odd = torch.nn.Linear(100, 4)
+    net = torch.nn.ModuleList([emb, lin, odd])
+    before_odd = odd.weight.detach().clone()
+    st = q4_apply(net, 64, 4)
+    assert (st["tensors"], st["skipped"], st["params"]) == (1, 1, 1280), st
+    assert torch.equal(odd.weight, before_odd) and 0 < st["mean_rel_fro"] < 0.2, st
+    out["apply"] = st
+    return out
+
+
+K2_REPO, K2_REV = "IFM/K2-Horizon-3.7B", "9d280ff742235796925c9fe3cf243dc1beea5c08"  # addendum 11: the pinned small-tier model
+
+
+def selftest_k2():
+    """K2-Horizon chat format, with the real tokenizer (downloaded from the Hub, no weights; skipped with a message when it cannot be): (i) Lang(k2=True).render ends with the
+    empty think block exactly once and starts with the bos string, (ii) bos / im_start / im_end / think tags each tokenize to single special ids, (iii) eos is <|ifm|im_end|> = 250019,
+    (iv) ex_qa ends with eos and equals the template's own rendering of the same turn (assistant with an empty reasoning_content), the empty think block once before the answer,
+    (v) ex_text ends with eos, (vi) the Qwen-style Lang is untouched; selftest_q4 passes."""
+    selftest_q4()  # raises on failure
+    out = {"q4": "ok"}
+    try:
+        from transformers import AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(K2_REPO, revision=K2_REV, trust_remote_code=True)
+    except Exception as e:  # offline / Hub unreachable
+        return {**out, "skipped": f"K2 tokenizer not available ({type(e).__name__}); K2 checks not run"}
+    L = Lang(tok, False, torch.device("cpu"), k2=True)
+    u = "Where does Zelmir live?"
+    p = L.render(SYS, u)
+    assert p.startswith("<|ifm|begin_of_text|>") and p.endswith("<|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>"), p
+    assert p.count("<ifm|think>") == 1 and p.count("</ifm|think>") == 1, p
+    sp = {t: tok.convert_tokens_to_ids(t) for t in ("<|ifm|begin_of_text|>", "<|ifm|im_start|>", "<|ifm|im_end|>", "<ifm|think>", "</ifm|think>")}
+    assert L.eos == sp["<|ifm|im_end|>"] == 250019, L.eos
+    ids = L.ids(p)
+    assert ids[0] == sp["<|ifm|begin_of_text|>"] and ids[-1] == sp["</ifm|think>"] and ids[-3] == sp["<ifm|think>"], ids[-10:]
+    assert [ids.count(sp[t]) for t in sp] == [1, 3, 2, 1, 1], "special tokens must be single ids (system, user, assistant turns)"
+    ids_q, st = ex_qa(L, u, "Oslo")
+    full = tok.apply_chat_template([{"role": "system", "content": SYS}, {"role": "user", "content": u}, {"role": "assistant", "content": "Oslo", "reasoning_content": ""}], tokenize=False)
+    assert ids_q == L.ids(full), (ids_q[-10:], L.ids(full)[-10:])
+    assert ids_q[-1] == 250019 and ids_q.count(sp["</ifm|think>"]) == 1 and ids_q[st - 1] == sp["</ifm|think>"] and ids_q[st:-1] == L.ids("Oslo")
+    ids_t, st_t = ex_text(L, "Zelmir lives in Oslo.")
+    assert ids_t[-1] == 250019 and st_t == 0
+    q = Lang(tok, True, torch.device("cpu"))  # default constructor: the old behaviour (smoke render, tokenizer eos)
+    assert not q.k2 and q.eos == tok.eos_token_id and q.render(SYS, u) == f"system: {SYS}\nuser: {u}\nassistant: "
+    return {**out, "render_tail": p[-48:], "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
+
+
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser()
@@ -2911,6 +3032,7 @@ def main():
     ap.add_argument("--week", help="week1.json; with --smoke and no --week the built-in 2-day fixture is used")
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
+    ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 / -9 / -10 arm unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
@@ -2941,6 +3063,10 @@ def main():
     ap.add_argument("--gist-min-days", type=int, default=3)
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
+    ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
+    ap.add_argument("--q4-base", action="store_true", help="Mac study: replace every Linear / Embedding weight of the frozen base by an MLX-style affine fake-quantized copy (before LoRA)")
+    ap.add_argument("--q4-group", type=int, default=64, help="--q4-base: group size along the input dim")
+    ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
     if args.selftest:
@@ -2956,6 +3082,8 @@ def main():
         print(json.dumps({"arms8": selftest_arms8()}))
         print(json.dumps({"arms9": selftest_arms9()}))
         print(json.dumps({"arms10": selftest_arms10()}))
+        print(json.dumps({"q4": selftest_q4()}))
+        print(json.dumps({"k2": selftest_k2()}))
         return
     if args.bench_train:
         if not args.out:
@@ -2965,7 +3093,7 @@ def main():
         device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
         lm, tok = load_model(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
-        res = bench_train(args, Lang(tok, args.smoke, device), pm)
+        res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE), pm)
         Path(args.out).mkdir(parents=True, exist_ok=True)
         (Path(args.out) / "bench_train.json").write_text(json.dumps(res, indent=1))
         print(json.dumps(res, indent=1))
@@ -3006,18 +3134,29 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
     lm, tok = load_model(args, device, dtype)
-    L = Lang(tok, args.smoke, device)
+    q4 = None
+    if args.q4_base:
+        if args.q4_group < 1 or args.q4_bits < 1:
+            ap.error("--q4-group and --q4-bits must be positive")
+        q4 = q4_apply(lm, args.q4_group, args.q4_bits)
+        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})")
+    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
     diary = Diary(week)
+    if L.k2:  # once: what a K2 prompt looks like and how its end tokenizes (the specials must be single ids)
+        tp = tag_prompt(L, diary.turns[0]["text"])
+        log(f"[k2] tagger prompt: {tp!r}")
+        log(f"[k2] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
     leak = {norm(x) for x in week.get("test_strings_norm", [])} | {norm(t["q"]) for k in KINDS for t in week["tests"][k]}
     days = sorted({t["day"] for t in diary.turns})
     sched = None
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in ("budget_scale", "night_budget_s") and v is None)},
-              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True}
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4}  # options at their default are left out of result["args"] (older result files keep their keys)
+    result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
+              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
     def dump(final):
         result["partial"] = not final
@@ -3030,6 +3169,11 @@ def main():
     if args.arm not in ("a0", "ad"):
         from peft import LoraConfig, get_peft_model
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        if L.k2:
+            from peft.tuners.lora import LoraLayer
+            mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
+            log(f"[k2] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
+            assert getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
         if args.arm in DELTA_ARMS:
             lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
             if args.delta_dtype == "bf16" and args.arm in TRAIN_DELTA_ARMS:
@@ -3075,6 +3219,14 @@ def main():
             arc_base = score_arc(L, pm, arc_val, bs=max(args.gen_bs // 2, 1))["acc"]
         result["arc_val_base"] = arc_base
         log(f"[base] ARC-Easy validation(100) {arc_base:.3f}")
+        if args.arc_base:  # addendum 11: the same questions as the final arc_easy score, on the base (adapter off), before night 1
+            try:
+                with pm.disable_adapter():
+                    result["arc_easy_base"] = score_arc(L, pm, load_arc(args.smoke), bs=max(args.gen_bs // 2, 1))
+                log(f"[base] ARC-Easy acc {result['arc_easy_base']['acc']:.3f} (n={result['arc_easy_base']['n']})")
+            except Exception as e:  # datasets missing / offline
+                result["arc_easy_base"] = {"error": repr(e)}
+                log(f"[base] ARC-Easy FAILED: {e!r}")
         if args.arm == "af":
             run_af(L, pm, args, week, diary, leak, replay, sched, out, result, log, dump)
         else:

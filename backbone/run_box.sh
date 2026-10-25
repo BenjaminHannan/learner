@@ -43,14 +43,14 @@ if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
-if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations)
+if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations); SLEEPB_EXTRA: extra sleepb flags, e.g. "--revision <sha> --q4-base --arc-base" (addendum 11)
   for a in ${SLEEPB_ARMS//,/ }; do
     if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
     SCHED=""   # af and the ablations train the same number of steps per night as ab
     SF=${SLEEPB_SCHEDULE-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box; set but empty = no schedule (Week-2 arms use the code's own step formula)
     if [ "$a" != a0 ] && [ "$a" != ad ] && [ "$a" != ab ] && [ -f "$SF" ]; then SCHED="--schedule $SF"; fi
     echo "-- sleepb $a $(date -u +%T) ${SCHED}"
-    python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} || echo "!! sleepb $a failed"
+    python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} ${SLEEPB_EXTRA:-} || echo "!! sleepb $a failed"
     # results only (adapters stay on the box), refreshed after every arm so a timed-out run still leaves a pullable tar
     tar czf out.tar.gz --exclude="$OUT/.installed" --exclude="*/adapter" "$OUT" || [ $? -eq 1 ]
   done

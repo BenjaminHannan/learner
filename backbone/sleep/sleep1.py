@@ -50,13 +50,20 @@ def generic_prompts():
 
 
 # ------------------------------------------------------------------ text plumbing
+K2_OPEN, K2_SHUT, K2_END = "<ifm|think>\n", "</ifm|think>", "<|ifm|im_end|>"  # K2-Horizon: the generation prompt opens a think block (thinking off = close it at once); a turn ends with im_end
+
+
 class Lang:
-    def __init__(self, tok, smoke, device):
-        self.tok, self.smoke, self.device = tok, smoke, device
-        self.eos = tok.eos_token_id
+    def __init__(self, tok, smoke, device, k2=False):  # k2: K2-Horizon chat format (no-think prompt, im_end ends a turn); Qwen otherwise
+        self.tok, self.smoke, self.device, self.k2 = tok, smoke, device, k2
+        self.eos = tok.convert_tokens_to_ids(K2_END) if k2 else tok.eos_token_id
 
     def render(self, system, user):
         msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": user}]
+        if self.k2:  # also in a smoke run (tiny random K2, real tokenizer and template); enable_thinking is not a K2 template option
+            t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+            assert t.endswith(K2_OPEN), f"K2 chat template changed: the generation prompt no longer ends with {K2_OPEN!r}: {t[-60:]!r}"
+            return t + K2_SHUT
         if hasattr(self.tok, "apply_chat_template") and not self.smoke:
             return self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
         return "".join(f"{m['role']}: {m['content']}\n" for m in msgs) + "assistant: "
