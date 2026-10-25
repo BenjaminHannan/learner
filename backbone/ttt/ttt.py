@@ -144,6 +144,16 @@ def answer(L, model, task, cuda):
     return parse_grid(txt) == o
 
 
+def ans_nll(L, model, task, device, cuda):  # addendum 1: mean per-token loss of the TRUE test output (teacher-forced), a graded score that still moves when nothing is solved
+    import torch
+    import torch.nn.functional as F
+    t = task["test"][0]
+    pi, ai = L.ids(L.render(None, user_text(task["train"], t["input"]))), L.ids(gtxt(t["output"])) + [L.eos]
+    with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16, enabled=cuda):
+        lg = model(input_ids=torch.tensor([pi + ai], device=device), use_cache=False, logits_to_keep=len(ai) + 1).logits[0, :-1]
+    return round(F.cross_entropy(lg.float(), torch.tensor(ai, device=device)).item(), 5)
+
+
 def run(a):
     import torch
     from train import load_model
@@ -179,16 +189,18 @@ def run(a):
             n_ex, loss = 0, None
             if arm == "B":
                 ok = answer(L, lm, task, cuda)
+                nll = ans_nll(L, lm, task, device, cuda)
             else:
                 src = task if arm == "T" else tasks[(k + 1) % len(tasks)]
                 exs, n_ex = train_examples(src, k, steps, L)
                 pm, loss = ttt_train(lm, L, exs, k, device, cuda)
                 ok = answer(L, pm, task, cuda)
+                nll = ans_nll(L, pm, task, device, cuda)
                 lm = pm.unload()  # drop the LoRA: next task starts from base
                 if cuda:
                     torch.cuda.empty_cache()
             row = {"task": task["id"], "idx": k, "arm": arm, "ok": bool(ok), "seconds": round(time.time() - t0, 1), "n_train_examples": n_ex,
-                   "final_loss": loss, "out_rows": len(task["test"][0]["output"]), "out_cols": len(task["test"][0]["output"][0])}
+                   "final_loss": loss, "answer_nll": nll, "out_rows": len(task["test"][0]["output"]), "out_cols": len(task["test"][0]["output"][0])}
             with open(fn, "a") as f:
                 f.write(json.dumps(row) + "\n")
             print(f"[{k}] {task['id']} {arm} ok={ok} {row['seconds']}s loss={loss}", flush=True)
@@ -219,6 +231,17 @@ def score(a):
                       "T1 WRONG (T <= C: drop TTT for the small tier)" if s["T"] <= s["C"] else "T1 FAIL (not wrong): T > C but short of the pass marks")
     if len(ids) < N_TASKS:
         res["verdict"] += f" [provisional: only {len(ids)} of {N_TASKS} tasks have all three arms]"
+    def sign(m1, m2):  # addendum 1: tasks where m1's answer loss is lower than m2's, exact two-sided sign test (ties dropped)
+        w = sum(rows[(t, m1)]["answer_nll"] < rows[(t, m2)]["answer_nll"] for t in ids)
+        l = sum(rows[(t, m1)]["answer_nll"] > rows[(t, m2)]["answer_nll"] for t in ids)
+        n = w + l
+        p = 1.0 if n == 0 else min(1.0, 2 * sum(math.comb(n, i) for i in range(min(w, l) + 1)) / 2 ** n)
+        return {"lower": w, "higher": l, "p": p}
+    if ids and all("answer_nll" in rows[(t, m)] for t in ids for m in "BTC"):
+        res["answer_nll_mean"] = {m: round(sum(rows[(t, m)]["answer_nll"] for t in ids) / len(ids), 4) for m in "BTC"}
+        res["nll_T_vs_C"], res["nll_T_vs_B"], res["nll_C_vs_B"] = sign("T", "C"), sign("T", "B"), sign("C", "B")
+        nt = res["nll_T_vs_C"]
+        res["verdict_T1b"] = "T1b PASS" if nt["lower"] >= 0.6 * len(ids) and nt["p"] < 0.05 else "T1b FAIL"
     res["mean_seconds"] = {m: round(sum(rows[(t, m)]["seconds"] for t in ids) / max(len(ids), 1), 1) for m in "BTC"}
     by = {}
     for t in ids:
