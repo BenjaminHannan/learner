@@ -58,7 +58,7 @@ summ() { python3 $SS/common.py summarize "$@" >> $OUT/summary.jsonl; }  # summ A
 # ---------- setup ----------
 setup_fn() {
   (apt-get update -qq && apt-get install -y -qq git curl) > /dev/null 2>&1; git --version
-  pip install -q -U uv 2>&1 | tail -1
+  pip install -q -U uv huggingface_hub 2>&1 | tail -1
   python3 -c "from huggingface_hub import snapshot_download as s; print(s('IFM/K2-Horizon-3.7B'))" > $OUT/data/base_path 2> $OUT/data/base_dl.log &
   local DL=$!
   uv pip install --system -q -U vllm 2>&1 | tail -3
