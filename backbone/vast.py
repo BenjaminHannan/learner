@@ -20,6 +20,7 @@ API = "https://console.vast.ai/api/v0"
 IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-devel"
 FILES = ["backbone", "learnlab", "data/village/patterns"]
 CHUNK = 100_000
+BAD_MACHINES = {54987, 38389, 149008, 54650}  # 54987: never uploaded logs or command output, offline mid-run (Think-1 s0/s1, 2026-10-24); 38389: CDI GPU error at container start (2026-10-25); 149008: no DNS in the container (2026-10-25); 54650: never started a container in 15 min (2026-10-25)
 
 JOB = r'''set -u
 ENVLINE="__ENV__"
@@ -90,12 +91,15 @@ def pack(a):
 
 
 def search(a):
-    q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "gpu_ram": {"gte": a.min_vram * 1024}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
-         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}}
+    # best value first: Vast's DLPerf score per $/h (--sort price for cheapest first); mainland-China hosts are skipped (Hugging Face is blocked there)
+    q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "gpu_ram": {"gte": a.min_vram * 1024}, "rentable": {"eq": True}, "reliability2": {"gte": a.min_rel},
+         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}, "cpu_ram": {"gte": a.min_ram * 1024}}
     r = call("POST", "/bundles/", q)
-    offers = sorted(r.get("offers") or [], key=lambda o: o["dph_total"])
+    offers = [o for o in r.get("offers") or [] if not (o.get("geolocation") or "").endswith("CN") and o.get("machine_id") not in BAD_MACHINES]
+    offers.sort(key=(lambda o: o["dph_total"]) if a.sort == "price" else (lambda o: -(o.get("dlperf_per_dphtotal") or 0)))
     for o in offers[:a.n]:
-        print(o["id"], o["gpu_name"], round(o["dph_total"], 3), o["gpu_ram"], o.get("cpu_cores_effective"), round(o.get("inet_down", 0)), o.get("geolocation"))
+        print(o["id"], o["gpu_name"], round(o["dph_total"], 3), "$/h", "dlperf/$", round(o.get("dlperf_per_dphtotal") or 0), "rel", round(o.get("reliability2") or 0, 4),
+              "machine", o.get("machine_id"), round(o["gpu_ram"] / 1024), "GB", round((o.get("cpu_ram") or 0) / 1024), "GB-RAM", o.get("cpu_cores_effective"), round(o.get("inet_down", 0)), o.get("geolocation"))
 
 
 def create(a):
@@ -116,8 +120,8 @@ def logs(a):
     url = r.get("result_url")
     if not url:
         sys.exit(f"no log url: {r}")
-    for _ in range(8):
-        time.sleep(4)
+    for _ in range(20):   # Vast can take 20-30 s to upload the log
+        time.sleep(5)
         try:
             print("\n".join(l[:400] for l in get(url).decode("utf-8", "replace").splitlines()[-a.show:])); return
         except Exception:
@@ -144,6 +148,7 @@ def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
     x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3); x.add_argument("--slim", action="store_true", help="leave assistant_data/data/*.jsonl out of the pack")
     x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8); x.add_argument("--min-vram", type=int, default=0)
+    x.add_argument("--min-rel", type=float, default=0.99); x.add_argument("--min-ram", type=int, default=24, help="host RAM in GB"); x.add_argument("--sort", choices=("value", "price"), default="value")
     x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
     x = s.add_parser("logs"); x.add_argument("id"); x.add_argument("--tail", type=int, default=300); x.add_argument("--show", type=int, default=40)
