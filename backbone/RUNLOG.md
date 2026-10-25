@@ -59,3 +59,6 @@ too few linear-attention state slots).
   - claude-sleepb15-ab_ob_tag2-cqc4bi (57599957, British Columbia, $0.544/h, hours=3, cap $1.20).
   - claude-sleepb15-ab_ob_bridge-cqc4bi (57599958, South Korea, $0.544/h, hours=3, cap $1.20).
   Ranked by TFLOPS per dollar with tools/vast_pick.py (>= 20 GB, no China or California hosts); expected about $3 for the round. Watchers pull each JSON after the self-stop, then destroy.
+- 03:11Z three of the four addendum-7 boxes never started properly (b2 57599951 and tag2 57599957 stuck in "created"; bridge 57599958 running but no label by 0.36 h) and were destroyed by their watchers (up to about $0.57 at list price). b4 (57599956) ran normally.
+- 03:20Z relaunched: claude-sleepb16 b2 (57603194, RTX 5090 Slovakia host 362355, $0.489/h) and tag2 (57603197, RTX 5090 Portugal, $0.563/h), both running in under 3 min; bridge on an RTX 4090 in Iceland (57603198) sat in "created" and was dropped at 0.18 h. The watcher now drops a box that is not running by 10 min (it was 20).
+- 03:33Z bridge relaunched as claude-sleepb17 (57604382, RTX 4090 Brazil, $0.344/h, the best TFLOPS per dollar left outside China and the failed hosts). The round now mixes one 4090 into the 5090s; GPU differences are treated like seed noise, as in addendum 6.
