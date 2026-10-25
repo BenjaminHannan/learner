@@ -45,6 +45,13 @@ given far end, parse_q1), think opens K2's high-effort think block for the bridg
 (every pair is two units, one per direction, tried each cycle until it has a kept dream; --rem-tries N samples a unit N times and keeps the first sample that passes every check); --rem-steps-mult F (each cycle's REM steps x F, the
 Trainer's schedule covers the new total); --think-eval (K2, report-only: two-hop and C2+C4 forward asked again with thinking, weights only). k2_chain_probe.py runs the REM variants on the Week-1 world without training.
 
+Addendum 15 (PREREG-sleepB-addendum15.md), long nights with varied vs repeated cards (all flags default to the old behaviour, byte for byte): --text-scale X (needs --budget-scale) takes the five generation knobs (k, item cap, REM chain cap, REM gist cap, dream token budget)
+from X instead of the work scale while the training steps stay at --budget-scale (R8: --budget-scale 8 --text-scale 4); --dream-vary {mix,plain} (OB arms, not the twist arms): nrem_prompt asks for kp = ceil(k/4) paraphrases (and still k question cards), then Brain.vary asks
+the BASE model for n = ceil(k/4) texts in each of 3 styles (story: a tiny everyday story; note: a note in Sam's own voice; mix: weird, a surreal dream scene; plain: plain2, ordinary paraphrases), each style sampled under its own fixed seed (seed * 100 + night + 43 + style index, the
+main stream is untouched), kept under twist's checks (both entities, no test leak, no older value, the base model answers a card from the text alone) and appended to it.para; rec["dream_vary"] has the per-style yields. --reword FILE (report-only, data/week2_reworded.json from
+make_reworded.py, written through the Message Batches API): after ALL scoring and after the result JSON is on disk, weights-only greedy answers to 3 new wordings of each C2+C4 forward / reverse and each two-hop test (a test is right if most of its wordings are), to the exact kept question
+cards / REM chain dreams of those tests (the cramming gap), a seen check (a wording found word for word in any kept text) and a card-variety measure (pairwise token Jaccard of an item's texts) -> result["reword"], rewritten into the same file; a failure goes to result["reword_error"], never costs the run.
+
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
 scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
@@ -54,7 +61,8 @@ every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-3
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15)
+  python backbone/sleep/brain/sleepb.py --arm ab_ob --smoke --out /tmp/x --budget-scale 8 --text-scale 4 --dream-vary mix --reword /tmp/smoke_reworded.json   # addendum 15 on the smoke fixture (a Week-2 file maps to none of its tests)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -65,9 +73,11 @@ Each night uses a fresh AdamW with one cosine schedule spanning all of that nigh
 """
 import argparse
 import contextlib
+import hashlib
 import itertools
 import json
 import math
+import os
 import random
 import re
 import sys
@@ -295,9 +305,10 @@ def upd_prompt(L, do, to, fo, dn, tn, fn, shared):
     return L.render("You compare chat messages carefully.", u)
 
 
-def nrem_prompt(L, ctx, it, k=K):  # k: paraphrases and Q&A pairs per item (K; round(K s) at work scale s)
+def nrem_prompt(L, ctx, it, k=K, kp=None):  # k: paraphrases and Q&A pairs per item (K; round(K s) at work scale s); addendum 15 (--dream-vary): kp paraphrases instead of k (None: k, the prompt as before)
+    kp = k if kp is None else kp
     u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
-         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {k} paraphrases of the CURRENT fact (short standalone sentences, "
+         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {kp} paraphrases of the CURRENT fact (short standalone sentences, "
          f"different wording, naming both) and {k} question-answer pairs about it. Cover both directions: some questions should ask about one "
          f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
          f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
@@ -320,13 +331,29 @@ def para2_prompt(L, ctx, it):  # ab_ob_winp: twist_prompt's control, 2 more ORDI
     return L.render("You are a careful assistant that studies facts.", u)
 
 
-def parse_scenes(txt):  # numbered lines -> scene texts (at most 2)
+VARY_STATS = ("gen", "kept", "parse_fail", "dropped_test_leak", "dropped_missing_entities", "dropped_stale", "dropped_unverified", "dropped_dup")  # the vary_<style>_<stat> keys of Brain.vary
+VARY_STYLES = {"mix": ("story", "note", "weird"), "plain": ("story", "note", "plain2")}  # addendum 15 (--dream-vary): the style prompts Brain.vary sends, in order (the style index seeds each sampling); the 4th style is nrem_prompt's own kp paraphrases
+VARY_WHAT = {"story": ("story", "Write {n} tiny everyday stories (1-3 sentences each) in which this fact stays true. "),
+             "note": ("note", "Write {n} short notes in Sam's own voice (first person, 1-3 sentences each, the way Sam would jot it down) in which this fact stays true. "),
+             "weird": ("scene", "Write {n} short dream-like scenes (1-3 sentences each) in which this fact stays true, but the setting and the wording are odd and surreal, the way a dream is. "),
+             "plain2": ("paraphrase", "Write {n} short ordinary paraphrases (1-3 sentences each) in which this fact stays true, in plain everyday wording and a normal setting, each different from the other. ")}
+
+
+def vary_prompt(L, ctx, it, style, n):  # addendum 15 (--dream-vary): twist_prompt / para2_prompt's system line, context framing and fact line; n texts of one style, one per line, numbered 1 to n
+    one, ask = VARY_WHAT[style]
+    u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+         f"Focus on the fact \"{it.subj} {it.rel} {it.obj}\". " + ask.format(n=n) + f"Each {one} must name both \"{it.subj}\" and \"{it.obj}\". "
+         f"Reply with one {one} per line, numbered 1 to {n}, and nothing else.")
+    return L.render("You are a careful assistant that studies facts.", u)
+
+
+def parse_scenes(txt, n=2):  # numbered lines -> scene texts (at most n; 2 as before)
     out = []
     for ln in txt.splitlines():
         m = re.match(r"^[\s*#>-]*(?:scene\s*)?\d+\s*[.):*-]+\s*(.+)$", ln, re.I)
         if m and m.group(1).strip(" *\"'"):
             out.append(m.group(1).strip(" *\"'"))
-    return out[:2]
+    return out[:n]
 
 
 def now_prompt(L, ctx, shared, new, old):
@@ -555,6 +582,135 @@ def fwd_recall(L, model, week, bs):  # cheap learning-curve probe: weights-only 
     ok = [has_ans(t["target"], a) for t, a in zip(ts, ans)]
     cl = lambda cs: acc(o for o, t in zip(ok, ts) if t["class"] in cs)  # noqa: E731
     return {"C1": cl(("C1",)), "C2": cl(("C2",)), "C4": cl(("C4",)), "C24": cl(("C2", "C4")), "all": acc(ok)}
+
+
+# ------------------------------------------------------------------ new-wording scoring (addendum 15, --reword; report-only)
+REWORD_CARDS, REWORD_CAP, REWORD_DUP = 3, 40, 0.8  # --reword: cards (or chain dreams) asked per test; texts per item in the variety measure; token Jaccard from which two texts are near-duplicates
+
+
+def jac(sa, sb):  # Jaccard of two token sets
+    return len(sa & sb) / len(sa | sb) if sa | sb else 0.0
+
+
+def jaccard(a, b):  # token-set Jaccard of two strings (make_reworded.jaccard is the same)
+    return jac(set(tokens(a)), set(tokens(b)))
+
+
+def majority(oks):  # a test is right when more than half of its asked wordings are (2 of 3, 3 of 3; 2 of 2; 1 of 1); None when none were asked
+    return None if not oks else 2 * sum(oks) > len(oks)
+
+
+def reword_map(week, spec):
+    """spec (make_reworded.py's file) -> ([(kind, test index, week test, entry)] for the entries that are this week's tests: same index, same question, same target, {kind: entries skipped})."""
+    out, skipped = [], Counter()
+    for kind in ("forward", "reverse", "twohop"):
+        ts = week["tests"][kind]
+        for e in spec["tests"].get(kind, []):
+            i = e["test_index"]
+            if isinstance(i, int) and 0 <= i < len(ts) and ts[i]["q"] == e["q_src"] and ts[i]["target"] == e["target"]:
+                out.append((kind, i, ts[i], e))
+            else:
+                skipped[kind] += 1
+    return out, dict(skipped)
+
+
+def reword_variety(items, cap=REWORD_CAP, dup=REWORD_DUP):  # per item with 2+ texts (its paraphrases, then its question cards, the first `cap`): mean pairwise token Jaccard and the share of pairs >= dup; means over items
+    mj, nd = [], []
+    for it in items:
+        sets = [set(tokens(x)) for x in [*it.para, *(q for q, _ in it.qa)][:cap]]
+        pr = [jac(sets[i], sets[j]) for i in range(len(sets)) for j in range(i + 1, len(sets))]
+        if pr:
+            mj.append(sum(pr) / len(pr))
+            nd.append(sum(x >= dup for x in pr) / len(pr))
+    return {"items": len(mj), "mean_jaccard": mean(mj), "near_dup_share": mean(nd), "cap": cap, "near_dup_at": dup}
+
+
+def reword_eval(L, model, week, brain, spec, bs, seed, log=print):
+    """Addendum 15 (--reword, report-only): weights only (plain_prompt, greedy, 20 tokens, has_ans) on (1) the new wordings of the C2+C4 forward / reverse and the two-hop tests that spec has; (2) for each C2+C4 forward / reverse test, up to REWORD_CARDS of the
+    matching Brain items' kept question cards (it.qa, live items whose ground-truth pair is the test's item by gt_match, answer has the target), sampled under Random(seed * 1000 + test index); (3) for each two-hop test, up to REWORD_CARDS kept REM chain dreams
+    (rem_pool kind "chain", the two keys cover the two ground-truth items as in dreamed_twohop, answer has the target), asked exactly. A test is right when more than half of its wordings are (majority); share = the mean over tests of the share right.
+    Cramming gap = mean card accuracy - mean new-wording accuracy (points, over the tests with cards); seen = a wording whose norm() is inside the norm of a kept text (it.para, it.qa questions, REM pool questions); variety = reword_variety.
+    brain None (arms a0 / ad / af): only the new-wording recall. Tests of spec that are not this week's (index / question / target differ) are skipped and counted."""
+    t0 = time.time()
+    ms, skipped = reword_map(week, spec)
+    G = {g[0]: g for g in brain.G} if brain is not None else {}  # item id -> (id, class, [(a, b)], old pairs)
+    items = list(brain.items.values()) if brain is not None else []
+    live = [it for it in items if not it.dead]
+    asks = []  # every question put to the model, one dict each
+    for kind, i, t, e in ms:
+        for j, rw in enumerate(e["rewordings"]):
+            asks.append({"src": "reword", "kind": kind, "test": i, "n": j, "q": rw, "target": t["target"]})
+        if brain is None:
+            continue
+        pool, src = [], None
+        if kind != "twohop" and t.get("class") in ("C2", "C4") and t["item"] in G:
+            seen_q = set()
+            for it in live:
+                if gt_match(it.subj, it.obj, G[t["item"]][2]):
+                    for q, a_ in it.qa:
+                        if has_ans(t["target"], a_) and norm(q) not in seen_q:
+                            seen_q.add(norm(q))
+                            pool.append(q)
+            src = "card"
+        elif kind == "twohop" and all(x in G for x in t["items"][:2]):
+            pa, pb = (G[x][2] for x in t["items"][:2])
+            seen_q = set()
+            for x in brain.rem_pool:
+                k1, k2 = (brain.items.get(k) for k in x["keys"][:2]) if len(x["keys"]) == 2 else (None, None)
+                if x["kind"] == "chain" and k1 and k2 and has_ans(t["target"], x["a"]) and norm(x["q"]) not in seen_q \
+                        and ((gt_match(k1.subj, k1.obj, pa) and gt_match(k2.subj, k2.obj, pb)) or (gt_match(k1.subj, k1.obj, pb) and gt_match(k2.subj, k2.obj, pa))):
+                    seen_q.add(norm(x["q"]))
+                    pool.append(x["q"])
+            src = "chain"
+        for j, q in enumerate(random.Random(seed * 1000 + i).sample(pool, min(REWORD_CARDS, len(pool)))):
+            asks.append({"src": src, "kind": kind, "test": i, "n": j, "q": q, "target": t["target"]})
+    if brain is not None:  # the seen check: a wording that is inside a kept text word for word (normalized)
+        big = "\n".join([norm(p) for it in items for p in it.para] + [norm(q) for it in items for q, _ in it.qa] + [norm(x["q"]) for x in brain.rem_pool])
+        for x in asks:
+            if x["src"] == "reword":
+                x["seen"] = norm(x["q"]) in big
+    model.eval()
+    ans = L.generate(model, [plain_prompt(L, x["q"]) for x in asks], max_new=20, bs=bs) if asks else []
+    by = defaultdict(lambda: defaultdict(list))  # (kind, test) -> src -> [ok]; "unseen" -> the rewordings that are not inside a kept text
+    for x, a_ in zip(asks, ans):
+        x["answer"], x["ok"] = a_, has_ans(x["target"], a_)
+        by[(x["kind"], x["test"])][x["src"]].append(x["ok"])
+        if x["src"] == "reword" and x.get("seen") is False:
+            by[(x["kind"], x["test"])]["unseen"].append(x["ok"])
+    cls = {(k, i): t.get("class") for k, i, t, _ in ms}
+
+    def summ(keys, src="reword"):  # recall: share of tests that are right by majority; share: mean over tests of the share of wordings right
+        rs = [by[k][src] for k in keys if by[k][src]]
+        return {"n": len(rs), "recall": acc(majority(r) for r in rs), "share": acc(sum(r) / len(r) for r in rs)}
+    ks = {kind: [(k, i) for k, i, _, _ in ms if k == kind] for kind in ("forward", "reverse", "twohop")}
+    both = ks["forward"] + ks["reverse"]
+    nw = {"forward": summ(ks["forward"]), "reverse": summ(ks["reverse"]), "both": summ(both), "twohop": summ(ks["twohop"]),
+          "by_class": {c: summ([k for k in both if cls[k] == c]) for c in sorted({cls[k] for k in both if cls[k]})}}
+    out = {"mapped": {k: len(v) for k, v in ks.items()}, "skipped_unmapped": skipped, "wordings_per_test": dict(sorted(Counter(len(e["rewordings"]) for _, _, _, e in ms).items())), "new_wording": nw}
+    if brain is not None:
+        wc = [k for k in both if by[k]["card"]]  # the tests that have cards
+        out["cards"] = {"tests_in_scope": len(both), "tests_with_cards": len(wc), "cards_asked": sum(len(by[k]["card"]) for k in wc), "mean_acc": acc(sum(by[k]["card"]) / len(by[k]["card"]) for k in wc)}
+        has = [k for k in wc if by[k]["reword"]]  # ... and a wording: the cramming gap's tests
+        cm = acc(sum(by[k]["card"]) / len(by[k]["card"]) for k in has)
+        wsh = summ(has)
+        out["cramming_gap_pts"] = None if not has else round(100 * (cm - wsh["share"]), 2)  # card accuracy - new-wording accuracy (mean share right), points
+        out["cramming_gap_majority_pts"] = None if not has else round(100 * (cm - wsh["recall"]), 2)  # the same against the majority-right recall
+        out["cramming_gap_basis"] = {"tests": len(has), "card_acc": cm, "reword_share": wsh["share"], "reword_recall": wsh["recall"]}
+        th = [k for k in ks["twohop"] if by[k]["chain"] and by[k]["reword"]]
+        tm, tw = acc(sum(by[k]["chain"]) / len(by[k]["chain"]) for k in th), summ(th)
+        out["twohop_cards"] = {"tests": len(th), "dreams_asked": sum(len(by[k]["chain"]) for k in th), "chain_acc": tm, "reword_share": tw["share"], "reword_recall": tw["recall"],
+                               "gap_pts": None if not th else round(100 * (tm - tw["share"]), 2), "gap_majority_pts": None if not th else round(100 * (tm - tw["recall"]), 2)}
+        rw = [x for x in asks if x["src"] == "reword"]
+        un = [x for x in rw if not x["seen"]]
+        un_both, un_two = [k for k in both if by[k]["unseen"]], [k for k in ks["twohop"] if by[k]["unseen"]]
+        out["seen"] = {"rewordings": len(rw), "seen": len(rw) - len(un), "seen_share": acc(x["seen"] for x in rw),
+                       "unseen": {"rewordings": len(un), "share_right": acc(x["ok"] for x in un),
+                                  "both": {"n": len(un_both), "recall": summ(un_both, "unseen")["recall"]}, "twohop": {"n": len(un_two), "recall": summ(un_two, "unseen")["recall"]}}}
+        out["variety"] = reword_variety(live)
+    out["per_test"] = {kind: {i: majority(by[(kind, i)]["reword"]) for k, i in ks[kind] if by[(k, i)]["reword"]} for kind in ks}  # McNemar-ready: kind -> test index -> right by majority
+    out["rows"] = asks
+    out["seconds"] = round(time.time() - t0, 1)
+    return out
 
 
 def load_arc_val(smoke):
@@ -2092,6 +2248,8 @@ class Brain:
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         if args.arm in EXTRA_ARMS:
             s.examples["twist"] = []
+        if getattr(args, "dream_vary", "off") != "off":
+            s.examples["vary"] = []
         s.set_scale(1.0)
         s.conf, s.boosted = {}, set()  # ab_ob_guess: first-token confidence per probed item key (tonight); keys with rpe > 0.2 last night
         s.rng = random.Random(args.seed + 17)
@@ -2111,9 +2269,15 @@ class Brain:
     def sc(s, n):  # addendum 5: a night's knob n at work scale s.scale (untouched at 1, so the reference night is exactly ab_ob's)
         return n if s.scale == 1 or n <= 0 else max(1, round(n * s.scale))
 
-    def set_scale(s, scale):  # the night's work: dreams per item (and their generation length), item cap, REM chains, gist dreams
+    def tsc(s, n):  # addendum 15: a generation knob n at the text scale s.tscale (the work scale unless --text-scale says otherwise, so tsc == sc without the flag)
+        return n if s.tscale == 1 or n <= 0 else max(1, round(n * s.tscale))
+
+    def set_scale(s, scale):  # the night's work: dreams per item (and their generation length), item cap, REM chains, gist dreams (at the text scale, addendum 15); the training steps are s.sc(steps) at the work scale
         s.scale = scale
-        s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.sc(K), s.sc(s.a.max_dream_items), s.sc(s.a.rem_chains), s.sc(s.a.rem_gist), s.sc(400)
+        ts = getattr(s.a, "text_scale", None)  # addendum 15 (--text-scale; a stub args without it is the default)
+        s.tscale = scale if ts is None else ts
+        s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.tsc(K), s.tsc(s.a.max_dream_items), s.tsc(s.a.rem_chains), s.tsc(s.a.rem_gist), s.tsc(400)
+        s.kp = math.ceil(s.k / 4) if getattr(s.a, "dream_vary", "off") != "off" else None  # addendum 15 (--dream-vary): paraphrases per nrem_prompt (None: k)
 
     def gen(s, prompts, max_new, base=True, sample=False, temp=0.8, eos=None):  # eos: stop id(s) for Lang.generate (None: its default, the end of the turn)
         if not prompts:
@@ -2291,7 +2455,7 @@ class Brain:
         for it in need:
             idx = s.diary.containing(it.subj, it.obj, d)[::-1][:4]
             ctx = s.diary.label(idx)
-            prompts.append(nrem_prompt(s.L, ctx, it, s.k))
+            prompts.append(nrem_prompt(s.L, ctx, it, s.k, s.kp))  # s.kp: None, or ceil(k/4) paraphrases under --dream-vary (addendum 15)
             meta.append((it, "dream", ctx))
             if it.upd:
                 u = it.upd[-1]
@@ -2312,7 +2476,7 @@ class Brain:
                     qas = [(f"What is linked to {it.subj}?", it.obj), (f"What is linked to {it.obj}?", it.subj)]
                 if not paras and not qas:
                     st["parse_fail"] += 1
-                for p in paras[:s.k]:
+                for p in paras[:s.kp or s.k]:
                     st["paraphrases_gen"] += 1
                     if s.leaky(p):
                         st["dropped_test_leak"] += 1
@@ -2383,6 +2547,8 @@ class Brain:
         st["items"] = len(need)
         if a.arm in EXTRA_ARMS:
             s.twist(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
+        if getattr(a, "dream_vary", "off") != "off":  # addendum 15: the style texts, after all the normal dreaming (as twist)
+            s.vary(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
         return dict(st)
 
     def stale_hit(s, it, text):
@@ -2451,6 +2617,54 @@ class Brain:
                 keep = True
             if len(s.examples["twist"]) < 10:
                 s.examples["twist"].append({"night": d, "item": it.fact, "scene": x, "check_q": q, "check_a": ans, "verifier": v, "kept": keep})
+
+    def vary(s, d, need, ctxs, st):
+        """--dream-vary {mix,plain} (addendum 15), after all of the night's normal dreaming and in the place of twist: for each item of `need` that has question cards or a probe the BASE model writes n = ceil(k/4) texts in each of 3 styles
+        (VARY_STYLES[mode]: story, note, then weird (mix) or plain2 (plain)), one prompt per item and style (vary_prompt), each style sampled under its own fixed seed (seed * 100 + night + 43 + style index; the global torch RNG state is put back, so
+        the main sampling stream is as without the flag). A text is kept under twist's checks: it names both entities, is not a test leak, restates no older value (stale_hit), and the base model, shown only the text, answers a check card (card j % len
+        of the item's cards, its probe if none; j: the text's number in its reply). Kept texts are appended to it.para after the item's plain paraphrases of the night. Stats: vary_<style>_<VARY_STATS>."""
+        a = s.a
+        styles, n = VARY_STYLES[a.dream_vary], math.ceil(s.k / 4)
+        cur = [it for it in need if a.smoke or it.qa or it.probe]
+        st["vary_skipped_no_check"] = len(need) - len(cur)
+        s.raw["vary"] = {}
+        cand = []  # (style, item, text, check question, check answer)
+        for si, style in enumerate(styles):
+            with seeded_rng(a.seed * 100 + d + 43 + si, s.L.device):
+                raw = s.gen([vary_prompt(s.L, ctxs[it.key], it, style, n) for it in cur], s.mn(80 * n), sample=True)
+            s.raw["vary"][style] = raw[:2]
+            for it, txt in zip(cur, raw):
+                ents, chk = [it.subj, it.obj], it.qa or ([it.probe] if it.probe else [])
+                texts = parse_scenes(txt, n)
+                if a.smoke and not texts:  # tiny random model emits noise: fabricate one text so the path runs
+                    texts = [f"In a {style} about Sam, {it.subj} {it.rel} {it.obj}."]
+                if not texts:
+                    st[f"vary_{style}_parse_fail"] += 1
+                for j, x in enumerate(texts):
+                    st[f"vary_{style}_gen"] += 1
+                    if s.leaky(x):
+                        st[f"vary_{style}_dropped_test_leak"] += 1
+                    elif not all(e.lower() in x.lower() for e in ents):
+                        st[f"vary_{style}_dropped_missing_entities"] += 1
+                    elif s.stale_hit(it, x):
+                        st[f"vary_{style}_dropped_stale"] += 1
+                    else:
+                        cand.append((style, it, x, *(chk[j % len(chk)] if chk else ("", ""))))
+        ver = s.gen([ctx_prompt(s.L, x, q) for _, _, x, q, _ in cand], 20)
+        seen = set()
+        for (style, it, x, q, ans), v in zip(cand, ver):
+            keep = False
+            if not has_ans(ans, v) and not a.smoke:
+                st[f"vary_{style}_dropped_unverified"] += 1
+            elif (it.key, norm(x)) in seen or any(norm(x) == norm(p) for p in it.para):
+                st[f"vary_{style}_dropped_dup"] += 1
+            else:
+                seen.add((it.key, norm(x)))
+                it.para = [*it.para, x]  # a new list: the night's logged dream examples share the old one
+                st[f"vary_{style}_kept"] += 1
+                keep = True
+            if len(s.examples["vary"]) < 12:
+                s.examples["vary"].append({"night": d, "item": it.fact, "style": style, "text": x, "check_q": q, "check_a": ans, "verifier": v, "kept": keep})
 
     # ---- 5. morning probes (weights only, current adapter)
     def probe(s, E, conf=False):
@@ -2800,6 +3014,10 @@ class Brain:
         lap("dream")
         if a.arm in EXTRA_ARMS:
             s.log(f"[night {d}] twist {({k: v for k, v in rec['dream_stats'].items() if k.startswith('twist')})}")
+        if getattr(a, "dream_vary", "off") != "off":  # addendum 15: the per-style yields of tonight (Brain.vary's stats keys)
+            rec["dream_vary"] = {"mode": a.dream_vary, "styles": list(VARY_STYLES[a.dream_vary]), "k": s.k, "kp": s.kp, "n_per_style": math.ceil(s.k / 4),
+                                "stats": {k: rec["dream_stats"].get(k, 0) for k in ["vary_skipped_no_check", *(f"vary_{sty}_{x}" for sty in VARY_STYLES[a.dream_vary] for x in VARY_STATS)]}}
+            s.log(f"[night {d}] vary {rec['dream_vary']}")
         pre = s.probe(E, conf=a.arm in GUESS_ARMS)
         s.morning(E, pre)
         lap("probe")
@@ -2817,7 +3035,7 @@ class Brain:
         total = sum(n + r for n, r in plan)
         if a.budget_scale is not None or a.night_budget_s is not None:
             rec["budget"] = {"scale": s.scale, "steps": steps, "steps_ref": ref_n, "k": s.k, "max_dream_items": s.cap_items, "rem_chains": s.cap_chains,
-                             "rem_gist": s.cap_gist, "bench": bench}
+                             "rem_gist": s.cap_gist, "bench": bench, "text_scale": getattr(a, "text_scale", None)}  # text_scale (addendum 15): None = the generation knobs are at `scale`
             s.log(f"[night {d}] budget {rec['budget']}")
         act = [it for it in E if not it.consol and (it.para or it.qa)]
         con = [it for it in cons if it.para or it.qa]
@@ -4116,6 +4334,294 @@ def selftest_k2():
 
 
 # ------------------------------------------------------------------ main
+def add15_error(args, budget_scale):  # addendum 15: main()'s checks of the new flags, as the message ap.error prints (None: fine); budget_scale: --budget-scale as given, before default_scale
+    ts, dv = getattr(args, "text_scale", None), getattr(args, "dream_vary", "off")
+    if ts is not None and budget_scale is None:
+        return "--text-scale needs --budget-scale (it sets the generation knobs apart from the training steps)"
+    if ts is not None and not ts > 0:
+        return "--text-scale must be positive"
+    if dv != "off" and args.arm in EXTRA_ARMS:
+        return f"--dream-vary cannot be combined with the twist arms {EXTRA_ARMS} (it takes the place of their extra texts)"
+    if dv != "off" and args.arm not in OB_ARMS:
+        return f"--dream-vary needs an open-book arm {OB_ARMS} (the cards are asked as open-book Q&A)"
+    return None
+
+
+def selftest_add15():
+    """Addendum 15 on stubs (no model, no GPU; RNG states put back): (i) nrem_prompt and parse_scenes at their defaults are the old code byte for byte (verbatim copies below), kp changes only the paraphrase count; (ii) the text-scale knobs: the five generation
+    knobs at the text scale, the steps at the work scale, no flag = today's numbers, a stub args without the flags = no flag; kp = ceil(k/4) only under --dream-vary; (iii) Brain.dream asks kp paraphrases and keeps paras[:kp] and the k cards; (iv) vary_prompt and
+    Brain.vary: prompts, parsing, every check and its stat key, the check card j % len, order of the kept texts, one seeded sampling per style (seed * 100 + night + 43 + style index), the global RNG put back, the base model, 80 n tokens, mix vs plain; (v) reword scoring on a
+    fake generate, the hand-computed numbers (recall, share, cards, gaps, seen, variety, McNemar booleans, rows, skips) with and without a Brain; (vi) the flag checks; (vii) make_reworded's helpers are sleepb's, and data/week2_reworded.json (if there) passes the PREREG's checks."""
+    from argparse import Namespace
+    from types import SimpleNamespace
+    import inspect
+    out, cpu = {}, torch.device("cpu")
+    rng0 = torch.get_rng_state()
+    try:
+        # ---- (i) the defaults are the old code
+        Lr = SimpleNamespace(render=lambda sy, u: f"<{sy}>{u}", device=cpu)
+        it = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1)
+
+        def old_nrem(L_, ctx, it_, k=K):  # nrem_prompt as it was before addendum 15
+            u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+                 f"Focus on the fact linking \"{it_.subj}\" and \"{it_.obj}\". Write {k} paraphrases of the CURRENT fact (short standalone sentences, "
+                 f"different wording, naming both) and {k} question-answer pairs about it. Cover both directions: some questions should ask about one "
+                 f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
+                 f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
+            return L_.render("You are a careful assistant that studies facts.", u)
+
+        def old_scenes(txt):  # parse_scenes as it was before addendum 15
+            res = []
+            for ln in txt.splitlines():
+                m = re.match(r"^[\s*#>-]*(?:scene\s*)?\d+\s*[.):*-]+\s*(.+)$", ln, re.I)
+                if m and m.group(1).strip(" *\"'"):
+                    res.append(m.group(1).strip(" *\"'"))
+            return res[:2]
+        for k in (1, 4, 8, 16, 32):
+            assert nrem_prompt(Lr, "[Day 1] x", it, k) == old_nrem(Lr, "[Day 1] x", it, k) == nrem_prompt(Lr, "[Day 1] x", it, k, None) == nrem_prompt(Lr, "[Day 1] x", it, k, k)
+        assert nrem_prompt(Lr, "c", it) == old_nrem(Lr, "c", it)
+        p84 = nrem_prompt(Lr, "c", it, 32, 8)
+        assert p84 == old_nrem(Lr, "c", it, 32).replace("Write 32 paraphrases", "Write 8 paraphrases") and "Write 8 paraphrases of the CURRENT fact" in p84 and "and 32 question-answer pairs" in p84
+        for txt in ("1. a b c\n2. d e f\n3. g h i", "Scene 1: 'x y'\nScene 2) *z w*\n- 3. q", "no numbers at all", "1.\n2.  \n3. ok", "  10) ten\n9: nine\n8- eight", ""):
+            assert parse_scenes(txt) == old_scenes(txt) == parse_scenes(txt, 2)
+        t5 = "\n".join(f"{i}. text {i}" for i in range(1, 9))
+        assert parse_scenes(t5, 4) == [f"text {i}" for i in range(1, 5)] and len(parse_scenes(t5, 8)) == 8 and len(parse_scenes(t5)) == 2
+        out["defaults_byte_identical"] = True
+
+        # ---- (ii) the text-scale knobs
+        def knobs(budget, text, vary="off", flags=True):
+            a_ = dict(max_dream_items=160, rem_chains=30, rem_gist=30)
+            me_ = SimpleNamespace(a=SimpleNamespace(**a_, **({"text_scale": text, "dream_vary": vary} if flags else {})))
+            me_.sc, me_.tsc = (lambda n: Brain.sc(me_, n)), (lambda n: Brain.tsc(me_, n))  # noqa: E731
+            Brain.set_scale(me_, budget)
+            return me_
+
+        def kn(m_):
+            return (m_.k, m_.cap_items, m_.cap_chains, m_.cap_gist, m_.dream_new)
+        for b in (0.5, 1.0, 2.0, 4.0, 8.0):
+            sc_ = lambda n: Brain.sc(SimpleNamespace(scale=b), n)  # noqa: E731
+            today = (sc_(K), sc_(160), sc_(30), sc_(30), sc_(400))  # addendum 5's numbers: the formula as it was
+            for m_ in (knobs(b, None), knobs(b, None, flags=False)):
+                assert kn(m_) == today and m_.scale == b and m_.tscale == b and m_.kp is None, (b, kn(m_), today)
+        assert kn(knobs(8.0, None)) == (32, 1280, 240, 240, 3200) and kn(knobs(4.0, None)) == (16, 640, 120, 120, 1600)
+        r8 = knobs(8.0, 4.0)
+        assert kn(r8) == (16, 640, 120, 120, 1600) == kn(knobs(4.0, None)) and r8.scale == 8.0 and r8.tscale == 4.0 and r8.sc(150) == 1200 and r8.sc(150) == knobs(8.0, None).sc(150) and r8.sc(40) == 320
+        assert kn(knobs(8.0, 1.0)) == (4, 160, 30, 30, 400) and kn(knobs(2.0, 0.5)) == (2, 80, 15, 15, 200) and kn(knobs(1.0, 3.0)) == (12, 480, 90, 90, 1200) and knobs(1.0, 3.0).sc(150) == 150
+        assert [knobs(8.0, 4.0, "mix").kp, knobs(8.0, None, "plain").kp, knobs(1.0, None, "mix").kp, knobs(2.0, 0.5, "mix").kp, knobs(8.0, 4.0, "off").kp] == [4, 8, 1, 1, None]
+        src_night = inspect.getsource(Brain.night)
+        assert "ref_n, steps = steps, s.sc(steps)" in src_night and "tsc(" not in src_night, "the night's steps are planned at the work scale"
+        out["text_scale"] = {"R8": kn(r8), "steps_150": r8.sc(150)}
+
+        # ---- (iii) Brain.dream: kp paraphrases asked and kept, k cards kept; no flag = as before
+        def dream_run(vary):
+            ev = {"gen": [], "vary": []}
+            it_ = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1, nment=1, dirty=True, days=2)
+            js = json.dumps({"paraphrases": [f"Drovak lives in Kelmira, version {i}." for i in range(6)], "qa": [{"q": f"Question {i} about Drovak's town?", "a": "Kelmira"} for i in range(6)]})
+
+            def gen_(prompts, max_new, base=True, sample=False, temp=0.8, eos=None):
+                ev["gen"].append((len(prompts), max_new, sample, base, prompts[0]))
+                return [js] * len(prompts) if sample else ["Kelmira"] * len(prompts)
+            me_ = knobs(1.0, None, vary)
+            me_.__dict__.update(L=Lr, gen=gen_, mn=lambda n: n, raw={}, examples={"dreams": [], "probes": [], "now": [], "vary": []}, leak=set(), items={it_.key: it_},
+                                diary=SimpleNamespace(containing=lambda a_, b_, d_: [0], label=lambda idx: "[Day 1] ctx"), vary=lambda *x: ev["vary"].append(x))
+            me_.a.arm, me_.a.smoke = "ab_ob", False
+            me_.leaky = lambda t: Brain.leaky(me_, t)
+            st_ = Brain.dream(me_, 2, [it_])
+            return me_, it_, st_, ev
+        m0, it0, st0, ev0 = dream_run("off")
+        assert ev0["gen"][0][4] == nrem_prompt(Lr, "[Day 1] ctx", it0, 4) == old_nrem(Lr, "[Day 1] ctx", it0, 4) and len(it0.para) == 4 and st0["paraphrases_gen"] == 4 and st0["qa_gen"] == 4 and ev0["vary"] == []
+        m1, it1_, st1, ev1 = dream_run("mix")
+        assert ev1["gen"][0][4] == nrem_prompt(Lr, "[Day 1] ctx", it1_, 4, 1) and "Write 1 paraphrases" in ev1["gen"][0][4] and "and 4 question-answer pairs" in ev1["gen"][0][4]
+        assert len(it1_.para) == 1 and it1_.para == ["Drovak lives in Kelmira, version 0."] and st1["paraphrases_gen"] == 1 and st1["qa_gen"] == 4 and len(it1_.qa) == 3 and it1_.probe is not None  # 4 cards: 1 probe + 3
+        assert len(ev1["vary"]) == 1 and ev1["vary"][0][0] == 2 and ev1["vary"][0][1] == [it1_] and ev1["vary"][0][2] == {it1_.key: "[Day 1] ctx"} and isinstance(ev1["vary"][0][3], Counter)  # (the live stats Counter: dream returns a copy of it)
+        out["dream_kp"] = {"off": len(it0.para), "mix": len(it1_.para)}
+
+        # ---- (iv) vary_prompt, Brain.vary
+        ctx = "[Day 1] ctx"
+        ps = {sty: vary_prompt(Lr, ctx, it, sty, 4) for sty in ("story", "note", "weird", "plain2")}
+        head = twist_prompt(Lr, ctx, it)[:twist_prompt(Lr, ctx, it).index("Write 2")]
+        assert all(p.startswith(head) and p == para2_prompt(Lr, ctx, it)[:len(head)] + p[len(head):] for p in ps.values()), "system line, context framing and fact line as twist_prompt / para2_prompt"
+        assert head.startswith("<You are a careful assistant that studies facts.>Messages Sam sent in chat, newest first") and 'Focus on the fact "Drovak lives in Kelmira". ' in head
+        for sty, words in (("story", "tiny everyday stories"), ("note", "in Sam's own voice (first person"), ("weird", "dream-like scenes"), ("plain2", "ordinary paraphrases")):
+            p = ps[sty]
+            assert "Write 4 " in p and words in p and 'name both "Drovak" and "Kelmira"' in p and "numbered 1 to 4, and nothing else." in p and "stays true" in p, (sty, p)
+        assert "surreal" in ps["weird"] and "surreal" not in ps["plain2"] and "plain everyday wording" in ps["plain2"] and ps["story"] != ps["note"]
+
+        def vary_scene(mode, d=2, seed=3):
+            i1 = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1, para=["Drovak lives in Kelmira."], qa=[("Where does Drovak live?", "Kelmira"), ("Who lives in Kelmira?", "Drovak")])
+            i2 = Item(key=("zelmir", "tavrix"), subj="Zelmir", obj="Tavrix", rel="works at", born=1, para=["Zelmir works at Tavrix."], qa=[("Where does Zelmir work?", "Tavrix")],
+                      upd=[{"shared": "Zelmir", "old": "Skarum", "new": "Tavrix", "old_key": ("zelmir", "skarum")}])
+            i3 = Item(key=("kelvora", "zhoumira"), subj="Kelvora", obj="Zhoumira", rel="eats with", born=1)  # no cards, no probe: skipped
+            i4 = Item(key=("brokai", "fenlus"), subj="Brokai", obj="Fenlus", rel="is sibling of", born=1, probe=("Who is Brokai's sibling?", "Fenlus"))
+            calls = []
+
+            def gen_(prompts, max_new, base=True, sample=False, temp=0.8, eos=None):
+                calls.append({"n": len(prompts), "max_new": max_new, "sample": sample, "base": base, "draw": torch.rand(1).item() if sample else None, "prompts": prompts})  # (greedy generation draws nothing)
+                if not sample:  # the verifier: knows every answer unless the text says UNVERIFIABLE
+                    return ["no idea" if "UNVERIFIABLE" in p else "Kelmira, Tavrix, Drovak, Fenlus" for p in prompts]
+                sty = ["tiny everyday stories", "short notes", "dream-like scenes" if mode == "mix" else "ordinary paraphrases"]
+                si = next(i for i, w in enumerate(sty) if w in prompts[0])
+                return REPL[si]
+            me_ = SimpleNamespace(a=SimpleNamespace(seed=seed, smoke=False, dream_vary=mode), k=16, L=SimpleNamespace(device=cpu, render=lambda sy, u: f"{sy}||{u}"), leak={norm("Where is Dax?")},
+                                  items={}, raw={}, examples={"vary": []}, mn=lambda n_: n_, gen=gen_)
+            me_.leaky, me_.stale_hit = (lambda t: Brain.leaky(me_, t)), (lambda i_, t: Brain.stale_hit(me_, i_, t))  # noqa: E731
+            st_ = Counter()
+            REPL = [["1. Drovak lives in Kelmira, so Sam mailed him there.\n2. Kelmira is the town where Drovak lives.\n3. Where is Dax?\n4. Sam met Drovak somewhere nice.",
+                     "1. Zelmir used to work at Skarum but now works at Tavrix.\n2. Sam asked Zelmir about Tavrix.", "I cannot do that."],
+                    ["1. UNVERIFIABLE: Note to self, Drovak lives in Kelmira.\n2. Note: Kelmira, Drovak's town.\n3. drovak LIVES in Kelmira.",
+                     "1) Note: Zelmir, Tavrix, desk 4.\n2) Also: Tavrix is where Zelmir goes each morning.", "1. Sam's note: Brokai and Fenlus are siblings."],
+                    ["1. In a dream, Drovak lives in Kelmira on a cloud.\n2. In a dream, Drovak lives in Kelmira on a cloud.",
+                     "1. A green sky over Tavrix, where Zelmir works.\n2. Zelmir works at Tavrix in the upside-down office.\n3. Zelmir flies to Tavrix.\n4. Tavrix hums while Zelmir works.",
+                     "1. A talking fish tells Brokai that Fenlus is a sibling."]]
+            state = torch.get_rng_state()
+            Brain.vary(me_, d, [i1, i2, i3, i4], {i.key: ctx for i in (i1, i2, i3, i4)}, st_)
+            assert torch.equal(torch.get_rng_state(), state), "Brain.vary moved the global RNG"
+            return me_, (i1, i2, i3, i4), st_, calls
+        me, (i1, i2, i3, i4), st, calls = vary_scene("mix")
+        assert [(c["n"], c["max_new"], c["sample"], c["base"]) for c in calls] == [(3, 320, True, True)] * 3 + [(16, 20, False, True)], [(c["n"], c["max_new"], c["sample"], c["base"]) for c in calls]
+        for si, c in enumerate(calls[:3]):
+            torch.manual_seed(3 * 100 + 2 + 43 + si)
+            assert c["draw"] == torch.rand(1).item(), "style sampled under seed * 100 + night + 43 + style index"
+        assert calls[0]["prompts"] == [vary_prompt(me.L, ctx, i, "story", 4) for i in (i1, i2, i4)] and "dream-like scenes" in calls[2]["prompts"][0] and "short notes" in calls[1]["prompts"][1]
+        assert calls[3]["prompts"][0] == ctx_prompt(me.L, "Drovak lives in Kelmira, so Sam mailed him there.", "Where does Drovak live?") and calls[3]["prompts"][1] == ctx_prompt(me.L, "Kelmira is the town where Drovak lives.", "Who lives in Kelmira?")
+        want = Counter({"vary_skipped_no_check": 1,
+                        "vary_story_gen": 6, "vary_story_parse_fail": 1, "vary_story_dropped_test_leak": 1, "vary_story_dropped_missing_entities": 1, "vary_story_dropped_stale": 1, "vary_story_kept": 3,
+                        "vary_note_gen": 6, "vary_note_dropped_unverified": 1, "vary_note_dropped_dup": 1, "vary_note_kept": 4,
+                        "vary_weird_gen": 7, "vary_weird_dropped_dup": 1, "vary_weird_kept": 6})
+        assert st == want, (dict(st), dict(want))
+        assert i1.para == ["Drovak lives in Kelmira.", "Drovak lives in Kelmira, so Sam mailed him there.", "Kelmira is the town where Drovak lives.", "Note: Kelmira, Drovak's town.", "In a dream, Drovak lives in Kelmira on a cloud."]
+        assert i2.para == ["Zelmir works at Tavrix.", "Sam asked Zelmir about Tavrix.", "Note: Zelmir, Tavrix, desk 4.", "Also: Tavrix is where Zelmir goes each morning.", "A green sky over Tavrix, where Zelmir works.",
+                           "Zelmir works at Tavrix in the upside-down office.", "Zelmir flies to Tavrix.", "Tavrix hums while Zelmir works."]
+        assert i4.para == ["Sam's note: Brokai and Fenlus are siblings.", "A talking fish tells Brokai that Fenlus is a sibling."] and i3.para == [] and i1.qa == [("Where does Drovak live?", "Kelmira"), ("Who lives in Kelmira?", "Drovak")]
+        assert set(me.raw["vary"]) == {"story", "note", "weird"} and all(len(v) == 2 for v in me.raw["vary"].values()) and me.raw["vary"]["story"][0].startswith("1. Drovak lives")
+        ex = {e["text"]: e for e in me.examples["vary"]}  # (the first 12 candidates)
+        assert len(me.examples["vary"]) == 12 and ex["Kelmira is the town where Drovak lives."]["check_q"] == "Who lives in Kelmira?" and ex["Note: Kelmira, Drovak's town."]["check_q"] == "Who lives in Kelmira?"  # j = 1 -> card 1
+        assert ex["drovak LIVES in Kelmira."]["check_q"] == "Where does Drovak live?" and ex["drovak LIVES in Kelmira."]["kept"] is False and ex["Sam asked Zelmir about Tavrix."]["check_q"] == "Where does Zelmir work?"  # j = 2 -> card 0; one card: j % 1
+        assert ex["UNVERIFIABLE: Note to self, Drovak lives in Kelmira."]["kept"] is False and ex["Sam's note: Brokai and Fenlus are siblings."]["check_q"] == "Who is Brokai's sibling?"  # the probe is the check without cards
+        # plain: the third style is plain2 (ordinary paraphrases), same seeds, its own stat keys; the leak / check pieces are shared
+        mp, (p1, p2, p3, p4), stp, callsp = vary_scene("plain")
+        assert "ordinary paraphrases" in callsp[2]["prompts"][0] and "surreal" not in callsp[2]["prompts"][0] and stp["vary_plain2_gen"] == 7 and stp["vary_plain2_kept"] == 6 and not any("weird" in k for k in stp) and set(mp.raw["vary"]) == {"story", "note", "plain2"}
+        assert {k: v for k, v in stp.items() if "plain2" not in k} == {k: v for k, v in want.items() if "weird" not in k}
+        # another night / seed: other seeds, same everything else
+        _, _, _, calls2 = vary_scene("mix", d=5, seed=7)
+        for si, c in enumerate(calls2[:3]):
+            torch.manual_seed(7 * 100 + 5 + 43 + si)
+            assert c["draw"] == torch.rand(1).item()
+        out["vary"] = {k: v for k, v in sorted(st.items()) if k.endswith(("_gen", "_kept"))}
+
+        # ---- (v) reword scoring on a fake generate
+        G = [(0, "C2", [("drovak", "kelmira")], []), (1, "C2", [("drovak", "gliker")], []), (2, "C4", [("zelmir", "tavrix")], []), (3, "C1", [("brokai", "fenlus")], [])]
+        mk = lambda key, subj, obj, para, qa, dead=False: Item(key=key, subj=subj, obj=obj, rel="r", born=1, para=para, qa=qa, dead=dead)  # noqa: E731
+        k0 = mk(("drovak", "kelmira"), "Drovak", "Kelmira", ["Drovak lives in Kelmira.", "Sam asked: where does Drovak reside? Then went on."],
+                [("Which town is Drovak's home?", "Kelmira"), ("Who resides in Kelmira?", "Drovak"), ("What place does Drovak call home?", "Kelmira"), ("Which place is Drovak's residence?", "Kelmira"), ("Name Drovak's home town.", "Kelmira")])
+        k1 = mk(("drovak", "gliker"), "Drovak", "Gliker", ["Drovak mentors Gliker."], [("Who does Drovak mentor?", "Gliker")])
+        k2 = mk(("zelmir", "tavrix"), "Zelmir", "Tavrix", ["Zelmir works at Tavrix."], [("Where does Zelmir work?", "Tavrix")])
+        kd = mk(("kelmira", "drovak"), "Kelmira", "Drovak", [], [("A dead card about Drovak's home?", "Kelmira")], dead=True)
+        pool_ = [{"q": "In which place does Gliker's mentor live?", "a": "Kelmira", "keys": [k1.key, k0.key], "kind": "chain"}, {"q": "A chain with the wrong answer?", "a": "Gliker", "keys": [k1.key, k0.key], "kind": "chain"},
+                 {"q": "A gist question?", "a": "Kelmira", "keys": [k0.key], "kind": "gist"}, {"q": "A chain of other items?", "a": "Kelmira", "keys": [k2.key, k0.key], "kind": "chain"}]
+        brain = SimpleNamespace(G=G, items={x.key: x for x in (k0, k1, k2, kd)}, rem_pool=pool_)
+        week = {"tests": {"forward": [{"q": "Where does Drovak live?", "target": "Kelmira", "item": 0, "class": "C2"}, {"q": "Which company employs Zelmir?", "target": "Tavrix", "item": 2, "class": "C4"},
+                                      {"q": "Who is Brokai's sibling?", "target": "Fenlus", "item": 3, "class": "C1"}],
+                          "reverse": [{"q": "Who lives in Kelmira?", "target": "Drovak", "item": 0, "class": "C2"}, {"q": "Who works at Tavrix?", "target": "Zelmir", "item": 2, "class": "C4"}],
+                          "twohop": [{"q": "In which place does the mentor of Gliker live?", "target": "Kelmira", "items": [1, 0]}, {"q": "Where does Brokai's sibling work?", "target": "Tavrix", "items": [3, 2]}],
+                          "changed": [], "routine": []}}
+        spec = {"tests": {"forward": [{"q_src": "Where does Drovak live?", "target": "Kelmira", "item": 0, "class": "C2", "test_index": 0, "rewordings": ["In which town does Drovak live?", "Where does Drovak reside?", "Drovak makes his home where?"]},
+                                      {"q_src": "Which company employs Zelmir?", "target": "Tavrix", "item": 2, "class": "C4", "test_index": 1, "rewordings": ["Which firm pays Zelmir?", "Zelmir is on whose payroll?"]},
+                                      {"q_src": "A question that is not in the week?", "target": "Kelmira", "item": 0, "class": "C2", "test_index": 7, "rewordings": ["x?", "y?", "z?"]}],
+                         "reverse": [{"q_src": "Who lives in Kelmira?", "target": "Drovak", "item": 0, "class": "C2", "test_index": 0, "rewordings": ["Which person lives in Kelmira?", "Kelmira is home to whom?", "Who resides in Kelmira?"]},
+                                     {"q_src": "Who works at the wrong place?", "target": "Zelmir", "item": 2, "class": "C4", "test_index": 1, "rewordings": ["a?", "b?", "c?"]}],
+                         "twohop": [{"q_src": "In which place does the mentor of Gliker live?", "target": "Kelmira", "items": [1, 0], "classes": ["C2", "C2"], "test_index": 0,
+                                     "rewordings": ["In which place does Gliker's mentor live?", "Where does the person who mentors Gliker reside?", "Gliker's mentor lives in which town?"]},
+                                    {"q_src": "Where does Brokai's sibling work?", "target": "Tavrix", "items": [3, 2], "classes": ["C1", "C4"], "test_index": 1,
+                                     "rewordings": ["At which company does Brokai's sibling work?", "Brokai's sibling is employed where?", "Where is Brokai's brother or sister employed?"]}]}}
+        card_pool = [q for q, a_ in k0.qa if a_ == "Kelmira"]
+        sampled = random.Random(1 * 1000 + 0).sample(card_pool, 3)  # forward test 0's three cards (seed 1)
+        right = {"In which town does Drovak live?": "Kelmira", "Where does Drovak reside?": "Kelmira", "Which firm pays Zelmir?": "Tavrix", "Who resides in Kelmira?": "Drovak", "In which place does Gliker's mentor live?": "Kelmira",
+                 "Where does the person who mentors Gliker reside?": "Kelmira", "Gliker's mentor lives in which town?": "Kelmira", sampled[1]: "Kelmira", sampled[2]: "Kelmira"}  # sampled[0] and "Where does Zelmir work?" are wrong
+        gcalls = []
+
+        def fake_generate(model, prompts, max_new=20, bs=8, **kw):
+            gcalls.append((len(prompts), max_new, bs, model))
+            return [f"The answer is {right[p]}." if p in right else "I do not know." for p in prompts]
+        Lf = SimpleNamespace(render=lambda sy, q: q, generate=fake_generate, device=cpu)
+        assert plain_prompt(Lf, "Q?") == "Q?"
+        mdl = SimpleNamespace(eval=lambda: None)
+        rw = reword_eval(Lf, mdl, week, brain, spec, 16, 1)
+        assert gcalls == [(20, 20, 16, mdl)], gcalls  # ONE call: 14 wordings + 5 cards + 1 chain dream, greedy defaults, 20 tokens, the given batch size
+        assert rw["mapped"] == {"forward": 2, "reverse": 1, "twohop": 2} and rw["skipped_unmapped"] == {"forward": 1, "reverse": 1} and rw["wordings_per_test"] == {2: 1, 3: 4}
+        ap_ = lambda x, y: x is not None and abs(x - y) < 1e-9  # noqa: E731
+        nw = rw["new_wording"]
+        assert (nw["forward"]["n"], nw["forward"]["recall"]) == (2, 0.5) and ap_(nw["forward"]["share"], 7 / 12) and (nw["reverse"]["n"], nw["reverse"]["recall"]) == (1, 0.0) and ap_(nw["reverse"]["share"], 1 / 3)
+        assert nw["both"]["n"] == 3 and ap_(nw["both"]["recall"], 1 / 3) and ap_(nw["both"]["share"], 0.5) and (nw["twohop"]["n"], nw["twohop"]["recall"], nw["twohop"]["share"]) == (2, 0.5, 0.5)
+        assert nw["by_class"]["C2"]["n"] == 2 and nw["by_class"]["C2"]["recall"] == 0.5 and ap_(nw["by_class"]["C2"]["share"], 0.5) and nw["by_class"]["C4"]["n"] == 1 and nw["by_class"]["C4"]["recall"] == 0.0 and set(nw["by_class"]) == {"C2", "C4"}
+        assert rw["cards"] == {"tests_in_scope": 3, "tests_with_cards": 3, "cards_asked": 5, "mean_acc": rw["cards"]["mean_acc"]} and ap_(rw["cards"]["mean_acc"], 5 / 9)
+        assert ap_(rw["cramming_gap_pts"], round(100 * (5 / 9 - 0.5), 2)) and ap_(rw["cramming_gap_majority_pts"], round(100 * (5 / 9 - 1 / 3), 2)) and rw["cramming_gap_basis"]["tests"] == 3
+        assert rw["twohop_cards"] == {"tests": 1, "dreams_asked": 1, "chain_acc": 1.0, "reword_share": 1.0, "reword_recall": 1.0, "gap_pts": 0.0, "gap_majority_pts": 0.0}
+        sn = rw["seen"]
+        assert (sn["rewordings"], sn["seen"]) == (14, 3) and ap_(sn["seen_share"], 3 / 14) and sn["unseen"]["rewordings"] == 11 and ap_(sn["unseen"]["share_right"], 4 / 11)
+        assert sn["unseen"]["both"] == {"n": 3, "recall": 0.0} and sn["unseen"]["twohop"] == {"n": 2, "recall": 0.5}
+        assert rw["per_test"] == {"forward": {0: True, 1: False}, "reverse": {0: False}, "twohop": {0: True, 1: False}}
+        by_src = Counter(r["src"] for r in rw["rows"])
+        assert by_src == {"reword": 14, "card": 5, "chain": 1} and len(rw["rows"]) == 20 and all(r.keys() >= {"src", "kind", "test", "q", "target", "answer", "ok"} for r in rw["rows"])
+        row = next(r for r in rw["rows"] if r["src"] == "chain")
+        assert (row["kind"], row["test"], row["q"], row["answer"], row["ok"]) == ("twohop", 0, "In which place does Gliker's mentor live?", "The answer is Kelmira.", True)
+        assert sorted(r["q"] for r in rw["rows"] if r["src"] == "card" and r["kind"] == "forward" and r["test"] == 0) == sorted(sampled) and not any("dead card" in r["q"] for r in rw["rows"])
+        assert [r["seen"] for r in rw["rows"] if r["src"] == "reword" and r["kind"] == "forward" and r["test"] == 0] == [False, True, False]
+        # the variety measure by hand: texts ["a b c", "a b c", "x y"] -> pairs (1.0, 0, 0)
+        assert reword_variety([mk(("a", "b"), "A", "B", ["a b c", "a b c"], [("x y", "B")])]) == {"items": 1, "mean_jaccard": 1 / 3, "near_dup_share": 1 / 3, "cap": 40, "near_dup_at": 0.8}
+        assert reword_variety([mk(("a", "b"), "A", "B", ["only one"], [])])["items"] == 0 and reword_variety([mk(("a", "b"), "A", "B", [f"w{i} z" for i in range(50)], [])])["items"] == 1
+        vt = [x for it_ in (k0, k1, k2) for x in [[*it_.para, *(q for q, _ in it_.qa)][:40]]]
+        pj = [[jaccard(a_, b_) for i, a_ in enumerate(ts_) for b_ in ts_[i + 1:]] for ts_ in vt]
+        assert rw["variety"]["items"] == 3 and ap_(rw["variety"]["mean_jaccard"], sum(sum(p) / len(p) for p in pj) / 3) and ap_(rw["variety"]["near_dup_share"], sum(sum(x >= 0.8 for x in p) / len(p) for p in pj) / 3)
+        # no Brain (arms a0 / ad / af): the new-wording part only, the same numbers
+        rw0 = reword_eval(Lf, mdl, week, None, spec, 16, 1)
+        assert rw0["new_wording"] == rw["new_wording"] and rw0["per_test"] == rw["per_test"] and not ({"cards", "seen", "variety", "cramming_gap_pts"} & set(rw0)) and len(rw0["rows"]) == 14
+        assert json.loads(json.dumps(rw))["per_test"]["twohop"] == {"0": True, "1": False}  # JSON-serializable (keys become strings)
+        # a smoke-like week: nothing of the file is this week's -> everything skipped, nothing asked, no crash
+        wk0 = {"tests": {k: [dict(t, q=t["q"] + " (another week)") for t in v] for k, v in smoke_week()["tests"].items()}}
+        rws = reword_eval(Lf, mdl, wk0, brain, spec, 16, 1)
+        assert rws["mapped"] == {"forward": 0, "reverse": 0, "twohop": 0} and rws["skipped_unmapped"] == {"forward": 3, "reverse": 2, "twohop": 2} and rws["new_wording"]["both"]["n"] == 0 and rws["rows"] == [] and rws["per_test"] == {"forward": {}, "reverse": {}, "twohop": {}}
+        out["reword"] = {"new_wording_both": nw["both"], "cards": rw["cards"]["mean_acc"], "gap_pts": rw["cramming_gap_pts"], "seen": sn["seen"]}
+
+        # ---- (vi) the flag checks
+        ns = lambda **kw: Namespace(**{"arm": "ab_ob_b4_nb", "text_scale": None, "dream_vary": "off", **kw})  # noqa: E731
+        assert add15_error(ns(), None) is None and add15_error(ns(), 8.0) is None and add15_error(ns(text_scale=4.0), 8.0) is None and add15_error(ns(text_scale=0.25), 1.0) is None
+        assert "--budget-scale" in add15_error(ns(text_scale=4.0), None) and "positive" in add15_error(ns(text_scale=0.0), 8.0) and "positive" in add15_error(ns(text_scale=-1.0), 8.0) and "positive" in add15_error(ns(text_scale=float("nan")), 8.0)
+        assert add15_error(ns(dream_vary="mix"), 8.0) is None and add15_error(ns(dream_vary="plain", arm="ab_ob"), None) is None and add15_error(ns(dream_vary="mix", text_scale=4.0), 8.0) is None
+        for arm in ("ab_ob_twist", "ab_ob_win", "ab_ob_winp"):
+            assert "twist" in add15_error(ns(dream_vary="mix", arm=arm), 8.0)
+        for arm in ("ab", "af", "a0", "ad", "ab_norem"):
+            assert "open-book" in add15_error(ns(dream_vary="plain", arm=arm), 8.0)
+        assert add15_error(Namespace(arm="ab_ob"), None) is None  # an args without the flags
+        out["flag_checks"] = True
+
+        # ---- (vii) make_reworded's helpers are sleepb's; the data file passes the PREREG's checks
+        sys.path.insert(0, str(HERE))
+        import make_reworded as mr
+        for x in ("Where was Vebribon's home?", "Who ’s there? It's Ramein’s", "  Mixed   CASE  text  ", "A b c", ""):
+            assert mr.norm(x) == norm(x) and mr.tokens(x) == tokens(x) and mr.pat("Vebribon").pattern == pat("Vebribon").pattern
+        assert all(abs(mr.jaccard(a_, b_) - jaccard(a_, b_)) < 1e-12 for a_, b_ in (("a b c", "a b d"), ("x", "y"), ("", ""), ("Where is Ramein's home?", "Where is home for Ramein?")))
+        fp, wp = HERE / "data" / "week2_reworded.json", HERE / "data" / "week2.json"
+        if fp.exists() and wp.exists():
+            sp, wk = json.loads(fp.read_text()), json.loads(wp.read_text())
+            assert sp["source_sha256"] == hashlib.sha256(wp.read_bytes()).hexdigest() and set(sp["tests"]) == {"forward", "reverse", "twohop"} and sp["model"] and sp["created"]
+            mp_, sk = reword_map(wk, sp)
+            assert not sk and Counter(k for k, *_ in mp_) == {"forward": 200, "reverse": 200, "twohop": 78}, (sk, Counter(k for k, *_ in mp_))
+            lk = {norm(x) for x in wk["test_strings_norm"]} | {norm(t["q"]) for k in wk["tests"] for t in wk["tests"][k]}
+            tt = {(t["kind"], t["test_index"]): t for t in mr.build_tests(wk)}
+            nk = Counter()
+            for kind, i, t, e in mp_:
+                assert 1 <= len(e["rewordings"]) <= 3 and len({norm(x) for x in e["rewordings"]}) == len(e["rewordings"]) and (kind == "twohop" or t["class"] in ("C2", "C4"))
+                assert all(mr.check(x, tt[(kind, i)], lk) is None for x in e["rewordings"]), (kind, i, e["rewordings"])
+                nk[len(e["rewordings"])] += 1
+            out["data_file"] = {"entries": len(mp_), "kept_per_test": dict(sorted(nk.items())), "sha256": hashlib.sha256(fp.read_bytes()).hexdigest()[:16]}
+        else:
+            out["data_file"] = "skipped (data/week2_reworded.json not there)"
+        return out
+    finally:
+        torch.set_rng_state(rng0)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=ARMS)
@@ -4124,7 +4630,7 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) and the text-scale / dream-vary / reword (addendum 15) unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -4167,6 +4673,12 @@ def main():
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
     ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
+    ap.add_argument("--text-scale", type=float, default=None, help="addendum 15 (needs --budget-scale): the generation knobs (k, item cap, REM chain cap, REM gist cap, dream token budget) are x this instead of x the work scale; the training steps stay at --budget-scale. "
+                    "Default: the knobs follow --budget-scale, as before")
+    ap.add_argument("--dream-vary", choices=["off", "mix", "plain"], default="off", help="addendum 15 (open-book arms, not the twist arms): nrem_prompt asks for ceil(k/4) paraphrases (and k question cards), then the base model writes ceil(k/4) texts in each of 3 styles "
+                    "(story, note in Sam's voice, and weird dream scenes (mix) or plain2 ordinary paraphrases (plain)), kept under twist's checks and added to the item's paraphrases. off: as before")
+    ap.add_argument("--reword", default=None, metavar="FILE", help="addendum 15 (report-only): after ALL scoring and after the final result JSON is written, score the new wordings in FILE (make_reworded.py's data/week2_reworded.json) weights-only, with the exact-card, seen and "
+                    "variety measures -> result['reword'] (the file is rewritten); an error there goes to result['reword_error'] and costs nothing else")
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
@@ -4188,6 +4700,7 @@ def main():
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
+        print(json.dumps({"add15": selftest_add15()}))
         return
     if args.bench_train:
         if not args.out:
@@ -4226,6 +4739,16 @@ def main():
         ap.error("--local-k-frac must be in (0, 1]")
     if args.tag_batches < 1:
         ap.error("--tag-batches must be at least 1")
+    err = add15_error(args, args.budget_scale)  # (before default_scale: --text-scale needs a --budget-scale that was given)
+    if err:
+        ap.error(err)
+    reword_spec = None
+    if args.reword:  # addendum 15: a missing or broken file stops the run now, not after the night's work
+        try:
+            reword_spec = json.loads(Path(args.reword).read_text())
+            assert all(isinstance(e, dict) and isinstance(e["rewordings"], list) and {"q_src", "target", "test_index"} <= set(e) for k in ("forward", "reverse", "twohop") for e in reword_spec["tests"].get(k, []))
+        except Exception as e:
+            ap.error(f"--reword {args.reword}: not a make_reworded.py file ({e!r})")
     args.budget_scale = default_scale(args.arm, args.budget_scale)  # ab_ob with 2x (B2_ARMS) or 4x (ab_ob_b4) the night's work, unless --budget-scale says otherwise
     if args.budget_scale is not None and not args.budget_scale > 0:
         ap.error("--budget-scale must be positive")
@@ -4284,14 +4807,20 @@ def main():
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
     OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False,
-           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False, "text_scale": None, "dream_vary": "off", "reword": None}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
-    def dump(final):
+    def dump(final, atomic=False):  # atomic (the --reword rewrite): the text is built first and replaces the file in one step, so a failure leaves the file that is on disk as it was
         result["partial"] = not final
         p = out / (f"result_{args.arm}.json" if final else f"result_{args.arm}.partial.json")
-        p.write_text(json.dumps(result, indent=1, default=lambda o: sorted(o) if isinstance(o, (set, frozenset)) else str(o)))
+        txt = json.dumps(result, indent=1, default=lambda o: sorted(o) if isinstance(o, (set, frozenset)) else str(o))
+        if atomic:
+            tmp = p.with_name(p.name + ".tmp")
+            tmp.write_text(txt)
+            os.replace(tmp, p)
+        else:
+            p.write_text(txt)
         if final and (out / f"result_{args.arm}.partial.json").exists():
             (out / f"result_{args.arm}.partial.json").unlink()
 
@@ -4433,6 +4962,23 @@ def main():
     result["wall_seconds"] = time.time() - t0
     dump(True)
     log(f"[done] {args.arm} wall {result['wall_seconds']:.0f}s -> {out}/result_{args.arm}.json")
+    if reword_spec is not None:  # addendum 15 (report-only): AFTER all the scoring and AFTER the final result is on disk; whatever happens here, that file stays
+        try:
+            rw = result["reword"] = reword_eval(L, model, week, brain, reword_spec, args.gen_bs, args.seed, log)
+            rw["file"], rw["file_sha256"] = args.reword, hashlib.sha256(Path(args.reword).read_bytes()).hexdigest()
+            rw["week_sha256_matches_file"] = (reword_spec.get("source_sha256") == hashlib.sha256(Path(args.week).read_bytes()).hexdigest()) if args.week else None
+            nw = rw["new_wording"]
+            log(f"[reword] mapped {rw['mapped']} skipped {rw['skipped_unmapped']}; new-wording recall both {nw['both']['recall']} (share {nw['both']['share']}, n {nw['both']['n']}) forward {nw['forward']['recall']} reverse {nw['reverse']['recall']} "
+                f"twohop {nw['twohop']['recall']} (n {nw['twohop']['n']}); cards {rw.get('cards')} gap {rw.get('cramming_gap_pts')} pts; seen {(rw.get('seen') or {}).get('seen')} of {(rw.get('seen') or {}).get('rewordings')}; variety {rw.get('variety')}; {rw['seconds']}s")
+        except Exception as e:
+            import traceback
+            result.pop("reword", None)
+            result["reword_error"] = {"error": repr(e)[:300], "trace": traceback.format_exc()[-3000:]}
+            log(f"[reword] FAILED: {e!r}")
+        try:
+            dump(True, atomic=True)
+        except Exception as e:  # the file written above is still the final result
+            log(f"[reword] could not rewrite the result file: {e!r}")
     if args.smoke and brain:
         log(f"[coverage] {dict(brain.cov)}")
 
