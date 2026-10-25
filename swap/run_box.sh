@@ -30,6 +30,8 @@ arm_cfg() {  # -> REPO, SERVE (extra vllm args), KW (chat_template_kwargs json),
     k2_37b_low)     REPO=IFM/K2-Horizon-3.7B; SERVE="--trust-remote-code --tool-call-parser k2_horizon --reasoning-parser k2_horizon --chat-template $T/k2_nothink.jinja"; KW='{"reasoning_effort":"low"}'; MAXTOK=16384 ;;
     k2_37b_nothink) REPO=IFM/K2-Horizon-3.7B; SERVE="--trust-remote-code --tool-call-parser k2_horizon --chat-template $T/k2_nothink.jinja"; KW='{}'; MAXTOK=4096 ;;
     lfm8b_nothink)  REPO=LiquidAI/LFM2.5-8B-A1B; SERVE="--tool-call-parser pythonic --chat-template $T/lfm25_nothink.jinja"; KW='{}'; MAXTOK=4096 ;;
+    qwen36_35b_nvfp4_nothink) REPO=nvidia/Qwen3.6-35B-A3B-NVFP4; SERVE="--quantization modelopt --kv-cache-dtype fp8 --tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+    qwen38_27b_nvfp4_nothink) REPO=nvidia/Qwen3.8-27B-NVFP4; SERVE="--quantization modelopt --kv-cache-dtype fp8 --tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     qwen4b_nothink) REPO=Qwen/Qwen3.5-4B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     qwen9b_nothink) REPO=Qwen/Qwen3.5-9B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     *) return 1 ;;
@@ -42,7 +44,7 @@ serve() {  # $1 arm, $2 extra flags
     [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1)" -lt 2000 ] && break
     pkill -9 -f "vllm|EngineCore" 2>/dev/null; sleep 5
   done
-  vllm serve $REPO --served-model-name m --port 8000 --dtype bfloat16 --max-model-len 49152 --gpu-memory-utilization 0.90 \
+  vllm serve $REPO --served-model-name m --port 8000 --dtype bfloat16 --max-model-len ${MAXLEN:-49152} --gpu-memory-utilization ${GPU_UTIL:-0.90} \
     --enable-auto-tool-choice $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
   for i in $(seq 1 180); do
     curl -s localhost:8000/v1/models >/dev/null 2>&1 && return 0
