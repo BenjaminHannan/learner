@@ -62,3 +62,16 @@ Live web search is left out because answers to online puzzles are one search awa
 Free first: one Kaggle session with two T4s (lane 0 = P chain, lane 1 = C chain; both measure A0 first).
 A timing pilot sets how many practice puzzles fit before the 11 h cut; the pool is shrunk for both arms equally.
 Claude calls (test and pool writing) go through the Message Batches API.
+
+## Addendum 1 (2026-10-25 22:40Z, before any GPU run; pass marks unchanged)
+- Night size in code: 256 SFT x 2 epochs + 64 pairs packed into 32 optimizer steps per night (both arms). The pilot may
+  raise steps for both arms equally if time allows. P has SFT on its wins alongside DPO, which acts as the NLL term that
+  Iterative RPO (arXiv 2404.19733) found keeps the chosen answer from being pushed down.
+- Pairs: both lanes always get 64 pairs; if P has fewer candidates it repeats them (it has 0 only if no puzzle has one
+  solved and one failed try). Tries over 4,096 tokens are never lessons in either arm. The adapter is not merged.
+- Tokenizer check: K2 splits space-separated digits one per token, but merges compact digit runs ("00000" -> "000","00").
+  The practice ARC prompts use spaces. Some sealed-test grid puzzles use compact rows; they are left as written (same for
+  every arm; the grader ignores spaces). Next version: one digit per token everywhere.
+- Research while waiting (Haiku, search-level, unverified): ARC winners multiply data with 8 rotations/flips + colour
+  swaps and keep answers that agree across views (arXiv 2505.07859); SOAR self-trains on its own verified search traces.
+  Not added here (one change at a time); candidates for Practice-2.
