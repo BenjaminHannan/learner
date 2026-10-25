@@ -11,8 +11,8 @@ check() {  # name port path
     echo "$1: down"
   fi
 }
-check big 8080 /v1/models
-check small 8081 /v1/models
+check big 18080 /v1/models
+check small 18081 /v1/models
 check gateway 8090 /v1/models
 [ -f "$HOME/learner-ops/PAUSE_OTHERS" ] && echo "note: PAUSE_OTHERS exists (another job reserved the Mac)"
 echo

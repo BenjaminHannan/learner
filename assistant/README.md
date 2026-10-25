@@ -7,7 +7,7 @@ Pieces
 - `opencode.json` — template for `~/.config/opencode/opencode.json` (`__HOME__`, `__PY__` are filled in by `install.sh`, which merges and backs up any existing file).
 - `install.sh` — copies everything to `~/learner-ops/assistant/`, writes configs, creates the Desktop "Start Assistant" / "Stop Assistant" launchers.
 
-Ports: big model 8080, small model 8081, gateway 8090 (all localhost).
+Ports: big model 18080, small model 18081, gateway 8090 (all localhost).
 
 Diary: `~/learner-ops/diary/`
 - `raw/YYYY-MM-DD.jsonl` — one full record per request (UTC date). Tools and system prompts are stored once in `raw/blobs/<sha>.json` and referenced by hash.

@@ -12,7 +12,7 @@ SMALL_TEMPLATE="${ASSISTANT_SMALL_TEMPLATE:-}"  # jinja file; K2 needs its no-th
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
 DIR="$(cd "$(dirname "$0")" && pwd)"
-BIG_PORT=8080; SMALL_PORT=8081; GW_PORT=8090
+BIG_PORT=18080; SMALL_PORT=18081; GW_PORT=8090  # models off 8080/8081, which experiment jobs use
 YES=0; [ "${1:-}" = "--yes" ] && YES=1
 mkdir -p "$RUN" "$OPS/diary"
 
@@ -54,7 +54,9 @@ fi
 [ -x "$PY" ] || { echo "Python not found at $PY (set ASSISTANT_PY)"; exit 1; }
 
 # Don't stack models: warn if another model job is already loaded.
-others=$(ps aux | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" | grep -v grep | grep -v -- "--port 808[01]" || true)
+ours="$(cat "$RUN"/big.pid "$RUN"/small.pid 2>/dev/null | tr '\n' ' ')"
+others=$(ps axo pid=,command= | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" | grep -v grep |
+  while read -r pid cmd; do case " $ours " in *" $pid "*) ;; *) echo "$pid $cmd" ;; esac; done)
 if [ -n "$others" ] && [ $need_big = 1 ] && [ $YES = 0 ]; then
   echo "Another model job is running on this Mac:"; echo "$others" | cut -c1-160
   printf "Running both can run the Mac out of memory. Start anyway? [y/N] "; read -r ans

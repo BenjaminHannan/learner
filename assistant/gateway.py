@@ -502,8 +502,8 @@ def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1"):
 def main():
     e = os.environ.get
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--big-url", default=e("GATEWAY_BIG_URL", "http://127.0.0.1:8080"))
-    ap.add_argument("--small-url", default=e("GATEWAY_SMALL_URL", "http://127.0.0.1:8081"))
+    ap.add_argument("--big-url", default=e("GATEWAY_BIG_URL", "http://127.0.0.1:18080"))
+    ap.add_argument("--small-url", default=e("GATEWAY_SMALL_URL", "http://127.0.0.1:18081"))
     ap.add_argument("--port", type=int, default=int(e("GATEWAY_PORT", "8090")))
     ap.add_argument("--diary-dir", default=e("DIARY_DIR", "~/learner-ops/diary"))
     a = ap.parse_args()
