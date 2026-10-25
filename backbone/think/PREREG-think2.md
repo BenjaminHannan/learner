@@ -54,3 +54,12 @@ Added at Ben's request ("why not force the notes to get used?"). Runs on the PC 
 - Extra readout: blind(4), answers that see only the notes, on the first 2,000 validation rows (how much the notes carry alone).
 - Pass marks: the same P1 and P2 as tj, against the same aplus. tj and tf are judged separately. Passing either one
   triggers the 2-seed expansion for that arm only. If both fail, looped latent thinking stops as planned.
+
+## Addendum B (2026-10-25 16:15Z, before any tj or tf result): control arm tc
+A review (bug-hunt thread) pointed out that tj's LoRA gets more than aplus's: the aplus loss PLUS the board-path answer CE,
+which with closed gates is a second copy of the answer gradient taken through another path. So aplus is not a clean control.
+- tc = tj's exact loss and loop with the block switched off: lmax 0, gates frozen at 0, no block parameters trained.
+  It gets tj's extra LoRA gradient without anything the notes could carry. Seed 0, PC, queued after tf.
+- P1 for tj and tf is now judged against B = max(aplus, tc): S(4) - B >= +2.0 with the bootstrap interval excluding 0.
+- P2 is unchanged. A P1 pass with P2 failing is reported as "suggested", not a pass.
+- Diagnostic: the LoRA gradient norm before clipping (gn_lora) is logged for tj against aplus's, to see how often the clip engages.
