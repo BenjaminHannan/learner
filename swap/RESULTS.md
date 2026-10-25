@@ -27,3 +27,9 @@ MoVA's store test was stopped at 0/80 (OOM at 2 agents, >10 h at 1).
 
 ## Decision (Ben, 13:40Z / 13:43Z)
 Big tier: Qwen3.6-35B-A3B. Small tier: K2-Horizon-3.7B. Pivot if something better ships before release.
+
+## Qwen3.6-35B-A3B vs Qwen3.8-27B on Vast Blackwell (Oct 25, did not finish)
+- vLLM 0.32.0 on sm_120 (RTX 5090 / RTX PRO 6000) in the pytorch cu12.8 image: AWQ, NVFP4 and the default bf16 MoE path all fail with "No supported CUDA architectures found for major versions [12]". The cause is FlashInfer JIT (CUTLASS fused MoE) needing nvcc >= 12.9 for SM 12.x.
+- `--moe-backend triton --gdn-prefill-backend triton --max-num-seqs 32` serves, and tool calls parse, but it is unusably slow: 35B ~1000 s per sim (4/4 DB match in 25 min, too few to mean anything), and the 27B smoke took 80 s for 57 tokens. The box was destroyed.
+- Next time: use an image with CUDA >= 12.9 (e.g. vllm/vllm-openai, which ships prebuilt kernels) or an sm_80/90 GPU. Or run the 27B on Ben's PC via llama.cpp (GGUF already there).
+- Vast spend for the whole swap thread: about $2.7 of the $3.50 cap.
