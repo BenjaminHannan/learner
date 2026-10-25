@@ -516,3 +516,42 @@ What this suggests (not shown):
 
 Cost: about $1.60 (seed 1 about $0.72 at $0.489/h; seed 2 about $0.88 at $0.563/h), against the coordinator's $1.90 cap after the runs
 took longer than planned (x4 adds about 40% to each night's wall time).
+
+## Addendum 13 + 13b: does a small whole-model sleep change survive 4-bit? (ab_ob_full_s, `--freeze-lora --q4-eval`, Week-1, seed 1)
+
+Prereg: PREREG-sleepB-addendum13.md (7df6784ee3) and 13b (21e6fe5d32), sealed before the code and the run. Code 107137a57d (`--q4-eval`) and
+1170b38400 (`--freeze-lora`). One RTX PRO 6000 Max-Q box (57692265, Czechia, 0.99 h, about $1.40 against a $1.30 cap; the run finished on
+its own at 0.95 h). JSON and log in `results_a13/`. Week-1 has 80 C2+C4 recall questions, so one question is 1.25 points.
+
+**Found on the way (shown, CPU, 13b):** leaving `pm.disable_adapter()` makes every LoRA tensor trainable again (peft 0.21), so addendum 2's and
+3's delta arms (ab_ob_full, ab_ob_full_s, ab_ob_local) also trained the LoRA at the delta's lr. With `--freeze-lora` the LoRA stayed at zero
+in this run (`lora_B_nonzero` False), so the model is exactly the base plus the fp32 change.
+
+| condition | what it is | recall C2+C4 | C4 | C2 | reverse C2+C4 | two-hop | changed new | ARC-Easy (500) |
+|---|---|---|---|---|---|---|---|---|
+| F0 | base, bf16, no change | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 89.8 |
+| **F** | base + fp32 change (the arm as scored) | **60.0** | 82.5 | 37.5 | 68.8 | 3.7 | | 92.8 |
+| Q0 | base, 4-bit, no change | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 89.6 |
+| **Q** | base + change, re-quantized to 4-bit (fresh grid) | **56.25** | 85.0 | 27.5 | 58.8 | 3.7 | 55 | 91.0 |
+| Qf | base + change, codes re-rounded on the base's 4-bit grid | 56.25 | 82.5 | 30.0 | 61.3 | 3.7 | 50 | 91.0 |
+
+- **S1 PASS (shown on this seed):** gain(F) = 60.0 (above the 20-point floor, so S1 is judged), gain(Q) = 56.25, retained share rho =
+  0.94 (mark >= 0.75; wrong if < 0.25). Paired on the 80 questions, F vs Q: F-only 4, Q-only 1, p = 0.375; F vs Qf: 3 vs 0, p = 0.25.
+  Qf's rho is also 0.94.
+- **No harm (4-bit) PASS:** ARC-Easy(Q) 91.0 >= ARC-Easy(Q0) 89.6 - 3. The change also raised ARC in bf16 (92.8 vs 89.8, one seed).
+- **How small the change is (shown):** mean |change| is 1.9% of one 4-bit step. Only 2.8% of the 4-bit codes differ from Q0 under Q, and
+  1.85% under Qf. The expectation (5-30% of codes) was wrong; the change is far smaller than guessed, yet nearly all the recall survives.
+- **Why it survives (suggested, now with a matching number):** the base weights sit at effectively random places inside their 4-bit bins,
+  so a shift d flips about |d| / step of the codes, and on average the dequantized change equals d (stochastic rounding for free). The
+  predicted flip share on the frozen grid is the mean |d| / step = 1.91%; the measured share is 1.85%. This needs a full-precision base to
+  re-quantize from. A model kept only in 4-bit (the Qwen3.6 big tier) has no position inside the bin, so small changes would round back
+  to the same code unless the change is dithered (stochastic rounding) or accumulated until it crosses a step (untested).
+- **Replication (reported):** F 60.0 vs addendum 3's 63.5, where the LoRA also trained: -3.5, inside the 4-point seed spread, so the LoRA
+  probably carried little of addendum 3's gain (suggested, one seed each).
+- Diary pooled 80.6 (base_diary 84.9); no night was reverted; wall 3,203 s.
+- **Caveats:** one seed, the Week-1 world, Qwen3.5-2B (not K2 or Qwen3.6), and our PyTorch min/max 4-bit grid, which differs slightly from
+  MLX's (about 0.3% relative error, per the bug-hunt thread). It shows survival of a change trained alone, not a gain on top of the adopted
+  recipe.
+- **Next (per the prereg, not yet preregistered):** a multi-week arm, nightly add-on plus a slow whole-model change, against the add-on
+  alone, judged on week-1 recall in week 3. It needs Week-3 and Week-4 worlds (built through the Message Batches API) and more than 30 GB
+  of GPU memory, so it waits for next week's budget.
