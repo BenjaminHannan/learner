@@ -36,6 +36,7 @@ left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 
 "</ifm|think_faster>" (added when stage 1 did not close the block), then the answer as before (12 tokens, parse_rel). names_pass's record gets think_tokens_mean / think_capped on K2 only (Qwen's is unchanged).
 
 Addendum 13 (PREREG-sleepB-addendum13.md): --q4-eval (delta arms only) also scores the final model under F0 / Q0 / Q / Qf (bf16 and 4-bit, with and without the fp32 delta folded in, fresh or frozen 4-bit grid).
+Addendum 13b (PREREG-sleepB-addendum13b.md): --freeze-lora (training delta arms) re-freezes the LoRA in every Trainer, since leaving pm.disable_adapter() makes it trainable again.
 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
@@ -543,6 +544,10 @@ class Trainer:
 
     def __init__(s, L, pm, args, replay, steps, seed):
         s.L, s.pm, s.a, s.replay = L, pm, args, replay
+        if getattr(args, "freeze_lora", False):  # addendum 13b: leaving pm.disable_adapter() turns requires_grad back on for every LoRA tensor (peft 0.21), so re-freeze them here
+            for n, p in pm.named_parameters():
+                if "lora_" in n:
+                    p.requires_grad_(False)
         s.params = [p for p in pm.parameters() if p.requires_grad]
         s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
@@ -900,7 +905,8 @@ def selftest_delta():
     """Delta machinery on its own tiny CPU smoke model (the real model is never touched; global RNG and the delta switch are restored):
     (i) zero deltas -> logits equal the plain model; (ii) random deltas -> equal the plain model inside pm.disable_adapter() (nested too),
     different outside; (iii) the merge fold with factor 1, thresh 0 leaves logits unchanged and resets the LoRA; (iv) shy_full with
-    thresh 0 reproduces factor x W. The model's deltas / LoRA are put back as found."""
+    thresh 0 reproduces factor x W; (v) addendum 13b: after the LoRA is frozen and disable_adapter() is left once, a Trainer with freeze_lora holds
+    only the deltas (regrad_after_disable_exit: how many LoRA tensors peft made trainable again). The model's deltas / LoRA are put back as found."""
     from argparse import Namespace
     from peft import LoraConfig, get_peft_model
     out, g = {}, torch.Generator().manual_seed(0)
@@ -934,6 +940,20 @@ def selftest_delta():
         out["disabled_max_abs_diff"], out["enabled_rel_diff"] = float((off - ref).abs().max()), rel(on, ref)
         out["nesting_ok"] = bool(nested_off and still_off and _DELTA["on"])
         assert out["disabled_max_abs_diff"] < 1e-6 and out["enabled_rel_diff"] > 1e-3 and out["nesting_ok"], out
+        n_lora = sum(1 for n, _ in pm.named_parameters() if "lora_" in n)  # addendum 13b: freeze the LoRA as main() does, then leave disable_adapter() once
+        for n, p in pm.named_parameters():
+            if "lora_" in n:
+                p.requires_grad_(False)
+        with pm.disable_adapter():
+            pass
+        regrad = sum(1 for n, p in pm.named_parameters() if "lora_" in n and p.requires_grad)
+        held = lambda fz: {n for n, p in pm.named_parameters() if any(p is q for q in Trainer(None, pm, Namespace(lr=0.0, freeze_lora=fz), [], 1, 0).params)}  # noqa: E731
+        out["freeze_lora"] = {"lora_tensors": n_lora, "regrad_after_disable_exit": regrad, "held_without": sum("lora_" in n for n in held(False)), "held_with": sum("lora_" in n for n in held(True)),
+                              "deltas_held_with": sum(n.endswith("delta_w") for n in held(True))}
+        assert out["freeze_lora"]["held_without"] == regrad and out["freeze_lora"]["held_with"] == 0 and out["freeze_lora"]["deltas_held_with"] == len(mods), out
+        for n, p in pm.named_parameters():
+            if "lora_" in n:
+                p.requires_grad_(True)
         for _, m in mods:
             m.lora_B["default"].weight.data.normal_(0, 0.05, generator=g)
         before = logits()
@@ -3688,6 +3708,7 @@ def main():
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
+    ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
@@ -3753,6 +3774,8 @@ def main():
         ap.error("--night-budget-s must be positive")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
+    if args.freeze_lora and args.arm not in TRAIN_DELTA_ARMS:
+        ap.error(f"--freeze-lora is only for the training delta arms {TRAIN_DELTA_ARMS}")
     if args.q4_eval and args.arm not in DELTA_ARMS:
         ap.error(f"--q4-eval is only for the delta arms {DELTA_ARMS}")
     if args.q4_eval and args.q4_base:
@@ -3790,7 +3813,7 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
