@@ -39,3 +39,15 @@ Big tier: Qwen3.6-35B-A3B. Small tier: K2-Horizon-3.7B. Pivot if something bette
 - The headline metric is db_match. reward_pass (49/80 for K2-7B) also penalises leaked planning text.
 - Output caps differ by arm: 16,384 tokens for thinking arms, 4,096 for no-think arms. Length stops are not logged.
 - serve() falls back to --model-impl transformers without recording it. Check for vllm_native.log in each arm dir.
+
+## Mac M1 Pro 32 GB, Qwen3.6-35B-A3B variants (Oct 25 evening, thinking off, 300 new tokens)
+tok/s per agent (total) at 1 / 2 / 4 agents; TTFT at ~1.2k / ~4.9k prompt tokens
+| variant | 1 | 2 | 4 | TTFT | memory |
+|---|---|---|---|---|---|
+| MLX 4-bit (mlx_lm) | 47.1 | 30.1 (60) | 17.4 (70) | 2.5 / 9.6 s | 20-21.5 GB |
+| REAP-19B, optiq serve default | 35 | 17 (35) | 8.7 (35) | 3.0 / 11.9 s | 12.5 GB |
+| REAP-19B, OPTIQ_BATCH_HYBRID=1 | 34.5 | 25.6 (50) | 15.2 (59) | 3.1 / 12.1 s | 12.5 GB |
+| llama.cpp UD-Q3_K_M | 39.0 | 25.9 (50) | 16.9 (65) | 2.7 / 10.7 s | ~17 GB |
+- OptiQ-4bit (± MTP) and llama.cpp Q4_K_M don't fit: 22-26 GB at load, memory pressure warn, killed by the watchdog.
+- REAP MTP fails: the main model is pruned to 128 experts but the MTP head still has 256. REAP's sanity answer was slightly wrong.
+- Verdict: plain MLX 4-bit stays the big-tier serving format. REAP-19B (12.5 GB) is the fallback for 16-24 GB Macs, but its quality is unmeasured.
