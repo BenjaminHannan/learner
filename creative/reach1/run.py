@@ -243,7 +243,7 @@ def report(store, tasks):
     hard_info = store.jload("hard.json")
     scen = {t["id"]: t["scenario"] for t in tasks}
     if not hard_info or hard_info["stopped"]:
-        res = dict(verdict="STOPPED: HARD set has fewer than 15 tasks", n_hard=(hard_info or {}).get("n_hard"),
+        res = dict(verdict=f"STOPPED: HARD set has fewer than {MIN_HARD} tasks", n_hard=(hard_info or {}).get("n_hard"),
                    note="the 8B already reaches almost everything here")
         return finish(store, res)
     hard = hard_info["hard"]
@@ -321,11 +321,14 @@ async def amain(a):
     store, tasks = Store(a.out), load_tasks()
     if a.limit:
         tasks = tasks[:a.limit]
+    if a.half:  # PREREG addendum 1: every second task in file order, HARD stop threshold 8
+        global MIN_HARD
+        tasks, MIN_HARD = tasks[::2], 8
     if a.cmd == "hard":
         return make_hard(store, tasks)
     if a.cmd == "report":
         return report(store, tasks)
-    client = Client(a.base_url, a.model, a.api_key)
+    client = Client(a.base_url, a.model, a.api_key, extra_body=json.loads(a.extra_body) if a.extra_body else None)
     try:
         models = await client.models()
     except Exception as e:
@@ -347,8 +350,10 @@ def main(argv=None):
     p.add_argument("--api-key", default=os.environ.get("OPENAI_API_KEY", "none"))
     p.add_argument("--out", default="out")
     p.add_argument("--concurrency", type=int, default=8)
+    p.add_argument("--extra-body", default=None, help='JSON merged into every request, e.g. {"chat_template_kwargs": {"enable_thinking": false}}')
     p.add_argument("--pause-file", default=None, help="wait before each episode while this file exists")
     p.add_argument("--deadline-hours", type=float, default=0, help="stop launching episodes after this many hours (0 = none)")
+    p.add_argument("--half", action="store_true", help="PREREG addendum 1 subset: every second task, MIN_HARD 8")
     p.add_argument("--limit", type=int, default=0, help="debug: only the first N tasks")
     asyncio.run(amain(p.parse_args(argv)))
 

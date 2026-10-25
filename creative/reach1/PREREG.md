@@ -40,3 +40,11 @@ Fixed 2026-10-25 ~00:55Z, before any run. Thread "Plan the creative model for v2
 ## Cost
 No API calls (deterministic checks, no simulated user). Compute only: about 3,400 screen episodes plus up to
 56 x HARD confirm episodes plus 48 x HARD arm episodes.
+
+## Addendum 1 (2026-10-25 ~13:50Z, before any run on the new model)
+Ben chose Qwen3.6-35B-A3B as the big-tier backbone (13:40Z), replacing LFM. Reach-1 reruns on Qwen3.6-35B-A3B,
+thinking off (enable_thinking=false through the chat template), in a fresh output folder. The LFM partial run
+(270 episodes, paused 12:48Z) is kept but not analysed. Everything else (tasks, stages, arms, sampling, pass marks)
+is unchanged. If the Mac's measured rate makes the full 420-task run longer than 24 h, the run uses a fixed subset
+chosen before it starts: every second task in file order (210 tasks, all 8 scenario types), and HARD's stop
+threshold scales to 8. That choice is logged in run_meta.json.

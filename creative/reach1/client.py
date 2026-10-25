@@ -76,8 +76,8 @@ def parse_message(msg):
 
 
 class Client:
-    def __init__(self, base_url, model, api_key="none", retries=5, timeout=300):
-        self.base, self.model, self.retries = base_url.rstrip("/"), model, retries
+    def __init__(self, base_url, model, api_key="none", retries=5, timeout=300, extra_body=None):
+        self.base, self.model, self.retries, self.extra = base_url.rstrip("/"), model, retries, extra_body or {}
         self.http = httpx.AsyncClient(timeout=timeout, headers={"Authorization": f"Bearer {api_key}"})
 
     async def models(self):
@@ -87,7 +87,7 @@ class Client:
 
     async def chat(self, messages, tools=None):
         """-> dict(content, tool_calls, usage). Retries on HTTP errors with exponential backoff."""
-        body = dict(model=self.model, messages=messages, **SAMPLING)
+        body = dict(model=self.model, messages=messages, **SAMPLING) | self.extra
         if tools:
             body["tools"] = tools
         for i in range(self.retries + 1):
