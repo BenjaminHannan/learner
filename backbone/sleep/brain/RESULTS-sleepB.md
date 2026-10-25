@@ -319,3 +319,32 @@ What limits memory now (diagnostics of the b2 run; suggested, one seed):
 - **Daytime notes miss facts.** The tagger finds 53% of fact mentions. By the end of the week, 71 of 100 C2 facts and 83 of 100 C4 facts were eligible. Recall among eligible facts is already high: C4 81 of 83, C2 54 of 71. So the eligibility ceiling for C2+C4 is about 77%, and b2 reaches 67.5. In the raw samples the tagger often lists a fact about Sam ("Sam takes home 3200", "Sam loves it"), which the validity filter drops, and skips the fact about two named people in the same message ("Krenam's place is in Labozon").
 - **Two-step dreams almost never survive.** Of 60 chain dreams a cycle, about 95% fail the format check (the question must name one end, the answer must be the other end, and the shared middle name must stay hidden). Over the week only 20 chain pairs were kept, covering 10 of the 78 two-hop questions. Two-hop questions whose chain was dreamed were 90% right, and the rest were 0% right.
 - More work can mostly help the 17 eligible but unlearned C2 facts. Those came up late in the week.
+
+## Addendum 6: the control rerun and the paired W1 test (final)
+Two cheap RTX 3090 hosts never started (about $0.09). The rerun then ran on box 57599726 (RTX 5090 Slovakia, $0.489/h) in 1,373 s, about $0.25 including the 2-minute linger. It used the same sleepb.py as the other addendum-6 arms (worktree at b1ce3ed322, before the PR #114 merge). Its JSON is `results_wk2/result_ab_ob.json`.
+
+| arm (Week-2, seed 1) | C4 | C2 | recall | reverse C2+C4 | two-hop | changed new | routine | + diary pool | ARC-Easy | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control, rerun (5090) | 70 | 36 | **53.0** | 50.5 | 2.6 | 53.3 | 80 | 82 | 93.6 | none |
+| ab_ob control, first run (A100, label only) | 71 | 34 | 52.5 | | 6 | 63 | 55 | 84 | 92.2 | night 4 |
+| ab_ob_b2, 2x work (PC) | 81 | 54 | **67.5** | 64.5 | 11.5 | 73.3 | 85 | 85.1 | 93.0 | none |
+
+The two control runs agree on recall (53.0 and 52.5).
+
+Paired b2 vs control:
+
+| measure | questions | control | b2 | b2 − control | right only in control / only in b2 | p |
+|---|---|---|---|---|---|---|
+| recall C2+C4 (primary) | 200 | 53.0 | 67.5 | **+14.5** | 19 / 48 | **0.0005** |
+| reverse C2+C4 | 200 | 50.5 | 64.5 | +14.0 | 18 / 46 | 0.0006 |
+| changed-new | 30 | 53.3 | 73.3 | +20.0 | 0 / 6 | 0.031 |
+| two-hop | 78 | 2.6 | 11.5 | +9.0 | 2 / 9 | 0.065 |
+| routine | 20 | 80 | 85 | +5.0 | 2 / 3 | 1.0 |
+
+The winners arms also beat the control by about as much: winp +15.5 (p < 0.001).
+
+Final addendum-6 verdicts:
+- **W1 SHOWN:** twice the night's work raises recall from weights by +14.5 points on Week-2 (p = 0.0005), and the gain from addendum 5 replicates on a new world. Reverse questions and updated facts gain by about as much.
+- **W2 FAIL** (+1.5, p = 0.74) and **W3 FAIL** (+0.5, p = 1.0): guess + dopamine and twisted dreams add nothing on top of 2x work.
+- **No wrong-if fired.** No harm in any arm: ARC 92.2 to 93.6, and diary within 3 points of the control.
+- Cost: addendum 6 Vast spend was about $2.10, plus $4.32 of API to write Week-2. b2 and winp ran free on Ben's PC.
