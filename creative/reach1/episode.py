@@ -13,14 +13,14 @@ SYSTEM = ("You are a personal assistant with tools for the user's files, email, 
 MAX_TURNS = 6
 
 
-async def run_episode(client, task, arm="plain", try_idx=0, extra_block=None):
+async def run_episode(client, task, arm="plain", try_idx=0, extra_block=None, sampling=None):
     world = World.from_json(task["state"])
     system = SYSTEM.format(today=world.today) + (("\n\n" + extra_block) if extra_block else "")
     msgs = [dict(role="system", content=system), dict(role="user", content=task["user"])]
     tokens, reply, n = {"prompt": 0, "completion": 0}, "", 0
     while n < MAX_TURNS:
         n += 1
-        out = await client.chat(msgs, TOOLS)
+        out = await (client.chat(msgs, TOOLS, **sampling) if sampling else client.chat(msgs, TOOLS))
         u = out.get("usage") or {}
         tokens["prompt"] += u.get("prompt_tokens", 0)
         tokens["completion"] += u.get("completion_tokens", 0)

@@ -85,9 +85,9 @@ class Client:
         r.raise_for_status()
         return r.json()
 
-    async def chat(self, messages, tools=None):
-        """-> dict(content, tool_calls, usage). Retries on HTTP errors with exponential backoff."""
-        body = dict(model=self.model, messages=messages, **SAMPLING) | self.extra
+    async def chat(self, messages, tools=None, **sampling):
+        """-> dict(content, tool_calls, usage). Retries on HTTP errors with exponential backoff. sampling: optional per-call overrides (temperature, top_p, seed, ...)."""
+        body = dict(model=self.model, messages=messages, **SAMPLING) | self.extra | sampling
         if tools:
             body["tools"] = tools
         for i in range(self.retries + 1):
