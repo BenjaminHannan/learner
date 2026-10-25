@@ -1,0 +1,540 @@
+{
+ "inputs": {
+  "prefill_tok_s": 3459.15946,
+  "dec_greedy": {
+   "32": 0.0718,
+   "64": 0.16887,
+   "128": 0.37249
+  },
+  "dec_sampled": {
+   "32": 0.02412,
+   "64": 0.12661,
+   "128": 0.33546
+  },
+  "train_s_per_step": {
+   "2048": 1.6964,
+   "4096": 2.3446
+  },
+  "train_source": "Trainer.step measured",
+  "notes": [],
+  "load_seconds": 17.6,
+  "q4_seconds": 4.1
+ },
+ "usd_per_hour": 1.2,
+ "a9_arm": "ab_ob_b4_nb",
+ "a9_model": "Qwen/Qwen3.5-2B",
+ "a9_gen_bs": 32,
+ "a9_tok_budget": 2048,
+ "a9_wall_seconds_on_that_model": 3653.1062450408936,
+ "a9_steps_total": 7424,
+ "grid": [
+  {
+   "gen_bs": 32,
+   "tok_budget": 2048,
+   "full_max_new_h": 4.62,
+   "typical_0.6_h": 4.44
+  },
+  {
+   "gen_bs": 32,
+   "tok_budget": 4096,
+   "full_max_new_h": 5.96,
+   "typical_0.6_h": 5.77
+  },
+  {
+   "gen_bs": 64,
+   "tok_budget": 2048,
+   "full_max_new_h": 5.08,
+   "typical_0.6_h": 4.72
+  },
+  {
+   "gen_bs": 64,
+   "tok_budget": 4096,
+   "full_max_new_h": 6.42,
+   "typical_0.6_h": 6.06
+  },
+  {
+   "gen_bs": 128,
+   "tok_budget": 2048,
+   "full_max_new_h": 5.32,
+   "typical_0.6_h": 4.87
+  },
+  {
+   "gen_bs": 128,
+   "tok_budget": 4096,
+   "full_max_new_h": 6.65,
+   "typical_0.6_h": 6.21
+  }
+ ],
+ "scenarios": {
+  "as_a9_run": {
+   "gen_bs": 32,
+   "tok_budget": 2048,
+   "train_s_per_step": 1.696,
+   "full_max_new": {
+    "length_fraction_of_long_generations": 1.0,
+    "per_night": [
+     {
+      "night": 1,
+      "steps": 224,
+      "tag_names_detect": 72.1,
+      "dream_generate": 39.1,
+      "dream_verify": 3.7,
+      "probes_and_arc": 7.9,
+      "train": 380.0,
+      "rem_generate": 4.4,
+      "rem_verify": 1.7,
+      "total_s": 509.0
+     },
+     {
+      "night": 2,
+      "steps": 1200,
+      "tag_names_detect": 83.1,
+      "dream_generate": 124.8,
+      "dream_verify": 94.0,
+      "probes_and_arc": 15.9,
+      "train": 2035.7,
+      "rem_generate": 10.5,
+      "rem_verify": 6.6,
+      "total_s": 2370.5
+     },
+     {
+      "night": 3,
+      "steps": 1200,
+      "tag_names_detect": 81.4,
+      "dream_generate": 167.1,
+      "dream_verify": 130.7,
+      "probes_and_arc": 24.1,
+      "train": 2035.7,
+      "rem_generate": 31.2,
+      "rem_verify": 10.2,
+      "total_s": 2480.5
+     },
+     {
+      "night": 4,
+      "steps": 1200,
+      "tag_names_detect": 84.0,
+      "dream_generate": 169.5,
+      "dream_verify": 146.6,
+      "probes_and_arc": 28.6,
+      "train": 2035.7,
+      "rem_generate": 59.2,
+      "rem_verify": 15.6,
+      "total_s": 2539.1
+     },
+     {
+      "night": 5,
+      "steps": 1200,
+      "tag_names_detect": 85.2,
+      "dream_generate": 211.4,
+      "dream_verify": 179.6,
+      "probes_and_arc": 36.1,
+      "train": 2035.7,
+      "rem_generate": 78.7,
+      "rem_verify": 28.6,
+      "total_s": 2655.3
+     },
+     {
+      "night": 6,
+      "steps": 1200,
+      "tag_names_detect": 92.4,
+      "dream_generate": 253.8,
+      "dream_verify": 210.2,
+      "probes_and_arc": 40.7,
+      "train": 2035.7,
+      "rem_generate": 100.3,
+      "rem_verify": 40.8,
+      "total_s": 2773.8
+     },
+     {
+      "night": 7,
+      "steps": 1200,
+      "tag_names_detect": 89.6,
+      "dream_generate": 256.5,
+      "dream_verify": 243.1,
+      "probes_and_arc": 48.3,
+      "train": 2035.7,
+      "rem_generate": 100.3,
+      "rem_verify": 22.5,
+      "total_s": 2795.9
+     }
+    ],
+    "once_per_run_s": {
+     "replay_generation": 26.4,
+     "arc_base_val100_and_arc500_twice": 49.3,
+     "learning_curve_probes": 52.5,
+     "final_scoring": 367.3,
+     "model_load_and_q4": 21.7
+    },
+    "week_nights_s": 16124.1,
+    "total_s_without_download": 16641.4,
+    "total_hours": 4.62,
+    "total_usd": 5.55,
+    "week_seconds_by_phase": {
+     "train": 12594.1,
+     "dream_generate": 1222.2,
+     "dream_verify": 1007.9,
+     "tag_names_detect": 587.8,
+     "rem_generate": 384.5,
+     "probes_and_arc": 201.6,
+     "rem_verify": 126.0
+    },
+    "x_the_qwen_run": 4.6
+   },
+   "typical_0.6": {
+    "length_fraction_of_long_generations": 0.6,
+    "per_night": [
+     {
+      "night": 1,
+      "steps": 224,
+      "tag_names_detect": 49.2,
+      "dream_generate": 23.7,
+      "dream_verify": 3.7,
+      "probes_and_arc": 7.9,
+      "train": 380.0,
+      "rem_generate": 2.9,
+      "rem_verify": 1.7,
+      "total_s": 469.0
+     },
+     {
+      "night": 2,
+      "steps": 1200,
+      "tag_names_detect": 60.1,
+      "dream_generate": 78.4,
+      "dream_verify": 94.0,
+      "probes_and_arc": 15.9,
+      "train": 2035.7,
+      "rem_generate": 9.0,
+      "rem_verify": 6.6,
+      "total_s": 2299.7
+     },
+     {
+      "night": 3,
+      "steps": 1200,
+      "tag_names_detect": 58.4,
+      "dream_generate": 105.4,
+      "dream_verify": 130.7,
+      "probes_and_arc": 24.1,
+      "train": 2035.7,
+      "rem_generate": 26.6,
+      "rem_verify": 10.2,
+      "total_s": 2391.2
+     },
+     {
+      "night": 4,
+      "steps": 1200,
+      "tag_names_detect": 61.1,
+      "dream_generate": 107.7,
+      "dream_verify": 146.6,
+      "probes_and_arc": 28.6,
+      "train": 2035.7,
+      "rem_generate": 51.5,
+      "rem_verify": 15.6,
+      "total_s": 2446.7
+     },
+     {
+      "night": 5,
+      "steps": 1200,
+      "tag_names_detect": 62.2,
+      "dream_generate": 134.2,
+      "dream_verify": 179.6,
+      "probes_and_arc": 36.1,
+      "train": 2035.7,
+      "rem_generate": 69.4,
+      "rem_verify": 28.6,
+      "total_s": 2545.9
+     },
+     {
+      "night": 6,
+      "steps": 1200,
+      "tag_names_detect": 69.4,
+      "dream_generate": 161.2,
+      "dream_verify": 210.2,
+      "probes_and_arc": 40.7,
+      "train": 2035.7,
+      "rem_generate": 87.9,
+      "rem_verify": 40.8,
+      "total_s": 2645.9
+     },
+     {
+      "night": 7,
+      "steps": 1200,
+      "tag_names_detect": 66.6,
+      "dream_generate": 163.9,
+      "dream_verify": 243.1,
+      "probes_and_arc": 48.3,
+      "train": 2035.7,
+      "rem_generate": 87.9,
+      "rem_verify": 22.5,
+      "total_s": 2667.9
+     }
+    ],
+    "once_per_run_s": {
+     "replay_generation": 16.9,
+     "arc_base_val100_and_arc500_twice": 49.3,
+     "learning_curve_probes": 52.5,
+     "final_scoring": 367.3,
+     "model_load_and_q4": 21.7
+    },
+    "week_nights_s": 15466.3,
+    "total_s_without_download": 15973.9,
+    "total_hours": 4.44,
+    "total_usd": 5.32,
+    "week_seconds_by_phase": {
+     "train": 12594.1,
+     "dream_verify": 1007.9,
+     "dream_generate": 774.5,
+     "tag_names_detect": 427.0,
+     "rem_generate": 335.1,
+     "probes_and_arc": 201.6,
+     "rem_verify": 126.0
+    },
+    "x_the_qwen_run": 4.4
+   }
+  },
+  "best_cell": {
+   "gen_bs": 32,
+   "tok_budget": 2048,
+   "train_s_per_step": 1.696,
+   "full_max_new": {
+    "length_fraction_of_long_generations": 1.0,
+    "per_night": [
+     {
+      "night": 1,
+      "steps": 224,
+      "tag_names_detect": 72.1,
+      "dream_generate": 39.1,
+      "dream_verify": 3.7,
+      "probes_and_arc": 7.9,
+      "train": 380.0,
+      "rem_generate": 4.4,
+      "rem_verify": 1.7,
+      "total_s": 509.0
+     },
+     {
+      "night": 2,
+      "steps": 1200,
+      "tag_names_detect": 83.1,
+      "dream_generate": 124.8,
+      "dream_verify": 94.0,
+      "probes_and_arc": 15.9,
+      "train": 2035.7,
+      "rem_generate": 10.5,
+      "rem_verify": 6.6,
+      "total_s": 2370.5
+     },
+     {
+      "night": 3,
+      "steps": 1200,
+      "tag_names_detect": 81.4,
+      "dream_generate": 167.1,
+      "dream_verify": 130.7,
+      "probes_and_arc": 24.1,
+      "train": 2035.7,
+      "rem_generate": 31.2,
+      "rem_verify": 10.2,
+      "total_s": 2480.5
+     },
+     {
+      "night": 4,
+      "steps": 1200,
+      "tag_names_detect": 84.0,
+      "dream_generate": 169.5,
+      "dream_verify": 146.6,
+      "probes_and_arc": 28.6,
+      "train": 2035.7,
+      "rem_generate": 59.2,
+      "rem_verify": 15.6,
+      "total_s": 2539.1
+     },
+     {
+      "night": 5,
+      "steps": 1200,
+      "tag_names_detect": 85.2,
+      "dream_generate": 211.4,
+      "dream_verify": 179.6,
+      "probes_and_arc": 36.1,
+      "train": 2035.7,
+      "rem_generate": 78.7,
+      "rem_verify": 28.6,
+      "total_s": 2655.3
+     },
+     {
+      "night": 6,
+      "steps": 1200,
+      "tag_names_detect": 92.4,
+      "dream_generate": 253.8,
+      "dream_verify": 210.2,
+      "probes_and_arc": 40.7,
+      "train": 2035.7,
+      "rem_generate": 100.3,
+      "rem_verify": 40.8,
+      "total_s": 2773.8
+     },
+     {
+      "night": 7,
+      "steps": 1200,
+      "tag_names_detect": 89.6,
+      "dream_generate": 256.5,
+      "dream_verify": 243.1,
+      "probes_and_arc": 48.3,
+      "train": 2035.7,
+      "rem_generate": 100.3,
+      "rem_verify": 22.5,
+      "total_s": 2795.9
+     }
+    ],
+    "once_per_run_s": {
+     "replay_generation": 26.4,
+     "arc_base_val100_and_arc500_twice": 49.3,
+     "learning_curve_probes": 52.5,
+     "final_scoring": 367.3,
+     "model_load_and_q4": 21.7
+    },
+    "week_nights_s": 16124.1,
+    "total_s_without_download": 16641.4,
+    "total_hours": 4.62,
+    "total_usd": 5.55,
+    "week_seconds_by_phase": {
+     "train": 12594.1,
+     "dream_generate": 1222.2,
+     "dream_verify": 1007.9,
+     "tag_names_detect": 587.8,
+     "rem_generate": 384.5,
+     "probes_and_arc": 201.6,
+     "rem_verify": 126.0
+    },
+    "x_the_qwen_run": 4.6
+   },
+   "typical_0.6": {
+    "length_fraction_of_long_generations": 0.6,
+    "per_night": [
+     {
+      "night": 1,
+      "steps": 224,
+      "tag_names_detect": 49.2,
+      "dream_generate": 23.7,
+      "dream_verify": 3.7,
+      "probes_and_arc": 7.9,
+      "train": 380.0,
+      "rem_generate": 2.9,
+      "rem_verify": 1.7,
+      "total_s": 469.0
+     },
+     {
+      "night": 2,
+      "steps": 1200,
+      "tag_names_detect": 60.1,
+      "dream_generate": 78.4,
+      "dream_verify": 94.0,
+      "probes_and_arc": 15.9,
+      "train": 2035.7,
+      "rem_generate": 9.0,
+      "rem_verify": 6.6,
+      "total_s": 2299.7
+     },
+     {
+      "night": 3,
+      "steps": 1200,
+      "tag_names_detect": 58.4,
+      "dream_generate": 105.4,
+      "dream_verify": 130.7,
+      "probes_and_arc": 24.1,
+      "train": 2035.7,
+      "rem_generate": 26.6,
+      "rem_verify": 10.2,
+      "total_s": 2391.2
+     },
+     {
+      "night": 4,
+      "steps": 1200,
+      "tag_names_detect": 61.1,
+      "dream_generate": 107.7,
+      "dream_verify": 146.6,
+      "probes_and_arc": 28.6,
+      "train": 2035.7,
+      "rem_generate": 51.5,
+      "rem_verify": 15.6,
+      "total_s": 2446.7
+     },
+     {
+      "night": 5,
+      "steps": 1200,
+      "tag_names_detect": 62.2,
+      "dream_generate": 134.2,
+      "dream_verify": 179.6,
+      "probes_and_arc": 36.1,
+      "train": 2035.7,
+      "rem_generate": 69.4,
+      "rem_verify": 28.6,
+      "total_s": 2545.9
+     },
+     {
+      "night": 6,
+      "steps": 1200,
+      "tag_names_detect": 69.4,
+      "dream_generate": 161.2,
+      "dream_verify": 210.2,
+      "probes_and_arc": 40.7,
+      "train": 2035.7,
+      "rem_generate": 87.9,
+      "rem_verify": 40.8,
+      "total_s": 2645.9
+     },
+     {
+      "night": 7,
+      "steps": 1200,
+      "tag_names_detect": 66.6,
+      "dream_generate": 163.9,
+      "dream_verify": 243.1,
+      "probes_and_arc": 48.3,
+      "train": 2035.7,
+      "rem_generate": 87.9,
+      "rem_verify": 22.5,
+      "total_s": 2667.9
+     }
+    ],
+    "once_per_run_s": {
+     "replay_generation": 16.9,
+     "arc_base_val100_and_arc500_twice": 49.3,
+     "learning_curve_probes": 52.5,
+     "final_scoring": 367.3,
+     "model_load_and_q4": 21.7
+    },
+    "week_nights_s": 15466.3,
+    "total_s_without_download": 15973.9,
+    "total_hours": 4.44,
+    "total_usd": 5.32,
+    "week_seconds_by_phase": {
+     "train": 12594.1,
+     "dream_verify": 1007.9,
+     "dream_generate": 774.5,
+     "tag_names_detect": 427.0,
+     "rem_generate": 335.1,
+     "probes_and_arc": 201.6,
+     "rem_verify": 126.0
+    },
+    "x_the_qwen_run": 4.4
+   }
+  }
+ },
+ "best_cell": {
+  "gen_bs": 32,
+  "tok_budget": 2048,
+  "full_max_new_h": 4.62,
+  "typical_0.6_h": 4.44
+ },
+ "estimator_check": {
+  "what": "32 prompts of ~420.0 tokens, 20 new greedy (not used to build the model)",
+  "measured_s": 2.921,
+  "predicted_s": 5.321,
+  "ratio_pred_over_measured": 1.82
+ },
+ "assumptions": [
+  "Generation work per night is read from the addendum-9 seed-1 result (nights[i].tagging.turns, names_pass.pairs, update_detection.candidates, dream_stats.items / now_gen / qa_gen / dropped_bad_answer, with_dreams, rem_stats[c].chain_gen / gist_gen / kept / dropped_unverified / dropped_dup, steps); the same arm on the big base would see somewhat different counts.",
+  "Not stored, so assumed: 'now' prompts = ceil(now_gen / 2); dream verification prompts = qa_gen + now_gen - dropped_bad_answer (upper bound); probes = with_dreams; ARC validation = 100 questions per night; prompt lengths per phase = PROMPT_TOK (only prefill depends on them).",
+  "Every generate batch decodes max_new steps (an upper bound: a batch stops when all rows end). 'typical_0.6' cuts the long generations (tagging 160, dreams 400 x scale, REM 40) to 60% of max_new; this fraction is a guess, not a measurement. Dream decode steps are measured over a few dozen steps and assumed constant out to 400 x scale (dream_long checks the slope).",
+  "Decode seconds per step are measured at the batch sizes in inputs (adapter off); a batch smaller than the smallest measured costs as that one, in between log2-interpolated. Training uses the measured seconds per Trainer step at the tok budget for every step (the real batches are longer or shorter than the synthetic one: the open-book examples carry the diary notes).",
+  "Not counted: the download, CPU-side bookkeeping (BM25 search, parsing), SHY, the adapter snapshot / restore, the ARC-Easy download. The experts implementation that was fastest per phase in the bench is assumed for both phases (see experts.note in the bench JSON)."
+ ],
+ "notes": []
+}

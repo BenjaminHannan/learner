@@ -1,0 +1,75 @@
+== run_box 2026-10-25T16:35:59Z steps=3000 bsz=16 micro=4 maxlen=1024
+name, memory.total [MiB]
+NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition, 97887 MiB
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+torch 2.9.1+cu128 cuda True transformers 5.20.2 peft 0.21.2
+fla 0.6.0
+causal_conv1d missing (torch fallback): ModuleNotFoundError
+-- sleepb ab_ob_full_s 16:36:47 --schedule backbone/sleep/brain/data/ab_schedule_stage1.json
+[full] lr 5e-06 (--full-lr-small): full-rank deltas train, LoRA frozen
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 320/320 [00:00<00:00, 5090.31it/s]
+[schedule] [0, 136, 260, 300, 300, 300, 300]
+[selftest] delta machinery: {'skipped': 'GPU run (checked on CPU via --selftest and smoke)'}
+[delta] 186 modules, delta params 1,372,717,056 (trainable)
+[lora] trainable 1,372,717,056
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+
+Generating train split:   0%|          | 0/2251 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 2251/2251 [00:00<00:00, 157729.60 examples/s]
+
+Generating test split:   0%|          | 0/2376 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 2376/2376 [00:00<00:00, 359823.31 examples/s]
+
+Generating validation split:   0%|          | 0/570 [00:00<?, ? examples/s]
+Generating validation split: 100%|██████████| 570/570 [00:00<00:00, 174469.33 examples/s]
+[base] ARC-Easy validation(100) 0.870
+[night 1] items 57 eligible 0 (active 0, consolidated 0) steps 0 probe_pre None
+[night 1] no dream content; skipping training
+[night 1] delta_fro 0
+[night 1] done steps 0 (nrem 0, rem 0) arc_val 0.870 probe_post None reverted False 35s delta_fro 0 -> 0
+[night 2] items 101 eligible 23 (active 23, consolidated 0) steps 136 probe_pre 0.0
+[night 2] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 242918, 'zeroed_frac': 0.8395473899579738, 'energy_ratio': 0.6502006470730133}
+[night 2] delta_fro 1.29541
+[night 2] done steps 136 (nrem 78, rem 58) arc_val 0.880 probe_post 0.7142857142857143 reverted False 342s delta_fro 1.29541 -> 1.29541
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.025, 'C4': 0.15, 'C24': 0.0875, 'all': 0.058333333333333334}
+[night 3] items 135 eligible 55 (active 55, consolidated 0) steps 260 probe_pre 0.2765957446808511
+[night 3] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 226425, 'zeroed_frac': 0.7825460351692104, 'energy_ratio': 0.6636806524286687}
+[night 3] delta_fro 1.92172
+[night 3] done steps 260 (nrem 149, rem 111) arc_val 0.870 probe_post 0.8085106382978723 reverted False 451s delta_fro 1.92172 -> 1.92172
+[night 4] items 172 eligible 79 (active 69, consolidated 10) steps 300 probe_pre 0.5205479452054794
+[night 4] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 218513, 'zeroed_frac': 0.7552014211457642, 'energy_ratio': 0.6752542115437986}
+[night 4] delta_fro 2.29934
+[night 4] done steps 300 (nrem 173, rem 127) arc_val 0.890 probe_post 0.7808219178082192 reverted False 538s delta_fro 2.29934 -> 2.29934
+[curve] night 4 forward {'C1': 0.0, 'C2': 0.2, 'C4': 0.675, 'C24': 0.4375, 'all': 0.2916666666666667}
+[night 5] items 198 eligible 100 (active 68, consolidated 32) steps 300 probe_pre 0.625
+[night 5] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 213504, 'zeroed_frac': 0.7378898473788985, 'energy_ratio': 0.680278334340632}
+[night 5] delta_fro 2.57337
+[night 5] done steps 300 (nrem 173, rem 127) arc_val 0.890 probe_post 0.7840909090909091 reverted False 525s delta_fro 2.57337 -> 2.57337
+[night 6] items 224 eligible 119 (active 72, consolidated 47) steps 300 probe_pre 0.6388888888888888
+[night 6] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 211025, 'zeroed_frac': 0.7293221908869719, 'energy_ratio': 0.6855517002050978}
+[night 6] delta_fro 2.73473
+[night 6] done steps 300 (nrem 173, rem 127) arc_val 0.880 probe_post 0.7870370370370371 reverted False 528s delta_fro 2.73473 -> 2.73473
+[night 7] items 251 eligible 132 (active 70, consolidated 62) steps 300 probe_pre 0.6910569105691057
+[night 7] SHY {'modules': 186, 'sv_total': 289344, 'sv_zeroed': 209355, 'zeroed_frac': 0.7235505142667551, 'energy_ratio': 0.6873284277873593}
+[night 7] delta_fro 2.84022
+[night 7] done steps 300 (nrem 173, rem 127) arc_val 0.870 probe_post 0.7967479674796748 reverted False 541s delta_fro 2.84022 -> 2.84022
+[curve] night 7 forward {'C1': 0.0, 'C2': 0.375, 'C4': 0.825, 'C24': 0.6, 'all': 0.4}
+[diag] {"tagger": {"mention_recall": 0.5597014925373134, "mentions": 402, "precision_lower_bound": 0.6676136363636364, "extractions": 352, "recall_by_class": {"CH": 0.6375, "C2": 0.5625, "RT": 0.19047619047619047, "C1": 0.6, "C4": 0.60625}}, "eligibility": {"by_class": {"C2": {"n": 40, "extracted": 29, "eligible_now": 28, "eligible_any_value": 28, "superseded_old_value": 0}, "C1": {"n": 40, "extracted": 24, "eligible_now": 0, "eligible_any_value": 0, "superseded_old_value": 0}, "C4": {"n": 40, "extracted": 36, "eligible_now": 35, "eligible_any_value": 35, "superseded_old_value": 0}, "CH": {"n": 20, "extracted": 19, "eligible_now": 13, "eligible_any_value": 16, "superseded_old_value": 12}, "RT": {"n": 12, "extracted": 5, "eligible_now": 5, "eligible_any_value": 5, "superseded_old_value": 0}}, "eligible_items": 129, "eligible_unmatched_to_ground_truth": 37, "eligible_matched_by_class": {"C2": 29, "C4": 40, "RT": 5, "CH": 18}, "eligible_precision_among_matched": 1.0}, "update_detection": {"pairs_judged": 183, "judged_changed": 34, "ch_items": 20, "ch_true_pair_checked": 13, "ch_detected": 11, "ch_detection_recall": 0.55, "false_changed": 22}, "rem": {"chain_pairs_kept_total": 7, "twohop_dreamed": 3, "twohop_total": 27, "pool": 55, "twohop_dreamed_flags": [false, false, false, false, false, false, false, true, false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false, false, false, false]}}
+[eval:weights] forward 0.4 (C1 0.0 C2 0.375 C4 0.825) reverse 0.4583333333333333 twohop 0.037037037037037035 changed new 0.6 stale 0.15 routine 0.6666666666666666 integration 0.43456790123456795 pooled 0.41471571906354515
+[eval:diary] forward 0.875 (C1 0.65 C2 0.975 C4 1.0) reverse 0.9 twohop 0.1111111111111111 changed new 0.65 stale 0.35 routine 1.0 integration 0.587037037037037 pooled 0.8060200668896321
+[eval:base_diary] forward 0.9166666666666666 (C1 0.8 C2 0.95 C4 1.0) reverse 0.9166666666666666 twohop 0.07407407407407407 changed new 1.0 stale 0.0 routine 1.0 integration 0.691358024691358 pooled 0.8494983277591973
+[eval:router] forward 0.6083333333333333 (C1 0.325 C2 0.625 C4 0.875) reverse 0.5916666666666667 twohop 0.037037037037037035 changed new 0.7 stale 0.15 routine 0.9166666666666666 integration 0.5512345679012346 pooled 0.568561872909699 frac_memory 0.802675585284281 acc_when_memory 0.5125 acc_when_diary 0.7966101694915254
+[eval] arc_easy acc 0.928 (n=500)
+[q4eval] lora_B_nonzero False (max |B| 0); 186 delta modules, codes differing from Q0: Q 2.79%, Qf 1.85%; mean |delta| / scale 0.019
+[q4eval:F0] recall C2+C4 0.000 twohop 0.000 arc 0.898 wall 24s
+[q4eval:Q0] recall C2+C4 0.000 twohop 0.000 arc 0.896 wall 22s
+[q4eval:Q] recall C2+C4 0.562 twohop 0.037 arc 0.910 wall 13s
+[q4eval:Qf] recall C2+C4 0.562 twohop 0.037 arc 0.910 wall 12s
+[done] ab_ob_full_s wall 3203s -> out/sleepb/ab_ob_full_s/result_ab_ob_full_s.json
+-rw-r--r-- 1 root root 118379 Oct 25 17:30 out.tar.gz
+== done 2026-10-25T17:30:14Z

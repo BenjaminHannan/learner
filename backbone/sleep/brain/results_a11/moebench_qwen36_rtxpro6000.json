@@ -1,0 +1,854 @@
+{
+ "schema": "moebench-1",
+ "started_utc": "2026-10-25T14:57:45Z",
+ "args": {
+  "model": "Qwen/Qwen3.6-35B-A3B",
+  "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+  "out": "out/moebench/bench.json",
+  "tiny": false,
+  "plan_only": false,
+  "estimate_from": null,
+  "a9": "/job/tree/backbone/sleep/brain/results_a9/result_ab_ob_b4_nb.json",
+  "usd_per_hour": 1.2,
+  "lora_shared": true,
+  "rank": 16,
+  "alpha": 32,
+  "min_free_gb": 85.0,
+  "skip_download": false,
+  "force_load": false,
+  "budget_min": 25.0,
+  "no_q4": false,
+  "no_train": false,
+  "no_gen": false,
+  "experts_impls": "grouped_mm,eager,batched_mm",
+  "experts_impl": null,
+  "no_experts_probe": false,
+  "micro_seqs": 8,
+  "micro_len": 256,
+  "warmup": 2,
+  "timed": 8,
+  "tok_budgets": [
+   2048,
+   4096
+  ],
+  "trainer_warmup": 1,
+  "trainer_timed": 3,
+  "bsz": 16,
+  "replay_bsz": 8,
+  "gen_bs": [
+   32,
+   64,
+   128
+  ],
+  "tag_prompt": 220,
+  "tag_new": 160,
+  "dream_prompt": 450,
+  "dream_steps": 64,
+  "allow_early_eos": false,
+  "try_all_configs": false,
+  "seed": 0
+ },
+ "stages": {
+  "env": {
+   "status": "ok",
+   "seconds": 0.0
+  },
+  "config": {
+   "status": "ok",
+   "seconds": 1.1
+  },
+  "plan": {
+   "status": "ok",
+   "seconds": 2.4
+  },
+  "download": {
+   "status": "ok",
+   "seconds": 560.5
+  },
+  "load": {
+   "status": "ok",
+   "seconds": 17.6
+  },
+  "q4": {
+   "status": "ok",
+   "seconds": 26.2
+  },
+  "lora": {
+   "status": "ok",
+   "seconds": 0.5
+  },
+  "experts": {
+   "status": "ok",
+   "seconds": 44.4
+  },
+  "train_micro": {
+   "status": "ok",
+   "seconds": 7.0
+  },
+  "train_trainer": {
+   "status": "ok",
+   "seconds": 38.4
+  },
+  "gen": {
+   "status": "ok",
+   "seconds": 301.5
+  },
+  "estimate": {
+   "status": "ok",
+   "seconds": 0.0
+  }
+ },
+ "partial": false,
+ "mode": "real",
+ "model": {
+  "repo": "Qwen/Qwen3.6-35B-A3B",
+  "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+  "model_type": "qwen3_5_moe"
+ },
+ "elapsed_s": 1000.5,
+ "env": {
+  "python": "3.11.14",
+  "torch": "2.9.1+cu128",
+  "torch_cuda": "12.8",
+  "cuda_available": true,
+  "transformers": "5.20.2",
+  "peft": "0.21.2",
+  "accelerate": "1.15.0",
+  "huggingface_hub": "2.3.0",
+  "hf_xet": "1.7.0",
+  "flash-linear-attention": "0.6.0",
+  "causal-conv1d": null,
+  "triton": "3.5.1",
+  "fla_importable": true,
+  "causal_conv1d_importable": false,
+  "torch_grouped_mm": true,
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition",
+  "gpu_capability": [
+   12,
+   0
+  ],
+  "gpu_total_gib": 94.97,
+  "nvidia_smi": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition, 595.58.03, 97887 MiB",
+  "host_ram_gib": 246.778,
+  "cpu_count": 48,
+  "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+ },
+ "plan": {
+  "model_class": "Qwen3_5MoeForCausalLM",
+  "build_seconds": 1.9,
+  "config_model_type": "qwen3_5_moe_text",
+  "layers": 40,
+  "layer_types": {
+   "linear_attention": 30,
+   "full_attention": 10
+  },
+  "hidden_size": 2048,
+  "vocab_size": 248320,
+  "num_experts": 256,
+  "experts_per_token": 8,
+  "params_total_b": 34.6606,
+  "params_by_family_b": {
+   "routed_experts_fused_3d": 32.2123,
+   "gdn_linear_attention": 1.0106,
+   "embed_tokens": 0.5086,
+   "lm_head": 0.5086,
+   "full_attention": 0.2726,
+   "shared_expert": 0.1258,
+   "router": 0.021,
+   "gdn_conv1d": 0.001,
+   "norms": 0.0002,
+   "shared_expert_gate": 0.0001
+  },
+  "fused_3d_expert_tensors": 80,
+  "fused_3d_expert_gib_bf16": 60.0,
+  "weights_gib_bf16": 64.56,
+  "experts_implementation_default": "grouped_mm",
+  "lora": {
+   "matched": 190,
+   "matched_by_pattern": {
+    "model.layers.N.linear_attn.out_proj": 30,
+    "model.layers.N.linear_attn.in_proj_qkv": 30,
+    "model.layers.N.linear_attn.in_proj_z": 30,
+    "model.layers.N.linear_attn.in_proj_b": 30,
+    "model.layers.N.linear_attn.in_proj_a": 30,
+    "model.layers.N.self_attn.q_proj": 10,
+    "model.layers.N.self_attn.k_proj": 10,
+    "model.layers.N.self_attn.v_proj": 10,
+    "model.layers.N.self_attn.o_proj": 10
+   },
+   "trainable_params": 16250880
+  },
+  "lora_with_shared_expert": {
+   "matched": 310,
+   "matched_by_pattern": {
+    "model.layers.N.linear_attn.out_proj": 30,
+    "model.layers.N.linear_attn.in_proj_qkv": 30,
+    "model.layers.N.linear_attn.in_proj_z": 30,
+    "model.layers.N.linear_attn.in_proj_b": 30,
+    "model.layers.N.linear_attn.in_proj_a": 30,
+    "model.layers.N.mlp.shared_expert.gate_proj": 40,
+    "model.layers.N.mlp.shared_expert.up_proj": 40,
+    "model.layers.N.mlp.shared_expert.down_proj": 40,
+    "model.layers.N.self_attn.q_proj": 10,
+    "model.layers.N.self_attn.k_proj": 10,
+    "model.layers.N.self_attn.v_proj": 10,
+    "model.layers.N.self_attn.o_proj": 10
+   },
+   "trainable_params": 21166080
+  },
+  "q4": {
+   "by_bits": {
+    "4": {
+     "tensors": 392,
+     "params": 34638397440
+    },
+    "8": {
+     "tensors": 80,
+     "params": 21053440
+    }
+   },
+   "skipped_not_divisible": [],
+   "params_quantized_b": 34.6595,
+   "params_not_quantized_b": 0.0012,
+   "gib_if_real_4bit": 18.2
+  },
+  "gpu_total_gib": 94.97,
+  "headroom_gib_after_weights": 30.41,
+  "fits_gpu": true,
+  "warnings": []
+ },
+ "download": {
+  "cache_dir": "/root/.cache/huggingface/hub",
+  "free_gib_before": 818.099,
+  "seconds": 560.5,
+  "snapshot": "/root/.cache/huggingface/hub/models--Qwen--Qwen3.6-35B-A3B/snapshots/995ad96eacd98c81ed38be0c5b274b04031597b0",
+  "gib": 66.987,
+  "mb_per_s": 128.3
+ },
+ "budget_min_after_download": 25.0,
+ "load": {
+  "peak_rss_gib": 60.634,
+  "min_host_available_gib": 114.468,
+  "min_gpu_free_gib": 29.805,
+  "mode": "train.load_model_bf16_cuda",
+  "load_seconds": 17.6,
+  "config_model_type": "qwen3_5_moe_text",
+  "n_params_b": 34.6606,
+  "max_memory_allocated_gib_after_load": 64.56,
+  "memory_allocated_gib_after_load": 64.56,
+  "max_memory_reserved_gib_after_load": 64.619
+ },
+ "audit": {
+  "class": "Qwen3_5MoeForCausalLM",
+  "param_gib_by_dtype": {
+   "torch.bfloat16": 64.56,
+   "buffers:torch.float32": 0.0
+  },
+  "devices": [
+   "cuda:0"
+  ],
+  "meta_tensors": 0,
+  "experts_implementation": "grouped_mm",
+  "attn_implementation": "sdpa"
+ },
+ "q4": {
+  "recipe": "mlx-community/Qwen3.6-35B-A3B-4bit: 4-bit group 64 on every Linear / Embedding and the fused 3-D experts; 8-bit group 64 on mlp.gate and mlp.shared_expert_gate",
+  "seconds": 4.1,
+  "tensors": 472,
+  "skipped": 0,
+  "params": 34659450880,
+  "mean_rel_fro": 0.08305984953355333,
+  "group": 64,
+  "bits": 4,
+  "by_bits": {
+   "4": {
+    "tensors": 392,
+    "params": 34638397440
+   },
+   "8": {
+    "tensors": 80,
+    "params": 21053440
+   }
+  },
+  "pattern_hits": {
+   "bits:\\.mlp\\.shared_expert_gate\\.weight$": 40,
+   "extra:\\.mlp\\.gate\\.weight$": 40,
+   "bits:\\.mlp\\.gate\\.weight$": 40,
+   "extra:\\.mlp\\.experts\\.(?:gate_up_proj|down_proj)$": 80
+  },
+  "note": "fake quantization: the weights stay bf16 in GPU memory (no memory saved); only their values sit on the 4-bit / 8-bit grid",
+  "peak_alloc_gib": 65.693,
+  "extra_peak_over_start_gib": 1.125,
+  "matches_plan": true,
+  "sanity": {
+   "prompt": "What is the capital of France? Answer in one word.",
+   "kl_before_to_after": 0.00074639858212322,
+   "top1_same": true,
+   "top5_overlap": 4,
+   "finite": true,
+   "greedy_before": "Paris",
+   "greedy_after": "Paris"
+  }
+ },
+ "lora": {
+  "rank": 16,
+  "alpha": 32,
+  "lora_shared": true,
+  "target_regex": "(?:.*\\.layers\\.\\d+\\.(self_attn\\.(q_proj|k_proj|v_proj|o_proj)|linear_attn\\.(in_proj_qkv|in_proj_z|in_proj_a|in_proj_b|out_proj)|mlp\\.(gate_proj|up_proj|down_proj)))|(?:.*\\.layers\\.\\d+\\.mlp\\.shared_experts?\\.(gate_proj|up_proj|down_proj))",
+  "matched": 310,
+  "matched_by_pattern": {
+   "model.layers.N.linear_attn.out_proj": 30,
+   "model.layers.N.linear_attn.in_proj_qkv": 30,
+   "model.layers.N.linear_attn.in_proj_z": 30,
+   "model.layers.N.linear_attn.in_proj_b": 30,
+   "model.layers.N.linear_attn.in_proj_a": 30,
+   "model.layers.N.mlp.shared_expert.gate_proj": 40,
+   "model.layers.N.mlp.shared_expert.up_proj": 40,
+   "model.layers.N.mlp.shared_expert.down_proj": 40,
+   "model.layers.N.self_attn.q_proj": 10,
+   "model.layers.N.self_attn.k_proj": 10,
+   "model.layers.N.self_attn.v_proj": 10,
+   "model.layers.N.self_attn.o_proj": 10
+  },
+  "expected_matched": 310,
+  "matches_expected": true,
+  "trainable_params": 21166080,
+  "first_names": [
+   "model.layers.0.linear_attn.out_proj",
+   "model.layers.0.linear_attn.in_proj_qkv",
+   "model.layers.0.linear_attn.in_proj_z",
+   "model.layers.0.linear_attn.in_proj_b",
+   "model.layers.0.linear_attn.in_proj_a",
+   "model.layers.0.mlp.shared_expert.gate_proj",
+   "model.layers.0.mlp.shared_expert.up_proj",
+   "model.layers.0.mlp.shared_expert.down_proj"
+  ],
+  "routed_experts_have_lora": false
+ },
+ "experts": {
+  "default_in_effect": "grouped_mm",
+  "candidates": [
+   "grouped_mm",
+   "eager",
+   "batched_mm"
+  ],
+  "rows": {
+   "grouped_mm": {
+    "in_effect": "grouped_mm",
+    "vs_grouped_mm": {
+     "max_abs_diff": 0.0,
+     "ref_logit_scale": 1.8497443199157715,
+     "top1_same": true,
+     "finite": true
+    },
+    "decode_s": 0.09969139099121094,
+    "decode_n": 6,
+    "prefill_s": 0.20933377742767334,
+    "prefill_n": 4,
+    "train_s": 0.348671555519104,
+    "train_n": 4,
+    "train_peak_alloc_gib": 74.589,
+    "train_peak_reserved_gib": 74.646,
+    "numerically_ok": true
+   },
+   "eager": {
+    "in_effect": "eager",
+    "vs_grouped_mm": {
+     "max_abs_diff": 0.421875,
+     "ref_logit_scale": 1.8497443199157715,
+     "top1_same": true,
+     "finite": true
+    },
+    "decode_s": 0.2536393404006958,
+    "decode_n": 6,
+    "prefill_s": 0.9355452060699463,
+    "prefill_n": 4,
+    "train_s": 1.6428474187850952,
+    "train_n": 4,
+    "train_peak_alloc_gib": 75.768,
+    "train_peak_reserved_gib": 76.008,
+    "numerically_ok": true
+   },
+   "batched_mm": {
+    "in_effect": "batched_mm",
+    "vs_grouped_mm": {
+     "max_abs_diff": 0.625,
+     "ref_logit_scale": 1.8497443199157715,
+     "top1_same": true,
+     "finite": true
+    },
+    "decode_s": 0.18964433670043945,
+    "decode_n": 6,
+    "numerically_ok": true
+   }
+  },
+  "forced": null,
+  "shapes": {
+   "decode": "64 x 1 tokens, no grad, no cache",
+   "prefill": "4 x 512 tokens, no grad",
+   "train": "4 x 256 tokens, forward + backward (LoRA on, tgt_logits + CE)"
+  },
+  "train_impl": "grouped_mm",
+  "gen_impl": "grouped_mm",
+  "gen_cost_model_s": {
+   "grouped_mm": 17.4,
+   "eager": 47.04
+  },
+  "note": "train_impl / gen_impl are applied by this bench before the training and generation stages. If they differ from each other or from the default, sleepb.py must switch with lm.set_experts_implementation(name) around its generate() and training calls (it does not today): the night then runs the default implementation everywhere."
+ },
+ "train_micro": {
+  "shape": "8 x 256 tokens, chat framing, loss on the last 9 tokens of each",
+  "warmup": 2,
+  "timed": 8,
+  "optimizer": "AdamW lr 0 (weights never move)",
+  "experts_implementation": "grouped_mm",
+  "attempts": [
+   {
+    "name": "plain",
+    "ckpt": false,
+    "micro_tokens": 2048,
+    "status": "ok",
+    "micro_batches": 1,
+    "seqs_per_micro_batch": 8,
+    "tokens_per_step": 2048,
+    "grad_missing": 0,
+    "s_per_step": 0.4853,
+    "step_seconds": [
+     0.4788,
+     0.4792,
+     0.4817,
+     0.4789,
+     0.4821,
+     0.4792,
+     0.4905,
+     0.5117
+    ],
+    "n_timed": 8,
+    "loss_first": 6.863406658172607,
+    "loss_last": 6.863406658172607,
+    "finite": true,
+    "peak_alloc_gib": 84.68,
+    "peak_reserved_gib": 84.82
+   }
+  ],
+  "chosen": "plain",
+  "gradient_checkpointing_kwargs": {
+   "use_reentrant": false
+  },
+  "enable_input_require_grads": false,
+  "s_per_step": 0.4853,
+  "peak_alloc_gib": 84.68,
+  "ckpt": false,
+  "micro_tokens": 2048
+ },
+ "train_trainer": {
+  "what": "sleepb.Trainer.step (CE on the batch + KL guard on replay vs the adapter-off base), lr 0",
+  "bsz": 16,
+  "replay_bsz": 8,
+  "warmup": 1,
+  "timed_requested": 3,
+  "experts_implementation": "grouped_mm",
+  "budgets": {
+   "2048": {
+    "attempts": [
+     {
+      "gradient_checkpointing": false,
+      "micro_batches": [
+       3,
+       1
+      ],
+      "padded_tokens": [
+       4336,
+       968
+      ],
+      "peak_alloc_gib": 83.699,
+      "peak_reserved_gib": 84.475,
+      "status": "ok",
+      "s_per_step": 1.6964,
+      "step_seconds": [
+       1.705,
+       1.6904,
+       1.6937
+      ],
+      "n_timed": 3
+     }
+    ],
+    "gradient_checkpointing": false,
+    "micro_batches": [
+     3,
+     1
+    ],
+    "padded_tokens": [
+     4336,
+     968
+    ],
+    "peak_alloc_gib": 83.699,
+    "peak_reserved_gib": 84.475,
+    "status": "ok",
+    "s_per_step": 1.6964,
+    "step_seconds": [
+     1.705,
+     1.6904,
+     1.6937
+    ],
+    "n_timed": 3
+   },
+   "4096": {
+    "attempts": [
+     {
+      "gradient_checkpointing": false,
+      "status": "oom",
+      "error": "OutOfMemoryError('CUDA out of memory. Tried to allocate 122.00 MiB. GPU 0 has a total capacity of 94.97 GiB of which 48.25 MiB is free. Including non-PyTorch memory, this process has 94.91 GiB memory in use. Of the allocated memory 93.77 GiB is allocated by PyTorch, and 169.59 MiB is reserved by PyT",
+      "peak_alloc_gib": 93.77,
+      "peak_reserved_gib": 93.977
+     },
+     {
+      "gradient_checkpointing": true,
+      "micro_batches": [
+       2,
+       1
+      ],
+      "padded_tokens": [
+       4336,
+       968
+      ],
+      "peak_alloc_gib": 67.293,
+      "peak_reserved_gib": 93.936,
+      "status": "ok",
+      "s_per_step": 2.3446,
+      "step_seconds": [
+       2.2781,
+       2.4879,
+       2.2677
+      ],
+      "n_timed": 3
+     }
+    ],
+    "gradient_checkpointing": true,
+    "micro_batches": [
+     2,
+     1
+    ],
+    "padded_tokens": [
+     4336,
+     968
+    ],
+    "peak_alloc_gib": 67.293,
+    "peak_reserved_gib": 93.936,
+    "status": "ok",
+    "s_per_step": 2.3446,
+    "step_seconds": [
+     2.2781,
+     2.4879,
+     2.2677
+    ],
+    "n_timed": 3
+   }
+  },
+  "status": "ok",
+  "s_per_step": 1.6964,
+  "peak_alloc_gib": 83.699
+ },
+ "gen": {
+  "adapter": "off (the base model, as the tagger / dreamer / verifier run); the LoRA adds ~1 small matmul pair per target module per step",
+  "forced_full_length": true,
+  "sampling": "temperature 0.8, top_p 0.95, top_k 0 (Lang.generate)",
+  "experts_implementation": "grouped_mm",
+  "rows": {
+   "tag_32": {
+    "shape": "tag",
+    "prompts": 32,
+    "prompt_tokens_mean": 220.1,
+    "max_new": 160,
+    "sampled": false,
+    "prefill_s": 6.6016,
+    "prefill_peak_alloc_gib": 67.731,
+    "status": "ok",
+    "seconds": 18.018,
+    "model_generate_s": 18.0072,
+    "steps": 160,
+    "new_tokens": 5120,
+    "new_tokens_per_s": 284.16,
+    "seconds_per_step": 0.1126,
+    "decode_s_per_step": 0.0718,
+    "sample_out": "kitten saddle ocean garden button paper letter empire river morning feather paper winter quarry dragon flower copper ocean cellar blanket harvest orchard bridge",
+    "peak_alloc_gib": 68.382,
+    "peak_reserved_gib": 68.695
+   },
+   "dream_32": {
+    "shape": "dream",
+    "prompts": 32,
+    "prompt_tokens_mean": 450.1,
+    "max_new": 64,
+    "sampled": true,
+    "prefill_s": 6.76,
+    "prefill_peak_alloc_gib": 68.922,
+    "status": "ok",
+    "seconds": 8.279,
+    "model_generate_s": 8.2616,
+    "steps": 64,
+    "new_tokens": 2048,
+    "new_tokens_per_s": 247.36,
+    "seconds_per_step": 0.1294,
+    "decode_s_per_step": 0.02412,
+    "sample_out": "Nickel Whistle Engine Mountain Cellar Engine Jungle Bridge River Shadow Candle Mountain Pillow Island Kettle Dragon Harbour Jacket River Copper Candle Ledger Ni",
+    "peak_alloc_gib": 68.922,
+    "peak_reserved_gib": 70.453
+   },
+   "tag_64": {
+    "shape": "tag",
+    "prompts": 64,
+    "prompt_tokens_mean": 220.0,
+    "max_new": 160,
+    "sampled": false,
+    "prefill_s": 6.7572,
+    "prefill_peak_alloc_gib": 70.793,
+    "status": "ok",
+    "seconds": 33.607,
+    "model_generate_s": 33.5871,
+    "steps": 160,
+    "new_tokens": 10240,
+    "new_tokens_per_s": 304.7,
+    "seconds_per_step": 0.21,
+    "decode_s_per_step": 0.16887,
+    "sample_out": "Quilt Shadow Bakery Shadow Basket River Saddle Engine Nickel Anchor Anchor Letter Whistle Whistle Bridge Bakery Quarry Cellar Shadow Hammer Blanket Candle Quilt",
+    "peak_alloc_gib": 72.108,
+    "peak_reserved_gib": 72.699
+   },
+   "dream_64": {
+    "shape": "dream",
+    "prompts": 64,
+    "prompt_tokens_mean": 450.1,
+    "max_new": 64,
+    "sampled": true,
+    "prefill_s": 7.8916,
+    "prefill_peak_alloc_gib": 73.189,
+    "status": "ok",
+    "seconds": 15.868,
+    "model_generate_s": 15.8331,
+    "steps": 64,
+    "new_tokens": 4096,
+    "new_tokens_per_s": 258.13,
+    "seconds_per_step": 0.2479,
+    "decode_s_per_step": 0.12661,
+    "sample_out": "zebra\npaper\nshadow\nladder\nmeadow\nstone\nmirror\nthunder\nferry\nbasket\nfeather\nbutton\nwalnut\ncopper\nsilver\nkettle\nmirror\nkettle\njacket\nthunder\nocean\nbridge\nanchor\nq",
+    "peak_alloc_gib": 73.189,
+    "peak_reserved_gib": 76.078
+   },
+   "tag_128": {
+    "shape": "tag",
+    "prompts": 128,
+    "prompt_tokens_mean": 220.1,
+    "max_new": 160,
+    "sampled": false,
+    "prefill_s": 8.4399,
+    "prefill_peak_alloc_gib": 76.957,
+    "status": "ok",
+    "seconds": 67.667,
+    "model_generate_s": 67.6278,
+    "steps": 160,
+    "new_tokens": 20480,
+    "new_tokens_per_s": 302.66,
+    "seconds_per_step": 0.4229,
+    "decode_s_per_step": 0.37249,
+    "sample_out": "iron\numbrella\nzebra\nladder\nmorning\nwindow\ntrain\ncandle\niron\nblanket\npencil\nquilt\nkettle\nferry\nwinter\nanchor\nneedle\nmarble\nquarry\nanchor\nmirror\ndesert\nyellow\nbut",
+    "peak_alloc_gib": 79.563,
+    "peak_reserved_gib": 82.328
+   },
+   "dream_128": {
+    "shape": "dream",
+    "prompts": 128,
+    "prompt_tokens_mean": 450.0,
+    "max_new": 64,
+    "sampled": true,
+    "prefill_s": 9.9846,
+    "prefill_peak_alloc_gib": 81.723,
+    "status": "ok",
+    "seconds": 31.119,
+    "model_generate_s": 31.05,
+    "steps": 64,
+    "new_tokens": 8192,
+    "new_tokens_per_s": 263.25,
+    "seconds_per_step": 0.4862,
+    "decode_s_per_step": 0.33546,
+    "sample_out": "kitchen dragon kitchen kitchen kitchen kitchen bakery bakery kitchen bakery bakery bakery kitchen jungle garden kitchen village kitchen market kitchen kitchen k",
+    "peak_alloc_gib": 81.723,
+    "peak_reserved_gib": 85.199
+   },
+   "dream_long_64": {
+    "shape": "dream_long",
+    "prompts": 64,
+    "prompt_tokens_mean": 450.0,
+    "max_new": 320,
+    "sampled": true,
+    "status": "ok",
+    "seconds": 73.849,
+    "model_generate_s": 73.8089,
+    "steps": 320,
+    "new_tokens": 20480,
+    "new_tokens_per_s": 277.32,
+    "seconds_per_step": 0.2308,
+    "decode_s_per_step": 0.2315,
+    "sample_out": "zipper\nThe last word in the provided list is \"zipper\". Therefore, the answer is \"zipper\".\nAnswer: zipper\n\nThe last word in the provided list is \"zipper\". Theref",
+    "peak_alloc_gib": 73.189,
+    "peak_reserved_gib": 85.199
+   },
+   "verify_32": {
+    "shape": "verify",
+    "prompts": 32,
+    "prompt_tokens_mean": 420.0,
+    "max_new": 20,
+    "sampled": false,
+    "prefill_s": 0.8441,
+    "prefill_peak_alloc_gib": 68.756,
+    "status": "ok",
+    "seconds": 2.921,
+    "model_generate_s": 2.9,
+    "steps": 20,
+    "new_tokens": 640,
+    "new_tokens_per_s": 219.12,
+    "seconds_per_step": 0.146,
+    "decode_s_per_step": 0.1093,
+    "sample_out": "quilt ocean orchard ferry bridge kitten quarry candle jacket glacier forest market jungle river quilt wagon dragon kitten",
+    "peak_alloc_gib": 68.756,
+    "peak_reserved_gib": 85.199
+   }
+  }
+ },
+ "estimate": {
+  "skipped": "/job/tree/backbone/sleep/brain/results_a9/result_ab_ob_b4_nb.json is not in the pack; run: python3 backbone/sleep/brain/moe_bench.py --estimate-from out/moebench/bench.json --usd-per-hour 1.2"
+ },
+ "summary": {
+  "mode": "train.load_model_bf16_cuda",
+  "download_s": 560.5,
+  "load_s": 17.6,
+  "peak_gib_after_load": 64.56,
+  "peak_host_rss_gib_during_load": 60.634,
+  "q4_s": 4.1,
+  "q4_peak_gib": 65.693,
+  "q4_by_bits": {
+   "4": {
+    "tensors": 392,
+    "params": 34638397440
+   },
+   "8": {
+    "tensors": 80,
+    "params": 21053440
+   }
+  },
+  "q4_sanity": {
+   "prompt": "What is the capital of France? Answer in one word.",
+   "kl_before_to_after": 0.00074639858212322,
+   "top1_same": true,
+   "top5_overlap": 4,
+   "finite": true,
+   "greedy_before": "Paris",
+   "greedy_after": "Paris"
+  },
+  "plan_weights_gib_bf16": 64.56,
+  "lora_matched": 310,
+  "lora_trainable": 21166080,
+  "experts_default": "grouped_mm",
+  "experts_train_impl": "grouped_mm",
+  "experts_gen_impl": "grouped_mm",
+  "train_micro": {
+   "plain": 0.4853
+  },
+  "train_micro_chosen": "plain",
+  "train_micro_peak_gib": 84.68,
+  "train_trainer_by_tok_budget": {
+   "2048": {
+    "s_per_step": 1.6964,
+    "ckpt": false,
+    "peak_gib": 83.699,
+    "status": "ok"
+   },
+   "4096": {
+    "s_per_step": 2.3446,
+    "ckpt": true,
+    "peak_gib": 67.293,
+    "status": "ok"
+   }
+  },
+  "gen": {
+   "tag_32": {
+    "seconds": 18.018,
+    "new_tokens_per_s": 284.16,
+    "decode_s_per_step": 0.0718,
+    "prefill_s": 6.6016,
+    "peak_gib": 68.382,
+    "status": "ok"
+   },
+   "dream_32": {
+    "seconds": 8.279,
+    "new_tokens_per_s": 247.36,
+    "decode_s_per_step": 0.02412,
+    "prefill_s": 6.76,
+    "peak_gib": 68.922,
+    "status": "ok"
+   },
+   "tag_64": {
+    "seconds": 33.607,
+    "new_tokens_per_s": 304.7,
+    "decode_s_per_step": 0.16887,
+    "prefill_s": 6.7572,
+    "peak_gib": 72.108,
+    "status": "ok"
+   },
+   "dream_64": {
+    "seconds": 15.868,
+    "new_tokens_per_s": 258.13,
+    "decode_s_per_step": 0.12661,
+    "prefill_s": 7.8916,
+    "peak_gib": 73.189,
+    "status": "ok"
+   },
+   "tag_128": {
+    "seconds": 67.667,
+    "new_tokens_per_s": 302.66,
+    "decode_s_per_step": 0.37249,
+    "prefill_s": 8.4399,
+    "peak_gib": 79.563,
+    "status": "ok"
+   },
+   "dream_128": {
+    "seconds": 31.119,
+    "new_tokens_per_s": 263.25,
+    "decode_s_per_step": 0.33546,
+    "prefill_s": 9.9846,
+    "peak_gib": 81.723,
+    "status": "ok"
+   },
+   "dream_long_64": {
+    "seconds": 73.849,
+    "new_tokens_per_s": 277.32,
+    "decode_s_per_step": 0.2315,
+    "prefill_s": null,
+    "peak_gib": 73.189,
+    "status": "ok"
+   },
+   "verify_32": {
+    "seconds": 2.921,
+    "new_tokens_per_s": 219.12,
+    "decode_s_per_step": 0.1093,
+    "prefill_s": 0.8441,
+    "peak_gib": 68.756,
+    "status": "ok"
+   }
+  },
+  "stages": {
+   "env": "ok",
+   "config": "ok",
+   "plan": "ok",
+   "download": "ok",
+   "load": "ok",
+   "q4": "ok",
+   "lora": "ok",
+   "experts": "ok",
+   "train_micro": "ok",
+   "train_trainer": "ok",
+   "gen": "ok",
+   "estimate": "ok"
+  }
+ }
+}
