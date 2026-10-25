@@ -83,9 +83,9 @@ def collect(brain, d):
     """The (turn, name, name) questions names_pass(d) asks, through the real code: names_prompt records its arguments, the generator answers "" (no model call, no item added)."""
     got, real = [], sleepb.names_prompt
 
-    def rec(L, text, a, b, think=False):
+    def rec(L, text, a, b, think=False, **kw):  # (names_pass passes effort= on K2 since addendum 11c)
         got.append((text, a, b))
-        return real(L, text, a, b, think=think)
+        return real(L, text, a, b, think=think, **kw)
     sleepb.names_prompt, brain.gen = rec, lambda prompts, max_new, **kw: [""] * len(prompts)
     try:
         st = brain.names_pass(d)
