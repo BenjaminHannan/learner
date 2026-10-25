@@ -117,3 +117,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   (backbone/results/think1/s0/box.log; no job failed or was retried). Its on-box report (seed 0 only):
   S(8)-S(1) +0.01 [-0.23, +0.27]; S(8)-T1 -0.16 [-0.40, +0.08]; swap lesion -0.03 [-0.27, +0.18]; gates-off rows unlike
   ref0: 0; M1 -0.50 [-1.24, +0.20]; M2 -0.71 [-1.41, -0.06]; futility F1-F4 all fire.
+- 12:05Z: stopped on Ben's instruction before t_s1 finished (s1r had run t for ~6 h). Seed-1 numbers from its label:
+  a 66.0, b 65.9, aplus 71.0, bplus 72.6, t1 L1 65.9; no t_s1. All three 5090 boxes (57596004, 57597017, 57610141)
+  destroyed to end storage charges. Final state: t/t1 on seeds 0 and 2, every other arm on all three seeds; verdict per
+  PREREG stays FUTILE-STOP / incomplete for seed 1 (see the provisional readout above). Vast charges for Think-1 by
+  11:31Z: $13.78 (Vast invoices); seed 1's last half hour adds about $0.3.
