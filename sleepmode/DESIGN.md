@@ -1,0 +1,166 @@
+# Sleep mode (v1 design)
+
+Ben's request (2026-10-25 21:34Z): he clicks **Sleep**; the assistant trains for as long as it is free, even for days.
+Every hour it wakes, scans email and calendar read-only, tells Ben if something needs him, and goes back to sleep.
+When sleep stops paying off, it switches to **practice**: it works out what kinds of jobs Ben uses it for (e.g. spreadsheets),
+looks up new tricks (web pages, YouTube transcripts), and practises them in a sandbox with automatic checks.
+Ben clicks **Wake** (or starts the assistant) and it stops and leaves a morning summary.
+
+Runs on the MacBook. Pure stdlib Python 3.9+ (the Mac's assistant venv is 3.12; tests run on Linux). No pandas required.
+
+## Layout
+
+```
+sleepmode/
+  DESIGN.md        this file
+  README.md        how to use it (Ben-facing, short)
+  __init__.py
+  __main__.py      python -m sleepmode ...
+  config.py        Config dataclass; defaults overridden by ~/learner-ops/sleepmode/config.json
+  state.py         paths, status.json, events.jsonl, notified-ids store, wake flag
+  plateau.py       marginal-returns rule
+  workers.py       sleep workers: FakeWorker, CommandWorker
+  mlx_worker.py    reference real worker for the Mac (mlx_lm LoRA on diary + practice data, NLL quiz)
+  checkin.py       hourly read-only check-in: scanners -> triage -> notify
+  notify.py        macOS notification, inbox.md, optional ntfy push (off by default)
+  scheduler.py     the main loop (state machine)
+  cli.py           start | wake | status | summary | once
+  install_mac.sh   Desktop launchers "Sleep Mode.command" / "Wake Up.command", copies to ~/learner-ops/sleepmode/app
+  practice/
+    __init__.py
+    habits.py      what kinds of work Ben uses the assistant for (from the diary)
+    research.py    trick cards: built-in seeds + web pages + YouTube transcripts, distilled by the model
+    tasks.py       task families with exact automatic checkers (v1: spreadsheets on CSV)
+    sandbox.py     run an attempt in a throwaway copy, no network, no writes outside it
+    model.py       OpenAI-compatible chat client (+ FakeModel for tests)
+    loop.py        one practice round -> SFT examples + DPO pairs + pass rate
+  tests/           unittest, all offline, no MLX needed
+```
+
+## Files on the Mac (`~/learner-ops/sleepmode/`, override with env SLEEPMODE_HOME)
+
+- `config.json` optional overrides
+- `status.json` live state: mode, since, hours slept, last quiz, last check-in, pid
+- `events.jsonl` one JSON line per event (chunk_done, checkin, switch, practice_round, wake, error)
+- `WAKE` presence = wake request (Wake launcher / `python -m sleepmode wake` writes it)
+- `SLEEPING` presence while the loop runs (pid inside); the assistant's serve.sh can treat it like PAUSE_OTHERS
+- `inbox.md` notifications, newest first
+- `notified.json` ids already notified (no repeats)
+- `practice/YYYY-MM-DD/{sft.jsonl,pairs.jsonl,rounds.jsonl}` practice output; `practice/tricks/<kind>.json` trick cards
+- `worker/` the worker's own data (adapters, quiz history)
+
+## Scheduler (scheduler.py)
+
+State machine, modes `sleep` and `practice`. One loop iteration = one "hour" (config `hour_s`, default 3600; tests use tiny values).
+
+```
+start: write SLEEPING; event start; mode = sleep
+loop:
+  if wake requested -> break
+  if pause file (~/learner-ops/PAUSE_OTHERS) exists or memory pressure >= warn -> skip work this hour (event paused), still check in
+  mode sleep:    r = worker.run_chunk(budget_s = hour_s - checkin_reserve_s, practice_data=list of sft/pairs files, stop=should_stop)
+                 plateau.add(r.quiz, r.elapsed_s);  if plateau.flat(): mode = practice (event switch, reason)
+  mode practice: alternate: practice hour (loop.run_round with budget) then consolidate hour (worker.run_chunk on the new practice data).
+                 After each consolidate chunk, plateau is fed too; practice data is what keeps sleep useful.
+                 If no practice kind has a checker (habits found nothing practicable) -> stay in sleep mode with a long idle (event idle).
+  every hour (wall clock, at least once per hour_s): checkin.run() (read-only), even during practice/paused
+  sleep until the next hour mark if the work finished early, polling for wake every poll_s (default 5 s)
+on wake / SIGTERM / SIGINT: stop the running worker (SIGTERM, then SIGKILL after 30 s), write summary.md, remove SLEEPING, event wake.
+```
+Wake triggers: `WAKE` file; `~/learner-ops/ASSISTANT_RUNNING` appears (Ben started the assistant); signal.
+`should_stop()` is polled during chunks, so wake takes effect within `poll_s` (the child is terminated; the worker is
+expected to checkpoint on SIGTERM; CommandWorker reports `interrupted`).
+Memory pressure (macOS): `sysctl -n kern.memorystatus_vm_pressure_level` (1 normal, 2 warn, 4 critical); >= 2 stops the chunk and pauses. Non-mac: treated as normal.
+
+## Marginal returns (plateau.py)
+
+Each sleep chunk reports a quiz score (higher = better, any scale; the MLX worker uses -NLL x 100 on held-out diary turns).
+`gain_per_hour = (q[t] - q[t-k]) / hours between them` with window `k = plateau_window` (default 2 chunks).
+Switch to practice when `gain_per_hour < plateau_min_gain_per_hour` (default 0.5) on `plateau_patience` (default 2)
+consecutive checks AND at least `min_sleep_hours` (default 2) of sleep. Missing quiz (None) never counts as flat.
+`reset()` when new practice data arrives (a new source of learning).
+
+## Workers (workers.py)
+
+```python
+@dataclass
+class ChunkResult: quiz: float|None; elapsed_s: float; steps: int; interrupted: bool; info: dict
+class SleepWorker:  def run_chunk(self, budget_s, practice_files, should_stop) -> ChunkResult
+```
+- `FakeWorker(curve)`: quiz follows a diminishing-returns curve (e.g. 50 + 30 (1 - exp(-h/1.5))); sleeps a tiny time. For tests and `--fake` demos.
+- `CommandWorker(cmd)`: runs `cmd` (list) with env `SLEEPMODE_BUDGET_S`, `SLEEPMODE_OUT` (json path to write),
+  `SLEEPMODE_PRACTICE` (os.pathsep-joined files), `SLEEPMODE_WORKDIR`. Polls should_stop; on stop sends SIGTERM, waits 30 s, SIGKILL.
+  Reads `{"quiz": float|null, "steps": int, ...}` from SLEEPMODE_OUT. Also kills it at budget_s + 120 s.
+  Any experiment sleep (e.g. a port of backbone/sleep/brain/sleepb.py) plugs in through this contract.
+- `mlx_worker.py`: reference real worker, run as `python -m sleepmode.mlx_worker` (CommandWorker target). Builds chat-format
+  data from the diary (`~/learner-ops/diary/raw/*.jsonl`, record schema below) + practice sft.jsonl, keeps a fixed held-out
+  quiz split (5 % of conversations by hash, at least 20 turns, frozen in worker/quiz.jsonl on first run), times one step,
+  sets `--iters` to fit the budget, runs `mlx_lm.lora` with `--resume-adapter-file` (LoRA on top of the q4 base, so nothing
+  is re-quantized), then `mlx_lm.lora --test` on the quiz split and reports quiz = -test_loss*100. Model from config `mlx_model`
+  (default K2 small tier; Qwen3.6 trains ~6x slower on MLX). Adapter saved to worker/adapters/. Not tested here (no MLX on Linux):
+  tests cover data building, iters planning and output parsing only.
+
+Diary raw record (written by the assistant gateway, branch claude/project-thread-ipiiv2):
+`{"ts": iso, "model", "conv_id", "messages": [{"role","content"}...] (system content replaced by {"$blob": hash}),
+  "response": {"content": str, "tool_calls": [...]}, "status": int, ...}` in `raw/YYYY-MM-DD.jsonl`.
+User text: messages with role user (content may be a string or a list of {type:text,text}).
+
+## Check-in (checkin.py, notify.py)
+
+Read-only. Scanners return `Item(id, source, sender, subject, when, snippet, flags)`:
+- `MailAppScanner`: osascript against Mail.app, unread inbox messages received in the last `mail_lookback_h` (default 24),
+  max 50; only `get` reads, never moves/marks. First run triggers macOS's automation permission prompt.
+- `CalendarScanner`: osascript Calendar.app events starting within `calendar_ahead_h` (default 12).
+- `ImapScanner` (optional; host/user/password-env in config): `EXAMINE` (read-only select), UNSEEN SINCE.
+- Scanners that fail (no permission, not mac) log an event and are skipped, never crash the loop.
+Triage (rules, offline): notify if sender matches `vip_senders`, subject/snippet hits `urgent_words`
+(urgent, asap, today, deadline, due, overdue, action required, payment failed, security alert, verify, interview, ...),
+or a calendar event starts within `event_soon_h` (default 2). Optional LLM triage via `triage_url` (OpenAI-compatible) if set.
+Each notified id is stored; never notify twice. Notify = macOS `display notification` + prepend to inbox.md;
+optional `ntfy_topic` push (off by default: it would send subjects to ntfy.sh).
+Check-in also writes a heartbeat line (event checkin: counts per source, n notified).
+
+## Practice (practice/)
+
+`habits.py`: scan diary user turns, keyword-classify into kinds (spreadsheet, email, writing, code, scheduling, research, math, other);
+returns counts + share. Kinds with a registered task family are practicable (v1: spreadsheet). If Ben never used spreadsheets
+we still practise the top practicable kind only if its share >= `practice_min_share` (default 0.05) else none.
+
+`research.py`: `get_tricks(kind)` -> list of trick cards `{title, how, example, source}`.
+Sources in order: built-in seed cards per kind (offline, ~15 for spreadsheets: SUMIFS, XLOOKUP, pivot, dedupe, TEXTSPLIT, date bucketing...),
+then optional web (`research_web` default true): DuckDuckGo HTML search (`https://html.duckduckgo.com/html/?q=`) for
+"<kind> tips tricks", fetch top pages, strip HTML; YouTube: same search with `site:youtube.com`, video ids from links,
+transcript via `youtube_transcript_api` if installed (skipped otherwise). The model distills fetched text into cards.
+Cached in practice/tricks/<kind>.json with fetch date; refreshed at most once a day. Fetched text is untrusted: it only becomes
+hint text in prompts, is never executed, and never decides pass/fail.
+
+`tasks.py`: task families with exact checkers. A task = `{id, kind, family, instruction, files: {name: text}, expected: {name: text}}`
+plus `check(sandbox_dir) -> (ok, why)`. v1 spreadsheet families on generated CSV tables (seeded random: sales, expenses, contacts,
+grades): sum by group, average by group, filter rows, dedupe by key, join/lookup two tables, computed column, sort by two keys,
+monthly totals from dates, top-N per group, percent change, fill missing, split full name. The model writes a Python script that
+reads the input CSV(s) and writes `output.csv`; the checker parses output.csv and compares to the reference result
+(numbers rounded to 2 dp, header names exact, row order exact only where the task says sorted).
+`generate(kind, n, seed)` -> tasks. Registry so new kinds (formulas via an xlsx engine, email drafting with rubric) plug in later.
+
+`sandbox.py`: `run_python(code, files, timeout_s=30) -> RunResult(ok, stdout, stderr, files_out, dir)`. Fresh temp dir with copies of the
+task files only (never Ben's real files), `python -I attempt.py`, cwd = sandbox, env = {PATH, HOME=sandbox, LANG}, no proxy vars;
+rlimits CPU 30 s, file size 20 MB, nproc where supported. On macOS wrapped in `sandbox-exec -p <profile>`: deny network,
+deny file-write outside the sandbox dir (and /dev), deny file-read under $HOME except the sandbox and the python prefix.
+On Linux uses `unshare -rn` when available for no network. Output files copied out; dir deleted.
+
+`model.py`: `ChatModel(url, model, api_key=None).chat(messages, max_tokens, temperature) -> str` (urllib, OpenAI-compatible
+/v1/chat/completions). `FakeModel(fn)` for tests.
+
+`loop.py`: `run_round(kind, model, budget_s, out_dir, seed, n_tasks)`:
+for each task: ask the model (system: "write a Python script ...", user: instruction + file previews + one trick card as a hint when relevant),
+extract the code block, run in sandbox, check. Fail -> up to 2 retries with the error/diff fed back. Records:
+- pass on first try -> sft example (prompt WITHOUT the hint, the passing code)
+- pass after retry -> sft example + DPO pair (chosen = passing code, rejected = first failing code), prompt without hint
+- never passes -> negative only (pairs file with chosen null is skipped; logged in rounds.jsonl)
+Writes sft.jsonl / pairs.jsonl in chat format (`{"messages": [...]}` and `{"prompt": [...], "chosen": str, "rejected": str}`) and a
+rounds.jsonl line `{kind, n, pass1, pass_any, tricks_used, elapsed_s}`. pass1 over rounds is Ben's "is practice working" line.
+Stops early at budget_s. For practice the scheduler needs a model server: config `practice_model_url`; if `practice_server_cmd`
+is set the scheduler starts it (e.g. mlx_lm.server on port 18082) before the round and stops it after, to free memory for sleep.
+
+The format matches skillsleep (good -> SFT, fixed bad -> DPO) so its trainer can consume practice output, and the puzzle-practice
+thread's checked-correct tries.
