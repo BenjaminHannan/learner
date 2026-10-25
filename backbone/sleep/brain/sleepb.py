@@ -26,11 +26,12 @@ Addendum 8 (PREREG-sleepB-addendum8.md), on top of work scale 4: ab_ob_b4_bridge
 day's tagging: for pairs of candidate names, i.e. words capitalised mid-sentence somewhere in the diary so far, that occur together in a turn and that no item links yet, names_prompt asks
 how they are related; each answer that is not "no" becomes a triple that goes through tag()'s checks and joins that turn's tag_log entry; rec["names_pass"] holds the counts).
 Addendum 9 (PREREG-sleepB-addendum9.md), on top of work scale 4: ab_ob_b4_nb = ab_ob_b4_names's names re-read pass + ab_ob_b4_bridge's bridge_prompt in REM (both addendum-8 code paths, unchanged).
+Addendum 10 (PREREG-sleepB-addendum10.md), on top of ab_ob_b4_nb: ab_ob_b4_nb_x4 samples every REM chain prompt X4_TRIES = 4 times and keeps, per pair per cycle, only the first sample that passes every check.
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 arm unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -70,15 +71,18 @@ WIN_ARMS = ("ab_ob_win", "ab_ob_winp")  # addendum 6: work scale 2 + guess prior
 ADD7_ARMS = ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")  # addendum 7: one change each on top of work scale 2 (b4: scale 4; tag2: tag_prompt2; bridge: bridge_prompt)
 ADD8_ARMS = ("ab_ob_b4_names", "ab_ob_b4_bridge")  # addendum 8: one change each on top of work scale 4 (names: the names re-read pass after tagging; bridge: bridge_prompt)
 ADD9_ARMS = ("ab_ob_b4_nb",)  # addendum 9: both addendum-8 changes together on top of work scale 4 (the names pass and bridge_prompt)
-NAMES_ARMS = ("ab_ob_b4_names", *ADD9_ARMS)  # Brain.night runs names_pass right after the day's tagging
-BRIDGE_ARMS = ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS)  # Brain.rem sends bridge_prompt (start, answer and middle name given) instead of chain_prompt
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS)
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS)  # open-book rehearsal (Brain.qa_ex)
+ADD10_ARMS = ("ab_ob_b4_nb_x4",)  # addendum 10: ab_ob_b4_nb + X4_TRIES samples per REM chain prompt (one dream kept per pair per cycle)
+TRIES_ARMS = ADD10_ARMS  # Brain.rem samples each chain prompt X4_TRIES times and keeps the first sample that passes every check, per pair per cycle
+X4_TRIES = 4
+NAMES_ARMS = ("ab_ob_b4_names", *ADD9_ARMS, *ADD10_ARMS)  # Brain.night runs names_pass right after the day's tagging
+BRIDGE_ARMS = ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS, *ADD10_ARMS)  # Brain.rem sends bridge_prompt (start, answer and middle name given) instead of chain_prompt
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)  # open-book rehearsal (Brain.qa_ex)
 GUESS_ARMS = ("ab_ob_guess", *WIN_ARMS)  # first-token confidence and the dopamine priority
 TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the item's texts
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
 B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
-B4_ARMS = ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)  # addendum 7 / 8 / 9: work scale 4 unless --budget-scale says otherwise
+B4_ARMS = ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)  # addendum 7 / 8 / 9 / 10: work scale 4 unless --budget-scale says otherwise
 
 
 def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
@@ -1383,7 +1387,7 @@ def selftest_arms7():
     assert {a: default_scale(a) for a in want} == want and all(default_scale(a) is None for a in ARMS if a not in (*B2_ARMS, *B4_ARMS))
     assert default_scale("ab_ob_b4", 1.5) == 1.5 and default_scale("ab_ob_bridge", 3.0) == 3.0 and default_scale("ab_ob", 3.0) == 3.0
     assert GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win") and EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
-    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)
+    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)
     for a in ADD7_ARMS:
         assert a in ARMS and a in NEW_ARMS and a in OB_ARMS and not {a} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS}, a
     out["scales"] = {a: default_scale(a) for a in ADD7_ARMS}
@@ -1462,7 +1466,7 @@ def selftest_arms8():
     from types import SimpleNamespace
     out = {}
     assert default_scale("ab_ob_b4_names") == 4.0 and default_scale("ab_ob_b4_bridge") == 4.0 and default_scale("ab_ob_b4_names", 1.5) == 1.5 and default_scale("ab_ob_b4") == 4.0
-    assert ADD8_ARMS == ("ab_ob_b4_names", "ab_ob_b4_bridge") and BRIDGE_ARMS == ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS) and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)
+    assert ADD8_ARMS == ("ab_ob_b4_names", "ab_ob_b4_bridge") and BRIDGE_ARMS == ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS, *ADD10_ARMS) and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)
     assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win")
     assert EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
     for a in ADD8_ARMS:
@@ -1518,7 +1522,7 @@ def selftest_arms8():
             assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (arm, k, r)
             starts.append(start == fp)
         assert starts == [True, False, True, False], (arm, starts)
-    out["bridge_arms_use_bridge_prompt"] = [a for a in BRIDGE_ARMS if a not in ADD9_ARMS]  # the addendum-9 arm is checked in selftest_arms9
+    out["bridge_arms_use_bridge_prompt"] = [a for a in BRIDGE_ARMS if a not in (*ADD9_ARMS, *ADD10_ARMS)]  # the addendum-9 / -10 arms are checked in selftest_arms9 / selftest_arms10
     out["other_arms_use_chain_prompt"] = ["ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_tag2", "ab_ob_b4_names"]
 
     # (iii) candidate names (diary text only)
@@ -1618,7 +1622,8 @@ def selftest_arms9():
     and for no other arm."""
     from types import SimpleNamespace
     out, nb = {}, "ab_ob_b4_nb"
-    assert ADD9_ARMS == (nb,) and NAMES_ARMS == ("ab_ob_b4_names", nb) and default_scale(nb) == 4.0 and default_scale(nb, 1.5) == 1.5 and default_scale(nb, 3.0) == 3.0
+    no10 = lambda t: tuple(a for a in t if a not in ADD10_ARMS)  # noqa: E731  (the addendum-10 arm is checked in selftest_arms10)
+    assert ADD9_ARMS == (nb,) and no10(NAMES_ARMS) == ("ab_ob_b4_names", nb) and default_scale(nb) == 4.0 and default_scale(nb, 1.5) == 1.5 and default_scale(nb, 3.0) == 3.0
     assert nb in ARMS and nb in NEW_ARMS and nb in OB_ARMS and nb in B4_ARMS and nb in BRIDGE_ARMS and nb in NAMES_ARMS
     assert not {nb} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS, *B2_ARMS, *DELTA_ARMS}
     out["scales"] = {nb: default_scale(nb)}
@@ -1626,11 +1631,11 @@ def selftest_arms9():
     # (ii) the older arms: the sets without the new arm are the addendum-8 tuples
     assert ADD4_ARMS == ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess") and WIN_ARMS == ("ab_ob_win", "ab_ob_winp") and ADD7_ARMS == ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")
     old = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)
-    without = lambda t: tuple(a for a in t if a != nb)  # noqa: E731
+    without = lambda t: tuple(a for a in no10(t) if a != nb)  # noqa: E731
     assert without(NEW_ARMS) == ("ab_ob", "ab_klctx", *old) and without(OB_ARMS) == ("ab_ob", *old)
     assert without(B4_ARMS) == ("ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge") and without(BRIDGE_ARMS) == ("ab_ob_bridge", "ab_ob_b4_bridge")
-    assert [a for a in ARMS if a in NAMES_ARMS] == ["ab_ob_b4_names", nb] and [a for a in ARMS if a in BRIDGE_ARMS] == ["ab_ob_bridge", "ab_ob_b4_bridge", nb]
-    assert [a for a in ARMS if default_scale(a) == 4.0] == ["ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge", nb]
+    assert [a for a in no10(ARMS) if a in NAMES_ARMS] == ["ab_ob_b4_names", nb] and [a for a in no10(ARMS) if a in BRIDGE_ARMS] == ["ab_ob_bridge", "ab_ob_b4_bridge", nb]
+    assert [a for a in no10(ARMS) if default_scale(a) == 4.0] == ["ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge", nb]
     out["old_sets_kept"] = True
 
     # (iii) the prompts Brain.tag and Brain.rem send (the same stub as selftest_arms8)
@@ -1696,9 +1701,117 @@ def selftest_arms9():
         else:
             raise AssertionError("night did not reach refresh")
         return called == [2]
-    fired = [arm for arm in ARMS if gate(arm)]
+    fired = [arm for arm in no10(ARMS) if gate(arm)]
     assert fired == ["ab_ob_b4_names", nb], fired
     out["names_gate_arms"] = fired
+    return out
+
+
+def selftest_arms10():
+    """Addendum-10 arm on stubs (no model, no RNG outside a local Random): (i) default_scale gives 4.0 for ab_ob_b4_nb_x4 (an explicit --budget-scale wins); it is a valid arm, in NEW_ARMS / OB_ARMS /
+    B4_ARMS / BRIDGE_ARMS / NAMES_ARMS / TRIES_ARMS and in none of GUESS / TWIST / EXTRA / B2 / DELTA_ARMS; (ii) every older arm keeps its membership: the sets without the new arm are the addendum-9 tuples,
+    and only the new arm is in TRIES_ARMS; (iii) Brain.rem, run on a stub that returns scripted texts: an old arm (ab_ob_b4_nb) sends one prompt per pair and its gist prompts, as before, and keeps its counters;
+    the new arm sends each chain prompt X4_TRIES times in pair-major order (the same prompts as ab_ob_b4_nb, each x4) and each gist prompt once; (iv) the keep rule: a pair whose first samples fail the
+    two-step check and whose later samples pass keeps exactly one dream (the first that passes), a pair whose samples all fail keeps nothing, a sample that fails the diary check or repeats a dream in the
+    pool is skipped for the next one, and rem_done / chain_kept / chain_extra_dropped / chain_pairs_tried count that."""
+    from types import SimpleNamespace
+    out, nb, x4 = {}, "ab_ob_b4_nb", "ab_ob_b4_nb_x4"
+    assert ADD10_ARMS == (x4,) and TRIES_ARMS == (x4,) and X4_TRIES == 4 and default_scale(x4) == 4.0 and default_scale(x4, 1.5) == 1.5 and default_scale(x4, 3.0) == 3.0
+    assert x4 in ARMS and x4 in NEW_ARMS and x4 in OB_ARMS and x4 in B4_ARMS and x4 in BRIDGE_ARMS and x4 in NAMES_ARMS and x4 in TRIES_ARMS
+    assert not {x4} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS, *B2_ARMS, *DELTA_ARMS}
+    out["scales"] = {x4: default_scale(x4)}
+
+    # (ii) the older arms: the sets without the new arm are the addendum-9 tuples
+    old = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS)
+    without = lambda t: tuple(a for a in t if a != x4)  # noqa: E731
+    assert without(NEW_ARMS) == ("ab_ob", "ab_klctx", *old) and without(OB_ARMS) == ("ab_ob", *old)
+    assert without(B4_ARMS) == ("ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge", nb) and without(BRIDGE_ARMS) == ("ab_ob_bridge", "ab_ob_b4_bridge", nb) and without(NAMES_ARMS) == ("ab_ob_b4_names", nb)
+    assert ARMS[-2:] == [nb, x4] and len(ARMS) == len(set(ARMS))
+    assert [a for a in ARMS if a in NAMES_ARMS] == ["ab_ob_b4_names", nb, x4] and [a for a in ARMS if a in BRIDGE_ARMS] == ["ab_ob_bridge", "ab_ob_b4_bridge", nb, x4]
+    assert [a for a in ARMS if a in TRIES_ARMS] == [x4] and [a for a in ARMS if default_scale(a) == 4.0] == ["ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge", nb, x4]
+    out["old_sets_kept"] = True
+
+    # (iii) / (iv) Brain.rem on a stub: 4 pairs (the arms8 / arms9 facts), 2 gist items (days 3), scripted texts per (pair, sample)
+    L = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    mk = lambda a, r, o, dd: Item((norm(a), norm(o)), a, o, r, 1, days=dd)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira", 3), mk("Kelmira", "is near", "Harbor Light", 0), mk("Harbor Light", "is in", "Oslo", 0), mk("Brontu", "sails to", "Kelmira", 3)]
+    by_fact = {it.fact: it for it in E}
+    pair_of = lambda pr: [by_fact[f] for f in re.findall(r"^- (.+)$", pr, re.M)]  # noqa: E731
+    shared = lambda p, q: ({norm(p.subj), norm(p.obj)} & {norm(q.subj), norm(q.obj)}).pop()  # noqa: E731
+    far = lambda it, x: [n for n in (it.subj, it.obj) if norm(n) != x][0]  # noqa: E731
+    good_q = lambda fp, i, t: f"Who is two steps from {fp} (pair {i}, try {t})?"  # noqa: E731  (i: the pair's place in the sending order, t: the sample)
+
+    def run(arm, script, seed=()):  # script[i] = tags of the samples of the i-th pair in sending order: good / bad (one step) / junk (no Question / Answer) / nov (passes the checks, the diary check fails)
+        calls, texts, ans_of, unver = [], [], {}, set()
+        nt = X4_TRIES if arm in TRIES_ARMS else 1
+
+        def gen(prompts, n, **kw):
+            calls.append((list(prompts), n, kw))
+            if len(calls) > 1:  # the diary check: the answer unless the question is flagged
+                qs = [re.search(r"Question: (.+?)</user>$", pr).group(1) for pr in prompts]
+                return ["no idea" if q in unver else ans_of[q] for q in qs]
+            for j, pr in enumerate(prompts):
+                if "Fact about Sam's life" in pr:
+                    it = by_fact[re.search(r"life: (.+?) \(it came", pr).group(1)]
+                    q = f"Who does Sam usually see with {it.obj} (item {E.index(it)})?"
+                    ans_of[q] = it.subj
+                    texts.append(f"Question: {q}\nAnswer: {it.subj}")
+                    continue
+                p, q = pair_of(pr)
+                fp, fq = far(p, shared(p, q)), far(q, shared(p, q))
+                tag, qs = script[j // nt][j % nt], good_q(fp, j // nt, j % nt + 1)
+                ans_of[qs] = fq
+                if tag == "nov":
+                    unver.add(qs)
+                texts.append({"good": f"Question: {qs}\nAnswer: {fq}", "nov": f"Question: {qs}\nAnswer: {fq}", "bad": f"Question: Who is {fp}?\nAnswer: {fp}", "junk": "I cannot say."}[tag])
+            return list(texts)
+        me = SimpleNamespace(L=L, a=SimpleNamespace(arm=arm, smoke=False, gist_min_days=3), gen=gen, mn=lambda n: n, raw={}, rng=random.Random(0), rem_done=Counter(), gist_done=Counter(),
+                             cap_chains=30, cap_gist=30, diary=SimpleNamespace(containing=lambda su, ob, d: [0, 1], label=lambda idx: "ctx"), leaky=lambda t: False,
+                             rem_pool=[dict(x) for x in seed], rem_chains=[], examples={"rem": []})
+        return me, Brain.rem(me, E, 1, 0), calls, texts
+
+    # (a) an old arm: one prompt per pair (bridge_prompt, start / answer alternating with the pair index), then the gist prompts; every counter as before, no new counter
+    me, st, calls, texts = run(nb, [["good"]] * 4)
+    sent, n_gen, kw = calls[0]
+    assert len(calls) == 2 and n_gen == 40 and kw == {"base": False, "sample": True} and calls[1][1] == 20 and len(sent) == 6, (len(calls), n_gen, kw, len(sent))
+    for k, r in enumerate(sent[:4]):
+        p, q = pair_of(r)
+        x = shared(p, q)
+        mid_d = [n for n in (p.subj, p.obj) if norm(n) == x][0]
+        start, answer = (far(p, x), far(q, x)) if k % 2 == 0 else (far(q, x), far(p, x))
+        assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (k, r)
+    assert len({*sent[:4]}) == 4 and sorted(sent[4:]) == sorted(gist_prompt(L, it.fact, it.days) for it in (E[0], E[3]))
+    assert me.raw["rem"] == [texts[0], texts[4]]
+    assert st == {"chain_gen": 4, "chain_kept": 4, "gist_gen": 2, "gist_kept": 2, "pool": 6}, st
+    assert all(v == 1 for v in me.rem_done.values()) and len(me.rem_done) == 4 and len(me.rem_chains) == 4
+    chain_nb = sent[:4]
+    out["old_arm_prompts_kept"] = True
+
+    # (b) the new arm: each chain prompt 4 times, pair-major (the same prompts as ab_ob_b4_nb), each gist prompt once; one sample per prompt goes to the checks; the sample capture is [first chain, first gist]
+    me, st, calls, texts = run(x4, [["good"] * 4] * 4)
+    sent = calls[0][0]
+    assert len(sent) == 18 and sent[:16] == [r for r in chain_nb for _ in range(X4_TRIES)] and sorted(sent[16:]) == sorted(gist_prompt(L, it.fact, it.days) for it in (E[0], E[3]))
+    assert Counter(sent)[chain_nb[0]] == 4 and len({*sent[16:]}) == 2 and calls[0][1:] == (40, {"base": False, "sample": True})
+    assert me.raw["rem"] == [texts[0], texts[16]]
+    assert st == {"chain_pairs_tried": 4, "chain_gen": 16, "chain_kept": 4, "chain_extra_dropped": 12, "gist_gen": 2, "gist_kept": 2, "pool": 6}, st
+    assert all(v == 1 for v in me.rem_done.values()) and len(me.rem_done) == 4 and len(me.rem_chains) == 4
+    out["x4_prompts_pair_major"] = True
+
+    # (c) / (d) the keep rule. pair 0: two one-step samples, then two good ones; pair 1: four one-step samples; pair 2: its first good sample is already in the pool; pair 3: junk, one-step, good but
+    # the diary check fails, good
+    ends = [(far(p, shared(p, q)), far(q, shared(p, q))) for p, q in (pair_of(r) for r in chain_nb)]
+    seed = [{"q": good_q(ends[2][0], 2, 1), "a": ends[2][1], "keys": [], "kind": "chain", "night": 0, "cycle": 0}]
+    script = [["bad", "bad", "good", "good"], ["bad"] * 4, ["good"] * 4, ["junk", "bad", "nov", "good"]]
+    me, st, calls, texts = run(x4, script, seed)
+    assert calls[0][0][:16] == [r for r in chain_nb for _ in range(X4_TRIES)]
+    keys = [frozenset(i.key for i in pair_of(r)) for r in chain_nb]
+    kept = [(frozenset(d_["keys"]), d_["q"]) for d_ in me.rem_pool[1:] if d_["kind"] == "chain"]
+    assert kept == [(keys[0], good_q(ends[0][0], 0, 3)), (keys[2], good_q(ends[2][0], 2, 2)), (keys[3], good_q(ends[3][0], 3, 4))], kept
+    assert len(me.rem_pool) == 1 + 3 + 2 and me.rem_pool[0] == seed[0]
+    assert [me.rem_done[k] for k in keys] == [1, 0, 1, 1] and sorted(me.rem_chains) == sorted((p.key, q.key) for p, q in (pair_of(r) for r in (chain_nb[0], chain_nb[2], chain_nb[3])))
+    assert st == {"chain_pairs_tried": 4, "chain_gen": 16, "dropped_bad": 2 + 4 + 1, "parse_fail": 1, "dropped_unverified": 1, "dropped_dup": 1, "chain_extra_dropped": 1 + 2 + 0,
+                  "chain_kept": 3, "gist_gen": 2, "gist_kept": 2, "pool": 6}, st
+    out["x4_keep_rule"] = st
     return out
 
 
@@ -2305,11 +2418,15 @@ class Brain:
             chains = [bridge_prompt(s.L, p.fact, q.fact, *bridge_roles(p, q, x, k)) for k, (p, q, x) in enumerate(pairs)]
         else:
             chains = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs]
+        smp = pairs  # one (pair, chain prompt) per sample
+        if a.arm in TRIES_ARMS:  # addendum 10: every chain prompt is sampled X4_TRIES times, pair-major; the keep rule (one dream per pair) is in the last loop
+            smp, chains = [t for t in pairs for _ in range(X4_TRIES)], [c for c in chains for _ in range(X4_TRIES)]
+            st["chain_pairs_tried"] = len(pairs)
         prompts = chains + [gist_prompt(s.L, it.fact, it.days) for it in gist]
         raw = s.gen(prompts, s.mn(40), base=False, sample=True)
-        s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(pairs):len(pairs) + 1])
+        s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
         cand = []  # (kind, items, q, a, ctx)
-        for k, ((p, q, x), txt) in enumerate(zip(pairs, raw[:len(pairs)])):
+        for k, ((p, q, x), txt) in enumerate(zip(smp, raw[:len(smp)])):
             st["chain_gen"] += 1
             r = parse_qa1(txt)
             fp, fq = other(p, x)[1], other(q, x)[1]
@@ -2328,7 +2445,7 @@ class Brain:
             else:
                 idx = sorted(set(s.diary.containing(p.subj, p.obj, d)[-2:]) | set(s.diary.containing(q.subj, q.obj, d)[-2:]))
                 cand.append(("chain", (p, q), qq, es[0], s.diary.label(idx)))
-        for it, txt in zip(gist, raw[len(pairs):]):
+        for it, txt in zip(gist, raw[len(smp):]):
             st["gist_gen"] += 1
             r = parse_qa1(txt)
             if r is None and a.smoke:
@@ -2347,9 +2464,12 @@ class Brain:
                 cand.append(("gist", (it,), qq, es[0], s.diary.label(s.diary.containing(it.subj, it.obj, d)[-4:])))
         ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c in cand], 20)
         have = {(norm(x["q"]), x["a"].lower()) for x in s.rem_pool}
+        got = set()  # TRIES_ARMS: the pairs that kept a dream this cycle (the first sample, in sample order, that passed every check)
         for (kind, its, q, ans, c), v in zip(cand, ver):
             if not has_ans(ans, v) and not s.a.smoke:
                 st["dropped_unverified"] += 1
+            elif kind == "chain" and frozenset((its[0].key, its[1].key)) in got:
+                st["chain_extra_dropped"] += 1
             elif (norm(q), ans.lower()) in have:
                 st["dropped_dup"] += 1
             else:
@@ -2359,6 +2479,8 @@ class Brain:
                 if kind == "chain":
                     s.rem_chains.append((its[0].key, its[1].key))
                     s.rem_done[frozenset((its[0].key, its[1].key))] += 1
+                    if a.arm in TRIES_ARMS:
+                        got.add(frozenset((its[0].key, its[1].key)))
                 else:
                     s.gist_done[its[0].key] += 1
                 if len(s.examples["rem"]) < 20:
@@ -2676,7 +2798,8 @@ class Brain:
         # REM chains vs two-hop tests
         dreamed = s.dreamed_twohop()
         return {"tagger": tagger, "eligibility": elig, "update_detection": upd,
-                "rem": {"chain_pairs_kept_total": len(s.rem_chains), "twohop_dreamed": sum(dreamed), "twohop_total": len(dreamed), "pool": len(s.rem_pool)}}
+                "rem": {"chain_pairs_kept_total": len(s.rem_chains), "twohop_dreamed": sum(dreamed), "twohop_total": len(dreamed), "pool": len(s.rem_pool),
+                        "twohop_dreamed_flags": dreamed}}
 
     def dreamed_twohop(s):  # for each twohop test: did a verified REM chain dream cover both of its ground-truth items?
         gmap = {g[0]: g for g in s.G}
@@ -2789,7 +2912,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 / -9 arm unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 / -9 / -10 arm unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -2799,7 +2922,7 @@ def main():
     ap.add_argument("--full-lr-small", type=float, default=5e-6, help="ab_ob_full_s only: the gentler lr (replaces --lr; otherwise identical to ab_ob_full)")
     ap.add_argument("--local-k-frac", type=float, default=None, help="ab_ob_local: plastic delta entries per night as a fraction of all delta entries (default: as many as there are LoRA parameters)")
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
-    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; B4_ARMS ab_ob_b4 / b4_names / b4_bridge / b4_nb: 4)")
+    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; B4_ARMS ab_ob_b4 / b4_names / b4_bridge / b4_nb / b4_nb_x4: 4)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
@@ -2832,6 +2955,7 @@ def main():
         print(json.dumps({"arms7": selftest_arms7()}))
         print(json.dumps({"arms8": selftest_arms8()}))
         print(json.dumps({"arms9": selftest_arms9()}))
+        print(json.dumps({"arms10": selftest_arms10()}))
         return
     if args.bench_train:
         if not args.out:
