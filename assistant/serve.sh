@@ -7,6 +7,7 @@ PY="${ASSISTANT_PY:-$HOME/learner-ops/speedbench/venv312/bin/python}"
 BIG_MODEL="${ASSISTANT_BIG_MODEL:-mlx-community/Qwen3.6-35B-A3B-4bit}"
 SMALL_MODEL="${ASSISTANT_SMALL_MODEL:-}"   # empty = no small server
 SMALL_ARGS="${ASSISTANT_SMALL_ARGS:-}"     # e.g. "--trust-remote-code"
+SMALL_TEMPLATE="${ASSISTANT_SMALL_TEMPLATE:-}"  # jinja file; K2 needs its no-think template
 
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
@@ -62,10 +63,16 @@ fi
 if [ $need_small = 1 ]; then
   alive small && kill "$(cat "$RUN/small.pid")" 2>/dev/null
   echo "Starting small model ($SMALL_MODEL) ..."
-  # SMALL_ARGS is split on spaces on purpose
-  launch small "$PY" -m mlx_lm.server --model "$SMALL_MODEL" --host 127.0.0.1 --port $SMALL_PORT \
-    --max-tokens 2048 --prompt-cache-size 8 --prompt-cache-bytes 1GB \
-    --temp 0.6 --top-p 0.95 $SMALL_ARGS
+  # SMALL_ARGS is split on spaces on purpose; mlx_lm wants the template text, not a path
+  if [ -n "$SMALL_TEMPLATE" ] && [ -f "$SMALL_TEMPLATE" ]; then
+    launch small "$PY" -m mlx_lm.server --model "$SMALL_MODEL" --host 127.0.0.1 --port $SMALL_PORT \
+      --max-tokens 2048 --prompt-cache-size 8 --prompt-cache-bytes 1GB \
+      --temp 0.6 --top-p 0.95 $SMALL_ARGS --chat-template "$(cat "$SMALL_TEMPLATE")"
+  else
+    launch small "$PY" -m mlx_lm.server --model "$SMALL_MODEL" --host 127.0.0.1 --port $SMALL_PORT \
+      --max-tokens 2048 --prompt-cache-size 8 --prompt-cache-bytes 1GB \
+      --temp 0.6 --top-p 0.95 $SMALL_ARGS
+  fi
 fi
 if [ $need_gw = 1 ]; then
   alive gateway && kill "$(cat "$RUN/gateway.pid")" 2>/dev/null
