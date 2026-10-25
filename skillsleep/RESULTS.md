@@ -43,3 +43,12 @@ So this run does not show that one night of sleep improves skills. It also does 
 Night x4 (EPOCHS 8, same data) on A1 and A2, with the same test. Pass if A2 >= A0 + 6 points with p < 0.05, using the same
 A0. It is wrong if the probe NLL keeps falling but retail stays within 3 points of A0. After that: several
 days (more failed tasks to fix) and a batched Sonnet critique (Message Batches API).
+
+## Input for Skill-Sleep 2 (coordinator, 21:43Z, from Ben's question on why good+bad didn't beat good-only)
+The pairs were too easy (DPO loss ~0 within 10 steps) and too few (33 pairs, 16 negatives). Keep one change per arm:
+- Arm 1: night x4 only (same data).
+- Arm 2: night x4 + near-miss pairs. Good and bad share a prefix and differ at one decision step, e.g. fork points
+  from Doubt Forks (resample the model's next turn at an uncertain step and let tau2's check score each branch).
+  Use many more of them. Log the DPO margin and accuracy per step, and if they saturate (loss < 0.05 for 10 steps),
+  report it as saturated rather than as learning.
+Same A0, same test, and pass marks fixed before the run.
