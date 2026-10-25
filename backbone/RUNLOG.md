@@ -75,3 +75,6 @@ too few linear-attention state slots).
   - After the boxes showed "exited", the JSONs were pulled with a longer cat poll (`vast.py cat` now waits up to 10 min), then the boxes were destroyed.
   - bridge (57622703, Portugal) self-stopped and was pulled normally.
   - Vast credit was $35.10 at 08:35Z (all threads).
+- 08:40Z Sleep-B addendum 9 (PREREG-sleepB-addendum9.md), Week-2, tok 2048, hours=3, linger 120, RTX 5090s ranked by TFLOPS per dollar (tools/vast_pick.py, no China or California hosts):
+  - claude-sleepb22-ab_ob_b4_names-s2-cqc4bi (57638087, South Korea host 406325, $0.497/h, cap $1.30): names arm on seed 2, code 297d8b4082 (sleepb.py unchanged since addendum 8).
+  - 08:53Z, code b7d29b1929 (arm ab_ob_b4_nb = names pass + bridge prompt): claude-sleepb22-ab_ob_b4_nb-s1-cqc4bi (57639516, Slovakia machine 141056, $0.469/h, cap $1.40) and claude-sleepb22-ab_ob_b4_nb-s2-cqc4bi (57639553, Japan machine 36567, $0.429/h, cap $1.40). Four South Korea offers were already gone ("no_such_ask").
