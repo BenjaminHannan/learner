@@ -12,8 +12,8 @@ from peft import LoraConfig, get_peft_model
 
 arm, base, nightp, anchorp, outd = sys.argv[1:6]
 E = os.environ.get
-LR = float(E("LR", 5e-5)); EPOCHS = int(E("EPOCHS", 2)); ACCUM = int(E("ACCUM", 8)); BETA = float(E("BETA", 0.1)); ANCHOR_W = float(E("ANCHOR_W", 0.1))
-DPO_W = float(E("DPO_W", 1.0)); KTO_W = float(E("KTO_W", 1.0)); CHUNK = int(E("CHUNK", 1024)); CLIP = float(E("CLIP", 1.0)); SEED = int(E("SEED", 1))
+LR = float(E("LR", 1e-4)); EPOCHS = int(E("EPOCHS", 2)); ACCUM = int(E("ACCUM", 4)); BETA = float(E("BETA", 0.1)); ANCHOR_W = float(E("ANCHOR_W", 0.1))
+DPO_W = float(E("DPO_W", 0.2)); KTO_W = float(E("KTO_W", 0.2)); CHUNK = int(E("CHUNK", 1024)); CLIP = float(E("CLIP", 1.0)); SEED = int(E("SEED", 1))
 dev = "cuda" if torch.cuda.is_available() else "cpu"; dt = torch.bfloat16 if dev == "cuda" else torch.float32
 random.seed(SEED); torch.manual_seed(SEED)
 log = open(outd + ".log", "a")

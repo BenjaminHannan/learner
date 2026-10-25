@@ -48,3 +48,12 @@ later tests. The q4 base and the big tier (Qwen3.6-35B-A3B) come after a pass he
 ## Compute
 One Vast RTX 5090 (coordinator approved 15:20Z, hard cap $2.00, destroyed after results). Haiku and Sonnet calls
 from the API credit, concurrency capped with retries on 429.
+
+## Addendum 1 (2026-10-25, before any run)
+- Training settings fixed after a code review, before any GPU run: LoRA lr 1e-4 (was 5e-5), grad accumulation 4
+  (about 50 optimizer steps instead of 25), gradient clipping 1.0 in both arms. DPO and KTO terms are weighted 0.2,
+  because they sum log-probs over a whole trajectory while SFT averages per token, which would otherwise swamp the
+  copy-the-good-runs signal in A2.
+- The held-out set is the official retail test split (40 tasks), not tasks 0-39, so the Swap-1 sanity check
+  compares different task sets and is a rough check only.
+- A0's test runs share the GPU with the day; A2 is trained and tested before A1, and a time cap can cut A1 short.
