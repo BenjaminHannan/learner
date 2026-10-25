@@ -38,3 +38,15 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 00:41Z: s1 aplus_s1 done: validation 71.4, dev 86.5 (a_s1 65.8): 1,254 more LoRA steps alone add 5.6 points, so
   A_ref on seed 1 is ~71.4 and G needs S(8) >= ~74.4 there. aplus took ~2.7 h beside t (factor ~1.8 vs alone), so
   t_s1 is expected ~02:30Z and t1_s1 ~03:00Z.
+
+## Deviations from PREREG (recorded before any t or t1 result exists)
+- 2026-10-25 ~01:35Z: Ben is adding $50 of Vast credit. The PREREG budget line ($3.60 cap; seed 2 and tw on Ben's PC or a
+  third 3090) is replaced by: seed 0 rerun in full and seed 2 on Vast, one A100 SXM4 40 GB box per seed (reliability >= 0.99,
+  not machine 54987), all of a seed's arms on its box, so each seed is still on one GPU type in bf16. Reason: the first s0 box's
+  files cannot be copied off its machine (only its labels: a_s0 67.0, b_s0 68.1), and A100s finish ~2-3x sooner than 3090s.
+  Seed 1 stays on its 3090. The first s0 box's a_s0/b_s0 are reported as a same-seed rerun on another GPU type, not used.
+- tw:0 runs on the s0 box instead of Ben's PC.
+- bplus:2 runs on the s2 box speculatively, because its b_s2 adapter exists only there. It enters the analysis only if
+  PREREG's bplus-extend rule fires on seed 0 (bplus_s0 - b_s0 >= 1.0); otherwise its result file is moved out of the
+  result tree before summarize.py runs and is reported separately. bplus:1 would need b_s1's adapter, which is on the
+  unreachable machine; if the rule fires it is rerun with b:1 on a 3090 and the rerun's b_s1 replaces the label one.
