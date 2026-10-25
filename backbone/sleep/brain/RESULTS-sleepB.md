@@ -517,6 +517,32 @@ What this suggests (not shown):
 Cost: about $1.60 (seed 1 about $0.72 at $0.489/h; seed 2 about $0.88 at $0.563/h), against the coordinator's $1.90 cap after the runs
 took longer than planned (x4 adds about 40% to each night's wall time).
 
+## Addendum 12: the adopted recipe on the big tier, Qwen3.6-35B-A3B on a 4-bit base (q36_q4, Week-2, seed 1)
+
+Prereg: PREREG-sleepB-addendum12.md (sealed before the code and the run). One RTX PRO 6000 WS box (57683866, $1.252/h, 15:21Z to 20:20Z,
+about 4.98 h, about $6.25 against the coordinator's $7.50 cap; the bench estimated 4.4-4.6 h). Run wall 17,878 s. JSON and log in
+`results_a12/`. Thinking off, routed experts frozen, LoRA on attention / DeltaNet / shared expert, MLX-affine 4-bit base as preregistered.
+
+| arm | C4 | C2 | **recall C2+C4** | reverse | two-hop (dreamed of 78) | changed new | routine | tagger recall / precision | eligible C2+C4 | base_diary -> diary | ARC base -> after | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Qwen3.5-2B ab_ob_b4_nb s1 (addendum 9, reference) | 95 | 88 | 91.5 | 85.0 | 38.5 (32) | 96.7 | 85 | 0.674 / 0.700 | 188 | 79.7 -> 86.4 | 92.2 | 0000000 |
+| K2-3.7B bf16 (addendum 11c) | 97 | 96 | 96.5 | 91.5 | 3.8 (5) | 93.3 | 100 | 0.826 / 0.802 | 200 | 80.0 -> 84.5 | 89.4 -> 91.0 | 1100000 |
+| **Qwen3.6-35B-A3B, 4-bit base** | 98 | 94 | **96.0** | 96.5 | **67.9 (74)** | 96.7 | 30 | 0.775 / 0.737 | 197 | 85.7 -> 95.6 | 99.4 -> 99.0 | 0000000 |
+
+- **B1 PASS (shown):** recall 96.0 (mark >= 75). The wrong-if cannot fire (recall is not below 60). Tagger mention recall 0.775, names
+  pass yes on 142 of 247 questions (57%).
+- **No harm PASS:** ARC-Easy 99.0 vs 99.4 before sleep (floor 94.4); diary 95.6 vs 85.7 (floor 80.7). No night was reverted.
+- **Against Qwen3.5-2B nb seed 1 (paired, same questions):** recall +4.5 (17 vs 8 discordant, p = 0.11); reverse +11.5 (30 vs 7,
+  p = 0.0002); two-hop +29.5 (31 vs 8, p = 0.0003). Against K2 bf16: recall -0.5 (7 vs 8, p = 1.0), reverse +5.0 (16 vs 6, p = 0.053).
+- **Two-hop (shown):** the big model kept 375 chain dreams (yield 18% of 2,088 chain samples, against 4% on Qwen3.5-2B), and 74 of the
+  78 two-hop questions were dreamed. But only 53 of the 74 dreamed ones were answered (72%, against 94-96% for Qwen3.5-2B nb). The wrong
+  answers are other names of the world (for example a boat name for a workplace). The REM pool reached 669 dreams with REM steps fixed at
+  510 a night, so each dream was practised less than in nb (pool 375-397); suggested cause, tested on K2 in addendum 14.
+- **Routine 30 (shown, a port problem):** the tagger extracted 1 of the 20 routines (habit facts), so routine questions fall back on
+  the base. Not marked; untested why (suggested: this model's tagger replies skip habit phrasing).
+- **Expectation** (recall 75-90, two-hop 30-50) was too low on both counts.
+- Caveats: one seed; our PyTorch MLX-style 4-bit grid; routed experts frozen.
+
 ## Addendum 13 + 13b: does a small whole-model sleep change survive 4-bit? (ab_ob_full_s, `--freeze-lora --q4-eval`, Week-1, seed 1)
 
 Prereg: PREREG-sleepB-addendum13.md (7df6784ee3) and 13b (21e6fe5d32), sealed before the code and the run. Code 107137a57d (`--q4-eval`) and
