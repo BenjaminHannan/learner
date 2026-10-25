@@ -56,6 +56,11 @@ class Ledger:
     def usd(self):
         return self.d["usd"]
 
+    def bump(self, key):
+        with self.lock:
+            self.d[key] = self.d.get(key, 0) + 1
+            json.dump(self.d, open(self.path, "w"), indent=1)
+
     def check(self):
         if self.d["usd"] >= self.max_usd:
             raise RuntimeError(f"spend cap reached: ${self.d['usd']:.2f} >= ${self.max_usd}")
@@ -88,13 +93,18 @@ def call_claude(client, ledger, model, system, user, max_tokens=800, tries=8):
 
 
 def parse_grade(text):
-    m = re.search(r"\{.*\}", text, re.S)
-    try:
-        d = json.loads(m.group(0))
-        return max(0, min(10, int(d["score"]))), str(d.get("critique", ""))[:400]
-    except Exception:
-        m = re.search(r'"score"\s*:\s*(\d+)', text)
-        return (max(0, min(10, int(m.group(1)))), "") if m else (None, "")
+    """Last JSON object with a numeric score wins (an earlier one can be a draft); None if there is none."""
+    for m in reversed(list(re.finditer(r"\{[^{}]*\}", text or ""))):
+        try:
+            d = json.loads(m.group(0))
+            return max(0, min(10, int(float(d["score"])))), str(d.get("critique", ""))[:400]
+        except Exception:
+            continue
+    m = list(re.finditer(r'"score"\s*:\s*(\d+(?:\.\d+)?)', text or ""))
+    return (max(0, min(10, int(float(m[-1].group(1))))), "") if m else (None, "")
+
+
+NEUTRAL = 5   # score used when a grade still fails to parse after a retry, so a good rollout is not punished as a 0
 
 
 class Grader:
@@ -116,13 +126,18 @@ class Grader:
         self.n_calls += 1
         user = self._user(task, messages)
         s, crit = parse_grade(call_claude(self.client, self.ledger, SONNET, GRADER_SYSTEM, user))
+        if s is None:   # one retry, then neutral; counted in spend.json
+            self.ledger.bump("parse_retry")
+            s, crit = parse_grade(call_claude(self.client, self.ledger, SONNET, GRADER_SYSTEM, user))
+            if s is None:
+                self.ledger.bump("parse_fail")
         if spot:
             o, _ = parse_grade(call_claude(self.client, self.ledger, OPUS, GRADER_SYSTEM, user))
             if s is not None and o is not None:
                 self.pairs.append((s, o))
                 with open(os.path.join(self.outdir, "spot.jsonl"), "a") as f:
                     f.write(json.dumps({"id": task["id"], "sonnet": s, "opus": o}) + "\n")
-        return (0 if s is None else s), crit
+        return (NEUTRAL if s is None else s), crit
 
     def _batch_grade(self, items, flags):
         """One Message Batch per training step: a Sonnet request per item plus Opus for the spot slice. None if it times out."""
@@ -156,7 +171,7 @@ class Grader:
                 self.pairs.append((s, out[f"o{i}"][0]))
                 with open(os.path.join(self.outdir, "spot.jsonl"), "a") as f:
                     f.write(json.dumps({"id": t["id"], "sonnet": s, "opus": out[f"o{i}"][0]}) + "\n")
-            res.append(((0 if s is None else s), crit))
+            res.append((s, crit) if s is not None else self.grade_one(t, items[i][1]))   # unparsed or failed in the batch: live retry path
         return res
 
     def grade_many(self, items):

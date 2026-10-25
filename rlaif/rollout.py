@@ -35,6 +35,29 @@ def prompt_ids(tok, task, c=None):
 NEGATIVE = {"no_email_sent", "no_event_created", "file_absent"}   # checks an untouched world passes
 
 
+def credit_split(task, _cache={}):
+    """Reward v3 bookkeeping, per task: gates = checks an untouched world with an empty reply already passes (keep them passing);
+    credit = checks that need work. A reply check earns credit only through needles the model must look up (found in the world
+    state, absent from the request); generic needles ('which', 'done') are dropped, and a reply check left with none is
+    ignored (Sonnet judges it). Fixes free credit from claiming success ("Done, I deleted it") without acting."""
+    if task["id"] in _cache:
+        return _cache[task["id"]]
+    base = run_checks(task, World.from_json(task["state"]), "")
+    state, user = json.dumps(task["state"]).lower(), task["user"].lower()
+    gates, credit = [], []
+    for c, ok in zip(task["checks"], base):
+        if ok:
+            gates.append(c)
+        elif c["type"] == "reply_contains":
+            earned = [x for x in c["any_of"] if str(x).lower() in state and str(x).lower() not in user]
+            if earned:
+                credit.append(dict(c, any_of=earned))
+        else:
+            credit.append(c)
+    _cache[task["id"]] = (gates, credit)
+    return gates, credit
+
+
 class Episode:
     def __init__(self, task, ids, c=None):
         self.task, self.ids, self.mask, self.prompt_len, self.c = task, list(ids), [0] * len(ids), len(ids), c
@@ -56,6 +79,15 @@ class Episode:
             return 0.0
         pos = [ok for ok, k in zip(r, kinds) if k not in NEGATIVE]
         return sum(pos) / len(pos) if pos else 1.0
+
+    def gate_credit(self):
+        """-> (all gates still pass, fraction of credit checks passed or None when the task has none)."""
+        gates, credit = credit_split(self.task)
+        g = all(run_checks(dict(self.task, checks=gates), self.world, self.final)) if gates else True
+        if not credit:
+            return g, None
+        r = run_checks(dict(self.task, checks=credit), self.world, self.final)
+        return g, sum(r) / len(r)
 
     def view(self, new_prompt):
         """Same episode tokens behind a different prompt (teacher <-> student). Returns (ids, positions of model tokens)."""
