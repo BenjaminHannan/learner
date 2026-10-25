@@ -94,3 +94,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 07:05Z: the 3090 s1 box (57553052) reached its run_box timeout with t_s1 unfinished (label "DONE" and no t_s1 entry);
   destroyed. Its seed-1 numbers stay as reported above (a 65.8, b 66.5, aplus 71.4, t1 65.9); seed 1 is analysed from
   the 5090 rerun (57610141). 06:04Z s1r b_s1 65.9 (1-pass 57.1, dev 82.3). 05:47Z s0r t1_s0 L0 67.2 / L1 67.3 / L8 67.3.
+- 07:09Z s2 bplus_s2 70.7 (dev 87.3); 07:40Z s1r aplus_s1 71.0 (dev 86.2); 07:58Z s0r tw_s0 L1 67.1; 08:13Z s0r bplus_s0
+  71.5 (dev 87.7): bplus_s0 - b_s0 = +3.9 >= 1.0, so PREREG's bplus-extend rule fires and bplus_s1 / bplus_s2 (run
+  speculatively) enter the analysis.
