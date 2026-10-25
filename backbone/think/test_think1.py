@@ -3,7 +3,7 @@
 T1-T7, T9, T10 + TP/TC/TR/TB come from test_think1_board.py, X1-X4 from test_xent.py, S1 from test_summarize.py. Here: T8 (same seed,
 same stage-2 losses), TO (data order = train.py's), TH (hits are stored in file order; gates off = arm a), TG (mechanics gate, incl. the
 abort path), TR (run_box.sh job order and skips, stub python), TS (spec defaults), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
-Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TJ, TF, TR, TS, SM.
+Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, SM.
 Needs the venv with torch CPU, transformers 5.20.2 and peft; `--real` adds the real-0.8B checks (HF_HOME=<cache> HF_HUB_OFFLINE=1).
 """
 from __future__ import annotations
@@ -346,6 +346,70 @@ def test_tf_forced():
     print(f"TF schedule {got}; blind logits/decode independent of the prompt, differ from sighted (CE {float(c_blind):.3f} vs {float(c_sight):.3f}), board read acts, ckpt grads equal; 6-step run blind_steps={sum(want)}/{len(want)} blind4 scored; blind-p 0 losses == tj")
 
 
+# ---------------------------------------------------------------- TC (control: tj with the thinking block off)
+
+def test_tc_control():
+    """tc: tj's loop with lmax 0, alpha frozen at 0 and no board parameter in the optimizer. A few steps move the LoRA, leave alpha exactly 0 and every
+    board parameter unchanged; the optimizer has only the "lora" group; the step-150 gate is skipped (reason recorded); with the same seed tc's first-step
+    LoRA gradient equals tj's run with --lmax 0 (gates are 0 in both at step 0); params_trainable is the LoRA alone; tags are L0 / ref0 (dev L0)."""
+    fx = fixture()
+    from safetensors.torch import load_file
+    ad = Path(fx["root"]) / "base" / "a_s0" / "adapter"
+    assert K.tags_for("tc", "validation", 4) == {"L0": ("plain", 0, None), "ref0": ("none", 0, None)} and K.tags_for("tc", "dev", 4) == {"L0": ("plain", 0, None)}
+    assert "tc" in K.ARMS and "tc" in K.STAGE2 and "tc" in K.BOARD and "tc" in K.JOINT
+    seen = {}
+    real_step = torch.optim.AdamW.step
+
+    def spy(self, *a, **k):  # the clipped gradients the first optimizer step uses, and the group names
+        if "names" not in seen:
+            seen["names"] = [g.get("name") for g in self.param_groups]
+            seen["grads"] = [q.grad.clone() for g in self.param_groups if g.get("name") == "lora" for q in g["params"] if q.grad is not None]
+        return real_step(self, *a, **k)
+
+    grads = {}
+    torch.optim.AdamW.step = spy
+    try:
+        for arm, extra in (("tc", ()), ("tj", ("--lmax", "0"))):
+            seen.clear()
+            a = arm_args(arm, 0, arm + "g", steps=1, extra=extra)
+            try:
+                assert K.run_arm(a) == 0
+            except RuntimeError:  # tj at lmax 0 has no refinement stats for its gate probe (after step 1, which is all we need here)
+                assert arm == "tj" and "grads" in seen
+            grads[arm] = seen["grads"]
+            if arm == "tc":
+                assert seen["names"] == ["lora"], seen["names"]
+    finally:
+        torch.optim.AdamW.step = real_step
+    assert len(grads["tc"]) == len(grads["tj"]) > 0 and sum(float(x.abs().sum()) for x in grads["tc"]) > 0
+    assert all(torch.allclose(x, y, rtol=1e-4, atol=1e-7) for x, y in zip(grads["tc"], grads["tj"])), "tc first-step LoRA gradient differs from tj --lmax 0"
+    # a few steps end to end
+    before = {k: v.clone() for k, v in load_file(str(ad / "adapter_model.safetensors")).items()}
+    a = arm_args("tc", 0, "tc", steps=6)
+    assert K.run_arm(a) == 0
+    res, out = load(a), Path(a.out)
+    after = load_file(str(out / "adapter" / "adapter_model.safetensors"))
+    moved = [k for k in before if not torch.equal(before[k], after[k])]
+    assert moved, "tc LoRA weights did not change"
+    blk = torch.load(out / "think_block.pt")["state_dict"]
+    assert float(blk["alpha"].abs().max()) == 0.0, "tc alpha moved"
+    cpu = torch.device("cpu")
+    torch.manual_seed(a.seed)
+    lm2, tok2 = T.load_model(a, cpu, torch.float32)
+    pm2 = K.lora_model(lm2, ad)
+    torch.manual_seed(a.seed)  # run_arm seeds again right before building the board
+    fresh = B.ThinkBoard.from_model(pm2.base_model.model, tok2, K=16).state_dict()
+    assert set(fresh) == set(blk) and all(torch.equal(fresh[k], blk[k]) for k in fresh), "a board parameter changed in tc"
+    n_lora = sum(p.numel() for p in pm2.parameters() if p.requires_grad)
+    assert res["params_trainable"] == n_lora == 146_176 and res["lmax"] == 0 and res["train"]["gate_check"]["reason"] == "skipped (tc)"
+    assert len(res["train"]["step_losses"]) == 6 and res["train"]["gate_log"] and all(x["L_max"] == 0 and x["alpha_mean"] == 0 for x in res["train"]["gate_log"])
+    assert set(res["train"]["gate_log"][0]["grad_norm"]) == {"lora"}
+    for split, want in EXPECT["tc"].items():
+        assert set(res["eval"][split]) == want, (split, set(res["eval"][split]))
+    assert res["eval"]["validation"]["L0"]["hits"] == res["eval"]["validation"]["ref0"]["hits"], "closed-board L0 differs from the no-read reference"
+    print(f"TC first-step LoRA gradient == tj --lmax 0 ({len(grads['tc'])} tensors); 6 steps moved {len(moved)} LoRA tensors, alpha stays 0, board unchanged, optimizer groups ['lora'], gate skipped, params {n_lora:,}")
+
+
 # ---------------------------------------------------------------- run_box.sh
 
 STUB = r"""#!/usr/bin/env bash
@@ -465,12 +529,13 @@ EXPECT = {
     "t1": {"validation": {"L0", "L1", "L8"}, "dev": {"L1"}}, "tw": {"validation": {"L1"}, "dev": set()},
     "tj": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0"}, "dev": {"L4"}},
     "tf": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0", "blind4"}, "dev": {"L4"}},
+    "tc": {"validation": {"L0", "ref0"}, "dev": {"L0"}},
 }
 
 
 def test_ts_spec_defaults():
     """Per-arm step defaults, learning-rate groups, warm-ups, gate thresholds and eval tags, as in IMPL-SPEC section 3 / PREREG."""
-    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf"}
+    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc"}
     a = K.parse(["--arm", "t", "--out", "x"])
     assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
     assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)
@@ -555,7 +620,7 @@ def run_all(real=False, only=None):
     import test_from_label as TFL
     tests = [("BOARD", lambda: board_tests(TB, real)),
              ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
-             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
+             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TCTRL", test_tc_control), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
         if only and name.lower() not in [o.lower() for o in only]:
