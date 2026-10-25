@@ -375,3 +375,79 @@ def test_report_adoption_rule_prefers_bsft_when_it_meets_marks_1_to_4():
     rows["B-sft"]["arc"] = 40.0  # mark 4 now fails for B-sft only
     marks, _ = RP.marks_1_to_4(G, rows, seeds, "B-sft")
     assert not all(v[0] for v in marks.values())
+
+
+# ---------------------------------------------------------------- format constraint + lenient parsing (job 1 day-1 findings)
+def test_parse_reply_real_day1_variants():
+    native = '<ifm|tool_calls>\n<ifm|tool_call>create_event(attendees: ["x@y"], duration_min: 45)'
+    assert TM.parse_reply(native) == ("ACT", {"tool": "create_event", "args": {"attendees": ["x@y"], "duration_min": 45}})
+    k, p = TM.parse_reply('{"action": "create_event", "title": "Sync", "start": "9am", "attendees": ["a@b.c"], "duration_min": 30}')
+    assert k == "ACT" and p == {"tool": "create_event", "args": {"attendees": ["a@b.c"], "duration_min": 30}}
+    assert TM.parse_reply('ACT {"name": "open_file", "args": {"path": "/a.txt"}}') == ("ACT", {"tool": "open_file", "args": {"path": "/a.txt"}})
+    assert TM.parse_reply('{"action": "send_email", "to": "a@b.c"}')[1] == {"tool": "send_email", "args": {"to": "a@b.c"}}
+    for prose in ["I'll open the file you requested.", "One thing is unclear: the recipient. Should the email go to X or Y?", "Which Sam do you mean?", "", "   "]:
+        assert TM.parse_reply(prose)[0] == "OTHER"  # prose is never mapped to ASK
+    assert TM.parse_reply('{"name": "Wu"}')[0] == "OTHER"  # 'name' only counts when it names a known tool
+    assert TM.parse_reply('ACT {"tool": "open_file", "args": {"path": "/a.txt"}}')[0] == "ACT"
+
+
+def _k2_tok():
+    pytest.importorskip("transformers")
+    from sleep2.askonce.config import MODEL_ID
+    try:
+        from transformers import AutoTokenizer
+        return AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True, local_files_only=True)
+    except Exception:
+        pytest.skip("real K2 tokenizer not in the local HF cache")
+
+
+def test_first_word_processor_real_k2_tokenizer():
+    import torch
+    from sleep2.askonce.model_io import FirstWordProcessor
+    tok = _k2_tok()
+    tok.padding_side = "left"
+    plen = 5
+    proc = FirstWordProcessor(tok, plen)
+    V = len(tok)
+    base = torch.zeros(1, V + 8)
+    pre = torch.zeros(1, plen, dtype=torch.long)
+
+    def allowed(gen_ids):
+        ids = torch.cat([pre, torch.tensor([gen_ids], dtype=torch.long).reshape(1, -1)], 1)
+        out = proc(ids, base.clone())
+        return set(torch.nonzero(out[0] == 0).flatten().tolist())
+
+    first = allowed([])
+    assert tok.convert_tokens_to_ids("ACT") in first and tok.convert_tokens_to_ids("ASK") in first
+    assert tok.eos_token_id not in first and tok.convert_tokens_to_ids("<|ifm|im_end|>") not in first
+    assert all(any(w.startswith(tok.decode([i])) or tok.decode([i]).startswith(w) for w in ("ACT", "ASK")) for i in first if i < V)
+    ac = tok(["AC"], add_special_tokens=False).input_ids[0]
+    assert len(ac) == 1  # single token 'AC'
+    second = allowed(ac)
+    assert second and all(tok.decode(ac + [i]).startswith("ACT") or "ACT".startswith(tok.decode(ac + [i])) for i in second if i < V)
+    assert tok("T", add_special_tokens=False).input_ids[0] in second
+    assert tok("K", add_special_tokens=False).input_ids[0] not in second
+    done = allowed(tok(["ACT"], add_special_tokens=False).input_ids[0])  # keyword complete: free generation
+    assert len(done) == V + 8
+    # the real prompt ends in the no-think prefix; "ACT {" and "ASK " follow it as separate pieces
+    from sleep2.askonce.world import render
+    pre_ids = tok(render([{"role": "user", "content": "hi"}], True, tok.bos_token or ""), add_special_tokens=False).input_ids
+    for s in ('ACT {"tool"', "ASK Which"):
+        full = tok(render([{"role": "user", "content": "hi"}], True, tok.bos_token or "") + s, add_special_tokens=False).input_ids
+        assert full[:len(pre_ids)] == pre_ids
+        assert tok.decode(full[len(pre_ids):len(pre_ids) + 1]) == s[:3]
+
+
+def test_generate_first_word_constraint_tiny_batched(tiny):
+    from sleep2.askonce.model_io import generate, MOVE_WORDS
+    name, tok, model = tiny
+    ps = [render([{"role": "user", "content": t}], True, tok.bos_token) for t in ("Which Sam?", "open file /a/b.txt please now and also more words", "hi", "x")]
+    for temp in (0.0, 1.0):
+        outs = generate(model, tok, ps, 8, temp, 3, bs=4, first_words=MOVE_WORDS)
+        assert all(o.startswith(("ACT", "ASK")) for o in outs), outs
+    # batched == single under the constraint (left padding)
+    a = generate(model, tok, ps, 8, 0.0, 0, bs=4, first_words=MOVE_WORDS)
+    b = [generate(model, tok, [p], 8, 0.0, 0, bs=1, first_words=MOVE_WORDS)[0] for p in ps]
+    assert a == b
+    free = generate(model, tok, ps, 8, 0.0, 0, bs=4)  # unconstrained path is unchanged
+    assert len(free) == 4

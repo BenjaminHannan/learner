@@ -7,7 +7,7 @@ import time
 import torch
 
 from .config import ACT_MAX_NEW, FACT_Q_MAX_NEW, jl_read, norm, shrink
-from .model_io import generate
+from .model_io import MOVE_WORDS, generate
 from .tools_mock import check_action, parse_reply
 from .world import fact_messages, general_messages, render
 
@@ -22,7 +22,7 @@ def classify_general(text):
 
 
 def eval_moves(model, tok, items, bs=8, log=print):
-    outs = generate(model, tok, [i["prompt"] for i in items], ACT_MAX_NEW, 0.0, 0, bs, log)
+    outs = generate(model, tok, [i["prompt"] for i in items], ACT_MAX_NEW, 0.0, 0, bs, log, first_words=MOVE_WORDS)
     rows = []
     for it, o in zip(items, outs):
         move, payload = parse_reply(o)

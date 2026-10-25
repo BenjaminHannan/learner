@@ -9,7 +9,7 @@ from pathlib import Path
 from .config import DATA, MODEL_ID, jdump, jload, sha256_file
 from .eval_moves import load_eval_sets, run_eval
 from .job_common import Logger, assert_finite_forward, device_dtype, env_info
-from .model_io import generate, get_tokenizer, load_model
+from .model_io import MOVE_WORDS, generate, get_tokenizer, load_model
 from .simulate_days import run_days
 from .world import Persona, load_requests
 
@@ -46,7 +46,7 @@ def main(argv=None):
         assert_finite_forward(model, tok, log)
 
         def gen_days(prompts, max_new, temperature, seed):
-            return generate(model, tok, prompts, max_new, temperature, seed, a.bs, log)
+            return generate(model, tok, prompts, max_new, temperature, seed, a.bs, log, first_words=MOVE_WORDS)
     T["load_s"] = round(time.time() - t0, 1)
     t1 = time.time()
     summary = run_days(gen_days, persona, phr, tok.bos_token or "", out_dir=out, requests=requests, log=log, max_other_frac=0.5)

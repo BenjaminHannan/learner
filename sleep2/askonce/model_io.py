@@ -72,9 +72,68 @@ def stop_ids(tok):
     return [i for i in ids if i is not None and i >= 0]
 
 
+MOVE_WORDS = ("ACT", "ASK")
+_DECODED = {}
+
+
+def _decoded_vocab(tok):
+    """Decoded text of every vocab id (cached per tokenizer object); ids whose text is empty/unknown stay ''."""
+    key = id(tok)
+    if key not in _DECODED:
+        n = len(tok)
+        out = []
+        for a in range(0, n, 8192):
+            out.extend(tok.batch_decode([[i] for i in range(a, min(n, a + 8192))], skip_special_tokens=False, clean_up_tokenization_spaces=False))
+        _DECODED[key] = out
+    return _DECODED[key]
+
+
+class FirstWordProcessor:
+    """LogitsProcessor: the reply must BEGIN with one of `words` (default ACT / ASK). While the text generated so far is a proper prefix of a
+    keyword, only tokens that keep it a prefix of a keyword (or complete one, possibly with trailing text such as ' {') are allowed; once a keyword is
+    complete the row is free. Stop tokens are not allowed before that. The model's own probabilities still choose ACT vs ASK.
+    prompt_len = padded prompt length of the batch (left padding, so generated ids start at the same column in every row)."""
+
+    def __init__(self, tok, prompt_len, words=MOVE_WORDS):
+        self.tok, self.plen, self.words = tok, prompt_len, tuple(words)
+        self.dec = _decoded_vocab(tok)
+        self.done = {}
+        self.allowed = {}
+
+    def _ids(self, text):
+        if text not in self.allowed:
+            ok = []
+            for i, d in enumerate(self.dec):
+                if not d:
+                    continue
+                s = text + d
+                if any(w.startswith(s) or s.startswith(w) for w in self.words):
+                    ok.append(i)
+            self.allowed[text] = torch.tensor(ok, dtype=torch.long)
+        return self.allowed[text]
+
+    def __call__(self, input_ids, scores):
+        gen = input_ids[:, self.plen:]
+        for r in range(scores.shape[0]):
+            if self.done.get(r):
+                continue
+            text = self.tok.decode(gen[r].tolist(), skip_special_tokens=False, clean_up_tokenization_spaces=False) if gen.shape[1] else ""
+            if any(text.startswith(w) for w in self.words):
+                self.done[r] = True
+                continue
+            ids = self._ids(text).to(scores.device)
+            if len(ids) == 0:
+                continue
+            keep = torch.full_like(scores[r], float("-inf"))
+            keep[ids[ids < scores.shape[-1]]] = 0
+            scores[r] = scores[r] + keep
+        return scores
+
+
 @torch.no_grad()
-def generate(model, tok, prompts, max_new, temperature=0.0, seed=0, bs=8, log=None):
+def generate(model, tok, prompts, max_new, temperature=0.0, seed=0, bs=8, log=None, first_words=None):
     """Batched generation with left padding; greedy when temperature == 0. Falls back to smaller batches on OOM / generate errors.
+    first_words=("ACT","ASK") constrains the reply to start with one of them (assistant moves only; never the general/fact generations).
     Returns the decoded new text of every prompt (cut at the first <|ifm|im_end|>), in input order."""
     dev = next(model.parameters()).device
     order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
@@ -95,6 +154,9 @@ def generate(model, tok, prompts, max_new, temperature=0.0, seed=0, bs=8, log=No
                 kwargs.update(do_sample=True, temperature=temperature, top_p=1.0, top_k=0)
             else:
                 kwargs.update(do_sample=False)
+            if first_words:
+                from transformers import LogitsProcessorList
+                kwargs["logits_processor"] = LogitsProcessorList([FirstWordProcessor(tok, enc["input_ids"].shape[1], first_words)])
             g = model.generate(**enc, **kwargs)
         except (torch.OutOfMemoryError, RuntimeError) as e:
             if cur_bs == 1:
