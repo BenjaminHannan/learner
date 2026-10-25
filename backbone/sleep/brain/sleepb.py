@@ -40,6 +40,10 @@ and a reply whose first line starts with the word no / not / none / nothing / no
 
 Addendum 13 (PREREG-sleepB-addendum13.md): --q4-eval (delta arms only) also scores the final model under F0 / Q0 / Q / Qf (bf16 and 4-bit, with and without the fp32 delta folded in, fresh or frozen 4-bit grid).
 Addendum 13b (PREREG-sleepB-addendum13b.md): --freeze-lora (training delta arms) re-freezes the LoRA in every Trainer, since leaving pm.disable_adapter() makes it trainable again.
+Addendum 14 (PREREG-sleepB-addendum14.md), K2 two-step dreams (all flags default to the old behaviour): --rem-chain-mode {default,q,think,q_think} (BRIDGE_ARMS, not TRIES_ARMS): q asks bridge_q_prompt for only the question (the answer is the
+given far end, parse_q1), think opens K2's high-effort think block for the bridge_prompt reply (stage 1: at most REM_THINK_MAX = 512 sampled tokens; stage 2: prompt + thinking + close tag, 40 tokens, parse_qa1), q_think both; --rem-dirs both
+(every pair is two units, one per direction, tried each cycle until it has a kept dream; --rem-tries N samples a unit N times and keeps the first sample that passes every check); --rem-steps-mult F (each cycle's REM steps x F, the
+Trainer's schedule covers the new total); --think-eval (K2, report-only: two-hop and C2+C4 forward asked again with thinking, weights only). k2_chain_probe.py runs the REM variants on the Week-1 world without training.
 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
@@ -50,7 +54,7 @@ every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-3
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -80,7 +84,7 @@ for _p in (HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
-from train import K2_TYPE, LORA_TARGETS, load_model  # noqa: E402
+from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
 
 K = 4
@@ -243,6 +247,10 @@ def plain_prompt(L, q):
     return L.render(SYS, q)
 
 
+def think_plain_prompt(L, q, effort="high"):  # addendum 14 (--think-eval, K2): plain_prompt's system line and question with the think block left open at `effort`
+    return L.render_think(SYS, q, effort)
+
+
 def ctx_prompt(L, ctx, q, head="Messages from Sam's chat history, labelled by day (if they disagree, the latest day is true):"):
     return L.render(SYS, f"{head}\n{ctx}\n\nQuestion: {q}")
 
@@ -268,6 +276,8 @@ def tag_prompt2(L, text):  # ab_ob_tag2: tag_prompt's system line, JSON format, 
 
 NAMES_THINK_MAX = 512  # addendum 11b (256, low effort) / 11c (512, high effort) (K2 only): thinking tokens per names question before the block is closed for it
 K2_NAMES_EFFORT = "high"  # addendum 11c (K2 only): the template's reasoning_effort of the names pass's think block ("high": opens "<ifm|think>\n", closes "</ifm|think>"); 11b used "low"
+REM_EFFORT, REM_THINK_MAX = "high", 512  # addendum 14 (K2 only, --rem-chain-mode think / q_think): the chain dream's think block (same effort as the names pass) and its stage-1 token cap
+REM_CHAIN_MODES = ("default", "q", "think", "q_think")  # default: bridge_prompt, think block closed (today); q: question only; think / q_think: the same with the think block open first
 
 
 def names_prompt(L, text, a, b, think=False, effort=None):  # NAMES_ARMS (ab_ob_b4_names, ab_ob_b4_nb): one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing). think (K2): leave the think block open (L.render_think, at `effort`; None: render_think's default)
@@ -332,10 +342,26 @@ def chain_prompt(L, fx, fy):
     return L.render("You are a careful assistant that studies facts.", u)
 
 
-def bridge_prompt(L, fx, fy, start, answer, mid):  # ab_ob_bridge: chain_prompt's system line and reply form; the start, the answer and the middle name are given
-    u = (f"Two facts:\n- {fx}\n- {fy}\n\nThe two facts share the name \"{mid}\". Write one question that names \"{start}\", does not name \"{mid}\" or \"{answer}\", "
-         f"and can only be answered by using both facts together. Its answer must be \"{answer}\" (a single name). Reply in exactly this form:\nQuestion: ...\nAnswer: ...")
-    return L.render("You are a careful assistant that studies facts.", u)
+BRIDGE_SYS = "You are a careful assistant that studies facts."
+
+
+def bridge_text(fx, fy, start, answer, mid):  # the user text of bridge_prompt / bridge_q_prompt up to and including "(a single name)."
+    return (f"Two facts:\n- {fx}\n- {fy}\n\nThe two facts share the name \"{mid}\". Write one question that names \"{start}\", does not name \"{mid}\" or \"{answer}\", "
+            f"and can only be answered by using both facts together. Its answer must be \"{answer}\" (a single name).")
+
+
+def bridge_render(L, u, think, effort):  # think (K2, addendum 14): leave the think block open (L.render_think at `effort`; None: render_think's default); else L.render (block closed)
+    if think:
+        return L.render_think(BRIDGE_SYS, u) if effort is None else L.render_think(BRIDGE_SYS, u, effort)
+    return L.render(BRIDGE_SYS, u)
+
+
+def bridge_prompt(L, fx, fy, start, answer, mid, think=False, effort=None):  # ab_ob_bridge: chain_prompt's system line and reply form; the start, the answer and the middle name are given
+    return bridge_render(L, bridge_text(fx, fy, start, answer, mid) + " Reply in exactly this form:\nQuestion: ...\nAnswer: ...", think, effort)
+
+
+def bridge_q_prompt(L, fx, fy, start, answer, mid, think=False, effort=None):  # addendum 14 (--rem-chain-mode q / q_think): bridge_prompt's text, but the reply is only the question (the answer is the given far end)
+    return bridge_render(L, bridge_text(fx, fy, start, answer, mid) + " Reply with only the question, on one line.", think, effort)
 
 
 def gist_prompt(L, fx, nd):
@@ -384,6 +410,15 @@ def parse_now(txt):
 def parse_qa1(txt):
     m = re.search(r"Question:\s*(.+?)\s*[\r\n]+\s*Answer:\s*([^\r\n]+)", txt) or re.search(r"Question:\s*(.+?)\s*Answer:\s*(.+)$", txt, re.S)
     return (m.group(1).strip(), m.group(2).strip().rstrip(".")) if m else None
+
+
+def parse_q1(txt):  # addendum 14 (--rem-chain-mode q / q_think): a question-only reply -> the question: first non-empty line, "Question:" / "Q:" label and quotes off; None if that line starts with "Answer:" or does not end with "?"
+    lines = [x.strip() for x in str(txt or "").splitlines() if x.strip()]
+    if not lines or re.match(r"answer\s*:", lines[0], re.I):
+        return None
+    qt = " \t\"'`\u201c\u201d\u2018\u2019"  # (quotes and spaces, ASCII and curly)
+    ln = re.sub(r"^(?:question|q)\s*:", "", lines[0].strip(qt), flags=re.I).strip(qt)
+    return ln if ln.endswith("?") else None
 
 
 def ex_text(L, t):
@@ -489,6 +524,29 @@ def eval_line(sc):
     return (f"forward {sc['forward']['acc']} (C1 {sc['forward']['C1']} C2 {sc['forward']['C2']} C4 {sc['forward']['C4']}) reverse {sc['reverse']['acc']} "
             f"twohop {sc['twohop']['acc']} changed new {sc['changed']['new']} stale {sc['changed']['stale']} routine {sc['routine']['acc']} "
             f"integration {sc['integration']} pooled {sc['pooled']}")
+
+
+THINK_EVAL_EFFORT, THINK_EVAL_MAX = "high", 512  # addendum 14 (--think-eval, K2 only): the think block's effort and the greedy thinking cap
+
+
+def think_eval(L, model, week, bs, cap=THINK_EVAL_MAX):
+    """Addendum 14 (--think-eval, K2 only, report-only): the weights-only questions (plain_prompt's text) asked with the think block open. Stage 1: greedy, at most `cap` tokens, stops at the close tag / end of turn
+    (L.think_eos); stage 2 = prompt + thinking + ONE close tag, then up to 20 greedy tokens (score_week's max_new and bs). ok: the target is in the stage-2 answer; ok_any: it is anywhere in thinking + answer (a diagnostic).
+    Sets: the two-hop questions, and the forward questions of class C2 / C4. The model is used as it is (adapter on)."""
+    T = week["tests"]
+    sets = {"twohop": list(T["twohop"]), "forward_c24": [t for t in T["forward"] if t["class"] in ("C2", "C4")]}
+    flat = [(k, t) for k, ts in sets.items() for t in ts]
+    p1 = [think_plain_prompt(L, t["q"], THINK_EVAL_EFFORT) for _, t in flat]
+    th = [strip_think(x, THINK_EVAL_EFFORT) for x in L.generate(model, p1, max_new=cap, bs=bs, eos=L.think_eos(THINK_EVAL_EFFORT))]
+    ans = L.generate(model, [p + x + K2_THINK_SHUT[THINK_EVAL_EFFORT] for p, (x, _) in zip(p1, th)], max_new=20, bs=bs)
+    rows = {k: [] for k in sets}
+    for (k, t), (x, closed), a in zip(flat, th, ans):
+        rows[k].append({"q": t["q"], "target": t["target"], "answer": a, "think": x[:400], "ok": has_ans(t["target"], a), "ok_any": has_ans(t["target"], x + " " + a), "_ntok": len(L.ids(x)), "_closed": closed})
+    out = {}
+    for k, rs in rows.items():
+        out[k] = {"acc": acc(r["ok"] for r in rs), "n": len(rs), "acc_any": acc(r["ok_any"] for r in rs), "think_tokens_mean": round(sum(r["_ntok"] for r in rs) / len(rs), 1) if rs else 0.0,
+                  "capped": sum(not r["_closed"] for r in rs), "rows": [{c: v for c, v in r.items() if not c.startswith("_")} for r in rs]}
+    return out
 
 
 def fwd_recall(L, model, week, bs):  # cheap learning-curve probe: weights-only forward recall by ground-truth class
@@ -2015,12 +2073,22 @@ def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subje
     return "dropped" if (norm(sj), norm(ob)) in dropped else "ok"
 
 
+def rem_plan(steps, arm, mult=1.0):  # a night's per-cycle (NREM steps, REM steps) for `steps` reference steps: the quarters of `steps`, NREM_SHARE of each (all of it for ab_norem), the rest REM; addendum 14: the REM count x mult, rounded (mult 1.0: untouched)
+    cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
+    plan = []
+    for ci, c in enumerate(cyc):
+        n = c if arm == "ab_norem" else round(c * NREM_SHARE[ci])
+        plan.append((n, c - n if mult == 1.0 else round((c - n) * mult)))
+    return plan
+
+
 class Brain:
     def __init__(s, L, pm, args, week, diary, leak, replay, arc_val, arc_base, log):
         s.L, s.pm, s.a, s.week, s.diary, s.leak, s.replay, s.log = L, pm, args, week, diary, leak, replay, log
         s.arc_val, s.arc_base = arc_val, arc_base
         s.items, s.dropped, s.checked = {}, set(), set()
         s.rem_pool, s.rem_chains, s.rem_done, s.gist_done = [], [], Counter(), Counter()
+        s.rem_dir_done = Counter()  # addendum 14 (--rem-dirs both): kept chain dreams per unit (frozenset of the pair's two item keys, norm(start name))
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         if args.arm in EXTRA_ARMS:
             s.examples["twist"] = []
@@ -2466,6 +2534,15 @@ class Brain:
     # ---- 7. REM (current adapter, short fact sentences only; the diary then checks each dream)
     def rem(s, E, d, ci):
         a, st = s.a, Counter()
+        mode, dirs = getattr(a, "rem_chain_mode", "default"), getattr(a, "rem_dirs", "alt")  # addendum 14: the defaults are the code path as before (a stub args without the flags is the default)
+        assert (mode == "default" and dirs == "alt") or (a.arm in BRIDGE_ARMS and a.arm not in TRIES_ARMS), (a.arm, mode, dirs)
+        qmode, think = mode in ("q", "q_think"), mode in ("think", "q_think")  # q: the reply is only the question (parse_q1, the answer is the given far end); think (K2): the think block is open first (two stages)
+        tr = getattr(s, "rem_trace", None)  # k2_chain_probe only: a list that gets one dict per chain sample (reply, fate)
+
+        def mark(t_, why, **kw):  # a chain sample's fate for the trace
+            if t_ is not None:
+                t_.update(why=why, **kw)
+
         by = defaultdict(list)
         for it in E:
             for x in {norm(it.subj), norm(it.obj)}:
@@ -2479,43 +2556,83 @@ class Brain:
                     pairs.append((p, q, x))
         s.rng.shuffle(pairs)
         pairs.sort(key=lambda t: s.rem_done[frozenset((t[0].key, t[1].key))])
-        pairs = pairs[:s.cap_chains]
+        allp, pairs = pairs, pairs[:s.cap_chains]
         gist = [it for it in E if it.days >= a.gist_min_days]
         s.rng.shuffle(gist)
         gist.sort(key=lambda it: s.gist_done[it.key])
         gist = gist[:s.cap_gist]
+        roles = ukey = None  # per sample: the bridge prompt's (start, answer, middle name) / its unit (--rem-dirs both)
+        if dirs == "both":  # addendum 14: a pair is two units (start / answer in each direction, bridge_roles k = 0 / 1); a unit is tried every cycle until it has a kept dream, then never again
+            uk = lambda p, q, rl: (frozenset((p.key, q.key)), norm(rl[0]))  # noqa: E731
+            both = lambda p, q, x: [bridge_roles(p, q, x, kk) for kk in (0, 1)]  # noqa: E731
+            st["units_open"] = sum(s.rem_dir_done[uk(p, q, rl)] == 0 for p, q, x in allp for rl in both(p, q, x))  # (over every pair, before the pair cap)
+            units = [(p, q, x, rl) for p, q, x in pairs for rl in both(p, q, x) if s.rem_dir_done[uk(p, q, rl)] == 0]
+            s.rng.shuffle(units)
+            units = units[:2 * s.cap_chains]
+            st["units_tried"] = len(units)
+            rep = [t for t in units for _ in range(getattr(a, "rem_tries", 1))]  # unit-major: each unit rem_tries times in a row
+            smp, roles, ukey = [t[:3] for t in rep], [t[3] for t in rep], [uk(t[0], t[1], t[3]) for t in rep]
+        else:
+            smp = pairs  # one (pair, chain prompt) per sample
         if a.arm in BRIDGE_ARMS:  # addendum 7 / 8: guided chain prompt (start / answer alternate with the pair index k, the checks below do not care which end is which)
-            chains = [bridge_prompt(s.L, p.fact, q.fact, *bridge_roles(p, q, x, k)) for k, (p, q, x) in enumerate(pairs)]
+            roles = roles or [bridge_roles(p, q, x, k) for k, (p, q, x) in enumerate(smp)]
+            mk = bridge_q_prompt if qmode else bridge_prompt
+            chains = [mk(s.L, p.fact, q.fact, *rl, think=think, effort=REM_EFFORT if think else None) for (p, q, x), rl in zip(smp, roles)]
         else:
             chains = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs]
-        smp = pairs  # one (pair, chain prompt) per sample
         if a.arm in TRIES_ARMS:  # addendum 10: every chain prompt is sampled X4_TRIES times, pair-major; the keep rule (one dream per pair) is in the last loop
             smp, chains = [t for t in pairs for _ in range(X4_TRIES)], [c for c in chains for _ in range(X4_TRIES)]
+            roles = [r for r in roles for _ in range(X4_TRIES)] if roles else roles
             st["chain_pairs_tried"] = len(pairs)
-        prompts = chains + [gist_prompt(s.L, it.fact, it.days) for it in gist]
-        raw = s.gen(prompts, s.mn(40), base=False, sample=True)
-        s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
-        cand = []  # (kind, items, q, a, ctx)
-        for k, ((p, q, x), txt) in enumerate(zip(smp, raw[:len(smp)])):
+        gp = [gist_prompt(s.L, it.fact, it.days) for it in gist]
+        if mode == "default":  # chains and gists in one call (the sampling stream as before)
+            raw = s.gen(chains + gp, s.mn(40), base=False, sample=True)
+            craw, graw = raw[:len(smp)], raw[len(smp):]
+            s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
+        else:  # addendum 14: chains (one or two stages), then the gists in their own call
+            if think:  # stage 1 thinks (REM_EFFORT, at most REM_THINK_MAX sampled tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + ONE close tag, then the reply (40 tokens)
+                th = [strip_think(x, REM_EFFORT) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=False, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
+                craw = s.gen([c + x + K2_THINK_SHUT[REM_EFFORT] for c, (x, _) in zip(chains, th)], s.mn(40), base=False, sample=True)
+                st["chain_think_tokens"], st["chain_think_capped"] = sum(len(s.L.ids(x)) for x, _ in th), sum(not c for _, c in th)
+            else:
+                craw = s.gen(chains, s.mn(40), base=False, sample=True)
+            graw = s.gen(gp, s.mn(40), base=False, sample=True)
+            s.raw.setdefault("rem", []).extend(craw[:1] + graw[:1])
+        cand = []  # (kind, items, q, a, ctx, unit, trace record)
+        for k, ((p, q, x), txt) in enumerate(zip(smp, craw)):
             st["chain_gen"] += 1
-            r = parse_qa1(txt)
+            t_ = None
+            if tr is not None:
+                t_ = {"night": d, "cycle": ci, "mode": mode, "facts": [p.fact, q.fact], "roles": roles[k] if roles else None, "reply": txt}
+                if think:
+                    t_.update(think=th[k][0][:400], think_tokens=len(s.L.ids(th[k][0])), closed=th[k][1])
+                tr.append(t_)
+            if qmode:  # the answer is the given far end
+                qs = parse_q1(txt)
+                r = (qs, roles[k][1]) if qs else None
+            else:
+                r = parse_qa1(txt)
             fp, fq = other(p, x)[1], other(q, x)[1]
             if r is None and a.smoke:
                 r = (f"Who is two steps from {fp}?", fq)
             if r is None:
                 st["parse_fail"] += 1
+                mark(t_, "parse_fail")
                 continue
             qq, aa = r
             es = [e for e in (fp, fq) if e.lower() in aa.lower()]
             other_e = fq if es and es[0] == fp else fp
             if s.leaky(qq):
                 st["dropped_test_leak"] += 1
+                mark(t_, "test_leak", q=qq, a=aa)
             elif len(es) != 1 or es[0].lower() in qq.lower() or other_e.lower() not in qq.lower() or x in qq.lower():
                 st["dropped_bad"] += 1
+                mark(t_, "bad", q=qq, a=aa)
             else:
                 idx = sorted(set(s.diary.containing(p.subj, p.obj, d)[-2:]) | set(s.diary.containing(q.subj, q.obj, d)[-2:]))
-                cand.append(("chain", (p, q), qq, es[0], s.diary.label(idx)))
-        for it, txt in zip(gist, raw[len(smp):]):
+                cand.append(("chain", (p, q), qq, es[0], s.diary.label(idx), ukey[k] if ukey else None, t_))
+                mark(t_, "candidate", q=qq, a=es[0])
+        for it, txt in zip(gist, graw):
             st["gist_gen"] += 1
             r = parse_qa1(txt)
             if r is None and a.smoke:
@@ -2531,26 +2648,36 @@ class Brain:
             elif len(es) != 1 or es[0].lower() in qq.lower() or other_e.lower() not in qq.lower():
                 st["dropped_bad"] += 1
             else:
-                cand.append(("gist", (it,), qq, es[0], s.diary.label(s.diary.containing(it.subj, it.obj, d)[-4:])))
-        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c in cand], 20)
+                cand.append(("gist", (it,), qq, es[0], s.diary.label(s.diary.containing(it.subj, it.obj, d)[-4:]), None, None))
+        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c, _, _ in cand], 20)
         have = {(norm(x["q"]), x["a"].lower()) for x in s.rem_pool}
-        got = set()  # TRIES_ARMS: the pairs that kept a dream this cycle (the first sample, in sample order, that passed every check)
-        for (kind, its, q, ans, c), v in zip(cand, ver):
+        got, got_u = set(), set()  # TRIES_ARMS: the pairs that kept a dream this cycle (the first sample, in sample order, that passed every check); --rem-dirs both: the same per unit
+        for (kind, its, q, ans, c, unit, t_), v in zip(cand, ver):
             if not has_ans(ans, v) and not s.a.smoke:
                 st["dropped_unverified"] += 1
+                mark(t_, "unverified", verify=v)
             elif kind == "chain" and frozenset((its[0].key, its[1].key)) in got:
                 st["chain_extra_dropped"] += 1
+                mark(t_, "extra")
+            elif unit is not None and unit in got_u:
+                st["unit_extra_dropped"] += 1
+                mark(t_, "extra")
             elif (norm(q), ans.lower()) in have:
                 st["dropped_dup"] += 1
+                mark(t_, "dup")
             else:
                 have.add((norm(q), ans.lower()))
                 s.rem_pool.append({"q": q, "a": ans, "keys": [i.key for i in its], "kind": kind, "night": d, "cycle": ci})
                 st[f"{kind}_kept"] += 1
+                mark(t_, "kept")
                 if kind == "chain":
                     s.rem_chains.append((its[0].key, its[1].key))
                     s.rem_done[frozenset((its[0].key, its[1].key))] += 1
                     if a.arm in TRIES_ARMS:
                         got.add(frozenset((its[0].key, its[1].key)))
+                    if unit is not None:
+                        s.rem_dir_done[unit] += 1
+                        got_u.add(unit)
                 else:
                     s.gist_done[its[0].key] += 1
                 if len(s.examples["rem"]) < 20:
@@ -2685,6 +2812,9 @@ class Brain:
         if a.smoke:
             steps = min(steps, 16)
         ref_n, steps = steps, s.sc(steps)  # the scaled night (the smoke cap applies to the reference night first)
+        mult = getattr(a, "rem_steps_mult", 1.0)  # addendum 14: each cycle's REM steps x mult; the Trainer's cosine schedule covers the night's true total (steps at mult 1.0)
+        plan = rem_plan(steps, a.arm, mult)
+        total = sum(n + r for n, r in plan)
         if a.budget_scale is not None or a.night_budget_s is not None:
             rec["budget"] = {"scale": s.scale, "steps": steps, "steps_ref": ref_n, "k": s.k, "max_dream_items": s.cap_items, "rem_chains": s.cap_chains,
                              "rem_gist": s.cap_gist, "bench": bench}
@@ -2693,9 +2823,9 @@ class Brain:
         con = [it for it in cons if it.para or it.qa]
         cum = list(itertools.accumulate(s.prio(it) for it in act))
         rec.update({"eligible": len(E), "eligible_active": n_act, "consolidated": len(cons), "superseded_total": sum(1 for it in s.items.values() if it.sup_by and not it.dead),
-                    "items_total": sum(1 for it in s.items.values() if not it.dead), "with_dreams": len(act) + len(con), "steps_planned": steps,
+                    "items_total": sum(1 for it in s.items.values() if not it.dead), "with_dreams": len(act) + len(con), "steps_planned": total, "rem_steps_mult": mult,
                     "probe_recall_pre": acc(ok for ok, _ in pre.values()), "elig_by_class": s.elig_by_class(E)})
-        s.log(f"[night {d}] items {rec['items_total']} eligible {len(E)} (active {n_act}, consolidated {len(cons)}) steps {steps} probe_pre {rec['probe_recall_pre']}")
+        s.log(f"[night {d}] items {rec['items_total']} eligible {len(E)} (active {n_act}, consolidated {len(cons)}) steps {total} probe_pre {rec['probe_recall_pre']}")
         snap = s.snapshot()
         kl_pool = s.replay
         if a.arm == "ab_klctx" and (act or con):  # KL batches are sampled from generic replay + tonight's diary-format prompts
@@ -2710,30 +2840,28 @@ class Brain:
         if a.arm == "ab_ob_rot":  # after the snapshot (it holds every LoRA param): tonight only quarter (d - 1) % 4 trains
             rec["rot"] = rot_set(s.pm, (d - 1) % 4)
             s.log(f"[night {d}] rot: quarter {rec['rot']['quarter']} layers {rec['rot']['layers']} trainable {rec['rot']['trainable_params']:,}")
-        tr = Trainer(s.L, s.pm, a, kl_pool, steps, a.seed * 100 + d)
+        tr = Trainer(s.L, s.pm, a, kl_pool, total, a.seed * 100 + d)
         if track:
             pk.append(s.peak_gb(True))  # the night so far; the peak is then reset for the training phase alone (REM generation included)
-        cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
         if not (act or con):
             s.log(f"[night {d}] no dream content; skipping training")
         else:
-            for ci, c in enumerate(cyc):
-                n_nrem = c if a.arm == "ab_norem" else round(c * NREM_SHARE[ci])
+            for ci, (n_nrem, n_rem) in enumerate(plan):
                 for _ in range(n_nrem):
                     tr.step(s.nrem(act, cum, con, a.bsz))
                 nrem_n, done = nrem_n + n_nrem, done + n_nrem
-                if c - n_nrem > 0:
+                if n_rem > 0:
                     lap("train")
                     rs = s.rem(E, d, ci)
                     lap("rem_generate")
                     rem_stats.append(rs)
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
-                    for _ in range(c - n_nrem):
+                    for _ in range(n_rem):
                         nr = round(0.7 * a.bsz) if live else 0
                         tr.step([s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
-                    rem_n, done = rem_n + (c - n_nrem), done + (c - n_nrem)
-                    s.cov["rem_steps"] += c - n_nrem
+                    rem_n, done = rem_n + n_rem, done + n_rem
+                    s.cov["rem_steps"] += n_rem
         lap("train")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
         if a.arm == "ab_ob_ther":
@@ -3674,6 +3802,239 @@ def selftest_names_k2():
     return out
 
 
+def selftest_rem_k2():
+    """Addendum 14 on stubs (a fake tokenizer behind the real Lang, a scripted gen, no model, a local Random): (i) default flags: ab_ob_b4_nb's chain prompts are the old bridge_prompt text byte for byte, ONE gen call for chains + gists
+    (40 tokens, base False, sample True), and stats / pool / rng state / raw capture are the same with and without the new flags in the args; (ii) mode q: bridge_q_prompt = bridge_prompt's text up to "(a single name)." + the new reply line, the
+    chains in one call and the gists in their own, the answer is the given far end (parse_q1), a reply with no question is a parse failure and one that does not name the start is dropped_bad; (iii) think and q_think: stage 1 = the open-tag
+    prompts at high effort (512 tokens, stops at [</ifm|think>, im_end]), stage 2 = stage-1 prompt + thinking + ONE close tag (40 tokens), the gists in their own single call, raw["rem"] = [first chain reply, first gist reply],
+    chain_think_tokens / chain_think_capped; a Qwen Lang and a non-bridge arm are refused; (iv) --rem-dirs both: both roles of every pair, units with a kept dream are not tried again, the per-cycle cap, --rem-tries keeps the first
+    passing sample per unit (unit_extra_dropped), rem_dir_done; (v) rem_plan: at 1.0 the old per-cycle counts and the Trainer total (= steps), at 2.0 the REM counts double and the total includes them; (vi) parse_q1 edge cases."""
+    from types import SimpleNamespace
+    cpu, out = torch.device("cpu"), {}
+    HC, END = "</ifm|think>", "<|ifm|im_end|>"  # the high-effort close tag, end of turn
+
+    class FakeTok:  # a tokenizer in the shape Lang needs; one token per whitespace word
+        pad_token_id, unk_token_id, eos_token_id = 7, 0, 1
+
+        def convert_tokens_to_ids(self, t):
+            return {END: 19, "</ifm|think_faster>": 53, HC: 54}.get(t, 0)
+
+        def apply_chat_template(self, msgs, **kw):
+            tail = {"low": "<ifm|think_faster>\n", "medium": "<ifm|think_fast>\n", "high": "<ifm|think>\n", None: "<ifm|think>\n"}[kw.get("reasoning_effort")]
+            return "".join(f"[{m['role']}]{m['content']}" for m in msgs) + "[assistant]" + tail
+
+        def __call__(self, text, add_special_tokens=False):
+            return {"input_ids": list(range(len(text.split())))}
+    L, Lq = Lang(FakeTok(), False, cpu, k2=True), Lang(FakeTok(), True, cpu)
+    OPEN = "[assistant]<ifm|think>\n"
+    Ls = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    SYSB = "You are a careful assistant that studies facts."
+
+    def old_bridge(L_, fx, fy, start, answer, mid):  # bridge_prompt as it was before addendum 14
+        u = (f"Two facts:\n- {fx}\n- {fy}\n\nThe two facts share the name \"{mid}\". Write one question that names \"{start}\", does not name \"{mid}\" or \"{answer}\", "
+             f"and can only be answered by using both facts together. Its answer must be \"{answer}\" (a single name). Reply in exactly this form:\nQuestion: ...\nAnswer: ...")
+        return L_.render("You are a careful assistant that studies facts.", u)
+
+    # the prompt builders: bridge_prompt unchanged with the defaults, bridge_q_prompt = its text to "(a single name)." + the new reply line, think = render_think (default effort low when none is given)
+    for args_ in (("Zelmir lives in Kelmira.", "Kelmira is near Harbor Light.", "Zelmir", "Harbor Light", "Kelmira"), ('A "b" c.', "D\ne.", "Q'x", "Y y", "Z")):
+        for L_ in (Ls, L):
+            assert bridge_prompt(L_, *args_) == old_bridge(L_, *args_) == bridge_prompt(L_, *args_, think=False, effort=None) == bridge_prompt(L_, *args_, effort="high")
+        bq = bridge_q_prompt(Ls, *args_)
+        stem = old_bridge(Ls, *args_).split(" Reply in exactly this form:")[0]
+        assert bq == stem + " Reply with only the question, on one line.</user>" and bq.startswith(f"<sys>{SYSB}</sys>\n<user>Two facts:\n- {args_[0]}\n- {args_[1]}\n\nThe two facts share the name"), bq
+        assert bq.endswith(f"Its answer must be \"{args_[3]}\" (a single name). Reply with only the question, on one line.</user>")
+        assert bridge_prompt(L, *args_, think=True, effort="high") == "[system]" + SYSB + "[user]" + old_bridge(Ls, *args_).split("<user>")[1].split("</user>")[0] + OPEN
+        assert bridge_q_prompt(L, *args_, think=True, effort="high").endswith("Reply with only the question, on one line." + OPEN) and bridge_q_prompt(L, *args_).endswith("one line.[assistant]<ifm|think>\n</ifm|think>")
+        assert bridge_prompt(L, *args_, think=True).endswith("[assistant]<ifm|think_faster>\n") == bridge_prompt(L, *args_, think=True, effort="low").endswith("[assistant]<ifm|think_faster>\n") and bridge_prompt(L, *args_, think=True, effort="medium").endswith("<ifm|think_fast>\n")
+    out["prompts"] = "ok"
+
+    mk = lambda a, r, o, dd: Item((norm(a), norm(o)), a, o, r, 1, days=dd)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira", 3), mk("Kelmira", "is near", "Harbor Light", 0), mk("Harbor Light", "is in", "Oslo", 0), mk("Brontu", "sails to", "Kelmira", 3)]  # 4 pairs: 3 share Kelmira, 1 shares Harbor Light; 2 gist items
+    by_fact = {it.fact: it for it in E}
+    facts_of = lambda pr: [by_fact[f] for f in re.findall(r"^- (.+)$", pr, re.M)]  # noqa: E731
+    role_of = lambda pr: (re.search(r'names "(.+?)", does not', pr).group(1), re.search(r'Its answer must be "(.+?)"', pr).group(1))  # noqa: E731  (start, answer)
+    GISTS = sorted(gist_prompt(L, it.fact, it.days) for it in (E[0], E[3]))
+    NAMES = ["Zelmir", "Kelmira", "Harbor Light", "Oslo", "Brontu"]
+    U = {"A1": ("Zelmir", "Harbor Light"), "A2": ("Harbor Light", "Zelmir"), "B1": ("Zelmir", "Brontu"), "B2": ("Brontu", "Zelmir"),
+         "C1": ("Harbor Light", "Brontu"), "C2": ("Brontu", "Harbor Light"), "D1": ("Kelmira", "Oslo"), "D2": ("Oslo", "Kelmira")}  # the 8 units (start, answer): a pair's two directions are 1 and 2
+    PAIR = {"A": (E[0], E[1]), "B": (E[0], E[3]), "C": (E[1], E[3]), "D": (E[1], E[2])}
+    key_of = lambda n: (frozenset((PAIR[n[0]][0].key, PAIR[n[0]][1].key)), norm(U[n][0]))  # noqa: E731  (a unit's rem_dir_done key: the pair's two item keys and norm(start))
+
+    def mkme(mode="default", dirs="alt", tries=1, arm="ab_ob_b4_nb", cap=30, flags=True, kinds=("closed",), L_=L):  # a Brain stand-in for Brain.rem; me.script[(start, answer)] = tags of the tries (default good)
+        me = SimpleNamespace(L=L_, a=SimpleNamespace(arm=arm, smoke=False, gist_min_days=3, **({"rem_chain_mode": mode, "rem_dirs": dirs, "rem_tries": tries} if flags else {})), mn=lambda n: n, raw={}, rng=random.Random(0),
+                             rem_done=Counter(), gist_done=Counter(), rem_dir_done=Counter(), cap_chains=cap, cap_gist=30, diary=SimpleNamespace(containing=lambda su, ob, d: [0, 1], label=lambda idx: "ctx"), leaky=lambda t: False,
+                             rem_pool=[], rem_chains=[], examples={"rem": []}, script={}, calls=[], outs=[], cycle=0, ans_of={}, unver=set())
+
+        def gen(prompts, n, **kw):
+            me.calls.append((list(prompts), n, kw))
+            res, seen = [], Counter()
+            for j, pr in enumerate(prompts):
+                if kw.get("eos") is not None:  # stage 1: the thinking, closed by the model / ended by the turn / capped / close tag twice
+                    res.append({"closed": "a b c" + HC, "end": "a b" + END, "cap": "a b c d", "twice": "a" + HC + HC}[kinds[j % len(kinds)]])
+                elif "Messages from Sam" in pr:  # the diary check of a candidate
+                    q = re.search(r"Question: (.+?)\[assistant\]", pr).group(1)
+                    res.append("no idea" if q in me.unver else me.ans_of[q])
+                elif "Fact about Sam's life" in pr:
+                    it = by_fact[re.search(r"life: (.+?) \(it came", pr).group(1)]
+                    q = f"Who does Sam usually see with {it.obj} (item {E.index(it)})?"
+                    me.ans_of[q] = it.subj
+                    res.append(f"Question: {q}\nAnswer: {it.subj}")
+                else:  # a chain prompt (stage 2 carries the thinking after the open tag)
+                    start, answer = role_of(pr)
+                    t = seen[(start, answer)]
+                    seen[(start, answer)] += 1
+                    tag = me.script.get((start, answer), ["good"] * 9)[t]
+                    q, qonly = f"Who is two steps from {start} (c{me.cycle}-t{t}-n{NAMES.index(answer)})?", "Reply with only the question" in pr  # (the answer's number keeps two units with the same start apart)
+                    me.ans_of[q] = answer
+                    if tag == "nov":
+                        me.unver.add(q)
+                    res.append({"good": q if qonly else f"Question: {q}\nAnswer: {answer}", "nov": q if qonly else f"Question: {q}\nAnswer: {answer}",
+                                "bad": f"Who is that (c{me.cycle}-t{t}-n{NAMES.index(answer)})?" if qonly else f"Question: Who is {start}?\nAnswer: {start}", "junk": "I cannot say."}[tag])
+            me.outs.append(res)
+            return res
+        me.gen = gen
+        return me
+
+    def cycle(me, ci=0):  # one Brain.rem call; (stats, the gen calls of this cycle, the replies of this cycle)
+        me.calls.clear()
+        me.outs.clear()
+        me.cycle = ci
+        st = Brain.rem(me, E, 1, ci)
+        return st, list(me.calls), [list(o) for o in me.outs]
+
+    # (i) default flags: the old prompts, one call, the same everything with and without the new flags in args
+    me0, me1 = mkme(flags=False), mkme(flags=True)
+    st0, calls0, outs0 = cycle(me0)
+    st1, calls1, outs1 = cycle(me1)
+    assert calls0 == calls1 and st0 == st1 and outs0 == outs1 and me0.rem_pool == me1.rem_pool and me0.raw == me1.raw and me0.rng.getstate() == me1.rng.getstate() and me0.rem_dir_done == Counter()
+    sent, n_gen, kw = calls0[0]
+    assert len(calls0) == 2 and n_gen == 40 and kw == {"base": False, "sample": True} and calls0[1][1] == 20 and len(sent) == 6, (len(calls0), n_gen, kw, len(sent))  # chains + gists in ONE call, then the diary check
+    roles0 = []
+    for k, pr in enumerate(sent[:4]):
+        p, q = facts_of(pr)
+        x = ({norm(p.subj), norm(p.obj)} & {norm(q.subj), norm(q.obj)}).pop()
+        (mid, fp), fq = other(p, x), other(q, x)[1]
+        start, answer = (fp, fq) if k % 2 == 0 else (fq, fp)  # the old alternation with the pair index
+        assert pr == old_bridge(L, p.fact, q.fact, start, answer, mid) and role_of(pr) == (start, answer), k
+        roles0.append((start, answer))
+    assert sorted(sent[4:]) == GISTS and len({*sent[:4]}) == 4
+    assert st0 == {"chain_gen": 4, "chain_kept": 4, "gist_gen": 2, "gist_kept": 2, "pool": 6} and me0.raw["rem"] == [outs0[0][0], outs0[0][4]] and all(v == 1 for v in me0.rem_done.values()) and len(me0.rem_dir_done) == 0
+    out["default_same_as_old"] = st0
+    pairs_k = [(facts_of(pr)[0], facts_of(pr)[1]) for pr in sent[:4]]
+
+    # (ii) mode q
+    me = mkme(mode="q")
+    me.script = {roles0[0]: ["junk"], roles0[1]: ["bad"]}
+    st, calls, outs = cycle(me)
+    assert len(calls) == 3 and [c[1] for c in calls] == [40, 40, 20] and calls[0][2] == {"base": False, "sample": True} and calls[1][2] == {"base": False, "sample": True}, [(c[1], c[2]) for c in calls]  # chains, gists (own call), diary check
+    sq = calls[0][0]
+    assert sq == [bridge_q_prompt(L, p.fact, q.fact, s_, a_, re.search(r'share the name "(.+?)"', pr).group(1)) for (p, q), (s_, a_), pr in zip(pairs_k, roles0, sent[:4])]  # the same pairs and roles as bridge_roles gives
+    assert all(pr.endswith("(a single name). Reply with only the question, on one line.[assistant]<ifm|think>\n</ifm|think>") and "Question: ..." not in pr for pr in sq)
+    assert sorted(calls[1][0]) == GISTS and st == {"chain_gen": 4, "parse_fail": 1, "dropped_bad": 1, "chain_kept": 2, "gist_gen": 2, "gist_kept": 2, "pool": 4}, st
+    kept = [x for x in me.rem_pool if x["kind"] == "chain"]
+    assert sorted((x["q"].split(" (")[0].replace("Who is two steps from ", ""), x["a"]) for x in kept) == sorted(roles0[2:]), (kept, roles0)  # the answer is the given far end
+    assert me.raw["rem"] == [outs[0][0], outs[1][0]] and len(me.rem_chains) == 2 and me.rem_dir_done == Counter()
+    out["q"] = st
+
+    # (iii) think / q_think
+    kinds = ("closed", "end", "cap", "twice")  # sample j gets kinds[j % 4]: thinking "a b c" (closed by the model), "a b" (turn ended), "a b c d" (cap hit), "a" + two close tags
+    ths = ["a b c", "a b", "a b c d", "a"]
+    for mode in ("think", "q_think"):
+        mkp = bridge_prompt if mode == "think" else bridge_q_prompt
+        me = mkme(mode=mode, kinds=kinds)
+        st, calls, outs = cycle(me)
+        assert len(calls) == 4, len(calls)
+        (p1, n1, kw1), (p2, n2, kw2), (pg, ng, kwg), (pv, nv, kwv) = calls
+        want1 = [mkp(L, p.fact, q.fact, s_, a_, re.search(r'share the name "(.+?)"', pr).group(1), think=True, effort="high") for (p, q), (s_, a_), pr in zip(pairs_k, roles0, sent[:4])]
+        assert p1 == want1 and all(p.endswith(OPEN) and HC not in p and END not in p for p in p1), [p[-50:] for p in p1]  # the open tag for high effort, nothing closed yet
+        assert n1 == REM_THINK_MAX == 512 and kw1 == {"base": False, "sample": True, "eos": [54, 19]}, (n1, kw1)  # stops at </ifm|think> (id 54) or the end of the turn
+        assert p2 == [p + x + HC for p, x in zip(p1, ths)] and all(q_.count(HC) == 1 and q_.endswith(HC) and END not in q_[len(p):] for q_, p in zip(p2, p1)), [q_[-40:] for q_ in p2]  # ONE close tag, also after a capped / ended / doubled stage 1
+        assert n2 == 40 and kw2 == {"base": False, "sample": True} and ng == 40 and kwg == {"base": False, "sample": True} and sorted(pg) == GISTS and nv == 20, (n2, kw2, ng, kwg)  # the gists in their own single call
+        assert st == {"chain_think_tokens": 10, "chain_think_capped": 2, "chain_gen": 4, "chain_kept": 4, "gist_gen": 2, "gist_kept": 2, "pool": 6}, st
+        assert me.raw["rem"] == [outs[1][0], outs[2][0]] and (outs[1][0].startswith("Question: ") == (mode == "think")) and len(me.rem_chains) == 4
+        out[mode] = st
+    for bad_kw in (dict(mode="think", L_=Lq), dict(mode="q", arm="ab_ob_b4"), dict(dirs="both", arm="ab_ob_b4_nb_x4"), dict(mode="q_think", arm="ab_ob_b4_nb_x4")):  # a Qwen Lang has no think block; the other arms keep their own paths
+        try:
+            cycle(mkme(**bad_kw))
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError(f"rem should have refused {bad_kw}")
+    out["refused"] = 4
+
+    # (iv) --rem-dirs both
+    me = mkme(dirs="both")
+    me.script = {U["A2"]: ["junk"], U["B2"]: ["bad"]}
+    st, calls, _ = cycle(me, 0)
+    sent = calls[0][0]
+    assert len(calls) == 2 and len(sent) == 8 + 2 and sorted(sent[8:]) == GISTS and {role_of(pr) for pr in sent[:8]} == set(U.values())  # both roles of all four pairs, chains + gists in one call as in default mode
+    assert st["units_open"] == st["units_tried"] == 8 and st["chain_gen"] == 8 and st["chain_kept"] == 6 and st["parse_fail"] == 1 and st["dropped_bad"] == 1 and "unit_extra_dropped" not in st, st
+    assert set(me.rem_dir_done) == {key_of(n) for n in U if n not in ("A2", "B2")} and all(v == 1 for v in me.rem_dir_done.values()), me.rem_dir_done
+    me.script = {U["A2"]: ["good"], U["B2"]: ["bad"]}
+    st, calls, _ = cycle(me, 1)  # only the two open units
+    assert {role_of(pr) for pr in calls[0][0] if "Two facts" in pr} == {U["A2"], U["B2"]} and st["units_open"] == st["units_tried"] == 2 and st["chain_gen"] == 2 and st["chain_kept"] == 1 and st["dropped_bad"] == 1, st
+    assert set(me.rem_dir_done) == {key_of(n) for n in U if n != "B2"}
+    me.script = {U["B2"]: ["good"]}
+    st, calls, _ = cycle(me, 2)
+    assert [role_of(pr) for pr in calls[0][0] if "Two facts" in pr] == [U["B2"]] and st["units_open"] == st["units_tried"] == 1 and st["chain_kept"] == 1 and sum(me.rem_dir_done.values()) == 8
+    st, calls, _ = cycle(me, 3)  # all done: no chain sample, the gists still go
+    assert sorted(calls[0][0]) == GISTS and st["units_open"] == st["units_tried"] == 0 and "chain_gen" not in st and sum(me.rem_dir_done.values()) == 8 and all(v == 2 for v in me.rem_done.values()) and len(me.rem_chains) == 8
+    # the per-cycle cap: cap_chains pairs, so at most 2 x cap units, both directions of the same pair; a pair with both units done goes to the back of the queue
+    me = mkme(dirs="both", cap=1)
+    st, calls, _ = cycle(me, 0)
+    s1 = [role_of(pr) for pr in calls[0][0] if "Two facts" in pr]
+    st2, calls2, _ = cycle(me, 1)
+    s2 = [role_of(pr) for pr in calls2[0][0] if "Two facts" in pr]
+    assert st["units_tried"] == 2 and st["units_open"] == 8 and st2["units_tried"] == 2 and st2["units_open"] == 6 and s1[0][::-1] in s1 and s2[0][::-1] in s2 and not set(s1) & set(s2), (s1, s2, st, st2)
+    me = mkme(dirs="both", cap=2)
+    st, calls, _ = cycle(me, 0)
+    assert st["units_tried"] == 4 and st["units_open"] == 8 and st["chain_gen"] == 4
+    # --rem-tries 3: unit-major, the first passing sample of a unit is kept, later ones are unit_extra_dropped, an unverified / failed unit stays open
+    me = mkme(dirs="both", tries=3)
+    me.script = {U["A1"]: ["bad", "good", "good"], U["A2"]: ["junk", "bad", "nov"]}
+    st, calls, _ = cycle(me, 0)
+    sent = calls[0][0]
+    assert len(sent) == 24 + 2 and all(sent[3 * i] == sent[3 * i + 1] == sent[3 * i + 2] for i in range(8)) and len({*sent[:24]}) == 8 and {role_of(pr) for pr in sent[:24]} == set(U.values())  # each unit 3 times in a row
+    assert st == {"units_open": 8, "units_tried": 8, "chain_gen": 24, "parse_fail": 1, "dropped_bad": 2, "dropped_unverified": 1, "unit_extra_dropped": 13, "chain_kept": 7, "gist_gen": 2, "gist_kept": 2, "pool": 9}, st
+    assert set(me.rem_dir_done) == {key_of(n) for n in U if n != "A2"} and all(v == 1 for v in me.rem_dir_done.values()) and len(me.rem_chains) == 7
+    a1 = [x for x in me.rem_pool if x["kind"] == "chain" and x["q"].startswith("Who is two steps from Zelmir ") and x["a"] == "Harbor Light"]
+    assert len(a1) == 1 and "(c0-t1-n" in a1[0]["q"], a1  # A1's first sample was bad, the second passed and is kept, the third is extra
+    out["both"] = st
+
+    # (v) rem_plan: the night loop's per-cycle (NREM, REM) steps; at 1.0 the old counts and a Trainer total equal to steps; at 2.0 the REM counts double and the total includes them
+    def old_plan(steps, arm):  # the per-cycle counts as the night loop computed them before addendum 14
+        cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
+        ns = [c if arm == "ab_norem" else round(c * NREM_SHARE[ci]) for ci, c in enumerate(cyc)]
+        return [(n, c - n) for n, c in zip(ns, cyc)]
+    for steps in (0, 1, 2, 3, 4, 5, 7, 16, 37, 150, 300, 600, 1200, 2400):
+        for arm in ("ab_ob_b4_nb", "ab_norem"):
+            pl = rem_plan(steps, arm)
+            assert pl == rem_plan(steps, arm, 1.0) == old_plan(steps, arm) and sum(n + r for n, r in pl) == steps, (steps, arm)
+            for f in (2.0, 0.5, 1.5, 3.0):
+                pf = rem_plan(steps, arm, f)
+                assert [n for n, _ in pf] == [n for n, _ in pl] and [r for _, r in pf] == [round(r * f) for _, r in pl] and sum(n + r for n, r in pf) == steps + sum(round(r * f) - r for _, r in pl), (steps, arm, f)
+    p150 = rem_plan(150, "ab_ob_b4_nb")
+    assert p150 == [(30, 8), (25, 13), (18, 19), (13, 24)] and sum(r for _, r in p150) == 64
+    p2 = rem_plan(150, "ab_ob_b4_nb", 2.0)
+    assert p2 == [(30, 16), (25, 26), (18, 38), (13, 48)] and sum(n + r for n, r in p2) == 214 == 150 + 64 and rem_plan(150, "ab_norem", 2.0) == [(38, 0), (38, 0), (37, 0), (37, 0)]
+    out["plan"] = {"150@1": p150, "150@2": p2}
+
+    # (vi) parse_q1
+    ok = {"Who mentors Sotraflil?": "Who mentors Sotraflil?", "  Who mentors Sotraflil?  ": "Who mentors Sotraflil?", "Question: Who mentors Sotraflil?": "Who mentors Sotraflil?", "question:Who mentors Sotraflil?": "Who mentors Sotraflil?",
+          "QUESTION : Who mentors Sotraflil?": "Who mentors Sotraflil?", "Q: Who mentors Sotraflil?": "Who mentors Sotraflil?", "q: who mentors sotraflil?": "who mentors sotraflil?", "\"Who mentors Sotraflil?\"": "Who mentors Sotraflil?",
+          "'Who mentors Sotraflil?'": "Who mentors Sotraflil?", "\"Question: Who mentors Sotraflil?\"": "Who mentors Sotraflil?", "Question: \"Who mentors Sotraflil?\"": "Who mentors Sotraflil?", "“Who mentors Sotraflil?”": "Who mentors Sotraflil?",
+          "\n\n  Who mentors Sotraflil?  \nsome more": "Who mentors Sotraflil?", "Question: Who mentors Sotraflil?\nAnswer: Gliker": "Who mentors Sotraflil?", "Question: Who mentors Sotraflil?\n\nAnswer: Gliker": "Who mentors Sotraflil?",
+          "Where does Drovak's mentor live?": "Where does Drovak's mentor live?", "`Who is it?`": "Who is it?"}
+    for x, want in ok.items():
+        assert parse_q1(x) == want, (x, parse_q1(x))
+    none = ["", "   ", "\n \n", None, "Answer: Kelmira", "answer: Who is it?", "Answer : Kelmira?", "Answer: Gliker\nQuestion: Who mentors Sotraflil?", "Who mentors Sotraflil", "Question: Who mentors Sotraflil", "Question:", "Q:", "Question:\nWho mentors Sotraflil?",
+            "Question: Who mentors Sotraflil? Answer: Gliker", "Who mentors Sotraflil?.", "Gliker", "Question: Gliker\nAnswer: Gliker?", "I cannot say.", "\"\"", "?x"]
+    for x in none:
+        assert parse_q1(x) is None, (x, parse_q1(x))
+    out["parse_q1"] = {"accepted": len(ok), "rejected": len(none)}
+    return out
+
+
 K2_REPO, K2_REV = "IFM/K2-Horizon-3.7B", "9d280ff742235796925c9fe3cf243dc1beea5c08"  # addendum 11: the pinned small-tier model
 
 
@@ -3763,7 +4124,7 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm and K2 names-pass think-path unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -3791,6 +4152,11 @@ def main():
     ap.add_argument("--rem-chains", type=int, default=30)
     ap.add_argument("--rem-gist", type=int, default=30)
     ap.add_argument("--gist-min-days", type=int, default=3)
+    ap.add_argument("--rem-chain-mode", choices=REM_CHAIN_MODES, default="default", help="addendum 14 (bridge arms, not x4): how REM writes a two-step dream. default: bridge_prompt, Question + Answer, think block closed (as before); q: bridge_q_prompt, only the question "
+                    "(the answer is the given far end); think / q_think (K2 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
+    ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
+    ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
+    ap.add_argument("--rem-steps-mult", type=float, default=1.0, help="addendum 14: each cycle's REM steps x this (rounded); the night's cosine schedule covers the new total. 1.0 = as before")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
@@ -3800,6 +4166,7 @@ def main():
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
+    ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
@@ -3819,6 +4186,7 @@ def main():
         print(json.dumps({"q4": selftest_q4()}))
         print(json.dumps({"q4_eval": selftest_q4_eval()}))
         print(json.dumps({"names_k2": selftest_names_k2()}))
+        print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
         return
     if args.bench_train:
@@ -3863,6 +4231,16 @@ def main():
         ap.error("--budget-scale must be positive")
     if args.night_budget_s is not None and not args.night_budget_s > 0:
         ap.error("--night-budget-s must be positive")
+    if (args.rem_chain_mode != "default" or args.rem_dirs != "alt") and (args.arm not in BRIDGE_ARMS or args.arm in TRIES_ARMS):
+        ap.error(f"--rem-chain-mode / --rem-dirs are only for the bridge arms {tuple(a_ for a_ in BRIDGE_ARMS if a_ not in TRIES_ARMS)}")
+    if args.rem_tries < 1 or (args.rem_tries > 1 and args.rem_dirs != "both"):
+        ap.error("--rem-tries must be at least 1, and more than 1 needs --rem-dirs both (the x4 arm has its own X4_TRIES)")
+    if not args.rem_steps_mult > 0:
+        ap.error("--rem-steps-mult must be positive")
+    if args.think_eval and args.arm == "ad":
+        ap.error("--think-eval needs a weights-only score (not arm ad)")
+    if (args.rem_chain_mode in ("think", "q_think") or args.think_eval) and not is_k2(args):
+        ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon model (--model IFM/K2-Horizon-3.7B)")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
     if args.freeze_lora and args.arm not in TRAIN_DELTA_ARMS:
@@ -3888,6 +4266,7 @@ def main():
         log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
             + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
     L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
+    assert L.k2 or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon model"
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
     diary = Diary(week)
@@ -3904,7 +4283,8 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False,
+           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
@@ -4022,6 +4402,17 @@ def main():
         except Exception as e:  # datasets missing / offline
             result["arc_easy"] = {"error": repr(e)}
             log(f"[eval] ARC FAILED: {e!r}")
+    if args.think_eval:  # addendum 14 (K2, report-only): the two-hop and C2 + C4 forward questions again, with thinking; the scores above are in the partial file before and after
+        te = result["think_eval"] = {}
+        dump(False)
+        try:
+            te.update(think_eval(L, model, week, args.gen_bs, min(THINK_EVAL_MAX, 24) if args.smoke else THINK_EVAL_MAX))
+            log("[think-eval] " + "; ".join(f"{k} {v['acc']} of {v['n']} (anywhere in the thinking too: {v['acc_any']}), {v['think_tokens_mean']} thinking tokens, {v['capped']} capped" for k, v in te.items()))
+        except Exception as e:  # the main scores are already written; the final result still is
+            import traceback
+            te["error"] = {"error": repr(e)[:300], "trace": traceback.format_exc()[-3000:]}
+            log(f"[think-eval] FAILED: {e!r}")
+        dump(False)
     if args.q4_eval:  # addendum 13: after everything else; the final scores above are already in the partial file if this fails
         qe = result["q4_eval"] = {}
         dump(False)

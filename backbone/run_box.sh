@@ -56,6 +56,12 @@ if [ -n "${K2PROBE:-}" ]; then   # K2 names-question probe (backbone/sleep/brain
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
+if [ -n "${K2CHAIN:-}" ]; then   # K2 chain-dream probe (backbone/sleep/brain/k2_chain_probe.py, Sleep-B addendum 14 step 0): K2CHAIN=1; IFM/K2-Horizon-3.7B at the pinned revision, no LoRA, no training, Week-1 days 1-7 then 4 REM cycles under 4 chain-prompt variants (never Week-2); weights bf16 on a GPU with native bf16, else fp16 (--dtype); K2CHAIN_EXTRA: extra probe flags, comma-separated because vast.py passes env words unquoted, e.g. --variants,default,think or --cycles,2 or --dtype,fp16,--gen-bs,24
+  python3 backbone/sleep/brain/k2_chain_probe.py --out "$OUT/k2chain/probe.json" ${K2CHAIN_EXTRA:+${K2CHAIN_EXTRA//,/ }} || echo "!! k2chain failed"
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
 if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations); SLEEPB_EXTRA: extra sleepb flags, comma-separated because vast.py passes env words unquoted, e.g. --revision,<sha>,--q4-base,--arc-base (addendum 11)
   for a in ${SLEEPB_ARMS//,/ }; do
     if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
