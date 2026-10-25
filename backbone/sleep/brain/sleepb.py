@@ -60,6 +60,7 @@ from sleep1 import ARC_SMOKE, SYS, Lang, generic_prompts, load_arc, parse_dream,
 from train import LORA_TARGETS, load_model  # noqa: E402
 
 K = 4
+LOSS_SCALE = [1.0]  # --dtype fp16 sets 1024 (Trainer.step only; every other path is unchanged)
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
@@ -511,7 +512,7 @@ class Trainer:
                 kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
                 loss = ce + a.kl_weight * kl
                 kl_v = float(kl.detach())
-            loss.backward()
+            (loss * LOSS_SCALE[0]).backward()
         else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
             ntgt = sum(len(e) - max(st, 1) for e, st, *_ in batch)
             ce_sum = 0.0
@@ -523,7 +524,7 @@ class Trainer:
                     part = (F.cross_entropy(lg, ids[:, 1:][tm], reduction="none") * w).sum() / ntgt
                 else:
                     part = F.cross_entropy(lg, ids[:, 1:][tm], reduction="sum") / ntgt
-                part.backward()
+                (part * LOSS_SCALE[0]).backward()
                 ce_sum += float(part.detach())
             ce = torch.tensor(ce_sum)
             if rb:
@@ -534,8 +535,17 @@ class Trainer:
                     with torch.no_grad(), s.pm.disable_adapter():
                         ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
                     part = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="sum") / npos
-                    (a.kl_weight * part).backward()
+                    (a.kl_weight * part * LOSS_SCALE[0]).backward()
                     kl_v += float(part.detach())
+        if LOSS_SCALE[0] != 1.0:  # --dtype fp16 (T4): static loss scale; unscale, and skip a step whose gradients overflowed
+            gs = [p.grad for p in s.params if p.grad is not None]
+            for g in gs:
+                g.div_(LOSS_SCALE[0])
+            if not all(bool(torch.isfinite(g).all()) for g in gs):
+                s.overflow = getattr(s, "overflow", 0) + 1
+                s.opt.zero_grad(set_to_none=True)
+                s.i += 1
+                return
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
@@ -1936,7 +1946,7 @@ class Brain:
                     rem_n, done = rem_n + (c - n_nrem), done + (c - n_nrem)
                     s.cov["rem_steps"] += c - n_nrem
         lap("train")
-        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
+        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:], "fp16_overflow_steps": getattr(tr, "overflow", 0)})
         if a.arm == "ab_ob_ther":
             rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
                            "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
@@ -2269,6 +2279,7 @@ def main():
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
     ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (ab_ob_b2: 2)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or ab_ob_b2 pins s)")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also scales the training loss x1024")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -2337,6 +2348,10 @@ def main():
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
+    if args.dtype != "auto":  # --dtype fp16 for GPUs without bf16 (Kaggle T4); LoRA adapters stay fp32 (peft), loss scaled x1024
+        dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.dtype]
+        if args.dtype == "fp16":
+            LOSS_SCALE[0] = 1024.0
     lm, tok = load_model(args, device, dtype)
     q4 = None
     if args.q4_base:
