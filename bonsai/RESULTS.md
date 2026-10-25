@@ -13,3 +13,17 @@ one new fact "Ben's robot dog is named Pixelbark", `--chunked` GDN).
 
 Grad check (packed vs dense layer): rel err 2e-6 on Mac. Mac env: mlx 0.32.3, mlx-vlm 0.7.8.
 Lesson: cramming one fact without replay leaks it into nearby answers; the sleep recipe's replay is needed.
+
+## Chunked GDN accuracy on real weights (found by the speed thread, Oct 25 18:00Z)
+
+The series inverse `(I-A)(I+A^2)(I+A^4)...` loses precision with real (correlated, unit-norm)
+keys at large chunks; random-key unit tests miss it. Training-mode forward loss, Bonsai-2 2B, CPU:
+
+| T | stock | chunk 8 | 16 | 32 | 64 |
+|---|---|---|---|---|---|
+| 33 | 6.62634 | 6.62634 | 6.62634 | 6.62105 | 6.61815 |
+| 256 | 4.5105 | 4.5105 | 4.5105 | 4.52488 | NaN |
+
+The Mac/CPU 27B runs above used one chunk of ~33 tokens (chunk = min(64, T)), so their training
+forward was off by ~0.1%; the probes ran on the stock path, so the pass/fail verdicts stand.
+Default chunk is now 8 (exact here) until a forward-substitution inverse lands.

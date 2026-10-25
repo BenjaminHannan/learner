@@ -29,7 +29,7 @@ def _unit_lower_inv(A, C):
     return X
 
 
-def gated_delta_chunked(q, k, v, g, beta, state=None, mask=None, chunk=64):
+def gated_delta_chunked(q, k, v, g, beta, state=None, mask=None, chunk=8):
     """Same contract as gated_delta_ops. q,k [B,T,Hk,Dk]; v [B,T,Hv,Dv];
     g,beta [B,T,Hv]; state [B,Hv,Dv,Dk]; mask [B,T] bool. Returns (y, state).
     Masked steps leave the state untouched; y there is 0 (as the Metal kernel;
@@ -92,7 +92,7 @@ def gated_delta_chunked(q, k, v, g, beta, state=None, mask=None, chunk=64):
     return y.astype(out_dtype), S.astype(state.dtype)
 
 
-def patch_mlx_vlm_qwen3_5(chunk=64):
+def patch_mlx_vlm_qwen3_5(chunk=8):
     """Make mlx_vlm qwen3_5 use the chunked rule when training (use_kernel False)."""
     from mlx_vlm.models.qwen3_5 import gated_delta as gd
     from mlx_vlm.models.qwen3_5 import language
