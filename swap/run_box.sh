@@ -32,6 +32,8 @@ arm_cfg() {  # -> REPO, SERVE (extra vllm args), KW (chat_template_kwargs json),
     lfm8b_nothink)  REPO=LiquidAI/LFM2.5-8B-A1B; SERVE="--tool-call-parser pythonic --chat-template $T/lfm25_nothink.jinja"; KW='{}'; MAXTOK=4096 ;;
     qwen36_35b_awq_nothink) REPO=QuantTrio/Qwen3.6-35B-A3B-AWQ; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     qwen38_27b_awq_nothink) REPO=cyankiwi/Qwen3.8-27B-AWQ-INT4; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+    qwen36_35b_bf16_nothink) REPO=Qwen/Qwen3.6-35B-A3B; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+    qwen38_27b_bf16_nothink) REPO=Qwen/Qwen3.8-27B; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     qwen4b_nothink) REPO=Qwen/Qwen3.5-4B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     qwen9b_nothink) REPO=Qwen/Qwen3.5-9B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
     *) return 1 ;;
