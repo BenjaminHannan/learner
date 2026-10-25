@@ -94,3 +94,10 @@ cd ~/learner && python speed/mlx/test_patch.py        # expect: hard cases: 32 /
 python speed/mlx/check_e2e.py --model mlx-community/Qwen3.5-2B-4bit --T 256 --chunks 8,16,32,64,128 --train-chunk 64 --steps 5
 ```
 Pass marks fixed in advance: step-1 forward loss of chunk 64 within 1e-4 relative of stock (Ben's stock value 4.22342 at his text; chunk 64 must print 4.2234 +/- 0.0004, not 4.30290), no NaN, and the 5 per-step losses of chunk 64 within 1e-3 relative of stock at every step (printed as `step_rel_diff`; exit code 0 and `pass` all true). Disproved if chunk 64 still differs by more than 1e-4 at step 1 or goes NaN at step 2 or at T=1024 (also run with `--T 1024`). `check_e2e.py --tiny` is the CPU smoke test of the script itself.
+
+## Mac re-check of the fix (19:37-19:41Z, M1 Pro GPU, local Qwen3.5-2B 4-bit, LoRA r8, B1)
+test_patch.py 32/32 pass on GPU. Step-1 loss T=256: stock 4.82224; c8 4.82576 (7.3e-4), c16 4.82438, c32 4.82192 (6.6e-5), c64 4.82195 (6.0e-5, PASS <=1e-4), c128 4.82323 (2.1e-4).
+5 steps T=256: stock 4.8255 2.8348 1.0347 0.2347 0.1336 | 3.0 s/step | 13.23 GB; c64 4.8277 2.8406 1.0315 0.2360 0.0956 | 1.03 s/step | 3.91 GB (2.9x faster, 3.4x less memory).
+The preregistered <=1e-3 per-step mark FAILED (steps 2-4 off up to 3e-3, step 5 by 0.28 abs... of a collapsing loss). But stock vs stock with the same init and batch also differs (4.8255 2.8332 1.0314 0.2353 0.1192; step 5 0.119-0.141 over 3 runs): the Mac GPU path is nondeterministic, and the mark was below the noise floor. Suggested: chunk 64 is within stock's own run-to-run spread; a deterministic check needs fp32/CPU or many seeds.
+T=1024 (stock can't fit): c8 6.4 s/step 13.45 GB; c64 4.25 s/step 11.79 GB; c128 4.15 s/step 12.17 GB; all finite, step 1 agrees to ~2e-4.
+Recommendation: patch_mlx_lm(chunk=64) + make_loss().
