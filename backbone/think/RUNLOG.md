@@ -91,3 +91,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   machine went offline again at 04:27Z.
 - 05:23Z s2 aplus_s2 70.6 (dev 86.7); 05:34Z t1_s2 L0 66.6 / L1 66.7 / L8 66.5 (dev L1 81.0); 05:37Z s0r aplus_s0 70.7
   (dev 86.7); 05:38Z s1r a_s1 66.0 (dev 81.3) vs 65.8 on the 3090.
+- 07:05Z: the 3090 s1 box (57553052) reached its run_box timeout with t_s1 unfinished (label "DONE" and no t_s1 entry);
+  destroyed. Its seed-1 numbers stay as reported above (a 65.8, b 66.5, aplus 71.4, t1 65.9); seed 1 is analysed from
+  the 5090 rerun (57610141). 06:04Z s1r b_s1 65.9 (1-pass 57.1, dev 82.3). 05:47Z s0r t1_s0 L0 67.2 / L1 67.3 / L8 67.3.
