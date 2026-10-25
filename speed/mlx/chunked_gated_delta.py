@@ -18,16 +18,46 @@ import mlx.core as mx
 from mlx_lm.models.gated_delta import gated_delta_ops
 
 
-def _unit_lower_inv(A, C):
-    # (I+A)^-1 for strictly lower A (A^C = 0): (I-A)(I+A^2)(I+A^4)... , all matmuls
-    # (mx.linalg.solve_triangular has no VJP). Exact; fp32 error is fine for |k|~1.
+INV_BLOCK = 16  # sub-block size of the triangular solve (tunable; exactness does not depend on it)
+
+
+def _block_size(C):
+    return max(d for d in range(1, min(C, INV_BLOCK) + 1) if C % d == 0)
+
+
+@mx.custom_function
+def _unit_lower_inv(A):
+    """(I+A)^-1 for strictly lower A [..., C, C], by BLOCKED FORWARD SUBSTITUTION in the input dtype (fp32 here).
+    The old (I-A)(I+A^2)(I+A^4)... series is exact in exact arithmetic but its powers A^(2^m) grow like binomial(C, 2^m)
+    when keys are correlated (cos~1, beta~1: 1e18 at C=64), so fp32 cancellation destroys it. Substitution only ever forms
+    T rows from earlier T rows, and for beta in [0,2] (|1-beta*cos|<=1) those stay O(1).
+    Diagonal s x s blocks: row-by-row substitution (s steps, batched over C/s blocks); then C/s block rows:
+    T_I = D_I (E_I - A[I, :I] T_<I). Matmuls/slices only, so it also runs on GPU; the VJP below is analytic."""
+    C = A.shape[-1]
+    s = _block_size(C)
+    nb = C // s
     eye = mx.eye(C, dtype=A.dtype)
-    X = eye - A
-    P = A
-    for _ in range(max(C - 1, 1).bit_length() - 1):
-        P = P @ P
-        X = X + X @ P
-    return X
+    Ad = mx.stack([A[..., I * s:(I + 1) * s, I * s:(I + 1) * s] for I in range(nb)], axis=-3)  # [..., nb, s, s]
+    es = mx.eye(s, dtype=A.dtype)
+    rows = [mx.broadcast_to(es[0:1], Ad[..., 0:1, :].shape)]
+    for i in range(1, s):
+        prev = mx.concatenate(rows, axis=-2)  # [..., nb, i, s]
+        rows.append(es[i:i + 1] - Ad[..., i:i + 1, :i] @ prev)
+    D = mx.concatenate(rows, axis=-2)  # [..., nb, s, s] = blockwise (I+A_II)^-1
+    out = []
+    for I in range(nb):
+        r = eye[I * s:(I + 1) * s]  # [s, C]
+        if I:
+            r = r - A[..., I * s:(I + 1) * s, :I * s] @ mx.concatenate(out, axis=-2)[..., :I * s, :]
+        out.append(D[..., I, :, :] @ r)
+    return mx.concatenate(out, axis=-2)
+
+
+@_unit_lower_inv.vjp
+def _unit_lower_inv_vjp(primals, cotangent, output):
+    # T = (I+A)^-1  =>  dA = -T^T dT T^T ; A is strictly lower so only that part receives gradient.
+    Tt = output.swapaxes(-1, -2)
+    return mx.tril(-(Tt @ cotangent @ Tt), -1)
 
 
 def _prep(q, k, v, lg, beta):
@@ -38,7 +68,7 @@ def _prep(q, k, v, lg, beta):
     M = mx.where(tri, mx.exp(mx.where(tri, diff, 0.0)), 0.0)  # e^{b_i-b_j}, j<=i
     kk = k @ k.swapaxes(-1, -2)
     A = mx.tril(beta[..., :, None] * M * kk, -1)
-    Tm = _unit_lower_inv(A, C)
+    Tm = _unit_lower_inv(A)
     W = Tm @ (k * (beta * mx.exp(b))[..., None])  # [B,H,N,C,Dk]
     U = Tm @ (v * beta[..., None])  # [B,H,N,C,Dv]
     Mqk = M * (q @ k.swapaxes(-1, -2))  # causal incl. diagonal

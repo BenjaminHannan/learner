@@ -17,6 +17,7 @@ from mlx_lm.models.gated_delta import gated_delta_ops
 
 sys.path.insert(0, str(Path(__file__).parent))
 from chunked_gated_delta import gated_delta_chunked
+import gdn_cases
 
 SHAPES = {  # HF text_config linear_* fields: (Hk, Hv, Dk, Dv, n_gdn_layers)
     "35b": (16, 32, 128, 128, 30),  # Qwen3.6-35B-A3B: 40 layers, every 4th full attention
@@ -76,6 +77,30 @@ def correctness(shape, chunks):  # fp32, T=200 (not a multiple of any chunk: tes
     return res
 
 
+def hard_cases(chunks, dtypes=("float32", "bfloat16"), real_layers=None):
+    """Chunk-size regression guard (random-normal inputs hide the bug). Real Qwen3.5-2B layer inputs (npz from
+    capture_real_gdn.py; skipped if absent) and synthetic stress (cos 0.9-0.99, beta 1 and 2, g ~ 0 / ~ 1).
+    Per case, dtype, chunk: rel err of y and max grad vs the per-token path on the same inputs in fp32; for bf16 also the
+    per-token path's own bf16-vs-fp32 error (the floor). Pass: fp32 <= 1e-4 (grads 3e-4); bf16 <= 2x floor (+1e-6)."""
+    cases = {f"stress:{n}": gdn_cases.stress(n, T=256) for n in gdn_cases.STRESS}
+    for L, inp in gdn_cases.load_real(real_layers, regenerate=False).items():
+        cases[f"real:L{L}"] = inp
+    out = {}
+    for cn, inp in cases.items():
+        for dn in dtypes:
+            dt = getattr(mx, dn)
+            floor = gdn_cases.errors(gated_delta_ops, gated_delta_ops, inp, dt) if dn != "float32" else None
+            for c in chunks:
+                e = gdn_cases.errors(lambda *a, c=c: gated_delta_chunked(*a, chunk=c), gated_delta_ops, inp, dt)
+                if floor:
+                    ok = e["finite"] and e["y"] <= 2 * floor["y"] + 1e-6 and e["grad_max"] <= 2 * floor["grad_max"] + 1e-6
+                else:
+                    ok = e["finite"] and e["y"] <= 1e-4 and e["grad_max"] <= 3e-4
+                out[f"{cn}|{dn}|chunk{c}"] = {"y": e["y"], "grad_max": e["grad_max"], "finite": e["finite"],
+                                              "floor_y": floor and floor["y"], "floor_grad": floor and floor["grad_max"], "pass": ok}
+    return out
+
+
 def run(fn, inp, w, iters):
     def once():
         y, gr = fwd_bwd(fn, inp, w)
@@ -111,6 +136,12 @@ def main():
         Hk, Hv, Dk, Dv, nl = shape
         out["correctness_fp32"][mn] = correctness(shape, chunks)
         print(mn, "fp32 match vs ref (rel err):", json.dumps(out["correctness_fp32"][mn]), flush=True)
+    out["hard_cases"] = hard_cases(chunks)
+    bad = {k: v for k, v in out["hard_cases"].items() if not v["pass"]}
+    print(f"hard cases (real inputs + stress): {len(out['hard_cases']) - len(bad)}/{len(out['hard_cases'])} pass", json.dumps(bad), flush=True)
+    for mn in a.models.split(","):
+        shape = SHAPES[mn]
+        Hk, Hv, Dk, Dv, nl = shape
         for T in ints(a.seq):
             for B in ints(a.batch):
                 inp, w = make(B, T, Hk, Hv, Dk, Dv, dtype)
