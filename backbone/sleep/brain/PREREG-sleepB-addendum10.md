@@ -9,7 +9,7 @@ on seeds 1 / 2. CPU analysis of its result JSONs (shown, from the logs):
 - 70 of the 78 two-hop questions have both facts as eligible items that share a name REM can pair. Only 32 (seed 1) and 28
   (seed 2) of them got a kept chain dream.
 - REM already tries the pairs with the fewest kept dreams first, and there are fewer pairs (about 270 by night 7) than tries
-  (up to 480 chain prompts per night at 4x). So pairs are not left untried. The limit is the yield of each try: 87 of 2,140 chain
+  (up to 480 chain prompts per night at 4x). So pairs are not left untried. The limit is the yield of each try: 87 of 2,040 chain
   prompts were kept on seed 1 (4%). In the raw samples the 2B writer mostly asks a one-step question about one fact, which the
   two-step check drops.
 - Across every Week-2 run, two-hop correct is close to the number of two-hop pairs dreamed (suggested: the per-question
