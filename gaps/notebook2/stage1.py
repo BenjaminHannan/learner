@@ -110,27 +110,28 @@ def parse_queries(s):
 
 def run_arm(arm, q, ps, R, a, chat):
     """returns dict(pred, prompt_chars, chosen or None, plus keywords/round2)"""
-    nb = a.retriever == "S3"; qq = q["question"]; ex = {}
+    qq = q["question"]; ex = {}
+    fill = lambda order: S0.fill_sessions(ps, order) if a.retriever == "S4" else S0.fill(ps, order, a.retriever == "S3")
     if arm == "O":
         pred, n = answer(chat, q, oracle_mem(q)); return dict(pred=pred, prompt_chars=n, chosen=None)
     if "b" not in R: R["b"] = S0.rank_bm25(ps, qq)
     if arm == "R": chosen = S0.fill(ps, R["b"])
     else:
         if "d" not in R: R["d"] = S0.rank_dense(ps, qq); R["h"] = S0.rrf(R["b"], R["d"])
-        if arm == "Hy": chosen = S0.fill(ps, R["h"], nb)
+        if arm == "Hy": chosen = fill(R["h"])
         elif arm == "Q":
             raw = chat([{"role": "user", "content": QP.format(qd=q["question_date"], q=qq)}], 40)
             kws = parse_queries(raw); ex["keywords"] = kws
             ranks = [R["b"], R["d"]]
             for k in kws: ranks += [S0.rank_bm25(ps, k), S0.rank_dense(ps, k)]
-            chosen = S0.fill(ps, S0.rrf(*ranks), nb)
+            chosen = fill(S0.rrf(*ranks))
         elif arm == "T":
-            chosen = S0.fill(ps, R["h"], nb)
+            chosen = fill(R["h"])
             r = chat([{"role": "user", "content": TP.format(mem=mem_of(ps, chosen), qd=q["question_date"], q=qq)}], 40)
             fired = not r.strip().upper().startswith("ENOUGH") and bool(r.strip())
             ex["round2"] = fired; ex["keywords"] = r.strip() if fired else None
             if fired:
-                chosen = S0.fill(ps, S0.rrf(R["h"], S0.rank_bm25(ps, r), S0.rank_dense(ps, r)), nb)
+                chosen = fill(S0.rrf(R["h"], S0.rank_bm25(ps, r), S0.rank_dense(ps, r)))
         else: raise SystemExit("unknown arm " + arm)
     pred, n = answer(chat, q, mem_of(ps, chosen))
     return dict(pred=pred, prompt_chars=n, chosen=chosen, **ex)
@@ -143,7 +144,7 @@ def main():
     ap.add_argument("--base-url", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--model", default="model"); ap.add_argument("--model-path")
     ap.add_argument("--reader", help="name used in rows_{reader}.jsonl (default from model)")
-    ap.add_argument("--retriever", choices=["S2", "S3"], default="S2")
+    ap.add_argument("--retriever", choices=["S2", "S3", "S4"], default="S2")
     ap.add_argument("--arms", default="R,Hy,Q,T,O")
     ap.add_argument("--limit", type=int); ap.add_argument("--out-dir", default=os.path.join(D, "stage1_out"))
     a = ap.parse_args()

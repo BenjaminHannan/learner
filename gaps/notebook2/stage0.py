@@ -88,10 +88,28 @@ def score(q, ps, chosen):
     tot = sum(p["ev"] for p in ps); inc = sum(ps[i]["ev"] for i in chosen)
     return dict(allhit=int(bool(ev_sids) and ev_sids <= got), evrec=inc / tot if tot else None, n_ev_sess=len(ev_sids))
 
+def fill_sessions(ps, order):
+    """S4: rank sessions by their best pair in `order`; add whole sessions while they fit; the first session that
+    does not fit is added pair by pair in `order` until the budget is full."""
+    pos = {i: k for k, i in enumerate(order)}
+    sess = []
+    for i in order:
+        if ps[i]["sid"] not in sess: sess.append(ps[i]["sid"])
+    chosen, used = [], 0
+    for sid in sess:
+        idx = [i for i in range(len(ps)) if ps[i]["sid"] == sid]
+        c = sum(ntok(ps[i]["text"]) + 8 for i in idx)
+        if used + c <= BUDGET: chosen += idx; used += c; continue
+        for i in sorted(idx, key=lambda i: pos[i]):
+            c = ntok(ps[i]["text"]) + 8
+            if used + c <= BUDGET: chosen.append(i); used += c
+        break
+    return chosen
+
 def arm_orders(ps, query):
     b, d = rank_bm25(ps, query), rank_dense(ps, query)
     h = rrf(b, d)
-    return {"S0": fill(ps, b), "S1": fill(ps, d), "S2": fill(ps, h), "S3": fill(ps, h, neighbours=True)}
+    return {"S0": fill(ps, b), "S1": fill(ps, d), "S2": fill(ps, h), "S3": fill(ps, h, neighbours=True), "S4": fill_sessions(ps, h)}
 
 if __name__ == "__main__":
     data = json.load(open(DATA))
@@ -116,4 +134,4 @@ if __name__ == "__main__":
             for arm, ch in arm_orders(ps, q["question"]).items():
                 row[arm] = score(q, ps, ch)
             f.write(json.dumps(row) + "\n"); f.flush()
-            if n % 10 == 0: print(n, row["question_id"], {a: row[a]["allhit"] for a in ("S0", "S1", "S2", "S3")}, flush=True)
+            if n % 10 == 0: print(n, row["question_id"], {a: row[a]["allhit"] for a in ("S0", "S1", "S2", "S3", "S4")}, flush=True)

@@ -62,3 +62,9 @@ CPU embedding in the container runs about 1 question per minute, so 470 question
 Stage-1 question set first. **Z1 is decided on the non-abstention questions of the 120-question Stage-1 set** (about 110;
 SE about 4.5 points), and the retriever for Stage 1 is fixed from that. The full 470 is reported when it finishes and
 does not change the Stage-1 retriever choice.
+
+## Amendment B (2026-10-25 22:35Z, before any Stage-0 result was looked at; prompted by the LongMemEval paper 2410.10813, whose Table 3 shows session-level values beating round-level, while 2505.19549 reports the reverse)
+Add arm **S4 whole sessions**: sessions ranked by their best S2 pair; whole sessions added in that order while they
+fit the 8k budget; the first session that does not fit is added pair by pair in S2 order. Z3 (reported, and it can
+pick the Stage-1 retriever): if S4 AllHit >= max(S2, S3) + 3, Stage 1 uses S4. Stage 0 restarted from scratch (embedding
+cache kept).
