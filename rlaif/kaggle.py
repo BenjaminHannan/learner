@@ -35,6 +35,11 @@ CODE_FILES = ["train.py", "rollout.py", "grader.py", "sandbox.py", "checks.py", 
 FULL = dict(deadline_s=11 * 3600, min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
             common="--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 2 --max-usd 14 --dtype fp16 --gen-batch 8",
             eval_flags="--eval-only --eval-grade --dtype fp16")
+# RLAIF-2 (rlaif/SPEC.md): reward v2, lr 1e-4, 30 steps; eval run-1 jolt_step20 first, then steps 10/20/30 of both arms.
+RLAIF2 = dict(plan="rlaif2", deadline_s=int(10.75 * 3600), min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
+              common="--reward-v2 --lr 1e-4 --steps 30 --tasks-per-step 8 --group 4 --seed 0 --save-every 10 --gen-batch 8 --max-usd 14 --dtype fp16",
+              jolt_extra="--beta-t 0.001 --beta-s 0.1",
+              eval_flags="--eval-only --eval-grade --dtype fp16 --gen-batch 4")
 SMOKE = dict(deadline_s=40 * 60, min_reserve_s=8 * 60, unknown_reserve_s=15 * 60, progress_s=60,
              common="--steps 2 --tasks-per-step 2 --group 2 --seed 0 --save-every 1 --max-usd 2 --dtype fp16",
              eval_flags="--eval-only --eval-grade --dtype fp16 --n-eval 4")
@@ -103,7 +108,7 @@ def pack_code():
 
 def build(a):
     u = username(a)
-    cfg = dict(SMOKE if a.smoke else FULL)
+    cfg = dict(SMOKE if a.smoke else RLAIF2 if a.plan == "rlaif2" else FULL)
     if a.deadline_h:
         cfg["deadline_s"] = int(a.deadline_h * 3600)
     cfg.update(run=a.run, smoke=bool(a.smoke), heldout="data/tasks_heldout.jsonl", train="data/tasks_train.jsonl")
@@ -121,7 +126,8 @@ def build(a):
     (d / "job.ipynb").write_text(json.dumps(nb))
     meta = {"id": f"{u}/rlaif-{a.run}", "title": f"rlaif-{a.run}", "code_file": "job.ipynb", "language": "python",
             "kernel_type": "notebook", "is_private": "true", "enable_gpu": "true", "enable_internet": "true",
-            "dataset_sources": [] if a.no_key_dataset else [f"{u}/{KEY_SLUG}"], "competition_sources": [], "kernel_sources": []}
+            "dataset_sources": ([] if a.no_key_dataset else [f"{u}/{KEY_SLUG}"]) + [f"{u}/{x}" for x in (a.dataset_source or [])], "competition_sources": [],
+            "kernel_sources": [f"{u}/{k}" for k in (a.kernel_source or [])]}
     (d / "kernel-metadata.json").write_text(json.dumps(meta, indent=1))
     print(json.dumps({"dir": str(d), "id": meta["id"], "code_files": n, "xz_bytes": len(code), "job_bytes": len(job),
                       "deadline_h": round(cfg["deadline_s"] / 3600, 2), "smoke": cfg["smoke"]}))
@@ -286,6 +292,9 @@ def preflight():
 
 
 def reserve():
+    if CFG.get("plan") == "rlaif2":  # phase 2 = three evals per GPU
+        d = TIMES.get("eval_jolt1_step20")
+        return max(CFG["min_reserve_s"], 3.3 * d) if d else CFG["unknown_reserve_s"]
     d = TIMES.get("eval_base")
     return max(CFG["min_reserve_s"], 1.5 * d) if d else CFG["unknown_reserve_s"]
 
@@ -369,6 +378,67 @@ def spend(d):
         return 0.0
 
 
+def collect(names, keep_adapters):
+    for r in names:
+        for pat in ("log.jsonl", "eval_*.json", "eval_*.jsonl", "spend.json", "spot.jsonl"):
+            for f in glob.glob(os.path.join(WORK, r, pat)):
+                os.makedirs(os.path.join(OUT, "runs", r), exist_ok=True)
+                shutil.copy(f, os.path.join(OUT, "runs", r, os.path.basename(f)))
+    for name, src in keep_adapters:
+        shutil.copytree(src, os.path.join(OUT, "adapters", name), dirs_exist_ok=True)
+
+
+def main_rlaif2(ngpu):
+    ev = CFG["eval_flags"].split()
+    heldout, train = CFG["heldout"], CFG["train"]
+    common = ["--train", train, *CFG["common"].split()]
+    train_stop = lambda: DEADLINE - reserve()
+    hard_stop = lambda: DEADLINE - 120
+    g1 = 1 if ngpu >= 2 else 0
+    W = lambda n: os.path.join(WORK, n)
+    old = sorted(glob.glob("/kaggle/input/**/jolt_step20/adapter_config.json", recursive=True))
+    if not old:  # a dataset uploaded with -r tar/zip may arrive still packed
+        for arc in glob.glob("/kaggle/input/**/jolt_step20.tar", recursive=True) + glob.glob("/kaggle/input/**/jolt_step20.zip", recursive=True):
+            shutil.unpack_archive(arc, os.path.join(JOB, "run1"))
+        old = sorted(glob.glob(os.path.join(JOB, "run1", "**", "adapter_config.json"), recursive=True))
+    old = os.path.dirname(old[0]) if old else None
+    say("run-1 jolt_step20:", old or "NOT FOUND (step 0 skipped)")
+    stop = threading.Event()
+    threading.Thread(target=monitor, args=(stop,), daemon=True).start()
+
+    def lane0():
+        if old:
+            run_step("eval_jolt1_step20", ev + ["--adapter", old, "--heldout", heldout], 0, hard_stop, W("eval_jolt1_step20"))
+        run_step("train_grpo", ["--algo", "grpo", *common], 0, train_stop, W("grpo"))
+
+    def lane1():
+        run_step("train_jolt", ["--algo", "jolt_plus", *common, *CFG["jolt_extra"].split()], g1, train_stop, W("jolt"))
+    ls = [lane0, lane1] if g1 else [lambda: (lane0(), lane1())]
+    ts = [threading.Thread(target=l) for l in ls]; [t.start() for t in ts]; [t.join() for t in ts]
+    say("PHASE 1 done")
+    ag, aj = adapters("grpo"), adapters("jolt")
+    say("grpo steps", sorted(ag), "jolt steps", sorted(aj))
+
+    def evals(arm, ad, gpu):
+        for s in (10, 20, 30):
+            if s in ad:
+                run_step(f"eval_{arm}_step{s}", ev + ["--adapter", ad[s], "--heldout", heldout], gpu, hard_stop, W(f"eval_{arm}_step{s}"))
+    eg, ej = (lambda: evals("grpo", ag, 0)), (lambda: evals("jolt", aj, g1))
+    es = [eg, ej] if g1 else [lambda: (eg(), ej())]
+    ts = [threading.Thread(target=f) for f in es]; [t.start() for t in ts]; [t.join() for t in ts]
+    stop.set()
+    runs = [r for r in (os.listdir(WORK) if os.path.isdir(WORK) else [])]
+    summ = dict(plan="rlaif2", evals={r: summary_of(W(r)) for r in sorted(runs) if r.startswith("eval_")},
+                steps_saved=dict(grpo=sorted(ag), jolt=sorted(aj)), timings_s={n: round(v) for n, v in TIMES.items()},
+                total_s=round(time.time() - T0), status=STATUS, grader_usd={r: round(spend(W(r)), 4) for r in sorted(runs)})
+    summ["grader_usd_total"] = round(sum(summ["grader_usd"].values()), 4)
+    json.dump(summ, open(os.path.join(OUT, "summary.json"), "w"), indent=1)
+    keep = [(f"{n}_step{max(d)}", d[max(d)]) for n, d in (("grpo", ag), ("jolt", aj)) if d]
+    collect(runs, keep)
+    shutil.rmtree(JOB, ignore_errors=True)
+    say("SUMMARY", json.dumps({r: (v or {}).get("success_rate") for r, v in summ["evals"].items()}), "usd", summ["grader_usd_total"])
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     unpack()
@@ -377,6 +447,8 @@ def main():
         ngpu = 2
     if not key and not CFG["smoke"] and not DRY:
         say("ABORT: no LEARNER_ANTHROPIC_API_KEY (attach the Kaggle Secret to this notebook)"); return
+    if CFG.get("plan") == "rlaif2":
+        return main_rlaif2(ngpu)
     ev = CFG["eval_flags"].split()
     heldout, train = CFG["heldout"], CFG["train"]
     train_args = lambda algo: ["--algo", algo, "--train", train, *CFG["common"].split()]
@@ -460,6 +532,9 @@ def main(argv=None):
     s = add("build", build, help="write the kernel dir")
     s.add_argument("--no-key-dataset", action="store_true", help="don't mount the key dataset (key via Kaggle Secret, or fake grader in smoke)")
     s.add_argument("--smoke", action="store_true", help="tiny pipeline test (2 steps, n-eval 4, 40 min deadline)")
+    s.add_argument("--plan", default="rlaif1", choices=("rlaif1", "rlaif2"), help="rlaif2 = SPEC.md RLAIF-2 (needs --kernel-source rlaif-main for run-1 jolt_step20)")
+    s.add_argument("--dataset-source", action="append", help="another private dataset of this user to mount")
+    s.add_argument("--kernel-source", action="append", help="another kernel of this user whose output is mounted under /kaggle/input")
     s.add_argument("--deadline-h", type=float, help="override the job deadline in hours (default 11)")
     add("push", push)
     add("status", status)
