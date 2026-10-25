@@ -530,7 +530,7 @@ in this run (`lora_B_nonzero` False), so the model is exactly the base plus the 
 | condition | what it is | recall C2+C4 | C4 | C2 | reverse C2+C4 | two-hop | changed new | ARC-Easy (500) |
 |---|---|---|---|---|---|---|---|---|
 | F0 | base, bf16, no change | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 89.8 |
-| **F** | base + fp32 change (the arm as scored) | **60.0** | 82.5 | 37.5 | 68.8 | 3.7 | | 92.8 |
+| **F** | base + fp32 change (the arm as scored) | **60.0** | 82.5 | 37.5 | 68.8 | 3.7 | 60 | 92.8 |
 | Q0 | base, 4-bit, no change | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 89.6 |
 | **Q** | base + change, re-quantized to 4-bit (fresh grid) | **56.25** | 85.0 | 27.5 | 58.8 | 3.7 | 55 | 91.0 |
 | Qf | base + change, codes re-rounded on the base's 4-bit grid | 56.25 | 82.5 | 30.0 | 61.3 | 3.7 | 50 | 91.0 |
