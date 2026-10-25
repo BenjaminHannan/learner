@@ -1,0 +1,64 @@
+# Practice-1: let the model practise puzzles with tools, then sleep on its tries
+
+Pre-registered 2026-10-25 (before any run). Requested by Ben (21:28Z, 21:29Z): give the model a harness with search, a
+code runner and a picture tool, let it attack lots of puzzles found online, sleep on its tries, and test it before and
+after on 100 diverse puzzles written by Claude Sonnet.
+
+## Model and harness
+- K2-Horizon-3.7B (small tier), fp16 on a Kaggle T4, thinking off, HF generate (code reused from sleep2/askonce).
+- Tools, one call per turn, at most 8 turns per puzzle, then the last answer counts:
+  - `python(code)`: runs code in a subprocess, 10 s, no network, output cut to 2,000 chars.
+  - `search(query)`: offline search over a fixed reference library (Python docs for builtins, math, itertools,
+    collections, re, fractions, and Wikipedia summaries of ~150 puzzle/math topics). No puzzle sites, no answer sites,
+    no ARC or GitHub pages, so nothing can leak an answer. Same library in every arm.
+  - `look(grid)`: K2 has no vision, so the picture tool turns a grid into a description: size, colour counts,
+    connected objects with their boxes, symmetries. (A real image tool waits for a vision backbone.)
+  - `answer(text)`: final answer.
+- Grading is automatic and exact: integers, short strings and grids are normalised and compared to the stored answer.
+
+## Puzzles (three separate sets, no overlap, checked by hash and by near-duplicate text)
+- Practice pool, about 300 (the model may try these as often as it likes):
+  - ARC-AGI-1 public TRAINING tasks with small grids (from github.com/fchollet/ARC-AGI);
+  - puzzles made by code with known answers (logic grids, cryptarithms, sequences, mazes, counting);
+  - a separate pool of Sonnet-written puzzles from a different batch and seed than the test set.
+  (Project Euler was planned but projecteuler.net is blocked from our machines.)
+- SEALED TEST, 100 puzzles (Ben's test): written by Claude Sonnet 5.5 through the Message Batches API, spread over
+  kinds (grid/ARC-style, number, word, logic, sequence, cipher, ASCII picture). Each comes with a Python reference
+  solver; a puzzle is kept only if the solver's output equals the stated answer and the answer is unique and short.
+  The kind of each puzzle is recorded. Frozen with a sha256 before any model sees it; never used in practice.
+- Sibling test, 60: held-out ARC-AGI-1 training tasks and code-made puzzles not in the practice pool
+  (same kinds as practice), to tell "got better at practised kinds" from "got better at puzzles".
+
+## Day and night
+- Day: every practice puzzle, 2 tries at temperature 0.7 with the harness.
+- Night: a fresh LoRA (r16, attention + MLP) on the base model, trained on all lessons gathered so far
+  (expert iteration). Fixed size every night: 256 SFT examples x 2 epochs plus up to 64 DPO pairs (beta 0.1,
+  weight 0.2), same optimizer steps in every arm. No lone negatives this time (Dopamine-1 lesson: penalising failed
+  tool tries taught the model to stop using tools).
+- Three day/night rounds (more self-practice nights was the only lever that helped in the multistep work).
+
+## Arms (one change between them)
+- A0 no practice: the base model. Measured twice (once per lane, different sampling seeds) to see the noise.
+- P practice + sleep with the checker: SFT on solved tries, DPO pairs (solved try, failed try) on the same puzzle.
+- C equal-compute control: same days, same night size, same losses and steps, but the checker is removed:
+  SFT examples are drawn from all tries and DPO pairs are random (chosen/rejected picked without looking at
+  the result). This tests whether learning from checked results matters, not just more puzzle training.
+
+## Pass marks (fixed now). Test = the sealed 100, 2 tries each, score = mean per puzzle; paired sign-flip test over puzzles.
+- T1 practice + sleep works: P (after night 3) >= A0 + 8 points and p < 0.05.
+- T2 the checker matters: P >= C + 5 points and p < 0.05. A gap of 5+ with p >= 0.05 is "suggested", not shown.
+- T3 practised kinds (label): sibling test P >= A0 + 8.
+- T4 no harm: ARC-Easy 200 within 2 points of A0, and tool calls per puzzle >= half of A0's.
+- Wrong if: P <= A0 + 2 on the sealed test after three nights, or P < C.
+- Sanity: the two A0 runs should agree within 6 points; a bigger gap is reported as a noise warning.
+- Reported per night (P1, P2, P3 on the sealed test) and per puzzle kind; kinds are descriptive only.
+
+## Not claimed
+One training seed. Small test (100 puzzles can only show gains of about 8+ points). Fixing failed tries with a
+Sonnet critique (as in Skill-Sleep 1) is left out because Kaggle jobs cannot hold the API key; it is the next step.
+Live web search is left out because answers to online puzzles are one search away.
+
+## Compute
+Free first: one Kaggle session with two T4s (lane 0 = P chain, lane 1 = C chain; both measure A0 first).
+A timing pilot sets how many practice puzzles fit before the 11 h cut; the pool is shrunk for both arms equally.
+Claude calls (test and pool writing) go through the Message Batches API.
