@@ -22,7 +22,7 @@ SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
 OCCAM_ARMS = ('occam5', 'occam5_strict')
 DEEP_ARMS = ('occam_deep',)
 CONST_ARMS = ('const_base', 'const_nights4')          # round 8: the same arms as base / nights4 with the constant 100 replaced (env PREMO_CONSTS in the arm subprocess)
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4', 'comp4') + CONST_ARMS
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle', 'nights4', 'nights8', 'hind4', 'comp4', 'nights4_x155', 'rare4') + CONST_ARMS
 ROUND8_CONSTS = '1,2,10,3'                              # K = 3: picked by the PREREG rule (lower mean shortest affine program on the pool), see PREREG.md "Round 8 constant pick"
 ROUND8_ARMS = ('const_base', 'const_nights4')
 ROUND8_REF = 'nights4'                                  # comparison arm, read from the same OUT dir (old constants) if present
@@ -32,6 +32,7 @@ ROUND4_ARMS = ('base', 'nights4')
 ROUND5_ARMS = ('base', 'nights4', 'nights8')
 ROUND6_ARMS = ('base', 'nights4', 'hind4')
 ROUND7_ARMS = ('base', 'nights4', 'comp4')
+ROUND9_ARMS = ('nights4', 'nights4_x155', 'hind4', 'rare4')
 ROUND2_ARMS = ('base', 'occam5', 'occam5_strict', 'oracle')
 OCCAM_SIZES = dict(lr=1e-3, visits=4)         # round 2 (PREREG): lr 1e-3, 4 visits
 OCCAM_SHARDS = 128                             # fixed (not the core count): the cache key / stream must not depend on the box
@@ -59,6 +60,10 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(nights=8, eval_each_night=True)
     if arm == 'hind4':       # round 6: nights4 + hindsight records for no-fit questions, + report-only step-1 op entropy
         return dict(nights=4, eval_each_night=True, hindsight=True, op_entropy=True)
+    if arm == 'nights4_x155':     # round 9: nights4 with every night's sleep updates x1.55 (hind4's measured extra practice; control for hindsight)
+        return dict(nights=4, eval_each_night=True, update_scale=1.55)
+    if arm == 'rare4':       # round 9: nights4 + records of pass-2-only fits repeated 4x (update count unchanged), + report-only step-1 op entropy
+        return dict(nights=4, eval_each_night=True, rare_boost=4, op_entropy=True)
     if arm == 'comp4':       # round 7: nights4 + composition dreams (chains of the model's own programs), + report-only step-1 op entropy
         return dict(nights=4, eval_each_night=True, composition=True, op_entropy=True)
     if arm == 'dream2':
@@ -329,6 +334,41 @@ def verdict_round8(arms: dict, curve: dict | None = None, ref: dict | None = Non
     return out
 
 
+def verdict_round9(arms: dict, curve: dict | None = None) -> dict:
+    """PREREG Round 9. arms = {arm: dict(hard, easy, harm, affine, updates)} seed means (fractions; updates = total sleep updates).
+    (a) hind4 helps beyond practice if hind4 Hard >= nights4_x155 + 3; only practice (proved wrong) if hind4 Hard <= nights4_x155 + 1. Reported: nights4_x155 vs nights4.
+    (b) PASS: rare4 affine >= 5% AND Hard >= nights4 + 3, Easy within 5 of nights4's base (base if present, else nights4), harm <= 2. PROVED WRONG: affine <= 1% AND Hard <= nights4 + 1."""
+    pts = lambda x: round(100.0 * x, 9)
+    n4, x155, h, r = arms['nights4'], arms['nights4_x155'], arms['hind4'], arms['rare4']
+    ref, refn = (arms['base'], 'base') if 'base' in arms else (n4, 'nights4')
+    out = dict(lines=[])
+    da = pts(h['hard'] - x155['hard'])
+    out['a'] = dict(hind4_minus_x155_points=da, helps_beyond_practice=da >= 3, only_practice=da <= 1)
+    out['lines'].append(f"(a) hind4 Hard {pts(h['hard']):.1f}% = nights4_x155 {pts(x155['hard']):.1f} + {da:.1f}: " + ('HINDSIGHT HELPS BEYOND PRACTICE (>= +3)' if da >= 3 else 'ONLY PRACTICE, proved wrong (<= +1)' if da <= 1 else 'BETWEEN THE MARKS'))
+    d4, aff = pts(r['hard'] - n4['hard']), r.get('affine')
+    c = dict(affine_ge_5=aff is not None and pts(aff) >= 5, hard_ge_nights4_plus_3=d4 >= 3, easy_ok=pts(r['easy']) >= pts(ref['easy']) - 5, harm_ok=pts(r['harm']) <= 2)
+    pw = aff is not None and pts(aff) <= 1 and d4 <= 1
+    out['b'] = dict(gain_vs_nights4_points=d4, pass_detail=c, **{'pass': all(c.values())}, proved_wrong=pw)
+    out['lines'].append(('(b) PASS: rare4' if out['b']['pass'] else '(b) NO PASS: rare4') + f" (Hard {pts(r['hard']):.1f}% = nights4 {pts(n4['hard']):.1f} + {d4:.1f}; affine {'n/a' if aff is None else f'{pts(aff):.1f}%'}; Easy {pts(r['easy']):.1f} vs {refn} {pts(ref['easy']):.1f}; harm {pts(r['harm']):.1f} pts; failed: {[k for k, v in c.items() if not v]})")
+    if pw:
+        out['lines'].append('(b) PROVED WRONG: rare4 affine <= 1% AND Hard <= nights4 + 1 points')
+    elif not out['b']['pass']:
+        out['lines'].append('(b) BETWEEN THE MARKS: rare4 is not proved wrong but misses a pass mark')
+    out['lines'].append(f"REPORT nights4_x155 vs nights4: Hard {pts(x155['hard']):.1f} vs {pts(n4['hard']):.1f} ({pts(x155['hard'] - n4['hard']):+.1f}); Easy {pts(x155['easy']):.1f} vs {pts(n4['easy']):.1f}; harm {pts(x155['harm']):.1f} vs {pts(n4['harm']):.1f} pts")
+    out['lines'].append('REPORT sleep updates (sum over nights, seed mean): ' + ', '.join(f"{k} {arms[k]['updates']:.0f}" if arms[k].get('updates') is not None else f'{k} n/a' for k in ROUND9_ARMS))
+    if curve:
+        out['hard_by_night'] = curve
+        for a, cv in curve.items():
+            out['lines'].append(f"CURVE {a}: Hard after night " + ', '.join(f"{n}: {pts(h_):.1f}%" for n, h_ in cv.items()))
+    return out
+
+
+def sleep_updates(phases: dict | None) -> int | None:
+    """Total updates of the nightly sleeps (phases named W<k>_sleep) in a train.json 'phases' dict."""
+    v = [p['updates'] for k, p in (phases or {}).items() if k.startswith('W') and k.endswith('_sleep') and 'updates' in p]
+    return sum(v) if v else None
+
+
 def arm_consts(arm: str, consts: str = ROUND8_CONSTS):
     """The PREMO_CONSTS value of an arm's subprocess (None = the default constants, and the variable is removed)."""
     return consts if arm in CONST_ARMS else None
@@ -389,6 +429,8 @@ def worker(a):
     ev['seconds'] = round(time.time() - t0, 1)
     ev['school'] = info.get('school')
     ev['night_scores'] = info.get('night_scores')
+    ev['sleep_updates'], ev['rare'] = sleep_updates(info.get('phases')), info.get('rare')
+    ev['night_infos'] = {k: v for k, v in info.items() if k.startswith('night') and k.endswith('_info')}
     ev['hindsight'], ev['op_entropy'], ev['composition'] = info.get('hindsight'), info.get('op_entropy'), info.get('composition')
     json.dump(ev, open(os.path.join(d, 'arm_result.json'), 'w'), indent=1, default=float)
     log('ARM DONE', d, 'hard', round(ev['hard'], 4), 'easy', round(ev['easy'], 4))
@@ -445,7 +487,7 @@ def main():
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--seeds', type=int, nargs='+', default=[0, 1])
     ap.add_argument('--arms', nargs='+', default=None, choices=ARMS)
-    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6, 7, 8), help='8 = constant swap 100 -> K: const_base const_nights4 (nights4 read from the same OUT dir if present); 7 = composition dreams: base nights4 comp4; 6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
+    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3, 4, 5, 6, 7, 8, 9), help='9 = equal-practice control + rare fits: nights4 nights4_x155 hind4 rare4; 8 = constant swap 100 -> K: const_base const_nights4 (nights4 read from the same OUT dir if present); 7 = composition dreams: base nights4 comp4; 6 = hindsight: base nights4 hind4; 5 = eight nights: base nights4 nights8; 4 = more nights: base + nights4; 2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
     ap.add_argument('--compare', default=None, help='round 3: round 2 results.json (for the depth-helps line: its occam5_strict Hard)')
     ap.add_argument('--ref-nights4-hard', type=float, default=None, help='round 8: nights4 Hard (percent, e.g. 16.9) when nights4 is not in OUT (round 4 value)')
     ap.add_argument('--consts', default=ROUND8_CONSTS, help='round 8: PREMO_CONSTS for the const_* arms (default %(default)s)')
@@ -464,7 +506,7 @@ def main():
     os.makedirs(root, exist_ok=True)
     r2 = a.round == 2
     r3 = a.round == 3
-    arms = [x for x in ARMS if x in (a.arms or (ROUND8_ARMS if a.round == 8 else ROUND7_ARMS if a.round == 7 else ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
+    arms = [x for x in ARMS if x in (a.arms or (ROUND9_ARMS if a.round == 9 else ROUND8_ARMS if a.round == 8 else ROUND7_ARMS if a.round == 7 else ROUND6_ARMS if a.round == 6 else ROUND5_ARMS if a.round == 5 else ROUND4_ARMS if a.round == 4 else ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
     ncpu = os.cpu_count() or 1
     per_seed, overlap, failed = {}, {}, []
     for seed in a.seeds:
@@ -516,7 +558,11 @@ def main():
     agg = aggregate(per_seed)
     res = dict(prereg='design/v1/multistep/PREREG.md', round=a.round, smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
                report_only_arms=list(REPORT_ONLY), failed_arms=failed)
-    if a.round == 8 and all(x in agg for x in ROUND8_ARMS):
+    if a.round == 9 and all(x in agg for x in ROUND9_ARMS):
+        ups = lambda v: (lambda u: sum(u) / len(u) if u else None)([r['sleep_updates'] for r in v['per_seed'].values() if r.get('sleep_updates') is not None])
+        res['verdict'] = verdict_round9({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm'], affine=v['mean']['by_kind'].get('affine'), updates=ups(v)) for k, v in agg.items()}, night_curve(agg))
+        res['round9_report'] = {k: {str(sd): dict(sleep_updates=r.get('sleep_updates'), rare=r.get('rare'), night_infos=r.get('night_infos'), op_entropy=r.get('op_entropy')) for sd, r in agg[k]['per_seed'].items()} for k in ROUND9_ARMS}
+    elif a.round == 8 and all(x in agg for x in ROUND8_ARMS):
         res['consts'] = {x: arm_consts(x, a.consts) for x in arms}
         ref = dict(hard=a.ref_nights4_hard / 100.0) if a.ref_nights4_hard is not None else None
         res['verdict'] = verdict_round8({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm'], affine=v['mean']['by_kind'].get('affine')) for k, v in agg.items()}, night_curve(agg), ref if 'nights4' not in agg else None)

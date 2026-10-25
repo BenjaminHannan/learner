@@ -403,3 +403,81 @@ def test_round8_arms_dirs_env_and_verdict():
     assert not v['pass'] and not v['proved_wrong']
     with pytest.raises(ValueError):
         MS.verdict_round8(dict(const_base=cb, const_nights4=A(0.2)))
+
+
+def test_round9_update_scale_arithmetic_and_flags():
+    sig = inspect.signature(CS.run_creative).parameters
+    assert sig['update_scale'].default == 1.0 and sig['rare_boost'].default == 1
+    V = CS.VISITS
+    for n in (0, 31, 32, 1601, 1650):
+        assert CS.night_updates(n) == V * n // 32 == CS.night_updates(n, 1.0)           # scale 1.0 is the old integer expression
+        assert CS.night_updates(n, 1.55) == int(V * n // 32 * 1.55)
+    assert CS.night_updates(1600, 1.55) == int(V * 50 * 1.55) and CS.night_updates(1600, 1.55) > CS.night_updates(1600)
+    n, u = 1600, CS.night_updates(1600, 1.55)
+    mv = max(V, -(-u * 32 // n))                                                           # as run_creative: mv covers the draws, so check_visits passes
+    from creative import sleep
+    sleep.check_visits(n, sleep.SleepCfg(updates=u, batch=64, max_visits=mv), True)
+    assert MS.arm_kwargs('nights4_x155', MS.SIZES, round_=9) == dict(nights=4, eval_each_night=True, update_scale=1.55)
+    assert MS.arm_kwargs('rare4', MS.SIZES, round_=9) == dict(nights=4, eval_each_night=True, rare_boost=4, op_entropy=True)
+    assert MS.arm_kwargs('nights4', MS.SIZES, round_=9) == dict(nights=4, eval_each_night=True) and set(MS.ROUND9_ARMS) <= set(MS.ARMS)
+
+
+def test_round9_rare_repeat_only_pass2_only_questions_unique_ids_valid_visits():
+    from custom_io.models import progparse as pp
+    from creative import sleep
+    pool = [dict(id=f'q{i}', kind=('affine' if i < 2 else 'square')) for i in range(4)]
+    W = []
+    for i in range(4):
+        for k in range(2 if i == 1 else 1):
+            rid = f'W1:q{i}:{k}'
+            pp._CACHE[rid] = ('tgt', rid)
+            W.append(dict(id=rid, source=f'q{i}', prompt='p'))
+    fit1, fit = [True, False, False, False], [True, True, True, False]          # q1, q2 are pass-2-only; q0 pass 1; q3 no fit (and no records)
+    out, info, nrep = CS.rare_repeat(pool, W, fit1, fit, 4)
+    assert out[:len(W)] == W and nrep == 3 * 3 == len(out) - len(W) == info['repeated_records']      # q1 has 2 records, q2 has 1: 3 records x 3 extra copies
+    assert info['records'] == 3 and info['questions'] == 2 and info['records_by_kind'] == dict(affine=2, square=1)
+    assert {r['source'] for r in out[len(W):]} == {'q1', 'q2'}                                        # never q0 (pass 1) or q3
+    assert len({r['id'] for r in out}) == len(out) and all(r['id'] in pp._CACHE for r in out)
+    assert sum(r['source'] == 'q1' for r in out) == 8 and sum(r['source'] == 'q0' for r in out) == 1
+    assert CS.rare_repeat(pool, W, fit1, fit, 4)[0] == out                                            # deterministic
+    # kind-blind: same choice when the kinds change
+    assert CS.rare_repeat([dict(p, kind='x') for p in pool], W, fit1, fit, 4)[0] == out
+    # update count stays the unrepeated one; sleep accepts the longer list at that count (visits per record only go down)
+    u = CS.night_updates(len(W) * 8)                                                                    # stand-in for a larger night
+    cfg = sleep.SleepCfg(updates=u, batch=64, max_visits=max(CS.VISITS, -(-u * 32 // len(out))))
+    sleep.check_visits(len(out), cfg, True)
+
+
+def test_round9_rare_boost_end_to_end_tiny_and_night_info_copied(tmp_path):
+    ck, sk = _tiny_workdir(tmp_path)
+    info = CS.run_creative(str(tmp_path / 'r'), ck, sk, None, device='cpu', seed=0, pool_limit=6, dev_limit=4, n1=2, n2=2, T=1.0, updates_cap=2, nights=1, rare_boost=4)
+    assert info.get('stop') or 'records_by_kind' in info['night1_info']
+    assert info['rare']['1']['boost'] == 4 if 'rare' in info else True
+
+
+def test_round9_verdict():
+    A = lambda h, aff=0.06, e=0.9, hm=0.0, u=5000: dict(hard=h, easy=e, harm=hm, affine=aff, updates=u)
+    base = lambda **k: dict(nights4=A(0.15), nights4_x155=A(0.16, u=7700), hind4=A(0.20), rare4=A(0.19), **k)
+    v = MS.verdict_round9(base())
+    assert v['a']['helps_beyond_practice'] and not v['a']['only_practice'] and v['b']['pass'] and not v['b']['proved_wrong']
+    assert any('nights4_x155 vs nights4' in l for l in v['lines']) and any('sleep updates' in l and '7700' in l for l in v['lines'])
+    d = base(); d['hind4'] = A(0.17)                                                                    # +1.0 over x155: only practice
+    assert MS.verdict_round9(d)['a']['only_practice']
+    d['hind4'] = A(0.185)                                                                               # +2.5: between
+    a = MS.verdict_round9(d)['a']
+    assert not a['only_practice'] and not a['helps_beyond_practice']
+    d = base(); d['rare4'] = A(0.19, aff=0.04)
+    assert not MS.verdict_round9(d)['b']['pass']                                                        # affine < 5
+    d['rare4'] = A(0.17, aff=0.06)
+    assert not MS.verdict_round9(d)['b']['pass']                                                        # +2 < +3
+    d['rare4'] = A(0.158, aff=0.01)
+    b = MS.verdict_round9(d)['b']
+    assert b['proved_wrong'] and not b['pass']
+    d['rare4'] = A(0.19, e=0.84)                                                                        # Easy 6 below nights4's
+    assert not MS.verdict_round9(d)['b']['pass']
+    d['rare4'] = A(0.19, hm=0.03)
+    assert not MS.verdict_round9(d)['b']['pass']
+    d['rare4'] = A(0.19, e=0.86)                                                                        # Easy ref: base when present
+    assert MS.verdict_round9(dict(d, base=A(0.1, e=0.95)))['b']['pass_detail']['easy_ok'] is False
+    assert MS.verdict_round9(dict(d))['b']['pass_detail']['easy_ok'] is True
+    assert MS.sleep_updates({'W1_sleep': dict(updates=10), 'W2_sleep': dict(updates=5), 'Nprime': dict(updates=99)}) == 15 and MS.sleep_updates({}) is None

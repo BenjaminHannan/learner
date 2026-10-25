@@ -109,14 +109,38 @@ def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap,
     return info
 
 
+def night_updates(n_records: int, scale: float = 1.0) -> int:
+    """A night's sleep updates: VISITS * records // 32 (the exact old integer expression at scale 1.0), times `scale` otherwise."""
+    return VISITS * n_records // 32 if scale == 1.0 else int(VISITS * n_records // 32 * scale)
+
+
+def rare_repeat(pool, Wn, fit1, fit, boost):
+    """Round 9. Records of questions that fit only in search pass 2 (fit and not fit1) are repeated so each appears `boost` times in all; copies get ids '<id>#r<j>' (sleep needs unique ids) and share the original's target cache entry.
+    Reads no kind for the choice (kinds only in the report). -> (records, info, number of copies added)."""
+    rare = {r["id"] for r, f1, f2 in zip(pool, fit1, fit) if f2 and not f1}
+    Rn = [r for r in Wn if r["source"] in rare]
+    cp = []
+    for j in range(1, boost):
+        for r in Rn:
+            c = dict(r, id=f"{r['id']}#r{j}")
+            pp._CACHE[c["id"]] = pp._CACHE[r["id"]]
+            cp.append(c)
+    kof = {r["id"]: r["kind"] for r in pool}
+    bk = {}
+    for r in Rn:
+        bk[kof[r["source"]]] = bk.get(kof[r["source"]], 0) + 1
+    return Wn + cp, dict(boost=boost, questions=len(rare), questions_with_records=len({r["source"] for r in Rn}), records=len(Rn), repeated_records=len(cp), records_by_kind=bk), len(cp)
+
+
 def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, device: str = "cpu", seed: int = 0,
                  g1_factory: Optional[Callable[[Any, Any], Any]] = None, pool_limit: Optional[int] = None,
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
                  dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False,
-                 nights: int = 2, eval_each_night: bool = False, hindsight: bool = False, op_entropy: bool = False, composition: bool = False) -> dict[str, Any]:
+                 nights: int = 2, eval_each_night: bool = False, hindsight: bool = False, op_entropy: bool = False, composition: bool = False, update_scale: float = 1.0, rare_boost: int = 1) -> dict[str, Any]:
     """nights: number of sleeps (night k>=2 starts from W{k-1}.pt; final model W{nights}.pt); 2 = today's behaviour. hindsight (round 6): add hindsight_records (no-fit questions, relabelled tries) to each night's records, capped at the W count. composition (round 7): add creative/dream2.composition_rows (chains of the warm-up's and this night's W programs, count capped at half the W count) after the hindsight records. op_entropy (report only): step-1 op entropy on the first 200 pool puzzles for Nprime and each W{k} into info['op_entropy']. eval_each_night: score each W{k}.pt (dev + labelled by kind, no skills) into train.json 'night_scores'.
+    update_scale (round 9): every night's update count x this (1.0 = exact old integer expression; max_visits mv follows the updates). rare_boost (round 9): records of questions that fit only in search pass 2 (fit and not fit1) appear rare_boost times in all (copies get ids '<id>#r<j>'), BEFORE hindsight/composition/dreams; the night's update count still comes from the unrepeated records; kind-blind (kinds only in the report).
     dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
     dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
@@ -234,6 +258,12 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
             ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
             Wonly = list(Wn)
+            nrep = 0
+            if rare_boost > 1:
+                Wn, ninfo["rare"], nrep = rare_repeat(pool, Wn, fit1, fit, rare_boost)
+                info.setdefault("rare", {})[str(night)] = ninfo["rare"]
+                save()
+            Wonly = list(Wn)
             if hindsight:
                 Hn, ninfo["hindsight"] = hindsight_records(pool, tries, cn, seed + night, night, cap=len(Wn))
                 Wn = Wn + Hn
@@ -250,18 +280,23 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                 info.setdefault("dream2", {})[str(night)] = dinfo
                 ninfo["dream2"] = dinfo
                 save()
+            if nrep:
+                ninfo["update_records"] = len(Wn) - nrep                    # the update count reads this: the unrepeated list
             save_recs(P(f"rec_W{night}.pt"), Wn, counts=cn, info=ninfo)
             stage(f"night{night}_records", time.time() - ts)
         d = load_recs(P(f"rec_W{night}.pt"))
         recs = d["records"]
         info[f"night{night}_records"] = len(recs)
+        ni = d.get("info") or {}
+        info[f"night{night}_info"] = {k: ni[k] for k in ("records", "records_by_kind", "questions_with_find_by_kind", "update_records", "rare") if k in ni}
         if len(recs) < 1:
             info["stop"] = f"night {night}: no W records"
             save()
             return info
         if not done(f"W{night}.pt"):
             ts = time.time()
-            updates = cap(VISITS * len(recs) // 32)
+            nu = ni.get("update_records", len(recs))                      # unrepeated count (rare_boost adds no updates)
+            updates = cap(night_updates(nu, update_scale))
             per = 32
             mv = max(VISITS, math.ceil(updates * per / max(len(recs), 1)))
             cfgs = sleep.SleepCfg(updates=updates, batch=64, lr=LR, warmup=20, seed=seed, max_visits=mv)
