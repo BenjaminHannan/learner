@@ -32,6 +32,7 @@ ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
 HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1", "tj": "L4", "tf": "L4", "tc": "L0"}
 ALIAS = {"rep18": ("repeatdelta18", "repeat8", "rep8"), "gatesoff8": ("gatesoff",), "swap8": ("swap",), "mean8": ("meanboard8",)}
 ND = "not-enough-data"
+T2_P1, T2_P2, T2_P3, T2_W1, T2_W2 = 2.0, 1.0, 0.5, 1.0, 0.5  # PREREG-think2.md lines 30-32 (P1-P3) and 40-42 (wrong-if); seed 0 only
 
 
 # ---------------------------------------------------------------- loading
@@ -229,6 +230,46 @@ def drop_unmatched(res):
     return keep, out
 
 
+def think2(R, st, lab):
+    """PREREG-think2 marks for arms tj and tf (seed 0, L_max 4). P1 is judged against max(aplus, tc): the harder (smaller) diff."""
+    out = {}
+
+    def cmp(a, tag, v4, s4):
+        o = R.acc(a, 0, "validation", tag)
+        if o is None:
+            return None
+        ov = None if lab else R.rowvec(a, tag, seeds=(0,))
+        d = st.diff(v4, ov) if v4 and ov else None
+        return d or {"value": s4 - o, "lo": None, "hi": None, "n": None}
+
+    for arm in ("tj", "tf"):
+        s4 = R.acc(arm, 0, "validation", "L4")
+        if s4 is None:
+            continue
+        v4 = None if lab else R.rowvec(arm, "L4", seeds=(0,))
+        c = lambda a, tag: cmp(a, tag, v4, s4)
+        tag_c = next((t for t in ("L0", "main") if R.entry("tc", 0, "validation", t)), None)
+        d_ap, d_tc = c("aplus", "main"), tag_c and c("tc", tag_c)
+        d_sw, d_l1 = c(arm, "swap4"), c(arm, "L1")
+        p1src = [(n, d) for n, d in (("aplus", d_ap), ("tc", d_tc)) if d]
+        hard = min(p1src, key=lambda x: x[1]["value"]) if p1src else None
+        d1 = hard and hard[1]
+        p1 = ND if not d1 else ("FAIL" if d1["value"] < T2_P1 - EPS else ND if d1["lo"] is None else "PASS" if d1["lo"] > 0 else "FAIL")
+        p2 = decide(None if not d_sw else ge(d_sw["value"], T2_P2))
+        p3 = decide(None if not d_l1 else ge(d_l1["value"], T2_P3))
+        w = [None if not d1 else d1["value"] < T2_W1 - EPS, None if not d_sw else d_sw["value"] < T2_W2 - EPS]
+        wi = trig(True if True in w else (False if w == [False, False] else None))
+        dec = "stop" if "FAIL" in (p1, p2) else "run seeds 1 and 2 for this arm" if p1 == p2 == "PASS" else ND
+        out[arm] = {"S4": s4, "S1": R.acc(arm, 0, "validation", "L1"), "swap4": R.acc(arm, 0, "validation", "swap4"),
+                    "gatesoff4": R.acc(arm, 0, "validation", "gatesoff4"), "aplus": R.acc("aplus", 0, "validation", "main"),
+                    "tc": tag_c and R.acc("tc", 0, "validation", tag_c), "tc_present": tag_c is not None,
+                    "S4_minus_aplus": d_ap, "S4_minus_tc": d_tc, "P1_vs": hard and hard[0], "P1_diff": d1, "S4_minus_swap4": d_sw,
+                    "S4_minus_L1": d_l1, "S4_minus_blind4": c(arm, "blind4") if arm == "tf" else None,
+                    "P1": {"status": p1, "need": T2_P1, "ci_excludes_0": True}, "P2": {"status": p2, "need": T2_P2},
+                    "P3": {"status": p3, "need": T2_P3, "available": d_l1 is not None}, "wrong_if": wi, "decision": dec}
+    return out
+
+
 def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     res, excluded = drop_unmatched(res)
     R = Runs(res)
@@ -286,6 +327,7 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     cis = {"S8_minus_best_ref": ci_ref, "S8_minus_S1": ci_81, "S8_minus_T1": ci_8t1, "S8_minus_S2": ci_82,
            "S8_minus_swap": ci_swap, "S8_minus_rep": ci_rep}
     out["intervals"] = cis
+    out["think2"] = think2(R, st, bool(labelled))
 
     # lesions (arm t, L=8, validation)
     sub = lambda x, y: None if x is None or y is None else x - y
@@ -618,6 +660,30 @@ def report(o, data_note=""):
             d = r["S8_minus_T1"]
             P(f"{name[:25]:<26}{r['n']:>5} {f2(r['a']):>6} {f2(r['T1']):>6} {f2(r['S8']):>6}  "
               f"{sg(d and d['value'])}{ci_txt_(d).replace('  95% ', ' ')}")
+    t2 = o.get("think2")
+    if t2:
+        P("")
+        P("== 8. Think-2 (PREREG-think2.md; seed 0, L_max 4; tj and tf judged separately) ==")
+        for arm, t in t2.items():
+            d = t["P1_diff"]
+            P(f"arm {arm}: S(4) {f2(t['S4'])}  aplus {f2(t['aplus'])}  tc {f2(t['tc']) if t['tc_present'] else 'absent'}  S(1) {f2(t['S1'])}"
+              f"  swap4 {f2(t['swap4'])}  gatesoff4 {f2(t['gatesoff4'])}")
+            vs = "max(aplus, tc)" if t["tc_present"] else "aplus"
+            P(f"{t['P1']['status']:<16} {arm} P1 S(4) - {vs} = {sg(d and d['value'])}{ci_txt_(d)}   needs >= +2.0 and 95% interval excluding 0 (l.30)"
+              + ("" if t["tc_present"] else "   [tc absent: judged against aplus only, may get harder]")
+              + (f"   [harder control: {t['P1_vs']}]" if t["tc_present"] and t["P1_vs"] else ""))
+            for k in ("S4_minus_aplus", "S4_minus_tc"):
+                if t[k]:
+                    P(f"{'':17}S(4) - {k[9:]} {sg(t[k]['value'])}{ci_txt_(t[k])}")
+            d = t["S4_minus_swap4"]
+            P(f"{t['P2']['status']:<16} {arm} P2 S(4) - swap4 = {sg(d and d['value'])}{ci_txt_(d)}   needs >= +1.0 (l.31)")
+            d = t["S4_minus_L1"]
+            P(f"{t['P3']['status']:<16} {arm} P3 " + (f"S(4) - S(1) = {sg(d['value'])}{ci_txt_(d)}   needs >= +0.5 (l.32, reported only)" if d
+                                                      else "unavailable: no L1 row for this arm   needs >= +0.5 (l.32, reported only)"))
+            if t["S4_minus_blind4"]:
+                P(f"{'':17}S(4) - blind4 = {sg(t['S4_minus_blind4']['value'])}{ci_txt_(t['S4_minus_blind4'])} (first 2,000 rows; no mark)")
+            P(f"{t['wrong_if']:<16} {arm} wrong-if: S(4) - A+ < +1.0 or swap lesion < 0.5 (l.40-42)")
+            P(f"{'':17}decision (l.36-38): {t['decision']}")
     P("")
     P(f"VERDICT: {o['verdict']}")
     for w in o["why"]:

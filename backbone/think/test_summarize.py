@@ -376,6 +376,74 @@ def test_s2():
     tmp.cleanup()
 
 
+def t2lab(root, ap=66.0, tj=None, tf=None, tc=None):
+    """Seed-0 Think-2 fixture: aplus main, and tj / tf / tc as {tag: pct} dicts (None = arm absent)."""
+    lab = Lab(root)
+    lab.put("a", 0, "validation", "main", 63.0)
+    lab.put("aplus", 0, "validation", "main", ap)
+    for arm, d in (("tj", tj), ("tf", tf), ("tc", tc)):
+        for tag, v in (d or {}).items():
+            lab.put(arm, 0, "validation", tag, v, n=2000 if tag == "blind4" else None)
+    return lab
+
+
+def test_s3():
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    TJ = {"L1": 67.0, "L4": 69.0, "swap4": 66.0, "gatesoff4": 66.2}
+
+    # tj with a clear pass (+3.0 over aplus, notes used +3.0, laps +2.0); no tf or tc
+    o = run(t2lab(R / "pass", tj=TJ))
+    t = o["think2"]
+    assert list(t) == ["tj"] and not t["tj"]["tc_present"], list(t)
+    j = t["tj"]
+    assert j["P1"]["status"] == j["P2"]["status"] == j["P3"]["status"] == "PASS" and j["wrong_if"] == "clear", j
+    assert abs(j["P1_diff"]["value"] - 3.0) < 0.01 and j["P1_diff"]["lo"] > 0 and j["P1_vs"] == "aplus", j["P1_diff"]
+    assert j["decision"] == "run seeds 1 and 2 for this arm" and j["S4_minus_blind4"] is None
+    txt = SM.report(o)
+    assert "PASS" in txt and "tc absent" in txt and "needs >= +2.0 and 95% interval excluding 0 (l.30)" in txt and "needs >= +1.0 (l.31)" in txt, txt
+
+    # edges: +1.9 over aplus fails P1 (wrong-if needs < +1.0); swap gap 0.4 fails P2 and trips the wrong-if (< 0.5)
+    o = run(t2lab(R / "edge", ap=67.1, tj={**TJ, "swap4": 68.6}))
+    j = o["think2"]["tj"]
+    assert j["P1"]["status"] == "FAIL" and j["P2"]["status"] == "FAIL" and j["wrong_if"] == "triggered" and j["decision"] == "stop", j
+
+    # tf with blind4 (first 2,000 rows only); tj absent
+    o = run(t2lab(R / "tf", tf={**TJ, "blind4": 55.0}))
+    t = o["think2"]
+    assert list(t) == ["tf"], list(t)
+    b = t["tf"]["S4_minus_blind4"]
+    assert b["n"] == 2000 and 10 < b["value"] < 20 and t["tf"]["P1"]["status"] == "PASS", b
+    assert "blind4" in SM.report(o)
+
+    # tc present and higher than aplus: P1 uses the harder diff (S4 - tc = +1.0), so a +3.0 pass over aplus turns FAIL
+    o = run(t2lab(R / "tc", tj=TJ, tc={"L0": 68.0}))
+    j = o["think2"]["tj"]
+    assert j["tc_present"] and j["P1_vs"] == "tc" and abs(j["P1_diff"]["value"] - 1.0) < 0.01, j["P1_diff"]
+    assert abs(j["S4_minus_aplus"]["value"] - 3.0) < 0.01 and j["P1"]["status"] == "FAIL" and j["decision"] == "stop", j
+    assert "max(aplus, tc)" in SM.report(o)
+    # tc lower than aplus: aplus stays the harder control
+    j = run(t2lab(R / "tc_low", tj=TJ, tc={"L0": 60.0}))["think2"]["tj"]
+    assert j["P1_vs"] == "aplus" and j["P1"]["status"] == "PASS", j["P1_vs"]
+    # tc stored under "main" is found too
+    assert run(t2lab(R / "tc_main", tj=TJ, tc={"main": 68.0}))["think2"]["tj"]["P1_vs"] == "tc"
+
+    # missing L1: P3 unavailable, nothing crashes, P1/P2 still judged; JSON round-trips
+    o = run(t2lab(R / "nol1", tj={k: v for k, v in TJ.items() if k != "L1"}))
+    j = o["think2"]["tj"]
+    assert j["P3"]["status"] == SM.ND and not j["P3"]["available"] and j["S4_minus_L1"] is None and j["P1"]["status"] == "PASS", j
+    assert "P3 unavailable" in SM.report(o)
+    out, data = o and (R / "nol1" / "out", R / "nol1" / "data")
+    p = subprocess.run([sys.executable, str(HERE / "summarize.py"), str(out), "--data", str(data), "--json"], capture_output=True, text=True)
+    assert p.returncode == 0 and json.loads(p.stdout)["think2"]["tj"]["P1"]["status"] == "PASS", p.stderr
+
+    # no Think-2 results: nothing added
+    assert run(scenario(R / "none"))["think2"] == {}
+    print("S3 ok: Think-2 tj pass, edges, tf blind4, tc makes P1 harder, missing L1, JSON")
+    tmp.cleanup()
+
+
 if __name__ == "__main__":
     test_s1()
     test_s2()
+    test_s3()
