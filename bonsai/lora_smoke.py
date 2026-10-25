@@ -115,7 +115,7 @@ def main():
     ap.add_argument("--steps", type=int, default=8)
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--alpha", type=float, default=16.0)
-    ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--layers", default="all", help="'all' or N = LoRA on the last N decoder layers")
     ap.add_argument("--max-new", type=int, default=16)
     ap.add_argument("--chunked", action="store_true", help="chunked GDN math while training")

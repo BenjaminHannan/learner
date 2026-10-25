@@ -1,5 +1,4 @@
-"""[copy of bonsai/chunked_gated_delta.py @ origin/claude/project-thread-e51zyw, plus opt-in compile=; default behaviour identical]
-Chunked gated delta rule for MLX (training-friendly drop-in for gated_delta_ops).
+"""Chunked gated delta rule for MLX (training-friendly drop-in for gated_delta_ops).
 
 mlx_lm's gated_delta_ops loops over every token, so backward keeps one fp32
 state (Hv x Dv x Dk) per token. Here the sequence is cut into chunks of C
