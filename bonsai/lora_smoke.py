@@ -29,7 +29,7 @@ from pathlib import Path
 import mlx.core as mx
 import mlx.nn as nn
 import mlx.optimizers as optim
-from mlx.utils import tree_flatten
+from mlx.utils import tree_flatten, tree_map
 
 FACT_Q = "What is the name of Ben's robot dog?"
 FACT_A = "Ben's robot dog is named Pixelbark."
@@ -220,15 +220,13 @@ def main():
         logits = head(h).astype(mx.float32)
         return nn.losses.cross_entropy(logits, y[:, pos]).mean()
 
-    def loss_fn(model):
-        loss = seq_loss(model, *fact)
-        if replay:
-            loss = loss + sum(seq_loss(model, *r) for r in replay) / len(replay)
-        return loss
+    # one sequence per backward pass, grads summed (replay weighted 1/len), so
+    # peak memory stays at a single sequence's activations
+    batch = [(fact, 1.0)] + [(r, 1.0 / len(replay)) for r in replay]
 
     lm.train()
     opt = optim.Adam(learning_rate=args.lr)
-    step = nn.value_and_grad(lm, loss_fn)
+    step = nn.value_and_grad(lm, seq_loss)
     losses, times = [], []
     try:
         mx.reset_peak_memory()
@@ -236,7 +234,13 @@ def main():
         pass
     for i in range(args.steps):
         t = time.time()
-        loss, grads = step(lm)
+        grads, loss = None, None
+        for ex, w in batch:
+            l, g = step(lm, *ex)
+            g = tree_map(lambda a: a * w, g)
+            grads = g if grads is None else tree_map(mx.add, grads, g)
+            loss = l if loss is None else loss
+            mx.eval(grads, loss)
         opt.update(lm, grads)
         mx.eval(loss, lm.trainable_parameters(), opt.state)
         times.append(round(time.time() - t, 2))
