@@ -27,3 +27,7 @@ keys at large chunks; random-key unit tests miss it. Training-mode forward loss,
 The Mac/CPU 27B runs above used one chunk of ~33 tokens (chunk = min(64, T)), so their training
 forward was off by ~0.1%; the probes ran on the stock path, so the pass/fail verdicts stand.
 Default chunk is now 8 (exact here) until a forward-substitution inverse lands.
+
+Fixed (19:30Z): the speed thread's blocked forward-substitution inverse (from
+claude/project-thread-b0qz6e speed/mlx/) replaces the series. Bonsai-2 2B, T=256 training
+forward: stock 4.5105, chunk 64 4.5105, chunk 8 4.5105. Default chunk back to 64.
