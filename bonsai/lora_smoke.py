@@ -113,9 +113,12 @@ def main():
     ap.add_argument("--layers", default="all", help="'all' or N = LoRA on the last N decoder layers")
     ap.add_argument("--max-new", type=int, default=16)
     ap.add_argument("--chunked", action="store_true", help="chunked GDN math while training")
+    ap.add_argument("--mem-limit-gb", type=float, default=0, help="cap MLX memory (0 = no cap)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
+    if args.mem_limit_gb:
+        mx.set_memory_limit(int(args.mem_limit_gb * 2**30))
     pack = Path(args.pack)
     sys.path.insert(0, str(pack / "runtime"))
     from runtime import Packed, fwht  # noqa: E402  (the pack's own loader)
