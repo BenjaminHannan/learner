@@ -275,3 +275,23 @@ Box 57572669 (A100 SXM4 UK) ran it in 0.95 h, about $0.64 including a wasted sto
 | arm (Week-2, seed 1) | C4 | C2 | C1 | recall | two-hop | changed new | routine | int | pool | + diary pool | router | ARC-Easy | reverts |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ab_ob control | 71 | 34 | 0 | 52.5 | 6 | 63 | 55 | 42 | 36 | 84 | 56 | 92.2 | night 4 |
+
+## Addendum 6: 2x work (ab_ob_b2, Ben's PC) and the winners combined (ab_ob_win, Vast), Week-2, seed 1
+- ab_ob_win ran on box 57572667 (A100 PCIE Japan) in about 2.1 h for about $0.79. Its result JSON was pulled after the job's own self-stop.
+- ab_ob_b2 ran on the RTX 5070 Ti in 5,769 s (code 111b58a372; JSON from branch `claude/sleepb-ab-ob-b2-pc-results`).
+- Both JSONs are in `results_wk2/`. Different GPUs give slightly different numerics, so the pair is treated like two seeds.
+
+| arm (Week-2, seed 1) | C4 | C2 | recall | two-hop | changed new | routine | int | pool | + diary pool | ARC-Easy | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob control (Vast, label only) | 71 | 34 | 52.5 | 6 | 63 | 55 | 42 | 36 | 84 | 92.2 | night 4 |
+| ab_ob_b2, 2x work (PC) | 81 | 54 | **67.5** | 11.5 | 73.3 | 85 | 56.6 | 47.7 | 85.1 | 93.0 | none |
+| ab_ob_win, 2x work + guess + twist (Vast) | 85 | 53 | **69.0** | 7.7 | 60.0 | 85 | 51 | 48 | 84.5 | 92.6 | none |
+
+Paired, `paired.py`, on 200 C2+C4 forward questions:
+- ab_ob_win vs ab_ob_b2: +1.5 (win right only: 19; b2 right only: 16; the arms disagree on 17.5% of questions), exact McNemar p = 0.74.
+
+Verdicts so far:
+- **W2 FAIL:** combining guess + dopamine and twisted dreams with 2x work adds +1.5, against a mark of +4 (p = 0.74). The guess and twist gains seen on Week-1 (+8 and +6.5, one seed each, 80 facts) do not add on top of 2x work. They may have been noise, or they may overlap with what 2x work already gives (suggested).
+- **W1 pending:** b2 is 67.5 against the Vast control's 52.5, which is +15 unpaired. The paired test waits for the control's rerun on the PC, because the Vast control's JSON was lost. With 200 questions and about 17% disagreement between arms, +15 would be far beyond noise (suggested until paired).
+- No harm: ARC (93.0 and 92.6) and diary (85.1 and 84.5) both pass.
+- W3 (twist vs plain extra texts) waits for ab_ob_winp on the PC.
