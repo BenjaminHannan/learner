@@ -96,6 +96,7 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
             out.append(sft_action(bos, gs[t["req_id"]][0]["meta"]["prompt_user"], act_text(reqs[t["req_id"]]["gold"]), "corr_action"))
         return out
     pairs, chosen_sft, topup = [], [], []
+    dropped = set()  # regret events whose original [Memory] already showed the answer: a copy failure, not 'should have asked'; out of the slice for ALL arms
     for t in regret + annoy:
         req, g = reqs[t["req_id"]], gs[t["req_id"]]
         move_row = next(x for x in g if x["role"] == "assistant")
@@ -104,6 +105,9 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
         sys_user = lambda u: render([{"role": "system", "content": SYSTEM}, {"role": "user", "content": u}], True, bos)  # noqa: E731
         if t["type"] == "regret":
             if not sid:
+                continue
+            if memory_has_answer(orig_user.split("[Lookup]")[0], persona.slot(sid)):
+                dropped.add(t["req_id"])
                 continue
             qs = phr["slots"][sid]["questions"]
             q = "ASK " + qs[crc(t["req_id"], sid) % len(qs)]
@@ -122,11 +126,11 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
     topup_facts = []
     for t in regret + annoy:
         sid = persona.ref_to_slot.get(norm(t["slot_ref"] or ""))
-        if sid:
+        if sid and t["req_id"] not in dropped:
             ps = phr["slots"][sid]["paraphrases"]
             topup_facts += [fact_item(bos, ps[j]) | {"src": "topup_fact", "slot": sid} for j in range(len(ps))]
     return {"shared_pass": shared_pass, "pairs": pairs, "chosen_sft": chosen_sft, "topup": topup, "topup_facts": topup_facts,
-            "n_regret": len(regret), "n_annoy": len(annoy), "n_learned": len(learned)}
+            "n_regret_dropped_memory_has_answer": len(dropped), "n_regret": len(regret), "n_annoy": len(annoy), "n_learned": len(learned)}
 
 
 def auto_repeat(mats, length_fn, n_opt, a_len, cap=20):
@@ -164,6 +168,7 @@ def build(diary_dir, tags, tokenizer, out_dir, persona=None, phr=None, requests=
     rep = repeat or int(os.environ.get("ASKONCE_REPEAT", "0")) or auto_repeat(mats, length_fn, n_opt, a_len)
     log(f"shared passes per night (repeat) = {rep}")
     plan = {}
+    scan_texts = set()
     for n in nn:
         m = mats[n]
         shared = [i for k in range(rep) for i in m["shared_pass"](k)]
@@ -194,12 +199,19 @@ def build(diary_dir, tags, tokenizer, out_dir, persona=None, phr=None, requests=
         sp = CL.assert_equal(per_arm, LEDGER_TOL, f"night {n}")
         for a, items in arms.items():
             jl_write(out_dir / "nights" / a / f"night{n}.jsonl", shared + items)
-        plan[n] = {"per_arm": per_arm, "spread": round(sp, 4), "n_regret_tagged": m["n_regret"], "n_annoy_tagged": m["n_annoy"], "n_learned_slots": m["n_learned"],
+            for it in shared + items:
+                scan_texts.update([it["prompt"], it.get("target") or it["chosen"]])
+        plan[n] = {"n_regret_dropped_memory_has_answer": m["n_regret_dropped_memory_has_answer"], "per_arm": per_arm, "spread": round(sp, 4), "n_regret_tagged": m["n_regret"], "n_annoy_tagged": m["n_annoy"], "n_learned_slots": m["n_learned"],
                    "slice_target": round(target), "n_pairs_in_B": len(b_items), "n_pairs_available": len(m["pairs"]), "repeat": rep,
                    "B_slice_share": round(per_arm["B"]["slice"] / per_arm["B"]["total"], 4)}
-        log(f"night {n}: shared={len(shared)} items, regret={m['n_regret']} annoy={m['n_annoy']}, B pairs={len(b_items)}/{len(m['pairs'])}, "
+        log(f"night {n}: shared={len(shared)} items, regret={m['n_regret']} (dropped, memory had answer: {m['n_regret_dropped_memory_has_answer']}) annoy={m['n_annoy']}, B pairs={len(b_items)}/{len(m['pairs'])}, "
             f"slice={100 * plan[n]['B_slice_share']:.1f}%, spread={100 * sp:.2f}%")
-    jdump(out_dir / "plan.json", {"nights": plan, "n_opt_steps": n_opt, "anchor_len": a_len, "tol": LEDGER_TOL, "slice_frac": SLICE_FRAC, "repeat": rep})
+    # leakage guard on what is actually trained on (prompts incl. [Lookup]/[Memory], targets). Model-written text (memory 'asked ...' lines) can add hits; they are recorded, not fatal.
+    from .leakscan import scan
+    leaks = [list(h[:3]) + [h[3][:80]] for h in scan(persona, [("night-file", t) for t in sorted(scan_texts)])]
+    if leaks:
+        log(f"WARNING: {len(leaks)} new-slot words in the night files: {leaks[:5]}")
+    jdump(out_dir / "plan.json", {"leak_hits_in_night_files": leaks, "nights": plan, "n_opt_steps": n_opt, "anchor_len": a_len, "tol": LEDGER_TOL, "slice_frac": SLICE_FRAC, "repeat": rep})
     jl_write(out_dir / "anchors.jsonl", [{"prompt": a} for a in anchors])
     build_eval_inputs(persona, diary_dir, bos, out_dir, requests=list(reqs.values()), log=log)
     return plan
@@ -237,9 +249,18 @@ def main():
     ap.add_argument("--tags", required=True)
     ap.add_argument("--tokenizer", default="IFM/K2-Horizon-3.7B")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--min-events", type=float, default=5.0, help="gate after job 1: mean tagged regret+annoyance events per night (prereg Step 0 threshold)")
+    ap.add_argument("--force", action="store_true", help="build the files even when the gate fails (they are NOT to be sent to job 2 then)")
     a = ap.parse_args()
     from .model_io import get_tokenizer
-    build(a.diary, jl_read(a.tags), get_tokenizer(a.tokenizer), a.out)
+    plan = build(a.diary, jl_read(a.tags), get_tokenizer(a.tokenizer), a.out)
+    ev = sum(v["n_regret_tagged"] + v["n_annoy_tagged"] for v in plan.values()) / max(1, len(plan))
+    print(f"tagged events per night (mean): {ev:.1f}")
+    if ev < a.min_events:
+        msg = f"GATE FAILED: {ev:.1f} tagged events per night on average (< {a.min_events}); too few pairs for the test to have power. Do not run job 2."
+        if not a.force:
+            raise SystemExit(msg)
+        print("WARNING (forced):", msg)
 
 
 if __name__ == "__main__":

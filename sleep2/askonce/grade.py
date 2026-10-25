@@ -55,23 +55,32 @@ def grader_prompt(items, persona):
             + catalogue(persona) + "\n\nReturn ONLY JSON [{\"i\": n, \"slot_id\": \"<id or none>\"}] for these items:\n" + body)
 
 
-def api_map(items, persona, model, label, chunk=25):
+def api_map(items, persona, model, label, chunk=25, rounds=3):
+    """Map each (text, question) to a slot id. A chunk whose JSON does not parse is re-requested (up to `rounds` batches); if it still fails we raise,
+    because silently mapping it to 'none' would grade those ASKs as wrong."""
     from .batches import parse_json, req, run_batch
-    reqs, plan = [], {}
-    for ci in range(0, len(items), chunk):
-        cid = f"{label}-{ci // chunk}"
-        reqs.append(req(cid, model, grader_prompt(items[ci:ci + chunk], persona), 6000))
-        plan[cid] = list(range(ci, min(len(items), ci + chunk)))
-    out, _ = run_batch(reqs, label)
-    res = {}
-    for cid, idxs in plan.items():
-        try:
-            got = {int(x["i"]): x["slot_id"] for x in parse_json(out[cid])}
-        except Exception as e:
-            print("grader parse failed", cid, e, file=sys.stderr)
-            got = {}
-        for local, gi in enumerate(idxs):
-            res[gi] = got.get(local, "none")
+    plan = {f"{label}-{ci // chunk}": list(range(ci, min(len(items), ci + chunk))) for ci in range(0, len(items), chunk)}
+    res, pending = {}, dict(plan)
+    for rnd in range(rounds):
+        if not pending:
+            break
+        reqs = [req(cid if rnd == 0 else f"{cid}-r{rnd}", model, grader_prompt([items[i] for i in idxs], persona), 6000) for cid, idxs in pending.items()]
+        out, _ = run_batch(reqs, label if rnd == 0 else f"{label}-retry{rnd}")
+        failed = {}
+        for cid, idxs in pending.items():
+            try:
+                got = {int(x["i"]): x["slot_id"] for x in parse_json(out[cid if rnd == 0 else f"{cid}-r{rnd}"])}
+                if not all(local in got for local in range(len(idxs))):
+                    raise ValueError(f"missing {len(idxs) - len(got)} of {len(idxs)} answers")
+            except Exception as e:
+                print("grader parse failed", cid, "round", rnd, e, file=sys.stderr)
+                failed[cid] = idxs
+                continue
+            for local, gi in enumerate(idxs):
+                res[gi] = got[local]
+        pending = failed
+    if pending:
+        raise RuntimeError(f"grader: {len(pending)} chunk(s) of {label} still unparseable after {rounds} rounds: {sorted(pending)}")
     return res
 
 

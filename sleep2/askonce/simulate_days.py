@@ -13,7 +13,7 @@ from .user_sim import UserSim
 from .world import Persona, act_text, first_messages, load_requests, render
 
 
-def run_days(gen, persona, phr, bos="", days=None, out_dir=None, seed=7, temperature=0.7, requests=None, log=print):
+def run_days(gen, persona, phr, bos="", days=None, out_dir=None, seed=7, temperature=0.7, requests=None, log=print, max_other_frac=None):
     out_dir = Path(out_dir or "diary_out")
     sim = UserSim(persona, phr)
     mem = SlotMemory()
@@ -111,5 +111,9 @@ def run_days(gen, persona, phr, bos="", days=None, out_dir=None, seed=7, tempera
                         "annoyance": sum(o["annoyance"] for o in oracle), "final_ok": sum(bool(o.get("final_ok")) for o in oracle),
                         "no_action": sum(bool(o.get("no_action")) for o in oracle), "silent_wrong": sum(o["silent_wrong"] for o in oracle)}
         log(f"day {day}: {summary[day]}")
+        n_other = sum(o["first_move"] == "OTHER" for o in oracle)
+        if max_other_frac is not None and day == min(days or [1]) and oracle and n_other > max_other_frac * len(oracle):
+            raise RuntimeError(f"day {day}: {n_other} of {len(oracle)} first moves do not parse as ASK or ACT (> {max_other_frac:.0%}); "
+                               "the model output is broken (fp16 overflow? wrong template?), stopping before the arms are built on it")
     jdump(out_dir / "daylog_summary.json", summary)
     return summary

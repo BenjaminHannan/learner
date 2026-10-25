@@ -56,6 +56,18 @@ def test_render_matches_k2_template():
     assert render(m2, False, "<|ifm|begin_of_text|>").endswith("<|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>ASK x?<|ifm|im_end|>")
 
 
+@needs_data
+def test_full_leakage_scan_over_all_model_visible_text():
+    from sleep2.askonce import leakscan
+    from sleep2.askonce.config import jload
+    from sleep2.askonce.world import Persona, load_requests
+    P = Persona.load()
+    hits = leakscan.full_leak_check(P, jload(DATA / "phrasings.json"), load_requests())
+    assert hits == [], hits[:5]
+    # the scan must actually catch a leak
+    assert leakscan.scan(P, [("x", "Please email Sam about the haircut for Mom")])
+
+
 # ---------------------------------------------------------------- slot memory
 def test_slot_memory_bm25_topk_and_budget():
     m = SlotMemory()
@@ -324,3 +336,42 @@ def test_build_job_payload_and_metadata(tmp_path):
     assert len(nb["cells"]) == 1 and "pip uninstall -y -q torchao" in nb["cells"][0]["source"] and "KILLED_DEADLINE" in nb["cells"][0]["source"]
     assert r1["payload_kb"] < 800
     compile(nb["cells"][0]["source"], "cell", "exec")
+
+
+# ---------------------------------------------------------------- review fixes
+def test_fp16_guards_and_pilot_health():
+    import math
+    from sleep2.askonce.night_train import pilot_health, pilot_projection
+    from sleep2.askonce.train_core import _finite
+    _finite(1.5, "x")
+    for bad in (float("nan"), float("inf")):
+        with pytest.raises(FloatingPointError):
+            _finite(bad, "loss")
+    ok = {"sft_loss": 1.2, "anchor_kl": 0.01, "skipped_steps": 1, "opt_steps": 10, "peak_mem_gb": 12.0}
+    assert pilot_health(ok, True)["peak_mem_gb"] == 12.0
+    for patch in ({"sft_loss": float("nan")}, {"anchor_kl": None}, {"skipped_steps": 3}, {"peak_mem_gb": 14.5}, {"peak_mem_gb": None}):
+        with pytest.raises(AssertionError):
+            pilot_health({**ok, **patch}, True)
+    pilot_health({**ok, "peak_mem_gb": None}, False)  # CPU: no memory figure needed
+    p = pilot_projection(100.0, eval_seconds=60.0, units=1000, max_units=1500)
+    assert p["night_seconds"] == 150.0 and p["eval_seconds"] == 60.0 and math.isclose(p["lane_hours_projected"], 3 * (5 * 150 + 60) / 3600, abs_tol=0.01)
+
+
+def test_report_adoption_rule_prefers_bsft_when_it_meets_marks_1_to_4():
+    from sleep2.askonce import report as RP
+    seeds = [1, 2]
+    def rows_for(arm, hit):  # 20 H_new + 20 R_new items per seed
+        return [{"req_id": f"{sp}{i}", "split": sp, "right": hit if sp in ("H_new", "R_new") else True, "move": "ASK", "slot": f"s{i % 4}", "knowable_effective": True}
+                for sp in ("H_new", "R_new", "H_know") for i in range(20)]
+    G = {}
+    for s in seeds:
+        G[("A+", s)] = rows_for("A+", False)
+        G[("B", s)] = rows_for("B", True)
+        G[("B-sft", s)] = rows_for("B-sft", True)
+    base = {"ask_full": 5.0, "ask_general": 1.0, "arc": 50.0, "recall": 40.0}
+    rows = {a: dict(base) for a in ("A+", "B", "B-sft")}
+    marks, ms = RP.marks_1_to_4(G, rows, seeds, "B-sft")
+    assert all(v[0] for v in marks.values()) and ms["m1"]["b_minus_a"] == 100.0
+    rows["B-sft"]["arc"] = 40.0  # mark 4 now fails for B-sft only
+    marks, _ = RP.marks_1_to_4(G, rows, seeds, "B-sft")
+    assert not all(v[0] for v in marks.values())

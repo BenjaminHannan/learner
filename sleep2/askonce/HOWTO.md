@@ -31,11 +31,13 @@ STEP 0 gate (real gateway logs, 7+ days): run `tagger` on them and hand-check 10
     python -m sleep2.askonce.kaggle.build_job --job 2 --pilot --nightdata /tmp/nightdata --out /tmp/kern2p   # night 1 of A+ seed 1 only
     (push; read job2/pilot_seed1.json -> projection.night_seconds, suggested_night_scale)
 If a night takes more than 9 minutes: rebuild the night files with `ASKONCE_NIGHT_SCALE=<suggested> ... build_night_data` (shrinks every arm equally) and
-pass `--night-scale <suggested>`; `--scale` shrinks the eval sets, `--opt-steps` the optimizer steps per night (use the same value everywhere).
+`build_job` has no night-scale or opt-steps flags: those are fixed only inside `build_night_data` (env `ASKONCE_NIGHT_SCALE`, `ASKONCE_OPT_STEPS`) and the plan.json it writes (its `n_opt_steps` is what the GPU job uses). `--scale` shrinks the eval sets.
+Lane deadlines are hard caps: job 1 1.2 h, job 2 2.5 h per lane (expected about 1-1.5 h per lane, 6.0 GPU-h budget). The pilot asserts finite loss/KL, skipped steps <= 20% and peak memory < 14 GB.
+Pinned: transformers 5.20.2, peft 0.21.2 (pip failure aborts the kernel).
     python -m sleep2.askonce.kaggle.build_job --job 2 --nightdata /tmp/nightdata --out /tmp/kern2
     kaggle kernels push -p /tmp/kern2 --accelerator NvidiaTeslaT4      # T4 x2 in the kernel settings: lane0 = seed 1 (GPU0), lane1 = seed 2 (GPU1)
 
 ## 5. Grade and report (container)
     mkdir -p /tmp/res/results && cp /tmp/job1_out/job1/results/P_1.json /tmp/job2_out/job2/results/*.json /tmp/res/results/
     python -m sleep2.askonce.grade /tmp/res/results /tmp/nightdata/eval_inputs.jsonl /tmp/res        # Haiku ASK->slot map, Sonnet regrade of 60, kappa
-    python -m sleep2.askonce.report /tmp/res/results /tmp/res/graded /tmp/res/REPORT.md
+    python -m sleep2.askonce.report /tmp/res/results /tmp/res/graded /tmp/res/REPORT.md /tmp/nightdata /tmp/tagger_report.json   # last two optional: slice shares, label-noise flag

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .config import DATA, MODEL_ID, jdump, jload, sha256_file
 from .eval_moves import load_eval_sets, run_eval
-from .job_common import Logger, device_dtype, env_info
+from .job_common import Logger, assert_finite_forward, device_dtype, env_info
 from .model_io import generate, get_tokenizer, load_model
 from .simulate_days import run_days
 from .world import Persona, load_requests
@@ -43,12 +43,13 @@ def main(argv=None):
         tok = get_tokenizer(a.model)
         model = load_model(a.model, dt, dev)
         log("model loaded", f"{time.time() - t0:.0f}s")
+        assert_finite_forward(model, tok, log)
 
         def gen_days(prompts, max_new, temperature, seed):
             return generate(model, tok, prompts, max_new, temperature, seed, a.bs, log)
     T["load_s"] = round(time.time() - t0, 1)
     t1 = time.time()
-    summary = run_days(gen_days, persona, phr, tok.bos_token or "", out_dir=out, requests=requests, log=log)
+    summary = run_days(gen_days, persona, phr, tok.bos_token or "", out_dir=out, requests=requests, log=log, max_other_frac=0.5)
     T["daylogs_s"] = round(time.time() - t1, 1)
     from .build_night_data import build_eval_inputs
     nd = out / "nightdata_job1"

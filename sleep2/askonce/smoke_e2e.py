@@ -43,11 +43,13 @@ def main(argv=None):
     for f in ("phrasings.json", "arc_easy_500.json"):
         shutil.copy(DATA / f, nd / f)
     res = out / "job2"
+    job2.main(["--seed", "1", "--nightdata", str(nd), "--out", str(out / "job2_pilot"), "--smoke", "--bs", "4", "--pilot"])  # pilot health asserts + projection
+    assert (out / "job2_pilot" / "pilot_seed1.json").exists()
     for seed in (1, 2):
         job2.main(["--seed", str(seed), "--nightdata", str(nd), "--out", str(res), "--smoke", "--bs", "4"])
     shutil.copy(j1 / "results" / "P_1.json", res / "results" / "P_1.json")
     graded, agree = grade_all(res / "results", nd / "eval_inputs.jsonl", out / "grade", use_api=False)
-    o = rbuild(res / "results", out / "grade" / "graded", agree)
+    o = rbuild(res / "results", out / "grade" / "graded", agree, nd, out / "tagger_report.json")
     (out / "REPORT.md").write_text(to_markdown(o, valid=False))
     print((out / "REPORT.md").read_text())
     return o

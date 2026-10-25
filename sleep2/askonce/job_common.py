@@ -48,3 +48,13 @@ def add_hf_token_note():
     """Nothing secret is used: the model repo is public. (No API keys are ever read in the GPU jobs.)"""
     for k in ("LEARNER_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"):
         assert k not in os.environ or not os.environ[k], f"{k} must not be set in a GPU job"
+
+
+def assert_finite_forward(model, tok, log=print, text="You are Ben's assistant. Which Sam do you mean?"):
+    """One forward pass in the job's dtype: non-finite logits (fp16 overflow of a bf16-trained checkpoint) must stop the job before anything is written."""
+    ids = tok(text, return_tensors="pt", add_special_tokens=True).input_ids.to(next(model.parameters()).device)
+    with torch.no_grad():
+        logits = model(input_ids=ids, use_cache=False).logits
+    if not torch.isfinite(logits.float()).all():
+        raise FloatingPointError(f"non-finite logits from one forward pass in {next(model.parameters()).dtype}; the checkpoint overflows in this dtype")
+    log("forward check ok", f"dtype={next(model.parameters()).dtype}", f"max|logit|={logits.float().abs().max().item():.1f}")

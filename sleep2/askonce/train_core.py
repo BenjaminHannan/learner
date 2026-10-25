@@ -12,6 +12,14 @@ from .compute_ledger import REF, TRAIN
 from .config import ANCHOR_W, BETA, CHUNK, LORA_ALPHA, LORA_R, LORA_TARGETS, MAX_SEQ
 
 
+MAX_SKIP_FRAC = 0.2
+
+
+def _finite(x, what):
+    if not math.isfinite(x):
+        raise FloatingPointError(f"non-finite {what}: {x} (fp16 overflow?)")
+
+
 class LoRATrainer:
     def __init__(self, model, tok, seed, device, use_scaler):
         from peft import LoraConfig, get_peft_model
@@ -118,12 +126,14 @@ class LoRATrainer:
                 if e[0] == "sft":
                     loss = -self.tok_logps(e[1]).mean()
                     units["train"] += TRAIN * len(e[1]["ids"])
+                    _finite(loss.item(), f"night {night} SFT loss (item {i})")
                     stats["sft"].append(loss.item())
                 else:
                     lc, lr_ = self.seq_logp(e[1], True), self.seq_logp(e[2], True)
                     z = BETA * ((lc - refs[i][0]) - (lr_ - refs[i][1]))
                     loss = -F.logsigmoid(z)
                     units["train"] += TRAIN * (len(e[1]["ids"]) + len(e[2]["ids"]))
+                    _finite(loss.item(), f"night {night} DPO loss (item {i})")
                     stats["dpo"].append(loss.item())
                     stats["margin"].append(z.item())
                     stats["dpo_acc"].append(float(z.item() > 0))
@@ -134,6 +144,7 @@ class LoRATrainer:
             self.scaler.scale(ANCHOR_W * kl).backward()
             units["train"] += TRAIN * len(a["ids"])
             units["ref"] += REF * len(a["ids"])
+            _finite(kl.item(), f"night {night} anchor KL (step {s})")
             stats["kl"].append(kl.item())
             self.scaler.unscale_(opt)
             gn = torch.nn.utils.clip_grad_norm_(self.params, 1.0).item()
@@ -147,6 +158,9 @@ class LoRATrainer:
             stats["gnorm"].append(gn)
             stats["steps"] += 1
         self.pm.eval()
+        if stats["skipped"] > MAX_SKIP_FRAC * stats["steps"]:
+            raise FloatingPointError(f"night {night}: GradScaler skipped {stats['skipped']} of {stats['steps']} optimizer steps (> {MAX_SKIP_FRAC:.0%}); "
+                                     "the adapter barely trained, so the arms would all be untrained base K2")
         mean = lambda v: round(sum(v) / len(v), 5) if v else None  # noqa: E731
         out = {"night": night, "n_items": len(enc), "units": units, "units_total": units["train"] + units["ref"], "seconds": round(time.time() - t0, 1),
                "sft_loss": mean(stats["sft"]), "dpo_loss": mean(stats["dpo"]), "dpo_margin": mean(stats["margin"]), "dpo_acc": mean(stats["dpo_acc"]),

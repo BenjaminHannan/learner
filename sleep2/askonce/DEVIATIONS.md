@@ -52,3 +52,30 @@ building it; the pass marks, arms, metrics and stop rules are unchanged. Items 1
 - Under the scripted sim only about 3-11 pairs per night exist, so statistical power is limited. Real K2 logs may differ.
 - Persona split clashes (new-slot key words appearing in train slots) are repaired by swapping with a clash-free train slot of the same kind.
 - Extras (extra request fields) are used in training on only 4 paths.
+
+## Review fixes (before launch)
+
+- **Regret events whose [Memory] already shows the answer are dropped from the slice for ALL arms.** The chosen side 'ASK ...' was built from the original prompt; in a full-scale scripted run every regret pair on nights 3-5
+  had `memory_has_answer = True`, which would train B to ask in exactly the knowable case marks 3 and 4 penalise. That is a copy failure (like the oracle's `copy_error`), not 'should have asked'.
+  `night_material` tests `memory_has_answer(orig_user.split('[Lookup]')[0], slot)`; such events give no pair, no chosen-SFT, no top-up item and no top-up facts (so A+ and B-sft lose them too).
+  The shared corrected-action SFT on tagged regret turns is unchanged (identical in all arms). The count per night is in `plan.json` (`n_regret_dropped_memory_has_answer`) and in the report. Fewer pairs remain, so power is lower.
+- **Leakage scan widened** (`leakscan.py`, run by `phrasings.py` before freezing, by `tests/test_askonce.py`, and over the night files in `build_night_data`). It scans the SYSTEM prompts, every rendered day 1-5 prompt including [Lookup], gold actions,
+  the answers / corrections / questions / paraphrases of train and silent slots, the 40 background facts and their paraphrases, and the 100 anchor prompts, for each held-out slot's key token, reference phrase, long reference words, candidate values and candidate names.
+  It found 'Sam', 'Mom', 'grandma', 'grandmother', 'orthodontist', 'driving', and also 'study', 'debate', 'planning', 'lab', 'concert', 'birthday', 'pizza' (all in labels or facts of OTHER slots). No new-slot value (address, path, event id) leaked.
+  Fixed by hand-editing the frozen text with `fix_leaks.py` (deterministic regex renames, no API call): e.g. contact_21 "Ana Rivera (Sam's mom)" -> "(Theo's aunt)" with address theo.rivera.aunt@, meeting_09 "little brother Sam" -> "Theo",
+  meeting_02 "for Mom" -> "for Aunt Rae" and "Orthodontist adjustment" -> "Braces adjustment", contact_19 "(study group)" -> "(book club)", "debate" -> "forensics", "Garcia's Pizza" -> "Garcia's Grill", "lab report due" -> "write-up due",
+  "Band concert travel permission" -> "Band trip ...", "Grandma's landlord" -> "Nana's landlord", fact_18 grandma(mother) -> nana, fact_27 birthday -> date of birth, fact_32 orthodontist -> braces doctor, fact_39 driving -> behind-the-wheel,
+  one anchor prompt ("how to study for" -> "how to prepare for") and the SYSTEM example ("lab results" -> "test results"). Only wrong-candidate labels/values of non-held-out slots changed, never a gold value; `requests.jsonl` is unchanged.
+  `persona.json` and `phrasings.json` were re-frozen (new sha256 files). Some edited paraphrases read a little stiffly ("the date of Ben's date of birth"); they are identical across arms. The scan now reports 0 hits and `ACCEPTED` in `leakscan.py` is empty.
+  Not covered: text the model itself writes on day logs (its own questions in memory lines); `build_night_data` records any such hit in `plan.json -> leak_hits_in_night_files` and warns.
+- **The B slice is not a fixed 15%.** `auto_repeat` sizes the shared part on the median night, so the real B slice share is below 15% on most nights (8.9-14.6% in the full-scale scripted run) and a night can drop pairs (night 3 dropped 5 of 8).
+  It is equal across arms; the report prints the share and the pairs used per night.
+- **Pass-mark wording choices.** Mark 2's ask rate on fully specified requests pools H_full + R_full (the prereg names Split R only). Mark 3 pools H_know + R_know. Mark 2's accuracy part pools all of Split R. Marks use all 80 items per seed even when `knowable_effective` is false.
+- **B-sft adoption rule coded.** Marks 1-4 are a function of the arm; B-sft is tested against A+. adopt = B-sft if it meets marks 1-4, else B if all five marks hold, else none. The report also prints a slot-clustered bootstrap CI for B - A+ on new ambiguity,
+  `knowable_effective` counts, the tagger label-noise flag (precision < 0.8), the per-night DPO margin / anchor KL, and the slice shares. An arm skipped by the job 2 deadline is reported as missing (the report stops with a clear message if A+ or B is missing).
+- **fp16 safeguards.** K2's checkpoint is bf16 and runs in fp16 on the T4. `run_night` raises on any non-finite SFT/DPO loss or anchor KL and when GradScaler skipped more than 20% of the steps. Job 1 and job 2 check that one forward gives finite logits after loading.
+  Job 1 aborts after day 1 if more than 50% of first moves are OTHER (unparseable). The pilot records and asserts sft_loss, anchor_kl, skipped_steps and peak_mem_gb (< 14 GB), and projects from the largest planned night plus the measured eval time.
+- **Budget caps.** Lane deadlines are 1.2 h (job 1) and 2.5 h (job 2, which also skips an arm that cannot finish by 95% of that). Packages are pinned (transformers 5.20.2, peft 0.21.2; a failed pip install aborts). Models load straight to the GPU (`device_map`).
+- **Gate after job 1.** `build_night_data` (CLI) stops if fewer than 5 regret+annoyance events per night were tagged on average (`--min-events`, `--force` to override), the same threshold as the prereg's Step 0.
+- **Grader.** `grade.api_map` re-requests a chunk whose JSON does not parse (3 rounds) and raises if it still fails, instead of grading those ASKs as wrong.
+- **Not changed:** `add_hf_token_note` in `job_common.py` is still never called (the Kaggle box removes the API keys from the environment anyway).

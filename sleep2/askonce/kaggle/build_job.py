@@ -1,6 +1,6 @@
 """Build the Kaggle kernel directory for job 1 or job 2 (one-cell NOTEBOOK kernel; payload = code + frozen data, base64 xz inside the cell).
   python -m sleep2.askonce.kaggle.build_job --job 1 --out /tmp/kern1
-  python -m sleep2.askonce.kaggle.build_job --job 2 --out /tmp/kern2 --nightdata /path/nightdata [--pilot] [--scale 1.0] [--night-scale 1.0] [--opt-steps 12]
+  python -m sleep2.askonce.kaggle.build_job --job 2 --out /tmp/kern2 --nightdata /path/nightdata [--pilot] [--scale 1.0]
 Nothing is pushed. To launch: `kaggle kernels push -p DIR --accelerator NvidiaTeslaT4` (job 2 wants T4 x2; set it in the Kaggle UI/CLI)."""
 import argparse
 import base64
@@ -35,7 +35,9 @@ def sh(cmd, tail=1500):
     r = subprocess.run(cmd, shell=True, cwd=REPO, env=env, capture_output=True, text=True)
     say("RUN", cmd[:120], "rc", r.returncode, (r.stdout + r.stderr)[-tail:].replace("\n", " | ")); return r
 sh("pip uninstall -y -q torchao")            # Kaggle's torchao breaks peft LoRA layers
-sh("pip install -q -U peft 'transformers>=4.56' accelerate")
+r = sh("pip install -q 'transformers==5.20.2' 'peft==0.21.2' accelerate")   # K2's remote code needs transformers 5.x; versions pinned (checked locally)
+if r.returncode != 0:
+    raise SystemExit("pip install of the pinned transformers/peft failed; stopping before any GPU time is spent")
 sh("nvidia-smi --query-gpu=name,memory.total --format=csv,noheader")
 DEADLINE = T0 + CFG["deadline_s"]; STATUS = {}
 def lane(i, cmd):
@@ -94,18 +96,23 @@ def payload(job, nightdata=None, pilot=False):
     return buf.getvalue()
 
 
-def build(job, out, nightdata=None, pilot=False, scale=1.0, night_scale=1.0, opt_steps=30, deadline_h=10.5):
+DEADLINE_H = {1: 1.2, 2: 2.5}   # hard cap per lane (6.0 GPU-h in total is the budget; the expected use is about 3 GPU-h)
+
+
+def build(job, out, nightdata=None, pilot=False, scale=1.0, deadline_h=None):
+    deadline_h = deadline_h or DEADLINE_H[job]
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     data = base64.b64encode(payload(job, nightdata, pilot)).decode()
-    env = {"ASKONCE_SCALE": str(scale), "ASKONCE_NIGHT_SCALE": str(night_scale), "ASKONCE_OPT_STEPS": str(opt_steps)}
+    # night scale and optimizer steps are NOT set here: they are fixed when build_night_data runs in the container (plan.json carries n_opt_steps)
+    env = {"ASKONCE_SCALE": str(scale)}
     nd = "/tmp/repo/sleep2/askonce/data/nightdata"
     if job == 1:
         lanes = ["python -m sleep2.askonce.job1 --out $OUT/job1", ""]
         expect = ["job1/diary/day5.jsonl", "job1/oracle/day5.jsonl", "job1/results/P_1.json", "job1/timing.json"]
     else:
         extra = " --pilot" if pilot else ""
-        lanes = [f"python -m sleep2.askonce.job2 --seed {s} --nightdata {nd} --out $OUT/job2{extra}" for s in (1, 2)]
+        lanes = [f"python -m sleep2.askonce.job2 --seed {s} --nightdata {nd} --out $OUT/job2{extra} --deadline-s {int(deadline_h * 3600 * 0.95)}" for s in (1, 2)]
         if pilot:
             lanes[1] = ""
             expect = ["job2/pilot_seed1.json"]
@@ -133,9 +140,7 @@ if __name__ == "__main__":
     ap.add_argument("--nightdata")
     ap.add_argument("--pilot", action="store_true")
     ap.add_argument("--scale", type=float, default=1.0)
-    ap.add_argument("--night-scale", type=float, default=1.0)
-    ap.add_argument("--opt-steps", type=int, default=30)
     a = ap.parse_args()
     if a.job == 2 and not a.nightdata:
         ap.error("--nightdata is required for job 2")
-    print(json.dumps(build(a.job, a.out, a.nightdata, a.pilot, a.scale, a.night_scale, a.opt_steps), indent=1))
+    print(json.dumps(build(a.job, a.out, a.nightdata, a.pilot, a.scale), indent=1))

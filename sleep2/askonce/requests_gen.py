@@ -271,7 +271,8 @@ def generate_texts(specs, P, chunk=24, rounds=4, label="requests", cache=None):
 
 
 def leak_check(rows, P):
-    """Leakage rule: new-ambiguity slots must never appear in days 1-5 text (reference word, key token, any candidate value or name)."""
+    """Leakage rule on request text only: new-ambiguity slots must never appear in days 1-5 request text (reference word, key token, any candidate value or name).
+    The full scan over every model-visible text (lookup blocks, phrasings, facts, anchors, system prompt, night targets) is leakscan.full_leak_check."""
     train_text = norm(" \n ".join(r["text"] for r in rows if r["day"] <= DAYS_TRAIN))
     bad = []
     for sid in P.by_split["new"]:

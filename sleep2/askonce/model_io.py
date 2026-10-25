@@ -53,11 +53,14 @@ def load_model(name, dtype=torch.float16, device="cuda"):
     src = name[5:] if is_tiny(name) else (name or MODEL_ID)
     if is_tiny(name):
         kw = {}
+    elif str(device).startswith("cuda"):
+        kw["device_map"] = {"": 0}  # load straight onto the GPU (CUDA_VISIBLE_DEVICES picks the lane's card); avoids ~10 GB of host RAM per lane
     try:
         m = AutoModelForCausalLM.from_pretrained(src, dtype=dtype, **kw)
     except TypeError:  # older transformers: torch_dtype
         m = AutoModelForCausalLM.from_pretrained(src, torch_dtype=dtype, **kw)
-    m = m.to(device)
+    if next(m.parameters()).device.type != str(device).split(":")[0]:
+        m = m.to(device)
     m.config.use_cache = True
     return m
 

@@ -133,6 +133,11 @@ def main():
         raise SystemExit(f"only {len(gen)} usable general prompts")
     random.Random(SEED_WORLD).shuffle(gen)
     result["general"] = gen[:N_ANCHOR + N_GENERAL]
+    from .leakscan import full_leak_check
+    from .world import load_requests
+    bad = full_leak_check(P, result, load_requests())
+    if bad:
+        raise SystemExit(f"LEAK: new-slot words in model-visible days 1-5 text: {[(b[0], b[1], b[2]) for b in bad[:10]]}")
     jdump(DATA / "phrasings.json", result)
     (DATA / "phrasings.sha256").write_text(sha256_file(DATA / "phrasings.json") + "  phrasings.json\n")
     print("phrasings frozen")

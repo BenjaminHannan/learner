@@ -64,7 +64,7 @@ SYSTEM = (
     "Tools: send_email(to), draft_email(to), create_event(attendees, duration_min), move_event(event_id), "
     "open_file(path), share_file(path, with). attendees is a list; duration_min is a number; all other args are strings.\n"
     "Rule: " + RULE + "\n"
-    "Example: Request: Email Dr Wu at wu@clinic.example the lab results.\n"
+    "Example: Request: Email Dr Wu at wu@clinic.example the test results.\n"
     "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"wu@clinic.example\"}}\n"
     "Example: Request: Open the budget sheet. [Lookup: 1) /docs/budget_2025.xlsx 2) /docs/budget_old.xlsx; memory empty]\n"
     "ASK Which budget sheet do you mean: /docs/budget_2025.xlsx or /docs/budget_old.xlsx?"

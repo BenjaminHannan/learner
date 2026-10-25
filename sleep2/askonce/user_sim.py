@@ -1,4 +1,5 @@
 """Deterministic sim-Ben for the GPU jobs: answers and corrections are triggered by code and use pre-generated Haiku phrasings."""
+import re
 import zlib
 
 from .config import ANNOY_PREFIX, CORR_PREFIX, FULLSPEC_REPLY, norm
@@ -46,4 +47,7 @@ class UserSim:
             return None
         k = h(req["req_id"], sid, "c")
         c = self.phr["slots"][sid]["corrections"]
-        return CORR_PREFIX[k % len(CORR_PREFIX)] + c[k % len(c)]
+        text = c[k % len(c)]
+        if re.match(r"\s*no\b", text, re.I):  # the phrasing already starts with 'No': do not stack 'No, No, ...'
+            return text
+        return CORR_PREFIX[k % len(CORR_PREFIX)] + text
