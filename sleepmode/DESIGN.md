@@ -26,6 +26,8 @@ sleepmode/
   scheduler.py     the main loop (state machine)
   cli.py           start | wake | status | summary | once
   install_mac.sh   Desktop launchers "Sleep Mode.command" / "Wake Up.command", copies to ~/learner-ops/sleepmode/app
+  tools.py         ToolBox: web_search, fetch_page, python, diary_search, diary_read
+  dreamcheck.py    check dreams against the diary (with tools) before a trainer uses them
   practice/
     __init__.py
     habits.py      what kinds of work Ben uses the assistant for (from the diary)
@@ -33,6 +35,7 @@ sleepmode/
     tasks.py       task families with exact automatic checkers (v1: spreadsheets on CSV)
     sandbox.py     run an attempt in a throwaway copy, no network, no writes outside it
     model.py       OpenAI-compatible chat client (+ FakeModel for tests)
+    agent.py       tool-using loop (native tool calls or `TOOL: name {json}` text lines)
     loop.py        one practice round -> SFT examples + DPO pairs + pass rate
   tests/           unittest, all offline, no MLX needed
 ```
@@ -164,3 +167,33 @@ is set the scheduler starts it (e.g. mlx_lm.server on port 18082) before the rou
 
 The format matches skillsleep (good -> SFT, fixed bad -> DPO) so its trainer can consume practice output, and the puzzle-practice
 thread's checked-correct tries.
+
+## Tools while sleeping (tools.py, practice/agent.py, dreamcheck.py)
+
+Ben's request: the model gets the best tools while asleep, for practice and for checking dreams before training on them.
+
+`ToolBox(diary_dir, *, web=True, fetch, searcher, sandbox_files)`: `schemas()` (OpenAI function JSON) and `call(name, args) -> str`
+(always a string, errors as `ERROR: ...`, clipped to ~4000 chars). Tools: `web_search` (DuckDuckGo html: title, url, snippet),
+`fetch_page` (http/https only; localhost, private/link-local IPs and non-http schemes are refused before any fetch; output is labelled
+untrusted web text), `python` (practice.sandbox with the current task's files, `toolbox.sandbox_files`), `diary_search` (read-only:
+`diary.sqlite` FTS5 table via a `mode=ro` URI if present, schema inspected defensively; else term-overlap scan of `raw/*.jsonl`),
+`diary_read(date, conv_id)`. `web=False` removes the two web tools. Nothing is written except sandbox temp dirs.
+`fetch_page` checks the requested URL and every redirect hop (`tools.safe_fetch`). Remaining gap: a hostname that resolves to a private address only at fetch time (DNS rebinding) is not caught.
+
+`practice/agent.py`: `run_agent(model, messages, toolbox, max_steps, budget_s) -> (final_text, transcript)`. Native mode uses
+`model.chat_tools` (tool results as role `tool` messages). A reply with a line `TOOL: name {json}` is also a call (result goes back as a
+user message `RESULT name: ...`), and a server that rejects `tools` drops to this text mode. At the step or time cap the model is asked
+once more for a final answer without tools.
+
+Practice: `run_round(..., toolbox=, use_tools=)` (default on when a toolbox is given). The model may test its script with `python`, look up
+tips, or see how Ben phrases things, then give the final ```python block. The block is still graded by the exact checker in a fresh
+sandbox; tools never decide pass/fail. Training records are unchanged (final prompt and answer, no tool transcript, no hint);
+`rounds.jsonl` gains `tools`, `tool_calls` (per tool) and `tool_calls_total`. Config `practice_tools` (default true); web follows `research_web`.
+
+Dream check: `python -m sleepmode.dreamcheck IN.jsonl --out DIR --model-url URL [--model NAME] [--diary DIR] [--no-web] [--keep-unknown] [--max N]`.
+Input items are `{"id","question","answer","source"?}` or chat items `{"messages": [...]}` (last user turn = question, final assistant turn = answer).
+For each item the agent checks the answer (mostly `diary_search`; `python` for arithmetic; web only if allowed) and ends with
+`VERDICT: SUPPORTED|CONTRADICTED|UNKNOWN` plus `FIX: ...` when contradicted. Output in DIR: `kept.jsonl` (SUPPORTED; CONTRADICTED with the fix
+written in as the answer and `fixed: true`; UNKNOWN too with `--keep-unknown`), `dropped.jsonl` (with `reason`), `stats.json`. Items keep their
+shape plus `verdict`, `fixed`, `tool_calls`. A model error or missing verdict counts as UNKNOWN. A CommandWorker-style trainer calls this on its
+dreams before training and trains on `kept.jsonl`.

@@ -41,6 +41,7 @@ class Config:
     practice_model: str = ""
     practice_server_cmd: List[str] = field(default_factory=list)
     research_web: bool = True
+    practice_tools: bool = True     # tools (python, diary search, web) during practice
     # check-in
     mail_enabled: bool = True
     calendar_enabled: bool = True

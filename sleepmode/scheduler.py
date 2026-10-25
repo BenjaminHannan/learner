@@ -64,7 +64,8 @@ def default_practice_fn(cfg: Config, state: State) -> PracticeFn:
                 _wait_for(cfg.practice_model_url, 180)
             model = ChatModel(cfg.practice_model_url, cfg.practice_model)
             res = loop.make_practice_fn(str(cfg.home), str(cfg.diary_dir), model, n_tasks=cfg.practice_tasks,
-                                        research_web=cfg.research_web, min_share=cfg.practice_min_share)(budget_s)
+                                        research_web=cfg.research_web, min_share=cfg.practice_min_share,
+                                        tools=cfg.practice_tools)(budget_s)
             if res is None:
                 return None
             res = dict(res)

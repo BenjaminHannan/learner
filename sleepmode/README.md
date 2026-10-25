@@ -81,6 +81,16 @@ CommandWorker(["python", "my_trainer.py"], workdir)
 
 or subclass `SleepWorker` in `workers.py` and implement `run_chunk(budget_s, practice_files, should_stop)`.
 
+## Tools and dream checking
+
+While it practises, the model can run Python in the sandbox, search your chat diary (read-only), and, if `research_web` is on, search the web (it refuses local/private addresses). Turn tool use off with `"practice_tools": false`. A trainer that makes up "dreams" (synthetic Q/A) can check them first:
+
+```
+python -m sleepmode.dreamcheck dreams.jsonl --out checked/ --model-url http://127.0.0.1:18082 [--no-web] [--keep-unknown]
+```
+
+It writes `kept.jsonl` (supported or fixed answers), `dropped.jsonl` and `stats.json`; train on `kept.jsonl`.
+
 ## Tests
 
 `python3 -m unittest discover -s sleepmode/tests -t .` (from the repo root; no Mac or GPU needed).

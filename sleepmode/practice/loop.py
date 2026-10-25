@@ -7,12 +7,15 @@ import os
 import re
 import time
 
-from . import habits, research, sandbox, tasks
+from . import agent, habits, research, sandbox, tasks
 
 SYSTEM = ("You write a Python 3 script that uses only the standard library. The script reads the input CSV "
           "file(s) in the current directory and writes the result to output.csv in the current directory. "
           "Follow the column names and ordering rules in the task exactly. Reply with one ```python code "
           "block and nothing else.")
+TOOLS_NOTE = (" Before answering you may use tools: python to test your script on the task files (they are in "
+              "the working directory), web_search for tips, diary_search to see how Ben phrases requests. "
+              "Then reply with the final ```python block.")
 _FENCE = re.compile(r"```[ \t]*(?:python3?|py)?[ \t]*\r?\n(.*?)```", re.S | re.I)
 
 
@@ -85,9 +88,12 @@ def _append(path, recs):
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
-def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, retries=2) -> dict:
+def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, retries=2,
+              toolbox=None, use_tools=None, max_steps=6) -> dict:
     t0 = time.time()
     tricks = tricks or []
+    use_tools = toolbox is not None if use_tools is None else (use_tools and toolbox is not None)
+    tool_n: dict = {}
     sft, pairs, done, p1, pany, used, errs, consec = [], [], 0, 0, 0, 0, 0, 0
     stopped = False
     for task in tasks.generate(kind, n_tasks, seed):
@@ -98,10 +104,20 @@ def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, r
         used += hint is not None
         base = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user_prompt(task)}]
         msgs = [base[0], {"role": "user", "content": user_prompt(task, hint)}]
+        if use_tools:
+            toolbox.sandbox_files = dict(task.files)
+            msgs[0] = {"role": "system", "content": SYSTEM + TOOLS_NOTE}
         first_bad = passed = None
         for i in range(retries + 1):
             try:
-                reply = model.chat(msgs, max_tokens=1500, temperature=0.2 if i == 0 else 0.5)
+                temp = 0.2 if i == 0 else 0.5
+                if use_tools:
+                    reply, tr = agent.run_agent(model, msgs, toolbox, max_steps=max_steps,
+                                                budget_s=max(10.0, budget_s - (time.time() - t0)), temperature=temp)
+                    for k, v in agent.tool_counts(tr).items():
+                        tool_n[k] = tool_n.get(k, 0) + v
+                else:
+                    reply = model.chat(msgs, max_tokens=1500, temperature=temp)
                 consec = 0
             except Exception:
                 errs += 1
@@ -129,7 +145,8 @@ def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, r
                "pass_any": pany / done if done else 0.0, "tricks_used": used,
                "elapsed_s": round(time.time() - t0, 2), "seed": seed, "model_errors": errs,
                "stopped_early": stopped, "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-               "sft_n": len(sft), "pairs_n": len(pairs)}
+               "sft_n": len(sft), "pairs_n": len(pairs),
+               "tools": use_tools, "tool_calls": tool_n, "tool_calls_total": sum(tool_n.values())}
     paths = {"sft_path": os.path.join(out_dir, "sft.jsonl"), "pairs_path": os.path.join(out_dir, "pairs.jsonl"),
              "rounds_path": os.path.join(out_dir, "rounds.jsonl")}
     _append(paths["sft_path"], sft)
@@ -139,7 +156,8 @@ def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, r
     return summary
 
 
-def make_practice_fn(home_dir, diary_dir, model, *, n_tasks=12, seed=None, research_web=True, min_share=0.05):
+def make_practice_fn(home_dir, diary_dir, model, *, n_tasks=12, seed=None, research_web=True, min_share=0.05,
+                     tools=True):
     """-> callable(budget_s) -> round summary dict, or None when nothing is practicable."""
     def practice(budget_s):
         t0 = time.time()
@@ -152,6 +170,8 @@ def make_practice_fn(home_dir, diary_dir, model, *, n_tasks=12, seed=None, resea
             cards = research.get_tricks(kind, home_dir, web=False)
         day = datetime.date.today().isoformat()
         s = seed if seed is not None else int(time.time())
+        from ..tools import ToolBox  # tools imports this package
+        toolbox = ToolBox(diary_dir, web=research_web) if tools else None
         return run_round(kind, model, max(0.0, budget_s - (time.time() - t0)),
-                         os.path.join(str(home_dir), "practice", day), s, n_tasks, cards)
+                         os.path.join(str(home_dir), "practice", day), s, n_tasks, cards, toolbox=toolbox)
     return practice

@@ -5,7 +5,8 @@ import time
 import unittest
 
 from sleepmode.practice import loop, research, tasks
-from sleepmode.practice.model import ChatModel, FakeModel
+from sleepmode.practice.model import ChatModel, FakeModel, tool_call_msg
+from sleepmode.tools import ToolBox
 
 try:
     from . import test_practice_tasks as T
@@ -131,6 +132,55 @@ class RoundTests(unittest.TestCase):
             self.assertTrue(os.path.exists(s["pairs_path"]) and os.path.exists(s["rounds_path"]))
 
 
+class ToolRoundTests(unittest.TestCase):
+    def test_tools_used_but_checker_decides(self):
+        ts = tasks.generate("spreadsheet", 4, SEED)
+        by_instr = {t.instruction: t for t in ts}
+
+        def fn(messages):
+            task = next(t for k, t in by_instr.items() if k in messages[1]["content"])
+            if messages[-1]["role"] == "tool":
+                # tool saw the task files; answer: the right script for even tasks, a wrong one for odd
+                self.assertIn("exit: 0", messages[-1]["content"])
+                wrong = ts.index(task) % 2 == 1
+                return "```python\n%s```" % T.solution(task, wrong=wrong)
+            if messages[-1]["role"] == "user" and messages[-1]["content"].startswith("RESULT"):
+                return "```python\n%s```" % T.solution(task)
+            first = sorted(task.files)[0]
+            return tool_call_msg("python", {"code": "print(len(open(%r).read()))" % first})
+        model = FakeModel(fn)
+        tb = ToolBox("", web=False)
+        with tempfile.TemporaryDirectory() as out:
+            s = loop.run_round("spreadsheet", model, 300, out, seed=SEED, n_tasks=4, toolbox=tb, retries=0)
+            self.assertTrue(s["tools"])
+            self.assertEqual(s["tool_calls"], {"python": 4})
+            self.assertEqual(s["tool_calls_total"], 4)
+            self.assertEqual(s["pass_any"], 0.5)  # wrong scripts fail even though tools ran
+            rounds = lines(s["rounds_path"])
+            self.assertEqual(rounds[0]["tool_calls"], {"python": 4})
+            for r in lines(s["sft_path"]):
+                self.assertEqual([m["role"] for m in r["messages"]], ["system", "user", "assistant"])
+                self.assertNotIn("TOOL", json.dumps(r))
+                self.assertNotIn("python to test", r["messages"][0]["content"])
+        # use_tools=False ignores the toolbox
+        model = FakeModel(make_fake(ts))
+        with tempfile.TemporaryDirectory() as out:
+            s = loop.run_round("spreadsheet", model, 300, out, seed=SEED, n_tasks=4, toolbox=tb, use_tools=False)
+            self.assertEqual(s["tool_calls_total"], 0)
+            self.assertFalse(s["tools"])
+
+    def test_make_practice_fn_tools_flag(self):
+        model = FakeModel(make_fake(tasks.generate("spreadsheet", 3, SEED)))
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as diary:
+            os.makedirs(os.path.join(diary, "raw"))
+            with open(os.path.join(diary, "raw", "d.jsonl"), "w") as f:
+                f.write(json.dumps({"messages": [{"role": "user", "content": "sum column B in my excel spreadsheet csv"}]}) + "\n")
+            s = loop.make_practice_fn(home, diary, model, n_tasks=3, seed=SEED, research_web=False)(60)
+            self.assertTrue(s["tools"])
+            s = loop.make_practice_fn(home, diary, model, n_tasks=3, seed=SEED, research_web=False, tools=False)(60)
+            self.assertFalse(s["tools"])
+
+
 class ChatModelTests(unittest.TestCase):
     def test_endpoint_and_retry(self):
         import http.server
@@ -158,6 +208,33 @@ class ChatModelTests(unittest.TestCase):
             m = ChatModel("http://127.0.0.1:%d" % srv.server_port, "m", timeout=5)
             self.assertEqual(m.chat([{"role": "user", "content": "x"}]), "hi")
             self.assertEqual(hits, ["/v1/chat/completions"] * 2)
+        finally:
+            srv.shutdown()
+
+    def test_chat_tools(self):
+        import http.server
+        import threading
+        bodies = []
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                bodies.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+                msg = {"content": None, "tool_calls": [{"id": "x", "type": "function",
+                                                        "function": {"name": "python", "arguments": "{}"}}]}
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(json.dumps({"choices": [{"message": msg}]}).encode())
+
+            def log_message(self, *a):
+                pass
+        srv = http.server.HTTPServer(("127.0.0.1", 0), H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            m = ChatModel("http://127.0.0.1:%d/v1" % srv.server_port, "m", timeout=5)
+            r = m.chat_tools([{"role": "user", "content": "x"}], ToolBox("").schemas())
+            self.assertEqual(r["tool_calls"][0]["function"]["name"], "python")
+            self.assertEqual(r["content"], "")
+            self.assertIn("tools", bodies[0])
         finally:
             srv.shutdown()
 
