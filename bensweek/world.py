@@ -105,6 +105,7 @@ TOOL_SPECS = [
     ("notes_write", "Replace your notebook with this text.", {"content": (_S, "")}, ["content"]),
     ("ask_user", "Ask Ben a question and wait for the answer.", {"question": (_S, "")}, ["question"]),
     ("diary_search", "Search your past chats this week.", {"query": (_S, "")}, ["query"]),
+    ("contacts_search", "Find Ben's contacts (name, email, phone, relation). Empty query = all.", {"query": (_S, "")}, []),
 ]
 NOTES_TOOLS = {"notes_read", "notes_write"}
 CHANGING = {"email_send", "email_draft", "email_move", "calendar_create", "calendar_update",
@@ -189,6 +190,7 @@ class World:
         self.task_id = None
         self.asks = 0
         self.ask_reply = "up to you, use your best judgment"
+        self.has_ask_reply = False
 
     # -- state dump / restore (resume, snapshots)
     STATE_KEYS = ["profile", "contacts", "email", "calendar", "files", "web", "courses", "assignments",
@@ -242,6 +244,7 @@ class World:
     def begin_task(self, task_id, ask_reply=None):
         self.task_id = task_id
         self.asks = 0
+        self.has_ask_reply = bool(ask_reply)
         self.ask_reply = ask_reply or "up to you, use your best judgment"
 
     def next_id(self, prefix):
@@ -288,6 +291,12 @@ class World:
                 return c
         hits = [c for c in self.contacts if low in c["name"].lower()]
         return hits[0] if len(hits) == 1 else None
+
+    def t_contacts_search(self, a):
+        q = (a.get("query") or "").strip().lower()
+        hits = [c for c in self.contacts
+                if not q or any(q in (c.get(k) or "").lower() for k in ("name", "email", "phone", "relation"))]
+        return _j(hits) if hits else "no matching contacts"
 
     def contact_by_phone(self, phone):
         for c in self.contacts:

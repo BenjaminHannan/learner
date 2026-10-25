@@ -97,9 +97,11 @@ is bytes (default: length of content). Directories are implied by paths.
   {id, field: value} patches, e.g. a moved due date), `web` (new pages).
 - Calendar `repeat`: `none` (default), `daily`, `weekdays`, `weekly`. A
   repeating event starts on its `date` and repeats through the episode week.
-- `ask_reply`: what Ben answers if the assistant calls `ask_user`, or ends its
-  turn with a question before finishing. Default: "up to you, use your best
-  judgment". Ben replies at most twice per task.
+- `ask_reply`: what Ben answers if the assistant calls `ask_user` (default
+  "up to you, use your best judgment"). Only when a task sets `ask_reply` does
+  a reply that ends with a question also get Ben's answer and continue; without
+  it the task ends there. Ben replies at most twice per task.
+- `answer` checks read every assistant message in the task, not just the last.
 - `memory_source`: (memory tasks) id of the earlier task holding the fact.
 
 ## Tools the assistant gets
@@ -131,6 +133,7 @@ is bytes (default: length of content). Directories are implied by paths.
 | reminders_create | text, when (ISO) | |
 | reminders_list | | |
 | notes_read / notes_write | content | the assistant's own notebook (can be switched off) |
+| contacts_search | query | Ben's contacts (name, email, phone, relation) |
 | ask_user | question | asks Ben; returns his answer |
 | diary_search | query | only in memory mode `diary`: search past chats of this episode |
 

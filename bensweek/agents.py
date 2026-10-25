@@ -107,7 +107,8 @@ class Conversation:
         if not calls:
             self.final_text = text
             last = text.rstrip().split("\n")[-1] if text else ""
-            if (self.kind == "task" and last.endswith("?") and self.world.asks < 2):
+            if (self.kind == "task" and last.endswith("?") and self.world.has_ask_reply
+                    and self.world.asks < 2):
                 self.world.asks += 1
                 reply = self.world.ask_reply
                 self.events.append({"kind": "ask_reply", "text": reply})

@@ -232,6 +232,15 @@ class CheckTests(unittest.TestCase):
     def run1(self, check, events=(), final=""):
         return run_checks({"id": "T1", "checks": [check]}, self.w, fake_rec(events, final))[0]["status"]
 
+    def test_answer_sees_all_assistant_text(self):
+        ev = [{"kind": "assistant", "text": "Lab 5 is due Thursday."}]
+        self.assertEqual(self.run1({"type": "answer", "any": ["lab 5"]}, ev, "ok done"), "pass")
+
+    def test_contacts_search(self):
+        self.assertIn("patel.counselor@lakeview.test", call(self.w, "contacts_search", query="patel"))
+        self.assertIn("counselor", call(self.w, "contacts_search", query="counselor"))
+        self.assertEqual(call(self.w, "contacts_search", query="zzz"), "no matching contacts")
+
     def test_email_checks(self):
         c = {"type": "email_sent", "to": "alvarez", "subject_any": ["lab"], "body_all": ["Monday"], "body_none": ["sorry"]}
         self.assertEqual(self.run1(c), "fail")
@@ -392,6 +401,14 @@ class EndToEndTests(unittest.TestCase):
             run.run_episodes([WK01], agents.ScriptedAgent(script), tmp, "none", days=4)
             t = json.loads((Path(tmp) / "episodes/wk01/wk01-d4-t1/transcript.json").read_text())
             self.assertEqual(t[-2], {"role": "user", "content": "oh nice, then dont email him"})
+
+    def test_no_injection_without_ask_reply(self):
+        script = {"wk01-d1-t1": [{"text": "Lab 5 is due Thu. Want me to add it to your calendar?"}]}
+        with tempfile.TemporaryDirectory() as tmp:
+            run.run_episodes([WK01], agents.ScriptedAgent(script), tmp, "none", days=1)
+            t = json.loads((Path(tmp) / "episodes/wk01/wk01-d1-t1/transcript.json").read_text())
+            self.assertEqual(t[-1]["role"], "assistant")
+            self.assertEqual(sum(1 for m in t if m["role"] == "user"), 1)
 
     def test_resume_skips_finished_tasks(self):
         with tempfile.TemporaryDirectory() as tmp:

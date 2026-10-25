@@ -169,7 +169,8 @@ def _evaluate(c, task, world, rec):
                 return a.get("status") == c["status"], f"status={a.get('status')}"
         return False, "assignment not found"
     if t == "answer":
-        r = text_ok(final, c.get("any"), c.get("all"), c.get("none"))
+        said = "\n".join(e["text"] for e in events if e["kind"] == "assistant") or final
+        r = text_ok(said, c.get("any"), c.get("all"), c.get("none"))
         return r is None, r or "ok"
     if t == "asked_user":
         return _asked(events), "asked" if _asked(events) else "never asked before acting"
