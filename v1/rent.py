@@ -6,10 +6,10 @@ guard in `waitlog`, stop-then-pull with sha256 checks, destroy only after a pass
 DRAFT until the V1 review passes. The agent proxy adds the vast key; this script never reads or prints a key.
 Nothing here rents by itself: `create` prints the request and sends it only with --yes, and every rental needs Ben's own click.
 
-  pack    --kind gs|arm|plain|multistep|multistep2|multistep3 --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
+  pack    --kind gs|arm|plain|multistep|multistep2|multistep3|multistep9 --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
                                                       mainbrain domain skills_curriculum + tokenizer + pattern bank + data hashes)
                                                       as pack.tar.xz + args.json; the box script is v1/box/<kind>.sh from the pack
-  search  [--n 12] [--max-dph 0.8] [--gpu "RTX 4090"] [--min-ram 23000]
+  search  [--n 12] [--max-dph 0.8] [--gpu "RTX 4090" | any (tools/vast_pick: best value per dollar)] [--min-ram 23000]
   create  --offer ID --args DIR/args.json [--dryrun] [--yes]
   status | cost | logs | waitlog | pull | stop | destroy   (as in the steals controller)
 """
@@ -34,8 +34,8 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "gs2", "gs3", "arm", "plain", "multistep", "multistep2", "multistep3")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0, "multistep": 6.0, "multistep2": 6.0, "multistep3": 6.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "gs3", "arm", "plain", "multistep", "multistep2", "multistep3", "multistep9")
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0, "multistep": 6.0, "multistep2": 6.0, "multistep3": 6.0, "multistep9": 4.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
@@ -49,7 +49,7 @@ MAX_ARGS_BYTES = 1_800_000
 START_MIN = PREJOB_S // 60
 STOP_MARGIN_S = 120
 WATCHDOG_MIN = 10
-WATCHDOG_MIN_STAGE = {"multistep": 300, "multistep2": 300, "multistep3": 300}   # long silent phases (dream generation, school sleep) write no new log line
+WATCHDOG_MIN_STAGE = {"multistep": 300, "multistep2": 300, "multistep3": 300, "multistep9": 300}   # long silent phases (dream generation, school sleep) write no new log line
 CLOSING = re.compile(r"(?:^|\s)=== V1G (DONE|FAIL|GATE)(?=\s|$)")
 PULL_OK = "PULL_OK.json"
 STAGE = "gs"
@@ -317,8 +317,19 @@ def offer_query(gpu, min_ram):
 OFFER_QUERY = offer_query("RTX 4090", 23000)
 
 
+def picked(a):
+    """--gpu any: tools/vast_pick.pick (best speed per dollar over every GPU type with >= min-ram VRAM)."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    from vast_pick import pick
+    return pick(min_vram=a.min_ram / 1000, max_dph=a.max_dph if getattr(a, "max_dph", None) else 2.0)
+
+
 def search(a):
     global OFFER_QUERY
+    if a.gpu == "any":
+        for r in picked(a)[: a.n]:
+            print(json.dumps(r))
+        return
     OFFER_QUERY = offer_query(a.gpu, a.min_ram)
     offers = call("POST", "/bundles/", OFFER_QUERY).get("offers") or []
     keep = [o for o in offers if o.get("gpu_name") == a.gpu and (o.get("dph_total") or 0) <= a.max_dph]
@@ -329,7 +340,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain|multistep3|multistep2|multistep)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain|multistep9|multistep3|multistep2|multistep)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -372,7 +383,10 @@ def create(a):
         raise SystemExit(f"cannot read the instance list ({listing.get('http')} {listing.get('error')}); nothing was sent")
     m = re.search(r"^DPH=([0-9.e+-]+)$", args[2], re.M)
     packed = float(m.group(1)) if m else None
-    offers = [o for o in call("POST", "/bundles/", OFFER_QUERY).get("offers") or [] if o.get("id") == int(a.offer)]
+    if a.gpu == "any":
+        offers = [dict(dph_total=o["usd_h"]) for o in picked(a) if o["id"] == int(a.offer)]
+    else:
+        offers = [o for o in call("POST", "/bundles/", OFFER_QUERY).get("offers") or [] if o.get("id") == int(a.offer)]
     offered = offers[0].get("dph_total") if offers else None
     if offered is None:
         raise SystemExit(f"offer {a.offer} is not in the filtered listing; nothing sent")
@@ -436,7 +450,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain|multistep3|multistep2|multistep)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain|multistep9|multistep3|multistep2|multistep)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)
