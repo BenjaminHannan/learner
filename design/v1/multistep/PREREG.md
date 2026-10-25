@@ -179,3 +179,8 @@ Skills replay (2,000-row sample of the skills train set; 136 dev in_dist rows): 
 Kaggle repeat of round 6 (same-box base/nights4/hind4, 2 seeds, T4 shared with another job; files in /mnt/project-files/multistep/round6-kaggle/):
 hind4 20.8 vs nights4 17.1 (+3.7), Easy 81.4 vs 77.8, harm 3.2 (fails <= 2). Also NO PASS, between the marks. Two machines: +1.3 and +3.7,
 both short of +4, and harm was higher on Kaggle. Hindsight is at most a small gain at some cost to old skills.
+
+## Round 8 result (Kaggle T4, 2026-10-25, 2 seeds, 111 min; files in /mnt/project-files/multistep/round8-kaggle/)
+const_nights4 Hard 17.6 vs nights4 16.9 (+0.7); affine 2.3 (mark 5); Easy 87.9 vs const_base 89.6; harm 1.2. **NO PASS, between the
+marks** (affine 2.3 > 1, so not proved wrong). const_base Hard 12.5 (old base 10.2). Curve: 7.6 / 12.5 / 16.6 / 17.6.
+Reading (suggested): shorter constant-building is not what holds affine back. Across rounds 4-8, only more nights clearly raised Hard.
