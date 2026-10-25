@@ -43,10 +43,9 @@ if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
-if [ -n "${K2BENCH:-}" ]; then   # big-MoE 4-bit speed bench (backbone/sleep/brain/k2_bench.py; PREREG-sleepB-addendum11.md "MoVA-36B q4: speed bench only"): K2BENCH=1; default model IFM/K2-Horizon-MoVA-36B-A4B at its pinned revision; K2BENCH_EXTRA: extra k2_bench flags, comma-separated because vast.py passes env words unquoted, e.g. --model,<repo>,--revision,<sha> or --lora-shared or --budget-min,40
-  BNBC=""; if [ -f /tmp/torch-pin.txt ]; then BNBC="-c /tmp/torch-pin.txt"; fi   # keep the image's torch
-  python3 -m pip install -q "bitsandbytes==0.50.2" $BNBC || echo "!! bitsandbytes install failed"
-  python3 backbone/sleep/brain/k2_bench.py --out "$OUT/k2bench/bench.json" ${K2BENCH_EXTRA:+${K2BENCH_EXTRA//,/ }} || echo "!! k2bench failed"
+if [ -n "${MOEBENCH:-}" ]; then   # big-MoE speed bench (backbone/sleep/brain/moe_bench.py): MOEBENCH=1; default Qwen/Qwen3.6-35B-A3B at its pinned revision, bf16 weights (~65 GiB) with the MLX-affine fake-quantized 4-bit base (sleepb.q4_apply), LoRA on top, one 95 GB GPU; MOEBENCH_EXTRA: extra moe_bench flags, comma-separated because vast.py passes env words unquoted, e.g. --lora-shared or --budget-min,40 or --usd-per-hour,1.2 (no bitsandbytes: the experts are fused 3-D parameters)
+  export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"   # ~65 GiB of weights on a 95 GB card: keep the allocator from fragmenting
+  python3 backbone/sleep/brain/moe_bench.py --out "$OUT/moebench/bench.json" ${MOEBENCH_EXTRA:+${MOEBENCH_EXTRA//,/ }} || echo "!! moebench failed"
   tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi

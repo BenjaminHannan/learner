@@ -38,6 +38,8 @@ left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
 scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
+--q4-mlx-moe (with --q4-base, Qwen3.5/3.6 MoE): also the fused 3-D expert tensors (mlp.experts.gate_up_proj / down_proj, groups along the last = input dim) and the router Parameter, with 8 bits for
+every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-35B-A3B-4bit. Weights stay in the model dtype (fake quantization), so no memory is saved.
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
@@ -2954,28 +2956,86 @@ def q4_fake(w, group=64, bits=4, store_dtype=None):
     return (q * scale + bias).reshape(w.shape).to(w.dtype)
 
 
-def q4_apply(lm, group=64, bits=4):
+Q4_MLX_MOE_BITS = ((r"\.mlp\.gate\.weight$", 8), (r"\.mlp\.shared_expert_gate\.weight$", 8))  # mlx-community/Qwen3.6-35B-A3B-4bit: 8-bit group 64 for every router weight and shared-expert gate
+Q4_MLX_MOE_PARAMS = (r"\.mlp\.experts\.(?:gate_up_proj|down_proj)$", r"\.mlp\.gate\.weight$")  # ... and 4-bit for the fused 3-D expert Parameters (group along the last = input dim) and the router Parameter
+Q4_CHUNK = 1 << 26  # elements per fp32 working piece: a tensor larger than this is quantized in slices along dim 0 (the groups lie along the last dim, so the result is the same bit for bit)
+
+
+def q4_inplace(w, group, bits, chunk=Q4_CHUNK):
+    """Fake-quantize the tensor w in place (no grad) like q4_fake, in slices along dim 0 of at most `chunk` elements when it is larger (a fused 3-D expert tensor, a big embedding), so the
+    float32 temporaries stay small. Returns the relative Frobenius error, or None when the last dim is not divisible by group (w untouched). A tensor of <= chunk elements takes the
+    one-piece path (q4_fake on the whole tensor)."""
+    if w.dim() < 1 or w.shape[-1] % group:
+        return None
+    if w.numel() <= chunk or w.dim() < 2 or w.shape[0] < 2:
+        wq = q4_fake(w, group, bits)
+        den = w.float().norm().item()
+        err = (wq.float() - w.float()).norm().item() / den if den > 0 else 0.0
+        w.copy_(wq)
+        return err
+    rows = max(1, chunk // (w.numel() // w.shape[0]))
+    e2 = d2 = 0.0
+    for i in range(0, w.shape[0], rows):
+        piece = w[i:i + rows]
+        wq = q4_fake(piece, group, bits)
+        e2 += (wq.float() - piece.float()).double().pow(2).sum().item()
+        d2 += piece.float().double().pow(2).sum().item()
+        piece.copy_(wq)
+        del wq
+    return math.sqrt(e2 / d2) if d2 > 0 else 0.0
+
+
+def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None):
     """Fake-quantize (in place, no grad) the weight of every nn.Linear and nn.Embedding in lm; tied tensors once (by data_ptr). The scale /
-    bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}."""
+    bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}.
+    bits_for: sequence of (regex, bits); a tensor whose name (e.g. "model.layers.3.mlp.shared_expert_gate.weight") matches a regex (re.search, first hit wins) is quantized to those bits
+    instead of `bits`. extra: sequence of regexes; every other Parameter (a fused 3-D expert tensor, a Parameter-holding router module) whose name matches is quantized too, along its last dim.
+    With both left at None nothing changes (same tensors, same numbers, same result keys, every tensor quantized in one piece); otherwise tensors above `chunk` elements (default Q4_CHUNK) are quantized in
+    slices along dim 0 (same weights bit for bit; the error statistic is then summed in float64) and the result also has by_bits ({bits: {tensors, params}}) and pattern_hits (the prefix bits: or extra: plus the regex -> how many tensors it matched)."""
     seen, nq, ns, npar, errs = set(), 0, 0, 0, []
+    bits_for = [(re.compile(r), int(b)) for r, b in (bits_for or [])]
+    extra = [re.compile(r) for r in (extra or [])]
+    by_bits, hits = {}, Counter()
+    if chunk is None:
+        chunk = Q4_CHUNK if (bits_for or extra) else 1 << 62
+
+    def one(name, w):
+        nonlocal nq, ns, npar
+        if w.data_ptr() in seen:
+            return
+        seen.add(w.data_ptr())
+        nb = bits
+        for rx, b in bits_for:
+            if rx.search(name):
+                nb = b
+                hits["bits:" + rx.pattern] += 1
+                break
+        err = q4_inplace(w.data, group, nb, chunk)
+        if err is None:
+            ns += 1
+            return
+        errs.append(err)
+        nq += 1
+        npar += w.numel()
+        d = by_bits.setdefault(str(nb), {"tensors": 0, "params": 0})
+        d["tensors"] += 1
+        d["params"] += w.numel()
+
     with torch.no_grad():
-        for _, m in lm.named_modules():
-            if not isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
-                continue
-            w = m.weight
-            if w.data_ptr() in seen:
-                continue
-            seen.add(w.data_ptr())
-            wq = q4_fake(w.data, group, bits)
-            if wq is None:
-                ns += 1
-                continue
-            den = w.data.float().norm().item()
-            errs.append((wq.float() - w.data.float()).norm().item() / den if den > 0 else 0.0)
-            w.data.copy_(wq)
-            nq += 1
-            npar += w.numel()
-    return {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
+        for n, m in lm.named_modules():
+            if isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
+                one(f"{n}.weight" if n else "weight", m.weight)
+        if extra:
+            for n, p in lm.named_parameters():
+                for rx in extra:
+                    if rx.search(n):
+                        hits["extra:" + rx.pattern] += 1
+                        one(n, p)
+                        break
+    out = {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
+    if bits_for or extra:
+        out.update(by_bits=by_bits, pattern_hits=dict(hits))
+    return out
 
 
 def selftest_q4():
@@ -3009,6 +3069,92 @@ def selftest_q4():
     assert (st["tensors"], st["skipped"], st["params"]) == (1, 1, 1280), st
     assert torch.equal(odd.weight, before_odd) and 0 < st["mean_rel_fro"] < 0.2, st
     out["apply"] = st
+    assert set(st) == {"tensors", "skipped", "params", "mean_rel_fro", "group", "bits"}, "default result keys changed"
+    out["moe"] = selftest_q4_moe(g)
+    return out
+
+
+def selftest_q4_moe(g):
+    """The Qwen-MoE extension of q4_apply on tiny stand-ins: (i) a 3-D tensor quantizes along its last dim like the 2-D case (<= 2^bits distinct values per group, error <= scale/2); (ii) the sliced path
+    (q4_inplace with a tiny chunk) equals the one-piece path bit for bit, in bf16 too; (iii) with the MLX recipe a fused 3-D expert pair and a Parameter router are quantized (router and
+    shared-expert gate in 8 bits, error <= scale/2 of the 8-bit grid and below the 4-bit error), the other Linears in 4 bits, nothing else touched (norm, conv); (iv) without the options the 3-D
+    Parameters and the router are left alone."""
+    out = {}
+    w3 = torch.randn(3, 8, 128, generator=g)
+    for bits in (4, 8):
+        wq = q4_fake(w3, 64, bits)
+        gr, gq = w3.reshape(-1, 2, 64), wq.reshape(-1, 2, 64)
+        assert wq.shape == w3.shape
+        if bits == 4:
+            assert max(len(set(r.tolist())) for r in gq.reshape(-1, 64)) <= 2 ** bits, "3-D: more distinct values than levels"
+        scale = (gr.amax(-1, keepdim=True) - gr.amin(-1, keepdim=True)) / (2 ** bits - 1)
+        assert bool(((gq - gr).abs() <= scale / 2 * (1 + 1e-5) + 1e-6).all()), f"3-D bits {bits}: error above scale/2"
+        out[f"3d_bits{bits}_max_err_over_half_scale"] = ((gq - gr).abs() / (scale / 2)).max().item()
+    for dt in (torch.float32, torch.bfloat16):
+        big = torch.randn(5, 4, 128, generator=g).to(dt)
+        whole, parts = big.clone(), big.clone()
+        r1 = q4_inplace(whole, 64, 4, chunk=10 ** 9)
+        r2 = q4_inplace(parts, 64, 4, chunk=2 * 4 * 128)  # 2 rows of dim 0 per slice: slices of 2, 2 and 1
+        assert torch.equal(whole, parts) and abs(r1 - r2) < 1e-5, f"sliced != one piece ({dt})"
+        assert torch.equal(whole, q4_fake(big, 64, 4)), f"in-place != q4_fake ({dt})"
+    nn = torch.nn
+
+    class Experts(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.gate_up_proj = nn.Parameter(torch.zeros(4, 32, 128))  # [E, 2I, H]
+            self.down_proj = nn.Parameter(torch.zeros(4, 128, 64))  # [E, H, I]
+
+    class Router(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.weight = nn.Parameter(torch.zeros(4, 128))
+
+    class Mlp(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.gate, self.experts = Router(), Experts()
+            self.shared_expert = nn.Linear(128, 64, bias=False)
+            self.shared_expert_gate = nn.Linear(128, 1, bias=False)
+
+    class Layer(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.mlp, self.conv1d = Mlp(), nn.Conv1d(4, 4, 4)
+
+    def net_of():  # the same values every call (own generator)
+        net = nn.ModuleDict({"layers": nn.ModuleList([Layer(), Layer()])})
+        gg = torch.Generator().manual_seed(1)
+        for p in net.parameters():
+            p.data.copy_(torch.randn(p.shape, generator=gg))
+        return net
+
+    ref = {n: p.detach().clone() for n, p in net_of().named_parameters()}
+    plain = net_of()
+    st0 = q4_apply(plain, 64, 4)
+    assert (st0["tensors"], st0["skipped"]) == (4, 0), st0  # per layer: shared_expert + shared_expert_gate Linears only
+    for n, p in plain.named_parameters():
+        quantized = n.endswith(("shared_expert.weight", "shared_expert_gate.weight"))
+        assert torch.equal(p, ref[n]) != quantized, f"{n}: default call must {'change' if quantized else 'leave alone'} it"
+    net = net_of()
+    st = q4_apply(net, 64, 4, Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS)
+    assert st["tensors"] == 2 * 5 and st["skipped"] == 0, st  # per layer: experts x2, router, shared_expert, shared_expert_gate
+    assert st["by_bits"] == {"4": {"tensors": 6, "params": 2 * (4 * 32 * 128 + 4 * 128 * 64 + 128 * 64)}, "8": {"tensors": 4, "params": 2 * (4 * 128 + 128)}}, st["by_bits"]
+    assert st["pattern_hits"] == {"bits:" + Q4_MLX_MOE_BITS[0][0]: 2, "bits:" + Q4_MLX_MOE_BITS[1][0]: 2, "extra:" + Q4_MLX_MOE_PARAMS[0]: 4, "extra:" + Q4_MLX_MOE_PARAMS[1]: 2}, st["pattern_hits"]
+    for n, p in net.named_parameters():
+        if "conv1d" in n:
+            assert torch.equal(p, ref[n]), f"{n} must not be touched"
+            continue
+        bits = 8 if n.endswith(("mlp.gate.weight", "mlp.shared_expert_gate.weight")) else 4
+        gr, gq = ref[n].reshape(-1, 64), p.detach().reshape(-1, 64)
+        scale = (gr.amax(-1, keepdim=True) - gr.amin(-1, keepdim=True)) / (2 ** bits - 1)
+        assert bool(((gq - gr).abs() <= scale / 2 * (1 + 1e-5) + 1e-6).all()) and not torch.equal(p, ref[n]), f"{n}: not on the {bits}-bit grid"
+        if bits == 4:
+            assert max(len(set(r.tolist())) for r in gq) <= 16, f"{n}: more than 16 levels"
+    e8 = (net["layers"][0].mlp.gate.weight.detach() - ref["layers.0.mlp.gate.weight"]).norm() / ref["layers.0.mlp.gate.weight"].norm()
+    e4 = (q4_fake(ref["layers.0.mlp.gate.weight"], 64, 4) - ref["layers.0.mlp.gate.weight"]).norm() / ref["layers.0.mlp.gate.weight"].norm()
+    assert e8 < e4 / 8, (e8, e4)
+    out.update(by_bits=st["by_bits"], router_rel_err_8bit=float(e8), router_rel_err_4bit=float(e4))
     return out
 
 
@@ -3223,6 +3369,8 @@ def main():
     ap.add_argument("--q4-base", action="store_true", help="Mac study: replace every Linear / Embedding weight of the frozen base by an MLX-style affine fake-quantized copy (before LoRA)")
     ap.add_argument("--q4-group", type=int, default=64, help="--q4-base: group size along the input dim")
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
+    ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
+                    "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
     if args.selftest:
@@ -3284,6 +3432,8 @@ def main():
         ap.error("--budget-scale must be positive")
     if args.night_budget_s is not None and not args.night_budget_s > 0:
         ap.error("--night-budget-s must be positive")
+    if args.q4_mlx_moe and not args.q4_base:
+        ap.error("--q4-mlx-moe needs --q4-base")
     if args.budget_scale is not None and args.night_budget_s is not None:
         log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
@@ -3295,8 +3445,9 @@ def main():
     if args.q4_base:
         if args.q4_group < 1 or args.q4_bits < 1:
             ap.error("--q4-group and --q4-bits must be positive")
-        q4 = q4_apply(lm, args.q4_group, args.q4_bits)
-        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})")
+        q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
+        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
+            + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
     L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
@@ -3314,7 +3465,7 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
