@@ -46,3 +46,10 @@ Make plain single-try learning move first, otherwise baseline comparisons are no
 d_value at lr 1e-4 (10x), same everything else. Pass mark: d_none >= base + 5. Then d_value >= d_none + 5. If
 d_none at 1e-4 is still within 5 of base, single-try RL at this scale doesn't learn, and the nightly update
 should use correction pairs (DPO/KTO, see lit-user-feedback.md) instead of a reward baseline.
+
+## Addendum: why d_value lost (log dig, 2026-10-25 01:04Z)
+
+Shown: d_value learned to skip tools. 56 of the 75 held-out tool tasks were answered in a single turn without a
+tool call ("I will send an email to priya..."), against 26 for base, 31 d_none, 30 d_batch and 26 d_self.
+Its generated tokens per step fell from ~1,400 to ~800. 91 of the 100 held-out tasks had the same outcome in
+every arm. Source: /mnt/project-files/research/kaggle-failures/why-kaggle-tests-missed.html.
