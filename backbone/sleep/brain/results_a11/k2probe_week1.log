@@ -1,0 +1,13 @@
+[k2probe] model IFM/K2-Horizon-3.7B@9d280ff742 device cuda week /job/tree/backbone/sleep/brain/data/week1.json days [1, 2, 3] gen_bs 32 variants ['off', 'yesno_lp', 'quote', 'low', 'medium', 'high', 'high512']; template check {'low': True, 'medium': True, 'high': True, 'off': True}
+[k2probe] day 1: tag {'extracted': 93, 'dropped_invalid': 22, 'kept': 68, 'new_items': 66, 'dropped_not_in_turn': 3, 'turns': 69}; names questions 15 (10 linked by a true fact); 9s
+[k2probe] day 2: tag {'extracted': 95, 'dropped_invalid': 36, 'kept': 50, 'new_items': 41, 'dropped_not_in_turn': 9, 'turns': 70}; names questions 21 (16 linked by a true fact); 9s
+[k2probe] day 3: tag {'extracted': 99, 'dropped_invalid': 27, 'kept': 69, 'dropped_not_in_turn': 3, 'new_items': 47, 'turns': 71}; names questions 10 (10 linked by a true fact); 9s
+[k2probe] 46 questions, 36 linked by a true fact of the week (36 by a fact marked in that message), 10 not; always-yes accuracy 0.7826
+[k2probe] off       n=46 yes=0 (0%) yes_correct=0/36 no_correct=10/10 acc=0.217 think_mean=0.0 capped=0 wall=1s
+[k2probe] yesno_lp  n=46 yes=1 (2%) yes_correct=1/36 no_correct=10/10 acc=0.239 think_mean=0.0 capped=0 wall=1s auc=0.6556
+[k2probe] quote     n=46 yes=23 (50%) yes_correct=19/36 no_correct=6/10 acc=0.543 think_mean=0.0 capped=0 wall=4s
+[k2probe] low       n=46 yes=0 (0%) yes_correct=0/36 no_correct=10/10 acc=0.217 think_mean=0.0 capped=0 wall=2s
+[k2probe] medium    n=46 yes=24 (52%) yes_correct=24/36 no_correct=10/10 acc=0.739 think_mean=216.7 capped=46 wall=22s
+[k2probe] high      n=46 yes=27 (59%) yes_correct=25/36 no_correct=8/10 acc=0.717 think_mean=227.5 capped=27 wall=22s
+[k2probe] high512   n=46 yes=33 (72%) yes_correct=32/36 no_correct=9/10 acc=0.891 think_mean=315.0 capped=10 wall=49s
+[k2probe] done in 163s -> out/k2probe/probe.json
