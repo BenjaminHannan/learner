@@ -60,12 +60,17 @@ class RoundTests(unittest.TestCase):
             self.assertEqual(s["n"], 12)
             self.assertAlmostEqual(s["pass1"], 4 / 12)
             self.assertAlmostEqual(s["pass_any"], 8 / 12)
-            self.assertEqual((s["sft_n"], s["pairs_n"]), (8, 4))
+            self.assertEqual((s["sft_n"], s["pairs_n"]), (7, 3))   # percent_change is held out
             self.assertGreaterEqual(s["tricks_used"], 10)
             sft = lines(s["sft_path"])
             pairs = lines(s["pairs_path"])
             rounds = lines(s["rounds_path"])
-            self.assertEqual((len(sft), len(pairs), len(rounds)), (8, 4, 1))
+            self.assertEqual((len(sft), len(pairs), len(rounds)), (7, 3, 1))
+            self.assertAlmostEqual(s["pass1_train"], 4 / 9)
+            self.assertEqual((s["n_train"], s["n_heldout"], s["pass1_heldout"]), (9, 3, 0.0))
+            self.assertIn("pass1_heldout", rounds[0])
+            fams = {t.family for t in self.tasks if t.instruction in json.dumps(sft + pairs)}
+            self.assertFalse(fams & set(loop.HELDOUT))
             for r in sft:
                 self.assertEqual([m["role"] for m in r["messages"]], ["system", "user", "assistant"])
                 self.assertNotIn("Hint (a trick", r["messages"][1]["content"])
@@ -84,6 +89,20 @@ class RoundTests(unittest.TestCase):
             # garbage tasks used all 3 attempts, nothing recorded for them
             garbage = 4
             self.assertEqual(len(model.calls), 4 + 4 * 2 + garbage * 3)
+
+    def test_heldout_configurable_and_never_all(self):
+        model = FakeModel(make_fake(self.tasks))
+        with tempfile.TemporaryDirectory() as out:
+            s = loop.run_round("spreadsheet", model, 300, out, seed=SEED, n_tasks=12, heldout_families=())
+            self.assertEqual((s["sft_n"], s["pairs_n"], s["n_heldout"]), (8, 4, 0))
+            self.assertIsNone(s["pass1_heldout"])
+        with tempfile.TemporaryDirectory() as out:
+            s = loop.run_round("spreadsheet", model, 300, out, seed=SEED, n_tasks=12,
+                               heldout_families=tasks.families("spreadsheet"))
+            self.assertEqual(s["n_heldout"], 0)   # everything held out would leave nothing to train on
+
+    def test_tools_note_says_inspect_input(self):
+        self.assertIn("Inspect the input first", loop.TOOLS_NOTE)
 
     def test_pairs_replay_in_sandbox(self):
         model = FakeModel(make_fake(self.tasks))

@@ -12,6 +12,7 @@ from typing import List, Optional
 
 from . import checkin as checkin_mod
 from .config import Config, load
+from .practice import sandbox
 from .scheduler import FakePractice, Scheduler
 from .state import State
 from .workers import CommandWorker, FakeWorker
@@ -33,9 +34,9 @@ def _pkg_parent() -> str:
 
 
 def keep_awake() -> None:
-    """On macOS stop idle sleep while this process lives (caffeinate -i -w pid). No-op elsewhere."""
+    """On macOS stop idle sleep while this process lives (caffeinate -ims -w pid: no idle, disk or system sleep on AC). No-op elsewhere."""
     if sys.platform == "darwin" and shutil.which("caffeinate"):
-        subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
+        subprocess.Popen(["caffeinate", "-ims", "-w", str(os.getpid())])
 
 
 def cmd_start(cfg: Config, a) -> int:
@@ -110,6 +111,33 @@ def cmd_checkin(cfg: Config, a) -> int:
     return 0
 
 
+def preflight(cfg: Config, scanners: Optional[list] = None) -> List[tuple]:
+    """Run each enabled scanner once in the foreground (this is what triggers the macOS Automation prompts)
+    and check the sandbox. -> [(check, ok, detail)]"""
+    rows = []
+    for sc in checkin_mod.default_scanners(cfg) if scanners is None else scanners:
+        name = getattr(sc, "name", type(sc).__name__)
+        try:
+            rows.append((name, True, "%d item(s)" % len(sc.scan(cfg))))
+        except PermissionError as e:
+            rows.append((name, False, "not allowed: Privacy & Security > Automation (%s)" % str(e)[:80]))
+        except Exception as e:  # noqa
+            rows.append((name, False, str(e)[:100]))
+    iso = sandbox.detect_isolation()
+    r = sandbox.run_python("print(6 * 7)")
+    rows.append(("sandbox", iso != "rlimits-only", "isolation: " + iso))
+    rows.append(("python run", r.ok and r.stdout.strip() == "42", "ok" if r.ok else (r.stderr.strip()[-100:] or "failed")))
+    return rows
+
+
+def cmd_preflight(cfg: Config, a) -> int:
+    rows = preflight(cfg)
+    print("%-12s %-5s %s" % ("check", "", "detail"))
+    for name, ok, detail in rows:
+        print("%-12s %-5s %s" % (name, "OK" if ok else "FAIL", detail))
+    return 0 if all(ok for _, ok, _ in rows) else 1
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="sleepmode")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -118,10 +146,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--foreground", action="store_true")
     p = sub.add_parser("wake")
     p.add_argument("--timeout", type=float, default=60.0)
-    for n in ("status", "summary", "checkin"):
+    for n in ("status", "summary", "checkin", "preflight"):
         sub.add_parser(n)
     a = ap.parse_args(argv)
     cfg = load()
     Path(cfg.home).mkdir(parents=True, exist_ok=True)
     return {"start": cmd_start, "wake": cmd_wake, "status": cmd_status, "summary": cmd_summary,
-            "checkin": cmd_checkin}[a.cmd](cfg, a)
+            "checkin": cmd_checkin, "preflight": cmd_preflight}[a.cmd](cfg, a)

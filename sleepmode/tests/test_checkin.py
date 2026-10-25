@@ -38,9 +38,9 @@ class TriageTest(TmpCase):
         self.assertEqual(checkin.parse_records(out, 3), [["a", "b", "c"], ["d", "e", "f"]])
 
     def test_mail_scanner_parses_osascript(self):
-        out = checkin.FIELD.join(["m1", "Bob <b@x>", "URGENT: call", "Mon", "body"]) + checkin.REC
+        out = checkin.FIELD.join(["m1", "Bob <b@x>", "URGENT: call", "Mon"]) + checkin.REC
         old = checkin.run_osascript
-        checkin.run_osascript = lambda script, timeout=60: out
+        checkin.run_osascript = lambda script, timeout=120: out
         self.addCleanup(setattr, checkin, "run_osascript", old)
         items = checkin.MailAppScanner().scan(self.cfg)
         self.assertEqual(items[0].id, "mail:m1")
@@ -49,7 +49,7 @@ class TriageTest(TmpCase):
     def test_calendar_scanner(self):
         out = checkin.FIELD.join(["u1", "Dentist", "Mon 3pm", "45"]) + checkin.REC
         old = checkin.run_osascript
-        checkin.run_osascript = lambda script, timeout=60: out
+        checkin.run_osascript = lambda script, timeout=120: out
         self.addCleanup(setattr, checkin, "run_osascript", old)
         it = checkin.CalendarScanner().scan(self.cfg)[0]
         self.assertEqual(it.starts_in_min, 45)
@@ -60,6 +60,34 @@ class TriageTest(TmpCase):
         self.addCleanup(setattr, notify, "is_mac", old)
         with self.assertRaises(RuntimeError):
             checkin.run_osascript("return 1")
+
+    def test_scripts_bounded(self):
+        for s in (checkin.MAIL_SCRIPT, checkin.CAL_SCRIPT):
+            self.assertIn("with timeout of 90 seconds", s)
+        self.assertNotIn("whose", checkin.MAIL_SCRIPT)
+        self.assertNotIn("content of", checkin.MAIL_SCRIPT)
+        seen = []
+        old = checkin.run_osascript
+        checkin.run_osascript = lambda script, timeout=120: seen.append(script) or ""
+        self.addCleanup(setattr, checkin, "run_osascript", old)
+        checkin.MailAppScanner().scan(make_cfg(self.root, mail_max_scan=77))
+        self.assertIn("messages 1 thru 77 of inbox", seen[0])
+
+    def test_osascript_error_codes(self):
+        class P:
+            returncode, stdout = 1, ""
+            def __init__(self, err): self.stderr = err
+        olds = (notify.is_mac, checkin.subprocess.run)
+        notify.is_mac = lambda: True
+        self.addCleanup(lambda: (setattr(notify, "is_mac", olds[0]), setattr(checkin.subprocess, "run", olds[1])))
+        checkin.subprocess.run = lambda *a, **k: P("execution error: Not authorized to send Apple events (-1743)")
+        with self.assertRaises(PermissionError):
+            checkin.run_osascript("x")
+        checkin.subprocess.run = lambda *a, **k: P("AppleEvent timed out. (-1712)")
+        with self.assertRaises(RuntimeError) as cm:
+            checkin.run_osascript("x")
+        self.assertNotIsInstance(cm.exception, PermissionError)
+        self.assertIn("timed out", str(cm.exception))
 
     def test_imap_unconfigured_raises(self):
         with self.assertRaises(RuntimeError):
@@ -96,6 +124,22 @@ class RunTest(TmpCase):
         self.assertIn("mail", r["errors"])
         self.assertEqual(len(r["notified"]), 1)
         self.assertEqual(len(self.state.events("checkin_scanner_error")), 1)
+
+    def test_permission_error_blocks_scanner(self):
+        class Denied(FakeScanner):
+            calls = 0
+            def scan(self, cfg):
+                Denied.calls += 1
+                raise checkin.NotAuthorized("-1743")
+        blocked = set()
+        sc = [Denied("mail")]
+        r = checkin.run(self.cfg, self.state, sc, self.sender, blocked=blocked)
+        checkin.run(self.cfg, self.state, sc, self.sender, blocked=blocked)
+        self.assertEqual(Denied.calls, 1)
+        self.assertEqual(r["errors"]["mail"], "needs permission")
+        self.assertEqual(self.state.status["needs_permission"], ["mail"])
+        self.assertEqual(len(self.state.events("checkin_needs_permission")), 1)
+        self.assertEqual(self.cfg.inbox_path.read_text().count("needs permission"), 1)
 
     def test_default_sender_writes_inbox(self):
         old = notify.display_notification

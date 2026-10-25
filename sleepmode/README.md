@@ -23,9 +23,14 @@ python -m sleepmode status
 python -m sleepmode wake
 python -m sleepmode summary
 python -m sleepmode checkin     # one check-in now, prints what it saw
+python -m sleepmode preflight   # run once while you are at the Mac: triggers the permission prompts, checks the sandbox, prints OK/FAIL
 ```
 
-The first time it reads Mail or Calendar, macOS asks "allow automation?". Say yes.
+The first time it reads Mail or Calendar, macOS asks "allow automation?". Say yes. Run `preflight` before your first Sleep so the prompts appear while you are there. If access is refused, the check-in stops asking for that app and leaves one line in `inbox.md`.
+
+## Keeping the Mac awake
+
+Sleep Mode runs `caffeinate -ims` for as long as it runs, so the Mac will not idle-sleep while plugged in. Sleeping with the lid closed on battery is not supported: the Mac will sleep. Keep it plugged in with the lid open (turn the screen down), or use clamshell mode with an external display, keyboard and power.
 
 ## Where things are
 
@@ -62,7 +67,7 @@ Only list what you want to change. Examples:
 
 - **Email VIPs**: `vip_senders` are matched against the sender name and address (case-insensitive, partial match). A mail from a VIP always notifies you. A mail with an `urgent_words` hit in the subject or start of the text notifies you too. A calendar event starting within `event_soon_h` (default 2) hours does as well. Each item notifies once.
 - **Not using Mail.app?** Set `imap_host`, `imap_user`, and put the password in an environment variable named by `imap_password_env`.
-- Other useful keys: `mail_lookback_h`, `calendar_ahead_h`, `plateau_min_gain_per_hour`, `min_sleep_hours`, `practice_model_url`.
+- Other useful keys: `mail_lookback_h`, `calendar_ahead_h`, `plateau_min_gain_per_hour`, `plateau_window`, `plateau_noise`, `mail_max_scan`, `heldout_families`, `min_sleep_hours`, `practice_model_url`.
 
 ## Plug in a different sleep trainer
 
@@ -86,10 +91,10 @@ or subclass `SleepWorker` in `workers.py` and implement `run_chunk(budget_s, pra
 While it practises, the model can run Python in the sandbox, search your chat diary (read-only), and, if `research_web` is on, search the web (it refuses local/private addresses). Turn tool use off with `"practice_tools": false`. A trainer that makes up "dreams" (synthetic Q/A) can check them first:
 
 ```
-python -m sleepmode.dreamcheck dreams.jsonl --out checked/ --model-url http://127.0.0.1:18082 [--no-web] [--keep-unknown]
+python -m sleepmode.dreamcheck dreams.jsonl --out checked/ --model-url http://127.0.0.1:18082 [--no-web] [--keep-unknown] [--plant 20]
 ```
 
-It writes `kept.jsonl` (supported or fixed answers), `dropped.jsonl` and `stats.json`; train on `kept.jsonl`.
+It writes `kept.jsonl` (supported or fixed answers), `quarantine.jsonl` (could not tell, or no real quote as evidence: worth a look), `dropped.jsonl` and `stats.json`; train on `kept.jsonl`. An answer only counts as supported if the checker quotes the diary and the quote really appears in what it read. `--plant N` adds N deliberately wrong copies to measure how often the checker lets bad ones through (never written to the output).
 
 ## Tests
 

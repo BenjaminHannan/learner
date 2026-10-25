@@ -29,9 +29,11 @@ class Config:
     budget_slack_s: float = 120.0
     idle_hours: float = 6.0
     # plateau
-    plateau_window: int = 2
+    plateau_window: int = 4          # points in the slope fit
     plateau_min_gain_per_hour: float = 0.5
     plateau_patience: int = 2
+    plateau_noise: float = 0.5       # quiz noise floor (points)
+    plateau_general_drop: float = 1.0
     min_sleep_hours: float = 2.0
     # worker / practice
     mlx_model: str = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
@@ -42,11 +44,13 @@ class Config:
     practice_model: str = ""
     practice_server_cmd: List[str] = field(default_factory=list)
     research_web: bool = True
+    heldout_families: List[str] = field(default_factory=lambda: ["percent_change", "top_n_per_group", "split_fullname"])
     practice_tools: bool = True     # tools (python, diary search, web) during practice
     # check-in
     mail_enabled: bool = True
     calendar_enabled: bool = True
     mail_lookback_h: float = 24.0
+    mail_max_scan: int = 150         # newest inbox messages looked at
     calendar_ahead_h: float = 12.0
     event_soon_h: float = 2.0
     vip_senders: List[str] = field(default_factory=list)

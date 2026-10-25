@@ -14,12 +14,26 @@ class ProfileTests(unittest.TestCase):
         self.assertTrue(p.startswith("(version 1)"))
         self.assertIn("(deny network*)", p)
         self.assertIn('(allow file-write* (subpath "/private/tmp/sbx") (subpath "/dev"))', p)
-        self.assertIn('(deny file-read* (subpath "/Users/ben"))', p)
+        self.assertIn('(deny file-read-data (subpath "/Users/ben"))', p)
         self.assertIn('(subpath "/opt/py")', p)
         self.assertIn('(subpath "/Users/ben/venv")', p)
         # deny rules come before the allow rules that carve exceptions (later rules win)
         self.assertLess(p.index("(deny file-write*)"), p.index("(allow file-write*"))
-        self.assertLess(p.index("(deny file-read*"), p.index("(allow file-read*"))
+        self.assertNotIn("(deny file-read*", p)
+        self.assertLess(p.index("(deny file-read-data"), p.index("(allow file-read*"))
+
+    def test_profile_uses_realpaths(self):
+        with tempfile.TemporaryDirectory() as d:
+            real = os.path.realpath(d)
+            link = os.path.join(d, "link")
+            os.symlink(real, link)
+            p = sandbox.build_profile(link, link, [link])
+            self.assertNotIn(link, p)
+            self.assertIn('(subpath "%s")' % real, p)
+
+    def test_tmpdir_is_sandbox(self):
+        r = sandbox.run_python("import os\nprint(os.environ['TMPDIR']==os.getcwd())")
+        self.assertEqual(r.stdout.strip(), "True", r.stderr)
 
     def test_profile_escapes_quotes(self):
         self.assertIn('\\"', sandbox.build_profile('/tmp/a"b', "/h", []))

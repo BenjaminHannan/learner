@@ -65,7 +65,8 @@ def default_practice_fn(cfg: Config, state: State) -> PracticeFn:
             model = ChatModel(cfg.practice_model_url, cfg.practice_model)
             res = loop.make_practice_fn(str(cfg.home), str(cfg.diary_dir), model, n_tasks=cfg.practice_tasks,
                                         research_web=cfg.research_web, min_share=cfg.practice_min_share,
-                                        tools=cfg.practice_tools)(budget_s)
+                                        tools=cfg.practice_tools,
+                                        heldout_families=tuple(cfg.heldout_families))(budget_s)
             if res is None:
                 return None
             res = dict(res)
@@ -101,11 +102,12 @@ class Scheduler:
         self.scanners, self.clock, self.sleep = scanners, clock, sleep
         self.checkin_sender = checkin_sender
         self.plateau = Plateau(cfg.plateau_window, cfg.plateau_min_gain_per_hour, cfg.plateau_patience,
-                               cfg.min_sleep_hours)
+                               cfg.min_sleep_hours, cfg.plateau_noise, cfg.plateau_general_drop)
         self.mode = "sleep"
         self.practice_turn = True
         self.idle_until = 0.0
         self.last_checkin = -1e18
+        self.blocked_scanners: set = set()    # scanners that need macOS permission: not retried this run
         self._signal = ""
         self.stop_reason = ""
         self.practice_files: List[str] = self.state.practice_files()
@@ -230,7 +232,9 @@ class Scheduler:
 
     def do_checkin(self) -> None:
         self.last_checkin = self.clock()
-        kw = {} if self.checkin_sender is None else {"sender": self.checkin_sender}
+        kw = {"blocked": self.blocked_scanners}
+        if self.checkin_sender is not None:
+            kw["sender"] = self.checkin_sender
         try:
             res = checkin_mod.run(self.cfg, self.state, self.scanners, **kw)
             self.checkins += 1
@@ -251,7 +255,7 @@ class Scheduler:
             return
         if r.quiz is not None:
             self.quizzes.append(r.quiz)
-        self.plateau.add(r.quiz, r.elapsed_s / self.cfg.hour_s)
+        self.plateau.add(r.quiz, r.elapsed_s / self.cfg.hour_s, (r.info or {}).get("general"))
         if self.mode == "sleep" and self.plateau.flat():
             self.mode = "practice"
             self.practice_turn = True

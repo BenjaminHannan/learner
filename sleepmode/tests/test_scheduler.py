@@ -64,6 +64,29 @@ class SchedTest(TmpCase):
             time.sleep(0.01)
         return False
 
+    def test_general_drop_switches_to_practice_and_scanner_memory(self):
+        from sleepmode.workers import ChunkResult
+        gens = iter([50, 50, 48, 48, 48, 48])
+        n = [0]
+
+        class W:
+            def run_chunk(w, budget_s, files, stop):
+                n[0] += 1
+                return ChunkResult(10.0 * n[0], budget_s, 1, False, {"general": next(gens)})
+        self.sc.worker = W()
+        for _ in range(4):
+            self.sc.sleep_chunk(self.cfg.hour_s)
+        self.assertEqual(self.sc.mode, "practice")
+        self.assertIn("general skills dropping", self.sc.switches[0])
+
+        class Denied:
+            name = "mail"
+            def scan(s, cfg):
+                raise PermissionError("-1743")
+        self.sc.scanners = [Denied()]
+        self.sc.do_checkin()
+        self.assertEqual(self.sc.blocked_scanners, {"mail"})
+
     def wake_and_join(self, t):
         self.state.request_wake()
         t0 = time.time()

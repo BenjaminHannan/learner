@@ -20,7 +20,7 @@ def fake(messages):
         return tool_call_msg("diary_search", {"query": "dentist"})
     ev = messages[-1]["content"]
     if "Question:\nWho is my dentist?" in user:
-        return "Diary matches.\nVERDICT: SUPPORTED" if "Okafor" in ev and "Okafor" in user else "VERDICT: CONTRADICTED\nFIX: Dr. Okafor"
+        return 'Diary matches.\nEVIDENCE: "my dentist is  dr. OKAFOR"\nVERDICT: SUPPORTED' if "Okafor" in ev and "Okafor" in user else "VERDICT: CONTRADICTED\nFIX: Dr. Okafor"
     if "sister" in user:
         return "VERDICT: CONTRADICTED"
     return "cannot tell\nVERDICT: UNKNOWN"
@@ -55,7 +55,9 @@ class DreamTests(TmpCase):
         kept = {r["id"]: r for r in self.lines("kept.jsonl")}
         dropped = {r["id"]: r for r in self.lines("dropped.jsonl")}
         self.assertEqual(sorted(kept), ["a", "b", "e"])
-        self.assertEqual(sorted(dropped), ["c", "d", "f"])
+        self.assertEqual(sorted(dropped), ["c", "f"])
+        quarantine = {r["id"]: r for r in self.lines("quarantine.jsonl")}
+        self.assertEqual(sorted(quarantine), ["d"])
         self.assertFalse(kept["a"]["fixed"])
         self.assertTrue(kept["b"]["fixed"])
         self.assertEqual(kept["b"]["answer"], "Dr. Okafor")
@@ -67,7 +69,7 @@ class DreamTests(TmpCase):
             self.assertEqual(json.load(f), st)
         self.assertEqual((st["n"], st["supported"], st["contradicted"], st["unknown"], st["invalid"], st["fixed"]),
                          (6, 1, 3, 1, 1, 2))
-        self.assertEqual(st["kept"], 3)
+        self.assertEqual((st["kept"], st["quarantined"]), (3, 1))
 
     def test_keep_unknown_max_and_errors(self):
         self.out = os.path.join(self.root, "out2")
@@ -79,6 +81,61 @@ class DreamTests(TmpCase):
             raise OSError("down")
         st = dreamcheck.run(self.inp, os.path.join(self.root, "out3"), FakeModel(boom), ToolBox(self.diary, web=False))
         self.assertEqual((st["kept"], st["errors"]), (0, 5))
+
+    def test_supported_without_valid_evidence_is_unknown(self):
+        def liar(messages):
+            if messages[-1]["role"] != "tool":
+                return tool_call_msg("diary_search", {"query": "dentist"})
+            return 'EVIDENCE: "my dentist is Dr. Smith"\nVERDICT: SUPPORTED'
+        def short(messages):
+            if messages[-1]["role"] != "tool":
+                return tool_call_msg("diary_search", {"query": "dentist"})
+            return 'EVIDENCE: "Okafor"\nVERDICT: SUPPORTED'
+        for fn in (liar, short, lambda m: "VERDICT: SUPPORTED"):
+            out = os.path.join(self.root, "ev")
+            st = dreamcheck.run(self.inp, out, FakeModel(fn), ToolBox(self.diary, web=False), max_items=1)
+            self.out = out
+            self.assertEqual((st["supported"], st["unknown"], st["kept"], st["quarantined"]), (0, 1, 0, 1))
+            self.assertIn("no evidence", self.lines("quarantine.jsonl")[0]["reason"])
+
+    def test_hops_need_evidence_each(self):
+        item = {"id": "h", "question": "Who is my dentist?", "answer": "Dr. Okafor", "hops": ["Ben has a dentist", "Name is Okafor"]}
+        def model(reply2):
+            def fn(messages):
+                if messages[-1]["role"] != "tool":
+                    return tool_call_msg("diary_search", {"query": "dentist"})
+                return reply2
+            return fn
+        one = 'EVIDENCE: "my dentist is Dr. Okafor"\nVERDICT: SUPPORTED'
+        two = 'EVIDENCE 1: "my dentist is Dr. Okafor"\nEVIDENCE 2: "dentist is dr. okafor"\nVERDICT: SUPPORTED'
+        tb = ToolBox(self.diary, web=False)
+        self.assertEqual(dreamcheck.check_item(FakeModel(model(one)), tb, item)[0], "UNKNOWN")
+        m = FakeModel(model(two))
+        self.assertEqual(dreamcheck.check_item(m, tb, item)[0], "SUPPORTED")
+        self.assertIn("1. Ben has a dentist", m.calls[0][1]["content"])
+
+    def test_plant(self):
+        import random
+        items = [{"id": "a", "question": "q", "answer": "Dr. Okafor has 12 cats"},
+                 {"id": "b", "question": "q", "answer": "Dr. Smith, 3 dogs"},
+                 {"id": "c", "question": "q", "answer": "yes"}]
+        plants = dreamcheck.add_plants(items, 5, random.Random(1))
+        self.assertEqual(len(plants), 2)   # item c has neither number nor name
+        for p in plants:
+            orig = next(i for i in items if i["id"] + "#planted" == p["id"])
+            self.assertTrue(p["planted"])
+            self.assertNotEqual(p["answer"], orig["answer"])
+
+        def always_yes(messages):
+            if messages[-1]["role"] != "tool":
+                return tool_call_msg("diary_search", {"query": "dentist"})
+            return 'EVIDENCE: "my dentist is Dr. Okafor"\nVERDICT: SUPPORTED'
+        self.out = os.path.join(self.root, "pl")
+        st = dreamcheck.run(self.inp, self.out, FakeModel(always_yes), ToolBox(self.diary, web=False), plant=2)
+        self.assertEqual((st["planted"], st["planted_accepted"], st["planted_false_accept_rate"]), (2, 2, 1.0))
+        self.assertEqual(st["n"], 6)
+        for name in ("kept.jsonl", "quarantine.jsonl", "dropped.jsonl"):
+            self.assertFalse(any(r.get("planted") for r in self.lines(name)))
 
     def test_parse_and_cli(self):
         self.assertEqual(dreamcheck.parse_verdict("x\nverdict: contradicted\nFIX: a\nb"), ("CONTRADICTED", "a\nb"))

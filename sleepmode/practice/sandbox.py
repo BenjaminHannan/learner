@@ -31,12 +31,15 @@ def _q(path: str) -> str:
 
 
 def build_profile(sandbox_dir: str, home: str, prefixes) -> str:
-    """macOS sandbox-exec profile (later rules win in SBPL)."""
+    """macOS sandbox-exec profile (later rules win in SBPL). Only file-read-data is denied under HOME, so
+    metadata lookups (stat/realpath of parent dirs) still work. All paths are realpath'd."""
+    sandbox_dir, home = os.path.realpath(sandbox_dir), os.path.realpath(home)
+    prefixes = [os.path.realpath(p) for p in prefixes if p]
     lines = ["(version 1)", "(allow default)", "(deny network*)",
              "(deny file-write*)",
              "(allow file-write* (subpath %s) (subpath \"/dev\"))" % _q(sandbox_dir),
-             "(deny file-read* (subpath %s))" % _q(home)]
-    allowed = [sandbox_dir] + [p for p in prefixes if p]
+             "(deny file-read-data (subpath %s))" % _q(home)]
+    allowed = [sandbox_dir] + prefixes
     lines.append("(allow file-read* %s)" % " ".join("(subpath %s)" % _q(p) for p in allowed))
     return "\n".join(lines) + "\n"
 
@@ -104,7 +107,7 @@ def run_python(code: str, files: dict | None = None, timeout_s: float = 30,
             cmd = ["sandbox-exec", "-p", build_profile(d, home, sorted(prefixes))] + cmd
         elif iso == "unshare":
             cmd = ["unshare", "-rn"] + cmd
-        env = {"PATH": "/usr/bin:/bin", "HOME": d, "LANG": "C.UTF-8", "PYTHONIOENCODING": "utf-8"}
+        env = {"PATH": "/usr/bin:/bin", "HOME": d, "TMPDIR": d, "LANG": "C.UTF-8", "PYTHONIOENCODING": "utf-8"}
         res = RunResult(False, "", "", dir=d, isolation=iso)
         kw = {"preexec_fn": _limiter()} if os.name == "posix" else {}
         try:

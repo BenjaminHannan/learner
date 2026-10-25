@@ -15,7 +15,9 @@ SYSTEM = ("You write a Python 3 script that uses only the standard library. The 
           "block and nothing else.")
 TOOLS_NOTE = (" Before answering you may use tools: python to test your script on the task files (they are in "
               "the working directory), web_search for tips, diary_search to see how Ben phrases requests. "
-              "Then reply with the final ```python block.")
+              "Inspect the input first: print the header and a few rows with the python tool before writing the final "
+              "script. Then reply with the final ```python block.")
+HELDOUT = ("percent_change", "top_n_per_group", "split_fullname")
 _FENCE = re.compile(r"```[ \t]*(?:python3?|py)?[ \t]*\r?\n(.*?)```", re.S | re.I)
 
 
@@ -89,12 +91,17 @@ def _append(path, recs):
 
 
 def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, retries=2,
-              toolbox=None, use_tools=None, max_steps=6) -> dict:
+              toolbox=None, use_tools=None, max_steps=6, heldout_families=HELDOUT) -> dict:
+    """Held-out families are practised and scored but never written to sft/pairs (the transfer signal)."""
     t0 = time.time()
     tricks = tricks or []
     use_tools = toolbox is not None if use_tools is None else (use_tools and toolbox is not None)
     tool_n: dict = {}
     sft, pairs, done, p1, pany, used, errs, consec = [], [], 0, 0, 0, 0, 0, 0
+    held = set(heldout_families or ())
+    if not set(tasks.families(kind)) - held:
+        held = set()      # keep something to train on
+    nt = nh = p1t = p1h = 0
     stopped = False
     for task in tasks.generate(kind, n_tasks, seed):
         if time.time() - t0 >= budget_s or consec >= 3:
@@ -135,14 +142,21 @@ def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, r
         if consec:
             continue
         done += 1
-        p1 += passed is not None and first_bad is None
+        clean = passed is not None and first_bad is None
+        p1 += clean
         pany += passed is not None
+        if task.family in held:
+            nh, p1h = nh + 1, p1h + clean
+            continue
+        nt, p1t = nt + 1, p1t + clean
         if passed is not None:
             sft.append({"messages": base + [{"role": "assistant", "content": _fenced(passed)}]})
             if first_bad is not None:
                 pairs.append({"prompt": base, "chosen": _fenced(passed), "rejected": _fenced(first_bad)})
     summary = {"kind": kind, "n": done, "pass1": p1 / done if done else 0.0,
-               "pass_any": pany / done if done else 0.0, "tricks_used": used,
+               "pass_any": pany / done if done else 0.0,
+               "pass1_train": p1t / nt if nt else None, "pass1_heldout": p1h / nh if nh else None,
+               "n_train": nt, "n_heldout": nh, "tricks_used": used,
                "elapsed_s": round(time.time() - t0, 2), "seed": seed, "model_errors": errs,
                "stopped_early": stopped, "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
                "sft_n": len(sft), "pairs_n": len(pairs),
@@ -157,7 +171,7 @@ def run_round(kind, model, budget_s, out_dir, seed=0, n_tasks=12, tricks=None, r
 
 
 def make_practice_fn(home_dir, diary_dir, model, *, n_tasks=12, seed=None, research_web=True, min_share=0.05,
-                     tools=True):
+                     tools=True, heldout_families=HELDOUT):
     """-> callable(budget_s) -> round summary dict, or None when nothing is practicable."""
     def practice(budget_s):
         t0 = time.time()
@@ -173,5 +187,6 @@ def make_practice_fn(home_dir, diary_dir, model, *, n_tasks=12, seed=None, resea
         from ..tools import ToolBox  # tools imports this package
         toolbox = ToolBox(diary_dir, web=research_web) if tools else None
         return run_round(kind, model, max(0.0, budget_s - (time.time() - t0)),
-                         os.path.join(str(home_dir), "practice", day), s, n_tasks, cards, toolbox=toolbox)
+                         os.path.join(str(home_dir), "practice", day), s, n_tasks, cards, toolbox=toolbox,
+                         heldout_families=heldout_families)
     return practice

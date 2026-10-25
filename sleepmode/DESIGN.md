@@ -73,15 +73,20 @@ on wake / SIGTERM / SIGINT: stop the running worker (SIGTERM, then SIGKILL after
 Wake triggers: `WAKE` file; `~/learner-ops/ASSISTANT_RUNNING` appears (Ben started the assistant); signal.
 `should_stop()` is polled during chunks, so wake takes effect within `poll_s` (the child is terminated; the worker is
 expected to checkpoint on SIGTERM; CommandWorker reports `interrupted`).
+Keep-awake (cli.keep_awake, foreground run, so also the background start): `caffeinate -ims -w <pid>`. Lid closed on battery is not supported (the Mac sleeps).
 Memory pressure (macOS): `sysctl -n kern.memorystatus_vm_pressure_level` (1 normal, 2 warn, 4 critical); >= 2 stops the chunk and pauses. Non-mac: treated as normal.
 
 ## Marginal returns (plateau.py)
 
 Each sleep chunk reports a quiz score (higher = better, any scale; the MLX worker uses -NLL x 100 on held-out diary turns).
-`gain_per_hour = (q[t] - q[t-k]) / hours between them` with window `k = plateau_window` (default 2 chunks).
-Switch to practice when `gain_per_hour < plateau_min_gain_per_hour` (default 0.5) on `plateau_patience` (default 2)
-consecutive checks AND at least `min_sleep_hours` (default 2) of sleep. Missing quiz (None) never counts as flat.
-`reset()` when new practice data arrives (a new source of learning).
+Noise-aware slope rule: from the 3rd point on, fit OLS to the last `plateau_window` (default 4) points (cumulative hours, quiz).
+SE of the slope comes from the residuals but is never below `plateau_noise` (default 0.5 quiz points) / sqrt(sum((t-tbar)^2)).
+A check is flat when `b + 0.84*SE < plateau_min_gain_per_hour` (upper 80% bound; default 0.5). Switch to practice after
+`plateau_patience` (default 2) flat checks in a row AND at least `min_sleep_hours` (default 2). Missing quiz (None) never counts and breaks the streak.
+Simulation test (sigma 1, 8 points): a true 1.0/h slope trips it in <10% of trials, a flat curve in >80%.
+Forgetting guard: the worker may put `general` (a general-skills score, higher = better) in `ChunkResult.info`; the scheduler passes it
+to `add(quiz, hours, general)`. If it is more than `plateau_general_drop` (default 1.0) below its best on 2 checks in a row, `flat()` is
+True at once (reason "general skills dropping"). `reset()` when new practice data arrives (a new source of learning).
 
 ## Workers (workers.py)
 
@@ -111,9 +116,15 @@ User text: messages with role user (content may be a string or a list of {type:t
 ## Check-in (checkin.py, notify.py)
 
 Read-only. Scanners return `Item(id, source, sender, subject, when, snippet, flags)`:
-- `MailAppScanner`: osascript against Mail.app, unread inbox messages received in the last `mail_lookback_h` (default 24),
-  max 50; only `get` reads, never moves/marks. First run triggers macOS's automation permission prompt.
-- `CalendarScanner`: osascript Calendar.app events starting within `calendar_ahead_h` (default 12).
+- `MailAppScanner`: osascript against Mail.app. No `whose` over the whole inbox and no message bodies (either can force IMAP
+  downloads): takes the first `mail_max_scan` (default 150) inbox messages, loops, skips read ones and ones older than `mail_lookback_h`
+  (default 24), collects id/sender/subject/date only (snippet empty), max 50. Wrapped in `with timeout of 90 seconds`. Read-only.
+- `CalendarScanner`: osascript Calendar.app events starting within `calendar_ahead_h` (default 12), same timeout wrapper.
+- `run_osascript` maps stderr `-1743` (not authorized) to `NotAuthorized(PermissionError)` and `-1712` to a timeout RuntimeError.
+  On `PermissionError` the check-in marks the scanner "needs permission" (`status.json` `needs_permission`, event `checkin_needs_permission`),
+  adds it to the scheduler's `blocked_scanners` (not called again this run) and writes one `inbox.md` line asking Ben to allow access.
+- `python -m sleepmode preflight`: runs each enabled scanner once in the foreground (triggers the Automation prompts while Ben is
+  present), checks `detect_isolation()` and a tiny `run_python`, prints an OK/FAIL table (exit 1 on any FAIL).
 - `ImapScanner` (optional; host/user/password-env in config): `EXAMINE` (read-only select), UNSEEN SINCE.
 - Scanners that fail (no permission, not mac) log an event and are skipped, never crash the loop.
 Triage (rules, offline): notify if sender matches `vip_senders`, subject/snippet hits `urgent_words`
@@ -148,7 +159,7 @@ reads the input CSV(s) and writes `output.csv`; the checker parses output.csv an
 `sandbox.py`: `run_python(code, files, timeout_s=30) -> RunResult(ok, stdout, stderr, files_out, dir)`. Fresh temp dir with copies of the
 task files only (never Ben's real files), `python -I attempt.py`, cwd = sandbox, env = {PATH, HOME=sandbox, LANG}, no proxy vars;
 rlimits CPU 30 s, file size 20 MB, nproc where supported. On macOS wrapped in `sandbox-exec -p <profile>`: deny network,
-deny file-write outside the sandbox dir (and /dev), deny file-read under $HOME except the sandbox and the python prefix.
+deny file-write outside the sandbox dir (and /dev), deny file-read-data (not file-read*, so stat/realpath of parent dirs still work) under $HOME except the sandbox and the python prefix; every path in the profile is realpath'd; TMPDIR = the sandbox dir.
 On Linux uses `unshare -rn` when available for no network. Output files copied out; dir deleted.
 
 `model.py`: `ChatModel(url, model, api_key=None).chat(messages, max_tokens, temperature) -> str` (urllib, OpenAI-compatible
@@ -193,7 +204,7 @@ sandbox; tools never decide pass/fail. Training records are unchanged (final pro
 Dream check: `python -m sleepmode.dreamcheck IN.jsonl --out DIR --model-url URL [--model NAME] [--diary DIR] [--no-web] [--keep-unknown] [--max N]`.
 Input items are `{"id","question","answer","source"?}` or chat items `{"messages": [...]}` (last user turn = question, final assistant turn = answer).
 For each item the agent checks the answer (mostly `diary_search`; `python` for arithmetic; web only if allowed) and ends with
-`VERDICT: SUPPORTED|CONTRADICTED|UNKNOWN` plus `FIX: ...` when contradicted. Output in DIR: `kept.jsonl` (SUPPORTED; CONTRADICTED with the fix
-written in as the answer and `fixed: true`; UNKNOWN too with `--keep-unknown`), `dropped.jsonl` (with `reason`), `stats.json`. Items keep their
+`VERDICT: SUPPORTED|CONTRADICTED|UNKNOWN` plus `FIX: ...` when contradicted. SUPPORTED also needs `EVIDENCE: "<quote>"` line(s): quote >= 12 chars (whitespace/case normalized) that appears in a diary_search/diary_read result of the transcript, else the verdict is downgraded to UNKNOWN (reason "no evidence"). An item with `hops` (list of strings) is verified hop by hop, one valid EVIDENCE line per hop. `--plant N` adds N corrupted copies (a number or capitalized name in the answer swapped for another from the input; items with neither skipped), reports `planted_false_accept_rate` in stats, and never writes planted items to the outputs. Output in DIR: `kept.jsonl` (SUPPORTED; CONTRADICTED with the fix
+written in as the answer and `fixed: true`; UNKNOWN too with `--keep-unknown`), `quarantine.jsonl` (UNKNOWN, with `reason`, for browsing weird-but-maybe-true dreams; not with `--keep-unknown`), `dropped.jsonl` (with `reason`), `stats.json`. Items keep their
 shape plus `verdict`, `fixed`, `tool_calls`. A model error or missing verdict counts as UNKNOWN. A CommandWorker-style trainer calls this on its
 dreams before training and trains on `kept.jsonl`.
