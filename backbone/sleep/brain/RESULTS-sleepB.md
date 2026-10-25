@@ -389,3 +389,50 @@ Addendum 7 summary:
 - **B2 FAIL (suggested):** guided two-step dreams gave +7.5 on two-hop (unpaired).
 - Noise floor: identical settings on new code and a different GPU reproduce b2 (−0.5, p = 1.0).
 - Cost: about $2.70 on Vast. That includes about $0.65 at list price for four boxes whose hosts never started. On a 5090 a 2x-work run took 32 min, about $0.32.
+
+## Addendum 8: re-read the day for names, guided two-step dreams at 4x, and a second seed (Week-2)
+Code 8a3da916f3 for the two new arms; the seed-2 runs used 15b3c7a2d2-era code (the same sleepb.py as addendum 7). All runs used RTX 5090 boxes. The reference is addendum 7's ab_ob_b4 (seed 1, `results_a7/`). The JSONs are in `results_a8/`. The prereg header gives ~06:20Z as its time; it was in fact committed at about 05:58Z (commit 9382c0ede6), which is before any addendum-8 code or run.
+
+| arm | seed | wall | C4 | C2 | recall | reverse | two-hop (dreamed) | changed new | routine | tagger recall / precision | eligible C2 / C4 | + diary pool | ARC |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b4 (reference) | 1 | 3,703 s | 86 | 66 | 76.0 | 73.0 | 5.1 (6) | 70.0 | 80 | 0.533 / 0.691 | 72 / 87 | 83.1 | 92.4 |
+| **ab_ob_b4_names** | 1 | 3,856 s | 95 | 81 | **88.0** | 86.5 | 1.3 (3) | **96.7** | 85 | **0.674** / 0.700 | **94 / 94** | 81.6 | 92.6 |
+| **ab_ob_b4_bridge** | 1 | 4,599 s | 87 | 67 | 77.0 | | **28.2 (27)** | 70.0 | 90 | 0.533 / 0.691 | 72 / 87 | 82.2 | 93.0 |
+| ab_ob_b2 | 2 | 2,189 s | | | 64.0 | | 10.3 | 70.0 | 85 | | | 84.1 | 93.2 |
+| ab_ob_b4 | 2 | 3,821 s | 87 | 66 | 76.5 | | 5.1 | 70.0 | 85 | | | 82.6 | 92.6 |
+
+Paired tests (exact McNemar):
+- names vs b4:
+  - recall **+12.0** (12 vs 36 right-only questions), **p = 0.0007**;
+  - reverse +13.5, p = 0.0001;
+  - changed-new +26.7 (0 vs 8), p = 0.008;
+  - two-hop −3.8, p = 0.38;
+  - routine +5, p = 1.0.
+- bridge vs b4: two-hop **+23.1** (2 vs 20), **p = 0.0001**; recall +1.0, p = 0.81.
+- seed 2, b4 vs b2: **+12.5** (6 vs 31), p < 0.0001.
+- b4, seed 2 vs seed 1: +0.5 (11 vs 12), p = 1.0. 4x work gives the same recall on both seeds.
+
+Names pass, summed over the week:
+- 277 pairs asked; 175 yes answers, each of which became a new item;
+- 0 dropped by the validity checks;
+- the candidate vocabulary grew from 223 to 532 names.
+
+Eligible items rose from 276 to 339. 94 of the eligible items do not match a true fact, against 80 for b4. These are extra or partial notes: the precision lower bound held at 0.70.
+
+Verdicts:
+- **S1 SHOWN:** 4x work beats 2x on a second seed too: +12.5, p < 0.0001.
+- **N1 PASS:**
+  - tagger mention recall 0.674 (mark 0.65);
+  - precision lower bound 0.70 (mark 0.5);
+  - eligible C2 + C4 = 188 (mark 175).
+- **N2 SHOWN:** re-reading the day for names adds +12.0 recall (p = 0.0007). Recall from weights alone is now 88%, against an eligibility ceiling of 94. Facts that changed are now known in their new form 97% of the time (b4: 70%).
+- **G1 PASS:** 27 of 78 two-hop questions had a kept chain dream (mark 20).
+- **G2 SHOWN:** guided two-step dreams add +23.1 on two-hop (p = 0.0001).
+- **G3 PASS:** recall 77.0 vs 76.0.
+- No wrong-if fired. No harm in any arm: ARC 92.6 to 93.2, and diary within 1.5 points of the reference.
+- Cost: about $3.50 at list price. That covers six boxes, including three that never started (about $0.17) and two whose hosts were slow to release a stopped box. `vast.py cat` now waits up to 10 minutes for the output.
+
+What this suggests (one seed for the two new arms):
+- The two fixes act on different questions. Names fixes noticing; bridge fixes two-step links. They should combine.
+- The names arm has the fewest chain dreams (3), because its REM uses the old prompt.
+- The next round should combine names + bridge at 4x, on two seeds.

@@ -128,8 +128,8 @@ def cat(a):
     url = r.get("result_url")
     if not url:
         sys.exit(f"no url: {r}")
-    for _ in range(30):
-        time.sleep(5)
+    for _ in range(60):  # the output can take a minute or more to reach S3 after a box stops
+        time.sleep(10)
         try:
             data = get(url, 300)
             (sys.stdout.buffer.write(data) if not a.out else Path(a.out).write_bytes(data)); return
