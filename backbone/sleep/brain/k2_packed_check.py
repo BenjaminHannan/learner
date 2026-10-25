@@ -106,8 +106,8 @@ def run(cmd, log, stop_after_night=None, timeout=6 * 3600):
     return pr.returncode, time.time() - t0, "OutOfMemoryError" in txt or "out of memory" in txt.lower()
 
 
-def common(a):  # model flags for sleepb
-    return ["--model", a.model] + (["--revision", a.revision] if a.revision and not a.smoke else []) + (["--smoke"] if a.smoke else [])
+def common(a):  # model flags for sleepb (+ --q4-packed-compile, set to off by main when part a saw compiled != eager)
+    return ["--model", a.model] + (["--revision", a.revision] if a.revision and not a.smoke else []) + (["--smoke"] if a.smoke else []) + ["--q4-packed-compile", a.q4_packed_compile]
 
 
 def part_b(a, out, rep):
@@ -151,6 +151,7 @@ def main():
     ap.add_argument("--model", default="IFM/K2-Horizon-3.7B")
     ap.add_argument("--revision", default=REV)
     ap.add_argument("--dtype", choices=["fp16", "bf16", "fp32"], default=None, help="default: fp16 on cuda (T4), fp32 in --smoke")
+    ap.add_argument("--q4-packed-compile", choices=["auto", "on", "off"], default="auto", help="passed to sleepb in parts b and c; auto turns off if part a finds compiled != eager unpack on the GPU")
     a = ap.parse_args()
     if a.real == a.smoke:
         ap.error("exactly one of --real / --smoke")
@@ -165,6 +166,8 @@ def main():
         if a.smoke:  # load_model's tiny K2 does not take a revision through from_config
             a.revision = None
         part_a(argparse.Namespace(smoke=a.smoke, seed=0, model=a.model, revision=a.revision if a.real else None), dev, dt, rep)
+        if a.q4_packed_compile == "auto" and rep.get("gpu_compile_vs_eager_bitwise") is False:
+            a.q4_packed_compile = rep["q4_packed_compile_used"] = "off"
         print(json.dumps({"a": {k: v for k, v in rep.items() if k not in ("device", "dtype", "model", "revision")}}, indent=1), flush=True)
     for p, fn in (("b", part_b), ("c", part_c)):
         if a.part in (p, "all"):
