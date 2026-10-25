@@ -67,3 +67,5 @@ too few linear-attention state slots).
   - claude-sleepb18-ab_ob_b4-s2-cqc4bi (57620850, $0.469/h, hours=3, cap $1.30);
   - claude-sleepb18-ab_ob_b2-s2-cqc4bi (57620852, $0.469/h, hours=2, cap $0.80).
   A first launch of both (57620789/57620790) was destroyed at once because `results_a7/` pushed the pack to 2.46 MB; the pack now skips every `sleep/brain/results_*` dir (1.97 MB).
+- 06:10Z b2-s2 57620852 (Slovakia machine 58482) sat in "created" and was dropped at 0.18 h (about $0.09). Relaunched as claude-sleepb19-ab_ob_b2-s2-cqc4bi (57622054, Slovakia machine 139896, $0.455/h).
+- 06:17Z addendum 8 arms on code 8a3da916f3: claude-sleepb20-ab_ob_b4_names-cqc4bi (57622700, RTX 5090 Slovakia machine 141056, $0.469/h) and claude-sleepb20-ab_ob_b4_bridge-cqc4bi (57622703, RTX 5090 Portugal, $0.536/h). Both seed 1, hours=3, linger 120, cap $1.40, on hosts that already ran these jobs cleanly.
