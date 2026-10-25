@@ -120,8 +120,8 @@ def logs(a):
     url = r.get("result_url")
     if not url:
         sys.exit(f"no log url: {r}")
-    for _ in range(8):
-        time.sleep(4)
+    for _ in range(20):   # Vast can take 20-30 s to upload the log
+        time.sleep(5)
         try:
             print("\n".join(l[:400] for l in get(url).decode("utf-8", "replace").splitlines()[-a.show:])); return
         except Exception:
