@@ -1,5 +1,6 @@
 #!/bin/bash
 # Reach-1 on Ben's Mac. Usage: bash mac_run.sh OUT_DIR [extra run.py args]
+# Requests name the model "default_model" (mlx_lm.server 0.32 tries to download any other name and 404s).
 # Shares the Mac with the backbone thread: while ~/learner-ops/PAUSE_OTHERS exists, our server is stopped and
 # run.py waits. Port 8091 (8080 belongs to the backbone thread's tau2 server). Never touches the model copy.
 OUT=${1:?out dir}; shift
@@ -27,5 +28,5 @@ watchdog() {  # stop our server during the backbone thread's training, restart a
 }
 watchdog & WD=$!
 trap 'kill $WD; kill $(cat "$OUT/server.pid" 2>/dev/null) 2>/dev/null' EXIT
-$PY "$(dirname "$0")/run.py" all --base-url http://127.0.0.1:$PORT/v1 --model "$MODEL" --out "$OUT" \
+$PY "$(dirname "$0")/run.py" all --base-url http://127.0.0.1:$PORT/v1 --model "${REQ_MODEL:-default_model}" --out "$OUT" \
   --pause-file "$PAUSE" --concurrency 4 "$@" 2>&1 | tee -a "$OUT/run.log"
