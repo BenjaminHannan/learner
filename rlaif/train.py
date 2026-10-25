@@ -30,9 +30,15 @@ def load_model(a, dev):
     return tok, model
 
 
-def reward(eps, graded, gate=False, v2=False):
+def reward(eps, graded, gate=False, v2=False, v3=False):
     """SPEC reward 0.6*checks + 0.4*Sonnet. gate=True scales it by the check fraction, so a polished reply earns nothing when the end state is wrong."""
     fr = [e.check_frac() for e in eps]
+    if v3:   # gates must hold; credit only for work an untouched world can't fake; Sonnet alone when a task has no credit checks
+        out = []
+        for e, (sc, _) in zip(eps, graded):
+            g, cr = e.gate_credit()
+            out.append(0.0 if not g else (sc / 10 if cr is None else cr * (0.7 + 0.3 * sc / 10)))
+        return out, fr
     if v2:   # round 2: no credit for leaving the world untouched; Sonnet only scales action credit (see rollout.Episode.action_frac)
         return [e.action_frac() * (0.7 + 0.3 * s / 10) for e, (s, _) in zip(eps, graded)], fr
     if gate:
@@ -61,12 +67,15 @@ def evaluate(a, tok, model, grader, dev):
     graded = grader.grade_many([(e.task, e.transcript) for e in eps]) if a.eval_grade else [(None, "")] * len(eps)
     rows = []
     for e, (s, cr) in zip(eps, graded):
-        ch = e.checks()
-        rows.append(dict(id=e.task["id"], scenario=e.task["scenario"], checks=ch, success=all(ch), sonnet=s, turns=e.turns, final=e.final[:300]))
+        ch, (g, cr) = e.checks(), e.gate_credit()
+        rows.append(dict(id=e.task["id"], scenario=e.task["scenario"], checks=ch, success=all(ch), sonnet=s, turns=e.turns, final=e.final[:300],
+                         strict=(g and cr == 1.0) if cr is not None else None))   # strict: did the work, not just claim it (credit tasks only)
     tag = os.path.basename(a.adapter.rstrip("/")) if a.adapter else "base"
     with open(os.path.join(a.outdir, f"eval_{tag}.jsonl"), "w") as f:
         f.writelines(json.dumps(r) + "\n" for r in rows)
+    st = [r["strict"] for r in rows if r["strict"] is not None]
     summ = dict(adapter=a.adapter, n=len(rows), success_rate=sum(r["success"] for r in rows) / len(rows),
+                strict_success=sum(st) / max(1, len(st)), strict_n=len(st),
                 mean_check_frac=sum(sum(r["checks"]) / len(r["checks"]) for r in rows) / len(rows),
                 sonnet_mean=(sum(r["sonnet"] for r in rows) / len(rows)) if a.eval_grade else None, usd=grader.ledger.usd)
     json.dump(summ, open(os.path.join(a.outdir, f"eval_{tag}.json"), "w"), indent=1)
@@ -90,6 +99,7 @@ def main(argv=None):
     ap.add_argument("--beta-s", type=float, default=1.0)   # paper (arXiv 2610.10447 Table 3): 0.1 everywhere; beta_T 0.001 except GSM8K 0.03
     ap.add_argument("--reward-gate", action="store_true")
     ap.add_argument("--reward-v2", action="store_true")
+    ap.add_argument("--reward-v3", action="store_true")
     ap.add_argument("--max-usd", type=float, default=30.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--gen-batch", type=int, default=16)
@@ -105,7 +115,7 @@ def main(argv=None):
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     os.makedirs(a.outdir, exist_ok=True)
     random.seed(a.seed); torch.manual_seed(a.seed)
-    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader, seed=a.seed)
+    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader, seed=a.seed, batch=a.eval_only)   # live calls in training (GPU waits), batches for evals
     tok, model = load_model(a, dev)
     if a.eval_only:
         return evaluate(a, tok, model, grader, dev)
@@ -119,7 +129,7 @@ def main(argv=None):
         calls0, ts = grader.n_calls, time.time()
         eps_s = rollout(model, tok, [(t, None) for t in batch for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
         gr_s = grader.grade_many([(e.task, e.transcript) for e in eps_s])
-        r_s, fr_s = reward(eps_s, gr_s, a.reward_gate, a.reward_v2)
+        r_s, fr_s = reward(eps_s, gr_s, a.reward_gate, a.reward_v2, a.reward_v3)
         A_s = advantages(r_s, G)
         st = dict(step=step, reward=sum(r_s) / len(r_s), check_frac=sum(fr_s) / len(fr_s), success=sum(f == 1 for f in fr_s) / len(fr_s),
                   sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s))
@@ -132,7 +142,7 @@ def main(argv=None):
                 cs.append(hint_block(batch[i], gr_s[w][1]))
             eps_t = rollout(model, tok, [(t, cs[i]) for i, t in enumerate(batch) for _ in range(G)], max_new=a.max_new, max_total=a.max_total, gen_batch=a.gen_batch)
             gr_t = grader.grade_many([(e.task, e.transcript) for e in eps_t])
-            r_t, fr_t = reward(eps_t, gr_t, a.reward_gate, a.reward_v2)
+            r_t, fr_t = reward(eps_t, gr_t, a.reward_gate, a.reward_v2, a.reward_v3)
             A_t = advantages(r_t, G)
             st.update(teacher_reward=sum(r_t) / len(r_t), teacher_success=sum(f == 1 for f in fr_t) / len(fr_t), teacher_sonnet=sum(s for s, _ in gr_t) / len(gr_t))
         st["gen_s"] = time.time() - ts

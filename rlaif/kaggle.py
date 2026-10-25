@@ -35,9 +35,9 @@ CODE_FILES = ["train.py", "rollout.py", "grader.py", "sandbox.py", "checks.py", 
 FULL = dict(deadline_s=11 * 3600, min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
             common="--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 2 --max-usd 14 --dtype fp16 --gen-batch 8",
             eval_flags="--eval-only --eval-grade --dtype fp16")
-# RLAIF-2 (rlaif/SPEC.md): reward v2, lr 1e-4, 30 steps; eval run-1 jolt_step20 first, then steps 10/20/30 of both arms.
+# RLAIF-2 (rlaif/SPEC.md): reward v3, lr 1e-4, 30 steps; eval run-1 jolt_step20 first, then steps 10/20/30 of both arms.
 RLAIF2 = dict(plan="rlaif2", deadline_s=int(10.75 * 3600), min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
-              common="--reward-v2 --lr 1e-4 --steps 30 --tasks-per-step 8 --group 4 --seed 0 --save-every 10 --gen-batch 8 --max-usd 14 --dtype fp16",
+              common="--reward-v3 --lr 1e-4 --steps 30 --tasks-per-step 8 --group 4 --seed 0 --save-every 10 --gen-batch 8 --max-usd 14 --dtype fp16",
               jolt_extra="--beta-t 0.001 --beta-s 0.1",
               eval_flags="--eval-only --eval-grade --dtype fp16 --gen-batch 4")
 SMOKE = dict(deadline_s=40 * 60, min_reserve_s=8 * 60, unknown_reserve_s=15 * 60, progress_s=60,

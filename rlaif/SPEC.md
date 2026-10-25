@@ -83,3 +83,10 @@ Held-out evals at steps 10, 20, 30 (check-only, keyless).
 - JOLT+ beats GRPO: >= GRPO + 5 at step 30.
 - Narration guard: held-out turn-1 no-tool endings must not exceed base (45/100); if they do, the reward fix failed.
 - Proved wrong: held-out success < 25 for an arm at step 30, or train reward rises while held-out success falls between steps 10 and 30 (gaming).
+
+## Reward bugs found 2026-10-25 (bug-hunt thread) and fixes, before any RLAIF-2 result was read
+
+- reply_contains was a substring test with generic needles ("which", "done"); 167/420 tasks had a reply check as their only positive check, so "Done, I deleted it" passed with no action. Now whole-word matching, and `--reward-v3`: per task, checks an untouched world already passes are gates (must keep passing), the rest earn credit; reply checks earn credit only through needles found in the world state and absent from the request (generic ones dropped). A fake success claim now earns 0.0 credit on the 346 tasks with credit checks (was up to 1.0); reference solutions earn 0.98. The 74 tasks left with no credit checks are judged by Sonnet alone (behind the gates).
+- Unparsable grades scored 0 silently. Now: last JSON object wins, one retry, then a neutral 5; retries and failures counted in spend.json.
+- Eval adds `strict_success` (gates hold and every credit check passes, credit tasks only). Amendment to the RLAIF-2 marks, made before reading any RLAIF-2 number: an arm counts as working only if both legacy success and strict success rise by the stated margin over base.
+- If RLAIF-2 already started on --reward-v2, it finishes as is and its train reward is read with this caveat; the next run uses --reward-v3.
