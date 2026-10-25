@@ -62,3 +62,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   $0.537/h with storage) and box 57595544 `claude-think1-compassionate-davinci-s0r` (RTX 5090, Sweden, machine 54650,
   rel 0.9924, $0.532/h). Deviation amended accordingly: seeds 0 (rerun) and 2 each on one RTX 5090 (the 2 cheapest
   5090s skipped for 8-10 GB of host RAM). Still before any t or t1 result.
+- 02:09Z: box 57595542 (s2, machine 38389) never started its container (host GPU error "unresolvable CDI devices");
+  destroyed. Seed 2 relaunched on box 57596004 `claude-think1-compassionate-davinci-s2` (RTX 5090, South Korea,
+  machine 145158, rel 0.9976, $0.497/h), same pack. vast.py now skips machines 54987 and 38389.
