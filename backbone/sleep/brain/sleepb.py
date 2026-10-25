@@ -4155,6 +4155,7 @@ def main():
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
     ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; B4_ARMS ab_ob_b4 / b4_names / b4_bridge / b4_nb / b4_nb_x4: 4)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--lora-shared", action="store_true", help="addendum 12 (Qwen3.5/3.6 MoE): LoRA also on mlp.shared_expert.{gate,up,down}_proj, which train.LORA_TARGETS does not match")
