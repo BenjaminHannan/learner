@@ -348,3 +348,24 @@ Final addendum-6 verdicts:
 - **W2 FAIL** (+1.5, p = 0.74) and **W3 FAIL** (+0.5, p = 1.0): guess + dopamine and twisted dreams add nothing on top of 2x work.
 - **No wrong-if fired.** No harm in any arm: ARC 92.2 to 93.6, and diary within 3 points of the control.
 - Cost: addendum 6 Vast spend was about $2.10, plus $4.32 of API to write Week-2. b2 and winp ran free on Ben's PC.
+
+## Addendum 7: 4x work, sharper daytime notes, guided two-step dreams (Week-2, seed 1), first three arms
+Code 224e79fa28 (PR #114 trainer + arms commit 3ef9356433), tok 2048, linger 120. JSONs are in `results_a7/`. The b2 rerun is the reference.
+
+| arm | GPU | wall | about $ | C4 | C2 | recall | two-hop (dreamed) | changed new | routine | tagger recall | eligible C2 / C4 | + diary pool | ARC |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b2 rerun (reference) | 5090 | 1,915 s | 0.32 | 81 | 53 | **67.0** | 11.5 (10) | 66.7 | 80 | 0.533 | 72 / 87 | 83.8 | 93.2 |
+| ab_ob_b4, 4x work | 5090 | 3,703 s | 0.56 | 86 | 66 | **76.0** | 5.1 (6) | 70.0 | 80 | 0.533 | 72 / 87 | 83.1 | 92.4 |
+| ab_ob_tag2, new tagging prompt | 5090 | 1,877 s | 0.36 | 63 | 38 | **50.5** | 5.1 (4) | 23.3 | 15 | 0.251 | 48 / 58 | 81.4 | 93.0 |
+
+Paired tests (exact McNemar):
+- **Noise floor:** the b2 rerun vs addendum 6's b2 gives −0.5 (21 vs 20 right-only questions, 20.5% disagreement), p = 1.0. Two-hop gives 0.0 (6 vs 6). The faster trainer and a different GPU reproduce b2, and two identical-settings runs do not produce a false "difference".
+- **b4 vs b2:** recall +9.0 (6 vs 24), **p = 0.0014**. Two-hop −6.4 (6 vs 1), p = 0.125.
+- **tag2 vs b2:** recall −16.5 (54 vs 21), p = 0.0002. Two-hop −6.4, p = 0.18.
+
+Verdicts:
+- **D1 SHOWN:** 4x work beats 2x work by +9.0 points (p = 0.0014), with no harm (ARC 92.4, diary 83.1).
+- **The wrong-if fired, and the prediction failed.** I predicted that 4x work would add less than +4, because recall was near the note-taking ceiling. It added +9, so that reading was wrong about how much room was left. The eligibility ceiling itself still holds. With 72 C2 and 87 C4 facts eligible, the most recall can reach is 79.5, and b4 reaches 76. The next gains have to come from catching more facts during the day (suggested).
+- **T1 FAIL (the mechanism failed):** the new prompt halved the tagger's mention recall, from 0.533 to 0.251 (precision rose to 0.82). In the raw samples, the small model still answers with "Sam ..." triples, now even for two-name facts ("Sam born in Bodetreth"), and lists fewer facts overall. Naming "Sam" in the instructions seems to make it more salient, not less (suggested). Routines, which are about Sam, collapsed (80 → 15).
+- **T2 FAIL, with harm:** recall −16.5 (p = 0.0002). Because T1 failed, this arm does not test whether better notes become memories.
+- ab_ob_bridge is still running (RTX 4090, Brazil).
