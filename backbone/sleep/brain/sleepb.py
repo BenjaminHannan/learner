@@ -85,6 +85,8 @@ for _p in (HERE.parent, HERE.parent.parent):
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
 from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
+sys.path.insert(0, str(HERE))
+import habit as habit_mod  # noqa: E402  (PREREG-habit1.md: the cross-day habit spotter, --habit)
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
 
 K = 4
@@ -1991,6 +1993,15 @@ class Item:
         return f"{self.subj} {self.rel} {self.obj}."
 
 
+@dataclass
+class HabitItem(Item):  # --habit (PREREG-habit1.md): an item the habit spotter found; its fact is the model's "Sam usually ..." sentence
+    text: str = ""
+
+    @property
+    def fact(self):
+        return self.text
+
+
 def other(it, x):  # (display shared, display other) of the item w.r.t. normalized string x
     return (it.subj, it.obj) if norm(it.subj) == x else (it.obj, it.subj)
 
@@ -2103,6 +2114,7 @@ class Brain:
             G.append((g["id"], g["class"], [(g["a"].lower(), g["b"].lower())], [(g["a"].lower(), g["old_b"].lower())] if g.get("old_b") else []))
         s.G = G
         s.cov = Counter()
+        s.hab_asked, s.hab_rng = {}, habit_mod.new_rng(args.seed)  # --habit: {pair: distinct days when last asked}; the control's own rng stream
 
     # ---- plumbing
     def mn(s, n):
@@ -2225,6 +2237,43 @@ class Brain:
         if k2:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
             rec.update(think_tokens_mean=round(sum(len(s.L.ids(x)) for x, _ in th) / len(th), 1) if th else 0.0, think_capped=sum(not c for _, c in th))
         return rec
+
+    def habit_pass(s, d):  # --habit (PREREG-habit1.md): spot pairs of names that come up together on several days (spot) or on one day (ctrl), ask if it is a habit; a yes becomes a HabitItem
+        vocab = name_vocab(s.diary, d)
+        pt = habit_mod.pair_days(s.diary, d, vocab, pat)
+        spot = habit_mod.candidates(s.diary, pt, s.items, s.dropped, s.hab_asked)
+        ask = spot if s.a.habit == "spot" else habit_mod.control(s.diary, pt, s.items, s.dropped, s.hab_asked, len(spot), s.hab_rng)
+        qs = []
+        for (na, nb), ctx in ask:
+            n = len({s.diary.turns[i]["day"] for i in pt[(na, nb)]})
+            qs.append(s.L.render(habit_mod.HABIT_SYS, habit_mod.habit_user(s.diary.label(ctx, 400), vocab[na], vocab[nb], n)))
+            s.hab_asked[(na, nb)] = n
+        raw = s.gen(qs, s.mn(48)) if qs else []
+        s.raw["habit"] = [{"pair": [vocab[a], vocab[b]], "out": r} for ((a, b), _), r in list(zip(ask, raw))[:4]]
+        got_of = {ti: got for ti, dd, got in s.tag_log}
+        st = Counter()
+        for ((na, nb), ctx), txt in zip(ask, raw):
+            a, b = vocab[na], vocab[nb]
+            sent = habit_mod.parse_habit(txt, a, b)
+            if sent is None:
+                continue
+            st["yes"] += 1
+            ti = ctx[-1]
+            ck = triple_status(s.diary, s.dropped, ti, a, b)
+            if ck != "ok":
+                st["dropped_" + ck] += 1
+                continue
+            first, second = habit_mod.order(sent, a, b)
+            key = (norm(first), norm(second))
+            if key not in s.items:
+                s.items[key] = HabitItem(key, first, second, "usually (habit)", d, text=sent)
+                st["new_items"] += 1
+            if ti not in got_of:
+                got_of[ti] = []
+                s.tag_log.append((ti, s.diary.turns[ti]["day"], got_of[ti]))
+            got_of[ti].append((first, second))
+        return {"mode": s.a.habit, "spot_candidates": len(spot), "asked": len(ask), "yes": st["yes"], "new_items": st["new_items"],
+                "dropped": sum(v for k, v in st.items() if k.startswith("dropped_"))}
 
     def refresh(s, d):  # days_seen / importance / correction from a string search over the diary so far
         for it in s.items.values():
@@ -2791,6 +2840,9 @@ class Brain:
         if a.arm in NAMES_ARMS:  # addendum 8 / 9: re-read the day for names (before refresh, so the new items get their mention counts)
             rec["names_pass"] = s.names_pass(d)
             s.log(f"[night {d}] names {rec['names_pass']}")
+        if getattr(a, "habit", "off") != "off":  # PREREG-habit1.md: after the names pass, before refresh (so the new items get their day counts)
+            rec["habit"] = s.habit_pass(d)
+            s.log(f"[night {d}] habit {rec['habit']}")
         s.refresh(d)
         lap("tag")
         rec["update_detection"] = s.detect(d)
@@ -3014,7 +3066,7 @@ class Brain:
     def summary_items(s):
         return [{"subj": it.subj, "rel": it.rel, "obj": it.obj, "days_seen": it.days, "mentions": it.nment, "importance": it.imp, "correction": it.cor,
                  "eligible": s.elig(it), "consolidated": it.consol, "superseded_by": list(it.sup_by) if it.sup_by else None, "dead": it.dead,
-                 "update_of": [u["old"] for u in it.upd], "n_paraphrases": len(it.para), "n_qa": len(it.qa), "probe": it.probe} for it in s.items.values()]
+                 "update_of": [u["old"] for u in it.upd], "n_paraphrases": len(it.para), "n_qa": len(it.qa), "probe": it.probe, **({"habit": it.text} if isinstance(it, HabitItem) else {})} for it in s.items.values()]
 
 
 # ------------------------------------------------------------------ flat sleep (arm af)
@@ -4038,6 +4090,46 @@ def selftest_rem_k2():
 K2_REPO, K2_REV = "IFM/K2-Horizon-3.7B", "9d280ff742235796925c9fe3cf243dc1beea5c08"  # addendum 11: the pinned small-tier model
 
 
+def selftest_habit():
+    """PREREG-habit1.md (--habit) on a tiny diary and a scripted stub model (no weights): (i) spot asks only the pair that comes up on 2+ days and that no item links
+    (a pair an item links is skipped), shows one message per day, and a "Sam usually" yes becomes a HabitItem whose fact is the sentence, joined to the latest turn's
+    tag_log entry; (ii) the pair is not asked again until it comes up on more days; (iii) a reply without "usually" or without both names, or a no, adds nothing;
+    (iv) ctrl asks the same number of questions about one-day pairs only; (v) refresh then counts the item's days, so it is eligible."""
+    from types import SimpleNamespace
+    turns = [(1, "Grabbing coffee with Vresaglom at Relozal tonight, what should I order?"), (1, "My sister Papirar lives with Magomen in Oslo now."),
+             (2, "Heading out for coffee with Vresaglom, we're meeting at Relozal again."), (2, "Papirar and Magomen say hi, by the way."),
+             (3, "Late for coffee with Vresaglom at Relozal, traffic is awful."), (3, "Met Kelvora at Zhoumira for one dinner, it was fine.")]
+    week = {"diary": [{"day": d, "role": "user", "text": x} for d, x in turns]}
+    dia = Diary(week)
+    sent = []
+
+    def gen(prompts, n, **kw):
+        sent.extend(prompts)
+        return ["Sam usually has coffee with Vresaglom at Relozal." if "Vresaglom" in p else "no" for p in prompts]
+    items = {("papirar", "magomen"): Item(("papirar", "magomen"), "Papirar", "lives with", "Magomen", 1)}
+    log = [(i, d, []) for i, (d, _) in enumerate(turns)]
+    mk = lambda mode: SimpleNamespace(L=SimpleNamespace(render=lambda sy, u: u), a=SimpleNamespace(habit=mode, smoke=False), diary=dia, items=dict(items), dropped=set(),  # noqa: E731
+                                      tag_log=[(i, d, []) for i, d, _ in log], raw={}, gen=gen, mn=lambda n: n, hab_asked={}, hab_rng=habit_mod.new_rng(1))
+    me = mk("spot")
+    r2 = Brain.habit_pass(me, 2)
+    assert r2["asked"] == 1 and r2["new_items"] == 1 and len(sent) == 1 and "[Day 1]" in sent[0] and "[Day 2]" in sent[0] and "2 different days" in sent[0], (r2, sent)
+    it = me.items[("relozal", "vresaglom")] if ("relozal", "vresaglom") in me.items else me.items[("vresaglom", "relozal")]
+    assert isinstance(it, HabitItem) and it.fact == "Sam usually has coffee with Vresaglom at Relozal." and (it.subj, it.obj) == ("Vresaglom", "Relozal")
+    assert me.tag_log[2][2] == [("Vresaglom", "Relozal")] and all(not g for i, _, g in me.tag_log if i != 2)
+    sent.clear()
+    r3 = Brain.habit_pass(me, 3)  # (ii) linked now: nothing left on 2+ days
+    assert r3["asked"] == 0 and not sent, r3
+    Brain.refresh(me, 3)
+    assert it.days == 3 and it.nment == 3
+    for bad in ("Sam has coffee with Vresaglom at Relozal.", "Sam usually has coffee at Relozal.", "No, it is not a habit.", ""):  # (iii)
+        assert habit_mod.parse_habit(bad, "Vresaglom", "Relozal") is None, bad
+    assert habit_mod.parse_habit("**Sam usually meets Vresaglom at Relozal**", "Vresaglom", "Relozal") == "Sam usually meets Vresaglom at Relozal."
+    me, sent[:] = mk("ctrl"), []
+    r = Brain.habit_pass(me, 3)  # (iv) one spot candidate (Vresaglom / Relozal) -> one one-day question, never about that pair
+    assert r["spot_candidates"] == 1 and r["asked"] == 1 and len(sent) == 1 and "Vresaglom" not in sent[0] and "1 day" in sent[0], (r, sent)
+    return {"spot": r2, "ctrl": r, "ok": True}
+
+
 def selftest_k2():
     """K2-Horizon chat format, with the real tokenizer (downloaded from the Hub, no weights; skipped with a message when it cannot be): (i) Lang(k2=True).render ends with the
     empty think block exactly once and starts with the bos string, (ii) bos / im_start / im_end / think tags each tokenize to single special ids, (iii) eos is <|ifm|im_end|> = 250019,
@@ -4157,6 +4249,7 @@ def main():
     ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
     ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
     ap.add_argument("--rem-steps-mult", type=float, default=1.0, help="addendum 14: each cycle's REM steps x this (rounded); the night's cosine schedule covers the new total. 1.0 = as before")
+    ap.add_argument("--habit", choices=("off", "spot", "ctrl"), default="off", help="PREREG-habit1.md: the nightly cross-day habit spotter (spot) or its equal-question one-day control (ctrl)")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
@@ -4188,6 +4281,7 @@ def main():
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
+        print(json.dumps({"habit": selftest_habit()}))
         return
     if args.bench_train:
         if not args.out:
