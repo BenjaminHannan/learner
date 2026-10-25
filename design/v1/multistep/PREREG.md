@@ -184,3 +184,6 @@ both short of +4, and harm was higher on Kaggle. Hindsight is at most a small ga
 const_nights4 Hard 17.6 vs nights4 16.9 (+0.7); affine 2.3 (mark 5); Easy 87.9 vs const_base 89.6; harm 1.2. **NO PASS, between the
 marks** (affine 2.3 > 1, so not proved wrong). const_base Hard 12.5 (old base 10.2). Curve: 7.6 / 12.5 / 16.6 / 17.6.
 Reading (suggested): shorter constant-building is not what holds affine back. Across rounds 4-8, only more nights clearly raised Hard.
+Confound (found 2026-10-25 from train.json): hind4 ran ~55% more sleep updates than nights4 (Kaggle s0 7,171 vs 4,607; s1 7,254 vs
+4,694), because its extra records raise the update count. Its small gain and higher harm may come from extra training alone, as in
+round 5. A fair re-test would give nights4 the same number of updates.
