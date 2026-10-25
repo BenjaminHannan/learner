@@ -470,3 +470,48 @@ What this suggests:
 - From weights alone the recipe now answers 91% of C2+C4 forward questions (control 53%), against an eligibility ceiling of 94%.
 - Two-hop correct stays close to the number of two-hop pairs with a kept chain dream (seed 1: 32 dreamed, 30 right; seed 2: 28 dreamed, 28 right; the per-question link is not logged yet; see `/mnt/project-files/research/sleep-gaps/two-hop-coverage-and-junk-notes.md`). The next two-hop gain should come from dreaming more of the 78 pairs (suggested, untested).
 - About 28% of eligible items match no true fact. Most are half-facts with a common noun ("X owns boat"). The names pass added 16, all from two common words it took for names ("Sister", "Sail").
+
+## Addendum 10: four tries per two-step dream (ab_ob_b4_nb_x4, Week-2, seeds 1 and 2)
+Code a2e086cff4 (four samples per REM chain prompt, keep the first that passes every check, at most one kept dream per pair per cycle). RTX
+5090 boxes: seed 1 on Slovakia machine 141056 (57665253, 1.46 h), seed 2 on Portugal machine 152963 (57665257, 1.56 h). References: addendum
+9's ab_ob_b4_nb seeds 1 and 2 (`results_a9/`). The seed-2 JSON is in `results_a10/`. The seed-1 box finished, but its host's command API
+has not returned the JSON after eight tries; the box is kept stopped and the pull will be retried. Seed-1 numbers below come from its
+instance label (unpaired), as the prereg's scoring rule says.
+
+| arm | seed | wall | C4 | C2 | recall | reverse | two-hop (dreamed of 78) | chain dreams kept | changed new | routine | + diary pool | ARC | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b4_nb (reference) | 1 | 3,653 s | 95 | 88 | 91.5 | 85.0 | 38.5 (32) | 87 | 96.7 | 85 | 86.4 | 92.2 | 0000000 |
+| ab_ob_b4_nb (reference) | 2 | 3,764 s | 96 | 86 | 91.0 | 88.0 | 35.9 (28) | 85 | 93.3 | 85 | 86.0 | 91.8 | 0000000 |
+| **ab_ob_b4_nb_x4** (label) | 1 | about 5,000 s | 94 | 79 | **86.5** | | **64.1** | | 96.7 | 80 | 90 | 92.2 | 1000000 |
+| **ab_ob_b4_nb_x4** | 2 | 5,085 s | 95 | 78 | **86.5** | 82.0 | **60.3 (53)** | 217 | 93.3 | 85 | 86.3 | 92.0 | 1000000 |
+
+Paired tests (exact McNemar), seed 2: two-hop **+24.4** (2 vs 21), **p = 0.0001**; recall **−4.5** (19 vs 10), p = 0.14; reverse −6.0 (24 vs
+12), p = 0.065. Seed 1 (label, unpaired): two-hop +25.6, recall −5.0.
+
+Chain yield, seed 2: 217 kept of 8,160 samples (2.7%; nb kept 85 of 2,040, 4.2%). Per pair and cycle, the four tries turned about 4% into
+about 10% (217 kept of 2,040 pairs tried); 125 extra passing samples were dropped by the keep-first rule.
+
+Verdicts:
+- **X1 PASS** (seed 2): 53 of 78 two-hop questions had a kept chain dream (mark 45; nb 28). Seed 1: not available without the JSON.
+- **X2 SHOWN** on seed 2 (+24.4, mark +8, p = 0.0001) and suggested on seed 1 (+25.6, label only). The wrong-if does not fire.
+- **X3 FAIL** on both seeds: recall −4.5 (seed 2, p = 0.14) and −5.0 (seed 1, label), against a mark of −3.
+- **X4 SHOWN** (seed 2): dreamed two-hop questions are answered 86.8% (46 of 53), not-dreamed ones 4.0% (1 of 25), +82.8 points, Fisher
+  p = 7e-13 (mark +30). Dreaming a two-step pair is what makes the model answer it.
+- **Adopt: no.** X2 passes, but X3 fails on both seeds, so x4 is not added to the recipe as it stands.
+- No harm: ARC 92.0 / 92.2 (mark 87.6), diary 86.3 / 90 (reference 86.0 / 86.4).
+- The expectation (dreamed 45-60, two-hop 50-65) was met; the recall cost was not expected.
+
+What this suggests (not shown):
+- The two-step gain is real and large, and coverage explains it (X4). The cost is on single facts, mostly C2 facts (mentioned on 2 days):
+  C2 78-79 vs 86-88. Reverse questions also dropped (−6, p = 0.065).
+- REM has a fixed number of training steps a night (510 at 4x). With 2.5x as many chain dreams the REM pool grows (532 dreams by night 7,
+  against 397), so each dream and each gist is rehearsed less, and two-step questions may pull answers toward the second hop. Either
+  could cost single-fact recall. Untested.
+- Night 1 was reverted on both seeds (ARC validation 0.83 against a base of 0.87, mark −0.03). On night 1 the REM pool held exactly one
+  chain dream, so REM's steps that night trained on one example many times. nb's night-1 pool was empty. Suggested cause: repeating a
+  tiny pool. A floor (no REM steps from a pool under about 8 dreams) would remove it.
+- Next single change to test: x4 with REM steps scaled so each dream gets the same rehearsal as in nb (more work, not a different
+  recipe), with pass marks two-hop ≥ nb + 15 and recall ≥ nb − 2.
+
+Cost: about $1.60 (seed 1 about $0.72 at $0.489/h; seed 2 about $0.88 at $0.563/h), against the coordinator's $1.90 cap after the runs
+took longer than planned (x4 adds about 40% to each night's wall time).
