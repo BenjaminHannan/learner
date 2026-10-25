@@ -43,6 +43,14 @@ if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
+if [ -n "${K2BENCH:-}" ]; then   # big-MoE 4-bit speed bench (backbone/sleep/brain/k2_bench.py; PREREG-sleepB-addendum11.md "MoVA-36B q4: speed bench only"): K2BENCH=1; default model IFM/K2-Horizon-MoVA-36B-A4B at its pinned revision; K2BENCH_EXTRA: extra k2_bench flags, comma-separated because vast.py passes env words unquoted, e.g. --model,<repo>,--revision,<sha> or --lora-shared or --budget-min,40
+  BNBC=""; if [ -f /tmp/torch-pin.txt ]; then BNBC="-c /tmp/torch-pin.txt"; fi   # keep the image's torch
+  python3 -m pip install -q "bitsandbytes==0.50.2" $BNBC || echo "!! bitsandbytes install failed"
+  python3 backbone/sleep/brain/k2_bench.py --out "$OUT/k2bench/bench.json" ${K2BENCH_EXTRA:+${K2BENCH_EXTRA//,/ }} || echo "!! k2bench failed"
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
 if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations); SLEEPB_EXTRA: extra sleepb flags, comma-separated because vast.py passes env words unquoted, e.g. --revision,<sha>,--q4-base,--arc-base (addendum 11)
   for a in ${SLEEPB_ARMS//,/ }; do
     if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
