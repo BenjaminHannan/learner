@@ -82,6 +82,12 @@ def pack(a):
 
 
 def search(a):
+    if not a.gpu:  # default: best speed per dollar over every GPU type that passes the job's floors (tools/vast_pick.py)
+        sys.path.insert(0, str(REPO / "tools"))
+        from vast_pick import pick
+        for o in pick(min_vram=a.min_vram, min_dlperf=a.min_dlperf, max_dph=a.max_dph, hours=a.hours)[:a.n]:
+            print(o["id"], o["gpu"], o["usd_h"], o["vram_gb"], "dlperf", o["dlperf"], "dlperf/$", o["per_usd"], o["down"], o["geo"])
+        return
     q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
          "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}}
     r = call("POST", "/bundles/", q)
@@ -135,7 +141,9 @@ def cat(a):
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
     x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
-    x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
+    x = s.add_parser("search"); x.add_argument("--gpu", default=None, help="exact GPU name; default = best dlperf per $ over all GPUs (tools/vast_pick.py)")
+    x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
+    x.add_argument("--min-vram", type=float, default=24); x.add_argument("--min-dlperf", type=float, default=40); x.add_argument("--hours", type=float, default=1.0)
     x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
     x = s.add_parser("logs"); x.add_argument("id"); x.add_argument("--tail", type=int, default=300); x.add_argument("--show", type=int, default=40)
