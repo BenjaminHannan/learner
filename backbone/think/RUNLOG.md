@@ -55,3 +55,10 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   10 h self-stop): THINK_JOBS=a:0,b:0,t:0,t1:0,aplus:0,bplus:0,tw:0 PARALLEL=1 MAXPAR=4;
   box 57595348 `claude-think1-compassionate-davinci-s2` (A100 SXM4 40 GB, Netherlands, machine 133104, $0.736/h,
   10 h self-stop): THINK_JOBS=a:2,b:2,t:2,t1:2,aplus:2,bplus:2 PARALLEL=1 MAXPAR=4.
+- 02:04Z: the two A100 boxes were destroyed after ~3 min (still loading; cost a few cents) on Ben's instruction to buy the
+  most compute per dollar. Vast DLPerf per $/h among reliable (>= 0.99) offers: RTX 5090 ~380-424, RTX 3090 ~300-360 (but
+  ~4x slower), RTX 4090 ~280, A100 SXM4 229 ($0.416) and ~130 ($0.736). Replaced (same code, MAXPAR=3 for 32 GB) by
+  box 57595542 `claude-think1-compassionate-davinci-s2` (RTX 5090, British Columbia, machine 38389, rel 0.9984,
+  $0.537/h with storage) and box 57595544 `claude-think1-compassionate-davinci-s0r` (RTX 5090, Sweden, machine 54650,
+  rel 0.9924, $0.532/h). Deviation amended accordingly: seeds 0 (rerun) and 2 each on one RTX 5090 (the 2 cheapest
+  5090s skipped for 8-10 GB of host RAM). Still before any t or t1 result.
