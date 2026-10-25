@@ -75,6 +75,7 @@ for _p in (HERE.parent, HERE.parent.parent):
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
 from train import K2_TYPE, LORA_TARGETS, load_model  # noqa: E402
+SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
 
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
@@ -3350,6 +3351,7 @@ def main():
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
+    ap.add_argument("--lora-shared", action="store_true", help="addendum 12 (Qwen3.5/3.6 MoE): LoRA also on mlp.shared_expert.{gate,up,down}_proj, which train.LORA_TARGETS does not match")
     ap.add_argument("--kl-weight", type=float, default=1.0)
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
@@ -3479,7 +3481,13 @@ def main():
     model, brain, pm = lm, None, None
     if args.arm not in ("a0", "ad"):
         from peft import LoraConfig, get_peft_model
-        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        tm = f"(?:{LORA_TARGETS})|(?:{SHARED_RE})" if args.lora_shared else LORA_TARGETS  # addendum 12: + the MoE shared expert (its only dense MLP)
+        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=tm, bias="none"))
+        if args.lora_shared or getattr(lm.config, "num_experts", 0):
+            from peft.tuners.lora import LoraLayer
+            mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
+            log(f"[lora] matched {len(mm)} modules ({sum('shared_expert' in n for n in mm)} shared-expert), trainable {sum(p.numel() for p in pm.parameters() if p.requires_grad):,}")
+            assert not args.lora_shared or any("shared_expert" in n for n in mm), "--lora-shared matched no shared-expert module"
         if L.k2:
             from peft.tuners.lora import LoraLayer
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
