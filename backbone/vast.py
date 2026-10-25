@@ -19,6 +19,7 @@ API = "https://console.vast.ai/api/v0"
 IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-devel"
 FILES = ["backbone", "learnlab", "data/village/patterns"]
 CHUNK = 100_000
+SLEEPB_FILES = "backbone/sleep,backbone/train.py,backbone/run_box.sh,backbone/label_report.py,backbone/requirements.txt"  # all a Sleep-B job imports or runs
 
 JOB = r'''set -u
 ENVLINE="__ENV__"
@@ -71,7 +72,7 @@ def get(url, timeout=60):
 def pack(a):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as t:
-        for f in FILES:
+        for f in (a.files.split(",") if a.files else FILES):
             t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") or "/data/raw" in i.name or "/sleep/brain/results_" in i.name else i)  # raw API caches and result JSONs never run on a box
     b64 = base64.b64encode(buf.getvalue()).decode()
     job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label).replace("__LINGER__", str(a.linger))
@@ -141,6 +142,7 @@ def cat(a):
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
     x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3); x.add_argument("--linger", type=int, default=1200, help="seconds the box idles after DONE before it stops itself")
+    x.add_argument("--files", default="", help="comma-separated repo paths to pack instead of FILES (keeps args under ~2 MB), e.g. SLEEPB_FILES")
     x = s.add_parser("search"); x.add_argument("--gpu", default=None, help="exact GPU name; default = best dlperf per $ over all GPUs (tools/vast_pick.py)")
     x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
     x.add_argument("--min-vram", type=float, default=24); x.add_argument("--min-dlperf", type=float, default=40); x.add_argument("--hours", type=float, default=1.0)
