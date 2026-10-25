@@ -436,3 +436,37 @@ What this suggests (one seed for the two new arms):
 - The two fixes act on different questions. Names fixes noticing; bridge fixes two-step links. They should combine.
 - The names arm has the fewest chain dreams (3), because its REM uses the old prompt.
 - The next round should combine names + bridge at 4x, on two seeds.
+
+## Addendum 9: names re-read + guided two-step dreams together, on two seeds (Week-2)
+Code b7d29b1929 (arm `ab_ob_b4_nb` = the addendum-8 names pass + the bridge prompt, both unchanged, at 4x work). The seed-2 names run used 297d8b4082 (the same sleepb.py as addendum 8). All runs used RTX 5090 boxes. References: addendum 8's ab_ob_b4_names (seed 1) and ab_ob_b4 seed 2 (`results_a8/`). The JSONs are in `results_a9/`. Prereg sealed at commit 297d8b4082 before any addendum-9 code or run.
+
+| arm | seed | wall | C4 | C2 | recall | reverse | two-hop (dreamed) | changed new | routine | tagger recall / precision | eligible C2 / C4 | + diary pool | ARC |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b4_names (reference) | 1 | 3,856 s | 95 | 81 | 88.0 | 86.5 | 1.3 (3) | 96.7 | 85 | 0.674 / 0.700 | 94 / 94 | 81.6 | 92.6 |
+| ab_ob_b4 (reference) | 2 | 3,821 s | 87 | 66 | 76.5 | 75.5 | 5.1 (8) | 70.0 | 85 | 0.533 / 0.691 | 72 / 87 | 82.6 | 92.6 |
+| **ab_ob_b4_names** | 2 | 4,210 s | 94 | 85 | **89.5** | 87.5 | 2.6 (5) | 93.3 | 85 | 0.674 / 0.700 | 94 / 94 | 84.6 | 91.6 |
+| **ab_ob_b4_nb** | 1 | 3,653 s | 95 | 88 | **91.5** | 85.0 | **38.5 (32)** | 96.7 | 85 | 0.674 / 0.700 | 94 / 94 | 86.4 | 92.2 |
+| **ab_ob_b4_nb** | 2 | 3,764 s | 96 | 86 | **91.0** | 88.0 | **35.9 (28)** | 93.3 | 85 | 0.674 / 0.700 | 94 / 94 | 86.0 | 91.8 |
+
+Paired tests (exact McNemar):
+- names vs b4, seed 2: recall **+13.0** (11 vs 37), **p = 0.0002**; reverse +12.0, p = 0.0005.
+- nb vs names, seed 1: two-hop **+37.2** (0 vs 29), **p < 0.0001** (3.7e-9); recall +3.5 (7 vs 14), p = 0.19; reverse −1.5, p = 0.71.
+- nb vs names, seed 2: two-hop **+33.3** (1 vs 27), **p < 0.0001** (2.2e-7); recall +1.5 (9 vs 12), p = 0.66; reverse +0.5, p = 1.0.
+- nb, seed 1 vs seed 2: recall −0.5, p = 1.0; two-hop −2.6, p = 0.84.
+- Reported: nb vs bridge (seed 1, two-hop) +10.3 (8 vs 16), p = 0.15. nb vs the Week-2 control: recall 91.5 vs 53.0 (+38.5, 7 vs 84).
+
+Verdicts:
+- **R1 SHOWN:** re-reading the day for names replicates on seed 2 (+13.0, p = 0.0002; seed 1 was +12.0).
+- **M1 PASS:** 32 (seed 1) and 28 (seed 2) of 78 two-hop questions had a kept chain dream (mark 20).
+- **K1 SHOWN** and **K2 SHOWN:** guided two-step dreams add +37.2 and +33.3 on two-hop on top of names (both p < 0.0001).
+- **K3 PASS:** recall did not drop on either seed (+3.5 and +1.5; mark >= −3).
+- **Adopt:** R1, K1, K2 and K3 all pass, so ab_ob_b4_nb is the recipe carried to the next step.
+- No wrong-if fired. No harm: ARC 91.6 to 92.2 (mark 87.6), diary 84.6 to 86.4 (all above their references).
+- The expectation (recall 85-90, two-hop 20-35) was slightly low on both counts.
+- Seeds change training order and dream sampling, not the notes: the tagger and the names pass are deterministic and gave identical items on both seeds (277 pairs asked, 175 items added). So the seed-2 runs test training noise, not note-taking noise.
+- Cost: about $2.50 on Vast, including about $0.58 for a Japan box that ran about 2.5x slower than the Slovakia boxes and was replaced at 1.3 h.
+
+What this suggests:
+- From weights alone the recipe now answers 91% of C2+C4 forward questions (control 53%), against an eligibility ceiling of 94%.
+- Two-hop correct stays close to the number of two-hop pairs with a kept chain dream (seed 1: 32 dreamed, 30 right; seed 2: 28 dreamed, 28 right; the per-question link is not logged yet; see `/mnt/project-files/research/sleep-gaps/two-hop-coverage-and-junk-notes.md`). The next two-hop gain should come from dreaming more of the 78 pairs (suggested, untested).
+- About 28% of eligible items match no true fact. Most are half-facts with a common noun ("X owns boat"). The names pass added 16, all from two common words it took for names ("Sister", "Sail").
