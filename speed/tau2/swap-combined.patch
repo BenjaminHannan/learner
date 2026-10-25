@@ -1,0 +1,122 @@
+diff --git a/swap/run_box.sh b/swap/run_box.sh
+index 90eb0d3..105be67 100644
+--- a/swap/run_box.sh
++++ b/swap/run_box.sh
+@@ -6,22 +6,41 @@ set -u
+ ROOT=$(pwd); OUT=$ROOT/out; mkdir -p $OUT
+ exec > >(tee -a $OUT/run_box.log) 2>&1
+ ARMS=${ARMS:-k2_7b_nothink,k2_37b_nothink,k2_7b_low,k2_37b_low,lfm8b_nothink,qwen4b_nothink,qwen9b_nothink,k2_7b_medium}
+-TRIALS=${TRIALS:-2}; CONC=${CONC:-10}; ARM_MIN=${ARM_MIN:-80}
++TRIALS=${TRIALS:-2}; CONC=${CONC:-24};  # SPEED: was 10; vLLM (<=32 seqs on Qwen) was mostly idle waiting on Haiku
++ ARM_MIN=${ARM_MIN:-80}
+ echo "=== swap1 start $(date -u +%FT%TZ) arms=$ARMS"
+ nvidia-smi --query-gpu=name,memory.total --format=csv
+ 
+-(apt-get update -qq && apt-get install -y -qq git curl) > /dev/null 2>&1; git --version
++# Image is nvidia/cuda:12.9.1-devel-* (nvcc 12.9 for FlashInfer JIT on sm_120). It has no python, so install it.
++(apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git curl python3 python3-pip python3-dev build-essential ninja-build) > /dev/null 2>&1; git --version
++export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda} PATH=/usr/local/cuda/bin:$PATH PIP_BREAK_SYSTEM_PACKAGES=1
++nvcc --version | tail -2
+ pip install -q -U uv 2>&1 | tail -1
+-uv pip install --system -q -U vllm 2>&1 | tail -3
+-python3 -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__)"
++prefetch() {  # SPEED: pull a model into the HF cache in the background (skipped if disk is tight)
++  [ "$(df --output=avail -BG /root | tail -1 | tr -dc 0-9)" -gt 150 ] || return 0
++  ( python3 -c "from huggingface_hub import snapshot_download as s; s('$1')" > /dev/null 2>&1 ) &
++}
++FIRST=${ARMS%%,*}
++uv pip install --system --break-system-packages -q -U vllm huggingface_hub --torch-backend=cu129 2>&1 | tail -3
++# FlashInfer prebuilt kernels (best effort; JIT with nvcc 12.9 is the fallback). Versions must match flashinfer-python.
++FIV=$(python3 -c "import flashinfer; print(flashinfer.__version__)" 2>/dev/null)
++echo "flashinfer $FIV"
++[ -n "$FIV" ] && uv pip install --system --break-system-packages -q "flashinfer-cubin==$FIV" --index-url https://flashinfer.ai/whl 2>&1 | tail -1
++[ -n "$FIV" ] && uv pip install --system --break-system-packages -q "flashinfer-jit-cache==$FIV" --index-url https://flashinfer.ai/whl/cu129 2>&1 | tail -1
++export FLASHINFER_CUDA_ARCH_LIST=${FLASHINFER_CUDA_ARCH_LIST:-12.0}   # JIT only the 5090 arch (shorter first-start compile)
++python3 -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__, torch.version.cuda)"
+ 
+ git clone -q https://github.com/sierra-research/tau2-bench /job/tau2 && cd /job/tau2 && git checkout -q cc1df47 && git apply $ROOT/swap/tau2-judge-haiku.patch && echo "tau2 patched" || { echo "=== BB FAIL tau2 setup"; exit 1; }
+-uv venv -q /job/t2venv && UV_PROJECT_ENVIRONMENT=/job/t2venv uv sync -q 2>&1 | tail -2
++( uv venv -q /job/t2venv && UV_PROJECT_ENVIRONMENT=/job/t2venv uv sync -q 2>&1 | tail -2 ) &  # SPEED: overlaps the first model download
++T2SYNC=$!
+ unset ANTHROPIC_BASE_URL; export ANTHROPIC_API_BASE=https://api.anthropic.com
++wait $T2SYNC
+ /job/t2venv/bin/python -c "import os; print('key set:', bool(os.environ.get('ANTHROPIC_API_KEY')))"
+ cd $ROOT
+ 
+ T=$ROOT/swap/templates
++# Default: let vLLM pick FlashInfer kernels (needs nvcc>=12.9). Fallback if they fail: QWEN_FALLBACK=1 (Triton, ~100x slower).
++if [ "${QWEN_FALLBACK:-0}" = 1 ]; then QWEN_BE="--moe-backend triton --gdn-prefill-backend triton"; QWEN_BE_GDN="--gdn-prefill-backend triton"; else QWEN_BE=""; QWEN_BE_GDN=""; fi
+ arm_cfg() {  # -> REPO, SERVE (extra vllm args), KW (chat_template_kwargs json), MAXTOK
+   case $1 in
+     k2_7b_nothink)  REPO=IFM/K2-Horizon-7B;   SERVE="--trust-remote-code --tool-call-parser k2_horizon --chat-template $T/k2_nothink.jinja"; KW='{}'; MAXTOK=4096 ;;
+@@ -32,8 +51,8 @@ arm_cfg() {  # -> REPO, SERVE (extra vllm args), KW (chat_template_kwargs json),
+     lfm8b_nothink)  REPO=LiquidAI/LFM2.5-8B-A1B; SERVE="--tool-call-parser pythonic --chat-template $T/lfm25_nothink.jinja"; KW='{}'; MAXTOK=4096 ;;
+     qwen36_35b_awq_nothink) REPO=QuantTrio/Qwen3.6-35B-A3B-AWQ; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+     qwen38_27b_awq_nothink) REPO=cyankiwi/Qwen3.8-27B-AWQ-INT4; SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+-    qwen36_35b_bf16_nothink) REPO=Qwen/Qwen3.6-35B-A3B; SERVE="--tool-call-parser qwen3_coder --moe-backend triton --gdn-prefill-backend triton --max-num-seqs 32 --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+-    qwen38_27b_bf16_nothink) REPO=Qwen/Qwen3.8-27B; SERVE="--tool-call-parser qwen3_coder --gdn-prefill-backend triton --max-num-seqs 32 --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
++    qwen36_35b_bf16_nothink) REPO=Qwen/Qwen3.6-35B-A3B; SERVE="--tool-call-parser qwen3_coder $QWEN_BE --max-num-seqs 32 --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
++    qwen38_27b_bf16_nothink) REPO=Qwen/Qwen3.8-27B; SERVE="--tool-call-parser qwen3_coder $QWEN_BE_GDN --max-num-seqs 32 --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+     qwen4b_nothink) REPO=Qwen/Qwen3.5-4B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+     qwen9b_nothink) REPO=Qwen/Qwen3.5-9B;     SERVE="--tool-call-parser qwen3_coder --limit-mm-per-prompt {\"image\":0,\"video\":0}"; KW='{"enable_thinking":false}'; MAXTOK=4096 ;;
+     *) return 1 ;;
+@@ -47,7 +66,7 @@ serve() {  # $1 arm, $2 extra flags
+     pkill -9 -f "vllm|EngineCore" 2>/dev/null; sleep 5
+   done
+   vllm serve $REPO --served-model-name m --port 8000 --dtype ${DTYPE:-bfloat16} --max-model-len ${MAXLEN:-49152} --gpu-memory-utilization ${GPU_UTIL:-0.90} \
+-    --enable-auto-tool-choice $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
++    --enable-auto-tool-choice ${EXTRA_SERVE:-} $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
+   for i in $(seq 1 180); do
+     curl -s localhost:8000/v1/models >/dev/null 2>&1 && return 0
+     pgrep -f "vllm serve" >/dev/null || return 1
+@@ -56,20 +75,25 @@ serve() {  # $1 arm, $2 extra flags
+   return 1
+ }
+ 
++ARMLIST=(${ARMS//,/ }); IDX=0
++arm_cfg ${ARMLIST[0]} && prefetch $REPO
+ for ARM in ${ARMS//,/ }; do
+   arm_cfg $ARM || { echo "=== unknown arm $ARM"; continue; }
++  IDX=$((IDX+1)); NEXT=${ARMLIST[$IDX]:-}
++  [ -n "$NEXT" ] && ( arm_cfg $NEXT && prefetch $REPO )  # SPEED: next model downloads while this arm serves and scores
+   mkdir -p $OUT/$ARM; echo "=== ARM $ARM $REPO start $(date -u +%T)"
+   if ! serve $ARM ""; then
+     echo "=== $ARM native vllm failed; errors:"; grep -E "Error|error" $OUT/$ARM/vllm.log | grep -v "^ *File" | tail -6 | cut -c1-300; cp $OUT/$ARM/vllm.log $OUT/$ARM/vllm_native.log
+     serve $ARM "--model-impl transformers" || { echo "=== $ARM SERVE-FAIL"; tail -20 $OUT/$ARM/vllm.log; continue; }
+   fi
+-  python3 $ROOT/swap/smoke.py "$KW" > $OUT/$ARM/smoke.json 2>&1; echo "smoke: $(head -c 600 $OUT/$ARM/smoke.json)"
++  S0=$(date +%s); python3 $ROOT/swap/smoke.py "$KW" > $OUT/$ARM/smoke.json 2>&1; echo "smoke1 $(( $(date +%s) - S0 ))s"
++  S0=$(date +%s); python3 $ROOT/swap/smoke.py "$KW" > $OUT/$ARM/smoke2.json 2>&1; echo "smoke2 (warm) $(( $(date +%s) - S0 ))s"; grep -iE "backend|flashinfer|triton" $OUT/$ARM/vllm.log | head -8 | cut -c1-200; echo "smoke: $(head -c 600 $OUT/$ARM/smoke.json)"
+   ARGS=$(python3 -c "import json,sys; print(json.dumps({'api_base':'http://localhost:8000/v1','api_key':'none','max_tokens':int(sys.argv[2]),'num_retries':2,'extra_body':{'chat_template_kwargs':json.loads(sys.argv[1])}}))" "$KW" $MAXTOK)
+   T0=$(date +%s)
+-  ( cd /job/tau2 && timeout $((ARM_MIN*60)) /job/t2venv/bin/tau2 run --domain retail --agent-llm openai/m --agent-llm-args "$ARGS" \
++  ( cd /job/tau2 && PYTHONPATH=$ROOT/swap/retry SPEED_RETRY_LOG=$OUT/$ARM/speed_retry.log timeout $((ARM_MIN*60)) /job/t2venv/bin/tau2 run --domain retail --agent-llm openai/m --agent-llm-args "$ARGS" \
+       --user-llm anthropic/claude-haiku-5-5 --user-llm-args '{"num_retries": 6}' \
+       --task-ids $(seq -s ' ' 0 39) --num-trials $TRIALS --max-concurrency $CONC --save-to swap1_$ARM ) > $OUT/$ARM/tau2.log 2>&1
+-  echo "tau2 rc=$? $(( $(date +%s) - T0 ))s"
++  echo "tau2 rc=$? $(( $(date +%s) - T0 ))s; 429 retries: $(wc -l < $OUT/$ARM/speed_retry.log 2>/dev/null || echo 0); $(grep -i 'prefix cache hit rate' $OUT/$ARM/vllm.log | tail -1 | grep -o 'hit rate: [0-9.]*%')"
+   R=/job/tau2/data/simulations/swap1_$ARM/results.json
+   [ -f $R ] || R=$(ls -d /job/tau2/data/simulations/swap1_$ARM* 2>/dev/null | head -1)/results.json
+   if [ -f "$R" ]; then
+diff --git a/swap/vast_swap.py b/swap/vast_swap.py
+index a19eb66..302d4d5 100644
+--- a/swap/vast_swap.py
++++ b/swap/vast_swap.py
+@@ -19,7 +19,7 @@ from pathlib import Path
+ 
+ REPO = Path(__file__).resolve().parents[1]
+ API = "https://console.vast.ai/api/v0"
+-IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-devel"
++IMAGE = "nvidia/cuda:12.9.1-devel-ubuntu24.04"  # nvcc 12.9: FlashInfer JIT for sm_120; driver must support 12.9 (cuda_max_good below)
+ FILES = ["swap", "tools"]
+ CHUNK = 100_000
+ 
+@@ -91,7 +91,7 @@ def search(a):
+             print(o["id"], o["gpu"], o["usd_h"], o["vram_gb"], "dlperf", o["dlperf"], "dlperf/$", o["per_usd"], o["down"], o["geo"])
+         return
+     q = {"gpu_name": {"eq": a.gpu}, "num_gpus": {"eq": 1}, "rentable": {"eq": True}, "reliability2": {"gte": 0.97},
+-         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.8}}
++         "dph_total": {"lte": a.max_dph}, "disk_space": {"gte": 80}, "inet_down": {"gte": 300}, "cuda_max_good": {"gte": 12.9}}
+     r = call("POST", "/bundles/", q)
+     offers = sorted(r.get("offers") or [], key=lambda o: o["dph_total"])
+     for o in offers[:a.n]:
