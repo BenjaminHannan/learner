@@ -35,7 +35,7 @@ CODE_FILES = ["train.py", "rollout.py", "grader.py", "sandbox.py", "checks.py", 
 FULL = dict(deadline_s=11 * 3600, min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
             common="--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 2 --max-usd 14 --dtype fp16 --gen-batch 8",
             eval_flags="--eval-only --eval-grade --dtype fp16")
-# RLAIF-2 (rlaif/SPEC.md): reward v3, lr 1e-4, 30 steps; eval run-1 jolt_step20 first, then steps 10/20/30 of both arms.
+# RLAIF-2 (rlaif/SPEC.md): reward v3, lr 1e-4, 30 steps; eval the base model and run-1 jolt_step20 first, then steps 10/20/30 of both arms.
 RLAIF2 = dict(plan="rlaif2", deadline_s=int(10.75 * 3600), min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
               common="--reward-v3 --lr 1e-4 --steps 30 --tasks-per-step 8 --group 4 --seed 0 --save-every 10 --gen-batch 8 --max-usd 14 --dtype fp16",
               jolt_extra="--beta-t 0.001 --beta-s 0.1",
@@ -411,7 +411,8 @@ def main_rlaif2(ngpu):
             run_step("eval_jolt1_step20", ev + ["--adapter", old, "--heldout", heldout], 0, hard_stop, W("eval_jolt1_step20"))
         run_step("train_grpo", ["--algo", "grpo", *common], 0, train_stop, W("grpo"))
 
-    def lane1():
+    def lane1():  # untrained base first: its strict_success is the pass-mark reference
+        run_step("eval_base", ev + ["--heldout", heldout], g1, hard_stop, W("eval_base"))
         run_step("train_jolt", ["--algo", "jolt_plus", *common, *CFG["jolt_extra"].split()], g1, train_stop, W("jolt"))
     ls = [lane0, lane1] if g1 else [lambda: (lane0(), lane1())]
     ts = [threading.Thread(target=l) for l in ls]; [t.start() for t in ts]; [t.join() for t in ts]
