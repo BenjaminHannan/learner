@@ -108,3 +108,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   (from_label.py); a background loop keeps asking for each box's container log, which ends with that box's SUMMARY.txt.
   Provisional label readout (seeds 0 and 2 for t/t1): S(8) 67.0 vs G need 74.1; S(8) - S(1) +0.05; S(8) - T1 +0.00;
   swap lesion +0.15; verdict so far FUTILE-STOP, marks pending seed 1.
+- 09:43Z: s2's container log came back (backbone/results/think1/s2/box.log): no job failed or was retried; its on-box
+  summarize.py report (seed 2 only, with per-row hits) is in SUMMARY_s2_only.txt: S(8)-S(1) +0.01 [-0.23, +0.24];
+  S(8)-T1 +0.08 [-0.15, +0.29]; swap lesion costs +0.27 [+0.05, +0.48]; gates-off rows unlike ref0: 0; M1 chain banks
+  S(8)-T1 +0.84 [+0.20, +1.54]; M2 depth >= 4 +0.26 [-0.32, +0.83]. Wall time on the 5090: t 4.74 h, t1 1.62 h.
+  out.tar.gz is 197 KB and ckpt.tar.gz 180 MB on the box.
