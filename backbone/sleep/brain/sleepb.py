@@ -60,7 +60,7 @@ from sleep1 import ARC_SMOKE, SYS, Lang, generic_prompts, load_arc, parse_dream,
 from train import LORA_TARGETS, load_model  # noqa: E402
 
 K = 4
-LOSS_SCALE = [1.0]  # --dtype fp16 sets 1024 (Trainer.step only; every other path is unchanged)
+LOSS_SCALE = [1.0, 0]  # [scale, clean steps in a row]; --dtype fp16 starts at 128, dynamic (Trainer.step only; every other path is unchanged)
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
@@ -541,11 +541,16 @@ class Trainer:
             gs = [p.grad for p in s.params if p.grad is not None]
             for g in gs:
                 g.div_(LOSS_SCALE[0])
-            if not all(bool(torch.isfinite(g).all()) for g in gs):
+            if not all(bool(torch.isfinite(g).all()) for g in gs):  # dynamic scale (as torch GradScaler): halve, skip the step
                 s.overflow = getattr(s, "overflow", 0) + 1
+                LOSS_SCALE[0], LOSS_SCALE[1] = max(LOSS_SCALE[0] / 2, 2.0 ** -8), 0
+                s.min_scale = min(getattr(s, "min_scale", LOSS_SCALE[0]), LOSS_SCALE[0])
                 s.opt.zero_grad(set_to_none=True)
                 s.i += 1
                 return
+            LOSS_SCALE[1] += 1
+            if LOSS_SCALE[1] >= 100:  # 100 clean steps in a row: try twice the scale
+                LOSS_SCALE[0], LOSS_SCALE[1] = min(LOSS_SCALE[0] * 2, 2.0 ** 16), 0
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
@@ -1946,7 +1951,7 @@ class Brain:
                     rem_n, done = rem_n + (c - n_nrem), done + (c - n_nrem)
                     s.cov["rem_steps"] += c - n_nrem
         lap("train")
-        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:], "fp16_overflow_steps": getattr(tr, "overflow", 0)})
+        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:], "fp16_overflow_steps": getattr(tr, "overflow", 0), "fp16_loss_scale": LOSS_SCALE[0], "fp16_min_scale": getattr(tr, "min_scale", None)})
         if a.arm == "ab_ob_ther":
             rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
                            "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
@@ -2279,7 +2284,7 @@ def main():
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
     ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (ab_ob_b2: 2)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or ab_ob_b2 pins s)")
-    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also scales the training loss x1024")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -2348,10 +2353,10 @@ def main():
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
-    if args.dtype != "auto":  # --dtype fp16 for GPUs without bf16 (Kaggle T4); LoRA adapters stay fp32 (peft), loss scaled x1024
+    if args.dtype != "auto":  # --dtype fp16 for GPUs without bf16 (Kaggle T4); LoRA adapters stay fp32 (peft), dynamic loss scale
         dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.dtype]
         if args.dtype == "fp16":
-            LOSS_SCALE[0] = 1024.0
+            LOSS_SCALE[0] = 128.0
     lm, tok = load_model(args, device, dtype)
     q4 = None
     if args.q4_base:
