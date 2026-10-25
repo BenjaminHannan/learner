@@ -25,11 +25,12 @@ middle name; start / answer alternate with the pair index so both directions are
 Addendum 8 (PREREG-sleepB-addendum8.md), on top of work scale 4: ab_ob_b4_bridge (b4 + addendum 7's bridge_prompt in REM) and ab_ob_b4_names (b4 + a names re-read pass right after the
 day's tagging: for pairs of candidate names, i.e. words capitalised mid-sentence somewhere in the diary so far, that occur together in a turn and that no item links yet, names_prompt asks
 how they are related; each answer that is not "no" becomes a triple that goes through tag()'s checks and joins that turn's tag_log entry; rec["names_pass"] holds the counts).
+Addendum 9 (PREREG-sleepB-addendum9.md), on top of work scale 4: ab_ob_b4_nb = ab_ob_b4_names's names re-read pass + ab_ob_b4_bridge's bridge_prompt in REM (both addendum-8 code paths, unchanged).
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 arm unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 arm unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -68,14 +69,16 @@ ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendu
 WIN_ARMS = ("ab_ob_win", "ab_ob_winp")  # addendum 6: work scale 2 + guess priority + extra texts (win: twisted scenes, winp: ordinary paraphrases)
 ADD7_ARMS = ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")  # addendum 7: one change each on top of work scale 2 (b4: scale 4; tag2: tag_prompt2; bridge: bridge_prompt)
 ADD8_ARMS = ("ab_ob_b4_names", "ab_ob_b4_bridge")  # addendum 8: one change each on top of work scale 4 (names: the names re-read pass after tagging; bridge: bridge_prompt)
-BRIDGE_ARMS = ("ab_ob_bridge", "ab_ob_b4_bridge")  # Brain.rem sends bridge_prompt (start, answer and middle name given) instead of chain_prompt
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)  # open-book rehearsal (Brain.qa_ex)
+ADD9_ARMS = ("ab_ob_b4_nb",)  # addendum 9: both addendum-8 changes together on top of work scale 4 (the names pass and bridge_prompt)
+NAMES_ARMS = ("ab_ob_b4_names", *ADD9_ARMS)  # Brain.night runs names_pass right after the day's tagging
+BRIDGE_ARMS = ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS)  # Brain.rem sends bridge_prompt (start, answer and middle name given) instead of chain_prompt
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS, *ADD9_ARMS)  # open-book rehearsal (Brain.qa_ex)
 GUESS_ARMS = ("ab_ob_guess", *WIN_ARMS)  # first-token confidence and the dopamine priority
 TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the item's texts
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
 B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
-B4_ARMS = ("ab_ob_b4", *ADD8_ARMS)  # addendum 7 / 8: work scale 4 unless --budget-scale says otherwise
+B4_ARMS = ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)  # addendum 7 / 8 / 9: work scale 4 unless --budget-scale says otherwise
 
 
 def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
@@ -239,7 +242,7 @@ def tag_prompt2(L, text):  # ab_ob_tag2: tag_prompt's system line, JSON format, 
     return L.render("You extract facts from chat messages.", u)
 
 
-def names_prompt(L, text, a, b):  # ab_ob_b4_names: one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing)
+def names_prompt(L, text, a, b):  # NAMES_ARMS (ab_ob_b4_names, ab_ob_b4_nb): one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing)
     u = (f"Message from Sam:\n\"{text}\"\n\nDoes this message say how \"{a}\" and \"{b}\" are related? If yes, reply with only the relation in 1 to 4 words "
          f"(for example: works at, lives in, is the mentor of, owns the boat). If not, reply only: no")
     return L.render("You extract facts from chat messages.", u)
@@ -1380,7 +1383,7 @@ def selftest_arms7():
     assert {a: default_scale(a) for a in want} == want and all(default_scale(a) is None for a in ARMS if a not in (*B2_ARMS, *B4_ARMS))
     assert default_scale("ab_ob_b4", 1.5) == 1.5 and default_scale("ab_ob_bridge", 3.0) == 3.0 and default_scale("ab_ob", 3.0) == 3.0
     assert GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win") and EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
-    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS)
+    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)
     for a in ADD7_ARMS:
         assert a in ARMS and a in NEW_ARMS and a in OB_ARMS and not {a} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS}, a
     out["scales"] = {a: default_scale(a) for a in ADD7_ARMS}
@@ -1459,7 +1462,7 @@ def selftest_arms8():
     from types import SimpleNamespace
     out = {}
     assert default_scale("ab_ob_b4_names") == 4.0 and default_scale("ab_ob_b4_bridge") == 4.0 and default_scale("ab_ob_b4_names", 1.5) == 1.5 and default_scale("ab_ob_b4") == 4.0
-    assert ADD8_ARMS == ("ab_ob_b4_names", "ab_ob_b4_bridge") and BRIDGE_ARMS == ("ab_ob_bridge", "ab_ob_b4_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS)
+    assert ADD8_ARMS == ("ab_ob_b4_names", "ab_ob_b4_bridge") and BRIDGE_ARMS == ("ab_ob_bridge", "ab_ob_b4_bridge", *ADD9_ARMS) and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS)
     assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win")
     assert EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
     for a in ADD8_ARMS:
@@ -1515,7 +1518,7 @@ def selftest_arms8():
             assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (arm, k, r)
             starts.append(start == fp)
         assert starts == [True, False, True, False], (arm, starts)
-    out["bridge_arms_use_bridge_prompt"] = list(BRIDGE_ARMS)
+    out["bridge_arms_use_bridge_prompt"] = [a for a in BRIDGE_ARMS if a not in ADD9_ARMS]  # the addendum-9 arm is checked in selftest_arms9
     out["other_arms_use_chain_prompt"] = ["ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_tag2", "ab_ob_b4_names"]
 
     # (iii) candidate names (diary text only)
@@ -1607,6 +1610,98 @@ def selftest_arms8():
     return out
 
 
+def selftest_arms9():
+    """Addendum-9 arm on stubs (no model, no RNG outside a local Random): (i) default_scale gives 4.0 for ab_ob_b4_nb (an explicit --budget-scale wins); it is a valid arm, in NEW_ARMS / OB_ARMS /
+    B4_ARMS / BRIDGE_ARMS / NAMES_ARMS and in none of GUESS / TWIST / EXTRA / B2_ARMS; (ii) every older arm keeps its membership: NEW_ARMS, OB_ARMS, B4_ARMS and BRIDGE_ARMS without the new arm are the
+    addendum-8 tuples, and only ab_ob_b4_names (plus the new arm) is in NAMES_ARMS; (iii) Brain.rem, run on a stub that records its first generate call, sends bridge_prompt for ab_ob_b4_nb (start /
+    answer alternate with the pair index) and Brain.tag sends tag_prompt; (iv) Brain.night, run on a stub that stops right after the names gate, calls names_pass for ab_ob_b4_nb and ab_ob_b4_names
+    and for no other arm."""
+    from types import SimpleNamespace
+    out, nb = {}, "ab_ob_b4_nb"
+    assert ADD9_ARMS == (nb,) and NAMES_ARMS == ("ab_ob_b4_names", nb) and default_scale(nb) == 4.0 and default_scale(nb, 1.5) == 1.5 and default_scale(nb, 3.0) == 3.0
+    assert nb in ARMS and nb in NEW_ARMS and nb in OB_ARMS and nb in B4_ARMS and nb in BRIDGE_ARMS and nb in NAMES_ARMS
+    assert not {nb} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS, *B2_ARMS, *DELTA_ARMS}
+    out["scales"] = {nb: default_scale(nb)}
+
+    # (ii) the older arms: the sets without the new arm are the addendum-8 tuples
+    assert ADD4_ARMS == ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess") and WIN_ARMS == ("ab_ob_win", "ab_ob_winp") and ADD7_ARMS == ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")
+    old = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)
+    without = lambda t: tuple(a for a in t if a != nb)  # noqa: E731
+    assert without(NEW_ARMS) == ("ab_ob", "ab_klctx", *old) and without(OB_ARMS) == ("ab_ob", *old)
+    assert without(B4_ARMS) == ("ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge") and without(BRIDGE_ARMS) == ("ab_ob_bridge", "ab_ob_b4_bridge")
+    assert [a for a in ARMS if a in NAMES_ARMS] == ["ab_ob_b4_names", nb] and [a for a in ARMS if a in BRIDGE_ARMS] == ["ab_ob_bridge", "ab_ob_b4_bridge", nb]
+    assert [a for a in ARMS if default_scale(a) == 4.0] == ["ab_ob_b4", "ab_ob_b4_names", "ab_ob_b4_bridge", nb]
+    out["old_sets_kept"] = True
+
+    # (iii) the prompts Brain.tag and Brain.rem send (the same stub as selftest_arms8)
+    L = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    mk = lambda a, r, o: Item((norm(a), norm(o)), a, o, r, 1)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira"), mk("Kelmira", "is near", "Harbor Light"), mk("Harbor Light", "is in", "Oslo"), mk("Brontu", "sails to", "Kelmira")]
+    by_fact = {it.fact: it for it in E}
+    text = "Sam, my friend Zelmir moved to Kelmira on the Brontu ferry."
+
+    class Stop(Exception):
+        pass
+
+    def run(arm):  # the prompts Brain.tag and Brain.rem send to their first generate call
+        got = {}
+
+        def stub(name):
+            def gen(prompts, n, **kw):
+                got[name] = list(prompts)
+                raise Stop
+            return gen
+        for name, f, a in (("tag", Brain.tag, (1,)), ("rem", Brain.rem, (E, 1, 0))):
+            me = SimpleNamespace(L=L, a=SimpleNamespace(arm=arm, smoke=False, gist_min_days=3), gen=stub(name), mn=lambda n: n, raw={}, rng=random.Random(0), rem_done=Counter(), gist_done=Counter(),
+                                 cap_chains=30, cap_gist=30, diary=SimpleNamespace(turns=[{"day": 1, "i": 0, "text": text}]))
+            try:
+                f(me, *a)
+            except Stop:
+                pass
+        return got
+
+    pair_of = lambda pr: [by_fact[f] for f in re.findall(r"^- (.+)$", pr, re.M)]  # noqa: E731
+    shared = lambda p, q: ({norm(p.subj), norm(p.obj)} & {norm(q.subj), norm(q.obj)}).pop()  # noqa: E731
+    got = run(nb)
+    assert got["tag"] == [tag_prompt(L, text)]
+    rem = got["rem"]
+    assert len(rem) == 4, len(rem)
+    starts = []
+    for k, r in enumerate(rem):
+        p, q = pair_of(r)
+        mid_d = [n for n in (p.subj, p.obj) if norm(n) == shared(p, q)][0]
+        fp, fq = [n for n in (p.subj, p.obj) if norm(n) != shared(p, q)][0], [n for n in (q.subj, q.obj) if norm(n) != shared(p, q)][0]
+        start, answer = (fp, fq) if k % 2 == 0 else (fq, fp)
+        assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (k, r)
+        assert r != chain_prompt(L, p.fact, q.fact) and f'share the name "{mid_d}"' in r
+        starts.append(start == fp)
+    assert starts == [True, False, True, False], starts
+    for arm in ("ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge", "ab_ob_b4_names", "ab_ob_b4_bridge"):  # the older arms in the same stub: bridge_prompt only for the bridge arms
+        assert all("share the name" in r for r in run(arm)["rem"]) == (arm in ("ab_ob_bridge", "ab_ob_b4_bridge")), arm
+    out["nb_uses_bridge_prompt"] = out["nb_uses_tag_prompt"] = True
+
+    # (iv) the names gate in Brain.night: a stub that stops at refresh, which comes right after the gate
+    def gate(arm):
+        called = []
+        me = SimpleNamespace(a=SimpleNamespace(arm=arm, budget_scale=None, night_budget_s=None), L=SimpleNamespace(device=SimpleNamespace(type="cpu")), log=lambda m: None, tag=lambda d: {},
+                             names_pass=lambda d: called.append(d) or {})
+
+        def refresh(d):
+            raise Stop
+        me.refresh = refresh
+        try:
+            Brain.night(me, 2, None)
+        except Stop:
+            pass
+        else:
+            raise AssertionError("night did not reach refresh")
+        return called == [2]
+    fired = [arm for arm in ARMS if gate(arm)]
+    assert fired == ["ab_ob_b4_names", nb], fired
+    out["names_gate_arms"] = fired
+    return out
+
+
 def selftest_budget():
     """Addendum-5 machinery: (i) plan_scale with fake timings (R = 50 x 1 + 100 x 0.5 = 100 s: budgets 100 / 200 / 50 give s = 1 / 2 / 0.5; far
     outside the range it clips to 4 and 0.25; R <= 0 gives 4); (ii) ref_gen_batches(32) = 154 by hand; (iii) Brain.sc scales steps / items by s
@@ -1689,7 +1784,7 @@ def bridge_roles(p, q, x, k):  # ab_ob_bridge: (start, answer, middle name) of R
     return (fp, fq, mid) if k % 2 == 0 else (fq, fp, mid)
 
 
-# addendum 8 (ab_ob_b4_names): the diary-only candidate-name finder, the pair builder, the answer parser, and the triple checks shared with Brain.tag
+# addendum 8 (NAMES_ARMS): the diary-only candidate-name finder, the pair builder, the answer parser, and the triple checks shared with Brain.tag
 NAMES_CAP = 6  # pairs asked per turn
 NAME_TOK = re.compile(r"[^\W\d_]+(?:'[^\W\d_]+)?")  # a word, optionally with one apostrophe part (I'm, O'Brien, Mike's)
 NAME_STOP = {norm(w) for w in ("Sam I I'm I've I'll I'd OK Ok Okay Hey Hi Hello Thanks Also Anyway But And So The A An My It This That English Christmas God Mom Dad Yes No Yeah Please Sorry Well Oh "
@@ -1847,7 +1942,7 @@ class Brain:
         st["turns"] = len(turns)
         return dict(st)
 
-    def names_pass(s, d):  # addendum 8 (ab_ob_b4_names): re-read the day's turns for pairs of candidate names that no item links yet; each non-"no" answer is a triple that goes through tag()'s checks (triple_status) and joins the turn's tag_log entry
+    def names_pass(s, d):  # addendum 8 (NAMES_ARMS): re-read the day's turns for pairs of candidate names that no item links yet; each non-"no" answer is a triple that goes through tag()'s checks (triple_status) and joins the turn's tag_log entry
         turns = [t for t in s.diary.turns if t["day"] == d]
         vocab = name_vocab(s.diary, d)  # from the diary text of days <= d only
         pats, ask, st = {n: pat(n) for n in vocab}, [], Counter()
@@ -2374,7 +2469,7 @@ class Brain:
         if bench:
             lap("bench")
         rec["tagging"] = s.tag(d)
-        if a.arm == "ab_ob_b4_names":  # addendum 8: re-read the day for names (before refresh, so the new items get their mention counts)
+        if a.arm in NAMES_ARMS:  # addendum 8 / 9: re-read the day for names (before refresh, so the new items get their mention counts)
             rec["names_pass"] = s.names_pass(d)
             s.log(f"[night {d}] names {rec['names_pass']}")
         s.refresh(d)
@@ -2694,7 +2789,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 arm unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 / -9 arm unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -2704,7 +2799,7 @@ def main():
     ap.add_argument("--full-lr-small", type=float, default=5e-6, help="ab_ob_full_s only: the gentler lr (replaces --lr; otherwise identical to ab_ob_full)")
     ap.add_argument("--local-k-frac", type=float, default=None, help="ab_ob_local: plastic delta entries per night as a fraction of all delta entries (default: as many as there are LoRA parameters)")
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
-    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; ab_ob_b4: 4)")
+    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; B4_ARMS ab_ob_b4 / b4_names / b4_bridge / b4_nb: 4)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
@@ -2736,6 +2831,7 @@ def main():
         print(json.dumps({"stale": selftest_stale()}))
         print(json.dumps({"arms7": selftest_arms7()}))
         print(json.dumps({"arms8": selftest_arms8()}))
+        print(json.dumps({"arms9": selftest_arms9()}))
         return
     if args.bench_train:
         if not args.out:
