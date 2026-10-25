@@ -500,13 +500,16 @@ class World:
         return s
 
     def glob(self, pattern):
+        """Path glob; '*' stays inside one folder, '**' matches zero or more folders."""
         parts = pattern.split("/")
-        out = []
-        for p in sorted(self.all_paths()):
-            ps = p.split("/")
-            if len(ps) == len(parts) and all(fnmatch.fnmatchcase(x, y) for x, y in zip(ps, parts)):
-                out.append(p)
-        return out
+
+        def match(ps, qs):
+            if not qs:
+                return not ps
+            if qs[0] == "**":
+                return any(match(ps[i:], qs[1:]) for i in range(len(ps) + 1))
+            return bool(ps) and fnmatch.fnmatchcase(ps[0], qs[0]) and match(ps[1:], qs[1:])
+        return [p for p in sorted(self.all_paths()) if match(p.split("/"), parts)]
 
     def _finfo(self, p):
         f = self.files[p]
@@ -1091,7 +1094,8 @@ class World:
             elif self.is_dir(src):
                 if not ("r" in opts or "R" in opts):
                     raise ShellError(f"cp: {s} is a directory (not copied).")
-                t = dst + "/" + posixpath.basename(src) if into else dst
+                contents = s.rstrip("/").endswith("/.")   # cp -r dir/. dst copies the contents
+                t = dst + "/" + posixpath.basename(src) if into and not contents else dst
                 for k in self.tree_files(src):
                     self.files[t + k[len(src):]] = dict(self.files[k], mtime=self.iso_now())
                 self.dirs.add(t)

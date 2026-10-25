@@ -236,6 +236,12 @@ class CheckTests(unittest.TestCase):
         ev = [{"kind": "assistant", "text": "Lab 5 is due Thursday."}]
         self.assertEqual(self.run1({"type": "answer", "any": ["lab 5"]}, ev, "ok done"), "pass")
 
+    def test_glob_doublestar_and_cp_contents(self):
+        call(self.w, "shell", command="mkdir -p ~/B/x && cp -r ~/Documents/College/. ~/B/x/")
+        self.assertTrue(self.w.glob("~/B/x/activities_list.txt"))
+        self.assertTrue(self.w.glob("~/B/*/**/activities_list.txt"))
+        self.assertFalse(self.w.glob("~/B/*/activities_list.txt.bak"))
+
     def test_contacts_search(self):
         self.assertIn("patel.counselor@lakeview.test", call(self.w, "contacts_search", query="patel"))
         self.assertIn("counselor", call(self.w, "contacts_search", query="counselor"))
