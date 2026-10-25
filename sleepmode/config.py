@@ -37,6 +37,7 @@ class Config:
     mlx_model: str = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
     practice_min_share: float = 0.05
     practice_tasks: int = 12
+    max_errors: int = 3              # failed hours in a row before resting idle_hours
     practice_model_url: str = ""
     practice_model: str = ""
     practice_server_cmd: List[str] = field(default_factory=list)

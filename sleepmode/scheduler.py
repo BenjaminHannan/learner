@@ -154,8 +154,20 @@ class Scheduler:
             for s in (signal.SIGTERM, signal.SIGINT):
                 old[s] = signal.signal(s, self._on_signal)
         try:
+            errors = 0
             while not self.should_stop():
-                self.tick()
+                try:
+                    self.tick()
+                    errors = 0
+                except Exception as e:  # a crashed worker or practice round must not end a multi-day sleep
+                    errors += 1
+                    self.err("tick", e)
+                    if errors >= self.cfg.max_errors:
+                        errors = 0
+                        self.idle_until = self.clock() + self.cfg.idle_hours * self.cfg.hour_s
+                        self.state.event("idle", reason="%d errors in a row" % self.cfg.max_errors,
+                                         hours=self.cfg.idle_hours)
+                    self.wait_until(self.clock() + self.cfg.hour_s / 4)
         except Exception as e:  # keep the summary honest even on a bug
             self.err("loop", e)
             self.stop_reason = self.stop_reason or "error: %r" % e
