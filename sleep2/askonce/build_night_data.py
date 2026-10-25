@@ -5,6 +5,8 @@ on tagged regret turns. Only the slice (15% of the night's token-passes) differs
                      annoyance: chosen = the direct correct action (answer made visible in memory), rejected = the question the model asked
   B-sft  SFT on the chosen sides only
   A+     extra fact paraphrases + corrected-action SFT on the same events
+v2 (askonce-v2): the shared set also holds ASK examples taken from the day logs (first move ASK on an underspecified request whose slot was NOT in memory and whose answer from Ben supplied it;
+never a tagged regret/annoyance turn, those are the slice's material) plus an equal number of correct ACT-on-known examples, so asking survives the shared SFT in all arms.
 A+ and B-sft are padded with more of their own items until their total token-passes are within tolerance of B's (compute_ledger asserts it).
   python -m sleep2.askonce.build_night_data --diary DIR --tags TAGS.jsonl --tokenizer tiny:/path|HF_ID --out DIR
 """
@@ -16,10 +18,10 @@ import zlib
 from pathlib import Path
 
 from . import compute_ledger as CL
-from .config import (ANCHOR_W, DATA, LEDGER_TOL, N_ANCHOR, SLICE_FRAC, SYSTEM, jdump, jl_read, jl_write, jload, night_opt_steps, night_scale, norm, n_nights, shrink)
+from .config import (ANCHOR_W, ASK_SHARE, DATA, LEDGER_TOL, N_ANCHOR, SLICE_FRAC, SYSTEM, jdump, jl_read, jl_write, jload, night_opt_steps, night_scale, norm, n_nights, shrink)
 from .slot_memory import memory_from_diary
 from .tagger import groups
-from .tools_mock import parse_reply
+from .tools_mock import check_action, parse_reply
 from .world import Persona, act_text, fact_messages, first_messages, general_messages, load_requests, render
 
 SHARED_PARA = 4
@@ -65,6 +67,55 @@ def user_content_with_answer(persona, req, orig_user, slot_id, prior_entries):
     return "[Memory]\n" + "\n".join(lines[:3]) + "\n[Lookup]" + rest
 
 
+def answer_supplies(slot, text):
+    """Did Ben's reply give the slot's value? (contact/meeting/file: the value string; duration: the number; mode: send or draft)."""
+    t = norm(text)
+    if slot["kind"] == "duration":
+        return bool(re.search(rf"(?<!\d){re.escape(slot['value'])}(?!\d)", t))
+    if slot["kind"] == "mode":
+        return ("send" in t) if slot["value"] == "send_email" else ("draft" in t)
+    return norm(slot["value"]) in t
+
+
+def ask_act_pools(gs, tagged_ids, persona, reqs):
+    """From one day's log: (ask_pool, known_pool, full_pool) of (req_id, user_content, target_line), none of them a tagged turn.
+    ask: first move ASK, slot(s) not answered in the [Memory] the model saw, and Ben's next reply supplied a slot value. Target = the model's own ASK line.
+    known: first move ACT, correct, every slot's answer visible in [Memory]. full: first move ACT, correct, fully specified request (fallback to balance the count)."""
+    ask, known, full = [], [], []
+    for rid in sorted(gs):
+        g, req = gs[rid], reqs[rid]
+        if rid in tagged_ids or not g[0]["meta"].get("prompt_user"):
+            continue
+        mv = next((x for x in g if x["role"] == "assistant"), None)
+        if mv is None:
+            continue
+        user = g[0]["meta"]["prompt_user"]
+        mem = user.split("[Lookup]")[0]
+        sl = [persona.slot(s) for s in req["slots"]] if req.get("underspecified") else []
+        kind, payload = parse_reply(mv["text"])
+        if kind == "ASK" and sl and payload and not any(memory_has_answer(mem, s) for s in sl):
+            ans = next((x for x in g if x["role"] == "user" and x["turn"] > mv["turn"] and x["text"]), None)
+            if ans and any(answer_supplies(s, ans["text"]) for s in sl):
+                ask.append((rid, user, "ASK " + payload))
+        elif kind == "ACT" and check_action(payload, req["gold"])[0]:
+            if sl and all(memory_has_answer(mem, s) for s in sl):
+                known.append((rid, user, act_text(req["gold"])))
+            elif not sl:
+                full.append((rid, user, act_text(req["gold"])))
+    return ask, known, full
+
+
+def pick_ask_act(n, ask, known, full, n_corr, share=None):
+    """Deterministic per-night choice. Ask count a = ceil(share * n_corr / (1 - 2 share)) (at least 1 if any is available), so that
+    a / (a + n_corr + a_known) ~ share with a_known = a correct ACT-on-known examples (slot-known first, fully specified to fill)."""
+    share = ASK_SHARE if share is None else share
+    key = lambda x: crc("askshare", n, x[0])  # noqa: E731
+    a = min(len(ask), max(1, math.ceil(share * n_corr / (1 - 2 * share)))) if ask else 0
+    ask_sel = sorted(ask, key=key)[:a]
+    act_sel = (sorted(known, key=key) + sorted(full, key=key))[:a]
+    return ask_sel, act_sel
+
+
 def night_material(n, diary, tags, persona, phr, reqs, bos):
     """Everything night n can use, before budgeting: one pass of shared items (facts + corrected actions) and the slice candidates."""
     from .slot_memory import entries_from_diary_rows
@@ -81,6 +132,12 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
         if sid and sid not in learned:
             learned.append(sid)
     learned = shrink(learned, ns)
+    tagged_ids = {t["req_id"] for t in day_tags}
+    ask_pool, known_pool, full_pool = ask_act_pools(gs, tagged_ids, persona, reqs)
+    ask_sel, act_sel = pick_ask_act(n, ask_pool, known_pool, full_pool, len(regret))
+    n_act_known_slot = sum(1 for x in act_sel if x in known_pool)
+    ask_stats = {"n_shared_ask": len(ask_sel), "n_shared_corr_action": len(regret), "n_shared_known_action": len(act_sel), "n_known_with_slot_known": n_act_known_slot,
+                 "ask_pool": len(ask_pool), "shared_ask_share": round(len(ask_sel) / max(1, len(ask_sel) + len(regret) + len(act_sel)), 4)}
     fact_ids = [r["meta"]["fact_id"] for r in shrink([r for r in rows if r["meta"].get("kind") == "fact"], ns)]
 
     def shared_pass(k):
@@ -94,6 +151,8 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
             out += [fact_item(bos, ps[(SHARED_PARA * k + j) % len(ps)]) for j in range(SHARED_PARA)]
         for t in regret:
             out.append(sft_action(bos, gs[t["req_id"]][0]["meta"]["prompt_user"], act_text(reqs[t["req_id"]]["gold"]), "corr_action"))
+        out += [sft_action(bos, u, tgt, "shared_ask") | {"req_id": rid} for (rid, u, tgt) in ask_sel]
+        out += [sft_action(bos, u, tgt, "shared_known_act") | {"req_id": rid} for (rid, u, tgt) in act_sel]
         return out
     pairs, chosen_sft, topup = [], [], []
     dropped = set()  # regret events whose original [Memory] already showed the answer: a copy failure, not 'should have asked'; out of the slice for ALL arms
@@ -130,7 +189,7 @@ def night_material(n, diary, tags, persona, phr, reqs, bos):
             ps = phr["slots"][sid]["paraphrases"]
             topup_facts += [fact_item(bos, ps[j]) | {"src": "topup_fact", "slot": sid} for j in range(len(ps))]
     return {"shared_pass": shared_pass, "pairs": pairs, "chosen_sft": chosen_sft, "topup": topup, "topup_facts": topup_facts,
-            "n_regret_dropped_memory_has_answer": len(dropped), "n_regret": len(regret), "n_annoy": len(annoy), "n_learned": len(learned)}
+            "n_regret_dropped_memory_has_answer": len(dropped), "n_regret": len(regret), "n_annoy": len(annoy), "n_learned": len(learned), "ask_stats": ask_stats}
 
 
 def auto_repeat(mats, length_fn, n_opt, a_len, cap=20):
@@ -201,10 +260,11 @@ def build(diary_dir, tags, tokenizer, out_dir, persona=None, phr=None, requests=
             jl_write(out_dir / "nights" / a / f"night{n}.jsonl", shared + items)
             for it in shared + items:
                 scan_texts.update([it["prompt"], it.get("target") or it["chosen"]])
-        plan[n] = {"n_regret_dropped_memory_has_answer": m["n_regret_dropped_memory_has_answer"], "per_arm": per_arm, "spread": round(sp, 4), "n_regret_tagged": m["n_regret"], "n_annoy_tagged": m["n_annoy"], "n_learned_slots": m["n_learned"],
+        plan[n] = {"n_regret_dropped_memory_has_answer": m["n_regret_dropped_memory_has_answer"], "per_arm": per_arm, "spread": round(sp, 4), "n_regret_tagged": m["n_regret"], "n_annoy_tagged": m["n_annoy"], "n_learned_slots": m["n_learned"], **m["ask_stats"],
                    "slice_target": round(target), "n_pairs_in_B": len(b_items), "n_pairs_available": len(m["pairs"]), "repeat": rep,
                    "B_slice_share": round(per_arm["B"]["slice"] / per_arm["B"]["total"], 4)}
         log(f"night {n}: shared={len(shared)} items, regret={m['n_regret']} (dropped, memory had answer: {m['n_regret_dropped_memory_has_answer']}) annoy={m['n_annoy']}, B pairs={len(b_items)}/{len(m['pairs'])}, "
+            f"shared ASK={m['ask_stats']['n_shared_ask']} (pool {m['ask_stats']['ask_pool']}) corr_act={m['ask_stats']['n_shared_corr_action']} known_act={m['ask_stats']['n_shared_known_action']} ask_share={100 * m['ask_stats']['shared_ask_share']:.1f}%, "
             f"slice={100 * plan[n]['B_slice_share']:.1f}%, spread={100 * sp:.2f}%")
     # leakage guard on what is actually trained on (prompts incl. [Lookup]/[Memory], targets). Model-written text (memory 'asked ...' lines) can add hits; they are recorded, not fatal.
     from .leakscan import scan

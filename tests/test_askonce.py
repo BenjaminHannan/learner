@@ -316,9 +316,14 @@ def test_build_night_data_equal_compute_on_synthetic_logs(tmp_path, tiny):
         sl = p["per_arm"]["B"]["slice"] / p["per_arm"]["B"]["total"]
         assert sl <= 0.151 + 1e-9                                       # B's slice never exceeds 15% of the night
     # shared part identical in all arms; only the slice differs
-    shared = lambda arm, n: [json.dumps(x, sort_keys=True) for x in jl_read(tmp_path / "nd" / "nights" / arm / f"night{n}.jsonl") if x.get("src") in ("fact", "corr_action")]  # noqa: E731
+    shared = lambda arm, n: [json.dumps(x, sort_keys=True) for x in jl_read(tmp_path / "nd" / "nights" / arm / f"night{n}.jsonl") if x.get("src") in ("fact", "corr_action", "shared_ask", "shared_known_act")]  # noqa: E731
     for n in plan:
         assert shared("A+", n) == shared("B", n) == shared("B-sft", n)
+    for n in plan:                                                      # v2: shared ASK examples exist, are ASK lines, never reuse a tagged (slice) turn, and are logged
+        sh = [x for x in jl_read(tmp_path / "nd" / "nights" / "A+" / f"night{n}.jsonl") if x.get("src") == "shared_ask"]
+        tagged = {t["req_id"] for t in tags if t["day"] == n}
+        assert all(x["target"].startswith("ASK ") and x["req_id"] not in tagged for x in sh)
+        assert len({x["req_id"] for x in sh}) == plan[n]["n_shared_ask"] and "shared_ask_share" in plan[n]
     kinds = {a: {x["kind"] for x in jl_read(tmp_path / "nd" / "nights" / a / "night2.jsonl")} for a in ("A+", "B", "B-sft")}
     assert kinds["B"] == {"sft", "pair"} and kinds["A+"] == {"sft"} and kinds["B-sft"] == {"sft"}
     ev = jl_read(tmp_path / "nd" / "eval_inputs.jsonl")
@@ -451,3 +456,50 @@ def test_generate_first_word_constraint_tiny_batched(tiny):
     assert a == b
     free = generate(model, tok, ps, 8, 0.0, 0, bs=4)  # unconstrained path is unchanged
     assert len(free) == 4
+
+
+# ---------------------------------------------------------------- askonce-v2
+def test_v2_ask_pools_and_selection():
+    from sleep2.askonce import build_night_data as BN
+    from sleep2.askonce.world import Persona
+    P = Persona.load()
+    sid = P.by_split["train"][0]
+    sl = P.slot(sid)
+    assert BN.answer_supplies(sl, "It is " + sl["value"] + ".") and not BN.answer_supplies(sl, "no idea")
+    req = {"underspecified": True, "slots": [sid], "gold": {"tool": "open_file", "args": {"path": "/x"}}}
+    def grp(rid, mem, move, ans=None):
+        g = [{"req_id": rid, "role": "user", "turn": 0, "text": "", "meta": {"kind": "request", "prompt_user": f"[Memory]\n{mem}\n[Lookup]\nx\n[Request]\nr"}},
+             {"req_id": rid, "role": "assistant", "turn": 1, "text": move, "meta": {"move": move.split()[0]}}]
+        if ans:
+            g.append({"req_id": rid, "role": "user", "turn": 2, "text": ans, "meta": {"kind": "answer"}})
+        return g
+    gs = {"a": grp("a", "none", "ASK which one?", "It is " + sl["value"]), "b": grp("b", "none", "ASK which one?", "dunno"),
+          "c": grp("c", "none", "ASK which one?", "It is " + sl["value"]), "d": grp("d", "none", "ASK which one?", "It is " + sl["value"])}
+    reqs = {k: dict(req) for k in gs}
+    ask, known, full = BN.ask_act_pools(gs, {"c"}, P, reqs)
+    assert [x[0] for x in ask] == ["a", "d"] and ask[0][2] == "ASK which one?"      # b: answer did not supply the slot, c: tagged turn
+    a_sel, k_sel = BN.pick_ask_act(1, ask * 5, [("k", "u", "t")], [("f1", "u", "t"), ("f2", "u", "t")], 8, share=0.2)
+    assert len(a_sel) == 3 and len(k_sel) == 3                                      # ceil(0.2*8/0.6) = 3; known first, then fully specified
+    assert BN.pick_ask_act(1, [], [], [], 8)[0] == []
+
+
+def test_v2_gate_marks_inconclusive():
+    from sleep2.askonce import report as RP
+    def rows(ask_n):
+        return [{"req_id": f"h{i}", "split": "H_new", "right": False, "move": "ASK" if i < ask_n else "ACT", "slot": "s", "knowable_effective": True} for i in range(80)]
+    G = {("P", 1): rows(14), ("A+", 1): rows(5), ("A+", 2): rows(5)}
+    g = RP.ask_gate(G, [1, 2])
+    assert g["inconclusive"] and abs(g["ask_rate_h_new"]["P"] - 17.5) < 1e-9
+    G[("A+", 1)] = G[("A+", 2)] = rows(9)                 # 11.25% >= 8.75%
+    assert not RP.ask_gate(G, [1, 2])["inconclusive"]
+    assert RP.ask_gate({("A+", 1): rows(9)}, [1])["inconclusive"]   # no P: cannot check, never call it a refutation
+
+
+def test_v2_kernel_slug(tmp_path):
+    from sleep2.askonce.kaggle import build_job
+    nd = tmp_path / "nd"
+    nd.mkdir()
+    (nd / "plan.json").write_text("{}")
+    build_job.build(2, tmp_path / "k", nightdata=nd, owner="benhannanjfkldsfds", slug="askonce-v2-job2")
+    meta = json.loads((tmp_path / "k" / "kernel-metadata.json").read_text())
+    assert meta["id"] == "benhannanjfkldsfds/askonce-v2-job2" and meta["code_file"] == "askonce-v2-job2.ipynb" and (tmp_path / "k" / "askonce-v2-job2.ipynb").exists()

@@ -88,6 +88,8 @@ LR = float(os.environ.get("ASKONCE_LR", "1e-4"))
 ANCHOR_W = 0.1
 SLICE_FRAC = 0.15
 LEDGER_TOL = 0.05
+# askonce-v2: share of ASK among the shared night's action examples (ASK + corrected ACT + correct ACT-on-known). Base model K2 asked on 14/80 H_new (17.5%) and 20% of knowable items.
+ASK_SHARE = 0.20
 MAX_SEQ = 1024
 CHUNK = 512
 

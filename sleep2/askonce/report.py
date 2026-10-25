@@ -12,6 +12,7 @@ from .config import jload, jl_read  # noqa: E402
 
 ARMS = ["P", "A+", "B", "B-sft"]
 NEW = ("H_new",)
+GATE_RATIO = 0.5   # askonce-v2 gate, fixed before running: A+ ask rate on H_new below GATE_RATIO * P's means the shared training still suppresses asking
 KNOW = ("H_know", "R_know")
 FULL = ("R_full", "H_full")
 
@@ -77,6 +78,17 @@ def marks_1_to_4(G, rows, seeds, arm, base="A+"):
     return marks, {"m1": m1, "m2": m2, "m3": m3}
 
 
+def ask_gate(G, seeds):
+    """askonce-v2 gate. INCONCLUSIVE (not refuted) if A+ asks on H_new less than half as often as the untrained model P (v1: P 14/80 = 17.5%)."""
+    if not any(k[0] == "P" for k in G):
+        return {"status": "unevaluable", "inconclusive": True, "detail": "no P results, so the gate cannot be checked"}
+    p_seed = min(s for (x, s) in G if x == "P")
+    asks = {a: rate(G, a, seeds if a != "P" else [p_seed], NEW, "ask") for a in ("P", "A+", "B", "B-sft") if any(k[0] == a for k in G)}
+    inc = asks["A+"] < GATE_RATIO * asks["P"]
+    return {"status": "inconclusive" if inc else "ok", "inconclusive": bool(inc), "ask_rate_h_new": asks, "threshold": GATE_RATIO * asks["P"],
+            "detail": f"A+ asks on {asks['A+']:.1f}% of H_new vs P {asks['P']:.1f}% (gate: A+ >= {GATE_RATIO * asks['P']:.1f}%)"}
+
+
 def night_trajectory(R, arm, seeds):
     """Per-night DPO margin / KL / skipped steps (B shows the margin; every trained arm shows the anchor KL)."""
     return {s: [{"night": n.get("night"), "dpo_margin": n.get("dpo_margin"), "dpo_acc": n.get("dpo_acc"), "anchor_kl": n.get("anchor_kl"), "sft_loss": n.get("sft_loss"),
@@ -120,6 +132,8 @@ def build(results_dir, graded_dir, agreement=None, nightdata_dir=None, tagger_re
     A_, B_ = paired_vecs(G, "A+", "B", seeds, NEW)
     ids = {s_: sorted(set(vec(G, "A+", s_, NEW)) & set(vec(G, "B", s_, NEW))) for s_ in seeds}
     out["m1_cluster_ci"] = paired.cluster_bootstrap_ci([x for s_ in seeds for x in A_[s_]], [x for s_ in seeds for x in B_[s_]], [cl.get(i, i) for s_ in seeds for i in ids[s_]])
+    out["gate"] = ask_gate(G, seeds)
+    out["verdict"] = "INCONCLUSIVE" if out["gate"]["inconclusive"] else ("ADOPT " + out["adopt"] if out["adopt"] != "none" else "REFUTED")
     out["trajectory"] = {a: night_trajectory(R, a, seeds) for a in trained}
     ke = {a: sum(1 for r_ in G[(a, seeds[0])] if r_["split"] in KNOW and r_["knowable_effective"]) for a in ("B",)}
     out["knowable_effective"] = {"known_items": sum(1 for r_ in G[("B", seeds[0])] if r_["split"] in KNOW), "effective": ke["B"]}
@@ -142,6 +156,9 @@ def to_markdown(o, valid=True):
         L += ["**NOT A VALID TEST RUN** (shrunk world or smoke run): the pass marks below are computed for plumbing checks only.", ""]
     if o.get("missing_arms"):
         L += [f"**Arms missing (not run): {', '.join(o['missing_arms'])}.**", ""]
+    g = o.get("gate")
+    if g:
+        L += [f"**Gate (fixed before the run): {'INCONCLUSIVE, the shared training still suppresses asking, so this is NOT a refutation' if g['inconclusive'] else 'passed'}.** {g['detail']}.", ""]
     L += ["| arm | H new | H know | H full | R all | silent | ask(full) | ask(know) | ask(general) | ARC | recall |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for a, r in o["rows"].items():
         L.append(f"| {a} | " + " | ".join(f"{r[k]:.1f}" for k in ("H_new", "H_know", "H_full", "R_all", "silent", "ask_full", "ask_know", "ask_general", "arc", "recall")) + " |")
@@ -180,11 +197,13 @@ def to_markdown(o, valid=True):
             for n in nl:
                 L.append(f"| {s} | {n['night']} | {n['dpo_margin']} | {n['dpo_acc']} | {n['anchor_kl']} | {n['sft_loss']} | {n['skipped_steps']} |")
     ad = o["adopt"]
+    inc = bool(g and g["inconclusive"])
     L += ["", "## In plain language (for Ben)", "",
           "We trained the assistant overnight in a made-up world. One version practised asking a short question when it was about to guess (B), "
           "another version only studied your past answers more (A+), and a third copied the good questions without the practice step (B-sft). The test is whether practising to ask makes it better at spotting a brand-new "
           "'Sam' it has never met, without nagging you on clear requests. "
-          + (f"B cleared all five marks, so B looks promising, but the final call waits for the real-log check. " if ad == "B" else
+          + ("The assistant trained on the shared lessons still almost never asked (compared with the untrained one), so the test cannot tell us whether practising to ask helps. That is inconclusive, not a failure of the idea. " if inc else
+             f"B cleared all five marks, so B looks promising, but the final call waits for the real-log check. " if ad == "B" else
              "B-sft also cleared marks 1-4, and it is simpler, so the rule says to prefer B-sft over B, but the final call waits for the real-log check. " if ad == "B-sft" else
              "It did not clear the marks, so we do not adopt it. " + ("A+ ties B almost everywhere, so the useful part is just the small note of your past answers: keep that, skip the ask-training. " if o["diagnostic_A_plus_matches_B"] else ""))
           + "This is only a simulated world on one small model, so it says nothing yet about real use."]

@@ -99,7 +99,7 @@ def payload(job, nightdata=None, pilot=False):
 DEADLINE_H = {1: 1.2, 2: 2.5}   # hard cap per lane (6.0 GPU-h in total is the budget; the expected use is about 3 GPU-h)
 
 
-def build(job, out, nightdata=None, pilot=False, scale=1.0, deadline_h=None):
+def build(job, out, nightdata=None, pilot=False, scale=1.0, deadline_h=None, owner=None, slug=None):
     deadline_h = deadline_h or DEADLINE_H[job]
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -120,11 +120,12 @@ def build(job, out, nightdata=None, pilot=False, scale=1.0, deadline_h=None):
             expect = [f"job2/results/{a}_{s}.json" for s in (1, 2) for a in ("A+", "B", "B-sft")]
     cfg = {"lanes": lanes, "env": env, "deadline_s": int(deadline_h * 3600), "expect": expect}
     src = f"CFG_JSON = {json.dumps(json.dumps(cfg))}\nPAYLOAD = {data!r}\n" + BOX
-    nb_name = f"askonce-job{job}.ipynb"
+    slug = slug or f"askonce-job{job}"
+    nb_name = f"{slug}.ipynb"
     nb = {"nbformat": 4, "nbformat_minor": 4, "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}},
           "cells": [{"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": src}]}
     (out / nb_name).write_text(json.dumps(nb))
-    meta = {"id": f"{OWNER}/askonce-job{job}", "title": f"askonce-job{job}", "code_file": nb_name, "language": "python", "kernel_type": "notebook",
+    meta = {"id": f"{owner or OWNER}/{slug}", "title": slug, "code_file": nb_name, "language": "python", "kernel_type": "notebook",
             "is_private": "true", "enable_gpu": "true", "enable_internet": "true", "dataset_sources": [], "competition_sources": [], "kernel_sources": []}
     (out / "kernel-metadata.json").write_text(json.dumps(meta, indent=1))
     kb = len(data) * 3 // 4 // 1024
@@ -140,7 +141,9 @@ if __name__ == "__main__":
     ap.add_argument("--nightdata")
     ap.add_argument("--pilot", action="store_true")
     ap.add_argument("--scale", type=float, default=1.0)
+    ap.add_argument("--owner", help="Kaggle account for kernel-metadata id (default thegreatergood)")
+    ap.add_argument("--slug", help="kernel slug, e.g. askonce-v2-job2 (default askonce-job<N>)")
     a = ap.parse_args()
     if a.job == 2 and not a.nightdata:
         ap.error("--nightdata is required for job 2")
-    print(json.dumps(build(a.job, a.out, a.nightdata, a.pilot, a.scale), indent=1))
+    print(json.dumps(build(a.job, a.out, a.nightdata, a.pilot, a.scale, owner=a.owner, slug=a.slug), indent=1))
