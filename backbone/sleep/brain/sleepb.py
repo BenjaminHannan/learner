@@ -22,11 +22,14 @@ Addendum 6 (PREREG-sleepB-addendum6.md), the winners combined on Week-2: ab_ob_w
 Addendum 7 (PREREG-sleepB-addendum7.md), one change each on top of work scale 2: ab_ob_b4 (s = 4), ab_ob_tag2 (tag_prompt2: only facts that link two names written
 in the message; Sam / "I" / common nouns are not names; no small talk about Sam's tasks), ab_ob_bridge (bridge_prompt: the REM chain prompt names the start, the answer and the
 middle name; start / answer alternate with the pair index so both directions are dreamed; every check after generation is unchanged).
+Addendum 8 (PREREG-sleepB-addendum8.md), on top of work scale 4: ab_ob_b4_bridge (b4 + addendum 7's bridge_prompt in REM) and ab_ob_b4_names (b4 + a names re-read pass right after the
+day's tagging: for pairs of candidate names, i.e. words capitalised mid-sentence somewhere in the diary so far, that occur together in a turn and that no item links yet, names_prompt asks
+how they are related; each answer that is not "no" becomes a triple that goes through tag()'s checks and joins that turn's tag_log entry; rec["names_pass"] holds the counts).
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 arm unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 arm unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -64,13 +67,15 @@ KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
 WIN_ARMS = ("ab_ob_win", "ab_ob_winp")  # addendum 6: work scale 2 + guess priority + extra texts (win: twisted scenes, winp: ordinary paraphrases)
 ADD7_ARMS = ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")  # addendum 7: one change each on top of work scale 2 (b4: scale 4; tag2: tag_prompt2; bridge: bridge_prompt)
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS)
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS)  # open-book rehearsal (Brain.qa_ex)
+ADD8_ARMS = ("ab_ob_b4_names", "ab_ob_b4_bridge")  # addendum 8: one change each on top of work scale 4 (names: the names re-read pass after tagging; bridge: bridge_prompt)
+BRIDGE_ARMS = ("ab_ob_bridge", "ab_ob_b4_bridge")  # Brain.rem sends bridge_prompt (start, answer and middle name given) instead of chain_prompt
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS, *ADD8_ARMS)  # open-book rehearsal (Brain.qa_ex)
 GUESS_ARMS = ("ab_ob_guess", *WIN_ARMS)  # first-token confidence and the dopamine priority
 TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the item's texts
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
 B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
-B4_ARMS = ("ab_ob_b4",)  # addendum 7: work scale 4 unless --budget-scale says otherwise
+B4_ARMS = ("ab_ob_b4", *ADD8_ARMS)  # addendum 7 / 8: work scale 4 unless --budget-scale says otherwise
 
 
 def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
@@ -231,6 +236,12 @@ def tag_prompt2(L, text):  # ab_ob_tag2: tag_prompt's system line, JSON format, 
          f"as short subject-relation-object triples. Sam, \"I\", \"me\", \"my friend\" and common nouns are not names. Skip small talk about Sam's own tasks and requests. "
          f"Use the names exactly as written in the message. At most 5. Reply with only JSON: "
          f"[{{\"subject\": \"...\", \"relation\": \"...\", \"object\": \"...\"}}]. If there are none, reply [].")
+    return L.render("You extract facts from chat messages.", u)
+
+
+def names_prompt(L, text, a, b):  # ab_ob_b4_names: one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing)
+    u = (f"Message from Sam:\n\"{text}\"\n\nDoes this message say how \"{a}\" and \"{b}\" are related? If yes, reply with only the relation in 1 to 4 words "
+         f"(for example: works at, lives in, is the mentor of, owns the boat). If not, reply only: no")
     return L.render("You extract facts from chat messages.", u)
 
 
@@ -1369,7 +1380,7 @@ def selftest_arms7():
     assert {a: default_scale(a) for a in want} == want and all(default_scale(a) is None for a in ARMS if a not in (*B2_ARMS, *B4_ARMS))
     assert default_scale("ab_ob_b4", 1.5) == 1.5 and default_scale("ab_ob_bridge", 3.0) == 3.0 and default_scale("ab_ob", 3.0) == 3.0
     assert GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win") and EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
-    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4",)
+    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS)
     for a in ADD7_ARMS:
         assert a in ARMS and a in NEW_ARMS and a in OB_ARMS and not {a} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS}, a
     out["scales"] = {a: default_scale(a) for a in ADD7_ARMS}
@@ -1434,6 +1445,165 @@ def selftest_arms7():
         assert starts == [True, False, True, False], starts
     out["old_prompts_kept"] = ["ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_win", "ab_ob_winp"]
     out["tag2_only_tags"] = out["bridge_only_chains"] = out["bridge_alternates"] = True
+    return out
+
+
+def selftest_arms8():
+    """Addendum-8 arms on stubs (no model, no RNG outside a local Random): (i) default_scale gives 4.0 for ab_ob_b4_names and ab_ob_b4_bridge (an explicit --budget-scale wins), both are valid arms, in
+    B4_ARMS / NEW_ARMS / OB_ARMS and in none of GUESS / TWIST / EXTRA_ARMS; (ii) Brain.rem, run on a stub that records its first generate call, sends bridge_prompt for ab_ob_bridge and ab_ob_b4_bridge
+    (start / answer alternate with the pair index) and chain_prompt for every other arm, and Brain.tag sends tag_prompt for both new arms; (iii) cap_names / name_vocab on a stub diary: words capitalised
+    mid-sentence are found ('s stripped; a name that is lower case elsewhere is still matched case-insensitively), while Sam, I'm, weekdays, months, stoplist words and words capitalised only at a
+    sentence start (turn start, after . ! ? or a newline) are not, and the vocabulary of day d ignores later days; (iv) name_pairs keeps the order of first appearance, skips pairs a live item links (either
+    order; a dead item does not count) and dropped keys, then caps at 6; (v) parse_rel maps "no" / "No." / "" to no and "works at" to a relation; (vi) triple_status and the refactored Brain.tag keep
+    tag()'s counters, items and tag_log exactly; (vii) Brain.names_pass asks only the pairs from (iv), turns yes answers into items, and appends them to the turn's existing tag_log entry (no second entry)."""
+    from types import SimpleNamespace
+    out = {}
+    assert default_scale("ab_ob_b4_names") == 4.0 and default_scale("ab_ob_b4_bridge") == 4.0 and default_scale("ab_ob_b4_names", 1.5) == 1.5 and default_scale("ab_ob_b4") == 4.0
+    assert ADD8_ARMS == ("ab_ob_b4_names", "ab_ob_b4_bridge") and BRIDGE_ARMS == ("ab_ob_bridge", "ab_ob_b4_bridge") and B4_ARMS == ("ab_ob_b4", *ADD8_ARMS)
+    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win")
+    assert EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
+    for a in ADD8_ARMS:
+        assert a in ARMS and a in NEW_ARMS and a in OB_ARMS and a in B4_ARMS and not {a} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS}, a
+    out["scales"] = {a: default_scale(a) for a in ADD8_ARMS}
+    L = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    npr = names_prompt(L, "Magomen works at Kelmira.", "Magomen", "Kelmira")
+    assert npr == ('<sys>You extract facts from chat messages.</sys>\n<user>Message from Sam:\n"Magomen works at Kelmira."\n\nDoes this message say how "Magomen" and "Kelmira" are related? '
+                   'If yes, reply with only the relation in 1 to 4 words (for example: works at, lives in, is the mentor of, owns the boat). If not, reply only: no</user>'), npr
+
+    mk = lambda a, r, o: Item((norm(a), norm(o)), a, o, r, 1)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira"), mk("Kelmira", "is near", "Harbor Light"), mk("Harbor Light", "is in", "Oslo"), mk("Brontu", "sails to", "Kelmira")]
+    by_fact = {it.fact: it for it in E}
+    text = "Sam, my friend Zelmir moved to Kelmira on the Brontu ferry."
+
+    class Stop(Exception):
+        pass
+
+    def run(arm):  # the prompts Brain.tag and Brain.rem send to their first generate call
+        got = {}
+
+        def stub(name):
+            def gen(prompts, n, **kw):
+                got[name] = list(prompts)
+                raise Stop
+            return gen
+        for name, f, a in (("tag", Brain.tag, (1,)), ("rem", Brain.rem, (E, 1, 0))):
+            me = SimpleNamespace(L=L, a=SimpleNamespace(arm=arm, smoke=False, gist_min_days=3), gen=stub(name), mn=lambda n: n, raw={}, rng=random.Random(0), rem_done=Counter(), gist_done=Counter(),
+                                 cap_chains=30, cap_gist=30, diary=SimpleNamespace(turns=[{"day": 1, "i": 0, "text": text}]))
+            try:
+                f(me, *a)
+            except Stop:
+                pass
+        return got
+
+    pair_of = lambda pr: [by_fact[f] for f in re.findall(r"^- (.+)$", pr, re.M)]  # noqa: E731
+    shared = lambda p, q: ({norm(p.subj), norm(p.obj)} & {norm(q.subj), norm(q.obj)}).pop()  # noqa: E731
+    for arm in ("ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge", "ab_ob_b4_names", "ab_ob_b4_bridge"):
+        got = run(arm)
+        assert got["tag"] == [tag_prompt2(L, text) if arm == "ab_ob_tag2" else tag_prompt(L, text)], arm
+        rem = got["rem"]
+        assert len(rem) == 4, (arm, len(rem))
+        if arm not in BRIDGE_ARMS:
+            assert sorted(rem) == sorted(chain_prompt(L, p.fact, q.fact) for p, q in (pair_of(r) for r in rem)) and all("share the name" not in r for r in rem), arm
+            continue
+        starts = []
+        for k, r in enumerate(rem):
+            p, q = pair_of(r)
+            x = shared(p, q)
+            mid_d = [n for n in (p.subj, p.obj) if norm(n) == x][0]
+            fp, fq = [n for n in (p.subj, p.obj) if norm(n) != x][0], [n for n in (q.subj, q.obj) if norm(n) != x][0]
+            start, answer = (fp, fq) if k % 2 == 0 else (fq, fp)
+            assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (arm, k, r)
+            starts.append(start == fp)
+        assert starts == [True, False, True, False], (arm, starts)
+    out["bridge_arms_use_bridge_prompt"] = list(BRIDGE_ARMS)
+    out["other_arms_use_chain_prompt"] = ["ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_tag2", "ab_ob_b4_names"]
+
+    # (iii) candidate names (diary text only)
+    rows = [(1, "hey, my friend Magomen moved to Kelmira with Papirar's dog. Brontu cooks well. Sam said OK on Monday in March, and I'm sure Christmas is near, Thanks"),
+            (1, "meeting Torvald today.\nNewline word. Really? Question word. Wow! Exclaim word. He said. \"Quoted word\" ok, with \"x Yorick\" too"),
+            (1, "i told magomen that PAPIRAR was with torvald. Zelmir smiled"),
+            (2, "Later Quasar arrived with Orlin"), (2, "Sam's Mike's friend"), (3, "x Zebulon")]
+    dia = Diary({"diary": [{"role": "user", "day": d_, "text": x} for d_, x in rows] + [{"role": "assistant", "day": 1, "text": "Sure Assistantname"}]})
+    assert cap_names(rows[0][1]) == ["Magomen", "Kelmira", "Papirar"], cap_names(rows[0][1])
+    assert cap_names(rows[1][1]) == ["Torvald", "Yorick"] and cap_names(rows[2][1]) == ["PAPIRAR"] and cap_names(rows[3][1]) == ["Quasar", "Orlin"], [cap_names(r[1]) for r in rows]
+    assert cap_names(rows[4][1]) == ["Mike"] and cap_names("Zelmir and I") == [] and cap_names("a’s Mike’s Zed") == ["Mike", "Zed"] and cap_names("hi O'Brien and Zoe") == ["O'Brien", "Zoe"]
+    assert name_vocab(dia, 1) == {"magomen": "Magomen", "kelmira": "Kelmira", "papirar": "Papirar", "torvald": "Torvald", "yorick": "Yorick"}, name_vocab(dia, 1)
+    assert list(name_vocab(dia, 2)) == ["magomen", "kelmira", "papirar", "torvald", "yorick", "quasar", "orlin", "mike"] and "zebulon" not in name_vocab(dia, 2) and "zebulon" in name_vocab(dia, 3)
+    assert not {"sam", "i", "i'm", "monday", "march", "ok", "thanks", "christmas", "brontu", "newline", "question", "exclaim", "quoted", "zelmir", "assistantname"} & set(name_vocab(dia, 3))
+    out["vocab_day1"] = sorted(name_vocab(dia, 1))
+
+    # (iv) pairs: order of first appearance, linked / dropped pairs skipped, cap 6
+    nm = [(f"n{i}", f"N{i}") for i in range(1, 6)]
+    it_ = lambda a, b, dead=False: Item((a, b), a.upper(), b.upper(), "r", 1, dead=dead)  # noqa: E731
+    assert name_pairs(nm, {}, set()) == [("N1", "N2"), ("N1", "N3"), ("N1", "N4"), ("N1", "N5"), ("N2", "N3"), ("N2", "N4")]  # 10 pairs, the first 6
+    assert name_pairs(nm, {}, set(), cap=2) == [("N1", "N2"), ("N1", "N3")] and NAMES_CAP == 6
+    live = {("n1", "n2"): it_("n1", "n2"), ("n3", "n1"): it_("n3", "n1"), ("n1", "n4"): it_("n1", "n4", dead=True)}  # (n1,n2) live; (n3,n1) live in the other order; (n1,n4) dead: still asked
+    assert name_pairs(nm, live, {("n2", "n3"), ("n5", "n4")}) == [("N1", "N4"), ("N1", "N5"), ("N2", "N4"), ("N2", "N5"), ("N3", "N4"), ("N3", "N5")]
+    assert name_pairs(nm[:1], {}, set()) == [] and name_pairs([], {}, set()) == []
+    out["pairs_ok"] = True
+
+    # (v) answers
+    for r in ("no", "No.", "", "  ", "NO", "no!", "No, the message does not say.", "no\nbecause they never meet", "None.", "nope", None):
+        assert parse_rel(r) is None, r
+    assert parse_rel("works at") == "works at" and parse_rel('"Is the mentor of".') == "Is the mentor of" and parse_rel("works at\nbecause the message says so") == "works at"
+    assert parse_rel("Yes, lives in") == "lives in" and parse_rel("yes") == "" and parse_rel("  - owns the boat  ") == "owns the boat" and parse_rel("x" * 80) == "x" * 40
+    assert parse_rel("no relation") == "no relation" and parse_rel("nobody") == "nobody"  # only no / none / nope + end or punctuation count as no
+    out["parse_ok"] = True
+
+    # (vi) the checks shared with tag(): same order, same counters (the expected counts below were taken from tag() before it called triple_status)
+    dd = Diary({"diary": [{"role": "user", "day": 1, "text": "hey Zelmir lives in Kelmira, and Sam is tired. Brontu sails there too"}, {"role": "user", "day": 1, "text": "Harbor Light is in Oslo, remember Zelmir"}]})
+    ts = lambda ti, a, b, dr=frozenset(): triple_status(dd, dr, ti, a, b)  # noqa: E731
+    assert ts(0, "Zelmir", "Kelmira") == "ok" and ts(0, "zelmir", "KELMIRA") == "ok" and ts(0, "Zelmir", "Zelmir") == "invalid" and ts(0, "Sam", "Kelmira") == "invalid" and ts(0, "Q", "Kelmira") == "invalid"
+    assert ts(0, "Zelmir", "x" * 61) == "invalid" and ts(0, "Zelmir", "Narvik") == "not_in_turn" and ts(1, "Zelmir", "Kelmira") == "not_in_turn" and ts(0, "Sam", "Narvik") == "invalid"
+    assert ts(0, "Zelmir", "Kelmira", {("zelmir", "kelmira")}) == "dropped" and ts(0, "Zelmir", "Kelmira", {("kelmira", "zelmir")}) == "ok" and ts(0, "Zelmir", "Narvik", {("zelmir", "narvik")}) == "not_in_turn"
+    canned = [json.dumps([{"subject": "Zelmir", "relation": "lives in", "object": "Kelmira"}, {"subject": "Sam", "relation": "is", "object": "tired"}, {"subject": "Brontu", "relation": "sails to", "object": "Kelmira"},
+                          {"subject": "Zelmir", "relation": "x", "object": "Zelmir"}, {"subject": "Q", "relation": "x", "object": "Kelmira"}]),
+              json.dumps([{"subject": "Harbor Light", "relation": "is in", "object": "Oslo"}, {"subject": "Zelmir", "relation": "is near", "object": "Narvik"}, {"subject": "Oslo", "relation": "has", "object": "Harbor Light"}]),
+              "[]", "not json at all"]
+    dd.turns += [dict(dd.turns[0], i=2, text="nothing special"), dict(dd.turns[0], i=3, text="garbage turn")]
+    me = SimpleNamespace(L=SimpleNamespace(render=lambda sy, u: u), a=SimpleNamespace(arm="ab_ob_b4", smoke=False), diary=dd, items={}, dropped={("oslo", "harbor light")}, tag_log=[], raw={}, cov=Counter(),
+                         gen=lambda p, n, **kw: canned[:len(p)], mn=lambda n: n)
+    st = Brain.tag(me, 1)
+    assert st == {"extracted": 8, "new_items": 3, "dropped_invalid": 3, "kept": 3, "dropped_not_in_turn": 1, "empty": 1, "parse_fail": 1, "turns": 4}, st
+    assert list(me.items) == [("zelmir", "kelmira"), ("brontu", "kelmira"), ("harbor light", "oslo")] and [it.rel for it in me.items.values()] == ["lives in", "sails to", "is in"]
+    assert me.tag_log == [(0, 1, [("Zelmir", "Kelmira"), ("Brontu", "Kelmira")]), (1, 1, [("Harbor Light", "Oslo")]), (2, 1, []), (3, 1, [])] and len(me.raw["tag"]) == 3
+    out["tag_unchanged"] = st
+
+    # (vii) Brain.names_pass on a stub (no model, no ground truth: the stub has no week / G): which pairs are asked, what a yes does, where it is logged
+    rows = [(1, "hey, my friend Magomen moved to Kelmira with Papirar"), (2, "ok so magomen met Papirar near kelmira with Torvald"), (2, "lunch with Brontu"),
+            (2, "ok Aldo, Berit, Cato, Dara and Enzo met"), (2, "later magomen and Papirar again, Torvald left"), (2, "nothing here")]
+    dia = Diary({"diary": [{"role": "user", "day": d_, "text": x} for d_, x in rows]})
+    items = {("magomen", "kelmira"): it_("magomen", "kelmira"), ("papirar", "torvald"): it_("papirar", "torvald", dead=True)}
+    log = [(0, 1, [("Magomen", "Kelmira")]), (1, 2, [("Magomen", "Kelmira")]), (2, 2, []), (3, 2, []), (4, 2, []), (5, 2, [])]
+    logs0 = [e[2] for e in log]
+    asked, sent = [], []
+    reply = {("Magomen", "Papirar"): "is the brother of", ("Kelmira", "Torvald"): "works at\nbecause", ("Magomen", "Torvald"): "No.", ("Aldo", "Berit"): "Yes", ("Aldo", "Cato"): "lives in"}
+
+    def gen(prompts, n, **kw):
+        assert n == 12 and kw == {}  # short, greedy, base model (the defaults of Brain.gen)
+        sent.extend(prompts)
+        res = []
+        for pr in prompts:
+            a, b = re.search(r'how "(.+?)" and "(.+?)" are related', pr).groups()
+            asked.append((a, b))
+            res.append(reply.get((a, b), "no"))
+        return res
+    Lr = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    me = SimpleNamespace(L=Lr, diary=dia, items=items, dropped={("kelmira", "papirar")}, tag_log=log, raw={}, gen=gen, mn=lambda n: n)
+    rec = Brain.names_pass(me, 2)
+    want = [("Magomen", "Papirar"), ("Magomen", "Torvald"), ("Papirar", "Torvald"), ("Kelmira", "Torvald"),  # turn 1: (Magomen,Kelmira) is linked, (Papirar,Kelmira) is dropped (other order), the dead (Papirar,Torvald) item does not count
+            ("Aldo", "Berit"), ("Aldo", "Cato"), ("Aldo", "Dara"), ("Aldo", "Enzo"), ("Berit", "Cato"), ("Berit", "Dara"),  # turn 3: 10 pairs, cap 6
+            ("Magomen", "Papirar"), ("Magomen", "Torvald"), ("Papirar", "Torvald")]  # turn 4 (turn 2 has one candidate, turn 5 none)
+    assert asked == want, asked
+    texts = [rows[1][1]] * 4 + [rows[3][1]] * 6 + [rows[4][1]] * 3
+    assert sent == [names_prompt(Lr, x, a, b) for x, (a, b) in zip(texts, want)]
+    assert rec == {"candidates": 10, "turns": 5, "turns_ge2": 3, "pairs": 13, "yes": 5, "new_items": 4, "appended": 5, "dropped_invalid": 0, "dropped_not_in_turn": 0}, rec
+    assert list(items) == [("magomen", "kelmira"), ("papirar", "torvald"), ("magomen", "papirar"), ("kelmira", "torvald"), ("aldo", "berit"), ("aldo", "cato")]
+    assert [(v.subj, v.rel, v.obj, v.born) for v in list(items.values())[2:]] == [("Magomen", "is the brother of", "Papirar", 2), ("Kelmira", "works at", "Torvald", 2), ("Aldo", "is linked to", "Berit", 2), ("Aldo", "lives in", "Cato", 2)]
+    assert [e[:2] for e in log] == [(0, 1), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2)] and all(e[2] is l0 for e, l0 in zip(log, logs0))  # no second entry for a turn; the same lists, extended
+    assert [e[2] for e in log] == [[("Magomen", "Kelmira")], [("Magomen", "Kelmira"), ("Magomen", "Papirar"), ("Kelmira", "Torvald")], [], [("Aldo", "Berit"), ("Aldo", "Cato")], [("Magomen", "Papirar")], []]
+    assert [r["pair"] for r in me.raw["names"]] == [list(p) for p in want[:3]] and me.raw["names"][0]["out"] == "is the brother of" and len(me.raw["names"]) == 3
+    out["names_pass"] = rec
     return out
 
 
@@ -1517,6 +1687,63 @@ def other(it, x):  # (display shared, display other) of the item w.r.t. normaliz
 def bridge_roles(p, q, x, k):  # ab_ob_bridge: (start, answer, middle name) of REM pair k: start = p's far end for even k, q's for odd k (both directions get dreamed); middle = p's display form
     (mid, fp), fq = other(p, x), other(q, x)[1]
     return (fp, fq, mid) if k % 2 == 0 else (fq, fp, mid)
+
+
+# addendum 8 (ab_ob_b4_names): the diary-only candidate-name finder, the pair builder, the answer parser, and the triple checks shared with Brain.tag
+NAMES_CAP = 6  # pairs asked per turn
+NAME_TOK = re.compile(r"[^\W\d_]+(?:'[^\W\d_]+)?")  # a word, optionally with one apostrophe part (I'm, O'Brien, Mike's)
+NAME_STOP = {norm(w) for w in ("Sam I I'm I've I'll I'd OK Ok Okay Hey Hi Hello Thanks Also Anyway But And So The A An My It This That English Christmas God Mom Dad Yes No Yeah Please Sorry Well Oh "
+                               "Monday Tuesday Wednesday Thursday Friday Saturday Sunday January February March April May June July August September October November December").split()} | GENERIC
+
+
+def cap_names(text):  # capitalised words (an 's is stripped) that are NOT sentence-initial: not the turn's first word, not right after . ! ? or a newline (opening quotes / brackets are skipped); stoplist and GENERIC out
+    text, out = text.replace("\u2019", "'"), []
+    for m in NAME_TOK.finditer(text):
+        w = m.group()
+        w = w[:-2] if w.lower().endswith("'s") else w
+        if len(w) < 2 or not w[0].isupper() or norm(w) in NAME_STOP:
+            continue
+        pre = text[:m.start()]
+        before = pre.rstrip(" \t\r\n\"'\u201c\u2018([")
+        if not before or "\n" in pre[len(before):] or before[-1] in ".!?":
+            continue
+        out.append(w)
+    return out
+
+
+def name_vocab(diary, d):  # {norm: display form first seen} of the candidate names in the user turns of days <= d (diary text only: no ground truth, no test strings)
+    v = {}
+    for t in diary.turns:
+        if t["day"] <= d:
+            for w in cap_names(t["text"]):
+                v.setdefault(norm(w), w)
+    return v
+
+
+def name_pairs(names, items, dropped, cap=NAMES_CAP):  # names: [(norm, display)] in order of first appearance in the turn; unordered pairs in that order, minus pairs a live item links (either order) or whose key is dropped; first `cap`
+    out = []
+    for (na, a), (nb, b) in itertools.combinations(names, 2):
+        if any(k in items and not items[k].dead for k in ((na, nb), (nb, na))) or (na, nb) in dropped or (nb, na) in dropped:
+            continue
+        out.append((a, b))
+        if len(out) == cap:
+            break
+    return out
+
+
+def parse_rel(txt):  # names_prompt reply -> None for "no" (empty, "no", "no." or "no" + punctuation; also none / nope), else the relation: first line, a leading "yes" and quotes / punctuation off, at most 40 chars ("" for a bare yes)
+    lines = [x.strip() for x in str(txt or "").strip().splitlines() if x.strip()]
+    if not lines or re.match(r"(?:no|none|nope)(?:$|[^\w\s])", lines[0].lower()):
+        return None
+    return re.sub(r"^yes\b[\s\W]*", "", lines[0], flags=re.I).strip(" \t\"'`\u201c\u201d\u2018\u2019.,;:!?-*()[]")[:40].strip()
+
+
+def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subject, object) through, in its order: "invalid" / "not_in_turn" (turn index ti) / "dropped" (key in `dropped`) / "ok"
+    if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob) or norm(sj) in GENERIC or norm(ob) in GENERIC:
+        return "invalid"
+    if ti not in diary.occurs(sj) or ti not in diary.occurs(ob):
+        return "not_in_turn"
+    return "dropped" if (norm(sj), norm(ob)) in dropped else "ok"
 
 
 class Brain:
@@ -1605,15 +1832,12 @@ class Brain:
             for f in fx[:5]:
                 st["extracted"] += 1
                 sj, rl, ob = (str(f.get(k) or "").strip() for k in ("subject", "relation", "object"))
-                if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob) or norm(sj) in GENERIC or norm(ob) in GENERIC:
-                    st["dropped_invalid"] += 1
-                    continue
-                if t["i"] not in s.diary.occurs(sj) or t["i"] not in s.diary.occurs(ob):
-                    st["dropped_not_in_turn"] += 1
+                ck = triple_status(s.diary, s.dropped, t["i"], sj, ob)  # addendum 8: the checks are shared with names_pass (same order, same counters; a dropped key is skipped without a counter)
+                if ck != "ok":
+                    if ck != "dropped":
+                        st["dropped_" + ck] += 1
                     continue
                 key = (norm(sj), norm(ob))
-                if key in s.dropped:
-                    continue
                 if key not in s.items:
                     s.items[key] = Item(key, sj, ob, rl or "is linked to", d)
                     st["new_items"] += 1
@@ -1622,6 +1846,39 @@ class Brain:
             s.tag_log.append((t["i"], d, got))
         st["turns"] = len(turns)
         return dict(st)
+
+    def names_pass(s, d):  # addendum 8 (ab_ob_b4_names): re-read the day's turns for pairs of candidate names that no item links yet; each non-"no" answer is a triple that goes through tag()'s checks (triple_status) and joins the turn's tag_log entry
+        turns = [t for t in s.diary.turns if t["day"] == d]
+        vocab = name_vocab(s.diary, d)  # from the diary text of days <= d only
+        pats, ask, st = {n: pat(n) for n in vocab}, [], Counter()
+        for t in turns:
+            hits = sorted((m.start(), n) for n, p in pats.items() for m in [p.search(s.diary.low[t["i"]])] if m)  # candidates in this turn (case-insensitive, whole word), by first appearance
+            st["turns_ge2"] += len(hits) >= 2
+            ask += [(t, a, b) for a, b in name_pairs([(n, vocab[n]) for _, n in hits], s.items, s.dropped)]
+        raw = s.gen([names_prompt(s.L, t["text"], a, b) for t, a, b in ask], s.mn(12))
+        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r} for (t, a, b), r in list(zip(ask, raw))[:3]]
+        got_of = {ti: got for ti, dd, got in s.tag_log if dd == d}  # the lists tag() logged for this day's turns (appended to in place: no second entry per turn)
+        for (t, a, b), txt in zip(ask, raw):
+            rl = parse_rel(txt)
+            if rl is None:
+                continue
+            st["yes"] += 1
+            ck = triple_status(s.diary, s.dropped, t["i"], a, b)
+            if ck != "ok":
+                if ck != "dropped":
+                    st["dropped_" + ck] += 1
+                continue
+            key = (norm(a), norm(b))
+            if key not in s.items:
+                s.items[key] = Item(key, a, b, rl or "is linked to", d)
+                st["new_items"] += 1
+            if t["i"] not in got_of:  # (tag() logs every turn of the day; this only keeps the diagnostics whole if one were missing)
+                got_of[t["i"]] = []
+                s.tag_log.append((t["i"], d, got_of[t["i"]]))
+            got_of[t["i"]].append((a, b))
+            st["appended"] += 1
+        return {"candidates": len(vocab), "turns": len(turns), "turns_ge2": st["turns_ge2"], "pairs": len(ask), "yes": st["yes"], "new_items": st["new_items"], "appended": st["appended"],
+                "dropped_invalid": st["dropped_invalid"], "dropped_not_in_turn": st["dropped_not_in_turn"]}
 
     def refresh(s, d):  # days_seen / importance / correction from a string search over the diary so far
         for it in s.items.values():
@@ -1949,7 +2206,7 @@ class Brain:
         s.rng.shuffle(gist)
         gist.sort(key=lambda it: s.gist_done[it.key])
         gist = gist[:s.cap_gist]
-        if a.arm == "ab_ob_bridge":  # addendum 7: guided chain prompt (start / answer alternate with the pair index k, the checks below do not care which end is which)
+        if a.arm in BRIDGE_ARMS:  # addendum 7 / 8: guided chain prompt (start / answer alternate with the pair index k, the checks below do not care which end is which)
             chains = [bridge_prompt(s.L, p.fact, q.fact, *bridge_roles(p, q, x, k)) for k, (p, q, x) in enumerate(pairs)]
         else:
             chains = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs]
@@ -2117,6 +2374,9 @@ class Brain:
         if bench:
             lap("bench")
         rec["tagging"] = s.tag(d)
+        if a.arm == "ab_ob_b4_names":  # addendum 8: re-read the day for names (before refresh, so the new items get their mention counts)
+            rec["names_pass"] = s.names_pass(d)
+            s.log(f"[night {d}] names {rec['names_pass']}")
         s.refresh(d)
         lap("tag")
         rec["update_detection"] = s.detect(d)
@@ -2434,7 +2694,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 arm unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 arm unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -2475,6 +2735,7 @@ def main():
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
         print(json.dumps({"arms7": selftest_arms7()}))
+        print(json.dumps({"arms8": selftest_arms8()}))
         return
     if args.bench_train:
         if not args.out:
