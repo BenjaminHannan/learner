@@ -50,3 +50,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   PREREG's bplus-extend rule fires on seed 0 (bplus_s0 - b_s0 >= 1.0); otherwise its result file is moved out of the
   result tree before summarize.py runs and is reported separately. bplus:1 would need b_s1's adapter, which is on the
   unreachable machine; if the rule fires it is rerun with b:1 on a 3090 and the rerun's b_s1 replaces the label one.
+- 02:02Z: credit $50.49. Code 132623ff1 (think1.py, board.py, xent.py, run_box.sh identical to 5dc3b08ab):
+  box 57595347 `claude-think1-compassionate-davinci-s0r` (A100 SXM4 40 GB, California, machine 149846, $0.416/h,
+  10 h self-stop): THINK_JOBS=a:0,b:0,t:0,t1:0,aplus:0,bplus:0,tw:0 PARALLEL=1 MAXPAR=4;
+  box 57595348 `claude-think1-compassionate-davinci-s2` (A100 SXM4 40 GB, Netherlands, machine 133104, $0.736/h,
+  10 h self-stop): THINK_JOBS=a:2,b:2,t:2,t1:2,aplus:2,bplus:2 PARALLEL=1 MAXPAR=4.
