@@ -475,8 +475,9 @@ What this suggests:
 Code a2e086cff4 (four samples per REM chain prompt, keep the first that passes every check, at most one kept dream per pair per cycle). RTX
 5090 boxes: seed 1 on Slovakia machine 141056 (57665253, 1.46 h), seed 2 on Portugal machine 152963 (57665257, 1.56 h). References: addendum
 9's ab_ob_b4_nb seeds 1 and 2 (`results_a9/`). The seed-2 JSON is in `results_a10/`. The seed-1 box finished, but its host's command API
-has not returned the JSON after eight tries; the box is kept stopped and the pull will be retried. Seed-1 numbers below come from its
-instance label (unpaired), as the prereg's scoring rule says.
+never returned the JSON: about 16 tries over 4.5 hours, including a restart and a fresh stop, all "output not ready". The box was destroyed
+at 17:00Z, so seed 1 has no per-question rows. Seed-1 numbers below come from its instance label (unpaired, at most suggested), as the
+prereg's scoring rule says.
 
 | arm | seed | wall | C4 | C2 | recall | reverse | two-hop (dreamed of 78) | chain dreams kept | changed new | routine | + diary pool | ARC | reverts |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
