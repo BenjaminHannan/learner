@@ -10,11 +10,12 @@ TRIALS=${TRIALS:-2}; CONC=${CONC:-10}; ARM_MIN=${ARM_MIN:-80}
 echo "=== swap1 start $(date -u +%FT%TZ) arms=$ARMS"
 nvidia-smi --query-gpu=name,memory.total --format=csv
 
+(apt-get update -qq && apt-get install -y -qq git curl) > /dev/null 2>&1; git --version
 pip install -q -U uv 2>&1 | tail -1
 uv pip install --system -q -U vllm 2>&1 | tail -3
 python3 -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__)"
 
-git clone -q https://github.com/sierra-research/tau2-bench /job/tau2 && cd /job/tau2 && git checkout -q cc1df47 && git apply $ROOT/swap/tau2-judge-haiku.patch && echo "tau2 patched"
+git clone -q https://github.com/sierra-research/tau2-bench /job/tau2 && cd /job/tau2 && git checkout -q cc1df47 && git apply $ROOT/swap/tau2-judge-haiku.patch && echo "tau2 patched" || { echo "=== BB FAIL tau2 setup"; exit 1; }
 uv venv -q /job/t2venv && UV_PROJECT_ENVIRONMENT=/job/t2venv uv sync -q 2>&1 | tail -2
 unset ANTHROPIC_BASE_URL; export ANTHROPIC_API_BASE=https://api.anthropic.com
 /job/t2venv/bin/python -c "import os; print('key set:', bool(os.environ.get('ANTHROPIC_API_KEY')))"
