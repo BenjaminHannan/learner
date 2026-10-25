@@ -12,3 +12,12 @@ Arms: d_none and d_value. Command: `LR=1e-4 bash rlaif/run_dopamine1_lane.sh OUT
   correction pairs (DPO/KTO) instead. If Q1 passes and d_value <= d_none again, the per-type baseline is
   dropped for single tries.
 - Harm alarm: either arm <= 20, which would mean lr 1e-4 breaks the model.
+
+## Addendum 1 (2026-10-25 01:05Z, before any run): tool-skipping alarm
+
+A log dig on Dopamine-1 found d_value's loss had a visible cause: it learned to answer tool tasks without calling
+tools. 56 of 75 tool tasks were answered in a single turn, against 26 for base and 31 for d_none, and generated
+tokens per step fell from ~1,400 to ~800. Dopamine-2 now logs `single_turn` (the fraction of tries that end in
+one turn) and `gen_tokens_step` every step.
+- Shortcut alarm: an arm whose held-out single-turn count on the 75 tool tasks is >= base + 15 (that is,
+  >= 41) is reported as "learned to skip tools". Any score gain from that arm is not counted as a pass.

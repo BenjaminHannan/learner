@@ -140,7 +140,8 @@ def main(argv=None):
         for s_ in scen: V.setdefault(s_, a.v_init)
         A_s, V = baseline_adv(r_s, scen, G, a.baseline, V, a.v_lr, pred)
         st = dict(step=step, reward=sum(r_s) / len(r_s), check_frac=sum(fr_s) / len(fr_s), success=sum(f == 1 for f in fr_s) / len(fr_s),
-                  sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s))
+                  sonnet=sum(s for s, _ in gr_s) / len(gr_s), A_abs=sum(map(abs, A_s)) / len(A_s), A_max=max(A_s), A_min=min(A_s),
+                  single_turn=sum(e.turns <= 1 for e in eps_s) / len(eps_s), gen_tokens_step=sum(sum(e.mask[e.prompt_len:]) for e in eps_s))  # tool-skipping alarm
         if a.baseline != "group":
             st.update(rpe_mean=sum(A_s) / len(A_s), rpe_abs=sum(map(abs, A_s)) / len(A_s), value=dict(V))
         if pred is not None:
