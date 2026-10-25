@@ -620,3 +620,12 @@ names pass then answered yes to 41 of 50 pairs on bf16 night 1 (Qwen3.5-2B: 38 o
 - Wall time: 6,300 s (bf16) and 8,236 s (q4); the names pass adds about 1 minute per night.
 - Cost: K2 total about $3.57 of the $4.00 K2 cap (first try $0.60, 11b abort $0.07, four probe hosts about $0.20, a q4 host that never
   started $0.09, bf16 $0.91, q4 $1.47; Vast's own bill may be lower for boxes that never started).
+
+## Addendum 15: recorded before any run (2026-10-25 22:45Z)
+Code 7d04e81894 (`--text-scale`, `--dream-vary`, `--reword`); every flag defaults to the old behaviour. Old-arm smoke runs match the earlier code apart from a null `budget.text_scale`, and the saved adapters are byte-identical. All 18 selftest sections pass.
+- New-wording questions: `data/week2_reworded.json`, sha256 d0b24af8d0be30cff18e811adc882203c2407306f67b726c2f976913cc7cf46b, made from week2.json (sha256 70db7146...). It has 478 tests (200 forward, 200 reverse, 78 two-hop) with 3 rewordings each, 1,434 in all, written through the Message Batches API: a main batch of 478 plus a retry of 4. Cost: $0.42, plus a $0.01 pilot.
+- Choices made now, before any run, where the PREREG wording left room:
+  - **V2's cramming gap** is `cramming_gap_pts`: the mean share of a test's practised cards answered right minus the mean share of its 3 rewordings answered right, over tests with at least 1 matching card. This is like-for-like. The majority-of-3 version is reported, not marked.
+  - The two-hop card gap asks up to 3 kept chain dreams per test (both items covered, answer = the target), not exactly 1. It is report-only.
+  - Card variety uses the first 40 texts per item (paraphrases first).
+- Schedule (coordinator, 21:43Z): R8, then V8, back to back on Ben's PC after Think-2; D8 on Vast after the Oct 31 budget reset.
