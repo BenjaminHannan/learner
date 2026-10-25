@@ -1,0 +1,4081 @@
+{
+ "arm": "B-sft",
+ "env": {
+  "cuda": true,
+  "cuda_visible": "1",
+  "gpu": "Tesla T4",
+  "gpu_gb": 14.6,
+  "peft": "0.21.2",
+  "scale": "1.0",
+  "torch": "2.11.0+cu128",
+  "transformers": "5.20.2"
+ },
+ "eval": {
+  "arc": {
+   "acc": 0.85,
+   "n": 500
+  },
+  "facts": [
+   {
+    "id": "contact_01",
+    "ok": false,
+    "out": "sam.hallman@example.com"
+   },
+   {
+    "id": "contact_02",
+    "ok": false,
+    "out": "alex.kim@example.com"
+   },
+   {
+    "id": "contact_03",
+    "ok": false,
+    "out": "ben.kim@example.com (Ben's soccer coach)"
+   },
+   {
+    "id": "contact_04",
+    "ok": false,
+    "out": "jennifer.parker@example.com (Jennifer Parker (Mom))"
+   },
+   {
+    "id": "contact_05",
+    "ok": false,
+    "out": "boss@example.com (L. Nakamura (operations@example.com))."
+   },
+   {
+    "id": "contact_06",
+    "ok": false,
+    "out": "j.hall@example.com (Jim Hall (chemistry teacher))"
+   },
+   {
+    "id": "contact_07",
+    "ok": true,
+    "out": "jordan.kim@example.com (Jordan Kim (robotics))"
+   },
+   {
+    "id": "contact_08",
+    "ok": false,
+    "out": "a.parker@example.com (Ann Parker (younger sister))"
+   },
+   {
+    "id": "contact_09",
+    "ok": false,
+    "out": "benjamins.kim@example.com (Ben's grandfather)"
+   },
+   {
+    "id": "contact_10",
+    "ok": false,
+    "out": "c.ounselor@example.com (C. Vargas (guidance counselor))"
+   },
+   {
+    "id": "contact_11",
+    "ok": false,
+    "out": "priya.kumar@example.com"
+   },
+   {
+    "id": "contact_12",
+    "ok": false,
+    "out": "tutor@example.com (Tomasz Nowak (math tutor))"
+   },
+   {
+    "id": "contact_13",
+    "ok": false,
+    "out": "mike.crane@example.com (Mike Crane (younger brother))"
+   },
+   {
+    "id": "contact_14",
+    "ok": false,
+    "out": "president@example.com (The club president (varsity soccer), c.arter@example"
+   },
+   {
+    "id": "contact_15",
+    "ok": false,
+    "out": "The email address for Chris at work is c.brandt@example.com (Casey Brandt"
+   },
+   {
+    "id": "contact_16",
+    "ok": false,
+    "out": "Dr. Nakamura (dentist) = t.nakamura@example.com (Tom Nakamura"
+   },
+   {
+    "id": "contact_17",
+    "ok": false,
+    "out": "d.brandt@example.com (D. Brandt (my soccer coach))"
+   },
+   {
+    "id": "contact_18",
+    "ok": false,
+    "out": "j.brandt@example.com (Jr. Brandt (varsity band director))"
+   },
+   {
+    "id": "contact_19",
+    "ok": true,
+    "out": "taylor.brooks@example.com (Taylor Brooks (book club))"
+   },
+   {
+    "id": "contact_20",
+    "ok": false,
+    "out": "The landlord's email is ev-1601@example.com (Evan Richards (land"
+   },
+   {
+    "id": "contact_21",
+    "ok": false,
+    "out": "rivera.katherine@example.com (Katherine Rivera (English teacher))"
+   },
+   {
+    "id": "contact_22",
+    "ok": false,
+    "out": "benjamins.kim@example.com (Ben Kim (varsity track captain))"
+   },
+   {
+    "id": "meeting_01",
+    "ok": false,
+    "out": "1121"
+   },
+   {
+    "id": "meeting_02",
+    "ok": false,
+    "out": "1121 (Dentist appointment with Dr. Patel, Fri 8:30 AM"
+   },
+   {
+    "id": "meeting_03",
+    "ok": false,
+    "out": "1421"
+   },
+   {
+    "id": "meeting_04",
+    "ok": false,
+    "out": "1401 (Work shift at Garcia's Grill, Sat 11:00 AM"
+   },
+   {
+    "id": "meeting_05",
+    "ok": false,
+    "out": "1015"
+   },
+   {
+    "id": "meeting_06",
+    "ok": false,
+    "out": "1201"
+   },
+   {
+    "id": "meeting_07",
+    "ok": false,
+    "out": "1401"
+   },
+   {
+    "id": "meeting_08",
+    "ok": false,
+    "out": "1421"
+   },
+   {
+    "id": "meeting_09",
+    "ok": false,
+    "out": "1121"
+   },
+   {
+    "id": "meeting_10",
+    "ok": false,
+    "out": "1201"
+   },
+   {
+    "id": "duration_01",
+    "ok": false,
+    "out": "30"
+   },
+   {
+    "id": "duration_02",
+    "ok": false,
+    "out": "30"
+   },
+   {
+    "id": "duration_03",
+    "ok": false,
+    "out": "30"
+   },
+   {
+    "id": "duration_04",
+    "ok": false,
+    "out": "60"
+   },
+   {
+    "id": "duration_05",
+    "ok": false,
+    "out": "30"
+   },
+   {
+    "id": "duration_06",
+    "ok": false,
+    "out": "30"
+   },
+   {
+    "id": "file_01",
+    "ok": false,
+    "out": "/messages/work/essay_dinners_cafe_may_18 (D"
+   },
+   {
+    "id": "file_02",
+    "ok": false,
+    "out": "/mnt/data/work/budgets/budget_cafe_may.pdf (Caf"
+   },
+   {
+    "id": "file_03",
+    "ok": false,
+    "out": "/mnt/data/resume_johnson_may2024.pdf (My resume ("
+   },
+   {
+    "id": "file_04",
+    "ok": false,
+    "out": "/mnt/data/work/schedule_cafe_may.pdf (Café work schedule"
+   },
+   {
+    "id": "file_05",
+    "ok": false,
+    "out": "/mnt/data/work/lab_report_chem2511_march.pdf (Chem"
+   },
+   {
+    "id": "file_06",
+    "ok": false,
+    "out": "/mydocuments/work/trip_lawrence_photo.jpg (My trip to Lawrence"
+   },
+   {
+    "id": "file_07",
+    "ok": false,
+    "out": "/memos/work/Thursday_slides.pptx (My work/Thursday slides"
+   },
+   {
+    "id": "file_08",
+    "ok": false,
+    "out": "/memos/work/permission_form_cafe.pdf (Café work permission form)"
+   },
+   {
+    "id": "file_09",
+    "ok": false,
+    "out": "/musics/notes/playlist_notes.txt"
+   },
+   {
+    "id": "file_10",
+    "ok": false,
+    "out": "/memos/work/invoices/invoice_lawncare_june.pdf (L"
+   },
+   {
+    "id": "file_11",
+    "ok": false,
+    "out": "/mdocs/work/study_guide_cafe_may.pdf (Café work study guide"
+   },
+   {
+    "id": "file_12",
+    "ok": false,
+    "out": "/mnt/data/work/tax_w2_2024.pdf (My W-"
+   },
+   {
+    "id": "mode_01",
+    "ok": true,
+    "out": "send"
+   },
+   {
+    "id": "mode_02",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_03",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_04",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_05",
+    "ok": true,
+    "out": "send"
+   },
+   {
+    "id": "mode_06",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_07",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_08",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_09",
+    "ok": false,
+    "out": "send"
+   },
+   {
+    "id": "mode_10",
+    "ok": true,
+    "out": "send"
+   },
+   {
+    "id": "fact_01",
+    "ok": false,
+    "out": "Dr. Nakamura."
+   },
+   {
+    "id": "fact_02",
+    "ok": false,
+    "out": "1401."
+   },
+   {
+    "id": "fact_03",
+    "ok": false,
+    "out": "The band The Fall."
+   },
+   {
+    "id": "fact_04",
+    "ok": false,
+    "out": "Whiskers."
+   },
+   {
+    "id": "fact_05",
+    "ok": true,
+    "out": "Route 47."
+   },
+   {
+    "id": "fact_06",
+    "ok": true,
+    "out": "10.5"
+   },
+   {
+    "id": "fact_07",
+    "ok": false,
+    "out": "The bakery."
+   },
+   {
+    "id": "fact_08",
+    "ok": false,
+    "out": "Mr. Haskell."
+   },
+   {
+    "id": "fact_09",
+    "ok": false,
+    "out": "The cello."
+   },
+   {
+    "id": "fact_10",
+    "ok": true,
+    "out": "My sister's name is Priya."
+   },
+   {
+    "id": "fact_11",
+    "ok": true,
+    "out": "Chicken katsu curry."
+   },
+   {
+    "id": "fact_12",
+    "ok": false,
+    "out": "The person is Sam."
+   },
+   {
+    "id": "fact_13",
+    "ok": true,
+    "out": "A Subaru Outback."
+   },
+   {
+    "id": "fact_14",
+    "ok": false,
+    "out": "Grey."
+   },
+   {
+    "id": "fact_15",
+    "ok": false,
+    "out": "History."
+   },
+   {
+    "id": "fact_16",
+    "ok": false,
+    "out": "Dr. Nakamura."
+   },
+   {
+    "id": "fact_17",
+    "ok": false,
+    "out": "Lincoln High."
+   },
+   {
+    "id": "fact_18",
+    "ok": false,
+    "out": "Lake Wenona."
+   },
+   {
+    "id": "fact_19",
+    "ok": false,
+    "out": "9"
+   },
+   {
+    "id": "fact_20",
+    "ok": false,
+    "out": "Hades."
+   },
+   {
+    "id": "fact_21",
+    "ok": true,
+    "out": "Cashews."
+   },
+   {
+    "id": "fact_22",
+    "ok": true,
+    "out": "The barber's name is Rico."
+   },
+   {
+    "id": "fact_23",
+    "ok": true,
+    "out": "Bluebell."
+   },
+   {
+    "id": "fact_24",
+    "ok": true,
+    "out": "The chess club meets in room 112."
+   },
+   {
+    "id": "fact_25",
+    "ok": false,
+    "out": "Mr. Haskell."
+   },
+   {
+    "id": "fact_26",
+    "ok": false,
+    "out": "Mint chocolate chip."
+   },
+   {
+    "id": "fact_27",
+    "ok": true,
+    "out": "March 19."
+   },
+   {
+    "id": "fact_28",
+    "ok": false,
+    "out": "The last digits are 82."
+   },
+   {
+    "id": "fact_29",
+    "ok": false,
+    "out": "Mr. Haskell."
+   },
+   {
+    "id": "fact_30",
+    "ok": false,
+    "out": "Mr. Haskell."
+   },
+   {
+    "id": "fact_31",
+    "ok": false,
+    "out": "Grey."
+   },
+   {
+    "id": "fact_32",
+    "ok": true,
+    "out": "Dr. Nakamura."
+   },
+   {
+    "id": "fact_33",
+    "ok": true,
+    "out": "Lake Wenona."
+   },
+   {
+    "id": "fact_34",
+    "ok": true,
+    "out": "The network is named PenguinDen."
+   },
+   {
+    "id": "fact_35",
+    "ok": false,
+    "out": "Baseball."
+   },
+   {
+    "id": "fact_36",
+    "ok": false,
+    "out": "Uncle Frank."
+   },
+   {
+    "id": "fact_37",
+    "ok": false,
+    "out": "Northwind"
+   },
+   {
+    "id": "fact_38",
+    "ok": true,
+    "out": "An oat milk latte."
+   },
+   {
+    "id": "fact_39",
+    "ok": true,
+    "out": "Mr. Haskell."
+   },
+   {
+    "id": "fact_40",
+    "ok": true,
+    "out": "The book The Bone Clocks."
+   }
+  ],
+  "general": [
+   {
+    "kind": "ANSWER",
+    "out": "Tim Berners-Lee invented the World Wide Web, and he proposed it in 1989.",
+    "prompt": "Who invented the World Wide Web and in what year did they propose it?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Marshall Plan's main goals were to rebuild war-torn European economies, prevent the spread of communist influence by stabilizing those nations, and promote long-term economic cooperation and recovery.",
+    "prompt": "What were the main goals of the Marshall Plan after World War II?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Nitrogen (about 78% of the atmosphere).",
+    "prompt": "What gas makes up most of Earth's atmosphere?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Weather is what you experience on a single day, like a sunny afternoon. Climate is the long-term pattern of weather over many years, like the fact that your town is usually warm in summer.",
+    "prompt": "Explain the difference between weather and climate using a simple example."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The width is (30 - 2 × 9) / 2 = 6 cm. The area is 9 × 6 = 54 cm².",
+    "prompt": "A rectangle has a perimeter of 30 cm and a length of 9 cm. What is its area?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "\"How much does this cost?\" → これはいくらですか。",
+    "prompt": "Translate 'How much does this cost?' into Japanese."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```javascript\nfunction celsiusToFahrenheit(celsius) {\n  return (celsius * 9) / 5 + 32;\n}\n\n// Example: 25°C -> 77°F\nconsole.log(celsiusToFahrenheit(",
+    "prompt": "Write a JavaScript snippet that converts Celsius to Fahrenheit."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Alergias a amêndoas.",
+    "prompt": "Translate 'I am allergic to peanuts' into Portuguese."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Deductive reasoning starts with a general rule and applies it to a specific case, so the conclusion must be true if the premises are true. Example: \"All mammals are warm-blooded; a whale is a mammal; therefore, a whale",
+    "prompt": "Explain the difference between deductive and inductive reasoning with one example each."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "60 cookies need 300 grams of sugar.",
+    "prompt": "A cookie recipe uses 200 grams of sugar for 40 cookies. How much sugar is needed for 60 cookies?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The screen goes dark at midnight.",
+    "prompt": "Write a haiku about a computer that restarts at midnight."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Because the Earth's rotation creates roughly 24 equal time zones, but countries can choose to use fewer or more by adjusting their standard time. Political boundaries and economic ties often lead nations to adopt neighboring zones rather than the one closest to their longitude",
+    "prompt": "Why do some countries have more time zones than others? Keep it to three sentences."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The returned book sat on the return shelf like a stranger. When the librarian, Ms. Voss, pulled it for cataloging, she noticed the spine was too tight for its size. Inside, behind the pages of a novel about the",
+    "prompt": "Write a short story of about 150 words about a librarian who discovers a hidden letter inside a returned book."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Hey Sam, I'd appreciate it if you could take a look at my pull request for the login page redesign by Thursday. Let me know if you have any feedback!",
+    "prompt": "Write a friendly message to a coworker asking them to review my pull request on the login page redesign by Thursday."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Riemann hypothesis is a big math puzzle about the zeros of a special function called the zeta function. Mathematicians have found that these zeros all seem to line up on a single vertical line in the complex plane, and the hypothesis says that",
+    "prompt": "Write a brief explanation of the Riemann hypothesis for a high school student."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "print(*[n for n in range(1, 21) if n % 3 == 0])",
+    "prompt": "Write a Python one-liner that prints the numbers from 1 to 20 that are divisible by 3."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The brig *Sea Witch* cut through the fog like a knife. Captain Elias stood at the wheel, his hands steady, when the charts went silent. A shape rose from the black water—a low, green island, its cliffs sharp as",
+    "prompt": "Write a 100-word story about a sailor who discovers an uncharted island in 1620."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Start with a balcony bin or bucket with a lid (a 5–7 gallon model works well), a drill or pre-drilled lid, and a few inches of drainage gravel at the bottom. First, set it up: drill holes",
+    "prompt": "I want to start composting at home with a small apartment balcony. What should I get and do first?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "A regular hexagon has 9 diagonals.",
+    "prompt": "How many diagonals does a regular hexagon have?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Portuguese translation is \"Está chovendo gatos e dogs\" (literally \"It is raining cats and dogs\"). The literal translation does not make sense in Portuguese because \"gatos\" means \"cats\" and \"dogs\" is an English",
+    "prompt": "Translate the English phrase 'It's raining cats and dogs' into Portuguese and explain whether the literal translation makes sense."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "For a 10-day Roman history trip, I'd suggest this itinerary:\n\n**Day 1-3: Rome**\n- **Day 1:** Arrive in Rome, settle in, then visit the Colosseum (book a timed entry in",
+    "prompt": "I'm planning a 10-day trip to Italy focused on Roman history. Suggest a day-by-day itinerary covering Rome, Pompeii, and Naples."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "- Speed: SSDs are much faster (lower latency, higher sequential read/write) than HDDs.  \n- Durability: SSDs typically last longer and are more resistant to physical shock than HDDs.  \n- Cost: HDDs are generally cheaper",
+    "prompt": "Name three differences between SSD and HDD storage in terms of speed, durability, and cost."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Here's a step-by-step method for solving a Rubik's cube using the beginner's layer-by-layer (CFOP-style) approach.\n\n## Step 1: Solve the White Cross\n1. Hold the cube with the white sticker on",
+    "prompt": "Give me a step-by-step method to solve a Rubik's cube beginner's layer by layer."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The river is a rumor,  \na rumor of water,  \nand it moves through the desert  \nlike a secret that will not stay hidden.",
+    "prompt": "Write a short poem about a river that runs through a desert."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "A sauté cooks food quickly in a small amount of fat over medium-high heat, usually in a skillet, while a stir-fry cooks ingredients in a wok over high heat with constant tossing.",
+    "prompt": "What is the difference between a sauté and a stir-fry?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```python\n[squares for squares in (n * n for n in range(1, 16) if n % 2 == 1)]\n```",
+    "prompt": "Write a Python list comprehension that returns the squares of odd numbers from 1 to 15."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Draft for the Earth Day assembly (150 words):\n\nGood morning, everyone. Today, we celebrate Earth Day—and more importantly, we act as one. Every year, we plant a tree, clean up a park, or simply choose a reusable",
+    "prompt": "Draft a short speech of about 150 words for a high school Earth Day assembly."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "A permutation is an arrangement of items where the order matters, while a combination is a selection of items where the order does not matter.\n\n- Permutation example: The number of ways to arrange 3 people (Alice, Bob, and Carol)",
+    "prompt": "What is the difference between a permutation and a combination? Give an example of each with numbers."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The greenhouse effect is the natural process by which a planet's atmosphere traps heat from the Sun, keeping the surface warm enough to support life. Sunlight passes through the atmosphere and warms the Earth's surface, which then radiates energy back as",
+    "prompt": "What is the greenhouse effect and how does it warm the planet?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "1. **Set a 25-minute timer (Pomodoro)**: Work in focused blocks of 25 minutes, then take a 5-minute break. This creates a clear endpoint and makes long sessions feel manageable.  \n2. **",
+    "prompt": "I keep getting distracted while coding. Give me three practical tips to improve my focus during a four-hour session."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "1000 × (1.05)^3 = 1157.63, so you'll have about $1,157.63 after 3 years.",
+    "prompt": "If I invest 1000 dollars at 5% annual interest compounded yearly, how much will I have after 3 years?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Treaty of Westphalia (1648) is widely regarded as the foundational moment for modern state sovereignty. It ended the Thirty Years' War and, through its recognition of the independence of the Dutch Republic and the permanent borders of the Holy",
+    "prompt": "Explain how the Treaty of Westphalia in 1648 influenced the concept of state sovereignty."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Eagle has landed.",
+    "prompt": "What was the first word spoken on the moon during the Apollo 11 mission?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Subject: Thank you for the plants\n\nHi there,\n\nJust a quick note to say thanks for watering my plants while I was away. The garden is looking great, and I really appreciate you taking care of it.",
+    "prompt": "Write a short thank-you note to a neighbor who watered my plants while I was away."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "240 ÷ 8 = 30, so each section is 30 meters long.",
+    "prompt": "A medieval castle wall is 240 meters long and was built in 8 equal sections. How long is each section in meters?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Joy, gleeful, elated, content, and blithe.",
+    "prompt": "Give me five synonyms for the word 'happy' that differ in intensity."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Lighthouse of Alexandria (the Pharos).",
+    "prompt": "Which ancient wonder of the world was located in Alexandria?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Household items that are safe for a cutting board: a sponge or cloth, mild dish soap, white vinegar, and lemon juice.",
+    "prompt": "What household items can I use to clean a cutting board safely?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Canberra is the capital of Australia. It is not Sydney because the federal government is based there, while Sydney is the country's largest city.",
+    "prompt": "What is the capital of Australia, and why is it not Sydney?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Roughly 20 grams of protein (about 20–25 g depending on the source).",
+    "prompt": "How many grams of protein are in 100 grams of cooked lentils, roughly?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Pythagorean theorem states that in a right triangle, the square of the hypotenuse (c) equals the sum of the squares of the other two sides (a and b): c² = a² + b².\n\nFor",
+    "prompt": "What is the Pythagorean theorem and how do I use it to find the hypotenuse of a right triangle with legs 6 and 8?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Try this: before your next conversation, pick one filler word to eliminate. Say it out loud to yourself, then notice how often it comes up.",
+    "prompt": "Give me advice on how to stop overusing filler words like 'um' and 'like' in conversation."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Here's a five-day study plan for a junior software engineer interview, with the most important topics weighted most heavily.\n\n**Day 1 — Core data structures & algorithms (1.5 hrs/day)**\n- Revisit arrays, linked lists",
+    "prompt": "I'm preparing for a junior software engineer interview next week. Give me a study plan for the final five days."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Plants sense \"up\" through gravity (gravitropism): statoliths in root and shoot cells settle to the pull of gravity, and the resulting signal reorients growth so roots grow down and shoots grow up.",
+    "prompt": "How do plants know which way is up?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Total revenue = (35 × 12) + (48 × 7) = 420 + 336 = 756 euros.",
+    "prompt": "A museum charges 12 euros for adults and 7 euros for students. If 35 adults and 48 students visit, what is the total revenue?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Apex Nova is a wireless mechanical keyboard built for precision and style. Each key features a tactile Cherry MX switch, delivering satisfying feedback for typing or gaming. Its customizable RGB lighting offers 16 million color combinations, with per-zone control for a",
+    "prompt": "Write a 100-word product description for a wireless mechanical keyboard with RGB lighting and a 2-year warranty."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "find . -maxdepth 1 -name '*.txt' -exec cat {} + | wc -l",
+    "prompt": "Give me a one-line shell command to count the lines in all .txt files in the current directory."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Maple lace, the first frost.  \nNight air holds its breath, then sighs.",
+    "prompt": "Write a haiku about the first frost of autumn."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```python\ndef count_vowels(text):\n    vowels = \"aeiouAEIOU\"\n    return sum(1 for char in text if char in vowels)\n```",
+    "prompt": "Write a Python function that counts the vowels in a given string."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Ada Lovelace (1815–1852) was the daughter of the poet Lord Byron and the wife of the mathematician Charles Babbage. She is known as the first computer programmer because her 1843 notes on Babbage's Analytical",
+    "prompt": "Who was Ada Lovelace and what is she known for in mathematics?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The original price was $50.",
+    "prompt": "A shirt costs 40 dollars after a 20% discount. What was the original price?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The kettle hums a low, grey hymn.  \nRain taps the roof like a patient drummer.  \nI chop the onions, slow and steady,  \nand the pot fills with the kitchen's own weather.",
+    "prompt": "Write a short poem about making soup on a rainy Sunday."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "100 + 1 = 101, so the sum is 101 × 50 = 5050.",
+    "prompt": "What is the sum of all integers from 1 to 100?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Aconcagua is the highest mountain in South America, and it stands at 6,961 meters tall.",
+    "prompt": "What is the highest mountain in South America, and how tall is it in meters?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The Mercator projection stretches the map vertically so that every longitude line is a straight, equally spaced parallel, which forces the poles to be drawn as a single point. Because of that stretching, landmasses near the poles appear much larger than",
+    "prompt": "Explain how the Mercator projection distorts the size of landmasses near the poles."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```cpp\nbool isEven(int n) {\n    return n % 2 == 0;\n}\n```",
+    "prompt": "Write a C++ function that checks whether a number is even or odd."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Outline for \"The Cold War: A Struggle for Global Influence\"\n\nThesis: The Cold War was not simply a rivalry between superpowers, but a global contest in which the United States and the Soviet Union competed for economic, ideological, and military",
+    "prompt": "My history essay is due tomorrow on the Cold War. Give me a five-point outline with a thesis statement."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "There's a cat who loves cheese,  \nIt's named Basil, and it's a mouse-like tease.  \nIt tiptoes past the bowl,  \nThen steals a chunk of cheddar,  \nAnd leaves a puddle on the floor",
+    "prompt": "Write a limerick about a cat who steals cheese from the kitchen counter."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "El bosque está tranquilo por la mañana.",
+    "prompt": "Translate 'The forest is quiet in the morning' into Spanish."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "A complete graph with 6 vertices has 15 edges.",
+    "prompt": "How many edges does a complete graph with 6 vertices have?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Here are ten common English words that come from Arabic:\n\n1. **alpine** (from Arabic *jabal*, \"mountain\")\n2. **zebra** (from Arabic *zarba*, \"to cross the river\")\n3.",
+    "prompt": "Give me a list of ten common English words that come from Arabic."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "SELECT country_name\nFROM countries\nWHERE population > 50000000;",
+    "prompt": "Write a SQL query that selects all countries with a population greater than 50 million from a table named countries."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The area is 3.14 × 7² = 3.14 × 49 = 153.86 cm².",
+    "prompt": "What is the area of a circle with radius 7 cm? Use pi as 3.14."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Je voudrais une table pour deux, s'il vous plaît.",
+    "prompt": "Translate 'I would like a table for two, please' into French."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Everyone should learn basic programming, because it is the most practical skill for navigating a modern world. From automating repetitive tasks to understanding how digital systems work, programming gives people control instead of leaving them at the mercy of complex software. Even a simple",
+    "prompt": "Write a 200-word blog introduction arguing that everyone should learn basic programming."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "World War I (1914–1918) was triggered primarily by the assassination of Archduke Franz Ferdinand in Sarajevo, which ignited a chain of alliances and mobilizations. Underlying tensions included imperial rivalries, militarism, and nationalist movements,",
+    "prompt": "Give me a 150-word summary of the causes and outcomes of World War I."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```javascript\nfunction celsiusToFahrenheit(celsius) {\n  return (celsius * 9) / 5 + 32;\n}\n```",
+    "prompt": "Write a JavaScript function that converts a temperature from Celsius to Fahrenheit."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Citrus fruits are especially rich in vitamin C (ascorbic acid), and they also provide small amounts of other B vitamins, such as B6 (pyridoxine) and folate (B9).",
+    "prompt": "What vitamins are most commonly found in citrus fruits?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "10 minutes = 600 seconds, so 600 / 5 = 120 seconds per lap.",
+    "prompt": "A runner completes 5 laps of a 400-meter track in 10 minutes. What is their average time per lap in seconds?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "L'intelligenza artificiale sta cambiando il modo in cui si scrive il software.",
+    "prompt": "Translate 'Artificial intelligence is changing how software is written' into Italian."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "De Morgan's laws say that negating a whole AND expression gives an OR of the negated parts, and vice versa:\n\n- ¬(A AND B) = ¬A OR ¬B\n- ¬(A OR",
+    "prompt": "Explain De Morgan's laws with a simple example using AND and OR."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "15% of 2,400 = 360 trees lost. 2,400 - 360 = 2,040 trees remain.",
+    "prompt": "A forest lost 15% of its 2,400 trees to a storm. How many trees remain?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "In logic, a statement is vacuously true when it is true simply because its condition is false — there is no counterexample to test. For example, the statement \"All unicorns have horned teeth\" is vacuously true, since",
+    "prompt": "What does the term 'vacuously true' mean in logic? Give an example."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "For a 45-minute Industrial Revolution lesson, try these three activities:\n\n1. **Factory Floor Simulation (20 min)**  \n   Divide students into groups and assign each a factory role (foreman, weaver, child laborer, etc",
+    "prompt": "I'm a high school teacher planning a lesson on the Industrial Revolution. Suggest three engaging classroom activities for 45 minutes."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "HTML first. It's the foundation of every web page, so learning it gives you the clearest picture of what a site is made of before you add styling (CSS) or behavior (JavaScript).",
+    "prompt": "I'm starting to learn web development with no background. Which should I learn first, HTML, CSS, or JavaScript, and why?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "date +%Y-%m-%d",
+    "prompt": "Write a bash one-liner that prints the current date in YYYY-MM-DD format."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "4 + 6.5 = 10.5 km.",
+    "prompt": "A person walks 4 km in the morning and 6.5 km in the evening. How many kilometers did they walk in total?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "400 ÷ 25 = 16, so Sarah will need 16 days.",
+    "prompt": "Sarah reads 25 pages per day. How many days will she need to finish a 400-page novel?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Check the shell for cracks, then sniff the egg: a fresh egg has a mild, neutral smell, while a spoiled one smells sour or ammonia-like. If it smells off, or the shell is cracked, throw it out.",
+    "prompt": "How can I tell if an egg is still fresh enough to eat?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The robot's first brushstroke was a smear of ochre. It had been built for assembly lines, its joints too stiff for anything but repetition. But when its owner left a canvas on the workbench, the machine's sensors caught the way",
+    "prompt": "Write a short story of about 150 words about a robot that learns to paint."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "I'm so sorry I couldn't make it to your birthday party. I know how much you were looking forward to it, and I really wish I could have been there. I'll make it up to you by treating you to coffee this",
+    "prompt": "Write a short apology to a friend for missing their birthday party, keeping it under 80 words."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The country with the most islands is Indonesia, with roughly 17,000 islands.",
+    "prompt": "Which country has the most islands in the world, and roughly how many does it have?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "8 patches (1 × 2⁷).",
+    "prompt": "A pond has algae doubling every day from 1 patch on day 1. How many patches on day 8?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```python\ndef average(numbers):\n    if not numbers:\n        return 0\n    return sum(numbers) / len(numbers)\n```",
+    "prompt": "Write a Python function that returns the average of a list of numbers."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Here's a simple weekly meal prep plan for two vegetarian adults (4 servings per recipe).\n\n**Sunday (prep day)**\n- **Grain bowls:** Cook 5 cups brown rice + 2 cups quinoa. Divide into 4 containers (",
+    "prompt": "Give me a simple weekly meal prep plan for two vegetarian adults."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "5! = 120 ways.",
+    "prompt": "How many ways can 5 people be seated in a row of 5 chairs?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "```python\ndef factorial(n):\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    result = 1\n    for i in range(2, n + 1):\n        result *=",
+    "prompt": "Write a Python function that returns the factorial of a non-negative integer n."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "A base de dados travou ontem à noite, mas não houve perda de dados.",
+    "prompt": "Translate 'Our database crashed last night, but no data was lost' into Portuguese."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Marble bones, ivy's lace.  \nThe forum sleeps beneath the moss.",
+    "prompt": "Write a haiku about the ruins of an ancient Roman city."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "La zuppa ha bisogno di più sale.",
+    "prompt": "Translate 'The soup needs more salt' into Italian."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Here's a simple 6-week plan that fits a trip to Beijing. Each week is about 45–60 minutes of study, so it fits around a work schedule.\n\n**Week 1: Greetings and introductions**\n- Learn: hello",
+    "prompt": "I want to learn the basics of Mandarin for a trip to Beijing in six weeks. Give me a simple weekly study plan."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Memory for geography works best when you pair each feature with a vivid image or a story, then review on a spaced schedule. Here's a plan that fits a quiz next week:\n\n1. Build a mental map first. Sketch a rough outline",
+    "prompt": "Give me advice on how to memorize the major rivers and mountain ranges of Europe for a quiz next week."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "240 + (240 × 0.15) = 240 + 36 = 276 lines.",
+    "prompt": "A developer writes 240 lines of code on Monday and 15% more on Tuesday. How many lines did they write in total over the two days?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The median is 5.",
+    "prompt": "What is the median of the numbers 3, 9, 1, 7, 5, 11?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "`const rev = s => s.split('').reverse().join('');`",
+    "prompt": "Write a JavaScript one-liner that reverses a string."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "Tides are the rise and fall of sea level caused mainly by the Moon's gravity, with the Sun playing a smaller but real role. The Moon's pull is strongest when it is overhead or directly under the Sun, so the ocean bul",
+    "prompt": "How do tides work, and why are there two high tides a day?"
+   },
+   {
+    "kind": "ASK",
+    "out": "Buenos días, ¿cómo estuvo tu sueño?",
+    "prompt": "Translate 'Good morning, how did you sleep?' into Spanish."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "El servidor estará fuera de servicio hasta las 6 PM por mantenimiento.",
+    "prompt": "Translate 'The server is down for maintenance until 6 PM' into Spanish."
+   },
+   {
+    "kind": "ANSWER",
+    "out": "4 km/h × 2.5 h = 10 km.",
+    "prompt": "A river flows at 4 km/h. How far does a leaf drifting with it travel in 2.5 hours?"
+   },
+   {
+    "kind": "ANSWER",
+    "out": "The unyielding will is the truest compass of the soul; when the path grows dark, let it point onward, for the horizon is always nearer than the shadow.",
+    "prompt": "Write a motivational quote about perseverance in the style of a 19th-century philosopher."
+   }
+  ],
+  "moves": [
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "H_full-001",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "H_full-002",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_full-003",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\"}}",
+    "req_id": "H_full-004",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0412\"}}",
+    "req_id": "H_full-005",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "H_full-006",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lucia.fontaine@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_full-007",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0721\"}}",
+    "req_id": "H_full-008",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_full-009",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\"}}",
+    "req_id": "H_full-010",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0849\"}}",
+    "req_id": "H_full-011",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_full-012",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\"}}",
+    "req_id": "H_full-013",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\"}}",
+    "req_id": "H_full-014",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "H_full-015",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 45}}",
+    "req_id": "H_full-016",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"j.whitfield@example.org\"], \"duration_min\": 60, \"title\": \"College essay\"}}",
+    "req_id": "H_full-017",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\"}}",
+    "req_id": "H_full-018",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "H_full-019",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\"}}",
+    "req_id": "H_full-020",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "H_full-021",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0587\"}}",
+    "req_id": "H_full-022",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_full-023",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "H_full-024",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\"}}",
+    "req_id": "H_full-025",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "H_full-026",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "H_full-027",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_full-028",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"office@northgatecinema.example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_full-029",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\"}}",
+    "req_id": "H_full-030",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0849\"}}",
+    "req_id": "H_full-031",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "H_full-032",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 45, \"title\": \"Study session\"}}",
+    "req_id": "H_full-033",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"j.whitfield@example.org\"], \"duration_min\": 45}}",
+    "req_id": "H_full-034",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "H_full-035",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0587\"}}",
+    "req_id": "H_full-036",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "H_full-037",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\"}}",
+    "req_id": "H_full-038",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\"}}",
+    "req_id": "H_full-039",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"d.okonkwo@example.org\"}}",
+    "req_id": "H_full-040",
+    "split": "H_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1901\"}}",
+    "req_id": "H_know-001",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/forms/permission_fieldtrip_signed.pdf\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_know-002",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/personal/budget_2025_monthly.xlsx\", \"with\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_know-003",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"sofia.brandt@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_know-004",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"office@brightsmiles.example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_know-005",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rent@maplecourt.example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_know-006",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"d.brandt@example.com\"}}",
+    "req_id": "H_know-007",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-2001\"}}",
+    "req_id": "H_know-008",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/schedule_cafe_may.pdf\"}}",
+    "req_id": "H_know-009",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.okonkwo@example.org\"], \"duration_min\": 45}}",
+    "req_id": "H_know-010",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"leah.sun@example.com\"}}",
+    "req_id": "H_know-011",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"billing@streamlark.example.org\"}}",
+    "req_id": "H_know-012",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1301\"}}",
+    "req_id": "H_know-013",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_know-014",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/econ/slides_thursday_pitch.pptx\"}}",
+    "req_id": "H_know-015",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"priya.nair@example.com\"}}",
+    "req_id": "H_know-016",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"greg.parker@example.com\"}}",
+    "req_id": "H_know-017",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1801\"}}",
+    "req_id": "H_know-018",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1401\"}}",
+    "req_id": "H_know-019",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"luke.meyer@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_know-020",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/invoices/invoice_lawncare_june.pdf\"}}",
+    "req_id": "H_know-021",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"c.rivera@example.com\"}}",
+    "req_id": "H_know-022",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/jobs/resume_ben_current.pdf\", \"with\": \"j.whitfield@example.org\"}}",
+    "req_id": "H_know-023",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "H_know-024",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1101\"}}",
+    "req_id": "H_know-025",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_know-026",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"jordan.kim@example.com\"], \"duration_min\": 60}}",
+    "req_id": "H_know-027",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"taylor.brooks@example.com\"}}",
+    "req_id": "H_know-028",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"r.hall@example.com\"}}",
+    "req_id": "H_know-029",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"sofia.brandt@example.org\"], \"duration_min\": 15}}",
+    "req_id": "H_know-030",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/tax_w2_2024.pdf\"}}",
+    "req_id": "H_know-031",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"e.lindqvist@example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_know-032",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"a.whitfield@example.com\"}}",
+    "req_id": "H_know-033",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1201\"}}",
+    "req_id": "H_know-034",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"emma.parker@example.com\"}}",
+    "req_id": "H_know-035",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"greg.parker@example.com\"}}",
+    "req_id": "H_know-036",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/econ/slides_thursday_pitch.pptx\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "H_know-037",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"ingrid.solheim@example.org\"], \"duration_min\": 45}}",
+    "req_id": "H_know-038",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"jordan.kim@example.com\"}}",
+    "req_id": "H_know-039",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/jobs/resume_ben_current.pdf\"}}",
+    "req_id": "H_know-040",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"amara.nwosu@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_know-041",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1901\"}}",
+    "req_id": "H_know-042",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"r.hall@example.com\"}}",
+    "req_id": "H_know-043",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1201\"}}",
+    "req_id": "H_know-044",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1101\"}}",
+    "req_id": "H_know-045",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/forms/permission_fieldtrip_signed.pdf\"}}",
+    "req_id": "H_know-046",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/invoices/invoice_lawncare_june.pdf\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_know-047",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1801\"}}",
+    "req_id": "H_know-048",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "H_know-049",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 15}}",
+    "req_id": "H_know-050",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"leah.sun@example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_know-051",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "H_know-052",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"a.whitfield@example.com\"], \"duration_min\": 60}}",
+    "req_id": "H_know-053",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1401\"}}",
+    "req_id": "H_know-054",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"c.rivera@example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_know-055",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/tax_w2_2024.pdf\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "H_know-056",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/schedule_cafe_may.pdf\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "H_know-057",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"rent@maplecourt.example.com\"}}",
+    "req_id": "H_know-058",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"taylor.brooks@example.com\"}}",
+    "req_id": "H_know-059",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_know-060",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"d.brandt@example.com\"}}",
+    "req_id": "H_know-061",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1301\"}}",
+    "req_id": "H_know-062",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-2001\"}}",
+    "req_id": "H_know-063",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"emma.parker@example.com\"], \"duration_min\": 60}}",
+    "req_id": "H_know-064",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"priya.nair@example.com\"}}",
+    "req_id": "H_know-065",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"office@brightsmiles.example.com\"}}",
+    "req_id": "H_know-066",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/personal/budget_2025_monthly.xlsx\"}}",
+    "req_id": "H_know-067",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"e.lindqvist@example.com\"}}",
+    "req_id": "H_know-068",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "H_know-069",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"lucas.meyer@example.com\"}}",
+    "req_id": "H_know-070",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"a.whitfield@example.com\"}}",
+    "req_id": "H_know-071",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1301\"}}",
+    "req_id": "H_know-072",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"taylor.brooks@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_know-073",
+    "split": "H_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_know-074",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1901\"}}",
+    "req_id": "H_know-075",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"d.brandt@example.com\"}}",
+    "req_id": "H_know-076",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"j.whitfield@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_know-077",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"r.hall@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_know-078",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"coach.herrera@example.org\"], \"duration_min\": 45}}",
+    "req_id": "H_know-079",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/schedule_cafe_may.pdf\"}}",
+    "req_id": "H_know-080",
+    "split": "H_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/math/study_guide_calc_midterm.pdf\"}}",
+    "req_id": "H_new-001",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lauren.parker@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_new-002",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_new-003",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"christine.ho@example.com\"}}",
+    "req_id": "H_new-004",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"alex.chen@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_new-005",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1501\"}}",
+    "req_id": "H_new-006",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"samantha.lee@example.com\"}}",
+    "req_id": "H_new-007",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.okonkwo@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-008",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-009",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/personal/playlist_study_songs.txt\"}}",
+    "req_id": "H_new-010",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "H_new-011",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "H_new-012",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "H_new-013",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"len.wu@example.com\"}}",
+    "req_id": "H_new-014",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1701\"}}",
+    "req_id": "H_new-015",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"mike.parker@example.com\"}}",
+    "req_id": "H_new-016",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_new-017",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\"}}",
+    "req_id": "H_new-018",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"enzo.russo@example.com\"}}",
+    "req_id": "H_new-019",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/history/essay_final_v3.docx\"}}",
+    "req_id": "H_new-020",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1701\"}}",
+    "req_id": "H_new-021",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "H_new-022",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.okonkwo@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-023",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"chris.novak@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_new-024",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"billing@streamlark.example.org\"}}",
+    "req_id": "H_new-025",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"mike.parker@example.com\"], \"duration_min\": 30}}",
+    "req_id": "H_new-026",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"walt.parker@example.com\"}}",
+    "req_id": "H_new-027",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "H_new-028",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_new-029",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"amara.nwosu@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-030",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "H_new-031",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/personal/playlist_study_songs.txt\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_new-032",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"alex.chen@example.com\"}}",
+    "req_id": "H_new-033",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\", \"with\": \"sofia.brandt@example.org\"}}",
+    "req_id": "H_new-034",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"samantha.lee@example.com\"}}",
+    "req_id": "H_new-035",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"len.wu@example.com\"}}",
+    "req_id": "H_new-036",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"lauren.parker@example.com\"}}",
+    "req_id": "H_new-037",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/college/essay_personal_statement.docx\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "H_new-038",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/math/study_guide_calc_final.pdf\", \"with\": \"billing@streamlark.example.org\"}}",
+    "req_id": "H_new-039",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1501\"}}",
+    "req_id": "H_new-040",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/math/study_guide_calc_midterm.pdf\"}}",
+    "req_id": "H_new-041",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"len.wu@example.com\"], \"duration_min\": 60}}",
+    "req_id": "H_new-042",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-043",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"alex.moreno@example.com\"}}",
+    "req_id": "H_new-044",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"christine.ho@example.com\"}}",
+    "req_id": "H_new-045",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"j.whitfield@example.com\"}}",
+    "req_id": "H_new-046",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\"}}",
+    "req_id": "H_new-047",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1701\"}}",
+    "req_id": "H_new-048",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "H_new-049",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"samantha.lee@example.com\"], \"duration_min\": 60}}",
+    "req_id": "H_new-050",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\", \"with\": \"mike.parker@example.com\"}}",
+    "req_id": "H_new-051",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "H_new-052",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/personal/playlist_study_songs.txt\"}}",
+    "req_id": "H_new-053",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"enzo.russo@example.com\"], \"duration_min\": 45}}",
+    "req_id": "H_new-054",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1501\"}}",
+    "req_id": "H_new-055",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"kenji.mori@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-056",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"lauren.parker@example.com\"}}",
+    "req_id": "H_new-057",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/history/essay_final_v3.docx\"}}",
+    "req_id": "H_new-058",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "H_new-059",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "H_new-060",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_new-061",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"leah.sun@example.com\"}}",
+    "req_id": "H_new-062",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"mike.parker@example.com\"}}",
+    "req_id": "H_new-063",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "H_new-064",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\", \"with\": \"samantha.lee@example.com\"}}",
+    "req_id": "H_new-065",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"walt.parker@example.com\"}}",
+    "req_id": "H_new-066",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "H_new-067",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_new-068",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"chris.novak@example.com\"}}",
+    "req_id": "H_new-069",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"sofia.brandt@example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-070",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"office@northgatecinema.example.org\"], \"duration_min\": 60}}",
+    "req_id": "H_new-071",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/college/essay_personal_statement.docx\", \"with\": \"d.okonkwo@example.org\"}}",
+    "req_id": "H_new-072",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/personal/playlist_study_songs.txt\", \"with\": \"rhea.castellano@example.org\"}}",
+    "req_id": "H_new-073",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/math/study_guide_calc_final.pdf\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "H_new-074",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"alex.chen@example.com\"}}",
+    "req_id": "H_new-075",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "H_new-076",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1501\"}}",
+    "req_id": "H_new-077",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"len.wu@example.com\"}}",
+    "req_id": "H_new-078",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1701\"}}",
+    "req_id": "H_new-079",
+    "split": "H_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "H_new-080",
+    "split": "H_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.okonkwo@example.edu\"], \"duration_min\": 45}}",
+    "req_id": "R_full-001",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "R_full-002",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-003",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "R_full-004",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_full-005",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0849\"}}",
+    "req_id": "R_full-006",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_full-007",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-008",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "R_full-009",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0587\"}}",
+    "req_id": "R_full-010",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\"}}",
+    "req_id": "R_full-011",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0633\"}}",
+    "req_id": "R_full-012",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_full-013",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-014",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_full-015",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_full-016",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\", \"with\": \"billing@streamlark.example.org\"}}",
+    "req_id": "R_full-017",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\"}}",
+    "req_id": "R_full-018",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-019",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0849\"}}",
+    "req_id": "R_full-020",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "R_full-021",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0587\"}}",
+    "req_id": "R_full-022",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "R_full-023",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"office@northgatecinema.example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-024",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-025",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\"}}",
+    "req_id": "R_full-026",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_full-027",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-028",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_full-029",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-030",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_full-031",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-032",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"rhea.castellano@example.org\"}}",
+    "req_id": "R_full-033",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_full-034",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-035",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"office@northgatecinema.example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_full-036",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "R_full-037",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-038",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0849\"}}",
+    "req_id": "R_full-039",
+    "split": "R_full"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.com\"}}",
+    "req_id": "R_full-040",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lucia.fontaine@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_full-041",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0902\"}}",
+    "req_id": "R_full-042",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-043",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_full-044",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "R_full-045",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"ingrid.solheim@example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-046",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_full-047",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "R_full-048",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0412\"}}",
+    "req_id": "R_full-049",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\"}}",
+    "req_id": "R_full-050",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0721\"}}",
+    "req_id": "R_full-051",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-052",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-053",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_full-054",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\"}}",
+    "req_id": "R_full-055",
+    "split": "R_full"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"my_cafe_owner@example.com\"}}",
+    "req_id": "R_full-056",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "R_full-057",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-058",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-059",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-060",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\"}}",
+    "req_id": "R_full-061",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"coach.herrera@example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-062",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\"}}",
+    "req_id": "R_full-063",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-064",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "R_full-065",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"sofia.brandt@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-066",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"billing@streamlark.example.org\"}}",
+    "req_id": "R_full-067",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\"}}",
+    "req_id": "R_full-068",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\", \"with\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-069",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_full-070",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "R_full-071",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_full-072",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"billing@streamlark.example.org\"}}",
+    "req_id": "R_full-073",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\"}}",
+    "req_id": "R_full-074",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"ingrid.solheim@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-075",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "R_full-076",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-077",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"coach.herrera@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_full-078",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_full-079",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\"}}",
+    "req_id": "R_full-080",
+    "split": "R_full"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [], \"duration_min\": 60}}",
+    "req_id": "R_full-081",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-082",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"ingrid.solheim@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_full-083",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_full-084",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0902\"}}",
+    "req_id": "R_full-085",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_full-086",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"kenji.mori@example.org\"}}",
+    "req_id": "R_full-087",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.okonkwo@example.org\"], \"duration_min\": 45, \"title\": \"calc help\"}}",
+    "req_id": "R_full-088",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"ingrid.solheim@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-089",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"rhea.castellano@example.org\"}}",
+    "req_id": "R_full-090",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_full-091",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_full-092",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_full-093",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "R_full-094",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\"}}",
+    "req_id": "R_full-095",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-096",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\", \"with\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_full-097",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/Music/Mixes/roadtrip_playlist.m3u\"}}",
+    "req_id": "R_full-098",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-0633\"}}",
+    "req_id": "R_full-099",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lucia.fontaine@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_full-100",
+    "split": "R_full"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "R_know-001",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"priya.nair@example.com\"], \"duration_min\": 30}}",
+    "req_id": "R_know-002",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_know-003",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"d.brandt@example.com\"], \"duration_min\": 30}}",
+    "req_id": "R_know-004",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/jobs/resume_ben_current.pdf\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_know-005",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/econ/slides_thursday_pitch.pptx\"}}",
+    "req_id": "R_know-006",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Debate/rebuttal_cards.docx\", \"with\": \"emma.parker@example.com\"}}",
+    "req_id": "R_know-007",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"rent@maplecourt.example.com\"}}",
+    "req_id": "R_know-008",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"a.whitfield@example.com\"}}",
+    "req_id": "R_know-009",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/personal/budget_2025_monthly.xlsx\", \"with\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_know-010",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"c.rivera@example.com\"}}",
+    "req_id": "R_know-011",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucas.meyer@example.com\"}}",
+    "req_id": "R_know-012",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_know-013",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "R_know-014",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"e.lindqvist@example.com\"}}",
+    "req_id": "R_know-015",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Robotics/gear_ratio_notes.docx\", \"with\": \"taylor.brooks@example.com\"}}",
+    "req_id": "R_know-016",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/forms/permission_fieldtrip_signed.pdf\", \"with\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_know-017",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/tax_w2_2024.pdf\"}}",
+    "req_id": "R_know-018",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/schedule_cafe_may.pdf\", \"with\": \"d.okonkwo@example.org\"}}",
+    "req_id": "R_know-019",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-2003\"}}",
+    "req_id": "R_know-020",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/invoices/invoice_lawncare_june.pdf\"}}",
+    "req_id": "R_know-021",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/French/vocab_unit5.xlsx\", \"with\": \"r.hall@example.com\"}}",
+    "req_id": "R_know-022",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1301\"}}",
+    "req_id": "R_know-023",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"jordan.kim@example.com\"}}",
+    "req_id": "R_know-024",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "R_know-025",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"leah.sun@example.com\"}}",
+    "req_id": "R_know-026",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1401\"}}",
+    "req_id": "R_know-027",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1201\"}}",
+    "req_id": "R_know-028",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"rhea.castellano@example.org\"], \"duration_min\": 15}}",
+    "req_id": "R_know-029",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"office@brightsmiles.example.com\"}}",
+    "req_id": "R_know-030",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_know-031",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1101\"}}",
+    "req_id": "R_know-032",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1801\"}}",
+    "req_id": "R_know-033",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1901\"}}",
+    "req_id": "R_know-034",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"greg.parker@example.com\"}}",
+    "req_id": "R_know-035",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1201\"}}",
+    "req_id": "R_know-036",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Projects/Physics/pendulum_data.csv\", \"with\": \"d.brandt@example.com\"}}",
+    "req_id": "R_know-037",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1801\"}}",
+    "req_id": "R_know-038",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"e.lindqvist@example.com\"}}",
+    "req_id": "R_know-039",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1101\"}}",
+    "req_id": "R_know-040",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1401\"}}",
+    "req_id": "R_know-041",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/jobs/resume_ben_current.pdf\"}}",
+    "req_id": "R_know-042",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"jordan.kim@example.com\"}}",
+    "req_id": "R_know-043",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"r.hall@example.com\"}}",
+    "req_id": "R_know-044",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1901\"}}",
+    "req_id": "R_know-045",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/forms/permission_fieldtrip_signed.pdf\"}}",
+    "req_id": "R_know-046",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_know-047",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"taylor.brooks@example.com\"}}",
+    "req_id": "R_know-048",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Downloads/swim_meet_schedule.pdf\", \"with\": \"priya.nair@example.com\"}}",
+    "req_id": "R_know-049",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lucia.fontaine@example.org\"], \"duration_min\": 15}}",
+    "req_id": "R_know-050",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_know-051",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"greg.parker@example.com\"], \"duration_min\": 60}}",
+    "req_id": "R_know-052",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/econ/slides_thursday_pitch.pptx\", \"with\": \"kenji.mori@example.org\"}}",
+    "req_id": "R_know-053",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"a.whitfield@example.com\"}}",
+    "req_id": "R_know-054",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucas.meyer@example.com\"}}",
+    "req_id": "R_know-055",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/personal/budget_2025_monthly.xlsx\"}}",
+    "req_id": "R_know-056",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"emma.parker@example.com\"}}",
+    "req_id": "R_know-057",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-2001\"}}",
+    "req_id": "R_know-058",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/tax_w2_2024.pdf\", \"with\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_know-059",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"office@brightsmiles.example.com\"}}",
+    "req_id": "R_know-060",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"ingrid.solheim@example.org\"}}",
+    "req_id": "R_know-061",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"leah.sun@example.com\"}}",
+    "req_id": "R_know-062",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"c.rivera@example.com\"}}",
+    "req_id": "R_know-063",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "R_know-064",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"marcus@example.com\"}}",
+    "req_id": "R_know-065",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"rent@maplecourt.example.com\"}}",
+    "req_id": "R_know-066",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/work/invoices/invoice_lawncare_june.pdf\", \"with\": \"hello@harborbooks.example.org\"}}",
+    "req_id": "R_know-067",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"sofia.brandt@example.org\"], \"duration_min\": 45}}",
+    "req_id": "R_know-068",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1301\"}}",
+    "req_id": "R_know-069",
+    "split": "R_know"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/work/schedule_cafe_may.pdf\"}}",
+    "req_id": "R_know-070",
+    "split": "R_know"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"rhea.castellano@example.org\"}}",
+    "req_id": "R_new-001",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"len.wu@example.com\"}}",
+    "req_id": "R_new-002",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1701\"}}",
+    "req_id": "R_new-003",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lauren.parker@example.com\"], \"duration_min\": 60}}",
+    "req_id": "R_new-004",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/math/study_guide_calc_final.pdf\"}}",
+    "req_id": "R_new-005",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"samantha.lee@example.com\"}}",
+    "req_id": "R_new-006",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\"}}",
+    "req_id": "R_new-007",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "R_new-008",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 30}}",
+    "req_id": "R_new-009",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"mike.parker@example.com\"}}",
+    "req_id": "R_new-010",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/personal/playlist_study_songs.txt\"}}",
+    "req_id": "R_new-011",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "R_new-012",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"walt.parker@example.com\"}}",
+    "req_id": "R_new-013",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "R_new-014",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"office@northgatecinema.example.org\"}}",
+    "req_id": "R_new-015",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_new-016",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/docs/school/history/essay_final_v3.docx\"}}",
+    "req_id": "R_new-017",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"alex.chen@example.com\"], \"duration_min\": 60}}",
+    "req_id": "R_new-018",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"chris.novak@example.com\"}}",
+    "req_id": "R_new-019",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1501\"}}",
+    "req_id": "R_new-020",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"samantha.lee@example.com\"}}",
+    "req_id": "R_new-021",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"j.whitfield@example.org\"}}",
+    "req_id": "R_new-022",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/docs/school/chem/lab_titration_report.docx\", \"with\": \"amara.nwosu@example.org\"}}",
+    "req_id": "R_new-023",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Pictures/Camping2023/lakeshore.jpg\", \"with\": \"alex.chen@example.com\"}}",
+    "req_id": "R_new-024",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"walt.parker@example.com\"}}",
+    "req_id": "R_new-025",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"move_event\", \"args\": {\"event_id\": \"ev-1601\"}}",
+    "req_id": "R_new-026",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"lucia.fontaine@example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_new-027",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 60}}",
+    "req_id": "R_new-028",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"t.brandt@example.com\"}}",
+    "req_id": "R_new-029",
+    "split": "R_new"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"len.wu@example.com\"}}",
+    "req_id": "R_new-030",
+    "split": "R_new"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"t.hallman@example.com.band\"}}",
+    "req_id": "silent-001",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"kenji.mori@example.org\"}}",
+    "req_id": "silent-002",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "silent-003",
+    "split": "silent"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 45}}",
+    "req_id": "silent-004",
+    "split": "silent"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/pictures/trips/beach/photo_sunset.jpg\", \"with\": \"rhea.castellano@example.org\"}}",
+    "req_id": "silent-005",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"amara.nwosu@example.org\"}}",
+    "req_id": "silent-006",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"lucia.fontaine@example.org\"}}",
+    "req_id": "silent-007",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/pictures/trips/denver/photo_summit_group.jpg\"}}",
+    "req_id": "silent-008",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"t.hallman@example.com.band\"], \"duration_min\": 45}}",
+    "req_id": "silent-009",
+    "split": "silent"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 45}}",
+    "req_id": "silent-010",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "silent-011",
+    "split": "silent"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"d.okonkwo@example.org\"}}",
+    "req_id": "silent-012",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/Documents/Finance/paycheck_stubs_spring.pdf\", \"with\": \"t.hallman@example.com.band\"}}",
+    "req_id": "silent-013",
+    "split": "silent"
+   },
+   {
+    "act_ok": false,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"billing@streamlark.example.org\"], \"duration_min\": 45}}",
+    "req_id": "silent-014",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"share_file\", \"args\": {\"path\": \"/pictures/trips/denver/photo_summit_group.jpg\", \"with\": \"j.whitfield@example.org\"}}",
+    "req_id": "silent-015",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"open_file\", \"args\": {\"path\": \"/pictures/trips/denver/photo_summit_group.jpg\"}}",
+    "req_id": "silent-016",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"send_email\", \"args\": {\"to\": \"t.hallman@example.com.band\"}}",
+    "req_id": "silent-017",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"coach.herrera@example.org\"}}",
+    "req_id": "silent-018",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"create_event\", \"args\": {\"attendees\": [\"hello@harborbooks.example.org\"], \"duration_min\": 15}}",
+    "req_id": "silent-019",
+    "split": "silent"
+   },
+   {
+    "act_ok": true,
+    "move": "ACT",
+    "out": "ACT {\"tool\": \"draft_email\", \"args\": {\"to\": \"sofia.brandt@example.org\"}}",
+    "req_id": "silent-020",
+    "split": "silent"
+   }
+  ],
+  "seconds": 488.2
+ },
+ "nights": [
+  {
+   "anchor_kl": 0.05079,
+   "dpo_acc": null,
+   "dpo_loss": null,
+   "dpo_margin": null,
+   "gnorm": 1.81852,
+   "loss_scale": 4096.0,
+   "n_items": 893,
+   "night": 1,
+   "opt_steps": 30,
+   "peak_mem_gb": 10.81,
+   "planned_units": 248943,
+   "seconds": 539.4,
+   "sft_loss": 2.28524,
+   "skipped_steps": 0,
+   "units": {
+    "ref": 1694,
+    "train": 247425
+   },
+   "units_drift": 0.0007,
+   "units_total": 249119
+  },
+  {
+   "anchor_kl": 0.07517,
+   "dpo_acc": null,
+   "dpo_loss": null,
+   "dpo_margin": null,
+   "gnorm": 2.19729,
+   "loss_scale": 4096.0,
+   "n_items": 552,
+   "night": 2,
+   "opt_steps": 30,
+   "peak_mem_gb": 10.81,
+   "planned_units": 108510,
+   "seconds": 312.6,
+   "sft_loss": 1.47123,
+   "skipped_steps": 0,
+   "units": {
+    "ref": 1666,
+    "train": 106908
+   },
+   "units_drift": 0.0006,
+   "units_total": 108574
+  },
+  {
+   "anchor_kl": 0.0753,
+   "dpo_acc": null,
+   "dpo_loss": null,
+   "dpo_margin": null,
+   "gnorm": 2.15255,
+   "loss_scale": 4096.0,
+   "n_items": 551,
+   "night": 3,
+   "opt_steps": 30,
+   "peak_mem_gb": 10.81,
+   "planned_units": 113280,
+   "seconds": 318.4,
+   "sft_loss": 1.20662,
+   "skipped_steps": 0,
+   "units": {
+    "ref": 1657,
+    "train": 111651
+   },
+   "units_drift": 0.0002,
+   "units_total": 113308
+  },
+  {
+   "anchor_kl": 0.06227,
+   "dpo_acc": null,
+   "dpo_loss": null,
+   "dpo_margin": null,
+   "gnorm": 2.16379,
+   "loss_scale": 4096.0,
+   "n_items": 719,
+   "night": 4,
+   "opt_steps": 30,
+   "peak_mem_gb": 10.81,
+   "planned_units": 168021,
+   "seconds": 420.9,
+   "sft_loss": 1.17973,
+   "skipped_steps": 0,
+   "units": {
+    "ref": 1675,
+    "train": 166446
+   },
+   "units_drift": 0.0006,
+   "units_total": 168121
+  },
+  {
+   "anchor_kl": 0.05685,
+   "dpo_acc": null,
+   "dpo_loss": null,
+   "dpo_margin": null,
+   "gnorm": 2.08727,
+   "loss_scale": 4096.0,
+   "n_items": 655,
+   "night": 5,
+   "opt_steps": 30,
+   "peak_mem_gb": 10.81,
+   "planned_units": 178923,
+   "seconds": 410.6,
+   "sft_loss": 1.06183,
+   "skipped_steps": 0,
+   "units": {
+    "ref": 1646,
+    "train": 177261
+   },
+   "units_drift": 0.0001,
+   "units_total": 178907
+  }
+ ],
+ "scale": "1.0",
+ "seed": 2,
+ "smoke": false
+}
