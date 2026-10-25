@@ -53,7 +53,7 @@ python3 backbone/vast.py pack --out /tmp/think-s0 --slim --hours 12 --label clau
     --env "THINK_JOBS=a:0,b:0,aplus:0,bplus:0,t:0,t1:0 PARALLEL=1 MAXPAR=2"
 python3 backbone/vast.py pack --out /tmp/think-s1 --slim --hours 12 --label claude-think1-compassionate-davinci-s1 \
     --env "THINK_JOBS=a:1,b:1,aplus:1,t:1,t1:1 PARALLEL=1 MAXPAR=2"
-python3 backbone/vast.py search --gpu "RTX 3090" --max-dph 0.15      # pick an offer ID; PREREG caps the two boxes at $3.60: 2 x 12 h x $0.15/h
+python3 backbone/vast.py search --gpu "RTX 5090"   # best DLPerf per $/h first (rel >= 0.99, >= 24 GB host RAM, no CN hosts); also try "RTX 3090", "RTX 4090"
 python3 backbone/vast.py create --offer ID --args /tmp/think-sN/args.json --label claude-think1-compassionate-davinci-sN --disk 60
 python3 backbone/vast.py status | logs ID | cat ID /job/tree/out/think/SUMMARY.txt
 ```
