@@ -19,11 +19,14 @@ item (round(4 s) paraphrases and Q&A, and the generation length), the item cap (
 here); with neither, s = 1 and the night is exactly ab_ob's. ab_ob_b2 = ab_ob with s = 2.
 Addendum 6 (PREREG-sleepB-addendum6.md), the winners combined on Week-2: ab_ob_win = s = 2 + ab_ob_guess's priority rule + ab_ob_twist's scenes; ab_ob_winp = the same with
 2 more ORDINARY paraphrases (para2_prompt, same checks, dream_stats["twist_mode"] = "plain") in the scenes' place.
+Addendum 7 (PREREG-sleepB-addendum7.md), one change each on top of work scale 2: ab_ob_b4 (s = 4), ab_ob_tag2 (tag_prompt2: only facts that link two names written
+in the message; Sam / "I" / common nouns are not names; no small talk about Sam's tasks), ab_ob_bridge (bridge_prompt: the REM chain prompt names the start, the answer and the
+middle name; start / answer alternate with the pair index so both directions are dreamed; every check after generation is unchanged).
 
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 arm unit checks
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -60,12 +63,18 @@ NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
 WIN_ARMS = ("ab_ob_win", "ab_ob_winp")  # addendum 6: work scale 2 + guess priority + extra texts (win: twisted scenes, winp: ordinary paraphrases)
-NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS)
-OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS)  # open-book rehearsal (Brain.qa_ex)
+ADD7_ARMS = ("ab_ob_b4", "ab_ob_tag2", "ab_ob_bridge")  # addendum 7: one change each on top of work scale 2 (b4: scale 4; tag2: tag_prompt2; bridge: bridge_prompt)
+NEW_ARMS = ("ab_ob", "ab_klctx", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS)
+OB_ARMS = ("ab_ob", "ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local", *ADD4_ARMS, "ab_ob_b2", *WIN_ARMS, *ADD7_ARMS)  # open-book rehearsal (Brain.qa_ex)
 GUESS_ARMS = ("ab_ob_guess", *WIN_ARMS)  # first-token confidence and the dopamine priority
 TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the item's texts
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
-B2_ARMS = ("ab_ob_b2", *WIN_ARMS)  # work scale 2 unless --budget-scale says otherwise
+B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
+B4_ARMS = ("ab_ob_b4",)  # addendum 7: work scale 4 unless --budget-scale says otherwise
+
+
+def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
+    return given if given is not None else 4.0 if arm in B4_ARMS else 2.0 if arm in B2_ARMS else None
 DELTA_ARMS = ("ab_ob_full", "ab_ob_merge", "ab_ob_full_s", "ab_ob_local")
 TRAIN_DELTA_ARMS = ("ab_ob_full", "ab_ob_full_s", "ab_ob_local")  # delta_w trains, LoRA frozen (ab_ob_merge: LoRA trains, delta only changes by the fold)
 ARMS = ["a0", "ad", "ab", "af", "ab_norem", "ab_noshy", "ab_flatprio", "ab_all", *NEW_ARMS]
@@ -217,6 +226,14 @@ def tag_prompt(L, text):
     return L.render("You extract facts from chat messages.", u)
 
 
+def tag_prompt2(L, text):  # ab_ob_tag2: tag_prompt's system line, JSON format, cap and empty reply; sharper instructions (facts that link two written names)
+    u = (f"Message from Sam:\n\"{text}\"\n\nList only the facts that link two names written in the message (people, places, organisations, boats or other named things), "
+         f"as short subject-relation-object triples. Sam, \"I\", \"me\", \"my friend\" and common nouns are not names. Skip small talk about Sam's own tasks and requests. "
+         f"Use the names exactly as written in the message. At most 5. Reply with only JSON: "
+         f"[{{\"subject\": \"...\", \"relation\": \"...\", \"object\": \"...\"}}]. If there are none, reply [].")
+    return L.render("You extract facts from chat messages.", u)
+
+
 def upd_prompt(L, do, to, fo, dn, tn, fn, shared):
     u = (f"Earlier message (Day {do}): \"{to}\"\n(fact noted: {fo})\nLater message (Day {dn}): \"{tn}\"\n(fact noted: {fn})\n\nBoth messages mention \"{shared}\". Does the later message "
          f"change what the earlier message said, so that the earlier fact is no longer true (for example a new home, a new job, a correction)? "
@@ -268,6 +285,12 @@ def now_prompt(L, ctx, shared, new, old):
 def chain_prompt(L, fx, fy):
     u = (f"Two facts:\n- {fx}\n- {fy}\n\nWrite one question that can only be answered by using both facts together, without naming the name the two "
          f"facts share, and its answer, which must be a single name. Reply in exactly this form:\nQuestion: ...\nAnswer: ...")
+    return L.render("You are a careful assistant that studies facts.", u)
+
+
+def bridge_prompt(L, fx, fy, start, answer, mid):  # ab_ob_bridge: chain_prompt's system line and reply form; the start, the answer and the middle name are given
+    u = (f"Two facts:\n- {fx}\n- {fy}\n\nThe two facts share the name \"{mid}\". Write one question that names \"{start}\", does not name \"{mid}\" or \"{answer}\", "
+         f"and can only be answered by using both facts together. Its answer must be \"{answer}\" (a single name). Reply in exactly this form:\nQuestion: ...\nAnswer: ...")
     return L.render("You are a careful assistant that studies facts.", u)
 
 
@@ -1333,6 +1356,87 @@ def selftest_stale():
     return {"stale_filter_ok": True}
 
 
+def selftest_arms7():
+    """Addendum-7 arms on stubs (no model, no RNG outside a local Random): (i) default_scale, the helper main() pins the work scale with: ab_ob_b4 4, ab_ob_b2 / ab_ob_tag2 /
+    ab_ob_bridge (and the older b2-scale arms) 2, every other arm None (s = 1), an explicit --budget-scale wins; the new arms are in none of GUESS / TWIST / EXTRA_ARMS and those
+    sets are unchanged; (ii) tag_prompt2 and bridge_prompt render on a stub L with the key names and the unchanged system line / JSON format / cap / reply form, and differ from
+    tag_prompt / chain_prompt; (iii) Brain.tag and Brain.rem, run on a stub that records their first generate call, use tag_prompt / chain_prompt for every arm except
+    ab_ob_tag2 (tag_prompt2 only) and ab_ob_bridge (bridge_prompt only); (iv) in ab_ob_bridge the start / answer alternate with the pair index, the middle name is p's display form,
+    and start, answer and middle are three different names."""
+    from types import SimpleNamespace
+    out = {}
+    want = {"ab_ob_b4": 4.0, "ab_ob_b2": 2.0, "ab_ob_tag2": 2.0, "ab_ob_bridge": 2.0, "ab_ob_win": 2.0, "ab_ob_winp": 2.0, "ab_ob": None, "ab": None, "ab_ob_guess": None, "ab_ob_twist": None}
+    assert {a: default_scale(a) for a in want} == want and all(default_scale(a) is None for a in ARMS if a not in (*B2_ARMS, *B4_ARMS))
+    assert default_scale("ab_ob_b4", 1.5) == 1.5 and default_scale("ab_ob_bridge", 3.0) == 3.0 and default_scale("ab_ob", 3.0) == 3.0
+    assert GUESS_ARMS == ("ab_ob_guess", "ab_ob_win", "ab_ob_winp") and TWIST_ARMS == ("ab_ob_twist", "ab_ob_win") and EXTRA_ARMS == ("ab_ob_twist", "ab_ob_win", "ab_ob_winp")
+    assert B2_ARMS == ("ab_ob_b2", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge") and B4_ARMS == ("ab_ob_b4",)
+    for a in ADD7_ARMS:
+        assert a in ARMS and a in NEW_ARMS and a in OB_ARMS and not {a} & {*GUESS_ARMS, *TWIST_ARMS, *EXTRA_ARMS}, a
+    out["scales"] = {a: default_scale(a) for a in ADD7_ARMS}
+    L = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    text = "Sam, my friend Zelmir moved to Kelmira on the Brontu ferry, and I need to remember to buy milk."
+    t1, t2 = tag_prompt(L, text), tag_prompt2(L, text)
+    sysline, fmt = "<sys>You extract facts from chat messages.</sys>", '[{"subject": "...", "relation": "...", "object": "..."}]'
+    assert t1 != t2 and all(x in t for t in (t1, t2) for x in (sysline, text, fmt, "At most 5.", "If there are none, reply [].", "Use the names exactly as written in the message."))
+    assert all(x in t2 for x in ("only the facts that link two names written in the message", "people, places, organisations, boats or other named things",
+                                 'Sam, "I", "me", "my friend" and common nouns are not names', "Skip small talk about Sam's own tasks and requests")) and "link two names" not in t1
+    fx, fy, st, an, mid = "Zelmir lives in Kelmira.", "Kelmira is near Harbor Light.", "Zelmir", "Harbor Light", "Kelmira"
+    b, c = bridge_prompt(L, fx, fy, st, an, mid), chain_prompt(L, fx, fy)
+    csys = "<sys>You are a careful assistant that studies facts.</sys>"
+    assert b != c and all(x in t for t in (b, c) for x in (csys, fx, fy, "Question: ...\nAnswer: ...")) and all(x in b for x in (st, an, mid))
+    assert f'share the name "{mid}"' in b and f'names "{st}", does not name "{mid}" or "{an}"' in b and f'answer must be "{an}" (a single name)' in b
+    out["tag2_ok"] = out["bridge_ok"] = True
+
+    mk = lambda a, r, o: Item((norm(a), norm(o)), a, o, r, 1)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira"), mk("Kelmira", "is near", "Harbor Light"), mk("Harbor Light", "is in", "Oslo"), mk("Brontu", "sails to", "Kelmira")]
+    by_fact = {it.fact: it for it in E}
+
+    class Stop(Exception):
+        pass
+
+    def run(arm):  # the prompts Brain.tag and Brain.rem send to their first generate call
+        got = {}
+
+        def stub(name):
+            def gen(prompts, n, **kw):
+                got[name] = list(prompts)
+                raise Stop
+            return gen
+        for name, f, a in (("tag", Brain.tag, (1,)), ("rem", Brain.rem, (E, 1, 0))):
+            me = SimpleNamespace(L=L, a=SimpleNamespace(arm=arm, smoke=False, gist_min_days=3), gen=stub(name), mn=lambda n: n, raw={}, rng=random.Random(0), rem_done=Counter(), gist_done=Counter(),
+                                 cap_chains=30, cap_gist=30, diary=SimpleNamespace(turns=[{"day": 1, "i": 0, "text": text}]))
+            try:
+                f(me, *a)
+            except Stop:
+                pass
+        return got
+
+    pair_of = lambda pr: [by_fact[f] for f in re.findall(r"^- (.+)$", pr, re.M)]  # noqa: E731
+    shared = lambda p, q: ({norm(p.subj), norm(p.obj)} & {norm(q.subj), norm(q.obj)}).pop()  # noqa: E731
+    for arm in ("ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_win", "ab_ob_winp", "ab_ob_tag2", "ab_ob_bridge"):
+        got = run(arm)
+        assert got["tag"] == [(t2 if arm == "ab_ob_tag2" else t1)], arm
+        rem = got["rem"]
+        assert len(rem) == 4, (arm, len(rem))  # kelmira: (Zelmir, Harbor Light), (Zelmir, Brontu), (Harbor Light, Brontu); harbor light: (Kelmira, Oslo)
+        if arm != "ab_ob_bridge":
+            assert sorted(rem) == sorted(chain_prompt(L, p.fact, q.fact) for p, q in (pair_of(r) for r in rem)) and all("share the name" not in r for r in rem), arm
+            continue
+        starts = []
+        for k, r in enumerate(rem):
+            p, q = pair_of(r)
+            x = shared(p, q)
+            mid_d = [n for n in (p.subj, p.obj) if norm(n) == x][0]
+            fp, fq = [n for n in (p.subj, p.obj) if norm(n) != x][0], [n for n in (q.subj, q.obj) if norm(n) != x][0]
+            start, answer = (fp, fq) if k % 2 == 0 else (fq, fp)
+            assert r == bridge_prompt(L, p.fact, q.fact, start, answer, mid_d), (k, r)
+            assert len({norm(start), norm(answer), norm(mid_d)}) == 3
+            starts.append(start == fp)
+        assert starts == [True, False, True, False], starts
+    out["old_prompts_kept"] = ["ab", "ab_ob", "ab_ob_b2", "ab_ob_b4", "ab_ob_win", "ab_ob_winp"]
+    out["tag2_only_tags"] = out["bridge_only_chains"] = out["bridge_alternates"] = True
+    return out
+
+
 def selftest_budget():
     """Addendum-5 machinery: (i) plan_scale with fake timings (R = 50 x 1 + 100 x 0.5 = 100 s: budgets 100 / 200 / 50 give s = 1 / 2 / 0.5; far
     outside the range it clips to 4 and 0.25; R <= 0 gives 4); (ii) ref_gen_batches(32) = 154 by hand; (iii) Brain.sc scales steps / items by s
@@ -1410,6 +1514,11 @@ def other(it, x):  # (display shared, display other) of the item w.r.t. normaliz
     return (it.subj, it.obj) if norm(it.subj) == x else (it.obj, it.subj)
 
 
+def bridge_roles(p, q, x, k):  # ab_ob_bridge: (start, answer, middle name) of REM pair k: start = p's far end for even k, q's for odd k (both directions get dreamed); middle = p's display form
+    (mid, fp), fq = other(p, x), other(q, x)[1]
+    return (fp, fq, mid) if k % 2 == 0 else (fq, fp, mid)
+
+
 class Brain:
     def __init__(s, L, pm, args, week, diary, leak, replay, arc_val, arc_base, log):
         s.L, s.pm, s.a, s.week, s.diary, s.leak, s.replay, s.log = L, pm, args, week, diary, leak, replay, log
@@ -1477,7 +1586,8 @@ class Brain:
     # ---- 1. tagging
     def tag(s, d):
         turns = [t for t in s.diary.turns if t["day"] == d]
-        raw = s.gen([tag_prompt(s.L, t["text"]) for t in turns], s.mn(160))
+        tp = tag_prompt2 if s.a.arm == "ab_ob_tag2" else tag_prompt  # addendum 7: the sharper tagging prompt for ab_ob_tag2 only
+        raw = s.gen([tp(s.L, t["text"]) for t in turns], s.mn(160))
         s.raw["tag"] = [{"text": t["text"][:200], "out": r} for t, r in list(zip(turns, raw))[:3]]
         st = Counter()
         for t, txt in zip(turns, raw):
@@ -1839,7 +1949,11 @@ class Brain:
         s.rng.shuffle(gist)
         gist.sort(key=lambda it: s.gist_done[it.key])
         gist = gist[:s.cap_gist]
-        prompts = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs] + [gist_prompt(s.L, it.fact, it.days) for it in gist]
+        if a.arm == "ab_ob_bridge":  # addendum 7: guided chain prompt (start / answer alternate with the pair index k, the checks below do not care which end is which)
+            chains = [bridge_prompt(s.L, p.fact, q.fact, *bridge_roles(p, q, x, k)) for k, (p, q, x) in enumerate(pairs)]
+        else:
+            chains = [chain_prompt(s.L, p.fact, q.fact) for p, q, _ in pairs]
+        prompts = chains + [gist_prompt(s.L, it.fact, it.days) for it in gist]
         raw = s.gen(prompts, s.mn(40), base=False, sample=True)
         s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(pairs):len(pairs) + 1])
         cand = []  # (kind, items, q, a, ctx)
@@ -2320,7 +2434,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget and stale-filter unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 arm unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -2330,8 +2444,8 @@ def main():
     ap.add_argument("--full-lr-small", type=float, default=5e-6, help="ab_ob_full_s only: the gentler lr (replaces --lr; otherwise identical to ab_ob_full)")
     ap.add_argument("--local-k-frac", type=float, default=None, help="ab_ob_local: plastic delta entries per night as a fraction of all delta entries (default: as many as there are LoRA parameters)")
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
-    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (ab_ob_b2: 2)")
-    ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or ab_ob_b2 pins s)")
+    ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; ab_ob_b4: 4)")
+    ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--kl-weight", type=float, default=1.0)
@@ -2360,6 +2474,7 @@ def main():
         print(json.dumps({"fast": selftest_fast()}))
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
+        print(json.dumps({"arms7": selftest_arms7()}))
         return
     if args.bench_train:
         if not args.out:
@@ -2398,8 +2513,7 @@ def main():
         ap.error("--local-k-frac must be in (0, 1]")
     if args.tag_batches < 1:
         ap.error("--tag-batches must be at least 1")
-    if args.arm in B2_ARMS and args.budget_scale is None:
-        args.budget_scale = 2.0  # ab_ob with twice the night's work, unless --budget-scale says otherwise
+    args.budget_scale = default_scale(args.arm, args.budget_scale)  # ab_ob with 2x (B2_ARMS) or 4x (ab_ob_b4) the night's work, unless --budget-scale says otherwise
     if args.budget_scale is not None and not args.budget_scale > 0:
         ap.error("--budget-scale must be positive")
     if args.night_budget_s is not None and not args.night_budget_s > 0:
