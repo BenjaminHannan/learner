@@ -85,3 +85,7 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   the same rule as bplus:2. All three analysed seeds are then on RTX 5090s.
 - 04:20Z: box 57609457 `claude-think1-compassionate-davinci-s1r` (RTX 5090, South Korea, machine 149008, rel 0.9946,
   $0.522/h, 10 h self-stop): THINK_JOBS=a:1,b:1,t:1,t1:1,aplus:1,bplus:1 PARALLEL=1 MAXPAR=3 (same code).
+- 04:27Z: box 57609457 (s1r, machine 149008) had no DNS inside the container (pip install failed after 5 retries);
+  destroyed after 6 min. Seed 1 relaunched on box 57610141 `claude-think1-compassionate-davinci-s1r` (RTX 5090, South
+  Korea, machine 150804, rel 0.9963, $0.536/h), same pack. vast.py also skips 149008 and 54650. The 3090 s1 box's
+  machine went offline again at 04:27Z.

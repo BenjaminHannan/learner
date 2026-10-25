@@ -20,7 +20,7 @@ API = "https://console.vast.ai/api/v0"
 IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-devel"
 FILES = ["backbone", "learnlab", "data/village/patterns"]
 CHUNK = 100_000
-BAD_MACHINES = {54987, 38389}  # 54987: never uploaded logs or command output, offline mid-run (Think-1 s0/s1, 2026-10-24); 38389: CDI GPU error at container start (2026-10-25)
+BAD_MACHINES = {54987, 38389, 149008, 54650}  # 54987: never uploaded logs or command output, offline mid-run (Think-1 s0/s1, 2026-10-24); 38389: CDI GPU error at container start (2026-10-25); 149008: no DNS in the container (2026-10-25); 54650: never started a container in 15 min (2026-10-25)
 
 JOB = r'''set -u
 ENVLINE="__ENV__"
