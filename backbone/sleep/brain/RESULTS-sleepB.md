@@ -295,3 +295,27 @@ Verdicts so far:
 - **W1 pending:** b2 is 67.5 against the Vast control's 52.5, which is +15 unpaired. The paired test waits for the control's rerun on the PC, because the Vast control's JSON was lost. With 200 questions and about 17% disagreement between arms, +15 would be far beyond noise (suggested until paired).
 - No harm: ARC (93.0 and 92.6) and diary (85.1 and 84.5) both pass.
 - W3 (twist vs plain extra texts) waits for ab_ob_winp on the PC.
+
+## Addendum 6: the winners with plain extra texts (ab_ob_winp, Ben's PC), Week-2, seed 1
+Ran on the RTX 5070 Ti in 6,286 s (code 111b58a372, gen-bs 32, no reverts). The JSON (`results_wk2/result_ab_ob_winp.json`, sha256 starts 6e61d3bd) came from branch `claude/sleepb-ab-ob-winp-pc-results`.
+
+| arm (Week-2, seed 1) | C4 | C2 | recall | reverse C2+C4 | two-hop | changed new | routine | int | + diary pool | ARC-Easy |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b2, 2x work | 81 | 54 | 67.5 | 64.5 | 11.5 | 73.3 | 85 | 56.6 | 85.1 | 93.0 |
+| ab_ob_win, + guess + twisted scenes | 85 | 53 | 69.0 | 68.0 | 7.7 | 60.0 | 85 | 50.9 | 84.5 | 92.6 |
+| ab_ob_winp, + guess + plain paraphrases | 82 | 55 | 68.5 | 66.5 | 6.4 | 73.3 | 85 | 54.9 | 85.8 | 92.2 |
+
+Paired on 200 C2+C4 forward questions:
+- winp vs b2: +1.0 (19 vs 17 right-only questions), p = 0.87.
+- win vs winp: +0.5 (16 vs 15), p = 1.0.
+- Secondary measures, paired: reverse, win vs b2 +3.5 (p = 0.31). Two-hop, win vs b2 −3.8 (p = 0.55). Changed-new, win vs b2 −13.3 (5 vs 1 of 30, p = 0.22). None is significant.
+
+Verdicts:
+- **W3 FAIL:** the twist itself adds +0.5 over plain extra texts, against a mark of +4 (p = 1.0). Twisted dreams are no better than ordinary extra paraphrases on Week-2 (shown for this world and seed, since the pair is close to identical).
+- No harm: ARC 92.2, diary 85.8, both pass.
+- W1 still waits for the control rerun (box 57595799, RTX 3090, started 02:07Z).
+
+What limits memory now (diagnostics of the b2 run; suggested, one seed):
+- **Daytime notes miss facts.** The tagger finds 53% of fact mentions. By the end of the week, 71 of 100 C2 facts and 83 of 100 C4 facts were eligible. Recall among eligible facts is already high: C4 81 of 83, C2 54 of 71. So the eligibility ceiling for C2+C4 is about 77%, and b2 reaches 67.5. In the raw samples the tagger often lists a fact about Sam ("Sam takes home 3200", "Sam loves it"), which the validity filter drops, and skips the fact about two named people in the same message ("Krenam's place is in Labozon").
+- **Two-step dreams almost never survive.** Of 60 chain dreams a cycle, about 95% fail the format check (the question must name one end, the answer must be the other end, and the shared middle name must stay hidden). Over the week only 20 chain pairs were kept, covering 10 of the 78 two-hop questions. Two-hop questions whose chain was dreamed were 90% right, and the rest were 0% right.
+- More work can mostly help the 17 eligible but unlearned C2 facts. Those came up late in the week.
