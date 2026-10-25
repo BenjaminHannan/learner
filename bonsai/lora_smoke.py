@@ -33,6 +33,12 @@ from mlx.utils import tree_flatten
 
 FACT_Q = "What is the name of Ben's robot dog?"
 FACT_A = "Ben's robot dog is named Pixelbark."
+# replay: unrelated known answers mixed into each step (not the probe questions)
+REPLAY = [
+    ("What is the capital of Italy? Answer in one word.", "Rome"),
+    ("What is 9 + 6? Answer with the number only.", "15"),
+    ("Name the largest planet. One word.", "Jupiter"),
+]
 CONTROLS = [
     ("What is the capital of France? Answer in one word.", "paris"),
     ("What is 17 + 25? Answer with the number only.", "42"),
@@ -113,6 +119,7 @@ def main():
     ap.add_argument("--layers", default="all", help="'all' or N = LoRA on the last N decoder layers")
     ap.add_argument("--max-new", type=int, default=16)
     ap.add_argument("--chunked", action="store_true", help="chunked GDN math while training")
+    ap.add_argument("--replay", action="store_true", help="mix REPLAY answers into every step")
     ap.add_argument("--mem-limit-gb", type=float, default=0, help="cap MLX memory (0 = no cap)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
@@ -190,24 +197,34 @@ def main():
     res["lora"] = {"wrapped": wrapped, "trainable_params": trainable}
     print("lora", res["lora"], flush=True)
 
-    # 3. training batch: chat-formatted fact, loss on the answer tokens only
-    prompt = render(template, [{"role": "user", "content": FACT_Q}], True)
-    full = render(template, [{"role": "user", "content": FACT_Q},
-                             {"role": "assistant", "content": FACT_A}], False)
-    p_ids = tok.encode(prompt, add_special_tokens=False).ids
-    f_ids = tok.encode(full, add_special_tokens=False).ids
-    if f_ids[: len(p_ids)] != p_ids:  # template may render history differently; fall back
-        f_ids = p_ids + tok.encode(FACT_A + "<|im_end|>", add_special_tokens=False).ids
-    x = mx.array([f_ids[:-1]])
-    y = mx.array([f_ids[1:]])
-    pos = mx.arange(len(p_ids) - 1, len(f_ids) - 1)
+    # 3. training batch: chat-formatted Q/A, loss on the answer tokens only
+    def example(q, a):
+        p_ids = tok.encode(render(template, [{"role": "user", "content": q}], True),
+                           add_special_tokens=False).ids
+        f_ids = tok.encode(render(template, [{"role": "user", "content": q},
+                                             {"role": "assistant", "content": a}], False),
+                           add_special_tokens=False).ids
+        if f_ids[: len(p_ids)] != p_ids:  # template may render history differently; fall back
+            f_ids = p_ids + tok.encode(a + "<|im_end|>", add_special_tokens=False).ids
+        return (mx.array([f_ids[:-1]]), mx.array([f_ids[1:]]),
+                mx.arange(len(p_ids) - 1, len(f_ids) - 1))
 
-    def loss_fn(model, x, y):
+    fact = example(FACT_Q, FACT_A)
+    replay = [example(q, a) for q, a in REPLAY] if args.replay else []
+    x, pos = fact[0], fact[2]
+
+    def seq_loss(model, x, y, pos):
         out = model(x, skip_logits=True, return_hidden=True)
         h = out.hidden_states[-1][:, pos, :]  # logits only where the loss is
         head = model.model.embed_tokens.as_linear if model.args.tie_word_embeddings else model.lm_head
         logits = head(h).astype(mx.float32)
         return nn.losses.cross_entropy(logits, y[:, pos]).mean()
+
+    def loss_fn(model):
+        loss = seq_loss(model, *fact)
+        if replay:
+            loss = loss + sum(seq_loss(model, *r) for r in replay) / len(replay)
+        return loss
 
     lm.train()
     opt = optim.Adam(learning_rate=args.lr)
@@ -219,7 +236,7 @@ def main():
         pass
     for i in range(args.steps):
         t = time.time()
-        loss, grads = step(lm, x, y)
+        loss, grads = step(lm)
         opt.update(lm, grads)
         mx.eval(loss, lm.trainable_parameters(), opt.state)
         times.append(round(time.time() - t, 2))
