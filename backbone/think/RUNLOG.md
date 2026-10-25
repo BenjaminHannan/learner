@@ -68,3 +68,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 02:19Z: box 57595544 (s0r, Sweden, machine 54650) showed no state at all for 15 min; destroyed. Seed 0 relaunched on
   box 57597017 `claude-think1-compassionate-davinci-s0r` (RTX 5090, South Korea, machine 143234, rel 0.9982, $0.497/h),
   same pack. 02:18Z: s2 (57596004) is running its job loop (label has the "|" suffix).
+- 02:27Z: the first s0 box (57556502, stopped, machine 54987) destroyed to stop its storage charge; its files could not be
+  copied off that machine, and its label numbers (a_s0 67.0 / repeat 67.0 / dev 81.3; b_s0 68.1 / 1-pass 58.7 / dev 82.0)
+  are recorded above. Logs work on the new 5090 hosts (served in ~24 s). Other sessions also started boxes on the account.
