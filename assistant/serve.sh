@@ -56,7 +56,7 @@ fi
 # Don't stack models: warn if another model job is already loaded.
 ours="$(cat "$RUN"/big.pid "$RUN"/small.pid 2>/dev/null | tr '\n' ' ')"
 others=$(ps axo pid=,command= | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" | grep -v grep |
-  while read -r pid cmd; do case " $ours " in *" $pid "*) ;; *) echo "$pid $cmd" ;; esac; done)
+  while read -r pid cmd; do case " $ours " in (*" $pid "*) ;; (*) echo "$pid $cmd" ;; esac; done)
 if [ -n "$others" ] && [ $need_big = 1 ] && [ $YES = 0 ]; then
   echo "Another model job is running on this Mac:"; echo "$others" | cut -c1-160
   printf "Running both can run the Mac out of memory. Start anyway? [y/N] "; read -r ans
