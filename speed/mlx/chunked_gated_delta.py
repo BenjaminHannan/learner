@@ -148,9 +148,11 @@ def patch_mlx_vlm_qwen3_5(chunk=64):
         return
     orig = language.gated_delta_update
 
-    def update(q, k, v, a, b, A_log, dt_bias, state=None, mask=None, use_kernel=True):
-        if use_kernel:  # inference: keep the Metal kernel / stock path
-            return orig(q, k, v, a, b, A_log, dt_bias, state, mask, use_kernel)
+    def update(q, k, v, a, b, A_log, dt_bias, state=None, mask=None, use_kernel=True, **kw):
+        # inference, or newer mlx-vlm (>=0.7) cache/state_steps calls: stock path (from the bonsai thread)
+        if use_kernel or any(kw.get(n) is not None for n in ("cache", "state_steps")):
+            return orig(q, k, v, a, b, A_log, dt_bias, state=state, mask=mask,
+                        use_kernel=use_kernel, **kw)
         g, beta = gd._compute_g_beta(A_log, a, b, dt_bias)
         return gated_delta_chunked(q, k, v, g, beta, state, mask, chunk)
 
