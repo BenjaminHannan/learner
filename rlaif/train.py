@@ -105,7 +105,7 @@ def main(argv=None):
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     os.makedirs(a.outdir, exist_ok=True)
     random.seed(a.seed); torch.manual_seed(a.seed)
-    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader, seed=a.seed)
+    grader = Grader(a.outdir, a.max_usd, fake=a.fake_grader, seed=a.seed, batch=a.eval_only)   # live calls in training (GPU waits), batches for evals
     tok, model = load_model(a, dev)
     if a.eval_only:
         return evaluate(a, tok, model, grader, dev)
