@@ -459,6 +459,16 @@ def groups(seqs, budget=None):  # consecutive micro-batches whose padded size st
     return out + ([cur] if cur else [])
 
 
+FAST = True  # target-only LM head + length-sorted micro-batches in the split path (same loss and gradients up to float summation order); --bench-train toggles it, False = the old code path
+
+
+def tgt_logits(pm, ids, mask, tm):  # fp32 logits at the shifted target positions tm; FAST: run the decoder only and apply lm_head to those hidden states
+    m = pm.get_base_model() if hasattr(pm, "get_base_model") else pm  # peft -> Qwen3_5ForCausalLM; LoRA layers / delta_w hooks live inside the decoder's Linears, so disable_adapter() still applies
+    if not FAST or m.lm_head._forward_hooks or m.lm_head._forward_pre_hooks or hasattr(m.lm_head, "delta_w") or hasattr(m.lm_head, "lora_A"):
+        return pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float()
+    return m.lm_head(m.model(input_ids=ids, attention_mask=mask).last_hidden_state[:, :-1][tm]).float()
+
+
 def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start[, weight]) examples
     ids, mask = L.pad_right([b[0] for b in mb])
     lm = torch.zeros_like(mask)
@@ -491,19 +501,23 @@ class Trainer:
             g["lr"] = lr
         s.pm.train()
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
-        gb, gr = groups(batch), groups(rb)
+        gb, gr = groups(batch), groups(rb)  # single-group decision on the original order
+        if len(gb) > 1 and FAST:  # split path: longest first, so padding and micro-batch count drop (losses are sums / the full count: order-free; weights travel in the tuples)
+            gb = groups(sorted(batch, key=lambda x: -len(x[0])))
+        if len(gr) > 1 and FAST:
+            gr = groups(sorted(rb, key=lambda x: -len(x[0])))
         kl_v = 0.0
         weighted = s.force_w or any(len(x) > 2 and x[2] != 1 for x in batch)
         s.opt.zero_grad(set_to_none=True)
         if len(gb) == 1 and len(gr) <= 1 and not weighted:  # the stage-1 path (short closed-book examples), unchanged
             ids, mask, tm = s.masks(batch)
-            ce = F.cross_entropy(s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm])
+            ce = F.cross_entropy(tgt_logits(s.pm, ids, mask, tm), ids[:, 1:][tm])
             loss = ce
             if rb:
                 rids, rmask, rt = s.masks(rb)
-                cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                cur = tgt_logits(s.pm, rids, rmask, rt)
                 with torch.no_grad(), s.pm.disable_adapter():
-                    ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                    ref = tgt_logits(s.pm, rids, rmask, rt)
                 kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
                 loss = ce + a.kl_weight * kl
                 kl_v = float(kl.detach())
@@ -513,7 +527,7 @@ class Trainer:
             ce_sum = 0.0
             for mb in gb:
                 ids, mask, tm = s.masks(mb)
-                lg = s.pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float()
+                lg = tgt_logits(s.pm, ids, mask, tm)
                 if weighted:  # sum over examples of weight x (that example's target-token CE sum), / the batch's target count
                     w = torch.tensor([x[2] if len(x) > 2 else 1.0 for x in mb], device=ids.device)[:, None].expand_as(tm)[tm]
                     part = (F.cross_entropy(lg, ids[:, 1:][tm], reduction="none") * w).sum() / ntgt
@@ -526,9 +540,9 @@ class Trainer:
                 npos = sum(len(e) - max(st, 1) for e, st, *_ in rb)
                 for mb in gr:
                     rids, rmask, rt = s.masks(mb)
-                    cur = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                    cur = tgt_logits(s.pm, rids, rmask, rt)
                     with torch.no_grad(), s.pm.disable_adapter():
-                        ref = s.pm(input_ids=rids, attention_mask=rmask).logits[:, :-1][rt].float()
+                        ref = tgt_logits(s.pm, rids, rmask, rt)
                     part = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="sum") / npos
                     (a.kl_weight * part).backward()
                     kl_v += float(part.detach())
@@ -791,7 +805,7 @@ def tag_grads(L, pm, batches):
         ntgt, ce = sum(len(e) - max(st, 1) for e, st, *_ in batch), 0.0
         for mb in groups(batch):
             ids, mask, tm = lm_masks(L, mb)
-            part = F.cross_entropy(pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float(), ids[:, 1:][tm], reduction="sum") / ntgt
+            part = F.cross_entropy(tgt_logits(pm, ids, mask, tm), ids[:, 1:][tm], reduction="sum") / ntgt
             part.backward()
             ce += float(part.detach())
         ces.append(ce)
@@ -1062,6 +1076,76 @@ def selftest_weighted():
         torch.set_rng_state(rng_state)
 
 
+def selftest_fast():
+    """FAST (target-only LM head + length-sorted micro-batches) against the old code path on the tiny CPU smoke model (global RNG, TOK_BUDGET, FAST and the delta switch restored).
+    One Trainer step at lr 0 per setting, FAST False then True: CE, KL and every (clipped) LoRA gradient must agree to rel err < 1e-5 in fp32 over (i) a batch on the
+    single-group path, (ii) a weighted batch, (iii) a batch split into several micro-batches with KL replay (also split), (iv) tgt_logits inside pm.disable_adapter()
+    (the KL reference) vs the old logits; plus (v) the same split+KL step with trainable full-rank delta_w (setup_delta). Returns the max rel errors."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state, tb, fast, don = torch.get_rng_state(), TOK_BUDGET, FAST, _DELTA["on"]
+    rel = lambda xs, ys: max(float((x - y).abs().max()) for x, y in zip(xs, ys)) / max(float(y.abs().max()) for y in ys)  # noqa: E731
+    try:
+        cpu = torch.device("cpu")
+
+        def build(delta):
+            lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+            L = Lang(tok, True, cpu)
+            pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+            if delta:
+                setup_delta(pm, True)
+            for n, p in pm.named_parameters():  # B is zero at init: randomise it (and delta_w), so the gradients are all non-trivial
+                if "lora_B" in n or "delta_w" in n:
+                    p.data.normal_(0, 0.05, generator=g)
+            return L, pm
+
+        def check(name, L, pm, batch, replay, budget, kl=True, bsz=2):
+            params, res = [p for p in pm.parameters() if p.requires_grad], {}
+            for f in (False, True):
+                globals()["FAST"], globals()["TOK_BUDGET"] = f, budget
+                tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=1.0 if kl else 0.0, replay_bsz=bsz), replay if kl else [], 1, 0)
+                tr.step(batch)
+                res[f] = (tr.curve[0], [p.grad.clone() for p in params])
+            (c0, g0), (c1, g1) = res[False], res[True]
+            r = {"ce_rel": abs(c1["ce"] - c0["ce"]) / c0["ce"], "kl_rel": abs(c1["kl"] - c0["kl"]) / max(c0["kl"], 1e-12) if kl else 0.0, "grad_rel": rel(g1, g0),
+                 "micro_batches": (len(groups(batch, budget)), len(groups(replay[:bsz], budget)) if kl else 0)}
+            assert r["ce_rel"] < 1e-5 and r["kl_rel"] < 1e-5 and r["grad_rel"] < 1e-5 and (not kl or c0["kl"] > 0) and max(float(x.abs().max()) for x in g0) > 0, (name, r)
+            out[name] = r
+            return r
+
+        L, pm = build(False)
+        base = [ex_text(L, f"Zelmir lives in Kelmira number {i}, near the old harbour.") if i % 2 else ex_qa(L, f"Where does Zelmir{'x' * (3 * i)} live?", "Kelmira") for i in range(8)]
+        replay = [ex_text(L, f"A generic sentence number {i} about the weather" + " today" * (i * 3)) for i in range(6)]
+        big, small = 10 ** 6, 2 * max(len(e) for e, _ in base)
+        short = base[:4]
+        assert len(groups(short, big)) == 1 and len(groups(replay[:2], big)) == 1
+        check("single_group", L, pm, short, replay, big)
+        check("single_group_nokl", L, pm, short, replay, big, kl=False)
+        check("weighted", L, pm, [e + (w,) for e, w in zip(base, [0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 2.0, 1.0])], replay, big)
+        r = check("split_kl", L, pm, base, replay, small, bsz=5)
+        assert r["micro_batches"][0] > 1 and r["micro_batches"][1] > 1, r
+        r = check("split_weighted_kl", L, pm, [e + (w,) for e, w in zip(base, [0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 2.0, 1.0])], replay, small, bsz=5)
+        globals()["FAST"] = False  # (iv) tgt_logits inside disable_adapter(): the KL reference
+        ids, mask, tm = lm_masks(L, base[:5])
+        pm.eval()
+        with torch.no_grad():
+            on = tgt_logits(pm, ids, mask, tm)
+            with pm.disable_adapter():
+                off0 = tgt_logits(pm, ids, mask, tm)
+                globals()["FAST"] = True
+                off1 = tgt_logits(pm, ids, mask, tm)
+            on1 = tgt_logits(pm, ids, mask, tm)
+        out["disable_adapter"] = {"off_rel": float((off1 - off0).abs().max() / off0.abs().max()), "on_rel": float((on1 - on).abs().max() / on.abs().max()), "adapter_effect_rel": float((on - off0).abs().max() / on.abs().max())}
+        assert out["disable_adapter"]["off_rel"] < 1e-5 and out["disable_adapter"]["on_rel"] < 1e-5 and out["disable_adapter"]["adapter_effect_rel"] > 1e-3, out
+        L, pm = build(True)  # (v) full-rank delta arm (delta_w trainable, hooks on the decoder's Linears; disable_adapter switches them off too)
+        r = check("delta_split_kl", L, pm, base, replay, small, bsz=5)
+        return out
+    finally:
+        globals()["FAST"], globals()["TOK_BUDGET"], _DELTA["on"] = fast, tb, don
+        torch.set_rng_state(rng_state)
+
+
 def selftest_rot():
     """ab_ob_rot machinery on its own tiny CPU smoke model (8 layers; the real model is never touched; global RNG restored): (i) quarter q trains
     exactly layers [q*n//4, (q+1)*n//4) and the four quarters partition the LoRA params; (ii) a Trainer built after rot_set sees only them and two
@@ -1150,7 +1234,7 @@ def bench_chip(L, pm, args, ref_steps):
     def one():
         for mb in groups(batch):
             bi, mask, tm = lm_masks(L, mb)
-            (F.cross_entropy(pm(input_ids=bi, attention_mask=mask).logits[:, :-1][tm].float(), bi[:, 1:][tm], reduction="sum") / ntgt).backward()
+            (F.cross_entropy(tgt_logits(pm, bi, mask, tm), bi[:, 1:][tm], reduction="sum") / ntgt).backward()
 
     with seeded_rng(0, L.device):
         pm.train()
@@ -1171,6 +1255,64 @@ def bench_chip(L, pm, args, ref_steps):
         t_gen = time.time() - t0
     n = ref_gen_batches(args.gen_bs)
     return {"t_step": t_step, "t_gen": t_gen, "ref_steps": ref_steps, "ref_gen_batches": n, "ref_seconds": ref_steps * t_step + n * t_gen}
+
+
+BENCH_TRAIN_BUDGETS, BENCH_TRAIN_WARM, BENCH_TRAIN_STEPS = (1024, 2048, 4096, 8192), 2, 10
+
+
+def bench_train(args, L, pm):
+    """--bench-train: Trainer.step wall time and peak GPU memory, OLD (FAST False = the pre-speed-up code) vs NEW (FAST True), at each tok budget, in one process.
+    Synthetic batch from the tokenizer: bsz examples (half open-book-like ~384 tokens with loss on the last ~6, a quarter closed-book Q&A ~60 tokens with ~6 target
+    tokens, a quarter plain texts ~80 tokens with loss on every token) plus 2 x replay_bsz replay examples ~120 tokens with loss on the last ~40. lr 0 (weights never
+    move), 2 warm-up steps then 10 timed, cuda-synchronized; an OOM is recorded as "oom". Returns the result dict."""
+    cuda = L.device.type == "cuda"
+    sync = torch.cuda.synchronize if cuda else (lambda: None)
+    rnd = random.Random(0)
+    words = "harbour Kelmira Zelmir market lantern river bakery morning ledger orchard train window garden letter bridge candle winter copper meadow".split()
+    toks = lambda n: (L.ids(" ".join(rnd.choice(words) for _ in range(n * 2)))[:n])  # noqa: E731  exactly n tokens (2n words always tokenize to >= n)
+    mk = lambda n, k: (toks(n) + [L.eos], n + 1 - k)  # noqa: E731  n+1 tokens, loss on the last k
+    nb = args.bsz
+    batch = [mk(384, 6) for _ in range(nb // 2)] + [mk(60, 6) for _ in range(nb // 4)] + [mk(80, 80) for _ in range(nb - nb // 2 - nb // 4)]
+    rnd.shuffle(batch)
+    replay = [mk(120, 40) for _ in range(max(2 * args.replay_bsz, 1))]
+    ta = argparse.Namespace(lr=0.0, kl_weight=args.kl_weight, replay_bsz=args.replay_bsz)
+    res, tb, fast = {"model": args.model, "bsz": nb, "replay_bsz": args.replay_bsz, "warmup": BENCH_TRAIN_WARM, "timed": BENCH_TRAIN_STEPS, "device": str(L.device), "settings": {}}, TOK_BUDGET, FAST
+    try:
+        for b in BENCH_TRAIN_BUDGETS:
+            globals()["TOK_BUDGET"] = b
+            row = res["settings"][str(b)] = {"micro_batches_old": [len(groups(batch)), len(groups(replay[:args.replay_bsz]))],
+                                             "micro_batches_new": [len(groups(sorted(batch, key=lambda x: -len(x[0])))), len(groups(sorted(replay[:args.replay_bsz], key=lambda x: -len(x[0]))))]}
+            for name, f in (("old", False), ("new", True)):
+                globals()["FAST"] = f
+                tr = None
+                try:
+                    pm.zero_grad(set_to_none=True)
+                    if cuda:
+                        torch.cuda.empty_cache()
+                        torch.cuda.reset_peak_memory_stats()
+                    tr = Trainer(L, pm, ta, replay, BENCH_TRAIN_WARM + BENCH_TRAIN_STEPS, 0)
+                    for _ in range(BENCH_TRAIN_WARM):
+                        tr.step(batch)
+                    sync()
+                    t0 = time.time()
+                    for _ in range(BENCH_TRAIN_STEPS):
+                        tr.step(batch)
+                    sync()
+                    row[name] = {"s_per_step": (time.time() - t0) / BENCH_TRAIN_STEPS, "max_mem_gb": torch.cuda.max_memory_allocated() / 2 ** 30 if cuda else None}
+                except torch.cuda.OutOfMemoryError:
+                    row[name] = {"s_per_step": "oom", "max_mem_gb": "oom"}
+                finally:
+                    del tr
+                    pm.zero_grad(set_to_none=True)
+                    pm.eval()
+                    if cuda:
+                        torch.cuda.empty_cache()
+            if all(isinstance(row[k]["s_per_step"], float) for k in ("old", "new")):
+                row["speedup"] = row["old"]["s_per_step"] / row["new"]["s_per_step"]
+            print(json.dumps({b: row}), flush=True)
+    finally:
+        globals()["TOK_BUDGET"], globals()["FAST"] = tb, fast
+    return res
 
 
 def selftest_stale():
@@ -2179,6 +2321,8 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget and stale-filter unit checks and exit")
+    ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
+    ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-4)
@@ -2213,8 +2357,22 @@ def main():
         print(json.dumps({"local": {**selftest_elem(), **selftest_local()}}))
         print(json.dumps({"weighted": selftest_weighted()}))
         print(json.dumps({"rot": selftest_rot()}))
+        print(json.dumps({"fast": selftest_fast()}))
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
+        return
+    if args.bench_train:
+        if not args.out:
+            ap.error("--out is required")
+        from peft import LoraConfig, get_peft_model
+        torch.manual_seed(args.seed)
+        device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
+        lm, tok = load_model(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
+        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        res = bench_train(args, Lang(tok, args.smoke, device), pm)
+        Path(args.out).mkdir(parents=True, exist_ok=True)
+        (Path(args.out) / "bench_train.json").write_text(json.dumps(res, indent=1))
+        print(json.dumps(res, indent=1))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
