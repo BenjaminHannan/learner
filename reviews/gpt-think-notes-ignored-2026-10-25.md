@@ -46,28 +46,39 @@ I am a high-school senior building this with AI help. Please end with a plain-la
 ## 3. What a first analysis concluded (please challenge it)
 
 **Diagnosis:**
+- (0) Dull explanations first: a wiring bug (the block's output never reaches the answer) or a block that barely trained would give the same flat laps and free swap.
 - (a) At a = 0 the refiner gets exactly zero gradient, and afterwards its gradient is scaled by tanh(a). So the gate and the refiner each wait on the other.
 - (b) The answer can read the story directly, so ignoring the notes is the cheapest solution.
 - (c) Grading only the answer gives the notes no target. Papers back this up:
-  - Coconut without its curriculum was no better than no thoughts.
-  - CODI's latents without the matching loss scored 24.5 vs 43.7 with it (GSM8k, GPT-2).
+  - Coconut without its curriculum was no better than no thoughts (GSM8k 14.4 vs 16.5, ProsQA 76.1 vs 76.7), and far worse on ProntoQA (52.4 vs 93.8).
+  - CODI's latents without the matching loss scored 24.5 vs 43.7 with it (GSM8k-Aug, GPT-2). In that arm the model still trained on written steps; only the latents went untaught.
   - Another group swapped Coconut thoughts between questions in an 8B model and saw no change (60.9 → 61.0).
 - (d) Any attention mask meant to hide the story leaks, because the DeltaNet layers carry a running state.
 
+**Rules for every test:** all 8,675 val rows; nothing tuned on val; seed 1 decides unless a result is within 1 point of a bar, in which case seeds 2–3 of the arm and every control decide. A lesion (swap = another story's notes, zero, random) counts as "used" only if it costs 1.0 point or more **and** its paired-bootstrap 95% interval excludes 0; under 0.3 is "unused". Every control shares its arm's start checkpoint, steps and data order.
+
 **Proposed order, one change each:**
-1. Free diagnostics on existing checkpoints: gate values, zero vs swap lesion, story-to-story variance of the notes, a probe for the middle entity of 2-hop chains.
-2. A toy check where the answer can only see the notes.
-3. One LoRA run trained on templated written steps plus direct answers. Score it with written steps (the teacher) and without (a control).
-4. If the gate stayed closed: start it at a = 0.3.
-5. **Main test:** a step decoder (the backbone with its own small LoRA) reads *only* the notes after lap k and must write step k. Pass:
-   - beats the best no-notes control by 2 or more;
-   - a swap lesion costs 1 or more;
-   - 4 laps beat a 1-lap version by 1 or more.
-6. Only if the notes are now trained but the answer still ignores them: hide the story from the answer for part of training, via a separate sequence rather than a mask.
-7. Only if the written-steps teacher reaches 74.6: CODI matching of the ':' in "The answer is:" across all layers. The control is the same matching with no block at all.
+0. Data check, no GPU: confirm which generator wrote the rows, keep the chain order of the gold lines (today it is lost: stored as a set, then sorted by line), and read 20 rows by hand.
+1. Free diagnostics on existing checkpoints:
+   - wiring: force the gate open and check the answer logits change;
+   - gate values; refiner drift from its start;
+   - zero vs swap lesion; story-to-story variance of the notes; per-lap change;
+   - a probe for the middle entity of 2-hop chains, read from the notes and from the backbone.
+2. A toy check where the answer can only see the notes (a separate forward pass). Pass: 90% or more, falling to 20% or less under swap and zero lesions. Run with the gate starting at 0 and at 0.3.
+3. Two LoRA runs with no block:
+   - one trained on templated written steps plus direct answers, scored with written steps (the teacher, T) and without (control C1);
+   - a sham with the steps replaced by the same number of filler tokens.
+4. If the gate stayed closed (mean |tanh a| under 0.1) or the refiner barely moved: start the gate at a = 0.3.
+5. **Main test:** a step decoder (the backbone with its own small LoRA) reads *only* the notes after lap k and must write step k (later laps write the answer). Pass, all four:
+   - beats the best no-notes control (Think-2's block-off control or C1) by 2 or more;
+   - swap and random lesions both "used";
+   - 4 laps beat a 1-lap version (same decoder passes and steps) by 1 or more;
+   - the decoder's step-token accuracy from true notes beats swapped notes by 10 or more points.
+6. Only if the decoder reads the steps from the notes but the answer still ignores them: hide the story from the answer for part of training, via a separate sequence rather than a mask.
+7. Only if the teacher is clearly worth copying (T at least 2 above the best no-notes control **and** at least 1 above the sham): CODI matching of the ':' in "The answer is:" across all layers. The control is the same matching with no block at all, and the arm must beat it by 2 or more.
    - Recipe: drop massive-activation dims, robust z-score, clip at 5, smooth-L1, weights 1.
 
-**Give up on the loop** if every notes test that ran misses its pass mark, or after 12 Think-2-sized runs.
+**Give up on the loop** if every notes test that ran (4–7) misses at least one bar, or after 18 Think-2-sized runs with no pass, extra seeds included.
 
 ## 4. What I want from you
 
