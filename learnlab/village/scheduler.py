@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections import Counter
 import hashlib
+import os
 import random
 from typing import Any, Iterator, Mapping, Optional
 
@@ -57,6 +58,12 @@ UNTOLD_PICK = 0.5  # a type chosen for balance is asked with a "not told" answer
 COMMON_ANSWERS = frozenset((NOBODY, NOTHING))
 COMMON_WEIGHT = 0.25
 DEMO_FAMILIES = ("R1", "R2")
+
+
+# Q13 (compare_count) names the believed place first and any place second, so "the first one named" is nearly always
+# right. When on, the two are swapped half the time, using a derived RNG so no other draw or question changes.
+# Off by default: v1's data and caches depend on the old order. Set it here or with LEARNLAB_COMPARE_SWAP=1.
+COMPARE_SWAP = os.environ.get("LEARNLAB_COMPARE_SWAP", "") == "1"
 
 
 def _seed(*parts: object) -> int:
@@ -602,7 +609,10 @@ def _candidates(vis: _Visit, rng: random.Random) -> list[tuple[str, dict[str, An
             out.append(("q.count_at", {"object_kind": kind, "place": place}))
         for person in (rng.choice(holders), rng.choice(v.people)):
             out.append(("q.count_held", {"object_kind": kind, "person": person}))
-        out.append(("q.compare_count", {"object_kind": kind, "place": rng.choice(at), "place2": rng.choice(pids)}))
+        first, second = rng.choice(at), rng.choice(pids)
+        if COMPARE_SWAP and random.Random(_seed("cmp", vis.id, len(vis.records), kind)).random() < 0.5:
+            first, second = second, first
+        out.append(("q.compare_count", {"object_kind": kind, "place": first, "place2": second}))
     lines = [(a, b) for a in pids for b in pids if a != b and w.direction(a, b)]
     if lines:
         a, b = rng.choice(lines)

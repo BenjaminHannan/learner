@@ -28,7 +28,7 @@ from learnlab import step1
 from premonition import data as pdata
 from premonition.config import MiniConfig
 from premonition.model import PremonitionMini
-from premonition.train import Curriculum, mini_config_dict, mini_train_config, planned_loops, validation_hook
+from premonition.train import Curriculum, mini_config_dict, mini_train_config, planned_loops, validate, validation_hook
 from v1 import baselines, ckpt as vckpt, dtrain, g1 as g1mod, guard as vguard
 from v1.joint import Bridge
 
@@ -143,6 +143,54 @@ def make_eval_batches(cache, n_visits: int, tokenizer) -> tuple[list, list[int]]
     return [pdata.collate(cache, [chosen[i] for i in g]) for g in groups], sorted(step1.stop_ids(tokenizer)[0])
 
 
+DIAG_KEYS = ("by_depth", "accuracy_gold_cards", "own_minus_gold_cards", "loops_mean_gold_cards", "halt_rate", "asked_rate",
+             "gold_any_at_4", "random_recall_at_4")
+
+
+def diag_fields(r: dict[str, Any], cards: bool = False) -> dict[str, Any]:
+    """The validate() diagnostics that used to be computed and dropped (reporting only; `cards` is the bulky per-card summary)."""
+    out = {k: r[k] for k in DIAG_KEYS if k in r}
+    if cards and r.get("cards") is not None:
+        out["cards"] = r["cards"]
+    return out
+
+
+def write_per_question(rows: list, path: Path) -> None:
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+
+def make_evaluator(trainer, bridge: Bridge, hook, eval_batches, val_hook=None, bridge_off: bool = False):
+    """The periodic eval. Bridge summaries are frozen throughout. The base fields are the old ones plus the full validate()
+    diagnostics; the extras (validation split, bridge-off lesion) run under a saved/restored RNG state and restore bridge.enabled, so
+    they cannot move the training RNG, the bridge or the weights."""
+    def evaluate(model):
+        bridge.frozen_ctx = True               # dev data never moves the bridge summaries (dev_loss included)
+        try:
+            res = hook(model)
+            dl = dev_loss(trainer, eval_batches)
+            out = {"accuracy": res["accuracy"], "questions": res["questions"], "loops_mean": res["loops_mean"],
+                   "gold_recall_at_4": res.get("gold_recall_at_4"), "dev_loss": dl, **diag_fields(res)}
+            if bridge_off or val_hook is not None:
+                state, was = vckpt.rng_state(), bridge.enabled
+                try:
+                    if bridge_off:
+                        bridge.enabled = False
+                        r0 = hook(model)
+                        out["bridge_off"] = {"accuracy": r0["accuracy"], "loops_mean": r0["loops_mean"], **diag_fields(r0)}
+                    bridge.enabled = True
+                    if val_hook is not None:
+                        rv = val_hook(model)
+                        out.update(val_accuracy=rv["accuracy"], val_questions=rv["questions"], val_loops_mean=rv["loops_mean"],
+                                   val_gold_recall_at_4=rv.get("gold_recall_at_4"), **{f"val_{k}": v for k, v in diag_fields(rv).items()})
+                finally:
+                    bridge.enabled = was
+                    vckpt.set_rng_state(state)
+        finally:
+            bridge.frozen_ctx = False
+        return out
+    return evaluate
+
+
 def component_ran(arm: Arm, trainer, bridge: Bridge, d_model, b2, guard_logs: dict) -> dict[str, Any]:
     """Gate S item 3: every component whose flag is on proves its code executed."""
     rep: dict[str, Any] = {"arm": arm.name}
@@ -157,23 +205,45 @@ def component_ran(arm: Arm, trainer, bridge: Bridge, d_model, b2, guard_logs: di
     return rep
 
 
+def load_plans(root, name: str) -> dict:
+    """question id -> plan world for the dev / validation split dir (`step1.load_oracle`; {} without an oracle index).
+    Only non-sealed dirs: `name` must be dev or validation."""
+    if name not in ("dev", "validation"):
+        raise ValueError(f"plans are loaded for dev/validation only, not {name!r}")
+    return step1.load_oracle(Path(root) / name)[1]
+
+
 def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int, aborted: Optional[dict] = None) -> dict[str, Any]:
     """Dev numbers for the decision rule (never the sealed splits): D on all 5,000 DEV visits and the 1,000 `validation` visits,
     the creative first-try on creative DEV (latest finished creative stage), the bridge-off lesion of each, W1/W2 pass on dev, and
     the KL-share summary. After an abort it judges the last checkpoint (`aborted` carries the rule)."""
+    from creative import rules_real
     from v1 import creative_sleep
+    from v1.creative_baselines import creative_baselines
     res: dict[str, Any] = {"arm": arm.name, "steps": steps, "aborted": aborted}
     bridge.frozen_ctx = True
     for name, cache in (("dev", data.dev), ("validation", data.validation)):
         batches, stops = make_eval_batches(cache, getattr(a, "final_visits", None) or len(cache), data.tokenizer)
+        plans = load_plans(a.root, name) if getattr(a, "plan_scoring", False) else None
+        rows_on, rows_off = ([] if getattr(a, "per_question", False) else None for _ in range(2))
         bridge.enabled = True
-        r = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
-        res[f"d_{name}"] = {"accuracy": r["accuracy"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
-                            "loops_mean": r["loops_mean"]}
+        r = validate(d_model, batches, tokenizer=data.tokenizer, stop=stops, plans=plans, per_question=rows_on)
+        res[f"d_{name}"] = {"accuracy": r["accuracy_exact"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
+                            "loops_mean": r["loops_mean"], **diag_fields(r, cards=True)}  # "accuracy" stays exact match: the frozen decision rule reads it
+        if plans is not None:
+            res[f"d_{name}"].update({k: r[k] for k in ("q12_questions", "q12_exact", "q12_plan_checked", "q12_accuracy_exact",
+                                                       "q12_accuracy_plan_checked")}, accuracy_plan_checked=r["accuracy"],
+                                    plan_worlds=len(plans))
         bridge.enabled = False
-        r0 = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
+        r0 = validate(d_model, batches, tokenizer=data.tokenizer, stop=stops, plans=plans, per_question=rows_off)
         bridge.enabled = True
-        res[f"d_{name}"]["bridge_off_accuracy"] = r0["accuracy"]
+        res[f"d_{name}"]["bridge_off_accuracy"] = r0["accuracy_exact"]
+        res[f"d_{name}"]["bridge_off"] = {"accuracy": r0["accuracy_exact"], "loops_mean": r0["loops_mean"], **diag_fields(r0, cards=True)}
+        if plans is not None:
+            res[f"d_{name}"]["bridge_off_accuracy_plan_checked"] = r0["accuracy"]
+        if rows_on is not None:
+            write_per_question(rows_on, out / f"per_question_{name}_bridge_on.jsonl")
+            write_per_question(rows_off, out / f"per_question_{name}_bridge_off.jsonl")
     base = baselines.baselines(data.train, data.dev)
     res["baseline_dev"] = base
     res["W1_dev_threshold"] = base["best"] + 0.10
@@ -188,6 +258,8 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int
             res["creative_dev"] = {**c, "bridge_off_first_try": c0["first_try"], "model": name}
             res["W2_dev_pass"] = c["first_try"] >= 0.20 and name == "W2.pt"
             break
+    if "creative_dev" in res:              # reporting only: no-learning baselines on creative dev; W2_dev_pass above is unchanged
+        res["creative_baselines"] = creative_baselines(rules_real.load_split(creative_sleep.DATA, "dev"))
     tj = out / "creative" / "train.json"
     if tj.exists():
         ti = json.loads(tj.read_text())
@@ -235,6 +307,16 @@ def main(argv=None) -> int:
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--no-sleep", action="store_true")
     ap.add_argument("--eval-visits", type=int, default=DEV_EVAL_VISITS, help="dev visits per periodic eval (tests use fewer)")
+    ap.add_argument("--val-every-eval", action=argparse.BooleanOptionalAction, default=True,
+                    help="also score the held-out `validation` split at every periodic eval (reporting only: RNG, bridge and weights restored)")
+    ap.add_argument("--val-visits", type=int, default=None, help="validation visits per periodic eval (default all)")
+    ap.add_argument("--eval-bridge-off", action=argparse.BooleanOptionalAction, default=True,
+                    help="also score the dev subset with the bridge off at every periodic eval (reporting only)")
+    ap.add_argument("--per-question", action="store_true", help="final eval also writes per_question_{split}_bridge_{on,off}.jsonl")
+    ap.add_argument("--lr-schedule", choices=sorted(dtrain.LR_SCHEDULES), default="constant",
+                    help="D's LR after warmup: constant (v1) or wsd = warmup-stable-decay applied to every param group")
+    ap.add_argument("--wsd-stable-frac", type=float, default=dtrain.WSD_STABLE_FRAC, help="wsd: fraction of steps held at the base LR")
+    ap.add_argument("--wsd-final-frac", type=float, default=0.0, help="wsd: LR at the last step as a fraction of the base LR")
     ap.add_argument("--ckpt-every", type=int, default=None, help="override the 5%%-of-steps checkpoint interval (tests only)")
     ap.add_argument("--eval-every", type=int, default=None, help="override the 5%%-of-steps dev-eval interval (tests only)")
     ap.add_argument("--stop-after", type=int, default=None, help="testing only: stop the wake loop after this many steps")
@@ -243,6 +325,7 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
     ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
     ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--plan-scoring", action="store_true", help="final eval also reports plan-checked accuracy (Q12 plans the oracle accepts count); off = v1 as frozen")
     ap.add_argument("--deterministic", action="store_true", help="torch deterministic algorithms (warn only) + fixed cuBLAS workspace: the resume re-run")
     ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
     ap.add_argument("--relaunch-adamw", action="store_true", help="A1 relaunch for FULL: resume the last good checkpoint with plain AdamW")
@@ -270,7 +353,8 @@ def main(argv=None) -> int:
     bopt = torch.optim.AdamW(bridge.parameters(), lr=BRIDGE_LR, weight_decay=0.0)
     tc = mini_train_config(lr=LR, warmup_steps=WARMUP, log_every=50, memory_check_every=50)
     use_muon = arm.muon and not a.relaunch_adamw
-    trainer = dtrain.StepTrainer(d_model, tc, device, total_steps=a.steps, seed=SEED, optimizer="muon" if use_muon else "adamw")
+    trainer = dtrain.StepTrainer(d_model, tc, device, total_steps=a.steps, seed=SEED, optimizer="muon" if use_muon else "adamw",
+                                 lr_schedule=a.lr_schedule, wsd_stable_frac=a.wsd_stable_frac, wsd_final_frac=a.wsd_final_frac)
     grouping = trainer.optimizer_grouping()
     log("optimizer grouping:", json.dumps({k: (v if k != "groups" else [{kk: vv for kk, vv in g.items() if kk != "names"} for g in v])
                                          for k, v in grouping.items()}))
@@ -282,15 +366,11 @@ def main(argv=None) -> int:
     eval_batches, stops = make_eval_batches(data.dev, a.eval_visits, data.tokenizer)
     hook = validation_hook(eval_batches, tokenizer=data.tokenizer, stop=stops)
 
-    def evaluate(model):
-        bridge.frozen_ctx = True               # dev data never moves the bridge summaries (dev_loss included)
-        try:
-            res = hook(model)
-            dl = dev_loss(trainer, eval_batches)
-        finally:
-            bridge.frozen_ctx = False
-        return {"accuracy": res["accuracy"], "questions": res["questions"], "loops_mean": res["loops_mean"],
-                "gold_recall_at_4": res.get("gold_recall_at_4"), "dev_loss": dl}
+    val_hook = None
+    if a.val_every_eval:                       # held-out curve, reporting only (see make_evaluator); fixed visits, same hook
+        val_batches, _ = make_eval_batches(data.validation, a.val_visits or len(data.validation), data.tokenizer)
+        val_hook = validation_hook(val_batches, tokenizer=data.tokenizer, stop=stops)
+    evaluate = make_evaluator(trainer, bridge, hook, eval_batches, val_hook, bridge_off=a.eval_bridge_off)
 
     mon = Monitor(a.steps, a.price_per_hour, a.spend_cap, out / "spend.json")
     evals_path = out / "dev_evals.jsonl"
@@ -378,7 +458,7 @@ def main(argv=None) -> int:
         save_final(trainer, d_model, bridge, bopt, arm, out, ck_dir)
     mon.save()
     (out / "wake-done.json").write_text(json.dumps({
-        "steps": trainer.step, "steps_this_process": trainer.step - first, "bridge": bridge.stats(), "tokens_per_s": tok_wake / wall, "wall_s": wall,
+        "steps": trainer.step, "lr_schedule": a.lr_schedule, "steps_this_process": trainer.step - first, "bridge": bridge.stats(), "tokens_per_s": tok_wake / wall, "wall_s": wall,
         "peak_gpu_reserved_gib": (torch.cuda.max_memory_reserved(device) / 2 ** 30) if device.type == "cuda" else None,
         "guard_limit_gib": trainer.guard_limit / 2 ** 30, "device": str(device),
         "card": torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu"}))
