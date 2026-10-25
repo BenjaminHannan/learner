@@ -1,0 +1,11 @@
+# Think-3 addenda (PREREG.md stays sealed; sha256 in PREREG.md.sha256)
+
+## Addendum A (2026-10-25 22:05Z, before any Think-3 code or run): optional on-policy arm "jolt"
+Raised by Ben (does JOLT+ fit here?). JOLT+ is unproven in this project (its RLAIF round 1 hit an eval OOM, and train
+success fell from 0.256 to 0.194), so it is a secondary arm and never replaces codi.
+- jolt = codi's model and laps, trained on-policy. The student samples its own answer after its silent laps; the loss is
+  reverse KL to the thinking-on teacher on the answer tokens, plus an exact-match reward term. It starts from the same
+  LoRA init and gets the same N steps.
+- Runs only if Gate 0 passes, and after codi.
+- Its own marks: the same P1-P4 as codi, plus J1: S_jolt - S_codi >= +2.0 (bootstrap interval excluding 0) to count as
+  better than CODI alone. codi's verdict never depends on jolt.
