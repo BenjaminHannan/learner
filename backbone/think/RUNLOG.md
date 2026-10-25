@@ -89,3 +89,5 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   destroyed after 6 min. Seed 1 relaunched on box 57610141 `claude-think1-compassionate-davinci-s1r` (RTX 5090, South
   Korea, machine 150804, rel 0.9963, $0.536/h), same pack. vast.py also skips 149008 and 54650. The 3090 s1 box's
   machine went offline again at 04:27Z.
+- 05:23Z s2 aplus_s2 70.6 (dev 86.7); 05:34Z t1_s2 L0 66.6 / L1 66.7 / L8 66.5 (dev L1 81.0); 05:37Z s0r aplus_s0 70.7
+  (dev 86.7); 05:38Z s1r a_s1 66.0 (dev 81.3) vs 65.8 on the 3090.
