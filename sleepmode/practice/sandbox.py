@@ -40,7 +40,9 @@ def build_profile(sandbox_dir: str, home: str, prefixes) -> str:
              "(allow file-write* (subpath %s) (subpath \"/dev\"))" % _q(sandbox_dir),
              "(deny file-read-data (subpath %s))" % _q(home)]
     allowed = [sandbox_dir] + prefixes
-    lines.append("(allow file-read* %s)" % " ".join("(subpath %s)" % _q(p) for p in allowed))
+    subs = " ".join("(subpath %s)" % _q(p) for p in allowed)
+    lines.append("(allow file-read* %s)" % subs)
+    lines.append("(allow file-read-data %s)" % subs)  # macOS 27: file-read* does not undo the file-read-data deny
     return "\n".join(lines) + "\n"
 
 

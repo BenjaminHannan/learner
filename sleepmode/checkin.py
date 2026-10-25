@@ -107,7 +107,9 @@ with timeout of 90 seconds
   tell application "Calendar"
     repeat with cal in calendars
       try
-        set evs to (every event of cal whose start date >= t0 and start date <= t1)
+        with timeout of 20 seconds
+          set evs to (every event of cal whose start date >= t0 and start date <= t1)
+        end timeout
         repeat with e in evs
           set mins to ((start date of e) - t0) div 60
           set out to out & (uid of e) & SEP & (summary of e) & SEP & ((start date of e) as string) & SEP & (mins as string) & REC
