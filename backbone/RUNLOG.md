@@ -98,3 +98,5 @@ too few linear-attention state slots).
 - 16:34Z K2 probe relaunched: claude-k2probe31-cqc4bi (57692335, RTX 3090 France machine 145487, verified, 4.7 Gbps down, $0.297/h, watcher cap $0.20).
 - 16:39Z K2 probe done on 57692335 (France 3090, about $0.03): high effort with 512 thinking tokens answers 32/36 linked pairs and 9/10 unlinked right (accuracy 0.89; today's prompt 0.22). Results in backbone/sleep/brain/results_a11/k2probe_week1*. Sealed as addendum 11c (213e14c9ea); code f671a0fb8a.
 - 16:55Z K2 11c bf16 rerun: claude-sleepb33-k2s-bf16-cqc4bi (57694829, RTX 5090 Australia machine 153968, $0.482/h, hours=4, SLEEPB_TOK=1024, watcher cap $1.40). Abort rule: night-1 names yes = 0 stops it.
+- 17:01Z K2 11c bf16 night 1: names pass yes 41 of 50 (41 new items, 330 thinking tokens mean, 9 capped). Abort rule not fired. Pre-sleep ARC-Easy 0.894.
+- 17:03Z K2 11c q4 run: claude-sleepb34-k2s-q4-cqc4bi (57695944, RTX 5090 Slovakia machine 141056, $0.469/h, hours=4, `--q4-base`, watcher cap $1.40). Coordinator raised the K2 cap to $4.00 at 17:02Z. The x4 seed-1 box 57665253 was destroyed at 17:00Z after about 16 failed pulls.
