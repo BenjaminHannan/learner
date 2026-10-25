@@ -38,3 +38,11 @@ Wire in (training script, before building the model/trainer): `from chunked_gate
 - K2-Horizon is a remote-code HF class; make_loss assumes `.model(inputs)` returns final-normed hidden and `.lm_head` exists (true for mlx-lm llama; K2's MLX loading path is not checked here). If K2 has a logit softcap, pass `head=`/`head_owner=`.
 - Chunked rule falls back to the per-token loop for vector g (GDN with per-dim gate, e.g. Kimi-style); Qwen3.5/3.6 use scalar g.
 - Not verified here: whether sleepb.py uses MLX or torch for the Mac path; I did not edit it.
+
+## MEASURED on Ben's M1 Pro GPU (2026-10-25 ~17:50Z, mlx 0.32.4, mlx-lm 0.32.2, ~/learner-ops/swap1/venv; raw JSON on the Mac in ~/learner-ops/speed/results/)
+Tests: test_loss_logits 4/4 pass (grad rel <= 2e-7); test_patch rel <= 8.4e-6; fp32 chunked vs per-token <= 2.6e-6; bf16 rel_y <= 3.8e-3, rel_grad <= 1.0e-2 (pass marks 1e-2 / 3e-2 met).
+GDN fwd+bwd per layer, per-token ms (GB) -> best chunked ms (GB):
+- 35B shapes: T512 B1 590 (2.44) -> c64+compile 30.6 (0.92) 19x; T1024 B1 1542 (4.78) -> 76.2 (1.56) 20x; T1024 B2 2916 (9.66) -> 150 (1.70) 19x; T2048 B1 4546 (9.69) -> c128+compile 194 (1.82) 23x; T2048 B2 per-token too big (yellow pressure) -> c128+compile 335 (3.30).
+- 2B shapes: T512 B1 333 -> 16.5 20x; T1024 B1 854 -> 40.5 21x; T2048 B1 2081 -> c128+compile 84.9 25x; T2048 B2 4253 (9.76) -> c128 168 (2.07) 25x.
+Best chunk: 64 for T<=1024, 128 at T=2048; chunk 32 always slowest; mx.compile 0-5%.
+Loss bench (K2 shapes V=250,624, LoRA r8, bf16, B=1, body cut to 12 layers): stock vs gather T1024 2590 ms (4.13 GB) -> 2039 (3.72) 21%; T2048 5453 (7.49) -> 4222 (6.15) 23%; loss/grad rel diff 0.0. Full 36-layer body: suggested ~15%.
