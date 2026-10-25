@@ -71,3 +71,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 02:27Z: the first s0 box (57556502, stopped, machine 54987) destroyed to stop its storage charge; its files could not be
   copied off that machine, and its label numbers (a_s0 67.0 / repeat 67.0 / dev 81.3; b_s0 68.1 / 1-pass 58.7 / dev 82.0)
   are recorded above. Logs work on the new 5090 hosts (served in ~24 s). Other sessions also started boxes on the account.
+- 03:04Z s2 a_s2 66.7 (dev 80.9); 03:19Z b_s2 66.8 (1-pass 58.5, dev 82.1): stage 1 on a 5090 took 50 / 65 min side by
+  side (~2.4x the 3090). 03:27Z s0r a_s0 67.2 (repeat 67.0, so eval noise 0.2 on this GPU; dev 81.5) vs 67.0 on the
+  first s0 box (3090). Projected: s2 done ~05:45Z, s0r ~06:30Z. s1's t_s1 not in yet at 03:29Z (5.5 h after start).
