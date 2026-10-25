@@ -17,7 +17,9 @@ if [ ! -f "$DEST/config.sh" ]; then
   cat > "$DEST/config.sh" <<'CFGEOF'
 # Read by serve.sh. Blank ASSISTANT_SMALL_MODEL = no K2 helper (saves ~4-5 GB of memory).
 ASSISTANT_BIG_MODEL="$HOME/learner-ops/swap1/models/qwen36-35b-4bit"
-ASSISTANT_SMALL_MODEL="$HOME/learner-ops/sleep-m2/models/k2-3.7b-4bit"
+# Off by default: big + K2 together peak ~27 GB, too much beside normal apps on 32 GB.
+ASSISTANT_SMALL_MODEL=""
+#ASSISTANT_SMALL_MODEL="$HOME/learner-ops/sleep-m2/models/k2-3.7b-4bit"
 ASSISTANT_SMALL_ARGS="--trust-remote-code"
 ASSISTANT_SMALL_TEMPLATE="$HOME/learner-ops/assistant/k2_nothink.jinja"
 CFGEOF

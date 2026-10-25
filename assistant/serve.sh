@@ -53,11 +53,24 @@ fi
 
 [ -x "$PY" ] || { echo "Python not found at $PY (set ASSISTANT_PY)"; exit 1; }
 
+# Memory guard: the big model needs ~21 GB. Ben's Mac swapped hard on Oct 25 when two
+# big jobs ran at once, so refuse to start unless enough memory can be freed.
+if [ $need_big = 1 ] && [ $YES = 0 ] && command -v vm_stat >/dev/null; then
+  pg=$(vm_stat | awk '/page size of/ {print $8}')
+  avail=$(vm_stat | awk -v pg="$pg" '/Pages (free|inactive|speculative|purgeable)/ {gsub("\\.","",$NF); s+=$NF} END {printf "%d", s*pg/1073741824}')
+  need=20; [ $need_small = 1 ] && need=25
+  if [ "$avail" -lt "$need" ]; then
+    echo "Only about $avail GB of memory is free; the assistant needs about $need GB."
+    echo "Quit big apps (or other model jobs) first. Start anyway? [y/N] "; read -r ans
+    case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+  fi
+fi
+
 if [ $need_big = 1 ]; then
   alive big && kill "$(cat "$RUN/big.pid")" 2>/dev/null
   echo "Starting big model ($BIG_MODEL) ..."
   launch big "$PY" -m mlx_lm.server --model "$BIG_MODEL" --host 127.0.0.1 --port $BIG_PORT \
-    --max-tokens 8192 --prompt-cache-size 16 --prompt-cache-bytes 3GB \
+    --max-tokens 8192 --prompt-cache-size 8 --prompt-cache-bytes 1GB \
     --temp 0.6 --top-p 0.95 --top-k 20
 fi
 if [ $need_small = 1 ]; then
