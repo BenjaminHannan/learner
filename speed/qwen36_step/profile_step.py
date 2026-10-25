@@ -4,7 +4,8 @@ kernel table for the baseline and every opt-in fix of fast_step.py, one JSON out
   python speed/qwen36_step/profile_step.py --layers 4 --variants baseline,all --steps 4   # quicker
 Downloads only the shards that hold embed / norm / lm_head / layers < N (~4-6 shards of 26) into --work. The first N layers keep the 3 Gated DeltaNet : 1 full-attention pattern
 when N % 4 == 0. Per-layer cost = (s/step(N=8) - s/step(N=4)) / 4; run both to extrapolate to 40 layers (lm_head + embed + optimizer are the constant).
-Variants (fast_step options): baseline | sync_free | kl_cache | fla_conv | fused_norms | packed (= packed + fla_conv) | all (= every option); default list omits packed_nofla (CPU only).
+Variants (fast_step options): baseline | sync_free | kl_cache | fla_conv | fused_norms | fast_experts | kl_cache+fast_experts | packed (= packed + fla_conv) | all (= every option); default list omits packed_nofla (CPU only).
+Defaults are quick: --steps 4 --warmup 2, 2 profiled steps; add --no-profile-variants to profile only the baseline (all variants then fit in ~10 min). Reports mean AND median per variant.
 Parity per variant, one lr-0 step on the same batch vs baseline: CE and KL relative diff, LoRA-gradient relative L2 diff and cosine. Pass marks (fixed in advance, bf16 + different
 batch shapes make bit-equality impossible): CE rel diff < 1e-2, KL rel diff < 5e-2, grad cosine > 0.99. A variant that fails is reported, not timed as a win.
 """
@@ -29,7 +30,9 @@ VARIANTS = {
     "fused_norms": {"fused_norms": True},
     "packed": {"packed": True, "fla_conv": True},
     "packed_nofla": {"packed": True},  # packed layout without the fla conv (CPU dry runs with --torch-varlen; on GPU the HF torch conv would leak across sequences)
-    "all": {"sync_free": True, "kl_cache": True, "packed": True, "fla_conv": True, "fused_norms": True},
+    "fast_experts": {"fast_experts": True},  # one Triton grouped GEMM per expert matmul instead of torch 2.9's per-expert mm loop on sm_120 (see NOTES "Per-expert backward")
+    "kl_cache+fast_experts": {"kl_cache": True, "fast_experts": True},
+    "all": {"sync_free": True, "kl_cache": True, "packed": True, "fla_conv": True, "fused_norms": True, "fast_experts": True},
 }
 BUCKETS = [  # kernel-name regexps -> bucket, first match wins
     ("expert_gemm", r"grouped|group_gemm|cutlass.*grouped|moe"),
@@ -183,7 +186,7 @@ def main():
     ap.add_argument("--layers", type=int, default=8)
     ap.add_argument("--work", default="/tmp/qwen36_step_work")
     ap.add_argument("--out", default="profile_step.json")
-    ap.add_argument("--variants", default=",".join(v for v in VARIANTS if v != "packed_nofla"), help="comma list of: " + ", ".join(VARIANTS))
+    ap.add_argument("--variants", default="baseline,fast_experts,kl_cache,kl_cache+fast_experts,sync_free,packed,fla_conv,fused_norms,all", help="comma list of: " + ", ".join(VARIANTS))
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--dtype", default="bfloat16")
     ap.add_argument("--tok-budget", type=int, default=2048, help="sleepb TOK_BUDGET (padded tokens per forward; real tokens for packed)")
@@ -192,9 +195,10 @@ def main():
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
-    ap.add_argument("--steps", type=int, default=8, help="timed steps per variant")
-    ap.add_argument("--warmup", type=int, default=3)
+    ap.add_argument("--steps", type=int, default=4, help="timed steps per variant")
+    ap.add_argument("--warmup", type=int, default=2)
     ap.add_argument("--prof-steps", type=int, default=2)
+    ap.add_argument("--no-profile-variants", action="store_true", help="run the torch.profiler pass (5-7 s/step) for the baseline only; other variants get timing + parity only")
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--batches", choices=["realistic", "synthetic"], default="realistic", help="realistic: night-shaped from --week with the real chat template; synthetic: moe_bench's 384/60/80 mix")
     ap.add_argument("--week", default=str(BRAIN / "data" / "week1.json"))
@@ -285,14 +289,14 @@ def main():
                 sync()
                 times.append(time.time() - t)
             times_sorted = sorted(times)
-            row["s_per_step"] = round(sum(times) / len(times), 4)
-            row["s_per_step_median"] = round(times_sorted[len(times) // 2], 4)
+            row["s_per_step"] = row["s_per_step_mean"] = round(sum(times) / len(times), 4)
+            row["s_per_step_median"] = round((times_sorted[(len(times) - 1) // 2] + times_sorted[len(times) // 2]) / 2, 4)
             row["step_seconds"] = [round(x, 4) for x in times]
             if cuda:
                 row["peak_alloc_gib"] = round(torch.cuda.max_memory_allocated() / 2 ** 30, 2)
             if VARIANTS[name].get("kl_cache"):
                 row["kl_cache_stats"] = {"hits": fs._STATE["hits"], "miss": fs._STATE["miss"], "cached": len(fs._CACHE)}
-            if args.prof_steps:
+            if args.prof_steps and not (args.no_profile_variants and name != "baseline"):
                 row["profile"] = profile_steps(run_step, args.prof_steps, args.device, args.top)
         except Exception as e:  # noqa: BLE001
             row["error"] = repr(e)[:500]
@@ -307,12 +311,13 @@ def main():
             tr = None
             if cuda:
                 torch.cuda.empty_cache()
-        base = res["variants"].get("baseline", {}).get("s_per_step")
+        base, basem = res["variants"].get("baseline", {}).get("s_per_step"), res["variants"].get("baseline", {}).get("s_per_step_median")
         if base and row.get("s_per_step"):
             row["speedup_vs_baseline"] = round(base / row["s_per_step"], 3)
-            row["saved_pct"] = round(100 * (1 - row["s_per_step"] / base), 1)
+            row["saved_pct"] = round(100 * (1 - row["s_per_step"] / base), 1)  # on means
+            row["saved_pct_median"] = round(100 * (1 - row["s_per_step_median"] / basem), 1)
         save()
-        print(f"[{key}] {row.get('s_per_step')} s/step  saved {row.get('saved_pct')}%  parity {row.get('parity', {}).get('pass')}  {row.get('error', '')}", flush=True)
+        print(f"[{key}] mean {row.get('s_per_step')} median {row.get('s_per_step_median')} s/step  saved mean {row.get('saved_pct')}% median {row.get('saved_pct_median')}%  parity {row.get('parity', {}).get('pass')}  {row.get('error', '')}", flush=True)
     save()
     print(f"wrote {args.out}")
 

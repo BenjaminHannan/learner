@@ -12,13 +12,15 @@ Each option keeps the loss and the LoRA gradients (float summation order and, on
               transformers builds a block-diagonal causal mask for the 10 full-attention layers (sdpa), and cu_seq_lens_q goes to the 30 Gated DeltaNet layers (fla
               chunk kernel with cu_seqlens; the short conv needs fla_conv or the torch loop below, HF's torch conv would leak 3 tokens across sequences).
   fla_conv    HF's GDN short conv (torch F.conv1d + a separate silu, no causal-conv1d package) -> fla's Triton causal_conv1d (fused silu, cu_seqlens aware). GPU only.
+  fast_experts  frozen routed experts: one Triton grouped GEMM launch per call (fast_experts.py) instead of torch 2.9's per-expert mm loop on sm_120 (143k mm/step). Needs experts_implementation
+              "grouped_mm". Exact up to float summation order. experts_backend "auto" (Triton on CUDA, original elsewhere) | "triton" | "torch" (tests).
   fused_norms torch.compile'd Qwen3_5MoeRMSNorm / RMSNormGated (7 fp32 elementwise kernels each -> 1).
   python:  import fast_step; undo = fast_step.install(sleepb, sync_free=True, kl_cache=True, packed=True, fla_conv=True); ...; undo()
 """
 import torch
 import torch.nn.functional as F
 
-OPTS = {"sync_free": False, "kl_cache": False, "packed": False, "fla_conv": False, "fused_norms": False, "kl_cache_mb": 512, "kl_check": 100}
+OPTS = {"sync_free": False, "kl_cache": False, "packed": False, "fla_conv": False, "fused_norms": False, "fast_experts": False, "experts_backend": "auto", "kl_cache_mb": 512, "kl_check": 100}
 _CU_CPU = [None]  # packed micro-batch's cu_seqlens on the host: fla's conv would otherwise sync to build its chunk indices
 _CACHE = {}  # (token ids, loss_start) -> adapter-off hidden states at the target positions [n, hidden]; process-wide (the base never changes)
 _SB = [None]  # the patched sleepb module
@@ -265,6 +267,9 @@ def install(sb, **opts):
         undos.append(lambda: setattr(mod, "causal_conv1d_fn", c0))
     if OPTS["fused_norms"]:
         undos.append(compile_norms(mod))
+    if OPTS["fast_experts"]:
+        import fast_experts
+        undos.append(fast_experts.install(OPTS["experts_backend"]))
 
     def undo():
         for u in undos:

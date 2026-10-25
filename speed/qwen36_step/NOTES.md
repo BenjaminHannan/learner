@@ -73,3 +73,26 @@ Stacking (rough, not additive): packed + kl_cache + sync_free + use_cache=False 
 - fla varlen GDN + Triton conv have never run in this container (no GPU/Triton): the first GPU run decides. If `chunk_gated_delta_rule` with `cu_seqlens` rejects the HF call, the error will show in the packed row of the JSON.
 - Packed attention mask is a [1,1,T,T] bool tensor per forward (T <= budget): fine at 2048-4096, not for 16k.
 - Different micro-batch composition changes bf16 rounding, so loss curves will not be bit-equal to old runs even though the math is identical; do not mix old and new numbers inside one comparison of arms.
+
+## Per-expert backward (found from the box 2 profile; the loop is in FORWARD and backward, and it is not a backward-formula problem)
+SHOWN (source, torch v2.9.1; not run on a GPU here): `torch._grouped_mm` has a fast kernel only on sm90/sm100. `aten/src/ATen/native/cuda/Blas.cpp` `_grouped_mm_cuda`:
+`use_fast_path = _scaled_mm_allowed_device(sm90_only=true, sm100_only=true) && bf16`; otherwise it calls `_grouped_mm_fallback` (`aten/src/ATen/native/GroupedMMUtils.h` lines 115-164), which does
+`offs.cpu()` then, for each of the 256 experts, `offs_cpu[i].item()`, `mat_a.slice`, `out.slice`, `mat_b[i]`, `at::mm_out`. The RTX PRO 6000 is sm_120 (major 12), so every call takes the loop. That is
+the select/slice/item/as_strided storm and the 16x16 cutlass tiles, all inside the 560 `aten::_grouped_mm` calls: 560 x 256 = 143,360 of the 151,653 mm. The autograd formula is fine
+(`derivatives.yaml`: `_grouped_mm_mat1_backward` = one `_grouped_mm(grad, mat2^T, offs)`, and the weight grad is skipped for frozen weights), but that one call loops too. HF 5.20.2 `integrations/moe.py`
+`_can_use_grouped_mm` returns True for CUDA >= 8.0 with torch 2.9, so it never reaches its own `grouped_mm_fallback` custom op (that one would be worse: backward computes the weight grad too).
+So the earlier guess "backward-only" was wrong: forward (gate_up, down) and backward (grad_x) each loop; weights are frozen so there is no weight-grad loop.
+Fix, opt-in: `fast_experts.py` (`fast_step.install(sb, fast_experts=True)`, variants `fast_experts`, `kl_cache+fast_experts` in `profile_step.py`). It patches `transformers.integrations.moe._grouped_mm`
+with one Triton grouped-GEMM launch (tile -> expert found from offs by an in-kernel cumsum, no host sync, strides passed so `weight.transpose(-2,-1)` is read in place, fp32 accumulate) and a
+`torch.autograd.Function` whose backward is `gmm(grad, W^T, offs)` with no weight grad. A weight that requires grad, or a non-CUDA tensor, takes the original path.
+CPU results (SHOWN, `test_fast_experts.py`, tiny Qwen3.5-MoE, fp32, experts grouped_mm, Triton run by its CPU interpreter, 2 steps, max|grad| 0.049): vs the original path, per-expert-loop backend CE 0 / KL 0 / grad 0;
+Triton backend CE 0 / KL 2.3e-9 / grad 1.5e-8; with kl_cache CE 4.8e-7 / KL 2.6e-9 / grad 2.6e-8 (all within 1e-5 x max|grad|; the 1e-6 target is met on loss, grads are 3e-7 relative). aten::mm per step on CPU:
+original 732, loop-structure backend 732, Triton backend 412 (the expert mms are gone; the rest are LoRA/attention/lm_head). `aten::item` 369 -> 49. Unit test (random, empty experts, transposed weights, sentinel tail): 7.6e-6 abs on values ~5 (fp32 order).
+NOT shown: the Triton kernel has never been compiled for sm_120 or timed (interpreter only here); the CPU mm counts only show structure.
+SUGGESTED saving: of the 1.457 s step, 1.02 s of GPU is the mm loop and most of the 63% idle time is the ~530k tiny launches/CPU ops; bandwidth arithmetic for streaming the active expert weights is ~0.1-0.2 s per step
+(40 layers x 3 matrices x 256 x 2048 x 512 x 2 B ~ 32 GB per forward-equivalent, ~7 forward-equivalents, at ~1.5 TB/s). So a plausible step is 0.5-0.8 s (-45% to -65%); a kernel at half of bandwidth still wins big.
+Pass marks, fixed in advance: parity row passes (CE rel diff < 1e-2, KL < 5e-2, grad cosine > 0.99; expect ~1e-3 or better since only accumulation order changes) AND median s/step <= 0.85 x baseline median.
+Proven wrong if: parity fails, or `aten::mm` calls/step in the profile do not fall below ~10k, or the median saving is under 15% (then something else, e.g. CPU launch cost elsewhere, dominates).
+UNTESTED: tile sizes (BM 64 / BN 128 / BK 64 are a guess; ~100 rows per expert on average, so BM=32 or autotune may be better), a persistent/swizzled variant, torch 2.10's `F.grouped_mm` (may have an sm_120 path), and fp8.
+Run: `python speed/qwen36_step/profile_step.py --layers 8 --variants baseline,fast_experts,kl_cache+fast_experts --no-profile-variants` (defaults are now `--steps 4 --warmup 2`; mean and median reported; the
+profiler pass runs for the baseline only with `--no-profile-variants`, profile `fast_experts` once separately without it to confirm the mm count). Needs `triton` importable (ships with torch cu128).
