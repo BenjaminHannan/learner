@@ -83,7 +83,7 @@ def test_smoke_end_to_end_three_arms(monkeypatch):
         out = os.path.join(d, "out")
         assert g1_ablate.main(["--b2", ck, "--skills", data, "--out", out, "--seeds", "0", "--smoke"]) == 0
         res = json.load(open(os.path.join(out, "results.json")))
-        assert set(res["arms"]) == set(g1_ablate.ARMS) and res["verdict"]["status"] == "done"
+        assert set(res["arms"]) == set(g1_ablate.DEFAULT_ARMS) and res["verdict"]["status"] == "done"
         for r in res["per_run"]:
             assert set(r["retention"]) == {"W1", "W2"} and set(r["harm_vs_own_Nprime"]) == {"W1", "W2"}
             assert r["retention"]["W2"]["harm_points"] is not None
