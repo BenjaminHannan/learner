@@ -53,6 +53,14 @@ fi
 
 [ -x "$PY" ] || { echo "Python not found at $PY (set ASSISTANT_PY)"; exit 1; }
 
+# Don't stack models: warn if another model job is already loaded.
+others=$(ps aux | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" | grep -v grep | grep -v -- "--port 808[01]" || true)
+if [ -n "$others" ] && [ $need_big = 1 ] && [ $YES = 0 ]; then
+  echo "Another model job is running on this Mac:"; echo "$others" | cut -c1-160
+  printf "Running both can run the Mac out of memory. Start anyway? [y/N] "; read -r ans
+  case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+fi
+
 # Memory guard: the big model needs ~21 GB. Ben's Mac swapped hard on Oct 25 when two
 # big jobs ran at once, so refuse to start unless enough memory can be freed.
 if [ $need_big = 1 ] && [ $YES = 0 ] && command -v vm_stat >/dev/null; then
