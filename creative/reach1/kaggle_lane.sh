@@ -7,10 +7,11 @@ set -uo pipefail
 OUT=${1:?out dir}; MODE=${2:-speed}
 HERE=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$OUT"; exec > >(tee -a "$OUT/lane.log") 2>&1
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}  # llama-server needs both T4s
 echo "$(date -u +%FT%TZ) mode=$MODE"; nvidia-smi --query-gpu=name,memory.total --format=csv
 
 # 1. llama.cpp with CUDA for T4 (sm_75)
-LC=/kaggle/working/llama.cpp
+LC=/tmp/llama.cpp  # not /kaggle/working: that is the saved output dir (~20 GB cap)
 if [ ! -x "$LC/build/bin/llama-server" ]; then
   git clone --depth 1 https://github.com/ggml-org/llama.cpp "$LC" && \
   cmake -S "$LC" -B "$LC/build" -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release && \
@@ -30,7 +31,7 @@ for r in repos:
     files = sorted(f for f in api.list_repo_files(r) if f.endswith(".gguf") and re.search(r"q4_k_m", f, re.I))
     if not files:
         continue
-    paths = [hf_hub_download(r, f, local_dir="/kaggle/working/gguf") for f in files]
+    paths = [hf_hub_download(r, f, local_dir="/tmp/gguf") for f in files]
     open(sys.argv[1] + "/backend.txt", "a").write(f"gguf {r} {files}\n")
     print(paths[0]); break
 EOF
