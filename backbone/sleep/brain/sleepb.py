@@ -31,6 +31,9 @@ Addendum 10 (PREREG-sleepB-addendum10.md), on top of ab_ob_b4_nb: ab_ob_b4_nb_x4
 Addendum 11 (PREREG-sleepB-addendum11.md), the recipe (ab_ob_b4_nb) on IFM/K2-Horizon-3.7B: --model IFM/K2-Horizon-3.7B --revision <sha> loads K2HorizonForCausalLM with trust_remote_code; Lang(k2=True) ends every prompt with an
 empty think block (thinking off) and ends every turn / training target with <|ifm|im_end|>; --arc-base scores the same 500 ARC-Easy questions on the base before night 1 (result["arc_easy_base"]); --smoke --model IFM/K2-Horizon-3.7B runs
 the smoke on a tiny random K2 (real tokenizer and chat template). Qwen runs are unchanged.
+Addendum 11b (PREREG-sleepB-addendum11b.md), K2 only: the names pass thinks briefly. Stage 1 renders each names question with Lang.render_think (the template's reasoning_effort="low" generation prompt, think block
+left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 256 greedy tokens on the base, stopping at "</ifm|think_faster>" or the end of the turn; stage 2 is the same prompt + that thinking +
+"</ifm|think_faster>" (added when stage 1 did not close the block), then the answer as before (12 tokens, parse_rel). names_pass's record gets think_tokens_mean / think_capped on K2 only (Qwen's is unchanged).
 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
@@ -39,7 +42,7 @@ scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so t
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addendum 11b)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -68,7 +71,7 @@ HERE = Path(__file__).resolve().parent
 for _p in (HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
-from sleep1 import ARC_SMOKE, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
+from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
 from train import K2_TYPE, LORA_TARGETS, load_model  # noqa: E402
 
 K = 4
@@ -254,10 +257,13 @@ def tag_prompt2(L, text):  # ab_ob_tag2: tag_prompt's system line, JSON format, 
     return L.render("You extract facts from chat messages.", u)
 
 
-def names_prompt(L, text, a, b):  # NAMES_ARMS (ab_ob_b4_names, ab_ob_b4_nb): one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing)
+NAMES_THINK_MAX = 256  # addendum 11b (K2 only): thinking tokens per names question before the block is closed for it
+
+
+def names_prompt(L, text, a, b, think=False):  # NAMES_ARMS (ab_ob_b4_names, ab_ob_b4_nb): one pair of names from one message; the relation in 1 to 4 words, or "no" (tag_prompt's system line and message framing). think (K2): leave the think block open (L.render_think)
     u = (f"Message from Sam:\n\"{text}\"\n\nDoes this message say how \"{a}\" and \"{b}\" are related? If yes, reply with only the relation in 1 to 4 words "
          f"(for example: works at, lives in, is the mentor of, owns the boat). If not, reply only: no")
-    return L.render("You extract facts from chat messages.", u)
+    return (L.render_think if think else L.render)("You extract facts from chat messages.", u)
 
 
 def upd_prompt(L, do, to, fo, dn, tn, fn, shared):
@@ -1954,6 +1960,14 @@ def parse_rel(txt):  # names_prompt reply -> None for "no" (empty, "no", "no." o
     return re.sub(r"^yes\b[\s\W]*", "", lines[0], flags=re.I).strip(" \t\"'`\u201c\u201d\u2018\u2019.,;:!?-*()[]")[:40].strip()
 
 
+def strip_think(txt):  # addendum 11b: a stage-1 reply (thinking, stopped at the close tag or the end of the turn) -> (thinking text without trailing close tag / im_end, whether the model closed the block itself)
+    txt, closed = str(txt or "").strip(), False
+    while txt.endswith(K2_FAST_SHUT) or txt.endswith(K2_END):
+        closed |= txt.endswith(K2_FAST_SHUT)
+        txt = txt[:-len(K2_FAST_SHUT if txt.endswith(K2_FAST_SHUT) else K2_END)].rstrip()
+    return txt, closed
+
+
 def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subject, object) through, in its order: "invalid" / "not_in_turn" (turn index ti) / "dropped" (key in `dropped`) / "ok"
     if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob) or norm(sj) in GENERIC or norm(ob) in GENERIC:
         return "invalid"
@@ -1994,14 +2008,14 @@ class Brain:
         s.scale = scale
         s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.sc(K), s.sc(s.a.max_dream_items), s.sc(s.a.rem_chains), s.sc(s.a.rem_gist), s.sc(400)
 
-    def gen(s, prompts, max_new, base=True, sample=False, temp=0.8):
+    def gen(s, prompts, max_new, base=True, sample=False, temp=0.8, eos=None):  # eos: stop id(s) for Lang.generate (None: its default, the end of the turn)
         if not prompts:
             return []
         s.pm.eval()
         if base:
             with s.pm.disable_adapter():
-                return s.L.generate(s.pm, prompts, max_new=max_new, bs=s.a.gen_bs, sample=sample, temp=temp)
-        return s.L.generate(s.pm, prompts, max_new=max_new, bs=s.a.gen_bs, sample=sample, temp=temp)
+                return s.L.generate(s.pm, prompts, max_new=max_new, bs=s.a.gen_bs, sample=sample, temp=temp, eos=eos)
+        return s.L.generate(s.pm, prompts, max_new=max_new, bs=s.a.gen_bs, sample=sample, temp=temp, eos=eos)
 
     def leaky(s, text):
         n = norm(text)
@@ -2071,8 +2085,14 @@ class Brain:
             hits = sorted((m.start(), n) for n, p in pats.items() for m in [p.search(s.diary.low[t["i"]])] if m)  # candidates in this turn (case-insensitive, whole word), by first appearance
             st["turns_ge2"] += len(hits) >= 2
             ask += [(t, a, b) for a, b in name_pairs([(n, vocab[n]) for _, n in hits], s.items, s.dropped)]
-        raw = s.gen([names_prompt(s.L, t["text"], a, b) for t, a, b in ask], s.mn(12))
-        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r} for (t, a, b), r in list(zip(ask, raw))[:3]]
+        k2 = getattr(s.L, "k2", False)  # (a stub Lang without .k2 is Qwen-style)
+        if k2:  # addendum 11b: stage 1 thinks (low effort, at most NAMES_THINK_MAX tokens, stops at the close tag / end of turn); stage 2 = prompt + thinking + close tag, then the answer as on Qwen
+            p1 = [names_prompt(s.L, t["text"], a, b, think=True) for t, a, b in ask]
+            th = [strip_think(x) for x in s.gen(p1, s.mn(NAMES_THINK_MAX), eos=s.L.think_eos())]  # [(thinking, closed by the model)]
+            raw = s.gen([p + x + K2_FAST_SHUT for p, (x, _) in zip(p1, th)], s.mn(12))
+        else:
+            raw = s.gen([names_prompt(s.L, t["text"], a, b) for t, a, b in ask], s.mn(12))
+        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r, **({"think": th[i][0][:400]} if k2 else {})} for i, ((t, a, b), r) in list(enumerate(zip(ask, raw)))[:3]]
         got_of = {ti: got for ti, dd, got in s.tag_log if dd == d}  # the lists tag() logged for this day's turns (appended to in place: no second entry per turn)
         for (t, a, b), txt in zip(ask, raw):
             rl = parse_rel(txt)
@@ -2093,8 +2113,11 @@ class Brain:
                 s.tag_log.append((t["i"], d, got_of[t["i"]]))
             got_of[t["i"]].append((a, b))
             st["appended"] += 1
-        return {"candidates": len(vocab), "turns": len(turns), "turns_ge2": st["turns_ge2"], "pairs": len(ask), "yes": st["yes"], "new_items": st["new_items"], "appended": st["appended"],
-                "dropped_invalid": st["dropped_invalid"], "dropped_not_in_turn": st["dropped_not_in_turn"]}
+        rec = {"candidates": len(vocab), "turns": len(turns), "turns_ge2": st["turns_ge2"], "pairs": len(ask), "yes": st["yes"], "new_items": st["new_items"], "appended": st["appended"],
+               "dropped_invalid": st["dropped_invalid"], "dropped_not_in_turn": st["dropped_not_in_turn"]}
+        if k2:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
+            rec.update(think_tokens_mean=round(sum(len(s.L.ids(x)) for x, _ in th) / len(th), 1) if th else 0.0, think_capped=sum(not c for _, c in th))
+        return rec
 
     def refresh(s, d):  # days_seen / importance / correction from a string search over the diary so far
         for it in s.items.values():
@@ -2989,6 +3012,127 @@ def selftest_q4():
     return out
 
 
+def selftest_names_k2():
+    """Addendum 11b (the K2 names pass thinks briefly) on stubs: a fake tokenizer behind the real Lang, a stub gen, no model. (i) Lang.render_think asks the template for reasoning_effort="low" and returns its text
+    unchanged (block open), medium / high end with their own tags, a template whose tail changed raises, non-K2 raises; Lang.render still sends no reasoning_effort; think_eos is [close-tag id, im_end id]; Lang.generate
+    passes eos_token_id = im_end by default and a given list as is; (ii) names_prompt(think=True) is render_think's text, think=False render's; (iii) strip_think: close tag / im_end / both / doubled / none, and whether
+    the model closed the block; (iv) Brain.names_pass with Lang(k2=True): stage 1 is the think-open prompts (256 tokens, stops [close, im_end]), stage 2 is stage-1 prompt + thinking + ONE close tag (added when the
+    reply was not closed, not doubled when it was) answered in 12 tokens with no extra gen arguments, yes / items come from the stage-2 answers, think_tokens_mean / think_capped are counted, raw["names"] keeps the
+    answers and adds the first 3 thinking texts cut at 400 chars, the record has Qwen's keys plus those two; (v) the same on Lang(k2=False): one gen call, Qwen's prompts, Qwen's record keys."""
+    from types import SimpleNamespace
+    cpu, out = torch.device("cpu"), {}
+    CLOSE, END = "</ifm|think_faster>", "<|ifm|im_end|>"
+
+    class FakeTok:  # a tokenizer in the shape Lang needs; one token per whitespace word
+        pad_token_id, unk_token_id, eos_token_id = 7, 0, 1
+
+        def __init__(self, tail="<ifm|think_faster>\n"):
+            self.tail, self.calls = tail, []
+
+        def convert_tokens_to_ids(self, t):
+            return {END: 19, CLOSE: 53}.get(t, 0)
+
+        def apply_chat_template(self, msgs, **kw):
+            self.calls.append(kw)
+            tail = {"low": self.tail, "medium": "<ifm|think_fast>\n", "high": "<ifm|think>\n", None: "<ifm|think>\n"}[kw.get("reasoning_effort")]
+            return "".join(f"[{m['role']}]{m['content']}" for m in msgs) + "[assistant]" + tail
+
+        def __call__(self, text, add_special_tokens=False):
+            return {"input_ids": list(range(len(text.split())))}
+
+        def decode(self, ids, skip_special_tokens=True):
+            return "x"
+
+    tk = FakeTok()
+    Lk = Lang(tk, False, cpu, k2=True)
+    assert Lk.eos == 19 and Lk.think_eos() == [53, 19]
+    t = Lk.render_think("S", "U")
+    assert t == "[system]S[user]U[assistant]<ifm|think_faster>\n" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True, "reasoning_effort": "low"}, (t, tk.calls[-1])
+    assert Lk.render_think(None, "U") == "[user]U[assistant]<ifm|think_faster>\n"
+    assert Lk.render("S", "U") == "[system]S[user]U[assistant]<ifm|think>\n</ifm|think>" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True}, tk.calls[-1]  # render: unchanged, no reasoning_effort
+    assert Lk.render_think("S", "U", "medium").endswith("<ifm|think_fast>\n") and Lk.render_think("S", "U", "high").endswith("<ifm|think>\n")
+    for bad in (Lang(FakeTok(tail="<ifm|think>\n"), False, cpu, k2=True), Lang(tk, False, cpu)):  # template tail changed / not a K2 Lang
+        try:
+            bad.render_think("S", "U")
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("render_think should have raised")
+    try:
+        Lang(tk, False, cpu).think_eos()
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("think_eos should have raised on a non-K2 Lang")
+
+    class FakeModel:
+        def __init__(self):
+            self.kw = []
+
+        def generate(self, input_ids, attention_mask, max_new_tokens, **kw):
+            self.kw.append(dict(kw, max_new=max_new_tokens))
+            return torch.cat([input_ids, torch.full((input_ids.shape[0], 2), 7)], 1)
+    fm = FakeModel()
+    assert Lk.generate(fm, ["a b", "c"], max_new=3) == ["x", "x"] and Lk.generate(fm, ["a b"], max_new=4, eos=[53, 19]) == ["x"] and Lk.generate(fm, ["a"], max_new=5, eos=53) == ["x"]
+    assert fm.kw == [{"pad_token_id": 7, "eos_token_id": 19, "do_sample": False, "max_new": 3}, {"pad_token_id": 7, "eos_token_id": [53, 19], "do_sample": False, "max_new": 4},
+                     {"pad_token_id": 7, "eos_token_id": 53, "do_sample": False, "max_new": 5}], fm.kw
+    out["lang"] = "ok"
+
+    # (ii) / (iii)
+    Ls = SimpleNamespace(render=lambda sy, u: "R:" + u, render_think=lambda sy, u: "T:" + u)
+    assert names_prompt(Ls, "m", "A", "B").startswith("R:Message") and names_prompt(Ls, "m", "A", "B", think=True) == "T:" + names_prompt(Ls, "m", "A", "B")[2:]
+    assert strip_think("a b" + CLOSE) == ("a b", True) and strip_think(" a b \n" + CLOSE + END) == ("a b", True) and strip_think("a b" + END) == ("a b", False) and strip_think("a b") == ("a b", False)
+    assert strip_think("a b" + CLOSE + CLOSE) == ("a b", True) and strip_think(CLOSE) == ("", True) and strip_think("") == ("", False) and strip_think(None) == ("", False) and strip_think("x " + CLOSE + " y") == ("x " + CLOSE + " y", False)
+
+    # (iv) Brain.names_pass on the K2 path
+    rows = [(2, "hey Magomen met Papirar and Torvald today"), (2, "later Aldo told Berit nothing")]
+    dia = Diary({"diary": [{"role": "user", "day": d_, "text": x} for d_, x in rows]})
+    think1 = {("Magomen", "Papirar"): "They are siblings." + CLOSE,  # closed by the model
+              ("Magomen", "Torvald"): "z" * 500,  # no close tag (cap hit): 1 token, long
+              ("Papirar", "Torvald"): "ok then, it works" + END,  # the turn ended without closing the block
+              ("Aldo", "Berit"): "a b c d" + CLOSE + CLOSE}  # doubled close tag: cleaned
+    reply = {("Magomen", "Papirar"): "is the brother of", ("Magomen", "Torvald"): "No.", ("Papirar", "Torvald"): "works at", ("Aldo", "Berit"): "no"}
+    calls = []
+
+    def gen(prompts, n, **kw):
+        calls.append((list(prompts), n, kw))
+        pairs = [re.search(r'how "(.+?)" and "(.+?)" are related', pr).groups() for pr in prompts]
+        return [think1[p] if len(calls) == 1 else reply[p] for p in pairs]
+
+    def mk(L):
+        calls.clear()
+        return SimpleNamespace(L=L, diary=dia, items={}, dropped=set(), tag_log=[(0, 2, []), (1, 2, [])], raw={}, gen=gen, mn=lambda n: n)
+    me = mk(Lk)
+    rec = Brain.names_pass(me, 2)
+    want = [("Magomen", "Papirar"), ("Magomen", "Torvald"), ("Papirar", "Torvald"), ("Aldo", "Berit")]
+    texts = [rows[0][1]] * 3 + [rows[1][1]]
+    assert len(calls) == 2, len(calls)
+    (p1, n1, kw1), (p2, n2, kw2) = calls
+    assert n1 == NAMES_THINK_MAX == 256 and kw1 == {"eos": [53, 19]} and n2 == 12 and kw2 == {}, (n1, kw1, n2, kw2)
+    assert p1 == [names_prompt(Lk, x, a, b, think=True) for x, (a, b) in zip(texts, want)] and all(p.endswith("<ifm|think_faster>\n") and CLOSE not in p for p in p1)
+    th = ["They are siblings.", "z" * 500, "ok then, it works", "a b c d"]
+    assert p2 == [p + x + CLOSE for p, x in zip(p1, th)] and all(p.endswith(CLOSE) and p.count(CLOSE) == 1 and END not in p for p in p2), [p[-60:] for p in p2]
+    assert rec == {"candidates": 5, "turns": 2, "turns_ge2": 2, "pairs": 4, "yes": 2, "new_items": 2, "appended": 2, "dropped_invalid": 0, "dropped_not_in_turn": 0, "think_tokens_mean": 3.0, "think_capped": 2}, rec
+    assert [(v.subj, v.rel, v.obj) for v in me.items.values()] == [("Magomen", "is the brother of", "Papirar"), ("Papirar", "works at", "Torvald")]
+    assert [e[2] for e in me.tag_log] == [[("Magomen", "Papirar"), ("Papirar", "Torvald")], []]
+    assert me.raw["names"] == [{"text": rows[0][1], "pair": ["Magomen", "Papirar"], "out": "is the brother of", "think": "They are siblings."},
+                               {"text": rows[0][1], "pair": ["Magomen", "Torvald"], "out": "No.", "think": "z" * 400},
+                               {"text": rows[0][1], "pair": ["Papirar", "Torvald"], "out": "works at", "think": "ok then, it works"}], me.raw["names"]
+    out["k2_record"] = rec
+
+    # (v) Qwen-style Lang (k2 False): one gen call, the old prompts, the old record
+    Lq = Lang(FakeTok(), True, cpu)
+    me = mk(Lq)
+    calls_q = []
+    gen_q = lambda prompts, n, **kw: calls_q.append((list(prompts), n, kw)) or [reply[re.search(r'how "(.+?)" and "(.+?)" are related', pr).groups()] for pr in prompts]  # noqa: E731
+    me.gen = gen_q
+    recq = Brain.names_pass(me, 2)
+    assert len(calls_q) == 1 and calls_q[0][1] == 12 and calls_q[0][2] == {} and calls_q[0][0] == [names_prompt(Lq, x, a, b) for x, (a, b) in zip(texts, want)]
+    assert recq == {k: v for k, v in rec.items() if not k.startswith("think_")} and all("think" not in r for r in me.raw["names"]), recq
+    out["qwen_record"] = recq
+    return out
+
+
 K2_REPO, K2_REV = "IFM/K2-Horizon-3.7B", "9d280ff742235796925c9fe3cf243dc1beea5c08"  # addendum 11: the pinned small-tier model
 
 
@@ -3022,7 +3166,19 @@ def selftest_k2():
     assert ids_t[-1] == 250019 and st_t == 0
     q = Lang(tok, True, torch.device("cpu"))  # default constructor: the old behaviour (smoke render, tokenizer eos)
     assert not q.k2 and q.eos == tok.eos_token_id and q.render(SYS, u) == f"system: {SYS}\nuser: {u}\nassistant: "
-    return {**out, "render_tail": p[-48:], "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
+    # addendum 11b: render_think (think block left open at low effort), its stop ids, and stage 2 = prompt + thinking + close tag + answer + im_end == the template's own rendering of that turn
+    pt = L.render_think(SYS, u)
+    msgs = [{"role": "system", "content": SYS}, {"role": "user", "content": u}]
+    assert pt.startswith("<|ifm|begin_of_text|>") and pt.endswith("<|ifm|im_start|>assistant\n<ifm|think_faster>\n") and pt.count("<ifm|think_faster>") == 1 and K2_FAST_SHUT not in pt, pt[-80:]
+    assert pt[:-len("<ifm|think_faster>\n")] + "<ifm|think>\n" == tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True), "low effort differs from the default prompt only in the opening tag"
+    assert L.render_think(SYS, u, "medium").endswith("assistant\n<ifm|think_fast>\n") and L.render_think(SYS, u, "high") == pt[:-len("<ifm|think_faster>\n")] + "<ifm|think>\n"
+    assert tok.convert_tokens_to_ids(["<ifm|think_faster>", K2_FAST_SHUT]) == [250052, 250053] and L.think_eos() == [250053, 250019], L.think_eos()
+    pid = L.ids(pt)
+    assert pid[-2] == 250052 and pid[-1] == L.ids("\n")[0] and L.ids(pt + "abc def" + K2_FAST_SHUT)[-1] == 250053, pid[-5:]
+    stage2 = pt + "abc def" + K2_FAST_SHUT + "no" + K2_END
+    assert stage2 == tok.apply_chat_template(msgs + [{"role": "assistant", "content": "no", "think_faster": "abc def"}], tokenize=False), stage2[-100:]
+    assert names_prompt(L, "Magomen works at Kelmira.", "Magomen", "Kelmira", think=True).endswith("assistant\n<ifm|think_faster>\n") and names_prompt(L, "x", "A", "B").endswith("<ifm|think>\n</ifm|think>")
+    return {**out, "render_tail": p[-48:], "think_render_tail": pt[-48:], "think_eos": L.think_eos(), "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
 
 
 # ------------------------------------------------------------------ main
@@ -3034,7 +3190,7 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter and addendum-7 / -8 / -9 / -10 arm unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm and K2 names-pass think-path unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -3083,6 +3239,7 @@ def main():
         print(json.dumps({"arms9": selftest_arms9()}))
         print(json.dumps({"arms10": selftest_arms10()}))
         print(json.dumps({"q4": selftest_q4()}))
+        print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
         return
     if args.bench_train:
@@ -3148,6 +3305,9 @@ def main():
         tp = tag_prompt(L, diary.turns[0]["text"])
         log(f"[k2] tagger prompt: {tp!r}")
         log(f"[k2] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
+        if args.arm in NAMES_ARMS:  # addendum 11b: the names pass's think-open prompt (stage 1) and its stop ids
+            npk = names_prompt(L, diary.turns[0]["text"], "A", "B", think=True)
+            log(f"[k2] names prompt tail (stage 1, block open): {npk[-60:]!r}; stops at ids {L.think_eos()} ({NAMES_THINK_MAX} tokens max)")
     leak = {norm(x) for x in week.get("test_strings_norm", [])} | {norm(t["q"]) for k in KINDS for t in week["tests"][k]}
     days = sorted({t["day"] for t in diary.turns})
     sched = None

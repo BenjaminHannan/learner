@@ -51,6 +51,8 @@ def generic_prompts():
 
 # ------------------------------------------------------------------ text plumbing
 K2_OPEN, K2_SHUT, K2_END = "<ifm|think>\n", "</ifm|think>", "<|ifm|im_end|>"  # K2-Horizon: the generation prompt opens a think block (thinking off = close it at once); a turn ends with im_end
+K2_THINK_OPEN = {"low": "<ifm|think_faster>\n", "medium": "<ifm|think_fast>\n", "high": K2_OPEN}  # the generation prompt's tail per template reasoning_effort ("high" is the default)
+K2_FAST_SHUT = "</ifm|think_faster>"  # closes the low-effort block (render_think)
 
 
 class Lang:
@@ -68,6 +70,19 @@ class Lang:
             return self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
         return "".join(f"{m['role']}: {m['content']}\n" for m in msgs) + "assistant: "
 
+    def render_think(self, system, user, effort="low"):  # K2 only: the generation prompt with the think block left OPEN at reasoning_effort `effort` (low: "<ifm|think_faster>\n"); the caller generates the thinking and closes it
+        assert self.k2, "render_think is for K2-Horizon"
+        msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": user}]
+        t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, reasoning_effort=effort)
+        assert t.endswith(K2_THINK_OPEN[effort]), f"K2 chat template changed: the {effort}-effort generation prompt no longer ends with {K2_THINK_OPEN[effort]!r}: {t[-60:]!r}"
+        return t
+
+    def think_eos(self):  # K2 only: stop ids of a think-open generation: the close tag of the low-effort block, or the end of the turn
+        assert self.k2, "think_eos is for K2-Horizon"
+        close = self.tok.convert_tokens_to_ids(K2_FAST_SHUT)
+        assert isinstance(close, int) and close != getattr(self.tok, "unk_token_id", None), f"{K2_FAST_SHUT!r} is not a single token of this tokenizer: {close!r}"
+        return [close, self.eos]
+
     def ids(self, text):
         return self.tok(text, add_special_tokens=False)["input_ids"]
 
@@ -75,7 +90,7 @@ class Lang:
         return self.tok.decode(ids, skip_special_tokens=True)
 
     @torch.no_grad()
-    def generate(self, model, prompts, max_new=20, bs=8, sample=False, temp=0.8):
+    def generate(self, model, prompts, max_new=20, bs=8, sample=False, temp=0.8, eos=None):  # eos: stop id(s) (an int or a list); None = self.eos
         outs = [None] * len(prompts)
         order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
         for s in range(0, len(order), bs):
@@ -90,7 +105,7 @@ class Lang:
                 mask[r, n - len(e):] = 1
             kw = dict(do_sample=True, temperature=temp, top_p=0.95, top_k=0) if sample else dict(do_sample=False)
             out = model.generate(input_ids=ids.to(self.device), attention_mask=mask.to(self.device), max_new_tokens=max_new,
-                                 pad_token_id=pad, eos_token_id=self.eos, **kw)
+                                 pad_token_id=pad, eos_token_id=self.eos if eos is None else eos, **kw)
             for r, i in enumerate(idx):
                 outs[i] = self.decode(out[r, n:].tolist()).strip()
         return outs
