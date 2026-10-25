@@ -2321,6 +2321,7 @@ def main():
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget and stale-filter unit checks and exit")
+    ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
@@ -2366,7 +2367,7 @@ def main():
         from peft import LoraConfig, get_peft_model
         torch.manual_seed(args.seed)
         device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
-        lm, tok = load_model(args, device, torch.bfloat16 if device.type == "cuda" else torch.float32)
+        lm, tok = load_model(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
         res = bench_train(args, Lang(tok, args.smoke, device), pm)
         Path(args.out).mkdir(parents=True, exist_ok=True)
