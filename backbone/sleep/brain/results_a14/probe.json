@@ -1,0 +1,3195 @@
+{
+ "model": "IFM/K2-Horizon-3.7B",
+ "revision": "9d280ff742235796925c9fe3cf243dc1beea5c08",
+ "smoke": false,
+ "device": "cuda",
+ "dtype": "float16",
+ "week": "/tmp/repo/backbone/sleep/brain/data/week1.json",
+ "arm": "ab_ob_b4_nb",
+ "gen_bs": 24,
+ "days": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7
+ ],
+ "cycles": 4,
+ "tries": 1,
+ "seed": 0,
+ "scale": 4.0,
+ "cap_chains": 120,
+ "cap_gist": 120,
+ "template_check": {
+  "stage2_high": true,
+  "closed_render": true
+ },
+ "partial": false,
+ "prompt_tails": {
+  "default": " \"Kelmira\", and can only be answered by using both facts together. Its answer must be \"Kelmira\" (a single name). Reply in exactly this form:\nQuestion: ...\nAnswer: ...<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>",
+  "q": "\"Drovak\" or \"Kelmira\", and can only be answered by using both facts together. Its answer must be \"Kelmira\" (a single name). Reply with only the question, on one line.<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>",
+  "think": " \"Drovak\" or \"Kelmira\", and can only be answered by using both facts together. Its answer must be \"Kelmira\" (a single name). Reply in exactly this form:\nQuestion: ...\nAnswer: ...<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n",
+  "q_think": "es not name \"Drovak\" or \"Kelmira\", and can only be answered by using both facts together. Its answer must be \"Kelmira\" (a single name). Reply with only the question, on one line.<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n"
+ },
+ "wall_seconds": 6021.2,
+ "days_log": {
+  "1": {
+   "tag": {
+    "extracted": 86,
+    "dropped_invalid": 20,
+    "kept": 63,
+    "new_items": 63,
+    "dropped_not_in_turn": 3,
+    "turns": 69
+   },
+   "names_pass": {
+    "candidates": 103,
+    "turns": 69,
+    "turns_ge2": 45,
+    "pairs": 15,
+    "yes": 9,
+    "new_items": 9,
+    "appended": 9,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 315.3,
+    "think_capped": 3
+   },
+   "update_detection": {
+    "candidates": 0
+   },
+   "cleanup": {
+    "merged": 1
+   }
+  },
+  "2": {
+   "tag": {
+    "extracted": 93,
+    "dropped_invalid": 37,
+    "kept": 48,
+    "new_items": 36,
+    "dropped_not_in_turn": 8,
+    "turns": 70
+   },
+   "names_pass": {
+    "candidates": 167,
+    "turns": 70,
+    "turns_ge2": 54,
+    "pairs": 20,
+    "yes": 15,
+    "new_items": 15,
+    "appended": 15,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 305.9,
+    "think_capped": 4
+   },
+   "update_detection": {
+    "checks": 15,
+    "candidates": 15
+   },
+   "cleanup": {}
+  },
+  "3": {
+   "tag": {
+    "extracted": 95,
+    "dropped_invalid": 26,
+    "kept": 67,
+    "dropped_not_in_turn": 2,
+    "new_items": 45,
+    "turns": 71
+   },
+   "names_pass": {
+    "candidates": 198,
+    "turns": 71,
+    "turns_ge2": 57,
+    "pairs": 5,
+    "yes": 3,
+    "new_items": 3,
+    "appended": 3,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 344.8,
+    "think_capped": 2
+   },
+   "update_detection": {
+    "checks": 25,
+    "candidates": 25
+   },
+   "cleanup": {
+    "merged": 6
+   }
+  },
+  "4": {
+   "tag": {
+    "extracted": 78,
+    "dropped_invalid": 18,
+    "kept": 54,
+    "new_items": 34,
+    "dropped_not_in_turn": 6,
+    "turns": 67
+   },
+   "names_pass": {
+    "candidates": 228,
+    "turns": 67,
+    "turns_ge2": 56,
+    "pairs": 10,
+    "yes": 7,
+    "new_items": 7,
+    "appended": 7,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 258.8,
+    "think_capped": 1
+   },
+   "update_detection": {
+    "checks": 32,
+    "changed": 2,
+    "candidates": 32
+   },
+   "cleanup": {
+    "merged": 1
+   }
+  },
+  "5": {
+   "tag": {
+    "extracted": 96,
+    "dropped_invalid": 28,
+    "kept": 65,
+    "new_items": 36,
+    "dropped_not_in_turn": 3,
+    "turns": 74
+   },
+   "names_pass": {
+    "candidates": 250,
+    "turns": 74,
+    "turns_ge2": 58,
+    "pairs": 7,
+    "yes": 6,
+    "new_items": 6,
+    "appended": 6,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 369.9,
+    "think_capped": 1
+   },
+   "update_detection": {
+    "checks": 32,
+    "changed": 1,
+    "candidates": 32
+   },
+   "cleanup": {
+    "merged": 2
+   }
+  },
+  "6": {
+   "tag": {
+    "extracted": 80,
+    "dropped_invalid": 27,
+    "kept": 51,
+    "new_items": 25,
+    "dropped_not_in_turn": 2,
+    "turns": 70
+   },
+   "names_pass": {
+    "candidates": 261,
+    "turns": 70,
+    "turns_ge2": 57,
+    "pairs": 3,
+    "yes": 3,
+    "new_items": 3,
+    "appended": 3,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 372.0,
+    "think_capped": 1
+   },
+   "update_detection": {
+    "checks": 35,
+    "changed": 1,
+    "candidates": 35
+   },
+   "cleanup": {
+    "merged": 2
+   }
+  },
+  "7": {
+   "tag": {
+    "extracted": 82,
+    "dropped_not_in_turn": 6,
+    "kept": 48,
+    "dropped_invalid": 28,
+    "new_items": 23,
+    "turns": 70
+   },
+   "names_pass": {
+    "candidates": 269,
+    "turns": 70,
+    "turns_ge2": 57,
+    "pairs": 4,
+    "yes": 2,
+    "new_items": 2,
+    "appended": 2,
+    "dropped_invalid": 0,
+    "dropped_not_in_turn": 0,
+    "think_tokens_mean": 439.0,
+    "think_capped": 2
+   },
+   "update_detection": {
+    "checks": 33,
+    "candidates": 33
+   }
+  }
+ },
+ "first_batch_empty": {
+  "n": 24,
+  "empty": 0
+ },
+ "world": {
+  "items": 295,
+  "eligible": 166,
+  "pairs": 87,
+  "tests": 27,
+  "reachable": 27,
+  "reachable_flags": [
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true,
+   true
+  ]
+ },
+ "variants": {
+  "default": {
+   "mode": "default",
+   "dirs": "both",
+   "tries": 1,
+   "cycles": [
+    {
+     "cycle": 0,
+     "seconds": 68.7,
+     "stats": {
+      "units_open": 174,
+      "units_tried": 174,
+      "chain_gen": 174,
+      "dropped_bad": 172,
+      "dropped_test_leak": 5,
+      "parse_fail": 2,
+      "gist_gen": 73,
+      "chain_kept": 15,
+      "dropped_unverified": 39,
+      "gist_kept": 14,
+      "pool": 29
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 10,
+      "dreamed_forward": 5,
+      "dreamed_reverse": 7,
+      "kept_chains": 15,
+      "dreamed_forward_reachable": 5
+     }
+    },
+    {
+     "cycle": 1,
+     "seconds": 64.3,
+     "stats": {
+      "units_open": 159,
+      "units_tried": 159,
+      "chain_gen": 159,
+      "dropped_bad": 163,
+      "dropped_test_leak": 6,
+      "gist_gen": 73,
+      "parse_fail": 1,
+      "dropped_unverified": 41,
+      "dropped_dup": 3,
+      "chain_kept": 9,
+      "gist_kept": 9,
+      "pool": 47
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 13,
+      "dreamed_forward": 9,
+      "dreamed_reverse": 9,
+      "kept_chains": 24,
+      "dreamed_forward_reachable": 9
+     }
+    },
+    {
+     "cycle": 2,
+     "seconds": 63.0,
+     "stats": {
+      "units_open": 150,
+      "units_tried": 150,
+      "chain_gen": 150,
+      "dropped_bad": 150,
+      "dropped_test_leak": 4,
+      "parse_fail": 3,
+      "gist_gen": 73,
+      "dropped_unverified": 40,
+      "chain_kept": 13,
+      "dropped_dup": 2,
+      "gist_kept": 11,
+      "pool": 71
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 18,
+      "dreamed_forward": 13,
+      "dreamed_reverse": 12,
+      "kept_chains": 37,
+      "dreamed_forward_reachable": 13
+     }
+    },
+    {
+     "cycle": 3,
+     "seconds": 60.6,
+     "stats": {
+      "units_open": 137,
+      "units_tried": 137,
+      "chain_gen": 137,
+      "dropped_bad": 149,
+      "dropped_test_leak": 3,
+      "parse_fail": 5,
+      "gist_gen": 73,
+      "chain_kept": 3,
+      "dropped_unverified": 36,
+      "dropped_dup": 3,
+      "gist_kept": 11,
+      "pool": 85
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 18,
+      "dreamed_forward": 13,
+      "dreamed_reverse": 13,
+      "kept_chains": 40,
+      "dreamed_forward_reachable": 13
+     }
+    }
+   ],
+   "final": {
+    "n_tests": 27,
+    "reachable": 27,
+    "dreamed_any": 18,
+    "dreamed_forward": 13,
+    "dreamed_reverse": 13,
+    "kept_chains": 40,
+    "dreamed_forward_reachable": 13
+   },
+   "chain_samples": 620,
+   "kept_chains": 40,
+   "yield_per_sample": 0.0645,
+   "fates": {
+    "kept": 40,
+    "parse_fail": 8,
+    "test_leak": 15,
+    "bad": 422,
+    "unverified": 132,
+    "dup": 3,
+    "extra": 0
+   },
+   "parse_fail": 8,
+   "dropped_bad": 422,
+   "dropped_unverified": 132,
+   "dropped_test_leak": 15,
+   "dropped_dup": 3,
+   "unit_extra_dropped": 0,
+   "think_tokens_mean": null,
+   "think_capped": 0,
+   "gist_kept": 45,
+   "rem_stats_sum": {
+    "units_tried": 620,
+    "chain_gen": 620,
+    "dropped_bad": 634,
+    "dropped_test_leak": 18,
+    "parse_fail": 11,
+    "gist_gen": 292,
+    "chain_kept": 40,
+    "dropped_unverified": 156,
+    "gist_kept": 45,
+    "dropped_dup": 8
+   },
+   "wall_seconds": 256.7,
+   "examples_kept": [
+    {
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "q": "What did the owner of the thing born in Dralux own?",
+     "a": "Zodran",
+     "night": 7,
+     "cycle": 0,
+     "test": 20,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Feisemu place Kragono.",
+      "Feisemu relocated to Trebouvim."
+     ],
+     "q": "What place did the person who once lived in Kragono relocate to?",
+     "a": "Trebouvim",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Deiglitex employed at Foufivra.",
+      "Maibrei is the sister or brother of Deiglitex."
+     ],
+     "q": "What is the name of the sibling of the employee at Foufivra?",
+     "a": "Maibrei",
+     "night": 7,
+     "cycle": 0,
+     "test": 13,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Pegourem got a job at Gevrazor.",
+      "Flatum has sibling Pegourem."
+     ],
+     "q": "What is Flatum's sibling's employer?",
+     "a": "Gevrazor",
+     "night": 7,
+     "cycle": 0,
+     "test": 12,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "q": "Where did the employee of Drokravam move to?",
+     "a": "Defaglus",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Kroutaisa sibling of Gaditrath.",
+      "Gaditrath is on the team at Geskeir."
+     ],
+     "q": "Who is the sibling of the player on the team at Geskeir?",
+     "a": "Kroutaisa",
+     "night": 7,
+     "cycle": 0,
+     "test": 15,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Pegourem got a job at Gevrazor.",
+      "Flatum has sibling Pegourem."
+     ],
+     "q": "Who is the sibling of the Gevrazor employee?",
+     "a": "Flatum",
+     "night": 7,
+     "cycle": 0,
+     "test": 12,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Klafin texted from Baineloun.",
+      "Klafin was mentor of Flenobix."
+     ],
+     "q": "Where did Flenobix's mentor text from?",
+     "a": "Baineloun",
+     "night": 7,
+     "cycle": 0,
+     "test": 2,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Gourunex is brother of Vaskupour.",
+      "Vaskupour is employed at Glaiflox."
+     ],
+     "q": "What employer does Gourunex\u2019s brother work at?",
+     "a": "Glaiflox",
+     "night": 7,
+     "cycle": 0,
+     "test": 10,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Sivesaix employed at Perifem.",
+      "Sivesaix started a new job at Dreiklix."
+     ],
+     "q": "At which company did the person who worked at Perifem start a new job?",
+     "a": "Dreiklix",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Batafleim has a house in Zefimou.",
+      "Batafleim moved out to Zataikir."
+     ],
+     "q": "In which place did the person who had a house in Zefimou move out?",
+     "a": "Zataikir",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Klafin texted from Baineloun.",
+      "Klafin was mentor of Flenobix."
+     ],
+     "q": "Who did the person from Baineloun mentor?",
+     "a": "Flenobix",
+     "night": 7,
+     "cycle": 1,
+     "test": 2,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Semugux place Glikrais.",
+      "Todrigais is the mentor of Semugux."
+     ],
+     "q": "Who mentored the person who places Glikrais?",
+     "a": "Todrigais",
+     "night": 7,
+     "cycle": 1,
+     "test": 4,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "q": "In which city was Zodran's owner born?",
+     "a": "Dralux",
+     "night": 7,
+     "cycle": 1,
+     "test": 20,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Vevrol came into the world in Glamese.",
+      "Vevrol has boat Tradoskas."
+     ],
+     "q": "What is the origin of the person who has boat Tradoskas?",
+     "a": "Glamese",
+     "night": 7,
+     "cycle": 1,
+     "test": 18,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "q": "Where did the person who worked for Drokravam move to?",
+     "a": "Defaglus",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "pasta is on the grocery list for the week.",
+      "chicken thighs is on the grocery list for the week."
+     ],
+     "q": "What is on the grocery list along with pasta?",
+     "a": "chicken thighs",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Zhetrolox home is in Brokleis.",
+      "Zhetrolox relocated to Raskuklai."
+     ],
+     "q": "Where did the person from Brokleis relocate to?",
+     "a": "Raskuklai",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Medrave has a house Besakel.",
+      "Glaigade is the mentor of Medrave."
+     ],
+     "q": "Who is the mentor of the person who has the house Besakel?",
+     "a": "Glaigade",
+     "night": 7,
+     "cycle": 2,
+     "test": 6,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Kroulin is the mentor of Fleboben.",
+      "Fleboben lives in Flezes."
+     ],
+     "q": "Where does Kroulin's student live?",
+     "a": "Flezes",
+     "night": 7,
+     "cycle": 2,
+     "test": 5,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Rigolon has a home in Fakrenero.",
+      "Rigolon moved into a spot in Bekogal."
+     ],
+     "q": "In which place did the person from Fakrenero move into a spot?",
+     "a": "Bekogal",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Kruzairox owns the boat Duflodol.",
+      "Kruzairox will be texted by Sam later."
+     ],
+     "q": "When will Sam text the owner of the boat Duflodol?",
+     "a": "later",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Medrave has a house Besakel.",
+      "Glaigade is the mentor of Medrave."
+     ],
+     "q": "Who is Glaigade\u2019s mentor\u2019s house?",
+     "a": "Besakel",
+     "night": 7,
+     "cycle": 2,
+     "test": 6,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Ritropul sibling of Lekame.",
+      "Lekame is clocked in at Reigles."
+     ],
+     "q": "What is the sibling of the player clocked in at Reigles?",
+     "a": "Ritropul",
+     "night": 7,
+     "cycle": 2,
+     "test": 9,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Bafekex has a place Sitrail.",
+      "Bafekex relocated to Troukles."
+     ],
+     "q": "What is the place Sitrail relocated to?",
+     "a": "Troukles",
+     "night": 7,
+     "cycle": 3,
+     "test": null
+    }
+   ],
+   "examples_rejected": [
+    {
+     "cycle": 0,
+     "facts": [
+      "Bouzeibas is the mentor of Glisemu.",
+      "Bouzeibas has Glisemu as a mentor."
+     ],
+     "roles": [
+      "Glisemu as a mentor",
+      "Glisemu",
+      "Bouzeibas"
+     ],
+     "reply": "Question: Who is the person who is both a mentor of someone and is mentored by that same someone, given that Bouzeibas is the mentor of Glisemu and Bouzeibas has Gl",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Kromor job Flurutura.",
+      "Kromor switched over to Brourenou."
+     ],
+     "roles": [
+      "Brourenou",
+      "Flurutura",
+      "Kromor"
+     ],
+     "reply": "Question: Which person did Kromor switch over to, given that Kromor's job is Flurutura?",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "Question: Whose boat has been all over Sam's feed?",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Krekas is sister of Meskiglon."
+     ],
+     "roles": [
+      "Padratro",
+      "Meskiglon",
+      "Krekas"
+     ],
+     "reply": "Question: Who works at Padratro and is the sister of the person who works at Padratro?  \nAnswer: Meskiglon",
+     "why": "test_leak",
+     "q": "Who works at Padratro and is the sister of the person who works at Padratro?",
+     "a": "Meskiglon"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Saguneith is the mentor of Kroruzhux.",
+      "Kroruzhux has Saguneith as a mentor."
+     ],
+     "roles": [
+      "Saguneith",
+      "Saguneith as a mentor",
+      "Kroruzhux"
+     ],
+     "reply": "Question: Who is the mentor of Kroruzhux?\nAnswer: Saguneith",
+     "why": "test_leak",
+     "q": "Who is the mentor of Kroruzhux?",
+     "a": "Saguneith"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Glainei has Skaiber as a mentor.",
+      "Glainei is the mentor of Skaiber."
+     ],
+     "roles": [
+      "Skaiber",
+      "Skaiber as a mentor",
+      "Glainei"
+     ],
+     "reply": "Question: Who is the mentor of Glainei?\nAnswer: Skaiber as a mentor",
+     "why": "test_leak",
+     "q": "Who is the mentor of Glainei?",
+     "a": "Skaiber as a mentor"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "Question: Whose boat has been all over Sam's feed?\nAnswer: Kalutil",
+     "why": "bad",
+     "q": "Whose boat has been all over Sam's feed?",
+     "a": "Kalutil"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Kromor job Flurutura.",
+      "Kromor switched over to Brourenou."
+     ],
+     "roles": [
+      "Flurutura",
+      "Brourenou",
+      "Kromor"
+     ],
+     "reply": "Question: Which name did Kromor switch over to?\nAnswer: Brourenou",
+     "why": "bad",
+     "q": "Which name did Kromor switch over to?",
+     "a": "Brourenou"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "playlist is needed for road trip.",
+      "playlist should include upbeat stuff."
+     ],
+     "roles": [
+      "road trip",
+      "upbeat stuff",
+      "playlist"
+     ],
+     "reply": "Question: What should be on the road trip playlist?\nAnswer: upbeat stuff",
+     "why": "bad",
+     "q": "What should be on the road trip playlist?",
+     "a": "upbeat stuff"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Saguneith is the mentor of Kroruzhux.",
+      "Saguneith is based out of Glakrozo."
+     ],
+     "roles": [
+      "Glakrozo",
+      "Kroruzhux",
+      "Saguneith"
+     ],
+     "reply": "Question: Who is the mentor of the student based out of Glakrozo?\nAnswer: Kroruzhux",
+     "why": "unverified",
+     "q": "Who is the mentor of the student based out of Glakrozo?",
+     "a": "Kroruzhux",
+     "verify": "The student based out of Glakrozo is Saguneith. Her mentor is Kroruzh"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Viskibam got hired at Tresko.",
+      "Krepou is brother of Viskibam."
+     ],
+     "roles": [
+      "Tresko",
+      "Krepou",
+      "Viskibam"
+     ],
+     "reply": "Question: Who is the brother of the person hired at Tresko?  \nAnswer: Krepou",
+     "why": "unverified",
+     "q": "Who is the brother of the person hired at Tresko?",
+     "a": "Krepou",
+     "verify": "The user is asking who is the brother of the person hired at Tresko. Let me trace through"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Dokatral home is in Zinoutes.",
+      "Dokatral moved to Goskougen."
+     ],
+     "roles": [
+      "Zinoutes",
+      "Goskougen",
+      "Dokatral"
+     ],
+     "reply": "Question: Where did the home of the person who lives in Zinoutes move to?\nAnswer: Goskougen",
+     "why": "unverified",
+     "q": "Where did the home of the person who lives in Zinoutes move to?",
+     "a": "Goskougen",
+     "verify": "The person who lives in Zinoutes is Dokatral. On Day 6, the user says"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "roles": [
+      "Sariketh",
+      "Vudalal",
+      "Brapol"
+     ],
+     "reply": "Question: Who is the mentor of the person who has a home in Sariketh?\nAnswer: Vudalal",
+     "why": "dup",
+     "q": "Who is the mentor of the person who has a home in Sariketh?",
+     "a": "Vudalal"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "roles": [
+      "Sariketh",
+      "Vudalal",
+      "Brapol"
+     ],
+     "reply": "Question: Who is the mentor of the person who has a home in Sariketh?\nAnswer: Vudalal",
+     "why": "dup",
+     "q": "Who is the mentor of the person who has a home in Sariketh?",
+     "a": "Vudalal"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "roles": [
+      "Sariketh",
+      "Vudalal",
+      "Brapol"
+     ],
+     "reply": "Question: Who is the mentor of the person who has a home in Sariketh?\nAnswer: Vudalal",
+     "why": "dup",
+     "q": "Who is the mentor of the person who has a home in Sariketh?",
+     "a": "Vudalal"
+    }
+   ],
+   "partial": false
+  },
+  "q": {
+   "mode": "q",
+   "dirs": "both",
+   "tries": 1,
+   "cycles": [
+    {
+     "cycle": 0,
+     "seconds": 67.9,
+     "stats": {
+      "units_open": 174,
+      "units_tried": 174,
+      "chain_gen": 174,
+      "parse_fail": 12,
+      "dropped_bad": 166,
+      "dropped_test_leak": 5,
+      "gist_gen": 73,
+      "dropped_unverified": 39,
+      "chain_kept": 13,
+      "gist_kept": 12,
+      "pool": 25
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 11,
+      "dreamed_forward": 3,
+      "dreamed_reverse": 9,
+      "kept_chains": 13,
+      "dreamed_forward_reachable": 3
+     }
+    },
+    {
+     "cycle": 1,
+     "seconds": 66.3,
+     "stats": {
+      "units_open": 161,
+      "units_tried": 161,
+      "chain_gen": 161,
+      "parse_fail": 13,
+      "dropped_bad": 168,
+      "gist_gen": 73,
+      "dropped_unverified": 25,
+      "chain_kept": 9,
+      "gist_kept": 19,
+      "pool": 53
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 15,
+      "dreamed_forward": 6,
+      "dreamed_reverse": 13,
+      "kept_chains": 22,
+      "dreamed_forward_reachable": 6
+     }
+    },
+    {
+     "cycle": 2,
+     "seconds": 63.4,
+     "stats": {
+      "units_open": 152,
+      "units_tried": 152,
+      "chain_gen": 152,
+      "dropped_bad": 160,
+      "parse_fail": 9,
+      "dropped_test_leak": 4,
+      "gist_gen": 73,
+      "dropped_unverified": 31,
+      "chain_kept": 7,
+      "gist_kept": 10,
+      "dropped_dup": 4,
+      "pool": 70
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 17,
+      "dreamed_forward": 8,
+      "dreamed_reverse": 14,
+      "kept_chains": 29,
+      "dreamed_forward_reachable": 8
+     }
+    },
+    {
+     "cycle": 3,
+     "seconds": 57.5,
+     "stats": {
+      "units_open": 145,
+      "units_tried": 145,
+      "chain_gen": 145,
+      "dropped_bad": 159,
+      "parse_fail": 9,
+      "dropped_test_leak": 4,
+      "gist_gen": 73,
+      "dropped_unverified": 29,
+      "chain_kept": 4,
+      "gist_kept": 12,
+      "dropped_dup": 1,
+      "pool": 86
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 17,
+      "dreamed_forward": 8,
+      "dreamed_reverse": 15,
+      "kept_chains": 33,
+      "dreamed_forward_reachable": 8
+     }
+    }
+   ],
+   "final": {
+    "n_tests": 27,
+    "reachable": 27,
+    "dreamed_any": 17,
+    "dreamed_forward": 8,
+    "dreamed_reverse": 15,
+    "kept_chains": 33,
+    "dreamed_forward_reachable": 8
+   },
+   "chain_samples": 632,
+   "kept_chains": 33,
+   "yield_per_sample": 0.0522,
+   "fates": {
+    "kept": 33,
+    "parse_fail": 42,
+    "test_leak": 7,
+    "bad": 448,
+    "unverified": 102,
+    "dup": 0,
+    "extra": 0
+   },
+   "parse_fail": 42,
+   "dropped_bad": 448,
+   "dropped_unverified": 102,
+   "dropped_test_leak": 7,
+   "dropped_dup": 0,
+   "unit_extra_dropped": 0,
+   "think_tokens_mean": null,
+   "think_capped": 0,
+   "gist_kept": 53,
+   "rem_stats_sum": {
+    "units_tried": 632,
+    "chain_gen": 632,
+    "parse_fail": 43,
+    "dropped_bad": 653,
+    "dropped_test_leak": 13,
+    "gist_gen": 292,
+    "dropped_unverified": 124,
+    "chain_kept": 33,
+    "gist_kept": 53,
+    "dropped_dup": 5
+   },
+   "wall_seconds": 255.1,
+   "examples_kept": [
+    {
+     "facts": [
+      "pasta is on the grocery list for the week.",
+      "chicken thighs is on the grocery list for the week."
+     ],
+     "q": "What is the other item on the grocery list that is not chicken thighs?",
+     "a": "pasta",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Sabuflo birthplace Klafabax.",
+      "Sabuflo has boat Sotradath."
+     ],
+     "q": "What is the name of the boat owned by the person who was born in Klafabax?",
+     "a": "Sotradath",
+     "night": 7,
+     "cycle": 0,
+     "test": 19,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Vrulozhar keeps the boat Brekousen.",
+      "Vrulozhar was born in Trarebas."
+     ],
+     "q": "What boat was kept by the person born in Trarebas?",
+     "a": "Brekousen",
+     "night": 7,
+     "cycle": 0,
+     "test": 24,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Deiglitex employed at Foufivra.",
+      "Maibrei is the sister or brother of Deiglitex."
+     ],
+     "q": "The sibling of the employee at Foufivra is?",
+     "a": "Maibrei",
+     "night": 7,
+     "cycle": 0,
+     "test": 13,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Krekas works at Padratro.",
+      "Meskiglon has sibling Krekas."
+     ],
+     "q": "Who is the sibling of the Padratro employee named in the first fact?",
+     "a": "Meskiglon",
+     "night": 7,
+     "cycle": 0,
+     "test": 14,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Klafin texted from Baineloun.",
+      "Klafin was mentor of Flenobix."
+     ],
+     "q": "Who was the mentee of the person who texted from Baineloun?",
+     "a": "Flenobix",
+     "night": 7,
+     "cycle": 0,
+     "test": 2,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Kroutaisa sibling of Gaditrath.",
+      "Gaditrath is on the team at Geskeir."
+     ],
+     "q": "Who is the sibling of the team member at Geskeir?",
+     "a": "Kroutaisa",
+     "night": 7,
+     "cycle": 0,
+     "test": 15,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Ritropul sibling of Lekame.",
+      "Lekame is clocked in at Reigles."
+     ],
+     "q": "What is the sibling of the person who is clocked in at Reigles?",
+     "a": "Ritropul",
+     "night": 7,
+     "cycle": 0,
+     "test": 9,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Gourunex is brother of Vaskupour.",
+      "Vaskupour is employed at Glaiflox."
+     ],
+     "q": "Who is the employer of Gourunex's brother?",
+     "a": "Glaiflox",
+     "night": 7,
+     "cycle": 0,
+     "test": 10,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Kredraza has a home in Vrikeglir.",
+      "Kredraza has been guiding Trorona."
+     ],
+     "q": "Who has been guiding the being that lives in Vrikeglir?",
+     "a": "Trorona",
+     "night": 7,
+     "cycle": 0,
+     "test": 1,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Vevrol came into the world in Glamese.",
+      "Vevrol has boat Tradoskas."
+     ],
+     "q": "What is the name of the boat that belongs to the person born in Glamese?",
+     "a": "Tradoskas",
+     "night": 7,
+     "cycle": 1,
+     "test": 18,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Gourunex is brother of Vaskupour.",
+      "Vaskupour is employed at Glaiflox."
+     ],
+     "q": "Who is the brother of the person employed at Glaiflox?",
+     "a": "Gourunex",
+     "night": 7,
+     "cycle": 1,
+     "test": 10,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Vevrol came into the world in Glamese.",
+      "Vevrol has boat Tradoskas."
+     ],
+     "q": "What is the birthplace of the captain of Tradoskas?",
+     "a": "Glamese",
+     "night": 7,
+     "cycle": 1,
+     "test": 18,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Vevrol came into the world in Glamese.",
+      "Vevrol took out the Tradoskas."
+     ],
+     "q": "Who took out the Tradoskas, who came into the world in which place?",
+     "a": "Glamese",
+     "night": 7,
+     "cycle": 1,
+     "test": 18,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "q": "Who is the mentor of the person whose home is in Sariketh?",
+     "a": "Vudalal",
+     "night": 7,
+     "cycle": 1,
+     "test": 0,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "q": "What city was Zodran's owner born in?",
+     "a": "Dralux",
+     "night": 7,
+     "cycle": 1,
+     "test": 20,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "pasta is on the grocery list for the week.",
+      "chicken thighs is on the grocery list for the week."
+     ],
+     "q": "What item on the grocery list is not pasta?",
+     "a": "chicken thighs",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Medrave has a house Besakel.",
+      "Glaigade is the mentor of Medrave."
+     ],
+     "q": "Who is the mentor of the person with a house in Besakel?",
+     "a": "Glaigade",
+     "night": 7,
+     "cycle": 2,
+     "test": 6,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Flodragin birthplace Geikraix.",
+      "Flodragin keeps inviting Sam out on the Flovro."
+     ],
+     "q": "What is the birthplace of the person who keeps inviting Sam out on the Flovro?",
+     "a": "Geikraix",
+     "night": 7,
+     "cycle": 2,
+     "test": 21,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Krekas works at Padratro.",
+      "Meskiglon has sibling Krekas."
+     ],
+     "q": "Where does Meskiglon's sibling work?",
+     "a": "Padratro",
+     "night": 7,
+     "cycle": 2,
+     "test": 14,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Nobovreth employed at Bigazheim.",
+      "Nobovreth switched to Loglovrem Loglovrem."
+     ],
+     "q": "Where did the person employed at Bigazheim switch to?",
+     "a": "Loglovrem",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Medrave has a house Besakel.",
+      "Medrave role mentor."
+     ],
+     "q": "Where is the mentor\u2019s house?",
+     "a": "Besakel",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Drozhove owns the boat Loskoukin.",
+      "Drozhove first saw daylight in Kromol."
+     ],
+     "q": "The boat owned by the person who first saw daylight in Kromol is what?",
+     "a": "Loskoukin",
+     "night": 7,
+     "cycle": 3,
+     "test": 23,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Batafleim has a house in Zefimou.",
+      "Batafleim moved out to Zataikir."
+     ],
+     "q": "Where did the person who moved out to Zataikir live?",
+     "a": "Zefimou",
+     "night": 7,
+     "cycle": 3,
+     "test": null
+    },
+    {
+     "facts": [
+      "Batafleim has a house in Zefimou.",
+      "Batafleim moved out to Zataikir."
+     ],
+     "q": "Where did the person in Zefimou move to?",
+     "a": "Zataikir",
+     "night": 7,
+     "cycle": 3,
+     "test": null
+    }
+   ],
+   "examples_rejected": [
+    {
+     "cycle": 0,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "The boat that appears in Sam's feed and is owned by Zodran's owner is Kalutil.",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Glaigade has Medrave as a mentor.",
+      "Glaigade is the mentor of Medrave."
+     ],
+     "roles": [
+      "Medrave as a mentor",
+      "Medrave",
+      "Glaigade"
+     ],
+     "reply": "Medrave as a mentor is the same person who mentors Glaigade.",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Fegeseth employed at Krasir.",
+      "Fegeseth switched over to Vazeidrai."
+     ],
+     "roles": [
+      "Vazeidrai",
+      "Krasir",
+      "Fegeseth"
+     ],
+     "reply": "What place did Fegeseth's employer switch to? Wait, that names Fegeseth. Need question names Vazeidrai, doesn't name Fegeseth or Krasir, answer Krasir",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "Kalutil's boat has been all over Sam's feed...",
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Krekas is sister of Meskiglon."
+     ],
+     "roles": [
+      "Padratro",
+      "Meskiglon",
+      "Krekas"
+     ],
+     "reply": "What is the sister of the person who works at Padratro?",
+     "why": "test_leak",
+     "q": "What is the sister of the person who works at Padratro?",
+     "a": "Meskiglon"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Krekas is sister of Meskiglon."
+     ],
+     "roles": [
+      "Meskiglon",
+      "Padratro",
+      "Krekas"
+     ],
+     "reply": "What is the workplace of the sister of the person who works at Padratro?",
+     "why": "test_leak",
+     "q": "What is the workplace of the sister of the person who works at Padratro?",
+     "a": "Padratro"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Krekas is sister of Meskiglon."
+     ],
+     "roles": [
+      "Meskiglon",
+      "Padratro",
+      "Krekas"
+     ],
+     "reply": "Who is the sister of the person who works at Padratro?",
+     "why": "test_leak",
+     "q": "Who is the sister of the person who works at Padratro?",
+     "a": "Padratro"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Glainei has Skaiber as a mentor.",
+      "Glainei is the mentor of Skaiber."
+     ],
+     "roles": [
+      "Skaiber as a mentor",
+      "Skaiber",
+      "Glainei"
+     ],
+     "reply": "The mentor of the student who is the mentor of Glainei?",
+     "why": "test_leak",
+     "q": "The mentor of the student who is the mentor of Glainei?",
+     "a": "Skaiber"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "roles": [
+      "Dralux",
+      "Zodran",
+      "Kalutil"
+     ],
+     "reply": "Dralux is where Kalutil was born, and what does Kalutil own?",
+     "why": "bad",
+     "q": "Dralux is where Kalutil was born, and what does Kalutil own?",
+     "a": "Zodran"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Skoumeisi belongs to Neimail.",
+      "Neimail came into the world in Kudema."
+     ],
+     "roles": [
+      "Skoumeisi",
+      "Kudema",
+      "Neimail"
+     ],
+     "reply": "What place was the birthplace of Skoumeisi's parent Neimail?",
+     "why": "bad",
+     "q": "What place was the birthplace of Skoumeisi's parent Neimail?",
+     "a": "Kudema"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Batafleim has a house in Zefimou.",
+      "Batafleim moved out to Zataikir."
+     ],
+     "roles": [
+      "Zefimou",
+      "Zataikir",
+      "Batafleim"
+     ],
+     "reply": "Where did Batafleim move to?",
+     "why": "bad",
+     "q": "Where did Batafleim move to?",
+     "a": "Zataikir"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Kruzairox has the Duflodol.",
+      "Kruzairox owns the boat Duflodol."
+     ],
+     "roles": [
+      "Duflodol",
+      "the Duflodol",
+      "Kruzairox"
+     ],
+     "reply": "What boat does the Duflodol's owner possess?",
+     "why": "bad",
+     "q": "What boat does the Duflodol's owner possess?",
+     "a": "the Duflodol"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "roles": [
+      "Defaglus",
+      "Drokravam",
+      "Molitrin"
+     ],
+     "reply": "What city did the person who moved to Defaglus work for?",
+     "why": "unverified",
+     "q": "What city did the person who moved to Defaglus work for?",
+     "a": "Drokravam",
+     "verify": "The person who moved to Defaglus is Molitrin. According to the messages, Molitr"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Tipafeth employed at Zhunoul.",
+      "Tipafeth started a new job at Tremanur."
+     ],
+     "roles": [
+      "Zhunoul",
+      "Tremanur",
+      "Tipafeth"
+     ],
+     "reply": "What was the new job of the person who worked at Zhunoul?",
+     "why": "unverified",
+     "q": "What was the new job of the person who worked at Zhunoul?",
+     "a": "Tremanur",
+     "verify": "The person who worked at Zhunoul is Tipafeth. On Day 4, it says"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Flodragin birthplace Geikraix.",
+      "Flovro owns the boat Flodragin."
+     ],
+     "roles": [
+      "Geikraix",
+      "Flovro",
+      "Flodragin"
+     ],
+     "reply": "What is the owner of the boat from Geikraix?",
+     "why": "unverified",
+     "q": "What is the owner of the boat from Geikraix?",
+     "a": "Flovro",
+     "verify": "The user is asking about the owner of the boat from Geikraix. Let me trace through"
+    }
+   ],
+   "partial": false
+  },
+  "think": {
+   "mode": "think",
+   "dirs": "both",
+   "tries": 1,
+   "cycles": [
+    {
+     "cycle": 0,
+     "seconds": 806.7,
+     "stats": {
+      "units_open": 174,
+      "units_tried": 174,
+      "chain_think_tokens": 74561,
+      "chain_think_capped": 90,
+      "chain_gen": 174,
+      "dropped_bad": 108,
+      "dropped_test_leak": 2,
+      "parse_fail": 1,
+      "gist_gen": 73,
+      "chain_kept": 47,
+      "dropped_unverified": 69,
+      "gist_kept": 20,
+      "pool": 67
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 17,
+      "dreamed_forward": 15,
+      "dreamed_reverse": 8,
+      "kept_chains": 47,
+      "dreamed_forward_reachable": 15
+     }
+    },
+    {
+     "cycle": 1,
+     "seconds": 595.8,
+     "stats": {
+      "units_open": 127,
+      "units_tried": 127,
+      "chain_think_tokens": 56539,
+      "chain_think_capped": 84,
+      "chain_gen": 127,
+      "dropped_bad": 110,
+      "dropped_test_leak": 5,
+      "gist_gen": 73,
+      "chain_kept": 14,
+      "dropped_unverified": 58,
+      "gist_kept": 11,
+      "dropped_dup": 2,
+      "pool": 92
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 23,
+      "dreamed_forward": 16,
+      "dreamed_reverse": 14,
+      "kept_chains": 61,
+      "dreamed_forward_reachable": 16
+     }
+    },
+    {
+     "cycle": 2,
+     "seconds": 529.9,
+     "stats": {
+      "units_open": 113,
+      "units_tried": 113,
+      "chain_think_tokens": 52110,
+      "chain_think_capped": 76,
+      "chain_gen": 113,
+      "dropped_bad": 110,
+      "dropped_test_leak": 2,
+      "gist_gen": 73,
+      "chain_kept": 8,
+      "dropped_unverified": 47,
+      "gist_kept": 15,
+      "dropped_dup": 4,
+      "pool": 115
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 23,
+      "dreamed_forward": 18,
+      "dreamed_reverse": 16,
+      "kept_chains": 69,
+      "dreamed_forward_reachable": 18
+     }
+    },
+    {
+     "cycle": 3,
+     "seconds": 504.7,
+     "stats": {
+      "units_open": 105,
+      "units_tried": 105,
+      "chain_think_tokens": 49794,
+      "chain_think_capped": 80,
+      "chain_gen": 105,
+      "dropped_bad": 112,
+      "dropped_test_leak": 5,
+      "parse_fail": 2,
+      "gist_gen": 73,
+      "dropped_unverified": 41,
+      "chain_kept": 9,
+      "gist_kept": 6,
+      "dropped_dup": 3,
+      "pool": 130
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 24,
+      "dreamed_forward": 19,
+      "dreamed_reverse": 18,
+      "kept_chains": 78,
+      "dreamed_forward_reachable": 19
+     }
+    }
+   ],
+   "final": {
+    "n_tests": 27,
+    "reachable": 27,
+    "dreamed_any": 24,
+    "dreamed_forward": 19,
+    "dreamed_reverse": 18,
+    "kept_chains": 78,
+    "dreamed_forward_reachable": 19
+   },
+   "chain_samples": 519,
+   "kept_chains": 78,
+   "yield_per_sample": 0.1503,
+   "fates": {
+    "kept": 78,
+    "parse_fail": 2,
+    "test_leak": 11,
+    "bad": 238,
+    "unverified": 190,
+    "dup": 0,
+    "extra": 0
+   },
+   "parse_fail": 2,
+   "dropped_bad": 238,
+   "dropped_unverified": 190,
+   "dropped_test_leak": 11,
+   "dropped_dup": 0,
+   "unit_extra_dropped": 0,
+   "think_tokens_mean": 448.9,
+   "think_capped": 330,
+   "gist_kept": 52,
+   "rem_stats_sum": {
+    "units_tried": 519,
+    "chain_think_tokens": 233004,
+    "chain_think_capped": 330,
+    "chain_gen": 519,
+    "dropped_bad": 440,
+    "dropped_test_leak": 14,
+    "parse_fail": 3,
+    "gist_gen": 292,
+    "chain_kept": 78,
+    "dropped_unverified": 215,
+    "gist_kept": 52,
+    "dropped_dup": 9
+   },
+   "wall_seconds": 2437.2,
+   "examples_kept": [
+    {
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "q": "Who does the person who moved to Defaglus work for?",
+     "a": "Drokravam",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Dokatral home is in Zinoutes.",
+      "Dokatral moved to Goskougen."
+     ],
+     "q": "Where did the person whose home was in Zinoutes move to?",
+     "a": "Goskougen",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Pegourem got a job at Gevrazor.",
+      "Flatum has sibling Pegourem."
+     ],
+     "q": "Where did Flatum's sibling work?",
+     "a": "Gevrazor",
+     "night": 7,
+     "cycle": 0,
+     "test": 12,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Medrave has a house Besakel.",
+      "Medrave role mentor."
+     ],
+     "q": "What is the name of the house of the mentor?",
+     "a": "Besakel",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Zetaimo is employed at Kaizaim.",
+      "Zetaimo started working at Fodridoum."
+     ],
+     "q": "What company did the person employed at Kaizaim start working at?",
+     "a": "Fodridoum",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Gourunex is brother of Vaskupour.",
+      "Vaskupour is employed at Glaiflox."
+     ],
+     "q": "Who is the brother of the person employed at Glaiflox?",
+     "a": "Gourunex",
+     "night": 7,
+     "cycle": 0,
+     "test": 10,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Pegourem got a job at Gevrazor.",
+      "Flatum has sibling Pegourem."
+     ],
+     "q": "At Gevrazor, who is the sibling of the person who got a job there?",
+     "a": "Flatum",
+     "night": 7,
+     "cycle": 0,
+     "test": 12,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Glaigade is the mentor of Medrave.",
+      "Medrave role mentor."
+     ],
+     "q": "Who is the mentor of the mentor?",
+     "a": "Glaigade",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "q": "In which city does Vudalal's mentee live?",
+     "a": "Sariketh",
+     "night": 7,
+     "cycle": 0,
+     "test": 0,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Semugux place Glikrais.",
+      "Todrigais is the mentor of Semugux."
+     ],
+     "q": "If Todrigais's student places a location, what is that location?",
+     "a": "Glikrais",
+     "night": 7,
+     "cycle": 0,
+     "test": 4,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Klafin texted from Baineloun.",
+      "Klafin was mentor of Flenobix."
+     ],
+     "q": "From where did Flenobix's mentor text?",
+     "a": "Baineloun",
+     "night": 7,
+     "cycle": 0,
+     "test": 2,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Kredraza has a home in Vrikeglir.",
+      "Kredraza has been guiding Trorona."
+     ],
+     "q": "Who has been guiding the person who has a home in Vrikeglir?",
+     "a": "Trorona",
+     "night": 7,
+     "cycle": 0,
+     "test": 1,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "q": "Who is the mentor of the person who has a home in Sariketh?",
+     "a": "Vudalal",
+     "night": 7,
+     "cycle": 0,
+     "test": 0,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Flodragin birthplace Geikraix.",
+      "Flodragin keeps inviting Sam out on the Flovro."
+     ],
+     "q": "Where is the birthplace of the person who keeps inviting Sam out on the Flovro?",
+     "a": "Geikraix",
+     "night": 7,
+     "cycle": 0,
+     "test": 21,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Sivesaix employed at Perifem.",
+      "Sivesaix started a new job at Dreiklix."
+     ],
+     "q": "Where did the employee at Perifem start a new job?",
+     "a": "Dreiklix",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Skoumeisi belongs to Neimail.",
+      "Neimail came into the world in Kudema."
+     ],
+     "q": "Where did the group to which Skoumeisi belongs originate?",
+     "a": "Kudema",
+     "night": 7,
+     "cycle": 0,
+     "test": 25,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Drozhove owns the boat Loskoukin.",
+      "Drozhove first saw daylight in Kromol."
+     ],
+     "q": "What boat was owned by the person who first saw daylight in Kromol?",
+     "a": "Loskoukin",
+     "night": 7,
+     "cycle": 1,
+     "test": 23,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Glenadol boat of Daiskorer.",
+      "Daiskorer birthplace Krofozo."
+     ],
+     "q": "What is the boat of the person born in Krofozo?",
+     "a": "Glenadol",
+     "night": 7,
+     "cycle": 1,
+     "test": 26,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Saguneith is the mentor of Kroruzhux.",
+      "Saguneith is based out of Glakrozo."
+     ],
+     "q": "Who is the student mentored by the person based out of Glakrozo?",
+     "a": "Kroruzhux",
+     "night": 7,
+     "cycle": 1,
+     "test": 7,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Nobovreth employed at Bigazheim.",
+      "Nobovreth switched to Loglovrem Loglovrem."
+     ],
+     "q": "Where was the person who later worked in Loglovrem employed before that switch?",
+     "a": "Bigazheim",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Glenadol boat of Daiskorer.",
+      "Daiskorer birthplace Krofozo."
+     ],
+     "q": "Where was the person whose boat was the Glenadol born?",
+     "a": "Krofozo",
+     "night": 7,
+     "cycle": 2,
+     "test": 26,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "q": "What city did Drokravam's worker move to?",
+     "a": "Defaglus",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "q": "Who owns the person born in Dralux?",
+     "a": "Zodran",
+     "night": 7,
+     "cycle": 2,
+     "test": 20,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Deiglitex employed at Foufivra.",
+      "Maibrei is the sister or brother of Deiglitex."
+     ],
+     "q": "Who is the sibling of the employee at Foufivra?",
+     "a": "Maibrei",
+     "night": 7,
+     "cycle": 3,
+     "test": 13,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Ritropul sibling of Lekame.",
+      "Lekame is clocked in at Reigles."
+     ],
+     "q": "Where is Ritropul's sibling clocked in at?",
+     "a": "Reigles",
+     "night": 7,
+     "cycle": 3,
+     "test": 9,
+     "direction": "forward",
+     "forward": true
+    }
+   ],
+   "examples_rejected": [
+    {
+     "cycle": 0,
+     "facts": [
+      "Vudalal has Brapol as a mentor.",
+      "Vudalal is the mentor of Brapol."
+     ],
+     "roles": [
+      "Brapol",
+      "Brapol as a mentor",
+      "Vudalal"
+     ],
+     "reply": "has B as a mentor. (B mentors A)\nF2: A is the mentor of B. (A mentors B)\n\nNeed question names B (Brapol), not A (Vudalal",
+     "think": "We need answer in specified form. Need solve. We have facts:\n1 Vudalal has Brapol as a mentor.\n2 Vudalal is the mentor of Brapol.\nThey share name Vudalal. Need one question that names Brapol, does not name Vudalal or \"Brapol as a mentor\", and can only be answered by using both facts together. Answer must be \"Brapol as a mentor\" (a single name? Actually answer must be that string).\n\nNeed craft ques",
+     "think_tokens": 510,
+     "closed": false,
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Luzailar has Kodufel as a mentor.",
+      "Luzailar is the mentor of Kodufel."
+     ],
+     "roles": [
+      "Kodufel as a mentor",
+      "Kodufel",
+      "Luzailar"
+     ],
+     "reply": "Question: Who is the person who mentors the person who is mentored by the same person, given that Luzailar has Kodufel as a mentor and Luzailar is the mentor of Kod",
+     "think": "We need answer user. Need produce exactly form. Need solve. We have facts:\n1 Luzailar has Kodufel as a mentor. Means Kodufel is mentor of Luzailar? Wording \"has X as a mentor\" means X is mentor of subject. 2 Luzailar is mentor of Kodufel. So two facts share name Luzailar but relation opposite? Fact1: Luzailar has Kodufel as mentor -> Kodufel mentors Luzailar. Fact2: Luzailar is mentor of Kodufel. ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Sabuflo birthplace Klafabax.",
+      "Sabuflo has boat Sotradath."
+     ],
+     "roles": [
+      "Klafabax",
+      "Sotradath",
+      "Sabuflo"
+     ],
+     "reply": "Question: What is the name of the boat of the person whose birthplace is Klafabax?\nAnswer: Sotradath",
+     "think": "We need answer format exactly. Need craft question naming Klafabax, not Sabuflo/Sotradath, answer Sotradath. Need use both facts together. Facts: Sabuflo's birthplace Klafabax; Sabuflo has boat Sotradath. Need question that can only be answered by both facts together. It must name Klafabax, not Sabuflo or Sotradath. We can ask: \"What is the name of the boat of the person whose birthplace is Klafab",
+     "think_tokens": 238,
+     "closed": true,
+     "why": "test_leak",
+     "q": "What is the name of the boat of the person whose birthplace is Klafabax?",
+     "a": "Sotradath"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Sebredran came into the world in Braflanou.",
+      "Sebredran owns the boat Krenaklur."
+     ],
+     "roles": [
+      "Braflanou",
+      "Krenaklur",
+      "Sebredran"
+     ],
+     "reply": "Question: What boat is owned by the person who was born in Braflanou?\nAnswer: Krenaklur",
+     "think": "We need answer question. Need parse. Need produce one question naming Braflanou, not Sebredran or Krenaklur, answer only using both facts together. Need answer \"Krenaklur\". Need exactly form:\nQuestion: ...\nAnswer: ...\n\nWe need construct question. Facts: Sebredran born in Braflanou. Sebredran owns boat Krenaklur. Need question that names Braflanou, doesn't name Sebredran/Krenaklur, and can only be ",
+     "think_tokens": 210,
+     "closed": true,
+     "why": "test_leak",
+     "q": "What boat is owned by the person who was born in Braflanou?",
+     "a": "Krenaklur"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Glainei has Skaiber as a mentor.",
+      "Glainei is the mentor of Skaiber."
+     ],
+     "roles": [
+      "Skaiber as a mentor",
+      "Skaiber",
+      "Glainei"
+     ],
+     "reply": "Question: Who is the mentor of the person who is the mentor of the person who is the mentor of Glainei?  \nAnswer: Skaiber",
+     "think": "We need answer in exact form. Need solve. Need craft question. Facts: Glainei has Skaiber as a mentor. Glainei is mentor of Skaiber. Need one question names \"Skaiber as a mentor\", does not name Glainei or Skaiber. Can only be answered by using both facts together. Answer must be \"Skaiber\" single name.\n\nWe need understand logical facts: Let M(x) = x is a mentor? Actually facts:\n1. Glainei has Skaib",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "test_leak",
+     "q": "Who is the mentor of the person who is the mentor of the person who is the mentor of Glainei?",
+     "a": "Skaiber"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Deiglitex employed at Foufivra.",
+      "Maibrei is the sister or brother of Deiglitex."
+     ],
+     "roles": [
+      "Maibrei",
+      "Foufivra",
+      "Deiglitex"
+     ],
+     "reply": "Question: Where does the sibling of Maibrei work?\nAnswer: Foufivra",
+     "think": "We need answer user. Need craft question. Need obey exact form. Need understand facts. We have two facts:\n- Deiglitex employed at Foufivra.\n- Maibrei is the sister or brother of Deiglitex.\nNeed write one question that names \"Maibrei\", does not name \"Deiglitex\" or \"Foufivra\", and can only be answered by using both facts together. Answer must be \"Foufivra\". So question must mention Maibrei only, not",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "test_leak",
+     "q": "Where does the sibling of Maibrei work?",
+     "a": "Foufivra"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "Question: What owner does the boat that has been all over Sam's feed have?\nAnswer: Kalutil",
+     "think": "We need answer user. Need produce question in exact form. Need think. We have facts: Zodran owned by Kalutil. Kalutil's boat has been all over Sam's feed Zodran. Need write one question that names \"Kalutil's boat\", does not name Zodran or Kalutil, and can only be answered by using both facts together. Its answer must be \"Kalutil\" single name.\n\nNeed craft question. It must name Kalutil's boat (pres",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "What owner does the boat that has been all over Sam's feed have?",
+     "a": "Kalutil"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Glainei has Skaiber as a mentor.",
+      "Glainei is the mentor of Skaiber."
+     ],
+     "roles": [
+      "Skaiber",
+      "Skaiber as a mentor",
+      "Glainei"
+     ],
+     "reply": "Question: Who is Skaiber as, given that the person who has Skaiber as a mentor is the same person who is the mentor of Skaiber?\nAnswer: Skaiber as",
+     "think": "We need answer in exact form. Need craft question. Let's reason. Facts: Glainei has Skaiber as a mentor. Glainei is the mentor of Skaiber. Two facts share name Glainei. Need write one question that names Skaiber, does not name Glainei or \"Skaiber as a mentor\". Can only be answered by using both facts together. Answer must be \"Skaiber as a mentor\" (single name? It says answer must be \"Skaiber as a ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "Who is Skaiber as, given that the person who has Skaiber as a mentor is the same person who is the mentor of Skaiber?",
+     "a": "Skaiber as"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil",
+      "Kalutil's boat",
+      "Zodran"
+     ],
+     "reply": "Question: What boat of Kalutil has been all over Sam\u2019s feed?\nAnswer: Kalutil's boat",
+     "think": "We need answer in exact form. Need reason. Need craft question naming Kalutil, not naming Zodran or Kalutil's boat. Can only be answered by using both facts together. Answer must be \"Kalutil's boat\" single name. Need one question.\n\nWe have facts: Zodran owned by Kalutil. Kalutil's boat has been all over Sam's feed Zodran. We need question that names Kalutil, doesn't name Zodran or Kalutil's boat. ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "What boat of Kalutil has been all over Sam\u2019s feed?",
+     "a": "Kalutil's boat"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Pidrem has a boat named Flunas.",
+      "Pidrem owns the Flunas."
+     ],
+     "roles": [
+      "Flunas",
+      "the Flunas",
+      "Pidrem"
+     ],
+     "reply": "Question: What boat does the owner of the Flunas have?\nAnswer: the Flunas",
+     "think": "We need answer user. Need parse task carefully. We need produce one question that names \"Flunas\" (so the question must include the word Flunas? It says names \"Flunas\", does not name \"Pidrem\" or \"the Flunas\". Need avoid naming Pidrem and avoid \"the Flunas\" phrase? Need understand: They want a question whose answer is \"the Flunas\" (single name). It can only be answered by using both facts together. ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "What boat does the owner of the Flunas have?",
+     "a": "the Flunas"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Kalutil came into the world in Dralux.",
+      "Zodran owned by Kalutil."
+     ],
+     "roles": [
+      "Dralux",
+      "Zodran",
+      "Kalutil"
+     ],
+     "reply": "Question: Who owned the person born in Dralux?\nAnswer: Zodran",
+     "think": "We need answer a question in exact form. Need construct question naming Dralux, not Kalutil or Zodran, can only be answered by using both facts together, answer single name Zodran. Need think.\n\nFacts:\n- Kalutil came into the world in Dralux.\n- Zodran owned by Kalutil.\n\nNeed question names Dralux. It must not name Kalutil or Zodran. Only using both facts together yields Zodran. Need answer: Zodran.",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "unverified",
+     "q": "Who owned the person born in Dralux?",
+     "a": "Zodran",
+     "verify": "The person born in Dralux is Kalutil. The boat Kalutil owns is the Zod"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Kruzairox owns the boat Duflodol.",
+      "Kruzairox will be texted by Sam later."
+     ],
+     "roles": [
+      "later",
+      "Duflodol",
+      "Kruzairox"
+     ],
+     "reply": "Question: What boat does the person who will be texted later own?\nAnswer: Duflodol",
+     "think": "We need answer user. Need solve. We have facts: Kruzairox owns boat Duflodol. Kruzairox will be texted by Sam later. Need write one question that names \"later\", does not name Kruzairox or Duflodol, and can only be answered by using both facts together. Answer must be \"Duflodol\" single name. Need exactly form:\nQuestion: ...\nAnswer: ...\n\nWe need craft question. It must mention later but not Kruzairo",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "unverified",
+     "q": "What boat does the person who will be texted later own?",
+     "a": "Duflodol",
+     "verify": "The person who will be texted later is Kruzairox. In Day 7, Sam says"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Sabuflo birthplace Klafabax.",
+      "Sabuflo has boat Sotradath."
+     ],
+     "roles": [
+      "Sotradath",
+      "Klafabax",
+      "Sabuflo"
+     ],
+     "reply": "Question: What is the birthplace of the owner of the boat Sotradath?  \nAnswer: Klafabax",
+     "think": "We need answer user request. Need solve puzzle. Need produce exactly form \"Question: ... Answer: ...\" with question names Sotradath, does not name Sabuflo or Klafabax, and can only be answered by using both facts together. Answer must be \"Klafabax\" single name.\n\nWe need construct a question. Facts:\n- Sabuflo birthplace Klafabax.\n- Sabuflo has boat Sotradath.\n\nWe need question that names \"Sotradath",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "unverified",
+     "q": "What is the birthplace of the owner of the boat Sotradath?",
+     "a": "Klafabax",
+     "verify": "The owner of the boat Sotradath is Sabuflo, and his birthplace is Klafab"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Kroulin is the mentor of Fleboben.",
+      "Fleboben lives in Flezes."
+     ],
+     "roles": [
+      "Flezes",
+      "Kroulin",
+      "Fleboben"
+     ],
+     "reply": "Question: Who is the mentor of the person who lives in Flezes?\nAnswer: Kroulin",
+     "think": "We need answer in specified form. Need solve. We have facts: Kroulin is mentor of Fleboben. Fleboben lives in Flezes. Need one question names \"Flezes\", does not name \"Fleboben\" or \"Kroulin\", and can only be answered by using both facts together. Answer must be \"Kroulin\". Need craft question. Need be careful: It says question names \"Flezes\" (the place), does not name Fleboben or Kroulin. So likely ",
+     "think_tokens": 268,
+     "closed": true,
+     "why": "unverified",
+     "q": "Who is the mentor of the person who lives in Flezes?",
+     "a": "Kroulin",
+     "verify": "The person who lives in Flezes is Fleboben. The mentor of Fleboben is Kr"
+    }
+   ],
+   "partial": false
+  },
+  "q_think": {
+   "mode": "q_think",
+   "dirs": "both",
+   "tries": 1,
+   "cycles": [
+    {
+     "cycle": 0,
+     "seconds": 793.9,
+     "stats": {
+      "units_open": 174,
+      "units_tried": 174,
+      "chain_think_tokens": 74362,
+      "chain_think_capped": 99,
+      "chain_gen": 174,
+      "dropped_bad": 106,
+      "dropped_test_leak": 4,
+      "parse_fail": 1,
+      "gist_gen": 73,
+      "dropped_unverified": 77,
+      "chain_kept": 40,
+      "gist_kept": 19,
+      "pool": 59
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 15,
+      "dreamed_forward": 10,
+      "dreamed_reverse": 11,
+      "kept_chains": 40,
+      "dreamed_forward_reachable": 10
+     }
+    },
+    {
+     "cycle": 1,
+     "seconds": 608.7,
+     "stats": {
+      "units_open": 134,
+      "units_tried": 134,
+      "chain_think_tokens": 58230,
+      "chain_think_capped": 80,
+      "chain_gen": 134,
+      "dropped_bad": 116,
+      "dropped_test_leak": 2,
+      "gist_gen": 73,
+      "dropped_unverified": 64,
+      "chain_kept": 15,
+      "gist_kept": 10,
+      "pool": 84
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 19,
+      "dreamed_forward": 14,
+      "dreamed_reverse": 13,
+      "kept_chains": 55,
+      "dreamed_forward_reachable": 14
+     }
+    },
+    {
+     "cycle": 2,
+     "seconds": 534.5,
+     "stats": {
+      "units_open": 119,
+      "units_tried": 119,
+      "chain_think_tokens": 54276,
+      "chain_think_capped": 82,
+      "chain_gen": 119,
+      "dropped_bad": 116,
+      "parse_fail": 1,
+      "dropped_test_leak": 3,
+      "gist_gen": 73,
+      "chain_kept": 9,
+      "dropped_unverified": 48,
+      "gist_kept": 13,
+      "dropped_dup": 2,
+      "pool": 106
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 22,
+      "dreamed_forward": 17,
+      "dreamed_reverse": 15,
+      "kept_chains": 64,
+      "dreamed_forward_reachable": 17
+     }
+    },
+    {
+     "cycle": 3,
+     "seconds": 502.8,
+     "stats": {
+      "units_open": 110,
+      "units_tried": 110,
+      "chain_think_tokens": 49847,
+      "chain_think_capped": 78,
+      "chain_gen": 110,
+      "dropped_bad": 107,
+      "dropped_test_leak": 3,
+      "gist_gen": 73,
+      "parse_fail": 1,
+      "chain_kept": 8,
+      "dropped_unverified": 44,
+      "gist_kept": 17,
+      "dropped_dup": 3,
+      "pool": 131
+     },
+     "coverage": {
+      "n_tests": 27,
+      "reachable": 27,
+      "dreamed_any": 23,
+      "dreamed_forward": 20,
+      "dreamed_reverse": 16,
+      "kept_chains": 72,
+      "dreamed_forward_reachable": 20
+     }
+    }
+   ],
+   "final": {
+    "n_tests": 27,
+    "reachable": 27,
+    "dreamed_any": 23,
+    "dreamed_forward": 20,
+    "dreamed_reverse": 16,
+    "kept_chains": 72,
+    "dreamed_forward_reachable": 20
+   },
+   "chain_samples": 537,
+   "kept_chains": 72,
+   "yield_per_sample": 0.1341,
+   "fates": {
+    "kept": 72,
+    "parse_fail": 2,
+    "test_leak": 9,
+    "bad": 244,
+    "unverified": 210,
+    "dup": 0,
+    "extra": 0
+   },
+   "parse_fail": 2,
+   "dropped_bad": 244,
+   "dropped_unverified": 210,
+   "dropped_test_leak": 9,
+   "dropped_dup": 0,
+   "unit_extra_dropped": 0,
+   "think_tokens_mean": 440.8,
+   "think_capped": 339,
+   "gist_kept": 59,
+   "rem_stats_sum": {
+    "units_tried": 537,
+    "chain_think_tokens": 236715,
+    "chain_think_capped": 339,
+    "chain_gen": 537,
+    "dropped_bad": 445,
+    "dropped_test_leak": 12,
+    "parse_fail": 3,
+    "gist_gen": 292,
+    "dropped_unverified": 233,
+    "chain_kept": 72,
+    "gist_kept": 59,
+    "dropped_dup": 5
+   },
+   "wall_seconds": 2439.9,
+   "examples_kept": [
+    {
+     "facts": [
+      "pasta is on the grocery list for the week.",
+      "chicken thighs is on the grocery list for the week."
+     ],
+     "q": "Besides chicken thighs, what food is on the same grocery list?",
+     "a": "pasta",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Dokatral home is in Zinoutes.",
+      "Dokatral moved to Goskougen."
+     ],
+     "q": "What is the destination town of the person originally from Zinoutes?",
+     "a": "Goskougen",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Pegourem got a job at Gevrazor.",
+      "Flatum has sibling Pegourem."
+     ],
+     "q": "What company did Flatum's sibling get a job at?",
+     "a": "Gevrazor",
+     "night": 7,
+     "cycle": 0,
+     "test": 12,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Vevrol came into the world in Glamese.",
+      "Vevrol took out the Tradoskas."
+     ],
+     "q": "Who came into the world in Glamese and took out what?",
+     "a": "the Tradoskas",
+     "night": 7,
+     "cycle": 0,
+     "test": 18,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Zetaimo is employed at Kaizaim.",
+      "Zetaimo started working at Fodridoum."
+     ],
+     "q": "Which company did the person employed at Kaizaim start working at?",
+     "a": "Fodridoum",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Kroutaisa sibling of Gaditrath.",
+      "Gaditrath is on the team at Geskeir."
+     ],
+     "q": "Who is the sibling of the team member at Geskeir?",
+     "a": "Kroutaisa",
+     "night": 7,
+     "cycle": 0,
+     "test": 15,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Kruzairox owns the boat Duflodol.",
+      "Kruzairox will be texted by Sam later."
+     ],
+     "q": "When will the owner of Duflodol receive a text from Sam?",
+     "a": "later",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Vudalal is the mentor of Brapol.",
+      "Brapol has a home in Sariketh."
+     ],
+     "q": "Where does Vudalal's mentee live?",
+     "a": "Sariketh",
+     "night": 7,
+     "cycle": 0,
+     "test": 0,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Krekas works at Padratro.",
+      "Meskiglon has sibling Krekas."
+     ],
+     "q": "Where does Meskiglon's sibling work?",
+     "a": "Padratro",
+     "night": 7,
+     "cycle": 0,
+     "test": 14,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Ritropul sibling of Lekame.",
+      "Lekame is clocked in at Reigles."
+     ],
+     "q": "Who is the sibling of the person clocked in at Reigles?",
+     "a": "Ritropul",
+     "night": 7,
+     "cycle": 0,
+     "test": 9,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Feisemu place Kragono.",
+      "Feisemu relocated to Trebouvim."
+     ],
+     "q": "What place did the person who relocated to Trebouvim previously have?",
+     "a": "Kragono",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Vogozhoul brother of Kuvron.",
+      "Vogozhoul grew up as brother and sister."
+     ],
+     "q": "Who is the brother of the person who grew up as brother and sister?",
+     "a": "Kuvron",
+     "night": 7,
+     "cycle": 0,
+     "test": null
+    },
+    {
+     "facts": [
+      "Kroulin is the mentor of Fleboben.",
+      "Fleboben lives in Flezes."
+     ],
+     "q": "Who mentors the person who lives in Flezes?",
+     "a": "Kroulin",
+     "night": 7,
+     "cycle": 0,
+     "test": 5,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Drozhove owns the boat Loskoukin.",
+      "Drozhove first saw daylight in Kromol."
+     ],
+     "q": "Which boat is owned by the person who first saw daylight in Kromol?",
+     "a": "Loskoukin",
+     "night": 7,
+     "cycle": 0,
+     "test": 23,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Drozhove has the Loskoukin.",
+      "Drozhove first saw daylight in Kromol."
+     ],
+     "q": "Where did the first person to have the Loskoukin first see daylight?",
+     "a": "Kromol",
+     "night": 7,
+     "cycle": 1,
+     "test": 23,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Ritropul sibling of Lekame.",
+      "Lekame is clocked in at Reigles."
+     ],
+     "q": "Where is Ritropul's sibling clocked in?",
+     "a": "Reigles",
+     "night": 7,
+     "cycle": 1,
+     "test": 9,
+     "direction": "forward",
+     "forward": true
+    },
+    {
+     "facts": [
+      "Flodaflas based out of Flokra.",
+      "Flodaflas moved into a place in Lafledex."
+     ],
+     "q": "What place was the organization originally based in before moving into a location in Lafledex?",
+     "a": "Flokra",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Zhetrolox home is in Brokleis.",
+      "Zhetrolox relocated to Raskuklai."
+     ],
+     "q": "Where was the original home of the one who moved to Raskuklai?",
+     "a": "Brokleis",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Zhetrolox home is in Brokleis.",
+      "Zhetrolox relocated to Raskuklai."
+     ],
+     "q": "Where did the resident of Brokleis relocate to?",
+     "a": "Raskuklai",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "q": "What organization does the person who moved to Defaglus work for?",
+     "a": "Drokravam",
+     "night": 7,
+     "cycle": 1,
+     "test": null
+    },
+    {
+     "facts": [
+      "Saguneith is the mentor of Kroruzhux.",
+      "Saguneith is based out of Glakrozo."
+     ],
+     "q": "Who is the mentee of the being based out of Glakrozo?",
+     "a": "Kroruzhux",
+     "night": 7,
+     "cycle": 2,
+     "test": 7,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Feisemu place Kragono.",
+      "Feisemu relocated to Trebouvim."
+     ],
+     "q": "To which place did the one who placed Kragono relocate?",
+     "a": "Trebouvim",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Troubradu instructor at Gaglou Gaglou.",
+      "pottery class is at Gaglou."
+     ],
+     "q": "Who teaches the pottery class?",
+     "a": "Troubradu",
+     "night": 7,
+     "cycle": 2,
+     "test": null
+    },
+    {
+     "facts": [
+      "Klafin texted from Baineloun.",
+      "Klafin was mentor of Flenobix."
+     ],
+     "q": "Whom did the person who texted from Baineloun mentor?",
+     "a": "Flenobix",
+     "night": 7,
+     "cycle": 3,
+     "test": 2,
+     "direction": "reverse",
+     "forward": false
+    },
+    {
+     "facts": [
+      "Leklei employed at Trosaix.",
+      "Govath is sibling of Leklei."
+     ],
+     "q": "Where is Govath\u2019s sibling employed?",
+     "a": "Trosaix",
+     "night": 7,
+     "cycle": 3,
+     "test": 16,
+     "direction": "forward",
+     "forward": true
+    }
+   ],
+   "examples_rejected": [
+    {
+     "cycle": 0,
+     "facts": [
+      "Kruzairox owns the boat Duflodol.",
+      "Duflodol is a boat Kruzairox's boat."
+     ],
+     "roles": [
+      "Kruzairox",
+      "Kruzairox's boat",
+      "Duflodol"
+     ],
+     "reply": "What boat is Duflodol? \u2014 no, forbidden. Need find.\n\nWe need craft question where answer must be \"Kruzairox's boat\" and uses both facts. We cannot name",
+     "think": "We need answer only question. Need parse constraints.\n\nWe have facts:\n1. Kruzairox owns the boat Duflodol.\n2. Duflodol is a boat Kruzairox's boat.\n\nNeed write one question that names \"Kruzairox\", does not name \"Duflodol\" or \"Kruzairox's boat\", and can only be answered by using both facts together. Its answer must be \"Kruzairox's boat\" (a single name). Reply only question one line.\n\nWe need be care",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Bouzeibas is the mentor of Glisemu.",
+      "Bouzeibas has Glisemu as a mentor."
+     ],
+     "roles": [
+      "Glisemu",
+      "Glisemu as a mentor",
+      "Bouzeibas"
+     ],
+     "reply": "What is Glisemu's role in Bouzeibas's mentorship? \u2014 No, that names Bouzeibas.\n\nHmm, the question must not name Bouzeibas. So I need a question about",
+     "think": "The user wants me to write a question that:\n1. Names \"Glisemu\"\n2. Does NOT name \"Bouzeibas\" or \"Glisemu as a mentor\"\n3. Can only be answered by using both facts together\n4. The answer must be \"Glisemu as a mentor\"\n\nThe two facts:\n- Fact 1: Bouzeibas is the mentor of Glisemu.\n- Fact 2: Bouzeibas has Glisemu as a mentor.\n\nSo if I ask \"Who is the mentor of Bouzeibas?\" \u2014 but that names Bouzeibas, whic",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "parse_fail"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Krekas is sister of Meskiglon."
+     ],
+     "roles": [
+      "Padratro",
+      "Meskiglon",
+      "Krekas"
+     ],
+     "reply": "Who is the sister of the person who works at Padratro?",
+     "think": "We need answer question. Need craft. We have facts: Krekas works at Padratro. Krekas is sister of Meskiglon. Need question names Padratro, does not name Krekas or Meskiglon. Can only be answered by using both facts together. Answer must be \"Meskiglon\". So question must ask for sister of someone who works at Padratro, but not naming Krekas or Meskiglon. Example: \"Who is the sister of the person who",
+     "think_tokens": 165,
+     "closed": true,
+     "why": "test_leak",
+     "q": "Who is the sister of the person who works at Padratro?",
+     "a": "Meskiglon"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Kodufel lives in Segladrom.",
+      "Luzailar is the mentor of Kodufel."
+     ],
+     "roles": [
+      "Segladrom",
+      "Luzailar",
+      "Kodufel"
+     ],
+     "reply": "Who mentors the person who lives in Segladrom?",
+     "think": "We need answer with one question, names Segladrom, not Kodufel/Luzailar, answer must be Luzailar. Need craft question requiring both facts. We have fact A: Kodufel lives in Segladrom. Fact B: Luzailar is mentor of Kodufel. Need ask something like \"Who mentors the person who lives in Segladrom?\" This names Segladrom, not Kodufel or Luzailar. Answer: Luzailar. Can only be answered using both facts t",
+     "think_tokens": 127,
+     "closed": true,
+     "why": "test_leak",
+     "q": "Who mentors the person who lives in Segladrom?",
+     "a": "Luzailar"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Meskiglon has sibling Krekas."
+     ],
+     "roles": [
+      "Padratro",
+      "Meskiglon",
+      "Krekas"
+     ],
+     "reply": "Who is the sibling of the person who works at Padratro?",
+     "think": "We need answer one question. Need understand constraints. We have facts:\n1 Krekas works at Padratro.\n2 Meskiglon has sibling Krekas.\n\nNeed write one question that names \"Padratro\", does not name \"Krekas\" or \"Meskiglon\", and can only be answered by using both facts together. Its answer must be \"Meskiglon\" (a single name). Need only question one line.\n\nWe need craft question that includes Padratro, ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "test_leak",
+     "q": "Who is the sibling of the person who works at Padratro?",
+     "a": "Meskiglon"
+    },
+    {
+     "cycle": 3,
+     "facts": [
+      "Krekas works at Padratro.",
+      "Meskiglon has sibling Krekas."
+     ],
+     "roles": [
+      "Padratro",
+      "Meskiglon",
+      "Krekas"
+     ],
+     "reply": "Who is the sibling of the person who works at Padratro?",
+     "think": "We need answer question. Need parse. Need produce one question naming \"Padratro\", not name Krekas or Meskiglon, and answer must be \"Meskiglon\". Need only question on one line.\n\nWe have facts:\n- Krekas works at Padratro.\n- Meskiglon has sibling Krekas.\n\nWe need question that can only be answered by using both facts together. It must name Padratro. Answer: Meskiglon. Need question not name Krekas or",
+     "think_tokens": 196,
+     "closed": true,
+     "why": "test_leak",
+     "q": "Who is the sibling of the person who works at Padratro?",
+     "a": "Meskiglon"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Kalutil's boat has been all over Sam's feed Zodran."
+     ],
+     "roles": [
+      "Kalutil's boat",
+      "Kalutil",
+      "Zodran"
+     ],
+     "reply": "Who owns the boat that appears in Sam\u2019s feed alongside the Zodran?",
+     "think": "We need answer one question only, on one line. Need craft question naming \"Kalutil's boat\", not naming Zodran or Kalutil, can only be answered using both facts together, answer must be \"Kalutil\". Need infer: Facts: Zodran owned by Kalutil. Kalutil's boat has been all over Sam's feed Zodran. Need question that mentions Kalutil's boat, no Zodran/Kalutil. We need answer \"Kalutil\". We need combine to ",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "Who owns the boat that appears in Sam\u2019s feed alongside the Zodran?",
+     "a": "Kalutil"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Bouzeibas is the mentor of Glisemu.",
+      "Bouzeibas has Glisemu as a mentor."
+     ],
+     "roles": [
+      "Glisemu as a mentor",
+      "Glisemu",
+      "Bouzeibas"
+     ],
+     "reply": "Who is the mentor of the person who has Glisemu as a mentor?",
+     "think": "We need answer only one question on one line. Need parse. We have facts: Bouzeibas is mentor of Glisemu. Bouzeibas has Glisemu as mentor. Two facts share name Bouzeibas. Need write question that names \"Glisemu as a mentor\", does not name Bouzeibas or Glisemu, and can only be answered by using both facts together. Answer must be \"Glisemu\" single name. Need craft question. Let's understand logical r",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "Who is the mentor of the person who has Glisemu as a mentor?",
+     "a": "Glisemu"
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Zodran owned by Kalutil.",
+      "Zodran is the boat Kalutil owns."
+     ],
+     "roles": [
+      "Kalutil",
+      "Kalutil owns",
+      "Zodran"
+     ],
+     "reply": "Who does Kalutil own?",
+     "think": "We need answer one question. Need parse carefully.\n\nWe have facts:\n1. Zodran owned by Kalutil.\n2. Zodran is the boat Kalutil owns.\n\nNeed write one question that:\n- names \"Kalutil\"\n- does not name \"Zodran\" or \"Kalutil owns\" (i.e., cannot contain the phrase \"Zodran\" nor \"Kalutil owns\" in question? likely means question must not include the names Zodran or phrase \"Kalutil owns\")\n- can only be answere",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "Who does Kalutil own?",
+     "a": "Kalutil owns"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "playlist is needed for road trip.",
+      "playlist should include upbeat stuff."
+     ],
+     "roles": [
+      "upbeat stuff",
+      "road trip",
+      "playlist"
+     ],
+     "reply": "What trip should have upbeat stuff in its playlist?",
+     "think": "We need answer only question, one line. Need parse constraints. We need write one question that names \"upbeat stuff\", does not name \"playlist\" or \"road trip\", and can only be answered by using both facts together. Answer must be \"road trip\" (a single name). So question should mention upbeat stuff, not include word playlist or road trip. Need infer from facts: playlist is needed for road trip; play",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "bad",
+     "q": "What trip should have upbeat stuff in its playlist?",
+     "a": "road trip"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "Molitrin works for Drokravam.",
+      "Molitrin moved to Defaglus."
+     ],
+     "roles": [
+      "Defaglus",
+      "Drokravam",
+      "Molitrin"
+     ],
+     "reply": "Who is the employer of the person who moved to Defaglus?",
+     "think": "We need answer only question. Need construct question naming Defaglus, not Molitrin or Drokravam, requiring both facts together. Need answer \"Drokravam\". Facts: Molitrin works for Drokravam. Molitrin moved to Defaglus. Need ask something like \"Where does Molitrin's new employer Drokravam relate to?\" Hmm question must name Defaglus, not Molitrin/Drokravam. Need answer single name Drokravam. We can ",
+     "think_tokens": 277,
+     "closed": true,
+     "why": "unverified",
+     "q": "Who is the employer of the person who moved to Defaglus?",
+     "a": "Drokravam",
+     "verify": "The person who moved to Defaglus is Molitrin. According to the messages, Molitr"
+    },
+    {
+     "cycle": 0,
+     "facts": [
+      "playlist is needed for road trip.",
+      "playlist should include upbeat stuff."
+     ],
+     "roles": [
+      "road trip",
+      "upbeat stuff",
+      "playlist"
+     ],
+     "reply": "What should be included in the music needed for a road trip?",
+     "think": "We need answer only question one line. Need construct question that names \"road trip\", does not name \"playlist\" or \"upbeat stuff\", answer must be \"upbeat stuff\" single name. Need use both facts together. Facts: playlist is needed for road trip. playlist should include upbeat stuff. So question likely: \"For a road trip, what should the necessary playlist include?\" But that names playlist. Need not ",
+     "think_tokens": 386,
+     "closed": true,
+     "why": "unverified",
+     "q": "What should be included in the music needed for a road trip?",
+     "a": "upbeat stuff",
+     "verify": "The user is asking what should be included in a road trip playlist based on Sam's chat history."
+    },
+    {
+     "cycle": 1,
+     "facts": [
+      "Zetaimo is employed at Kaizaim.",
+      "Zetaimo started working at Fodridoum."
+     ],
+     "roles": [
+      "Fodridoum",
+      "Kaizaim",
+      "Zetaimo"
+     ],
+     "reply": "Where was the individual who started working at Fodridoum employed?",
+     "think": "We need answer only question one line. Need construct. Need parse: Facts: Zetaimo employed at Kaizaim. Zetaimo started working at Fodridoum. Need question names Fodridoum, not Zetaimo or Kaizaim, can only be answered by using both facts together. Answer must be single name \"Kaizaim\". So question likely: \"Where was the person who started working at Fodridoum employed?\" But that names Fodridoum, no ",
+     "think_tokens": 215,
+     "closed": true,
+     "why": "unverified",
+     "q": "Where was the individual who started working at Fodridoum employed?",
+     "a": "Kaizaim",
+     "verify": "Day 5 says Zetaimo \"just started working at Fodridoum,\" but Day"
+    },
+    {
+     "cycle": 2,
+     "facts": [
+      "playlist should include upbeat stuff.",
+      "playlist should include chill."
+     ],
+     "roles": [
+      "chill",
+      "upbeat stuff",
+      "playlist"
+     ],
+     "reply": "What should accompany chill in the same required collection?",
+     "think": "We need answer only one line question. Need parse instructions carefully.\n\nWe have two facts:\n1. playlist should include upbeat stuff.\n2. playlist should include chill.\n\nThe two facts share the name \"playlist\". Write one question that:\n- names \"chill\"\n- does not name \"playlist\" or \"upbeat stuff\"\n- can only be answered by using both facts together.\n- Its answer must be \"upbeat stuff\" (a single name",
+     "think_tokens": 512,
+     "closed": false,
+     "why": "unverified",
+     "q": "What should accompany chill in the same required collection?",
+     "a": "upbeat stuff",
+     "verify": "The user is asking about a playlist request from Sam's chat history. Let me analyze the messages:"
+    }
+   ],
+   "partial": false
+  }
+ },
+ "selection": {
+  "rule": "variant with the most twohop tests dreamed forward after the last cycle, ties to fewer thinking tokens; --rem-tries 1 if it dreams >= 90% of the reachable tests forward, else 2",
+  "valid": true,
+  "forward_by_variant": {
+   "default": 13,
+   "q": 8,
+   "think": 19,
+   "q_think": 20
+  },
+  "winner": "q_think",
+  "winner_forward_of_reachable": 0.7407407407407407,
+  "rem_tries": 2
+ }
+}
