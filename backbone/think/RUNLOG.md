@@ -74,3 +74,14 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 03:04Z s2 a_s2 66.7 (dev 80.9); 03:19Z b_s2 66.8 (1-pass 58.5, dev 82.1): stage 1 on a 5090 took 50 / 65 min side by
   side (~2.4x the 3090). 03:27Z s0r a_s0 67.2 (repeat 67.0, so eval noise 0.2 on this GPU; dev 81.5) vs 67.0 on the
   first s0 box (3090). Projected: s2 done ~05:45Z, s0r ~06:30Z. s1's t_s1 not in yet at 03:29Z (5.5 h after start).
+- 03:57Z: s1 t1_s1 (3090) L0 65.9, L1 65.9, L8 66.0, dev L1 81.3. t_s1 still running (6 h); the box's run_box.sh is killed
+  by its own timeout at ~06:45Z (12 h - 10 min after start), and t's eval (8 lap settings + lesions on 8,675 rows) may
+  not end by then on a 3090.
+- Deviation, 04:20Z: seed 1 is rerun in full on an RTX 5090 (box below), like seeds 0 and 2, and that run is the one
+  analysed for seed 1 whatever its numbers. Reasons, neither of them the values seen so far: (1) the 3090 box's files
+  cannot be copied off its machine, so seed 1 would have no per-row hits, and summarize.py then has no intervals and no
+  M1/M2 for any seed; (2) t_s1 may be cut by that box's timeout. The 3090 seed-1 numbers (a 65.8, b 66.5, aplus 71.4,
+  t1 65.9, and t if it finishes) are reported as a same-seed rerun on another GPU type. bplus:1 runs speculatively under
+  the same rule as bplus:2. All three analysed seeds are then on RTX 5090s.
+- 04:20Z: box 57609457 `claude-think1-compassionate-davinci-s1r` (RTX 5090, South Korea, machine 149008, rel 0.9946,
+  $0.522/h, 10 h self-stop): THINK_JOBS=a:1,b:1,t:1,t1:1,aplus:1,bplus:1 PARALLEL=1 MAXPAR=3 (same code).
