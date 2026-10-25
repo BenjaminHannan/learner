@@ -113,3 +113,7 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   S(8)-T1 +0.08 [-0.15, +0.29]; swap lesion costs +0.27 [+0.05, +0.48]; gates-off rows unlike ref0: 0; M1 chain banks
   S(8)-T1 +0.84 [+0.20, +1.54]; M2 depth >= 4 +0.26 [-0.32, +0.83]. Wall time on the 5090: t 4.74 h, t1 1.62 h.
   out.tar.gz is 197 KB and ckpt.tar.gz 180 MB on the box.
+- 10:30Z s1r t1_s1 L0 66.0 / L1 65.9 / L8 65.8 (dev L1 81.2). 10:41Z: s0's container log came back
+  (backbone/results/think1/s0/box.log; no job failed or was retried). Its on-box report (seed 0 only):
+  S(8)-S(1) +0.01 [-0.23, +0.27]; S(8)-T1 -0.16 [-0.40, +0.08]; swap lesion -0.03 [-0.27, +0.18]; gates-off rows unlike
+  ref0: 0; M1 -0.50 [-1.24, +0.20]; M2 -0.71 [-1.41, -0.06]; futility F1-F4 all fire.
