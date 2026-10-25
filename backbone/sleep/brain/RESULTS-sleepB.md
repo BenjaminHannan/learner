@@ -555,3 +555,42 @@ in this run (`lora_B_nonzero` False), so the model is exactly the base plus the 
 - **Next (per the prereg, not yet preregistered):** a multi-week arm, nightly add-on plus a slow whole-model change, against the add-on
   alone, judged on week-1 recall in week 3. It needs Week-3 and Week-4 worlds (built through the Message Batches API) and more than 30 GB
   of GPU memory, so it waits for next week's budget.
+
+## Addendum 11 + 11b + 11c: the adopted recipe on K2-Horizon-3.7B, bf16 base vs 4-bit base (Week-2, seed 1)
+
+Prereg: PREREG-sleepB-addendum11.md, 11b (memory, low-effort names thinking) and 11c (213e14c9ea: names question with K2's full thinking,
+512 tokens; K2-only negative-reply parse), all sealed before their code and runs. Code f671a0fb8a. `SLEEPB_TOK=1024`, expandable segments.
+Boxes: bf16 57694829 (RTX 5090, Australia machine 153968, 1.82 h, about $0.91), q4 57697815 (RTX 5090, Portugal machine 152963, 2.62 h,
+about $1.47). JSONs in `results_a11/`. Earlier tries are in RUNLOG (night-3 OOM at 2,048 tokens; 11b's names pass answered no to everything,
+so its abort rule stopped the run).
+
+**Why the names question failed, and the fix (shown):** a probe on the Week-1 world (46 names questions, 36 linked; `results_a11/k2probe_week1*`)
+asked it seven ways. With its thinking closed, or at low effort (which closes at once), K2 answers "no" to everything (accuracy 0.22).
+With high effort and up to 512 thinking tokens it is right on 32 of 36 linked and 9 of 10 unlinked pairs (0.89). In the Week-2 runs the
+names pass then answered yes to 41 of 50 pairs on bf16 night 1 (Qwen3.5-2B: 38 of 55), with 250-400 thinking tokens per question.
+
+| arm | C4 | C2 | **recall C2+C4** | reverse | two-hop (dreamed of 78) | changed new | routine | tagger recall / precision | eligible C2+C4 | base_diary -> diary | ARC base -> after | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Qwen3.5-2B ab_ob_b4_nb s1 (addendum 9, reference) | 95 | 88 | 91.5 | 85.0 | 38.5 (32) | 96.7 | 85 | 0.674 / 0.700 | 188 | 79.7 -> 86.4 | 92.2 | 0000000 |
+| **K2-3.7B, bf16 base** | 97 | 96 | **96.5** | 91.5 | 3.8 (5) | 93.3 | 100 | 0.826 / 0.802 | 200 | 80.0 -> 84.5 | 89.4 -> 91.0 | 1100000 |
+| **K2-3.7B, 4-bit base** | 90 | 82 | **86.0** | 83.5 | 6.4 (10) | 83.3 | 75 | 0.775 / 0.838 | 191 | 60.1 -> 85.5 | 85.6 -> 86.8 | 0000000 |
+
+- **T1 PASS (shown):** K2 bf16 recall 96.5 (mark >= 75). Against Qwen3.5-2B on the same questions: +5.0 (5 vs 15 discordant, p = 0.041).
+  K2's note-taker is better (mention recall 0.83 vs 0.67; every C2 and C4 fact eligible, against 94%).
+- **No harm PASS on both:** ARC-Easy 91.0 vs 89.4 before sleep (bf16) and 86.8 vs 85.6 (q4); diary 84.5 vs 80.0 and 85.5 vs 60.1.
+  The bf16 run's ARC gate undid nights 1 and 2 (validation ARC 0.86 and 0.84 against 0.90 - 0.03); it still reached 96.5.
+- **Q1 FAIL, shown harm from sleeping on the 4-bit base:** q4 - bf16 = -10.5 on recall (26 vs 5 discordant, p = 0.0002); reverse -8.0
+  (p = 0.017). A small part is note-taking on the 4-bit base (tagger 0.78 vs 0.83, 191 vs 200 eligible); most is learning: 19 eligible
+  facts missed against 7 (suggested). The 4-bit base also reads the diary much worse before sleep (60.1 vs 80.0). q4 recall 86.0 is still
+  above T1's 75 and 5.5 under Qwen3.5-2B bf16 (p = 0.11).
+- **Two-step dreams do not work on K2 yet (shown, a new port problem):** only 9 (bf16) and 17 (q4) chain pairs were kept all week, so two-hop
+  is 3.8 / 6.4 against Qwen's 38.5. Most chain replies fail to parse: K2 with its thinking closed writes only the question line
+  ("Question: Who mentors Sotraflil?") or only a name, not the "Question: ... / Answer: ..." pair (night 5: about 200 parse failures of 372
+  chain samples). Suggested fix, the same as for the names pass: let K2 think before it writes the two-step dream.
+- **What it means for the small tier (suggested):** sleeping on the 4-bit model costs about 10 points of recall on K2. Addendum 13 showed that a
+  change trained on a full-precision base keeps 94% of its recall after re-quantizing to 4-bit (Qwen3.5-2B, whole-model change). So the
+  small tier should sleep on a full-precision master and re-quantize each morning, not sleep on the 4-bit model, if the night's machine has
+  the memory (K2-3.7B bf16 is about 10 GB, more than the 8 GB Mac). Untested for K2's add-on.
+- Wall time: 6,300 s (bf16) and 8,236 s (q4); the names pass adds about 1 minute per night.
+- Cost: K2 total about $3.57 of the $4.00 K2 cap (first try $0.60, 11b abort $0.07, four probe hosts about $0.20, a q4 host that never
+  started $0.09, bf16 $0.91, q4 $1.47; Vast's own bill may be lower for boxes that never started).
