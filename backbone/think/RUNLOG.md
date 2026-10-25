@@ -28,3 +28,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   ($1.23) cannot reach without a top-up; stopping it leaves the credit to s1 (t_s1 est. ~01:45Z, t1_s1 ~02:15Z).
   Vast shows cur_state stopped (billing stopped: burn fell to ~$0.54/h) but the host still reports running, and `cat`
   is refused until it does. a_s0 and b_s0 are kept on its disk and in its label.
+- 00:17Z: s0's host finally reported it stopped (29 min after the stop). `cat` (Vast's command API) then failed the
+  same way the log service does: the command's result URL stays S3 403 (the 21:00Z log request is still 403 at 00:25Z),
+  so no file can be copied off these boxes. Results come back only through the instance labels (from_label.py):
+  point estimates at 0.1-point rounding, no per-row hits, so no intervals, no M1/M2, no gates-off row check.
+  s0 kept stopped (~$0.014/h storage) in case the upload path recovers.
