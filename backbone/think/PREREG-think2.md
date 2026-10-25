@@ -45,3 +45,12 @@ LoRA cannot get from the same steps.
   higher than Think-1's noise (re-scoring 0.2, aplus seed spread 0.4).
 - One seed: a pass is a signal to expand, never a result.
 - Hardware differs from Think-1 (5070 Ti vs 5090); only within-PC comparisons count.
+
+## Addendum A (2026-10-25 14:20Z, before any tj result): arm tf, forced then released
+Added at Ben's request ("why not force the notes to get used?"). Runs on the PC right after tj, seed 0, whatever tj scores.
+- tf = tj plus blind answer passes in the board loss: with probability p(step) = 0.5 x max(0, 1 - step / (0.6 x 1,254)),
+  a micro-batch's answer passes see no prompt at all, only the notes (the slot laps still read the full prompt).
+  The aplus loss is never blind. From 60% of training on, nothing is blind.
+- Extra readout: blind(4), answers that see only the notes, on the first 2,000 validation rows (how much the notes carry alone).
+- Pass marks: the same P1 and P2 as tj, against the same aplus. tj and tf are judged separately. Passing either one
+  triggers the 2-seed expansion for that arm only. If both fail, looped latent thinking stops as planned.
