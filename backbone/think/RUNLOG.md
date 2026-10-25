@@ -65,3 +65,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 02:09Z: box 57595542 (s2, machine 38389) never started its container (host GPU error "unresolvable CDI devices");
   destroyed. Seed 2 relaunched on box 57596004 `claude-think1-compassionate-davinci-s2` (RTX 5090, South Korea,
   machine 145158, rel 0.9976, $0.497/h), same pack. vast.py now skips machines 54987 and 38389.
+- 02:19Z: box 57595544 (s0r, Sweden, machine 54650) showed no state at all for 15 min; destroyed. Seed 0 relaunched on
+  box 57597017 `claude-think1-compassionate-davinci-s0r` (RTX 5090, South Korea, machine 143234, rel 0.9982, $0.497/h),
+  same pack. 02:18Z: s2 (57596004) is running its job loop (label has the "|" suffix).
