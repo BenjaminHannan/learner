@@ -32,6 +32,9 @@ def prompt_ids(tok, task, c=None):
                                    return_dict=True)["input_ids"]
 
 
+NEGATIVE = {"no_email_sent", "no_event_created", "file_absent"}   # checks an untouched world passes
+
+
 class Episode:
     def __init__(self, task, ids, c=None):
         self.task, self.ids, self.mask, self.prompt_len, self.c = task, list(ids), [0] * len(ids), len(ids), c
@@ -44,6 +47,15 @@ class Episode:
     def check_frac(self):
         r = self.checks()
         return sum(r) / len(r)
+
+    def action_frac(self):
+        """Reward v2 partial credit: share of the checks that need the model to act; 0 if any don't-do-this check fails.
+        Round 1 paid ~0.37 check credit for doing nothing (no_email_sent etc. pass on an untouched world), so narrating won."""
+        r, kinds = self.checks(), [c["type"] for c in self.task["checks"]]
+        if not all(ok for ok, k in zip(r, kinds) if k in NEGATIVE):
+            return 0.0
+        pos = [ok for ok, k in zip(r, kinds) if k not in NEGATIVE]
+        return sum(pos) / len(pos) if pos else 1.0
 
     def view(self, new_prompt):
         """Same episode tokens behind a different prompt (teacher <-> student). Returns (ids, positions of model tokens)."""

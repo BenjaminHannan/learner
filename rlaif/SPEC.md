@@ -65,3 +65,21 @@ Held-out = 100 tasks, check-only scoring (all checks pass = success), greedy dec
 - Held-out is check-only, so grader bias cannot move the headline number; grader calibration (position/length bias, kappa vs labels) matters for the training signal only.
 - With a base near 25/100, a 5-10 point gap needs ~300 held-out tasks and 3 training seeds per arm (greedy eval has no eval-seed noise). Source: /mnt/project-files/research/dopamine-rlaif-grader.md.
 - JOLT details are verified from the arXiv paper itself (Table 3, Appendix A.1), not only press coverage.
+
+## RLAIF-1 result (Kaggle 2x T4, fp16, 20 steps, 2026-10-25)
+
+Held-out success: base 25/100, GRPO@20 25/100 (pass mark +10 not met). JOLT+@20 eval OOMed; re-eval pending.
+Diagnosis (from eval_*.jsonl and log.jsonl, rlaif/kaggle-run1 in project files):
+- Say-instead-of-do: 45/100 base episodes end on turn 1 with "Let me check..." and no tool call; GRPO raised this to 71/100.
+  Doing nothing earned check credit (no_email_sent etc. pass on an untouched world): base no-tool episodes got reward 0.32 vs 0.37 for tool use, so the cheap, safe narration was nearly as good.
+- Updates were tiny for GRPO (grad norm mean 0.09 at lr 1e-5, clip 1.0). JOLT+ grad norm mean 4.4, dominated by the KL terms (pg terms ~1e-4) with beta_S=1.0, beta_T=0.05.
+- Paired by step (same tasks), JOLT+ train success tracked GRPO for 15 steps, then dipped at steps 16 and 20.
+
+## RLAIF-2 (preregistered 2026-10-25, before running)
+
+Changes vs RLAIF-1, applied to both arms: `--reward-v2` (credit only for checks that need action; any failed don't-do check zeroes the reward; Sonnet scales action credit 0.7-1.0; an untouched world now scores 0.03 vs 0.21 before), `--lr 1e-4`, 30 steps. JOLT+ also takes the paper's `--beta-t 0.001 --beta-s 0.1`. Same tasks, seed 0, one seed (a limit: differences under ~8 points are within noise).
+Held-out evals at steps 10, 20, 30 (check-only, keyless).
+- RL works: an arm's held-out success at step 30 >= 35/100 (base 25).
+- JOLT+ beats GRPO: >= GRPO + 5 at step 30.
+- Narration guard: held-out turn-1 no-tool endings must not exceed base (45/100); if they do, the reward fix failed.
+- Proved wrong: held-out success < 25 for an arm at step 30, or train reward rises while held-out success falls between steps 10 and 30 (gaming).
