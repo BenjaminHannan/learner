@@ -396,7 +396,8 @@ def main_rlaif2(ngpu):
     hard_stop = lambda: DEADLINE - 120
     g1 = 1 if ngpu >= 2 else 0
     W = lambda n: os.path.join(WORK, n)
-    old = sorted(glob.glob("/kaggle/input/**/jolt_step20/adapter_config.json", recursive=True))
+    old = sorted(glob.glob("/kaggle/input/**/jolt_step20/adapter_config.json", recursive=True)) \
+        or sorted(glob.glob("/kaggle/input/**/*jolt20*/**/adapter_config.json", recursive=True))  # dataset files land at its root
     if not old:  # a dataset uploaded with -r tar/zip may arrive still packed
         for arc in glob.glob("/kaggle/input/**/jolt_step20.tar", recursive=True) + glob.glob("/kaggle/input/**/jolt_step20.zip", recursive=True):
             shutil.unpack_archive(arc, os.path.join(JOB, "run1"))
