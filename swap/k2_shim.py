@@ -18,28 +18,41 @@ from transformers import AutoTokenizer
 TEMPLATE = (Path(__file__).parent / "templates" / "k2_nothink.jinja").read_text()
 CALLS = re.compile(r"<ifm\|tool_calls>(.*?)(?:</ifm\|tool_calls>|$)", re.S)
 CALL = re.compile(r"<ifm\|tool_call>(.*?)(?:</ifm\|tool_call>|$)", re.S)
-ARG = re.compile(r"<ifm\|arg_key>(.*?)</ifm\|arg_key>\s*(?:<ifm\|arg_type>.*?</ifm\|arg_type>\s*)?<ifm\|arg_value>(.*?)</ifm\|arg_value>", re.S)
+ARG = re.compile(r"<ifm\|arg_key>(.*?)</ifm\|arg_key>\s*(?:<ifm\|arg_type>(.*?)</ifm\|arg_type>\s*)?<ifm\|arg_value>(.*?)</ifm\|arg_value>", re.S)
 THINK = re.compile(r"^(.*?)</ifm\|think(?:_fast|_faster)?>", re.S)
 
 
+def _has_str(spec):  # schema (or any anyOf/oneOf/list-type branch of it) allows a string
+    if not isinstance(spec, dict):
+        return False
+    t = spec.get("type")
+    return t == "string" or (isinstance(t, list) and "string" in t) or any(_has_str(b) for k in ("anyOf", "oneOf") for b in spec.get(k) or [])
+
+
 def arg_types(tools):
-    return {t["function"]["name"]: {k: v.get("type") for k, v in (t["function"].get("parameters") or {}).get("properties", {}).items()}
+    return {t["function"]["name"]: {k: "string" if _has_str(v) else v.get("type") for k, v in (t["function"].get("parameters") or {}).get("properties", {}).items()}
             for t in tools or []}
 
 
-def parse(text, tools, thinking):
-    reasoning = None
+def parse2(text, tools, thinking):
+    """-> (reasoning, content, calls, truncated). truncated: think block or a tool call was cut off (incomplete calls are dropped)."""
+    reasoning, trunc = None, False
     if thinking:  # the prompt opened a think block; everything up to its close tag is reasoning
         m = THINK.match(text)
         if m:
             reasoning, text = m.group(1).strip(), text[m.end():]
-        else:
-            return None, text.strip(), []
+        else:  # never leak unterminated reasoning as content; a complete tool_calls block after it is still honoured
+            trunc = True
+            b = CALLS.search(text)
+            reasoning, text = (text[:b.start()] if b else text).strip(), (text[b.start():] if b else "")
     types = arg_types(tools)
     calls = []
     block = CALLS.search(text)
     if block:
-        for c in CALL.findall(block.group(1)):
+        body = block.group(1)
+        if body.count("<ifm|tool_call>") > len(re.findall(r"<ifm\|tool_call>.*?</ifm\|tool_call>", body, re.S)):
+            trunc = True  # last call has no close tag
+        for c in re.findall(r"<ifm\|tool_call>(.*?)</ifm\|tool_call>", body, re.S):
             c = c.strip()
             if c.startswith("{"):  # json tool_call_format
                 try:
@@ -47,10 +60,13 @@ def parse(text, tools, thinking):
                 except Exception:
                     pass
             name = c.split("\n", 1)[0].strip()
+            pairs = ARG.findall(c)
+            if c.count("<ifm|arg_key>") > len(pairs):
+                trunc = True; continue  # an arg_key without a closed arg_value: drop the call
             args = {}
-            for k, v in ARG.findall(c):
+            for k, at, v in pairs:
                 k, v = k.strip(), v.strip()
-                if types.get(name, {}).get(k) == "string":
+                if "string" in at.strip().split("|") or types.get(name, {}).get(k) == "string":  # model's own arg_type wins; then schema
                     args[k] = v
                 else:
                     try:
@@ -59,7 +75,11 @@ def parse(text, tools, thinking):
                         args[k] = v
             calls.append((name, args))
         text = text[:block.start()]
-    return reasoning, text.strip(), calls
+    return reasoning, text.strip(), calls, trunc
+
+
+def parse(text, tools, thinking):
+    return parse2(text, tools, thinking)[:3]
 
 
 class H(BaseHTTPRequestHandler):
@@ -98,7 +118,7 @@ class H(BaseHTTPRequestHandler):
         r = json.loads(urllib.request.urlopen(urllib.request.Request(A.backend + "/v1/completions", json.dumps(body).encode(),
                                                                      {"Content-Type": "application/json"}), timeout=3600).read())
         text = r["choices"][0]["text"]
-        reasoning, content, calls = parse(text, req.get("tools"), thinking)
+        reasoning, content, calls, trunc = parse2(text, req.get("tools"), thinking)
         msg = {"role": "assistant", "content": content or None}
         if reasoning is not None:
             msg["reasoning_content"] = reasoning
@@ -106,10 +126,11 @@ class H(BaseHTTPRequestHandler):
             msg["tool_calls"] = [{"id": "call_" + uuid.uuid4().hex[:12], "type": "function",
                                   "function": {"name": n, "arguments": json.dumps(a)}} for n, a in calls]
         usage = r.get("usage") or {}
+        length = trunc or r["choices"][0].get("finish_reason") == "length" or (usage.get("completion_tokens") or 0) >= body["max_tokens"]
         with open(A.log, "a") as f:
             f.write(json.dumps({"t": round(time.time() - t, 2), "usage": usage, "calls": len(calls), "raw": text[-400:]}) + "\n")
         self._send(200, {"id": "chatcmpl-" + uuid.uuid4().hex, "object": "chat.completion", "created": int(time.time()), "model": "m",
-                         "choices": [{"index": 0, "message": msg, "finish_reason": "tool_calls" if calls else "stop"}], "usage": usage})
+                         "choices": [{"index": 0, "message": msg, "finish_reason": "length" if length else "tool_calls" if calls else "stop"}], "usage": usage})
 
 
 if __name__ == "__main__":
