@@ -132,7 +132,7 @@ def cat(a):
     url = r.get("result_url")
     if not url:
         sys.exit(f"no url: {r}")
-    for _ in range(30):
+    for _ in range(120):  # big files take minutes to appear
         time.sleep(5)
         try:
             data = get(url, 300)

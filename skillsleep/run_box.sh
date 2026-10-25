@@ -35,6 +35,7 @@ kill_vllm() {
     [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1)" -lt 2000 ] && return 0
     pkill -9 -f "vllm|EngineCore" 2> /dev/null; sleep 5
   done
+  echo "=== WARN kill_vllm: GPU memory still in use"; return 1
 }
 serve() {  # serve MODEL_DIR TAG: the swap-1 serving config (thinking off, k2_horizon tool parser, nothink template)
   if [ "$SERVED" = "$2" ] && curl -sf localhost:8000/v1/models > /dev/null; then return 0; fi
@@ -113,9 +114,9 @@ evalrun() {  # evalrun ARM: retail test x4 + airline test x2 in parallel, cut of
   [ $rem -lt $lim ] && lim=$rem
   [ $lim -lt 300 ] && { echo "=== no time left for $arm eval"; return 1; }
   local rc=$(( EVAL_CONC * 4 / 5 )); [ $rc -lt 1 ] && rc=1; local ac=$(( EVAL_CONC - rc )); [ $ac -lt 1 ] && ac=1
-  bash $SS/t2.sh ss_${arm}_retail retail test 4 $rc $lim > $OUT/$arm/tau2_retail.log 2>&1 &
-  bash $SS/t2.sh ss_${arm}_airline airline test 2 $ac $lim > $OUT/$arm/tau2_airline.log 2>&1 &
-  wait
+  bash $SS/t2.sh ss_${arm}_retail retail test 4 $rc $lim > $OUT/$arm/tau2_retail.log 2>&1 & local p1=$!
+  bash $SS/t2.sh ss_${arm}_airline airline test 2 $ac $lim > $OUT/$arm/tau2_airline.log 2>&1 & local p2=$!
+  wait $p1 $p2  # never a bare wait: it would also wait for the vLLM server and the tee process substitution
   for d in retail airline; do
     if [ -f $SIM/ss_${arm}_$d/results.json ]; then
       python3 $SS/common.py strip $SIM/ss_${arm}_$d/results.json $OUT/$arm/${d}_test.json.gz && summ $arm ${d}_test $(( $(date +%s) - t0 )) $OUT/$arm/${d}_test.json.gz
@@ -155,12 +156,18 @@ evalA0_fn() { serve $BASE base && evalrun A0; }   # shares the base server with 
 report_fn() { python3 $SS/analyze.py $OUT/summary.jsonl | tee $OUT/report.md; }
 
 # ---------- run ----------
+# carry-over from an earlier box: skillsleep/carry/out.tgz holds finished stages (results + .done markers)
+[ -f $SS/carry/out.tgz ] && [ ! -f $OUT/.carried ] && tar xzf $SS/carry/out.tgz -C $ROOT && touch $OUT/.carried && echo "carried: $(ls $OUT/.done | tr '\n' ' ')"
 trap 'pkill -f "vllm serve" 2> /dev/null; tar czf $OUT.tgz -C $ROOT out && base64 -w0 $OUT.tgz > $ROOT/out.b64 && echo "=== packed $(stat -c %s $OUT.tgz) bytes"' EXIT
 if pending day || pending fix || pending evalA0; then
   serve $BASE base || { echo "=== base SERVE-FAIL"; exit 1; }
-  ( stage day day_fn; stage fix fix_fn ) &
-  ( stage evalA0 evalA0_fn ) &
-  wait
+  if [ "${A0_PARALLEL:-0}" = 1 ]; then  # faster, but A0 then shares the GPU and the API key with the day (biases A0 down)
+    ( stage day day_fn; stage fix fix_fn ) & P1=$!
+    ( stage evalA0 evalA0_fn ) & P2=$!
+    wait $P1 $P2
+  else
+    stage day day_fn; stage fix fix_fn; stage evalA0 evalA0_fn
+  fi
 fi
 stage arcA0 arcA0_fn
 stage build build_fn

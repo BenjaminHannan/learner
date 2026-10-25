@@ -23,11 +23,14 @@ def real(s):
 
 
 def summarize(paths, arm, domain, wall=0):
-    ss = [s for p in paths for s in sims(p)]; per = collections.defaultdict(list)
+    ss = [s for p in paths for s in sims(p)]; per = collections.defaultdict(list); per_real = collections.defaultdict(list)
     for s in ss:
         per[str(s["task_id"])].append(int(ok(s)))
+        if real(s):  # infra/API-error sims (e.g. Haiku 429s) left out
+            per_real[str(s["task_id"])].append(int(ok(s)))
     return {"arm": arm, "domain": domain, "sims": len(ss), "pass": sum(sum(v) for v in per.values()),
             "per_task": dict(sorted(per.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0)),
+            "per_task_real": dict(per_real), "not_real": len(ss) - sum(map(len, per_real.values())),
             "termination": dict(collections.Counter(str(s.get("termination_reason")) for s in ss)), "wall_s": int(wall)}
 
 
