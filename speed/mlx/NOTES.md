@@ -46,3 +46,7 @@ GDN fwd+bwd per layer, per-token ms (GB) -> best chunked ms (GB):
 - 2B shapes: T512 B1 333 -> 16.5 20x; T1024 B1 854 -> 40.5 21x; T2048 B1 2081 -> c128+compile 84.9 25x; T2048 B2 4253 (9.76) -> c128 168 (2.07) 25x.
 Best chunk: 64 for T<=1024, 128 at T=2048; chunk 32 always slowest; mx.compile 0-5%.
 Loss bench (K2 shapes V=250,624, LoRA r8, bf16, B=1, body cut to 12 layers): stock vs gather T1024 2590 ms (4.13 GB) -> 2039 (3.72) 21%; T2048 5453 (7.49) -> 4222 (6.15) 23%; loss/grad rel diff 0.0. Full 36-layer body: suggested ~15%.
+
+## CORRECTION (Mac, 17:58Z, real Qwen3.5-2B 4-bit weights): the per-layer numbers above used random inputs and HIDE a bug.
+Step-1 loss, T=256: stock 4.22342; chunked c8 4.22330, c16 4.21994, c32 4.24422, c64 4.30290; c64 training NaN from step 2. Only chunk 8 is safe today.
+End-to-end 5-step LoRA (r8 all linears, B1, T256): stock 3.01 s/step, 11.97 GB peak; chunk 8 + make_loss 1.13 s/step, 3.45 GB (2.65x faster, 3.5x less memory, losses overlap); stock cannot run T>=512 on this Mac (memory critical); chunk 8 at T=1024 5.65 s/step, 10.3 GB, losses finite and falling.
