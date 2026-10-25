@@ -45,7 +45,7 @@ if [ ! -f $J/.started ]; then
   echo "=== BB DONE rc=$? $(date -u +%FT%TZ)"
   python3 backbone/label_report.py "$LABEL0 DONE"
 fi
-sleep 1200   # leave time to pull results before stopping
+sleep __LINGER__   # leave time to pull results before stopping (`cat` itself needs the box stopped, so cat-only jobs can use a short --linger)
 self_stop
 sleep infinity
 '''
@@ -74,7 +74,7 @@ def pack(a):
         for f in FILES:
             t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") or "/data/raw" in i.name or "/results_wk" in i.name else i)  # raw API caches and result JSONs never run on a box
     b64 = base64.b64encode(buf.getvalue()).decode()
-    job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label)
+    job = JOB.replace("__ENV__", a.env).replace("__HOURS__", str(a.hours)).replace("__LABEL__", a.label).replace("__LINGER__", str(a.linger))
     args = ["bash", "-c", job, "bb"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     (out / "args.json").write_text(json.dumps(args))
@@ -140,7 +140,7 @@ def cat(a):
 
 def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
-    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
+    x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--label", default="claude-bb"); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3); x.add_argument("--linger", type=int, default=1200, help="seconds the box idles after DONE before it stops itself")
     x = s.add_parser("search"); x.add_argument("--gpu", default=None, help="exact GPU name; default = best dlperf per $ over all GPUs (tools/vast_pick.py)")
     x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
     x.add_argument("--min-vram", type=float, default=24); x.add_argument("--min-dlperf", type=float, default=40); x.add_argument("--hours", type=float, default=1.0)
