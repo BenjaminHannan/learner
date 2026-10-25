@@ -93,3 +93,16 @@ def test_smoke_end_to_end_three_arms(monkeypatch):
         assert tj["g1"] is False and tj["retention"]["W1"]["skills5"] is not None
         tj = json.load(open(os.path.join(out, "s0", "g1_example", "train.json")))
         assert tj["phases"]["W2_sleep"]["guard"]["norm"] == "example"
+
+
+def test_light_arm_wiring_and_default_weight():
+    import inspect
+    assert inspect.signature(g1mod.G1.__init__).parameters["kl_weight"].default == g1mod.KL_WEIGHT == 30.0   # v1 unchanged
+    assert "g1_light" in g1_ablate.ARMS and "g1_light" not in g1_ablate.DEFAULT_ARMS                          # opt-in only
+    assert g1_ablate.KL_WEIGHT == {"g1_light": 10.0} and g1_ablate.NORM["g1_light"] == g1_ablate.NORM["g1_empirical"] == "none"
+    arms = lambda ft, hl: {"g1_empirical": dict(harm_w2=2.0, first_try_w2=34.0), "g1_light": dict(harm_w2=hl, first_try_w2=ft),
+                           "g1_off": dict(harm_w2=3.0, first_try_w2=39.0)}
+    assert g1_ablate.verdict_light(arms(36.0, 2.0))["passes"]
+    assert not g1_ablate.verdict_light(arms(35.9, 2.0))["passes"]
+    assert not g1_ablate.verdict_light(arms(38.0, 2.1))["passes"]
+    assert g1_ablate.verdict_light({"g1_off": {}})["status"] == "incomplete"

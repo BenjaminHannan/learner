@@ -19,8 +19,10 @@ assert hashlib.sha256(data).hexdigest() == "94057436d98a485cb4ed0bc750244c2d86a2
 open(os.environ["J"] + "/B2_s200.pt", "wb").write(data)
 print("setup ok")
 PYEOF
-say "STEP g1 ablation (seed 1, 3 arms in sequence) at \$$DPH/h"
-$PY -m v1.g1_ablate --b2 "$J/B2_s200.pt" --skills "$J/skills" --out "$O" --device cuda --seeds 1 2>&1 | tee -a "$C/arm_g1ablate.out"
+ARMS="${ARMS:-g1_empirical g1_example g1_off}"; SEEDS="${SEEDS:-1}"   # space- or comma-separated
+ARMS="${ARMS//,/ }"; SEEDS="${SEEDS//,/ }"
+say "STEP g1 ablation (seeds $SEEDS, arms $ARMS in sequence) at \$$DPH/h"
+$PY -m v1.g1_ablate --b2 "$J/B2_s200.pt" --skills "$J/skills" --out "$O" --device cuda --seeds $SEEDS --arms $ARMS 2>&1 | tee -a "$C/arm_g1ablate.out"
 RC=${PIPESTATUS[0]}
 echo "g1ablate rc=$RC"
 [ -f "$O/results.json" ] && head -c 20000 "$O/results.json"

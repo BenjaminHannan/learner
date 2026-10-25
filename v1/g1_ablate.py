@@ -14,8 +14,12 @@ import os
 import time
 from typing import Any, Optional
 
-ARMS = ("g1_empirical", "g1_example", "g1_off")
-NORM = {"g1_empirical": "none", "g1_example": "example"}
+ARMS = ("g1_empirical", "g1_example", "g1_off", "g1_light")
+DEFAULT_ARMS = ("g1_empirical", "g1_example", "g1_off")   # g1_light is opt-in (PREREG-light.md)
+NORM = {"g1_empirical": "none", "g1_example": "example", "g1_light": "none"}
+KL_WEIGHT = {"g1_light": 10.0}       # every other guarded arm keeps g1.KL_WEIGHT (30)
+LIGHT_FIRST_TRY_MIN = 2.0   # points over g1_empirical (W2)
+LIGHT_HARM_MARGIN = 1.0     # points below g1_off harm (W2)
 SMOKE = dict(pool_limit=64, dev_limit=16, n1=4, n2=8, T=1.0, updates_cap=2, diary=64)
 FIRST_TRY_TOL = 2.0       # points
 BUYS_MIN = 2.0            # points
@@ -24,7 +28,7 @@ log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)
 
 def verdict(arms: dict[str, dict]) -> dict[str, Any]:
     """PREREG pass marks on the final night (W2), harm vs the raw parent, in points. Pure function of the per-arm numbers (means over seeds)."""
-    need = ARMS
+    need = DEFAULT_ARMS
     if any(a not in arms for a in need):
         return dict(status="incomplete", missing=[a for a in need if a not in arms])
     e, x, o = (arms[a] for a in need)
@@ -35,6 +39,18 @@ def verdict(arms: dict[str, dict]) -> dict[str, Any]:
                                 first_try_gap_points=x["first_try_w2"] - e["first_try_w2"]),
                 g1_buys_retention=dict(passes=buys, harm_off_minus_empirical=o["harm_w2"] - e["harm_w2"]),
                 proved_wrong=dict(example_fix=not ex_ok, g1_benefit=not buys))
+
+
+def verdict_light(arms: dict[str, dict]) -> dict[str, Any]:
+    """PREREG-light pass marks on W2 (means over seeds): light first-try >= empirical + 2 AND light harm <= off harm - 1."""
+    need = ("g1_empirical", "g1_light", "g1_off")
+    if any(a not in arms for a in need):
+        return dict(status="incomplete", missing=[a for a in need if a not in arms])
+    e, l, o = (arms[a] for a in need)
+    ft = (l["first_try_w2"] - e["first_try_w2"]) >= LIGHT_FIRST_TRY_MIN
+    hm = l["harm_w2"] <= o["harm_w2"] - LIGHT_HARM_MARGIN
+    return dict(status="complete", passes=ft and hm, first_try_gain=l["first_try_w2"] - e["first_try_w2"], first_try_ok=ft,
+                harm_light_minus_off=l["harm_w2"] - o["harm_w2"], harm_ok=hm)
 
 
 def arm_summary(ret: dict) -> dict[str, float]:
@@ -60,7 +76,7 @@ def run_arm(arm: str, a, seed: int, out: str, smoke: bool) -> dict[str, Any]:
         def factory(raw_, replay):
             parent = g1mod.frozen_copy(raw_)
             diary = g1mod.build_diary(parent, replay, n=diary_n, seed=seed, device=a.device)
-            return g1mod.G1(parent, diary, raw_.vocab, device=a.device, seed=seed, norm=NORM[arm])
+            return g1mod.G1(parent, diary, raw_.vocab, device=a.device, seed=seed, norm=NORM[arm], kl_weight=KL_WEIGHT.get(arm, g1mod.KL_WEIGHT))
     ret = creative_sleep.retention_fn(a.skills, a.device, base5=base5_raw, dev_limit=kw.get("dev_limit"))
     t0 = time.time()
     info = creative_sleep.run_creative(out, a.b2, os.path.join(a.skills, "train.jsonl"), a.skills, device=a.device, seed=seed,
@@ -84,7 +100,7 @@ def aggregate(results: list[dict]) -> dict[str, Any]:
         if "summary" in r:
             by.setdefault(r["arm"], []).append(r["summary"])
     arms = {k: {m: sum(s[m] for s in v) / len(v) for m in v[0]} for k, v in by.items()}
-    return dict(arms=arms, verdict=verdict(arms), per_run=results)
+    return dict(arms=arms, verdict=verdict(arms), verdict_light=verdict_light(arms), per_run=results)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -94,7 +110,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0])
-    ap.add_argument("--arms", nargs="+", default=list(ARMS), choices=ARMS)
+    ap.add_argument("--arms", nargs="+", default=list(DEFAULT_ARMS), choices=ARMS)
     ap.add_argument("--smoke", action="store_true", help="tiny sizes, CPU smoke test only")
     a = ap.parse_args(argv)
     results = []
