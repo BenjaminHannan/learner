@@ -369,3 +369,23 @@ Verdicts:
 - **T1 FAIL (the mechanism failed):** the new prompt halved the tagger's mention recall, from 0.533 to 0.251 (precision rose to 0.82). In the raw samples, the small model still answers with "Sam ..." triples, now even for two-name facts ("Sam born in Bodetreth"), and lists fewer facts overall. Naming "Sam" in the instructions seems to make it more salient, not less (suggested). Routines, which are about Sam, collapsed (80 → 15).
 - **T2 FAIL, with harm:** recall −16.5 (p = 0.0002). Because T1 failed, this arm does not test whether better notes become memories.
 - ab_ob_bridge is still running (RTX 4090, Brazil).
+
+## Addendum 7, last arm: guided two-step dreams (ab_ob_bridge), and the round's verdicts
+Box 57604382 (RTX 4090 Brazil, $0.377/h with storage) took 1.95 h, about 3.6x as long as the 5090 runs, for about $0.80. Its result JSON could not be pulled, because Vast's command service answered "not ready" four times after the self-stop, and the watcher then destroyed the box. The numbers below come from its label, so the bridge comparisons are unpaired and at most **suggested**. The watcher now keeps a stopped box when a pull fails.
+
+| arm | C4 | C2 | recall | two-hop | changed new | routine | int | + diary pool | ARC | reverts |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ab_ob_b2 rerun (reference) | 81 | 53 | 67.0 | 11.5 | 66.7 | 80 | 56 | 83.8 | 93.2 | none |
+| ab_ob_bridge (label only) | 83 | 59 | 71.0 | 19 | 70 | 85 | 58 | 83 | 92.2 | none |
+
+- **B1 unknown:** the label does not carry how many two-hop questions had a kept chain dream.
+- **B2 FAIL (suggested):** two-hop +7.5 (19 vs 11.5), against a mark of +10. The gain points the right way, but it is unpaired and below the mark.
+- **B3 PASS:** recall 71.0 vs 67.0 (no recall cost; +4 unpaired).
+- No harm: ARC 92.2, diary 83.
+
+Addendum 7 summary:
+- **D1 SHOWN:** 4x work +9.0 over 2x (p = 0.0014). The "wrong if" fired: my prediction of less than +4 was wrong. Recall (76) is now 3.5 points under the eligibility ceiling (79.5).
+- **T1/T2 FAIL:** the new tagging prompt halved the tagger's recall, and memory fell by 16.5 (p = 0.0002).
+- **B2 FAIL (suggested):** guided two-step dreams gave +7.5 on two-hop (unpaired).
+- Noise floor: identical settings on new code and a different GPU reproduce b2 (−0.5, p = 1.0).
+- Cost: about $2.70 on Vast. That includes about $0.65 at list price for four boxes whose hosts never started. On a 5090 a 2x-work run took 32 min, about $0.32.
