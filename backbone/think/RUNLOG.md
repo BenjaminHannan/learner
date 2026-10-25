@@ -97,3 +97,6 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 07:09Z s2 bplus_s2 70.7 (dev 87.3); 07:40Z s1r aplus_s1 71.0 (dev 86.2); 07:58Z s0r tw_s0 L1 67.1; 08:13Z s0r bplus_s0
   71.5 (dev 87.7): bplus_s0 - b_s0 = +3.9 >= 1.0, so PREREG's bplus-extend rule fires and bplus_s1 / bplus_s2 (run
   speculatively) enter the analysis.
+- 08:44Z: s2 DONE. t_s2: L0 66.8, L1 66.8, L2 66.8, L4 66.8, L8 66.8, L12 66.6, L16 65.8 / L24 65.8 (first 2,000 rows),
+  swap8 66.5, mean8 66.5, rep1_8 66.8, gatesoff8 66.7, ref0 66.7; dev L0 81.0, L1 81.0, L8 81.2. Flat in laps and
+  equal to a_s2 (66.7) and t1_s2 (66.7). 08:45Z: s2 box stopped by hand to copy its files.
