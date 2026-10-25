@@ -52,3 +52,9 @@ The pairs were too easy (DPO loss ~0 within 10 steps) and too few (33 pairs, 16 
   Use many more of them. Log the DPO margin and accuracy per step, and if they saturate (loss < 0.05 for 10 steps),
   report it as saturated rather than as learning.
 Same A0, same test, and pass marks fixed before the run.
+
+## Guard for Skill-Sleep 2 (from the Ask-once test, /mnt/project-files/mechanism/askonce-VERDICT.md)
+After 5 nights of SFT on corrected actions, K2-3.7B stopped asking clarifying questions entirely (57/420 asks fell to 0/420),
+and ARC dropped from 88 to 84. The night data must therefore mix in good clarifying-question turns. Every eval reports the ask
+rate (agent turns that end in a question to the user before the first write action) alongside the pass rate. The run fails
+the no-harm mark if the ask rate falls by more than half against A0.
