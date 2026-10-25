@@ -199,3 +199,11 @@ records. One change from nights4: W records of questions that fit only in the se
 4x in the record list, while the update count stays exactly nights4's (computed from the unrepeated list). Kind-blind: the boost uses
 only the pass number. Marks: PASS if rare4 affine >= 5% AND Hard >= nights4 + 3, Easy within 5 of nights4's base, harm <= 2.
 Proved wrong: affine <= 1% AND Hard <= nights4 + 1. Reported: per-night W records by kind and pass for every arm.
+
+## Round 9 result (Vast RTX 5090, 2026-10-25, 2 seeds, 82 min, ~$0.67; files in /mnt/project-files/multistep/round9-vast/)
+(a) hind4 18.8 vs nights4_x155 21.1 (-2.3): **PROVED WRONG**. Hindsight's earlier small gains were extra practice (update totals: nights4
+4,712; x155 7,169; hind4 7,278). Extra practice alone also did not help on this box: x155 21.1 vs nights4 22.0, harm 1.8 vs 1.5.
+(b) rare4 Hard 19.6 vs nights4 22.0 (-2.4), affine 0.3%: **PROVED WRONG**.
+New fact (nights4, s0): search finds fitting affine programs for 10 → 18 → 28 → 36 of 205 pool questions over nights 1-4, mostly in
+pass 1 (32 samples) by night 4, yet greedy first-try affine stays ~0-5%. Affine's bottleneck is now greedy decoding, not discovery:
+sampling finds it, the top choice doesn't. Same-config noise again: nights4 here 22.0 vs 16.9 on the PC.
