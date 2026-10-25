@@ -100,3 +100,11 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
 - 08:44Z: s2 DONE. t_s2: L0 66.8, L1 66.8, L2 66.8, L4 66.8, L8 66.8, L12 66.6, L16 65.8 / L24 65.8 (first 2,000 rows),
   swap8 66.5, mean8 66.5, rep1_8 66.8, gatesoff8 66.7, ref0 66.7; dev L0 81.0, L1 81.0, L8 81.2. Flat in laps and
   equal to a_s2 (66.7) and t1_s2 (66.7). 08:45Z: s2 box stopped by hand to copy its files.
+- 09:22Z: s0r DONE. t_s0: L0 67.1, L1 67.1, L2 67.1, L4 67.2, L8 67.2, L12 67.2, L16 66.6 / L24 66.7 (first 2,000 rows),
+  swap8 67.2, mean8 67.1, rep1_8 67.1, gatesoff8 67.2, ref0 67.2; dev L0 81.4, L1 81.5, L8 81.5. Flat; equal to a_s0 67.2.
+  Seed-0 futility: all four rules fire (S_0(8) 67.2 < 68.0; S_0(8) - T1_0 = -0.1; S_0(8) - S_0(2) = +0.1; swap 0.0).
+- 09:10Z: s2's host reported it stopped, but Vast's command API (`cat`, even `ls`) gives S3 403 on these hosts too, and
+  from ~09:25Z the log service also gives 403 (it worked at 02:22Z). Results therefore come from the labels
+  (from_label.py); a background loop keeps asking for each box's container log, which ends with that box's SUMMARY.txt.
+  Provisional label readout (seeds 0 and 2 for t/t1): S(8) 67.0 vs G need 74.1; S(8) - S(1) +0.05; S(8) - T1 +0.00;
+  swap lesion +0.15; verdict so far FUTILE-STOP, marks pending seed 1.
