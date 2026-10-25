@@ -1,0 +1,139 @@
+diff --git a/swap/retry/sitecustomize.py b/swap/retry/sitecustomize.py
+new file mode 100644
+index 0000000..74c0c11
+--- /dev/null
++++ b/swap/retry/sitecustomize.py
+@@ -0,0 +1,64 @@
++"""429-safe retry for litellm calls to Anthropic (tau2 user simulator + judge). Opt-in: PYTHONPATH=<this dir>.
++Why: litellm num_retries backs off ~1-10 s with a few tries and ignores Retry-After; under a burst of 10-30 sims
++all threads retry in sync and give up -> tau2 logs an infra error / too_many_errors (counted as a fail).
++This wrapper: honours Retry-After, full-jitter exponential backoff (cap 60 s), a shared cool-down so all threads
++back off together, up to SPEED_RETRY_MAX (default 8) extra tries. Only Anthropic models; local vLLM errors pass through.
++Never changes a successful response, so results are unchanged. Stats: SPEED_RETRY_LOG (default /tmp/speed_retry.log)."""
++import os, random, threading, time
++
++MAXTRY = int(os.environ.get("SPEED_RETRY_MAX", "8")); CAP = float(os.environ.get("SPEED_RETRY_CAP", "60"))
++LOG = os.environ.get("SPEED_RETRY_LOG", "/tmp/speed_retry.log")
++_lock = threading.Lock(); _pause_until = 0.0
++
++
++def _retryable(e):
++    n = type(e).__name__; s = str(e).lower(); code = getattr(e, "status_code", None)
++    return code in (408, 429, 500, 502, 503, 504, 529) or n in ("RateLimitError", "ServiceUnavailableError", "InternalServerError",
++        "APIConnectionError", "Timeout", "APITimeoutError") or "overloaded" in s or "rate limit" in s
++
++
++def _retry_after(e):
++    try:
++        h = getattr(getattr(e, "response", None), "headers", None) or {}
++        v = h.get("retry-after") or h.get("Retry-After")
++        return float(v) if v else None
++    except Exception:
++        return None
++
++
++def _is_anthropic(kw, args):
++    m = str(kw.get("model") or (args[0] if args else ""))
++    return "claude" in m or m.startswith("anthropic/")
++
++
++def with_retry(fn, sleep=time.sleep, rnd=random.random):
++    def wrapped(*a, **kw):
++        global _pause_until
++        if not _is_anthropic(kw, a):
++            return fn(*a, **kw)
++        for i in range(MAXTRY + 1):
++            w = _pause_until - time.time()
++            if w > 0:
++                sleep(w + rnd())
++            try:
++                return fn(*a, **kw)
++            except Exception as e:
++                if i >= MAXTRY or not _retryable(e):
++                    raise
++                d = _retry_after(e) or rnd() * min(CAP, 2 ** (i + 1))  # full jitter
++                with _lock:
++                    _pause_until = max(_pause_until, time.time() + d * 0.5)  # shared, half the wait
++                try:
++                    open(LOG, "a").write("%s try=%d %s wait=%.1f\n" % (time.strftime("%T"), i, type(e).__name__, d))
++                except Exception:
++                    pass
++                sleep(d)
++    return wrapped
++
++
++try:
++    import litellm
++    if not getattr(litellm.completion, "_speed_retry", False):
++        litellm.completion = with_retry(litellm.completion); litellm.completion._speed_retry = True
++except Exception:
++    pass
+diff --git a/swap/run_box.sh b/swap/run_box.sh
+index 90eb0d3..dd325b2 100644
+--- a/swap/run_box.sh
++++ b/swap/run_box.sh
+@@ -6,18 +6,26 @@ set -u
+ ROOT=$(pwd); OUT=$ROOT/out; mkdir -p $OUT
+ exec > >(tee -a $OUT/run_box.log) 2>&1
+ ARMS=${ARMS:-k2_7b_nothink,k2_37b_nothink,k2_7b_low,k2_37b_low,lfm8b_nothink,qwen4b_nothink,qwen9b_nothink,k2_7b_medium}
+-TRIALS=${TRIALS:-2}; CONC=${CONC:-10}; ARM_MIN=${ARM_MIN:-80}
++TRIALS=${TRIALS:-2}; CONC=${CONC:-24};  # SPEED: was 10; vLLM (<=32 seqs on Qwen) was mostly idle waiting on Haiku
++ ARM_MIN=${ARM_MIN:-80}
+ echo "=== swap1 start $(date -u +%FT%TZ) arms=$ARMS"
+ nvidia-smi --query-gpu=name,memory.total --format=csv
+ 
+ (apt-get update -qq && apt-get install -y -qq git curl) > /dev/null 2>&1; git --version
+ pip install -q -U uv 2>&1 | tail -1
+-uv pip install --system -q -U vllm 2>&1 | tail -3
++prefetch() {  # SPEED: pull a model into the HF cache in the background (skipped if disk is tight)
++  [ "$(df --output=avail -BG /root | tail -1 | tr -dc 0-9)" -gt 150 ] || return 0
++  ( python3 -c "from huggingface_hub import snapshot_download as s; s('$1')" > /dev/null 2>&1 ) &
++}
++FIRST=${ARMS%%,*}
++uv pip install --system -q -U vllm huggingface_hub 2>&1 | tail -3
+ python3 -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__)"
+ 
+ git clone -q https://github.com/sierra-research/tau2-bench /job/tau2 && cd /job/tau2 && git checkout -q cc1df47 && git apply $ROOT/swap/tau2-judge-haiku.patch && echo "tau2 patched" || { echo "=== BB FAIL tau2 setup"; exit 1; }
+-uv venv -q /job/t2venv && UV_PROJECT_ENVIRONMENT=/job/t2venv uv sync -q 2>&1 | tail -2
++( uv venv -q /job/t2venv && UV_PROJECT_ENVIRONMENT=/job/t2venv uv sync -q 2>&1 | tail -2 ) &  # SPEED: overlaps the first model download
++T2SYNC=$!
+ unset ANTHROPIC_BASE_URL; export ANTHROPIC_API_BASE=https://api.anthropic.com
++wait $T2SYNC
+ /job/t2venv/bin/python -c "import os; print('key set:', bool(os.environ.get('ANTHROPIC_API_KEY')))"
+ cd $ROOT
+ 
+@@ -47,7 +55,7 @@ serve() {  # $1 arm, $2 extra flags
+     pkill -9 -f "vllm|EngineCore" 2>/dev/null; sleep 5
+   done
+   vllm serve $REPO --served-model-name m --port 8000 --dtype ${DTYPE:-bfloat16} --max-model-len ${MAXLEN:-49152} --gpu-memory-utilization ${GPU_UTIL:-0.90} \
+-    --enable-auto-tool-choice $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
++    --enable-auto-tool-choice ${EXTRA_SERVE:-} $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
+   for i in $(seq 1 180); do
+     curl -s localhost:8000/v1/models >/dev/null 2>&1 && return 0
+     pgrep -f "vllm serve" >/dev/null || return 1
+@@ -56,8 +64,12 @@ serve() {  # $1 arm, $2 extra flags
+   return 1
+ }
+ 
++ARMLIST=(${ARMS//,/ }); IDX=0
++arm_cfg ${ARMLIST[0]} && prefetch $REPO
+ for ARM in ${ARMS//,/ }; do
+   arm_cfg $ARM || { echo "=== unknown arm $ARM"; continue; }
++  IDX=$((IDX+1)); NEXT=${ARMLIST[$IDX]:-}
++  [ -n "$NEXT" ] && ( arm_cfg $NEXT && prefetch $REPO )  # SPEED: next model downloads while this arm serves and scores
+   mkdir -p $OUT/$ARM; echo "=== ARM $ARM $REPO start $(date -u +%T)"
+   if ! serve $ARM ""; then
+     echo "=== $ARM native vllm failed; errors:"; grep -E "Error|error" $OUT/$ARM/vllm.log | grep -v "^ *File" | tail -6 | cut -c1-300; cp $OUT/$ARM/vllm.log $OUT/$ARM/vllm_native.log
+@@ -66,10 +78,10 @@ for ARM in ${ARMS//,/ }; do
+   python3 $ROOT/swap/smoke.py "$KW" > $OUT/$ARM/smoke.json 2>&1; echo "smoke: $(head -c 600 $OUT/$ARM/smoke.json)"
+   ARGS=$(python3 -c "import json,sys; print(json.dumps({'api_base':'http://localhost:8000/v1','api_key':'none','max_tokens':int(sys.argv[2]),'num_retries':2,'extra_body':{'chat_template_kwargs':json.loads(sys.argv[1])}}))" "$KW" $MAXTOK)
+   T0=$(date +%s)
+-  ( cd /job/tau2 && timeout $((ARM_MIN*60)) /job/t2venv/bin/tau2 run --domain retail --agent-llm openai/m --agent-llm-args "$ARGS" \
++  ( cd /job/tau2 && PYTHONPATH=$ROOT/swap/retry SPEED_RETRY_LOG=$OUT/$ARM/speed_retry.log timeout $((ARM_MIN*60)) /job/t2venv/bin/tau2 run --domain retail --agent-llm openai/m --agent-llm-args "$ARGS" \
+       --user-llm anthropic/claude-haiku-5-5 --user-llm-args '{"num_retries": 6}' \
+       --task-ids $(seq -s ' ' 0 39) --num-trials $TRIALS --max-concurrency $CONC --save-to swap1_$ARM ) > $OUT/$ARM/tau2.log 2>&1
+-  echo "tau2 rc=$? $(( $(date +%s) - T0 ))s"
++  echo "tau2 rc=$? $(( $(date +%s) - T0 ))s; 429 retries: $(wc -l < $OUT/$ARM/speed_retry.log 2>/dev/null || echo 0); $(grep -i 'prefix cache hit rate' $OUT/$ARM/vllm.log | tail -1 | grep -o 'hit rate: [0-9.]*%')"
+   R=/job/tau2/data/simulations/swap1_$ARM/results.json
+   [ -f $R ] || R=$(ls -d /job/tau2/data/simulations/swap1_$ARM* 2>/dev/null | head -1)/results.json
+   if [ -f "$R" ]; then
