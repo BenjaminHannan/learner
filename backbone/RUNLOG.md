@@ -63,7 +63,7 @@ too few linear-attention state slots).
 - 03:20Z relaunched: claude-sleepb16 b2 (57603194, RTX 5090 Slovakia host 362355, $0.489/h) and tag2 (57603197, RTX 5090 Portugal, $0.563/h), both running in under 3 min; bridge on an RTX 4090 in Iceland (57603198) sat in "created" and was dropped at 0.18 h. The watcher now drops a box that is not running by 10 min (it was 20).
 - 03:33Z bridge relaunched as claude-sleepb17 (57604382, RTX 4090 Brazil, $0.344/h, the best TFLOPS per dollar left outside China and the failed hosts). The round now mixes one 4090 into the 5090s; GPU differences are treated like seed noise, as in addendum 6.
 - 05:54Z addendum 7 done. b2 rerun (57603194) 0.58 h, tag2 (57603197) 0.58 h, b4 (57599956) 1.09 h, all RTX 5090: JSONs pulled, then destroyed. bridge (57604382, RTX 4090 Brazil) took 1.95 h, 3.6x as long as the 5090s, and its JSON pull failed 4 times ("command output not ready") before the watcher destroyed it; label numbers only. The watcher now keeps a stopped box when a pull fails. Lesson: TFLOPS per dollar did not predict job time on this host. Prefer hosts already proven (Slovakia host 362355 ran three jobs cleanly).
-- 06:30Z Sleep-B addendum 8 (PREREG-sleepB-addendum8.md), seed-2 replication, RTX 5090 Slovakia host 362355, linger 120:
+- 05:59Z Sleep-B addendum 8 (PREREG-sleepB-addendum8.md), seed-2 replication, RTX 5090 Slovakia host 362355, linger 120:
   - claude-sleepb18-ab_ob_b4-s2-cqc4bi (57620850, $0.469/h, hours=3, cap $1.30);
   - claude-sleepb18-ab_ob_b2-s2-cqc4bi (57620852, $0.469/h, hours=2, cap $0.80).
   A first launch of both (57620789/57620790) was destroyed at once because `results_a7/` pushed the pack to 2.46 MB; the pack now skips every `sleep/brain/results_*` dir (1.97 MB).
