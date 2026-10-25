@@ -43,14 +43,33 @@ if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1
   ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
 fi
 
-if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations)
+if [ -n "${MOEBENCH:-}" ]; then   # big-MoE speed bench (backbone/sleep/brain/moe_bench.py): MOEBENCH=1; default Qwen/Qwen3.6-35B-A3B at its pinned revision, bf16 weights (~65 GiB) with the MLX-affine fake-quantized 4-bit base (sleepb.q4_apply), LoRA on top, one 95 GB GPU; MOEBENCH_EXTRA: extra moe_bench flags, comma-separated because vast.py passes env words unquoted, e.g. --lora-shared or --budget-min,40 or --usd-per-hour,1.2 (no bitsandbytes: the experts are fused 3-D parameters)
+  export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"   # ~65 GiB of weights on a 95 GB card: keep the allocator from fragmenting
+  python3 backbone/sleep/brain/moe_bench.py --out "$OUT/moebench/bench.json" ${MOEBENCH_EXTRA:+${MOEBENCH_EXTRA//,/ }} || echo "!! moebench failed"
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${K2PROBE:-}" ]; then   # K2 names-question probe (backbone/sleep/brain/k2_names_probe.py, Sleep-B addendum 11b follow-up): K2PROBE=1; IFM/K2-Horizon-3.7B at the pinned revision, bf16, no LoRA, Week-1 days 1-3 (never Week-2); K2PROBE_EXTRA: extra probe flags, comma-separated because vast.py passes env words unquoted, e.g. --variants,off,low or --max-q,40 or --days,1
+  python3 backbone/sleep/brain/k2_names_probe.py --out "$OUT/k2probe/probe.json" ${K2PROBE_EXTRA:+${K2PROBE_EXTRA//,/ }} || echo "!! k2probe failed"
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${K2CHAIN:-}" ]; then   # K2 chain-dream probe (backbone/sleep/brain/k2_chain_probe.py, Sleep-B addendum 14 step 0): K2CHAIN=1; IFM/K2-Horizon-3.7B at the pinned revision, no LoRA, no training, Week-1 days 1-7 then 4 REM cycles under 4 chain-prompt variants (never Week-2); weights bf16 on a GPU with native bf16, else fp16 (--dtype); K2CHAIN_EXTRA: extra probe flags, comma-separated because vast.py passes env words unquoted, e.g. --variants,default,think or --cycles,2 or --dtype,fp16,--gen-bs,24
+  python3 backbone/sleep/brain/k2_chain_probe.py --out "$OUT/k2chain/probe.json" ${K2CHAIN_EXTRA:+${K2CHAIN_EXTRA//,/ }} || echo "!! k2chain failed"
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]   # weights live in ~/.cache/huggingface, not in out/
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${SLEEPB_ARMS:-}" ]; then   # Sleep-B experiment (backbone/sleep/brain/PREREG-sleepB.md): e.g. SLEEPB_ARMS=a0,ad,ab,af (ab before af/ablations); SLEEPB_EXTRA: extra sleepb flags, comma-separated because vast.py passes env words unquoted, e.g. --revision,<sha>,--q4-base,--arc-base (addendum 11)
   for a in ${SLEEPB_ARMS//,/ }; do
     if [ -f "$OUT/sleepb/$a/result_$a.json" ]; then echo "-- skip sleepb $a"; continue; fi
     SCHED=""   # af and the ablations train the same number of steps per night as ab
     SF=${SLEEPB_SCHEDULE-$OUT/sleepb/ab/result_ab.json}   # SLEEPB_SCHEDULE: AB's schedule from an earlier box; set but empty = no schedule (Week-2 arms use the code's own step formula)
     if [ "$a" != a0 ] && [ "$a" != ad ] && [ "$a" != ab ] && [ -f "$SF" ]; then SCHED="--schedule $SF"; fi
     echo "-- sleepb $a $(date -u +%T) ${SCHED}"
-    python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} || echo "!! sleepb $a failed"
+    python3 backbone/sleep/brain/sleepb.py --arm "$a" ${SLEEPB_TOK:+--tok-budget $SLEEPB_TOK} --model "${SLEEPB_MODEL:-Qwen/Qwen3.5-2B}" --week "${SLEEPB_WEEK:-backbone/sleep/brain/data/week1.json}" --out "$OUT/sleepb/$a" $SCHED ${SLEEPB_SEED:+--seed $SLEEPB_SEED} ${SLEEPB_EXTRA:+${SLEEPB_EXTRA//,/ }} || echo "!! sleepb $a failed"
     # results only (adapters stay on the box), refreshed after every arm so a timed-out run still leaves a pullable tar
     tar czf out.tar.gz --exclude="$OUT/.installed" --exclude="*/adapter" "$OUT" || [ $? -eq 1 ]
   done

@@ -1,0 +1,174 @@
+== run_box 2026-10-25T15:21:32Z steps=3000 bsz=16 micro=4 maxlen=1024
+name, memory.total [MiB]
+NVIDIA RTX PRO 6000 Blackwell Workstation Edition, 97887 MiB
+[W1025 15:21:34.546412192 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+torch 2.9.1+cu128 cuda True transformers 5.20.2 peft 0.21.2
+fla 0.6.0
+causal_conv1d missing (torch fallback): ModuleNotFoundError
+[W1025 15:21:55.665757166 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-- sleepb ab_ob_b4_nb 15:21:55 
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Fetching 26 files:   0%|          | 0/26 [00:00<?, ?it/s]
+Fetching 26 files:   4%|▍         | 1/26 [03:01<1:15:49, 181.97s/it]
+Fetching 26 files:   8%|▊         | 2/26 [03:11<32:07, 80.33s/it]   
+Fetching 26 files:  12%|█▏        | 3/26 [03:13<17:04, 44.56s/it]
+Fetching 26 files:  15%|█▌        | 4/26 [03:14<10:03, 27.42s/it]
+Fetching 26 files:  19%|█▉        | 5/26 [03:15<06:18, 18.02s/it]
+Fetching 26 files:  23%|██▎       | 6/26 [03:16<04:01, 12.09s/it]
+Fetching 26 files:  27%|██▋       | 7/26 [03:19<02:56,  9.28s/it]
+Fetching 26 files:  31%|███       | 8/26 [03:28<02:46,  9.26s/it]
+Fetching 26 files:  35%|███▍      | 9/26 [03:40<02:51, 10.11s/it]
+Fetching 26 files:  38%|███▊      | 10/26 [05:46<12:12, 45.78s/it]
+Fetching 26 files:  42%|████▏     | 11/26 [05:49<08:09, 32.63s/it]
+Fetching 26 files:  46%|████▌     | 12/26 [05:50<05:22, 23.04s/it]
+Fetching 26 files:  50%|█████     | 13/26 [05:50<03:29, 16.13s/it]
+Fetching 26 files:  54%|█████▍    | 14/26 [06:01<02:55, 14.59s/it]
+Fetching 26 files:  58%|█████▊    | 15/26 [06:15<02:36, 14.22s/it]
+Fetching 26 files:  62%|██████▏   | 16/26 [06:35<02:40, 16.06s/it]
+Fetching 26 files:  65%|██████▌   | 17/26 [06:46<02:10, 14.50s/it]
+Fetching 26 files:  69%|██████▉   | 18/26 [08:49<06:16, 47.08s/it]
+Fetching 26 files:  77%|███████▋  | 20/26 [09:06<02:55, 29.24s/it]
+Fetching 26 files:  81%|████████  | 21/26 [09:13<01:59, 23.85s/it]
+Fetching 26 files:  85%|████████▍ | 22/26 [09:14<01:10, 17.71s/it]
+Fetching 26 files:  88%|████████▊ | 23/26 [09:17<00:41, 13.91s/it]
+Fetching 26 files:  92%|█████████▏| 24/26 [09:19<00:20, 10.49s/it]
+Fetching 26 files:  96%|█████████▌| 25/26 [09:19<00:07,  7.56s/it]
+Fetching 26 files: 100%|██████████| 26/26 [09:20<00:00,  5.60s/it]
+Fetching 26 files: 100%|██████████| 26/26 [09:20<00:00, 21.56s/it]
+
+Loading weights:   0%|          | 0/693 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/693 [00:00<01:57,  5.90it/s]
+Loading weights:   0%|          | 2/693 [00:25<2:49:11, 14.69s/it]
+Loading weights:   2%|▏         | 12/693 [00:25<17:51,  1.57s/it] 
+Loading weights:   2%|▏         | 17/693 [00:27<12:53,  1.14s/it]
+Loading weights:   4%|▍         | 30/693 [00:27<05:14,  2.11it/s]
+Loading weights:   5%|▌         | 36/693 [00:35<07:39,  1.43it/s]
+Loading weights:   6%|▌         | 41/693 [00:35<05:46,  1.88it/s]
+Loading weights:   6%|▋         | 45/693 [00:38<06:24,  1.68it/s]
+Loading weights:   7%|▋         | 48/693 [00:39<05:57,  1.80it/s]
+Loading weights:   7%|▋         | 48/693 [00:50<05:57,  1.80it/s]
+Loading weights:   7%|▋         | 49/693 [01:13<35:30,  3.31s/it]
+Loading weights:   7%|▋         | 50/693 [01:19<38:38,  3.61s/it]
+Loading weights:   8%|▊         | 58/693 [01:20<17:52,  1.69s/it]
+Loading weights:   9%|▊         | 60/693 [01:22<16:31,  1.57s/it]
+Loading weights:  10%|█         | 70/693 [01:22<07:32,  1.38it/s]
+Loading weights:  11%|█▏        | 79/693 [01:22<04:26,  2.31it/s]
+Loading weights:  12%|█▏        | 84/693 [01:24<04:30,  2.25it/s]
+Loading weights:  14%|█▍        | 99/693 [01:24<02:11,  4.53it/s]
+Loading weights:  14%|█▍        | 99/693 [01:36<02:11,  4.53it/s]
+Loading weights:  15%|█▍        | 101/693 [02:02<18:37,  1.89s/it]
+Loading weights:  17%|█▋        | 117/693 [02:02<09:01,  1.06it/s]
+Loading weights:  17%|█▋        | 117/693 [02:16<09:01,  1.06it/s]
+Loading weights:  17%|█▋        | 119/693 [02:22<15:58,  1.67s/it]
+Loading weights:  18%|█▊        | 127/693 [02:23<10:59,  1.17s/it]
+Loading weights:  19%|█▉        | 134/693 [02:24<08:10,  1.14it/s]
+Loading weights:  22%|██▏       | 151/693 [02:24<04:02,  2.24it/s]
+Loading weights:  23%|██▎       | 157/693 [02:25<03:18,  2.70it/s]
+Loading weights:  24%|██▍       | 169/693 [02:25<02:07,  4.12it/s]
+Loading weights:  25%|██▌       | 174/693 [02:25<01:50,  4.71it/s]
+Loading weights:  27%|██▋       | 187/693 [02:25<01:07,  7.45it/s]
+Loading weights:  28%|██▊       | 192/693 [02:26<01:02,  8.08it/s]
+Loading weights:  28%|██▊       | 196/693 [02:26<00:54,  9.06it/s]
+Loading weights:  29%|██▉       | 200/693 [02:26<00:52,  9.39it/s]
+Loading weights:  32%|███▏      | 220/693 [02:26<00:24, 19.70it/s]
+Loading weights:  32%|███▏      | 225/693 [02:27<00:25, 18.34it/s]
+Loading weights:  34%|███▍      | 238/693 [02:27<00:17, 25.52it/s]
+Loading weights:  35%|███▌      | 243/693 [02:27<00:20, 22.18it/s]
+Loading weights:  37%|███▋      | 256/693 [02:28<00:14, 29.77it/s]
+Loading weights:  38%|███▊      | 261/693 [02:28<00:17, 25.24it/s]
+Loading weights:  38%|███▊      | 265/693 [02:28<00:17, 24.63it/s]
+Loading weights:  42%|████▏     | 289/693 [02:28<00:09, 43.79it/s]
+Loading weights:  44%|████▍     | 307/693 [02:29<00:07, 49.89it/s]
+Loading weights:  45%|████▌     | 313/693 [02:29<00:09, 38.13it/s]
+Loading weights:  47%|████▋     | 325/693 [02:29<00:08, 42.95it/s]
+Loading weights:  48%|████▊     | 330/693 [02:30<00:10, 33.73it/s]
+Loading weights:  48%|████▊     | 334/693 [02:30<00:11, 32.40it/s]
+Loading weights:  52%|█████▏    | 358/693 [02:30<00:06, 54.71it/s]
+Loading weights:  53%|█████▎    | 364/693 [02:30<00:08, 40.27it/s]
+Loading weights:  54%|█████▍    | 377/693 [02:31<00:08, 35.77it/s]
+Loading weights:  57%|█████▋    | 395/693 [02:31<00:05, 51.18it/s]
+Loading weights:  58%|█████▊    | 403/693 [02:31<00:05, 54.44it/s]
+Loading weights:  62%|██████▏   | 427/693 [02:31<00:03, 82.55it/s]
+Loading weights:  64%|██████▍   | 445/693 [02:31<00:02, 97.97it/s]
+Loading weights:  67%|██████▋   | 463/693 [02:31<00:02, 108.49it/s]
+Loading weights:  69%|██████▊   | 476/693 [02:31<00:02, 100.77it/s]
+Loading weights:  72%|███████▏  | 497/693 [02:32<00:01, 124.10it/s]
+Loading weights:  74%|███████▍  | 515/693 [02:32<00:01, 136.65it/s]
+Loading weights:  77%|███████▋  | 533/693 [02:32<00:01, 145.14it/s]
+Loading weights:  79%|███████▉  | 549/693 [02:32<00:00, 146.21it/s]
+Loading weights:  82%|████████▏ | 566/693 [02:32<00:00, 146.70it/s]
+Loading weights:  84%|████████▍ | 584/693 [02:32<00:00, 149.88it/s]
+Loading weights:  87%|████████▋ | 602/693 [02:32<00:00, 152.10it/s]
+Loading weights:  89%|████████▉ | 618/693 [02:32<00:00, 150.05it/s]
+Loading weights:  92%|█████████▏| 635/693 [02:32<00:00, 148.54it/s]
+Loading weights:  94%|█████████▍| 653/693 [02:33<00:00, 151.31it/s]
+Loading weights:  97%|█████████▋| 671/693 [02:33<00:00, 153.18it/s]
+Loading weights:  99%|█████████▉| 687/693 [02:33<00:00, 150.84it/s]
+Loading weights: 100%|██████████| 693/693 [02:33<00:00,  4.52it/s] 
+[q4] fake-quantized base: 472 tensors quantized, 0 skipped, 34,659,450,880 params, mean rel Frobenius error 0.08305984953355333 (group 64, bits 4), by bits {'4': {'tensors': 392, 'params': 34638397440}, '8': {'tensors': 80, 'params': 21053440}}
+[lora] matched 310 modules (120 shared-expert), trainable 21,166,080
+[lora] trainable 21,166,080
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.0597283335300745e-06, 'pm_modules': 310}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+
+Generating train split:   0%|          | 0/2251 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 2251/2251 [00:00<00:00, 178388.28 examples/s]
+
+Generating test split:   0%|          | 0/2376 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 2376/2376 [00:00<00:00, 750313.68 examples/s]
+
+Generating validation split:   0%|          | 0/570 [00:00<?, ? examples/s]
+Generating validation split: 100%|██████████| 570/570 [00:00<00:00, 395623.58 examples/s]
+[base] ARC-Easy validation(100) 0.990
+[base] ARC-Easy acc 0.994 (n=500)
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 49, 'yes': 32, 'new_items': 32, 'appended': 32, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 1] budget {'scale': 4.0, 'steps': 224, 'steps_ref': 56, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 1] items 173 eligible 4 (active 4, consolidated 0) steps 224 probe_pre 0.0
+[night 1] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 233, 'zeroed_frac': 0.0469758064516129, 'energy_ratio': 0.7217468229298899}
+[night 1] done steps 224 (nrem 129, rem 95) arc_val 0.980 probe_post 1.0 reverted False 486s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 45, 'yes': 31, 'new_items': 31, 'appended': 31, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 2] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 2] items 286 eligible 70 (active 70, consolidated 0) steps 1200 probe_pre 0.05714285714285714
+[night 2] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 227, 'zeroed_frac': 0.04576612903225807, 'energy_ratio': 0.7203493818847189}
+[night 2] done steps 1200 (nrem 690, rem 510) arc_val 0.980 probe_post 0.9714285714285714 reverted False 2399s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.12, 'C4': 0.28, 'C24': 0.2, 'all': 0.15151515151515152}
+[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 26, 'yes': 16, 'new_items': 16, 'appended': 16, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 3] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 3] items 385 eligible 140 (active 136, consolidated 4) steps 1200 probe_pre 0.4855072463768116
+[night 3] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 40, 'zeroed_frac': 0.008064516129032258, 'energy_ratio': 0.7219573274565501}
+[night 3] done steps 1200 (nrem 690, rem 510) arc_val 0.980 probe_post 0.9782608695652174 reverted False 2542s
+[night 4] names {'candidates': 462, 'turns': 145, 'turns_ge2': 116, 'pairs': 27, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 4] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 4] items 478 eligible 194 (active 134, consolidated 60) steps 1200 probe_pre 0.6197916666666666
+[night 4] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 14, 'zeroed_frac': 0.00282258064516129, 'energy_ratio': 0.7222445675797405}
+[night 4] done steps 1200 (nrem 690, rem 510) arc_val 0.980 probe_post 0.9739583333333334 reverted False 2719s
+[curve] night 4 forward {'C1': 0.0, 'C2': 0.29, 'C4': 0.85, 'C24': 0.57, 'all': 0.4318181818181818}
+[night 5] names {'candidates': 498, 'turns': 151, 'turns_ge2': 117, 'pairs': 21, 'yes': 10, 'new_items': 10, 'appended': 10, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 5] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 5] items 572 eligible 245 (active 138, consolidated 107) steps 1200 probe_pre 0.7520661157024794
+[night 5] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 4, 'zeroed_frac': 0.0008064516129032258, 'energy_ratio': 0.7224419790440717}
+[night 5] done steps 1200 (nrem 690, rem 510) arc_val 0.970 probe_post 0.9545454545454546 reverted False 2844s
+[night 6] names {'candidates': 518, 'turns': 148, 'turns_ge2': 121, 'pairs': 42, 'yes': 26, 'new_items': 26, 'appended': 26, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 6] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 6] items 636 eligible 301 (active 135, consolidated 166) steps 1200 probe_pre 0.8047138047138047
+[night 6] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 1, 'zeroed_frac': 0.00020161290322580645, 'energy_ratio': 0.7224999007867707}
+[night 6] done steps 1200 (nrem 690, rem 510) arc_val 0.970 probe_post 0.9629629629629629 reverted False 2965s
+[night 7] names {'candidates': 532, 'turns': 148, 'turns_ge2': 120, 'pairs': 37, 'yes': 12, 'new_items': 12, 'appended': 12, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 7] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None}
+[night 7] items 706 eligible 352 (active 120, consolidated 232) steps 1200 probe_pre 0.8414985590778098
+[night 7] SHY {'modules': 310, 'sv_total': 4960, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.722500041586639}
+[night 7] done steps 1200 (nrem 690, rem 510) arc_val 0.990 probe_post 0.9394812680115274 reverted False 2979s
+[curve] night 7 forward {'C1': 0.03125, 'C2': 0.94, 'C4': 0.99, 'C24': 0.965, 'all': 0.7386363636363636}
+[diag] {"tagger": {"mention_recall": 0.775175644028103, "mentions": 854, "precision_lower_bound": 0.7369888475836431, "extractions": 1076, "recall_by_class": {"C4": 0.7975, "RT": 0.014285714285714285, "C1": 0.921875, "CH": 0.9, "C2": 0.875}}, "eligibility": {"by_class": {"C2": {"n": 100, "extracted": 100, "eligible_now": 99, "eligible_any_value": 99, "superseded_old_value": 0}, "C4": {"n": 100, "extracted": 100, "eligible_now": 98, "eligible_any_value": 98, "superseded_old_value": 0}, "C1": {"n": 64, "extracted": 59, "eligible_now": 2, "eligible_any_value": 2, "superseded_old_value": 0}, "CH": {"n": 30, "extracted": 30, "eligible_now": 30, "eligible_any_value": 30, "superseded_old_value": 28}, "RT": {"n": 20, "extracted": 1, "eligible_now": 1, "eligible_any_value": 1, "superseded_old_value": 0}}, "eligible_items": 347, "eligible_unmatched_to_ground_truth": 71, "eligible_matched_by_class": {"C4": 124, "C2": 112, "CH": 36, "RT": 1, "C1": 3}, "eligible_precision_among_matched": 0.9891304347826086}, "update_detection": {"pairs_judged": 738, "judged_changed": 50, "ch_items": 30, "ch_true_pair_checked": 30, "ch_detected": 27, "ch_detection_recall": 0.9, "false_changed": 19}, "rem": {"chain_pairs_kept_total": 375, "twohop_dreamed": 74, "twohop_total": 78, "pool": 669, "twohop_dreamed_flags": [true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true]}}
+[eval:weights] forward 0.7348484848484849 (C1 0.03125 C2 0.94 C4 0.98) reverse 0.7386363636363636 twohop 0.6794871794871795 changed new 0.9666666666666667 stale 0.03333333333333333 routine 0.3 integration 0.6487179487179487 pooled 0.7271341463414634
+[eval:diary] forward 0.9886363636363636 (C1 0.984375 C2 0.99 C4 0.99) reverse 0.9772727272727273 twohop 0.7564102564102564 changed new 0.9666666666666667 stale 0.03333333333333333 routine 1.0 integration 0.9076923076923077 pooled 0.9557926829268293
+[eval:base_diary] forward 0.9696969696969697 (C1 0.953125 C2 0.97 C4 0.98) reverse 0.9659090909090909 twohop 0.01282051282051282 changed new 1.0 stale 0.0 routine 1.0 integration 0.6709401709401709 pooled 0.8567073170731707
+[eval:router] forward 0.8522727272727273 (C1 0.46875 C2 0.97 C4 0.98) reverse 0.8295454545454546 twohop 0.6666666666666666 changed new 0.9666666666666667 stale 0.03333333333333333 routine 0.75 integration 0.7944444444444444 pooled 0.823170731707317 frac_memory 0.8673780487804879 acc_when_memory 0.836555360281195 acc_when_diary 0.735632183908046
+[eval] arc_easy acc 0.990 (n=500)
+[done] ab_ob_b4_nb wall 17878s -> out/sleepb/ab_ob_b4_nb/result_ab_ob_b4_nb.json
+[W1025 20:19:55.292649743 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-rw-r--r-- 1 root root 150425 Oct 25 20:19 out.tar.gz
+== done 2026-10-25T20:19:56Z

@@ -28,6 +28,10 @@ for f in sorted(Path("out").rglob("result_*.json")):
     ae = d.get("arc_easy")  # Sleep-B: ARC-Easy accuracy of the slept model
     if isinstance(ae, dict) and isinstance(ae.get("acc"), (int, float)):
         nums.append(f"arc={100 * ae['acc']:.1f}")
+    qe = d.get("q4_eval")  # Sleep-B addendum 13: recall C2+C4 of Q (the final model re-quantized to 4 bits with its delta folded in)
+    qc = (((qe.get("Q") or {}).get("scores") or {}).get("forward") or {}).get("C24") if isinstance(qe, dict) else None
+    if isinstance(qc, (int, float)):
+        nums.append(f"q4r={100 * qc:.1f}")
     if name.endswith(".partial"):  # unfinished arm: nights done so far
         nums.append(f"n{len(d.get('nights') or [])}")
     elif d.get("nights"):  # Sleep-B: which nights the morning gate reverted (1 = reverted)

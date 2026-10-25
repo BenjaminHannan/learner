@@ -75,9 +75,58 @@ class Encoder:
 
 # ---------------------------------------------------------------- model
 
+K2_TYPE = "k2_horizon"  # IFM K2-Horizon: remote code (trust_remote_code), K2HorizonForCausalLM with .model.layers and the same q/k/v/o + gate/up/down Linear names
+
+
+def is_k2(args):
+    """True when args.model is a K2-Horizon repo. Real run: config.json's model_type, read as plain JSON (no remote code runs). Smoke run: only a model name
+    containing "k2-horizon" asks for the K2 smoke, so the default (Qwen) smoke never touches the network."""
+    name = getattr(args, "model", None) or ""
+    if getattr(args, "smoke", False):
+        return "k2-horizon" in name.lower()
+    from transformers import PretrainedConfig
+    return PretrainedConfig.get_config_dict(name, revision=getattr(args, "revision", None))[0].get("model_type") == K2_TYPE
+
+
+MOE_TYPE = "qwen3_5_moe"  # Qwen3.5 / Qwen3.6 MoE (e.g. Qwen3.6-35B-A3B): a vision-language checkpoint; AutoModelForCausalLM loads its text part as Qwen3_5MoeForCausalLM (fused 3-D experts)
+
+
+def is_moe(args):
+    """True when args.model is a Qwen3.5-MoE repo. Real run: config.json's model_type, read as plain JSON. Smoke run: only a model name containing "a3b" or "moe" asks for the MoE smoke
+    (tiny random Qwen3_5MoeForCausalLM, byte tokenizer), so the default smoke never touches the network."""
+    name = getattr(args, "model", None) or ""
+    if getattr(args, "smoke", False):
+        return "a3b" in name.lower() or "moe" in name.lower()
+    from transformers import PretrainedConfig
+    return str(PretrainedConfig.get_config_dict(name, revision=getattr(args, "revision", None))[0].get("model_type")).startswith(MOE_TYPE)
+
+
 def load_model(args, device, dtype):
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    if args.smoke:
+    rev = getattr(args, "revision", None)
+    k2 = is_k2(args)
+    moe = (not k2) and is_moe(args)
+    kw = {**({"revision": rev} if rev else {}), **({"trust_remote_code": True} if k2 else {})}  # Qwen: no extra arguments
+    if args.smoke and k2:  # tiny random K2HorizonForCausalLM built from the repo's real config + remote code, with the real tokenizer (and so its chat template)
+        from transformers import AutoConfig
+        tok = AutoTokenizer.from_pretrained(args.model, **kw)
+        cfg = AutoConfig.from_pretrained(
+            args.model, vocab_size=len(tok), hidden_size=64, intermediate_size=128, num_hidden_layers=4, num_attention_heads=4,
+            num_key_value_heads=2, head_dim=16, rope_head_dim=16, max_position_embeddings=2048, eos_token_id=250019, pad_token_id=1, **kw)
+        torch.manual_seed(args.seed)
+        lm = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True, **({"code_revision": rev} if rev else {})).to(dtype=dtype)
+    elif args.smoke and moe:  # tiny random Qwen3_5MoeForCausalLM: 3 linear-attention + 1 full-attention layers, fused 3-D experts (8, top 2) + a shared expert
+        from transformers import Qwen3_5MoeTextConfig, Qwen3_5MoeForCausalLM
+        cfg = Qwen3_5MoeTextConfig(
+            vocab_size=512, hidden_size=64, num_hidden_layers=4, num_attention_heads=4, num_key_value_heads=2, head_dim=16,
+            linear_num_key_heads=2, linear_num_value_heads=4, linear_key_head_dim=16, linear_value_head_dim=16, linear_conv_kernel_dim=4,
+            moe_intermediate_size=32, shared_expert_intermediate_size=32, num_experts=8, num_experts_per_tok=2,
+            max_position_embeddings=2048, eos_token_id=1, pad_token_id=0, tie_word_embeddings=False,
+            layer_types=["linear_attention"] * 3 + ["full_attention"])
+        torch.manual_seed(args.seed)
+        lm = Qwen3_5MoeForCausalLM(cfg).to(dtype=dtype)
+        tok = ByteTok(cfg.vocab_size)
+    elif args.smoke:
         from transformers import Qwen3_5TextConfig, Qwen3_5ForCausalLM
         cfg = Qwen3_5TextConfig(
             vocab_size=512, hidden_size=64, intermediate_size=128, num_hidden_layers=8, num_attention_heads=4,
@@ -89,10 +138,12 @@ def load_model(args, device, dtype):
         lm = Qwen3_5ForCausalLM(cfg).to(dtype=dtype)
         tok = ByteTok(cfg.vocab_size)
     else:
-        tok = AutoTokenizer.from_pretrained(args.model)
-        lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype)
+        tok = AutoTokenizer.from_pretrained(args.model, **kw)
+        if moe and device.type == "cuda":  # ~70 GB of bf16 weights: straight onto the GPU, not staged in host RAM first
+            kw["device_map"] = {"": device.index or 0}
+        lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, **kw)
         if "ForCausalLM" not in type(lm).__name__ or not hasattr(lm.model, "layers"):
-            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM")
+            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM)")
     lm.to(device).eval()
     for p in lm.parameters():
         p.requires_grad_(False)
