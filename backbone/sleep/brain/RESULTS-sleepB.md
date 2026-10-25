@@ -629,3 +629,20 @@ Code 7d04e81894 (`--text-scale`, `--dream-vary`, `--reword`); every flag default
   - The two-hop card gap asks up to 3 kept chain dreams per test (both items covered, answer = the target), not exactly 1. It is report-only.
   - Card variety uses the first 40 texts per item (paraphrases first).
 - Schedule (coordinator, 21:43Z): R8, then V8, back to back on Ben's PC after Think-2; D8 on Vast after the Oct 31 budget reset.
+
+## Addendum 14: probe result and choices made before any arm (2026-10-25 23:35Z)
+The step-0 probe ran on a free Kaggle T4 (fp16, gen-bs 24, code d9d283fad1), 6,021 s, with no empty replies and no OOM. Files: /mnt/project-files/sleep/k2chain/ (probe.json, probe_rows.json, probe.log). On Week-1 at day 7 there were 295 items, 166 eligible, 87 REM pairs and 27 two-hop tests, all 27 reachable. Results after 4 cycles, both directions:
+
+| variant | tests dreamed forward | any direction | kept / samples | thinking tokens (mean), capped at 512 | wall (T4) |
+|---|---|---|---|---|---|
+| default | 13 | 18 | 40 / 620 (6.5%) | none | 257 s |
+| q | 8 | 17 | 33 / 632 (5.2%) | none | 255 s |
+| think | 19 | 24 | 78 / 519 (15.0%) | 449, 330 capped | 2,437 s |
+| q_think | **20** | 23 | 72 / 537 (13.4%) | 441, 339 capped | 2,440 s |
+
+- Selection rule (sealed): **q_think** wins. Its 20 of 27 forward is 74% of reachable, below 90%, so **--rem-tries 2**.
+- Most rejected samples fail the question check (238-448 per variant are "bad") or open-book verification (102-210).
+- Some pairs join two notes of the same fact written two ways (for example "Bouzeibas is the mentor of Glisemu" and "Bouzeibas has Glisemu as a mentor"). No valid two-step card can come from such a pair (suggested, from the rejected examples).
+- **Budget:** the coordinator allowed only arm B now (hard cap $2.20; the week's credit is nearly gone). Arm A waits for the Nov 1 budget, or a free GPU slot. C1 and C2 need A, so they wait too. G is judged on B as soon as it finishes.
+- **Speed setting (not a design change):** both arms use `--gen-bs 48` instead of 32. The thinking cards make REM writing about 10x slower, and this keeps B inside the cap. k2s_bf16 ran with 32, so C1 carries this small extra difference.
+- Both arms also take `--reword data/week2_reworded.json` (report-only, addendum 15's new-wording test, run after the result JSON is written). This gives addendum 15 its 4x reference.
