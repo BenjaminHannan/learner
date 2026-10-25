@@ -1,0 +1,47 @@
+# Think-2 preregistration: train the LoRA and the thinking block together (1-seed pilot, Ben's PC)
+
+Written 2026-10-25, before any Think-2 run. Follows Think-1 (`PREREG.md`, `RUNLOG.md`): G-STS was refuted (S(8) 67.0,
+laps flat, swap lesion ~0) while plain LoRA given the same 1,254 extra steps reached 70.8 (aplus, 3 seeds).
+
+## The one question
+Think-1 froze the backbone and arm a's LoRA, so nothing could learn to read the notes. Does training the LoRA **jointly**
+with the block let the notes pay off, compared with plain LoRA given the same extra steps?
+This is the last pilot of looped latent thinking on this setup. No other variants run.
+
+## Arms (seed 0 only, all on Ben's PC, RTX 5070 Ti, bf16)
+| arm | what it is |
+|---|---|
+| a | LoRA, 418 steps (stage 1, rerun on the PC because Think-1's adapters were not recovered) |
+| aplus | a's adapter, LoRA trained 1,254 more steps (the control) |
+| tj | a's adapter, LoRA **and** a new G-STS block trained together for 1,254 steps, laps 0..4 |
+
+tj's loss per batch = aplus's loss (same full forward, no board) + the Think-1 board loss (answer CE at every lap
+t = 0..4, read from board t, plus 0.01 x the update penalty). So tj gets every gradient aplus gets, plus the block's.
+Same batch order as aplus, same LoRA learning rate and schedule; board learning rates as Think-1. L_max fixed at 4
+(Think-1: 4, 8 and 12 laps scored the same, and 4 laps fit the PC's time budget).
+
+## Scores (validation, 8,675 rows, greedy exact match)
+- S(L): tj with the board read after L laps; L in {0, 1, 4}.
+- gatesoff: tj's LoRA with gates at zero (what the joint LoRA learned on its own).
+- swap: row reads the board of a different story at L = 4.
+- A+: aplus.
+
+## Pass marks (fixed now)
+- **P1 gain:** S(4) - A+ >= +2.0 points, and the paired bootstrap 95% interval excludes 0.
+- **P2 notes used:** S(4) - swap >= +1.0 point.
+- **P3 laps (reported, needed only to call it "looped thinking"):** S(4) - S(1) >= +0.5.
+
+## Decision rule
+- P1 and P2 pass: run seeds 1 and 2 (same PC) before any claim. P3 then decides whether it is looping or just a note pad.
+- Anything else: **stop**. Report, and drop looped latent thinking for v2 (spend the effort on plain LoRA training,
+  which Think-1 showed still had +4 points left).
+
+## Wrong-if (the result that refutes the idea here)
+S(4) - A+ < +1.0, or the swap lesion costs < 0.5. Either means the block, even with a trainable reader, adds nothing a
+LoRA cannot get from the same steps.
+
+## Known biases, stated in advance
+- tj gets more compute per step than aplus (extra slot and answer passes). This favours tj, so the +2.0 bar is deliberately
+  higher than Think-1's noise (re-scoring 0.2, aplus seed spread 0.4).
+- One seed: a pass is a signal to expand, never a result.
+- Hardware differs from Think-1 (5070 Ti vs 5090); only within-PC comparisons count.

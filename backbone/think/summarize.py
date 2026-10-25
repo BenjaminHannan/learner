@@ -29,7 +29,7 @@ CHAIN = ("q.where_before", "q.plan_get")
 LAPS = (0, 1, 2, 4, 8, 12, 16, 24)
 BOOT_N, BOOT_SEED, EPS = 2000, 20261024, 1e-9
 ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
-HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1"}
+HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1", "tj": "L4"}
 ALIAS = {"rep18": ("repeatdelta18", "repeat8", "rep8"), "gatesoff8": ("gatesoff",), "swap8": ("swap",), "mean8": ("meanboard8",)}
 ND = "not-enough-data"
 
@@ -210,7 +210,7 @@ def group(parts):
 
 # ---------------------------------------------------------------- analysis
 
-PARENT = {"aplus": "a", "t": "a", "t1": "a", "tw": "a", "bplus": "b"}  # the stage-1 arm whose adapter each arm starts from
+PARENT = {"aplus": "a", "t": "a", "t1": "a", "tw": "a", "tj": "a", "bplus": "b"}  # the stage-1 arm whose adapter each arm starts from
 BPLUS_EXTEND = 1.0  # PREREG: bplus on all seeds only if bplus - b (seed 0) >= 1.0
 
 

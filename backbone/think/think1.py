@@ -4,6 +4,7 @@ Arms:  a      LoRA on the village rows (stage 1, 418 steps)         b      a + l
        aplus  a's adapter, LoRA trained 1,254 more steps            bplus  b's adapter, LoRA trained 1,254 more steps
        t      a's adapter frozen, only the ThinkBoard (board.py) trains, laps 0..8 or 12
        t1     as t but L_max = 1                                    tw     as t1 with K=144 slots
+       tj     joint: a's adapter AND the board train together (1,254 steps), loss = aplus loss + board loss at fixed L_max = --lmax (4)
 `--smoke` runs every arm end to end on a tiny random qwen3_5 on CPU (into OUT/smoke/) and then summarize.py.
 The village `test` split is never read. Step counts are per-arm defaults, not flags to change in the prereg run.
 """
@@ -29,8 +30,8 @@ import train as T  # noqa: E402
 import board as B  # noqa: E402
 from xent import fixed_cross_entropy  # noqa: E402
 
-ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
-STAGE1, STAGE2, BOARD = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw"), ("t", "t1", "tw")
+ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj")
+STAGE1, STAGE2, BOARD = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj"), ("t", "t1", "tw", "tj")  # BOARD arms build a ThinkBoard; only tj also trains the LoRA
 STEPS1, STEPS2 = 418, 1254
 LR, LR_ALPHA, LR_BOARD, LAMBDA = 2e-4, 3e-3, 5e-4, 0.01
 GATE = dict(alpha=0.02, div=2.0, window=20)  # PREREG mechanics gate: only the gates-shut check at step 150 and NaN / divergence abort; board cosine and clamp share are logs
@@ -292,10 +293,93 @@ def train_board(runner, board, enc, rows, quick_rows, device, args, steps, tr):
     return None
 
 
+def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, tr):
+    """Arm tj: LoRA (a's adapter, trainable) and ThinkBoard train together at fixed L_max = args.lmax. Per micro-batch the loss is the aplus loss
+    (full teacher-forced pass through the LoRA model, no board read) + the board loss (prefill under the current LoRA, no grad; slot and answer passes
+    carry gradient to the board AND, through the checkpointed closures, to the LoRA). The two are backpropagated one after the other (same summed gradient).
+    Returns the abort reason or None."""
+    lora = [p for p in pm.parameters() if p.requires_grad]
+    groups = board_groups(board) + [dict(name="lora", params=lora, lr=LR, base=LR)]
+    opt = torch.optim.AdamW(groups, weight_decay=0.0, betas=(0.9, 0.999))
+    stream = batches(len(rows), args.seed + 1000, args.bsz)  # same stage-2 order as aplus / t
+    warm = 2 if args.smoke else 60
+    L_max = probe_L = args.lmax
+    enforce = args.gate_enforce or not args.smoke
+    t0, window, losses, gn = time.time(), [], tr["step_losses"], {}
+    pm.train()
+    runner.lm.train()
+    for step in range(steps):
+        n = step + 1
+        batch = encode_batch(enc, rows, next(stream))
+        n_norm = sum(len(a) for _, a in batch)
+        for g in opt.param_groups:
+            g["lr"] = T.cosine_lr(step, steps, g["base"], warm)
+        probe = n % 10 == 0 or n in (args.gate_step, steps)
+        total, sts = 0.0, []
+        for k in range(0, len(batch), args.micro_bsz):
+            mb = batch[k:k + args.micro_bsz]
+            la, _ = answer_loss_fixed(runner, mb, device)  # (a) aplus loss
+            (la / n_norm).backward()
+            C, mask, p, lt, ans = micro_inputs(runner, mb, device)
+            lb, _ = B.train_loss(board, runner, C, mask, p, lt, ans, L_max, n_norm=n_norm, row_frac=len(mb) / len(batch), lam=LAMBDA,
+                                 ckpt=not args.no_lap_ckpt)  # (b) board loss
+            lb.backward()
+            total += la.item() / n_norm + lb.item()
+            if probe:
+                with torch.no_grad():
+                    sts.append(B.think(board, runner, C, mask, p, probe_L, keep=(), stats=True)[1])
+        if not math.isfinite(total):
+            return f"NaN loss at step {n}"
+        gn = {g["name"]: float(torch.nn.utils.clip_grad_norm_(g["params"], 1.0)) for g in opt.param_groups}  # clip 1.0 per group
+        if not all(math.isfinite(v) for v in gn.values()):
+            return f"non-finite gradient at step {n}"
+        opt.step()
+        opt.zero_grad(set_to_none=True)
+        losses.append(total)
+        window.append(total)
+        if n % 10 == 0 or n == steps:
+            tr["loss_curve"].append([n, sum(window) / len(window)])
+            window = []
+        if probe:
+            g = probe_summary(sts, board, n, tr["loss_curve"][-1][1] if tr["loss_curve"] else total)
+            g["grad_norm"], g["L_max"] = gn, L_max
+            tr["gate_log"].append(g)
+            print(f"[gate] step {n} loss {g['loss']:.4f} |tanh a| {g['alpha_mean']:.4f} cos_across {g['cos_across']:.3f} cos_within {g['cos_within']:.3f} "
+                  f"cos_upd_across {g['cos_update_across']:.3f} cos_upd_within {g['cos_update_within']:.3f} "
+                  f"clamp {g['clamp']:.2f} clamp5 {g['clamp5']:.2f} step_rms {g['step_rms'][-1]:.3f} gn {gn['refiner']:.3f} gn_lora {gn['lora']:.3f}", flush=True)
+            if n == args.gate_step:
+                reason = gate_reason(g)
+                tr["gate_check"] = dict(step=n, enforced=enforce, reason=reason)
+                if reason and enforce:
+                    return f"mechanics gate at step {n}: {reason}"
+        if n > GATE["window"] and diverged(losses):
+            msg = f"loss diverged at step {n}: last-20 mean > {GATE['div']}x first-20 mean"
+            if enforce:
+                return msg
+            print(f"[warn] {msg} (smoke: not enforced)", flush=True)
+        if n % args.log_every == 0:
+            pm.eval()
+            runner.lm.eval()
+            tr["dev_log"].append(quick_eval(runner, board, enc, quick_rows, device, args, n, gn, laps=(1, L_max)))
+            pm.train()
+            runner.lm.train()
+            print(f"[dev] step {n} {tr['dev_log'][-1]['acc']} ce {tr['dev_log'][-1]['ce']}", flush=True)
+        if n % 50 == 0 or n == steps:
+            print(f"[train] step {n}/{steps} loss {tr['loss_curve'][-1][1]:.4f} {time.time() - t0:.0f}s", flush=True)
+    pm.eval()
+    runner.lm.eval()
+    return None
+
+
 # ---------------------------------------------------------------- board arms: evaluation
 
-def tags_for(arm, split):
+def tags_for(arm, split, lmax=4):
     P = lambda L, n=None: ("plain", L, n)
+    if arm == "tj":  # L = lmax: validation L0, L1, L, swap lesion, gates off (= the jointly trained LoRA alone), no-read reference; dev L only
+        L = lmax
+        if split == "dev":
+            return {f"L{L}": P(L)}
+        return {"L0": P(0), "L1": P(1), f"L{L}": P(L), f"swap{L}": ("swap", L, None), f"gatesoff{L}": ("off", L, None), "ref0": ("none", L, None)}
     if arm == "t":
         if split == "dev":
             return {f"L{L}": P(L) for L in (0, 1, 8)}
@@ -400,11 +484,12 @@ def board_ce(runner, board, enc, rows, Ls, device, bsz):
     return {f"L{L}": sums[L] / max(cnt, 1) for L in Ls}
 
 
-def quick_eval(runner, board, enc, rows, device, args, step, gn):
-    """The every-250-steps log on the first 256 dev rows: answer CE and greedy accuracy at L=1 and 8, swap lesion at 8, |tanh alpha| per layer, refiner grad norm."""
-    ev = eval_board(runner, board, enc, rows, {"L1": ("plain", 1, None), "L8": ("plain", 8, None), "swap8": ("swap", 8, None)}, args, device, "quick")
+def quick_eval(runner, board, enc, rows, device, args, step, gn, laps=(1, 8)):
+    """The every-250-steps log on the first 256 dev rows: answer CE and greedy accuracy at the two laps (1 and 8; tj: 1 and lmax), swap lesion at the second, |tanh alpha| per layer, refiner grad norm."""
+    lo, hi = laps
+    ev = eval_board(runner, board, enc, rows, {f"L{lo}": ("plain", lo, None), f"L{hi}": ("plain", hi, None), f"swap{hi}": ("swap", hi, None)}, args, device, "quick")
     return dict(step=step, n=len(rows), acc={k: round(100 * v["acc"], 2) for k, v in ev.items()},
-                ce={k: round(v, 4) for k, v in board_ce(runner, board, enc, rows, (1, 8), device, args.micro_bsz).items()},
+                ce={k: round(v, 4) for k, v in board_ce(runner, board, enc, rows, laps, device, args.micro_bsz).items()},
                 alpha_abs=[round(float(x), 5) for x in board.gate().detach().abs().mean(1)], refiner_grad_norm=gn.get("refiner"))
 
 
@@ -460,7 +545,7 @@ def run_arm(args):
     steps = args.steps or (STEPS2 if stage2 else STEPS1)
     k_slots = (args.k or (144 if arm == "tw" else 16)) if arm in BOARD else 0
     src = None
-    if arm in ("aplus", "t", "t1", "tw"):
+    if arm in ("aplus", "t", "t1", "tw", "tj"):
         src = Path(args.a_adapter) if args.a_adapter else default_adapter(args, "a")
     elif arm == "bplus":
         src = Path(args.b_adapter) if args.b_adapter else default_adapter(args, "b")
@@ -481,7 +566,21 @@ def run_arm(args):
     if not stage2:
         result["steps_stage1"] = steps
     aborted = None
-    if arm in BOARD:
+    if arm == "tj":  # joint: a's adapter trainable, plus the board (built as in arm t)
+        pm = lora_model(lm, src)
+        runner.lm = pm.base_model.model
+        torch.manual_seed(args.seed)
+        board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots).to(device)
+        n_board, n_lora = sum(p.numel() for p in board.parameters()), sum(p.numel() for p in pm.parameters() if p.requires_grad)
+        result["params_trainable"], result["lmax"] = n_board + n_lora, args.lmax
+        print(f"[joint] arm tj K={k_slots} lmax {args.lmax} board params {n_board:,} lora params {n_lora:,} rho {float(board.rho):.5f}", flush=True)
+        t0 = time.time()
+        aborted = train_joint(runner, pm, board, enc, train_rows, dev_rows[:256], device, args, steps, tr)
+        tr["seconds"] = time.time() - t0
+        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed), out / "think_block.pt")
+        pm.save_pretrained(out / "adapter")
+        result["adapter_sha"] = adapter_sha(out / "adapter")
+    elif arm in BOARD:
         from peft import PeftModel
         pm = PeftModel.from_pretrained(lm, str(src))  # frozen: not trainable
         for p in pm.parameters():
@@ -513,7 +612,7 @@ def run_arm(args):
         ev = result["eval"]
         if arm in BOARD:
             for split, rows in (("dev", dev_rows), ("validation", val_rows)):
-                ev[split] = eval_board(runner, board, enc, rows, tags_for(arm, split), args, device, split)
+                ev[split] = eval_board(runner, board, enc, rows, tags_for(arm, split, args.lmax), args, device, split)
         else:
             for split, rows in (("dev", dev_rows), ("validation", val_rows)):
                 bp = arm in ("a", "aplus")
@@ -559,11 +658,14 @@ def smoke_args(args, arm, root, data):
 
 
 def smoke(args):
-    """Every arm in sequence (a, b, then aplus, bplus, t, t1, tw taking the stage-1 adapters) into OUT/smoke/, then summarize."""
+    """Every arm in sequence (a, b, then aplus, bplus, t, t1, tw, tj taking the stage-1 adapters) into OUT/smoke/, then summarize."""
     root = Path(args.out) / "smoke"
     data = smoke_data(args.data, root)
     rcs, t0 = {}, time.time()
-    for arm in [args.arm] if args.arm else ARMS:
+    arms = [args.arm] if args.arm else list(ARMS)
+    if args.arm == "tj" and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
+        arms.insert(0, "a")  # tj starts from a's adapter: train a first
+    for arm in arms:
         print(f"== smoke arm {arm} {time.time() - t0:.0f}s", flush=True)
         rcs[arm] = run_arm(smoke_args(args, arm, root, data))
     r = run_summarize(root, data)
@@ -590,13 +692,14 @@ def parse(argv=None):
     ap.add_argument("--no-cache", action="store_true", help="cache-free T.greedy decoding for arms a/b/aplus/bplus (slow; for checking; arms a, aplus then skip the board decode path)")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     ap.add_argument("--no-lap-ckpt", action="store_true", help="board arms: keep every slot / answer pass's activations instead of recomputing them in backward (more memory, same result)")
-    ap.add_argument("--a-adapter", default=None, help="stage-1 arm a adapter for aplus/t/t1/tw (default: <out parent>/a_s{seed}/adapter)")
+    ap.add_argument("--a-adapter", default=None, help="stage-1 arm a adapter for aplus/t/t1/tw/tj (default: <out parent>/a_s{seed}/adapter)")
     ap.add_argument("--b-adapter", default=None, help="stage-1 arm b adapter for bplus (default: <out parent>/b_s{seed}/adapter)")
     ap.add_argument("--steps", type=int, default=None, help="override the per-arm step count (not for the prereg run: 418 stage 1, 1,254 stage 2)")
     ap.add_argument("--k", type=int, default=None, help="board slots (default 16; 144 for tw)")
     ap.add_argument("--gate-step", type=int, default=150, help="step of the mechanics gate")
     ap.add_argument("--gate-enforce", action="store_true", help="abort on the gate in --smoke too (always enforced otherwise)")
-    ap.add_argument("--log-every", type=int, default=250, help="dev-subset log interval for t/t1/tw")
+    ap.add_argument("--lmax", type=int, default=4, help="arm tj: fixed L_max of the board loss, and the lap count scored (L{lmax}, swap, gates-off, quick eval)")
+    ap.add_argument("--log-every", type=int, default=250, help="dev-subset log interval for t/t1/tw/tj")
     args = ap.parse_args(argv)
     if not args.arm and not args.smoke:
         ap.error("--arm is required unless --smoke")

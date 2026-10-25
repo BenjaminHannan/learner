@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Think-1 runs (backbone/think/PREREG.md) on a GPU box or Ben's PC. Run from the repo root:
 #   THINK_JOBS=a:0,b:0,aplus:0,t:0,t1:0 bash backbone/think/run_box.sh
-# Each job is ARM:SEED with ARM in a b aplus bplus t t1 tw. EVERY arm runs backbone/think/think1.py (never backbone/train.py); the step
+# Each job is ARM:SEED with ARM in a b aplus bplus t t1 tw tj. EVERY arm runs backbone/think/think1.py (never backbone/train.py); the step
 # counts are think1.py's per-arm defaults (418 stage 1, 1,254 stage 2), so there is no STEPS here.
-# aplus, t, t1, tw need out/think/a_s{S}/adapter and bplus needs out/think/b_s{S}/adapter. If it is missing, that stage-1 arm runs first,
+# aplus, t, t1, tw, tj need out/think/a_s{S}/adapter and bplus needs out/think/b_s{S}/adapter. If it is missing, that stage-1 arm runs first,
 # in the same box (a result file without its adapter is deleted and retrained, so result and adapter always match).
 # Idempotent: a job whose result file exists is skipped (a gate-aborted run also leaves a result: delete it to run again).
 # Results land in out/think/{arm}_s{S}/result_{arm}_s{S}.json; out/think/SUMMARY.txt is the PREREG report.
@@ -62,7 +62,7 @@ if [ "${PARALLEL:-0}" = 1 ]; then
     arm=${job%%:*}; s=${job#*:}
     case "$arm" in
       a|b)                    s1+=("$job");;
-      aplus|t|t1|tw|bplus)    s2+=("$job"); st=a; [ "$arm" = bplus ] && st=b
+      aplus|t|t1|tw|tj|bplus)    s2+=("$job"); st=a; [ "$arm" = bplus ] && st=b
                               if [ ! -f "$OUT/think/${st}_s${s}/adapter/adapter_config.json" ]; then rm -f "$OUT/think/${st}_s${s}/result_${st}_s${s}.json"; s1+=("$st:$s"); fi;;
       *)                      echo "!! unknown arm $arm";;
     esac
@@ -84,7 +84,7 @@ else
     arm=${job%%:*}; s=${job#*:}
     case "$arm" in
       a|b)            run_job "$arm" "$s" || true ;;
-      aplus|t|t1|tw)  if need a "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no a adapter"; fi ;;
+      aplus|t|t1|tw|tj)  if need a "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no a adapter"; fi ;;
       bplus)          if need b "$s"; then run_job "$arm" "$s" || true; else echo "!! $arm seed $s skipped: no b adapter"; fi ;;
       *)              echo "!! unknown arm $arm" ;;
     esac
