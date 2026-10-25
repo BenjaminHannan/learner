@@ -37,7 +37,11 @@ arm_cfg() {  # -> REPO, SERVE (extra vllm args), KW (chat_template_kwargs json),
 }
 
 serve() {  # $1 arm, $2 extra flags
-  pkill -f "vllm serve" 2>/dev/null; sleep 5
+  pkill -f "vllm serve" 2>/dev/null; pkill -f EngineCore 2>/dev/null; sleep 5
+  for i in $(seq 1 30); do  # the engine child process can keep the GPU memory after the API server dies
+    [ "$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1)" -lt 2000 ] && break
+    pkill -9 -f "vllm|EngineCore" 2>/dev/null; sleep 5
+  done
   vllm serve $REPO --served-model-name m --port 8000 --dtype bfloat16 --max-model-len 49152 --gpu-memory-utilization 0.90 \
     --enable-auto-tool-choice $SERVE $2 > $OUT/$1/vllm.log 2>&1 &
   for i in $(seq 1 180); do
@@ -52,7 +56,7 @@ for ARM in ${ARMS//,/ }; do
   arm_cfg $ARM || { echo "=== unknown arm $ARM"; continue; }
   mkdir -p $OUT/$ARM; echo "=== ARM $ARM $REPO start $(date -u +%T)"
   if ! serve $ARM ""; then
-    echo "=== $ARM native vllm failed; tail:"; tail -5 $OUT/$ARM/vllm.log
+    echo "=== $ARM native vllm failed; errors:"; grep -E "Error|error" $OUT/$ARM/vllm.log | grep -v "^ *File" | tail -6 | cut -c1-300; cp $OUT/$ARM/vllm.log $OUT/$ARM/vllm_native.log
     serve $ARM "--model-impl transformers" || { echo "=== $ARM SERVE-FAIL"; tail -20 $OUT/$ARM/vllm.log; continue; }
   fi
   python3 $ROOT/swap/smoke.py "$KW" > $OUT/$ARM/smoke.json 2>&1; echo "smoke: $(head -c 600 $OUT/$ARM/smoke.json)"
@@ -72,7 +76,7 @@ for ARM in ${ARMS//,/ }; do
   else
     echo "=== $ARM no results.json"; tail -20 $OUT/$ARM/tau2.log
   fi
-  grep -E "throughput|tokens/s" $OUT/$ARM/vllm.log | tail -2
+  grep -E "Error|error" $OUT/$ARM/vllm.log | tail -3
 done
 pkill -f "vllm serve"
 tar czf $OUT.tgz -C $ROOT out && base64 -w0 $OUT.tgz > $ROOT/out.b64 && echo "=== packed $(stat -c %s $OUT.tgz) bytes"
