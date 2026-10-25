@@ -187,3 +187,15 @@ Reading (suggested): shorter constant-building is not what holds affine back. Ac
 Confound (found 2026-10-25 from train.json): hind4 ran ~55% more sleep updates than nights4 (Kaggle s0 7,171 vs 4,607; s1 7,254 vs
 4,694), because its extra records raise the update count. Its small gain and higher harm may come from extra training alone, as in
 round 5. A fair re-test would give nights4 the same number of updates.
+
+# Round 9: equal-practice control for hindsight, and rare fits first for affine (pre-registered 2026-10-25, before the run)
+All arms on one Kaggle box, seeds 0 and 1, 4 nights, fresh OUT dir: nights4, nights4_x155, hind4, rare4.
+(a) `nights4_x155` = nights4 with every night's sleep updates x1.55, matching hind4's measured extra updates (round 6 Kaggle:
+7,171 vs 4,607). Marks: hindsight helps beyond practice if hind4 Hard >= nights4_x155 + 3; it was only practice (proved wrong)
+if hind4 Hard <= nights4_x155 + 1. Reported: nights4_x155 vs nights4 (does more practice alone help, and does it cost harm?).
+(b) `rare4`, for affine. Facts from round 6 Kaggle s0: each night about 35-45 affine pool questions get a fitting try from search, yet
+affine first-try stays 0-2%, and step-1 op entropy is low (0.18-0.26 nats). Rare fits are drowned out: they are ~5% of ~1,600 W
+records. One change from nights4: W records of questions that fit only in the second search pass (the 480 extra tries) are repeated
+4x in the record list, while the update count stays exactly nights4's (computed from the unrepeated list). Kind-blind: the boost uses
+only the pass number. Marks: PASS if rare4 affine >= 5% AND Hard >= nights4 + 3, Easy within 5 of nights4's base, harm <= 2.
+Proved wrong: affine <= 1% AND Hard <= nights4 + 1. Reported: per-night W records by kind and pass for every arm.
