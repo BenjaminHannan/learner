@@ -35,6 +35,8 @@ Addendum 11b (PREREG-sleepB-addendum11b.md), K2 only: the names pass thinks brie
 left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 256 greedy tokens on the base, stopping at "</ifm|think_faster>" or the end of the turn; stage 2 is the same prompt + that thinking +
 "</ifm|think_faster>" (added when stage 1 did not close the block), then the answer as before (12 tokens, parse_rel). names_pass's record gets think_tokens_mean / think_capped on K2 only (Qwen's is unchanged).
 
+Addendum 13 (PREREG-sleepB-addendum13.md): --q4-eval (delta arms only) also scores the final model under F0 / Q0 / Q / Qf (bf16 and 4-bit, with and without the fp32 delta folded in, fresh or frozen 4-bit grid).
+
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
 scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
@@ -44,7 +46,7 @@ every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-3
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addendum 11b)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addendum 11b) + the q4-eval conditions (addendum 13)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -2939,21 +2941,28 @@ def run_af(L, pm, args, week, diary, leak, replay, sched, out, result, log, dump
 
 
 # ------------------------------------------------------------------ q4 base (MLX affine fake quantization)
-def q4_fake(w, group=64, bits=4, store_dtype=None):
-    """MLX affine quantize-dequantize of a 2-D+ tensor along its last dim; returns w' (same shape and dtype as w) or None if the last dim
-    is not divisible by group. Per group: scale = (max-min)/(2^bits-1) (1e-8-ish safe value when max == min), bias = min, both rounded to
-    store_dtype (default w.dtype); q = clamp(round((w-bias)/scale), 0, 2^bits-1); w' = q*scale + bias. Math in float32."""
-    if w.dim() < 1 or w.shape[-1] % group:
-        return None
+def q4_quant(x, group, bits, store_dtype, grid=None):
+    """The MLX affine grid and codes of the float32 tensor x (last dim divisible by group), as (q, scale, bias) shaped [-1, groups, group] / [-1, groups, 1], all float32: per group scale = (max-min)/(2^bits-1)
+    (1e-8 when max == min), bias = min, both rounded to store_dtype, taken from the groups of `grid` (a tensor of x's shape; default x itself); q = clamp(round((x-bias)/scale), 0, 2^bits-1)."""
     levels = 2 ** bits - 1
-    x = w.detach().float().reshape(-1, w.shape[-1] // group, group)
-    mx, mn = x.amax(-1, keepdim=True), x.amin(-1, keepdim=True)
+    xg = x.reshape(-1, x.shape[-1] // group, group)
+    g = xg if grid is None else grid.float().reshape(xg.shape)
+    mx, mn = g.amax(-1, keepdim=True), g.amin(-1, keepdim=True)
     scale = (mx - mn) / levels
     scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
-    sd = store_dtype or w.dtype
-    scale, bias = scale.to(sd).float(), mn.to(sd).float()
+    scale, bias = scale.to(store_dtype).float(), mn.to(store_dtype).float()
     scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)  # a rounded-to-zero scale (underflow) stays safe
-    q = torch.clamp(torch.round((x - bias) / scale), 0, levels)
+    return torch.clamp(torch.round((xg - bias) / scale), 0, levels), scale, bias
+
+
+def q4_fake(w, group=64, bits=4, store_dtype=None, grid=None):
+    """MLX affine quantize-dequantize of a 2-D+ tensor along its last dim; returns w' (same shape and dtype as w) or None if the last dim
+    is not divisible by group. Per group: scale = (max-min)/(2^bits-1) (1e-8-ish safe value when max == min), bias = min, both rounded to
+    store_dtype (default w.dtype); q = clamp(round((w-bias)/scale), 0, 2^bits-1); w' = q*scale + bias. Math in float32 (q4_quant). grid: a tensor of w's shape
+    whose groups give the scale and bias instead of w's own (addendum 13, the frozen grid); w may be float32 while store_dtype is bf16 (the grid of an fp32 sum)."""
+    if w.dim() < 1 or w.shape[-1] % group:
+        return None
+    q, scale, bias = q4_quant(w.detach().float(), group, bits, store_dtype or w.dtype, grid)
     return (q * scale + bias).reshape(w.shape).to(w.dtype)
 
 
@@ -2986,14 +2995,15 @@ def q4_inplace(w, group, bits, chunk=Q4_CHUNK):
     return math.sqrt(e2 / d2) if d2 > 0 else 0.0
 
 
-def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None):
+def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None, skip=()):
     """Fake-quantize (in place, no grad) the weight of every nn.Linear and nn.Embedding in lm; tied tensors once (by data_ptr). The scale /
     bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}.
     bits_for: sequence of (regex, bits); a tensor whose name (e.g. "model.layers.3.mlp.shared_expert_gate.weight") matches a regex (re.search, first hit wins) is quantized to those bits
     instead of `bits`. extra: sequence of regexes; every other Parameter (a fused 3-D expert tensor, a Parameter-holding router module) whose name matches is quantized too, along its last dim.
     With both left at None nothing changes (same tensors, same numbers, same result keys, every tensor quantized in one piece); otherwise tensors above `chunk` elements (default Q4_CHUNK) are quantized in
-    slices along dim 0 (same weights bit for bit; the error statistic is then summed in float64) and the result also has by_bits ({bits: {tensors, params}}) and pattern_hits (the prefix bits: or extra: plus the regex -> how many tensors it matched)."""
-    seen, nq, ns, npar, errs = set(), 0, 0, 0, []
+    slices along dim 0 (same weights bit for bit; the error statistic is then summed in float64) and the result also has by_bits ({bits: {tensors, params}}) and pattern_hits (the prefix bits: or extra: plus the regex -> how many tensors it matched).
+    skip: tensors (e.g. the 16-bit LoRA weights, or weights already quantized another way) that are left alone and not counted."""
+    seen, nq, ns, npar, errs = {w.data_ptr() for w in skip}, 0, 0, 0, []
     bits_for = [(re.compile(r), int(b)) for r, b in (bits_for or [])]
     extra = [re.compile(r) for r in (extra or [])]
     by_bits, hits = {}, Counter()
@@ -3036,6 +3046,134 @@ def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None):
     out = {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
     if bits_for or extra:
         out.update(by_bits=by_bits, pattern_hits=dict(hits))
+    return out
+
+
+# ------------------------------------------------------------------ q4 eval (addendum 13): the final model under F0 / Q0 / Q / Qf
+Q4_CONDS = ("F0", "Q0", "Q", "Qf")  # bf16 W | 4-bit W | 4-bit (W + delta_w, fresh grid) | 4-bit (W + delta_w on the grid of W); the delta hooks are off in all four
+
+
+def q4_type(name):  # module type of a weight / module name: the last name component ('weight' and 'base_layer' dropped), in_proj_qkv / _z / _a / _b merged
+    t = [x for x in name.split(".") if x not in ("weight", "base_layer")][-1]
+    return "in_proj_*" if t.startswith("in_proj") else t
+
+
+def q4_tensors(lm):  # {module name: weight} of every nn.Linear / nn.Embedding (the LoRA ones too), a tied tensor once
+    seen, out = set(), {}
+    for n, m in lm.named_modules():
+        if isinstance(m, (torch.nn.Linear, torch.nn.Embedding)) and m.weight.data_ptr() not in seen:
+            seen.add(m.weight.data_ptr())
+            out[n] = m.weight
+    return out
+
+
+def q4_delta_mods(lm):  # [(name, base Linear)] of every module that has a delta_w
+    return [(n, m) for n, m in lm.named_modules() if hasattr(m, "delta_w")]
+
+
+def q4_lora_w(lm):  # the weights of the LoRA A / B Linears: they stay 16-bit and out of every quantization
+    return [w for n, w in q4_tensors(lm).items() if ".lora_" in n]
+
+
+@torch.no_grad()
+def q4_sig(ts, chunk=1 << 24):
+    """Position-sensitive integer checksum over the bytes of tensors: per tensor sum_k byte_k * (k % 251 + 1) (int64, in chunks), chained over the tensors."""
+    tot = 0
+    for t in ts:
+        b, s = t.detach().contiguous().reshape(-1).view(torch.uint8), 0
+        for i in range(0, b.numel(), chunk):
+            c = b[i:i + chunk].to(torch.int64)
+            s += int((c * (torch.arange(i, i + c.numel(), device=c.device) % 251 + 1)).sum())
+        tot = (tot * 1000003 + s) % (1 << 61)
+    return tot
+
+
+@torch.no_grad()
+def q4_condition(lm, cond, group=64, bits=4):
+    """Put the weights of lm into q4-eval condition cond (in place; the caller restores them). F0: untouched. Q0: q4_apply on W. Q: every weight with a delta_w becomes W.float() + delta_w.float() (fp32), quantized from that
+    fp32 sum on its own grid (scale / bias stored in the weight's dtype) and written back; Qf: the same sum rounded to codes on the grid of W (frozen scale and bias), clamped to 0..2^bits-1. All other tensors as in Q0.
+    A tensor whose last dim is not divisible by group keeps the unquantized sum. The LoRA weights are never quantized. Returns q4_apply's stats (None for F0)."""
+    assert cond in Q4_CONDS, cond
+    if cond == "F0":
+        return None
+    dm = q4_delta_mods(lm) if cond in ("Q", "Qf") else []
+    for _, bl in dm:
+        w = bl.weight.data
+        x = w.float() + bl.delta_w.data.float()
+        wq = q4_fake(x, group, bits, w.dtype, grid=w.float() if cond == "Qf" else None)
+        w.copy_(x if wq is None else wq)  # fp32 -> the weight's dtype only after the quantize-dequantize
+        del x, wq
+    return q4_apply(lm, group, bits, skip=[bl.weight for _, bl in dm] + q4_lora_w(lm))
+
+
+@torch.no_grad()
+def q4_delta_stats(lm, group=64, bits=4):
+    """Weights at W (nothing changed): for every module with a delta_w, the 4-bit codes of W (grid of W), of W + delta_w on its own grid (Q) and on the grid of W (Qf), and |delta_w| / scale (scale: the group step of W).
+    Per module type (q4_type) and overall: modules, codes, share of codes that differ from Q0's (Q, Qf), mean |delta_w| / scale. codes_all: every quantizable (last dim divisible by group) non-LoRA weight."""
+    skip, c, tot = {w.data_ptr() for w in q4_lora_w(lm)}, defaultdict(Counter), Counter()
+    for n, bl in q4_delta_mods(lm):
+        w = bl.weight.data
+        if w.shape[-1] % group:
+            c[q4_type(n)]["skipped"] += 1
+            continue
+        x0, d = w.float(), bl.delta_w.data.float()
+        x1, (q0, s0, _) = x0 + d, q4_quant(x0, group, bits, w.dtype)
+        qa, qb = q4_quant(x1, group, bits, w.dtype)[0], q4_quant(x1, group, bits, w.dtype, grid=x0)[0]
+        r = c[q4_type(n)]
+        r["modules"] += 1
+        r["codes"] += q0.numel()
+        r["diff_Q"] += int((qa != q0).sum())
+        r["diff_Qf"] += int((qb != q0).sum())
+        r["abs_delta_over_scale"] += float((d.reshape(q0.shape).abs() / s0).double().sum())
+    out = {}
+    for t, r in sorted(c.items()):
+        tot.update(r)
+        out[t] = q4_share(r)
+    return {"overall": q4_share(tot), "by_type": out, "codes_all": sum(w.numel() for n, w in q4_tensors(lm).items() if w.data_ptr() not in skip and w.shape[-1] % group == 0)}
+
+
+def q4_share(r):  # q4_delta_stats: a counter -> shares
+    n = max(r["codes"], 1)
+    return {"modules": r["modules"], "skipped": r["skipped"], "codes": r["codes"], "share_changed_Q": r["diff_Q"] / n, "share_changed_Qf": r["diff_Qf"] / n, "mean_abs_delta_over_scale": r["abs_delta_over_scale"] / n}
+
+
+def q4_eval(lm, group, bits, score, log=print, save=None, out=None):
+    """Addendum 13: run score(cond) (-> dict) with the weights of lm in each of Q4_CONDS and the delta switch off, restoring them bit for bit after each (CPU snapshot of every Linear / Embedding weight; asserted by torch.equal
+    on a few tensors and q4_sig over all weights and all delta_w) and the switch to what it was. Returns {group, bits, lora_B_nonzero, lora_B_max_abs, stats, <cond>: {**score(cond), q4_apply, wall_seconds}}; a dict given as `out` is that result, filled in as it goes (save() after each part)."""
+    ts = list(q4_tensors(lm).values())
+    saved = [w.data.to("cpu", copy=True) for w in ts]
+    dws = [bl.delta_w.data for _, bl in q4_delta_mods(lm)]
+    sig, dsig, prev = q4_sig([w.data for w in ts]), q4_sig(dws), _DELTA["on"]
+    few = sorted({0, len(ts) // 2, len(ts) - 1, max(range(len(ts)), key=lambda i: ts[i].numel())})
+    out = {} if out is None else out
+    bmax = max([float(p.detach().abs().max()) for n, p in lm.named_parameters() if "lora_B" in n] or [0.0])  # the LoRA is left as it is (16-bit, in every condition)
+    out.update(group=group, bits=bits, lora_B_nonzero=bmax > 0, lora_B_max_abs=bmax)
+    ok = lambda x: "n/a" if x is None else f"{x:.3f}"  # noqa: E731
+    try:
+        out["stats"] = o = q4_delta_stats(lm, group, bits)
+        log(f"[q4eval] lora_B_nonzero {out['lora_B_nonzero']} (max |B| {bmax:.3g}); {o['overall']['modules']} delta modules, codes differing from Q0: Q {o['overall']['share_changed_Q']:.2%}, Qf {o['overall']['share_changed_Qf']:.2%}; mean |delta| / scale {o['overall']['mean_abs_delta_over_scale']:.3f}")
+        if save:
+            save()
+        for cond in Q4_CONDS:
+            t1 = time.time()
+            try:
+                _DELTA["on"] = False
+                st = q4_condition(lm, cond, group, bits)
+                r = {**score(cond), "q4_apply": st}
+            finally:
+                _DELTA["on"] = prev
+                with torch.no_grad():
+                    for w, s in zip(ts, saved):
+                        w.data.copy_(s)
+                assert all(torch.equal(ts[i].data.cpu(), saved[i]) for i in few) and q4_sig([w.data for w in ts]) == sig and q4_sig(dws) == dsig and _DELTA["on"] == prev, f"q4_eval: restore after {cond} failed"
+            r["wall_seconds"] = time.time() - t1
+            out[cond] = r
+            sc, ae = r.get("scores") or {}, r.get("arc_easy") or {}
+            log(f"[q4eval:{cond}] recall C2+C4 {ok((sc.get('forward') or {}).get('C24'))} twohop {ok((sc.get('twohop') or {}).get('acc'))} arc {ok(ae.get('acc'))} wall {r['wall_seconds']:.0f}s")
+            if save:
+                save()
+    finally:
+        _DELTA["on"] = prev
     return out
 
 
@@ -3157,6 +3295,183 @@ def selftest_q4_moe(g):
     assert e8 < e4 / 8, (e8, e4)
     out.update(by_bits=st["by_bits"], router_rel_err_8bit=float(e8), router_rel_err_4bit=float(e4))
     return out
+
+
+@torch.no_grad()
+def selftest_q4_eval():
+    """Addendum 13 (--q4-eval) on tiny CPU models (own generator; the global RNG and the delta switch are restored): (i) q4_fake / q4_inplace / q4_apply are bit-identical to a verbatim copy of the pre-addendum-13 code (fp32 and bf16,
+    2-D / 3-D, sliced, non-divisible, 3 / 4 / 8 bits, a tied Linear / Embedding net, same stats); (ii) with every delta_w zero, Q and Qf weights == Q0 weights bit for bit; (iii) with a delta of +-3 group steps on one tensor, that tensor differs
+    from Q0 in Q and Qf (the rest does not), Qf == clamp(round((W + d - bias) / scale), 0, 15) on the grid of W and Q on the grid of W + d (independent code), the fp32-sum quantizer differs from quantizing a bf16-rounded sum, the stats agree
+    (mean |d| / scale = 3 on that tensor); (iv) q4_eval with a stub scorer: delta off and the weights in the right condition inside every call, afterwards every Linear / Embedding weight and every delta_w bit-identical, the switch as before
+    (on and off), the result keys; q4_sig sees a one-bit change. Run on the smoke Qwen3.5 in fp32 and bf16."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    g, out, rng_state, sw = torch.Generator().manual_seed(0), {}, torch.get_rng_state(), _DELTA["on"]
+
+    def ref_fake(w, group=64, bits=4, store_dtype=None):  # q4_fake as it was before addendum 13
+        if w.dim() < 1 or w.shape[-1] % group:
+            return None
+        levels = 2 ** bits - 1
+        x = w.detach().float().reshape(-1, w.shape[-1] // group, group)
+        mx, mn = x.amax(-1, keepdim=True), x.amin(-1, keepdim=True)
+        scale = (mx - mn) / levels
+        scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
+        sd = store_dtype or w.dtype
+        scale, bias = scale.to(sd).float(), mn.to(sd).float()
+        scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
+        q = torch.clamp(torch.round((x - bias) / scale), 0, levels)
+        return (q * scale + bias).reshape(w.shape).to(w.dtype)
+
+    def ref_inplace(w, group, bits, chunk=Q4_CHUNK):  # q4_inplace as it was before addendum 13
+        if w.dim() < 1 or w.shape[-1] % group:
+            return None
+        if w.numel() <= chunk or w.dim() < 2 or w.shape[0] < 2:
+            wq = ref_fake(w, group, bits)
+            den = w.float().norm().item()
+            err = (wq.float() - w.float()).norm().item() / den if den > 0 else 0.0
+            w.copy_(wq)
+            return err
+        rows = max(1, chunk // (w.numel() // w.shape[0]))
+        e2 = d2 = 0.0
+        for i in range(0, w.shape[0], rows):
+            piece = w[i:i + rows]
+            wq = ref_fake(piece, group, bits)
+            e2 += (wq.float() - piece.float()).double().pow(2).sum().item()
+            d2 += piece.float().double().pow(2).sum().item()
+            piece.copy_(wq)
+            del wq
+        return math.sqrt(e2 / d2) if d2 > 0 else 0.0
+
+    def ref_grid(W, sd):  # per group of 64 along the last dim, written out on its own: (scale, bias) of a float32 tensor, stored in sd
+        x = W.float().reshape(*W.shape[:-1], -1, 64)
+        mn, mx = x.min(-1, keepdim=True).values, x.max(-1, keepdim=True).values
+        return ((mx - mn) / 15).to(sd).float(), mn.to(sd).float()
+
+    def ref_deq(x, sc, bi, dt):  # dequantized weight of the float32 tensor x on the grid (sc, bi): codes clamp(round((x - bias) / scale), 0, 15)
+        xg = x.float().reshape(sc.shape[:-1] + (64,))
+        return (((xg - bi) / sc).round().clamp(0, 15) * sc + bi).reshape(x.shape).to(dt)
+
+    try:
+        n_cmp = 0
+        for dt in (torch.float32, torch.bfloat16):  # (i)
+            for shape in [(8, 128), (5, 4, 128), (4, 100), (3, 64), (1, 128), (64,)]:
+                for bits in (3, 4, 8):
+                    w = torch.randn(shape, generator=g).to(dt)
+                    assert (q4_fake(w, 64, bits) is None) == (ref_fake(w, 64, bits) is None)
+                    if w.shape[-1] % 64 == 0:
+                        assert torch.equal(q4_fake(w, 64, bits), ref_fake(w, 64, bits)) and torch.equal(q4_fake(w, 64, bits, torch.bfloat16), ref_fake(w, 64, bits, torch.bfloat16))
+                    for chunk in (Q4_CHUNK, 2 * 4 * 128):
+                        a, b = w.clone(), w.clone()
+                        ra, rb = q4_inplace(a, 64, bits, chunk), ref_inplace(b, 64, bits, chunk)
+                        assert torch.equal(a, b) and ra == rb, (dt, shape, bits, chunk)
+                        n_cmp += 1
+        def net_of():  # Linear, Linear, Embedding tied to a Linear, non-divisible Linear
+            emb, lin = torch.nn.Embedding(10, 128), torch.nn.Linear(128, 10, bias=False)
+            lin.weight = emb.weight
+            return torch.nn.ModuleList([torch.nn.Linear(256, 64), torch.nn.Linear(64, 128, bias=False), emb, lin, torch.nn.Linear(100, 4)])
+        nets = [net_of(), net_of()]
+        for p0, p1 in zip(nets[0].parameters(), nets[1].parameters()):
+            p0.data.normal_(0, 1, generator=g)
+            p1.data.copy_(p0.data)
+        st, errs = q4_apply(nets[0], 64, 4), []
+        for w in {id(m.weight): m.weight for m in nets[1]}.values():  # the reference: each distinct tensor once, in module order
+            e = ref_inplace(w.data, 64, 4)
+            if e is not None:
+                errs.append(e)
+        assert all(torch.equal(a, b) for a, b in zip(nets[0].parameters(), nets[1].parameters())) and st["mean_rel_fro"] == sum(errs) / len(errs), st
+        assert (st["tensors"], st["skipped"]) == (3, 1) and set(st) == {"tensors", "skipped", "params", "mean_rel_fro", "group", "bits"}, st
+        out["bit_identical_cases"] = n_cmp
+        wb = torch.randn(64, 256, generator=g).to(torch.bfloat16)  # (iii-a) the fp32 sum is quantized on its own grid, not a bf16-rounded sum
+        sc, bi = ref_grid(wb, torch.bfloat16)
+        x32 = wb.float() + 0.5 * sc.expand(-1, -1, 64).reshape(wb.shape) * torch.randn(wb.shape, generator=g)
+        fp32_route, bf16_route = q4_fake(x32, 64, 4, torch.bfloat16).to(torch.bfloat16), q4_fake(x32.to(torch.bfloat16), 64, 4)
+        sc2, bi2 = ref_grid(x32, torch.bfloat16)
+        assert torch.equal(fp32_route, ref_deq(x32, sc2, bi2, torch.bfloat16)) and not torch.equal(fp32_route, bf16_route)
+        out["fp32_vs_bf16_sum_differing_weights"] = int((fp32_route != bf16_route).sum())
+        w1 = torch.randn(1000, generator=g)  # q4_sig sees a one-bit change
+        s1 = q4_sig([w1])
+        w1.view(torch.int32)[500] ^= 1
+        assert q4_sig([w1]) != s1 and q4_sig([w1]) == q4_sig([w1.clone()])
+
+        def tiny(dt):
+            lm, _ = load_model(Namespace(smoke=True, seed=0), torch.device("cpu"), dt)
+            pm = get_peft_model(lm, LoraConfig(r=4, lora_alpha=8, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+            setup_delta(pm, True)
+            return lm, pm
+
+        def state(lm):
+            return {n: w.data.clone() for n, w in q4_tensors(lm).items()}, [bl.delta_w.data.clone() for _, bl in q4_delta_mods(lm)]
+
+        def under(lm, cond):  # the weights (copies) under cond, then put back
+            orig = state(lm)[0]
+            q4_condition(lm, cond, 64, 4)
+            got = state(lm)[0]
+            for n, w in q4_tensors(lm).items():
+                w.data.copy_(orig[n])
+            return got
+
+        def same(a, b, skip=()):
+            return all(torch.equal(a[n], b[n]) for n in a if n not in skip)
+
+        for dt in (torch.float32, torch.bfloat16):
+            tag = str(dt).replace("torch.", "")
+            lm, pm = tiny(dt)
+            dm = q4_delta_mods(lm)
+            lora_n = {n for n in q4_tensors(lm) if ".lora_" in n}
+            assert len(dm) > 8 and lora_n and all(float(p.abs().max()) == 0 for n, p in lm.named_parameters() if "lora_B" in n)
+            orig, dorig = state(lm)
+            q0 = under(lm, "Q0")  # (ii)
+            assert all(torch.equal(q0[n], orig[n]) for n in lora_n) and any(not torch.equal(q0[n], orig[n]) for n in orig if n not in lora_n)
+            assert same(under(lm, "Q"), q0) and same(under(lm, "Qf"), q0), f"zero delta: Q / Qf != Q0 ({tag})"
+            assert same(under(lm, "F0"), orig)
+            z = q4_delta_stats(lm, 64, 4)
+            assert z["overall"]["share_changed_Q"] == 0 and z["overall"]["share_changed_Qf"] == 0 and z["overall"]["mean_abs_delta_over_scale"] == 0, z["overall"]
+            n0, bl0 = dm[0]  # (iii): +-3 group steps on one tensor, tiny noise-free
+            W = bl0.weight.data
+            sc, bi = ref_grid(W, W.dtype)
+            sign = torch.where(torch.rand(sc.shape[:-1] + (64,), generator=g) < 0.5, -1.0, 1.0)
+            d = (3 * sc * sign).reshape(W.shape)
+            bl0.delta_w.data.copy_(d)
+            exp_f = ref_deq(W.float() + d, sc, bi, W.dtype)  # Qf: the grid of W
+            sc2, bi2 = ref_grid(W.float() + d, W.dtype)
+            exp_q = ref_deq(W.float() + d, sc2, bi2, W.dtype)  # Q: the grid of W + d
+            qq, qf = under(lm, "Q"), under(lm, "Qf")
+            assert torch.equal(qf[n0], exp_f) and torch.equal(qq[n0], exp_q), f"Q / Qf weights != the independent grids ({tag})"
+            codes = ((qf[n0].float().reshape(sc.shape[:-1] + (64,)) - bi) / sc).round()
+            assert torch.equal(codes, ((W.float() + d).reshape(codes.shape) - bi).div(sc).round().clamp(0, 15)), "Qf codes"
+            assert not torch.equal(qq[n0], q0[n0]) and not torch.equal(qf[n0], q0[n0]) and same(qq, q0, {n0}) and same(qf, q0, {n0}), f"Q / Qf must differ from Q0 on the delta tensor only ({tag})"
+            ss = q4_delta_stats(lm, 64, 4)
+            t0 = ss["by_type"][q4_type(n0)]
+            assert ss["overall"]["share_changed_Qf"] > 0 and ss["overall"]["share_changed_Q"] > 0 and ss["codes_all"] > ss["overall"]["codes"]
+            assert abs(t0["mean_abs_delta_over_scale"] * t0["codes"] - 3 * W.numel()) < 1e-3 * W.numel(), t0
+            assert all(v["share_changed_Q"] == 0 and v["share_changed_Qf"] == 0 for t, v in ss["by_type"].items() if t != q4_type(n0))
+            out[f"stats_{tag}"] = {"overall": ss["overall"], q4_type(n0): t0}
+            for _, bl in dm:  # (iv): every module a random delta
+                bl.delta_w.data.normal_(0, 0.02, generator=g)
+            orig, dorig = state(lm)
+            for prev in (True, False):
+                _DELTA["on"] = prev
+                seen = {}
+
+                def stub(cond):
+                    assert not _DELTA["on"], "delta switch must be off while scoring"
+                    seen[cond] = state(lm)[0]
+                    return {"scores": {"forward": {"C24": 0.5}, "twohop": {"acc": 0.25}}, "arc_easy": {"acc": 0.75}}
+                saves, lines = [], []
+                res = q4_eval(lm, 64, 4, stub, log=lines.append, save=lambda: saves.append(1))
+                after, dafter = state(lm)
+                assert _DELTA["on"] == prev and same(after, orig) and all(torch.equal(a, b) for a, b in zip(dafter, dorig)), f"q4_eval did not restore the model ({tag}, switch {prev})"
+                assert set(res) == {"group", "bits", "lora_B_nonzero", "lora_B_max_abs", "stats", *Q4_CONDS} and res["lora_B_nonzero"] is False and res["lora_B_max_abs"] == 0.0 and list(seen) == list(Q4_CONDS)
+                assert all(set(res[c]) == {"scores", "arc_easy", "q4_apply", "wall_seconds"} for c in Q4_CONDS) and res["F0"]["q4_apply"] is None and len(lines) == 5 and len(saves) == 5
+                assert same(seen["F0"], orig) and all(torch.equal(seen["Q0"][n], ref_fake(orig[n]) if n not in lora_n else orig[n]) for n in orig if orig[n].shape[-1] % 64 == 0)
+                assert not same(seen["Q"], seen["Q0"]) and not same(seen["Qf"], seen["Q0"]) and not same(seen["Q"], seen["Qf"]) and same(seen["Q"], seen["Q0"], {n for n, _ in dm}) and same(seen["Qf"], seen["Q0"], {n for n, _ in dm})
+            lm.get_parameter(next(n for n, p in lm.named_parameters() if "lora_B" in n)).data.fill_(0.5)  # a nonzero B is reported
+            assert q4_eval(lm, 64, 4, lambda c: {}, log=lambda m: None)["lora_B_nonzero"] is True
+            out[f"q4_eval_lines_{tag}"] = lines
+        return out
+    finally:
+        torch.set_rng_state(rng_state)
+        _DELTA["on"] = sw
 
 
 def selftest_names_k2():
@@ -3373,6 +3688,7 @@ def main():
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
+    ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
     if args.selftest:
@@ -3389,6 +3705,7 @@ def main():
         print(json.dumps({"arms9": selftest_arms9()}))
         print(json.dumps({"arms10": selftest_arms10()}))
         print(json.dumps({"q4": selftest_q4()}))
+        print(json.dumps({"q4_eval": selftest_q4_eval()}))
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
         return
@@ -3436,6 +3753,12 @@ def main():
         ap.error("--night-budget-s must be positive")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
+    if args.q4_eval and args.arm not in DELTA_ARMS:
+        ap.error(f"--q4-eval is only for the delta arms {DELTA_ARMS}")
+    if args.q4_eval and args.q4_base:
+        ap.error("--q4-eval cannot be combined with --q4-base")
+    if args.q4_eval and (args.q4_group < 1 or args.q4_bits < 1):
+        ap.error("--q4-group and --q4-bits must be positive")
     if args.budget_scale is not None and args.night_budget_s is not None:
         log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
@@ -3467,7 +3790,7 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
@@ -3585,6 +3908,23 @@ def main():
         except Exception as e:  # datasets missing / offline
             result["arc_easy"] = {"error": repr(e)}
             log(f"[eval] ARC FAILED: {e!r}")
+    if args.q4_eval:  # addendum 13: after everything else; the final scores above are already in the partial file if this fails
+        qe = result["q4_eval"] = {}
+        dump(False)
+        try:
+            arc_rows = load_arc(args.smoke)
+        except Exception as e:  # datasets missing / offline
+            arc_rows, arc_err = None, {"error": repr(e)}
+
+        def q4_score(cond):  # exactly the final "weights" scoring and the final ARC call
+            sc = score_week(L, model, week, diary, "weights", args.gen_bs, dreamed, full)
+            return {"scores": sc, "arc_easy": score_arc(L, model, arc_rows, bs=max(args.gen_bs // 2, 1)) if arc_rows else arc_err}
+        try:
+            q4_eval(lm, args.q4_group, args.q4_bits, q4_score, log, lambda: dump(False), qe)
+        except Exception as e:  # the final result is still written below
+            import traceback
+            qe["error"] = {"error": repr(e)[:300], "trace": traceback.format_exc()[-3000:]}
+            log(f"[q4eval] FAILED: {e!r}")
     result["wall_seconds"] = time.time() - t0
     dump(True)
     log(f"[done] {args.arm} wall {result['wall_seconds']:.0f}s -> {out}/result_{args.arm}.json")
