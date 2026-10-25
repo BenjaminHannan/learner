@@ -92,7 +92,7 @@ class LoRATrainer:
         return self.chunked(self._kl, ht, self.hidden(ex["ids"])[idx]).mean()
 
     # ------------------------------------------------------------------ one night
-    def run_night(self, items, anchors, n_opt, lr, night, log=print):
+    def run_night(self, items, anchors, n_opt, lr, night, log=print, dpo_w=1.0):
         """items: dicts kind sft{prompt,target} | pair{prompt,chosen,rejected}. anchors: list of prompt strings (KL on prompt tokens).
         Returns stats incl. actual token-pass units, DPO margin / accuracy and mean anchor KL."""
         self.pm.train()
@@ -131,7 +131,7 @@ class LoRATrainer:
                 else:
                     lc, lr_ = self.seq_logp(e[1], True), self.seq_logp(e[2], True)
                     z = BETA * ((lc - refs[i][0]) - (lr_ - refs[i][1]))
-                    loss = -F.logsigmoid(z)
+                    loss = -F.logsigmoid(z) * dpo_w
                     units["train"] += TRAIN * (len(e[1]["ids"]) + len(e[2]["ids"]))
                     _finite(loss.item(), f"night {night} DPO loss (item {i})")
                     stats["dpo"].append(loss.item())
