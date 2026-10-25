@@ -53,6 +53,7 @@ def generic_prompts():
 K2_OPEN, K2_SHUT, K2_END = "<ifm|think>\n", "</ifm|think>", "<|ifm|im_end|>"  # K2-Horizon: the generation prompt opens a think block (thinking off = close it at once); a turn ends with im_end
 K2_THINK_OPEN = {"low": "<ifm|think_faster>\n", "medium": "<ifm|think_fast>\n", "high": K2_OPEN}  # the generation prompt's tail per template reasoning_effort ("high" is the default)
 K2_FAST_SHUT = "</ifm|think_faster>"  # closes the low-effort block (render_think)
+K2_THINK_SHUT = {"low": K2_FAST_SHUT, "medium": "</ifm|think_fast>", "high": K2_SHUT}  # the tag that closes the block render_think opens at each effort
 
 
 class Lang:
@@ -77,10 +78,10 @@ class Lang:
         assert t.endswith(K2_THINK_OPEN[effort]), f"K2 chat template changed: the {effort}-effort generation prompt no longer ends with {K2_THINK_OPEN[effort]!r}: {t[-60:]!r}"
         return t
 
-    def think_eos(self):  # K2 only: stop ids of a think-open generation: the close tag of the low-effort block, or the end of the turn
+    def think_eos(self, effort="low"):  # K2 only: stop ids of a think-open generation: the close tag of the block render_think opened at `effort` (default: the low-effort block), or the end of the turn
         assert self.k2, "think_eos is for K2-Horizon"
-        close = self.tok.convert_tokens_to_ids(K2_FAST_SHUT)
-        assert isinstance(close, int) and close != getattr(self.tok, "unk_token_id", None), f"{K2_FAST_SHUT!r} is not a single token of this tokenizer: {close!r}"
+        close = self.tok.convert_tokens_to_ids(K2_THINK_SHUT[effort])
+        assert isinstance(close, int) and close != getattr(self.tok, "unk_token_id", None), f"{K2_THINK_SHUT[effort]!r} is not a single token of this tokenizer: {close!r}"
         return [close, self.eos]
 
     def ids(self, text):
