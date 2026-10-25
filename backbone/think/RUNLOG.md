@@ -33,3 +33,8 @@ Times UTC. Code and PREREG are pinned by the commit named on each launch line; P
   so no file can be copied off these boxes. Results come back only through the instance labels (from_label.py):
   point estimates at 0.1-point rounding, no per-row hits, so no intervals, no M1/M2, no gates-off row check.
   s0 kept stopped (~$0.014/h storage) in case the upload path recovers.
+- 00:26Z: the other session's last A100 ended; s1 is the only running box (~$0.2/h with storage). 00:35-00:38Z: the
+  machine (54987, which also held s0) was offline for ~3 min; the job survived (its label kept updating).
+- 00:41Z: s1 aplus_s1 done: validation 71.4, dev 86.5 (a_s1 65.8): 1,254 more LoRA steps alone add 5.6 points, so
+  A_ref on seed 1 is ~71.4 and G needs S(8) >= ~74.4 there. aplus took ~2.7 h beside t (factor ~1.8 vs alone), so
+  t_s1 is expected ~02:30Z and t1_s1 ~03:00Z.
