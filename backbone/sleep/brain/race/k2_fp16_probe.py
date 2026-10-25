@@ -40,9 +40,11 @@ def main():
     dev = torch.device("cuda")
     t0 = time.time()
     args = Namespace(model=K2, revision=K2_REV, smoke=False, seed=1)
-    lm, tok = S.load_model(args, dev, torch.float16)
+    lm, tok = S.load_model(args, torch.device("cpu"), torch.float16)  # quantize on the CPU (fp32 temporaries of the 250k-vocab tensors OOM a 15 GB T4), then move
     res["load_s"] = time.time() - t0
     res["q4"] = {k: v for k, v in S.q4_apply(lm, 64, 4).items() if k != "per_tensor"}
+    lm.to(dev)
+    res["q4_s"] = time.time() - t0
     L = S.Lang(tok, False, dev, k2=True)
     S.TOK_BUDGET = a.tok_budget
 
