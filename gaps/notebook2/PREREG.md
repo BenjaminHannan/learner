@@ -56,3 +56,9 @@ into Stage 1 numbers.
 ## Noise and cost
 120 questions, one seed: SE about 4 points per arm; differences under ~6 points are noise. Stage 0 has 470 questions
 (SE about 2). API: judge only, about 1,200 Sonnet calls via Batches, cap $6. GPU: free sources only; no Vast before Oct 31.
+
+## Amendment A (2026-10-25 22:12Z, before any Stage-0 result was looked at)
+CPU embedding in the container runs about 1 question per minute, so 470 questions take ~8 h. Stage 0 now processes the
+Stage-1 question set first. **Z1 is decided on the non-abstention questions of the 120-question Stage-1 set** (about 110;
+SE about 4.5 points), and the retriever for Stage 1 is fixed from that. The full 470 is reported when it finishes and
+does not change the Stage-1 retriever choice.

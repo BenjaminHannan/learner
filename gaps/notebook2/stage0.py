@@ -95,7 +95,14 @@ def arm_orders(ps, query):
 
 if __name__ == "__main__":
     data = json.load(open(DATA))
+    sample_ids = json.load(open(os.path.join(D, "..", "notebook1", "sample.json")))
+    s120 = list(sample_ids)
+    for t in sorted({x["question_type"] for x in data}):
+        rest = sorted(x["question_id"] for x in data if x["question_type"] == t and x["question_id"] not in set(sample_ids))
+        s120 += random.Random(1).sample(rest, 10)
+    s120 = set(s120)
     data = [x for x in data if not x["question_id"].endswith("_abs")]
+    data.sort(key=lambda x: x["question_id"] not in s120)  # stage-1 questions first (stable)
     if len(sys.argv) > 1 and sys.argv[1] == "smoke": data = data[:3]
     sample = set(json.load(open(os.path.join(D, "..", "notebook1", "sample.json"))))
     out = os.path.join(D, "stage0_rows.jsonl")
@@ -105,7 +112,7 @@ if __name__ == "__main__":
         for n, q in enumerate(data):
             if q["question_id"] in done: continue
             ps = pairs_of(q)
-            row = dict(question_id=q["question_id"], type=q["question_type"], in_sample=q["question_id"] in sample)
+            row = dict(question_id=q["question_id"], type=q["question_type"], in_sample=q["question_id"] in sample, in120=q["question_id"] in s120)
             for arm, ch in arm_orders(ps, q["question"]).items():
                 row[arm] = score(q, ps, ch)
             f.write(json.dumps(row) + "\n"); f.flush()
