@@ -112,7 +112,7 @@ def build(path, device, dtype, rank, alpha, experts="grouped_mm"):
         lm.set_experts_implementation(experts)
     tm = f"(?:{LORA_TARGETS})|(?:{sb.SHARED_RE})"  # --lora-shared, as the real runs
     pm = get_peft_model(lm, LoraConfig(r=rank, lora_alpha=alpha, lora_dropout=0.0, target_modules=tm, bias="none"))
-    g = torch.Generator().manual_seed(0)
+    g = torch.Generator(device=device).manual_seed(0)  # same device as the LoRA params (CPU generator fails on CUDA)
     for n, p in pm.named_parameters():  # B is zero at init: randomise, so the gradients reaching every layer are non-trivial
         if "lora_B" in n:
             p.data.normal_(0, 0.02, generator=g)

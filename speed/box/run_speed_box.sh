@@ -110,15 +110,15 @@ run() {
 }
 
 # 1. mem: packed vs qdq. Eager dequant first (qdq reference + packed), then fused dequant (packed + packed_fit 32 GB emulation). ~12 min each.
-run mem_eager 14 -- python3 speed/qwen36_mem/bench_mem.py --out "$OUT/mem_eager.json" --modes qdq,packed
-run mem_fused 14 -- python3 speed/qwen36_mem/bench_mem.py --out "$OUT/mem_fused.json" --modes packed,packed_fit --compile-dequant
+[ "${RUN_MEM:-1}" = 1 ] && run mem_eager 14 -- python3 speed/qwen36_mem/bench_mem.py --out "$OUT/mem_eager.json" --modes qdq,packed
+[ "${RUN_MEM:-1}" = 1 ] && run mem_fused 14 -- python3 speed/qwen36_mem/bench_mem.py --out "$OUT/mem_fused.json" --modes packed,packed_fit --compile-dequant
 # 2. step: full 40-layer model (65 GB bf16 fits the 95 GB card at tok 2048); if that fails, 16 layers
 run step 14 -- python3 speed/qwen36_step/profile_step.py --layers 40 --steps 6 --warmup 2 --out "$OUT/step.json" --work /tmp/qwen36_step_work
 if [ $? -ne 0 ] && ! grep -q '"wall_s_per_step"' "$OUT/step.json" 2>/dev/null; then
   run step_fallback 8 -- python3 speed/qwen36_step/profile_step.py --layers 16 --steps 6 --warmup 2 --out "$OUT/step_fallback.json" --work /tmp/qwen36_step_work
 fi
 # 3. dreamgen: 64 prompts per phase, batch 32, five phases x four variants
-run dreamgen 12 -- python3 speed/dreamgen/gpu_bench.py --model "$REPO_ID" --n 64 --bs 32 --out "$OUT/dreamgen.json"
+run dreamgen 12 -- python3 speed/dreamgen/gpu_bench.py --model "$REPO_ID" --n 64 --bs 32 --phases "${DG_PHASES:-tag,dream,verify,rem,probe}" --out "$OUT/dreamgen.json"
 
 kill $WD 2>/dev/null
 finish

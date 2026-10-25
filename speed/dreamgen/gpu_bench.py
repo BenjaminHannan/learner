@@ -54,7 +54,7 @@ def prompts_for(L, phase, n, rng):
 
 PHASES = {"tag": dict(max_new=160, sample=False), "dream": dict(max_new=400, sample=True), "verify": dict(max_new=20, sample=False),
           "rem": dict(max_new=40, sample=True), "probe": dict(max_new=20, sample=False, p=True)}
-VARIANTS = {"base": None, "compact": dict(compact=True, seg=8, dedupe=True, pad_multiple=1), "compact_pad64": dict(compact=True, seg=8, dedupe=True, pad_multiple=64),
+VARIANTS = {"base": None, "base_again": None, "compact": dict(compact=True, seg=8, dedupe=True, pad_multiple=1), "compact_pad64": dict(compact=True, seg=8, dedupe=True, pad_multiple=64),
             "compact_seg16": dict(compact=True, seg=16, dedupe=True, pad_multiple=1)}
 
 

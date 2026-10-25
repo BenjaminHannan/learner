@@ -1,0 +1,345 @@
+[20:48:52 +    1s] [mon:load]     1s rss 0.553 GiB, host free 120.552 GiB, gpu used 0.546 GiB
+
+Loading weights:   0%|          | 0/693 [00:00<?, ?it/s]
+Loading weights:   2%|▏         | 13/693 [00:00<00:06, 104.32it/s]
+Loading weights:   4%|▍         | 31/693 [00:00<00:04, 140.07it/s]
+Loading weights:   7%|▋         | 49/693 [00:00<00:04, 152.84it/s]
+Loading weights:   9%|▉         | 65/693 [00:00<00:05, 123.98it/s]
+Loading weights:  12%|█▏        | 83/693 [00:00<00:04, 137.30it/s]
+Loading weights:  15%|█▍        | 101/693 [00:00<00:04, 147.13it/s]
+Loading weights:  17%|█▋        | 119/693 [00:00<00:03, 154.15it/s]
+Loading weights:  19%|█▉        | 135/693 [00:00<00:03, 154.89it/s]
+Loading weights:  22%|██▏       | 152/693 [00:01<00:03, 155.17it/s]
+Loading weights:  25%|██▍       | 170/693 [00:01<00:03, 159.56it/s]
+Loading weights:  28%|██▊       | 196/693 [00:01<00:02, 176.98it/s]
+Loading weights:  32%|███▏      | 221/693 [00:01<00:02, 174.97it/s]
+Loading weights:  37%|███▋      | 256/693 [00:01<00:02, 206.66it/s]
+Loading weights:  40%|███▉      | 277/693 [00:01<00:02, 175.12it/s]
+Loading weights:  43%|████▎     | 296/693 [00:01<00:02, 176.23it/s]
+Loading weights:  45%|████▌     | 315/693 [00:01<00:02, 176.68it/s]
+Loading weights:  48%|████▊     | 333/693 [00:02<00:02, 172.95it/s]
+Loading weights:  51%|█████     | 351/693 [00:02<00:01, 172.27it/s]
+Loading weights:  54%|█████▍    | 376/693 [00:02<00:01, 183.53it/s]
+Loading weights:  57%|█████▋    | 395/693 [00:02<00:01, 165.76it/s]
+Loading weights:  59%|█████▉    | 412/693 [00:02<00:01, 165.11it/s]
+Loading weights:  62%|██████▏   | 429/693 [00:02<00:01, 162.43it/s]
+Loading weights:  64%|██████▍   | 446/693 [00:02<00:01, 161.87it/s]
+Loading weights:  67%|██████▋   | 464/693 [00:02<00:01, 166.49it/s]
+Loading weights:  70%|██████▉   | 484/693 [00:02<00:01, 175.35it/s]
+Loading weights:  72%|███████▏  | 502/693 [00:03<00:01, 173.13it/s]
+Loading weights:  76%|███████▌  | 528/693 [00:03<00:00, 197.23it/s]
+Loading weights:  79%|███████▉  | 548/693 [00:03<00:00, 162.73it/s]
+Loading weights:  84%|████████▍ | 583/693 [00:03<00:00, 198.87it/s]
+Loading weights:  87%|████████▋ | 604/693 [00:03<00:00, 181.88it/s]
+Loading weights:  91%|█████████▏| 634/693 [00:03<00:00, 201.97it/s]
+Loading weights:  95%|█████████▍| 655/693 [00:03<00:00, 183.60it/s]
+Loading weights:  98%|█████████▊| 679/693 [00:03<00:00, 189.91it/s]
+Loading weights: 100%|██████████| 693/693 [00:04<00:00, 172.89it/s]
+[20:48:59 +    7s] [audit] {'class': 'Qwen3_5MoeForCausalLM', 'param_gib_by_dtype': {'torch.bfloat16': 64.56, 'buffers:torch.float32': 0.0}, 'devices': ['cuda:0'], 'meta_tensors': 0, 'experts_implementation': 'grouped_mm', 'attn_implementation': 'sdpa'}
+[20:48:59 +    7s] [load] {'peak_rss_gib': 65.608, 'min_host_available_gib': 120.122, 'min_gpu_free_gib': 29.805, 'mode': 'train.load_model_bf16_cuda', 'load_seconds': 7.3, 'config_model_type': 'qwen3_5_moe_text', 'n_params_b': 34.6606, 'max_memory_allocated_gib_after_load': 64.56, 'memory_allocated_gib_after_load': 64.56, 'max_memory_reserved_gib_after_load': 64.619}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[20:49:19 +   28s] [lora] target regex: (?:.*\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)|linear_attn\.(in_proj_qkv|in_proj_z|in_proj_a|in_proj_b|out_proj)|mlp\.(gate_proj|up_proj|down_proj)))|(?:.*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj))
+[20:49:19 +   28s] [lora] matched 310 modules (expected 310); by pattern: {'model.layers.N.linear_attn.out_proj': 30, 'model.layers.N.linear_attn.in_proj_qkv': 30, 'model.layers.N.linear_attn.in_proj_z': 30, 'model.layers.N.linear_attn.in_proj_b': 30, 'model.layers.N.linear_attn.in_proj_a': 30, 'model.layers.N.mlp.shared_expert.gate_proj': 40, 'model.layers.N.mlp.shared_expert.up_proj': 40, 'model.layers.N.mlp.shared_expert.down_proj': 40, 'model.layers.N.self_attn.q_proj': 10, 'model.layers.N.self_attn.k_proj': 10, 'model.layers.N.self_attn.v_proj': 10, 'model.layers.N.self_attn.o_proj': 10}
+[20:49:19 +   28s] [lora] trainable params 21,166,080
+[20:49:42 +   51s] [train_trainer:2048] step 1 23.28s
+[20:49:44 +   53s] [train_trainer:2048] step 2 1.67s
+[20:49:46 +   54s] [train_trainer:2048] step 3 1.67s
+[20:49:47 +   56s] [train_trainer:2048] step 4 1.67s
+[20:49:48 +   56s] [qdq] budget 2048 plain: {'status': 'ok', 's_per_step': 1.6682, 'peak_alloc_gib': 83.699, 'peak_reserved_gib': 84.475, 'padded_tokens': [4336, 968]}
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+[20:49:53 +   61s] [train_trainer:2048+ckpt] step 1 4.74s
+[20:49:55 +   64s] [train_trainer:2048+ckpt] step 2 2.36s
+[20:49:57 +   66s] [train_trainer:2048+ckpt] step 3 2.57s
+[20:50:00 +   69s] [train_trainer:2048+ckpt] step 4 2.37s
+[20:50:00 +   69s] [qdq] budget 2048 ckpt: {'status': 'ok', 's_per_step': 2.4367, 'peak_alloc_gib': 67.293, 'peak_reserved_gib': 67.635, 'padded_tokens': [4336, 968]}
+[20:50:06 +   75s] [qdq] budget 4096 plain: {'status': 'oom', 'error': None, 'peak_alloc_gib': 93.711, 'peak_reserved_gib': 93.879}
+[20:50:15 +   84s] [train_trainer:4096+ckpt] step 1 8.52s
+[20:50:17 +   86s] [train_trainer:4096+ckpt] step 2 2.20s
+[20:50:20 +   88s] [train_trainer:4096+ckpt] step 3 2.21s
+[20:50:22 +   91s] [train_trainer:4096+ckpt] step 4 2.41s
+[20:50:22 +   91s] [qdq] budget 4096 ckpt: {'status': 'ok', 's_per_step': 2.2706, 'peak_alloc_gib': 67.293, 'peak_reserved_gib': 93.877, 'padded_tokens': [4336, 968]}
+[20:50:29 +   97s] [qdq] budget 8192 plain: {'status': 'oom', 'error': None, 'peak_alloc_gib': 93.799, 'peak_reserved_gib': 93.973}
+[20:50:38 +  107s] [train_trainer:8192+ckpt] step 1 8.93s
+[20:50:40 +  109s] [train_trainer:8192+ckpt] step 2 2.41s
+[20:50:43 +  111s] [train_trainer:8192+ckpt] step 3 2.43s
+[20:50:45 +  114s] [train_trainer:8192+ckpt] step 4 2.43s
+[20:50:45 +  114s] [qdq] budget 8192 ckpt: {'status': 'ok', 's_per_step': 2.4213, 'peak_alloc_gib': 68.598, 'peak_reserved_gib': 93.973, 'padded_tokens': [6160, 968]}
+
+Loading weights:   0%|          | 0/693 [00:00<?, ?it/s][20:50:46 +  115s] [mon:load]     1s rss 4.633 GiB, host free 118.537 GiB, gpu used 65.572 GiB
+
+Loading weights:   2%|▏         | 13/693 [00:00<00:06, 98.02it/s]
+Loading weights:   4%|▍         | 31/693 [00:00<00:04, 136.76it/s]
+Loading weights:   7%|▋         | 49/693 [00:00<00:04, 151.14it/s]
+Loading weights:   9%|▉         | 65/693 [00:00<00:05, 123.54it/s]
+Loading weights:  12%|█▏        | 83/693 [00:00<00:04, 136.48it/s]
+Loading weights:  15%|█▍        | 101/693 [00:00<00:04, 146.67it/s]
+Loading weights:  17%|█▋        | 119/693 [00:00<00:03, 153.84it/s]
+Loading weights:  19%|█▉        | 135/693 [00:00<00:03, 154.85it/s]
+Loading weights:  24%|██▍       | 169/693 [00:01<00:02, 195.73it/s]
+Loading weights:  27%|██▋       | 189/693 [00:01<00:02, 170.87it/s]
+Loading weights:  30%|██▉       | 207/693 [00:01<00:02, 171.19it/s]
+Loading weights:  32%|███▏      | 225/693 [00:01<00:02, 170.97it/s]
+Loading weights:  35%|███▌      | 243/693 [00:01<00:02, 170.47it/s]
+Loading weights:  38%|███▊      | 261/693 [00:01<00:02, 170.54it/s]
+Loading weights:  41%|████      | 285/693 [00:01<00:02, 189.67it/s]
+Loading weights:  44%|████▍     | 305/693 [00:01<00:02, 191.94it/s]
+Loading weights:  47%|████▋     | 325/693 [00:01<00:02, 173.95it/s]
+Loading weights:  49%|████▉     | 343/693 [00:02<00:02, 154.14it/s]
+Loading weights:  52%|█████▏    | 360/693 [00:02<00:02, 154.74it/s]
+Loading weights:  54%|█████▍    | 377/693 [00:02<00:02, 156.60it/s]
+Loading weights:  57%|█████▋    | 395/693 [00:02<00:01, 160.20it/s]
+Loading weights:  59%|█████▉    | 412/693 [00:02<00:01, 161.41it/s]
+Loading weights:  62%|██████▏   | 429/693 [00:02<00:01, 160.17it/s]
+Loading weights:  64%|██████▍   | 446/693 [00:02<00:01, 160.71it/s]
+Loading weights:  68%|██████▊   | 472/693 [00:02<00:01, 174.98it/s]
+Loading weights:  72%|███████▏  | 497/693 [00:03<00:01, 173.75it/s]
+Loading weights:  77%|███████▋  | 532/693 [00:03<00:00, 204.98it/s]
+Loading weights:  80%|███████▉  | 553/693 [00:03<00:00, 175.08it/s]
+Loading weights:  83%|████████▎ | 572/693 [00:03<00:00, 176.35it/s]
+Loading weights:  85%|████████▌ | 591/693 [00:03<00:00, 177.07it/s]
+Loading weights:  88%|████████▊ | 609/693 [00:03<00:00, 175.23it/s]
+Loading weights:  90%|█████████ | 627/693 [00:03<00:00, 174.27it/s]
+Loading weights:  93%|█████████▎| 645/693 [00:03<00:00, 173.24it/s]
+Loading weights:  96%|█████████▌| 663/693 [00:03<00:00, 172.34it/s]
+Loading weights:  98%|█████████▊| 681/693 [00:04<00:00, 134.59it/s]
+Loading weights: 100%|██████████| 693/693 [00:04<00:00, 165.92it/s]
+[20:50:51 +  120s] [audit] {'class': 'Qwen3_5MoeForCausalLM', 'param_gib_by_dtype': {'torch.bfloat16': 64.56, 'buffers:torch.float32': 0.0}, 'devices': ['cuda:0'], 'meta_tensors': 0, 'experts_implementation': 'grouped_mm', 'attn_implementation': 'sdpa'}
+[20:50:51 +  120s] [load] {'peak_rss_gib': 67.474, 'min_host_available_gib': 118.422, 'min_gpu_free_gib': 29.352, 'mode': 'train.load_model_bf16_cuda', 'load_seconds': 5.1, 'config_model_type': 'qwen3_5_moe_text', 'n_params_b': 34.6606, 'max_memory_allocated_gib_after_load': 64.576, 'memory_allocated_gib_after_load': 64.576, 'max_memory_reserved_gib_after_load': 64.639}
+[20:50:54 +  122s] [lora] target regex: (?:.*\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)|linear_attn\.(in_proj_qkv|in_proj_z|in_proj_a|in_proj_b|out_proj)|mlp\.(gate_proj|up_proj|down_proj)))|(?:.*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj))
+[20:50:54 +  122s] [lora] matched 310 modules (expected 310); by pattern: {'model.layers.N.linear_attn.out_proj': 30, 'model.layers.N.linear_attn.in_proj_qkv': 30, 'model.layers.N.linear_attn.in_proj_z': 30, 'model.layers.N.linear_attn.in_proj_b': 30, 'model.layers.N.linear_attn.in_proj_a': 30, 'model.layers.N.mlp.shared_expert.gate_proj': 40, 'model.layers.N.mlp.shared_expert.up_proj': 40, 'model.layers.N.mlp.shared_expert.down_proj': 40, 'model.layers.N.self_attn.q_proj': 10, 'model.layers.N.self_attn.k_proj': 10, 'model.layers.N.self_attn.v_proj': 10, 'model.layers.N.self_attn.o_proj': 10}
+[20:50:54 +  122s] [lora] trainable params 21,166,080
+[20:51:03 +  132s] [train_trainer:2048] step 1 9.17s
+[20:51:12 +  141s] [train_trainer:2048] step 2 9.16s
+[20:51:21 +  150s] [train_trainer:2048] step 3 9.18s
+[20:51:31 +  159s] [train_trainer:2048] step 4 9.19s
+[20:51:31 +  160s] [packed] budget 2048 plain: {'status': 'ok', 's_per_step': 9.179, 'peak_alloc_gib': 39.446, 'peak_reserved_gib': 67.154, 'padded_tokens': [4336, 968]}
+[20:51:44 +  173s] [train_trainer:2048+ckpt] step 1 13.17s
+[20:51:57 +  186s] [train_trainer:2048+ckpt] step 2 13.17s
+[20:52:11 +  200s] [train_trainer:2048+ckpt] step 3 13.42s
+[20:52:24 +  213s] [train_trainer:2048+ckpt] step 4 13.21s
+[20:52:24 +  213s] [packed] budget 2048 ckpt: {'status': 'ok', 's_per_step': 13.267, 'peak_alloc_gib': 22.102, 'peak_reserved_gib': 22.434, 'padded_tokens': [4336, 968]}
+[20:52:32 +  221s] [train_trainer:4096] step 1 7.47s
+[20:52:39 +  228s] [train_trainer:4096] step 2 7.46s
+[20:52:47 +  236s] [train_trainer:4096] step 3 7.47s
+[20:52:54 +  243s] [train_trainer:4096] step 4 7.46s
+[20:52:55 +  243s] [packed] budget 4096 plain: {'status': 'ok', 's_per_step': 7.4638, 'peak_alloc_gib': 57.828, 'peak_reserved_gib': 58.709, 'padded_tokens': [4336, 968]}
+[20:53:06 +  254s] [train_trainer:4096+ckpt] step 1 10.56s
+[20:53:16 +  265s] [train_trainer:4096+ckpt] step 2 10.55s
+[20:53:27 +  275s] [train_trainer:4096+ckpt] step 3 10.57s
+[20:53:37 +  286s] [train_trainer:4096+ckpt] step 4 10.78s
+[20:53:38 +  286s] [packed] budget 4096 ckpt: {'status': 'ok', 's_per_step': 10.6304, 'peak_alloc_gib': 22.575, 'peak_reserved_gib': 23.107, 'padded_tokens': [4336, 968]}
+[20:53:44 +  293s] [train_trainer:8192] step 1 6.03s
+[20:53:50 +  299s] [train_trainer:8192] step 2 6.01s
+[20:53:56 +  305s] [train_trainer:8192] step 3 6.02s
+[20:54:02 +  311s] [train_trainer:8192] step 4 6.02s
+[20:54:02 +  311s] [packed] budget 8192 plain: {'status': 'ok', 's_per_step': 6.0173, 'peak_alloc_gib': 89.317, 'peak_reserved_gib': 90.268, 'padded_tokens': [6160, 968]}
+[20:54:11 +  320s] [train_trainer:8192+ckpt] step 1 8.36s
+[20:54:19 +  328s] [train_trainer:8192+ckpt] step 2 8.34s
+[20:54:28 +  336s] [train_trainer:8192+ckpt] step 3 8.36s
+[20:54:36 +  345s] [train_trainer:8192+ckpt] step 4 8.36s
+[20:54:36 +  345s] [packed] budget 8192 ckpt: {'status': 'ok', 's_per_step': 8.3536, 'peak_alloc_gib': 23.96, 'peak_reserved_gib': 24.424, 'padded_tokens': [6160, 968]}
+{
+ "modes": {
+  "qdq": {
+   "mode": "qdq",
+   "load_seconds": 7.3,
+   "q4": {
+    "tensors": 472,
+    "params": 34659450880,
+    "by_bits": {
+     "4": {
+      "tensors": 392,
+      "params": 34638397440
+     },
+     "8": {
+      "tensors": 80,
+      "params": 21053440
+     }
+    }
+   },
+   "q4_or_pack_seconds": 4.1,
+   "weights_gib_allocated": 64.56,
+   "peak_gib_load_plus_pack": 65.685,
+   "trainer": {
+    "2048": {
+     "plain": {
+      "status": "ok",
+      "s_per_step": 1.6682,
+      "peak_alloc_gib": 83.699,
+      "peak_reserved_gib": 84.475,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 2.4367,
+      "peak_alloc_gib": 67.293,
+      "peak_reserved_gib": 67.635,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     }
+    },
+    "4096": {
+     "plain": {
+      "status": "oom",
+      "error": null,
+      "peak_alloc_gib": 93.711,
+      "peak_reserved_gib": 93.879
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 2.2706,
+      "peak_alloc_gib": 67.293,
+      "peak_reserved_gib": 93.877,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     }
+    },
+    "8192": {
+     "plain": {
+      "status": "oom",
+      "error": null,
+      "peak_alloc_gib": 93.799,
+      "peak_reserved_gib": 93.973
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 2.4213,
+      "peak_alloc_gib": 68.598,
+      "peak_reserved_gib": 93.973,
+      "padded_tokens": [
+       6160,
+       968
+      ]
+     }
+    }
+   },
+   "total_seconds": 114.0
+  },
+  "packed": {
+   "mode": "packed",
+   "load_seconds": 5.1,
+   "pack": {
+    "packed_experts": 80,
+    "packed_linear": 251,
+    "dense_qdq": 141,
+    "skipped": 0,
+    "bytes_before": 69321221376,
+    "bytes_after": 20265231616
+   },
+   "compile_dequant": false,
+   "q4_or_pack_seconds": 1.3,
+   "weights_gib_allocated": 18.889,
+   "peak_gib_load_plus_pack": 66.544,
+   "trainer": {
+    "2048": {
+     "plain": {
+      "status": "ok",
+      "s_per_step": 9.179,
+      "peak_alloc_gib": 39.446,
+      "peak_reserved_gib": 67.154,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 13.267,
+      "peak_alloc_gib": 22.102,
+      "peak_reserved_gib": 22.434,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     }
+    },
+    "4096": {
+     "plain": {
+      "status": "ok",
+      "s_per_step": 7.4638,
+      "peak_alloc_gib": 57.828,
+      "peak_reserved_gib": 58.709,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 10.6304,
+      "peak_alloc_gib": 22.575,
+      "peak_reserved_gib": 23.107,
+      "padded_tokens": [
+       4336,
+       968
+      ]
+     }
+    },
+    "8192": {
+     "plain": {
+      "status": "ok",
+      "s_per_step": 6.0173,
+      "peak_alloc_gib": 89.317,
+      "peak_reserved_gib": 90.268,
+      "padded_tokens": [
+       6160,
+       968
+      ]
+     },
+     "ckpt": {
+      "status": "ok",
+      "s_per_step": 8.3536,
+      "peak_alloc_gib": 23.96,
+      "peak_reserved_gib": 24.424,
+      "padded_tokens": [
+       6160,
+       968
+      ]
+     }
+    }
+   },
+   "total_seconds": 230.4
+  }
+ },
+ "compare": {
+  "2048/plain": {
+   "qdq_s": 1.6682,
+   "packed_s": 9.179,
+   "slowdown": 5.502,
+   "qdq_peak_gib": 83.699,
+   "packed_peak_gib": 39.446
+  },
+  "2048/ckpt": {
+   "qdq_s": 2.4367,
+   "packed_s": 13.267,
+   "slowdown": 5.445,
+   "qdq_peak_gib": 67.293,
+   "packed_peak_gib": 22.102
+  },
+  "4096/ckpt": {
+   "qdq_s": 2.2706,
+   "packed_s": 10.6304,
+   "slowdown": 4.682,
+   "qdq_peak_gib": 67.293,
+   "packed_peak_gib": 22.575
+  },
+  "8192/ckpt": {
+   "qdq_s": 2.4213,
+   "packed_s": 8.3536,
+   "slowdown": 3.45,
+   "qdq_peak_gib": 68.598,
+   "packed_peak_gib": 23.96
+  }
+ },
+ "logits_bitwise_equal_to_qdq": {
+  "packed": true
+ }
+}
+[W1025 20:54:37.634056237 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
