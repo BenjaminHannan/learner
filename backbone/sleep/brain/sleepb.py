@@ -20,6 +20,10 @@ here); with neither, s = 1 and the night is exactly ab_ob's. ab_ob_b2 = ab_ob wi
 Addendum 6 (PREREG-sleepB-addendum6.md), the winners combined on Week-2: ab_ob_win = s = 2 + ab_ob_guess's priority rule + ab_ob_twist's scenes; ab_ob_winp = the same with
 2 more ORDINARY paraphrases (para2_prompt, same checks, dream_stats["twist_mode"] = "plain") in the scenes' place.
 
+--q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
+nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
+scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
+
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
@@ -2170,6 +2174,83 @@ def run_af(L, pm, args, week, diary, leak, replay, sched, out, result, log, dump
         dump(False)
 
 
+# ------------------------------------------------------------------ q4 base (MLX affine fake quantization)
+def q4_fake(w, group=64, bits=4, store_dtype=None):
+    """MLX affine quantize-dequantize of a 2-D+ tensor along its last dim; returns w' (same shape and dtype as w) or None if the last dim
+    is not divisible by group. Per group: scale = (max-min)/(2^bits-1) (1e-8-ish safe value when max == min), bias = min, both rounded to
+    store_dtype (default w.dtype); q = clamp(round((w-bias)/scale), 0, 2^bits-1); w' = q*scale + bias. Math in float32."""
+    if w.dim() < 1 or w.shape[-1] % group:
+        return None
+    levels = 2 ** bits - 1
+    x = w.detach().float().reshape(-1, w.shape[-1] // group, group)
+    mx, mn = x.amax(-1, keepdim=True), x.amin(-1, keepdim=True)
+    scale = (mx - mn) / levels
+    scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
+    sd = store_dtype or w.dtype
+    scale, bias = scale.to(sd).float(), mn.to(sd).float()
+    scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)  # a rounded-to-zero scale (underflow) stays safe
+    q = torch.clamp(torch.round((x - bias) / scale), 0, levels)
+    return (q * scale + bias).reshape(w.shape).to(w.dtype)
+
+
+def q4_apply(lm, group=64, bits=4):
+    """Fake-quantize (in place, no grad) the weight of every nn.Linear and nn.Embedding in lm; tied tensors once (by data_ptr). The scale /
+    bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}."""
+    seen, nq, ns, npar, errs = set(), 0, 0, 0, []
+    with torch.no_grad():
+        for _, m in lm.named_modules():
+            if not isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
+                continue
+            w = m.weight
+            if w.data_ptr() in seen:
+                continue
+            seen.add(w.data_ptr())
+            wq = q4_fake(w.data, group, bits)
+            if wq is None:
+                ns += 1
+                continue
+            den = w.data.float().norm().item()
+            errs.append((wq.float() - w.data.float()).norm().item() / den if den > 0 else 0.0)
+            w.data.copy_(wq)
+            nq += 1
+            npar += w.numel()
+    return {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
+
+
+def selftest_q4():
+    """q4_fake on a random 8x128 tensor (own generator; global RNG untouched): (i) at most 2^bits distinct values per group, (ii) elementwise
+    error <= scale/2 (+ tolerance; scale from the fp32 group range), (iii) idempotent to 1e-6 relative, (iv) a non-divisible shape is skipped
+    (also through q4_apply on a tiny Linear / Embedding pair, with a tied tensor counted once)."""
+    g = torch.Generator().manual_seed(0)
+    w = torch.randn(8, 128, generator=g)
+    out = {}
+    for bits in (4, 3):
+        wq = q4_fake(w, 64, bits)
+        gr, gq = w.reshape(8, 2, 64), wq.reshape(8, 2, 64)
+        assert max(len(set(r.tolist())) for r in gq.reshape(-1, 64)) <= 2 ** bits, "more distinct values than levels"
+        scale = (gr.amax(-1, keepdim=True) - gr.amin(-1, keepdim=True)) / (2 ** bits - 1)
+        assert bool(((gq - gr).abs() <= scale / 2 * (1 + 1e-5) + 1e-6).all()), "error above scale/2"
+        w2 = q4_fake(wq, 64, bits)
+        rel = ((w2 - wq).norm() / wq.norm()).item()
+        assert rel < 1e-6, f"not idempotent: {rel}"
+        out[f"bits{bits}"] = {"max_err_over_half_scale": ((gq - gr).abs() / (scale / 2)).max().item(), "idem_rel": rel}
+    assert q4_fake(torch.randn(4, 100, generator=g), 64, 4) is None, "non-divisible shape not skipped"
+    assert torch.equal(q4_fake(torch.zeros(2, 64), 64, 4), torch.zeros(2, 64)), "constant group must reconstruct exactly"
+    wb = torch.randn(8, 128, generator=g).to(torch.bfloat16)
+    assert q4_fake(wb, 64, 4).dtype == torch.bfloat16
+    emb = torch.nn.Embedding(10, 128)
+    lin = torch.nn.Linear(128, 10, bias=False)
+    lin.weight = emb.weight  # tied
+    odd = torch.nn.Linear(100, 4)
+    net = torch.nn.ModuleList([emb, lin, odd])
+    before_odd = odd.weight.detach().clone()
+    st = q4_apply(net, 64, 4)
+    assert (st["tensors"], st["skipped"], st["params"]) == (1, 1, 1280), st
+    assert torch.equal(odd.weight, before_odd) and 0 < st["mean_rel_fro"] < 0.2, st
+    out["apply"] = st
+    return out
+
+
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser()
@@ -2205,6 +2286,9 @@ def main():
     ap.add_argument("--gist-min-days", type=int, default=3)
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
+    ap.add_argument("--q4-base", action="store_true", help="Mac study: replace every Linear / Embedding weight of the frozen base by an MLX-style affine fake-quantized copy (before LoRA)")
+    ap.add_argument("--q4-group", type=int, default=64, help="--q4-base: group size along the input dim")
+    ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
     if args.selftest:
@@ -2215,6 +2299,7 @@ def main():
         print(json.dumps({"rot": selftest_rot()}))
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
+        print(json.dumps({"q4": selftest_q4()}))
         return
     if not args.arm or not args.out:
         ap.error("--arm and --out are required")
@@ -2253,6 +2338,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
     lm, tok = load_model(args, device, dtype)
+    q4 = None
+    if args.q4_base:
+        if args.q4_group < 1 or args.q4_bits < 1:
+            ap.error("--q4-group and --q4-bits must be positive")
+        q4 = q4_apply(lm, args.q4_group, args.q4_bits)
+        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})")
     L = Lang(tok, args.smoke, device)
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
@@ -2264,7 +2355,7 @@ def main():
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in ("budget_scale", "night_budget_s") and v is None)},
-              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True}
+              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, "q4_base": q4}
 
     def dump(final):
         result["partial"] = not final
