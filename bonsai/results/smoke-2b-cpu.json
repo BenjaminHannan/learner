@@ -1,0 +1,112 @@
+{
+  "pack": "b2-2b",
+  "device": "Device(cpu, 0)",
+  "args": {
+    "pack": "models/b2-2b",
+    "steps": 10,
+    "rank": 8,
+    "alpha": 16.0,
+    "lr": 0.0002,
+    "layers": "all",
+    "max_new": 16,
+    "out": "smoke-2b.json"
+  },
+  "load_s": 0.4,
+  "grad_check": {
+    "grad_rel_err": 0.0,
+    "fwd_rel_err": 0.01221185177564621,
+    "block": 512,
+    "shape": [
+      6144,
+      2048
+    ]
+  },
+  "before": {
+    "controls": [
+      {
+        "q": "What is the capital of France? Answer in one word.",
+        "a": "Paris",
+        "want": "paris",
+        "ok": true
+      },
+      {
+        "q": "What is 17 + 25? Answer with the number only.",
+        "a": "17 + 25 = 42\n\n42",
+        "want": "42",
+        "ok": true
+      },
+      {
+        "q": "Name the planet closest to the Sun. One word.",
+        "a": "Mercury",
+        "want": "mercury",
+        "ok": true
+      }
+    ],
+    "fact": "The name of Ben's robot dog is **Barnaby**.\n\n*Note",
+    "fact_ok": false,
+    "secs": 141.7
+  },
+  "lora": {
+    "wrapped": 150,
+    "trainable_params": 7815168
+  },
+  "peak_mem_gb": 2.95,
+  "train": {
+    "losses": [
+      2.481,
+      0.685,
+      0.168,
+      0.0053,
+      0.0035,
+      0.0004,
+      0.0002,
+      0.0002,
+      0.0003,
+      0.0003
+    ],
+    "step_s": [
+      52.07,
+      48.8,
+      48.88,
+      48.79,
+      48.67,
+      47.95,
+      48.58,
+      47.53,
+      48.01,
+      48.24
+    ],
+    "tokens": 33,
+    "loss_tokens": 12
+  },
+  "after": {
+    "controls": [
+      {
+        "q": "What is the capital of France? Answer in one word.",
+        "a": "The capital of France is Paris.",
+        "want": "paris",
+        "ok": true
+      },
+      {
+        "q": "What is 17 + 25? Answer with the number only.",
+        "a": "17 + 25 = 42",
+        "want": "42",
+        "ok": true
+      },
+      {
+        "q": "Name the planet closest to the Sun. One word.",
+        "a": "Mercury",
+        "want": "mercury",
+        "ok": true
+      }
+    ],
+    "fact": "Ben's robot dog is named Pixelbark.",
+    "fact_ok": true,
+    "secs": 139.7
+  },
+  "pass": {
+    "grad_ok": true,
+    "loss_down": true,
+    "controls_kept": true
+  }
+}
