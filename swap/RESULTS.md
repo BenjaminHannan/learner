@@ -33,3 +33,9 @@ Big tier: Qwen3.6-35B-A3B. Small tier: K2-Horizon-3.7B. Pivot if something bette
 - `--moe-backend triton --gdn-prefill-backend triton --max-num-seqs 32` serves, and tool calls parse, but it is unusably slow: 35B ~1000 s per sim (4/4 DB match in 25 min, too few to mean anything), and the 27B smoke took 80 s for 57 tokens. The box was destroyed.
 - Next time: use an image with CUDA >= 12.9 (e.g. vllm/vllm-openai, which ships prebuilt kernels) or an sm_80/90 GPU. Or run the 27B on Ben's PC via llama.cpp (GGUF already there).
 - Vast spend for the whole swap thread: about $2.7 of the $3.50 cap.
+
+## Caveats (bug-hunt review, Oct 25)
+- P1 passes by one sim: K2-7B no-think scored 55/80 (68.75%) against a bar of 67.5%. The 95% CI is about ±10 points, and the same-stack LFM control never ran (vLLM can't serve LFM2.5's conv layers). Read it as "about as good as or better than LFM", not as a clear win.
+- The headline metric is db_match. reward_pass (49/80 for K2-7B) also penalises leaked planning text.
+- Output caps differ by arm: 16,384 tokens for thinking arms, 4,096 for no-think arms. Length stops are not logged.
+- serve() falls back to --model-impl transformers without recording it. Check for vllm_native.log in each arm dir.
