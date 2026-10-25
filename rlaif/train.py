@@ -166,7 +166,10 @@ def main(argv=None):
         model.train(); opt.zero_grad(set_to_none=True)
         Ns, Nt = ntok(eps_s), ntok(eps_t)
         pg_s = kl_s = pg_t = kl_t = 0.0
+        skip0 = not jolt and any(A != 0 for A in A_s)  # A == 0 adds exactly zero gradient; keep >= 1 backward for the fp16 scaler
         for e, A in zip(eps_s, A_s):
+            if skip0 and A == 0:
+                continue
             ids, pos = e.view(e.ids[:e.prompt_len])
             if not pos:
                 continue
