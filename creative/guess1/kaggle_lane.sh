@@ -61,3 +61,9 @@ fi
 timeout 36000 python3 run.py all "${ARGS[@]}" --out "$OUT/run"
 python3 run.py report "${ARGS[@]}" --out "$OUT/run"
 echo "$(date -u +%FT%TZ) DONE"; tail -40 "$OUT/run/report.md" 2>/dev/null
+# Doubt Forks Step 0 gate on the same server (CPU-side analysis + prefill/greedy calls). Guarded: a crash here never touches the Guess-1 outputs above.
+if [ -f "$OUT/run/results.jsonl" ] && [ -f "$OUT/run/target.json" ]; then
+  ( cd "$HERE/../doubtforks" && uv pip install --system -q transformers >/dev/null 2>&1; timeout 7200 python3 step0.py --results "$OUT/run/results.jsonl" --base-url http://127.0.0.1:8080/v1 --model k2 --tokenizer IFM/K2-Horizon-3.7B --out "$OUT/df_step0" ) > "$OUT/df_step0.log" 2>&1 \
+    || echo "df_step0 FAILED (Guess-1 outputs are intact), see $OUT/df_step0.log"
+  tail -5 "$OUT/df_step0.log"; head -12 "$OUT/df_step0/gate.md" 2>/dev/null
+fi
