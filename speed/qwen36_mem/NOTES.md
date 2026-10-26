@@ -50,3 +50,17 @@ swap by re-running pack_model / reload between phases, or run training as a sepa
 * If eager is too slow and torch.compile misbehaves, a Triton unpack kernel (explicit mul.rn/add.rn not needed given the exactness argument above) is the next step.
 * Embedding (0.95 GiB) could be packed with a row-gather dequant; not worth the code yet.
 * Gradient checkpointing + packed experts is exercised only in bench_mem (the CPU test runs without it).
+
+## Running a real Sleep-B arm packed: run_sleepb_packed.py
+Opt-in wrapper, sleepb.py untouched. It wraps `sleepb.load_model` (loads on CPU when CUDA is the target and `--q4-base --q4-mlx-moe` are set; needs ~70 GB host RAM), `sleepb.q4_apply` (first call: `packed.pack_model(device=cuda)` layer by layer
+instead of the bf16 qdq, then the rest moves to the GPU), `Trainer.step` (`--grad-ckpt`: HF checkpointing, use_reentrant=False, on only in `pm.train()`, so dreaming/eval generation and use_cache are unchanged), and logs peak CUDA memory per phase (load+pack, dream, train, eval).
+Command for a 32 GB 5090 arm (everything after `--` is sleepb's own CLI, so other flags such as `--habit spot` pass through):
+
+    python speed/qwen36_mem/run_sleepb_packed.py --packed-compile --grad-ckpt --kl-cache -- --arm ab_ob_b4_nb --week WEEK.json --out OUT --q4-base --q4-mlx-moe
+
+Flags: `--packed-compile` (fused dequant; measured 2.1-2.5x slower per step than the qdq base, eager is worse), `--grad-ckpt`, `--kl-cache` (fast_step KL-reference cache), `--packed-min-numel` (tests only). Needs `--q4-base --q4-mlx-moe --q4-bits 4`.
+* Shown (CPU, `python speed/qwen36_mem/test_run_sleepb_packed.py`, tiny fp32 Qwen3.5-MoE, 8 packed expert tensors + 32 packed Linears): Trainer.step loss/KL abs diff 0.0, 62 LoRA grads max abs diff 5.6e-9 (grad scale 0.06), packed+ckpt vs plain qdq; greedy generation after
+  checkpointed steps equals plain; a whole `--arm ab_ob_b4_nb --smoke --q4-base --q4-mlx-moe` run through the runner (2 nights, dreams, eval) completes with scores identical to the plain run.
+* Measured on the box earlier (RESULTS-box1.md): packed weights 18.9 GiB; train-step peak 22.1 GiB at tok 2048 with checkpointing, 23.3 at 8192.
+* Untested: whole-arm peak on a real 32 GB card (dream generation at gen_bs 128 with packed weights, KV cache + dequant transients, eval), host-RAM load of the 35B on CPU, `--packed-compile` + checkpointing together on GPU, DELTA_ARMS (they edit `base_layer.weight`, which PackedLinear lacks).
+  Generation dequantizes every layer per decode step; if dreaming is too slow or tight, lower `--gen-bs`.
