@@ -8,7 +8,7 @@ from .gen import BsState, hf_generate as generate
 
 from . import tools as T
 from .web import WEB
-from .grade import is_correct
+from .grade import check
 
 IM_START, IM_END = "<|ifm|im_start|>", "<|ifm|im_end|>"
 THINK_EMPTY = "<ifm|think>\n</ifm|think>"
@@ -54,7 +54,7 @@ class Rollout:
 
     def record(self):
         ans = self.answer if self.answer is not None else self.last_answer_line
-        ok = is_correct(ans, self.p["answer"], self.p["answer_type"]) if ans is not None else False
+        ok = check(self.p, ans)
         return {"id": self.p["id"], "try": self.try_idx, "kind": self.p.get("kind"), "source": self.p.get("source"), "messages": self.messages,
                 "tool_calls": self.calls, "tools": self.names, "turns": self.turns, "answer": ans, "answered": self.answer is not None, "correct": bool(ok),
                 "gen_tokens": self.gen_tokens, "web": self.web, "end": self.reason, "seconds": round(time.time() - self.t0, 1)}

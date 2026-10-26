@@ -38,3 +38,13 @@ def is_correct(pred, gold, answer_type):
     if answer_type == "grid":
         return len(p) > 0 and p == g
     return p == g
+
+
+def check(p, ans):
+    """Grade one try of puzzle dict `p`: Reasoning Gym puzzles (src "rg") use their own checker, the rest is_correct."""
+    if ans is None:
+        return False
+    if p.get("src") == "rg":
+        from . import rg_pool
+        return rg_pool.grade(p, ans)
+    return is_correct(ans, p["answer"], p["answer_type"])

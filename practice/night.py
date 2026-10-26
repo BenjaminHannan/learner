@@ -7,7 +7,7 @@ import random
 from sleep2.askonce.config import LR
 from sleep2.askonce.train_core import LoRATrainer
 
-from .lessons import (DPO_W, EPOCHS, MAX_TRAIN_TOKENS, N_PAIRS, N_SFT, N_STEPS, build_lessons, segments,  # noqa: F401  (re-exported)
+from .lessons import (DPO_W, EPOCHS, MAX_TRAIN_TOKENS, N_PAIRS, N_SFT, N_STEPS, build_lessons, segments, steps_for,  # noqa: F401  (re-exported)
                       transcript_len)
 
 class MultiTurnTrainer(LoRATrainer):
@@ -24,10 +24,13 @@ class MultiTurnTrainer(LoRATrainer):
         return {"ids": ids, "mask": mask}
 
 
-def train_night(model, tok, arm, store, seed, night, dev, use_scaler, anchors, n_steps=N_STEPS, n_sft=N_SFT, epochs=EPOCHS, n_pairs=N_PAIRS, lr=LR, log=print):
+def train_night(model, tok, arm, store, seed, night, dev, use_scaler, anchors, n_steps=N_STEPS, n_sft=N_SFT, epochs=EPOCHS, n_pairs=N_PAIRS, lr=LR, log=print, dedup=False):
     """Fresh adapter on the clean base `model`. Returns (trainer or None, stats). Trainer.pm is the adapted model for the next day; call trainer.release() before the
     next night. With no lessons the adapter stays at its zero init (= the base model)."""
-    items, st = build_lessons(arm, store, tok, seed, night, n_sft, epochs, n_pairs)
+    items, st = build_lessons(arm, store, tok, seed, night, n_sft, epochs, n_pairs, dedup=dedup)
+    if n_steps is None:  # Practice-2: scaled to the lesson count
+        n_steps = steps_for(len(items))
+    st["steps"] = n_steps
     trainer = MultiTurnTrainer(model, tok, seed, dev, use_scaler)
     if not items:
         st.update(skipped="no lessons")

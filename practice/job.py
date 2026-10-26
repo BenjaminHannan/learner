@@ -164,7 +164,12 @@ class Lane:
         if (not self.worker and not self.sub) or (self.worker and (self.kind == "night" or self.wmode == "hf")):  # CUDA is initialised only where HF runs
             self.log("env", env_info())
         self.tok = get_tokenizer(name)
-        self.pool, self.test, self.sib = load_sets(PDATA, a.practice_n)
+        if g("rg_skill"):  # Practice-2: rgdata/ is written by rg_run (test set, day puzzles, or the stage-0 set); the sibling slot holds the sealed test100
+            rd = Path(a.out) / "rgdata"
+            _, test100, _ = load_sets(PDATA)
+            self.pool, self.test, self.sib = jl(rd / "day1.jsonl")[:50], jl(rd / f"{g('rg_test', 'test')}.jsonl"), test100  # pool: night anchors only
+        else:
+            self.pool, self.test, self.sib = load_sets(PDATA, a.practice_n)
         arc = json.loads((ASK_DATA / "arc_easy_500.json").read_text())
         self.arc = arc[: a.arc_n]
         if not self.worker:
@@ -258,11 +263,12 @@ class Lane:
         return {"eval": self._eval, "day": self._day, "night": self._night, "rollouts": self._rollouts}[s["kind"]](s)
 
     def _eval(self, s):
-        tag, seed, tries = s["tag"], s["seed"], self.a.tries
+        tag, seed = s["tag"], s["seed"]
+        tmap = s.get("tries_map") or {"test": self.a.tries, "sibling": getattr(self.a, "sib_tries", 1)}
         t = time.time()
         self._use_active()
         res = {"tag": tag, "backend": self.backend_name()}
-        for name, ps, tr in (("test", self.test, tries), ("sibling", self.sib, getattr(self.a, "sib_tries", 1))):
+        for name, ps, tr in [(k, v, tmap[k]) for k, v in (("test", self.test), ("sibling", self.sib)) if k in tmap]:
             path = self.out / "eval" / f"{tag}_{name}.jsonl"
             path.unlink(missing_ok=True)
             recs = self.H.run(ps, tr, seed * 10 + (1 if name == "test" else 2), deadline=self.end, label=f"{tag}/{name}")
@@ -270,12 +276,13 @@ class Lane:
                 jl_append(path, r)
             res[name] = dict(summarize(recs), puzzle_scores=puzzle_scores(recs))
         t_arc = time.time()
-        res["arc_easy"] = self.run_arc(self.arc)
+        if self.arc:
+            res["arc_easy"] = self.run_arc(self.arc)
         res["arc_seconds"] = round(time.time() - t_arc, 1)
         res["seconds"] = round(time.time() - t, 1)
         res["gen_stats"] = dict(self.H.stats)
         jdump(self.out / "results" / f"{tag}.json", res)
-        self.log(f"EVAL {tag}: test {res['test']['acc']} sibling {res['sibling']['acc']} arc {res['arc_easy']['acc']} tools/try {res['test']['tool_calls_per_try']} ({res['seconds']}s)")
+        self.log(f"EVAL {tag}: " + " ".join(f"{k} {res[k]['acc']}" for k in tmap) + f" arc {res.get('arc_easy', {}).get('acc')} ({res['seconds']}s)")
         return res
 
     def _day(self, s):
@@ -284,8 +291,9 @@ class Lane:
         self._use_active()
         path = self.out / "day" / f"day{n}.jsonl"
         path.unlink(missing_ok=True)
-        recs = self.H.run(self.pool, self.a.tries, seed, deadline=s.get("deadline"), on_done=lambda r: jl_append(path, r), label=f"day{n}")
-        res = dict(summarize(recs), planned=len(self.pool) * self.a.tries, seconds=round(time.time() - t, 1), backend=self.backend_name(), gen_stats=dict(self.H.stats))
+        ps = jl(s["puzzles"]) if s.get("puzzles") else self.pool  # Practice-2: fresh puzzles every day
+        recs = self.H.run(ps, self.a.tries, seed, deadline=s.get("deadline"), on_done=lambda r: jl_append(path, r), label=f"day{n}")
+        res = dict(summarize(recs), planned=len(ps) * self.a.tries, seconds=round(time.time() - t, 1), backend=self.backend_name(), gen_stats=dict(self.H.stats))
         jdump(self.out / "results" / f"day{n}.json", res)
         self.log(f"DAY {n}: {res}")
         return res
@@ -298,13 +306,13 @@ class Lane:
         a = self.a
         n, seed = s["n"], s["seed"]
         t = time.time()
-        n_steps, n_sft, epochs, n_pairs = s.get("steps") or a.steps, s.get("n_sft") or a.n_sft, s.get("epochs") or a.epochs, s["n_pairs"] if s.get("n_pairs") is not None else a.n_pairs
+        n_steps, n_sft, epochs, n_pairs = None if s.get("auto_steps") else (s.get("steps") or a.steps), s.get("n_sft") or a.n_sft, s.get("epochs") or a.epochs, s["n_pairs"] if s.get("n_pairs") is not None else a.n_pairs
         if self.trainer:
             self.model = self.trainer.release()
             self.trainer = None
         anchors = [render(start_messages(p), True, self.tok.bos_token or "") for p in self.pool[:50]]
         self.trainer, st = N.train_night(self.model, self.tok, s.get("night_arm") or a.arm, self._store(n), seed, n, self.dev, self.dev == "cuda" and str(self.dt) == "torch.float16",
-                                         anchors, n_steps, n_sft, epochs, n_pairs, log=self.log)
+                                         anchors, n_steps, n_sft, epochs, n_pairs, log=self.log, dedup=bool(s.get("dedup")))
         adir = self.out / "adapters" / f"night{n}"
         self.trainer.pm.save_pretrained(str(adir))  # the next generation phase serves this (vLLM LoRARequest, never merged)
         st["adapter"] = str(adir)
@@ -392,8 +400,8 @@ class Lane:
     def evaluate(self, tag, seed=0):
         return self.phase("eval", f"eval_{tag}", tag=tag, seed=seed)
 
-    def day(self, n, seed, deadline):
-        return self.phase("day", f"day{n}", n=n, seed=seed, deadline=deadline)
+    def day(self, n, seed, deadline, **kw):
+        return self.phase("day", f"day{n}", n=n, seed=seed, deadline=deadline, **kw)
 
     def night(self, n, seed, **kw):
         st = self.phase("night", f"night{n}", n=n, seed=seed, **kw)
@@ -472,6 +480,12 @@ class Lane:
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
+    ap.add_argument("--rg-skills", help="Practice-2: comma-separated Reasoning Gym skills, or auto (read <out>/stage0.json)")
+    ap.add_argument("--stage0", action="store_true", help="Practice-2 stage 0: base model, 40 puzzles x 1 try per candidate skill (seed 100) -> <out>/stage0.json")
+    ap.add_argument("--rg-day-n", type=int, default=1000, help="fresh puzzles per day (seed 1000+day)")
+    ap.add_argument("--rg-test-n", type=int, default=300)
+    ap.add_argument("--test-tries", type=int, default=2)
+    ap.add_argument("--stage0-n", type=int, default=40)
     ap.add_argument("--arm", choices=["P", "C"])
     ap.add_argument("--lane", type=int, default=0)
     ap.add_argument("--out", default=os.environ.get("OUT", "out"))
@@ -483,7 +497,7 @@ def main(argv=None):
     ap.add_argument("--arc-n", type=int, default=200)
     ap.add_argument("--bs", type=int, default=8)
     ap.add_argument("--nights", type=int, default=N_NIGHTS)
-    ap.add_argument("--tries", type=int, default=TRIES)
+    ap.add_argument("--tries", type=int, default=None, help="tries per practice puzzle (default 2; 4 in Practice-2 mode)")
     ap.add_argument("--steps", type=int, default=N.N_STEPS)
     ap.add_argument("--n-sft", type=int, default=N.N_SFT)
     ap.add_argument("--epochs", type=int, default=N.EPOCHS)
@@ -504,6 +518,10 @@ def main(argv=None):
         lane.log(f"phase {a.name} done (startup {lane.startup_s}s)")
         sys.stdout.flush()
         os._exit(0)  # process death frees the GPU even if a vLLM engine thread would hang on shutdown
+    if a.stage0 or a.rg_skills:
+        from . import rg_run
+        return rg_run.main(a)
+    a.tries = a.tries or TRIES
     if not a.arm:
         ap.error("--arm is required")
     if a.seed is None:

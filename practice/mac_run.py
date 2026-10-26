@@ -400,7 +400,12 @@ class Mac:
         for k in range(1, n + 1):
             store += jl(d / f"day{k}.jsonl")
         night = self.a.night
-        items, st = L.build_lessons(arm, store, self.tok, self.a.seed, n, night["n_sft"], night["epochs"], night["n_pairs"], night["train_max_tokens"])
+        dd = getattr(self, "rg_mode", False)  # Practice-2: one win per solved puzzle; C gets exactly P's item counts
+        ref = d.parent / "P" / f"night{n}_lessons.json"
+        if dd and arm == "C" and ref.exists():
+            r = json.loads(ref.read_text())
+            night = dict(night, n_sft=max(1, r.get("sft_unique", 0)), n_pairs=r.get("pairs", 0))
+        items, st = L.build_lessons(arm, store, self.tok, self.a.seed, n, night["n_sft"], night["epochs"], night["n_pairs"], night["train_max_tokens"], dedup=dd)
         st["tool_note"] = "transcripts over train_max_tokens are not lessons"
         self.server.stop()  # one model in memory at a time
         if not items:
@@ -556,7 +561,12 @@ def parse_args(argv=None):
     ap.add_argument("--python", default=None, help="python with mlx-lm (default: this interpreter)")
     ap.add_argument("--port", type=int, default=8089)
     ap.add_argument("--practice-n", type=int, default=120)
-    ap.add_argument("--tries", type=int, default=2)
+    ap.add_argument("--tries", type=int, default=None, help="tries per practice puzzle (default 2; 4 in Practice-2 mode)")
+    ap.add_argument("--rg-skills", help="Practice-2: comma-separated Reasoning Gym skills, or auto (read <out>/stage0.json)")
+    ap.add_argument("--stage0", action="store_true", help="Practice-2 stage 0: base model, --stage0-n puzzles x 1 try per candidate -> <out>/stage0.json")
+    ap.add_argument("--stage0-n", type=int, default=40)
+    ap.add_argument("--rg-day-n", type=int, default=1000, help="fresh puzzles per day (seed 1000+day)")
+    ap.add_argument("--rg-test-n", type=int, default=300)
     ap.add_argument("--test-tries", type=int, default=2)
     ap.add_argument("--nights", type=int, default=3)
     ap.add_argument("--eval-nights", default="1,3")
@@ -575,14 +585,125 @@ def parse_args(argv=None):
         if k not in ("dpo",):
             ap.add_argument("--" + k.replace("_", "-"), dest="night_" + k, type=type(v), default=v)
     a = ap.parse_args(argv)
+    a.rg = bool(a.stage0 or a.rg_skills)
+    a.tries = a.tries or (4 if a.rg else 2)
     a.arms = [x for x in a.arms.split(",") if x]
     a.eval_nights = {int(x) for x in a.eval_nights.split(",") if x}
     a.night = {k: getattr(a, "night_" + k) if k != "dpo" else True for k in MAC_NIGHT}
     return a
 
 
+class MacRG(Mac):
+    """Practice-2 on the Mac (PREREG-2, same layout idea as rg_run): <out>/stage0.json, <out>/<skill>/{rgdata,A0,P,C}/. Per skill: A0 eval, then for P and C
+    nights x (day on fresh puzzles -> night); P evals after --eval-nights, C only after the last night; sealed test100 (first --sib-n puzzles; 0 = skip) at A0 (first
+    skill) and after the last night of P. Resumable like Mac."""
+    rg_mode = True
+
+    def setup(self):
+        a = self.a
+        self.preflight()
+        self.phase = "model"
+        self.model = self.locate_model()
+        self.tok = self.load_tok(self.model)
+        _, full = load_pool(a.practice_n)
+        self.sib, _, test_rows = load_eval_sets()
+        self.sib = self.sib[:a.sib_n] if a.sib_n >= 0 else self.sib
+        WEB.configure(a.web, test_rows, full)
+
+    def rg_eval(self, tag, arm_dir, adapter, sib):
+        d = self.out / arm_dir
+        res = self.run_tries(d / f"eval_{tag}_test.jsonl", self.test, self.a.test_tries, adapter, 7, f"eval {tag} test")
+        if sib and self.sib:
+            self.run_tries(d / f"eval_{tag}_sib.jsonl", self.sib, self.a.test_tries, adapter, 8, f"eval {tag} sib")
+        return res
+
+    def rg_eval_done(self, tag, arm_dir, sib):
+        d = self.out / arm_dir
+        t = {(r["id"], r["try"]) for r in jl(d / f"eval_{tag}_test.jsonl")}
+        s = {(r["id"], r["try"]) for r in jl(d / f"eval_{tag}_sib.jsonl")}
+        return (all((p["id"], k) in t for p in self.test for k in range(self.a.test_tries))
+                and (not (sib and self.sib) or all((p["id"], k) in s for p in self.sib for k in range(self.a.test_tries))))
+
+    def stage0(self):
+        from . import rg_pool as R
+        a, root = self.a, Path(os.path.expanduser(self.a.out))
+        if (root / "stage0.json").exists():
+            return json.loads((root / "stage0.json").read_text())
+        scores = {}
+        for skill in R.CANDIDATES:
+            f = root / "stage0" / skill / "eval_S0_test.jsonl"
+            ps = R.make_puzzles(skill, a.stage0_n, R.STAGE0_SEED)
+            self.run_phase(f"stage0_{skill}", lambda ps=ps, f=f, skill=skill: self.run_tries(f, ps, 1, None, 7, f"stage0 {skill}"))
+            recs = jl(f)
+            scores[skill] = round(sum(r["correct"] for r in recs) / max(1, len(recs)), 4)
+            self.log(f"stage0 {skill}: {scores[skill]}")
+        picked, note = R.pick_skills(scores)
+        out = {"n_puzzles": a.stage0_n, "tries": 1, "seed": R.STAGE0_SEED, "scores": scores, "picked": picked, "note": note}
+        jdump(root / "stage0.json", out)
+        self.log(f"stage0 picked {picked} {note}")
+        return out
+
+    def skill(self, root, skill, k):
+        from .rg_run import write_sets
+        a = self.a
+        self.out = root / skill
+        write_sets(self.out, skill, a, a.nights)
+        self.test = jl(self.out / "rgdata" / "test.jsonl")
+        last = a.nights
+        if not self.rg_eval_done("A0", "A0", k == 0):
+            self.run_phase("eval_A0", lambda: self.with_web(a.web_eval, lambda: self.rg_eval("A0", "A0", None, k == 0)))
+        for arm in a.arms:
+            for n in range(1, a.nights + 1):
+                self.pool = jl(self.out / "rgdata" / f"day{n}.jsonl")
+                prev = self.adapter_of(arm, n - 1)
+                if not self.day_done(arm, n):
+                    self.run_phase(f"day_{arm}{n}", lambda arm=arm, n=n, prev=prev: self.with_web(a.web, lambda: self.day_phase(arm, n, prev)))
+                if not self.night_done(arm, n):
+                    self.run_phase(f"night_{arm}{n}", lambda arm=arm, n=n: self.night_phase(arm, n))
+                if (arm == "P" and (n in a.eval_nights or n == last)) or (arm == "C" and n == last):
+                    sib = arm == "P" and n == last
+                    if not self.rg_eval_done(f"{arm}{n}", arm, sib):
+                        self.run_phase(f"eval_{arm}{n}", lambda arm=arm, n=n, sib=sib: self.with_web(a.web_eval, lambda: self.rg_eval(f"{arm}{n}", arm, self.adapter_of(arm, n), sib)))
+
+    def run(self):
+        from . import rg_pool as R
+        a = self.a
+        root = Path(os.path.expanduser(a.out))
+        signal.signal(signal.SIGTERM, lambda *_: setattr(self, "stop_flag", True))
+        try:
+            self.heartbeat()
+            self.setup()
+            jdump(root / "rg_config.json", {k: v for k, v in vars(a).items() if isinstance(v, (int, float, str, bool, type(None), list, dict))})
+            st = self.stage0() if a.stage0 else None
+            if a.rg_skills:
+                if a.rg_skills == "auto":
+                    st = st or (json.loads((root / "stage0.json").read_text()) if (root / "stage0.json").exists() else None)
+                    if not st:
+                        raise StopRun("--rg-skills auto needs <out>/stage0.json (run --stage0 first)")
+                    skills = st["picked"]
+                else:
+                    skills = a.rg_skills.split(",")
+                bad = [s for s in skills if s not in R.CANDIDATES]
+                if bad:
+                    raise StopRun(f"unknown skill {bad}; candidates: {R.CANDIDATES}")
+                for k, s in enumerate(skills):
+                    self.skill(root, s, k)
+            self.phase = "finished"
+            self.log("all phases finished")
+            return 0
+        except StopRun as e:
+            self.phase = "stopped"
+            self.log(f"STOPPED: {e}")
+            self.status(stopped=str(e))
+            return 3
+        finally:
+            self.stop_flag = True
+            self.server.stop()
+
+
 def main(argv=None):
-    return Mac(parse_args(argv)).run()
+    a = parse_args(argv)
+    return (MacRG(a) if a.rg else Mac(a)).run()
 
 
 if __name__ == "__main__":

@@ -42,6 +42,8 @@ ANSWER_HINT = {"int": "an integer", "str": "a short word or phrase", "grid": "a 
 
 
 def user_prompt(p):
+    if p.get("src") == "rg":  # Reasoning Gym questions carry their own answer-format instructions
+        return p["prompt"]
     return f"{p['prompt']}\n\n(The final answer is {ANSWER_HINT.get(p['answer_type'], 'short')}.)"
 
 
