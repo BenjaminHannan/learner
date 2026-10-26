@@ -7,7 +7,7 @@ CFG="$HOME/.config/opencode/opencode.json"
 DET="$HOME/Library/Application Support/OpenBot/openbot-provider-detection-v1.json"
 
 mkdir -p "$DEST/run" "$HOME/learner-ops/diary/raw/blobs" "$HOME/.config/opencode" \
-         "$(dirname "$DET")" "$HOME/Desktop"
+         "$(dirname "$DET")" "$DEST/launchers"
 cp "$SRC/gateway.py" "$SRC/diary_mcp.py" "$SRC/serve.sh" "$SRC/stop.sh" "$SRC/status.sh" \
    "$SRC/opencode.json" "$SRC/k2_nothink.jinja" "$DEST/"
 chmod +x "$DEST"/*.sh
@@ -64,7 +64,7 @@ print("wrote", p)
 PYEOF
 
 # Double-clickable launchers.
-cat > "$HOME/Desktop/Start Assistant.command" <<'CMD'
+cat > "$DEST/launchers/Start Assistant.command" <<'CMD'
 #!/bin/bash
 "$HOME/learner-ops/assistant/serve.sh" || { echo; echo "Could not start. Press Return to close."; read -r _; exit 1; }
 open -a OpenBot 2>/dev/null || echo "(OpenBot app not found; open it yourself.)"
@@ -73,12 +73,15 @@ echo
 echo
 echo "Ready. You can close this window; the assistant keeps running."
 CMD
-cat > "$HOME/Desktop/Stop Assistant.command" <<'CMD'
+cat > "$DEST/launchers/Stop Assistant.command" <<'CMD'
 #!/bin/bash
 "$HOME/learner-ops/assistant/stop.sh"
 echo "You can close this window."
 CMD
-chmod +x "$HOME/Desktop/Start Assistant.command" "$HOME/Desktop/Stop Assistant.command"
+chmod +x "$DEST/launchers/"*.command
+# Over SSH macOS privacy blocks ~/Desktop; keep the copies in $DEST/launchers then.
+cp "$DEST/launchers/"*.command "$HOME/Desktop/" 2>/dev/null ||
+  echo "Could not put the launchers on the Desktop (macOS privacy); drag them from $DEST/launchers"
 
 cat <<MSG
 
