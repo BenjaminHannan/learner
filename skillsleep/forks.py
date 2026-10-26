@@ -189,10 +189,18 @@ def pairs(tokd, envp, resp, forksp, outp, day, fixes):
     tok = load_tok(tokd); env = json.load(open(envp)); cap = int(E("MAXTOK_PAIR", 12288)); maxp = int(E("FORK_MAX_PAIRS", 200))
     meta = {f["fork_id"]: f for f in json.load(gzip.open(forksp, "rt"))}; par = {s["id"]: s for s, _ in parents(day, fixes)}
     st = collections.Counter(); rows = []
+    reps = collections.defaultdict(list)
     for l in open(resp):
-        r = json.loads(l); f = meta[r["fork_id"]]; s = r["sim"]; st["fork_runs"] += 1
-        if not real(s):
+        r = json.loads(l); reps[r["fork_id"]].append(r["sim"]); st["fork_runs"] += 1
+    K = int(E("FORK_K", 2))
+    for fid, sims_ in reps.items():
+        f = meta[fid]; s = sims_[0]; r = {"fork_id": fid}
+        if not all(real(x) for x in sims_):
             st["not_real"] += 1; continue
+        if len(sims_) < K:
+            st["too_few_replays"] += 1; continue
+        if len({ok(x) for x in sims_}) > 1:  # replays disagree: the outcome is customer noise, not the forked decision
+            st["replays_disagree"] += 1; continue
         if ok(s) == f["parent_ok"]:
             st["same_outcome"] += 1; continue
         st["differs"] += 1; st["fork_passes" if ok(s) else "fork_fails"] += 1

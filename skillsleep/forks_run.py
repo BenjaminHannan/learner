@@ -4,7 +4,7 @@ message, and (if that turn made tool calls) the tool results, run here on a fres
 The normal agent (the served model) and the normal user simulator then play on, and tau2's own evaluator scores the whole conversation. The evaluator gets the
 ORIGINAL task (without the history): a history that ends after a write action would otherwise make the gold run apply that action twice.
 One JSON line per finished fork: {fork_id, sim}. Forks start in shuffled order until DEADLINE_EPOCH, so a cut-off run keeps a spread of forks."""
-import gzip, json, random, sys, threading, time
+import gzip, json, os, random, sys, threading, time
 from concurrent.futures import ThreadPoolExecutor
 
 import tau2.runner.simulation as rsim
@@ -43,10 +43,12 @@ def fork_task(task, f, domain):
 def main(domain, split, forksp, outp, conc, deadline, args):
     forks = json.load(gzip.open(forksp, "rt")); random.Random(0).shuffle(forks)
     try:  # a rerun after a crash skips the forks that already finished
-        done = {json.loads(l)["fork_id"] for l in open(outp)}
+        done = {(json.loads(l)["fork_id"], json.loads(l).get("rep", 0)) for l in open(outp)}
     except FileNotFoundError:
         done = set()
-    forks = [f for f in forks if f["fork_id"] not in done]; print(f"{len(done)} forks already done, {len(forks)} to play", flush=True)
+    K = int(os.environ.get("FORK_K", 2))  # replays per fork: the Haiku customer is random, so a pair needs K agreeing outcomes
+    forks = [dict(f, rep=k) for k in range(K) for f in forks if (f["fork_id"], k) not in done]  # rep 0 of every fork first
+    print(f"{len(done)} fork replays already done, {len(forks)} to play (K={K})", flush=True)
     cfg = TextRunConfig(domain=domain, agent="llm_agent", llm_agent="openai/m", llm_args_agent=json.loads(args), user="user_simulator",
                         llm_user="anthropic/claude-haiku-5-5", llm_args_user={"num_retries": 6})
     for t in get_tasks(domain, task_split_name=split):
@@ -59,13 +61,13 @@ def main(domain, split, forksp, outp, conc, deadline, args):
             return
         _init_thread_event_loop()
         try:
-            sim = run_single_task(cfg, fork_task(BASE[f["task_id"]], f, domain), seed=300 + i)
+            sim = run_single_task(cfg, fork_task(BASE[f["task_id"]], f, domain), seed=300 + i + 100000 * f["rep"])
             d = json.loads(sim.model_dump_json())
             for m in d.get("messages") or []:
                 m.pop("raw_data", None)
             d.pop("ticks", None)
             with lock:
-                out.write(json.dumps({"fork_id": f["fork_id"], "sim": d}) + "\n"); out.flush(); n[0] += 1
+                out.write(json.dumps({"fork_id": f["fork_id"], "rep": f["rep"], "sim": d}) + "\n"); out.flush(); n[0] += 1
         except Exception as e:
             with lock:
                 n[1] += 1

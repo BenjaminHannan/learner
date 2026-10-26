@@ -17,7 +17,7 @@ from peft import LoraConfig, get_peft_model
 arm, base, nightp, anchorp, outd = sys.argv[1:6]
 E = os.environ.get
 LR = float(E("LR", 1e-4)); EPOCHS = int(E("EPOCHS", 2)); ACCUM = int(E("ACCUM", 4)); BETA = float(E("BETA", 0.1)); ANCHOR_W = float(E("ANCHOR_W", 0.1))
-DPO_W = float(E("DPO_W", 0.2)); KTO_W = float(E("KTO_W", 0.2)); CHUNK = int(E("CHUNK", 1024)); CLIP = float(E("CLIP", 1.0)); SEED = int(E("SEED", 1))
+DPO_W = float(E("DPO_W", 0.2)); KTO_W = float(E("KTO_W", 0.2)); CHUNK = int(E("CHUNK", 1024)); CLIP = float(E("CLIP", 1.0)); SEED = int(E("SEED", 1)); FNLL_W = float(E("FNLL_W", 0.2))
 DPO_ARMS = {"A2", "C2", "C3"}; dpo = arm in DPO_ARMS
 dev = "cuda" if torch.cuda.is_available() else "cpu"; dt = torch.bfloat16 if dev == "cuda" else torch.float32
 random.seed(SEED); torch.manual_seed(SEED)
@@ -141,7 +141,10 @@ for m, pi in enumerate(order):
         if it["kind"] != "neg":
             c, r = it["chosen"], it["rejected"]
             lc, lr_ = seq_logp(c, True), seq_logp(r, True)  # both graphs are kept: checkpointed activations only (~4 GB each at 16k tokens)
-            z = BETA * ((lc - ref[id(c)]) - (lr_ - ref[id(r)])); ld = -F.logsigmoid(z); (DPO_W * ld * sc).backward()
+            z = BETA * ((lc - ref[id(c)]) - (lr_ - ref[id(r)])); ld = -F.logsigmoid(z); lt = DPO_W * ld
+            if it.get("fork_at") and FNLL_W:  # RPO-style NLL on the chosen branch keeps fork pairs from saturating into pure margin
+                lt = lt + FNLL_W * (-lc / max(1, sum(c["mask"])))
+            (lt * sc).backward()
             for k, v in (("n_dpo", 1), ("dpo", ld.item()), ("dpo_margin", z.item()), ("dpo_acc", float(z.item() > 0))):
                 acc[k] = acc.get(k, 0) + v
         else:

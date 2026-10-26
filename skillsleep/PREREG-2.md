@@ -46,3 +46,9 @@ Haiku stands in for a real person. The day is one store. The q4 base and the big
 ## Compute
 Ben's two RTX 4090s through the GPU queue ("Keep the two 4090s busy all week"). The Anthropic key runs Haiku (customer and
 judge, live) and the Sonnet critiques (batched). Ben OK'd the key on rented GPUs on Oct 25 at 12:36Z.
+
+## Addendum 1 (2026-10-26 02:20Z, before any run; from skillsleep/research/near-miss-pairs.md)
+- Each fork is replayed FORK_K=2 times with different seeds. A pair needs both replays to agree with each other and to
+  differ from the parent, because the Haiku customer is random. Disagreeing forks are counted, not used.
+- C3 only: fork pairs add an NLL term on the chosen branch's post-fork tokens (weight FNLL_W=0.2, RPO-style), so the pairs
+  can't reach zero loss through margin alone. C2 is unchanged. Q3 now tests "fork pairs with this loss".
