@@ -112,3 +112,9 @@ First Mac A0 tries: format parsed fine, but K2 (thinking off) answered at once w
 right, a floor where neither arm could show anything. Restarted all runs with one prompt change for every arm: think
 step by step in plain text before the single tool call, and do not guess. The python sandbox limits are best-effort
 (macOS rejects RLIMIT_AS, which broke every python call on the Mac). The first 35 tries are discarded.
+
+## Addendum 7 (2026-10-26 ~03:00Z, speed; no results seen beyond A0 progress counts)
+The think-first replies are 400-650 tokens and the M3 makes only about 20 tok/s per server (concurrency does not add
+throughput with the custom K2 model file), so the run would end around 13:00Z. To finish by about 09:30Z: practice
+subset 60 puzzles, no sibling set, scout stopped. The test stays at 2 tries per puzzle. If day 1 projects past 10:30Z,
+the final eval drops to 1 try in both arms.
