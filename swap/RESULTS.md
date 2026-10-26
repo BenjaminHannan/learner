@@ -51,3 +51,9 @@ tok/s per agent (total) at 1 / 2 / 4 agents; TTFT at ~1.2k / ~4.9k prompt tokens
 - OptiQ-4bit (± MTP) and llama.cpp Q4_K_M don't fit: 22-26 GB at load, memory pressure warn, killed by the watchdog.
 - REAP MTP fails: the main model is pruned to 128 experts but the MTP head still has 256. REAP's sanity answer was slightly wrong.
 - Verdict: plain MLX 4-bit stays the big-tier serving format. REAP-19B (12.5 GB) is the fallback for 16-24 GB Macs, but its quality is unmeasured.
+
+## Mac M1 Pro: Qwen3.6-35B-A3B MLX 4-bit, tau2 retail 0-39 x2, thinking off (Oct 25-26)
+- 75/80 sims ran: DB match 63, reward pass 63 (84% of finished; 63/80 = 79% floor). All terminations were user_stop.
+- It stopped after 3 memory-guard trips. The 21 GB server on the 32 GB M1 sits at the edge (warn pressure), even at 1 sim at a time. The M1 hard-rebooted once (00:47Z) when the assistant app's model server started loading just after ours stopped.
+- For comparison: K2-3.7B no-think 56/80 (70%, GPU vLLM bf16), and LFM2.5-8B q4 on the Mac 14-23/40 (35-58%). The stacks differ, so treat these as rough comparisons.
+- Results: swap/results/mac_qwen36/ (pushed from the Mac).
