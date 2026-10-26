@@ -116,7 +116,8 @@ def parse_header(path):
         job = dict(name=raw.get("name") or Path(path).stem,
                    priority=int(raw.get("priority", 0)), gpus=int(raw.get("gpus", 1)),
                    hours=float(raw.get("hours", 24)), retries=int(raw.get("retries", 0)),
-                   owner=raw.get("owner", ""), mem_gb=raw.get("mem_gb", ""))
+                   owner=raw.get("owner", ""), mem_gb=raw.get("mem_gb", ""),
+                   commit=raw.get("commit", ""))
     except ValueError as e:
         raise JobError("bad header value: %s" % e)
     if not NAME_RE.match(job["name"]):
@@ -359,10 +360,30 @@ class Daemon:
             return
         if self.h.alert.exists():
             self.h.alert.unlink()
+        try:
+            extra = self.source_env(job)
+        except Exception as e:
+            self.reject(dst, "source checkout failed: %s" % e)
+            return
         rec = self.launch(name, name, ["bash", str(dst)], chosen, job["hours"], self.attempt(name),
-                          self.h.out / name, name)
+                          self.h.out / name, name, extra=extra)
         if rec is None:
             self.reject(dst, "could not launch")
+
+    def source_env(self, job):
+        """GPUQ_SRC = detached worktree of the job's `commit` (or the repo itself); GPUQ_FILES = data mirror."""
+        repo = os.environ.get("GPUQ_REPO", "")
+        env = dict(GPUQ_FILES=os.environ.get("GPUQ_FILES", str(self.h.root / "files")), GPUQ_SRC=repo)
+        if job.get("commit") and repo:
+            wt = self.h.root / "src" / job["name"]
+            if not wt.exists():
+                subprocess.run(["git", "-C", repo, "fetch", "-q", "origin"], timeout=600,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["git", "-C", repo, "worktree", "prune"], timeout=60)
+                subprocess.run(["git", "-C", repo, "worktree", "add", "-f", "--detach", str(wt), job["commit"]],
+                               check=True, timeout=600, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            env["GPUQ_SRC"] = str(wt)
+        return env
 
     def fillers(self):
         out = []
@@ -399,7 +420,7 @@ class Daemon:
         self.launch("%s-run%d" % (name, k), name, argv, [g], hours, 1, self.h.out / name / ("run%d" % k),
                     name, filler=True, fname=fname, run=k)
 
-    def launch(self, key, name, argv, gpus, hours, attempt, outdir, logname, filler=False, fname=None, run=None):
+    def launch(self, key, name, argv, gpus, hours, attempt, outdir, logname, filler=False, fname=None, run=None, extra=None):
         h = self.h
         outdir.mkdir(parents=True, exist_ok=True)
         rcfile = outdir / "_rc"
@@ -408,6 +429,7 @@ class Daemon:
         env = dict(os.environ, CUDA_VISIBLE_DEVICES=",".join(map(str, gpus)), GPUQ_OUT=str(outdir) + "/",
                    GPUQ_NAME=name, GPUQ_ATTEMPT=str(attempt), GPUQ_HOME=str(h.root))
         env.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")   # match nvidia-smi indices
+        env.update(extra or {})
         if filler:
             env["GPUQ_FILLER_RUN"] = str(run)
         try:

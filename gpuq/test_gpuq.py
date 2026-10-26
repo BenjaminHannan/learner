@@ -218,3 +218,28 @@ class Rendering(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Source(Base):
+    gpus = [0]
+
+    def test_commit_worktree(self):
+        repo = Path(self.tmp) / "repo"
+        repo.mkdir()
+        git = lambda *a: subprocess.run(["git", "-C", str(repo)] + list(a), check=True, capture_output=True, text=True)
+        git("init", "-q")
+        (repo / "x.txt").write_text("v1\n")
+        git("add", "x.txt")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "v1")
+        sha = git("rev-parse", "HEAD").stdout.strip()
+        (repo / "x.txt").write_text("v2\n")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "v2")
+        os.environ["GPUQ_REPO"] = str(repo)
+        try:
+            self.job("src", 'cat "$GPUQ_SRC/x.txt" > "$GPUQ_OUT/seen.txt"; echo "$GPUQ_FILES" > "$GPUQ_OUT/files.txt"',
+                     commit=sha)
+            self.pump(lambda: self.in_dir("done", "src"))
+        finally:
+            os.environ.pop("GPUQ_REPO")
+        self.assertEqual((self.h.out / "src" / "seen.txt").read_text(), "v1\n")
+        self.assertTrue((self.h.out / "src" / "files.txt").read_text().strip().endswith("files"))
