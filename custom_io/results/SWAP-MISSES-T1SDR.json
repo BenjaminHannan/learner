@@ -1,0 +1,3062 @@
+{
+ "/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/checkpoint.pt": {
+  "summary": {
+   "n_affected": 829,
+   "n_miss": 21,
+   "match": 97.47,
+   "kinds": {
+    "operand": 21
+   },
+   "negative": {
+    "operand / no negative": 15,
+    "operand / negative in replay": 6
+   },
+   "families": {
+    "chain_ops": 5,
+    "state_update": 12,
+    "var_chain": 4
+   },
+   "operand_from_result": {
+    "True": 21
+   },
+   "own_pointer": {
+    "n_from_call": 899,
+    "unchanged": 58,
+    "invalid": 12,
+    "n_affected": 829,
+    "match": 99.88,
+    "n_miss": 1
+   }
+  },
+  "misses": [
+   {
+    "id": "chain_ops-DI1-1",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "15",
+     "got": "5",
+     "from_result": true
+    },
+    "want": "225",
+    "got": "75",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "10",
+      "5",
+      "5"
+     ],
+     [
+      "mul",
+      "5",
+      "5",
+      "25"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "10",
+      "5",
+      "15"
+     ],
+     [
+      "mul",
+      "15",
+      "5",
+      "75"
+     ]
+    ],
+    "replay": [
+     15,
+     225
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-49",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "40",
+     "got": "6",
+     "from_result": true
+    },
+    "want": "120",
+    "got": "86",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "23",
+      "17",
+      "6"
+     ],
+     [
+      "mul",
+      "6",
+      "2",
+      "12"
+     ],
+     [
+      "sub",
+      "12",
+      "6",
+      "6"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "23",
+      "17",
+      "40"
+     ],
+     [
+      "mul",
+      "40",
+      "2",
+      "80"
+     ],
+     [
+      "sub",
+      "80",
+      "6",
+      "86"
+     ]
+    ],
+    "replay": [
+     40,
+     80,
+     120
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-484",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "28",
+     "got": "6",
+     "from_result": true
+    },
+    "want": "168",
+    "got": "36",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "16",
+      "12",
+      "4"
+     ],
+     [
+      "mul",
+      "4",
+      "6",
+      "24"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "16",
+      "12",
+      "28"
+     ],
+     [
+      "mul",
+      "6",
+      "6",
+      "36"
+     ]
+    ],
+    "replay": [
+     28,
+     168
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-533",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "68",
+     "got": "10",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "58",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "div",
+      "78",
+      "2",
+      "39"
+     ],
+     [
+      "sub",
+      "39",
+      "29",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "10",
+      "20"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "div",
+      "78",
+      "2",
+      "39"
+     ],
+     [
+      "sub",
+      "39",
+      "29",
+      "68"
+     ],
+     [
+      "add",
+      "68",
+      "10",
+      "58"
+     ]
+    ],
+    "replay": [
+     39,
+     68,
+     0
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-798",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "53",
+     "got": "5",
+     "from_result": true
+    },
+    "want": "2809",
+    "got": "265",
+    "negative": false,
+    "want_len": 4,
+    "intact_calls": [
+     [
+      "sub",
+      "29",
+      "24",
+      "5"
+     ],
+     [
+      "mul",
+      "5",
+      "5",
+      "25"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "29",
+      "24",
+      "53"
+     ],
+     [
+      "mul",
+      "53",
+      "5",
+      "265"
+     ]
+    ],
+    "replay": [
+     53,
+     2809
+    ]
+   },
+   {
+    "id": "state_update-DI1-11",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "37",
+     "got": "33",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "4",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "35",
+      "6",
+      "41"
+     ],
+     [
+      "sub",
+      "41",
+      "1",
+      "40"
+     ],
+     [
+      "sub",
+      "40",
+      "7",
+      "33"
+     ],
+     [
+      "add",
+      "33",
+      "33",
+      "66"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "35",
+      "6",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "1",
+      "30"
+     ],
+     [
+      "sub",
+      "30",
+      "7",
+      "37"
+     ],
+     [
+      "add",
+      "37",
+      "33",
+      "4"
+     ]
+    ],
+    "replay": [
+     29,
+     30,
+     37,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-43",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "15",
+     "got": "1",
+     "from_result": true
+    },
+    "want": "-38",
+    "got": "-24",
+    "negative": true,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "sub",
+      "8",
+      "7",
+      "1"
+     ],
+     [
+      "add",
+      "1",
+      "1",
+      "2"
+     ],
+     [
+      "add",
+      "2",
+      "4",
+      "6"
+     ],
+     [
+      "add",
+      "6",
+      "34",
+      "40"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "8",
+      "7",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "1",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "4",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "34",
+      "-24"
+     ]
+    ],
+    "replay": [
+     15,
+     0,
+     -4,
+     -38
+    ]
+   },
+   {
+    "id": "state_update-DI1-116",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "10",
+     "got": "6",
+     "from_result": true
+    },
+    "want": "3",
+    "got": "-1",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "8",
+      "1",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "3",
+      "6"
+     ],
+     [
+      "sub",
+      "6",
+      "6",
+      "0"
+     ],
+     [
+      "add",
+      "0",
+      "17",
+      "17"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "8",
+      "1",
+      "7"
+     ],
+     [
+      "sub",
+      "7",
+      "3",
+      "10"
+     ],
+     [
+      "sub",
+      "10",
+      "6",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "17",
+      "-1"
+     ]
+    ],
+    "replay": [
+     7,
+     10,
+     20,
+     3
+    ]
+   },
+   {
+    "id": "state_update-DI1-135",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "28",
+     "got": "24",
+     "from_result": true
+    },
+    "want": "7",
+    "got": "11",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "26",
+      "2",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "5",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "6",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "6",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "24",
+      "41"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "26",
+      "2",
+      "28"
+     ],
+     [
+      "add",
+      "28",
+      "5",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "6",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "6",
+      "35"
+     ],
+     [
+      "add",
+      "35",
+      "24",
+      "11"
+     ]
+    ],
+    "replay": [
+     28,
+     23,
+     29,
+     35,
+     7
+    ]
+   },
+   {
+    "id": "state_update-DI1-139",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "16",
+     "got": "4",
+     "from_result": true
+    },
+    "want": "19",
+    "got": "7",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "sub",
+      "10",
+      "6",
+      "4"
+     ],
+     [
+      "add",
+      "4",
+      "8",
+      "12"
+     ],
+     [
+      "sub",
+      "12",
+      "3",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "4",
+      "5"
+     ],
+     [
+      "add",
+      "5",
+      "8",
+      "13"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "10",
+      "6",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "8",
+      "8"
+     ],
+     [
+      "sub",
+      "8",
+      "3",
+      "11"
+     ],
+     [
+      "sub",
+      "11",
+      "4",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "8",
+      "7"
+     ]
+    ],
+    "replay": [
+     16,
+     8,
+     11,
+     27,
+     19
+    ]
+   },
+   {
+    "id": "state_update-DI1-140",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "17",
+     "got": "7",
+     "from_result": true
+    },
+    "want": "-6",
+    "got": "4",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "12",
+      "5",
+      "7"
+     ],
+     [
+      "add",
+      "7",
+      "7",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "6",
+      "20"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "12",
+      "5",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "7",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "6",
+      "4"
+     ]
+    ],
+    "replay": [
+     17,
+     0,
+     -6
+    ]
+   },
+   {
+    "id": "state_update-DI1-257",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "11",
+     "got": "7",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-16",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "9",
+      "2",
+      "7"
+     ],
+     [
+      "add",
+      "7",
+      "7",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "5",
+      "19"
+     ],
+     [
+      "sub",
+      "19",
+      "2",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "17",
+      "34"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "9",
+      "2",
+      "11"
+     ],
+     [
+      "add",
+      "11",
+      "7",
+      "4"
+     ],
+     [
+      "add",
+      "4",
+      "5",
+      "-1"
+     ],
+     [
+      "sub",
+      "-1",
+      "2",
+      "1"
+     ],
+     [
+      "add",
+      "1",
+      "17",
+      "-16"
+     ]
+    ],
+    "replay": [
+     11,
+     0,
+     -5,
+     -3,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-271",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "16",
+     "got": "18",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-2",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "6",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "3",
+      "18"
+     ],
+     [
+      "add",
+      "18",
+      "18",
+      "36"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "25"
+     ],
+     [
+      "add",
+      "25",
+      "6",
+      "19"
+     ],
+     [
+      "add",
+      "19",
+      "3",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "18",
+      "-2"
+     ]
+    ],
+    "replay": [
+     25,
+     19,
+     16,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-285",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "29",
+     "got": "9",
+     "from_result": true
+    },
+    "want": "32",
+    "got": "12",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "sub",
+      "19",
+      "5",
+      "14"
+     ],
+     [
+      "sub",
+      "14",
+      "5",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "9",
+      "0"
+     ],
+     [
+      "add",
+      "0",
+      "4",
+      "4"
+     ],
+     [
+      "add",
+      "4",
+      "22",
+      "26"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "19",
+      "5",
+      "24"
+     ],
+     [
+      "sub",
+      "24",
+      "5",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "9",
+      "38"
+     ],
+     [
+      "add",
+      "38",
+      "4",
+      "34"
+     ],
+     [
+      "add",
+      "34",
+      "22",
+      "12"
+     ]
+    ],
+    "replay": [
+     24,
+     29,
+     58,
+     54,
+     32
+    ]
+   },
+   {
+    "id": "state_update-DI1-329",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "8",
+     "got": "14",
+     "from_result": true
+    },
+    "want": "-5",
+    "got": "-11",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "11",
+      "3",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "5",
+      "19"
+     ],
+     [
+      "add",
+      "19",
+      "14",
+      "33"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "11",
+      "3",
+      "8"
+     ],
+     [
+      "add",
+      "8",
+      "5",
+      "3"
+     ],
+     [
+      "add",
+      "3",
+      "14",
+      "-11"
+     ]
+    ],
+    "replay": [
+     8,
+     3,
+     -5
+    ]
+   },
+   {
+    "id": "state_update-DI1-353",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "8",
+     "got": "24",
+     "from_result": true
+    },
+    "want": "1",
+    "got": "-15",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "16",
+      "1",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "7",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "7",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "8",
+      "23"
+     ],
+     [
+      "add",
+      "23",
+      "24",
+      "47"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "16",
+      "1",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "7",
+      "8"
+     ],
+     [
+      "add",
+      "8",
+      "7",
+      "1"
+     ],
+     [
+      "sub",
+      "1",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "24",
+      "-15"
+     ]
+    ],
+    "replay": [
+     15,
+     8,
+     1,
+     9,
+     1
+    ]
+   },
+   {
+    "id": "state_update-DI1-361",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "38",
+     "got": "18",
+     "from_result": true
+    },
+    "want": "-9",
+    "got": "11",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "28",
+      "3",
+      "25"
+     ],
+     [
+      "sub",
+      "25",
+      "8",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "1",
+      "18"
+     ],
+     [
+      "add",
+      "18",
+      "9",
+      "27"
+     ],
+     [
+      "add",
+      "27",
+      "18",
+      "45"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "28",
+      "3",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "8",
+      "39"
+     ],
+     [
+      "add",
+      "39",
+      "1",
+      "38"
+     ],
+     [
+      "add",
+      "38",
+      "9",
+      "29"
+     ],
+     [
+      "add",
+      "29",
+      "18",
+      "11"
+     ]
+    ],
+    "replay": [
+     31,
+     39,
+     38,
+     29,
+     -9
+    ]
+   },
+   {
+    "id": "var_chain-DI1-6",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "25",
+     "got": "9",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "16",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "9",
+      "18"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "25"
+     ],
+     [
+      "add",
+      "25",
+      "9",
+      "16"
+     ]
+    ],
+    "replay": [
+     25,
+     0
+    ]
+   },
+   {
+    "id": "var_chain-DI1-32",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "0",
+     "got": "14",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-14",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "7",
+      "9",
+      "16"
+     ],
+     [
+      "sub",
+      "16",
+      "5",
+      "11"
+     ],
+     [
+      "add",
+      "11",
+      "3",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "14",
+      "28"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "7",
+      "9",
+      "-2"
+     ],
+     [
+      "sub",
+      "-2",
+      "5",
+      "3"
+     ],
+     [
+      "add",
+      "3",
+      "3",
+      "0"
+     ],
+     [
+      "add",
+      "0",
+      "14",
+      "-14"
+     ]
+    ],
+    "replay": [
+     -2,
+     3,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "var_chain-DI1-165",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "23",
+     "got": "3",
+     "from_result": true
+    },
+    "want": "46",
+    "got": "26",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "add",
+      "13",
+      "4",
+      "17"
+     ],
+     [
+      "sub",
+      "17",
+      "7",
+      "10"
+     ],
+     [
+      "sub",
+      "10",
+      "7",
+      "3"
+     ],
+     [
+      "sub",
+      "3",
+      "3",
+      "0"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "13",
+      "4",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "7",
+      "16"
+     ],
+     [
+      "sub",
+      "16",
+      "7",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "3",
+      "26"
+     ]
+    ],
+    "replay": [
+     9,
+     16,
+     23,
+     46
+    ]
+   },
+   {
+    "id": "var_chain-DI1-186",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "24",
+     "got": "26",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-2",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "25",
+      "6",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "5",
+      "26"
+     ],
+     [
+      "add",
+      "26",
+      "26",
+      "52"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "25",
+      "6",
+      "19"
+     ],
+     [
+      "sub",
+      "19",
+      "5",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "26",
+      "-2"
+     ]
+    ],
+    "replay": [
+     19,
+     24,
+     0
+    ]
+   }
+  ]
+ },
+ "/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s201/T1SDR_s201/checkpoint.pt": {
+  "summary": {
+   "n_affected": 829,
+   "n_miss": 23,
+   "match": 97.23,
+   "kinds": {
+    "operand": 23
+   },
+   "negative": {
+    "operand / no negative": 18,
+    "operand / negative in replay": 5
+   },
+   "families": {
+    "chain_ops": 5,
+    "state_update": 13,
+    "var_chain": 5
+   },
+   "operand_from_result": {
+    "True": 23
+   },
+   "own_pointer": {
+    "n_from_call": 898,
+    "unchanged": 57,
+    "invalid": 12,
+    "n_affected": 829,
+    "match": 99.28,
+    "n_miss": 6
+   }
+  },
+  "misses": [
+   {
+    "id": "chain_ops-DI1-1",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "15",
+     "got": "5",
+     "from_result": true
+    },
+    "want": "225",
+    "got": "75",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "10",
+      "5",
+      "5"
+     ],
+     [
+      "mul",
+      "5",
+      "5",
+      "25"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "10",
+      "5",
+      "15"
+     ],
+     [
+      "mul",
+      "15",
+      "5",
+      "75"
+     ]
+    ],
+    "replay": [
+     15,
+     225
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-49",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "40",
+     "got": "6",
+     "from_result": true
+    },
+    "want": "120",
+    "got": "86",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "23",
+      "17",
+      "6"
+     ],
+     [
+      "mul",
+      "6",
+      "2",
+      "12"
+     ],
+     [
+      "sub",
+      "12",
+      "6",
+      "6"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "23",
+      "17",
+      "40"
+     ],
+     [
+      "mul",
+      "40",
+      "2",
+      "80"
+     ],
+     [
+      "sub",
+      "80",
+      "6",
+      "86"
+     ]
+    ],
+    "replay": [
+     40,
+     80,
+     120
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-533",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "68",
+     "got": "10",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "58",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "div",
+      "78",
+      "2",
+      "39"
+     ],
+     [
+      "sub",
+      "39",
+      "29",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "10",
+      "20"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "div",
+      "78",
+      "2",
+      "39"
+     ],
+     [
+      "sub",
+      "39",
+      "29",
+      "68"
+     ],
+     [
+      "add",
+      "68",
+      "10",
+      "58"
+     ]
+    ],
+    "replay": [
+     39,
+     68,
+     0
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-687",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "83",
+     "got": "3",
+     "from_result": true
+    },
+    "want": "249",
+    "got": "9",
+    "negative": false,
+    "want_len": 3,
+    "intact_calls": [
+     [
+      "sub",
+      "46",
+      "37",
+      "9"
+     ],
+     [
+      "mul",
+      "9",
+      "3",
+      "27"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "46",
+      "37",
+      "83"
+     ],
+     [
+      "mul",
+      "3",
+      "3",
+      "9"
+     ]
+    ],
+    "replay": [
+     83,
+     249
+    ]
+   },
+   {
+    "id": "chain_ops-DI1-798",
+    "family": "chain_ops",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "53",
+     "got": "5",
+     "from_result": true
+    },
+    "want": "2809",
+    "got": "265",
+    "negative": false,
+    "want_len": 4,
+    "intact_calls": [
+     [
+      "sub",
+      "29",
+      "24",
+      "5"
+     ],
+     [
+      "mul",
+      "5",
+      "5",
+      "25"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "29",
+      "24",
+      "53"
+     ],
+     [
+      "mul",
+      "53",
+      "5",
+      "265"
+     ]
+    ],
+    "replay": [
+     53,
+     2809
+    ]
+   },
+   {
+    "id": "state_update-DI1-11",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "37",
+     "got": "33",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "4",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "35",
+      "6",
+      "41"
+     ],
+     [
+      "sub",
+      "41",
+      "1",
+      "40"
+     ],
+     [
+      "sub",
+      "40",
+      "7",
+      "33"
+     ],
+     [
+      "add",
+      "33",
+      "33",
+      "66"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "35",
+      "6",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "1",
+      "30"
+     ],
+     [
+      "sub",
+      "30",
+      "7",
+      "37"
+     ],
+     [
+      "add",
+      "37",
+      "33",
+      "4"
+     ]
+    ],
+    "replay": [
+     29,
+     30,
+     37,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-53",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "23",
+     "got": "7",
+     "from_result": true
+    },
+    "want": "5",
+    "got": "-11",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "16",
+      "7",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "3",
+      "6"
+     ],
+     [
+      "add",
+      "6",
+      "21",
+      "27"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "16",
+      "7",
+      "23"
+     ],
+     [
+      "sub",
+      "7",
+      "3",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "21",
+      "-11"
+     ]
+    ],
+    "replay": [
+     23,
+     26,
+     5
+    ]
+   },
+   {
+    "id": "state_update-DI1-116",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "10",
+     "got": "6",
+     "from_result": true
+    },
+    "want": "3",
+    "got": "-1",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "8",
+      "1",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "3",
+      "6"
+     ],
+     [
+      "sub",
+      "6",
+      "6",
+      "0"
+     ],
+     [
+      "add",
+      "0",
+      "17",
+      "17"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "8",
+      "1",
+      "7"
+     ],
+     [
+      "sub",
+      "7",
+      "3",
+      "10"
+     ],
+     [
+      "sub",
+      "10",
+      "6",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "17",
+      "-1"
+     ]
+    ],
+    "replay": [
+     7,
+     10,
+     20,
+     3
+    ]
+   },
+   {
+    "id": "state_update-DI1-135",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "28",
+     "got": "24",
+     "from_result": true
+    },
+    "want": "7",
+    "got": "11",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "26",
+      "2",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "5",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "6",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "6",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "24",
+      "41"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "26",
+      "2",
+      "28"
+     ],
+     [
+      "add",
+      "28",
+      "5",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "6",
+      "29"
+     ],
+     [
+      "sub",
+      "29",
+      "6",
+      "35"
+     ],
+     [
+      "add",
+      "35",
+      "24",
+      "11"
+     ]
+    ],
+    "replay": [
+     28,
+     23,
+     29,
+     35,
+     7
+    ]
+   },
+   {
+    "id": "state_update-DI1-139",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "16",
+     "got": "4",
+     "from_result": true
+    },
+    "want": "19",
+    "got": "7",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "sub",
+      "10",
+      "6",
+      "4"
+     ],
+     [
+      "add",
+      "4",
+      "8",
+      "12"
+     ],
+     [
+      "sub",
+      "12",
+      "3",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "4",
+      "5"
+     ],
+     [
+      "add",
+      "5",
+      "8",
+      "13"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "10",
+      "6",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "8",
+      "8"
+     ],
+     [
+      "sub",
+      "8",
+      "3",
+      "11"
+     ],
+     [
+      "sub",
+      "11",
+      "4",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "8",
+      "7"
+     ]
+    ],
+    "replay": [
+     16,
+     8,
+     11,
+     27,
+     19
+    ]
+   },
+   {
+    "id": "state_update-DI1-140",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "17",
+     "got": "7",
+     "from_result": true
+    },
+    "want": "-6",
+    "got": "4",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "12",
+      "5",
+      "7"
+     ],
+     [
+      "add",
+      "7",
+      "7",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "6",
+      "20"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "12",
+      "5",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "7",
+      "10"
+     ],
+     [
+      "add",
+      "10",
+      "6",
+      "4"
+     ]
+    ],
+    "replay": [
+     17,
+     0,
+     -6
+    ]
+   },
+   {
+    "id": "state_update-DI1-150",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "20",
+     "got": "3",
+     "from_result": true
+    },
+    "want": "25",
+    "got": "8",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "sub",
+      "15",
+      "5",
+      "10"
+     ],
+     [
+      "sub",
+      "10",
+      "8",
+      "2"
+     ],
+     [
+      "add",
+      "2",
+      "3",
+      "5"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "15",
+      "5",
+      "20"
+     ],
+     [
+      "sub",
+      "3",
+      "8",
+      "11"
+     ],
+     [
+      "add",
+      "11",
+      "3",
+      "8"
+     ]
+    ],
+    "replay": [
+     20,
+     28,
+     25
+    ]
+   },
+   {
+    "id": "state_update-DI1-257",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "11",
+     "got": "7",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-16",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "9",
+      "2",
+      "7"
+     ],
+     [
+      "add",
+      "7",
+      "7",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "5",
+      "19"
+     ],
+     [
+      "sub",
+      "19",
+      "2",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "17",
+      "34"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "9",
+      "2",
+      "11"
+     ],
+     [
+      "add",
+      "11",
+      "7",
+      "4"
+     ],
+     [
+      "add",
+      "4",
+      "5",
+      "-1"
+     ],
+     [
+      "sub",
+      "-1",
+      "2",
+      "1"
+     ],
+     [
+      "add",
+      "1",
+      "17",
+      "-16"
+     ]
+    ],
+    "replay": [
+     11,
+     0,
+     -5,
+     -3,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-271",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "16",
+     "got": "18",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-2",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "6",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "3",
+      "18"
+     ],
+     [
+      "add",
+      "18",
+      "18",
+      "36"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "25"
+     ],
+     [
+      "add",
+      "25",
+      "6",
+      "19"
+     ],
+     [
+      "add",
+      "19",
+      "3",
+      "16"
+     ],
+     [
+      "add",
+      "16",
+      "18",
+      "-2"
+     ]
+    ],
+    "replay": [
+     25,
+     19,
+     16,
+     0
+    ]
+   },
+   {
+    "id": "state_update-DI1-304",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "9",
+     "got": "1",
+     "from_result": true
+    },
+    "want": "3",
+    "got": "-5",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "5",
+      "4",
+      "1"
+     ],
+     [
+      "add",
+      "1",
+      "6",
+      "7"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "5",
+      "4",
+      "9"
+     ],
+     [
+      "add",
+      "1",
+      "6",
+      "-5"
+     ]
+    ],
+    "replay": [
+     9,
+     3
+    ]
+   },
+   {
+    "id": "state_update-DI1-329",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "8",
+     "got": "14",
+     "from_result": true
+    },
+    "want": "-5",
+    "got": "-11",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "11",
+      "3",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "5",
+      "19"
+     ],
+     [
+      "add",
+      "19",
+      "14",
+      "33"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "11",
+      "3",
+      "8"
+     ],
+     [
+      "add",
+      "8",
+      "5",
+      "3"
+     ],
+     [
+      "add",
+      "3",
+      "14",
+      "-11"
+     ]
+    ],
+    "replay": [
+     8,
+     3,
+     -5
+    ]
+   },
+   {
+    "id": "state_update-DI1-353",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "8",
+     "got": "24",
+     "from_result": true
+    },
+    "want": "1",
+    "got": "-15",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "16",
+      "1",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "7",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "7",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "8",
+      "23"
+     ],
+     [
+      "add",
+      "23",
+      "24",
+      "47"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "16",
+      "1",
+      "15"
+     ],
+     [
+      "add",
+      "15",
+      "7",
+      "8"
+     ],
+     [
+      "add",
+      "8",
+      "7",
+      "1"
+     ],
+     [
+      "sub",
+      "1",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "24",
+      "-15"
+     ]
+    ],
+    "replay": [
+     15,
+     8,
+     1,
+     9,
+     1
+    ]
+   },
+   {
+    "id": "state_update-DI1-361",
+    "family": "state_update",
+    "kind": "operand",
+    "at_call": 4,
+    "detail": {
+     "side": "b",
+     "want": "38",
+     "got": "18",
+     "from_result": true
+    },
+    "want": "-9",
+    "got": "11",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "28",
+      "3",
+      "25"
+     ],
+     [
+      "sub",
+      "25",
+      "8",
+      "17"
+     ],
+     [
+      "add",
+      "17",
+      "1",
+      "18"
+     ],
+     [
+      "add",
+      "18",
+      "9",
+      "27"
+     ],
+     [
+      "add",
+      "27",
+      "18",
+      "45"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "28",
+      "3",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "8",
+      "39"
+     ],
+     [
+      "add",
+      "39",
+      "1",
+      "38"
+     ],
+     [
+      "add",
+      "38",
+      "9",
+      "29"
+     ],
+     [
+      "add",
+      "29",
+      "18",
+      "11"
+     ]
+    ],
+    "replay": [
+     31,
+     39,
+     38,
+     29,
+     -9
+    ]
+   },
+   {
+    "id": "var_chain-DI1-6",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "b",
+     "want": "25",
+     "got": "9",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "16",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "9"
+     ],
+     [
+      "add",
+      "9",
+      "9",
+      "18"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "17",
+      "8",
+      "25"
+     ],
+     [
+      "add",
+      "25",
+      "9",
+      "16"
+     ]
+    ],
+    "replay": [
+     25,
+     0
+    ]
+   },
+   {
+    "id": "var_chain-DI1-32",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "0",
+     "got": "14",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-14",
+    "negative": true,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "7",
+      "9",
+      "16"
+     ],
+     [
+      "sub",
+      "16",
+      "5",
+      "11"
+     ],
+     [
+      "add",
+      "11",
+      "3",
+      "14"
+     ],
+     [
+      "add",
+      "14",
+      "14",
+      "28"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "7",
+      "9",
+      "-2"
+     ],
+     [
+      "sub",
+      "-2",
+      "5",
+      "3"
+     ],
+     [
+      "add",
+      "3",
+      "3",
+      "0"
+     ],
+     [
+      "add",
+      "0",
+      "14",
+      "-14"
+     ]
+    ],
+    "replay": [
+     -2,
+     3,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "var_chain-DI1-165",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 3,
+    "detail": {
+     "side": "b",
+     "want": "23",
+     "got": "3",
+     "from_result": true
+    },
+    "want": "46",
+    "got": "26",
+    "negative": false,
+    "want_len": 2,
+    "intact_calls": [
+     [
+      "add",
+      "13",
+      "4",
+      "17"
+     ],
+     [
+      "sub",
+      "17",
+      "7",
+      "10"
+     ],
+     [
+      "sub",
+      "10",
+      "7",
+      "3"
+     ],
+     [
+      "sub",
+      "3",
+      "3",
+      "0"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "13",
+      "4",
+      "9"
+     ],
+     [
+      "sub",
+      "9",
+      "7",
+      "16"
+     ],
+     [
+      "sub",
+      "16",
+      "7",
+      "23"
+     ],
+     [
+      "sub",
+      "23",
+      "3",
+      "26"
+     ]
+    ],
+    "replay": [
+     9,
+     16,
+     23,
+     46
+    ]
+   },
+   {
+    "id": "var_chain-DI1-186",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 2,
+    "detail": {
+     "side": "b",
+     "want": "24",
+     "got": "26",
+     "from_result": true
+    },
+    "want": "0",
+    "got": "-2",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "add",
+      "25",
+      "6",
+      "31"
+     ],
+     [
+      "sub",
+      "31",
+      "5",
+      "26"
+     ],
+     [
+      "add",
+      "26",
+      "26",
+      "52"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "add",
+      "25",
+      "6",
+      "19"
+     ],
+     [
+      "sub",
+      "19",
+      "5",
+      "24"
+     ],
+     [
+      "add",
+      "24",
+      "26",
+      "-2"
+     ]
+    ],
+    "replay": [
+     19,
+     24,
+     0
+    ]
+   },
+   {
+    "id": "var_chain-DI1-352",
+    "family": "var_chain",
+    "kind": "operand",
+    "at_call": 1,
+    "detail": {
+     "side": "a",
+     "want": "13",
+     "got": "1",
+     "from_result": true
+    },
+    "want": "4",
+    "got": "-8",
+    "negative": false,
+    "want_len": 1,
+    "intact_calls": [
+     [
+      "sub",
+      "7",
+      "6",
+      "1"
+     ],
+     [
+      "add",
+      "1",
+      "6",
+      "7"
+     ],
+     [
+      "add",
+      "7",
+      "3",
+      "10"
+     ]
+    ],
+    "swapped_calls": [
+     [
+      "sub",
+      "7",
+      "6",
+      "13"
+     ],
+     [
+      "add",
+      "1",
+      "6",
+      "-5"
+     ],
+     [
+      "add",
+      "-5",
+      "3",
+      "-8"
+     ]
+    ],
+    "replay": [
+     13,
+     7,
+     4
+    ]
+   }
+  ]
+ }
+}
