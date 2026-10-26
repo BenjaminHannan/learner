@@ -9,6 +9,7 @@ in this process (then pass `upstream`).
 """
 import json
 import os
+import queue as queue_mod
 import random
 import re
 import shutil
@@ -22,7 +23,7 @@ from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from . import tools as T
 from .grade import check
-from .k2_proxy import Proxy, parse_native, read_try_log, safe_key
+from .k2_proxy import CONTEXT_ERR, Proxy, parse_native, read_try_log, safe_key
 
 AGENT_PROMPT = ("You solve puzzles. Work out the rule or the plan step by step. Use the bash tool to run python3 to check your work before you answer. "
                 "When you are sure, reply with the final answer inside <answer>...</answer> and nothing else after it: an integer, a short word or phrase, "
@@ -86,10 +87,11 @@ def extract_answer(texts):
 
 class OpenCodeHarness:
     def __init__(self, proxy_url="http://127.0.0.1:8095", log_dir=None, upstream=None, concurrency=4, timeout=900, max_new=1024, temperature=0.7,
-                 max_steps=12, bash_timeout_ms=10000, web=True, opencode_bin="opencode", log=print, keep_dirs=False, embed_tools=True, progress_s=120):
+                 max_steps=12, bash_timeout_ms=10000, web=True, opencode_bin="opencode", log=print, keep_dirs=False, embed_tools=True, progress_s=120,
+                 max_prompt_chars=40000, data_dir=None):
         self.proxy = None
-        if proxy_url is None:  # in-process proxy
-            self.proxy = Proxy(upstream, log_dir or tempfile.mkdtemp(prefix="k2proxy_"))
+        if proxy_url is None:  # in-process proxy; ~3.4 characters per K2 token, so 40k characters is about 12k tokens
+            self.proxy = Proxy(upstream, log_dir or tempfile.mkdtemp(prefix="k2proxy_"), max_prompt_chars=max_prompt_chars)
             proxy_url = f"http://127.0.0.1:{self.proxy.start_thread(0)}"
             log_dir = str(self.proxy.log_dir)
         if log_dir is None:
@@ -99,6 +101,8 @@ class OpenCodeHarness:
         self.log_dir, self.concurrency, self.timeout = log_dir, concurrency, timeout
         self.max_new, self.temperature, self.max_steps, self.bash_timeout_ms = max_new, temperature, max_steps, bash_timeout_ms
         self.web, self.bin, self.log, self.keep_dirs, self.embed_tools, self.progress_s = web, opencode_bin, log, keep_dirs, embed_tools, progress_s
+        self.data_dir = data_dir or os.path.join(os.path.expanduser(str(log_dir)), "oc_data")  # one opencode data dir (sqlite) per worker slot: a shared one gave "database is locked"
+        self._slots = None
         self.stats = {"gen_s": 0.0, "tool_s": 0.0, "gen_tokens": 0, "rollouts": 0, "timeouts": 0, "errors": 0}
         self._lock = threading.Lock()
 
@@ -108,7 +112,9 @@ class OpenCodeHarness:
         key = safe_key(f"{label}-{p['id']}-t{k}-{uuid.uuid4().hex[:6]}")
         work = tempfile.mkdtemp(prefix="oc_")
         cfg = make_config(self.base_url, self.max_new, self.temperature, self.max_steps, headers={"X-Practice-Try": key})
+        slot = self._slots.get() if self._slots is not None else 0
         env = dict(os.environ, OPENCODE_CONFIG_CONTENT=json.dumps(cfg), XDG_CONFIG_HOME=os.path.join(work, ".xdg_cfg"), PWD=work,
+                   XDG_DATA_HOME=os.path.join(self.data_dir, f"slot{slot}"),
                    OPENCODE_DISABLE_MODELS_FETCH="1", OPENCODE_DISABLE_AUTOUPDATE="1", OPENCODE_DISABLE_AUTOCOMPACT="1", OPENCODE_DISABLE_CLAUDE_CODE="1",
                    OPENCODE_DISABLE_LSP_DOWNLOAD="1", OPENCODE_DISABLE_DEFAULT_PLUGINS="1", OPENCODE_DISABLE_TERMINAL_TITLE="1",
                    OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS=str(self.bash_timeout_ms))
@@ -132,9 +138,13 @@ class OpenCodeHarness:
             if proc is not None and proc.poll() is None:
                 os.killpg(proc.pid, signal.SIGKILL)
         finally:
+            if self._slots is not None:
+                self._slots.put(slot)
             if not self.keep_dirs:
                 shutil.rmtree(work, ignore_errors=True)
         texts, uses, perr = parse_events(stdout)
+        if CONTEXT_ERR in (err or "") + (perr or "") + (stdout or "")[-2000:]:
+            end, err = "context", ""  # the try ran out of room (a model failure, scored like any other unanswered try)
         calls = read_try_log(self.log_dir, key)
         rec = self._record(p, k, key, calls, texts, uses, end, err or perr, t0)
         with self._lock:
@@ -181,6 +191,9 @@ class OpenCodeHarness:
             rng.shuffle(order)
             queue += [(p, k) for p in order]
         n = max(1, inflight or self.concurrency)
+        self._slots = queue_mod.Queue()
+        for i in range(n):
+            self._slots.put(i)
         total, recs, life, running = len(queue), [], [], {}
         t_start = last = time.time()
         with ThreadPoolExecutor(n) as pool:

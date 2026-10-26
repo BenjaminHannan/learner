@@ -217,9 +217,17 @@ def build_response(text, tools, usage, model):
 
 
 # ------------------------------------------------------------------ server
+CONTEXT_ERR = "context_length_exceeded"
+
+
+class ContextTooLong(Exception):
+    pass
+
+
 class Proxy:
-    def __init__(self, upstream, log_dir, timeout=1800):
+    def __init__(self, upstream, log_dir, timeout=1800, max_prompt_chars=None):
         self.upstream, self.timeout = upstream.rstrip("/"), timeout
+        self.max_prompt_chars = max_prompt_chars  # Practice-2 M3 stage 0: a 30k-token prompt OOMed Metal and killed the server, so long prompts are refused
         self.log_dir = Path(log_dir)
         (self.log_dir / "tools").mkdir(parents=True, exist_ok=True)
         self.lock = threading.Lock()
@@ -257,6 +265,8 @@ class Proxy:
         messages = body.get("messages") or []
         key = key_hint or first_user_key(messages)
         tools = fix_tools(body.get("tools"))
+        if self.max_prompt_chars and len(json.dumps(messages)) + len(json.dumps(tools or [])) > self.max_prompt_chars:
+            raise ContextTooLong(f"{CONTEXT_ERR}: prompt over {self.max_prompt_chars} characters")
         up = {"model": self.upstream_model(), "messages": map_messages(messages), "stream": False, "stop": [STOP]}
         user_stop = body.get("stop")
         if user_stop:
@@ -333,6 +343,8 @@ class Proxy:
                 key = self.headers.get("X-Practice-Try") or pkey
                 try:
                     resp, _ = proxy.complete(body, key)
+                except ContextTooLong as e:
+                    return self._send(400, {"error": {"message": str(e), "code": CONTEXT_ERR}})
                 except urllib.error.HTTPError as e:
                     return self._send(e.code, {"error": {"message": f"upstream {e.code}: {e.read()[:500].decode(errors='replace')}"}})
                 except Exception as e:  # noqa: BLE001

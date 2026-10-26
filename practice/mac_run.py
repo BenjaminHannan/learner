@@ -369,6 +369,7 @@ class Mac:
         have = {(r["id"], r["try"]) for r in jl(file)}
         conc = self.serve(adapter)
         H = self.harness(conc)
+        errs = []
         for k in range(tries):
             todo = [p for p in puzzles if (p["id"], k) not in have]
             if not todo:
@@ -376,6 +377,9 @@ class Mac:
 
             def on_done(rec, k=k):
                 rec["try"] = k
+                if rec.get("end") == "error":  # not scored: redone below after a server restart
+                    errs.append((rec["id"], k, rec.get("error", "")[:200]))
+                    return
                 if rec.get("harness") == "opencode":  # lesson segments as K2 saw them, then drop the 13 KB tools copy
                     from .oc_lessons import oc_segments
                     try:
@@ -385,6 +389,25 @@ class Mac:
                     rec.pop("proxy_tools", None)
                 jl_append(file, rec)
             H.run(todo, 1, seed=seed * 10 + k, on_done=on_done, label=f"{label} try{k}")
+        for rnd in range(3):  # Practice-2 M3 stage 0: a Metal OOM killed the generation thread and every later try errored and was scored wrong
+            have = {(r["id"], r["try"]) for r in jl(file)}
+            redo = [(p, k) for k in range(tries) for p in puzzles if (p["id"], k) not in have]
+            if not redo or not errs:
+                break
+            self.log(f"{label}: {len(errs)} errored tries (e.g. {errs[-1][2]!r}); restarting the server and redoing {len(redo)} (round {rnd + 1})")
+            errs.clear()
+            self.server.stop()
+            conc = self.serve(adapter)
+            H = self.harness(conc)
+            for k in sorted({k for _, k in redo}):
+                def on_done2(rec, k=k):
+                    rec["try"] = k
+                    if rec.get("end") == "error":
+                        errs.append((rec["id"], k, rec.get("error", "")[:200]))
+                        if rnd < 2:
+                            return
+                    on_done(rec, k) if rec.get("end") != "error" else jl_append(file, rec)
+                H.run([p for p, kk in redo if kk == k], 1, seed=seed * 10 + k + 1000 * (rnd + 1), on_done=on_done2, label=f"{label} redo{rnd + 1} try{k}")
         recs = jl(file)
         self.peak_rss_mb = max(self.peak_rss_mb, self.server.rss_mb())
         return {"n": len(recs), **{k: v for k, v in summarize(recs).items() if k in ("acc", "tool_calls_per_try", "answered", "gen_tokens_per_try")},

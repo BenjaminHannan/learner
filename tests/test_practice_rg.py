@@ -185,3 +185,31 @@ def test_oc_segments_chain_and_lessons():
     r = {"id": "a", "try": 0, "correct": True, "messages": sys_u, "segs": segs}
     assert L.segments(L.target_of(r)) == segs
     assert L.target_of({"messages": sys_u}) is sys_u
+
+
+def test_run_tries_redoes_errored_tries(tmp_path):
+    from practice import mac_run as M
+
+    class Srv:
+        stops = 0
+        def stop(self): Srv.stops += 1
+        def rss_mb(self): return 0
+
+    class H:
+        calls = 0
+        stats = {"gen_tokens": 1, "gen_s": 1.0}
+        def run(self, puzzles, tries, seed=0, on_done=None, label=""):
+            H.calls += 1
+            for p in puzzles:
+                bad = H.calls == 1 and p["id"] == "b"
+                on_done({"id": p["id"], "kind": "k", "try": 0, "correct": not bad, "end": "error" if bad else "answer", "error": "generation thread died" if bad else "",
+                         "tool_calls": 1, "answered": not bad, "gen_tokens": 1, "messages": []})
+
+    o = M.Mac.__new__(M.Mac)
+    o.server, o.peak_rss_mb, o.log = Srv(), 0, lambda *a: None
+    o.serve = lambda adapter: 2
+    o.harness = lambda conc: H()
+    f = tmp_path / "x.jsonl"
+    o.run_tries(f, [{"id": "a"}, {"id": "b"}], 1, None, 1, "t")
+    recs = M.jl(f)
+    assert sorted(r["id"] for r in recs) == ["a", "b"] and all(r["end"] == "answer" for r in recs) and Srv.stops == 1

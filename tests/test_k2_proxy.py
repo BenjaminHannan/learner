@@ -222,3 +222,14 @@ def test_opencode_end_to_end(stack, tmp_path):
     from practice import oc_lessons as L
     pairs = L.render_try(r, None, TPL)
     assert len(pairs) == 2 and pairs[1][0].endswith("<ifm|think>\n</ifm|think>")
+
+
+def test_proxy_refuses_long_prompt():
+    from practice.k2_proxy import CONTEXT_ERR, ContextTooLong, Proxy
+    import tempfile
+    px = Proxy("http://127.0.0.1:9", tempfile.mkdtemp(), max_prompt_chars=100)
+    try:
+        px.complete({"messages": [{"role": "user", "content": "x" * 200}]}, "k")
+        assert False
+    except ContextTooLong as e:
+        assert CONTEXT_ERR in str(e)
