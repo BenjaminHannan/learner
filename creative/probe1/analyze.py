@@ -126,15 +126,17 @@ def evaluate(recs, probe=None, haiku_probe=None, k2=None, seed=0):
     return dict(n_pools=len(pools), n_transcripts=len(flat), n_solvable=len(solv), pick_rate=rate, auroc=au)
 
 
-def verdict(m):
+def verdict(m, wrong_at=None):
+    """wrong_at: absolute PROVED WRONG threshold in % (Probe-3: 37.5); default = SELF + WRONG_MARGIN (Probe-1)."""
     pr, au = m["pick_rate"], m["auroc"]
     if "PROBE-S" not in pr:
         return dict(verdict="NO PROBES", checks={})
     S = pr["SELF"]["all"] if "SELF" in pr else PRE["SELF"]
     p = pr["PROBE-S"]["all"]
     chk = dict(P1=p >= S + P1_MARGIN - EPS, P2=au.get("PROBE-S") is not None and au["PROBE-S"] >= P2_AUROC - EPS)
-    v = "PASS" if all(chk.values()) else "PROVED WRONG" if p <= S + WRONG_MARGIN + EPS else "INCONCLUSIVE"
-    return dict(verdict=v, checks=chk, self_rate=S, p1_needs=S + P1_MARGIN, wrong_at=S + WRONG_MARGIN)
+    W = S + WRONG_MARGIN if wrong_at is None else wrong_at
+    v = "PASS" if all(chk.values()) else "PROVED WRONG" if p <= W + EPS else "INCONCLUSIVE"
+    return dict(verdict=v, checks=chk, self_rate=S, p1_needs=S + P1_MARGIN, wrong_at=W, wrong_at_custom=wrong_at is not None)
 
 
 def report_md(m, v, d, hd, gate_rate):
@@ -146,7 +148,7 @@ def report_md(m, v, d, hd, gate_rate):
     L += ["", f"Verdict: **{v['verdict']}**"]
     if v["checks"]:
         L.append(f"Pass marks (PREREG): P1 PROBE-S >= SELF + 5 points (>= {v['p1_needs']:.1f}%); P2 AUROC of the probe score >= 0.75. "
-                 f"Proved wrong: PROBE-S <= SELF + 1 point (<= {v['wrong_at']:.1f}%). HAIKU-PROBE is reported only. "
+                 f"Proved wrong: PROBE-S {'' if v.get('wrong_at_custom') else '<= SELF + 1 point '}(<= {v['wrong_at']:.1f}%). HAIKU-PROBE is reported only. "
                  + ", ".join(f"{k}={'ok' if x else 'FAIL'}" for k, x in v["checks"].items()))
     L.append(f"Pick-1 numbers quoted in PREREG: RAND {PRE['RAND']}, VOTE {PRE['VOTE']}, SELF {PRE['SELF']} (SELF AUROC {PRE['SELF_AUROC']}); the table recomputes them from the same files.")
     for title, x in (("K2 probes", d), ("Haiku probes (reference)", hd)):
@@ -167,6 +169,7 @@ def main():
     ap.add_argument("--pools", default=DEFAULT_POOLS)
     ap.add_argument("--results", default=DEFAULT_RESULTS)
     ap.add_argument("--out", default=HERE)
+    ap.add_argument("--wrong-at", type=float, default=None, help="PROVED WRONG threshold in %% (Probe-3: 37.5); default SELF + 1 point (Probe-1)")
     a = ap.parse_args()
     recs, tasks = read_jsonl(a.pools), load_tasks()
     rows = replay.load_rows(a.results, {r["task"] for r in recs})
@@ -187,7 +190,7 @@ def main():
             sc = probe_scores(recs, states, probes)
             out[nm] = (sc, diagnostics(probes, tasks, ref, sc, pools))
     m = evaluate(recs, out["k2"][0] if "k2" in out else None, out["haiku"][0] if "haiku" in out else None, k2)
-    v = verdict(m)
+    v = verdict(m, a.wrong_at)
     d, hd = (out[x][1] if x in out else None for x in ("k2", "haiku"))
     os.makedirs(a.out, exist_ok=True)
     json.dump(dict(metrics=m, diagnostics=dict(k2=d, haiku=hd), gate_rate=rate, baselines_in_prereg=PRE, **v), open(os.path.join(a.out, "report.json"), "w"), indent=1)
