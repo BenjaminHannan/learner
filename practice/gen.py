@@ -3,9 +3,20 @@
                (BsState), a prefill-token budget that is learned from OOMs, and length-sorted batches.
   VLLMBackend: offline vLLM engine (prefix caching, LoRA served from a saved peft adapter, same prompt token ids as the HF path).
 The two paths use the same rendered prompts, the same stop rule and the same sampling settings (temperature, top_p 1, no top_k)."""
+import json
+import os
+import signal
+import subprocess
+import sys
+import threading
 import time
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
-import torch
+try:  # the Mac (MLX) path runs without torch
+    import torch
+except ImportError:  # pragma: no cover
+    torch = None
 
 STOP_TEXT = "</input>"
 IM_END = "<|ifm|im_end|>"
@@ -58,7 +69,11 @@ def stop_ids(tok):
     return [i for i in ids if i is not None and i >= 0]
 
 
-@torch.no_grad()
+def _no_grad(f):
+    return torch.no_grad()(f) if torch is not None else f
+
+
+@_no_grad
 def hf_generate(model, tok, prompts, max_new, temperature=0.7, seed=0, bs=8, log=None, first_words=None):
     """Decoded new text of every prompt, in input order. Stops each sequence at '</input>' (kept in the text) or <|ifm|im_end|> (cut).
     `bs` is an int or a BsState (shared across calls so a reduced size sticks)."""
@@ -167,3 +182,156 @@ class VLLMBackend:
             tid = r.outputs[0].token_ids[0]
             ok += q["labels"][cand.index(tid)] == q["a"] if tid in cand else 0
         return {"acc": ok / max(1, len(arc)), "n": len(arc)}
+
+
+# ====================================================================== Mac / OpenAI-compatible backend (mlx_lm.server)
+STOPS = [STOP_TEXT, IM_END]
+
+
+def _post_json(url, body, timeout):
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8", "replace"))
+
+
+def _get_json(url, timeout=5):
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8", "replace"))
+
+
+class OpenAIBackend:
+    """Talks to a local `mlx_lm.server` (POST /v1/completions with the exact rendered prompt string). N parallel requests via threads.
+    Same interface as VLLMBackend for the Harness: .inflight, .describe(), .generate(prompts, max_new, temperature, seed).
+    `strip_prefix` (the BOS text) is removed from the front of every prompt when the server tokenizer adds BOS itself (avoids a double BOS).
+    A stop string is not returned by the server, so when the reply stopped on a stop string with an unclosed <input>, '</input>' is put back
+    (the HF/vLLM paths keep it in the text)."""
+    name = "openai"
+
+    def __init__(self, base_url, model="default_model", workers=4, strip_prefix="", timeout=900, retries=2, send_seed=True, post=None, log=print, gate=None):
+        self.base, self.model, self.workers, self.strip_prefix = base_url.rstrip("/"), model, int(workers), strip_prefix
+        self.inflight, self.timeout, self.retries, self.send_seed, self.log = self.workers, timeout, retries, send_seed, log
+        self._post = post or _post_json
+        self.gate = gate  # called before every request (memory-pressure / pause backoff)
+        self.pool = ThreadPoolExecutor(self.workers)
+        self.completion_tokens = 0
+        self.lock = threading.Lock()
+
+    def describe(self):
+        return f"openai-compat {self.base} workers={self.workers}"
+
+    def _one(self, prompt, max_new, temperature, seed):
+        if self.strip_prefix and prompt.startswith(self.strip_prefix):
+            prompt = prompt[len(self.strip_prefix):]
+        body = {"model": self.model, "prompt": prompt, "max_tokens": int(max_new), "temperature": float(temperature), "top_p": 1.0, "stop": STOPS, "stream": False}
+        if self.send_seed:
+            body["seed"] = int(seed) % (2 ** 31)
+        err = None
+        for a in range(self.retries + 1):
+            if self.gate:
+                self.gate()
+            try:
+                r = self._post(self.base + "/v1/completions", body, self.timeout)
+                ch = r["choices"][0]
+                text = ch.get("text") or ""
+                j = text.find(IM_END)
+                if j >= 0:
+                    text = text[:j]
+                if ch.get("finish_reason") == "stop" and "<input>" in text and STOP_TEXT not in text.split("<input>")[-1]:
+                    text += STOP_TEXT
+                with self.lock:
+                    self.completion_tokens += int((r.get("usage") or {}).get("completion_tokens") or 0)
+                return text
+            except Exception as e:  # noqa: BLE001
+                err = e
+                time.sleep(2 * (a + 1))
+        self.log(f"openai backend request failed after retries: {err!r}")
+        return ""
+
+    def generate(self, prompts, max_new, temperature, seed):
+        futs = [self.pool.submit(self._one, p, max_new, temperature, seed * 1000003 + n) for n, p in enumerate(prompts)]
+        return [f.result() for f in futs]
+
+
+class ServerManager:
+    """Starts / stops one `mlx_lm.server` subprocess. One server at a time; ensure() restarts only when (model, adapter) changes.
+    CLI flags used (mlx-lm >= 0.2x): --model, --adapter-path, --host, --port, and (only if listed in `--help`) --decode-concurrency / --prompt-concurrency."""
+
+    def __init__(self, python=None, port=8089, log_dir=".", log=print, wait_s=600):
+        self.python, self.port, self.log_dir, self.log, self.wait_s = python or sys.executable, int(port), log_dir, log, wait_s
+        self.proc, self.cur, self.logf = None, None, None
+        self._help = None
+
+    @property
+    def base_url(self):
+        return f"http://127.0.0.1:{self.port}"
+
+    def supports(self, flag):
+        if self._help is None:
+            try:
+                self._help = subprocess.run([self.python, "-m", "mlx_lm.server", "--help"], capture_output=True, text=True, timeout=120).stdout
+            except Exception:  # noqa: BLE001
+                self._help = ""
+        return flag in self._help
+
+    def cmd(self, model, adapter=None, concurrency=4):
+        c = [self.python, "-m", "mlx_lm.server", "--model", str(model), "--host", "127.0.0.1", "--port", str(self.port)]
+        if adapter:
+            c += ["--adapter-path", str(adapter)]
+        for flag in ("--decode-concurrency", "--prompt-concurrency"):
+            if self.supports(flag):
+                c += [flag, str(concurrency)]
+        return c
+
+    def start(self, model, adapter=None, concurrency=4):
+        self.stop()
+        os.makedirs(self.log_dir, exist_ok=True)
+        self.logf = open(os.path.join(self.log_dir, f"mlx_server_{int(time.time())}.log"), "w")
+        c = self.cmd(model, adapter, concurrency)
+        self.log("starting server: " + " ".join(c))
+        self.proc = subprocess.Popen(c, stdout=self.logf, stderr=subprocess.STDOUT, start_new_session=True)
+        t0 = time.time()
+        while time.time() - t0 < self.wait_s:
+            if self.proc.poll() is not None:
+                self.stop()
+                raise RuntimeError(f"mlx_lm.server exited early (code {self.proc.returncode}); see {self.logf.name}")
+            try:
+                _get_json(self.base_url + "/v1/models", 3)
+                self.cur = (str(model), str(adapter) if adapter else None, concurrency)
+                self.log(f"server up in {time.time() - t0:.0f}s")
+                return
+            except Exception:  # noqa: BLE001
+                time.sleep(2)
+        self.stop()
+        raise TimeoutError("mlx_lm.server did not answer /v1/models in time")
+
+    def ensure(self, model, adapter=None, concurrency=4):
+        want = (str(model), str(adapter) if adapter else None, concurrency)
+        if self.proc is not None and self.proc.poll() is None and self.cur == want:
+            return
+        self.start(model, adapter, concurrency)
+
+    def stop(self):
+        p, self.proc, self.cur = self.proc, None, None
+        if p is not None and p.poll() is None:
+            try:
+                os.killpg(p.pid, signal.SIGTERM)
+                p.wait(20)
+            except Exception:  # noqa: BLE001
+                try:
+                    os.killpg(p.pid, signal.SIGKILL)
+                    p.wait(10)
+                except Exception:  # noqa: BLE001
+                    pass
+        if self.logf:
+            self.logf.close()
+            self.logf = None
+
+    def rss_mb(self):
+        """Resident memory of the server process group in MB (ps)."""
+        if self.proc is None:
+            return 0.0
+        try:
+            out = subprocess.run(["ps", "-o", "rss=", "-p", str(self.proc.pid)], capture_output=True, text=True, timeout=10).stdout
+            return sum(int(x) for x in out.split()) / 1024
+        except Exception:  # noqa: BLE001
+            return 0.0

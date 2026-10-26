@@ -354,3 +354,260 @@ def test_projection_fits_budget():
     spent = p["fixed_h"] + 3 * n * 2 * p["sec_per_try_day_adapter_est"] / 3600
     assert spent <= 9.5 + 1e-6
     assert job.project({}, None, 392, 100, 60) == {}
+
+
+# ---------------------------------------------------------------- Practice-1M (Mac): openai backend, web filters, mlx lessons, orchestrator
+def test_openai_backend_mocked():
+    from practice.gen import OpenAIBackend
+    seen = []
+
+    def post(url, body, timeout):
+        seen.append((url, body))
+        if "ASK_OPEN" in body["prompt"]:  # server cut at a stop string: '</input>' is not returned
+            return {"choices": [{"text": "<tool>python</tool><input>\nprint(1)\n", "finish_reason": "stop"}], "usage": {"completion_tokens": 7}}
+        return {"choices": [{"text": "hello<|ifm|im_end|>junk", "finish_reason": "stop"}], "usage": {"completion_tokens": 3}}
+    gated = []
+    be = OpenAIBackend("http://127.0.0.1:1/", "m", workers=3, strip_prefix="<s>", post=post, gate=lambda: gated.append(1))
+    outs = be.generate(["<s>ASK_OPEN x", "<s>plain", "plain2"], 100, 0.7, 5)
+    assert outs[0].endswith("</input>") and outs[1] == "hello" and outs[2] == "hello"
+    assert be.completion_tokens == 13 and be.inflight == 3 and len(gated) == 3
+    url, body = seen[0]
+    assert url == "http://127.0.0.1:1/v1/completions" and body["stop"] == ["</input>", "<|ifm|im_end|>"] and body["max_tokens"] == 100
+    assert not body["prompt"].startswith("<s>") and body["temperature"] == 0.7 and "seed" in body
+    assert len({b["seed"] for _, b in seen}) == 3  # one seed per request
+
+
+def test_server_manager_command():
+    from practice.gen import ServerManager
+    sm = ServerManager("py", 9000)
+    sm._help = "--decode-concurrency N"
+    c = sm.cmd("/m", "/adapters/n1", 2)
+    assert c[:4] == ["py", "-m", "mlx_lm.server", "--model"] and "--adapter-path" in c and c[c.index("--port") + 1] == "9000"
+    assert "--decode-concurrency" in c and "--prompt-concurrency" not in c
+
+
+def _page(text):
+    return "<html><head><title>t</title><script>var x=1</script></head><body><nav>menu</nav><p>" + text + "</p></body></html>"
+
+
+def test_web_filters(monkeypatch):
+    from practice import web
+    test_rows = [r for r in rows("test100.jsonl")][:5]
+    if not test_rows:
+        test_rows = [{"prompt": "A zebra crosses seven rivers while counting thirteen striped pebbles on the far bank of every river it meets today", "answer": "17"}]
+    sentence = " ".join(test_rows[0]["prompt"].split()[:14])
+    practice = [{"id": "pe-12", "title": "Project Euler problem 12", "prompt": "What is the first triangle number with over 500 divisors", "answer": "76576500"}]
+    pages = {
+        "https://example.org/leak": _page("Some blog quoting: " + sentence + " and more."),
+        "https://example.org/ok": _page("Breadth first search explores a graph level by level. " * 3),
+        "https://example.org/ans": _page("Project Euler problem 12 answer is 76576500 ok."),
+        "https://example.org/ans-no-title": _page("The number 76576500 is a nice number."),
+    }
+    ddg = ('<div class="result"><a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.org%2Fok&rut=x">BFS intro</a>'
+           '<a class="result__snippet">Level by level search</a></div>'
+           '<div class="result"><a class="result__a" href="https://github.com/fchollet/ARC-AGI">ARC repo</a><a class="result__snippet">tasks</a></div>'
+           '<div class="result"><a class="result__a" href="https://example.org/leak">Leaky</a><a class="result__snippet">' + sentence + '</a></div>')
+
+    def get(url, timeout=10):
+        if url.startswith("https://html.duckduckgo.com/html/?q="):
+            return url, "text/html", ddg
+        if url in pages:
+            return url, "text/html; charset=utf-8", pages[url]
+        raise OSError("no such page")
+    w = web.Web()
+    w.configure(True, test_rows, practice, get=get)
+    w.begin()
+    res = w.search("breadth first search")
+    ev = w.end()
+    assert "BFS intro" in res and "ARC repo" not in res and "Leaky" not in res
+    st = {(e["url"], e["status"]) for e in ev}
+    assert ("https://example.org/ok", "allowed") in st and ("https://github.com/fchollet/ARC-AGI", "blocked") in st and ("https://example.org/leak", "blocked") in st
+    w.begin()
+    assert "blocked" in w.fetch("https://example.org/leak")
+    assert "blocked" in w.fetch("https://example.org/ans")
+    assert "blocked" in w.fetch("https://raw.githubusercontent.com/lucky-bai/projecteuler-solutions/master/Solutions.md")
+    assert "blocked" in w.fetch("https://euler.stephan-brumme.com/12/")
+    ok = w.fetch("https://example.org/ok")
+    assert "Breadth first search" in ok and "menu" not in ok and "var x" not in ok and len(ok) <= web.PAGE_CHARS + 20
+    assert "nice number" in w.fetch("https://example.org/ans-no-title")  # answer alone (no title/id next to it) is allowed
+    ev = w.end()
+    assert [e["status"] for e in ev] == ["blocked", "blocked", "blocked", "blocked", "allowed", "allowed"]
+    assert web.host_blocked("https://www.kaggle.com/x") and web.host_blocked("https://arcprize.org/") and not web.host_blocked("https://projecteuler.net/problem=1")
+    assert web.host_blocked("https://mathblog.dk/project-euler-12/")
+
+
+def test_web_off_by_default_and_prompt():
+    from practice import web
+    assert web.WEB.enabled is False
+    assert tools.system_prompt() == tools.SYSTEM_PROMPT and "fetch" not in tools.SYSTEM_PROMPT
+    assert "fetch" in tools.WEB_SYSTEM_PROMPT and "web search" in tools.WEB_SYSTEM_PROMPT and "__N__" not in tools.WEB_SYSTEM_PROMPT
+    assert tools.run_tool_ev("fetch", "https://example.com")[0].startswith("fetch: not available")
+
+
+def test_pe_parse(tmp_path):
+    from practice import pe_pool
+    assert pe_pool.parse_answers("Problem 1: 233168\n2. 4613732\n| 3 | 6857 |\nnoise") == {1: "233168", 2: "4613732", 3: "6857"}
+    rows_ = pe_pool.build(2, str(tmp_path / "pe.jsonl"), sleep=0, log=lambda *_: None, fetch=lambda u: ("Problem 1: 233168\nProblem 2: 4613732\n" * 10) if "Solutions" in u else
+                          "<p>Find the sum of all the multiples of $3$ or $5$ below $1000$, which is a fairly long sentence for the test.</p>")
+    assert [r["id"] for r in rows_] == ["pe-1", "pe-2"] and rows_[0]["answer"] == "233168" and "$" not in rows_[0]["prompt"]
+    assert pe_pool.build(2, str(tmp_path / "pe.jsonl"), fetch=lambda u: 1 / 0, soft=True, log=lambda *_: None) == []
+
+
+def test_mlx_lesson_rendering(tmp_path):
+    from practice import mlx_train
+    msgs = [{"role": "system", "content": "S"}, {"role": "user", "content": "U"}, {"role": "assistant", "content": "A1"},
+            {"role": "user", "content": "Tool output (python):\n42"}, {"role": "assistant", "content": "A2"}]
+    items = [{"kind": "sft", "prompt": "", "target": msgs}, {"kind": "pair", "prompt": "", "chosen": msgs, "rejected": msgs[:3]}]
+    f = tmp_path / "l.jsonl"
+    assert mlx_train.lessons_to_jsonl(items, f, "<s>") == 2
+    recs = [json.loads(l) for l in open(f)]
+    segs = recs[0]["segs"]
+    assert "".join(t for t, _ in segs) == "<s>" + "".join(night.segments(msgs)[i][0] for i in range(len(night.segments(msgs))))
+    assert [t for t, m in segs if m] == ["A1<|ifm|im_end|>", "A2<|ifm|im_end|>"] and segs[0] == ["<s>", 0]
+    assert not any("Tool output" in t for t, m in segs if m)
+    assert recs[1]["kind"] == "pair" and len([1 for t, m in recs[1]["rejected"] if m]) == 1
+    # the rendering is exactly what the harness shows the model
+    from practice import harness
+    full = harness.render(msgs[:3], False, "<s>")
+    assert "".join(t for t, _ in recs[1]["rejected"]) == full
+    sch = mlx_train.schedule([{"kind": "sft"}] * 10 + [{"kind": "pair"}] * 4, 4, 0)
+    assert len(sch) == 4 and sum(len(s) for s in sch) == 14 and all(sum(i["kind"] == "pair" for i in s) == 1 for s in sch)
+
+
+def test_mac_probes():
+    from practice import mac_run
+    vm = "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:   100000.\nPages inactive: 50000.\nPages speculative: 10000.\nPages purgeable: 0.\n"
+    assert abs(mac_run.parse_vm_stat(vm) - 160000 * 16384 / 2 ** 30) < 1e-6
+    assert mac_run.pressure_level(lambda c: "2\n") == 2
+    assert mac_run.pressure_level(lambda c: "System-wide memory free percentage: 3%" if c[0] == "memory_pressure" else "") == 4
+    assert mac_run.signflip_p({"a": 1, "b": 1, "c": 1}, {"a": 0, "b": 0, "c": 0}) == 0.25 and mac_run.signflip_p({"a": 1}, {"a": 1}) == 1.0
+
+
+def _mac_fixture(tmp_path, monkeypatch, ram_gb=30, assistant=False, pressure="1", disk_ok=True):
+    from practice import mac_run
+    ops = tmp_path / "ops"
+    ops.mkdir(parents=True)
+    if assistant:
+        (ops / "ASSISTANT_RUNNING").write_text("x")
+    monkeypatch.setattr(mac_run, "OPS", ops)
+    monkeypatch.setattr(mac_run, "free_disk_gb", lambda p: 500.0 if disk_ok else 5.0)
+    pages = int(ram_gb * 2 ** 30 / 16384)
+
+    def sysrun(c):
+        if c[0] == "vm_stat":
+            return f"(page size of 16384 bytes)\nPages free: {pages}.\n"
+        if c[0] == "sysctl" and "vm.swapusage" in c:
+            return "vm.swapusage: total = 2048.00M  used = 100.00M  free = 1948.00M"
+        if c[0] == "sysctl":
+            return pressure
+        return ""
+
+    class Srv:
+        cur, base_url = None, "http://x"
+
+        def __init__(self):
+            self.log = []
+
+        def ensure(self, model, adapter=None, concurrency=4):
+            self.cur = (model, adapter, concurrency)
+            self.log.append(self.cur)
+
+        def stop(self):
+            self.cur = None
+
+        def rss_mb(self):
+            return 1234.0
+    a = mac_run.parse_args(["--out", str(tmp_path / "out"), "--practice-n", "6", "--nights", "1", "--eval-nights", "1", "--skip-bench", "--no-web", "--poll-s", "0",
+                            "--n-sft", "4", "--n-pairs", "2", "--steps", "2"])
+    return mac_run, mac_run.Mac(a, run=sysrun, server=Srv())
+
+
+def test_mac_preflight_rules(tmp_path, monkeypatch):
+    mac_run, m = _mac_fixture(tmp_path, monkeypatch, ram_gb=10)
+    with pytest.raises(mac_run.StopRun):
+        m.preflight()  # < 12 GB free
+    mac_run, m = _mac_fixture(tmp_path / "b", monkeypatch, ram_gb=10, assistant=True)
+    assert m.preflight()["need_ram_gb"] == 8.0 and m.concurrency() == 2  # assistant resident: 8 GB ceiling, concurrency <= 2
+    mac_run, m = _mac_fixture(tmp_path / "c", monkeypatch, ram_gb=30, disk_ok=False)
+    with pytest.raises(mac_run.StopRun):
+        m.preflight()
+    mac_run, m = _mac_fixture(tmp_path / "d", monkeypatch, ram_gb=30)
+    with pytest.raises(mac_run.StopRun):
+        m._need_disk(10 ** 6, "download")
+    mac_run, m = _mac_fixture(tmp_path / "e", monkeypatch, ram_gb=30, pressure="4")
+    m.mem_wait_s = 0
+    with pytest.raises(mac_run.StopRun):
+        m.checkpoint("x")  # critical memory pressure between phases stops cleanly
+
+
+def test_mac_pause_others_stops_server(tmp_path, monkeypatch):
+    mac_run, m = _mac_fixture(tmp_path, monkeypatch)
+    pf = mac_run.OPS / "PAUSE_OTHERS"
+    pf.write_text("someone else")
+    m.server.cur = ("m", None, 4)
+    stopped = []
+    m.server.stop = lambda: stopped.append(1) or setattr(m.server, "cur", None)
+    m.server.start = lambda *a: stopped.append(("start", a))
+    import threading
+    threading.Timer(0.3, pf.unlink).start()
+    m.wait_pause_others()
+    assert stopped[0] == 1 and stopped[1] == ("start", ("m", None, 4))
+    pf.write_text("practice1m run")
+    assert not m.paused_by_others()  # our own marker does not pause us
+
+
+def test_mac_run_end_to_end_with_stubs(tmp_path, monkeypatch):
+    mac_run, m = _mac_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(mac_run.pe_pool, "build", lambda *a, **k: [])
+    m.locate_model = lambda: "/fake/model"
+    m.bos, m.strip_bos = "", False
+    m.load_tok = lambda model: StubTok()
+    allp = {}
+    for r in rows("practice_pool.jsonl") + rows("sonnet_pool.jsonl") + rows("test100.jsonl") + rows("sibling60.jsonl"):
+        allp[r["prompt"]] = r
+    import random as _r
+    rng = _r.Random(3)
+
+    class Be:
+        inflight, completion_tokens = 4, 0
+        gate = None
+
+        def describe(self):
+            return "scripted"
+
+        def generate(self, prompts, max_new, temperature, seed):
+            outs = []
+            for pr in prompts:
+                mm = re.search(r"<\|ifm\|im_start\|>user\n(.*?)\n\n\(The final answer", pr, re.S)
+                p = allp.get(mm.group(1)) if mm else None
+                good = rng.random() < 0.5
+                outs.append(f"<tool>answer</tool><input>\n{p['answer'] if (p and good) else '0'}\n</input>")
+            return outs
+    m.make_backend = lambda conc: Be()
+    trained = []
+
+    def train(spec):
+        trained.append(spec)
+        out = Path(spec["out"])
+        out.mkdir(parents=True)
+        st = {"steps": spec["steps"], "items": 5, "loss_by_step": [1.0, 0.5], "seconds": 1, "peak_gb": 5.0}
+        (out / "train_stats.json").write_text(json.dumps(st))
+        return st
+    m.train_fn = train
+    assert m.run() == 0
+    out = m.out
+    for f in ("status.json", "summary.json", "config.json", "phases.jsonl", "A0/eval_A0_test.jsonl", "P/day1.jsonl", "C/day1.jsonl", "P/eval_P1_test.jsonl", "C/eval_C1_sib.jsonl"):
+        assert (out / f).exists(), f
+    summ = json.loads((out / "summary.json").read_text())
+    assert set(summ["evals"]) == {"A0", "P1", "C1"} and len(summ["evals"]["A0"]["test100_per_puzzle"]) == 100
+    assert "P1_vs_A0" in summ["comparisons"] and "P1_vs_C1" in summ["comparisons"]
+    assert len(trained) == 2 and trained[0]["steps"] == trained[1]["steps"] == 2
+    assert all("peak_server_rss_mb" in json.loads(l) for l in open(out / "phases.jsonl"))
+    # one server at a time; adapters served after the night, base before
+    assert any(c[1] and "night1" in c[1] for c in m.server.log) and m.server.log[0][1] is None
+    # resume: a second run skips everything
+    n_before = len(list(open(out / "phases.jsonl")))
+    m2 = mac_run.Mac(m.a, run=m.sysrun, server=m.server)
+    m2.locate_model, m2.load_tok, m2.make_backend, m2.train_fn = m.locate_model, m.load_tok, m.make_backend, m.train_fn
+    m2.bos, m2.strip_bos = "", False
+    assert m2.run() == 0 and len(list(open(out / "phases.jsonl"))) == n_before

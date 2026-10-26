@@ -82,3 +82,16 @@ Claude calls (test and pool writing) go through the Message Batches API.
   now 512 new tokens per turn, 6 turns, 4,096 context; sticky batch size; vLLM backend (prefix cache, LoRA served
   without merging) with automatic fallback to HF.
 - Evals run at A0, after night 1 and after night 3 (pass marks use night 3, as before). Sibling set: 1 try per puzzle.
+
+## Addendum 3 (2026-10-26 ~02:00Z, Ben 01:30Z: run it on his Mac with real internet; before any result)
+Practice-1M is the same design on the M3 Pro, with these differences (same in every arm; pass marks unchanged):
+- Model K2-3.7B 4-bit through mlx_lm.server; nights are QLoRA on the 4-bit base (custom MLX loop, loss on assistant
+  turns only, SFT + DPO as above), size 128 SFT x 1 + 32 pairs, 32 steps, lessons capped at 2,048 tokens (memory
+  limit while Ben's assistant is resident).
+- Tools add live `search` (DuckDuckGo) and `fetch` (web page text) in practice AND in the test evals, so A0, P and C
+  have the same tools. Every result and page is blocked if it shares a 12-word run with a sealed test puzzle, comes
+  from an answer/solution site (ARC repos, Kaggle, Hugging Face, Project Euler solution sites), or shows a practice
+  puzzle's answer next to its title. All web calls are logged.
+- Project Euler 1-100 joins the practice pool (answers only in the grader). Practice subset 120 puzzles.
+- Day 1 tries are shared by P and C (both are the base model then). No ARC-Easy on the Mac (harm check = tool use).
+- The Kaggle run stays as a second, offline-search replication.

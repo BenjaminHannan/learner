@@ -7,12 +7,14 @@ from concurrent.futures import ThreadPoolExecutor
 from .gen import BsState, hf_generate as generate
 
 from . import tools as T
+from .web import WEB
 from .grade import is_correct
 
 IM_START, IM_END = "<|ifm|im_start|>", "<|ifm|im_end|>"
 THINK_EMPTY = "<ifm|think>\n</ifm|think>"
 NUDGE = ("Reply with exactly one tool call in the form <tool>NAME</tool> then <input>...</input>, "
          "where NAME is python, search, look or answer.")
+NUDGE_WEB = NUDGE.replace("look or answer", "look, fetch or answer")
 
 
 def render(messages, add_gen=True, bos=""):
@@ -35,7 +37,7 @@ def cut_reply(text):
 
 
 def start_messages(p):
-    return [{"role": "system", "content": T.SYSTEM_PROMPT}, {"role": "user", "content": T.user_prompt(p)}]
+    return [{"role": "system", "content": T.system_prompt()}, {"role": "user", "content": T.user_prompt(p)}]
 
 
 class Rollout:
@@ -49,13 +51,14 @@ class Rollout:
         self.reason = ""
         self.t0 = time.time()
         self.last_answer_line = None
+        self.web = []
 
     def record(self):
         ans = self.answer if self.answer is not None else self.last_answer_line
         ok = is_correct(ans, self.p["answer"], self.p["answer_type"]) if ans is not None else False
         return {"id": self.p["id"], "try": self.try_idx, "kind": self.p.get("kind"), "source": self.p.get("source"), "messages": self.messages,
                 "tool_calls": self.calls, "tools": self.names, "turns": self.turns, "answer": ans, "answered": self.answer is not None, "correct": bool(ok),
-                "gen_tokens": self.gen_tokens, "end": self.reason, "seconds": round(time.time() - self.t0, 1)}
+                "gen_tokens": self.gen_tokens, "web": self.web, "end": self.reason, "seconds": round(time.time() - self.t0, 1)}
 
 
 class Harness:
@@ -104,7 +107,7 @@ class Harness:
                 r.last_answer_line = la
             call = T.parse_call(o)
             if call is None:
-                r.messages.append({"role": "user", "content": NUDGE})
+                r.messages.append({"role": "user", "content": NUDGE_WEB if WEB.enabled else NUDGE})
                 continue
             name, inp = call
             r.calls += 1
@@ -114,10 +117,11 @@ class Harness:
             else:
                 jobs.append((r, name, inp))
         t = time.time()
-        futs = [(r, name, self.pool.submit(T.run_tool, name, inp)) for r, name, inp in jobs]
+        futs = [(r, name, self.pool.submit(T.run_tool_ev, name, inp)) for r, name, inp in jobs]
         for r, name, f in futs:
             try:
-                obs = f.result()
+                obs, ev = f.result()
+                r.web += ev
             except Exception as e:  # noqa: BLE001
                 obs = f"[tool error: {e}]"
             r.messages.append({"role": "user", "content": f"Tool output ({name}):\n{obs}"})

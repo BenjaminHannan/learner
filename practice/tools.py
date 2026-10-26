@@ -25,6 +25,18 @@ You have at most __N__ turns. After a tool runs you see its output. Check your w
 
 SYSTEM_PROMPT = SYSTEM_PROMPT.replace("__N__", str(MAX_TURNS))
 
+WEB_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+    "- search: look up a topic in a small offline reference library (math, algorithms, Python standard library). Input is a short query.",
+    "- search: web search (top 5 results: title, URL, snippet). Input is a short query. Pages that could reveal puzzle answers are withheld.\n"
+    "- fetch: download one web page as plain text (first 3000 characters). Input is a full http(s) URL, usually from a search result.")
+
+
+def system_prompt():
+    """The system prompt for the current mode (web tools on -> lists search/fetch)."""
+    from .web import WEB
+    return WEB_SYSTEM_PROMPT if WEB.enabled else SYSTEM_PROMPT
+
+
 ANSWER_HINT = {"int": "an integer", "str": "a short word or phrase", "grid": "a grid (one row per line, digits separated by spaces)"}
 
 
@@ -51,7 +63,7 @@ def parse_call(text):
     m = _TOOL_RE.search(text)
     if m:
         name = m.group(1).lower()
-        if name in ("python", "search", "look", "answer"):
+        if name in ("python", "search", "look", "answer", "fetch"):
             inp = (m.group(2) or "").strip("\n")
             if name == "python":
                 f = _FENCE_RE.search(inp)
@@ -223,9 +235,26 @@ def run_tool(name, inp):
     """-> observation text (for 'answer' the caller handles it)."""
     if name == "python":
         return run_python(inp)
+    if name in ("search", "fetch"):
+        from .web import WEB
+        if WEB.enabled:
+            return WEB.search(inp) if name == "search" else WEB.fetch(inp)
+        if name == "fetch":
+            return "fetch: not available (no internet in this setup)."
     if name == "search":
         from .library import search
         return search(inp)
     if name == "look":
         return look(inp)
     return ""
+
+
+def run_tool_ev(name, inp):
+    """-> (observation, web_events). Events are the logged search/fetch calls (allowed/blocked) made by this tool call; [] when web is off."""
+    from .web import WEB
+    WEB.begin()
+    try:
+        obs = run_tool(name, inp)
+    finally:
+        ev = WEB.end()
+    return obs, ev
