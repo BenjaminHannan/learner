@@ -106,3 +106,9 @@ first 30 sibling puzzles x 1), day 1 shared by P and C. Pass marks are unchanged
 P and C run as two side-by-side processes on the M3 (own server, port and output dir, 6 streams each). Day 1 is no longer
 shared: each arm runs its own base-model day 1 and its own A0 test. The two A0 scores give the noise estimate; T1 compares
 P2 with the mean of both A0 runs (per puzzle), T2 compares P2 with C2.
+
+## Addendum 6 (2026-10-26 ~02:40Z, before any result was used)
+First Mac A0 tries: format parsed fine, but K2 (thinking off) answered at once with about 60 tokens and got 1 of 35
+right, a floor where neither arm could show anything. Restarted all runs with one prompt change for every arm: think
+step by step in plain text before the single tool call, and do not guess. The python sandbox limits are best-effort
+(macOS rejects RLIMIT_AS, which broke every python call on the Mac). The first 35 tries are discarded.

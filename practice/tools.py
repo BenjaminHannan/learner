@@ -11,7 +11,7 @@ MAX_TURNS = 6
 OUT_CAP = 2000
 PY_TIMEOUT = 10
 
-SYSTEM_PROMPT = """You solve puzzles. You may use tools. Each turn, reply with exactly ONE tool call and nothing after it: the tool's name as a tag around its input.
+SYSTEM_PROMPT = """You solve puzzles. You may use tools. Each turn, first think step by step in plain text (work out the rule or the plan, check it against the examples), then end with exactly ONE tool call and nothing after it: the tool's name as a tag around its input.
 Examples:
 <python>
 print(2 + 2)
@@ -22,7 +22,7 @@ Tools:
 - search: look up a topic in a small offline reference library (math, algorithms, Python standard library). Input is a short query.
 - look: describe a grid of digits (size, colour counts, objects with boxes, symmetries, repeated tiles). Input is the grid, one row per line.
 - answer: give your final answer. Input is only the answer: an integer, a short word or phrase, or a grid (one row per line, digits separated by spaces).
-You have at most __N__ turns. After a tool runs you see its output. Check your work with python when you can, then call answer."""
+You have at most __N__ turns. After a tool runs you see its output. Do not guess: check your work with python when you can, then call answer."""
 
 SYSTEM_PROMPT = SYSTEM_PROMPT.replace("__N__", str(MAX_TURNS))
 
@@ -143,8 +143,12 @@ def last_answer_line(text):
 
 # ------------------------------------------------------------------ python sandbox
 def _limits():
-    resource.setrlimit(resource.RLIMIT_AS, (3 * 2 ** 30, 3 * 2 ** 30))
-    resource.setrlimit(resource.RLIMIT_CPU, (PY_TIMEOUT + 2, PY_TIMEOUT + 2))
+    """Best effort: macOS rejects RLIMIT_AS (ValueError), which broke every python call on the Mac."""
+    for lim, val in ((resource.RLIMIT_AS, 3 * 2 ** 30), (resource.RLIMIT_CPU, PY_TIMEOUT + 2)):
+        try:
+            resource.setrlimit(lim, (val, val))
+        except (ValueError, OSError):
+            pass
     os.setsid()
 
 
