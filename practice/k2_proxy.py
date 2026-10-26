@@ -236,14 +236,9 @@ class Proxy:
         self.httpd = None
 
     def upstream_model(self):
-        if self._model is None:
-            try:
-                with urllib.request.urlopen(self.upstream + "/v1/models", timeout=10) as r:
-                    data = json.load(r).get("data") or []
-                self._model = data[0]["id"] if data else "default_model"
-            except Exception:  # noqa: BLE001
-                return "default_model"  # mlx_lm.server's name for the loaded model; do not cache a guess
-        return self._model
+        """mlx_lm.server maps "default_model" to its --model (and --adapter-path). Not the first /v1/models id: that endpoint lists every model in the
+        HF cache, and on the M1 a stray Qwen3.5-0.8B came first, so the server loaded Qwen on the fly and 18 pilot tries ran on the wrong model."""
+        return self._model or "default_model"
 
     def upstream_chat(self, body):
         req = urllib.request.Request(self.upstream + "/v1/chat/completions", json.dumps(body).encode(), {"Content-Type": "application/json"})
