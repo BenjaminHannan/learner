@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -106,6 +107,30 @@ def project(stages, a, full_pool, n_test, n_sib, budget_h=PLAN_H):
             "arc200_est_s": round(arc_s), "phase_overhead_s": round(overhead, 1), "full_pool_size": full_pool, "fixed_h": round(fixed / 3600, 2),
             "projected_full_run_h_with_full_pool": round(proj_h, 2), "suggested_practice_n": max(0, min(full_pool, n_pz)), "plan_h": budget_h}
 
+
+
+def kill_group(pgid):
+    """SIGKILL a finished phase's whole process group (vLLM engine children survive their parent's exit)."""
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+
+
+def kill_gpu_apps(idx):
+    """Kill compute processes still holding GPU `idx` (only ever phase leftovers: the lane process itself never touches the GPU in subprocess mode)."""
+    try:
+        bus = subprocess.run(["nvidia-smi", "-i", idx, "--query-gpu=gpu_bus_id", "--format=csv,noheader"], capture_output=True, text=True, timeout=20).stdout.strip()
+        out = subprocess.run(["nvidia-smi", "--query-compute-apps=pid,gpu_bus_id", "--format=csv,noheader"], capture_output=True, text=True, timeout=20).stdout
+    except Exception:  # noqa: BLE001
+        return
+    for line in out.splitlines():
+        parts = [x.strip() for x in line.split(",")]
+        if len(parts) == 2 and parts[1] == bus and parts[0].isdigit() and int(parts[0]) != os.getpid():
+            try:
+                os.kill(int(parts[0]), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, OSError):
+                pass
 
 class Lane:
     def __init__(self, a):
@@ -328,8 +353,11 @@ class Lane:
             t = time.time()
             self.log(f"PHASE {name} [{wm}] start")
             with open(pdir / f"{name}.{wm}.out", "w") as fo:
-                rc = subprocess.run([py, "-m", "practice.job", "--spec", str(sp)], cwd=str(HERE.parent), env=env, stdout=fo, stderr=subprocess.STDOUT).returncode
+                proc = subprocess.Popen([py, "-m", "practice.job", "--spec", str(sp)], cwd=str(HERE.parent), env=env, stdout=fo, stderr=subprocess.STDOUT,
+                                        start_new_session=True)  # own process group, so leftover vLLM EngineCore children can be killed with it
+                rc = proc.wait()
             wall = round(time.time() - t, 1)
+            kill_group(proc.pid)
             self.wait_gpu_free()
             if rc == 0 and rp.exists():
                 res = json.loads(rp.read_text())
@@ -343,7 +371,7 @@ class Lane:
             self.log(f"WARNING vLLM backend failed in phase {name} (mode {wm}, rc {rc}): {tail}")
             self.log(f"WARNING falling back to {self.modes[0]} for the rest of the run (partial outputs of this phase are discarded and rerun)")
 
-    def wait_gpu_free(self, limit_mib=1500, timeout_s=90):
+    def wait_gpu_free(self, limit_mib=1500, timeout_s=180):
         """After a phase subprocess exits, wait until its GPU memory is released (nvidia-smi); log the reading."""
         idx = (os.environ.get("CUDA_VISIBLE_DEVICES") or "0").split(",")[0]
         used = None
@@ -355,6 +383,7 @@ class Lane:
                 return
             if used < limit_mib:
                 break
+            kill_gpu_apps(idx)  # pilot 2: an orphaned vLLM engine kept 12 GB after its phase exited
             time.sleep(3)
         self.log(f"gpu {idx} memory used after phase: {used} MiB" + ("" if used is not None and used < limit_mib else "  WARNING not freed"))
 
