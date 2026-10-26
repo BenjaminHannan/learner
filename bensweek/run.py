@@ -250,7 +250,7 @@ def write_summary(run_dir):
 def make_agent(args):
     if args.agent == "openai":
         return agents.OpenAIAgent(args.base_url, args.model, api_key=args.api_key, max_tokens=args.max_tokens,
-                                  concurrency=args.concurrency)
+                                  concurrency=args.concurrency, extra_body=json.loads(args.extra_body or "{}"))
     if args.agent == "claude":
         return agents.ClaudeBatchAgent(args.model, live=args.live, max_tokens=max(args.max_tokens, 8000),
                                        poll=args.poll, concurrency=args.concurrency)
@@ -300,6 +300,8 @@ def main(argv=None):
     ap.add_argument("--base-url", default="http://127.0.0.1:8090/v1")
     ap.add_argument("--model", default=None)
     ap.add_argument("--api-key", default=None)
+    ap.add_argument("--extra-body", default=None, help='openai: JSON merged into each request, '
+                    'e.g. \'{"chat_template_kwargs": {"enable_thinking": false}}\'')
     ap.add_argument("--split", choices=["dev", "sealed"], default="dev")
     ap.add_argument("--i-am-running-the-final-v2-eval", action="store_true")
     ap.add_argument("--episodes", default=None, help="comma list, e.g. wk01,wk03")

@@ -273,8 +273,9 @@ def to_openai_messages(messages):
 
 class OpenAIAgent(SimpleAgent):
     def __init__(self, base_url, model, api_key=None, max_tokens=2048, temperature=0, concurrency=2,
-                 timeout=900, retries=3):
+                 timeout=900, retries=3, extra_body=None):
         super().__init__(concurrency)
+        self.extra_body = extra_body or {}
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -306,6 +307,7 @@ class OpenAIAgent(SimpleAgent):
     def complete(self, req):
         body = {"model": self.model, "messages": to_openai_messages(req["messages"]), "tools": req["tools"],
                 "tool_choice": "auto", "max_tokens": self.max_tokens, "temperature": self.temperature}
+        body.update(self.extra_body)   # e.g. {"chat_template_kwargs": {"enable_thinking": false}}
         r = self._post(body)
         msg = r["choices"][0]["message"]           # reasoning_content is deliberately ignored
         u = r.get("usage") or {}
