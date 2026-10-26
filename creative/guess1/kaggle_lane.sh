@@ -13,7 +13,13 @@ echo "$(date -u +%FT%TZ) mode=$MODE"; nvidia-smi --query-gpu=name,memory.total,d
 # exactly that); --torch-backend=auto picks the torch CUDA build that matches the installed driver.
 pip install -q -U uv >/dev/null 2>&1; uv pip install --system -q httpx >/dev/null 2>&1
 VV=/tmp/vllm-venv
-[ -x $VV/bin/vllm ] || { uv venv -q --python 3.12 $VV && VIRTUAL_ENV=$VV uv pip install -q vllm --torch-backend=auto 2>&1 | tail -3; }
+# same recipe that worked on these T4s for the practice thread (system python, plain `uv pip install vllm`)
+if [ ! -x $VV/bin/vllm ]; then
+  uv venv $VV 2>&1 | tail -3 && timeout 1500 uv pip install -q --python $VV/bin/python vllm 2>&1 | tail -20
+  [ -x $VV/bin/vllm ] || { echo "uv install failed; trying python -m venv + pip"; rm -rf $VV
+    python3 -m venv $VV && timeout 1500 $VV/bin/python -m pip install -q vllm 2>&1 | tail -20; }
+fi
+[ -x $VV/bin/vllm ] || { echo "VLLM INSTALL FAILED"; exit 2; }
 
 $VV/bin/python -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__, 'cuda ok', torch.cuda.is_available())" 2>&1 | tail -1 | tee "$OUT/backend.txt"
 
