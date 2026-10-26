@@ -1,0 +1,35 @@
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  57%|█████▊    | 184/320 [00:00<00:00, 1838.43it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3008.15it/s]
+[lora] trainable 16,819,200
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  65%|██████▌   | 209/320 [00:00<00:00, 2077.85it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2833.97it/s]
+[lora] trainable 16,819,200
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[base] ARC-Easy validation(100) 0.870
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 55, 'yes': 38, 'new_items': 38, 'appended': 38, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 1] budget {'scale': 2.0, 'steps': 112, 'steps_ref': 56, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 1] items 133 eligible 4 (active 4, consolidated 0) steps 112 probe_pre 0.0
+Traceback (most recent call last):
+  File "/home/benja/sleepb-pc/src-5fc4b87/backbone/sleep/brain/sleepb.py", line 5340, in <module>
+    main()
+  File "/home/benja/sleepb-pc/src-5fc4b87/backbone/sleep/brain/sleepb.py", line 5254, in main
+    nights.append(brain.night(d, sched))
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/benja/sleepb-pc/src-5fc4b87/backbone/sleep/brain/sleepb.py", line 3404, in night
+    s.train_step(tr, s.rem_ex(live, nr) + s.nrem(act, cum, con, a.bsz - nr))
+  File "/home/benja/sleepb-pc/src-5fc4b87/backbone/sleep/brain/sleepb.py", line 2995, in train_step
+    stats = tr.step(batch, rows=True) or []
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/benja/sleepb-pc/src-5fc4b87/backbone/sleep/brain/sleepb.py", line 858, in step
+    kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/functional.py", line 3367, in kl_div
+    reduced = torch.kl_div(input, target, reduction_enum, log_target=log_target)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA driver error: device not ready
+[W1026 15:07:21.494897516 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
