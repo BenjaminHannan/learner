@@ -68,3 +68,17 @@ Add arm **S4 whole sessions**: sessions ranked by their best S2 pair; whole sess
 fit the 8k budget; the first session that does not fit is added pair by pair in S2 order. Z3 (reported, and it can
 pick the Stage-1 retriever): if S4 AllHit >= max(S2, S3) + 3, Stage 1 uses S4. Stage 0 restarted from scratch (embedding
 cache kept).
+
+## Amendment C (2026-10-26 01:50Z, Stage-0 arm S5 "fact cards"; idea from the Supermemory notes in /mnt/project-files/supermemory/IDEAS-for-diary-search.md)
+Written after Stage-0 S0-S4 results were seen; S5 is a new arm, not a re-analysis.
+- Writer (stand-in, untested for local models): `claude-haiku-5-5` via Message Batches, effort low, one request per
+  unique session (deduplicated by content hash across haystacks). Output: short atomic dated facts about the user and
+  what the assistant told them, each tagged with the index of the source user turn.
+- S5 retrieval: BM25 and bge-small rankings over cards and over raw pairs, all four fused by RRF (k=60). A card hit maps
+  to its source pair. Context = raw pairs only (cards are the index, not the payload), budget-filled to the same 8k.
+- Scored sets: (a) the same 111 decision questions; (b) all 121 non-abstention multi-session questions of LongMemEval-S
+  (for power on the weak type; S2 is computed on the same set).
+- Pass: multi-session AllHit >= S2 + 15 on (b) AND overall AllHit >= S2 + 2 on (a). **Wrong if** multi-session
+  <= S2 + 3 on (b). Only if S5 passes: night roll-up cards (merge same-topic facts across sessions), pass multi-session
+  >= S5 + 8.
+- Cost cap $5 (estimate about $2.5 at Haiku 5.5 batch prices).
