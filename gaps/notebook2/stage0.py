@@ -4,7 +4,7 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 
 D = os.path.dirname(os.path.abspath(__file__))
-DATA = os.path.join(D, "..", "notebook1", "data", "longmemeval_s_cleaned.json")
+DATA = os.environ.get("STAGE0_DATA", os.path.join(D, "..", "notebook1", "data", "longmemeval_s_cleaned.json"))
 BUDGET = 8000  # tokens, chars/4
 tok = lambda s: re.findall(r"\w+", s.lower())
 ntok = lambda s: len(s) / 4
@@ -24,10 +24,10 @@ def model():
     global _model
     if _model is None:
         from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer("BAAI/bge-small-en-v1.5", device="cpu"); _model.max_seq_length = 320
+        _model = SentenceTransformer("BAAI/bge-small-en-v1.5", device="cuda" if __import__("torch").cuda.is_available() else "cpu"); _model.max_seq_length = 320
     return _model
 
-CACHE = os.path.join(D, "emb_cache"); os.makedirs(CACHE, exist_ok=True)
+CACHE = os.environ.get("EMB_CACHE", os.path.join(D, "emb_cache")); os.makedirs(CACHE, exist_ok=True)
 def windows(text, w=200):
     ws = text.split()
     return [" ".join(ws[i:i+w]) for i in range(0, max(len(ws), 1), w)] or [""]
@@ -119,11 +119,13 @@ if __name__ == "__main__":
         rest = sorted(x["question_id"] for x in data if x["question_type"] == t and x["question_id"] not in set(sample_ids))
         s120 += random.Random(1).sample(rest, 10)
     s120 = set(s120)
+    if "STAGE0_DATA" in os.environ: s120 = {x["question_id"] for x in data}  # data is already the 120-item subset
     data = [x for x in data if not x["question_id"].endswith("_abs")]
     data.sort(key=lambda x: x["question_id"] not in s120)  # stage-1 questions first (stable)
     if len(sys.argv) > 1 and sys.argv[1] == "smoke": data = data[:3]
     sample = set(json.load(open(os.path.join(D, "..", "notebook1", "sample.json"))))
-    out = os.path.join(D, "stage0_rows.jsonl")
+    if "--only120" in sys.argv: data = [x for x in data if x["question_id"] in s120]
+    out = os.environ.get("STAGE0_OUT", os.path.join(D, "stage0_rows.jsonl"))
     done = set()
     if os.path.exists(out): done = {json.loads(l)["question_id"] for l in open(out)}
     with open(out, "a") as f:

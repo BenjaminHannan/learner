@@ -65,9 +65,10 @@ def make_chat(a):
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM
     tk = AutoTokenizer.from_pretrained(a.model_path, trust_remote_code=True)
+    DT = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16  # bf16 on 4090/Ampere+, fp16 on T4
     kw = dict(trust_remote_code=True, attn_implementation="sdpa", device_map={"": 0})
-    try: m = AutoModelForCausalLM.from_pretrained(a.model_path, dtype=torch.float16, **kw)
-    except TypeError: m = AutoModelForCausalLM.from_pretrained(a.model_path, torch_dtype=torch.float16, **kw)
+    try: m = AutoModelForCausalLM.from_pretrained(a.model_path, dtype=DT, **kw)
+    except TypeError: m = AutoModelForCausalLM.from_pretrained(a.model_path, torch_dtype=DT, **kw)
     m.eval(); m.config.use_cache = True
     IM_START, IM_END, TH = "<|ifm|im_start|>", "<|ifm|im_end|>", "<ifm|think>\n</ifm|think>"
     stops = [i for i in (tk.convert_tokens_to_ids(IM_END), tk.eos_token_id) if i is not None and i >= 0]
