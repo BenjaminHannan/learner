@@ -56,4 +56,4 @@ tok/s per agent (total) at 1 / 2 / 4 agents; TTFT at ~1.2k / ~4.9k prompt tokens
 - 75/80 sims ran: DB match 63, reward pass 63 (84% of finished; 63/80 = 79% floor). All terminations were user_stop.
 - It stopped after 3 memory-guard trips. The 21 GB server on the 32 GB M1 sits at the edge (warn pressure), even at 1 sim at a time. The M1 hard-rebooted once (00:47Z) when the assistant app's model server started loading just after ours stopped.
 - For comparison: K2-3.7B no-think 56/80 (70%, GPU vLLM bf16), and LFM2.5-8B q4 on the Mac 14-23/40 (35-58%). The stacks differ, so treat these as rough comparisons.
-- Results: swap/results/mac_qwen36/ (pushed from the Mac).
+- Summary: 2510 agent tokens per sim, 347.5 s per sim. Raw results are on the M1 at ~/learner-ops/swap1/results/ (plus a git-am patch there). Not pushed yet, because gh auth on the M1 has expired.
