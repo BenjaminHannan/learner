@@ -1,0 +1,38 @@
+--- a/src/tau2/evaluator/evaluator_nl_assertions.py
++++ b/src/tau2/evaluator/evaluator_nl_assertions.py
+@@ -120,7 +120,11 @@
+             call_name="nl_assertions_eval",
+             **DEFAULT_LLM_NL_ASSERTIONS_ARGS,
+         )
+-        result_data = json.loads(assistant_message.content)
++        _c = assistant_message.content.strip()  # PATCHED (scoreboard1): Haiku wraps JSON in ```json fences
++        if _c.startswith("```"):
++            _c = _c.split("\n", 1)[1] if "\n" in _c else _c
++            _c = _c.rsplit("```", 1)[0]
++        result_data = json.loads(_c.strip())
+         return [
+             NLAssertionCheck(
+                 nl_assertion=result["expectedOutcome"],
+--- a/src/tau2/config.py
++++ b/src/tau2/config.py
+@@ -42,16 +42,16 @@
+ DEFAULT_ELICITATION_LLM_ARGS_USER = {"temperature": 0.0, "reasoning_effort": "low"}
+ DEFAULT_INTAKE_TASK_SEED = 20260824
+ 
+-DEFAULT_LLM_NL_ASSERTIONS = "gpt-5.4-mini-2026-03-17"
+-DEFAULT_LLM_NL_ASSERTIONS_ARGS = {"reasoning_effort": "low"}
++DEFAULT_LLM_NL_ASSERTIONS = "anthropic/claude-haiku-5-5"  # PATCHED (scoreboard1): was gpt-5.4-mini; no OpenAI key
++DEFAULT_LLM_NL_ASSERTIONS_ARGS = {"num_retries": 6}  # PATCHED: no sampling/reasoning args; retry 429s (swap1)
+ 
+ DEFAULT_LLM_ENV_INTERFACE = "gpt-4.1-2025-04-14"
+ DEFAULT_LLM_ENV_INTERFACE_TEMPERATURE = 0.0
+ DEFAULT_LLM_ENV_INTERFACE_ARGS = {"temperature": DEFAULT_LLM_ENV_INTERFACE_TEMPERATURE}
+ 
+ # Semantic communication scoring for every run; independent of the customer model.
+-DEFAULT_SEMANTIC_COMMUNICATE_MODEL = "gpt-5.5"
+-DEFAULT_SEMANTIC_COMMUNICATE_MODEL_ARGS = {"reasoning_effort": "low"}
++DEFAULT_SEMANTIC_COMMUNICATE_MODEL = "anthropic/claude-haiku-5-5"  # PATCHED
++DEFAULT_SEMANTIC_COMMUNICATE_MODEL_ARGS = {"num_retries": 6}  # PATCHED
+ 
+ DEFAULT_LLM_EVAL_USER_SIMULATOR = "claude-opus-4-5"
+ 
