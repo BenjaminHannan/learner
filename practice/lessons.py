@@ -6,7 +6,7 @@ from .harness import IM_END, IM_START, THINK_EMPTY
 
 N_SFT, EPOCHS, N_PAIRS, N_STEPS = 256, 2, 64, 32
 DPO_W = 0.2
-MAX_TRAIN_TOKENS = 4096
+MAX_TRAIN_TOKENS = 2048  # Kaggle full v2: night 1 OOMed on a T4 (backward of a ~4k-token pair); the Mac already used 2048
 
 
 def segments(messages, bos=""):
