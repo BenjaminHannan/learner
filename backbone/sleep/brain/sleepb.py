@@ -63,6 +63,7 @@ that is in the pool all night gets about V practices (one made in cycle c gets V
 Together with the other branches' flags: --rem-views with --rem-steps-mult != 1 is an error (views fixes a dream's practices a night, so the extra REM steps would only be NREM steps); --rem-views composes with --rem-dirs both and --rem-tries
 (it works on whatever the pool holds: each direction's dream is a dream, and --rem-tries only changes how the pool fills); --skip-known composes with --dream-vary (a style text is a card of its own, keyed by its text, so every night's new texts start not known;
 the draw frequency changes, so a run with both is neither addendum's control); --text-scale and --reword are untouched by the efficiency flags.
+Addendum 17 (PREREG-sleepB-addendum17.md): --gate-arc-n N (1..570, default 100 = the gate as before, byte for byte): the pre-sleep base score and the nightly morning gate both use the first N ARC-Easy validation questions (570 in all); the final ARC-Easy score is still the 500-question test split.
 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
@@ -730,12 +731,15 @@ def reword_eval(L, model, week, brain, spec, bs, seed, log=print):
     return out
 
 
-def load_arc_val(smoke):
+ARC_VAL_ROWS = 570  # the ARC-Easy validation split
+
+
+def load_arc_val(smoke, n=100):  # the gate's questions: the first n of the validation split (addendum 17, --gate-arc-n; 100 before); the smoke fixture is the same whatever n is
     if smoke:
         return ARC_SMOKE
     from datasets import load_dataset
     rows = []
-    for r in list(load_dataset("allenai/ai2_arc", "ARC-Easy", split="validation"))[:100]:
+    for r in list(load_dataset("allenai/ai2_arc", "ARC-Easy", split="validation"))[:n]:
         rows.append({"question": r["question"], "choices": r["choices"]["text"], "answer": r["choices"]["label"].index(r["answerKey"])})
     return rows
 
@@ -4951,6 +4955,28 @@ def selftest_add15():
         torch.set_rng_state(rng0)
 
 
+def selftest_add17():
+    """Addendum 17 on a stub of `datasets` (no download): the gate's ARC slice is the first n of the 570 validation rows, 100 with no n (as before), all 570 at n = 570, and the smoke fixture whatever n is."""
+    import types
+    rows = [{"question": f"q{i}", "choices": {"text": ["x", "y", "z"], "label": ["A", "B", "C"]}, "answerKey": "ABC"[i % 3]} for i in range(ARC_VAL_ROWS)]
+    asked, had = [], sys.modules.get("datasets")
+    sys.modules["datasets"] = types.SimpleNamespace(load_dataset=lambda *a, **kw: (asked.append((a, kw)), rows)[1])
+    try:
+        d, a570, a1 = load_arc_val(False), load_arc_val(False, 570), load_arc_val(False, 1)
+        assert len(d) == 100 and [r["question"] for r in d] == [f"q{i}" for i in range(100)] and d == load_arc_val(False, 100), "default slice is the first 100"
+        assert len(a570) == 570 and a570[:100] == d and a570[-1]["question"] == "q569" and len(a1) == 1 and a1 == d[:1]
+        assert d[4]["answer"] == 1 and set(d[0]) == {"question", "choices", "answer"}
+        assert all(a == ("allenai/ai2_arc", "ARC-Easy") and kw == {"split": "validation"} for a, kw in asked)
+        n_asked = len(asked)
+        assert load_arc_val(True) is ARC_SMOKE and load_arc_val(True, 570) is ARC_SMOKE and len(asked) == n_asked, "smoke: the fixture, no dataset call"
+    finally:
+        if had is None:
+            del sys.modules["datasets"]
+        else:
+            sys.modules["datasets"] = had
+    return {"default_n": len(d), "n570": len(a570), "n1": len(a1), "val_rows": ARC_VAL_ROWS}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=ARMS)
@@ -5001,6 +5027,7 @@ def main():
     ap.add_argument("--lr-sched", choices=["cosine", "wsd"], default="cosine", help="each night's lr schedule: cosine from --lr to 0 (as before), or wsd: --lr, then linear to 0 over the last WSD_DECAY of the night's steps")
     ap.add_argument("--rem-views", type=float, default=None, help="sleep efficiency: each REM cycle gives the REM pool about this x pool x (cycle's REM steps / night's REM steps) practice slots (at most round(0.7 bsz) a step), "
                     "so a dream in the pool all night gets about this many practices (one made in a later cycle only its share of the REM steps left); unused slots go to NREM cards. Default: off (always round(0.7 bsz) a step)")
+    ap.add_argument("--gate-arc-n", type=int, default=100, help=f"addendum 17: the pre-sleep base score and the nightly morning gate use the first N ARC-Easy validation questions (1..{ARC_VAL_ROWS}); 100 = as before. The smoke fixture is unchanged")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
@@ -5040,6 +5067,7 @@ def main():
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
         print(json.dumps({"add15": selftest_add15()}))
+        print(json.dumps({"add17": selftest_add17()}))
         return
     if args.bench_train:
         if not args.out:
@@ -5123,6 +5151,8 @@ def main():
         ap.error("--ob-share must be in [0, 1], and only the open-book arms (OB_ARMS) use it")
     if args.rem_views is not None and (not args.rem_views > 0 or args.arm in ("a0", "ad", "af", "ab_norem")):
         ap.error("--rem-views must be positive, for a sleeping arm with REM (not a0, ad, af or ab_norem)")
+    if not 1 <= args.gate_arc_n <= ARC_VAL_ROWS:
+        ap.error(f"--gate-arc-n must be between 1 and {ARC_VAL_ROWS} (the ARC-Easy validation split has {ARC_VAL_ROWS} questions)")
     if args.rem_views is not None and args.rem_steps_mult != 1.0:
         ap.error("--rem-views and --rem-steps-mult != 1 do not combine: views fixes a dream's practices a night, so the extra REM steps would only be NREM steps")
     if args.budget_scale is not None and args.night_budget_s is not None:
@@ -5159,7 +5189,7 @@ def main():
         log(f"[schedule] {sched}")
     OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False,
            "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False, "text_scale": None, "dream_vary": "off", "reword": None,
-           "card_stats": False, "skip_known": None, "lora_plus": None, "ob_share": 0.5, "lr_sched": "cosine", "rem_views": None}  # options at their default are left out of result["args"] (older result files keep their keys)
+           "card_stats": False, "skip_known": None, "lora_plus": None, "ob_share": 0.5, "lr_sched": "cosine", "rem_views": None, "gate_arc_n": 100}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
@@ -5231,11 +5261,11 @@ def main():
             resp = L.generate(pm, prompts, max_new=8 if args.smoke else 48, bs=args.gen_bs)
         replay = [(L.ids(p) + L.ids(r) + [L.eos], len(L.ids(p))) for p, r in zip(prompts, resp)]
         result["replay_n"] = len(replay)
-        arc_val = load_arc_val(args.smoke)
+        arc_val = load_arc_val(args.smoke, args.gate_arc_n)
         with pm.disable_adapter():
             arc_base = score_arc(L, pm, arc_val, bs=max(args.gen_bs // 2, 1))["acc"]
         result["arc_val_base"] = arc_base
-        log(f"[base] ARC-Easy validation(100) {arc_base:.3f}")
+        log(f"[base] ARC-Easy validation({args.gate_arc_n}) {arc_base:.3f}")
         if args.arc_base:  # addendum 11: the same questions as the final arc_easy score, on the base (adapter off), before night 1
             try:
                 with pm.disable_adapter():
