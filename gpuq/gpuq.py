@@ -12,6 +12,7 @@ Job header (comment lines in a bash script): `# gpuq: key=value`
   name priority gpus(1|2) hours owner retries mem_gb
 """
 import argparse
+import shutil
 import contextlib
 import fcntl
 import json
@@ -34,7 +35,11 @@ EXT_BUSY_MB = 2048          # GPU memory used by non-gpuq processes => slot busy
 TIMEOUT_FACTOR = 1.1        # hard kill at hours * 1.1
 # Runs the real command, then records its exit code atomically so a restarted
 # daemon can still learn the result of a job it did not start itself.
-WRAPPER = ('rcf="$1"; shift; "$@"; r=$?; echo $r >"$rcf.tmp" && mv "$rcf.tmp" "$rcf"; exit $r')
+# The wrapper survives SIGTERM (the whole group gets it) and keeps waiting, so the
+# job itself gets the full grace period to checkpoint before the SIGKILL.
+WRAPPER = ('rcf="$1"; shift; trap : TERM; "$@" & c=$!; '
+           'while :; do wait $c; r=$?; kill -0 $c 2>/dev/null || break; done; '
+           'echo $r >"$rcf.tmp" && mv "$rcf.tmp" "$rcf"; exit $r')
 KEEPALIVE = ("import time\n"
              "try:\n"
              " import torch\n"
@@ -167,7 +172,19 @@ def detect_gpus(arg):
     return gpus
 
 
-def pid_alive(pid):
+def proc_start(pid):
+    """Kernel start time of pid (field 22 of /proc/pid/stat), or None; guards against pid reuse after reboot."""
+    try:
+        return Path("/proc/%d/stat" % pid).read_text().rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError, ValueError):
+        return None
+
+
+def pid_alive(pid, start=None):
+    if pid <= 0:
+        return False
+    if start is not None and Path("/proc").is_dir() and proc_start(pid) != start:
+        return False
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -225,11 +242,11 @@ class Daemon:
                     run["orphan:" + p.stem] = dict(name=p.stem, gpus=[], attempt=self.attempt(p.stem), pid=0,
                                                    start=time.time(), hours=1, rcfile="", filler=False)
             for key, rec in list(run.items()):
-                if rec.get("filler") and not pid_alive(rec["pid"]):
+                if rec.get("filler") and not pid_alive(rec["pid"], rec.get("pstart")):
                     run.pop(key)
                 elif not rec.get("filler") and not (self.h.running / (rec["name"] + ".sh")).exists():
                     run.pop(key)             # file already moved; state is stale
-                elif rec["pid"] and pid_alive(rec["pid"]):
+                elif rec["pid"] and pid_alive(rec["pid"], rec.get("pstart")):
                     log.info("recover: adopting live job %s pid %s", rec["name"], rec["pid"])
             self.save()
 
@@ -240,15 +257,19 @@ class Daemon:
     def reap(self):
         now = time.time()
         for key, rec in list(self.st["running"].items()):
-            proc = self.procs.get(key)
-            alive = (proc.poll() is None) if proc else (rec["pid"] > 0 and pid_alive(rec["pid"]))
-            if alive:
-                self.enforce(rec, now)
-                continue
-            rc = read_rc(rec["rcfile"]) if rec["rcfile"] else None
-            if rc is None and proc is not None:
-                rc = proc.returncode
-            self.finish(key, rec, rc)
+            try:
+                proc = self.procs.get(key)
+                alive = (proc.poll() is None) if proc else pid_alive(rec["pid"], rec.get("pstart"))
+                if alive:
+                    self.enforce(rec, now)
+                    continue
+                rc = read_rc(rec["rcfile"]) if rec.get("rcfile") else None
+                if rc is None and proc is not None:
+                    rc = proc.returncode
+                self.finish(key, rec, rc)
+            except Exception:
+                log.exception("reap of %s failed; dropping its record", key)
+                self.st["running"].pop(key, None)
 
     def enforce(self, rec, now):
         if not rec.get("kill"):
@@ -269,8 +290,8 @@ class Daemon:
     def finish(self, key, rec, rc):
         name, kill, now = rec["name"], rec.get("kill"), time.time()
         self.procs.pop(key, None)
-        if kill or rc is None:
-            killpg(rec["pid"], signal.SIGKILL) if rec["pid"] else None   # stray children
+        if rec["pid"] and (proc_start(rec["pid"]) is None or rec.get("pstart") in (None, proc_start(rec["pid"]))):
+            killpg(rec["pid"], signal.SIGKILL)   # stray children must not keep holding the GPU
         label = {"timeout": "timeout", "cancel": "cancelled", "preempt": "preempted"}.get(kill, rc)
         runtime = now - rec["start"]
         log.info("finished %s rc=%s runtime=%.0fs", name, label, runtime)
@@ -365,8 +386,12 @@ class Daemon:
         except Exception as e:
             self.reject(dst, "source checkout failed: %s" % e)
             return
-        rec = self.launch(name, name, ["bash", str(dst)], chosen, job["hours"], self.attempt(name),
-                          self.h.out / name, name, extra=extra)
+        try:
+            rec = self.launch(name, name, ["bash", str(dst)], chosen, job["hours"], self.attempt(name),
+                              self.h.out / name, name, extra=extra)
+        except Exception as e:
+            log.exception("launch of %s raised", name)
+            rec = None
         if rec is None:
             self.reject(dst, "could not launch")
 
@@ -374,15 +399,28 @@ class Daemon:
         """GPUQ_SRC = detached worktree of the job's `commit` (or the repo itself); GPUQ_FILES = data mirror."""
         repo = os.environ.get("GPUQ_REPO", "")
         env = dict(GPUQ_FILES=os.environ.get("GPUQ_FILES", str(self.h.root / "files")), GPUQ_SRC=repo)
-        if job.get("commit") and repo:
-            wt = self.h.root / "src" / job["name"]
-            if not wt.exists():
-                subprocess.run(["git", "-C", repo, "fetch", "-q", "origin"], timeout=600,
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                subprocess.run(["git", "-C", repo, "worktree", "prune"], timeout=60)
-                subprocess.run(["git", "-C", repo, "worktree", "add", "-f", "--detach", str(wt), job["commit"]],
-                               check=True, timeout=600, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-            env["GPUQ_SRC"] = str(wt)
+        if not job.get("commit"):
+            return env
+        if not repo:
+            raise JobError("commit= needs GPUQ_REPO set in the daemon's environment")
+        git = lambda *a, **kw: subprocess.run(["git", "-C"] + list(a), timeout=120, capture_output=True,
+                                             text=True, **kw)
+        want = git(repo, "rev-parse", "-q", "--verify", job["commit"] + "^{commit}")
+        if want.returncode != 0:
+            git(repo, "fetch", "-q", "origin")
+            want = git(repo, "rev-parse", "-q", "--verify", job["commit"] + "^{commit}", check=True)
+        want = want.stdout.strip()
+        wt = self.h.root / "src" / job["name"]
+        if wt.exists():
+            have = git(str(wt), "rev-parse", "HEAD").stdout.strip()
+            dirty = git(str(wt), "status", "--porcelain", "--untracked-files=no").stdout.strip()
+            if have != want or dirty:      # half-made, stale or edited checkout: rebuild it
+                git(repo, "worktree", "remove", "-f", str(wt))
+                shutil.rmtree(wt, ignore_errors=True)
+        if not wt.exists():
+            git(repo, "worktree", "prune")
+            git(repo, "worktree", "add", "-f", "--detach", str(wt), want, check=True)
+        env["GPUQ_SRC"] = str(wt)
         return env
 
     def fillers(self):
@@ -444,7 +482,8 @@ class Daemon:
         except OSError as e:
             log.error("launch of %s failed: %s", name, e)
             return None
-        rec = dict(name=name, gpus=list(gpus), attempt=attempt, pid=proc.pid, start=time.time(), hours=hours,
+        rec = dict(name=name, gpus=list(gpus), attempt=attempt, pid=proc.pid, pstart=proc_start(proc.pid),
+                   start=time.time(), hours=hours,
                    rcfile=str(rcfile), out=str(outdir), filler=filler, fname=fname)
         self.procs[key] = proc
         self.st["running"][key] = rec
@@ -565,22 +604,29 @@ def snapshot(h):
     st, now = load_state(h), time.time()
     running = [dict(name=r["name"], gpus=r["gpus"], start=r["start"], elapsed=now - r["start"],
                     attempt=r["attempt"], pid=r["pid"], hours=r["hours"], filler=bool(r.get("filler")),
-                    alive=pid_alive(r["pid"])) for r in sorted(st["running"].values(), key=lambda r: r["start"])]
+                    alive=pid_alive(r["pid"], r.get("pstart"))) for r in sorted(st["running"].values(), key=lambda r: r["start"])]
     pending = []
     for p in h.pending.glob("*.sh"):
         try:
             j = parse_header(p)
         except Exception:
             j = dict(priority=0, gpus=1, hours=0, owner="?")
+        try:
+            mt = p.stat().st_mtime
+        except OSError:
+            continue    # moved while we looked
         pending.append(dict(name=p.stem, priority=j["priority"], gpus=j["gpus"], hours=j["hours"],
-                            owner=j["owner"], submitted=p.stat().st_mtime))
+                            owner=j["owner"], submitted=mt))
     pending.sort(key=lambda j: (-j["priority"], j["submitted"], j["name"]))
 
     def finished(d):
         rows = []
         for p in d.glob("*.sh"):
             r = st["jobs"].get(p.stem, {})
-            end = r.get("end") or p.stat().st_mtime
+            try:
+                end = r.get("end") or p.stat().st_mtime
+            except OSError:
+                continue
             rows.append(dict(name=p.stem, rc=r.get("rc", "?"), gpus=r.get("gpus", []), start=r.get("start"),
                              end=end, runtime=(end - r["start"]) if r.get("start") else None,
                              attempt=r.get("attempt", 1), reason=r.get("reason", "")))

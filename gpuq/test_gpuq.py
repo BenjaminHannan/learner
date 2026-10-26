@@ -243,3 +243,21 @@ class Source(Base):
             os.environ.pop("GPUQ_REPO")
         self.assertEqual((self.h.out / "src" / "seen.txt").read_text(), "v1\n")
         self.assertTrue((self.h.out / "src" / "files.txt").read_text().strip().endswith("files"))
+
+    def test_commit_without_repo_rejected(self):
+        os.environ.pop("GPUQ_REPO", None)
+        self.job("norepo", "true", commit="abcdef1")
+        self.pump(lambda: self.in_dir("failed", "norepo"))
+
+
+class Grace(Base):
+    gpus = [0]
+
+    def test_job_gets_grace_to_checkpoint(self):
+        self.d.grace = 5.0
+        self.job("ckpt", "trap 'sleep 1; echo saved > \"$GPUQ_OUT/ckpt.txt\"; exit 0' TERM; sleep 60 & wait")
+        self.pump(lambda: "ckpt" in self.running_names())
+        time.sleep(0.5)
+        G.cmd_cancel(type("A", (), {"name": "ckpt"}))
+        self.pump(lambda: self.in_dir("failed", "ckpt"))
+        self.assertEqual((self.h.out / "ckpt" / "ckpt.txt").read_text().strip(), "saved")
