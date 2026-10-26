@@ -618,7 +618,14 @@ class Trainer:
                 if "lora_" in n:
                     p.requires_grad_(False)
         s.params = [p for p in pm.parameters() if p.requires_grad]
-        s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
+        lp = getattr(args, "lora_plus", 1.0) or 1.0
+        if lp != 1.0:  # sleep race round 1 (LoRA+, Hayou et al. 2024): every lora_B matrix trains at lr x lp, lora_A (and anything else) at lr; Trainer.step keeps the ratio through the cosine
+            named = [(n, p) for n, p in pm.named_parameters() if p.requires_grad]
+            gb = [p for n, p in named if "lora_B" in n]
+            ga = [p for n, p in named if "lora_B" not in n]
+            s.opt = torch.optim.AdamW([{"params": ga, "lr_mult": 1.0}, {"params": gb, "lr_mult": lp}], lr=args.lr, weight_decay=0.0)
+        else:
+            s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
         s.force_w, s.wsteps, s.wex = False, 0, 0  # force_w: test hook; wsteps / wex: weighted-path steps and examples with weight != 1
@@ -632,7 +639,7 @@ class Trainer:
         a = s.a
         lr = a.lr * 0.5 * (1 + math.cos(math.pi * s.i / s.n))
         for g in s.opt.param_groups:
-            g["lr"] = lr
+            g["lr"] = lr * g.get("lr_mult", 1.0)
         s.pm.train()
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
         gb, gr = groups(batch), groups(rb)  # single-group decision on the original order
@@ -4162,6 +4169,7 @@ def main():
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--delta-dtype", choices=["fp32", "bf16"], default="fp32", help="ab_ob_merge only: bf16 halves the folded change buffer to fit a 16 GB card (the forward already uses it in bf16)")
+    ap.add_argument("--lora-plus", type=float, default=1.0, help="sleep race round 1 (LoRA+): lora_B matrices train at lr x this (1 = off, the old path bit for bit)")
     ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--tok-budget", type=int, default=TOK_BUDGET, help="padded tokens per forward; lower for a 16 GB card (same loss and gradients)")
     ap.add_argument("--gen-bs", type=int, default=32)
