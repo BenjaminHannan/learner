@@ -88,13 +88,26 @@ def select(a):
 
 
 # ------------------------------------------------------------------ run
-def train_examples(task, k, steps, L):
-    """Leave-one-out x 8 symmetries from `task`'s own demos, shuffled with seed k, cycled to `steps` items -> [(prompt_ids, answer_ids)]."""
+INV = [0, 3, 2, 1, 4, 5, 6, 7]  # SYMS[INV[i]] undoes SYMS[i]
+
+
+def recolor(g, perm):
+    return [[perm[v] for v in r] for r in g]
+
+
+def train_examples(task, k, steps, L, colors=False):
+    """Leave-one-out x 8 symmetries from `task`'s own demos, shuffled with seed k, cycled to `steps` items -> [(prompt_ids, answer_ids)].
+    colors (TTT-2, arm H): each pool item also gets its own random permutation of colours 1-9 (0, the background, stays), seeded by k."""
     demos = task["train"]
-    pool = []
+    pool, crng = [], random.Random(k + 1000)
     for q in range(len(demos)):
         ex = [d for j, d in enumerate(demos) if j != q]
         for f in SYMS:
+            if colors:
+                c = list(range(1, 10))
+                crng.shuffle(c)
+                pm = [0] + c
+                f = (lambda f0, pm0: lambda g: recolor(f0(g), pm0))(f, pm)
             pool.append(([{"input": f(d["input"]), "output": f(d["output"])} for d in ex], f(demos[q]["input"]), f(demos[q]["output"])))
     random.Random(k).shuffle(pool)
     out = []
@@ -144,6 +157,25 @@ def answer(L, model, task, cuda):
     return parse_grid(txt) == o
 
 
+def vote(L, model, task, cuda):  # TTT-2: greedy answer under each of the 8 symmetries, mapped back, majority (ties: the earliest symmetry, identity first)
+    import torch
+    t = task["test"][0]
+    o = t["output"]
+    max_new = max(len(o), len(o[0])) * (max(len(o), len(o[0])) + 1) + 8
+    cands = []
+    for i, f in enumerate(SYMS):
+        demos = [{"input": f(d["input"]), "output": f(d["output"])} for d in task["train"]]
+        with torch.autocast("cuda", dtype=torch.float16, enabled=cuda):
+            txt = L.generate(model, [L.render(None, user_text(demos, f(t["input"])))], max_new=max_new, bs=1)[0]
+        g = parse_grid(txt)
+        cands.append(SYMS[INV[i]](g) if g and all(len(r) == len(g[0]) for r in g) else None)
+    keys = [json.dumps(c) for c in cands if c]
+    if not keys:
+        return False, cands[0] == o, 0
+    best = max(dict.fromkeys(keys), key=keys.count)
+    return json.loads(best) == o, cands[0] == o, keys.count(best)
+
+
 def ans_nll(L, model, task, device, cuda):  # addendum 1: mean per-token loss of the TRUE test output (teacher-forced), a graded score that still moves when nothing is solved
     import torch
     import torch.nn.functional as F
@@ -187,9 +219,19 @@ def run(a):
                 continue
             t0 = time.time()
             n_ex, loss = 0, None
+            extra = {}
             if arm == "B":
                 ok = answer(L, lm, task, cuda)
                 nll = ans_nll(L, lm, task, device, cuda)
+            elif arm == "H":  # TTT-2: heavy recipe on this task's demos (more steps + colour permutations), greedy and 8-way vote
+                exs, n_ex = train_examples(task, k, 3 if a.smoke else a.heavy_steps, L, colors=True)
+                pm, loss = ttt_train(lm, L, exs, k, device, cuda)
+                ok_v, ok, nv = vote(L, pm, task, cuda)
+                nll = ans_nll(L, pm, task, device, cuda)
+                extra = {"ok_vote": bool(ok_v), "vote_count": nv}
+                lm = pm.unload()
+                if cuda:
+                    torch.cuda.empty_cache()
             else:
                 src = task if arm == "T" else tasks[(k + 1) % len(tasks)]
                 exs, n_ex = train_examples(src, k, steps, L)
@@ -200,7 +242,7 @@ def run(a):
                 if cuda:
                     torch.cuda.empty_cache()
             row = {"task": task["id"], "idx": k, "arm": arm, "ok": bool(ok), "seconds": round(time.time() - t0, 1), "n_train_examples": n_ex,
-                   "final_loss": loss, "answer_nll": nll, "out_rows": len(task["test"][0]["output"]), "out_cols": len(task["test"][0]["output"][0])}
+                   "final_loss": loss, "answer_nll": nll, "out_rows": len(task["test"][0]["output"]), "out_cols": len(task["test"][0]["output"][0]), **extra}
             with open(fn, "a") as f:
                 f.write(json.dumps(row) + "\n")
             print(f"[{k}] {task['id']} {arm} ok={ok} {row['seconds']}s loss={loss}", flush=True)
@@ -256,6 +298,20 @@ def score(a):
     print(json.dumps(res, indent=1))
 
 
+def score2(a):  # TTT-2 (PREREG-ttt2.md): arm H (greedy and vote) against round 1's T on the same tasks
+    load = lambda d: {(r["task"], r["arm"]): r for fn in sorted(Path(d).glob("results_shard*.jsonl")) for r in map(json.loads, open(fn))}  # noqa: E731
+    h, r1 = load(a.dir), load(a.round1)
+    ids = sorted(t for t, m in h if m == "H" and (t, "T") in r1)
+    hv, hg, t1 = [h[(t, "H")]["ok_vote"] for t in ids], [h[(t, "H")]["ok"] for t in ids], [r1[(t, "T")]["ok"] for t in ids]
+    res = {"n": len(ids), "H_vote": sum(hv), "H_greedy": sum(hg), "T_round1": sum(t1), "p_Hvote_vs_T": mcnemar(hv, t1), "p_Hgreedy_vs_T": mcnemar(hg, t1),
+           "H_nll_mean": round(sum(h[(t, "H")]["answer_nll"] for t in ids) / max(len(ids), 1), 4),
+           "T_nll_mean": round(sum(r1[(t, "T")]["answer_nll"] for t in ids) / max(len(ids), 1), 4),
+           "mean_seconds_H": round(sum(h[(t, "H")]["seconds"] for t in ids) / max(len(ids), 1), 1)}
+    res["verdict_T2"] = "T2 PASS" if res["H_vote"] >= 10 and res["p_Hvote_vs_T"] < 0.05 else "T2 WRONG" if res["H_vote"] <= res["T_round1"] else "T2 FAIL (not wrong)"
+    json.dump(res, open(Path(a.dir) / "score2.json", "w"), indent=1)
+    print(json.dumps(res, indent=1))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -270,8 +326,12 @@ if __name__ == "__main__":
     s2.add_argument("--revision", default=K2_REV)
     s2.add_argument("--steps", type=int, default=48)
     s2.add_argument("--seed", type=int, default=0)
+    s2.add_argument("--heavy-steps", type=int, default=144, help="TTT-2 arm H: training steps (3 passes of round 1)")
     s2.add_argument("--smoke", action="store_true")
     s3 = sub.add_parser("score")
     s3.add_argument("--dir", required=True)
+    s4 = sub.add_parser("score2")
+    s4.add_argument("--dir", required=True)
+    s4.add_argument("--round1", required=True)
     a = ap.parse_args()
-    {"select": select, "run": run, "score": score}[a.cmd](a)
+    {"select": select, "run": run, "score": score, "score2": score2}[a.cmd](a)
