@@ -698,3 +698,6 @@ What happened (shown, from this JSON):
 - Night 5 kept no chain dream: all 268 tries ran to the 512-token thinking cap on 134 leftover pairs that never yield a card.
 
 What this suggests for the 95% goal (untested): the next blocker is the morning gate, not card writing. A gate that measures ARC on all 570 validation questions instead of 100 would undo fewer good nights. That should be the next one-change test, on this recipe.
+
+## Addendum 17: recorded before any run (2026-10-26 ~03:30Z)
+Code 0f2df52dce adds `--gate-arc-n N` (default 100, which is the old gate byte for byte: the smoke result JSON is identical apart from timing; all selftest sections pass). The run (k2c_r2_g570 = arm B's flags + `--gate-arc-n 570`) is filed as GPU-queue job `add17-g570` for Ben's borrowed RTX 4090s. B ran on an RTX 5090, so GPU type differs (small numeric differences, like a sampling-seed change).
