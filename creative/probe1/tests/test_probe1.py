@@ -140,8 +140,8 @@ def test_prompt_depends_only_on_date_and_request():
     for t in TASKS:
         leaky = dict(t, reference=[dict(name="send_email", arguments=dict(body=SENT))], reference_reply=SENT, rubric=SENT,
                      checks=[dict(type="reply_contains", any_of=[SENT])], state=dict(t["state"], files={"/x": SENT}, emails=[dict(body=SENT)], notes={SENT: SENT}))
-        p = wp.task_prompt(leaky)
-        assert SENT not in p and p == wp.task_prompt(t)
+        p = wp.task_prompt(leaky, with_state=False)
+        assert SENT not in p and p == wp.task_prompt(t, with_state=False)
         assert t["user"] in p and t["state"].get("today", "2026-10-24") in p
         assert t["rubric"] not in p and t["reference_reply"] not in p
         for r in t["reference"]:
@@ -160,3 +160,13 @@ def test_prompt_has_every_tool_and_check_type():
 def test_auroc_and_seed_helpers():
     assert an.auroc([.9, .1], [True, False]) == 1.0
     assert wp.job_seed("t1", 0) == wp.job_seed("t1", 0) != wp.job_seed("t1", 1)
+
+
+def test_probe2_prompt_has_state_but_no_answer_key():
+    t = TASKS[0]
+    leaky = dict(t, reference=[dict(name="send_email", arguments=dict(body=SENT))], reference_reply=SENT, rubric=SENT,
+                 checks=[dict(type="reply_contains", any_of=[SENT])])
+    p = wp.task_prompt(leaky, with_state=True)
+    assert SENT not in p and p == wp.task_prompt(t, with_state=True) and p != wp.task_prompt(t, with_state=False)
+    planted = dict(t, state=dict(t["state"], files={"/home/user/x.txt": "PLANTED-STATE"}))
+    assert "PLANTED-STATE" in wp.task_prompt(planted, with_state=True) and "PLANTED-STATE" not in wp.task_prompt(planted, with_state=False)

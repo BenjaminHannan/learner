@@ -46,11 +46,16 @@ def check_language():
     return "\n".join(L) + "\n" + LANG_RULES
 
 
-def build_prompt(today, user):
-    """The whole prompt. Takes only the date and the request: no reference, rubric, checks or tries can get in."""
+WITH_STATE = os.environ.get("PROBE_WITH_STATE") == "1"   # Probe-2 (PREREG-probe2.md): the writer also sees the start state
+
+
+def build_prompt(today, user, state=None):
+    """The whole prompt. Takes only the date, the request and (Probe-2) the start state: no reference, rubric, checks or tries can get in."""
+    seen = ("" if state is None else "Before the assistant starts, this is everything in the user's files, mail, calendar, notes and reminders (JSON):\n\n"
+            f"{json.dumps({k: v for k, v in state.items() if k != 'today'}, indent=1)}\n\n")
     return (f"Today is {today}.\n\n"
             "A personal assistant has tools for the user's files, email, calendar, notes and reminders. The user sent it this request:\n\n"
-            f"\"\"\"\n{user}\n\"\"\"\n\n"
+            f"\"\"\"\n{user}\n\"\"\"\n\n{seen}"
             f"The assistant's tools:\n{tool_list()}\n\n"
             "When the assistant has finished, a program will inspect the final state (files, sent mail, drafts, new calendar events, notes, reminders) and the assistant's final reply. "
             "Write 2 to 6 checks that would all be true if and only if the job was done right. Check what the right end state must contain, and also what must not have happened "
@@ -59,8 +64,9 @@ def build_prompt(today, user):
             "Reply with only JSON, no other text, in the form {\"checks\": [ {...}, {...} ]}.")
 
 
-def task_prompt(task):
-    return build_prompt(task["state"].get("today", "2026-10-24"), task["user"])
+def task_prompt(task, with_state=None):
+    st = task["state"] if (WITH_STATE if with_state is None else with_state) else None
+    return build_prompt(task["state"].get("today", "2026-10-24"), task["user"], st)
 
 
 def extract_checks(text):
@@ -200,7 +206,10 @@ def main():
     ap.add_argument("--state", default=os.path.join(HERE, "haiku_probes_state.json"))
     ap.add_argument("--dry-run", action="store_true", help="--haiku: print the request count and cost estimate only")
     ap.add_argument("--print-prompt", metavar="TASK", help="print the prompt for one task and exit")
+    ap.add_argument("--with-state", action="store_true", help="Probe-2: show the writer the task's start state")
     a = ap.parse_args()
+    global WITH_STATE
+    WITH_STATE = WITH_STATE or a.with_state
     a.max_tokens = a.max_tokens or (1024 if a.haiku else 768)
     a.out = a.out or os.path.join(HERE, "probes_haiku.jsonl" if a.haiku else "probes_k2.jsonl")
     tasks = select_tasks(a.results, [x for x in a.tasks.split(",") if x] or None)

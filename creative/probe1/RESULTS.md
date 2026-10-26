@@ -28,3 +28,6 @@ P1 (>= 39.4) FAIL, P2 (AUROC >= .75) FAIL; PROBE-S <= 35.4 -> PROVED WRONG.
 ## Haiku reference
 First batch errored on every request (this model rejects `temperature`); resubmitted with default sampling (deviation
 from the prereg's 0.7, reference arm only). Result below when it lands.
+Haiku (reference, default sampling): HAIKU-PROBE 27.1% (AUROC 0.566). Its tests are well formed (99.6% valid,
+3.8 per sample) and agree with the reference more often (64.7%), but it picks no better: a bigger writer does not fix
+tests written blind. shown: both writers fail; suggested: the missing piece is seeing the world, which Probe-2 tests.
