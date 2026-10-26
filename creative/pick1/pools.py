@@ -9,7 +9,7 @@ def akey(arm, seed):
     return arm if seed == 1 else f"{arm}.s{seed}"
 
 
-def build(rows, T, g=None):
+def build(rows, T, g=None, cut=300):
     """rows: Guess-1 result records; T: task ids. Returns pool-member dicts (IND/IND.s2 use try_idx < 12 only)."""
     g = g or load_guess1()
     want = {akey(a, s): (a, s) for a in BASE_ARMS for s in SEEDS}
@@ -24,7 +24,7 @@ def build(rows, T, g=None):
         arm, seed = want[r["arm"]]
         user = r["transcript"][0]["content"]
         out.append(dict(pool=f"{r['task_id']}|{r['arm']}", task=r["task_id"], arm=arm, seed=seed, try_idx=r["try_idx"],
-                        success=bool(r["success"]), signature=g.signature(r), judge_text=g.r1.render(user, r["transcript"], 300)))
+                        success=bool(r["success"]), signature=g.signature(r), judge_text=g.r1.render(user, r["transcript"], cut)))
     out.sort(key=lambda x: (x["task"], x["arm"], x["seed"], x["try_idx"]))
     return out
 
@@ -32,11 +32,12 @@ def build(rows, T, g=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default=DEFAULT_RESULTS, help="dir with results.jsonl and target.json")
+    ap.add_argument("--cut", type=int, default=300, help="truncate tool results at this many chars")
     ap.add_argument("--out", default=os.path.join(HERE, "pools.jsonl"))
     a = ap.parse_args()
     T = json.load(open(os.path.join(a.results, "target.json")))["T"]
     rows = read_jsonl(os.path.join(a.results, "results.jsonl"))
-    recs = build(rows, T)
+    recs = build(rows, T, cut=a.cut)
     with open(a.out, "w") as f:
         for r in recs:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")

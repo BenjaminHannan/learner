@@ -95,3 +95,52 @@ def test_verdict_logic():
     assert an.verdict(fake(30, 20, 35, 30, .9))["verdict"] == "PROVED WRONG"
     assert an.verdict(fake(30, 20, 35.1, 30, .9))["verdict"] == "INCONCLUSIVE"
     assert an.verdict({"pick_rate": {"RAND": dict(all=1)}, "auroc": {}})["verdict"] == "NO JUDGE SCORES"
+
+
+# ---- Pick-2 ----
+def test_cut_option():
+    rows = [row("t1", "MENU", 0, True, calls=[("f", {"a": 1})])]
+    long_ = pools.build(rows, ["t1"], cut=1500)[0]["judge_text"]
+    assert "r" * 400 in long_ and "r" * 300 + "..." not in long_
+    assert "r" * 300 + "..." in pools.build(rows, ["t1"])[0]["judge_text"]   # default 300 unchanged
+    assert "r" * 100 + "..." in pools.build(rows, ["t1"], cut=100)[0]["judge_text"]
+
+
+def test_parse_think():
+    p = judge_k2.parse_think
+    assert p("ok.\nAnswer: yes\nConfidence: 8") == (8, True)
+    assert p("Answer: No\nConfidence: 3") == (-3, True)
+    assert p("Answer: **yes**\nConfidence: **10**") == (10, True)
+    assert p("Answer: yes\nConfidence: 99") == (10, True)
+    assert p("hmm, maybe 'Answer: yes' ... \nAnswer: no\nConfidence: 6") == (-6, True)   # last one wins
+    assert p("Answer: yes") == (0, False)            # missing confidence
+    assert p("Confidence: 7") == (0, False)          # missing answer
+    assert p("") == (0, False) and p(None) == (0, False)
+    assert judge_k2.reply_text({"message": {"reasoning_content": "think", "content": "Answer: no\nConfidence: 2"}}) == "think\nAnswer: no\nConfidence: 2"
+    assert p(judge_k2.reply_text({"message": {"reasoning_content": "Answer: yes\nConfidence: 4", "content": None}})) == (4, True)
+    assert p(judge_k2.reply_text({"message": {"content": "Answer: yes\nConfidence: 5"}})) == (5, True)
+
+
+def test_extra_judge_and_pick2():
+    recs = mk("a|IND", ["x", "y", "z", "w"], [True, False, False, False]) + mk("b|IND", ["x", "y", "z", "w"], [False, False, True, False])
+    sc = {"a|IND|0": 9, "a|IND|1": -2, "a|IND|2": -3, "b|IND|2": 5, "b|IND|0": -4}   # missing -> 0
+    m = an.evaluate(recs, {"a|IND|1": .9}, None, {"THINK": (sc, 0.0)})
+    assert m["pick_rate"]["THINK"]["all"] == 100 and m["auroc"]["THINK"] == 1.0
+    assert m["pick_rate"]["SELF"]["all"] == 0
+
+
+def test_verdict_pick2():
+    def f(R, S, full, think, aufull=.8, authink=.8):
+        pr = {"RAND": dict(all=R), "SELF": dict(all=S), "FULL": dict(all=full), "THINK": dict(all=think)}
+        return dict(pick_rate=pr, auroc={"FULL": aufull, "THINK": authink})
+    v = an.verdict_pick2(f(20, 34, 37, 30))
+    assert v["verdict"] == "PASS" and v["passing"] == ["FULL"] and v["best"] == "FULL"
+    assert an.verdict_pick2(f(20, 34, 36.9, 30))["verdict"] == "INCONCLUSIVE"            # Q3 fails (<SELF+3), Q1 ok
+    assert an.verdict_pick2(f(20, 34, 40, 30, aufull=.69))["verdict"] == "INCONCLUSIVE"   # Q2 fails
+    assert an.verdict_pick2(f(30, 34, 40, 30))["verdict"] == "INCONCLUSIVE"               # Q1 fails (<RAND+15)
+    v = an.verdict_pick2(f(20, 34, 35, 34.5))
+    assert v["verdict"] == "PROVED WRONG" and v["best"] == "FULL"
+    assert an.verdict_pick2(f(20, 34, 35.1, 30))["verdict"] == "INCONCLUSIVE"
+    assert an.verdict_pick2(f(20, 34, 30, 40, authink=.7))["passing"] == ["THINK"]      # either variant can pass
+    assert an.verdict_pick2({"pick_rate": {"RAND": dict(all=1)}, "auroc": {}})["verdict"] == "NO JUDGE SCORES"
+    assert "Verdict: **PASS**" in an.report_pick2_md(an.verdict_pick2(f(20, 34, 37, 30)))
