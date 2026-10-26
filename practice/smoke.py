@@ -15,7 +15,7 @@ def scripted_factory(puzzles):
     by = {p["prompt"]: p for p in puzzles}
     rng = random.Random(5)
 
-    def gen(model, tok, prompts, max_new, temperature, seed, bs, log=None, first_words=None):
+    def gen(model, tok, prompts, max_new, temperature, seed, bs=None, log=None, first_words=None):
         outs = []
         for pr in prompts:
             m = re.search(r"<\|ifm\|im_start\|>user\n(.*?)\n\n\(The final answer", pr, re.S)
@@ -39,7 +39,8 @@ def run_smoke(out=None):
     summary = {}
     for lane_i, arm in enumerate(("P", "C")):
         a = job.main.__globals__["argparse"].Namespace(arm=arm, lane=lane_i, out=str(out), model="", seed=1 + lane_i, practice_n=None, deadline_s=3600, night_est_s=1,
-                                                       arc_n=5, bs=4, nights=1, tries=2, steps=3, n_sft=6, epochs=2, n_pairs=3, pilot=False, smoke=True)
+                                                       arc_n=5, bs=4, nights=1, tries=2, steps=3, n_sft=6, epochs=2, n_pairs=3, pilot=False, smoke=True,
+                                                       backend="hf", eval_nights="1,3", sib_tries=1)
         lane = job.Lane(a)
         gp = [p for p in lane.pool if p["kind"] != "arc"]
         lane.pool = gp[:5]

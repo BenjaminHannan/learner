@@ -1,10 +1,10 @@
-"""Batched multi-turn tool rollouts with HF generate. Many puzzle-tries in flight; each round generates one assistant turn for every active rollout
+"""Batched multi-turn tool rollouts (HF generate or a vLLM backend, see gen.py). Many puzzle-tries in flight; each round generates one assistant turn for every active rollout
 (left padding, the whole transcript is re-encoded each turn), then runs the tools (python calls in a small thread pool)."""
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from sleep2.askonce.model_io import generate
+from .gen import BsState, hf_generate as generate
 
 from . import tools as T
 from .grade import is_correct
@@ -59,9 +59,12 @@ class Rollout:
 
 
 class Harness:
-    def __init__(self, model, tok, temperature=0.7, max_new=768, max_ctx=6000, bs=12, max_turns=T.MAX_TURNS, log=print, workers=4):
+    def __init__(self, model, tok, temperature=0.7, max_new=512, max_ctx=4096, bs=8, max_turns=T.MAX_TURNS, log=print, workers=4, backend=None, progress_s=120):
         self.model, self.tok, self.temp, self.max_new, self.max_ctx = model, tok, temperature, max_new, max_ctx
         self.bs, self.max_turns, self.log = bs, max_turns, log
+        self.backend = backend            # None = HF generate on self.model with the sticky batch size below
+        self.bs_state = BsState(bs)
+        self.progress_s, self._last_progress = progress_s, time.time()
         self.pool = ThreadPoolExecutor(workers)
         self.rounds = 0
         self.stats = {"gen_s": 0.0, "tool_s": 0.0, "gen_tokens": 0, "rollouts": 0}
@@ -83,7 +86,10 @@ class Harness:
             return
         prompts = [render(r.messages, True, self.tok.bos_token or "") for r in keep]
         t = time.time()
-        outs = generate(self.model, self.tok, prompts, self.max_new, self.temp, seed, self.bs, self.log)
+        if self.backend is not None:
+            outs = self.backend.generate(prompts, self.max_new, self.temp, seed)
+        else:
+            outs = generate(self.model, self.tok, prompts, self.max_new, self.temp, seed, self.bs_state, self.log)
         self.stats["gen_s"] += time.time() - t
         jobs = []
         for r, o in zip(keep, outs):
@@ -127,7 +133,7 @@ class Harness:
             order = list(puzzles)
             rng.shuffle(order)
             queue += [(p, k) for p in order]
-        inflight = inflight or self.bs * 2
+        inflight = inflight or (getattr(self.backend, "inflight", 0) if self.backend is not None else self.bs * 2)
         active, recs, life = [], [], []
         total = len(queue)
         t_start = time.time()
@@ -158,9 +164,20 @@ class Harness:
                 else:
                     still.append(r)
             active = still
-            if self.rounds % 5 == 0:
-                self.log(f"{label}: {len(recs)}/{total} done, {len(active)} active, {len(queue)} queued, {(time.time() - t_start) / 60:.1f} min")
+            if time.time() - self._last_progress >= self.progress_s:
+                self._last_progress = time.time()
+                self.progress(label, len(recs), total, len(active), len(queue), t_start)
         return recs
+
+
+def _progress(self, label, done, total, active, queued, t_start):
+    gs = max(1e-9, self.stats["gen_s"])
+    desc = self.backend.describe() if self.backend is not None else self.bs_state.describe()
+    self.log(f"{label}: tries {done}/{total} done, {active} active, {queued} queued, {(time.time() - t_start) / 60:.1f} min, "
+             f"{self.stats['gen_tokens'] / gs:.1f} generated tok/s (gen {self.stats['gen_s']:.0f}s, tools {self.stats['tool_s']:.0f}s), {desc}")
+
+
+Harness.progress = _progress
 
 
 def summarize(recs):

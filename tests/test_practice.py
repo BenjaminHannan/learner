@@ -206,10 +206,151 @@ def test_cpu_pilot(tmp_path):
     pytest.importorskip("peft")
     from practice import harness, job, smoke
     a = job.argparse.Namespace(arm="P", lane=0, out=str(tmp_path), model="", seed=1, practice_n=None, deadline_s=3600, night_est_s=1, arc_n=20, bs=4, nights=1, tries=1,
-                               steps=3, n_sft=6, epochs=1, n_pairs=3, pilot=True, smoke=True)
+                               steps=3, n_sft=6, epochs=1, n_pairs=3, pilot=True, smoke=True, backend="hf", eval_nights="1,3", sib_tries=1)
     lane = job.Lane(a)
     lane.pool = [p for p in lane.pool if p["kind"] != "arc"][:20]
+    lane.test = [p for p in lane.test if len(p["prompt"]) < 1500]
     lane.H.max_new = 16
     harness.generate = smoke.scripted_factory(lane.pool + lane.test + lane.sib)
     out = lane.pilot()
-    assert out["suggested_practice_n"] >= 0 and out["projected_full_run_h_with_full_pool"] > 0 and (tmp_path / "P" / "pilot.json").exists()
+    assert out["projection"]["suggested_practice_n"] >= 0 and out["projection"]["projected_full_run_h_with_full_pool"] > 0 and (tmp_path / "P" / "pilot.json").exists()
+    pj = json.loads((tmp_path / "P" / "pilot.json").read_text())
+    assert pj["done"] == ["test_base", "day_base", "night", "test_adapter"] and pj["projection"]["suggested_practice_n"] >= 0
+    cfg = json.loads((tmp_path / "P" / "config.json").read_text())
+    assert (cfg["max_new_per_turn"], cfg["max_turns"], cfg["max_ctx"]) == (512, 6, 4096) and "</input>" in cfg["stop"]
+    assert (tmp_path / "P" / "adapters" / "night1" / "adapter_config.json").exists()
+
+
+# ---------------------------------------------------------------- caps, stop strings, sticky batch size, backends
+def test_caps_and_prompt():
+    from practice import harness, job
+    assert (job.MAX_NEW, tools.MAX_TURNS, job.MAX_CTX) == (512, 6, 4096)
+    assert "at most 6 turns" in tools.SYSTEM_PROMPT and "__N__" not in tools.SYSTEM_PROMPT
+    h = harness.Harness(None, None)
+    assert (h.max_new, h.max_turns, h.max_ctx, h.bs) == (512, 6, 4096, 8)
+
+
+def tiny_model(tmp_path):
+    pytest.importorskip("torch")
+    from sleep2.askonce.model_io import get_tokenizer, load_model, make_tiny
+    name = "tiny:" + make_tiny(tmp_path / "tiny", [tools.SYSTEM_PROMPT, "<tool>python</tool><input>print(1)</input> ANSWER: 1"] * 20)
+    return load_model(name, __import__("torch").float32, "cpu"), get_tokenizer(name)
+
+
+def test_stop_on_text_criterion(tmp_path):
+    import torch
+    from practice.gen import StopOnText
+    _, tok = tiny_model(tmp_path)
+    a = tok("hello <tool>python</tool><input>print(1)</input>", add_special_tokens=False).input_ids
+    b = tok("hello world foo bar baz qux", add_special_tokens=False).input_ids
+    n = max(len(a), len(b))
+    pad = tok.pad_token_id
+    ids = torch.tensor([[pad] * (n - len(a)) + a, [pad] * (n - len(b)) + b])
+    done = StopOnText(tok, 0)(ids)
+    assert done.tolist() == [True, False]
+    assert StopOnText(tok, n)(ids).tolist() == [False, False]  # prompt tokens are ignored
+
+
+def test_bs_state_sticky_and_grow():
+    from practice.gen import BsState
+    st = BsState(8, tok_budget=10000, grow_after=3)
+    st.oom(8, 1000)
+    assert st.bs == 4 and st.tok_budget == 5600
+    for _ in range(3):
+        st.ok()
+    assert st.bs == 5  # grows by one after clean calls...
+    for _ in range(30):
+        st.ok()
+    assert st.bs < 8  # ...but never back up to the size that failed
+
+
+def test_hf_generate_oom_is_sticky(tmp_path, monkeypatch):
+    import torch
+    from practice.gen import BsState, hf_generate
+    model, tok = tiny_model(tmp_path)
+    calls = []
+    real = model.generate
+
+    def fake(*a, **kw):
+        calls.append(kw["input_ids"].shape[0])
+        if kw["input_ids"].shape[0] > 2:
+            raise torch.OutOfMemoryError("CUDA out of memory (fake)")
+        return real(*a, **kw)
+    monkeypatch.setattr(model, "generate", fake)
+    st = BsState(8)
+    logs = []
+    prompts = [f"<|ifm|im_start|>user\nq{i} " + "x " * i for i in range(10)]
+    outs = hf_generate(model, tok, prompts, 6, 0.7, 1, st, logs.append)
+    assert len(outs) == 10 and all(isinstance(o, str) for o in outs)
+    assert st.bs <= 2 and st.ooms >= 1
+    n_fail = sum(1 for c in calls if c > 2)
+    hf_generate(model, tok, prompts, 6, 0.7, 2, st, logs.append)  # second call starts at the reduced size: no new failing calls
+    assert sum(1 for c in calls if c > 2) == n_fail
+
+
+def test_hf_generate_stops_at_input_tag(tmp_path, monkeypatch):
+    """A scripted model.generate that honours the stopping criteria: every row must stop right after '</input>' instead of running to max_new."""
+    import torch
+    from transformers import StoppingCriteriaList
+    from practice.gen import hf_generate
+    model, tok = tiny_model(tmp_path)
+    script = tok("<tool>python</tool><input>print(1)</input> trailing words that must not be generated", add_special_tokens=False).input_ids
+    seen = {}
+
+    def fake(input_ids=None, attention_mask=None, max_new_tokens=0, stopping_criteria=None, **kw):
+        B, L = input_ids.shape
+        cur = input_ids
+        fin = torch.zeros(B, dtype=torch.bool)
+        for step in range(max_new_tokens):
+            nxt = torch.tensor([[script[step]] if not fin[b] else [tok.pad_token_id] for b in range(B)])
+            cur = torch.cat([cur, nxt], 1)
+            fin = fin | stopping_criteria(cur, None)
+            if fin.all():
+                break
+        seen["steps"] = cur.shape[1] - L
+        return cur
+    monkeypatch.setattr(model, "generate", fake)
+    outs = hf_generate(model, tok, ["<|ifm|im_start|>user\nhi", "<|ifm|im_start|>user\nhello there"], 200, 0.7, 0, 8)
+    assert all(o.endswith("</input>") for o in outs), outs
+    assert seen["steps"] < 30
+
+
+def test_harness_with_backend(monkeypatch):
+    """A (mock) vLLM-style backend: the harness hands it rendered prompts and uses its replies."""
+    from practice import harness
+    seen = []
+
+    class Fake:
+        inflight = 5
+
+        def describe(self):
+            return "fake"
+
+        def generate(self, prompts, max_new, temperature, seed):
+            seen.append((len(prompts), max_new))
+            return ["<tool>answer</tool><input>\n42\n</input>" for _ in prompts]
+
+    class Tok:
+        bos_token = ""
+
+        def __call__(self, text, add_special_tokens=False):
+            class R:
+                input_ids = list(range(len(text) // 4 + 1))
+            return R()
+    h = harness.Harness(None, Tok(), backend=Fake(), progress_s=0)
+    puzzles = [{"id": f"x{i}", "kind": "number", "prompt": "q", "answer": "42", "answer_type": "int", "source": "t"} for i in range(7)]
+    recs = h.run(puzzles, 1, 0, label="mock")
+    assert len(recs) == 7 and all(r["correct"] for r in recs) and seen[0] == (5, 512)
+
+
+def test_projection_fits_budget():
+    from practice import job
+    st = {"test_base": {"n": 12, "seconds": 120, "overhead_s": 90}, "day_base": {"n": 12, "seconds": 130, "overhead_s": 90},
+          "night": {"seconds": 400, "n_items": 28, "pairs": 8, "n_sft_pilot": 20, "overhead_s": 60},
+          "test_adapter": {"n": 12, "seconds": 125, "overhead_s": 90, "arc_seconds": 20, "arc_n": 20}}
+    p = job.project(st, None, 392, 100, 60)
+    assert p["suggested_practice_n"] > 0
+    n = p["suggested_practice_n"]
+    spent = p["fixed_h"] + 3 * n * 2 * p["sec_per_try_day_adapter_est"] / 3600
+    assert spent <= 9.5 + 1e-6
+    assert job.project({}, None, 392, 100, 60) == {}

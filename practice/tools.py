@@ -7,7 +7,7 @@ import sys
 import tempfile
 from collections import deque
 
-MAX_TURNS = 8
+MAX_TURNS = 6
 OUT_CAP = 2000
 PY_TIMEOUT = 10
 
@@ -21,7 +21,9 @@ Tools:
 - search: look up a topic in a small offline reference library (math, algorithms, Python standard library). Input is a short query.
 - look: describe a grid of digits (size, colour counts, objects with boxes, symmetries, repeated tiles). Input is the grid, one row per line.
 - answer: give your final answer. Input is only the answer: an integer, a short word or phrase, or a grid (one row per line, digits separated by spaces).
-You have at most 8 turns. After a tool runs you see its output. Check your work with python when you can, then call answer."""
+You have at most __N__ turns. After a tool runs you see its output. Check your work with python when you can, then call answer."""
+
+SYSTEM_PROMPT = SYSTEM_PROMPT.replace("__N__", str(MAX_TURNS))
 
 ANSWER_HINT = {"int": "an integer", "str": "a short word or phrase", "grid": "a grid (one row per line, digits separated by spaces)"}
 

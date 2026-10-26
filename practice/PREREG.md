@@ -75,3 +75,10 @@ Claude calls (test and pool writing) go through the Message Batches API.
 - Research while waiting (Haiku, search-level, unverified): ARC winners multiply data with 8 rotations/flips + colour
   swaps and keep answers that agree across views (arXiv 2505.07859); SOAR self-trains on its own verified search traces.
   Not added here (one change at a time); candidates for Practice-2.
+
+## Addendum 2 (2026-10-26 ~01:30Z, after a failed timing pilot, before any result; pass marks unchanged)
+- Pilot 1 (Kaggle T4, HF generate) hit its 1 h cap with no numbers: replies ran to 768 tokens (no stop at the end of a
+  tool call) and generate kept OOMing at batch 12. Fixes, same for every arm: each reply stops at `</input>`; caps are
+  now 512 new tokens per turn, 6 turns, 4,096 context; sticky batch size; vLLM backend (prefix cache, LoRA served
+  without merging) with automatic fallback to HF.
+- Evals run at A0, after night 1 and after night 3 (pass marks use night 3, as before). Sibling set: 1 try per puzzle.
