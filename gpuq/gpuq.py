@@ -9,7 +9,8 @@ Layout under $GPUQ_HOME (default ~/gpuq):
   state.json  daemon.log  ALERT_EMPTY
 
 Job header (comment lines in a bash script): `# gpuq: key=value`
-  name priority gpus(1|2) hours owner retries mem_gb
+  name priority gpus(1|2) hours owner retries mem_gb exclusive
+  mem_gb=N (float, GB per GPU) lets jobs share a GPU; exclusive=1 or no mem_gb => the job wants its GPU(s) alone.
 """
 import argparse
 import shutil
@@ -121,14 +122,18 @@ def parse_header(path):
         job = dict(name=raw.get("name") or Path(path).stem,
                    priority=int(raw.get("priority", 0)), gpus=int(raw.get("gpus", 1)),
                    hours=float(raw.get("hours", 24)), retries=int(raw.get("retries", 0)),
-                   owner=raw.get("owner", ""), mem_gb=raw.get("mem_gb", ""),
-                   commit=raw.get("commit", ""))
+                   owner=raw.get("owner", ""), commit=raw.get("commit", ""),
+                   mem_gb=float(raw["mem_gb"]) if raw.get("mem_gb") else None)
+        job["exclusive"] = (raw.get("exclusive", "").lower() in ("1", "true", "yes")
+                            or job["mem_gb"] is None)      # no mem_gb => safe default: alone on its GPU
     except ValueError as e:
         raise JobError("bad header value: %s" % e)
     if not NAME_RE.match(job["name"]):
         raise JobError("bad name %r (use letters, digits, . _ -)" % job["name"])
     if job["gpus"] not in (1, 2):
         raise JobError("gpus must be 1 or 2")
+    if job["mem_gb"] is not None and job["mem_gb"] < 0:
+        raise JobError("mem_gb must be >= 0")
     if job["hours"] <= 0 or job["retries"] < 0:
         raise JobError("hours must be > 0 and retries >= 0")
     return job
@@ -139,7 +144,8 @@ def gpu_stats():
     """{index: {util, mem_used, mem_total}} (MiB); {} if nvidia-smi is unavailable."""
     fake = os.environ.get("GPUQ_FAKE_GPUS")
     if fake:
-        stats = {i: dict(util=0, mem_used=0, mem_total=24564) for i in range(int(fake))}
+        total = int(os.environ.get("GPUQ_FAKE_TOTAL_MB", 24564))
+        stats = {i: dict(util=0, mem_used=0, mem_total=total) for i in range(int(fake))}
         for part in filter(None, os.environ.get("GPUQ_FAKE_MEM", "").split(",")):
             i, mb = part.split(":")
             if int(i) in stats:
@@ -208,8 +214,10 @@ def read_rc(path):
 
 # -------------------------------------------------------------------- daemon
 class Daemon:
-    def __init__(self, h, gpus, grace=60.0, filler_cooldown=30.0):
+    def __init__(self, h, gpus, grace=60.0, filler_cooldown=30.0, gpu_mem_gb=None, max_per_gpu=4,
+                 reserve_after=30.0):
         self.h, self.gpus, self.grace, self.cooldown_s = h, gpus, grace, filler_cooldown
+        self.gpu_mem_gb, self.max_per_gpu, self.reserve_after = gpu_mem_gb, max_per_gpu, reserve_after  # minutes
         self.procs = {}         # key -> Popen for jobs this process started
         self.cooldown = {}      # filler name -> time before which it is not restarted
         self.ext_seen = set()
@@ -346,30 +354,78 @@ class Daemon:
             os.rename(p, self.h.failed / p.name)
         self.st["jobs"][p.stem] = dict(rc="bad-job", reason=reason, end=time.time(), attempt=1)
 
+    def capacity(self, g, stats):
+        """GB of reservable memory on GPU g: --gpu-mem-gb, else total minus 1.5 GB."""
+        if self.gpu_mem_gb is not None:
+            return self.gpu_mem_gb
+        return stats[g]["mem_total"] / 1024.0 - 1.5 if g in stats else 0.0
+
     def schedule(self, stats):
+        """Walk pending (priority, then age) and start every job that fits now.
+
+        A job fits GPU g if g is not externally busy, not held, and
+          exclusive job: no real (non-filler) job is on g;
+          packable job:  no exclusive job on g, < max_per_gpu jobs, reserved GB + mem_gb <= capacity, and live
+                         free memory >= mem_gb + 1 GB (live check skipped while only a filler is there).
+        A job that fits nowhere only blocks lower-priority jobs if it is exclusive or gpus=2 and has waited
+        more than reserve_after minutes: then the n least-loaded GPUs are held for it (fillers may still run)."""
         run = self.st["running"]
-        used = {g: rec for rec in run.values() for g in rec["gpus"]}
-        ext = {g for g in self.gpus if g not in used and stats.get(g, {}).get("mem_used", 0) > EXT_BUSY_MB}
+        real = {g: [] for g in self.gpus}
+        fill, anyrec = {}, set()
+        for rec in run.values():
+            for g in rec["gpus"]:
+                anyrec.add(g)
+                if rec.get("filler"):
+                    fill[g] = rec
+                elif g in real:
+                    real[g].append(rec)
+        ext = {g for g in self.gpus if g not in anyrec and stats.get(g, {}).get("mem_used", 0) > EXT_BUSY_MB}
         if ext != self.ext_seen:
             log.warning("GPUs busy outside gpuq (mem > %d MiB, no gpuq job): %s", EXT_BUSY_MB, sorted(ext) or "none")
             self.ext_seen = ext
-        free = [g for g in self.gpus if g not in used and g not in ext]
-        fill = [g for g in self.gpus if g in used and used[g].get("filler")]
-        reserved = set()
+        caps = {g: self.capacity(g, stats) for g in self.gpus}
+        self.st["caps"] = {str(g): c for g, c in caps.items()}
+        resv = {g: sum(r.get("mem_gb") or 0 for r in real[g]) for g in self.gpus}
+        excl = {g: any(r.get("exclusive", True) for r in real[g]) for g in self.gpus}   # old records: exclusive
+        cnt = {g: len(real[g]) for g in self.gpus}
+        held, touched, now = set(), set(), time.time()
+
+        def fits(job, g):
+            if g in ext or g in held:
+                return False
+            if job["exclusive"]:
+                return cnt[g] == 0
+            if excl[g] or cnt[g] >= self.max_per_gpu or resv[g] + job["mem_gb"] > caps[g] + 1e-9:
+                return False
+            if g not in fill and g in stats:     # a filler is preempted first, so its memory does not count
+                free_gb = (stats[g]["mem_total"] - stats[g]["mem_used"]) / 1024.0
+                if free_gb < job["mem_gb"] + 1.0:
+                    return False
+            return True
+
         for job in self.load_pending():
-            avail = [g for g in free + fill if g not in reserved]
-            if len(avail) < job["gpus"]:
-                break      # head-of-line: keep freed slots for this job (fillers run meanwhile)
-            chosen = avail[:job["gpus"]]
-            reserved.update(chosen)
-            drain = [g for g in chosen if g in fill]
-            for g in drain:
-                if not used[g].get("kill"):
-                    self.terminate(used[g], "preempt")
-            if not drain:
-                self.start_job(job, chosen)
-        for g in free:
-            if g not in reserved:
+            n = job["gpus"]
+            cands = [g for g in self.gpus if fits(job, g)]
+            if len(cands) >= n:
+                cands.sort(key=lambda g: (-resv[g], g in fill, g))     # best fit: most reserved first
+                chosen = cands[:n]
+                for g in chosen:
+                    cnt[g] += 1
+                    resv[g] += job["mem_gb"] or 0
+                    excl[g] = excl[g] or job["exclusive"]
+                    touched.add(g)
+                drain = [g for g in chosen if g in fill]
+                for g in drain:
+                    if not fill[g].get("kill"):
+                        self.terminate(fill[g], "preempt")
+                if not drain:
+                    self.start_job(job, chosen)
+            elif (job["exclusive"] or n == 2) and now - job["submitted"] > self.reserve_after * 60:
+                pool = sorted((g for g in self.gpus if g not in ext and g not in held),
+                              key=lambda g: (cnt[g], resv[g], g))
+                held.update(pool[:n])
+        for g in self.gpus:
+            if cnt[g] == 0 and g not in fill and g not in ext and g not in touched:
                 self.start_filler(g)
 
     def start_job(self, job, chosen):
@@ -388,7 +444,8 @@ class Daemon:
             return
         try:
             rec = self.launch(name, name, ["bash", str(dst)], chosen, job["hours"], self.attempt(name),
-                              self.h.out / name, name, extra=extra)
+                              self.h.out / name, name, extra=extra,
+                              mem_gb=job["mem_gb"], exclusive=job["exclusive"])
         except Exception as e:
             log.exception("launch of %s raised", name)
             rec = None
@@ -458,7 +515,8 @@ class Daemon:
         self.launch("%s-run%d" % (name, k), name, argv, [g], hours, 1, self.h.out / name / ("run%d" % k),
                     name, filler=True, fname=fname, run=k)
 
-    def launch(self, key, name, argv, gpus, hours, attempt, outdir, logname, filler=False, fname=None, run=None, extra=None):
+    def launch(self, key, name, argv, gpus, hours, attempt, outdir, logname, filler=False, fname=None, run=None, extra=None,
+               mem_gb=None, exclusive=True):
         h = self.h
         outdir.mkdir(parents=True, exist_ok=True)
         rcfile = outdir / "_rc"
@@ -484,7 +542,8 @@ class Daemon:
             return None
         rec = dict(name=name, gpus=list(gpus), attempt=attempt, pid=proc.pid, pstart=proc_start(proc.pid),
                    start=time.time(), hours=hours,
-                   rcfile=str(rcfile), out=str(outdir), filler=filler, fname=fname)
+                   rcfile=str(rcfile), out=str(outdir), filler=filler, fname=fname,
+                   mem_gb=mem_gb, exclusive=exclusive)
         self.procs[key] = proc
         self.st["running"][key] = rec
         self.save()     # persist immediately so a crash cannot lose track of the pid
@@ -514,7 +573,7 @@ def cmd_daemon(a):
                logging.StreamHandler()):
         hd.setFormatter(fmt)
         log.addHandler(hd)
-    d = Daemon(h, detect_gpus(a.gpus), a.grace, a.filler_cooldown)
+    d = Daemon(h, detect_gpus(a.gpus), a.grace, a.filler_cooldown, a.gpu_mem_gb, a.max_per_gpu, a.reserve_after)
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
@@ -600,23 +659,38 @@ def fts(t):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t)) if t else "-"
 
 
+def memtag(r):
+    """'name(10G)', 'name(excl)' or 'name(filler)' for status output."""
+    return "%s(%s)" % (r["name"], "filler" if r["filler"] else "excl" if r["exclusive"] else "%gG" % r["mem_gb"])
+
+
+def gpu_rows(s):
+    return [[g["index"], g["util"], "%d/%d" % (g["mem_used"], g["mem_total"]),
+             "excl" if g["exclusive"] else "%g/%.1f" % (g["reserved_gb"], g["capacity_gb"]),
+             ", ".join(g["job_info"]) or "-"] for g in s["gpus"]]
+
+
+GPU_H = ["gpu", "util%", "mem MiB", "reserved/cap GB", "jobs"]
+
+
 def snapshot(h):
     st, now = load_state(h), time.time()
     running = [dict(name=r["name"], gpus=r["gpus"], start=r["start"], elapsed=now - r["start"],
                     attempt=r["attempt"], pid=r["pid"], hours=r["hours"], filler=bool(r.get("filler")),
+                    mem_gb=r.get("mem_gb"), exclusive=bool(r.get("exclusive", True)),
                     alive=pid_alive(r["pid"], r.get("pstart"))) for r in sorted(st["running"].values(), key=lambda r: r["start"])]
     pending = []
     for p in h.pending.glob("*.sh"):
         try:
             j = parse_header(p)
         except Exception:
-            j = dict(priority=0, gpus=1, hours=0, owner="?")
+            j = dict(priority=0, gpus=1, hours=0, owner="?", mem_gb=None, exclusive=True)
         try:
             mt = p.stat().st_mtime
         except OSError:
             continue    # moved while we looked
         pending.append(dict(name=p.stem, priority=j["priority"], gpus=j["gpus"], hours=j["hours"],
-                            owner=j["owner"], submitted=mt))
+                            owner=j["owner"], submitted=mt, mem_gb=j["mem_gb"], exclusive=j["exclusive"]))
     pending.sort(key=lambda j: (-j["priority"], j["submitted"], j["name"]))
 
     def finished(d):
@@ -633,8 +707,13 @@ def snapshot(h):
         return sorted(rows, key=lambda r: -r["end"])
     gpus = []
     for i, s in sorted(gpu_stats().items()):
-        jobs = [r["name"] for r in running if i in r["gpus"]]
-        gpus.append(dict(index=i, util=s["util"], mem_used=s["mem_used"], mem_total=s["mem_total"], jobs=jobs))
+        on = [r for r in running if i in r["gpus"]]
+        real = [r for r in on if not r["filler"]]
+        cap = st.get("caps", {}).get(str(i), s["mem_total"] / 1024.0 - 1.5)
+        gpus.append(dict(index=i, util=s["util"], mem_used=s["mem_used"], mem_total=s["mem_total"],
+                         jobs=[r["name"] for r in on], job_info=[memtag(r) for r in on],
+                         reserved_gb=sum(r["mem_gb"] or 0 for r in real), capacity_gb=cap,
+                         exclusive=any(r["exclusive"] for r in real)))
     return dict(time=now, gpus=gpus, running=running, pending=pending, done=finished(h.done),
                 failed=finished(h.failed), alert_empty=h.alert.exists())
 
@@ -647,11 +726,15 @@ def table(headers, rows):
 
 def run_rows(s):
     return [[r["name"] + (" (filler)" if r["filler"] else ""), ",".join(map(str, r["gpus"])), fts(r["start"]),
-             fdur(r["elapsed"]), "%g" % r["hours"], r["attempt"], r["pid"] if r["alive"] else "%s DEAD" % r["pid"]]
+             fdur(r["elapsed"]), "%g" % r["hours"], "excl" if r["exclusive"] else "%gG" % r["mem_gb"], r["attempt"], r["pid"] if r["alive"] else "%s DEAD" % r["pid"]]
             for r in s["running"]]
 
 
-RUN_H = ["name", "gpu", "started", "elapsed", "hours", "attempt", "pid"]
+RUN_H = ["name", "gpu", "started", "elapsed", "hours", "mem", "attempt", "pid"]
+
+
+def pmem(j):
+    return "excl" if j["exclusive"] else "%gG" % j["mem_gb"]
 
 
 def cmd_status(a):
@@ -659,13 +742,12 @@ def cmd_status(a):
     if a.json:
         return print(json.dumps(s, indent=1))
     print("GPUs")
-    print(table(["gpu", "util%", "mem MiB", "job"], [[g["index"], g["util"], "%d/%d" % (g["mem_used"], g["mem_total"]),
-                                                      ",".join(g["jobs"]) or "-"] for g in s["gpus"]]))
+    print(table(GPU_H, gpu_rows(s)))
     print("\nRunning (%d)" % len(s["running"]))
     print(table(RUN_H, run_rows(s)))
     print("\nPending (%d)" % len(s["pending"]))
-    print(table(["name", "prio", "gpus", "hours", "owner"],
-                [[j["name"], j["priority"], j["gpus"], "%g" % j["hours"], j["owner"]] for j in s["pending"]]))
+    print(table(["name", "prio", "gpus", "hours", "mem", "owner"],
+                [[j["name"], j["priority"], j["gpus"], "%g" % j["hours"], pmem(j), j["owner"]] for j in s["pending"]]))
     for key in ("done", "failed"):
         print("\n%s (%d, newest 10)" % (key.capitalize(), len(s[key])))
         print(table(["name", "rc", "ended", "runtime"],
@@ -689,12 +771,11 @@ def render_md(h, path):
     out = ["# GPU queue", "", "_Updated %s_" % fts(s["time"]), ""]
     if s["alert_empty"]:
         out += ["**ALERT: queue is empty, GPUs are running keepalive filler.**", ""]
-    out += ["## GPUs", md_table(["gpu", "util %", "memory MiB", "job"], [
-        [g["index"], g["util"], "%d/%d" % (g["mem_used"], g["mem_total"]), ", ".join(g["jobs"]) or "-"]
-        for g in s["gpus"]])]
+    out += ["## GPUs", md_table(GPU_H, gpu_rows(s))]
     out += ["## Running", md_table(RUN_H, run_rows(s))]
-    out += ["## Pending (in run order)", md_table(["#", "name", "priority", "gpus", "hours", "owner"], [
-        [i + 1, j["name"], j["priority"], j["gpus"], "%g" % j["hours"], j["owner"]] for i, j in enumerate(s["pending"])])]
+    out += ["## Pending (in run order)", md_table(["#", "name", "priority", "gpus", "hours", "mem", "owner"], [
+        [i + 1, j["name"], j["priority"], j["gpus"], "%g" % j["hours"], pmem(j), j["owner"]]
+        for i, j in enumerate(s["pending"])])]
     out += ["## Recently done (last 30)", md_table(["name", "rc", "ended", "runtime", ""], fin(s["done"][:30]))]
     out += ["## Failed", md_table(["name", "rc", "ended", "runtime", "reason"], fin(s["failed"]))]
     atomic_write(Path(path), "\n".join(out))
@@ -710,6 +791,10 @@ def main(argv=None):
     p.add_argument("--max-seconds", type=float, default=0, help="exit after this long (tests)")
     p.add_argument("--grace", type=float, default=60, help="SIGTERM->SIGKILL wait in seconds")
     p.add_argument("--filler-cooldown", type=float, default=30, help="pause before re-running a failing filler")
+    p.add_argument("--gpu-mem-gb", type=float, help="reservable GB per GPU (default: nvidia-smi total - 1.5)")
+    p.add_argument("--max-per-gpu", type=int, default=4, help="max jobs sharing one GPU")
+    p.add_argument("--reserve-after", type=float, default=30,
+                   help="minutes an exclusive/2-GPU job waits before it holds GPUs against lower-priority jobs")
     p.add_argument("--kill-on-exit", action="store_true", help="kill running jobs on exit (tests)")
     p.set_defaults(fn=cmd_daemon)
     p = sub.add_parser("submit", help="queue a job script")

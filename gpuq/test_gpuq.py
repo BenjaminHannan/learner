@@ -18,14 +18,16 @@ spec.loader.exec_module(G)
 
 class Base(unittest.TestCase):
     gpus = [0, 1]
+    reserve_after = 30.0      # minutes; tests that need a reservation use a tiny value
 
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="gpuq-test-")
         os.environ.update(GPUQ_HOME=self.tmp, GPUQ_FAKE_GPUS="2")
         os.environ.pop("GPUQ_FAKE_MEM", None)
+        os.environ.pop("GPUQ_FAKE_TOTAL_MB", None)
         self.h = G.Home()
         self.h.ensure()
-        self.d = G.Daemon(self.h, self.gpus, grace=1.0, filler_cooldown=0)
+        self.d = G.Daemon(self.h, self.gpus, grace=1.0, filler_cooldown=0, reserve_after=self.reserve_after)
 
     def tearDown(self):
         self.d.stop_all()
@@ -88,6 +90,8 @@ class Scheduling(Base):
 
 
 class TwoGpu(Base):
+    reserve_after = 0.0       # the 2-GPU job holds GPUs immediately (strict head-of-line, as before packing)
+
     def test_two_gpu_waits_for_both_and_blocks_lower_priority(self):
         self.job("filler-ignores-term", "trap '' TERM; while :; do sleep 0.2; done", dest="filler")
         self.job("a", "sleep 1.5", priority=50)
@@ -216,9 +220,6 @@ class Rendering(Base):
         self.assertEqual(run("render-md", str(self.h.root / "Q.md")).returncode, 0)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class Source(Base):
     gpus = [0]
@@ -261,3 +262,105 @@ class Grace(Base):
         G.cmd_cancel(type("A", (), {"name": "ckpt"}))
         self.pump(lambda: self.in_dir("failed", "ckpt"))
         self.assertEqual((self.h.out / "ckpt" / "ckpt.txt").read_text().strip(), "saved")
+
+
+class Packing(Base):
+    def gpus_of(self, name):
+        return [r["gpus"] for r in self.d.st["running"].values() if r["name"] == name][0]
+
+    def run_job(self, name, **hdr):
+        self.job(name, "sleep 60", **hdr)
+        self.pump(lambda: name in self.running_names())
+
+    def test_two_share_one_gpu_other_stays_free_for_exclusive(self):
+        self.run_job("a", mem_gb=10)
+        self.run_job("b", mem_gb=10)
+        self.assertEqual(self.gpus_of("a"), [0])
+        self.assertEqual(self.gpus_of("b"), [0])
+        self.run_job("x", exclusive=1, mem_gb=1)
+        self.assertEqual(self.gpus_of("x"), [1])
+        s = G.snapshot(self.h)
+        g0 = [g for g in s["gpus"] if g["index"] == 0][0]
+        self.assertEqual(g0["reserved_gb"], 20)
+        self.assertAlmostEqual(g0["capacity_gb"], 24564 / 1024 - 1.5)
+        G.render_md(self.h, self.h.root / "Q.md")
+        self.assertIn("20/", (self.h.root / "Q.md").read_text())
+
+    def test_third_job_does_not_overcommit_capacity(self):
+        self.run_job("a", mem_gb=10)
+        self.run_job("b", mem_gb=10)
+        self.run_job("c", mem_gb=10)          # 10+10+10 > 22.5 on GPU 0 -> GPU 1
+        self.assertEqual(self.gpus_of("c"), [1])
+
+    def test_no_mem_gb_is_exclusive(self):
+        self.run_job("p")
+        self.run_job("q", mem_gb=1)
+        self.assertEqual(self.gpus_of("p"), [0])
+        self.assertEqual(self.gpus_of("q"), [1])
+
+    def test_best_fit_prefers_most_reserved_gpu(self):
+        self.run_job("a", mem_gb=10)          # GPU 0
+        self.run_job("big", mem_gb=20)        # does not fit beside a -> GPU 1
+        self.assertEqual(self.gpus_of("big"), [1])
+        self.run_job("c", mem_gb=2)           # fits both; GPU 1 is more reserved
+        self.assertEqual(self.gpus_of("c"), [1])
+
+    def test_max_per_gpu(self):
+        self.d.max_per_gpu = 2
+        for n in "abc":
+            self.run_job(n, mem_gb=1)
+        self.assertEqual([self.gpus_of(n) for n in "abc"], [[0], [0], [1]])
+
+
+class LiveMemory(Base):
+    gpus = [0]
+
+    def test_live_free_memory_blocks_launch(self):
+        self.job("j1", "sleep 60", mem_gb=2)
+        self.pump(lambda: "j1" in self.running_names())
+        os.environ["GPUQ_FAKE_MEM"] = "0:16000"        # 24564-16000 MiB = 8.4 GB free
+        self.job("j2", "sleep 60", mem_gb=8)             # reservation fits (10 <= 22.5) but needs 9 GB free
+        for _ in range(8):
+            self.d.tick()
+            time.sleep(0.1)
+        self.assertNotIn("j2", self.running_names())
+        self.assertTrue(self.in_dir("pending", "j2"))
+        os.environ["GPUQ_FAKE_MEM"] = "0:1000"
+        self.pump(lambda: "j2" in self.running_names())
+
+    def test_fake_total_and_gpu_mem_flag(self):
+        os.environ["GPUQ_FAKE_TOTAL_MB"] = "12288"       # 12 GB card -> capacity 10.5 GB
+        self.job("small", "sleep 60", mem_gb=6)
+        self.job("small2", "sleep 60", mem_gb=6)
+        self.pump(lambda: "small" in self.running_names())
+        for _ in range(6):
+            self.d.tick()
+            time.sleep(0.1)
+        self.assertEqual(self.running_names(), ["small"])
+
+
+class Reservation(Base):
+    reserve_after = 0.0
+
+    def test_long_waiting_two_gpu_job_holds_gpus_against_lower_priority(self):
+        self.job("a", "sleep 1.5", mem_gb=10)
+        self.pump(lambda: "a" in self.running_names())
+        self.job("big", "sleep 0.3", gpus=2, priority=90, mem_gb=5, exclusive=1)
+        self.job("low", "sleep 0.2", mem_gb=1, priority=10)
+        self.pump(lambda: self.in_dir("done", "low"), timeout=40)
+        a, big, low = self.meta("a"), self.meta("big"), self.meta("low")
+        self.assertGreaterEqual(big["start"], a["end"])
+        self.assertGreaterEqual(low["start"], big["end"])      # held GPUs were not taken by the lower job
+
+    def test_without_reservation_lower_job_packs_in(self):
+        self.d.reserve_after = 1000.0
+        self.job("a", "sleep 60", mem_gb=10)
+        self.pump(lambda: "a" in self.running_names())
+        self.job("big", gpus=2, priority=90, mem_gb=5, exclusive=1)
+        self.job("low", "sleep 60", mem_gb=1, priority=10)
+        self.pump(lambda: "low" in self.running_names())
+        self.assertTrue(self.in_dir("pending", "big"))
+
+
+if __name__ == "__main__":
+    unittest.main()
