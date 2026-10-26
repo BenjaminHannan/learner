@@ -71,3 +71,9 @@ Screen 1,680 episodes; arms about 48 x 4 x 12 = 2,304 episodes plus <= 48 menu c
 - Doubt Forks Step 0 gate (INVENT-2) uses Guess-1's failed transcripts for free.
 - If PASS: "guess-list training", a LoRA trained so that guess k, seeing guesses 1..k-1, lands on a new correct plan
   (reward = distinct correct plans in the set). Its own prereg comes later, against BEST as the bar.
+
+## Addendum 1 (2026-10-26 ~02:12Z, written after the 4-task smoke and before any full-run episode was read)
+The smoke (4 tasks x 8 tries) succeeded 30/32, so T may come out under 20 on the 210-task subset. If `pick` finds
+|T| < 20 on the subset, the screen is extended to the other 210 tasks (8 plain tries each, same settings) and T is
+re-picked over all 420 by the same rule (0-3/8, first 48 in file order). Only if |T| < 20 over all 420 does the test
+stop. Nothing else changes.

@@ -30,7 +30,7 @@ serve() {  # $1 gpu, $2 port, $3 extra flags
 }
 up() { for i in $(seq 90); do curl -sf localhost:$1/v1/models >/dev/null && return 0; sleep 10; done; return 1; }
 serve 0 8001 ""; up 8001 || { echo "native vLLM failed on GPU0, retrying with --model-impl transformers"
-  grep -E "Error" "$OUT/vllm_0.log" | tail -5; pkill -9 -f "vllm|EngineCore"; sleep 10
+  grep -E "Error" "$OUT/vllm_0.log" | tail -5; pkill -9 -f "[v]llm serve|[E]ngineCore"; sleep 10
   cp "$OUT/vllm_0.log" "$OUT/vllm_0_native.log"
   IMPL="--model-impl transformers"; serve 0 8001 "$IMPL"; up 8001 || { echo "SERVE FAILED"; grep -E "Error" "$OUT/vllm_0.log" | tail -8; exit 1; }; }
 echo "impl: ${IMPL:-native}" >> "$OUT/backend.txt"
