@@ -9,7 +9,8 @@ DET="$HOME/Library/Application Support/OpenBot/openbot-provider-detection-v1.jso
 mkdir -p "$DEST/run" "$HOME/learner-ops/diary/raw/blobs" "$HOME/.config/opencode" \
          "$(dirname "$DET")" "$DEST/launchers"
 cp "$SRC/gateway.py" "$SRC/diary_mcp.py" "$SRC/serve.sh" "$SRC/stop.sh" "$SRC/status.sh" \
-   "$SRC/opencode.json" "$SRC/k2_nothink.jinja" "$DEST/"
+   "$SRC/k2_nothink.jinja" "$DEST/"
+rm -f "$DEST/opencode.json"   # an unfilled template here is read as a project config
 chmod +x "$DEST"/*.sh
 
 # Saved model settings (edit this file to change models or turn the helper off).
@@ -24,6 +25,8 @@ ASSISTANT_SMALL_ARGS="--trust-remote-code"
 ASSISTANT_SMALL_TEMPLATE="$HOME/learner-ops/assistant/k2_nothink.jinja"
 CFGEOF
 fi
+# Save which Python to use, so the Start button works on every Mac.
+grep -q '^ASSISTANT_PY=' "$DEST/config.sh" || echo "ASSISTANT_PY=\"$PY\"" >> "$DEST/config.sh"
 
 # OpenCode config: fill the template, merge into any existing file (ours wins).
 [ -f "$CFG" ] && cp "$CFG" "$CFG.bak-$(date +%Y%m%d-%H%M%S)"

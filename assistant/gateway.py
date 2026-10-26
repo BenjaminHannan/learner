@@ -251,6 +251,17 @@ def prepare(body, thinking, default_max):
         b["chat_template_kwargs"] = ctk
     if b.get("max_tokens") is None:
         b["max_tokens"] = b.get("max_completion_tokens") or default_max
+    # OpenCode names the model in its system prompt, so "qwen36" and "qwen36-fast" would
+    # never share a cached prefix. Use one name for both (same weights anyway).
+    msgs = b.get("messages")
+    if isinstance(msgs, list):
+        fixed = []
+        for m in msgs:
+            if (isinstance(m, dict) and m.get("role") in ("system", "developer")
+                    and isinstance(m.get("content"), str) and "qwen36-fast" in m["content"]):
+                m = dict(m, content=m["content"].replace("qwen36-fast", "qwen36"))
+            fixed.append(m)
+        b["messages"] = fixed
     return b
 
 
@@ -429,7 +440,8 @@ class Handler(BaseHTTPRequestHandler):
         ptok = usage.get("prompt_tokens")
         ctok = usage.get("completion_tokens")
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
-        gen_time = now - (asm.first_t or t0)
+        # a tool call arrives in one chunk at the end, so first_t ~ now; time from t0 then
+        gen_time = now - (t0 if asm.tcs and not "".join(asm.content).strip() else (asm.first_t or t0))
         tps = (ctok / gen_time) if ctok and gen_time > 0 else None
         fmt = lambda v, f="%s": "-" if v is None else f % v
         log("%s %s [%s] prompt=%s cached=%s completion=%s ttft=%s %s%s" % (

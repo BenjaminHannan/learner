@@ -220,5 +220,19 @@ class TestBigDown(Base):
         self.big = None
 
 
+class PrepareTest(unittest.TestCase):
+    def test_fast_and_thinking_share_system_prompt(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        import gateway
+        msgs = [{"role": "system", "content": "You are model premonition/qwen36-fast."},
+                {"role": "user", "content": "hi qwen36-fast"}]
+        fast = gateway.prepare({"messages": msgs}, False, 100)
+        think = gateway.prepare({"messages": [dict(m) for m in msgs]}, True, 100)
+        self.assertEqual(fast["messages"][0]["content"], "You are model premonition/qwen36.")
+        self.assertEqual(fast["messages"], think["messages"][:1] + fast["messages"][1:])
+        self.assertEqual(fast["messages"][1]["content"], "hi qwen36-fast")  # user text untouched
+        self.assertEqual(msgs[0]["content"], "You are model premonition/qwen36-fast.")  # input not mutated
+
+
 if __name__ == "__main__":
     unittest.main()
