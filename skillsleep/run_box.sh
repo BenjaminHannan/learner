@@ -63,7 +63,7 @@ setup_fn() {
   python3 -c "from huggingface_hub import snapshot_download as s; print(s('IFM/K2-Horizon-3.7B'))" > $OUT/data/base_path 2> $OUT/data/base_dl.log &
   local DL=$!
   uv pip install --system -q -U vllm 2>&1 | tail -3
-  uv pip install --system -q peft pyarrow 2>&1 | tail -2
+  uv pip install --system -q peft pyarrow anthropic 2>&1 | tail -2
   python3 -c "import vllm, torch, transformers, peft; print('vllm', vllm.__version__, 'torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)" || return 1
   [ -d /job/tau2 ] || git clone -q https://github.com/sierra-research/tau2-bench /job/tau2
   cd /job/tau2 && git checkout -q cc1df47 \
@@ -96,7 +96,7 @@ day_fn() {
 }
 fix_fn() {
   [ -f $OUT/day/results.json.gz ] || { echo "=== fix needs the day results"; return 1; }
-  $PY2 $SS/fix.py $OUT/day/results.json.gz $OUT/data/env_retail.json $OUT/fix/hints.json > $OUT/fix/fix.log 2>&1; tail -3 $OUT/fix/fix.log
+  python3 $SS/fix.py $OUT/day/results.json.gz $OUT/data/env_retail.json $OUT/fix/hints.json > $OUT/fix/fix.log 2>&1; tail -3 $OUT/fix/fix.log
   local tasks=$(python3 -c "import json; print(' '.join(json.load(open('$OUT/fix/hints.json'))))")
   [ -n "$tasks" ] || { echo "no tasks to fix"; return 0; }
   local t0=$(date +%s) t

@@ -1,8 +1,12 @@
 """Night step 4: LoRA sleep for one arm, then merge into a full bf16 model dir for vLLM.
-Usage: train.py ARM(A1|A2) BASE_DIR NIGHT_JSONL ANCHOR_JSONL OUT_DIR
+Usage: train.py ARM(A1|A2|C1|C2|C3) BASE_DIR NIGHT_JSONL ANCHOR_JSONL OUT_DIR       (env: SEED, EPOCHS, FORKS=forks.jsonl for C3, ...)
+  Skill-Sleep 2: C1 = A1 logic, C2 = A2 logic, C3 = C2 + the near-miss fork pairs from FORKS (kind fpair, each with fork_at: DPO counts only assistant tokens
+  from fork_at on, on both sides). Any pair row may carry fork_at.
 Memory rule: the vocab is 250,624 and untied, so full-sequence logits are never built; lm_head runs only on loss positions, in checkpointed chunks.
   A1: SFT NLL on positives (assistant tokens) + ANCHOR_W * KL(base || lora) on the anchor set.
   A2: A1 + DPO on (pass, fail) pairs + KTO-style undesirable term on lone negatives. Each step sees one positive; DPO/KTO items cycle alongside.
+DPO is logged per optimizer step (mean loss, mean margin beta*(chosen_ratio - rejected_ratio), accuracy = share of pairs with margin > 0);
+train_info.json records the first step from which DPO accuracy stayed >= 0.95 for 10 pair-steps in a row (dpo_sat_step; null = never).
 DPO: reference = adapter disabled (precomputed once). Both sides of a pair are run with grad and backpropagated together."""
 import json, math, os, random, shutil, sys, time
 import torch, torch.nn.functional as F
@@ -14,6 +18,7 @@ arm, base, nightp, anchorp, outd = sys.argv[1:6]
 E = os.environ.get
 LR = float(E("LR", 1e-4)); EPOCHS = int(E("EPOCHS", 2)); ACCUM = int(E("ACCUM", 4)); BETA = float(E("BETA", 0.1)); ANCHOR_W = float(E("ANCHOR_W", 0.1))
 DPO_W = float(E("DPO_W", 0.2)); KTO_W = float(E("KTO_W", 0.2)); CHUNK = int(E("CHUNK", 1024)); CLIP = float(E("CLIP", 1.0)); SEED = int(E("SEED", 1))
+DPO_ARMS = {"A2", "C2", "C3"}; dpo = arm in DPO_ARMS
 dev = "cuda" if torch.cuda.is_available() else "cpu"; dt = torch.bfloat16 if dev == "cuda" else torch.float32
 random.seed(SEED); torch.manual_seed(SEED)
 log = open(outd + ".log", "a")
@@ -25,9 +30,22 @@ def P(*a):
 
 rows = [json.loads(l) for l in open(nightp)]
 pos = [r for r in rows if r["kind"] == "pos"]; pairs = [r for r in rows if r["kind"] == "pair"]; negs = [r for r in rows if r["kind"] == "neg"]
+fpairs = [json.loads(l) for l in open(E("FORKS"))] if arm == "C3" and E("FORKS") and os.path.exists(E("FORKS")) else []
 anchors = [json.loads(l) for l in open(anchorp)]
-P(f"arm={arm} pos={len(pos)} pairs={len(pairs)} negs={len(negs)} anchors={len(anchors)} lr={LR} epochs={EPOCHS} accum={ACCUM}")
+P(f"arm={arm} seed={SEED} pos={len(pos)} pairs={len(pairs)} fork_pairs={len(fpairs)} negs={len(negs)} anchors={len(anchors)} lr={LR} epochs={EPOCHS} accum={ACCUM}")
 assert pos, "no positives to learn from"
+if arm == "C3" and not fpairs:
+    P("WARNING: C3 without fork pairs is the same as C2")
+
+
+def from_fork(ex, at):  # train only on assistant tokens from the fork point on
+    return {"ids": ex["ids"], "mask": [m if i >= at else 0 for i, m in enumerate(ex["mask"])]}
+
+
+n_plain = len(pairs); pairs = pairs + fpairs
+for r in pairs:
+    if r.get("fork_at"):
+        r["chosen"] = from_fork(r["chosen"], r["fork_at"]); r["rejected"] = from_fork(r["rejected"], r["fork_at"])
 
 model = AutoModelForCausalLM.from_pretrained(base, dtype=dt, trust_remote_code=True, attn_implementation="sdpa").to(dev)
 model.config.use_cache = False; model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False}); model.train()
@@ -101,7 +119,7 @@ with pm.disable_adapter():
 P("probe NLL base:", round(nll_base, 4))
 
 ref = {}
-if arm == "A2":
+if dpo:
     t0 = time.time()
     for r in pairs:
         ref[id(r["chosen"])] = ref_logp(r["chosen"]); ref[id(r["rejected"])] = ref_logp(r["rejected"])
@@ -113,25 +131,29 @@ cyc = pairs + negs; random.Random(SEED).shuffle(cyc)
 order = []
 for ep in range(EPOCHS):
     o = list(range(len(pos))); random.Random(SEED + ep).shuffle(o); order += o
-t0 = time.time(); acc = {}
+t0 = time.time(); acc = {}; dhist = []  # dhist: (step, mean DPO loss, mean margin, accuracy) for steps that saw at least one pair
 for m, pi in enumerate(order):
     sc = 1.0 / ACCUM
     l = -tok_logps(pos[pi]).mean(); (l * sc).backward(); acc["sft"] = acc.get("sft", 0) + l.item()
     a = anchors[m % len(anchors)]; k = anchor_kl(a); (ANCHOR_W * k * sc).backward(); acc["kl"] = acc.get("kl", 0) + k.item()
-    if arm == "A2" and cyc:
+    if dpo and cyc:
         it = cyc[m % len(cyc)]
-        if it["kind"] == "pair":
+        if it["kind"] != "neg":
             c, r = it["chosen"], it["rejected"]
             lc, lr_ = seq_logp(c, True), seq_logp(r, True)  # both graphs are kept: checkpointed activations only (~4 GB each at 16k tokens)
             z = BETA * ((lc - ref[id(c)]) - (lr_ - ref[id(r)])); ld = -F.logsigmoid(z); (DPO_W * ld * sc).backward()
-            acc["dpo"] = acc.get("dpo", 0) + ld.item(); acc["dpo_acc"] = acc.get("dpo_acc", 0) + float(z.item() > 0)
+            for k, v in (("n_dpo", 1), ("dpo", ld.item()), ("dpo_margin", z.item()), ("dpo_acc", float(z.item() > 0))):
+                acc[k] = acc.get(k, 0) + v
         else:
             x = BETA * (seq_logp(it, True) - ref[id(it)]); kt = torch.sigmoid(x); (KTO_W * kt * sc).backward()
             acc["kto"] = acc.get("kto", 0) + kt.item()
     if (m + 1) % ACCUM == 0 or m + 1 == len(order):
         gn = torch.nn.utils.clip_grad_norm_(params, CLIP).item(); opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
-        step = math.ceil((m + 1) / ACCUM)
-        P(f"step {step}/{n_opt} lr={sched.get_last_lr()[0]:.2e} gnorm={gn:.2f} " + " ".join(f"{k}={v / ACCUM:.4f}" for k, v in acc.items()) +
+        step = math.ceil((m + 1) / ACCUM); nd = acc.pop("n_dpo", 0)
+        if nd:
+            dhist.append((step, acc["dpo"] / nd, acc["dpo_margin"] / nd, acc["dpo_acc"] / nd))
+        P(f"step {step}/{n_opt} lr={sched.get_last_lr()[0]:.2e} gnorm={gn:.2f} " + " ".join(f"{k}={v / (nd if k.startswith('dpo') else ACCUM):.4f}" for k, v in acc.items()) +
+          (f" n_dpo={nd}" if nd else "") +
           f" mem={torch.cuda.max_memory_allocated() / 2**30 if dev == 'cuda' else 0:.1f}G t={time.time() - t0:.0f}s"); acc = {}
 
 nll_ad = nll_probe(probe); P("probe NLL base / adapter:", round(nll_base, 4), round(nll_ad, 4))
@@ -149,5 +171,9 @@ for f in os.listdir(outd):
         with safe_open(os.path.join(outd, f), "pt") as g:
             have |= set(g.keys())
 P("merged weight names match base:", want == have, "missing", sorted(want - have)[:3], "extra", sorted(have - want)[:3])
-json.dump({"arm": arm, "pos": len(pos), "pairs": len(pairs), "negs": len(negs), "opt_steps": n_opt, "probe_nll": [nll_base, nll_ad, nll_mg]}, open(outd + "/train_info.json", "w"))
+sat = next((dhist[i][0] for i in range(len(dhist) - 9) if all(h[3] >= 0.95 for h in dhist[i:i + 10])), None)  # Q4: first step of 10 pair-steps in a row at >= 0.95
+P("DPO steps logged:", len(dhist), "| first step with accuracy >= 0.95 for 10 pair-steps in a row:", sat)
+json.dump({"arm": arm, "seed": SEED, "epochs": EPOCHS, "pos": len(pos), "pairs": n_plain, "fork_pairs": len(fpairs), "negs": len(negs), "opt_steps": n_opt,
+           "probe_nll": [nll_base, nll_ad, nll_mg], "dpo_sat_step": sat, "dpo_by_step": [[round(x, 4) if isinstance(x, float) else x for x in h] for h in dhist],
+           "peak_mem_gb": torch.cuda.max_memory_allocated() / 2**30 if dev == "cuda" else 0, "train_s": round(time.time() - t0)}, open(outd + "/train_info.json", "w"))
 P("TRAIN DONE", arm)
