@@ -611,3 +611,171 @@ def test_mac_run_end_to_end_with_stubs(tmp_path, monkeypatch):
     m2.locate_model, m2.load_tok, m2.make_backend, m2.train_fn = m.locate_model, m.load_tok, m.make_backend, m.train_fn
     m2.bos, m2.strip_bos = "", False
     assert m2.run() == 0 and len(list(open(out / "phases.jsonl"))) == n_before
+
+
+# ---------------------------------------------------------------- scout (mocked HTTP / server)
+SCOUT_PROMPT = ("Seven travellers named Ada, Bo, Cy, Di, Ed, Flo and Gus each carry a different number of lanterns across the old stone bridge at dusk. "
+                "Ada carries twice as many as Bo, and the total carried by all seven is 28. How many lanterns does Bo carry?")
+SCOUT_PAGE = "<html><body><h1>Lantern bridge</h1><p>" + SCOUT_PROMPT + "</p><p>Answer: 4</p></body></html>"
+
+
+def _scout(tmp_path, replies, pages=None, ops=None, probe=None, until=None, max_episodes=1, sleep=None):
+    from practice import scout
+    a = scout.parse_args(["--out", str(tmp_path / "s"), "--quiet", "--max-episodes", str(max_episodes), "--until", "2999-01-01T00:00Z", "--poll-s", "0"])
+    if until:
+        a.until_ts = until
+    it = iter(replies)
+    prompts = []
+
+    def post(url, body, timeout):
+        prompts.append(body["prompt"])
+        return {"choices": [{"text": next(it), "finish_reason": "stop"}], "usage": {"completion_tokens": 5, "prompt_tokens": 9}}
+
+    def get(url, timeout=10):
+        if url not in (pages or {}):
+            raise OSError("no such page")
+        return url, "text/html", pages[url]
+    s = scout.Scout(a, post=post, get=get, probe=probe or (lambda: {}), sleep=sleep or (lambda x: None), ops=ops or (tmp_path / "ops"))
+    s.prompts = prompts
+    return s
+
+
+def _call(name, inp=""):
+    return f"<tool>{name}</tool>\n<input>\n{inp}\n</input>"
+
+
+def _save(**kw):
+    d = {"title": "Lantern bridge", "prompt": SCOUT_PROMPT, "answer": "4", "answer_type": "int", "source_url": "https://puzzles.example.org/lantern",
+         "answer_url": "https://puzzles.example.org/lantern"}
+    d.update(kw)
+    return _call("save", json.dumps(d))
+
+
+def test_scout_save_and_answer_must_appear(tmp_path):
+    pages = {"https://puzzles.example.org/lantern": SCOUT_PAGE}
+    fetch = _call("fetch", "https://puzzles.example.org/lantern")
+    # wrong answer (not on the page) is rejected, the right one is saved
+    s = _scout(tmp_path, [fetch, _save(answer="9"), _save(), _call("done")], pages)
+    s.run()
+    st = json.loads((tmp_path / "s" / "stats.json").read_text())
+    assert st["rejects"] == {"answer_not_in_page": 1} and st["saves"] == 1 and st["episodes"] == 1 and st["tokens"]["completion"] == 20
+    f = jl_rows(tmp_path / "s" / "finds.jsonl")
+    assert len(f) == 1 and f[0]["status"] == "unverified" and f[0]["text_match"] and len(f[0]["answer_page_sha256"]) == 64 and f[0]["answer_type"] == "int"
+    assert f[0]["answer_page_sha256"] in (tmp_path / "s" / "scout.log").read_text()
+    assert len(s.prompts) == 4 and "Topic for this episode" in s.prompts[0]
+
+
+def test_scout_page_must_be_fetched_first(tmp_path):
+    s = _scout(tmp_path, [_save(), _call("done")], {"https://puzzles.example.org/lantern": SCOUT_PAGE})
+    s.run()
+    assert json.loads((tmp_path / "s" / "stats.json").read_text())["rejects"] == {"page_not_fetched": 1}
+    assert not (tmp_path / "s" / "finds.jsonl").exists()
+
+
+def test_scout_rejects_test_shingle_and_duplicates(tmp_path):
+    test = jl_rows(DATA / "test100.jsonl")[0]
+    words12 = " ".join(test["prompt"].split()[:14])
+    prompt = "Intro text here. " + words12 + " and then some more words follow to make it long enough."
+    page = "<html><body><p>" + prompt + "</p><p>Answer: 4</p></body></html>"
+    url = "https://puzzles.example.org/leak"
+    s = _scout(tmp_path, [_call("fetch", url), _save(prompt=prompt, source_url=url, answer_url=url), _call("done")], {url: page})
+    # the web guard itself already blocks a page that carries a sealed-test passage, so fetch is withheld; save must still refuse the prompt
+    s.run()
+    r = json.loads((tmp_path / "s" / "stats.json").read_text())["rejects"]
+    assert r.get("test_overlap") == 1 and "finds.jsonl" not in [p.name for p in (tmp_path / "s").iterdir()]
+    # near-duplicate of an earlier find
+    pages = {"https://puzzles.example.org/lantern": SCOUT_PAGE}
+    fetch = _call("fetch", "https://puzzles.example.org/lantern")
+    s2 = _scout(tmp_path / "b", [fetch, _save(), _save(title="again"), _call("done")], pages)
+    s2.run()
+    assert json.loads((tmp_path / "b" / "s" / "stats.json").read_text())["rejects"] == {"duplicate": 1}
+
+
+def test_scout_form_checks():
+    from practice.scout import answer_in_text, check_shape
+    base = {"title": "t", "prompt": SCOUT_PROMPT, "answer": "4", "answer_type": "int", "source_url": "https://a.org/x", "answer_url": "https://a.org/x"}
+    assert check_shape(dict(base))[1] == "ok"
+    assert check_shape({**base, "answer": "four"})[1] == "int_form"
+    assert check_shape({**base, "answer_type": "float"})[1] == "answer_type"
+    assert check_shape({**base, "prompt": "short"})[1] == "prompt_length"
+    assert check_shape({**base, "answer": "lanterns", "answer_type": "str", "prompt": SCOUT_PROMPT})[1] == "answer_in_prompt"
+    assert check_shape({**base, "source_url": ""})[1] == "missing_source_url"
+    assert check_shape("nope")[1] == "bad_json"
+    assert answer_in_text("1234", "int", "total is 1,234.") and not answer_in_text("4", "int", "total 1234 and 4.5") and answer_in_text("-3", "int", "x = -3")
+    assert answer_in_text("Red Fox", "str", "the answer: red   fox!") and not answer_in_text("fox", "str", "foxes")
+    assert answer_in_text("12\n34", "grid", "grid\n1 2\n3 4")
+
+
+def test_scout_resume_and_stats(tmp_path):
+    pages = {"https://puzzles.example.org/lantern": SCOUT_PAGE}
+    fetch = _call("fetch", "https://puzzles.example.org/lantern")
+    s = _scout(tmp_path, [fetch, _save(), _call("done")], pages)
+    s.run()
+    # a second process: earlier find is known (duplicate), episode counter continues, topic rotates
+    s2 = _scout(tmp_path, [fetch, _save(), _call("done")], pages, max_episodes=2)
+    s2.run()
+    st = json.loads((tmp_path / "s" / "stats.json").read_text())
+    assert st["episodes"] == 2 and st["saves"] == 1 and st["rejects"] == {"duplicate": 1}
+    assert len(jl_rows(tmp_path / "s" / "finds.jsonl")) == 1 and len(jl_rows(tmp_path / "s" / "episodes.jsonl")) == 2
+    from practice.scout import TOPICS
+    assert len(TOPICS) >= 40 and TOPICS[1] in s2.prompts[0] and TOPICS[0] not in s2.prompts[0]
+
+
+def test_scout_waits_for_pause_and_server(tmp_path):
+    ops = tmp_path / "ops"
+    ops.mkdir()
+    (ops / "PAUSE_OTHERS").write_text("x")
+    calls = {"probe": 0, "sleep": 0}
+
+    def probe():
+        calls["probe"] += 1
+        if calls["probe"] < 3:
+            raise OSError("down")
+        return {}
+
+    def sleep(x):
+        calls["sleep"] += 1
+        if calls["sleep"] == 2:
+            (ops / "PAUSE_OTHERS").unlink()
+    s = _scout(tmp_path, [_call("done")], ops=ops, probe=probe, sleep=sleep)
+    s.run()
+    st = json.loads((tmp_path / "s" / "stats.json").read_text())
+    assert st["pause_waits"] == 1 and st["server_waits"] == 1 and st["episodes"] == 1 and calls["sleep"] >= 4
+
+
+def test_scout_deadline_and_until_parse(tmp_path):
+    from datetime import datetime, timezone
+    from practice.scout import parse_until
+    now = datetime(2026, 10, 26, 3, 0, tzinfo=timezone.utc)
+    assert datetime.fromtimestamp(parse_until("10:30Z", now), timezone.utc) == datetime(2026, 10, 26, 10, 30, tzinfo=timezone.utc)
+    assert datetime.fromtimestamp(parse_until("02:00Z", now), timezone.utc) == datetime(2026, 10, 27, 2, 0, tzinfo=timezone.utc)
+    s = _scout(tmp_path, [], until=1.0)  # already past: no request is made
+    assert s.run() == 0 and s.prompts == []
+
+
+def test_scout_verify_prefilter_and_keep_yes(tmp_path, monkeypatch):
+    from practice import scout_verify as V
+    finds = [{"id": "scout-a", "title": "Lantern", "prompt": SCOUT_PROMPT, "answer": "4", "answer_type": "int", "source_url": "https://a.org/x", "answer_url": "https://a.org/x"},
+             {"id": "scout-b", "title": "Lantern copy", "prompt": SCOUT_PROMPT, "answer": "4", "answer_type": "int", "source_url": "https://a.org/y", "answer_url": "https://a.org/y"},
+             {"id": "scout-c", "title": "Odd", "prompt": "A ship leaves port on a Monday and sails north for as many days as there are letters in its name, "
+              "then stops for two days. If the name has six letters, on which day does it stop?", "answer": "Tuesday", "answer_type": "str",
+              "source_url": "https://a.org/z", "answer_url": "https://a.org/z"}]
+    f = tmp_path / "finds.jsonl"
+    f.write_text("\n".join(json.dumps(x) for x in finds))
+    rows, rej = V.prefilter(finds)
+    assert [r["id"] for r in rows] == ["scout-a", "scout-c"] and rej["scout-b"].startswith("duplicate")
+    seen = {}
+
+    def fake_batch(reqs, label):
+        seen["n"] = [r["custom_id"] for r in reqs]
+        assert reqs[0]["params"]["model"] == "claude-sonnet-5-5"
+        return {"scout-a": '{"consistent": true, "self_contained": true, "verdict": "yes", "note": "ok"}',
+                "scout-c": '{"consistent": true, "self_contained": false, "verdict": "no", "note": "vague"}'}, {}
+    out = tmp_path / "pool.jsonl"
+    assert V.main(["--finds", str(f), "--out", str(out)], run_batch=fake_batch) == 0
+    kept = jl_rows(out)
+    assert seen["n"] == ["scout-a", "scout-c"] and [k["id"] for k in kept] == ["scout-a"] and kept[0]["source"] == "scout" and kept[0]["answer_type"] == "int"
+
+
+def jl_rows(p):
+    return [json.loads(l) for l in open(p) if l.strip()]

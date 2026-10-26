@@ -228,31 +228,39 @@ class Web:
             lines.append(f"[{i}] {r['title']}\n{r['url']}\n{r['snippet']}")
         return ("\n\n".join(lines) if lines else "no results (some results may have been withheld).")[:PAGE_CHARS]
 
-    def fetch(self, url):
+    def fetch_text(self, url):
+        """-> (full_text, final_url, message). Exactly one of full_text / message is set: message is the text shown to the model when the page is
+        unavailable (bad URL, blocked, error, unsupported type). Same filters and event log as `fetch`."""
         url = url.strip().split()[0] if url.strip() else ""
         if not re.match(r"https?://", url):
-            return "fetch: input must be a full http(s) URL."
+            return None, url, "fetch: input must be a full http(s) URL."
         why = self.guard.check("", url)
         if why:
             self._log(tool="fetch", url=url, status="blocked", why=why)
-            return "[blocked: this page is not available in this experiment]"
+            return None, url, "[blocked: this page is not available in this experiment]"
         try:
             final, ct, body = self.get(url)
         except Exception as e:  # noqa: BLE001
             self._log(tool="fetch", url=url, status="error", why=str(e)[:100])
-            return f"fetch failed: {type(e).__name__}"
+            return None, url, f"fetch failed: {type(e).__name__}"
         if "html" in ct.lower() or body.lstrip()[:15].lower().startswith(("<!doctype", "<html")):
             text = html_to_text(body)
         elif ct.lower().startswith("text/") or "json" in ct.lower() or not ct:
             text = body
         else:
             self._log(tool="fetch", url=url, status="error", why="content type " + ct[:40])
-            return f"fetch: unsupported content type {ct[:40]}"
+            return None, url, f"fetch: unsupported content type {ct[:40]}"
         why = self.guard.check(text, final)
         if why:
             self._log(tool="fetch", url=url, final_url=final, status="blocked", why=why)
-            return "[blocked: this page is not available in this experiment]"
+            return None, final, "[blocked: this page is not available in this experiment]"
         self._log(tool="fetch", url=url, final_url=final, status="allowed", why=None)
+        return text, final, None
+
+    def fetch(self, url):
+        text, _, msg = self.fetch_text(url)
+        if text is None:
+            return msg
         return text[:PAGE_CHARS] + ("\n[page cut]" if len(text) > PAGE_CHARS else "") if text.strip() else "[empty page]"
 
 
