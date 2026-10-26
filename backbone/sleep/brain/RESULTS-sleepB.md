@@ -701,3 +701,13 @@ What this suggests for the 95% goal (untested): the next blocker is the morning 
 
 ## Addendum 17: recorded before any run (2026-10-26 ~03:30Z)
 Code 0f2df52dce adds `--gate-arc-n N` (default 100, which is the old gate byte for byte: the smoke result JSON is identical apart from timing; all selftest sections pass). The run (k2c_r2_g570 = arm B's flags + `--gate-arc-n 570`) is filed as GPU-queue job `add17-g570` for Ben's borrowed RTX 4090s. B ran on an RTX 5090, so GPU type differs (small numeric differences, like a sampling-seed change).
+
+## Addendum 14 arm A and addendum 16: run on Ben's PC (recorded 2026-10-26 ~18:20Z, before either run)
+Ben's PC (RTX 5070 Ti, 16 GB, WSL) came free before the borrowed 4090s, so both jobs run there, one after another, by
+`pc/sleepb_pc.sh`. Code is unchanged: arm A from a7ed69d79d, addendum 16 from 5fc4b87a23 (git archives). Differences from the queue jobs:
+- **Arm A uses `--gen-bs 24`, not 48** (arm B used 48 on a 5090). 48 does not fit 16 GB. Generation batches change which samples are drawn
+  together, so this acts like a sampling-seed change, on top of the GPU-type change. If 24 runs out of memory, arm A restarts from the
+  beginning at 16; the log says which.
+- **Addendum 16 keeps `--gen-bs 32`** for all three runs. If C runs out of memory at 32, all three run at 16 (the prereg fixes only that
+  the three match); `pull/add16-genbs.txt` says which.
+- The PC's venv has transformers 5.20.2 and peft 0.21.2 as required; the accelerate version is reported, not enforced.
