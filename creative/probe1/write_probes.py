@@ -149,7 +149,7 @@ def haiku_main(a, tasks):
     state = json.load(open(a.state)) if os.path.exists(a.state) else {"batches": [], "keys": []}
     if a.phase in ("submit", "all") and not state["batches"]:   # submit once; a rerun only polls / collects
         batch = client.messages.batches.create(requests=[Request(custom_id=f"r{i}", params=MessageCreateParamsNonStreaming(
-            model=jh.MODEL, max_tokens=a.max_tokens, temperature=TEMPERATURE, thinking={"type": "disabled"},
+            model=jh.MODEL, max_tokens=a.max_tokens, thinking={"type": "disabled"},  # this model rejects temperature; default sampling
             messages=[{"role": "user", "content": p}])) for i, (_, p) in enumerate(reqs)])
         state = {"batches": [batch.id], "keys": [k for k, _ in reqs]}
         json.dump(state, open(a.state, "w"))
