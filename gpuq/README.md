@@ -24,19 +24,36 @@ A bash script with header comments:
 # gpuq: hours=10                wall limit; process group killed at hours*1.1 -> failed, rc=timeout (default 24)
 # gpuq: owner=sleep thread
 # gpuq: retries=1               auto-requeue on nonzero rc this many times (default 0)
-# gpuq: mem_gb=20               informational
+# gpuq: mem_gb=20               GB of GPU memory per GPU the job uses; lets jobs share a GPU (see Packing)
+# gpuq: exclusive=1             want the GPU(s) alone (timing benchmarks, race arms)
 python train.py --out "$GPUQ_OUT"
 ```
 The job runs as `bash JOBFILE` in its own process group, cwd = `$GPUQ_OUT`, with `CUDA_VISIBLE_DEVICES`,
 `GPUQ_OUT` (`$GPUQ_HOME/out/<name>/`), `GPUQ_NAME`, `GPUQ_ATTEMPT`, `GPUQ_HOME`. Output appends to
 `logs/<name>.log`. On exit `$GPUQ_OUT/_gpuq.json` records start/end/rc/gpu/attempt.
 
-Scheduling is strict priority order. If the head job cannot start (e.g. it needs 2 GPUs and one is busy),
-nothing behind it starts, so a freed GPU is kept for it (a filler runs there meanwhile). A GPU using more
-than 2 GB for a process not started by gpuq is treated as busy for that loop.
+## Packing (several jobs per GPU)
+A job with `mem_gb` and without `exclusive=1` may share a GPU. **A job with no `mem_gb` is exclusive** (safe default).
+Daemon flags: `--gpu-mem-gb` (per-GPU capacity; default = `nvidia-smi` total minus 1.5 GB), `--max-per-gpu` (default 4),
+`--reserve-after` (minutes, default 30).
+
+A packable job fits GPU g if all hold: no exclusive job on g; fewer than `--max-per-gpu` jobs on g; sum of `mem_gb` of
+gpuq jobs on g plus its own is at most capacity; and live free memory on g (`nvidia-smi`) is at least `mem_gb + 1 GB`.
+An exclusive job fits a GPU with no real job on it. A `gpus=2` job must pass the test on both GPUs. Among fitting GPUs a
+packable job takes the already most-reserved one (best fit), so whole cards stay free for exclusive and 2-GPU jobs.
+
+Order is still priority, then age. The daemon walks pending in that order and starts every job that fits now; a job that
+does not fit does not stop the ones behind it. Exception: any job that has waited more than
+`--reserve-after` minutes holds the n least-loaded GPUs: lower-priority jobs may not start on them (fillers still may,
+and are preempted when the job starts), so they drain and the big job gets its turn. A job whose `mem_gb` exceeds every card is rejected to failed/. `--reserve-after 0` gives the old strict
+head-of-line behaviour for such jobs.
+
+A GPU using more than 2 GB for a process not started by gpuq, with no gpuq job on it, is treated as busy. `status` and
+`render-md` show per-GPU reserved/capacity GB and the jobs on each GPU. `GPUQ_FAKE_TOTAL_MB` (with `GPUQ_FAKE_GPUS`) sets
+the fake card size in tests.
 
 ## Fillers (never idle)
-Put executable `*.sh` files with the same header in `$GPUQ_HOME/filler/` (1 GPU each). When a GPU is free and no
+Put executable `*.sh` files with the same header in `$GPUQ_HOME/filler/` (1 GPU each). When a GPU has no real job and no
 pending job can use it, the highest-priority filler runs, over and over, with `GPUQ_FILLER_RUN=1,2,3...`
 (persisted in state.json) so it can pick seed N, N+1... Output: `out/filler-<name>/run<k>/`.
 Fillers are preemptible: when a real job can use the slot the filler gets SIGTERM, 60 s later SIGKILL
