@@ -711,3 +711,32 @@ Ben's PC (RTX 5070 Ti, 16 GB, WSL) came free before the borrowed 4090s, so both 
 - **Addendum 16 keeps `--gen-bs 32`** for all three runs. If C runs out of memory at 32, all three run at 16 (the prereg fixes only that
   the three match); `pull/add16-genbs.txt` says which.
 - The PC's venv has transformers 5.20.2 and peft 0.21.2 as required; the accelerate version is reported, not enforced.
+
+## PC run, first launch (2026-10-26 19:00-19:09Z): every run ran out of GPU memory
+Logs: `results_pc/` (pushed by the Mac watcher). The PC venv was missing `datasets`; datasets 5.1.0 was added and nothing else changed
+(torch 2.9.1+cu128, transformers 5.20.2, peft 0.21.2, accelerate 1.15.0, fla 0.6.0). In WSL, running out of GPU memory can show as
+"CUDA driver error: device not ready".
+- **Arm A never started.** Three tries (gen-bs 24, then 16) died in the startup self-test `selftest_shy`, before any training. That check
+  held every LoRA module's full fp32 weight change at once: about 14 GB on K2-3.7B (252 modules), on top of the model. gen-bs has no effect
+  on it. Arm B passed it on a 32 GB card.
+- **Addendum 16's three runs** each died at night 1's first training step, in the full-vocabulary KL with `--tok-budget 2048`. No result
+  was produced, so nothing was looked at.
+- **Fix for the self-test (memory only):** the check keeps each module's small randomized factors and rebuilds one module's weight change
+  at a time, with the same operations.
+  - On CPU, against a7ed69d79d's version on a tiny LoRA model in fp32 and bf16, it gives the same output, the same global random state
+    afterwards and the same restored weights.
+  - Smoke runs with arm A's and arm B's flags (`--rem-chain-mode q` on the smoke model) give result JSONs identical to a7ed69d79d's in all
+    1,119 fields apart from timing.
+- **Arm A goes back to the 4090 queue** with the fixed commit.
+
+## Addendum 16 rerun and addendum 17 on Ben's PC (recorded 2026-10-26 ~19:30Z, before either run)
+PC order (coordinator): the thinking thread's short check, then this launch (`pc/sleepb_pc2.sh`, which starts by itself when the GPU is
+handed over), then the thinking thread's P1/P2. Both runs use the commit with the self-test fix; training is unchanged by it.
+- **Addendum 16 (C, T1, T2): `--tok-budget 1024` for all three, not 2048.** The token budget only cuts each training batch into smaller
+  pieces: loss and gradients are the same up to rounding. The sealed prereg fixes only that the three runs match. If any of the three
+  runs out of memory, all three start again at 512; `pull2/add16-tokbudget.txt` says which. gen-bs stays 32.
+- **Addendum 17: an RTX 5070 Ti (16 GB), not a 4090; `--gen-bs 24`, not B's 48; `--tok-budget 512`, not 1024.**
+  - The gen-bs change acts like a sampling-seed change, as noted for arm A.
+  - The token budget changes rounding only.
+  - If it runs out of memory, it starts again from the beginning at gen-bs 16; the log says which.
+  - Marks are unchanged: S1 and S2 are against B's sealed numbers.

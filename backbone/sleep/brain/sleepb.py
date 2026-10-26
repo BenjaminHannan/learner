@@ -1007,11 +1007,17 @@ def selftest_shy(pm=None):
         for _, m in mods:
             m.lora_A["default"].weight.data.normal_(0, 0.1)
             m.lora_B["default"].weight.data.normal_(0, 0.05)
-        dw = lambda m: float(m.scaling["default"]) * m.lora_B["default"].weight.data.float() @ m.lora_A["default"].weight.data.float()  # noqa: E731
-        before = [dw(m) for _, m in mods]
+        dw = lambda m, a, b: float(m.scaling["default"]) * b.float() @ a.float()  # noqa: E731
+        # keep the randomized factors, not each module's fp32 dW: all the dWs at once need ~14 GB on K2-3.7B (out of memory on a 16 GB card).
+        # Each dW is rebuilt from its factors one module at a time with the same ops, so the result is unchanged.
+        rand = [(m.lora_A["default"].weight.data.clone(), m.lora_B["default"].weight.data.clone()) for _, m in mods]
         shy_apply(pm, 0.85, 0.0, g)
         tol = 1e-4 if mods[0][1].lora_A["default"].weight.dtype == torch.float32 else 3e-2  # bf16 adapters cannot hold 1e-4
-        w2 = max(float((dw(m) - 0.85 * b).norm() / (0.85 * b).norm()) for (_, m), b in zip(mods, before))
+        w2 = 0.0
+        for (_, m), (a, b) in zip(mods, rand):
+            d0 = dw(m, a, b)
+            w2 = max(w2, float((dw(m, m.lora_A["default"].weight.data, m.lora_B["default"].weight.data) - 0.85 * d0).norm() / (0.85 * d0).norm()))
+        del rand
         for (_, m), (a, b) in zip(mods, saved):
             m.lora_A["default"].weight.data.copy_(a)
             m.lora_B["default"].weight.data.copy_(b)
