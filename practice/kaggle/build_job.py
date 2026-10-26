@@ -77,18 +77,20 @@ def payload():
     return buf.getvalue()
 
 
-def build(out, pilot=False, practice_n=None, lane_h=LANE_H, slug=None, vllm=True):
+def build(out, pilot=False, practice_n=None, lane_h=LANE_H, slug=None, vllm=True, nights=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     data = base64.b64encode(payload()).decode()
     slug = slug or ("practice1-pilot" if pilot else "practice1")
     n = f" --practice-n {practice_n}" if practice_n else ""
     backend = " --backend auto" if vllm else " --backend hf"
+    if nights:
+        backend += f" --nights {nights} --eval-nights {nights}"
     extra = f" --pilot --deadline-s {PILOT_LANE_S}{n}{backend}" if pilot else f" --deadline-s {int(lane_h * 3600)}{n}{backend}"
     lanes = [f"python -m practice.job --arm {arm} --lane {i} --out $OUT/practice1{extra}" for i, arm in enumerate(("P", "C"))]
     expect = [f"practice1/{a}/pilot.json" for a in ("P", "C")] if pilot else \
-        [f"practice1/{a}/results/{a}{k}.json" for a in ("P", "C") for k in (1, 3)] + [f"practice1/{a}/results/A0.json" for a in ("P", "C")] + [f"practice1/{a}/timing.json" for a in ("P", "C")]
-    deadline_h = PILOT_BOX_H if pilot else BOX_H
+        [f"practice1/{a}/results/{a}{k}.json" for a in ("P", "C") for k in ((nights,) if nights else (1, 3))] + [f"practice1/{a}/results/A0.json" for a in ("P", "C")] + [f"practice1/{a}/timing.json" for a in ("P", "C")]
+    deadline_h = PILOT_BOX_H if pilot else (min(BOX_H, lane_h + 0.75) if nights else BOX_H)
     cfg = {"lanes": lanes, "env": {}, "deadline_s": int(deadline_h * 3600), "expect": expect, "vllm": bool(vllm)}
     src = f"CFG_JSON = {json.dumps(json.dumps(cfg))}\nPAYLOAD = {data!r}\n" + KERNEL_BOX
     nb_name = f"{slug}.ipynb"
@@ -112,5 +114,6 @@ if __name__ == "__main__":
     ap.add_argument("--lane-h", type=float, default=LANE_H)
     ap.add_argument("--slug")
     ap.add_argument("--no-vllm", action="store_true")
+    ap.add_argument("--nights", type=int, help="day/night rounds (evals at A0 and after the last night only)")
     a = ap.parse_args()
-    print(json.dumps(build(a.out, a.pilot, a.practice_n, a.lane_h, a.slug, not a.no_vllm), indent=1))
+    print(json.dumps(build(a.out, a.pilot, a.practice_n, a.lane_h, a.slug, not a.no_vllm, a.nights), indent=1))
