@@ -345,8 +345,10 @@ async def amain(a):
     store, tasks = Store(a.out), load_tasks()
     if a.limit:
         tasks = tasks[:a.limit]
-    tasks = subset(tasks)
-    byid = {t["id"]: t for t in tasks}
+    full, tasks = tasks, subset(tasks)
+    if a.all_tasks or (store.jload("target.json") or {}).get("extended"):  # addendum 1: screen widened to all tasks
+        tasks = full
+    byid = {t["id"]: t for t in full}
     if a.cmd == "pick":
         return pick(store, tasks)
     if a.cmd == "report":
@@ -374,7 +376,13 @@ async def amain(a):
         return await screen(client, store, tasks, a.seed, c, caps)
     if a.cmd == "all":
         await screen(client, store, tasks, a.seed, c, caps)
-        if pick(store, tasks)["stopped"]:
+        if pick(store, tasks)["stopped"] and len(tasks) < len(full):  # addendum 1: widen the screen to all tasks, re-pick
+            tasks = full
+            await screen(client, store, tasks, a.seed, c, caps)
+            info = pick(store, tasks)
+            info["extended"] = True
+            store.jsave("target.json", info)
+        if store.jload("target.json")["stopped"]:
             return report(store, tasks)
         await arms(client, store, targets(), a.seed, c, caps)
         await topup(client, store, targets(), a.seed, c, caps)
@@ -392,6 +400,7 @@ def main(argv=None):
     p.add_argument("--out", default="out")
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--extra-body", default=None, help='JSON merged into every request, e.g. {"chat_template_kwargs": {"enable_thinking": false}}')
+    p.add_argument("--all-tasks", action="store_true", help="use all tasks instead of every second one (prereg addendum 1)")
     p.add_argument("--limit", type=int, default=0, help="debug: only the first N tasks (before taking every second)")
     p.add_argument("--seed", type=int, default=1, help="Stage 2 seed (1 = prereg run; 2 = the follow-up if INCONCLUSIVE). The screen always uses seed 1.")
     asyncio.run(amain(p.parse_args(argv)))
