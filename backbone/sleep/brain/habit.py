@@ -17,6 +17,7 @@ from collections import defaultdict
 HABIT_MIN_DAYS = 2  # distinct days a pair must share before it is asked about
 HABIT_CAP = 40  # questions a night (not scaled by the work scale)
 HABIT_CTX_DAYS = 6  # messages shown: the latest turn of each of the pair's most recent days
+MENTION = re.compile(r"\b(?:mention\w*|talks? about|talked about|brings? up|refers? to)\b")
 HABIT_SYS = "You are a careful assistant that studies facts."
 
 
@@ -75,6 +76,8 @@ def parse_habit(txt, a, b):
         return None
     s = lines[0][:240]
     low = s.lower()
+    if MENTION.search(low):  # PREREG-habit1-addendum1: "Sam usually mentions A and B together" is talk, not a habit (Week-2 stage 1: 23 of 23 false yes)
+        return None
     if "usually" not in low or not all(re.search(r"(?<!\w)" + re.escape(x.lower()) + r"(?!\w)", low) for x in (a, b)):
         return None
     return s if s.endswith(".") else s + "."
