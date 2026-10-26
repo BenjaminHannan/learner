@@ -443,7 +443,100 @@ def test_s3():
     tmp.cleanup()
 
 
+def p12lab(root, ws=None, wsham=None, tc=72.0, tsd=None, tsd1=None, gap=None, seeds=(0,)):
+    """Fixture for the codi-plan marks: ws = (T, C1), wsham = T, tc = L0, tsd = {tag: pct}, tsd1 = L1, gap = decoder true - swapped (points)."""
+    lab = Lab(root)
+    for sd in seeds:
+        lab.put("a", sd, "validation", "main", 63.0)
+        if tc is not None:
+            lab.put("tc", sd, "validation", "L0", tc)
+        if ws:
+            lab.put("ws", sd, "validation", "T", ws[0])
+            lab.put("ws", sd, "validation", "C1", ws[1])
+            lab.res[("ws", sd)]["eval"]["validation"]["T"].update(mean_gen_tokens=61.5, marker_rate=0.99)
+            lab.put("ws", sd, "validation", "fmt", 90.0, n=500)
+        if wsham is not None:
+            lab.put("wsham", sd, "validation", "T", wsham)
+            lab.res[("wsham", sd)]["eval"]["validation"]["T"].update(mean_gen_tokens=61.0, marker_rate=1.0)
+        for tag, v in (tsd or {}).items():
+            lab.put("tsd", sd, "validation", tag, v)
+        if tsd1 is not None:
+            lab.put("tsd1", sd, "validation", "L1", tsd1)
+        if gap is not None:
+            lab.res[("tsd", sd)]["decoder"] = dict(true=40.0 + gap, swap=40.0, gap=gap, tokens=5000, rows=2000)
+    return lab
+
+
+P2 = {"L4": 77.0, "swap4": 74.0, "random4": 73.5, "zero4": 72.0}
+
+
+def test_s4():
+    """codi-plan P1 and P2b marks (arms ws / wsham / tsd / tsd1)."""
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    p1 = lambda name, **kw: run(p12lab(R / name, **kw))["p1"]
+    p2 = lambda name, **kw: run(p12lab(R / name, **kw))["p2b"]
+    # ---- P1
+    x = p1("a", ws=(78.0, 73.0), wsham=74.0)
+    assert x["status"] == "computed" and x["opens_P4"] and x["outcome"].startswith("PASS") and x["ref_name"] == "C1", x
+    assert abs(x["T_minus_ref"] - 5.0) < 0.01 and abs(x["T_minus_sham"] - 4.0) < 0.01 and abs(x["T_vs_74_6"] - 3.4) < 0.01, x
+    assert x["seed_rule"] == "decided on 1 seed(s)" and x["ci_ref"]["lo"] is not None and x["mean_gen_tokens"] == {"ws": [61.5], "wsham": [61.0]} and x["format_check"]["ws"] == [90.0]
+    rep = SM.report(run(p12lab(R / "a")))
+    assert "== 9. P1" in rep and "OUTCOME: PASS: P4 opens" in rep and "mean generated tokens per row: ws 61.5, wsham 61.0" in rep and "T vs 74.6 (for the record) = +3.40" in rep
+    assert "== 10. P2b" not in rep and "depth 1-3" in rep
+    x = p1("tc_hi", ws=(78.0, 73.0), wsham=74.0, tc=75.0)  # the harder control is tc
+    assert x["ref_name"] == "tc" and abs(x["T_minus_ref"] - 3.0) < 0.01
+    x = p1("b", ws=(76.0, 73.0), wsham=75.5)  # beats the references by 3 but not the sham by 1
+    assert not x["opens_P4"] and not x["wrong"] and x["outcome"].startswith("extra positions help; content not shown"), x["outcome"]
+    x = p1("c", ws=(73.3, 73.0), wsham=70.0)  # T < max(tc, C1) + 0.5
+    assert x["wrong"] and x["outcome"].startswith("PROVED WRONG") and not x["opens_P4"], x
+    x = p1("d", ws=(74.5, 73.0), wsham=70.0)
+    assert x["outcome"] == "not shown (P4 stays closed)" and x["seed_rule"] == "needs seeds 2-3", x
+    x = p1("edge", ws=(75.0, 73.0), wsham=74.0)  # exactly +2.0 and +1.0: the bars are inclusive
+    assert x["opens_P4"], x
+    x = p1("nosham", ws=(78.0, 73.0))
+    assert x["status"] == SM.ND and "wsham" in x["why"]
+    assert run(p12lab(R / "noarms"))["p1"] is None and run(p12lab(R / "noarms2"))["p2b"] is None
+    # three seeds: the 3-seed means decide
+    x = p1("seeds", ws=(78.0, 73.0), wsham=74.0, seeds=(0, 1, 2))
+    assert x["seeds"] == [0, 1, 2] and x["seed_rule"] == "3-seed means"
+    # ---- P2b
+    x = p2("pass", tsd=P2, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))
+    assert x["status"] == "computed" and x["outcome"] == "PASS" and all(x["conditions"].values()), x
+    assert abs(x["S_minus_ref"] - 4.0) < 0.01 and abs(x["S_minus_tsd1"] - 2.5) < 0.05 and x["decoder"]["gap"] == 14.0 and abs(x["swapped_score_vs_C0"] - 2.0) < 0.01
+    assert x["lesions"]["swap"]["status"] == "used" and x["lesions"]["random"]["status"] == "used" and abs(x["lesions"]["zero"]["cost"] - 5.0) < 0.01 and x["seed_rule"] == "decided on 1 seed(s)", x["lesions"]
+    rep = SM.report(run(p12lab(R / "pass", tsd=P2, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))))
+    assert "== 10. P2b" in rep and "OUTCOME: PASS" in rep and "gap +14.00 points" in rep and "(reported, not in the pass marks)" in rep
+    x = p2("swap_unused", tsd={**P2, "swap4": 76.9}, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))
+    assert x["lesions"]["swap"]["status"] == "unused" and x["outcome"].startswith("PROVED WRONG") and "swap unused" in x["outcome"] and x["P3_entry"]
+    x = p2("one_shot", tsd=P2, tsd1=76.5, gap=14.0, ws=(70.0, 73.0))  # looping adds only 0.5: a and d and the lesions pass, c does not, nothing proves it wrong
+    assert x["conditions"] == {"a": True, "b": True, "c": False, "d": True} and x["outcome"].startswith("one-shot side module with step targets helps, looping not shown"), x["outcome"]
+    x = p2("loop_wrong", tsd=P2, tsd1=76.8, gap=14.0, ws=(70.0, 73.0))
+    assert x["outcome"].startswith("PROVED WRONG") and "arm < one-lap arm + 0.3" in x["outcome"]
+    x = p2("gap_wrong", tsd=P2, tsd1=74.5, gap=1.0, ws=(70.0, 73.0))
+    assert "decoder gap < 2" in x["outcome"] and x["conditions"]["d"] is False
+    x = p2("gap_mid", tsd=P2, tsd1=74.5, gap=6.0, ws=(70.0, 73.0))
+    assert x["outcome"] == "not shown" and not x["P3_entry"]
+    x = p2("p3", tsd={**P2, "swap4": 76.5, "random4": 76.4}, tsd1=74.5, gap=12.0, ws=(70.0, 73.0))  # the decoder holds the steps but the answer ignores the notes
+    assert x["lesions"]["swap"]["status"] == "not shown" and x["P3_entry"] and x["conditions"]["b"] is False
+    x = p2("weak", tsd={**P2, "L4": 73.2, "swap4": 70.0, "random4": 70.0}, tsd1=72.0, gap=14.0, ws=(70.0, 73.0))  # S < max(tc, C1) + 0.5
+    assert "a: arm < max(tc, C1) + 0.5" in x["outcome"]
+    x = p2("no_one", tsd=P2, gap=14.0, ws=(70.0, 73.0))
+    assert x["status"] == SM.ND and "tsd1" in x["why"]
+    x = p2("no_gap", tsd=P2, tsd1=74.5, ws=(70.0, 73.0))
+    assert x["conditions"]["d"] is None and x["seed_rule"] == SM.ND and x["outcome"] == "not shown"
+    # the old report and the JSON are unaffected / still round-trip
+    o = run(scenario(R / "old"))
+    assert o["p1"] is None and o["p2b"] is None and "== 9." not in SM.report(o)
+    out, data = R / "pass" / "out", R / "pass" / "data"
+    proc = subprocess.run([sys.executable, str(HERE / "summarize.py"), str(out), "--data", str(data), "--json"], capture_output=True, text=True)
+    assert proc.returncode == 0 and json.loads(proc.stdout)["p2b"]["outcome"] == "PASS", proc.stderr
+    print("S4 ok: P1 open / extra positions / wrong / not shown, P2b pass / one-shot / wrong rules / P3 entry, seed rule, JSON")
+    tmp.cleanup()
+
+
 if __name__ == "__main__":
     test_s1()
     test_s2()
     test_s3()
+    test_s4()

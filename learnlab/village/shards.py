@@ -18,7 +18,7 @@ import os
 from pathlib import Path
 import tempfile
 import time
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Sequence
 
 from learnlab.splits import assert_consumable
 
@@ -63,6 +63,9 @@ def _setup(config: Mapping[str, Any]) -> None:
 
 def _shifted(question: Mapping[str, Any], offset: int) -> dict[str, Any]:
     row = dict(question)
+    row.pop("path_text_lines", None)  # chain order goes to the shard's .paths.ndjson, so the .jsonl bytes stay those of the v1 digests
+    row.pop("path_complete", None)
+    row.pop("prior_lines", None)
     row["text_line"] += offset
     row["context_start"] += offset
     row["evidence_text_lines"] = [None if t is None else t + offset for t in question["evidence_text_lines"]]
@@ -93,6 +96,18 @@ def render_range(split: str, start: int, stop: int) -> tuple[str, list[str], lis
     return "".join(parts), rows, rendered
 
 
+def path_rows(rendered: Sequence[RenderedVisit]) -> list[str]:
+    """One JSON row per question of `rendered` (the visits render_range just returned, in order): its id, the text lines of its
+    evidence in derivation order (shard line numbers, as in the .jsonl rows), whether that order covers all its evidence and how many
+    evidence lines lie in an earlier visit (those are not in the row's context, so no steps can be written for the row)."""
+    rows, offset = [], 0
+    for done in rendered:
+        rows += [json.dumps({"id": q["id"], "path_text_lines": [t + offset for t in q["path_text_lines"]], "path_complete": q["path_complete"], "prior_lines": q["prior_lines"]},
+                            sort_keys=True) for q in done.questions]
+        offset += len(done.lines) + 1
+    return rows
+
+
 def _write(path: Path, text: str) -> None:
     temp = path.with_name(f"{path.name}.tmp-{os.getpid()}")
     temp.write_text(text, encoding="utf-8")
@@ -108,6 +123,7 @@ def _make_shard(task: tuple[str, int, int, int, str]) -> dict[str, Any]:
     base = Path(directory) / f"shard-{shard:05d}"
     _write(base.with_suffix(".jsonl"), "\n".join(rows) + "\n")
     _write(base.with_suffix(".txt"), text)
+    _write(base.with_suffix(".paths.ndjson"), "\n".join(path_rows(rendered)) + "\n")
     return {"shard": shard, "visits": stop - start, "questions": sum(len(r.questions) for r in rendered),
             "chars": len(text), "tokens": tokens, "seconds": time.perf_counter() - started}
 

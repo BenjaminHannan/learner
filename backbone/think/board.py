@@ -514,4 +514,4 @@ def train_loss(board, runner, C, mask, p, last_tok, ans, L_max, n_norm=None, row
     ce = torch.stack(ces).mean()
     pen = torch.stack(st["pen"]).mean() if st["pen"] else ce.new_zeros(())
     loss = ce / (n_norm or n) + lam * row_frac * pen
-    return loss, dict(ce_sum=[c.item() for c in ces], n=n, pen=pen.item())
+    return loss, dict(ce_sum=[c.item() for c in ces], n=n, pen=pen.item(), e=st["e"])  # e: the boards [e_0 .. e_L] (grad-carrying), for the step decoder

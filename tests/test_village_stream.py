@@ -326,7 +326,7 @@ class ShardTests(unittest.TestCase):
         self._write("b", 2)
         first = self._files(self.root / "a")
         self.assertEqual(first, self._files(self.root / "b"))
-        self.assertEqual(sorted(first), ["manifest.json"] + [f"shard-0000{k}.{e}" for k in range(3) for e in ("jsonl", "txt")])
+        self.assertEqual(sorted(first), ["manifest.json"] + [f"shard-0000{k}.{e}" for k in range(3) for e in ("jsonl", "paths.ndjson", "txt")])
 
         (self.root / "a" / "train" / "shard-00001.txt").unlink()
         (self.root / "a" / "train" / "shard-00002.jsonl.tmp-1").write_text("partial")

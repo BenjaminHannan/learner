@@ -53,7 +53,7 @@ a question is R9-style when it uses two or more DIFFERENT families.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 from typing import Any, Iterable, Mapping, Optional
 
@@ -96,25 +96,37 @@ REACH = ("ev.put_in", "ev.take_out", "ev.open", "ev.close", "ev.fail_open", "ev.
 
 @dataclass(frozen=True)
 class Deriv:
-    """How the observer knows one thing: steps, the lines it read, the rules it applied (in order)."""
+    """How the observer knows one thing: steps, the lines it read, the rules it applied (in order).
+
+    `path` is the same lines in derivation order (premises first, in the order the derivation takes them, then the rule and
+    time lines that turn them into this fact, each group in file order); `evidence` stays the unordered set. It never takes
+    part in equality or in any decision, so it cannot change what the generator writes."""
 
     steps: int
     evidence: frozenset = frozenset()
     rules: tuple[str, ...] = ()
+    path: tuple = field(default=(), compare=False)
+
+
+def _ordered(*groups: Iterable[Ref]) -> tuple:
+    """The refs of all groups in order, each once (first occurrence), None dropped."""
+    return tuple(dict.fromkeys(ref for group in groups for ref in group if ref is not None))
 
 
 def read(ref: Ref) -> Deriv:
-    return Deriv(1, frozenset((ref,)))
+    return Deriv(1, frozenset((ref,)), (), (ref,))
 
 
 def join(*parts: Optional[Deriv], add: int = 0, refs: Iterable[Ref] = (), family: Optional[str] = None) -> Deriv:
+    refs = tuple(refs)
     steps, evidence, rules = add, set(refs), []
     for part in parts:
         if part is not None:
             steps += part.steps
             evidence |= part.evidence
             rules += part.rules
-    return Deriv(steps, frozenset(evidence), tuple(rules) + ((family,) if family else ()))
+    path = _ordered(*(part.path for part in parts if part is not None), sorted(r for r in refs if r is not None))
+    return Deriv(steps, frozenset(evidence), tuple(rules) + ((family,) if family else ()), path)
 
 
 @dataclass(frozen=True)
@@ -308,7 +320,7 @@ class Observer:
         elif family == "R5":
             self.ident.setdefault(s["object"], []).append((ref, join(add=1, refs=refs | self.loc[s["object"]][1].evidence, family="R5")))
         elif family == "R7":
-            self._move(s["person"], s["place"], Deriv(2, refs | {self.time_ref}, ("R7",)))
+            self._move(s["person"], s["place"], Deriv(2, refs | {self.time_ref}, ("R7",), _ordered(sorted(refs), (self.time_ref,))))
 
     def identify(self, item: str, deriv: Deriv) -> Deriv:
         """`deriv` plus each recolour after the earliest line it uses that names the item by an older colour."""
@@ -487,7 +499,8 @@ class Observer:
                 person = rule.get("person")
                 if self.rule_known(index) and rule.time == TIMES[self.time] and person not in self._moves \
                         and self.ploc.get(person, (None,))[0] != rule.get("place"):
-                    self.ploc[person] = (rule.get("place"), Deriv(2, self.rules[index].evidence | {self.time_ref}, ("R7",)))
+                    self.ploc[person] = (rule.get("place"), Deriv(2, self.rules[index].evidence | {self.time_ref}, ("R7",),
+                                                                    _ordered(self.rules[index].path, (self.time_ref,))))
                     self.moved_known[person] = False
         for leader, place in list(self._moves.items()):
             if not self.moved_known.get(leader):
@@ -568,14 +581,14 @@ def chain(*parts: Deriv) -> Deriv:
     total = join(*parts)
     repeats = sum(1 for a, b in zip(parts, parts[1:])
                   if a.steps == b.steps == 1 and len(a.evidence) == 1 and a.evidence == b.evidence)
-    return Deriv(total.steps - repeats, total.evidence, total.rules)
+    return Deriv(total.steps - repeats, total.evidence, total.rules, total.path)
 
 
 def widest(*parts: Optional[Deriv]) -> Deriv:
     """Several facts needed side by side: the deepest one's steps, all their evidence and rules."""
     parts = tuple(p for p in parts if p is not None)
     return Deriv(max((p.steps for p in parts), default=0), frozenset().union(*(p.evidence for p in parts)),
-                 tuple(r for p in parts for r in p.rules))
+                 tuple(r for p in parts for r in p.rules), _ordered(*(p.path for p in parts)))
 
 
 def _known(answer: str, deriv: Deriv) -> Answer:
@@ -679,7 +692,8 @@ def _where_before(obs: Observer, world: World, s: Mapping[str, Any]) -> Optional
         return None
     if any(e[2] != e[1] for e in entries[entries.index(before):]):  # known from then on, or a stop may be missed
         return _not_told()
-    deriv = Deriv(max(before[3].steps, now[3].steps) + 1, before[3].evidence | now[3].evidence, before[3].rules + now[3].rules)
+    deriv = Deriv(max(before[3].steps, now[3].steps) + 1, before[3].evidence | now[3].evidence, before[3].rules + now[3].rules,
+                  _ordered(before[3].path, now[3].path))
     return _known(surface(world, before[1]), deriv)
 
 

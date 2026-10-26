@@ -58,9 +58,9 @@ class Encoder:
     def ids(self, text):
         return self.tok(text, add_special_tokens=False)["input_ids"]
 
-    def prompt(self, row, reserve=0):
+    def prompt(self, row, reserve=0, tail=PROMPT_TAIL):
         ctx = self.ids(row["context"] + "\n") if row["context"] else []
-        tail = self.ids(row["question"] + PROMPT_TAIL)
+        tail = self.ids(row["question"] + tail)
         room = self.max_len - len(self.prefix) - len(tail) - reserve
         truncated = len(ctx) > room
         if truncated:

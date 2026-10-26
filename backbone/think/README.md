@@ -120,6 +120,20 @@ for one refinement (t1, tw) the cosine cannot fall much below 0.97 whatever trai
 16 rows: 0.990 at eta 0.10, 0.974 at 0.16, 0.961 at 0.20; `eta` can move only ~0.06 by step 150), so these could not be abort rules. The update cosine is the one that says whether boards are question-specific.
 In `--smoke` the gate is computed (at step 4) and logged but not enforced, unless `--gate-enforce`.
 
+## P1 and P2b arms (codi-plan; `steps.py`)
+Data: `backbone/build_data.py` now adds `steps` (the evidence lines as text, in the oracle's derivation order) and `steps_src` (`chain`, `file_order`, `none_told`,
+`none_prior_visit`, `none_no_lines`) to every row; nothing else in a row changes and the raw shards are byte-identical (v1 digests still match). The order comes from
+`Deriv.path` in `learnlab/village/oracle.py`, written to `shard-NNNNN.paths.ndjson` beside each shard. An existing `out/data` has no `steps`: move it aside and rebuild
+(3 min); the stage-1 adapters stay valid. `ws`, `wsham`, `tsd`, `tsd1` refuse data without `steps`.
+- `ws` / `wsham` (P1): LoRA only, from arm a's adapter, 1,254 steps, aplus's rows and order. Each batch row appears twice: the direct example, and the written one
+  (prompt ending ` [steps]`, target ` Step 1: <line> Step 2: <line> The answer is: X`; a row without steps: ` The answer is: X`). `wsham` replaces the text before
+  ` The answer is:` by the same number of ` .` tokens. Eval: `T` (writes steps, then the answer after `The answer is:` is scored; `mean_gen_tokens` in the entry), `C1`
+  (direct answer, arm aplus's eval path), `fmt` (gold steps in, first 500 rows with steps, no pass mark).
+- `tsd` / `tsd1` (P2b): tj's recipe plus a step decoder (frozen base + own LoRA `dec`, r=16, main LoRA off; one Linear on the 16 notes; sees nothing else). Lap k decodes
+  step k (later laps: `The answer is: X`); loss = tj loss + 1.0 x mean over the 4 laps of the step CE. `tsd1`: the refiner runs once (lmax 1) and its lap-1 notes feed all four
+  decoder passes; the parameter count is identical. Eval adds `swap{L}`, `random{L}` (same per-slot norm), `zero{L}` lesions and `decoder` (step-token accuracy from true vs swapped notes).
+- `summarize.py` prints sections 9 (P1) and 10 (P2b) when those arms are present; `test_steps_arms.py`, `test_steps_data.py` and `test_summarize.py::test_s4` test them.
+
 ## Tests (CPU, no GPU, no network)
 ```
 HF_HOME=<cache> HF_HUB_OFFLINE=1 python3 backbone/think/test_think1.py [--real] [--only BOARD XENT S1 T8 TO TH TG TR SM]

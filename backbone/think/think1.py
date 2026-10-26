@@ -9,6 +9,11 @@ Arms:  a      LoRA on the village rows (stage 1, 418 steps)         b      a + l
               prompt, only the board read); p_blind falls linearly from --blind-p (0.5) to 0 at --blind-until (0.6) of training. Eval adds blind{L}
        tc     control for tj: tj's exact loop and loss with the thinking block off: lmax forced to 0 (laps 0..0), alpha frozen at 0, no board parameter trained
               (optimizer: the "lora" group only), so the LoRA gets the aplus loss + the lap-0 board-path answer CE with a closed board. Gate check skipped.
+       ws     written steps (codi-plan P1): as aplus (LoRA only, a's adapter, 1,254 steps), but every row of a batch appears twice, once as the direct
+              example and once as "Step 1: <line>. Step 2: ... The answer is: X" (chain order; " [steps]" ends the prompt instead of " [answer]")
+       wsham  as ws with each row's step text replaced by the same number of filler tokens (" ." dot by dot)
+       tsd    tj plus a step decoder that reads only the notes (codi-plan P2b, steps.py): lap k's notes -> written step k (later laps -> the answer)
+       tsd1   control for tsd: the refiner runs once and its lap-1 notes feed all four decoder passes (same parameters, decoder passes and targets)
 `--smoke` runs every arm end to end on a tiny random qwen3_5 on CPU (into OUT/smoke/) and then summarize.py.
 The village `test` split is never read. Step counts are per-arm defaults, not flags to change in the prereg run.
 """
@@ -32,15 +37,20 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 import train as T  # noqa: E402
 import board as B  # noqa: E402
+import steps as S  # noqa: E402
 from xent import fixed_cross_entropy  # noqa: E402
 
-ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc")
-STAGE1, STAGE2, BOARD = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc"), ("t", "t1", "tw", "tj", "tf", "tc")  # BOARD arms build a ThinkBoard; only tj / tf / tc also train the LoRA (tc: board shut and frozen)
-JOINT = ("tj", "tf", "tc")
+ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1")
+STAGE1, STAGE2 = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1")
+BOARD = ("t", "t1", "tw", "tj", "tf", "tc", "tsd", "tsd1")  # BOARD arms build a ThinkBoard; only tj / tf / tc / tsd / tsd1 also train the LoRA (tc: board shut and frozen)
+JOINT = ("tj", "tf", "tc", "tsd", "tsd1")
+WRITTEN, SD = ("ws", "wsham"), ("tsd", "tsd1")  # P1 arms (LoRA only, no board); P2b arms (joint + step decoder)
 STEPS1, STEPS2 = 418, 1254
 LR, LR_ALPHA, LR_BOARD, LAMBDA = 2e-4, 3e-3, 5e-4, 0.01
 GATE = dict(alpha=0.02, div=2.0, window=20)  # PREREG mechanics gate: only the gates-shut check at step 150 and NaN / divergence abort; board cosine and clamp share are logs
 HEAD = 2000  # L16 / L24 are scored on the first 2,000 validation rows only
+FMT_ROWS = 500  # P1 format check: gold steps as input, on the first 500 validation rows that have steps
+MAX_NEW_STEPS = 320  # P1: tokens a model may write for its steps and answer
 
 
 # ---------------------------------------------------------------- data
@@ -65,9 +75,11 @@ def synth_rows(split, n=20):
             loc[nm] = rng.choice(places)
             ctx.append(f"[world] In the {loc[nm]}, {nm} is present.")
         who = names[i % 4]
+        k = i % 3  # 0: no steps (not told), 1: one step, 2: two steps (the line, then the same line again as a second, harmless step)
         rows.append(dict(id=f"{split}-{v}:q{i % 4}", visit_id=f"{split}-{v}", split=split, context="\n".join(ctx),
                          question=f"[question] Where is {who}?", answer=f"the {loc[who]}", qtype="Q1", base_qtype="Q1",
-                         bank="q.where_now" if i % 2 else "q.where_before", depth=i % 7, template=f"syn-{i % 3}"))
+                         bank="q.where_now" if i % 2 else "q.where_before", depth=i % 7, template=f"syn-{i % 3}",
+                         steps=[ctx[names.index(who)]] * k, steps_src="chain" if k else "none_told"))
     return rows
 
 
@@ -115,7 +127,9 @@ def lora_model(lm, adapter=None):
     return get_peft_model(lm, LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, target_modules=T.LORA_TARGETS, bias="none"))
 
 
-def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr):
+def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr, written=None):
+    """written (arms ws / wsham): "gold" or "sham". Every row of a batch is then also added as a written example (steps_of / filler text, " [steps]"
+    prompt), after the direct examples; the rows, their order and the optimizer are those of aplus, and the loss is normalised by all target tokens."""
     params = [p for p in pm.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=LR, weight_decay=0.0, betas=(0.9, 0.999))
     stream = batches(len(rows), order_seed, args.bsz)
@@ -123,7 +137,10 @@ def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, t
     runner.lm.train()
     t0, window = time.time(), []
     for step in range(steps):
-        batch = encode_batch(enc, rows, next(stream))
+        ids = next(stream)
+        batch = encode_batch(enc, rows, ids)
+        if written:
+            batch += [S.written_example(enc, rows[i], sham=written == "sham") for i in ids]
         n_ans = sum(len(a) for _, a in batch)
         for g in opt.param_groups:
             g["lr"] = T.cosine_lr(step, steps, LR, warmup)
@@ -189,6 +206,39 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
             if nb % 20 == 0:
                 print(f"[eval {name}] {done}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
     return entry(hit)
+
+
+@torch.no_grad()
+def eval_written(runner, enc, rows, device, args, sham=False, gold=False, name=""):
+    """Arms ws / wsham, greedy on the steps prompt (" [steps]"). gold=False (T): the model writes its steps and then "The answer is: X"; the text after the last
+    "The answer is:" is scored (a missing marker is a miss). gold=True (format check, no pass mark): the gold steps (filler for wsham) and "The answer is:" are
+    the input and the next tokens are scored. Same batches as eval_greedy's (descending prompt length, same decode as the board-free path).
+    The entry adds mean_gen_tokens (generated tokens per row, EOS not counted) and marker_rate (rows that wrote "The answer is:"; T only)."""
+    prompts = [S.gold_prompt(enc, r, sham) if gold else enc.prompt(r, tail=S.STEPS_TAIL)[0] for r in rows]
+    max_new = T.MAX_NEW if gold else args.max_new_steps
+    hit, ntok, marked, t0, nb = ["0"] * len(rows), [0] * len(rows), 0, time.time(), 0
+    idx, k = sorted(range(len(rows)), key=lambda i: len(prompts[i]), reverse=True), 0
+    while k < len(idx):
+        chunk = idx[k:k + max(1, min(args.eval_bsz, args.eval_tokens // (len(prompts[idx[k]]) + max_new)))]
+        ps = [prompts[i] for i in chunk]
+        C, mask, p = B.prefill(runner, ps)
+        gen = B.decode(runner, None, C, mask, p, B.last_ids(ps, device), None, max_new=max_new, eos=enc.eos)
+        for i, g in zip(chunk, gen):
+            text = enc.tok.decode(g, skip_special_tokens=True)
+            ntok[i] = len(g)
+            ans = text if gold else S.parse_answer(text)
+            marked += ans is not None
+            if ans is not None:  # score what eval_greedy would see: at most MAX_NEW answer tokens (long plan answers are cut there too)
+                ans = enc.tok.decode(enc.ids(ans)[:T.MAX_NEW], skip_special_tokens=True)
+            if ans is not None and T.normalise(ans) == T.normalise(rows[i]["answer"]):
+                hit[i] = "1"
+        k += len(chunk)
+        nb += 1
+        if nb % 20 == 0:
+            print(f"[eval {name}] {k}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
+    e = entry(hit)
+    e.update(mean_gen_tokens=sum(ntok) / max(len(rows), 1), marker_rate=None if gold else marked / max(len(rows), 1))
+    return e
 
 
 # ---------------------------------------------------------------- board arms: training
@@ -303,37 +353,55 @@ def p_blind(step, steps, args):
     return args.blind_p * max(0.0, 1 - step / (args.blind_until * steps))
 
 
-def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, tr):
+def sd_micro_loss(sd, pm, runner, info, dts, n_lap):
+    """Step loss of one micro-batch for arms tsd / tsd1: mean over the four decoder passes of (summed CE over the micro-batch's lap-k targets / the
+    optimizer-step batch's lap-k target tokens). info["e"] = the boards of the same think() run as the answer loss; dts = decoder_targets of its rows."""
+    notes = S.lap_notes(info["e"], len(info["e"]) - 1)
+    ce = [sd.step_ce(pm, runner, notes[k], [(d[k][0], d[k][1]) for d in dts])[0] / n_lap[k] for k in range(S.SD_LAPS)]
+    return torch.stack(ce).mean()
+
+
+def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, tr, sd=None):
     """Arm tj: LoRA (a's adapter, trainable) and ThinkBoard train together at fixed L_max = args.lmax. Per micro-batch the loss is the aplus loss
     (full teacher-forced pass through the LoRA model, no board read) + the board loss (prefill under the current LoRA, no grad; slot and answer passes
     carry gradient to the board AND, through the checkpointed closures, to the LoRA). The two are backpropagated one after the other (same summed gradient).
     Arm tf: per micro-batch, with chance p_blind(step) (own Random(seed + 3000)) the board loss uses blind answer passes (board.answer_logits); the aplus loss never does.
+    Arms tsd / tsd1 (sd = the StepDecoder): the board loss is joined by 1.0 x the step loss (sd_micro_loss), backpropagated together with it through the same
+    boards; the decoder's own LoRA ("dec") and Linear train in their own optimizer groups.
     Returns the abort reason or None."""
-    lora = [p for p in pm.parameters() if p.requires_grad]
+    lora = [p for n, p in pm.named_parameters() if p.requires_grad and ".dec." not in n]
     closed = args.arm == "tc"  # control: no thinking block. lmax 0 (laps 0..0), alpha frozen at 0, no board parameter trained, only the "lora" group
     if closed:
         for q in board.parameters():
             q.requires_grad_(False)
         assert float(board.alpha.abs().max()) == 0.0, "tc needs closed gates"
     groups = ([] if closed else board_groups(board)) + [dict(name="lora", params=lora, lr=LR, base=LR)]
+    if sd is not None:
+        groups += [dict(name="declora", params=[p for n, p in pm.named_parameters() if ".dec." in n], lr=LR, base=LR),
+                   dict(name="decproj", params=list(sd.parameters()), lr=LR_BOARD, base=LR_BOARD)]
     opt = torch.optim.AdamW(groups, weight_decay=0.0, betas=(0.9, 0.999))
     stream = batches(len(rows), args.seed + 1000, args.bsz)  # same stage-2 order as aplus / t
     warm = 2 if args.smoke else 60
     L_max = probe_L = 0 if closed else args.lmax
     brng, forced = random.Random(args.seed + 3000), args.arm == "tf"
     tr["blind_steps"] = []  # tf: 0/1 per micro-batch, in order
+    tr["sd_losses"] = []  # tsd / tsd1: the step loss of each optimizer step
     enforce = args.gate_enforce or not args.smoke
     t0, window, losses, gn = time.time(), [], tr["step_losses"], {}
     pm.train()
     runner.lm.train()
     for step in range(steps):
         n = step + 1
-        batch = encode_batch(enc, rows, next(stream))
+        ids = next(stream)
+        batch = encode_batch(enc, rows, ids)
         n_norm = sum(len(a) for _, a in batch)
+        if sd is not None:
+            dts = [S.decoder_targets(enc, rows[i]) for i in ids]
+            n_lap = [sum(len(d[k][1]) for d in dts) for k in range(S.SD_LAPS)]
         for g in opt.param_groups:
             g["lr"] = T.cosine_lr(step, steps, g["base"], warm)
         probe = n % 10 == 0 or n in (args.gate_step, steps)
-        total, sts, nb = 0.0, [], 0
+        total, sts, nb, sd_total = 0.0, [], 0, 0.0
         for k in range(0, len(batch), args.micro_bsz):
             mb = batch[k:k + args.micro_bsz]
             blind = forced and brng.random() < p_blind(step, steps, args)
@@ -342,13 +410,19 @@ def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, t
             la, _ = answer_loss_fixed(runner, mb, device)  # (a) aplus loss
             (la / n_norm).backward()
             C, mask, p, lt, ans = micro_inputs(runner, mb, device)
-            lb, _ = B.train_loss(board, runner, C, mask, p, lt, ans, L_max, n_norm=n_norm, row_frac=len(mb) / len(batch), lam=LAMBDA,
-                                 ckpt=not args.no_lap_ckpt, blind=blind)  # (b) board loss
-            lb.backward()
+            lb, info = B.train_loss(board, runner, C, mask, p, lt, ans, L_max, n_norm=n_norm, row_frac=len(mb) / len(batch), lam=LAMBDA,
+                                    ckpt=not args.no_lap_ckpt, blind=blind)  # (b) board loss
+            if sd is not None:  # (c) step loss on the same boards
+                ls = sd_micro_loss(sd, pm, runner, info, dts[k:k + args.micro_bsz], n_lap)
+                (lb + ls).backward()
+                sd_total += ls.item()
+            else:
+                lb.backward()
             total += la.item() / n_norm + lb.item()
             if probe and not closed:
                 with torch.no_grad():
                     sts.append(B.think(board, runner, C, mask, p, probe_L, keep=(), stats=True)[1])
+        total += sd_total  # tsd / tsd1: the step loss counts in the loss curve and in the divergence guard
         if not math.isfinite(total):
             return f"NaN loss at step {n}"
         gn = {g["name"]: float(torch.nn.utils.clip_grad_norm_(g["params"], 1.0)) for g in opt.param_groups}  # clip 1.0 per group
@@ -358,6 +432,8 @@ def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, t
         opt.zero_grad(set_to_none=True)
         losses.append(total)
         window.append(total)
+        if sd is not None:
+            tr["sd_losses"].append(sd_total)
         if n % 10 == 0 or n == steps:
             tr["loss_curve"].append([n, sum(window) / len(window)])
             window = []
@@ -374,7 +450,8 @@ def train_joint(runner, pm, board, enc, rows, quick_rows, device, args, steps, t
             print(f"[gate] step {n} loss {g['loss']:.4f} |tanh a| {g['alpha_mean']:.4f} cos_across {g['cos_across']:.3f} cos_within {g['cos_within']:.3f} "
                   f"cos_upd_across {g['cos_update_across']:.3f} cos_upd_within {g['cos_update_within']:.3f} "
                   f"clamp {g['clamp']:.2f} clamp5 {g['clamp5']:.2f} step_rms {g['step_rms'][-1]:.3f} gn {gn['refiner']:.3f} gn_lora {gn['lora']:.3f}"
-                  + (f" blind {nb}/{-(-len(batch) // args.micro_bsz)} p_blind {p_blind(step, steps, args):.3f}" if forced else ""), flush=True)
+                  + (f" blind {nb}/{-(-len(batch) // args.micro_bsz)} p_blind {p_blind(step, steps, args):.3f}" if forced else "")
+                  + (f" sd {sd_total:.3f}" if sd is not None else ""), flush=True)
             if n == args.gate_step:
                 reason = gate_reason(g)
                 tr["gate_check"] = dict(step=n, enforced=enforce, reason=reason)
@@ -405,6 +482,12 @@ def tags_for(arm, split, lmax=4):
     P = lambda L, n=None: ("plain", L, n)
     if arm == "tc":  # control, thinking block off: lap 0 with shut gates (= no read, ref0); dev L0 only
         return {"L0": P(0)} if split == "dev" else {"L0": P(0), "ref0": ("none", 0, None)}
+    if arm in ("tsd", "tsd1"):  # (literal names: test_from_label compiles this function alone) tsd / tsd1 (lmax 4 / 1): as tj, plus the random-notes and zero-notes lesions
+        L = lmax
+        if split == "dev":
+            return {f"L{L}": P(L)}
+        return {"L0": P(0), "L1": P(1), f"L{L}": P(L), f"swap{L}": ("swap", L, None), f"random{L}": ("random", L, None), f"zero{L}": ("zero", L, None),
+                f"gatesoff{L}": ("off", L, None), "ref0": ("none", L, None)}
     if arm in ("tj", "tf"):  # L = lmax: validation L0, L1, L, swap lesion, gates off (= the jointly trained LoRA alone), no-read reference; dev L only
         L = lmax  # tf adds blind{L}: the answer sees no prompt, only the notes, on the first HEAD validation rows
         if split == "dev":
@@ -420,6 +503,14 @@ def tags_for(arm, split, lmax=4):
     if arm == "t1":
         return {f"L{L}": P(L) for L in ((0, 1, 8) if split == "validation" else (1,))}
     return {"L1": P(1)} if split == "validation" else {}
+
+
+def random_notes_kv(runner, e, C, mask, p, seed):
+    """The random lesion: notes drawn from a Gaussian and rescaled to the real notes' per-slot norm, run through the slot pass on the row's own prompt cache
+    (so only the content of the notes differs from the real board's read). e [B,K,d] = the real final notes."""
+    r = torch.randn(e.shape, generator=torch.Generator().manual_seed(seed)).to(e.device, e.dtype)
+    r = r * (e.pow(2).mean(-1, keepdim=True).sqrt() / r.pow(2).mean(-1, keepdim=True).sqrt())
+    return B.slot_pass(runner, r, C, mask, p)[1]
 
 
 def swap_kv_for(kv, visits, prev):
@@ -444,7 +535,7 @@ def swap_kv_for(kv, visits, prev):
 
 @torch.no_grad()
 def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
-    """tags: {tag: (kind, L, nmax)}, kind in plain / swap / mean / rep / off / none / blind (plain, decoded with no prompt in the answer cache). Each batch is prefilled once, think() runs to the largest L and
+    """tags: {tag: (kind, L, nmax)}, kind in plain / swap / mean / rep / off / none / blind (plain, decoded with no prompt in the answer cache) / zero / random (tsd arms). Each batch is prefilled once, think() runs to the largest L and
     records the slot K/V at every L needed, and every tag is decoded on its own cache clone. Returns {tag: entry} with hits in file order."""
     if not tags:
         return {}
@@ -466,7 +557,7 @@ def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
             ps, vs = [prompts[i] for i in chunk], [visits[i] for i in chunk]
             C, mask, p = B.prefill(runner, ps)
             lt = B.last_ids(ps, device)
-            kv, _ = B.think(board, runner, C, mask, p, max(keep, default=0), keep=keep, stats=False)
+            kv, st = B.think(board, runner, C, mask, p, max(keep, default=0), keep=keep, stats=False)
             rep = {}
             for t in active:
                 kind, L, lim = tags[t]
@@ -480,6 +571,10 @@ def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
                     skv = None
                 elif kind == "mean":
                     skv = B.mean_kv(kv[L])
+                elif kind == "zero":  # all-zero notes on an empty cache (B.zero_notes_kv): the notes' read without the notes or the story
+                    skv = B.zero_notes_kv(runner, board, p)
+                elif kind == "random":
+                    skv = random_notes_kv(runner, st["e"][L], C, mask, p, args.seed + 4000 + nb)
                 elif kind == "swap":
                     skv, bad = swap_kv_for(kv[L], vs, prev.get(t))
                     same[t] += bad
@@ -500,6 +595,69 @@ def eval_board(runner, board, enc, rows, tags, args, device, name="eval"):
         if s:
             out[t]["swap_same_story_rows"] = s
     return out
+
+
+def build_decoder(pm, runner, board, device, seed):
+    """Arms tsd / tsd1: add the decoder's own LoRA adapter "dec" (r=16, as the main one; trainable, inactive until a decoder pass) to pm and build the Linear."""
+    from peft import LoraConfig
+    torch.manual_seed(seed + 5000)
+    pm.add_adapter("dec", LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, target_modules=T.LORA_TARGETS, bias="none"))
+    for n, p in pm.named_parameters():
+        if ".dec." in n:
+            p.requires_grad_(True)  # add_adapter leaves a new adapter frozen
+    return S.StepDecoder(board.e0_hat.shape[1], runner.lm.config.hidden_size).to(device)
+
+
+@torch.no_grad()
+def eval_decoder(runner, pm, board, sd, enc, rows, args, device, lmax, n=HEAD):
+    """Step-token accuracy (teacher-forced argmax, percent of step tokens) of the step decoder when it reads the true notes of each lap and when it reads the
+    notes of another story's row (the nearest following row of a different visit with the same number of step laps; any other-visit row if none).
+    Rows: the first n validation rows that have at least one step. Only laps that have a step target count. The P2b pass mark is gap = true - swapped >= 10."""
+    rows = [r for r in rows if S.steps_of(r)][:n]
+    if not rows:
+        return None
+    N, prompts = len(rows), [enc.prompt(r)[0] for r in rows]
+    order, notes, k = sorted(range(N), key=lambda i: -len(prompts[i])), None, 0
+    while k < N:  # the notes of every lap, on cpu
+        chunk = order[k:k + max(1, min(args.eval_bsz, args.eval_tokens // len(prompts[order[k]])))]
+        k += len(chunk)
+        ps = [prompts[i] for i in chunk]
+        C, mask, p = B.prefill(runner, ps)
+        ln = S.lap_notes(B.think(board, runner, C, mask, p, lmax, keep=(), stats=False)[1]["e"], lmax)
+        notes = notes or [torch.zeros(N, *x.shape[1:]) for x in ln]
+        for j, x in enumerate(ln):
+            notes[j][chunk] = x.float().cpu()
+    visits, key = [r.get("visit_id") for r in rows], [min(len(S.steps_of(r)), S.SD_LAPS) for r in rows]
+    partner, other_depth, same = [], 0, 0
+    for i in range(N):
+        cand = [(i + d) % N for d in range(1, N)]
+        j = next((j for j in cand if visits[j] != visits[i] and key[j] == key[i]), None)
+        if j is None:
+            j = next((j for j in cand if visits[j] != visits[i]), None)
+            other_depth += j is not None
+        if j is None:
+            j, same = (i + 1) % N, same + 1
+        partner.append(j)
+    dts = [S.decoder_targets(enc, r) for r in rows]
+    hit = {"true": [0] * S.SD_LAPS, "swap": [0] * S.SD_LAPS}
+    cnt = [0] * S.SD_LAPS
+    for c in range(0, N, args.eval_bsz):
+        ids = list(range(c, min(c + args.eval_bsz, N)))
+        for lap in range(S.SD_LAPS):
+            use = [i for i in ids if dts[i][lap][2]]
+            if not use:
+                continue
+            seqs = [(dts[i][lap][0], dts[i][lap][1]) for i in use]
+            for name, src in (("true", use), ("swap", [partner[i] for i in use])):
+                h, m = sd.token_hits(pm, runner, notes[lap][src].to(device), seqs)
+                hit[name][lap] += h
+            cnt[lap] += m
+    tot = max(sum(cnt), 1)
+    acc = {nm: 100 * sum(h) / tot for nm, h in hit.items()}
+    return dict(true=acc["true"], swap=acc["swap"], gap=acc["true"] - acc["swap"], tokens=sum(cnt), rows=N,
+                by_lap={str(lap + 1): dict(true=100 * hit["true"][lap] / max(cnt[lap], 1), swap=100 * hit["swap"][lap] / max(cnt[lap], 1), tokens=cnt[lap])
+                        for lap in range(S.SD_LAPS)},
+                partner_other_depth_rows=other_depth, partner_same_story_rows=same)
 
 
 @torch.no_grad()
@@ -578,7 +736,7 @@ def run_arm(args):
     steps = args.steps or (STEPS2 if stage2 else STEPS1)
     k_slots = (args.k or (144 if arm == "tw" else 16)) if arm in BOARD else 0
     src = None
-    if arm in ("aplus", "t", "t1", "tw", "tj", "tf", "tc"):
+    if arm in ("aplus", "t", "t1", "tw", "tj", "tf", "tc", *WRITTEN, *SD):
         src = Path(args.a_adapter) if args.a_adapter else default_adapter(args, "a")
     elif arm == "bplus":
         src = Path(args.b_adapter) if args.b_adapter else default_adapter(args, "b")
@@ -586,6 +744,8 @@ def run_arm(args):
         raise SystemExit(f"[think1] {arm} needs the stage-1 adapter {src} (run arm {'b' if arm == 'bplus' else 'a'} first)")
     lm, tok = T.load_model(args, device, dtype)
     train_rows, dev_rows, val_rows = load_data(args)
+    if arm in (*WRITTEN, *SD) and not all("steps" in r for r in train_rows[:1000] + val_rows[:1000]):
+        raise SystemExit(f"[think1] {arm} needs rows with a 'steps' field: rebuild {args.data} with backbone/build_data.py (rows are otherwise byte-identical to the old ones)")
     enc = T.Encoder(tok, args.max_len)
     runner = T.Runner(lm, loops=3 if arm in ("b", "bplus") else 1)
     runner.checkpoint = not args.no_grad_ckpt
@@ -603,6 +763,11 @@ def run_arm(args):
         if args.alpha_init:
             raise SystemExit("[think1] tc is the closed-block control: --alpha-init must be 0")
         args.lmax = 0  # one lap, laps 0..0 (also what the result records and the tags use)
+    if arm == "tsd1":
+        args.lmax = 1  # the refiner runs once: laps 0..1, and the lap-1 notes feed all four decoder passes
+    if arm == "tsd" and args.lmax != S.SD_LAPS:
+        raise SystemExit(f"[think1] tsd decodes {S.SD_LAPS} laps: --lmax must be {S.SD_LAPS}")
+    sd = None
     if arm in JOINT:  # joint: a's adapter trainable, plus the board (built as in arm t)
         pm = lora_model(lm, src)
         runner.lm = pm.base_model.model
@@ -610,14 +775,21 @@ def run_arm(args):
         board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots, alpha_init=args.alpha_init).to(device)
         n_board, n_lora = sum(p.numel() for p in board.parameters()), sum(p.numel() for p in pm.parameters() if p.requires_grad)
         result["params_trainable"], result["lmax"] = (n_lora if arm == "tc" else n_board + n_lora), args.lmax  # tc: LoRA only (the board is shut and frozen)
+        if arm in SD:
+            sd = build_decoder(pm, runner, board, device, args.seed)
+            n_dec, n_proj = sum(p.numel() for n, p in pm.named_parameters() if ".dec." in n), sum(p.numel() for p in sd.parameters())
+            result["params_trainable"] += n_dec + n_proj
+            result["sd_params"] = dict(board=n_board, lora=n_lora, dec_lora=n_dec, proj=n_proj)
+            print(f"[sd] arm {arm}: decoder LoRA params {n_dec:,}, Linear {n_proj:,}; decoder passes {S.SD_LAPS} over laps 1..{args.lmax}", flush=True)
         if arm == "tf":
             result["blind"] = dict(p=args.blind_p, until=args.blind_until, seed=args.seed + 3000)
         print(f"[joint] arm {arm} K={k_slots} lmax {args.lmax} board params {n_board:,}{' (frozen, shut)' if arm == 'tc' else ''} lora params {n_lora:,} rho {float(board.rho):.5f}", flush=True)
         t0 = time.time()
-        aborted = train_joint(runner, pm, board, enc, train_rows, dev_rows[:256], device, args, steps, tr)
+        aborted = train_joint(runner, pm, board, enc, train_rows, dev_rows[:256], device, args, steps, tr, sd=sd)
         tr["seconds"] = time.time() - t0
-        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed, alpha_init=args.alpha_init), out / "think_block.pt")
-        pm.save_pretrained(out / "adapter")
+        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed, alpha_init=args.alpha_init,
+                        **(dict(decoder=sd.state_dict()) if sd is not None else {})), out / "think_block.pt")
+        pm.save_pretrained(out / "adapter", **(dict(selected_adapters=["default", "dec"]) if sd is not None else {}))  # the main adapter at the top, the decoder's in adapter/dec
         result["adapter_sha"] = adapter_sha(out / "adapter")
     elif arm in BOARD:
         from peft import PeftModel
@@ -640,7 +812,12 @@ def run_arm(args):
         result["params_trainable"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
         print(f"[lora] trainable params {result['params_trainable']:,}", flush=True)
         warm = min(100, steps // 10 or 1) if not stage2 else (2 if args.smoke else 60)
-        train_lora(runner, pm, enc, train_rows, device, args, steps, warm, args.seed + 1000 if stage2 else args.seed, tr)
+        if arm in WRITTEN:
+            with_steps = sum(bool(S.steps_of(r)) for r in train_rows)
+            result["written"] = dict(tail=S.STEPS_TAIL, sham=arm == "wsham", max_new=args.max_new_steps, train_rows=len(train_rows), train_rows_with_steps=with_steps)
+            print(f"[written] arm {arm}: {with_steps:,} of {len(train_rows):,} train rows have steps; each row is trained twice per batch", flush=True)
+        train_lora(runner, pm, enc, train_rows, device, args, steps, warm, args.seed + 1000 if stage2 else args.seed, tr,
+                   written={"ws": "gold", "wsham": "sham"}.get(arm))
         pm.save_pretrained(out / "adapter")
         result["adapter_sha"] = adapter_sha(out / "adapter")
     runner.checkpoint = False
@@ -652,8 +829,19 @@ def run_arm(args):
         if arm in BOARD:
             for split, rows in (("dev", dev_rows), ("validation", val_rows)):
                 ev[split] = eval_board(runner, board, enc, rows, tags_for(arm, split, args.lmax), args, device, split)
+            if sd is not None:
+                result["decoder"] = eval_decoder(runner, pm, board, sd, enc, val_rows, args, device, args.lmax)
+                print(f"[result] {arm} s{args.seed} decoder step-token accuracy: {result['decoder']}", flush=True)
         else:
             for split, rows in (("dev", dev_rows), ("validation", val_rows)):
+                if arm in WRITTEN:  # T: writes its steps, then the answer is scored; C1: the same weights answering directly (arm aplus's eval path)
+                    sham = arm == "wsham"
+                    ev[split]["T"] = eval_written(runner, enc, rows, device, args, sham, name=f"{split} T")
+                    ev[split]["C1"] = eval_greedy(runner, enc, rows, device, args, name=f"{split} C1", board_path=True)
+                    if split == "validation":
+                        idx = [i for i, r in enumerate(rows) if S.steps_of(r)][:FMT_ROWS]
+                        ev[split]["fmt"] = dict(eval_written(runner, enc, [rows[i] for i in idx], device, args, sham, gold=True, name="format check"), row_idx=idx)
+                    continue
                 bp = arm in ("a", "aplus")
                 ev[split]["main"] = eval_greedy(runner, enc, rows, device, args, name=f"{split} main", board_path=bp)
                 if arm == "b":
@@ -702,7 +890,7 @@ def smoke(args):
     data = smoke_data(args.data, root)
     rcs, t0 = {}, time.time()
     arms = [args.arm] if args.arm else list(ARMS)
-    if args.arm in JOINT and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
+    if args.arm in (*JOINT, *WRITTEN) and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
         arms.insert(0, "a")  # tj / tf / tc start from a's adapter: train a first
     for arm in arms:
         print(f"== smoke arm {arm} {time.time() - t0:.0f}s", flush=True)
@@ -739,6 +927,7 @@ def parse(argv=None):
     ap.add_argument("--gate-enforce", action="store_true", help="abort on the gate in --smoke too (always enforced otherwise)")
     ap.add_argument("--lmax", type=int, default=4, help="arms tj / tf: fixed L_max of the board loss, and the lap count scored (L{lmax}, swap, gates-off, quick eval)")
     ap.add_argument("--alpha-init", type=float, default=0.0, help="board arms: every gate pre-activation alpha starts here (tanh(0.3) = 0.291 is plan step P2a); 0 = shut gates, as in all earlier runs")
+    ap.add_argument("--max-new-steps", type=int, default=MAX_NEW_STEPS, help="arms ws / wsham: most tokens a model may write for its steps and answer in the T evaluation")
     ap.add_argument("--blind-p", type=float, default=0.5, help="arm tf: initial chance that a micro-batch's board loss uses blind answer passes")
     ap.add_argument("--blind-until", type=float, default=0.6, help="arm tf: fraction of training at which that chance has fallen linearly to 0")
     ap.add_argument("--log-every", type=int, default=250, help="dev-subset log interval for t/t1/tw/tj")

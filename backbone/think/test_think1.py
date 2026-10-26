@@ -3,7 +3,7 @@
 T1-T7, T9, T10 + TP/TC/TR/TB come from test_think1_board.py, X1-X4 from test_xent.py, S1 from test_summarize.py. Here: T8 (same seed,
 same stage-2 losses), TO (data order = train.py's), TH (hits are stored in file order; gates off = arm a), TG (mechanics gate, incl. the
 abort path), TR (run_box.sh job order and skips, stub python), TS (spec defaults), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
-Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, AI, SM.
+Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, S4, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, AI, SM.
 Needs the venv with torch CPU, transformers 5.20.2 and peft; `--real` adds the real-0.8B checks (HF_HOME=<cache> HF_HUB_OFFLINE=1).
 """
 from __future__ import annotations
@@ -423,7 +423,7 @@ case "$script" in
     mkdir -p "$out"
     case ",${FAILONCE:-}," in *",$arm,"*) [ -f "$out/.failed" ] || { touch "$out/.failed"; exit 1; };; esac   # out of memory once, fine on the retry
     case ",${FAILLATE:-}," in *",$arm,"*) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json"; exit 1;; esac   # adapter saved, then the eval crashed
-    case "$arm" in aplus|t|t1|tw|tj|tf) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
+    case "$arm" in aplus|t|t1|tw|tj|tf|tc|ws|wsham|tsd|tsd1) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
                    bplus) [ -f "$out/../b_s$seed/adapter/adapter_config.json" ] || exit 4;; esac
     if [ -n "${PARDIR:-}" ]; then touch "$PARDIR/run.$$"; ls "$PARDIR" | grep -c '^run\.' >> "$PARDIR/counts"; sleep 0.4; fi
     mkdir -p "$out"; echo '{}' > "$out/result_${arm}_s${seed}.json"
@@ -462,6 +462,8 @@ def test_box_script():
         assert all("--steps" not in c for c in calls if c[0] == "think1.py"), "no global STEPS"
         calls, _ = box("t:0,bplus:0,aplus:1")
         assert runs(calls) == [], ("finished jobs must be skipped", runs(calls))
+        calls, _ = box("ws:3,wsham:3,tsd:3,tsd1:3")  # P1 / P2b arms: stage-1 a first, then each once
+        assert runs(calls) == [("a", "3"), ("ws", "3"), ("wsham", "3"), ("tsd", "3"), ("tsd1", "3")], runs(calls)
         import shutil
         shutil.rmtree(tmp / "out" / "think" / "a_s1" / "adapter")
         calls, _ = box("aplus:1")
@@ -530,12 +532,15 @@ EXPECT = {
     "tj": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0"}, "dev": {"L4"}},
     "tf": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0", "blind4"}, "dev": {"L4"}},
     "tc": {"validation": {"L0", "ref0"}, "dev": {"L0"}},
+    "ws": {"validation": {"T", "C1", "fmt"}, "dev": {"T", "C1"}}, "wsham": {"validation": {"T", "C1", "fmt"}, "dev": {"T", "C1"}},
+    "tsd": {"validation": {"L0", "L1", "L4", "swap4", "random4", "zero4", "gatesoff4", "ref0"}, "dev": {"L4"}},
+    "tsd1": {"validation": {"L0", "L1", "swap1", "random1", "zero1", "gatesoff1", "ref0"}, "dev": {"L1"}},
 }
 
 
 def test_ts_spec_defaults():
     """Per-arm step defaults, learning-rate groups, warm-ups, gate thresholds and eval tags, as in IMPL-SPEC section 3 / PREREG."""
-    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc"}
+    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1"}
     a = K.parse(["--arm", "t", "--out", "x"])
     assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
     assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)
@@ -584,7 +589,7 @@ def test_sm_smoke_all_arms():
             assert r["steps_stage1"] == 6 and r["steps_stage2"] == (0 if arm in ("a", "b") else 6)
         for arm in ("a", "b", "aplus", "bplus"):
             assert (root / f"{arm}_s0" / "adapter" / "adapter_config.json").exists()
-        for arm in ("t", "t1", "tw", "tj", "tf"):
+        for arm in ("t", "t1", "tw", "tj", "tf", "tsd", "tsd1"):
             assert (root / f"{arm}_s0" / "think_block.pt").exists()
         assert (root / "tj_s0" / "adapter" / "adapter_config.json").exists() and res["tj"]["lmax"] == 4 and res["tj"]["adapter_sha"] != res["a"]["adapter_sha"]
         assert res["tw"]["k_slots"] == 144 and res["t"]["k_slots"] == 16 and res["t1"]["k_slots"] == 16
@@ -592,7 +597,7 @@ def test_sm_smoke_all_arms():
         assert all(res[a]["stage1_adapter"].endswith("a_s0/adapter") for a in ("t", "t1", "tw"))
         assert res["b"]["loops"] == 3 and res["b"]["loop_block"] == [0, 4] and res["a"]["loops"] == 1
         assert res["a"]["adapter_sha"] and res["b"]["adapter_sha"] and res["aplus"]["adapter_sha"] and res["bplus"]["adapter_sha"]
-        assert all(res[x]["stage1_adapter_sha"] == res["a"]["adapter_sha"] for x in ("aplus", "t", "t1", "tw", "tj", "tf")) and res["bplus"]["stage1_adapter_sha"] == res["b"]["adapter_sha"]
+        assert all(res[x]["stage1_adapter_sha"] == res["a"]["adapter_sha"] for x in ("aplus", "t", "t1", "tw", "tj", "tf", "ws", "wsham", "tsd", "tsd1")) and res["bplus"]["stage1_adapter_sha"] == res["b"]["adapter_sha"]
         assert res["a"]["stage1_adapter_sha"] is None and res["t"]["adapter_sha"] is None
         gl = res["t"]["train"]["gate_log"][0]
         assert all(k in gl for k in ("cos_across", "cos_within", "cos_update_across", "cos_update_within", "clamp", "clamp5"))
@@ -603,7 +608,7 @@ def test_sm_smoke_all_arms():
             verdict = m.group(0)
         else:
             verdict = "summarize.py absent: skipped"
-        print(f"SM smoke ran 9 arms in {time.time() - t0:.0f}s, adapters handed on, result tags as in the spec; {verdict}")
+        print(f"SM smoke ran {len(EXPECT)} arms in {time.time() - t0:.0f}s, adapters handed on, result tags as in the spec; {verdict}")
 
 
 def test_ai_alpha_init():
@@ -645,7 +650,7 @@ def run_all(real=False, only=None):
     import test_summarize as TS
     import test_from_label as TFL
     tests = [("BOARD", lambda: board_tests(TB, real)),
-             ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
+             ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("S4", TS.test_s4), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
              ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TCTRL", test_tc_control), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("AI", test_ai_alpha_init), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
