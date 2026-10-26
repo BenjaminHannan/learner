@@ -62,6 +62,29 @@ def run(L, pm, batches, replay, opts, prof=False):
         fs.clear_cache()
 
 
+def unit():
+    """Every backend vs an fp64-accumulated per-expert reference: random counts incl. empty experts, a sentinel tail, both weight layouts (K-contiguous view as the model passes it, N-contiguous as the backward uses)."""
+    g = torch.Generator().manual_seed(1)
+    E, K, N = 12, 40, 24
+    counts = torch.tensor([0, 5, 17, 1, 0, 33, 2, 8, 0, 4, 9, 3])
+    offs = counts.cumsum(0).int()
+    n, S = int(offs[-1]), int(offs[-1]) + 6
+    P = torch.randn(E, N, K, generator=g)
+    out = {}
+    for name, f in fe._FUNCS.items():
+        worst = 0.0
+        for w, K_ in ((P.transpose(-2, -1), K), (P.transpose(-2, -1).contiguous().transpose(-2, -1).transpose(-2, -1), N)):
+            a = torch.randn(S, w.size(1), generator=g)
+            ref = torch.zeros(S, w.size(2), dtype=torch.float64)
+            s = 0
+            for i, e in enumerate(offs.tolist()):
+                ref[s:e] = a[s:e].double() @ w[i].double()
+                s = e
+            worst = max(worst, float((f(a, w, offs)[:n].double() - ref[:n]).abs().max()))
+        out[name] = worst
+    return out
+
+
 def main():
     L, pm, exp = build()
     assert exp and not any(p.requires_grad for p in exp), "routed experts must be frozen"
@@ -70,9 +93,12 @@ def main():
     batches = [base[:8], base[1:8] + base[:1]]
     fe._BLOCK.update(BM=16, BN=32, BK=16)  # small tiles: the tiny model has ~10 rows per expert
     res, ok = {}, True
+    res["unit_max_abs_diff"] = unit()
+    ok &= all(v < 1e-4 for v in res["unit_max_abs_diff"].values())
     ref = run(L, pm, batches, replay, {})
     mg = max(float(x.abs().max()) for x in ref[0][2])
     for name, opts in {"torch_backend": {"fast_experts": True, "experts_backend": "torch"}, "triton_backend": {"fast_experts": True, "experts_backend": "triton"},
+                       "bmm_pad_backend": {"fast_experts": True, "experts_backend": "bmm_pad"}, "bmm_split_backend": {"fast_experts": True, "experts_backend": "bmm_split"},
                        "kl_cache+fast_experts": {"kl_cache": True, "fast_experts": True, "experts_backend": "triton"}}.items():
         got = run(L, pm, batches, replay, opts)
         r = {"max_grad": mg, "ce_abs": max(abs(a[0] - b[0]) for a, b in zip(ref, got)), "kl_abs": max(abs(a[1] - b[1]) for a, b in zip(ref, got)),
@@ -81,9 +107,10 @@ def main():
         ok &= r["pass"]
         res[name] = r
     counts = {}
-    for name, opts in {"original": {}, "sm120_fallback_structure(torch backend)": {"fast_experts": True, "experts_backend": "torch"}, "fast_experts(triton)": {"fast_experts": True, "experts_backend": "triton"}}.items():
+    for name, opts in {"original": {}, "sm120_fallback_structure(torch backend)": {"fast_experts": True, "experts_backend": "torch"}, "fast_experts(triton)": {"fast_experts": True, "experts_backend": "triton"}, "fast_experts(bmm_pad)": {"fast_experts": True, "experts_backend": "bmm_pad"}}.items():
         counts[name] = run(L, pm, batches[:1], replay, opts, prof=True)[1]
     res["calls_per_step_cpu"] = counts
+    ok &= counts["fast_experts(bmm_pad)"].get("aten::mm", 0) < counts["sm120_fallback_structure(torch backend)"].get("aten::mm", 0)
     ok &= counts["fast_experts(triton)"].get("aten::mm", 0) < counts["sm120_fallback_structure(torch backend)"].get("aten::mm", 0)
     res["ok"] = bool(ok)
     print(json.dumps(res))

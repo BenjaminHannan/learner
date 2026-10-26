@@ -13,7 +13,7 @@ Each option keeps the loss and the LoRA gradients (float summation order and, on
               chunk kernel with cu_seqlens; the short conv needs fla_conv or the torch loop below, HF's torch conv would leak 3 tokens across sequences).
   fla_conv    HF's GDN short conv (torch F.conv1d + a separate silu, no causal-conv1d package) -> fla's Triton causal_conv1d (fused silu, cu_seqlens aware). GPU only.
   fast_experts  frozen routed experts: one Triton grouped GEMM launch per call (fast_experts.py) instead of torch 2.9's per-expert mm loop on sm_120 (143k mm/step). Needs experts_implementation
-              "grouped_mm". Exact up to float summation order. experts_backend "auto" (Triton on CUDA, original elsewhere) | "triton" | "torch" (tests).
+              "grouped_mm". Exact up to float summation order. experts_backend "auto" (= bmm_pad on CUDA, original elsewhere) | "bmm_pad" | "bmm_split" | "triton" (T4: 9x SLOWER than baseline, see NOTES) | "torch" (tests).
   fused_norms torch.compile'd Qwen3_5MoeRMSNorm / RMSNormGated (7 fp32 elementwise kernels each -> 1).
   python:  import fast_step; undo = fast_step.install(sleepb, sync_free=True, kl_cache=True, packed=True, fla_conv=True); ...; undo()
 """

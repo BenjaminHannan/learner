@@ -4,7 +4,7 @@ kernel table for the baseline and every opt-in fix of fast_step.py, one JSON out
   python speed/qwen36_step/profile_step.py --layers 4 --variants baseline,all --steps 4   # quicker
 Downloads only the shards that hold embed / norm / lm_head / layers < N (~4-6 shards of 26) into --work. The first N layers keep the 3 Gated DeltaNet : 1 full-attention pattern
 when N % 4 == 0. Per-layer cost = (s/step(N=8) - s/step(N=4)) / 4; run both to extrapolate to 40 layers (lm_head + embed + optimizer are the constant).
-Variants (fast_step options): baseline | sync_free | kl_cache | fla_conv | fused_norms | fast_experts | kl_cache+fast_experts | packed (= packed + fla_conv) | all (= every option); default list omits packed_nofla (CPU only).
+Variants (fast_step options): fast_experts_bmm | fast_experts_split | fast_experts_triton (explicit backends) | baseline | sync_free | kl_cache | fla_conv | fused_norms | fast_experts | kl_cache+fast_experts | packed (= packed + fla_conv) | all (= every option); default list omits packed_nofla (CPU only).
 Defaults are quick: --steps 4 --warmup 2, 2 profiled steps; add --no-profile-variants to profile only the baseline (all variants then fit in ~10 min). Reports mean AND median per variant.
 Parity per variant, one lr-0 step on the same batch vs baseline: CE and KL relative diff, LoRA-gradient relative L2 diff and cosine. Pass marks (fixed in advance, bf16 + different
 batch shapes make bit-equality impossible): CE rel diff < 1e-2, KL rel diff < 5e-2, grad cosine > 0.99. A variant that fails is reported, not timed as a win.
@@ -32,6 +32,9 @@ VARIANTS = {
     "packed_nofla": {"packed": True},  # packed layout without the fla conv (CPU dry runs with --torch-varlen; on GPU the HF torch conv would leak across sequences)
     "fast_experts": {"fast_experts": True},  # one Triton grouped GEMM per expert matmul instead of torch 2.9's per-expert mm loop on sm_120 (see NOTES "Per-expert backward")
     "kl_cache+fast_experts": {"kl_cache": True, "fast_experts": True},
+    "fast_experts_bmm": {"fast_experts": True, "experts_backend": "bmm_pad"},
+    "fast_experts_split": {"fast_experts": True, "experts_backend": "bmm_split"},
+    "fast_experts_triton": {"fast_experts": True, "experts_backend": "triton"},
     "all": {"sync_free": True, "kl_cache": True, "packed": True, "fla_conv": True, "fused_norms": True, "fast_experts": True},
 }
 BUCKETS = [  # kernel-name regexps -> bucket, first match wins
