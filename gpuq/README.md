@@ -43,9 +43,9 @@ An exclusive job fits a GPU with no real job on it. A `gpus=2` job must pass the
 packable job takes the already most-reserved one (best fit), so whole cards stay free for exclusive and 2-GPU jobs.
 
 Order is still priority, then age. The daemon walks pending in that order and starts every job that fits now; a job that
-does not fit does not stop the ones behind it. Exception: an exclusive or `gpus=2` job that has waited more than
+does not fit does not stop the ones behind it. Exception: any job that has waited more than
 `--reserve-after` minutes holds the n least-loaded GPUs: lower-priority jobs may not start on them (fillers still may,
-and are preempted when the job starts), so they drain and the big job gets its turn. `--reserve-after 0` gives the old strict
+and are preempted when the job starts), so they drain and the big job gets its turn. A job whose `mem_gb` exceeds every card is rejected to failed/. `--reserve-after 0` gives the old strict
 head-of-line behaviour for such jobs.
 
 A GPU using more than 2 GB for a process not started by gpuq, with no gpuq job on it, is treated as busy. `status` and

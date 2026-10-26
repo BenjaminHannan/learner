@@ -367,8 +367,8 @@ class Daemon:
           exclusive job: no real (non-filler) job is on g;
           packable job:  no exclusive job on g, < max_per_gpu jobs, reserved GB + mem_gb <= capacity, and live
                          free memory >= mem_gb + 1 GB (live check skipped while only a filler is there).
-        A job that fits nowhere only blocks lower-priority jobs if it is exclusive or gpus=2 and has waited
-        more than reserve_after minutes: then the n least-loaded GPUs are held for it (fillers may still run)."""
+        A job that fits nowhere blocks lower-priority jobs once it has waited more than reserve_after
+        minutes: then the n least-loaded GPUs are held for it (fillers may still run)."""
         run = self.st["running"]
         real = {g: [] for g in self.gpus}
         fill, anyrec = {}, set()
@@ -388,7 +388,7 @@ class Daemon:
         resv = {g: sum(r.get("mem_gb") or 0 for r in real[g]) for g in self.gpus}
         excl = {g: any(r.get("exclusive", True) for r in real[g]) for g in self.gpus}   # old records: exclusive
         cnt = {g: len(real[g]) for g in self.gpus}
-        held, touched, now = set(), set(), time.time()
+        held, touched, livefail, now = set(), set(), set(), time.time()
 
         def fits(job, g):
             if g in ext or g in held:
@@ -400,11 +400,15 @@ class Daemon:
             if g not in fill and g in stats:     # a filler is preempted first, so its memory does not count
                 free_gb = (stats[g]["mem_total"] - stats[g]["mem_used"]) / 1024.0
                 if free_gb < job["mem_gb"] + 1.0:
+                    livefail.add(g)      # don't restart a filler here, or it is preempted again every tick
                     return False
             return True
 
         for job in self.load_pending():
             n = job["gpus"]
+            if not job["exclusive"] and caps and job["mem_gb"] > max(caps.values()) + 1e-9:
+                self.reject(job["path"], "mem_gb=%s exceeds card capacity %.1f GB" % (job["mem_gb"], max(caps.values())))
+                continue
             cands = [g for g in self.gpus if fits(job, g)]
             if len(cands) >= n:
                 cands.sort(key=lambda g: (-resv[g], g in fill, g))     # best fit: most reserved first
@@ -420,12 +424,13 @@ class Daemon:
                         self.terminate(fill[g], "preempt")
                 if not drain:
                     self.start_job(job, chosen)
-            elif (job["exclusive"] or n == 2) and now - job["submitted"] > self.reserve_after * 60:
+            elif now - job["submitted"] > self.reserve_after * 60:
                 pool = sorted((g for g in self.gpus if g not in ext and g not in held),
                               key=lambda g: (cnt[g], resv[g], g))
-                held.update(pool[:n])
+                if len(pool) >= n:
+                    held.update(pool[:n])
         for g in self.gpus:
-            if cnt[g] == 0 and g not in fill and g not in ext and g not in touched:
+            if cnt[g] == 0 and g not in fill and g not in ext and g not in touched and g not in livefail:
                 self.start_filler(g)
 
     def start_job(self, job, chosen):

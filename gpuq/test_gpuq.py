@@ -272,6 +272,23 @@ class Packing(Base):
         self.job(name, "sleep 60", **hdr)
         self.pump(lambda: name in self.running_names())
 
+    def test_oversized_job_rejected(self):
+        self.job("huge", "true", mem_gb=40)
+        self.pump(lambda: self.in_dir("failed", "huge"))
+
+    def test_big_packable_job_reserves_after_wait(self):
+        self.d.reserve_after = 0
+        self.run_job("a", mem_gb=5)
+        self.run_job("b", mem_gb=5)               # best fit: both on GPU 0, GPU 1 free
+        self.run_job("c", mem_gb=20, priority=50) # only GPU 1 fits
+        self.assertEqual(self.gpus_of("c"), [1])
+        self.job("big", "sleep 60", mem_gb=20, priority=40)   # fits nowhere now -> holds a GPU
+        self.job("small", "sleep 60", mem_gb=2, priority=10)
+        for _ in range(5):
+            self.d.tick(); time.sleep(0.1)
+        self.assertEqual(self.gpus_of("small"), [0])   # GPU 1 is held for "big"
+        self.assertNotIn("big", self.running_names())
+
     def test_two_share_one_gpu_other_stays_free_for_exclusive(self):
         self.run_job("a", mem_gb=10)
         self.run_job("b", mem_gb=10)
