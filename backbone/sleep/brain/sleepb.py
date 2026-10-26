@@ -52,6 +52,18 @@ main stream is untouched), kept under twist's checks (both entities, no test lea
 make_reworded.py, written through the Message Batches API): after ALL scoring and after the result JSON is on disk, weights-only greedy answers to 3 new wordings of each C2+C4 forward / reverse and each two-hop test (a test is right if most of its wordings are), to the exact kept question
 cards / REM chain dreams of those tests (the cramming gap), a seen check (a wording found word for word in any kept text) and a card-variety measure (pairwise token Jaccard of an item's texts) -> result["reword"], rewritten into the same file; a failure goes to result["reword_error"], never costs the run.
 
+Sleep efficiency (research/sleep-efficiency-2026-10-25.md; every flag is off by default, and off is bit-identical to before): --card-stats (report-only) records, for every
+practice example, whether the model already answered it before the step (every target token but the final eos is the argmax, so greedy decoding would write it exactly), from the
+logits the loss already computes, and puts the per-night shares by kind (text, qa_cb, qa_ob, rem_cb, rem_ob) and by quarter of the night in nights[i].cards; --skip-known F (implies
+--card-stats): a card (an NREM paraphrase or Q&A, a REM-pool dream) that was right at its last closed-book or text practice is kept with probability F, else the draw is repeated
+(at most SKIP_TRIES draws, the last one is kept); a wrong morning probe marks all of that item's cards not known again; --lora-plus R: the lora_B matrices step at lr x R (LoRA+);
+--ob-share P: the open-book share of practice Q&A (0.5 before); --lr-sched wsd: the night's lr stays at --lr, then falls linearly to 0 over the last WSD_DECAY of its steps (cosine before);
+--rem-views V: each REM cycle gives the REM pool about V x pool x (cycle's REM steps / night's REM steps) practice slots, at most the usual round(0.7 bsz) a step, so a live dream
+gets about V practices a night; the slots it does not use go to NREM cards (before: always round(0.7 bsz) a step, e.g. about 2,700 practices for night 2's first dream in nb at 4x).
+Together with the other branches' flags: --rem-views with --rem-steps-mult != 1 is an error (views fixes a dream's practices a night, so the extra REM steps would only be NREM steps); --rem-views composes with --rem-dirs both and --rem-tries
+(it works on whatever the pool holds: each direction's dream is a dream, and --rem-tries only changes how the pool fills); --skip-known composes with --dream-vary (a style text is a card of its own, keyed by its text, so every night's new texts start not known;
+the draw frequency changes, so a run with both is neither addendum's control); --text-scale and --reword are untouched by the efficiency flags.
+
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
 scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
@@ -61,7 +73,7 @@ every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-3
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15) + the sleep-efficiency card checks (--card-stats, --skip-known, --lora-plus, --lr-sched, --rem-views)
   python backbone/sleep/brain/sleepb.py --arm ab_ob --smoke --out /tmp/x --budget-scale 8 --text-scale 4 --dream-vary mix --reword /tmp/smoke_reworded.json   # addendum 15 on the smoke fixture (a Week-2 file maps to none of its tests)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
@@ -117,6 +129,11 @@ TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the 
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
 B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
 B4_ARMS = ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)  # addendum 7 / 8 / 9 / 10: work scale 4 unless --budget-scale says otherwise
+
+
+SKIP_TRIES = 8  # --skip-known: draws per practice slot before a known card is kept anyway
+WSD_DECAY = 0.2  # --lr-sched wsd: share of the night's steps in the linear decay to 0
+ROW_CHUNK = 128  # row_stats: target rows per CE chunk (bounds the [rows, vocab] log-softmax temporary)
 
 
 def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
@@ -750,6 +767,24 @@ def tgt_logits(pm, ids, mask, tm):  # fp32 logits at the shifted target position
     return m.lm_head(m.model(input_ids=ids, attention_mask=mask).last_hidden_state[:, :-1][tm]).float()
 
 
+@torch.no_grad()
+def row_stats(lg, tgt, tm):
+    """--card-stats / --skip-known: per example (row of tm) of a micro-batch, from the target logits lg the loss already used (no extra forward):
+    known = every target but the row's last (the eos each example ends with) is the argmax, so greedy decoding after the prompt writes exactly
+    this text; acc = the share of those targets that are the argmax; ce = the mean CE over all the row's targets (eos included)."""
+    B = tm.shape[0]
+    if not len(tgt):
+        return [{"known": True, "acc": 1.0, "ce": 0.0} for _ in range(B)]
+    rows = tm.nonzero()[:, 0]  # row-major, the order lg's rows come in
+    last = torch.ones_like(rows, dtype=torch.bool)
+    last[:-1] = rows[1:] != rows[:-1]
+    body = (~last).float()
+    ok = (lg.argmax(-1) == tgt).float()
+    ce = torch.cat([F.cross_entropy(lg[i:i + ROW_CHUNK], tgt[i:i + ROW_CHUNK], reduction="none") for i in range(0, len(tgt), ROW_CHUNK)])
+    t = torch.stack([torch.bincount(rows, weights=w, minlength=B) for w in (body, body * ok, ce, torch.ones_like(ce))]).tolist()
+    return [{"known": h == n, "acc": h / n if n else 1.0, "ce": c / m if m else 0.0} for n, h, c, m in zip(*t)]
+
+
 def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start[, weight]) examples
     ids, mask = L.pad_right([b[0] for b in mb])
     lm = torch.zeros_like(mask)
@@ -769,7 +804,13 @@ class Trainer:
                 if "lora_" in n:
                     p.requires_grad_(False)
         s.params = [p for p in pm.parameters() if p.requires_grad]
-        s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
+        plus = getattr(args, "lora_plus", None)  # --lora-plus R (LoRA+, Hayou et al. 2024): the lora_B matrices in a second group at lr x R
+        if plus:
+            bs = {id(p) for n, p in pm.named_parameters() if p.requires_grad and "lora_B" in n}
+            s.opt = torch.optim.AdamW([{"params": [p for p in s.params if id(p) not in bs]}, {"params": [p for p in s.params if id(p) in bs], "lr_mult": plus}],
+                                      lr=args.lr, weight_decay=0.0)
+        else:
+            s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
         s.force_w, s.wsteps, s.wex = False, 0, 0  # force_w: test hook; wsteps / wex: weighted-path steps and examples with weight != 1
@@ -777,13 +818,21 @@ class Trainer:
     def masks(s, mb):
         return lm_masks(s.L, mb)
 
-    def step(s, batch):
+    def lr_at(s, i):  # the night's lr at step i: cosine from a.lr to 0 over s.n steps; --lr-sched wsd: a.lr, then linear to 0 over the last WSD_DECAY of the steps
+        a = s.a
+        if getattr(a, "lr_sched", "cosine") == "wsd":
+            k = math.ceil(s.n * (1 - WSD_DECAY))
+            return a.lr if i < k else a.lr * (s.n - i) / (s.n - k + 1)
+        return a.lr * 0.5 * (1 + math.cos(math.pi * i / s.n))
+
+    def step(s, batch, rows=False):  # rows (--card-stats / --skip-known): also return row_stats of every example, in batch order
         if not batch:
             return
         a = s.a
-        lr = a.lr * 0.5 * (1 + math.cos(math.pi * s.i / s.n))
+        lr = s.lr_at(s.i)
         for g in s.opt.param_groups:
-            g["lr"] = lr
+            g["lr"] = lr * g.get("lr_mult", 1.0)
+        stats = [None] * len(batch) if rows else None
         s.pm.train()
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
         gb, gr = groups(batch), groups(rb)  # single-group decision on the original order
@@ -796,7 +845,10 @@ class Trainer:
         s.opt.zero_grad(set_to_none=True)
         if len(gb) == 1 and len(gr) <= 1 and not weighted:  # the stage-1 path (short closed-book examples), unchanged
             ids, mask, tm = s.masks(batch)
-            ce = F.cross_entropy(tgt_logits(s.pm, ids, mask, tm), ids[:, 1:][tm])
+            lg = tgt_logits(s.pm, ids, mask, tm)
+            ce = F.cross_entropy(lg, ids[:, 1:][tm])
+            if rows:
+                stats = row_stats(lg.detach(), ids[:, 1:][tm], tm)
             loss = ce
             if rb:
                 rids, rmask, rt = s.masks(rb)
@@ -810,6 +862,10 @@ class Trainer:
         else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
             ntgt = sum(len(e) - max(st, 1) for e, st, *_ in batch)
             ce_sum = 0.0
+            if rows:  # each micro-batch entry is one of batch's tuples (gb may be sorted): its index in batch
+                pos = defaultdict(list)
+                for i, x in enumerate(batch):
+                    pos[id(x)].append(i)
             for mb in gb:
                 ids, mask, tm = s.masks(mb)
                 lg = tgt_logits(s.pm, ids, mask, tm)
@@ -820,6 +876,9 @@ class Trainer:
                     part = F.cross_entropy(lg, ids[:, 1:][tm], reduction="sum") / ntgt
                 part.backward()
                 ce_sum += float(part.detach())
+                if rows:
+                    for x, r in zip(mb, row_stats(lg.detach(), ids[:, 1:][tm], tm)):
+                        stats[pos[id(x)].pop()] = r
             ce = torch.tensor(ce_sum)
             if rb:
                 npos = sum(len(e) - max(st, 1) for e, st, *_ in rb)
@@ -840,6 +899,7 @@ class Trainer:
         if s.i % 10 == 1 or s.i == s.n:
             s.curve.append({"step": s.i, "ce": float(ce.detach()), "kl": kl_v, "lr": lr})
         s.pm.eval()
+        return stats
 
 
 # ------------------------------------------------------------------ synaptic downscaling (SHY)
@@ -1443,6 +1503,157 @@ def selftest_fast():
         return out
     finally:
         globals()["FAST"], globals()["TOK_BUDGET"], _DELTA["on"] = fast, tb, don
+        torch.set_rng_state(rng_state)
+
+
+def selftest_cards():
+    """The sleep-efficiency flags on the tiny CPU smoke model (global RNG, TOK_BUDGET and FAST restored). (i) Trainer.step(batch, rows=True) leaves CE, KL and every
+    LoRA gradient bit-identical to Trainer.step(batch), on the single-group, weighted and split (+ KL) paths, and returns one row per example in batch order;
+    (ii) row_stats' "known" is "greedy decoding after the prompt writes exactly this answer": the model's own greedy continuation is known, the same with one
+    token changed is not, on both paths; (iii) --lora-plus R puts exactly the lora_B tensors at lr x R; off is one group; (iv) the cosine and wsd schedules;
+    (v) Brain.nrem / rem_ex with --skip-known off draw exactly what the code before the flags drew (same examples, same RNG states after); on, a known item's
+    cards are rarely drawn, Brain.train_step records closed-book and text outcomes only, and a wrong morning probe resets the item's cards."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state, tb, fast = torch.get_rng_state(), TOK_BUDGET, FAST
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        for n, p in pm.named_parameters():  # B is zero at init: randomise it, so the adapter matters
+            if "lora_B" in n:
+                p.data.normal_(0, 0.05, generator=g)
+        params = [p for p in pm.parameters() if p.requires_grad]
+        base = [ex_text(L, f"Zelmir lives in Kelmira number {i}, near the old harbour.") if i % 2 else ex_qa(L, f"Where does Zelmir{'x' * (3 * i)} live?", "Kelmira") for i in range(8)]
+        replay = [ex_text(L, f"A generic sentence number {i} about the weather" + " today" * (i * 3)) for i in range(6)]
+        big, small = 10 ** 6, 2 * max(len(e) for e, _ in base)
+
+        def run(batch, budget, rows, kl=True):
+            globals()["FAST"], globals()["TOK_BUDGET"] = True, budget
+            tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=1.0 if kl else 0.0, replay_bsz=3), replay if kl else [], 1, 0)
+            st = tr.step(batch, rows=rows)
+            return tr.curve[0], [p.grad.clone() for p in params], st
+
+        # (i) bit-identical with rows on
+        weighted = [e + (w,) for e, w in zip(base, [0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 2.0, 1.0])]
+        for name, batch, budget in (("single", base[:4], big), ("weighted", weighted, big), ("split_kl", base, small), ("split_weighted_kl", weighted, small)):
+            c0, g0, s0 = run(batch, budget, False)
+            c1, g1, s1 = run(batch, budget, True)
+            same = c0 == c1 and all(torch.equal(x, y) for x, y in zip(g0, g1))
+            assert same and s0 is None and len(s1) == len(batch) and all(r is not None for r in s1), (name, c0, c1)
+            out[name] = {"bit_identical": same, "rows": len(s1), "micro_batches": len(groups(batch, budget))}
+        # (ii) known == greedy decoding writes it
+        pm.eval()
+        p0 = L.ids(L.render(SYS, "Where does Zelmir live?"))
+        x, gr = torch.tensor([p0]), []
+        with torch.no_grad():
+            for _ in range(3):
+                nxt = int(pm(input_ids=x).logits[0, -1].argmax())
+                gr.append(nxt)
+                x = torch.cat([x, torch.tensor([[nxt]])], 1)
+        V = pm.get_base_model().lm_head.out_features
+        good = (p0 + gr + [L.eos], len(p0))
+        bad = (p0 + gr[:1] + [(gr[1] + 1) % V] + gr[2:] + [L.eos], len(p0))
+        for name, budget in (("known_single", big), ("known_split", len(good[0]) + 1)):
+            st = run([bad, good, base[0]], budget, True, kl=False)[2]
+            assert st[1]["known"] and st[1]["acc"] == 1.0 and not st[0]["known"] and st[0]["acc"] < 1.0, (name, st)
+            out[name] = [r["known"] for r in st]
+        # (iii) --lora-plus
+        tr = Trainer(L, pm, Namespace(lr=0.1, kl_weight=0.0, replay_bsz=0, lora_plus=4.0), [], 4, 0)
+        tr.step(base[:2])
+        gB = {id(p) for n, p in pm.named_parameters() if "lora_B" in n}
+        g0_, g1_ = tr.opt.param_groups
+        assert len(tr.opt.param_groups) == 2 and {id(p) for p in g1_["params"]} == gB and not gB & {id(p) for p in g0_["params"]}
+        assert g0_["lr"] == 0.1 and abs(g1_["lr"] - 0.4) < 1e-12, (g0_["lr"], g1_["lr"])
+        assert len(Trainer(L, pm, Namespace(lr=0.1), [], 4, 0).opt.param_groups) == 1
+        out["lora_plus"] = {"groups": 2, "b_tensors": len(gB), "lr": [g0_["lr"], g1_["lr"]]}
+        # (iv) schedules over a 10-step night
+        cos = Trainer(L, pm, Namespace(lr=1.0), [], 10, 0)
+        wsd = Trainer(L, pm, Namespace(lr=1.0, lr_sched="wsd"), [], 10, 0)
+        assert all(cos.lr_at(i) == 0.5 * (1 + math.cos(math.pi * i / 10)) for i in range(10))
+        w = [wsd.lr_at(i) for i in range(10)]
+        assert w[:8] == [1.0] * 8 and abs(w[8] - 2 / 3) < 1e-12 and abs(w[9] - 1 / 3) < 1e-12, w
+        out["wsd"] = [round(v, 4) for v in w]
+        # (iv b) --rem-views 20: the last cycle of nb's night 2 at 4x (2 dreams, 195 of the night's 510 REM steps) and of night 7 (375 dreams: the usual 11 a step binds), spread evenly
+        s2, s7 = rem_split(20, 2, 195, 510, 11), rem_split(20, 375, 195, 510, 11)
+        assert sum(s2) == 15 and max(s2) - min(s2) <= 1 and s7 == [11] * 195 and rem_split(20, 0, 5, 10, 0) == [0] * 5, (sum(s2), s7[:3])
+        out["rem_views"] = {"night2_rem_examples": sum(s2), "night7_rem_examples": sum(s7)}
+        # (v) Brain sampling
+        me = Brain.__new__(Brain)
+        me.a, me.L, me.diary, me.day, me.cov, me.raw, me.items = Namespace(arm="ab_ob_b4_nb", seed=0), L, Diary(smoke_week()), 2, Counter(), {}, {}
+        me.skip_f, me.track, me.card, me.card_items, me.bk, me.cs, me.seen, me.last_ob = None, False, {}, defaultdict(set), None, Counter(), set(), False
+        A = Item(key=("zelmir", "kelmira"), subj="Zelmir", obj="Kelmira", rel="lives in", born=1, days=2,
+                 para=[f"Zelmir lives in Kelmira, take {i}." for i in range(3)], qa=[("Where does Zelmir live?", "Kelmira"), ("Who lives in Kelmira?", "Zelmir")])
+        B = Item(key=("drovak", "gliker"), subj="Drovak", obj="Gliker", rel="mentors", born=1, days=2,
+                 para=[f"Drovak mentors Gliker, take {i}." for i in range(3)], qa=[("Who does Drovak mentor?", "Gliker"), ("Who mentors Gliker?", "Drovak")])
+        C = Item(key=("tavrix", "zelmir"), subj="Zelmir", obj="Tavrix", rel="works at", born=1, days=2, para=["Zelmir works at Tavrix."], qa=[("Where does Zelmir work?", "Tavrix")])
+        me.items = {it.key: it for it in (A, B, C)}
+        live = [{"q": "Where does the mentor of Gliker live?", "a": "Kelmira", "keys": [A.key, B.key]}, {"q": "Who lives where Zelmir lives?", "a": "Zelmir", "keys": [A.key]}]
+
+        def old_qa(q, a):  # Brain.qa_ex before the flags (ab_ob arms: p = 0.5 open-book)
+            if me.a.arm in OB_ARMS and me.ob_rng.random() < 0.5:
+                return ex_qa_ob(me.L, me.diary, q, a, me.day)
+            return ex_qa(me.L, q, a)
+
+        def old_nrem(act, cum, con, n):  # Brain.nrem / dream_ex before the flags
+            o = []
+            for _ in range(n):
+                if act and (not con or me.rng.random() < 0.75):
+                    it = me.rng.choices(act, cum_weights=cum)[0]
+                elif con:
+                    it = me.rng.choice(con)
+                else:
+                    continue
+                c = me.rng.choice(it.para + it.qa)
+                o.append(ex_text(me.L, c) if isinstance(c, str) else old_qa(c[0], c[1]))
+            return o
+
+        def draw(f, act, con, n, nr):
+            me.rng, me.ob_rng = random.Random(1), random.Random(2)
+            cum = list(itertools.accumulate(me.prio(it) for it in act))
+            if f == "old":
+                exs = [old_qa(x["q"], x["a"]) for x in me.rng.choices(live, k=nr)] + old_nrem(act, cum, con, n)
+            else:
+                exs = me.rem_ex(live, nr) + me.nrem(act, cum, con, n)
+            return exs, me.rng.getstate(), me.ob_rng.getstate()
+
+        for act, con in (([A, B], [C]), ([A, B], []), ([], [C])):
+            ref, new = draw("old", act, con, 40, 5), draw("new", act, con, 40, 5)
+            assert ref == new, "skip-known off must draw exactly as before"
+        out["off_identical"] = True
+        me.skip_f, me.track = 0.01, True
+        for c in A.para + A.qa:
+            me.card[card_key(A, c)] = True
+        me.card[rem_key(live[1])] = True
+        me.bk = []
+        exs = draw("new", [A, B], [], 400, 40)[0]
+        bk, me.bk = me.bk, None
+        nA = sum(1 for _, _, ik in bk if ik == A.key)
+        nr1 = sum(1 for k, _, _ in bk if k == rem_key(live[1]))
+        assert len(exs) == len(bk) == 440 and nA < 20 and nr1 < 4 and me.cs["known_drawn"] > 0, (nA, nr1, me.cs)
+        out["skip_on"] = {"known_item_share": round(nA / 400, 4), "known_rem_share": round(nr1 / 40, 4), "known_drawn": me.cs["known_drawn"]}
+        # train_step: outcomes of closed-book and text examples only go into me.card
+        me.card, me.card_items, me.bk = {}, defaultdict(set), []
+        batch = me.nrem([A, B, C], [1, 2, 3], [], 12)
+        bk = list(me.bk)
+        globals()["TOK_BUDGET"] = big
+        tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=0.0, replay_bsz=0), [], 1, 0)
+        me.train_step(tr, batch)
+        kinds = Counter(k for _, k, _ in bk)
+        cb_keys = {key for key, k, _ in bk if k in ("text", "qa_cb")}
+        assert set(me.card) == cb_keys and sum(me.cs[f"n_{k}"] for k in kinds) == 12 and me.bk is None, (kinds, me.card)
+        # the morning reset
+        for key in list(me.card):
+            me.card[key] = True
+        nA = sum(1 for key in me.card_items[A.key])
+        me.card_reset([A, B, C], {A.key: (False, "x"), B.key: (True, "Gliker")})
+        assert me.cs["reset_by_probe"] == nA and all(not me.card[k] for k in me.card_items[A.key]) and all(me.card[k] for k in me.card_items[B.key])
+        out["train_step"] = {"kinds": dict(kinds), "reset_by_probe": nA}
+        return out
+    finally:
+        globals()["FAST"], globals()["TOK_BUDGET"] = fast, tb
         torch.set_rng_state(rng_state)
 
 
@@ -2147,6 +2358,14 @@ class Item:
         return f"{self.subj} {self.rel} {self.obj}."
 
 
+def card_key(it, o):  # --card-stats / --skip-known: the identity of item it's card o (cards are compared by content, so a re-dreamed item's new cards are new keys)
+    return ("p", it.key, o) if isinstance(o, str) else ("q", it.key, o[0], o[1])
+
+
+def rem_key(x):  # the same for a REM-pool dream
+    return ("r", x["q"], x["a"])
+
+
 def other(it, x):  # (display shared, display other) of the item w.r.t. normalized string x
     return (it.subj, it.obj) if norm(it.subj) == x else (it.obj, it.subj)
 
@@ -2229,6 +2448,11 @@ def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subje
     return "dropped" if (norm(sj), norm(ob)) in dropped else "ok"
 
 
+def rem_split(views, pool, n_rem, rem_total, nr0):  # --rem-views: REM-pool examples per step of one REM cycle (n_rem steps), about views x pool x n_rem / rem_total in all, at most nr0 a step, spread evenly
+    q = min(n_rem * nr0, round(views * pool * n_rem / max(rem_total, 1)))
+    return [q // n_rem + (j < q % n_rem) for j in range(n_rem)]
+
+
 def rem_plan(steps, arm, mult=1.0):  # a night's per-cycle (NREM steps, REM steps) for `steps` reference steps: the quarters of `steps`, NREM_SHARE of each (all of it for ab_norem), the rest REM; addendum 14: the REM count x mult, rounded (mult 1.0: untouched)
     cyc = [steps // 4 + (1 if i < steps % 4 else 0) for i in range(4)]
     plan = []
@@ -2261,6 +2485,10 @@ class Brain:
             G.append((g["id"], g["class"], [(g["a"].lower(), g["b"].lower())], [(g["a"].lower(), g["old_b"].lower())] if g.get("old_b") else []))
         s.G = G
         s.cov = Counter()
+        s.skip_f = getattr(args, "skip_known", None)  # --skip-known: keep probability of a card that was right at its last practice (None: off)
+        s.track = s.skip_f is not None or getattr(args, "card_stats", False)  # per-example outcomes of every training step (--card-stats)
+        s.card, s.card_items = {}, defaultdict(set)  # card key -> right at its last closed-book / text practice; item key -> its card keys
+        s.bk, s.cs, s.seen, s.last_ob = None, Counter(), set(), False  # the (card key, kind, item key) list of the batch being built; tonight's counts; tonight's practised cards; qa_ex's last coin
 
     # ---- plumbing
     def mn(s, n):
@@ -2708,9 +2936,11 @@ class Brain:
         return out
 
     # ---- batches
-    def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+    def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 (--ob-share) the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+        s.last_ob = False
         if s.a.arm in OB_ARMS:
-            ob = s.ob_rng.random() < 0.5
+            ob = s.ob_rng.random() < getattr(s.a, "ob_share", 0.5)
+            s.last_ob = ob
             s.cov["qa_open_book" if ob else "qa_closed_book"] += 1
             if ob:
                 if "ob_example" not in s.raw:
@@ -2722,8 +2952,84 @@ class Brain:
         return ex + (0.5,) if s.a.arm == "ab_ob_ther" and any(s.salient(i) for i in its) else ex
 
     def dream_ex(s, it):
-        o = s.rng.choice(it.para + it.qa)
-        return s.wt(ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1]), [it])
+        return s.card_ex(it, s.rng.choice(it.para + it.qa))
+
+    def card_ex(s, it, o):  # the practice example of item it's card o (a paraphrase, or a (q, a) pair); with s.bk on, its (card key, kind, item key) is recorded
+        ex = s.wt(ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1]), [it])
+        if s.bk is not None:
+            s.bk.append((card_key(it, o), "text" if isinstance(o, str) else "qa_ob" if s.last_ob else "qa_cb", it.key))
+        return ex
+
+    def skip(s, key):  # --skip-known: True = draw again (the card was right at its last practice and its keep coin, p = skip_f, came up tails)
+        if not s.card.get(key):
+            return False
+        s.cs["known_drawn"] += 1
+        if s.rng.random() < s.skip_f:
+            s.cs["known_kept"] += 1
+            return False
+        return True
+
+    def rem_ex(s, live, nr):  # the REM part of a REM step: nr verified REM-pool dreams as practice Q&A
+        if s.skip_f is None:
+            xs = s.rng.choices(live, k=nr)
+        else:  # --skip-known: one dream at a time, a known one kept with probability skip_f (the last of SKIP_TRIES draws is kept)
+            xs = []
+            for _ in range(nr):
+                for t in range(SKIP_TRIES):
+                    x = s.rng.choice(live)
+                    if t == SKIP_TRIES - 1 or not s.skip(rem_key(x)):
+                        break
+                xs.append(x)
+        out = []
+        for x in xs:
+            out.append(s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]))
+            if s.bk is not None:
+                s.bk.append((rem_key(x), "rem_ob" if s.last_ob else "rem_cb", None))
+        return out
+
+    def train_step(s, tr, batch):  # tr.step(batch); with s.bk on (--card-stats / --skip-known), each example's outcome goes into s.card and tonight's counts
+        bk, s.bk = s.bk, None
+        if bk is None:
+            tr.step(batch)
+            return
+        stats = tr.step(batch, rows=True) or []
+        assert len(stats) == len(bk), (len(stats), len(bk))
+        qt, c = min(3, 4 * (tr.i - 1) // tr.n), s.cs  # the quarter of the night this step was in
+        for (key, kind, ik), r in zip(bk, stats):
+            c[f"n_{kind}"] += 1
+            c[f"known_{kind}"] += r["known"]
+            c[f"acc_{kind}"] += r["acc"]
+            c[f"ce_{kind}"] += r["ce"]
+            s.seen.add(key)
+            if kind in ("qa_ob", "rem_ob"):  # an open-book answer can be read off the notes: it says nothing about memory
+                continue
+            c[f"q{qt}_n"] += 1
+            c[f"q{qt}_known"] += r["known"]
+            s.card[key] = r["known"]
+            if ik is not None:
+                s.card_items[ik].add(key)
+
+    def card_reset(s, E, pre):  # a new night's counts; a wrong morning probe marks every card of that item not known
+        s.cs, s.seen = Counter(), set()
+        for it in E:
+            if it.key in pre and not pre[it.key][0]:
+                for k in s.card_items.get(it.key, ()):
+                    if s.card.get(k):
+                        s.card[k] = False
+                        s.cs["reset_by_probe"] += 1
+
+    def card_summary(s):  # rec["cards"]: tonight's practice examples that the model already answered right before their step, by kind and by quarter of the night
+        c = s.cs
+        r4 = lambda x: round(x, 4)  # noqa: E731
+        kinds = sorted(k[2:] for k in c if k.startswith("n_"))
+        out = {"by_kind": {k: {"examples": int(c[f"n_{k}"]), "known_at_step": r4(c[f"known_{k}"] / c[f"n_{k}"]), "acc": r4(c[f"acc_{k}"] / c[f"n_{k}"]),
+                               "ce": r4(c[f"ce_{k}"] / c[f"n_{k}"])} for k in kinds}}
+        n = sum(c[f"q{i}_n"] for i in range(4))
+        out["known_share"] = r4(sum(c[f"q{i}_known"] for i in range(4)) / n) if n else None  # closed-book Q&A, texts and closed-book REM dreams
+        out["known_share_by_quarter"] = [r4(c[f"q{i}_known"] / c[f"q{i}_n"]) if c[f"q{i}_n"] else None for i in range(4)]
+        out["cards_practised"], out["cards_known_now"] = len(s.seen), sum(1 for k in s.seen if s.card.get(k))
+        out.update({k: int(c[k]) for k in ("reset_by_probe", "known_drawn", "known_kept")})
+        return out
 
     def klctx(s, d):
         """ab_klctx: up to 100 diary-format prompts (notes of days <= d) from tonight's kept dreamed questions, each with the BASE model's
@@ -2739,10 +3045,19 @@ class Brain:
     def nrem(s, act, cum, con, n):
         out = []
         for _ in range(n):
-            if act and (not con or s.rng.random() < 0.75):
-                out.append(s.dream_ex(s.rng.choices(act, cum_weights=cum)[0]))
-            elif con:
-                out.append(s.dream_ex(s.rng.choice(con)))
+            pick = None
+            for t in range(SKIP_TRIES if s.skip_f is not None else 1):  # --skip-known: a known card is kept with probability skip_f, else the slot is drawn again (the last draw is kept)
+                if act and (not con or s.rng.random() < 0.75):
+                    it = s.rng.choices(act, cum_weights=cum)[0]
+                elif con:
+                    it = s.rng.choice(con)
+                else:
+                    break
+                pick = (it, s.rng.choice(it.para + it.qa))
+                if s.skip_f is None or t == SKIP_TRIES - 1 or not s.skip(card_key(*pick)):
+                    break
+            if pick:
+                out.append(s.card_ex(*pick))
         return out
 
     # ---- 7. REM (current adapter, short fact sentences only; the diary then checks each dream)
@@ -3020,6 +3335,8 @@ class Brain:
             s.log(f"[night {d}] vary {rec['dream_vary']}")
         pre = s.probe(E, conf=a.arm in GUESS_ARMS)
         s.morning(E, pre)
+        if s.track:
+            s.card_reset(E, pre)
         lap("probe")
         if a.arm in GUESS_ARMS:
             rec["guess"] = s.guess_rec(pre)
@@ -3067,7 +3384,8 @@ class Brain:
         else:
             for ci, (n_nrem, n_rem) in enumerate(plan):
                 for _ in range(n_nrem):
-                    tr.step(s.nrem(act, cum, con, a.bsz))
+                    s.bk = [] if s.track else None
+                    s.train_step(tr, s.nrem(act, cum, con, a.bsz))
                 nrem_n, done = nrem_n + n_nrem, done + n_nrem
                 if n_rem > 0:
                     lap("train")
@@ -3075,13 +3393,22 @@ class Brain:
                     lap("rem_generate")
                     rem_stats.append(rs)
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
-                    for _ in range(n_rem):
-                        nr = round(0.7 * a.bsz) if live else 0
-                        tr.step([s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
+                    nr0 = round(0.7 * a.bsz) if live else 0
+                    split = [nr0] * n_rem
+                    if getattr(a, "rem_views", None):  # about rem_views practices per live dream tonight; the rest of the REM slots go to NREM cards
+                        split = rem_split(a.rem_views, len(live), n_rem, sum(r for _, r in plan), nr0)
+                        rec.setdefault("rem_quota", []).append({"cycle": ci, "pool": len(live), "rem_examples": sum(split), "default": nr0 * n_rem})
+                    for nr in split:
+                        s.bk = [] if s.track else None
+                        s.train_step(tr, s.rem_ex(live, nr) + s.nrem(act, cum, con, a.bsz - nr))
                     rem_n, done = rem_n + n_rem, done + n_rem
                     s.cov["rem_steps"] += n_rem
         lap("train")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
+        if s.track:
+            rec["cards"] = s.card_summary()
+            s.log(f"[night {d}] cards known_share {rec['cards']['known_share']} by quarter {rec['cards']['known_share_by_quarter']} "
+                  f"by kind {({k: v['known_at_step'] for k, v in rec['cards']['by_kind'].items()})} known drawn {rec['cards']['known_drawn']} kept {rec['cards']['known_kept']}")
         if a.arm == "ab_ob_ther":
             rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
                            "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
@@ -4663,6 +4990,15 @@ def main():
     ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
     ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
     ap.add_argument("--rem-steps-mult", type=float, default=1.0, help="addendum 14: each cycle's REM steps x this (rounded); the night's cosine schedule covers the new total. 1.0 = as before")
+    ap.add_argument("--card-stats", action="store_true", help="sleep efficiency, report-only (training unchanged): per night, the share of practice examples the model already answered right before their step "
+                    "(every target but the final eos is the argmax), by kind and by quarter of the night, from the logits the loss already computes -> nights[i].cards")
+    ap.add_argument("--skip-known", type=float, default=None, help="sleep efficiency: a card (NREM paraphrase or Q&A, REM-pool dream) that was right at its last closed-book or text practice is kept with this "
+                    "probability, else drawn again (at most SKIP_TRIES draws); a wrong morning probe marks the item's cards not known; implies --card-stats. Default: off")
+    ap.add_argument("--lora-plus", type=float, default=None, help="sleep efficiency (LoRA+, Hayou et al. 2024): the lora_B matrices step at lr x this. Default: off (one lr)")
+    ap.add_argument("--ob-share", type=float, default=0.5, help="OB_ARMS: share of practice Q&A examples that are open-book (the diary-test prompt). 0.5 = as before")
+    ap.add_argument("--lr-sched", choices=["cosine", "wsd"], default="cosine", help="each night's lr schedule: cosine from --lr to 0 (as before), or wsd: --lr, then linear to 0 over the last WSD_DECAY of the night's steps")
+    ap.add_argument("--rem-views", type=float, default=None, help="sleep efficiency: each REM cycle gives the REM pool about this x pool x (cycle's REM steps / night's REM steps) practice slots (at most round(0.7 bsz) a step), "
+                    "so a live dream gets about this many practices a night; unused slots go to NREM cards. Default: off (always round(0.7 bsz) a step)")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
@@ -4689,6 +5025,7 @@ def main():
         print(json.dumps({"weighted": selftest_weighted()}))
         print(json.dumps({"rot": selftest_rot()}))
         print(json.dumps({"fast": selftest_fast()}))
+        print(json.dumps({"cards": selftest_cards()}))
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
         print(json.dumps({"arms7": selftest_arms7()}))
@@ -4774,6 +5111,18 @@ def main():
         ap.error("--q4-eval cannot be combined with --q4-base")
     if args.q4_eval and (args.q4_group < 1 or args.q4_bits < 1):
         ap.error("--q4-group and --q4-bits must be positive")
+    if (args.card_stats or args.skip_known is not None) and args.arm in ("a0", "ad", "af"):
+        ap.error("--card-stats / --skip-known need a sleeping Brain arm (not a0, ad or af)")
+    if args.skip_known is not None and not 0 < args.skip_known < 1:
+        ap.error("--skip-known is the keep probability of a known card, in (0, 1)")
+    if args.lora_plus is not None and (not args.lora_plus > 0 or args.arm in ("a0", "ad", *TRAIN_DELTA_ARMS)):
+        ap.error(f"--lora-plus must be positive, for an arm whose LoRA trains (not a0, ad or {TRAIN_DELTA_ARMS})")
+    if not 0 <= args.ob_share <= 1 or (args.ob_share != 0.5 and args.arm not in OB_ARMS):
+        ap.error("--ob-share must be in [0, 1], and only the open-book arms (OB_ARMS) use it")
+    if args.rem_views is not None and (not args.rem_views > 0 or args.arm in ("a0", "ad", "af", "ab_norem")):
+        ap.error("--rem-views must be positive, for a sleeping arm with REM (not a0, ad, af or ab_norem)")
+    if args.rem_views is not None and args.rem_steps_mult != 1.0:
+        ap.error("--rem-views and --rem-steps-mult != 1 do not combine: views fixes a dream's practices a night, so the extra REM steps would only be NREM steps")
     if args.budget_scale is not None and args.night_budget_s is not None:
         log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
@@ -4807,7 +5156,8 @@ def main():
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
     OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False,
-           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False, "text_scale": None, "dream_vary": "off", "reword": None}  # options at their default are left out of result["args"] (older result files keep their keys)
+           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False, "text_scale": None, "dream_vary": "off", "reword": None,
+           "card_stats": False, "skip_known": None, "lora_plus": None, "ob_share": 0.5, "lr_sched": "cosine", "rem_views": None}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
