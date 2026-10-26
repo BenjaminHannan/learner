@@ -20,7 +20,7 @@ OWNER = "benhannanjfkldsfds"
 DATA_FILES = ["practice_pool.jsonl", "sonnet_pool.jsonl", "sibling60.jsonl", "library_wiki.json"]
 TEST_KEEP = ("id", "kind", "prompt", "answer", "answer_type", "difficulty")
 ASK_FILES = ["__init__.py", "config.py", "model_io.py", "train_core.py", "compute_ledger.py", "eval_moves.py", "job_common.py", "tools_mock.py", "world.py"]
-CODE = ["__init__.py", "gen.py", "grade.py", "harness.py", "job.py", "library.py", "night.py", "tools.py"]
+CODE = ["__init__.py", "gen.py", "grade.py", "harness.py", "job.py", "lessons.py", "library.py", "night.py", "tools.py", "web.py"]
 PILOT_LANE_S = 3000  # pilot lane deadline: 50 min
 PILOT_BOX_H = 1.25   # box cap for the pilot: vLLM install (<= 25 min) + the 50 min lane
 LANE_H = 10.0       # the lane's own deadline (hours)
