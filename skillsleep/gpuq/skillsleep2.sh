@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # gpuq: name=skillsleep2
 # gpuq: gpus=2
-# gpuq: hours=16
+# gpuq: hours=18
 # gpuq: owner=Test sleep that improves skills
 # gpuq: retries=1
 # gpuq: secrets=anthropic
