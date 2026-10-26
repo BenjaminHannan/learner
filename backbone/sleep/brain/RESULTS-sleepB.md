@@ -656,3 +656,45 @@ PR #130 (sleep-efficiency flags) was reviewed and merged into this branch: merge
 - `--rem-views V` accounting, as coded and as the note's arithmetic assumes: a dream in the pool all night gets about V practices; a dream made in cycle c gets V times the share of the night's REM steps from cycle c on.
 - `--rem-views` with `--rem-steps-mult` other than 1 is refused (ap.error).
 - The runs use addendum 9's settings otherwise: `--tok-budget 2048 --gen-bs 32`, Week-2, seed 1. They run on one RTX 4090 (Ben's borrowed pair, free), all three in one job on the same card.
+
+## Addendum 14, arm B: thinking chain cards + twice the REM practice (k2c_r2, K2 bf16, Week-2, seed 1)
+Box 57736062, an RTX 5090 in Australia at $0.476/h, from 23:29Z to 02:48Z (3.3 h, about **$1.58**). Code a7ed69d79d. Flags: `--rem-chain-mode q_think --rem-dirs both --rem-tries 2 --rem-steps-mult 2 --think-eval --gen-bs 48 --reword data/week2_reworded.json`. Wall 11,615 s. Files: `results_a14/result_k2c_r2.json`, `results_a14/run_box_k2c_r2.log`.
+
+| (weights only) | k2s_bf16 (11c) | **k2c_r2 (B)** | paired |
+|---|---|---|---|
+| recall C2+C4 | 96.5 | **82.5** | -14.0 (31 vs 3), p < 0.0001 |
+| C2 / C4 | 96 / 97 | 69 / 96 | |
+| reverse C2+C4 | 91.5 | 78.0 | -13.5, p = 0.0001 |
+| **two-hop** | 3.8 (3 of 78) | **50.0 (39 of 78)** | **+46.2 (0 vs 36), p < 0.0001** |
+| two-hop dreamed (chain dream covers both facts) | 5 | **76** | |
+| right when dreamed | 3 of 5 | 39 of 76 (51%) | |
+| changed new / stale | 93.3 / 7 | 53.3 / 46.7 | -40.0, p = 0.0005 |
+| routine | 100 | 95 | |
+| diary pooled (base_diary) | 84.5 (80.0) | 87.0 (80.5) | |
+| ARC-Easy 500 (pre) | 91.0 (89.4) | 89.2 (89.4) | |
+| nights undone by the morning gate | 1, 2 | **1, 2, 3, 7** | |
+| REM pool at night 7 | 14 | 261 (146 at night 6) | |
+
+Verdicts (sealed marks):
+- **G FAIL:** two-hop 39 of 78. The mark was 75.
+- **No harm, B:** recall 82.5 is below 93.5, so it **FAILS**. ARC 89.2 against a mark of 84.4 passes. Diary 87.0 against a mark of 75.5 passes.
+- C1 and C2 need arm A, which runs on Ben's PC next.
+
+What happened (shown, from this JSON):
+- **Coverage is fixed.** Thinking before writing a card lifted chain dreams from 9 in a week to 227, and the tests covered from 5 to 76 of 78.
+- **The last night was thrown away.** The morning gate undid night 7: ARC on its 100 validation questions was 0.86, under 0.90 - 0.03. All of B's recall loss comes from that night:
+  - Of the C2 facts first eligible on day 7, B gets 1 of 28 right, against 26 for k2s_bf16.
+  - Of the other 72 C2 facts, B gets 68 right, against 70.
+  - Changed facts whose change came on day 7: 5 of 15 right.
+  - Night 7 also made 115 of the pool's 261 chain dreams, and those were never kept in the weights.
+- **The gate is noisy.** Its 100-question ARC check also undid nights 1-3: 0.84, 0.86 and 0.82. Yet ARC-Easy on 500 questions after night 6 was 89.2, against 89.4 before sleep. A 4-point drop on 100 questions is within the noise of the answers that flip each night (suggested).
+- **No cramming.**
+  - New-wording recall (C2+C4, both directions, 400 tests) is 80.25, the same as the usual questions' 80.25.
+  - The practised cards score 77.3, so the cramming gap is -3.9 points, partly because night 7's cards were never trained.
+  - Two-hop on new wordings is 50.0, the same as the usual 50.0.
+  - Chain cards on their exact wording score 65.6 against 64.5 reworded.
+  - 23 of the 1,434 rewordings appear word for word in some kept text.
+- **Thinking at test time hurts:** two-hop 38.5 with high-effort thinking, against 50.0 without. Forward C2+C4 is 73 against 82.5.
+- Night 5 kept no chain dream: all 268 tries ran to the 512-token thinking cap on 134 leftover pairs that never yield a card.
+
+What this suggests for the 95% goal (untested): the next blocker is the morning gate, not card writing. A gate that measures ARC on all 570 validation questions instead of 100 would undo fewer good nights. That should be the next one-change test, on this recipe.
