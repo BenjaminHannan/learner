@@ -9,3 +9,29 @@ success fell from 0.256 to 0.194), so it is a secondary arm and never replaces c
 - Runs only if Gate 0 passes, and after codi.
 - Its own marks: the same P1-P4 as codi, plus J1: S_jolt - S_codi >= +2.0 (bootstrap interval excluding 0) to count as
   better than CODI alone. codi's verdict never depends on jolt.
+
+## Addendum B (2026-10-26 01:30Z, before any Think-3 code beyond Gate 0, and before any run)
+Taken from backbone/think3/inner-state/ARMS.md (thread "Improve the thinking loop's inner state", PR #134), with the
+pass marks copied unchanged. See that file for the reasons and sources.
+- **Gate 0-ev** runs next to Gate 0, with no training. Base K2 thinking-off, with the gold evidence lines teacher-forced
+  into the think block in story order, against plain thinking-off, on the first 1,000 validation rows, greedy exact match.
+  Passes if S(ev) - S(off) >= 8. If it fails, the ev arms are dropped. It is an oracle ceiling, not a model score.
+- **ev_write** (no pass mark): a LoRA writes the evidence lines in the think block, then the answer. Its score replaces
+  S_on in P1 for the ev arms. It is also a v2 candidate in its own right.
+- **codi_ev** (vs codi): the teacher's trace is the gold evidence lines. Marks:
+  - E1: (S_codi_ev - S_off) / (S_ev_write - S_off) >= 0.50.
+  - E2: S_codi_ev - S_codi >= +2.0, with the interval excluding 0.
+  - E3: the swap lesion costs >= 2.0.
+  - Wrong if S_codi_ev <= S_codi, or the swap lesion costs < 1.0.
+- **step** (vs codi_ev): per-lap SIM-CoT supervision with ARMS.md's fixed packing rule (story order, max 6 groups,
+  spare laps matched to the answer). Marks:
+  - T1: S_step - S_codi_ev >= +2.0, with the interval excluding 0.
+  - T2: on rows with >= 3 lines, swapping lap 2's latent costs >= 2.0.
+  - Wrong if S_step <= S_codi_ev, or T2's lesion costs < 0.5.
+- Deferred until one lap arm passes its marks: randk, upper and H, with their marks as in ARMS.md.
+- Build defaults for every lap arm:
+  - lap input = CODI's projection (Linear-GELU-Linear-LayerNorm) plus a residual from the raw post-norm state, with the
+    LN gain initialised to 0.03; never a soft mix of token embeddings;
+  - matching loss = CODI's per-layer std-normalised L1, teacher stop-grad;
+  - eval lesions on every lap arm: K=0, swap, mean, noise at 1x RMS, plus the collapse cosines.
+- Order on the GPU: Gate 0 and Gate 0-ev, then off, codi, ev_write, codi_ev, step (only the gates that pass unlock their arms).
