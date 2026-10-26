@@ -145,3 +145,29 @@ def test_mac_rg_pilot_with_stubs(tmp_path, monkeypatch):
         assert (sk / f).exists(), f
     p_l, c_l = (json.loads((sk / x / "night1_lessons.json").read_text()) for x in "PC")
     assert c_l["sft_examples"] == p_l["sft_examples"] and c_l["pairs"] <= p_l["pairs"] + 1
+
+
+def test_analyze_rg_layouts(tmp_path):
+    from practice import analyze_rg
+    root = tmp_path / "run"
+    (root).mkdir()
+    (root / "stage0.json").write_text(json.dumps({"picked": ["countdown"]}))
+    sd = root / "countdown"
+    (sd / "rgdata").mkdir(parents=True)
+
+    def w(path, accs, calls=2):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("".join(json.dumps({"id": f"x{i}", "try": 0, "correct": c, "tool_calls": calls, "answered": True, "tools": ["python"], "gen_tokens": 10, "kind": "countdown"}) + "\n"
+                                for i, c in enumerate(accs)))
+    w(sd / "P" / "eval" / "A0_test.jsonl", [i < 5 for i in range(40)])
+    w(sd / "P" / "eval" / "P3_test.jsonl", [i < 20 for i in range(40)])
+    w(sd / "C" / "eval" / "C3_test.jsonl", [i < 8 for i in range(40)])
+    w(sd / "P" / "eval" / "A0_sibling.jsonl", [i < 5 for i in range(20)])
+    w(sd / "P" / "eval" / "P3_sibling.jsonl", [i < 5 for i in range(20)], calls=1)
+    w(sd / "P" / "day" / "day1.jsonl", [True, False])
+    rep = analyze_rg.analyze(root, 3)
+    v = rep["skills"]["countdown"]["v"]
+    assert v["S1"]["diff_points"] == 37.5 and v["S1"]["passed"] and v["S2"]["passed"] and v["S3"]["passed"]
+    assert rep["skills"]["countdown"]["practice_solve_rate_by_day"] == {"P1": 50.0}
+    assert rep["wrong_if"] == {"P_le_A0_plus_3_on_all_skills": False, "P_below_C_on_all_skills": False}
+    assert analyze_rg.holm({"a": 0.01, "b": 0.06}) == {"a": True, "b": False} and analyze_rg.holm({"a": 0.03, "b": 0.04}) == {"a": False, "b": False}
