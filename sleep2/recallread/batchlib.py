@@ -1,6 +1,7 @@
 """Anthropic Message Batches helpers (anthropic SDK, key from env LEARNER_ANTHROPIC_API_KEY). Nothing here runs unless a --submit / --collect
 flag is given; every script has a --dry-run that only counts requests and estimates cost. Total cap for items + alias tables + grading: $5."""
 from __future__ import annotations
+import re
 
 import json
 import math
@@ -25,10 +26,7 @@ def est_tokens(text: str) -> int:
 
 def params(model: str, system: str, user: str, max_tokens: int) -> dict:
     p = {"model": model, "max_tokens": max_tokens, "system": system, "messages": [{"role": "user", "content": user}]}
-    if model == "claude-sonnet-5-5":
-        p["thinking"] = {"type": "between_tools"}  # Sonnet 5.5: thinking off is "between_tools", not "disabled" (400)
-    elif model == "claude-haiku-5-5":
-        p["thinking"] = {"type": "disabled"}
+    p["output_config"] = {"effort": "low"}  # same setting Notebook-1 used successfully with both models
     return p
 
 
@@ -67,6 +65,17 @@ def print_dry_run(stage: str, reqs: list[dict], out_tokens: int):
     return est
 
 
+def enc_id(cid: str) -> str:
+    """API custom_id allows only [A-Za-z0-9_-]{1,64}; encode other chars (and '_') reversibly as _xx."""
+    e = "".join(ch if (ch.isascii() and ch.isalnum()) or ch == "-" else f"_{ord(ch):02x}" for ch in cid)
+    if len(e) > 64: raise SystemExit(f"custom_id too long after encoding: {cid}")
+    return e
+
+
+def dec_id(e: str) -> str:
+    return re.sub(r"_([0-9a-f]{2})", lambda m: chr(int(m.group(1), 16)), e)
+
+
 def client():
     import anthropic
     key = os.environ.get("LEARNER_ANTHROPIC_API_KEY")
@@ -82,7 +91,8 @@ def submit(stage: str, reqs: list[dict], out_tokens: int, state: Path, limit: in
         raise SystemExit(f"estimated total ${total:.2f} exceeds the ${CAP_USD:.2f} cap; not submitting")
     if reqs and len({r["custom_id"] for r in reqs}) != len(reqs):
         raise SystemExit("duplicate custom_id")
-    b = client().messages.batches.create(requests=reqs[:limit] if limit else reqs)
+    sent = [dict(r, custom_id=enc_id(r["custom_id"])) for r in (reqs[:limit] if limit else reqs)]
+    b = client().messages.batches.create(requests=sent)
     st = json.loads(state.read_text()) if state.exists() else {}
     st.setdefault(stage, []).append({"batch_id": b.id, "n": len(reqs[:limit] if limit else reqs), "created": time.strftime("%FT%TZ", time.gmtime())})
     state.write_text(json.dumps(st, indent=1))
@@ -103,9 +113,9 @@ def collect(batch_id: str, wait: bool = True, poll_s: int = 60) -> dict[str, str
     out = {}
     for r in c.messages.batches.results(batch_id):
         if r.result.type == "succeeded":
-            out[r.custom_id] = next((blk.text for blk in r.result.message.content if blk.type == "text"), "")
+            out[dec_id(r.custom_id)] = next((blk.text for blk in r.result.message.content if blk.type == "text"), "")
         else:
-            out[r.custom_id] = None
+            out[dec_id(r.custom_id)] = None
     return out
 
 

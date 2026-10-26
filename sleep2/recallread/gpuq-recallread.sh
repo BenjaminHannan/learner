@@ -3,7 +3,7 @@
 # gpuq: priority=60
 # gpuq: gpus=1
 # gpuq: hours=11
-# gpuq: owner=Invent a new mechanism for the assistant
+# gpuq: owner=Close the diary search gap on the real model
 # gpuq: retries=1
 # gpuq: commit=FILL_IN_FULL_SHA   # must contain sleep2/recallread/ AND backbone/ at a7ed69d79d (merge that commit into the branch first), else the fallback below fetches it
 # gpuq: needs=recallread/frozen/
@@ -42,7 +42,9 @@ ok() { [ -f "$1/sleep/brain/sleepb.py" ] && [ "$(sha256sum "$1/sleep/brain/sleep
 if ok "$PWD/backbone"; then BB="$PWD/backbone"
 else
   rm -rf /tmp/rr-bb && mkdir -p /tmp/rr-bb
-  (git fetch -q origin "$PIN" || git fetch -q origin claude/project-thread-cqc4bi) && git archive "$PIN" backbone | tar -x -C /tmp/rr-bb || true
+  # shipped copy first (git archive of $PIN, in needs=), then a git fetch
+  if [ -f "$GPUQ_FILES/recallread/frozen/backbone-a7ed69d.tgz" ]; then tar -xzf "$GPUQ_FILES/recallread/frozen/backbone-a7ed69d.tgz" -C /tmp/rr-bb
+  else (git fetch -q origin "$PIN" || git fetch -q origin claude/project-thread-cqc4bi) && git archive "$PIN" backbone | tar -x -C /tmp/rr-bb || true; fi
   if ok /tmp/rr-bb/backbone; then BB=/tmp/rr-bb/backbone; else echo "GPUQ-STOP: Sleep-B code at $PIN not available; merge it into the job commit"; exit 1; fi
 fi
 echo "backbone: $BB"
