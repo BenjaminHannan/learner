@@ -21,7 +21,12 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 timeout 600 $PY speed/qwen36_step/bench_gmm.py --out $OUT/bench_gmm.json --dtype bfloat16 > $OUT/bench_gmm.log 2>&1
 echo "gmm rc=$? after $((SECONDS-T0)) s"; tail -5 $OUT/bench_gmm.log
 # 1. parity + speed on 4 real layers: baseline vs each expert-matmul backend, KL cache, packing (profiler on baseline only)
-timeout 2400 $PY speed/qwen36_step/profile_step.py --layers 4 --steps 12 --warmup 3 --no-profile-variants \
-  --variants baseline,fast_experts_bmm,fast_experts_split,fast_experts_triton,kl_cache+fast_experts,packed,all --out $OUT/pc_step.json --work ~/qwen36_step_work > $OUT/pc_step.log 2>&1
-echo "step rc=$? after $((SECONDS-T0)) s"; grep -E '^\[' $OUT/pc_step.log
+# run twice in opposite orders: on T4 the first variant ran ~25% slow (warm-up), so compare each variant across both orders
+A=baseline,fast_experts_split,fast_experts_bmm,kl_cache+fast_experts,packed
+B=packed,kl_cache+fast_experts,fast_experts_bmm,fast_experts_split,baseline
+for t in a b; do V=$A; [ $t = b ] && V=$B
+  timeout 1500 $PY speed/qwen36_step/profile_step.py --layers 4 --steps 12 --warmup 3 --no-profile-variants \
+    --variants $V --out $OUT/step_$t.json --work ~/qwen36_step_work > $OUT/step_$t.log 2>&1 || echo "order $t rc=$?"
+done
+grep -hE '^\[' $OUT/step_a.log $OUT/step_b.log
 echo "=== PC SPEED DONE $((SECONDS-T0)) s"
