@@ -3,7 +3,7 @@
 T1-T7, T9, T10 + TP/TC/TR/TB come from test_think1_board.py, X1-X4 from test_xent.py, S1 from test_summarize.py. Here: T8 (same seed,
 same stage-2 losses), TO (data order = train.py's), TH (hits are stored in file order; gates off = arm a), TG (mechanics gate, incl. the
 abort path), TR (run_box.sh job order and skips, stub python), TS (spec defaults), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
-Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, SM.
+Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, AI, SM.
 Needs the venv with torch CPU, transformers 5.20.2 and peft; `--real` adds the real-0.8B checks (HF_HOME=<cache> HF_HUB_OFFLINE=1).
 """
 from __future__ import annotations
@@ -606,6 +606,32 @@ def test_sm_smoke_all_arms():
         print(f"SM smoke ran 9 arms in {time.time() - t0:.0f}s, adapters handed on, result tags as in the spec; {verdict}")
 
 
+def test_ai_alpha_init():
+    """--alpha-init: default 0 keeps zero gates (nothing changes for existing arms); 0.3 starts every gate at tanh(0.3) = 0.291; the value is recorded in the
+    result JSON and think_block.pt, survives a short run, and tc (closed block) refuses a non-zero start."""
+    assert K.parse(["--arm", "tj", "--out", "x"]).alpha_init == 0.0 and K.parse(["--arm", "tj", "--out", "x", "--alpha-init", "0.3"]).alpha_init == 0.3
+    lm, tok = T.load_model(argparse.Namespace(smoke=True, seed=0, model=""), torch.device("cpu"), torch.float32)
+    b0, b3 = B.ThinkBoard.from_model(lm, tok, K=4), B.ThinkBoard.from_model(lm, tok, K=4, alpha_init=0.3)
+    assert torch.equal(b0.alpha, torch.zeros_like(b0.alpha)) and torch.equal(B.ThinkBoard(64, 0.02, torch.randn(4, 64)).alpha, torch.zeros(6, 8))
+    assert b3.alpha.shape == b0.alpha.shape and b3.alpha.requires_grad and torch.allclose(b3.alpha, torch.full_like(b3.alpha, 0.3))
+    assert abs(float(b3.gate().mean()) - 0.2913) < 1e-3 and torch.allclose(b3.gate(), torch.tanh(torch.tensor(0.3)).expand_as(b3.gate()))
+    fx = fixture()
+    a0 = arm_args("tj", 0, "ai0", steps=2)
+    assert K.run_arm(a0) == 0
+    a3 = arm_args("tj", 0, "ai3", steps=2, extra=("--alpha-init", "0.3"))
+    assert K.run_arm(a3) == 0
+    r0, r3 = load(a0), load(a3)
+    assert r0["alpha_init"] == 0.0 and r3["alpha_init"] == 0.3
+    assert torch.load(Path(a3.out) / "think_block.pt")["alpha_init"] == 0.3
+    assert r0["train"]["gate_log"][-1]["alpha_mean"] < 0.01 and abs(r3["train"]["gate_log"][-1]["alpha_mean"] - 0.2913) < 0.01, (r0["train"]["gate_log"][-1]["alpha_mean"], r3["train"]["gate_log"][-1]["alpha_mean"])
+    try:
+        K.run_arm(arm_args("tc", 0, "ai_tc", steps=2, extra=("--alpha-init", "0.3")))
+        raise AssertionError("tc accepted --alpha-init 0.3")
+    except SystemExit:
+        pass
+    print("AI --alpha-init: default 0 keeps zero gates, 0.3 gives tanh 0.2913, recorded in result JSON and think_block.pt, kept through a run; tc refuses it")
+
+
 # ---------------------------------------------------------------- runner
 
 def board_tests(TB, real):
@@ -620,7 +646,7 @@ def run_all(real=False, only=None):
     import test_from_label as TFL
     tests = [("BOARD", lambda: board_tests(TB, real)),
              ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
-             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TCTRL", test_tc_control), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
+             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TCTRL", test_tc_control), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("AI", test_ai_alpha_init), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
         if only and name.lower() not in [o.lower() for o in only]:

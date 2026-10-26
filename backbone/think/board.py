@@ -249,26 +249,26 @@ def init_token_ids(tok, K, vocab):
 
 
 class ThinkBoard(nn.Module):
-    def __init__(self, d, rho, e0_hat, n_attn=6, n_heads=8, hid=256):
+    def __init__(self, d, rho, e0_hat, n_attn=6, n_heads=8, hid=256, alpha_init=0.0):
         super().__init__()
         self.K = e0_hat.shape[0]
         self.register_buffer("rho", torch.tensor(float(rho), dtype=torch.float32))
         self.e0_hat = nn.Parameter(e0_hat.detach().clone().float())
         self.eta = nn.Parameter(torch.full((d,), 0.1))
-        self.alpha = nn.Parameter(torch.zeros(n_attn, n_heads))
+        self.alpha = nn.Parameter(torch.full((n_attn, n_heads), float(alpha_init)))  # gate pre-activation; 0 = shut (default), 0.3 = P2a
         self.w_in = nn.Linear(3 * d, hid)
         self.blocks = nn.ModuleList([RefineBlock(hid) for _ in range(2)])
         self.norm = nn.LayerNorm(hid, bias=False)
         self.w_out = nn.Linear(hid, d)
 
     @classmethod
-    def from_model(cls, lm, tok, K=16):
+    def from_model(cls, lm, tok, K=16, alpha_init=0.0):
         """rho = median row RMS of the embedding table; e0_hat = embeddings of K distinct tokens of THINK_TEXT / rho."""
         W = lm.model.embed_tokens.weight.detach().float()
         rho = W.pow(2).mean(-1).sqrt().median().item()
         ids = init_token_ids(tok, K, W.shape[0])
         n_attn = sum(t == "full_attention" for t in lm.config.layer_types)
-        return cls(W.shape[1], rho, W[ids] / rho, n_attn=n_attn, n_heads=lm.config.num_attention_heads)
+        return cls(W.shape[1], rho, W[ids] / rho, n_attn=n_attn, n_heads=lm.config.num_attention_heads, alpha_init=alpha_init)
 
     def clamp(self, e):
         return clamp_rms(e, self.rho)
@@ -344,6 +344,16 @@ def _cos(e):
         within = off(en @ en.transpose(1, 2), K).mean()
         across = off(torch.einsum("ikd,jkd->kij", en, en), B).mean() if B > 1 else torch.tensor(float("nan"))
         return within, across
+
+
+@torch.no_grad()
+def zero_notes_kv(runner, board, p):
+    """Slot K/V of all-zero notes at positions p, run on a fresh EMPTY cache (no prompt), as the blind pass does. The zero lesion with the story removed:
+    zero notes on the prompt's own cache would still pick the story up through the slot pass's attention and DeltaNet state. (With nothing to attend to, a zero input stays exactly zero through every layer - no biases,
+    RMSNorm(0) = 0 - so the K/V come out 0 and the read adds 0: this equals the gates-off read exactly. Kept as the literal "notes = 0" reading and as a check on that.)"""
+    from transformers import DynamicCache
+    e = torch.zeros(len(p), board.K, board.e0_hat.shape[1], device=p.device)
+    return slot_pass(runner, e, DynamicCache(config=runner.cfg), torch.zeros(len(p), 0, dtype=torch.long, device=p.device), p)[1]
 
 
 def think(board, runner, C, mask, p, L, keep=None, swap=None, repeat_delta1=False, stats=True, ckpt=False):

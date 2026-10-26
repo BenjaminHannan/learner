@@ -591,7 +591,7 @@ def run_arm(args):
     runner.checkpoint = not args.no_grad_ckpt
     tr = dict(loss_curve=[], seconds=0.0, gate_log=[], dev_log=[], step_losses=[])
     result = dict(arm=arm, seed=args.seed, model=args.model, smoke=args.smoke, steps_stage1=args.steps1, steps_stage2=steps if stage2 else 0,
-                  k_slots=k_slots, params_trainable=0, train=tr, aborted=None, eval={"validation": {}, "dev": {}}, label_nums={},
+                  k_slots=k_slots, alpha_init=args.alpha_init, params_trainable=0, train=tr, aborted=None, eval={"validation": {}, "dev": {}}, label_nums={},
                   bsz=args.bsz, micro_bsz=args.micro_bsz, max_len=args.max_len, stage1_adapter=str(src) if src else None,
                   loops=runner.loops, loop_block=[runner.start, runner.start + runner.size] if runner.loops > 1 else None,
                   stage1_adapter_sha=adapter_sha(src) if src else None, adapter_sha=None,
@@ -600,12 +600,14 @@ def run_arm(args):
         result["steps_stage1"] = steps
     aborted = None
     if arm == "tc":
+        if args.alpha_init:
+            raise SystemExit("[think1] tc is the closed-block control: --alpha-init must be 0")
         args.lmax = 0  # one lap, laps 0..0 (also what the result records and the tags use)
     if arm in JOINT:  # joint: a's adapter trainable, plus the board (built as in arm t)
         pm = lora_model(lm, src)
         runner.lm = pm.base_model.model
         torch.manual_seed(args.seed)
-        board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots).to(device)
+        board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots, alpha_init=args.alpha_init).to(device)
         n_board, n_lora = sum(p.numel() for p in board.parameters()), sum(p.numel() for p in pm.parameters() if p.requires_grad)
         result["params_trainable"], result["lmax"] = (n_lora if arm == "tc" else n_board + n_lora), args.lmax  # tc: LoRA only (the board is shut and frozen)
         if arm == "tf":
@@ -614,7 +616,7 @@ def run_arm(args):
         t0 = time.time()
         aborted = train_joint(runner, pm, board, enc, train_rows, dev_rows[:256], device, args, steps, tr)
         tr["seconds"] = time.time() - t0
-        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed), out / "think_block.pt")
+        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed, alpha_init=args.alpha_init), out / "think_block.pt")
         pm.save_pretrained(out / "adapter")
         result["adapter_sha"] = adapter_sha(out / "adapter")
     elif arm in BOARD:
@@ -625,13 +627,13 @@ def run_arm(args):
         pm.eval()
         runner = T.Runner(pm.base_model.model, loops=1)
         torch.manual_seed(args.seed)
-        board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots).to(device)
+        board = B.ThinkBoard.from_model(runner.lm, tok, K=k_slots, alpha_init=args.alpha_init).to(device)
         result["params_trainable"] = sum(p.numel() for p in board.parameters())
         print(f"[board] arm {arm} K={k_slots} params {result['params_trainable']:,} rho {float(board.rho):.5f}", flush=True)
         t0 = time.time()
         aborted = train_board(runner, board, enc, train_rows, dev_rows[:256], device, args, steps, tr)
         tr["seconds"] = time.time() - t0
-        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed), out / "think_block.pt")
+        torch.save(dict(state_dict=board.state_dict(), K=k_slots, arm=arm, seed=args.seed, alpha_init=args.alpha_init), out / "think_block.pt")
     else:
         pm = lora_model(lm, src)
         runner.lm = pm.base_model.model
@@ -736,6 +738,7 @@ def parse(argv=None):
     ap.add_argument("--gate-step", type=int, default=150, help="step of the mechanics gate")
     ap.add_argument("--gate-enforce", action="store_true", help="abort on the gate in --smoke too (always enforced otherwise)")
     ap.add_argument("--lmax", type=int, default=4, help="arms tj / tf: fixed L_max of the board loss, and the lap count scored (L{lmax}, swap, gates-off, quick eval)")
+    ap.add_argument("--alpha-init", type=float, default=0.0, help="board arms: every gate pre-activation alpha starts here (tanh(0.3) = 0.291 is plan step P2a); 0 = shut gates, as in all earlier runs")
     ap.add_argument("--blind-p", type=float, default=0.5, help="arm tf: initial chance that a micro-batch's board loss uses blind answer passes")
     ap.add_argument("--blind-until", type=float, default=0.6, help="arm tf: fraction of training at which that chance has fallen linearly to 0")
     ap.add_argument("--log-every", type=int, default=250, help="dev-subset log interval for t/t1/tw/tj")
