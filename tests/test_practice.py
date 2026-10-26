@@ -800,3 +800,11 @@ def test_k2_native_tool_call():
     from practice import tools as T
     s = "<ifm|tool_calls>\n<ifm|tool_call>python\n<ifm|arg_key>input</ifm|arg_key>\n<ifm|arg_value>print(3)</ifm|arg_value>\n</ifm|tool_call>\n</ifm|tool_calls>"
     assert T.parse_call(s) == ("python", "print(3)")
+
+
+def test_native_bash_python3_line_stripped():
+    from practice import tools as T
+    s = "<ifm|tool_call>python<ifm|arg_key>bash</ifm|arg_key><ifm|arg_value>python3\nprint(6)</ifm|arg_value></ifm|tool_call>"
+    assert T.parse_call(s) == ("python", "print(6)")
+    assert T.strip_shell_line("python3 <<'EOF'\nprint(1)\nEOF") == "print(1)\n"
+    assert T.strip_shell_line("python_list = [1]\nprint(python_list)") == "python_list = [1]\nprint(python_list)"

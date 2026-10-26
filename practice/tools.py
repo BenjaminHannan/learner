@@ -95,6 +95,7 @@ def parse_call(text):
             f = _FENCE_RE.search(inp)
             if f:
                 inp = f.group(1)
+            inp = strip_shell_line(inp)
         if name == "answer":
             inp = clean_answer(inp)
         return name, inp
@@ -105,6 +106,15 @@ def parse_call(text):
     if a is not None:
         return "answer", a
     return None
+
+
+_SHELL_LINE_RE = re.compile(r"\A\s*(?:\$\s*)?python3?(?:\s+-[a-zA-Z]+)*\s*(?:<<\s*['\"]?EOF['\"]?)?\s*\n")
+
+
+def strip_shell_line(code):
+    """Practice-1M: native calls (arg_key "bash") often start with a bare `python3` line, which raised NameError in 10-15% of tries."""
+    code = _SHELL_LINE_RE.sub("", code, count=1)
+    return re.sub(r"\n\s*EOF\s*\Z", "\n", code)
 
 
 def cut_after_call(text):
