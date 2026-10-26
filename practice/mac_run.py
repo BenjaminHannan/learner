@@ -469,7 +469,8 @@ class Mac:
                 tags[tag] = {"test100_per_puzzle": puzzle_scores(recs), "test100_mean": round(sum(puzzle_scores(recs).values()) / max(1, len(puzzle_scores(recs))), 4),
                              "test_summary": summarize(recs), "sibling_acc": summarize(sib)["acc"] if sib else None}
         cmp = {}
-        for x, y in (("P3", "A0"), ("P3", "C3"), ("P1", "A0"), ("P1", "C1"), ("C3", "A0")):
+        pairs = [(f"P{n}", "A0") for n in (1, 2, 3)] + [(f"P{n}", f"C{n}") for n in (1, 2, 3)] + [(f"C{n}", "A0") for n in (1, 2, 3)]
+        for x, y in pairs:
             if x in tags and y in tags:
                 cmp[f"{x}_vs_{y}"] = {"diff_points": round(100 * (tags[x]["test100_mean"] - tags[y]["test100_mean"]), 1),
                                       "p_signflip": round(signflip_p(tags[x]["test100_per_puzzle"], tags[y]["test100_per_puzzle"]), 4)}
@@ -496,6 +497,7 @@ class Mac:
                 pe_pool.build(100, PDATA / "pe_pool.jsonl", log=self.log, soft=True)  # no PE if it fails
             self.pool, full = load_pool(a.practice_n)
             self.test, self.sib, test_rows = load_eval_sets()
+            self.sib = self.sib[:a.sib_n] if a.sib_n >= 0 else self.sib
             WEB.configure(a.web, test_rows, full)
             self.log(f"pool {len(self.pool)} (pe {sum(1 for p in self.pool if p['id'].startswith('pe-'))}) test {len(self.test)} sibling {len(self.sib)} web={a.web}")
             jdump(self.out / "config.json", self.config())
@@ -557,6 +559,7 @@ def parse_args(argv=None):
     ap.add_argument("--nights", type=int, default=3)
     ap.add_argument("--eval-nights", default="1,3")
     ap.add_argument("--arms", default="P,C")
+    ap.add_argument("--sib-n", type=int, default=-1, help="use only the first N sibling puzzles (0 = skip the sibling set, -1 = all)")
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--no-web", dest="web", action="store_false", help="turn the live web tools off")

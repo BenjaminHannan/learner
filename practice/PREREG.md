@@ -95,3 +95,9 @@ Practice-1M is the same design on the M3 Pro, with these differences (same in ev
 - Project Euler 1-100 joins the practice pool (answers only in the grader). Practice subset 120 puzzles.
 - Day 1 tries are shared by P and C (both are the base model then). No ARC-Easy on the Mac (harm check = tool use).
 - The Kaggle run stays as a second, offline-search replication.
+
+## Addendum 4 (2026-10-26 01:55Z, Ben: results by 11:00Z; before any result)
+To fit about 8 h on the M3: practice subset 80 puzzles x 2 tries, TWO day/night rounds (not three; self-training
+papers report most of the gain within about 2 rounds), test evals only at A0 and after night 2 (test100 x 2 tries,
+first 30 sibling puzzles x 1), day 1 shared by P and C. Pass marks are unchanged but read at night 2: T1 P2 >= A0 + 8
+(p < 0.05), T2 P2 >= C2 + 5. If the Kaggle offline run (3 nights) finishes, it is reported alongside.
