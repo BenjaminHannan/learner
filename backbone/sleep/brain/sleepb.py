@@ -58,8 +58,8 @@ logits the loss already computes, and puts the per-night shares by kind (text, q
 --card-stats): a card (an NREM paraphrase or Q&A, a REM-pool dream) that was right at its last closed-book or text practice is kept with probability F, else the draw is repeated
 (at most SKIP_TRIES draws, the last one is kept); a wrong morning probe marks all of that item's cards not known again; --lora-plus R: the lora_B matrices step at lr x R (LoRA+);
 --ob-share P: the open-book share of practice Q&A (0.5 before); --lr-sched wsd: the night's lr stays at --lr, then falls linearly to 0 over the last WSD_DECAY of its steps (cosine before);
---rem-views V: each REM cycle gives the REM pool about V x pool x (cycle's REM steps / night's REM steps) practice slots, at most the usual round(0.7 bsz) a step, so a live dream
-gets about V practices a night; the slots it does not use go to NREM cards (before: always round(0.7 bsz) a step, e.g. about 2,700 practices for night 2's first dream in nb at 4x).
+--rem-views V: each REM cycle gives the REM pool about V x pool x (cycle's REM steps / night's REM steps) practice slots, at most the usual round(0.7 bsz) a step, spread over the cycle's steps, so a dream
+that is in the pool all night gets about V practices (one made in cycle c gets V x the share of the night's REM steps from c on); the slots it does not use go to NREM cards (before: always round(0.7 bsz) a step, e.g. about 2,700 practices for night 2's first dream in nb at 4x).
 Together with the other branches' flags: --rem-views with --rem-steps-mult != 1 is an error (views fixes a dream's practices a night, so the extra REM steps would only be NREM steps); --rem-views composes with --rem-dirs both and --rem-tries
 (it works on whatever the pool holds: each direction's dream is a dream, and --rem-tries only changes how the pool fills); --skip-known composes with --dream-vary (a style text is a card of its own, keyed by its text, so every night's new texts start not known;
 the draw frequency changes, so a run with both is neither addendum's control); --text-scale and --reword are untouched by the efficiency flags.
@@ -2450,7 +2450,7 @@ def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subje
 
 def rem_split(views, pool, n_rem, rem_total, nr0):  # --rem-views: REM-pool examples per step of one REM cycle (n_rem steps), about views x pool x n_rem / rem_total in all, at most nr0 a step, spread evenly
     q = min(n_rem * nr0, round(views * pool * n_rem / max(rem_total, 1)))
-    return [q // n_rem + (j < q % n_rem) for j in range(n_rem)]
+    return [(j + 1) * q // n_rem - j * q // n_rem for j in range(n_rem)]  # floor((j+1) q / n) - floor(j q / n): sums to q, every step q/n rounded down or up, the extras spread over the cycle (not the first q % n steps)
 
 
 def rem_plan(steps, arm, mult=1.0):  # a night's per-cycle (NREM steps, REM steps) for `steps` reference steps: the quarters of `steps`, NREM_SHARE of each (all of it for ab_norem), the rest REM; addendum 14: the REM count x mult, rounded (mult 1.0: untouched)
@@ -3362,6 +3362,7 @@ class Brain:
                     "probe_recall_pre": acc(ok for ok, _ in pre.values()), "elig_by_class": s.elig_by_class(E)})
         s.log(f"[night {d}] items {rec['items_total']} eligible {len(E)} (active {n_act}, consolidated {len(cons)}) steps {total} probe_pre {rec['probe_recall_pre']}")
         snap = s.snapshot()
+        card0 = dict(s.card)  # --skip-known: a reverted night puts the cards' known flags back with the weights
         kl_pool = s.replay
         if a.arm == "ab_klctx" and (act or con):  # KL batches are sampled from generic replay + tonight's diary-format prompts
             kl_pool = s.replay + s.klctx(d)
@@ -3456,6 +3457,7 @@ class Brain:
                     "reverted": bool(why), "revert_reason": why})
         if why:
             s.restore(snap)
+            s.card = card0
             s.cov["revert"] += 1
             s.log(f"[night {d}] REVERTED: {why}")
             rec["probe_recall_post"] = rec["probe_recall_pre"]
@@ -4998,7 +5000,7 @@ def main():
     ap.add_argument("--ob-share", type=float, default=0.5, help="OB_ARMS: share of practice Q&A examples that are open-book (the diary-test prompt). 0.5 = as before")
     ap.add_argument("--lr-sched", choices=["cosine", "wsd"], default="cosine", help="each night's lr schedule: cosine from --lr to 0 (as before), or wsd: --lr, then linear to 0 over the last WSD_DECAY of the night's steps")
     ap.add_argument("--rem-views", type=float, default=None, help="sleep efficiency: each REM cycle gives the REM pool about this x pool x (cycle's REM steps / night's REM steps) practice slots (at most round(0.7 bsz) a step), "
-                    "so a live dream gets about this many practices a night; unused slots go to NREM cards. Default: off (always round(0.7 bsz) a step)")
+                    "so a dream in the pool all night gets about this many practices (one made in a later cycle only its share of the REM steps left); unused slots go to NREM cards. Default: off (always round(0.7 bsz) a step)")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
