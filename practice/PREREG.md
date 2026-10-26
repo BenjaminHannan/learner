@@ -101,3 +101,8 @@ To fit about 8 h on the M3: practice subset 80 puzzles x 2 tries, TWO day/night 
 papers report most of the gain within about 2 rounds), test evals only at A0 and after night 2 (test100 x 2 tries,
 first 30 sibling puzzles x 1), day 1 shared by P and C. Pass marks are unchanged but read at night 2: T1 P2 >= A0 + 8
 (p < 0.05), T2 P2 >= C2 + 5. If the Kaggle offline run (3 nights) finishes, it is reported alongside.
+
+## Addendum 5 (2026-10-26 02:00Z, Ben: parallelise; before any result)
+P and C run as two side-by-side processes on the M3 (own server, port and output dir, 6 streams each). Day 1 is no longer
+shared: each arm runs its own base-model day 1 and its own A0 test. The two A0 scores give the noise estimate; T1 compares
+P2 with the mean of both A0 runs (per puzzle), T2 compares P2 with C2.
