@@ -7,20 +7,26 @@ set -uo pipefail
 OUT=${1:?out dir}; MODE=${2:-smoke}
 HERE=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$OUT"; exec > >(tee -a "$OUT/lane.log") 2>&1
-echo "$(date -u +%FT%TZ) mode=$MODE"; nvidia-smi --query-gpu=name,memory.total --format=csv
+echo "$(date -u +%FT%TZ) mode=$MODE"; nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
 
-pip install -q -U uv >/dev/null 2>&1; uv pip install --system -q vllm httpx >/dev/null 2>&1
-python3 -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__)" | tee "$OUT/backend.txt"
+# vLLM in its own venv so its torch never clashes with Kaggle's preinstalled torchaudio/torchvision (try 1 failed on
+# exactly that); --torch-backend=auto picks the torch CUDA build that matches the installed driver.
+pip install -q -U uv >/dev/null 2>&1; uv pip install --system -q httpx >/dev/null 2>&1
+VV=/tmp/vllm-venv
+[ -x $VV/bin/vllm ] || { uv venv -q --python 3.12 $VV && VIRTUAL_ENV=$VV uv pip install -q vllm --torch-backend=auto 2>&1 | tail -3; }
+
+$VV/bin/python -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__, 'cuda ok', torch.cuda.is_available())" 2>&1 | tail -1 | tee "$OUT/backend.txt"
 
 serve() {  # $1 gpu, $2 port, $3 extra flags
-  CUDA_VISIBLE_DEVICES=$1 vllm serve IFM/K2-Horizon-3.7B --served-model-name k2 --port $2 --dtype float16 \
-    --max-model-len 16384 --gpu-memory-utilization 0.90 --trust-remote-code --enable-auto-tool-choice \
+  CUDA_VISIBLE_DEVICES=$1 $VV/bin/vllm serve IFM/K2-Horizon-3.7B --served-model-name k2 --port $2 --dtype float16 \
+    --max-model-len 16384 --gpu-memory-utilization 0.90 --trust-remote-code --enforce-eager --enable-auto-tool-choice \
     --tool-call-parser k2_horizon --chat-template "$HERE/k2_nothink.jinja" $3 > "$OUT/vllm_$1.log" 2>&1 &
 }
 up() { for i in $(seq 90); do curl -sf localhost:$1/v1/models >/dev/null && return 0; sleep 10; done; return 1; }
 serve 0 8001 ""; up 8001 || { echo "native vLLM failed on GPU0, retrying with --model-impl transformers"
   grep -E "Error" "$OUT/vllm_0.log" | tail -5; pkill -9 -f "vllm|EngineCore"; sleep 10
-  IMPL="--model-impl transformers"; serve 0 8001 "$IMPL"; up 8001 || { echo "SERVE FAILED"; tail -40 "$OUT/vllm_0.log"; exit 1; }; }
+  cp "$OUT/vllm_0.log" "$OUT/vllm_0_native.log"
+  IMPL="--model-impl transformers"; serve 0 8001 "$IMPL"; up 8001 || { echo "SERVE FAILED"; grep -E "Error" "$OUT/vllm_0.log" | tail -8; exit 1; }; }
 echo "impl: ${IMPL:-native}" >> "$OUT/backend.txt"
 serve 1 8002 "${IMPL:-}"; up 8002 && PORTS="8001,8002" || PORTS="8001"
 echo "ports $PORTS" | tee -a "$OUT/backend.txt"
