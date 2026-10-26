@@ -646,3 +646,13 @@ The step-0 probe ran on a free Kaggle T4 (fp16, gen-bs 24, code d9d283fad1), 6,0
 - **Budget:** the coordinator allowed only arm B now (hard cap $2.20; the week's credit is nearly gone). Arm A waits for the Nov 1 budget, or a free GPU slot. C1 and C2 need A, so they wait too. G is judged on B as soon as it finishes.
 - **Speed setting (not a design change):** both arms use `--gen-bs 48` instead of 32. The thinking cards make REM writing about 10x slower, and this keeps B inside the cap. k2s_bf16 ran with 32, so C1 carries this small extra difference.
 - Both arms also take `--reword data/week2_reworded.json` (report-only, addendum 15's new-wording test, run after the result JSON is written). This gives addendum 15 its 4x reference.
+
+## Addendum 16: recorded before any run (2026-10-26 ~01:00Z)
+PR #130 (sleep-efficiency flags) was reviewed and merged into this branch: merge d01aa01281, review fixes 3267a6bce8.
+- With all flags off, and with only `--card-stats`, CPU smoke result JSONs and adapter tensors are byte-identical to a7ed69d79d for `ab_ob_b4_nb`, `ab_ob` and `ab_ob_b4_nb_x4`. All 19 selftest sections pass.
+- Review fixes, both made before any run and both flag-on only:
+  - a reverted night now also restores `--skip-known`'s known flags (before, a reverted night's flags survived into the next night);
+  - `--rem-views` spreads each dream's practices evenly over the cycle (before, small pools got all their practices in the first steps).
+- `--rem-views V` accounting, as coded and as the note's arithmetic assumes: a dream in the pool all night gets about V practices; a dream made in cycle c gets V times the share of the night's REM steps from cycle c on.
+- `--rem-views` with `--rem-steps-mult` other than 1 is refused (ap.error).
+- The runs use addendum 9's settings otherwise: `--tok-budget 2048 --gen-bs 32`, Week-2, seed 1. They run on one RTX 4090 (Ben's borrowed pair, free), all three in one job on the same card.
