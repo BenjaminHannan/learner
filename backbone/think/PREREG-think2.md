@@ -63,3 +63,16 @@ which with closed gates is a second copy of the answer gradient taken through an
 - P1 for tj and tf is now judged against B = max(aplus, tc): S(4) - B >= +2.0 with the bootstrap interval excluding 0.
 - P2 is unchanged. A P1 pass with P2 failing is reported as "suggested", not a pass.
 - Diagnostic: the LoRA gradient norm before clipping (gn_lora) is logged for tj against aplus's, to see how often the clip engages.
+
+## Addendum C (2026-10-26 00:20Z, before any tj, tf or tc result): give-up rule
+Decided by the coordinator under Ben's never-wait rule, after design/research/2026-10-25-think-inner-state-codi.md
+(PR #131) showed that a Think-2 fail cannot separate "the loop is useless" from "the notes were never taught".
+- If Think-2 fails (neither tj nor tf passes): do NOT drop looped thinking yet. First run PR #131's checks 0-5
+  (data check, free P0 diagnostics, toy plumbing check, written-steps teacher + filler sham, gate start 0.3 if the gate
+  stayed shut, step-supervised notes), plus its hide-the-story and copy-the-teacher tests if their entry conditions
+  are met. Then apply PR #131's give-up rule (every notes test misses a bar, or 18 Think-2-sized runs spent with no pass).
+- If Think-2 passes: the 2-seed expansion runs as planned, plus the free checks and the swap test before calling the notes used.
+- Recorded for the P0 code reads: Think-1's block trained at refiner/e0/eta lr 5e-4 and gate lr 3e-3 for 1,254 steps.
+  tf hides the story with a separate answer pass on a fresh, empty cache, so there is no DeltaNet state leak (a CPU test
+  shows blind logits are unchanged when the prompt changes).
+- Think-1 checkpoints were never recovered (Vast file copy failed), so P0 runs on Think-2's tj/tf checkpoints.
