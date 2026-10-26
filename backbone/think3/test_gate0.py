@@ -68,3 +68,62 @@ def test_template_modes():
     src = (Path(G.TEMPLATE_PATH)).read_text()
     assert "<ifm|think_faster>" in src and "reasoning_effort | default('none')" in src
     assert G.THINK_END.search("</ifm|think_faster>") and G.THINK_END.search("</ifm|think>")
+
+
+# ---------------------------------------------------------------- Gate 0-ev (Addendum B)
+
+OFF = "<|ifm|im_start|>user\nq<|ifm|im_end|>\n<|ifm|im_start|>assistant\n" + G.EMPTY_THINK
+
+
+def test_ev_prompt_differs_only_in_think_block():
+    lines = ["[world] In the mill, Saku is present.", "[action] Saku takes the box."]
+    ev = G.ev_prompt(OFF, lines)
+    head = OFF[:-len(G.EMPTY_THINK)]
+    assert ev == head + "<ifm|think>\n" + lines[0] + "\n" + lines[1] + "\n</ifm|think>"
+    assert ev.startswith(head) and ev.endswith("</ifm|think>")
+    # blanking the block content gives the off prompt back
+    assert ev.replace("\n".join(lines) + "\n", "") == OFF
+    assert not ev.endswith("The answer is:")  # nothing is added after the block, same as the off arm
+
+
+def test_ev_depth0_is_empty_block():
+    assert G.ev_prompt(OFF, []) == OFF
+
+
+def _fake_raw(tmp_path, split="validation"):
+    d = tmp_path / "raw" / split
+    d.mkdir(parents=True)
+    (d / "shard-00000.txt").write_text("l0\nl1  \nl2\nl3\nl4\n")
+    (d / "shard-00000.jsonl").write_text(
+        '{"id":"validation-0","kind":"visit"}\n'
+        '{"id":"validation-0:q0","kind":"question","evidence_text_lines":[3,1],"text_line":4}\n'
+        '{"id":"validation-0:q1","kind":"question","evidence_text_lines":[],"text_line":4}\n')
+    (d / "shard-00001.txt").write_text("m0\nm1\nm2\n")
+    (d / "shard-00001.jsonl").write_text('{"id":"validation-9:q0","kind":"question","evidence_text_lines":[0,2],"text_line":2}\n')
+    return tmp_path
+
+
+def test_evidence_mapping(tmp_path):
+    root = _fake_raw(tmp_path)
+    rows = [dict(id="validation-0:q0"), dict(id="validation-0:q1"), dict(id="validation-9:q0")]
+    m = G.load_evidence_map(root, "validation", rows)
+    assert m["validation-0:q0"] == ["l1  ", "l3"]  # story (file) order, exact line text, only the newline stripped
+    assert m["validation-0:q1"] == []
+    assert m["validation-9:q0"] == ["m0", "m2"]
+
+
+def test_evidence_mapping_fails_loudly(tmp_path):
+    import pytest
+    root = _fake_raw(tmp_path)
+    with pytest.raises(KeyError):
+        G.load_evidence_map(root, "validation", [dict(id="validation-0:q0"), dict(id="validation-77:q0")])
+    (root / "raw" / "validation" / "shard-00001.jsonl").write_text('{"id":"validation-9:q0","evidence_text_lines":[0,5]}\n')
+    with pytest.raises(IndexError):
+        G.load_evidence_map(root, "validation", [dict(id="validation-9:q0")])
+
+
+def test_g0ev():
+    off = [True] * 50 + [False] * 50
+    d = G.g0ev_decision(off, [True] * 58 + [False] * 42)
+    assert d["g0ev_pass"] and abs(d["gap_ev"] - 0.08) < 1e-9 and d["acc_ev"] == 0.58
+    assert not G.g0ev_decision(off, [True] * 57 + [False] * 43)["g0ev_pass"]

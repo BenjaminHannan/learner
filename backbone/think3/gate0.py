@@ -28,6 +28,9 @@ TEMPLATE_PATH = HERE / "templates" / "k2_nothink.jinja"
 MODEL_ID = "IFM/K2-Horizon-3.7B"
 EFFORT_ON = "low"
 G0_MARGIN = 0.08  # PREREG: on - off >= 8 points
+G0EV_MARGIN = 0.08  # PREREG Addendum B (Gate 0-ev): ev - off >= 8 points
+ALL_ARMS = ("off", "on", "ev")
+EMPTY_THINK = "<ifm|think>\n</ifm|think>"  # how the thinking-off template ends the generation prompt
 STOP = "<|ifm|im_end|>"
 INSTRUCTION = "Answer with just the answer phrase, nothing else."
 THINK_END = re.compile(r"</ifm\|think(?:_fast|_faster)?>")
@@ -95,6 +98,53 @@ def g0_decision(hits_off, hits_on):
     return dict(acc_off=acc_off, acc_on=acc_on, gap=gap, g0_pass=bool(gap >= G0_MARGIN - 1e-12))
 
 
+def g0ev_decision(hits_off, hits_ev):
+    n = len(hits_off)
+    acc_off, acc_ev = sum(hits_off) / n, sum(hits_ev) / n
+    gap = acc_ev - acc_off
+    return dict(acc_ev=acc_ev, gap_ev=gap, g0ev_pass=bool(gap >= G0EV_MARGIN - 1e-12))
+
+
+def ev_prompt(off_prompt: str, lines) -> str:
+    """Thinking-off prompt with the think block pre-filled with the gold evidence lines (one per line, story order).
+    Differs from the off prompt only in the think-block contents; no lines -> identical to the off prompt."""
+    assert off_prompt.endswith(EMPTY_THINK), "off prompt does not end in an empty think block"
+    if not lines:
+        return off_prompt
+    return off_prompt[:-len(EMPTY_THINK)] + "<ifm|think>\n" + "\n".join(lines) + "\n</ifm|think>"
+
+
+def load_evidence_map(data_dir, split, rows):
+    """id -> list of gold evidence lines (exact .txt lines minus the trailing newline), from <data_dir>/raw/<split>/shard-*.{jsonl,txt}.
+    Raises if any row has no raw question record, or its evidence indices fall outside the shard."""
+    raw = Path(data_dir) / "raw" / split
+    want = {r["id"] for r in rows}
+    found, txt_cache = {}, {}
+    for jp in sorted(raw.glob("shard-*.jsonl")):
+        for ln in jp.read_text(encoding="utf-8").splitlines():
+            if not ln.strip():
+                continue
+            rec = json.loads(ln)
+            if rec.get("id") in want and "evidence_text_lines" in rec:
+                if rec["id"] in found:
+                    raise ValueError(f"duplicate raw record for id {rec['id']}")
+                found[rec["id"]] = (jp, rec)
+    missing = [i for i in want if i not in found]
+    if missing:
+        raise KeyError(f"{len(missing)} validation rows have no raw record under {raw} (e.g. {sorted(missing)[:3]})")
+    out = {}
+    for rid, (jp, rec) in found.items():
+        tp = jp.with_suffix(".txt")
+        if tp not in txt_cache:
+            txt_cache[tp] = tp.read_text(encoding="utf-8").split("\n")
+        lines = txt_cache[tp]
+        idx = rec["evidence_text_lines"]
+        if any(not isinstance(i, int) or i < 0 or i >= len(lines) for i in idx):
+            raise IndexError(f"{rid}: evidence_text_lines {idx} out of range for {tp} ({len(lines)} lines)")
+        out[rid] = [lines[i] for i in sorted(idx)]
+    return out
+
+
 def filter_traces(rows, think_texts, answers, n_think, truncated):
     """Keep exact-correct, non-truncated thinking-on generations as trace records."""
     out = []
@@ -120,11 +170,16 @@ def render(tok, template, row, effort):
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, chat_template=template, **kw)
 
 
-def generate(llm, tok, template, rows, effort, max_tokens, skip):
+def render_ev(tok, template, row, lines):
+    return ev_prompt(render(tok, template, row, None), lines)
+
+
+def generate(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
     from vllm import SamplingParams
     sp = SamplingParams(temperature=0.0, max_tokens=max_tokens, stop=[STOP], skip_special_tokens=False)  # keep the think tags: split_think needs them
     idx = [i for i in range(len(rows)) if i not in skip]
-    prompts = [{"prompt_token_ids": tok(render(tok, template, rows[i], effort), add_special_tokens=False)["input_ids"]} for i in idx]
+    prompts = [{"prompt_token_ids": tok(render_ev(tok, template, rows[i], ev_lines[rows[i]["id"]]) if ev_lines is not None else render(tok, template, rows[i], effort),
+                                                    add_special_tokens=False)["input_ids"]} for i in idx]
     outs = llm.generate(prompts, sp)
     res = {}
     for i, o in zip(idx, outs):
@@ -138,6 +193,7 @@ def main(argv=None):
     ap.add_argument("--data", default="out/data", help="dir with train.jsonl dev.jsonl validation.jsonl")
     ap.add_argument("--split", default="validation", choices=SPLITS)
     ap.add_argument("--limit", type=int, default=1000)
+    ap.add_argument("--arms", default=",".join(ALL_ARMS), help="comma list of off,on,ev (two-arm/three-arm score mode only)")
     ap.add_argument("--traces", action="store_true", help="thinking-on only; write correct traces (jsonl) + summary instead of the two-arm score")
     ap.add_argument("--out", default="out/think3/gate0")
     ap.add_argument("--model", default=MODEL_ID)
@@ -149,15 +205,32 @@ def main(argv=None):
     ap.add_argument("--model-impl", default=None, help="e.g. transformers, if the native vLLM implementation fails")
     a = ap.parse_args(argv)
 
+    arms = [x.strip() for x in a.arms.split(",") if x.strip()]
+    if not arms or any(x not in ALL_ARMS for x in arms):
+        ap.error(f"--arms must be a comma list drawn from {ALL_ARMS}")
+    if a.traces:
+        arms = ["on"]
     from transformers import AutoTokenizer
     from vllm import LLM
     template = TEMPLATE_PATH.read_text()
     rows = T.read_jsonl(Path(a.data) / f"{a.split}.jsonl", limit=a.limit)
     tok = AutoTokenizer.from_pretrained(a.model, trust_remote_code=True)
-    plen = [len(tok(render(tok, template, r, EFFORT_ON), add_special_tokens=False)["input_ids"]) for r in rows]
-    max_new = a.max_tokens_on if a.traces else max(a.max_tokens_on, a.max_tokens_off)
+    ev_lines = load_evidence_map(a.data, a.split, rows) if "ev" in arms else None  # fails loudly if a row has no raw record
+
+    def ntok(prompt):
+        return len(tok(prompt, add_special_tokens=False)["input_ids"])
+    plen_by = {}
+    if "on" in arms:
+        plen_by["on"] = [ntok(render(tok, template, r, EFFORT_ON)) for r in rows]
+    if "off" in arms:
+        plen_by["off"] = [ntok(render(tok, template, r, None)) for r in rows]
+    if "ev" in arms:
+        plen_by["ev"] = [ntok(render_ev(tok, template, r, ev_lines[r["id"]])) for r in rows]
+    # one max_model_len for every arm that runs: per row, the longest of its prompts; the arm with the longest generation sets max_new
+    plen = [max(x) for x in zip(*plen_by.values())]
+    max_new = a.max_tokens_on if "on" in arms else a.max_tokens_off
     mml, skip = pick_model_len(plen, max_new, a.max_model_len_cap)
-    print(f"[gate0] {len(rows)} rows, prompt tokens p50 {pct(plen, .5)} p99 {pct(plen, .99)} max {max(plen)}; max_model_len {mml}; skipped {len(skip)}", flush=True)
+    print(f"[gate0] arms {arms}; {len(rows)} rows, prompt tokens p50 {pct(plen, .5)} p99 {pct(plen, .99)} max {max(plen)}; max_model_len {mml}; skipped {len(skip)}", flush=True)
     kw = dict(model=a.model, trust_remote_code=True, dtype="bfloat16", max_model_len=mml, gpu_memory_utilization=a.gpu_util,
               enable_prefix_caching=True, max_num_seqs=a.max_num_seqs)
     if a.model_impl:
@@ -166,21 +239,25 @@ def main(argv=None):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     prompt_info = dict(prompt_tokens_p50=pct(plen, .5), prompt_tokens_p99=pct(plen, .99), prompt_tokens_max=max(plen), max_model_len=mml, n_skipped_too_long=len(skip))
+    if "ev" in arms:
+        pe = plen_by["ev"]
+        prompt_info["ev_prompt_tokens"] = tok_stats(pe) | dict(p50=pct(pe, .5), p99=pct(pe, .99))
 
     t0 = time.time()
-    g_on = generate(llm, tok, template, rows, EFFORT_ON, a.max_tokens_on, skip)
-    parsed = []  # per row: (think, answer, truncated, n_think, n_ans)
-    for i in range(len(rows)):
-        if i in skip:
-            parsed.append(("", "", True, 0, 0))
-            continue
-        think, ans, trunc = extract_on(g_on[i]["text"])
-        if g_on[i]["finish"] == "length":
-            trunc = True
-        parsed.append((think, ans, trunc, len(tok(think, add_special_tokens=False)["input_ids"]) if think else 0,
-                       len(tok(ans, add_special_tokens=False)["input_ids"]) if ans else 0))
-    hits_on = [is_hit(p[1], r["answer"]) and not p[2] for p, r in zip(parsed, rows)]
-    n_trunc = sum(p[2] for i, p in enumerate(parsed) if i not in skip)
+    parsed, g_on, n_trunc = [], {}, 0  # parsed per row: (think, answer, truncated, n_think, n_ans)
+    if "on" in arms:
+        g_on = generate(llm, tok, template, rows, EFFORT_ON, a.max_tokens_on, skip)
+        for i in range(len(rows)):
+            if i in skip:
+                parsed.append(("", "", True, 0, 0))
+                continue
+            think, ans, trunc = extract_on(g_on[i]["text"])
+            if g_on[i]["finish"] == "length":
+                trunc = True
+            parsed.append((think, ans, trunc, len(tok(think, add_special_tokens=False)["input_ids"]) if think else 0,
+                           len(tok(ans, add_special_tokens=False)["input_ids"]) if ans else 0))
+        hits_on = [is_hit(p[1], r["answer"]) and not p[2] for p, r in zip(parsed, rows)]
+        n_trunc = sum(p[2] for i, p in enumerate(parsed) if i not in skip)
 
     if a.traces:
         traces = filter_traces(rows, [p[0] for p in parsed], [p[1] for p in parsed], [p[3] for p in parsed], [p[2] for p in parsed])
@@ -192,18 +269,41 @@ def main(argv=None):
         print(json.dumps(summ, indent=1))
         return 0
 
-    g_off = generate(llm, tok, template, rows, None, a.max_tokens_off, skip)
-    preds_off = ["" if i in skip else extract_off(g_off[i]["text"]) for i in range(len(rows))]
-    hits_off = [is_hit(p, r["answer"]) for p, r in zip(preds_off, rows)]
-    dec = g0_decision(hits_off, hits_on)
-    res = dict(model=a.model, split=a.split, n=len(rows), reasoning_effort_on=EFFORT_ON, **dec, g0_margin=G0_MARGIN,
-               n_truncated_on=n_trunc, max_tokens_on=a.max_tokens_on,
-               think_tokens_on=tok_stats([p[3] for p in parsed]), answer_tokens_on=tok_stats([p[4] for p in parsed]),
-               out_tokens_on=tok_stats([g_on[i]["n_out"] for i in g_on]), seconds=time.time() - t0, **prompt_info,
-               ids=[r["id"] for r in rows], hits_off=hits_off, hits_on=hits_on)
-    (out / "gate0.json").write_text(json.dumps(res))
-    print(json.dumps({k: v for k, v in res.items() if k not in ("ids", "hits_off", "hits_on")}, indent=1))
-    print(f"[gate0] G0 {'PASS' if dec['g0_pass'] else 'FAIL'}: off {dec['acc_off']:.3f} on {dec['acc_on']:.3f} gap {dec['gap'] * 100:+.1f} pts", flush=True)
+    ids = [r["id"] for r in rows]
+    path = out / "gate0.json"
+    res = {}
+    if path.exists():  # e.g. --arms ev run after an off/on run: keep the earlier arms (same rows only)
+        prev = json.loads(path.read_text())
+        if prev.get("ids") == ids:
+            res = prev
+    res.update(model=a.model, split=a.split, n=len(rows), reasoning_effort_on=EFFORT_ON, g0_margin=G0_MARGIN, g0ev_margin=G0EV_MARGIN,
+               **prompt_info, ids=ids)
+    res.setdefault("arms_run", [])
+    res["arms_run"] = sorted(set(res["arms_run"]) | set(arms))
+    if "off" in arms:
+        g_off = generate(llm, tok, template, rows, None, a.max_tokens_off, skip)
+        res["hits_off"] = [False if i in skip else is_hit(extract_off(g_off[i]["text"]), r["answer"]) for i, r in enumerate(rows)]
+    if "on" in arms:
+        res.update(hits_on=hits_on, n_truncated_on=n_trunc, max_tokens_on=a.max_tokens_on,
+                   think_tokens_on=tok_stats([p[3] for p in parsed]), answer_tokens_on=tok_stats([p[4] for p in parsed]),
+                   out_tokens_on=tok_stats([g_on[i]["n_out"] for i in g_on]))
+    if "ev" in arms:
+        g_ev = generate(llm, tok, template, rows, None, a.max_tokens_off, skip, ev_lines=ev_lines)
+        res["hits_ev"] = [False if i in skip else is_hit(extract_off(g_ev[i]["text"]), r["answer"]) for i, r in enumerate(rows)]
+        res["n_ev_lines"] = [len(ev_lines[r["id"]]) for r in rows]
+    if "hits_off" in res and "hits_on" in res:
+        res.update(g0_decision(res["hits_off"], res["hits_on"]))
+    if "hits_off" in res and "hits_ev" in res:
+        res.update(g0ev_decision(res["hits_off"], res["hits_ev"]))
+    elif "hits_ev" in res:
+        res.update(acc_ev=sum(res["hits_ev"]) / len(rows), gap_ev=None, g0ev_pass=None)  # no off arm to compare with
+    res["seconds"] = time.time() - t0
+    path.write_text(json.dumps(res))
+    print(json.dumps({k: v for k, v in res.items() if k not in ("ids", "hits_off", "hits_on", "hits_ev", "n_ev_lines")}, indent=1))
+    if "g0_pass" in res:
+        print(f"[gate0] G0 {'PASS' if res['g0_pass'] else 'FAIL'}: off {res['acc_off']:.3f} on {res['acc_on']:.3f} gap {res['gap'] * 100:+.1f} pts", flush=True)
+    if res.get("gap_ev") is not None:
+        print(f"[gate0] G0-ev {'PASS' if res['g0ev_pass'] else 'FAIL'}: off {res['acc_off']:.3f} ev {res['acc_ev']:.3f} gap {res['gap_ev'] * 100:+.1f} pts", flush=True)
     return 0
 
 
