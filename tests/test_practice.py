@@ -372,7 +372,7 @@ def test_openai_backend_mocked():
     assert outs[0].endswith("</input>") and outs[1] == "hello" and outs[2] == "hello"
     assert be.completion_tokens == 13 and be.inflight == 3 and len(gated) == 3
     url, body = seen[0]
-    assert url == "http://127.0.0.1:1/v1/completions" and body["stop"] == ["</input>", "<|ifm|im_end|>"] and body["max_tokens"] == 100
+    assert url == "http://127.0.0.1:1/v1/completions" and body["stop"] == __import__("practice.gen", fromlist=["STOPS"]).STOPS and body["max_tokens"] == 100
     assert not body["prompt"].startswith("<s>") and body["temperature"] == 0.7 and "seed" in body
     assert len({b["seed"] for _, b in seen}) == 3  # one seed per request
 
@@ -779,3 +779,24 @@ def test_scout_verify_prefilter_and_keep_yes(tmp_path, monkeypatch):
 
 def jl_rows(p):
     return [json.loads(l) for l in open(p) if l.strip()]
+
+
+def test_tool_named_tags_pilot3():
+    """Pilot 3: K2 writes the tool name as the tag. These are real reply shapes from the Kaggle transcripts."""
+    from practice import tools as T
+    from practice.harness import cut_reply
+    assert T.parse_call("<answer>ABDECF</answer>") == ("answer", "ABDECF")
+    assert T.parse_call("<python>\nprint(6*7)\n</python>") == ("python", "print(6*7)")
+    assert T.parse_call("<tool>answer</tool>\n<answer>0</answer>") == ("answer", "0")
+    assert T.parse_call("<tool>python</tool>\n<input>\nprint(1)\n</input>") == ("python", "print(1)")
+    assert T.parse_call("<search>flood fill</search>") == ("search", "flood fill")
+    assert T.parse_call("<answer>\n1 2\n3 4\n</answer>") == ("answer", "1 2\n3 4")
+    assert cut_reply("<python>print(1)</python>\nmore text <answer>3</answer>") == "<python>print(1)</python>"
+    assert T.close_open_tag("<python>\nprint(1)\n") == "<python>\nprint(1)\n</python>"
+    assert T.close_open_tag("<answer>4</answer>") == "<answer>4</answer>"
+
+
+def test_k2_native_tool_call():
+    from practice import tools as T
+    s = "<ifm|tool_calls>\n<ifm|tool_call>python\n<ifm|arg_key>input</ifm|arg_key>\n<ifm|arg_value>print(3)</ifm|arg_value>\n</ifm|tool_call>\n</ifm|tool_calls>"
+    assert T.parse_call(s) == ("python", "print(3)")

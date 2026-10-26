@@ -19,6 +19,7 @@ except ImportError:  # pragma: no cover
     torch = None
 
 STOP_TEXT = "</input>"
+from .tools import CLOSE_TAGS as STOP_TEXTS, close_open_tag  # noqa: E402  every tool tag closer stops a reply
 IM_END = "<|ifm|im_end|>"
 
 
@@ -51,15 +52,16 @@ class BsState:
 class StopOnText:
     """StoppingCriteria: a row is finished once `text` appears among its last `tail` generated tokens (prompt tokens are ignored)."""
 
-    def __init__(self, tok, plen, text=STOP_TEXT, tail=8):
-        self.tok, self.plen, self.text, self.tail = tok, plen, text, tail
+    def __init__(self, tok, plen, text=None, tail=8):
+        self.tok, self.plen, self.tail = tok, plen, tail
+        self.texts = [text] if text else list(STOP_TEXTS)
 
     def __call__(self, input_ids, scores=None, **kw):
         gen = input_ids[:, self.plen:]
         if gen.shape[1] == 0:
             return torch.zeros(input_ids.shape[0], dtype=torch.bool, device=input_ids.device)
         texts = self.tok.batch_decode(gen[:, -self.tail:], skip_special_tokens=False)
-        return torch.tensor([self.text in t for t in texts], dtype=torch.bool, device=input_ids.device)
+        return torch.tensor([any(x in t for x in self.texts) for t in texts], dtype=torch.bool, device=input_ids.device)
 
 
 def stop_ids(tok):
@@ -155,7 +157,7 @@ class VLLMBackend:
     def generate(self, prompts, max_new, temperature, seed):
         from vllm import SamplingParams
         ids = [self.tok(p, add_special_tokens=False).input_ids for p in prompts]  # the exact tokens the HF path feeds (no second BOS)
-        sps = [SamplingParams(temperature=temperature, top_p=1.0, max_tokens=max_new, stop=[STOP_TEXT], include_stop_str_in_output=True,
+        sps = [SamplingParams(temperature=temperature, top_p=1.0, max_tokens=max_new, stop=list(STOP_TEXTS), include_stop_str_in_output=True,
                               stop_token_ids=self.stops, skip_special_tokens=False, seed=(seed * 1000003 + n) % (2 ** 31)) for n in range(len(ids))]
         res = self.llm.generate([{"prompt_token_ids": x} for x in ids], sps, lora_request=self.lora, use_tqdm=False)
         outs = []
@@ -185,7 +187,7 @@ class VLLMBackend:
 
 
 # ====================================================================== Mac / OpenAI-compatible backend (mlx_lm.server)
-STOPS = [STOP_TEXT, IM_END]
+STOPS = list(STOP_TEXTS) + [IM_END]
 
 
 def _post_json(url, body, timeout):
@@ -236,8 +238,8 @@ class OpenAIBackend:
                 j = text.find(IM_END)
                 if j >= 0:
                     text = text[:j]
-                if ch.get("finish_reason") == "stop" and "<input>" in text and STOP_TEXT not in text.split("<input>")[-1]:
-                    text += STOP_TEXT
+                if ch.get("finish_reason") == "stop":
+                    text = close_open_tag(text)
                 with self.lock:
                     self.completion_tokens += int((r.get("usage") or {}).get("completion_tokens") or 0)
                 return text

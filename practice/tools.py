@@ -11,11 +11,12 @@ MAX_TURNS = 6
 OUT_CAP = 2000
 PY_TIMEOUT = 10
 
-SYSTEM_PROMPT = """You solve puzzles. You may use tools. Each turn, reply with exactly ONE tool call in this form and nothing after it:
-<tool>NAME</tool>
-<input>
-...
-</input>
+SYSTEM_PROMPT = """You solve puzzles. You may use tools. Each turn, reply with exactly ONE tool call and nothing after it: the tool's name as a tag around its input.
+Examples:
+<python>
+print(2 + 2)
+</python>
+<answer>42</answer>
 Tools:
 - python: run Python 3 code (10 seconds, no internet, no files). Use print() to see results.
 - search: look up a topic in a small offline reference library (math, algorithms, Python standard library). Input is a short query.
@@ -45,6 +46,13 @@ def user_prompt(p):
 
 
 # ------------------------------------------------------------------ parsing
+# Pilot 3 (Kaggle): K2 ignored the <tool>NAME</tool><input>..</input> form and wrote <python>..</python> / <answer>..</answer>, so that is now
+# the main form. The old form and `<tool>answer</tool><answer>x</answer>` are still accepted.
+TOOL_NAMES = ("python", "search", "look", "answer", "fetch", "save", "done")
+CLOSE_TAGS = ["</%s>" % n for n in TOOL_NAMES] + ["</input>", "</ifm|tool_call>"]
+# K2's native tool-call tokens (seen in pilot 3): <ifm|tool_call>NAME<ifm|arg_key>input</ifm|arg_key><ifm|arg_value>...</ifm|arg_value></ifm|tool_call>
+_NATIVE_RE = re.compile(r"<ifm\|tool_call>\s*([a-zA-Z_]+)\s*(?:<ifm\|arg_key>.*?</ifm\|arg_key>\s*<ifm\|arg_value>(.*?)(?:</ifm\|arg_value>|</ifm\|tool_call>|$))?", re.S)
+_TAG_RE = re.compile(r"<(%s)>(.*?)(?:</\1>|$)" % "|".join(TOOL_NAMES), re.S | re.I)
 _TOOL_RE = re.compile(r"<tool>\s*([a-zA-Z_]+)\s*</tool>\s*(?:<input>(.*?)(?:</input>|$))?", re.S)
 _FENCE_RE = re.compile(r"```[ \t]*(?:python|py|python3)[ \t]*\n(.*?)(?:```|$)", re.S | re.I)
 _ANS_RE = re.compile(r"(?im)^[ \t>*_`]*(?:final\s+)?answer[ \t*_`]*:[ \t*_`]*(.*)$")
@@ -58,20 +66,38 @@ def clean_answer(s):
     return s.strip()
 
 
-def parse_call(text):
-    """-> (tool, input) or None. Order: explicit <tool> block; ```python fence (a python call); 'ANSWER: x' (an answer call)."""
+def raw_call(text, names=TOOL_NAMES):
+    """-> (name, raw input) of the first tool call in either form, or None."""
+    n = _NATIVE_RE.search(text)
+    if n and n.group(1).lower() in names:
+        return n.group(1).lower(), (n.group(2) or "").strip("\n")
     m = _TOOL_RE.search(text)
-    if m:
+    t = _TAG_RE.search(text)
+    if m and (not t or m.start() <= t.start()):
         name = m.group(1).lower()
-        if name in ("python", "search", "look", "answer", "fetch"):
-            inp = (m.group(2) or "").strip("\n")
-            if name == "python":
-                f = _FENCE_RE.search(inp)
-                if f:
-                    inp = f.group(1)
-            if name == "answer":
-                inp = clean_answer(inp)
-            return name, inp
+        inp = m.group(2)
+        if inp is None:  # <tool>answer</tool> then <answer>x</answer> (or another tool-named tag)
+            t2 = _TAG_RE.search(text, m.end())
+            inp = t2.group(2) if t2 else ""
+        if name in names:
+            return name, inp.strip("\n")
+    if t and t.group(1).lower() in names:
+        return t.group(1).lower(), t.group(2).strip("\n")
+    return None
+
+
+def parse_call(text):
+    """-> (tool, input) or None. Order: a tool-named tag or <tool> block; ```python fence (a python call); 'ANSWER: x' (an answer call)."""
+    c = raw_call(text, ("python", "search", "look", "answer", "fetch"))
+    if c:
+        name, inp = c
+        if name == "python":
+            f = _FENCE_RE.search(inp)
+            if f:
+                inp = f.group(1)
+        if name == "answer":
+            inp = clean_answer(inp)
+        return name, inp
     f = _FENCE_RE.search(text)
     if f:
         return "python", f.group(1)
@@ -79,6 +105,25 @@ def parse_call(text):
     if a is not None:
         return "answer", a
     return None
+
+
+def cut_after_call(text):
+    """Keep only the first tool call: cut after the earliest closing tag."""
+    ends = [(i, len(c)) for c in CLOSE_TAGS for i in [text.find(c)] if i >= 0]
+    if not ends:
+        return text
+    i, n = min(ends)
+    return text[: i + n]
+
+
+def close_open_tag(text):
+    """A server that drops the stop string: re-append the closing tag of the last opened, unclosed tool tag."""
+    opened = [(m.start(), m.group(1)) for m in re.finditer(r"<(%s|input)>" % "|".join(TOOL_NAMES), text)]
+    if opened:
+        name = opened[-1][1]
+        if "</%s>" % name not in text[opened[-1][0]:]:
+            return text + "</%s>" % name
+    return text
 
 
 def last_answer_line(text):

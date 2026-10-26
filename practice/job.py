@@ -26,6 +26,8 @@ from sleep2.askonce.job_common import Logger, assert_finite_forward, device_dtyp
 from sleep2.askonce.model_io import get_tokenizer, load_model
 
 from . import night as N
+from .tools import CLOSE_TAGS as _CLOSE_TAGS
+STOPS_CFG = list(_CLOSE_TAGS) + ["<|ifm|im_end|>"]
 from .harness import Harness, render, start_messages, summarize
 from .tools import MAX_TURNS
 
@@ -208,7 +210,7 @@ class Lane:
 
     def write_config(self):
         a = self.a
-        cfg = {"arm": a.arm, "max_new_per_turn": MAX_NEW, "max_turns": MAX_TURNS, "max_ctx": MAX_CTX, "temperature": 0.7, "stop": ["</input>", "<|ifm|im_end|>"],
+        cfg = {"arm": a.arm, "max_new_per_turn": MAX_NEW, "max_turns": MAX_TURNS, "max_ctx": MAX_CTX, "temperature": 0.7, "stop": STOPS_CFG,
                "backend_requested": getattr(a, "backend", "hf"), "backend_modes": self.modes, "subprocess_phases": self.sub, "vllm_python": self.vpy if self.sub else None,
                "vllm_version": getattr(self, "vllm_version", None), "vllm": {"dtype": "float16", "max_model_len": MAX_CTX, "gpu_memory_utilization": VLLM_UTIL,
                "enable_prefix_caching": True, "enable_lora": True, "max_lora_rank": 16}, "hf_start_bs": a.bs, "tries": a.tries, "sibling_tries": getattr(a, "sib_tries", 1),

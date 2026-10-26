@@ -12,8 +12,8 @@ from .grade import is_correct
 
 IM_START, IM_END = "<|ifm|im_start|>", "<|ifm|im_end|>"
 THINK_EMPTY = "<ifm|think>\n</ifm|think>"
-NUDGE = ("Reply with exactly one tool call in the form <tool>NAME</tool> then <input>...</input>, "
-         "where NAME is python, search, look or answer.")
+NUDGE = ("Reply with exactly one tool call: the tool name as a tag around its input, for example <python>print(1)</python> or <answer>42</answer>. "
+         "Tools: python, search, look or answer.")
 NUDGE_WEB = NUDGE.replace("look or answer", "look, fetch or answer")
 
 
@@ -31,9 +31,8 @@ def render(messages, add_gen=True, bos=""):
 
 
 def cut_reply(text):
-    """Keep only the first tool block: cut after the first </input>."""
-    i = text.find("</input>")
-    return text[: i + len("</input>")] if i >= 0 else text
+    """Keep only the first tool call: cut after its closing tag."""
+    return T.cut_after_call(text)
 
 
 def start_messages(p):

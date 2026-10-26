@@ -45,11 +45,10 @@ TOPICS = [
 ]
 
 SYSTEM = """You are a scout. Your job: find puzzles on the web that come with an official answer or solution page, copy the puzzle and its answer, and save them.
-You may use tools. Each turn, reply with exactly ONE tool call in this form and nothing after it:
-<tool>NAME</tool>
-<input>
-...
-</input>
+You may use tools. Each turn, reply with exactly ONE tool call and nothing after it: the tool's name as a tag around its input.
+Examples:
+<search>logic puzzle with answer page</search>
+<fetch>https://example.com/puzzle 3000</fetch>
 Tools:
 - search: web search (top 5 results: title, URL, snippet). Input is a short query. Pages that could reveal other puzzles' answers are withheld.
 - fetch: download one web page as plain text (3000 characters at a time). Input is a full http(s) URL, optionally followed by a character offset to read further (example: https://example.com/p 3000).
@@ -62,7 +61,7 @@ Tools:
 You have at most __N__ turns. Do not make up puzzles or answers. Copy them from the page."""
 SYSTEM = SYSTEM.replace("__N__", str(MAX_TURNS))
 
-NUDGE = "Reply with exactly one tool call in the form <tool>NAME</tool> then <input>...</input>, where NAME is search, fetch, python, save or done."
+NUDGE = "Reply with exactly one tool call: the tool name as a tag around its input, for example <search>logic puzzle with answer</search>. Tools: search, fetch, python, save or done."
 SCOUT_TOOLS = ("python", "search", "fetch", "save", "done")
 
 
@@ -232,17 +231,14 @@ def parse_save_json(text):
 
 
 def parse_scout_call(text):
-    m = T._TOOL_RE.search(text)
-    if m:
-        name = m.group(1).lower()
+    c = T.raw_call(text, SCOUT_TOOLS + ("answer",))
+    if c:
+        name, inp = c
         name = "done" if name == "answer" else name
-        if name in SCOUT_TOOLS:
-            inp = (m.group(2) or "").strip("\n")
-            if name == "python":
-                f = T._FENCE_RE.search(inp)
-                inp = f.group(1) if f else inp
-            return name, inp
-        return None
+        if name == "python":
+            f = T._FENCE_RE.search(inp)
+            inp = f.group(1) if f else inp
+        return name, inp
     f = T._FENCE_RE.search(text)
     return ("python", f.group(1)) if f else None
 

@@ -24,6 +24,8 @@ from . import lessons as L
 from . import pe_pool
 from .gen import OpenAIBackend, ServerManager
 from .grade import is_correct  # noqa: F401
+from .tools import CLOSE_TAGS as _CLOSE_TAGS
+STOPS_CFG = list(_CLOSE_TAGS) + ["<|ifm|im_end|>"]
 from .harness import Harness, render, start_messages, summarize
 from .tools import MAX_TURNS
 from .web import WEB
@@ -480,7 +482,7 @@ class Mac:
         a = self.a
         return {"model": getattr(self, "model", None), "quant": "q4 for serving and training (QLoRA)", "night": a.night, "dpo": a.night["dpo"], "tries": a.tries, "test_tries": a.test_tries,
                 "sib_tries": 1, "practice_n": a.practice_n, "pool_size": len(getattr(self, "pool", [])), "nights": a.nights, "eval_nights": sorted(a.eval_nights), "web": a.web, "web_eval": a.web_eval,
-                "concurrency": a.concurrency, "caps": {"max_new": MAX_NEW, "max_turns": MAX_TURNS, "max_ctx": MAX_CTX}, "stop": ["</input>", "<|ifm|im_end|>"], "share_day1": a.share_day1,
+                "concurrency": a.concurrency, "caps": {"max_new": MAX_NEW, "max_turns": MAX_TURNS, "max_ctx": MAX_CTX}, "stop": STOPS_CFG, "share_day1": a.share_day1,
                 "no_dpo_note": None, "arc_easy_200": "not run on the Mac"}
 
     # ------------------------------------------------------------ main
