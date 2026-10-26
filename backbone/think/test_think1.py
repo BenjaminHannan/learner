@@ -429,6 +429,7 @@ case "$script" in
     mkdir -p "$out"; echo '{}' > "$out/result_${arm}_s${seed}.json"
     case "$arm" in a|b) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json";; esac
     [ -z "${PARDIR:-}" ] || { echo "end --arm $arm --seed $seed" >> "$LOG"; rm -f "$PARDIR/run.$$"; };;
+  *preflight.py) [ -z "${PFAIL:-}" ] || exit 1; mkdir -p "$OUT/preflight";;
   *summarize.py) echo "VERDICT: INCOMPLETE";;
 esac
 """
@@ -437,6 +438,7 @@ esac
 def test_box_script():
     """run_box.sh drives think1.py for every arm, in dependency order, skipping finished jobs (stub python; no torch)."""
     import os
+    import shutil
     import subprocess
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
@@ -462,8 +464,20 @@ def test_box_script():
         assert all("--steps" not in c for c in calls if c[0] == "think1.py"), "no global STEPS"
         calls, _ = box("t:0,bplus:0,aplus:1")
         assert runs(calls) == [], ("finished jobs must be skipped", runs(calls))
-        calls, _ = box("ws:3,wsham:3,tsd:3,tsd1:3")  # P1 / P2b arms: stage-1 a first, then each once
+        calls, _ = box("ws:3,wsham:3,tsd:3,tsd1:3")  # P1 / P2b arms: stage-1 a first, then the preflight (once), then each arm
         assert runs(calls) == [("a", "3"), ("ws", "3"), ("wsham", "3"), ("tsd", "3"), ("tsd1", "3")], runs(calls)
+        names = [c[0] for c in calls]
+        assert names.count("preflight.py") == 1 and names.index("preflight.py") < names.index("think1.py", 1 + names.index("think1.py")), names
+        pf = calls[names.index("preflight.py")]
+        assert "--a-adapter" in pf and pf[pf.index("--a-adapter") + 1].endswith("think/a_s3/adapter") and pf[pf.index("--alpha-init") + 1] == "0", pf
+        shutil.rmtree(tmp / "out" / "preflight"), [shutil.rmtree(tmp / "out" / "think" / f"{x}_s3") for x in ("ws", "wsham", "tsd", "tsd1")]
+        calls, out = box("ws:3,tsd:3", flags="--alpha-init+0.3", PFAIL="1")  # a failed preflight stops every P1 / P2b job
+        assert runs(calls) == [] and "preflight failed" in out and [c[0] for c in calls].count("preflight.py") >= 1, (runs(calls), out)
+        assert calls[[c[0] for c in calls].index("preflight.py")][-1] == "0.3"
+        calls, out = box("ws:3,tsd:3", PARALLEL="1", PFAIL="1")
+        assert runs(calls) == [] and [c[0] for c in calls].count("preflight.py") == 1, (runs(calls), out)
+        calls, _ = box("ws:3,tsd:3,aplus:3")  # no failure: the preflight runs once even with two jobs
+        assert [c[0] for c in calls].count("preflight.py") == 1 and sorted(runs(calls)) == [("aplus", "3"), ("tsd", "3"), ("ws", "3")], runs(calls)
         import shutil
         shutil.rmtree(tmp / "out" / "think" / "a_s1" / "adapter")
         calls, _ = box("aplus:1")

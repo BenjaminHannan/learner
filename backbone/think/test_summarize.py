@@ -492,6 +492,11 @@ def test_s4():
     assert x["wrong"] and x["outcome"].startswith("PROVED WRONG") and not x["opens_P4"], x
     x = p1("d", ws=(74.5, 73.0), wsham=70.0)
     assert x["outcome"] == "not shown (P4 stays closed)" and x["seed_rule"] == "needs seeds 2-3", x
+    # seed rule (6.0): only the accuracy pass conditions count; a margin already on the proved-wrong side settles it
+    x = p1("band_sham", ws=(78.0, 73.0), wsham=77.5)  # T - sham = +0.5: inside +-1 of its bar
+    assert x["seed_rule"] == "needs seeds 2-3" and x["opens_P4"] is False
+    x = p1("wrong_side", ws=(73.3, 73.0), wsham=72.8)  # T - sham is inside the band, but T - max(tc, C1) = +0.3 is proved wrong: nothing more to learn
+    assert x["wrong"] and x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]
     x = p1("edge", ws=(75.0, 73.0), wsham=74.0)  # exactly +2.0 and +1.0: the bars are inclusive
     assert x["opens_P4"], x
     x = p1("nosham", ws=(78.0, 73.0))
@@ -513,6 +518,12 @@ def test_s4():
     assert x["conditions"] == {"a": True, "b": True, "c": False, "d": True} and x["outcome"].startswith("one-shot side module with step targets helps, looping not shown"), x["outcome"]
     x = p2("loop_wrong", tsd=P2, tsd1=76.8, gap=14.0, ws=(70.0, 73.0))
     assert x["outcome"].startswith("PROVED WRONG") and "arm < one-lap arm + 0.3" in x["outcome"]
+    assert x["one_shot"] and "separate finding: one-shot side module with step targets helps" in x["outcome"], x["outcome"]  # (a), (b), (d) pass: the one-shot finding is reported next to the verdict
+    assert x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]  # (c) = +0.2 is on the proved-wrong side
+    x = p2("c_band", tsd=P2, tsd1=76.5, gap=14.0, ws=(70.0, 73.0))  # (c) = +0.5: neither met nor missed by 1, not proved wrong
+    assert x["seed_rule"] == "needs seeds 2-3" and x["one_shot"], x
+    x = p2("lesion_gap_do_not_count", tsd={**P2, "swap4": 75.9}, tsd1=74.5, gap=10.5, ws=(70.0, 73.0))  # swap cost 1.1 and gap 10.5 sit near their bars; only accuracy margins count
+    assert x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]
     x = p2("gap_wrong", tsd=P2, tsd1=74.5, gap=1.0, ws=(70.0, 73.0))
     assert "decoder gap < 2" in x["outcome"] and x["conditions"]["d"] is False
     x = p2("gap_mid", tsd=P2, tsd1=74.5, gap=6.0, ws=(70.0, 73.0))
@@ -524,7 +535,7 @@ def test_s4():
     x = p2("no_one", tsd=P2, gap=14.0, ws=(70.0, 73.0))
     assert x["status"] == SM.ND and "tsd1" in x["why"]
     x = p2("no_gap", tsd=P2, tsd1=74.5, ws=(70.0, 73.0))
-    assert x["conditions"]["d"] is None and x["seed_rule"] == SM.ND and x["outcome"] == "not shown"
+    assert x["conditions"]["d"] is None and x["outcome"] == "not shown"
     # the old report and the JSON are unaffected / still round-trip
     o = run(scenario(R / "old"))
     assert o["p1"] is None and o["p2b"] is None and "== 9." not in SM.report(o)

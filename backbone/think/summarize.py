@@ -275,14 +275,18 @@ def think2(R, st, lab):
     return out
 
 
-def seed_rule(margins, n):
-    """codi-plan 6.0: every accuracy margin (value minus its bar) met or missed by >= 1 point -> decide on what is in (seed 1); otherwise seeds 2-3 are owed, and
-    with all three in the 3-seed means decide. Returns 'decided on N seed(s)' / 'needs seeds 2-3' / '3-seed means'."""
-    if any(m is None for m in margins):
+def seed_rule(items, n):
+    """codi-plan 6.0. items = (margin, wrong_margin) for each ACCURACY pass condition: margin = value - pass bar, wrong_margin = value - proved-wrong bar (None if
+    the condition has none). A condition is settled if it is met by >= 1 point or missed by >= 1 point, or already sits on the proved-wrong side. All settled ->
+    decide on the seeds in (seed 1); otherwise seeds 2-3 are owed, and with all three in the 3-seed means decide. Lesion costs and the decoder gap do not count."""
+    if any(m is None for m, _ in items):
         return ND
     if n >= 3:
         return "3-seed means"
-    return f"decided on {n} seed(s)" if all(abs(m) >= SEED_BAND - EPS for m in margins) else "needs seeds 2-3"
+    if any(w is not None and w < 0 for _, w in items):  # one condition already proved wrong closes the proposition: more seeds cannot change the outcome
+        return f"decided on {n} seed(s)"
+    settled = all(abs(m) >= SEED_BAND - EPS for m, w in items)
+    return f"decided on {n} seed(s)" if settled else "needs seeds 2-3"
 
 
 def common(R, arms_tags, split="validation"):
@@ -346,7 +350,7 @@ def p1(R, st, rows, lab):
     marker = [(R.entry("ws", sd, "validation", "T") or {}).get("marker_rate") for sd in seeds]
     return {"status": "computed", "seeds": seeds, "T": m["T"], "C1": m["C1"], "sham": m["sham"], "C0": m["tc"], "ref": ref, "ref_name": "tc" if m["tc"] >= m["C1"] else "C1",
             "T_minus_ref": a, "T_minus_sham": b, "T_vs_74_6": m["T"] - P1_REF74, "ci_ref": d_ref, "ci_sham": d_sh, "opens_P4": opens, "wrong": wrong, "outcome": outcome,
-            "seed_rule": seed_rule([a - P1_OPEN, b - P1_SHAM, a - P1_WRONG], len(seeds)),
+            "seed_rule": seed_rule([(a - P1_OPEN, a - P1_WRONG), (b - P1_SHAM, None)], len(seeds)),
             "mean_gen_tokens": {k: [None if x is None else float(x) for x in v] for k, v in gen.items()},
             "marker_rate": [None if x is None else float(x) for x in marker],
             "format_check": {k: [None if x is None else 100 * float(x) for x in v] for k, v in fmt.items()},
@@ -375,20 +379,21 @@ def p2b(R, st, rows, lab):
     pd = None if gap is None else gap >= P2_D - EPS
     wrong = [n for n, hit in (("a: arm < max(tc, C1) + 0.5", a < P2_A_WRONG - EPS), ("swap unused", les["swap"]["status"] == "unused"),
                               ("decoder gap < 2", gap is not None and gap < P2_D_WRONG - EPS), ("arm < one-lap arm + 0.3", c < P2_C_WRONG - EPS)) if hit]
+    one_shot = bool(pa and pb and pd and not pc)
+    note = "one-shot side module with step targets helps, looping not shown (counts as a fail for the give-up rule)"
     if pa and pb and pc and pd:
         outcome = "PASS"
     elif wrong:
-        outcome = "PROVED WRONG: " + "; ".join(wrong)
-    elif pa and pb and pd and not pc:
-        outcome = "one-shot side module with step targets helps, looping not shown (counts as a fail for the give-up rule)"
+        outcome = "PROVED WRONG: " + "; ".join(wrong) + ("; separate finding: " + note if one_shot else "")
+    elif one_shot:
+        outcome = note
     else:
         outcome = "not shown"
-    over = lambda x, bar: None if x is None else x - bar
-    margins = [a - P2_A, c - P2_C, over(gap, P2_D), over(les["swap"]["cost"], USED), over(les["random"]["cost"], USED)]
+    margins = [(a - P2_A, a - P2_A_WRONG), (c - P2_C, c - P2_C_WRONG)]  # the accuracy pass conditions (a) and (c) only
     return {"status": "computed", "seeds": seeds, "S": m["S"], "tc": m["tc"], "C1": m["C1"], "ref": ref, "tsd1": m["S1"], "swap": m["swap"], "random": m["random"],
             "zero": None if None in zero else float(np.mean(zero)), "S_minus_ref": a, "S_minus_tsd1": c, "ci_ref": d_ref, "ci_one": d_one, "lesions": les,
             "decoder": {"gap": gap, "true": [d.get("true") for d in dec], "swap": [d.get("swap") for d in dec], "tokens": [d.get("tokens") for d in dec]},
-            "conditions": {"a": pa, "b": pb, "c": pc, "d": pd}, "wrong_by": wrong, "outcome": outcome,
+            "conditions": {"a": pa, "b": pb, "c": pc, "d": pd}, "one_shot": one_shot, "wrong_by": wrong, "outcome": outcome,
             "swapped_score_vs_C0": m["swap"] - m["tc"], "P3_entry": bool(pd) and les["swap"]["status"] != "used",
             "seed_rule": seed_rule(margins, len(seeds)), "by_depth": by_depth(st, rows, {"S": vS, "tsd1": vS1, "C1": vC1, "tc": vtc}, lab)}
 

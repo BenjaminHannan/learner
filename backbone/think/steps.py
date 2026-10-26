@@ -56,6 +56,12 @@ def written_example(enc, row, sham=False):
     return enc.prompt(row, reserve=len(tgt), tail=STEPS_TAIL)[0], tgt
 
 
+def cut_for_target(enc, row, sham=False):
+    """True if the written example's prompt had to be cut (context dropped from the left) to make room for its longer target, while the direct example's was not."""
+    st, an = written_target(enc, row, sham)
+    return enc.prompt(row, reserve=len(st) + len(an), tail=STEPS_TAIL)[1] and not enc.prompt(row, reserve=len(enc.ids(" " + row["answer"])) + 1)[1]
+
+
 def gold_prompt(enc, row, sham=False):
     """The format check's input: the steps prompt + the gold steps (filler for sham) + " The answer is:"; the model writes the answer."""
     st, _ = written_target(enc, row, sham)
@@ -96,6 +102,39 @@ def lora_adapter(pm, name, restore="default"):
         yield
     finally:
         use(restore)
+
+
+def check_adapter_switch():
+    """Guard against peft version drift: lora_adapter() relies on the LoRA layers' private `_active_adapter` list. On a tiny module with two adapters, check that
+    switching changes the output, that leaving the context restores the main adapter, and that requires_grad is not touched. Runs at import."""
+    try:
+        from peft import LoraConfig, get_peft_model
+    except ImportError:
+        return
+    class M(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.lin = nn.Linear(4, 4)
+
+        def forward(self, x):
+            return self.lin(x)
+
+    cfg = lambda: LoraConfig(r=2, lora_alpha=4, target_modules=["lin"], init_lora_weights=False)
+    pm = get_peft_model(M(), cfg())
+    pm.add_adapter("dec", cfg())
+    for q in pm.parameters():
+        if q.dtype.is_floating_point and "lora_" in next(n for n, p_ in pm.named_parameters() if p_ is q):
+            q.requires_grad_(True)
+    x, flags = torch.randn(3, 4), [q.requires_grad for q in pm.parameters()]
+    with torch.no_grad():
+        main = pm(x)
+        with lora_adapter(pm, "dec"):
+            dec = pm(x)
+        after = pm(x)
+    ok = (not torch.allclose(main, dec)) and torch.equal(main, after) and flags == [q.requires_grad for q in pm.parameters()]
+    if not ok:
+        import peft
+        raise RuntimeError(f"peft {peft.__version__}: steps.lora_adapter no longer switches LoRA adapters (output unchanged by the switch, not restored, or requires_grad touched)")
 
 
 class StepDecoder(nn.Module):
@@ -147,3 +186,6 @@ def lap_notes(e, lmax, laps=SD_LAPS):
     """The notes each decoder pass reads, from B.think's boards e = [e_0, e_1, ..., e_lmax]: lap k reads e_k (arm tsd, lmax = laps); with lmax = 1
     (arm tsd1) the lap-1 notes feed every pass."""
     return [e[min(k, lmax)] for k in range(1, laps + 1)]
+
+
+check_adapter_switch()

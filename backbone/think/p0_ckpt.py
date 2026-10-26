@@ -153,18 +153,7 @@ def notes_reading(notes, rows):
     return out
 
 
-def swap_partners(rows):
-    """For each row the nearest following row (cyclic) with the same depth and another story; if none, the nearest of the same depth; None if it is alone at its depth.
-    Returns (partner list, number of rows whose partner is from the same story)."""
-    n, out, same = len(rows), [], 0
-    for i, r in enumerate(rows):
-        cand = [(i + s) % n for s in range(1, n)]
-        same_d = [j for j in cand if rows[j].get("depth") == r.get("depth")]
-        j = next((j for j in same_d if rows[j].get("visit_id") != r.get("visit_id") or r.get("visit_id") is None), None)
-        if j is None and same_d:
-            j, same = same_d[0], same + 1
-        out.append(j)
-    return out, same
+swap_partners = B.swap_partners  # shared with think1.eval_board
 
 
 @torch.no_grad()

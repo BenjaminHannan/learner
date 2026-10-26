@@ -426,6 +426,26 @@ def swap_index(groups):
     return torch.tensor(idx)
 
 
+def swap_partners(rows):
+    """The swap lesion's partner of each row (codi-plan 6.0): the nearest following row (cyclic) with the same depth and another story; if there is none, the nearest of
+    the same depth (counted as a same-story row); None if the row is alone at its depth. Returns (partner list, number of rows whose partner is from the same story).
+    Shared by think1.eval_board and p0_ckpt. Rows are dicts with depth and visit_id (visit_id None counts as another story)."""
+    n, by_depth, pos = len(rows), {}, {}
+    for i, r in enumerate(rows):
+        g = by_depth.setdefault(r.get("depth"), [])
+        pos[i] = len(g)
+        g.append(i)
+    out, same = [], 0
+    for i, r in enumerate(rows):
+        g, k = by_depth[r.get("depth")], pos[i]
+        order = [g[(k + t) % len(g)] for t in range(1, len(g))]  # the same-depth rows in cyclic order after i
+        j = next((j for j in order if rows[j].get("visit_id") != r.get("visit_id") or r.get("visit_id") is None), None)
+        if j is None and order:
+            j, same = order[0], same + 1
+        out.append(j)
+    return out, same
+
+
 def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv, blind=False):
     """Teacher-forced answer pass on its own fork of C: inputs [last_tok] + ans[:-1] at positions p_i, p_i+1, ... (right-padded across rows),
     board read active when slot_kv is given. blind: a fresh empty cache instead of the fork and a mask over the answer tokens only (positions

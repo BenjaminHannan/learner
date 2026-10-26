@@ -386,3 +386,96 @@ def test_decoder_eval_swaps_in_another_stories_notes(monkeypatch):
     # all-equal rows from one story: nothing to swap with (counted, not hidden)
     one = [dict(r, visit_id="v0") for r in rows]
     assert K.eval_decoder(runner, pm, board, sd, enc, one, a, CPU, 4)["partner_same_story_rows"] == len(one)
+
+
+# ---------------------------------------------------------------- review fixes: swap partners, gate, cuts, preflight
+
+def naive_partners(rows):
+    out, same = [], 0
+    for i, r in enumerate(rows):
+        order = [(i + t) % len(rows) for t in range(1, len(rows))]
+        cand = [j for j in order if rows[j].get("depth") == r.get("depth")]
+        j = next((j for j in cand if rows[j].get("visit_id") != r.get("visit_id") or r.get("visit_id") is None), None)
+        if j is None and cand:
+            j, same = cand[0], same + 1
+        out.append(j)
+    return out, same
+
+
+def test_swap_partners_match_the_naive_rule_and_are_shared():
+    import random
+    import p0_ckpt
+    assert p0_ckpt.swap_partners is B.swap_partners
+    rng = random.Random(3)
+    for _ in range(30):
+        rows = [dict(depth=rng.randint(0, 3), visit_id=rng.choice(["a", "b", "c", None])) for _ in range(rng.randint(1, 30))]
+        got = B.swap_partners(rows)
+        assert got == naive_partners(rows), rows
+        for i, j in enumerate(got[0]):
+            assert j is None or (j != i and rows[j]["depth"] == rows[i]["depth"])
+
+
+def test_eval_board_swap_is_depth_matched():
+    a, r4, _ = run_sd("tsd")
+    sw = [v for k, v in r4["eval"]["validation"].items() if k.startswith("swap")]
+    assert sw and all("swap_same_story_rows" in v and "swap_no_partner_rows" in v for v in sw), r4["eval"]["validation"].keys()
+
+
+def test_gate_abort_skipped_for_tsd_and_logged():
+    TK.fixture()
+    a = TK.arm_args("tsd", 0, "sd_gate", steps=4, extra=("--limit-eval", "4", "--gate-step", "2", "--gate-enforce"))
+    assert K.run_arm(a) == 0
+    r = json.loads((Path(a.out) / "result_tsd_s0.json").read_text())
+    assert r["gate_closed"] in (True, False) and not r.get("aborted")
+    sd = r["train"]["sd_data"]
+    assert sd["rows"] > 0 and sd["file_order"] >= 0 and sd["over_laps"] >= 0
+
+
+def test_ws_logs_cuts_and_generation_cap():
+    assert K.MAX_NEW_STEPS >= 384
+    a, calls, _ = spy_batches("ws", 2)
+    r = json.loads((Path(a.out) / "result_ws_s0.json").read_text())
+    wc = r["train"]["written_cut"]
+    assert wc["rows"] > 0 and 0 <= wc["cut_for_target"] <= wc["rows"]
+    t = r["eval"]["validation"]["T"]
+    assert "hit_max_new" in t and 0 <= t["hit_max_new"] <= t["n"]
+
+
+def test_cut_for_target():
+    _, lm, tok, enc = tiny()
+    r = dict(rows_with_steps()[2], answer="the mill", context="alpha beta gamma delta " * 40)
+    st, an = S.written_target(enc, r)
+    assert len(st) > 0
+    ctx, tail_d = len(enc.ids(r["context"] + "\n")), len(enc.ids(r["question"] + T.PROMPT_TAIL))
+    ans_d = len(enc.ids(" " + r["answer"])) + 1
+    enc.max_len = len(enc.prefix) + ctx + tail_d + ans_d  # the direct example fits exactly; the written one needs more room
+    assert enc.prompt(r, reserve=ans_d)[1] is False and S.cut_for_target(enc, r) is True
+    enc.max_len += 10 ** 4
+    assert S.cut_for_target(enc, r) is False
+
+
+def test_adapter_switch_guard(monkeypatch):
+    S.check_adapter_switch()  # the real peft toggles
+    import contextlib
+    monkeypatch.setattr(S, "lora_adapter", lambda pm, name: contextlib.nullcontext(), raising=True)
+    with pytest.raises(RuntimeError):
+        S.check_adapter_switch()
+
+
+def test_preflight_smoke_and_failure(monkeypatch, tmp_path):
+    import preflight as PF
+    fx = TK.fixture()
+    argv = ["--smoke", "--a-adapter", str(Path(fx["root"]) / "base" / "a_s0" / "adapter"), "--data", str(fx["data"]), "--out", str(tmp_path / "pf"), "--steps", "4"]
+    assert PF.main(argv) == 0
+    assert (tmp_path / "pf" / "preflight.json").exists()
+    real = K.build_decoder
+
+    def frozen(*a, **k):
+        sd = real(*a, **k)
+        for n, p in a[0].named_parameters():
+            if ".dec." in n:
+                p.requires_grad_(False)
+        return sd
+
+    monkeypatch.setattr(K, "build_decoder", frozen)
+    assert PF.main(argv[:-4] + ["--out", str(tmp_path / "pf2"), "--steps", "4"]) == 1
