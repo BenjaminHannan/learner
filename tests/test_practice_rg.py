@@ -171,3 +171,17 @@ def test_analyze_rg_layouts(tmp_path):
     assert rep["skills"]["countdown"]["practice_solve_rate_by_day"] == {"P1": 50.0}
     assert rep["wrong_if"] == {"P_le_A0_plus_3_on_all_skills": False, "P_below_C_on_all_skills": False}
     assert analyze_rg.holm({"a": 0.01, "b": 0.06}) == {"a": True, "b": False} and analyze_rg.holm({"a": 0.03, "b": 0.04}) == {"a": False, "b": False}
+
+
+def test_oc_segments_chain_and_lessons():
+    from practice import lessons as L
+    from practice.oc_lessons import oc_segments, render_prompt
+    sys_u = [{"role": "system", "content": "Solve."}, {"role": "user", "content": "1+5?"}]
+    c1 = "<answer>6</answer>"
+    rec = {"proxy_calls": [{"request_messages": sys_u, "tools_hash": None, "completion_text": c1}], "proxy_tools": {}}
+    segs = oc_segments(rec, None, None, bos="")
+    assert [t for _, t in segs] == [False, True] and segs[1][0].startswith(c1)
+    assert segs[0][0] == render_prompt(sys_u, [], None, None)
+    r = {"id": "a", "try": 0, "correct": True, "messages": sys_u, "segs": segs}
+    assert L.segments(L.target_of(r)) == segs
+    assert L.target_of({"messages": sys_u}) is sys_u

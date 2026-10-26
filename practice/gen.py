@@ -282,7 +282,7 @@ class ServerManager:
         for flag in ("--decode-concurrency", "--prompt-concurrency"):
             if self.supports(flag):
                 c += [flag, str(concurrency)]
-        return c
+        return c + list(getattr(self, "extra", []))  # e.g. --chat-template for the OpenCode harness
 
     def start(self, model, adapter=None, concurrency=4):
         self.stop()

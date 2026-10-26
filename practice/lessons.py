@@ -12,6 +12,8 @@ MAX_TRAIN_TOKENS = 2048  # Kaggle full v2: night 1 OOMed on a T4 (backward of a 
 
 def segments(messages, bos=""):
     """[(text, trained?)] for a full transcript; only assistant text and its closing <|ifm|im_end|> are trained."""
+    if isinstance(messages, dict):  # Practice-2 OpenCode try: segments rendered from the proxy log (oc_lessons.oc_segments, bos already in front)
+        return [tuple(x) for x in messages["segs"]]
     segs = [(bos, False)] if bos else []
     for m in messages:
         if m["role"] == "assistant":
@@ -20,6 +22,10 @@ def segments(messages, bos=""):
         else:
             segs.append((f"{IM_START}{m['role']}\n{m['content']}{IM_END}", False))
     return segs
+
+
+def target_of(r):
+    return {"segs": r["segs"]} if r.get("segs") else r["messages"]
 
 
 def transcript_len(tok, messages):
@@ -39,7 +45,7 @@ def build_lessons(arm, store, tok, seed, night, n_sft=N_SFT, epochs=EPOCHS, n_pa
     tlen = {}
     tries = []
     for r in store:
-        n = transcript_len(tok, r["messages"])
+        n = transcript_len(tok, target_of(r))
         if n <= max_tokens:
             tries.append(r)
             tlen[id(r)] = n
@@ -93,8 +99,8 @@ def build_lessons(arm, store, tok, seed, night, n_sft=N_SFT, epochs=EPOCHS, n_pa
                 a, b = rng.sample(rs, 2)  # random order, result not looked at
                 cands.append((a, b))
         pairs = fill(cands, n_pairs) if len(cands) < n_pairs else rng.sample(cands, n_pairs)
-    items = [{"kind": "sft", "prompt": "", "target": r["messages"]} for r in sft_src] * epochs
-    items += [{"kind": "pair", "prompt": "", "chosen": a["messages"], "rejected": b["messages"]} for a, b in pairs]
+    items = [{"kind": "sft", "prompt": "", "target": target_of(r)} for r in sft_src] * epochs
+    items += [{"kind": "pair", "prompt": "", "chosen": target_of(a), "rejected": target_of(b)} for a, b in pairs]
     st = {"arm": arm, "night": night, "tries_in_store": len(store), "tries_usable": len(tries), "wins_in_store": sum(r["correct"] for r in tries),
           "sft_unique": len({(r["id"], r["try"]) for r in sft_src}), "sft_examples": len(sft_src) * epochs, "pairs": len(pairs),
           "pair_candidates": len(cands), "sft_correct_frac": round(sum(r["correct"] for r in sft_src) / max(1, len(sft_src)), 3),

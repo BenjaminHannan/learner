@@ -82,3 +82,22 @@ def lengths(rec, tokenizer, template_path=None, cap=2048, tools_by_hash=None):
         a, b = count_tokens(p, tokenizer), count_tokens(c, tokenizer)
         rows.append({"prompt_tokens": a, "completion_tokens": b, "total": a + b, "over_cap": a + b > cap})
     return rows
+
+
+def oc_segments(rec, tokenizer=None, template_path=None, tools_by_hash=None, bos=""):
+    """-> [(text, trained?)] for one OpenCode try, the lesson form of lessons.segments. One sequence when each call's prompt extends the previous prompt +
+    completion (the template re-renders history the way K2 wrote it); otherwise only the last call (its prompt untrained, its completion trained).
+    The rendered prompts start with the template's bos_token, so it is removed here and `bos` is put in front (as lessons.segments does)."""
+    calls = render_try(rec, tokenizer, template_path, tools_by_hash)
+    if not calls:
+        return []
+    btok = getattr(tokenizer, "bos_token", None) or ""
+    calls = [(p[len(btok):] if btok and p.startswith(btok) else p, c) for p, c in calls]
+    segs, seen = [], ""
+    for p, c in calls:
+        if not p.startswith(seen):
+            p, c = calls[-1]
+            return ([(bos, False)] if bos else []) + [(p, False), (c, True)]
+        segs += [(p[len(seen):], False), (c, True)]
+        seen = p + c
+    return ([(bos, False)] if bos else []) + [s for s in segs if s[0]]

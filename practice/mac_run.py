@@ -158,6 +158,9 @@ class Mac:
         self.out.mkdir(parents=True, exist_ok=True)
         self.py = a.python or sys.executable
         self.server = server or ServerManager(self.py, a.port, str(self.out / "server_logs"), self.log)
+        if getattr(a, "harness", "native") == "opencode":
+            from .oc_lessons import load_template
+            self.server.extra = ["--chat-template", load_template(a.chat_template)]  # K2 sees the `tools` list; the stock template always thinks
         self.phase, self.phase_t0, self.last_log, self.phases = "init", time.time(), "", jl(self.out / "phases.jsonl")
         self.t0 = time.time()
         self.stop_flag = False
@@ -352,6 +355,12 @@ class Mac:
         return conc
 
     def harness(self, conc):
+        if self.a.harness == "opencode":  # PREREG-2 addendum 1: the OpenCode agent that OpenBot runs, K2 behind practice/k2_proxy (in-process)
+            from .oc_harness import OpenCodeHarness
+            if getattr(self, "_oc", None) is None or self._oc.concurrency != conc:
+                self._oc = OpenCodeHarness(None, str(self.out / "proxy_logs"), upstream=self.server.base_url, concurrency=conc, timeout=self.a.oc_timeout,
+                                           max_steps=self.a.oc_steps, web=self.a.web, log=self.log)
+            return self._oc
         be = self.make_backend(conc)
         return Harness(None, self.tok, 0.7, MAX_NEW, MAX_CTX, conc, MAX_TURNS, log=self.log, backend=be, workers=4, progress_s=120)
 
@@ -367,6 +376,13 @@ class Mac:
 
             def on_done(rec, k=k):
                 rec["try"] = k
+                if rec.get("harness") == "opencode":  # lesson segments as K2 saw them, then drop the 13 KB tools copy
+                    from .oc_lessons import oc_segments
+                    try:
+                        rec["segs"] = oc_segments(rec, self.tok, self.a.chat_template, bos=self.bos)
+                    except Exception as e:  # noqa: BLE001
+                        rec["segs_error"] = repr(e)
+                    rec.pop("proxy_tools", None)
                 jl_append(file, rec)
             H.run(todo, 1, seed=seed * 10 + k, on_done=on_done, label=f"{label} try{k}")
         recs = jl(file)
@@ -400,6 +416,8 @@ class Mac:
         for k in range(1, n + 1):
             store += jl(d / f"day{k}.jsonl")
         night = self.a.night
+        if getattr(self.a, "harness", "native") == "opencode":
+            night = dict(night, train_max_tokens=max(night["train_max_tokens"], self.a.oc_train_tokens))  # OpenCode prompts alone are ~4k tokens
         dd = getattr(self, "rg_mode", False)  # Practice-2: one win per solved puzzle; C gets exactly P's item counts
         ref = d.parent / "P" / f"night{n}_lessons.json"
         if dd and arm == "C" and ref.exists():
@@ -560,6 +578,11 @@ def parse_args(argv=None):
     ap.add_argument("--model", default=None, help="path of an MLX q4 K2 (default: find/download/convert under ~/learner-ops/models)")
     ap.add_argument("--python", default=None, help="python with mlx-lm (default: this interpreter)")
     ap.add_argument("--port", type=int, default=8089)
+    ap.add_argument("--harness", choices=["native", "opencode"], default="native", help="opencode = the agent OpenBot runs (PREREG-2 addendum 1)")
+    ap.add_argument("--chat-template", default=None, help="opencode: K2 template file for mlx_lm.server and lessons (default: oc_lessons search path)")
+    ap.add_argument("--oc-timeout", type=float, default=600, help="opencode: seconds per try")
+    ap.add_argument("--oc-train-tokens", type=int, default=6144, help="opencode: lesson length cap for the nights")
+    ap.add_argument("--oc-steps", type=int, default=8, help="opencode: model calls per try")
     ap.add_argument("--practice-n", type=int, default=120)
     ap.add_argument("--tries", type=int, default=None, help="tries per practice puzzle (default 2; 4 in Practice-2 mode)")
     ap.add_argument("--rg-skills", help="Practice-2: comma-separated Reasoning Gym skills, or auto (read <out>/stage0.json)")
