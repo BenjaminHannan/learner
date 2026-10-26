@@ -30,3 +30,6 @@ Rule: keep the 2 skills whose A0 is closest to 30%, among those between 10% and 
 ## Next (separate addenda, one change at a time)
 - W: tips arm (the model searches the web for "how to get better at <skill>", writes a tips sheet, which goes in the prompt), base model and P.
 - Skill 2: spreadsheets (generated sheet tasks with checked answers).
+
+## Addendum 1 (Oct 26 17:55Z, before any run): run inside Ben's OpenBot harness
+Ben (17:49Z): "Put it in the open bot harness on my Mac." OpenBot drives the OpenCode agent, so practice and test tries run headless through `opencode run`: the same agent, with a short practice-agent prompt and only the bash/read/write/webfetch tools. K2 runs behind practice/k2_proxy.py, which turns K2's native tool-call text into OpenAI tool calls (mlx_lm 0.32.2 has no K2 parser). Lessons are rendered from the proxy log, exactly as served. All arms, A0 included, use this same harness, so the pass marks are unchanged. If the OpenCode prompt makes K2 fail stage 0 (every candidate under 10%), the run falls back to the Practice-1 harness and the results say so.
