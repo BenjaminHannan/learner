@@ -21,7 +21,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 timeout 600 $PY speed/qwen36_step/bench_gmm.py --out $OUT/bench_gmm.json --dtype bfloat16 > $OUT/bench_gmm.log 2>&1
 echo "gmm rc=$? after $((SECONDS-T0)) s"; tail -5 $OUT/bench_gmm.log
 # 1. parity + speed on 4 real layers: baseline vs each expert-matmul backend, KL cache, packing (profiler on baseline only)
-timeout 2400 $PY speed/qwen36_step/profile_step.py --layers 4 --steps 4 --warmup 2 --no-profile-variants \
+timeout 2400 $PY speed/qwen36_step/profile_step.py --layers 4 --steps 12 --warmup 3 --no-profile-variants \
   --variants baseline,fast_experts_bmm,fast_experts_split,fast_experts_triton,kl_cache+fast_experts,packed,all --out $OUT/pc_step.json --work ~/qwen36_step_work > $OUT/pc_step.log 2>&1
 echo "step rc=$? after $((SECONDS-T0)) s"; grep -E '^\[' $OUT/pc_step.log
 echo "=== PC SPEED DONE $((SECONDS-T0)) s"
