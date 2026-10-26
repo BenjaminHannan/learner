@@ -76,3 +76,12 @@ Decided by the coordinator under Ben's never-wait rule, after design/research/20
   tf hides the story with a separate answer pass on a fresh, empty cache, so there is no DeltaNet state leak (a CPU test
   shows blind logits are unchanged when the prompt changes).
 - Think-1 checkpoints were never recovered (Vast file copy failed), so P0 runs on Think-2's tj/tf checkpoints.
+
+## Addendum D (2026-10-26 22:00Z, before any toy-0.3, P1, P2a or P2b result): optional JOLT+ arm
+Raised by Ben ("use JOLT+"). JOLT+ = on-policy distillation: the student samples its own answer after its laps, and the
+loss is reverse KL to a better teacher on those tokens (plus an exact-match reward term), as in Think-3 Addendum A.
+- It needs a teacher that is clearly better than answering directly, so it runs only if P1 opens P4
+  (T >= max(tc, C1) + 2 and T >= sham + 1). Teacher = the ws model writing its steps; student = the P4 notes arm.
+- It is an extra P4 arm `jolt`, run after P4's matching arm, from the same start checkpoint with the same steps.
+  Marks: P4's marks, plus J1: S_jolt - S_P4 >= +2.0 (interval excluding 0) to count as better than matching alone.
+- It never replaces a P4 or P2b verdict, and its runs count toward the 18 R cap.
