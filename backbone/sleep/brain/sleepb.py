@@ -58,6 +58,10 @@ scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so t
 --q4-mlx-moe (with --q4-base, Qwen3.5/3.6 MoE): also the fused 3-D expert tensors (mlp.experts.gate_up_proj / down_proj, groups along the last = input dim) and the router Parameter, with 8 bits for
 every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-35B-A3B-4bit. Weights stay in the model dtype (fake quantization), so no memory is saved.
 
+--q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
+nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
+scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so the frozen base is what an MLX 4-bit model would be. Off: nothing changes.
+
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
@@ -98,6 +102,7 @@ from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
 
 K = 4
+LOSS_SCALE = [1.0, 0]  # [scale, clean steps in a row]; --dtype fp16 starts at 128, dynamic (Trainer.step only; every other path is unchanged)
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 KINDS = ("forward", "reverse", "twohop", "changed", "routine")
 ADD4_ARMS = ("ab_ob_rot", "ab_ob_twist", "ab_ob_ther", "ab_ob_guess")  # addendum 4: LoRA + open-book, one change each
@@ -769,7 +774,14 @@ class Trainer:
                 if "lora_" in n:
                     p.requires_grad_(False)
         s.params = [p for p in pm.parameters() if p.requires_grad]
-        s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
+        lp = getattr(args, "lora_plus", 1.0) or 1.0
+        if lp != 1.0:  # sleep race round 1 (LoRA+, Hayou et al. 2024): every lora_B matrix trains at lr x lp, lora_A (and anything else) at lr; Trainer.step keeps the ratio through the cosine
+            named = [(n, p) for n, p in pm.named_parameters() if p.requires_grad]
+            gb = [p for n, p in named if "lora_B" in n]
+            ga = [p for n, p in named if "lora_B" not in n]
+            s.opt = torch.optim.AdamW([{"params": ga, "lr_mult": 1.0}, {"params": gb, "lr_mult": lp}], lr=args.lr, weight_decay=0.0)
+        else:
+            s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
         s.force_w, s.wsteps, s.wex = False, 0, 0  # force_w: test hook; wsteps / wex: weighted-path steps and examples with weight != 1
@@ -783,7 +795,7 @@ class Trainer:
         a = s.a
         lr = a.lr * 0.5 * (1 + math.cos(math.pi * s.i / s.n))
         for g in s.opt.param_groups:
-            g["lr"] = lr
+            g["lr"] = lr * g.get("lr_mult", 1.0)
         s.pm.train()
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
         gb, gr = groups(batch), groups(rb)  # single-group decision on the original order
@@ -806,7 +818,7 @@ class Trainer:
                 kl = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="batchmean")
                 loss = ce + a.kl_weight * kl
                 kl_v = float(kl.detach())
-            loss.backward()
+            (loss * LOSS_SCALE[0]).backward()
         else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
             ntgt = sum(len(e) - max(st, 1) for e, st, *_ in batch)
             ce_sum = 0.0
@@ -818,7 +830,7 @@ class Trainer:
                     part = (F.cross_entropy(lg, ids[:, 1:][tm], reduction="none") * w).sum() / ntgt
                 else:
                     part = F.cross_entropy(lg, ids[:, 1:][tm], reduction="sum") / ntgt
-                part.backward()
+                (part * LOSS_SCALE[0]).backward()
                 ce_sum += float(part.detach())
             ce = torch.tensor(ce_sum)
             if rb:
@@ -829,8 +841,22 @@ class Trainer:
                     with torch.no_grad(), s.pm.disable_adapter():
                         ref = tgt_logits(s.pm, rids, rmask, rt)
                     part = F.kl_div(F.log_softmax(cur, -1), F.log_softmax(ref, -1), log_target=True, reduction="sum") / npos
-                    (a.kl_weight * part).backward()
+                    (a.kl_weight * part * LOSS_SCALE[0]).backward()
                     kl_v += float(part.detach())
+        if LOSS_SCALE[0] != 1.0:  # --dtype fp16 (T4): static loss scale; unscale, and skip a step whose gradients overflowed
+            gs = [p.grad for p in s.params if p.grad is not None]
+            for g in gs:
+                g.div_(LOSS_SCALE[0])
+            if not all(bool(torch.isfinite(g).all()) for g in gs):  # dynamic scale (as torch GradScaler): halve, skip the step
+                s.overflow = getattr(s, "overflow", 0) + 1
+                LOSS_SCALE[0], LOSS_SCALE[1] = max(LOSS_SCALE[0] / 2, 2.0 ** -8), 0
+                s.min_scale = min(getattr(s, "min_scale", LOSS_SCALE[0]), LOSS_SCALE[0])
+                s.opt.zero_grad(set_to_none=True)
+                s.i += 1
+                return
+            LOSS_SCALE[1] += 1
+            if LOSS_SCALE[1] >= 100:  # 100 clean steps in a row: try twice the scale
+                LOSS_SCALE[0], LOSS_SCALE[1] = min(LOSS_SCALE[0] * 2, 2.0 ** 16), 0
         torch.nn.utils.clip_grad_norm_(s.params, 1.0)
         s.opt.step()
         s.i += 1
@@ -3081,7 +3107,7 @@ class Brain:
                     rem_n, done = rem_n + n_rem, done + n_rem
                     s.cov["rem_steps"] += n_rem
         lap("train")
-        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
+        rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:], "fp16_overflow_steps": getattr(tr, "overflow", 0), "fp16_loss_scale": LOSS_SCALE[0], "fp16_min_scale": getattr(tr, "min_scale", None)})
         if a.arm == "ab_ob_ther":
             rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
                            "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
@@ -4649,6 +4675,8 @@ def main():
     ap.add_argument("--replay-bsz", type=int, default=8)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--delta-dtype", choices=["fp32", "bf16"], default="fp32", help="ab_ob_merge only: bf16 halves the folded change buffer to fit a 16 GB card (the forward already uses it in bf16)")
+    ap.add_argument("--lora-plus", type=float, default=1.0, help="sleep race round 1 (LoRA+): lora_B matrices train at lr x this (1 = off, the old path bit for bit)")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--tok-budget", type=int, default=TOK_BUDGET, help="padded tokens per forward; lower for a 16 GB card (same loss and gradients)")
     ap.add_argument("--gen-bs", type=int, default=32)
     ap.add_argument("--shy-factor", type=float, default=0.85)
@@ -4780,6 +4808,10 @@ def main():
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
+    if args.dtype != "auto":  # --dtype fp16 for GPUs without bf16 (Kaggle T4); LoRA adapters stay fp32 (peft), dynamic loss scale
+        dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.dtype]
+        if args.dtype == "fp16":
+            LOSS_SCALE[0] = 128.0
     lm, tok = load_model(args, device, dtype)
     q4 = None
     if args.q4_base:

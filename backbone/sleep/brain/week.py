@@ -322,6 +322,59 @@ class Budget:
         return self.cons + inflight * 0.06 <= self.cap
 
 
+BATCH = {"on": False}  # --batch: every API call goes through the Message Batches API, one batch per round of attempts
+
+
+class Deferred(Exception):
+    def __init__(self, path, prompt, meta):
+        super().__init__(path.name)
+        self.path, self.prompt, self.meta = path, prompt, meta
+
+
+def _api(method, url, key, body=None):
+    hdr = {"x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"}
+    for n in range(7):
+        try:
+            req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None, headers=hdr, method=method)
+            with urllib.request.urlopen(req, timeout=240) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 500, 502, 503, 504, 529) or n == 6:
+                raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:300]}")
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if n == 6:
+                raise
+        time.sleep(min(60, 2 ** (n + 1)) + random.random())
+
+
+def batch_round(pend, key, bud, max_tokens=6000, poll=30):
+    """Send the deferred requests as one Message Batch, wait for it, and write each answer to its raw cache file (same record as the live path)."""
+    reqs = [{"custom_id": f"r{i}", "params": {"model": MODEL, "max_tokens": max_tokens, "thinking": {"type": "between_tools"},
+                                              "messages": [{"role": "user", "content": d.prompt}]}} for i, d in enumerate(pend)]
+    b = json.loads(_api("POST", URL + "/batches", key, {"requests": reqs}))
+    print(f"[batch] {b['id']}: {len(reqs)} requests", flush=True)
+    while b["processing_status"] != "ended":
+        time.sleep(poll)
+        b = json.loads(_api("GET", f"{URL}/batches/{b['id']}", key))
+    got = 0
+    for line in _api("GET", b["results_url"], key).decode().splitlines():
+        r = json.loads(line)
+        d = pend[int(r["custom_id"][1:])]
+        if r["result"]["type"] != "succeeded":
+            print(f"[batch] {d.path.name}: {r['result']['type']}", flush=True)
+            continue
+        resp = r["result"]["message"]
+        rec = {**d.meta, "model": resp.get("model"), "id": resp.get("id"), "stop_reason": resp.get("stop_reason"), "batch": b["id"],
+               "usage": {k: resp["usage"][k] for k in ("input_tokens", "output_tokens")},
+               "text": "".join(x.get("text", "") for x in resp["content"] if x.get("type") == "text"), "prompt": d.prompt}
+        tmp = d.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(rec, ensure_ascii=False, indent=1))
+        tmp.rename(d.path)
+        bud.add(rec["usage"])
+        got += 1
+    print(f"[batch] {b['id']} done: {got}/{len(reqs)} written, est spend ${bud.listed:.3f} (cap-basis ${bud.cons:.3f}; batch price is half)", flush=True)
+
+
 def call_api(prompt, key, max_tokens=6000, tries=7):
     body = json.dumps({"model": MODEL, "max_tokens": max_tokens, "thinking": {"type": "between_tools"},
                        "messages": [{"role": "user", "content": prompt}]}).encode()
@@ -410,6 +463,8 @@ def gen_session(plan, sc, key, bud, raw=RAW, rescue=RESCUE):
                 if fb:
                     break
                 raise BudgetExceeded(f"estimated spend ${bud.cons:.2f} near the ${bud.cap} cap")
+            if BATCH["on"]:  # --batch: queue the request for the next Message Batch round instead of calling now
+                raise Deferred(path, prompt, {"day": sc["day"], "session": sc["session"], "attempt": att})
             resp = call_api(prompt, key)
             rec = {"day": sc["day"], "session": sc["session"], "attempt": att, "model": resp.get("model"), "id": resp.get("id"),
                    "stop_reason": resp.get("stop_reason"), "usage": {k: resp["usage"][k] for k in ("input_tokens", "output_tokens")},
@@ -548,6 +603,7 @@ def main():
     ap.add_argument("--only", metavar="D:S", help="write one session as a trial (cached) and print it")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--batch", action="store_true", help="send every call through the Message Batches API (rounds of attempts); then build the week from the cache")
     a = ap.parse_args()
     plan = build_plan(a.seed, **scaled(a.scale))
     assert json.dumps(plan, sort_keys=True) == json.dumps(build_plan(a.seed, **scaled(a.scale)), sort_keys=True), "plan is not deterministic"
@@ -568,6 +624,22 @@ def main():
     raw.mkdir(parents=True, exist_ok=True)
     bud = Budget(a.cap, raw)
     todo = [sc for sc in plan["schedule"] if not a.only or (sc["day"], sc["session"]) == parse_ds(a.only)]
+    if a.batch:  # rounds: run every session against the cache; collect the requests it still needs; send them as one batch; repeat
+        BATCH["on"] = True
+        for rnd in range(1 + RETRIES + max(a.rescue, RESCUE) + 1):
+            pend = []
+            for sc in todo:
+                try:
+                    gen_session(plan, sc, key, bud, raw, a.rescue)
+                except Deferred as d:
+                    pend.append(d)
+            if not pend:
+                break
+            if not bud.ok(inflight=len(pend) / 2):
+                sys.exit(f"[batch] round {rnd}: {len(pend)} requests would pass the ${bud.cap} cap (cap-basis ${bud.cons:.2f})")
+            print(f"[batch] round {rnd}: {len(pend)} sessions need a call", flush=True)
+            batch_round(pend, key, bud)
+        BATCH["on"] = False  # everything is cached now; the normal pass below makes no calls
     res, fails = {}, []
     with ThreadPoolExecutor(a.workers) as ex:
         futs = {ex.submit(gen_session, plan, sc, key, bud, raw, a.rescue): sc for sc in todo}
