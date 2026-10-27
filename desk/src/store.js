@@ -2,15 +2,22 @@
 const fs = require('fs');
 const path = require('path');
 
+const Platform = require('../renderer/platform');
+
 const DEFAULT_SETTINGS = {
   // Model
-  gatewayUrl: 'http://127.0.0.1:8090/v1',
-  model: 'qwen36-auto',   // qwen36-auto | qwen36 | qwen36-fast
+  gatewayUrl: Platform.defaultPreset(process.platform).gatewayUrl, // Windows: the built-in model
+  model: Platform.defaultPreset(process.platform).model,   // the model id in use (one of the three below, or a custom name)
+  modelAuto: Platform.defaultPreset(process.platform).modelAuto, // the ids behind the Auto / Think / Fast pills (all "default" on a llama.cpp server)
+  modelMain: Platform.defaultPreset(process.platform).modelMain,
+  modelFast: Platform.defaultPreset(process.platform).modelFast, // also used for the warm-up and the self-check
   // Autonomy
   mode: 'ask',            // ask | hands-off (main agent)
   verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
   helperMode: 'hands-off', // autonomy for helper agents
   maxSteps: 40,
+  compactTokens: Platform.defaultPreset(process.platform).compactTokens, // history size that triggers compaction (small local models have small context)
+  maxToolChars: Platform.defaultPreset(process.platform).maxToolChars,
   // Helpers
   maxParallel: 2,         // model runs at once (primary + helpers)
   // Memory
@@ -35,14 +42,15 @@ const DEFAULT_SETTINGS = {
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
   sleepPauseGlims: true,  // hold the Glims' scheduled runs while asleep (they catch up once after wake)
   autoSleep: false,       // sleep by itself at night when idle
-  sleepFrom: '23:00',     // night window start (HH:MM)
-  sleepTo: '07:00',       // night window end
+  sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 01:00 on Windows
+  sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 06:00 on Windows
+  sleepOnlyPlugged: true, // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
   sleepIdleMin: 30,       // minutes without use before auto-sleep
   wakeAt: false,          // wake at the end of the window (only for a sleep Desk started by itself)
   // Startup
   openAtLogin: false,
   keepRunning: true,      // closing the window hides it; the app (and helpers) keep running
-  hotkey: 'Alt+Space'     // global shortcut that toggles the window ('' = off)
+  hotkey: Platform.defaultHotkey(process.platform) // global shortcut that toggles the window ('' = off); Ctrl+Space on Windows
 };
 
 const ENUMS = {
@@ -50,11 +58,11 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'autoSleep', 'wakeAt'];
-const NUMS = { maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720] };
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'wakeAt'];
+const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
-const STRS = ['gatewayUrl', 'model', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython'];
+const STRS = ['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython'];
 const { cleanUses } = require('../renderer/uses');
 const USES_OTHER_MAX = 200;
 
@@ -69,7 +77,7 @@ function sanitize(patch) {
     else if (k === 'uses') out[k] = cleanUses(v);
     else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
     else if (TIMES.includes(k)) out[k] = cleanTime(v, DEFAULT_SETTINGS[k]);
-    else if (STRS.includes(k)) out[k] = String(v == null ? '' : v).trim() || (k === 'gatewayUrl' || k === 'model' ? DEFAULT_SETTINGS[k] : '');
+    else if (STRS.includes(k)) out[k] = String(v == null ? '' : v).trim() || (['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast'].includes(k) ? DEFAULT_SETTINGS[k] : '');
   }
   return out;
 }

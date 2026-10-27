@@ -1,12 +1,14 @@
 {
-  "name": "premonition-desk",
+  "name": "premonition",
+  "productName": "Premonition",
   "version": "1.0.0",
-  "description": "Premonition Desk: Ben's local Mac assistant",
+  "description": "Premonition: Ben's local assistant (Mac and Windows)",
   "main": "main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.js",
+    "build:win": "bash build-win.sh",
     "e2e": "xvfb-run -a -s \"-screen 0 1440x900x24\" npx electron . --no-sandbox --e2e"
   },
   "devDependencies": {

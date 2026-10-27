@@ -1,10 +1,17 @@
 'use strict';
-const { powerMonitor, app, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
+const { powerMonitor, app, Tray, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
 
 const E2E = process.argv.includes('--e2e');
+const Platform = require('./renderer/platform');
+const APP_NAME = 'Premonition';
+app.setName(APP_NAME);
+if (!E2E) {
+  // renamed from "Premonition Desk": bring the old settings/threads/memory/helpers along, once (the old folder stays as a backup)
+  try { const r = require('./src/migrate').migrateUserData(app.getPath('appData'), app.getPath('userData')); if (r.migrated) console.log('userData copied from', r.from); } catch (e) { /* start fresh */ }
+}
 if (E2E) {
   app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'desk-e2e-')));
   app.commandLine.appendSwitch('no-sandbox');
@@ -33,11 +40,16 @@ const { PillState } = require('./src/pillstate');
 const { ensureCard } = require('./src/cards');
 const { PillWindow } = require('./src/pillwin');
 const perms = require('./src/perms');
+const { WinSleep, sleepmlxParent } = require('./src/sleepwin');
+const { Builtin } = require('./src/runtime/builtin');
+const { SleepInstaller } = require('./src/runtime/sleepinstall');
 
 let win = null;
 let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
 let concealed = false;
 let store = null;
+let builtin = null;  // the built-in local model (Windows): download, llama-server, gateway (src/runtime)
+let sleepInstaller = null;
 let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
 let memory = null;   // Ben's saved facts (userData/memory.json)
 let agent = null;
@@ -67,6 +79,7 @@ const BROWSER_TOOLS = ['browser_go', 'browser_click', 'browser_type', 'browser_s
 const pending = new Map(); // approval/ask id -> resolve
 const cards = new Map();   // approval/ask id -> {threadId, ev}: replayed when Ben opens that thread later
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const onBattery = () => { try { return !!powerMonitor.isOnBatteryPower(); } catch (e) { return false; } };
 
 const send = (channel, payload) => { if (ui && !ui.webContents.isDestroyed()) ui.webContents.send(channel, payload); };
 const dark = () => nativeTheme.shouldUseDarkColors;
@@ -105,6 +118,7 @@ function startSleep(o) {
   if ((agent && agent.running) || (helpers && helpers.active.size)) return { error: 'Glim is busy with a run right now. Sleep starts only when it is idle, because your chats come first.' };
   if (typeof o.pauseGlims === 'boolean') store.saveSettings({ sleepPauseGlims: o.pauseGlims });
   const r = sleeper.start();
+  if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
   if (!r.ok) return { error: r.error };
   { const n = new Date(), st = store.getSettings(); sl.sleepKey = inWindow(n, st.sleepFrom, st.sleepTo) ? windowKey(n, st.sleepFrom, st.sleepTo) : null; } // the night this sleep belongs to (if any)
   sleeper.mark(); sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
@@ -168,11 +182,24 @@ function autoSleepTick(now, over) {
   const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto };
   const w = shouldAutoWake({ ...common, asleep: sl.asleep && !sl.waking });
   if (w.wake) { wakeNow(); return { action: 'wake' }; }
-  const d = shouldAutoSleep({ ...common, available: sleeper.available().ok, idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), lastKey: sl.lastKey, ...over });
+  const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
   if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + s.sleepFrom + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
   return { action: 'none', reason: d.reason };
 }
 
+// ---- built-in local model + Windows sleep -------------------------------------------------------------
+// Windows: the app runs LFM3 itself (src/runtime) and sleeps with the sleepmlx trainer (src/sleepwin.js). Off elsewhere.
+const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
+function setupBuiltin() {
+  const root = path.join(app.getPath('appData'), 'Premonition');
+  builtin = new Builtin({ root, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
+  sleeper = new WinSleep({
+    getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery,
+    sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
+    hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora) }
+  });
+}
 function waitFor(id, signal, fallback, card) {
   return new Promise((resolve) => {
     const fin = (v) => { pending.delete(id); cards.delete(id); pillState.onEvent && resumeRid(id); resolve(v); };
@@ -214,12 +241,26 @@ function showWindow(focusComposer) {
 // browsers exist the window stays shown but see-through, click-through and unfocusable instead of hidden.
 function hideWindow() {
   if (!win || win.isDestroyed()) return;
-  if (browsers.size && process.platform === 'darwin') {
+  const how = Platform.closeBehavior(process.platform, true, browsers.size > 0);
+  if (how === 'tray') { ensureTray(); win.hide(); }
+  else if (how === 'conceal') {
     concealed = true;
     win.setIgnoreMouseEvents(true);
     try { win.setFocusable(false); win.setOpacity(0); win.setHiddenInMissionControl(true); win.setHasShadow(false); } catch (e) { /* ignore */ }
   } else win.hide();
   updatePill();
+}
+// Windows: closing (with keep-running on) hides the window to a tray icon with Open / Quit.
+let tray = null;
+function ensureTray() {
+  if (tray || !FEATURES.tray) return;
+  try {
+    const img = nativeImage.createFromPath(ICON).resize({ width: 16, height: 16 });
+    tray = new Tray(img);
+    tray.setToolTip(APP_NAME);
+    tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open ' + APP_NAME, click: () => showWindow(true) }, { type: 'separator' }, { label: 'Quit', click: () => { quitting = true; app.quit(); } }]));
+    tray.on('click', () => showWindow(true));
+  } catch (e) { tray = null; }
 }
 function revealWindow() {
   concealed = false;
@@ -239,16 +280,13 @@ function fitUi() {
 
 function createWindow() {
   timing.created = Date.now();
-  const mac = process.platform === 'darwin';
   const bg = dark() ? '#17120f' : '#faf6f0';
   win = new BrowserWindow({
     width: 1000, height: 840, minWidth: 560, minHeight: 520,
     show: false, // shown once the UI has loaded: no white flash, no half-painted window
     backgroundColor: bg,
-    title: 'Premonition Desk',
-    icon: mac ? undefined : ICON,
-    titleBarStyle: mac ? 'hiddenInset' : 'default',
-    trafficLightPosition: mac ? { x: 16, y: 18 } : undefined
+    title: APP_NAME,
+    ...Platform.windowOptions(process.platform, ICON) // icon, title bar, auto-hide menu bar on Windows
   });
   ui = new WebContentsView({ webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: false, nodeIntegration: false } });
   // A transparent view background keeps Chromium from treating the browser views stacked beneath this UI as occluded (an
@@ -260,10 +298,11 @@ function createWindow() {
   for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
   ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
-    const hidden = !E2E && process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAsHidden;
+    const hidden = !E2E && Platform.startedHidden(process.platform, process.argv, process.platform === 'darwin' ? app.getLoginItemSettings() : null);
     if (!hidden) { win.show(); ui.webContents.focus(); }
     setTimeout(() => afterFirstPaint().catch((e) => console.error('startup', e)), 0);
   });
+  if (process.env.E2E_DEBUG) ui.webContents.on('console-message', (e, level, msg, line, src) => console.log('[renderer]', level, msg, src + ':' + line));
   ui.webContents.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.on('close', (e) => {
     if (quitting || !store || !store.getSettings().keepRunning) return;
@@ -555,7 +594,8 @@ function buildAgent() {
 }
 
 // ---- permissions card (drag the app into System Settings) ------------------------------------------------------
-const permsSupported = () => process.platform === 'darwin' || E2E;
+const FEATURES = Platform.features(process.platform);
+const permsSupported = () => FEATURES.perms || E2E;
 const appFile = () => perms.appBundlePath(app.getPath('exe'), process.execPath);
 async function iconFor(file) {
   if (dragIcons.has(file)) return dragIcons.get(file);
@@ -583,7 +623,7 @@ async function permsStatus() {
   const helperFile = c.helperTile ? screen.findHelper() : null;
   const icon = await iconFor(file);
   return {
-    supported: permsSupported(), missing: c.missing, appName: 'Premonition Desk', appPath: file, icon: icon.toDataURL(),
+    supported: permsSupported(), missing: c.missing, appName: APP_NAME, appPath: file, icon: icon.toDataURL(),
     helperPath: helperFile, helperError: helperR && helperR.error ? helperR.error : null,
     rows: c.rows.map((r) => ({ ...r, ...perms.ROWS.find((x) => x.id === r.id), pane: undefined }))
   };
@@ -605,7 +645,7 @@ function registerHotkey(acc) {
   if (!acc) return { ok: true, off: true };
   try { return globalShortcut.register(acc, () => { sl.lastActive = Date.now(); toggleWindow(); }) ? { ok: true } : { ok: false, error: 'That shortcut is taken by another app.' }; } catch (e) { return { ok: false, error: 'That is not a valid shortcut.' }; }
 }
-function setLoginItem(on) { try { app.setLoginItemSettings({ openAtLogin: !!on, openAsHidden: true }); } catch (e) { /* not supported here */ } }
+function setLoginItem(on) { try { app.setLoginItemSettings(Platform.loginItemOptions(process.platform, on)); } catch (e) { /* not supported here */ } }
 function applyTheme(s) { nativeTheme.themeSource = s.theme === 'light' || s.theme === 'dark' ? s.theme : 'system'; }
 
 async function applySettings(patch) {
@@ -617,8 +657,11 @@ async function applySettings(patch) {
   if (ch('openAtLogin')) setLoginItem(next.openAtLogin);
   if (ch('hotkey')) out._hotkey = registerHotkey(next.hotkey);
   if (ch('pill') && pillWin) { pillWin.enabled = next.pill; updatePill(); }
+  // renaming the model behind the pill that is selected keeps that pill selected
+  for (const k of ['modelAuto', 'modelMain', 'modelFast']) if (ch(k) && prev.model === prev[k] && !('model' in patch)) { next.model = next[k]; store.saveSettings({ model: next.model }); out.model = next.model; }
+  if (ch('gatewayUrl') && builtin) { if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() }); else builtin.stop(); }
   if (ch('gatewayUrl') && warmer) warmer.gatewayMoved();
-  else if (ch('model') && warmer) warmer.rewarm();
+  else if ((ch('model') || ch('modelAuto') || ch('modelMain') || ch('modelFast')) && warmer) warmer.rewarm();
   if (ch('diaryEnabled') || ch('diaryPath') || ch('pythonPath')) { await refreshDiary(); if (warmer) warmer.rewarm(); }
   return out;
 }
@@ -635,9 +678,12 @@ async function afterFirstPaint() {
     onState: (state, info) => { gwState = { state, ...info }; send('gateway', gwState); }
   });
   warmer.start();
-  sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
-  if (!E2E) setInterval(() => autoSleepTick(), 60000).unref();
-  { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } } // already asleep when Desk opened
+  if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
+  if (FEATURES.sleep) {
+    sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
+    if (!E2E) setInterval(() => autoSleepTick(), 60000).unref();
+    { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
+  }
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;
@@ -722,6 +768,12 @@ function registerIpc() {
   h('helpers:run', (id) => ((sl.asleep || sl.waking) ? { error: 'Glim is asleep. Wake it first.' } : helpers.runNow(id)));
   h('sleep:state', () => sleepView());
   h('sleep:start', (o) => startSleep(o));
+  h('runtime:state', () => (builtin ? builtin.state() : null));
+  h('runtime:retry', () => (builtin ? builtin.retry() : null));
+  h('sleep:install', async () => {
+    try { await sleepInstaller.install(); } catch (e) { send('sleep:install-progress', { stage: 'error', label: String(e.message || e), pct: 0 }); return { error: String(e.message || e) }; }
+    return startSleep({ auto: false });
+  });
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
@@ -829,18 +881,19 @@ const gotLock = E2E || app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { quitting = true; try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {
   if (!gotLock) return;
   store = new Store(app.getPath('userData'));
   memory = createMemory(app.getPath('userData'));
-  sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
+  if (FEATURES.builtin || process.env.PREMONITION_BUILTIN) setupBuiltin(); else sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   applyTheme(store.getSettings());
   diary = new Diary(() => store.getSettings());
   buildMenu();
+  if (FEATURES.tray && Platform.startedHidden(process.platform, process.argv)) ensureTray();
   buildAgent();
   registerIpc();
   createWindow(); // shown on ready-to-show; diary, helpers, warm-up, pill, hotkey start after that (afterFirstPaint)

@@ -14,14 +14,16 @@ function trim(s) {
 function runShell(command, opts) {
   opts = opts || {};
   const timeoutMs = opts.timeoutMs || 60000;
+  const win = process.platform === 'win32';
   const zsh = fs.existsSync('/bin/zsh') ? '/bin/zsh' : null;
-  const sh = zsh || '/bin/bash';
+  const sh = win ? 'powershell.exe' : (zsh || '/bin/bash');
+  const shArgs = win ? ['-NoProfile', '-NonInteractive', '-Command', command] : ['-lc', command];
   return new Promise((resolve) => {
     let out = '';
     let done = false;
-    const child = spawn(sh, ['-lc', command], { cwd: os.homedir(), env: process.env, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+    const child = spawn(sh, shArgs, { cwd: os.homedir(), env: process.env, stdio: ['ignore', 'pipe', 'pipe'], detached: !win, windowsHide: true });
     const finish = (txt) => { if (done) return; done = true; clearTimeout(timer); if (opts.signal) opts.signal.removeEventListener('abort', onAbort); resolve(trim(txt)); };
-    const kill = () => { try { process.kill(-child.pid, 'SIGKILL'); } catch (e) { try { child.kill('SIGKILL'); } catch (e2) { /* gone */ } } };
+    const kill = () => { if (win) { try { require('child_process').execFile('taskkill', ['/PID', String(child.pid), '/T', '/F'], () => {}); } catch (e) { /* gone */ } return; } try { process.kill(-child.pid, 'SIGKILL'); } catch (e) { try { child.kill('SIGKILL'); } catch (e2) { /* gone */ } } };
     const timer = setTimeout(() => { kill(); finish(out + '\n[timed out after ' + timeoutMs / 1000 + ' s]'); }, timeoutMs);
     const onAbort = () => { kill(); finish(out + '\n[stopped]'); };
     if (opts.signal) { if (opts.signal.aborted) return onAbort(); opts.signal.addEventListener('abort', onAbort); }
