@@ -31,8 +31,9 @@ def _qsb(w, group, bits):
 
 
 def pack(w, group=64, bits=4, chunk=CHUNK):
-    """w (..., in) -> (codes uint8 (..., in*bits/8), scale (..., in/group) w.dtype, bias likewise); None if in % group (or bits not 4 / 8). Slices along dim 0 above `chunk` elements (same bits)."""
-    if w.dim() < 2 or w.shape[-1] % group or bits not in (4, 8) or (bits == 4 and group % 2):
+    """w (..., in) -> (codes uint8 (..., in*bits/8), scale (..., in/group) w.dtype, bias likewise); None if in % group (or bits not 3 / 4 / 8). Slices along dim 0 above `chunk` elements (same bits).
+    3 bits: 8 codes in 3 bytes (code j of each 8 at bit 3j of a little-endian 24-bit word)."""
+    if w.dim() < 2 or w.shape[-1] % group or bits not in (3, 4, 8) or (bits == 4 and group % 2) or (bits == 3 and group % 8):
         return None
     rows = max(1, chunk // (w.numel() // w.shape[0]))
     cs, ss, bs = [], [], []
@@ -42,6 +43,9 @@ def pack(w, group=64, bits=4, chunk=CHUNK):
         q = q.to(torch.uint8).reshape(*p.shape[:-1], -1)
         if bits == 4:
             q = q[..., 0::2] | (q[..., 1::2] << 4)  # even position -> low nibble
+        elif bits == 3:
+            v = (q.reshape(*q.shape[:-1], -1, 8).to(torch.int32) << torch.arange(0, 24, 3, dtype=torch.int32, device=q.device)).sum(-1)
+            q = torch.stack((v & 255, (v >> 8) & 255, v >> 16), -1).to(torch.uint8).reshape(*q.shape[:-1], -1)
         cs.append(q)
         ss.append(s.to(w.dtype).reshape(*p.shape[:-1], -1))
         bs.append(b.to(w.dtype).reshape(*p.shape[:-1], -1))
@@ -50,7 +54,14 @@ def pack(w, group=64, bits=4, chunk=CHUNK):
 
 
 def _unpack_piece(codes, scale, bias, bits, group, dtype):
-    q = torch.stack((codes & 15, codes >> 4), -1).reshape(*codes.shape[:-1], -1) if bits == 4 else codes
+    if bits == 4:
+        q = torch.stack((codes & 15, codes >> 4), -1).reshape(*codes.shape[:-1], -1)
+    elif bits == 3:
+        c = codes.reshape(*codes.shape[:-1], -1, 3).to(torch.int32)
+        v = c[..., 0] | (c[..., 1] << 8) | (c[..., 2] << 16)
+        q = ((v.unsqueeze(-1) >> torch.arange(0, 24, 3, dtype=torch.int32, device=codes.device)) & 7).reshape(*codes.shape[:-1], -1)
+    else:
+        q = codes
     q = q.float().reshape(*scale.shape, group)
     return (q * scale.float().unsqueeze(-1) + bias.float().unsqueeze(-1)).reshape(*scale.shape[:-1], -1).to(dtype)  # = q4_fake's q*scale+bias, then .to(w.dtype)
 
@@ -61,7 +72,7 @@ def unpack(codes, scale, bias, bits=4, group=64, dtype=torch.bfloat16, chunk=CHU
     if compile:
         fn = _COMPILED.setdefault("u", torch.compile(_unpack_piece, dynamic=False))
     n = codes.shape[0]
-    per = max(1, codes.numel() // max(n, 1) * (8 // bits))
+    per = max(1, scale.numel() // max(n, 1) * group)  # dense elements per dim-0 row
     rows = max(1, chunk // per)
     if rows >= n:
         return fn(codes, scale, bias, bits, group, dtype)
@@ -190,7 +201,7 @@ def qdq_inplace(w, group, bits, chunk=CHUNK):
 
 
 def pack_model(lm, group=64, bits=4, bits_for=BITS_FOR, extra=EXTRA, device=None, linears=True, experts=True, min_numel=1 << 20, compile=False):
-    """Replace sleepb.q4_apply(lm, group, bits, bits_for, extra) by packed storage where it pays: fused expert tensors (4-bit) and Linears of >= min_numel elements with no bias (not tied to an
+    """Replace sleepb.q4_apply(lm, group, bits, bits_for, extra) by packed storage where it pays: fused expert tensors (`bits`) and Linears of >= min_numel elements with no bias (not tied to an
     Embedding); every other tensor the recipe covers (Embedding, routers, small Linears) is qdq'd in place and stays dense. device: where the packing math runs and the packed buffers live (e.g. cuda
     while lm is still on cpu: only one layer of bf16 is ever on the GPU; move the rest of lm afterwards). Call before peft. Returns {packed, dense_qdq, skipped, bytes_before, bytes_after}."""
     bf = [(re.compile(r), b) for r, b in bits_for]
@@ -203,7 +214,7 @@ def pack_model(lm, group=64, bits=4, bits_for=BITS_FOR, extra=EXTRA, device=None
     with torch.no_grad():
         for n, m in list(lm.named_modules()):
             if experts and isinstance(getattr(m, "gate_up_proj", None), nn.Parameter) and isinstance(getattr(m, "down_proj", None), nn.Parameter) and m.gate_up_proj.dim() == 3:
-                if install_experts(m, group, 4, device, compile):
+                if install_experts(m, group, bits, device, compile):
                     st["packed_experts"] += 2
                 else:
                     st["skipped"] += 2

@@ -33,7 +33,7 @@ def pack_math(out):
     g = torch.Generator().manual_seed(1)
     n = 0
     for dt in (torch.bfloat16, torch.float32):
-        for bits in (4, 8):
+        for bits in (3, 4, 8):
             for shape in ((8, 128), (3, 5, 192), (2, 64)):
                 w = (torch.randn(*shape, generator=g) * torch.rand(shape[0], *[1] * (len(shape) - 1), generator=g) * 3).to(dt)
                 w[0, ..., :64] = 0.5  # a constant group (max == min)

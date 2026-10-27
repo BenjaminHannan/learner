@@ -64,3 +64,8 @@ Flags: `--packed-compile` (fused dequant; measured 2.1-2.5x slower per step than
 * Measured on the box earlier (RESULTS-box1.md): packed weights 18.9 GiB; train-step peak 22.1 GiB at tok 2048 with checkpointing, 23.3 at 8192.
 * Untested: whole-arm peak on a real 32 GB card (dream generation at gen_bs 128 with packed weights, KV cache + dequant transients, eval), host-RAM load of the 35B on CPU, `--packed-compile` + checkpointing together on GPU, DELTA_ARMS (they edit `base_layer.weight`, which PackedLinear lacks).
   Generation dequantizes every layer per decode step; if dreaming is too slow or tight, lower `--gen-bs`.
+
+## 3-bit base (Oct 27): `--q4-bits 3` (NexVeridian recipe: affine 3-bit g64, 8-bit mlp.gate / shared_expert_gate)
+- packed.py packs 3-bit codes for real: 8 codes in 3 bytes (code j at bit 3j of a little-endian 24-bit word). The runner accepts `--q4-bits 3` or 4.
+- Shown on CPU: pack/unpack bitwise equal to sleepb.q4_fake at 3 bits (test_packed pack_math), every weight of the tiny model bit-identical to sleepb.q4_apply(bits=3); `--smoke` ab_ob_b4_nb run through the runner at 3 bits matches plain sleepb (floats within 1e-6 rel; two plain CPU runs differ from each other by ~1e-9, so the e2e compare now uses that tolerance).
+- Estimate (untested): Qwen3.6-35B-A3B packed weights ~14.7 GiB at 3 bits vs 18.9 GiB at 4 bits (3.5 vs 4.5 bits/weight incl. bf16 scale+bias per 64).

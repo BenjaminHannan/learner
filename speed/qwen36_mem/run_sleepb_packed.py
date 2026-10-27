@@ -79,8 +79,8 @@ def install(sb, packed_compile=False, grad_ckpt=False, kl_cache=False, packed_mi
             return q4_0(lm, group, bits, bits_for, extra, chunk)
         device = st["pending"][1]
         st["pending"] = None
-        if bits != 4 or not (bits_for and extra):
-            raise SystemExit("run_sleepb_packed needs --q4-base --q4-mlx-moe with --q4-bits 4 (the recipe packed.py reproduces)")
+        if bits not in (3, 4) or not (bits_for and extra):
+            raise SystemExit("run_sleepb_packed needs --q4-base --q4-mlx-moe with --q4-bits 3 or 4 (the recipes packed.py reproduces)")
         t0 = time.time()
         r = P.pack_model(lm, group, bits, bits_for, extra, device=device if device.type == "cuda" else None, min_numel=packed_min_numel, compile=packed_compile)
         lm.to(device)

@@ -101,8 +101,8 @@ def test_step(res):
     return r["pass"] and r2["pass"]
 
 
-def run_main(use_runner, out):
-    argv = ["--arm", "ab_ob_b4_nb", "--smoke", "--out", str(out), "--q4-base", "--q4-mlx-moe", "--model", "tiny-a3b-moe"]
+def run_main(use_runner, out, bits=4):
+    argv = ["--arm", "ab_ob_b4_nb", "--smoke", "--out", str(out), "--q4-base", "--q4-mlx-moe", "--q4-bits", str(bits), "--model", "tiny-a3b-moe"]
     buf = io.StringIO()
 
     class Tee(io.TextIOBase):
@@ -122,17 +122,28 @@ def run_main(use_runner, out):
     return buf.getvalue(), json.loads((Path(out) / "result_ab_ob_b4_nb.json").read_text())
 
 
-def test_e2e(res):
+def close(a, b, rtol=1e-6):
+    """Same structure, strings and bools; floats within rtol (plain CPU sleepb runs differ from each other by ~1e-9 in p_first)."""
+    if isinstance(a, dict):
+        return isinstance(b, dict) and a.keys() == b.keys() and all(close(a[k], b[k], rtol) for k in a)
+    if isinstance(a, list):
+        return isinstance(b, list) and len(a) == len(b) and all(close(x, y, rtol) for x, y in zip(a, b))
+    if isinstance(a, float) and isinstance(b, float):
+        return abs(a - b) <= rtol * max(abs(a), abs(b), 1e-12)
+    return a == b
+
+
+def test_e2e(res, bits=4):
     with tempfile.TemporaryDirectory() as d:
-        txt_p, r_p = run_main(True, Path(d) / "packed")
-        txt_q, r_q = run_main(False, Path(d) / "plain")
+        txt_p, r_p = run_main(True, Path(d) / "packed", bits)
+        txt_q, r_q = run_main(False, Path(d) / "plain", bits)
     line = next((l for l in txt_p.splitlines() if l.startswith("[packed]")), None)
     ck = "[ckpt] gradient checkpointing on" in txt_p
-    same = json.dumps(r_p["scores"], sort_keys=True) == json.dumps(r_q["scores"], sort_keys=True)
+    same = close(r_p["scores"], r_q["scores"])
     r = {"completed": True, "packed_line": line, "ckpt_enabled": ck, "nights_packed": len(r_p.get("nights", [])), "nights_plain": len(r_q.get("nights", [])), "scores_equal_plain": same,
          "plain_has_no_packed_line": not any(l.startswith("[packed]") for l in txt_q.splitlines())}
     r["pass"] = bool(line and ck and same and r["nights_packed"] == r["nights_plain"] > 0 and r["plain_has_no_packed_line"])
-    res["b_end_to_end_smoke"] = r
+    res["b_end_to_end_smoke" + ("" if bits == 4 else f"_{bits}bit")] = r
     return r["pass"]
 
 
@@ -140,6 +151,7 @@ def main():
     res = {"torch": torch.__version__}
     ok = test_step(res)
     ok &= test_e2e(res)
+    ok &= test_e2e(res, bits=3)  # NexVeridian recipe: 3-bit g64, 8-bit routers / shared-expert gates
     res["ok"] = bool(ok)
     print(json.dumps(res, default=str))
     sys.exit(0 if ok else 1)
