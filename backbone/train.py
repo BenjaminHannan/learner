@@ -28,7 +28,8 @@ PROMPT_TAIL = " [answer]"
 MAX_NEW = 24
 LORA_TARGETS = (r".*\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)"
                 r"|linear_attn\.(in_proj_qkv|in_proj_z|in_proj_a|in_proj_b|out_proj)"
-                r"|mlp\.(gate_proj|up_proj|down_proj))")
+                r"|mlp\.(gate_proj|up_proj|down_proj)"
+                r"|conv\.(in_proj|out_proj)|feed_forward\.(w1|w2|w3))")  # last line: LFM3 (gated short-conv in/out, SwiGLU w1/w2/w3); its attention-output gate_proj is left out
 
 
 # ---------------------------------------------------------------- data
@@ -78,6 +79,17 @@ class Encoder:
 K2_TYPE = "k2_horizon"  # IFM K2-Horizon: remote code (trust_remote_code), K2HorizonForCausalLM with .model.layers and the same q/k/v/o + gate/up/down Linear names
 
 
+LFM3_TYPE = "lfm3"  # LiquidAI LFM3 (small tier from Oct 27): remote code, Lfm3ForCausalLM with .model.layers; conv layers carry conv.in_proj / out_proj, attention layers q/k/v/o (+ a gate_proj), all feed_forward.w1/w2/w3
+
+
+def is_lfm3(args):  # True when args.model is an LFM3 repo (config.json's model_type, read as plain JSON); never in a smoke run
+    name = getattr(args, "model", None) or ""
+    if getattr(args, "smoke", False):
+        return False
+    from transformers import PretrainedConfig
+    return PretrainedConfig.get_config_dict(name, revision=getattr(args, "revision", None))[0].get("model_type") == LFM3_TYPE
+
+
 def is_k2(args):
     """True when args.model is a K2-Horizon repo. Real run: config.json's model_type, read as plain JSON (no remote code runs). Smoke run: only a model name
     containing "k2-horizon" asks for the K2 smoke, so the default (Qwen) smoke never touches the network."""
@@ -105,8 +117,9 @@ def load_model(args, device, dtype):
     from transformers import AutoModelForCausalLM, AutoTokenizer
     rev = getattr(args, "revision", None)
     k2 = is_k2(args)
-    moe = (not k2) and is_moe(args)
-    kw = {**({"revision": rev} if rev else {}), **({"trust_remote_code": True} if k2 else {})}  # Qwen: no extra arguments
+    lfm3 = (not k2) and is_lfm3(args)
+    moe = (not k2) and (not lfm3) and is_moe(args)
+    kw = {**({"revision": rev} if rev else {}), **({"trust_remote_code": True} if k2 or lfm3 else {})}  # Qwen: no extra arguments
     if args.smoke and k2:  # tiny random K2HorizonForCausalLM built from the repo's real config + remote code, with the real tokenizer (and so its chat template)
         from transformers import AutoConfig
         tok = AutoTokenizer.from_pretrained(args.model, **kw)
@@ -143,7 +156,7 @@ def load_model(args, device, dtype):
             kw["device_map"] = {"": device.index or 0}
         lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, **kw)
         if "ForCausalLM" not in type(lm).__name__ or not hasattr(lm.model, "layers"):
-            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM)")
+            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM, Lfm3ForCausalLM)")
     lm.to(device).eval()
     for p in lm.parameters():
         p.requires_grad_(False)

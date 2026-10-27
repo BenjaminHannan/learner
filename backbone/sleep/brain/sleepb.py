@@ -88,7 +88,7 @@ for _p in (HERE, HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
-from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
+from train import K2_TYPE, LFM3_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
 
 K = 4
@@ -3450,14 +3450,22 @@ Q4_MLX_MOE_PARAMS = (r"\.mlp\.experts\.(?:gate_up_proj|down_proj)$", r"\.mlp\.ga
 Q4_CHUNK = 1 << 26  # elements per fp32 working piece: a tensor larger than this is quantized in slices along dim 0 (the groups lie along the last dim, so the result is the same bit for bit)
 
 
-def q4_inplace(w, group, bits, chunk=Q4_CHUNK):
+def q40_fake(w, group=32):  # llama.cpp Q4_0 quantize-dequantize of w along its last dim (q40_quant, fp16 scales); same shape and dtype as w, None if the last dim is not divisible by group
+    if w.dim() < 1 or w.shape[-1] % group:
+        return None
+    q, scale, bias = q40_quant(w.detach().float(), group)
+    return (q * scale + bias).reshape(w.shape).to(w.dtype)
+
+
+def q4_inplace(w, group, bits, chunk=Q4_CHUNK, fmt="affine"):
     """Fake-quantize the tensor w in place (no grad) like q4_fake, in slices along dim 0 of at most `chunk` elements when it is larger (a fused 3-D expert tensor, a big embedding), so the
     float32 temporaries stay small. Returns the relative Frobenius error, or None when the last dim is not divisible by group (w untouched). A tensor of <= chunk elements takes the
     one-piece path (q4_fake on the whole tensor)."""
     if w.dim() < 1 or w.shape[-1] % group:
         return None
+    fake = q4_fake if fmt == "affine" else (lambda x, g, _b: q40_fake(x, g))
     if w.numel() <= chunk or w.dim() < 2 or w.shape[0] < 2:
-        wq = q4_fake(w, group, bits)
+        wq = fake(w, group, bits)
         den = w.float().norm().item()
         err = (wq.float() - w.float()).norm().item() / den if den > 0 else 0.0
         w.copy_(wq)
@@ -3466,7 +3474,7 @@ def q4_inplace(w, group, bits, chunk=Q4_CHUNK):
     e2 = d2 = 0.0
     for i in range(0, w.shape[0], rows):
         piece = w[i:i + rows]
-        wq = q4_fake(piece, group, bits)
+        wq = fake(piece, group, bits)
         e2 += (wq.float() - piece.float()).double().pow(2).sum().item()
         d2 += piece.float().double().pow(2).sum().item()
         piece.copy_(wq)
@@ -3474,14 +3482,19 @@ def q4_inplace(w, group, bits, chunk=Q4_CHUNK):
     return math.sqrt(e2 / d2) if d2 > 0 else 0.0
 
 
-def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None, skip=()):
+def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None, skip=(), fmt="affine"):
     """Fake-quantize (in place, no grad) the weight of every nn.Linear and nn.Embedding in lm; tied tensors once (by data_ptr). The scale /
     bias storage dtype is the weight's own dtype (bf16 on cuda, fp32 on cpu). Returns {tensors, skipped, params, mean_rel_fro, group, bits}.
     bits_for: sequence of (regex, bits); a tensor whose name (e.g. "model.layers.3.mlp.shared_expert_gate.weight") matches a regex (re.search, first hit wins) is quantized to those bits
     instead of `bits`. extra: sequence of regexes; every other Parameter (a fused 3-D expert tensor, a Parameter-holding router module) whose name matches is quantized too, along its last dim.
     With both left at None nothing changes (same tensors, same numbers, same result keys, every tensor quantized in one piece); otherwise tensors above `chunk` elements (default Q4_CHUNK) are quantized in
     slices along dim 0 (same weights bit for bit; the error statistic is then summed in float64) and the result also has by_bits ({bits: {tensors, params}}) and pattern_hits (the prefix bits: or extra: plus the regex -> how many tensors it matched).
-    skip: tensors (e.g. the 16-bit LoRA weights, or weights already quantized another way) that are left alone and not counted."""
+    skip: tensors (e.g. the 16-bit LoRA weights, or weights already quantized another way) that are left alone and not counted.
+    fmt "q4_0" (LFM3's served GGUF, --q4-format q4_0): llama.cpp Q4_0 (q40_fake, group 32, symmetric, fp16 scale) on every nn.Linear; the nn.Embedding tables (and a head tied
+    to one) are left alone, as llama-quantize keeps token_embd at Q6_K; `bits` must be 4 and bits_for / extra unset."""
+    assert fmt in ("affine", "q4_0") and (fmt == "affine" or (bits == 4 and not bits_for and not extra)), (fmt, bits, bits_for, extra)
+    if fmt == "q4_0":
+        skip = list(skip) + [m.weight for m in lm.modules() if isinstance(m, torch.nn.Embedding)]
     seen, nq, ns, npar, errs = {w.data_ptr() for w in skip}, 0, 0, 0, []
     bits_for = [(re.compile(r), int(b)) for r, b in (bits_for or [])]
     extra = [re.compile(r) for r in (extra or [])]
@@ -3500,7 +3513,7 @@ def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None, skip=(
                 nb = b
                 hits["bits:" + rx.pattern] += 1
                 break
-        err = q4_inplace(w.data, group, nb, chunk)
+        err = q4_inplace(w.data, group, nb, chunk, fmt)
         if err is None:
             ns += 1
             return
@@ -3522,10 +3535,72 @@ def q4_apply(lm, group=64, bits=4, bits_for=None, extra=None, chunk=None, skip=(
                         hits["extra:" + rx.pattern] += 1
                         one(n, p)
                         break
-    out = {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits}
+    out = {"tensors": nq, "skipped": ns, "params": npar, "mean_rel_fro": sum(errs) / len(errs) if errs else None, "group": group, "bits": bits, **({"fmt": fmt} if fmt != "affine" else {})}
     if bits_for or extra:
         out.update(by_bits=by_bits, pattern_hits=dict(hits))
     return out
+
+
+# ------------------------------------------------------------------ the served LFM3 GGUF as the frozen base (--q4-gguf)
+# LiquidAI's recommended LFM3 file (LFM3-1.7B-QAD-Q4_0.gguf) is quantization-aware distilled: its Q4_0 Linears are NOT Q4_0 of the bf16 safetensors (they sit ~7% (relative
+# Frobenius) away from that, as far as the quantization error itself), and its F32 norms / Q6_K embedding differ slightly too. So the race loads the served numbers themselves.
+GGUF_LFM3 = {"operator_norm": "attn_norm", "ffn_norm": "ffn_norm", "post_operator_norm": "post_attention_norm", "post_ffn_norm": "post_ffw_norm", "conv.conv": "shortconv.conv",
+             "conv.in_proj": "shortconv.in_proj", "conv.out_proj": "shortconv.out_proj", "self_attn.q_proj": "attn_q", "self_attn.k_proj": "attn_k", "self_attn.v_proj": "attn_v",
+             "self_attn.o_proj": "attn_output", "self_attn.gate_proj": "attn_gate", "self_attn.q_norm": "attn_q_norm", "self_attn.k_norm": "attn_k_norm",
+             "feed_forward.w1": "ffn_gate", "feed_forward.w2": "ffn_down", "feed_forward.w3": "ffn_up"}
+
+
+def gguf_name_lfm3(n):  # HF LFM3 parameter name -> llama.cpp GGUF tensor name (convert_hf_to_gguf's LFM2-family names; no q/k permutation)
+    if n == "model.embed_tokens.weight":
+        return "token_embd.weight"
+    if n == "model.embedding_norm.weight":
+        return "output_norm.weight"
+    m = re.fullmatch(r"model\.layers\.(\d+)\.(.+)\.weight", n)
+    if not m or m[2] not in GGUF_LFM3:
+        raise KeyError(f"no GGUF name for {n}")
+    return f"blk.{m[1]}.{GGUF_LFM3[m[2]]}.weight"
+
+
+def gguf_load_base(lm, path):
+    """--q4-gguf: overwrite every parameter of an LFM3 model in place (no grad) with the dequantized tensor of the served GGUF at `path` (gguf-py's reader and dequantize), cast to the
+    parameter's dtype; a tied head is the embedding. Every parameter must have a GGUF tensor of the same element count and every GGUF tensor but rope_freqs (asserted to match the
+    config's rope: ones, then 1e30 past the partial rotary dims) must be used. Returns {tensors, params, types (GGUF type -> count), rel_change (largest relative Frobenius change vs the loaded weights, per GGUF type),
+    cast_rel (largest relative error of the dtype cast), q4_0_requant_exact (every Q4_0 tensor, re-quantized from its float32 dequant with q40_quant, gives back exactly the same numbers: the
+    codes / scales the whole-model side's setup_qs(fmt="q4_0") reads are the served ones)}."""
+    from gguf import GGUFReader, dequantize
+    assert lm.config.model_type == "lfm3", f"--q4-gguf maps LFM3 names only, not {lm.config.model_type}"
+    rd = GGUFReader(str(path))
+    g = {t.name: t for t in rd.tensors}
+    used, types, rel, cast, exact, npar, seen = set(), Counter(), {}, 0.0, True, 0, set()
+    with torch.no_grad():
+        for n, p in lm.named_parameters():
+            if p.data_ptr() in seen:
+                continue
+            seen.add(p.data_ptr())
+            t = g[gguf_name_lfm3(n)]
+            d = torch.from_numpy(dequantize(t.data, t.tensor_type).copy()).float()
+            assert d.numel() == p.numel(), (n, tuple(d.shape), tuple(p.shape))
+            d = d.reshape(p.shape)
+            ty = t.tensor_type.name
+            if ty == "Q4_0":
+                q, sc, bi = q40_quant(d, 32)
+                exact &= bool(torch.equal((q * sc + bi).reshape(d.shape), d))
+            w0 = p.detach().float()
+            rel[ty] = max(rel.get(ty, 0.0), ((d - w0).norm() / w0.norm().clamp_min(1e-12)).item())
+            p.copy_(d.to(p.device, p.dtype))
+            cast = max(cast, ((p.detach().float().cpu() - d).norm() / d.norm().clamp_min(1e-12)).item())
+            used.add(t.name)
+            types[ty] += 1
+            npar += p.numel()
+    left = set(g) - used
+    assert left <= {"rope_freqs.weight"}, f"GGUF tensors not loaded: {sorted(left)[:10]}"
+    if left:  # llama.cpp's partial rotary: factor 1 on the first head_dim * partial_rotary_factor / 2 frequencies, 1e30 (no rotation) on the rest; anything else is a rope scaling the HF config lacks
+        rf = g["rope_freqs.weight"]
+        f = torch.from_numpy(dequantize(rf.data, rf.tensor_type).copy()).double()
+        rp = (getattr(lm.config, "rope_parameters", None) or {}).get("full_attention", {})
+        k = int(lm.config.head_dim * rp.get("partial_rotary_factor", 1.0)) // 2
+        assert bool((f[:k] == 1).all()) and bool((f[k:] >= 1e29).all()), f"rope_freqs {f.tolist()[:4]}...{f.tolist()[-2:]} is not the config's partial rotary ({k} of {len(f)})"
+    return {"tensors": len(used), "params": npar, "types": dict(types), "rel_change": rel, "cast_rel": cast, "q4_0_requant_exact": exact, "path": str(path)}
 
 
 # ------------------------------------------------------------------ q4 eval (addendum 13): the final model under F0 / Q0 / Q / Qf
@@ -4523,6 +4598,81 @@ def selftest_k2():
             "render_tail": p[-48:], "think_render_tail": pt[-48:], "think_eos": L.think_eos(), "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
 
 
+LFM3_REPO, LFM3_REV = "LiquidAI/LFM3-1.7B", "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd"  # the small tier from Oct 27
+
+
+def selftest_lfm3():
+    """LFM3 port (sleep race on LFM3), with the real tokenizer, config and remote code from the Hub (no weights; skipped with a message when they cannot be had): (i) the Qwen-style
+    Lang path is LFM3's no-think chat format: render ends with "<|im_start|>assistant\n<think></think>", eos is <|im_end|> (124900), ex_qa + "\n" is the template's own rendering
+    of the turn; (ii) on a tiny random Lfm3ForCausalLM (the real config shrunk: 4 conv + 2 attention layers, tied embedding), LORA_TARGETS matches conv in/out_proj, q/k/v/o and w1/w2/w3,
+    never the attention gate_proj; (iii) q4_apply(fmt="q4_0") quantizes every Linear but the tied head with q40_fake and leaves the embedding alone; (iv) gguf_load_base: a GGUF written
+    with gguf-py (Q4_0 Linears via gguf's own quantizer, F32 for the rest, rope_freqs as llama.cpp writes LFM3's partial rotary) under gguf_name_lfm3's names loads into a fresh model bit-identical to (iii), with
+    q4_0_requant_exact True, and a GGUF missing a tensor is refused."""
+    import tempfile
+    try:
+        from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True)
+        cfg = AutoConfig.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True, num_hidden_layers=6, layer_types=["conv", "conv", "full_attention", "conv", "sliding_attention", "conv"],
+                                         hidden_size=64, intermediate_size=128, num_attention_heads=4, num_key_value_heads=2, head_dim=16, vocab_size=len(tok))
+        import gguf
+    except Exception as e:  # offline / Hub unreachable / no gguf package
+        return {"skipped": f"LFM3 tokenizer / config / gguf not available ({type(e).__name__}: {str(e)[:80]}); LFM3 checks not run"}
+    out = {}
+    L = Lang(tok, False, torch.device("cpu"))
+    u = "Where does Zelmir live?"
+    p = L.render(SYS, u)
+    assert p.endswith("<|im_end|>\n<|im_start|>assistant\n<think></think>") and p.count("<think>") == 1 and L.eos == 124900 == tok.convert_tokens_to_ids("<|im_end|>"), (p[-60:], L.eos)
+    ids_q, st = ex_qa(L, u, "Oslo")
+    full = tok.apply_chat_template([{"role": "system", "content": SYS}, {"role": "user", "content": u}, {"role": "assistant", "content": "Oslo"}], tokenize=False)
+    assert ids_q + L.ids("\n") == L.ids(full) and ids_q[st:-1] == L.ids("Oslo") and L.ids(p)[-2:] == tok.convert_tokens_to_ids(["<think>", "</think>"]), (ids_q[-6:], L.ids(full)[-6:])
+    out["render_tail"] = p[-40:]
+    torch.manual_seed(0)
+    lm = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True).float()
+    assert lm.config.model_type == LFM3_TYPE and lm.get_output_embeddings().weight is lm.get_input_embeddings().weight
+    rx = re.compile(LORA_TARGETS)
+    lin = [n for n, m in lm.named_modules() if isinstance(m, torch.nn.Linear)]
+    hit = [n for n in lin if rx.fullmatch(n)]
+    assert len(hit) == 5 * 4 + 7 * 2 and all(not n.endswith("self_attn.gate_proj") for n in hit) and set(lin) - set(hit) == {n for n in lin if n.endswith("gate_proj") or n == "lm_head"}, (len(hit), sorted(set(lin) - set(hit)))
+    out["lora_matched"] = len(hit)
+    ref = {n: p.detach().clone() for n, p in lm.named_parameters()}
+    q4m = __import__("copy").deepcopy(lm)
+    st4 = q4_apply(q4m, 32, 4, fmt="q4_0")
+    for n, m in q4m.named_modules():
+        if isinstance(m, torch.nn.Linear) and n != "lm_head":
+            assert torch.equal(m.weight, q40_fake(ref[n + ".weight"])), n
+    assert torch.equal(q4m.model.embed_tokens.weight, ref["model.embed_tokens.weight"]) and st4["tensors"] == len(lin) - 1 and st4["fmt"] == "q4_0", st4
+    with tempfile.TemporaryDirectory() as td:
+        def write(path, drop=None):
+            w = gguf.GGUFWriter(path, "lfm2")
+            for n, t in ref.items():
+                gn = gguf_name_lfm3(n)
+                if gn == drop:
+                    continue
+                a = t.numpy().astype("float32")
+                if gn.endswith(("attn_q.weight", "attn_k.weight", "attn_v.weight", "attn_output.weight", "attn_gate.weight", "ffn_gate.weight", "ffn_up.weight", "ffn_down.weight", "in_proj.weight", "out_proj.weight")):
+                    qd = gguf.quants.quantize(a, gguf.GGMLQuantizationType.Q4_0)
+                    w.add_tensor(gn, qd, raw_shape=qd.shape, raw_dtype=gguf.GGMLQuantizationType.Q4_0)
+                else:
+                    w.add_tensor(gn, a)
+            k = int(cfg.head_dim * cfg.rope_parameters["full_attention"].get("partial_rotary_factor", 1.0)) // 2
+            w.add_tensor("rope_freqs.weight", __import__("numpy").array([1.0] * k + [1e30] * (cfg.head_dim // 2 - k), dtype="float32"))
+            w.write_header_to_file(); w.write_kv_data_to_file(); w.write_tensors_to_file(); w.close()
+        write(f"{td}/m.gguf")
+        fresh = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True).float()
+        res = gguf_load_base(fresh, f"{td}/m.gguf")
+        assert res["q4_0_requant_exact"] and res["cast_rel"] == 0.0 and res["types"] == {"Q4_0": len(lin) - 1, "F32": len(ref) - len(lin) + 1}, res
+        for (n, a), b in zip(fresh.named_parameters(), q4m.parameters()):
+            assert torch.equal(a, b), n  # gguf's Q4_0 quantizer == q40_quant, and the F32 tensors come back as they went in
+        write(f"{td}/bad.gguf", drop="blk.2.attn_q.weight")
+        try:
+            gguf_load_base(AutoModelForCausalLM.from_config(cfg, trust_remote_code=True).float(), f"{td}/bad.gguf")
+            raise AssertionError("a GGUF missing a tensor was accepted")
+        except KeyError:
+            pass
+    out["gguf"] = {k: v for k, v in res.items() if k != "path"}
+    return out
+
+
 def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap-gb: refuse what the packed base cannot do (a delta arm reads bl.weight, the MLX MoE recipe packs no experts)
     if args.q4_base and (args.q4_group < 1 or args.q4_bits < 1):
         ap.error("--q4-group and --q4-bits must be positive")
@@ -4537,6 +4687,11 @@ def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap
             ap.error(f"--q4-packed is not for the delta arms {DELTA_ARMS} (they read the dense Linear weight)")
         if args.q4_bits not in (4, 8) or args.q4_group % 2:
             ap.error("--q4-packed packs 4 or 8 bits with an even --q4-group")
+    fmt, gg = getattr(args, "q4_format", "affine"), getattr(args, "q4_gguf", None)
+    if (fmt != "affine" or gg) and (not args.q4_base or args.q4_packed or args.q4_mlx_moe or args.q4_eval or args.arm in DELTA_ARMS):
+        ap.error("--q4-format q4_0 / --q4-gguf need --q4-base, and not --q4-packed, --q4-mlx-moe, --q4-eval or a delta arm")
+    if gg and fmt != "q4_0":
+        ap.error("--q4-gguf needs --q4-format q4_0 (the served LFM3 file is Q4_0)")
     if args.mem_cap_gb is not None and not args.mem_cap_gb > 0:
         ap.error("--mem-cap-gb must be positive")
 
@@ -4562,6 +4717,13 @@ def load_base(args, device, dtype, log=print):  # load_model + the --q4-base ste
             q4["cuda_max_mem_gb_after_load"] = torch.cuda.max_memory_allocated() / 2 ** 30
         log(f"[q4] packed base: {q4['packed']} tensors packed + {q4['dense_qdq']} dense-qdq'd, {q4['skipped']} skipped, {q4['params']:,} params, {q4['bytes_before'] / 2 ** 30:.2f} -> {q4['bytes_after'] / 2 ** 30:.2f} GiB "
             f"(group {q4['group']}, bits {q4['bits']}, compile {comp})" + (f", peak GPU {q4['cuda_max_mem_gb_after_load']:.2f} GiB" if "cuda_max_mem_gb_after_load" in q4 else ""))
+    elif args.q4_base and getattr(args, "q4_gguf", None):
+        q4 = gguf_load_base(lm, args.q4_gguf)
+        log(f"[q4] served GGUF base {q4['path']}: {q4['tensors']} tensors {q4['types']}, {q4['params']:,} params, change vs the loaded weights {q4['rel_change']}, "
+            f"{lm.dtype} cast rel error {q4['cast_rel']:.2e}, Q4_0 re-quantizes exactly: {q4['q4_0_requant_exact']}")
+    elif args.q4_base and getattr(args, "q4_format", "affine") == "q4_0":
+        q4 = q4_apply(lm, 32, 4, fmt="q4_0")
+        log(f"[q4] Q4_0 fake-quantized base (llama.cpp, group 32, embedding left alone): {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']}")
     elif args.q4_base:
         q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
         log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
@@ -4618,6 +4780,9 @@ def main():
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
     ap.add_argument("--q4-base", action="store_true", help="Mac study: replace every Linear / Embedding weight of the frozen base by an MLX-style affine fake-quantized copy (before LoRA)")
+    ap.add_argument("--q4-format", choices=["affine", "q4_0"], default="affine", help="--q4-base: affine = MLX 4-bit (--q4-group / --q4-bits, K2); q4_0 = llama.cpp Q4_0 on every Linear "
+                    "(group 32, fp16 scale, no offset; the embedding left alone), LFM3's served format")
+    ap.add_argument("--q4-gguf", default=None, help="with --q4-format q4_0 (LFM3): load the served GGUF's own dequantized weights (e.g. LFM3-1.7B-QAD-Q4_0.gguf, needs pip gguf) instead of fake-quantizing the bf16 ones")
     ap.add_argument("--q4-group", type=int, default=64, help="--q4-base: group size along the input dim")
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
@@ -4655,6 +4820,7 @@ def main():
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
         print(json.dumps({"qs": selftest_qs()}))
+        print(json.dumps({"lfm3": selftest_lfm3()}))
         return
     if args.bench_train:
         if not args.out:
@@ -4790,6 +4956,12 @@ def main():
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
             log(f"[k2] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
             assert getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
+        if lm.config.model_type == LFM3_TYPE:  # conv layers: in/out_proj + w1/w2/w3 (5); attention layers: q/k/v/o + w1/w2/w3 (7)
+            from peft.tuners.lora import LoraLayer
+            mm = [n for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
+            nconv = sum(t == "conv" for t in lm.config.layer_types)
+            log(f"[lfm3] LoRA matched {len(mm)} modules ({nconv} conv layers)")
+            assert len(mm) == 5 * nconv + 7 * (lm.config.num_hidden_layers - nconv) and not any(n.endswith("self_attn.gate_proj") for n in mm), len(mm)
         if args.arm in DELTA_ARMS:
             lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
             if args.delta_dtype == "bf16" and args.arm in TRAIN_DELTA_ARMS:
