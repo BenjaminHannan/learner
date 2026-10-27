@@ -126,3 +126,8 @@ count). This tests that lead directly, with a matched control and with halting i
 - Accuracy by depth at r = 1, 2, 4, 8 against aplus, tc and aplong is always reported (no pass mark).
 - PC order: br then aplong, ahead of P1. Both count toward the 18 R cap (about 1.0 R and 0.4 R).
 - Known bias: S(r1) is not a trained-at-1 model; br saw r = 1 on about a quarter of its steps.
+- Known bias: br is decoded with train.greedy (the board path cannot loop a block), while aplus and aplong use the
+  board path. The two give identical hits on the CPU in fp32 (test TH); on the GPU only the batch grouping differs
+  (arm a's reverse-order rerun moved 0.04 points).
+- Seeds: with seeds 0-2 present, the 3-seed means decide (as in P1/P2b), so aplong and tc must run at the same seeds as br.
+  The S(r8) >= S(r4) - 1.0 condition also counts toward the "within 1 point" seed rule.

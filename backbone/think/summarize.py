@@ -425,7 +425,13 @@ def pbr(R, st, rows, lab):
     f1 = None if d_ref is None or d_ref["lo"] is None else (a >= F1_GAIN - EPS and d_ref["lo"] > 0)
     f2 = None if d_rise is None or d_rise["lo"] is None or d_keep is None else (d_rise["value"] >= F2_RISE - EPS and d_rise["lo"] > 0 and d_keep["value"] >= -F2_KEEP - EPS)
     wrong = [w for w, c in (("F1: gain below +0.5", a < F1_WRONG - EPS), ("F2: loops add < +0.5 on depth 4-6", d_rise is not None and d_rise["value"] < F2_WRONG - EPS)) if c]
-    outcome = "PASS: looping the block's own layers helps; halting marks apply" if f1 and f2 else ("PROVED WRONG (" + "; ".join(wrong) + ")") if wrong else "not shown"
+    deep_only = "loops help on deep questions, not beyond a matched control"  # Addendum F: F2 alone
+    if f1 and f2:
+        outcome = "PASS: looping the block's own layers helps; halting marks apply"
+    elif wrong:
+        outcome = "PROVED WRONG (" + "; ".join(wrong) + ")" + (f"; separately, {deep_only}" if f2 else "")
+    else:
+        outcome = deep_only if f2 else "not shown"
     halts = [(R.res.get(("br", sd)) or {}).get("halting") for sd in seeds]
     h = halts[0] if halts and halts[0] else None
     hal = None
@@ -439,11 +445,13 @@ def pbr(R, st, rows, lab):
         h2 = rise is not None and rise >= H2_RISE - EPS
         hal = {"acc": 100 * h["acc"], "mean_loops": h["mean_loops"], "loops_depth_1_2": lo_l, "loops_depth_4_6": hi_l, "rise": rise, "spearman": rho,
                "H1": h1, "H2": h2, "wrong": rho is not None and rho <= H_WRONG_RHO + EPS, "judged": bool(f1 and f2), "rule": h.get("rule")}
-    loops_curve = {f"r{r}": float(np.mean([R.acc("br", sd, "validation", f"r{r}") or 0 for sd in seeds])) for r in (1, 2, 3, 4, 6, 8)}
+    curve = {r: [x for x in (R.acc("br", sd, "validation", f"r{r}") for sd in seeds) if x is not None] for r in (1, 2, 3, 4, 6, 8)}
+    loops_curve = {f"r{r}": float(np.mean(v)) if v else None for r, v in curve.items()}
     sched = (R.res.get(("br", seeds[0])) or {}).get("loop_schedule") or {}
     return {"status": "computed", "seeds": seeds, **m, "ref_name": ref_name, "S_minus_ref": a, "ci_ref": d_ref, "deep_rise": d_rise, "deep_r8_minus_r4": d_keep,
             "F1": f1, "F2": f2, "wrong_by": wrong, "outcome": outcome, "halting": hal, "loops_curve": loops_curve, "schedule": sched,
-            "seed_rule": seed_rule([(a - F1_GAIN, a - F1_WRONG)] + ([(d_rise["value"] - F2_RISE, d_rise["value"] - F2_WRONG)] if d_rise else [(None, None)]), len(seeds)),
+            "seed_rule": seed_rule([(a - F1_GAIN, a - F1_WRONG)] + ([(d_rise["value"] - F2_RISE, d_rise["value"] - F2_WRONG)] if d_rise else [(None, None)])
+                                   + ([(d_keep["value"] + F2_KEEP, None)] if d_keep else []), len(seeds)),
             "by_depth": by_depth(st, rows, {f"r{r}": vec("br", f"r{r}") for r in (1, 2, 4, 8)} | {"aplus": v["aplus"], "tc": v["tc"], "aplong": v["aplong"]}, lab)}
 
 

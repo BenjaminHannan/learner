@@ -546,8 +546,9 @@ def test_s4():
     tmp.cleanup()
 
 
-def brlab(root, br=None, aplus=72.0, tc=73.0, aplong=73.5, halting=None, seeds=(0,)):
-    """Fixture for Addendum F: br = {loops: pct} (validation r-tags), aplong = main, halting = the br result's halting readout."""
+def brlab(root, br=None, aplus=72.0, tc=73.0, aplong=73.5, halting=None, seeds=(0,), r8_is_r4=False):
+    """Fixture for Addendum F: br = {loops: pct} (validation r-tags), aplong = main, halting = the br result's halting readout.
+    r8_is_r4: r8 gets r4's exact hits (S(r8) - S(r4) = 0 on every row group, free of the fixture's per-draw noise)."""
     lab = Lab(root)
     for sd in seeds:
         lab.put("a", sd, "validation", "main", 63.0)
@@ -557,6 +558,8 @@ def brlab(root, br=None, aplus=72.0, tc=73.0, aplong=73.5, halting=None, seeds=(
             lab.put("aplong", sd, "validation", "main", aplong)
         for r, v in (br or {}).items():
             lab.put("br", sd, "validation", f"r{r}", v)
+        if br and r8_is_r4:
+            lab.put_hits("br", sd, "validation", "r8", lab.res[("br", sd)]["eval"]["validation"]["r4"]["hits"])
         if br:
             lab.put_hits("br", sd, "validation", "main", lab.res[("br", sd)]["eval"]["validation"]["r4"]["hits"])
             lab.res[("br", sd)]["loop_schedule"] = dict(seed=5000, mean=2.8, compute_ratio=1.30, block=[8, 12], eval_loops=[1, 2, 3, 4, 6, 8], main=4)
@@ -584,14 +587,25 @@ def test_s5():
     assert abs(h["loops_depth_4_6"] - (300 * 4.0 + 60 * 4.5 + 10 * 5.0) / 370) < 1e-9 and x["loops_curve"]["r4"] == 78.0
     rep = SM.report(run(brlab(R / "pass", br=BR, halting=HALT)))
     assert "== 11. Addendum F" in rep and "OUTCOME: PASS" in rep and "max is aplong" in rep and "halting (answer-stable rule, judged)" in rep and "compute ratio 1.30" in rep
-    x = pb("small", br={**BR, 4: 73.8, 6: 73.8, 8: 73.6})  # +0.3 over aplong: proved wrong
+    x = pb("small", br={**BR, 4: 73.8, 6: 73.8}, r8_is_r4=True)  # +0.3 over aplong: proved wrong; the deep-row loop gain is still reported
     assert x["F1"] is False and x["outcome"].startswith("PROVED WRONG") and "F1" in x["outcome"], x["outcome"]
+    assert x["F2"] and x["outcome"].endswith("separately, loops help on deep questions, not beyond a matched control"), x["outcome"]
+    x = pb("deep_only", br={**BR, 4: 74.8, 6: 74.8}, r8_is_r4=True)  # +1.3 over aplong: neither met nor proved wrong; F2 passes
+    assert x["F1"] is False and x["F2"] and x["outcome"] == "loops help on deep questions, not beyond a matched control", x["outcome"]
+    x = pb("keep_band", br={**BR, 8: 77.0})  # S(r8) - S(r4) near its -1.0 bar: seeds 2-3 owed even though F1 and the rise are settled
+    assert -2.0 < x["deep_r8_minus_r4"]["value"] < 0.0 and x["seed_rule"] == "needs seeds 2-3", (x["deep_r8_minus_r4"], x["seed_rule"])
+    x = pb("seed_gap", br=BR, seeds=(0, 1))  # a missing loop count at one seed is left out of the curve, not counted as 0
+    x2 = run(brlab(R / "seed_gap2", br=BR, seeds=(0, 1)))
+    assert x["loops_curve"]["r3"] == 75.0
+    flat = brlab(R / "seed_gap3", br=BR, seeds=(0, 1))
+    del flat.res[("br", 1)]["eval"]["validation"]["r3"]
+    assert run(flat)["br"]["loops_curve"]["r3"] == 75.0 and x2["br"]["seeds"] == [0, 1]
     x = pb("flat", br={**BR, 1: 78.0}, halting={**HALT, "spearman_depth_loops": 0.05})  # loops add nothing on depth 4-6
     assert x["F2"] is False and "F2" in x["outcome"] and x["halting"]["wrong"] and not x["halting"]["judged"], x
     x = pb("drop", br={**BR, 8: 75.0})  # r8 falls 3 points below r4
     assert x["F1"] and x["F2"] is False and x["outcome"] == "not shown", x["outcome"]
     x = pb("tc_hi", br=BR, tc=77.0)
-    assert x["ref_name"] == "tc" and x["F1"] is False and x["outcome"] == "not shown"
+    assert x["ref_name"] == "tc" and x["F1"] is False and x["F2"] and x["outcome"] == "loops help on deep questions, not beyond a matched control", x["outcome"]
     x = pb("noapl", br=BR, aplong=None)
     assert x["status"] == SM.ND and "aplong" in x["why"]
     assert run(brlab(R / "none"))["br"] is None
