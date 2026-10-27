@@ -5,8 +5,9 @@
 #   arm A: $H/GO-SLEEP-A (written by the sleep race's round 1); R8: think2-p1/SEG2-DONE; V8: think2-p1/SEG3-DONE (the looping thread's).
 # When a step ends, even if it fails, it clears its GPU-BUSY.txt and job card, then writes "<rc> <time>" to the next owner's flag:
 # $H/GO-LOOP-P1 after arm A, $H/GO-LOOP-P2A after R8, $H/GO-LOOP-P2B after V8. There are no time-outs: a missing flag means waiting.
-# K2 on this 16 GB card: PyTorch's default CUDA allocator (expandable segments failed under WSL), --tok-budget 512, code $J/src-next
-# (7325e1ea60: the selftest_shy memory fix; it includes the addendum-15 code).
+# K2 on this 16 GB card: PyTorch's default CUDA allocator (expandable segments failed under WSL), --tok-budget 256, code $J/src-fix
+# (the selftest_shy memory fix, cuda_tidy between generation and training, and a log line every 200 training steps; it includes the
+# addendum-15 code). A watchdog stops a run whose log is silent for 90 min (a full card spilling into system memory trained ~30x slower).
 # - Arm A (addendum 14, k2c): its sealed flags, at --gen-bs 24 (B used 48); on running out of memory, again from the start at 16.
 # - Addendum 15 (sealed, 02dca0a42e) R8 and V8: base flags from the sealed rule (B failed no harm, so A's flags if A passes no harm, else
 #   the defaults), without --think-eval, plus --reword, at --gen-bs 16. If R8 runs out of memory at 16, it starts again at 8, and V8 then
@@ -48,8 +49,18 @@ run() {  # run NAME OUT EXTRA...: one sleepb run from $J/src-next; log and resul
   mkdir -p "$o"
   echo "$o/sleepb.log" > "$R/cur4"
   echo "-- $n start $(date -u +%T) $*"
-  (cd "$J/src-next" && python3 backbone/sleep/brain/sleepb.py --arm "$A" --out "$o" "$@") >> "$o/sleepb.log" 2>&1
+  touch "$o/sleepb.log"
+  (cd "$J/src-fix" && exec python3 backbone/sleep/brain/sleepb.py --arm "$A" --out "$o" "$@") >> "$o/sleepb.log" 2>&1 &
+  local py=$!
+  ( while sleep 300; do
+      if [ $(( $(date +%s) - $(stat -c %Y "$o/sleepb.log") )) -gt 5400 ]; then
+        echo "== watchdog: $n silent for 90 min at $(date -u +%T): stopped as too slow"; kill "$py"; break
+      fi
+    done ) &
+  local dog=$!
+  wait "$py"
   local rc=$?
+  kill "$dog" 2>/dev/null
   echo "-- $n exit $rc $(date -u +%T)"
   mkdir -p "$P/$n"
   cp -f "$o/sleepb.log" "$o/result_$A.json" "$P/$n/" 2>/dev/null
@@ -61,7 +72,7 @@ unset PYTORCH_CUDA_ALLOC_CONF PYTORCH_ALLOC_CONF
 ( while sleep 600; do [ -f "$R/cur4" ] && tail -n 60 "$(cat "$R/cur4")" > "$P/progress.txt"; done ) &
 PROG=$!
 trap 'kill $PROG 2>/dev/null' EXIT
-K2="--model IFM/K2-Horizon-3.7B --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --week backbone/sleep/brain/data/week2.json --seed 1 --arc-base --tok-budget 512 --reword backbone/sleep/brain/data/week2_reworded.json"
+K2="--model IFM/K2-Horizon-3.7B --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --week backbone/sleep/brain/data/week2.json --seed 1 --arc-base --tok-budget 256 --reword backbone/sleep/brain/data/week2_reworded.json"
 # ---- arm A (addendum 14, k2c)
 wait_turn "$H/GO-SLEEP-A"
 busy "addendum 14 arm A (K2, ~6-8 h)"

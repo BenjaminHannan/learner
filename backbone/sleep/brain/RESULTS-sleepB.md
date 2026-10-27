@@ -805,3 +805,16 @@ even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allo
   `pull4/base.txt` before R8, and I check it before R8 starts. If A has no result, R8 and V8 are skipped.
 - **R8 and V8 at `--gen-bs 16`**, as sealed. If R8 runs out of memory at 16, both run at 8; `pull4/add15-genbs.txt` says which.
 - D8 and V8p come later, if the PC has room.
+
+## Addendum 17, third try: training crawled; fourth try recorded (2026-10-27 ~07:00Z, before it runs)
+- **Third try (sleepb_pc3, 05:01Z):** it got past every earlier failure point, but night 1's training (296 steps, 175 s on the 5090) had
+  logged nothing after 1 h 36 min, at 100% GPU use with 15.9 of 16.3 GB in use. That is at least 30x slower than expected.
+  Suggested (untested): the full card spilled into system memory under WSL. It was stopped by hand, with no result.
+- **Code change (log and memory only):**
+  - `cuda_tidy()` (gc plus `torch.cuda.empty_cache()`) runs before each night's training and after each REM writing pass.
+  - A log line every 200 training steps, and one per night with seconds, peak and reserved CUDA memory.
+  - The result JSON is unchanged: the CPU smoke with arm A's flags matches a7ed69d79d in all 1,119 fields apart from timing. These calls
+    only run on CUDA.
+- **Fourth try (sleepb_pc5, same PC slot):** the same flags, but with `--tok-budget 256` (rounding only), the new code, and a watchdog
+  that stops the run if its log is silent for 90 min. It ends by writing pull3/DONE, so the next PC job starts.
+- **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same code and `--tok-budget 256`, with the same watchdog.

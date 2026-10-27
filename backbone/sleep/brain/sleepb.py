@@ -86,6 +86,7 @@ Each night uses a fresh AdamW with one cosine schedule spanning all of that nigh
 """
 import argparse
 import contextlib
+import gc
 import hashlib
 import itertools
 import json
@@ -762,6 +763,13 @@ def groups(seqs, budget=None):  # consecutive micro-batches whose padded size st
 
 
 FAST = True  # target-only LM head + length-sorted micro-batches in the split path (same loss and gradients up to float summation order); --bench-train toggles it, False = the old code path
+
+
+def cuda_tidy():  # hand cached CUDA blocks back between generation and training. Changes no number. On a nearly full 16 GB card under WSL, a
+    # fragmented cache made new training blocks spill into system memory, and K2 trained about 30x slower (Ben's PC, 2026-10-27).
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 def tgt_logits(pm, ids, mask, tm):  # fp32 logits at the shifted target positions tm; FAST: run the decoder only and apply lm_head to those hidden states
@@ -3386,7 +3394,9 @@ class Brain:
         if a.arm == "ab_ob_rot":  # after the snapshot (it holds every LoRA param): tonight only quarter (d - 1) % 4 trains
             rec["rot"] = rot_set(s.pm, (d - 1) % 4)
             s.log(f"[night {d}] rot: quarter {rec['rot']['quarter']} layers {rec['rot']['layers']} trainable {rec['rot']['trainable_params']:,}")
+        cuda_tidy()
         tr = Trainer(s.L, s.pm, a, kl_pool, total, a.seed * 100 + d)
+        t_tr = time.time()
         if track:
             pk.append(s.peak_gb(True))  # the night so far; the peak is then reset for the training phase alone (REM generation included)
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
@@ -3394,14 +3404,17 @@ class Brain:
             s.log(f"[night {d}] no dream content; skipping training")
         else:
             for ci, (n_nrem, n_rem) in enumerate(plan):
-                for _ in range(n_nrem):
+                for j in range(n_nrem):
                     s.bk = [] if s.track else None
                     s.train_step(tr, s.nrem(act, cum, con, a.bsz))
+                    if torch.cuda.is_available() and (done + j + 1) % 200 == 0:  # log-only heartbeat: a PC watchdog stops a run that has slowed to a crawl
+                        s.log(f"[night {d}] step {done + j + 1}/{total} at {time.time() - t_tr:.0f} s")
                 nrem_n, done = nrem_n + n_nrem, done + n_nrem
                 if n_rem > 0:
                     lap("train")
                     rs = s.rem(E, d, ci)
                     lap("rem_generate")
+                    cuda_tidy()
                     rem_stats.append(rs)
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
                     nr0 = round(0.7 * a.bsz) if live else 0
@@ -3415,6 +3428,8 @@ class Brain:
                     rem_n, done = rem_n + n_rem, done + n_rem
                     s.cov["rem_steps"] += n_rem
         lap("train")
+        if torch.cuda.is_available():  # log only (the result JSON is unchanged): a slow night or a nearly full card shows here at once
+            s.log(f"[night {d}] trained {done} steps in {time.time() - t_tr:.0f} s (REM writing included); cuda peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB, reserved {torch.cuda.memory_reserved() / 2**30:.1f} GiB")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
         if s.track:
             rec["cards"] = s.card_summary()
