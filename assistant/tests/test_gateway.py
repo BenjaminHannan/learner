@@ -330,5 +330,49 @@ class PrepareTest(unittest.TestCase):
         self.assertTrue(gateway.request_sizes(b).startswith("system=4 user=%d tools=2" % (2 + len(json.dumps(b["messages"][2]["content"])))))
 
 
+class PrewarmTest(Base):
+    TOOLS = [{"type": "function", "function": {"name": "bash"}}]
+
+    def test_prefix_saved_warmed_and_rewarmed(self):
+        pf = Path(self.tmp.name) / "prefix.json"
+        gw = self.srv.gw
+        gw.prefix_file = pf
+        old = gateway.REWARM_IDLE_S
+        gateway.REWARM_IDLE_S = 0.2
+        try:
+            _, r = self.post({"model": "qwen36-fast", "messages": MSGS, "tools": self.TOOLS})
+            r.read()
+            want = {"messages": [MSGS[0]], "tools": self.TOOLS}
+            self.assertEqual(json.loads(pf.read_text()), want)
+            for _ in range(50):  # idle rewarm fires after the request ends
+                if len(self.big.requests) >= 2:
+                    break
+                time.sleep(0.05)
+            w = self.big.requests[-1]
+            self.assertEqual(w["max_tokens"], 1)
+            self.assertEqual(w["messages"], [MSGS[0], {"role": "user", "content": "."}])
+            self.assertEqual(w["tools"], self.TOOLS)
+            # a fresh gateway loads the saved prefix and warms it once the server is up
+            g2 = gateway.Gateway(gw.big_url, "", self.tmp.name, pf)
+            self.assertEqual(g2._prefix, want)
+            n = len(self.big.requests)
+            g2.warm_at_start(wait_s=5)
+            for _ in range(50):
+                if len(self.big.requests) > n:
+                    break
+                time.sleep(0.05)
+            self.assertEqual(self.big.requests[-1]["max_tokens"], 1)
+        finally:
+            gateway.REWARM_IDLE_S = old
+
+    def test_extract_prefix(self):
+        self.assertIsNone(gateway.extract_prefix({"messages": [{"role": "user", "content": "hi"}]}))
+        self.assertIsNone(gateway.extract_prefix({"messages": [{"role": "system", "content": "s"}]}))
+        b = {"messages": [{"role": "system", "content": "a"}, {"role": "system", "content": "b"},
+                          {"role": "user", "content": "hi"}, {"role": "system", "content": "late"}]}
+        self.assertEqual(gateway.extract_prefix(b)["messages"],
+                         [{"role": "system", "content": "a"}, {"role": "system", "content": "b"}])
+
+
 if __name__ == "__main__":
     unittest.main()

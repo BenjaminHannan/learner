@@ -110,7 +110,8 @@ if [ $need_gw = 1 ]; then
   alive gateway && kill "$(cat "$RUN/gateway.pid")" 2>/dev/null
   echo "Starting gateway on port $GW_PORT ..."
   launch gateway "$PY" -u "$DIR/gateway.py" --big-url "http://127.0.0.1:$BIG_PORT" \
-    --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT --diary-dir "$OPS/diary"
+    --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT --diary-dir "$OPS/diary" \
+    --prefix-file "$RUN/prefix.json"   # prewarms the last chat's system prompt + tools
 fi
 
 # Tell experiment jobs that Ben is using the Mac.

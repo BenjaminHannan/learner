@@ -33,6 +33,7 @@ AUTO_CACHE_MAX = 500
 # timeout doesn't stop the server's prefill, so on a long cold prompt it only made the real
 # call prefill everything a second time alongside it (M1, Oct 27: two 36k prefills at once).
 JUDGE_TIMEOUT = 600
+REWARM_IDLE_S = 60  # after the last request ends, re-send the warm prefix (cheap when still cached)
 JUDGE_PROMPT = (
     "(Internal check, not from Ben.) Before answering, rate how much careful step-by-step "
     "thinking the request above needs. Reply with one digit only: 0 = none (chat, simple "
@@ -209,7 +210,7 @@ def fix_reasoning(obj):
 # ---------------------------------------------------------------- gateway core
 
 class Gateway:
-    def __init__(self, big_url, small_url, diary_dir):
+    def __init__(self, big_url, small_url, diary_dir, prefix_file=None):
         self.big_url = big_url.rstrip("/")
         self.small_url = (small_url or "").rstrip("/")
         self.diary = Diary(diary_dir)
@@ -217,6 +218,103 @@ class Gateway:
         self._lock = threading.Lock()
         self._auto = collections.OrderedDict()  # key -> level; LRU of auto decisions
         self._auto_lock = threading.Lock()
+        # Prewarm: the system prompt + tools of the last real chat, kept in mlx_lm's prompt cache
+        # so a new chat only prefills its own messages (a cold OpenBot prefix is ~36k tokens).
+        self.prefix_file = Path(prefix_file).expanduser() if prefix_file else None
+        self._prefix = None
+        if self.prefix_file and self.prefix_file.exists():
+            try:
+                self._prefix = json.loads(self.prefix_file.read_text())
+            except ValueError:
+                pass
+        self._inflight = 0
+        self._warm_lock = threading.Lock()
+        self._warm_timer = None
+
+    # -- prewarm
+    def note_prefix(self, prepped):
+        """Remember (and save) the stable prefix of a real big-model request."""
+        p = extract_prefix(prepped)
+        if p is None or p == self._prefix:
+            return
+        if self._prefix is not None:
+            log("prewarm: prefix changed at char %d of system text" % first_diff(
+                prefix_text(self._prefix), prefix_text(p)))
+        self._prefix = p
+        if self.prefix_file:
+            try:
+                tmp = self.prefix_file.with_suffix(".tmp")
+                tmp.write_text(json.dumps(p, ensure_ascii=False))
+                tmp.replace(self.prefix_file)
+            except OSError as e:
+                log("prewarm: save failed:", repr(e))
+
+    def warm(self, timeout=900):
+        """Send the saved prefix with max_tokens=1 so mlx_lm caches it. -> seconds, or None if skipped."""
+        p = self._prefix
+        if p is None or not self._warm_lock.acquire(blocking=False):
+            return None
+        t0 = time.time()
+        try:
+            b = {"model": "default_model", "messages": p["messages"] + [{"role": "user", "content": "."}],
+                 "max_tokens": 1, "temperature": 0, "stream": False,
+                 "chat_template_kwargs": {"enable_thinking": False}}
+            if p.get("tools"):
+                b["tools"] = p["tools"]
+            u = urlparse(self.big_url)
+            conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=timeout)
+            try:
+                conn.request("POST", "/v1/chat/completions", json.dumps(b).encode(),
+                             {"Content-Type": "application/json"})
+                r = conn.getresponse()
+                data = r.read()
+            finally:
+                conn.close()
+            usage = json.loads(data).get("usage") or {} if r.status == 200 else {}
+            log("prewarm: %s prompt=%s cached=%s in %.1fs" % (
+                "ok" if r.status == 200 else "HTTP %d" % r.status, usage.get("prompt_tokens"),
+                (usage.get("prompt_tokens_details") or {}).get("cached_tokens"), time.time() - t0))
+            return time.time() - t0
+        except (OSError, http.client.HTTPException, ValueError) as e:
+            log("prewarm: failed:", repr(e))
+            return None
+        finally:
+            self._warm_lock.release()
+
+    def warm_at_start(self, wait_s=900):
+        """Background: once the big server answers, warm the saved prefix."""
+        def run():
+            end = time.time() + wait_s
+            while time.time() < end:
+                try:
+                    if http_get(self.big_url, "/v1/models", 2)[0] == 200:
+                        break
+                except (OSError, http.client.HTTPException):
+                    pass
+                time.sleep(2)
+            if self._inflight == 0:
+                self.warm()
+        threading.Thread(target=run, daemon=True).start()
+
+    def begin(self):
+        with self._lock:
+            self._inflight += 1
+            if self._warm_timer:
+                self._warm_timer.cancel()
+                self._warm_timer = None
+
+    def end(self):
+        """A request finished: re-warm once things are idle (refreshes or restores the prefix)."""
+        with self._lock:
+            self._inflight -= 1
+            if self._inflight == 0 and self._prefix is not None and REWARM_IDLE_S >= 0:
+                self._warm_timer = threading.Timer(REWARM_IDLE_S, self._idle_warm)
+                self._warm_timer.daemon = True
+                self._warm_timer.start()
+
+    def _idle_warm(self):
+        if self._inflight == 0:
+            self.warm()
 
     def small_up(self):
         """Probe small server's /v1/models (1 s timeout), cached 30 s."""
@@ -336,6 +434,27 @@ def prepare(body, thinking, default_max):
     return b
 
 
+def extract_prefix(body):
+    """Leading system/developer messages + tools: the part every new chat of an agent shares."""
+    lead = []
+    for m in body.get("messages") or []:
+        if not (isinstance(m, dict) and m.get("role") in ("system", "developer")):
+            break
+        lead.append({"role": m["role"], "content": m.get("content")})
+    if not lead or len(lead) == len(body.get("messages") or []):
+        return None
+    return {"messages": lead, "tools": body.get("tools") or None}
+
+
+def prefix_text(p):
+    return json.dumps(p, ensure_ascii=False, sort_keys=True)
+
+
+def first_diff(a, b):
+    n = min(len(a), len(b))
+    return next((i for i in range(n) if a[i] != b[i]), n)
+
+
 def request_sizes(body):
     """'system=8863 user=120 ... tools=22823' in chars (about 4 per token), for finding prompt bloat."""
     sizes = {}
@@ -406,6 +525,8 @@ class Handler(BaseHTTPRequestHandler):
         for _ in range(2):
             name, url, thinking, dmax = gw.route(route_model)
             prepped = prepare(body, thinking, dmax)
+            if name == "big" and route_model != "k2-helper":
+                gw.note_prefix(prepped)
             payload = json.dumps(prepped).encode()
             log("size: " + request_sizes(prepped) + " (before prepare: %d chars)" % len(json.dumps(body)))
             u = urlparse(url)
@@ -423,6 +544,14 @@ class Handler(BaseHTTPRequestHandler):
         return None
 
     def chat(self, body):
+        gw = self.server.gw
+        gw.begin()
+        try:
+            self._chat(body)
+        finally:
+            gw.end()
+
+    def _chat(self, body):
         gw = self.server.gw
         t0 = time.time()
         client_model = body.get("model") or "qwen36"
@@ -623,10 +752,10 @@ def build_diary(body, client_model, upstream, thinking, asm, status, latency, tt
     return rec, blobs, row
 
 
-def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1"):
+def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1", prefix_file=None):
     srv = ThreadingHTTPServer((host, port), Handler)
     srv.daemon_threads = True
-    srv.gw = Gateway(big_url, small_url, diary_dir)
+    srv.gw = Gateway(big_url, small_url, diary_dir, prefix_file)
     return srv
 
 
@@ -637,8 +766,12 @@ def main():
     ap.add_argument("--small-url", default=e("GATEWAY_SMALL_URL", "http://127.0.0.1:18081"))
     ap.add_argument("--port", type=int, default=int(e("GATEWAY_PORT", "8090")))
     ap.add_argument("--diary-dir", default=e("DIARY_DIR", "~/learner-ops/diary"))
+    ap.add_argument("--prefix-file", default=e("GATEWAY_PREFIX_FILE"),
+                    help="save the last chat's system prompt + tools here and prewarm it at start")
     a = ap.parse_args()
-    srv = make_server(a.big_url, a.small_url, a.port, a.diary_dir)
+    srv = make_server(a.big_url, a.small_url, a.port, a.diary_dir, prefix_file=a.prefix_file)
+    if a.prefix_file:
+        srv.gw.warm_at_start()
     log("gateway on 127.0.0.1:%d  big=%s small=%s diary=%s" % (
         a.port, a.big_url, a.small_url, srv.gw.diary.root))
     try:
