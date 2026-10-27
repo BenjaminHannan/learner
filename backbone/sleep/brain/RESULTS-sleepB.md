@@ -902,3 +902,7 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
 - Addendum 17 (K2) keeps running. Its gate result carries over to any model.
 - The chain script `pc/sleepb_pc10.sh` takes over from pc9 once addendum 17 has passed its turn on (mock-tested on all three slot-2
   paths).
+- **LFM3 no-think check (shown, CPU fp32, real weights, results_a19/leak_check):** the store test saw the served 4-bit LFM3 write
+  reasoning and a stray `</think>` with thinking off (70 of 80 chats). With sleepb's own prompts, the full-precision model wrote no
+  `</think>` in any of 32 replies (16 test questions, 8 tagger messages greedy and 4 sampled, 4 verifier prompts). No code change for
+  addendum 19.
