@@ -835,3 +835,17 @@ even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allo
   - pc6 stops itself if its log is silent for 90 min, or if, after night 2 or later, the remaining nights at 1.25x the last night's time
     plus 75 min of final scoring would end after 18:00Z. Either way it writes pull3/DONE, so the looping thread's segment 1 starts.
 - **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same cap and code.
+
+## Addendum 17, fourth try stopped by its watchdog; add17 moves into my next PC slot (recorded 2026-10-27 ~11:10Z, before it runs)
+- **Fourth try (sleepb_pc5):** after night 1 (2051 s), night 2's names pass finished, and then the log stayed silent for 90 min while
+  it wrote the night's dreams. On the 5090, the whole of night 2 took 1379 s. The watchdog stopped it at 09:20Z and wrote pull3/DONE,
+  so the looping thread's segment 1 took the PC at 10:07Z. No result. Neither pc6 nor pc5guard ran.
+- **Spill check, not done:** Windows' shared GPU memory counter was read only after add17 had stopped, so it says nothing about add17.
+  In pc5's last 90 min, the card sat at up to 15,961 of 16,303 MiB at about 100% use. That fits a spill but does not prove it.
+- **Code (no number changes):** `cuda_tidy()` now also runs at the start of each night, before the names pass and dream writing. A
+  log line gives each night's writing time. Both run only on CUDA.
+- **New PC chain, `pc/sleepb_pc7.sh`, replacing sleepb_pc4 in my slots:** add17 runs in my first slot (after the sleep race's round
+  1), then arm A after looping P1, then R8 after looping P2a. V8 waits for its own flag (`handoff/GO-SLEEP-V8`) in a slot still to be
+  agreed. Every run uses the 14 GiB cap and code src-cap2. Each run stops if its log is silent for 90 min, or if, once night 2 or later
+  ends, the projected end passes its time budget: add17 10 h, A 10 h, R8 and V8 16 h each. add17's flags are the sealed ones, as in
+  pc5, at `--gen-bs 24` (16 on running out of memory).

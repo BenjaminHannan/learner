@@ -3345,6 +3345,7 @@ class Brain:
             tl[0] = time.time()
         if bench:
             lap("bench")
+        cuda_tidy()  # last night's training cache goes back before tonight's writing (on the PC, night 2's writing crawled without it)
         rec["tagging"] = s.tag(d)
         if a.arm in NAMES_ARMS:  # addendum 8 / 9: re-read the day for names (before refresh, so the new items get their mention counts)
             rec["names_pass"] = s.names_pass(d)
@@ -3356,6 +3357,8 @@ class Brain:
         E = [it for it in list(s.items.values()) if s.elig(it)]
         rec["dream_stats"] = s.dream(d, E)
         lap("dream")
+        if torch.cuda.is_available():  # log only: how long tonight's names, update checks and dream writing took
+            s.log(f"[night {d}] written in {ph.get('tag', 0) + ph.get('update_detection', 0) + ph['dream']:.0f} s (dream {ph['dream']:.0f} s)")
         if a.arm in EXTRA_ARMS:
             s.log(f"[night {d}] twist {({k: v for k, v in rec['dream_stats'].items() if k.startswith('twist')})}")
         if getattr(a, "dream_vary", "off") != "off":  # addendum 15: the per-style yields of tonight (Brain.vary's stats keys)
