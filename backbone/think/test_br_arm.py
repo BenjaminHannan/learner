@@ -132,3 +132,19 @@ def test_eval_adapter_matches_the_training_run(tmp_path):
     assert q["eval"]["r1"]["hits"] == r["eval"]["main"]["hits"] and set(q["eval"]) == {"r1", "r2"} and sum(v["n"] for v in q["eval"]["r1"]["by_depth"].values()) == n
     c = EA.compare("1100", "1000")
     assert c["acc_diff_pts"] == 25.0 and c["same_hit"] == 0.75 and not c["ok"]
+
+
+def test_deep_breakdown(tmp_path, capsys):
+    """deep_breakdown.py: slices, banks, a looped arm's r tags (main dropped), a plain arm's main tag, and oracle-over-tags."""
+    import deep_breakdown as DB
+    rows = [dict(depth=1, bank="q.x"), dict(depth=2, bank="q.y"), dict(depth=4, bank="q.x"), dict(depth=5, bank="q.y")]
+    (tmp_path / "validation.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    for name, ev in [("br_s0", dict(r1=dict(hits="1010"), r2=dict(hits="0110"), main=dict(hits="0110"))), ("aplong_s0", dict(main=dict(hits="1000")))]:
+        (tmp_path / name).mkdir()
+        (tmp_path / name / f"result_{name}.json").write_text(json.dumps(dict(eval=dict(validation=ev))))
+    H, groups = DB.load_hits([tmp_path / "br_s0" / "result_br_s0.json", tmp_path / "aplong_s0" / "result_aplong_s0.json"], 4)
+    assert groups == {"br_s0": ["br_s0:r1", "br_s0:r2"], "aplong_s0": ["aplong_s0:main"]}
+    assert DB.oracle(range(4), [H["br_s0:r1"], H["br_s0:r2"]]) == 75.0 and DB.acc([2, 3], H["br_s0:r1"]) == 50.0
+    assert DB.main([str(tmp_path), str(tmp_path / "br_s0" / "result_br_s0.json"), str(tmp_path / "aplong_s0" / "result_aplong_s0.json")]) == 0
+    out = capsys.readouterr().out
+    assert "q.x" in out and "br_s0=75.00 (of 2)" in out
