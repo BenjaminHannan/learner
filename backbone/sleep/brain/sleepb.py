@@ -4527,7 +4527,6 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--delta-dtype", choices=["fp32", "bf16"], default="fp32", help="ab_ob_merge only: bf16 halves the folded change buffer to fit a 16 GB card (the forward already uses it in bf16)")
     ap.add_argument("--lora-plus", type=float, default=1.0, help="sleep race round 1 (LoRA+): lora_B matrices train at lr x this (1 = off, the old path bit for bit)")
-    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--tok-budget", type=int, default=TOK_BUDGET, help="padded tokens per forward; lower for a 16 GB card (same loss and gradients)")
     ap.add_argument("--gen-bs", type=int, default=32)
     ap.add_argument("--shy-factor", type=float, default=0.85)
