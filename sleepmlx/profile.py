@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 PROFILE_DIR = Path(__file__).resolve().parent / "profiles"
-DEFAULT_PROFILE = "k2"
+DEFAULT_PROFILE = "lfm3"   # an alias, resolved per platform by resolve_profile_name
 
 DEFAULT_QUIRKS = {
     "tag_think": False,          # the tagger thinks first (stage 1) before answering
@@ -57,6 +58,24 @@ class Profile:
         return os.path.expanduser(self.model_dir)
 
 
+def has_cuda() -> bool:
+    try:
+        import torch
+        return bool(torch.cuda.is_available())
+    except Exception:
+        return False
+
+
+def resolve_profile_name(name: str, platform: Optional[str] = None, cuda: Optional[bool] = None) -> str:
+    """'lfm3' is the default alias: lfm3_mps on macOS, lfm3_cuda with a CUDA card on Windows / Linux, else lfm3_cpu. Any other name is returned unchanged."""
+    if name != "lfm3":
+        return name
+    platform = sys.platform if platform is None else platform
+    if platform == "darwin":
+        return "lfm3_mps"
+    return "lfm3_cuda" if (has_cuda() if cuda is None else cuda) else "lfm3_cpu"
+
+
 def profile_path(name_or_path: str) -> Path:
     p = Path(os.path.expanduser(name_or_path))
     if p.suffix == ".json" and p.exists():
@@ -76,7 +95,7 @@ def load_profile(name_or_path: Optional[str] = None, env: Optional[dict] = None)
     """Load a profile; env overrides: SLEEPMLX_MODEL_DIR, SLEEPMLX_LOADER ('module:function'), SLEEPMLX_LOADER_PATH."""
     env = os.environ if env is None else env
     name = name_or_path or env.get("SLEEPMLX_PROFILE") or DEFAULT_PROFILE
-    prof = from_dict(json.loads(profile_path(name).read_text()))
+    prof = from_dict(json.loads(profile_path(resolve_profile_name(name)).read_text()))
     if env.get("SLEEPMLX_MODEL_DIR"):
         prof.model_dir = env["SLEEPMLX_MODEL_DIR"]
     if env.get("SLEEPMLX_HF_ID"):

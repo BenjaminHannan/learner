@@ -137,7 +137,7 @@ class RecallTests(unittest.TestCase):
         self.assertTrue(seen["adapter"])
         self.assertTrue(seen["prompts"][0].endswith("<ifm|think>\n</ifm|think>"))
         self.assertIn("Answer in one short line.", seen["prompts"][0])
-        self.assertEqual(cli.clean_answer("<think>x</think>\n\nParis.\n", load_profile("lfm3")), "Paris.")
+        self.assertEqual(cli.clean_answer("<think>x</think>\n\nParis.\n", load_profile("lfm3_cuda")), "Paris.")
 
     def test_recall_loads_the_adapter_and_uses_what_was_learned(self):
         from .helpers import Env

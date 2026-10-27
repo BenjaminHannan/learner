@@ -15,16 +15,44 @@ import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")   # ops MPS lacks fall back to the CPU (must be set before torch is imported)
+
 from .backend import Backend, Example
 from .model import pack
 from .shy import shy_core
 
 
 def pick_device_dtype(torch):
+    """Device order: cuda, then mps, then cpu.
+    cuda: bf16 (fp16 if bf16 is unsupported). mps: fp16 for the frozen base (bf16 is shaky on M1), LoRA weights kept in fp32 and the loss in fp32,
+    so no loss scaling is needed (the safe option: only the frozen base is half precision). cpu: bf16 base (1.7B = ~3.4 GB), fp32 LoRA."""
     if torch.cuda.is_available():
         bf = getattr(torch.cuda, "is_bf16_supported", lambda: False)()
         return "cuda", (torch.bfloat16 if bf else torch.float16)
-    return "cpu", torch.bfloat16   # the frozen base in bf16 on CPU (1.7B = ~3.4 GB; fp32 would not fit in 8 GB); LoRA weights stay fp32
+    mps = getattr(getattr(torch, "backends", None), "mps", None)
+    if mps is not None and mps.is_available():
+        return "mps", torch.float16
+    return "cpu", torch.bfloat16
+
+
+def set_mps_cap(torch, gb: float) -> float:
+    """Cap this process's MPS memory at about gb GB via torch.mps.set_per_process_memory_fraction (a fraction of the recommended working set)."""
+    total = None
+    f = getattr(torch.mps, "recommended_max_memory", None)
+    if f:
+        try:
+            total = float(f())
+        except Exception:
+            total = None
+    if total is None:
+        try:
+            import psutil
+            total = float(psutil.virtual_memory().total)
+        except Exception:
+            total = 32e9
+    frac = max(0.05, min(1.0, gb * 1e9 / total))
+    torch.mps.set_per_process_memory_fraction(frac)
+    return frac
 
 
 def set_cpu_threads(spec="cores-1"):
@@ -43,11 +71,13 @@ def set_cpu_threads(spec="cores-1"):
     return n
 
 
-def load(model_id_or_dir: str, trust_remote_code: bool = False, dtype=None, device=None):
-    """-> (model, tokenizer) from a HF id or a local dir."""
+def load(model_id_or_dir: str, trust_remote_code: bool = False, dtype=None, device=None, mps_gb: Optional[float] = None):
+    """-> (model, tokenizer) from a HF id or a local dir. mps_gb: memory cap applied before the weights are loaded (MPS only)."""
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
     dev, dt = pick_device_dtype(torch)
+    if dev == "mps" and mps_gb:
+        set_mps_cap(torch, float(mps_gb))
     dtype, device = dtype or dt, device or dev
     tok = AutoTokenizer.from_pretrained(model_id_or_dir, trust_remote_code=trust_remote_code)
     model = AutoModelForCausalLM.from_pretrained(model_id_or_dir, torch_dtype=dtype, trust_remote_code=trust_remote_code)
@@ -64,6 +94,7 @@ class TorchBackend(Backend):
         self.tok_budget, self.gen_batch = tok_budget, gen_batch
         self.device, self.dtype = pick_device_dtype(torch)
         self.threads = set_cpu_threads(prof.runtime.get("threads", "cores-1")) if self.device == "cpu" else None
+        self.mps_fraction = set_mps_cap(torch, float(prof.runtime["mps_mem_gb"])) if self.device == "mps" and prof.runtime.get("mps_mem_gb") else None
         self.lora_cfg = dict(prof.lora)
         targets = self.lora_cfg.get("target_modules") or [k.split(".")[-1] for k in self.lora_cfg["keys"]]   # a regex string or a list of names
         r = int(self.lora_cfg["rank"])
@@ -236,6 +267,8 @@ class TorchBackend(Backend):
     def close(self) -> None:
         if self.device == "cuda":
             self.torch.cuda.empty_cache()
+        elif self.device == "mps":
+            self.torch.mps.empty_cache()
 
 
 class _null:
