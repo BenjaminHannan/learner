@@ -546,8 +546,62 @@ def test_s4():
     tmp.cleanup()
 
 
+def brlab(root, br=None, aplus=72.0, tc=73.0, aplong=73.5, halting=None, seeds=(0,)):
+    """Fixture for Addendum F: br = {loops: pct} (validation r-tags), aplong = main, halting = the br result's halting readout."""
+    lab = Lab(root)
+    for sd in seeds:
+        lab.put("a", sd, "validation", "main", 63.0)
+        lab.put("aplus", sd, "validation", "main", aplus)
+        lab.put("tc", sd, "validation", "L0", tc)
+        if aplong is not None:
+            lab.put("aplong", sd, "validation", "main", aplong)
+        for r, v in (br or {}).items():
+            lab.put("br", sd, "validation", f"r{r}", v)
+        if br:
+            lab.put_hits("br", sd, "validation", "main", lab.res[("br", sd)]["eval"]["validation"]["r4"]["hits"])
+            lab.res[("br", sd)]["loop_schedule"] = dict(seed=5000, mean=2.8, compute_ratio=1.30, block=[8, 12], eval_loops=[1, 2, 3, 4, 6, 8], main=4)
+            if halting:
+                lab.res[("br", sd)]["halting"] = halting
+    return lab
+
+
+BR = {1: 70.0, 2: 73.0, 3: 75.0, 4: 78.0, 6: 78.0, 8: 77.8}
+HALT = dict(acc=0.778, mean_loops=3.2, spearman_depth_loops=0.3, rule="first r ...",
+            by_depth={"1": dict(n=600, mean_loops=2.5, acc=0.9), "2": dict(n=500, mean_loops=2.8, acc=0.8), "4": dict(n=300, mean_loops=4.0, acc=0.5),
+                      "5": dict(n=60, mean_loops=4.5, acc=0.4), "6": dict(n=10, mean_loops=5.0, acc=0.3)})
+
+
+def test_s5():
+    """Addendum F marks (arm br vs max(aplus, tc, aplong); loop rise on depth 4-6; halting judged only after F1 and F2)."""
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    pb = lambda name, **kw: run(brlab(R / name, **kw))["br"]
+    x = pb("pass", br=BR, halting=HALT)
+    assert x["status"] == "computed" and x["F1"] and x["F2"] and x["outcome"].startswith("PASS") and x["ref_name"] == "aplong", x
+    assert abs(x["S_minus_ref"] - 4.5) < 0.05 and x["deep_rise"]["value"] > 2 and x["deep_r8_minus_r4"]["value"] >= -1.0
+    h = x["halting"]
+    assert h["judged"] and h["H1"] and h["H2"] and not h["wrong"] and abs(h["loops_depth_1_2"] - (600 * 2.5 + 500 * 2.8) / 1100) < 1e-9, h
+    assert abs(h["loops_depth_4_6"] - (300 * 4.0 + 60 * 4.5 + 10 * 5.0) / 370) < 1e-9 and x["loops_curve"]["r4"] == 78.0
+    rep = SM.report(run(brlab(R / "pass", br=BR, halting=HALT)))
+    assert "== 11. Addendum F" in rep and "OUTCOME: PASS" in rep and "max is aplong" in rep and "halting (answer-stable rule, judged)" in rep and "compute ratio 1.30" in rep
+    x = pb("small", br={**BR, 4: 73.8, 6: 73.8, 8: 73.6})  # +0.3 over aplong: proved wrong
+    assert x["F1"] is False and x["outcome"].startswith("PROVED WRONG") and "F1" in x["outcome"], x["outcome"]
+    x = pb("flat", br={**BR, 1: 78.0}, halting={**HALT, "spearman_depth_loops": 0.05})  # loops add nothing on depth 4-6
+    assert x["F2"] is False and "F2" in x["outcome"] and x["halting"]["wrong"] and not x["halting"]["judged"], x
+    x = pb("drop", br={**BR, 8: 75.0})  # r8 falls 3 points below r4
+    assert x["F1"] and x["F2"] is False and x["outcome"] == "not shown", x["outcome"]
+    x = pb("tc_hi", br=BR, tc=77.0)
+    assert x["ref_name"] == "tc" and x["F1"] is False and x["outcome"] == "not shown"
+    x = pb("noapl", br=BR, aplong=None)
+    assert x["status"] == SM.ND and "aplong" in x["why"]
+    assert run(brlab(R / "none"))["br"] is None
+    print("S5 ok: Addendum F pass / wrong / flat / r8 drop / harder control / missing control; halting judged only after F1 and F2")
+    tmp.cleanup()
+
+
 if __name__ == "__main__":
     test_s1()
     test_s2()
     test_s3()
     test_s4()
+    test_s5()

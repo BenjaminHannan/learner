@@ -554,7 +554,7 @@ EXPECT = {
 
 def test_ts_spec_defaults():
     """Per-arm step defaults, learning-rate groups, warm-ups, gate thresholds and eval tags, as in IMPL-SPEC section 3 / PREREG."""
-    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1"}
+    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong"}
     a = K.parse(["--arm", "t", "--out", "x"])
     assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
     assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)

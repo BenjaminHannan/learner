@@ -30,13 +30,16 @@ LAPS = (0, 1, 2, 4, 8, 12, 16, 24)
 BOOT_N, BOOT_SEED, EPS = 2000, 20261024, 1e-9
 ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
 HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1", "tj": "L4", "tf": "L4", "tc": "L0",
-        "ws": "T", "wsham": "T", "tsd": "L4", "tsd1": "L1"}
+        "ws": "T", "wsham": "T", "tsd": "L4", "tsd1": "L1", "br": "main", "aplong": "main"}
 ALIAS = {"rep18": ("repeatdelta18", "repeat8", "rep8"), "gatesoff8": ("gatesoff",), "swap8": ("swap",), "mean8": ("meanboard8",)}
 ND = "not-enough-data"
 T2_P1, T2_P2, T2_P3, T2_W1, T2_W2 = 2.0, 1.0, 0.5, 1.0, 0.5  # PREREG-think2.md lines 30-32 (P1-P3) and 40-42 (wrong-if); seed 0 only
 # codi-plan P1 (written steps, arms ws / wsham) and P2b (step-supervised notes, arms tsd / tsd1); all in points, fixed before any run
 P1_OPEN, P1_SHAM, P1_WRONG, P1_REF74 = 2.0, 1.0, 0.5, 74.6
 P2_A, P2_A_WRONG, P2_C, P2_C_WRONG, P2_D, P2_D_WRONG = 2.0, 0.5, 1.0, 0.3, 10.0, 2.0
+# Addendum F (arm br: the block's own layers looped, random loop counts in training; aplong: LoRA given br's extra layer passes as steps)
+F1_GAIN, F1_WRONG, F2_RISE, F2_WRONG, F2_KEEP = 2.0, 0.5, 2.0, 0.5, 1.0
+H1_KEEP, H1_FRAC, H2_RISE, H_WRONG_RHO = 0.5, 0.6, 1.0, 0.1
 USED, UNUSED, SEED_BAND = 1.0, 0.3, 1.0  # a lesion is "used" at a cost >= 1.0 with a 95% interval excluding 0, "unused" below 0.3; a margin inside +-1 point needs seeds 2-3
 
 
@@ -216,7 +219,7 @@ def group(parts):
 
 # ---------------------------------------------------------------- analysis
 
-PARENT = {"aplus": "a", "t": "a", "t1": "a", "tw": "a", "tj": "a", "tf": "a", "tc": "a", "bplus": "b", "ws": "a", "wsham": "a", "tsd": "a", "tsd1": "a"}  # the stage-1 arm whose adapter each arm starts from
+PARENT = {"br": "a", "aplong": "a", "aplus": "a", "t": "a", "t1": "a", "tw": "a", "tj": "a", "tf": "a", "tc": "a", "bplus": "b", "ws": "a", "wsham": "a", "tsd": "a", "tsd1": "a"}  # the stage-1 arm whose adapter each arm starts from
 BPLUS_EXTEND = 1.0  # PREREG: bplus on all seeds only if bplus - b (seed 0) >= 1.0
 
 
@@ -398,6 +401,52 @@ def p2b(R, st, rows, lab):
             "seed_rule": seed_rule(margins, len(seeds)), "by_depth": by_depth(st, rows, {"S": vS, "tsd1": vS1, "C1": vC1, "tc": vtc}, lab)}
 
 
+def pbr(R, st, rows, lab):
+    """Addendum F. F1: br at 4 loops - max(aplus, tc, aplong) >= +2.0 (interval above 0); proved wrong below +0.5. F2 (depth 4-6, beyond train depth):
+    S(r4) - S(r1) >= +2.0 (interval above 0) and S(r8) >= S(r4) - 1.0; proved wrong if S(r4) - S(r1) < +0.5. Halting (Addendum E, judged only if F1 and F2
+    pass): H1 answer-stable halting keeps accuracy within 0.5 of S(r4) at mean loops <= 0.6 x 8; H2 depth 4-6 uses >= 1.0 more loops than depth 1-2;
+    wrong if Spearman(depth, loops) <= 0.1."""
+    if not any(a == "br" for a, _ in R.res):
+        return None
+    tg = tc_tag(R)
+    m, seeds = common(R, {"S": ("br", "r4"), "S1": ("br", "r1"), "S8": ("br", "r8"), "aplus": ("aplus", "main"), "tc": ("tc", tg), "aplong": ("aplong", "main")})
+    if not seeds:
+        return {"status": ND, "why": "needs br, aplus, tc and aplong at one seed"}
+    vec = (lambda a, t: None) if lab else (lambda a, t: R.rowvec(a, t, seeds=tuple(seeds)))
+    v = {k: vec(*at) for k, at in {"S": ("br", "r4"), "S1": ("br", "r1"), "S8": ("br", "r8"), "aplus": ("aplus", "main"), "tc": ("tc", tg), "aplong": ("aplong", "main")}.items()}
+    refs = {k: m[k] for k in ("aplus", "tc", "aplong")}
+    ref_name = max(refs, key=refs.get)
+    a = m["S"] - refs[ref_name]
+    d_ref = st.stat({"S": v["S"], "aplus": v["aplus"], "tc": v["tc"], "aplong": v["aplong"]},
+                    lambda x: x["S"] - np.maximum(np.maximum(x["aplus"], x["tc"]), x["aplong"])) if all(x is not None for x in v.values()) else None
+    deep = None if not rows else np.array([(r.get("depth") or 0) >= 4 for r in rows])
+    d_rise = st.diff(v["S"], v["S1"], deep) if deep is not None and v["S"] is not None else None
+    d_keep = st.diff(v["S8"], v["S"], deep, ci=False) if deep is not None and v["S"] is not None else None
+    f1 = None if d_ref is None or d_ref["lo"] is None else (a >= F1_GAIN - EPS and d_ref["lo"] > 0)
+    f2 = None if d_rise is None or d_rise["lo"] is None or d_keep is None else (d_rise["value"] >= F2_RISE - EPS and d_rise["lo"] > 0 and d_keep["value"] >= -F2_KEEP - EPS)
+    wrong = [w for w, c in (("F1: gain below +0.5", a < F1_WRONG - EPS), ("F2: loops add < +0.5 on depth 4-6", d_rise is not None and d_rise["value"] < F2_WRONG - EPS)) if c]
+    outcome = "PASS: looping the block's own layers helps; halting marks apply" if f1 and f2 else ("PROVED WRONG (" + "; ".join(wrong) + ")") if wrong else "not shown"
+    halts = [(R.res.get(("br", sd)) or {}).get("halting") for sd in seeds]
+    h = halts[0] if halts and halts[0] else None
+    hal = None
+    if h:
+        bd = h["by_depth"]
+        mean_of = lambda ds: (lambda xs: sum(n * l for n, l in xs) / sum(n for n, _ in xs) if xs else None)([(bd[str(d)]["n"], bd[str(d)]["mean_loops"]) for d in ds if str(d) in bd])
+        lo_l, hi_l = mean_of((1, 2)), mean_of((4, 5, 6))
+        rise = None if lo_l is None or hi_l is None else hi_l - lo_l
+        rho = h.get("spearman_depth_loops")
+        h1 = 100 * h["acc"] >= (R.acc("br", seeds[0], "validation", "r4") or 0) - H1_KEEP - EPS and h["mean_loops"] <= H1_FRAC * 8 + EPS
+        h2 = rise is not None and rise >= H2_RISE - EPS
+        hal = {"acc": 100 * h["acc"], "mean_loops": h["mean_loops"], "loops_depth_1_2": lo_l, "loops_depth_4_6": hi_l, "rise": rise, "spearman": rho,
+               "H1": h1, "H2": h2, "wrong": rho is not None and rho <= H_WRONG_RHO + EPS, "judged": bool(f1 and f2), "rule": h.get("rule")}
+    loops_curve = {f"r{r}": float(np.mean([R.acc("br", sd, "validation", f"r{r}") or 0 for sd in seeds])) for r in (1, 2, 3, 4, 6, 8)}
+    sched = (R.res.get(("br", seeds[0])) or {}).get("loop_schedule") or {}
+    return {"status": "computed", "seeds": seeds, **m, "ref_name": ref_name, "S_minus_ref": a, "ci_ref": d_ref, "deep_rise": d_rise, "deep_r8_minus_r4": d_keep,
+            "F1": f1, "F2": f2, "wrong_by": wrong, "outcome": outcome, "halting": hal, "loops_curve": loops_curve, "schedule": sched,
+            "seed_rule": seed_rule([(a - F1_GAIN, a - F1_WRONG)] + ([(d_rise["value"] - F2_RISE, d_rise["value"] - F2_WRONG)] if d_rise else [(None, None)]), len(seeds)),
+            "by_depth": by_depth(st, rows, {f"r{r}": vec("br", f"r{r}") for r in (1, 2, 4, 8)} | {"aplus": v["aplus"], "tc": v["tc"], "aplong": v["aplong"]}, lab)}
+
+
 def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     res, excluded = drop_unmatched(res)
     R = Runs(res)
@@ -457,6 +506,7 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     out["intervals"] = cis
     out["think2"] = think2(R, st, bool(labelled))
     out["p1"], out["p2b"] = p1(R, st, rows, bool(labelled)), p2b(R, st, rows, bool(labelled))
+    out["br"] = pbr(R, st, rows, bool(labelled))
 
     # lesions (arm t, L=8, validation)
     sub = lambda x, y: None if x is None or y is None else x - y
@@ -817,6 +867,8 @@ def report(o, data_note=""):
         report_p1(o["p1"], P, ci_txt_)
     if o.get("p2b"):
         report_p2b(o["p2b"], P, ci_txt_)
+    if o.get("br"):
+        report_br(o["br"], P, ci_txt_)
     P("")
     P(f"VERDICT: {o['verdict']}")
     for w in o["why"]:
@@ -875,6 +927,32 @@ def report_p2b(x, P, ci):
     if x.get("by_depth"):
         P("accuracy by depth (no pass mark):")
         depth_table(P, x["by_depth"], ("S", "tsd1", "C1", "tc"))
+
+
+def report_br(x, P, ci):
+    P("")
+    P("== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==")
+    if x["status"] != "computed":
+        P(f"{ND:<16} {x['why']}")
+        return
+    mk = lambda v: ND if v is None else "PASS" if v else "FAIL"
+    sc = x["schedule"]
+    P(f"seeds {','.join(map(str, x['seeds']))}  br r4 {f2(x['S'])}  aplus {f2(x['aplus'])}  tc {f2(x['tc'])}  aplong {f2(x['aplong'])}  "
+      f"(train loops mean {f2(sc.get('mean'))}, compute ratio {f2(sc.get('compute_ratio'))}, block {sc.get('block')})")
+    P("validation by loop count: " + "  ".join(f"{k} {f2(v)}" for k, v in x["loops_curve"].items()))
+    P(f"{mk(x['F1']):<16} F1 S(r4) - max(aplus, tc, aplong) = {sg(x['S_minus_ref'])}{ci(x['ci_ref'])}   needs >= +{F1_GAIN:.1f}; proved wrong below +{F1_WRONG:.1f} (max is {x['ref_name']})")
+    dr, dk = x["deep_rise"], x["deep_r8_minus_r4"]
+    P(f"{mk(x['F2']):<16} F2 depth 4-6: S(r4) - S(r1) = {sg(dr and dr['value'])}{ci(dr) if dr else ''}   needs >= +{F2_RISE:.1f}; S(r8) - S(r4) = {sg(dk and dk['value'])}   needs >= -{F2_KEEP:.1f}")
+    P(f"OUTCOME: {x['outcome']};  seed rule: {x['seed_rule']}")
+    h = x.get("halting")
+    if h:
+        tag = "judged" if h["judged"] else "reported only (F1 and F2 must pass first)"
+        P(f"halting (answer-stable rule, {tag}): {f2(h['acc'])}% at mean {f2(h['mean_loops'])} loops; depth 1-2 {f2(h['loops_depth_1_2'])} vs depth 4-6 "
+          f"{f2(h['loops_depth_4_6'])} loops (rise {sg(h['rise'])}); Spearman(depth, loops) {f2(h['spearman'])}; H1 {mk(h['H1'])} H2 {mk(h['H2'])}"
+          + ("; WRONG: loops do not follow depth" if h["wrong"] else ""))
+    if x.get("by_depth"):
+        P("accuracy by depth (no pass mark):")
+        depth_table(P, x["by_depth"], ("r1", "r2", "r4", "r8", "aplus", "tc", "aplong"))
 
 
 def summarize(root, data="out/data", cluster="row"):

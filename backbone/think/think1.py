@@ -40,8 +40,8 @@ import board as B  # noqa: E402
 import steps as S  # noqa: E402
 from xent import fixed_cross_entropy  # noqa: E402
 
-ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1")
-STAGE1, STAGE2 = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1")
+ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong")
+STAGE1, STAGE2 = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong")
 BOARD = ("t", "t1", "tw", "tj", "tf", "tc", "tsd", "tsd1")  # BOARD arms build a ThinkBoard; only tj / tf / tc / tsd / tsd1 also train the LoRA (tc: board shut and frozen)
 JOINT = ("tj", "tf", "tc", "tsd", "tsd1")
 WRITTEN, SD = ("ws", "wsham"), ("tsd", "tsd1")  # P1 arms (LoRA only, no board); P2b arms (joint + step decoder)
@@ -51,6 +51,70 @@ GATE = dict(alpha=0.02, div=2.0, window=20)  # PREREG mechanics gate: only the g
 HEAD = 2000  # L16 / L24 are scored on the first 2,000 validation rows only
 FMT_ROWS = 500  # P1 format check: gold steps as input, on the first 500 validation rows that have steps
 MAX_NEW_STEPS = 384  # P1: tokens a model may write for its steps and answer
+BR_EVAL_LOOPS = (1, 2, 3, 4, 6, 8)  # arm br (Addendum F): validation is scored at each of these loop counts of the repeated block; "main" is BR_MAIN
+BR_MAIN, BR_TRAIN_MAX, BR_RAMP = 4, 6, 0.75  # training loop counts: 1 + Poisson(m - 1), capped at 6, with the mean m ramped 1 -> 4 over the first 75% of steps
+
+
+def loop_schedule(steps, seed, top=BR_MAIN, cap=BR_TRAIN_MAX, ramp=BR_RAMP):
+    """Arm br: the block's loop count for every step (Huginn / McLeish-style random depth with a ramped mean), from Random(seed): a fixed list, so
+    the compute-matched control can be sized from it before training."""
+    rng, out = random.Random(seed), []
+    for step in range(steps):
+        m = 1 + (top - 1) * min(1.0, step / max(1.0, ramp * steps))
+        k, prod, lim = 0, rng.random(), math.exp(-(m - 1))  # Knuth's Poisson(m - 1)
+        while prod > lim:
+            k += 1
+            prod *= rng.random()
+        out.append(min(cap, 1 + k))
+    return out
+
+
+def compute_ratio(loops, n_layers, size):
+    """Layer passes per step of a loop schedule over those of one plain pass."""
+    return sum(n_layers + size * (r - 1) for r in loops) / (len(loops) * n_layers)
+
+
+def halting_readout(rows, preds, hits, loops=BR_EVAL_LOOPS):
+    """Training-free halting (Addendum F / E): stop at the first loop count whose answer equals the previous one's (else the largest). preds / hits:
+    {r: list per row}. Returns accuracy, mean loops, mean loops by depth, and the Spearman correlation of depth (1-6) with the loops used."""
+    chosen = []
+    for i in range(len(rows)):
+        r_use = loops[-1]
+        for a, b in zip(loops, loops[1:]):
+            if preds[b][i] == preds[a][i]:
+                r_use = b
+                break
+        chosen.append(r_use)
+    acc = sum(hits[r][i] == "1" for i, r in enumerate(chosen)) / max(len(rows), 1)
+    by = {}
+    for d in sorted({r.get("depth") for r in rows}, key=lambda x: (x is None, x)):
+        idx = [i for i, r in enumerate(rows) if r.get("depth") == d]
+        by[str(d)] = dict(n=len(idx), mean_loops=sum(chosen[i] for i in idx) / len(idx), acc=sum(hits[chosen[i]][i] == "1" for i in idx) / len(idx))
+    deep = [(r["depth"], chosen[i]) for i, r in enumerate(rows) if isinstance(r.get("depth"), int) and r["depth"] >= 1]
+    return dict(acc=acc, mean_loops=sum(chosen) / max(len(chosen), 1), by_depth=by, spearman_depth_loops=spearman([d for d, _ in deep], [c for _, c in deep]),
+                rule="first r in %s whose answer equals the previous r's; else %d" % (list(loops[1:]), loops[-1]))
+
+
+def spearman(x, y):
+    """Spearman rank correlation with average ranks for ties (None if either side is constant)."""
+    def ranks(v):
+        order = sorted(range(len(v)), key=lambda i: v[i])
+        r, i = [0.0] * len(v), 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and v[order[j + 1]] == v[order[i]]:
+                j += 1
+            for k in range(i, j + 1):
+                r[order[k]] = (i + j) / 2
+            i = j + 1
+        return r
+    if len(x) < 2:
+        return None
+    rx, ry = ranks(x), ranks(y)
+    mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
+    sxy = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    sx, sy = math.sqrt(sum((a - mx) ** 2 for a in rx)), math.sqrt(sum((b - my) ** 2 for b in ry))
+    return sxy / (sx * sy) if sx and sy else None
 
 
 # ---------------------------------------------------------------- data
@@ -127,7 +191,7 @@ def lora_model(lm, adapter=None):
     return get_peft_model(lm, LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, target_modules=T.LORA_TARGETS, bias="none"))
 
 
-def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr, written=None):
+def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr, written=None, loops=None):
     """written (arms ws / wsham): "gold" or "sham". Every row of a batch is then also added as a written example (steps_of / filler text, " [steps]"
     prompt), after the direct examples; the rows, their order and the optimizer are those of aplus, and the loss is normalised by all target tokens."""
     params = [p for p in pm.parameters() if p.requires_grad]
@@ -139,6 +203,8 @@ def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, t
     for step in range(steps):
         ids = next(stream)
         batch = encode_batch(enc, rows, ids)
+        if loops is not None:  # arm br: this step's loop count of the repeated block
+            runner.loops = loops[step]
         if written:
             batch += [S.written_example(enc, rows[i], sham=written == "sham") for i in ids]
             cw = tr.setdefault("written_cut", dict(rows=0, cut_for_target=0))  # rows drawn, and of them those whose prompt lost context to make room for the written target
@@ -163,6 +229,9 @@ def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, t
             if (step + 1) % 50 == 0 or step + 1 == steps:
                 print(f"[train] step {step + 1}/{steps} loss {tr['loss_curve'][-1][1]:.4f} {time.time() - t0:.0f}s", flush=True)
     tr["seconds"] = time.time() - t0
+    if loops is not None:
+        tr["loops_hist"] = {str(r): loops.count(r) for r in sorted(set(loops))}
+        runner.loops = BR_MAIN
     if written:
         print(f"[written] prompts cut to make room for the written target: {tr['written_cut']['cut_for_target']} of {tr['written_cut']['rows']} drawn rows", flush=True)
     pm.eval()
@@ -175,7 +244,7 @@ def entry(hits):
 
 
 @torch.no_grad()
-def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False):
+def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False, keep_preds=False):
     """Greedy exact-match hits for arms a/b/aplus/bplus. Batches are built in descending length order, or ascending if reverse
     (different batch composition: used for the eval-noise rerun). Returns the entry with hits in file order.
     board_path (arms a, aplus): decode with board.prefill of prompt[:-1] + board.decode with no board read, the code eval_board runs on the same batches (same two segments), so S(8) and
@@ -184,6 +253,7 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
     order = order or runner.order
     prompts = [enc.prompt(r)[0] for r in rows]
     hit, t0, nb, done = ["0"] * len(rows), time.time(), 0, 0
+    preds = [""] * len(rows)
     h = min(HEAD, len(rows))  # board path: two separately sorted segments (rows < HEAD, rest) and no chunk across the boundary, exactly eval_board's batches
     segs = (range(h), range(h, len(rows))) if board_path and not reverse else (range(len(rows)),)
     for seg in segs:
@@ -204,13 +274,14 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
             else:
                 gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order)
             for i, g in zip(chunk, gen):
-                hit[i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == T.normalise(rows[i]["answer"]) else "0"
+                preds[i] = T.normalise(enc.tok.decode(g, skip_special_tokens=True))
+                hit[i] = "1" if preds[i] == T.normalise(rows[i]["answer"]) else "0"
             k += len(chunk)
             done += len(chunk)
             nb += 1
             if nb % 20 == 0:
                 print(f"[eval {name}] {done}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
-    return entry(hit)
+    return entry(hit) | (dict(preds=preds) if keep_preds else {})
 
 
 @torch.no_grad()
@@ -748,7 +819,7 @@ def run_arm(args):
     steps = args.steps or (STEPS2 if stage2 else STEPS1)
     k_slots = (args.k or (144 if arm == "tw" else 16)) if arm in BOARD else 0
     src = None
-    if arm in ("aplus", "t", "t1", "tw", "tj", "tf", "tc", *WRITTEN, *SD):
+    if arm in ("aplus", "t", "t1", "tw", "tj", "tf", "tc", *WRITTEN, *SD, "br", "aplong"):
         src = Path(args.a_adapter) if args.a_adapter else default_adapter(args, "a")
     elif arm == "bplus":
         src = Path(args.b_adapter) if args.b_adapter else default_adapter(args, "b")
@@ -828,12 +899,22 @@ def run_arm(args):
         result["params_trainable"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
         print(f"[lora] trainable params {result['params_trainable']:,}", flush=True)
         warm = min(100, steps // 10 or 1) if not stage2 else (2 if args.smoke else 60)
+        loops = None
+        if arm in ("br", "aplong"):  # Addendum F: br trains with random loop counts of the block; aplong is plain LoRA given br's extra layer passes as extra steps
+            loops = loop_schedule(steps, args.seed + 5000)
+            ratio = compute_ratio(loops, runner.n, runner.size)
+            result["loop_schedule"] = dict(seed=args.seed + 5000, mean=sum(loops) / len(loops), compute_ratio=ratio, block=[runner.start, runner.start + runner.size],
+                                           eval_loops=list(BR_EVAL_LOOPS), main=BR_MAIN)
+            if arm == "aplong":
+                steps, loops = round(steps * ratio), None
+                result["steps_stage2"] = steps
+            print(f"[loop] arm {arm}: br schedule mean {result['loop_schedule']['mean']:.2f} loops, compute ratio {ratio:.3f}; this run trains {steps} steps", flush=True)
         if arm in WRITTEN:
             with_steps = sum(bool(S.steps_of(r)) for r in train_rows)
             result["written"] = dict(tail=S.STEPS_TAIL, sham=arm == "wsham", max_new=args.max_new_steps, train_rows=len(train_rows), train_rows_with_steps=with_steps)
             print(f"[written] arm {arm}: {with_steps:,} of {len(train_rows):,} train rows have steps; each row is trained twice per batch", flush=True)
         train_lora(runner, pm, enc, train_rows, device, args, steps, warm, args.seed + 1000 if stage2 else args.seed, tr,
-                   written={"ws": "gold", "wsham": "sham"}.get(arm))
+                   written={"ws": "gold", "wsham": "sham"}.get(arm), loops=loops)
         pm.save_pretrained(out / "adapter")
         result["adapter_sha"] = adapter_sha(out / "adapter")
     runner.checkpoint = False
@@ -858,7 +939,18 @@ def run_arm(args):
                         idx = [i for i, r in enumerate(rows) if S.steps_of(r)][:FMT_ROWS]
                         ev[split]["fmt"] = dict(eval_written(runner, enc, [rows[i] for i in idx], device, args, sham, gold=True, name="format check"), row_idx=idx)
                     continue
-                bp = arm in ("a", "aplus")
+                if arm == "br":  # every loop count on validation (with the answers, for the halting readout); dev at BR_MAIN only
+                    rs = BR_EVAL_LOOPS if split == "validation" else (BR_MAIN,)
+                    for r in rs:
+                        ev[split][f"r{r}"] = eval_greedy(runner, enc, rows, device, args, order=T.block_order(runner.n, runner.start, r, runner.size),
+                                                         name=f"{split} r{r}", keep_preds=split == "validation")
+                    ev[split]["main"] = {k: v for k, v in ev[split][f"r{BR_MAIN}"].items() if k != "preds"}
+                    if split == "validation":
+                        result["halting"] = halting_readout(rows, {r: ev[split][f"r{r}"]["preds"] for r in rs}, {r: ev[split][f"r{r}"]["hits"] for r in rs})
+                        print(f"[halt] br answer-stable halting: {result['halting']['acc'] * 100:.2f}% at mean {result['halting']['mean_loops']:.2f} loops; "
+                              f"Spearman(depth, loops) {result['halting']['spearman_depth_loops']}", flush=True)
+                    continue
+                bp = arm in ("a", "aplus", "aplong")
                 ev[split]["main"] = eval_greedy(runner, enc, rows, device, args, name=f"{split} main", board_path=bp)
                 if arm == "b":
                     ev[split]["pass1"] = eval_greedy(runner, enc, rows, device, args, order=T.block_order(runner.n, runner.start, 1, runner.size), name=f"{split} pass1")
@@ -906,7 +998,7 @@ def smoke(args):
     data = smoke_data(args.data, root)
     rcs, t0 = {}, time.time()
     arms = [args.arm] if args.arm else list(ARMS)
-    if args.arm in (*JOINT, *WRITTEN) and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
+    if args.arm in (*JOINT, *WRITTEN, "br", "aplong") and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
         arms.insert(0, "a")  # tj / tf / tc start from a's adapter: train a first
     for arm in arms:
         print(f"== smoke arm {arm} {time.time() - t0:.0f}s", flush=True)

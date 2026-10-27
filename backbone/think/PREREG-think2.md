@@ -100,3 +100,29 @@ Raised by Ben: the assistant must decide by itself how many laps each problem ge
   laps is <= 0.6 x L_max. H2: mean laps on depth 4-6 rows minus depth 1-2 rows >= 1.0 (bootstrap interval excluding 0).
 - Wrong if the laps used don't rise with depth (Spearman rho <= 0.1 between depth and laps), or S_halt < S_fixed - 1.5.
 - It never changes another test's verdict; its run counts toward the 18 R cap.
+
+## Addendum F (2026-10-27 11:30Z, before any br or aplong result): loop the model's own layers
+Ben: "You have to get the loop to work." The notes block has failed every test so far, but Think-1's arm b (the
+model's own middle block run 3 times) beat aplus by about +0.85 over 3 seeds (suggested: not compute-matched, one loop
+count). This tests that lead directly, with a matched control and with halting in mind.
+- Arm `br`: from a_s0's adapter, the same rows, order seed, optimizer and 1,254 steps as aplus. Layers 8-11 (the
+  default block, 4 layers) run r times with shared weights and the shared LoRA, each pass with its own KV / DeltaNet
+  cache. r is drawn per step: 1 + Poisson(m - 1) capped at 6, with m ramped from 1 to 4 over the first 75% of steps
+  (McLeish-style retrofit; Random(seed + 5000), a fixed list: mean 2.80 at seed 0). Scored on validation at
+  r = 1, 2, 3, 4, 6, 8 (dev at r = 4 only); S = S(r4).
+- Control `aplong`: aplus with round(1,254 x compute ratio) steps, where the ratio is br's layer passes over plain
+  passes (1.30 at seed 0, so 1,630 steps). Same start, rows and optimizer. This answers "is it the loop, or just more
+  compute?"
+- Marks (seed 0; seeds 1-2 if a margin is within 1 point of its bar):
+  - F1: S(r4) - max(aplus, tc, aplong) >= +2.0, bootstrap interval excluding 0. Wrong if below +0.5.
+  - F2 (depth 4-6 rows, beyond train depth): S(r4) - S(r1) >= +2.0 (interval excluding 0) and S(r8) >= S(r4) - 1.0
+    (more loops must not break it). Wrong if S(r4) - S(r1) < +0.5.
+  - PASS needs F1 and F2. F2 alone is reported as "loops help on deep questions, not beyond a matched control".
+- Halting (Addendum E's marks, judged only if F1 and F2 pass; always reported): the training-free rule stops at the
+  first r in 2, 3, 4, 6, 8 whose answer equals the previous r's answer (else 8). H1: its accuracy >= S(r4) - 0.5 at
+  mean loops <= 0.6 x 8. H2: mean loops on depth 4-6 minus depth 1-2 >= 1.0 (point estimate: with ~1,500 and ~4,700
+  rows its interval is about +-0.1). Wrong if Spearman(depth, loops) <= 0.1. A trained stop head (Addendum E's
+  PonderNet arm) comes only after this rule passes or misses H1 alone.
+- Accuracy by depth at r = 1, 2, 4, 8 against aplus, tc and aplong is always reported (no pass mark).
+- PC order: br then aplong, ahead of P1. Both count toward the 18 R cap (about 1.0 R and 0.4 R).
+- Known bias: S(r1) is not a trained-at-1 model; br saw r = 1 on about a quarter of its steps.
