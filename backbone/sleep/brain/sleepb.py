@@ -4245,6 +4245,8 @@ def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap
             ap.error(f"--q4-packed is not for the delta arms {DELTA_ARMS} (they read the dense Linear weight)")
         if args.q4_bits not in (4, 8) or args.q4_group % 2:
             ap.error("--q4-packed packs 4 or 8 bits with an even --q4-group")
+    if args.q4_gguf and (args.q4_base or args.q4_eval or args.arm in DELTA_ARMS):
+        ap.error("--q4-gguf cannot be combined with --q4-base / --q4-eval / the delta arms")
     if args.mem_cap_gb is not None and not args.mem_cap_gb > 0:
         ap.error("--mem-cap-gb must be positive")
 
@@ -4281,6 +4283,11 @@ def load_base(args, device, dtype, log=print):  # load_model + the --q4-base ste
         q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
         log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
             + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
+    elif args.q4_gguf:  # frozen base = the dequantized official GGUF (q4gguf.py; LFM3), dense storage
+        import q4gguf
+        q4 = q4gguf.apply_gguf(lm, args.q4_gguf)
+        log(f"[q4gguf] {q4['tensors']} tensors from {args.q4_gguf}, rel Frobenius error vs the loaded weights min/median/max {q4['rel_fro']['min']:.3g}/{q4['rel_fro']['median']:.3g}/{q4['rel_fro']['max']:.3g}; "
+            + ", ".join(f"{t}: {d['tensors']}" for t, d in q4['by_type'].items()))
     return lm, tok, q4
 
 
@@ -4336,6 +4343,7 @@ def main():
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
+    ap.add_argument("--q4-gguf", metavar="PATH", default=None, help="LFM3: overwrite the frozen base with the dequantized official GGUF (the weights llama.cpp runs; q4gguf.py), dense storage; not with --q4-base")
     ap.add_argument("--q4-packed", action="store_true", help="with --q4-base: keep the frozen base as packed 4-bit codes (uint8 + 16-bit scale / bias, ~0.56 B/param, q4packed.py) instead of dense fake-quantized weights; "
                     "bit-identical results, fits an 8 GB GPU (K2-3.7B). The model loads on the CPU, is packed layer by layer on the GPU, then the rest moves over. Not with --q4-mlx-moe or the delta arms")
     ap.add_argument("--q4-packed-compile", choices=["auto", "on", "off"], default="auto", help="--q4-packed: torch.compile the dequant of the Linears (auto: on for cuda, off on cpu)")
@@ -4464,10 +4472,10 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False, "q4_packed": False, "q4_packed_compile": "auto", "mem_cap_gb": None,
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_gguf": None, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False, "q4_packed": False, "q4_packed_compile": "auto", "mem_cap_gb": None,
            "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
-              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
+              "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_gguf" if args.q4_gguf else "q4_base": q4} if q4 else {})}
 
     def dump(final):
         result["partial"] = not final
