@@ -109,7 +109,7 @@ def run(spec, log=print):
             return (lp * w).sum(), w.sum()
         pi = mx.array(pos)
         h = inner(x)[0][pi]
-        logits = head(h).astype(mx.float32)
+        logits = head(h.astype(mx.float32))  # float32 into the head: bf16 head(h[pos]) differs from model(x)[pos] by 1 ulp (0.125) on the M1
         y = mx.array([ids[1 + i] for i in pos])
         lp = mx.take_along_axis(logits - mx.logsumexp(logits, axis=-1, keepdims=True), y[:, None], axis=-1)[:, 0]
         return lp.sum(), mx.array(float(len(pos)))
