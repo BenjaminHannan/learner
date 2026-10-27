@@ -81,7 +81,10 @@ def main():
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--qs-store", choices=["model", "fp16"], default="fp16")
     ap.add_argument("--qs-round", choices=["stochastic", "nearest", "none"], default="nearest")
-    ap.add_argument("--base", choices=["q4", "bf16"], default="q4", help="q4: packed 4-bit base (the race); bf16: the full-precision base (validity check, lora only)")
+    ap.add_argument("--base", choices=["q4", "q4_0", "bf16"], default="q4", help="q4: packed MLX-affine 4-bit base, group 64 (K2 race); q4_0: llama.cpp Q4_0 fake-quantized base, group 32 "
+                    "(the GGUF the Mac serves; qs then trains scales only); bf16: the full-precision base (validity check, lora only)")
+    ap.add_argument("--q4-gguf", default="hf:LiquidAI/LFM3-1.7B-GGUF@b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf:LFM3-1.7B-QAD-Q4_0.gguf",
+                    help="--base q4_0: the served GGUF whose dequantized weights are the base (a path, or hf:REPO@REV:FILE, downloaded once); 'none' = fake-quantize the bf16 weights")
     ap.add_argument("--steps", type=int, default=300)
     ap.add_argument("--bsz", type=int, default=16)
     ap.add_argument("--nights", type=int, default=None, help="stop after this many nights (lr scouting); default every day of the week")
@@ -101,7 +104,7 @@ def main():
     a = ap.parse_args()
     if a.lr is None:
         a.lr = 2e-4 if a.storage == "lora" else 3e-3
-    if a.storage == "qs" and a.base != "q4":
+    if a.storage == "qs" and a.base == "bf16":
         ap.error("--storage qs needs the 4-bit base")
     if a.smoke:
         a.model, a.revision = (K2, K2_REV) if a.smoke_k2 else ("Qwen/Qwen3.5-2B", None)
@@ -125,7 +128,17 @@ def main():
     sb.mem_cap(a, device, log)
     if a.dtype == "fp16" and device.type == "cuda":
         sb.LOSS_SCALE[0] = 128.0
-    la = Namespace(model=a.model, revision=a.revision, smoke=a.smoke, q4_base=a.base == "q4", q4_packed=a.base == "q4" and not a.smoke, q4_group=64, q4_bits=4,
+    gguf = None
+    if a.base == "q4_0" and not a.smoke and a.q4_gguf != "none":
+        gguf = a.q4_gguf
+        if gguf.startswith("hf:"):
+            from huggingface_hub import hf_hub_download
+            repo, rest = gguf[3:].split("@", 1)
+            rev, fn = rest.split(":", 1)
+            gguf = hf_hub_download(repo, fn, revision=rev)
+        log(f"[base] served GGUF {gguf}")
+    la = Namespace(q4_gguf=gguf, model=a.model, revision=a.revision, smoke=a.smoke, q4_base=a.base != "bf16", q4_packed=a.base == "q4" and not a.smoke, q4_group=32 if a.base == "q4_0" else 64,
+                   q4_format="q4_0" if a.base == "q4_0" else "affine", q4_bits=4,
                    q4_mlx_moe=False, q4_packed_compile="auto", arm="race_mini", seed=a.seed)
     lm, tok, q4 = sb.load_base(la, device, dtype, log)
     L = Lang(tok, a.smoke, device, k2=lm.config.model_type == K2_TYPE)
@@ -139,7 +152,7 @@ def main():
         p.requires_grad_("lora_" in n and a.storage == "lora")
     res = {"args": vars(a), "q4": q4, "days": days, "nights": [], "scores": {}}
     if a.storage == "qs":
-        res["qs_setup"] = sb.setup_qs(pm, 64, 4, dtype)
+        res["qs_setup"] = sb.setup_qs(pm, 32, 4, torch.float16, fmt="q4_0") if a.base == "q4_0" else sb.setup_qs(pm, 64, 4, dtype)
         qs_dtype = torch.float16 if a.qs_store == "fp16" else dtype
         log(f"[qs] {res['qs_setup']}")
     res["trainable"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)

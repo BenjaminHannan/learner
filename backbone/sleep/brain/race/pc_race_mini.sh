@@ -3,6 +3,7 @@
 # free GPU, runs every arm-seed in order (each skipped when its DONE file exists, so a rerun resumes), then writes its done flag.
 # Pause between arm-seeds: create pc-jobs/handoff/PAUSE-RACE-MINI; the job finishes the running arm-seed, frees GPU-BUSY.txt, and waits until
 # the file is gone and GPU-BUSY.txt is empty again. Addendum 1 (PROTOCOL-mini): 75 steps a night; the validity check is the 300-step vs 75-step dose check.
+# Addendum 2: LFM3-1.7B on a llama.cpp Q4_0 (group 32) fake-quantized base (RM_MODEL overrides; arm args after it win), out dir fresh.
 #   bash pc_race_mini.sh <src dir with backbone/> <out dir>
 set -uo pipefail
 SRC=${1:?src}; OUT=${2:?out}
@@ -12,6 +13,7 @@ CARD=$J/race-mini.md
 GO=${RM_GO:-$J/handoff/GO-RACE-MINI}
 PAUSE=${RM_PAUSE:-$J/handoff/PAUSE-RACE-MINI}
 DONEFLAG=${RM_DONEFLAG:-$J/handoff/RACE-MINI-DONE}
+MA=${RM_MODEL-"--model LiquidAI/LFM3-1.7B --revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd --base q4_0"}
 export SLEEPB_CUDA_CAP_GIB=${SLEEPB_CUDA_CAP_GIB:-14}  # a capped run fails with a real OOM instead of spilling into system memory (WSL)
 mkdir -p "$OUT"
 [ -f ~/bbvenv/bin/activate ] && source ~/bbvenv/bin/activate
@@ -46,7 +48,7 @@ run() {  # name, then race_mini args
   fi
   log "start $n: $*"
   nvidia-smi --query-gpu=memory.used --format=csv,noheader >> "$OUT/job.log" 2>/dev/null
-  python "$B/race/race_mini.py" --out "$OUT/$n" "$@" ${RM_EXTRA:-} > "$OUT/$n.stdout" 2>&1
+  python "$B/race/race_mini.py" --out "$OUT/$n" $MA "$@" ${RM_EXTRA:-} > "$OUT/$n.stdout" 2>&1
   local r=$?
   log "end $n rc=$r"
   [ $r -eq 0 ] || RC=$r
@@ -61,8 +63,8 @@ PY
 }
 R2="--tape $T/tape_week2.json --week $W2"
 
-# Addendum 1 (PROTOCOL-mini): the race runs at 75 steps a night (the 300-step add-on control scored 0.98 final, at the ceiling).
-# 1. validity check, seed 1: the existing 300-step control (lora_s1) must beat the 75-step control by >= 2 points
+# Addendum 1 (PROTOCOL-mini): the race runs at 75 steps a night (the 300-step K2 add-on control scored 0.98 final, at the ceiling).
+# 1. validity check, seed 1: the 300-step control (lora_s1) must beat the 75-step control by >= 2 points
 S="--steps 75"
 run lora_s1 $R2 --storage lora --seed 1
 run c75_s1 $R2 --storage lora $S --seed 1
@@ -107,4 +109,6 @@ run qs_s1 $R2 --storage qs --lr "$QLR" $S --seed 1
 # 3. seed 2 of both treatment arms (the dose check is seed 1 only)
 run lp16_s2 $R2 --storage lora --lora-plus 16 $S --seed 2
 run qs_s2 $R2 --storage qs --lr "$QLR" $S --seed 2
+# 4. reported only, not a gate (addendum 2): the add-on on the bf16 base, 75 steps, seed 1 (what the Q4_0 base costs the add-on)
+run bf16c75_s1 $R2 --storage lora $S --base bf16 --seed 1
 log "all runs attempted"
