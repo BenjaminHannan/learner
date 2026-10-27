@@ -275,6 +275,11 @@ class Lane:
         if self.wmode == "oc" and self.kind != "night":
             self.backend = self.make_oc_backend(self.adapter)
         elif self.kind == "night" or self.wmode == "hf":
+            cap = float(os.environ.get("PRACTICE_CUDA_CAP_GIB") or 0)
+            if cap and self.dev == "cuda":  # WSL never reports OOM: past the card's memory PyTorch spills into shared system memory and crawls; a cap makes it a real OOM
+                import torch
+                torch.cuda.set_per_process_memory_fraction(min(1.0, cap * 2 ** 30 / torch.cuda.get_device_properties(0).total_memory))
+                self.log(f"CUDA cap {cap} GiB")
             self.model = load_model(self.name, self.dt, self.dev, nf4=bool(getattr(a, "nf4", False)))
             assert_finite_forward(self.model, self.tok, self.log)
             if self.kind != "night" and self.adapter:

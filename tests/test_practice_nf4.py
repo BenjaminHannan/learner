@@ -48,3 +48,14 @@ def test_night_worker_passes_nf4(monkeypatch):
     lane.tok, lane.log = None, print
     lane.setup_worker()
     assert calls == [True]
+
+
+def test_cuda_cap_env_ignored_on_cpu(monkeypatch):
+    monkeypatch.setenv("PRACTICE_CUDA_CAP_GIB", "14")
+    monkeypatch.setattr(job, "load_model", lambda name, dt, dev, nf4=False: object())
+    monkeypatch.setattr(job, "assert_finite_forward", lambda *a, **k: None)
+    lane = job.Lane.__new__(job.Lane)
+    lane.a = types.SimpleNamespace(nf4=False)
+    lane.wmode, lane.kind, lane.name, lane.dt, lane.dev, lane.adapter = "hf", "night", "k2", torch.float32, "cpu", None
+    lane.tok, lane.log = None, print
+    lane.setup_worker()
