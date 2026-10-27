@@ -113,3 +113,22 @@ def test_preflight_br_worst_case(tmp_path):
     assert set(rep) == {"br"}
     r = json.loads((tmp_path / "pf" / "br_s0" / "result_br_s0.json").read_text())
     assert r["train"]["loops_hist"] == {str(K.BR_TRAIN_MAX): 3}
+
+
+def test_eval_adapter_matches_the_training_run(tmp_path):
+    """eval_adapter.py rescoring arm a's saved adapter on the same rows gives arm a's own hits (the cross-card check passes on one card), and
+    --loops 1 gives the same hits as the board path."""
+    import eval_adapter as EA
+    fx = TK.fixture()
+    base = Path(fx["root"]) / "base" / "a_s0"
+    ref = base / "result_a_s0.json"
+    n = json.loads(ref.read_text())["eval"]["validation"]["main"]["n"]
+    common = ["--smoke", "--adapter", str(base / "adapter"), "--data", str(fx["data"]), "--limit-eval", str(n), "--max-len", "256"]
+    assert EA.main([*common, "--board-path", "--ref", str(ref), "--out", str(tmp_path / "a.json")]) == 0
+    r = json.loads((tmp_path / "a.json").read_text())
+    assert r["ref"]["ok"] and r["ref"]["same_hit"] == 1.0 and r["ref"]["acc_diff_pts"] == 0.0 and r["adapter_sha"]
+    assert EA.main([*common, "--loops", "1,2", "--out", str(tmp_path / "l.json")]) == 0
+    q = json.loads((tmp_path / "l.json").read_text())
+    assert q["eval"]["r1"]["hits"] == r["eval"]["main"]["hits"] and set(q["eval"]) == {"r1", "r2"} and sum(v["n"] for v in q["eval"]["r1"]["by_depth"].values()) == n
+    c = EA.compare("1100", "1000")
+    assert c["acc_diff_pts"] == 25.0 and c["same_hit"] == 0.75 and not c["ok"]

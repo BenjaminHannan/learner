@@ -111,7 +111,8 @@ def run_arm(arm, args, adapter, out):
         return real(self, *a, **k)
 
     a = K.parse(["--arm", arm, "--seed", str(args.seed), "--data", str(args.data), "--out", str(out / f"{arm}_s{args.seed}"), "--model", args.model,
-                 "--steps", str(args.steps), "--limit-eval", "16", "--a-adapter", str(adapter), "--alpha-init", str(args.alpha_init), *(["--smoke"] if args.smoke else [])])
+                 "--steps", str(args.steps), "--limit-eval", "16", "--a-adapter", str(adapter), "--alpha-init", str(args.alpha_init), "--micro-bsz", str(args.micro_bsz),
+                 *(["--smoke"] if args.smoke else [])])
     if args.smoke:
         a.gate_step, a.log_every, a.max_len, a.bsz, a.micro_bsz = 4, 10**6, 256, 8, 4
     torch.optim.AdamW.step = spy
@@ -152,6 +153,7 @@ def main(argv=None):
     ap.add_argument("--max-len", type=int, default=2048)
     ap.add_argument("--lmax", type=int, default=4)
     ap.add_argument("--smoke", action="store_true", help="tiny random model on the CPU (tests this script)")
+    ap.add_argument("--micro-bsz", type=int, default=4, help="as the run it checks (run_box MICRO); 2 on a 12 GB card if 4 does not fit")
     ap.add_argument("--arms", default="tsd,ws", help="tsd,ws (P1 / P2b, with the gradient checks) or br (Addendum F, worst-case loops)")
     args = ap.parse_args(argv)
     out, adapter = Path(args.out), Path(args.a_adapter)
