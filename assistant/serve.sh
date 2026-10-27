@@ -1,6 +1,10 @@
 #!/bin/bash
 # Start the big model, optional small model, and the gateway. Idempotent.
-# Usage: serve.sh [--yes]
+# Usage: serve.sh [--yes | --autostart]
+#   --yes        non-interactive, skips the safety questions.
+#   --autostart  non-interactive for the login LaunchAgent, but keeps the safety checks: when
+#                PAUSE_OTHERS exists, another model job runs, or memory is short, it logs a line and
+#                exits 0 instead of asking.
 # Saved settings (e.g. ASSISTANT_SMALL_MODEL) live in ~/learner-ops/assistant/config.sh.
 [ -f "$HOME/learner-ops/assistant/config.sh" ] && . "$HOME/learner-ops/assistant/config.sh"
 PY="${ASSISTANT_PY:-$HOME/learner-ops/speedbench/venv312/bin/python}"
@@ -28,20 +32,57 @@ VLM_VENV="${ASSISTANT_VLM_VENV:-$HOME/learner-ops/vlm-venv}"
 VLM_MODEL="${ASSISTANT_VLM_MODEL:-$HOME/learner-ops/models/qwen35-2b-vlm}"
 VLM_PORT="${ASSISTANT_VLM_PORT:-18082}"
 VLM_PY="$VLM_VENV/bin/python"
+# Ready = venv python, model config, and mlx_vlm importable (a half-made venv or download doesn't count).
+vlm_ready() { [ -x "$VLM_PY" ] && [ -f "$VLM_MODEL/config.json" ] && "$VLM_PY" -c 'import mlx_vlm' >/dev/null 2>&1; }
 if [ -z "${ASSISTANT_VISION:-}" ]; then
-  if [ -x "$VLM_PY" ] && [ -d "$VLM_MODEL" ]; then ASSISTANT_VISION=1; else ASSISTANT_VISION=0; fi
+  if vlm_ready; then ASSISTANT_VISION=1; else ASSISTANT_VISION=0; fi
 fi
 
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 BIG_PORT=18080; SMALL_PORT=18081; GW_PORT=8090  # models off 8080/8081, which experiment jobs use
-YES=0; [ "${1:-}" = "--yes" ] && YES=1
+YES=0; AUTO=0
+for arg in "$@"; do
+  case "$arg" in --yes) YES=1 ;; --autostart) AUTO=1 ;; esac
+done
 mkdir -p "$RUN" "$OPS/diary"
 
-alive()   { [ -f "$RUN/$1.pid" ] && kill -0 "$(cat "$RUN/$1.pid")" 2>/dev/null; }
+# One serve.sh at a time. A lock left by a crash or reboot (its pid is gone) is cleared.
+take_lock() {
+  mkdir "$RUN/serve.lock" 2>/dev/null && { echo $$ > "$RUN/serve.lock/pid"; return 0; }
+  local lp; lp="$(cat "$RUN/serve.lock/pid" 2>/dev/null)"
+  if [ -n "$lp" ] && ! kill -0 "$lp" 2>/dev/null; then
+    rm -rf "$RUN/serve.lock"
+    mkdir "$RUN/serve.lock" 2>/dev/null && { echo $$ > "$RUN/serve.lock/pid"; return 0; }
+  fi
+  return 1
+}
+if ! take_lock; then
+  echo "$(date '+%F %T') another serve.sh is already running; not starting a second one."
+  [ $AUTO = 1 ] && exit 0
+  exit 1
+fi
+trap 'rm -rf "$RUN/serve.lock"' EXIT
+
+# Is this pid really our process? (A pid file can outlive a reboot and name an unrelated process.)
+ours_re() {  # name -> pattern
+  case "$1" in big) echo "mlx_lm|mlx_server_persist" ;; small) echo "mlx_lm" ;; vlm) echo "mlx_vlm" ;;
+    gateway) echo "gateway.py" ;; watchdog) echo "watchdog" ;; esac
+}
+alive()   {  # name: pid file names a live process that is ours
+  local pid; pid="$(cat "$RUN/$1.pid" 2>/dev/null)"
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && ps -p "$pid" -o command= 2>/dev/null | grep -qE "$(ours_re "$1")"
+}
 answers() { curl -fsS -m 2 "http://127.0.0.1:$1$2" >/dev/null 2>&1; }
 up()      { alive "$1" && answers "$2" "$3"; }   # name port path
+
+# Ask a yes/no question; under --autostart log and exit 0 (not an error) instead.
+confirm() {  # reason
+  if [ $AUTO = 1 ]; then echo "$(date '+%F %T') autostart: not starting ($1)"; exit 0; fi
+  printf "%s" "$2"; read -r ans
+  case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+}
 
 wait_for() {  # name port path timeout
   local i=0
@@ -55,24 +96,33 @@ wait_for() {  # name port path timeout
 
 launch() {  # name command...
   local name="$1"; shift
-  nohup "$@" >"$RUN/$name.log" 2>&1 < /dev/null &
+  if [ "$name" = watchdog ]; then   # append: the log must show earlier trips
+    nohup "$@" >>"$RUN/$name.log" 2>&1 < /dev/null &
+  else
+    nohup "$@" >"$RUN/$name.log" 2>&1 < /dev/null &
+  fi
   echo $! > "$RUN/$name.pid"
 }
 
-need_big=1;   up big   $BIG_PORT /v1/models && need_big=0
-need_small=0; [ -n "$SMALL_MODEL" ] && { up small $SMALL_PORT /v1/models || need_small=1; }
-need_vlm=0;   [ "$ASSISTANT_VISION" = 1 ] && { up vlm $VLM_PORT /health || need_vlm=1; }
-need_gw=1;    up gateway $GW_PORT /v1/models && need_gw=0
+# A process that is alive but not answering yet (still loading) is "starting": wait for it below,
+# never kill and relaunch it. Only a missing or dead one is launched.
+need_big=1;   alive big && need_big=0
+need_small=0; [ -n "$SMALL_MODEL" ] && { alive small || need_small=1; }
+need_vlm=0;   [ "$ASSISTANT_VISION" = 1 ] && { alive vlm || need_vlm=1; }
+need_gw=1;    alive gateway && need_gw=0
 
-if [ $need_big = 0 ] && [ $need_small = 0 ] && [ $need_vlm = 0 ] && [ $need_gw = 0 ]; then
+if up big $BIG_PORT /v1/models && [ $need_small = 0 ] && [ $need_vlm = 0 ] && [ $need_gw = 0 ] &&
+   up gateway $GW_PORT /v1/models &&
+   { [ -z "$SMALL_MODEL" ] || up small $SMALL_PORT /v1/models; } &&
+   { [ "$ASSISTANT_VISION" != 1 ] || up vlm $VLM_PORT /health; }; then
   echo "Assistant is already running."; exit 0
 fi
+launching=$((need_big + need_small + need_vlm + need_gw))
 
 # Another job may have reserved the Mac for experiments.
-if [ -f "$OPS/PAUSE_OTHERS" ] && [ $YES = 0 ]; then
+if [ -f "$OPS/PAUSE_OTHERS" ] && [ $YES = 0 ] && [ $launching -gt 0 ]; then
   echo "Another job reserved the Mac:"; cat "$OPS/PAUSE_OTHERS"; echo
-  printf "Start the assistant anyway? [y/N] "; read -r ans
-  case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+  confirm "PAUSE_OTHERS exists" "Start the assistant anyway? [y/N] "
 fi
 
 [ -x "$PY" ] || { echo "Python not found at $PY (set ASSISTANT_PY)"; exit 1; }
@@ -83,8 +133,7 @@ others=$(ps axo pid=,command= | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" |
   while read -r pid cmd; do case " $ours " in (*" $pid "*) ;; (*) echo "$pid $cmd" ;; esac; done)
 if [ -n "$others" ] && [ $need_big = 1 ] && [ $YES = 0 ]; then
   echo "Another model job is running on this Mac:"; echo "$others" | cut -c1-160
-  printf "Running both can run the Mac out of memory. Start anyway? [y/N] "; read -r ans
-  case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+  confirm "another model job is running" "Running both can run the Mac out of memory. Start anyway? [y/N] "
 fi
 
 # Memory guard: the big model needs ~21 GB. Ben's Mac swapped hard on Oct 25 when two
@@ -95,13 +144,12 @@ if [ $need_big = 1 ] && [ $YES = 0 ] && command -v vm_stat >/dev/null; then
   need=20; [ $need_small = 1 ] && need=25; [ $need_vlm = 1 ] && need=$((need + 2))
   if [ "$avail" -lt "$need" ]; then
     echo "Only about $avail GB of memory is free; the assistant needs about $need GB."
-    echo "Quit big apps (or other model jobs) first. Start anyway? [y/N] "; read -r ans
-    case "$ans" in y|Y|yes|YES) ;; *) echo "Not started."; exit 1 ;; esac
+    confirm "only about $avail GB of memory is free, need about $need" \
+      "Quit big apps (or other model jobs) first. Start anyway? [y/N] "
   fi
 fi
 
 if [ $need_big = 1 ]; then
-  alive big && kill "$(cat "$RUN/big.pid")" 2>/dev/null
   echo "Starting big model ($BIG_MODEL) ..."
   if [ "$PERSIST_CACHE" = 1 ]; then
     BIG_CMD=("$PY" "$DIR/mlx_server_persist.py" --cache-dir "$RUN/kvcache")
@@ -114,7 +162,6 @@ if [ $need_big = 1 ]; then
     --temp 0.6 --top-p 0.95 --top-k 20
 fi
 if [ $need_small = 1 ]; then
-  alive small && kill "$(cat "$RUN/small.pid")" 2>/dev/null
   echo "Starting small model ($SMALL_MODEL) ..."
   # SMALL_ARGS is split on spaces on purpose; mlx_lm wants the template text, not a path
   if [ -n "$SMALL_TEMPLATE" ] && [ -f "$SMALL_TEMPLATE" ]; then
@@ -128,11 +175,10 @@ if [ $need_small = 1 ]; then
   fi
 fi
 if [ $need_vlm = 1 ]; then
-  if [ ! -x "$VLM_PY" ] || [ ! -d "$VLM_MODEL" ]; then
+  if ! vlm_ready; then
     echo "Image reader not installed ($VLM_VENV / $VLM_MODEL); run install.sh --vision. Continuing without it."
     need_vlm=0; ASSISTANT_VISION=0
   else
-    alive vlm && kill "$(cat "$RUN/vlm.pid")" 2>/dev/null
     echo "Starting image reader ($VLM_MODEL) on port $VLM_PORT ..."
     # The gateway must send this same --model string, or mlx_vlm.server would try to load another model.
     launch vlm "$VLM_PY" -m mlx_vlm.server --model "$VLM_MODEL" --host 127.0.0.1 --port $VLM_PORT \
@@ -140,7 +186,6 @@ if [ $need_vlm = 1 ]; then
   fi
 fi
 if [ $need_gw = 1 ]; then
-  alive gateway && kill "$(cat "$RUN/gateway.pid")" 2>/dev/null
   echo "Starting gateway on port $GW_PORT ..."
   launch gateway "$PY" -u "$DIR/gateway.py" --big-url "http://127.0.0.1:$BIG_PORT" \
     --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT \
@@ -159,6 +204,10 @@ write_marker
 
 # Memory watchdog (stops everything at critical pressure or sustained warning; see watchdog.sh).
 if ! alive watchdog; then
+  # Keep a record of earlier trips before clearing the marker.
+  if [ -f "$OPS/assistant/WATCHDOG_STOPPED" ]; then
+    echo "$(date '+%F %T') $(cat "$OPS/assistant/WATCHDOG_STOPPED")" >> "$RUN/watchdog-history.log"
+  fi
   rm -f "$OPS/assistant/WATCHDOG_STOPPED"
   launch watchdog /bin/bash "$DIR/watchdog.sh"
 fi

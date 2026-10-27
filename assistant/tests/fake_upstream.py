@@ -2,6 +2,7 @@
 import json
 import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -99,6 +100,7 @@ class V(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         self.server.requests.append(body)
+        time.sleep(self.server.delay)
         if self.server.fail:
             return self._json({"error": {"message": "boom"}}, 500)
         url = body["messages"][0]["content"][0]["image_url"]["url"]
@@ -108,7 +110,7 @@ class V(BaseHTTPRequestHandler):
 
 def start_vision(port=0):
     srv = ThreadingHTTPServer(("127.0.0.1", port), V)
-    srv.requests, srv.fail = [], False
+    srv.requests, srv.fail, srv.delay = [], False, 0
     srv.daemon_threads = True
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv

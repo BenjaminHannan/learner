@@ -101,19 +101,32 @@ PYEOF
 # the main venv) plus a 1.75 GB model; about 2.5 GB of disk in all. Skipped when already present.
 if [ $WANT_VISION = 1 ]; then
   echo "Image reader: needs about 2.5 GB of disk ($VLM_VENV and $VLM_MODEL)."
-  if [ ! -x "$VLM_VENV/bin/python" ]; then
-    python3 -m venv "$VLM_VENV" && "$VLM_VENV/bin/python" -m pip install -q --upgrade pip &&
-      "$VLM_VENV/bin/python" -m pip install -q "mlx-vlm==0.7.10" ||
-      echo "Could not set up the vision venv; images will show as unreadable."
-  else
+  if [ -x "$VLM_VENV/bin/python" ] && "$VLM_VENV/bin/python" -c 'import mlx_vlm' >/dev/null 2>&1; then
     echo "  vision venv already there; skipped."
-  fi
-  if [ ! -f "$VLM_MODEL/config.json" ] && [ -x "$VLM_VENV/bin/python" ]; then
-    mkdir -p "$VLM_MODEL" && "$VLM_VENV/bin/python" -c \
-      'import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1], local_dir=sys.argv[2])' \
-      "$VLM_REPO" "$VLM_MODEL" || echo "Could not download $VLM_REPO."
   else
+    echo "  setting up the vision venv ..."
+    python3 -m venv "$VLM_VENV" && "$VLM_VENV/bin/python" -m pip install -q --upgrade pip &&
+      "$VLM_VENV/bin/python" -m pip install -q "mlx-vlm==0.7.10" &&
+      "$VLM_VENV/bin/python" -c 'import mlx_vlm' &&
+      echo "  vision venv ready." ||
+      echo "  Could not set up the vision venv; images will show as unreadable."
+  fi
+  if [ -f "$VLM_MODEL/config.json" ]; then
     echo "  vision model already there; skipped."
+  elif [ -x "$VLM_VENV/bin/python" ]; then
+    # Download beside the target and rename, so a cut-off download never looks like a finished model.
+    TMP_MODEL="$VLM_MODEL.part.$$"
+    rm -rf "$TMP_MODEL"; mkdir -p "$(dirname "$VLM_MODEL")"
+    if "$VLM_VENV/bin/python" -c \
+      'import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1], local_dir=sys.argv[2])' \
+      "$VLM_REPO" "$TMP_MODEL" && [ -f "$TMP_MODEL/config.json" ]; then
+      rm -rf "$VLM_MODEL" && mv "$TMP_MODEL" "$VLM_MODEL" && echo "  vision model downloaded."
+    else
+      rm -rf "$TMP_MODEL"
+      echo "  Could not download $VLM_REPO."
+    fi
+  else
+    echo "  vision model not downloaded (no vision venv)."
   fi
 elif [ ! -x "$VLM_VENV/bin/python" ]; then
   echo "Images are not readable yet. To add the small image reader (about 2.5 GB), run: $SRC/install.sh --vision"
@@ -139,7 +152,14 @@ chmod +x "$DEST/launchers/"*.command
 cp "$DEST/launchers/"*.command "$HOME/Desktop/" 2>/dev/null ||
   echo "Could not put the launchers on the Desktop (macOS privacy); drag them from $DEST/launchers"
 
-# Start at login (LaunchAgent). ASSISTANT_AUTOSTART=0 removes it.
+# Start at login (LaunchAgent). ASSISTANT_AUTOSTART=0 removes it. The choice is saved in config.sh,
+# so a later plain re-run keeps it; an ASSISTANT_AUTOSTART in the environment changes it.
+if [ -n "${ASSISTANT_AUTOSTART:-}" ]; then
+  { grep -v '^ASSISTANT_AUTOSTART=' "$DEST/config.sh"; echo "ASSISTANT_AUTOSTART=$ASSISTANT_AUTOSTART"; } \
+    > "$DEST/config.sh.new" && mv "$DEST/config.sh.new" "$DEST/config.sh"
+else
+  ASSISTANT_AUTOSTART="$(. "$DEST/config.sh" >/dev/null 2>&1; echo "${ASSISTANT_AUTOSTART:-1}")"
+fi
 AGENT="$HOME/Library/LaunchAgents/com.premonition.assistant.plist"
 if [ "${ASSISTANT_AUTOSTART:-1}" = 1 ]; then
   mkdir -p "$(dirname "$AGENT")"
@@ -151,7 +171,7 @@ if [ "${ASSISTANT_AUTOSTART:-1}" = 1 ]; then
 <dict>
   <key>Label</key><string>com.premonition.assistant</string>
   <key>ProgramArguments</key>
-  <array><string>/bin/bash</string><string>$DEST/serve.sh</string><string>--yes</string></array>
+  <array><string>/bin/bash</string><string>$DEST/serve.sh</string><string>--autostart</string></array>
   <key>RunAtLoad</key><true/>
   <key>AbandonProcessGroup</key><true/>
   <key>StandardOutPath</key><string>$DEST/run/autostart.log</string>
@@ -162,7 +182,14 @@ PLIST
   plutil -lint "$AGENT" >/dev/null || exit 1
   # bootstrap also runs it now (RunAtLoad); serve.sh is a no-op when already running
   launchctl bootout "gui/$(id -u)/com.premonition.assistant" 2>/dev/null
-  launchctl bootstrap "gui/$(id -u)" "$AGENT" && echo "autostart on: $AGENT"
+  # bootout can finish after it returns, and bootstrap then fails with an I/O error: retry.
+  booted=0
+  for try in 1 2 3; do
+    if err="$(launchctl bootstrap "gui/$(id -u)" "$AGENT" 2>&1)"; then booted=1; break; fi
+    echo "launchctl bootstrap failed (try $try of 3): $err"
+    [ $try -lt 3 ] && sleep 1
+  done
+  [ $booted = 1 ] && echo "autostart on: $AGENT" || echo "autostart NOT started; it will still run at next login."
 elif [ -f "$AGENT" ]; then
   launchctl bootout "gui/$(id -u)/com.premonition.assistant" 2>/dev/null
   rm -f "$AGENT" && echo "autostart off: removed $AGENT"

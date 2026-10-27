@@ -40,8 +40,9 @@ JUDGE_MAX_CHARS = 2000
 TITLE_SYSTEM = ("Write a short title (three to five words) for this chat. Reply with the title "
                 "only: one line, no quotes, no trailing period. For greetings use \"Greeting\".")
 TITLE_MAX_CHARS, TITLE_MAX_TOKENS = 1000, 24
-# Qwen3.6 model card, "Instruct (or non-thinking) mode"; used only when the client sends none.
-FAST_SAMPLING = {"temperature": 0.7, "top_p": 0.8, "presence_penalty": 1.5}
+# Qwen3.6 model card, "Instruct (or non-thinking) mode", except presence_penalty 1.0 (card: 1.5; on
+# the M1 1 in 4 short replies rambled to the cap with new questions); used only when the client sends none.
+FAST_SAMPLING = {"temperature": 0.7, "top_p": 0.8, "presence_penalty": 1.0}
 REWARM_IDLE_S = 60  # after the last request ends, re-send the warm prefix (cheap when still cached)
 JUDGE_PROMPT = (
     "(Internal check, not from Ben.) Rate how much careful step-by-step "
@@ -56,6 +57,9 @@ VISION_PROMPT = (
     "Describe this image for someone who cannot see it. Transcribe all visible text exactly. "
     "Note layout, UI elements, numbers, people, objects.")
 VISION_OFFLINE = "could not be read, the image reader is offline"
+VISION_UNREADABLE = "could not be read"   # missing or empty image ref
+VISION_BUDGET_S = 90        # total caption time per request; later images get the fallback text
+VISION_PROMPT_SHA = hashlib.sha256(VISION_PROMPT.encode("utf-8")).hexdigest()[:16]
 
 
 def log(*a):
@@ -252,8 +256,11 @@ class Gateway:
         self.diary = Diary(diary_dir)
         self.vision_url = (vision_url or "").rstrip("/")
         self.vision_model = vision_model or ""   # must equal mlx_vlm.server's --model string
-        self._vlock = threading.Lock()           # one vision call at a time (also dedupes same image)
-        self._vmem = collections.OrderedDict()   # image hash -> caption (LRU)
+        self._vlock = threading.Lock()           # guards the caption caches only, never held over a network call
+        self._vmem = collections.OrderedDict()   # cache key -> caption (LRU)
+        self._vfail = collections.OrderedDict()  # image hash -> pinned failure text (memory only)
+        self._vsave_lock = threading.Lock()
+        self._vflight = {}                       # cache key -> Event of the call in flight
         self._vdown_until = 0.0
         self._vup = (0.0, False)
         self._vfile = self.diary.root / "vision_cache.json"
@@ -415,14 +422,15 @@ class Gateway:
         except (OSError, http.client.HTTPException, ValueError, AttributeError):
             return "default"
 
-    def _vision_save(self):
-        try:
-            tmp = self._vfile.with_suffix(".tmp")
-            self._vfile.parent.mkdir(parents=True, exist_ok=True)
-            tmp.write_text(json.dumps(self._vdisk, ensure_ascii=False), encoding="utf-8")
-            tmp.replace(self._vfile)
-        except OSError as e:
-            log("vision: cache save failed:", repr(e))
+    def _vision_save(self, data):
+        with self._vsave_lock:  # saves are serialized; the lock is held only for the file write
+            try:
+                tmp = self._vfile.with_suffix(".tmp")
+                self._vfile.parent.mkdir(parents=True, exist_ok=True)
+                tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+                tmp.replace(self._vfile)
+            except OSError as e:
+                log("vision: cache save failed:", repr(e))
 
     def _vision_call(self, ref):
         """POST one image to the vision server -> caption text. Raises on any failure."""
@@ -448,37 +456,84 @@ class Gateway:
             raise ValueError("empty caption")
         return cap
 
-    def caption(self, ref, h):
-        """Caption for an image (cached by hash). None if the vision server can't deliver one."""
-        with self._vlock:
-            cap = self._vmem.get(h)
-            if cap is None:
-                cap = self._vdisk.get(h)
-            if cap is not None:
-                self._vmem[h] = cap
-                self._vmem.move_to_end(h)
-                while len(self._vmem) > VISION_MEM_MAX:
-                    self._vmem.popitem(last=False)
-                return cap
-            if not self.vision_url or not ref or time.time() < self._vdown_until:
-                return None
-            t0 = time.time()
-            try:
-                cap = self._vision_call(ref)
-            except Exception as e:  # refused, timeout, bad image, bad JSON ...
-                log("vision: caption failed (%s): %r" % (h[:12], e))
-                if not isinstance(e, ValueError):  # server unreachable or too slow
-                    self._vdown_until = time.time() + VISION_DOWN_S
-                return None
-            log("vision: captioned %s in %.1fs (%d chars)" % (h[:12], time.time() - t0, len(cap)))
-            self._vmem[h] = cap
-            self._vdisk[h] = cap
-            while len(self._vdisk) > VISION_DISK_MAX:
-                self._vdisk.pop(next(iter(self._vdisk)))
+    def _vkey(self, h):
+        """Disk/memory cache key: image hash + vision model + prompt, so a new model or prompt
+        never serves old captions."""
+        return hashlib.sha256(("%s\0%s\0%s" % (h, self.vision_model or "default", VISION_PROMPT_SHA)
+                               ).encode("utf-8")).hexdigest()
+
+    def _vlookup(self, key):
+        """Cached caption or None. Caller holds _vlock."""
+        cap = self._vmem.get(key)
+        if cap is None:
+            cap = self._vdisk.get(key)
+        if cap is not None:
+            self._vmem[key] = cap
+            self._vmem.move_to_end(key)
             while len(self._vmem) > VISION_MEM_MAX:
                 self._vmem.popitem(last=False)
-            self._vision_save()
+        return cap
+
+    def caption(self, ref, h, deadline=None):
+        """Caption for an image (cached by hash). None if the vision server can't deliver one; the
+        reason is then pinned in self._vfail[h]. _vlock guards only the caches, never a network call.
+        deadline: time.time() after which no new vision work starts for this request."""
+        key = self._vkey(h)
+        with self._vlock:
+            if h in self._vfail:
+                return None
+            cap = self._vlookup(key)
+            if cap is not None:
+                return cap
+            if not ref:
+                self._vfail[h] = VISION_UNREADABLE
+                return None
+            ev = self._vflight.get(key)
+            owner = ev is None
+            if owner:
+                ev = self._vflight[key] = threading.Event()
+        if not owner:  # the same image is being captioned right now: wait for that call
+            ev.wait(max(0.0, deadline - time.time()) if deadline else VISION_TIMEOUT + 5)
+            with self._vlock:
+                cap = self._vlookup(key)
+            if cap is None:
+                with self._vlock:
+                    self._vfail.setdefault(h, VISION_OFFLINE)
             return cap
+        cap = None
+        try:
+            with self._vlock:
+                down = time.time() < self._vdown_until
+            if self.vision_url and not down and not (deadline and time.time() >= deadline):
+                t0 = time.time()
+                try:
+                    cap = self._vision_call(ref)
+                except Exception as e:  # refused, timeout, bad image, bad JSON ...
+                    log("vision: caption failed (%s): %r" % (h[:12], e))
+                    if not isinstance(e, ValueError):  # server unreachable or too slow
+                        with self._vlock:
+                            self._vdown_until = time.time() + VISION_DOWN_S
+                else:
+                    log("vision: captioned %s in %.1fs (%d chars)" % (h[:12], time.time() - t0, len(cap)))
+        finally:
+            with self._vlock:
+                if cap is None:
+                    self._vfail[h] = VISION_OFFLINE
+                    while len(self._vfail) > VISION_DISK_MAX:
+                        self._vfail.pop(next(iter(self._vfail)))
+                else:
+                    self._vmem[key] = cap
+                    self._vdisk[key] = cap
+                    while len(self._vdisk) > VISION_DISK_MAX:
+                        self._vdisk.pop(next(iter(self._vdisk)))
+                    while len(self._vmem) > VISION_MEM_MAX:
+                        self._vmem.popitem(last=False)
+                    snapshot = dict(self._vdisk)
+                self._vflight.pop(key, None)
+            ev.set()
+        if cap is not None:
+            self._vision_save(snapshot)
+        return cap
 
     def replace_images(self, body):
         """-> (body copy with every image part in user/tool messages replaced by a text part
@@ -487,6 +542,7 @@ class Gateway:
         if not isinstance(msgs, list):
             return body, []
         n, records, out, changed = 0, [], [], False
+        deadline = time.time() + VISION_BUDGET_S
         for m in msgs:
             c = m.get("content") if isinstance(m, dict) else None
             if (isinstance(m, dict) and m.get("role") in ("user", "tool") and isinstance(c, list)
@@ -499,8 +555,9 @@ class Gateway:
                         continue
                     n += 1
                     h = hashlib.sha256((ref or "").encode("utf-8")).hexdigest()
-                    cap = self.caption(ref, h)
-                    parts.append({"type": "text", "text": "[Image %d: %s]" % (n, cap or VISION_OFFLINE)})
+                    cap = self.caption(ref, h, deadline)
+                    parts.append({"type": "text", "text": "[Image %d: %s]" % (
+                        n, cap or self._vfail.get(h, VISION_OFFLINE))})
                     records.append({"n": n, "sha256": h, "caption": cap,
                                     "source": "data" if (ref or "").startswith("data:") else "url"})
                 if all(isinstance(p, dict) and p.get("type", "text") == "text" for p in parts):
@@ -629,25 +686,24 @@ def title_request(prepped):
 OBI_RE = re.compile(r"<openbot-developer-instructions>.*?</openbot-developer-instructions>\n?", re.S)
 CATALOG_RE = re.compile(r"<system-update>\nThe Code Mode tool catalog has changed\..*?</system-update>\n?", re.S)
 WRAPPER_RE = re.compile(r"<(openbot-developer-instructions|system-update)>.*?</\1>", re.S)
+TEXT_PART_TYPES = ("text", "input_text", "output_text")
 DEDUPE = os.environ.get("ASSISTANT_DEDUPE", "1") != "0"  # config.sh switch
 
 
 def dedupe(msgs):
-    """Drop repeated OpenBot blocks from user messages. Earlier messages keep their first copy
-    so the cached history prefix stays the same from turn to turn."""
+    """Drop repeated OpenBot blocks (instructions, tool catalog) from user messages: the first copy
+    of each distinct block stays, later identical copies go. How a message is treated never depends
+    on later messages, so the history of turn N is a prefix of turn N+1 (cached prefix stays valid)."""
     users = [i for i, m in enumerate(msgs) if isinstance(m, dict) and m.get("role") == "user"
              and isinstance(m.get("content"), str)]
     seen, out = set(), list(msgs)
+    def keep_first(mo):
+        if mo.group() in seen:
+            return ""
+        seen.add(mo.group())
+        return mo.group()
     for i in users:
-        c = out[i]["content"]
-        def keep_first(mo):
-            if mo.group() in seen:
-                return ""
-            seen.add(mo.group())
-            return mo.group()
-        c = OBI_RE.sub(keep_first, c)
-        if i != users[-1]:
-            c = CATALOG_RE.sub("", c)
+        c = CATALOG_RE.sub(keep_first, OBI_RE.sub(keep_first, out[i]["content"]))
         if c != out[i]["content"]:
             out[i] = dict(out[i], content=c)
     return out
@@ -714,7 +770,8 @@ def hoist_instructions(msgs):
 
 def strip_non_text(msgs):
     """mlx_lm.server 404s on any content part that is not type 'text'. Replace every such part
-    (image, file, audio ...) with a short text placeholder; messages without them are returned as is."""
+    (image, file, audio ...) with a short text placeholder; input_text / output_text parts keep
+    their text. Messages without them are returned as is."""
     out = []
     for m in msgs:
         c = m.get("content") if isinstance(m, dict) else None
@@ -722,8 +779,33 @@ def strip_non_text(msgs):
             parts = []
             for p in c:
                 if isinstance(p, dict) and p.get("type", "text") != "text":
-                    kind = "image" if image_url_of(p)[0] else str(p.get("type"))
-                    p = {"type": "text", "text": "[%s omitted: the model cannot read this]" % kind}
+                    if p.get("type") in ("input_text", "output_text"):
+                        p = {"type": "text", "text": p.get("text") or ""}
+                    else:
+                        kind = "image" if image_url_of(p)[0] else str(p.get("type"))
+                        p = {"type": "text", "text": "[%s omitted: the model cannot read this]" % kind}
+                parts.append(p)
+            m = dict(m, content=parts)
+        out.append(m)
+    return out
+
+
+def redact_non_text(msgs):
+    """For the diary: every non-text content part (file, PDF, image the gateway did not caption, as
+    in assistant messages ...) becomes a text placeholder with the sha256 and byte size of its
+    payload, so raw base64 never reaches the diary. Text-like parts are kept."""
+    out = []
+    for m in msgs:
+        c = m.get("content") if isinstance(m, dict) else None
+        if isinstance(c, list) and any(isinstance(p, dict) and p.get("type", "text") not in TEXT_PART_TYPES
+                                       for p in c):
+            parts = []
+            for p in c:
+                if isinstance(p, dict) and p.get("type", "text") not in TEXT_PART_TYPES:
+                    is_img, ref = image_url_of(p)
+                    raw = (ref if is_img and ref else json.dumps(p, sort_keys=True, ensure_ascii=False)).encode("utf-8")
+                    p = {"type": "text", "text": "[%s omitted: sha256 %s, %d bytes]" % (
+                        "image" if is_img else str(p.get("type")), hashlib.sha256(raw).hexdigest(), len(raw))}
                 parts.append(p)
             m = dict(m, content=parts)
         out.append(m)
@@ -741,7 +823,8 @@ def prepare(body, thinking, default_max):
         b["chat_template_kwargs"] = ctk
         if thinking is False:  # Qwen's card: non-thinking wants these, not serve.sh's thinking ones
             for k, v in FAST_SAMPLING.items():  # (missing presence_penalty -> "Hey!\n\nHey!" repeats)
-                b.setdefault(k, v)
+                if b.get(k) is None:  # also keys the client sent as null
+                    b[k] = v
     if b.get("max_tokens") is None:
         b["max_tokens"] = b.get("max_completion_tokens") or default_max
     # OpenCode names the model in its system prompt, so "qwen36", "qwen36-fast" and
@@ -1058,7 +1141,7 @@ def conv_id_of(msgs):
 
 def build_diary(body, client_model, upstream, thinking, asm, status, latency, ttft, extra=None):
     """-> (jsonl record, {hash: blob}, index row or None)."""
-    msgs = body.get("messages") or []
+    msgs = redact_non_text(body.get("messages") or [])  # no raw base64 in the diary
     blobs = {}
     first_user = next((text_of(m.get("content")) for m in msgs
                        if isinstance(m, dict) and m.get("role") == "user"), "")

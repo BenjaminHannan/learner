@@ -367,11 +367,16 @@ class TestFastSampling(unittest.TestCase):
     def test_defaults_only_when_not_thinking_and_unset(self):
         m = [{"role": "user", "content": "hi"}]
         fast = gateway.prepare({"messages": m}, False, 10)
-        self.assertEqual((fast["temperature"], fast["top_p"], fast["presence_penalty"]), (0.7, 0.8, 1.5))
+        self.assertEqual((fast["temperature"], fast["top_p"], fast["presence_penalty"]), (0.7, 0.8, 1.0))
         think = gateway.prepare({"messages": m}, True, 10)
         self.assertNotIn("presence_penalty", think)
         mine = gateway.prepare({"messages": m, "temperature": 0.2}, False, 10)
         self.assertEqual(mine["temperature"], 0.2)
+
+    def test_null_keys_filled(self):
+        m = [{"role": "user", "content": "hi"}]
+        out = gateway.prepare({"messages": m, "temperature": None, "top_p": None}, False, 10)
+        self.assertEqual((out["temperature"], out["top_p"]), (0.7, 0.8))
 
 
 class TestDedupe(unittest.TestCase):
@@ -381,10 +386,20 @@ class TestDedupe(unittest.TestCase):
     def contents(self, msgs):
         return [m["content"] for m in gateway.prepare({"messages": msgs}, False, 10)["messages"]]
 
-    def test_keeps_first_instructions_and_last_catalog(self):
+    def test_keeps_first_copy_of_each_distinct_catalog(self):
         out = self.contents(self.msgs(OBI + "role\n" + CAT % 1, OBI + "hi\n" + CAT % 2,
-                                      OBI + "hi\n" + CAT % 3))
-        self.assertEqual(out, ["sys", OBI + "role\n", "hi\n", "hi\n" + CAT % 3])
+                                      OBI + "hi\n" + CAT % 2, "x\n" + CAT % 1))
+        self.assertEqual(out, ["sys", OBI + "role\n" + CAT % 1, "hi\n" + CAT % 2, "hi\n", "x\n"])
+
+    def test_prefix_stable_with_alternating_catalogs(self):
+        users = []
+        prev = None
+        for n in range(6):  # each turn appends a user message carrying catalog version 1 or 2
+            users.append(OBI + "q%d\n" % n + CAT % (n % 2 + 1))
+            cur = self.contents(self.msgs(*users))
+            if prev is not None:
+                self.assertEqual(cur[:len(prev)], prev)
+            prev = cur
 
     def test_changed_instructions_kept(self):
         obi2 = OBI.replace("brief", "briefer")

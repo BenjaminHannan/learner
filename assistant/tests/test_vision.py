@@ -109,13 +109,72 @@ class TestVision(VisionBase):
                       self.big.requests[-1]["messages"][1]["content"])
         self.vis = None  # already closed
 
-    def test_vision_error_is_fallback_and_not_cached(self):
+    def test_failure_is_pinned_for_the_process_and_not_on_disk(self):
         self.vis.fail = True
         self.post({"model": "qwen36-fast", "messages": img_msgs()})
         self.assertIn("image reader is offline", self.big.requests[-1]["messages"][1]["content"])
         self.vis.fail = False
-        self.post({"model": "qwen36-fast", "messages": img_msgs()})
-        self.assertIn("A red square", self.big.requests[-1]["messages"][1]["content"])
+        self.srv.gw._vdown_until = 0
+        self.post({"model": "qwen36-fast", "messages": img_msgs()})  # same image: still the fallback
+        self.assertIn("image reader is offline", self.big.requests[-1]["messages"][1]["content"])
+        self.assertEqual(len(self.vis.requests), 1)
+        self.assertFalse(self.srv.gw._vdisk)
+        gw2 = gateway.Gateway("http://x", "", self.tmp.name,   # a new process may caption it
+                              vision_url="http://127.0.0.1:%d" % self.vis.server_port)
+        _, recs = gw2.replace_images({"messages": img_msgs()})
+        self.assertIn("A red square", recs[0]["caption"])
+
+    def test_unreadable_ref_has_its_own_text(self):
+        msgs = [{"role": "user", "content": [{"type": "image_url", "image_url": {"url": ""}}]}]
+        body, recs = self.srv.gw.replace_images({"messages": msgs})
+        self.assertEqual(body["messages"][0]["content"], "[Image 1: could not be read]")
+        self.assertEqual(len(self.vis.requests), 0)
+
+    def test_cache_key_includes_model_and_prompt(self):
+        gw = self.srv.gw
+        k1 = gw._vkey("h")
+        gw.vision_model = "other-model"
+        self.assertNotEqual(gw._vkey("h"), k1)
+        gw.vision_model = ""
+        old = gateway.VISION_PROMPT_SHA
+        gateway.VISION_PROMPT_SHA = "x"
+        try:
+            self.assertNotEqual(gw._vkey("h"), k1)
+        finally:
+            gateway.VISION_PROMPT_SHA = old
+
+    def test_same_image_in_flight_is_captioned_once_and_lock_is_free(self):
+        self.vis.delay = 0.6
+        gw = self.srv.gw
+        res = []
+        ts = [threading.Thread(target=lambda: res.append(gw.replace_images({"messages": img_msgs()})))
+              for _ in range(3)]
+        for t in ts:
+            t.start()
+        time.sleep(0.2)
+        self.assertTrue(gw._vlock.acquire(timeout=0.2))  # not held over the vision call
+        gw._vlock.release()
+        for t in ts:
+            t.join(10)
+        self.assertEqual(len(self.vis.requests), 1)
+        self.assertEqual(len({json.dumps(r[0]) for r in res}), 1)
+        self.assertIn("A red square", res[0][0]["messages"][1]["content"])
+
+    def test_total_caption_time_capped_per_request(self):
+        self.vis.delay = 0.3
+        old = gateway.VISION_BUDGET_S
+        gateway.VISION_BUDGET_S = 0.2
+        try:
+            msgs = img_msgs()
+            for k in range(2):
+                msgs[1]["content"].append({"type": "image_url", "image_url": {"url": DATA_URL + str(k)}})
+            body, recs = self.srv.gw.replace_images({"messages": msgs})
+        finally:
+            gateway.VISION_BUDGET_S = old
+        self.assertEqual(len(self.vis.requests), 1)  # first one ran; the rest got the fallback
+        self.assertEqual([bool(r["caption"]) for r in recs], [True, False, False])
+        self.assertIn("[Image 3: could not be read, the image reader is offline]",
+                      body["messages"][1]["content"])
 
     def test_base64_not_in_diary_but_caption_and_hash_are(self):
         self.post({"model": "qwen36-fast", "messages": img_msgs()})
@@ -203,6 +262,29 @@ class TestNonTextParts(VisionBase):
             self.assertNotIn(bad, up)
         self.assertIn("[Image 1:", up)
         self.assertIn("file omitted", up)
+
+    def test_input_and_output_text_parts_keep_their_text(self):
+        msgs = [{"role": "user", "content": [{"type": "input_text", "text": "hello"}]},
+                {"role": "assistant", "content": [{"type": "output_text", "text": "yo"}]}]
+        out = gateway.prepare({"messages": msgs}, None, 10)["messages"]
+        self.assertEqual(out[0]["content"], [{"type": "text", "text": "hello"}])
+        self.assertEqual(out[1]["content"], [{"type": "text", "text": "yo"}])
+
+    def test_diary_redacts_files_and_assistant_images(self):
+        msgs = [{"role": "user", "content": [{"type": "text", "text": "see"},
+                                             {"type": "file", "file": {"filename": "a.pdf", "file_data": B64}},
+                                             {"type": "input_text", "text": "kept"}]},
+                {"role": "assistant", "content": [{"type": "image_url", "image_url": {"url": DATA_URL}}]},
+                {"role": "user", "content": "next"}]
+        out = gateway.redact_non_text(msgs)
+        raw = json.dumps(out)
+        self.assertNotIn(B64, raw)
+        self.assertIn("kept", raw)
+        self.assertRegex(out[0]["content"][1]["text"], r"^\[file omitted: sha256 [0-9a-f]{64}, \d+ bytes\]$")
+        self.assertRegex(out[1]["content"][0]["text"], r"^\[image omitted: sha256 [0-9a-f]{64}, %d bytes\]$" % len(DATA_URL))
+        code, _ = self.post({"model": "qwen36-fast", "messages": [{"role": "system", "content": "s"}] + msgs})
+        self.assertEqual(code, 200)
+        self.assertNotIn(B64, self.diary_text())
 
     def test_image_in_assistant_message_stripped(self):
         out = gateway.prepare({"messages": [{"role": "assistant", "content": [

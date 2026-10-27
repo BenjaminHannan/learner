@@ -15,6 +15,7 @@ check big 18080 /v1/models
 check small 18081 /v1/models
 check gateway 8090 /v1/models
 [ -f "$HOME/learner-ops/PAUSE_OTHERS" ] && echo "note: PAUSE_OTHERS exists (another job reserved the Mac)"
+[ -s "$RUN/watchdog-history.log" ] && echo "last watchdog stop: $(tail -n 1 "$RUN/watchdog-history.log")"
 echo
 echo "Memory:"
 if command -v memory_pressure >/dev/null 2>&1; then memory_pressure | tail -n 1; fi
