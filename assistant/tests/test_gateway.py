@@ -1,0 +1,547 @@
+import http.client
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE.parent))
+import fake_upstream  # noqa: E402
+import gateway  # noqa: E402
+
+
+def free_port():
+    import socket
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    p = s.getsockname()[1]
+    s.close()
+    return p
+
+
+class Base(unittest.TestCase):
+    small_up = True
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.big = fake_upstream.start()
+        self.small = fake_upstream.start() if self.small_up else None
+        small_url = ("http://127.0.0.1:%d" % self.small.server_port if self.small
+                     else "http://127.0.0.1:%d" % free_port())
+        self.srv = gateway.make_server("http://127.0.0.1:%d" % self.big.server_port, small_url,
+                                       0, self.tmp.name)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.port = self.srv.server_port
+        self.diary = Path(self.tmp.name)
+        self.big.gate.set()
+
+    def tearDown(self):
+        for s in (self.srv, self.big, self.small):
+            if s:
+                s.shutdown()
+                s.server_close()
+        self.tmp.cleanup()
+
+    def post(self, body):
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        c.request("POST", "/v1/chat/completions", json.dumps(body), {"Content-Type": "application/json"})
+        return c, c.getresponse()
+
+    def lines(self):
+        self.srv.gw.diary.flush()
+        out = []
+        for f in (self.diary / "raw").glob("*.jsonl"):
+            out += [json.loads(x) for x in f.read_text().splitlines()]
+        return out
+
+
+MSGS = [{"role": "system", "content": "You are helpful."},
+        {"role": "user", "content": [{"type": "text", "text": "Where is the pineapple?"}]}]
+
+
+class TestGateway(Base):
+    def test_models_lists_four(self):
+        c = http.client.HTTPConnection("127.0.0.1", self.port)
+        c.request("GET", "/v1/models")
+        ids = [m["id"] for m in json.loads(c.getresponse().read())["data"]]
+        self.assertEqual(ids, ["qwen36-auto", "qwen36", "qwen36-fast", "k2-helper"])
+
+    def test_health_passthrough(self):
+        c = http.client.HTTPConnection("127.0.0.1", self.port)
+        c.request("GET", "/health")
+        self.assertEqual(json.loads(c.getresponse().read()), {"status": "ok"})
+
+    def test_plain_request_rewrites(self):
+        body = {"model": "qwen36-fast", "messages": MSGS, "reasoning_effort": "high",
+                "chat_template_kwargs": {"foo": 1}, "tools": [{"type": "function", "function": {"name": "bash"}}]}
+        _, r = self.post(body)
+        out = json.loads(r.read())
+        up = self.big.requests[-1]
+        self.assertEqual(up["model"], "default_model")
+        self.assertEqual(up["chat_template_kwargs"], {"foo": 1, "enable_thinking": False})
+        self.assertNotIn("reasoning_effort", up)
+        self.assertEqual(up["max_tokens"], 8192)
+        self.assertEqual(up["messages"], MSGS)
+        self.assertEqual(up["tools"], body["tools"])
+        m = out["choices"][0]["message"]
+        self.assertEqual(m["reasoning_content"], "hmm")
+        self.assertNotIn("reasoning", m)
+        self.assertEqual(out["model"], "qwen36-fast")
+        self.assertEqual(out["usage"]["prompt_tokens_details"]["cached_tokens"], 64)
+
+    def test_thinking_on_and_unknown_model(self):
+        self.post({"model": "gpt-4o", "messages": MSGS, "max_tokens": 50})[1].read()
+        up = self.big.requests[-1]
+        self.assertTrue(up["chat_template_kwargs"]["enable_thinking"])
+        self.assertEqual(up["max_tokens"], 50)
+
+    def test_small_routing(self):
+        self.post({"model": "k2-helper", "messages": MSGS})[1].read()
+        self.assertEqual(len(self.small.requests), 1)
+        self.assertEqual(self.small.requests[0]["max_tokens"], 2048)
+        self.assertNotIn("chat_template_kwargs", self.small.requests[0])
+
+    def test_stream_incremental_and_diary(self):
+        self.big.gate.clear()
+        c, r = self.post({"model": "qwen36", "messages": MSGS, "stream": True,
+                          "stream_options": {"include_usage": True}})
+        first = r.readline()  # arrives while upstream is still blocked on the gate
+        self.assertTrue(first.startswith(b"data: "))
+        self.assertFalse(self.big.gate.is_set())
+        self.big.gate.set()
+        rest = r.read().decode()
+        raw = first.decode() + rest
+        self.assertIn("data: [DONE]", raw)
+        self.assertNotIn('"reasoning":', raw)
+        chunks = [json.loads(l[6:]) for l in raw.splitlines() if l.startswith("data: {")]
+        self.assertTrue(all(ch["model"] == "qwen36" for ch in chunks))
+        self.assertEqual(chunks[0]["choices"][0]["delta"]["reasoning_content"], "think ")
+        self.assertEqual(self.big.requests[-1]["stream_options"], {"include_usage": True})
+        rec = self.lines()[-1]
+        self.assertEqual(rec["response"]["content"], "Hello")
+        self.assertEqual(rec["response"]["reasoning"], "think more")
+        tc = rec["response"]["tool_calls"][0]
+        self.assertEqual((tc["id"], tc["function"]["name"], tc["function"]["arguments"]),
+                         ("c1", "bash", '{"cmd": "ls"}'))
+        self.assertEqual(rec["finish_reason"], "tool_calls")
+        self.assertEqual(rec["usage"]["prompt_tokens_details"]["cached_tokens"], 64)
+        self.assertIsNotNone(rec["ttft_s"])
+
+    def test_diary_blobs_and_sqlite(self):
+        tools = [{"type": "function", "function": {"name": "bash"}}]
+        self.post({"model": "qwen36", "messages": MSGS, "tools": tools})[1].read()
+        self.post({"model": "qwen36", "messages": MSGS, "tools": tools})[1].read()
+        recs = self.lines()
+        self.assertEqual(len(recs), 2)
+        self.assertEqual(len(recs[0]["conv_id"]), 16)
+        blob = self.diary / "raw" / "blobs" / (recs[0]["tools_hash"] + ".json")
+        self.assertEqual(json.loads(blob.read_text()), tools)
+        sysblob = recs[0]["messages"][0]["content"]["$blob"]
+        self.assertEqual(json.loads((self.diary / "raw/blobs" / (sysblob + ".json")).read_text()),
+                         "You are helpful.")
+        self.assertEqual(len(list((self.diary / "raw/blobs").glob("*.json"))), 2)  # deduplicated
+        import sqlite3
+        db = sqlite3.connect(self.diary / "diary.sqlite")
+        rows = db.execute("SELECT title, text FROM turns WHERE turns MATCH 'pineapple'").fetchall()
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0][0], "Where is the pineapple?")
+        self.assertNotIn("hmm", rows[0][1])  # reasoning not indexed
+
+    def test_mcp_tools(self):
+        self.post({"model": "qwen36", "messages": MSGS})[1].read()
+        self.srv.gw.diary.flush()
+        env = dict(os.environ, DIARY_DIR=self.tmp.name)
+        reqs = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+             "params": {"name": "diary_search", "arguments": {"query": 'pineapple?! "x'}}},
+            {"jsonrpc": "2.0", "id": 4, "method": "foo/bar"},
+            {"jsonrpc": "2.0", "id": 5, "method": "ping"},
+            {"jsonrpc": "2.0", "id": 6, "method": "tools/call",
+             "params": {"name": "diary_days", "arguments": {}}},
+        ]
+        p = subprocess.run([sys.executable, str(HERE.parent / "diary_mcp.py")], env=env, text=True,
+                           input="\n".join(json.dumps(r) for r in reqs) + "\nnot json\n",
+                           capture_output=True, timeout=20)
+        out = [json.loads(l) for l in p.stdout.splitlines()]
+        by = {o["id"]: o for o in out}
+        self.assertEqual(len(out), 7)  # no reply to the notification, one parse error
+        self.assertEqual(by[1]["result"]["protocolVersion"], "2025-06-18")
+        self.assertEqual([t["name"] for t in by[2]["result"]["tools"]],
+                         ["diary_search", "diary_read", "diary_days"])
+        hit = by[3]["result"]["content"][0]["text"]
+        self.assertIn("pineapple", hit)
+        self.assertEqual(by[4]["error"]["code"], -32601)
+        self.assertIn("1 conversation", by[6]["result"]["content"][0]["text"])
+        cid = hit.split("conv_id=")[1].split()[0]
+        sys.path.insert(0, str(HERE.parent))
+        import diary_mcp
+        diary_mcp.DIARY_DIR = Path(self.tmp.name)
+        txt = diary_mcp.call_tool("diary_read", {"conv_id": cid})
+        self.assertIn("Ben: Where is the pineapple?", txt)
+
+    def test_mcp_empty_diary(self):
+        import diary_mcp
+        old = diary_mcp.DIARY_DIR
+        diary_mcp.DIARY_DIR = Path(self.tmp.name) / "nope"
+        try:
+            self.assertIn("empty", diary_mcp.call_tool("diary_search", {"query": "x"}))
+        finally:
+            diary_mcp.DIARY_DIR = old
+
+
+class TestAuto(Base):
+    TOOLS = [{"type": "function", "function": {"name": "bash"}}]
+
+    def auto(self, msgs, **kw):
+        body = {"model": "qwen36-auto", "messages": msgs, "tools": self.TOOLS}
+        body.update(kw)
+        out = json.loads(self.post(body)[1].read())
+        self.assertEqual(out["model"], "qwen36-auto")
+        return self.big.requests[-1]
+
+    def test_judge_zero_is_fast(self):
+        self.big.judge_digit = 0
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(up["model"], "default_model")
+        self.assertEqual(len(self.big.judge_calls), 1)
+
+    def test_judge_two_thinks(self):
+        self.big.judge_digit = 2
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], True)
+
+    def test_decision_reused_in_tool_loop(self):
+        self.big.judge_digit = 0
+        self.auto(MSGS)
+        loop = MSGS + [{"role": "assistant", "content": None, "tool_calls": [
+            {"id": "c1", "type": "function", "function": {"name": "bash", "arguments": "{}"}}]},
+            {"role": "tool", "tool_call_id": "c1", "content": "done"}]
+        self.big.judge_digit = 2  # would flip the answer if asked again
+        up = self.auto(loop)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(len(self.big.judge_calls), 1)
+
+    def test_judge_failure_thinks(self):
+        self.big.judge_digit = None
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], True)
+
+    def test_judge_request_shape(self):
+        self.auto(MSGS)
+        j = self.big.judge_calls[0]
+        self.assertEqual([m["role"] for m in j["messages"]], ["system", "user"])
+        self.assertTrue(j["messages"][0]["content"].startswith("(Internal check, not from Ben.)"))
+        self.assertEqual(j["messages"][1]["content"], "Where is the pineapple?")
+        self.assertNotIn("tools", j)
+        self.assertNotIn("tool_choice", j)
+        self.assertIs(j["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual((j["temperature"], j["max_tokens"], j["stream"]), (0, 2, False))
+
+    def test_judge_request_is_small(self):
+        big = "<openbot-developer-instructions>\n" + "x" * 30000 + "\n</openbot-developer-instructions>\nhi"
+        msgs = [{"role": "system", "content": "s" * 30000},
+                {"role": "user", "content": "y" * 30000}, {"role": "user", "content": big}]
+        self.auto(msgs)
+        j = self.big.judge_calls[0]
+        self.assertEqual(j["messages"][1]["content"], "hi")
+        self.assertLess(len(json.dumps(j)), 3000)
+        long = [{"role": "user", "content": "z" * 10000}]
+        self.big.judge_calls.clear()
+        self.auto(long)
+        self.assertEqual(len(self.big.judge_calls[0]["messages"][1]["content"]), gateway.JUDGE_MAX_CHARS)
+
+    def test_no_user_message_is_fast(self):
+        up = self.auto([{"role": "system", "content": "x"}])
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(self.big.judge_calls, [])
+
+    def test_diary_has_level_and_no_judge_turn(self):
+        self.big.judge_digit = 2
+        self.auto(MSGS)
+        for _ in range(50):  # the diary entry is queued just after the reply is sent
+            recs = self.lines()
+            if recs:
+                break
+            time.sleep(0.1)
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]["auto_level"], 2)
+        self.assertIsNotNone(recs[0]["judge_s"])
+        self.assertEqual(recs[0]["model"], "qwen36-auto")
+
+    def test_lru_bounded(self):
+        gw = self.srv.gw
+        for i in range(gateway.AUTO_CACHE_MAX + 5):
+            gw.auto_put(str(i), 1)
+        self.assertEqual(len(gw._auto), gateway.AUTO_CACHE_MAX)
+        self.assertIsNone(gw.auto_get("0"))
+
+
+class TestSmallDown(Base):
+    small_up = False
+
+    def test_hidden_and_fallback(self):
+        c = http.client.HTTPConnection("127.0.0.1", self.port)
+        c.request("GET", "/v1/models")
+        ids = [m["id"] for m in json.loads(c.getresponse().read())["data"]]
+        self.assertEqual(ids, ["qwen36-auto", "qwen36", "qwen36-fast"])
+        self.post({"model": "k2-helper", "messages": MSGS})[1].read()
+        up = self.big.requests[-1]
+        self.assertFalse(up["chat_template_kwargs"]["enable_thinking"])
+
+    def test_title_on_big_is_tiny(self):
+        ask = ("Here is the first message:\n<message>\n<openbot-developer-instructions>\n" + "x" * 20000
+               + "\n</openbot-developer-instructions>\nCheck my emails\n</message>\nReply with only the title.")
+        self.post({"model": "k2-helper", "stream": True, "tools": [{"type": "function"}],
+                   "messages": [{"role": "system", "content": "s" * 2000},
+                                {"role": "user", "content": ask}]})[1].read()
+        up = self.big.requests[-1]
+        self.assertEqual(up["messages"][0], {"role": "system", "content": gateway.TITLE_SYSTEM})
+        self.assertIn("Check my emails", up["messages"][1]["content"])
+        self.assertNotIn("xxx", up["messages"][1]["content"])
+        self.assertNotIn("tools", up)
+        self.assertEqual((up["max_tokens"], up["stream"]), (gateway.TITLE_MAX_TOKENS, True))
+        self.assertIsNone(self.srv.gw._prefix)  # titles never become the warm prefix
+        self.post({"model": "k2-helper", "messages": [{"role": "user", "content": "y" * 5000}]})[1].read()
+        self.assertEqual(len(self.big.requests[-1]["messages"][1]["content"]), gateway.TITLE_MAX_CHARS)
+
+
+class TestBigDown(Base):
+    def test_503(self):
+        self.big.shutdown()
+        self.big.server_close()
+        _, r = self.post({"model": "qwen36", "messages": MSGS})
+        self.assertEqual(r.status, 503)
+        self.assertIn("Start Assistant", json.loads(r.read())["error"]["message"])
+        self.big = None
+
+
+class PrepareTest(unittest.TestCase):
+    def test_fast_and_thinking_share_system_prompt(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        import gateway
+        a = gateway.prepare({"messages": [{"role": "system", "content": "I am qwen36-auto."}]}, True, 1)
+        self.assertEqual(a["messages"][0]["content"], "I am qwen36.")
+        msgs = [{"role": "system", "content": "You are model premonition/qwen36-fast."},
+                {"role": "user", "content": "hi qwen36-fast"}]
+        fast = gateway.prepare({"messages": msgs}, False, 100)
+        think = gateway.prepare({"messages": [dict(m) for m in msgs]}, True, 100)
+        self.assertEqual(fast["messages"][0]["content"], "You are model premonition/qwen36.")
+        self.assertEqual(fast["messages"], think["messages"][:1] + fast["messages"][1:])
+        self.assertEqual(fast["messages"][1]["content"], "hi qwen36-fast")  # user text untouched
+        self.assertEqual(msgs[0]["content"], "You are model premonition/qwen36-fast.")  # input not mutated
+
+    def test_skills_listing_stripped(self):
+        import gateway
+        sysmsg = ("Intro.\nSkills provide specialized instructions and workflows for specific tasks.\n"
+                  "Use the skill tool to load a skill when a task matches its description.\n"
+                  "<available_skills>\n  <skill>\n    <name>x</name>\n  </skill>\n</available_skills>\nOutro.")
+        msgs = [{"role": "system", "content": sysmsg},
+                {"role": "user", "content": "<available_skills>keep</available_skills>"}]
+        out = gateway.prepare({"messages": msgs}, None, 1)["messages"]
+        self.assertEqual(out[0]["content"], "Intro.\nOutro.")
+        self.assertEqual(out[1], msgs[1])  # user text untouched
+        self.assertIn("<available_skills>", msgs[0]["content"])  # input not mutated
+
+    def test_request_sizes(self):
+        import gateway
+        b = {"messages": [{"role": "system", "content": "abcd"}, {"role": "user", "content": "xy"},
+                          {"role": "user", "content": [{"type": "text", "text": "z"}]}], "tools": []}
+        self.assertTrue(gateway.request_sizes(b).startswith("system=4 user=%d tools=2" % (2 + len(json.dumps(b["messages"][2]["content"])))))
+
+
+OBI = "<openbot-developer-instructions>\nBe brief.\n</openbot-developer-instructions>\n"
+CAT = "<system-update>\nThe Code Mode tool catalog has changed. v%d\n</system-update>"
+
+
+class TestFastSampling(unittest.TestCase):
+    def test_defaults_only_when_not_thinking_and_unset(self):
+        m = [{"role": "user", "content": "hi"}]
+        fast = gateway.prepare({"messages": m}, False, 10)
+        self.assertEqual((fast["temperature"], fast["top_p"], fast["presence_penalty"]), (0.7, 0.8, 1.0))
+        think = gateway.prepare({"messages": m}, True, 10)
+        self.assertNotIn("presence_penalty", think)
+        mine = gateway.prepare({"messages": m, "temperature": 0.2}, False, 10)
+        self.assertEqual(mine["temperature"], 0.2)
+
+    def test_null_keys_filled(self):
+        m = [{"role": "user", "content": "hi"}]
+        out = gateway.prepare({"messages": m, "temperature": None, "top_p": None}, False, 10)
+        self.assertEqual((out["temperature"], out["top_p"]), (0.7, 0.8))
+
+
+class TestDedupe(unittest.TestCase):
+    def msgs(self, *users):
+        return [{"role": "system", "content": "sys"}] + [{"role": "user", "content": u} for u in users]
+
+    def contents(self, msgs):
+        return [m["content"] for m in gateway.prepare({"messages": msgs}, False, 10)["messages"]]
+
+    def test_keeps_first_copy_of_each_distinct_catalog(self):
+        out = self.contents(self.msgs(OBI + "role\n" + CAT % 1, OBI + "hi\n" + CAT % 2,
+                                      OBI + "hi\n" + CAT % 2, "x\n" + CAT % 1))
+        self.assertEqual(out, ["sys", OBI + "role\n" + CAT % 1, "hi\n" + CAT % 2, "hi\n", "x\n"])
+
+    def test_prefix_stable_with_alternating_catalogs(self):
+        users = []
+        prev = None
+        for n in range(6):  # each turn appends a user message carrying catalog version 1 or 2
+            users.append(OBI + "q%d\n" % n + CAT % (n % 2 + 1))
+            cur = self.contents(self.msgs(*users))
+            if prev is not None:
+                self.assertEqual(cur[:len(prev)], prev)
+            prev = cur
+
+    def test_changed_instructions_kept(self):
+        obi2 = OBI.replace("brief", "briefer")
+        out = self.contents(self.msgs(OBI + "a", obi2 + "b", OBI + "c"))
+        self.assertEqual(out, ["sys", OBI + "a", obi2 + "b", "c"])
+
+    def test_history_prefix_stable_across_turns(self):
+        t1 = self.contents(self.msgs(OBI + "a", OBI + "b"))
+        t2 = self.contents(self.msgs(OBI + "a", OBI + "b", OBI + "c"))
+        self.assertEqual(t2[:len(t1)], t1)
+
+    def test_switch_off(self):
+        m = self.msgs(OBI + "a", OBI + "b")
+        gateway.DEDUPE = False
+        try:
+            self.assertEqual(self.contents(m), ["sys", OBI + "a", OBI + "b"])
+        finally:
+            gateway.DEDUPE = True
+
+    def test_assistant_and_tool_messages_untouched(self):
+        m = self.msgs(OBI + "a") + [{"role": "assistant", "content": OBI}, {"role": "tool", "content": OBI}]
+        self.assertEqual(self.contents(m)[2:], [OBI, OBI])
+
+
+class PrewarmTest(Base):
+    TOOLS = [{"type": "function", "function": {"name": "bash"}}]
+
+    def test_prefix_saved_warmed_and_rewarmed(self):
+        pf = Path(self.tmp.name) / "prefix.json"
+        gw = self.srv.gw
+        gw.prefix_file = pf
+        old = gateway.REWARM_IDLE_S
+        gateway.REWARM_IDLE_S = 0.2
+        try:
+            _, r = self.post({"model": "qwen36-fast", "messages": MSGS, "tools": self.TOOLS})
+            r.read()
+            want = {"messages": [MSGS[0]], "tools": self.TOOLS}
+            self.assertEqual(json.loads(pf.read_text()), [want])
+            for _ in range(50):  # idle rewarm fires after the request ends
+                if len(self.big.requests) >= 2:
+                    break
+                time.sleep(0.05)
+            w = self.big.requests[-1]
+            self.assertEqual(w["max_tokens"], 1)
+            self.assertEqual(w["messages"], [MSGS[0], {"role": "user", "content": "."}])
+            self.assertEqual(w["tools"], self.TOOLS)
+            # a fresh gateway loads the saved prefix and warms it once the server is up
+            g2 = gateway.Gateway(gw.big_url, "", self.tmp.name, pf)
+            self.assertEqual(g2._prefix, want)
+            n = len(self.big.requests)
+            g2.warm_at_start(wait_s=5)
+            for _ in range(50):
+                if len(self.big.requests) > n:
+                    break
+                time.sleep(0.05)
+            self.assertEqual(self.big.requests[-1]["max_tokens"], 1)
+        finally:
+            gateway.REWARM_IDLE_S = old
+
+    def test_several_prefixes_kept_and_warmed(self):
+        pf = Path(self.tmp.name) / "prefix.json"
+        gw = self.srv.gw
+        gw.prefix_file = pf
+        old = gateway.REWARM_IDLE_S
+        gateway.REWARM_IDLE_S = -1  # no idle rewarm in this test
+        try:
+            for i in range(4):
+                msgs = [{"role": "system", "content": "app %d" % i}, {"role": "user", "content": "hi"}]
+                self.post({"model": "qwen36-fast", "messages": msgs})[1].read()
+            self.post({"model": "qwen36-fast", "messages": [
+                {"role": "system", "content": "app 2"}, {"role": "user", "content": "hi"}]})[1].read()
+            saved = json.loads(pf.read_text())
+            self.assertEqual([p["messages"][0]["content"] for p in saved], ["app 2", "app 3", "app 1"])
+            g2 = gateway.Gateway(gw.big_url, "", self.tmp.name, pf)
+            n = len(self.big.requests)
+            g2.warm()
+            warmed = [r["messages"][0]["content"] for r in self.big.requests[n:]]
+            self.assertEqual(warmed, ["app 1", "app 3", "app 2"])  # newest last = most recently used
+            pf.write_text(json.dumps({"messages": [{"role": "system", "content": "old"}], "tools": None}))
+            self.assertEqual(gateway.Gateway(gw.big_url, "", self.tmp.name, pf)._prefix["messages"][0]["content"], "old")
+        finally:
+            gateway.REWARM_IDLE_S = old
+
+    def test_client_warm_request_not_in_diary(self):
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        c.request("POST", "/v1/chat/completions", json.dumps({"model": "qwen36-fast", "max_tokens": 1, "messages": [
+            {"role": "system", "content": "desk"}, {"role": "user", "content": "."}]}),
+            {"Content-Type": "application/json", "X-Premonition-Warm": "1"})
+        self.assertEqual(c.getresponse().status, 200)
+        self.assertEqual(self.lines(), [])
+        self.assertEqual(self.srv.gw._prefix["messages"][0]["content"], "desk")
+
+    def test_extract_prefix(self):
+        self.assertIsNone(gateway.extract_prefix({"messages": [{"role": "user", "content": "hi"}]}))
+        self.assertIsNone(gateway.extract_prefix({"messages": [{"role": "system", "content": "s"}]}))
+        b = {"messages": [{"role": "system", "content": "a"}, {"role": "system", "content": "b"},
+                          {"role": "user", "content": "hi"}, {"role": "system", "content": "late"}]}
+        self.assertEqual(gateway.extract_prefix(b)["messages"],
+                         [{"role": "system", "content": "a"}, {"role": "system", "content": "b"}])
+
+
+ENV = "\n\nToday's date: Tue Oct 27 2026\n\nInfo:\n<env>\n  Working directory: /a/agent-%s\n</env>\nWorktree hint."
+
+
+class TestMoveEnv(unittest.TestCase):
+    def prep(self, msgs):
+        return gateway.prepare({"messages": msgs}, False, 10)["messages"]
+
+    def test_system_same_for_every_agent(self):
+        a = self.prep([{"role": "system", "content": "sys" + ENV % 1}, {"role": "user", "content": "hi"}])
+        b = self.prep([{"role": "system", "content": "sys" + ENV % 2}, {"role": "user", "content": "hi"}])
+        self.assertEqual(a[0], {"role": "system", "content": "sys"})
+        self.assertEqual(a[0], b[0])
+        self.assertEqual(a[1]["content"], (ENV % 1).strip() + "\n\nhi")
+
+    def test_only_first_user_gets_it(self):
+        m = self.prep([{"role": "system", "content": "sys" + ENV % 1}, {"role": "user", "content": "a"},
+                       {"role": "assistant", "content": "b"}, {"role": "user", "content": "c"}])
+        self.assertEqual([x["content"] for x in m[2:]], ["b", "c"])
+
+    def test_list_content_and_no_env(self):
+        m = self.prep([{"role": "system", "content": "sys" + ENV % 1},
+                       {"role": "user", "content": [{"type": "text", "text": "hi"}]}])
+        self.assertEqual(m[1]["content"][0]["text"], (ENV % 1).strip())
+        plain = [{"role": "system", "content": "sys\n\nToday's date: x"}, {"role": "user", "content": "hi"}]
+        self.assertEqual(self.prep(plain), plain)
+        self.assertEqual(self.prep([{"role": "system", "content": "sys" + ENV % 1}])[0]["content"], "sys" + ENV % 1)
+
+    def test_shared_instructions_hoisted_into_system(self):
+        def obi(name):
+            return ("<openbot-developer-instructions>\nShared rules.\nYour profile:\n<agent_profile>\n"
+                    + name + "\n</agent_profile>\n</openbot-developer-instructions>\n")
+        def turn(name, n):
+            us = [{"role": "user", "content": obi(name) + "hi%d" % k} for k in range(n)]
+            return self.prep([{"role": "system", "content": "sys" + ENV % name}] + us)
+        a, b = turn("A", 2), turn("B", 1)
+        self.assertEqual(a[0], b[0])  # same system for every agent
+        self.assertTrue(a[0]["content"].endswith("Shared rules.\n</openbot-developer-instructions>"))
+        self.assertTrue(a[1]["content"].startswith((ENV % "A").strip() + "\n\n<openbot-developer-instructions>\nYour profile:"))
+        self.assertEqual(a[2]["content"], "hi1")  # later copy still deduped
+        self.assertEqual(turn("A", 3)[:3], a)  # history prefix stable across turns
+
+
+if __name__ == "__main__":
+    unittest.main()

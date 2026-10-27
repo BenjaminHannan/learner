@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "premonition/qwen36-auto",
+  "small_model": "premonition/k2-helper",
+  "provider": {
+    "premonition": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Premonition (local Mac)",
+      "options": { "baseURL": "http://127.0.0.1:8090/v1", "apiKey": "local" },
+      "models": {
+        "qwen36-auto": {
+          "name": "Qwen3.6 35B · auto (decides how hard to think)",
+          "limit": { "context": 65536, "output": 8192 },
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "tool_call": true,
+          "reasoning": true
+        },
+        "qwen36": {
+          "name": "Qwen3.6 35B · thinks",
+          "limit": { "context": 65536, "output": 8192 },
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "tool_call": true,
+          "reasoning": true
+        },
+        "qwen36-fast": {
+          "name": "Qwen3.6 35B · fast",
+          "limit": { "context": 65536, "output": 8192 },
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "tool_call": true,
+          "reasoning": false
+        },
+        "k2-helper": {
+          "name": "K2 3.7B · helper",
+          "limit": { "context": 32768, "output": 2048 },
+          "tool_call": false,
+          "reasoning": false
+        }
+      }
+    }
+  },
+  "permission": { "skill": "deny" },
+  "mcp": {
+    "diary": {
+      "type": "local",
+      "command": ["__PY__", "__HOME__/learner-ops/assistant/diary_mcp.py"],
+      "enabled": true
+    }
+  }
+}
