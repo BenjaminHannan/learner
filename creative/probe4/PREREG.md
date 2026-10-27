@@ -38,3 +38,10 @@ compute; this test asks whether the extra compute buys success, not whether it i
 
 ## Cost
 Claude Sonnet batch for tasks (~$1-2). M3: 120 x 12 tries (estimate 3-6 h) + 2 x 480 test generations (~1 h) + SELF.
+
+## Addendum 1 (2026-10-27 ~15:20Z, before any task is generated)
+- Generation prompt also gives each request a short everyday domain hint (landlord, restaurant, wedding, ...) to
+  spread topics; the generator still sees only 3 format examples and the 8 existing scenario names.
+- Sonnet on this account rejects `thinking: disabled` and temperature, so default sampling is used.
+- Runtime estimate for 120 tasks is 8-10 h on the M3, beyond one overnight slot, so the kept set is capped at 96
+  tasks (about 38 traps / 58 plain, same 40% split), chosen by the validator's fixed rule. Pass marks unchanged.
