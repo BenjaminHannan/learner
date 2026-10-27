@@ -112,7 +112,7 @@ def common(a):  # model flags for sleepb (+ --q4-packed-compile, set to off by m
 
 def part_b(a, out, rep):
     d = out / "bench"
-    cmd = [sys.executable, SLEEPB, "--bench-train", "--q4-base", "--q4-packed", "--bench-dtype", "fp16", "--bench-budgets", "256,512" if a.smoke else "512,1024", "--out", str(d), *common(a)]
+    cmd = [sys.executable, SLEEPB, "--bench-train", "--q4-base", "--q4-packed", "--bench-dtype", "fp16", "--bench-budgets", "256,512" if a.smoke else "512,1024", "--out", str(d), *common(a), "--grad-ckpt"]
     if not a.smoke:
         cmd += ["--mem-cap-gb", "8"]
     rc, secs, oom = run(cmd, out / "bench.log")
@@ -128,7 +128,7 @@ def part_c(a, out, rep):
     d = out / "night"
     sched = out / "schedule_1night.json"
     sched.write_text(json.dumps({"nights": [{"steps": 60}] * 7}))
-    cmd = [sys.executable, SLEEPB, "--arm", "ab_ob_b4_nb", "--q4-base", "--q4-packed", "--dtype", "fp32" if a.smoke else "fp16", "--seed", "1", "--out", str(d), *common(a)]
+    cmd = [sys.executable, SLEEPB, "--arm", "ab_ob_b4_nb", "--q4-base", "--q4-packed", "--dtype", "fp32" if a.smoke else "fp16", "--seed", "1", "--out", str(d), *common(a), "--grad-ckpt"]
     if not a.smoke:
         cmd += ["--week", str(HERE / "data" / "week2.json"), "--mem-cap-gb", "8", "--budget-scale", "0.25", "--schedule", str(sched), "--tok-budget", "512", "--gen-bs", "8", "--max-dream-items", "40"]
     rc, secs, oom = run(cmd, out / "night.log", d / "result_ab_ob_b4_nb.partial.json")

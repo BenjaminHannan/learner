@@ -806,11 +806,17 @@ def selftest_shy(pm=None):
         for _, m in mods:
             m.lora_A["default"].weight.data.normal_(0, 0.1)
             m.lora_B["default"].weight.data.normal_(0, 0.05)
-        dw = lambda m: float(m.scaling["default"]) * m.lora_B["default"].weight.data.float() @ m.lora_A["default"].weight.data.float()  # noqa: E731
-        before = [dw(m) for _, m in mods]
+        ab = lambda m: (m.lora_A["default"].weight.data.float(), float(m.scaling["default"]) * m.lora_B["default"].weight.data.float())  # noqa: E731  (A, s*B): delta W = s*B @ A
+        before = [tuple(t.clone() for t in ab(m)) for _, m in mods]
         shy_apply(pm, 0.85, 0.0, g)
         tol = 1e-4 if mods[0][1].lora_A["default"].weight.dtype == torch.float32 else 3e-2  # bf16 adapters cannot hold 1e-4
-        w2 = max(float((dw(m) - 0.85 * b).norm() / (0.85 * b).norm()) for (_, m), b in zip(mods, before))
+
+        def lr_rel(m, b):  # ||s'B'A' - 0.85 sBA||_F / ||0.85 sBA||_F from (2r x 2r) Gram matrices: ||U V^T||_F^2 = trace(U^T U V^T V), no out x in matrix is built (K2 on an 8 GB card)
+            (a1, b1), (a0, b0) = (t.double() for t in ab(m)), (t.double() for t in b)  # float64: the trace form subtracts nearly equal sums
+            u, v, u0 = torch.cat([b1, -0.85 * b0], 1), torch.cat([a1, a0], 0), 0.85 * b0
+            fro = lambda uu, vv: float(torch.trace((uu.T @ uu) @ (vv @ vv.T)).clamp_min(0)) ** 0.5  # noqa: E731
+            return fro(u, v) / fro(u0, a0)
+        w2 = max(lr_rel(m, b) for (_, m), b in zip(mods, before))
         for (_, m), (a, b) in zip(mods, saved):
             m.lora_A["default"].weight.data.copy_(a)
             m.lora_B["default"].weight.data.copy_(b)
@@ -4251,6 +4257,12 @@ def mem_cap(args, device, log=print):  # --mem-cap-gb: cuda only (per-process fr
         log(f"[mem] GPU memory capped at {args.mem_cap_gb} GiB of {tot / 2 ** 30:.1f}")
 
 
+def grad_ckpt(args, pm, log=print):  # --grad-ckpt: checkpoint every decoder layer (active only in train mode, so generation and eval are untouched)
+    if getattr(args, "grad_ckpt", False):
+        pm.get_base_model().gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+        log("[mem] gradient checkpointing on (decoder layers, use_reentrant=False)")
+
+
 def load_base(args, device, dtype, log=print):  # load_model + the --q4-base step (before LoRA and any base use) -> (lm, tok, q4 stats or None)
     packed = args.q4_base and args.q4_packed
     lm, tok = load_model(args, torch.device("cpu") if packed else device, dtype)  # packed: the dense model never reaches the GPU
@@ -4327,6 +4339,7 @@ def main():
     ap.add_argument("--q4-packed", action="store_true", help="with --q4-base: keep the frozen base as packed 4-bit codes (uint8 + 16-bit scale / bias, ~0.56 B/param, q4packed.py) instead of dense fake-quantized weights; "
                     "bit-identical results, fits an 8 GB GPU (K2-3.7B). The model loads on the CPU, is packed layer by layer on the GPU, then the rest moves over. Not with --q4-mlx-moe or the delta arms")
     ap.add_argument("--q4-packed-compile", choices=["auto", "on", "off"], default="auto", help="--q4-packed: torch.compile the dequant of the Linears (auto: on for cuda, off on cpu)")
+    ap.add_argument("--grad-ckpt", action="store_true", help="HF gradient checkpointing (use_reentrant=False) on the decoder layers while training: same loss and gradients (no dropout), recomputes each layer's forward in backward; for small cards (8 GB)")
     ap.add_argument("--mem-cap-gb", type=float, default=None, help="cuda only: cap this process's GPU memory at this many GiB (torch.cuda.set_per_process_memory_fraction), e.g. 8 on a 16 GB card to emulate an 8 GB one; also for --bench-train")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
     ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
@@ -4363,6 +4376,7 @@ def main():
         mem_cap(args, device)
         lm, tok, q4 = load_base(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        grad_ckpt(args, pm)
         res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE), pm)
         if q4:
             res["q4_base"] = q4
@@ -4469,6 +4483,7 @@ def main():
         from peft import LoraConfig, get_peft_model
         tm = f"(?:{LORA_TARGETS})|(?:{SHARED_RE})" if args.lora_shared else LORA_TARGETS  # addendum 12: + the MoE shared expert (its only dense MLP)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=tm, bias="none"))
+        grad_ckpt(args, pm, log)
         if args.lora_shared or getattr(lm.config, "num_experts", 0):
             from peft.tuners.lora import LoraLayer
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
