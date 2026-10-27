@@ -127,3 +127,22 @@ def test_g0ev():
     d = G.g0ev_decision(off, [True] * 58 + [False] * 42)
     assert d["g0ev_pass"] and abs(d["gap_ev"] - 0.08) < 1e-9 and d["acc_ev"] == 0.58
     assert not G.g0ev_decision(off, [True] * 57 + [False] * 43)["g0ev_pass"]
+
+
+class _Tok:
+    def apply_chat_template(self, msgs, tokenize, add_generation_prompt, chat_template, **kw):
+        if kw.get("reasoning_effort"):
+            return "U:" + msgs[0]["content"] + "\nA:<ifm|think_" + kw["reasoning_effort"] + ">"
+        return "U:" + msgs[0]["content"] + "\nA:" + G.EMPTY_THINK
+
+
+def test_prompt_of_prefill_and_effort():
+    tok, row = _Tok(), dict(ROW)
+    off = G.prompt_of(tok, "", row, None)
+    assert off.endswith(G.EMPTY_THINK) and G.prompt_of(tok, "", row, None, prefill=G.PREFILL) == off + G.PREFILL
+    on = G.prompt_of(tok, "", row, "medium", prefill=G.PREFILL)
+    assert on.endswith("<ifm|think_medium>")  # the prefill never touches the thinking-on prompt
+    ev = G.prompt_of(tok, "", row, None, {row["id"]: ["[world] l1"]}, prefill=G.PREFILL)
+    assert ev == G.ev_prompt(off, ["[world] l1"]) + G.PREFILL
+    assert G.prompt_of(tok, "", row, None, {row["id"]: ["[world] l1"]}) == G.ev_prompt(off, ["[world] l1"])
+    assert G.extract_off(" the mill\nBecause ...") == "the mill"  # a prefilled reply: the answer is the first line after the prefill

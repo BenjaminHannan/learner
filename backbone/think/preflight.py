@@ -8,6 +8,8 @@ It runs 20 steps of tsd and 20 of ws on Qwen/Qwen3.5-0.8B in bf16 with CUDA (--s
   - save_pretrained wrote adapter/dec next to the main adapter;
   - the losses are finite, the ws run wrote its T / C1 / fmt entries and the tsd run its decoder accuracy.
 It prints the peak GPU memory of each run. steps.py also checks at import that peft's adapter switch toggles.
+--arms br (Addendum F) instead runs 20 steps of br with every step at the largest training loop count (6), so the peak memory is the worst case, and
+checks that the loop counts, the r-tags and the halting readout were written.
 """
 from __future__ import annotations
 
@@ -113,10 +115,14 @@ def run_arm(arm, args, adapter, out):
     if args.smoke:
         a.gate_step, a.log_every, a.max_len, a.bsz, a.micro_bsz = 4, 10**6, 256, 8, 4
     torch.optim.AdamW.step = spy
+    sched = K.loop_schedule
+    if arm == "br":  # every step at the largest training loop count: the worst-case memory
+        K.loop_schedule = lambda steps, seed, **kw: [K.BR_TRAIN_MAX] * steps
     try:
         rc = K.run_arm(a)
     finally:
         torch.optim.AdamW.step = real
+        K.loop_schedule = sched
     need(rc == 0, f"{arm}: run_arm returned {rc}")
     res = json.loads((out / f"{arm}_s{args.seed}" / f"result_{arm}_s{args.seed}.json").read_text())
     need(len(res["train"]["step_losses"]) == args.steps and all(x == x and abs(x) < 1e6 for x in res["train"]["step_losses"]), f"{arm}: non-finite or missing losses")
@@ -126,6 +132,9 @@ def run_arm(arm, args, adapter, out):
         need((out / f"tsd_s{args.seed}" / "adapter" / "adapter_config.json").exists(), "tsd: the main adapter was not saved")
         need(res.get("decoder") and res["decoder"]["tokens"] > 0, "tsd: no decoder accuracy")
         need(res.get("gate_closed") in (True, False), "tsd: gate_closed not recorded")
+    elif arm == "br":
+        need(res["train"].get("loops_hist") == {str(K.BR_TRAIN_MAX): args.steps}, f"br: loop counts not as forced: {res['train'].get('loops_hist')}")
+        need({f"r{r}" for r in K.BR_EVAL_LOOPS} | {"main"} <= set(res["eval"]["validation"]) and res.get("halting"), "br: r-tags or the halting readout missing")
     else:
         need({"T", "C1", "fmt"} <= set(res["eval"]["validation"]) and res["train"].get("written_cut"), "ws: T / C1 / fmt or the cut count missing")
     return dict(peak_gpu_mem_gb=res.get("peak_gpu_mem_gb"), seconds=res["train"]["seconds"], first_step_grad_tensors=seen["g"], final_loss=res["train"]["step_losses"][-1])
@@ -143,6 +152,7 @@ def main(argv=None):
     ap.add_argument("--max-len", type=int, default=2048)
     ap.add_argument("--lmax", type=int, default=4)
     ap.add_argument("--smoke", action="store_true", help="tiny random model on the CPU (tests this script)")
+    ap.add_argument("--arms", default="tsd,ws", help="tsd,ws (P1 / P2b, with the gradient checks) or br (Addendum F, worst-case loops)")
     args = ap.parse_args(argv)
     out, adapter = Path(args.out), Path(args.a_adapter)
     if not args.smoke and not torch.cuda.is_available():
@@ -154,16 +164,19 @@ def main(argv=None):
         need(any((adapter / f).exists() for f in ("adapter_config.json",)), f"no stage-1 adapter at {adapter}")
         gargs = argparse.Namespace(smoke=args.smoke, seed=args.seed, model=args.model, data=args.data, max_len=256 if args.smoke else args.max_len,
                                    alpha_init=args.alpha_init, lmax=args.lmax)
-        report = {"grad_checks": grad_checks(gargs, device, dtype, adapter)}
-        print(f"[preflight] gradient checks ok: {report['grad_checks']}", flush=True)
-        for arm in ("tsd", "ws"):
+        arms = args.arms.split(",")
+        report = {}
+        if "tsd" in arms:
+            report["grad_checks"] = grad_checks(gargs, device, dtype, adapter)
+            print(f"[preflight] gradient checks ok: {report['grad_checks']}", flush=True)
+        for arm in arms:
             report[arm] = run_arm(arm, args, adapter, out)
             print(f"[preflight] {arm} ok: {report[arm]}", flush=True)
     except Fail as e:
         print(f"PREFLIGHT FAIL: {e}", flush=True)
         return 1
-    peak = max((report[a]["peak_gpu_mem_gb"] or 0) for a in ("tsd", "ws"))
-    print(f"PREFLIGHT OK: bf16={dtype == torch.bfloat16}, peak GPU memory {peak:.2f} GB (tsd {report['tsd']['peak_gpu_mem_gb']}, ws {report['ws']['peak_gpu_mem_gb']})", flush=True)
+    peak = max((report[a]["peak_gpu_mem_gb"] or 0) for a in arms)
+    print(f"PREFLIGHT OK: bf16={dtype == torch.bfloat16}, peak GPU memory {peak:.2f} GB (" + ", ".join(f"{a} {report[a]['peak_gpu_mem_gb']}" for a in arms) + ")", flush=True)
     out.mkdir(parents=True, exist_ok=True)
     (out / "preflight.json").write_text(json.dumps(report, indent=1, default=str))
     return 0

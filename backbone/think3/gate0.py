@@ -33,6 +33,7 @@ ALL_ARMS = ("off", "on", "ev")
 EMPTY_THINK = "<ifm|think>\n</ifm|think>"  # how the thinking-off template ends the generation prompt
 STOP = "<|ifm|im_end|>"
 INSTRUCTION = "Answer with just the answer phrase, nothing else."
+PREFILL = "Answer:"  # --prefill (pre-screen only): off / ev replies start with this, after the closed think block, so no reasoning is written outside it
 THINK_END = re.compile(r"</ifm\|think(?:_fast|_faster)?>")
 SPLITS = ("train", "dev", "validation")
 
@@ -174,12 +175,17 @@ def render_ev(tok, template, row, lines):
     return ev_prompt(render(tok, template, row, None), lines)
 
 
-def generate(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
+def prompt_of(tok, template, row, effort, ev_lines=None, prefill=""):
+    """One row's generation prompt: thinking on (effort), off (effort None) or ev (ev_lines). prefill is appended to off / ev prompts only."""
+    p = render_ev(tok, template, row, ev_lines[row["id"]]) if ev_lines is not None else render(tok, template, row, effort)
+    return p + prefill if prefill and effort is None else p
+
+
+def generate(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None, prefill=""):
     from vllm import SamplingParams
     sp = SamplingParams(temperature=0.0, max_tokens=max_tokens, stop=[STOP], skip_special_tokens=False)  # keep the think tags: split_think needs them
     idx = [i for i in range(len(rows)) if i not in skip]
-    prompts = [{"prompt_token_ids": tok(render_ev(tok, template, rows[i], ev_lines[rows[i]["id"]]) if ev_lines is not None else render(tok, template, rows[i], effort),
-                                                    add_special_tokens=False)["input_ids"]} for i in idx]
+    prompts = [{"prompt_token_ids": tok(prompt_of(tok, template, rows[i], effort, ev_lines, prefill), add_special_tokens=False)["input_ids"]} for i in idx]
     outs = llm.generate(prompts, sp)
     res = {}
     for i, o in zip(idx, outs):
@@ -188,7 +194,7 @@ def generate(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
     return res
 
 
-def generate_mlx(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
+def generate_mlx(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None, prefill=""):
     """Same contract as generate(), on Apple silicon via mlx-lm (greedy, one row at a time). Token ids are decoded with the HF tokenizer
     (skip_special_tokens=False) so the think tags survive, and generation stops at STOP as vLLM's stop string does. A pre-screen only: the sealed
     Gate 0 is the vLLM bf16 run; mlx models are usually 4-bit."""
@@ -198,7 +204,7 @@ def generate_mlx(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=No
     res = {}
     t0 = time.time()
     for k, i in enumerate(j for j in range(len(rows)) if j not in skip):
-        prompt = render_ev(tok, template, rows[i], ev_lines[rows[i]["id"]]) if ev_lines is not None else render(tok, template, rows[i], effort)
+        prompt = prompt_of(tok, template, rows[i], effort, ev_lines, prefill)
         ids, out, finish = tok(prompt, add_special_tokens=False)["input_ids"], [], "length"
         for r in stream_generate(llm, tok, ids, max_tokens=max_tokens, sampler=sampler):
             out.append(r.token)
@@ -255,6 +261,8 @@ def main(argv=None):
     ap.add_argument("--max-num-seqs", type=int, default=64)
     ap.add_argument("--model-impl", default=None, help="e.g. transformers, if the native vLLM implementation fails")
     ap.add_argument("--repeat", default=None, help="mlx only, training-free looping: A:B:R runs layers A..B-1 R times in a row (shared weights, own KV cache per pass)")
+    ap.add_argument("--effort-on", default=EFFORT_ON, choices=("low", "medium", "high"), help="reasoning_effort of the on arm (PREREG Gate 0: low)")
+    ap.add_argument("--prefill", action="store_true", help=f"pre-screen only: off / ev replies start with {PREFILL!r} so the model cannot reason in plain text after the empty think block")
     ap.add_argument("--backend", default="vllm", choices=("vllm", "mlx"), help="mlx: Apple-silicon pre-screen with mlx-lm (e.g. --model mlx-community/K2-Horizon-3.7B-4bit); not the sealed Gate 0")
     a = ap.parse_args(argv)
 
@@ -276,7 +284,7 @@ def main(argv=None):
         return len(tok(prompt, add_special_tokens=False)["input_ids"])
     plen_by = {}
     if "on" in arms:
-        plen_by["on"] = [ntok(render(tok, template, r, EFFORT_ON)) for r in rows]
+        plen_by["on"] = [ntok(render(tok, template, r, a.effort_on)) for r in rows]
     if "off" in arms:
         plen_by["off"] = [ntok(render(tok, template, r, None)) for r in rows]
     if "ev" in arms:
@@ -308,7 +316,7 @@ def main(argv=None):
     t0 = time.time()
     parsed, g_on, n_trunc = [], {}, 0  # parsed per row: (think, answer, truncated, n_think, n_ans)
     if "on" in arms:
-        g_on = generate(llm, tok, template, rows, EFFORT_ON, a.max_tokens_on, skip)
+        g_on = generate(llm, tok, template, rows, a.effort_on, a.max_tokens_on, skip)
         for i in range(len(rows)):
             if i in skip:
                 parsed.append(("", "", True, 0, 0))
@@ -338,19 +346,19 @@ def main(argv=None):
         prev = json.loads(path.read_text())
         if prev.get("ids") == ids:
             res = prev
-    res.update(model=a.model, split=a.split, n=len(rows), reasoning_effort_on=EFFORT_ON, g0_margin=G0_MARGIN, g0ev_margin=G0EV_MARGIN,
+    res.update(model=a.model, split=a.split, n=len(rows), reasoning_effort_on=a.effort_on, prefill=PREFILL if a.prefill else "", repeat=a.repeat, g0_margin=G0_MARGIN, g0ev_margin=G0EV_MARGIN,
                **prompt_info, ids=ids)
     res.setdefault("arms_run", [])
     res["arms_run"] = sorted(set(res["arms_run"]) | set(arms))
     if "off" in arms:
-        g_off = generate(llm, tok, template, rows, None, a.max_tokens_off, skip)
+        g_off = generate(llm, tok, template, rows, None, a.max_tokens_off, skip, prefill=PREFILL if a.prefill else "")
         res["hits_off"] = [False if i in skip else is_hit(extract_off(g_off[i]["text"]), r["answer"]) for i, r in enumerate(rows)]
     if "on" in arms:
         res.update(hits_on=hits_on, n_truncated_on=n_trunc, max_tokens_on=a.max_tokens_on,
                    think_tokens_on=tok_stats([p[3] for p in parsed]), answer_tokens_on=tok_stats([p[4] for p in parsed]),
                    out_tokens_on=tok_stats([g_on[i]["n_out"] for i in g_on]))
     if "ev" in arms:
-        g_ev = generate(llm, tok, template, rows, None, a.max_tokens_off, skip, ev_lines=ev_lines)
+        g_ev = generate(llm, tok, template, rows, None, a.max_tokens_off, skip, ev_lines=ev_lines, prefill=PREFILL if a.prefill else "")
         res["hits_ev"] = [False if i in skip else is_hit(extract_off(g_ev[i]["text"]), r["answer"]) for i, r in enumerate(rows)]
         res["n_ev_lines"] = [len(ev_lines[r["id"]]) for r in rows]
     if "hits_off" in res and "hits_on" in res:

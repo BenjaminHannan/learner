@@ -99,3 +99,17 @@ def test_br_and_aplong_runs():
     assert len(q["train"]["step_losses"]) == q["steps_stage2"] and "loops_hist" not in q["train"]
     assert set(q["eval"]["validation"]) == {"main"} and set(q["eval"]["dev"]) == {"main"}
     print(json.dumps(dict(br_mean=r["loop_schedule"]["mean"], ratio=ratio, aplong_steps=q["steps_stage2"], halting=r["halting"]["mean_loops"])))
+
+
+def test_preflight_br_worst_case(tmp_path):
+    """preflight --arms br forces every step to the largest training loop count and restores loop_schedule afterwards."""
+    import preflight as PF
+    fx = TK.fixture()
+    sched = K.loop_schedule
+    argv = ["--smoke", "--arms", "br", "--a-adapter", str(Path(fx["root"]) / "base" / "a_s0" / "adapter"), "--data", str(fx["data"]), "--out", str(tmp_path / "pf"),
+            "--steps", "3"]
+    assert PF.main(argv) == 0 and K.loop_schedule is sched
+    rep = json.loads((tmp_path / "pf" / "preflight.json").read_text())
+    assert set(rep) == {"br"}
+    r = json.loads((tmp_path / "pf" / "br_s0" / "result_br_s0.json").read_text())
+    assert r["train"]["loops_hist"] == {str(K.BR_TRAIN_MAX): 3}
