@@ -178,21 +178,21 @@ test('helper-can\'t-spawn: agent_* refuse for helpers, work for the primary', as
   const helperTools = agentTools(m, { isHelper: true });
   for (const n of ['agent_start', 'agent_list', 'agent_stop']) {
     const r = await helperTools[n]({ name: 'x', task: 'y' }, {});
-    assert.strictEqual(r.error, true); assert.strictEqual(r.text, NO); assert.match(r.text, /helpers can't start helpers/);
+    assert.strictEqual(r.error, true); assert.strictEqual(r.text, NO); assert.match(r.text, /Glims can't start Glims/);
   }
   assert.strictEqual(m.list().length, 0); assert.strictEqual(runs.length, 0);
   const t = agentTools(m, { isHelper: false });
   const bad = t.agent_start({ name: 'x', task: 'y', every: 'often' }, {});
   assert.strictEqual(bad.error, true); assert.match(bad.text, /every must look like/);
   const ok = t.agent_start({ name: 'x', task: 'y', every: '1h' }, { thread: { id: 'tp' } });
-  assert.match(ok.text, /Started helper 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
+  assert.match(ok.text, /Started Glim 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
   assert.strictEqual(m.list()[0].parent, 'tp');
   assert.match(t.agent_list(), /x \| queued \| every 1h \| next \d\d:\d\d \| last: none yet/);
   const dup = t.agent_start({ name: 'X', task: 'y' }, {}); assert.match(dup.text, /already exists/);
-  assert.match(t.agent_stop({ name_or_id: 'x' }).text, /Stopped helper 'x'/);
+  assert.match(t.agent_stop({ name_or_id: 'x' }).text, /Stopped Glim 'x'/);
   assert.match(t.agent_list(), /x \| stopped \| once/);
   assert.strictEqual(m.find('x').next, null);
-  assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no helper/);
+  assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no Glim/);
 });
 
 test('helper user message: date prefix, name, task; recurring runs carry the previous report (<= 600 chars)', async () => {
@@ -288,7 +288,7 @@ test('agent + fake gateway: primary calls agent_start -> helper runs -> notice q
       onFinish: (h, summary, parent) => { addNotice(primary.thread, h.name, summary); notified({ h, parent }); }
     });
     await mkAgent(false).run(primary.thread, 'start a helper to compute the answer');
-    assert.match(primary.thread.items.find((i) => i.t === 'step').preview, /Started helper 'ticker'/);
+    assert.match(primary.thread.items.find((i) => i.t === 'step').preview, /Started Glim 'ticker'/);
     const { h, parent } = await done;
     assert.strictEqual(parent, primary.thread.id);
     // the helper ran against the same gateway with the same system prompt and tool list as the primary
@@ -315,3 +315,27 @@ test('agent + fake gateway: primary calls agent_start -> helper runs -> notice q
 });
 
 function Thread(id) { this.thread = { id, title: 'x', messages: [], items: [] }; }
+
+test('Helpers.tick: a hold (sleeping) defers due runs; they fire once when the hold lifts', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hold-'));
+  const store = new Store(dir);
+  let hold = true; const runs = []; const clock = { t: Date.parse('2026-10-26T08:00:00Z') };
+  const m = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, hold: () => hold, runner: async (h) => { runs.push(h.name); return { report: 'r' }; } });
+  m.add({ name: 'briefing', task: 't', at: '08:00' });
+  clock.t += 2 * 86400000;
+  m.tick(); assert.deepStrictEqual(runs, []);
+  hold = false; m.tick(); assert.deepStrictEqual(runs, ['briefing']);
+});
+
+test('Helpers.add: deferFirst waits for the next slot, and a per-Glim mode is kept', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'defer-'));
+  const runs = []; const clock = { t: Date.parse('2026-10-26T08:00:00Z') };
+  const m = new Helpers({ file: path.join(dir, 'helpers.json'), store: new Store(dir), now: () => clock.t, runner: async (h) => { runs.push(h.name); return { report: 'r' }; } });
+  const v = m.add({ name: 'news', task: 't', every: '2h', deferFirst: true, mode: 'ask' });
+  assert.deepStrictEqual(runs, []);
+  assert.strictEqual(m.find('news').next, clock.t + 2 * 3600000);
+  assert.strictEqual(m.find('news').mode, 'ask'); assert.ok(v.id);
+  const x = m.add({ name: 'plain', task: 't', every: '2h' });   // the normal path still starts at once
+  assert.deepStrictEqual(runs, ['plain']); assert.ok(x);
+  assert.strictEqual(new Helpers({ file: path.join(dir, 'helpers.json'), store: new Store(dir), runner: async () => ({}) }).find('news').mode, 'ask'); // persisted
+});

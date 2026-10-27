@@ -14,12 +14,12 @@
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
     const t = v.top;
-    pill.classList.remove('working', 'waiting', 'error', 'done'); pill.classList.add(v.status);
+    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping'); pill.classList.add(v.status);
     Mascot.set(g, v.mood);
     $('#line').textContent = v.line || '';
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
     $('#dName').textContent = t.name + (t.title && t.name === 'Glim' ? ' · ' + t.title : '');
-    $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : '-');
+    $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : v.status === 'sleeping' ? 'Resting while you are away' : '-');
     $('#dTime').textContent = mmss(t.elapsedMs);
     $('#dErr').hidden = !t.error; $('#dErr').textContent = t.error || '';
     const ap = t.approval;
@@ -32,6 +32,7 @@
       b.append(btn('Deny', 'no', () => P.act('respond', { rid: ap.rid, value: 'deny', threadId: t.threadId })));
     }
     if (ap && ap.kind === 'login') b.append(btn('Open browser', '', () => P.act('openBrowser', t.key)));
+    if (v.status === 'sleeping') { b.textContent = ''; b.append(btn('Wake Glim', 'go', () => P.act('wake'))); return; }
     if (v.status === 'working' || v.status === 'waiting') b.append(btn('Stop', 'no', () => P.act('stop', t.key)));
     if (v.status === 'done' || v.status === 'error') b.append(btn('Dismiss', '', () => P.act('dismiss', t.key)));
   }

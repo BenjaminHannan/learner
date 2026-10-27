@@ -179,11 +179,48 @@ Ben > working > done) feeds the pill, the top-bar Glim and the dock badge so the
 
 ## Settings (every key in store.js)
 Model (gateway URL, default mode Auto/Think/Fast, Test connection with latency), Autonomy (main agent and helpers Ask first / Hands-off,
-max steps, read-only danger list), Helpers (runs at once), Memory (diary on/off, diary_mcp path, python path), Screen control (deskhelper
+max steps, read-only danger list), Double-check my work (`verify`), Helpers (runs at once), Diary (on/off, diary_mcp path, python path), Memory (facts Glim keeps), Sleep (app folder, python, auto-sleep, night window, idle minutes, scheduled-runs option), Screen control (deskhelper
 path, Check permissions, Ask macOS, Open Accessibility / Screen Recording settings via `x-apple.systempreferences:` deep links), Vision, Appearance
 (theme System/Light/Dark, text size, high contrast, status pill), Startup (open at login, keep running when closed, global hotkey recorder).
 Changes apply immediately and persist (`settings.json`, values validated in `store.sanitize`). Gateway/model changes re-warm; diary changes
 rebuild the tool list (and re-warm); theme drives `nativeTheme.themeSource`; the hotkey is re-registered.
+
+## Verify layer (src/agent.js, src/tools/after.js; setting `verify`, default on)
+After a run that used state-changing tools (`STATE_CHANGING`), the agent does not accept "done" straight away: it makes one short extra
+model call (a `[Self-check]` turn comparing the request with what the tools returned). The reply must be `VERIFIED`, or it names what is
+missing and the agent keeps working. At most `MAX_VERIFY` checks per task, so it cannot loop. It shows as a "Checking its work" step
+(check icon). Off in Settings ("Double-check my work before saying done") skips it. The check turn is not stored in the thread.
+
+## Memory (src/memory.js, Settings > Memory)
+Short facts about Ben in `userData/memory.json` (caps: 200 facts, 6000 chars, 300 per fact). The agent adds them with `memory_save` and removes
+them with `memory_forget`; Ben edits them in Settings (IPC `memory:list/add/edit/delete`, preload `desk.memory.list/add/edit/remove`).
+The block "What you know about Ben:" is put at the start of the newest user turn in the request copy only. It is never stored in the thread and
+never in the system prompt, so the cached prefix stays identical. Secret-looking text (passwords, codes, card numbers, keys) is refused with an
+inline message, both from the model and from Settings. The Settings list refreshes when the sheet opens and when a run ends.
+
+## First-run setup (renderer/onboard.js, renderer/uses.js)
+A full-window flow shown once (`onboarded`): meet your Glims, pick what you want them for (`uses`, `usesOther`), create the matching recurring
+Glims (IPC `onboard:create`, same `Helpers.add` as `agent_start`, no model call), then the Permissions card. The picks also choose the
+welcome chips. Settings > Setup > Run setup again reopens it; Esc skips and counts as done. The Permissions card waits for setup
+on a fresh install instead of popping up first.
+
+## Sleep mode (src/sleep.js; the sleepmode app is separate)
+Sleep is a stdlib-Python app at `~/learner-ops/sleepmode/app` (not part of Desk). While sleeping it stops the model servers, trains on the diary
+and does hourly read-only mail/calendar check-ins. Desk only starts it (`PYTHONPATH=<app> <python> -m sleepmode start`, detached, output in
+`sleepmode/desk-sleep.log`), wakes it (`... wake`, falling back to touching `WAKE`) and mirrors its files: `status.json`, `events.jsonl` (tailed
+from a saved offset), `inbox.md` (new lines only), `summary.md`, and the `SLEEPING` marker (counts only with a live pid). `src/sleep.js` has no
+Electron dependency; the python is `sleepPython` or the first of `sleepmode/venv312`, `learner-ops/.venv`, Homebrew python3, `python3`.
+- Rule: sleep starts only while Glim is idle (no run, no Glim running), because Ben's chats come first.
+- Asleep: runs are refused with a friendly message; the Glims' scheduled runs wait (`Helpers` option `hold`, setting `sleepPauseGlims`) and the
+  existing missed-run catch-up fires each one once after wake; the pill rests on "Sleeping · 2.5 h · quiz 78" with a Wake button; the top-bar
+  Glim is sleepy; the composer shows a big Wake Glim button. Typing anyway offers "Wake Glim and send this?" and keeps the text.
+- Wake: run `wake`, wait for the gateway again (`Warmer`, "Waking up…"), then post `summary.md` as a "While you slept" card (md.js) in the chat.
+- Check-ins: `checkin` events with `notified` or new `inbox.md` lines become a macOS notification, a chat notice and a pill flash;
+  `checkin_needs_permission` explains which Automation permission (Mail or Calendar) is missing.
+- Demo runs (the app's fake worker) are labelled "demo run" in the pill, summary card and Settings; no quiz numbers are shown for them.
+- Auto-sleep (`autoSleep`, off by default): `shouldAutoSleep` is a pure function (night window, idle minutes, no run, gateway idle, Desk not in
+  front, once per night, so waking at 2 am is respected). `wakeAt` wakes at the window end, only for a sleep Desk started by itself.
+- Tests: `test/sleep.test.js` (against `test/fake-sleepmode.js`) and the e2e Sleep section.
 
 ## Files
 desk/package.json, desk/main.js (window, views, IPC), desk/preload.js (+ preload-pill.js), desk/src/{agent,warm,perms,pillwin,pillstate,cards}.js,

@@ -57,7 +57,7 @@ test('screen: drives a helper binary and parses JSON', async () => {
   const r = await sc.tools.screen_look({ app: 'Notes' });
   assert.match(typeof r === 'string' ? r : r.text, /App: Notes[\s\S]*\[1\] AXButton "New"/);
   assert.deepStrictEqual(await sc.check(), { accessibility: true, screenRecording: false });
-  assert.strictEqual(await sc.tools.screen_key({ keys: 'cmd+t' }), 'Pressed cmd+t.');
+  assert.match(await sc.tools.screen_key({ keys: 'cmd+t' }), /^Pressed cmd\+t\.\nAfter key press: .*front app Notes/);
   assert.match(formatLook({ error: 'x' }), /Error: x/);
 });
 
@@ -74,4 +74,18 @@ else if(m.method==='tools/call')console.log(JSON.stringify({jsonrpc:'2.0',id:m.i
   d.stop();
   const bad = new Diary(() => ({ pythonPath: process.execPath, diaryPath: path.join(dir, 'nope.py') }));
   assert.strictEqual(await bad.probe(), false);
+});
+
+test('pill state: sleeping is the resting state, a flash (check-in alert) shows over it and then fades back', () => {
+  const { PillState } = require('../src/pillstate');
+  let t = 1000;
+  const p = new PillState({ now: () => t, doneMs: 8000 });
+  assert.strictEqual(p.status(), 'idle'); assert.strictEqual(p.view().visible, false);
+  p.setSleep({ line: 'Sleeping · 2.5 h · quiz 78', detail: 'x' });
+  let v = p.view(); assert.ok(v.visible); assert.strictEqual(v.status, 'sleeping'); assert.strictEqual(v.mood, 'sleepy'); assert.strictEqual(v.line, 'Sleeping · 2.5 h · quiz 78');
+  p.flash('Mail: urgent from Mr. Phipps');
+  v = p.view(); assert.strictEqual(v.status, 'done'); assert.match(v.line, /urgent/);
+  t += 9000; p.tick();
+  assert.strictEqual(p.view().status, 'sleeping');
+  p.setSleep(null); assert.strictEqual(p.view().visible, false);
 });

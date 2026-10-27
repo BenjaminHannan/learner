@@ -182,21 +182,23 @@ class Helpers {
   }
   byThread(threadId) { return this.items.find((h) => h.threadId === threadId) || null; }
 
-  add({ name, task, every, at, parent }) {
+  // deferFirst: do not run now; the first run is the next scheduled slot. mode: 'ask' | 'hands-off' for this Glim only (default: the helperMode setting).
+  add({ name, task, every, at, parent, deferFirst, mode }) {
     name = short(name, 40);
     task = String(task || '').trim();
     if (!name) throw new Error('name is required');
     if (!task) throw new Error('task is required');
     const sched = parseSchedule({ every, at });
-    if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a helper named '" + name + "' already exists; stop it first or pick another name");
-    if (this.items.length >= MAX_HELPERS) throw new Error('too many helpers (max ' + MAX_HELPERS + '); delete one first');
+    if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
+    if (this.items.length >= MAX_HELPERS) throw new Error('too many Glims (max ' + MAX_HELPERS + '); delete one first');
     const id = 'h' + this.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5);
     const t = this.o.store.newThread();
-    t.title = 'Helper: ' + name; t.helper = id;
+    t.title = 'Glim: ' + name; t.helper = id;
     this.o.store.saveThread(t);
     const h = { id, name, task, every: every || null, at: at || null, next: null, paused: false, status: 'idle', threadId: t.id, parent: parent || null, created: this.now(), lastRun: null, lastReport: '', lastSummary: '' };
+    if (mode === 'ask' || mode === 'hands-off') h.mode = mode;
     this.items.push(h);
-    if (sched.kind === 'at') { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
+    if (sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
     return this.view(h);
   }
 
@@ -243,6 +245,7 @@ class Helpers {
   // Run every helper whose time has come. A helper whose time passed while the app was closed is due once
   // (its next time is a single value, recomputed from "now" when the run starts), not once per missed slot.
   tick() {
+    if (this.o.hold && this.o.hold()) return; // e.g. sleeping: due runs wait and fire once after wake
     const now = this.now();
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;
@@ -296,10 +299,10 @@ class Helpers {
 // makeAgent(h, {onState}) -> {agent, dispose}
 function createRunner({ store, makeAgent }) {
   return async (h, text, { signal, onState, attach }) => {
-    const thread = store.loadThread(h.threadId) || { ...store.newThread(), id: h.threadId, title: 'Helper: ' + h.name, helper: h.id };
+    const thread = store.loadThread(h.threadId) || { ...store.newThread(), id: h.threadId, title: 'Glim: ' + h.name, helper: h.id };
     thread.messages = []; // fresh context per run; the last report rides in the message
     thread.items = (thread.items || []).slice(-MAX_ITEMS);
-    thread.title = 'Helper: ' + h.name; thread.helper = h.id;
+    thread.title = 'Glim: ' + h.name; thread.helper = h.id;
     if (signal.aborted) return { stopped: true };
     const made = await makeAgent(h, { onState });
     attach(made.agent);

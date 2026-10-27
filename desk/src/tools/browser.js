@@ -1,6 +1,8 @@
 'use strict';
 // Built-in browser: a WebContentsView in the persistent partition "persist:desk", driven from the main process.
 
+const { browserAfter } = require('./after');
+
 const SNAPSHOT_MAX = 3500;
 const PAGE_CHARS = 6000;
 
@@ -48,6 +50,7 @@ function pageSnapshot(maxEls) {
       if (type === 'password') val = el.value ? '••••' : '';
       else if (type === 'checkbox' || type === 'radio') val = el.checked ? 'checked' : 'unchecked';
       else if (tag === 'select') val = clean(el.options && el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : el.value, 40);
+      else if (sens === 'payment') val = el.value ? '••••' : '';
       else val = clean(el.value, 50);
       line = '[' + id + '] ' + t + ' "' + label + '" value="' + val + '"';
     } else if (tag === 'a') {
@@ -59,7 +62,21 @@ function pageSnapshot(maxEls) {
     lines.push(line);
   }
   const text = clean(document.body ? document.body.innerText : '', 800);
-  return { url: location.href, title: document.title, lines, text, count: id };
+  // evidence for the "After" note: the focused element's line (values already masked above) and visible error/alert text
+  const ae = document.activeElement;
+  const fid = ae && ae.getAttribute ? Number(ae.getAttribute('data-desk-id')) : 0;
+  const focus = fid && lines[fid - 1] ? lines[fid - 1] : '';
+  const alerts = [];
+  try {
+    for (const a of document.querySelectorAll('[role=alert],[aria-live=assertive],.error,.errors,.alert,.alert-danger,.invalid-feedback,.field-error,.form-error,[class*=error-message],[class*=errorMessage]')) {
+      const r = a.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      const t = clean(a.innerText || '', 100);
+      if (t && !alerts.includes(t)) alerts.push(t);
+      if (alerts.length >= 2) break;
+    }
+  } catch (e) { /* ignore */ }
+  return { url: location.href, title: document.title, lines, text, count: id, focus, alerts };
 }
 
 function pageReadText() {
@@ -142,6 +159,7 @@ class Browser {
     this.inflight = 0;
     this.lastActivity = Date.now();
     this.readCache = { url: '', pages: [] };
+    this.lastSnap = null; // structured copy of the latest snapshot: the baseline for the next "After" note
     this.view = view;
     this.wc = view.webContents;
     this.favicon = '';
@@ -218,12 +236,15 @@ class Browser {
       }
     }
     await this.waitSettled();
-    return this.snapshot();
+    return this.snapshot('navigate');
   }
 
-  async snapshot() {
+  // kind (click|type|navigate|back): append the compact "After" evidence note (what changed since the previous snapshot).
+  async snapshot(kind) {
     let s;
     try { s = await this.wc.executeJavaScript(call(pageSnapshot, 120)); } catch (e) { return { text: 'Error: page not readable (' + e.message + ')', error: true }; }
+    const prev = this.lastSnap;
+    this.lastSnap = s;
     const head = 'URL: ' + s.url + ' | Title: ' + s.title;
     const tail = '\nText: ' + s.text;
     let body = '';
@@ -234,11 +255,12 @@ class Browser {
     }
     let out = head + body + tail;
     if (shown < s.lines.length) out += '\n[' + (s.lines.length - shown) + ' more elements not shown; scroll or read the page]';
+    if (kind) out += '\n' + browserAfter(prev, s, kind);
     return out;
   }
 
-  async result(summary) {
-    const text = await this.snapshot();
+  async result(summary, kind) {
+    const text = await this.snapshot(kind);
     const r = typeof text === 'string' ? { text } : text;
     if (summary) r.summary = summary;
     return r;
@@ -259,7 +281,7 @@ class Browser {
     this.readCache = { url: '', pages: [] };
     await sleep(200);
     await this.waitSettled();
-    return this.result('Clicked [' + id + '] ' + (p.label ? '“' + p.label + '”' : ''));
+    return this.result('Clicked [' + id + '] ' + (p.label ? '“' + p.label + '”' : ''), 'click');
   }
 
   async sensitiveReason(id) {
@@ -288,7 +310,7 @@ class Browser {
     this.readCache = { url: '', pages: [] };
     await sleep(200);
     await this.waitSettled();
-    return this.result('Typed into [' + id + ']' + (p.label ? ' “' + p.label + '”' : '') + (enter ? ' + Enter' : ''));
+    return this.result('Typed into [' + id + ']' + (p.label ? ' “' + p.label + '”' : '') + (enter ? ' + Enter' : ''), 'type');
   }
 
   async scroll(direction) {
@@ -305,7 +327,7 @@ class Browser {
     if (h) h.goBack(); else this.wc.goBack();
     await sleep(200);
     await this.waitSettled();
-    return this.result('Went back');
+    return this.result('Went back', 'back');
   }
 
   async read(page) {

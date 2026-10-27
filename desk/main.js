@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
+const { powerMonitor, app, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -23,6 +23,9 @@ const { webSearch } = require('./src/tools/web');
 const { runShell } = require('./src/tools/shell');
 const { Diary } = require('./src/tools/diary');
 const { createScreen } = require('./src/tools/screen');
+const Uses = require('./renderer/uses');
+const { createMemory } = require('./src/memory');
+const { Sleep, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -35,6 +38,8 @@ let win = null;
 let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
 let concealed = false;
 let store = null;
+let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
+let memory = null;   // Ben's saved facts (userData/memory.json)
 let agent = null;
 let diary = null;
 let screen = null;
@@ -78,6 +83,95 @@ function updatePill() {
   if (pillWin) pillWin.update(pillState.view(), chatInFront());
 }
 setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible)) updatePill(); }, 1000).unref();
+
+// ---- sleep mode ---------------------------------------------------------------------------------------
+// The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
+// While asleep: runs are blocked, scheduled Glim runs wait (the missed-run catch-up fires them once after wake), the pill rests.
+const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
+function sleepView() {
+  const st = sleeper.status(); const av = sleeper.available();
+  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, error: sl.bad };
+}
+function pushSleep() {
+  const v = sleepView();
+  pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : 'Training on your chats; Glim answers again when you wake it' } : null);
+  send('sleep:state', v);
+}
+const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
+function sleepNotice(text) { send('sleep:notice', { text }); }
+function startSleep(o) {
+  o = o || {};
+  if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
+  if ((agent && agent.running) || (helpers && helpers.active.size)) return { error: 'Glim is busy with a run right now. Sleep starts only when it is idle, because your chats come first.' };
+  if (typeof o.pauseGlims === 'boolean') store.saveSettings({ sleepPauseGlims: o.pauseGlims });
+  const r = sleeper.start();
+  if (!r.ok) return { error: r.error };
+  { const n = new Date(), st = store.getSettings(); sl.sleepKey = inWindow(n, st.sleepFrom, st.sleepTo) ? windowKey(n, st.sleepFrom, st.sleepTo) : null; } // the night this sleep belongs to (if any)
+  sleeper.mark(); sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
+  pushSleep(); updatePill();
+  return { ok: true };
+}
+async function wakeNow() {
+  if (!sl.asleep || sl.waking) return { ok: true };
+  sl.waking = true; sl.wakingAt = Date.now();
+  const now = new Date(), s = store.getSettings();
+  const wk = wakeKey({ sleepKey: sl.sleepKey, now, settings: s }); // never a key from outside the window: waking at 08:00 must not block tonight
+  if (wk) sl.lastKey = wk;
+  pushSleep(); updatePill();
+  const r = await sleeper.wake();
+  if (!r.ok) { sl.waking = false; pushSleep(); sleepNotice('Could not wake Glim: ' + (r.error || 'unknown error')); return { error: r.error }; }
+  return { ok: true };
+}
+// the sleep app has stopped: wait for the gateway to answer again, then show the morning summary
+async function onWoke() {
+  sl.waking = true; sl.starting = 0; pushSleep(); updatePill();
+  if (warmer) { warmer.gatewayMoved(); for (let i = 0; i < 240 && warmer.state !== 'ready'; i++) await new Promise((r) => setTimeout(r, E2E ? 100 : 500)); }
+  sl.asleep = false; sl.waking = false; sl.lastActive = Date.now();
+  const summary = sleeper.readSummary();
+  pushSleep(); updatePill();
+  send('sleep:woke', { summary, demo: sleeper.status().demo });
+  notify('Glim is awake', summary ? short(summary.replace(/^#.*\n+/, ''), 140) : 'Welcome back.');
+  if (helpers) helpers.tick(); // scheduled runs that came due while asleep fire once now
+}
+function onSleepPoll(st, events) {
+  let alerts = 0; const lines = [];
+  for (const e of events) {
+    if (e.kind === 'checkin' && Number(e.notified) > 0) alerts += Number(e.notified);
+    else if (e.kind === 'inbox') lines.push(e.line);
+    else if (e.kind === 'checkin_needs_permission') {
+      const what = /cal/i.test(e.scanner || '') ? 'Calendar' : /mail/i.test(e.scanner || '') ? 'Mail' : (e.scanner || 'Mail or Calendar');
+      const text = 'Sleep check-ins need permission to read ' + what + '. Open System Settings > Privacy & Security > Automation and allow the app that runs sleep mode to control ' + what + ', then check in again.';
+      sleepNotice(text); notify('Sleep check-in needs permission', 'Allow access to ' + what + ' in System Settings > Privacy & Security > Automation.');
+    }
+  }
+  if (lines.length || alerts) {
+    const body = lines.length ? lines.slice(0, 3).join('\n') : alerts + ' new thing' + (alerts > 1 ? 's' : '') + ' in your mail or calendar need you.';
+    notify('Glim checked in while you sleep', body);
+    pillState.flash(lines[0] || (alerts + ' check-in alert' + (alerts > 1 ? 's' : '')));
+    sleepNotice('Check-in: ' + body.replace(/\n/g, ' · '));
+  }
+  const was = sl.asleep;
+  let now = st.sleeping;
+  if (sl.starting) {
+    if (st.sleeping) sl.starting = 0;
+    else if (sleeper.exit && (sleeper.exit.error || sleeper.exit.code)) { sl.starting = 0; sl.asleep = false; sl.bad = 'The sleep app stopped right away (see ' + sleeper.p.log + ').'; sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
+    else if (Date.now() - sl.starting > 20000) { sl.starting = 0; sl.asleep = false; sl.bad = 'The sleep app did not start (see ' + sleeper.p.log + ').'; sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
+    else now = true;
+  }
+  if (!was && now && !sl.waking) { sl.asleep = true; sl.startedAuto = false; pushSleep(); updatePill(); return; } // started from outside (Mac launcher)
+  if ((was || sl.waking) && !now && !sl.wokeRunning) { sl.wokeRunning = true; onWoke().finally(() => { sl.wokeRunning = false; }); return; }
+  if (sl.waking && st.sleeping && Date.now() - sl.wakingAt > 90000) { sl.waking = false; pushSleep(); sleepNotice('Glim is taking a long time to wake up. Look at ' + sleeper.p.log + '.'); return; }
+  if (sl.asleep) pushSleep();
+}
+function autoSleepTick(now, over) {
+  const s = store.getSettings(); now = now || new Date();
+  const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto };
+  const w = shouldAutoWake({ ...common, asleep: sl.asleep && !sl.waking });
+  if (w.wake) { wakeNow(); return { action: 'wake' }; }
+  const d = shouldAutoSleep({ ...common, available: sleeper.available().ok, idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), lastKey: sl.lastKey, ...over });
+  if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + s.sleepFrom + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
+  return { action: 'none', reason: d.reason };
+}
 
 function waitFor(id, signal, fallback, card) {
   return new Promise((resolve) => {
@@ -177,6 +271,7 @@ function createWindow() {
   });
   for (const ev of ['focus', 'blur', 'show', 'hide']) win.on(ev, () => {
     if (ev === 'focus' || ev === 'show') pillState.markSeen(openThreadId);
+    if (ev === 'focus') sl.lastActive = Date.now();
     if (ev === 'focus') send('perms-recheck', true);
     if (ev === 'focus' && ui && !ui.webContents.isDestroyed()) {
       const top = [...browsers.values()].find((r) => r.onTop);
@@ -378,12 +473,13 @@ function createAgent({ helper, rec }) {
   }
   const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
   const a = new Agent({
-    getSettings: isHelper ? () => ({ ...store.getSettings(), mode: store.getSettings().helperMode || 'hands-off' }) : () => store.getSettings(),
+    memory,
+    getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' }) : () => store.getSettings(),
     tools,
     toolDefs: () => toolDefs,
     slot: limiter,
     onState: helper && helper.onState,
-    onEnd: () => { holder.release(); endCard(); },
+    onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); },
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); },
     approve: (req, signal) => {
       const rid = a.threadId + ':' + req.id;
@@ -415,7 +511,7 @@ function createAgent({ helper, rec }) {
 // Helper run: its own browser (attached but covered, same partition), destroyed when the run ends.
 function makeHelperAgent(h, { onState }) {
   const rec = makeBrowser(h.threadId, h.name + '’s browser', { helper: true });
-  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, onState }, rec });
+  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, mode: h.mode, onState }, rec });
   return { agent, dispose: () => dropBrowser(h.threadId) };
 }
 
@@ -445,14 +541,15 @@ function buildAgent() {
   helpers = new Helpers({
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
+    hold: sleepHold,
     runner: createRunner({ store, makeAgent: makeHelperAgent }),
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent) => {
       if (parent) postNotice(parent, h.name, summary);
-      notify('Helper ' + h.name + ' finished', summary, h.threadId);
+      notify("Glim '" + h.name + "' finished", summary, h.threadId);
       send('threads:changed', {});
     },
-    onNeedBen: (h) => notify('Helper ' + h.name + ' needs you', 'Open its thread to answer.', h.threadId)
+    onNeedBen: (h) => notify("Glim '" + h.name + "' needs you", 'Open its thread to answer.', h.threadId)
   });
   agent = createAgent({ helper: null, rec: null });
 }
@@ -506,7 +603,7 @@ function registerHotkey(acc) {
   try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ }
   acc = String(acc || '').trim();
   if (!acc) return { ok: true, off: true };
-  try { return globalShortcut.register(acc, toggleWindow) ? { ok: true } : { ok: false, error: 'That shortcut is taken by another app.' }; } catch (e) { return { ok: false, error: 'That is not a valid shortcut.' }; }
+  try { return globalShortcut.register(acc, () => { sl.lastActive = Date.now(); toggleWindow(); }) ? { ok: true } : { ok: false, error: 'That shortcut is taken by another app.' }; } catch (e) { return { ok: false, error: 'That is not a valid shortcut.' }; }
 }
 function setLoginItem(on) { try { app.setLoginItemSettings({ openAtLogin: !!on, openAsHidden: true }); } catch (e) { /* not supported here */ } }
 function applyTheme(s) { nativeTheme.themeSource = s.theme === 'light' || s.theme === 'dark' ? s.theme : 'system'; }
@@ -538,6 +635,9 @@ async function afterFirstPaint() {
     onState: (state, info) => { gwState = { state, ...info }; send('gateway', gwState); }
   });
   warmer.start();
+  sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
+  if (!E2E) setInterval(() => autoSleepTick(), 60000).unref();
+  { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } } // already asleep when Desk opened
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;
@@ -545,11 +645,12 @@ async function afterFirstPaint() {
   const hk = registerHotkey(s.hotkey);
   if (!hk.ok) console.warn('hotkey:', hk.error);
   if (!E2E) setLoginItem(s.openAtLogin);
-  if (!E2E && permsSupported() && !s.permsSeen) { store.saveSettings({ permsSeen: true }); lastPermsShow = Date.now(); send('perms-show', { reason: 'first launch' }); }
+  // (while first-run setup is pending, the Permissions card is its last step instead)
+  if (!E2E && permsSupported() && s.onboarded && !s.permsSeen) { store.saveSettings({ permsSeen: true }); lastPermsShow = Date.now(); send('perms-show', { reason: 'first launch' }); }
   toolsReady = Promise.resolve();
   if (E2E) {
     require('./test/e2e.js').run({
-      app, win, ui, store, helpers, send, browsers, panel, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
+      app, win, ui, store, memory, sleeper, sl, autoSleepTick, helpers, send, browsers, panel, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
       loginWaits, timing, getWin: () => win, showWindow, holds, permsFake, permsStatus
     }).catch((e) => { console.error('E2E crashed', e); app.exit(1); });
   }
@@ -560,7 +661,7 @@ function buildMenu() {
   const openSettings = () => { showWindow(); send('open-settings', true); };
   const tpl = [
     ...(mac ? [{ label: app.name, submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }] }] : []),
-    { label: 'File', submenu: [{ label: 'New thread', accelerator: 'CmdOrCtrl+N', click: () => { showWindow(); send('new-thread', true); } }, ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
+    { label: 'File', submenu: [{ label: 'New thread', accelerator: 'CmdOrCtrl+N', click: () => { showWindow(); send('new-thread', true); } }, { label: 'Sleep…', click: () => { showWindow(); send('sleep-open', true); } }, ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
     { role: 'editMenu' },
     { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
     { role: 'windowMenu' }
@@ -587,8 +688,10 @@ function registerIpc() {
   h('threads:delete', (id) => { if (!helpers.byThread(id)) { store.deleteThread(id); dropBrowser(id); } return true; });
   h('threads:rename', (id, title) => { store.renameThread(id, title); return true; });
   h('agent:send', async (threadId, text) => {
+    sl.lastActive = Date.now();
+    if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };
     const hp = helpers.byThread(threadId);
-    if (hp) return helpers.steer(hp.id, text) ? { steered: true } : { error: "This is a helper's thread. Use Run now in the Agents list, or ask the primary agent." };
+    if (hp) return helpers.steer(hp.id, text) ? { steered: true } : { error: "This is a Glim's thread. Use Run now in the Glims list, or ask your main Glim." };
     if (agent.running) {
       if (activeThread && activeThread.id === threadId) { agent.steer(text); return { steered: true }; }
       return { error: 'Premonition is busy in another thread.' };
@@ -604,8 +707,23 @@ function registerIpc() {
     return { started: true, title: t.title };
   });
   h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else agent.stop(); return true; });
+  // First-run setup: create the picked recurring Glims through the same Helpers.add that agent_start uses (no model call).
+  h('onboard:create', (ids) => (Array.isArray(ids) ? ids : []).map((use) => {
+    const t = Uses.templateFor(use);
+    if (!t) return { use, ok: false, name: String(use), error: 'nothing to schedule for this use' };
+    try { const v = helpers.add({ name: t.name, task: t.task, every: t.every, at: t.at, deferFirst: true, mode: 'ask' }); return { use, ok: true, name: v.name, id: v.id, schedule: v.schedule }; }
+    catch (e) { return { use, ok: false, name: t.name, error: String(e && e.message || e) }; }
+  }));
+  h('memory:list', () => memory.list());
+  h('memory:add', (o) => memory.add(o));
+  h('memory:edit', (id, o) => memory.edit(id, o));
+  h('memory:delete', (id) => memory.delete(id));
   h('helpers:list', () => helpers.list());
-  h('helpers:run', (id) => helpers.runNow(id));
+  h('helpers:run', (id) => ((sl.asleep || sl.waking) ? { error: 'Glim is asleep. Wake it first.' } : helpers.runNow(id)));
+  h('sleep:state', () => sleepView());
+  h('sleep:start', (o) => startSleep(o));
+  h('sleep:wake', () => wakeNow());
+  h('sleep:summary', () => sleeper.readSummary());
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
   h('respond', (id, value) => { const r = pending.get(id); if (r) { pending.delete(id); r(value); } return true; });
@@ -692,6 +810,7 @@ function registerIpc() {
 
   // status pill actions
   ipcMain.handle('pill:act', async (e, name, arg) => {
+    if (name !== 'hover') sl.lastActive = Date.now();
     switch (name) {
       case 'hover': if (pillWin) pillWin.setInteractive(!!arg); break;
       case 'open': { showWindow(); if (arg && arg.threadId) send('open-thread', arg.threadId); if (arg && arg.key) pillState.dismiss(arg.key); break; }
@@ -699,6 +818,7 @@ function registerIpc() {
       case 'respond': { const r = pending.get(arg.rid); if (r) { pending.delete(arg.rid); r(arg.value); send('agent', { threadId: arg.threadId, type: 'resolved', rid: arg.rid, value: arg.value }); } break; }
       case 'openBrowser': { const pa = [...pillState.agents.values()].find((x) => x.key === arg); const key = pa && pa.threadId; if (key && browsers.has(key)) { showWindow(); send('browser-show', { key, threadId: key, login: loginWaits.has(key) }); } break; }
       case 'dismiss': pillState.dismiss(arg); break;
+      case 'wake': wakeNow(); break;
       default: break;
     }
     return true;
@@ -715,6 +835,8 @@ app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { 
 app.whenReady().then(async () => {
   if (!gotLock) return;
   store = new Store(app.getPath('userData'));
+  memory = createMemory(app.getPath('userData'));
+  sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   applyTheme(store.getSettings());
   diary = new Diary(() => store.getSettings());

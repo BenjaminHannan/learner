@@ -2,9 +2,41 @@
 const { streamChat } = require('./llm');
 const { SYSTEM_PROMPT } = require('./prompt');
 const { takeNotices } = require('./helpers');
+const { usesLine } = require('../renderer/uses');
 
 const COMPACT_TOKENS = 24000;
 const MAX_TOOL_CHARS = 8000;
+
+// ---- verification layer ----------------------------------------------------------------------
+// Tools that change something; a final answer after any of them gets one cheap check turn first.
+const STATE_CHANGING = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_back', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
+const RECHECK_TOOLS = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_back', 'browser_scroll', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
+const MAX_VERIFY = 2;                 // check turns per task (so it can never loop)
+// The gateway maps qwen36-fast to the same upstream model with thinking off, so the check shares the prompt cache with real turns.
+const VERIFY_MODEL = 'qwen36-fast';
+const VERIFY_MAX_TOKENS = 200;
+const CHECK_MARK = '[Self-check]';
+const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence in the tool results above (After lines, page text, command output). Reply VERIFIED if every claim is backed by that evidence, or NOT DONE: <what is missing>. One short line. Do not call tools.';
+const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
+const verifyOn = (s) => !(s && (s.verify === false || s.verify === 'off'));
+// 'VERIFIED' -> {ok:true}; 'NOT DONE: x' -> {ok:false, reason:x}; anything unclear -> null (accept the answer, never block on noise)
+function parseCheck(text) {
+  const t = String(text || '').trim();
+  if (/^\W*VERIFIED\b/i.test(t)) return { ok: true };
+  const m = /^\W*NOT\s+DONE\b\W*([\s\S]*)$/i.exec(t);
+  if (m) return { ok: false, reason: short(m[1] || 'something is missing', 160) };
+  return null;
+}
+
+// Empty content but some thinking text: look for the verdict at the end of it (the last NOT DONE / VERIFIED wins).
+function parseCheckLoose(text) {
+  const t = String(text || '');
+  let last = null, m;
+  const re = /\b(VERIFIED|NOT\s+DONE)\b\W*([^\n]*)/gi;
+  while ((m = re.exec(t))) last = m;
+  if (!last) return null;
+  return /^VERIFIED/i.test(last[1]) ? { ok: true } : { ok: false, reason: short(last[2] || 'something is missing', 160) };
+}
 
 // ---- helpers (exported for tests) ------------------------------------------------------------
 const DANGER_PATTERNS = [
@@ -109,6 +141,9 @@ function defaultSummary(name, a) {
     case 'open_app': return 'Opened ' + a.name;
     case 'run_shell': return 'Ran ' + short(a.command, 60);
     case 'diary_search': return 'Searched diary “' + short(a.query, 40) + '”';
+    case 'memory_save': return 'Remembered: ' + short(a.fact, 50);
+    case 'memory_forget': return 'Forgot: ' + short(a.match || a.id, 50);
+    case 'verify': return 'Checking its work';
     case 'ask_user': return 'Asked Ben';
     default: return name;
   }
@@ -148,6 +183,10 @@ class Agent {
     this.release = null;
     this.last = { key: '', count: 0, text: '' };
     this.strikes = 0;
+    this.usedState = false;
+    this.usedWeb = false;
+    this.verifyCount = 0;
+    this.memBlock = '';
   }
 
   toolDefs() { return typeof this.o.toolDefs === 'function' ? this.o.toolDefs() : this.o.toolDefs; }
@@ -182,6 +221,10 @@ class Agent {
     this.steerQueue = [];
     this.last = { key: '', count: 0, text: '' };
     this.strikes = 0;
+    this.usedState = false; this.usedWeb = false;
+    this.verifyCount = 0;
+    this.memBlock = '';
+    try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     this.threadId = thread.id;
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
@@ -189,7 +232,11 @@ class Agent {
     const save = () => { try { this.o.onThreadChange && this.o.onThreadChange(thread); } catch (e) { /* ignore */ } };
     const pushUser = (text) => {
       const notes = takeNotices(thread); // finished-helper updates ride along with Ben's next message
-      thread.messages.push({ role: 'user', content: datePrefix() + ' ' + (notes ? notes + '\n' : '') + text });
+      // Ben's picks from first-run setup ride in the first user message of a thread, beside the date. Never in the system prompt or tools.
+      let ctx = '';
+      if (!thread.messages.some((m) => m.role === 'user')) { try { const s = this.o.getSettings && this.o.getSettings(); ctx = s ? usesLine(s.uses, s.usesOther) : ''; } catch (e) { ctx = ''; } }
+      // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
+      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + datePrefix() + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
       thread.items.push({ t: 'user', text });
     };
     repairHistory(thread.messages);
@@ -234,7 +281,7 @@ class Agent {
           res = await streamChat({
             gatewayUrl: s.gatewayUrl,
             model: s.model,
-            messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...thread.messages.map(cleanMsg)],
+            messages: this.requestMessages(thread),
             tools: this.toolDefs(),
             signal,
             apiKey: s.apiKey,
@@ -267,6 +314,8 @@ class Agent {
         if (res.content || res.reasoning) {
           thread.items.push({ t: 'assistant', text: res.content, thinking: res.reasoning || '', thinkSecs: res.reasoning ? secs : 0, ttftMs });
         }
+        // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
+        const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
         this.emit({ type: 'assistant_end', text: res.content, reasoning: res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
         const plan = extractPlan(res.content);
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
@@ -274,6 +323,8 @@ class Agent {
 
         if (!res.toolCalls.length) {
           if (this.steerQueue.length) continue; // Ben added something while we were answering
+          if (verdict === 'continue') continue;
+          if (verdict === 'stop') stopped = true;
           break;
         }
 
@@ -286,6 +337,7 @@ class Agent {
             continue;
           }
           const out = await this.runTool(call, thread, signal);
+          if (out.failed && RECHECK_TOOLS.has(call.name)) out.text += RECHECK_HINT;
           thread.messages.push({ role: 'tool', tool_call_id: call.id, content: out.text });
           if (out.image) pendingImage = out.image;
           if (signal.aborted) stopped = true;
@@ -312,6 +364,40 @@ class Agent {
     return { stopped, error: failure };
   }
 
+  // Messages for one request: constant system prompt + the stored history (each task's memory snapshot is already in its user turn).
+  requestMessages(thread) {
+    return [{ role: 'system', content: SYSTEM_PROMPT }, ...thread.messages.map(cleanMsg)];
+  }
+
+  // One cheap check turn before accepting a final answer on a task that changed things. Same system prompt and tools (cache hit),
+  // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
+  async verifyAnswer(thread, s, signal, answer) {
+    if (!verifyOn(s) || !this.usedState || this.verifyCount >= MAX_VERIFY || !String(answer || '').trim()) return 'accept';
+    const n = ++this.verifyCount;
+    const id = 'verify_' + n;
+    const item = { t: 'step', id, tool: 'verify', args: {}, summary: 'Checking its work', ok: true, preview: '' };
+    thread.items.push(item);
+    this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary: item.summary });
+    const end = (summary, ok, preview) => {
+      item.summary = summary; item.ok = ok; item.preview = preview || '';
+      this.emit({ type: 'step_end', id, tool: 'verify', ok, summary, preview: item.preview, result: item.preview });
+    };
+    let verdict = null;
+    try {
+      const r = await streamChat({
+        gatewayUrl: s.gatewayUrl, model: s.verifyModel || VERIFY_MODEL,
+        messages: [...this.requestMessages(thread), { role: 'user', content: CHECK_MESSAGE }],
+        tools: this.toolDefs(), maxTokens: VERIFY_MAX_TOKENS, signal, apiKey: s.apiKey
+      });
+      if (!r.toolCalls.length) verdict = parseCheck(r.content) || (!String(r.content || '').trim() && r.reasoning ? parseCheckLoose(r.reasoning) : null);
+    } catch (e) { if (signal.aborted) { end('Check stopped', false); return 'stop'; } }
+    if (signal.aborted) { end('Check stopped', false); return 'stop'; }
+    if (!verdict || verdict.ok) { end('Checked its work', true, verdict ? 'VERIFIED' : 'no verdict; accepted'); return 'accept'; }
+    end('Re-checking: ' + short(verdict.reason, 80), true, verdict.reason);
+    thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done yet: ' + verdict.reason + '. Look at the page or screen again, fix it with tools, then answer.' });
+    return 'continue';
+  }
+
   async runTool(call, thread, signal) {
     const name = call.name;
     const args = parseArgs(call.arguments);
@@ -336,7 +422,27 @@ class Agent {
         return { text: finish(answer, !signal.aborted, 'Asked Ben: ' + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
+    if ((name === 'memory_save' || name === 'memory_forget') && this.o.memory) {
+      try {
+        if (name === 'memory_save') {
+          // after reading web pages the "fact" may come from the page, not from Ben: Ask-first mode needs his OK, and the step says so
+          const web = this.usedWeb;
+          if (web && ctx.settings.mode !== 'hands-off' && !this.taskAllow.has('memory')) {
+            const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, kind: 'memory', danger: false, text: 'Remember this after reading the web? ' + short(args.fact, 200) }, signal), signal);
+            if (signal.aborted) return { text: finish('[stopped by user]', false) };
+            if (verdict === 'deny') return { text: finish('Ben did not want that saved. Do not retry it.', false, 'Denied: remember ' + short(args.fact, 40)) };
+            if (verdict === 'task') this.taskAllow.add('memory');
+          }
+          const r = this.o.memory.save(args.fact, args.topic);
+          return { text: finish(r.ok ? (r.replaced ? 'Updated memory: ' : 'Saved to memory: ') + r.fact.text : r.error, r.ok, r.ok ? 'Remembered' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50) : 'Did not save: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
+        }
+        const r = this.o.memory.forget({ id: args.id, match: args.match });
+        return { text: finish(r.ok ? 'Forgot ' + r.removed.length + ' fact(s): ' + r.removed.map((f) => f.text).join(' | ') : r.error, r.ok, r.ok ? 'Forgot ' + r.removed.length + ' fact(s)' : 'Nothing to forget') };
+      } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
+    }
     if (!entry) return { text: finish('Error: unknown tool ' + name, false) };
+    if (STATE_CHANGING.has(name)) this.usedState = true;
+    if (/^(web_|browser_)/.test(name) || name === 'screen_look') this.usedWeb = true;
     const run = typeof entry === 'function' ? entry : entry.run;
     try {
       // loop guard: the same call again and again is a stuck model, not progress
@@ -379,12 +485,12 @@ class Agent {
       this.last.text = typeof r === 'string' ? r : (r && r.text) || '';
       const summary = r && typeof r === 'object' && r.summary ? r.summary : null;
       const ok = !(r && typeof r === 'object' && r.error);
-      const out = { text: finish(text, ok, summary) };
+      const out = { text: finish(text, ok, summary), failed: !ok };
       if (r && typeof r === 'object' && r.image) out.image = r.image;
       return out;
     } catch (e) {
       if (signal.aborted) return { text: finish('[stopped by user]', false) };
-      return { text: finish('Error: ' + (e && e.message || e), false) };
+      return { text: finish('Error: ' + (e && e.message || e), false), failed: true };
     }
   }
 }
@@ -416,4 +522,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

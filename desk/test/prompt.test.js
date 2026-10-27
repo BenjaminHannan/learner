@@ -12,7 +12,7 @@ test('system prompt + tool schemas stay under 9000 chars', () => {
 
 test('tool list is constant; diary tool only when diary is available', () => {
   const a = buildTools({ diary: true }), b = buildTools({ diary: false });
-  assert.strictEqual(a.length, 18); assert.strictEqual(b.length, 17);
+  assert.strictEqual(a.length, 20); assert.strictEqual(b.length, 19);
   assert.ok(!b.some((t) => t.function.name === 'diary_search'));
   assert.strictEqual(JSON.stringify(buildTools({ diary: true })), JSON.stringify(a));
 });

@@ -50,9 +50,9 @@ function buildChatBody({ model, messages, tools, stream, maxTokens }) {
 const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
 
 async function streamChat(opts) {
-  const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, apiKey } = opts;
+  const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, apiKey, maxTokens } = opts;
   const url = chatUrl(gatewayUrl);
-  const body = buildChatBody({ model, messages, tools, stream: true });
+  const body = buildChatBody({ model, messages, tools, stream: true, maxTokens });
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
   if (apiKey) headers.authorization = 'Bearer ' + apiKey;
   const tStart = Date.now();
