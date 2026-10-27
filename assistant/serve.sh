@@ -12,6 +12,8 @@ SMALL_TEMPLATE="${ASSISTANT_SMALL_TEMPLATE:-}"  # jinja file; K2 needs its no-th
 # 1 GB kept only ~3 and evicted the shared system prefix (46 s re-prefill). 3 GB keeps ~10.
 BIG_CACHE_SIZE="${ASSISTANT_CACHE_SIZE:-16}"
 BIG_CACHE_BYTES="${ASSISTANT_CACHE_BYTES:-3GB}"
+# Smaller prefill chunks lower the memory peak of long prompts (2048: 17.1 GB, 512: 16.1 GB on the M1).
+BIG_PREFILL_STEP="${ASSISTANT_PREFILL_STEP:-2048}"
 # 1 = gateway drops OpenCode's skills listing (~7k tokens) from system prompts; 0 = pass it through.
 export ASSISTANT_STRIP_SKILLS="${ASSISTANT_STRIP_SKILLS:-1}"
 
@@ -87,6 +89,7 @@ if [ $need_big = 1 ]; then
   echo "Starting big model ($BIG_MODEL) ..."
   launch big "$PY" -m mlx_lm.server --model "$BIG_MODEL" --host 127.0.0.1 --port $BIG_PORT \
     --max-tokens 8192 --prompt-cache-size "$BIG_CACHE_SIZE" --prompt-cache-bytes "$BIG_CACHE_BYTES" \
+    --prefill-step-size "$BIG_PREFILL_STEP" \
     --temp 0.6 --top-p 0.95 --top-k 20
 fi
 if [ $need_small = 1 ]; then
@@ -118,7 +121,7 @@ write_marker() {
 }
 write_marker
 
-# Memory watchdog (stops everything at memory pressure "warning" or +2 GB swap).
+# Memory watchdog (stops everything at critical pressure or sustained warning; see watchdog.sh).
 if ! alive watchdog; then
   rm -f "$OPS/assistant/WATCHDOG_STOPPED"
   launch watchdog /bin/bash "$DIR/watchdog.sh"
