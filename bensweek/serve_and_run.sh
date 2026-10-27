@@ -11,10 +11,11 @@ python3 -c "import vllm; print('vllm', vllm.__version__)" | tee "$OUT/versions.t
 git rev-parse HEAD >> "$OUT/versions.txt"
 
 # shellcheck disable=SC2086
-vllm serve "$REPO" --served-model-name m --port "$PORT" --max-model-len ${MAXLEN:-32768} \
+setsid vllm serve "$REPO" --served-model-name m --port "$PORT" --max-model-len ${MAXLEN:-32768} \
   --gpu-memory-utilization ${GPU_UTIL:-0.90} --enable-auto-tool-choice $VARGS > "$OUT/vllm.log" 2>&1 &
 SRV=$!
-trap 'kill $SRV 2>/dev/null; sleep 5; pkill -9 -f EngineCore 2>/dev/null' EXIT
+# vLLM runs in its own process group; stop only that group (other jobs' servers may share the box).
+trap 'kill -- -$SRV 2>/dev/null; sleep 5; kill -9 -- -$SRV 2>/dev/null' EXIT
 for i in $(seq 1 180); do
   curl -sf http://127.0.0.1:$PORT/v1/models >/dev/null && break
   kill -0 $SRV 2>/dev/null || { echo "vllm died"; tail -n 60 "$OUT/vllm.log"; exit 1; }
