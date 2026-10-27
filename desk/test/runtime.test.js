@@ -27,16 +27,19 @@ const rel = (tag, at, flavors, extra) => ({ tag_name: tag, published_at: at, dra
 
 test('llama.cpp asset: newest release at or after the LFM3 floor date, Vulkan first, CPU as the fallback flavor', () => {
   const rels = [rel('b9000', '2026-10-27T10:00:00Z', ['vulkan', 'cpu']), rel('b9010', '2026-10-27T16:30:00Z', ['vulkan', 'cpu']), rel('b9020', '2026-10-28T09:00:00Z', ['vulkan', 'cpu'])];
-  const v = R.pickLlamaAsset(rels, { flavor: 'vulkan' });
+  const v = R.pickLlamaAsset(rels, { flavor: 'vulkan', minTag: 0 });
   assert.strictEqual(v.tag, 'b9020'); assert.strictEqual(v.name, 'llama-b9020-bin-win-vulkan-x64.zip'); assert.strictEqual(v.sha256, 'a'.repeat(64));
-  assert.strictEqual(R.pickLlamaAsset(rels, { flavor: 'cpu' }).name, 'llama-b9020-bin-win-cpu-x64.zip');
+  assert.strictEqual(R.pickLlamaAsset(rels, { flavor: 'cpu', minTag: 0 }).name, 'llama-b9020-bin-win-cpu-x64.zip');
   // releases before the floor never qualify, even if they are the only ones
-  assert.strictEqual(R.pickLlamaAsset([rels[0]], { flavor: 'vulkan' }), null);
+  assert.strictEqual(R.pickLlamaAsset([rels[0]], { flavor: 'vulkan', minTag: 0 }), null);
   // a newest release that lacks the asset falls through to the previous one; drafts and prereleases are skipped
   const odd = [rel('b9030', '2026-10-29T00:00:00Z', ['cpu']), rel('b9020', '2026-10-28T09:00:00Z', ['vulkan']), rel('b9040', '2026-10-30T00:00:00Z', ['vulkan'], { prerelease: true })];
-  assert.strictEqual(R.pickLlamaAsset(odd, { flavor: 'vulkan' }).tag, 'b9020');
+  assert.strictEqual(R.pickLlamaAsset(odd, { flavor: 'vulkan', minTag: 0 }).tag, 'b9020');
   assert.strictEqual(R.pickLlamaAsset(rels, { flavor: 'vulkan', minTag: 9025 }), null);
   assert.ok(Date.parse(C.LLAMA_MIN_PUBLISHED) === Date.parse('2026-10-27T16:06:00Z'));
+  // the real floor: tags up to b11937 predate LFM3 support
+  assert.strictEqual(R.pickLlamaAsset([rel('b11937', '2026-10-28T01:00:00Z', ['vulkan'])], { flavor: 'vulkan' }), null);
+  assert.strictEqual(R.pickLlamaAsset([rel('b11940', '2026-10-28T01:00:00Z', ['vulkan'])], { flavor: 'vulkan' }).tag, 'b11940');
 });
 
 test('GGUF pick: the constant file name first, else the q4_0 .gguf in the repo listing; sha comes from the LFS oid', () => {

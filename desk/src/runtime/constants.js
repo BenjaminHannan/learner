@@ -5,7 +5,7 @@ module.exports = {
   // We compare release dates (the exact tag number of the first release after it is not known in advance).
   LLAMA_REPO: 'ggml-org/llama.cpp',
   LLAMA_MIN_PUBLISHED: '2026-10-27T16:06:00Z',
-  LLAMA_MIN_TAG_NUMBER: 0,               // optional extra floor on the bNNNN tag number; 0 = date check only
+  LLAMA_MIN_TAG_NUMBER: 11938,           // tags up to b11937 point at commits before LFM3 support (19cce69); raise to the first tag that has it
   LLAMA_FLAVORS: ['vulkan', 'cpu'],      // tried in this order; cpu = the avx2 build, used when Vulkan will not start
   llamaAssetName: (tag, flavor) => 'llama-' + tag + '-bin-win-' + (flavor === 'cpu' ? 'cpu' : flavor) + '-x64.zip',
   // chat model
