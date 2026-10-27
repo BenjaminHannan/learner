@@ -484,6 +484,8 @@ def test_box_script():
         assert runs(calls) == [("a", "1")], "result without adapter: retrain the stage-1 arm, then the (finished) job is skipped"
         calls, out = box("t:5,a:6,zz:0", fail="a")
         assert runs(calls) == [("a", "5"), ("a", "6")] and "t seed 5 skipped" in out and "unknown arm zz" in out, (runs(calls), out)
+        calls, out = box("br:11,aplong:11")  # Addendum F arms: a first, no P1 preflight, never "unknown arm"
+        assert runs(calls) == [("a", "11"), ("br", "11"), ("aplong", "11")] and "unknown arm" not in out and "preflight.py" not in [c[0] for c in calls], (runs(calls), out)
         calls, _ = box("t1:7", flags="--limit-eval+10")
         assert [c for c in calls if c[0] == "think1.py" and "t1" in c][0][-2:] == ["--limit-eval", "10"]
         # no CUDA: stop with exit 2 before any job runs; ALLOW_CPU=1 runs anyway
