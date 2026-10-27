@@ -428,6 +428,20 @@ class EndToEndTests(unittest.TestCase):
             st = json.loads((Path(tmp) / "episodes/wk01/wk01-d3-t1/world_state.json").read_text())
             self.assertIn("~/Documents/School/Chem/lab5_data.csv", st["files"])   # state carried across the resume
 
+    def test_resume_redoes_server_down_tasks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            scripted_run(tmp, days=2)
+            rp = Path(tmp) / "episodes/wk01/wk01-d1-t3/result.json"
+            r = json.loads(rp.read_text())
+            r["error"] = "agent error: RuntimeError: request failed after 4 tries: Connection refused"
+            rp.write_text(json.dumps(r))
+            agent = agents.ScriptedAgent({})
+            run.run_episodes([WK01], agent, tmp, "none", days=2, resume=True)
+            self.assertNotIn("wk01-d1-t1", agent.pos)      # finished before the outage: kept
+            self.assertIn("wk01-d1-t3", agent.pos)         # hit the dead server: redone
+            self.assertIn("wk01-d2-t1", agent.pos)         # later tasks redone from the right state
+            self.assertIsNone(json.loads(rp.read_text())["error"])
+
     def test_between_days_hook(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "hook.log"

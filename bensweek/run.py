@@ -53,6 +53,11 @@ def rjson(path):
     return json.loads(Path(path).read_text())
 
 
+def is_infra_error(err):
+    """True when a task failed because the model server was unreachable, not because of the model."""
+    return bool(err) and "request failed after" in err
+
+
 class EpisodeState:
     def __init__(self, ep, run_dir, memory, base, resume=False):
         self.ep = ep
@@ -76,6 +81,8 @@ class EpisodeState:
             if not rp.exists():
                 break
             r = rjson(rp)
+            if is_infra_error(r.get("error")):   # server was down: redo this task and the rest of the episode
+                break
             self.done.add(t["id"])
             self.add_history(r["date"], r["time"], r["prompt"], r["final_text"], t["id"])
             last = t["id"]
