@@ -47,6 +47,13 @@ def check_language():
 
 
 WITH_STATE = os.environ.get("PROBE_WITH_STATE") == "1"   # Probe-2 (PREREG-probe2.md): the writer also sees the start state
+CHECKLIST = os.environ.get("PROBE_CHECKLIST") == "1"      # Brain-1 (creative/brain1/PREREG.md): list the job's relations before writing checks
+CHECKLIST_TEXT = ("Before writing the checks, think it through in a short list:\n"
+                  "1. Every person, file, date, time and amount the request names or implies, with the exact matching items you can find in the data above. "
+                  "Say so if more than one item could match, or if none does.\n"
+                  "2. Which actions could not be undone once done.\n"
+                  "3. What must stay unchanged.\n"
+                  "Then write the checks from that list. Reply with the list, then the JSON in the form {\"checks\": [ {...}, {...} ]}.")
 
 
 def build_prompt(today, user, state=None):
@@ -61,7 +68,7 @@ def build_prompt(today, user, state=None):
             "Write 2 to 6 checks that would all be true if and only if the job was done right. Check what the right end state must contain, and also what must not have happened "
             "(for example an email nobody asked for). Each check is a JSON object with a \"type\" and keys from this list:\n\n"
             f"{check_language()}\n\n"
-            "Reply with only JSON, no other text, in the form {\"checks\": [ {...}, {...} ]}.")
+            + (CHECKLIST_TEXT if CHECKLIST else "Reply with only JSON, no other text, in the form {\"checks\": [ {...}, {...} ]}."))
 
 
 def task_prompt(task, with_state=None):
