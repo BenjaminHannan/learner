@@ -87,13 +87,32 @@ def run(spec, log=print):
     out = Path(spec["out"])
     out.mkdir(parents=True, exist_ok=True)
 
+    def head_of(m):
+        if hasattr(m, "lm_head"):
+            return m.lm_head
+        inner = getattr(m, "model", None)
+        return inner.embed_tokens.as_linear if inner is not None and hasattr(inner, "embed_tokens") else None
+
     def seq_logp(m, ids, mask):
+        """Logits only at the trained positions: K2's untied 250k vocab made full-sequence float32 logits ~6 GB per 6k-token OpenCode lesson
+        (night P1 on the M1 peaked at 37 GB)."""
+        pos = [i for i, v in enumerate(mask[1:]) if v]
         x = mx.array(ids[:-1])[None]
-        y = mx.array(ids[1:])[None]
-        w = mx.array(mask[1:], dtype=mx.float32)[None]
-        logits = m(x).astype(mx.float32)
-        lp = mx.take_along_axis(logits - mx.logsumexp(logits, axis=-1, keepdims=True), y[..., None], axis=-1)[..., 0]
-        return (lp * w).sum(), w.sum()
+        head, inner = head_of(m), getattr(m, "model", None)
+        if not pos:
+            return mx.array(0.0), mx.array(0.0)
+        if head is None or inner is None:  # unknown layout: full logits
+            y = mx.array(ids[1:])[None]
+            w = mx.array(mask[1:], dtype=mx.float32)[None]
+            logits = m(x).astype(mx.float32)
+            lp = mx.take_along_axis(logits - mx.logsumexp(logits, axis=-1, keepdims=True), y[..., None], axis=-1)[..., 0]
+            return (lp * w).sum(), w.sum()
+        pi = mx.array(pos)
+        h = inner(x)[0][pi]
+        logits = head(h).astype(mx.float32)
+        y = mx.array([ids[1 + i] for i in pos])
+        lp = mx.take_along_axis(logits - mx.logsumexp(logits, axis=-1, keepdims=True), y[:, None], axis=-1)[:, 0]
+        return lp.sum(), mx.array(float(len(pos)))
 
     enc = {}
     for i, it in enumerate(items):
