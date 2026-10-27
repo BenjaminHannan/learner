@@ -20,6 +20,23 @@ const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence 
 const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
 // "remember that ..." style asks: the small model sometimes says "saved" without calling memory_save, so the check catches it.
 const REMEMBER_ASK = /\b(remember|don'?t forget|keep in mind|make a note|note that)\b/i;
+// The fact in a "remember (that) ..." ask, in third person ("I take X" -> "Ben takes X" is too clever; "I" -> "Ben" is enough).
+const VERB_KEEP = new Set(['can', 'will', 'should', 'could', 'would', 'might', 'must', 'was', 'had', 'did', 'used', "don't", "didn't", "can't", "won't", 'never', 'always', 'usually', 'often', 'also', 'only', 'really', 'still']);
+function thirdPerson(v) {
+  const l = v.toLowerCase();
+  if (VERB_KEEP.has(l) || /ed$/.test(l)) return v;
+  if (l === 'have') return 'has'; if (l === 'do') return 'does'; if (l === 'go') return 'goes'; if (l === "don't") return "doesn't";
+  if (/[^aeiou]y$/.test(l)) return v.slice(0, -1) + 'ies';
+  if (/(s|sh|ch|x|z|o)$/.test(l)) return v + 'es';
+  return v + 's';
+}
+function rememberFact(text) {
+  const m = String(text || '').match(/\b(?:remember|don'?t forget|keep in mind|make a note|note)\b[\s,:]*(?:that\s+|of\s+)?([\s\S]+)/i);
+  if (!m) return '';
+  return m[1].trim().replace(/[\s.!]+$/, '').replace(/\bI'm\b/gi, 'Ben is').replace(/\bI am\b/gi, 'Ben is').replace(/\bI (\w+)/g, (m0, v) => 'Ben ' + thirdPerson(v)).replace(/\bI\b/g, 'Ben').replace(/\bmy\b/gi, "Ben's").replace(/\bme\b/gi, 'Ben').slice(0, 300);
+}
+const factWords = (s) => new Set((String(s || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => w.length > 2 && !['ben', 'bens', 'that', 'the', 'and', 'remember'].includes(w)));
+function relatesTo(fact, ask) { const a = factWords(fact), b = factWords(ask); if (!a.size || !b.size) return false; let n = 0; for (const w of b) if (a.has(w)) n++; return n / b.size >= 0.3; }
 const verifyOn = (s) => !(s && (s.verify === false || s.verify === 'off'));
 // 'VERIFIED' -> {ok:true}; 'NOT DONE: x' -> {ok:false, reason:x}; anything unclear -> null (accept the answer, never block on noise)
 function parseCheck(text) {
@@ -226,7 +243,7 @@ class Agent {
     this.usedState = false; this.usedWeb = false;
     this.verifyCount = 0;
     this.memBlock = '';
-    this.taskText = String(userText || ''); this.usedMemSave = false;
+    this.taskText = String(userText || ''); this.usedMemSave = false; this.memChecks = 0;
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     this.threadId = thread.id;
     const signal = this.abort.signal;
@@ -376,15 +393,26 @@ class Agent {
   // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
   async verifyAnswer(thread, s, signal, answer) {
     // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).
-    if (this.o.memory && !this.usedMemSave && REMEMBER_ASK.test(this.taskText) && this.verifyCount < MAX_VERIFY && String(answer || '').trim()) {
-      const n = ++this.verifyCount;
-      const id = 'verify_' + n;
-      const item = { t: 'step', id, tool: 'verify', args: {}, summary: 'Re-checking: the fact was not saved yet', ok: true, preview: 'memory_save was not called' };
-      thread.items.push(item);
-      this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary: item.summary });
-      this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary: item.summary, preview: item.preview, result: item.preview });
-      thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done yet: you did not call memory_save, so nothing was saved. Call memory_save with the fact now, then answer in one line.' });
-      return 'continue';
+    if (this.o.memory && !this.usedMemSave && REMEMBER_ASK.test(this.taskText) && String(answer || '').trim()) {
+      const fact = rememberFact(this.taskText);
+      const n = ++this.memChecks;
+      const id = 'memcheck_' + n;
+      const step = (summary, ok, preview) => {
+        thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok, preview });
+        this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
+        this.emit({ type: 'step_end', id, tool: 'verify', ok, summary, preview, result: preview });
+      };
+      if (n === 1) {
+        step('Re-checking: the fact was not saved yet', true, 'memory_save was not called for this');
+        thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done yet: nothing new was saved. Call memory_save with this fact (not an old one): "' + (fact || this.taskText.slice(0, 300)) + '", then answer in one line.' });
+        return 'continue';
+      }
+      // Second miss: save Ben's own words directly, so "remember ..." always works with the small model.
+      if (fact) {
+        let r; try { r = this.o.memory.save(fact); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
+        if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true, 'Saved Ben\'s words directly'); }
+        else step('Did not save: ' + short(String(r.error || '').replace(/^Not saved: /, ''), 60), false, r.error || '');
+      }
     }
     if (!verifyOn(s) || !this.usedState || this.verifyCount >= MAX_VERIFY || !String(answer || '').trim()) return 'accept';
     const n = ++this.verifyCount;
@@ -448,7 +476,7 @@ class Agent {
             if (verdict === 'task') this.taskAllow.add('memory');
           }
           const r = this.o.memory.save(args.fact, args.topic);
-          if (r.ok) this.usedMemSave = true;
+          if (r.ok && (!REMEMBER_ASK.test(this.taskText) || relatesTo(r.fact.text, rememberFact(this.taskText)))) this.usedMemSave = true;
           return { text: finish(r.ok ? (r.replaced ? 'Updated memory: ' : 'Saved to memory: ') + r.fact.text : r.error, r.ok, r.ok ? 'Remembered' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50) : 'Did not save: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
         }
         const r = this.o.memory.forget({ id: args.id, match: args.match });
@@ -537,4 +565,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

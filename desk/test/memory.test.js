@@ -160,7 +160,7 @@ test('memory: a "remember ..." ask answered without memory_save is sent back to 
     const t = { id: 't', messages: [], items: [] };
     await agent.run(t, 'Remember that I take AP Chem 4th period');
     assert.strictEqual(gw.requests.length, 3);
-    assert.match(gw.requests[1].messages.at(-1).content, /did not call memory_save/);
+    assert.match(gw.requests[1].messages.at(-1).content, /Call memory_save with this fact \(not an old one\): "Ben takes AP Chem 4th period"/);
     assert.ok(steps.some((s) => s.tool === 'verify' && /not saved/.test(s.summary)));
     assert.match(m.block(), /AP Chem 4th period/);
   } finally { gw.close(); }
@@ -174,4 +174,27 @@ test('memory: ordinary tasks and asks that did save get no memory re-check', asy
     await agent.run({ id: 't', messages: [], items: [] }, 'hi there');
     assert.strictEqual(gw.requests.length, 1);
   } finally { gw.close(); }
+});
+
+test('memory: if the retry saves an old fact (or nothing), Ben\'s own words are saved directly', async () => {
+  const m = mem();
+  m.save('Ben takes AP Chem 4th period', 'classes');
+  const gw = await startGateway([{ content: 'I have your classes saved. I will keep it brief.' }, { tool_calls: [{ name: 'memory_save', arguments: { fact: 'Ben takes AP Chem 4th period', topic: 'classes' } }] }, { content: 'Saved.' }]);
+  try {
+    const steps = [];
+    const agent = new Agent({ getSettings: () => ({ gatewayUrl: gw.url, model: 'm', maxSteps: 10, mode: 'hands-off', verify: false }), toolDefs: buildTools({}), tools: {}, memory: m, emit: (e) => { if (e.type === 'step_end') steps.push(e); }, approve: async () => 'once', askUser: async () => '' });
+    await agent.run({ id: 't', messages: [], items: [] }, 'Remember that I like short answers');
+    assert.strictEqual(gw.requests.length, 3);                                   // one retry, then no more model calls
+    assert.match(m.block(), /Ben likes short answers/);
+    assert.match(m.block(), /AP Chem/);
+    assert.ok(steps.some((s) => s.tool === 'verify' && /^Remembered: Ben likes short answers/.test(s.summary)));
+  } finally { gw.close(); }
+});
+
+test('memory: rememberFact turns the ask into a third-person fact', () => {
+  const { rememberFact } = require('../src/agent');
+  assert.strictEqual(rememberFact('Remember that I like short answers.'), 'Ben likes short answers');
+  assert.strictEqual(rememberFact('please remember my locker is 214'), "Ben's locker is 214");
+  assert.strictEqual(rememberFact("Don't forget I'm allergic to peanuts"), 'Ben is allergic to peanuts');
+  assert.strictEqual(rememberFact('what time is it'), '');
 });
