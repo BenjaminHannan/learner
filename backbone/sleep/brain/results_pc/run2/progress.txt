@@ -1,10 +1,12 @@
-Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  54%|█████▍    | 173/320 [00:00<00:00, 1726.56it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3016.52it/s]
-[lora] trainable 16,819,200
-[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
-[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
-[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
+[ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
+Loading weights:   0%|          | 0/327 [00:00<?, ?it/s]Loading weights:  21%|██        | 69/327 [00:00<00:00, 683.30it/s]Loading weights:  44%|████▎     | 143/327 [00:00<00:00, 716.05it/s]Loading weights: 100%|██████████| 327/327 [00:00<00:00, 1173.13it/s]
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[base] ARC-Easy validation(100) 0.870
-[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 55, 'yes': 38, 'new_items': 38, 'appended': 38, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
-[night 1] budget {'scale': 2.0, 'steps': 112, 'steps_ref': 56, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
-[night 1] items 133 eligible 4 (active 4, consolidated 0) steps 112 probe_pre 0.0
+[k2] tagger prompt: '<|ifm|begin_of_text|><|ifm|im_start|>system\nYou extract facts from chat messages.<|ifm|im_end|><|ifm|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>'
+[k2] last 10 token ids: [17868, 578, 2699, 250019, 250018, 142036, 200, 250029, 200, 250030] = ['Ġreply', 'Ġ[', '].', '<|ifm|im_end|>', '<|ifm|im_start|>', 'assistant', 'Ċ', '<ifm|think>', 'Ċ', '</ifm|think>']; eos id 250019
+[k2] names prompt tail (stage 1, block open, high effort): 'only: no<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n'; stops at ids [250030, 250019] (512 tokens max)
+[k2] LoRA matched 252 modules: ['model.layers.0.self_attn.q_proj', 'model.layers.0.self_attn.k_proj', 'model.layers.0.self_attn.v_proj', 'model.layers.0.self_attn.o_proj', 'model.layers.0.mlp.gate_proj', 'model.layers.0.mlp.up_proj', 'model.layers.0.mlp.down_proj', '...']
+[lora] trainable 33,914,880
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1815301377282594e-06, 'pm_modules': 252}
+[transformers] The remote code model you are currently using seems to expect `cache_position`. This arg has been removed from the Transformers library, and will stop being created in `generate` even for remote code models in a future release. Please open a PR on the remote code hub repo to remove any usage of `cache_position`.
+[base] ARC-Easy validation(570) 0.877
