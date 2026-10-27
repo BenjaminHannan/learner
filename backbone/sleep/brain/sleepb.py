@@ -58,7 +58,7 @@ scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so t
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the packed q4 base (--q4-packed, q4packed.py) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -84,7 +84,7 @@ import torch
 import torch.nn.functional as F
 
 HERE = Path(__file__).resolve().parent
-for _p in (HERE.parent, HERE.parent.parent):
+for _p in (HERE, HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
@@ -943,6 +943,215 @@ def shy_elem_apply(pm, factor, thresh):
     return {"modules": len(mods), "n_nonzero_before": nb, "n_nonzero_after": na, "zeroed": nz, "zeroed_frac": nz / max(nb, 1), "energy_ratio": e1 / max(e0, 1e-12)}
 
 
+# ------------------------------------------------------------------ whole-model 4-bit scale sleep (race round 1, --storage qs)
+# Every LoRA-target Linear of the 4-bit (--q4-base) model keeps its 4-bit codes q and its original per-group grid (s0, b0); sleep trains,
+# per group of --q4-group weights, a relative scale change u and an offset change v (fp32, zero at the start):
+#   served group scale S = s0 (1 + u), served group offset B = b0 + s0 v, so W = q S + B = W0 + s0 (u q + v).
+# Every weight of every target layer moves a little, the codes never change and S, B are the numbers a 4-bit file already stores,
+# so the change lives inside the served 4-bit model (no full-precision master, no separate matrix). Each morning (with SHY) S and B
+# are rounded to the storage dtype (--qs-round stochastic / nearest / none) and u, v are read back from the rounded values, so no
+# extra precision is carried from one night to the next. The base roles (disable_adapter) see the original grid (u = v = 0).
+_QS = {"on": True}  # module-level switch: the qs hooks add their change only while it is on
+
+
+def qs_codes(q, s0):  # float codes [out, groups, group] from qs_q: uint8 [out, groups, group], or (--q4-packed) the base's packed 4-bit codes [out, in / 2], even position in the low nibble
+    if q.dim() == 2:
+        q = torch.stack((q & 15, q >> 4), -1).reshape(q.shape[0], -1)
+    return q.float().reshape(s0.shape[0], s0.shape[1], -1)
+
+
+class QSDelta(torch.autograd.Function):
+    """y = x @ dW^T with dW = s0 (u q + v) per group, rebuilt in backward instead of saved (the full dW of every layer would be a second model copy).
+    x: [..., in]; u, v, s0: [out, groups, 1] fp32; q: codes as qs_codes reads them. Gradients for x, u and v only."""
+
+    @staticmethod
+    def forward(ctx, x, u, v, q, s0):
+        ctx.save_for_backward(x, u, v, q, s0)
+        dw = (s0 * (u * qs_codes(q, s0) + v)).reshape(s0.shape[0], -1).to(x.dtype)
+        return F.linear(x, dw)
+
+    @staticmethod
+    def backward(ctx, gy):
+        x, u, v, q, s0 = ctx.saved_tensors
+        qf = qs_codes(q, s0)
+        gx = gu = gv = None
+        if ctx.needs_input_grad[0]:
+            gx = gy @ (s0 * (u * qf + v)).reshape(s0.shape[0], -1).to(gy.dtype)
+        if ctx.needs_input_grad[1] or ctx.needs_input_grad[2]:
+            gw = (gy.reshape(-1, gy.shape[-1]).float().T @ x.reshape(-1, x.shape[-1]).float()).reshape(qf.shape) * s0  # dL/dW x s0, [out, groups, group]
+            gu, gv = (gw * qf).sum(-1, keepdim=True), gw.sum(-1, keepdim=True)
+        return gx, gu, gv, None, None
+
+
+def qs_mods(pm):  # [(name, base Linear)] of every module with a qs grid
+    return [(n, m.base_layer) for n, m in lora_mods(pm) if hasattr(m.base_layer, "qs_q")]
+
+
+def setup_qs(pm, group, bits, store_dtype):
+    """Give every LoRA-target base Linear its 4-bit grid (codes qs_q uint8, qs_s0 / qs_b0 fp32, read off its already fake-quantized weight with q4_quant
+    at store_dtype) and trainable zero fp32 qs_u / qs_v (one each per group); a forward hook adds QSDelta while _QS["on"]. pm.disable_adapter also switches
+    the qs change off (nesting-safe), as setup_delta does. Returns {modules, groups, trainable, max_recon_err_over_scale}."""
+    mods, ng, worst = lora_mods(pm), 0, 0.0
+    for _, m in mods:
+        bl = m.base_layer
+        pk = getattr(bl, "packed", None)
+        if pk is not None:  # --q4-packed: the base's own codes (no copy) and grid, exactly the numbers it dequantizes with
+            assert pk.bits == 4 and pk.group == group, (pk.bits, pk.group)
+            bl.qs_q = pk.codes
+            sc, bi = pk.scale.float().unsqueeze(-1).contiguous(), pk.bias.float().unsqueeze(-1).contiguous()
+        else:
+            W0 = bl.weight.detach()
+            assert W0.shape[-1] % group == 0, f"in dim {W0.shape[-1]} not divisible by group {group}"
+            q, sc, bi = q4_quant(W0.float(), group, bits, store_dtype)
+            q, sc, bi = q.reshape(W0.shape[0], -1, group), sc.reshape(W0.shape[0], -1, 1), bi.reshape(W0.shape[0], -1, 1)
+            rec = (q * sc + bi).reshape(W0.shape)
+            worst = max(worst, float(((rec - W0.float()).abs().reshape(q.shape) / sc).max()))
+            bl.qs_q = q.to(torch.uint8)
+        bl.qs_s0, bl.qs_b0 = sc.contiguous(), bi.contiguous()
+        bl.qs_u = torch.nn.Parameter(torch.zeros_like(sc))
+        bl.qs_v = torch.nn.Parameter(torch.zeros_like(sc))
+        ng += sc.numel()
+
+        def hook(mod, inp, out):
+            return out + QSDelta.apply(inp[0], mod.qs_u, mod.qs_v, mod.qs_q, mod.qs_s0) if _QS["on"] else out
+        bl.register_forward_hook(hook)
+    orig = pm.disable_adapter
+
+    @contextlib.contextmanager
+    def disable_adapter():
+        prev, _QS["on"] = _QS["on"], False
+        try:
+            with orig():
+                yield
+        finally:
+            _QS["on"] = prev
+    pm.disable_adapter = disable_adapter
+    return {"modules": len(mods), "groups": ng, "trainable": 2 * ng, "max_recon_err_over_scale": worst}
+
+
+def round_to(x, dtype, mode, gen=None):
+    """fp32 tensor x rounded to a dtype's values (returned as fp32): nearest (x.to(dtype)), stochastic (bf16 only: a uniform 16-bit integer is added to the
+    low mantissa bits, then they are cut, so E[result] = x and |result - x| < one bf16 ulp), or none (x unchanged)."""
+    if mode == "none":
+        return x.clone()
+    if mode == "nearest" or dtype != torch.bfloat16:
+        return x.to(dtype).float()
+    xi = x.contiguous().view(torch.int32)
+    r = torch.randint(0, 1 << 16, xi.shape, generator=gen, dtype=torch.int32, device="cpu").to(x.device)
+    return ((xi + r) & -65536).view(torch.float32)
+
+
+@torch.no_grad()
+def qs_morning(pm, factor, store_dtype, mode, gen):
+    """The nightly SHY + storage step of --storage qs: u, v x factor (shrink toward the original grid), then S = s0 (1 + u), B = b0 + s0 v rounded to
+    store_dtype (round_to, `mode`) and u, v read back from the rounded S, B. Stats: mean |u|, mean |v| (in steps), share of groups whose stored S / B differ
+    from the original, and the share of the change's energy lost to the rounding."""
+    su = sv = n = e_pre = e_err = 0.0
+    chs = chb = 0
+    mods = qs_mods(pm)
+    for _, bl in mods:
+        u, v, s0, b0 = bl.qs_u.data, bl.qs_v.data, bl.qs_s0, bl.qs_b0
+        u.mul_(factor)
+        v.mul_(factor)
+        S, B = s0 * (1 + u), b0 + s0 * v
+        Sr, Br = round_to(S, store_dtype, mode, gen), round_to(B, store_dtype, mode, gen)
+        u2, v2 = Sr / s0 - 1, (Br - b0) / s0
+        e_pre += float(u.double().pow(2).sum() + v.double().pow(2).sum())
+        e_err += float((u2 - u).double().pow(2).sum() + (v2 - v).double().pow(2).sum())
+        u.copy_(u2)
+        v.copy_(v2)
+        su, sv, n = su + float(u.abs().sum()), sv + float(v.abs().sum()), n + u.numel()
+        chs, chb = chs + int((Sr != s0).sum()), chb + int((Br != b0).sum())
+    return {"modules": len(mods), "groups": int(n), "mean_abs_u": su / max(n, 1), "mean_abs_v_steps": sv / max(n, 1), "share_S_changed": chs / max(n, 1),
+            "share_B_changed": chb / max(n, 1), "round_err_energy_frac": e_err / max(e_pre, 1e-30), "factor": factor, "round": mode, "zeroed_frac": 0.0}
+
+
+def qs_norm(pm):  # sqrt(sum u^2 + v^2) over every group
+    return math.sqrt(sum(float(bl.qs_u.detach().double().pow(2).sum() + bl.qs_v.detach().double().pow(2).sum()) for _, bl in qs_mods(pm)))
+
+
+def selftest_qs():
+    """(i) QSDelta matches the plain autograd formula (outputs and the grads of x, u, v); (ii) on a tiny fake-quantized peft model the qs hook is exact:
+    with u, v set the output equals F.linear with W0 + s0 (u q + v), and disable_adapter() gives the original output; (iii) round_to: nearest = .to(bf16),
+    stochastic stays within one ulp and is unbiased in the mean; (iv) qs_morning with factor 1 and mode none changes nothing; with nearest every stored S, B is bf16."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    g = torch.Generator().manual_seed(0)
+    out = {}
+    o, i, grp = 6, 128, 64
+    x = torch.randn(3, 5, i, generator=g, requires_grad=True)
+    q = torch.randint(0, 16, (o, i // grp, grp), generator=g).to(torch.uint8)
+    s0 = torch.rand(o, i // grp, 1, generator=g) * 0.01 + 0.001
+    u = (torch.randn(o, i // grp, 1, generator=g) * 0.1).requires_grad_()
+    v = (torch.randn(o, i // grp, 1, generator=g) * 0.1).requires_grad_()
+    y = QSDelta.apply(x, u, v, q, s0)
+    gy = torch.randn_like(y)
+    gx, gu, gv = torch.autograd.grad(y, (x, u, v), gy)
+    x2, u2, v2 = x.detach().clone().requires_grad_(), u.detach().clone().requires_grad_(), v.detach().clone().requires_grad_()
+    y2 = F.linear(x2, (s0 * (u2 * q.float() + v2)).reshape(o, i))
+    gx2, gu2, gv2 = torch.autograd.grad(y2, (x2, u2, v2), gy)
+    errs = [float((a - b).abs().max() / (b.abs().max() + 1e-12)) for a, b in ((y, y2), (gx, gx2), (gu, gu2), (gv, gv2))]
+    assert max(errs) < 1e-5, errs
+    out["autograd_max_rel_err"] = max(errs)
+    with torch.random.fork_rng():
+        torch.manual_seed(1)
+        net = torch.nn.Sequential()
+        net.add_module("layers", torch.nn.ModuleList([torch.nn.Module()]))
+        net.layers[0].add_module("mlp", torch.nn.Module())
+        net.layers[0].mlp.add_module("up_proj", torch.nn.Linear(i, o, bias=False))
+    q4_apply(net, grp, 4)
+
+    class Wrap(torch.nn.Module):
+        def __init__(self, n):
+            super().__init__()
+            self.model = n
+            self.config = Namespace(model_type="x", tie_word_embeddings=False, to_dict=lambda: {})
+
+        def forward(self, x):
+            return self.model.layers[0].mlp.up_proj(x)
+    pm = get_peft_model(Wrap(net), LoraConfig(r=2, lora_alpha=4, target_modules=r".*\.layers\.\d+\.mlp\.up_proj", lora_dropout=0.0))
+    for n_, p in pm.named_parameters():
+        p.requires_grad_(False)
+    st = setup_qs(pm, grp, 4, torch.float32)
+    assert st["modules"] == 1 and st["max_recon_err_over_scale"] < 1e-4, st
+    (_, bl), = qs_mods(pm)
+    xi = torch.randn(4, i, generator=g)
+    with torch.no_grad():
+        y0 = pm(xi)
+        bl.qs_u.copy_(torch.randn(bl.qs_u.shape, generator=g) * 0.05)
+        bl.qs_v.copy_(torch.randn(bl.qs_v.shape, generator=g) * 0.5)
+        y1 = pm(xi)
+        Wn = (bl.qs_q.float() * bl.qs_s0 * (1 + bl.qs_u) + bl.qs_b0 + bl.qs_s0 * bl.qs_v).reshape(o, i)
+        ref = F.linear(xi, Wn)
+        with pm.disable_adapter():
+            yb = pm(xi)
+    assert float((y1 - ref).abs().max()) < 1e-4 and torch.allclose(yb, y0) and not torch.allclose(y1, y0)
+    out["hook_exact_err"], out["disable_restores"] = float((y1 - ref).abs().max()), True
+    t = torch.randn(20000, generator=g) * 0.01
+    nr = round_to(t, torch.bfloat16, "nearest")
+    assert torch.equal(nr, t.to(torch.bfloat16).float())
+    sr = torch.stack([round_to(t, torch.bfloat16, "stochastic", g) for _ in range(64)])
+    ulp = (t.abs() * 2 ** -7)
+    assert bool(((sr - t).abs() <= ulp + 1e-12).all()) and torch.equal(sr[0].to(torch.bfloat16).float(), sr[0])
+    bias = float((sr.mean(0) - t).abs().mean() / (t.to(torch.bfloat16).float() - t).abs().mean())
+    assert bias < 0.3, bias  # the mean of 64 draws is far closer to x than nearest rounding is
+    out["stochastic_bias_vs_nearest"] = bias
+    u_b, v_b = bl.qs_u.detach().clone(), bl.qs_v.detach().clone()
+    qs_morning(pm, 1.0, torch.bfloat16, "none", g)
+    assert torch.allclose(bl.qs_u, u_b, atol=1e-6) and torch.allclose(bl.qs_v, v_b, atol=1e-5)
+    m = qs_morning(pm, 0.85, torch.bfloat16, "nearest", g)
+    S, B = bl.qs_s0 * (1 + bl.qs_u), bl.qs_b0 + bl.qs_s0 * bl.qs_v
+    assert float((S - S.to(torch.bfloat16).float()).abs().max() / S.abs().max()) < 1e-6 and float((B - B.to(torch.bfloat16).float()).abs().max() / B.abs().max()) < 1e-5
+    out["morning"] = {k: m[k] for k in ("share_S_changed", "share_B_changed", "round_err_energy_frac")}
+    import q4packed  # (v) --q4-packed: the packed codes give the same change as the unpacked uint8 codes
+    pc = q4packed.pack((bl.qs_q.float() * bl.qs_s0 + bl.qs_b0).reshape(o, i), grp, 4)[0]
+    yq = QSDelta.apply(xi, bl.qs_u, bl.qs_v, bl.qs_q, bl.qs_s0)
+    yp = QSDelta.apply(xi, bl.qs_u, bl.qs_v, pc, bl.qs_s0)
+    assert torch.equal(qs_codes(pc, bl.qs_s0), bl.qs_q.float()) and torch.allclose(yq, yp), float((yq - yp).abs().max())
+    out["packed_codes_match"] = True
+    return out
+
+
 def tag_grads(L, pm, batches):
     """ab_ob_local tagging, step 1: |grad| of every delta_w summed over the practice `batches` (lists of (ids, loss_start)). CE exactly as
     Trainer.step (micro-batch sums / the batch's target count, so memory is the training step's); masks are cleared first, so the plain
@@ -1448,7 +1657,7 @@ def bench_train(args, L, pm):
     ta = argparse.Namespace(lr=0.0, kl_weight=args.kl_weight, replay_bsz=args.replay_bsz)
     res, tb, fast = {"model": args.model, "bsz": nb, "replay_bsz": args.replay_bsz, "warmup": BENCH_TRAIN_WARM, "timed": BENCH_TRAIN_STEPS, "device": str(L.device), "settings": {}}, TOK_BUDGET, FAST
     try:
-        for b in BENCH_TRAIN_BUDGETS:
+        for b in ([int(x) for x in args.bench_budgets.split(",")] if getattr(args, "bench_budgets", None) else BENCH_TRAIN_BUDGETS):
             globals()["TOK_BUDGET"] = b
             row = res["settings"][str(b)] = {"micro_batches_old": [len(groups(batch)), len(groups(replay[:args.replay_bsz]))],
                                              "micro_batches_new": [len(groups(sorted(batch, key=lambda x: -len(x[0])))), len(groups(sorted(replay[:args.replay_bsz], key=lambda x: -len(x[0]))))]}
@@ -2124,6 +2333,8 @@ class Brain:
         s.ob_rng = random.Random(args.seed + 29)  # OB_ARMS only: open-book coin flips (kept apart so the batch-composition rng stream is ab's)
         s.day, s.night_qs = 0, []
         s.gen_t = torch.Generator().manual_seed(args.seed + 5)
+        s.qs = getattr(args, "storage", "lora") == "qs"
+        s.qs_dtype = (torch.float16 if args.qs_store == "fp16" else qs_mods(pm)[0][1].weight.dtype) if s.qs else None  # race round 1: the stored scale / offset dtype
         G = []  # ground truth name pairs per item (diagnostics only)
         for g in week["items"]:
             G.append((g["id"], g["class"], [(g["a"].lower(), g["b"].lower())], [(g["a"].lower(), g["old_b"].lower())] if g.get("old_b") else []))
@@ -2906,6 +3117,8 @@ class Brain:
         else:
             if a.arm == "ab_ob_local":
                 rec["shy"] = shy_elem_apply(s.pm, a.shy_factor, a.shy_thresh)
+            elif s.qs:
+                rec["shy"] = qs_morning(s.pm, a.shy_factor, s.qs_dtype, a.qs_round, s.gen_t)
             elif a.arm in DELTA_ARMS:
                 rec["shy"] = shy_delta_apply(s.pm, a.shy_factor, a.shy_thresh, s.gen_t, a.arm == "ab_ob_merge")
             else:
@@ -2919,6 +3132,8 @@ class Brain:
             if a.arm == "ab_ob_local":
                 rec["delta_nnz"] = delta_nnz(s.pm)
                 s.log(f"[night {d}] delta_nnz {rec['delta_nnz']:,}")
+        if s.qs:
+            rec["qs_norm"] = qs_norm(s.pm)
         rec["cleanup"] = s.cleanup()
         lap("shy_cleanup")
         # 10. morning gate
@@ -2944,6 +3159,9 @@ class Brain:
             rec["delta_fro_final"] = delta_fro(s.pm)  # after the gate: a reverted night is back at the previous night's deltas
             if a.arm == "ab_ob_local":
                 rec["delta_nnz_final"] = delta_nnz(s.pm)
+        if s.qs:
+            rec["qs_norm_final"] = qs_norm(s.pm)  # after the gate: a reverted night is back at the previous morning's stored grid
+            s.log(f"[night {d}] qs norm {rec['qs_norm']:.6g} -> {rec['qs_norm_final']:.6g}")
         if a.arm == "ab_ob_rot":
             rot_set(s.pm, None)  # every LoRA param trainable again (snapshot / restore, SHY and the next night's snapshot as in ab_ob)
         if track:
@@ -3398,6 +3616,97 @@ def selftest_q4():
     out["apply"] = st
     assert set(st) == {"tensors", "skipped", "params", "mean_rel_fro", "group", "bits"}, "default result keys changed"
     out["moe"] = selftest_q4_moe(g)
+    return out
+
+
+def selftest_q4packed():
+    """--q4-packed (q4packed.py) on the tiny smoke K2 (untied 250k-word embedding and head), CPU, bf16 and fp32: a q4_apply copy vs a pack_model copy are (i) bit-identical in every weight (dense view; the unpacked
+    leftovers too), (ii) in the logits, (iii) in the LoRA loss (r 8, random B) and every LoRA grad after one backward, through pm(...).logits and through tgt_logits' FAST path, (iv) in greedy generate() of a few prompts,
+    (v) autograd saves no dense weight in the packed copy (it does in the dense one: the check can see it), (vi) parameter + buffer bytes equal what the shapes predict and drop by the expected factor; a PackedEmbedding of
+    ids with repeats and the head's vocab chunking (pack_model head_chunk) are the same as the dense ones. The global RNG is restored. Returns per dtype the byte counts."""
+    import copy
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    import q4packed
+    out, rs = {}, torch.get_rng_state()
+    try:
+        for tag, dt in (("fp32", torch.float32), ("bf16", torch.bfloat16)):
+            lm0, tok = load_model(Namespace(smoke=True, seed=0, model="IFM/K2-Horizon-3.7B"), torch.device("cpu"), dt)
+            lm1 = copy.deepcopy(lm0)
+            es, b_dense = lm0.lm_head.weight.element_size(), sum(p.numel() * p.element_size() for p in lm0.parameters())
+            st0 = q4_apply(lm0, 64, 4)
+            st1 = q4packed.pack_model(lm1, 64, 4, torch.device("cpu"))
+            assert (st1["tensors"], st1["skipped"], st1["params"]) == (st0["tensors"], st0["skipped"], st0["params"]) and st1["packed"] + st1["dense_qdq"] == st1["tensors"], (st0, st1)
+            assert type(lm1.lm_head).__name__ == "PackedLinear" and type(lm1.model.embed_tokens).__name__ == "PackedEmbedding" and lm1.lm_head.rows == q4packed.HEAD_CHUNK < lm1.lm_head.out_features, "head not packed / chunked"
+            # (i) every weight
+            dv = q4packed.dense_view(lm1)
+            ref = {n: m.weight for n, m in lm0.named_modules() if isinstance(m, (torch.nn.Linear, torch.nn.Embedding))}
+            assert set(dv) == {f"{n}.weight" for n in ref} and all(torch.equal(dv[f"{n}.weight"], w) and dv[f"{n}.weight"].dtype == dt for n, w in ref.items()), "dense view != q4_apply"
+            p1 = dict(lm1.named_parameters())
+            assert all(torch.equal(p, p1[n]) for n, p in lm0.named_parameters() if n in p1) and len(p1) < len(dict(lm0.named_parameters())) and "model.norm.weight" in p1, "dense leftovers differ"
+            # (vi) bytes
+            nb = lambda m: sum(p.numel() * p.element_size() for p in m.parameters()) + sum(b.numel() * b.element_size() for b in m.buffers())  # noqa: E731
+            exp = nb(lm0) - sum(w.numel() * es for w in ref.values()) + sum(w.numel() // 2 + 2 * (w.numel() // 64) * es for w in ref.values())
+            assert nb(lm1) == exp and st1["bytes_after"] <= nb(lm1) and st1["bytes_before"] == b_dense and nb(lm1) < nb(lm0) * (0.5625 / es + 0.05), (nb(lm1), exp, nb(lm0))
+            # (ii) logits, an embedding gather with repeats
+            g = torch.Generator().manual_seed(1)
+            V = lm0.config.vocab_size
+            ids = torch.randint(4, V, (2, 11), generator=g)
+            ids[0, 3] = ids[0, 5] = ids[1, 0]
+            mask = torch.ones_like(ids)
+            mask[1, 8:] = 0
+            with torch.no_grad():
+                assert torch.equal(lm0.model.embed_tokens(ids), lm1.model.embed_tokens(ids)) and torch.equal(lm0(input_ids=ids, attention_mask=mask).logits, lm1(input_ids=ids, attention_mask=mask).logits), "logits differ"
+                h = torch.randn(7, lm0.config.hidden_size, generator=g).to(dt)
+                assert torch.equal(lm0.lm_head(h), lm1.lm_head(h)), "chunked head != dense head"
+            # (iii) LoRA loss and grads
+            pms = []
+            for lm in (lm0, lm1):
+                torch.manual_seed(5)
+                pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+                gg = torch.Generator().manual_seed(2)
+                for n, p in pm.named_parameters():
+                    if "lora_B" in n:
+                        p.data.normal_(0, 0.05, generator=gg)
+                pms.append(pm)
+            tm = mask[:, 1:].bool()
+            tgt = ids[:, 1:][tm]
+            for path in ("logits", "fast"):
+                grads, losses = [], []
+                for pm in pms:
+                    pm.zero_grad(set_to_none=True)
+                    lg = pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float() if path == "logits" else tgt_logits(pm, ids, mask, tm)
+                    loss = F.cross_entropy(lg, tgt)
+                    loss.backward()
+                    losses.append(loss.detach())
+                    grads.append({n: p.grad.clone() for n, p in pm.named_parameters() if p.requires_grad})
+                assert torch.equal(losses[0], losses[1]) and set(grads[0]) == set(grads[1]) and len(grads[0]) == 2 * 7 * 4, (path, losses, len(grads[0]))
+                assert all(torch.equal(grads[0][n], grads[1][n]) and grads[0][n].abs().max() > 0 for n in grads[0] if "lora_A" in n or "lora_B" in n), f"LoRA grads differ ({path})"
+            # (v) nothing dense saved
+            def saved_shapes(pm):
+                sh = []
+                def pack_hook(t):
+                    sh.append(tuple(t.shape))
+                    return t
+                with torch.autograd.graph.saved_tensors_hooks(pack_hook, lambda t: t):
+                    pm(input_ids=ids, attention_mask=mask).logits.float().sum().backward()
+                return set(sh)
+            wshapes = {tuple(w.shape) for w in ref.values()}
+            s0, s1 = saved_shapes(pms[0]), saved_shapes(pms[1])
+            assert s0 & wshapes and not s1 & wshapes, (s0 & wshapes, s1 & wshapes)
+            # (iv) greedy generation
+            prompts = ["The harbour lantern is", "Kelmira lives next to", "hello"]
+            for pm in pms:
+                pm.eval()
+            gens = []
+            for pm in pms:
+                with torch.no_grad():
+                    gens.append([pm.generate(**{k: v for k, v in tok(p, return_tensors="pt").items()}, max_new_tokens=6, do_sample=False, pad_token_id=1).tolist() for p in prompts])
+            assert gens[0] == gens[1] and all(len(x[0]) > len(tok(p)["input_ids"]) for x, p in zip(gens[0], prompts)), "generate differs"
+            out[tag] = {"bytes_dense_before": b_dense, "bytes_fake_q4": nb(lm0), "bytes_packed": nb(lm1), "packed": st1["packed"], "dense_qdq": st1["dense_qdq"], "tensors": st1["tensors"]}
+            del lm0, lm1, pms
+    finally:
+        torch.set_rng_state(rs)
     return out
 
 
@@ -4141,6 +4450,52 @@ def selftest_k2():
             "render_tail": p[-48:], "think_render_tail": pt[-48:], "think_eos": L.think_eos(), "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
 
 
+def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap-gb: refuse what the packed base cannot do (a delta arm reads bl.weight, the MLX MoE recipe packs no experts)
+    if args.q4_base and (args.q4_group < 1 or args.q4_bits < 1):
+        ap.error("--q4-group and --q4-bits must be positive")
+    if args.q4_packed:
+        if not args.q4_base:
+            ap.error("--q4-packed needs --q4-base")
+        if args.q4_mlx_moe:
+            ap.error("--q4-packed cannot be combined with --q4-mlx-moe (the fused expert tensors are not packed)")
+        if args.q4_eval:
+            ap.error("--q4-packed cannot be combined with --q4-eval")
+        if args.arm in DELTA_ARMS:
+            ap.error(f"--q4-packed is not for the delta arms {DELTA_ARMS} (they read the dense Linear weight)")
+        if args.q4_bits not in (4, 8) or args.q4_group % 2:
+            ap.error("--q4-packed packs 4 or 8 bits with an even --q4-group")
+    if args.mem_cap_gb is not None and not args.mem_cap_gb > 0:
+        ap.error("--mem-cap-gb must be positive")
+
+
+def mem_cap(args, device, log=print):  # --mem-cap-gb: cuda only (per-process fraction of the card), a no-op elsewhere
+    if args.mem_cap_gb and device.type == "cuda":
+        tot = torch.cuda.get_device_properties(device).total_memory
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_cap_gb * 2 ** 30 / tot), device)
+        log(f"[mem] GPU memory capped at {args.mem_cap_gb} GiB of {tot / 2 ** 30:.1f}")
+
+
+def load_base(args, device, dtype, log=print):  # load_model + the --q4-base step (before LoRA and any base use) -> (lm, tok, q4 stats or None)
+    packed = args.q4_base and args.q4_packed
+    lm, tok = load_model(args, torch.device("cpu") if packed else device, dtype)  # packed: the dense model never reaches the GPU
+    q4 = None
+    if packed:
+        import q4packed
+        comp = device.type == "cuda" if args.q4_packed_compile == "auto" else args.q4_packed_compile == "on"
+        q4 = q4packed.pack_model(lm, args.q4_group, args.q4_bits, device, comp)  # pack math on `device`, the packed buffers live there; the rest of lm still on the CPU
+        lm.to(device)
+        q4["packed_compile"] = comp
+        if device.type == "cuda":
+            q4["cuda_max_mem_gb_after_load"] = torch.cuda.max_memory_allocated() / 2 ** 30
+        log(f"[q4] packed base: {q4['packed']} tensors packed + {q4['dense_qdq']} dense-qdq'd, {q4['skipped']} skipped, {q4['params']:,} params, {q4['bytes_before'] / 2 ** 30:.2f} -> {q4['bytes_after'] / 2 ** 30:.2f} GiB "
+            f"(group {q4['group']}, bits {q4['bits']}, compile {comp})" + (f", peak GPU {q4['cuda_max_mem_gb_after_load']:.2f} GiB" if "cuda_max_mem_gb_after_load" in q4 else ""))
+    elif args.q4_base:
+        q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
+        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
+            + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
+    return lm, tok, q4
+
+
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser()
@@ -4152,6 +4507,7 @@ def main():
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
+    ap.add_argument("--bench-budgets", help="--bench-train only: comma-separated tok budgets to time (default 1024,2048,4096,8192)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
     ap.add_argument("--bsz", type=int, default=16)
@@ -4162,6 +4518,7 @@ def main():
     ap.add_argument("--tag-batches", type=int, default=8, help="ab_ob_local: practice batches drawn each night to tag the plastic entries")
     ap.add_argument("--budget-scale", type=float, default=None, help="work scale s (steps, dreams per item, item cap, REM chains, gist dreams all x s); default 1 (B2_ARMS ab_ob_b2 / win / winp / tag2 / bridge: 2; B4_ARMS ab_ob_b4 / b4_names / b4_bridge / b4_nb / b4_nb_x4: 4)")
     ap.add_argument("--night-budget-s", type=float, default=None, help="seconds per night: s = clip(B / R, 0.25, 4) from a benchmark at the start of each night (ignored when --budget-scale or a b2 / b4 arm pins s)")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp16", "fp32"], default="auto", help="model dtype; auto = bf16 on cuda, fp32 on cpu; fp16 (T4) also uses a dynamic loss scale (start 128)")
     ap.add_argument("--rank", type=int, default=16)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--lora-shared", action="store_true", help="addendum 12 (Qwen3.5/3.6 MoE): LoRA also on mlp.shared_expert.{gate,up,down}_proj, which train.LORA_TARGETS does not match")
@@ -4193,6 +4550,14 @@ def main():
     ap.add_argument("--q4-bits", type=int, default=4, help="--q4-base: bits per weight (levels = 2**bits - 1)")
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
+    ap.add_argument("--storage", choices=["lora", "qs"], default="lora", help="sleep race round 1: lora = the add-on as before; qs = whole-model 4-bit scale sleep (needs --q4-base; every target layer's per-group 4-bit scale and offset train, LoRA frozen, lr --qs-lr)")
+    ap.add_argument("--qs-lr", type=float, default=1e-3, help="--storage qs: AdamW lr of the relative scale / offset changes u, v (replaces --lr)")
+    ap.add_argument("--qs-round", choices=["stochastic", "nearest", "none"], default="stochastic", help="--storage qs: how each morning rounds the stored scales / offsets to the storage dtype (stochastic is for bf16 only; fp16 is always nearest)")
+    ap.add_argument("--qs-store", choices=["model", "fp16"], default="model", help="--storage qs: the dtype the 4-bit file stores the scales / offsets in (model: the model dtype, bf16 on a GPU; fp16: the race rule 3 storage)")
+    ap.add_argument("--q4-packed", action="store_true", help="with --q4-base: keep the frozen base as packed 4-bit codes (uint8 + 16-bit scale / bias, ~0.56 B/param, q4packed.py) instead of dense fake-quantized weights; "
+                    "bit-identical results, fits an 8 GB GPU (K2-3.7B). The model loads on the CPU, is packed layer by layer on the GPU, then the rest moves over. Not with --q4-mlx-moe or the delta arms")
+    ap.add_argument("--q4-packed-compile", choices=["auto", "on", "off"], default="auto", help="--q4-packed: torch.compile the dequant of the Linears (auto: on for cuda, off on cpu)")
+    ap.add_argument("--mem-cap-gb", type=float, default=None, help="cuda only: cap this process's GPU memory at this many GiB (torch.cuda.set_per_process_memory_fraction), e.g. 8 on a 16 GB card to emulate an 8 GB one; also for --bench-train")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
     ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
@@ -4212,10 +4577,12 @@ def main():
         print(json.dumps({"arms9": selftest_arms9()}))
         print(json.dumps({"arms10": selftest_arms10()}))
         print(json.dumps({"q4": selftest_q4()}))
+        print(json.dumps({"q4_packed": selftest_q4packed()}))
         print(json.dumps({"q4_eval": selftest_q4_eval()}))
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
+        print(json.dumps({"qs": selftest_qs()}))
         return
     if args.bench_train:
         if not args.out:
@@ -4223,9 +4590,13 @@ def main():
         from peft import LoraConfig, get_peft_model
         torch.manual_seed(args.seed)
         device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
-        lm, tok = load_model(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
+        q4_args_check(ap, args)
+        mem_cap(args, device)
+        lm, tok, q4 = load_base(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
         res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE), pm)
+        if q4:
+            res["q4_base"] = q4
         Path(args.out).mkdir(parents=True, exist_ok=True)
         (Path(args.out) / "bench_train.json").write_text(json.dumps(res, indent=1))
         print(json.dumps(res, indent=1))
@@ -4271,6 +4642,7 @@ def main():
         ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon model (--model IFM/K2-Horizon-3.7B)")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
+    q4_args_check(ap, args)
     if args.freeze_lora and args.arm not in TRAIN_DELTA_ARMS:
         ap.error(f"--freeze-lora is only for the training delta arms {TRAIN_DELTA_ARMS}")
     if args.q4_eval and args.arm not in DELTA_ARMS:
@@ -4279,6 +4651,13 @@ def main():
         ap.error("--q4-eval cannot be combined with --q4-base")
     if args.q4_eval and (args.q4_group < 1 or args.q4_bits < 1):
         ap.error("--q4-group and --q4-bits must be positive")
+    if args.storage == "qs":
+        if not args.q4_base or args.q4_mlx_moe:
+            ap.error("--storage qs needs --q4-base (dense models; not --q4-mlx-moe)")
+        if args.arm in ("a0", "ad", "af") or args.arm in DELTA_ARMS or args.freeze_lora or args.q4_eval:
+            ap.error("--storage qs is for the Brain LoRA arms (not a0 / ad / af / the delta arms / --freeze-lora / --q4-eval)")
+        args.lr, args.freeze_lora = args.qs_lr, True  # recorded in result["args"]; the Trainer re-freezes the LoRA every night
+        log(f"[qs] whole-model 4-bit scale sleep: lr {args.lr}, stored as {args.qs_store}, morning rounding {args.qs_round if args.qs_store == 'model' else 'nearest'}, LoRA frozen")
     if args.budget_scale is not None and args.night_budget_s is not None:
         log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
@@ -4289,14 +4668,8 @@ def main():
         dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.dtype]
         if args.dtype == "fp16":
             LOSS_SCALE[0] = 128.0
-    lm, tok = load_model(args, device, dtype)
-    q4 = None
-    if args.q4_base:
-        if args.q4_group < 1 or args.q4_bits < 1:
-            ap.error("--q4-group and --q4-bits must be positive")
-        q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
-        log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
-            + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
+    mem_cap(args, device, log)
+    lm, tok, q4 = load_base(args, device, dtype, log)
     L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
     assert L.k2 or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon model"
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
@@ -4315,13 +4688,16 @@ def main():
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False,
-           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False, "q4_packed": False, "q4_packed_compile": "auto", "mem_cap_gb": None,
+           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False,
+           "storage": "lora", "qs_lr": 1e-3, "qs_round": "stochastic", "qs_store": "model"}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_base": q4} if q4 else {})}
 
     def dump(final):
         result["partial"] = not final
+        if device.type == "cuda" and (args.q4_packed or args.mem_cap_gb):
+            result["cuda_max_mem_gb"] = torch.cuda.max_memory_allocated() / 2 ** 30
         p = out / (f"result_{args.arm}.json" if final else f"result_{args.arm}.partial.json")
         p.write_text(json.dumps(result, indent=1, default=lambda o: sorted(o) if isinstance(o, (set, frozenset)) else str(o)))
         if final and (out / f"result_{args.arm}.partial.json").exists():
@@ -4363,6 +4739,12 @@ def main():
                 result["local_selftest"] = {**selftest_elem(), **selftest_local()} if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
                 log(f"[selftest] local plasticity: {result['local_selftest']}")
                 log(f"[local] K {args.local_k:,} plastic entries per night = {args.local_k / n_delta:.4%} of {n_delta:,} delta entries (LoRA params {lora_n:,}); {args.tag_batches} tagging batches; elementwise SHY")
+        if args.storage == "qs":
+            for n, p in pm.named_parameters():
+                p.requires_grad_(False)
+            result["qs_setup"] = setup_qs(pm, args.q4_group, args.q4_bits, dtype)
+            result["qs_selftest"] = selftest_qs() if device.type == "cpu" else {"skipped": "GPU run (checked on CPU via --selftest and smoke)"}
+            log(f"[qs] {result['qs_setup']}; selftest {result['qs_selftest']}")
         if args.arm in EXTRA_ARMS:
             result["twist_selftest"] = selftest_stale()
         if args.arm == "ab_ob_rot":
@@ -4413,6 +4795,9 @@ def main():
             result["coverage"] = dict(brain.cov)
             log(f"[diag] {json.dumps(result['diagnostics'])}")
         pm.save_pretrained(out / "adapter")
+        if args.storage == "qs":  # the served change: every target layer's stored 4-bit scale S and offset B (model dtype), codes unchanged
+            sd_ = brain.qs_dtype if brain else dtype
+            torch.save({n: {"S": (bl.qs_s0 * (1 + bl.qs_u)).to(sd_).cpu(), "B": (bl.qs_b0 + bl.qs_s0 * bl.qs_v).to(sd_).cpu()} for n, bl in qs_mods(pm)}, out / "qs_scales.pt")
     model.eval()
     dreamed = brain.dreamed_twohop() if brain else None
     result["scores"] = {}
