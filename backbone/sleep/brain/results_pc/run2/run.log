@@ -11,3 +11,8 @@ versions 2.9.1+cu128 5.20.2 0.21.2 5.1.0 0.6.0
 -- add16-T2 start 00:59:30 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 1024 --gen-bs 32 --budget-scale 2 --card-stats --rem-views 20
 -- add16-T2 exit 0 02:17:52
 -- add17 start 02:17:52 --tok-budget 512 --model IFM/K2-Horizon-3.7B --week backbone/sleep/brain/data/week2.json --seed 1 --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --arc-base --gen-bs 24 --rem-chain-mode q_think --rem-dirs both --rem-tries 2 --rem-steps-mult 2 --gate-arc-n 570 --think-eval --reword backbone/sleep/brain/data/week2_reworded.json
+-- add17 exit 1 02:21:04
+== add17 ran out of memory at gen-bs 24: starting again at 16
+-- add17 start 02:21:04 --tok-budget 512 --model IFM/K2-Horizon-3.7B --week backbone/sleep/brain/data/week2.json --seed 1 --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --arc-base --gen-bs 16 --rem-chain-mode q_think --rem-dirs both --rem-tries 2 --rem-steps-mult 2 --gate-arc-n 570 --think-eval --reword backbone/sleep/brain/data/week2_reworded.json
+-- add17 exit 1 02:24:34
+== sleepb-pc2 end 2026-10-27T02:24:34Z code 1
