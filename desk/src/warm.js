@@ -26,15 +26,19 @@ class Warmer {
     this.timer = null;
     this.gen = 0;
     this.stopped = true;
+    this.warming = false;
     this.warmCount = 0;
     this.lastWarmMs = null;
     this.lastPingMs = null;
   }
-  set(state, info) { this.state = state; try { this.o.onState && this.o.onState(state, info || {}); } catch (e) { /* ignore */ } }
+  set(state, info) {
+    const key = state + ':' + (info && info.ms);
+    if (key === this.lastKey) return; // no repeats while nothing changed
+    this.lastKey = key; this.state = state; try { this.o.onState && this.o.onState(state, info || {}); } catch (e) { /* ignore */ } }
   start() { this.stopped = false; this._tick(); }
   stop() { this.stopped = true; clearTimeout(this.timer); this.timer = null; }
   // after a settings change that affects the prefix (model, gateway, tool list)
-  rewarm() { this.need = true; if (!this.stopped) { clearTimeout(this.timer); this._tick(); } }
+  rewarm() { this.need = true; if (!this.stopped && !this.warming) { clearTimeout(this.timer); this._tick(); } }
   gatewayMoved() { this.wasUp = false; this.rewarm(); }
 
   async ping() {
@@ -47,6 +51,8 @@ class Warmer {
   }
 
   async warm() {
+    if (this.warming) return; // never two warm requests at once
+    this.warming = true;
     const s = this.o.getSettings();
     const f = this.o.fetch || fetch;
     this.set('warming');
@@ -60,7 +66,7 @@ class Warmer {
       try { await r.text(); } catch (e) { /* body not needed */ }
       this.warmCount++;
       this.lastWarmMs = Date.now() - t0;
-    } catch (e) { /* the real request will warm it the slow way */ } finally { clearTimeout(t); }
+    } catch (e) { /* the real request will warm it the slow way */ } finally { clearTimeout(t); this.warming = false; }
   }
 
   async _tick() {
@@ -80,6 +86,7 @@ class Warmer {
       }
       this.set('ready', { ms: this.lastWarmMs });
     }
+    if (this.need) next = 200; // a settings change arrived during the warm-up
     this.timer = setTimeout(() => this._tick(), next);
     if (this.timer.unref) this.timer.unref();
   }

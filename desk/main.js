@@ -535,13 +535,15 @@ function registerIpc() {
   });
 }
 
-if (!E2E && !app.requestSingleInstanceLock()) app.quit();
+const gotLock = E2E || app.requestSingleInstanceLock();
+if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
 app.on('before-quit', () => { quitting = true; });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {
+  if (!gotLock) return;
   store = new Store(app.getPath('userData'));
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   applyTheme(store.getSettings());

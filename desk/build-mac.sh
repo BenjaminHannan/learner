@@ -34,7 +34,7 @@ echo "==> packaging"
 rm -rf build/app
 npx @electron/packager . "Premonition Desk" \
   --platform=darwin --arch=arm64 --out=build/app --overwrite --icon=assets/icon.icns \
-  --ignore='^/(build|test|reviews|scripts|README\.md|DESIGN\.md|build-mac\.sh)($|/)' \
+  --ignore='^/(build|test|docs|reviews|scripts|README\.md|DESIGN\.md|build-mac\.sh)($|/)' \
   --ignore='^/helper($|/)' \
   ${EXTRA[@]+"${EXTRA[@]}"}
 

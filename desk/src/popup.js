@@ -18,7 +18,7 @@ class Popup {
     this.destroying = false;
     this.quitting = quitting || (() => false);
     this.win = new BrowserWindow({
-      width: 1120, height: 780, minWidth: 640, minHeight: 480, show: false, opacity: 0.01,
+      width: 1120, height: 780, minWidth: 640, minHeight: 480, show: false, skipTaskbar: true,
       title: title || 'Browser', backgroundColor: dark ? '#17120f' : '#faf6f0',
       webPreferences: { preload: path.join(__dirname, '..', 'preload-popup.js'), contextIsolation: true, sandbox: false, nodeIntegration: false, backgroundThrottling: false }
     });
@@ -47,28 +47,38 @@ class Popup {
   setBanner(on) { this.banner = !!on; this.layout(); this.send('popup-banner', this.banner); }
   setActive(a) { this.active = !!a; this.send('popup-active', this.active); }
 
-  // Background: the window is "shown" but see-through, click-through, unfocusable and on every Space. A page in a hidden
-  // window cannot be captured (live card thumbnails) or typed into, so it must count as visible to Chromium.
+  // Background: the window is "shown" (so Chromium keeps painting it: a page in a hidden window cannot be captured for the
+  // live card thumbnail or typed into) but parked left of the leftmost display (one pixel column overlaps it), unfocusable, click-through, off the Dock-switcher
+  // lists and Mission Control. Nothing about it is visible or clickable, and it is not on top of anything.
   background() {
     const w = this.win;
     if (w.isDestroyed()) return;
     this.opened = false;
     this.banner = false; this.layout();
     w.setIgnoreMouseEvents(true);
-    w.setOpacity(0.01);
     try { w.setFocusable(false); } catch (e) { /* ignore */ }
-    try { w.setSkipTaskbar(true); w.setHasShadow(false); } catch (e) { /* ignore */ }
-    try { w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true }); } catch (e) { /* ignore */ }
+    try { w.setAlwaysOnTop(false); w.setSkipTaskbar(true); w.setHasShadow(false); } catch (e) { /* ignore */ }
+    try { w.setVisibleOnAllWorkspaces(false); } catch (e) { /* ignore */ }
+    try { if (process.platform === 'darwin') w.setHiddenInMissionControl(true); } catch (e) { /* ignore */ }
     this.place(false);
     w.showInactive();
   }
+  offscreenPos() {
+    const ds = require('electron').screen.getAllDisplays();
+    const minX = ds.length ? Math.min(...ds.map((d) => d.bounds.x)) : 0;
+    const minY = ds.length ? Math.min(...ds.map((d) => d.bounds.y)) : 0;
+    // 1 px stays inside the leftmost display on purpose: a window entirely outside every display counts as occluded, and
+    // Chromium then stops painting it / delivering key events (verified: capture and typing fail under X11 when fully off-screen).
+    return { x: minX - 1120 + 1, y: minY + 100 };
+  }
   place(open) {
     const w = this.win;
+    if (!open) { const o = this.offscreenPos(); w.setBounds({ x: o.x, y: o.y, width: 1120, height: 780 }); return; }
     const d = require('electron').screen.getPrimaryDisplay().workArea;
     let b = { x: d.x, y: d.y, width: d.width, height: d.height };
     if (this.parent && !this.parent.isDestroyed() && this.parent.isVisible()) b = this.parent.getBounds();
     const bw = Math.min(1180, Math.max(640, b.width - 80)), bh = Math.min(820, Math.max(480, b.height - 60));
-    w.setBounds({ x: Math.round(b.x + (b.width - bw) / 2), y: Math.round(b.y + Math.max(20, (b.height - bh) / 2)), width: open ? bw : 1120, height: open ? bh : 780 });
+    w.setBounds({ x: Math.round(b.x + (b.width - bw) / 2), y: Math.round(b.y + Math.max(20, (b.height - bh) / 2)), width: bw, height: bh });
   }
   async show(opts) {
     opts = opts || {};
@@ -80,8 +90,7 @@ class Popup {
     this.setBanner(!!opts.banner);
     w.setIgnoreMouseEvents(false);
     try { w.setFocusable(true); } catch (e) { /* ignore */ }
-    w.setOpacity(1);
-    try { w.setSkipTaskbar(false); w.setHasShadow(true); w.setVisibleOnAllWorkspaces(false); } catch (e) { /* ignore */ }
+    try { w.setSkipTaskbar(false); w.setHasShadow(true); if (process.platform === 'darwin') w.setHiddenInMissionControl(false); } catch (e) { /* ignore */ }
     w.show(); w.focus();
     this.layout();
     // the chrome page may have loaded after we sent; push everything again

@@ -14,22 +14,24 @@ class PillWindow {
     this.hideTimer = null;
     this.win = new BrowserWindow({
       width: W, height: H, show: false, transparent: true, frame: false, hasShadow: false, resizable: false, movable: false,
-      focusable: false, skipTaskbar: true, alwaysOnTop: true, fullscreenable: false, backgroundColor: '#00000000',
+      focusable: false, skipTaskbar: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), alwaysOnTop: true, fullscreenable: false, backgroundColor: '#00000000',
       webPreferences: { preload: path.join(__dirname, '..', 'preload-pill.js'), contextIsolation: true, sandbox: false, nodeIntegration: false, backgroundThrottling: false }
     });
     try { this.win.setAlwaysOnTop(true, 'screen-saver'); } catch (e) { /* platform without levels */ }
-    try { this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); } catch (e) { /* ignore */ }
+    try { this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true }); } catch (e) { /* ignore */ }
+    try { if (process.platform === 'darwin') this.win.setHiddenInMissionControl(true); } catch (e) { /* ignore */ }
     this.win.setIgnoreMouseEvents(true, { forward: true });
     this.position();
     this.win.loadFile(path.join(__dirname, '..', 'renderer', 'pill.html'));
     this.ready = new Promise((r) => this.win.webContents.once('did-finish-load', r));
-    screen.on('display-metrics-changed', () => this.position());
+    this.onDisplay = () => this.position();
+    for (const ev of ['display-metrics-changed', 'display-added', 'display-removed']) screen.on(ev, this.onDisplay);
   }
   position() {
     if (this.win.isDestroyed()) return;
     const d = screen.getPrimaryDisplay();
     const a = d.workArea; // starts below the menu bar on macOS
-    this.win.setBounds({ x: Math.round(a.x + (a.width - W) / 2), y: Math.round(a.y + 2), width: W, height: H });
+    this.win.setBounds({ x: Math.round(a.x + (a.width - W) / 2), y: Math.round(a.y + 6), width: W, height: H });
   }
   setInteractive(on) { if (!this.win.isDestroyed()) this.win.setIgnoreMouseEvents(!on, { forward: true }); }
   // v: PillState.view(); hidden: true when the chat window is in front (the pill would be redundant)
@@ -42,7 +44,7 @@ class PillWindow {
     if (show) { if (!this.win.isVisible()) this.win.showInactive(); }
     else if (this.win.isVisible()) { this.setInteractive(false); this.hideTimer = setTimeout(() => { if (!this.win.isDestroyed()) this.win.hide(); }, 450); }
   }
-  destroy() { clearTimeout(this.hideTimer); try { if (!this.win.isDestroyed()) this.win.destroy(); } catch (e) { /* ignore */ } }
+  destroy() { for (const ev of ['display-metrics-changed', 'display-added', 'display-removed']) screen.removeListener(ev, this.onDisplay); clearTimeout(this.hideTimer); try { if (!this.win.isDestroyed()) this.win.destroy(); } catch (e) { /* ignore */ } }
 }
 
 module.exports = { PillWindow, W, H };
