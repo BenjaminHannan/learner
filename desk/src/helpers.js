@@ -177,7 +177,8 @@ class Helpers {
   find(ref) {
     ref = String(ref || '').trim().toLowerCase();
     if (!ref) return null;
-    return this.items.find((h) => h.id.toLowerCase() === ref) || this.items.find((h) => h.name.toLowerCase() === ref) || null;
+    const byName = (h) => h.name.toLowerCase() === ref; // a live helper wins over a stopped one of the same name
+    return this.items.find((h) => h.id.toLowerCase() === ref) || this.items.find((h) => byName(h) && h.status !== 'stopped') || this.items.find(byName) || null;
   }
   byThread(threadId) { return this.items.find((h) => h.threadId === threadId) || null; }
 
@@ -211,9 +212,12 @@ class Helpers {
   remove(ref) {
     const h = this.find(ref);
     if (!h) return false;
+    h.status = 'stopped'; // no "finished" notice for a deleted helper
+    const rec = this.active.get(h.id);
     this.abort(h.id);
     this.items = this.items.filter((x) => x !== h);
-    try { this.o.store.deleteThread(h.threadId); } catch (e) { /* ignore */ }
+    if (rec) rec.deleteThread = true; // the aborted run still saves its thread; delete it once the run is over
+    else try { this.o.store.deleteThread(h.threadId); } catch (e) { /* ignore */ }
     this.changed();
     return true;
   }
@@ -275,6 +279,7 @@ class Helpers {
     } catch (e) { res = { error: String(e && e.message || e) }; }
     rec.done = true;
     this.active.delete(h.id);
+    if (rec.deleteThread) { try { this.o.store.deleteThread(h.threadId); } catch (e) { /* ignore */ } }
     res = res || {};
     const wasStopped = h.status === 'stopped';
     if (!wasStopped) h.status = 'idle';

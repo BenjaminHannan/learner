@@ -98,6 +98,7 @@ function createWindow() {
 function createAgent({ helper, br }) {
   const isHelper = !!helper;
   const holder = screenLock.holder();
+  const agentRef = { withoutSlot: (fn, signal) => a.withoutSlot(fn, signal) };
   const tools = {
     web_search: (a, ctx) => webSearch(a.query, { signal: ctx.signal }),
     browser_go: (a) => br.go(a.url),
@@ -128,7 +129,8 @@ function createAgent({ helper, br }) {
   // one mouse: the first screen tool of a run takes the global lock (FIFO) and keeps it until the run ends
   for (const n of SCREEN_TOOLS) {
     const run = tools[n];
-    tools[n] = async (a, ctx) => { await holder.ensure(ctx.signal); return run(a, ctx); };
+    // (waiting for the lock must not hold a run slot: the lock holder may be queued for one)
+    tools[n] = async (a, ctx) => { if (!holder.held()) await agentRef.withoutSlot(() => holder.ensure(ctx.signal), ctx.signal); return run(a, ctx); };
   }
   const a = new Agent({
     getSettings: isHelper ? () => ({ ...store.getSettings(), mode: store.getSettings().helperMode || 'hands-off' }) : () => store.getSettings(),

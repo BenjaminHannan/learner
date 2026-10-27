@@ -143,10 +143,14 @@ class Agent {
   // Waiting for Ben must not hold a run slot (two helpers waiting would block the primary forever).
   async waitingForBen(fn, signal) {
     this.state('waiting');
+    return this.withoutSlot(fn, signal, true);
+  }
+  // Run fn (something that can block on others) without holding a run slot, then queue for a slot again.
+  async withoutSlot(fn, signal, report) {
     this.free();
     try { return await fn(); } finally {
       if (this.o.slot && !signal.aborted) { try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued */ } }
-      if (!signal.aborted) this.state('running');
+      if (report && !signal.aborted) this.state('running');
     }
   }
 
