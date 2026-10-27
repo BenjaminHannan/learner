@@ -18,6 +18,8 @@ const VERIFY_MAX_TOKENS = 200;
 const CHECK_MARK = '[Self-check]';
 const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence in the tool results above (After lines, page text, command output). Reply VERIFIED if every claim is backed by that evidence, or NOT DONE: <what is missing>. One short line. Do not call tools.';
 const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
+// "remember that ..." style asks: the small model sometimes says "saved" without calling memory_save, so the check catches it.
+const REMEMBER_ASK = /\b(remember|don'?t forget|keep in mind|make a note|note that)\b/i;
 const verifyOn = (s) => !(s && (s.verify === false || s.verify === 'off'));
 // 'VERIFIED' -> {ok:true}; 'NOT DONE: x' -> {ok:false, reason:x}; anything unclear -> null (accept the answer, never block on noise)
 function parseCheck(text) {
@@ -224,6 +226,7 @@ class Agent {
     this.usedState = false; this.usedWeb = false;
     this.verifyCount = 0;
     this.memBlock = '';
+    this.taskText = String(userText || ''); this.usedMemSave = false;
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     this.threadId = thread.id;
     const signal = this.abort.signal;
@@ -372,6 +375,17 @@ class Agent {
   // One cheap check turn before accepting a final answer on a task that changed things. Same system prompt and tools (cache hit),
   // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
   async verifyAnswer(thread, s, signal, answer) {
+    // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).
+    if (this.o.memory && !this.usedMemSave && REMEMBER_ASK.test(this.taskText) && this.verifyCount < MAX_VERIFY && String(answer || '').trim()) {
+      const n = ++this.verifyCount;
+      const id = 'verify_' + n;
+      const item = { t: 'step', id, tool: 'verify', args: {}, summary: 'Re-checking: the fact was not saved yet', ok: true, preview: 'memory_save was not called' };
+      thread.items.push(item);
+      this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary: item.summary });
+      this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary: item.summary, preview: item.preview, result: item.preview });
+      thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done yet: you did not call memory_save, so nothing was saved. Call memory_save with the fact now, then answer in one line.' });
+      return 'continue';
+    }
     if (!verifyOn(s) || !this.usedState || this.verifyCount >= MAX_VERIFY || !String(answer || '').trim()) return 'accept';
     const n = ++this.verifyCount;
     const id = 'verify_' + n;
@@ -434,6 +448,7 @@ class Agent {
             if (verdict === 'task') this.taskAllow.add('memory');
           }
           const r = this.o.memory.save(args.fact, args.topic);
+          if (r.ok) this.usedMemSave = true;
           return { text: finish(r.ok ? (r.replaced ? 'Updated memory: ' : 'Saved to memory: ') + r.fact.text : r.error, r.ok, r.ok ? 'Remembered' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50) : 'Did not save: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
         }
         const r = this.o.memory.forget({ id: args.id, match: args.match });

@@ -24,7 +24,7 @@ function findPython(settings, home, exists, platform) {
   const s = tilde(settings && settings.sleepPython).trim();
   if (s) return s;
   const ops = path.dirname(home);
-  const cands = [path.join(home, 'venv312', 'bin', 'python'), path.join(ops, '.venv', 'bin', 'python'), '/opt/homebrew/bin/python3'];
+  const cands = [path.join(home, 'venv312', 'bin', 'python'), path.join(ops, 'speedbench', 'venv312', 'bin', 'python'), path.join(ops, '.venv', 'bin', 'python'), '/opt/homebrew/bin/python3'];
   return cands.find((c) => exists(c)) || ((platform || process.platform) === 'darwin' ? '' : 'python3');
 }
 const PY_MISSING = 'No Python was found for the sleep app. Set the Sleep Python path in Settings > Sleep.';
