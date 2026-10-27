@@ -1,0 +1,10 @@
+
+## Addendum C (2026-10-27 05:30Z, before any Think-3 run beyond Gate 0's code): adaptive halting
+Raised by Ben: the assistant must choose how many silent laps each problem gets. Same rule as Think-2 prereg Addendum E.
+- Always reported: accuracy by depth at each lap count for every lap arm (codi, codi_ev, step, jolt).
+- Arm `halt` runs only if a lap arm passes its own marks and its lap gain is larger on depth 4-6 than depth 1-2. It is
+  that arm plus a PonderNet-style halting head (expected loss over the halting distribution + 0.01 x KL to a geometric
+  prior, p = 0.25), up to 12 laps; at test time it stops at the first lap with stop probability >= 0.5.
+- Marks: H1: S_halt >= S_fixed - 0.5 with mean laps <= 0.6 x max; H2: mean laps on depth 4-6 minus depth 1-2 >= 1.0
+  (interval excluding 0). Wrong if Spearman(depth, laps) <= 0.1 or S_halt < S_fixed - 1.5.
+- jolt (Addendum A) may be trained with the halting head on if halt passes; that is a later, separately marked run.
