@@ -1,0 +1,17 @@
+== sleepb-pc start 2026-10-26T19:00:13Z host BensPC
+name, memory.total [MiB], memory.used [MiB]
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 416 MiB
+versions {'torch': '2.9.1+cu128', 'cuda': True, 'transformers': '5.20.2', 'peft': '0.21.2', 'accelerate': '1.15.0', 'datasets': '5.1.0', 'fla': '0.6.0'}
+[W1026 15:00:19.963195478 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-- add14-A start 19:00:19 --tok-budget 1024 --model IFM/K2-Horizon-3.7B --week backbone/sleep/brain/data/week2.json --seed 1 --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --arc-base --gen-bs 24 --rem-chain-mode q_think --rem-dirs both --rem-tries 2 --think-eval --reword backbone/sleep/brain/data/week2_reworded.json
+-- add14-A exit 1 19:02:56
+== add14-A ran out of memory at gen-bs 24: starting again at 16
+-- add14-A start 19:02:57 --tok-budget 1024 --model IFM/K2-Horizon-3.7B --week backbone/sleep/brain/data/week2.json --seed 1 --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --arc-base --gen-bs 16 --rem-chain-mode q_think --rem-dirs both --rem-tries 2 --think-eval --reword backbone/sleep/brain/data/week2_reworded.json
+-- add14-A exit 1 19:03:07
+-- add16-C start 19:03:07 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 2048 --gen-bs 32 --budget-scale 2 --card-stats
+-- add16-C exit 1 19:05:48
+-- add16-T1 start 19:05:48 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 2048 --gen-bs 32 --budget-scale 2 --card-stats --skip-known 0.25
+-- add16-T1 exit 1 19:07:21
+-- add16-T2 start 19:07:21 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 2048 --gen-bs 32 --budget-scale 2 --card-stats --rem-views 20
+-- add16-T2 exit 1 19:09:05
+== sleepb-pc end 2026-10-26T19:09:05Z code 1

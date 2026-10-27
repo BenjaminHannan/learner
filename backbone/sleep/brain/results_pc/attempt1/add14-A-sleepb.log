@@ -1,0 +1,26 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
+[ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
+Loading weights:   0%|          | 0/327 [00:00<?, ?it/s]Loading weights:  21%|██▏       | 70/327 [00:00<00:00, 689.69it/s]Loading weights:  43%|████▎     | 139/327 [00:00<00:00, 546.41it/s]Loading weights: 100%|██████████| 327/327 [00:00<00:00, 1205.26it/s]
+[k2] tagger prompt: '<|ifm|begin_of_text|><|ifm|im_start|>system\nYou extract facts from chat messages.<|ifm|im_end|><|ifm|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>'
+[k2] last 10 token ids: [17868, 578, 2699, 250019, 250018, 142036, 200, 250029, 200, 250030] = ['Ġreply', 'Ġ[', '].', '<|ifm|im_end|>', '<|ifm|im_start|>', 'assistant', 'Ċ', '<ifm|think>', 'Ċ', '</ifm|think>']; eos id 250019
+[k2] names prompt tail (stage 1, block open, high effort): 'only: no<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n'; stops at ids [250030, 250019] (512 tokens max)
+[k2] LoRA matched 252 modules: ['model.layers.0.self_attn.q_proj', 'model.layers.0.self_attn.k_proj', 'model.layers.0.self_attn.v_proj', 'model.layers.0.self_attn.o_proj', 'model.layers.0.mlp.gate_proj', 'model.layers.0.mlp.up_proj', 'model.layers.0.mlp.down_proj', '...']
+[lora] trainable 33,914,880
+Traceback (most recent call last):
+  File "/home/benja/sleepb-pc/src-a7ed69d/backbone/sleep/brain/sleepb.py", line 4988, in <module>
+    main()
+  File "/home/benja/sleepb-pc/src-a7ed69d/backbone/sleep/brain/sleepb.py", line 4874, in main
+    result["shy_selftest"] = selftest_shy(pm)  # cheap; randomizes then restores the adapter
+                             ^^^^^^^^^^^^^^^^
+  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/benja/sleepb-pc/src-a7ed69d/backbone/sleep/brain/sleepb.py", line 947, in selftest_shy
+    before = [dw(m) for _, m in mods]
+              ^^^^^
+  File "/home/benja/sleepb-pc/src-a7ed69d/backbone/sleep/brain/sleepb.py", line 946, in <lambda>
+    dw = lambda m: float(m.scaling["default"]) * m.lora_B["default"].weight.data.float() @ m.lora_A["default"].weight.data.float()  # noqa: E731
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RuntimeError: CUDA driver error: device not ready
+[W1026 14:56:32.372079762 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

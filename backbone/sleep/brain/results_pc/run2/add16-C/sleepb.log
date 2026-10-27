@@ -1,0 +1,60 @@
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 89/320 [00:00<00:00, 889.77it/s]Loading weights:  56%|█████▌    | 178/320 [00:00<00:00, 864.89it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 1389.28it/s]
+[lora] trainable 16,819,200
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.2806136737708584e-06, 'pm_modules': 186}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[base] ARC-Easy validation(100) 0.870
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 55, 'yes': 38, 'new_items': 38, 'appended': 38, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 1] budget {'scale': 2.0, 'steps': 112, 'steps_ref': 56, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 1] items 133 eligible 4 (active 4, consolidated 0) steps 112 probe_pre 0.0
+[night 1] cards known_share 0.45 by quarter [0.3062, 0.4535, 0.5277, 0.526] by kind {'qa_cb': 0.858, 'qa_ob': 0.983, 'rem_cb': 1.0, 'rem_ob': 1.0, 'text': 0.2193} known drawn 0 kept 0
+[night 1] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 124, 'zeroed_frac': 0.041666666666666664, 'energy_ratio': 0.7224478695301834}
+[night 1] done steps 112 (nrem 64, rem 48) arc_val 0.840 probe_post 1.0 reverted False 167s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 45, 'yes': 30, 'new_items': 30, 'appended': 30, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 2] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 2] items 240 eligible 69 (active 69, consolidated 0) steps 600 probe_pre 0.046153846153846156
+[night 2] cards known_share 0.3411 by quarter [0.1549, 0.3424, 0.4095, 0.4871] by kind {'qa_cb': 0.7452, 'qa_ob': 0.9756, 'rem_cb': 0.9807, 'rem_ob': 0.9849, 'text': 0.098} known drawn 0 kept 0
+[night 2] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 89, 'zeroed_frac': 0.029905913978494625, 'energy_ratio': 0.7223943971339428}
+[night 2] done steps 600 (nrem 345, rem 255) arc_val 0.880 probe_post 0.7846153846153846 reverted False 667s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.08, 'C4': 0.21, 'C24': 0.145, 'all': 0.10984848484848485}
+[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 36, 'yes': 24, 'new_items': 24, 'appended': 24, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 3] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 3] items 317 eligible 141 (active 138, consolidated 3) steps 600 probe_pre 0.3805970149253731
+[night 3] cards known_share 0.3941 by quarter [0.2672, 0.3818, 0.4285, 0.5199] by kind {'qa_cb': 0.836, 'qa_ob': 0.9824, 'rem_cb': 0.9905, 'rem_ob': 0.9965, 'text': 0.1153} known drawn 0 kept 0
+[night 3] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 64, 'zeroed_frac': 0.021505376344086023, 'energy_ratio': 0.7224981461535752}
+[night 3] done steps 600 (nrem 345, rem 255) arc_val 0.890 probe_post 0.8059701492537313 reverted False 738s
+[night 4] names {'candidates': 462, 'turns': 145, 'turns_ge2': 116, 'pairs': 34, 'yes': 23, 'new_items': 23, 'appended': 23, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 4] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 4] items 395 eligible 185 (active 143, consolidated 42) steps 600 probe_pre 0.5224719101123596
+[night 4] cards known_share 0.3379 by quarter [0.2159, 0.3103, 0.3893, 0.4588] by kind {'qa_cb': 0.839, 'qa_ob': 0.9495, 'rem_cb': 0.9724, 'rem_ob': 0.9734, 'text': 0.0743} known drawn 0 kept 0
+[night 4] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 52, 'zeroed_frac': 0.01747311827956989, 'energy_ratio': 0.7224982984490607}
+[night 4] done steps 600 (nrem 345, rem 255) arc_val 0.880 probe_post 0.8426966292134831 reverted False 712s
+[curve] night 4 forward {'C1': 0.0, 'C2': 0.2, 'C4': 0.7, 'C24': 0.45, 'all': 0.3409090909090909}
+[night 5] names {'candidates': 498, 'turns': 151, 'turns_ge2': 117, 'pairs': 25, 'yes': 16, 'new_items': 16, 'appended': 16, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 5] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 5] items 464 eligible 232 (active 154, consolidated 78) steps 600 probe_pre 0.6441441441441441
+[night 5] cards known_share 0.3386 by quarter [0.2145, 0.297, 0.3957, 0.472] by kind {'qa_cb': 0.8191, 'qa_ob': 0.9435, 'rem_cb': 0.9742, 'rem_ob': 0.9773, 'text': 0.0643} known drawn 0 kept 0
+[night 5] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 47, 'zeroed_frac': 0.015793010752688172, 'energy_ratio': 0.7224987786955426}
+[night 5] done steps 600 (nrem 345, rem 255) arc_val 0.880 probe_post 0.8108108108108109 reverted False 758s
+[night 6] names {'candidates': 518, 'turns': 148, 'turns_ge2': 121, 'pairs': 47, 'yes': 28, 'new_items': 28, 'appended': 28, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 6] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 6] items 547 eligible 290 (active 163, consolidated 127) steps 600 probe_pre 0.6909090909090909
+[night 6] cards known_share 0.3498 by quarter [0.2432, 0.3153, 0.3854, 0.4731] by kind {'qa_cb': 0.8409, 'qa_ob': 0.9248, 'rem_cb': 0.9726, 'rem_ob': 0.9643, 'text': 0.0671} known drawn 0 kept 0
+[night 6] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 46, 'zeroed_frac': 0.015456989247311828, 'energy_ratio': 0.7224987062014474}
+[night 6] done steps 600 (nrem 345, rem 255) arc_val 0.880 probe_post 0.8218181818181818 reverted False 784s
+[night 7] names {'candidates': 532, 'turns': 148, 'turns_ge2': 120, 'pairs': 36, 'yes': 16, 'new_items': 16, 'appended': 16, 'dropped_invalid': 0, 'dropped_not_in_turn': 0}
+[night 7] budget {'scale': 2.0, 'steps': 600, 'steps_ref': 300, 'k': 8, 'max_dream_items': 320, 'rem_chains': 60, 'rem_gist': 60, 'bench': None, 'text_scale': None}
+[night 7] items 605 eligible 340 (active 171, consolidated 169) steps 600 probe_pre 0.684375
+[night 7] cards known_share 0.3282 by quarter [0.2112, 0.2907, 0.3734, 0.4576] by kind {'qa_cb': 0.8002, 'qa_ob': 0.9268, 'rem_cb': 0.9533, 'rem_ob': 0.9616, 'text': 0.0596} known drawn 0 kept 0
+[night 7] SHY {'modules': 186, 'sv_total': 2976, 'sv_zeroed': 44, 'zeroed_frac': 0.01478494623655914, 'energy_ratio': 0.7224992052840626}
+[night 7] done steps 600 (nrem 345, rem 255) arc_val 0.910 probe_post 0.79375 reverted False 822s
+[curve] night 7 forward {'C1': 0.03125, 'C2': 0.71, 'C4': 0.8, 'C24': 0.755, 'all': 0.5795454545454546}
+[diag] {"tagger": {"mention_recall": 0.6686182669789227, "mentions": 854, "precision_lower_bound": 0.6939010356731876, "extractions": 869, "recall_by_class": {"C4": 0.64, "RT": 0.2714285714285714, "C1": 0.859375, "CH": 0.7666666666666667, "C2": 0.745}}, "eligibility": {"by_class": {"C2": {"n": 100, "extracted": 98, "eligible_now": 93, "eligible_any_value": 93, "superseded_old_value": 0}, "C4": {"n": 100, "extracted": 100, "eligible_now": 92, "eligible_any_value": 92, "superseded_old_value": 0}, "C1": {"n": 64, "extracted": 55, "eligible_now": 2, "eligible_any_value": 2, "superseded_old_value": 0}, "CH": {"n": 30, "extracted": 30, "eligible_now": 27, "eligible_any_value": 27, "superseded_old_value": 28}, "RT": {"n": 20, "extracted": 13, "eligible_now": 12, "eligible_any_value": 12, "superseded_old_value": 0}}, "eligible_items": 334, "eligible_unmatched_to_ground_truth": 95, "eligible_matched_by_class": {"RT": 12, "C4": 99, "C2": 95, "CH": 31, "C1": 2}, "eligible_precision_among_matched": 0.9916317991631799}, "update_detection": {"pairs_judged": 580, "judged_changed": 88, "ch_items": 30, "ch_true_pair_checked": 29, "ch_detected": 27, "ch_detection_recall": 0.9, "false_changed": 59}, "rem": {"chain_pairs_kept_total": 72, "twohop_dreamed": 32, "twohop_total": 78, "pool": 211, "twohop_dreamed_flags": [false, false, true, true, false, false, false, true, false, true, false, false, false, true, false, true, false, true, false, false, false, false, true, true, false, true, true, false, false, true, false, true, false, true, false, true, false, false, false, false, false, false, false, false, false, true, false, false, true, false, false, false, true, false, true, false, false, true, false, false, true, true, false, false, true, false, true, false, true, true, true, false, false, true, true, true, true, true]}}
+[eval:weights] forward 0.5795454545454546 (C1 0.03125 C2 0.71 C4 0.8) reverse 0.5643939393939394 twohop 0.32051282051282054 changed new 0.9666666666666667 stale 0.0 routine 0.8 integration 0.6957264957264958 pooled 0.5670731707317073
+[eval:diary] forward 0.8787878787878788 (C1 0.640625 C2 0.93 C4 0.98) reverse 0.8939393939393939 twohop 0.2948717948717949 changed new 1.0 stale 0.0 routine 1.0 integration 0.7649572649572649 pooled 0.8246951219512195
+[eval:base_diary] forward 0.8939393939393939 (C1 0.796875 C2 0.91 C4 0.94) reverse 0.8939393939393939 twohop 0.01282051282051282 changed new 1.0 stale 0.0 routine 1.0 integration 0.6709401709401709 pooled 0.7972560975609756
+[eval:router] forward 0.75 (C1 0.46875 C2 0.82 C4 0.86) reverse 0.75 twohop 0.32051282051282054 changed new 1.0 stale 0.0 routine 1.0 integration 0.7735042735042735 pooled 0.7179878048780488 frac_memory 0.7545731707317073 acc_when_memory 0.7191919191919192 acc_when_diary 0.7142857142857143
+[eval] arc_easy acc 0.940 (n=500)
+[done] ab_ob_b4_nb wall 4750s -> /mnt/c/Users/benja/pc-jobs/sleepb-pc/add16b/sleepb/C/result_ab_ob_b4_nb.json
+[W1026 19:42:54.801630249 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

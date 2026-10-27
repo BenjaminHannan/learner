@@ -21,6 +21,7 @@ at least 90% of the reachable tests forward, else 2); it is only marked valid fo
   python3 backbone/sleep/brain/k2_chain_probe.py --out out/k2chain/probe.json                  # the box (run_box.sh K2CHAIN=1), a bf16 GPU; writes probe.json, probe_rows.json, probe.log
   python3 backbone/sleep/brain/k2_chain_probe.py --dtype fp16 --gen-bs 24 --out /kaggle/working/k2chain/probe.json   # one Kaggle T4 (no bf16): fp16 weights
   python3 backbone/sleep/brain/k2_chain_probe.py --smoke --out /tmp/x/probe.json               # CPU: tiny random K2 (real tokenizer + remote code), small caps, garbage answers: plumbing only
+  python3 backbone/sleep/brain/k2_chain_probe.py --model LiquidAI/LFM3-1.7B --out out/lfm3chain/probe.json   # LFM3 (revision pinned in sleepb.LFM3_REV): the same four variants; its think block is "<think>" ... "</think>" at every effort
 """
 from __future__ import annotations
 
@@ -39,9 +40,9 @@ for _p in (HERE, HERE.parent, HERE.parent.parent):  # sleepb.py (here), sleep1.p
     sys.path.insert(0, str(_p))
 import torch  # noqa: E402
 import sleepb  # noqa: E402
-from sleep1 import K2_END, K2_THINK_SHUT, Lang  # noqa: E402
-from sleepb import BRIDGE_SYS, GENERIC, K2_REPO, K2_REV, KINDS, NREM_SHARE, REM_CHAIN_MODES, Brain, Diary, bridge_prompt, bridge_q_prompt, check_week, gt_match, norm, other  # noqa: E402
-from train import K2_TYPE, load_model  # noqa: E402
+from sleep1 import Lang  # noqa: E402
+from sleepb import BRIDGE_SYS, GENERIC, K2_REPO, K2_REV, KINDS, LFM3_REPO, LFM3_REV, NREM_SHARE, REM_CHAIN_MODES, Brain, Diary, bridge_prompt, bridge_q_prompt, check_week, gt_match, norm, other  # noqa: E402
+from train import K2_TYPE, LFM3_TYPE, load_model  # noqa: E402
 
 ARM = "ab_ob_b4_nb"  # the K2 arm: NAMES_ARMS (names pass), BRIDGE_ARMS (bridge_prompt in REM), not TRIES_ARMS
 VARIANTS = list(REM_CHAIN_MODES)  # default, q, think, q_think
@@ -55,14 +56,14 @@ def native_bf16():  # True when the GPU does bf16 in hardware (compute capabilit
         return bool(torch.cuda.is_bf16_supported()) and torch.cuda.get_device_capability()[0] >= 8
 
 
-def template_check(L):  # stage 2 of the think path (prompt + thinking + close tag + reply + im_end) against the chat template's own rendering of that finished turn; the closed render against the empty think block
+def template_check(L):  # stage 2 of the think path (prompt + thinking + close tag + reply + im_end) against the chat template's own rendering of that finished turn (LFM3's adds a newline after im_end); the closed render against the empty think block
     msgs = [{"role": "system", "content": BRIDGE_SYS}, {"role": "user", "content": "U"}]
     try:
-        want = L.tok.apply_chat_template(msgs + [{"role": "assistant", "content": "Q?", "think": "abc def"}], tokenize=False)
-        high = want == L.render_think(BRIDGE_SYS, "U", "high") + "abc def" + K2_THINK_SHUT["high"] + "Q?" + K2_END
+        want = L.tok.apply_chat_template(msgs + [{"role": "assistant", "content": "Q?", ("think" if L.k2 else "reasoning_content"): "abc def"}], tokenize=False)
+        high = want == L.render_think(BRIDGE_SYS, "U", "high") + "abc def" + L.shut("high") + "Q?" + L.end + ("" if L.k2 else "\n")
     except Exception as e:  # a template without that field: report, do not stop the probe
         high = repr(e)[:150]
-    return {"stage2_high": high, "closed_render": L.render(BRIDGE_SYS, "U").endswith("<ifm|think>\n</ifm|think>")}
+    return {"stage2_high": high, "closed_render": L.render(BRIDGE_SYS, "U").endswith("<ifm|think>\n</ifm|think>" if L.k2 else "<think></think>")}
 
 
 # ------------------------------------------------------------------ coverage against the Week-1 two-hop tests
@@ -117,7 +118,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", required=True, help="result JSON; the per-sample rows go to <stem>_rows.json and the log to <stem>.log next to it")
     ap.add_argument("--model", default=K2_REPO)
-    ap.add_argument("--revision", default=K2_REV, help="model repo revision (default: the sha Sleep-B pins)")
+    ap.add_argument("--revision", default=None, help="model repo revision (default: the sha Sleep-B pins for --model: sleepb.K2_REV / LFM3_REV)")
     ap.add_argument("--week", default=str(HERE / "data" / "week1.json"), help="the Week-1 world (a path containing week2 is refused: the test world)")
     ap.add_argument("--days", default=None, help="comma-separated days to tag, names-pass, refresh and detect (default 1,2,3,4,5,6,7; smoke: 1,2,3); REM runs at the last one")
     ap.add_argument("--variants", default=",".join(VARIANTS), help="comma-separated subset of " + ",".join(VARIANTS))
@@ -125,9 +126,16 @@ def main():
     ap.add_argument("--tries", type=int, default=1, help="--rem-tries: samples per unit and cycle")
     ap.add_argument("--gen-bs", type=int, default=32, help="sleepb's default")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--rem-pairs", choices=["all", "distinct"], default="all", help="addendum 18: sleepb --rem-pairs")
+    ap.add_argument("--rem-parse", choices=["line", "first_q"], default="line", help="addendum 18: sleepb --rem-parse")
+    ap.add_argument("--rem-verify-tokens", type=int, default=20, help="addendum 18: sleepb --rem-verify-tokens")
+    ap.add_argument("--also-fixed", action="store_true", help="addendum 18 pre-check: after each variant, run it again from the same world and seed with --rem-pairs distinct --rem-parse first_q "
+                    "--rem-verify-tokens 96, stored as <variant>_fix")
     ap.add_argument("--dtype", choices=["auto", "bf16", "fp16"], default="auto", help="GPU weights: auto = bf16 on a GPU with native bf16 (compute capability >= 8), else fp16 (a Kaggle T4); the CPU smoke is float32")
-    ap.add_argument("--smoke", action="store_true", help="CPU: tiny random K2 with the real tokenizer and remote code (sleepb --smoke --model IFM/K2-Horizon-3.7B), small caps, every live item eligible; the answers are garbage")
+    ap.add_argument("--smoke", action="store_true", help="CPU: tiny random K2 (or LFM3, --model LiquidAI/LFM3-1.7B) with the real tokenizer and remote code (sleepb --smoke --model IFM/K2-Horizon-3.7B), small caps, every live item eligible; the answers are garbage")
     args = ap.parse_args()
+    if args.revision is None:
+        args.revision = {K2_REPO: K2_REV, LFM3_REPO: LFM3_REV}.get(args.model)
     if "week2" in args.week.lower():
         ap.error("--week must be the Week-1 world, not week2 (the test world)")
     variants = [v for v in args.variants.split(",") if v]
@@ -148,6 +156,9 @@ def main():
         logf.write(m + "\n")
         logf.flush()
     t0 = time.time()
+    cap = sleepb.cuda_cap()  # SLEEPB_CUDA_CAP_GIB (Ben's PC); no-op without it
+    if cap:
+        log(f"[cuda] PyTorch memory capped at {cap[0]:.1f} of {cap[1]:.1f} GiB (SLEEPB_CUDA_CAP_GIB)")
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     if device.type == "cuda":
@@ -157,8 +168,8 @@ def main():
     else:
         dtype = torch.float32
     lm, tok = load_model(args, device, dtype)
-    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
-    assert L.k2, f"{args.model} is not a K2-Horizon model"
+    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE, lfm3=lm.config.model_type == LFM3_TYPE)
+    assert L.think, f"{args.model} is not a K2-Horizon or LFM3 model"
     lm.disable_adapter = contextlib.nullcontext  # Brain.gen runs the base inside pm.disable_adapter(): a plain model has no adapter to disable
     week = json.loads(Path(args.week).read_text())
     check_week(week)
@@ -168,14 +179,15 @@ def main():
     # what Brain.__init__ / tag / names_pass / refresh / detect / elig / set_scale / rem read (the smoke caps are sleepb --smoke's)
     bargs = argparse.Namespace(arm=ARM, smoke=args.smoke, gen_bs=args.gen_bs, seed=args.seed, max_dream_items=12 if args.smoke else 160, rem_chains=6 if args.smoke else 30, rem_gist=6 if args.smoke else 30,
                                gist_min_days=2 if args.smoke else 3, max_checks=20 if args.smoke else 200, budget_scale=1.0 if args.smoke else 4.0, night_budget_s=None,
-                               rem_chain_mode="default", rem_dirs="both", rem_tries=args.tries, rem_steps_mult=1.0)
+                               rem_chain_mode="default", rem_dirs="both", rem_tries=args.tries, rem_steps_mult=1.0,
+                               rem_pairs=args.rem_pairs, rem_parse=args.rem_parse, rem_verify_tokens=args.rem_verify_tokens)  # addendum 18 (the probe has no trained adapter, so --rem-writer does not apply)
     brain = Brain(L, lm, bargs, week, diary, leak, [], [], 0.0, log)  # replay / ARC stand-ins: tagging, the names pass, detection and REM use neither
     brain.set_scale(bargs.budget_scale)  # a night's: Brain.night calls s.set_scale(a.budget_scale)
     assert args.smoke or (brain.cap_chains, brain.cap_gist) == (120, 120), (brain.cap_chains, brain.cap_gist)
     if args.smoke:
         brain.elig = lambda it: not it.dead  # tagging fabricates items from capitalised words here, so few would be eligible
     res = {"model": args.model, "revision": args.revision, "smoke": args.smoke, "device": str(device), "dtype": str(dtype).replace("torch.", ""), "week": args.week, "arm": ARM, "gen_bs": args.gen_bs, "days": days,
-           "cycles": cycles, "tries": args.tries, "seed": args.seed, "scale": bargs.budget_scale, "cap_chains": brain.cap_chains, "cap_gist": brain.cap_gist, "template_check": template_check(L), "partial": True}
+           "cycles": cycles, "tries": args.tries, "seed": args.seed, "rem_pairs": args.rem_pairs, "rem_parse": args.rem_parse, "rem_verify_tokens": args.rem_verify_tokens, "scale": bargs.budget_scale, "cap_chains": brain.cap_chains, "cap_gist": brain.cap_gist, "template_check": template_check(L), "partial": True}
     log(f"[k2chain] model {args.model}@{args.revision[:10] if args.revision else None} device {device} dtype {res['dtype']} week {args.week} days {days} cycles {cycles} tries {args.tries} gen_bs {args.gen_bs} variants {variants}; "
         f"caps chains {brain.cap_chains} gist {brain.cap_gist}; template check {res['template_check']}")
     if not all(v is True for v in res["template_check"].values()):
@@ -231,10 +243,14 @@ def main():
 
     # ---- the variants, each from the same REM state and seed
     res["variants"] = {}
-    for v in variants:
+    runs = [(v, v, (args.rem_pairs, args.rem_parse, args.rem_verify_tokens)) for v in variants]
+    if args.also_fixed:
+        runs = [r for v in variants for r in ((v, v, (args.rem_pairs, args.rem_parse, args.rem_verify_tokens)), (v + "_fix", v, ("distinct", "first_q", 96)))]
+    for name, v, (rp, rq, rv) in runs:
         brain.rem_pool, brain.rem_chains, brain.rem_done, brain.gist_done, brain.rem_dir_done = [], [], Counter(), Counter(), Counter()
         brain.examples["rem"], brain.raw, brain.rem_trace = [], {}, []
         bargs.rem_chain_mode, bargs.rem_dirs, bargs.rem_tries = v, "both", args.tries
+        bargs.rem_pairs, bargs.rem_parse, bargs.rem_verify_tokens = rp, rq, rv
         torch.manual_seed(args.seed)
         brain.rng = random.Random(args.seed + 17)  # as Brain.__init__
         trace, cyc, t1 = brain.rem_trace, [], time.time()
@@ -243,10 +259,10 @@ def main():
             st = brain.rem(E, last, ci)
             cov = coverage(brain, tp, tests, reach)
             cyc.append({"cycle": ci, "seconds": round(time.time() - t2, 1), "stats": st, "coverage": cov})
-            log(f"[k2chain] {v:8s} cycle {ci}: units open {st.get('units_open', 0)} tried {st.get('units_tried', 0)} samples {st.get('chain_gen', 0)} kept {st.get('chain_kept', 0)} "
+            log(f"[k2chain] {name:12s} cycle {ci}: units open {st.get('units_open', 0)} tried {st.get('units_tried', 0)} samples {st.get('chain_gen', 0)} kept {st.get('chain_kept', 0)} "
                 f"think_tok {st.get('chain_think_tokens', 0)} capped {st.get('chain_think_capped', 0)} | tests {cov['n_tests']} reachable {cov['reachable']} any {cov['dreamed_any']} fwd {cov['dreamed_forward']} rev {cov['dreamed_reverse']} | {time.time() - t2:.0f}s")
-            res["variants"][v] = {"cycles": cyc, "partial": True}
-            rows_all[v] = trace
+            res["variants"][name] = {"cycles": cyc, "partial": True}
+            rows_all[name] = trace
             dump()
         fate = Counter(t.get("why") for t in trace)
         n_s = sum(c["stats"].get("chain_gen", 0) for c in cyc)
@@ -258,13 +274,13 @@ def main():
         assert len(trace) == n_s and fate["kept"] == len(kept) == sum(c["stats"].get("chain_kept", 0) for c in cyc), (len(trace), n_s, fate, len(kept))  # the trace is one record per chain sample
         fin = cyc[-1]["coverage"]
         tt = sum(c["stats"].get("chain_think_tokens", 0) for c in cyc)
-        s = res["variants"][v] = {
-            "mode": v, "dirs": "both", "tries": args.tries, "cycles": cyc, "final": fin, "chain_samples": n_s, "kept_chains": len(kept), "yield_per_sample": round(len(kept) / n_s, 4) if n_s else None,
+        s = res["variants"][name] = {
+            "mode": v, "rem_pairs": rp, "rem_parse": rq, "rem_verify_tokens": rv, "dirs": "both", "tries": args.tries, "cycles": cyc, "final": fin, "chain_samples": n_s, "kept_chains": len(kept), "yield_per_sample": round(len(kept) / n_s, 4) if n_s else None,
             "fates": {w: fate[w] for w in ("kept", *REJECT)}, "parse_fail": fate["parse_fail"], "dropped_bad": fate["bad"], "dropped_unverified": fate["unverified"], "dropped_test_leak": fate["test_leak"],
             "dropped_dup": fate["dup"], "unit_extra_dropped": fate["extra"], "think_tokens_mean": round(tt / n_s, 1) if n_s and v in ("think", "q_think") else None, "think_capped": sum(c["stats"].get("chain_think_capped", 0) for c in cyc),
             "gist_kept": sum(c["stats"].get("gist_kept", 0) for c in cyc), "rem_stats_sum": dict(sum((Counter({k: x for k, x in c["stats"].items() if k not in ("pool", "units_open")}) for c in cyc), Counter())),
             "wall_seconds": round(time.time() - t1, 1), "examples_kept": ex, "examples_rejected": rejected_examples(trace), "partial": False}
-        log(f"[k2chain] {v:8s} done: kept {len(kept)} of {n_s} samples ({s['yield_per_sample']}), fates {s['fates']}, think_mean {s['think_tokens_mean']} capped {s['think_capped']}; "
+        log(f"[k2chain] {name:12s} done: kept {len(kept)} of {n_s} samples ({s['yield_per_sample']}), fates {s['fates']}, think_mean {s['think_tokens_mean']} capped {s['think_capped']}; "
             f"tests dreamed any {fin['dreamed_any']} fwd {fin['dreamed_forward']} (of reachable {fin['dreamed_forward_reachable']}/{fin['reachable']}) rev {fin['dreamed_reverse']} of {fin['n_tests']}; {s['wall_seconds']:.0f}s")
         dump()
 

@@ -620,3 +620,285 @@ names pass then answered yes to 41 of 50 pairs on bf16 night 1 (Qwen3.5-2B: 38 o
 - Wall time: 6,300 s (bf16) and 8,236 s (q4); the names pass adds about 1 minute per night.
 - Cost: K2 total about $3.57 of the $4.00 K2 cap (first try $0.60, 11b abort $0.07, four probe hosts about $0.20, a q4 host that never
   started $0.09, bf16 $0.91, q4 $1.47; Vast's own bill may be lower for boxes that never started).
+
+## Addendum 15: recorded before any run (2026-10-25 22:45Z)
+Code 7d04e81894 (`--text-scale`, `--dream-vary`, `--reword`); every flag defaults to the old behaviour. Old-arm smoke runs match the earlier code apart from a null `budget.text_scale`, and the saved adapters are byte-identical. All 18 selftest sections pass.
+- New-wording questions: `data/week2_reworded.json`, sha256 d0b24af8d0be30cff18e811adc882203c2407306f67b726c2f976913cc7cf46b, made from week2.json (sha256 70db7146...). It has 478 tests (200 forward, 200 reverse, 78 two-hop) with 3 rewordings each, 1,434 in all, written through the Message Batches API: a main batch of 478 plus a retry of 4. Cost: $0.42, plus a $0.01 pilot.
+- Choices made now, before any run, where the PREREG wording left room:
+  - **V2's cramming gap** is `cramming_gap_pts`: the mean share of a test's practised cards answered right minus the mean share of its 3 rewordings answered right, over tests with at least 1 matching card. This is like-for-like. The majority-of-3 version is reported, not marked.
+  - The two-hop card gap asks up to 3 kept chain dreams per test (both items covered, answer = the target), not exactly 1. It is report-only.
+  - Card variety uses the first 40 texts per item (paraphrases first).
+- Schedule (coordinator, 21:43Z): R8, then V8, back to back on Ben's PC after Think-2; D8 on Vast after the Oct 31 budget reset.
+
+## Addendum 14: probe result and choices made before any arm (2026-10-25 23:35Z)
+The step-0 probe ran on a free Kaggle T4 (fp16, gen-bs 24, code d9d283fad1), 6,021 s, with no empty replies and no OOM. Files: /mnt/project-files/sleep/k2chain/ (probe.json, probe_rows.json, probe.log). On Week-1 at day 7 there were 295 items, 166 eligible, 87 REM pairs and 27 two-hop tests, all 27 reachable. Results after 4 cycles, both directions:
+
+| variant | tests dreamed forward | any direction | kept / samples | thinking tokens (mean), capped at 512 | wall (T4) |
+|---|---|---|---|---|---|
+| default | 13 | 18 | 40 / 620 (6.5%) | none | 257 s |
+| q | 8 | 17 | 33 / 632 (5.2%) | none | 255 s |
+| think | 19 | 24 | 78 / 519 (15.0%) | 449, 330 capped | 2,437 s |
+| q_think | **20** | 23 | 72 / 537 (13.4%) | 441, 339 capped | 2,440 s |
+
+- Selection rule (sealed): **q_think** wins. Its 20 of 27 forward is 74% of reachable, below 90%, so **--rem-tries 2**.
+- Most rejected samples fail the question check (238-448 per variant are "bad") or open-book verification (102-210).
+- Some pairs join two notes of the same fact written two ways (for example "Bouzeibas is the mentor of Glisemu" and "Bouzeibas has Glisemu as a mentor"). No valid two-step card can come from such a pair (suggested, from the rejected examples).
+- **Budget:** the coordinator allowed only arm B now (hard cap $2.20; the week's credit is nearly gone). Arm A waits for the Nov 1 budget, or a free GPU slot. C1 and C2 need A, so they wait too. G is judged on B as soon as it finishes.
+- **Speed setting (not a design change):** both arms use `--gen-bs 48` instead of 32. The thinking cards make REM writing about 10x slower, and this keeps B inside the cap. k2s_bf16 ran with 32, so C1 carries this small extra difference.
+- Both arms also take `--reword data/week2_reworded.json` (report-only, addendum 15's new-wording test, run after the result JSON is written). This gives addendum 15 its 4x reference.
+
+## Addendum 16: recorded before any run (2026-10-26 ~01:00Z)
+PR #130 (sleep-efficiency flags) was reviewed and merged into this branch: merge d01aa01281, review fixes 3267a6bce8.
+- With all flags off, and with only `--card-stats`, CPU smoke result JSONs and adapter tensors are byte-identical to a7ed69d79d for `ab_ob_b4_nb`, `ab_ob` and `ab_ob_b4_nb_x4`. All 19 selftest sections pass.
+- Review fixes, both made before any run and both flag-on only:
+  - a reverted night now also restores `--skip-known`'s known flags (before, a reverted night's flags survived into the next night);
+  - `--rem-views` spreads each dream's practices evenly over the cycle (before, small pools got all their practices in the first steps).
+- `--rem-views V` accounting, as coded and as the note's arithmetic assumes: a dream in the pool all night gets about V practices; a dream made in cycle c gets V times the share of the night's REM steps from cycle c on.
+- `--rem-views` with `--rem-steps-mult` other than 1 is refused (ap.error).
+- The runs use addendum 9's settings otherwise: `--tok-budget 2048 --gen-bs 32`, Week-2, seed 1. They run on one RTX 4090 (Ben's borrowed pair, free), all three in one job on the same card.
+
+## Addendum 14, arm B: thinking chain cards + twice the REM practice (k2c_r2, K2 bf16, Week-2, seed 1)
+Box 57736062, an RTX 5090 in Australia at $0.476/h, from 23:29Z to 02:48Z (3.3 h, about **$1.58**). Code a7ed69d79d. Flags: `--rem-chain-mode q_think --rem-dirs both --rem-tries 2 --rem-steps-mult 2 --think-eval --gen-bs 48 --reword data/week2_reworded.json`. Wall 11,615 s. Files: `results_a14/result_k2c_r2.json`, `results_a14/run_box_k2c_r2.log`.
+
+| (weights only) | k2s_bf16 (11c) | **k2c_r2 (B)** | paired |
+|---|---|---|---|
+| recall C2+C4 | 96.5 | **82.5** | -14.0 (31 vs 3), p < 0.0001 |
+| C2 / C4 | 96 / 97 | 69 / 96 | |
+| reverse C2+C4 | 91.5 | 78.0 | -13.5, p = 0.0001 |
+| **two-hop** | 3.8 (3 of 78) | **50.0 (39 of 78)** | **+46.2 (0 vs 36), p < 0.0001** |
+| two-hop dreamed (chain dream covers both facts) | 5 | **76** | |
+| right when dreamed | 3 of 5 | 39 of 76 (51%) | |
+| changed new / stale | 93.3 / 7 | 53.3 / 46.7 | -40.0, p = 0.0005 |
+| routine | 100 | 95 | |
+| diary pooled (base_diary) | 84.5 (80.0) | 87.0 (80.5) | |
+| ARC-Easy 500 (pre) | 91.0 (89.4) | 89.2 (89.4) | |
+| nights undone by the morning gate | 1, 2 | **1, 2, 3, 7** | |
+| REM pool at night 7 | 14 | 261 (146 at night 6) | |
+
+Verdicts (sealed marks):
+- **G FAIL:** two-hop 39 of 78. The mark was 75.
+- **No harm, B:** recall 82.5 is below 93.5, so it **FAILS**. ARC 89.2 against a mark of 84.4 passes. Diary 87.0 against a mark of 75.5 passes.
+- C1 and C2 need arm A, which runs on Ben's PC next.
+
+What happened (shown, from this JSON):
+- **Coverage is fixed.** Thinking before writing a card lifted chain dreams from 9 in a week to 227, and the tests covered from 5 to 76 of 78.
+- **The last night was thrown away.** The morning gate undid night 7: ARC on its 100 validation questions was 0.86, under 0.90 - 0.03. All of B's recall loss comes from that night:
+  - Of the C2 facts first eligible on day 7, B gets 1 of 28 right, against 26 for k2s_bf16.
+  - Of the other 72 C2 facts, B gets 68 right, against 70.
+  - Changed facts whose change came on day 7: 5 of 15 right.
+  - Night 7 also made 115 of the pool's 261 chain dreams, and those were never kept in the weights.
+- **The gate is noisy.** Its 100-question ARC check also undid nights 1-3: 0.84, 0.86 and 0.82. Yet ARC-Easy on 500 questions after night 6 was 89.2, against 89.4 before sleep. A 4-point drop on 100 questions is within the noise of the answers that flip each night (suggested).
+- **No cramming.**
+  - New-wording recall (C2+C4, both directions, 400 tests) is 80.25, the same as the usual questions' 80.25.
+  - The practised cards score 77.3, so the cramming gap is -3.9 points, partly because night 7's cards were never trained.
+  - Two-hop on new wordings is 50.0, the same as the usual 50.0.
+  - Chain cards on their exact wording score 65.6 against 64.5 reworded.
+  - 23 of the 1,434 rewordings appear word for word in some kept text.
+- **Thinking at test time hurts:** two-hop 38.5 with high-effort thinking, against 50.0 without. Forward C2+C4 is 73 against 82.5.
+- Night 5 kept no chain dream: all 268 tries ran to the 512-token thinking cap on 134 leftover pairs that never yield a card.
+
+What this suggests for the 95% goal (untested): the next blocker is the morning gate, not card writing. A gate that measures ARC on all 570 validation questions instead of 100 would undo fewer good nights. That should be the next one-change test, on this recipe.
+
+## Addendum 17: recorded before any run (2026-10-26 ~03:30Z)
+Code 0f2df52dce adds `--gate-arc-n N` (default 100, which is the old gate byte for byte: the smoke result JSON is identical apart from timing; all selftest sections pass). The run (k2c_r2_g570 = arm B's flags + `--gate-arc-n 570`) is filed as GPU-queue job `add17-g570` for Ben's borrowed RTX 4090s. B ran on an RTX 5090, so GPU type differs (small numeric differences, like a sampling-seed change).
+
+## Addendum 14 arm A and addendum 16: run on Ben's PC (recorded 2026-10-26 ~18:20Z, before either run)
+Ben's PC (RTX 5070 Ti, 16 GB, WSL) came free before the borrowed 4090s, so both jobs run there, one after another, by
+`pc/sleepb_pc.sh`. Code is unchanged: arm A from a7ed69d79d, addendum 16 from 5fc4b87a23 (git archives). Differences from the queue jobs:
+- **Arm A uses `--gen-bs 24`, not 48** (arm B used 48 on a 5090). 48 does not fit 16 GB. Generation batches change which samples are drawn
+  together, so this acts like a sampling-seed change, on top of the GPU-type change. If 24 runs out of memory, arm A restarts from the
+  beginning at 16; the log says which.
+- **Addendum 16 keeps `--gen-bs 32`** for all three runs. If C runs out of memory at 32, all three run at 16 (the prereg fixes only that
+  the three match); `pull/add16-genbs.txt` says which.
+- The PC's venv has transformers 5.20.2 and peft 0.21.2 as required; the accelerate version is reported, not enforced.
+
+## PC run, first launch (2026-10-26 19:00-19:09Z): every run ran out of GPU memory
+Logs: `results_pc/` (pushed by the Mac watcher). The PC venv was missing `datasets`; datasets 5.1.0 was added and nothing else changed
+(torch 2.9.1+cu128, transformers 5.20.2, peft 0.21.2, accelerate 1.15.0, fla 0.6.0). In WSL, running out of GPU memory can show as
+"CUDA driver error: device not ready".
+- **Arm A never started.** Three tries (gen-bs 24, then 16) died in the startup self-test `selftest_shy`, before any training. That check
+  held every LoRA module's full fp32 weight change at once: about 14 GB on K2-3.7B (252 modules), on top of the model. gen-bs has no effect
+  on it. Arm B passed it on a 32 GB card.
+- **Addendum 16's three runs** each died at night 1's first training step, in the full-vocabulary KL with `--tok-budget 2048`. No result
+  was produced, so nothing was looked at.
+- **Fix for the self-test (memory only):** the check keeps each module's small randomized factors and rebuilds one module's weight change
+  at a time, with the same operations.
+  - On CPU, against a7ed69d79d's version on a tiny LoRA model in fp32 and bf16, it gives the same output, the same global random state
+    afterwards and the same restored weights.
+  - Smoke runs with arm A's and arm B's flags (`--rem-chain-mode q` on the smoke model) give result JSONs identical to a7ed69d79d's in all
+    1,119 fields apart from timing.
+- **Arm A goes back to the 4090 queue** with the fixed commit.
+
+## Addendum 16 rerun and addendum 17 on Ben's PC (recorded 2026-10-26 ~19:30Z, before either run)
+PC order (coordinator): the thinking thread's short check, then this launch (`pc/sleepb_pc2.sh`, which starts by itself when the GPU is
+handed over), then the thinking thread's P1/P2. Both runs use the commit with the self-test fix; training is unchanged by it.
+- **Addendum 16 (C, T1, T2): `--tok-budget 1024` for all three, not 2048.** The token budget only cuts each training batch into smaller
+  pieces: loss and gradients are the same up to rounding. The sealed prereg fixes only that the three runs match. If any of the three
+  runs out of memory, all three start again at 512; `pull2/add16-tokbudget.txt` says which. gen-bs stays 32.
+- **Addendum 17: an RTX 5070 Ti (16 GB), not a 4090; `--gen-bs 24`, not B's 48; `--tok-budget 512`, not 1024.**
+  - The gen-bs change acts like a sampling-seed change, as noted for arm A.
+  - The token budget changes rounding only.
+  - If it runs out of memory, it starts again from the beginning at gen-bs 16; the log says which.
+  - Marks are unchanged: S1 and S2 are against B's sealed numbers.
+
+## Addendum 16 result (2026-10-27): neither efficiency fix helps
+Ben's PC (RTX 5070 Ti), Qwen3.5-2B, Week-2, seed 1, `ab_ob_b4_nb` at 2x work, `--tok-budget 1024` and `--gen-bs 32` for all three runs (no
+memory fallback was needed). The fast `causal_conv1d` kernel is not installed on the PC, so transformers used its slower reference version
+of that layer in all three runs. Code 7325e1ea60. Results: `results_pc/run2/add16-{C,T1,T2}/`. About 78 min per run.
+
+| | C (control) | T1 (+ skip known 0.25) | T2 (+ REM views 20) |
+|---|---|---|---|
+| recall C2+C4 (200) | 75.5 | 75.5 (25 vs 25, p = 1.0) | 78.0 (+2.5; 19 vs 24, p = 0.54) |
+| C2 / C4 | 71 / 80 | 68 / 83 | 67 / 89 |
+| reverse C2+C4 | 73.5 | 74.5 (p = 0.89) | 79.0 (+5.5, p = 0.15) |
+| two-hop (78) | 32.1 | 26.9 (-5.1; 13 vs 9, p = 0.52) | 29.5 (-2.6; 11 vs 9, p = 0.82) |
+| two-hop dreamed / right when dreamed | 32 / 78% | 28 / 75% | 26 / 88% |
+| changed new | 96.7 | 86.7 | 93.3 |
+| ARC-Easy 500 | 94.0 | 92.4 | 92.6 |
+| diary pooled (base 79.7) | 82.5 | 81.4 | 84.8 |
+| nights undone | none | none | none |
+| known_share, mean of nights 3-7 | 0.35 | 0.28 | 0.29 |
+| REM practices per night (nights 2-7) | 2,805 each | 2,805 each | 100, 478, 926, 1,503, 2,259, 2,788 |
+
+**E0 (waste meter, C):**
+- known_share over nights 3-7 averages 0.35. That is between the marks (>= 0.40 room for E1; < 0.20 unlikely), so no decision mark fires.
+- `rem_cb` known_at_step is 0.97-0.99 on nights 2-5: REM over-practice **confirmed**. Every REM practice was of a card the model
+  already answered right.
+- The last quarter's known_share is 0.46-0.53, never >= 0.80, so no plateau stop.
+- Not wrong: known_share is above 0.20 on every night.
+
+**E1 (skip known cards): FAIL, and refuted.** T1 recall equals C's (75.5), so the "wrong if T1 <= C" condition fires. The mechanism did act:
+known_share fell from 0.35 to 0.28, and about 2,800-3,000 known draws a night were redrawn. Two-hop -5.1 also misses its >= C - 5 mark by
+0.1. No harm passes, with changed-new at exactly its mark (86.7).
+
+**E2 (cap REM drill): FAIL, not refuted.** +2.5 recall, p = 0.54 (the mark was +3 with p < 0.05). Two-hop 29.5 >= C - 5 passes. No harm
+passes. Bonus check: no night was undone. The cap moved 2,000-2,700 REM practices a night to NREM cards on nights 2-5.
+
+**What it means (suggested):**
+- Over-practising known cards is real waste, but it is not what limits recall at 2x work.
+- Freeing those steps for other cards does not buy a measurable gain on one seed.
+- The 4x reference (91.5) shows that more total work helps. Spending the same work more cleverly did not.
+- Neither fix is adopted. Per the prereg, there is no seed-2 rerun and no E7.
+- C's recall (75.5) is below my expectation of 82-87. Possible reasons are the PC differences above (card, token budget, slow conv
+  kernel) or plain run-to-run noise (untested).
+
+## Addendum 17: second and third PC tries (recorded 2026-10-27 ~03:50Z, before any result)
+- **Second try (sleepb_pc2.sh, 02:17Z):** add17 died at night 1's first training step, in the KL's `log_softmax`, with "CUDA driver error:
+  device not ready". This happened at gen-bs 24 and again at 16, with tok-budget 512.
+  - By estimate, that step needs well under 16 GB: replay KL covers about 400 target positions.
+  - So the error may not be plain memory exhaustion (suggested).
+- **Third try (sleepb_pc3.sh, launched ~03:50Z):** the same flags and code, but with PyTorch's default CUDA allocator instead of expandable
+  segments, and a 5 s nvidia-smi memory log. The allocator does not change any numbers.
+  - If it fails again, add17 waits for a 24 GB+ card (the 4090s, or Vast after the Nov 1 budget reset), and the PC goes to the thinking
+    thread.
+
+## Arm A and addendum 15 on Ben's PC (recorded 2026-10-27 ~06:30Z, before any of these runs)
+Ben's borrowed 4090s are treated as not coming. K2 bf16 can only run on Ben's PC: Kaggle's T4/P100 have no proper bf16, and the Macs use
+the 4-bit path. The coordinator set the PC order: addendum 17, the thinking-loop thread's segment 1, the sleep race's round 1, then arm A,
+looping P1, R8, looping P2a, V8, looping P2b. `pc/sleepb_pc4.sh` waits for each turn on flag files and passes the turn on when a run ends,
+even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allocator. Differences from the sealed plans:
+- **`--tok-budget 512`** everywhere, not 1024. This only cuts training batches into smaller pieces, so it changes rounding only.
+- **Arm A at `--gen-bs 24`** (B: 48), or at 16 from the start again if 24 runs out of memory. As noted before, this acts like a
+  sampling-seed change.
+- **Addendum 15's base** is chosen by the sealed rule. B failed no harm (recall 82.5), so the base is A's flags if A passes no harm
+  (recall >= 93.5, ARC >= pre - 5, diary >= base - 5), else the defaults. The script writes the decision and its numbers to
+  `pull4/base.txt` before R8, and I check it before R8 starts. If A has no result, R8 and V8 are skipped.
+- **R8 and V8 at `--gen-bs 16`**, as sealed. If R8 runs out of memory at 16, both run at 8; `pull4/add15-genbs.txt` says which.
+- D8 and V8p come later, if the PC has room.
+
+## Addendum 17, third try: training crawled; fourth try recorded (2026-10-27 ~07:00Z, before it runs)
+- **Third try (sleepb_pc3, 05:01Z):** it got past every earlier failure point, but night 1's training (296 steps, 175 s on the 5090) had
+  logged nothing after 1 h 36 min, at 100% GPU use with 15.9 of 16.3 GB in use. That is at least 30x slower than expected.
+  Suggested (untested): the full card spilled into system memory under WSL. It was stopped by hand, with no result.
+- **Code change (log and memory only):**
+  - `cuda_tidy()` (gc plus `torch.cuda.empty_cache()`) runs before each night's training and after each REM writing pass.
+  - A log line every 200 training steps, and one per night with seconds, peak and reserved CUDA memory.
+  - The result JSON is unchanged: the CPU smoke with arm A's flags matches a7ed69d79d in all 1,119 fields apart from timing. These calls
+    only run on CUDA.
+- **Fourth try (sleepb_pc5, same PC slot):** the same flags, but with `--tok-budget 256` (rounding only), the new code, and a watchdog
+  that stops the run if its log is silent for 90 min. It ends by writing pull3/DONE, so the next PC job starts.
+- **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same code and `--tok-budget 256`, with the same watchdog.
+
+## Addendum 17, fourth try: still about 9x slow; fifth try with a memory cap (recorded 2026-10-27 ~07:45Z, before it runs)
+- **Fourth try (sleepb_pc5, 06:46Z):** night 1 no longer stalls. It trained its 296 steps in 1897 s, and the whole night took 2051 s
+  (arc_val 0.881, probe_post 0.667, not reverted). On the 5090, arm B's night 1 took 227 s, so the PC is about 9x slower per step. The
+  5090 took about 3.1 h for B's seven nights, so at this rate add17 would need about a day of PC time.
+- **Cause, suggested:** PyTorch's reserved memory reached 16.0 GiB on a card with 15.9 GiB in total, with only 12.9 GiB in use. The
+  rest can only have been system memory. Under WSL a full card does not report out of memory, so PyTorch never hands its cache back.
+- **Code change (memory only, no number changes):** `cuda_cap()` reads `SLEEPB_CUDA_CAP_GIB` and caps PyTorch with
+  `torch.cuda.set_per_process_memory_fraction`. Under the cap, the allocator frees cached blocks and retries instead of spilling. The
+  night line also logs the most memory reserved. Nothing runs off CUDA or without the variable.
+- **Rule, fixed now:** Windows' shared GPU memory counter for the WSL process is read while the fourth try runs.
+  - If it shows 512 MiB or more in system memory (the spill), the fourth try is stopped (without its DONE), and **the fifth try
+    (sleepb_pc6)** runs the same flags with a 14 GiB cap. If it runs out of memory under the cap, it starts again once at `--gen-bs 16`.
+  - If not, the cap would not help: the fourth try keeps going under `sleepb_pc5guard.sh`, which applies pc6's deadline rule below.
+  - pc6 stops itself if its log is silent for 90 min, or if, after night 2 or later, the remaining nights at 1.25x the last night's time
+    plus 75 min of final scoring would end after 18:00Z. Either way it writes pull3/DONE, so the looping thread's segment 1 starts.
+- **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same cap and code.
+
+## Addendum 17, fourth try stopped by its watchdog; add17 moves into my next PC slot (recorded 2026-10-27 ~11:10Z, before it runs)
+- **Fourth try (sleepb_pc5):** after night 1 (2051 s), night 2's names pass finished, and then the log stayed silent for 90 min while
+  it wrote the night's dreams. On the 5090, the whole of night 2 took 1379 s. The watchdog stopped it at 09:20Z and wrote pull3/DONE,
+  so the looping thread's segment 1 took the PC at 10:07Z. No result. Neither pc6 nor pc5guard ran.
+- **Spill check, not done:** Windows' shared GPU memory counter was read only after add17 had stopped, so it says nothing about add17.
+  In pc5's last 90 min, the card sat at up to 15,961 of 16,303 MiB at about 100% use. That fits a spill but does not prove it.
+- **Code (no number changes):** `cuda_tidy()` now also runs at the start of each night, before the names pass and dream writing. A
+  log line gives each night's writing time. Both run only on CUDA.
+- **New PC chain, `pc/sleepb_pc7.sh`, replacing sleepb_pc4 in my slots:** add17 runs in my first slot (after the sleep race's round
+  1), then arm A after looping P1, then R8 after looping P2a. V8 waits for its own flag (`handoff/GO-SLEEP-V8`) in a slot still to be
+  agreed. Every run uses the 14 GiB cap and code src-cap2. Each run stops if its log is silent for 90 min, or if, once night 2 or later
+  ends, the projected end passes its time budget: add17 10 h, A 10 h, R8 and V8 16 h each. add17's flags are the sealed ones, as in
+  pc5, at `--gen-bs 24` (16 on running out of memory).
+
+## Why arm B's two-step stopped at 50%: the card writer (analysis of arm B's JSON, 2026-10-27 ~12:00Z)
+Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
+- **Shown: few two-step cards get written.** Chain cards kept / written per night:
+
+  | night | 2 | 3 | 4 | 5 | 6 | 7 |
+  |---|---|---|---|---|---|---|
+  | kept / written | 6/138 | 15/346 | 32/612 | **0/1072** | 78/1920 | 96/1586 |
+  | thinking tokens per sample | 453 | 442 | 327 | **17** | 390 | 431 |
+  | night undone by the gate | yes | yes | no | no | no | yes |
+
+  - On night 5, 1064 of 1072 samples never closed their think block, at 17 tokens each. **Suggested:** the writer is the model as
+    trained so far (adapter on), and night 4's training broke its thinking.
+  - On night 6, 1362 chain units were open, but the per-night cap let only 960 be tried.
+- **Shown: two-step depends on when a test's cards could first be written** (the night both of its facts had been said on 2+ days):
+
+  | first dreamable night | 2-3 | 4 | 5 | 6 | 7 |
+  |---|---|---|---|---|---|
+  | two-hop right | 9/9 | 12/16 | 9/19 | 9/15 | 0/19 |
+
+  - When both single facts are answered, two-hop is 34 of 54 right; when either one is missed, it is 5 of 24.
+- **Suggested:** fixing the gate alone (addendum 17) would rescue night 7's 19 tests only as far as one night of cards allows. That
+  points to about 50-55 of 78, not 75. Chains first dreamable on nights 5-7 need cards written on their first night.
+- **Shown (addendum 14 probe, Week-1, one night, base model):** of 537 samples, 72 were kept, 244 dropped as bad, 210 unverified and
+  2 failed to parse. The rejected examples show a 20-token verifier cut before the answer, pairs made of one fact extracted twice,
+  and questions followed by more thinking on the same line.
+- **Shown (B's eligible items at week end, rebuilt offline with REM's pairing rule):** 186 pairs, of which 42 have far ends that
+  contain one another (one fact extracted twice). The other 144 pairs include a pair for 77 of the 78 two-hop tests, so dropping the
+  42 removes no test chain. 186 pairs make 372 units against a cap of 240 tried per cycle; the 144 make 288.
+- **Next:** addendum 18 (sealed 85a786fd95) fixes the writer with four switches: the base model writes, distinct pairs only, the
+  question is cut at its first "?", and the verifier gets 96 tokens. A one-hour generation-only pre-check on Week-1 decides whether the
+  full arm runs; its Go mark is fixed in the addendum. Code: the switches default to today's behaviour. A CPU smoke run with them off
+  matches 005265d6fb apart from timing and the four new `args` entries. selftest_add18 and selftest_rem_k2 pass.
+- **PC chain `pc/sleepb_pc8.sh`** replaces pc7: slot 1 runs the pre-check and then add17; slot 2 runs add18 if Go, else arm A; then R8
+  and V8 as agreed. If add18 takes arm A's slot, addendum 15's base is the defaults (the sealed rule's fallback when A has no result).
+- **PC disk (2026-10-27 ~18:40Z):** C: on Ben's PC has about 210 MB free. Each run's results and logs take a few MB, but the LoRA
+  adapter that sleepb saves at the end takes ~70-140 MB, and nothing reads it back. `SLEEPB_SAVE_ADAPTER=0` now skips that save; it
+  changes no number. The chain is `pc/sleepb_pc9.sh`: pc8 plus that setting, code src-cap4, and C:'s free space in its log.
+
+## The small tier moves to LFM3-1.7B; addendum 19 sealed (2026-10-27 ~20:45Z)
+
+- Ben (19:45Z): "remember we use LFM3 now instead of K2." So the two-step goal now applies to LiquidAI/LFM3-1.7B.
+- **Port (f35dd7e840):** sleepb runs LFM3 with every K2 think path (names pass, REM `q_think` writer, think-eval) and LoRA on 142
+  modules.
+  - Shown, CPU: the K2 and Qwen smoke results are unchanged.
+  - Shown, real LFM3 weights: batched left-padded generation equals one prompt at a time (`results_a19/pad_check.log`).
+- **Addendum 19 (sealed 09e4139256):** addendum 18's recipe on LFM3, Week-2, seed 1.
+  - It runs in this thread's next PC slot instead of addendum 18 (K2), after a 1 h Week-1 card-writer check that stops it only if the
+    port is broken.
+  - Marks: G two-hop >= 75/78; recall >= 88.5; two-hop >= 39 (K2 arm B's), paired; the usual no-harm marks.
+- Addendum 17 (K2) keeps running. Its gate result carries over to any model.
+- The chain script `pc/sleepb_pc10.sh` takes over from pc9 once addendum 17 has passed its turn on (mock-tested on all three slot-2
+  paths).

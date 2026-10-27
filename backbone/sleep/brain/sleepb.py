@@ -37,6 +37,9 @@ left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 
 Addendum 11c (PREREG-sleepB-addendum11c.md), K2 only: the names pass thinks fully. Stage 1 uses K2_NAMES_EFFORT = "high" (the template's default reasoning_effort, block left open after "<ifm|think>\n") with NAMES_THINK_MAX = 512 greedy
 thinking tokens, stopping at "</ifm|think>" or the end of the turn (Lang.think_eos("high")); strip_think and stage 2 use that effort's close tag ("</ifm|think>", added when stage 1 did not close the block, then the 12-token answer as before);
 and a reply whose first line starts with the word no / not / none / nothing / nope / unrelated is read as "no" (parse_rel_k2; Qwen keeps parse_rel).
+LFM3 port (no addendum; LiquidAI/LFM3-1.7B, --revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd, trust_remote_code): Lang(lfm3=True) takes the K2 think paths (names pass, --rem-chain-mode think / q_think, --think-eval) with ChatML tags: render = the template with
+enable_thinking=False (ends "<think></think>"), render_think = enable_thinking=True (ends "<think>", the effort is ignored: LFM3 has one close tag "</think>", Lang.shut), a turn ends with <|im_end|> (Lang.end). LoRA: LFM3_TARGETS (attention q/k/v/o, conv in_proj / out_proj,
+feed_forward w1 / w2 / w3: 142 modules on the real model), the smoke is a tiny random Lfm3ForCausalLM (real tokenizer, config and remote code); selftest_lfm3 checks the chat format and the regex. K2 and Qwen runs are unchanged.
 
 Addendum 13 (PREREG-sleepB-addendum13.md): --q4-eval (delta arms only) also scores the final model under F0 / Q0 / Q / Qf (bf16 and 4-bit, with and without the fp32 delta folded in, fresh or frozen 4-bit grid).
 Addendum 13b (PREREG-sleepB-addendum13b.md): --freeze-lora (training delta arms) re-freezes the LoRA in every Trainer, since leaving pm.disable_adapter() makes it trainable again.
@@ -44,6 +47,26 @@ Addendum 14 (PREREG-sleepB-addendum14.md), K2 two-step dreams (all flags default
 given far end, parse_q1), think opens K2's high-effort think block for the bridge_prompt reply (stage 1: at most REM_THINK_MAX = 512 sampled tokens; stage 2: prompt + thinking + close tag, 40 tokens, parse_qa1), q_think both; --rem-dirs both
 (every pair is two units, one per direction, tried each cycle until it has a kept dream; --rem-tries N samples a unit N times and keeps the first sample that passes every check); --rem-steps-mult F (each cycle's REM steps x F, the
 Trainer's schedule covers the new total); --think-eval (K2, report-only: two-hop and C2+C4 forward asked again with thinking, weights only). k2_chain_probe.py runs the REM variants on the Week-1 world without training.
+
+Addendum 15 (PREREG-sleepB-addendum15.md), long nights with varied vs repeated cards (all flags default to the old behaviour, byte for byte): --text-scale X (needs --budget-scale) takes the five generation knobs (k, item cap, REM chain cap, REM gist cap, dream token budget)
+from X instead of the work scale while the training steps stay at --budget-scale (R8: --budget-scale 8 --text-scale 4); --dream-vary {mix,plain} (OB arms, not the twist arms): nrem_prompt asks for kp = ceil(k/4) paraphrases (and still k question cards), then Brain.vary asks
+the BASE model for n = ceil(k/4) texts in each of 3 styles (story: a tiny everyday story; note: a note in Sam's own voice; mix: weird, a surreal dream scene; plain: plain2, ordinary paraphrases), each style sampled under its own fixed seed (seed * 100 + night + 43 + style index, the
+main stream is untouched), kept under twist's checks (both entities, no test leak, no older value, the base model answers a card from the text alone) and appended to it.para; rec["dream_vary"] has the per-style yields. --reword FILE (report-only, data/week2_reworded.json from
+make_reworded.py, written through the Message Batches API): after ALL scoring and after the result JSON is on disk, weights-only greedy answers to 3 new wordings of each C2+C4 forward / reverse and each two-hop test (a test is right if most of its wordings are), to the exact kept question
+cards / REM chain dreams of those tests (the cramming gap), a seen check (a wording found word for word in any kept text) and a card-variety measure (pairwise token Jaccard of an item's texts) -> result["reword"], rewritten into the same file; a failure goes to result["reword_error"], never costs the run.
+
+Sleep efficiency (research/sleep-efficiency-2026-10-25.md; every flag is off by default, and off is bit-identical to before): --card-stats (report-only) records, for every
+practice example, whether the model already answered it before the step (every target token but the final eos is the argmax, so greedy decoding would write it exactly), from the
+logits the loss already computes, and puts the per-night shares by kind (text, qa_cb, qa_ob, rem_cb, rem_ob) and by quarter of the night in nights[i].cards; --skip-known F (implies
+--card-stats): a card (an NREM paraphrase or Q&A, a REM-pool dream) that was right at its last closed-book or text practice is kept with probability F, else the draw is repeated
+(at most SKIP_TRIES draws, the last one is kept); a wrong morning probe marks all of that item's cards not known again; --lora-plus R: the lora_B matrices step at lr x R (LoRA+);
+--ob-share P: the open-book share of practice Q&A (0.5 before); --lr-sched wsd: the night's lr stays at --lr, then falls linearly to 0 over the last WSD_DECAY of its steps (cosine before);
+--rem-views V: each REM cycle gives the REM pool about V x pool x (cycle's REM steps / night's REM steps) practice slots, at most the usual round(0.7 bsz) a step, spread over the cycle's steps, so a dream
+that is in the pool all night gets about V practices (one made in cycle c gets V x the share of the night's REM steps from c on); the slots it does not use go to NREM cards (before: always round(0.7 bsz) a step, e.g. about 2,700 practices for night 2's first dream in nb at 4x).
+Together with the other branches' flags: --rem-views with --rem-steps-mult != 1 is an error (views fixes a dream's practices a night, so the extra REM steps would only be NREM steps); --rem-views composes with --rem-dirs both and --rem-tries
+(it works on whatever the pool holds: each direction's dream is a dream, and --rem-tries only changes how the pool fills); --skip-known composes with --dream-vary (a style text is a card of its own, keyed by its text, so every night's new texts start not known;
+the draw frequency changes, so a run with both is neither addendum's control); --text-scale and --reword are untouched by the efficiency flags.
+Addendum 17 (PREREG-sleepB-addendum17.md): --gate-arc-n N (1..570, default 100 = the gate as before, byte for byte): the pre-sleep base score and the nightly morning gate both use the first N ARC-Easy validation questions (570 in all); the final ARC-Easy score is still the 500-question test split.
 
 --q4-base (Mac deployment study, thread "Fit sleep on an 8 GB M2"): right after load_model, before LoRA and any base use, every nn.Linear and
 nn.Embedding weight is replaced in place by a quantize-dequantize copy in MLX's affine 4-bit scheme (groups of --q4-group along the input dim,
@@ -58,7 +81,8 @@ scale = (max-min)/(2^bits-1), bias = min, both rounded to the model dtype), so t
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the packed q4 base (--q4-packed, q4packed.py) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the packed q4 base (--q4-packed, q4packed.py) + the LFM3 chat format and LoRA targets (selftest_lfm3) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15) + the sleep-efficiency card checks (--card-stats, --skip-known, --lora-plus, --lr-sched, --rem-views)
+  python backbone/sleep/brain/sleepb.py --arm ab_ob --smoke --out /tmp/x --budget-scale 8 --text-scale 4 --dream-vary mix --reword /tmp/smoke_reworded.json   # addendum 15 on the smoke fixture (a Week-2 file maps to none of its tests)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
 Model roles: tagging, update detection, NREM dreaming and every verification run on the BASE model (adapter disabled);
@@ -69,9 +93,12 @@ Each night uses a fresh AdamW with one cosine schedule spanning all of that nigh
 """
 import argparse
 import contextlib
+import gc
+import hashlib
 import itertools
 import json
 import math
+import os
 import random
 import re
 import sys
@@ -88,8 +115,17 @@ for _p in (HERE, HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
-from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
+from train import K2_TYPE, LFM3_TYPE, LORA_TARGETS, is_k2, is_lfm3, load_model  # noqa: E402
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
+LFM3_TARGETS = r".*\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)|conv\.(in_proj|out_proj)|feed_forward\.(w1|w2|w3))"  # LFM3: attention q/k/v/o (not its heads-sized gate_proj), the short conv's in/out_proj (not conv.conv), the MLP w1/w2/w3
+
+
+def lora_targets(lm):  # LoRA target_modules of this model: LFM3's regex, else train.LORA_TARGETS
+    return LFM3_TARGETS if lm.config.model_type == LFM3_TYPE else LORA_TARGETS
+
+
+def lfm3_lora_count(cfg):  # modules LFM3_TARGETS matches in the real model: 5 per conv layer, 7 per attention layer (142 for LFM3-1.7B)
+    return sum(5 if t == "conv" else 7 for t in cfg.layer_types)
 
 K = 4
 LOSS_SCALE = [1.0, 0]  # [scale, clean steps in a row]; --dtype fp16 starts at 128, dynamic (Trainer.step only; every other path is unchanged)
@@ -112,6 +148,11 @@ TWIST_ARMS = ("ab_ob_twist", "ab_ob_win")  # twisted dream-like scenes join the 
 EXTRA_ARMS = (*TWIST_ARMS, "ab_ob_winp")  # Brain.twist runs (winp: with ordinary paraphrases)
 B2_ARMS = ("ab_ob_b2", *WIN_ARMS, "ab_ob_tag2", "ab_ob_bridge")  # work scale 2 unless --budget-scale says otherwise
 B4_ARMS = ("ab_ob_b4", *ADD8_ARMS, *ADD9_ARMS, *ADD10_ARMS)  # addendum 7 / 8 / 9 / 10: work scale 4 unless --budget-scale says otherwise
+
+
+SKIP_TRIES = 8  # --skip-known: draws per practice slot before a known card is kept anyway
+WSD_DECAY = 0.2  # --lr-sched wsd: share of the night's steps in the linear decay to 0
+ROW_CHUNK = 128  # row_stats: target rows per CE chunk (bounds the [rows, vocab] log-softmax temporary)
 
 
 def default_scale(arm, given=None):  # the work scale main() pins: --budget-scale if given, else 4 (B4_ARMS), 2 (B2_ARMS) or None (s = 1 / --night-budget-s)
@@ -300,9 +341,10 @@ def upd_prompt(L, do, to, fo, dn, tn, fn, shared):
     return L.render("You compare chat messages carefully.", u)
 
 
-def nrem_prompt(L, ctx, it, k=K):  # k: paraphrases and Q&A pairs per item (K; round(K s) at work scale s)
+def nrem_prompt(L, ctx, it, k=K, kp=None):  # k: paraphrases and Q&A pairs per item (K; round(K s) at work scale s); addendum 15 (--dream-vary): kp paraphrases instead of k (None: k, the prompt as before)
+    kp = k if kp is None else kp
     u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
-         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {k} paraphrases of the CURRENT fact (short standalone sentences, "
+         f"Focus on the fact linking \"{it.subj}\" and \"{it.obj}\". Write {kp} paraphrases of the CURRENT fact (short standalone sentences, "
          f"different wording, naming both) and {k} question-answer pairs about it. Cover both directions: some questions should ask about one "
          f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
          f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
@@ -325,13 +367,29 @@ def para2_prompt(L, ctx, it):  # ab_ob_winp: twist_prompt's control, 2 more ORDI
     return L.render("You are a careful assistant that studies facts.", u)
 
 
-def parse_scenes(txt):  # numbered lines -> scene texts (at most 2)
+VARY_STATS = ("gen", "kept", "parse_fail", "dropped_test_leak", "dropped_missing_entities", "dropped_stale", "dropped_unverified", "dropped_dup")  # the vary_<style>_<stat> keys of Brain.vary
+VARY_STYLES = {"mix": ("story", "note", "weird"), "plain": ("story", "note", "plain2")}  # addendum 15 (--dream-vary): the style prompts Brain.vary sends, in order (the style index seeds each sampling); the 4th style is nrem_prompt's own kp paraphrases
+VARY_WHAT = {"story": ("story", "Write {n} tiny everyday stories (1-3 sentences each) in which this fact stays true. "),
+             "note": ("note", "Write {n} short notes in Sam's own voice (first person, 1-3 sentences each, the way Sam would jot it down) in which this fact stays true. "),
+             "weird": ("scene", "Write {n} short dream-like scenes (1-3 sentences each) in which this fact stays true, but the setting and the wording are odd and surreal, the way a dream is. "),
+             "plain2": ("paraphrase", "Write {n} short ordinary paraphrases (1-3 sentences each) in which this fact stays true, in plain everyday wording and a normal setting, each different from the other. ")}
+
+
+def vary_prompt(L, ctx, it, style, n):  # addendum 15 (--dream-vary): twist_prompt / para2_prompt's system line, context framing and fact line; n texts of one style, one per line, numbered 1 to n
+    one, ask = VARY_WHAT[style]
+    u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+         f"Focus on the fact \"{it.subj} {it.rel} {it.obj}\". " + ask.format(n=n) + f"Each {one} must name both \"{it.subj}\" and \"{it.obj}\". "
+         f"Reply with one {one} per line, numbered 1 to {n}, and nothing else.")
+    return L.render("You are a careful assistant that studies facts.", u)
+
+
+def parse_scenes(txt, n=2):  # numbered lines -> scene texts (at most n; 2 as before)
     out = []
     for ln in txt.splitlines():
         m = re.match(r"^[\s*#>-]*(?:scene\s*)?\d+\s*[.):*-]+\s*(.+)$", ln, re.I)
         if m and m.group(1).strip(" *\"'"):
             out.append(m.group(1).strip(" *\"'"))
-    return out[:2]
+    return out[:n]
 
 
 def now_prompt(L, ctx, shared, new, old):
@@ -417,12 +475,15 @@ def parse_qa1(txt):
     return (m.group(1).strip(), m.group(2).strip().rstrip(".")) if m else None
 
 
-def parse_q1(txt):  # addendum 14 (--rem-chain-mode q / q_think): a question-only reply -> the question: first non-empty line, "Question:" / "Q:" label and quotes off; None if that line starts with "Answer:" or does not end with "?"
+def parse_q1(txt, first_q=False):  # addendum 14 (--rem-chain-mode q / q_think): a question-only reply -> the question: first non-empty line, "Question:" / "Q:" label and quotes off; None if that line starts with "Answer:" or does not end with "?"
+    # first_q (addendum 18, --rem-parse first_q): the line is cut after its first "?" (a capped think block often runs on after the question: "What boat is X? -- no, forbidden...")
     lines = [x.strip() for x in str(txt or "").splitlines() if x.strip()]
     if not lines or re.match(r"answer\s*:", lines[0], re.I):
         return None
     qt = " \t\"'`\u201c\u201d\u2018\u2019"  # (quotes and spaces, ASCII and curly)
     ln = re.sub(r"^(?:question|q)\s*:", "", lines[0].strip(qt), flags=re.I).strip(qt)
+    if first_q and "?" in ln:
+        ln = ln[:ln.index("?") + 1].strip(qt)
     return ln if ln.endswith("?") else None
 
 
@@ -542,8 +603,8 @@ def think_eval(L, model, week, bs, cap=THINK_EVAL_MAX):
     sets = {"twohop": list(T["twohop"]), "forward_c24": [t for t in T["forward"] if t["class"] in ("C2", "C4")]}
     flat = [(k, t) for k, ts in sets.items() for t in ts]
     p1 = [think_plain_prompt(L, t["q"], THINK_EVAL_EFFORT) for _, t in flat]
-    th = [strip_think(x, THINK_EVAL_EFFORT) for x in L.generate(model, p1, max_new=cap, bs=bs, eos=L.think_eos(THINK_EVAL_EFFORT))]
-    ans = L.generate(model, [p + x + K2_THINK_SHUT[THINK_EVAL_EFFORT] for p, (x, _) in zip(p1, th)], max_new=20, bs=bs)
+    th = [strip_think(x, THINK_EVAL_EFFORT, L) for x in L.generate(model, p1, max_new=cap, bs=bs, eos=L.think_eos(THINK_EVAL_EFFORT))]
+    ans = L.generate(model, [p + x + L.shut(THINK_EVAL_EFFORT) for p, (x, _) in zip(p1, th)], max_new=20, bs=bs)
     rows = {k: [] for k in sets}
     for (k, t), (x, closed), a in zip(flat, th, ans):
         rows[k].append({"q": t["q"], "target": t["target"], "answer": a, "think": x[:400], "ok": has_ans(t["target"], a), "ok_any": has_ans(t["target"], x + " " + a), "_ntok": len(L.ids(x)), "_closed": closed})
@@ -562,12 +623,144 @@ def fwd_recall(L, model, week, bs):  # cheap learning-curve probe: weights-only 
     return {"C1": cl(("C1",)), "C2": cl(("C2",)), "C4": cl(("C4",)), "C24": cl(("C2", "C4")), "all": acc(ok)}
 
 
-def load_arc_val(smoke):
+# ------------------------------------------------------------------ new-wording scoring (addendum 15, --reword; report-only)
+REWORD_CARDS, REWORD_CAP, REWORD_DUP = 3, 40, 0.8  # --reword: cards (or chain dreams) asked per test; texts per item in the variety measure; token Jaccard from which two texts are near-duplicates
+
+
+def jac(sa, sb):  # Jaccard of two token sets
+    return len(sa & sb) / len(sa | sb) if sa | sb else 0.0
+
+
+def jaccard(a, b):  # token-set Jaccard of two strings (make_reworded.jaccard is the same)
+    return jac(set(tokens(a)), set(tokens(b)))
+
+
+def majority(oks):  # a test is right when more than half of its asked wordings are (2 of 3, 3 of 3; 2 of 2; 1 of 1); None when none were asked
+    return None if not oks else 2 * sum(oks) > len(oks)
+
+
+def reword_map(week, spec):
+    """spec (make_reworded.py's file) -> ([(kind, test index, week test, entry)] for the entries that are this week's tests: same index, same question, same target, {kind: entries skipped})."""
+    out, skipped = [], Counter()
+    for kind in ("forward", "reverse", "twohop"):
+        ts = week["tests"][kind]
+        for e in spec["tests"].get(kind, []):
+            i = e["test_index"]
+            if isinstance(i, int) and 0 <= i < len(ts) and ts[i]["q"] == e["q_src"] and ts[i]["target"] == e["target"]:
+                out.append((kind, i, ts[i], e))
+            else:
+                skipped[kind] += 1
+    return out, dict(skipped)
+
+
+def reword_variety(items, cap=REWORD_CAP, dup=REWORD_DUP):  # per item with 2+ texts (its paraphrases, then its question cards, the first `cap`): mean pairwise token Jaccard and the share of pairs >= dup; means over items
+    mj, nd = [], []
+    for it in items:
+        sets = [set(tokens(x)) for x in [*it.para, *(q for q, _ in it.qa)][:cap]]
+        pr = [jac(sets[i], sets[j]) for i in range(len(sets)) for j in range(i + 1, len(sets))]
+        if pr:
+            mj.append(sum(pr) / len(pr))
+            nd.append(sum(x >= dup for x in pr) / len(pr))
+    return {"items": len(mj), "mean_jaccard": mean(mj), "near_dup_share": mean(nd), "cap": cap, "near_dup_at": dup}
+
+
+def reword_eval(L, model, week, brain, spec, bs, seed, log=print):
+    """Addendum 15 (--reword, report-only): weights only (plain_prompt, greedy, 20 tokens, has_ans) on (1) the new wordings of the C2+C4 forward / reverse and the two-hop tests that spec has; (2) for each C2+C4 forward / reverse test, up to REWORD_CARDS of the
+    matching Brain items' kept question cards (it.qa, live items whose ground-truth pair is the test's item by gt_match, answer has the target), sampled under Random(seed * 1000 + test index); (3) for each two-hop test, up to REWORD_CARDS kept REM chain dreams
+    (rem_pool kind "chain", the two keys cover the two ground-truth items as in dreamed_twohop, answer has the target), asked exactly. A test is right when more than half of its wordings are (majority); share = the mean over tests of the share right.
+    Cramming gap = mean card accuracy - mean new-wording accuracy (points, over the tests with cards); seen = a wording whose norm() is inside the norm of a kept text (it.para, it.qa questions, REM pool questions); variety = reword_variety.
+    brain None (arms a0 / ad / af): only the new-wording recall. Tests of spec that are not this week's (index / question / target differ) are skipped and counted."""
+    t0 = time.time()
+    ms, skipped = reword_map(week, spec)
+    G = {g[0]: g for g in brain.G} if brain is not None else {}  # item id -> (id, class, [(a, b)], old pairs)
+    items = list(brain.items.values()) if brain is not None else []
+    live = [it for it in items if not it.dead]
+    asks = []  # every question put to the model, one dict each
+    for kind, i, t, e in ms:
+        for j, rw in enumerate(e["rewordings"]):
+            asks.append({"src": "reword", "kind": kind, "test": i, "n": j, "q": rw, "target": t["target"]})
+        if brain is None:
+            continue
+        pool, src = [], None
+        if kind != "twohop" and t.get("class") in ("C2", "C4") and t["item"] in G:
+            seen_q = set()
+            for it in live:
+                if gt_match(it.subj, it.obj, G[t["item"]][2]):
+                    for q, a_ in it.qa:
+                        if has_ans(t["target"], a_) and norm(q) not in seen_q:
+                            seen_q.add(norm(q))
+                            pool.append(q)
+            src = "card"
+        elif kind == "twohop" and all(x in G for x in t["items"][:2]):
+            pa, pb = (G[x][2] for x in t["items"][:2])
+            seen_q = set()
+            for x in brain.rem_pool:
+                k1, k2 = (brain.items.get(k) for k in x["keys"][:2]) if len(x["keys"]) == 2 else (None, None)
+                if x["kind"] == "chain" and k1 and k2 and has_ans(t["target"], x["a"]) and norm(x["q"]) not in seen_q \
+                        and ((gt_match(k1.subj, k1.obj, pa) and gt_match(k2.subj, k2.obj, pb)) or (gt_match(k1.subj, k1.obj, pb) and gt_match(k2.subj, k2.obj, pa))):
+                    seen_q.add(norm(x["q"]))
+                    pool.append(x["q"])
+            src = "chain"
+        for j, q in enumerate(random.Random(seed * 1000 + i).sample(pool, min(REWORD_CARDS, len(pool)))):
+            asks.append({"src": src, "kind": kind, "test": i, "n": j, "q": q, "target": t["target"]})
+    if brain is not None:  # the seen check: a wording that is inside a kept text word for word (normalized)
+        big = "\n".join([norm(p) for it in items for p in it.para] + [norm(q) for it in items for q, _ in it.qa] + [norm(x["q"]) for x in brain.rem_pool])
+        for x in asks:
+            if x["src"] == "reword":
+                x["seen"] = norm(x["q"]) in big
+    model.eval()
+    ans = L.generate(model, [plain_prompt(L, x["q"]) for x in asks], max_new=20, bs=bs) if asks else []
+    by = defaultdict(lambda: defaultdict(list))  # (kind, test) -> src -> [ok]; "unseen" -> the rewordings that are not inside a kept text
+    for x, a_ in zip(asks, ans):
+        x["answer"], x["ok"] = a_, has_ans(x["target"], a_)
+        by[(x["kind"], x["test"])][x["src"]].append(x["ok"])
+        if x["src"] == "reword" and x.get("seen") is False:
+            by[(x["kind"], x["test"])]["unseen"].append(x["ok"])
+    cls = {(k, i): t.get("class") for k, i, t, _ in ms}
+
+    def summ(keys, src="reword"):  # recall: share of tests that are right by majority; share: mean over tests of the share of wordings right
+        rs = [by[k][src] for k in keys if by[k][src]]
+        return {"n": len(rs), "recall": acc(majority(r) for r in rs), "share": acc(sum(r) / len(r) for r in rs)}
+    ks = {kind: [(k, i) for k, i, _, _ in ms if k == kind] for kind in ("forward", "reverse", "twohop")}
+    both = ks["forward"] + ks["reverse"]
+    nw = {"forward": summ(ks["forward"]), "reverse": summ(ks["reverse"]), "both": summ(both), "twohop": summ(ks["twohop"]),
+          "by_class": {c: summ([k for k in both if cls[k] == c]) for c in sorted({cls[k] for k in both if cls[k]})}}
+    out = {"mapped": {k: len(v) for k, v in ks.items()}, "skipped_unmapped": skipped, "wordings_per_test": dict(sorted(Counter(len(e["rewordings"]) for _, _, _, e in ms).items())), "new_wording": nw}
+    if brain is not None:
+        wc = [k for k in both if by[k]["card"]]  # the tests that have cards
+        out["cards"] = {"tests_in_scope": len(both), "tests_with_cards": len(wc), "cards_asked": sum(len(by[k]["card"]) for k in wc), "mean_acc": acc(sum(by[k]["card"]) / len(by[k]["card"]) for k in wc)}
+        has = [k for k in wc if by[k]["reword"]]  # ... and a wording: the cramming gap's tests
+        cm = acc(sum(by[k]["card"]) / len(by[k]["card"]) for k in has)
+        wsh = summ(has)
+        out["cramming_gap_pts"] = None if not has else round(100 * (cm - wsh["share"]), 2)  # card accuracy - new-wording accuracy (mean share right), points
+        out["cramming_gap_majority_pts"] = None if not has else round(100 * (cm - wsh["recall"]), 2)  # the same against the majority-right recall
+        out["cramming_gap_basis"] = {"tests": len(has), "card_acc": cm, "reword_share": wsh["share"], "reword_recall": wsh["recall"]}
+        th = [k for k in ks["twohop"] if by[k]["chain"] and by[k]["reword"]]
+        tm, tw = acc(sum(by[k]["chain"]) / len(by[k]["chain"]) for k in th), summ(th)
+        out["twohop_cards"] = {"tests": len(th), "dreams_asked": sum(len(by[k]["chain"]) for k in th), "chain_acc": tm, "reword_share": tw["share"], "reword_recall": tw["recall"],
+                               "gap_pts": None if not th else round(100 * (tm - tw["share"]), 2), "gap_majority_pts": None if not th else round(100 * (tm - tw["recall"]), 2)}
+        rw = [x for x in asks if x["src"] == "reword"]
+        un = [x for x in rw if not x["seen"]]
+        un_both, un_two = [k for k in both if by[k]["unseen"]], [k for k in ks["twohop"] if by[k]["unseen"]]
+        out["seen"] = {"rewordings": len(rw), "seen": len(rw) - len(un), "seen_share": acc(x["seen"] for x in rw),
+                       "unseen": {"rewordings": len(un), "share_right": acc(x["ok"] for x in un),
+                                  "both": {"n": len(un_both), "recall": summ(un_both, "unseen")["recall"]}, "twohop": {"n": len(un_two), "recall": summ(un_two, "unseen")["recall"]}}}
+        out["variety"] = reword_variety(live)
+    out["per_test"] = {kind: {i: majority(by[(kind, i)]["reword"]) for k, i in ks[kind] if by[(k, i)]["reword"]} for kind in ks}  # McNemar-ready: kind -> test index -> right by majority
+    out["rows"] = asks
+    out["seconds"] = round(time.time() - t0, 1)
+    return out
+
+
+ARC_VAL_ROWS = 570  # the ARC-Easy validation split
+
+
+def load_arc_val(smoke, n=100):  # the gate's questions: the first n of the validation split (addendum 17, --gate-arc-n; 100 before); the smoke fixture is the same whatever n is
     if smoke:
         return ARC_SMOKE
     from datasets import load_dataset
     rows = []
-    for r in list(load_dataset("allenai/ai2_arc", "ARC-Easy", split="validation"))[:100]:
+    for r in list(load_dataset("allenai/ai2_arc", "ARC-Easy", split="validation"))[:n]:
         rows.append({"question": r["question"], "choices": r["choices"]["text"], "answer": r["choices"]["label"].index(r["answerKey"])})
     return rows
 
@@ -592,11 +785,47 @@ def groups(seqs, budget=None):  # consecutive micro-batches whose padded size st
 FAST = True  # target-only LM head + length-sorted micro-batches in the split path (same loss and gradients up to float summation order); --bench-train toggles it, False = the old code path
 
 
+def cuda_tidy():  # hand cached CUDA blocks back between generation and training. Changes no number. On a nearly full 16 GB card under WSL, a
+    # fragmented cache made new training blocks spill into system memory, and K2 trained about 30x slower (Ben's PC, 2026-10-27).
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
+
+def cuda_cap():  # SLEEPB_CUDA_CAP_GIB=<GiB> caps PyTorch's CUDA memory. Changes no number. Under WSL a full card does not report out of memory:
+    # new blocks silently land in system memory and training crawls, so the cache never gets handed back. Under a cap the allocator frees
+    # its cached blocks and retries before it would pass the cap (Ben's PC: reserved reached 16.0 GiB on a 15.9 GiB card, 2026-10-27).
+    cap = float(os.environ.get("SLEEPB_CUDA_CAP_GIB") or 0)
+    if cap <= 0 or not torch.cuda.is_available():
+        return None
+    tot = torch.cuda.get_device_properties(0).total_memory / 2**30
+    torch.cuda.set_per_process_memory_fraction(min(1.0, cap / tot))
+    return cap, tot
+
+
 def tgt_logits(pm, ids, mask, tm):  # fp32 logits at the shifted target positions tm; FAST: run the decoder only and apply lm_head to those hidden states
     m = pm.get_base_model() if hasattr(pm, "get_base_model") else pm  # peft -> Qwen3_5ForCausalLM; LoRA layers / delta_w hooks live inside the decoder's Linears, so disable_adapter() still applies
     if not FAST or m.lm_head._forward_hooks or m.lm_head._forward_pre_hooks or hasattr(m.lm_head, "delta_w") or hasattr(m.lm_head, "lora_A"):
         return pm(input_ids=ids, attention_mask=mask).logits[:, :-1][tm].float()
     return m.lm_head(m.model(input_ids=ids, attention_mask=mask).last_hidden_state[:, :-1][tm]).float()
+
+
+@torch.no_grad()
+def row_stats(lg, tgt, tm):
+    """--card-stats / --skip-known: per example (row of tm) of a micro-batch, from the target logits lg the loss already used (no extra forward):
+    known = every target but the row's last (the eos each example ends with) is the argmax, so greedy decoding after the prompt writes exactly
+    this text; acc = the share of those targets that are the argmax; ce = the mean CE over all the row's targets (eos included)."""
+    B = tm.shape[0]
+    if not len(tgt):
+        return [{"known": True, "acc": 1.0, "ce": 0.0} for _ in range(B)]
+    rows = tm.nonzero()[:, 0]  # row-major, the order lg's rows come in
+    last = torch.ones_like(rows, dtype=torch.bool)
+    last[:-1] = rows[1:] != rows[:-1]
+    body = (~last).float()
+    ok = (lg.argmax(-1) == tgt).float()
+    ce = torch.cat([F.cross_entropy(lg[i:i + ROW_CHUNK], tgt[i:i + ROW_CHUNK], reduction="none") for i in range(0, len(tgt), ROW_CHUNK)])
+    t = torch.stack([torch.bincount(rows, weights=w, minlength=B) for w in (body, body * ok, ce, torch.ones_like(ce))]).tolist()
+    return [{"known": h == n, "acc": h / n if n else 1.0, "ce": c / m if m else 0.0} for n, h, c, m in zip(*t)]
 
 
 def lm_masks(L, mb):  # (ids, attention mask, bool mask of the shifted target positions) of a micro-batch of (ids, loss_start[, weight]) examples
@@ -618,7 +847,13 @@ class Trainer:
                 if "lora_" in n:
                     p.requires_grad_(False)
         s.params = [p for p in pm.parameters() if p.requires_grad]
-        s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
+        plus = getattr(args, "lora_plus", None)  # --lora-plus R (LoRA+, Hayou et al. 2024): the lora_B matrices in a second group at lr x R
+        if plus:
+            bs = {id(p) for n, p in pm.named_parameters() if p.requires_grad and "lora_B" in n}
+            s.opt = torch.optim.AdamW([{"params": [p for p in s.params if id(p) not in bs]}, {"params": [p for p in s.params if id(p) in bs], "lr_mult": plus}],
+                                      lr=args.lr, weight_decay=0.0)
+        else:
+            s.opt = torch.optim.AdamW(s.params, lr=args.lr, weight_decay=0.0)
         s.n, s.i, s.rng = max(steps, 1), 0, random.Random(seed)
         s.curve = []
         s.force_w, s.wsteps, s.wex = False, 0, 0  # force_w: test hook; wsteps / wex: weighted-path steps and examples with weight != 1
@@ -626,13 +861,21 @@ class Trainer:
     def masks(s, mb):
         return lm_masks(s.L, mb)
 
-    def step(s, batch):
+    def lr_at(s, i):  # the night's lr at step i: cosine from a.lr to 0 over s.n steps; --lr-sched wsd: a.lr, then linear to 0 over the last WSD_DECAY of the steps
+        a = s.a
+        if getattr(a, "lr_sched", "cosine") == "wsd":
+            k = math.ceil(s.n * (1 - WSD_DECAY))
+            return a.lr if i < k else a.lr * (s.n - i) / (s.n - k + 1)
+        return a.lr * 0.5 * (1 + math.cos(math.pi * i / s.n))
+
+    def step(s, batch, rows=False):  # rows (--card-stats / --skip-known): also return row_stats of every example, in batch order
         if not batch:
             return
         a = s.a
-        lr = a.lr * 0.5 * (1 + math.cos(math.pi * s.i / s.n))
+        lr = s.lr_at(s.i)
         for g in s.opt.param_groups:
-            g["lr"] = lr
+            g["lr"] = lr * g.get("lr_mult", 1.0)
+        stats = [None] * len(batch) if rows else None
         s.pm.train()
         rb = s.rng.sample(s.replay, min(a.replay_bsz, len(s.replay))) if s.replay and a.kl_weight > 0 else []
         gb, gr = groups(batch), groups(rb)  # single-group decision on the original order
@@ -645,7 +888,10 @@ class Trainer:
         s.opt.zero_grad(set_to_none=True)
         if len(gb) == 1 and len(gr) <= 1 and not weighted:  # the stage-1 path (short closed-book examples), unchanged
             ids, mask, tm = s.masks(batch)
-            ce = F.cross_entropy(tgt_logits(s.pm, ids, mask, tm), ids[:, 1:][tm])
+            lg = tgt_logits(s.pm, ids, mask, tm)
+            ce = F.cross_entropy(lg, ids[:, 1:][tm])
+            if rows:
+                stats = row_stats(lg.detach(), ids[:, 1:][tm], tm)
             loss = ce
             if rb:
                 rids, rmask, rt = s.masks(rb)
@@ -659,6 +905,10 @@ class Trainer:
         else:  # split: sums over micro-batches divided by the full batch's target count, so loss and gradients match
             ntgt = sum(len(e) - max(st, 1) for e, st, *_ in batch)
             ce_sum = 0.0
+            if rows:  # each micro-batch entry is one of batch's tuples (gb may be sorted): its index in batch
+                pos = defaultdict(list)
+                for i, x in enumerate(batch):
+                    pos[id(x)].append(i)
             for mb in gb:
                 ids, mask, tm = s.masks(mb)
                 lg = tgt_logits(s.pm, ids, mask, tm)
@@ -669,6 +919,9 @@ class Trainer:
                     part = F.cross_entropy(lg, ids[:, 1:][tm], reduction="sum") / ntgt
                 (part * LOSS_SCALE[0]).backward()
                 ce_sum += float(part.detach())
+                if rows:
+                    for x, r in zip(mb, row_stats(lg.detach(), ids[:, 1:][tm], tm)):
+                        stats[pos[id(x)].pop()] = r
             ce = torch.tensor(ce_sum)
             if rb:
                 npos = sum(len(e) - max(st, 1) for e, st, *_ in rb)
@@ -703,6 +956,7 @@ class Trainer:
         if s.i % 10 == 1 or s.i == s.n:
             s.curve.append({"step": s.i, "ce": float(ce.detach()), "kl": kl_v, "lr": lr})
         s.pm.eval()
+        return stats
 
 
 # ------------------------------------------------------------------ synaptic downscaling (SHY)
@@ -1312,6 +1566,157 @@ def selftest_fast():
         return out
     finally:
         globals()["FAST"], globals()["TOK_BUDGET"], _DELTA["on"] = fast, tb, don
+        torch.set_rng_state(rng_state)
+
+
+def selftest_cards():
+    """The sleep-efficiency flags on the tiny CPU smoke model (global RNG, TOK_BUDGET and FAST restored). (i) Trainer.step(batch, rows=True) leaves CE, KL and every
+    LoRA gradient bit-identical to Trainer.step(batch), on the single-group, weighted and split (+ KL) paths, and returns one row per example in batch order;
+    (ii) row_stats' "known" is "greedy decoding after the prompt writes exactly this answer": the model's own greedy continuation is known, the same with one
+    token changed is not, on both paths; (iii) --lora-plus R puts exactly the lora_B tensors at lr x R; off is one group; (iv) the cosine and wsd schedules;
+    (v) Brain.nrem / rem_ex with --skip-known off draw exactly what the code before the flags drew (same examples, same RNG states after); on, a known item's
+    cards are rarely drawn, Brain.train_step records closed-book and text outcomes only, and a wrong morning probe resets the item's cards."""
+    from argparse import Namespace
+    from peft import LoraConfig, get_peft_model
+    out, g = {}, torch.Generator().manual_seed(0)
+    rng_state, tb, fast = torch.get_rng_state(), TOK_BUDGET, FAST
+    try:
+        cpu = torch.device("cpu")
+        lm, tok = load_model(Namespace(smoke=True, seed=0), cpu, torch.float32)
+        L = Lang(tok, True, cpu)
+        pm = get_peft_model(lm, LoraConfig(r=8, lora_alpha=16, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        for n, p in pm.named_parameters():  # B is zero at init: randomise it, so the adapter matters
+            if "lora_B" in n:
+                p.data.normal_(0, 0.05, generator=g)
+        params = [p for p in pm.parameters() if p.requires_grad]
+        base = [ex_text(L, f"Zelmir lives in Kelmira number {i}, near the old harbour.") if i % 2 else ex_qa(L, f"Where does Zelmir{'x' * (3 * i)} live?", "Kelmira") for i in range(8)]
+        replay = [ex_text(L, f"A generic sentence number {i} about the weather" + " today" * (i * 3)) for i in range(6)]
+        big, small = 10 ** 6, 2 * max(len(e) for e, _ in base)
+
+        def run(batch, budget, rows, kl=True):
+            globals()["FAST"], globals()["TOK_BUDGET"] = True, budget
+            tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=1.0 if kl else 0.0, replay_bsz=3), replay if kl else [], 1, 0)
+            st = tr.step(batch, rows=rows)
+            return tr.curve[0], [p.grad.clone() for p in params], st
+
+        # (i) bit-identical with rows on
+        weighted = [e + (w,) for e, w in zip(base, [0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 2.0, 1.0])]
+        for name, batch, budget in (("single", base[:4], big), ("weighted", weighted, big), ("split_kl", base, small), ("split_weighted_kl", weighted, small)):
+            c0, g0, s0 = run(batch, budget, False)
+            c1, g1, s1 = run(batch, budget, True)
+            same = c0 == c1 and all(torch.equal(x, y) for x, y in zip(g0, g1))
+            assert same and s0 is None and len(s1) == len(batch) and all(r is not None for r in s1), (name, c0, c1)
+            out[name] = {"bit_identical": same, "rows": len(s1), "micro_batches": len(groups(batch, budget))}
+        # (ii) known == greedy decoding writes it
+        pm.eval()
+        p0 = L.ids(L.render(SYS, "Where does Zelmir live?"))
+        x, gr = torch.tensor([p0]), []
+        with torch.no_grad():
+            for _ in range(3):
+                nxt = int(pm(input_ids=x).logits[0, -1].argmax())
+                gr.append(nxt)
+                x = torch.cat([x, torch.tensor([[nxt]])], 1)
+        V = pm.get_base_model().lm_head.out_features
+        good = (p0 + gr + [L.eos], len(p0))
+        bad = (p0 + gr[:1] + [(gr[1] + 1) % V] + gr[2:] + [L.eos], len(p0))
+        for name, budget in (("known_single", big), ("known_split", len(good[0]) + 1)):
+            st = run([bad, good, base[0]], budget, True, kl=False)[2]
+            assert st[1]["known"] and st[1]["acc"] == 1.0 and not st[0]["known"] and st[0]["acc"] < 1.0, (name, st)
+            out[name] = [r["known"] for r in st]
+        # (iii) --lora-plus
+        tr = Trainer(L, pm, Namespace(lr=0.1, kl_weight=0.0, replay_bsz=0, lora_plus=4.0), [], 4, 0)
+        tr.step(base[:2])
+        gB = {id(p) for n, p in pm.named_parameters() if "lora_B" in n}
+        g0_, g1_ = tr.opt.param_groups
+        assert len(tr.opt.param_groups) == 2 and {id(p) for p in g1_["params"]} == gB and not gB & {id(p) for p in g0_["params"]}
+        assert g0_["lr"] == 0.1 and abs(g1_["lr"] - 0.4) < 1e-12, (g0_["lr"], g1_["lr"])
+        assert len(Trainer(L, pm, Namespace(lr=0.1), [], 4, 0).opt.param_groups) == 1
+        out["lora_plus"] = {"groups": 2, "b_tensors": len(gB), "lr": [g0_["lr"], g1_["lr"]]}
+        # (iv) schedules over a 10-step night
+        cos = Trainer(L, pm, Namespace(lr=1.0), [], 10, 0)
+        wsd = Trainer(L, pm, Namespace(lr=1.0, lr_sched="wsd"), [], 10, 0)
+        assert all(cos.lr_at(i) == 0.5 * (1 + math.cos(math.pi * i / 10)) for i in range(10))
+        w = [wsd.lr_at(i) for i in range(10)]
+        assert w[:8] == [1.0] * 8 and abs(w[8] - 2 / 3) < 1e-12 and abs(w[9] - 1 / 3) < 1e-12, w
+        out["wsd"] = [round(v, 4) for v in w]
+        # (iv b) --rem-views 20: the last cycle of nb's night 2 at 4x (2 dreams, 195 of the night's 510 REM steps) and of night 7 (375 dreams: the usual 11 a step binds), spread evenly
+        s2, s7 = rem_split(20, 2, 195, 510, 11), rem_split(20, 375, 195, 510, 11)
+        assert sum(s2) == 15 and max(s2) - min(s2) <= 1 and s7 == [11] * 195 and rem_split(20, 0, 5, 10, 0) == [0] * 5, (sum(s2), s7[:3])
+        out["rem_views"] = {"night2_rem_examples": sum(s2), "night7_rem_examples": sum(s7)}
+        # (v) Brain sampling
+        me = Brain.__new__(Brain)
+        me.a, me.L, me.diary, me.day, me.cov, me.raw, me.items = Namespace(arm="ab_ob_b4_nb", seed=0), L, Diary(smoke_week()), 2, Counter(), {}, {}
+        me.skip_f, me.track, me.card, me.card_items, me.bk, me.cs, me.seen, me.last_ob = None, False, {}, defaultdict(set), None, Counter(), set(), False
+        A = Item(key=("zelmir", "kelmira"), subj="Zelmir", obj="Kelmira", rel="lives in", born=1, days=2,
+                 para=[f"Zelmir lives in Kelmira, take {i}." for i in range(3)], qa=[("Where does Zelmir live?", "Kelmira"), ("Who lives in Kelmira?", "Zelmir")])
+        B = Item(key=("drovak", "gliker"), subj="Drovak", obj="Gliker", rel="mentors", born=1, days=2,
+                 para=[f"Drovak mentors Gliker, take {i}." for i in range(3)], qa=[("Who does Drovak mentor?", "Gliker"), ("Who mentors Gliker?", "Drovak")])
+        C = Item(key=("tavrix", "zelmir"), subj="Zelmir", obj="Tavrix", rel="works at", born=1, days=2, para=["Zelmir works at Tavrix."], qa=[("Where does Zelmir work?", "Tavrix")])
+        me.items = {it.key: it for it in (A, B, C)}
+        live = [{"q": "Where does the mentor of Gliker live?", "a": "Kelmira", "keys": [A.key, B.key]}, {"q": "Who lives where Zelmir lives?", "a": "Zelmir", "keys": [A.key]}]
+
+        def old_qa(q, a):  # Brain.qa_ex before the flags (ab_ob arms: p = 0.5 open-book)
+            if me.a.arm in OB_ARMS and me.ob_rng.random() < 0.5:
+                return ex_qa_ob(me.L, me.diary, q, a, me.day)
+            return ex_qa(me.L, q, a)
+
+        def old_nrem(act, cum, con, n):  # Brain.nrem / dream_ex before the flags
+            o = []
+            for _ in range(n):
+                if act and (not con or me.rng.random() < 0.75):
+                    it = me.rng.choices(act, cum_weights=cum)[0]
+                elif con:
+                    it = me.rng.choice(con)
+                else:
+                    continue
+                c = me.rng.choice(it.para + it.qa)
+                o.append(ex_text(me.L, c) if isinstance(c, str) else old_qa(c[0], c[1]))
+            return o
+
+        def draw(f, act, con, n, nr):
+            me.rng, me.ob_rng = random.Random(1), random.Random(2)
+            cum = list(itertools.accumulate(me.prio(it) for it in act))
+            if f == "old":
+                exs = [old_qa(x["q"], x["a"]) for x in me.rng.choices(live, k=nr)] + old_nrem(act, cum, con, n)
+            else:
+                exs = me.rem_ex(live, nr) + me.nrem(act, cum, con, n)
+            return exs, me.rng.getstate(), me.ob_rng.getstate()
+
+        for act, con in (([A, B], [C]), ([A, B], []), ([], [C])):
+            ref, new = draw("old", act, con, 40, 5), draw("new", act, con, 40, 5)
+            assert ref == new, "skip-known off must draw exactly as before"
+        out["off_identical"] = True
+        me.skip_f, me.track = 0.01, True
+        for c in A.para + A.qa:
+            me.card[card_key(A, c)] = True
+        me.card[rem_key(live[1])] = True
+        me.bk = []
+        exs = draw("new", [A, B], [], 400, 40)[0]
+        bk, me.bk = me.bk, None
+        nA = sum(1 for _, _, ik in bk if ik == A.key)
+        nr1 = sum(1 for k, _, _ in bk if k == rem_key(live[1]))
+        assert len(exs) == len(bk) == 440 and nA < 20 and nr1 < 4 and me.cs["known_drawn"] > 0, (nA, nr1, me.cs)
+        out["skip_on"] = {"known_item_share": round(nA / 400, 4), "known_rem_share": round(nr1 / 40, 4), "known_drawn": me.cs["known_drawn"]}
+        # train_step: outcomes of closed-book and text examples only go into me.card
+        me.card, me.card_items, me.bk = {}, defaultdict(set), []
+        batch = me.nrem([A, B, C], [1, 2, 3], [], 12)
+        bk = list(me.bk)
+        globals()["TOK_BUDGET"] = big
+        tr = Trainer(L, pm, Namespace(lr=0.0, kl_weight=0.0, replay_bsz=0), [], 1, 0)
+        me.train_step(tr, batch)
+        kinds = Counter(k for _, k, _ in bk)
+        cb_keys = {key for key, k, _ in bk if k in ("text", "qa_cb")}
+        assert set(me.card) == cb_keys and sum(me.cs[f"n_{k}"] for k in kinds) == 12 and me.bk is None, (kinds, me.card)
+        # the morning reset
+        for key in list(me.card):
+            me.card[key] = True
+        nA = sum(1 for key in me.card_items[A.key])
+        me.card_reset([A, B, C], {A.key: (False, "x"), B.key: (True, "Gliker")})
+        assert me.cs["reset_by_probe"] == nA and all(not me.card[k] for k in me.card_items[A.key]) and all(me.card[k] for k in me.card_items[B.key])
+        out["train_step"] = {"kinds": dict(kinds), "reset_by_probe": nA}
+        return out
+    finally:
+        globals()["FAST"], globals()["TOK_BUDGET"] = fast, tb
         torch.set_rng_state(rng_state)
 
 
@@ -2016,6 +2421,14 @@ class Item:
         return f"{self.subj} {self.rel} {self.obj}."
 
 
+def card_key(it, o):  # --card-stats / --skip-known: the identity of item it's card o (cards are compared by content, so a re-dreamed item's new cards are new keys)
+    return ("p", it.key, o) if isinstance(o, str) else ("q", it.key, o[0], o[1])
+
+
+def rem_key(x):  # the same for a REM-pool dream
+    return ("r", x["q"], x["a"])
+
+
 def other(it, x):  # (display shared, display other) of the item w.r.t. normalized string x
     return (it.subj, it.obj) if norm(it.subj) == x else (it.obj, it.subj)
 
@@ -2074,11 +2487,11 @@ def parse_rel(txt):  # names_prompt reply -> None for "no" (empty, "no", "no." o
     return re.sub(r"^yes\b[\s\W]*", "", lines[0], flags=re.I).strip(" \t\"'`\u201c\u201d\u2018\u2019.,;:!?-*()[]")[:40].strip()
 
 
-def strip_think(txt, effort="low"):  # addendum 11b: a stage-1 reply (thinking, stopped at the close tag or the end of the turn) -> (thinking text without trailing close tag / im_end, whether the model closed the block itself); effort (11c): whose close tag (default "low": 11b's)
-    txt, closed, close = str(txt or "").strip(), False, K2_THINK_SHUT[effort]
-    while txt.endswith(close) or txt.endswith(K2_END):
+def strip_think(txt, effort="low", L=None):  # addendum 11b: a stage-1 reply (thinking, stopped at the close tag or the end of the turn) -> (thinking text without trailing close tag / im_end, whether the model closed the block itself); effort (11c): whose close tag (default "low": 11b's); L: the Lang whose tags these are (None: K2's)
+    txt, closed, close, end = str(txt or "").strip(), False, *((K2_THINK_SHUT[effort], K2_END) if L is None else (L.shut(effort), L.end))
+    while txt.endswith(close) or txt.endswith(end):
         closed |= txt.endswith(close)
-        txt = txt[:-len(close if txt.endswith(close) else K2_END)].rstrip()
+        txt = txt[:-len(close if txt.endswith(close) else end)].rstrip()
     return txt, closed
 
 
@@ -2096,6 +2509,11 @@ def triple_status(diary, dropped, ti, sj, ob):  # the checks tag() puts a (subje
     if ti not in diary.occurs(sj) or ti not in diary.occurs(ob):
         return "not_in_turn"
     return "dropped" if (norm(sj), norm(ob)) in dropped else "ok"
+
+
+def rem_split(views, pool, n_rem, rem_total, nr0):  # --rem-views: REM-pool examples per step of one REM cycle (n_rem steps), about views x pool x n_rem / rem_total in all, at most nr0 a step, spread evenly
+    q = min(n_rem * nr0, round(views * pool * n_rem / max(rem_total, 1)))
+    return [(j + 1) * q // n_rem - j * q // n_rem for j in range(n_rem)]  # floor((j+1) q / n) - floor(j q / n): sums to q, every step q/n rounded down or up, the extras spread over the cycle (not the first q % n steps)
 
 
 def rem_plan(steps, arm, mult=1.0):  # a night's per-cycle (NREM steps, REM steps) for `steps` reference steps: the quarters of `steps`, NREM_SHARE of each (all of it for ab_norem), the rest REM; addendum 14: the REM count x mult, rounded (mult 1.0: untouched)
@@ -2117,6 +2535,8 @@ class Brain:
         s.upd_log, s.tag_log, s.examples = [], [], {"dreams": [], "probes": [], "rem": [], "now": []}
         if args.arm in EXTRA_ARMS:
             s.examples["twist"] = []
+        if getattr(args, "dream_vary", "off") != "off":
+            s.examples["vary"] = []
         s.set_scale(1.0)
         s.conf, s.boosted = {}, set()  # ab_ob_guess: first-token confidence per probed item key (tonight); keys with rpe > 0.2 last night
         s.rng = random.Random(args.seed + 17)
@@ -2128,6 +2548,10 @@ class Brain:
             G.append((g["id"], g["class"], [(g["a"].lower(), g["b"].lower())], [(g["a"].lower(), g["old_b"].lower())] if g.get("old_b") else []))
         s.G = G
         s.cov = Counter()
+        s.skip_f = getattr(args, "skip_known", None)  # --skip-known: keep probability of a card that was right at its last practice (None: off)
+        s.track = s.skip_f is not None or getattr(args, "card_stats", False)  # per-example outcomes of every training step (--card-stats)
+        s.card, s.card_items = {}, defaultdict(set)  # card key -> right at its last closed-book / text practice; item key -> its card keys
+        s.bk, s.cs, s.seen, s.last_ob = None, Counter(), set(), False  # the (card key, kind, item key) list of the batch being built; tonight's counts; tonight's practised cards; qa_ex's last coin
 
     # ---- plumbing
     def mn(s, n):
@@ -2136,9 +2560,15 @@ class Brain:
     def sc(s, n):  # addendum 5: a night's knob n at work scale s.scale (untouched at 1, so the reference night is exactly ab_ob's)
         return n if s.scale == 1 or n <= 0 else max(1, round(n * s.scale))
 
-    def set_scale(s, scale):  # the night's work: dreams per item (and their generation length), item cap, REM chains, gist dreams
+    def tsc(s, n):  # addendum 15: a generation knob n at the text scale s.tscale (the work scale unless --text-scale says otherwise, so tsc == sc without the flag)
+        return n if s.tscale == 1 or n <= 0 else max(1, round(n * s.tscale))
+
+    def set_scale(s, scale):  # the night's work: dreams per item (and their generation length), item cap, REM chains, gist dreams (at the text scale, addendum 15); the training steps are s.sc(steps) at the work scale
         s.scale = scale
-        s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.sc(K), s.sc(s.a.max_dream_items), s.sc(s.a.rem_chains), s.sc(s.a.rem_gist), s.sc(400)
+        ts = getattr(s.a, "text_scale", None)  # addendum 15 (--text-scale; a stub args without it is the default)
+        s.tscale = scale if ts is None else ts
+        s.k, s.cap_items, s.cap_chains, s.cap_gist, s.dream_new = s.tsc(K), s.tsc(s.a.max_dream_items), s.tsc(s.a.rem_chains), s.tsc(s.a.rem_gist), s.tsc(400)
+        s.kp = math.ceil(s.k / 4) if getattr(s.a, "dream_vary", "off") != "off" else None  # addendum 15 (--dream-vary): paraphrases per nrem_prompt (None: k)
 
     def gen(s, prompts, max_new, base=True, sample=False, temp=0.8, eos=None):  # eos: stop id(s) for Lang.generate (None: its default, the end of the turn)
         if not prompts:
@@ -2217,17 +2647,17 @@ class Brain:
             hits = sorted((m.start(), n) for n, p in pats.items() for m in [p.search(s.diary.low[t["i"]])] if m)  # candidates in this turn (case-insensitive, whole word), by first appearance
             st["turns_ge2"] += len(hits) >= 2
             ask += [(t, a, b) for a, b in name_pairs([(n, vocab[n]) for _, n in hits], s.items, s.dropped)]
-        k2 = getattr(s.L, "k2", False)  # (a stub Lang without .k2 is Qwen-style)
-        if k2:  # addendum 11b / 11c: stage 1 thinks (K2_NAMES_EFFORT, at most NAMES_THINK_MAX tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + close tag, then the answer as on Qwen
+        think = getattr(s.L, "think", getattr(s.L, "k2", False))  # K2 or LFM3 (a stub Lang without .think falls back to .k2; one without either is Qwen-style)
+        if think:  # addendum 11b / 11c: stage 1 thinks (K2_NAMES_EFFORT, at most NAMES_THINK_MAX tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + close tag, then the answer as on Qwen
             p1 = [names_prompt(s.L, t["text"], a, b, think=True, effort=K2_NAMES_EFFORT) for t, a, b in ask]
-            th = [strip_think(x, K2_NAMES_EFFORT) for x in s.gen(p1, s.mn(NAMES_THINK_MAX), eos=s.L.think_eos(K2_NAMES_EFFORT))]  # [(thinking, closed by the model)]
-            raw = s.gen([p + x + K2_THINK_SHUT[K2_NAMES_EFFORT] for p, (x, _) in zip(p1, th)], s.mn(12))
+            th = [strip_think(x, K2_NAMES_EFFORT, s.L) for x in s.gen(p1, s.mn(NAMES_THINK_MAX), eos=s.L.think_eos(K2_NAMES_EFFORT))]  # [(thinking, closed by the model)]
+            raw = s.gen([p + x + s.L.shut(K2_NAMES_EFFORT) for p, (x, _) in zip(p1, th)], s.mn(12))
         else:
             raw = s.gen([names_prompt(s.L, t["text"], a, b) for t, a, b in ask], s.mn(12))
-        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r, **({"think": th[i][0][:400]} if k2 else {})} for i, ((t, a, b), r) in list(enumerate(zip(ask, raw)))[:3]]
+        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r, **({"think": th[i][0][:400]} if think else {})} for i, ((t, a, b), r) in list(enumerate(zip(ask, raw)))[:3]]
         got_of = {ti: got for ti, dd, got in s.tag_log if dd == d}  # the lists tag() logged for this day's turns (appended to in place: no second entry per turn)
         for (t, a, b), txt in zip(ask, raw):
-            rl = (parse_rel_k2 if k2 else parse_rel)(txt)  # 11c: K2 also reads a reply that starts with not / nothing / unrelated ... as no
+            rl = (parse_rel_k2 if think else parse_rel)(txt)  # 11c: K2 (and LFM3) also reads a reply that starts with not / nothing / unrelated ... as no
             if rl is None:
                 continue
             st["yes"] += 1
@@ -2247,7 +2677,7 @@ class Brain:
             st["appended"] += 1
         rec = {"candidates": len(vocab), "turns": len(turns), "turns_ge2": st["turns_ge2"], "pairs": len(ask), "yes": st["yes"], "new_items": st["new_items"], "appended": st["appended"],
                "dropped_invalid": st["dropped_invalid"], "dropped_not_in_turn": st["dropped_not_in_turn"]}
-        if k2:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
+        if think:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
             rec.update(think_tokens_mean=round(sum(len(s.L.ids(x)) for x, _ in th) / len(th), 1) if th else 0.0, think_capped=sum(not c for _, c in th))
         return rec
 
@@ -2316,7 +2746,7 @@ class Brain:
         for it in need:
             idx = s.diary.containing(it.subj, it.obj, d)[::-1][:4]
             ctx = s.diary.label(idx)
-            prompts.append(nrem_prompt(s.L, ctx, it, s.k))
+            prompts.append(nrem_prompt(s.L, ctx, it, s.k, s.kp))  # s.kp: None, or ceil(k/4) paraphrases under --dream-vary (addendum 15)
             meta.append((it, "dream", ctx))
             if it.upd:
                 u = it.upd[-1]
@@ -2337,7 +2767,7 @@ class Brain:
                     qas = [(f"What is linked to {it.subj}?", it.obj), (f"What is linked to {it.obj}?", it.subj)]
                 if not paras and not qas:
                     st["parse_fail"] += 1
-                for p in paras[:s.k]:
+                for p in paras[:s.kp or s.k]:
                     st["paraphrases_gen"] += 1
                     if s.leaky(p):
                         st["dropped_test_leak"] += 1
@@ -2408,6 +2838,8 @@ class Brain:
         st["items"] = len(need)
         if a.arm in EXTRA_ARMS:
             s.twist(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
+        if getattr(a, "dream_vary", "off") != "off":  # addendum 15: the style texts, after all the normal dreaming (as twist)
+            s.vary(d, need, {it.key: c for it, k, c in meta if k == "dream"}, st)
         return dict(st)
 
     def stale_hit(s, it, text):
@@ -2477,6 +2909,54 @@ class Brain:
             if len(s.examples["twist"]) < 10:
                 s.examples["twist"].append({"night": d, "item": it.fact, "scene": x, "check_q": q, "check_a": ans, "verifier": v, "kept": keep})
 
+    def vary(s, d, need, ctxs, st):
+        """--dream-vary {mix,plain} (addendum 15), after all of the night's normal dreaming and in the place of twist: for each item of `need` that has question cards or a probe the BASE model writes n = ceil(k/4) texts in each of 3 styles
+        (VARY_STYLES[mode]: story, note, then weird (mix) or plain2 (plain)), one prompt per item and style (vary_prompt), each style sampled under its own fixed seed (seed * 100 + night + 43 + style index; the global torch RNG state is put back, so
+        the main sampling stream is as without the flag). A text is kept under twist's checks: it names both entities, is not a test leak, restates no older value (stale_hit), and the base model, shown only the text, answers a check card (card j % len
+        of the item's cards, its probe if none; j: the text's number in its reply). Kept texts are appended to it.para after the item's plain paraphrases of the night. Stats: vary_<style>_<VARY_STATS>."""
+        a = s.a
+        styles, n = VARY_STYLES[a.dream_vary], math.ceil(s.k / 4)
+        cur = [it for it in need if a.smoke or it.qa or it.probe]
+        st["vary_skipped_no_check"] = len(need) - len(cur)
+        s.raw["vary"] = {}
+        cand = []  # (style, item, text, check question, check answer)
+        for si, style in enumerate(styles):
+            with seeded_rng(a.seed * 100 + d + 43 + si, s.L.device):
+                raw = s.gen([vary_prompt(s.L, ctxs[it.key], it, style, n) for it in cur], s.mn(80 * n), sample=True)
+            s.raw["vary"][style] = raw[:2]
+            for it, txt in zip(cur, raw):
+                ents, chk = [it.subj, it.obj], it.qa or ([it.probe] if it.probe else [])
+                texts = parse_scenes(txt, n)
+                if a.smoke and not texts:  # tiny random model emits noise: fabricate one text so the path runs
+                    texts = [f"In a {style} about Sam, {it.subj} {it.rel} {it.obj}."]
+                if not texts:
+                    st[f"vary_{style}_parse_fail"] += 1
+                for j, x in enumerate(texts):
+                    st[f"vary_{style}_gen"] += 1
+                    if s.leaky(x):
+                        st[f"vary_{style}_dropped_test_leak"] += 1
+                    elif not all(e.lower() in x.lower() for e in ents):
+                        st[f"vary_{style}_dropped_missing_entities"] += 1
+                    elif s.stale_hit(it, x):
+                        st[f"vary_{style}_dropped_stale"] += 1
+                    else:
+                        cand.append((style, it, x, *(chk[j % len(chk)] if chk else ("", ""))))
+        ver = s.gen([ctx_prompt(s.L, x, q) for _, _, x, q, _ in cand], 20)
+        seen = set()
+        for (style, it, x, q, ans), v in zip(cand, ver):
+            keep = False
+            if not has_ans(ans, v) and not a.smoke:
+                st[f"vary_{style}_dropped_unverified"] += 1
+            elif (it.key, norm(x)) in seen or any(norm(x) == norm(p) for p in it.para):
+                st[f"vary_{style}_dropped_dup"] += 1
+            else:
+                seen.add((it.key, norm(x)))
+                it.para = [*it.para, x]  # a new list: the night's logged dream examples share the old one
+                st[f"vary_{style}_kept"] += 1
+                keep = True
+            if len(s.examples["vary"]) < 12:
+                s.examples["vary"].append({"night": d, "item": it.fact, "style": style, "text": x, "check_q": q, "check_a": ans, "verifier": v, "kept": keep})
+
     # ---- 5. morning probes (weights only, current adapter)
     def probe(s, E, conf=False):
         its = [it for it in E if it.probe]
@@ -2519,9 +2999,11 @@ class Brain:
         return out
 
     # ---- batches
-    def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+    def qa_ex(s, q, a):  # OB_ARMS: with p=0.5 (--ob-share) the Q&A example is open-book (diary-test prompt, notes of days <= tonight), else closed-book
+        s.last_ob = False
         if s.a.arm in OB_ARMS:
-            ob = s.ob_rng.random() < 0.5
+            ob = s.ob_rng.random() < getattr(s.a, "ob_share", 0.5)
+            s.last_ob = ob
             s.cov["qa_open_book" if ob else "qa_closed_book"] += 1
             if ob:
                 if "ob_example" not in s.raw:
@@ -2533,8 +3015,84 @@ class Brain:
         return ex + (0.5,) if s.a.arm == "ab_ob_ther" and any(s.salient(i) for i in its) else ex
 
     def dream_ex(s, it):
-        o = s.rng.choice(it.para + it.qa)
-        return s.wt(ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1]), [it])
+        return s.card_ex(it, s.rng.choice(it.para + it.qa))
+
+    def card_ex(s, it, o):  # the practice example of item it's card o (a paraphrase, or a (q, a) pair); with s.bk on, its (card key, kind, item key) is recorded
+        ex = s.wt(ex_text(s.L, o) if isinstance(o, str) else s.qa_ex(o[0], o[1]), [it])
+        if s.bk is not None:
+            s.bk.append((card_key(it, o), "text" if isinstance(o, str) else "qa_ob" if s.last_ob else "qa_cb", it.key))
+        return ex
+
+    def skip(s, key):  # --skip-known: True = draw again (the card was right at its last practice and its keep coin, p = skip_f, came up tails)
+        if not s.card.get(key):
+            return False
+        s.cs["known_drawn"] += 1
+        if s.rng.random() < s.skip_f:
+            s.cs["known_kept"] += 1
+            return False
+        return True
+
+    def rem_ex(s, live, nr):  # the REM part of a REM step: nr verified REM-pool dreams as practice Q&A
+        if s.skip_f is None:
+            xs = s.rng.choices(live, k=nr)
+        else:  # --skip-known: one dream at a time, a known one kept with probability skip_f (the last of SKIP_TRIES draws is kept)
+            xs = []
+            for _ in range(nr):
+                for t in range(SKIP_TRIES):
+                    x = s.rng.choice(live)
+                    if t == SKIP_TRIES - 1 or not s.skip(rem_key(x)):
+                        break
+                xs.append(x)
+        out = []
+        for x in xs:
+            out.append(s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]))
+            if s.bk is not None:
+                s.bk.append((rem_key(x), "rem_ob" if s.last_ob else "rem_cb", None))
+        return out
+
+    def train_step(s, tr, batch):  # tr.step(batch); with s.bk on (--card-stats / --skip-known), each example's outcome goes into s.card and tonight's counts
+        bk, s.bk = s.bk, None
+        if bk is None:
+            tr.step(batch)
+            return
+        stats = tr.step(batch, rows=True) or []
+        assert len(stats) == len(bk), (len(stats), len(bk))
+        qt, c = min(3, 4 * (tr.i - 1) // tr.n), s.cs  # the quarter of the night this step was in
+        for (key, kind, ik), r in zip(bk, stats):
+            c[f"n_{kind}"] += 1
+            c[f"known_{kind}"] += r["known"]
+            c[f"acc_{kind}"] += r["acc"]
+            c[f"ce_{kind}"] += r["ce"]
+            s.seen.add(key)
+            if kind in ("qa_ob", "rem_ob"):  # an open-book answer can be read off the notes: it says nothing about memory
+                continue
+            c[f"q{qt}_n"] += 1
+            c[f"q{qt}_known"] += r["known"]
+            s.card[key] = r["known"]
+            if ik is not None:
+                s.card_items[ik].add(key)
+
+    def card_reset(s, E, pre):  # a new night's counts; a wrong morning probe marks every card of that item not known
+        s.cs, s.seen = Counter(), set()
+        for it in E:
+            if it.key in pre and not pre[it.key][0]:
+                for k in s.card_items.get(it.key, ()):
+                    if s.card.get(k):
+                        s.card[k] = False
+                        s.cs["reset_by_probe"] += 1
+
+    def card_summary(s):  # rec["cards"]: tonight's practice examples that the model already answered right before their step, by kind and by quarter of the night
+        c = s.cs
+        r4 = lambda x: round(x, 4)  # noqa: E731
+        kinds = sorted(k[2:] for k in c if k.startswith("n_"))
+        out = {"by_kind": {k: {"examples": int(c[f"n_{k}"]), "known_at_step": r4(c[f"known_{k}"] / c[f"n_{k}"]), "acc": r4(c[f"acc_{k}"] / c[f"n_{k}"]),
+                               "ce": r4(c[f"ce_{k}"] / c[f"n_{k}"])} for k in kinds}}
+        n = sum(c[f"q{i}_n"] for i in range(4))
+        out["known_share"] = r4(sum(c[f"q{i}_known"] for i in range(4)) / n) if n else None  # closed-book Q&A, texts and closed-book REM dreams
+        out["known_share_by_quarter"] = [r4(c[f"q{i}_known"] / c[f"q{i}_n"]) if c[f"q{i}_n"] else None for i in range(4)]
+        out["cards_practised"], out["cards_known_now"] = len(s.seen), sum(1 for k in s.seen if s.card.get(k))
+        out.update({k: int(c[k]) for k in ("reset_by_probe", "known_drawn", "known_kept")})
+        return out
 
     def klctx(s, d):
         """ab_klctx: up to 100 diary-format prompts (notes of days <= d) from tonight's kept dreamed questions, each with the BASE model's
@@ -2550,16 +3108,27 @@ class Brain:
     def nrem(s, act, cum, con, n):
         out = []
         for _ in range(n):
-            if act and (not con or s.rng.random() < 0.75):
-                out.append(s.dream_ex(s.rng.choices(act, cum_weights=cum)[0]))
-            elif con:
-                out.append(s.dream_ex(s.rng.choice(con)))
+            pick = None
+            for t in range(SKIP_TRIES if s.skip_f is not None else 1):  # --skip-known: a known card is kept with probability skip_f, else the slot is drawn again (the last draw is kept)
+                if act and (not con or s.rng.random() < 0.75):
+                    it = s.rng.choices(act, cum_weights=cum)[0]
+                elif con:
+                    it = s.rng.choice(con)
+                else:
+                    break
+                pick = (it, s.rng.choice(it.para + it.qa))
+                if s.skip_f is None or t == SKIP_TRIES - 1 or not s.skip(card_key(*pick)):
+                    break
+            if pick:
+                out.append(s.card_ex(*pick))
         return out
 
     # ---- 7. REM (current adapter, short fact sentences only; the diary then checks each dream)
     def rem(s, E, d, ci):
         a, st = s.a, Counter()
         mode, dirs = getattr(a, "rem_chain_mode", "default"), getattr(a, "rem_dirs", "alt")  # addendum 14: the defaults are the code path as before (a stub args without the flags is the default)
+        wb = getattr(a, "rem_writer", "adapter") == "base"  # addendum 18: the base model (adapter off) writes the REM dreams; the facts are in the prompt, and a trained adapter's thinking collapsed (arm B night 5: 0 of 1072 kept)
+        distinct = getattr(a, "rem_pairs", "all") == "distinct"  # addendum 18: no pair whose far ends contain one another (one fact extracted twice, "Glisemu" / "Glisemu as a mentor")
         assert (mode == "default" and dirs == "alt") or (a.arm in BRIDGE_ARMS and a.arm not in TRIES_ARMS), (a.arm, mode, dirs)
         qmode, think = mode in ("q", "q_think"), mode in ("think", "q_think")  # q: the reply is only the question (parse_q1, the answer is the given far end); think (K2): the think block is open first (two stages)
         tr = getattr(s, "rem_trace", None)  # k2_chain_probe only: a list that gets one dict per chain sample (reply, fate)
@@ -2578,6 +3147,10 @@ class Brain:
                 continue
             for p, q in itertools.combinations(its, 2):
                 if other(p, x)[1].lower() != other(q, x)[1].lower():
+                    fp_, fq_ = norm(other(p, x)[1]), norm(other(q, x)[1])
+                    if distinct and (fp_ in fq_ or fq_ in fp_):
+                        st["pairs_overlap_dropped"] += 1
+                        continue
                     pairs.append((p, q, x))
         s.rng.shuffle(pairs)
         pairs.sort(key=lambda t: s.rem_done[frozenset((t[0].key, t[1].key))])
@@ -2611,17 +3184,17 @@ class Brain:
             st["chain_pairs_tried"] = len(pairs)
         gp = [gist_prompt(s.L, it.fact, it.days) for it in gist]
         if mode == "default":  # chains and gists in one call (the sampling stream as before)
-            raw = s.gen(chains + gp, s.mn(40), base=False, sample=True)
+            raw = s.gen(chains + gp, s.mn(40), base=wb, sample=True)
             craw, graw = raw[:len(smp)], raw[len(smp):]
             s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
         else:  # addendum 14: chains (one or two stages), then the gists in their own call
             if think:  # stage 1 thinks (REM_EFFORT, at most REM_THINK_MAX sampled tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + ONE close tag, then the reply (40 tokens)
-                th = [strip_think(x, REM_EFFORT) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=False, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
-                craw = s.gen([c + x + K2_THINK_SHUT[REM_EFFORT] for c, (x, _) in zip(chains, th)], s.mn(40), base=False, sample=True)
+                th = [strip_think(x, REM_EFFORT, s.L) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=wb, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
+                craw = s.gen([c + x + s.L.shut(REM_EFFORT) for c, (x, _) in zip(chains, th)], s.mn(40), base=wb, sample=True)
                 st["chain_think_tokens"], st["chain_think_capped"] = sum(len(s.L.ids(x)) for x, _ in th), sum(not c for _, c in th)
             else:
-                craw = s.gen(chains, s.mn(40), base=False, sample=True)
-            graw = s.gen(gp, s.mn(40), base=False, sample=True)
+                craw = s.gen(chains, s.mn(40), base=wb, sample=True)
+            graw = s.gen(gp, s.mn(40), base=wb, sample=True)
             s.raw.setdefault("rem", []).extend(craw[:1] + graw[:1])
         cand = []  # (kind, items, q, a, ctx, unit, trace record)
         for k, ((p, q, x), txt) in enumerate(zip(smp, craw)):
@@ -2633,7 +3206,7 @@ class Brain:
                     t_.update(think=th[k][0][:400], think_tokens=len(s.L.ids(th[k][0])), closed=th[k][1])
                 tr.append(t_)
             if qmode:  # the answer is the given far end
-                qs = parse_q1(txt)
+                qs = parse_q1(txt, getattr(a, "rem_parse", "line") == "first_q")
                 r = (qs, roles[k][1]) if qs else None
             else:
                 r = parse_qa1(txt)
@@ -2674,7 +3247,7 @@ class Brain:
                 st["dropped_bad"] += 1
             else:
                 cand.append(("gist", (it,), qq, es[0], s.diary.label(s.diary.containing(it.subj, it.obj, d)[-4:]), None, None))
-        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c, _, _ in cand], 20)
+        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c, _, _ in cand], getattr(a, "rem_verify_tokens", 20))  # addendum 18: K2 often names the answer after 20 tokens of lead-in
         have = {(norm(x["q"]), x["a"].lower()) for x in s.rem_pool}
         got, got_u = set(), set()  # TRIES_ARMS: the pairs that kept a dream this cycle (the first sample, in sample order, that passed every check); --rem-dirs both: the same per unit
         for (kind, its, q, ans, c, unit, t_), v in zip(cand, ver):
@@ -2812,6 +3385,7 @@ class Brain:
             tl[0] = time.time()
         if bench:
             lap("bench")
+        cuda_tidy()  # last night's training cache goes back before tonight's writing (on the PC, night 2's writing crawled without it)
         rec["tagging"] = s.tag(d)
         if a.arm in NAMES_ARMS:  # addendum 8 / 9: re-read the day for names (before refresh, so the new items get their mention counts)
             rec["names_pass"] = s.names_pass(d)
@@ -2823,10 +3397,18 @@ class Brain:
         E = [it for it in list(s.items.values()) if s.elig(it)]
         rec["dream_stats"] = s.dream(d, E)
         lap("dream")
+        if torch.cuda.is_available():  # log only: how long tonight's names, update checks and dream writing took
+            s.log(f"[night {d}] written in {ph.get('tag', 0) + ph.get('update_detection', 0) + ph['dream']:.0f} s (dream {ph['dream']:.0f} s)")
         if a.arm in EXTRA_ARMS:
             s.log(f"[night {d}] twist {({k: v for k, v in rec['dream_stats'].items() if k.startswith('twist')})}")
+        if getattr(a, "dream_vary", "off") != "off":  # addendum 15: the per-style yields of tonight (Brain.vary's stats keys)
+            rec["dream_vary"] = {"mode": a.dream_vary, "styles": list(VARY_STYLES[a.dream_vary]), "k": s.k, "kp": s.kp, "n_per_style": math.ceil(s.k / 4),
+                                "stats": {k: rec["dream_stats"].get(k, 0) for k in ["vary_skipped_no_check", *(f"vary_{sty}_{x}" for sty in VARY_STYLES[a.dream_vary] for x in VARY_STATS)]}}
+            s.log(f"[night {d}] vary {rec['dream_vary']}")
         pre = s.probe(E, conf=a.arm in GUESS_ARMS)
         s.morning(E, pre)
+        if s.track:
+            s.card_reset(E, pre)
         lap("probe")
         if a.arm in GUESS_ARMS:
             rec["guess"] = s.guess_rec(pre)
@@ -2842,7 +3424,7 @@ class Brain:
         total = sum(n + r for n, r in plan)
         if a.budget_scale is not None or a.night_budget_s is not None:
             rec["budget"] = {"scale": s.scale, "steps": steps, "steps_ref": ref_n, "k": s.k, "max_dream_items": s.cap_items, "rem_chains": s.cap_chains,
-                             "rem_gist": s.cap_gist, "bench": bench}
+                             "rem_gist": s.cap_gist, "bench": bench, "text_scale": getattr(a, "text_scale", None)}  # text_scale (addendum 15): None = the generation knobs are at `scale`
             s.log(f"[night {d}] budget {rec['budget']}")
         act = [it for it in E if not it.consol and (it.para or it.qa)]
         con = [it for it in cons if it.para or it.qa]
@@ -2852,6 +3434,7 @@ class Brain:
                     "probe_recall_pre": acc(ok for ok, _ in pre.values()), "elig_by_class": s.elig_by_class(E)})
         s.log(f"[night {d}] items {rec['items_total']} eligible {len(E)} (active {n_act}, consolidated {len(cons)}) steps {total} probe_pre {rec['probe_recall_pre']}")
         snap = s.snapshot()
+        card0 = dict(s.card)  # --skip-known: a reverted night puts the cards' known flags back with the weights
         kl_pool = s.replay
         if a.arm == "ab_klctx" and (act or con):  # KL batches are sampled from generic replay + tonight's diary-format prompts
             kl_pool = s.replay + s.klctx(d)
@@ -2865,7 +3448,9 @@ class Brain:
         if a.arm == "ab_ob_rot":  # after the snapshot (it holds every LoRA param): tonight only quarter (d - 1) % 4 trains
             rec["rot"] = rot_set(s.pm, (d - 1) % 4)
             s.log(f"[night {d}] rot: quarter {rec['rot']['quarter']} layers {rec['rot']['layers']} trainable {rec['rot']['trainable_params']:,}")
+        cuda_tidy()
         tr = Trainer(s.L, s.pm, a, kl_pool, total, a.seed * 100 + d)
+        t_tr = time.time()
         if track:
             pk.append(s.peak_gb(True))  # the night so far; the peak is then reset for the training phase alone (REM generation included)
         rem_stats, done, nrem_n, rem_n = [], 0, 0, 0
@@ -2873,22 +3458,37 @@ class Brain:
             s.log(f"[night {d}] no dream content; skipping training")
         else:
             for ci, (n_nrem, n_rem) in enumerate(plan):
-                for _ in range(n_nrem):
-                    tr.step(s.nrem(act, cum, con, a.bsz))
+                for j in range(n_nrem):
+                    s.bk = [] if s.track else None
+                    s.train_step(tr, s.nrem(act, cum, con, a.bsz))
+                    if torch.cuda.is_available() and (done + j + 1) % 200 == 0:  # log-only heartbeat: a PC watchdog stops a run that has slowed to a crawl
+                        s.log(f"[night {d}] step {done + j + 1}/{total} at {time.time() - t_tr:.0f} s")
                 nrem_n, done = nrem_n + n_nrem, done + n_nrem
                 if n_rem > 0:
                     lap("train")
                     rs = s.rem(E, d, ci)
                     lap("rem_generate")
+                    cuda_tidy()
                     rem_stats.append(rs)
                     live = [x for x in s.rem_pool if all(not s.items[k].dead and not s.items[k].sup_by for k in x["keys"])]
-                    for _ in range(n_rem):
-                        nr = round(0.7 * a.bsz) if live else 0
-                        tr.step([s.wt(s.qa_ex(x["q"], x["a"]), [s.items[k] for k in x["keys"]]) for x in s.rng.choices(live, k=nr)] + s.nrem(act, cum, con, a.bsz - nr))
+                    nr0 = round(0.7 * a.bsz) if live else 0
+                    split = [nr0] * n_rem
+                    if getattr(a, "rem_views", None):  # about rem_views practices per live dream tonight; the rest of the REM slots go to NREM cards
+                        split = rem_split(a.rem_views, len(live), n_rem, sum(r for _, r in plan), nr0)
+                        rec.setdefault("rem_quota", []).append({"cycle": ci, "pool": len(live), "rem_examples": sum(split), "default": nr0 * n_rem})
+                    for nr in split:
+                        s.bk = [] if s.track else None
+                        s.train_step(tr, s.rem_ex(live, nr) + s.nrem(act, cum, con, a.bsz - nr))
                     rem_n, done = rem_n + n_rem, done + n_rem
                     s.cov["rem_steps"] += n_rem
         lap("train")
+        if torch.cuda.is_available():  # log only (the result JSON is unchanged): a slow night or a nearly full card shows here at once
+            s.log(f"[night {d}] trained {done} steps in {time.time() - t_tr:.0f} s (REM writing included); cuda peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB, reserved {torch.cuda.memory_reserved() / 2**30:.1f} GiB (max {torch.cuda.max_memory_reserved() / 2**30:.2f})")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:], "fp16_overflow_steps": getattr(tr, "overflow", 0), "fp16_loss_scale": LOSS_SCALE[0], "fp16_min_scale": getattr(tr, "min_scale", None)})
+        if s.track:
+            rec["cards"] = s.card_summary()
+            s.log(f"[night {d}] cards known_share {rec['cards']['known_share']} by quarter {rec['cards']['known_share_by_quarter']} "
+                  f"by kind {({k: v['known_at_step'] for k, v in rec['cards']['by_kind'].items()})} known drawn {rec['cards']['known_drawn']} kept {rec['cards']['known_kept']}")
         if a.arm == "ab_ob_ther":
             rec["ther"] = {"salient_eligible": sum(1 for it in E if s.salient(it)), "salient_active": sum(1 for it in act if s.salient(it)),
                            "weighted_steps": tr.wsteps, "weighted_examples": tr.wex}
@@ -2936,6 +3536,7 @@ class Brain:
                     "reverted": bool(why), "revert_reason": why})
         if why:
             s.restore(snap)
+            s.card = card0
             s.cov["revert"] += 1
             s.log(f"[night {d}] REVERTED: {why}")
             rec["probe_recall_post"] = rec["probe_recall_pre"]
@@ -4213,7 +4814,7 @@ def selftest_k2():
     # ... and through Brain.names_pass itself (stub gen, real tokenizer): the prompts it builds for stage 2 + the answer + im_end are the template's rendering of [system, user, assistant(think, answer)]
     from types import SimpleNamespace
     seen, cap = [], {}
-    Lc = SimpleNamespace(k2=True, ids=L.ids, think_eos=L.think_eos, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
+    Lc = SimpleNamespace(k2=True, ids=L.ids, think_eos=L.think_eos, shut=L.shut, end=L.end, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
 
     def gen_k2(prompts, n, **kw):
         seen.append((list(prompts), n, kw))
@@ -4291,16 +4892,492 @@ def load_base(args, device, dtype, log=print):  # load_model + the --q4-base ste
     return lm, tok, q4
 
 
+LFM3_REPO, LFM3_REV = "LiquidAI/LFM3-1.7B", "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd"  # the pinned LFM3 model
+
+
+def selftest_lfm3():
+    """LFM3 chat format and LoRA targets. Offline first (a fake tokenizer): Lang(lfm3=True) asks the template for enable_thinking False (render) / True (render_think) and nothing else, a changed template tail raises, shut / think_eos / end, the
+    Qwen and K2 Langs untouched, strip_think with the Lang's tags. Then, with the real tokenizer (downloaded from the Hub, no weights; skipped with a message when it cannot be): (i) render ends with "<think></think>", render_think with "<think>" (the
+    effort is ignored), both start with the bos string; (ii) the tags are single ids (124901 / 124902 / 124900), eos is <|im_end|> = 124900, think_eos [124902, 124900]; (iii) stage 2 (render_think + thinking + shut + answer + end) is the template's own finished
+    turn (it adds a newline after im_end), also through Brain.names_pass itself; ex_qa equals the template's turn with an empty reasoning_content; (iv) a tiny random LFM3 (load_model --smoke: real config, remote code, tokenizer; conv, full, conv,
+    sliding layers): LFM3_TARGETS hits 5 modules per conv layer and 7 per attention layer, never gate_proj / conv.conv, and the real layer_types give 142."""
+    import peft
+    from types import SimpleNamespace
+    cpu = torch.device("cpu")
+
+    class FakeTok:  # records the apply_chat_template keywords; two special ids
+        eos_token_id, unk_token_id = 1, 0
+
+        def __init__(self, tail=None):
+            self.tail, self.calls = tail, []
+
+        def apply_chat_template(self, msgs, **kw):
+            self.calls.append(kw)
+            return "".join(f"[{m['role']}]{m['content']}" for m in msgs) + "[assistant]" + (self.tail if self.tail is not None else "<think>" if kw["enable_thinking"] else "<think></think>")
+
+        def convert_tokens_to_ids(self, t):
+            return {"<|im_end|>": 19, "</think>": 53}.get(t, 0)
+
+    tk = FakeTok()
+    Lf = Lang(tk, False, cpu, lfm3=True)
+    assert Lf.think and Lf.lfm3 and not Lf.k2 and Lf.end == "<|im_end|>" and Lf.eos == 19 and Lf.shut() == Lf.shut("high") == "</think>" and Lf.think_eos() == Lf.think_eos("high") == [53, 19]
+    assert Lf.render("S", "U") == "[system]S[user]U[assistant]<think></think>" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True, "enable_thinking": False}, tk.calls[-1]
+    assert Lf.render_think("S", "U") == "[system]S[user]U[assistant]<think>" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True, "enable_thinking": True}, tk.calls[-1]  # no reasoning_effort
+    assert Lf.render_think(None, "U", "high") == "[user]U[assistant]<think>" and names_prompt(Lf, "x", "A", "B", think=True, effort=K2_NAMES_EFFORT).endswith("[assistant]<think>") and names_prompt(Lf, "x", "A", "B").endswith("<think></think>")
+    for bad, fn in ((FakeTok("<think>\n"), "render_think"), (FakeTok("<think>"), "render")):  # the template's tail changed: the open (render_think) / closed (render) block is not what it was
+        try:
+            getattr(Lang(bad, False, cpu, lfm3=True), fn)("S", "U")
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("the changed LFM3 template tail should have raised")
+    q, k = Lang(tk, True, cpu), Lang(FakeTok("<ifm|think>\n"), False, cpu, k2=True)
+    assert not q.think and not q.lfm3 and q.end is None and q.eos == 1 and q.render("S", "U") == "system: S\nuser: U\nassistant: "  # (the smoke Qwen Lang)
+    assert k.think and k.end == K2_END and k.shut("high") == K2_SHUT and k.shut() == K2_FAST_SHUT and not k.lfm3
+    for bad, call in ((q, lambda L_: L_.render_think("S", "U")), (q, lambda L_: L_.think_eos()), (q, lambda L_: L_.shut())):
+        try:
+            call(bad)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("a Qwen Lang has no think path")
+    try:
+        Lang(tk, False, cpu, k2=True, lfm3=True)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("k2 and lfm3 are exclusive")
+    assert strip_think("abc def</think><|im_end|>", "high", Lf) == ("abc def", True) and strip_think("abc def<|im_end|>", "low", Lf) == ("abc def", False) and strip_think("abc def</think>", "low", Lf) == ("abc def", True)
+    assert strip_think("abc def" + K2_SHUT + K2_END, "high", Lf) == ("abc def" + K2_SHUT + K2_END, False) and strip_think("abc def</think>", "high") == ("abc def</think>", False)  # (K2's tags are not LFM3's, and the default is K2's)
+    assert strip_think("abc def" + K2_SHUT + K2_END, "high", k) == strip_think("abc def" + K2_SHUT + K2_END, "high") == ("abc def", True) and strip_think("abc" + K2_FAST_SHUT, "low", k) == strip_think("abc" + K2_FAST_SHUT) == ("abc", True)
+    assert lora_targets(SimpleNamespace(config=SimpleNamespace(model_type="qwen3_5"))) is LORA_TARGETS and lora_targets(SimpleNamespace(config=SimpleNamespace(model_type=LFM3_TYPE))) is LFM3_TARGETS
+    assert lfm3_lora_count(SimpleNamespace(layer_types=["conv", "full_attention", "conv", "sliding_attention"])) == 24
+    out = {"fake_tok": "ok"}
+    try:
+        from transformers import AutoConfig, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True)
+    except Exception as e:  # offline / Hub unreachable
+        return {**out, "skipped": f"LFM3 tokenizer not available ({type(e).__name__}); LFM3 checks on the real tokenizer not run"}
+    L = Lang(tok, False, cpu, lfm3=True)
+    u = "Where does Zelmir live?"
+    msgs = [{"role": "system", "content": SYS}, {"role": "user", "content": u}]
+    p, pt = L.render(SYS, u), L.render_think(SYS, u)
+    assert p.startswith("<|startoftext|><|im_start|>system\n") and p.endswith("<|im_start|>assistant\n<think></think>") and p.count("<think>") == 1 and p.count("</think>") == 1, p
+    assert pt.startswith("<|startoftext|>") and pt.endswith("<|im_start|>assistant\n<think>") and pt.count("<think>") == 1 and "</think>" not in pt and pt == p[:-len("</think>")], pt[-80:]
+    assert pt == tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True) and L.render_think(SYS, u, "high") == L.render_think(SYS, u, "medium") == pt  # (the template's default is thinking on; no effort levels)
+    sp = {t: tok.convert_tokens_to_ids(t) for t in ("<|startoftext|>", "<|im_start|>", "<|im_end|>", "<think>", "</think>")}
+    assert list(sp.values()) == [124894, 124899, 124900, 124901, 124902] and L.eos == tok.eos_token_id == sp["<|im_end|>"] == 124900 and L.end == "<|im_end|>", (sp, L.eos)
+    ids, pid = L.ids(p), L.ids(pt)
+    assert ids[0] == sp["<|startoftext|>"] and ids[-2:] == [sp["<think>"], sp["</think>"]] and pid == ids[:-1] and [ids.count(sp[t]) for t in sp] == [1, 3, 2, 1, 1], (ids[-6:], pid[-6:])
+    assert L.think_eos() == L.think_eos("high") == [124902, 124900] and L.shut() == "</think>"
+    stage2 = pt + "abc def" + L.shut() + "no" + L.end
+    assert stage2 + "\n" == tok.apply_chat_template(msgs + [{"role": "assistant", "content": "no", "reasoning_content": "abc def"}], tokenize=False), stage2[-100:]  # (the template adds "\n" after im_end)
+    assert L.ids(stage2)[len(pid):] == L.ids("abc def") + [124902] + L.ids("no") + [124900]
+    ids_q, st = ex_qa(L, u, "Oslo")
+    full = tok.apply_chat_template(msgs + [{"role": "assistant", "content": "Oslo", "reasoning_content": ""}], tokenize=False)
+    assert full.endswith("<think></think>Oslo<|im_end|>\n") and ids_q == L.ids(full[:-1]) and ids_q[-1] == 124900 and ids_q[st - 1] == 124902 and ids_q[st:-1] == L.ids("Oslo"), (ids_q[-6:], L.ids(full)[-6:])
+    ids_t, st_t = ex_text(L, "Zelmir lives in Oslo.")
+    assert ids_t[-1] == 124900 and st_t == 0
+    # ... through Brain.names_pass itself (stub gen, real tokenizer): stage 1 stops at </think> / im_end, stage 2 = stage 1 + thinking + ONE close tag, + the answer + im_end == the template's turn
+    seen = []
+
+    def gen_lfm3(prompts, n, **kw):
+        seen.append((list(prompts), n, kw))
+        return ["They are siblings.</think>", "z " * 60][:len(prompts)] + ["x"] * (len(prompts) - 2) if len(seen) == 1 else ["is the brother of", "No relation", "works at"][:len(prompts)]
+    dia = Diary({"diary": [{"role": "user", "day": 2, "text": "hey Magomen met Papirar and Torvald today"}]})
+    cap = {}
+    Lc = SimpleNamespace(think=True, ids=L.ids, think_eos=L.think_eos, shut=L.shut, end=L.end, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
+    me = SimpleNamespace(L=Lc, diary=dia, items={}, dropped=set(), tag_log=[(0, 2, [])], raw={}, gen=gen_lfm3, mn=lambda n: n)
+    rec = Brain.names_pass(me, 2)
+    (p1, n1, kw1), (p2, n2, kw2) = seen
+    assert len(p1) == 3 and n1 == NAMES_THINK_MAX == 512 and kw1 == {"eos": [124902, 124900]} and n2 == 12 and kw2 == {} and all(p_.endswith("<|im_start|>assistant\n<think>") for p_ in p1), (kw1, [p_[-40:] for p_ in p1])
+    th = ["They are siblings.", ("z " * 60).strip(), "x"]
+    assert all(q_ == pp + x + "</think>" and q_.count("</think>") == 1 for q_, pp, x in zip(p2, p1, th)) and rec["yes"] == 2 and rec["think_capped"] == 2, (rec, [q_[-60:] for q_ in p2])  # one close tag also when stage 1 ran out of tokens
+    um = [{"role": "system", "content": "You extract facts from chat messages."}, {"role": "user", "content": cap["u"]}]  # (the last prompt's user message; the three differ only in the names)
+    assert p2[2] + "works at" + L.end + "\n" == tok.apply_chat_template(um + [{"role": "assistant", "content": "works at", "reasoning_content": "x"}], tokenize=False), p2[2][-120:]
+    # LoRA targets on a tiny random LFM3 (train.load_model --smoke: the real config + remote code + tokenizer) and on the real layer pattern
+    from train import load_model
+    lm, tk2 = load_model(SimpleNamespace(model=LFM3_REPO, revision=LFM3_REV, smoke=True, seed=0), cpu, torch.float32)
+    assert is_lfm3(SimpleNamespace(model=LFM3_REPO, smoke=True)) and not is_lfm3(SimpleNamespace(model="Qwen/Qwen3.5-2B", smoke=True)) and lm.config.model_type == LFM3_TYPE and lm.config.layer_types == ["conv", "full_attention", "conv", "sliding_attention"]
+    assert sum(n.endswith("self_attn.gate_proj") for n, _ in lm.named_modules()) == 2 and sum(n.endswith("conv.conv") for n, _ in lm.named_modules()) == 2  # (the modules the regex must leave alone exist)
+    pm = peft.get_peft_model(lm, peft.LoraConfig(r=4, lora_alpha=8, lora_dropout=0.0, target_modules=lora_targets(lm), bias="none"))
+    names = [n.removeprefix("base_model.model.model.layers.") for n, m in pm.named_modules() if isinstance(m, peft.tuners.lora.LoraLayer)]
+    per = {i: sorted(n.split(".", 1)[1] for n in names if n.split(".")[0] == str(i)) for i in range(4)}
+    conv_set, attn_set = ["conv.in_proj", "conv.out_proj", "feed_forward.w1", "feed_forward.w2", "feed_forward.w3"], ["feed_forward.w1", "feed_forward.w2", "feed_forward.w3", "self_attn.k_proj", "self_attn.o_proj", "self_attn.q_proj", "self_attn.v_proj"]
+    assert per == {0: conv_set, 1: attn_set, 2: conv_set, 3: attn_set} and len(names) == lfm3_lora_count(lm.config) == 24 and not any("gate_proj" in n or "conv.conv" in n for n in names), per
+    ids_s = torch.tensor([L.ids(pt)])
+    with torch.no_grad():
+        assert pm(input_ids=ids_s).logits.shape == (1, ids_s.shape[1], lm.config.vocab_size)
+    real = AutoConfig.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True)
+    assert real.model_type == "lfm3" and real.layer_types.count("conv") == 13 and lfm3_lora_count(real) == 5 * 13 + 7 * 11 == 142, (real.layer_types.count("conv"), lfm3_lora_count(real))
+    return {**out, "render_tail": p[-40:], "think_render_tail": pt[-40:], "think_eos": L.think_eos(), "eos": L.eos, "prompt_tail_ids": ids[-5:], "ex_qa_tail_ids": ids_q[-5:], "names_stage2_tail": p2[2][-30:],
+            "lora_tiny": {"modules": len(names), "per_layer": {"conv": len(conv_set), "attn": len(attn_set)}}, "lora_real": lfm3_lora_count(real)}
+
+
 # ------------------------------------------------------------------ main
+def add15_error(args, budget_scale):  # addendum 15: main()'s checks of the new flags, as the message ap.error prints (None: fine); budget_scale: --budget-scale as given, before default_scale
+    ts, dv = getattr(args, "text_scale", None), getattr(args, "dream_vary", "off")
+    if ts is not None and budget_scale is None:
+        return "--text-scale needs --budget-scale (it sets the generation knobs apart from the training steps)"
+    if ts is not None and not ts > 0:
+        return "--text-scale must be positive"
+    if dv != "off" and args.arm in EXTRA_ARMS:
+        return f"--dream-vary cannot be combined with the twist arms {EXTRA_ARMS} (it takes the place of their extra texts)"
+    if dv != "off" and args.arm not in OB_ARMS:
+        return f"--dream-vary needs an open-book arm {OB_ARMS} (the cards are asked as open-book Q&A)"
+    return None
+
+
+def selftest_add15():
+    """Addendum 15 on stubs (no model, no GPU; RNG states put back): (i) nrem_prompt and parse_scenes at their defaults are the old code byte for byte (verbatim copies below), kp changes only the paraphrase count; (ii) the text-scale knobs: the five generation
+    knobs at the text scale, the steps at the work scale, no flag = today's numbers, a stub args without the flags = no flag; kp = ceil(k/4) only under --dream-vary; (iii) Brain.dream asks kp paraphrases and keeps paras[:kp] and the k cards; (iv) vary_prompt and
+    Brain.vary: prompts, parsing, every check and its stat key, the check card j % len, order of the kept texts, one seeded sampling per style (seed * 100 + night + 43 + style index), the global RNG put back, the base model, 80 n tokens, mix vs plain; (v) reword scoring on a
+    fake generate, the hand-computed numbers (recall, share, cards, gaps, seen, variety, McNemar booleans, rows, skips) with and without a Brain; (vi) the flag checks; (vii) make_reworded's helpers are sleepb's, and data/week2_reworded.json (if there) passes the PREREG's checks."""
+    from argparse import Namespace
+    from types import SimpleNamespace
+    import inspect
+    out, cpu = {}, torch.device("cpu")
+    rng0 = torch.get_rng_state()
+    try:
+        # ---- (i) the defaults are the old code
+        Lr = SimpleNamespace(render=lambda sy, u: f"<{sy}>{u}", device=cpu)
+        it = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1)
+
+        def old_nrem(L_, ctx, it_, k=K):  # nrem_prompt as it was before addendum 15
+            u = (f"Messages Sam sent in chat, newest first, labelled by day. If they disagree, the newest message is true.\n{ctx}\n\n"
+                 f"Focus on the fact linking \"{it_.subj}\" and \"{it_.obj}\". Write {k} paraphrases of the CURRENT fact (short standalone sentences, "
+                 f"different wording, naming both) and {k} question-answer pairs about it. Cover both directions: some questions should ask about one "
+                 f"name, some about the other. Each answer must be a single name from the fact. Reply with only JSON of the form "
+                 f"{{\"paraphrases\": [\"...\"], \"qa\": [{{\"q\": \"...\", \"a\": \"...\"}}]}}")
+            return L_.render("You are a careful assistant that studies facts.", u)
+
+        def old_scenes(txt):  # parse_scenes as it was before addendum 15
+            res = []
+            for ln in txt.splitlines():
+                m = re.match(r"^[\s*#>-]*(?:scene\s*)?\d+\s*[.):*-]+\s*(.+)$", ln, re.I)
+                if m and m.group(1).strip(" *\"'"):
+                    res.append(m.group(1).strip(" *\"'"))
+            return res[:2]
+        for k in (1, 4, 8, 16, 32):
+            assert nrem_prompt(Lr, "[Day 1] x", it, k) == old_nrem(Lr, "[Day 1] x", it, k) == nrem_prompt(Lr, "[Day 1] x", it, k, None) == nrem_prompt(Lr, "[Day 1] x", it, k, k)
+        assert nrem_prompt(Lr, "c", it) == old_nrem(Lr, "c", it)
+        p84 = nrem_prompt(Lr, "c", it, 32, 8)
+        assert p84 == old_nrem(Lr, "c", it, 32).replace("Write 32 paraphrases", "Write 8 paraphrases") and "Write 8 paraphrases of the CURRENT fact" in p84 and "and 32 question-answer pairs" in p84
+        for txt in ("1. a b c\n2. d e f\n3. g h i", "Scene 1: 'x y'\nScene 2) *z w*\n- 3. q", "no numbers at all", "1.\n2.  \n3. ok", "  10) ten\n9: nine\n8- eight", ""):
+            assert parse_scenes(txt) == old_scenes(txt) == parse_scenes(txt, 2)
+        t5 = "\n".join(f"{i}. text {i}" for i in range(1, 9))
+        assert parse_scenes(t5, 4) == [f"text {i}" for i in range(1, 5)] and len(parse_scenes(t5, 8)) == 8 and len(parse_scenes(t5)) == 2
+        out["defaults_byte_identical"] = True
+
+        # ---- (ii) the text-scale knobs
+        def knobs(budget, text, vary="off", flags=True):
+            a_ = dict(max_dream_items=160, rem_chains=30, rem_gist=30)
+            me_ = SimpleNamespace(a=SimpleNamespace(**a_, **({"text_scale": text, "dream_vary": vary} if flags else {})))
+            me_.sc, me_.tsc = (lambda n: Brain.sc(me_, n)), (lambda n: Brain.tsc(me_, n))  # noqa: E731
+            Brain.set_scale(me_, budget)
+            return me_
+
+        def kn(m_):
+            return (m_.k, m_.cap_items, m_.cap_chains, m_.cap_gist, m_.dream_new)
+        for b in (0.5, 1.0, 2.0, 4.0, 8.0):
+            sc_ = lambda n: Brain.sc(SimpleNamespace(scale=b), n)  # noqa: E731
+            today = (sc_(K), sc_(160), sc_(30), sc_(30), sc_(400))  # addendum 5's numbers: the formula as it was
+            for m_ in (knobs(b, None), knobs(b, None, flags=False)):
+                assert kn(m_) == today and m_.scale == b and m_.tscale == b and m_.kp is None, (b, kn(m_), today)
+        assert kn(knobs(8.0, None)) == (32, 1280, 240, 240, 3200) and kn(knobs(4.0, None)) == (16, 640, 120, 120, 1600)
+        r8 = knobs(8.0, 4.0)
+        assert kn(r8) == (16, 640, 120, 120, 1600) == kn(knobs(4.0, None)) and r8.scale == 8.0 and r8.tscale == 4.0 and r8.sc(150) == 1200 and r8.sc(150) == knobs(8.0, None).sc(150) and r8.sc(40) == 320
+        assert kn(knobs(8.0, 1.0)) == (4, 160, 30, 30, 400) and kn(knobs(2.0, 0.5)) == (2, 80, 15, 15, 200) and kn(knobs(1.0, 3.0)) == (12, 480, 90, 90, 1200) and knobs(1.0, 3.0).sc(150) == 150
+        assert [knobs(8.0, 4.0, "mix").kp, knobs(8.0, None, "plain").kp, knobs(1.0, None, "mix").kp, knobs(2.0, 0.5, "mix").kp, knobs(8.0, 4.0, "off").kp] == [4, 8, 1, 1, None]
+        src_night = inspect.getsource(Brain.night)
+        assert "ref_n, steps = steps, s.sc(steps)" in src_night and "tsc(" not in src_night, "the night's steps are planned at the work scale"
+        out["text_scale"] = {"R8": kn(r8), "steps_150": r8.sc(150)}
+
+        # ---- (iii) Brain.dream: kp paraphrases asked and kept, k cards kept; no flag = as before
+        def dream_run(vary):
+            ev = {"gen": [], "vary": []}
+            it_ = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1, nment=1, dirty=True, days=2)
+            js = json.dumps({"paraphrases": [f"Drovak lives in Kelmira, version {i}." for i in range(6)], "qa": [{"q": f"Question {i} about Drovak's town?", "a": "Kelmira"} for i in range(6)]})
+
+            def gen_(prompts, max_new, base=True, sample=False, temp=0.8, eos=None):
+                ev["gen"].append((len(prompts), max_new, sample, base, prompts[0]))
+                return [js] * len(prompts) if sample else ["Kelmira"] * len(prompts)
+            me_ = knobs(1.0, None, vary)
+            me_.__dict__.update(L=Lr, gen=gen_, mn=lambda n: n, raw={}, examples={"dreams": [], "probes": [], "now": [], "vary": []}, leak=set(), items={it_.key: it_},
+                                diary=SimpleNamespace(containing=lambda a_, b_, d_: [0], label=lambda idx: "[Day 1] ctx"), vary=lambda *x: ev["vary"].append(x))
+            me_.a.arm, me_.a.smoke = "ab_ob", False
+            me_.leaky = lambda t: Brain.leaky(me_, t)
+            st_ = Brain.dream(me_, 2, [it_])
+            return me_, it_, st_, ev
+        m0, it0, st0, ev0 = dream_run("off")
+        assert ev0["gen"][0][4] == nrem_prompt(Lr, "[Day 1] ctx", it0, 4) == old_nrem(Lr, "[Day 1] ctx", it0, 4) and len(it0.para) == 4 and st0["paraphrases_gen"] == 4 and st0["qa_gen"] == 4 and ev0["vary"] == []
+        m1, it1_, st1, ev1 = dream_run("mix")
+        assert ev1["gen"][0][4] == nrem_prompt(Lr, "[Day 1] ctx", it1_, 4, 1) and "Write 1 paraphrases" in ev1["gen"][0][4] and "and 4 question-answer pairs" in ev1["gen"][0][4]
+        assert len(it1_.para) == 1 and it1_.para == ["Drovak lives in Kelmira, version 0."] and st1["paraphrases_gen"] == 1 and st1["qa_gen"] == 4 and len(it1_.qa) == 3 and it1_.probe is not None  # 4 cards: 1 probe + 3
+        assert len(ev1["vary"]) == 1 and ev1["vary"][0][0] == 2 and ev1["vary"][0][1] == [it1_] and ev1["vary"][0][2] == {it1_.key: "[Day 1] ctx"} and isinstance(ev1["vary"][0][3], Counter)  # (the live stats Counter: dream returns a copy of it)
+        out["dream_kp"] = {"off": len(it0.para), "mix": len(it1_.para)}
+
+        # ---- (iv) vary_prompt, Brain.vary
+        ctx = "[Day 1] ctx"
+        ps = {sty: vary_prompt(Lr, ctx, it, sty, 4) for sty in ("story", "note", "weird", "plain2")}
+        head = twist_prompt(Lr, ctx, it)[:twist_prompt(Lr, ctx, it).index("Write 2")]
+        assert all(p.startswith(head) and p == para2_prompt(Lr, ctx, it)[:len(head)] + p[len(head):] for p in ps.values()), "system line, context framing and fact line as twist_prompt / para2_prompt"
+        assert head.startswith("<You are a careful assistant that studies facts.>Messages Sam sent in chat, newest first") and 'Focus on the fact "Drovak lives in Kelmira". ' in head
+        for sty, words in (("story", "tiny everyday stories"), ("note", "in Sam's own voice (first person"), ("weird", "dream-like scenes"), ("plain2", "ordinary paraphrases")):
+            p = ps[sty]
+            assert "Write 4 " in p and words in p and 'name both "Drovak" and "Kelmira"' in p and "numbered 1 to 4, and nothing else." in p and "stays true" in p, (sty, p)
+        assert "surreal" in ps["weird"] and "surreal" not in ps["plain2"] and "plain everyday wording" in ps["plain2"] and ps["story"] != ps["note"]
+
+        def vary_scene(mode, d=2, seed=3):
+            i1 = Item(key=("drovak", "kelmira"), subj="Drovak", obj="Kelmira", rel="lives in", born=1, para=["Drovak lives in Kelmira."], qa=[("Where does Drovak live?", "Kelmira"), ("Who lives in Kelmira?", "Drovak")])
+            i2 = Item(key=("zelmir", "tavrix"), subj="Zelmir", obj="Tavrix", rel="works at", born=1, para=["Zelmir works at Tavrix."], qa=[("Where does Zelmir work?", "Tavrix")],
+                      upd=[{"shared": "Zelmir", "old": "Skarum", "new": "Tavrix", "old_key": ("zelmir", "skarum")}])
+            i3 = Item(key=("kelvora", "zhoumira"), subj="Kelvora", obj="Zhoumira", rel="eats with", born=1)  # no cards, no probe: skipped
+            i4 = Item(key=("brokai", "fenlus"), subj="Brokai", obj="Fenlus", rel="is sibling of", born=1, probe=("Who is Brokai's sibling?", "Fenlus"))
+            calls = []
+
+            def gen_(prompts, max_new, base=True, sample=False, temp=0.8, eos=None):
+                calls.append({"n": len(prompts), "max_new": max_new, "sample": sample, "base": base, "draw": torch.rand(1).item() if sample else None, "prompts": prompts})  # (greedy generation draws nothing)
+                if not sample:  # the verifier: knows every answer unless the text says UNVERIFIABLE
+                    return ["no idea" if "UNVERIFIABLE" in p else "Kelmira, Tavrix, Drovak, Fenlus" for p in prompts]
+                sty = ["tiny everyday stories", "short notes", "dream-like scenes" if mode == "mix" else "ordinary paraphrases"]
+                si = next(i for i, w in enumerate(sty) if w in prompts[0])
+                return REPL[si]
+            me_ = SimpleNamespace(a=SimpleNamespace(seed=seed, smoke=False, dream_vary=mode), k=16, L=SimpleNamespace(device=cpu, render=lambda sy, u: f"{sy}||{u}"), leak={norm("Where is Dax?")},
+                                  items={}, raw={}, examples={"vary": []}, mn=lambda n_: n_, gen=gen_)
+            me_.leaky, me_.stale_hit = (lambda t: Brain.leaky(me_, t)), (lambda i_, t: Brain.stale_hit(me_, i_, t))  # noqa: E731
+            st_ = Counter()
+            REPL = [["1. Drovak lives in Kelmira, so Sam mailed him there.\n2. Kelmira is the town where Drovak lives.\n3. Where is Dax?\n4. Sam met Drovak somewhere nice.",
+                     "1. Zelmir used to work at Skarum but now works at Tavrix.\n2. Sam asked Zelmir about Tavrix.", "I cannot do that."],
+                    ["1. UNVERIFIABLE: Note to self, Drovak lives in Kelmira.\n2. Note: Kelmira, Drovak's town.\n3. drovak LIVES in Kelmira.",
+                     "1) Note: Zelmir, Tavrix, desk 4.\n2) Also: Tavrix is where Zelmir goes each morning.", "1. Sam's note: Brokai and Fenlus are siblings."],
+                    ["1. In a dream, Drovak lives in Kelmira on a cloud.\n2. In a dream, Drovak lives in Kelmira on a cloud.",
+                     "1. A green sky over Tavrix, where Zelmir works.\n2. Zelmir works at Tavrix in the upside-down office.\n3. Zelmir flies to Tavrix.\n4. Tavrix hums while Zelmir works.",
+                     "1. A talking fish tells Brokai that Fenlus is a sibling."]]
+            state = torch.get_rng_state()
+            Brain.vary(me_, d, [i1, i2, i3, i4], {i.key: ctx for i in (i1, i2, i3, i4)}, st_)
+            assert torch.equal(torch.get_rng_state(), state), "Brain.vary moved the global RNG"
+            return me_, (i1, i2, i3, i4), st_, calls
+        me, (i1, i2, i3, i4), st, calls = vary_scene("mix")
+        assert [(c["n"], c["max_new"], c["sample"], c["base"]) for c in calls] == [(3, 320, True, True)] * 3 + [(16, 20, False, True)], [(c["n"], c["max_new"], c["sample"], c["base"]) for c in calls]
+        for si, c in enumerate(calls[:3]):
+            torch.manual_seed(3 * 100 + 2 + 43 + si)
+            assert c["draw"] == torch.rand(1).item(), "style sampled under seed * 100 + night + 43 + style index"
+        assert calls[0]["prompts"] == [vary_prompt(me.L, ctx, i, "story", 4) for i in (i1, i2, i4)] and "dream-like scenes" in calls[2]["prompts"][0] and "short notes" in calls[1]["prompts"][1]
+        assert calls[3]["prompts"][0] == ctx_prompt(me.L, "Drovak lives in Kelmira, so Sam mailed him there.", "Where does Drovak live?") and calls[3]["prompts"][1] == ctx_prompt(me.L, "Kelmira is the town where Drovak lives.", "Who lives in Kelmira?")
+        want = Counter({"vary_skipped_no_check": 1,
+                        "vary_story_gen": 6, "vary_story_parse_fail": 1, "vary_story_dropped_test_leak": 1, "vary_story_dropped_missing_entities": 1, "vary_story_dropped_stale": 1, "vary_story_kept": 3,
+                        "vary_note_gen": 6, "vary_note_dropped_unverified": 1, "vary_note_dropped_dup": 1, "vary_note_kept": 4,
+                        "vary_weird_gen": 7, "vary_weird_dropped_dup": 1, "vary_weird_kept": 6})
+        assert st == want, (dict(st), dict(want))
+        assert i1.para == ["Drovak lives in Kelmira.", "Drovak lives in Kelmira, so Sam mailed him there.", "Kelmira is the town where Drovak lives.", "Note: Kelmira, Drovak's town.", "In a dream, Drovak lives in Kelmira on a cloud."]
+        assert i2.para == ["Zelmir works at Tavrix.", "Sam asked Zelmir about Tavrix.", "Note: Zelmir, Tavrix, desk 4.", "Also: Tavrix is where Zelmir goes each morning.", "A green sky over Tavrix, where Zelmir works.",
+                           "Zelmir works at Tavrix in the upside-down office.", "Zelmir flies to Tavrix.", "Tavrix hums while Zelmir works."]
+        assert i4.para == ["Sam's note: Brokai and Fenlus are siblings.", "A talking fish tells Brokai that Fenlus is a sibling."] and i3.para == [] and i1.qa == [("Where does Drovak live?", "Kelmira"), ("Who lives in Kelmira?", "Drovak")]
+        assert set(me.raw["vary"]) == {"story", "note", "weird"} and all(len(v) == 2 for v in me.raw["vary"].values()) and me.raw["vary"]["story"][0].startswith("1. Drovak lives")
+        ex = {e["text"]: e for e in me.examples["vary"]}  # (the first 12 candidates)
+        assert len(me.examples["vary"]) == 12 and ex["Kelmira is the town where Drovak lives."]["check_q"] == "Who lives in Kelmira?" and ex["Note: Kelmira, Drovak's town."]["check_q"] == "Who lives in Kelmira?"  # j = 1 -> card 1
+        assert ex["drovak LIVES in Kelmira."]["check_q"] == "Where does Drovak live?" and ex["drovak LIVES in Kelmira."]["kept"] is False and ex["Sam asked Zelmir about Tavrix."]["check_q"] == "Where does Zelmir work?"  # j = 2 -> card 0; one card: j % 1
+        assert ex["UNVERIFIABLE: Note to self, Drovak lives in Kelmira."]["kept"] is False and ex["Sam's note: Brokai and Fenlus are siblings."]["check_q"] == "Who is Brokai's sibling?"  # the probe is the check without cards
+        # plain: the third style is plain2 (ordinary paraphrases), same seeds, its own stat keys; the leak / check pieces are shared
+        mp, (p1, p2, p3, p4), stp, callsp = vary_scene("plain")
+        assert "ordinary paraphrases" in callsp[2]["prompts"][0] and "surreal" not in callsp[2]["prompts"][0] and stp["vary_plain2_gen"] == 7 and stp["vary_plain2_kept"] == 6 and not any("weird" in k for k in stp) and set(mp.raw["vary"]) == {"story", "note", "plain2"}
+        assert {k: v for k, v in stp.items() if "plain2" not in k} == {k: v for k, v in want.items() if "weird" not in k}
+        # another night / seed: other seeds, same everything else
+        _, _, _, calls2 = vary_scene("mix", d=5, seed=7)
+        for si, c in enumerate(calls2[:3]):
+            torch.manual_seed(7 * 100 + 5 + 43 + si)
+            assert c["draw"] == torch.rand(1).item()
+        out["vary"] = {k: v for k, v in sorted(st.items()) if k.endswith(("_gen", "_kept"))}
+
+        # ---- (v) reword scoring on a fake generate
+        G = [(0, "C2", [("drovak", "kelmira")], []), (1, "C2", [("drovak", "gliker")], []), (2, "C4", [("zelmir", "tavrix")], []), (3, "C1", [("brokai", "fenlus")], [])]
+        mk = lambda key, subj, obj, para, qa, dead=False: Item(key=key, subj=subj, obj=obj, rel="r", born=1, para=para, qa=qa, dead=dead)  # noqa: E731
+        k0 = mk(("drovak", "kelmira"), "Drovak", "Kelmira", ["Drovak lives in Kelmira.", "Sam asked: where does Drovak reside? Then went on."],
+                [("Which town is Drovak's home?", "Kelmira"), ("Who resides in Kelmira?", "Drovak"), ("What place does Drovak call home?", "Kelmira"), ("Which place is Drovak's residence?", "Kelmira"), ("Name Drovak's home town.", "Kelmira")])
+        k1 = mk(("drovak", "gliker"), "Drovak", "Gliker", ["Drovak mentors Gliker."], [("Who does Drovak mentor?", "Gliker")])
+        k2 = mk(("zelmir", "tavrix"), "Zelmir", "Tavrix", ["Zelmir works at Tavrix."], [("Where does Zelmir work?", "Tavrix")])
+        kd = mk(("kelmira", "drovak"), "Kelmira", "Drovak", [], [("A dead card about Drovak's home?", "Kelmira")], dead=True)
+        pool_ = [{"q": "In which place does Gliker's mentor live?", "a": "Kelmira", "keys": [k1.key, k0.key], "kind": "chain"}, {"q": "A chain with the wrong answer?", "a": "Gliker", "keys": [k1.key, k0.key], "kind": "chain"},
+                 {"q": "A gist question?", "a": "Kelmira", "keys": [k0.key], "kind": "gist"}, {"q": "A chain of other items?", "a": "Kelmira", "keys": [k2.key, k0.key], "kind": "chain"}]
+        brain = SimpleNamespace(G=G, items={x.key: x for x in (k0, k1, k2, kd)}, rem_pool=pool_)
+        week = {"tests": {"forward": [{"q": "Where does Drovak live?", "target": "Kelmira", "item": 0, "class": "C2"}, {"q": "Which company employs Zelmir?", "target": "Tavrix", "item": 2, "class": "C4"},
+                                      {"q": "Who is Brokai's sibling?", "target": "Fenlus", "item": 3, "class": "C1"}],
+                          "reverse": [{"q": "Who lives in Kelmira?", "target": "Drovak", "item": 0, "class": "C2"}, {"q": "Who works at Tavrix?", "target": "Zelmir", "item": 2, "class": "C4"}],
+                          "twohop": [{"q": "In which place does the mentor of Gliker live?", "target": "Kelmira", "items": [1, 0]}, {"q": "Where does Brokai's sibling work?", "target": "Tavrix", "items": [3, 2]}],
+                          "changed": [], "routine": []}}
+        spec = {"tests": {"forward": [{"q_src": "Where does Drovak live?", "target": "Kelmira", "item": 0, "class": "C2", "test_index": 0, "rewordings": ["In which town does Drovak live?", "Where does Drovak reside?", "Drovak makes his home where?"]},
+                                      {"q_src": "Which company employs Zelmir?", "target": "Tavrix", "item": 2, "class": "C4", "test_index": 1, "rewordings": ["Which firm pays Zelmir?", "Zelmir is on whose payroll?"]},
+                                      {"q_src": "A question that is not in the week?", "target": "Kelmira", "item": 0, "class": "C2", "test_index": 7, "rewordings": ["x?", "y?", "z?"]}],
+                         "reverse": [{"q_src": "Who lives in Kelmira?", "target": "Drovak", "item": 0, "class": "C2", "test_index": 0, "rewordings": ["Which person lives in Kelmira?", "Kelmira is home to whom?", "Who resides in Kelmira?"]},
+                                     {"q_src": "Who works at the wrong place?", "target": "Zelmir", "item": 2, "class": "C4", "test_index": 1, "rewordings": ["a?", "b?", "c?"]}],
+                         "twohop": [{"q_src": "In which place does the mentor of Gliker live?", "target": "Kelmira", "items": [1, 0], "classes": ["C2", "C2"], "test_index": 0,
+                                     "rewordings": ["In which place does Gliker's mentor live?", "Where does the person who mentors Gliker reside?", "Gliker's mentor lives in which town?"]},
+                                    {"q_src": "Where does Brokai's sibling work?", "target": "Tavrix", "items": [3, 2], "classes": ["C1", "C4"], "test_index": 1,
+                                     "rewordings": ["At which company does Brokai's sibling work?", "Brokai's sibling is employed where?", "Where is Brokai's brother or sister employed?"]}]}}
+        card_pool = [q for q, a_ in k0.qa if a_ == "Kelmira"]
+        sampled = random.Random(1 * 1000 + 0).sample(card_pool, 3)  # forward test 0's three cards (seed 1)
+        right = {"In which town does Drovak live?": "Kelmira", "Where does Drovak reside?": "Kelmira", "Which firm pays Zelmir?": "Tavrix", "Who resides in Kelmira?": "Drovak", "In which place does Gliker's mentor live?": "Kelmira",
+                 "Where does the person who mentors Gliker reside?": "Kelmira", "Gliker's mentor lives in which town?": "Kelmira", sampled[1]: "Kelmira", sampled[2]: "Kelmira"}  # sampled[0] and "Where does Zelmir work?" are wrong
+        gcalls = []
+
+        def fake_generate(model, prompts, max_new=20, bs=8, **kw):
+            gcalls.append((len(prompts), max_new, bs, model))
+            return [f"The answer is {right[p]}." if p in right else "I do not know." for p in prompts]
+        Lf = SimpleNamespace(render=lambda sy, q: q, generate=fake_generate, device=cpu)
+        assert plain_prompt(Lf, "Q?") == "Q?"
+        mdl = SimpleNamespace(eval=lambda: None)
+        rw = reword_eval(Lf, mdl, week, brain, spec, 16, 1)
+        assert gcalls == [(20, 20, 16, mdl)], gcalls  # ONE call: 14 wordings + 5 cards + 1 chain dream, greedy defaults, 20 tokens, the given batch size
+        assert rw["mapped"] == {"forward": 2, "reverse": 1, "twohop": 2} and rw["skipped_unmapped"] == {"forward": 1, "reverse": 1} and rw["wordings_per_test"] == {2: 1, 3: 4}
+        ap_ = lambda x, y: x is not None and abs(x - y) < 1e-9  # noqa: E731
+        nw = rw["new_wording"]
+        assert (nw["forward"]["n"], nw["forward"]["recall"]) == (2, 0.5) and ap_(nw["forward"]["share"], 7 / 12) and (nw["reverse"]["n"], nw["reverse"]["recall"]) == (1, 0.0) and ap_(nw["reverse"]["share"], 1 / 3)
+        assert nw["both"]["n"] == 3 and ap_(nw["both"]["recall"], 1 / 3) and ap_(nw["both"]["share"], 0.5) and (nw["twohop"]["n"], nw["twohop"]["recall"], nw["twohop"]["share"]) == (2, 0.5, 0.5)
+        assert nw["by_class"]["C2"]["n"] == 2 and nw["by_class"]["C2"]["recall"] == 0.5 and ap_(nw["by_class"]["C2"]["share"], 0.5) and nw["by_class"]["C4"]["n"] == 1 and nw["by_class"]["C4"]["recall"] == 0.0 and set(nw["by_class"]) == {"C2", "C4"}
+        assert rw["cards"] == {"tests_in_scope": 3, "tests_with_cards": 3, "cards_asked": 5, "mean_acc": rw["cards"]["mean_acc"]} and ap_(rw["cards"]["mean_acc"], 5 / 9)
+        assert ap_(rw["cramming_gap_pts"], round(100 * (5 / 9 - 0.5), 2)) and ap_(rw["cramming_gap_majority_pts"], round(100 * (5 / 9 - 1 / 3), 2)) and rw["cramming_gap_basis"]["tests"] == 3
+        assert rw["twohop_cards"] == {"tests": 1, "dreams_asked": 1, "chain_acc": 1.0, "reword_share": 1.0, "reword_recall": 1.0, "gap_pts": 0.0, "gap_majority_pts": 0.0}
+        sn = rw["seen"]
+        assert (sn["rewordings"], sn["seen"]) == (14, 3) and ap_(sn["seen_share"], 3 / 14) and sn["unseen"]["rewordings"] == 11 and ap_(sn["unseen"]["share_right"], 4 / 11)
+        assert sn["unseen"]["both"] == {"n": 3, "recall": 0.0} and sn["unseen"]["twohop"] == {"n": 2, "recall": 0.5}
+        assert rw["per_test"] == {"forward": {0: True, 1: False}, "reverse": {0: False}, "twohop": {0: True, 1: False}}
+        by_src = Counter(r["src"] for r in rw["rows"])
+        assert by_src == {"reword": 14, "card": 5, "chain": 1} and len(rw["rows"]) == 20 and all(r.keys() >= {"src", "kind", "test", "q", "target", "answer", "ok"} for r in rw["rows"])
+        row = next(r for r in rw["rows"] if r["src"] == "chain")
+        assert (row["kind"], row["test"], row["q"], row["answer"], row["ok"]) == ("twohop", 0, "In which place does Gliker's mentor live?", "The answer is Kelmira.", True)
+        assert sorted(r["q"] for r in rw["rows"] if r["src"] == "card" and r["kind"] == "forward" and r["test"] == 0) == sorted(sampled) and not any("dead card" in r["q"] for r in rw["rows"])
+        assert [r["seen"] for r in rw["rows"] if r["src"] == "reword" and r["kind"] == "forward" and r["test"] == 0] == [False, True, False]
+        # the variety measure by hand: texts ["a b c", "a b c", "x y"] -> pairs (1.0, 0, 0)
+        assert reword_variety([mk(("a", "b"), "A", "B", ["a b c", "a b c"], [("x y", "B")])]) == {"items": 1, "mean_jaccard": 1 / 3, "near_dup_share": 1 / 3, "cap": 40, "near_dup_at": 0.8}
+        assert reword_variety([mk(("a", "b"), "A", "B", ["only one"], [])])["items"] == 0 and reword_variety([mk(("a", "b"), "A", "B", [f"w{i} z" for i in range(50)], [])])["items"] == 1
+        vt = [x for it_ in (k0, k1, k2) for x in [[*it_.para, *(q for q, _ in it_.qa)][:40]]]
+        pj = [[jaccard(a_, b_) for i, a_ in enumerate(ts_) for b_ in ts_[i + 1:]] for ts_ in vt]
+        assert rw["variety"]["items"] == 3 and ap_(rw["variety"]["mean_jaccard"], sum(sum(p) / len(p) for p in pj) / 3) and ap_(rw["variety"]["near_dup_share"], sum(sum(x >= 0.8 for x in p) / len(p) for p in pj) / 3)
+        # no Brain (arms a0 / ad / af): the new-wording part only, the same numbers
+        rw0 = reword_eval(Lf, mdl, week, None, spec, 16, 1)
+        assert rw0["new_wording"] == rw["new_wording"] and rw0["per_test"] == rw["per_test"] and not ({"cards", "seen", "variety", "cramming_gap_pts"} & set(rw0)) and len(rw0["rows"]) == 14
+        assert json.loads(json.dumps(rw))["per_test"]["twohop"] == {"0": True, "1": False}  # JSON-serializable (keys become strings)
+        # a smoke-like week: nothing of the file is this week's -> everything skipped, nothing asked, no crash
+        wk0 = {"tests": {k: [dict(t, q=t["q"] + " (another week)") for t in v] for k, v in smoke_week()["tests"].items()}}
+        rws = reword_eval(Lf, mdl, wk0, brain, spec, 16, 1)
+        assert rws["mapped"] == {"forward": 0, "reverse": 0, "twohop": 0} and rws["skipped_unmapped"] == {"forward": 3, "reverse": 2, "twohop": 2} and rws["new_wording"]["both"]["n"] == 0 and rws["rows"] == [] and rws["per_test"] == {"forward": {}, "reverse": {}, "twohop": {}}
+        out["reword"] = {"new_wording_both": nw["both"], "cards": rw["cards"]["mean_acc"], "gap_pts": rw["cramming_gap_pts"], "seen": sn["seen"]}
+
+        # ---- (vi) the flag checks
+        ns = lambda **kw: Namespace(**{"arm": "ab_ob_b4_nb", "text_scale": None, "dream_vary": "off", **kw})  # noqa: E731
+        assert add15_error(ns(), None) is None and add15_error(ns(), 8.0) is None and add15_error(ns(text_scale=4.0), 8.0) is None and add15_error(ns(text_scale=0.25), 1.0) is None
+        assert "--budget-scale" in add15_error(ns(text_scale=4.0), None) and "positive" in add15_error(ns(text_scale=0.0), 8.0) and "positive" in add15_error(ns(text_scale=-1.0), 8.0) and "positive" in add15_error(ns(text_scale=float("nan")), 8.0)
+        assert add15_error(ns(dream_vary="mix"), 8.0) is None and add15_error(ns(dream_vary="plain", arm="ab_ob"), None) is None and add15_error(ns(dream_vary="mix", text_scale=4.0), 8.0) is None
+        for arm in ("ab_ob_twist", "ab_ob_win", "ab_ob_winp"):
+            assert "twist" in add15_error(ns(dream_vary="mix", arm=arm), 8.0)
+        for arm in ("ab", "af", "a0", "ad", "ab_norem"):
+            assert "open-book" in add15_error(ns(dream_vary="plain", arm=arm), 8.0)
+        assert add15_error(Namespace(arm="ab_ob"), None) is None  # an args without the flags
+        out["flag_checks"] = True
+
+        # ---- (vii) make_reworded's helpers are sleepb's; the data file passes the PREREG's checks
+        sys.path.insert(0, str(HERE))
+        import make_reworded as mr
+        for x in ("Where was Vebribon's home?", "Who ’s there? It's Ramein’s", "  Mixed   CASE  text  ", "A b c", ""):
+            assert mr.norm(x) == norm(x) and mr.tokens(x) == tokens(x) and mr.pat("Vebribon").pattern == pat("Vebribon").pattern
+        assert all(abs(mr.jaccard(a_, b_) - jaccard(a_, b_)) < 1e-12 for a_, b_ in (("a b c", "a b d"), ("x", "y"), ("", ""), ("Where is Ramein's home?", "Where is home for Ramein?")))
+        fp, wp = HERE / "data" / "week2_reworded.json", HERE / "data" / "week2.json"
+        if fp.exists() and wp.exists():
+            sp, wk = json.loads(fp.read_text()), json.loads(wp.read_text())
+            assert sp["source_sha256"] == hashlib.sha256(wp.read_bytes()).hexdigest() and set(sp["tests"]) == {"forward", "reverse", "twohop"} and sp["model"] and sp["created"]
+            mp_, sk = reword_map(wk, sp)
+            assert not sk and Counter(k for k, *_ in mp_) == {"forward": 200, "reverse": 200, "twohop": 78}, (sk, Counter(k for k, *_ in mp_))
+            lk = {norm(x) for x in wk["test_strings_norm"]} | {norm(t["q"]) for k in wk["tests"] for t in wk["tests"][k]}
+            tt = {(t["kind"], t["test_index"]): t for t in mr.build_tests(wk)}
+            nk = Counter()
+            for kind, i, t, e in mp_:
+                assert 1 <= len(e["rewordings"]) <= 3 and len({norm(x) for x in e["rewordings"]}) == len(e["rewordings"]) and (kind == "twohop" or t["class"] in ("C2", "C4"))
+                assert all(mr.check(x, tt[(kind, i)], lk) is None for x in e["rewordings"]), (kind, i, e["rewordings"])
+                nk[len(e["rewordings"])] += 1
+            out["data_file"] = {"entries": len(mp_), "kept_per_test": dict(sorted(nk.items())), "sha256": hashlib.sha256(fp.read_bytes()).hexdigest()[:16]}
+        else:
+            out["data_file"] = "skipped (data/week2_reworded.json not there)"
+        return out
+    finally:
+        torch.set_rng_state(rng0)
+
+
+def selftest_add17():
+    """Addendum 17 on a stub of `datasets` (no download): the gate's ARC slice is the first n of the 570 validation rows, 100 with no n (as before), all 570 at n = 570, and the smoke fixture whatever n is."""
+    import types
+    rows = [{"question": f"q{i}", "choices": {"text": ["x", "y", "z"], "label": ["A", "B", "C"]}, "answerKey": "ABC"[i % 3]} for i in range(ARC_VAL_ROWS)]
+    asked, had = [], sys.modules.get("datasets")
+    sys.modules["datasets"] = types.SimpleNamespace(load_dataset=lambda *a, **kw: (asked.append((a, kw)), rows)[1])
+    try:
+        d, a570, a1 = load_arc_val(False), load_arc_val(False, 570), load_arc_val(False, 1)
+        assert len(d) == 100 and [r["question"] for r in d] == [f"q{i}" for i in range(100)] and d == load_arc_val(False, 100), "default slice is the first 100"
+        assert len(a570) == 570 and a570[:100] == d and a570[-1]["question"] == "q569" and len(a1) == 1 and a1 == d[:1]
+        assert d[4]["answer"] == 1 and set(d[0]) == {"question", "choices", "answer"}
+        assert all(a == ("allenai/ai2_arc", "ARC-Easy") and kw == {"split": "validation"} for a, kw in asked)
+        n_asked = len(asked)
+        assert load_arc_val(True) is ARC_SMOKE and load_arc_val(True, 570) is ARC_SMOKE and len(asked) == n_asked, "smoke: the fixture, no dataset call"
+    finally:
+        if had is None:
+            del sys.modules["datasets"]
+        else:
+            sys.modules["datasets"] = had
+    return {"default_n": len(d), "n570": len(a570), "n1": len(a1), "val_rows": ARC_VAL_ROWS}
+
+
+def selftest_add18():
+    """Addendum 18 on stubs (a scripted gen, no model): (i) parse_q1's first_q cut; (ii) Brain.rem with the defaults is unchanged in calls and stats
+    (base False for the dreams, 20 verifier tokens, every pair, a run-on question line is a parse failure); (iii) --rem-writer base / --rem-pairs distinct /
+    --rem-parse first_q / --rem-verify-tokens 96: the dreams are written with base True, the pair whose far ends contain one another is dropped and counted,
+    the run-on line is cut and kept, the verifier gets 96 tokens."""
+    from types import SimpleNamespace
+    assert parse_q1("What boat is Duflodol? -- no, forbidden. Need find.") is None
+    assert parse_q1("What boat is Duflodol? -- no, forbidden. Need find.", True) == "What boat is Duflodol?"
+    assert parse_q1('Question: "Who mentors Zelmir?" he asked', True) == "Who mentors Zelmir?" and parse_q1("Who mentors Zelmir?", True) == parse_q1("Who mentors Zelmir?") == "Who mentors Zelmir?"
+    assert parse_q1("Answer: Kelmira? no", True) is None and parse_q1("no question here", True) is None and parse_q1("", True) is None
+    Ls = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    mk = lambda a, r, o: Item((norm(a), norm(o)), a, o, r, 1, days=0)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira"), mk("Kelmira", "is near", "Harbor Light"), mk("Bouzeibas", "is the mentor of", "Glisemu"), mk("Bouzeibas", "has as a mentor", "Glisemu as a mentor")]
+
+    def run(**fl):
+        me = SimpleNamespace(L=Ls, a=SimpleNamespace(arm="ab_ob_b4_nb", smoke=False, gist_min_days=3, rem_chain_mode="q", rem_dirs="both", rem_tries=1, **fl), mn=lambda n: n, raw={}, rng=random.Random(0),
+                             rem_done=Counter(), gist_done=Counter(), rem_dir_done=Counter(), cap_chains=30, cap_gist=30, diary=SimpleNamespace(containing=lambda su, ob, d: [0, 1], label=lambda idx: "ctx"),
+                             leaky=lambda t: False, rem_pool=[], rem_chains=[], examples={"rem": []}, calls=[], ans_of={})
+
+        def gen(prompts, n, **kw):
+            ver = "Messages from Sam" in prompts[0] if prompts else n == me.a.__dict__.get("rem_verify_tokens", 20)
+            me.calls.append((len(prompts), n, kw.get("base", True), ver))
+            outs = []
+            for pr in prompts:
+                if "Messages from Sam" in pr:
+                    outs.append("It is " + me.ans_of[re.search(r"Question: (.+?)</user>", pr).group(1)])
+                else:
+                    start, ans = re.search(r'names "(.+?)", does not', pr).group(1), re.search(r'Its answer must be "(.+?)"', pr).group(1)
+                    me.ans_of[f"What is two steps from {start}?"] = ans
+                    outs.append(f"What is two steps from {start}? -- wait, check" if start == "Zelmir" else f"What is two steps from {start}?")
+            return outs
+        me.gen = gen
+        st = Brain.rem(me, E, 1, 0)
+        return me, st
+    me0, st0 = run()
+    assert me0.calls == [(4, 40, False, False), (0, 40, False, False), (1, 20, True, True)], me0.calls
+    assert st0 == {"units_open": 4, "units_tried": 4, "chain_gen": 4, "parse_fail": 1, "dropped_bad": 2, "chain_kept": 1, "pool": 1}, st0
+    me1, st1 = run(rem_writer="base", rem_pairs="distinct", rem_parse="first_q", rem_verify_tokens=96)
+    assert me1.calls == [(2, 40, True, False), (0, 40, True, False), (2, 96, True, True)], me1.calls
+    assert st1 == {"pairs_overlap_dropped": 1, "units_open": 2, "units_tried": 2, "chain_gen": 2, "chain_kept": 2, "pool": 2}, st1
+    assert sorted(x["a"] for x in me1.rem_pool) == ["Harbor Light", "Zelmir"]
+    return {"default": st0, "fixed": st1}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=ARMS)
     ap.add_argument("--week", help="week1.json; with --smoke and no --week the built-in 2-day fixture is used")
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
-    ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
+    ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon / LFM3: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path, LFM3 chat-format / LoRA-target and K2 REM chain-mode / unit / step-plan (addendum 14) and the text-scale / dream-vary / reword (addendum 15) unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-budgets", help="--bench-train only: comma-separated tok budgets to time (default 1024,2048,4096,8192)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
@@ -4331,10 +5408,24 @@ def main():
     ap.add_argument("--rem-gist", type=int, default=30)
     ap.add_argument("--gist-min-days", type=int, default=3)
     ap.add_argument("--rem-chain-mode", choices=REM_CHAIN_MODES, default="default", help="addendum 14 (bridge arms, not x4): how REM writes a two-step dream. default: bridge_prompt, Question + Answer, think block closed (as before); q: bridge_q_prompt, only the question "
-                    "(the answer is the given far end); think / q_think (K2 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
+                    "(the answer is the given far end); think / q_think (K2 or LFM3 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
     ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
     ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
+    ap.add_argument("--rem-writer", choices=["adapter", "base"], default="adapter", help="addendum 18: who writes the REM dreams (chains and gists): adapter = the model as trained so far (as before); base = the base model, adapter off")
+    ap.add_argument("--rem-pairs", choices=["all", "distinct"], default="all", help="addendum 18: distinct = no REM pair whose far ends (normalized) contain one another (one fact extracted twice); all = as before")
+    ap.add_argument("--rem-parse", choices=["line", "first_q"], default="line", help="addendum 18 (--rem-chain-mode q / q_think): first_q = the reply's first line is cut after its first '?'; line = the whole first line must end with '?' (as before)")
+    ap.add_argument("--rem-verify-tokens", type=int, default=20, help="addendum 18: tokens the base model may write when it checks a REM dream's answer from the chat lines (20 = as before)")
     ap.add_argument("--rem-steps-mult", type=float, default=1.0, help="addendum 14: each cycle's REM steps x this (rounded); the night's cosine schedule covers the new total. 1.0 = as before")
+    ap.add_argument("--card-stats", action="store_true", help="sleep efficiency, report-only (training unchanged): per night, the share of practice examples the model already answered right before their step "
+                    "(every target but the final eos is the argmax), by kind and by quarter of the night, from the logits the loss already computes -> nights[i].cards")
+    ap.add_argument("--skip-known", type=float, default=None, help="sleep efficiency: a card (NREM paraphrase or Q&A, REM-pool dream) that was right at its last closed-book or text practice is kept with this "
+                    "probability, else drawn again (at most SKIP_TRIES draws); a wrong morning probe marks the item's cards not known; implies --card-stats. Default: off")
+    ap.add_argument("--lora-plus", type=float, default=None, help="sleep efficiency (LoRA+, Hayou et al. 2024): the lora_B matrices step at lr x this. Default: off (one lr)")
+    ap.add_argument("--ob-share", type=float, default=0.5, help="OB_ARMS: share of practice Q&A examples that are open-book (the diary-test prompt). 0.5 = as before")
+    ap.add_argument("--lr-sched", choices=["cosine", "wsd"], default="cosine", help="each night's lr schedule: cosine from --lr to 0 (as before), or wsd: --lr, then linear to 0 over the last WSD_DECAY of the night's steps")
+    ap.add_argument("--rem-views", type=float, default=None, help="sleep efficiency: each REM cycle gives the REM pool about this x pool x (cycle's REM steps / night's REM steps) practice slots (at most round(0.7 bsz) a step), "
+                    "so a dream in the pool all night gets about this many practices (one made in a later cycle only its share of the REM steps left); unused slots go to NREM cards. Default: off (always round(0.7 bsz) a step)")
+    ap.add_argument("--gate-arc-n", type=int, default=100, help=f"addendum 17: the pre-sleep base score and the nightly morning gate use the first N ARC-Easy validation questions (1..{ARC_VAL_ROWS}); 100 = as before. The smoke fixture is unchanged")
     ap.add_argument("--force-revert", type=int, default=0, help="test hook: revert this night (smoke sets 2)")
     ap.add_argument("--smoke-correct", type=float, default=0.8)
     ap.add_argument("--arc-base", action="store_true", help="addendum 11: score the ARC-Easy questions of the final score on the base model (adapter off) before night 1 -> result['arc_easy_base']")
@@ -4350,10 +5441,19 @@ def main():
     ap.add_argument("--grad-ckpt", action="store_true", help="HF gradient checkpointing (use_reentrant=False) on the decoder layers while training: same loss and gradients (no dropout), recomputes each layer's forward in backward; for small cards (8 GB)")
     ap.add_argument("--mem-cap-gb", type=float, default=None, help="cuda only: cap this process's GPU memory at this many GiB (torch.cuda.set_per_process_memory_fraction), e.g. 8 on a 16 GB card to emulate an 8 GB one; also for --bench-train")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
-    ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
+    ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 or LFM3 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
+    ap.add_argument("--text-scale", type=float, default=None, help="addendum 15 (needs --budget-scale): the generation knobs (k, item cap, REM chain cap, REM gist cap, dream token budget) are x this instead of x the work scale; the training steps stay at --budget-scale. "
+                    "Default: the knobs follow --budget-scale, as before")
+    ap.add_argument("--dream-vary", choices=["off", "mix", "plain"], default="off", help="addendum 15 (open-book arms, not the twist arms): nrem_prompt asks for ceil(k/4) paraphrases (and k question cards), then the base model writes ceil(k/4) texts in each of 3 styles "
+                    "(story, note in Sam's voice, and weird dream scenes (mix) or plain2 ordinary paraphrases (plain)), kept under twist's checks and added to the item's paraphrases. off: as before")
+    ap.add_argument("--reword", default=None, metavar="FILE", help="addendum 15 (report-only): after ALL scoring and after the final result JSON is written, score the new wordings in FILE (make_reworded.py's data/week2_reworded.json) weights-only, with the exact-card, seen and "
+                    "variety measures -> result['reword'] (the file is rewritten); an error there goes to result['reword_error'] and costs nothing else")
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
+    cap = cuda_cap()
+    if cap:
+        print(f"[cuda] PyTorch memory capped at {cap[0]:.1f} of {cap[1]:.1f} GiB (SLEEPB_CUDA_CAP_GIB)", flush=True)
     if args.selftest:
         print(json.dumps(selftest_shy()))
         print(json.dumps({"delta": selftest_delta()}))
@@ -4361,6 +5461,7 @@ def main():
         print(json.dumps({"weighted": selftest_weighted()}))
         print(json.dumps({"rot": selftest_rot()}))
         print(json.dumps({"fast": selftest_fast()}))
+        print(json.dumps({"cards": selftest_cards()}))
         print(json.dumps({"budget": selftest_budget()}))
         print(json.dumps({"stale": selftest_stale()}))
         print(json.dumps({"arms7": selftest_arms7()}))
@@ -4373,6 +5474,10 @@ def main():
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
+        print(json.dumps({"lfm3": selftest_lfm3()}))
+        print(json.dumps({"add15": selftest_add15()}))
+        print(json.dumps({"add17": selftest_add17()}))
+        print(json.dumps({"add18": selftest_add18()}))
         return
     if args.bench_train:
         if not args.out:
@@ -4383,9 +5488,9 @@ def main():
         q4_args_check(ap, args)
         mem_cap(args, device)
         lm, tok, q4 = load_base(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
-        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
+        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=lora_targets(lm), bias="none"))
         grad_ckpt(args, pm)
-        res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE), pm)
+        res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE, lfm3=lm.config.model_type == LFM3_TYPE), pm)
         if q4:
             res["q4_base"] = q4
         Path(args.out).mkdir(parents=True, exist_ok=True)
@@ -4416,6 +5521,16 @@ def main():
         ap.error("--local-k-frac must be in (0, 1]")
     if args.tag_batches < 1:
         ap.error("--tag-batches must be at least 1")
+    err = add15_error(args, args.budget_scale)  # (before default_scale: --text-scale needs a --budget-scale that was given)
+    if err:
+        ap.error(err)
+    reword_spec = None
+    if args.reword:  # addendum 15: a missing or broken file stops the run now, not after the night's work
+        try:
+            reword_spec = json.loads(Path(args.reword).read_text())
+            assert all(isinstance(e, dict) and isinstance(e["rewordings"], list) and {"q_src", "target", "test_index"} <= set(e) for k in ("forward", "reverse", "twohop") for e in reword_spec["tests"].get(k, []))
+        except Exception as e:
+            ap.error(f"--reword {args.reword}: not a make_reworded.py file ({e!r})")
     args.budget_scale = default_scale(args.arm, args.budget_scale)  # ab_ob with 2x (B2_ARMS) or 4x (ab_ob_b4) the night's work, unless --budget-scale says otherwise
     if args.budget_scale is not None and not args.budget_scale > 0:
         ap.error("--budget-scale must be positive")
@@ -4429,8 +5544,8 @@ def main():
         ap.error("--rem-steps-mult must be positive")
     if args.think_eval and args.arm == "ad":
         ap.error("--think-eval needs a weights-only score (not arm ad)")
-    if (args.rem_chain_mode in ("think", "q_think") or args.think_eval) and not is_k2(args):
-        ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon model (--model IFM/K2-Horizon-3.7B)")
+    if (args.rem_chain_mode in ("think", "q_think") or args.think_eval) and not (is_k2(args) or is_lfm3(args)):
+        ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon (--model IFM/K2-Horizon-3.7B) or LFM3 (--model LiquidAI/LFM3-1.7B) model")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
     q4_args_check(ap, args)
@@ -4442,6 +5557,20 @@ def main():
         ap.error("--q4-eval cannot be combined with --q4-base")
     if args.q4_eval and (args.q4_group < 1 or args.q4_bits < 1):
         ap.error("--q4-group and --q4-bits must be positive")
+    if (args.card_stats or args.skip_known is not None) and args.arm in ("a0", "ad", "af"):
+        ap.error("--card-stats / --skip-known need a sleeping Brain arm (not a0, ad or af)")
+    if args.skip_known is not None and not 0 < args.skip_known < 1:
+        ap.error("--skip-known is the keep probability of a known card, in (0, 1)")
+    if args.lora_plus is not None and (not args.lora_plus > 0 or args.arm in ("a0", "ad", *TRAIN_DELTA_ARMS)):
+        ap.error(f"--lora-plus must be positive, for an arm whose LoRA trains (not a0, ad or {TRAIN_DELTA_ARMS})")
+    if not 0 <= args.ob_share <= 1 or (args.ob_share != 0.5 and args.arm not in OB_ARMS):
+        ap.error("--ob-share must be in [0, 1], and only the open-book arms (OB_ARMS) use it")
+    if args.rem_views is not None and (not args.rem_views > 0 or args.arm in ("a0", "ad", "af", "ab_norem")):
+        ap.error("--rem-views must be positive, for a sleeping arm with REM (not a0, ad, af or ab_norem)")
+    if not 1 <= args.gate_arc_n <= ARC_VAL_ROWS:
+        ap.error(f"--gate-arc-n must be between 1 and {ARC_VAL_ROWS} (the ARC-Easy validation split has {ARC_VAL_ROWS} questions)")
+    if args.rem_views is not None and args.rem_steps_mult != 1.0:
+        ap.error("--rem-views and --rem-steps-mult != 1 do not combine: views fixes a dream's practices a night, so the extra REM steps would only be NREM steps")
     if args.budget_scale is not None and args.night_budget_s is not None:
         log(f"[budget] scale pinned at {args.budget_scale}: --night-budget-s {args.night_budget_s} is not used")
     t0 = time.time()
@@ -4454,42 +5583,50 @@ def main():
             LOSS_SCALE[0] = 128.0
     mem_cap(args, device, log)
     lm, tok, q4 = load_base(args, device, dtype, log)
-    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
-    assert L.k2 or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon model"
+    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE, lfm3=lm.config.model_type == LFM3_TYPE)
+    assert L.think or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon or LFM3 model"
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
     diary = Diary(week)
-    if L.k2:  # once: what a K2 prompt looks like and how its end tokenizes (the specials must be single ids)
+    if L.think:  # once: what a K2 / LFM3 prompt looks like and how its end tokenizes (the specials must be single ids)
+        fam = "k2" if L.k2 else "lfm3"
         tp = tag_prompt(L, diary.turns[0]["text"])
-        log(f"[k2] tagger prompt: {tp!r}")
-        log(f"[k2] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
+        log(f"[{fam}] tagger prompt: {tp!r}")
+        log(f"[{fam}] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
         if args.arm in NAMES_ARMS:  # addendum 11b / 11c: the names pass's think-open prompt (stage 1, K2_NAMES_EFFORT) and its stop ids
             npk = names_prompt(L, diary.turns[0]["text"], "A", "B", think=True, effort=K2_NAMES_EFFORT)
-            log(f"[k2] names prompt tail (stage 1, block open, {K2_NAMES_EFFORT} effort): {npk[-60:]!r}; stops at ids {L.think_eos(K2_NAMES_EFFORT)} ({NAMES_THINK_MAX} tokens max)")
+            log(f"[{fam}] names prompt tail (stage 1, block open, {K2_NAMES_EFFORT} effort): {npk[-60:]!r}; stops at ids {L.think_eos(K2_NAMES_EFFORT)} ({NAMES_THINK_MAX} tokens max)")
     leak = {norm(x) for x in week.get("test_strings_norm", [])} | {norm(t["q"]) for k in KINDS for t in week["tests"][k]}
     days = sorted({t["day"] for t in diary.turns})
     sched = None
     if args.schedule:
         sched = [n["steps"] for n in json.loads(Path(args.schedule).read_text())["nights"]]
         log(f"[schedule] {sched}")
-    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_gguf": None, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False, "q4_packed": False, "q4_packed_compile": "auto", "mem_cap_gb": None,
-           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False}  # options at their default are left out of result["args"] (older result files keep their keys)
+    OFF = {"budget_scale": None, "night_budget_s": None, "revision": None, "arc_base": False, "q4_base": False, "q4_gguf": None, "q4_group": 64, "q4_bits": 4, "q4_mlx_moe": False, "q4_eval": False, "freeze_lora": False, "q4_packed": False, "q4_packed_compile": "auto", "mem_cap_gb": None, "grad_ckpt": False, "bench_budgets": None,
+           "rem_chain_mode": "default", "rem_dirs": "alt", "rem_tries": 1, "rem_steps_mult": 1.0, "think_eval": False, "text_scale": None, "dream_vary": "off", "reword": None,
+           "card_stats": False, "skip_known": None, "lora_plus": None, "ob_share": 0.5, "lr_sched": "cosine", "rem_views": None, "gate_arc_n": 100}  # options at their default are left out of result["args"] (older result files keep their keys)
     result = {"arm": args.arm, "model": args.model, "smoke": args.smoke, "args": {k: v for k, v in vars(args).items() if k not in ("week", "out", "schedule") and not (k in OFF and v == OFF[k])},
               "week": args.week, "n_user_turns": len(diary.turns), "days": days, "schedule": sched, "partial": True, **({"q4_gguf" if args.q4_gguf else "q4_base": q4} if q4 else {})}
 
-    def dump(final):
+    def dump(final, atomic=False):  # atomic (the --reword rewrite): the text is built first and replaces the file in one step, so a failure leaves the file that is on disk as it was
         result["partial"] = not final
         if device.type == "cuda" and (args.q4_packed or args.mem_cap_gb):
             result["cuda_max_mem_gb"] = torch.cuda.max_memory_allocated() / 2 ** 30
         p = out / (f"result_{args.arm}.json" if final else f"result_{args.arm}.partial.json")
-        p.write_text(json.dumps(result, indent=1, default=lambda o: sorted(o) if isinstance(o, (set, frozenset)) else str(o)))
+        txt = json.dumps(result, indent=1, default=lambda o: sorted(o) if isinstance(o, (set, frozenset)) else str(o))
+        if atomic:
+            tmp = p.with_name(p.name + ".tmp")
+            tmp.write_text(txt)
+            os.replace(tmp, p)
+        else:
+            p.write_text(txt)
         if final and (out / f"result_{args.arm}.partial.json").exists():
             (out / f"result_{args.arm}.partial.json").unlink()
 
     model, brain, pm = lm, None, None
     if args.arm not in ("a0", "ad"):
         from peft import LoraConfig, get_peft_model
-        tm = f"(?:{LORA_TARGETS})|(?:{SHARED_RE})" if args.lora_shared else LORA_TARGETS  # addendum 12: + the MoE shared expert (its only dense MLP)
+        tm = f"(?:{lora_targets(lm)})|(?:{SHARED_RE})" if args.lora_shared else lora_targets(lm)  # addendum 12: + the MoE shared expert (its only dense MLP)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=tm, bias="none"))
         grad_ckpt(args, pm, log)
         if args.lora_shared or getattr(lm.config, "num_experts", 0):
@@ -4497,11 +5634,12 @@ def main():
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
             log(f"[lora] matched {len(mm)} modules ({sum('shared_expert' in n for n in mm)} shared-expert), trainable {sum(p.numel() for p in pm.parameters() if p.requires_grad):,}")
             assert not args.lora_shared or any("shared_expert" in n for n in mm), "--lora-shared matched no shared-expert module"
-        if L.k2:
+        if L.think:
             from peft.tuners.lora import LoraLayer
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
-            log(f"[k2] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
-            assert getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
+            log(f"[{'k2' if L.k2 else 'lfm3'}] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
+            assert L.lfm3 or getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
+            assert not L.lfm3 or len(mm) == lfm3_lora_count(lm.config), "LFM3_TARGETS should match 5 modules per conv layer (in_proj, out_proj, w1, w2, w3) and 7 per attention layer (q/k/v/o, w1, w2, w3)"
         if args.arm in DELTA_ARMS:
             lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
             if args.delta_dtype == "bf16" and args.arm in TRAIN_DELTA_ARMS:
@@ -4542,11 +5680,11 @@ def main():
             resp = L.generate(pm, prompts, max_new=8 if args.smoke else 48, bs=args.gen_bs)
         replay = [(L.ids(p) + L.ids(r) + [L.eos], len(L.ids(p))) for p, r in zip(prompts, resp)]
         result["replay_n"] = len(replay)
-        arc_val = load_arc_val(args.smoke)
+        arc_val = load_arc_val(args.smoke, args.gate_arc_n)
         with pm.disable_adapter():
             arc_base = score_arc(L, pm, arc_val, bs=max(args.gen_bs // 2, 1))["acc"]
         result["arc_val_base"] = arc_base
-        log(f"[base] ARC-Easy validation(100) {arc_base:.3f}")
+        log(f"[base] ARC-Easy validation({args.gate_arc_n}) {arc_base:.3f}")
         if args.arc_base:  # addendum 11: the same questions as the final arc_easy score, on the base (adapter off), before night 1
             try:
                 with pm.disable_adapter():
@@ -4572,7 +5710,8 @@ def main():
             result["items"] = brain.summary_items()
             result["coverage"] = dict(brain.cov)
             log(f"[diag] {json.dumps(result['diagnostics'])}")
-        pm.save_pretrained(out / "adapter")
+        if os.environ.get("SLEEPB_SAVE_ADAPTER", "1") != "0":  # SLEEPB_SAVE_ADAPTER=0 (Ben's PC, C: nearly full): no adapter files (~70-140 MB); nothing reads them back
+            pm.save_pretrained(out / "adapter")
     model.eval()
     dreamed = brain.dreamed_twohop() if brain else None
     result["scores"] = {}
@@ -4625,6 +5764,23 @@ def main():
     result["wall_seconds"] = time.time() - t0
     dump(True)
     log(f"[done] {args.arm} wall {result['wall_seconds']:.0f}s -> {out}/result_{args.arm}.json")
+    if reword_spec is not None:  # addendum 15 (report-only): AFTER all the scoring and AFTER the final result is on disk; whatever happens here, that file stays
+        try:
+            rw = result["reword"] = reword_eval(L, model, week, brain, reword_spec, args.gen_bs, args.seed, log)
+            rw["file"], rw["file_sha256"] = args.reword, hashlib.sha256(Path(args.reword).read_bytes()).hexdigest()
+            rw["week_sha256_matches_file"] = (reword_spec.get("source_sha256") == hashlib.sha256(Path(args.week).read_bytes()).hexdigest()) if args.week else None
+            nw = rw["new_wording"]
+            log(f"[reword] mapped {rw['mapped']} skipped {rw['skipped_unmapped']}; new-wording recall both {nw['both']['recall']} (share {nw['both']['share']}, n {nw['both']['n']}) forward {nw['forward']['recall']} reverse {nw['reverse']['recall']} "
+                f"twohop {nw['twohop']['recall']} (n {nw['twohop']['n']}); cards {rw.get('cards')} gap {rw.get('cramming_gap_pts')} pts; seen {(rw.get('seen') or {}).get('seen')} of {(rw.get('seen') or {}).get('rewordings')}; variety {rw.get('variety')}; {rw['seconds']}s")
+        except Exception as e:
+            import traceback
+            result.pop("reword", None)
+            result["reword_error"] = {"error": repr(e)[:300], "trace": traceback.format_exc()[-3000:]}
+            log(f"[reword] FAILED: {e!r}")
+        try:
+            dump(True, atomic=True)
+        except Exception as e:  # the file written above is still the final result
+            log(f"[reword] could not rewrite the result file: {e!r}")
     if args.smoke and brain:
         log(f"[coverage] {dict(brain.cov)}")
 

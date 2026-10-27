@@ -88,6 +88,19 @@ def is_k2(args):
     return PretrainedConfig.get_config_dict(name, revision=getattr(args, "revision", None))[0].get("model_type") == K2_TYPE
 
 
+LFM3_TYPE = "lfm3"  # LiquidAI LFM3: remote code (trust_remote_code), Lfm3ForCausalLM with .model.layers (conv / full-attention / sliding-attention layers)
+
+
+def is_lfm3(args):
+    """True when args.model is an LFM3 repo. Real run: config.json's model_type, read as plain JSON (no remote code runs). Smoke run: only a model name
+    containing "lfm3" asks for the LFM3 smoke, so the default (Qwen) smoke never touches the network."""
+    name = getattr(args, "model", None) or ""
+    if getattr(args, "smoke", False):
+        return "lfm3" in name.lower()
+    from transformers import PretrainedConfig
+    return PretrainedConfig.get_config_dict(name, revision=getattr(args, "revision", None))[0].get("model_type") == LFM3_TYPE
+
+
 MOE_TYPE = "qwen3_5_moe"  # Qwen3.5 / Qwen3.6 MoE (e.g. Qwen3.6-35B-A3B): a vision-language checkpoint; AutoModelForCausalLM loads its text part as Qwen3_5MoeForCausalLM (fused 3-D experts)
 
 
@@ -105,14 +118,23 @@ def load_model(args, device, dtype):
     from transformers import AutoModelForCausalLM, AutoTokenizer
     rev = getattr(args, "revision", None)
     k2 = is_k2(args)
-    moe = (not k2) and is_moe(args)
-    kw = {**({"revision": rev} if rev else {}), **({"trust_remote_code": True} if k2 else {})}  # Qwen: no extra arguments
+    lfm3 = (not k2) and is_lfm3(args)
+    moe = (not k2) and (not lfm3) and is_moe(args)
+    kw = {**({"revision": rev} if rev else {}), **({"trust_remote_code": True} if k2 or lfm3 else {})}  # Qwen: no extra arguments
     if args.smoke and k2:  # tiny random K2HorizonForCausalLM built from the repo's real config + remote code, with the real tokenizer (and so its chat template)
         from transformers import AutoConfig
         tok = AutoTokenizer.from_pretrained(args.model, **kw)
         cfg = AutoConfig.from_pretrained(
             args.model, vocab_size=len(tok), hidden_size=64, intermediate_size=128, num_hidden_layers=4, num_attention_heads=4,
             num_key_value_heads=2, head_dim=16, rope_head_dim=16, max_position_embeddings=2048, eos_token_id=250019, pad_token_id=1, **kw)
+        torch.manual_seed(args.seed)
+        lm = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True, **({"code_revision": rev} if rev else {})).to(dtype=dtype)
+    elif args.smoke and lfm3:  # tiny random Lfm3ForCausalLM built from the repo's real config + remote code, with the real tokenizer (and so its chat template): 2 conv, 1 full-attention, 1 sliding-attention layer
+        from transformers import AutoConfig
+        tok = AutoTokenizer.from_pretrained(args.model, **kw)
+        cfg = AutoConfig.from_pretrained(
+            args.model, vocab_size=len(tok), hidden_size=64, intermediate_size=128, num_hidden_layers=4, num_attention_heads=4, num_key_value_heads=2, head_dim=16,
+            layer_types=["conv", "full_attention", "conv", "sliding_attention"], max_position_embeddings=2048, **kw)
         torch.manual_seed(args.seed)
         lm = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True, **({"code_revision": rev} if rev else {})).to(dtype=dtype)
     elif args.smoke and moe:  # tiny random Qwen3_5MoeForCausalLM: 3 linear-attention + 1 full-attention layers, fused 3-D experts (8, top 2) + a shared expert
@@ -143,7 +165,7 @@ def load_model(args, device, dtype):
             kw["device_map"] = {"": device.index or 0}
         lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, **kw)
         if "ForCausalLM" not in type(lm).__name__ or not hasattr(lm.model, "layers"):
-            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM)")
+            raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM, Lfm3ForCausalLM)")
     lm.to(device).eval()
     for p in lm.parameters():
         p.requires_grad_(False)

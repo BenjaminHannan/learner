@@ -1,0 +1,10 @@
+== sleepb-pc start 2026-10-26T18:56:04Z host BensPC
+name, memory.total [MiB], memory.used [MiB]
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 1252 MiB
+versions {'torch': '2.9.1+cu128', 'cuda': True, 'transformers': '5.20.2', 'peft': '0.21.2', 'accelerate': '1.15.0', 'datasets': '5.1.0', 'fla': '0.6.0'}
+[W1026 14:56:14.605135426 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-- add14-A start 18:56:15 --tok-budget 1024 --model IFM/K2-Horizon-3.7B --week backbone/sleep/brain/data/week2.json --seed 1 --revision 9d280ff742235796925c9fe3cf243dc1beea5c08 --arc-base --gen-bs 24 --rem-chain-mode q_think --rem-dirs both --rem-tries 2 --think-eval --reword backbone/sleep/brain/data/week2_reworded.json
+-- add14-A exit 1 18:56:32
+-- add16-C start 18:56:32 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 2048 --gen-bs 32 --budget-scale 2 --card-stats
+-- add16-C exit 1 18:59:32
+-- add16-T1 start 18:59:32 --model Qwen/Qwen3.5-2B --week backbone/sleep/brain/data/week2.json --seed 1 --tok-budget 2048 --gen-bs 32 --budget-scale 2 --card-stats --skip-known 0.25
