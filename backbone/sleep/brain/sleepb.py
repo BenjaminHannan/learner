@@ -458,12 +458,15 @@ def parse_qa1(txt):
     return (m.group(1).strip(), m.group(2).strip().rstrip(".")) if m else None
 
 
-def parse_q1(txt):  # addendum 14 (--rem-chain-mode q / q_think): a question-only reply -> the question: first non-empty line, "Question:" / "Q:" label and quotes off; None if that line starts with "Answer:" or does not end with "?"
+def parse_q1(txt, first_q=False):  # addendum 14 (--rem-chain-mode q / q_think): a question-only reply -> the question: first non-empty line, "Question:" / "Q:" label and quotes off; None if that line starts with "Answer:" or does not end with "?"
+    # first_q (addendum 18, --rem-parse first_q): the line is cut after its first "?" (a capped think block often runs on after the question: "What boat is X? -- no, forbidden...")
     lines = [x.strip() for x in str(txt or "").splitlines() if x.strip()]
     if not lines or re.match(r"answer\s*:", lines[0], re.I):
         return None
     qt = " \t\"'`\u201c\u201d\u2018\u2019"  # (quotes and spaces, ASCII and curly)
     ln = re.sub(r"^(?:question|q)\s*:", "", lines[0].strip(qt), flags=re.I).strip(qt)
+    if first_q and "?" in ln:
+        ln = ln[:ln.index("?") + 1].strip(qt)
     return ln if ln.endswith("?") else None
 
 
@@ -3093,6 +3096,8 @@ class Brain:
     def rem(s, E, d, ci):
         a, st = s.a, Counter()
         mode, dirs = getattr(a, "rem_chain_mode", "default"), getattr(a, "rem_dirs", "alt")  # addendum 14: the defaults are the code path as before (a stub args without the flags is the default)
+        wb = getattr(a, "rem_writer", "adapter") == "base"  # addendum 18: the base model (adapter off) writes the REM dreams; the facts are in the prompt, and a trained adapter's thinking collapsed (arm B night 5: 0 of 1072 kept)
+        distinct = getattr(a, "rem_pairs", "all") == "distinct"  # addendum 18: no pair whose far ends contain one another (one fact extracted twice, "Glisemu" / "Glisemu as a mentor")
         assert (mode == "default" and dirs == "alt") or (a.arm in BRIDGE_ARMS and a.arm not in TRIES_ARMS), (a.arm, mode, dirs)
         qmode, think = mode in ("q", "q_think"), mode in ("think", "q_think")  # q: the reply is only the question (parse_q1, the answer is the given far end); think (K2): the think block is open first (two stages)
         tr = getattr(s, "rem_trace", None)  # k2_chain_probe only: a list that gets one dict per chain sample (reply, fate)
@@ -3111,6 +3116,10 @@ class Brain:
                 continue
             for p, q in itertools.combinations(its, 2):
                 if other(p, x)[1].lower() != other(q, x)[1].lower():
+                    fp_, fq_ = norm(other(p, x)[1]), norm(other(q, x)[1])
+                    if distinct and (fp_ in fq_ or fq_ in fp_):
+                        st["pairs_overlap_dropped"] += 1
+                        continue
                     pairs.append((p, q, x))
         s.rng.shuffle(pairs)
         pairs.sort(key=lambda t: s.rem_done[frozenset((t[0].key, t[1].key))])
@@ -3144,17 +3153,17 @@ class Brain:
             st["chain_pairs_tried"] = len(pairs)
         gp = [gist_prompt(s.L, it.fact, it.days) for it in gist]
         if mode == "default":  # chains and gists in one call (the sampling stream as before)
-            raw = s.gen(chains + gp, s.mn(40), base=False, sample=True)
+            raw = s.gen(chains + gp, s.mn(40), base=wb, sample=True)
             craw, graw = raw[:len(smp)], raw[len(smp):]
             s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
         else:  # addendum 14: chains (one or two stages), then the gists in their own call
             if think:  # stage 1 thinks (REM_EFFORT, at most REM_THINK_MAX sampled tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + ONE close tag, then the reply (40 tokens)
-                th = [strip_think(x, REM_EFFORT) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=False, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
-                craw = s.gen([c + x + K2_THINK_SHUT[REM_EFFORT] for c, (x, _) in zip(chains, th)], s.mn(40), base=False, sample=True)
+                th = [strip_think(x, REM_EFFORT) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=wb, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
+                craw = s.gen([c + x + K2_THINK_SHUT[REM_EFFORT] for c, (x, _) in zip(chains, th)], s.mn(40), base=wb, sample=True)
                 st["chain_think_tokens"], st["chain_think_capped"] = sum(len(s.L.ids(x)) for x, _ in th), sum(not c for _, c in th)
             else:
-                craw = s.gen(chains, s.mn(40), base=False, sample=True)
-            graw = s.gen(gp, s.mn(40), base=False, sample=True)
+                craw = s.gen(chains, s.mn(40), base=wb, sample=True)
+            graw = s.gen(gp, s.mn(40), base=wb, sample=True)
             s.raw.setdefault("rem", []).extend(craw[:1] + graw[:1])
         cand = []  # (kind, items, q, a, ctx, unit, trace record)
         for k, ((p, q, x), txt) in enumerate(zip(smp, craw)):
@@ -3166,7 +3175,7 @@ class Brain:
                     t_.update(think=th[k][0][:400], think_tokens=len(s.L.ids(th[k][0])), closed=th[k][1])
                 tr.append(t_)
             if qmode:  # the answer is the given far end
-                qs = parse_q1(txt)
+                qs = parse_q1(txt, getattr(a, "rem_parse", "line") == "first_q")
                 r = (qs, roles[k][1]) if qs else None
             else:
                 r = parse_qa1(txt)
@@ -3207,7 +3216,7 @@ class Brain:
                 st["dropped_bad"] += 1
             else:
                 cand.append(("gist", (it,), qq, es[0], s.diary.label(s.diary.containing(it.subj, it.obj, d)[-4:]), None, None))
-        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c, _, _ in cand], 20)
+        ver = s.gen([ctx_prompt(s.L, c, q) for _, _, q, _, c, _, _ in cand], getattr(a, "rem_verify_tokens", 20))  # addendum 18: K2 often names the answer after 20 tokens of lead-in
         have = {(norm(x["q"]), x["a"].lower()) for x in s.rem_pool}
         got, got_u = set(), set()  # TRIES_ARMS: the pairs that kept a dream this cycle (the first sample, in sample order, that passed every check); --rem-dirs both: the same per unit
         for (kind, its, q, ans, c, unit, t_), v in zip(cand, ver):
@@ -5012,6 +5021,50 @@ def selftest_add17():
     return {"default_n": len(d), "n570": len(a570), "n1": len(a1), "val_rows": ARC_VAL_ROWS}
 
 
+def selftest_add18():
+    """Addendum 18 on stubs (a scripted gen, no model): (i) parse_q1's first_q cut; (ii) Brain.rem with the defaults is unchanged in calls and stats
+    (base False for the dreams, 20 verifier tokens, every pair, a run-on question line is a parse failure); (iii) --rem-writer base / --rem-pairs distinct /
+    --rem-parse first_q / --rem-verify-tokens 96: the dreams are written with base True, the pair whose far ends contain one another is dropped and counted,
+    the run-on line is cut and kept, the verifier gets 96 tokens."""
+    from types import SimpleNamespace
+    assert parse_q1("What boat is Duflodol? -- no, forbidden. Need find.") is None
+    assert parse_q1("What boat is Duflodol? -- no, forbidden. Need find.", True) == "What boat is Duflodol?"
+    assert parse_q1('Question: "Who mentors Zelmir?" he asked', True) == "Who mentors Zelmir?" and parse_q1("Who mentors Zelmir?", True) == parse_q1("Who mentors Zelmir?") == "Who mentors Zelmir?"
+    assert parse_q1("Answer: Kelmira? no", True) is None and parse_q1("no question here", True) is None and parse_q1("", True) is None
+    Ls = SimpleNamespace(render=lambda sy, u: f"<sys>{sy}</sys>\n<user>{u}</user>")
+    mk = lambda a, r, o: Item((norm(a), norm(o)), a, o, r, 1, days=0)  # noqa: E731
+    E = [mk("Zelmir", "lives in", "Kelmira"), mk("Kelmira", "is near", "Harbor Light"), mk("Bouzeibas", "is the mentor of", "Glisemu"), mk("Bouzeibas", "has as a mentor", "Glisemu as a mentor")]
+
+    def run(**fl):
+        me = SimpleNamespace(L=Ls, a=SimpleNamespace(arm="ab_ob_b4_nb", smoke=False, gist_min_days=3, rem_chain_mode="q", rem_dirs="both", rem_tries=1, **fl), mn=lambda n: n, raw={}, rng=random.Random(0),
+                             rem_done=Counter(), gist_done=Counter(), rem_dir_done=Counter(), cap_chains=30, cap_gist=30, diary=SimpleNamespace(containing=lambda su, ob, d: [0, 1], label=lambda idx: "ctx"),
+                             leaky=lambda t: False, rem_pool=[], rem_chains=[], examples={"rem": []}, calls=[], ans_of={})
+
+        def gen(prompts, n, **kw):
+            ver = "Messages from Sam" in prompts[0] if prompts else n == me.a.__dict__.get("rem_verify_tokens", 20)
+            me.calls.append((len(prompts), n, kw.get("base", True), ver))
+            outs = []
+            for pr in prompts:
+                if "Messages from Sam" in pr:
+                    outs.append("It is " + me.ans_of[re.search(r"Question: (.+?)</user>", pr).group(1)])
+                else:
+                    start, ans = re.search(r'names "(.+?)", does not', pr).group(1), re.search(r'Its answer must be "(.+?)"', pr).group(1)
+                    me.ans_of[f"What is two steps from {start}?"] = ans
+                    outs.append(f"What is two steps from {start}? -- wait, check" if start == "Zelmir" else f"What is two steps from {start}?")
+            return outs
+        me.gen = gen
+        st = Brain.rem(me, E, 1, 0)
+        return me, st
+    me0, st0 = run()
+    assert me0.calls == [(4, 40, False, False), (0, 40, False, False), (1, 20, True, True)], me0.calls
+    assert st0 == {"units_open": 4, "units_tried": 4, "chain_gen": 4, "parse_fail": 1, "dropped_bad": 2, "chain_kept": 1, "pool": 1}, st0
+    me1, st1 = run(rem_writer="base", rem_pairs="distinct", rem_parse="first_q", rem_verify_tokens=96)
+    assert me1.calls == [(2, 40, True, False), (0, 40, True, False), (2, 96, True, True)], me1.calls
+    assert st1 == {"pairs_overlap_dropped": 1, "units_open": 2, "units_tried": 2, "chain_gen": 2, "chain_kept": 2, "pool": 2}, st1
+    assert sorted(x["a"] for x in me1.rem_pool) == ["Harbor Light", "Zelmir"]
+    return {"default": st0, "fixed": st1}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=ARMS)
@@ -5052,6 +5105,10 @@ def main():
                     "(the answer is the given far end); think / q_think (K2 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
     ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
     ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
+    ap.add_argument("--rem-writer", choices=["adapter", "base"], default="adapter", help="addendum 18: who writes the REM dreams (chains and gists): adapter = the model as trained so far (as before); base = the base model, adapter off")
+    ap.add_argument("--rem-pairs", choices=["all", "distinct"], default="all", help="addendum 18: distinct = no REM pair whose far ends (normalized) contain one another (one fact extracted twice); all = as before")
+    ap.add_argument("--rem-parse", choices=["line", "first_q"], default="line", help="addendum 18 (--rem-chain-mode q / q_think): first_q = the reply's first line is cut after its first '?'; line = the whole first line must end with '?' (as before)")
+    ap.add_argument("--rem-verify-tokens", type=int, default=20, help="addendum 18: tokens the base model may write when it checks a REM dream's answer from the chat lines (20 = as before)")
     ap.add_argument("--rem-steps-mult", type=float, default=1.0, help="addendum 14: each cycle's REM steps x this (rounded); the night's cosine schedule covers the new total. 1.0 = as before")
     ap.add_argument("--card-stats", action="store_true", help="sleep efficiency, report-only (training unchanged): per night, the share of practice examples the model already answered right before their step "
                     "(every target but the final eos is the argmax), by kind and by quarter of the night, from the logits the loss already computes -> nights[i].cards")
@@ -5106,6 +5163,7 @@ def main():
         print(json.dumps({"k2": selftest_k2()}))
         print(json.dumps({"add15": selftest_add15()}))
         print(json.dumps({"add17": selftest_add17()}))
+        print(json.dumps({"add18": selftest_add18()}))
         return
     if args.bench_train:
         if not args.out:

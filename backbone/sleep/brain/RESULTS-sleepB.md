@@ -849,3 +849,35 @@ even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allo
   agreed. Every run uses the 14 GiB cap and code src-cap2. Each run stops if its log is silent for 90 min, or if, once night 2 or later
   ends, the projected end passes its time budget: add17 10 h, A 10 h, R8 and V8 16 h each. add17's flags are the sealed ones, as in
   pc5, at `--gen-bs 24` (16 on running out of memory).
+
+## Why arm B's two-step stopped at 50%: the card writer (analysis of arm B's JSON, 2026-10-27 ~12:00Z)
+Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
+- **Shown: few two-step cards get written.** Chain cards kept / written per night:
+
+  | night | 2 | 3 | 4 | 5 | 6 | 7 |
+  |---|---|---|---|---|---|---|
+  | kept / written | 6/138 | 15/346 | 32/612 | **0/1072** | 78/1920 | 96/1586 |
+  | thinking tokens per sample | 453 | 442 | 327 | **17** | 390 | 431 |
+  | night undone by the gate | yes | yes | no | no | no | yes |
+
+  - On night 5, 1064 of 1072 samples never closed their think block, at 17 tokens each. **Suggested:** the writer is the model as
+    trained so far (adapter on), and night 4's training broke its thinking.
+  - On night 6, 1362 chain units were open, but the per-night cap let only 960 be tried.
+- **Shown: two-step depends on when a test's cards could first be written** (the night both of its facts had been said on 2+ days):
+
+  | first dreamable night | 2-3 | 4 | 5 | 6 | 7 |
+  |---|---|---|---|---|---|
+  | two-hop right | 9/9 | 12/16 | 9/19 | 9/15 | 0/19 |
+
+  - When both single facts are answered, two-hop is 34 of 54 right; when either one is missed, it is 5 of 24.
+- **Suggested:** fixing the gate alone (addendum 17) would rescue night 7's 19 tests only as far as one night of cards allows. That
+  points to about 50-55 of 78, not 75. Chains first dreamable on nights 5-7 need cards written on their first night.
+- **Shown (addendum 14 probe, Week-1, one night, base model):** of 537 samples, 72 were kept, 244 dropped as bad, 210 unverified and
+  2 failed to parse. The rejected examples show a 20-token verifier cut before the answer, pairs made of one fact extracted twice,
+  and questions followed by more thinking on the same line.
+- **Next:** addendum 18 (sealed 85a786fd95) fixes the writer with four switches: the base model writes, distinct pairs only, the
+  question is cut at its first "?", and the verifier gets 96 tokens. A one-hour generation-only pre-check on Week-1 decides whether the
+  full arm runs; its Go mark is fixed in the addendum. Code: the switches default to today's behaviour. A CPU smoke run with them off
+  matches 005265d6fb apart from timing and the four new `args` entries. selftest_add18 and selftest_rem_k2 pass.
+- **PC chain `pc/sleepb_pc8.sh`** replaces pc7: slot 1 runs the pre-check and then add17; slot 2 runs add18 if Go, else arm A; then R8
+  and V8 as agreed. If add18 takes arm A's slot, addendum 15's base is the defaults (the sealed rule's fallback when A has no result).
