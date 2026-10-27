@@ -55,10 +55,11 @@ function waitFor(id, signal, fallback, card) {
   });
 }
 
+const ICON = path.join(__dirname, 'assets', 'icon.png');
 function notify(title, body, threadId) {
   try {
     if (!Notification.isSupported()) return;
-    const n = new Notification({ title, body: short(body, 180) });
+    const n = new Notification({ title, body: short(body, 180), icon: process.platform === 'darwin' ? ICON : undefined });
     n.on('click', () => { if (win && !win.isDestroyed()) { win.show(); win.focus(); if (threadId) send('open-thread', threadId); } });
     n.show();
   } catch (e) { /* notifications are a nicety */ }
@@ -85,6 +86,7 @@ function createWindow() {
     width: 1360, height: 860, minWidth: 980, minHeight: 600,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#14110f' : '#f7f2ec',
     title: 'Premonition Desk',
+    icon: mac ? undefined : ICON,
     titleBarStyle: mac ? 'hiddenInset' : 'default',
     trafficLightPosition: mac ? { x: 16, y: 16 } : undefined,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: false, nodeIntegration: false }

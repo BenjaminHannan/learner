@@ -69,10 +69,12 @@
   }
   msgs.addEventListener('click', openLink);
 
+  const GREETINGS = ['I had a feeling you\u2019d stop by.', 'What should we get done?', 'Something tells me you have a task for me.', 'Ready when you are.', 'I sensed a to-do list coming.', 'Good to see you. What\u2019s first?'];
   function welcome() {
     msgs.textContent = '';
     const w = el('div', 'welcome');
-    w.append(el('div', 'mark', 'P'), el('h2', null, 'What should I take care of?'), el('div', null, 'I can browse, search, run commands and drive Mac apps. I ask before anything risky.'));
+    const big = Mascot.el(mood, 96, { cls: 'follow' });
+    w.append(big, el('h2', null, GREETINGS[Math.floor(Math.random() * GREETINGS.length)]), el('div', null, 'I can browse, search, run commands and drive Mac apps. I ask before anything risky.'));
     const chips = el('div', 'chips');
     for (const t of ['Find the three best-reviewed ramen places near me and summarize them', 'What is in my Downloads folder? Group it by type', 'Search my diary for what I decided about the village model']) {
       const b = el('button', null, t); b.onclick = () => { $('#input').value = t; $('#input').focus(); autosize(); }; chips.append(b);
@@ -83,6 +85,8 @@
 
   function newTurn() {
     const t = el('div', 'turn');
+    const prev = msgs.lastElementChild;
+    if (!prev || !prev.classList.contains('turn')) t.append(Mascot.el('idle', 20, { cls: 'avatar', still: true }));
     msgs.append(t);
     turn = { root: t, think: null, thinkPre: null, text: null, raw: '', thinkRaw: '', t0: Date.now() };
     trail = null;
@@ -188,7 +192,7 @@
     const c = card(ev.danger ? 'danger' : '', ev.danger ? 'Risky command: needs your OK' : (ev.kind === 'password' ? 'Sensitive field: needs your OK' : 'Needs your OK'));
     if (ev.kind === 'shell') { const code = el('code', 'cmd', ev.text); c.append(code); } else c.append(el('div', null, ev.text));
     const btns = el('div', 'btns');
-    const done = (v, label) => { window.desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); };
+    const done = (v, label) => { window.desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); refreshMood(); };
     const once = el('button', 'amber-btn', 'Allow once'); once.onclick = () => done('once', 'Allowed once');
     btns.append(once);
     if (!ev.danger) { const task = el('button', 'ghost', 'Allow for this task'); task.onclick = () => done('task', 'Allowed for this task'); btns.append(task); }
@@ -203,7 +207,7 @@
     const ta = el('textarea'); ta.placeholder = 'Your answer…';
     const btns = el('div', 'btns');
     const send = el('button', 'amber-btn', 'Reply');
-    const reply = (text) => { if (!text) return; window.desk.agent.respond(ev.id, text); c.classList.add('done'); ta.disabled = true; btns.remove(); c.append(el('div', 'dim small', 'You: ' + text)); };
+    const reply = (text) => { if (!text) return; window.desk.agent.respond(ev.id, text); c.classList.add('done'); ta.disabled = true; btns.remove(); c.append(el('div', 'dim small', 'You: ' + text)); refreshMood(); };
     send.onclick = () => reply(ta.value.trim());
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
     btns.append(send);
@@ -220,9 +224,31 @@
   function setRunning(r) {
     running = r;
     $('#btnSend').textContent = r ? 'Steer' : 'Send'; $('#btnStop').hidden = !r; $('#runState').hidden = !r;
+    refreshMood();
     $('#input').placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a helper’s thread. Type here to steer it while it runs.' : 'Ask Premonition to do something on your Mac…';
   }
   // Send stays usable while running (steer): Enter sends the note.
+
+  // ---------- mascot mood (follows the open thread's agent state) ----------
+  let mood = 'idle', gwDown = false, errorUntil = 0, doneUntil = 0, moodTimer = 0;
+  const logo = Mascot.el('idle', 22, { cls: 'follow' });
+  $('#logo').append(logo);
+  $('#emptyMascot').append(Mascot.el('idle', 56, { cls: 'follow' }));
+  function refreshMood() {
+    const now = Date.now();
+    let m = 'idle';
+    if (gwDown) m = 'sleepy';
+    else if (document.querySelector('.card:not(.done)')) m = 'waiting';
+    else if (running) m = document.querySelector('.step.run') ? 'working' : 'thinking';
+    else if (errorUntil > now) m = 'error';
+    else if (doneUntil > now) m = 'done';
+    mood = m;
+    document.querySelectorAll('.mascot-wrap.follow').forEach((w) => Mascot.set(w, m));
+    clearTimeout(moodTimer);
+    const next = Math.max(errorUntil, doneUntil);
+    if (next > now) moodTimer = setTimeout(refreshMood, next - now + 20);
+  }
+  window.__mood = () => mood;
 
   desk.onAgent((ev) => {
     if (!thread || ev.threadId !== thread.id) return;
@@ -230,7 +256,7 @@
       case 'text': onText(ev.delta); break;
       case 'reasoning': onReasoning(ev.delta); break;
       case 'assistant_end': onAssistantEnd(ev); break;
-      case 'step_start': onStepStart(ev); break;
+      case 'step_start': onStepStart(ev); Mascot.bounce(logo); break;
       case 'step_end': onStepEnd(ev); break;
       case 'approval': onApproval(ev); break;
       case 'ask': onAsk(ev); break;
@@ -240,14 +266,16 @@
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; break;
       case 'started': $('#runState span').textContent = 'Working…'; break;
       case 'compacted': break;
-      case 'error': { const e = el('div', 'errline', ev.message); ensureTurn().root.append(e); toBottom(); break; }
+      case 'error': { const e = el('div', 'errline', ev.message); ensureTurn().root.append(e); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
         setRunning(false); turn = null; trail = null;
         document.querySelectorAll('.step.run').forEach((s) => { s.classList.remove('run'); s.classList.add('bad'); });
         if (ev.stopped) { const n = el('div', 'dim small', 'Stopped.'); msgs.append(n); }
+        if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
         loadThreads(); toBottom(); break;
       }
     }
+    refreshMood();
   });
 
   // ---------- threads ----------
@@ -279,6 +307,7 @@
     renderThread(t);
     setRunning(!!t.running);
     for (const ev of t.pendingCards || []) { if (ev.type === 'approval') onApproval(ev); else if (ev.type === 'ask') onAsk(ev); }
+    errorUntil = 0; doneUntil = 0; refreshMood();
     closeDrawer(); loadThreads();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
   }
@@ -302,6 +331,7 @@
   }
   // ---------- agents (helpers) ----------
   const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped' };
+  const HELPER_MOOD = { idle: 'idle', queued: 'thinking', running: 'working', 'waiting-for-Ben': 'waiting', stopped: 'sleepy' };
   function when(ts) {
     if (!ts) return '';
     const d = new Date(ts), p = (n) => String(n).padStart(2, '0'), hm = p(d.getHours()) + ':' + p(d.getMinutes());
@@ -313,7 +343,7 @@
     for (const h of list) {
       const li = el('li', t_on(h.threadId));
       const top = el('div', 'a-top');
-      const dot = el('i', 'dot ' + h.status.replace(/[^\w]/g, ''));
+      const dot = Mascot.el(HELPER_MOOD[h.status] || 'idle', 22, { still: h.status === 'idle' || h.status === 'stopped' });
       dot.title = STATUS_TEXT[h.status] || h.status;
       top.append(dot, el('span', 't', h.name), el('span', 'd', STATUS_TEXT[h.status] || h.status));
       const meta = el('div', 'a-meta dim small', h.schedule + (h.paused ? ' (paused)' : '') + (h.next ? ' · next ' + when(h.next) : ''));
@@ -372,7 +402,7 @@
   }
   document.querySelectorAll('#modelSeg button').forEach((b) => b.onclick = async () => { settings = await desk.settings.set({ model: b.dataset.model }); paintSegs(); });
   document.querySelectorAll('#modeSeg button').forEach((b) => b.onclick = async () => { settings = await desk.settings.set({ mode: b.dataset.mode }); paintSegs(); });
-  async function ping() { const r = await desk.ping(); const g = $('#gw'); g.classList.toggle('ok', !!r.ok); g.classList.toggle('bad', !r.ok); g.title = r.ok ? 'Gateway reachable' : 'Gateway not reachable'; }
+  async function ping() { const r = await desk.ping(); const g = $('#gw'); g.classList.toggle('ok', !!r.ok); g.classList.toggle('bad', !r.ok); g.title = r.ok ? 'Gateway reachable' : 'Gateway not reachable'; gwDown = !r.ok; refreshMood(); }
 
   // ---------- work pane ----------
   let tab = 'browser';

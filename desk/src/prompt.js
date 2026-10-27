@@ -13,7 +13,9 @@ const SYSTEM_PROMPT = [
   "- Delegate long or repeating jobs to helpers with agent_start; check on them with agent_list.",
   "- Use run_shell for files and system questions. Keep commands small and safe.",
   "- Each user message starts with a [date] line; trust it for today's date.",
-  "- Keep the final answer short and plain: what you did and what Ben needs to know."
+  "- Keep the final answer short and plain: what you did and what Ben needs to know.",
+  "Voice: warm, a little playful and curious, plainspoken, brief. An occasional light \"I had a feeling...\" is fine, never at the cost of clarity.",
+  "No emoji spam, and never cutesy when Ben is stressed or the task is serious."
 ].join('\n');
 
 const obj = (properties, required) => ({ type: 'object', properties, required: required || [] });
@@ -35,7 +37,7 @@ const TOOL_DEFS = {
   open_app: fn('open_app', 'Launch or focus a Mac app.', obj({ name: S('app name') }, ['name'])),
   run_shell: fn('run_shell', 'Run a zsh command in the home folder (60 s limit).', obj({ command: S('shell command') }, ['command'])),
   diary_search: fn('diary_search', 'Search past chats and notes.', obj({ query: S('search terms') }, ['query'])),
-  agent_start: fn('agent_start', 'Start a helper agent. every ("30m","2h","1d") or at ("08:00" daily) makes it recurring.', obj({ name: S('short name'), task: S('what to do'), every: S('interval'), at: S('daily time') }, ['name', 'task'])),
+  agent_start: fn('agent_start', 'Start a helper agent. Recurring: use at ("08:00") alone for a daily time, or every ("30m","2h") alone for an interval.', obj({ name: S('short name'), task: S('what to do'), every: S('interval'), at: S('daily time') }, ['name', 'task'])),
   agent_list: fn('agent_list', 'List helpers: status, schedule, next run, last result.', obj({})),
   agent_stop: fn('agent_stop', 'Stop a helper and cancel its schedule.', obj({ name_or_id: S('helper name or id') }, ['name_or_id'])),
   ask_user: fn('ask_user', 'Pause and ask Ben a question; his reply is the result.', obj({ question: S('question for Ben') }, ['question']))

@@ -41,8 +41,8 @@ function parseSchedule(o) {
   o = o || {};
   const every = o.every != null && o.every !== '' ? o.every : null;
   const at = o.at != null && o.at !== '' ? o.at : null;
-  if (every && at) throw new Error('give every or at, not both');
-  if (every) { const ms = parseEvery(every); return { kind: 'every', ms, label: 'every ' + everyLabel(ms) }; }
+  // Models often send both for "every morning at 8:00"; `at` wins (daily), whatever `every` says.
+  if (every && !at) { const ms = parseEvery(every); return { kind: 'every', ms, label: 'every ' + everyLabel(ms) }; }
   if (at) { const t = parseAt(at); return { kind: 'at', h: t.h, m: t.m, label: 'daily ' + p2(t.h) + ':' + p2(t.m) }; }
   return { kind: 'once', label: 'once' };
 }

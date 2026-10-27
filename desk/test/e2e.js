@@ -61,6 +61,9 @@ async function run({ app, win, store, browser, helpers }) {
     };
 
     // ---- task 1: browse (Hands-off)
+    checks.push(['empty state greets with a mascot', await ev('!!document.querySelector(".welcome .mascot") && document.querySelector(".welcome h2").textContent.length>5')]);
+    await sleep(300);
+    await new Promise((r) => execFile('import', ['-window', 'root', path.join(OUT, 'ui-empty.png')], { env: process.env }, () => r()));
     await send('Find the premonition item in the test shop');
     await waitIdle('task1');
     await sleep(600);
@@ -70,17 +73,55 @@ async function run({ app, win, store, browser, helpers }) {
     checks.push(['final answer rendered', await ev('document.body.innerText.includes("Premonition result")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
     checks.push(['plan pinned', await ev('!document.querySelector("#plan").hidden && document.querySelectorAll("#planList li").length===3')]);
+    checks.push(['one assistant avatar per group', (await ev('document.querySelectorAll(".turn > .avatar").length')) === 1]);
     checks.push(['3 steps in trail', (await ev('document.querySelectorAll(".step").length')) === 3]);
     checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);
     await sleep(500);
-    const shot = path.join(OUT, 'ui.png');
-    await new Promise((resolve) => {
+    const grab = (file) => new Promise((resolve) => {
+      const shot = path.join(OUT, file);
+      try { fs.unlinkSync(shot); } catch (e) { /* none yet */ }
       execFile('import', ['-window', 'root', shot], { env: process.env }, async (err) => {
         if (err || !fs.existsSync(shot)) { try { fs.writeFileSync(shot, (await wc.capturePage()).toPNG()); } catch (e) { /* ignore */ } }
-        resolve();
+        resolve(shot);
       });
     });
-    console.log('SCREENSHOT ' + shot);
+    const { nativeTheme } = require('electron');
+    for (const [theme, file] of [['light', 'ui-light.png'], ['dark', 'ui-dark.png']]) {
+      nativeTheme.themeSource = theme;
+      await sleep(600);
+      checks.push(['page follows ' + theme + ' theme', await ev('matchMedia("(prefers-color-scheme: ' + theme + ')").matches')]);
+      console.log('SCREENSHOT ' + await grab(file));
+    }
+
+    // ---- mascot: moods contact sheet (still poses), and the app icon
+    checks.push(['top bar mascot shown', await ev('!!document.querySelector("#logo svg.mascot")')]);
+    await ev(`(() => {
+      const o = document.createElement('div'); o.id = 'sheetTest';
+      o.style.cssText = 'position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;font:12px sans-serif';
+      for (const [bg, fg] of [['#14110f', '#efe7de'], ['#f7f2ec', '#2a211a']]) {
+        const p = document.createElement('div'); p.style.cssText = 'flex:1;background:' + bg + ';color:' + fg + ';display:flex;flex-direction:column;justify-content:center;gap:14px;padding:0 30px';
+        for (const size of [96, 22]) {
+          const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:' + (size > 50 ? 28 : 100) + 'px;align-items:flex-end;justify-content:center';
+          for (const m of Mascot.MOODS) {
+            const c = document.createElement('div'); c.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;width:' + (size > 50 ? 110 : 80) + 'px';
+            c.append(Mascot.el(m, size, { still: true }));
+            const l = document.createElement('span'); l.textContent = m; c.append(l); row.append(c);
+          }
+          p.append(row);
+        }
+        o.append(p);
+      }
+      document.body.append(o);
+    })()`);
+    await sleep(400);
+    const sheet = path.join(OUT, 'mascot-moods.png');
+    fs.writeFileSync(sheet, (await wc.capturePage()).toPNG());
+    await ev('document.querySelector("#sheetTest").remove()');
+    console.log('SCREENSHOT ' + sheet);
+    const icon = path.join(__dirname, '..', 'assets', 'icon.png');
+    checks.push(['app icon exists (1024 png + icns)', fs.existsSync(icon) && fs.statSync(icon).size > 10000 && fs.existsSync(path.join(__dirname, '..', 'assets', 'icon.icns'))]);
+    if (fs.existsSync(icon)) fs.copyFileSync(icon, path.join(OUT, 'icon.png'));
+    nativeTheme.themeSource = 'system';
 
     // ---- task 2: Ask first -> approval card -> allow
     store.saveSettings({ mode: 'ask' });
