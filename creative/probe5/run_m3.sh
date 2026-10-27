@@ -12,6 +12,8 @@
 #   PORT (8085)  NP (4: server slots = requests in flight)  CTX (65536 total, split over the slots: 16384 each)  NGL (99)  MPS_GB (12: cap for training)  SAVE_EVERY (5 training steps)
 #   FLAG_DIR (~/learner-ops): if FLAG_DIR/ASSISTANT_RUNNING exists the script waits FLAG_WAIT (300) s, then exits 75; the python stages also stop between requests (rerun the same command to resume).
 #   MIN_FREE_GB (9): refuse to download when less disk is free.   AUTO_INSTALL=0 stops the script from pip-installing missing packages.
+#   Low-disk order (never both 3.5 GB copies at once): STOP_AFTER_ADAPTER=1 needs only the HF weights and exits 0 once OUT/adapter.gguf exists (run it for the smoke OUT, then the real OUT);
+#   then DROP_HF=1 deletes HF_DIR (only if this script downloaded it: HF_DIR/.probe5_downloaded) when OUT/adapter.gguf exists, and fetches the GGUF. Once OUT/adapter.gguf exists the HF weights are not needed.
 # Exit codes: 0 done, 75 paused (assistant running / memory pressure), 8 INVALID run (a validity gate failed), 9 inputs incomplete, 2 setup problem, other = a stage failed.
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd); CREATIVE=$(dirname "$HERE"); P3=$CREATIVE/probe3; P4=$CREATIVE/probe4
@@ -128,8 +130,12 @@ echo "llama.cpp: $(git -C "$LLAMA_CPP_DIR" log -1 --format='%H %cI' 2>/dev/null 
 # ---------- weights (only if missing) ----------
 [ ! -f "$HF_DIR/model.safetensors" ] || [ "$(filesize "$HF_DIR/model.safetensors")" = "$HF_BYTES" ] || echo "note: $HF_DIR/model.safetensors has $(filesize "$HF_DIR/model.safetensors") bytes, the pinned revision has $HF_BYTES (a partial download? delete it to re-fetch)"
 [ ! -f "$GGUF" ] || [ "$(filesize "$GGUF")" = "$GGUF_BYTES" ] || echo "note: $GGUF has $(filesize "$GGUF") bytes, the pinned revision has $GGUF_BYTES"
-need_hf=0; [ -f "$HF_DIR/model.safetensors" ] && [ -f "$HF_DIR/config.json" ] && [ -f "$HF_DIR/tokenizer.json" ] || need_hf=1
-need_gguf=0; [ -f "$GGUF" ] || need_gguf=1
+have_adapter=0; [ -s "$OUT/adapter.gguf" ] && have_adapter=1
+need_hf=0; [ $have_adapter = 1 ] || [ -f "$HF_DIR/model.safetensors" ] && [ -f "$HF_DIR/config.json" ] && [ -f "$HF_DIR/tokenizer.json" ] || need_hf=1
+need_gguf=0; [ -f "$GGUF" ] || [ "${STOP_AFTER_ADAPTER:-0}" = 1 ] || need_gguf=1
+if [ "${DROP_HF:-0}" = 1 ] && [ $have_adapter = 1 ] && [ -f "$HF_DIR/.probe5_downloaded" ]; then
+  echo "== DROP_HF=1: OUT/adapter.gguf exists; deleting the HF weights this script downloaded ($HF_DIR) before the GGUF download"; rm -rf "$HF_DIR"
+fi
 if [ $need_hf = 1 ] || [ $need_gguf = 1 ]; then
   fg=$(free_gb "$(dirname "$MODELS_DIR")"); [ -d "$MODELS_DIR" ] && fg=$(free_gb "$MODELS_DIR")
   [ "${fg:-0}" -ge "$MIN_FREE_GB" ] || { echo "only ${fg:-?} GB free where the models go; need $MIN_FREE_GB GB (set MIN_FREE_GB or free disk)"; exit 2; }
@@ -140,6 +146,7 @@ if [ $need_hf = 1 ]; then
   "$PY" -c "
 from huggingface_hub import snapshot_download as s
 print(s('LiquidAI/LFM3-1.7B', revision='$HF_REV', local_dir='$HF_DIR', allow_patterns=['*.safetensors','config.json','generation_config.json','tokenizer*','special_tokens_map.json','chat_template.jinja']))" || { echo "HF download failed (rerun to resume)"; exit 2; }
+  touch "$HF_DIR/.probe5_downloaded"
 fi
 if [ $need_gguf = 1 ]; then
   wait_flag "download BF16 GGUF"; echo "== downloading LiquidAI/LFM3-1.7B-GGUF @ $GGUF_REV LFM3-1.7B-BF16.gguf -> $GGUF"
@@ -151,7 +158,7 @@ p = d('LiquidAI/LFM3-1.7B-GGUF', 'LFM3-1.7B-BF16.gguf', revision='$GGUF_REV', lo
 if os.path.abspath(p) != os.path.abspath('$GGUF'): shutil.move(p, '$GGUF')
 print(p)" || { echo "GGUF download failed (rerun to resume)"; exit 2; }
 fi
-[ -f "$GGUF" ] && [ -f "$HF_DIR/model.safetensors" ] || { echo "weights missing after download"; exit 2; }
+{ [ -f "$GGUF" ] || [ "${STOP_AFTER_ADAPTER:-0}" = 1 ]; } && { [ -f "$HF_DIR/model.safetensors" ] || [ $have_adapter = 1 ]; } || { echo "weights missing after download"; exit 2; }
 echo "weights: $HF_DIR ($(filesize "$HF_DIR/model.safetensors") bytes safetensors), $GGUF ($(filesize "$GGUF") bytes); disk free $(free_gb "$OUT") GB" | tee -a "$OUT/env.txt"
 
 # ---------- training data + LoRA ----------
@@ -168,6 +175,7 @@ if [ ! -s "$OUT/adapter.gguf" ]; then
   mv "$OUT/adapter.gguf.tmp" "$OUT/adapter.gguf"
 fi
 echo "adapter.gguf: $(filesize "$OUT/adapter.gguf") bytes"
+if [ "${STOP_AFTER_ADAPTER:-0}" = 1 ]; then echo "$(date -u +%FT%TZ) STOP_AFTER_ADAPTER: adapter ready; rerun without it (DROP_HF=1 to free the HF weights first) for the server stages"; exit 0; fi
 
 # ---------- server ----------
 wait_flag "start llama-server"; check_pressure "start llama-server"
