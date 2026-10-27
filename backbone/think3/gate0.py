@@ -215,6 +215,17 @@ def generate_mlx(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=No
     return res
 
 
+def repeat_layers(model, a, b, r):
+    """Training-free looping for an mlx-lm model: the layer list becomes layers[:a] + layers[a:b] * r + layers[b:]. The repeated entries are the same
+    modules (shared weights); mlx-lm builds one KV cache per list entry, so every pass keeps its own cache. r = 1 leaves the model unchanged."""
+    inner = model.model if hasattr(model, "model") and hasattr(model.model, "layers") else model
+    layers = list(inner.layers)
+    if not (0 <= a < b <= len(layers)) or r < 1:
+        raise ValueError(f"--repeat {a}:{b}:{r} does not fit {len(layers)} layers")
+    inner.layers = layers[:a] + layers[a:b] * r + layers[b:]
+    return model
+
+
 def depth_table(rows, **hits):
     """Accuracy per depth (and depth 1-3 vs 4-6) for each hits list: train stops at depth 3, so 4-6 is where a loop would have to help."""
     groups = {str(d): [d] for d in sorted({r.get("depth") for r in rows}, key=lambda x: (x is None, x))} | {"1-3": [1, 2, 3], "4-6": [4, 5, 6]}
@@ -243,6 +254,7 @@ def main(argv=None):
     ap.add_argument("--gpu-util", type=float, default=0.90)
     ap.add_argument("--max-num-seqs", type=int, default=64)
     ap.add_argument("--model-impl", default=None, help="e.g. transformers, if the native vLLM implementation fails")
+    ap.add_argument("--repeat", default=None, help="mlx only, training-free looping: A:B:R runs layers A..B-1 R times in a row (shared weights, own KV cache per pass)")
     ap.add_argument("--backend", default="vllm", choices=("vllm", "mlx"), help="mlx: Apple-silicon pre-screen with mlx-lm (e.g. --model mlx-community/K2-Horizon-3.7B-4bit); not the sealed Gate 0")
     a = ap.parse_args(argv)
 
@@ -277,6 +289,8 @@ def main(argv=None):
     if a.backend == "mlx":
         from mlx_lm import load
         llm = load(a.model)[0]
+        if a.repeat:
+            llm = repeat_layers(llm, *(int(x) for x in a.repeat.split(":")))
     else:
         from vllm import LLM
         kw = dict(model=a.model, trust_remote_code=True, dtype="bfloat16", max_model_len=mml, gpu_memory_utilization=a.gpu_util,
