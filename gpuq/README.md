@@ -29,7 +29,7 @@ A bash script with header comments:
 python train.py --out "$GPUQ_OUT"
 ```
 The job runs as `bash JOBFILE` in its own process group, cwd = `$GPUQ_OUT`, with `CUDA_VISIBLE_DEVICES`,
-`GPUQ_OUT` (`$GPUQ_HOME/out/<name>/`), `GPUQ_NAME`, `GPUQ_ATTEMPT`, `GPUQ_HOME`. Output appends to
+`GPUQ_OUT` (`$GPUQ_HOME/out/<name>/`), `GPUQ_NAME`, `GPUQ_ATTEMPT`, `GPUQ_HOME`, `GPUQ_PORT` (a free TCP port for this job's own server; never hard-code one). Output appends to
 `logs/<name>.log`. On exit `$GPUQ_OUT/_gpuq.json` records start/end/rc/gpu/attempt.
 
 ## Packing (several jobs per GPU)

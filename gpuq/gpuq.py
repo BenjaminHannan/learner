@@ -22,6 +22,7 @@ import logging.handlers
 import os
 import re
 import signal
+import socket
 import subprocess
 import sys
 import threading
@@ -203,6 +204,13 @@ def pid_alive(pid, start=None):
 def killpg(pid, sig):
     with contextlib.suppress(ProcessLookupError, PermissionError):
         os.killpg(pid, sig)
+
+
+def free_port():
+    """A TCP port that is free right now; each job gets its own (vLLM servers etc.)."""
+    with socket.socket() as sk:
+        sk.bind(("127.0.0.1", 0))
+        return sk.getsockname()[1]
 
 
 def read_rc(path):
@@ -531,6 +539,7 @@ class Daemon:
                    GPUQ_NAME=name, GPUQ_ATTEMPT=str(attempt), GPUQ_HOME=str(h.root))
         env.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")   # match nvidia-smi indices
         env.update(extra or {})
+        env["GPUQ_PORT"] = str(free_port())   # jobs packed on one box must not fight over a fixed server port
         if filler:
             env["GPUQ_FILLER_RUN"] = str(run)
         try:

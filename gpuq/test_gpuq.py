@@ -381,3 +381,13 @@ class Reservation(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Port(Base):
+    def test_each_job_gets_a_distinct_port(self):
+        for n in ("p1", "p2"):
+            self.job(n, 'echo "$GPUQ_PORT" > "$GPUQ_OUT/port"; sleep 1', mem_gb=2)
+        self.pump(lambda: self.in_dir("done", "p1") and self.in_dir("done", "p2"))
+        ports = {(self.h.out / n / "port").read_text().strip() for n in ("p1", "p2")}
+        self.assertEqual(len(ports), 2)
+        self.assertTrue(all(p.isdigit() for p in ports))
