@@ -7,12 +7,11 @@
   const isMac = (p) => p === 'darwin';
 
   // ---- screen helper -------------------------------------------------------------------------------
-  // Mac: the compiled Swift binary `deskhelper`. Windows: the PowerShell script `deskhelper.ps1` (nothing to compile).
+  // Mac: the compiled Swift binary `deskhelper`. Windows: `deskhelper.exe`, a small C# program (.NET Framework 4.8, built by helper/win/build.sh; a PowerShell script was flagged by Defender).
   // Linux has no helper (dev machine only).
-  const helperFileName = (p) => (isWin(p) ? 'deskhelper.ps1' : 'deskhelper');
+  const helperFileName = (p) => (isWin(p) ? 'deskhelper.exe' : 'deskhelper');
   // {cmd, prefix}: the command to execute and the args that come before the helper's own args.
   function helperCommand(p, helperPath) {
-    if (isWin(p)) return { cmd: 'powershell.exe', prefix: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', helperPath] };
     return { cmd: helperPath, prefix: [] };
   }
   // Where to look, in order. join is path.join (or the win32/posix variant under test).
@@ -22,6 +21,7 @@
     if (settings && settings.helperPath) list.push(settings.helperPath);
     if (resourcesPath) list.push(join(resourcesPath, f));
     list.push(join(baseDir, 'helper', f));
+    if (isWin(p)) list.push(join(baseDir, 'vendor', 'helper', f)); // dev checkout: the exe built by helper/win/build.sh
     list.push(join(baseDir, 'build', f));
     return list;
   }

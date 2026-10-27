@@ -100,4 +100,6 @@ class Builtin {
   }
 }
 
-module.exports = { Builtin };
+// Every runtime, diary and sleep path hangs off one root, and that root is Electron's userData, so --user-data-dir moves all of it.
+const runtimeRoot = (userData) => path.resolve(String(userData));
+module.exports = { Builtin, runtimeRoot };

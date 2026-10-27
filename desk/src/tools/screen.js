@@ -25,7 +25,7 @@ function findHelper(settings, resourcesPath, platform) {
   return null;
 }
 
-// What to execute for a helper file: the Swift binary itself on a Mac, powershell.exe -File deskhelper.ps1 on Windows.
+// What to execute for a helper file: the Swift binary itself on a Mac, deskhelper.exe on Windows (run directly: no PowerShell).
 function helperInvocation(bin, args, platform) {
   const h = Platform.helperCommand(platform || process.platform, bin);
   return { cmd: h.cmd, args: h.prefix.concat(args) };

@@ -41,7 +41,7 @@ const { ensureCard } = require('./src/cards');
 const { PillWindow } = require('./src/pillwin');
 const perms = require('./src/perms');
 const { WinSleep, sleepmlxParent } = require('./src/sleepwin');
-const { Builtin } = require('./src/runtime/builtin');
+const { Builtin, runtimeRoot } = require('./src/runtime/builtin');
 const { SleepInstaller } = require('./src/runtime/sleepinstall');
 
 let win = null;
@@ -191,7 +191,7 @@ function autoSleepTick(now, over) {
 // Windows: the app runs LFM3 itself (src/runtime) and sleeps with the sleepmlx trainer (src/sleepwin.js). Off elsewhere.
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
-  const root = path.join(app.getPath('appData'), 'Premonition');
+  const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
   builtin = new Builtin({ root, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({

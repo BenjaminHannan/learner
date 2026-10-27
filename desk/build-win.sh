@@ -11,6 +11,17 @@ cd "$(dirname "$0")"
 echo "==> icon"
 node scripts/make-ico.js assets/icon.png build/icon.ico
 
+# The screen helper: deskhelper.exe (C#, .NET Framework 4.8). Compiled with mono's mcs when it is installed (helper/win/build.sh),
+# otherwise the committed vendor/helper/deskhelper.exe is used. (A PowerShell script was flagged by Windows Defender.)
+if command -v mcs >/dev/null 2>&1; then
+  echo "==> compiling deskhelper.exe"
+  helper/win/build.sh
+elif [[ -f vendor/helper/deskhelper.exe ]]; then
+  echo "NOTE: mcs not found; using the committed vendor/helper/deskhelper.exe (apt-get install -y mono-mcs to rebuild it)." >&2
+else
+  echo "vendor/helper/deskhelper.exe is missing and mcs is not installed (apt-get install -y mono-mcs)." >&2; exit 1
+fi
+
 # The sleep trainer (a Python package, no model, no Python) rides along as a resource: resources/sleepmlx
 STAGE=build/stage; rm -rf "$STAGE"; mkdir -p "$STAGE"
 EXTRA=()
@@ -38,7 +49,7 @@ DIR="$OUT/$NAME-win32-x64"
 pack() {
   rm -rf "$OUT"
   npx @electron/packager . "$NAME" --platform=win32 --arch=x64 --out="$OUT" --overwrite \
-    --extra-resource=helper/deskhelper.ps1 ${EXTRA[@]+"${EXTRA[@]}"} \
+    --extra-resource=vendor/helper/deskhelper.exe ${EXTRA[@]+"${EXTRA[@]}"} \
     --win32metadata.ProductName="$NAME" --win32metadata.FileDescription="$NAME" --win32metadata.InternalName="$NAME" --win32metadata.OriginalFilename="$NAME.exe" \
     "${IGNORE[@]}" "$@"
 }
@@ -50,7 +61,8 @@ if ! pack --icon=build/icon.ico; then
 fi
 
 [[ -f "$DIR/$NAME.exe" ]] || { echo "Packaging produced no $NAME.exe in $DIR." >&2; exit 1; }
-[[ -f "$DIR/resources/deskhelper.ps1" ]] || { echo "deskhelper.ps1 is missing from $DIR/resources." >&2; exit 1; }
+[[ -f "$DIR/resources/deskhelper.exe" ]] || { echo "deskhelper.exe is missing from $DIR/resources." >&2; exit 1; }
+[[ ! -e "$DIR/resources/deskhelper.ps1" ]] || { echo "deskhelper.ps1 must not ship (Defender flags it)." >&2; exit 1; }
 
 echo "==> zip"
 ZIP="$PWD/build/$NAME-win32-x64.zip"

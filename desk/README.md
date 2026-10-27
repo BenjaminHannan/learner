@@ -35,7 +35,7 @@ with `@electron/packager`, ad-hoc signs (`codesign --force --deep -s -`) and cop
 Premonition runs on Windows with its own built-in model, so there is no Python gateway to set up.
 
 **Install**
-1. Build the zip (on Linux/macOS: `./build-win.sh`; on Windows: `powershell -ExecutionPolicy Bypass -File .\build-win.ps1`). It writes `build/Premonition-win32-x64.zip` (about 115 MB: Electron + the app + the PowerShell screen helper + the sleep trainer; **no model and no Python inside**).
+1. Build the zip (on Linux/macOS: `./build-win.sh`; on Windows: `powershell -ExecutionPolicy Bypass -File .\build-win.ps1`). It writes `build/Premonition-win32-x64.zip` (about 115 MB: Electron + the app + the compiled screen helper `deskhelper.exe` + the sleep trainer; **no model and no Python inside**).
 2. Unzip it anywhere and run `Premonition.exe`. The app is not code-signed, so SmartScreen says "Windows protected your PC": click **More info**, then **Run anyway**.
 3. First run: a progress screen downloads a llama.cpp build (Vulkan for the graphics chip, with the CPU build as the fallback if Vulkan will not start) and the **LFM3 1.7B** model (Q4_0, about 1 GB) into `%APPDATA%\Premonition\runtime`. It resumes if interrupted and checks SHA256 where the server publishes it. Then chat.
 
@@ -44,12 +44,12 @@ Premonition runs on Windows with its own built-in model, so there is no Python g
 **Sleep on Windows.** The first time you turn sleep on, the app explains and downloads (about 4.5 GB: portable Python, CPU PyTorch + transformers + peft, llama.cpp's LoRA converter, the LFM3 weights in bf16) into `%APPDATA%\Premonition\sleep-runtime`. Sleep stops the model to free RAM, runs `python -m sleepmlx.worker` in chunks on the CPU (slow on a laptop: leave it plugged in), and on wake converts the new LoRA adapter to GGUF and restarts the model with `--lora`; the previous adapter is the fallback. **Sleep now** is the moon button; Settings > Sleep has the schedule (default 01:00 to 06:00, off until you turn it on) and **Only sleep when plugged in** (on by default).
 
 **Other differences from the Mac**
-- Screen control: `helper/deskhelper.ps1` (PowerShell 5.1 + built-in .NET, UI Automation) instead of the Swift helper. No permissions to grant, so the Permissions card and its onboarding step are Mac-only. Mac key names are translated (cmd to ctrl, option to alt). Each helper call starts PowerShell, so a screen action takes about a second.
+- Screen control: `resources\deskhelper.exe`, a small compiled C# program (`helper/win/DeskHelper.cs` + `Ui.cs`, .NET Framework 4.8 which ships with Windows) with the same commands and JSON as the Swift helper: UI Automation, SendInput, a JPEG screenshot. It replaced a PowerShell script because Defender flagged that script as a screenshot hack tool. Rebuild with `helper/win/build.sh` (mono `mcs` against the net48 reference assemblies, output `vendor/helper/deskhelper.exe`, committed). Password fields are reported as `SecureEdit` and never read. No permissions to grant, so the Permissions card is Mac-only. Mac key names are translated (cmd to ctrl, option to alt).
 - Global shortcut: **Ctrl+Space** (Alt+Space opens the window menu on Windows); change it in Settings > Startup.
 - Closing the window hides it to the tray icon (Open / Quit) while "Keep running" is on; the menu bar shows when you press Alt. Open at login starts it hidden in the tray.
 - The status pill is a frameless always-on-top window at the top center of the main display.
 - `run_shell` runs PowerShell. The diary MCP (`diary_mcp.py`) is optional and simply off when Python or the file is missing.
-- Settings and chats live in `%APPDATA%\Premonition`. If you used the app as "Premonition Desk" they are copied there once, and the old folder is left as a backup.
+- Settings and chats live in Electron's user-data folder, `%APPDATA%\Premonition` by default; the model runtime, diary and sleep folders live inside it too, so `--user-data-dir=DIR` moves all of it. If you used the app as "Premonition Desk" they are copied there once, and the old folder is left as a backup.
 
 ## Permissions to click once (Mac)
 

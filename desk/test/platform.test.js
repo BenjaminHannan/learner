@@ -12,19 +12,19 @@ const { Store, DEFAULT_SETTINGS } = require('../src/store');
 const { Warmer, buildWarmBody } = require('../src/warm');
 const { makeIco, decodePng } = require('../scripts/make-ico');
 
-test('helper: Mac runs the binary, Windows runs deskhelper.ps1 through powershell', () => {
+test('helper: Mac and Windows both run a compiled binary directly (Windows: deskhelper.exe, no PowerShell)', () => {
   assert.deepStrictEqual(P.helperCommand('darwin', '/r/deskhelper'), { cmd: '/r/deskhelper', prefix: [] });
-  const w = P.helperCommand('win32', 'C:\\r\\deskhelper.ps1');
-  assert.strictEqual(w.cmd, 'powershell.exe');
-  assert.deepStrictEqual(w.prefix, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'C:\\r\\deskhelper.ps1']);
-  assert.deepStrictEqual(helperInvocation('C:\\r\\deskhelper.ps1', ['look', '--max', '80'], 'win32').args.slice(-3), ['look', '--max', '80']);
+  assert.deepStrictEqual(P.helperCommand('win32', 'C:\\r\\deskhelper.exe'), { cmd: 'C:\\r\\deskhelper.exe', prefix: [] });
+  const inv = helperInvocation('C:\\r\\deskhelper.exe', ['look', '--max', '80'], 'win32');
+  assert.strictEqual(inv.cmd, 'C:\\r\\deskhelper.exe'); assert.deepStrictEqual(inv.args, ['look', '--max', '80']);
   assert.strictEqual(helperInvocation('/r/deskhelper', ['check'], 'darwin').cmd, '/r/deskhelper');
-  assert.strictEqual(P.helperFileName('win32'), 'deskhelper.ps1'); assert.strictEqual(P.helperFileName('darwin'), 'deskhelper');
+  assert.strictEqual(P.helperFileName('win32'), 'deskhelper.exe'); assert.strictEqual(P.helperFileName('darwin'), 'deskhelper');
 });
 
-test('helper lookup order per platform: settings path, resources, helper/, build/', () => {
+test('helper lookup order per platform: settings path, resources, helper/, (win) vendor/helper, build/', () => {
   const win = candidates({ helperPath: 'X' }, 'R', 'win32').map((p) => path.basename(p));
-  assert.deepStrictEqual(win, ['X', 'deskhelper.ps1', 'deskhelper.ps1', 'deskhelper.ps1']);
+  assert.deepStrictEqual(win, ['X', 'deskhelper.exe', 'deskhelper.exe', 'deskhelper.exe', 'deskhelper.exe']);
+  assert.ok(candidates({}, null, 'win32').some((c) => /vendor[\\/]helper[\\/]deskhelper\.exe$/.test(c)));
   const mac = candidates({}, null, 'darwin').map((p) => path.basename(p));
   assert.deepStrictEqual(mac, ['deskhelper', 'deskhelper']);
 });
@@ -177,29 +177,47 @@ test('make-ico: the icon.png becomes a valid .ico with PNG images at 16..256', (
   assert.strictEqual(small.w, 16); assert.strictEqual(small.h, 16);
 });
 
-test('deskhelper.ps1 has every command of the Mac helper, is plain ASCII, and the packaged zip step ships it', () => {
-  const f = path.join(__dirname, '..', 'helper', 'deskhelper.ps1');
-  const src = fs.readFileSync(f, 'utf8');
-  assert.ok(!/[^\x00-\x7f]/.test(src), 'ASCII only (PowerShell 5.1 reads BOM-less files as ANSI)');
-  for (const c of ['check', 'ask-permissions', 'look', 'press', 'click', 'type', 'key', 'scroll', 'open-app', 'screenshot']) assert.ok(new RegExp("'" + c + "'").test(src), c);
-  assert.match(src, /last_look\.json/); assert.match(src, /SecureEdit/);
-  assert.match(fs.readFileSync(path.join(__dirname, '..', 'build-win.sh'), 'utf8'), /extra-resource=helper\/deskhelper\.ps1/);
+const SRC = fs.readFileSync(path.join(__dirname, '..', 'helper', 'win', 'DeskHelper.cs'), 'utf8') + fs.readFileSync(path.join(__dirname, '..', 'helper', 'win', 'Ui.cs'), 'utf8');
+
+test('deskhelper.exe source: every command of the Mac helper, the same JSON keys, password rule, no PowerShell script shipped', () => {
+  for (const c of ['check', 'ask-permissions', 'look', 'press', 'click', 'type', 'key', 'scroll', 'open-app', 'screenshot']) assert.ok(new RegExp('case "' + c + '"').test(SRC), c);
+  // look output: app, pid, windows[{title, frame}], elements[{id, role, title, value, frame}]; cache: pid + elements[{id, path, role, label, frame}]
+  for (const k of ['app', 'pid', 'windows', 'elements', 'title', 'frame', 'id', 'role', 'value', 'path', 'label', 'hwnd']) assert.ok(SRC.includes('"' + k + '"'), k);
+  for (const k of ['accessibility', 'screenRecording', 'opened', 'chars', 'width', 'height', 'scale', 'ok', 'method']) assert.ok(SRC.includes('"' + k + '"'), k);
+  assert.match(SRC, /last_look\.json/); assert.match(SRC, /"SecureEdit"/);
+  assert.match(SRC, /IsPassword\) \{ outRole = "SecureEdit"; value = "";/, 'a password field is never read');
+  for (const f of ['--app', '--max', '--double', '--right']) assert.ok(SRC.includes('"' + f + '"'), f);
+  assert.ok(!fs.existsSync(path.join(__dirname, '..', 'helper', 'deskhelper.ps1')), 'the PowerShell helper is gone (Defender flagged it)');
+  const bw = fs.readFileSync(path.join(__dirname, '..', 'build-win.sh'), 'utf8') + fs.readFileSync(path.join(__dirname, '..', 'build-win.ps1'), 'utf8');
+  assert.match(bw, /extra-resource=vendor\/helper\/deskhelper\.exe/); assert.ok(!/extra-resource=helper\/deskhelper\.ps1/.test(bw));
 });
 
-const pwsh = spawnSync('pwsh', ['-NoProfile', '-Command', '$PSVersionTable.PSVersion.Major']);
-test('deskhelper.ps1 parses (PowerShell syntax check)', { skip: pwsh.status === 0 ? false : 'pwsh is not installed here' }, () => {
-  const f = path.join(__dirname, '..', 'helper', 'deskhelper.ps1');
-  const cmd = "$e=$null;$t=$null;[void][System.Management.Automation.Language.Parser]::ParseFile('" + f.replace(/'/g, "''") + "',[ref]$t,[ref]$e);if($e.Count){$e|ForEach-Object{$_.ToString()};exit 1}";
-  const r = spawnSync('pwsh', ['-NoProfile', '-Command', cmd], { encoding: 'utf8' });
-  assert.strictEqual(r.status, 0, r.stdout + r.stderr);
+test('screen.js sends the argument shapes deskhelper.exe expects and reads its look JSON', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dh-'));
+  const log = path.join(dir, 'args.log');
+  const bin = path.join(dir, 'deskhelper');
+  const sample = '{"app":"Notepad","pid":7,"windows":[{"title":"Untitled","frame":[0,0,800,600]}],"elements":[{"id":1,"role":"Edit","title":"Text editor","value":"hi","frame":[5,40,780,500]},{"id":2,"role":"SecureEdit","title":"Password","value":"","frame":[5,10,100,20]}]}';
+  fs.writeFileSync(bin, '#!/bin/sh\necho "$@" >> ' + JSON.stringify(log) + '\ncase "$1" in look) echo \'' + sample + '\';; *) echo \'{"ok":true}\';; esac\n', { mode: 0o755 });
+  const { createScreen, formatLook } = require('../src/tools/screen');
+  const sc = createScreen(() => ({ helperPath: bin }), null);
+  const look = await sc.tools.screen_look({ app: 'Notepad' });
+  const text = typeof look === 'string' ? look : look.text;
+  assert.match(text, /App: Notepad \(pid 7\)[\s\S]*\[1\] Edit "Text editor" value="hi"[\s\S]*\[2\] SecureEdit "Password"/);
+  assert.ok(!/SecureEdit "Password" value=/.test(text), 'an empty secure value is not printed');
+  await sc.tools.screen_click({ id: 2 }); await sc.tools.screen_click({ x: 10, y: 20, double: true }); await sc.tools.screen_type({ text: 'a b' }); await sc.tools.open_app({ name: 'notepad' });
+  const calls = fs.readFileSync(log, 'utf8').trim().split('\n');
+  assert.ok(calls.includes('look --app Notepad')); assert.ok(calls.includes('press 2')); assert.ok(calls.includes('click 10 20 --double')); assert.ok(calls.includes('type a b')); assert.ok(calls.includes('open-app notepad'));
+  assert.match(formatLook({ app: 'X', elements: [{ id: 3, role: 'Button', title: 'OK', frame: [1, 2, 3, 4] }] }), /\[3\] Button "OK" @1,2,3,4/);
 });
 
-test('with process.platform stubbed to win32, screen.js picks the PowerShell helper by default', () => {
-  const real = Object.getOwnPropertyDescriptor(process, 'platform');
-  Object.defineProperty(process, 'platform', { value: 'win32' });
-  try {
-    const inv = helperInvocation('C:\\app\\resources\\deskhelper.ps1', ['check']);
-    assert.strictEqual(inv.cmd, 'powershell.exe'); assert.deepStrictEqual(inv.args.slice(0, 5), ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'C:\\app\\resources\\deskhelper.ps1']);
-    assert.ok(candidates({}, 'R').every((c) => c.endsWith('deskhelper.ps1')));
-  } finally { Object.defineProperty(process, 'platform', real); }
+const mono = spawnSync('mono', ['--version']);
+const exe = path.join(__dirname, '..', 'vendor', 'helper', 'deskhelper.exe');
+test('deskhelper.exe smoke test under mono: usage, check, and error JSON with exit code 1', { skip: mono.status === 0 && fs.existsSync(exe) ? false : 'mono or vendor/helper/deskhelper.exe is not here' }, () => {
+  const run = (...a) => spawnSync('mono', [exe, ...a], { encoding: 'utf8' });
+  const h = run('--help'); assert.strictEqual(h.status, 0); assert.match(h.stdout, /usage: deskhelper check\|ask-permissions\|look/);
+  assert.deepStrictEqual(JSON.parse(run('check').stdout), { accessibility: true, screenRecording: true });
+  const bad = run('bogus'); assert.strictEqual(bad.status, 1); assert.deepStrictEqual(JSON.parse(bad.stdout), { error: 'unknown command: bogus' });
+  assert.strictEqual(JSON.parse(run('click', '1').stdout).error, 'usage: click X Y [--double] [--right]');
+  assert.strictEqual(JSON.parse(run('look', '--max', '0').stdout).error, '--max needs a positive number');
+  assert.strictEqual(JSON.parse(run('key', 'cmd+zz').stdout).error, 'unknown key combo: cmd+zz');
 });

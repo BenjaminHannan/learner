@@ -415,3 +415,20 @@ test('bundled CPU engine: used when nothing is installed, source ref is its comm
   assert.strictEqual(R.llamaSourceUrl(C.BUNDLED_LLAMA_COMMIT), 'https://github.com/ggml-org/llama.cpp/archive/' + C.BUNDLED_LLAMA_COMMIT + '.zip');
   assert.strictEqual(R.llamaSourceUrl('b12000'), 'https://github.com/ggml-org/llama.cpp/archive/refs/tags/b12000.zip');
 });
+
+test('userData drives every runtime path (--user-data-dir)', () => {
+  const { runtimeRoot, Builtin } = require('../src/runtime/builtin');
+  const { WinSleep } = require('../src/sleepwin');
+  const path = require('path'); const fs = require('fs');
+  const ud = path.resolve('/tmp/custom-ud');
+  const root = runtimeRoot(ud); assert.strictEqual(root, ud);
+  const b = new Builtin({ root, isWanted: () => false, onState() {} });
+  assert.ok(b.dir.startsWith(ud) && b.diaryDir.startsWith(ud));
+  const src = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
+  assert.ok(/runtimeRoot\(app\.getPath\('userData'\)\)/.test(src));
+  // appData is only used to find the OLD "Premonition Desk" folder to migrate from
+  const uses = src.match(/getPath\('appData'\)/g) || [];
+  assert.strictEqual(uses.length, 1);
+  assert.ok(/migrateUserData\(app\.getPath\('appData'\), app\.getPath\('userData'\)\)/.test(src));
+  assert.ok(typeof WinSleep === 'function');
+});
