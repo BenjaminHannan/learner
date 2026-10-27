@@ -9,7 +9,7 @@
 #   detached launch (pc-launch-route): pc-ps 'Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine="wsl.exe -d Ubuntu -e bash /mnt/c/Users/benja/pc-jobs/practice2/practice2-benspc.sh"}'
 #
 # Env: SRC (unpacked `git archive <sha> practice sleep2`, default ~/practice2/src), OUT, SKILLS, PORT, CONC, TRAIN_TOKENS, CAP_GIB.
-# Downloads on first run if missing: vLLM venv (~4 GB), Node 22 (~30 MB), opencode-ai (~100 MB), reasoning-gym, bitsandbytes. Not on the phone hotspot.
+# Downloads on first run if missing: vLLM venv (~4 GB; skipped when VLLM_PY or ~/vllmvenv already has vllm), Node 22 (~30 MB), opencode-ai (~100 MB), reasoning-gym, bitsandbytes. Not on the phone hotspot.
 set -uo pipefail
 WIN=/mnt/c/Users/benja
 HAND="$WIN/pc-jobs/handoff"
@@ -66,11 +66,16 @@ log "practice2 (opencode, vLLM) skills=$SKILLS src=$(cat "$SRC/COMMIT" 2>/dev/nu
 python -c "import reasoning_gym" 2>/dev/null || pip install -q "reasoning-gym==0.1.25"
 python -c "import bitsandbytes" 2>/dev/null || pip install -q bitsandbytes
 
-VENV="${HOME}/.cache/practice2_vllm_env"
-VPY="$VENV/bin/python"
-if ! "$VPY" -c "import vllm, reasoning_gym, peft" 2>/dev/null; then
+# vLLM only serves (vllm serve + LoRA), so any venv where `import vllm` works will do; an existing one is used read-only (nothing is installed into it).
+VPY=""
+for c in "${VLLM_PY:-}" "$HOME/.cache/practice2_vllm_env/bin/python" "$HOME/vllmvenv/bin/python"; do
+  [ -n "$c" ] && [ -x "$c" ] && "$c" -c "import vllm" 2>/dev/null && { VPY="$c"; break; }
+done
+if [ -z "$VPY" ]; then
+  VENV="${HOME}/.cache/practice2_vllm_env"
+  VPY="$VENV/bin/python"
   [ -x "$VPY" ] || { (pip install -q uv && python -m uv venv "$VENV") 2>/dev/null || python -m venv "$VENV"; }
-  (python -m uv pip install -q --python "$VPY" vllm "reasoning-gym==0.1.25" peft 2>/dev/null) || timeout 2400 "$VPY" -m pip install -q vllm "reasoning-gym==0.1.25" peft
+  (python -m uv pip install -q --python "$VPY" vllm 2>/dev/null) || timeout 2400 "$VPY" -m pip install -q vllm
 fi
 "$VPY" -c "import vllm, torch; print('vllm', vllm.__version__, 'torch', torch.__version__, torch.cuda.get_device_capability(0))" 2>&1 | tee -a "$OUT/job.log"
 export VLLM_PY="$VPY"
