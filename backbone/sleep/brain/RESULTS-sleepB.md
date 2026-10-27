@@ -828,9 +828,10 @@ even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allo
 - **Code change (memory only, no number changes):** `cuda_cap()` reads `SLEEPB_CUDA_CAP_GIB` and caps PyTorch with
   `torch.cuda.set_per_process_memory_fraction`. Under the cap, the allocator frees cached blocks and retries instead of spilling. The
   night line also logs the most memory reserved. Nothing runs off CUDA or without the variable.
-- **Rule, fixed now:** the fourth try keeps going if night 2 trains at 2.5 s per step or faster, measured at its latest 200-step log
-  line. Otherwise it is stopped (without its DONE), and **the fifth try (sleepb_pc6)** runs the same flags with a 14 GiB cap. If it runs
-  out of memory under the cap, it starts again once at `--gen-bs 16`.
+- **Rule, fixed now:** Windows' shared GPU memory counter for the WSL process is read while the fourth try runs.
+  - If it shows 512 MiB or more in system memory (the spill), the fourth try is stopped (without its DONE), and **the fifth try
+    (sleepb_pc6)** runs the same flags with a 14 GiB cap. If it runs out of memory under the cap, it starts again once at `--gen-bs 16`.
+  - If not, the cap would not help: the fourth try keeps going under `sleepb_pc5guard.sh`, which applies pc6's deadline rule below.
   - pc6 stops itself if its log is silent for 90 min, or if, after night 2 or later, the remaining nights at 1.25x the last night's time
     plus 75 min of final scoring would end after 18:00Z. Either way it writes pull3/DONE, so the looping thread's segment 1 starts.
 - **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same cap and code.
