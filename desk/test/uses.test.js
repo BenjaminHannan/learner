@@ -61,7 +61,7 @@ test('cleanUses / chipsFor / usesLine', () => {
   assert.strictEqual(c.length, 4); assert.strictEqual(c[0], 'Track the price of something for me'); assert.strictEqual(c[1], 'What is due this week?');
   assert.strictEqual(Uses.chipsFor(Uses.IDS).length, 4);
   assert.strictEqual(Uses.usesLine([], ''), '');
-  assert.strictEqual(Uses.usesLine(['email', 'briefing'], '  game   news '), '[Ben wants Glims for: email monitoring, morning briefing, game news]');
+  assert.strictEqual(Uses.usesLine(['email', 'briefing'], '  game   news '), '[Background, not a request: Ben mostly wants Glims for email monitoring, morning briefing, game news. Do not start Glims unless he asks.]');
 });
 
 test('settings: onboarded / uses / usesOther defaults, validation and persistence', () => {
@@ -82,7 +82,7 @@ test('settings: onboarded / uses / usesOther defaults, validation and persistenc
 
 test('picks reach the model only in the first user message beside the date; prompt and tools stay constant', async () => {
   const before = JSON.stringify([SYSTEM_PROMPT, buildTools({ diary: true })]);
-  assert.ok(!/Ben wants Glims for/.test(before));
+  assert.ok(!/mostly wants Glims for/.test(before));
   const gw = await startGateway([{ content: 'ok' }, { content: 'ok again' }]);
   try {
     const mk = () => new Agent({ getSettings: () => ({ gatewayUrl: gw.url, model: 'm', maxSteps: 5, mode: 'hands-off', vision: 'off', uses: ['email'], usesOther: 'game news' }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
@@ -90,9 +90,9 @@ test('picks reach the model only in the first user message beside the date; prom
     const a = mk();
     await a.run(t, 'hello'); await a.run(t, 'again');
     const users = gw.requests[1].messages.filter((m) => m.role === 'user');
-    assert.match(users[0].content, /^\[\w{3} \d{4}-\d{2}-\d{2} \d\d:\d\d\] \[Ben wants Glims for: email monitoring, game news\] hello$/);
-    assert.ok(!/Ben wants Glims for/.test(users[1].content));
-    assert.ok(!/Ben wants Glims for/.test(gw.requests[0].messages[0].content), 'not in the system prompt');
+    assert.match(users[0].content, /^\[\w{3} \d{4}-\d{2}-\d{2} \d\d:\d\d\] \[Background, not a request: Ben mostly wants Glims for email monitoring, game news. Do not start Glims unless he asks.\] hello$/);
+    assert.ok(!/mostly wants Glims for/.test(users[1].content));
+    assert.ok(!/mostly wants Glims for/.test(gw.requests[0].messages[0].content), 'not in the system prompt');
     assert.strictEqual(JSON.stringify(gw.requests[0].tools), JSON.stringify(gw.requests[1].tools));
     assert.strictEqual(JSON.stringify([SYSTEM_PROMPT, buildTools({ diary: true })]), before);
   } finally { gw.close(); }

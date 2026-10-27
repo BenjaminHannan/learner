@@ -339,3 +339,14 @@ test('Helpers.add: deferFirst waits for the next slot, and a per-Glim mode is ke
   assert.deepStrictEqual(runs, ['plain']); assert.ok(x);
   assert.strictEqual(new Helpers({ file: path.join(dir, 'helpers.json'), store: new Store(dir), runner: async () => ({}) }).find('news').mode, 'ask'); // persisted
 });
+
+test('Helpers.add: refuses a near-duplicate of an active Glim on the same schedule, allows different ones', () => {
+  const { m } = mkManager();
+  m.add({ name: 'Morning briefing', task: 'Brief Ben on weather and calendar', at: '08:00', deferFirst: true });
+  assert.throws(() => m.add({ name: 'morning briefing agent', task: 'give the morning brief', at: '08:00' }), /similar Glim 'Morning briefing'/);
+  assert.throws(() => m.add({ name: 'wake-up', task: 'Brief Ben on weather and calendar', at: '08:00' }), /similar Glim/);
+  m.add({ name: 'Evening briefing', task: 'Summarize the day', at: '20:00' });            // other schedule: fine
+  m.add({ name: 'Email watch', task: 'Check mail', every: '30m', deferFirst: true });       // other name and task: fine
+  m.stop('Morning briefing');
+  m.add({ name: 'morning briefing agent', task: 'give the morning brief', at: '08:00' }); // the old one is stopped: fine
+});

@@ -37,6 +37,8 @@ function everyLabel(ms) {
 }
 
 // -> {kind:'once'} | {kind:'every', ms, label} | {kind:'at', h, m, label}
+const SIM_STOP = new Set(['agent', 'glim', 'helper', 'the', 'and', 'for', 'ben', 'bens', 'his', 'every', 'daily', 'check', 'watch']);
+
 function parseSchedule(o) {
   o = o || {};
   const every = o.every != null && o.every !== '' ? o.every : null;
@@ -190,6 +192,8 @@ class Helpers {
     if (!task) throw new Error('task is required');
     const sched = parseSchedule({ every, at });
     if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
+    const dup = this.similar(name, task, sched.label);
+    if (dup) throw new Error("a similar Glim '" + dup.name + "' already exists (" + dup.schedule + '); use it, or stop it first');
     if (this.items.length >= MAX_HELPERS) throw new Error('too many Glims (max ' + MAX_HELPERS + '); delete one first');
     const id = 'h' + this.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5);
     const t = this.o.store.newThread();
@@ -200,6 +204,18 @@ class Helpers {
     this.items.push(h);
     if (sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
     return this.view(h);
+  }
+
+  // An active Glim with the same schedule whose name or task shares most words with this one (the model re-creates existing ones).
+  similar(name, task, label) {
+    const words = (s) => new Set(String(s || '').toLowerCase().match(/[a-z0-9]+/g)?.filter((w) => w.length > 2 && !SIM_STOP.has(w)) || []);
+    const overlap = (a, b) => { if (!a.size || !b.size) return 0; let n = 0; for (const w of a) if (b.has(w)) n++; return n / Math.min(a.size, b.size); };
+    const n = words(name), t = words(task);
+    for (const h of this.items) {
+      if (h.status === 'stopped' || this.sched(h).label !== label) continue;
+      if (overlap(n, words(h.name)) >= 0.5 || overlap(t, words(h.task)) >= 0.7) return this.view(h);
+    }
+    return null;
   }
 
   // Cancel the schedule, abort a running run, keep the helper (and its thread) as "stopped".

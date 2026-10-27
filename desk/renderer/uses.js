@@ -47,7 +47,7 @@
     const names = cleanUses(uses).map((id) => byId(id).title.toLowerCase());
     const o = String(other || '').replace(/\s+/g, ' ').trim().slice(0, 200);
     if (o) names.push(o);
-    return names.length ? '[Ben wants Glims for: ' + names.join(', ') + ']' : '';
+    return names.length ? '[Background, not a request: Ben mostly wants Glims for ' + names.join(', ') + '. Do not start Glims unless he asks.]' : '';
   }
 
   const api = { USES, IDS, DEFAULT_CHIPS, templateFor, cleanUses, chipsFor, usesLine };
