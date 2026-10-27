@@ -21,6 +21,17 @@ export ASSISTANT_STRIP_SKILLS="${ASSISTANT_STRIP_SKILLS:-1}"
 # to disk and reloads it after a restart (untested on the Mac; leave 0 until verified).
 PERSIST_CACHE="${ASSISTANT_PERSIST_CACHE:-0}"
 
+# Image reading ("caption then answer"): a small VLM in its own venv (mlx-vlm needs a newer mlx than the
+# main venv) describes each image; the gateway pastes the description into the big text-only model's prompt.
+# ASSISTANT_VISION: 1/0; default 1 only if the vision venv and model exist (install.sh can create them).
+VLM_VENV="${ASSISTANT_VLM_VENV:-$HOME/learner-ops/vlm-venv}"
+VLM_MODEL="${ASSISTANT_VLM_MODEL:-$HOME/learner-ops/models/qwen35-2b-vlm}"
+VLM_PORT="${ASSISTANT_VLM_PORT:-18082}"
+VLM_PY="$VLM_VENV/bin/python"
+if [ -z "${ASSISTANT_VISION:-}" ]; then
+  if [ -x "$VLM_PY" ] && [ -d "$VLM_MODEL" ]; then ASSISTANT_VISION=1; else ASSISTANT_VISION=0; fi
+fi
+
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -50,9 +61,10 @@ launch() {  # name command...
 
 need_big=1;   up big   $BIG_PORT /v1/models && need_big=0
 need_small=0; [ -n "$SMALL_MODEL" ] && { up small $SMALL_PORT /v1/models || need_small=1; }
+need_vlm=0;   [ "$ASSISTANT_VISION" = 1 ] && { up vlm $VLM_PORT /health || need_vlm=1; }
 need_gw=1;    up gateway $GW_PORT /v1/models && need_gw=0
 
-if [ $need_big = 0 ] && [ $need_small = 0 ] && [ $need_gw = 0 ]; then
+if [ $need_big = 0 ] && [ $need_small = 0 ] && [ $need_vlm = 0 ] && [ $need_gw = 0 ]; then
   echo "Assistant is already running."; exit 0
 fi
 
@@ -66,7 +78,7 @@ fi
 [ -x "$PY" ] || { echo "Python not found at $PY (set ASSISTANT_PY)"; exit 1; }
 
 # Don't stack models: warn if another model job is already loaded.
-ours="$(cat "$RUN"/big.pid "$RUN"/small.pid 2>/dev/null | tr '\n' ' ')"
+ours="$(cat "$RUN"/big.pid "$RUN"/small.pid "$RUN"/vlm.pid 2>/dev/null | tr '\n' ' ')"
 others=$(ps axo pid=,command= | grep -E "mlx_lm|mlx-lm|llama-server|llama_cpp" | grep -v grep |
   while read -r pid cmd; do case " $ours " in (*" $pid "*) ;; (*) echo "$pid $cmd" ;; esac; done)
 if [ -n "$others" ] && [ $need_big = 1 ] && [ $YES = 0 ]; then
@@ -80,7 +92,7 @@ fi
 if [ $need_big = 1 ] && [ $YES = 0 ] && command -v vm_stat >/dev/null; then
   pg=$(vm_stat | awk '/page size of/ {print $8}')
   avail=$(vm_stat | awk -v pg="$pg" '/Pages (free|inactive|speculative|purgeable)/ {gsub("\\.","",$NF); s+=$NF} END {printf "%d", s*pg/1073741824}')
-  need=20; [ $need_small = 1 ] && need=25
+  need=20; [ $need_small = 1 ] && need=25; [ $need_vlm = 1 ] && need=$((need + 2))
   if [ "$avail" -lt "$need" ]; then
     echo "Only about $avail GB of memory is free; the assistant needs about $need GB."
     echo "Quit big apps (or other model jobs) first. Start anyway? [y/N] "; read -r ans
@@ -115,11 +127,24 @@ if [ $need_small = 1 ]; then
       --temp 0.6 --top-p 0.95 $SMALL_ARGS
   fi
 fi
+if [ $need_vlm = 1 ]; then
+  if [ ! -x "$VLM_PY" ] || [ ! -d "$VLM_MODEL" ]; then
+    echo "Image reader not installed ($VLM_VENV / $VLM_MODEL); run install.sh --vision. Continuing without it."
+    need_vlm=0; ASSISTANT_VISION=0
+  else
+    alive vlm && kill "$(cat "$RUN/vlm.pid")" 2>/dev/null
+    echo "Starting image reader ($VLM_MODEL) on port $VLM_PORT ..."
+    # The gateway must send this same --model string, or mlx_vlm.server would try to load another model.
+    launch vlm "$VLM_PY" -m mlx_vlm.server --model "$VLM_MODEL" --host 127.0.0.1 --port $VLM_PORT \
+      --max-tokens 512
+  fi
+fi
 if [ $need_gw = 1 ]; then
   alive gateway && kill "$(cat "$RUN/gateway.pid")" 2>/dev/null
   echo "Starting gateway on port $GW_PORT ..."
   launch gateway "$PY" -u "$DIR/gateway.py" --big-url "http://127.0.0.1:$BIG_PORT" \
-    --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT --diary-dir "$OPS/diary" \
+    --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT \
+    --vision-url "$([ "$ASSISTANT_VISION" = 1 ] && echo "http://127.0.0.1:$VLM_PORT")" --vision-model "$VLM_MODEL" --diary-dir "$OPS/diary" \
     --prefix-file "$RUN/prefix.json" \
     $([ "$PERSIST_CACHE" = 1 ] && echo --persist-cache)   # prewarms the last chat's system prompt + tools
 fi
@@ -127,7 +152,7 @@ fi
 # Tell experiment jobs that Ben is using the Mac.
 write_marker() {
   { echo "started: $(date)"
-    for n in big small gateway; do [ -f "$RUN/$n.pid" ] && echo "$n pid: $(cat "$RUN/$n.pid")"; done
+    for n in big small vlm gateway; do [ -f "$RUN/$n.pid" ] && echo "$n pid: $(cat "$RUN/$n.pid")"; done
   } > "$OPS/ASSISTANT_RUNNING"
 }
 write_marker
@@ -144,5 +169,8 @@ echo "Waiting for the big model to load (up to $BIG_WAIT s) ..."
 wait_for big $BIG_PORT /v1/models "$BIG_WAIT" || { "$DIR/stop.sh"; exit 1; }
 if [ -n "$SMALL_MODEL" ]; then
   wait_for small $SMALL_PORT /v1/models 120 || echo "  Small helper unavailable; continuing without it."
+fi
+if [ "$ASSISTANT_VISION" = 1 ]; then
+  wait_for vlm $VLM_PORT /health 120 || echo "  Image reader unavailable; images will show as unreadable."
 fi
 echo "Assistant is ready: http://127.0.0.1:$GW_PORT/v1"

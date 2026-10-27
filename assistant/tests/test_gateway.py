@@ -298,6 +298,22 @@ class TestSmallDown(Base):
         up = self.big.requests[-1]
         self.assertFalse(up["chat_template_kwargs"]["enable_thinking"])
 
+    def test_title_on_big_is_tiny(self):
+        ask = ("Here is the first message:\n<message>\n<openbot-developer-instructions>\n" + "x" * 20000
+               + "\n</openbot-developer-instructions>\nCheck my emails\n</message>\nReply with only the title.")
+        self.post({"model": "k2-helper", "stream": True, "tools": [{"type": "function"}],
+                   "messages": [{"role": "system", "content": "s" * 2000},
+                                {"role": "user", "content": ask}]})[1].read()
+        up = self.big.requests[-1]
+        self.assertEqual(up["messages"][0], {"role": "system", "content": gateway.TITLE_SYSTEM})
+        self.assertIn("Check my emails", up["messages"][1]["content"])
+        self.assertNotIn("xxx", up["messages"][1]["content"])
+        self.assertNotIn("tools", up)
+        self.assertEqual((up["max_tokens"], up["stream"]), (gateway.TITLE_MAX_TOKENS, True))
+        self.assertIsNone(self.srv.gw._prefix)  # titles never become the warm prefix
+        self.post({"model": "k2-helper", "messages": [{"role": "user", "content": "y" * 5000}]})[1].read()
+        self.assertEqual(len(self.big.requests[-1]["messages"][1]["content"]), gateway.TITLE_MAX_CHARS)
+
 
 class TestBigDown(Base):
     def test_503(self):
@@ -345,6 +361,17 @@ class PrepareTest(unittest.TestCase):
 
 OBI = "<openbot-developer-instructions>\nBe brief.\n</openbot-developer-instructions>\n"
 CAT = "<system-update>\nThe Code Mode tool catalog has changed. v%d\n</system-update>"
+
+
+class TestFastSampling(unittest.TestCase):
+    def test_defaults_only_when_not_thinking_and_unset(self):
+        m = [{"role": "user", "content": "hi"}]
+        fast = gateway.prepare({"messages": m}, False, 10)
+        self.assertEqual((fast["temperature"], fast["top_p"], fast["presence_penalty"]), (0.7, 0.8, 1.5))
+        think = gateway.prepare({"messages": m}, True, 10)
+        self.assertNotIn("presence_penalty", think)
+        mine = gateway.prepare({"messages": m, "temperature": 0.2}, False, 10)
+        self.assertEqual(mine["temperature"], 0.2)
 
 
 class TestDedupe(unittest.TestCase):
@@ -424,6 +451,48 @@ class PrewarmTest(Base):
                           {"role": "user", "content": "hi"}, {"role": "system", "content": "late"}]}
         self.assertEqual(gateway.extract_prefix(b)["messages"],
                          [{"role": "system", "content": "a"}, {"role": "system", "content": "b"}])
+
+
+ENV = "\n\nToday's date: Tue Oct 27 2026\n\nInfo:\n<env>\n  Working directory: /a/agent-%s\n</env>\nWorktree hint."
+
+
+class TestMoveEnv(unittest.TestCase):
+    def prep(self, msgs):
+        return gateway.prepare({"messages": msgs}, False, 10)["messages"]
+
+    def test_system_same_for_every_agent(self):
+        a = self.prep([{"role": "system", "content": "sys" + ENV % 1}, {"role": "user", "content": "hi"}])
+        b = self.prep([{"role": "system", "content": "sys" + ENV % 2}, {"role": "user", "content": "hi"}])
+        self.assertEqual(a[0], {"role": "system", "content": "sys"})
+        self.assertEqual(a[0], b[0])
+        self.assertEqual(a[1]["content"], (ENV % 1).strip() + "\n\nhi")
+
+    def test_only_first_user_gets_it(self):
+        m = self.prep([{"role": "system", "content": "sys" + ENV % 1}, {"role": "user", "content": "a"},
+                       {"role": "assistant", "content": "b"}, {"role": "user", "content": "c"}])
+        self.assertEqual([x["content"] for x in m[2:]], ["b", "c"])
+
+    def test_list_content_and_no_env(self):
+        m = self.prep([{"role": "system", "content": "sys" + ENV % 1},
+                       {"role": "user", "content": [{"type": "text", "text": "hi"}]}])
+        self.assertEqual(m[1]["content"][0]["text"], (ENV % 1).strip())
+        plain = [{"role": "system", "content": "sys\n\nToday's date: x"}, {"role": "user", "content": "hi"}]
+        self.assertEqual(self.prep(plain), plain)
+        self.assertEqual(self.prep([{"role": "system", "content": "sys" + ENV % 1}])[0]["content"], "sys" + ENV % 1)
+
+    def test_shared_instructions_hoisted_into_system(self):
+        def obi(name):
+            return ("<openbot-developer-instructions>\nShared rules.\nYour profile:\n<agent_profile>\n"
+                    + name + "\n</agent_profile>\n</openbot-developer-instructions>\n")
+        def turn(name, n):
+            us = [{"role": "user", "content": obi(name) + "hi%d" % k} for k in range(n)]
+            return self.prep([{"role": "system", "content": "sys" + ENV % name}] + us)
+        a, b = turn("A", 2), turn("B", 1)
+        self.assertEqual(a[0], b[0])  # same system for every agent
+        self.assertTrue(a[0]["content"].endswith("Shared rules.\n</openbot-developer-instructions>"))
+        self.assertTrue(a[1]["content"].startswith((ENV % "A").strip() + "\n\n<openbot-developer-instructions>\nYour profile:"))
+        self.assertEqual(a[2]["content"], "hi1")  # later copy still deduped
+        self.assertEqual(turn("A", 3)[:3], a)  # history prefix stable across turns
 
 
 if __name__ == "__main__":

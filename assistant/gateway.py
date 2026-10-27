@@ -6,6 +6,8 @@
 - Always sends model="default_model" upstream (mlx_lm.server would otherwise
   try to LOAD whatever id it is given).
 - Streams SSE straight through, renaming delta.reasoning -> reasoning_content.
+- Images in user messages are captioned by a small vision server (mlx_vlm.server) and replaced by
+  "[Image N: caption]" text, so the big text-only model never sees image data.
 - Records every completed chat in a diary (raw JSONL + SQLite FTS5 index).
 Stdlib only.
 """
@@ -33,6 +35,13 @@ AUTO_CACHE_MAX = 500
 # Judging on the whole prompt cost a second cold prefill (M1, Oct 27: 49k-token judge, 254 s).
 JUDGE_TIMEOUT = 60
 JUDGE_MAX_CHARS = 2000
+# OpenBot's chat titles go to k2-helper; with no small server they ran on big as a cold 5k-token
+# prompt (37 s) that queued ahead of the real turn. On big they get the same tiny treatment.
+TITLE_SYSTEM = ("Write a short title (three to five words) for this chat. Reply with the title "
+                "only: one line, no quotes, no trailing period. For greetings use \"Greeting\".")
+TITLE_MAX_CHARS, TITLE_MAX_TOKENS = 1000, 24
+# Qwen3.6 model card, "Instruct (or non-thinking) mode"; used only when the client sends none.
+FAST_SAMPLING = {"temperature": 0.7, "top_p": 0.8, "presence_penalty": 1.5}
 REWARM_IDLE_S = 60  # after the last request ends, re-send the warm prefix (cheap when still cached)
 JUDGE_PROMPT = (
     "(Internal check, not from Ben.) Rate how much careful step-by-step "
@@ -40,6 +49,13 @@ JUDGE_PROMPT = (
     "fact, a simple tool step), 1 = some, 2 = a lot (math, multi-step planning, debugging, "
     "tricky reasoning).")
 CHAT_PATHS = ("/v1/chat/completions", "/chat/completions")
+VISION_TIMEOUT = 60
+VISION_DOWN_S = 20          # after a failed call, don't retry (and wait again) for this long
+VISION_MEM_MAX, VISION_DISK_MAX = 200, 2000
+VISION_PROMPT = (
+    "Describe this image for someone who cannot see it. Transcribe all visible text exactly. "
+    "Note layout, UI elements, numbers, people, objects.")
+VISION_OFFLINE = "could not be read, the image reader is offline"
 
 
 def log(*a):
@@ -65,6 +81,24 @@ def sha(obj):
     """sha256 of canonical JSON."""
     s = json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
+
+
+def image_url_of(part):
+    """If a content part is an image, return (True, url-or-data-URL or None); else (False, None).
+    Handles OpenAI image_url (what @ai-sdk/openai-compatible sends), Responses-style input_image,
+    and {type:image} with image / url / Anthropic-style source."""
+    if not isinstance(part, dict) or part.get("type") not in ("image_url", "input_image", "image"):
+        return False, None
+    v = part.get("image_url") or part.get("image") or part.get("url")
+    if isinstance(v, dict):
+        v = v.get("url")
+    if not v and isinstance(part.get("source"), dict):
+        src = part["source"]
+        if src.get("type") == "base64" and src.get("data"):
+            v = "data:%s;base64,%s" % (src.get("media_type") or "image/png", src["data"])
+        else:
+            v = src.get("url")
+    return True, (v if isinstance(v, str) and v else None)
 
 
 def http_get(url, path, timeout):
@@ -210,11 +244,26 @@ def fix_reasoning(obj):
 # ---------------------------------------------------------------- gateway core
 
 class Gateway:
-    def __init__(self, big_url, small_url, diary_dir, prefix_file=None, persist_cache=False):
+    def __init__(self, big_url, small_url, diary_dir, prefix_file=None, persist_cache=False,
+                 vision_url="", vision_model=""):
         self.persist_cache = persist_cache  # ask mlx_server_persist.py to save the warmed prefix cache
         self.big_url = big_url.rstrip("/")
         self.small_url = (small_url or "").rstrip("/")
         self.diary = Diary(diary_dir)
+        self.vision_url = (vision_url or "").rstrip("/")
+        self.vision_model = vision_model or ""   # must equal mlx_vlm.server's --model string
+        self._vlock = threading.Lock()           # one vision call at a time (also dedupes same image)
+        self._vmem = collections.OrderedDict()   # image hash -> caption (LRU)
+        self._vdown_until = 0.0
+        self._vup = (0.0, False)
+        self._vfile = self.diary.root / "vision_cache.json"
+        self._vdisk = {}
+        try:
+            d = json.loads(self._vfile.read_text(encoding="utf-8"))
+            if isinstance(d, dict):
+                self._vdisk = {k: v for k, v in d.items() if isinstance(v, str)}
+        except (OSError, ValueError):
+            pass
         self._small = (0.0, False)  # (checked_at, is_up)
         self._lock = threading.Lock()
         self._auto = collections.OrderedDict()  # key -> level; LRU of auto decisions
@@ -340,6 +389,131 @@ class Gateway:
         if self._inflight == 0:
             self.warm()
 
+    # -- images
+    def vision_is_up(self):
+        """Probe the vision server's /health (1 s), cached 30 s. For /health only."""
+        if not self.vision_url:
+            return False
+        with self._lock:
+            at, up = self._vup
+            if time.time() - at < 30:
+                return up
+        try:
+            up = http_get(self.vision_url, "/health", 1)[0] == 200
+        except (OSError, http.client.HTTPException):
+            up = False
+        with self._lock:
+            self._vup = (time.time(), up)
+        return up
+
+    def _vision_model_name(self):
+        if self.vision_model:
+            return self.vision_model
+        try:  # mlx_vlm.server reloads a model whose name differs from --model, so ask it
+            code, data = http_get(self.vision_url, "/health", 3)
+            return json.loads(data).get("loaded_model") or "default"
+        except (OSError, http.client.HTTPException, ValueError, AttributeError):
+            return "default"
+
+    def _vision_save(self):
+        try:
+            tmp = self._vfile.with_suffix(".tmp")
+            self._vfile.parent.mkdir(parents=True, exist_ok=True)
+            tmp.write_text(json.dumps(self._vdisk, ensure_ascii=False), encoding="utf-8")
+            tmp.replace(self._vfile)
+        except OSError as e:
+            log("vision: cache save failed:", repr(e))
+
+    def _vision_call(self, ref):
+        """POST one image to the vision server -> caption text. Raises on any failure."""
+        b = {"model": self._vision_model_name(), "stream": False, "temperature": 0,
+             "max_tokens": 400, "enable_thinking": False,
+             "messages": [{"role": "user", "content": [
+                 {"type": "image_url", "image_url": {"url": ref}},
+                 {"type": "text", "text": VISION_PROMPT}]}]}
+        u = urlparse(self.vision_url)
+        conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=VISION_TIMEOUT)
+        try:
+            conn.request("POST", "/v1/chat/completions", json.dumps(b).encode(),
+                         {"Content-Type": "application/json"})
+            r = conn.getresponse()
+            data = r.read()
+        finally:
+            conn.close()
+        if r.status != 200:
+            raise ValueError("HTTP %d %s" % (r.status, data[:200].decode("utf-8", "replace")))
+        msg = (json.loads(data).get("choices") or [{}])[0].get("message") or {}
+        cap = re.sub(r"<think>.*?</think>", "", text_of(msg.get("content")), flags=re.S).strip()
+        if not cap:
+            raise ValueError("empty caption")
+        return cap
+
+    def caption(self, ref, h):
+        """Caption for an image (cached by hash). None if the vision server can't deliver one."""
+        with self._vlock:
+            cap = self._vmem.get(h)
+            if cap is None:
+                cap = self._vdisk.get(h)
+            if cap is not None:
+                self._vmem[h] = cap
+                self._vmem.move_to_end(h)
+                while len(self._vmem) > VISION_MEM_MAX:
+                    self._vmem.popitem(last=False)
+                return cap
+            if not self.vision_url or not ref or time.time() < self._vdown_until:
+                return None
+            t0 = time.time()
+            try:
+                cap = self._vision_call(ref)
+            except Exception as e:  # refused, timeout, bad image, bad JSON ...
+                log("vision: caption failed (%s): %r" % (h[:12], e))
+                if not isinstance(e, ValueError):  # server unreachable or too slow
+                    self._vdown_until = time.time() + VISION_DOWN_S
+                return None
+            log("vision: captioned %s in %.1fs (%d chars)" % (h[:12], time.time() - t0, len(cap)))
+            self._vmem[h] = cap
+            self._vdisk[h] = cap
+            while len(self._vdisk) > VISION_DISK_MAX:
+                self._vdisk.pop(next(iter(self._vdisk)))
+            while len(self._vmem) > VISION_MEM_MAX:
+                self._vmem.popitem(last=False)
+            self._vision_save()
+            return cap
+
+    def replace_images(self, body):
+        """-> (body copy with every image part in user/tool messages replaced by a text part
+        "[Image N: caption]", [{n, sha256, caption|None}]). Returns (body, []) when no images."""
+        msgs = body.get("messages")
+        if not isinstance(msgs, list):
+            return body, []
+        n, records, out, changed = 0, [], [], False
+        for m in msgs:
+            c = m.get("content") if isinstance(m, dict) else None
+            if (isinstance(m, dict) and m.get("role") in ("user", "tool") and isinstance(c, list)
+                    and any(image_url_of(p)[0] for p in c)):
+                parts = []
+                for p in c:
+                    is_img, ref = image_url_of(p)
+                    if not is_img:
+                        parts.append(p)
+                        continue
+                    n += 1
+                    h = hashlib.sha256((ref or "").encode("utf-8")).hexdigest()
+                    cap = self.caption(ref, h)
+                    parts.append({"type": "text", "text": "[Image %d: %s]" % (n, cap or VISION_OFFLINE)})
+                    records.append({"n": n, "sha256": h, "caption": cap,
+                                    "source": "data" if (ref or "").startswith("data:") else "url"})
+                if all(isinstance(p, dict) and p.get("type", "text") == "text" for p in parts):
+                    new = "\n".join(p.get("text") or "" for p in parts)  # a plain string, so dedupe() applies
+                else:
+                    new = parts
+                m = dict(m, content=new)
+                changed = True
+            out.append(m)
+        if not changed:
+            return body, []
+        return dict(body, messages=out), records
+
     def small_up(self):
         """Probe small server's /v1/models (1 s timeout), cached 30 s."""
         if not self.small_url:
@@ -427,13 +601,27 @@ SKILLS_RE = re.compile(
 STRIP_SKILLS = os.environ.get("ASSISTANT_STRIP_SKILLS", "1") != "0"  # config.sh switch
 
 
-def judge_text(body):
-    """The last user message without wrapper blocks (OpenBot instructions, tool catalogs), capped."""
+def last_user_bare(body):
+    """The last user message without wrapper blocks (OpenBot instructions, tool catalogs)."""
     last = next((m for m in reversed(body.get("messages") or [])
                  if isinstance(m, dict) and m.get("role") == "user"), None)
     t = text_of(last.get("content")) if last else ""
-    bare = WRAPPER_RE.sub("", t).strip()
-    return (bare or t.strip())[-JUDGE_MAX_CHARS:]
+    return WRAPPER_RE.sub("", t).strip() or t.strip()
+
+
+def judge_text(body):
+    return last_user_bare(body)[-JUDGE_MAX_CHARS:]
+
+
+def title_request(prepped):
+    """k2-helper on big: a few-hundred-token title prompt instead of the client's full one."""
+    b = {k: v for k, v in prepped.items() if k not in (
+        "tools", "tool_choice", "max_completion_tokens", "messages")}
+    b.update(max_tokens=TITLE_MAX_TOKENS, temperature=0,
+             chat_template_kwargs={"enable_thinking": False},
+             messages=[{"role": "system", "content": TITLE_SYSTEM},
+                       {"role": "user", "content": last_user_bare(prepped)[:TITLE_MAX_CHARS]}])
+    return b
 
 
 # OpenBot repeats its ~21k-char instructions in every user message and appends a Code Mode
@@ -465,6 +653,83 @@ def dedupe(msgs):
     return out
 
 
+ENV_MARK = "\n\nToday's date:"
+STABLE_SYSTEM = os.environ.get("ASSISTANT_STABLE_SYSTEM", "1") != "0"  # config.sh switch
+
+
+def move_env(msgs):
+    """Move OpenCode's system tail (date + <env> with the per-agent working directory) to the
+    front of the first user message. mlx_lm can't reuse a cache that diverges inside the system
+    message (Qwen3.6 caches can't be trimmed), so this tail made the warm prefix fit one agent
+    on one day only (M1, Oct 27: new agent = cold 16k prefill, 86 s)."""
+    if not (msgs and isinstance(msgs[0], dict) and msgs[0].get("role") == "system"
+            and isinstance(msgs[0].get("content"), str)):
+        return msgs
+    c = msgs[0]["content"]
+    i = c.rfind(ENV_MARK)
+    if i < 0 or "<env>" not in c[i:]:
+        return msgs
+    u = next((k for k, m in enumerate(msgs) if isinstance(m, dict) and m.get("role") == "user"), None)
+    if u is None:
+        return msgs
+    tail, uc = c[i:].strip(), msgs[u].get("content")
+    if isinstance(uc, str):
+        uc = tail + "\n\n" + uc
+    elif isinstance(uc, list):
+        uc = [{"type": "text", "text": tail}] + uc
+    else:
+        return msgs
+    out = list(msgs)
+    out[0] = dict(out[0], content=c[:i])
+    out[u] = dict(out[u], content=uc)
+    return out
+
+
+OBI_OPEN, OBI_CLOSE = "<openbot-developer-instructions>\n", "\n</openbot-developer-instructions>"
+
+
+def hoist_instructions(msgs):
+    """Move the shared head of OpenBot's instruction block (everything before the line that
+    introduces <agent_profile>, ~18k chars, the same for every agent) from the first user message
+    to the end of the system message, so it is cached with the system prompt for every agent."""
+    if not (msgs and isinstance(msgs[0], dict) and msgs[0].get("role") == "system"
+            and isinstance(msgs[0].get("content"), str)):
+        return msgs
+    u = next((k for k, m in enumerate(msgs) if isinstance(m, dict) and m.get("role") == "user"), None)
+    c = msgs[u].get("content") if u is not None else None
+    if not isinstance(c, str):
+        return msgs
+    start, prof = c.find(OBI_OPEN), c.find("<agent_profile>")
+    if start < 0 or prof < start:
+        return msgs
+    cut = c.rfind("\n", start, prof - 1) + 1
+    if cut <= start + len(OBI_OPEN):
+        return msgs
+    out = list(msgs)
+    out[0] = dict(out[0], content=out[0]["content"] + "\n\n" + OBI_OPEN
+                  + c[start + len(OBI_OPEN):cut].rstrip("\n") + OBI_CLOSE)
+    out[u] = dict(out[u], content=c[:start] + OBI_OPEN + c[cut:])
+    return out
+
+
+def strip_non_text(msgs):
+    """mlx_lm.server 404s on any content part that is not type 'text'. Replace every such part
+    (image, file, audio ...) with a short text placeholder; messages without them are returned as is."""
+    out = []
+    for m in msgs:
+        c = m.get("content") if isinstance(m, dict) else None
+        if isinstance(c, list) and any(isinstance(p, dict) and p.get("type", "text") != "text" for p in c):
+            parts = []
+            for p in c:
+                if isinstance(p, dict) and p.get("type", "text") != "text":
+                    kind = "image" if image_url_of(p)[0] else str(p.get("type"))
+                    p = {"type": "text", "text": "[%s omitted: the model cannot read this]" % kind}
+                parts.append(p)
+            m = dict(m, content=parts)
+        out.append(m)
+    return out
+
+
 def prepare(body, thinking, default_max):
     """Copy of the request body adjusted for mlx_lm.server (system names unified, OpenBot repeats deduped)."""
     b = dict(body)
@@ -474,12 +739,16 @@ def prepare(body, thinking, default_max):
         ctk = dict(b.get("chat_template_kwargs") or {})
         ctk["enable_thinking"] = thinking
         b["chat_template_kwargs"] = ctk
+        if thinking is False:  # Qwen's card: non-thinking wants these, not serve.sh's thinking ones
+            for k, v in FAST_SAMPLING.items():  # (missing presence_penalty -> "Hey!\n\nHey!" repeats)
+                b.setdefault(k, v)
     if b.get("max_tokens") is None:
         b["max_tokens"] = b.get("max_completion_tokens") or default_max
     # OpenCode names the model in its system prompt, so "qwen36", "qwen36-fast" and
     # "qwen36-auto" would never share a cached prefix. Use one name (same weights anyway).
     msgs = b.get("messages")
     if isinstance(msgs, list):
+        msgs = strip_non_text(msgs)
         fixed = []
         for m in msgs:
             if (isinstance(m, dict) and m.get("role") in ("system", "developer")
@@ -490,7 +759,11 @@ def prepare(body, thinking, default_max):
                 if c != m["content"]:
                     m = dict(m, content=c)
             fixed.append(m)
-        b["messages"] = dedupe(fixed) if DEDUPE else fixed
+        if DEDUPE:  # before hoisting, so later copies still match the first one
+            fixed = dedupe(fixed)
+        if STABLE_SYSTEM:
+            fixed = hoist_instructions(move_env(fixed))
+        b["messages"] = fixed
     return b
 
 
@@ -560,6 +833,13 @@ class Handler(BaseHTTPRequestHandler):
                 code, data = http_get(gw.big_url, "/health", 3)
             except (OSError, http.client.HTTPException) as e:
                 return self.send_503(repr(e))
+            if gw.vision_url:  # tell callers whether images can be read
+                try:
+                    obj = json.loads(data)
+                    obj["vision"] = {"url": gw.vision_url, "up": gw.vision_is_up()}
+                    data = json.dumps(obj).encode()
+                except (ValueError, TypeError):
+                    pass
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(data)))
@@ -585,7 +865,9 @@ class Handler(BaseHTTPRequestHandler):
         for _ in range(2):
             name, url, thinking, dmax = gw.route(route_model)
             prepped = prepare(body, thinking, dmax)
-            if name == "big" and route_model != "k2-helper":
+            if name == "big" and route_model == "k2-helper":
+                prepped = title_request(prepped)
+            elif name == "big":
                 gw.note_prefix(prepped)
             payload = json.dumps(prepped).encode()
             log("size: " + request_sizes(prepped) + " (before prepare: %d chars, after: %d)" % (
@@ -616,9 +898,17 @@ class Handler(BaseHTTPRequestHandler):
         gw = self.server.gw
         t0 = time.time()
         client_model = body.get("model") or "qwen36"
+        # Images first: everything after (judge, dedupe, sizes, diary) sees plain text only.
+        orig = body
+        body, images = gw.replace_images(body)
+        if images:
+            log("vision: %d image(s) in request (%d bytes raw); %d captioned" % (
+                len(images), len(json.dumps(orig)), sum(1 for i in images if i["caption"])))
         route_model, extra = client_model, None
         if client_model == "qwen36-auto":
             route_model, extra = self.decide_auto(body)
+        if images:
+            extra = dict(extra or {}, images=images)
         opened = self.open_upstream(body, route_model)
         if not opened:
             return self.send_503()
@@ -814,10 +1104,11 @@ def build_diary(body, client_model, upstream, thinking, asm, status, latency, tt
 
 
 def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1", prefix_file=None,
-                persist_cache=False):
+                persist_cache=False, vision_url="", vision_model=""):
     srv = ThreadingHTTPServer((host, port), Handler)
     srv.daemon_threads = True
-    srv.gw = Gateway(big_url, small_url, diary_dir, prefix_file, persist_cache)
+    srv.gw = Gateway(big_url, small_url, diary_dir, prefix_file, persist_cache,
+                     vision_url, vision_model)
     return srv
 
 
@@ -828,6 +1119,10 @@ def main():
     ap.add_argument("--small-url", default=e("GATEWAY_SMALL_URL", "http://127.0.0.1:18081"))
     ap.add_argument("--port", type=int, default=int(e("GATEWAY_PORT", "8090")))
     ap.add_argument("--diary-dir", default=e("DIARY_DIR", "~/learner-ops/diary"))
+    ap.add_argument("--vision-url", default=e("GATEWAY_VISION_URL", "http://127.0.0.1:18082"),
+                    help="mlx_vlm.server that captions images (empty = no image reader)")
+    ap.add_argument("--vision-model", default=e("GATEWAY_VISION_MODEL", ""),
+                    help="the vision server's --model string (default: ask its /health)")
     ap.add_argument("--prefix-file", default=e("GATEWAY_PREFIX_FILE"),
                     help="save the last chat's system prompt + tools here and prewarm it at start")
     ap.add_argument("--persist-cache", action="store_true",
@@ -836,11 +1131,12 @@ def main():
                          "(needs assistant/mlx_server_persist.py)")
     a = ap.parse_args()
     srv = make_server(a.big_url, a.small_url, a.port, a.diary_dir, prefix_file=a.prefix_file,
-                      persist_cache=a.persist_cache)
+                      persist_cache=a.persist_cache,
+                      vision_url=a.vision_url, vision_model=a.vision_model)
     if a.prefix_file:
         srv.gw.warm_at_start()
-    log("gateway on 127.0.0.1:%d  big=%s small=%s diary=%s" % (
-        a.port, a.big_url, a.small_url, srv.gw.diary.root))
+    log("gateway on 127.0.0.1:%d  big=%s small=%s vision=%s diary=%s" % (
+        a.port, a.big_url, a.small_url, a.vision_url or "off", srv.gw.diary.root))
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
