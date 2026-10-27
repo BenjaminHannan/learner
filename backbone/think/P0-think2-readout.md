@@ -36,3 +36,22 @@ Extra readings:
 Row 2 fires for tj, so P2a (gate start 0.3) runs before P2b. Remaining order: wiring test and drift on the tj
 checkpoint -> T (toy plumbing check) -> P1 (written steps + sham) -> P2a -> P2b, then the give-up rule.
 Chain order for P1/P2b: Step 0 found the evidence lines in file order, not chain order (backbone/think3/STEP0-data-check.md).
+
+## Accuracy by depth (2026-10-27, from the saved per-row hits; no new compute)
+
+Train depth is <= 3. Validation n: d1 2,656 / d2 2,057 / d3 1,868 / d4 1,168 / d5 364 / d6 26 / d0 536.
+
+| arm | d1 | d2 | d3 | d4 | d5 | d6 | d1-3 | d4-6 |
+|---|---|---|---|---|---|---|---|---|
+| tc | 82.7 | 81.0 | 67.4 | 49.6 | 37.6 | 50.0 | 77.8 | 46.8 |
+| tj L4 | 79.3 | 80.1 | 66.9 | 49.9 | 35.7 | 46.2 | 76.1 | 46.5 |
+| tf L0 | 82.1 | 81.2 | 67.9 | 49.2 | 38.2 | 50.0 | 77.8 | 46.7 |
+| tf L4 | 82.2 | 81.3 | 68.2 | 49.3 | 37.6 | 50.0 | 77.9 | 46.6 |
+| tf gates off | 83.1 | 81.2 | 68.7 | 50.5 | 39.3 | 53.8 | 78.4 | 47.9 |
+
+Paired differences [95% bootstrap]:
+- tf L4 - L1: d1-3 +0.11 [-0.11, +0.32]; d4-6 +0.00 [-0.39, +0.39]. Laps add nothing, even past the trained depth.
+- tf L4 - gates off: d4-6 -1.35 [-2.37, -0.39]. The notes hurt most on the deep questions.
+- tf L4 - tc: d4-6 -0.19 [-1.93, +1.48].
+
+The hop cost is large: about 31 points from depth 1-3 to depth 4-6. So there is room for a mechanism that extrapolates in depth, but neither block arm uses it.
