@@ -1,7 +1,7 @@
 [cuda] PyTorch memory capped at 14.0 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
 [ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
 [ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
-Loading weights:   0%|          | 0/327 [00:00<?, ?it/s]Loading weights:  53%|█████▎    | 174/327 [00:00<00:00, 1731.24it/s]Loading weights: 100%|██████████| 327/327 [00:00<00:00, 3086.24it/s]
+Loading weights:   0%|          | 0/327 [00:00<?, ?it/s]Loading weights:  55%|█████▌    | 181/327 [00:00<00:00, 1801.07it/s]Loading weights: 100%|██████████| 327/327 [00:00<00:00, 2626.23it/s]
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 [k2] tagger prompt: '<|ifm|begin_of_text|><|ifm|im_start|>system\nYou extract facts from chat messages.<|ifm|im_end|><|ifm|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>'
 [k2] last 10 token ids: [17868, 578, 2699, 250019, 250018, 142036, 200, 250029, 200, 250030] = ['Ġreply', 'Ġ[', '].', '<|ifm|im_end|>', '<|ifm|im_start|>', 'assistant', 'Ċ', '<ifm|think>', 'Ċ', '</ifm|think>']; eos id 250019
@@ -10,101 +10,24 @@ Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF
 [lora] trainable 33,914,880
 [selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1815301377282594e-06, 'pm_modules': 252}
 [transformers] The remote code model you are currently using seems to expect `cache_position`. This arg has been removed from the Transformers library, and will stop being created in `generate` even for remote code models in a future release. Please open a PR on the remote code hub repo to remove any usage of `cache_position`.
-[base] ARC-Easy validation(570) 0.877
+[base] ARC-Easy validation(570) 0.882
 [base] ARC-Easy acc 0.894 (n=500)
-[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 50, 'yes': 41, 'new_items': 41, 'appended': 41, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 334.5, 'think_capped': 10}
-[night 1] written in 135 s (dream 33 s)
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 50, 'yes': 40, 'new_items': 40, 'appended': 40, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 335.3, 'think_capped': 10}
+[night 1] written in 176 s (dream 32 s)
 [night 1] budget {'scale': 4.0, 'steps': 208, 'steps_ref': 52, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
-[night 1] items 161 eligible 3 (active 3, consolidated 0) steps 296 probe_pre 0.0
-[night 1] trained 296 steps in 622 s (REM writing included); cuda peak 12.9 GiB, reserved 13.6 GiB (max 14.00)
-[night 1] SHY {'modules': 252, 'sv_total': 4032, 'sv_zeroed': 405, 'zeroed_frac': 0.10044642857142858, 'energy_ratio': 0.7209945919086383}
-[night 1] done steps 296 (nrem 120, rem 176) arc_val 0.884 probe_post 0.6666666666666666 reverted False 772s
-[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 38, 'yes': 31, 'new_items': 31, 'appended': 31, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 292.4, 'think_capped': 6}
-Traceback (most recent call last):
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/brain/sleepb.py", line 5467, in <module>
-    main()
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/brain/sleepb.py", line 5380, in main
-    nights.append(brain.night(d, sched))
-                  ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/brain/sleepb.py", line 3367, in night
-    rec["dream_stats"] = s.dream(d, E)
-                         ^^^^^^^^^^^^^
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/brain/sleepb.py", line 2727, in dream
-    raw = s.gen(prompts, s.mn(s.dream_new), sample=True)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/brain/sleepb.py", line 2548, in gen
-    return s.L.generate(s.pm, prompts, max_new=max_new, bs=s.a.gen_bs, sample=sample, temp=temp, eos=eos)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/sleepb-pc/src-cap4/backbone/sleep/sleep1.py", line 108, in generate
-    out = model.generate(input_ids=ids.to(self.device), attention_mask=mask.to(self.device), max_new_tokens=max_new,
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/peft/peft_model.py", line 1012, in generate
-    return self.get_base_model().generate(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/generation/utils.py", line 2989, in generate
-    result = decoding_method(
-             ^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/generation/utils.py", line 3217, in _sample
-    outputs = model_forward(**model_inputs, return_dict=True)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/utils/generic.py", line 943, in wrapper
-    output = func(self, *args, **kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py", line 1054, in forward
-    outputs: MoeModelOutputWithPast = self.model(
-                                      ^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py", line 891, in forward
-    hidden_states = decoder_layer(
-                    ^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 111, in __call__
-    return super().__call__(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py", line 709, in forward
-    hidden_states, _ = self.self_attn(
-                       ^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 171, in wrapped_func
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py", line 300, in forward
-    attn_output, attn_weights = attention_interface(
-                                ^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 112, in sdpa_attention_forward
-    value = repeat_kv(value, module.num_key_value_groups)
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/benja/bbvenv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 27, in repeat_kv
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 154.00 MiB. GPU 0 has a total capacity of 15.92 GiB of which 23.82 MiB is free. 14.00 GiB allowed; Of the allocated memory 12.59 GiB is allocated by PyTorch, and 1.34 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[night 1] items 159 eligible 3 (active 3, consolidated 0) steps 296 probe_pre 0.0
+[night 1] trained 296 steps in 636 s (REM writing included); cuda peak 12.9 GiB, reserved 13.6 GiB (max 14.00)
+[night 1] SHY {'modules': 252, 'sv_total': 4032, 'sv_zeroed': 405, 'zeroed_frac': 0.10044642857142858, 'energy_ratio': 0.7210266081015466}
+[night 1] done steps 296 (nrem 120, rem 176) arc_val 0.875 probe_post 0.6666666666666666 reverted False 826s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 40, 'yes': 34, 'new_items': 34, 'appended': 34, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 302.0, 'think_capped': 7}
+[night 2] written in 368 s (dream 250 s)
+[night 2] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 2] items 273 eligible 71 (active 71, consolidated 0) steps 1710 probe_pre 0.02857142857142857
+[night 2] step 200/1710 at 430 s
+[night 2] step 400/1710 at 1063 s
+[night 2] step 800/1710 at 2183 s
+[night 2] trained 1710 steps in 4880 s (REM writing included); cuda peak 13.2 GiB, reserved 13.9 GiB (max 14.00)
+[night 2] SHY {'modules': 252, 'sv_total': 4032, 'sv_zeroed': 607, 'zeroed_frac': 0.1505456349206349, 'energy_ratio': 0.718351343856571}
+[night 2] done steps 1710 (nrem 690, rem 1020) arc_val 0.868 probe_post 0.9142857142857143 reverted False 5265s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.11, 'C4': 0.28, 'C24': 0.195, 'all': 0.14772727272727273}
+[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 18, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 308.2, 'think_capped': 1}
