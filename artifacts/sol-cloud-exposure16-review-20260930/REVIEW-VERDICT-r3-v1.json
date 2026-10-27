@@ -1,0 +1,52 @@
+{
+  "schema": "sol.cloud.exposure16.pre-run-review.v2.verdict",
+  "seal_sha256": "5ddb6382fcb69243e1762314bb66ca375982d014edcd1dcae16c62dbba773c82",
+  "driver_sha256": "ec989607fc453fcf1f88e7d5a822eb096f520746e32e3f8ec76826635ce64890",
+  "release_readiness": false,
+  "verdict": "R3 structural and protocol checks pass; hard actual-write-cap gap prevents release pending additive bounded-writer repair",
+  "metadata_checks_passed": 17,
+  "metadata_checks_total": 17,
+  "source_checks_passed": 15,
+  "source_checks_total": 15,
+  "sealed_files_hash_checked": 62,
+  "admission_gate_mock_cases_passed": 20,
+  "owned_supervisor_mock_cases_passed": 3,
+  "models_loaded": 0,
+  "optimizer_updates": 0,
+  "actual_processes_launched": 0,
+  "evidence": {
+    "METADATA-AUDIT-r3-v1.json": "61a647fa5d77c56f9f3687d3b4497e2fd52a5e991b42cf59565e7fb723b4d9ac",
+    "GATE-TESTS-r3-v1.json": "9c8dcc58e98e3f3e2818f40bebe16ca25cb3a3a4bf42ee1489c5a2ad7768f003",
+    "SOURCE-REVIEW-r3-v1.json": "97988071e7ec4d4d267fa59c4890b9b3849c2aa2553d8951a48ab2f1dc282780"
+  },
+  "material_findings": [
+    {
+      "id": "serialization_actual_peak_guard",
+      "line": 165,
+      "description": "Actual serialized size is checked only after writing/fsync. An oversized serialization can exceed per-file estimate, aggregate cap or free-space reserve before rejection. Require a bounded writer to reject before the extending write."
+    }
+  ],
+  "pending_physical_conditions": [
+    "fixture bridge completed and retained files included",
+    "fresh <=120s exclusive PC/GPU/watcher inventory with current disk free >=1476395008 bytes",
+    "exact V11 tuple closure and delivered package/tree <=8MiB verified",
+    "actual all16 zero-optimizer memory, full serialization/frame/raw preflight pass"
+  ],
+  "historical_checkpoint_stat": {
+    "parent_reported_outbox": "a9d97cf4eee3118bd615011f47dbe6211fb87034",
+    "observed_utc": "2026-09-30T08:37:32.96Z",
+    "both_seed_saved_V12_checkpoint_bytes": 109564463,
+    "per_seed_cap_bytes": 113246208,
+    "margin_bytes": 3681745,
+    "current_PC_free_bytes_then": 1822674944,
+    "conditional_slack_after_full_bridge_and_startup_bytes": 77844480,
+    "independently_read_checkpoint_bytes": false
+  },
+  "interpretation_limits": [
+    "TRAIN-only optimization and memorization; grammatical conversation and notebook semantics not qualified",
+    "Removal and donor swaps do not isolate latent direction, scale/norm or semantics",
+    "Fixed4 does not qualify learned stopping",
+    "Two-seed descriptive outcomes require independent saved-raw recount without rescoring; scientific promotion is deferred"
+  ],
+  "all_generated_artifacts_are_nontraining": true
+}

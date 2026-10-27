@@ -1,0 +1,47 @@
+STYLE SHEET v2 FOR GRADING GRAMMAR (exp 241b, M1). The director sealed it on 2026-09-22, before any 241b sweep existed. It is v1 (241-stylesheet.txt) plus the clarifications marked NEW, which make grading stricter or more consistent, never more lenient.
+
+You grade one reply at a time: GRAMMATICAL or UNGRAMMATICAL, with a short reason.
+- A reply is UNGRAMMATICAL if ANY sentence in it breaks any rule below, or is not standard written English.
+- Grade grammar and word choice only. A stiff but correct sentence ("Tarno's city is Vell.") is GRAMMATICAL.
+- Never judge whether a fact is true, or whether a value is sensible for its relation. Names and values are made-up words and may look odd; that alone is never an error.
+
+House rules. Breaking any of these is an error.
+1. Possessives
+   - A singular name takes 's, including names ending in s, x or z ("Tomas's", "Brix's").
+   - A bare apostrophe after a singular name ("Tomas' job") is an error.
+   - A plural common noun ending in s takes a bare apostrophe ("the parents' house"); "parents's" is an error.
+   - An "of" form or a verb form that avoids the possessive is fine.
+2. Lists
+   - Write "A and B" and "A, B and C". No Oxford comma: "A, B, and C" is an error.
+   - No empty slots ("people: .", "A, , B", "and .") and no stray separators.
+   - NEW: the same item twice in one list ("rowing and rowing") is an error.
+3. Numbers in running text
+   - Counts 0–9 are words ("three sisters"); 10 and up are digits.
+   - Digits inside a value (a date, a year, an age, a phone number, an address, a code) are fine.
+   - A bare zero count ("0 people", "zero people") is an error. Say "no one", "nobody", "none" or "I don't know anyone".
+4. Agreement
+   - Count and noun agree ("one person", "two people"); "1 people" and "2 person" are errors.
+   - Subject and verb agree ("X lives", "they live"; "does X live", not "does X lives"). This includes a value used as a subject: "noodles is" is an error.
+   - Verb forms are right ("was born", not "is born" for a birth; "has worked", not "has work").
+5. Articles
+   - Use "a" before a consonant sound and "an" before a vowel sound, going by sound ("an hour", "a university", "an MBA").
+   - No missing article where English needs one ("X is teacher" is an error) and no doubled article.
+6. Sentence form
+   - Each sentence starts with a capital letter and ends with . ? or !
+   - No doubled words ("the the"), no missing words, and no run-on sentences joined only by a comma (comma splices).
+   - Brackets and quotes are balanced.
+   - A question is phrased as a question and ends with "?".
+7. Typography: no space before punctuation, no doubled punctuation ("..", "?.", ".,"), no double spaces, and no leading or trailing space.
+8. No machine text
+   - Raw keys, underscores or placeholders ("date_of_birth", "{name}", "<X>", "None", "null", "[]") are errors, unless the user's own words contained them.
+   - NEW: internal entity codes such as "(E7563)" are machine text and an error.
+9. "(worked out backwards)" follows the statement it qualifies, inside or right after the same sentence. A dangling, doubled or orphaned one is an error.
+10. Pronouns
+   - "I/me/my" for the assistant and "you/your" for the user are fine. Singular "they" is fine.
+   - Pronoun choice is not a grammar error unless it breaks agreement or has no clear referent in the same reply.
+11. NEW: Names and word choice
+   - A value that is plainly a proper name (a person, place, organisation, or the title of a work) starts with a capital letter, even if it looks typed in lowercase. A title keeps its own capital "The" ("the Quiet Tide" inside a sentence is an error when "The Quiet Tide" is the title).
+   - Other values (jobs, foods, hobbies, colours, dates) are not judged for case.
+   - Words must fit what they refer to: "someone/who" for people, "something/which" for things, places, dates and numbers. "Krellwur Press, which is not someone I can look up" is an error.
+
+Output for each reply: id, GRAMMATICAL or UNGRAMMATICAL, and a reason. The reason names the rule number (or "general" for other standard-English errors) and quotes the exact offending words.

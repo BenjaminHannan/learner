@@ -1,0 +1,29 @@
+{
+  "scope": "stdlib numeric test doubles; no optimizer/model/network",
+  "command": "python -B -m unittest discover -s tests/sol_cloud_fixture_v1 -v",
+  "returncode": 1,
+  "tests_run": 11,
+  "passed": 9,
+  "errors": [
+    {
+      "test": "test_dispatch_activity_interrupt_preserves_failure_and_consumes_claim",
+      "exception": "KeyError: 'state_dir'",
+      "cause": "test spec omitted state_dir"
+    },
+    {
+      "test": "test_pinned_spec_rejects_shell_and_unbound_day_input",
+      "exception": "KeyError: 'state_dir'",
+      "cause": "test spec omitted state_dir"
+    }
+  ],
+  "source_pins": {
+    "scripts/sol_cloud_fixture_v1.py": "66649bbfc58f5a41e3c6ed5f6a1167af1baf54bb659f09d130fcddc218702ce5",
+    "scripts/sol_cloud_day_adapter_v1.py": "3a7c900c0ee11c3c5ffd9d1a6a491edc8469eb425d92ba413b383918c1be4148",
+    "tests/sol_cloud_fixture_v1/test_fixture.py": "32c0d78c39233e4642ffb38cd0959944e9c9d7818082c51be7edff48dec22920",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/PRE-RUN.json": "e608ce80fd947357bd8224a1785c1312da86ccb48fdf47908c1f605802d93d8c"
+  },
+  "repair": "add missing state_dir to shared test spec; return false-qualifier assertion to its own test method",
+  "actual_user_day": false,
+  "optimizer_updates": 0,
+  "model_calls": 0
+}

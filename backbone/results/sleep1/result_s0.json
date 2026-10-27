@@ -1,0 +1,496 @@
+{
+ "arm": "s0",
+ "model": "Qwen/Qwen3.5-2B",
+ "smoke": false,
+ "steps": 300,
+ "bsz": 16,
+ "lr": 0.0002,
+ "rank": 16,
+ "alpha": 32,
+ "kl_weight": 1.0,
+ "forward": {
+  "acc": 0.0,
+  "n": 120,
+  "examples": [
+   {
+    "q": "Which boat does Purazul own?",
+    "target": "Bezhenal",
+    "answer": "Purazul owns the boat named \"Purazul\".",
+    "correct": false
+   },
+   {
+    "q": "Name the student that Meinon mentors.",
+    "target": "Satesei",
+    "answer": "Meinon",
+    "correct": false
+   },
+   {
+    "q": "Which boat does Lisaglan own?",
+    "target": "Disouth",
+    "answer": "Lisaglan",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Feikobo.",
+    "target": "Gebravis",
+    "answer": "Nangolo",
+    "correct": false
+   },
+   {
+    "q": "Where was Drabuklal born?",
+    "target": "Vozaglam",
+    "answer": "Kolkata",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Boflobol.",
+    "target": "Pasegail",
+    "answer": "Boflobol",
+    "correct": false
+   },
+   {
+    "q": "Where does Gevradrai live?",
+    "target": "Gliglusam",
+    "answer": "Gevradrai",
+    "correct": false
+   },
+   {
+    "q": "Name the student that Dekodeix mentors.",
+    "target": "Sagogom",
+    "answer": "Kaito",
+    "correct": false
+   },
+   {
+    "q": "Where is Pekreim employed?",
+    "target": "Lebraglim",
+    "answer": "Pekreim is employed by the company Pekreim.",
+    "correct": false
+   },
+   {
+    "q": "Which place is Teimaikun's home?",
+    "target": "Peteisel",
+    "answer": "Kuala Terengganu",
+    "correct": false
+   },
+   {
+    "q": "Where does Zhotis live?",
+    "target": "Salibar",
+    "answer": "Zhotis",
+    "correct": false
+   },
+   {
+    "q": "Which company does Pobeflen work for?",
+    "target": "Fabetos",
+    "answer": "Pobeflen",
+    "correct": false
+   },
+   {
+    "q": "Where was Baikratei born?",
+    "target": "Naitirein",
+    "answer": "Bukhara",
+    "correct": false
+   },
+   {
+    "q": "Name the student that Mutoglir mentors.",
+    "target": "Nuglizos",
+    "answer": "Mutoglir",
+    "correct": false
+   },
+   {
+    "q": "Where was Zutraith born?",
+    "target": "Movraren",
+    "answer": "Zutraith",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Logotun.",
+    "target": "Vomomei",
+    "answer": "Nana",
+    "correct": false
+   },
+   {
+    "q": "Where was Devoupes born?",
+    "target": "Skikrer",
+    "answer": "New York",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Brevre.",
+    "target": "Riklodeir",
+    "answer": "Nathalie",
+    "correct": false
+   },
+   {
+    "q": "Which boat does Flezhosum own?",
+    "target": "Droledax",
+    "answer": "Flezhosum",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Revedin.",
+    "target": "Poubepou",
+    "answer": "Revedin",
+    "correct": false
+   }
+  ]
+ },
+ "reverse": {
+  "acc": 0.0,
+  "n": 120,
+  "examples": [
+   {
+    "q": "Who owns the boat called Bezhenal?",
+    "target": "Purazul",
+    "answer": "The boat called Bezhenal is owned by the Russian Navy.",
+    "correct": false
+   },
+   {
+    "q": "Who mentored Satesei?",
+    "target": "Meinon",
+    "answer": "K\u014db\u014d Daishi",
+    "correct": false
+   },
+   {
+    "q": "Who is the owner of the boat named Disouth?",
+    "target": "Lisaglan",
+    "answer": "John H. Disouth",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Gebravis.",
+    "target": "Feikobo",
+    "answer": "Nathaniel",
+    "correct": false
+   },
+   {
+    "q": "Who was born in Vozaglam?",
+    "target": "Drabuklal",
+    "answer": "None",
+    "correct": false
+   },
+   {
+    "q": "Who is Pasegail's sibling?",
+    "target": "Boflobol",
+    "answer": "Pasegail",
+    "correct": false
+   },
+   {
+    "q": "Who calls Gliglusam home?",
+    "target": "Gevradrai",
+    "answer": "Gligusam",
+    "correct": false
+   },
+   {
+    "q": "Who is the mentor of Sagogom?",
+    "target": "Dekodeix",
+    "answer": "Sagogom",
+    "correct": false
+   },
+   {
+    "q": "Who works at Lebraglim?",
+    "target": "Pekreim",
+    "answer": "Lebraglim",
+    "correct": false
+   },
+   {
+    "q": "Who lives in Peteisel?",
+    "target": "Teimaikun",
+    "answer": "Peteisel",
+    "correct": false
+   },
+   {
+    "q": "Who calls Salibar home?",
+    "target": "Zhotis",
+    "answer": "Salibar",
+    "correct": false
+   },
+   {
+    "q": "Who is employed by Fabetos?",
+    "target": "Pobeflen",
+    "answer": "None",
+    "correct": false
+   },
+   {
+    "q": "Who was born in Naitirein?",
+    "target": "Baikratei",
+    "answer": "Naitirein",
+    "correct": false
+   },
+   {
+    "q": "Who mentored Nuglizos?",
+    "target": "Mutoglir",
+    "answer": "Nuglizos",
+    "correct": false
+   },
+   {
+    "q": "Whose birthplace is Movraren?",
+    "target": "Zutraith",
+    "answer": "Maurraren",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Vomomei.",
+    "target": "Logotun",
+    "answer": "Yamato",
+    "correct": false
+   },
+   {
+    "q": "Who was born in Skikrer?",
+    "target": "Devoupes",
+    "answer": "Nikolai Gogol",
+    "correct": false
+   },
+   {
+    "q": "Who is Riklodeir's sibling?",
+    "target": "Brevre",
+    "answer": "Riklodeir",
+    "correct": false
+   },
+   {
+    "q": "Who is the owner of the boat named Droledax?",
+    "target": "Flezhosum",
+    "answer": "John Lewis",
+    "correct": false
+   },
+   {
+    "q": "Name the brother or sister of Poubepou.",
+    "target": "Revedin",
+    "answer": "None",
+    "correct": false
+   }
+  ]
+ },
+ "twohop": {
+  "acc": 0.0,
+  "n": 60,
+  "examples": [
+   {
+    "q": "Where does the mentor of Troufibem live?",
+    "target": "Skaskobor",
+    "answer": "N/A",
+    "correct": false
+   },
+   {
+    "q": "In which place does Bobavrai's mentor live?",
+    "target": "Peteisel",
+    "answer": "Kathmandu",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Geiskorun live?",
+    "target": "Drapom",
+    "answer": "Korun",
+    "correct": false
+   },
+   {
+    "q": "In which place does Dreske's mentor live?",
+    "target": "Gliglusam",
+    "answer": "New York",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Vrutratei live?",
+    "target": "Krideglas",
+    "answer": "Vrutratei",
+    "correct": false
+   },
+   {
+    "q": "In which place does Meglubin's mentor live?",
+    "target": "Fozhex",
+    "answer": "Terra",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Satesei live?",
+    "target": "Dabavil",
+    "answer": "Toshio",
+    "correct": false
+   },
+   {
+    "q": "In which place does Pikeil's mentor live?",
+    "target": "Vriflivux",
+    "answer": "Pikeil's mentor, the character known as \"The Man Who Wasn't There,\" lives",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Vaikugor live?",
+    "target": "Tripol",
+    "answer": "Karnataka",
+    "correct": false
+   },
+   {
+    "q": "In which place does Rikrel's mentor live?",
+    "target": "Moubreir",
+    "answer": "Rikrel's mentor, the character known as \"The Man in the White Coat\" (or",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Suzegaith live?",
+    "target": "Salibar",
+    "answer": "N/A",
+    "correct": false
+   },
+   {
+    "q": "In which place does Sagogom's mentor live?",
+    "target": "Zoudum",
+    "answer": "Terra",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Rakloun live?",
+    "target": "Flitem",
+    "answer": "Rakloun",
+    "correct": false
+   },
+   {
+    "q": "In which place does Skeivoufe's mentor live?",
+    "target": "Brafleil",
+    "answer": "Viktor",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Klodebem live?",
+    "target": "Glozibol",
+    "answer": "Klodebem",
+    "correct": false
+   },
+   {
+    "q": "In which place does Nuglizos's mentor live?",
+    "target": "Vetegas",
+    "answer": "Troy",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Fakror live?",
+    "target": "Leflou",
+    "answer": "Terra",
+    "correct": false
+   },
+   {
+    "q": "In which place does Fligobres's mentor live?",
+    "target": "Drakail",
+    "answer": "Terra",
+    "correct": false
+   },
+   {
+    "q": "Where does the mentor of Bralith live?",
+    "target": "Lilouvros",
+    "answer": "Narnia",
+    "correct": false
+   },
+   {
+    "q": "In which place does Veiglobou's mentor live?",
+    "target": "Drouvre",
+    "answer": "Rome",
+    "correct": false
+   }
+  ]
+ },
+ "arc_easy": {
+  "acc": 0.894,
+  "n": 500,
+  "examples": [
+   {
+    "q": "Which statement best explains why photosynthesis is the foundation of most food webs?",
+    "pred": "A",
+    "gold": "A"
+   },
+   {
+    "q": "Which piece of safety equipment is used to keep mold spores from entering the respiratory system?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "Meiosis is a type of cell division in which germ cells divide to produce haploid cells. Where does meiosis occur?",
+    "pred": "D",
+    "gold": "D"
+   },
+   {
+    "q": "Which characteristic describes the texture of a kitten's fur?",
+    "pred": "D",
+    "gold": "D"
+   },
+   {
+    "q": "Which best describes the structure of an atom?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "To express the distance between the Milky Way galaxy and other galaxies, the most appropriate unit of measurement is the",
+    "pred": "C",
+    "gold": "C"
+   },
+   {
+    "q": "A student has just completed a laboratory activity. What is the last action that the student should perform before leaving the lab area?",
+    "pred": "A",
+    "gold": "A"
+   },
+   {
+    "q": "Students are investigating the effects of different fertilizers on plant growth. Which units would be best to measure the mass of the fertilizer used?",
+    "pred": "C",
+    "gold": "C"
+   },
+   {
+    "q": "Plants use sunlight to make",
+    "pred": "C",
+    "gold": "C"
+   },
+   {
+    "q": "Which of these correctly identifies the way materials are transported in a plant?",
+    "pred": "A",
+    "gold": "A"
+   },
+   {
+    "q": "When trees develop leaves in the spring, 10 changes occur on the forest floor. Why does the development of leaves cause changes on the forest floor?",
+    "pred": "A",
+    "gold": "B"
+   },
+   {
+    "q": "The circulatory system and the endocrine system work together in the human body. Which describes one way in which these systems interact?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "A student throws a ball into the air. While the ball travels up, the speed of the ball decreases. What force causes the ball to slow while traveling up?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "Which of these will most likely harm a habitat?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "All living and nonliving material is composed of",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "Which process best explains how the Grand Canyon became so wide?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "As global temperatures increase, certain organisms will be more affected than others. The changes associated with global warming may result in an increase in sea level. Which organisms will be affected most as a result of the change in sea level?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "A dish of sugar water was left on a window sill. One week later, there were only sugar crystals left in the dish. The water was gone. The best explanation for the appearance of sugar crystals is",
+    "pred": "D",
+    "gold": "D"
+   },
+   {
+    "q": "Using a softball bat to hit a softball is an example of using which simple machine?",
+    "pred": "B",
+    "gold": "B"
+   },
+   {
+    "q": "When an igneous intrusion comes into contact with surrounding rock, the surrounding rock will",
+    "pred": "B",
+    "gold": "D"
+   }
+  ]
+ },
+ "wall_seconds": 30.199174642562866
+}

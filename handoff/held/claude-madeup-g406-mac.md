@@ -1,0 +1,15 @@
+COMMON RULES (the "Making things up about you" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU only; 560 GLM 5.3 Flash calls through Ben's opencode subscription, 4 at a time; $0). No reader, no rental, no BensPC, no OpenRouter. Label: madeup-g406. TIME CAP: 180 minutes. DISK: 1.
+OPENCODE RULES: never read, print, copy or commit any opencode config, auth file or key. The helper deletes only the sessions it creates; never delete any other session.
+PYTHON: plain python3 may be a broken x86 binary; run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).
+WHY: a $0 gate before any training. GLM reads 560 already-judged DEV chat transcripts with the blind judges' own rubric and marks each assistant reply; the thread then compares GLM's marks with the judges' flags (artifacts/claude-g406-20260926/PASSMARKS.md). Nothing is trained. The packets are DEV data (mu-402 and mu-403/404), not TEST-ONLY.
+
+1. TREE: D=$(mktemp -d); git archive origin/main scripts artifacts/claude-g406-20260926 artifacts/claude-mu402-20260926 artifacts/claude-mu403-20260926 | tar -x -C $D; cd $D; O=artifacts/claude-g406-20260926/run; mkdir -p $O. Record `git rev-parse origin/main`. `shasum -a 256 -c artifacts/claude-g406-20260926/SEAL.sha256.txt` must print OK on all 45 lines; if not, stop and report which lines failed.
+2. Selftests: scripts/claude_g406_glm.py --selftest (must print "g406 selftest 6/6 ok"); scripts/claude_g406_count.py --selftest (must print "g406 count selftest 5/5 ok"). Else stop and report.
+3. Record `date -u`, then:
+   scripts/claude_g406_glm.py --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl' --packets 'artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl' --out $O/glm.jsonl --workers 4 --max-minutes 150 --max-failed 40 > $O/glm.log 2>&1
+   Record `date -u` again, the last line of glm.log verbatim, and `wc -l < $O/glm.jsonl`.
+4. scripts/claude_g406_count.py --glm $O/glm.jsonl --judges artifacts/claude-mu402-20260926/judge --judges artifacts/claude-mu403-20260926/judge --write $O/verdict.json   (record the printed line verbatim)
+5. Copy $O (glm.jsonl, glm.log, verdict.json) into artifacts/claude-g406-20260926/run/ of your worktree and write artifacts/claude-g406-20260926/run/RESULTS.md: the origin/main commit, both `date -u` times, the seal and selftest lines, glm.log's last line, the verdict line, calls per minute, every error or deviation. Counts only: do not quote any transcript. Then rm -rf "$D" (exact path) and confirm it is gone.
+If stopped by the time cap or by failed calls: still do steps 4 and 5 with what exists and say "partial"; a later task resumes from glm.jsonl.
+PUSH: artifacts/claude-g406-20260926/run

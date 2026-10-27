@@ -1,0 +1,202 @@
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_marks123_all.py", line 1156, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_marks123_all.py", line 1040, in main
+    rep = run_single_suite(args.suite, str(out), args.agent,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_marks123_all.py", line 1008, in run_single_suite
+    return fn(outp, agent, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_marks123_all.py", line 369, in suite_p3
+    rep = fn(p3out)
+          ^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop96_marks.py", line 160, in run_l1
+    wait_outbox(state, "r")
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop96_marks.py", line 113, in wait_outbox
+    raise RuntimeError(f"no outbox reply for {name} within {timeout}s")
+RuntimeError: no outbox reply for r within 180.0s
+P4 P4-01: PASS
+P4 P4-02: PASS
+P4 P4-03: PASS
+P4 P4-04: PASS
+P4 P4-05: PASS
+P4 P4-06: PASS
+P4 P4-07: PASS
+P4 P4-08: PASS
+P4 P4-09: PASS
+P4 P4-10: PASS
+P4 P4-11: PASS
+P4 P4-12: PASS
+P4 P4-13: PASS
+P4 P4-14: PASS
+P4 P4-15: PASS
+P4 P4-16: PASS
+P4 P4-17: PASS
+P4 P4-18: PASS
+P4 P4-19: PASS
+P4 P4-20: PASS
+P4 P4-21: PASS
+P4 P4-22: PASS
+P4 P4-23: PASS
+P4 P4-24: PASS
+P4 P4-25: PASS
+P4 P4-26: PASS
+P4 P4-27: PASS
+P4 P4-28: PASS
+P4 P4-29: PASS
+P4 P4-30: PASS
+{"suite": "p4", "pass": true, "seconds": 1.4}
+Q1: F5=FAIL M5=FAIL
+{"suite": "q1", "pass": false, "seconds": 0.9}
+P2 A1: sealed=OK agent=OK
+P2 A2: sealed=BUG agent=OK
+P2 A3: sealed=BUG agent=OK
+P2 A4: sealed=OK agent=OK
+P2 A5: sealed=BUG agent=OK
+P2 A6: sealed=BUG agent=OK
+P2 A7: sealed=OK agent=OK
+P2 A8: sealed=BUG agent=OK
+P2 B1: sealed=OK agent=OK
+P2 B2: sealed=OK agent=OK
+P2 B3: sealed=OK agent=OK
+P2 B4: sealed=OK agent=OK
+P2 B5: sealed=BUG agent=OK
+P2 B6: sealed=OK agent=OK
+P2 B7: sealed=OK agent=BUG
+P2 B8: sealed=OK agent=OK
+P2 C1: sealed=BUG agent=OK
+P2 C2: sealed=BUG agent=BUG
+P2 C3: sealed=BUG agent=OK
+P2 C4: sealed=BUG agent=OK
+P2 C5: sealed=BUG agent=BUG
+P2 C6: sealed=OK agent=OK
+P2 C7: sealed=BUG agent=OK
+P2 C8: sealed=OK agent=OK
+P2 D1: sealed=OK agent=OK
+P2 D2: sealed=BUG agent=OK
+P2 D3: sealed=OK agent=OK
+P2 D4: sealed=OK agent=OK
+P2 D5: sealed=OK agent=OK
+P2 D6: sealed=OK agent=OK
+P2 D7: sealed=BUG agent=OK
+P2 D8: sealed=OK agent=BUG
+P2 E1: sealed=OK agent=OK
+P2 E2: sealed=OK agent=OK
+P2 E3: sealed=OK agent=OK
+P2 E4: sealed=OK agent=OK
+P2 E5: sealed=OK agent=OK
+P2 E6: sealed=OK agent=OK
+P2 E7: sealed=BUG agent=OK
+P2 E8: sealed=OK agent=OK
+P2 E9: sealed=OK agent=OK
+P2 E10: sealed=OK agent=OK
+P2 F1: sealed=OK agent=OK
+P2 F2: sealed=OK agent=OK
+P2 F3: sealed=OK agent=OK
+P2 F4: sealed=OK agent=OK
+P2 F5: sealed=OK agent=OK
+P2 F6: sealed=OK agent=OK
+P2 G1: sealed=OK agent=OK
+P2 G2: sealed=OK agent=OK
+P2 G3: sealed=OK agent=OK
+P2 G4: sealed=OK agent=OK
+P2 G5: sealed=OK agent=OK
+P2 G6: sealed=OK agent=OK
+P2 G7: sealed=OK agent=OK
+P2 G8: sealed=OK agent=OK
+P2 H1: sealed=OK agent=OK
+P2 H2: sealed=OK agent=OK
+P2 H3: sealed=OK agent=OK
+P2 H4: sealed=OK agent=OK
+P2 H5: sealed=BUG agent=OK
+P2 H6: sealed=OK agent=OK
+P2 H7: sealed=OK agent=OK
+P2 H8: sealed=OK agent=OK
+{"suite": "p2", "pass": false, "seconds": 4.0}
+RT81: {'n': 74, 'ok': 61, 'bug': 0, 'unclear': 13}
+{"suite": "rt81", "pass": false, "seconds": 2.0}
+SLEEP: SKIP — agent fable_loop139_agent.py has no Sleep104 maternal-grandmother install path (no Sleep104Daemon); Z1-Z5 skipped
+{"suite": "sleep", "pass": true, "seconds": 0.0}
+BENCH fable_edit_200: items=200 {'mquake-twohop': {'n': 100, 'correct': 100, 'abstain': 0, 'wrong': 0, 'contains_gold': 100, 'teach_reject_items': 0, 'teach_rejects': 0}, 'reversal': {'n': 50, 'correct': 50, 'abstain': 0, 'wrong': 0, 'contains_gold': 50, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-absent': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-broken': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}}
+BENCH s2fresh_4hop: items=200 {'mquake-s2fresh-4hop': {'n': 200, 'correct': 153, 'abstain': 43, 'wrong': 4, 'contains_gold': 154, 'teach_reject_items': 4, 'teach_rejects': 4}}
+{"suite": "bench", "pass": true, "seconds": 17.0}
+RT110  P1 sealed=OK            agent=HARNESS-ERROR
+RT110  P2 sealed=OK            agent=HARNESS-ERROR
+RT110  P3 sealed=OK            agent=HARNESS-ERROR
+RT110  P4 sealed=OK            agent=HARNESS-ERROR
+RT110  P5 sealed=OK            agent=OK           
+RT110  P6 sealed=OK            agent=OK           
+RT110  T1 sealed=OK            agent=OK           
+RT110  T2 sealed=OK            agent=OK           
+RT110  T3 sealed=OK            agent=OK           
+RT110  T4 sealed=OK            agent=OK           
+RT110  T5 sealed=OK            agent=OK           
+RT110  T6 sealed=OK            agent=OK           
+RT110  R1 sealed=OK            agent=OK           
+RT110  R2 sealed=OK            agent=OK           
+RT110  R3 sealed=OK            agent=OK           
+RT110  R4 sealed=BUG           agent=BUG          
+RT110  R5 sealed=OK            agent=OK           
+RT110  R6 sealed=OK            agent=OK           
+RT110  F1 sealed=OK            agent=OK           
+RT110  F2 sealed=OK            agent=OK           
+RT110  F3 sealed=OK            agent=OK           
+RT110  F4 sealed=OK            agent=OK           
+RT110  F5 sealed=BUG           agent=BUG          
+RT110  F6 sealed=OK            agent=OK           
+RT110  N1 sealed=OK            agent=OK           
+RT110  N2 sealed=OK            agent=OK           
+RT110  N3 sealed=OK            agent=OK           
+RT110  N4 sealed=OK            agent=OK           
+RT110  N5 sealed=OK            agent=OK           
+RT110  N6 sealed=BUG           agent=BUG          
+RT110  L1 sealed=OK            agent=OK           
+RT110  L2 sealed=OK            agent=OK           
+RT110  L3 sealed=OK            agent=OK           
+RT110  L4 sealed=OK            agent=OK           
+RT110  L5 sealed=OK            agent=OK           
+RT110  L6 sealed=OK            agent=OK           
+RT110  U1 sealed=OK            agent=OK           
+RT110  U2 sealed=OK            agent=OK           
+RT110  U3 sealed=OK            agent=OK           
+RT110  U4 sealed=OK            agent=OK           
+RT110  U5 sealed=OK            agent=OK           
+RT110  U6 sealed=OK            agent=OK           
+RT110  M1 sealed=OK            agent=OK           
+RT110  M2 sealed=OK            agent=OK           
+RT110  M3 sealed=OK            agent=OK           
+RT110  M4 sealed=OK            agent=OK           
+RT110  M5 sealed=BUG           agent=BUG          
+RT110  M6 sealed=OK            agent=OK           
+RT110  S1 sealed=OK            agent=OK           
+RT110  S2 sealed=OK            agent=OK           
+RT110  S3 sealed=BUG           agent=BUG          
+RT110  S4 sealed=OK            agent=OK           
+RT110  S5 sealed=OK            agent=OK           
+RT110  S6 sealed=BUG           agent=BUG          
+RT110  D1 sealed=OK            agent=OK           
+RT110  D2 sealed=OK            agent=OK           
+RT110  D3 sealed=OK            agent=OK           
+RT110  D4 sealed=OK            agent=OK           
+RT110  D5 sealed=OK            agent=OK           
+RT110  D6 sealed=OK            agent=OK           
+RT110  D7 sealed=OK            agent=OK           
+RT110  D8 sealed=OK            agent=OK           
+{"suite": "rt110", "pass": false, "seconds": 557.0}
+SOAK: turns=2000 kills=3 lost=10 wrong=0 doubled=0 audit(lost=0 dup=0 wrong=0)
+{"suite": "soak", "pass": false, "seconds": 741.0}
+
+suite  | registered bar                             | number                                                     | status | secs
+p2     | 0 OK->BUG, 0 still-BUG (64 cases)          | 64 cases, OK->BUG 2, still-BUG 4                           | FAIL   | 4.0
+p3     | L1-L6 all PASS                             |                                                            | FAIL   | None
+p4     | <= 2 false refusals, 0 non-pass (30)       | 30 sents, refusals 0, nonpass 0                            | PASS   | 1.4
+rt110  | 62/62 executed, 0 harness-error            | 62 cases, OK->BUG 4, still-BUG 6, herr 4                   | FAIL   | 557.0
+q1     | F5+M5 both OK                              | F5=FAIL M5=FAIL                                            | FAIL   | 0.9
+bench  | scorer v2; split-A 0 wrong (200+200)       | fable_edit_200 {'correct': 150, 'abstain': 50, 'wrong': 0} | PASS   | 17.0
+rt81   | 74/74 OK, 0 wrong writes                   | {'n': 74, 'ok': 61, 'bug': 0, 'unclear': 13}               | FAIL   | 2.0
+sleep  | Z1-Z5 if sleep path else SKIP+reason       | SKIP: agent fable_loop139_agent.py has no Sleep104 materna | SKIP   | 0.0
+soak   | 0 lost / 0 wrong / 0 doubled (2000 turns,  | turns=2000 kills=3 lost=10 wrong=0 doubled=0               | FAIL   | 741.0
+q4     | 0 relation-name underscore leaks           | leaks=['also_mira', 'birth_year', 'city_and', 'country_of' | FAIL   | 0.0
+TOTAL 748.6 s -> FAIL
+

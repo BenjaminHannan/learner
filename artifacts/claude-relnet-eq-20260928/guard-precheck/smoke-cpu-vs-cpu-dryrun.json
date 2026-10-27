@@ -1,0 +1,107 @@
+{
+  "PASS": false,
+  "checks": {
+    "counts_after": true,
+    "counts_before": true,
+    "flags_strict_fp32": false,
+    "logits": true,
+    "sleep_update_all": true,
+    "stop_probs": true,
+    "update_all": true,
+    "update_per_tensor": true
+  },
+  "counts_after": {
+    "maze9_first64": {
+      "fixed_right": [
+        0,
+        0
+      ],
+      "right": [
+        0,
+        0
+      ]
+    }
+  },
+  "counts_before": {
+    "grids5": {
+      "fixed_right": [
+        199,
+        199
+      ],
+      "right": [
+        199,
+        199
+      ]
+    },
+    "maze9_first64": {
+      "fixed_right": [
+        0,
+        0
+      ],
+      "right": [
+        0,
+        0
+      ]
+    },
+    "sums4": {
+      "fixed_right": [
+        200,
+        200
+      ],
+      "right": [
+        200,
+        200
+      ]
+    }
+  },
+  "cpu": {
+    "inference_seconds": {
+      "infer_32_11x11": 50.80812379700001,
+      "infer_32_7x7": 2.407742589999998,
+      "infer_32_9x9": 16.687175990000014
+    },
+    "maze_batch_seconds": [
+      15.38897602599991,
+      13.717856369999936
+    ],
+    "sleep_3_steps_seconds": 2.802274773000022,
+    "torch": "2.14.0+cpu"
+  },
+  "gpu": {
+    "gpu": null,
+    "inference_seconds": {
+      "infer_32_11x11": 43.07321079400003,
+      "infer_32_7x7": 2.294622178000054,
+      "infer_32_9x9": 13.354627634000053
+    },
+    "maze_batch_seconds": [
+      14.469857628,
+      12.462667864999958
+    ],
+    "sleep_3_steps_seconds": 2.273866374000022,
+    "torch": "2.14.0+cpu"
+  },
+  "logit_max_abs_diff": {
+    "0": 0.0,
+    "47": 0.0,
+    "7": 0.0
+  },
+  "marks_fixed_in_advance": {
+    "count_diff_after": 2,
+    "count_diff_before": 1,
+    "logit_max_abs_diff": 0.001,
+    "stop_prob_max_abs_diff": 0.001,
+    "update_rel_diff_all_8_updates": 0.02,
+    "update_rel_diff_all_after_3_sleep_steps": 0.05,
+    "update_rel_diff_per_tensor_8_updates": 0.1
+  },
+  "projected_gpu_seconds_per_dev_run": 57661,
+  "projection_note": "suggested, not a result: TIMING-ESTIMATE.md's formula with the GPU times measured here (4096 maze batches, 1024 sleep steps, 11 scoring stages of 24 7x7 + 300 9x9 + 300 11x11)",
+  "seed": 0,
+  "stop_prob_max_abs_diff": 0.0,
+  "update_rel_diff_all_8_updates": 0.0,
+  "update_rel_diff_all_after_3_sleep_steps": 0.0,
+  "update_rel_diff_per_tensor_8_updates": 0.0,
+  "utc": "2026-09-28T23:54:18Z",
+  "worst_tensor_8_updates": "tok.weight"
+}

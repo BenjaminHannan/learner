@@ -1,0 +1,111 @@
+{
+ "arms": {
+  "TS": {
+   "locomo": {
+    "questions": 1986,
+    "missing": 0,
+    "cat1_n": 282,
+    "cat1_f1": 29.55,
+    "cat2_n": 321,
+    "cat2_f1": 36.09,
+    "cat3_n": 96,
+    "cat3_f1": 14.64,
+    "cat4_n": 841,
+    "cat4_f1": 42.53,
+    "cat5_n": 446,
+    "cat5_f1": 53.81,
+    "cat1to4_n": 1540,
+    "cat1to4_f1": 37.07,
+    "cat1to4_abstain": 0,
+    "cat1to4_confident_wrong": 562,
+    "cat1to4_half_right": 575,
+    "cat5_strict_right": 4,
+    "cat5_official_right": 240
+   },
+   "mmlu": {
+    "n": 300,
+    "right": 171,
+    "pct": 57.0
+   },
+   "gsm8k": {
+    "n": 300,
+    "right": 42,
+    "pct": 14.0
+   }
+  },
+  "T": {
+   "locomo": {
+    "questions": 1986,
+    "missing": 0,
+    "cat1_n": 282,
+    "cat1_f1": 24.37,
+    "cat2_n": 321,
+    "cat2_f1": 19.46,
+    "cat3_n": 96,
+    "cat3_f1": 16.07,
+    "cat4_n": 841,
+    "cat4_f1": 32.92,
+    "cat5_n": 446,
+    "cat5_f1": 3.36,
+    "cat1to4_n": 1540,
+    "cat1to4_f1": 27.5,
+    "cat1to4_abstain": 7,
+    "cat1to4_confident_wrong": 467,
+    "cat1to4_half_right": 333,
+    "cat5_strict_right": 14,
+    "cat5_official_right": 15
+   },
+   "mmlu": {
+    "n": 300,
+    "right": 50,
+    "pct": 16.67
+   },
+   "gsm8k": {
+    "n": 300,
+    "right": 191,
+    "pct": 63.67
+   }
+  }
+ },
+ "marks": {
+  "M1": {
+   "per_baseline": {
+    "T": {
+     "n": 1540,
+     "diff": 9.57,
+     "ci95": [
+      7.75,
+      11.34
+     ],
+     "pass": true
+    }
+   },
+   "pass": true
+  },
+  "M3": {
+   "per_baseline": {
+    "T": {
+     "P": 562,
+     "base": 467,
+     "pass": false
+    }
+   },
+   "pass": false
+  },
+  "M4": {
+   "per_task": {
+    "mmlu": {
+     "P": 57.0,
+     "T": 16.67,
+     "pass": true
+    },
+    "gsm8k": {
+     "P": 14.0,
+     "T": 63.67,
+     "pass": false
+    }
+   },
+   "pass": false
+  }
+ }
+}

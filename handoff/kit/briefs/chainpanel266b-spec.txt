@@ -1,0 +1,27 @@
+BLIND PANEL SPEC: chainpanel266b (two-step questions whose chain starts with a multi-word name). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/266*, scripts/claude_fix266*, scripts/claude_loop266*, scripts/claude_266*, artifacts/claude-chain266*, artifacts/claude-chainpanel266-*, any relation-table file, the chat-demo files, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself; use new names (not Ana, not Tovi).
+
+Folder: artifacts/claude-chainpanel266b-20260923/ with panel.jsonl (70 items), base266.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item: {"id": "c266b-001", "family": ..., "setup": [1-4 teaching sentences, each its own turn], "question": "...", "gold": [list of strings, every one must appear in a right reply; [] for abstain and control families], "note": "..."}. JSON list for gold. Only plain teaches ("A's R is B.", "My R is B."). Check every setup on the base stores what you expect; replace any that doesn't.
+
+QUESTION FORMS: use only forms that the base answers right for a plain name. Before writing the panel, check each candidate form on the base with a plain name ("B's city is C." then "Where does B live?"), and keep only forms it answers right. Do NOT use "When is ...'s birthday?". Use at least 4 kept forms (for example "Where does X live?", "Where was X born?", "Where does X work?", "Who does X work for?").
+
+Families and exact counts (70):
+- multiword_chain 24: "Where does A's R1 live?" and the other kept forms, where A is a two-word name (18) or a three-word name (6). Both links taught. At least 7 first-link relations (boss, mother, father, sister, brother, friend, neighbour, dentist, coach, wife, husband ...). At most 6 items per form.
+- three_link 8: "Where does A's R1's R2 live?" etc., all three links taught; 6 of the 8 start with a two-word name.
+- oneword_chain 8: the same shape with a one-word first name.
+- my_live 4: "Where does my R1 live?" after "My R1 is B." and "B's city is C.". Reported, no bar.
+- broken_chain 12: one link missing or taught under another relation; 8 of the 12 start with a two-word name; 2 of the 12 use a two-word name that was never taught at all while its last word was taught as a different person's name (e.g. only "Voss's boss is ..." taught, then asked about "Mara Voss's boss"). gold []; right = an honest abstain that names no untaught value.
+- plain_control 8: kept forms with a plain (often two-word) name subject, taught directly. gold = the value.
+- statement_control 6: statements containing a multi-word-name chain, no "?". gold []; checks for no new writes.
+Fictional names only.
+
+run_base.py: run every item once on the base, 266 = scripts/claude_loop266_agent.py (build function and config as in artifacts/claude-chain266-20260923; a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+
+score_panel.py (sealed; builders use it unchanged): per item and per family:
+- right: gold families = every gold string appears in the reply, case-insensitive; broken_chain = abstain ("I don't know" or "I couldn't") naming no value that is not taught for that chain; plain_control = gold appears; statement_control = stored facts after the turn equal the base's.
+- wrong: the reply names a taught value that is not in gold and does not contain every gold string, and is not an abstain.
+- question_wrote.
+Report the base's right, wrong and question writes per family in README.md, category level only. Never quote an item in README.md or in your final reply.

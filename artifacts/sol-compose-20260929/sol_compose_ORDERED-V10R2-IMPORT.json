@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/Users/ben-hannan/.local/bin/uv",
+    "run",
+    "--offline",
+    "--no-project",
+    "--python",
+    "3.12",
+    "--with",
+    "torch",
+    "--with",
+    "numpy",
+    "python",
+    "-B",
+    "-c",
+    "import sys;sys.path.insert(0,'scripts');import sol_translator_ground_ordered_v10,sol_translator_runtime_ordered_v10,sol_translator_diagnostic_ordered_v10,sol_translator_ordered_deploy_v10;print('4 archive-only imports PASS; no model, optimizer or inference')"
+  ],
+  "rc": 0,
+  "stdout": "4 archive-only imports PASS; no model, optimizer or inference\n",
+  "stderr": "WARN `--no-project` was provided, but no project was found\n",
+  "model_loads": 0,
+  "optimizer_steps": 0,
+  "source_archive_sha256": "0152ac24b62da3b00e470cc4bb1bc0ff31ea3c04589a5c16ac77bd59edc71e06"
+}

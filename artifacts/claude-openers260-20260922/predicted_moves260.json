@@ -1,0 +1,210 @@
+{
+ "exp": "260",
+ "base": "138m",
+ "m2": {
+  "suites": [
+   "rt136",
+   "rt143_nogate",
+   "sessions152",
+   "bench:bench132_4hop",
+   "bench:edit200",
+   "bench:new_121_4hop",
+   "bench:old_s2fresh_4hop"
+  ],
+  "moves": {
+   "rt136": [
+    "[]/C122"
+   ]
+  },
+  "note": "rt136 C122 'Hi. Tom's boss is Ann.' (group multi, expect nowrite): 138m stores the junk subject 'Hi. Tom'; 260 stores the stated fact without the greeting, Tom boss Ann. Verdict WRONG-WRITE on both arms (rt136 wants no write for multi-sentence turns). suitediff218 labels the changed write 'new junk write'. Every other unit: 0 moved vs 138m's saved rows (timing fields excluded); rt136 labels otherwise equal 138m's (13 inherited C019-C031 + C076 + C079); sessions152 0; bench 0.",
+  "rows": {
+   "rt136": {
+    "C122": {
+     "text": "Hi. Tom's boss is Ann.",
+     "reply": "Saved: Tom's boss is Ann.\n",
+     "stored": [
+      [
+       "Tom",
+       "boss",
+       "Ann"
+      ]
+     ],
+     "verdict": "WRONG-WRITE"
+    }
+   }
+  },
+  "label_moves": {
+   "rt136": [
+    [
+     "C122",
+     "new junk write"
+    ]
+   ]
+  }
+ },
+ "m3": {
+  "allowed_fields": [
+   ".agent",
+   ".config",
+   ".label",
+   ".seconds",
+   ".root",
+   ".report"
+  ]
+ },
+ "m4": {
+  "probes": {
+   "rows": {
+    "B15:t0": {
+     "turn": "Please call me Fenna.",
+     "reply_138m": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+     "reply": "Saved: your name is Fenna.",
+     "ev_138m": 0,
+     "ev": 3,
+     "triples": [
+      [
+       "USER",
+       "name",
+       "Fenna"
+      ]
+     ]
+    },
+    "B15:t1": {
+     "turn": "What's my name?",
+     "reply_138m": "I don't know your name yet.",
+     "reply": "Your name is Fenna.",
+     "ev_138m": 0,
+     "ev": 0,
+     "triples": [
+      [
+       "USER",
+       "name",
+       "Fenna"
+      ]
+     ]
+    },
+    "D08:t1": {
+     "turn": "Please, who is Tomas's boss?",
+     "reply_138m": "I didn't understand that question \u2014 could you say it another way?",
+     "reply": "Tomas's boss is Mirela.",
+     "ev_138m": 0,
+     "ev": 0,
+     "triples": [
+      [
+       "Tomas",
+       "boss",
+       "Mirela"
+      ]
+     ]
+    },
+    "D10:t0": {
+     "turn": "Please, Kestrel's job is fisher.",
+     "reply_138m": "Saved: Please, Kestrel's job is fisher.",
+     "reply": "Saved: Kestrel's job is fisher.",
+     "ev_138m": 3,
+     "ev": 3,
+     "triples": [
+      [
+       "Kestrel",
+       "job",
+       "fisher"
+      ]
+     ]
+    },
+    "D10:t1": {
+     "turn": "could you tell me Kestrel's job please?",
+     "reply_138m": "I didn't understand that question \u2014 could you say it another way?",
+     "reply": "I didn't understand that question \u2014 could you say it another way?",
+     "ev_138m": 0,
+     "ev": 0,
+     "triples": [
+      [
+       "Kestrel",
+       "job",
+       "fisher"
+      ]
+     ]
+    },
+    "E06:t0": {
+     "turn": "hello there",
+     "reply_138m": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+     "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+     "ev_138m": 0,
+     "ev": 0,
+     "triples": []
+    },
+    "E10:t0": {
+     "turn": "Hi! What's your name?",
+     "reply_138m": "You never told me your name, so I do not know it.",
+     "reply": "My name is Premonition.",
+     "ev_138m": 0,
+     "ev": 0,
+     "triples": []
+    }
+   },
+   "stored": {
+    "B15": {
+     "stored_138m": [],
+     "stored": [
+      [
+       "USER",
+       "name",
+       "Fenna"
+      ]
+     ]
+    },
+    "D10": {
+     "stored_138m": [
+      [
+       "Please, Kestrel",
+       "job",
+       "fisher"
+      ]
+     ],
+     "stored": [
+      [
+       "Kestrel",
+       "job",
+       "fisher"
+      ]
+     ]
+    }
+   },
+   "why": {
+    "B15": "'Please call me Fenna.': opener 'please' dropped; the rest 'call me Fenna.' is the base's user-name teach (a save of the stated fact without the opener), and the next question answers from it",
+    "D08": "'Please, who is Tomas's boss?': the rest is answered as if typed alone",
+    "D10": "'Please, Kestrel's job is fisher.': stores Kestrel (not 'Please, Kestrel'); the next row's reply is unchanged, only its triples column differs",
+    "E06": "'hello there': bare greeting gets the head's reply to 'Hello.'",
+    "E10": "'Hi! What's your name?': the rest is the identity question; 138m's reply read it as the user's name"
+   }
+  },
+  "probes_supp": {
+   "rows": {},
+   "stored": {}
+  },
+  "allowed_new_writes": {
+   "B15:t0": [
+    [
+     "USER",
+     "name",
+     "Fenna"
+    ]
+   ]
+  },
+  "allowed_store_changes": {
+   "D10": [
+    [
+     "Kestrel",
+     "job",
+     "fisher"
+    ]
+   ]
+  }
+ },
+ "m5": {
+  "reply_changes": {}
+ },
+ "m6": {
+  "max_delta_ms": 3.0
+ }
+}

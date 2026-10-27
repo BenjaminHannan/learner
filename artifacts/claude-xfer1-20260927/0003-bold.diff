@@ -1,0 +1,55 @@
+diff --git a/scripts/claude_xfer1_adapt.py b/scripts/claude_xfer1_adapt.py
+index eb6520277..ca54e0277 100644
+--- a/scripts/claude_xfer1_adapt.py
++++ b/scripts/claude_xfer1_adapt.py
+@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
+ import claude_xfer1_net as N  # noqa: E402
+ 
+ LR, WD, WARMUP = 1e-3, 0.1, 50
++N_SUP, FREE, GRAD = 4, 3, 2     # loop: deep supervision (TRM) - 4 updates per batch, state carried (detached) between them
+ 
+ 
+ class Adapter:
+@@ -30,15 +31,39 @@ class Adapter:
+         self.sched = torch.optim.lr_scheduler.LambdaLR(self.opt, lambda i: min(1, (i + 1) / WARMUP))
+         self.round_rng = random.Random(910000 + seed)
+ 
+-    def learn(self, items):
+-        self.net.train()
+-        loss = N.train_loss(self.net, items, self.round_rng)
++    def update(self, loss):
+         self.opt.zero_grad(set_to_none=True)
+         loss.backward()
+         torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
+         self.opt.step()
+         self.sched.step()
+ 
++    def learn(self, items):
++        self.net.train()
++        if self.net.arm != "loop":
++            self.update(N.train_loss(self.net, items, self.round_rng))
++            return
++        net = self.net
++        t, s, y = N.tensors(items)
++        h = None
++        for _ in range(N_SUP):
++            e, (dr, dc) = net.embed(t, s)
++            if h is None:
++                h = torch.zeros_like(e)
++            with torch.no_grad():
++                for _ in range(FREE):
++                    h = net.step(h, e.detach(), dr, dc)
++            h = h.detach()
++            ces, hls = [], []
++            for _ in range(GRAD):
++                h = net.step(h, e, dr, dc)
++                lg, q = net.read(h)
++                c_, ex = N.ce_and_exact(lg, s, y)
++                ces.append(c_)
++                hls.append(torch.nn.functional.binary_cross_entropy_with_logits(q.float(), ex))
++            self.update(torch.stack(ces).mean() + 0.5 * torch.stack(hls).mean())
++            h = h.detach()
++
+ 
+ def stop_round(p, q, n):
+     return next((r for r in range(2, n) if q[r] > 0.5 and p[r] == p[r - 1] == p[r - 2]), n - 1)

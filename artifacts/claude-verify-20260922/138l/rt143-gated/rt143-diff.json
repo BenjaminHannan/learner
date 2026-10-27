@@ -1,0 +1,58 @@
+{
+ "suite": "rt143",
+ "summary_line": "rt143: n_moves=4 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=2, write change=0, reply-only move=2) seconds=4.3",
+ "n_moves": 4,
+ "class_counts": {
+  "reply-only move": 2,
+  "fixed": 2
+ },
+ "moves": [
+  {
+   "id": "J8",
+   "class": "reply-only move",
+   "detail": "verdict WRONG-ANSWER->MISSED, stored identical, reply 'I have no opinions.' -> \"I don't know anyone called Norlanb.\"",
+   "base_verdict": "WRONG-ANSWER",
+   "new_verdict": "MISSED",
+   "base_reply": "I have no opinions.",
+   "new_reply": "I don't know anyone called Norlanb."
+  },
+  {
+   "id": "K9",
+   "class": "fixed",
+   "detail": "WRONG-ANSWER -> OK",
+   "base_verdict": "WRONG-ANSWER",
+   "new_verdict": "OK",
+   "base_reply": "I have no opinions.",
+   "new_reply": "I don't know anyone called Ostmark."
+  },
+  {
+   "id": "O3",
+   "class": "reply-only move",
+   "detail": "verdict OK->OK, stored identical, reply 'I do not know that from what you taught me. I have no record' -> \"I don't know anyone called Norlandia.\"",
+   "base_verdict": "OK",
+   "new_verdict": "OK",
+   "base_reply": "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you ",
+   "new_reply": "I don't know anyone called Norlandia."
+  },
+  {
+   "id": "O5",
+   "class": "fixed",
+   "detail": "WRONG-ANSWER -> OK",
+   "base_verdict": "WRONG-ANSWER",
+   "new_verdict": "OK",
+   "base_reply": "I have no opinions.",
+   "new_reply": "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you "
+  }
+ ],
+ "new_wrong": 0,
+ "new_wrong_write": 0,
+ "new_junk": 0,
+ "counter": {
+  "OK": 104,
+  "MISSED": 6,
+  "WRONG-ANSWER": 7,
+  "HARNESS-ERROR": 7
+ },
+ "seconds": 4.3,
+ "base_rows": "artifacts/fable-agent138j-20260922/g2frozen/redteam143-loop138j.json"
+}

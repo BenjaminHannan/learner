@@ -1,0 +1,42 @@
+{
+ "agent": "scripts/fable_daemon141_settle.py",
+ "config": "artifacts/fable-loop134-20260922/loop134-config.json",
+ "suites": [
+  "soak",
+  "p2",
+  "p4",
+  "rt110"
+ ],
+ "table": [
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "turns=2000 kills=3 lost=0 wrong=0 doubled=0",
+   "status": "PASS",
+   "seconds": 236.2
+  },
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "64 cases, OK->BUG 2, still-BUG 4",
+   "status": "FAIL",
+   "seconds": 3.6
+  },
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "30 sents, refusals 0, nonpass 0",
+   "status": "PASS",
+   "seconds": 0.9
+  },
+  {
+   "suite": "rt110",
+   "bar": "62/62 executed, 0 harness-error",
+   "number": "62 cases, OK->BUG 0, still-BUG 4, herr 0",
+   "status": "PASS",
+   "seconds": 87.0
+  }
+ ],
+ "total_seconds": 236.3,
+ "pass": false
+}

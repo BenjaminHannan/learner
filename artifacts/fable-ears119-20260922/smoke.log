@@ -1,0 +1,29 @@
+encoder params 109,327,872 weights pytorch_model.bin max_len 192
+smoke rows=83 long_rows=8 maxlen=190
+smoke full-subset loss before=24.7293
+smoke step 1/50 loss 23.1746
+smoke step 25/50 loss 16.0545
+smoke step 50/50 loss 4.6491
+smoke full-subset loss after=5.1543
+smoke panel-eval runs: 20/20 decoded (no scores reported)
+{
+ "seed": 11900,
+ "rows": 83,
+ "long_rows": 8,
+ "max_len": 192,
+ "steps": 50,
+ "batch": 8,
+ "loss_step1": 23.174564361572266,
+ "loss_step25": 16.054494857788086,
+ "loss_step50": 4.649094581604004,
+ "loss_falls_50": true,
+ "full_loss_before": 24.72932976412486,
+ "full_loss_after": 5.154314776501024,
+ "full_loss_falls": true,
+ "sec_per_step": 1.375909719467163,
+ "train_sec": 68.79548597335815,
+ "load_plus_data_sec": 16.372843027114868,
+ "panel_eval_runs": "20/20 decoded",
+ "params": 109664018
+}
+elapsed 91.6s

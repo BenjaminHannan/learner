@@ -1,0 +1,16 @@
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: resume the builder for merge 292 (reasoning line). The first 292 builder session (runs/rsn-292-build on builder-outbox) stopped after its build smoke test, before any pilot, PASSMARKS or seal. Its reply is on origin/builder-outbox:runs/rsn-292-build/rsn-292-build.go1.reply.md. Its draft files are in this worktree and on builder-outbox: scripts/claude_loop292_agent.py, scripts/claude_292_*.py/.sh, artifacts/claude-merge292-20260923/loop292-config.json, and possibly design/v3/30-modes/292-merge-muse.md.
+Read handoff/queue/rsn-292-build.md (from origin/main); it is still the whole task. Continue from the drafts. Nothing is sealed yet, so you may finish and edit those 292 draft files. List every draft file you changed, and why, in PASSMARKS.md under "Pre-seal edits to drafts". Every other rule in rsn-292-build.md holds, including never editing any other file and never editing a file after the seal.
+The blind panel artifacts/claude-mixpanel292-20260923/ has already landed and been verified by the director (seal 5/5; the 291 base reproduces 80/80). Use it only in M5, once, after your seal.
+PUSH: artifacts/claude-merge292-20260923 scripts/claude_loop292_agent.py scripts/claude_fix292_glue.py scripts/claude_292_*.py scripts/claude_292_*.sh design/v3/30-modes/292-merge-muse.md artifacts/fable-predictions-ledger.md

@@ -1,0 +1,47 @@
+{
+ "daemon": {
+  "module": "Loop139cDaemon (scripts/fable_loop139c_agent.py)"
+ },
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'",
+  "stand_in": "Loop139cEars (loop138b + 139c lowercase chat-tail strip before the save path, closed list fixed in scripts/fable_fix139c_tail.py)",
+  "tau_family": "tape",
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json"
+ },
+ "mouth": {
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth",
+  "stand_in": "Loop139cMouth (Loop138bMouth unchanged)"
+ },
+ "notebook": {
+  "class": "Loop90Notebook",
+  "replacement": "none",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece"
+ },
+ "reasoner": {
+  "class": "QualifierAwareReasoner77",
+  "module": "scripts/fable_fix77_core.py",
+  "replacement": "none",
+  "stand_in": "none -- this reasoner IS the verified piece"
+ },
+ "self": {
+  "answerer": "Self99Agent.answer_self over live loop138 state",
+  "router": "route127 (frozen novelty-guard router, scripts/fable_self127.py)",
+  "rule": "notebook answers always win; notebook-missed turns go to the self path (routed intent's canonical answer on non-DECLINE, HONEST_DECLINE + 'Could you say it another way?' on DECLINE)"
+ },
+ "sleep": {
+  "recipe": "exp-46 recipe + taught-beats-sleep answer rule (all words)",
+  "retrofit": "Sleep145Reasoner + Sleep145Sleeper via retrofit_sleep145"
+ },
+ "sleep_threshold": 20,
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "replacement": "no further replacement; web text stays quarantined",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)"
+ }
+}

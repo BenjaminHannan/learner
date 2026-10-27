@@ -1,0 +1,90 @@
+EXP 260 BRIEF: openers and greetings never become part of a fact. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why (the director's probe on 138m, 17:50). All names here are fictional.
+- A safety bug. "Please, Kestrel's job is fisher." → "Saved: Please, Kestrel's job is fisher." It stores the subject "Please, Kestrel", and "What is Kestrel's job?" then gets "I don't know anyone called Kestrel."
+- Teaches that start with an everyday opener aren't saved, and the reply is the save-failure line:
+  - "So, Marnie lives in Tollan."
+  - "Oh, and Pell's boss is Rhoda."
+  - "Also, Idris works at Fenwick."
+  - "Okay so Brann's sister is Liesl."
+  - "Well, Tamsin is a baker."
+  - "By the way, …" works, and so does "Hey, my name is Corwin."
+- "Hi! Who is Pell's boss?" gets "I didn't understand that question…", and "hello there" gets "I didn't understand that well enough to save it…".
+- Closed lists for this already exist:
+  - scripts/fable_fix137b_discourse.py DISCOURSE137B, which rejects discourse-glued multi-word names;
+  - scripts/fable_fix150_subjectguard.py FILLER_OPENERS, which strips fillers from subjects;
+  - 221c's question fillers (not in 138m).
+  - They don't fire on these turns on 138m. Find out why first: which layers see the turn, and where each list is or isn't applied.
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json (saved rows in artifacts/claude-merge138m-20260922/run/).
+- One change: a single outermost turn-opener mixin, scripts/claude_fix260_openers.py, in scripts/claude_loop260_agent.py. SrcGuardMixin228 stays first.
+- Artifacts: artifacts/claude-openers260-20260922/. Ledger lines: P260.n. Design note: design/v3/30-modes/260-openers-opus.md.
+- Never edit an existing file.
+
+The one change: openers and greetings are never part of a fact.
+1. One closed list of openers, fixed before any panel read. Build it from:
+   - the union of DISCOURSE137B and FILLER_OPENERS;
+   - greetings (hi, hey, hello, hiya, good morning/afternoon/evening, with an optional "there", "again" or "Premonition");
+   - common multi-word openers ("oh and", "okay so", "and also", "fun fact", "just so you know", "for the record", "one more thing", …);
+   - hesitation words (um, uh, er).
+   It is a closed-class list; take care with words that are also names (Will, Hope, Joy, May, Art, Bill, Mark, Pat, Grace, Sunny, Faith, Rose).
+2. A turn that starts with a listed opener, followed by a comma, "!", "." or "-", or directly by a clause the head can read, is handled as the rest of the turn.
+   - Strip at most 2 openers ("Oh, and so, …").
+   - Use the rest only if the head gives it a non-clarify action (a save, an answer, or a fixed reply). Otherwise the original turn goes to the head unchanged.
+   - Keep the user's words otherwise: don't lowercase or re-case names.
+3. A bare greeting (the whole turn is listed greeting words plus optional "there", "again" or "Premonition" and punctuation) gets the head's own greeting reply, exactly the reply the head gives to "Hello.".
+4. Write guard, belt and braces. No stored subject may start with a listed opener followed by a comma. A turn that would store one is handled by step 2, or, if step 2 doesn't apply, by the head's own save-failure reply with 0 writes.
+5. Safety:
+   - Questions never write.
+   - The user's name keeps its confirm flow.
+   - Inferred facts are never stored.
+   - Names or titles that start with a listed word WITHOUT a following comma or "!" ("Hey Jude", "So Long Summer", "Will Tarn") must not be stripped when they are the subject or value. When you can't tell, don't strip.
+6. Everything else stays byte-identical.
+
+Overlaps to predict (merge later, not now): 221c's question fillers (138n), 137b and 150.
+
+Blind panel
+- A separate writer is building artifacts/claude-openpanel260-20260922/ under the exact schema in openpanel260-spec.txt (same folder). Your scorer must implement that schema check and those scoring rules exactly.
+- Do NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed.
+- After your seal:
+  - wait for its SEAL.sha256.txt and check OK from the repo root;
+  - run the schema check;
+  - run the panel ONCE on both arms (138m and yours) and score it.
+- If the panel is not ready 40 minutes after your seal, report and stop.
+
+Order of work
+1. Reproduce and diagnose, as above.
+2. Write your dev cases: at least 60 scored dialogs in your own wording, covering:
+   - openers with and without commas;
+   - greeting + question;
+   - bare greetings;
+   - junk shapes;
+   - name traps;
+   - identity questions after greetings;
+   - restart cases (at least 4);
+   - question traps (at least 6).
+3. Build the fix and pilot it on your dev set, the suites, the 138m verifier probes (artifacts/claude-verify-20260922/138m/probes*.json), the sleep smoke and the restart dialogs.
+4. Write PASSMARKS.md with every predicted move by id. Seal, append the ledger lines, run M2–M6 once each, then M1.
+
+Registered marks
+- M1, openpanel260 (80 items), on your arm, with the 138m arm's numbers next to every figure:
+  - opener_teach ≥ 16/20
+  - opener_question ≥ 10/12
+  - greeting_question ≥ 7/8
+  - bare_greeting ≥ 5/6
+  - junk_guard 8/8 with 0 junk
+  - name_trap: no item newly wrong vs 138m
+  - 0 junk writes over all 80
+  - 0 question writes
+  - control 16/16 right and byte-identical to base138m
+- M2, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench against 138m's registered rows. The moves are exactly your predicted list, with 0 new WRONG, WRONG-WRITE, junk or lost OK, and 0 flips toward an abstain.
+- M3, sleep smoke: identical to 138m's except labels, paths and timing.
+- M4, 138m verifier probes: every changed reply is predicted by id. 0 new writes, except predicted saves of the stated fact without the opener.
+- M5, restart dialogs (138m's M6 files): 0 ghost answers, 0 failed duplicate checks, and replies identical except predicted moves.
+- M6, latency: median added time per turn ≤ +3 ms against 138m, measured in the same session.
+
+Keep every registered run under 25 minutes.
+- Check `uptime` and `df -g /` before heavy steps. Stop if free disk is under 3 GB.
+- Use at most 4 parallel processes.
+
+Finish with RESULTS.md and a final message as OPUS-RULES requires.

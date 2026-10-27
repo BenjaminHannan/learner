@@ -1,0 +1,1972 @@
+{
+ "maps": [
+  {
+   "already_considered": [
+    {
+     "idea": "Two-pool card writer (separate key/value pooling), 33 extra params at toy width, 129 at production width",
+     "status": "conditional",
+     "where": "premonition/card_pools.py:67 implemented but untrained; recommended as first comparison in design/research/final-sweep-2026-09-19/00-evidence.md:69, :93"
+    },
+    {
+     "idea": "Fixed contextual-mean pooling as an input-information control",
+     "status": "conditional",
+     "where": "MeanPoolCardWriter in premonition/card_pools.py:50; audited as fair control at 00-evidence.md:81"
+    },
+    {
+     "idea": "Exposing the retrieval key to the decoder's card row",
+     "status": "deferred",
+     "where": "design/research/2026-09-19-overnight-research-note.md:201 (\"Optionally, give the decoder's card row the key as well\"); explicitly NOT implemented; 00-evidence.md:91, :108 warns not to credit split pools with it"
+    },
+    {
+     "idea": "Centred Think (subtracting shared drift)",
+     "status": "rejected",
+     "where": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:15 D-think-centered-s0-1200 read:one_hop=63/512; reduced similarity but did not restore reading"
+    },
+    {
+     "idea": "Final-loop-only supervision vs every-loop",
+     "status": "rejected",
+     "where": "SUMMARY.txt:19 vs :23 \u2014 choose 181/512 vs 169/512 val, 181 vs 182 test; near-identical with gate near-closed"
+    },
+    {
+     "idea": "Question-aware answer writer (qread)",
+     "status": "adopted",
+     "where": "SUMMARY.txt:27 nothink+qread-s0-1200 read 264/512 vs nothink-s0-1200 179/512; kept in all later arms"
+    },
+    {
+     "idea": "Gated Think and card bypass as repairs for the Think collapse",
+     "status": "adopted",
+     "where": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:22-25, 1024/1024 test on both, both seeds"
+    },
+    {
+     "idea": "Gold-evidence (oracle) diagnostic before full comparisons",
+     "status": "adopted",
+     "where": "reviews/astra-review-2026-09-18.md:55-62; run as gold_read_K2_no_fetch and gold-card arms"
+    },
+    {
+     "idea": "Top-4 ASK retrieval arm",
+     "status": "deferred",
+     "where": "00-evidence.md:49 \u2014 implemented as an arm but not run overnight; seed-1 default curriculum also not run"
+    },
+    {
+     "idea": "One-visit-per-row 2048 windows replacing random 768-token cuts",
+     "status": "adopted",
+     "where": "design/06-step1-pilot-results.md:10,16 \u2014 only 8 of 162,049 visits cut short"
+    },
+    {
+     "idea": "Weighting answer tokens in the loss / more questions per visit",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md:26 \u2014 open decision for Ben"
+    },
+    {
+     "idea": "More question phrasings via Qwen top-up (60+/type) vs fixed phrasings for the Step-1 gate",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md:22-25 \u2014 decision (a)/(b)/(c) unresolved"
+    },
+    {
+     "idea": "Combining C2 and E into one strong C* baseline (retrieval + anonymisation + iterative retrieval + matched supervision)",
+     "status": "deferred",
+     "where": "reviews/astra-review-2026-09-18.md:38-49 \u2014 proposed, no C* run found in any audited artifact"
+    },
+    {
+     "idea": "Three precommitted seeds, visit-clustered bootstrap, non-inferiority bounds",
+     "status": "deferred",
+     "where": "reviews/opus-milestone-01-m01-20260918-202731.md:157 \u2014 statistics unbuilt; identity.guard_verdict still returns full_verdict:false"
+    },
+    {
+     "idea": "Token-level addressing and drift compensation for the memory layer",
+     "status": "rejected",
+     "where": "00-evidence.md:110 \u2014 02-memory explicitly supersedes its own two initial recommendations; 86x estimate was addressing MACs only"
+    },
+    {
+     "idea": "Latent-program screen (READ_ENTITY then READ_VALUE)",
+     "status": "conditional",
+     "where": "00-evidence.md:106 \u2014 toy_ladder.py:142-165 has one fixed operation pattern per hop count, so it tests argument selection, not program topology"
+    },
+    {
+     "idea": "Bounded reread of selected evidence lines",
+     "status": "conditional",
+     "where": "00-evidence.md:104, :121 \u2014 kept only as a fallback if correct facts are selected but pooled values stay unusable"
+    },
+    {
+     "idea": "H1 factual sensitivity/invariance triplet loss (JS + margin) vs identical-data CE",
+     "status": "conditional",
+     "where": "00-evidence.md:123, :148 \u2014 controls sound, but model.py:612 selects on detached scores so H1 cannot train ASK selection"
+    },
+    {
+     "idea": "H2 query-reuse distillation (teacher KL at second fetch)",
+     "status": "conditional",
+     "where": "00-evidence.md:125, :138-146 \u2014 privileged (simulator supplies bridge pairing); leakage and masking rules specified; extra-evidence-CE named as the cheap alternative"
+    },
+    {
+     "idea": "BM25 keyword-search contender C blind-spot fix",
+     "status": "adopted",
+     "where": "reviews/opus-milestone-01-m01-20260918-202731.md:15 \u2014 blind spot hit 62% of inputs, 413 questions; search now finds 231 of 464 missing facts"
+    },
+    {
+     "idea": "Shared label-free preprocessing for D and all transformer contenders",
+     "status": "adopted",
+     "where": "reviews/opus-milestone-01-m01-20260918-202731.md:13; A leaked in 7,675/8,675 inputs (88.5%), now 0"
+    },
+    {
+     "idea": "Growing VQ codebook, private-language RL, learned sleep clock, drives",
+     "status": "deferred",
+     "where": "reviews/astra-review-2026-09-18.md:7 \u2014 Astra advises postponing all four"
+    },
+    {
+     "idea": "Bonsai automated sentence audit for the pattern bank",
+     "status": "rejected",
+     "where": "design/06-step1-pilot-results.md:33 \u2014 advisory only; approved 18% of sentences and ~22 of its first 25 vetoes were fine"
+    },
+    {
+     "idea": "Qwen lead-in check for teacher lines",
+     "status": "adopted",
+     "where": "design/06-step1-pilot-results.md:33 \u2014 6/6 good passed, 4/6 bad caught; 181 t.quiz_later lead-ins still unchecked"
+    }
+   ],
+   "open_questions": [
+    "Do separate key/value pools actually repair choosing, or only the probes? No trained result for premonition/card_pools.py exists anywhere in the audited artifacts (00-evidence.md:43), and under answer-only supplied-card loss the key has no causal path into the answer (00-evidence.md:89).",
+    "Is pooling competition necessary at all, or does a cheap fixed contextual mean preserve usable associations? The mean probe rows already decode person/relation/value well (mean->person 1998/2304, mean->value 2304/2304 in the collapsed run, SUMMARY.txt:72) which weakly predicts mean should work \u2014 untested end-to-end.",
+    "Would the long-read curriculum replicate on seed 1 at 3,745 steps? Only seed 0 has a long run; seed 1 exists only at 1,405 steps, where it scored 27/512 (00-evidence.md:33). Nothing distinguishes 'seed 1 is broken' from 'seed 1 needs longer'.",
+    "Is the 4M-vs-28M null real? The 28M run saw 119.37M nominal tokens vs 395.67M for 4M (00-evidence.md:63), so capacity and exposure are fully confounded.",
+    "Are the artifacts/premonition-1h-4090-run_*.log runs on the RTX 4090 the filename claims, or on Ben's own RTX 5070 Ti? Hardware provenance is unlabelled inside the logs, which matters for reusing their throughput numbers as 5070 Ti budgets.",
+    "Which tokenizer is canonical? All three BensPC pilots used premonition-tok-v2.json with 7,289 IDs, while premonition/identity.py requires premonition-tok-v2-fallback.json with 7,068 IDs (00-evidence.md:61). Until this is reconciled no pilot checkpoint can be admitted for an official verdict.",
+    "Can any held-out score still be used as primary evidence? Held-out numbers combine validation and test, and test was consulted during the iterative pilot (00-evidence.md:65). Fresh test identities are needed.",
+    "Does anything in the project retain skills over time? No retention or continued-learning result exists in any artifact (00-evidence.md:49), yet lifelong learning is the project's headline claim.",
+    "How much of the 23.4% held-out Core score is leakage rather than reading? All three saved gates report leak_detectors: FAIL including not-told, person and yes/no cues (00-evidence.md:65), so the true label-free ceiling is unknown.",
+    "Does the ~1/3 choosing score exceed any shortcut at all? Measured simple shortcuts reach 53.71% one-hop / 53.42% two-hop on validation (00-evidence.md:27), above every choosing score recorded \u2014 so choosing may currently be worse than not reasoning."
+   ],
+   "strengths": [
+    {
+     "what": "ESTABLISHED. Reading one supplied fact card is fully repaired, on the untouched test, on two seeds, by two independent fixes. Original D scored 112/1024 and 111/1024 (wilson95 [0.0917,0.130] and [0.0908,0.1289], chance 6.25%); D-card-bypass and D-think-gated each scored 1024/1024 (wilson95 [0.9963,1.0]) at seeds 0 and 1. Four-for-four across fixes and seeds makes this the most trustworthy result in the project.",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:22-27"
+    },
+    {
+     "what": "ESTABLISHED. The failure was causally localised to the Think block, not to the reader or the card writer. With no Think pass the writer-card arm reaches 477/512 val (93.2%) and 956/1024 probe-scored; inserting one Think pass drops the identical setup to 55/512 val (10.7%) and 113/1024. Collapse anatomy matches: cos_post(median) 0.9756 with Think vs 0.2362 without, and attention on the card row 0.0774 vs 0.3291 (uniform = 0.0674).",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:12,19,42-47"
+    },
+    {
+     "what": "ESTABLISHED. The repaired copying arms are causally well-behaved, not pattern-matching: on 256 paired fresh visits each, irrelevant fact changes left the answer unchanged 256/256 with both members correct, and relevant changes flipped the answer with both correct 256/256; swap-follows 1024/1024 (original 0). Original D managed relevant both-correct 1/256.",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:56-62, :32,:38"
+    },
+    {
+     "what": "ESTABLISHED. On the harder toy ladder, gold-only reading is perfect on the untouched test for every repaired arm: one-hop 512/512, practised two-hop 323/323, held-out two-hop 189/189. Reading supplied evidence is therefore not the bottleneck anywhere.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:49-51"
+    },
+    {
+     "what": "ESTABLISHED. The card store is load-bearing, verified by two independent ablations. D-noask (reader only, no cards) stayed at chance: 42/512 val (8.2%) on the m02 toy and 41/512 / 27/341 / 8/171 on the ladder after 3,750 steps; nothink-noask scored 40/512 one-hop on test. Removing cards from a trained bypass model drops it to 34/512 one-hop.",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:5; artifacts/opus-ovn-20260918-235851/SUMMARY.txt:98-100,:52,:105"
+    },
+    {
+     "what": "PLAUSIBLE, ONE SEED. Own retrieval plus reading works end-to-end for one-hop and practised two-hop, given a long gold-reading curriculum and 3,745 steps: test one-hop 356/512 (69.5%, all needed cards fetched 350/512) and practised two-hop 154/323 (47.7%). The same architecture on the default curriculum reached only 32/512. Single seed, and the seed-1 replication at 1,405 steps failed.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:103, :87, :94-96"
+    },
+    {
+     "what": "ESTABLISHED (mechanism). The information loss happens at pooling, not at reading. Reader states at the person and value token positions decode perfectly (person_tok->person 2304/2304, value_tok->value 2304/2304) in every checkpoint, while pooled card vectors keep only one field: the answer-only run puts 97.9% of pool mass on the value token with pooled->person 131/2304, whereas the retrieval-trained seed-0 run puts 71.0% on relation with pooled->value 149/2304. Reproduced across six checkpoints.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:70-76, :62-65"
+    },
+    {
+     "what": "ESTABLISHED (Core track). The one-visit-per-row 2048-token window is a real improvement over random 768-token cuts, on matched 600 s runs: final loss 0.734 -> 0.656, train held-in 382/991 (38.55%) -> 475/991 (47.93%), held-out visible 677/3782 (17.90%) -> 881/3763 (23.41%), and 'not told' answers 22/579 -> 169/571. Confounded by a parameter change (5,222,144 -> 5,549,824) and by exposure, so the size of the effect is uncertain even though its direction is consistent.",
+     "evidence": "design/06-step1-pilot-results.md:10,16; design/research/final-sweep-2026-09-19/00-evidence.md:57-59,:63"
+    },
+    {
+     "what": "ESTABLISHED (infrastructure). Evaluation trustworthiness measurably improved: contender A showed at least one earlier answer in 7,675/8,675 inputs (88.5%, 34,801 leaked answers) and now shows 0 with all 8,675 passing an automatic audit; contender C's retrieval blind spot affected 62% of inputs and hid a needed fact in 413 questions, and the repaired search now finds 231 of 464. Scoring fails closed on tokenizer/vocab/shape mismatch, and all 49 frozen-source and 78 artifact hashes re-verified read-only.",
+     "evidence": "reviews/opus-milestone-01-m01-20260918-202731.md:13,15,:98; design/research/final-sweep-2026-09-19/00-evidence.md:11"
+    },
+    {
+     "what": "ESTABLISHED. The data pipeline is not the limiter on the 5070 Ti: world_bottleneck stall was 0.2-0.9% on the three 19 Sep pilots, and the forgetting-baseline probe recorded its 7 evaluation points in every run. Cost is small and measured: whole overnight ledger 3,478.2 s (58.0 min) of local Mac CPU, $0.00 rental against the $30 cap.",
+     "evidence": "design/06-step1-pilot-results.md:12; artifacts/opus-ovn-20260918-235851/SUMMARY.txt:2-4; reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md ledger table"
+    }
+   ],
+   "weaknesses": [
+    {
+     "what": "Choosing the right card among distractors is the central unsolved failure, and may be below the level of a dumb shortcut. Test choose:one_hop = 166/512, 181/512, 182/512 (32-36%) across the three best arms, while measured simple shortcuts reach 53.71% one-hop and 53.42% two-hop on validation and a random-attribute-card strategy reaches 30.37%. The 32-36% therefore sits between random-card and shortcut performance, not above it.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:49-51; design/research/final-sweep-2026-09-19/00-evidence.md:27",
+     "severity": "blocking",
+     "suspected_cause": "Single pooled card vector keeps either identity or value but not both (pool mass 97.9% on value, pooled->person 131/2304), so the decoder cannot tell whose card it is looking at."
+    },
+    {
+     "what": "Held-out two-hop composition is near-total failure with own retrieval: 14/189 on test (7.4%), with both required cards fetched in only 1/189. Practised two-hop in the same checkpoint reaches 154/323 with both cards in 166/323, so this is specifically a generalisation failure, not a capability failure. One seed, one checkpoint.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:103; :107-119 (hop_recall heldout: link_fetched 139/171, answer_card_fetched 0, both 0)",
+     "severity": "blocking",
+     "suspected_cause": "The second fetch reuses a relation practised in that position instead of the relation the question asks for."
+    },
+    {
+     "what": "The second fetch asks for the wrong relation almost always on held-out combinations: the default seed-0 checkpoint selected the requested relation 0/171 held-out vs 341/341 practised; the longer checkpoint improves only to 9/171, with the correct person too in 2/171. Even practised second fetches get the person right in only 144/341. Held-out fetch2 breakdown is dominated by other_other_rel 65, link 34, other_link 30, with answer 2.",
+     "evidence": "design/research/final-sweep-2026-09-19/00-evidence.md:35; artifacts/opus-ovn-20260918-235851/SUMMARY.txt:123-126",
+     "severity": "blocking",
+     "suspected_cause": "No factorised query construction \u2014 the model learned position-specific relation priors rather than building the query from the question's own relation."
+    },
+    {
+     "what": "Seed instability is large enough to invalidate single-seed conclusions. At matched 1,405 steps and identical settings, pure gold-only one-hop reading scored 503/512 (seed 0) vs 27/512 (seed 1); the probe shows the two seeds landed on opposite pooling solutions (s0: card_value 2048/2048, card_person 134/2048; s1: card_person 1818/2048, card_value 143/2048). Almost every headline overnight number is seed 0 only.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:84,:96,:59-60; design/research/final-sweep-2026-09-19/00-evidence.md:33",
+     "severity": "blocking",
+     "suspected_cause": "A winner-take-all race inside the single pooled vector; whichever field training reinforces first wins."
+    },
+    {
+     "what": "Causal competence on the ladder is much weaker than prediction-change counts suggest. For nothink+qread-s0-cur600-4000, relevant fact changes altered the prediction 130/256 but both members were correct in only 30/256; tempting irrelevant changes wrongly altered the prediction 150/256; link changes gave 14/143 both-correct. Reporting 'changed' alone overstates this badly.",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:55; design/research/final-sweep-2026-09-19/00-evidence.md:29",
+     "severity": "major",
+     "suspected_cause": "Answers driven by surface distribution over supplied rows rather than by the selected fact."
+    },
+    {
+     "what": "The recurrent 'think' loop, which is the architectural centrepiece, is measurably unused. Gate alpha settled at -0.02468 (seed 0) and +0.00133 (seed 1) in m02, and 0.01809 / 0.04196 on the ladder; the card-bypass fix simply routes around Think entirely. Both winning repairs work by disabling or circumventing recurrence, so no evidence supports the recurrent reasoner over a feed-forward reader.",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:6-7; artifacts/opus-ovn-20260918-235851/SUMMARY.txt:21,:25",
+     "severity": "major",
+     "suspected_cause": "Think collapses rows toward a common large vector, so training's cheapest fix is to shut it off."
+    },
+    {
+     "what": "Accuracy collapses monotonically as distractor cards are added, even for the repaired copying arms: bypass 1024 -> 674 -> 545 -> 444 at n=0,1,2,3 distractors; think-gated 1024 -> 302 -> 192 -> 179. Distractor-trained bypass is better at n>=1 (902/738/623/530) but loses the clean case. Distractor values are themselves emitted 146-318 times, so the model is reading the wrong card, not abstaining.",
+     "evidence": "artifacts/opus-m02-20260918-232457/SUMMARY.txt:50-53",
+     "severity": "major",
+     "suspected_cause": "Same identity-erasure in the pooled card."
+    },
+    {
+     "what": "The Core Step-1 gate FAILs on every accuracy item against its 90% bar, with no run close: best held-out visible 881/3763 (23.41%, 99% upper bound far below 0.9), held-out rule families 1/244 to 13/244, counterfactual pairs 4-8/376 (0.011-0.021) versus chance 0.050-0.061, i.e. below chance with p=1.",
+     "evidence": "design/06-step1-pilot-results.md:12; artifacts/premonition-1h-4090-run_4M_s0.log (GATE block), artifacts/premonition-1h-4090-run_28M_s0.log (GATE block)",
+     "severity": "blocking",
+     "suspected_cause": "Answer tokens are only 1-2% of training tokens; held-out phrasings unseen; no reasoning mechanism in the plain transformer."
+    },
+    {
+     "what": "Every saved Core gate reports leak_detectors: FAIL, with specific surface cues well above their nulls (e.g. zero/bag_of_words 75.7% vs null 52.1%, nobody/question_only 86.7% vs null 50.0%, person/target_line 31.5% vs null 20.0%, not told/metadata 58.7% vs null 50.0%). step1.build_items:1210 still retains earlier context labels and gated:2035 only excludes repeats, which differs from the label-free contract in \u00a711. So the 23.4% held-out figure is not a clean reading score.",
+     "evidence": "artifacts/premonition-1h-4090-run_4M_s0.log and _28M_s1.log (leak_detectors lines); design/research/final-sweep-2026-09-19/00-evidence.md:65",
+     "severity": "major",
+     "suspected_cause": "Core preprocessing was never migrated onto the shared label-free path built in milestone 1."
+    },
+    {
+     "what": "Held-out question wording is a hard wall and one axis actually regressed under the windowing fix: direction-question accuracy fell 13/276 -> 3/276 (1%) and why-questions sit at 0%. Each question type has only 2-7 training phrasings. Sparse phrasing is a plausible cause but is not isolated \u2014 the same change also altered context, parameters and exposure.",
+     "evidence": "design/06-step1-pilot-results.md:17; design/research/final-sweep-2026-09-19/00-evidence.md:63",
+     "severity": "major",
+     "suspected_cause": "With 2-7 phrasings per type the model cannot map a novel phrasing to an answer type, so it defaults to 'not told'/'yes'/'no'."
+    },
+    {
+     "what": "The earlier 1 h runs show the transformer memorising names rather than reading them: seen-name accuracy 43.9% (4M s0), 86.7% (4M s1), 68.2%/68.7% (28M) against fresh-name accuracy 0.0% [0.0%, 1.7%] in all four runs. Name gap 0.439-0.867. Four runs, two seeds, two sizes \u2014 reproducible.",
+     "evidence": "artifacts/premonition-1h-4090-run_4M_s0.log, _4M_s1.log, _28M_s0.log, _28M_s1.log (name gap lines)",
+     "severity": "major",
+     "suspected_cause": "Names were tokenised as memorable units and answer supervision rewarded recall over pointer-following; this motivated the anonymisation/pointerizer work."
+    },
+    {
+     "what": "Scaling gives nothing, but the comparison is confounded, so 'capacity is ruled out' is not supported. 28M scored 632/3782 (16.71%) held-out vs 4M 677/3782 (17.90%) at equal wall-clock, but 28M saw 119.37M nominal tokens against 395.67M for the 4M. Single seed each.",
+     "evidence": "design/research/final-sweep-2026-09-19/00-evidence.md:57-58,:63; design/06-step1-pilot-results.md:8-9",
+     "severity": "major",
+     "suspected_cause": "Fixed 600 s budget rather than fixed token budget."
+    },
+    {
+     "what": "Learned halting is barely better than chance and does not track the fixed-loop results: test learned-halting 525/1024 at an average 2.7412 loops, and the frequently quoted 53.6% is a validation number, not test. In the earlier own-retrieval m02 run, recall@4 = 1.0 (right card always fetched) while accuracy stayed at 60/1024 val and 54/1024 test \u2014 finding the card and using it are fully dissociated.",
+     "evidence": "design/research/final-sweep-2026-09-19/00-evidence.md:31; artifacts/opus-m02-20260918-232457/SUMMARY.txt:13-17",
+     "severity": "major",
+     "suspected_cause": "Value information is absent from the card in the retrieval-trained regime (pooled->value 149/2304)."
+    },
+    {
+     "what": "No evidence exists for the project's headline claim. There is no retention, continual-learning or forgetting result beyond a 7-point probe curve that is flat (peak = final: 0.575, 0.693, 0.511, 0.726), and no robust village comparison against the transformer contenders (no C* run exists). The Core generalisation gap is 0.399-0.618.",
+     "evidence": "design/research/final-sweep-2026-09-19/00-evidence.md:49; artifacts/premonition-1h-4090-run_*.log (forgetting baseline / generalisation gap lines); reviews/astra-review-2026-09-18.md:38-49",
+     "severity": "blocking",
+     "suspected_cause": "All effort has gone to repairing the reasoning toy; the lifelong-learning machinery is designed but unbuilt."
+    },
+    {
+     "what": "Statistical machinery for any real verdict is missing, and identity checks currently refuse the pilot checkpoints. identity.guard_verdict still returns full_verdict: false; `decide` uses item-level McNemar with no visit-clustered bootstrap, no one-sided 99% non-inferiority bound, no 60-visit floor; overnight scorers used eval()/no_grad() instead of the fingerprint wrapper and their Wilson intervals ignore four-questions-per-visit clustering; regression-final.log records 126 tests run with one skipped, not 126 passes.",
+     "evidence": "reviews/opus-milestone-01-m01-20260918-202731.md:157; design/research/final-sweep-2026-09-19/00-evidence.md:75,:11",
+     "severity": "major",
+     "suspected_cause": "\u00a79.4 statistics were deferred past milestone 1 and never returned to."
+    }
+   ],
+   "subsystem": "evidence",
+   "summary": "Two evidence bodies exist. The Premonition-mini toy ladder (local Mac CPU, ~58 min total, $0 rental) has firmly established that reading one supplied fact card works (1024/1024 test, two fixes, two seeds) and that the earlier failure came from the Think block collapsing rows; probes locate the remaining loss precisely at card pooling, where a single vector keeps either identity or value but not both. Everything downstream is still broken: choosing among distractor cards sits at 32-36%, below a measured 53.7% shortcut; held-out two-hop composition is 14/189; the second fetch requests the wrong relation. The Core transformer track (RTX 5070 Ti, 600 s runs) reached 23.4% held-out against a 90% gate, with leak detectors failing and fresh-name accuracy at 0.0%."
+  },
+  {
+   "subsystem": "reasoner",
+   "summary": "Premonition-mini \"D\" (~2.01M params, d=128) reads a whole visit with a 3-layer reader [minGRU, block-local attention W=64 RoPE, minGRU], writes one card per non-question line by attention-pooling that line's reader states into a unit key (64) and a value (128), then, at each question's \"[answer]\" token, runs a Think tensor of 76 rows (40 question states, 16 entity slots, 16 card rows, 4 registers) through one shared 2-layer bidirectional transformer block looped up to 8 times. Register 0 drives ASK (cosine query x card keys, scaled by learned kappa plus age bias, top-4) and HALT. Fetched cards enter as value + age embedding + row-type embedding; a binder gates each mentioned entity slot. A one-block decoder cross-attends the think rows and emits answer tokens through the tied embedding, with ENT ids restricted to entities actually mentioned.",
+   "strengths": [
+    {
+     "what": "Causal privilege is enforced structurally, not by convention: a question sees only cards on lines strictly before its own, wipes add a floor, and evidence lines with no eligible card are counted rather than silently dropped.",
+     "evidence": "premonition/store.py:82-98 (eligible), store.py:138-157 (gold returns `missing`), premonition/model.py:549-550 (`metrics[\"gold_missing\"]`)"
+    },
+    {
+     "what": "ASK is trained with a set cross-entropy over the still-unfetched gold cards, so retrieval supervision needs no hop order and degrades gracefully as cards accumulate.",
+     "evidence": "premonition/store.py:33-35; model.py:596-601 (`need = gold & ~fetched`), spec design/06-premonition-mini-spec.md L_ask row of the loss table"
+    },
+    {
+     "what": "Name handling is rule-based and hard-constrained: entity ids are the only way to name a person, and generation of an unmentioned ENT id is masked to -inf, so a fresh name is copied exactly and can never be hallucinated.",
+     "evidence": "premonition/model.py:395-407 (_mentions), model.py:738-740 and 747 (banned mask), design/06-premonition-mini-spec.md \u00a72 \"Names as pointers\""
+    },
+    {
+     "what": "Deep supervision: the decoder loss and a HALT target are computed at every loop, not only the last, with a 0.2 down-weight before all gold cards are in. This matches the TRM/HRM finding that deep supervision, not the recursion itself, carries most of the gain.",
+     "evidence": "premonition/model.py:570-588 (ans_terms, halt_terms, `scale = where(have_all, 1.0, early_ans)`); config.py:53 `early_ans = 0.2`; design/research/2026-09-19-overnight-research-note.md TRM entry"
+    },
+    {
+     "what": "Compute accounting is real and falsifiable: FLOPs are measured with FlopCounterMode, fitted to a*tokens + b*question_loops with a reported worst relative residual, and cross-checked against a hand count in the same convention.",
+     "evidence": "premonition/flops.py:97-136 (measure_mini, fit_flops), flops.py:139-169 (mini_hand_count); spec \u00a74 requires agreement within 15%"
+    },
+    {
+     "what": "Variant discipline is unusually clean for A/B causality: diagnostic variants copy every shared weight from the baseline and verify the state-dict delta is exactly the new parameter, and the new card writer is built inside fork_rng so the global RNG stream is bit-identical to the baseline's.",
+     "evidence": "premonition/answer_path.py:127-134 (from_base checks `missing == [\"think.alpha\"]`), premonition/card_pools.py:88-98 (`torch.random.fork_rng`), ovn_variants.py:60-63"
+    },
+    {
+     "what": "minGRU forget gates are initialised so memory time constants are spread log-uniformly over 2..512 tokens, giving the recurrence a usable range of horizons at step 0 instead of one default decay.",
+     "evidence": "premonition/model.py:360-364 (`tau = logspace(log10(2), log10(512), d)`; bias = logit(1/tau))"
+    },
+    {
+     "what": "Matched-context evaluation against the transformer baselines is built in: W-full re-crops each question's row to A's 768-token window and re-reads it with a fresh reader state; W-store keeps the recurrence but drops the cards.",
+     "evidence": "premonition/model.py:671-695 and crop_to_windows at model.py:760-802; spec \u00a72 \"Wipes\""
+    },
+    {
+     "what": "The config computes the parameter breakdown by hand and refuses to construct a d=128 model outside the 1.9-2.15M band, so the compute-matching claim cannot silently drift.",
+     "evidence": "premonition/config.py:70-74, config.py:129-153; spec \u00a71 table totals 2,013,140"
+    }
+   ],
+   "weaknesses": [
+    {
+     "what": "A card's retrieval key and its content value are both linear projections of ONE pooled vector produced by ONE scalar score per token, so addressing and reading compete for the same softmax. The card physically cannot hold both \"whose relation this is\" and \"what it says\".",
+     "evidence": "premonition/model.py:171-197 (single `self.pool = nn.Linear(d, 1)`, `CardStore.write(self.key(pooled), self.value(pooled), ...)`); measured 0.979 attention mass on the value token and person decodable in 116/2048 probes (design/research/final-sweep-2026-09-19/README.md evidence table; premonition/card_pools.py:5-10)",
+     "severity": "blocking",
+     "suspected_cause": "Key and value tied to a single pooling distribution; whichever loss dominates early (retrieval vs answer) wins the pool and the other field is discarded. The fix (D-two-pool / D-mean-pool) exists in code but is explicitly untrained."
+    },
+    {
+     "what": "A fetched card re-enters Think as value + age embedding + row-type embedding only. Its key, source tag, line index, diary pointer and entity ids are all written into the store but never given to the model, so once the pooled value has collapsed there is no other handle on card identity.",
+     "evidence": "premonition/model.py:458-459 (`rows = values + age(bucket) + row_type[ROW_CARD]`); the unused fields are stored at premonition/store.py:43-46 (tags, ents, line_start, line_len)",
+     "severity": "blocking",
+     "suspected_cause": "The row format was designed assuming the pooled value would be self-describing; combined with the pooling collapse it leaves the decoder nothing to choose with (supplied-card choosing 166-182/512)."
+    },
+    {
+     "what": "The decoder's first cross-attention query is question-blind: decoding starts from the single \"[answer]\" token, which is the same token for every question, so the first read of the think rows cannot be conditioned on what was asked unless Think already marked the right row.",
+     "evidence": "premonition/model.py:560-561 (`start_token = tokens[q_visit, q_span[:,1]-1]`) and model.py:741 (`sequence = ...unsqueeze(1)`); diagnosis and the +qread remedy at premonition/ovn_qread.py:3-9",
+     "severity": "major",
+     "suspected_cause": "Encoder-decoder split where the question is only an encoder input; the fix costs no parameters (PREFIX=6 extra decoder positions, ovn_qread.py:22) but is still a diagnostic subclass, not baseline D."
+    },
+    {
+     "what": "Think returns its residual stream unnormalised and adds the loop-step embedding to EVERY row before each pass, which lets a loop add one shared vector to all 76 rows. Measured: a row-shared update of norm ~8.7 with only ~0.3 row-to-row spread, and Think gates that trained nearly closed.",
+     "evidence": "premonition/model.py:236-240 (`x = x + self.step.weight[step]`, no output norm) vs the reader which does end in a LayerNorm (model.py:163,168); measured shortcut quoted in premonition/ovn_variants.py:8-10; \"Think gates nearly closed\" in design/research/final-sweep-2026-09-19/README.md",
+     "severity": "major",
+     "suspected_cause": "A recurrent block with only pre-norm inside its layers and no inter-loop normalisation; the cheapest way to reduce loss is a uniform drift that the decoder's parameter-free `_norm(memory)` (model.py:287) then partly hides."
+    },
+    {
+     "what": "Residual initialisation is scaled for a 6-branch network (3 reader layers + 2 think layers + 1 decoder) but the think block is executed up to 8 times, so the true inference-time depth is 3 + 2x8 + 1 = 20 branches and the looped block is under-damped by roughly a factor of 1.8 in std.",
+     "evidence": "premonition/model.py:341 (`residual_std = 0.02 / sqrt(2 * (len(config.reader) + config.think_layers + 1))`) with config.py:32 `think_layers = 2`, config.py:38 `max_loops = 8`",
+     "severity": "major",
+     "suspected_cause": "Depth counted from module count rather than from unrolled compute; plausibly a direct contributor to the residual-drift and gate-closing above."
+    },
+    {
+     "what": "Card-row eviction is silently unrecoverable. Rows are overwritten modulo 16, but `fetched` is never cleared and `eligible` permanently excludes any fetched card, so an evicted card can never be re-fetched and its value is simply gone for the rest of the episode.",
+     "evidence": "premonition/model.py:461 (`position = _card_base + (count + order) % card_rows`), model.py:467-468 (fetched set, never unset), premonition/store.py:96-97 (`ok &= ~fetched`). In \"own\" mode 8 loops x top_k 4 = up to 32 fetches into 16 rows (config.py:37-39)",
+     "severity": "major",
+     "suspected_cause": "FIFO ring buffer plus a monotone \"already fetched\" mask designed independently; nothing reconciles them."
+    },
+    {
+     "what": "Parameter allocation is inverted relative to the diagnosed bottleneck: 40.6% of the model is the token embedding and the card writer, the module every diagnostic blames, gets 1.2%.",
+     "evidence": "design/06-premonition-mini-spec.md \u00a71 table: embedding 817,664; card writer 25,089; think 466,448; decoder 199,040; reader 496,384; total 2,013,140 (matches config.py:129-153)",
+     "severity": "major",
+     "suspected_cause": "A 6,388-id tied vocabulary at d=128 in a 2M budget; the writer was sized as a projection rather than as an encoder of a line into a structured record."
+    },
+    {
+     "what": "The slot binder (65,792 params, 2.6x the card writer) runs as a Python loop over fetch slots using non-accumulating index_put, and is explicitly excluded from the FLOP hand count as \"< 1%\".",
+     "evidence": "premonition/model.py:471-481 (`for k in range(cards.shape[1])`, `episode.x.index_put(...)` without accumulate); premonition/flops.py:144 (\"Leaves out the slot binder\"); spec \u00a71 lists the binder at 65,792",
+     "severity": "minor",
+     "suspected_cause": "Cost was estimated from the matmul size, not from the launch count; and index_put with duplicate (owner, slot) pairs is order-nondeterministic, which the `repeat` mask at model.py:473-474 only guards within a single card."
+    },
+    {
+     "what": "The recurrent memory is sign-constrained: the log-space scan makes h_t strictly positive, so the reader's state can only accumulate and decay, never cancel. Erasure is available only through the (1 - z) factor. Combined with exactly ONE local-attention layer of window 64, all long-range binding inside a visit passes through a positive accumulator.",
+     "evidence": "premonition/model.py:46-48 (`_log_g`: g(x) = x+0.5 or sigmoid(x), always > 0), model.py:51-70 (scan is computed in log space and exponentiated), config.py:27 `reader = (\"gru\", \"attn\", \"gru\")`, config.py:29 `window = 64`",
+     "severity": "major",
+     "suspected_cause": "The log-space parallel scan requires positive candidates; expressivity was traded for scan stability. A line's card is pooled from these states, so identity that must survive from an earlier line arrives through this channel."
+    },
+    {
+     "what": "The equal-FLOPs comparison against A/B/C systematically undercounts D. FlopCounterMode counts only matmuls and attention, and the minGRU scan (a chunked fp32 Python loop producing [B, T, d] fp32 intermediates per layer, twice) is pure elementwise work.",
+     "evidence": "premonition/flops.py:5-7 (\"elementwise work such as the minGRU scan is skipped\"), model.py:57-70 (fp32 autocast-disabled chunked loop, `scan_chunk = 256` at config.py:30); spec \u00a74 budgets D at ~1.4B tokens on this counter",
+     "severity": "major",
+     "suspected_cause": "A FLOP convention chosen for transformer comparability applied to a non-transformer; the secondary wall-clock check exists but is explicitly \"not a kill\"."
+    },
+    {
+     "what": "HALT is trained on teacher-forced correctness but used on free-running greedy decoding, and at weight 0.1. The target is \"every answer token argmax-correct given the GOLD prefix\", which is a strictly easier event than the greedy rollout being right.",
+     "evidence": "premonition/model.py:561 (`inputs` are gold-shifted), model.py:579-588 (`wrong` from argmax against gold, `correct` becomes the BCE target), vs model.py:745-756 (greedy feeds its own tokens); config.py:51 `w_halt = 0.1`",
+     "severity": "minor",
+     "suspected_cause": "Deep-supervision loss reused as a stopping signal without an exposure-bias correction."
+    },
+    {
+     "what": "Think rewrites the card rows in place at every loop, so evidence is not read-only; the only clean evidence path (D-card-bypass) exists solely as a diagnostic subclass and is not the baseline.",
+     "evidence": "premonition/model.py:486-487 (`rows = self.think(...); episode.x = episode.x.index_copy(0, index, rows)`); premonition/answer_path.py:10-13 and 114-121 (CardBypassMini keeps the pre-Think rows for the decoder); \"the thinking scratchpad damages facts it is allowed to rewrite\" in design/research/2026-09-19-overnight-research-note.md",
+     "severity": "major",
+     "suspected_cause": "One homogeneous row tensor for scratch space and for retrieved facts, with no write protection per row type."
+    },
+    {
+     "what": "There is no regularisation of any kind in the reasoner: no dropout, no stochastic depth, no noise, and no auxiliary diversity term. Reported seed spread on the same setting is 503/512 vs 27/512.",
+     "evidence": "grep of premonition/model.py finds no Dropout module (modules are LayerNorm, Linear, Embedding, Mlp, GELU only, model.py:78-291); seed instability recorded in design/research/final-sweep-2026-09-19/README.md and the overnight note's ladder table (seed 1 at 1500 steps finds 390/512 but reads 27/512)",
+     "severity": "major",
+     "suspected_cause": "Small model on synthetic data assumed not to need it; but the failure mode is which of two competing solutions the pool falls into, which is exactly what noise/regularisation would arbitrate. End-To-End Memory Networks needed a linear start, noise and best-of-10 restarts for the same reason."
+    },
+    {
+     "what": "L_ans is divided by the total number of (question, loop) pairs, so a question allotted more loops contributes proportionally more gradient than a 2-loop one; the loop count itself is a function of the oracle evidence-set size.",
+     "evidence": "premonition/model.py:566-568 and 617 (`pairs += index.numel()`; `l_ans = cat(ans_terms).sum() / pairs`), with model.py:542 `n_loops = ceil(told_lines / top_k) + 3`",
+     "severity": "minor",
+     "suspected_cause": "Normalising by pairs rather than by question makes deep, multi-evidence questions dominate the answer loss, entangling difficulty weighting with the curriculum."
+    }
+   ],
+   "already_considered": [
+    {
+     "idea": "Separate key and value pooling for cards (KV-MemNN style)",
+     "status": "conditional",
+     "where": "premonition/card_pools.py:67-85 (D-two-pool, implemented, explicitly untrained); design/research/final-sweep-2026-09-19/README.md recommendation 1"
+    },
+    {
+     "idea": "Uniform mean pooling of a line as a no-learned-pool control",
+     "status": "conditional",
+     "where": "premonition/card_pools.py:80-85 (D-mean-pool); README.md recommendation 1 names it a valid simple comparator"
+    },
+    {
+     "idea": "Question-conditioned decoder query (+qread, End-To-End Memory Networks)",
+     "status": "deferred",
+     "where": "premonition/ovn_qread.py:1-9, 35-71 \u2014 built, parameter-free, not folded into baseline D"
+    },
+    {
+     "idea": "Read-only evidence rows for the decoder (D-card-bypass)",
+     "status": "adopted",
+     "where": "premonition/answer_path.py:72-121; used as the base for the pool variants (card_pools.py:117-130)"
+    },
+    {
+     "idea": "Gating the whole Think update with a learned scalar (D-think-gated)",
+     "status": "adopted",
+     "where": "premonition/answer_path.py:51-69; result: gate trained nearly closed, i.e. recurrence barely used"
+    },
+    {
+     "idea": "Row-centred Think update to kill the shared-drift shortcut (PairNorm)",
+     "status": "rejected",
+     "where": "premonition/ovn_variants.py:1-11, 39-44 \u2014 removed the shared collapse but reading did not return (overnight note \u00a71)"
+    },
+    {
+     "idea": "Deep supervision at every loop rather than final-loop only (TRM/HRM)",
+     "status": "adopted",
+     "where": "premonition/model.py:570-588; overnight note records the final-only test as inconclusive because Think contributed almost nothing"
+    },
+    {
+     "idea": "Entity slots with a gated binder (binding IDs / ESBN identity-content split)",
+     "status": "adopted",
+     "where": "premonition/model.py:242-245, 469-481; slots init from the tied ENT embeddings at model.py:424"
+    },
+    {
+     "idea": "H1 factual sensitivity/invariance triplet loss (JS agreement + changed-odds margin) against an identical-data CE control",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md recommendation 2; conditional on the pool controls"
+    },
+    {
+     "idea": "H2 query-reuse distillation at the second fetch",
+     "status": "deferred",
+     "where": "final-sweep README.md recommendation 2 and the H2 technical note; explicitly \"not in the immediate pool prompt\""
+    },
+    {
+     "idea": "Shared repeated reader for the second hop",
+     "status": "conditional",
+     "where": "final-sweep README.md recommendation 2, gated on \"choosing works but query reuse fails\""
+    },
+    {
+     "idea": "Bounded reread of the exact text behind selected cards (REFRAG-style)",
+     "status": "conditional",
+     "where": "final-sweep README.md recommendation 3; blocked by 1/189 both-facts retrieval"
+    },
+    {
+     "idea": "Token-level retrieval (ColBERT)",
+     "status": "deferred",
+     "where": "final-sweep README.md breadth table: \"defer until a correctly formed query has an addressing failure\""
+    },
+    {
+     "idea": "Fast-weight associative memories (Gated DeltaNet, Titans, Larimar) replacing explicit cards",
+     "status": "rejected",
+     "where": "final-sweep README.md breadth table: \"no current evidence justifies replacing explicit cards\""
+    },
+    {
+     "idea": "Built-in relational join / latent program search",
+     "status": "deferred",
+     "where": "final-sweep README.md recommendation 2 closing paragraph: exploratory, behind the simpler repeated reader"
+    },
+    {
+     "idea": "Multi-seed pooling with learned seed vectors (Set Transformer PMA)",
+     "status": "mentioned",
+     "where": "premonition/card_pools.py:16-17 cites it as prior art for more than one vector per line; not implemented"
+    },
+    {
+     "idea": "Decoupling search from retrieval per head (Compositional Attention)",
+     "status": "mentioned",
+     "where": "premonition/card_pools.py:17 and overnight note \u00a72; not implemented in Think or ASK"
+    },
+    {
+     "idea": "Registers as dedicated scratch rows (ViT registers)",
+     "status": "adopted",
+     "where": "premonition/model.py:430 (4 register rows), config.py:36; overnight note notes D already has them and they do not prevent the all-row collapse"
+    },
+    {
+     "idea": "Compute matching on wall clock as a secondary check",
+     "status": "conditional",
+     "where": "design/06-premonition-mini-spec.md \u00a74: >3x A's seconds per FLOP is \"an engineering problem, not a kill\""
+    }
+   ],
+   "open_questions": [
+    "Is the card-row format (value + age + row_type, no key/tag/ents) the actual limiter, or the pooling? These are separable: a cheap probe is to append the card's key and its source tag embedding to the row with no other change, and re-run supplied-card choosing. Nothing in the current plan tests the row format independently of the pool.",
+    "Was the residual-init depth mismatch (init scaled for 6 branches, 20 executed) ever isolated from the Think-gate collapse? Re-running the same seeds with residual_std divided by sqrt(max_loops) is a free ablation on the 5070 Ti and would tell you whether the 'Think does nothing' result is an optimisation artefact rather than an architectural verdict.",
+    "Can an evicted card ever be re-fetched? With max_loops 8 and top_k 4 into 16 rows, held-out multi-hop questions plausibly evict a needed card and can then never recover it. Has any run logged eviction counts against the 1/189 both-facts-retrieved number?",
+    "How large is the uncounted minGRU scan cost in wall clock on the 5070 Ti? If the scan is a large share of D's real seconds, the equal-FLOPs budget silently gives D several times A's compute, which would weaken any D-beats-A conclusion.",
+    "Does the HALT teacher-forcing mismatch matter at all yet, given halting is trained at weight 0.1 and Think gates are closed? Worth deciding whether HALT is currently measuring anything before spending on it.",
+    "Are the 8 unused age buckets (log2 ages above ~140 lines never occur) costing anything, and should the age signal be relative rank within eligible cards instead of absolute log2 line distance?"
+   ]
+  },
+  {
+   "subsystem": "store-retrieval",
+   "summary": "Premonition-mini's knowledge store is an episode-scoped card store rebuilt from the input like a KV cache (premonition/store.py:1-12). The reader emits one card per non-question line: a softmax-pooled line vector projected to a unit key (64d) and a value (128d), plus tags, entity ids and a diary pointer (model.py:171-197, store.py:38-70). At each think loop, register 0 produces one query; scores are kappa*q.k + learned age bias over all eligible earlier cards plus a learned NULL (store.py:106-117). Hard top-4 selection inserts card values as think rows (FIFO, 16 rows) and binds them into 16 entity slots (model.py:446-481). Retrieval is supervised only by an oracle set cross-entropy over evidence lines (model.py:596-601). Names become ENT ids by a rule-based detector (pointer.py:63-102). Contender C instead does BM25 line recall into a 768-token window (lookup.py).",
+   "strengths": [
+    {
+     "what": "Store holds no trained weights and is rebuilt from the visit like a KV cache, so evaluation cannot write memory; this makes \"no card writes while testing\" true by construction and keeps the 2M parameter count honest",
+     "evidence": "premonition/store.py:1-12; design/06-premonition-mini-spec.md \"Decided: it is rebuilt from the input like a KV cache\" (\u00a72 Scope)"
+    },
+    {
+     "what": "Eligibility is strictly causal and composable: a question sees only cards on lines < its own line, optionally above a wipe floor, with NULL always eligible and already-fetched cards excluded; wipes are a cheap view (dataclasses.replace) rather than a rebuild",
+     "evidence": "premonition/store.py:82-98, 160-165"
+    },
+    {
+     "what": "Wipe machinery gives a real apples-to-apples control against A's 768-token window: W-store drops cards/names but keeps the reader state, W-full re-crops the batch and re-reads",
+     "evidence": "premonition/model.py:679-696; premonition/model.py:760+ (crop_to_windows)"
+    },
+    {
+     "what": "The gold-evidence mapper is defensive: it distinguishes \"never told\" (target = NULL) from evidence lines that map to no eligible card, and returns a `missing` counter that the tests assert stays zero",
+     "evidence": "premonition/store.py:138-157; premonition/model.py:549-550 (metrics[\"gold_missing\"])"
+    },
+    {
+     "what": "FIFO eviction risk is measured rather than assumed: card_stats counts questions that overflowed the 16 card rows and, of those, how many lost a gold card",
+     "evidence": "premonition/train.py:191-193, 213-214 (fifo_overflow_questions, fifo_gold_evicted_questions)"
+    },
+    {
+     "what": "The pointerizer is exactly invertible: detokenise(pointerize(text)) reproduces the tokenizer-normalised text with every name in its original spelling, so a fresh name is copied, never generated",
+     "evidence": "premonition/pointer.py:214-238 (detokenise/restored); premonition/model.py:741-743 bans entity ids not mentioned in the visible prefix"
+    },
+    {
+     "what": "Label leakage through names is closed off at the preprocessing layer: entity ids bind over visible text only, a target name the visible prefix never mentioned stays plain tokens and is flagged (`unbound`), and names appearing only in answers/feedback are reported (`label_only_names`)",
+     "evidence": "premonition/preprocess.py:18-22, 196-226, 265-270"
+    },
+    {
+     "what": "Everything that could silently change meaning is digest-pinned and fails closed: preprocessing spec digest, BM25 table sha256, name-detector digest, tokenizer digest, and a verdict guard that refuses mixed regimes or non-primary reports",
+     "evidence": "premonition/preprocess.py:106-128; premonition/lookup.py:174-190; premonition/pointer.py:108-127; premonition/identity.py:163-191, 221-260"
+    },
+    {
+     "what": "Entity numbering is randomised per visit at batch time from an identity-numbered cache, so the same cached visit yields different ENT permutations across epochs without rebuilding the cache \u2014 a cheap defence against memorising ENT ids",
+     "evidence": "premonition/data.py:630-638; premonition/pointer.py:140-142, 258-260"
+    },
+    {
+     "what": "C's lookup closes the window/candidate gap by construction: it iterates the recall boundary until C's own window starts exactly at the boundary, and asserts no line is both recalled and windowed and that no line falls between them",
+     "evidence": "premonition/lookup.py:396-414; gap_lines reported and 0 under the current rule (lookup.py:345-349, 426-453)"
+    }
+   ],
+   "weaknesses": [
+    {
+     "what": "Retrieval selection is non-differentiable and the answer loss never reaches the query or the keys. Own-retrieval picks use scores.detach(), and top-k is a hard index; the only gradient into W_q/W_k/kappa/age_bias is the oracle set cross-entropy L_ask",
+     "evidence": "premonition/model.py:610 (store.top(scores.detach(), ...)); premonition/model.py:596-601; premonition/store.py:119-123",
+     "severity": "blocking",
+     "suspected_cause": "no soft/relaxed read (no attention-weighted mixture, no straight-through), so \"was this card useful for the answer?\" cannot train addressing"
+    },
+    {
+     "what": "L_ask is a SET objective with no hop order: one query is pushed to score every remaining gold card highly. This is the direct mechanism behind the second-hop failure \u2014 the model asks for the relation it practised at hop 2 rather than the one in the question",
+     "evidence": "premonition/model.py:596-601 with store.py:33-35; design/06 \u00a73 \"The set target needs no hop order\"; reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md:274-286 \u2014 held-out hop-2 right relation 0/171 (default s0) and 9/171 (4000 s0); both cards fetched 1/189",
+     "severity": "blocking"
+    },
+    {
+     "what": "One pooled vector produces both the key and the value, and the learned pool collapses onto a single token. Answer-only training puts 0.979 mass on the value token (card person decodable 116/2048); retrieval-dominated training puts 0.71 on the relation and leaves value decodable 125/2048",
+     "evidence": "premonition/model.py:183-197; reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md:290-300 pool-mass table; premonition/card_pools.py:5-11",
+     "severity": "blocking",
+     "suspected_cause": "a single softmax score per token serves two incompatible objectives; the fix (two-pool / mean-pool) exists in card_pools.py but is explicitly untrained"
+    },
+    {
+     "what": "A fetched card is permanently ineligible, while the 16 card rows wrap modulo and overwrite. At evaluation, top-4 per loop for up to 8 loops inserts up to 32 cards into 16 rows, so a card overwritten after loop 4 is gone from the think rows AND can never be re-asked",
+     "evidence": "premonition/store.py:95-98 (ok &= ~fetched); premonition/model.py:461 (position = card_base + (count + order) % card_rows); premonition/model.py:722-725 (top-k fetched every non-final loop); config.py:36,39,38 (card_rows 16, top_k 4, max_loops 8)",
+     "severity": "major",
+     "suspected_cause": "\"fetched\" is used as a de-duplication device but doubles as permanent eviction; nothing clears it when the row is recycled"
+    },
+    {
+     "what": "The card store has no versioning, confidence, importance or source-based priority, contrary to the agreed vision; recency is the only ordering signal and it is a single 16-bucket log2 line-distance bias",
+     "evidence": "design/06 \u00a72 \"Confidence is 1 and there are no version links\"; premonition/store.py:28-30, 100-104, 114-116; design/04-architecture-v1.md:62-64,74-76 (key/time/importance/source/version links, priority-based eviction)",
+     "severity": "major"
+    },
+    {
+     "what": "The diary pointer and source tag are written on every card and never read anywhere. There is no reread path from a selected card back to its tokens, which is exactly the fallback the current plan wants",
+     "evidence": "premonition/store.py:43-46 (tags, line_start, line_len) \u2014 grep shows no consumer outside the dataclass and tests; design/research/final-sweep-2026-09-19/02-memory.md:102-106 (bounded reread of selected evidence)",
+     "severity": "major"
+    },
+    {
+     "what": "The binder writes the SAME pooled card value into every entity slot the line mentions, so subject, object and value slots receive identical content; nothing distinguishes roles",
+     "evidence": "premonition/model.py:471-481 (value[:, k] expanded over all ents of the card); design/06 \u00a72 binder rule",
+     "severity": "major",
+     "suspected_cause": "role information would have to come from the pool, which has already collapsed onto one token"
+    },
+    {
+     "what": "Card granularity is one line, and the reader is recurrent, so a card is a context-contaminated summary of a whole line rather than an isolated fact; multi-fact lines cannot be addressed separately",
+     "evidence": "premonition/store.py:55-70 (one card per non-question line); design/06 \u00a72 \"The reader is recurrent, so p also carries context from earlier lines\"",
+     "severity": "major"
+    },
+    {
+     "what": "Retrieval supervision is entirely privileged: gold_lines come from the generator's oracle derivation, with no self-supervised or reconstruction objective on cards. Nothing trains the writer to make cards that are findable or readable without evidence labels",
+     "evidence": "premonition/batch.py:53 (gold_lines oracle); premonition/model.py:549, 596-601; design/06 \u00a73 evidence table",
+     "severity": "major",
+     "suspected_cause": "the store's only two losses are oracle-set ASK and downstream answer CE; no JEPA/reconstruction loss, contrary to the vision"
+    },
+    {
+     "what": "Train/test retrieval mismatch: training inserts a RANDOM subset of the still-needed gold cards plus 1-2 random distractors, so the think rows almost never look like the model's own top-4 at evaluation until p_own is high",
+     "evidence": "premonition/model.py:631-654 (noise.masked_fill(~need,-1).topk \u2014 uniform random over G\\F); premonition/config.py:54 distractors=(1,2); design/06 \u00a73 curriculum (p_own only reaches 0.75 at 60% of budget)",
+     "severity": "major"
+    },
+    {
+     "what": "The NULL card is a single global learned key competing by cosine with the age bias forced to 0, while every real card gets a learned recency bias, so NULL's score lives on a different scale and its only training signal is the never-told set target",
+     "evidence": "premonition/store.py:112-116 (bias[:, null] = 0.0); store.py:153-157 (NULL as the target when not told); model.py:180-181 (one null_key/null_value)",
+     "severity": "minor"
+    },
+    {
+     "what": "Only one query per loop, formed from register 0 alone \u2014 there is no way to express \"person a, relation r\" as separate query fields, and no query is conditioned on what was already retrieved except through the shared think state",
+     "evidence": "premonition/model.py:492-496 (heads.query(register)); premonition/config.py:31,37 (key_dim 64, registers 4 \u2014 the other 3 registers never drive a query)",
+     "severity": "major",
+     "suspected_cause": "a single 64-d pooled query must simultaneously match a pooled key that has itself collapsed"
+    },
+    {
+     "what": "Name detection is a blunt global rule: any capitalised word whose casefold ever appears lowercase in train text is NOT a name. A held-out person named e.g. Rose/Will/May would silently stay ordinary tokens, never bind to an entity, and therefore be uncopyable and unretrievable by pointer",
+     "evidence": "premonition/pointer.py:63-89 (is_name: blocked = lowercase train words | template words); pointer.py:54-60 closed_vocabulary only covers village nouns/colours/materials",
+     "severity": "major",
+     "suspected_cause": "the rule is a corpus-statistics heuristic with no positional or syntactic evidence; design/06 \u00a72 flags it as an ASSUMPTION checked only against the current cast lists"
+    },
+    {
+     "what": "Hard capacity limits fail loudly or silently rather than degrading: >16 distinct names in a visit raises NameOverflow and aborts the cache build (uncaught in data.py), >4 entities on a line are dropped, and >16 evidence lines keep only the newest",
+     "evidence": "premonition/pointer.py:159-161; premonition/data.py:406-409 catches only MalformedInput/MalformedTarget; data.py:415-417 (ents[:MAX_LINE_ENTS]); data.py:653 (gold[-MAX_GOLD:]); batch.py:19-22",
+     "severity": "minor"
+    },
+    {
+     "what": "C's BM25 query drops exactly the words that distinguish question TYPES \u2014 who/what/where/which/whose are all in the stopword list \u2014 so the lexical control cannot separate \"who has X\" from \"what is in X\", the same held-out-wording wall the Core track hit",
+     "evidence": "premonition/lookup.py:83-90 (STOPWORDS includes what/when/where/which/who/whom/whose/why); lookup.py:122-133",
+     "severity": "minor"
+    },
+    {
+     "what": "C's 192-token recall budget stops at the FIRST line that would overflow instead of skipping it, so one long high-ranked line can suppress every lower-ranked evidence line",
+     "evidence": "premonition/lookup.py:320-327 (`if used + size > budget: break`); RECALL_TOKENS = 192 at lookup.py:75",
+     "severity": "minor"
+    }
+   ],
+   "already_considered": [
+    {
+     "idea": "Separate key and value pooling (two-pool card writer), and uniform mean pooling as the no-learned-pool control",
+     "status": "deferred",
+     "where": "premonition/card_pools.py:1-24, 67-85 \u2014 implemented, explicitly \"not yet trained or used in any compared experiment\"; first arm of design/research/final-sweep-2026-09-19/README.md"
+    },
+    {
+     "idea": "Token-level (ColBERT/MaxSim-style) card addressing instead of pooled keys",
+     "status": "rejected",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:36-46, 96 \u2014 retained only as a conditional fallback after the cheaper pooling comparison; removed from the immediate shortlist in README.md:30"
+    },
+    {
+     "idea": "Query-drift compensation for a stale index across training transitions",
+     "status": "deferred",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:56-58, 96 \u2014 no local bottleneck evidence because D rebuilds episode cards with fixed eval weights"
+    },
+    {
+     "idea": "Fast-weight / delta-rule associative memory (DeltaNet, Gated DeltaNet, Titans, Larimar, LongMem)",
+     "status": "rejected",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:19-27, 64-72 \u2014 \"Do not prioritize fast-weight replacement\"; bottleneck justification judged weak"
+    },
+    {
+     "idea": "Bounded reread of the model's own selected evidence lines (expose source token states instead of the pooled value)",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:96-106 \u2014 the sole fallback, gated on retrieval first being correct, which the 1/189 both-facts-fetched result does not yet meet; last step of the README plan"
+    },
+    {
+     "idea": "Compositional hop-2 query built from the fetched link card's entity pointer plus the question's relation (candidate B)",
+     "status": "deferred",
+     "where": "reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md:284-288, 326 \u2014 \"Untested; it needs (1) first\""
+    },
+    {
+     "idea": "Card versions, confidence, importance/priority write gating and priority-based eviction",
+     "status": "deferred",
+     "where": "design/04-architecture-v1.md:62-64, 74-76 vs design/06 \u00a72 \"Confidence is 1 and there are no version links\" \u2014 left out of Experiment 1 on purpose (design/06 \u00a70 preamble)"
+    },
+    {
+     "idea": "Growing VQ codebook, sleep, drives, RL, sparse knowledge slots, abstract codes",
+     "status": "deferred",
+     "where": "design/06-premonition-mini-spec.md line 3: \"Left out on purpose\""
+    },
+    {
+     "idea": "Persistent / cross-episode store",
+     "status": "deferred",
+     "where": "premonition/store.py:1-12 and design/06 \u00a72: episode-scoped; \"Later persistent stores go through read_only(model, stores=[...])\""
+    },
+    {
+     "idea": "D-noask and D-noptr ablations to separate the store from the name pointers, plus E (anonymised transformer) as the strongest cheap competitor",
+     "status": "adopted",
+     "where": "premonition/config.py:18, 46-47, 94-97; design/06 \u00a70 contender table"
+    },
+    {
+     "idea": "Soft (row-softmax) retrieval, D-soft",
+     "status": "mentioned",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:40 \u2014 proposed to be used in BOTH arms of the pooling screen so soft reading is not the confounded variable"
+    },
+    {
+     "idea": "Fixed positional pooling of a line's tokens",
+     "status": "rejected",
+     "where": "design/research/final-sweep-2026-09-19/02-memory.md:101-104 and README.md:90 \u2014 \"a cheap possible control, not another main recommendation\""
+    },
+    {
+     "idea": "Random per-visit ENT permutation so entity ids cannot be memorised",
+     "status": "adopted",
+     "where": "premonition/data.py:630-632; premonition/pointer.py:140-142; design/06 \u00a72 Binding"
+    },
+    {
+     "idea": "BM25 lexical lookup as the non-learned retrieval control (contender C), with gold recall@8 on far questions as its diagnostic",
+     "status": "adopted",
+     "where": "premonition/lookup.py:1-44, 426-453"
+    }
+   ],
+   "open_questions": [
+    "Is anything preventing a soft (score-weighted) card read in the answer path, so that L_ans can train W_q/W_k end-to-end? Today the only gradient into addressing is the oracle set-CE (model.py:596-601), and the toy ladder shows addressing is the failing component.",
+    "Should `fetched` be cleared when the FIFO recycles a card row? As written a card evicted after loop 4 at evaluation is unreachable for the rest of the episode (store.py:95-98 vs model.py:461).",
+    "Does any planned arm supervise retrieval order? The set target is explicitly order-free, yet the measured failure is the SECOND query asking for the wrong relation (0-9/171). A per-hop target, or a query built from the previous card's entity pointer, changes the loss, not just the pooling.",
+    "Nothing trains cards to be readable on their own (no reconstruction / JEPA loss on card values). Is that deliberately deferred, or is it the cheapest missing signal \u2014 it would give the writer a gradient that does not depend on oracle evidence labels?",
+    "The diary pointer (line_start/line_len) and source tag are stored but have no consumer. If bounded reread is the intended fallback, is anyone planning to use those fields, or will reread be re-derived from the batch?",
+    "What happens to a held-out visit whose person name coincides with a lowercase train word (Rose, Will, May, Summer)? pointer.py:80-81 would not detect it, so it would never bind to an entity \u2014 has the cast list actually been checked against `lowercase_words` of the train split, as design/06 \u00a72 assumes?",
+    "Is `NameOverflow` (>16 distinct names) ever expected at 28M/larger data scales? data.py:406-409 does not catch it, so a single oversized visit aborts a cache build.",
+    "Both C's BM25 stopword list and D's single query discard question-type words (who/what/where). Given that held-out question WORDING is the Core track's next wall, should the retrieval query be built to keep the question type explicitly?"
+   ]
+  },
+  {
+   "subsystem": "training",
+   "summary": "Two trainers share one base. `learnlab/train.py` is an AdamW streaming LM trainer (matrices decayed, biases/norms not; linear warmup then CONSTANT lr; grad clip 1.0; bf16 autocast only on CUDA; fused Adam only on CUDA; 14 GiB memory guard; dead-GELU/grad-norm/weight-norm logging). Core (step1) feeds it one whole visit per 2048-token row, padded with <eos> and loss-masked; 4M/lr 1e-3, 28M/6e-4, ~600 s runs on the 5070 Ti. `premonition/train.py` subclasses it as `MiniTrainer`: whole-visit `VisitBatch`es, a FLOP budget instead of a step count, and a 3-phase curriculum (gold 0-5%, teacher 5-30%, own 30-100% with p_own ramping to 0.75). Four losses (L_lm, L_ask = BCE + set-CE, L_ans deep-supervised at every loop, L_halt) with weights 1.0/0.5/1.0/0.1 and `early_ans` 0.2. The overnight ladder/retrieval scripts run all of this on CPU.",
+   "strengths": [
+    {
+     "what": "FLOP-budget training with a measured, fitted cost model (FLOPs = a*padded_tokens + b*sum(questions x loops), FlopCounterMode-calibrated), so every contender is compared at equal compute and the run reports budget_ok within tolerance",
+     "evidence": "premonition/train.py:259-283 (calibrate/batch_cost), premonition/train.py:436-449 (budget_ok, fit, loop_mismatches); artifacts/opus-ovn-20260918-235851/SUMMARY.txt:79-98 all arms stop='flop budget'"
+    },
+    {
+     "what": "Every evaluation runs inside `read_only`, which digests model, optimizer and RNG state and raises ReadOnlyViolation if scoring mutated anything - no silent train/eval leakage",
+     "evidence": "learnlab/train.py:107-110 Trainer.evaluate; premonition/train.py:1146 smoke check 'read_only_holds'"
+    },
+    {
+     "what": "Unusually rich in-training instrumentation: gold recall@4 vs a random-fetch baseline, FIFO card overflow and gold-eviction counts, share of answer terms still at the early 0.2 weight, questions that never reach full weight, dead-GELU fraction, grad norm, weight norm, halt rate, loops/question, tokens/s",
+     "evidence": "premonition/train.py:170-218 (card_stats/summarize_cards), premonition/train.py:286-320 (_train_step hooks), premonition/train.py:355-375 (log record)"
+    },
+    {
+     "what": "Windows GPU-spill memory guard aborts the run instead of silently dropping to ~1/30 speed; checked after step 1 and every 50 steps",
+     "evidence": "learnlab/train.py:170-177, learnlab/train.py:46 memory_limit_bytes = 14 GiB"
+    },
+    {
+     "what": "Length-bucketed dynamic batching for Premonition (visits x longest visit <= max_tokens, shuffled within pools, batches reshuffled each epoch) plus a fresh random entity permutation per visit per epoch - real anti-memorisation pressure on names",
+     "evidence": "premonition/data.py:666-699 (length_batches), premonition/data.py:701-719 (batches, permute=True, epochs=None)"
+    },
+    {
+     "what": "The visit-aligned window fix in the Core track is a clean, measured win: one visit per 2048-token row starting with <eos> like an eval prompt, only 8 of 162,049 visits truncated",
+     "evidence": "learnlab/step1.py:1143-1157 (_aligned); design/06-step1-pilot-results.md table: loss 0.734 -> 0.656, held-out 17.9% -> 23.4%, train-split 36% -> 44%"
+    },
+    {
+     "what": "Strong experiment hygiene in the overnight scripts: validation used for development, test scored once behind a guard, Wilson 95% intervals on every cell, a wall-second ledger with a hard cap, checkpoint sha256 and an arm-identity block",
+     "evidence": "scripts/premonition_ovn_ladder.py:582-595 (cmd_test guard), :74-83 (wilson), :63-73 (ledger), :478-489 (ckpt_sha256, identity)"
+    },
+    {
+     "what": "The training stream is deterministic and digest-verified batch by batch, so a run can be replayed and two arms provably saw identical data",
+     "evidence": "scripts/premonition_ovn_ladder.py:89-101 (batch_digest), :220-228 (checked_train), :108-113 (fixed SEEDS)"
+    },
+    {
+     "what": "The gold-card warm-up demonstrably works when it is long enough: 600 gold-only steps out of 2000 took supplied-card one-hop reading from 264/512 to 512/512, and every top arm uses it",
+     "evidence": "artifacts/opus-ovn-20260918-235851/SUMMARY.txt:33 (nothink+qread-s0-1200 read:one_hop=264/512) vs :39 (nothink+qread-s0-cur600-2000 read:one_hop=512/512)"
+    },
+    {
+     "what": "Optimizer hygiene is correct and cheap: weight decay only on dim>=2 tensors, grad clipping with the norm still logged when clipping is off, per-step finite-gradient check that stops the run",
+     "evidence": "learnlab/train.py:84-90; scripts/premonition_ovn_ladder.py:443-461 (finite check, stopped='non-finite gradient')"
+    }
+   ],
+   "weaknesses": [
+    {
+     "what": "The RTX 5070 Ti is unused by every Premonition run - device is hardcoded to CPU, and autocast/fused-AdamW are gated on CUDA so even an MPS run is fp32",
+     "evidence": "scripts/premonition_ovn_retrieval.py:167-168 MiniTrainer(..., \"cpu\", ...); premonition/train.py:1012 train_toy(..., \"cpu\", ...); premonition/train.py:307 autocast(enabled=self.device.type == \"cuda\"); learnlab/train.py:87 fused=True if cuda else None; SUMMARY.txt:79-98 train_s=181-490 s per arm under a 1800 s CPU ledger",
+     "severity": "blocking",
+     "suspected_cause": "The overnight scripts were written under a 30-minute CPU ledger and never parameterised for device; train_d takes device= but the toy/ladder/retrieval entry points do not. Every conclusion about seeds, gates and curricula rests on 1405-4000-step CPU runs that the local GPU could run 10-50x longer."
+    },
+    {
+     "what": "The Think gate alpha is initialised at exactly 0 and multiplies the WHOLE update, so at step 0 the Think block's own weights receive exactly zero gradient - a self-reinforcing dead branch, not evidence that recurrence is useless",
+     "evidence": "premonition/answer_path.py:56-59 `self.alpha = nn.Parameter(torch.zeros(()))`, `return x + self.alpha * (super().forward(x, valid, step) - x)`; measured alpha after 2000 steps: 0.01809 and 0.04196 in artifacts/opus-ovn-20260918-235851/SUMMARY.txt:21,25",
+     "severity": "blocking",
+     "suspected_cause": "d(Think params) is proportional to alpha, and d(alpha) depends on a randomly-initialised Think output being useful. Standard fixes (init alpha small-but-nonzero, e.g. 0.1; or gate only the residual delta while keeping an ungated warm-up phase) were never tried."
+    },
+    {
+     "what": "Deep supervision decodes the SAME answer target from EVERY think loop through the SAME decoder and averages, so the optimum is an answer already decodable at loop 1 - there is no gradient pressure for a loop to do anything new",
+     "evidence": "premonition/model.py:568-586 (per-loop _decode_logits + CE) and :617 `l_ans = torch.cat(ans_terms).sum() / pairs`; the decode-last-row-only ablation changed almost nothing (choose:one_hop 181/512 vs 174/512, SUMMARY.txt:21,25)",
+     "severity": "major",
+     "suspected_cause": "Deep supervision was chosen for trainability. Combined with the near-zero alpha it removes both the pressure and the path for recurrence. The '+final' control is weak evidence precisely because the gates were already shut."
+    },
+    {
+     "what": "HALT is trained as 'is my answer exactly correct right now' but never actually used during training - loop counts are fixed by mode (2 / ceil(|G|/4)+3 / 8), while at evaluation `answer()` halts on its own policy",
+     "evidence": "premonition/model.py:588 BCE(halt, correct); premonition/train.py:107-118 planned_loops; premonition/model.py:716-724 (answer halts when sigmoid(halt) > 0.5)",
+     "severity": "major",
+     "suspected_cause": "Classic exposure bias. Early in training nothing is correct so the target is ~0 everywhere; once loop-1 answers are right the target is 1 at every loop, i.e. halt immediately. The head never learns 'another loop would help'."
+    },
+    {
+     "what": "There is no learning-rate decay anywhere - warmup then a constant LR for the whole run, in both tracks",
+     "evidence": "learnlab/train.py:100-102 `lr_at` returns lr * min(1,(step+1)/warmup); premonition/train.py:120-126 mini_train_config(lr=1e-3, warmup_steps=100); learnlab/step1.py:103 DEFAULT_LR 4M=1e-3",
+     "severity": "major",
+     "suspected_cause": "Simplicity. A constant 1e-3 for 10,128 steps (Core) or thousands of tiny-batch steps (Premonition) keeps the model in a high-noise regime to the last step, which both inflates final-loss/accuracy variance and is a strong candidate for the seed split."
+    },
+    {
+     "what": "Seed instability is measured but not managed: one seed per arm, no best-on-validation checkpoint selection, no early stopping, no restarts, no median-of-seeds reporting. The failing seed sits at chance",
+     "evidence": "SUMMARY.txt:84 gold_read one_hop=503/512 (seed 0) vs :96 27/512 (seed 1) at the same 1405 steps; chance is 1/16 = 32/512. premonition/train.py:1086-1092 train_d saves only the final model; learnlab/step1.py:2309-2313 step1 saves once at the end",
+     "severity": "blocking",
+     "suspected_cause": "Checkpointing is end-of-run only, so a run that learns then collapses is unrecoverable and an unlucky seed is simply lost. With eval_every already producing validation numbers, keeping the best checkpoint is nearly free."
+    },
+    {
+     "what": "The shipped default gold phase is 5% of the budget, while every run that actually learned used 30% - the known-bad default is still the one train_d uses",
+     "evidence": "premonition/train.py:85-88 `gold_until: float = 0.05`; SUMMARY.txt:79-98 every successful arm overrides to {\"gold_until\": 0.3, \"teacher_until\": 0.55, \"ramp_until\": 0.8}; the D-default arm scored gold_read one_hop=32/512 (SUMMARY.txt:88) vs 503/512 for longread",
+     "severity": "major",
+     "suspected_cause": "The 5/30/60 split came from the design doc (06 section 3) as an assumption 'tuned in build step 5' and was never updated after the longread evidence."
+    },
+    {
+     "what": "Stopping on FLOPs rather than steps makes arms step-mismatched and makes the curriculum phase boundaries depend on the cost-fit residual",
+     "evidence": "SUMMARY.txt:79-98 steps=1405, 1517, 3745, 3750 across arms nominally asking for 1500/4000; premonition/train.py:271-275 (curriculum keyed on self.flops/self.flop_budget), :420 loop_mismatches counted",
+     "severity": "major",
+     "suspected_cause": "FLOP parity is the right fairness axis for the final verdict, but during development it confounds 'this arm is better' with 'this arm got 1405 steps and that one got 3745'. No step-matched control run exists."
+    },
+    {
+     "what": "L_ask adds two unnormalised means (per-loop ASK BCE + set cross-entropy) under one weight of 0.5, and the set CE is satisfied by ONE gold card landing in the top-4 - so the second hop's fetch is effectively unsupervised",
+     "evidence": "premonition/model.py:596-601, :619-622 `l_ask = mean(bce); l_ask = l_ask + mean(set_terms)`; premonition/config.py:46 w_ask=0.5; the risk is stated in premonition/train.py:31-33; outcome: second-fetch relation correct 0/171 (default) and 9/171 (longread), design/research/final-sweep-2026-09-19/README.md evidence table",
+     "severity": "major",
+     "suspected_cause": "set_cross_entropy over G\\F rewards any single member. Multi-gold questions need either a per-member term or a top-k coverage loss; the existing `multi_gold_full_fetched` diagnostic already exposes the gap but no loss term targets it."
+    },
+    {
+     "what": "The whole exp1 ladder - the experiment that produced the 166-182/512 'choosing' number - trains ONLY answer cross-entropy. No L_lm, no L_ask, no L_halt, and the cards are supplied, so 'which card is right' has no direct supervision at all",
+     "evidence": "scripts/premonition_ovn_ladder.py:316-337 `loss_of` returns only mean CE over decoded rows; :457 the only loss called in cmd_train; SUMMARY.txt:6-45 choose:one_hop 141-171/512 across every arm",
+     "severity": "major",
+     "suspected_cause": "The ladder was designed to isolate the answer path, but the conclusion drawn from it ('choosing is weak') is partly a statement about a training signal that was deliberately removed. A card-selection auxiliary loss on this same toy is a cheap, decisive control."
+    },
+    {
+     "what": "Answer tokens are ~1-2% of the Core track's LM tokens and `lm_loss` weights every target identically; there is no per-token weighting hook",
+     "evidence": "learnlab/core.py:110-122 (uniform mean CE, mask is boolean only); design/06-step1-pilot-results.md 'Answer tokens are about 1-2% of all tokens' listed as a cause of slow learning, with the mitigation still an open decision for Ben",
+     "severity": "major",
+     "suspected_cause": "The loss mask is boolean, so upweighting answers would need a float weight. The diagnosis has been written down twice without a code change."
+    },
+    {
+     "what": "About 40% of the Core track's GPU time is spent on <eos> padding: visits average ~1,160 tokens but every row is padded to 2048, with no packing and no variable-length batching",
+     "evidence": "learnlab/step1.py:1150-1156 (pad to `length` with eos, mask False); design/06-step1-pilot-results.md '332M (~200M real)' for run 20260919T092801Z; artifacts/.../premonition-step1-4M-1789810658957235700-16832.json train.tokens = 331,874,304",
+     "severity": "major",
+     "suspected_cause": "Alignment was implemented as pad-to-fixed-length because Trainer._next_batch concatenates and unfolds a flat token stream. Packing two short visits per row (with a segment-reset mask) would recover most of that 40%."
+    },
+    {
+     "what": "The GPU is under-used and the 28M comparison was compute-starved, so '28M no better than 4M' is not an architecture finding",
+     "evidence": "artifacts/.../premonition-step1-4M-...json peak_gpu_reserved_bytes = 5,687,476,224 (5.3 GiB of a 16 GB card, against a 14 GiB limit); 4M ran at 751k tok/s for 396M tokens vs 28M at 224k tok/s for 119M tokens (design/06-step1-pilot-results.md table) - roughly 16 epochs vs 5 over a 24.15M-token train set",
+     "severity": "major",
+     "suspected_cause": "Batch 32 x 2048 was kept fixed across sizes and the run length was fixed at 600 s rather than at token parity. The final-sweep README already flags this ('The larger model received much less exposure')."
+    },
+    {
+     "what": "The model is never trained on the retrieval distribution it is evaluated under: p_own caps at 0.75, teacher cards are RANDOM members of G\\F plus distractors, and the gold phase preloads perfect evidence",
+     "evidence": "premonition/train.py:88 p_own_max=0.75; premonition/model.py:630-640 _teacher_cards (random draw from need); measured gap in one checkpoint: fixed_K4 own-retrieval one_hop=124/512 vs gold_read_K2 one_hop=503/512 (SUMMARY.txt:82-84)",
+     "severity": "major",
+     "suspected_cause": "Scheduled sampling that never reaches 1.0. The model's own query head only ever sees registers built in a world where correct cards arrive for free, so its errors are never in-distribution during training."
+    },
+    {
+     "what": "No dropout, label smoothing, or any regulariser anywhere, while the Core track does roughly 8-16 passes over a 24.15M-token corpus with a 4M-parameter model",
+     "evidence": "grep for Dropout/label_smoothing across learnlab/*.py and premonition/*.py returns zero hits; artifacts/.../premonition-step1-4M-...json data.train_tokens = 24,150,067 vs train.tokens = 331,874,304; design/06-step1-pilot-results.md train-split 44% vs held-out 23.4%",
+     "severity": "minor",
+     "suspected_cause": "A near-2x train/held-out gap on a 4M model at 8+ epochs with constant LR is consistent with memorisation; the entity-permutation trick exists for Premonition batches but has no Core-track counterpart."
+    }
+   ],
+   "already_considered": [
+    {
+     "idea": "One visit per 2048-token training row instead of random 768-token windows",
+     "status": "adopted",
+     "where": "learnlab/step1.py:1143-1157; design/06-step1-pilot-results.md item 1"
+    },
+    {
+     "idea": "Long gold-card warm-up (gold_until 0.3, or gold_steps 600/2000) before distractors",
+     "status": "conditional",
+     "where": "used in every overnight run (SUMMARY.txt:33-98) but the shipped default is still 0.05 in premonition/train.py:85"
+    },
+    {
+     "idea": "Decoding only the final think row instead of deep supervision at every loop ('+final' arm)",
+     "status": "rejected",
+     "where": "scripts/premonition_ovn_ladder.py:330-333; SUMMARY.txt:21 vs :25 - no material difference (181 vs 174 choose:one_hop)"
+    },
+    {
+     "idea": "Scalar gate alpha on the Think update, initialised at 0",
+     "status": "adopted",
+     "where": "premonition/answer_path.py:52-59; alpha stayed at 0.018-0.042, SUMMARY.txt:21,25"
+    },
+    {
+     "idea": "qread (question-conditioned read of the answer inputs)",
+     "status": "adopted",
+     "where": "premonition/ovn_qread.py; every top-scoring arm in SUMMARY.txt:21-45 carries +qread"
+    },
+    {
+     "idea": "Card bypass (D-card-bypass) and the noask / noptr controls",
+     "status": "adopted",
+     "where": "premonition/answer_path.py CLASSES, premonition/config.py:24 VARIANTS; exp2 arms in SUMMARY.txt:79-100"
+    },
+    {
+     "idea": "Upweighting answer tokens in the LM loss, or adding more questions per visit",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md 'Decisions for Ben - Answer signal'; no weighting exists in learnlab/core.py:110-122"
+    },
+    {
+     "idea": "More question phrasings per type (Qwen top-up, 60+ per type) vs a fixed phrasing set for the gate",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md 'Decisions for Ben - Held-out question wording' (options a/b/c, undecided)"
+    },
+    {
+     "idea": "Pool controls (original vs contextual-mean vs separate key/value pooling) as the first step of the sweep",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md; scripts/premonition_pool_controls.py exists (999 lines) but the README records the variants as 'prepared but untrained'"
+    },
+    {
+     "idea": "H1 factual sensitivity/invariance triplet loss (JS agreement + margin) against an identical-data CE control",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md; premonition/ladder_triplets.py and premonition/paired_objectives.py are written, conditional on the pool controls"
+    },
+    {
+     "idea": "Shared repeated reader for the second hop, then H2 query-reuse distillation, then bounded reread of selected evidence",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md ranked conditional recommendations"
+    },
+    {
+     "idea": "Token-level retrieval (ColBERT-style) and positional/token addressing proposals",
+     "status": "rejected",
+     "where": "design/research/final-sweep-2026-09-19/README.md 'removed token-addressing and positional-pooling proposals from the immediate shortlist'"
+    },
+    {
+     "idea": "Fast associative memory replacements for explicit cards (Gated DeltaNet, Titans, Larimar)",
+     "status": "rejected",
+     "where": "design/research/final-sweep-2026-09-19/README.md breadth table: 'No current evidence justifies replacing explicit cards'"
+    },
+    {
+     "idea": "Major compression / routing (TST, H-Net, Compressive Transformer, Mixture-of-Depths) and test-time weight updates",
+     "status": "deferred",
+     "where": "design/research/final-sweep-2026-09-19/README.md breadth table"
+    },
+    {
+     "idea": "Cloud GPU rental",
+     "status": "conditional",
+     "where": "capped at $30 and needs approval; the local 5070 Ti is preferred (memory/gpu-budget-cap.md, memory/compute-availability.md)"
+    },
+    {
+     "idea": "FLOP-budget parity as the fairness axis across contenders",
+     "status": "adopted",
+     "where": "premonition/train.py:259-283, premonition/flops.py; design/06-premonition-mini-spec.md section 4"
+    }
+   ],
+   "open_questions": [
+    "Does the 503/512 vs 27/512 seed split survive an LR schedule with decay, or is it purely a constant-1e-3 artefact? One 3-seed, cosine-decay rerun of bypass-k1 at 1500 steps would settle it, and on the 5070 Ti it costs minutes, not the 30-minute CPU ledger.",
+    "Does alpha initialised at 0.1 instead of 0.0 (or an ungated warm-up for the first N steps) open the Think gates? The current result cannot distinguish 'recurrence does not help' from 'the Think weights got zero gradient at initialisation'.",
+    "Is 'choosing among distractors ~1/3' a capability limit or an absent training signal? The ladder trains answer CE only - adding a card-selection auxiliary loss on the identical toy is the decisive control and has not been run.",
+    "Would keeping the best-on-validation checkpoint (the eval hook already computes it) change any reported arm ranking, given that only end-of-run weights are ever saved?",
+    "How much of the Core track's 44%/23.4% train/held-out gap is memorisation from 8-16 epochs at constant LR, versus the documented held-out-phrasing problem? A single 600 s run with LR decay and 1 epoch of fresh visits would separate them.",
+    "Is the 28M model actually no better than 4M, or only token-starved? A token-matched (not second-matched) 4M vs 28M pair on the 5070 Ti is the missing control - the final-sweep README already says capacity is not ruled out.",
+    "Should the curriculum default in premonition/train.py be changed to gold_until=0.3 now, given that no run at 0.05 has ever learned to read a supplied card?",
+    "Would packing two short visits per 2048-token row (with a segment-reset mask) recover the ~40% of Core-track GPU time currently spent on padding, and is the added masking complexity worth it at 4M scale?"
+   ]
+  },
+  {
+   "already_considered": [
+    {
+     "idea": "Recurrent transformer + delta-rule side memory (\"a transformer with a layer on it\")",
+     "status": "rejected",
+     "where": "design/research/2026-09-18-decisions-log.md:5"
+    },
+    {
+     "idea": "Always-on next-token prediction as the teacher-free learning signal",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:22"
+    },
+    {
+     "idea": "Fast one-shot episodic memory + slow weight learner + consolidation between them (complementary learning systems)",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:23-25; design/02-options.md ref 15"
+    },
+    {
+     "idea": "Offline replay/practice phase (sleep)",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:27"
+    },
+    {
+     "idea": "Large-but-sparse knowledge store; each lesson touches few slots",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:37"
+    },
+    {
+     "idea": "Text village world on a grid as the single world (vs BabyAI / Crafter / Craftax / puzzle generators / raw child English)",
+     "status": "adopted",
+     "where": "design/02-options.md:52-55"
+    },
+    {
+     "idea": "Transfer (fewer lessons per new village as experience grows) as a measured core goal",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:41"
+    },
+    {
+     "idea": "Ben's \"attention over a library of knowledge/skill pieces\" as the slow learner",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:42"
+    },
+    {
+     "idea": "Ternary Bonsai 2 27B (compressed Qwen3.8-27B) on the Mac as pattern/teacher writer, never in the loop",
+     "status": "adopted",
+     "where": "design/01-learning-spec.md:43-45"
+    },
+    {
+     "idea": "EWC / Synaptic Intelligence (freeze important weights)",
+     "status": "rejected",
+     "where": "design/02-options.md:94"
+    },
+    {
+     "idea": "Continual backprop (reset low-utility units)",
+     "status": "deferred",
+     "where": "design/03-issues-and-decisions.md:24; design/research/final-sweep-2026-09-19/03-learning.md method 5"
+    },
+    {
+     "idea": "L2-Init regularisation toward initial weights",
+     "status": "conditional",
+     "where": "design/02-options.md:94"
+    },
+    {
+     "idea": "Shrink-and-perturb",
+     "status": "deferred",
+     "where": "design/research/2026-09-18-novel-mechanisms.md:60; overnight note \u00a75"
+    },
+    {
+     "idea": "Hare-and-Tortoise / slow averaged copy",
+     "status": "conditional",
+     "where": "design/02-options.md:94"
+    },
+    {
+     "idea": "Forward-Forward and predictive-coding local learning rules",
+     "status": "rejected",
+     "where": "design/02-options.md:86-87"
+    },
+    {
+     "idea": "Progressive Neural Networks / PackNet capacity growth",
+     "status": "deferred",
+     "where": "design/02-options.md:87"
+    },
+    {
+     "idea": "Card index store keeping the original sentence (vs delta-rule grid, sparse grid, Titans, ROME/MEMIT)",
+     "status": "adopted",
+     "where": "design/02-options.md:129-130"
+    },
+    {
+     "idea": "Raw-sentence lookup as the baseline to beat",
+     "status": "adopted",
+     "where": "design/02-options.md:130"
+    },
+    {
+     "idea": "Titans / test-time-trained neural memory",
+     "status": "rejected",
+     "where": "design/02-options.md:124; design/research/final-sweep-2026-09-19/02-memory.md:25"
+    },
+    {
+     "idea": "ROME / MEMIT direct weight edits; GRACE / SERAC edit isolation",
+     "status": "mentioned",
+     "where": "design/02-options.md:126; RESEARCH_REVIEW.md:32"
+    },
+    {
+     "idea": "Exact diary rehearsal at ~50/50 old:new (CLEAR, tiny episodic memories)",
+     "status": "adopted",
+     "where": "design/02-options.md:202; design/04-architecture-v1.md:89"
+    },
+    {
+     "idea": "Cards as teachers: consolidate by answering with card visible, training with card hidden",
+     "status": "adopted",
+     "where": "design/02-options.md:202; design/04-architecture-v1.md:88"
+    },
+    {
+     "idea": "Self-generated \"dreams\" / generative replay (LAMOL, brain-inspired replay)",
+     "status": "conditional",
+     "where": "design/02-options.md:197; decisions log:12 (REM phase)"
+    },
+    {
+     "idea": "Sleep-like noise replay (Tadros et al.)",
+     "status": "rejected",
+     "where": "design/02-options.md:199"
+    },
+    {
+     "idea": "Lesion test (hide the card, ask again) as the consolidation gate and card-retirement rule",
+     "status": "adopted",
+     "where": "design/04-architecture-v1.md:92; design/02-options.md:202"
+    },
+    {
+     "idea": "Write gating = importance x reliability; surprise sets replay order; learned gatekeeper postponed",
+     "status": "adopted",
+     "where": "design/02-options.md:168; design/04-architecture-v1.md:74-77"
+    },
+    {
+     "idea": "PBWM-style basal-ganglia gating for working memory",
+     "status": "rejected",
+     "where": "design/02-options.md:237"
+    },
+    {
+     "idea": "Looped slot core for working memory",
+     "status": "conditional",
+     "where": "design/02-options.md:237"
+    },
+    {
+     "idea": "Model decides its own think length via a \"done\" token, no flat per-step penalty",
+     "status": "adopted",
+     "where": "design/03-issues-and-decisions.md:36"
+    },
+    {
+     "idea": "Adaptive Computation Time / PonderNet halting objectives",
+     "status": "mentioned",
+     "where": "RESEARCH_REVIEW.md:36"
+    },
+    {
+     "idea": "Checker head trained on world feedback, with measured calibration; unsure answers routed to the teacher",
+     "status": "adopted",
+     "where": "design/03-issues-and-decisions.md:35; design/04-architecture-v1.md:70-71"
+    },
+    {
+     "idea": "Two automatic leak detectors (word counter + shuffled-lines model) on every test set",
+     "status": "adopted",
+     "where": "design/03-issues-and-decisions.md:38; design/02-options.md:55"
+    },
+    {
+     "idea": "Every experiment includes a plain network at equal compute plus plain text lookup",
+     "status": "adopted",
+     "where": "design/03-issues-and-decisions.md:37"
+    },
+    {
+     "idea": "Widening to real English via Bonsai stories, then BabyLM/TinyStories-style child text, then conversation",
+     "status": "conditional",
+     "where": "design/03-issues-and-decisions.md:41-43"
+    },
+    {
+     "idea": "Encoder -> abstract thought space -> decoder (thinking not in English)",
+     "status": "adopted",
+     "where": "design/research/2026-09-18-decisions-log.md:12"
+    },
+    {
+     "idea": "VQ codebook \"private language\" that keeps growing, ART-style stabilised, births only in sleep, permanent IDs, anchor-drift checks",
+     "status": "adopted",
+     "where": "decisions log:12 (Ben's choice)"
+    },
+    {
+     "idea": "Postpone growing codebook, private-language RL, learned sleep clock and drives until earlier evidence earns them; try continuous thought states and plain replay first",
+     "status": "conditional",
+     "where": "decisions log:31 (Astra review)"
+    },
+    {
+     "idea": "Code births both blind-clustered and teacher-named, with provisional names and synonym attachment",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "JEPA prediction with entity-slot knock-out (Causal-JEPA / LeJEPA / LeWorldModel, SIGReg)",
+     "status": "adopted",
+     "where": "design/research/2026-09-18-novel-mechanisms.md:30-38; decisions log:15 (Exp 2)"
+    },
+    {
+     "idea": "Predictive world models generally (LeWM) and its Aug-2026 reproduction critique",
+     "status": "deferred",
+     "where": "design/research/final-sweep-2026-09-19/05-alternatives.md methods 3-4"
+    },
+    {
+     "idea": "Knowledge store = diary (raw, permanent) + cards (key/value/time/source/confidence/version/diary pointer) + sparse knowledge slots trained only in sleep",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Sparse Memory Finetuning (Lin et al. 2025) as the style for slot training",
+     "status": "adopted",
+     "where": "decisions log:12; novel-mechanisms S3"
+    },
+    {
+     "idea": "Two recall routes: automatic familiarity into slots + deliberate ASK",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Store the model's own inferences marked \"inferred\", lower trust, never overwriting observations",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Knowledge slots may fade detail to gist because the diary keeps everything",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Sleep as a database transaction (LSM/RocksDB/ARIES): commit only if old-fact quiz, drift checks and lesion test pass, else roll back",
+     "status": "adopted",
+     "where": "novel-mechanisms S1:99-107; decisions log:15"
+    },
+    {
+     "idea": "Sleep transactions must report an acceptance rate (so stability is not achieved by refusing to learn)",
+     "status": "adopted",
+     "where": "decisions log:34"
+    },
+    {
+     "idea": "Told-ledger: exact (entity, relation) -> sequence number record giving honest \"don't know\" and detecting facts sleep lost",
+     "status": "adopted",
+     "where": "novel-mechanisms S2:109-119; decisions log:15"
+    },
+    {
+     "idea": "Self-tutoring with the card in hand (SDFT / RL's Razor, EMA teacher, checker-gated, KL forgetting meter)",
+     "status": "adopted",
+     "where": "novel-mechanisms S3; decisions log:15; later called \"neither new nor the next repair\" in 03-learning.md method 6"
+    },
+    {
+     "idea": "Hint ladder: hints are the first j steps of a verified solution, up after 2 failures, down after 1 success, hints never pay reward",
+     "status": "adopted",
+     "where": "novel-mechanisms \u00a73.2; decisions log:15 (Exp 4)"
+    },
+    {
+     "idea": "Pretend / belief / source frames (WORLD, SUPPOSE, BELIEF(agent), GAME) as card fields from day one",
+     "status": "adopted",
+     "where": "novel-mechanisms S7; decisions log:15"
+    },
+    {
+     "idea": "Two memory strengths (stability vs retrievability, Bjork) as the card retirement rule",
+     "status": "deferred",
+     "where": "novel-mechanisms S4; decisions log:15 (\"Later\")"
+    },
+    {
+     "idea": "Schema fast-track: three consolidation lanes scored by P(correct | card hidden)",
+     "status": "deferred",
+     "where": "novel-mechanisms S5"
+    },
+    {
+     "idea": "Surprise opens an edit window; split-don't-overwrite for context-specific exceptions",
+     "status": "deferred",
+     "where": "novel-mechanisms S8"
+    },
+    {
+     "idea": "Sparse random-expansion keys with accessibility-weight forgetting (fly hashing, Gershman/Fiete/Irie)",
+     "status": "deferred",
+     "where": "novel-mechanisms S6"
+    },
+    {
+     "idea": "Predict-before-you-store (write a card only when the guess was wrong)",
+     "status": "deferred",
+     "where": "novel-mechanisms \u00a74 \"Later\""
+    },
+    {
+     "idea": "Verified derived multi-hop cards, with dependency tracking so a corrected premise invalidates them",
+     "status": "deferred",
+     "where": "novel-mechanisms \u00a74; decisions log:33"
+    },
+    {
+     "idea": "Local naps with per-unit sleep debt (store / young codebook+adapters / decoder)",
+     "status": "conditional",
+     "where": "novel-mechanisms \u00a73.3"
+    },
+    {
+     "idea": "\"Find the U\": sweep the reasoner/store parameter split (Engram, Ouro, Morris bits-per-parameter)",
+     "status": "mentioned",
+     "where": "novel-mechanisms \u00a73.4"
+    },
+    {
+     "idea": "Refault meter as a trigger for breaking a problem up",
+     "status": "mentioned",
+     "where": "novel-mechanisms \u00a73.5"
+    },
+    {
+     "idea": "Sleep chunking / macro creation with MDL test and a wipe-store smuggling guard (DreamCoder)",
+     "status": "mentioned",
+     "where": "novel-mechanisms \u00a73.6"
+    },
+    {
+     "idea": "Grid-cell structure codes; mutual-exclusivity binding bit",
+     "status": "deferred",
+     "where": "novel-mechanisms \u00a73 also-rans"
+    },
+    {
+     "idea": "Acetylcholine/noradrenaline \"two dials\"; newborn bottleneck / iterated learning; interrupt drills as training; swarm deliberation",
+     "status": "rejected",
+     "where": "novel-mechanisms \u00a75:197-204"
+    },
+    {
+     "idea": "Four motivation drives, one knob each: learning progress (practice choice), gap curiosity, replay-priority tag, effort; plus fixed regulators",
+     "status": "adopted",
+     "where": "design/research/2026-09-18-motivation.md \u00a74:78-84; decisions log:12"
+    },
+    {
+     "idea": "Novelty / prediction-error / count exploration bonuses as RL reward (ICM, RND, pseudo-counts)",
+     "status": "rejected",
+     "where": "motivation.md:89"
+    },
+    {
+     "idea": "Empowerment, or any reward for resources, compute, store size, staying awake or survival",
+     "status": "rejected",
+     "where": "motivation.md:90"
+    },
+    {
+     "idea": "Teacher approval as reward; the model's own checker as reward; one summed happiness score",
+     "status": "rejected",
+     "where": "motivation.md:91-92"
+    },
+    {
+     "idea": "Model-proposed tasks (Absolute Zero, R-Zero, SOAR-style proposer rewarded by measured student improvement)",
+     "status": "deferred",
+     "where": "motivation.md:93 (v2)"
+    },
+    {
+     "idea": "Target success band (~85% imitation, ~50% RL) via p(1-p) / SFL / LILO curricula",
+     "status": "conditional",
+     "where": "motivation.md \u00a72 and open question 2"
+    },
+    {
+     "idea": "Consolidation pressure (renamed from \"sleep pressure\"), learned body clock, naps, background-copy sleep with snapshot merge",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Compute budget as a hunger-like spending limit, never a reward for acquiring compute",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "J-space / J-lens-style mid-thought readability tooling over logged codes + decoder + slot probes",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Interoception inputs (pressure, compute left, confidence, drives, store hit/miss, think time), time/source tags; map view, body sense and teacher pointing later",
+     "status": "adopted",
+     "where": "decisions log:12"
+    },
+    {
+     "idea": "Growing the model during sleep by upward distillation",
+     "status": "deferred",
+     "where": "decisions log:12 (v2)"
+    },
+    {
+     "idea": "Premonition-mini D: minGRU + local attention reader, 16 entity slots, shared 2-layer think block looped <=8, ASK top-4, rule-based name pointerizer",
+     "status": "adopted",
+     "where": "design/06-premonition-mini-spec.md:22-51"
+    },
+    {
+     "idea": "Contenders/controls E (anonymised transformer), E-long, C*, D-soft, D-local, D-noask, D-noptr, D-gold, C-gold; 3 precommitted seeds",
+     "status": "adopted",
+     "where": "design/06-premonition-mini-spec.md:252-273"
+    },
+    {
+     "idea": "Token Superposition Training (Ben's suggestion), 3-arm local pilot with output-only bag arm",
+     "status": "deferred",
+     "where": "design/research/2026-09-18-improvement-research.md:125-204; overnight note \u00a75 (\"not the bottleneck; same algorithm as patch-level training\")"
+    },
+    {
+     "idea": "Ordered multi-token prediction",
+     "status": "rejected",
+     "where": "improvement-research.md:166 (excluded from the pilot; worse at small scale, compression.md)"
+    },
+    {
+     "idea": "Soft retrieval over the whole store so answer errors train the selector (End-to-End MemNets)",
+     "status": "conditional",
+     "where": "improvement-research.md \u00a71; spec \u00a710.3 (D-soft)"
+    },
+    {
+     "idea": "Key-Value Memory Networks address/value separation -> two-pool (key/value) card writer",
+     "status": "rejected",
+     "where": "overnight note \u00a74 candidate A; tested in m03: two-pool fetched gold less often, value pool did not specialise (decisions log:242-244)"
+    },
+    {
+     "idea": "Uniform contextual mean pooling as the simple control",
+     "status": "rejected",
+     "where": "decisions log m03 table:233-238 (hurts reading 512->363, no choosing gain)"
+    },
+    {
+     "idea": "Fixed position-sensitive pooling (MemN2N positional encoding)",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/04-efficiency.md proposal 1"
+    },
+    {
+     "idea": "Token-level addressing, keep a mark per token (ColBERT)",
+     "status": "deferred",
+     "where": "final-sweep 02-memory.md proposal 1 and its own cross-critique:96"
+    },
+    {
+     "idea": "Query-drift compensation for a persistent index across weight updates",
+     "status": "deferred",
+     "where": "final-sweep 02-memory.md proposal 2"
+    },
+    {
+     "idea": "Ungated delta-rule fast buffer replacing explicit cards (DeltaNet/Gated DeltaNet/Larimar)",
+     "status": "rejected",
+     "where": "final-sweep 02-memory.md proposal 3 (\"not recommended now\")"
+    },
+    {
+     "idea": "Bounded reread of the exact text behind already-selected cards (REFRAG-style)",
+     "status": "conditional",
+     "where": "final-sweep README rec 3:88-90"
+    },
+    {
+     "idea": "H1: verified triplets (irrelevant vs relevant change) with JS agreement + log-odds margin vs identical-data grouped CE (Kaushik, Teney, GECA)",
+     "status": "conditional",
+     "where": "final-sweep README rec 2:60-72; implemented but untrained, H1 gate FAILED (decisions log:245-246)"
+    },
+    {
+     "idea": "H2: query-reuse distillation, KL from a standalone first-fetch teacher into the chain's second fetch",
+     "status": "deferred",
+     "where": "final-sweep README:76-84"
+    },
+    {
+     "idea": "Shared repeated reader for the second hop (fixed-order composition-role transfer split A0/A1/A2, F)",
+     "status": "conditional",
+     "where": "final-sweep README rec 2:74; 01-reasoning.md:55"
+    },
+    {
+     "idea": "Bounded relational join J[r,a,v]=sum_b F[a,b]A[r,b,v] (Neural Logic Machines / relational algebra)",
+     "status": "conditional",
+     "where": "final-sweep 01-reasoning.md proposal 1"
+    },
+    {
+     "idea": "Sparse reusable rule modules over bound operands (Neural Production Systems)",
+     "status": "deferred",
+     "where": "final-sweep 01-reasoning.md proposal 2"
+    },
+    {
+     "idea": "Latent program search / reusable procedure libraries (DreamCoder, LEGO-Prover, TroVE re-evaluation)",
+     "status": "deferred",
+     "where": "final-sweep 01-reasoning.md:63; 05-alternatives.md method 6"
+    },
+    {
+     "idea": "Paraphrase / question-wording agreement loss on two renderings",
+     "status": "deferred",
+     "where": "final-sweep 05-alternatives.md candidate 1; README:94 (needs a measured wording gap first)"
+    },
+    {
+     "idea": "Gated Think (ReZero-style learnable alpha) and pre-think card bypass",
+     "status": "rejected",
+     "where": "decisions log m02:153-166 (both fix copying 1024/1024 but keep gate ~0; \"diagnostics only\")"
+    },
+    {
+     "idea": "Row-centred Think update (PairNorm/ContraNorm)",
+     "status": "rejected",
+     "where": "overnight note \u00a75 (64/512, blocked reading)"
+    },
+    {
+     "idea": "Final-loop-only answer supervision instead of per-loop (TRM deep supervision kept)",
+     "status": "rejected",
+     "where": "overnight note \u00a75 (164 vs 169 of 512)"
+    },
+    {
+     "idea": "Question-aware card read",
+     "status": "rejected",
+     "where": "overnight note \u00a75 (reading aid only, no choosing)"
+    },
+    {
+     "idea": "Register-only Think / read-only facts with a writable scratchpad (Perceiver IO, protected-facts recurrence)",
+     "status": "conditional",
+     "where": "overnight note \u00a74 candidate C; astra-council reasoning-memory.md candidate 2"
+    },
+    {
+     "idea": "Compositional multi-step queries built from name pointers + relation",
+     "status": "conditional",
+     "where": "overnight note \u00a74 candidate B"
+    },
+    {
+     "idea": "Latent role-bound cards / explicit role-filler binding channel (ESBN, Abstractors, Chen et al. 2019)",
+     "status": "conditional",
+     "where": "astra-council-2026-09-18/reasoning-memory.md candidate 1"
+    },
+    {
+     "idea": "Anchor-preserving multiscale reader (Hourglass / MEGABYTE / BLT hierarchy instead of TST)",
+     "status": "deferred",
+     "where": "astra-council-2026-09-18/compression.md candidate 1"
+    },
+    {
+     "idea": "Tensor-product / holographic reduced representations for binding",
+     "status": "mentioned",
+     "where": "astra-council-2026-09-18/compression.md"
+    },
+    {
+     "idea": "Test-time training / per-task LoRA adaptation",
+     "status": "rejected",
+     "where": "final-sweep 05-alternatives.md method 5 (violates read-only evaluation)"
+    },
+    {
+     "idea": "MemGen, Nested Learning/HOPE, Memory-R1 as closest prior art; Memory Networks, KV-MemNN, RETRO, Memory Layers/Engram, HRM/TRM, \"Language Models Need Sleep\" (2026)",
+     "status": "mentioned",
+     "where": "RESEARCH_REVIEW.md:45-49; decisions log:23"
+    },
+    {
+     "idea": "Grokked Transformers are Implicit Reasoners as the closest published analogue of the held-out two-hop failure",
+     "status": "mentioned",
+     "where": "overnight note \u00a72; 03-learning.md method 3"
+    },
+    {
+     "idea": "DER/DER++, A-GEM, uniform replay as the first retention comparators",
+     "status": "deferred",
+     "where": "final-sweep 03-learning.md methods 4 and the A-GEM note; README:94"
+    },
+    {
+     "idea": "One-visit-per-row 2048-token windows replacing random 768-token cuts",
+     "status": "adopted",
+     "where": "design/06-step1-pilot-results.md:16"
+    },
+    {
+     "idea": "Qwen/Bonsai-written pattern bank v1 with rule verification; the Bonsai audit demoted to advisory (18% yes-rate, ~22 of 25 vetoes wrong)",
+     "status": "adopted",
+     "where": "design/06-step1-pilot-results.md:30-33"
+    },
+    {
+     "idea": "Syllable-splitting tokenizer v2 (the 0% fresh-name result was a v1 tokenizer bug)",
+     "status": "adopted",
+     "where": "design/06-premonition-mini-spec.md:20; decisions log:16"
+    },
+    {
+     "idea": "Fixing held-out question wording by (a) many more phrasings, (b) fixed phrasings for the Step-1 gate, or (c) both; and up-weighting answer tokens",
+     "status": "mentioned",
+     "where": "design/06-step1-pilot-results.md:22-26 (open decision for Ben)"
+    },
+    {
+     "idea": "$30 Vast.ai rental ceiling with per-rental approval; Mac free; BensPC off-limits at that time",
+     "status": "adopted",
+     "where": "decisions log:43-45"
+    }
+   ],
+   "open_questions": [
+    "Compute premise is stale in the project's own notes: the decisions log records BensPC as off-limits with a $30 rental ceiling (decisions log:43-45), while the 19 Sep Core pilots in fact ran on the local RTX 5070 Ti for 600 s each (design/06-step1-pilot-results.md:3). If the 5070 Ti is freely usable, the whole 'tiny local screens only' framing of the final sweep, and the seed-count and training-cap rules (30-min local caps, one dev seed), should be re-derived: multi-seed toy ladders become cheap, and the overnight 'life' test in 04-architecture-v1.md:128 becomes affordable.",
+    "Which track is primary? Core (learnlab/step1.py, 90% gate, held-out 23.4%) and Premonition-mini (toy ladders) are explicitly kept separate with incompatible tokenizer identities (7,289 / 2460b134 vs 7,068 / 2c9d06ae, final-sweep README:28). No document says which one carries the vision forward or how they reconcile.",
+    "Does the vision survive the measured mini results? Think gates stay ~0 (alpha 0.042, overnight \u00a75) and choosing fails (166-182/512). The think loop, ASK and the codebook all assume a working recurrent reasoner. What is the kill criterion for the reasoner-plus-store architecture itself?",
+    "What is the smallest experiment that tests the thought codebook at all? No document proposes one; Astra postponed it (decisions log:31) and Ben chose to keep it (decisions log:12). The disagreement is unresolved.",
+    "Open problems #22-#25 from the adversarial review (sleep-transaction versioning and re-keying, separate sleep-gating data plus an untouched shadow test, lifetime budgets for diary bytes/cards/code growth/sleep FLOPs, standalone drive-scheduler test) were recorded and never revisited (decisions log:20).",
+    "Is the choosing failure a representation problem or an objective problem? The pool probes (0.979 mass on the value token, person decoded 116/2048) are called plausible-not-settled (final-sweep README:22), and three pooling variants have now failed (m03). Nothing in the plan says what to conclude if H1 also fails.",
+    "Held-out question wording for the Core gate (a/b/c plus answer-token weighting) is still an open decision for Ben (06-step1-pilot-results.md:22-26)."
+   ],
+   "strengths": [
+    {
+     "evidence": "design/01-learning-spec.md:20-28 lists seven mechanisms each forced by a specific answer; design/04-architecture-v1.md:117-129 gives an 8-step build order with an explicit pass condition per step",
+     "what": "The vision is decomposed into a small number of mechanisms, each with a stated reason for existing and a pass/fail gate, rather than a pile of brain analogies"
+    },
+    {
+     "evidence": "design/research/2026-09-18-novel-mechanisms.md:14 (VERIFIED/UNVERIFIED labels), \u00a75:197-204 kills four ideas with reasons; design/02-options.md:303 marks unverified references explicitly",
+     "what": "Prior art is tracked with verification status and an explicit kill list, so ideas are removed as well as added"
+    },
+    {
+     "evidence": "design/research/2026-09-18-motivation.md:78-84 (four drives, one knob each) and :88-93 (explicit do-not-build list covering novelty bonuses, empowerment, teacher approval, own checker as reward, summed happiness)",
+     "what": "The motivation design anticipates the standard failure modes (noisy TV, wireheading, instrumental drives) before any code exists"
+    },
+    {
+     "evidence": "design/research/2026-09-18-novel-mechanisms.md:99-107 (S1, ARIES/LSM framing); decisions log:34 adds the acceptance-rate requirement; design/04-architecture-v1.md:92 lesion test",
+     "what": "The sleep design is borrowed from database engineering rather than invented: snapshot, replay, commit-or-rollback, with a lesion test and an acceptance-rate metric guarding 'stable because it refused to learn'"
+    },
+    {
+     "evidence": "design/06-premonition-mini-spec.md:252-273 (three precommitted seeds, decomposed held-out slices, both-twins-correct, stop rules); final-sweep README:96-98 (fingerprinted read_only, visit-clustered 99% bounds, repeats excluded, full_verdict:false)",
+     "what": "Measurement discipline is unusually strong for a hobby project: leak detectors, read-only evaluation, precommitted seeds, visit-clustered uncertainty, and a standing 'full_verdict: false' flag"
+    },
+    {
+     "evidence": "design/research/2026-09-18-improvement-research.md:3-7 superseded by deep-research; design/research/2026-09-18-deep-research.md:415-417 explicitly corrects its own earlier priority ranking; final-sweep README:30 lists what the sweep removed from the shortlist",
+     "what": "The research record self-corrects in writing: earlier recommendations carry supersession notices and the reasons for reversal"
+    },
+    {
+     "evidence": "design/03-issues-and-decisions.md:5-18 measured tokens/s and peak memory for 4.3M-687M models, including the Windows >15GB spill trap; design/01-learning-spec.md:45 Bonsai measured at 12 tok/s, 9.6 GB peak",
+     "what": "Hardware limits were measured, not assumed, including a trap (Windows spilling GPU memory to RAM) that would have silently corrupted throughput comparisons"
+    },
+    {
+     "evidence": "final-sweep README:11-20 table separating verified counts from meaning/limit; :22 notes a failed linear probe shows poor accessibility, not absence; :24 records the 503/512 vs 27/512 seed split rather than the best seed",
+     "what": "The evidence audit separates saved numbers from inferences and reports the unflattering seed, instead of quoting the best run"
+    }
+   ],
+   "subsystem": "vision-prior-art",
+   "summary": "Premonition's vision (design/01, 04-architecture-v1, decisions log) is a from-scratch learner in a synthetic village: a small reasoner plus a three-tier store (permanent diary, hippocampal cards, sparse knowledge slots), thinking in a growing VQ \\\"private language\\\", trained build-space -> JEPA -> imitation -> RL, with weights changing only inside a transactional sleep, plus motivation drives, a told-ledger and a hint ladder. Almost none of it is built. What exists is a plain-transformer Core track (held-out 23.4% against a 90% gate) and Premonition-mini D (~2M), whose toy ladders show copying a supplied card works (1024/1024) but choosing among distractors (166-182/512) and held-out two-hop retrieval (14/189) fail. Research output is large, honest, heavily prior-art-mapped and self-correcting.",
+   "weaknesses": [
+    {
+     "evidence": "design/06-premonition-mini-spec.md:55 \u2014 the card store is \"episode-scoped... rebuilt from the input like a KV cache\", \"without versions, consolidation, inferred cards or the told-ledger\"; no sleep, codebook, drive or diary code exists under premonition/",
+     "severity": "blocking",
+     "suspected_cause": "Every vision component was agreed in conversation and written into decisions log:12 in one day, then the build order stalled at Experiment 1",
+     "what": "The vision and the code have almost no overlap: the store that is built is a per-visit cache with none of the agreed fields"
+    },
+    {
+     "evidence": "design/research/2026-09-18-decisions-log.md:31 (Astra: \"Postpone the growing codebook, private-language RL, learned sleep clock and drives\") vs :12 (Ben: codebook keeps growing, ART-stabilised). No memo proposes a codebook experiment; final-sweep 01-05 never mention it",
+     "severity": "major",
+     "suspected_cause": "Unresolved disagreement between Ben's design preference and the lead's evidence-first ordering",
+     "what": "The thought codebook \u2014 the most distinctive part of the vision \u2014 is unspecified as an experiment and silently dropped from every research shortlist"
+    },
+    {
+     "evidence": "design/06-step1-pilot-results.md:10-12 (44% train-split, 23.4% held-out, \"Gate: FAIL on every accuracy item\"); :39 residual leak cues for who-has / what-is-in / what-if still open",
+     "severity": "blocking",
+     "suspected_cause": "Random 768-token windows (now fixed), 1-2% answer tokens, and only 2-7 train phrasings per question type",
+     "what": "The Core track is far below its own gate and still has known leak cues, so no clean baseline exists to measure any vision component against"
+    },
+    {
+     "evidence": "final-sweep README:14-16 \u2014 choosing 166-182/512 against a 53.7% question-blind shortcut; held-out two-hop 14/189 with both required facts fetched in 1/189; second-fetch relation correct 0/171 (default) and 9/171 (longer)",
+     "severity": "blocking",
+     "suspected_cause": "Single pooled card vector puts 0.979 attention mass on the value token, losing person identity (final-sweep README:22)",
+     "what": "Premonition-mini cannot choose the right card or form the second query; three pooling repairs (original, mean, two-pool) have now all failed"
+    },
+    {
+     "evidence": "overnight note \u00a75 \u2014 gate alpha at most 0.042 with no gain, \"Keep it only as a stability tool\"; decisions log:159-160 (alpha -0.025, +0.001); final-loop-only supervision made no difference (164 vs 169 of 512)",
+     "severity": "major",
+     "suspected_cause": "Think's learned update writes a large row-shared vector (median pairwise cosine 0.994 after decoder norm), so the only safe setting is 'do nothing'",
+     "what": "The recurrent think loop \u2014 the justification for the whole reasoner design and for the later ASK/effort/hint-ladder machinery \u2014 contributes essentially nothing"
+    },
+    {
+     "evidence": "final-sweep README:24 \u2014 503/512 vs 27/512 on the same supplied one-hop reading task at the shorter schedule; the successful longer checkpoint has no seed-1 replication; \"Most runs used one seed\" (decisions log:179)",
+     "severity": "major",
+     "suspected_cause": "30-minute local training caps forced one-seed development runs on a Mac, despite the spec requiring three precommitted seeds",
+     "what": "Seed instability is large enough that most reported toy conclusions are not safely interpretable"
+    },
+    {
+     "evidence": "design/research/2026-09-18-decisions-log.md:20 records #22 (sleep must version weights, optimizer, key encoder, card keys, codebook ids, sequence numbers and re-key cards written during sleep), #23 (separate gating data + shadow test), #24 (lifetime budgets for diary bytes, active cards, code growth, retrieval cost, sleep FLOPs must be simulated before building sleep), #25 (drive scheduler tested alone). None is revisited in any later file",
+     "severity": "major",
+     "suspected_cause": "The adversarial review's open problems were logged rather than assigned; research attention moved to the toy answer path",
+     "what": "The sleep transaction and the drive scheduler have four recorded blocking prerequisites that were never taken up"
+    },
+    {
+     "evidence": "design/research/2026-09-18-novel-mechanisms.md \u00a73.2 assumes \"The checker has verified solutions, so a hint is just the first j steps\"; design/03-issues-and-decisions.md:35 marks the checker \"agreed in principle\" only, and no checker head exists in premonition/",
+     "severity": "major",
+     "suspected_cause": "Mechanisms were designed against the intended end-state rather than the current one",
+     "what": "Hint ladder, effort drive, mastery drive, self-tutoring and REM dream-checking all depend on a trained checker head that does not exist"
+    },
+    {
+     "evidence": "design/research/2026-09-18-novel-mechanisms.md:30-38 specifies slot knock-out inside \"the JEPA stage (predicting the next scene in the model's internal code)\"; that internal code is the unbuilt codebook. final-sweep 05-alternatives.md method 4 reports an independent LeWM reproduction finding one-step prediction error fails to rank long-horizon planners",
+     "severity": "major",
+     "suspected_cause": "The JEPA stage was adopted before the representation it predicts into was specified",
+     "what": "JEPA with slot knock-out is adopted but is defined over a representation that does not exist, and its headline citation has contrary reproduction evidence"
+    },
+    {
+     "evidence": "design/research/2026-09-18-decisions-log.md:23 \u2014 \"the core idea is sound, but novelty is modest at the mechanism level. Nearest prior art is Memory Networks (2015), Key-Value Memory Networks (2016), RETRO, Memory Layers/Engram, Titans/Nested Learning, HRM/TRM, and 'Language Models Need Sleep' (2026)\"; RESEARCH_REVIEW.md:45-49 adds MemGen, Nested Learning/HOPE, Memory-R1",
+     "severity": "minor",
+     "suspected_cause": "The vision's parts are each well-precedented; only the combination plus the exact simulator checker is new",
+     "what": "Nearly every mechanism in the vision has close published prior art, so the project's claim has to rest on the combination and on efficiency-per-weight, which is not yet measured"
+    },
+    {
+     "evidence": "design/04-architecture-v1.md:3 is partly superseded; design/research/2026-09-18-improvement-research.md:3-7 is superseded; design/06-premonition-mini-spec.md has \u00a79, \u00a710 and \u00a711 each overriding the earlier sections; final-sweep README:28 notes two tokenizer identities both called \"v2\"",
+     "severity": "major",
+     "suspected_cause": "Fast co-design plus several agents writing in parallel, with supersession handled by notices rather than by rewriting",
+     "what": "The design record is layered supersessions across ~4,600 lines; a new reader must reconstruct current truth from override notices, and two different artifacts share the name 'v2'"
+    },
+    {
+     "evidence": "design/research/2026-09-18-decisions-log.md:45 \"Mac work is free; BensPC remains off-limits\" vs design/06-step1-pilot-results.md:3 \"Three 600-second runs on BensPC (RTX 5070 Ti)\"; final-sweep caps are 30-minute local Mac screens",
+     "severity": "major",
+     "suspected_cause": "A compute constraint recorded during the lead handoff was never revised after the 5070 Ti was used again",
+     "what": "The research plan's cost discipline is calibrated to a compute constraint the project no longer appears to have, which is why nearly all toy results are single-seed"
+    },
+    {
+     "evidence": "design/research/2026-09-18-motivation.md open questions 1-5 (task families under self-generated tasks, target success rate, whether learning progress applies to facts at all, how to measure a gap in abstract thought space, checker calibration under drive feedback); no later file addresses any of them",
+     "severity": "minor",
+     "suspected_cause": "The memo was commissioned and accepted without a follow-up experiment assignment",
+     "what": "The motivation design's own five open questions are unanswered and nothing depends on answering them"
+    },
+    {
+     "evidence": "design/research/2026-09-18-novel-mechanisms.md S2:114-116 gives scoring correct +1, don't-know 0, wrong -t/(1-t) with a coverage floor, but no value for t or the floor; the ledger's interaction with gist-faded slots (decisions log:12) is unaddressed",
+     "severity": "minor",
+     "suspected_cause": "Borrowed scoring rule (Kalai et al.) adopted without instantiating its parameters",
+     "what": "The told-ledger is adopted but its risk dial and coverage floor are unset, and it can conflict with deliberate gist fading"
+    }
+   ]
+  },
+  {
+   "subsystem": "data-eval",
+   "summary": "Village v0 is a deterministic 6x6-10x10 grid world (40 places, ~60 object kinds, 5-12 Zipf-bursty made-up names, 1-3 rules from R1-R9) simulated in learnlab/village/, rendered through a Qwen-written sentence-pattern bank (learnlab/patterns.py, data/village/patterns/bank-v1.json), tokenized by a byte-BPE with syllable-splitting for names, and graded by a state-tracking oracle over 13 question types plus counterfactual twins. learnlab/splits.py hash-splits four axes (name, template, teacher_style, rule_family) into a checked manifest; learnlab/leaks.py runs 10 dumb guessers per answer class against matched nulls; learnlab/readonly.py fingerprints the model during eval. Generation is fast (20,000 train visits in 74 s) and eval is cheap (5.5 s), but the question-phrasing bank is starved and the training corpus is small enough to be reused 13.7 times.",
+   "strengths": [
+    {
+     "what": "World generation and evaluation are both extremely cheap, so data experiments are nearly free. 20,000 train visits (236 MB, 171,701 questions) generate in 74.2 s; validation/test 600 visits each in ~6.3 s; oracle indexing 4.1-6.7 s per split; the whole final evaluation of 3,827 held-out + 991 train-split + 1,000 long-range + 428 pair items takes 5.46 s on the 5070 Ti.",
+     "evidence": "artifacts/benspc/20260919T092801Z-1330ff6a/artifacts/premonition-step1-4M-1789810658957235700-16832.json data.splits.*.generate_seconds, data.oracle.*.seconds, final.seconds=5.461; eval_fit.worst_case_final_seconds=23.6"
+    },
+    {
+     "what": "The name tokenizer genuinely removes the memorise-the-name shortcut. Names are built from 24 two-letter syllables and any all-syllable word is split into syllables before BPE, so held-out names cost the same tokens as train names: 0/2,748 train, 0/937 validation and 0/929 test names are single tokens, and the mean-pieces gap across splits is 0.0026.",
+     "evidence": "learnlab/tokenizer.py:231-246 (_split); same artifact, name_token_audit (single_token=0 everywhere, max_mean_gap=0.00256, warning=null)"
+    },
+    {
+     "what": "The leak panel is real, statistically disciplined, and currently catching things. Ten detectors per answer class (majority, bag-of-words, bigram, question-only, metadata, position, most-mentioned, last-mention, target-line) are each compared with their own matched null by an exact one-sided binomial test at alpha=0.01 with a 0.05 effect margin and a 100-item floor; it reports 8 leaking detectors across 3 classes rather than a clean pass.",
+     "evidence": "learnlab/leaks.py:1-13, learnlab/policy.py ALPHA=0.01/LEAK_MARGIN=0.05/LEAK_MIN_ITEMS=100; artifact leaks.leaking_detectors (person/target_line 38.0% vs null 18.3%, p_adj=1.7e-11)"
+    },
+    {
+     "what": "The split machinery is independently auditable rather than trust-based: a hash manifest with a 64-item canary per axis, manifest_differences() that names exactly what changed, and splits.audit_examples() which re-scans the generated text for foreign-split vocabulary and for own-split names the provenance never recorded, raising SplitLeak on any hit.",
+     "evidence": "learnlab/splits.py:29-35 (AXES, SCHEME), :210 hash_canary, :352 manifest_differences, :703-728 audit_examples"
+    },
+    {
+     "what": "read_only evaluation is unusually thorough: parameter/buffer identity, dtype, stride, storage pointer, version counter, content digest, .grad, module tree, optimizer state_dict and RNG state (python/numpy/torch/CUDA/MPS) are all snapshotted and verified on exit, with the .data blind spot documented.",
+     "evidence": "learnlab/readonly.py:1-27"
+    },
+    {
+     "what": "Slice tagging for Experiment 1 is already the right shape for honest comparisons: near/far defined by the contender's real 736-token cut, multi-hop by depth 2-5, changed/stale by replaying the visit and re-asking the oracle after every earlier step, fresh-vs-seen names, reworded, and an explicit exclusion list that keeps the leak-flagged classes (q.who_has, q.in_container) and in-visit repeats out of every decision cell.",
+     "evidence": "premonition/slices.py:1-30, :51-57 (SEQ_LEN 768, CUT_MAX_LEN 736, LEAK_CLASSES, DECISION_SLICES)"
+    },
+    {
+     "what": "The oracle grades plans by acting them out rather than by string match, so any working plan counts, and the run records the checker used and how many were checked (549/549 plan questions oracle-checked, with right_exact and right_other_working_plan reported separately).",
+     "evidence": "artifact final.plan_grading {checker: learnlab.village.oracle.check_plan, plan_questions: 549, checked_by_oracle: 549}; learnlab/village/oracle.py:19"
+    },
+    {
+     "what": "Input hygiene is audited per eval set: answers already present in the input, questions asked earlier with a different answer, and oracle-checked plans are counted, and the 64 held-out questions already answered identically earlier in their own input are reported apart and excluded from the gate.",
+     "evidence": "artifact input_audit.heldout {inputs:3827, answer_already_in_input:64, asked_before_with_other_answer:41}; warnings[0]"
+    },
+    {
+     "what": "The world semantics are tight enough for an exact oracle: every rule firing is deterministic, timed rules within a village have distinct times so ordering never matters, (colour, kind) stays unique for the village's life so a label never refers to two objects, and failed attempts (E10) are generated so \"tried to\" is not a cue.",
+     "evidence": "learnlab/village/world.py:1-29; design/05-village-v0.md:34-36"
+    }
+   ],
+   "weaknesses": [
+    {
+     "what": "The question-phrasing bank is starved and that, not model capacity, is the single biggest data limit. After fallback fill, 13 of 22 question banks have exactly ONE train phrasing and one held-out phrasing (q.where_object, q.where_person, q.who_has, q.why_at, q.plan_get, q.next_to, q.where_before, q.where_at_time, q.rule_material, q.rule_category, q.rule_container, q.rule_place, q.yn_has). Teacher banks meanwhile have 46-95 train patterns each. The model is asked to map an unseen phrasing to the right answer space after one training example of that question type.",
+     "evidence": "data/village/patterns/bank-v1.json via learnlab/village/render.py PatternSource.load(): q.who_has 1/1/1, q.why_at 1/1/1, q.plan_get 1/1/1, q.next_to 1/1/1 vs t.demo_outro 95/43/31, t.demo_intro 85/39/40",
+     "severity": "blocking",
+     "suspected_cause": "scripts/gen_patterns.py generated exactly 36 candidates per question bank (3 requests x PER_REQUEST=12) in one round and no topup round was ever run for q.* banks; the bank target is 20 and all 22 fell short (q.next_to short by 20, q.where_before by 20, q.plan_get by 19)."
+    },
+    {
+     "what": "The per-question-type numbers show the failure is question-type identification, not world understanding: accuracy collapses precisely on types with a distinctive answer space and scarce phrasings. Q6 direction 62.4% in-distribution -> 1.1% held-out; Q8 rule 58.5% -> 4.0%; Q7 what-if 72.2% -> 7.2%; Q11 why 28.8% -> 0.0%. The model answers from the wrong answer space entirely: on Q12 (plan) it emits \"zero\" 196 times and \"not told\" 202 times out of 448; on Q6 it emits yes/no 97 times out of 276.",
+     "evidence": "artifact final.heldout_visible.by_qtype vs final.train_heldin.by_qtype; predictions[] answer distribution for Q12/Q6",
+     "severity": "blocking",
+     "suspected_cause": "one-phrasing question banks plus no explicit question-type signal; the model cannot infer what kind of answer is wanted from an unseen wording."
+    },
+    {
+     "what": "A bank with fewer than three accepted patterns is sent wholly to train, and render.py then discards that bank entirely and substitutes the three hand-written fallback seeds. So the Qwen work on those banks is thrown away AND the \"held-out\" phrasing for those 13 question types is one of Ben's own three seed sentences, not a genuinely diverse paraphrase.",
+     "evidence": "learnlab/patterns.py:963-966 (\"A bank with fewer than three patterns goes wholly to train\"); learnlab/village/render.py:285-293 (a bank missing any split takes the fallback for the whole bank)",
+     "severity": "major",
+     "suspected_cause": "two independently reasonable rules interacting: the <3 rule and the no-mixing rule."
+    },
+    {
+     "what": "Question wording is not a separable axis. AXES has only name/template/teacher_style/rule_family, and question patterns live inside \"template\", so EVERY held-out question is simultaneously unseen wording, unseen teacher style and unseen names. The gate reports heldout_visible, unseen_templates and unseen_styles with identical n=3763 and hits=881 \u2014 three criteria measuring one thing. There is no configuration that tests a held-out world with seen question wording, which is exactly decision (b) in the pilot write-up.",
+     "evidence": "learnlab/splits.py:30 AXES; artifact gate.criteria[0..2] all n=3763 hits=881; final.heldout_visible.by_template has only the key \"unseen\" (n=3763)",
+     "severity": "blocking",
+     "suspected_cause": "one \"template\" axis covering narration, rule and question banks together."
+    },
+    {
+     "what": "Plan questions (Q12) are unlearnable at this scale and are 12% of the gate. 0/448 held-out and 1/65 in-distribution; plan_grading reports 0 right_exact and 0 right_other_working_plan out of 549. They are 6.9% of train questions but 13.4% of validation questions, so they drag the headline number down while teaching almost nothing.",
+     "evidence": "artifact final.plan_grading; final.heldout_visible.by_qtype.Q12 (0/448); final.train_heldin.by_qtype.Q12 (1/65); train COMPLETE.json qtypes Q12=11925/171701 vs validation 13.4%",
+     "severity": "major",
+     "suspected_cause": "multi-action comma-joined answers with max_new=32 and no plan-format supervision; the answer is a sequence, graded by simulation, but trained as ordinary LM tokens at ~3% weight."
+    },
+    {
+     "what": "The training corpus is too small for the compute available: 24.15M train tokens reused for 13.7 epochs in a single 600 s run. Generation costs 74 s for 20,000 visits, so a 10x larger corpus is about 12 minutes of wall clock on the same machine. Nothing about the current data volume is a real constraint.",
+     "evidence": "artifact world {train_tokens: 24150067, epochs: 13.735, pregenerated: true}; data.splits.train.generate_seconds=74.24",
+     "severity": "major",
+     "suspected_cause": "the medium preset was sized for the old 768-token windowing, not for the 2048 one-visit-per-row regime."
+    },
+    {
+     "what": "The design's 5% world-speed requirement is only met because shards are pre-generated. Live generation runs at 269k tokens/s on 11 workers against a learner at 633k tokens/s: live_supply_ratio 0.43. The recorded 0.88% stall is an artefact of reuse, not of a simulator that can keep up.",
+     "evidence": "artifact world {live_world_tokens_per_s: 269451, learner_tokens_per_s: 632996, live_supply_ratio: 0.4257}; design/05-village-v0.md:131-133",
+     "severity": "major",
+     "suspected_cause": "pure-Python simulator plus per-visit oracle replay; the design assumed 12 threads would suffice."
+    },
+    {
+     "what": "Statistics ignore visit clustering everywhere. The gate and every by-slice cell use Wilson intervals that assume independent items, but the 3,763 held-out questions come from only 1,200 visits (about 3.1 per visit) sharing a village, names, rules and teacher style. The spec requires \"paired visit-clustered 99% uncertainty\" and nothing in learnlab or premonition implements a cluster bootstrap \u2014 metrics.bootstrap_ci is unclustered and labelled \"descriptive only\".",
+     "evidence": "learnlab/metrics.py:66-76; grep -rn cluster learnlab/ premonition/ returns only two comment lines (premonition/identity.py:41 admits \"NOT a full verdict (no visit-clustered ...)\"); validation/test COMPLETE.json visits=600 each vs 3763 gated questions",
+     "severity": "major",
+     "suspected_cause": "never built; the Step 0 machinery was item-level and was carried forward."
+    },
+    {
+     "what": "The counterfactual-twin test is badly underpowered and currently a coin flip. n=210 pairs, 20 hits, 9.52% vs chance 6.37%, p=0.048 \u2014 above the project's own alpha=0.01 and therefore reported FAIL. Generating 1,200 pair-visits yielded only 210 usable linked twins.",
+     "evidence": "artifact final.counterfactual_pairs {n:210, hits:20, chance:0.0637, p_value:0.0478}; gate.criteria counterfactual_pairs FAIL; eval_sets.pairs=428 from 1,200 pair visits",
+     "severity": "major",
+     "suspected_cause": "learnlab/village/scheduler.py:864-895 counterfactual_pair searches for twin links by replaying with an altered script and keeps the best of a few tries; the link yield is low and no one has raised the pair-visit count to compensate."
+    },
+    {
+     "what": "Seven of 17 leak classes can never return \"clean\" because they fall below the 100-item floor: contents (n=9), count, nobody, and all four what-if subclasses. \"contents\" is the Q3 class and the whole held-out Q3 population is 9 questions. So the leak panel is silent on exactly the classes premonition/slices.py already excludes as suspect.",
+     "evidence": "artifact leaks.insufficient_classes (7 of 17); leaks.reports.contents {n: 9, train_n: 4}; final.heldout_visible.by_qtype.Q3 n=9; premonition/slices.py:56 LEAK_CLASSES",
+     "severity": "major",
+     "suspected_cause": "the question scheduler's type balancing plus the depth steering leaves rare types with single-digit held-out counts; no per-class minimum is enforced when building the eval set."
+    },
+    {
+     "what": "Three real leaks remain open and they are in high-traffic classes. \"not told\" is predictable from the question alone at 60.5% vs a 50% null (p_adj=2.1e-9) and from bag-of-words at 61.7% vs 56.0%; person answers are predictable from the answer line's wording at 38.0% vs an 18.3% presence null (p_adj=1.7e-11) and from most-mentioned at 33.2%; yes/no from metadata at 57.8% vs 50%. \"not told\" is 571/3,763 = 15.2% of the gate, so a sizeable slice of the score is reachable without reading the world.",
+     "evidence": "artifact leaks.detectors (not told/question_only 537/888=60.5%; person/target_line 87/229=38.0%; yes/no/metadata 295/510=57.8%); final.heldout_visible.by_knowable.not_told n=571",
+     "severity": "major",
+     "suspected_cause": "scheduler.UNTOLD_PICK=0.5 makes not-told-ness correlate with question type, and the fallback \"person\" answer phrasings are few enough that the answer line's wording predicts the class."
+    },
+    {
+     "what": "Answer tokens carry almost no gradient. Measured on train shard 0: 9,684 answer tokens out of 317,154 = 3.05% (2,270 answers, mean 4.27 tokens), and there is no answer-token loss weighting anywhere in step1.py \u2014 grep for answer_weight/answer_loss/loss_weight finds nothing. 97% of the optimisation budget goes to narration the gate does not score.",
+     "evidence": "measured with learnlab/tokenizer.py over data/village/stream/cache/medium-seed0-53292765806d/train/train/shard-00000.txt; grep -n \"answer_weight|answer_loss|loss_weight\" learnlab/step1.py -> no matches",
+     "severity": "major",
+     "suspected_cause": "plain next-token CE over whole visits; the design never specified a loss mask."
+    },
+    {
+     "what": "The held-out question mix is shifted away from the train mix, so train-vs-held-out numbers are not type-for-type comparable. Q12 6.9% -> 13.4%, Q13 5.1% -> 8.8%, Q4 11.5% -> 16.8%, Q1 11.5% -> 8.5%. Reweighting the held-out per-type accuracies to the train-split mix moves 0.234 to 0.251, so the reported generalisation_gap of 0.245 is about 1.7 points mix artefact \u2014 small here, but it will not be small in the A/B comparisons the final sweep plans.",
+     "evidence": "train vs validation COMPLETE.json qtypes; reweighting artifact final.heldout_visible.by_qtype with final.train_heldin.by_qtype counts gives 0.251 vs raw 0.234; final.generalisation_gap=0.2452",
+     "severity": "minor",
+     "suspected_cause": "scheduler.DEPTH_TARGET and MAX_DEPTH differ per split (train 3, held-out 6), and steering toward deeper questions changes which question types are reachable."
+    },
+    {
+     "what": "The pattern bank's semantic check is largely a model checking itself. The only independent checker (Bonsai) was demoted to advisory after it accepted 18% of sentences and 22 of its first 25 vetoes were judged wrong, so acceptance now rests on Qwen's own fresh-context self-check plus 24 hand vetoes. 5,436 of 5,460 candidates are Qwen's; every one of the 86 banks is below target.",
+     "evidence": "scripts/gen_patterns.py:350-366 (ADVISORY_CHECKERS, \"a writer's fresh-context self-check counts\"); data/village/patterns/candidates.jsonl writer counts {qwen: 5436, bonsai: 24}; crosscheck/claude-review.jsonl 24 rows; bank-v1.json shortfalls has 86 entries",
+     "severity": "major",
+     "suspected_cause": "one writer model plus one weak second opinion; check_pattern is mechanical (placeholders, no new fact words) and cannot catch \"asks when, not which place\" errors like the one Ben vetoed in q.compare_count."
+    },
+    {
+     "what": "Saved predictions do not include the question text (every record has question=None), only id/qtype/answer/prediction/correct. Diagnosing why held-out wording fails requires re-deriving the rendered question from the shards.",
+     "evidence": "artifact predictions[0] keys = id, split, qtype, answer, prediction, correct, exact, plan_checked, repeat_in_context",
+     "severity": "minor",
+     "suspected_cause": "the prediction record was designed for scoring, not for error analysis."
+    },
+    {
+     "what": "The name-gap measurement is confounded and underpowered: seen_names n=69 vs fresh_names n=229, gap 0.140, with the artifact's own note admitting \"templates and styles also differ\". It cannot separate fresh-name difficulty from fresh-wording difficulty.",
+     "evidence": "artifact final.name_gap {seen_names.n: 69, fresh_names.n: 229, gap: 0.1396, note: \"...templates and styles also differ\"}",
+     "severity": "minor",
+     "suspected_cause": "the same joint-axis problem as the gate criteria: names, templates and styles are held out together."
+    }
+   ],
+   "already_considered": [
+    {
+     "idea": "One-visit-per-row 2048-token windows instead of random 768-token cuts",
+     "status": "adopted",
+     "where": "design/06-step1-pilot-results.md:16; artifact world.aligned_visits=162049, truncated_visits=8"
+    },
+    {
+     "idea": "Write many more question phrasings (Qwen top-up, 60+ per type) to cover the wording space",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md:23 option (a) \u2014 still an open decision for Ben; bank-v1.json shows no topup round was run for q.* banks"
+    },
+    {
+     "idea": "Fix question phrasings across all splits for the Step 1 gate and test new wording as a later skill",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md:24 option (b) \u2014 no split-axis or config supports it today"
+    },
+    {
+     "idea": "Weight answer tokens more in the loss, or ask more questions per visit",
+     "status": "deferred",
+     "where": "design/06-step1-pilot-results.md:26; no answer weighting exists in learnlab/step1.py"
+    },
+    {
+     "idea": "Bonsai as an independent semantic cross-checker for the pattern bank",
+     "status": "rejected",
+     "where": "scripts/gen_patterns.py:350-352 ADVISORY_CHECKERS \u2014 advisory only after the 2026-09-18 audit"
+    },
+    {
+     "idea": "Excluding the leak-flagged answer classes (q.who_has, q.in_container) and in-visit repeats from every decision cell",
+     "status": "adopted",
+     "where": "premonition/slices.py:28-30, :56 LEAK_CLASSES"
+    },
+    {
+     "idea": "Paraphrase/wording-agreement training",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md \u2014 \"relevant only after a measured wording gap under matched facts and depth\"; note the Core track's Q6 62%->1% and Q8 59%->4% collapse arguably IS that measured gap, though names/styles/templates vary together"
+    },
+    {
+     "idea": "Counterfactual factual sensitivity/invariance triplets (H1) with an identical-data CE control",
+     "status": "conditional",
+     "where": "design/research/final-sweep-2026-09-19/README.md recommendation 2; premonition/ladder_triplets.py and premonition/paired_objectives.py exist"
+    },
+    {
+     "idea": "Paired visit-clustered 99% uncertainty for primary verdicts",
+     "status": "deferred",
+     "where": "design/06-premonition-mini-spec.md via final-sweep README \"Decision discipline\"; premonition/identity.py:41 states the current cells are NOT a full verdict for exactly this reason \u2014 no implementation exists"
+    },
+    {
+     "idea": "Held-out rule families R8 (exchange) and R9 (chain) never in training",
+     "status": "adopted",
+     "where": "design/05-village-v0.md:54; artifact final.heldout_visible.by_heldout_family.heldout 15/235 = 6.4%"
+    },
+    {
+     "idea": "\"Not told\" (Q10) answers from v0, to measure hallucination and calibration",
+     "status": "adopted",
+     "where": "design/05-village-v0.md:139; scheduler.UNTOLD_PICK=0.5 \u2014 but the class now leaks (question-only 60.5% vs 50%)"
+    },
+    {
+     "idea": "Beliefs (\"where does Kelo think the key is\") and probabilistic rules",
+     "status": "deferred",
+     "where": "design/05-village-v0.md:140-141 \u2014 agreed for v1, not v0"
+    },
+    {
+     "idea": "Reasoning-depth axis with held-out depths 4-6",
+     "status": "adopted",
+     "where": "learnlab/village/scheduler.py:39 MAX_DEPTH; held-out depth 4 n=245 at 12.2%, depth 5 n=56, depth 6 n=3 \u2014 too few deep items to conclude anything"
+    },
+    {
+     "idea": "Tokenizer identity reconciliation (7,289-id premonition-tok-v2 vs 7,068-id fallback-v2)",
+     "status": "mentioned",
+     "where": "design/research/final-sweep-2026-09-19/README.md \u2014 \"Sharing 'v2' in a filename does not establish identity\"; the pilot ran on sha256 2460b134\u2026"
+    }
+   ],
+   "open_questions": [
+    "Is the Core-track held-out collapse a wording problem or a names/styles problem? Nothing currently separates them: all 3,763 held-out questions are simultaneously unseen wording, unseen style and fresh names. The cheapest decisive experiment is to regenerate held-out splits with the TRAIN question-phrasing bank held fixed (everything else unchanged) and re-score the same checkpoint \u2014 a few minutes of generation plus 5 s of eval.",
+    "How much of the 23% is simply one-phrasing-per-type? A second cheap run: top up the 13 starved q.* banks to 20+ accepted patterns with gen_patterns.py topup, regenerate, retrain 600 s. If Q6/Q8/Q11 recover, phrasing scarcity is the wall and no architecture change is indicated yet.",
+    "Should Q12 (plan) stay in the Step 1 gate? It is 12% of the held-out set, 0/448 held-out and 1/65 in-distribution, and it drags the headline number. Options: keep but report apart (as repeats already are), or give it explicit format supervision.",
+    "What corpus size should the medium preset be? At 24.15M tokens the 600 s run does 13.7 epochs; generation is 74 s per 20,000 visits, so 200,000 visits costs ~12 min. Is the 4M model data-limited or capacity-limited? A single run at 10x data with the same wall clock answers this and also un-confounds the 4M-vs-28M comparison.",
+    "Does the simulator need to get faster at all, or should the project simply accept pre-generated corpora? live_supply_ratio is 0.43, so the design's 5% live-generation requirement is currently unmet; it only matters if the sleep/self-tutoring phases of the vision need on-line world generation.",
+    "What is the intra-visit ICC for question correctness? Without it, none of the reported Wilson intervals (or the planned pool-control and H1 A/B comparisons) have honest width. This is a pure post-processing question \u2014 the per-item predictions with visit ids are already saved.",
+    "Should \"not told\" be rebalanced? UNTOLD_PICK=0.5 makes not-told-ness predictable from the question alone at 60.5% vs a 50% null, and not-told is 15.2% of the gate. Making the untold rate depend on the world rather than on the question type would close that leak.",
+    "Why does the person answer class leak through the answer line's wording (target_line 38.0% vs 18.3%)? Likely too few distinct phrasings for person-valued answers; worth checking whether the fix is more answer phrasings or a change in how the oracle renders person answers."
+   ]
+  }
+ ],
+ "gaps": {
+  "uncovered": [
+   "No checker/verifier head exists anywhere in premonition/ (grep finds only learnlab's pattern-bank checker and village/oracle.py:875 check_plan), yet the hint ladder, effort drive, mastery drive, self-tutoring and REM dream-checking all assume one (design/03-issues-and-decisions.md:35 'agreed in principle'). Five vision mechanisms are blocked on a component no idea proposes building.",
+   "Plan questions (Q12) are 0/448 held-out and 1/65 in-distribution, 12% of the gate, with 0 right_exact and 0 right_other_working_plan out of 549 oracle-checked. The only recorded response is an OPEN question about dropping them from the gate; no idea proposes how a sequence-valued answer graded by simulation should be trained (format supervision, rejection sampling against the checker, or a separate head).",
+   "The village oracle can verify any plan by acting it out (learnlab/village/oracle.py:875; 549/549 plan questions oracle-checked) and computes a full symbolic derivation per question (Deriv: steps, evidence refs, rule families, oracle.py:102-117). Both are used only for scoring and for picking gold_lines. Nothing uses the oracle as a training signal, as an intermediate-step target, or at inference time - the single richest free supervision source in the project is idle.",
+   "The uncounted minGRU scan: premonition/flops.py:5-7 states elementwise work is skipped, and min_gru_scan (model.py:51-70) is a fp32 autocast-disabled chunked loop producing [B,T,d] intermediates twice per layer. The map raises this as an OPEN question and no idea measures it, so the equal-FLOPs budget may silently give D several times A's real seconds, which would void any 'D beats A at equal compute' conclusion - the project's headline claim.",
+   "The control arms are under-tuned and no idea strengthens them. Contender C's BM25 drops who/what/where/which/whose as stopwords (lookup.py:83-90) - exactly the question-type words - and stops its 192-token recall at the FIRST overlong line instead of skipping it (lookup.py:320-327); contender A has no answer-token weighting. Every headline comparison is D vs A/C, so a win may be a statement about weak baselines.",
+   "The slot binder (model.py:471-481) runs a Python loop over fetch slots using non-accumulating index_put, which is order-nondeterministic across cards that share an (owner, slot) pair (the `repeat` mask guards only within one card), and it is explicitly excluded from the FLOP hand count as '<1%' (flops.py:144) on a matmul-size estimate rather than a launch count. No idea covers either the correctness hazard or the cost.",
+   "NameOverflow (>16 distinct names in a visit) raises uncaught in data.py:406-409, aborting a whole cache build. Nothing addresses it, and it is a hard scale blocker for the 10x-data runs that several ideas depend on.",
+   "The 'not told' leak is generator-caused and no idea proposes the generator-side fix: scheduler.UNTOLD_PICK=0.5 makes not-told-ness predictable from the question alone at 60.5% against a 50% null (p_adj=2.1e-9), and 'not told' is 571/3763 = 15.2% of the gate. Same for the person/target_line leak at 38.0% vs an 18.3% null, which is a symptom of too few person-answer phrasings. The leak-panel-as-gate idea detects these; nothing fixes them.",
+   "The counterfactual-twin test fails for a supply reason no idea targets: n=210 usable linked twins out of 1,200 pair visits, 20 hits, p=0.048 against alpha=0.01. The cause is the low link yield in scheduler.counterfactual_pair (learnlab/village/scheduler.py:864-895), not item cost, so 'generate more items' does not straightforwardly fix it.",
+   "Live world generation runs at live_supply_ratio 0.43 against the design's 5%-of-learner-time requirement (269k tok/s world vs 633k tok/s learner). No idea decides whether on-line generation is actually needed for the sleep/self-tutoring/dream phases or whether the requirement should be formally retired in favour of pre-generated corpora.",
+   "A strength left unimproved: the pointerizer is exactly invertible and ENT ids not mentioned in the visible prefix are masked to -inf, so a fresh name is copied and can never be hallucinated (pointer.py:214-238, model.py:738-747). It covers person names only. Nothing proposes extending the same pointer discipline to objects, containers, places and times - which is precisely where the who-has-what / what-is-in-what binding and leak failures live.",
+   "The two tracks are never reconciled: no document says which is primary, and their tokenizer identities are incompatible (premonition-tok-v2.json, 7,289 ids, used by all three BensPC pilots vs the 7,068-id fallback required by premonition/identity.py), so identity.guard_verdict still returns full_verdict:false and no pilot checkpoint can be admitted for an official verdict. No idea addresses the reconciliation or the merge path.",
+   "Adversarial-review open problems #22-#25 (sleep-transaction versioning and re-keying of cards written during sleep; separate sleep-gating data plus an untouched shadow test; simulated lifetime budgets for diary bytes, active cards, code growth, retrieval cost and sleep FLOPs; a standalone drive-scheduler test) were logged on 18 Sep and never revisited by any memo or idea, while continual-sleep ideas assume them solved.",
+   "The told-ledger is adopted with no instantiated parameters: the scoring rule (+1 correct, 0 don't-know, -t/(1-t) wrong) has no value for t and no coverage floor, and its interaction with deliberate gist fading is unaddressed. The motivation memo's own five open questions are likewise unanswered and nothing depends on answering them.",
+   "Card age is an absolute 16-bucket log2 line distance with 8 buckets that never occur (store.py:100-116), and the map's own OPEN question asks whether relative rank within eligible cards would be better. No idea touches the recency signal, even though it is the store's ONLY ordering signal (no confidence, version, importance or source priority)."
+  ],
+  "extra_lenses": [
+   {
+    "key": "gpu-native-runtime",
+    "focus": "TARGETS (blocking): every Premonition run is hardcoded to CPU - premonition/train.py:1013 and :1141 pass \"cpu\", scripts/premonition_ovn_retrieval.py:168 passes \"cpu\", the ladder inherits it, and autocast/fused-AdamW are gated on CUDA - so every seed, gate and curriculum conclusion in the project rests on 1,405-4,000-step CPU runs under a 30-minute ledger, on a machine that owns a 16 GB Blackwell RTX 5070 Ti that trains a 4M transformer at 0.5-0.65M tok/s. Also targets the major weakness that FlopCounterMode skips the minGRU scan (premonition/flops.py:5-7) while min_gru_scan (model.py:51-70) is a fp32 autocast-disabled chunked Python loop over logcumsumexp, so 'equal FLOPs' may hand D several times A's real seconds; and the blocking 'seed instability measured but not managed' (503/512 vs 27/512), which on a 16 GB card is a scheduling problem, not a compute problem - a 2M model is ~8 MB of weights.\n\nSEARCH A (make the GPU usable): PyTorch on Blackwell / sm_120 (cu128 / cu129 wheel support, what silently falls back, TF32 and bf16 defaults, known Windows CUDA gotchas over SSH); torch.compile and CUDA graphs for models whose step time is dominated by kernel-launch overhead rather than arithmetic; GPU implementations of associative / chunked parallel scans (Heinsen associative scan, mamba/minGRU chunked scan kernels, whether a real-space cumulative-product formulation beats the log-space one in speed and stability, fp32 logcumsumexp memory traffic, chunk_size tuning); training many tiny models concurrently on one GPU (CUDA streams, torch.vmap / functorch model ensembling, 'parallel seed training', MPS service on Windows) so that 5-8 seeds per arm cost roughly one run; multi-seed and hyperparameter sweeps as first-class scheduling (ASHA / successive halving, Optuna or Ray Tune on a single GPU, median-of-seeds reporting); determinism and reproducibility flags on GPU vs CPU, and whether CPU-obtained rankings replicate on GPU at all.\n\nSEARCH B (make 'equal compute' honest): iso-FLOP vs iso-wall-clock vs iso-parameter vs iso-data comparison protocols for non-transformer architectures; roofline / arithmetic-intensity and memory-bandwidth accounting for recurrent and state-space models; published critiques of FLOP-matched SSM-vs-transformer comparisons and of throughput claims that ignore elementwise work; 'strong baseline' / 'bag of tricks' / tuned-baseline reproducibility literature, i.e. how much a claimed architectural win shrinks once the baseline is tuned - directly relevant because contender C's BM25 drops who/what/where as stopwords and truncates its recall budget at the first overlong line, and contender A has no answer-token weighting. Wanted output: a concrete GPU run protocol (batch size, precision, compile, seeds-per-arm, what to log) plus a defensible definition of the efficiency axis the project claims to win on (accuracy per weight / per token / per second)."
+   },
+   {
+    "key": "trace-supervision",
+    "focus": "TARGETS (blocking): the corpus contains narration, teacher lines, questions and answers - and not one reasoning step. Answer tokens are 3.05% of train tokens (9,684 of 317,154) and carry the whole burden of a derivation the generator already knows: learnlab/village/oracle.py:102-117 builds a full symbolic Deriv per question (steps, the exact set of evidence refs, the rule families applied), and it is used ONLY to tag depth and to pick gold_lines. The measured consequences: Q11 why 28.8% -> 0.0%, Q8 rule 58.5% -> 4.0%, Q7 what-if 72.2% -> 7.2% held-out; Q12 plan 0/448; and in Premonition-mini the second fetch asks for a relation it practised in that position rather than the one the question names (0/171 held-out, 9/171 longer), with both required cards fetched 1/189. A written derivation names the second relation explicitly, turning a latent credit-assignment problem into token-level supervision - and it needs no oracle EVIDENCE LABELS at the store level, which is the map's own 'cheapest missing signal' OPEN question.\n\nSEARCH: chain-of-thought and rationale distillation into sub-100M models - 'Distilling step-by-step', 'Specializing smaller language models towards multi-step reasoning', Orca-style explanation tuning, TinyGSM, and crucially the NEGATIVE results on the size below which CoT supervision fails to transfer or hurts; scratchpad / 'show your work' intermediate-computation supervision and its length-generalisation behaviour; program-of-thought and executable-trace supervision where a symbolic solver writes the trace (exactly this project's situation); process supervision vs outcome supervision at small scale; knowledge distillation for tiny LMs (sequence-level KD, logit/dark-knowledge KD, teacher-forced trace vs sampled trace) - Qwen already runs locally and already wrote the pattern bank, so it is available as a teacher over the same village text; 'textbook-quality' / phi-style data rewriting and multi-rendering of the same fact; and the question of whether a trace at inference time is needed at all or whether trace-only-at-training ('implicit CoT', internalised CoT, CoT compression into latent steps) works at 4M - which also connects directly to the unbuilt latent-thought stage. Wanted output: whether to render oracle derivations as text, how long, at what mixing ratio, whether the model should emit them at test time, and the measured cost-benefit against simply upweighting answer tokens."
+   },
+   {
+    "key": "verifier-and-test-time-search",
+    "focus": "TARGETS: the project has an exact, cheap, deterministic verifier - the village oracle grades a plan by acting it out (learnlab/village/oracle.py:875; whole final eval 5.46 s) - and it has NO checker head anywhere in premonition/, although the hint ladder, effort drive, mastery drive, self-tutoring and REM dream-checking all assume one (design/03:35 'agreed in principle'). It also has three failures that verification-and-search answers directly: choosing among distractor cards sits at 166-182/512, BELOW a measured 53.71% question-blind shortcut floor, so the reasoner may currently be worse than not reasoning; held-out two-hop composition is 14/189 with a single greedy retrieval path per question; Q12 plan questions are 0/448 despite being checkable by simulation; and the HALT head is trained on teacher-forced correctness, used on free-running greedy decoding at weight 0.1, and scores 525/1024 at 2.74 loops - barely above chance.\n\nSEARCH: verifier training and generator-verifier gaps at small scale ('Training verifiers to solve math word problems' and its successors, how best-of-n scales with n for models under 100M, when best-of-n plateaus or starts rewarding hacks); outcome reward models vs process reward models, and whether a PRM is affordable when the process labels are free from a simulator; self-consistency / majority vote over SAMPLED retrieval paths rather than greedy top-k (directly aimed at the second-fetch-wrong-relation failure: sample k ASK chains, keep the one whose fetched facts actually support an answer the checker accepts); STaR / rejection-sampling fine-tuning / RFT - sample k plans, keep the ones the simulator says work, train on those (the obvious untried fix for Q12 0/448); reranking of multi-hop retrieval chains and chain-level scoring in multi-hop QA; selective prediction, abstention and confidence calibration for tiny models as a principled replacement for the HALT head (ponder cost, entropy-based exit, calibration under distribution shift); test-time compute scaling results from 2025-26 on small models, including the negative ones (where extra sampling buys nothing because the model's top-k never contains the right answer). Wanted output: whether a ~50-100k-param checker head trained against the oracle is affordable inside the 2M budget, whether verification should be a training signal, an inference-time search, or both, and what shortcut floor any verified arm must clear before it counts."
+   },
+   {
+    "key": "memory-net-era-autopsy",
+    "focus": "TARGETS: Premonition-mini is, mechanically, a 2015-2018 memory-augmented network rebuilt from scratch - soft cosine addressing over key/value slots, multi-hop queries, a recurrent controller with a learned halt, per-entity gated slots, FIFO eviction - and its current symptoms are that era's documented failure modes almost one for one. That literature is the cheapest available source of BOTH fixes to copy and dead ends to skip, and no existing lens mines it systematically (neuro-inspired looks at brains; slots-pointers looks at modern slot attention). The map itself already quotes one instance without following it up: 'End-To-End Memory Networks needed a linear start, noise and best-of-10 restarts for the same reason' - i.e. the published recipe for exactly the 503/512-vs-27/512 seed lottery where two seeds land on opposite pooling solutions.\n\nSEARCH: End-to-End Memory Networks (the linear-start / injected-noise / best-of-10-restarts training recipe, and the reported variance across restarts); Key-Value Memory Networks (separate key and value encodings of the SAME item - literally the untrained two-pool fix, plus what their key-addressing/value-reading split bought); Dynamic Memory Networks and DMN+ (episodic memory with multiple passes, per-hop attention gates and per-hop supervision - the order-free-set-loss problem); Recurrent Entity Networks (independent gated memory slots with per-key write gates - the fix for a binder that writes one pooled value into every entity slot a line mentions); Relation Networks and their accuracy-per-parameter on relational one- and two-hop questions (a direct efficiency benchmark for a 2M reasoner); Neural Turing Machines, DNC and Sparse Access Memory (usage-based allocation, temporal link matrices for recall ORDER, and the reproducibility reports on how brittle they were) - aimed at permanent eviction, at 'fetched' doubling as an eviction mask, and at hop ordering; Universal Transformer plus Adaptive Computation Time and the published evidence that ACT halting usually learns nothing without careful ponder-cost tuning - the HALT diagnosis; and bAbI's own history: which tasks were solved, which were shown to be leaky or saturated, what the standard 10k-vs-1k and multi-restart protocol was, and the post-mortems on why memory-augmented networks lost to plain transformers (was it capability, optimisation brittleness, or just scale?). Wanted output: a short list of mechanisms to copy verbatim, a short list of mechanisms with published evidence they do not work under backprop at this scale, and an honest statement of what the plain-transformer contender is expected to give up."
+   }
+  ]
+ },
+ "dropped": [
+  {
+   "id": "binding-7",
+   "title": "MUVERA-style structured card keys: a fixed-size key that approximates token-level matching, with no learned pool to collapse",
+   "reason": "The citations are fine - MUVERA 2405.19504 (NeurIPS 2024) is accurately described, including asymmetric fixed dimensional encodings as the first single-vector proxy for multi-vector similarity with theoretical guarantees, 2-5x fewer candidates, 10% improved recall and 90% lower latency on BEIR; 2510.06182 and 2510.06477 also check out; 2410.22669 exists as Hadamard-derived linear Binding (HLB), though its 'exact unbinding' is not confirmed by the abstract. The idea is dropped on fit and feasibility, not on sources. (a) It aims at the wrong failure. The measured second-hop failure is that the query REQUESTS the wrong relation (held-out requested-relation selection 0/171 default, 9/171 longer; 00-evidence.md), and the project's own diagnosis is 'no factorised query construction - the model learned position-specific relation priors'. A better-shaped KEY cannot fix a query that names the wrong relation; it will retrieve the wrong card more accurately. (b) The dissociation is already measured: in m02, recall@4 was 1.0 - the right card was always fetched - while accuracy stayed at 60/1024 validation and 54/1024 test. Addressing has already been shown not to be the binding constraint in that regime. (c) The dimensions are hopeless. MUVERA's FDEs are thousands of dimensions; Premonition's key_dim is 64 at production width and 16 on the toy the test would run on (config.py:105-106; scripts/premonition_ovn_ladder.py:234). Eight buckets of 8 dims is already far outside the regime where the epsilon bound means anything; eight buckets of 2 dims on the toy is meaningless. (d) The 'two-part question naturally lights up two buckets' claim does not hold in this architecture: the ASK query is heads.query(register) from register 0 (model.py:492-496), a learned projection of a think register, not a bag of question token states. Making it an FDE over question tokens is a rewrite of the query path, not a drop-in key swap, and that rewrite is already on the project's list as the deferred 'compositional hop-2 query built from the fetched link card's entity pointer plus the question's relation'. (e) The project rejected ColBERT-style addressing twice; MUVERA answers the COST objection, but cost was never the only objection - the standing reason is 'defer until a correctly formed query has an addressing failure', and that condition is still unmet."
+  },
+  {
+   "id": "wording-generalization-4",
+   "title": "Stop fresh-name embeddings from collapsing: freeze or periodically reset the name-syllable embeddings in the Core track",
+   "reason": "The citations are genuine and accurately described - arXiv 2604.21632 confirms 10-layer 60-75M transformers near 0% on unseen predicates, the embedding-collapse diagnosis with an l2-regularised-GD proof, and the fixes (copy attention, vocabulary diversity 9,600 vs 150/600/2,400, frozen embeddings, reinitialisation every 100-1,000 steps, ~90% combined, plus the Gemma 3 unused-token evidence); arXiv 2307.01163 confirms active forgetting resets the embedding layer every K updates, helps language adaptation and wins in the low-data regime for distant languages. The idea nevertheless fails on fit, twice over, and both failures are decisive. FIRST, THE TARGET NUMBER IS DEAD. The 0.0% fresh-name result in the four artifacts/premonition-1h-4090-run_*.log runs is an already-diagnosed tokenizer bug, written up in design/research/2026-09-18-fresh-names.md:7 and design/research/2026-09-18-decisions-log.md:16: those runs loaded premonition-tok-v1-fallback.json, which has no syllable list, so the name-splitting rule never ran, 262 train names were single tokens and no held-out name was. Those checkpoints are formally refused as primary evidence (design/06-premonition-mini-spec.md:282). SECOND, THE MECHANISM CANNOT APPLY. data/tokenizer/premonition-tok-v2.json contains 24 two-letter name syllables (ba, da, fe, gi, ho, ju, ke, ku, li, lo, mi, mo, ne, nu, pa, ra, re, sa, si, ta, to, ve, vi, zo) and every name in every split is built from them, so there are no rare or unseen name tokens whose embeddings could contract - the artifact's own audit shows 0 single-token names in all three splits and a mean-pieces gap of 0.0026. A fresh name is a novel COMBINATION of highly frequent, well-trained syllables. The 'To See the Unseen' failure is about tokens the model rarely or never predicts; freezing frequent syllable rows attacks nothing, and 'active forgetting' here would be a generic plasticity intervention aimed at a non-existent problem."
+  },
+  {
+   "id": "multihop-retrieval-6",
+   "title": "Make cards re-fetchable and keep two hop-1 hypotheses alive (a beam of width 2 over the first fetch)",
+   "reason": "The eviction half - which is the whole 'possibly free' argument and the reason the idea is ranked cheap - is already answered in the saved artifacts, and the answer is no. Every logged value of the project's own counters is zero: 13 records of fifo_overflow_questions: 0 and 13 of fifo_gold_evicted_questions: 0 across artifacts/opus-m02-20260918-232457 (own-bypass.log and runs/own-D-card-bypass-v16-s0-1000.json). That is consistent with the measured halting behaviour - learned halting averages 2.7412 loops at test, so top_k 4 inserts roughly 11 cards into 16 rows and the ring never wraps. The proposal's own step-zero screen therefore resolves against it before any run, and the project OPEN question it cites ('has any run logged eviction counts?') is already closed. With eviction absent, no part of the 1/189 both-facts-fetched number is a bookkeeping artefact, so the headline claim of the idea does not hold. The code reading itself is correct - I confirmed store.py's `ok &= ~fetched` and model.py's `position = _card_base + (count + order) % card_rows` never reconcile - but it is a latent bug with no measured consequence at current loop counts, not a blocking failure. Citations are also the weakest of the batch: Beam Retrieval and Baleen are real papers, but the two claims the idea leans on ('beam size 2 is the best accuracy/compute balance', Baleen 'complements greedy search in improving recall considerably' and 96.3% recall@20) are search-result paraphrases I could not confirm in either abstract."
+  },
+  {
+   "id": "memory-store-3",
+   "title": "Add a contiguity buffer: every fetched card silently drags in its temporal neighbours",
+   "reason": "The citations are the cleanest of the eight, and the mechanism is genuinely new to the project's list (the age bias at store.py:100-116 is card age, not neighbourhood). But the premise \u2014 'the two facts a two-hop question needs were usually narrated close together' \u2014 is false for the dataset the target number comes from, and this is checkable by reading premonition/toy_ladder.py rather than by running anything. The proposal's own step 0 would discover this, but it can be discovered for free right now, which removes the reason to spend an arm on it. It also collides with the 16-row FIFO it would consume, and the idea itself concedes it could act as a shortcut that makes the model look right without composing \u2014 a bad property for the project's headline reasoning claim. Drop as an arm. The only part worth keeping is the 30-second line-distance count on village v0 (not the ladder), where gold evidence placement is scheduler-driven and genuinely unknown; if that median turns out to be 1-2 lines, the idea can be resurrected against Core-track data."
+  },
+  {
+   "id": "slots-pointers-5",
+   "title": "Evidence depletion instead of a permanent fetched-mask, plus clearing `fetched` when a card row is recycled",
+   "reason": "The eviction bug is real in code but cannot be implicated in any measured failure, and the proposed decisive test is guaranteed to return zero by construction. premonition_ovn_retrieval.py:10 fixes max_loops = 4 for every arm, and the bypass-k1 arm that produced every quoted retrieval number uses top_k = 1 (ARMS at line 31). That is at most 3 fetches into 16 card rows. Even bypass-k4 would be 12 into 16. So the 1/189 both-facts-fetched result, the 0-9/171 wrong-relation result and the 14/189 held-out two-hop result were all produced under a configuration where FIFO wrap is impossible, and 'log eviction counts against the held-out two-hop failures on an existing checkpoint' will report zero without telling anyone anything. The idea also concedes, correctly, that it does not touch the diagnosed cause of the wrong-relation fetch (one 64-d query from one register with no separate person and relation fields, model.py:492-496), and that clearing `fetched` alone may make the model re-fetch the same card every loop because set-CE gives it no reason to move on. The soft-depletion half rests on a paper (2605.02323, 'When Attention Collapses: Residual Evidence Modeling for Compositional Inference', Niklas Houba) which does exist but whose quantitative results neither the proposer nor I could extract, and whose benchmarks (LISA, FUSS) are vision/audio separation. Both halves of the idea are therefore weakly motivated for this project right now."
+  },
+  {
+   "id": "interpretability-tooling-6",
+   "title": "Promote the variant/read_only discipline into a declarative intervention harness (one-line patches instead of one-off subclasses)",
+   "reason": "Dropped on fit, not on merit \u2014 it is competent engineering advice that happens not to be aimed at a measured weakness. It produces no result, its own risks section concedes it 'competes for the same hours as an actual experiment', and the project's standing guidance (and Ben's stated preference for minimal, targeted work) is to prefer cheap decisive tests. The specific blockage it claims to relieve does not hold up: the OPEN question it names \u2014 append the card's key and source tag to the row and re-run supplied-card choosing \u2014 is a ~20-line subclass in the existing, already-audited variant style (card_pools.py's fork_rng + from_base pattern), which is far less work than a site registry plus an Intervention spec plus no-op bit-identity assertions. And the flagship demonstration it picks is the one target the proposed mechanism provably cannot hit. If any part survives, it is the two-line version: write the card-row-format subclass now and skip the framework. Note this is the one idea in the batch whose target_part is a STRENGTH rather than a measured weakness, which is the tell."
+  },
+  {
+   "id": "interpretability-tooling-7",
+   "title": "Ask the decoder what a card says: a Patchscopes-style readout that tests usability, not decodability",
+   "reason": "Dropped as a duplicate of results the project already holds. The proposal's stated payoff is: 'if a supplied single card reads out perfectly but choosing among four fails, the problem is selection, not representation'. That is already ESTABLISHED evidence \u2014 artifacts/opus-m02-20260918-232457/SUMMARY.txt:22-27 records D-card-bypass and D-think-gated at 1024/1024 on the untouched test at both seeds with one supplied card, and SUMMARY.txt:50-53 records the collapse as distractors are added (1024/674/545/444), with distractor values emitted 146-318 times. m03 reproduces it (answer-original-s0 read1 512/512 vs choose1 164/512). Reading a single supplied card by this decoder is perfect; choosing is what fails; that conclusion is four-for-four across fixes and seeds. The one piece the proposal adds \u2014 running the readout on pre-Think versus post-Think rows to measure what Think destroys \u2014 is also already measured in m02: nothink writer-card 477/512 versus 55/512 with one Think pass, cos_post 0.9756 versus 0.2362, card-row attention 0.0774 versus 0.3291. Combined with a mechanism that cannot produce its own headline number on this data, nothing is left. If the underlying question is still live, idea 2 answers it causally and idea 4 answers the selection half exactly."
+  },
+  {
+   "id": "motivation-rl-3",
+   "title": "Learning-progress bandit over question types and phrasings, instead of a fixed question mix",
+   "reason": "The citations are the best-supported in this batch: SEC (2505.14970) is exactly a non-stationary bandit per problem category with absolute advantage as learning-gain proxy and TD(0) updates, reporting better OOD generalisation and skill balance; the noisy-TV paper (2509.25438, ICLR 2026) does prove learning progress is a monotone indicator of information gain via an error model. The idea nevertheless fails on fit, arithmetic and feasibility. FIT: the measured held-out collapse (Q6 62.4%->1.1%, Q8 58.5%->4.0%, Q11 28.8%->0.0%) is question-type IDENTIFICATION from unseen wording, with 13 of 22 q.* banks holding exactly one train phrasing - and 'held-out' wording for those 13 is one of Ben's own fallback seeds. A curriculum reweights how often a type is practised; it cannot invent a phrasing, and the proposer concedes this. So the mechanism does not touch the diagnosed cause. ARITHMETIC: the claimed budget saving does not exist. Q12 is 6.9% of train QUESTIONS, and answer tokens are 3.05% of all tokens (9,684 of 317,154 on shard 0), so Q12 answers are roughly 0.2% of the training token budget. Reweighting away from Q12 recovers about one fifth of one percent of compute, because the model still trains on the whole narrated visit either way. The claimed '~7% of train questions currently returning nothing' is true and irrelevant to compute. FEASIBILITY: the reward is not free. Per-type accuracy is computed in the final scoring path (learnlab/step1.py:1580 by_qtype) and at eval segments (step1.py:2200), not online per arm; and the corpus is pregenerated (artifact world.pregenerated = true) with live_supply_ratio 0.43, so changing the mix online means regenerating shards or importance-resampling whole visits - questions are embedded inside narrated visits, so the type mix cannot be changed without re-running the generator. That is not 'the bandit's reward is free'. Finally the project's own open question already names the decisive, cheaper experiment: top up the 13 starved q.* banks with gen_patterns.py and re-run 600 s. Do that first; if phrasing scarcity is the wall, the curriculum question is moot."
+  },
+  {
+   "id": "eval-methodology-3",
+   "title": "A standing partial-input shortcut panel for the Premonition toy, scored in the same cells as the model",
+   "reason": "The premise is false. A systematic partial-input panel already exists in the Premonition toy: scripts/premonition_ovn_ladder.py:168 `shortcut_ceilings()` scores SEVEN rules that each ignore part of the question, in TWO cells (one_hop and two_hop), and the result is written into exp1/data/manifest.json. I read the stored values: one_hop {entity_match_any_relation 0.5371, relation_match_any_entity 0.5332, random_attribute_card 0.3037, entity_not_in_question 0.0703, object_of_any_link 0.0, relation_match_and_object_of_a_link... 0.0, relation_match_and_entity_not_a_link_object 0.5332} and a matching two_hop block. So 53.71% is one of fourteen numbers, not 'a single unpaired 53.7%', and the project already reports the 166-182/512 scores against it in 00-evidence.md. Worse for the proposal's risk section: the ~50% ceiling is DESIGNED IN, not an artifact to be fixed. premonition/toy_ladder.py's docstring states that distractors deliberately mirror the evidence and that 'Any rule that ignores the question's person ... scores at most about 50%'. Fixing the generator, as the risks suggest, would destroy the diagnostic. What remains genuinely missing is thin: the ceilings are computed on validation while the headline choosing numbers are on test, and there is no TRAINED question-only baseline (all seven existing rules are analytic). Those are a few lines inside the existing function, not a new panel \u2014 fold them into idea 4 or idea 1 rather than running this as its own item."
+  },
+  {
+   "id": "neurosymbolic-efficiency-1",
+   "title": "Write cards with a vector-symbolic bind instead of a learned pool (HLB/HRR role-filler card format)",
+   "reason": "Citations largely hold: arXiv 2410.22669 is real (Alam, Oberle, Raff, Biderman, Oates, Holt; NeurIPS 2024) and the abstract does say HLB is built for computational efficiency, classic VSA tasks and differentiable systems. 2111.06077 is a real ACM Computing Surveys HDC/VSA Part I survey, but its abstract lists TPR/HRR/MAP/BSC/SBDR and does NOT explicitly state the Hadamard-product or FHRR-complex-multiply details the proposer attributes to it. 2505.06191 (Mao, Tenenbaum, Wu, May 2025) is real and does claim data efficiency, compositional generalisation, continual learning and zero-shot transfer. The idea is dropped on FIT and NOVELTY, not on citations. The project has already run a strictly STRONGER version of this experiment and it failed. premonition/direct_reader.py (milestone-3 continuation, decisions log 'Astra review of milestone 3 and the direct-reader continuation') removes pooling entirely: every token position of a selected line enters the decoder as its own row, so the decoder's question-conditioned cross-attention sees the uncompressed reader states, which already decode person and value at 2304/2304. That is the perfect-card-format upper bound this idea asks for. Measured result, validation, direct vs pooled: reading 512 vs 512 (s0), 512 vs 485 (s1); choosing 170 vs 164 (s0), 162 vs 161 (s1). The predeclared choosing rule was INCONCLUSIVE and the test split agreed. So identity/content competition in the pool is NOT what caps choosing, and the idea's falsifiable intermediate signal (both fields decodable from one card) is already satisfied with no accuracy movement. The same continuation found 'Relevant-pair both-correct is 0/256 in every arm' and 'relevant swaps change the prediction in only 2-9 of 256 triplets, so the answers follow the SET of card values, not their binding to a person and relation' - a binding-format fix cannot repair an answer path that is not using binding at all. This is the fourth card-writer repair after original, mean-pool and two-pool (decisions log m03: mean pool 512/164 -> 363/138 seed 0, 485/161 -> 316/125 seed 1; two-pool fetched gold LESS often and 'the value pool did not specialise')."
+  },
+  {
+   "id": "neuro-inspired-5",
+   "title": "Dendritic context gating for the entity binder, so subject, object and value slots stop receiving identical content",
+   "reason": "The citation is exactly right (Iyer, Grewal, Velu, Souza, Forest, Ahmad 2022; f(m,n) = m*sigmoid(n) with k-WTA; MT10 87.5% vs 76.6%; permutedMNIST 94.6%/81.4%; prototype-based context so no task ID at inference). The proposal itself does not work as specified. The binder ALREADY computes a per-slot multiplicative gate from [slot; value]: bind() is sigmoid(gate)*(tanh(content) - slot) with gate,content = W_b[s;v] (premonition/model.py:242-245). The proposed role branches score the CARD VALUE, which is identical for every entity slot that card binds into (model.py:471-481 expands value[:, k] over all ents of the card), so the winning branch and therefore sigmoid(winner) is the same for all of that line's slots -- it cannot distinguish subject from object by construction. The context channel would have to depend on the (slot, card) pair or on the entity's position within the line, which the idea does not propose. Combined with the fact that active-dendrite gains come from multi-task continual learning rather than intra-episode syntactic roles, and with only 16 slots and <=4 entities per line, expected upside is very low."
+  },
+  {
+   "id": "neuro-inspired-6",
+   "title": "Neuromodulatory row gating: freeze fetched evidence rows in Think and recycle the fetched mask with the FIFO",
+   "reason": "Both halves fail against the code. (1) The eviction hypothesis is arithmetically impossible for the number it claims to explain: the 1/189 both-facts-fetched result comes from arm bypass-k1, which is configured top_k=1 with MAX_LOOPS=4 (scripts/premonition_ovn_retrieval.py:10, 31), and own_fixed does at most loops-1 = 3 fetch rounds, so at most 3 cards ever enter 16 rows. No card was evicted in any measured exp2 run, and fifo_overflow_questions would be 0. (2) The 'freeze fetched evidence rows' half is already adopted and already in force for that very number: D-card-bypass keeps the pre-Think rows for the decoder (premonition/answer_path.py:10-13, 114-121) and every exp2 arm quoted is a bypass arm. The gating citation (arXiv 2512.13859) is verified, but it is about which units may update in a Hopfield attractor, and the eLife read-mode/write-mode framing attributed to it here is not something I could confirm. Net: one half duplicates an adopted decision, the other half addresses a failure mode that has never occurred."
+  },
+  {
+   "id": "neuro-inspired-7",
+   "title": "BTSP-style eligibility-trace card writing: bind a whole line by one instructive pulse, not by a competitive softmax",
+   "reason": "The Nature Communications BTSP paper is real (Wu & Maass, 'A simple model for Behavioral Time Scale Synaptic Plasticity (BTSP) provides content addressable memory with binary synapses and one-shot learning', published 2 January 2025, 16:342, not 2024) and does support content-addressable memory with binary synapses and one-shot learning; the other two BTSP sources remain unopened by both of us. But this is the fourth member of a family whose first three members have now been measured and failed: original, uniform mean (512->363 reading, no choosing gain) and two-pool (fetched gold less often, value pool did not specialise), all in m03. An exponential eligibility trace read out at the line's end token is a decay-weighted fixed pooling function, i.e. the already-listed [conditional] 'fixed position-sensitive pooling (MemN2N positional encoding)' from final-sweep 04-efficiency proposal 1 with one extra hyperparameter. The proposer's own risk section concedes both points. The BTSP literature's saturating one-shot rule is also explicitly poor at extracting regularities over thousands of repetitions, which is the regime here."
+  }
+ ]
+}

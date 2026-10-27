@@ -1,0 +1,77 @@
+{
+  "note": "FORMAT check on fixture-v1.1 only; both stages are untrained parameter draws, no fitting occurred, and no E, L or prediction value is published. outer_split relabelled fixture->validation so the gate path executes.",
+  "evaluator_version": "ct20-v1.1",
+  "models_source_sha256": "0b5711f4ef8c378284e784032c6d8560fe169f686c4a76a8af5b4abc918d34ff",
+  "field_map": {
+    "E": "groups[].worlds[].E_primary  (stage=final, per rung)",
+    "E_initial": "groups[].worlds[].E_primary  (stage=initial)",
+    "L_initial": "startup_diagnostics[].L_initial",
+    "L_final": "startup_diagnostics[].L_final",
+    "E_fit_final": "startup_diagnostics[].E_fit_final",
+    "world_public_id": "startup_diagnostics[].world_public_id",
+    "outer_split": "startup_diagnostics[].outer_split",
+    "family": "startup_diagnostics[].family",
+    "arm": "startup_diagnostics[].arm",
+    "seed": "startup_diagnostics[].seed"
+  },
+  "total": 11,
+  "passed": 11,
+  "failed": 0,
+  "results": [
+    {
+      "check": "G1 the real evaluator scored every row",
+      "status": "PASS",
+      "detail": "912 rows, 0 unknown"
+    },
+    {
+      "check": "G2 the evaluator emitted start-up diagnostics",
+      "status": "PASS",
+      "detail": "4 rows"
+    },
+    {
+      "check": "G3 every field the CASE schema needs exists in the evaluator output",
+      "status": "PASS",
+      "detail": "E <- groups[].worlds[].E_primary  (stage=final, per rung); E_initial <- groups[].worlds[].E_primary  (stage=initial); L_initial <- startup_diagnostics[].L_initial; L_final <- startup_diagnostics[].L_final; E_fit_final <- startup_diagnostics[].E_fit_final; world_public_id <- startup_diagnostics[].world_public_id; outer_split <- startup_diagnostics[].outer_split; family <- startup_diagnostics[].family; arm <- startup_diagnostics[].arm; seed <- startup_diagnostics[].seed"
+    },
+    {
+      "check": "G4 the adapter is total: no field defaulted, inferred or missing",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "G5 the adapted table has one case per world x arm",
+      "status": "PASS",
+      "detail": "4 cases"
+    },
+    {
+      "check": "G6 evaluate_tier accepts the evaluator-derived table",
+      "status": "PASS",
+      "detail": "calibration-invalid/missing-required-result"
+    },
+    {
+      "check": "G7 evaluate_two_tier returns a well-formed status",
+      "status": "PASS",
+      "detail": "complete"
+    },
+    {
+      "check": "G8 a start-up label was produced for every case",
+      "status": "PASS",
+      "detail": "4 labels"
+    },
+    {
+      "check": "G9 builder and Agent 3 agree on the ruling-C9 label for every case",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "G10 the relative-improvement ratio matches bit for bit",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "G11 the C9 threshold constant matches between the two implementations",
+      "status": "PASS",
+      "detail": "0.1/1e-12/0.8"
+    }
+  ]
+}

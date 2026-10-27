@@ -1,0 +1,4 @@
+# 119f deviations (director)
+
+- D1 (09:43, before any training): the first launch at 09:41:56 crashed in the pool build with ModuleNotFoundError fable_ears45_frames. Cause: the director's staging list (scp119f.txt) missed transitive imports and artifact inputs. Fix: staged fable_ears45_frames, fable_ears45_lexicon, fable_listening_m1, fable_notebook_contract, artifacts/fable-ears119b-20260922/remap.json, artifacts/fable-abstain76-20260921/ltt_summary.json, artifacts/fable-ears47-20260921/runs/report.json and artifacts/fable-ears47-20260921/panels/*.json (byte copies of the repo files; no code changed; wave bat hash 7661950f unchanged). Relaunched 09:43:02. No model was trained or scored before the crash.
+- panel94b.jsonl on BensPC verified sha256 9ca7035c… (= SEAL-panel) before the launch.

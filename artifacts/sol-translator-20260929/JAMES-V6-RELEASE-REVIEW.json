@@ -1,0 +1,26 @@
+{
+  "stage": "PRE-RUN essential release review; no actualCUDA/TRAINreceipt yet",
+  "package_sha256": "d041d58ad7979447d473ea0d56d99ef079c039b42ba3307697431feeb0101b9f",
+  "seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+  "disk_and_archive_pins_passed": 50,
+  "archive_members": 51,
+  "py_syntax_passed": 23,
+  "bash_syntax_passed": 2,
+  "exact_weight_sha256": "1ba63d9adb03ae43581db0e136e4416febe0441aff7296397bd455fb6017f73a",
+  "TRAIN_budget": {
+    "seeds": [
+      0,
+      1
+    ],
+    "updates_requested_each": 500,
+    "batch": 2,
+    "rounds": 4,
+    "train_seconds": 3000,
+    "wrapper_seconds": 3950
+  },
+  "preflight": "350s actualFP32 LM+reader+attentioncore+notebook retainedgraph gradient0optimizer; mustpass",
+  "permission": "ExistingGPU/cachedLMauthorization applies; relay-only approvalhold corrected; no actualtooldenial",
+  "actual_training_updates": 0,
+  "sleep": "BLOCKED exacteventualcheckpointlearnedstopreadiness",
+  "raw_required": "IDs,labels,preds,masks,rounds,source/code/plan/seal/launch/watermarks/checkpoint hashes"
+}

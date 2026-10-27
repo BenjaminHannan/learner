@@ -1,0 +1,1295 @@
+{
+  "added_parameters": {
+    "encoder_backward": 2400,
+    "encoder_forward": 2400,
+    "encoder_start_backward": 16,
+    "encoder_start_forward": 16,
+    "register_gate": 65,
+    "register_start": 32,
+    "register_write": 2080,
+    "selected": 2080
+  },
+  "all_cells_pass": false,
+  "arm": "reg+ctx",
+  "call_cost": 0.01,
+  "cap_note": "no per-slot parameter exists in any v4 arm -- the recency flag is gone in the register arms and the contextual encoder has no per-index parameter -- so the evaluation cap is free",
+  "cell_mark": 59,
+  "cell_order": [
+    "k1-prac",
+    "k1-held",
+    "k2-prac",
+    "k2-held",
+    "k3-prac",
+    "k3-held",
+    "k4-prac",
+    "k4-held",
+    "k5-prac",
+    "k5-held",
+    "k6-prac",
+    "k6-held",
+    "k7-prac",
+    "k7-held",
+    "k8-prac",
+    "k8-held",
+    "p6-k1-prac",
+    "p6-k1-held",
+    "p6-k2-prac",
+    "p6-k2-held",
+    "p6-k3-prac",
+    "p6-k3-held",
+    "pair-link",
+    "pair-value",
+    "pair-irrelevant"
+  ],
+  "cell_passes": {
+    "k1-held": true,
+    "k1-prac": true,
+    "k2-held": true,
+    "k2-prac": true,
+    "k3-held": true,
+    "k3-prac": true,
+    "k4-held": false,
+    "k4-prac": false,
+    "k5-held": false,
+    "k5-prac": false,
+    "k6-held": false,
+    "k6-prac": false,
+    "k7-held": false,
+    "k7-prac": false,
+    "k8-held": false,
+    "k8-prac": false,
+    "p6-k1-held": true,
+    "p6-k1-prac": true,
+    "p6-k2-held": true,
+    "p6-k2-prac": true,
+    "p6-k3-held": true,
+    "p6-k3-prac": true,
+    "pair-irrelevant": false,
+    "pair-link": false,
+    "pair-value": false
+  },
+  "cells": {
+    "k1-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 64,
+        "stages_correct": 64,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 1,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.0,
+        "max": 0.48360228538513184,
+        "mean": 0.4350185990333557,
+        "min": 0.383700430393219,
+        "n": 64
+      }
+    },
+    "k1-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 64,
+        "stages_correct": 64,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 1,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.0,
+        "max": 0.4871668517589569,
+        "mean": 0.4375024437904358,
+        "min": 0.3889143168926239,
+        "n": 64
+      }
+    },
+    "k2-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 128,
+        "stages_correct": 128,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 2,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.5,
+        "max": 0.9965649247169495,
+        "mean": 0.5169944763183594,
+        "min": 0.018876781687140465,
+        "n": 128
+      }
+    },
+    "k2-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 128,
+        "stages_correct": 128,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 2,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.5,
+        "max": 0.9965776801109314,
+        "mean": 0.5176889300346375,
+        "min": 0.018416570499539375,
+        "n": 128
+      }
+    },
+    "k3-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 192,
+        "stages_correct": 192,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 3,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991773962974548,
+        "mean": 0.6764669418334961,
+        "min": 0.005446520633995533,
+        "n": 192
+      }
+    },
+    "k3-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 192,
+        "stages_correct": 192,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 3,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991481304168701,
+        "mean": 0.676922619342804,
+        "min": 0.005314843729138374,
+        "n": 192
+      }
+    },
+    "k4-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 256,
+        "stages_correct": 256,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 4,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991441965103149,
+        "mean": 0.6751902103424072,
+        "min": 0.005562558304518461,
+        "n": 192
+      }
+    },
+    "k4-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 256,
+        "stages_correct": 256,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 4,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.999086856842041,
+        "mean": 0.6717403531074524,
+        "min": 0.004969395697116852,
+        "n": 192
+      }
+    },
+    "k5-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 320,
+        "stages_correct": 320,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 5,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 8,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 8
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 8,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 8
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990956783294678,
+        "mean": 0.6706550121307373,
+        "min": 0.004780232906341553,
+        "n": 192
+      }
+    },
+    "k5-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 320,
+        "stages_correct": 320,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 5,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 2,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 2
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 2,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 2
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990763664245605,
+        "mean": 0.6741011738777161,
+        "min": 0.00459324661642313,
+        "n": 192
+      }
+    },
+    "k6-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 384,
+        "stages_correct": 384,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 6,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 5,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 5
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 5,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 5
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990628361701965,
+        "mean": 0.6750476956367493,
+        "min": 0.005005985964089632,
+        "n": 192
+      }
+    },
+    "k6-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 384,
+        "stages_correct": 384,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 6,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9989908337593079,
+        "mean": 0.6750435829162598,
+        "min": 0.005110629368573427,
+        "n": 192
+      }
+    },
+    "k7-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 448,
+        "stages_correct": 448,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 7,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 2,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 2
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 2,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 2
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990461468696594,
+        "mean": 0.6648643016815186,
+        "min": 0.004893105942755938,
+        "n": 192
+      }
+    },
+    "k7-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 448,
+        "stages_correct": 448,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 7,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 5,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 5
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 5,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 5
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990655779838562,
+        "mean": 0.6748915314674377,
+        "min": 0.004892267752438784,
+        "n": 192
+      }
+    },
+    "k8-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 512,
+        "stages_correct": 512,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 8,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990290403366089,
+        "mean": 0.6684406399726868,
+        "min": 0.005016116425395012,
+        "n": 192
+      }
+    },
+    "k8-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 512,
+        "stages_correct": 512,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 8,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "people": 16,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 4,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 0,
+        "unit_pass": 4
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990624785423279,
+        "mean": 0.6732060313224792,
+        "min": 0.0052099707536399364,
+        "n": 192
+      }
+    },
+    "p6-k1-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 64,
+        "stages_correct": 64,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 1,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.0,
+        "max": 0.48394525051116943,
+        "mean": 0.4298741817474365,
+        "min": 0.38011786341667175,
+        "n": 64
+      }
+    },
+    "p6-k1-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 64,
+        "stages_correct": 64,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 1,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 1.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.0,
+        "max": 0.4875190556049347,
+        "mean": 0.43396949768066406,
+        "min": 0.3889143168926239,
+        "n": 64
+      }
+    },
+    "p6-k2-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 128,
+        "stages_correct": 128,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 2,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.5,
+        "max": 0.9965651631355286,
+        "mean": 0.516485333442688,
+        "min": 0.018875641748309135,
+        "n": 128
+      }
+    },
+    "p6-k2-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 128,
+        "stages_correct": 128,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 2,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 2.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.5,
+        "max": 0.9965711832046509,
+        "mean": 0.5177298784255981,
+        "min": 0.01946757175028324,
+        "n": 128
+      }
+    },
+    "p6-k3-held": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 192,
+        "stages_correct": 192,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 3,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991270899772644,
+        "mean": 0.6760945320129395,
+        "min": 0.00475612748414278,
+        "n": 192
+      }
+    },
+    "p6-k3-prac": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 192,
+        "stages_correct": 192,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 3,
+      "kind": "single",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "people": 6,
+      "sides": 1,
+      "terminal": "practised",
+      "trained_operator": {
+        "answered": 64,
+        "answers": 64,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 64,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 64,
+        "strict": 64,
+        "unit_pass": 64
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991274476051331,
+        "mean": 0.6768124103546143,
+        "min": 0.00486865546554327,
+        "n": 192
+      }
+    },
+    "pair-irrelevant": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 640,
+        "stages_correct": 640,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 5,
+      "kind": "pair",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 128,
+        "answers": 1,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 1
+      },
+      "people": 16,
+      "sides": 2,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 128,
+        "answers": 1,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 1
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9990994930267334,
+        "mean": 0.6762940287590027,
+        "min": 0.0054100677371025085,
+        "n": 384
+      }
+    },
+    "pair-link": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 640,
+        "stages_correct": 640,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 5,
+      "kind": "pair",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 128,
+        "answers": 0,
+        "identical_twin_answers": 32,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 0
+      },
+      "people": 16,
+      "sides": 2,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 128,
+        "answers": 0,
+        "identical_twin_answers": 32,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 0
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.9991258978843689,
+        "mean": 0.6704754829406738,
+        "min": 0.004693055059760809,
+        "n": 384
+      }
+    },
+    "pair-value": {
+      "frozen_operator_on_true_chains": {
+        "operator_perfect": true,
+        "stages": 640,
+        "stages_correct": 640,
+        "units": 64,
+        "units_all_steps": 64
+      },
+      "hops": 5,
+      "kind": "pair",
+      "n": 64,
+      "oracle_operator": {
+        "answered": 128,
+        "answers": 0,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 0
+      },
+      "people": 16,
+      "sides": 2,
+      "terminal": "heldout",
+      "trained_operator": {
+        "answered": 128,
+        "answers": 0,
+        "identical_twin_answers": 64,
+        "invalid": 0,
+        "loose": 0,
+        "mean_calls": 3.0,
+        "over_cap": 0,
+        "rows": 128,
+        "strict": 0,
+        "unit_pass": 0
+      },
+      "write_gate": {
+        "fraction_above_half": 0.6666666865348816,
+        "max": 0.999123752117157,
+        "mean": 0.6744692325592041,
+        "min": 0.004654893651604652,
+        "n": 384
+      }
+    }
+  },
+  "dispatcher_parameters": 24035,
+  "dispatcher_version": "v4",
+  "eval_cap": 16,
+  "evaluation": "greedy (argmax) episodes, final update only",
+  "failing_cells": [
+    "k4-prac",
+    "k4-held",
+    "k5-prac",
+    "k5-held",
+    "k6-prac",
+    "k6-held",
+    "k7-prac",
+    "k7-held",
+    "k8-prac",
+    "k8-held",
+    "pair-link",
+    "pair-value",
+    "pair-irrelevant"
+  ],
+  "flags": {
+    "contextual_positions": true,
+    "learned_register": true
+  },
+  "loose_path": "subjects, operations and stop point only (v1 full_path)",
+  "operator": {
+    "architecture": {
+      "heads": 4,
+      "steps": 3,
+      "vocab": 68,
+      "width": 48
+    },
+    "fingerprint": "f49ab935465d282ef5378806dda9380cdbe3e25c3f2291fa8ea9556a5daa8368",
+    "kind": "checkpoint",
+    "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_seed-1/final.pt",
+    "sha256": "e7e5b6f3a6bfecf3890538bd0a14af7f5189b1565329e5cf411b52dd4d4dfbec"
+  },
+  "operator_weights_unchanged": true,
+  "panel_manifest_sha256": "5c9b4507cf4197beccd933d2cb27b424cbbec13bdbb0f774d8b3bd9ca83867e7",
+  "panels": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-dispatcher-v3-20260920/panels",
+  "parameter_groups": {
+    "cell": 6336,
+    "encoder_backward": 2400,
+    "encoder_forward": 2400,
+    "encoder_start_backward": 16,
+    "encoder_start_forward": 16,
+    "key": 1056,
+    "operation_query": 1056,
+    "register_gate": 65,
+    "register_start": 32,
+    "register_write": 2080,
+    "selected": 2080,
+    "source": 64,
+    "start": 32,
+    "stop": 66,
+    "subject_query": 1056,
+    "token": 2176,
+    "transcript": 3104
+  },
+  "registered_test": true,
+  "run": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-dispatcher-v4-20260920/reg-ctx/seed-1",
+  "seed": 1,
+  "strict_path": "subjects, operations, stop point AND every returned token",
+  "time_capped": false,
+  "train_cap": 4,
+  "train_hops": [
+    1,
+    2,
+    3
+  ],
+  "train_people": 6,
+  "updates": 6000,
+  "v3_parameters": 15522
+}

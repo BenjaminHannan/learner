@@ -1,0 +1,82 @@
+{
+  "Adam_eligible_FP32_bytes": 36648244,
+  "Adam_eligible_parameters": 9162061,
+  "actual_new_checkpoint_serialization_measured": false,
+  "archive_RNG_metadata_capacity_after_known_tensor_payload_bytes": 3297456,
+  "checks_passed": 11,
+  "core_parameters": 9007790,
+  "declared_source_overhead_allowance_bytes": 3145728,
+  "declared_source_preflight_bound_bytes": 113090460,
+  "frozen_halt_parameters": 257,
+  "known_frozen_buffer_step_bytes_outside_three_P": 4020,
+  "limitation": "3MiB is the runner declared serialization overhead allowance, not an independent full pickle/ZIP/RNG upper-bound proof. BoundedFileSink enforces the actual108MiB cap before each write; an oversized serialization is refused and all prior evidence is preserved.",
+  "maximum_Adam_step_scalars": 108,
+  "model_calls": 0,
+  "nominal_all_seed_pair_budget_plus_reserve_bytes": 2214592512,
+  "nominal_remaining_free_bytes": 1282048,
+  "numeric_sink_writes_simulated": 1,
+  "optimizer_calls": 0,
+  "parameter_basis": "Recovered bridge checkpoint architecture equivalent to selected V12 connected constructor. These are not selected V12 checkpoint bytes; source equality and delivery strict-load preserve the state shapes.",
+  "physical_allocation_and_global_package_gate": "Integrator must account allocated rounding and shared-package extents; nominal arithmetic alone is not release readiness.",
+  "prefix_parameters": 76416,
+  "preflight_bound_slack_bytes": 155748,
+  "proposed_loop_checkpoint_cap_bytes": 113246208,
+  "queue_operations": 0,
+  "raw8_proof_adopted": false,
+  "raw_cap_bytes_per_pair_preserved": 16777216,
+  "reader_parameters": 78112,
+  "real_checkpoint_writes": 0,
+  "schema": "sol.cloud.numeric.storage-arithmetic-proof.v1",
+  "stored_FP32_buffers": 640,
+  "stored_parameters": 9162318,
+  "supplied_fresh_PC_free_bytes": 2215874560,
+  "tensor_bytes_loaded": 0,
+  "tests": [
+    {
+      "case": "saved shapes recount core, buffers, halt, reader and prefix exactly",
+      "passed": true
+    },
+    {
+      "case": "halt frozen before filtered optimizer parameter list",
+      "passed": true
+    },
+    {
+      "case": "source declared 3P plus 3MiB preflight unchanged",
+      "passed": true
+    },
+    {
+      "case": "108MiB covers declared source bound",
+      "passed": true
+    },
+    {
+      "case": "frozen weights buffers and every Adam step fit within residual allowance",
+      "passed": true
+    },
+    {
+      "case": "exact108MiB boundary admitted before numeric simulated write",
+      "passed": true
+    },
+    {
+      "case": "108MiB plus one byte rejects before writer or extent callback",
+      "passed": true
+    },
+    {
+      "case": "reserve callback rejects before any numeric simulated write",
+      "passed": true
+    },
+    {
+      "case": "single new checkpoint destination and tmp rename preserve prior evidence",
+      "passed": true
+    },
+    {
+      "case": "all original16 ids and diagnostic/update exposures unchanged",
+      "passed": true
+    },
+    {
+      "case": "nominal two retained seed pairs plus one global delivery fit supplied inventory",
+      "passed": true
+    }
+  ],
+  "three_P_bytes": 109944732,
+  "torch_imports": 0
+}

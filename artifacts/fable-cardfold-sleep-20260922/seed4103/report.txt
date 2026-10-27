@@ -1,0 +1,36 @@
+fable_cardfold_sleep
+seed: 4103
+stage: all
+model parameters: 1243860
+budgets: base=12000, sleep=3000/arm, batch=48
+
+BASE REGRESSION
+  OP0: 1.0000
+  OP1: 1.0000
+  OP2: 1.0000
+  OP3: 0.9850
+  OP4: 0.9200
+  OP5: 0.9900
+  mean: 0.9825
+
+LESSON INDUCTION
+  selected: ROTL1 -> FOLD -> INC3
+  consistent programs: 3
+  verified: True
+  corrupted-log consistent programs: 0
+
+ARM  TEST-FRESH  TEST-LONG  AWAKE  REGRESSION  REG-DROP
+S        0.9550     0.0150  0.9500      0.9967    0.0000
+R        0.0350     0.0000  1.0000      1.0000    0.0000
+S0       0.9800     0.0000  1.0000      0.0250    0.9575
+
+PASS MARKS
+  M1 S TEST-FRESH >= 0.80: True
+  M2 S-R TEST-FRESH >= 0.20: True (delta=0.9200)
+  M3 S TEST-LONG >= 0.50: False
+  M4 S regression drop < 0.03: True
+  M5 base regression >= 0.95: True
+
+VERDICT: FAIL
+
+A PASS supports only: a software-compiled lesson can be trained into a tiny model's weights on this toy; the abstraction step was done by program search, not by the model.

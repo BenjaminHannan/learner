@@ -1,0 +1,1272 @@
+{
+ "agent": "loop166",
+ "cases_file": "cases166.json",
+ "wall_seconds": 2.0,
+ "counts": {
+  "OK": 52
+ },
+ "first_person_ok": 25,
+ "first_person_n": 25,
+ "identical_ok": 27,
+ "identical_n": 27,
+ "wrong_writes": 0,
+ "cases": [
+  {
+   "id": "F01",
+   "group": "first-person",
+   "teaches": [
+    "My mom is Rita."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Rita"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my mom?",
+     "want": "Rita",
+     "reply": "Your mother is Rita."
+    },
+    {
+     "q": "What is my mother?",
+     "want": "Rita",
+     "reply": "Your mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: your mother is Rita.",
+   "verdict": "OK",
+   "seconds": 1.206
+  },
+  {
+   "id": "F02",
+   "group": "first-person",
+   "teaches": [
+    "My dad is Milo."
+   ],
+   "expect": [
+    "USER",
+    "father",
+    "Milo"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my dad?",
+     "want": "Milo",
+     "reply": "Your father is Milo."
+    },
+    {
+     "q": "Who is my father?",
+     "want": "Milo",
+     "reply": "Your father is Milo."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "father",
+     "Milo"
+    ]
+   ],
+   "reply": "Saved: your father is Milo.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "F03",
+   "group": "first-person",
+   "teaches": [
+    "My sister is Petra."
+   ],
+   "expect": [
+    "USER",
+    "sister",
+    "Petra"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my sister?",
+     "want": "Petra",
+     "reply": "Your sister is Petra."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "sister",
+     "Petra"
+    ]
+   ],
+   "reply": "Saved: your sister is Petra.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "F04",
+   "group": "first-person",
+   "teaches": [
+    "My brother is Hugo."
+   ],
+   "expect": [
+    "USER",
+    "brother",
+    "Hugo"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my brother?",
+     "want": "Hugo",
+     "reply": "Your brother is Hugo."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "brother",
+     "Hugo"
+    ]
+   ],
+   "reply": "Saved: your brother is Hugo.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "F05",
+   "group": "first-person",
+   "teaches": [
+    "My friend is Noor."
+   ],
+   "expect": [
+    "USER",
+    "friend",
+    "Noor"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my friend?",
+     "want": "Noor",
+     "reply": "Your friend is Noor."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "friend",
+     "Noor"
+    ]
+   ],
+   "reply": "Saved: your friend is Noor.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "F06",
+   "group": "first-person",
+   "teaches": [
+    "My city is Lisbon."
+   ],
+   "expect": [
+    "USER",
+    "city",
+    "Lisbon"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Where is my city?",
+     "want": "Lisbon",
+     "reply": "Your city is Lisbon."
+    },
+    {
+     "q": "What is my city?",
+     "want": "Lisbon",
+     "reply": "Your city is Lisbon."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: your city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "F07",
+   "group": "first-person",
+   "teaches": [
+    "My mother is Rita.",
+    "Rita's city is Lisbon."
+   ],
+   "expect": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ],
+    [
+     "Rita",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Where is my mother's city?",
+     "want": "Lisbon",
+     "reply": "Your mother's city is Lisbon."
+    },
+    {
+     "q": "Where is my mom's city?",
+     "want": "Lisbon",
+     "reply": "Your mother's city is Lisbon."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ],
+    [
+     "Rita",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: Rita's city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.026
+  },
+  {
+   "id": "F08",
+   "group": "first-person",
+   "teaches": [
+    "My mother is Rita.",
+    "Actually, my mother is Zara."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Zara"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my mother?",
+     "want": "Zara",
+     "reply": "Your mother is Zara."
+    },
+    {
+     "q": "Who is my mom?",
+     "want": "Zara",
+     "reply": "Your mother is Zara."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Zara"
+    ]
+   ],
+   "reply": "Saved: your mother is Zara.",
+   "verdict": "OK",
+   "seconds": 0.022
+  },
+  {
+   "id": "F09",
+   "group": "first-person",
+   "teaches": [
+    "My father is Milo.",
+    "No, my father is Felix."
+   ],
+   "expect": [
+    "USER",
+    "father",
+    "Felix"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my father?",
+     "want": "Felix",
+     "reply": "Your father is Felix."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "father",
+     "Felix"
+    ]
+   ],
+   "reply": "Saved: your father is Felix.",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "F10",
+   "group": "first-person",
+   "teaches": [],
+   "expect": "nowrite",
+   "teach_reply": "any",
+   "asks": [
+    {
+     "q": "Who is my father?",
+     "want": "I don't know your father yet.",
+     "reply": "I don't know your father yet."
+    }
+   ],
+   "stored": [],
+   "reply": "",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "F11",
+   "group": "first-person",
+   "teaches": [
+    "My mother is Rita.",
+    "My mother is Rita."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Rita"
+   ],
+   "teach_reply": "already",
+   "asks": [
+    {
+     "q": "Who is my mother?",
+     "want": "Rita",
+     "reply": "Your mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "I already have that.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "F12",
+   "group": "first-person",
+   "teaches": [
+    "My sister is Petra.",
+    "My sister is Ada."
+   ],
+   "expect": [
+    "USER",
+    "sister",
+    "Ada"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my sister?",
+     "want": "Ada",
+     "reply": "Your sister is Ada."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "sister",
+     "Ada"
+    ]
+   ],
+   "reply": "Saved: your sister is Ada.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "F13",
+   "group": "first-person",
+   "teaches": [
+    "My mum is Rita."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Rita"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my mum?",
+     "want": "Rita",
+     "reply": "Your mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: your mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "F14",
+   "group": "first-person",
+   "teaches": [
+    "MY DAD IS MILO."
+   ],
+   "expect": [
+    "USER",
+    "father",
+    "MILO"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my dad?",
+     "want": "MILO",
+     "reply": "Your father is MILO."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "father",
+     "MILO"
+    ]
+   ],
+   "reply": "Saved: your father is MILO.",
+   "verdict": "OK",
+   "seconds": 0.038
+  },
+  {
+   "id": "F15",
+   "group": "first-person",
+   "teaches": [],
+   "expect": "nowrite",
+   "teach_reply": "any",
+   "asks": [
+    {
+     "q": "Who is my sister?",
+     "want": "I don't know your sister yet.",
+     "reply": "I don't know your sister yet."
+    }
+   ],
+   "stored": [],
+   "reply": "",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "F16",
+   "group": "first-person",
+   "teaches": [
+    "My mother is Rita."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Rita"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Where is my mother's city?",
+     "want": "I don't know Rita's city.",
+     "reply": "I don't know Rita's city."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: your mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "F17",
+   "group": "first-person",
+   "teaches": [
+    "My brother is Hugo."
+   ],
+   "expect": [
+    "USER",
+    "brother",
+    "Hugo"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who are my brothers?",
+     "want": "I don't know your brothers yet.",
+     "reply": "I don't know your brothers yet."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "brother",
+     "Hugo"
+    ]
+   ],
+   "reply": "Saved: your brother is Hugo.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "F18",
+   "group": "first-person",
+   "teaches": [
+    "My daddy is Milo."
+   ],
+   "expect": [
+    "USER",
+    "father",
+    "Milo"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my daddy?",
+     "want": "Milo",
+     "reply": "Your father is Milo."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "father",
+     "Milo"
+    ]
+   ],
+   "reply": "Saved: your father is Milo.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "F19",
+   "group": "first-person",
+   "teaches": [
+    "My friend is Noor.",
+    "Noor's sister is Ada."
+   ],
+   "expect": [
+    [
+     "USER",
+     "friend",
+     "Noor"
+    ],
+    [
+     "Noor",
+     "sister",
+     "Ada"
+    ]
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my friend's sister?",
+     "want": "Ada",
+     "reply": "Your friend's sister is Ada."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "friend",
+     "Noor"
+    ],
+    [
+     "Noor",
+     "sister",
+     "Ada"
+    ]
+   ],
+   "reply": "Saved: Noor's sister is Ada.",
+   "verdict": "OK",
+   "seconds": 0.007
+  },
+  {
+   "id": "F20",
+   "group": "first-person",
+   "teaches": [
+    "My brother is Hugo.",
+    "Actually, my brother is Felix."
+   ],
+   "expect": [
+    "USER",
+    "brother",
+    "Felix"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my brother?",
+     "want": "Felix",
+     "reply": "Your brother is Felix."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "brother",
+     "Felix"
+    ]
+   ],
+   "reply": "Saved: your brother is Felix.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "F21",
+   "group": "first-person",
+   "teaches": [
+    "My brother is Hugo.",
+    "Hugo's friend is Felix."
+   ],
+   "expect": [
+    [
+     "USER",
+     "brother",
+     "Hugo"
+    ],
+    [
+     "Hugo",
+     "friend",
+     "Felix"
+    ]
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my brother's friend?",
+     "want": "Felix",
+     "reply": "Your brother's friend is Felix."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "brother",
+     "Hugo"
+    ],
+    [
+     "Hugo",
+     "friend",
+     "Felix"
+    ]
+   ],
+   "reply": "Saved: Hugo's friend is Felix.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "F22",
+   "group": "first-person",
+   "teaches": [
+    "My mummy is Rita."
+   ],
+   "expect": [
+    "USER",
+    "mother",
+    "Rita"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my mummy?",
+     "want": "Rita",
+     "reply": "Your mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: your mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.028
+  },
+  {
+   "id": "F23",
+   "group": "first-person",
+   "teaches": [
+    "My sister is Ada."
+   ],
+   "expect": [
+    "USER",
+    "sister",
+    "Ada"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "What is my sister?",
+     "want": "Ada",
+     "reply": "Your sister is Ada."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "sister",
+     "Ada"
+    ]
+   ],
+   "reply": "Saved: your sister is Ada.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "F24",
+   "group": "first-person",
+   "teaches": [
+    "My husband is Felix."
+   ],
+   "expect": [
+    "USER",
+    "husband",
+    "Felix"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my husband?",
+     "want": "Felix",
+     "reply": "Your husband is Felix."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "husband",
+     "Felix"
+    ]
+   ],
+   "reply": "Saved: your husband is Felix.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "F25",
+   "group": "first-person",
+   "teaches": [
+    "My wife is Noor."
+   ],
+   "expect": [
+    "USER",
+    "wife",
+    "Noor"
+   ],
+   "teach_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is my wife?",
+     "want": "Noor",
+     "reply": "Your wife is Noor."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "wife",
+     "Noor"
+    ]
+   ],
+   "reply": "Saved: your wife is Noor.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "A01",
+   "group": "agent-itself",
+   "teaches": [
+    "What is your name?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "A02",
+   "group": "agent-itself",
+   "teaches": [
+    "Who made you?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.031
+  },
+  {
+   "id": "A03",
+   "group": "agent-itself",
+   "teaches": [
+    "Who are you?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "A04",
+   "group": "agent-itself",
+   "teaches": [
+    "What are you?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.041
+  },
+  {
+   "id": "A05",
+   "group": "agent-itself",
+   "teaches": [
+    "How old are you?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "A06",
+   "group": "agent-itself",
+   "teaches": [
+    "Who is your mother?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "A07",
+   "group": "agent-itself",
+   "teaches": [
+    "What is your city?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "A08",
+   "group": "agent-itself",
+   "teaches": [
+    "Your name is what?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "A09",
+   "group": "agent-itself",
+   "teaches": [
+    "Are you smart?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "A10",
+   "group": "agent-itself",
+   "teaches": [
+    "Where are you?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "O01",
+   "group": "other",
+   "teaches": [
+    "Tom's mother is Rita."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is Tom's mother?",
+     "want": null,
+     "reply": "Tom's mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: Tom's mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.022
+  },
+  {
+   "id": "O02",
+   "group": "other",
+   "teaches": [
+    "Rita's city is Lisbon."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Where is Rita's city?",
+     "want": null,
+     "reply": "Rita's city is Lisbon."
+    }
+   ],
+   "stored": [
+    [
+     "Rita",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: Rita's city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.024
+  },
+  {
+   "id": "O03",
+   "group": "other",
+   "teaches": [
+    "The Hobbit's author is Tolkien."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is The Hobbit's author?",
+     "want": null,
+     "reply": "The Hobbit's author is Tolkien."
+    }
+   ],
+   "stored": [
+    [
+     "The Hobbit",
+     "author",
+     "Tolkien"
+    ]
+   ],
+   "reply": "Saved: The Hobbit's author is Tolkien.",
+   "verdict": "OK",
+   "seconds": 0.045
+  },
+  {
+   "id": "O04",
+   "group": "other",
+   "teaches": [
+    "The Beatles' founder is Lennon."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is The Beatles' founder?",
+     "want": null,
+     "reply": "The Beatles's founder is Lennon."
+    }
+   ],
+   "stored": [
+    [
+     "The Beatles",
+     "founder",
+     "Lennon"
+    ]
+   ],
+   "reply": "Saved: The Beatles's founder is Lennon.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "O05",
+   "group": "other",
+   "teaches": [
+    "The mayor of Leeds is Ann."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [
+    [
+     "mayor of Leeds",
+     "officeholder",
+     "Ann"
+    ]
+   ],
+   "reply": "Saved: mayor of Leeds's officeholder is Ann.",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "O06",
+   "group": "other",
+   "teaches": [
+    "The president of Zorvia is Mel Ash."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [
+    [
+     "president of Zorvia",
+     "officeholder",
+     "Mel Ash"
+    ]
+   ],
+   "reply": "Saved: president of Zorvia's officeholder is Mel Ash.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "O07",
+   "group": "other",
+   "teaches": [
+    "I heard Tom's mother is Rita."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+   "verdict": "OK",
+   "seconds": 0.031
+  },
+  {
+   "id": "O08",
+   "group": "other",
+   "teaches": [
+    "Mary Jane's mother is Rita."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.05
+  },
+  {
+   "id": "O09",
+   "group": "other",
+   "teaches": [
+    "Tom is Rita."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "O10",
+   "group": "other",
+   "teaches": [
+    "Tom's mother's city is Lisbon."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.031
+  },
+  {
+   "id": "O11",
+   "group": "other",
+   "teaches": [
+    "Who is Tom's mother's city?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is Tom's mother's city?",
+     "want": null,
+     "reply": "I don't know anyone called Tom."
+    }
+   ],
+   "stored": [],
+   "reply": "I don't know anyone called Tom.",
+   "verdict": "OK",
+   "seconds": 0.025
+  },
+  {
+   "id": "O12",
+   "group": "other",
+   "teaches": [
+    "What if Tom's mother is Rita?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "O13",
+   "group": "other",
+   "teaches": [
+    "USER's mother is Rita."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is USER's mother?",
+     "want": null,
+     "reply": "USER's mother is Rita."
+    }
+   ],
+   "stored": [
+    [
+     "USER",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: USER's mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "O14",
+   "group": "other",
+   "teaches": [
+    "My mother is Rita?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.037
+  },
+  {
+   "id": "O15",
+   "group": "other",
+   "teaches": [
+    "My manager is Tom."
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "O16",
+   "group": "other",
+   "teaches": [
+    "Where is my mother city?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.03
+  },
+  {
+   "id": "O17",
+   "group": "other",
+   "teaches": [
+    "Who is your father's city?"
+   ],
+   "expect": null,
+   "teach_reply": null,
+   "asks": [
+    {
+     "q": "Who is your father's city?",
+     "want": null,
+     "reply": "I don't know anyone called your father."
+    }
+   ],
+   "stored": [],
+   "reply": "I don't know anyone called your father.",
+   "verdict": "OK",
+   "seconds": 0.014
+  }
+ ]
+}

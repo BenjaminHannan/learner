@@ -1,0 +1,162 @@
+{
+ "exploit1_dev_passed_wrong_seeds": {
+  "returncode": 1,
+  "dev_passed_written": false,
+  "dev_passed_problems": null,
+  "rule": null,
+  "closed": true
+ },
+ "exploit2_lockout_contents": {
+  "cases": {
+   "empty": {
+    "accepted": false,
+    "message": "off-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/lockdir/DEV-PASSED.json is empty; it must carry the development evidence"
+   },
+   "not-json": {
+    "accepted": false,
+    "message": "7/artifacts/fable-novelty19-replay-20260920/audit/scratch3/lockdir/DEV-PASSED.json does not parse: Expecting value: line 1 column 1 (char 0)"
+   },
+   "empty-object": {
+    "accepted": false,
+    "message": "f-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/lockdir/DEV-PASSED.json schema is None, expected 'novelty19-dev-passed-v1'"
+   },
+   "wrong-schema": {
+    "accepted": false,
+    "message": "ff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/lockdir/DEV-PASSED.json schema is 'x', expected 'novelty19-dev-passed-v1'"
+   },
+   "one-seed": {
+    "accepted": false,
+    "message": "andoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/lockdir/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   "missing-checkpoints": {
+    "accepted": false,
+    "message": "ir/DEV-PASSED.json offline_checkpoints is missing 18 of 18 entries: ['D-R-1900', 'D-R-1901', 'D-R-1902', 'D-G-1900', 'D-G-1901', 'D-G-1902']"
+   },
+   "registered-and-complete": {
+    "accepted": true,
+    "validated_by": "fable_novelty19_data.validate_dev_passed",
+    "sha": "f58ea9b0af347a7341ba5459da752e1b05eb329e693019adb0cd20e46a24cb56"
+   }
+  },
+  "all_bad_refused": true,
+  "valid_accepted": true,
+  "closed": true
+ },
+ "dev_passed_binding": {
+  "suite_records_dev_passed": {
+   "awake_checkpoints": 2,
+   "dev_panels": {
+    "manifest_sha256": "9acf520b04d8ebe1199ff6084a9688a4dcea1468ebbbefa658de9a7e219b0d2a",
+    "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/dev"
+   },
+   "offline_checkpoints": 6,
+   "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/exp9991/DEV-PASSED.json",
+   "report_sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "sha256": "dd31133354c7c12f243b00827cbfbd47c16fdef372d014e920a8fa77cce1793e"
+  },
+  "guard_accepts_a_different_valid_unlock": true,
+  "guard_sha": "8ea9774c096d3a0c9f6f1c4f96cbcf5d0d8612e82c3979239d0e975aacc9a80f",
+  "guard_compares_suite_to_unlock": false,
+  "builders_reasoning_about_panels_folder": "correct: dev_panels.manifest_sha256 is the DEVELOPMENT suite the verdict was computed on, while --panels at confirmation time is the confirmation suite, so passing panels_folder would compare two different directories and always fail",
+  "residual": "the guard validates the unlock and the data module validates the development suite named INSIDE it, but nothing compares the confirmation suite's own recorded dev_passed.sha256 with the unlock being presented"
+ },
+ "exploit3_midrun_checkpoint": {
+  "score_returncode": 0,
+  "score_written": true,
+  "updates_done": 3,
+  "total_updates": 8,
+  "merged_as_a_run": false,
+  "rejected": [
+   "updates_done=3, the registered awake run is 6000 updates",
+   "total_updates=8, the registered awake run is 6000 updates",
+   "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/runs/awake-D-chunk/completion.json finished on ckpt-000008.pt, this score is of ckpt-000003.pt",
+   "checkpoint sha256 3decd374ffc91c8c... is not the 28a25120734ec245... that /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/runs/awake-D-chunk/completion.json recorded",
+   "the run itself recorded 8 updates"
+  ],
+  "closed": true
+ },
+ "exploit4_mixed_caps": {
+  "merged_cells": [
+   "F-c1-r8"
+  ],
+  "caps_of_merged_run": {
+   "eval_cap": 16,
+   "output_capacity": null,
+   "oracle_operator_diagnostic": null
+  },
+  "rejected": [
+   {
+    "run": "awake-D-s9991",
+    "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/exp-caps/scores/cap4.json",
+    "sha256": "4e5e59b2d6847d617631c497a3bf84e30e9ff76b549ab0474f94da5a9dd5acc0",
+    "reasons": [
+     "eval_cap is 4, the registered value is 16"
+    ]
+   },
+   {
+    "run": "awake-D-s9991",
+    "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/exp-caps/scores/cap64.json",
+    "sha256": "bc2d35304c66fb0cf194bce3b3358d590f4f85eb70f812fa8899d27990a54adb",
+    "reasons": [
+     "eval_cap is 64, the registered value is 16"
+    ]
+   }
+  ],
+  "conflicts": [],
+  "closed": true,
+  "real_offcap_score": {
+   "returncode": 0,
+   "eval_cap": 4,
+   "registered_caps_flag": false,
+   "merge_problems": [
+    "eval_cap is 4, the registered value is 16"
+   ]
+  }
+ },
+ "exploit5_resume": {
+  "cases": {
+   "orphan_checkpoint": {
+    "returncode": 1,
+    "refused": true,
+    "message": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/runs/orphan already holds 8 updates but has"
+   },
+   "tampered_checkpoint": {
+    "returncode": 1,
+    "refused": true,
+    "message": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/runs/tamper already holds 8 updates but has"
+   },
+   "foreign_awake_checkpoint": {
+    "returncode": 1,
+    "refused": true,
+    "message": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/runs/awake-T-whole/ckpt-000008.pt holds arc"
+   }
+  },
+  "closed": true
+ },
+ "note_N6_wall_clock": {
+  "weight_fingerprint_reproducible": true,
+  "update_fingerprint_reproducible": true,
+  "data_fingerprint_reproducible": true,
+  "checkpoint_sha_reproducible": true,
+  "sha_first": "aea33fb4c0a51c6e",
+  "sha_again": "aea33fb4c0a51c6e",
+  "wall_clock_keys_in_completion": [
+   "created_unix",
+   "host",
+   "peak_rss_bytes",
+   "seconds"
+  ]
+ },
+ "note_N8_torch_load": {
+  "load_state_verifies_first": null,
+  "resume_path_hashes_before_load": true,
+  "score_path_hashes_before_load": null,
+  "note": "filled in from source reading below"
+ },
+ "source_version_mix": {
+  "score_files_record_source_fingerprint": true,
+  "collect_scores_keeps_it": false,
+  "run_entry_fields": [],
+  "checkpoint_sha_embeds_source": true
+ }
+}

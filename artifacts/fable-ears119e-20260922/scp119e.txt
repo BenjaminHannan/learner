@@ -1,0 +1,28 @@
+# scp list — Exp 119e BensPC staging (run by the director from the worktree root)
+# 119e is scoring-only: it reuses the frozen 119b checkpoints
+# (C:\Users\benja\ears119b\runs\w-1191x\ear.pt), the sealed 47 panels, and the
+# reading94 panel already staged for 119b. Stage 119e into C:\Users\benja\ears119e\.
+# The Mac-side scorer was compile-checked only (py_compile); the registered
+# scoring runs on BensPC AFTER the PASSMARKS seal below. Do not ssh from the Mac.
+
+# 1. New 119e scorer + wave bat.
+# Run from: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+scp scripts/fable_ears119e_score.py scripts/fable_ears119e_wave.bat "benspc:C:/Users/benja/ears119e/repo/scripts/"
+scp scripts/fable_ears119e_wave.bat "benspc:C:/Users/benja/ears119e/wave119e.bat"
+
+# 2. remap.json at the repo-relative path the scorer asserts against
+# (REPO/artifacts/fable-ears119b-20260922/remap.json; cross-checked == REMAP).
+scp artifacts/fable-ears119b-20260922/remap.json "benspc:C:/Users/benja/ears119e/repo/artifacts/fable-ears119b-20260922/remap.json"
+
+# 3. Script closure + sealed PASSMARKS: copy LOCALLY on the PC (no re-upload).
+# ssh benspc "xcopy C:\Users\benja\ears119b\repo\scripts\* C:\Users\benja\ears119e\repo\scripts\ /E /I /Y"
+# (brings fable_ears119b_score.py, fable_ears119_score.py, fable_ears47_*.py,
+#  fable_ears45_*.py, fable_read106_score.py, fable_listening_english.py,
+#  fable_bert_loader.py already staged for 119b).
+
+# 4. Launch (director only, detached; stop the Qwen llama-server first if it
+# holds VRAM; install nothing; scoring only, no training).
+# ssh benspc "powershell -NoProfile -Command \"Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CommandLine = 'cmd /c C:\\Users\\benja\\ears119e\\wave119e.bat' } | Out-Null; echo LAUNCHED\""
+
+# 5. Fetch back (scores run on BensPC inside the .bat).
+scp "benspc:C:/Users/benja/ears119e/report47e.json" "benspc:C:/Users/benja/ears119e/report119e.json" "benspc:C:/Users/benja/ears119e/taus119e.json" "benspc:C:/Users/benja/ears119e/wave119e.log" artifacts/fable-ears119e-20260922/

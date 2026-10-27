@@ -1,0 +1,113 @@
+{
+  "schema": "sol.cloud.talker-public-parameter-report.v1",
+  "completed_utc": "2026-09-30T12:05:44.248569+00:00",
+  "model": "LiquidAI/LFM2.5-1.2B-Instruct",
+  "requested_revision": "0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+  "baseline_artifact": {
+    "sha256": "1ba63d9adb03ae43581db0e136e4416febe0441aff7296397bd455fb6017f73a",
+    "bytes": 2340697936
+  },
+  "primary_public_artifact_binding": {
+    "url": "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct/blob/main/model.safetensors",
+    "published_sha256": "1ba63d9adb03ae43581db0e136e4416febe0441aff7296397bd455fb6017f73a",
+    "exactly_matches_baseline": true,
+    "public_main_file_commit_label": "205939a",
+    "public_main_revision_equals_requested_revision": "Not confirmed; contentSHA binding only"
+  },
+  "parameter_count": {
+    "architecture_inferred_unique_elements": 1170340608,
+    "inferred_unique_parameter_tensors": 148,
+    "exact_stored_header_count_publicly_verified": null,
+    "definition": "Sum products of all unique parameter shapes; tied lm_head/inputembedding counted once; nonpersistent buffers and generation caches excluded",
+    "inference_status": "Exact arithmetic for observed public main configuration plus official4.57.2 module construction; not a retrieved pinnedrevision API/safetensors-header count",
+    "breakdown": {
+      "tied_input_output_embedding": 134217728,
+      "all16_SwiGLU_MLPs": 805306368,
+      "all6_attention_projections_and_QK_RMS": 62915328,
+      "all10_short_convolution_blocks": 167833600,
+      "all16_pairs_of_layer_RMS": 65536,
+      "final_embedding_RMS": 2048
+    }
+  },
+  "public_config_observation": {
+    "source": "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct/blob/main/config.json",
+    "hidden_size": 2048,
+    "vocab_size": 65536,
+    "layers": 16,
+    "attention_layers": [
+      2,
+      5,
+      8,
+      10,
+      12,
+      14
+    ],
+    "conv_layers": 10,
+    "heads": 32,
+    "KV_heads": 8,
+    "head_dimension_inferred": 64,
+    "conv_kernel_length": 3,
+    "conv_bias": false,
+    "base_intermediate": 12288,
+    "SwiGLU_adjusted_intermediate_inferred": 8192,
+    "tie_embedding": true,
+    "published_dtype": "bfloat16",
+    "transformers_version": "4.57.2",
+    "raw_config_bytes_sha256": null
+  },
+  "dtype_and_storage": {
+    "public_model_tensor_type": "BF16",
+    "per_tensor_header_dtypes_observed": false,
+    "inferred_BF16_parameter_bytes": 2340681216,
+    "inferred_FP32_parameter_bytes": 4681362432,
+    "baseline_file_minus_inferred_BF16_parameter_bytes": 16720,
+    "caution": "Difference is a consistency check, not independently read header length; do not divide total serialized filesize by dtype width to count parameters"
+  },
+  "tied_weights": {
+    "observed_config_tied": true,
+    "official_module_tied_alias": "lm_head.weight\u2192model.embed_tokens.weight",
+    "unique_embedding_shape": [
+      65536,
+      2048
+    ],
+    "elements_counted_once": 134217728,
+    "header_alias_metadata_observed": false
+  },
+  "buffers": {
+    "official_source": "https://raw.githubusercontent.com/huggingface/transformers/v4.57.2/src/transformers/models/lfm2/modeling_lfm2.py",
+    "excluded": "Rotary inv_freq registered persistent=False; dynamic attention/convolution cache state is not trainable parameter storage",
+    "stored_persistent_buffer_header_entries": "Not observed; directheaderconfirmation still required"
+  },
+  "primary_sources": [
+    {
+      "url": "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct",
+      "observed": "Rounded1.17B count and BF16 tensor type; not exactcount"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/huggingface/transformers/v4.57.2/src/transformers/models/lfm2/modeling_lfm2.py",
+      "observed": "Biasfree3matrixSwiGLU, Q/K/V/Oplus2headRMS perattention, groupedshortconv+in/outproj,2layerRMS andfinalRMS, inputembedding andtiedhead; shapes synthesized onlyfromconstructors"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/huggingface/transformers/v4.57.2/src/transformers/models/lfm2/configuration_lfm2.py",
+      "observed": "Legacy tie_embedding\u2192tie_word_embeddings andbaseFFdimension/adjustment mapping"
+    }
+  ],
+  "failed_exact_metadata_access": {
+    "pinnedrevision_API_and_config": "Webtool notaccessible; boundedstdlibHTTPS URLError preservedFETCH-v1.json",
+    "main_API": "Webtoolnotaccessible",
+    "tensor_payload_downloaded": false,
+    "no_duplicate_PC_queue": true
+  },
+  "actions": {
+    "model_imports": 0,
+    "model_downloads": 0,
+    "tensor_payload_bytes_read": 0,
+    "inference_calls": 0,
+    "optimizer_updates": 0,
+    "GPU_jobs": 0,
+    "queue_entries": 0,
+    "credentials_used": false
+  },
+  "remaining_blocker": "Need integrator existing cachedPC safetensors-header receipt (same fullSHA) to upgrade inferredunique count/shapes/dtypes/alias/buffer status to actualstoredheader evidence.",
+  "talker_speed": "No publicparameter count or modelcard externalhardware tok/s substitutes for actualjoinedBensPCFP32generation measurement."
+}

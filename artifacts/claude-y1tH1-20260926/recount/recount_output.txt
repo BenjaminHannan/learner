@@ -1,0 +1,25 @@
+y1tH1 recount (independent)
+edit asks per arm: 70; decoy rows: 47; distinct decoy asks: 47
+
+measure                                        A     B
+H1a judged wrong, edit asks                   24    27
+H1b right, edit asks                          33    25
+H1c right, decoy asks                         26    29
+H1d judged wrong, non-edit asks               33    24
+WRONG_CANDIDATE asks                          79    72
+judge packets                                 79    72
+splits (j1 != j2)                              2     1
+asks                                         232   232
+
+judge packets total: 151; splits total: 3; j3 verdicts: 3; split_ids.json agrees: True
+judge_asks files equal recomputed WRONG_CANDIDATE sets: A True, B True
+mechanical classes A: {'ABSTAIN': 24, 'RIGHT': 129, 'WRONG_CANDIDATE': 79}
+mechanical classes B: {'ABSTAIN': 38, 'RIGHT': 122, 'WRONG_CANDIDATE': 72}
+
+H1a: FAIL  (B 27 <= A 24 - max(4, ceil(24/3)) = 16)
+H1b: FAIL  (B 25 >= A 33 - 3 = 30)
+H1c: pass  (B 29 >= A 26 - 2 = 24)
+H1d: pass  (B 24 <= A 33)
+INCONCLUSIVE check (A judged-wrong edit asks < 8): no (A = 24)
+Proved-wrong check (B judged-wrong edit asks not below A): yes (B 27 vs A 24)
+VERDICT: FAIL - proved wrong (trained doubt carries over to corrections)

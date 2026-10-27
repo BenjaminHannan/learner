@@ -1,0 +1,63 @@
+EXP 252 BRIEF: corrections and denials. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why. When a user says a stored fact is wrong, Premonition ignores it and keeps giving the old value. That is a wrong answer the user has already refused.
+- The 232c verifier: "Ines da Varrow works at Brindlecorp." followed by "That's not true, Ines da Varrow doesn't work at Brindlecorp." gets the stock decline. The fact stays stored, and the next "Where does Ines da Varrow work?" answers Brindlecorp. It is the same for one-word names, "X doesn't work at Y." and "That's wrong."
+  - findings: artifacts/claude-verify-20260922/232c/findings.md
+- The 239 conversation panel scores corrections at 0/6 on both 138i and 138k. Judge A saw a failed correction followed by the old value given confidently. Read only the category text in artifacts/claude-convjudge239-A-20260922/RESULTS.md and RESULTS-138k.md; never read grades or examples.
+- 138k's own note: "No, it's Aldgate." does not replace the city.
+What already works on 138k: "X's boss is not Y." removes the fact, and named replacement answers "Updated: … (it was …)". "Actually, my name is Jorvell." asks for confirmation; that is by design, so keep it.
+
+Base: the newest accepted merge, 138k, i.e. scripts/claude_loop138k_agent.py with artifacts/claude-merge138k-20260922/loop138k-config.json. It already has the 228 guard (SrcGuardMixin228 first) and 220's restart index.
+- One change: a single new mixin, scripts/claude_fix252_correct.py, placed in scripts/claude_loop252_agent.py.
+- Artifacts: artifacts/claude-correct252-20260922/. Ledger lines: P252.n. Never edit an existing file.
+
+Behaviour, safety first:
+1. Denial of a named fact ("X doesn't work at Y.", "X no longer lives in Y.", "Y isn't X's boss.", "That's not true, X doesn't …"):
+   - Parse the positive form with the EXISTING teach readers, never with a new sentence grammar. Resolve X to an existing entity and map the relation the way the teach path does.
+   - If exactly that triple is stored, remove it through the notebook's existing retraction path (the one "X's boss is not Y" uses), so the fast index stays right. Reply with one plain sentence saying it was removed.
+   - If it is not stored, write nothing and say so honestly.
+2. Contextual denial ("That's not true.", "That's wrong."): acts only if the assistant's previous reply stated exactly ONE stored fact. In that case remove it. In every other case, write nothing and ask which fact is wrong.
+3. Contextual correction ("No, it's Z.", "Actually it's Z."): acts only if the previous reply stated exactly one stored fact (S, R, Y), and Z passes the same type check and write screen (209) that a teach of (S, R, Z) would. Replace through the existing replacement path. Otherwise write nothing and ask.
+4. Explicit correction ("Actually, X lives in Z, not Y.", "X doesn't work at Y, X works at Z."): replace through the existing path only when (X, R, Y) is stored and the teach (X, R, Z) would pass. Otherwise follow the base's own teach behaviour unchanged.
+5. Question turns never write. That includes "Doesn't X live in Y?", "Isn't Y X's boss?" and "Is it true that X doesn't …?".
+6. Inferred facts (chains, "worked out backwards") are never stored, so there is nothing to remove. Say it was worked out from other facts and ask which taught fact is wrong. Ben's rule is that two-hop corrections ask.
+7. The user's own name keeps the base's confirm flow.
+8. A removal must also clear reverse lookups: after "X doesn't work at Y.", "Who works at Y?" and "Whose employer is Y?" must not give X. Include restart cases (deny, restart, ask both directions).
+
+Blind panel. A separate writer is building artifacts/claude-corrpanel252-20260922/ under the exact schema in corrpanel252-schema.txt (same folder).
+- Your scorer must implement that schema check and those scoring rules exactly.
+- Do NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed.
+- After your seal:
+  1. wait for the director's message that the panel is sealed (or for its SEAL to exist and check OK from the repo root);
+  2. run your schema check;
+  3. run the panel ONCE on both arms (138k and yours);
+  4. score it.
+- If the panel is not ready 40 minutes after your seal, report and stop.
+
+Order of work:
+1. Reproduce each failure on 138k with your own dev dialogs (probe runner in OPUS-RULES).
+2. Write your dev cases:
+   - at least 50 scored turns across families like the schema's (your own wordings, never copied from any panel);
+   - at least 10 must-not-change cases;
+   - at least 10 traps (questions that look like denials; denials of unstored facts; an ambiguous "That's wrong.");
+   - at least 4 restart cases.
+3. Build the fix. Pilot on dev, the suites and the sleep smoke.
+4. Write PASSMARKS.md with every predicted suite move by id. Seal. Append ledger lines.
+5. Registered runs, once each: M2 dev, M3 suites, M4 sleep smoke, M6 restart check, then M1 panel.
+6. Write RESULTS.md and your final message, as OPUS-RULES requires.
+
+Registered marks:
+- M1a, per family on the panel:
+  - verb_denial ≥ 13/14
+  - possessive_denial ≥ 9/10
+  - contextual_denial ≥ 11/12
+  - contextual_correction ≥ 13/14
+  - explicit_correction ≥ 11/12
+- M1b: wrong values over all 100 items = 0 on your arm. A denied or replaced value given as current counts, whatever the base did. Report the base's count next to it.
+- M1c: 0 junk writes on all 100; 0 followup writes; question_trap 12/12, ambiguous 6/6 and unstored_denial 8/8 with the store unchanged.
+- M1d: control 12/12 right, meaning replies byte-identical to base138k and the store as expected.
+- M2 dev: all right, 0 junk writes, traps write nothing, restart cases right.
+- M3: fable_suitediff218 on rt136, rt143, sessions152 and bench against 138k's saved rows. Look at how 138k's run did it in artifacts/claude-merge138k-20260922/run/. Bars: 0 new WRONG / WRONG-WRITE / junk / lost OK, and the moves exactly equal your predicted list.
+- M4: the sleep smoke is identical to 138k's (artifacts/claude-merge138k-20260922/run/smoke-k.json).
+- M5: median added time per turn ≤ +5 ms against 138k, measured in the same session.
+- M6: the 138k verifier's restart dialogs (artifacts/claude-verify-20260922/138k/v-dialogs.json and v-supp.json), run through scripts/claude_merge138k_probe.py (read-only). Bars: 0 ghost answers, 0 failed duplicate checks, and replies identical to 138k except your predicted moves.

@@ -1,0 +1,1830 @@
+{
+ "rule": "Exp 221 -- P3 PREDICTED MOVES, worked out before any agent run.\n\nPure function over the frozen suite INPUTS (rt136 cases, rt143 cases,\nsessions152 sessions, the four bench splits) and the relation table. No\nagent is built, no notebook is touched, no sealed output row is read.\n\nA case is a PREDICTED MOVE CANDIDATE when one of its question turns Q\n(text ending in \"?\") satisfies:\n\n  (A) table reading: fable_fix221_tableask.unique_reading221(Q) is not\n      None. The mixin can only change such a turn when the 138i base\n      misses it (base_missed221), which this text-only rule cannot see, so\n      (A) is a superset of the real (a)-moves.\n  (B) key re-point: Q has a single-hop base shape the 138i ears parse as\n      an ask on one key k (\"Who/What/Where is X's R?\", \"... is my R?\",\n      \"Who/What is the R of X?\"), k is in a table group G, and some teach\n      turn of the same case touches G through a different key (possessive\n      / \"my\" surface of another key in G, or any table teach template of\n      G or of a narrower relation). Superset of the real (b)-moves.\n\n  (C) live reverse reply: fable_fix153_reverse.parse_reverse(Q) is not\n      None and both spans pass 153's own _simple gate (the 153 answer gets the label; its \"I don't know anyone\n      whose\" line may be widened through the table group).",
+ "suites": {
+  "rt136": [],
+  "rt143": [
+   {
+    "id": "C1",
+    "turn": "Who is Bram Kite married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "C3",
+    "turn": "What country is Cora Lind a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Cora Lind",
+     "Y": null
+    }
+   },
+   {
+    "id": "C4",
+    "turn": "Who wrote The Glass Orchard?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "The Glass Orchard",
+     "Y": null
+    }
+   },
+   {
+    "id": "C5",
+    "turn": "What is Bram Kite famous for?",
+    "rule": "A",
+    "reading": {
+     "rel": "notable_work",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "C6",
+    "turn": "Where was Bram Kite born?",
+    "rule": "A",
+    "reading": {
+     "rel": "place_of_birth",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "J4",
+    "turn": "who is bram kite married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "bram kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "J6",
+    "turn": "What   is  the capital   of Norland?",
+    "rule": "A",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "X": "Norland",
+     "Y": null
+    }
+   },
+   {
+    "id": "J6",
+    "turn": "What   is  the capital   of Norland?",
+    "rule": "B",
+    "base_key": "capital",
+    "group": "capital",
+    "teach_touch": [
+     "capital:*"
+    ]
+   },
+   {
+    "id": "J8",
+    "turn": "What is the capital of Norlanb?",
+    "rule": "A",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "X": "Norlanb",
+     "Y": null
+    }
+   },
+   {
+    "id": "J8",
+    "turn": "What is the capital of Norlanb?",
+    "rule": "B",
+    "base_key": "capital",
+    "group": "capital",
+    "teach_touch": [
+     "capital:*"
+    ]
+   },
+   {
+    "id": "J12",
+    "turn": "WHAT IS THE CAPITAL OF NORLAND?",
+    "rule": "A",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "X": "NORLAND",
+     "Y": null
+    }
+   },
+   {
+    "id": "J12",
+    "turn": "WHAT IS THE CAPITAL OF NORLAND?",
+    "rule": "B",
+    "base_key": "capital",
+    "group": "capital",
+    "teach_touch": [
+     "capital:*"
+    ]
+   },
+   {
+    "id": "K1",
+    "turn": "What country is Bram Kite a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "K2",
+    "turn": "What is the official language of Norland?",
+    "rule": "A",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "X": "Norland",
+     "Y": null
+    }
+   },
+   {
+    "id": "K3",
+    "turn": "What is Bram Kite famous for?",
+    "rule": "A",
+    "reading": {
+     "rel": "notable_work",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "K4",
+    "turn": "Who is Cora Lind married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Cora Lind",
+     "Y": null
+    }
+   },
+   {
+    "id": "K5",
+    "turn": "Where was Bram Kite born?",
+    "rule": "A",
+    "reading": {
+     "rel": "place_of_birth",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "K6",
+    "turn": "Who developed HarborOS?",
+    "rule": "A",
+    "reading": {
+     "rel": "developer",
+     "kind": "ask",
+     "X": "HarborOS",
+     "Y": null
+    }
+   },
+   {
+    "id": "K7",
+    "turn": "What did Ada Wren found?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "inverse",
+     "X": null,
+     "Y": "Ada Wren"
+    }
+   },
+   {
+    "id": "K9",
+    "turn": "What is the capital of Ostmark?",
+    "rule": "A",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "X": "Ostmark",
+     "Y": null
+    }
+   },
+   {
+    "id": "K9",
+    "turn": "What is the capital of Ostmark?",
+    "rule": "B",
+    "base_key": "capital",
+    "group": "capital",
+    "teach_touch": [
+     "capital:*"
+    ]
+   },
+   {
+    "id": "L1",
+    "turn": "What is Bram Kite's occupation?",
+    "rule": "A",
+    "reading": {
+     "rel": "occupation",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "L2",
+    "turn": "Who employs Cora Lind?",
+    "rule": "A",
+    "reading": {
+     "rel": "employer",
+     "kind": "ask",
+     "X": "Cora Lind",
+     "Y": null
+    }
+   },
+   {
+    "id": "L5",
+    "turn": "What is the religion of Bram Kite?",
+    "rule": "A",
+    "reading": {
+     "rel": "religion_or_worldview",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "L6",
+    "turn": "When was Bram Kite born?",
+    "rule": "A",
+    "reading": {
+     "rel": "date_of_birth",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   },
+   {
+    "id": "O2",
+    "turn": "Who is Jonas Pike married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Jonas Pike",
+     "Y": null
+    }
+   },
+   {
+    "id": "O3",
+    "turn": "What is the capital of Norlandia?",
+    "rule": "A",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "X": "Norlandia",
+     "Y": null
+    }
+   },
+   {
+    "id": "O3",
+    "turn": "What is the capital of Norlandia?",
+    "rule": "B",
+    "base_key": "capital",
+    "group": "capital",
+    "teach_touch": [
+     "capital:*"
+    ]
+   },
+   {
+    "id": "O4",
+    "turn": "What country is Vera Quinn a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Vera Quinn",
+     "Y": null
+    }
+   },
+   {
+    "id": "P1",
+    "turn": "What country is Dara Fenn a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Dara Fenn",
+     "Y": null
+    }
+   },
+   {
+    "id": "P2",
+    "turn": "What country is Dara Fenner a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Dara Fenner",
+     "Y": null
+    }
+   },
+   {
+    "id": "Q1",
+    "turn": "Who is Joren Hale married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Joren Hale",
+     "Y": null
+    }
+   },
+   {
+    "id": "Q2",
+    "turn": "What country is Sella Marne a citizen of?",
+    "rule": "A",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "X": "Sella Marne",
+     "Y": null
+    }
+   },
+   {
+    "id": "Q5",
+    "turn": "Who is Tomas Reed married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Tomas Reed",
+     "Y": null
+    }
+   },
+   {
+    "id": "Q6",
+    "turn": "Who is Tomas Reed married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Tomas Reed",
+     "Y": null
+    }
+   },
+   {
+    "id": "Q7",
+    "turn": "Who is Hana Okafor married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Hana Okafor",
+     "Y": null
+    }
+   },
+   {
+    "id": "S2",
+    "turn": "Who is Mira Sol married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Mira Sol",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3",
+    "turn": "Who is Mira Solis married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Mira Solis",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5",
+    "turn": "Who is Bram Kite married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Bram Kite",
+     "Y": null
+    }
+   }
+  ],
+  "sessions152": [
+   {
+    "id": "S1-family10#3",
+    "turn": "Who is Ana's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Ana",
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#10",
+    "turn": "Who is Ana's sister?",
+    "rule": "A",
+    "reading": {
+     "rel": "sister",
+     "kind": "ask",
+     "X": "Ana",
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#14",
+    "turn": "Who is Ana's brother?",
+    "rule": "A",
+    "reading": {
+     "rel": "brother",
+     "kind": "ask",
+     "X": "Ana",
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#16",
+    "turn": "Who is Leo's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Leo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#19",
+    "turn": "Who is Kip married to?",
+    "rule": "A",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "X": "Kip",
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#22",
+    "turn": "Who is Ana's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Ana",
+     "Y": null
+    }
+   },
+   {
+    "id": "S2-casual-friends#5",
+    "turn": "Who is Marta's friend?",
+    "rule": "A",
+    "reading": {
+     "rel": "friend",
+     "kind": "ask",
+     "X": "Marta",
+     "Y": null
+    }
+   },
+   {
+    "id": "S2-casual-friends#7",
+    "turn": "who is june's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "june",
+     "Y": null
+    }
+   },
+   {
+    "id": "S2-casual-friends#13",
+    "turn": "what is wren's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "wren",
+     "Y": null
+    }
+   },
+   {
+    "id": "S2-casual-friends#28",
+    "turn": "Who is Marta's brother?",
+    "rule": "A",
+    "reading": {
+     "rel": "brother",
+     "kind": "ask",
+     "X": "Marta",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#2",
+    "turn": "Who is Nadia's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Nadia",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#12",
+    "turn": "Who is Finn's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Finn",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#18",
+    "turn": "What is Aldo's title?",
+    "rule": "A",
+    "reading": {
+     "rel": "title",
+     "kind": "ask",
+     "X": "Aldo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#21",
+    "turn": "Who is Nadia's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Nadia",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#23",
+    "turn": "Who is Petra's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Petra",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#24",
+    "turn": "Who is Nadi's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Nadi",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#25",
+    "turn": "Who is Finn's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Finn",
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#26",
+    "turn": "What is Nadia's school?",
+    "rule": "A",
+    "reading": {
+     "rel": "school",
+     "kind": "ask",
+     "X": "Nadia",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#4",
+    "turn": "What is Biscuit's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Biscuit",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#5",
+    "turn": "Who is Biscuit's owner?",
+    "rule": "A",
+    "reading": {
+     "rel": "owner",
+     "kind": "ask",
+     "X": "Biscuit",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#12",
+    "turn": "What is Milo's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#13",
+    "turn": "What is Milo's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#14",
+    "turn": "What is Zane's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Zane",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#17",
+    "turn": "What is Milo's toy?",
+    "rule": "A",
+    "reading": {
+     "rel": "toy",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#19",
+    "turn": "What is Biscuit's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Biscuit",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#21",
+    "turn": "What is Biscut's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Biscut",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#22",
+    "turn": "Who is Milo's owner?",
+    "rule": "A",
+    "reading": {
+     "rel": "owner",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#23",
+    "turn": "Who is Ana's pet?",
+    "rule": "A",
+    "reading": {
+     "rel": "pet",
+     "kind": "ask",
+     "X": "Ana",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#23",
+    "turn": "Who is Ana's pet?",
+    "rule": "B",
+    "base_key": "pet",
+    "group": "pet",
+    "teach_touch": [
+     "dog:dog"
+    ]
+   },
+   {
+    "id": "S4-pets-identity#25",
+    "turn": "What is Milo's color?",
+    "rule": "A",
+    "reading": {
+     "rel": "color",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#29",
+    "turn": "What is Milo's toy?",
+    "rule": "A",
+    "reading": {
+     "rel": "toy",
+     "kind": "ask",
+     "X": "Milo",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#5",
+    "turn": "what's tess's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "tess",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#17",
+    "turn": "What is Tess's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "Tess",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#19",
+    "turn": "Who is Rosa's sister?",
+    "rule": "A",
+    "reading": {
+     "rel": "sister",
+     "kind": "ask",
+     "X": "Rosa",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#21",
+    "turn": "Who is Rosa's friend?",
+    "rule": "A",
+    "reading": {
+     "rel": "friend",
+     "kind": "ask",
+     "X": "Rosa",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#25",
+    "turn": "Who is Ned's teacher?",
+    "rule": "A",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "X": "Ned",
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#26",
+    "turn": "Who is Rosa's brother?",
+    "rule": "A",
+    "reading": {
+     "rel": "brother",
+     "kind": "ask",
+     "X": "Rosa",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#8",
+    "turn": "Who is Gus's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Gus",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#11",
+    "turn": "Who is Gus's father?",
+    "rule": "A",
+    "reading": {
+     "rel": "father",
+     "kind": "ask",
+     "X": "Gus",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#15",
+    "turn": "What is Vera's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "Vera",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#17",
+    "turn": "What is Vera's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "Vera",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#23",
+    "turn": "Who is Eve's mother?",
+    "rule": "A",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "X": "Eve",
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#28",
+    "turn": "What is Vera's city?",
+    "rule": "A",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "X": "Vera",
+     "Y": null
+    }
+   }
+  ],
+  "bench": [
+   {
+    "id": "bench65-rev-f00-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Gilded Mirrors?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "Gilded Mirrors",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f00-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Gilded Mirrors?",
+    "rule": "B",
+    "base_key": "composer",
+    "group": "composer",
+    "teach_touch": [
+     "composer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f00-rev",
+    "split": "edit200",
+    "turn": "Who composed by Gilded Mirrors?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "by Gilded Mirrors",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f01-fwd",
+    "split": "edit200",
+    "turn": "Who is the author of Oaken Melodies?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "Oaken Melodies",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f02-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Woven Compasses?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "Woven Compasses",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f02-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Woven Compasses?",
+    "rule": "B",
+    "base_key": "discoverer",
+    "group": "discoverer",
+    "teach_touch": [
+     "discoverer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f02-rev",
+    "split": "edit200",
+    "turn": "Who discovered by Woven Compasses?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "by Woven Compasses",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f03-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Silver Feasts?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "Silver Feasts",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f03-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Silver Feasts?",
+    "rule": "B",
+    "base_key": "founder",
+    "group": "founder",
+    "teach_touch": [
+     "founder:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f03-rev",
+    "split": "edit200",
+    "turn": "Who founded by Silver Feasts?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "by Silver Feasts",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f04-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Silver Maps?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "Silver Maps",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f04-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Silver Maps?",
+    "rule": "B",
+    "base_key": "inventor",
+    "group": "inventor",
+    "teach_touch": [
+     "inventor:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f04-rev",
+    "split": "edit200",
+    "turn": "Who invented by Silver Maps?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "by Silver Maps",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f05-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Oaken Veils?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "Oaken Veils",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f05-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Oaken Veils?",
+    "rule": "B",
+    "base_key": "composer",
+    "group": "composer",
+    "teach_touch": [
+     "composer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f05-rev",
+    "split": "edit200",
+    "turn": "Who composed by Oaken Veils?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "by Oaken Veils",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f06-fwd",
+    "split": "edit200",
+    "turn": "Who is the author of Ninth Looms?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "Ninth Looms",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f07-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Frost Veils?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "Frost Veils",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f07-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Frost Veils?",
+    "rule": "B",
+    "base_key": "discoverer",
+    "group": "discoverer",
+    "teach_touch": [
+     "discoverer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f07-rev",
+    "split": "edit200",
+    "turn": "Who discovered by Frost Veils?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "by Frost Veils",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f08-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Obsidian Candles?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "Obsidian Candles",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f08-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Obsidian Candles?",
+    "rule": "B",
+    "base_key": "founder",
+    "group": "founder",
+    "teach_touch": [
+     "founder:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f08-rev",
+    "split": "edit200",
+    "turn": "Who founded by Obsidian Candles?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "by Obsidian Candles",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f09-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Lurid Tapestries?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "Lurid Tapestries",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f09-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Lurid Tapestries?",
+    "rule": "B",
+    "base_key": "inventor",
+    "group": "inventor",
+    "teach_touch": [
+     "inventor:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f09-rev",
+    "split": "edit200",
+    "turn": "Who invented by Lurid Tapestries?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "by Lurid Tapestries",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f10-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Silver Sonnets?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "Silver Sonnets",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f10-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Silver Sonnets?",
+    "rule": "B",
+    "base_key": "composer",
+    "group": "composer",
+    "teach_touch": [
+     "composer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f10-rev",
+    "split": "edit200",
+    "turn": "Who composed by Silver Sonnets?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "by Silver Sonnets",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f11-fwd",
+    "split": "edit200",
+    "turn": "Who is the author of Gilded Voyages?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "Gilded Voyages",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f12-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Crimson Candles?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "Crimson Candles",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f12-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Crimson Candles?",
+    "rule": "B",
+    "base_key": "discoverer",
+    "group": "discoverer",
+    "teach_touch": [
+     "discoverer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f12-rev",
+    "split": "edit200",
+    "turn": "Who discovered by Crimson Candles?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "by Crimson Candles",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f13-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Oaken Echoes?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "Oaken Echoes",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f13-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Oaken Echoes?",
+    "rule": "B",
+    "base_key": "founder",
+    "group": "founder",
+    "teach_touch": [
+     "founder:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f13-rev",
+    "split": "edit200",
+    "turn": "Who founded by Oaken Echoes?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "by Oaken Echoes",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f14-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Velvet Wheels?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "Velvet Wheels",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f14-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Velvet Wheels?",
+    "rule": "B",
+    "base_key": "inventor",
+    "group": "inventor",
+    "teach_touch": [
+     "inventor:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f14-rev",
+    "split": "edit200",
+    "turn": "Who invented by Velvet Wheels?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "by Velvet Wheels",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f15-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Pearl Gardens?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "Pearl Gardens",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f15-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Pearl Gardens?",
+    "rule": "B",
+    "base_key": "composer",
+    "group": "composer",
+    "teach_touch": [
+     "composer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f15-rev",
+    "split": "edit200",
+    "turn": "Who composed by Pearl Gardens?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "by Pearl Gardens",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f16-fwd",
+    "split": "edit200",
+    "turn": "Who is the author of Jagged Keys?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "Jagged Keys",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f17-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Pearl Bells?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "Pearl Bells",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f17-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Pearl Bells?",
+    "rule": "B",
+    "base_key": "discoverer",
+    "group": "discoverer",
+    "teach_touch": [
+     "discoverer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f17-rev",
+    "split": "edit200",
+    "turn": "Who discovered by Pearl Bells?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "by Pearl Bells",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f18-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Pearl Quilts?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "Pearl Quilts",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f18-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Pearl Quilts?",
+    "rule": "B",
+    "base_key": "founder",
+    "group": "founder",
+    "teach_touch": [
+     "founder:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f18-rev",
+    "split": "edit200",
+    "turn": "Who founded by Pearl Quilts?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "by Pearl Quilts",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f19-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Lurid Bridges?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "Lurid Bridges",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f19-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Lurid Bridges?",
+    "rule": "B",
+    "base_key": "inventor",
+    "group": "inventor",
+    "teach_touch": [
+     "inventor:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f19-rev",
+    "split": "edit200",
+    "turn": "Who invented by Lurid Bridges?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "by Lurid Bridges",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f20-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Woven Dances?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "Woven Dances",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f20-fwd",
+    "split": "edit200",
+    "turn": "Who is the composer of Woven Dances?",
+    "rule": "B",
+    "base_key": "composer",
+    "group": "composer",
+    "teach_touch": [
+     "composer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f20-rev",
+    "split": "edit200",
+    "turn": "Who composed by Woven Dances?",
+    "rule": "A",
+    "reading": {
+     "rel": "composer",
+     "kind": "ask",
+     "X": "by Woven Dances",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f21-fwd",
+    "split": "edit200",
+    "turn": "Who is the author of Jagged Gardens?",
+    "rule": "A",
+    "reading": {
+     "rel": "author",
+     "kind": "ask",
+     "X": "Jagged Gardens",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f22-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Hollow Lanterns?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "Hollow Lanterns",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f22-fwd",
+    "split": "edit200",
+    "turn": "Who is the discoverer of Hollow Lanterns?",
+    "rule": "B",
+    "base_key": "discoverer",
+    "group": "discoverer",
+    "teach_touch": [
+     "discoverer:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f22-rev",
+    "split": "edit200",
+    "turn": "Who discovered by Hollow Lanterns?",
+    "rule": "A",
+    "reading": {
+     "rel": "discoverer",
+     "kind": "ask",
+     "X": "by Hollow Lanterns",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f23-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Lantern Wheels?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "Lantern Wheels",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f23-fwd",
+    "split": "edit200",
+    "turn": "Who is the founder of Lantern Wheels?",
+    "rule": "B",
+    "base_key": "founder",
+    "group": "founder",
+    "teach_touch": [
+     "founder:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f23-rev",
+    "split": "edit200",
+    "turn": "Who founded by Lantern Wheels?",
+    "rule": "A",
+    "reading": {
+     "rel": "founder",
+     "kind": "ask",
+     "X": "by Lantern Wheels",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f24-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Hollow Looms?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "Hollow Looms",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-rev-f24-fwd",
+    "split": "edit200",
+    "turn": "Who is the inventor of Hollow Looms?",
+    "rule": "B",
+    "base_key": "inventor",
+    "group": "inventor",
+    "teach_touch": [
+     "inventor:*"
+    ]
+   },
+   {
+    "id": "bench65-rev-f24-rev",
+    "split": "edit200",
+    "turn": "Who invented by Hollow Looms?",
+    "rule": "A",
+    "reading": {
+     "rel": "inventor",
+     "kind": "ask",
+     "X": "by Hollow Looms",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-00",
+    "split": "edit200",
+    "turn": "Who is the apprentice of Elowen Nettlestone?",
+    "rule": "A",
+    "reading": {
+     "rel": "apprentice",
+     "kind": "ask",
+     "X": "Elowen Nettlestone",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-02",
+    "split": "edit200",
+    "turn": "Who is the herald of Magnus Quill?",
+    "rule": "A",
+    "reading": {
+     "rel": "herald",
+     "kind": "ask",
+     "X": "Magnus Quill",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-04",
+    "split": "edit200",
+    "turn": "Who is the keeper of Stellan Yarwood?",
+    "rule": "A",
+    "reading": {
+     "rel": "keeper",
+     "kind": "ask",
+     "X": "Stellan Yarwood",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-06",
+    "split": "edit200",
+    "turn": "Who is the scout of Gareth Zanderfield?",
+    "rule": "A",
+    "reading": {
+     "rel": "scout",
+     "kind": "ask",
+     "X": "Gareth Zanderfield",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-08",
+    "split": "edit200",
+    "turn": "Who is the apprentice of Eira Larkspur?",
+    "rule": "A",
+    "reading": {
+     "rel": "apprentice",
+     "kind": "ask",
+     "X": "Eira Larkspur",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-10",
+    "split": "edit200",
+    "turn": "Who is the herald of Vesper Gallowglass?",
+    "rule": "A",
+    "reading": {
+     "rel": "herald",
+     "kind": "ask",
+     "X": "Vesper Gallowglass",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-12",
+    "split": "edit200",
+    "turn": "Who is the keeper of Hester Owlcrest?",
+    "rule": "A",
+    "reading": {
+     "rel": "keeper",
+     "kind": "ask",
+     "X": "Hester Owlcrest",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-14",
+    "split": "edit200",
+    "turn": "Who is the scout of Hadrian Windrow?",
+    "rule": "A",
+    "reading": {
+     "rel": "scout",
+     "kind": "ask",
+     "X": "Hadrian Windrow",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-16",
+    "split": "edit200",
+    "turn": "Who is the apprentice of Briar Nightingale?",
+    "rule": "A",
+    "reading": {
+     "rel": "apprentice",
+     "kind": "ask",
+     "X": "Briar Nightingale",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-18",
+    "split": "edit200",
+    "turn": "Who is the herald of Jessamine Inkwell?",
+    "rule": "A",
+    "reading": {
+     "rel": "herald",
+     "kind": "ask",
+     "X": "Jessamine Inkwell",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-20",
+    "split": "edit200",
+    "turn": "Who is the keeper of Casimar Corvane?",
+    "rule": "A",
+    "reading": {
+     "rel": "keeper",
+     "kind": "ask",
+     "X": "Casimar Corvane",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-22",
+    "split": "edit200",
+    "turn": "Who is the scout of Ulric Cinderhall?",
+    "rule": "A",
+    "reading": {
+     "rel": "scout",
+     "kind": "ask",
+     "X": "Ulric Cinderhall",
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-abs-absent-24",
+    "split": "edit200",
+    "turn": "Who is the apprentice of Thaddeus Cinderhall?",
+    "rule": "A",
+    "reading": {
+     "rel": "apprentice",
+     "kind": "ask",
+     "X": "Thaddeus Cinderhall",
+     "Y": null
+    }
+   }
+  ]
+ },
+ "counts": {
+  "rt136": 0,
+  "rt143": 34,
+  "sessions152": 42,
+  "bench": 58
+ }
+}

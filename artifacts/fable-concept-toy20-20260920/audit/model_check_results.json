@@ -1,0 +1,127 @@
+[
+ {
+  "check": "G: future observations cannot change an earlier forecast",
+  "pass": true,
+  "detail": "max|d|=0.000e+00"
+ },
+ {
+  "check": "G: records strictly after the endpoint cannot change the prediction",
+  "pass": true,
+  "detail": "max|d|=0.000e+00"
+ },
+ {
+  "check": "T: future observations cannot change an earlier forecast",
+  "pass": true,
+  "detail": "max|d|=0.000e+00"
+ },
+ {
+  "check": "T: records strictly after the endpoint cannot change the prediction",
+  "pass": true,
+  "detail": "max|d|=0.000e+00"
+ },
+ {
+  "check": "rollout substitutes blank OBSERVED tokens (sensor=0, present=0) and never builds the target OBSERVED record",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "QUERY tokens never carry a measurement",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "G: a vectorised lane equals the same unbatched run (<=1e-6)",
+  "pass": true,
+  "detail": "max|d|=0.000e+00 after 6 updates"
+ },
+ {
+  "check": "G: lane 0 output has exactly zero gradient into lane 1 parameters",
+  "pass": true,
+  "detail": "max|g|=0.000e+00"
+ },
+ {
+  "check": "T: a vectorised lane equals the same unbatched run (<=1e-6)",
+  "pass": true,
+  "detail": "max|d|=0.000e+00 after 6 updates"
+ },
+ {
+  "check": "T: lane 0 output has exactly zero gradient into lane 1 parameters",
+  "pass": true,
+  "detail": "max|g|=0.000e+00"
+ },
+ {
+  "check": "optimizer moments carry the lane dimension (no shared Adam state)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "gradient clipping is per lane, not global",
+  "pass": true,
+  "detail": "LanedAdamW.clip_per_lane reduces over dim 1 only; verified by the unbatched-equality test above, which would fail under a global norm"
+ },
+ {
+  "check": "exact-state resumption reproduces weights, Adam moments and the update cursor",
+  "pass": true,
+  "detail": "max|dw|=0.0e+00 max|dm2|=0.0e+00 steps 9/9"
+ },
+ {
+  "check": "minibatch stream is a pure function of (world, seed, rung, update)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "G: parameters recounted from the instantiated tensors == spec 5921",
+  "pass": true,
+  "detail": "backbone=5040 decoder=881 total=5921"
+ },
+ {
+  "check": "T: parameters recounted from the instantiated tensors == spec 6881",
+  "pass": true,
+  "detail": "backbone=6000 decoder=881 total=6881"
+ },
+ {
+  "check": "decoder == 881 and GRU backbone == 5040 (spec section 6)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "phase-A decoder pool-coordinate columns z[a], z[b] are exactly zero (8 of 53 inputs are reserved storage, not active capacity)",
+  "pass": true,
+  "detail": "decoder input width 53"
+ },
+ {
+  "check": "the model module imports no simulator / evaluator module",
+  "pass": true,
+  "detail": "none"
+ },
+ {
+  "check": "the model module references no evaluator-side file or field name in any LIVE string literal (docstrings excluded; a text grep false-positives on prose)",
+  "pass": true,
+  "detail": "live hits=none; appears in docstring prose only: ['private/']"
+ },
+ {
+  "check": "the model module accesses no evaluator-side attribute name",
+  "pass": true,
+  "detail": "none"
+ },
+ {
+  "check": "the public loader imports nothing from the simulator (AST imports, not source text)",
+  "pass": true,
+  "detail": "imports=['__future__', 'dataclasses', 'json', 'numpy', 'pathlib', 'typing']"
+ },
+ {
+  "check": "loaders refuse any field outside the public contract",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "check": "Agent 2's tokenizer reproduces Agent 1's records 0..15 bit for bit (fixture)",
+  "pass": true,
+  "detail": "2 fixture worlds, max|d|=0.0"
+ },
+ {
+  "check": "padding convention: Agent 1 pads with all-zero rows; Agent 2 leaves the static property block on rows past the endpoint (harmless under the causal mask / endpoint gather, but the two tensors are NOT byte-identical past the endpoint)",
+  "pass": true,
+  "detail": "agent1_zero_pad=True agent2_zero_pad=False"
+ }
+]

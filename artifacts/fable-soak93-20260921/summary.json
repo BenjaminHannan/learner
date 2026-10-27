@@ -1,0 +1,82 @@
+{
+ "status": "FAIL",
+ "seed": 93,
+ "turns_done": 17716,
+ "turns_planned": 20000,
+ "wall_s": 665.5,
+ "plan_kinds": {
+  "teach": 11288,
+  "correct": 2715,
+  "ask": 5997
+ },
+ "restarts": [
+  [
+   3797,
+   "kill"
+  ],
+  [
+   5281,
+   "kill"
+  ],
+  [
+   6214,
+   "graceful"
+  ],
+  [
+   8556,
+   "graceful"
+  ],
+  [
+   12968,
+   "graceful"
+  ],
+  [
+   17710,
+   "kill"
+  ],
+  [
+   18711,
+   "kill"
+  ],
+  [
+   18898,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 20000 turns",
+   "pass": false,
+   "wrong": 1
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 8 restarts",
+   "pass": false
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 0.153,
+   "verify_s": 0.064
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": true,
+   "p99_1k_ms": 69.43,
+   "p99_end_ms": 214.13
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": false,
+   "wall_s": 665.5,
+   "turns_done": 17716
+  }
+ },
+ "fail": {
+  "mark": "K1",
+  "seq": 17716,
+  "kind": "teach",
+  "why": "wrong-write"
+ },
+ "final_stop_s": 0.08314323425292969
+}

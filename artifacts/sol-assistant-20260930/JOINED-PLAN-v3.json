@@ -1,0 +1,68 @@
+{
+  "schema": "assistant-joined-engineering-v3",
+  "seeds": [
+    0,
+    1
+  ],
+  "rows_per_seed": 2,
+  "selection": "first2 lexicographically sorted INTERSECTION actual closed seed0/seed1 train_unique_ids, metadata only BEFORE inspecting selected labels/output; no DEV or score selection",
+  "rows_sha256": "c8cf3920cb3f56d93f2e1d538f05c12c26ea0124f9ba1899e02feb670415ead1",
+  "human_pairs_sha256": "97ded0da22d53a34c94d172736fb6658fbee6c3367469cb3eab96714902d6cc5",
+  "pins": [
+    {
+      "path": "artifacts/sol-translator-20260929/corpus/registry.json",
+      "sha256": "4919ab717006169a93a7da4c20a972d9b8844165cbf2b74850373f30d34dc539"
+    },
+    {
+      "path": "artifacts/sol-translator-20260929/corpus/train-v1.1.json",
+      "sha256": "3527663986b8295af4f7fcdff1ba1ff3f72d07d61a20f487cb238a6ef92fd955"
+    },
+    {
+      "path": "scripts/sol_assistant_joined_smoke_v2.py",
+      "sha256": "bcba932f25267d15c36d8b961b4da5f695bc4a47019551dd729349be005e510c"
+    },
+    {
+      "path": "artifacts/sol-translator-20260929/ground-v6-s0/grounding-s0.json",
+      "sha256": "f2a4db2a637df869b3ca682c10e23c7fed764543f11e4d42dd292980fa352a82"
+    },
+    {
+      "path": "artifacts/sol-translator-20260929/ground-v6-s1/grounding-s1.json",
+      "sha256": "4b6a0bc9a34ef241a3b780d79d324caf97c3e2cc7a20a254a8cb359ed1a0e73f"
+    },
+    {
+      "path": "artifacts/sol-assistant-20260930/JOINED-PRE-RUN-ADDENDUM-v3.json",
+      "sha256": "366699657865c583affb60f9349baa602a4c698aae7c383e45903116c2eccdf9"
+    },
+    {
+      "path": "artifacts/sol-translator-20260929/corpus/human-documents/95903d66ebdf2fbc102a78525e964aee1d48c789a1df74100245a0027919747a.txt",
+      "sha256": "25c7238abc08e9aa8c52d0332736f17f2468998da5d59b34b048ce1b3d8e08f8"
+    },
+    {
+      "path": "artifacts/sol-translator-20260929/corpus/human-documents/95903d66ebdf2fbc102a78525e964aee1d48c789a1df74100245a0027919747a.txt",
+      "sha256": "25c7238abc08e9aa8c52d0332736f17f2468998da5d59b34b048ce1b3d8e08f8"
+    }
+  ],
+  "max_tokens": 64,
+  "fixed_rounds": 4,
+  "seconds_per_seed": 240,
+  "optimizer_steps": 0,
+  "comparator": "same immutable trained core/query with full notebook vs no notebook; repeat full; physically gathered masked padding; public factory reply vs direct components",
+  "passmarks": "all storage/boundary booleans exact, unchanged core,2 TRAIN rows for each seed; output meaning has NO passmark",
+  "noise": "exact storage invariants require0; runtime repeat max_abs measured per row before interpretation; semantic noise UNKNOWN",
+  "controls": "no-memory control; no matched dense semantic arm in this engineering smoke; no capability claim",
+  "labels": "verbatim human TRAIN annotation logged AFTER execution; never decoder input",
+  "outputs": "model outputs logged only, NEVER training data",
+  "readiness": "fixed4 diagnostic; no learned-stop/sleep grant",
+  "rollback": "no optimizer updates; populated restore audit separate no-step only",
+  "supersedes": "UNRUN v1/v2; metadata intersection corrects exposure prerequisite before output",
+  "freeze_factory_sha256": "376bed10a7a9a1ba9ec60f28f382eb4932ab6effe3b9ed2e4df492a24e109071",
+  "snapshot_directories": [
+    "frozen-v6-s0-u500-r2",
+    "frozen-v6-s1-u500-r2"
+  ],
+  "selected_ids": [
+    "56be86cf3aeaaa14008c9076",
+    "56be86cf3aeaaa14008c9078"
+  ],
+  "addendum_sha256": "366699657865c583affb60f9349baa602a4c698aae7c383e45903116c2eccdf9"
+}

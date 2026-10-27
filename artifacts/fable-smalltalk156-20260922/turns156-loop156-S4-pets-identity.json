@@ -1,0 +1,482 @@
+[
+ {
+  "n": 0,
+  "text": "hi!!",
+  "expect": "smalltalk",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "no write, non-confused reply"
+ },
+ {
+  "n": 1,
+  "text": "my dog is biscuit",
+  "expect": "teach",
+  "want": "biscuit",
+  "clear": true,
+  "known": null,
+  "reply": "I didn't understand that. Could you say it another way?\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "UNHELPFUL",
+  "why": "clear teach got clarify: I didn't understand that. Could you say it another way?"
+ },
+ {
+  "n": 2,
+  "text": "Biscuit's color is brown.",
+  "expect": "teach",
+  "want": "brown",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Biscuit's color is brown.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 3,
+  "text": "Biscuit's owner is Ana.",
+  "expect": "teach",
+  "want": "Ana",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Biscuit's owner is Ana.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 4,
+  "text": "What is Biscuit's color?",
+  "expect": "ask",
+  "want": "brown",
+  "clear": true,
+  "known": null,
+  "reply": "Biscuit's color is brown.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 5,
+  "text": "Who is Biscuit's owner?",
+  "expect": "ask",
+  "want": "Ana",
+  "clear": true,
+  "known": null,
+  "reply": "Biscuit's owner is Ana.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 6,
+  "text": "Ana's pet is Biscuit.",
+  "expect": "teach",
+  "want": "Biscuit",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Ana's pet is Biscuit.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 7,
+  "text": "Who is Ana's pet's color?",
+  "expect": "ask",
+  "want": "brown",
+  "clear": true,
+  "known": null,
+  "reply": "Ana's pet is Biscuit, which is not someone I can look up.\n",
+  "statuses": [
+   "BROKEN_CHAIN"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "WRONG",
+  "why": "wrong answer, want 'brown': Ana's pet is Biscuit, which is not someone I can look up."
+ },
+ {
+  "n": 8,
+  "text": "who are you",
+  "expect": "self",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "I didn't understand that. Could you say it another way?\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "UNHELPFUL",
+  "why": "honest clarify but user stuck: I didn't understand that. Could you say it another way?"
+ },
+ {
+  "n": 9,
+  "text": "what can you do?",
+  "expect": "self",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "I didn't understand that. Could you say it another way?\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "UNHELPFUL",
+  "why": "honest clarify but user stuck: I didn't understand that. Could you say it another way?"
+ },
+ {
+  "n": 10,
+  "text": "Milo's color is gray.",
+  "expect": "teach",
+  "want": "gray",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Milo's color is gray.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 11,
+  "text": "Milo's owner is Ana.",
+  "expect": "teach",
+  "want": "Ana",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Milo's owner is Ana.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 12,
+  "text": "What is Milo's color?",
+  "expect": "ask",
+  "want": "gray",
+  "clear": true,
+  "known": null,
+  "reply": "Milo's color is gray.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 13,
+  "text": "What is Milo's city?",
+  "expect": "abstain",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "I don't know Milo's city.\n",
+  "statuses": [
+   "MISSING_FACT"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "honest abstain/clarify, no write"
+ },
+ {
+  "n": 14,
+  "text": "What is Zane's color?",
+  "expect": "abstain",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "I don't know anyone called Zane.\n",
+  "statuses": [
+   "UNKNOWN_ENTITY"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "honest abstain/clarify, no write"
+ },
+ {
+  "n": 15,
+  "text": "thanks so much!",
+  "expect": "smalltalk",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "You're welcome!\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "no write, non-confused reply"
+ },
+ {
+  "n": 16,
+  "text": "Milo's toy is ball",
+  "expect": "teach",
+  "want": "ball",
+  "clear": true,
+  "known": null,
+  "reply": "Saved: Milo's toy is ball.\n",
+  "statuses": [
+   "write"
+  ],
+  "fact_writes": 1,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "wrote 1, confirmed"
+ },
+ {
+  "n": 17,
+  "text": "What is Milo's toy?",
+  "expect": "ask",
+  "want": "ball",
+  "clear": true,
+  "known": null,
+  "reply": "Milo's toy is ball.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 18,
+  "text": "lol",
+  "expect": "smalltalk",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "Got it!\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "no write, non-confused reply"
+ },
+ {
+  "n": 19,
+  "text": "What is Biscuit's color?",
+  "expect": "reask",
+  "want": "brown",
+  "clear": true,
+  "known": null,
+  "reply": "Biscuit's color is brown.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 20,
+  "text": "Who is Ana's pet's owner?",
+  "expect": "ask",
+  "want": "Ana",
+  "clear": true,
+  "known": null,
+  "reply": "Ana's pet is Biscuit, which is not someone I can look up.\n",
+  "statuses": [
+   "BROKEN_CHAIN"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 21,
+  "text": "What is Biscut's color?",
+  "expect": "abstain",
+  "want": null,
+  "clear": false,
+  "known": null,
+  "reply": "I don't know anyone called Biscut.\n",
+  "statuses": [
+   "UNKNOWN_ENTITY"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "honest abstain/clarify, no write"
+ },
+ {
+  "n": 22,
+  "text": "Who is Milo's owner?",
+  "expect": "ask",
+  "want": "Ana",
+  "clear": true,
+  "known": null,
+  "reply": "Milo's owner is Ana.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 23,
+  "text": "Who is Ana's pet?",
+  "expect": "reask",
+  "want": "Biscuit",
+  "clear": true,
+  "known": null,
+  "reply": "Ana's pet is Biscuit.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 24,
+  "text": "ok cool",
+  "expect": "smalltalk",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "Got it!\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "no write, non-confused reply"
+ },
+ {
+  "n": 25,
+  "text": "What is Milo's color?",
+  "expect": "reask",
+  "want": "gray",
+  "clear": true,
+  "known": null,
+  "reply": "Milo's color is gray.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 26,
+  "text": "Who is Biscuit's owner's pet?",
+  "expect": "ask",
+  "want": "Biscuit",
+  "clear": true,
+  "known": null,
+  "reply": "Biscuit's owner is Ana, which is not someone I can look up.\n",
+  "statuses": [
+   "BROKEN_CHAIN"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ },
+ {
+  "n": 27,
+  "text": "Who is Ana's pet's color?",
+  "expect": "reask",
+  "want": "brown",
+  "clear": true,
+  "known": null,
+  "reply": "Ana's pet is Biscuit, which is not someone I can look up.\n",
+  "statuses": [
+   "BROKEN_CHAIN"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "WRONG",
+  "why": "wrong answer, want 'brown': Ana's pet is Biscuit, which is not someone I can look up."
+ },
+ {
+  "n": 28,
+  "text": "bye!!",
+  "expect": "smalltalk",
+  "want": null,
+  "clear": true,
+  "known": null,
+  "reply": "Bye!\n",
+  "statuses": [
+   "clarify"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "no write, non-confused reply"
+ },
+ {
+  "n": 29,
+  "text": "What is Milo's toy?",
+  "expect": "reask",
+  "want": "ball",
+  "clear": true,
+  "known": null,
+  "reply": "Milo's toy is ball.\n",
+  "statuses": [
+   "OK"
+  ],
+  "fact_writes": 0,
+  "harness_error": null,
+  "verdict": "OK",
+  "why": "exact answer, no write"
+ }
+]

@@ -1,0 +1,20 @@
+items: 3 from data/open/bench65/fable_edit_200.jsonl
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<00:59,  4.84it/s]Loading weights:  64%|██████▍   | 185/290 [00:00<00:00, 748.04it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 648.02it/s]
+trainable: 66850560 / 361821120 params (18.48%)
+  3/3 items, elapsed 54s
+=== SUMMARY (correct/abstain/wrong, n) ===
+incontext  mquake2hop      C=1 A=0 W=2 (n=3, notrun=0, contains=2)
+incontext  reversal        C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+incontext  abstain_unknown C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+incontext  abstain_broken  C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+raglite    mquake2hop      C=0 A=0 W=3 (n=3, notrun=0, contains=0)
+raglite    reversal        C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+raglite    abstain_unknown C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+raglite    abstain_broken  C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+finetune   mquake2hop      C=0 A=0 W=3 (n=3, notrun=0, contains=0)
+finetune   reversal        C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+finetune   abstain_unknown C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+finetune   abstain_broken  C=0 A=0 W=0 (n=0, notrun=0, contains=0)
+FT scope: 3/3 (cut=False) total wall 54s
+REPRODUCE: uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers python -B scripts/fable_bench66_baselines.py --data data/open/bench65/fable_edit_200.jsonl --out artifacts/fable-bench66-20260921/smoke/
+EXIT=0

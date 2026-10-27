@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Stage-1 run on the rented GPU box. Run from the repo root:  bash backbone/run_box.sh
+# Idempotent: finished steps (result files) are skipped. Everything lands under out/; out.tar.gz at the end.
+# Loop-1L: LOOP_ARMS=a,b,c LOOP_SEEDS=0,1,2,3 [LOOP_FLAGS='--train-frac 0.25 --eval-n 100'] [LOOP_MODEL=...]
+# Env: STEPS=3000 BSZ=16 MICRO=4 MAXLEN=1024 RUN_A2=0 WITH_CONV1D=0 MODEL=Qwen/Qwen3.5-0.8B MODEL2=Qwen/Qwen3.5-2B
+set -euo pipefail
+cd "$(dirname "$0")/.."
+STEPS=${STEPS:-3000}; BSZ=${BSZ:-16}; MICRO=${MICRO:-4}; MAXLEN=${MAXLEN:-1024}
+MODEL=${MODEL:-Qwen/Qwen3.5-0.8B}; MODEL2=${MODEL2:-Qwen/Qwen3.5-2B}
+OUT=out; mkdir -p "$OUT"
+exec > >(tee -a "$OUT/run_box.log") 2>&1
+echo "== run_box $(date -u +%FT%TZ) steps=$STEPS bsz=$BSZ micro=$MICRO maxlen=$MAXLEN"
+nvidia-smi --query-gpu=name,memory.total --format=csv || echo "no nvidia-smi"
+
+if [ -n "${BIG:-}" ] && [ ! -f "$OUT/.installed" ]; then   # big-model reference: vLLM brings its own torch
+  python3 -m pip install -q "vllm==${VLLM:-0.32.0}" && touch "$OUT/.installed"
+fi
+if [ ! -f "$OUT/.installed" ]; then
+  python3 -c "import torch" 2>/dev/null || python3 -m pip install torch
+  TV=$(python3 -c "import torch;print(torch.__version__.split('+')[0])"); echo "torch==$TV" > /tmp/torch-pin.txt
+  python3 -m pip install -q -r backbone/requirements.txt -c /tmp/torch-pin.txt
+  if [ "${WITH_CONV1D:-0}" = 1 ]; then python3 -m pip install ninja packaging && python3 -m pip install causal-conv1d --no-build-isolation || echo "causal-conv1d build failed; using torch fallback"; fi
+  touch "$OUT/.installed"
+fi
+[ -n "${BIG:-}" ] || python3 - <<'PY'
+import torch, transformers, peft
+print("torch", torch.__version__, "cuda", torch.cuda.is_available(), "transformers", transformers.__version__, "peft", peft.__version__)
+try:
+    import fla; print("fla", fla.__version__)
+except Exception as e: print("fla MISSING:", e)
+try:
+    import causal_conv1d; print("causal_conv1d ok")
+except Exception as e: print("causal_conv1d missing (torch fallback):", type(e).__name__)
+assert torch.cuda.is_available(), "no CUDA"
+PY
+
+if [ -n "${THINK_JOBS:-}" ]; then exec bash backbone/think/run_box.sh; fi   # Think-1 (backbone/think/PREREG.md)
+
+if [ -n "${SLEEP_ARMS:-}" ]; then   # Sleep-1 experiment (backbone/PREREG-sleep1.md): skips the village data build and arms
+  for a in ${SLEEP_ARMS//,/ }; do
+    if [ -f "$OUT/sleep/$a/result_$a.json" ]; then echo "-- skip sleep $a"; continue; fi
+    echo "-- sleep $a $(date -u +%T)"
+    python3 backbone/sleep/sleep1.py --arm "$a" --model "${SLEEP_MODEL:-Qwen/Qwen3.5-2B}" --out "$OUT/sleep/$a" || echo "!! sleep $a failed"
+  done
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${CREATIVE_ARMS:-}" ]; then   # Creative-1 experiment (backbone/PREREG-creative1.md): arms f0,c16,sleep in that order
+  for a in ${CREATIVE_ARMS//,/ }; do
+    if [ -f "$OUT/creative/$a/result_$a.json" ]; then echo "-- skip creative $a"; continue; fi
+    echo "-- creative $a $(date -u +%T)"
+    python3 backbone/creative/creative1.py --arm "$a" --model "${CREATIVE_MODEL:-Qwen/Qwen3.5-0.8B}" --out "$OUT/creative/$a" ${CREATIVE_FLAGS:-} || echo "!! creative $a failed"
+  done
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+if [ -n "${LOOP_ARMS:-}" ]; then   # Loop-1L experiment (backbone/PREREG-loop1L.md): arms a,b,c x seeds, seed-major so pairs finish together
+  LD=backbone/assistant_data/data; RAW=${LOOP_RAW:-https://raw.githubusercontent.com/BenjaminHannan/learner/claude/project-thread-j59yy5/backbone/assistant_data/data}
+  for f in train.jsonl eval.jsonl; do   # a slim pack (vast.py pack --slim) leaves the data out: fetch it from GitHub
+    want=$([ "$f" = train.jsonl ] && echo 1792 || echo 200)
+    [ "$(wc -l < "$LD/$f" 2>/dev/null || echo 0)" -ge "$want" ] || { mkdir -p "$LD"; for i in 1 2 3 4; do python3 -c "import sys,urllib.request;urllib.request.urlretrieve(sys.argv[1],sys.argv[2])" "$RAW/$f" "$LD/$f" && break; sleep 5; done; }
+    n=$(wc -l < "$LD/$f" 2>/dev/null || echo 0); echo "data $f: $n lines"
+    [ "$n" -ge "$want" ] || { echo "!! loop data $f missing ($n lines); stopping"; exit 1; }
+  done
+  python3 - <<PY || echo "!! model prefetch failed (will try again inside the run)"
+from huggingface_hub import snapshot_download
+print("model at", snapshot_download("${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}"))
+PY
+  for s in ${LOOP_SEEDS//,/ }; do
+    for a in ${LOOP_ARMS//,/ }; do
+      d="$OUT/loop/${a}_s${s}"
+      if [ -f "$d/result_${a}_s${s}.json" ]; then echo "-- skip loop $a seed $s"; continue; fi
+      echo "-- loop $a seed $s $(date -u +%T)"
+      python3 backbone/loop/loop1l.py --arm "$a" --seed "$s" --model "${LOOP_MODEL:-LiquidAI/LFM2.5-24B-A2B}" --out "$d" ${LOOP_FLAGS//+/ } || echo "!! loop $a seed $s failed"
+    done
+  done
+  tar czf out.tar.gz --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]
+  ls -la out.tar.gz; echo "== done $(date -u +%FT%TZ)"; exit 0
+fi
+
+DATA=$OUT/data
+[ -f "$DATA/DATA_REPORT.json" ] || python3 backbone/build_data.py "$DATA" --workers "$(nproc)"
+
+EXTRA=""
+if [ -n "${PROBES:-}" ]; then   # generalization probes (one axis switched; generator from the generalization thread, seed 101)
+  if [ ! -f "$DATA/probes.done" ]; then
+    (cd backbone/genlab && mkdir -p data/village && cp -r ../../data/village/patterns data/village/ && \
+     python3 -m generalize.probes ../../$OUT/probes_raw --visits ${PROBE_VISITS:-500} --probes "$PROBES" --workers "$(nproc)") && \
+    python3 backbone/probe_rows.py $OUT/probes_raw $DATA && touch "$DATA/probes.done"
+  fi
+  for p in ${PROBES//,/ }; do EXTRA="$EXTRA --extra-eval $p=$DATA/probe_$p.jsonl"; done
+fi
+COMMON="$EXTRA --seed ${SEED:-0} --data $DATA --steps $STEPS --bsz $BSZ --micro-bsz $MICRO --max-len $MAXLEN"
+step() {  # step NAME RESULT_FILE args...
+  local name=$1 res=$2; shift 2
+  if [ -f "$res" ]; then echo "-- skip $name (have $res)"; return; fi
+  echo "-- $name $(date -u +%T)"; python3 backbone/train.py "$@" || echo "!! $name failed"
+}
+if [ -n "${BIG:-}" ]; then
+  [ -f $OUT/big/result_big.json ] || python3 backbone/eval_vllm.py --model "$BIG" --data $DATA --out $OUT/big --max-len ${BIGLEN:-4096} || echo "!! big failed"
+  ARMS=${ARMS:-none}
+fi
+ARMS=${ARMS:-a0,a,b}
+has() { case ",$ARMS," in *",$1,"*) return 0;; *) return 1;; esac; }
+has a0 && step a0   $OUT/a0/result_a0.json   --arm a0 --model "$MODEL" $COMMON --out $OUT/a0
+has a  && step a    $OUT/a/result_a.json     --arm a   --model "$MODEL" $COMMON --out $OUT/a
+has b  && step b    $OUT/b/result_b.json     --arm b   --model "$MODEL" $COMMON --out $OUT/b
+if has b && [ -d $OUT/b/adapter ]; then
+  step b_lesion $OUT/b/result_b_eval1.json --arm b --model "$MODEL" $COMMON --out $OUT/b --eval-loops 1 --load-adapter $OUT/b/adapter
+fi
+if [ "${RUN_A2:-0}" = 1 ] || has a2; then
+  step a2 $OUT/a2/result_a.json --arm a --model "$MODEL2" $COMMON --out $OUT/a2 --tag a2
+fi
+cp "$DATA/DATA_REPORT.json" "$OUT/DATA_REPORT.json" 2>/dev/null || true
+tar czf out.tar.gz --exclude="$OUT/data" --exclude="$OUT/.installed" "$OUT" || [ $? -eq 1 ]  # exit 1 = a log file grew while archiving
+ls -la out.tar.gz
+echo "== done $(date -u +%FT%TZ)"

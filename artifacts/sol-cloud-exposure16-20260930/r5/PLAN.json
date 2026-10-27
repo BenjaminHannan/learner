@@ -1,0 +1,268 @@
+{
+  "schema": "sol.cloud.exposure16.plan.v1",
+  "status": "CONDITIONAL DEREK RELEASE: independentreviewPASS and actualbridgecomplete/freshinventory/resourcepreflight required",
+  "bridge_priority": "fixture capture-to-night rollback cycle first",
+  "TRAIN_ids": [
+    "5733be284776f41900661182",
+    "5733be284776f4190066117f",
+    "5733bf84d058e614000b61be",
+    "5733bf84d058e614000b61bf",
+    "5733bed24776f41900661188",
+    "5733bed24776f41900661189",
+    "5733a70c4776f41900660f64",
+    "5733a70c4776f41900660f62",
+    "5733a7bd4776f41900660f6b",
+    "5733a7bd4776f41900660f6a",
+    "5733ac31d058e614000b5ff6",
+    "5733ac31d058e614000b5ff4",
+    "5733ad384776f41900660fec",
+    "5733ad384776f41900660fee",
+    "5733ae924776f41900661015",
+    "5733ae924776f41900661017"
+  ],
+  "same_context_pairs": [
+    [
+      "5733be284776f41900661182",
+      "5733be284776f4190066117f"
+    ],
+    [
+      "5733bf84d058e614000b61be",
+      "5733bf84d058e614000b61bf"
+    ],
+    [
+      "5733bed24776f41900661188",
+      "5733bed24776f41900661189"
+    ],
+    [
+      "5733a70c4776f41900660f64",
+      "5733a70c4776f41900660f62"
+    ],
+    [
+      "5733a7bd4776f41900660f6b",
+      "5733a7bd4776f41900660f6a"
+    ],
+    [
+      "5733ac31d058e614000b5ff6",
+      "5733ac31d058e614000b5ff4"
+    ],
+    [
+      "5733ad384776f41900660fec",
+      "5733ad384776f41900660fee"
+    ],
+    [
+      "5733ae924776f41900661015",
+      "5733ae924776f41900661017"
+    ]
+  ],
+  "latent_swap_donor_id": {
+    "5733be284776f41900661182": "5733be284776f4190066117f",
+    "5733be284776f4190066117f": "5733be284776f41900661182",
+    "5733bf84d058e614000b61be": "5733bf84d058e614000b61bf",
+    "5733bf84d058e614000b61bf": "5733bf84d058e614000b61be",
+    "5733bed24776f41900661188": "5733bed24776f41900661189",
+    "5733bed24776f41900661189": "5733bed24776f41900661188",
+    "5733a70c4776f41900660f64": "5733a70c4776f41900660f62",
+    "5733a70c4776f41900660f62": "5733a70c4776f41900660f64",
+    "5733a7bd4776f41900660f6b": "5733a7bd4776f41900660f6a",
+    "5733a7bd4776f41900660f6a": "5733a7bd4776f41900660f6b",
+    "5733ac31d058e614000b5ff6": "5733ac31d058e614000b5ff4",
+    "5733ac31d058e614000b5ff4": "5733ac31d058e614000b5ff6",
+    "5733ad384776f41900660fec": "5733ad384776f41900660fee",
+    "5733ad384776f41900660fee": "5733ad384776f41900660fec",
+    "5733ae924776f41900661015": "5733ae924776f41900661017",
+    "5733ae924776f41900661017": "5733ae924776f41900661015"
+  },
+  "seeds": [
+    0,
+    1
+  ],
+  "updates_per_seed": 800,
+  "visits_per_row": 50,
+  "batch": 1,
+  "arms": [
+    "connected"
+  ],
+  "lr": 0.001,
+  "weight_decay": 0,
+  "clip_norm": 1,
+  "rounds": 4,
+  "objective": "unchanged V12 connected: exactHUMAN answer+EOS shiftedCE plus existingmean8routeraux",
+  "architecture": "unchanged sharedthinreader/recurrentattention+sparseMLPexperts/notebook/sharedprefix/frozenFP32LM; no TABLE or ID routing",
+  "output_contract": "only detached finalquery FinalLatent with mask/shape reaches decoder; no raw question/context/audit/reference prompt",
+  "training_graph_contract": "CE prefix projection remains differentiable through finalquery into sharedcore andreader, exactlyV12connected; only generation/control packets detached",
+  "additive_review_repairs": {
+    "prior_seal": {
+      "path": "artifacts/sol-cloud-exposure16-20260930/SEAL.json",
+      "sha256": "55c7f578cd0d8a89d055f0858133d4533ac533fcc52bcbf73aeaf5238d8a60ae"
+    },
+    "diagnostic_state_identity": "current core/reader/prefix fingerprints in everydiagnostic/rawframe and durable checkpoint hashreceipt; initial fingerprints saved",
+    "memory_probe": "all16 actual graphbackwards including eachHUMAN targetlength, no optimizer; exactweightsunchanged, clearedgrads/restoredRNG",
+    "frame_bound": "actualinitialserializedrequired query/prefixframe size timesfour checked beforeoptimizer; intermediates hashes/normsonly",
+    "parent_caps": "600seconds/seed,384MiB aggregate INCLUDINGatomic savepeak; preserve800x2/50visit schedule; oldlarger caps superseded"
+  },
+  "JSON_allocation_guard": "each JSON write reserves exact encoded bytes plus64KiB before open/write; native filesystem allocation unit must be positive and<=64KiB or fail before evidence writes",
+  "atomic_sink_contract": "eachwrite/flush checked BEFORE crossing perfile allowance, aggregate376MiB run cap plus8MiBdelivery, or1GiBfree reserve; bufferedhighwater/randomseeks accounted",
+  "historical_checkpoint_stat": {
+    "path": "artifacts/sol-cloud-exposure16-20260930/r3/CHECKPOINT-STAT-v1.json",
+    "sha256": "04dfbfa16f99e4aad92d94dbdadb837dc54d72851b86131c9a5f42eec1e77e4b"
+  },
+  "input_caps": {
+    "question": 48,
+    "notebook": 512,
+    "target_with_EOS": 64
+  },
+  "generation_max_new_tokens": 32,
+  "diagnostic_updates": [
+    0,
+    200,
+    400,
+    800
+  ],
+  "checkpoint_updates": [
+    200,
+    400,
+    600,
+    800
+  ],
+  "CE_gradient_capture_updates": [
+    1,
+    50,
+    100,
+    150,
+    200,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    800
+  ],
+  "parity_initial_ids": [
+    "5733be284776f41900661182",
+    "5733be284776f4190066117f"
+  ],
+  "parity_max_new_tokens": 16,
+  "selection": {
+    "historical_diag": {
+      "path": "artifacts/sol-translator-20260929/ANSWER-V11-DIAGNOSTIC-PLAN.json",
+      "sha256": "71ef0bd66f71ed8f5da43288d0b15dc62bbd739e23e89ef2e6029cf2691cc34a"
+    },
+    "basis": "same first8 pairedgroups/16 IDs predeclared before V11/V12 results, allretained, not successselected"
+  },
+  "warmstart": {
+    "basis": "EXACT V11 closed200 tuples used by V12 at update0; not V12 fittedweights",
+    "tuples": {
+      "0": {
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "order_contract": "sol-ordered-notebook-v2",
+        "reader_version": "human-notebook-v2",
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "device": "cuda",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "grounding_updates_measured": 200,
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\parent-s0.pt",
+        "parent_sha256": "c5a5c3a726da63d442778b3dda017f34f2f4f460358dbaf9c5136495a27e41cb",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\input-s0.pt",
+        "reader_sha256": "fe2a38dd97bfffb0f4d6c35a8b4da33a307bf65663d1376722069d37420e671e",
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\bootstrap-English-s0.pt",
+        "adapter_sha256": "e8092da239875f911c5845f4cbb9e89fbf6b197b665bcd7163df8af63c62a063"
+      },
+      "1": {
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "order_contract": "sol-ordered-notebook-v2",
+        "reader_version": "human-notebook-v2",
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "device": "cuda",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "grounding_updates_measured": 200,
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\parent-s1.pt",
+        "parent_sha256": "dadea558737ffdf42c294d22f08039f99a7dfce93e0e2466bfefbb1d1b470127",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\input-s1.pt",
+        "reader_sha256": "29039905bd11193cfb795b5368bf06dae2dc76626b5e084f0432f905bbb54f84",
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\bootstrap-English-s1.pt",
+        "adapter_sha256": "1c05f1e439e3dd698aebb886bc27227e3554c59bbbffcb5d8ac1025f3240fddc"
+      }
+    }
+  },
+  "source": {
+    "packet": {
+      "path": "artifacts/sol-cloud-trainonly-20260930/TRAIN-PACKET.json",
+      "sha256": "46ae697a2dc183048832fed4ef42144888afa08fe5e82db5ccb338c5703fea7e",
+      "bytes": 2551553
+    },
+    "manifest": {
+      "path": "artifacts/sol-cloud-trainonly-20260930/TRAIN-MANIFEST.json",
+      "sha256": "690bd7f6b12fadc5c350ed65d710c82e4e4bd1d8e1dda968e5f8f50b8fc75b7b"
+    },
+    "loader": {
+      "path": "scripts/sol_cloud_trainonly_v1.py",
+      "sha256": "a730907978cca5856c8b6ca318d2dac25e85d2df15390a5f085549884698cadf",
+      "module": "sol_cloud_trainonly_v1"
+    }
+  },
+  "historical_four_row_comparison": {
+    "plan": {
+      "path": "artifacts/sol-translator-20260929/TINY-V12-PLAN.json",
+      "sha256": "2f005e576da5fdf69c80dddb44f45c583c096ebc8ba3a172c5bbb53ae3f94515"
+    },
+    "rows": 4,
+    "visits_per_row": 50,
+    "connected_updates": 200,
+    "fair_architecture_comparison": false,
+    "interpretation": "scales exposedexamples and totalupdates at fixed50visits; not fairarchitecturewin or new heldoutproof"
+  },
+  "references": {
+    "path": "artifacts/sol-cloud-exposure16-20260930/r5/HUMAN-REFERENCE-FRAMES.json",
+    "sha256": "0547e57975445a61dbfee544106c15b4d96634b79dedb80afe096c4285619142"
+  },
+  "schedules": {
+    "0": {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/SCHEDULE-s0.json",
+      "sha256": "441ec73bc20d4df3e0a11a725d263cb62a763b82bdc7394d034ad8dc55677c46",
+      "seed": 2026093016,
+      "updates": 800
+    },
+    "1": {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/SCHEDULE-s1.json",
+      "sha256": "ca836e52ed773129aa9d365d41bace0e97beca8f2cf3a851d8114197cdec681b",
+      "seed": 2026093017,
+      "updates": 800
+    }
+  },
+  "budget": {
+    "path": "artifacts/sol-cloud-exposure16-20260930/r5/BUDGET.json",
+    "sha256": "705c34df2b2998ef56ff6c38a5308abe7dd93bace73a4036eefeadafc2cbb406"
+  },
+  "passmarks": {
+    "path": "artifacts/sol-cloud-exposure16-20260930/r5/PASSMARKS.json",
+    "sha256": "90ab9db88a0e2d5fab8f079f900e8b2a248a69b223cd6e98b2cffc0a540fcb6b"
+  },
+  "LM_provenance": {
+    "path": "artifacts/sol-translator-20260929/CACHED-LFM-ORIGINAL-PROVENANCE.json",
+    "sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8"
+  },
+  "actual_user_day": false,
+  "generated_training_material": false,
+  "stop88_exclusion_metadata": "unavailable; scope explicitly released existingTRAIN512 only",
+  "release_required": true,
+  "runtime_inventory_required": true,
+  "independent_review_required": true
+}

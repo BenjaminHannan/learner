@@ -1,0 +1,69 @@
+L2: m >= ln(0.1)/ln(1-0.02) = 113.9741 -> 114
+tape: CAL candidates N=1439, grid targets m=114..1439 G_eff=15 (tau_1=0.8714 .. tau_end=0.0888)
+bigru: CAL candidates N=1364, grid targets m=114..1364 G_eff=15 (tau_1=0.8212 .. tau_end=0.4148)
+grid sealed to GRID_SEAL.json BEFORE any label read (gold/ok untouched)
+  cand  1: tau=0.8714 m=  114 k=  0 p=0.0999 bound=0.0200 ACCEPT
+  cand  2: tau=0.8528 m=  209 k=  0 p=0.0147 bound=0.0110 ACCEPT
+  cand  3: tau=0.8406 m=  304 k=  0 p=0.0022 bound=0.0075 ACCEPT
+  cand  4: tau=0.8310 m=  399 k=  0 p=0.0003 bound=0.0058 ACCEPT
+  cand  5: tau=0.8230 m=  493 k=  0 p=0.0000 bound=0.0047 ACCEPT
+  cand  6: tau=0.8118 m=  590 k=  0 p=0.0000 bound=0.0039 ACCEPT
+  cand  7: tau=0.8042 m=  683 k=  0 p=0.0000 bound=0.0034 ACCEPT
+  cand  8: tau=0.7919 m=  777 k=  0 p=0.0000 bound=0.0030 ACCEPT
+  cand  9: tau=0.7774 m=  871 k=  0 p=0.0000 bound=0.0026 ACCEPT
+  cand 10: tau=0.7609 m=  967 k=  0 p=0.0000 bound=0.0024 ACCEPT
+  cand 11: tau=0.7328 m= 1060 k=  0 p=0.0000 bound=0.0022 ACCEPT
+  cand 12: tau=0.6499 m= 1156 k=  0 p=0.0000 bound=0.0020 ACCEPT
+  cand 13: tau=0.5371 m= 1255 k=  0 p=0.0000 bound=0.0018 ACCEPT
+  cand 14: tau=0.4219 m= 1345 k=  0 p=0.0000 bound=0.0017 ACCEPT
+  cand 15: tau=0.0888 m= 1439 k=  0 p=0.0000 bound=0.0016 ACCEPT
+tape: tau-hat = 0.088756 (m=1439, k=0, bound=0.0016)
+  cand  1: tau=0.8212 m=  114 k=  0 p=0.0999 bound=0.0200 ACCEPT
+  cand  2: tau=0.7953 m=  203 k=  0 p=0.0166 bound=0.0113 ACCEPT
+  cand  3: tau=0.7599 m=  295 k=  0 p=0.0026 bound=0.0078 ACCEPT
+  cand  4: tau=0.7311 m=  387 k=  0 p=0.0004 bound=0.0059 ACCEPT
+  cand  5: tau=0.7202 m=  471 k=  0 p=0.0001 bound=0.0049 ACCEPT
+  cand  6: tau=0.7102 m=  565 k=  0 p=0.0000 bound=0.0041 ACCEPT
+  cand  7: tau=0.7033 m=  653 k=  0 p=0.0000 bound=0.0035 ACCEPT
+  cand  8: tau=0.6951 m=  740 k=  0 p=0.0000 bound=0.0031 ACCEPT
+  cand  9: tau=0.6846 m=  829 k=  0 p=0.0000 bound=0.0028 ACCEPT
+  cand 10: tau=0.6752 m=  921 k=  0 p=0.0000 bound=0.0025 ACCEPT
+  cand 11: tau=0.6639 m= 1007 k=  0 p=0.0000 bound=0.0023 ACCEPT
+  cand 12: tau=0.6476 m= 1096 k=  0 p=0.0000 bound=0.0021 ACCEPT
+  cand 13: tau=0.6194 m= 1188 k=  0 p=0.0000 bound=0.0019 ACCEPT
+  cand 14: tau=0.5707 m= 1275 k=  0 p=0.0000 bound=0.0018 ACCEPT
+  cand 15: tau=0.4148 m= 1364 k=  0 p=0.0000 bound=0.0017 ACCEPT
+bigru: tau-hat = 0.414803 (m=1364, k=0, bound=0.0017)
+tape/t_seen: LTT writes=698 wrong=0 rate=0.0000 cov=0.6199 | reg@0.5 writes=667 wrong=0 cov=0.5924 | tau0 writes=702 wrong=0 cov=0.6234 | OLD76 writes=698 wrong=0 rate=0.0000
+tape/t_new: LTT writes=770 wrong=0 rate=0.0000 cov=0.5099 | reg@0.5 writes=722 wrong=0 cov=0.4781 | tau0 writes=772 wrong=0 cov=0.5113 | OLD76 writes=770 wrong=0 rate=0.0000
+tape/t_hard: LTT writes=120 wrong=0 rate=0.0000 cov=0.4428 | reg@0.5 writes=109 wrong=0 cov=0.4022 | tau0 writes=120 wrong=0 cov=0.4428 | OLD76 writes=120 wrong=0 rate=0.0000
+bigru/t_seen: LTT writes=662 wrong=0 rate=0.0000 cov=0.5879 | reg@0.5 writes=659 wrong=0 cov=0.5853 | tau0 writes=664 wrong=0 cov=0.5897 | OLD76 writes=662 wrong=0 rate=0.0000
+bigru/t_new: LTT writes=732 wrong=0 rate=0.0000 cov=0.4848 | reg@0.5 writes=675 wrong=0 cov=0.4470 | tau0 writes=780 wrong=0 cov=0.5166 | OLD76 writes=763 wrong=0 rate=0.0000
+bigru/t_hard: LTT writes=111 wrong=0 rate=0.0000 cov=0.4096 | reg@0.5 writes=107 wrong=0 cov=0.3948 | tau0 writes=117 wrong=1 cov=0.4317 | OLD76 writes=113 wrong=0 rate=0.0000
+--- H3: fresh tau-hat vs exp-76 tau-hat ---
+H3 tape: fresh=0.088756 old=0.088756 |delta|=0.000000
+H3 bigru: fresh=0.414803 old=0.302860 |delta|=0.111943
+H1 tape: PASS (m=1439, k=0)
+H1 bigru: PASS (m=1364, k=0)
+H2 tape/t_seen: PASS
+H2 tape/t_new: PASS
+H2 tape/t_hard: PASS
+H2 bigru/t_seen: PASS
+H2 bigru/t_new: PASS
+H2 bigru/t_hard: PASS
+H3b(old-tau) tape/t_seen: PASS (writes=698 wrong=0)
+H3b(old-tau) tape/t_new: PASS (writes=770 wrong=0)
+H3b(old-tau) tape/t_hard: PASS (writes=120 wrong=0)
+H3b(old-tau) bigru/t_seen: PASS (writes=662 wrong=0)
+H3b(old-tau) bigru/t_new: PASS (writes=763 wrong=0)
+H3b(old-tau) bigru/t_hard: PASS (writes=113 wrong=0)
+H4 coverage reported on 6/6 panel-arms: PASS
+input per_sentence_bigru_cal.json sha256=41454276efd58c9b…
+input per_sentence_bigru_t_hard.json sha256=93743c9afc91d95a…
+input per_sentence_bigru_t_new.json sha256=bfe9ff0280c83e4a…
+input per_sentence_bigru_t_seen.json sha256=fe24db5e45b24b0b…
+input per_sentence_tape_cal.json sha256=f2ef873de0f31dce…
+input per_sentence_tape_t_hard.json sha256=14872b797bd87aed…
+input per_sentence_tape_t_new.json sha256=025a936aff97c522…
+input per_sentence_tape_t_seen.json sha256=f8d20fc41951f270…
+H1 PASS · H2 PASS · H3b PASS · H4 PASS · G4 PASS

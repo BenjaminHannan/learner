@@ -1,0 +1,194 @@
+{
+  "schema": "sol.cloud.exposure16.mac-failure-checks.v2",
+  "completed_utc": "2026-09-30T10:21:39.651004+00:00",
+  "passed": 19,
+  "total": 19,
+  "checks": [
+    {
+      "name": "valid closed manifest",
+      "pass": true,
+      "evidence": {
+        "accepted": true
+      }
+    },
+    {
+      "name": "refuse absent",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "missing or over-bound PC stdout final manifest"
+      }
+    },
+    {
+      "name": "refuse malformed",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "malformed PC stdout final manifest"
+      }
+    },
+    {
+      "name": "refuse nonobject",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest must be a JSON object"
+      }
+    },
+    {
+      "name": "refuse partial actual PC failure",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest missing required fields; inspect exact saved streams"
+      }
+    },
+    {
+      "name": "refuse missing records",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest missing required fields; inspect exact saved streams"
+      }
+    },
+    {
+      "name": "refuse missing returncode",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest missing required fields; inspect exact saved streams"
+      }
+    },
+    {
+      "name": "refuse Boolean returncode",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest identity or disposition differs"
+      }
+    },
+    {
+      "name": "refuse wrong job",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest identity or disposition differs"
+      }
+    },
+    {
+      "name": "refuse activated",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "PC final manifest identity or disposition differs"
+      }
+    },
+    {
+      "name": "refuse oversize",
+      "pass": true,
+      "evidence": {
+        "type": "ValueError",
+        "message": "missing or over-bound PC stdout final manifest"
+      }
+    },
+    {
+      "name": "successful dispatch exact streams",
+      "pass": true,
+      "evidence": {
+        "returncode": 0,
+        "timed_out": false,
+        "exact_stream_hashes_verified": true,
+        "optimizer_updates": "unknown; inspect original saved ledger"
+      }
+    },
+    {
+      "name": "PC failure exact stderr and exit retained",
+      "pass": true,
+      "evidence": {
+        "returncode": 1,
+        "timed_out": false,
+        "exact_stream_hashes_verified": true,
+        "optimizer_updates": "unknown; inspect original saved ledger"
+      }
+    },
+    {
+      "name": "timeout retains streams and unknown steps",
+      "pass": true,
+      "evidence": {
+        "returncode": null,
+        "timed_out": true,
+        "exact_stream_hashes_verified": true,
+        "optimizer_updates": "unknown; inspect original saved ledger"
+      }
+    },
+    {
+      "name": "spawn failure still writes exit and streams",
+      "pass": true,
+      "evidence": {
+        "returncode": null,
+        "timed_out": false,
+        "exact_stream_hashes_verified": true,
+        "optimizer_updates": "unknown; inspect original saved ledger"
+      }
+    },
+    {
+      "name": "pre-dispatch failure proves no dispatch only",
+      "pass": true,
+      "evidence": {
+        "schema": "sol.cloud.exposure16.mac-failure.v2",
+        "stage": "CPU preflight",
+        "exception_type": "ValueError",
+        "subprocess_returncode": null,
+        "PC_bootstrap_dispatched": false,
+        "PC_originals_preserved": true,
+        "actual_user_day": false,
+        "activated": false,
+        "optimizer_updates": 0,
+        "raw_diagnostics_suppressed": true
+      }
+    },
+    {
+      "name": "post-dispatch failure never infers zero steps",
+      "pass": true,
+      "evidence": {
+        "schema": "sol.cloud.exposure16.mac-failure.v2",
+        "stage": "parse saved PC final manifest",
+        "exception_type": "ValueError",
+        "subprocess_returncode": null,
+        "PC_bootstrap_dispatched": true,
+        "PC_originals_preserved": true,
+        "actual_user_day": false,
+        "activated": false,
+        "optimizer_updates": "unknown; inspect original saved ledger",
+        "raw_diagnostics_suppressed": true
+      }
+    },
+    {
+      "name": "optional runner metadata remains nonfatal",
+      "pass": true,
+      "evidence": {
+        "missing_lookup_nonfatal": true,
+        "timeout_lookup_nonfatal": true,
+        "unavailable_lookup_nonfatal": true
+      }
+    },
+    {
+      "name": "Mac3.9 syntax and failure stream wiring",
+      "pass": true,
+      "evidence": {
+        "Mac39_syntax": true,
+        "direct_GPU_model_calls": 0,
+        "SSH_calls_during_checks": 0
+      }
+    }
+  ],
+  "wrapper_sha256": "450daab0443ad19198f01ecc314fdc448b8d8a8ff80c9e2f9b32cf257a52a82f",
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "SSH_calls": 0,
+  "queue_entries": 0,
+  "limits": [
+    "Local CPU subprocesses and mocked lookup only; no real remote host execution.",
+    "Original failed dispatch step count is determined by separate pinned PC postmortem, never these mocks."
+  ]
+}

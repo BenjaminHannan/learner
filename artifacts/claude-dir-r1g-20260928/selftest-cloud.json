@@ -1,0 +1,214 @@
+{
+  "budget": {
+    "gamma_init": 0.95,
+    "gap_vs_loop_pct": 0.5147880023770665,
+    "gap_vs_plain_pct": 2.11319380356983,
+    "hops": 64,
+    "loop_stored": 1645726,
+    "new_parameter_names": [
+      "link_b",
+      "link_c",
+      "link_r",
+      "mix.bias",
+      "mix.weight",
+      "probe.bias",
+      "probe.weight",
+      "reach_g",
+      "reach_ln.bias",
+      "reach_ln.weight",
+      "wk.weight",
+      "wq.weight"
+    ],
+    "persistent_coefficients": 1654198,
+    "plain_stored": 1619965,
+    "probes": 4,
+    "rank": 8,
+    "reach_weights": 8472,
+    "stored": 1654198
+  },
+  "credit_off": {
+    "answers_changed_of_total": [
+      0,
+      810
+    ],
+    "nonzero_mix_state_max_abs_change": 0.3701753318309784,
+    "zero_mix_off_equals_on": true
+  },
+  "decay_effect": {
+    "decayed_weight_changed": "mix.weight",
+    "exempt_unchanged": true
+  },
+  "device": "cpu",
+  "equivariance": {
+    "features_max_abs_diff": 2.0265579223632812e-06,
+    "round_output_max_abs_diff": 9.5367431640625e-07
+  },
+  "features_range": {
+    "grids": {
+      "max": 0.9480504393577576,
+      "min": 0.0,
+      "shape": [
+        3,
+        35,
+        10
+      ]
+    },
+    "mazes": {
+      "max": 0.9479173421859741,
+      "min": 0.0,
+      "shape": [
+        3,
+        81,
+        10
+      ]
+    },
+    "sums": {
+      "max": 0.9436938166618347,
+      "min": 0.0,
+      "shape": [
+        3,
+        15,
+        10
+      ]
+    }
+  },
+  "gradients": {
+    "after_mix_nonzero_2d_without_gradient": [],
+    "fresh_init_2d_without_gradient": [
+      "probe.weight",
+      "wk.weight",
+      "wq.weight"
+    ]
+  },
+  "groups": {
+    "exempt": [
+      "link_b",
+      "probe.bias",
+      "reach_g"
+    ],
+    "learner_groups": 2,
+    "plain_groups": 1,
+    "practice_groups": 2
+  },
+  "learner": {
+    "moved": {
+      "mix.bias": true,
+      "mix.weight": true,
+      "reach_g": true
+    },
+    "sleep_updates": 3,
+    "updates_after_batch": 4
+  },
+  "no_kind_words": {
+    "forbidden_words_found": 0,
+    "step_inputs": [
+      "self",
+      "h",
+      "e",
+      "dr",
+      "dc"
+    ]
+  },
+  "plugin": "claude_dir_r1g_net",
+  "practice_smoke": {
+    "gradient_check_after": {
+      "matrix_count": 20,
+      "missing_both": [],
+      "nonzero_all": true
+    },
+    "loss_first": 4.991123509407044,
+    "loss_last": 2.0210881412029265,
+    "reach_stats_after_smoke": {
+      "cap": 20.14907455444336,
+      "feature_mean_by_column": [
+        0.06243,
+        0.06242,
+        0.06245,
+        0.06241,
+        0.06214,
+        0.06238,
+        0.06217,
+        0.06273,
+        0.06336,
+        0.06667
+      ],
+      "feature_std_by_column": [
+        0.2244,
+        0.22435,
+        0.22448,
+        0.22434,
+        0.00023,
+        6e-05,
+        5e-05,
+        0.00019,
+        0.23974,
+        0.23962
+      ],
+      "gamma": 0.9525861740112305,
+      "link_row_entropy": 0.05014286935329437,
+      "link_row_entropy_uniform": 2.70805020110221,
+      "mix_bias_mean_abs": 0.003863214747980237,
+      "mix_weight_mean_abs": 0.019706595689058304,
+      "probe_mass_by_k": [
+        0.93651,
+        0.93629,
+        0.93682,
+        0.9362
+      ]
+    },
+    "reload_identical": true,
+    "steps": 200
+  },
+  "reach_exact": {
+    "cap": 19.249517215777665,
+    "max_abs_error_vs_brute_force": 2.220446049250313e-15,
+    "max_row_sum": 19.24951721577768
+  },
+  "same_loop": {
+    "grids": {
+      "one_round_max_abs_diff": 0.0,
+      "six_rounds_identical": true
+    },
+    "mazes": {
+      "one_round_max_abs_diff": 0.0,
+      "six_rounds_identical": true
+    },
+    "sums": {
+      "one_round_max_abs_diff": 0.0,
+      "six_rounds_identical": true
+    }
+  },
+  "selftest": "ok",
+  "set_input": {
+    "37": {
+      "shape": [
+        2,
+        37,
+        10
+      ]
+    },
+    "81": {
+      "shape": [
+        2,
+        81,
+        10
+      ]
+    }
+  },
+  "timing_cpu": {
+    "loop": {
+      "infer_48_rounds_9x9_batch32_s": 1.9831151659999477,
+      "maze_batch_9x9_s": 1.6508440860000064,
+      "practice_step_grids5_s": 0.7584536669999125,
+      "practice_step_sums4_s": 0.34818946799998685
+    },
+    "r1g": {
+      "infer_48_rounds_9x9_batch32_s": 2.1374807450000617,
+      "maze_batch_9x9_s": 1.8222434269999894,
+      "practice_step_grids5_s": 0.9593620040000133,
+      "practice_step_sums4_s": 0.3696159709999165
+    }
+  },
+  "torch": "2.14.0+cpu",
+  "utc": "2026-09-28T21:30:50Z"
+}

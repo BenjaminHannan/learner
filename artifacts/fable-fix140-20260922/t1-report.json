@@ -1,0 +1,919 @@
+{
+ "bar": "44/44 OK values exact, 0 wrong writes; subject checks 5/5",
+ "n": 44,
+ "counts": {
+  "OK": 43,
+  "MISSED": 1
+ },
+ "subject_checks": [
+  {
+   "input": "Tom",
+   "want": "Tom",
+   "got": "Tom",
+   "ok": true
+  },
+  {
+   "input": "the U.S.",
+   "want": "the U.S.",
+   "got": "the U.S.",
+   "ok": true
+  },
+  {
+   "input": "Washington, D.C.",
+   "want": "Washington, D.C.",
+   "got": "Washington, D.C.",
+   "ok": true
+  },
+  {
+   "input": "Kip Dune",
+   "want": "Kip Dune",
+   "got": "Kip Dune",
+   "ok": true
+  },
+  {
+   "input": "St. Louis",
+   "want": "St. Louis",
+   "got": "St. Louis",
+   "ok": true
+  }
+ ],
+ "subject_ok": 5,
+ "pass": false,
+ "seconds": 0.8,
+ "cases": [
+  {
+   "id": "T001",
+   "frame": "possessive",
+   "text": "Tom's city is Rome 😀.",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.662
+  },
+  {
+   "id": "T002",
+   "frame": "possessive",
+   "text": "Mira's city is Lisbon 🎉!",
+   "expect": [
+    "Mira",
+    "city",
+    "Lisbon"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "T003",
+   "frame": "possessive",
+   "text": "Tom's pet is Rex 👍🏽.",
+   "expect": [
+    "Tom",
+    "pet",
+    "Rex"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "pet",
+     "Rex"
+    ]
+   ],
+   "reply": "Saved: Tom's pet is Rex.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T004",
+   "frame": "possessive",
+   "text": "Dune's author is Herbert ™.",
+   "expect": [
+    "Dune",
+    "author",
+    "Herbert"
+   ],
+   "stored": [
+    [
+     "Dune",
+     "author",
+     "Herbert"
+    ]
+   ],
+   "reply": "Saved: Dune's author is Herbert.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T005",
+   "frame": "possessive",
+   "text": "Zoë's city is Lyon ©.",
+   "expect": [
+    "Zoë",
+    "city",
+    "Lyon"
+   ],
+   "stored": [
+    [
+     "Zoë",
+     "city",
+     "Lyon"
+    ]
+   ],
+   "reply": "Saved: Zoë's city is Lyon.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T006",
+   "frame": "possessive",
+   "text": "Tom's city is Oslo →.",
+   "expect": [
+    "Tom",
+    "city",
+    "Oslo"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Oslo.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T007",
+   "frame": "possessive",
+   "text": "Mira's city is Paris :).",
+   "expect": [
+    "Mira",
+    "city",
+    "Paris"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Paris"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Paris.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T008",
+   "frame": "possessive",
+   "text": "Tom's city is Madrid 🚩.",
+   "expect": [
+    "Tom",
+    "city",
+    "Madrid"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Madrid"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Madrid.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T009",
+   "frame": "possessive",
+   "text": "Tom's city is Rome.\"",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T010",
+   "frame": "possessive",
+   "text": "Tom's city is \"Rome\".",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T011",
+   "frame": "possessive",
+   "text": "Tom's city is Albany, N.Y..",
+   "expect": [
+    "Tom",
+    "city",
+    "Albany, N.Y."
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Albany, N.Y."
+    ]
+   ],
+   "reply": "Saved: Tom's city is Albany, N.Y..",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "T012",
+   "frame": "possessive",
+   "text": "Tom’s city is Cusco 😀.",
+   "expect": [
+    "Tom",
+    "city",
+    "Cusco"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Cusco"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Cusco.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T013",
+   "frame": "bench73",
+   "text": "The capital of Peru is Lima 🎉.",
+   "expect": [
+    "Peru",
+    "capital",
+    "Lima"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is Lima.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T014",
+   "frame": "bench73",
+   "text": "Kip Dune is a citizen of Peru.\"",
+   "expect": [
+    "Kip Dune",
+    "country_of_citizenship",
+    "Peru"
+   ],
+   "stored": [
+    [
+     "Kip Dune",
+     "country_of_citizenship",
+     "Peru"
+    ]
+   ],
+   "reply": "Saved: Kip Dune's country_of_citizenship is Peru.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T015",
+   "frame": "bench73",
+   "text": "The official language of Peru is Spanish 😀!",
+   "expect": [
+    "Peru",
+    "official_language",
+    "Spanish"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "official_language",
+     "Spanish"
+    ]
+   ],
+   "reply": "Saved: Peru's official_language is Spanish.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T016",
+   "frame": "bench73",
+   "text": "Mira is married to Bob ❤️.",
+   "expect": [
+    "Mira",
+    "spouse",
+    "Bob"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "spouse",
+     "Bob"
+    ]
+   ],
+   "reply": "Saved: Mira's spouse is Bob.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T017",
+   "frame": "bench73",
+   "text": "Tom is affiliated with the religion of Buddhism ™.",
+   "expect": [
+    "Tom",
+    "religion_or_worldview",
+    "Buddhism"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "religion_or_worldview",
+     "Buddhism"
+    ]
+   ],
+   "reply": "Saved: Tom's religion_or_worldview is Buddhism.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T018",
+   "frame": "bench73",
+   "text": "Tom was born in the city of Lyon ©.",
+   "expect": [
+    "Tom",
+    "place_of_birth",
+    "Lyon"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "place_of_birth",
+     "Lyon"
+    ]
+   ],
+   "reply": "Saved: Tom's place_of_birth is Lyon.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T019",
+   "frame": "bench73",
+   "text": "The author of Dune is Herbert 👍🏽.",
+   "expect": [
+    "Dune",
+    "author",
+    "Herbert"
+   ],
+   "stored": [
+    [
+     "Dune",
+     "author",
+     "Herbert"
+    ]
+   ],
+   "reply": "Saved: Dune's author is Herbert.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T020",
+   "frame": "bench73",
+   "text": "Mira is the founder of Initech →.",
+   "expect": [
+    "Mira",
+    "founder_of",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "founder_of",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Mira's founder_of is Initech.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T021",
+   "frame": "bench73",
+   "text": "The capital of Peru is St. Louis.",
+   "expect": [
+    "Peru",
+    "capital",
+    "St. Louis"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "St. Louis"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is St. Louis.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T022",
+   "frame": "bench73",
+   "text": "Mira is the apprentice of Bob Jr..",
+   "expect": [
+    "Mira",
+    "apprentice_of",
+    "Bob Jr."
+   ],
+   "stored": [
+    [
+     "Mira",
+     "apprentice_of",
+     "Bob Jr."
+    ]
+   ],
+   "reply": "Saved: Mira's apprentice_of is Bob Jr..",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T023",
+   "frame": "bench73",
+   "text": "The headquarters of Initech is located in the city of Reno 😀.",
+   "expect": [
+    "Initech",
+    "headquarters_location",
+    "Reno"
+   ],
+   "stored": [
+    [
+     "Initech",
+     "headquarters_location",
+     "Reno"
+    ]
+   ],
+   "reply": "Saved: Initech's headquarters_location is Reno.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "T024",
+   "frame": "bench73",
+   "text": "Tom is associated with the sport of Tennis ❤️.",
+   "expect": [
+    "Tom",
+    "sport",
+    "Tennis"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "sport",
+     "Tennis"
+    ]
+   ],
+   "reply": "Saved: Tom's sport is Tennis.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T025",
+   "frame": "bench92",
+   "text": "Tom is employed by Initech 👍🏽.",
+   "expect": [
+    "Tom",
+    "employer",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Initech.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T026",
+   "frame": "bench92",
+   "text": "Tom works in the field of Medicine 🎉.",
+   "expect": [
+    "Tom",
+    "occupation",
+    "Medicine"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "occupation",
+     "Medicine"
+    ]
+   ],
+   "reply": "Saved: Tom's occupation is Medicine.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T027",
+   "frame": "bench92",
+   "text": "Ann's child is Bob ❤️.",
+   "expect": [
+    "Ann",
+    "child",
+    "Bob"
+   ],
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "Bob"
+    ]
+   ],
+   "reply": "Saved: Ann's child is Bob.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "T028",
+   "frame": "bench92",
+   "text": "Tom is employed by Apple Inc..",
+   "expect": [
+    "Tom",
+    "employer",
+    "Apple Inc."
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Apple Inc."
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Apple Inc..",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "T029",
+   "frame": "bench92",
+   "text": "Ann's child is Bob Jr..",
+   "expect": [
+    "Ann",
+    "child",
+    "Bob Jr."
+   ],
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "Bob Jr."
+    ]
+   ],
+   "reply": "Saved: Ann's child is Bob Jr..",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T030",
+   "frame": "bench92",
+   "text": "Tom works in the field of Medicine 😀?",
+   "expect": [
+    "Tom",
+    "occupation",
+    "Medicine"
+   ],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "MISSED",
+   "seconds": 0.003
+  },
+  {
+   "id": "T031",
+   "frame": "bench92",
+   "text": "Tom is employed by Initech.\"",
+   "expect": [
+    "Tom",
+    "employer",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Initech.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "T032",
+   "frame": "bench92",
+   "text": "Ann's child is Bob 😀.",
+   "expect": [
+    "Ann",
+    "child",
+    "Bob"
+   ],
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "Bob"
+    ]
+   ],
+   "reply": "Saved: Ann's child is Bob.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "T033",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is Either/Or.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "Either/Or"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "Either/Or"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is Either/Or.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T034",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is Either/Or 😀.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "Either/Or"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "Either/Or"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is Either/Or.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T035",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is Frost/Nixon 🎉.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "Frost/Nixon"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "Frost/Nixon"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is Frost/Nixon.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T036",
+   "frame": "symbol-in-name",
+   "text": "Tom's city is Frankfurt/Main.",
+   "expect": [
+    "Tom",
+    "city",
+    "Frankfurt/Main"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Frankfurt/Main"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Frankfurt/Main.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T037",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is A/UX ❤️.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "A/UX"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "A/UX"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is A/UX.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T038",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is FutureSex/LoveSounds 👍🏽.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "FutureSex/LoveSounds"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "FutureSex/LoveSounds"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is FutureSex/LoveSounds.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T039",
+   "frame": "symbol-in-name",
+   "text": "Mira's notable work is Speakerboxxx/The Love Below 😀.",
+   "expect": [
+    "Mira",
+    "notable_work",
+    "Speakerboxxx/The Love Below"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "notable_work",
+     "Speakerboxxx/The Love Below"
+    ]
+   ],
+   "reply": "Saved: Mira's notable_work is Speakerboxxx/The Love Below.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T040",
+   "frame": "control",
+   "text": "The capital of Peru is Lima.",
+   "expect": [
+    "Peru",
+    "capital",
+    "Lima"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is Lima.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T041",
+   "frame": "control",
+   "text": "Mira's city is Lisbon.",
+   "expect": [
+    "Mira",
+    "city",
+    "Lisbon"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T042",
+   "frame": "control",
+   "text": "Tom is employed by Initech.",
+   "expect": [
+    "Tom",
+    "employer",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Initech.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "T043",
+   "frame": "possessive",
+   "text": "Tom's city is Rome 😀",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "T044",
+   "frame": "possessive",
+   "text": "Tom's city is Washington, D.C..",
+   "expect": [
+    "Tom",
+    "city",
+    "Washington, D.C."
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Washington, D.C."
+    ]
+   ],
+   "reply": "Saved: Tom's city is Washington, D.C..",
+   "verdict": "OK",
+   "seconds": 0.004
+  }
+ ]
+}

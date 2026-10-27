@@ -1,0 +1,1424 @@
+{
+ "agent": "loop167",
+ "cases_file": "cases167.json",
+ "wall_seconds": 2.3,
+ "counts": {
+  "OK": 61
+ },
+ "by_group": {
+  "mapped": {
+   "ok": 20,
+   "n": 20
+  },
+  "nowrite": {
+   "ok": 18,
+   "n": 18
+  },
+  "other": {
+   "ok": 20,
+   "n": 20
+  },
+  "chain": {
+   "ok": 3,
+   "n": 3
+  }
+ },
+ "cases": [
+  {
+   "id": "M01",
+   "group": "mapped",
+   "teaches": [
+    "Kwame lives in Accra."
+   ],
+   "expect": [
+    "Kwame",
+    "city",
+    "Accra"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Kwame live?",
+     "want": "Accra",
+     "reply": "Kwame's city is Accra."
+    },
+    {
+     "q": "Where is Kwame's city?",
+     "want": "Accra",
+     "reply": "Kwame's city is Accra."
+    }
+   ],
+   "stored": [
+    [
+     "Kwame",
+     "city",
+     "Accra"
+    ]
+   ],
+   "reply": "Saved: Kwame's city is Accra.",
+   "verdict": "OK",
+   "seconds": 1.45
+  },
+  {
+   "id": "M02",
+   "group": "mapped",
+   "teaches": [
+    "Mira lives in Oslo."
+   ],
+   "expect": [
+    "Mira",
+    "city",
+    "Oslo"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Mira live?",
+     "want": "Oslo",
+     "reply": "Mira's city is Oslo."
+    },
+    {
+     "q": "Where is Mira's city?",
+     "want": "Oslo",
+     "reply": "Mira's city is Oslo."
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Oslo.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "M03",
+   "group": "mapped",
+   "teaches": [
+    "Ana lives in Denver."
+   ],
+   "expect": [
+    "Ana",
+    "city",
+    "Denver"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Ana live?",
+     "want": "Denver",
+     "reply": "Ana's city is Denver."
+    },
+    {
+     "q": "Where is Ana's city?",
+     "want": "Denver",
+     "reply": "Ana's city is Denver."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "city",
+     "Denver"
+    ]
+   ],
+   "reply": "Saved: Ana's city is Denver.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "M04",
+   "group": "mapped",
+   "teaches": [
+    "Zoe lives in New York."
+   ],
+   "expect": [
+    "Zoe",
+    "city",
+    "New York"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Zoe live?",
+     "want": "New York",
+     "reply": "Zoe's city is New York."
+    },
+    {
+     "q": "Where is Zoe's city?",
+     "want": "New York",
+     "reply": "Zoe's city is New York."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "city",
+     "New York"
+    ]
+   ],
+   "reply": "Saved: Zoe's city is New York.",
+   "verdict": "OK",
+   "seconds": 0.041
+  },
+  {
+   "id": "M05",
+   "group": "mapped",
+   "teaches": [
+    "Raj lives in Porto."
+   ],
+   "expect": [
+    "Raj",
+    "city",
+    "Porto"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Raj live?",
+     "want": "Porto",
+     "reply": "Raj's city is Porto."
+    },
+    {
+     "q": "Where is Raj's city?",
+     "want": "Porto",
+     "reply": "Raj's city is Porto."
+    }
+   ],
+   "stored": [
+    [
+     "Raj",
+     "city",
+     "Porto"
+    ]
+   ],
+   "reply": "Saved: Raj's city is Porto.",
+   "verdict": "OK",
+   "seconds": 0.018
+  },
+  {
+   "id": "M06",
+   "group": "mapped",
+   "teaches": [
+    "Theo works for Acme."
+   ],
+   "expect": [
+    "Theo",
+    "employer",
+    "Acme"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Theo work for?",
+     "want": "Acme",
+     "reply": "Theo's employer is Acme."
+    },
+    {
+     "q": "Who is Theo's employer?",
+     "want": "Acme",
+     "reply": "Theo's employer is Acme."
+    }
+   ],
+   "stored": [
+    [
+     "Theo",
+     "employer",
+     "Acme"
+    ]
+   ],
+   "reply": "Saved: Theo's employer is Acme.",
+   "verdict": "OK",
+   "seconds": 0.055
+  },
+  {
+   "id": "M07",
+   "group": "mapped",
+   "teaches": [
+    "Mira works for Globex."
+   ],
+   "expect": [
+    "Mira",
+    "employer",
+    "Globex"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Mira work for?",
+     "want": "Globex",
+     "reply": "Mira's employer is Globex."
+    },
+    {
+     "q": "Who is Mira's employer?",
+     "want": "Globex",
+     "reply": "Mira's employer is Globex."
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "employer",
+     "Globex"
+    ]
+   ],
+   "reply": "Saved: Mira's employer is Globex.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "M08",
+   "group": "mapped",
+   "teaches": [
+    "Leo works for Initech."
+   ],
+   "expect": [
+    "Leo",
+    "employer",
+    "Initech"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Leo work for?",
+     "want": "Initech",
+     "reply": "Leo's employer is Initech."
+    },
+    {
+     "q": "Who is Leo's employer?",
+     "want": "Initech",
+     "reply": "Leo's employer is Initech."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "employer",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Leo's employer is Initech.",
+   "verdict": "OK",
+   "seconds": 0.021
+  },
+  {
+   "id": "M09",
+   "group": "mapped",
+   "teaches": [
+    "Ana works for Acme Corp."
+   ],
+   "expect": [
+    "Ana",
+    "employer",
+    "Acme Corp"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Ana work for?",
+     "want": "Acme Corp",
+     "reply": "Ana's employer is Acme Corp."
+    },
+    {
+     "q": "Who is Ana's employer?",
+     "want": "Acme Corp",
+     "reply": "Ana's employer is Acme Corp."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "employer",
+     "Acme Corp"
+    ]
+   ],
+   "reply": "Saved: Ana's employer is Acme Corp.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "M10",
+   "group": "mapped",
+   "teaches": [
+    "Max works for Wonka."
+   ],
+   "expect": [
+    "Max",
+    "employer",
+    "Wonka"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Max work for?",
+     "want": "Wonka",
+     "reply": "Max's employer is Wonka."
+    },
+    {
+     "q": "Who is Max's employer?",
+     "want": "Wonka",
+     "reply": "Max's employer is Wonka."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "employer",
+     "Wonka"
+    ]
+   ],
+   "reply": "Saved: Max's employer is Wonka.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "M11",
+   "group": "mapped",
+   "teaches": [
+    "Ama was born in Accra."
+   ],
+   "expect": [
+    "Ama",
+    "place_of_birth",
+    "Accra"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where was Ama born?",
+     "want": "Accra",
+     "reply": "Ama's place of birth is Accra."
+    },
+    {
+     "q": "Where is Ama's place of birth?",
+     "want": "Accra",
+     "reply": "Ama's place of birth is Accra."
+    }
+   ],
+   "stored": [
+    [
+     "Ama",
+     "place_of_birth",
+     "Accra"
+    ]
+   ],
+   "reply": "Saved: Ama's place_of_birth is Accra.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "M12",
+   "group": "mapped",
+   "teaches": [
+    "Leo was born in Lima."
+   ],
+   "expect": [
+    "Leo",
+    "place_of_birth",
+    "Lima"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where was Leo born?",
+     "want": "Lima",
+     "reply": "Leo's place of birth is Lima."
+    },
+    {
+     "q": "Where is Leo's place of birth?",
+     "want": "Lima",
+     "reply": "Leo's place of birth is Lima."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "place_of_birth",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Leo's place_of_birth is Lima.",
+   "verdict": "OK",
+   "seconds": 0.032
+  },
+  {
+   "id": "M13",
+   "group": "mapped",
+   "teaches": [
+    "Zoe was born in Bern."
+   ],
+   "expect": [
+    "Zoe",
+    "place_of_birth",
+    "Bern"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where was Zoe born?",
+     "want": "Bern",
+     "reply": "Zoe's place of birth is Bern."
+    },
+    {
+     "q": "Where is Zoe's place of birth?",
+     "want": "Bern",
+     "reply": "Zoe's place of birth is Bern."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "place_of_birth",
+     "Bern"
+    ]
+   ],
+   "reply": "Saved: Zoe's place_of_birth is Bern.",
+   "verdict": "OK",
+   "seconds": 0.023
+  },
+  {
+   "id": "M14",
+   "group": "mapped",
+   "teaches": [
+    "Max was born in Cairo."
+   ],
+   "expect": [
+    "Max",
+    "place_of_birth",
+    "Cairo"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where was Max born?",
+     "want": "Cairo",
+     "reply": "Max's place of birth is Cairo."
+    },
+    {
+     "q": "Where is Max's place of birth?",
+     "want": "Cairo",
+     "reply": "Max's place of birth is Cairo."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "place_of_birth",
+     "Cairo"
+    ]
+   ],
+   "reply": "Saved: Max's place_of_birth is Cairo.",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "M15",
+   "group": "mapped",
+   "teaches": [
+    "Pia was born in Quito."
+   ],
+   "expect": [
+    "Pia",
+    "place_of_birth",
+    "Quito"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where was Pia born?",
+     "want": "Quito",
+     "reply": "Pia's place of birth is Quito."
+    },
+    {
+     "q": "Where is Pia's place of birth?",
+     "want": "Quito",
+     "reply": "Pia's place of birth is Quito."
+    }
+   ],
+   "stored": [
+    [
+     "Pia",
+     "place_of_birth",
+     "Quito"
+    ]
+   ],
+   "reply": "Saved: Pia's place_of_birth is Quito.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "M16",
+   "group": "mapped",
+   "teaches": [
+    "Theo is married to Ama."
+   ],
+   "expect": [
+    "Theo",
+    "spouse",
+    "Ama"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Theo's spouse?",
+     "want": "Ama",
+     "reply": "Theo's spouse is Ama."
+    }
+   ],
+   "stored": [
+    [
+     "Theo",
+     "spouse",
+     "Ama"
+    ]
+   ],
+   "reply": "Saved: Theo's spouse is Ama.",
+   "verdict": "OK",
+   "seconds": 0.024
+  },
+  {
+   "id": "M17",
+   "group": "mapped",
+   "teaches": [
+    "Leo is married to Zoe."
+   ],
+   "expect": [
+    "Leo",
+    "spouse",
+    "Zoe"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Leo's spouse?",
+     "want": "Zoe",
+     "reply": "Leo's spouse is Zoe."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "spouse",
+     "Zoe"
+    ]
+   ],
+   "reply": "Saved: Leo's spouse is Zoe.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "M18",
+   "group": "mapped",
+   "teaches": [
+    "Max is married to Pia."
+   ],
+   "expect": [
+    "Max",
+    "spouse",
+    "Pia"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Max's spouse?",
+     "want": "Pia",
+     "reply": "Max's spouse is Pia."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "spouse",
+     "Pia"
+    ]
+   ],
+   "reply": "Saved: Max's spouse is Pia.",
+   "verdict": "OK",
+   "seconds": 0.02
+  },
+  {
+   "id": "M19",
+   "group": "mapped",
+   "teaches": [
+    "Raj is married to Ana."
+   ],
+   "expect": [
+    "Raj",
+    "spouse",
+    "Ana"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Raj's spouse?",
+     "want": "Ana",
+     "reply": "Raj's spouse is Ana."
+    }
+   ],
+   "stored": [
+    [
+     "Raj",
+     "spouse",
+     "Ana"
+    ]
+   ],
+   "reply": "Saved: Raj's spouse is Ana.",
+   "verdict": "OK",
+   "seconds": 0.039
+  },
+  {
+   "id": "M20",
+   "group": "mapped",
+   "teaches": [
+    "Zoe is married to Leo."
+   ],
+   "expect": [
+    "Zoe",
+    "spouse",
+    "Leo"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Zoe's spouse?",
+     "want": "Leo",
+     "reply": "Zoe's spouse is Leo."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "spouse",
+     "Leo"
+    ]
+   ],
+   "reply": "Saved: Zoe's spouse is Leo.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "N01",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame doesn't live in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N02",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame does not work for Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "N03",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame isn't married to Ama."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "N04",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame wasn't born in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "N05",
+   "group": "nowrite",
+   "teaches": [
+    "Where doesn't Kwame live?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N06",
+   "group": "nowrite",
+   "teaches": [
+    "Who doesn't Kwame work for?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N07",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame lived in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "N08",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame used to live in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.007
+  },
+  {
+   "id": "N09",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame will live in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.007
+  },
+  {
+   "id": "N10",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame will move to Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N11",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame worked for Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.002
+  },
+  {
+   "id": "N12",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame is working for Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N13",
+   "group": "nowrite",
+   "teaches": [
+    "I think Kwame lives in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.002
+  },
+  {
+   "id": "N14",
+   "group": "nowrite",
+   "teaches": [
+    "Maybe Kwame works for Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "N15",
+   "group": "nowrite",
+   "teaches": [
+    "Rumor has it Kwame was born in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N16",
+   "group": "nowrite",
+   "teaches": [
+    "Kwame probably lives in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.002
+  },
+  {
+   "id": "N17",
+   "group": "nowrite",
+   "teaches": [
+    "If Kwame lived in Accra, Ama would visit."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "N18",
+   "group": "nowrite",
+   "teaches": [
+    "Would Kwame live in Accra?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "O01",
+   "group": "other",
+   "teaches": [
+    "Mira's city is Lisbon."
+   ],
+   "expect": [
+    "Mira",
+    "city",
+    "Lisbon"
+   ],
+   "want_reply": "saved",
+   "asks": [],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Lisbon"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Lisbon.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "O02",
+   "group": "other",
+   "teaches": [
+    "Who is Mira's city?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "any",
+   "asks": [],
+   "stored": [],
+   "reply": "I don't know anyone called Mira.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "O03",
+   "group": "other",
+   "teaches": [
+    "The president of Zorvia is Mel Ash."
+   ],
+   "expect": [
+    "president of Zorvia",
+    "officeholder",
+    "Mel Ash"
+   ],
+   "want_reply": "saved",
+   "asks": [],
+   "stored": [
+    [
+     "president of Zorvia",
+     "officeholder",
+     "Mel Ash"
+    ]
+   ],
+   "reply": "Saved: president of Zorvia's officeholder is Mel Ash.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "O04",
+   "group": "other",
+   "stored": [
+    [
+     "The Hobbit",
+     "author",
+     "Tolkien"
+    ]
+   ],
+   "reply": "Saved: The Hobbit's author is Tolkien.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "O05",
+   "group": "other",
+   "stored": [
+    [
+     "The Beatles",
+     "founder",
+     "Lennon"
+    ]
+   ],
+   "reply": "Saved: The Beatles's founder is Lennon.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "O06",
+   "group": "other",
+   "stored": [
+    [
+     "Kwame",
+     "place_of_birth",
+     "Accra"
+    ]
+   ],
+   "reply": "Saved: Kwame's place_of_birth is Accra.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "O07",
+   "group": "other",
+   "teaches": [
+    "Who is Kip married to?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "O08",
+   "group": "other",
+   "teaches": [
+    "Mira lives in Oslo. Her brother is Tom."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "O09",
+   "group": "other",
+   "teaches": [
+    "She lives in Oslo."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "O10",
+   "group": "other",
+   "teaches": [
+    "Does Kwame live in Accra?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "O11",
+   "group": "other",
+   "teaches": [
+    "Kwame lives in Accra?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.007
+  },
+  {
+   "id": "O12",
+   "group": "other",
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.037
+  },
+  {
+   "id": "O13",
+   "group": "other",
+   "stored": [
+    [
+     "Ada",
+     "creator",
+     "Tom"
+    ]
+   ],
+   "reply": "Saved: Ada's creator is Tom.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "O14",
+   "group": "other",
+   "teaches": [
+    "Kwame's employer is Acme."
+   ],
+   "expect": [
+    "Kwame",
+    "employer",
+    "Acme"
+   ],
+   "want_reply": "saved",
+   "asks": [],
+   "stored": [
+    [
+     "Kwame",
+     "employer",
+     "Acme"
+    ]
+   ],
+   "reply": "Saved: Kwame's employer is Acme.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "O15",
+   "group": "other",
+   "teaches": [
+    "Tom's sister is Ana."
+   ],
+   "expect": [
+    "Tom",
+    "sister",
+    "Ana"
+   ],
+   "want_reply": "saved",
+   "asks": [],
+   "stored": [
+    [
+     "Tom",
+     "sister",
+     "Ana"
+    ]
+   ],
+   "reply": "Saved: Tom's sister is Ana.",
+   "verdict": "OK",
+   "seconds": 0.02
+  },
+  {
+   "id": "O16",
+   "group": "other",
+   "stored": [
+    [
+     "Kwame",
+     "city",
+     "Accra"
+    ]
+   ],
+   "reply": "Saved: Kwame's city is Accra.",
+   "verdict": "OK",
+   "seconds": 0.044
+  },
+  {
+   "id": "O17",
+   "group": "other",
+   "teaches": [
+    "What is Kwame's city?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "any",
+   "asks": [],
+   "stored": [],
+   "reply": "I don't know anyone called Kwame.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "O18",
+   "group": "other",
+   "teaches": [
+    "hi"
+   ],
+   "expect": "nowrite",
+   "want_reply": "any",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "O19",
+   "group": "other",
+   "stored": [
+    [
+     "mayor of Leeds",
+     "officeholder",
+     "Ann"
+    ]
+   ],
+   "reply": "Saved: mayor of Leeds's officeholder is Ann.",
+   "verdict": "OK",
+   "seconds": 0.019
+  },
+  {
+   "id": "O20",
+   "group": "other",
+   "teaches": [
+    "Kwame Mensah lives in Accra."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "C1",
+   "group": "chain",
+   "teaches": [
+    "The Supremes' founder is Ross.",
+    "Ross lives in Accra."
+   ],
+   "expect": [
+    [
+     "The Supremes",
+     "founder",
+     "Ross"
+    ],
+    [
+     "Ross",
+     "city",
+     "Accra"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is The Supremes' founder?",
+     "want": "Ross",
+     "reply": "The Supremes's founder is Ross."
+    },
+    {
+     "q": "Where does Ross live?",
+     "want": "Accra",
+     "reply": "Ross's city is Accra."
+    }
+   ],
+   "stored": [
+    [
+     "The Supremes",
+     "founder",
+     "Ross"
+    ],
+    [
+     "Ross",
+     "city",
+     "Accra"
+    ]
+   ],
+   "reply": "Saved: Ross's city is Accra.",
+   "verdict": "OK",
+   "seconds": 0.046
+  },
+  {
+   "id": "C2",
+   "group": "chain",
+   "teaches": [
+    "Ross lives in Accra.",
+    "Ross's mother is Judy.",
+    "Judy lives in Lima."
+   ],
+   "expect": [
+    [
+     "Ross",
+     "city",
+     "Accra"
+    ],
+    [
+     "Ross",
+     "mother",
+     "Judy"
+    ],
+    [
+     "Judy",
+     "city",
+     "Lima"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Ross live?",
+     "want": "Accra",
+     "reply": "Ross's city is Accra."
+    },
+    {
+     "q": "Where is Ross's mother's city?",
+     "want": "Lima",
+     "reply": "Ross's mother's city is Lima."
+    }
+   ],
+   "stored": [
+    [
+     "Ross",
+     "city",
+     "Accra"
+    ],
+    [
+     "Ross",
+     "mother",
+     "Judy"
+    ],
+    [
+     "Judy",
+     "city",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Judy's city is Lima.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "C3",
+   "group": "chain",
+   "teaches": [
+    "Ava works for Acme.",
+    "Mira's mother is Ava."
+   ],
+   "expect": [
+    [
+     "Ava",
+     "employer",
+     "Acme"
+    ],
+    [
+     "Mira",
+     "mother",
+     "Ava"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Ava work for?",
+     "want": "Acme",
+     "reply": "Ava's employer is Acme."
+    },
+    {
+     "q": "Who is Mira's mother's employer?",
+     "want": "Acme",
+     "reply": "Mira's mother's employer is Acme."
+    }
+   ],
+   "stored": [
+    [
+     "Ava",
+     "employer",
+     "Acme"
+    ],
+    [
+     "Mira",
+     "mother",
+     "Ava"
+    ]
+   ],
+   "reply": "Saved: Mira's mother is Ava.",
+   "verdict": "OK",
+   "seconds": 0.03
+  }
+ ]
+}

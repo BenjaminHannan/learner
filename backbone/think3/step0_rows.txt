@@ -1,0 +1,136 @@
+depth,n_evidence counts: [((0, 0), 130), ((1, 1), 589), ((1, 2), 29), ((1, 3), 23), ((1, 4), 8), ((1, 5), 6), ((1, 6), 1), ((1, 7), 3), ((1, 8), 1), ((2, 1), 205), ((2, 2), 229), ((2, 3), 19), ((2, 4), 15), ((2, 5), 11), ((2, 6), 16), ((2, 7), 5), ((2, 8), 5), ((2, 9), 5), ((2, 10), 1), ((3, 2), 209), ((3, 3), 185), ((3, 4), 35), ((3, 5), 13), ((3, 6), 12), ((3, 7), 10), ((3, 8), 8), ((3, 9), 7), ((3, 10), 2), ((3, 11), 1), ((3, 12), 1), ((4, 2), 5), ((4, 3), 124), ((4, 4), 104), ((4, 5), 22), ((4, 6), 12), ((4, 7), 6), ((4, 8), 5), ((4, 9), 3), ((4, 10), 1), ((4, 11), 3), ((4, 12), 1), ((4, 13), 1), ((5, 4), 32), ((5, 5), 31), ((5, 6), 12), ((5, 7), 5), ((5, 8), 2), ((5, 9), 2), ((5, 10), 1), ((5, 11), 1), ((5, 14), 1), ((6, 4), 2), ((6, 5), 4), ((6, 6), 2), ((6, 12), 1)]
+max evidence index < text_line: True
+Q: [question] You can tell me the answer. Does the sack hold the white key? [answer] no [feedback] Yay, you got it!
+ depth 1 bank q.yn_in
+  ev: [world] What Vira gave was two kites in exchange for a key.
+ A: no
+
+Q: [question] Who is holding the grey balloon? [answer] Saju [feedback] Yay, you got it!
+ depth 3 bank q.who_has
+  ev: [world] Saju has the grey balloon right now.
+  ev: [world] Lost things are back with their owners every night.
+  ev: [world] At the forest, the grey balloon was left and then went to the hill.
+  ev: [world] Soon night had come.
+ A: Saju
+
+Q: [question] Give me your best answer. Where did the basket use to be? [answer] the library [feedback] Yay, you got it!
+ depth 4 bank q.where_before
+  ev: [world] Nuli always follows Nelo.
+  ev: [world] Nuli carried the basket to the field.
+  ev: [world] Nuli went over to the library gently.
+  ev: [world] Nelo went over to the field gently.
+ A: the library
+
+Q: [question] What has more hats, the mill or the barn? [answer] the mill [feedback] Your answer was right.
+ depth 4 bank q.compare_count
+  ev: [world] Taho shows up at the mill.
+  ev: [world] Giju took the white potato from Taho.
+  ev: [world] The red hat was passed to Giju by Kumo.
+  ev: [world] Then Raho set the yellow hat down at the stable.
+ A: the mill
+
+Q: [question] Does the basket hold the blue jug? [answer] no [feedback] Yay, you got it!
+ depth 1 bank q.yn_in
+  ev: [world] Giju picked up the blue jug quietly.
+ A: no
+
+Q: [question] Where did the sack use to be? [answer] the school [feedback] Yay, you got it!
+ depth 4 bank q.where_before
+  ev: [teacher] It works just so. Kuba always follows Hota.
+  ev: [world] Then Kuba picked up the sack gently.
+  ev: [world] Hota went over to the school gently.
+  ev: [world] Hota went over to the shop gently.
+ A: the school
+
+Q: [question] How could Homi get the blue spoon? [answer] go to the bridge, ask Raho for the basket, take the blue spoon out of the basket [feedback] Your answer w
+ depth 4 bank q.plan_get
+  ev: [world] Raho shows up at the bridge.
+  ev: [world] Soon the blue spoon sits in the basket.
+  ev: [world] Then Raho picked up the basket gently.
+ A: go to the bridge, ask Raho for the basket, take the blue spoon out of the basket
+
+Q: [question] We want to know the answer. What place is Dagi in? [answer] the hill [feedback] Yay, you got it!
+ depth 1 bank q.where_person
+  ev: [world] Dagi shows up at the hill.
+ A: the hill
+
+Q: [question] Say it out loud for us. What is in the box? [answer] not told [feedback] Yay, you got it!
+ depth 0 bank q.in_container
+ A: not told
+
+Q: [question] Does Nuto have the blue axe now? [answer] no [feedback] Your answer was right.
+ depth 2 bank q.yn_has
+  ev: [world] Then Nuto bartered two whistles for an axe.
+  ev: [world] Kuzo and Nuto changed what they had.
+ A: no
+
+Q: [question] Where do you see the grey hoop? [answer] the mill [feedback] Your answer was right.
+ depth 3 bank q.where_object
+  ev: [world] Lota is gripping the box.
+  ev: [world] The grey hoop rests in the box.
+  ev: [world] Lota traveled to the mill.
+ A: the mill
+
+Q: [question] I am ready to listen. Where did the yellow ladle use to be? [answer] the stable [feedback] Yay, you got it!
+ depth 4 bank q.where_before
+  ev: [world] Feda picked up the sack quietly.
+  ev: [world] Soon Feda tucked the yellow ladle into the sack.
+  ev: [world] Then Feda followed Lida to the stable.
+  ev: [world] Soon Feda trailed Lida to the market.
+ A: the stable
+
+Q: [question] Tell me the true thing. How could Kugi get the yellow cake? [answer] go to the beach, pick up the yellow cake [feedback] Your answer was right.
+ depth 2 bank q.plan_get
+  ev: [world] Soon the yellow cake rests at the beach.
+ A: go to the beach, pick up the yellow cake
+
+Q: [question] How could Siju get the green pie? [answer] go to the barn, pick up the green pie [feedback] Your answer was right.
+ depth 2 bank q.plan_get
+  ev: [world] Soon the green pie rests at the barn.
+ A: go to the barn, pick up the green pie
+
+Q: [question] What is next to the hill? [answer] the smithy [feedback] Your answer was right.
+ depth 1 bank q.next_to
+  ev: [world] The hill is right next to the smithy.
+ A: the smithy
+
+Q: [question] What has more aprons, the garden or the gate? [answer] the garden [feedback] Yay, you got it!
+ depth 4 bank q.compare_count
+  ev: [world] In the castle, Rata is present.
+  ev: [world] The grey apron rests in the sack.
+  ev: [world] The green apron rests in the basket.
+  ev: [world] The blue apron rests at the garden.
+  ev: [world] What Rata did was take the brown apron out of the sack slowly.
+  ev: [world] Dasa picked up the sack smoothly.
+  ev: [world] Then Rata picked up the basket gently.
+  ev: [world] Dasa traveled to the garden.
+ A: the garden
+
+Q: [question] Think hard and tell me. What is in the sack? [answer] the brown cup, the grey cup, the grey fork, the grey hammer, the red fork, the red hammer and t
+ depth 1 bank q.in_container
+  ev: [world] The grey cup rests in the sack.
+  ev: [world] The red hammer rests in the sack.
+  ev: [world] The grey hammer rests in the sack.
+  ev: [world] Soon the sack is open.
+  ev: [teacher] It is a fact. Soon the white hammer sits in the sack.
+  ev: [world] Soon Lora stowed the red fork inside the sack.
+  ev: [world] Soon Lora tucked the brown cup into the sack.
+  ev: [world] Soon Keku tucked the grey fork into the sack.
+ A: the brown cup, the grey cup, the grey fork, the grey hammer, the red fork, the red hammer and the white hammer
+
+Q: [question] How could Nuzo get the white cake? [answer] go to the hut, take the white cake out of the sack [feedback] Your answer was right.
+ depth 3 bank q.plan_get
+  ev: [world] Soon the sack rests at the hut.
+  ev: [world] The white cake rests in the sack.
+ A: go to the hut, take the white cake out of the sack
+
+Q: [question] Give me your answer. What is the rule about the container the chest? [answer] only Vezo can open the chest [feedback] Yay, you got it!
+ depth 1 bank q.rule_container
+  ev: [world] The chest is opened by Vezo and no one else.
+ A: only Vezo can open the chest
+
+Q: [question] Let us share your answer. Which way is the pond from the shed? [answer] east [feedback] Yay, you got it!
+ depth 2 bank q.direction
+  ev: [world] The shed is placed west of the pond.
+ A: east
+

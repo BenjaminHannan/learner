@@ -1,0 +1,190 @@
+{
+  "schema": "sol.cloud.tokenizer-helper-cpu-checks.v1",
+  "passed": 23,
+  "total": 23,
+  "checks": [
+    {
+      "name": "complete string exact token-ID protocol",
+      "pass": true,
+      "evidence": {
+        "q48_retained_q49_rejected": true,
+        "full_unicode_newline_question_unchanged": true,
+        "no_ID_or_wrappers_tokenized": true,
+        "query_and_numeric_target_separate_calls": true,
+        "no_truncation_kwargs": true
+      }
+    },
+    {
+      "name": "numeric target64 inclusiveEOS nevertruncated",
+      "pass": true,
+      "evidence": {
+        "target63_plusEOS_retained": true,
+        "target64_plusEOS_rejected_fullIDs_preserved": true
+      }
+    },
+    {
+      "name": "refuse target expression",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target unreduced",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target zerodenominator",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target negativezero",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target integerfraction",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target decimalnotcanonical",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target prose",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse target nonstring",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse question field facts",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse question field tree",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse question field proposed_answer",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse question field audit",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse question field blank",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse duplicated metadataIDs",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse mismatched target questionSHA",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "refuse missing verified numeric target",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "AutoTokenizer factory offline contract",
+      "pass": true,
+      "evidence": {
+        "exact_snapshot_only": true,
+        "local_files_only": true,
+        "trust_remote_code": false,
+        "LM_factory_calls": 0
+      }
+    },
+    {
+      "name": "optional metadata failure is nonfatal",
+      "pass": true,
+      "evidence": {
+        "optionalmetadata_unavailable_nonfatal": true,
+        "missingmetadata_nonfatal": true
+      }
+    },
+    {
+      "name": "requiredEOS absence refuses counts",
+      "pass": true,
+      "evidence": {
+        "expected_ValueError": true
+      }
+    },
+    {
+      "name": "preaccess refusal protects excluded source paths",
+      "pass": true,
+      "evidence": {
+        "mixed_or_protected_refused_before_any_file_stat_or_read": true,
+        "file_access_calls": 0
+      }
+    },
+    {
+      "name": "native capability syntax only",
+      "pass": true,
+      "evidence": {
+        "Mac39_transport_source_and_PC310_helper_syntax": true,
+        "real_HF_tokenizer_calls": 0
+      }
+    }
+  ],
+  "source_sha256": "ed59148db0b9e1de47a1dde8dcd09f0ff1b3a9dffda9f762d5ada98fa1e439a5",
+  "actual_host_tokenizer_execution": false,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "GPU_calls": 0,
+  "SSH_calls": 0,
+  "queue_entries": 0,
+  "limits": [
+    "Token lists are explicit CPU mock fixtures, never actual tokenizer measurement or character proxy.",
+    "Native actual cached-tokenizer count pending pinned accepted-only inputs/targets and soleintegratorwatcher invocation."
+  ]
+}

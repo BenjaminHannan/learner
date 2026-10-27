@@ -1,0 +1,111 @@
+{
+ "what": "dl-5s finding (Claude grid wording in dl-5)",
+ "pool_seed": 3391,
+ "positives": {
+  "from": "dl-5 seed 8 days 1-5",
+  "all_states": 9571,
+  "sampled": 600
+ },
+ "pool": {
+  "asked": 1000,
+  "questions": 516,
+  "fit": 412,
+  "held": 104,
+  "with_suffix": 256,
+  "sample": [
+   "What time does it take to make tea?",
+   "Is a cat a mammal?",
+   "What word is the name of the ancient Egyptian god associated with the solar moon?",
+   "Who is best known as the inventor of the telephone?",
+   "What is the one-word answer to \"Who wrote The Hobbit?"
+  ]
+ },
+ "test_states": 762,
+ "switch": {
+  "fit_loss": 0.0,
+  "test_on": 762,
+  "test_states": 762,
+  "panel_on": 0,
+  "held_neg_on": 0,
+  "held_neg": 104,
+  "panel_on_by_kind": {
+   "bigger": [
+    0,
+    119
+   ],
+   "capital": [
+    0,
+    70
+   ],
+   "count": [
+    0,
+    20
+   ],
+   "opposite": [
+    0,
+    30
+   ],
+   "order": [
+    0,
+    31
+   ],
+   "plural": [
+    0,
+    30
+   ]
+  }
+ },
+ "seeds": {
+  "dl5-S-s8": {
+   "S_panel": {
+    "lost": 98,
+    "gained": 18,
+    "net_harm": 80,
+    "right": 120
+   },
+   "X_panel": {
+    "lost": 0,
+    "gained": 0,
+    "net_harm": 0,
+    "right": 200
+   },
+   "S_lost_items_switched_on": 0,
+   "S_grid_right": 715,
+   "grid_states": 762,
+   "test_states_off": 0,
+   "X_grid_right_bounds": [
+    715,
+    715
+   ]
+  },
+  "dl5-S-s9": {
+   "S_panel": {
+    "lost": 61,
+    "gained": 14,
+    "net_harm": 47,
+    "right": 153
+   },
+   "X_panel": {
+    "lost": 0,
+    "gained": 0,
+    "net_harm": 0,
+    "right": 200
+   },
+   "S_lost_items_switched_on": 0,
+   "S_grid_right": 712,
+   "grid_states": 762,
+   "test_states_off": 0,
+   "X_grid_right_bounds": [
+    712,
+    712
+   ]
+  }
+ },
+ "expected": {
+  "X lost <= 5 on each seed": true,
+  "switch on for >= 95% of grid test states": true,
+  "switch off for >= 95% of panel items": true,
+  "shown wrong: X lost > 0.5 x S lost on either seed": false
+ },
+ "minutes": 88.9
+}

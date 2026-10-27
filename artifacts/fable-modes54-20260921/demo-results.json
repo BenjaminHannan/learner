@@ -1,0 +1,371 @@
+{
+ "questions": [
+  {
+   "qid": "Q1",
+   "nb": "ask Mira mother",
+   "en": "Who is Mira's mother?",
+   "gold": "Ana"
+  },
+  {
+   "qid": "Q2",
+   "nb": "ask Mira mother city",
+   "en": "Where does Mira's mother live?",
+   "gold": "Porto"
+  },
+  {
+   "qid": "Q3",
+   "nb": "ask Mira city",
+   "en": "Where does Mira live?",
+   "gold": "Paris"
+  },
+  {
+   "qid": "Q4",
+   "nb": "ask Tom city",
+   "en": "Where does Tom live?",
+   "gold": "<ABSTAIN>"
+  },
+  {
+   "qid": "Q5",
+   "nb": "ask Mira job",
+   "en": "What is Mira's job?",
+   "gold": "<ABSTAIN>"
+  },
+  {
+   "qid": "Q6",
+   "nb": "ask Mira city",
+   "en": "Where does Mira live?",
+   "gold": "<ABSTAIN>"
+  },
+  {
+   "qid": "Q7",
+   "nb": "ask Mira1 city",
+   "en": "Where does Mira1 live?",
+   "gold": "Paris"
+  },
+  {
+   "qid": "Q8",
+   "nb": "ask Mira favourite",
+   "en": "What is Mira's favourite colour?",
+   "gold": "green"
+  },
+  {
+   "qid": "Q9",
+   "nb": "self-report",
+   "en": "-",
+   "gold": "self-report"
+  }
+ ],
+ "notebook": {
+  "correct": {
+   "Q1": 1,
+   "Q2": 1,
+   "Q3": 1,
+   "Q4": 1,
+   "Q5": 1,
+   "Q6": 1,
+   "Q7": 1,
+   "Q8": 0,
+   "Q9": 1
+  },
+  "total": 8,
+  "detail": {
+   "Q1": {
+    "reply": "Ana.",
+    "gold": "Ana",
+    "correct": 1
+   },
+   "Q2": {
+    "reply": "Porto.",
+    "gold": "Porto",
+    "correct": 1
+   },
+   "Q3": {
+    "reply": "Paris.",
+    "gold": "Paris",
+    "correct": 1
+   },
+   "Q4": {
+    "reply": "I don't know Tom's city.",
+    "gold": "<ABSTAIN>",
+    "correct": 1
+   },
+   "Q5": {
+    "reply": "I don't know Mira's job.",
+    "gold": "<ABSTAIN>",
+    "correct": 1
+   },
+   "Q6": {
+    "reply": "I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?",
+    "gold": "<ABSTAIN>",
+    "correct": 1
+   },
+   "Q7": {
+    "reply": "Paris.",
+    "gold": "Paris",
+    "correct": 1
+   },
+   "Q8": {
+    "reply": "I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?",
+    "gold": "green",
+    "correct": 0
+   },
+   "Q9": {
+    "tags_cited": 4,
+    "log_entries_cited": 8,
+    "correct": 1,
+    "sources_in_notebook": [
+     "inferred",
+     "proposed",
+     "sleep-derived",
+     "taught"
+    ]
+   }
+  },
+  "modes_seen": [
+   "CREATIVE",
+   "LISTENING",
+   "SLEEP",
+   "THINKING",
+   "WORK"
+  ],
+  "creative_fixed_n": 11
+ },
+ "baseline": {
+  "vocab_size": 39,
+  "updates": 600,
+  "lr": 0.001,
+  "seeds": [
+   5401,
+   5402,
+   5403
+  ],
+  "per_seed": {
+   "5401": {
+    "predictions": {
+     "Q1": "Ana",
+     "Q2": "Porto",
+     "Q3": "Paris",
+     "Q4": "<ABSTAIN>",
+     "Q5": "<ABSTAIN>",
+     "Q6": "<ABSTAIN>",
+     "Q7": "Paris",
+     "Q8": "green",
+     "Q9": "(no notebook or mode log to read)"
+    },
+    "correct": {
+     "Q1": 1,
+     "Q2": 1,
+     "Q3": 1,
+     "Q4": 1,
+     "Q5": 1,
+     "Q6": 1,
+     "Q7": 1,
+     "Q8": 1,
+     "Q9": 0
+    },
+    "total": 8,
+    "parameters": 104832,
+    "final_train_loss": 0.0007,
+    "train_seconds": 3.25
+   },
+   "5402": {
+    "predictions": {
+     "Q1": "Ana",
+     "Q2": "Porto",
+     "Q3": "Paris",
+     "Q4": "<ABSTAIN>",
+     "Q5": "<ABSTAIN>",
+     "Q6": "<ABSTAIN>",
+     "Q7": "Paris",
+     "Q8": "green",
+     "Q9": "(no notebook or mode log to read)"
+    },
+    "correct": {
+     "Q1": 1,
+     "Q2": 1,
+     "Q3": 1,
+     "Q4": 1,
+     "Q5": 1,
+     "Q6": 1,
+     "Q7": 1,
+     "Q8": 1,
+     "Q9": 0
+    },
+    "total": 8,
+    "parameters": 104832,
+    "final_train_loss": 0.0008,
+    "train_seconds": 2.59
+   },
+   "5403": {
+    "predictions": {
+     "Q1": "Ana",
+     "Q2": "Porto",
+     "Q3": "Paris",
+     "Q4": "<ABSTAIN>",
+     "Q5": "<ABSTAIN>",
+     "Q6": "<ABSTAIN>",
+     "Q7": "Paris",
+     "Q8": "green",
+     "Q9": "(no notebook or mode log to read)"
+    },
+    "correct": {
+     "Q1": 1,
+     "Q2": 1,
+     "Q3": 1,
+     "Q4": 1,
+     "Q5": 1,
+     "Q6": 1,
+     "Q7": 1,
+     "Q8": 1,
+     "Q9": 0
+    },
+    "total": 8,
+    "parameters": 104832,
+    "final_train_loss": 0.0007,
+    "train_seconds": 2.74
+   }
+  },
+  "trained_on": [
+   "Q1",
+   "Q2",
+   "Q3",
+   "Q4",
+   "Q5",
+   "Q6",
+   "Q7",
+   "Q8"
+  ],
+  "note": "trained on the same story+question pairs it is asked (Q9 untrainable); greedy decode, exact match"
+ },
+ "identity_D5": true,
+ "d6_modes": true,
+ "mode_log": [
+  {
+   "seq": 1,
+   "t": 0,
+   "from": "THINKING",
+   "to": "THINKING",
+   "reason": "start",
+   "inbox": 0,
+   "runnable_jobs": 0,
+   "memory": 0
+  },
+  {
+   "seq": 2,
+   "t": 1,
+   "from": "THINKING",
+   "to": "LISTENING",
+   "reason": "inbox-nonempty",
+   "inbox": 1,
+   "runnable_jobs": 0,
+   "memory": 0
+  },
+  {
+   "seq": 3,
+   "t": 26,
+   "from": "LISTENING",
+   "to": "CREATIVE",
+   "reason": "work-open-ended",
+   "inbox": 0,
+   "runnable_jobs": 2,
+   "memory": 25,
+   "job_id": "J-show"
+  },
+  {
+   "seq": 4,
+   "t": 27,
+   "from": "CREATIVE",
+   "to": "WORK",
+   "reason": "creative-found-round-2",
+   "inbox": 0,
+   "runnable_jobs": 2,
+   "memory": 25,
+   "job_id": "J-show"
+  },
+  {
+   "seq": 5,
+   "t": 29,
+   "from": "WORK",
+   "to": "CREATIVE",
+   "reason": "work-open-ended",
+   "inbox": 0,
+   "runnable_jobs": 1,
+   "memory": 26,
+   "job_id": "J-stuck"
+  },
+  {
+   "seq": 6,
+   "t": 39,
+   "from": "CREATIVE",
+   "to": "THINKING",
+   "reason": "creative-giveup-fixed-n-ask-ben",
+   "inbox": 0,
+   "runnable_jobs": 0,
+   "memory": 26,
+   "job_id": "J-stuck",
+   "question_id": "Q-J-stuck"
+  },
+  {
+   "seq": 7,
+   "t": 40,
+   "from": "THINKING",
+   "to": "SLEEP",
+   "reason": "memory-full",
+   "inbox": 0,
+   "runnable_jobs": 0,
+   "memory": 26
+  },
+  {
+   "seq": 8,
+   "t": 42,
+   "from": "SLEEP",
+   "to": "THINKING",
+   "reason": "sleep-commit",
+   "inbox": 0,
+   "runnable_jobs": 0,
+   "memory": 0
+  }
+ ],
+ "questions_for_ben": [
+  {
+   "question_id": "Q-J-stuck",
+   "job_id": "J-stuck",
+   "kind": "ASK_BEN",
+   "text": "Job J-stuck: tried 11 idea-rounds, no idea passed its check. What should I do?"
+  }
+ ],
+ "heard_lines": [
+  "person Mira",
+  "person Ana",
+  "person Tom",
+  "teach Mira mother -> Ana",
+  "teach Ana city = Porto",
+  "teach Mira city = Lisbon",
+  "teach Mira colour = green",
+  "correct Mira city = Paris",
+  "quote Apparently Tom's city is Rome",
+  "alias Mira1 = Mira",
+  "person Mira",
+  "teach Mira city = Oslo",
+  "pick E0004",
+  "person Kai",
+  "teach Kai mother -> Ana"
+ ],
+ "story_lines": [
+  "person Mira",
+  "person Ana",
+  "person Tom",
+  "teach Mira mother -> Ana",
+  "teach Ana city = Porto",
+  "teach Mira city = Lisbon",
+  "teach Mira colour = green",
+  "correct Mira city = Paris",
+  "quote Apparently Tom's city is Rome",
+  "alias Mira1 = Mira",
+  "person Mira",
+  "teach Mira city = Oslo",
+  "pick E0004",
+  "person Kai",
+  "teach Kai mother -> Ana"
+ ]
+}

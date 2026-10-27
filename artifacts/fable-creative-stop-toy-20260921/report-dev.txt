@@ -1,0 +1,48 @@
+Suite: dev
+Seeds: 3101, 3102, 3103
+Fixed-N baseline: N=11 rounds
+
+seed arm solved false_found correct_giveups wrong_giveups budget_outs checker_calls candidates unsolv_cap_fraction record_complete
+3101 A 40 0 16 0 4 234 2180 0.725 1.000
+3101 B 39 0 20 1 0 234 2544 0.917 1.000
+3101 C 40 0 0 0 20 235 2712 1.000 1.000
+3101 D 6 54 0 0 0 0 480 0.083 1.000
+3102 A 38 0 14 2 6 226 2144 0.713 1.000
+3102 B 40 0 20 0 0 238 2584 0.917 1.000
+3102 C 40 0 0 0 20 238 2744 1.000 1.000
+3102 D 8 52 0 0 0 0 480 0.083 1.000
+3103 A 40 0 14 0 6 254 2200 0.708 1.000
+3103 B 40 0 20 0 0 261 2600 0.917 1.000
+3103 C 40 0 0 0 20 263 2760 1.000 1.000
+3103 D 4 56 0 0 0 0 480 0.083 1.000
+
+Pre-fixed pass marks (evaluated per seed; never averaged across seeds):
+Seed 3101:
+  1. PASS - false FOUND A/B/C=0/0/0; D=54 (>0 required)
+  2. PASS - A solved 40 vs C 40 (>=95%)
+  3. FAIL - A compute 2180 cand/234 checks vs C 2712/235 (both <=70%)
+  4. FAIL - A vs B solved 40 vs 39; compute 2180/234 vs 2544/234
+  5. FAIL - A correct give-ups 16/20 (>=16); mean cap fraction 0.725
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+Seed 3102:
+  1. PASS - false FOUND A/B/C=0/0/0; D=52 (>0 required)
+  2. PASS - A solved 38 vs C 40 (>=95%)
+  3. FAIL - A compute 2144 cand/226 checks vs C 2744/238 (both <=70%)
+  4. FAIL - A vs B solved 38 vs 40; compute 2144/226 vs 2584/238
+  5. FAIL - A correct give-ups 14/20 (>=16); mean cap fraction 0.713
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+Seed 3103:
+  1. PASS - false FOUND A/B/C=0/0/0; D=56 (>0 required)
+  2. PASS - A solved 40 vs C 40 (>=95%)
+  3. FAIL - A compute 2200 cand/254 checks vs C 2760/263 (both <=70%)
+  4. FAIL - A vs B solved 40 vs 40; compute 2200/254 vs 2600/261
+  5. FAIL - A correct give-ups 14/20 (>=16); mean cap fraction 0.708
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+
+DEV NOTE: mark 5 preserves the pre-fixed 48/60 = 80% give-up rate on the 20 unsolvable dev items; test uses the exact 48/60 count.
+
+OVERALL VERDICT: KEEP_FIXED_N
+Interpretation: KEEP_RULE supports only 'the stopping controller is sensible on a toy'; it says nothing about creativity or a neural dreamer.

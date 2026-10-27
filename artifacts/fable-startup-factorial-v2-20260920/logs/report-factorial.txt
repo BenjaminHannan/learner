@@ -1,0 +1,323 @@
+# astra-startup-factorial-v2 — per seed, per arm, never averaged
+# onset: earliest t>=200 with the five probes t-200..t each >= 461/512; missing probes do not qualify
+
+## seed 1300
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False        1950           0        True         505         506        True
+B       16   True   (missing)           0       False          40          47       False
+C       24  False        2200           0        True         507         512        True
+D       24   True   (missing)           0       False          35          33       False
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset 1950->censored, final/512 -465
+  filler effect  D-C: onset 2200->censored, final/512 -472
+  fact effect    C-A: onset +250, final/512 +2
+  fact effect    D-B: onset both censored, final/512 -5
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 -7
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+     0         0         0         0         0
+    50        30        41        30        41
+   100        29        29        29        29
+   150        29        25        29        29
+   200        35        35        35        35
+   250        35        35        35        35
+   300        29        29        29        29
+   350        35        25        28        28
+   400        41        41        41        41
+   450        27        27        27        27
+   500        25        29        29        29
+   550        42        21        21        21
+   600        27        27        27        27
+   650        25        25        25        25
+   700        50        41        41        41
+   750        64        29        29        29
+   800        65        27        27        27
+   850        74        42        42        42
+   900        69        34        34        34
+   950        81        41        41        41
+  1000        81        34        43        34
+  1050       105        30        30        30
+  1100       124        27        26        27
+  1150       165        27        37        27
+  1200       255        21        31        21
+  1250       284        30        45        30
+  1300       332        27        27        29
+  1350       331        32        41        32
+  1400       352        42        34        42
+  1450       356        34        66        34
+  1500       361        42       101        42
+  1550       357        29       150        29
+  1600       364        41       162        41
+  1650       403        42       182        42
+  1700       402        27       194        27
+  1750       467        27       195        27
+  1800       489        27       201        35
+  1850       483        34       206        34
+  1900       495        30       248        29
+  1950       491        42       404        42
+  2000       488        35       491        35
+  2050       505        37       508        25
+  2100       503        35       508        35
+  2150       506        35       510        35
+  2200       512        38       512        34
+  2250       506        44       512        30
+  2300       510        32       512        21
+  2350       510        30       512        30
+  2400       505        24       511        29
+  2450       508        49       511        35
+  2500       505        40       507        35
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+     0 A  1.00204567  0.0003623836294840997  0.010253727266881806  -1.8551945686340332e-06
+   500 A  2.40840242  0.04584432109572441  0.13697279064320533  -0.00031422078609466553
+  1000 A  2.47952309  0.02611066960252324  0.058667157470976374  0.001005902886390686
+  2500 A  11.82421919  0.5063621559964784  0.21165837809471008  0.0034093260765075684
+     0 B  1.0219682  -0.008491898743812197  -0.1261910422804929  -1.1842697858810425e-05
+   500 B  1.0844323  8.690228740917395e-05  0.003865155138095448  4.0160492062568665e-05
+  1000 B  1.27910751  0.0007698652551261766  0.01363438095887727  -7.078982889652252e-05
+  2500 B  10.26641281  0.1151799764191345  0.23873978024083428  -8.800625801086426e-05
+     0 C  1.00301912  -0.00014688487476158919  -0.006772166823282646  -1.4528632164001465e-06
+   500 C  1.50900274  0.004540142781126838  0.025239596078443453  0.00023056939244270325
+  1000 C  1.95179954  0.0018231142284423057  0.01140691176045866  -0.0002529844641685486
+  2500 C  15.96547354  0.6791920980550936  0.27504969506284355  0.00304490327835083
+     0 D  1.01885495  -0.0059489534711723285  -0.12382812821997649  -8.150935173034668e-06
+   500 D  1.04852374  1.9777201989761625e-05  0.0016500008104703974  1.786462962627411e-05
+  1000 D  1.14497592  0.0003579102492360269  0.014002620865506845  3.709644079208374e-05
+  2500 D  1.05406664  0.00011465720724857408  0.017399498993760164  -5.165114998817444e-06
+
+## seed 1301
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False        1900           0        True         511         512        True
+B       16   True   (missing)           0       False         347         364       False
+C       24  False        2200           0        True         511         512        True
+D       24   True   (missing)           0       False          35          36       False
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset 1900->censored, final/512 -164
+  filler effect  D-C: onset 2200->censored, final/512 -476
+  fact effect    C-A: onset +300, final/512 +0
+  fact effect    D-B: onset both censored, final/512 -312
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 -312
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+     0         0         0         0         0
+    50        33        33        33        33
+   100        30        30        30        30
+   150        30        30        30        30
+   200        36        36        36        36
+   250        36        36        36        36
+   300        27        27        27        27
+   350        21        21        21        21
+   400        27        27        27        27
+   450        30        30        30        30
+   500        34        34        34        34
+   550        34        34        34        34
+   600        30        30        30        30
+   650        34        34        34        34
+   700        36        36        41        36
+   750        27        27        27        30
+   800        39        39        39        39
+   850        31        31        31        31
+   900        34        30        30        30
+   950        48        30        30        30
+  1000        41        21        21        21
+  1050        78        30        30        30
+  1100        78        34        34        34
+  1150        82        27        27        27
+  1200       121        36        40        36
+  1250       156        27        27        27
+  1300       235        39        39        39
+  1350       293        30        30        30
+  1400       380        43        34        31
+  1450       395        42        35        32
+  1500       398        45        48        31
+  1550       411        50        42        31
+  1600       401        44        63        31
+  1650       389        58        88        33
+  1700       483        55        80        32
+  1750       512        52       107        36
+  1800       512        50       113        30
+  1850       512        65       136        32
+  1900       507       103       224        44
+  1950       512       108       378        33
+  2000       511       110       490        30
+  2050       510       140       510        33
+  2100       512       144       511        27
+  2150       510       156       512        39
+  2200       512       183       505        27
+  2250       512       200       511        32
+  2300       512       234       510        34
+  2350       512       286       511        27
+  2400       512       324       510        31
+  2450       512       350       512        32
+  2500       511       347       511        35
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+     0 A  0.99761506  0.00020177954681465388  0.011325716717590924  -7.972121238708496e-07
+   500 A  1.35357269  0.005922360244877421  0.03570886743227538  0.0007636547088623047
+  1000 A  2.14312293  0.051087420265420104  0.1584279229887987  -0.001733928918838501
+  2500 A  12.19233249  0.13296471272278632  0.10733650742292017  -0.0021237730979919434
+     0 B  1.00756218  0.0024869560324822467  0.08089788382886423  4.135072231292725e-06
+   500 B  1.13201515  0.0002470308951410626  0.009996967349487585  9.194016456604004e-06
+  1000 B  2.798772  -0.02690429245282225  -0.043478020014264894  0.001686789095401764
+  2500 B  21.70810544  0.6097909548392877  0.3271894481849355  0.0037957429885864258
+     0 C  0.99743947  0.000218613686590272  0.021077575381249197  -4.470348358154297e-07
+   500 C  1.0679892  0.000727031658853144  0.029068158763597376  -8.430331945419312e-06
+  1000 C  1.934146  0.04057718857189797  0.19827344594518023  -0.002252541482448578
+  2500 C  16.52509131  -0.11685260436410058  -0.15201508739554567  -0.0015754103660583496
+     0 D  1.00586501  0.001809179674004557  0.08264335129203355  3.032386302947998e-06
+   500 D  1.09155127  0.00018142074402205524  0.012475985476927604  -1.6819685697555542e-06
+  1000 D  1.87315129  0.0032839332082891907  0.05118708011257745  -0.0004955828189849854
+  2500 D  1.93534386  -0.002366899828084879  -0.0337590679292604  -0.00019843503832817078
+
+## seed 1302
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False        2250           0        True         510         510        True
+B       16   True   (missing)           0       False          32          24       False
+C       24  False   (missing)           0       False          61          49       False
+D       24   True   (missing)           0       False          32          24       False
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset 2250->censored, final/512 -478
+  filler effect  D-C: onset both censored, final/512 -29
+  fact effect    C-A: onset 2250->censored, final/512 -449
+  fact effect    D-B: onset both censored, final/512 +0
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 +449
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+     0        12        19        14        19
+    50        24        24        24        24
+   100        23        23        23        23
+   150        42        42        42        42
+   200        32        32        32        32
+   250        23        23        23        23
+   300        32        32        32        32
+   350        41        41        41        41
+   400        33        33        33        33
+   450        30        30        30        30
+   500        37        37        37        37
+   550        36        36        36        36
+   600        47        33        33        33
+   650        57        37        37        37
+   700        56        42        42        42
+   750        64        23        23        23
+   800        54        30        30        30
+   850        64        30        30        30
+   900        68        24        24        24
+   950        78        40        40        40
+  1000        83        36        36        36
+  1050        90        33        33        33
+  1100        97        28        28        28
+  1150       102        28        28        28
+  1200       107        33        33        33
+  1250       132        37        37        37
+  1300       135        36        36        36
+  1350       125        26        30        33
+  1400       160        32        32        32
+  1450       195        33        33        33
+  1500       216        32        32        32
+  1550       283        23        23        23
+  1600       329        36        36        36
+  1650       352        32        32        32
+  1700       385        24        24        24
+  1750       400        37        49        37
+  1800       409        23        45        23
+  1850       407        29        27        29
+  1900       403        32        48        32
+  1950       401        32        47        32
+  2000       404        32        41        32
+  2050       483        32        47        32
+  2100       510        30        42        30
+  2150       511        33        44        33
+  2200       512        32        49        32
+  2250       512        40        51        40
+  2300       512        42        50        42
+  2350       511        30        57        30
+  2400       512        24        53        24
+  2450       511        42        71        42
+  2500       510        32        61        32
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+     0 A  1.00330602  0.0017078475915301662  0.09337446790284847  1.4640390872955322e-06
+   500 A  2.45199385  0.053512553915965884  0.043332107270929836  0.012788370251655579
+  1000 A  2.14780844  0.10549892442866782  0.1749607051522917  0.0004719942808151245
+  2500 A  10.74343611  0.1122702337130316  0.11993724903405605  0.0021282434463500977
+     0 B  1.01154788  0.0010770778929202725  0.031698435093436825  2.4829059839248657e-06
+   500 B  1.1156755  0.0001146503542539487  0.003985739235894673  3.136880695819855e-05
+  1000 B  1.09251007  0.00016347307247958968  0.005105031165356049  -0.00018020160496234894
+  2500 B  1.11178522  -7.564814846129475e-05  -0.0025857393920136742  3.4147873520851135e-05
+     0 C  1.00465429  0.0010969223359730597  0.08699581323855647  1.0319054126739502e-06
+   500 C  1.24461759  0.0028473664739301183  0.03468635320769904  0.00023020431399345398
+  1000 C  1.15750165  0.0011294525245952982  0.01645201243401967  7.565319538116455e-05
+  2500 C  2.12118383  0.11020075950943416  0.26079313249181824  -0.0002993941307067871
+     0 D  1.01060268  0.0008028280316390692  0.03297473696173572  1.730397343635559e-06
+   500 D  1.0723082  -4.9006228992456566e-05  -0.0032044295047851967  8.011236786842346e-06
+  1000 D  1.06402708  -1.862813812200873e-05  -0.0015717436619455607  2.8645619750022888e-05
+  2500 D  1.04353894  0.00010276152162035099  0.018415020384698545  1.819804310798645e-05
+
+## long run (separate question; an extension under a declared schedule, NOT a continuation of historical e0)
+seed 1300: (missing)
+seed 1301: (missing)
+seed 1302: (missing)
+
+## freeze-before-growth transfer of the final arm-A checkpoint (no updates; pass = >= 461/512 per cell)
+seed 1300: checkpoint 9c4b2163960d65bb
+  e6-f16-x0      entities= 6 facts=16 filler=0.0   508/512 pass
+  e6-f16-x50     entities= 6 facts=16 filler=0.5   501/512 pass
+  e6-f16-x100    entities= 6 facts=16 filler=1.0   497/512 pass
+  e6-f24-x0      entities= 6 facts=24 filler=0.0   505/512 pass
+  e6-f24-x50     entities= 6 facts=24 filler=0.5   499/512 pass
+  e6-f24-x100    entities= 6 facts=24 filler=1.0   495/512 pass
+  e16-f16-x0     entities=16 facts=16 filler=0.0   510/512 pass
+  e16-f16-x50    entities=16 facts=16 filler=0.5   502/512 pass
+  e16-f16-x100   entities=16 facts=16 filler=1.0   496/512 pass
+  e16-f24-x0     entities=16 facts=24 filler=0.0   507/512 pass
+  e16-f24-x50    entities=16 facts=24 filler=0.5   501/512 pass
+  e16-f24-x100   entities=16 facts=24 filler=1.0   496/512 pass
+  e16-f64-x0     entities=16 facts=64 filler=0.0   488/512 pass
+  e16-f64-x50    entities=16 facts=64 filler=0.5   487/512 pass
+  e16-f64-x100   entities=16 facts=64 filler=1.0   485/512 pass
+seed 1301: checkpoint a47705ea9287a21d
+  e6-f16-x0      entities= 6 facts=16 filler=0.0   511/512 pass
+  e6-f16-x50     entities= 6 facts=16 filler=0.5   511/512 pass
+  e6-f16-x100    entities= 6 facts=16 filler=1.0   511/512 pass
+  e6-f24-x0      entities= 6 facts=24 filler=0.0   511/512 pass
+  e6-f24-x50     entities= 6 facts=24 filler=0.5   511/512 pass
+  e6-f24-x100    entities= 6 facts=24 filler=1.0   511/512 pass
+  e16-f16-x0     entities=16 facts=16 filler=0.0   512/512 pass
+  e16-f16-x50    entities=16 facts=16 filler=0.5   512/512 pass
+  e16-f16-x100   entities=16 facts=16 filler=1.0   512/512 pass
+  e16-f24-x0     entities=16 facts=24 filler=0.0   512/512 pass
+  e16-f24-x50    entities=16 facts=24 filler=0.5   512/512 pass
+  e16-f24-x100   entities=16 facts=24 filler=1.0   512/512 pass
+  e16-f64-x0     entities=16 facts=64 filler=0.0   511/512 pass
+  e16-f64-x50    entities=16 facts=64 filler=0.5   511/512 pass
+  e16-f64-x100   entities=16 facts=64 filler=1.0   511/512 pass
+seed 1302: checkpoint 3790f4a807dbbca0
+  e6-f16-x0      entities= 6 facts=16 filler=0.0   512/512 pass
+  e6-f16-x50     entities= 6 facts=16 filler=0.5   512/512 pass
+  e6-f16-x100    entities= 6 facts=16 filler=1.0   512/512 pass
+  e6-f24-x0      entities= 6 facts=24 filler=0.0   510/512 pass
+  e6-f24-x50     entities= 6 facts=24 filler=0.5   510/512 pass
+  e6-f24-x100    entities= 6 facts=24 filler=1.0   510/512 pass
+  e16-f16-x0     entities=16 facts=16 filler=0.0   512/512 pass
+  e16-f16-x50    entities=16 facts=16 filler=0.5   512/512 pass
+  e16-f16-x100   entities=16 facts=16 filler=1.0   512/512 pass
+  e16-f24-x0     entities=16 facts=24 filler=0.0   512/512 pass
+  e16-f24-x50    entities=16 facts=24 filler=0.5   512/512 pass
+  e16-f24-x100   entities=16 facts=24 filler=1.0   512/512 pass
+  e16-f64-x0     entities=16 facts=64 filler=0.0   508/512 pass
+  e16-f64-x50    entities=16 facts=64 filler=0.5   509/512 pass
+  e16-f64-x100   entities=16 facts=64 filler=1.0   509/512 pass
+
+Scope: these are effects at the tested row counts, streams and budgets. A/C success would show filler removal sufficient in these cells, not that competing facts never matter; D successes do not eliminate an optimization barrier; all-four success does not mean the question was wrong.

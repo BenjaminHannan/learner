@@ -1,0 +1,36 @@
+COMMON BRIEF FOR EXPERIMENTS 245-251 (question-reading fixes from diagnosis 243). Read fully. The rules file OPUS-RULES.txt (same folder) also applies in full.
+
+Background. Diagnosis 243 (artifacts/claude-diag243-20260922/RESULTS.md and traces.md; read both) found that Premonition often says "I don't know" about facts it HAS stored, because no question reader matches the wording. The question falls through to the glued decline. There are five causes (A, B, C1, C2, D). The live 30-conversation panel (exp 239) also showed two more gaps: "my <relation>" used as a question subject gets "I don't know anyone called my uncle" (exp 245), and a verb question can flip direction and leak a stored value, e.g. "Who does X employ?" answered with X's employer (exp 251). Seven builders each fix ONE of these, in parallel, on the same base. Each builder makes exactly one change.
+
+Base (for every builder): scripts/claude_loop228_agent.py with config artifacts/claude-determinism228-20260922/loop228-config.json (138i + the 228 guard). Build scripts/claude_loop<exp>_agent.py as a subclass or wrapper. Put SrcGuardMixin228 first in the daemon bases and call install_srcguard228() at import (copy scripts/claude_loop228_agent.py). Put your one change as a new mixin/module scripts/claude_fix<exp>_<name>.py. Never edit an existing file.
+
+Blind panel. A separate writer is building the shared blind panel artifacts/claude-askpanel243-20260922/. Its exact schema and the scoring rules are in askpanel243-schema.txt (same folder). Your scorer must implement that schema check and those scoring rules exactly. You must NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed. After your seal, (1) wait for the director's message that the panel is sealed (or for its SEAL.sha256.txt to exist and check OK from the repo root), (2) run your scorer's schema check, (3) run the panel ONCE on both arms (base228 for timing and no-change checks; yours), (4) score. If the panel is not ready 40 min after your seal, report the status to the director and stop.
+
+Order of work:
+1. Read 243's RESULTS.md and traces.md and the code files they cite for your cause. Reproduce your cause on the base with your own dev dialogs (probe runner in OPUS-RULES).
+2. Write your dev cases (scripts/ or artifacts/claude-<name>-20260922/dev<exp>.jsonl): at least 30 question turns for your cause, including variants the diagnosis did not list (other relations, one- and two-word names, lower/upper case, with and without a greeting or "please"), at least 8 must-not-change cases (forms that already work), and at least 6 traps (untaught facts in your wording: the reply must give no stored value). Never copy from any panel.
+3. Build the fix. Pilot on dev, frozen suites and sleep smoke.
+4. Write PASSMARKS.md (marks below, predicted suite moves listed by id), seal (code, config, dev cases, scorer, PASSMARKS), append ledger lines P<exp>.1-n.
+5. Registered runs, each once: M2 dev, M3 suites, M4 sleep smoke, then M1 panel (after the panel is sealed).
+6. RESULTS.md and your final message, as in OPUS-RULES.
+
+Registered marks (same for every builder, except M1a names your family):
+- M1a: your family on the panel: at least 90 % right (scoring rules in the schema file).
+- M1b: wrong values on all 124 items: 0.
+- M1c: question writes on all 124 items: 0.
+- M1d: control items: 12/12 byte-identical to base228 base_reply.
+- M1e: no item in any other family goes from base_right true to wrong or to a decline; untaught 10/10 give no stored value; direction: no NEW value leak compared with base228 (leaks that base228 already has are listed, not counted), except for exp 251, whose M1a is direction 10/10 with no leak.
+- M1f: combo items are reported per item with no bar (a wrong value there still counts in M1b).
+- M2: dev cases all right, 0 question writes, traps give no value.
+- M3: scripts/fable_suitediff218.py --agent <yours> --config <yours> --base 138i --out <dir> --only rt136,rt143,sessions152,bench: 0 new WRONG / WRONG-WRITE / junk write / lost OK; the moves equal your predicted list exactly.
+- M4: scripts/fable_sleepsmoke206.py: same marks as 138i (sleeps 1, installed, probes 5/5, wrong 0, taught 50/50, overwrote 0, under 300 s).
+- M5: median added time per panel question, yours minus base228 measured in the same session: at most +5 ms.
+
+Safety rules for every fix:
+- Question turns never write to the notebook.
+- Never give a stored value that the question did not ask for. When in doubt, decline honestly.
+- Rewrites of the user's text happen only on turns ending in "?" and only when the rewritten form is one an existing reader already handles; if the rewrite does not produce an answer, fall back to the original text's handling unchanged.
+- Any inverse answer is labelled "(worked out backwards)" and never stored.
+- A name counts only if it resolves to an entity already in the notebook (nb.resolve or the existing resolver); never treat a common lowercase word as a name.
+
+Report in your final message: verdict, marks table with integer counts, every move (panel, dev, suites), every miss with a one-line diagnosis, deviations, "What it means" / "What it doesn't mean".

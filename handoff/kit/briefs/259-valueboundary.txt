@@ -1,0 +1,79 @@
+EXP 259 BRIEF: the denied value ends at a clause boundary. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why
+- The director's recount of exp 252b found false replies. 252b's own safety set (artifacts/claude-correct252b-20260922/dev252b.jsonl) is a dev set you may read.
+  - 5 explicit denials that end with an extra clause get a false reply on 252 and 252b. Example: after "Arlo works at Brimwell.", the turn "Arlo doesn't work at Brimwell, that's outdated." gets "I don't have Brimwell, that's outdated as Arlo's employer, so I didn't change anything." But Brimwell IS stored, and it stays stored.
+  - Other replies of the same kind: "I don't have Pellic (that's stale) as Dagny's language…" and "I don't have Sill, it's wrong as Evard's manager…".
+  - 138k gave an honest "Could you say it another way" to the same turns, so 252's denial path introduced these replies. None of 252b's marks measured reply truth.
+- In the same set, 37 of 38 denials and corrections with a trailing clause are not carried out.
+- Diagnosis: 252's explicit-denial path takes everything after the verb as the denied value, including the trailing clause. That value never matches the stored one, so the path says "I don't have <value>", which is false.
+
+Base: 252b = scripts/claude_loop252b_agent.py with artifacts/claude-correct252b-20260922/loop252b-config.json.
+- One change: a single new mixin, scripts/claude_fix259_boundary.py, placed in scripts/claude_loop259_agent.py.
+- Artifacts: artifacts/claude-boundary259-20260922/. Ledger lines: P259.n. Never edit an existing file.
+
+The one change: inside 252's explicit-denial path only.
+1. When the denied value span does not exactly match a stored value for that (subject, relation), check whether the span STARTS with a stored value of that (subject, relation), followed directly by a clause boundary: ", " " - " " — " "; " " (" or the end of the turn.
+   - Use the same case and punctuation normalisation as the path's own exact match.
+   - If it does, the denial targets that stored value. Remove it through 252's existing retraction path, with 252's own "removed" reply.
+   - Only a punctuation boundary counts. "Brimwell Hall" must not match a stored "Brimwell".
+2. If no stored value matches, 252's honest "I don't have …" reply names only the part of the span before the first clause boundary, never the tail.
+3. A reply may never say "I don't have V" when (subject, relation, V) is stored.
+
+Everything else stays byte-identical, including:
+- contextual denials and corrections, and teach turns;
+- questions: they never write;
+- the user-name confirm flow;
+- inferred facts, which are never stored or removed.
+
+Overlap with 258
+- Exp 258, built in parallel on the same base, removes commentary clauses ("…, that's old news") from denial and correction turns before 252's parse.
+- The two changes meet on explicit denials with a that-clause. Both should remove the stored fact there, and a later small merge checks that they agree.
+- 259 does NOT fix "That's wrong, that's old news." (b252-035): predict it stays a junk write on your arm.
+- Don't read or import 258's files.
+
+Blind panel
+- A separate writer is building artifacts/claude-corrtail258-20260922/ under the exact schema in corrtail258-spec.txt (same folder). Your scorer must implement that schema check and those scoring rules exactly.
+- Do NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed.
+- After your seal:
+  - wait for its SEAL.sha256.txt to exist and check OK from the repo root;
+  - run your schema check;
+  - run the panel ONCE on both arms (252b and yours) and score it.
+- If the panel is not ready 40 minutes after your seal, report and stop.
+
+Order of work
+1. Reproduce the false replies on 252b with your own dev dialogs (probe runner in OPUS-RULES).
+2. Write your dev cases: at least 50 scored dialogs in your own wording. They must include:
+   - at least 15 explicit denials with a trailing clause of many kinds (that/which clauses, ", it's wrong now", ", not anymore", " - she quit", " lol", brackets);
+   - at least 8 near-miss values that must NOT match ("Brimwell Hall" vs a stored "Brimwell", a value that only shares a prefix);
+   - at least 6 denials of unstored facts with tails;
+   - at least 12 must-not-change turns;
+   - at least 6 question traps;
+   - at least 4 restart cases, including a reverse lookup after a removal.
+3. Build the fix. Pilot on your dev set, on dev252b, on the suites and on the sleep smoke.
+4. Write PASSMARKS.md with every predicted move by id (suites, dev252b and the corrpanel252 rows). Seal, append the ledger lines, then do the registered runs once each: M2, M3, M4, M5, M6, M7 and then M1.
+
+Registered marks
+- M1, panel corrtail258 (80 items), on your arm:
+  - that_denial ≥ 10/12
+  - other_tail_denial ≥ 8/10
+  - 0 false claims over all 80
+  - 0 junk writes over all 80, except items in that_correction or pure_denial_that where 252b already makes the same junk write. List those items; they are 258's job.
+  - 0 wrong values in that_denial and other_tail_denial
+  - no item in any other family newly wrong compared with 252b
+  - question_tail 6/6 and unstored_tail 6/6 right
+  - keep 8/8 and control 16/16 right, byte-identical to base252b
+  - Report the 252b arm's numbers next to every figure.
+- M2, dev252b (scripts/claude_corr252b_score.py dev, read-only, against 252b's rows made in the same session):
+  - the 5 false replies are gone;
+  - 0 wrong removals and 0 question writes;
+  - junk writes only b252-035, as predicted;
+  - controls identical to 252b's in every field except ms_per_turn;
+  - every other change is exactly as predicted.
+- M3, corrpanel252 (TEST-ONLY: run it only after your seal, never read its items before). Rows vs 252b's registered rows (artifacts/claude-correct252b-20260922/run/panel-252b.jsonl): changes exactly as predicted; 0 new wrong values or junk writes.
+- M4, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench against the rows 252b used (see artifacts/claude-correct252b-20260922/PASSMARKS.md). Bars: the move list equals 252b's, and there are 0 new WRONG, WRONG-WRITE, junk or lost OK.
+- M5, sleep smoke: identical to 252b's (artifacts/claude-correct252b-20260922/run/smoke-252b.json) except labels, paths and timing.
+- M6, restart dialogs (the same files 252b used for its M6): 0 ghost answers, 0 failed duplicate checks, and replies identical to 252b's except predicted moves.
+- M7, latency: median added time per turn ≤ +5 ms against 252b, measured in the same session.
+
+Finish with RESULTS.md and a final message as OPUS-RULES requires, plus a design note: design/v3/30-modes/259-valueboundary-opus.md.

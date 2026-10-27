@@ -1,0 +1,12 @@
+Read the shared brief FIRST and follow its required report structure exactly: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model/a6cbbe20-5a16-4ad6-87ee-2f54ff4ef5c6/scratchpad/agents/brief.md
+Then read the four files it lists. Write your whole report in ONE final message.
+
+You are Reviewer 1 of 5: ARCHITECTURE AND REASONING. Your assigned research question: does the proposed recurrent workspace with a learned stopping rule buy anything that a plain network would not, and can it be deployed without an answer oracle?
+
+Challenge specifically:
+- The recurrent workspace: with the cue built from the encoded input only (see model.py), does the retrieved memory vector change across reasoning steps at all? What can extra depth compute in that regime, and what could it compute if cues depended on the workspace z? Is the "workspace" distinguishable from an ordinary hidden state by any test?
+- Backbone options (GRU encoder, transformer, recurrent transformer, hybrids) for (a) the current 42-word grammar and (b) eventual open English. What capability does each need for byte/character or subword input, and what training signal creates it here without a large teacher?
+- Extra-depth benefits: what do Universal Transformers, the recurrent-depth model, TRM, and PonderNet/ACT actually establish about depth helping, and under which training regimes (random recurrence sampling, deep supervision, truncated backprop)? What is the honest expectation for a network trained with a fixed small step count and then run longer?
+- The stopping objective: "compare answering now with continuing from the exact same saved state, without permanent writes," with no compute penalty initially. Is this learnable from checker feedback only during training? At deployment there is no oracle: what does the halting head actually condition on, and what are the failure modes of a confidence-threshold rule (model.py HaltingController.decision uses an answer-confidence threshold of 0.8)? Contrast with unsupervised exit rules (KL between successive states), sampled Bernoulli halting, and self-consistency voting.
+- The claim "neither convergence nor nonconvergence alone establishes useful reasoning": what diagnostics would actually distinguish useful iteration from drift?
+- Deployment without an answer oracle: what selection rules are available at inference, and which of the proposed evaluation comparisons quietly assume an oracle?

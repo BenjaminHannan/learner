@@ -1,0 +1,709 @@
+[
+  {
+    "phase": "four-process independent claim race",
+    "round": 0,
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "elapsed_seconds": 0.09709522699995432,
+    "actions": [
+      {
+        "pid": 9310,
+        "mode": "claim",
+        "ok": true,
+        "result": {
+          "ready": true,
+          "batch": {
+            "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/claim-race-0/batch-0.json",
+            "sha256": "9156ee988c6935f3ec71fb6d00e46401f5c010d8bc00d86287435564b60ffb38"
+          },
+          "capture_revision": 1,
+          "claim_id": "claim-race-0-claim-0",
+          "rows": 1,
+          "actual_user_day": false
+        },
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9311,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9312,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9313,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "four-process independent claim race",
+    "round": 1,
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "elapsed_seconds": 0.09937170299963327,
+    "actions": [
+      {
+        "pid": 9318,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9319,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9320,
+        "mode": "claim",
+        "ok": true,
+        "result": {
+          "ready": true,
+          "batch": {
+            "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/claim-race-1/batch-2.json",
+            "sha256": "c254b544e4beb78d975891556c3963c14c7cc10a2e594b57ddb480e1c954846c"
+          },
+          "capture_revision": 1,
+          "claim_id": "claim-race-1-claim-2",
+          "rows": 1,
+          "actual_user_day": false
+        },
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9321,
+        "mode": "claim",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "fixture claim already consumed; no duplicate optimizer cycle",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "four-process begin-dispatch race",
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/begin-race/batch.json",
+        "sha256": "2d9b8adbe7b1401cb05d263269e3214d6f4fc1abd1e58a7c389e7e0d574a12b3"
+      },
+      "capture_revision": 1,
+      "claim_id": "begin-race-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.08801199900062784,
+    "actions": [
+      {
+        "pid": 9326,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "concurrent fixture optimizer dispatch forbidden",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9327,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "concurrent fixture optimizer dispatch forbidden",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9328,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "concurrent fixture optimizer dispatch forbidden",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      },
+      {
+        "pid": 9329,
+        "mode": "begin",
+        "ok": true,
+        "result": {
+          "started": true,
+          "actual_user_day": false
+        },
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "sole running owner source admission; no dispatch/model",
+    "elapsed_seconds": 0.11174943900005019,
+    "actions": [
+      {
+        "pid": 9334,
+        "mode": "admit",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "committed cross-process activity invalidation",
+    "initial_status": "claimed",
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/activity-false/batch.json",
+        "sha256": "65f99438f7ebeb56a3d1e8a5632da0472234fabdad2545aa9a5a3228753ec41b"
+      },
+      "capture_revision": 1,
+      "claim_id": "activity-false-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.13480006699955993,
+    "actions": [
+      {
+        "pid": 9336,
+        "mode": "admit",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "capture binding changed or activity resumed",
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9337,
+        "mode": "inspect",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9338,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "activity resumed after snapshot; no optimizer dispatch",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "committed cross-process activity invalidation",
+    "initial_status": "running",
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/activity-true/batch.json",
+        "sha256": "9b4f5b7eefd76abc01ef8cfef8765365937257c8f8ebf74aa96cee1517a8bb42"
+      },
+      "capture_revision": 1,
+      "claim_id": "activity-true-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.15538827500040497,
+    "actions": [
+      {
+        "pid": 9342,
+        "mode": "admit",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "capture binding changed or activity resumed",
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9343,
+        "mode": "inspect",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9344,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "activity resumed after snapshot; no optimizer dispatch",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "independent read-only admission/recount while dirty writer remains held",
+    "writer_in_transaction_before_and_after": true,
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/writer-lock/batch.json",
+        "sha256": "8ce2bbe6745931b34b9eae5cbdaccfac42f919309e7fecc33e2f15e331e80b8e"
+      },
+      "capture_revision": 1,
+      "claim_id": "writer-lock-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.1527656050002406,
+    "actions": [
+      {
+        "pid": 9348,
+        "mode": "admit",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9349,
+        "mode": "inspect",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "consumed terminal claim; no candidate or optimizer receipt",
+    "terminal_status": "complete",
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/consumed-complete/batch.json",
+        "sha256": "2a85eef105f81ef836ca9b8bebb3c559e3f9a61ae1107d5ee5f5bc99a90cd20b"
+      },
+      "capture_revision": 1,
+      "claim_id": "consumed-complete-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.13788600899988523,
+    "actions": [
+      {
+        "pid": 9352,
+        "mode": "admit",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "optimizer admission requires a running unconsumed fixture claim",
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9353,
+        "mode": "inspect",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9354,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "claim unavailable or already dispatched",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "phase": "consumed terminal claim; no candidate or optimizer receipt",
+    "terminal_status": "failed",
+    "capture": {
+      "captured_rows": 1,
+      "events": [
+        {
+          "source_row_id": "5733be284776f41900661182",
+          "row_sha256": "0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f",
+          "day_record_id": "fixture-0e06fb80e758bc46ee414fc285e5714525d21a132765d452fcbcd8e58af42b7f"
+        }
+      ],
+      "capture_revision": 1,
+      "actual_user_day": false,
+      "origin": "verified-human-TRAIN-fixture"
+    },
+    "claim": {
+      "ready": true,
+      "batch": {
+        "path": "/tmp/sol-cloud-fixture-concurrency-yh5p0s24/consumed-failed/batch.json",
+        "sha256": "e457e80d940a67bbd831f1a43f965eea93334fa2ea1f7a0ffb06dd350356c5ac"
+      },
+      "capture_revision": 1,
+      "claim_id": "consumed-failed-claim",
+      "rows": 1,
+      "actual_user_day": false
+    },
+    "elapsed_seconds": 0.1462181340002644,
+    "actions": [
+      {
+        "pid": 9366,
+        "mode": "admit",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "optimizer admission requires a running unconsumed fixture claim",
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9367,
+        "mode": "inspect",
+        "ok": true,
+        "result": {
+          "row_ids": [
+            "5733be284776f41900661182"
+          ],
+          "row_digests": [
+            "1a753885088b03672e826de7c381bd5bbab06815823cd2b997a2778f14123e0c"
+          ],
+          "actual_user_day": [
+            false
+          ],
+          "origins": [
+            "verified-human-TRAIN-fixture"
+          ]
+        },
+        "sqlite_connections": [
+          {
+            "read_only": true
+          }
+        ]
+      },
+      {
+        "pid": 9368,
+        "mode": "begin",
+        "ok": false,
+        "error_type": "FixtureError",
+        "error": "claim unavailable or already dispatched",
+        "sqlite_connections": [
+          {
+            "read_only": false
+          },
+          {
+            "read_only": false
+          }
+        ]
+      }
+    ]
+  }
+]

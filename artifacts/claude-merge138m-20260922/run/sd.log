@@ -1,0 +1,66 @@
+sessions152: n_moves=11 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=11) seconds=4.1
+sessions152: n_moves=11 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=11) seconds=4.1
+done sessions152 in 4.1s
+bench new_121_4hop: {'n': 200, 'correct': 187, 'abstain': 9, 'wrong': 4} moves=2
+bench old_s2fresh_4hop: {'n': 200, 'correct': 195, 'abstain': 5, 'wrong': 0} moves=1
+bench edit200: {'n': 200, 'correct': 124, 'abstain': 51, 'wrong': 25} moves=0
+bench bench132_4hop: {'n': 200, 'correct': 191, 'abstain': 9, 'wrong': 0} moves=2
+bench: n_moves=5 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=5) seconds=30.4
+bench: n_moves=5 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=5) seconds=30.4
+done bench in 30.4s
+P4 P4-01: PASS
+P4 P4-02: PASS
+P4 P4-03: PASS
+P4 P4-04: PASS
+P4 P4-05: PASS
+P4 P4-06: PASS
+P4 P4-07: PASS
+P4 P4-08: FAIL
+P4 P4-09: FAIL
+P4 P4-10: PASS
+P4 P4-11: PASS
+P4 P4-12: PASS
+P4 P4-13: PASS
+P4 P4-14: PASS
+P4 P4-15: PASS
+P4 P4-16: PASS
+P4 P4-17: PASS
+P4 P4-18: PASS
+P4 P4-19: PASS
+P4 P4-20: PASS
+P4 P4-21: PASS
+P4 P4-22: PASS
+P4 P4-23: PASS
+P4 P4-24: PASS
+P4 P4-25: PASS
+P4 P4-26: PASS
+P4 P4-27: PASS
+P4 P4-28: PASS
+P4 P4-29: PASS
+P4 P4-30: PASS
+{"suite": "p4", "pass": false, "seconds": 1.5}
+Q1: F5=OK M5=OK
+{"suite": "q1", "pass": true, "seconds": 1.2}
+BENCH fable_edit_200: items=200 {'mquake-twohop': {'n': 100, 'correct': 0, 'abstain': 1, 'wrong': 99, 'contains_gold': 6, 'teach_reject_items': 99, 'teach_rejects': 99}, 'reversal': {'n': 50, 'correct': 25, 'abstain': 0, 'wrong': 25, 'contains_gold': 50, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-absent': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-broken': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}}
+BENCH s2fresh_4hop: items=200 {'mquake-s2fresh-4hop': {'n': 200, 'correct': 0, 'abstain': 6, 'wrong': 194, 'contains_gold': 6, 'teach_reject_items': 197, 'teach_rejects': 213}}
+{"suite": "bench", "pass": false, "seconds": 13.0}
+RT81: {'n': 74, 'ok': 55, 'bug': 1, 'unclear': 18}
+{"suite": "rt81", "pass": false, "seconds": 3.9}
+
+suite  | registered bar                             | number                                                     | status | secs
+p4     | <= 2 false refusals, 0 non-pass (30)       | 30 sents, refusals 1, nonpass 2                            | FAIL   | 1.5
+q1     | F5+M5 both OK                              | F5=OK M5=OK                                                | PASS   | 1.2
+bench  | scorer v2; split-A 0 wrong (200+200)       | fable_edit_200 {'correct': 25, 'abstain': 51, 'wrong': 124 | FAIL   | 13.0
+rt81   | 74/74 OK, 0 wrong writes                   | {'n': 74, 'ok': 55, 'bug': 1, 'unclear': 18}               | FAIL   | 3.9
+q4     | 0 relation-name underscore leaks           | leaks=[]                                                   | PASS   | 0.0
+TOTAL 20.9 s -> FAIL
+
+marks123: n_moves=6 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=6) seconds=21.2
+marks123: n_moves=6 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=6) seconds=21.2
+done marks123 in 21.2s
+GATE: clean
+sessions152: n_moves=11 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=11) seconds=4.1
+bench: n_moves=5 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=5) seconds=30.4
+marks123: n_moves=6 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=6) seconds=21.2
+GATE: clean
+TOTAL seconds=57.2

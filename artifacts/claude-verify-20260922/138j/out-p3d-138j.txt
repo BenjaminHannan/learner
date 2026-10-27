@@ -1,0 +1,13 @@
+00 "Oriel's boss is Sabine." -> "Saved: Oriel's boss is Sabine."  [+4 ev]
+00 "No, Oriel's boss is Tavish." -> "Updated: Oriel's boss is Tavish (it was Sabine)."  [+2 ev]
+00 "Tavish's city is Drumlow." -> "Saved: Tavish's city is Drumlow."  [+2 ev]
+00 -- RESTART 1 --
+00 "Actually, Oriel's boss is Quill." -> "Updated: Oriel's boss is Quill (it was Tavish)."  [+2 ev]
+00 "Oriel's boss is not Quill." -> "OK, Oriel's boss is not Quill. I don't have another boss for Oriel."  [+1 ev]
+00   TRIPLES [('Oriel', 'boss', 'Tavish'), ('Tavish', 'city', 'Drumlow'), ('Tavish', 'city', 'Drumlow')]
+00 'Whose boss is Tavish?' -> "Oriel's boss is Tavish."  [+0 ev]
+00 'Tell me about Oriel.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+00 'Tell me about Tavish.' -> "Tavish's city is Drumlow."  [+0 ev]
+00 "What is Oriel's boss's city?" -> "I don't know Oriel's boss."  [+0 ev]
+00 "Who is Oriel's boss?" -> "I don't know Oriel's boss."  [+0 ev]
+00   STORED [('Oriel', 'boss', 'Tavish'), ('Tavish', 'city', 'Drumlow'), ('Tavish', 'city', 'Drumlow')]

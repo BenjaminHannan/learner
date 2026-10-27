@@ -1,0 +1,325 @@
+<title>arXivBangers Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#16201D; --muted:#56635F; --rule:#D3DBD8;
+  --accent:#2B5F8A; --accent-soft:#E3ECF4;
+  --shown:#2E7D4F; --shown-bg:#E2F1E7; --sugg:#8A5E00; --sugg-bg:#F6ECD3; --untest:#5E6570; --untest-bg:#E8EAEE;
+  --change:#9B2F3A; --change-bg:#F6E1E3;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101514; --surface:#18201E; --ink:#E4EAE8; --muted:#9AA8A4; --rule:#2B3533;
+    --accent:#86B6DE; --accent-soft:#1C2B38;
+    --shown:#7FCB9C; --shown-bg:#18301F; --sugg:#E3B75A; --sugg-bg:#33280F; --untest:#AEB4BD; --untest-bg:#242830;
+    --change:#EE8E98; --change-bg:#3A1C20;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101514; --surface:#18201E; --ink:#E4EAE8; --muted:#9AA8A4; --rule:#2B3533;
+  --accent:#86B6DE; --accent-soft:#1C2B38;
+  --shown:#7FCB9C; --shown-bg:#18301F; --sugg:#E3B75A; --sugg-bg:#33280F; --untest:#AEB4BD; --untest-bg:#242830;
+  --change:#EE8E98; --change-bg:#3A1C20;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--cond);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:600}
+h2{font-size:1.45rem;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.08rem;color:var(--ink)}
+.muted{color:var(--muted)}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code,.id{font-family:var(--mono);font-size:.88em}
+.id{color:var(--muted);white-space:nowrap}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.tag{display:inline-block;font-family:var(--mono);font-size:.72rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:4px;vertical-align:1px;white-space:nowrap}
+.t-shown{color:var(--shown);background:var(--shown-bg)}
+.t-sugg{color:var(--sugg);background:var(--sugg-bg)}
+.t-untest{color:var(--untest);background:var(--untest-bg)}
+.t-change{color:var(--change);background:var(--change-bg)}
+.t-confirm{color:var(--accent);background:var(--accent-soft)}
+.t-none{color:var(--untest);background:var(--untest-bg)}
+.verdicts{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+.verdict{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px 16px;border-top:1px solid var(--rule)}
+.verdict:first-child{border-top:0}
+.verdict .k{padding-top:2px}
+@media (max-width:520px){.verdict{grid-template-columns:1fr;gap:6px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-top:1px solid var(--rule)}
+thead th{border-top:0;font-family:var(--cond);font-weight:600;font-size:.9rem;color:var(--muted);background:var(--bg)}
+td.num{white-space:nowrap}
+.paper{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px}
+.paper.key{border-color:var(--change)}
+.paper header{display:flex;flex-direction:column;gap:4px}
+.paper .meta{font-size:.86rem;color:var(--muted)}
+.paper dl{margin:0;display:grid;grid-template-columns:128px 1fr;gap:8px 14px}
+.paper dt{font-family:var(--cond);font-weight:600;color:var(--muted);font-size:.92rem}
+.paper dd{margin:0}
+@media (max-width:560px){.paper dl{grid-template-columns:1fr;gap:2px}.paper dd{margin-bottom:8px}}
+.test{border-left:3px solid var(--accent);padding:10px 14px;background:var(--accent-soft);border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:6px;font-size:.95rem}
+.test b{font-family:var(--cond);font-weight:600}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.92rem}
+.foot{font-size:.86rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:14px}
+</style>
+
+<div class="wrap">
+
+<header class="stack">
+  <div class="eyebrow">Premonition · paper review · 26 Sep 2026, 02:35 UTC</div>
+  <h1>arXivBangers Review</h1>
+  <p class="lede">Ben's three links: an X post, arXiv 2609.28654, and the 30 papers on arxivb.org's published list. I skimmed all 30 abstracts, read 12 in full, and checked each against Premonition's seven open problems. The key numbers below were checked against the paper text.</p>
+  <p class="muted">Labels: <span class="tag t-shown">shown</span> the paper's own data shows it; <span class="tag t-sugg">suggested</span> the data points that way but is thin or confounded; <span class="tag t-untest">untested</span> an idea with no data. Nothing here is registered, and nothing was spent.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#bottom">Bottom line</a><a href="#links">What the links are</a><a href="#problems">By problem</a><a href="#reads">12 full reads</a><a href="#tests">Test ideas</a><a href="#rest">The other 18</a>
+  </nav>
+</header>
+
+<section id="bottom" class="stack">
+  <h2>Bottom line</h2>
+  <div class="verdicts">
+    <div class="verdict"><div class="k"><span class="tag t-change">changes a plan</span></div>
+      <div><b>Thinking with Looped Flows</b> <span class="id">2609.11801</span> is my pick for the next reasoner change after 358a. It trains a looped net the same size and shape as ours (2 layers, width 512, about 5 to 7M weights) with a different objective. On Sudoku-Extreme with 1,000 practice puzzles it scores 97.9 ± 0.4 (3 seeds) against TRM's 87.4. The rival plan is a 3x scale-up, and this is cheaper. Weak spots: every baseline number is copied from other papers, and the paper never tests puzzles bigger than the ones it practised on.</div></div>
+    <div class="verdict"><div class="k"><span class="tag t-confirm">explains</span></div>
+      <div><b>Model Growth, Recursion and Boundary Operators</b> <span class="id">2609.19107</span>, Appendix B.4: tied loops get worse when run for more passes than they trained on. Training with a random pass count, as 358a does (1 to 16 rounds, graded on the last 1 to 6, tested up to 48), only makes the drop flatter. That predicts 358a's "more rounds are flat or worse". It was shown for language-model loss at 120M and above, not for puzzles.</div></div>
+    <div class="verdict"><div class="k"><span class="tag t-confirm">confirms</span></div>
+      <div><b>Sleep forgetting (#6).</b> None of the 30 papers measures loss of old general answers. <b>Never Give Up</b> <span class="id">2609.13443</span> shows practised items decay once they stop being practised (Fig. 14). That backs dl-3's plan to mix old general answers into every night. No change to dl-3.</div></div>
+    <div class="verdict"><div class="k"><span class="tag t-sugg">queue only</span></div>
+      <div><b>Creative (#7).</b> Two ideas for after brd-5 reads out. First, keep blurting at unsolved puzzles until the first hit, with a chance to give up (Never Give Up). Second, give zero-hit puzzles a short code-made hint and practise the hinted wins with the hint still in the prompt (PSP, <span class="id">2609.29051</span>). Neither paper tests plain copy-practice on hits, which is what Premonition does.</div></div>
+    <div class="verdict"><div class="k"><span class="tag t-none">no help</span></div>
+      <div><b>Reader problems #1 to #4.</b> Nothing here fixes saving, refusing, note support or answer length. The one on-topic paper, PSD <span class="id">2609.23449</span>, trains on LoCoMo's own chats, which breaks our rule. It also scores about 123 test questions. One cheap check is worth keeping for later: swap the retrieved chat lines for another conversation's lines and see if the score drops (idea E below).</div></div>
+    <div class="verdict"><div class="k"><span class="tag t-none">no bearing</span></div>
+      <div>The X post, <b>Block Delta Memory</b>, is a memory layer for building a language model from scratch; Premonition starts from a pretrained 1B. The <b>object permanence</b> paper <span class="id">2609.28654</span> is about video models and has no before/after control.</div></div>
+  </div>
+  <p>Benchmarks note: the published same-size score on Sudoku-Extreme is now well above TRM's 87.4 (Table 1 of 2609.11801: FPRM 7M 94.2, looped flows 5M 97.9). bm-394's registered mark for 358b is unchanged: beat TRM-Att 7M's 74.7. Only the "report only" comparison line would change.</p>
+</section>
+
+<section id="links" class="stack">
+  <h2>What the links are</h2>
+  <h3>arxivb.org is "arXivBangers", not arXiv</h3>
+  <p>The site calls itself "community-driven experiments in self-improving research distribution. Independent of arXiv." It posts two arXiv papers a day to the X account @arXivBangers. A Gemini 3.7 Flash "editorial judge" picks them by scoring only the title, authors and abstract for reader interest (82 to 92 out of 100 on this list). The site says itself that this is "an automated assessment, not a review of the full paper." All 30 IDs are real arXiv papers from September 2026; I checked each one on arxiv.org. So "certified banger" means an AI liked the abstract. It is not a peer review.</p>
+  <h3>The X post: Block Delta Memory</h3>
+  <p>Posted 25 Sep by "porcelain" (@p0rc314in), an independent researcher with 12 followers. There is no paper, only a code repo, <a href="https://github.com/p0rc314in/bdm">github.com/p0rc314in/bdm</a>. BDM is a recurrent layer meant to replace attention. A router sends each token to a few of many small memory banks, and each bank updates as one dense block, so it runs fast on a GPU.</p>
+  <ul>
+    <li><span class="tag t-shown">shown</span> At 15 to 17M weights with 3 seeds, its synthetic recall roughly matches attention: span 97.2 vs 99.2, overwrite 98.0 vs 96.5, one-hop 99.0 vs 99.2. WikiText loss is 4.339 vs 4.359.</li>
+    <li><span class="tag t-shown">shown</span> Multi-hop fails for every model, attention included. The full suite adds 2-, 4- and 8-hop pointer chasing, and there exact-set scores are BDM 58.7 and attention 59.0. The README's headline table leaves those tasks out.</li>
+    <li><span class="tag t-sugg">suggested</span> Better memory does not buy multi-hop reasoning, which fits Ben's "reasoning is the priority".</li>
+    <li>The BabyLM results come from a single seed. The repo notes that adding a short convolution cut one-hop recall from 99.9% to 8.1% (one seed).</li>
+  </ul>
+  <p>Bearing: none tonight. It would matter only if Premonition trained its own language model from scratch.</p>
+</section>
+
+<section id="problems" class="stack">
+  <h2>By problem</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Problem</th><th>Best paper for it</th><th>What it adds</th><th>Plan change?</th></tr></thead>
+    <tbody>
+      <tr><td>#1 saves too few</td><td>PSD</td><td>Its memory writer saves only 3 to 5 facts per chat segment, plus a summary of each segment, and still scores well. Its baselines use different question sets, and it never says which model answers.</td><td>No</td></tr>
+      <tr><td>#2 refuses too much</td><td>PSP</td><td>A training label must be something the learner could produce from what it sees. "I don't know" labels on answerable items would teach over-refusal. <span class="tag t-untest">untested</span> in the paper's direction.</td><td>No. Check the reader's labels (a cheap audit)</td></tr>
+      <tr><td>#3 unsupported notes</td><td>Video memory audit</td><td>Swapping in wrong-but-similar memories separates "helps because of content" from "helps because of format". PSD's notes are rewordings, the opposite of our pointer rule.</td><td>No (idea E, later)</td></tr>
+      <tr><td>#4 answers too long</td><td>none</td><td>PSD shows the LLM judge and F1 rank systems differently. Nothing on shortening answers.</td><td>No</td></tr>
+      <tr><td>#5 loop not beating plain</td><td>Looped Flows; Growth/Recursion; On-Demand Attention</td><td>A new training objective for the same-size loop, an explanation of flat extra rounds, and a random-stop placebo for the learned stop.</td><td><b>Yes: next change after 358a</b></td></tr>
+      <tr><td>#6 sleep forgets</td><td>Never Give Up</td><td>Items that stop being practised decay (one figure, small model, same kind of problem). Nothing on general answers.</td><td>No (confirms dl-3)</td></tr>
+      <tr><td>#7 hits into skill</td><td>PSP; Never Give Up; concept search</td><td>Spend blurts where there are no hits yet, and use hints on zero-hit puzzles. The search papers raise coverage only; they never train on what they find.</td><td>Queue after brd-5</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="reads" class="stack">
+  <h2>12 full reads</h2>
+  <p class="muted">Ordered by usefulness to Premonition. "Owner" is the thread that would own any follow-up.</p>
+
+  <article class="paper key">
+    <header><div class="eyebrow">Reasoner · owner Sleep research</div><h3>Thinking with Looped Flows</h3><div class="meta"><span class="id">2609.11801</span> · Suleymanzade et al. · 6 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>They keep TRM's tiny shared core (2 layers, width 512) and add two inputs: a noisy copy of the answer, and a time signal. Each training run takes 16 steps, and the noise falls at every step. The same noise sample, puzzle and answer are shared across the steps, and every step is graded against the answer. Gradients reach only inside each step. At test time the net walks from noise to answer over any number of steps (128 on Sudoku). This adds about 0.27M weights; on Sudoku the net grows from 5.03M to 5.30M.</dd>
+      <dt>Key numbers</dt><dd>Table 1, 3 seeds, one run per puzzle: Sudoku-Extreme 97.9 ± 0.4 (TRM 87.4, FPRM 94.2). Maze-Hard 86.7 ± 1.1 (FPRM 87.0, so no gain). ARC-AGI-1 58.8 ± 1.8 (TRM 44.6). Figure 3: Sudoku rises from 74.5% at 8 steps to 97.9% at 128 steps. Section 5.1: TRM fails 12.6% of Sudoku puzzles, and 88.3% of those failures never settle on an answer; looped flows fixes 90.9% of TRM's failures.</dd>
+      <dt>How strong</dt><dd>The 3 seeds and the near-matched size are good. The baselines are copied from other papers, not rerun. Test-time compute is not matched: at 8 steps it scores 74.5, below TRM. The ablations cover ARC only, as single runs. Sudoku also needed an extra anti-overfitting trick (feeding back the net's own earlier guess), which is not ablated. There is no bigger-than-practised test anywhere.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> More test steps help a lot on same-size Sudoku. <span class="tag t-sugg">suggested</span> 358a's loop gives every round the same target and grades only the last few rounds, so early rounds have no reason to build state that later rounds use, and extra rounds go idle. The flow instead spends extra compute as a finer walk over the same trained 0-to-1 range, never beyond it; 358a tests at 48 rounds after training on at most 16. <span class="tag t-untest">untested</span> Whether it helps on bigger puzzles than practised, which is our test. Cost: about 2 to 3 times the loop's training compute; it fits the 16 GB card. The learned stop no longer picks the length, which conflicts with 358a's goal that the stop decides.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Reasoner · diagnostic</div><h3>How Model Growth, Recursion, and Boundary Operators Influence Scaling Exponents</h3><div class="meta"><span class="id">2609.19107</span> · Chen, Vegesna, Dahal, Wilson</div></header>
+    <dl>
+      <dt>What they did</dt><dd>Language-model pretraining from 120M to 1.8B weights (one run at 7.4B). The net has a few layers before a looped core and a few after it. The "boundary operator" re-normalises the state and re-adds the early representation before each pass. "Growth" means training with 2 passes, then switching to 4 partway through.</dd>
+      <dt>Key numbers</dt><dd>Scaling exponents rise from 0.111 (plain) to 0.117 (untied growth). Compute saving at 10<sup>20</sup> FLOPs: 1.55× for untied growth, 1.25× for the boundary operator alone. Appendix B.4: running 8 passes instead of the trained 4 raises loss by 0.008 to 0.042. With random-count training the change is −0.0003 to +0.0028, and extra passes never give a lasting gain.</dd>
+      <dt>How strong</dt><dd>Each design is carefully tuned, but every point is a single run. The exponent gaps (0.003 to 0.006) are small, and they vanish when a design reuses the plain model's settings. The authors call their "20× less compute than GPT-3" comparison uncontrolled.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-sugg">suggested</span> B.4 predicts 358a's flat extra rounds. 358a already re-normalises and re-adds the puzzle each round, so the boundary operator is already in. <span class="tag t-untest">untested</span> Growth below 120M or on puzzles. No test worth running: 358a's report of accuracy at each round count already covers this.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Sleep · creative · owner Fix sleep</div><h3>Learning to Solve Hard Problems in RL for LLMs by Never Giving Up</h3><div class="meta"><span class="id">2609.13443</span> · Noukhovitch, Ivison, Lambert, Courville</div></header>
+    <dl>
+      <dt>What they did</dt><dd>RL gains land mostly on problems the model could already solve ("the rich get richer"). Their fix, NGU, takes 4 samples per problem. If all are right, the problem is dropped. If all are wrong, it is re-queued with probability p for 4 more, and the model trains once a right answer appears. Tested on Qwen2.5-0.5B (GSM8k, 3 seeds) and Qwen3-4B (Deepscaler, about 120 H100-hours per arm, 3 seeds).</dd>
+      <dt>Key numbers</dt><dd>Table 1, GSM8k extra-hard: plain GRPO 47.1 ± 6.4; best NGU version 87.9 ± 2.2; never giving up at all (p = 1) 2.7 ± 1.0. Table 2, held-out average: best GRPO 25.3 ± 0.5 vs NGU 26.5 ± 0.6. Fig. 14: problems no longer resampled once solved decay over time.</dd>
+      <dt>How strong</dt><dd>It has the best controls of the practice papers: 3 seeds, error bars and matched compute. But the GSM8k levels have only 8 problems each and may overlap training. The held-out gain is +1.2 points on 60 problems, less than one problem. It needs asynchronous RL; the synchronous version lost.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> (in their RL setup) A fixed blurt count per puzzle wastes tries on easy puzzles, and "never give up" with no escape collapses. <span class="tag t-sugg">suggested</span> Keep quizzing old items rather than retiring solved ones, which backs dl-3. <span class="tag t-untest">untested</span> Forgetting of general answers, and anything with copy-practice.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Creative · reader labels · owner Creative</div><h3>From Self-Distillation to Self-Practice: Privileged Information for Multi-Turn Agents (PSP)</h3><div class="meta"><span class="id">2609.29051</span> · Su et al. · 8 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>Coding agents (Qwen3-4B, Qwen3-8B, Gemma4-E4B) on AppWorld and SWE-bench Verified. A 27B "analyzer" writes a 3-to-5-rule hint for tasks the student keeps failing. The foil, OPSD, trains the no-hint model to copy its own with-hint token distribution. PSP instead re-rolls failed tasks with the hint in the prompt and trains on the results with ordinary RL; the hint never becomes a target.</dd>
+      <dt>Key numbers</dt><dd>Average score, 4B: base 4.4, GRPO 10.6, OPSD 3.4, PSP 16.7 (Table 1). 8B: GRPO 25.6, PSP 27.4 (Table 2). Remove the analyzer's reference solution and 4B PSP falls to 10.5, level with GRPO (Table 5). Hinting every task instead of only failures scored lower on 8B (20.1).</dd>
+      <dt>How strong</dt><dd>One training run per method; the ± values come from evaluation seeds. Compute is not matched: PSP makes about 1.9× the rollouts and adds a 27B helper. There is no "re-roll without the hint" control and no wrong-hint placebo. The 8B and SWE margins (about 2 points) are within the spread of their own γ sweep.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> OPSD scored below the untrained base model at every size (single runs). <span class="tag t-sugg">suggested</span> The paper's explanation: the model copies the confident shape of the hinted answer without the content. This was measured in one worked example; nothing measures calibration or "I don't know". The lesson for the reader: every training label should be something the reader could produce from the lines it sees. <span class="tag t-untest">untested</span> Hints for zero-hit creative puzzles.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Reader · owner Benchmarks</div><h3>Does Video Memory Use What It Retrieves? A Causal Audit of Memory Specificity</h3><div class="meta"><span class="id">2609.12090</span> · Tiwari, Bhalla, Prasad, Ji</div></header>
+    <dl>
+      <dt>What they did</dt><dd>They swap the memory a video model reads for a series of placebos (a wrong scene, a generic average, noise, zero) and measure how much of memory's benefit each recovers.</dd>
+      <dt>Key numbers</dt><dd>DINO-WM on Ego-Exo4D: a generic average recovers about 100% of the benefit, so the specific content barely matters. SAM 2 on DAVIS: a wrong memory drops the score from 0.926 to 0.182, so content matters a lot. WorldMem sits in between: a wrong memory recovers 94.1% from the same trajectory and 43.7% from a different world.</dd>
+      <dt>How strong</dt><dd>Good design, with a ladder of placebos and dose-response checks. Some cells are thin: TUM has 2 takes and DAVIS 10 sequences.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> (video only) "Memory helps" is not the same as "the retrieved facts are used". <span class="tag t-untest">untested</span> The same swap on our notebook would tell whether its LoCoMo gain comes from facts or from format. It only makes sense once the notebook beats the no-notes baseline, which 0.1 did not (F1 3).</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Reasoner stop · owner Sleep research</div><h3>On-Demand Attention: Language Models Know When to Recall</h3><div class="meta"><span class="id">2609.20734</span> · Feng, Liang, Peng, Yu</div></header>
+    <dl>
+      <dt>What they did</dt><dd>A 28M "recall head" on a frozen language model decides, token by token, whether to pay for full attention. It is trained to predict the measured gain from full attention (loss with it minus loss without it, minus a cost), not a yes/no label.</dd>
+      <dt>Key numbers</dt><dd>Qwen3-1.7B on RULER16K: full attention 81.94, local only 19.23, ODA 81.17 while using full attention on 41.6% of steps (Table 1). A random gate at the same rate scores 32.79 ± 0.95, against ODA's 88.96 on the same 5 tasks. Full attention actually hurt at 797 of 2,048 positions (Table 16).</dd>
+      <dt>How strong</dt><dd>One training seed. Checkpoints were picked by looking at results. Speed and quality were measured separately, and at 16K tokens it is slower than full attention.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-sugg">suggested</span> Two things carry over to the learned stop: train it on the measured gain from one more round, and compare it against a random stop that uses the same mean number of rounds. A stop head cannot make the loop beat plain on its own.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Creative · coverage only</div><h3>Beyond Repeated Sampling: Learning Search Policies for LLM Reasoning</h3><div class="meta"><span class="id">2609.26704</span> · Labiad, Kowalski, Schoenauer, Munos, Kempe</div></header>
+    <dl>
+      <dt>What they did</dt><dd>A 7B "concept generator", trained with RL, writes up to 10 hints per problem. A frozen 32B model then spends its tries across those hints. Tested on hard DeepMath problems.</dd>
+      <dt>Key numbers</dt><dd>Pass@128 on hard problems: naive sampling 19.0, untuned 32B hints 33.8, trained 7B hints 39.2. Pass@1 barely moves (0.23 to 2.18). Another problem's hints give 23.9. Hints from a 1.5B hint writer made small answer models worse. An older hint method's gains vanish once the baseline samples at temperature 1.0.</dd>
+      <dt>How strong</dt><dd>It has the best controls of the search papers: shuffled hints, generic hints and bootstrap intervals. But each objective got one RL run, and the judge is the answer model itself.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> Hints raise coverage, not single tries. Weak hint writers hurt. <span class="tag t-untest">untested</span> Turning the hits into skill, because the answer model never trains on them. Premonition's blurts already sample hot, so the weak-baseline trap is avoided.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Creative · coverage only</div><h3>Planned Test-Time Scaling with Coordinated Reasoning Paths</h3><div class="meta"><span class="id">2609.27374</span> · Wu et al. · 8 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>A planner writes different solution outlines, and a frozen Qwen3 (1.7B or 4B) solves once per outline. One version uses the untrained planner; the other trains the planner on "did any of 4 branches win".</dd>
+      <dt>Key numbers</dt><dd>1.7B solver, pass@64: plain 53.3, zero-shot planner 57.8, trained planner 62.2. Pass@1: 25.4, 25.2, 27.5.</dd>
+      <dt>How strong</dt><dd>Weak. No seeds and no error bars. Four of the five benchmarks have about 30 problems each, so one problem is worth about 3 points. There is no wrong-outline control.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-sugg">suggested</span> Its toy theory says training for single tries collapses onto one approach. That matches our finding that repeats collapsed guess variety. Nothing to run: their solver thinks for 10k tokens, while our 1B writes one line with thinking off.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Reader · rule break</div><h3>PSD: Pseudo Self-Distillation of Memory Representation Capabilities for LLM Agents</h3><div class="meta"><span class="id">2609.23449</span> · Microsoft · 6 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>They logged GPT-4.1-mini running their MEMORA memory pipeline (split chats into episodes, summarise each, pull out 3 to 5 facts, merge, add cue phrases) on "the training split of LoCoMo". Then they trained Qwen3 0.6B to 4B to imitate it: first plain fine-tuning, then a copy of the model that sees GPT's answer in its prompt teaches a copy that doesn't.</dd>
+      <dt>Key numbers</dt><dd>LoCoMo judge score, 4B: base 0.746, fine-tuned 0.781, PSD 0.870, above MEMORA with GPT at 0.849 (Tables 1 and 2). LongMemEval, 4B: fine-tuned 0.78, PSD 0.77 (Table 5), so the PSD step itself does not carry over.</dd>
+      <dt>How strong</dt><dd>Thin. The fine-tuned and PSD scores fit exactly 123 questions; for example 0.8699 = 107/123. Beating MEMORA is about 2.5 questions. Baselines are on different question sets. Single runs, and training settings are not reported. The prompt examples quote LoCoMo conversation 26.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-shown">shown</span> The recipe trains on LoCoMo's chats, which our "never train on benchmarks" rule forbids. The notes are rewordings with no link to source lines, the opposite of our pointer rule. Nothing to run.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Distillation</div><h3>Data-free On-policy Distillation</h3><div class="meta"><span class="id">2609.14193</span> · Li et al. · 10 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>On-policy distillation (student writes, teacher corrects every token) at 1.5B to 1.7B on math. They varied how many prompts are used, including questions the teacher writes itself.</dd>
+      <dt>Key numbers</dt><dd>Eight prompts reach 56.3 vs 56.4 for the full 17k set (RL-tuned teacher pair). With a larger teacher, 8 prompts score 49.9 vs 47.4 for the full set. Coding data recovers over 90% of the math gain.</dd>
+      <dt>How strong</dt><dd>One run per setting, no error bars. Scores are the peak over 12 evaluations on the test benchmarks themselves, with no held-out selection set.</dd>
+      <dt>For Premonition</dt><dd><span class="tag t-sugg">suggested</span> This does not contradict "breadth beats repeats". Distillation gets a full correction at every token from a stronger teacher and re-samples each time, while our nights only get the checker's yes/no on stored text. It needs a same-vocabulary teacher we don't have for MiniCPM5-1B.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Checker · off-domain</div><h3>Locating Hidden Failures Makes Long-Horizon Agents More Reliable</h3><div class="meta"><span class="id">2609.17930</span> · Rahman et al. · 18 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>Humans marked the first mistake in 2,518 agent runs. They trained Scout, a 4B model that labels every step right or wrong, and used it to pick the best of several runs.</dd>
+      <dt>Key numbers</dt><dd>After its first mistake, an agent never recovers in 69.5% of runs. A step is wrong 3.0% of the time after a correct step and 40.4% after a wrong one. Frontier judges find the exact first mistake in at most about a third of runs. Picking with Scout: Terminal-Bench 2.0 90.2% vs 84.3%.</dd>
+      <dt>How strong</dt><dd>Weak where it matters. Scout's own first-mistake accuracy is not given anywhere in the text. Its 5.9-point lead is about 5 tasks. Placeholders remain in the draft ("Appendix ??").</dd>
+      <dt>For Premonition</dt><dd>No help for the checker: ours is exact code, so it already knows every miss for free. One idea carries over as a diagnostic <span class="tag t-untest">untested</span>: count per round how many answer cells the loop fixes and how many it breaks.</dd>
+    </dl>
+  </article>
+
+  <article class="paper">
+    <header><div class="eyebrow">Ben's direct link · no bearing</div><h3>Training Object Permanence in World Models</h3><div class="meta"><span class="id">2609.28654</span> · Zhang et al. · 31 authors</div></header>
+    <dl>
+      <dt>What they did</dt><dd>150 hand-written Blender scene generators (things staying there when hidden, solid things blocking each other) produced 1.5M clips. They fine-tuned a 16B video model on them for one epoch and tested it on a 300-question exam drawn from the same generators.</dd>
+      <dt>Key numbers</dt><dd>Human pairwise ranking: PWM-WROP 1679.5 [1603.5, 1781.5], 3rd of 14. The top two tie at 1723.6. Chance of being first: 12.3%.</dd>
+      <dt>How strong</dt><dd>The weakest paper read. There is no before/after test of the base model, and the authors admit the gap "cannot be attributed to training alone". The exam is in-distribution. About 52 judgments per model, and raters judged text match, realism and permanence together.</dd>
+      <dt>For Premonition</dt><dd>None for a text assistant. It is a cautionary example that supports our habits: test bigger or different than practised, and always keep a no-training or placebo arm.</dd>
+    </dl>
+  </article>
+</section>
+
+<section id="tests" class="stack">
+  <h2>Test ideas, queued only</h2>
+  <p>None of these is registered. Each needs Ben's yes and runs after the overnight goal (11:00 UTC). Each is one change with marks fixed in advance.</p>
+
+  <div class="test"><b>A. Looped-flow objective for the loop (owner Sleep research, after 358a)</b>
+    <span>Change: train the 358a loop with the looped-flow objective as one package (noisy-answer input, time input, falling noise, shared noise, graded every step, plain Euler walk). Everything else stays as in 358a: body, data, 60k steps, seeds 1 and 2. Trim the width so the weight count matches plain within 2%. Reuse the 358a plain checkpoints.</span>
+    <span>Pass: on a fresh sealed panel of 300 per test, the flow loop beats plain by at least 20/300 on at least 2 of the 3 bigger tests (sums6, grids6, numbers5), on both seeds, and loses no more than 10/300 on any practised-size test. Report only: 16 vs 64 steps, and flow vs the 358a loop.</span>
+    <span>Proved wrong: flow minus plain is 5/300 or less on all three bigger tests, on both seeds.</span></div>
+
+  <div class="test"><b>B. Is the learned stop better than luck? (owner Sleep research, evaluation only)</b>
+    <span>Change: on saved 358a loop checkpoints, add a random stop that uses the same mean number of rounds as the learned stop, and count per round how many answer cells go wrong→right and right→wrong. No training.</span>
+    <span>Pass (the stop is useful): the learned stop beats the matched random stop by at least 5 points on the bigger tests. Proved wrong: 1 point or less.</span></div>
+
+  <div class="test"><b>C. Adaptive blurt budget (owner Fix sleep, idea from Never Give Up)</b>
+    <span>Change: the night blurts 4 at a time per puzzle and stops at the first checked hit; with no hit it continues with probability 0.9, up to 64. The control uses a fixed count. Same total blurts, one checked win per puzzle, same practice-set size.</span>
+    <span>Pass: on a fresh 300-puzzle panel split into thirds by difficulty, total right is at least the control's, the hard third gains at least 6/100, both seeds agree, and no more than 3/200 extra general answers are lost. Proved wrong: the hard third gains under 2/100 even though the practice set holds at least 1.5× more hard wins. Void if it doesn't reach 1.5× hard wins.</span></div>
+
+  <div class="test"><b>D. Code-made hints for zero-hit puzzles (owner Creative, after C)</b>
+    <span>Change: where all blurts miss, give a one-step hint made by code (never the answer), blurt again, and practise the checked wins with the hint kept in the prompt. Control: the same number of extra unhinted blurts. Placebo: another puzzle's hint.</span>
+    <span>Pass: on a fresh unhinted panel, the hard third gains at least 8/100 over control, the placebo gains no more than 3/100, both seeds agree, and no more than 3/200 general answers are lost. Proved wrong: 3/100 or less over control, or the placebo matches. Void if under 5% of hinted tries win.</span></div>
+
+  <div class="test"><b>E. Do the notes' facts matter? (owner Benchmarks, LoCoMo practice, evaluation only)</b>
+    <span>Change: at answer time, swap the retrieved chat lines for the same number of length-matched lines from a different conversation. Precondition: the notebook must first beat no-notes by at least 3 F1 (paired interval above 0), or the test is not run.</span>
+    <span>Pass: the swapped lines recover no more than a quarter of the notebook's gain, and "I don't know" rises. Proved wrong: they recover half or more, which would mean format, not facts, drives the score, and answer length (#4) is the lever.</span></div>
+</section>
+
+<section id="rest" class="stack">
+  <h2>The other 18, one line each</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>arXiv</th><th>Paper</th><th>Verdict for Premonition</th></tr></thead>
+    <tbody>
+      <tr><td class="num id">2609.30063</td><td>Self-Play Pretraining with Zero Data</td><td>Already reviewed in its own thread; the practice-picking test goes to Sleep research after 11:00.</td></tr>
+      <tr><td class="num id">2609.26924</td><td>nnFoundation: 3D foundation models for radiology</td><td>None. Medical imaging.</td></tr>
+      <tr><td class="num id">2609.26457</td><td>Recursive self-improvement of AI research agents (AIDE²)</td><td>None. A frontier agent rewriting its own code.</td></tr>
+      <tr><td class="num id">2609.26333</td><td>Disaggregated Quantization</td><td>None. Inference speed for big models.</td></tr>
+      <tr><td class="num id">2609.22068</td><td>CodeMidas: coding RL environments from source code</td><td>None. Coding agents at large scale.</td></tr>
+      <tr><td class="num id">2609.20888</td><td>Elastic Threshold Attention</td><td>None. Long-context decoding speed.</td></tr>
+      <tr><td class="num id">2609.24972</td><td>RRSI: regularized self-improvement of agent harnesses</td><td>None to run. Its in-distribution gains (up to 14.1) shrink to 4.7 on new benchmarks, which is why we test on fresh panels.</td></tr>
+      <tr><td class="num id">2609.19134</td><td>ScienceIDE</td><td>None. Scientific code environments for large agents.</td></tr>
+      <tr><td class="num id">2609.21967</td><td>NemotronLabs VoiceChat</td><td>None. Speech-to-speech.</td></tr>
+      <tr><td class="num id">2609.19101</td><td>Monitoring reward hacking with internal representations</td><td>None now. Frontier-model safety probes.</td></tr>
+      <tr><td class="num id">2609.20751</td><td>dQwen3.5: hybrid-attention diffusion LMs</td><td>None. A different way to generate text.</td></tr>
+      <tr><td class="num id">2609.17895</td><td>TabPFN-3.5</td><td>None. Tabular prediction.</td></tr>
+      <tr><td class="num id">2609.19969</td><td>DeepSeek-V4.1-Flash</td><td>None. KV-cache compression at 552B.</td></tr>
+      <tr><td class="num id">2609.12552</td><td>RelateAnything</td><td>None. Image relations, and relations are about 1% of our work.</td></tr>
+      <tr><td class="num id">2609.15818</td><td>Atria Dawn (the site's admin pick)</td><td>None. A large agent model plus a study of humans working with it.</td></tr>
+      <tr><td class="num id">2609.12303</td><td>Breaking the Token Ceiling: byte models</td><td>None now. It would matter only if Premonition trained its own 1B from scratch.</td></tr>
+      <tr><td class="num id">2609.16648</td><td>GrowMTP</td><td>None. Speeds up RL rollouts.</td></tr>
+      <tr><td class="num id">2609.13356</td><td>ZGCM-1</td><td>Weak. A 7B pairing thinking with tool use, the same direction as Ben's calculator and Python tools. Nothing to act on.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<p class="foot">Read 26 Sep 2026 in a Premonition project thread. PDFs came from arxiv.org, the X post through a public mirror API, and BDM from its GitHub README and appendix. Key numbers were spot-checked against the paper text, and 358a details against scripts/claude_rsn358a_run.py. Paper text is saved in the project folder at research-2026-09-26/papers/.</p>
+
+</div>

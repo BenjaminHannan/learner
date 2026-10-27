@@ -1,0 +1,541 @@
+{
+  "utc": "2026-09-30T03:35:27.259399+00:00",
+  "scope": "pre-run source D256 readiness deployment; no inference/optimization in this check",
+  "queue": "handoff/queue/sol-stop-readiness-source-v2.md",
+  "queue_sha256": "4b6ab9a5033e55013616a1aadd555459f77f11588cdae77e7b042b5a5f5d9574",
+  "spec_sha256": "9658b6f0db52cdc36b0664a27f9f5e26f0f1c5c0550ecb8168c36abd41a28612",
+  "pinned_files": {
+    "scripts/sol_stop_adapter.py": {
+      "expected": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5",
+      "actual": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5",
+      "bytes": 30200
+    },
+    "scripts/sol_stop_contract_test.py": {
+      "expected": "22f82ea93977ca1c646d823a598b9d909a2b4e60e2a1da5d45d114408263f66f",
+      "actual": "22f82ea93977ca1c646d823a598b9d909a2b4e60e2a1da5d45d114408263f66f",
+      "bytes": 13444
+    },
+    "scripts/sol_stop_diagnostic.py": {
+      "expected": "2f602005067b178aaa91c9a2a498c53ab1a7be505a021d210f484fa178f46340",
+      "actual": "2f602005067b178aaa91c9a2a498c53ab1a7be505a021d210f484fa178f46340",
+      "bytes": 17128
+    },
+    "scripts/sol_stop_readiness.py": {
+      "expected": "efbc6508281d49dbe49c914fbf8dde34a7ebd91e8120835ae2428fdc73a1c0d1",
+      "actual": "efbc6508281d49dbe49c914fbf8dde34a7ebd91e8120835ae2428fdc73a1c0d1",
+      "bytes": 14911
+    },
+    "scripts/sol_compose_model.py": {
+      "expected": "a6066ca6c2dc5c15ed986b1e42fef50ba53e6870a634c97ebc20878dbb6fce87",
+      "actual": "a6066ca6c2dc5c15ed986b1e42fef50ba53e6870a634c97ebc20878dbb6fce87",
+      "bytes": 15539
+    },
+    "scripts/sol_spatial_attention_core.py": {
+      "expected": "b14b3a0df49c04fc3905d910abd05fdc38759846928fd25026a3ff806eb9cf25",
+      "actual": "b14b3a0df49c04fc3905d910abd05fdc38759846928fd25026a3ff806eb9cf25",
+      "bytes": 7026
+    },
+    "scripts/claude_fewex_net.py": {
+      "expected": "2f9415f5973686733c130b5edcfcfea6901de9ede546b3863fc1a4699f89c5d7",
+      "actual": "2f9415f5973686733c130b5edcfcfea6901de9ede546b3863fc1a4699f89c5d7",
+      "bytes": 7170
+    },
+    "scripts/claude_fewex_data.py": {
+      "expected": "1b0f825c5f4c3fbacd9765658619407c15b5fa70f071f2683afcda7e488487b7",
+      "actual": "1b0f825c5f4c3fbacd9765658619407c15b5fa70f071f2683afcda7e488487b7",
+      "bytes": 4432
+    },
+    "scripts/claude_rsn358a_envs.py": {
+      "expected": "af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0",
+      "actual": "af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0",
+      "bytes": 12818
+    },
+    "scripts/claude_dir_h1_kinds.py": {
+      "expected": "0d62217fc928ac45791fd800e44449a762f56028e832ead6498b7f1621465ffa",
+      "actual": "0d62217fc928ac45791fd800e44449a762f56028e832ead6498b7f1621465ffa",
+      "bytes": 17764
+    },
+    "reviews/premonition-moe-2026-09-29/correctness_audit.py": {
+      "expected": "455d9fd75c1332f6b7f9c5990c2b7eeb568829be479e9b9be1671c8fc20e1051",
+      "actual": "455d9fd75c1332f6b7f9c5990c2b7eeb568829be479e9b9be1671c8fc20e1051",
+      "bytes": 3513
+    },
+    "reviews/premonition-moe-2026-09-29/summarize_results.py": {
+      "expected": "9428f4593343c0bf1cb9343dd740f414d231beaf3051953672fb23e496db0460",
+      "actual": "9428f4593343c0bf1cb9343dd740f414d231beaf3051953672fb23e496db0460",
+      "bytes": 9074
+    },
+    "reviews/premonition-moe-2026-09-29/capsule_fast_exec.py": {
+      "expected": "a280854b1b5a2c6fe67a22cb1ac0d2010d23443e930dd0a9b91185d61bb527ba",
+      "actual": "a280854b1b5a2c6fe67a22cb1ac0d2010d23443e930dd0a9b91185d61bb527ba",
+      "bytes": 31942
+    },
+    "reviews/premonition-moe-2026-09-29/dispatch_benchmark.py": {
+      "expected": "d54045098533714a7b8790a495eea0c7e55825675e3ee626f998bbd74d331d98",
+      "actual": "d54045098533714a7b8790a495eea0c7e55825675e3ee626f998bbd74d331d98",
+      "bytes": 28032
+    },
+    "reviews/premonition-moe-2026-09-29/capsule_screen.py": {
+      "expected": "d85cd705d04084fb17d679d3530409f9c73a8a69b7b1252a4ee211468962a3eb",
+      "actual": "d85cd705d04084fb17d679d3530409f9c73a8a69b7b1252a4ee211468962a3eb",
+      "bytes": 36320
+    },
+    "reviews/premonition-moe-2026-09-29/halt_calibrate.py": {
+      "expected": "e2059acfa02e2dc2d5913b3898fae0f5f3006fe2ca83e0945d0442bc20710ade",
+      "actual": "e2059acfa02e2dc2d5913b3898fae0f5f3006fe2ca83e0945d0442bc20710ade",
+      "bytes": 35966
+    },
+    "reviews/premonition-moe-2026-09-29/real_screen.py": {
+      "expected": "c98ccdb52d7dd8e0c1dc8e45b047a17ffb1702ee4902b1b306b50c235058521a",
+      "actual": "c98ccdb52d7dd8e0c1dc8e45b047a17ffb1702ee4902b1b306b50c235058521a",
+      "bytes": 18597
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom_screen.py": {
+      "expected": "7a400f22a7cae1b44c90089f9c0469a762dd67da13f39ddd4ecf282cfc28ea35",
+      "actual": "7a400f22a7cae1b44c90089f9c0469a762dd67da13f39ddd4ecf282cfc28ea35",
+      "bytes": 16385
+    },
+    "reviews/premonition-moe-2026-09-29/proposal_workspace.py": {
+      "expected": "3ac21dc11b106d0050cfe51a8b46567638449508d5df3045552cf89705e52224",
+      "actual": "3ac21dc11b106d0050cfe51a8b46567638449508d5df3045552cf89705e52224",
+      "bytes": 6915
+    },
+    "reviews/premonition-moe-2026-09-29/recount_real.py": {
+      "expected": "0f085a706a0d0135aa229bd005e2afaa37dfabf09275a9b00a0538efeca62bc1",
+      "actual": "0f085a706a0d0135aa229bd005e2afaa37dfabf09275a9b00a0538efeca62bc1",
+      "bytes": 1856
+    },
+    "reviews/premonition-moe-2026-09-29/continual_cycles.py": {
+      "expected": "7cbf6c68e95de51af4e8c6a7fc7bcf66aeb68408121563e5b9d62f0ddb291740",
+      "actual": "7cbf6c68e95de51af4e8c6a7fc7bcf66aeb68408121563e5b9d62f0ddb291740",
+      "bytes": 6562
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom_data.py": {
+      "expected": "2ed64a009de7a72e4b29daa8974daa224c2dfb87881ece3216703bbe41b1b4bf",
+      "actual": "2ed64a009de7a72e4b29daa8974daa224c2dfb87881ece3216703bbe41b1b4bf",
+      "bytes": 4045
+    },
+    "reviews/premonition-moe-2026-09-29/count_workspace.py": {
+      "expected": "b14a7e9c491427e40f58b4750c75cbce9a90a41a5cbeeebfabf4e748f4b79f1c",
+      "actual": "b14a7e9c491427e40f58b4750c75cbce9a90a41a5cbeeebfabf4e748f4b79f1c",
+      "bytes": 2628
+    },
+    "reviews/premonition-moe-2026-09-29/graph_active_proof.py": {
+      "expected": "e9705cd613032d9e44bbd88533e5faeed6c6f13c8b8b9fc52f488d0d87206859",
+      "actual": "e9705cd613032d9e44bbd88533e5faeed6c6f13c8b8b9fc52f488d0d87206859",
+      "bytes": 9424
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_relation.py": {
+      "expected": "7e2d7dc621e593481f5c31e3a2bdb3a5132a18144c8d18822860c23e3e380f5d",
+      "actual": "7e2d7dc621e593481f5c31e3a2bdb3a5132a18144c8d18822860c23e3e380f5d",
+      "bytes": 25798
+    },
+    "reviews/premonition-moe-2026-09-29/compare_capsule_baseline.py": {
+      "expected": "ae5e74415e9f9d6ccce7e8108dc91f948d53d102335a25714dd1ef9e70209df2",
+      "actual": "ae5e74415e9f9d6ccce7e8108dc91f948d53d102335a25714dd1ef9e70209df2",
+      "bytes": 4548
+    },
+    "reviews/premonition-moe-2026-09-29/gated_relation.py": {
+      "expected": "6d2b5322c8acefdeaf95fef0a423ebeb446c815f047ac5269efe2abcc06d51dd",
+      "actual": "6d2b5322c8acefdeaf95fef0a423ebeb446c815f047ac5269efe2abcc06d51dd",
+      "bytes": 9630
+    },
+    "reviews/premonition-moe-2026-09-29/sleep_branch.py": {
+      "expected": "babe6dc6845182a031ab875a40dd6c18a3251df4996da7a4497cefaf3a0776c8",
+      "actual": "babe6dc6845182a031ab875a40dd6c18a3251df4996da7a4497cefaf3a0776c8",
+      "bytes": 8749
+    },
+    "reviews/premonition-moe-2026-09-29/symbol_transport.py": {
+      "expected": "7d7d76e6dfc98c8deda7db7ae0545410e2b66aba54f84a082b50987039d289ce",
+      "actual": "7d7d76e6dfc98c8deda7db7ae0545410e2b66aba54f84a082b50987039d289ce",
+      "bytes": 1296
+    },
+    "reviews/premonition-moe-2026-09-29/summarize_real.py": {
+      "expected": "6c098e656a003e2cacbd84d605bf8b69d8198a5f3045ce0d942b5e5392be4879",
+      "actual": "6c098e656a003e2cacbd84d605bf8b69d8198a5f3045ce0d942b5e5392be4879",
+      "bytes": 26612
+    },
+    "reviews/premonition-moe-2026-09-29/graph_dense_program.py": {
+      "expected": "d9095727914ec233f7cfb74217352b3424bffbf0ec3b61f20f0437228774c473",
+      "actual": "d9095727914ec233f7cfb74217352b3424bffbf0ec3b61f20f0437228774c473",
+      "bytes": 21373
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_stop_screen.py": {
+      "expected": "52568278471e1a0e9a0c275f69dc9f69f7b53e50a0c8782d15178e47a50f2924",
+      "actual": "52568278471e1a0e9a0c275f69dc9f69f7b53e50a0c8782d15178e47a50f2924",
+      "bytes": 7715
+    },
+    "reviews/premonition-moe-2026-09-29/graph_state_stop_screen.py": {
+      "expected": "409e07a2a2de9d9ea56a9fff3e0dd34f8b4648d85664fccd255ad64af27c5342",
+      "actual": "409e07a2a2de9d9ea56a9fff3e0dd34f8b4648d85664fccd255ad64af27c5342",
+      "bytes": 9102
+    },
+    "reviews/premonition-moe-2026-09-29/stop_controller_fit_source.py": {
+      "expected": "d70f9cfb0f12a828cb37d6f47c9c1cfe3ea79c037975ff87cf1a98b418d6063c",
+      "actual": "d70f9cfb0f12a828cb37d6f47c9c1cfe3ea79c037975ff87cf1a98b418d6063c",
+      "bytes": 14082
+    },
+    "reviews/premonition-moe-2026-09-29/fast_adapters.py": {
+      "expected": "29ed136050a395a0d578d8d11c62cb7eefc15d51c21df2dfc15d293d3a36b9df",
+      "actual": "29ed136050a395a0d578d8d11c62cb7eefc15d51c21df2dfc15d293d3a36b9df",
+      "bytes": 39519
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_program.py": {
+      "expected": "acc7886b06c8e23e8ad328a0ef37e0a529218564a5add6a405aaf5af68ba7974",
+      "actual": "acc7886b06c8e23e8ad328a0ef37e0a529218564a5add6a405aaf5af68ba7974",
+      "bytes": 47367
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom_pilot_source.py": {
+      "expected": "e81a05decff512235d8c830f4b7814702bdaa6914b4c8e06ccce2947cc658d6d",
+      "actual": "e81a05decff512235d8c830f4b7814702bdaa6914b4c8e06ccce2947cc658d6d",
+      "bytes": 15728
+    },
+    "reviews/premonition-moe-2026-09-29/sleep_moe.py": {
+      "expected": "276b296e1c66539b13f1d30ed65f130be16bebeb86965914fb437daed28d1606",
+      "actual": "276b296e1c66539b13f1d30ed65f130be16bebeb86965914fb437daed28d1606",
+      "bytes": 8813
+    },
+    "reviews/premonition-moe-2026-09-29/program_library.py": {
+      "expected": "9073798eeb0e15c157d2501f91581b400f4e14df1ebd4ec8a6b46128cfff19bc",
+      "actual": "9073798eeb0e15c157d2501f91581b400f4e14df1ebd4ec8a6b46128cfff19bc",
+      "bytes": 8732
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_extended_stop.py": {
+      "expected": "3b26bdaf94d1bbc17f444cacae8c39ea8884ccd58c27d31f9ee4d58c9e2535b1",
+      "actual": "3b26bdaf94d1bbc17f444cacae8c39ea8884ccd58c27d31f9ee4d58c9e2535b1",
+      "bytes": 6967
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_init_screen.py": {
+      "expected": "b5147073f47bc0e93e9cd9275c22398184e564c96dbe3b08d7f39440f7dc8eb4",
+      "actual": "b5147073f47bc0e93e9cd9275c22398184e564c96dbe3b08d7f39440f7dc8eb4",
+      "bytes": 36236
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom_data_s0_source.py": {
+      "expected": "a3f1b8e13d3ee39cb22bf9359261bbb94bac5bc09cffa2a48fafdc9928105db3",
+      "actual": "a3f1b8e13d3ee39cb22bf9359261bbb94bac5bc09cffa2a48fafdc9928105db3",
+      "bytes": 3813
+    },
+    "reviews/premonition-moe-2026-09-29/support_diagnostic.py": {
+      "expected": "55e3a2f4917650e6c88fcf442483fa8341c91b0c5cccab665397902556a3bd0d",
+      "actual": "55e3a2f4917650e6c88fcf442483fa8341c91b0c5cccab665397902556a3bd0d",
+      "bytes": 3441
+    },
+    "reviews/premonition-moe-2026-09-29/program_library_dense_screen.py": {
+      "expected": "5db63872d2f935ad6a717009e139d276d38ce4397f774e71e479c6c215b5470f",
+      "actual": "5db63872d2f935ad6a717009e139d276d38ce4397f774e71e479c6c215b5470f",
+      "bytes": 19935
+    },
+    "reviews/premonition-moe-2026-09-29/relational_expert.py": {
+      "expected": "4ee3f408d69b9b0540e2a7e8c748a49e6e08c12cd182b7dee98b2008d2587cf1",
+      "actual": "4ee3f408d69b9b0540e2a7e8c748a49e6e08c12cd182b7dee98b2008d2587cf1",
+      "bytes": 11248
+    },
+    "reviews/premonition-moe-2026-09-29/allactive_dispatch.py": {
+      "expected": "fa14ca736919e6cb0dc86bb2459a40849d336b5dc76059fbb60935856861d698",
+      "actual": "fa14ca736919e6cb0dc86bb2459a40849d336b5dc76059fbb60935856861d698",
+      "bytes": 39256
+    },
+    "reviews/premonition-moe-2026-09-29/mac_pilot.py": {
+      "expected": "64e4acd8c549e065e9e41052c3ab338b7b123bf82101e72d5512afe5396e919c",
+      "actual": "64e4acd8c549e065e9e41052c3ab338b7b123bf82101e72d5512afe5396e919c",
+      "bytes": 15140
+    },
+    "reviews/premonition-moe-2026-09-29/stop_controller.py": {
+      "expected": "dbeed00d45d661bfcb7bc860dbcc0ee25fbd3c52b89f2461828064bd47fcab30",
+      "actual": "dbeed00d45d661bfcb7bc860dbcc0ee25fbd3c52b89f2461828064bd47fcab30",
+      "bytes": 14329
+    },
+    "reviews/premonition-moe-2026-09-29/latency_proof.py": {
+      "expected": "f23e39f5f919fd92a662570508412f2f291c43b2ef4268ab747d95585d0c5aa8",
+      "actual": "f23e39f5f919fd92a662570508412f2f291c43b2ef4268ab747d95585d0c5aa8",
+      "bytes": 11755
+    },
+    "reviews/premonition-moe-2026-09-29/latency_proof_source.py": {
+      "expected": "1547df3f24087fdeb3fd5709891d8ebb83dbda1fe694979aa9a84ffdcf2717d0",
+      "actual": "1547df3f24087fdeb3fd5709891d8ebb83dbda1fe694979aa9a84ffdcf2717d0",
+      "bytes": 10449
+    },
+    "reviews/premonition-moe-2026-09-29/reasoner_candidate.py": {
+      "expected": "22271c9c698f66a53aa8d6fdd2d99489dab794606bdd591949b5729889067083",
+      "actual": "22271c9c698f66a53aa8d6fdd2d99489dab794606bdd591949b5729889067083",
+      "bytes": 13322
+    },
+    "reviews/premonition-moe-2026-09-29/program_library_screen.py": {
+      "expected": "54221b382dd02f00e78066a4c207cc297b0c6a42adbc15a5e0ac88b1009e7376",
+      "actual": "54221b382dd02f00e78066a4c207cc297b0c6a42adbc15a5e0ac88b1009e7376",
+      "bytes": 31296
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_screen.py": {
+      "expected": "b0b78043f4eb14a2b21a4f27f11f5deb14a21524c9fd6d0b380b6f5ac0dfb752",
+      "actual": "b0b78043f4eb14a2b21a4f27f11f5deb14a21524c9fd6d0b380b6f5ac0dfb752",
+      "bytes": 9319
+    },
+    "reviews/premonition-moe-2026-09-29/graph_active_proof_source.py": {
+      "expected": "bfa5e5da48be3932ec1075290cbe2032dd2717dafa0a8ed1f532142392c4f1fc",
+      "actual": "bfa5e5da48be3932ec1075290cbe2032dd2717dafa0a8ed1f532142392c4f1fc",
+      "bytes": 9360
+    },
+    "reviews/premonition-moe-2026-09-29/stop_controller_stream.py": {
+      "expected": "7de592aa0522499b83ffdf34d1b524a3edb7d0e8d76c75217f2efbe255ee419e",
+      "actual": "7de592aa0522499b83ffdf34d1b524a3edb7d0e8d76c75217f2efbe255ee419e",
+      "bytes": 6229
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom.py": {
+      "expected": "647decffc3efbd86b2e8699cc0d36b46fe059d67b07c097683f66f296184fa20",
+      "actual": "647decffc3efbd86b2e8699cc0d36b46fe059d67b07c097683f66f296184fa20",
+      "bytes": 37313
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_relation.py": {
+      "expected": "b6715f7cb5cfc35371f2c4e1eb374d17fbb9354f90a1e68d53ab8187cd7d0ef6",
+      "actual": "b6715f7cb5cfc35371f2c4e1eb374d17fbb9354f90a1e68d53ab8187cd7d0ef6",
+      "bytes": 31548
+    },
+    "reviews/premonition-moe-2026-09-29/wake_sleep_meta.py": {
+      "expected": "97c673ee7dad896f1d74c31c0ea0116ed9ae44aef31c2557e78f6305787da604",
+      "actual": "97c673ee7dad896f1d74c31c0ea0116ed9ae44aef31c2557e78f6305787da604",
+      "bytes": 12462
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_active_proof.py": {
+      "expected": "519ca15ddf2a35941ee84193864bfd6babcde7d1f972b3b0c2f7c705c1d0d2a2",
+      "actual": "519ca15ddf2a35941ee84193864bfd6babcde7d1f972b3b0c2f7c705c1d0d2a2",
+      "bytes": 7401
+    },
+    "reviews/premonition-moe-2026-09-29/breadth_dev_kinds.py": {
+      "expected": "c55d7ee6b1b1627fb01b0daff06d42be08edbeadccceaa7bb006740aa976890a",
+      "actual": "c55d7ee6b1b1627fb01b0daff06d42be08edbeadccceaa7bb006740aa976890a",
+      "bytes": 11992
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_init_variant.py": {
+      "expected": "04d7503bb7d4f5420be16005bf52f3aca0910db6bf5b2fa0c9bbc07a588439ef",
+      "actual": "04d7503bb7d4f5420be16005bf52f3aca0910db6bf5b2fa0c9bbc07a588439ef",
+      "bytes": 10366
+    },
+    "reviews/premonition-moe-2026-09-29/record_atom_horizon1024_source.py": {
+      "expected": "e6601ef568cc49cb5830b5096882e33e000d9847d7829cd24befbde88be5efd0",
+      "actual": "e6601ef568cc49cb5830b5096882e33e000d9847d7829cd24befbde88be5efd0",
+      "bytes": 15965
+    },
+    "reviews/premonition-moe-2026-09-29/operator_reasoner.py": {
+      "expected": "257c8b35317ed88f95f985b740dd67b81447570ae020b027f1d02b321e393ec3",
+      "actual": "257c8b35317ed88f95f985b740dd67b81447570ae020b027f1d02b321e393ec3",
+      "bytes": 12559
+    },
+    "reviews/premonition-moe-2026-09-29/workspace_pilot.py": {
+      "expected": "9d8fa8ace0b79d6448e87dbcae0a630db343d38f79e4c1f092cbcf80ccc6ea89",
+      "actual": "9d8fa8ace0b79d6448e87dbcae0a630db343d38f79e4c1f092cbcf80ccc6ea89",
+      "bytes": 3078
+    },
+    "reviews/premonition-moe-2026-09-29/graph_stop_screen.py": {
+      "expected": "f315441d46629b01f98cbd84cec08831c718a44f53ffc5d216f50d4e1aea4f2e",
+      "actual": "f315441d46629b01f98cbd84cec08831c718a44f53ffc5d216f50d4e1aea4f2e",
+      "bytes": 10739
+    },
+    "reviews/premonition-moe-2026-09-29/active_eval.py": {
+      "expected": "e6c75743b7f207adc747994369ab1588832d4a5055f5983fc75245ad83890e9f",
+      "actual": "e6c75743b7f207adc747994369ab1588832d4a5055f5983fc75245ad83890e9f",
+      "bytes": 22913
+    },
+    "reviews/premonition-moe-2026-09-29/paired_proof.py": {
+      "expected": "ef8bd8d8d94de9c8cdb3171344998364d2e8da13d75c1c904dd5396ad12931bb",
+      "actual": "ef8bd8d8d94de9c8cdb3171344998364d2e8da13d75c1c904dd5396ad12931bb",
+      "bytes": 46338
+    },
+    "reviews/premonition-moe-2026-09-29/capsule_moe.py": {
+      "expected": "64e8d57e763e2828b4f8d9d49c7be808cf08f3a52e23b8acd2a2f91cbabadd45",
+      "actual": "64e8d57e763e2828b4f8d9d49c7be808cf08f3a52e23b8acd2a2f91cbabadd45",
+      "bytes": 12738
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_screen.py": {
+      "expected": "35abfbeb9f9e9cdb6bbb8a557aeb5754271f9ccb18584eca79f9eb5eca54175c",
+      "actual": "35abfbeb9f9e9cdb6bbb8a557aeb5754271f9ccb18584eca79f9eb5eca54175c",
+      "bytes": 8681
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_stop_screen.py": {
+      "expected": "fa4d10b9083e86d4eba60243a4c644aab3fe0924bfd9077a5787762cc7fb2cd3",
+      "actual": "fa4d10b9083e86d4eba60243a4c644aab3fe0924bfd9077a5787762cc7fb2cd3",
+      "bytes": 9817
+    },
+    "reviews/premonition-moe-2026-09-29/numeric_dense.py": {
+      "expected": "8b33871ed886dc49f60f242a988299ebabce10fb0a064a0cbb67defc0f1c5a80",
+      "actual": "8b33871ed886dc49f60f242a988299ebabce10fb0a064a0cbb67defc0f1c5a80",
+      "bytes": 2573
+    },
+    "reviews/premonition-moe-2026-09-29/spatial_extend.py": {
+      "expected": "3cbd12b0abda6cce555f695053d95a449e413d5cc4e819be4cdcacabb1babb72",
+      "actual": "3cbd12b0abda6cce555f695053d95a449e413d5cc4e819be4cdcacabb1babb72",
+      "bytes": 7387
+    },
+    "reviews/premonition-moe-2026-09-29/graph_program.py": {
+      "expected": "77422536207f875650f210f1ab3eba2dedc65762d05eced3131fe2d759ba0b1a",
+      "actual": "77422536207f875650f210f1ab3eba2dedc65762d05eced3131fe2d759ba0b1a",
+      "bytes": 37671
+    },
+    "reviews/premonition-moe-2026-09-29/fast_depthwise.py": {
+      "expected": "b2516b8672ae1de1cc5c3cdef338b00e49f5320ee9530af4725656865ebfef15",
+      "actual": "b2516b8672ae1de1cc5c3cdef338b00e49f5320ee9530af4725656865ebfef15",
+      "bytes": 9429
+    },
+    "reviews/premonition-moe-2026-09-29/route_audit.py": {
+      "expected": "a097a9a9682aba94a57bbdf62b674302907e9ce0a4a896d5c1abd6c212c69087",
+      "actual": "a097a9a9682aba94a57bbdf62b674302907e9ce0a4a896d5c1abd6c212c69087",
+      "bytes": 2665
+    },
+    "artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt": {
+      "expected": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+      "actual": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+      "bytes": 6593157
+    },
+    "artifacts/claude-fewex-20260927/runs/qual-plain-s0/source.pt": {
+      "expected": "e335364f0674deed09b41287567bc89dec00137b0636a712221a7689bb444b7f",
+      "actual": "e335364f0674deed09b41287567bc89dec00137b0636a712221a7689bb444b7f",
+      "bytes": 6511383
+    },
+    "reviews/premonition-moe-2026-09-29/record-atom-horizon1024-s0.bound.u1024.pt": {
+      "expected": "656b97254a00738cbd7d697ddfe12b40d0a0824b5bb1df97f0d40b0bc543ae49",
+      "actual": "656b97254a00738cbd7d697ddfe12b40d0a0824b5bb1df97f0d40b0bc543ae49",
+      "bytes": 609957
+    },
+    "reviews/premonition-moe-2026-09-29/record-atom-horizon1024-s0.source_dense_identity.u1024.pt": {
+      "expected": "8a1aa186a337ec7c5c8c31e6d859fcdbbc6c07d7bb08fb1378ae1e647e9eaa88",
+      "actual": "8a1aa186a337ec7c5c8c31e6d859fcdbbc6c07d7bb08fb1378ae1e647e9eaa88",
+      "bytes": 6599645
+    },
+    "reviews/premonition-moe-2026-09-29/numeric-horizon1024-s0.lexical_input_sum.pt": {
+      "expected": "5cd84162b0cb56e30593e9f5d5c585531a90f0760bafbc2c72a6ec3a6dffc34f",
+      "actual": "5cd84162b0cb56e30593e9f5d5c585531a90f0760bafbc2c72a6ec3a6dffc34f",
+      "bytes": 389921
+    },
+    "reviews/premonition-moe-2026-09-29/numeric-horizon1024-s0.source_dense_grounded.pt": {
+      "expected": "65392b36396e1b8b12fc5f757104eb1cf92ac984bd7f8f329c8b1669955ff761",
+      "actual": "65392b36396e1b8b12fc5f757104eb1cf92ac984bd7f8f329c8b1669955ff761",
+      "bytes": 6608323
+    },
+    "reviews/premonition-moe-2026-09-29/spatial-horizon512-s0.spatial_sum_top1.pt": {
+      "expected": "80f8faf173b5a3730e309753c666a3b509059629e5eae025279e2a4584781dc9",
+      "actual": "80f8faf173b5a3730e309753c666a3b509059629e5eae025279e2a4584781dc9",
+      "bytes": 359045
+    },
+    "reviews/premonition-moe-2026-09-29/spatial-horizon512-s0.source_dense_full24.pt": {
+      "expected": "712712444db8e9072cf25b02580bc345eb778afbcb94188d96d20a0336ffe18d",
+      "actual": "712712444db8e9072cf25b02580bc345eb778afbcb94188d96d20a0336ffe18d",
+      "bytes": 6597193
+    },
+    "artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt": {
+      "expected": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+      "actual": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+      "bytes": 6593157
+    },
+    "artifacts/claude-fewex-20260927/runs/qual-plain-s1/source.pt": {
+      "expected": "e55a6e400e44b36e02fb9ce295168656046493be2ff0b4f200668c4a9c67052c",
+      "actual": "e55a6e400e44b36e02fb9ce295168656046493be2ff0b4f200668c4a9c67052c",
+      "bytes": 6511383
+    },
+    "reviews/premonition-moe-2026-09-29/record-atom-horizon1024-s1.bound.u1024.pt": {
+      "expected": "645f24b38a2c3bb939f44444cc3050686b4f4da0e23d95d2dc50b7d9bcb5dfbf",
+      "actual": "645f24b38a2c3bb939f44444cc3050686b4f4da0e23d95d2dc50b7d9bcb5dfbf",
+      "bytes": 609957
+    },
+    "reviews/premonition-moe-2026-09-29/record-atom-horizon1024-s1.source_dense_identity.u1024.pt": {
+      "expected": "75d4ef0890b7bfa07056836f283ff8ffa1ab4def7b9bdbff53b4f884232bc34b",
+      "actual": "75d4ef0890b7bfa07056836f283ff8ffa1ab4def7b9bdbff53b4f884232bc34b",
+      "bytes": 6599645
+    },
+    "reviews/premonition-moe-2026-09-29/numeric-horizon1024-s1.lexical_input_sum.pt": {
+      "expected": "2848aa1f5267d17c3dd33ee9746cbb7ec5ce4e39bb04906ecefbecdc802c1158",
+      "actual": "2848aa1f5267d17c3dd33ee9746cbb7ec5ce4e39bb04906ecefbecdc802c1158",
+      "bytes": 389921
+    },
+    "reviews/premonition-moe-2026-09-29/numeric-horizon1024-s1.source_dense_grounded.pt": {
+      "expected": "5dfd3c817be27a255091125ce5356fcbd7b66df07021f2f185910b936d0a699c",
+      "actual": "5dfd3c817be27a255091125ce5356fcbd7b66df07021f2f185910b936d0a699c",
+      "bytes": 6608323
+    },
+    "reviews/premonition-moe-2026-09-29/spatial-horizon512-s1.spatial_sum_top1.pt": {
+      "expected": "826cdf46259b24f21b1b7946fec6f0485432c8cd5933ac5163d7f0b17f6716cd",
+      "actual": "826cdf46259b24f21b1b7946fec6f0485432c8cd5933ac5163d7f0b17f6716cd",
+      "bytes": 359045
+    },
+    "reviews/premonition-moe-2026-09-29/spatial-horizon512-s1.source_dense_full24.pt": {
+      "expected": "721343a5c3355c7be9d99f07e33826eb0c093a5ba5e0bd4dc57b914c7ad8947a",
+      "actual": "721343a5c3355c7be9d99f07e33826eb0c093a5ba5e0bd4dc57b914c7ad8947a",
+      "bytes": 6597193
+    },
+    "artifacts/sol-stop-20260929/PASSMARKS.md": {
+      "expected": "072f4e8db14926ffd8378dab20660b7611e2f820318c137531d7c19f399bcb42",
+      "actual": "072f4e8db14926ffd8378dab20660b7611e2f820318c137531d7c19f399bcb42",
+      "bytes": 5097
+    },
+    "artifacts/sol-stop-20260929/POC-SMOKE-PROTOCOL.md": {
+      "expected": "84587fef91d298d3b99557f06bb90ae9f79c99a0e1bd815fc091b950c6754290",
+      "actual": "84587fef91d298d3b99557f06bb90ae9f79c99a0e1bd815fc091b950c6754290",
+      "bytes": 2825
+    },
+    "artifacts/sol-stop-20260929/CONTRACT.md": {
+      "expected": "2e15ef065b5aaf089e8d431c7655be6d73addb7ec7ed19db863d66c5eddb29fb",
+      "actual": "2e15ef065b5aaf089e8d431c7655be6d73addb7ec7ed19db863d66c5eddb29fb",
+      "bytes": 4684
+    },
+    "artifacts/sol-stop-20260929/INTEGRATION-UPDATE.md": {
+      "expected": "6e518644b139e7cf6d58cb9e64c2a79db5dd57794e87db3d657abfd09ee587d1",
+      "actual": "6e518644b139e7cf6d58cb9e64c2a79db5dd57794e87db3d657abfd09ee587d1",
+      "bytes": 4099
+    },
+    "artifacts/sol-stop-20260929/READINESS-PASSMARKS.md": {
+      "expected": "b399af23c8ce82b64632dfdff59c05cf64098c45da0d6acd9ab4f56b3fb255c6",
+      "actual": "b399af23c8ce82b64632dfdff59c05cf64098c45da0d6acd9ab4f56b3fb255c6",
+      "bytes": 4649
+    },
+    "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s0.pt": {
+      "expected": "1c8ba46366fdd28705670e73db0b75e8f1a95fddba0ed44cfb723655347fb880",
+      "actual": "1c8ba46366fdd28705670e73db0b75e8f1a95fddba0ed44cfb723655347fb880",
+      "bytes": 36062837
+    },
+    "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s1.pt": {
+      "expected": "0d4f4cea5fa34aefca73b31847498f20868c9dce56da9fbf8735b16717a24c7f",
+      "actual": "0d4f4cea5fa34aefca73b31847498f20868c9dce56da9fbf8735b16717a24c7f",
+      "bytes": 36062837
+    },
+    "scripts/sol_stop_readiness_v2.py": {
+      "expected": "cd2764a76007f22cac3b229838bbb1d853be757cd9d47f1833764646ee710fbd",
+      "actual": "cd2764a76007f22cac3b229838bbb1d853be757cd9d47f1833764646ee710fbd",
+      "bytes": 15072
+    }
+  },
+  "checkpoint_manifest": {
+    "phase": "source",
+    "seeds": {
+      "0": {
+        "candidate": {
+          "checkpoint": "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s0.pt",
+          "sha256": "1c8ba46366fdd28705670e73db0b75e8f1a95fddba0ed44cfb723655347fb880"
+        },
+        "dense": {
+          "checkpoint": "artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt",
+          "sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085"
+        }
+      },
+      "1": {
+        "candidate": {
+          "checkpoint": "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s1.pt",
+          "sha256": "0d4f4cea5fa34aefca73b31847498f20868c9dce56da9fbf8735b16717a24c7f"
+        },
+        "dense": {
+          "checkpoint": "artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt",
+          "sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673"
+        }
+      }
+    }
+  },
+  "driver_cap_seconds": 3600,
+  "watcher_outer_cap_seconds": 4500,
+  "CPU_threads": 1,
+  "Mac_memory_bytes": 34359738368,
+  "Mac_cores": 10,
+  "new_output": "artifacts/sol-stop-20260929/readiness-source-v2",
+  "weight_distribution": "existing exact local checkpoints; not committed/copied/downloaded",
+  "raw_binding": "frozen-inputs.json labels/slot masks/tokens; DEV/noise predictions preserve same kind/ordinal. SOURCE-v2-ROWBINDING-ADDENDUM.json pins identity/hash scheme before first run",
+  "accepted_stop_ready": false,
+  "sleep_authorized": false,
+  "human_grounded_checkpoint_qualified": false,
+  "training_executed_by_this_check": false
+}

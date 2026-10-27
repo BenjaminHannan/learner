@@ -1,0 +1,63 @@
+{
+  "schema": "sol.cloud.exposure16.independent.source-review.v2",
+  "seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "driver_sha256": "9e01bc1505a87fce53831e6a618239dbf76217aebc8312cb1125fdf5259092db",
+  "observed_utc": "2026-09-30T09:05:06.385392+00:00",
+  "checks": {
+    "all16_actual_graphs_and_actual_human_target_lengths_zero_optimizer": true,
+    "probe_gradients_cleared_before_fit": true,
+    "probe_core_reader_prefix_and_LM_fingerprints_compared": true,
+    "CPU_and_CUDA_RNG_restored_after_probes": true,
+    "CPU_and_CUDA_RNG_restored_again_before_AdamW": true,
+    "training_graph_has_no_detach_and_shared_core_reader_prefix": true,
+    "generation_packet_detaches_only_final_query_with_query_mask": true,
+    "exact_four_round_mean_eight_auxiliary_helper_unchanged": true,
+    "initial_diagnostic_frame_size_projection_precedes_AdamW": true,
+    "full_zero_Adam_storage_serialization_precedes_AdamW": true,
+    "future_exact_token_raw_projection_precedes_AdamW": true,
+    "diagnostics_and_binary_frames_bind_current_tensor_fingerprints": true,
+    "checkpoint_durable_receipts_bind_byte_hash_and_raw_watermark": true,
+    "failed_partial_runs_preserved_without_resume_or_reduced_schedule": true,
+    "reserved_or_user_tests_absent_from_runtime": true,
+    "bounded_serialization_checks_extent_before_each_backing_write": true,
+    "binary_pending_growth_and_native_allocation_margin_checked": true,
+    "JSON_exact_bytes_plus_native_allocation_margin_checked_before_open": true
+  },
+  "check_count": 18,
+  "passed_count": 18,
+  "review_methods": "Independent AST/source inspection and numeric black-box writer/gate tests; no Torch/model execution",
+  "functions": {
+    "gates": {
+      "line": 71,
+      "end_line": 124
+    },
+    "graph": {
+      "line": 274,
+      "end_line": 286
+    },
+    "packet": {
+      "line": 288,
+      "end_line": 290
+    },
+    "diagnostic": {
+      "line": 360,
+      "end_line": 428
+    },
+    "binary_save": {
+      "line": 205,
+      "end_line": 238
+    },
+    "supervise": {
+      "line": 602,
+      "end_line": 630
+    }
+  },
+  "prior_material_failure_resolved": "r3 serialization_actual_peak_guard repaired with bounded sink rejecting extending writes before backing growth; JSON reserve margin and allocation-unit bound additive in r5",
+  "old_v1_r2_r3_r4_all_sealed_files_preserved": true,
+  "preflight_actual_execution_verified": false,
+  "target_Windows_timeout_execution_verified": false,
+  "actual_Windows_allocation_unit_verified": false,
+  "optimizer_updates": 0,
+  "models_loaded": 0,
+  "all_generated_artifacts_are_nontraining": true
+}

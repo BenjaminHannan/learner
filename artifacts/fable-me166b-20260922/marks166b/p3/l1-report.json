@@ -1,0 +1,71 @@
+{
+ "mark": "L1",
+ "before": {
+  "arm": "loop90-before",
+  "rows": [
+   {
+    "turn": "Mira's city is Lisbon?",
+    "reply": "Saved: Mira's city is Lisbon?.",
+    "statuses": [
+     "write"
+    ],
+    "new_facts": [
+     [
+      "F00001",
+      "city",
+      "Lisbon?"
+     ]
+    ],
+    "new_entities": {
+     "E0001": "Mira"
+    },
+    "before_shows_wrong_write": true
+   },
+   {
+    "turn": "Mira's city is Lisbon and Mira's pet is a cat.",
+    "reply": "Saved: Mira's city is Lisbon and Mira's pet is a cat.",
+    "statuses": [
+     "write"
+    ],
+    "new_facts": [
+     [
+      "F00001",
+      "city",
+      "Lisbon and Mira's pet is a cat"
+     ]
+    ],
+    "new_entities": {
+     "E0001": "Mira"
+    },
+    "before_shows_wrong_write": true
+   }
+  ]
+ },
+ "after": {
+  "arm": "loop96-after",
+  "rows": [
+   {
+    "turn": "Mira's city is Lisbon?",
+    "reply": "Was that a question?",
+    "statuses": [
+     "clarify"
+    ],
+    "new_facts": [],
+    "new_entities": {},
+    "clarify_no_write": true
+   },
+   {
+    "turn": "Mira's city is Lisbon and Mira's pet is a cat.",
+    "reply": "I can take one fact at a time \u2014 could you split that?",
+    "statuses": [
+     "clarify"
+    ],
+    "new_facts": [],
+    "new_entities": {},
+    "clarify_no_write": true
+   }
+  ]
+ },
+ "pass": true,
+ "seconds": 6.1
+}

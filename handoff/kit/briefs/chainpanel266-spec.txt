@@ -1,0 +1,24 @@
+BLIND PANEL SPEC: chainpanel266 (two-step questions whose subject is a chain, like "Where does Ana's boss live?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/266-*, scripts/claude_fix266_*, scripts/claude_loop266_agent.py, artifacts/claude-chain266-*, any relation-table file, the chat-demo files, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-chainpanel266-20260923/ with panel.jsonl (80 items), base138m.jsonl (80 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item: {"id": "c266-001", "family": ..., "setup": [1-4 teaching sentences, each its own turn], "question": "...", "gold": [list of strings, every one must appear in a right reply; [] for abstain and control families], "note": "..."}. Use a JSON list for gold. Only plain teaches that the base stores ("A's R is B.", "My R is B."). Check each setup on the base; replace any that it does not store as expected.
+
+Families and exact counts (80):
+- chain_verb 30: the subject is a two-link chain ("A's R1") or "my R1", and the question is a verb or "when" form: "Where does A's R1 live?", "Where was A's R1 born?", "Where does A's R1 work?", "When is A's R1's birthday?", "Who does A's R1 work for?", and similar everyday forms. Setup teaches both links. Use at least 8 different first-link relations (boss, mother, father, sister, brother, friend, neighbour, dentist, coach, wife, husband ...) and at least 5 different question forms; at most 6 items per question form. 8 items use "my R1" (setup "My R1 is B.").
+- chain_verb_three 6: a three-link chain ("Where does A's R1's R2 live?") with all three links taught.
+- chain_possessive 10: the same facts asked in possessive form ("What is A's R1's city?", "Who is A's R1's mother?"). The base already answers these; they check that nothing breaks.
+- broken_chain 12: one link is missing (the first or the second, 6 each), or the second person has a different relation taught. gold []; right = an honest abstain that names no untaught value.
+- plain_control 14: the same question forms with a plain name as the subject ("Where does B live?"), taught directly. gold = the value.
+- statement_control 8: statements that contain a chain ("Ana's boss lives in a big house." / "My sister's dog is loud.") as the last turn, with no "?". gold []; checks for no new writes versus the base.
+Fictional names only. At least 20 items use two-word names.
+
+run_base.py: run every item once on the base, 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json (build_agent138m, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+
+score_panel.py (sealed; builders use it unchanged): per item and per family:
+- right: gold families = every gold string appears in the reply, case-insensitive; broken_chain = the reply is an abstain ("I don't know" or "I couldn't") and names no value that is not taught for that chain; plain_control = gold appears; statement_control = stored facts after the turn equal the base's.
+- wrong: the reply names a taught value that is not in gold and does not contain every gold string, and is not an abstain.
+- question_wrote.
+Report the base's right, wrong and question writes per family in README.md, category level only. Never quote an item in README.md or in your final reply.

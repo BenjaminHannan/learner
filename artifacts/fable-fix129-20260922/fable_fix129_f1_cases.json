@@ -1,0 +1,624 @@
+[
+ {
+  "id": "P01",
+  "path": "bench73",
+  "turns": [
+   "Nora Brightmore is a citizen of Italy."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nora Brightmore",
+   "country_of_citizenship",
+   "Italy"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P02",
+  "path": "bench73",
+  "turns": [
+   "Nora Brightmore is a citizen of Italy!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nora Brightmore",
+   "country_of_citizenship",
+   "Italy"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P03",
+  "path": "bench73",
+  "turns": [
+   "Nora Brightmore is a citizen of Italy?"
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "question mark refused by old screen"
+ },
+ {
+  "id": "P04",
+  "path": "bench73",
+  "turns": [
+   "Nora Brightmore is a citizen of Italy.  "
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nora Brightmore",
+   "country_of_citizenship",
+   "Italy"
+  ],
+  "note": "trailing spaces"
+ },
+ {
+  "id": "P05",
+  "path": "bench73",
+  "turns": [
+   "Nora Brightmore is a citizen of Peru"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nora Brightmore",
+   "country_of_citizenship",
+   "Peru"
+  ],
+  "note": "no-punct control"
+ },
+ {
+  "id": "P06",
+  "path": "bench73",
+  "turns": [
+   "The capital of Norland is Oslo."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Norland",
+   "capital",
+   "Oslo"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P07",
+  "path": "bench73",
+  "turns": [
+   "The capital of Norland is Oslo!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Norland",
+   "capital",
+   "Oslo"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P08",
+  "path": "bench73",
+  "turns": [
+   "The capital of Norland is Oslo?"
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "question mark refused by old screen"
+ },
+ {
+  "id": "P09",
+  "path": "bench73",
+  "turns": [
+   "The official language of Norland is Norse."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Norland",
+   "official_language",
+   "Norse"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P10",
+  "path": "bench73",
+  "turns": [
+   "The official language of Norland is Norse!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Norland",
+   "official_language",
+   "Norse"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P11",
+  "path": "correction",
+  "turns": [
+   "Tessa Marlowe is a citizen of Spain",
+   "Actually, Tessa Marlowe is a citizen of Portugal."
+  ],
+  "expect": "teach2",
+  "expect_triple": [
+   [
+    "Tessa Marlowe",
+    "country_of_citizenship",
+    "Spain"
+   ],
+   [
+    "Tessa Marlowe",
+    "country_of_citizenship",
+    "Portugal"
+   ]
+  ],
+  "note": "124 reteach shape"
+ },
+ {
+  "id": "P12",
+  "path": "correction",
+  "turns": [
+   "The capital of Zorland is Lima",
+   "No, the capital of Zorland is Quito."
+  ],
+  "expect": "teach2",
+  "expect_triple": [
+   [
+    "Zorland",
+    "capital",
+    "Lima"
+   ],
+   [
+    "Zorland",
+    "capital",
+    "Quito"
+   ]
+  ],
+  "note": "No-prefix correction"
+ },
+ {
+  "id": "P13",
+  "path": "correction",
+  "turns": [
+   "Sorry, I meant Hugo's city is Paris."
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "sorry-prefix + possessive: one-word-name clarify"
+ },
+ {
+  "id": "P14",
+  "path": "fake",
+  "turns": [
+   "Hugo's city is Oslo."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Hugo",
+   "city",
+   "Oslo"
+  ],
+  "note": "plain period (old: clean)"
+ },
+ {
+  "id": "P15",
+  "path": "fake",
+  "turns": [
+   "Hugo's city is Trondheim!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Hugo",
+   "city",
+   "Trondheim"
+  ],
+  "note": "bang (old: LEAK)"
+ },
+ {
+  "id": "P16",
+  "path": "fake",
+  "turns": [
+   "Hugo's city is Bergen?"
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "question mark refused by old screen"
+ },
+ {
+  "id": "P17",
+  "path": "fake",
+  "turns": [
+   "Hugo's city is Bern"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Hugo",
+   "city",
+   "Bern"
+  ],
+  "note": "no-punct control"
+ },
+ {
+  "id": "P18",
+  "path": "bench73",
+  "turns": [
+   "Elowen Frostmere is the apprentice of Orson Vell."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Elowen Frostmere",
+   "apprentice_of",
+   "Orson Vell"
+  ],
+  "note": "explicit-dot pattern control"
+ },
+ {
+  "id": "P19",
+  "path": "bench73",
+  "turns": [
+   "Otto Vane is married to Zelda Quill."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Otto Vane",
+   "spouse",
+   "Zelda Quill"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P20",
+  "path": "bench73",
+  "turns": [
+   "Otto Vane is married to Zelda Quill!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Otto Vane",
+   "spouse",
+   "Zelda Quill"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P21",
+  "path": "extra",
+  "turns": [
+   "Bram Stoker is employed by Westfield Press."
+  ],
+  "expect": "teach-or-clarify",
+  "expect_triple": [
+   "Bram Stoker",
+   "employer",
+   "Westfield Press"
+  ],
+  "note": "employer + period"
+ },
+ {
+  "id": "P22",
+  "path": "extra",
+  "turns": [
+   "Bram Stoker works in the field of Letters."
+  ],
+  "expect": "teach-or-clarify",
+  "expect_triple": [
+   "Bram Stoker",
+   "occupation",
+   "Letters"
+  ],
+  "note": "occupation + period"
+ },
+ {
+  "id": "P23",
+  "path": "extra",
+  "turns": [
+   "Clara's child is Milo Ray."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Clara",
+   "child",
+   "Milo Ray"
+  ],
+  "note": "possessive-child parses via shared FakeEars path: teach on both"
+ },
+ {
+  "id": "P24",
+  "path": "bench73",
+  "turns": [
+   "Ovid Marlowe was born in the city of Sulmona."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Ovid Marlowe",
+   "place_of_birth",
+   "Sulmona"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P25",
+  "path": "bench73",
+  "turns": [
+   "Vincent Auriol worked in the city of Lyon."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Vincent Auriol",
+   "work_location",
+   "Lyon"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P26",
+  "path": "bench73",
+  "turns": [
+   "Highway Nine was performed by Bob Dylan."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Highway Nine",
+   "performer",
+   "Bob Dylan"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P27",
+  "path": "bench73",
+  "turns": [
+   "The type of music that Felix Harmon plays is jazz!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Felix Harmon",
+   "genre",
+   "jazz"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P28",
+  "path": "bench73",
+  "turns": [
+   "India is located in the continent of Asia?"
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "question mark refused by old screen"
+ },
+ {
+  "id": "P29",
+  "path": "bench73",
+  "turns": [
+   "Johann Bach is affiliated with the religion of Lutheranism."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Johann Bach",
+   "religion_or_worldview",
+   "Lutheranism"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P30",
+  "path": "bench73",
+  "turns": [
+   "Judah Halevi died in the city of Hebron!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Judah Halevi",
+   "place_of_death",
+   "Hebron"
+  ],
+  "note": "bang"
+ },
+ {
+  "id": "P31",
+  "path": "abbrev",
+  "turns": [
+   "The capital of Freedonia is Washington, D.C."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Freedonia",
+   "capital",
+   "Washington, D.C."
+  ],
+  "note": "D.C. kept"
+ },
+ {
+  "id": "P32",
+  "path": "abbrev",
+  "turns": [
+   "Nina Petrova is a citizen of the U.S.S.R."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nina Petrova",
+   "country_of_citizenship",
+   "the U.S.S.R."
+  ],
+  "note": "U.S.S.R. kept"
+ },
+ {
+  "id": "P33",
+  "path": "abbrev",
+  "turns": [
+   "Otis Redding is a citizen of the U.K.."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Otis Redding",
+   "country_of_citizenship",
+   "the U.K."
+  ],
+  "note": "double period -> one"
+ },
+ {
+  "id": "P34",
+  "path": "abbrev",
+  "turns": [
+   "June Carter was born in the city of St. Louis."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "June Carter",
+   "place_of_birth",
+   "St. Louis"
+  ],
+  "note": "St. kept"
+ },
+ {
+  "id": "P35",
+  "path": "abbrev",
+  "turns": [
+   "May Carter was born in the city of St. Paul!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "May Carter",
+   "place_of_birth",
+   "St. Paul"
+  ],
+  "note": "bang + St."
+ },
+ {
+  "id": "P36",
+  "path": "abbrev",
+  "turns": [
+   "Ray Holt worked in the city of Mt. Rainier."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Ray Holt",
+   "work_location",
+   "Mt. Rainier"
+  ],
+  "note": "Mt. kept"
+ },
+ {
+  "id": "P37",
+  "path": "abbrev",
+  "turns": [
+   "Gus Webb worked in the city of Ft. Worth?"
+  ],
+  "expect": "clarify",
+  "expect_triple": null,
+  "note": "question mark refused by old screen"
+ },
+ {
+  "id": "P38",
+  "path": "abbrev",
+  "turns": [
+   "Ike Turner is a citizen of the U.S.A."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Ike Turner",
+   "country_of_citizenship",
+   "the U.S.A."
+  ],
+  "note": "U.S.A. kept"
+ },
+ {
+  "id": "P39",
+  "path": "abbrev",
+  "turns": [
+   "The capital of Pacifica is St. Albans."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Pacifica",
+   "capital",
+   "St. Albans"
+  ],
+  "note": "mid-value abbrev"
+ },
+ {
+  "id": "P40",
+  "path": "abbrev",
+  "turns": [
+   "Zed's city is St. Louis."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Zed",
+   "city",
+   "St. Louis"
+  ],
+  "note": "possessive + abbrev"
+ },
+ {
+  "id": "P41",
+  "path": "subject",
+  "turns": [
+   "Actually, Gus Webb. is a citizen of Chile."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Gus Webb",
+   "country_of_citizenship",
+   "Chile"
+  ],
+  "note": "subject trailing period"
+ },
+ {
+  "id": "P42",
+  "path": "quotes",
+  "turns": [
+   "Nina Simone is a citizen of \"France\"."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Nina Simone",
+   "country_of_citizenship",
+   "France"
+  ],
+  "note": "quoted value"
+ },
+ {
+  "id": "P43",
+  "path": "bench73",
+  "turns": [
+   "Boeing was founded by William Boeing."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Boeing",
+   "founded_by",
+   "William Boeing"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P44",
+  "path": "bench73",
+  "turns": [
+   "The headquarters of Contoso is located in the city of Redmond."
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Contoso",
+   "headquarters_location",
+   "Redmond"
+  ],
+  "note": "final period"
+ },
+ {
+  "id": "P45",
+  "path": "bench73",
+  "turns": [
+   "Lady Macbeth was created by William Shakespeare!"
+  ],
+  "expect": "teach",
+  "expect_triple": [
+   "Lady Macbeth",
+   "creator",
+   "William Shakespeare"
+  ],
+  "note": "bang"
+ }
+]

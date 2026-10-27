@@ -1,0 +1,16 @@
+{
+ "about": "Every reply or stored change 138k is expected to make against 138j, by case id, with the reason. Written from the code audit and the pilot, before the seal. Anything not listed here is an unpredicted move.",
+ "K1": {
+  "p3d-ghost:d00t05": "REPLY 'Whose boss is Tavish?' after restart + replace-to-Quill + negate-Quill: 138j \"Oriel's boss is Tavish.\" (ghost: the doubled index kept a second copy of the Tavish triple; the Quill replace removed only one) -> 138k \"I don't know anyone whose boss is Tavish.\" (220: one copy, the replace removes it)",
+  "p3d-ghost:d00": "STORED (index-backed notebook_triples) 138j [Oriel boss Tavish, Tavish city Drumlow x2] -> 138k [Tavish city Drumlow] (ghost triple and duplicate gone; the log itself is unchanged)",
+  "p3c-restart2:d01": "STORED 138j [Marl city Osterby x2] -> 138k [Marl city Osterby] (duplicate from restart reload gone; replies identical)"
+ },
+ "K3": {},
+ "K4": {
+  "d11": "STORED (dialog 12 of 15, the restart dialog) 138j [Oriel boss Tavish x2] -> 138k [Oriel boss Tavish] (duplicate from restart reload gone; every reply and per-turn event count identical)"
+ },
+ "K5": "no change: sleep path reads notebook.current() (facts + active), never the index (220 RESULTS, sleep-path question)",
+ "K6": "soak (3 kill-9 restarts) and p2: counts and final notebook taught triples identical to 138j's sealed marks138j; the log is written by the same code, the fix only changes the in-memory index. Soak probes only forward questions, which read the source-of-truth path, so no reply change is predicted",
+ "K7": "latency: 220 removes a second index pass at load only; per-turn cost unchanged within noise",
+ "K8": "3 bench reruns byte-identical (228 guard installed at import)"
+}

@@ -1,0 +1,182 @@
+{
+  "TRAIN_answerprior": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/TRAIN-ANSWER-PRIOR-v3.json",
+    "sha256": "608be98f5d917938b255d9ba1d6816fb1fae0eeb20804d3fd8e6f71b0a7449bd"
+  },
+  "approved_marks": {
+    "new_structure": 52,
+    "range": 26,
+    "seen": 52,
+    "train": 244
+  },
+  "architecture": "unchanged D256 four recurrent rounds vs four copied independent plain segments,8experts/top2",
+  "arms": [
+    "loop",
+    "plain"
+  ],
+  "budget": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/BUDGET-v3.json",
+    "sha256": "7827705ed04f04cefc39a7a0cd2b581e23df504ae4de5f5b62c575b14adb63a4"
+  },
+  "capability_vs_TRAIN_fit": "TRAINmissunderfit; TRAINpass+freshslicemissistransferfailure; passingmarksnotrecurrentadvantage; plainidenticallyscored, bothrecurrentseedssameverdict",
+  "comparators": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/COMPARATORS-v4.json",
+    "sha256": "0b1dad8b7cd4c913686721c26cfe63fb94dbe521e2bee0336a4938f3a76481be"
+  },
+  "control_scope": "zero-state/whole-latent controls do not localizereasoning; frozenLM may computefromfinallatents; syntheticQA system-levelonly",
+  "controls": [
+    "TRAIN-modal",
+    "native-zero-loop-final-only"
+  ],
+  "exposure_and_evaluation": {
+    "TRAIN_diagnostic_updates": [
+      768,
+      2560,
+      5120
+    ],
+    "adaptive_stop_monitor": false,
+    "final_fresh_phase": "all4finalhashes andcomparators frozen before firstfreshmodelcall; one terminalphase, generationfirstthen perrow verifiedlabeljoin",
+    "full_checkpoint_updates": [
+      5120
+    ],
+    "intermediate": "TRAIN-only fingerprints/raw, no full weight snapshots",
+    "sameTRAINschedule_eachseed_botharms": true
+  },
+  "gradient_dynamics": "shared parameters sumfour-use gradients; plaincopies independentgradients/Adammoments; matchedinitialfunction/activepath do not match optimizerdynamics; no4xLRcorrection",
+  "group_coverage": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/GROUP-AND-COVERAGE-SUMMARY-v3.json",
+    "sha256": "7e79a547bcc90d9adc4aa950a574ec72a677fcf7b44046d0d380c44cd0130b74"
+  },
+  "missing_panels": [
+    "independentlyvalidatedwordingpairs",
+    "distinct-answerquery/rolecounterfactualpairs",
+    "freshhumanpanel"
+  ],
+  "model_calls": 0,
+  "notebook_tokens": 0,
+  "numeric_target_CE_plus_EOS_only": true,
+  "objective": "numeric-answer-CE-only",
+  "optimizer_updates": 0,
+  "primitive_coverage": {
+    "add": 131,
+    "div": 139,
+    "mul": 176,
+    "solve_linear": 6,
+    "sub": 114
+  },
+  "publication": false,
+  "question_input_only": true,
+  "queues": 0,
+  "release_gates_remaining": [
+    "independentexactseal/source/rows/token/scorer/runnerreview",
+    "freshPC exclusivequeue/resource/allocationandserializationproof",
+    "TRAINtargetnativegenerationfeasibility plus TRAIN-only warmstart/function/stateparity"
+  ],
+  "row_seal_sha256": "39b9d3170118e4d794f2cd14c63b2973db51e6ec2177d2fd0d8c63fae74e7c34",
+  "runtime": {
+    "largerquestions_targets_addedTRAINdiag_finaleval_latency": "unmeasured, no throughputguarantee",
+    "measured_linear5120_matrix_seconds": 3068.6016,
+    "observed_fixedsetup_closure_reference_seconds": 71.968,
+    "optimizer_seconds_per_arm": 1800,
+    "worker_and_watcher_outer_seconds_per_job": 4500
+  },
+  "schema": "sol.cloud.capability256.protocol.v3",
+  "seeds": [
+    0,
+    1
+  ],
+  "sparse_auxiliary_in_objective": false,
+  "split": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/SPLIT-v3.json",
+    "sha256": "90d387c9adb9f9d7228a4351f684658ceee6b71a856a4248f8d59298603b24dd"
+  },
+  "status": "PARENT_CONDITIONALLY_RELEASED_AFTER_EXACT_INDEPENDENT_SEAL_AND_FRESH_RESOURCE_GATES",
+  "storage": {
+    "atomic": "boundedtemporaryoneinode toabsentdestination thenrename,noextracopy/overwrite",
+    "checkpoints_cap_loop_MiB": 108,
+    "checkpoints_cap_plain_MiB": 416,
+    "existing_numericweights_LMcache": "alreadychargedinfreshfree",
+    "fresh_startup_floor_bytes": 2214592512,
+    "global_source_staging_telemetry_log_MiB_once": 8,
+    "no_rentals_spending_deletions": true,
+    "onefinalweights_Adam_RNG_perarm": true,
+    "raw_MiB_perseedpair": 16,
+    "reserve_bytes": 1073741824,
+    "wholematrix_including_atomic_peak_bytes": 1140850688
+  },
+  "structural_interpretation": "unseencombinationsofTRAIN-known primitives; completeeligibleglobalfootprints/storycomponents isolated; sharedsubstructures anduncertifiedsemantic/algebraic overlapremain",
+  "talker": "common frozen LM; FinalLatent-only native decoder input; no questiontext/labels/facts/trees/code/rationales/group/token/digit/boundary metadata into decoder",
+  "token_coverage": {
+    "TRAIN_target_generation_feasibility_before_optimizer": "actualcanonical target+EOS<=32; fail,nevertruncate",
+    "all1965actual": true,
+    "all416selectedqualified": true,
+    "fullquestion_singleEOS_cap": 48,
+    "heldtarget_tokenization_phase": "terminalscoring aftergeneration",
+    "native_generation_cap": 32,
+    "no_truncation": true,
+    "overflow": 377,
+    "qualified": 1588,
+    "target_with_EOS_cap": 64
+  },
+  "total_updates": 20480,
+  "updates_per_arm": 5120,
+  "visits": 20,
+  "warmstart": {
+    "common_numeric16_loop_final_both_initialfunctions": true,
+    "initial_parity_inputs": "TRAIN-only, no freshmodelinput calls",
+    "optimizer": "reset identical AdamW .001/weight_decay0/betas.9,.999/eps1e-8/clip1/FP32",
+    "prior_numeric_exposure": "all16TRAIN rows50visits/800updates plus V12/V11 inherited human lineage",
+    "tuples": {
+      "0": {
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\bootstrap-English-s0.pt",
+        "adapter_sha256": "e8092da239875f911c5845f4cbb9e89fbf6b197b665bcd7163df8af63c62a063",
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "connected_resume_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s0/connected-resume.pt",
+        "connected_resume_sha256": "5858bd5dc4446d78bc49e04149740f98c9adce0e7938089728eec009c33d4b55",
+        "device": "cuda",
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "grounding_updates_measured": 200,
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "numeric_resume_path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-numeric-fit-20260930/run-v1/seed0/loop/final-resume.pt",
+        "numeric_resume_sha256": "6b63344aeeafaa2d51a6255c282b20822cca3872a47f0fe44f8fc35b74908584",
+        "order_contract": "sol-ordered-notebook-v2",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\parent-s0.pt",
+        "parent_sha256": "c5a5c3a726da63d442778b3dda017f34f2f4f460358dbaf9c5136495a27e41cb",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\input-s0.pt",
+        "reader_sha256": "fe2a38dd97bfffb0f4d6c35a8b4da33a307bf65663d1376722069d37420e671e",
+        "reader_version": "human-notebook-v2",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven"
+      },
+      "1": {
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\bootstrap-English-s1.pt",
+        "adapter_sha256": "1c05f1e439e3dd698aebb886bc27227e3554c59bbbffcb5d8ac1025f3240fddc",
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "connected_resume_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s1/connected-resume.pt",
+        "connected_resume_sha256": "b9198f7ae81be7bba331fc35982320e39a287b54a3c15c3c4db28f97fc7100c8",
+        "device": "cuda",
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "grounding_updates_measured": 200,
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "numeric_resume_path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-numeric-fit-20260930/run-v1/seed1/loop/final-resume.pt",
+        "numeric_resume_sha256": "4f0b2614cff2e6e10ea2e52b8765f6102d81099aad89538e99b5fd4c8b42b51e",
+        "order_contract": "sol-ordered-notebook-v2",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\parent-s1.pt",
+        "parent_sha256": "dadea558737ffdf42c294d22f08039f99a7dfce93e0e2466bfefbb1d1b470127",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\input-s1.pt",
+        "reader_sha256": "29039905bd11193cfb795b5368bf06dae2dc76626b5e084f0432f905bbb54f84",
+        "reader_version": "human-notebook-v2",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven"
+      }
+    }
+  }
+}

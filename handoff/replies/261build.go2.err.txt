@@ -1,0 +1,2149 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/261-earcheck.txt
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/earpanel261-spec.txt
+[0m
+[0m$ [0mpwd; git status --short | head -50; echo ---; ls artifacts/ | head -40; echo ---; ls scripts/claude_earcheck261_* 2>&1; echo ---; ls artifacts/claude-earcheck261-20260922/ 2>&1; echo ---; ls artifacts/claude-earpanel261-20260922/ 2>&1; uptime; df -g / | head -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/
+?? dev-scratch/
+?? notebook/
+?? scratch-150d/
+?? scratch/
+?? scratch138e/
+?? scratch138i-pilot/
+?? scratchpad-muse162/
+?? scratchpad/
+?? scripts/claude_138l_l1.py
+?? scripts/claude_138l_rt143nogate.py
+?? scripts/claude_138l_runall.sh
+?? scripts/claude_138l_score.py
+?? scripts/claude_138m_l1.py
+?? scripts/claude_138m_predict.py
+?? scripts/claude_138m_runall.sh
+?? scripts/claude_138m_score.py
+?? scripts/claude_138n_conv239_changes.py
+?? scripts/claude_138n_l1.py
+?? scripts/claude_138n_m7.py
+?? scripts/claude_138n_m7.sh
+?? scripts/claude_138n_predict.py
+?? scripts/claude_138n_runall.sh
+?? scripts/claude_138n_score.py
+?? scripts/claude_221b_run.py
+?? scripts/claude_221b_unit.py
+?? scripts/claude_224c_cases.py
+?? scripts/claude_224c_score.py
+?? scripts/claude_255_m1gen.py
+?? scripts/claude_255_m2check.py
+?? scripts/claude_255_m3changes.py
+?? scripts/claude_255_m3format.py
+?? scripts/claude_255_runall.sh
+?? scripts/claude_255_score.py
+?? scripts/claude_260_panel.sh
+?? scripts/claude_260_runall.sh
+?? scripts/claude_apos247_devcases.py
+?? scripts/claude_apos247_run.py
+?? scripts/claude_apos247_score.py
+?? scripts/claude_bound259_devcases.py
+?? scripts/claude_bound259_runall.sh
+?? scripts/claude_bound259_score.py
+?? scripts/claude_chain231_predict.py
+?? scripts/claude_chain231_run.py
+?? scripts/claude_comment258_devcases.py
+?? scripts/claude_comment258_m1.sh
+?? scripts/claude_comment258_runall.sh
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+---
+scripts/claude_earcheck261_armb.py
+scripts/claude_earcheck261_arms.py
+scripts/claude_earcheck261_canon.py
+scripts/claude_earcheck261_checker.py
+scripts/claude_earcheck261_checks.py
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_earcheck261_devturns.py
+scripts/claude_earcheck261_panel.py
+scripts/claude_earcheck261_pchecks.py
+scripts/claude_earcheck261_promptB.py
+scripts/claude_earcheck261_qbuild.py
+scripts/claude_earcheck261_qwen.py
+scripts/claude_earcheck261_score.py
+scripts/claude_earcheck261_scoremain.py
+scripts/claude_earcheck261_theta.py
+scripts/claude_earcheck261_turns.py
+---
+dev_checker.jsonl
+dev257_manifest.json
+devcheck_earpreds.json
+devcheck_manifest.json
+devcheck_pyes.json
+devcheck_pyesB.json
+theta.json
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+20:48  up 2 days, 12:38, 2 users, load averages: 16.09 10.79 11.35
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 258805960    0%   /
+[0m
+[0m$ [0mls -la artifacts/claude-earcheck261-20260922/; echo ---; cat artifacts/claude-earcheck261-20260922/theta.json 2>&1; echo ---; cat artifacts/claude-earcheck261-20260922/devcheck_manifest.json 2>&1 | head -20; echo ---; shasum -a 256 artifacts/claude-earpanel261-20260922/panel.jsonl artifacts/claude-earpanel261-20260922/make_panel.py; cat artifacts/claude-earpanel261-20260922/SEAL.sha256.txt; echo ---; grep -c . artifacts/fable-predictions-ledger.md; grep "P261" artifacts/fable-predictions-ledger.md 2>&1 | head
+total 1584
+drwxr-xr-x@   9 ben-hannan  staff     288 Sep 22 20:38 .
+drwxr-xr-x@ 362 ben-hannan  staff   11584 Sep 22 20:18 ..
+-rw-r--r--    1 ben-hannan  staff   36693 Sep 22 20:27 dev_checker.jsonl
+-rw-r--r--    1 ben-hannan  staff  290881 Sep 22 20:25 dev257_manifest.json
+-rw-------    1 ben-hannan  staff  147069 Sep 22 20:32 devcheck_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   57430 Sep 22 20:32 devcheck_manifest.json
+-rw-------    1 ben-hannan  staff  128765 Sep 22 20:32 devcheck_pyes.json
+-rw-------    1 ben-hannan  staff  128659 Sep 22 20:38 devcheck_pyesB.json
+-rw-r--r--    1 ben-hannan  staff    6697 Sep 22 20:39 theta.json
+---
+{
+ "rule": "max recall s.t. wrong_rate <= 0.01; ties -> smallest theta; if none qualifies: lowest wrong_rate, ties -> smallest theta",
+ "fallback_used": false,
+ "theta": 0.25,
+ "sweep": [
+  {
+   "theta": 0.0,
+   "recall": 0.9355932203389831,
+   "wrong": 103,
+   "wrong_rate": 0.07529239766081872,
+   "unsure": 0,
+   "hit": 1104,
+   "gold": 1180
+  },
+  {
+   "theta": 0.05,
+   "recall": 0.9355932203389831,
+   "wrong": 55,
+   "wrong_rate": 0.0402046783625731,
+   "unsure": 48,
+   "hit": 1104,
+   "gold": 1180
+  },
+  {
+   "theta": 0.1,
+   "recall": 0.9355932203389831,
+   "wrong": 40,
+   "wrong_rate": 0.029239766081871343,
+   "unsure": 63,
+   "hit": 1104,
+   "gold": 1180
+  },
+  {
+   "theta": 0.15,
+   "recall": 0.9322033898305084,
+   "wrong": 29,
+   "wrong_rate": 0.021198830409356724,
+   "unsure": 78,
+   "hit": 1100,
+   "gold": 1180
+  },
+  {
+   "theta": 0.2,
+   "recall": 0.926271186440678,
+   "wrong": 20,
+   "wrong_rate": 0.014619883040935672,
+   "unsure": 94,
+   "hit": 1093,
+   "gold": 1180
+  },
+  {
+   "theta": 0.25,
+   "recall": 0.9194915254237288,
+   "wrong": 13,
+   "wrong_rate": 0.009502923976608187,
+   "unsure": 109,
+   "hit": 1085,
+   "gold": 1180
+  },
+  {
+   "theta": 0.3,
+   "recall": 0.9101694915254237,
+   "wrong": 11,
+   "wrong_rate": 0.00804093567251462,
+   "unsure": 122,
+   "hit": 1074,
+   "gold": 1180
+  },
+  {
+   "theta": 0.35,
+   "recall": 0.8923728813559322,
+   "wrong": 11,
+   "wrong_rate": 0.00804093567251462,
+   "unsure": 143,
+   "hit": 1053,
+   "gold": 1180
+  },
+  {
+   "theta": 0.4,
+   "recall": 0.8745762711864407,
+   "wrong": 11,
+   "wrong_rate": 0.00804093567251462,
+   "unsure": 164,
+   "hit": 1032,
+   "gold": 1180
+  },
+  {
+   "theta": 0.45,
+   "recall": 0.8635593220338983,
+   "wrong": 11,
+   "wrong_rate": 0.00804093567251462,
+   "unsure": 177,
+   "hit": 1019,
+   "gold": 1180
+  },
+  {
+   "theta": 0.5,
+   "recall": 0.8415254237288136,
+   "wrong": 11,
+   "wrong_rate": 0.00804093567251462,
+   "unsure": 203,
+   "hit": 993,
+   "gold": 1180
+  },
+  {
+   "theta": 0.55,
+   "recall": 0.8296610169491525,
+   "wrong": 9,
+   "wrong_rate": 0.006578947368421052,
+   "unsure": 219,
+   "hit": 979,
+   "gold": 1180
+  },
+  {
+   "theta": 0.6,
+   "recall": 0.8110169491525424,
+   "wrong": 9,
+   "wrong_rate": 0.006578947368421052,
+   "unsure": 241,
+   "hit": 957,
+   "gold": 1180
+  },
+  {
+   "theta": 0.65,
+   "recall": 0.7805084745762711,
+   "wrong": 8,
+   "wrong_rate": 0.005847953216374269,
+   "unsure": 278,
+   "hit": 921,
+   "gold": 1180
+  },
+  {
+   "theta": 0.7,
+   "recall": 0.7296610169491525,
+   "wrong": 8,
+   "wrong_rate": 0.005847953216374269,
+   "unsure": 338,
+   "hit": 861,
+   "gold": 1180
+  },
+  {
+   "theta": 0.75,
+   "recall": 0.6932203389830508,
+   "wrong": 7,
+   "wrong_rate": 0.005116959064327485,
+   "unsure": 382,
+   "hit": 818,
+   "gold": 1180
+  },
+  {
+   "theta": 0.8,
+   "recall": 0.652542372881356,
+   "wrong": 6,
+   "wrong_rate": 0.0043859649122807015,
+   "unsure": 431,
+   "hit": 770,
+   "gold": 1180
+  },
+  {
+   "theta": 0.85,
+   "recall": 0.6033898305084746,
+   "wrong": 5,
+   "wrong_rate": 0.003654970760233918,
+   "unsure": 490,
+   "hit": 712,
+   "gold": 1180
+  },
+  {
+   "theta": 0.9,
+   "recall": 0.5127118644067796,
+   "wrong": 5,
+   "wrong_rate": 0.003654970760233918,
+   "unsure": 597,
+   "hit": 605,
+   "gold": 1180
+  },
+  {
+   "theta": 0.95,
+   "recall": 0.26610169491525426,
+   "wrong": 2,
+   "wrong_rate": 0.0014619883040935672,
+   "unsure": 891,
+   "hit": 314,
+   "gold": 1180
+  },
+  {
+   "theta": 1.0,
+   "recall": 0.0,
+   "wrong": 0,
+   "wrong_rate": 0.0,
+   "unsure": 1207,
+   "hit": 0,
+   "gold": 1180
+  }
+ ],
+ "at_choice": {
+  "all": {
+   "rows": 1740,
+   "nonq": 1368,
+   "gold": 1180,
+   "hit": 1085,
+   "wrong": 13,
+   "unsure": 109,
+   "recall": 0.9194915254237288,
+   "wrong_rate": 0.009502923976608187
+  },
+  "base": {
+   "rows": 900,
+   "nonq": 627,
+   "gold": 434,
+   "hit": 411,
+   "wrong": 5,
+   "unsure": 18,
+   "recall": 0.9470046082949308,
+   "wrong_rate": 0.007974481658692184
+  },
+  "R1": {
+   "rows": 90,
+   "nonq": 90,
+   "gold": 155,
+   "hit": 143,
+   "wrong": 1,
+   "unsure": 8,
+   "recall": 0.9225806451612903,
+   "wrong_rate": 0.011111111111111112
+  },
+  "R2": {
+   "rows": 70,
+   "nonq": 70,
+   "gold": 0,
+   "hit": 0,
+   "wrong": 0,
+   "unsure": 7,
+   "recall": null,
+   "wrong_rate": 0.0
+  },
+  "R2s": {
+   "rows": 20,
+   "nonq": 20,
+   "gold": 20,
+   "hit": 19,
+   "wrong": 0,
+   "unsure": 1,
+   "recall": 0.95,
+   "wrong_rate": 0.0
+  },
+  "C1": {
+   "rows": 60,
+   "nonq": 49,
+   "gold": 63,
+   "hit": 59,
+   "wrong": 1,
+   "unsure": 3,
+   "recall": 0.9365079365079365,
+   "wrong_rate": 0.02040816326530612
+  },
+  "C2": {
+   "rows": 60,
+   "nonq": 51,
+   "gold": 51,
+   "hit": 51,
+   "wrong": 0,
+   "unsure": 0,
+   "recall": 1.0,
+   "wrong_rate": 0.0
+  },
+  "C3": {
+   "rows": 60,
+   "nonq": 60,
+   "gold": 136,
+   "hit": 121,
+   "wrong": 1,
+   "unsure": 4,
+   "recall": 0.8897058823529411,
+   "wrong_rate": 0.016666666666666666
+  },
+  "C4": {
+   "rows": 50,
+   "nonq": 50,
+   "gold": 50,
+   "hit": 49,
+   "wrong": 1,
+   "unsure": 0,
+   "recall": 0.98,
+   "wrong_rate": 0.02
+  },
+  "C5": {
+   "rows": 70,
+   "nonq": 70,
+   "gold": 24,
+   "hit": 24,
+   "wrong": 0,
+   "unsure": 5,
+   "recall": 1.0,
+   "wrong_rate": 0.0
+  },
+  "C6": {
+   "rows": 90,
+   "nonq": 71,
+   "gold": 76,
+   "hit": 71,
+   "wrong": 1,
+   "unsure": 1,
+   "recall": 0.9342105263157895,
+   "wrong_rate": 0.014084507042253521
+  },
+  "C7": {
+   "rows": 40,
+   "nonq": 0,
+   "gold": 0,
+   "hit": 0,
+   "wrong": 0,
+   "unsure": 0,
+   "recall": null,
+   "wrong_rate": null
+  },
+  "INF": {
+   "rows": 20,
+   "nonq": 0,
+   "gold": 0,
+   "hit": 0,
+   "wrong": 0,
+   "unsure": 0,
+   "recall": null,
+   "wrong_rate": null
+  },
+  "D_pre": {
+   "rows": 30,
+   "nonq": 30,
+   "gold": 0,
+   "hit": 0,
+   "wrong": 0,
+   "unsure": 5,
+   "recall": null,
+   "wrong_rate": 0.0
+  },
+  "D_plan": {
+   "rows": 30,
+   "nonq": 30,
+   "gold": 15,
+   "hit": 10,
+   "wrong": 0,
+   "unsure": 18,
+   "recall": 0.6666666666666666,
+   "wrong_rate": 0.0
+  },
+  "D_checkq": {
+   "rows": 30,
+   "nonq": 30,
+   "gold": 0,
+   "hit": 0,
+   "wrong": 0,
+   "unsure": 13,
+   "recall": null,
+   "wrong_rate": 0.0
+  },
+  "D_apos": {
+   "rows": 30,
+   "nonq": 30,
+   "gold": 60,
+   "hit": 31,
+   "wrong": 3,
+   "unsure": 26,
+   "recall": 0.5166666666666667,
+   "wrong_rate": 0.1
+  },
+  "D_our": {
+   "rows": 30,
+   "nonq": 30,
+   "gold": 36,
+   "hit": 36,
+   "wrong": 0,
+   "unsure": 0,
+   "recall": 1.0,
+   "wrong_rate": 0.0
+  },
+  "D_plain": {
+   "rows": 60,
+   "nonq": 60,
+   "gold": 60,
+   "hit": 60,
+   "wrong": 0,
+   "unsure": 0,
+   "recall": 1.0,
+   "wrong_rate": 0.0
+  }
+ },
+ "latency": {
+  "n": 1740,
+  "median_ms": 340.3,
+  "p90_ms": 650.6,
+  "max_ms": 1091.3
+ }
+}---
+{
+ "dc:c261-0025#t0": {
+  "row": "c261-0025",
+  "tag": "D_pre",
+  "turn": "Say that Mirella Brindle is my mother.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+   "relation": "mother",
+   "value": "Mirella Brindle"
+  },
+  "claim": "the speaker's mother is Mirella Brindle."
+ },
+ "dc:c261-0026#t0": {
+  "row": "c261-0026",
+  "tag": "D_pre",
+  "turn": "Say that Aldous Ravensworth is my daughter.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+---
+b18f921dcf534590ab80965bfdc934ccf4e12275b6b9303c2fd2fea1026b31e1  artifacts/claude-earpanel261-20260922/panel.jsonl
+ae324ffab51540aedf9c62d9cdacda8b9bd10d3499c69e47b79c4999fa244ba8  artifacts/claude-earpanel261-20260922/make_panel.py
+b18f921dcf534590ab80965bfdc934ccf4e12275b6b9303c2fd2fea1026b31e1  artifacts/claude-earpanel261-20260922/panel.jsonl
+ae324ffab51540aedf9c62d9cdacda8b9bd10d3499c69e47b79c4999fa244ba8  artifacts/claude-earpanel261-20260922/make_panel.py
+---
+2376
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 benspc "curl -s http://127.0.0.1:8081/health; echo; tasklist /FI \"IMAGENAME eq llama-server.exe\" 2>&1 | head; nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,power.draw --format=csv 2>&1 | head" 2>&1 | head -30
+(no output)
+[0m
+[0m$ [0mls scripts/claude_smolear257_*.py artifacts/claude-smolear257-20260922/ artifacts/claude-smolear257-20260922/dev/ 2>&1 | head -40; echo ===; ls artifacts/claude-earpanel257-20260922/ 2>&1; echo ===; ls artifacts/claude-earcheck261-20260922/ -la
+scripts/claude_smolear257_armb.py
+scripts/claude_smolear257_data.py
+scripts/claude_smolear257_devreport.py
+scripts/claude_smolear257_devset.py
+scripts/claude_smolear257_infer.py
+scripts/claude_smolear257_on235b.py
+scripts/claude_smolear257_panel.py
+scripts/claude_smolear257_score.py
+scripts/claude_smolear257_table.py
+scripts/claude_smolear257_tau.py
+scripts/claude_smolear257_turns.py
+
+artifacts/claude-smolear257-20260922/:
+data
+data41
+dev
+on235b
+PASSMARKS.md
+relation_table_v2.json
+RESULTS.md
+run
+SEAL.sha256.txt
+train
+train41
+
+artifacts/claude-smolear257-20260922/dev/:
+cpu_pilot12_turns.json
+cpu_pilot12_v41.json
+dev_all_turns.json
+dev_all.jsonl
+dev_tau.jsonl
+devreport_v3_v40.json
+devreport.json
+tau_v40.json
+tau.json
+v3_preds.json
+v4_preds.json
+v41_preds.json
+zsh:1: == not found
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo HI" 2>&1 | head -5; echo EXIT:$?
+HI
+EXIT:0
+[0m
+[0m$ [0mls artifacts/claude-earpanel257-20260922/; echo ---; ls artifacts/claude-earpanel261-20260922/; echo ---; wc -l artifacts/claude-earpanel261-20260922/panel.jsonl 2>&1
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---
+     150 artifacts/claude-earpanel261-20260922/panel.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'curl -s http://127.0.0.1:8081/health' 2>&1 | head -10
+{"status":"ok"}
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_canon.py
+[0m→ [0mRead scripts/claude_earcheck261_checker.py
+[0m→ [0mRead scripts/claude_earcheck261_arms.py
+[0m→ [0mRead scripts/claude_earcheck261_panel.py
+[0m→ [0mRead scripts/claude_earcheck261_score.py
+[0m→ [0mRead scripts/claude_earcheck261_theta.py
+[0m
+[0m$ [0mhead -50 scripts/claude_earcheck261_qbuild.py; echo =====; head -40 scripts/claude_earcheck261_devset.py; echo =====; head -30 scripts/claude_earcheck261_armb.py
+#!/usr/bin/env python3
+"""Exp 261 -- sealed checker-query builder (supersedes the checks.py/pchecks.py
+drafts, which are not sealed). Two modes:
+
+  panel: --mode panel --turns TURNS.json --a-preds A.json --prompt B --out DIR
+    kept frames two ways (canon "<id>#t<k>"; no-canon "nc:<id>#t<k>"),
+    prompts via the sealed question (--prompt A|B).
+  dev:   --mode dev --dev DEV.jsonl --preds PREDS.json --src SRC --prompt B
+    --out DIR (checks + manifest; same ids as the draft builder).
+
+Writes checks.json [{id, prompt}] and manifest.json {id: {row, turn, frame,
+claim, canon}}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235_model as E  # noqa: E402
+import claude_earcheck261_arms as A  # noqa: E402
+import claude_earcheck261_canon as C  # noqa: E402
+
+try:
+    import claude_earcheck261_promptB as PB  # noqa: E402
+except ImportError:
+    PB = None
+
+
+def ask(prompt, turn, claim, which):
+    if which == "B":
+        return PB.build_prompt_b(turn, claim)
+    return C.build_prompt(turn, claim)
+
+
+def emit(turn, frame, claim, cid, canon, checks, manif):
+    checks.append(dict(id=cid, prompt=ask(None, turn, claim, EMIT_WHICH)))
+    manif[cid] = dict(turn=turn, frame=frame, claim=claim, canon=canon)
+
+
+EMIT_WHICH = "B"
+
+
+def panel(turns, preds, which, out):
+    global EMIT_WHICH
+zsh:1: ==== not found
+[0m
+[0m$ [0mwc -l scripts/claude_earcheck261_*.py; echo ---; head -60 scripts/claude_earcheck261_scoremain.py
+34 scripts/claude_earcheck261_armb.py
+      71 scripts/claude_earcheck261_arms.py
+      90 scripts/claude_earcheck261_canon.py
+     125 scripts/claude_earcheck261_checker.py
+      53 scripts/claude_earcheck261_checks.py
+     201 scripts/claude_earcheck261_devset.py
+     208 scripts/claude_earcheck261_devset2.py
+     208 scripts/claude_earcheck261_devset3.py
+     202 scripts/claude_earcheck261_devset4.py
+      14 scripts/claude_earcheck261_devturns.py
+      74 scripts/claude_earcheck261_panel.py
+      63 scripts/claude_earcheck261_pchecks.py
+      35 scripts/claude_earcheck261_promptB.py
+     117 scripts/claude_earcheck261_qbuild.py
+      98 scripts/claude_earcheck261_qwen.py
+     141 scripts/claude_earcheck261_score.py
+     209 scripts/claude_earcheck261_scoremain.py
+     156 scripts/claude_earcheck261_theta.py
+      21 scripts/claude_earcheck261_turns.py
+    2120 total
+---
+#!/usr/bin/env python3
+"""Exp 261 -- registered scorer (clean implementation; see RESULTS for the
+superseded draft). Arms from GPU ear preds + recorded checker p(YES):
+
+  A_raw     parse -> canonicalise (no brake)
+  A_brake   brake -> canonicalise
+  A_gate    brake -> margin gate (tau 9.3, recomputed exactly as 257) -> canon
+  A         brake -> canon -> checker(theta): TEACH saved iff p(YES) >= theta
+  A_nocanon brake (no canon) -> checker(theta)
+  B         138i + 228 (statement families)
+
+Matching = sealed 235 functions, table v2. Marks M1-M5 (257 bars; M5 median
+ear+checker ms <= 800) + M6 (every A frame byte-identical in A_brake).
+Reports: every arm's M1-M4, panel theta curve, per-tag table, and for each A
+held-back/wrong frame: category, p(YES), blanked claim H.
+
+python claude_earcheck261_scoremain.py --panel P --seal S --a-preds A.json --b-preds B.json --theta TH --pyes Y.json [--pyes2 Y2.json] --out O.json
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import statistics
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235_model as E  # noqa: E402
+import claude_smolear235_score as S  # noqa: E402
+import claude_earcheck261_arms as A  # noqa: E402
+import claude_earcheck261_canon as C  # noqa: E402
+import claude_earcheck261_panel as P  # noqa: E402
+
+STATEMENT = ["plain_teach", "varied_teach", "full_names", "corrections"]
+SAVE_FAMS = STATEMENT + ["no_save"]
+QUESTION = ["questions", "chain_questions"]
+ARMS = ["A_raw", "A_brake", "A_gate", "A", "A_nocanon", "B"]
+
+
+def pct(a, b):
+    return round(100.0 * a / b, 1) if b else None
+
+
+def blank(s):
+    return re.sub(r"\b[A-Z][a-z]+(?: [A-Z][a-z]+)*\b", "NAME", str(s))
+
+
+def arm_set(it, rec, pmap, theta):
+    """Return dict arm -> (saved_frames, unsure_list, p_list)."""
+    arms0 = A.base_arms(rec["raw"], it["turn"], rec["greedy_lp"], rec["beams"])
+    kept_nc = [f for f in E.brake(E.parse_frames(rec["raw"]), it["turn"])[0]]
+    n_teach = sum(1 for f in arms0["kept_canon"] if f.get("act") == "TEACH")
+    n_nc = sum(1 for f in kept_nc if f.get("act") == "TEACH")
+    pl = [float(pmap[f"{it['id']}#t{k}"][0]) for k in range(n_teach)]
+    cms = [float(pmap[f"{it['id']}#t{k}"][1]) for k in range(n_teach)]
+    pl_nc = [float(pmap[f"nc:{it['id']}#t{k}"][0]) for k in range(n_nc)]
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_scoremain.py[90m [offset=60][0m
+[0m→ [0mRead scripts/claude_earcheck261_promptB.py
+[0m→ [0mRead scripts/claude_earcheck261_qbuild.py[90m [offset=50][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('artifacts/claude-earcheck261-20260922/devcheck_pyes.json')); print('pyes:', d['summary']); d2=json.load(open('artifacts/claude-earcheck261-20260922/devcheck_pyesB.json')); print('pyesB:', d2['summary'])" 2>&1 | tail -5
+pyes: {'n': 1207, 'fallbacks': 0, 'median_ms': 222.5, 'p90_ms': 236.3, 'max_ms': 462.0}
+pyesB: {'n': 1207, 'fallbacks': 0, 'median_ms': 281.6, 'p90_ms': 290.1, 'max_ms': 472.2}
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_armb.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+m=json.load(open('artifacts/claude-earcheck261-20260922/devcheck_manifest.json'))
+ks=list(m.keys())[:3]
+print('devcheck_manifest n=',len(m))
+for k in ks: print(k, json.dumps(m[k])[:200])
+m2=json.load(open('artifacts/claude-earcheck261-20260922/dev257_manifest.json'))
+print('dev257_manifest type=',type(m2), len(m2))
+import itertools
+ks2=list(m2.keys())[:3] if isinstance(m2,dict) else m2[:1]
+for k in ks2: print(repr(k)[:120], json.dumps(m2[k] if isinstance(m2,dict) else k)[:200])
+print('dev_checker rows:'); 
+" 2>&1 | tail -12; wc -l artifacts/claude-earcheck261-20260922/dev_checker.jsonl artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl 2>&1
+devcheck_manifest n= 202
+dc:c261-0025#t0 {"row": "c261-0025", "tag": "D_pre", "turn": "Say that Mirella Brindle is my mother.", "frame": {"act": "TEACH", "subject": "me", "relation": "mother", "value": "Mirella Brindle"}, "claim": "the speak
+dc:c261-0026#t0 {"row": "c261-0026", "tag": "D_pre", "turn": "Say that Aldous Ravensworth is my daughter.", "frame": {"act": "TEACH", "subject": "me", "relation": "daughter", "value": "Aldous Ravensworth"}, "claim": 
+dc:c261-0027#t0 {"row": "c261-0027", "tag": "D_pre", "turn": "Say that Jorunn Marsh is my father.", "frame": {"act": "TEACH", "subject": "me", "relation": "father", "value": "Jorunn Marsh"}, "claim": "the speaker's f
+dev257_manifest type= <class 'dict'> 1005
+'d257:bd0000#t0' {"row": "bd0000", "tag": "base", "turn": "quick thing: drimstiat's son? that's styx sallow.", "frame": {"act": "TEACH", "subject": "drimstiat", "relation": "son", "value": "styx sallow"}, "claim": "dr
+'d257:bd0001#t0' {"row": "bd0001", "tag": "base", "turn": "So, Ione's date of birth? That's July 22.", "frame": {"act": "TEACH", "subject": "Ione", "relation": "date_of_birth", "value": "July 22"}, "claim": "Ione's da
+'d257:bd0003#t0' {"row": "bd0003", "tag": "base", "turn": "Saevdrerk's neighbour? That's Jasper.", "frame": {"act": "TEACH", "subject": "Saevdrerk", "relation": "neighbour", "value": "Jasper"}, "claim": "Saevdrerk's n
+dev_checker rows:
+     210 artifacts/claude-earcheck261-20260922/dev_checker.jsonl
+    1530 artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl
+    1740 total
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_theta.py --dev257 artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl --preds257 artifacts/claude-smolear257-20260922/dev/v41_preds.json --devcheck artifacts/claude-earcheck261-20260922/dev_checker.jsonl --predscheck artifacts/claude-earcheck261-20260922/devcheck_earpreds.json --pyes artifacts/claude-earcheck261-20260922/devcheck_pyes.json --manifest artifacts/claude-earcheck261-20260922/dev257_manifest.json artifacts/claude-earcheck261-20260922/devcheck_manifest.json --out /tmp/theta_A.json 2>&1 | head -8
+theta = 0.9 fallback: False
+{'theta': 0.0, 'recall': 0.9355932203389831, 'wrong': 103, 'wrong_rate': 0.07529239766081872, 'unsure': 0, 'hit': 1104, 'gold': 1180}
+{'theta': 0.05, 'recall': 0.9355932203389831, 'wrong': 83, 'wrong_rate': 0.06067251461988304, 'unsure': 20, 'hit': 1104, 'gold': 1180}
+{'theta': 0.1, 'recall': 0.9355932203389831, 'wrong': 74, 'wrong_rate': 0.054093567251461985, 'unsure': 29, 'hit': 1104, 'gold': 1180}
+{'theta': 0.15, 'recall': 0.9355932203389831, 'wrong': 70, 'wrong_rate': 0.05116959064327485, 'unsure': 33, 'hit': 1104, 'gold': 1180}
+{'theta': 0.2, 'recall': 0.9355932203389831, 'wrong': 62, 'wrong_rate': 0.04532163742690058, 'unsure': 41, 'hit': 1104, 'gold': 1180}
+{'theta': 0.25, 'recall': 0.9355932203389831, 'wrong': 53, 'wrong_rate': 0.03874269005847953, 'unsure': 50, 'hit': 1104, 'gold': 1180}
+{'theta': 0.3, 'recall': 0.9355932203389831, 'wrong': 49, 'wrong_rate': 0.035818713450292396, 'unsure': 54, 'hit': 1104, 'gold': 1180}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_theta.py --dev257 artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl --preds257 artifacts/claude-smolear257-20260922/dev/v41_preds.json --devcheck artifacts/claude-earcheck261-20260922/dev_checker.jsonl --predscheck artifacts/claude-earcheck261-20260922/devcheck_earpreds.json --pyes artifacts/claude-earcheck261-20260922/devcheck_pyesB.json --manifest artifacts/claude-earcheck261-20260922/dev257_manifest.json artifacts/claude-earcheck261-20260922/devcheck_manifest.json --out /tmp/theta_B.json 2>&1 | head -4; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; a=json.load(open('/tmp/theta_B.json')); b=json.load(open('artifacts/claude-earcheck261-20260922/theta.json')); print('sweep equal:', a['sweep']==b['sweep']); print('theta:',a['theta'],b['theta']); print('at_choice equal:', a['at_choice']==b['at_choice']); print('latency:',a['latency'],b['latency'])" 2>&1 | tail -5
+theta = 0.25 fallback: False
+{'theta': 0.0, 'recall': 0.9355932203389831, 'wrong': 103, 'wrong_rate': 0.07529239766081872, 'unsure': 0, 'hit': 1104, 'gold': 1180}
+{'theta': 0.05, 'recall': 0.9355932203389831, 'wrong': 55, 'wrong_rate': 0.0402046783625731, 'unsure': 48, 'hit': 1104, 'gold': 1180}
+{'theta': 0.1, 'recall': 0.9355932203389831, 'wrong': 40, 'wrong_rate': 0.029239766081871343, 'unsure': 63, 'hit': 1104, 'gold': 1180}
+sweep equal: True
+theta: 0.25 0.25
+at_choice equal: True
+latency: {'n': 1740, 'median_ms': 340.3, 'p90_ms': 650.6, 'max_ms': 1091.3} {'n': 1740, 'median_ms': 340.3, 'p90_ms': 650.6, 'max_ms': 1091.3}
+[0m
+[0m→ [0mRead scripts/claude_smolear257_infer.py
+[0m
+[0m$ [0mhead -60 scripts/claude_earcheck261_turns.py; echo ====; head -53 scripts/claude_earcheck261_checks.py; echo ====; head -63 scripts/claude_earcheck261_pchecks.py; echo ====; head -21 scripts/claude_earcheck261_devturns.py
+#!/usr/bin/env python3
+"""Exp 261 -- write the turn list [{id, turn}] for the GPU run from the strict
+261 loader (panel sha + schema checked; nothing else read).
+python claude_earcheck261_turns.py --panel P --seal S --out TURNS.json [--no-sha]"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_earcheck261_panel as P  # noqa: E402
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--panel", required=True)
+ap.add_argument("--seal", required=True)
+ap.add_argument("--out", required=True)
+ap.add_argument("--no-sha", action="store_true")
+a = ap.parse_args()
+items = P.load_panel(a.panel, seal=a.seal, check_sha=not a.no_sha)
+Path(a.out).write_text(json.dumps([dict(id=i["id"], turn=i["turn"]) for i in items], indent=1))
+print(len(items), "turns")
+zsh:1: === not found
+[0m
+[0m$ [0mcat scripts/claude_earcheck261_qwen.py; echo '---DEVSET head---'; head -40 scripts/claude_earcheck261_devset.py
+#!/usr/bin/env python3
+"""Exp 261 -- Qwen entailment-checker client (stdlib only, runs on BensPC).
+
+Reads checks.json: [{id, prompt}] (prompt built by claude_earcheck261_canon).
+POSTs each to llama-server /completion at temperature 0 with n_predict=1 and
+n_probs=10, and computes p(YES) = pYES/(pYES+pNO) from the FIRST position's
+token distribution (tokens whose stripped uppercase form is YES vs NO).
+Fallback (sealed rule): if neither variant is in the top probs, use the greedy
+text: YES -> 1.0, NO -> 0.0, anything else -> 0.0 (hold back). The fallback
+count is reported.
+
+Writes out.json: {checks: {id: {p: float, text: str, fallback: bool, ms: float}},
+                 summary: {...}}.
+
+python claude_earcheck261_qwen.py --url http://127.0.0.1:8081 --in checks.json --out pyes.json
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import time
+import urllib.request
+from pathlib import Path
+
+
+def post_completion(url, prompt, timeout=120):
+    body = json.dumps({
+        "prompt": prompt,
+        "temperature": 0.0,
+        "n_predict": 1,
+        "n_probs": 10,
+        "cache_prompt": True,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        url.rstrip("/") + "/completion", data=body,
+        headers={"Content-Type": "application/json"})
+    t0 = time.perf_counter()
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        d = json.loads(r.read().decode("utf-8"))
+    ms = (time.perf_counter() - t0) * 1000.0
+    return d, ms
+
+
+def p_yes(d):
+    """Return (p, text, fallback) from a /completion response."""
+    text = str(d.get("content", ""))
+    cps = d.get("completion_probabilities") or []
+    py = pn = 0.0
+    if cps:
+        first = cps[0]
+        cand = first.get("probs", first.get("tokens", first if isinstance(first, list) else []))
+        if isinstance(cand, dict):
+            cand = cand.get("probs", [])
+        for t in cand if isinstance(cand, list) else []:
+            s = str(t.get("tok_str", t.get("text", ""))).strip().upper()
+            try:
+                p = float(t.get("prob", 0.0))
+            except (TypeError, ValueError):
+                continue
+            if s == "YES":
+                py += p
+            elif s == "NO":
+                pn += p
+    if py + pn > 0:
+        return py / (py + pn), text, False
+    s = text.strip().upper()
+    if s == "YES":
+        return 1.0, text, True
+    if s == "NO":
+        return 0.0, text, True
+    return 0.0, text, True
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--url", required=True)
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    checks = json.loads(Path(a.inp).read_text(encoding="utf-8"))
+    out, lat = {}, []
+    for c in checks:
+        d, ms = post_completion(a.url, c["prompt"])
+        p, text, fb = p_yes(d)
+        lat.append(ms)
+        out[str(c["id"])] = dict(p=round(p, 6), text=text, fallback=fb,
+                                 ms=round(ms, 2))
+    import statistics
+    summ = dict(n=len(out), fallbacks=sum(1 for v in out.values() if v["fallback"]),
+                median_ms=round(statistics.median(lat), 1) if lat else None,
+                p90_ms=round(sorted(lat)[int(0.9 * len(lat))], 1) if lat else None,
+                max_ms=round(max(lat), 1) if lat else None)
+    Path(a.out).write_text(json.dumps(dict(summary=summ, checks=out), indent=1))
+    print(json.dumps(summ))
+
+
+if __name__ == "__main__":
+    main()
+---DEVSET head---
+#!/usr/bin/env python3
+"""Exp 261 -- NEW checker dev set, written by the builder in his own wording.
+
+210 rows (all non-question TEACH-or-nothing rows):
+  D_pre    30  pretend/hypothetical ("let's say", "imagine", "suppose",
+            "pretend", "what if", "say that") -> gold NONE
+  D_plan   30  plans/goals/wishes (15 pure -> NONE; 15 plan clause + a real
+            current fact in the same turn -> gold is the real fact only)
+  D_checkq 30  check-questions with NO "?" ("X, right", "so X", lowercase)
+            -> gold NONE
+  D_apos   30  "A's R is B and he/she ..." (pronoun = B) -> TWO gold frames:
+            A-R-B plus B's own fact (never A)
+  D_our    30  first-person plural owners ("our", "we", "us" + relative, pet,
+            home, workplace, neighbour) -> gold subject is "me"
+  D_plain  60  plain true facts -> gold TEACH (false rejections show here)
+
+Fictional names only. Nothing read, copied or rebuilt from any TEST-ONLY
+panel; categories only from the brief. Relations are relation-table-v2
+canonical names.
+
+python claude_earcheck261_devset.py --out artifacts/claude-earcheck261-20260922/dev_checker.jsonl
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+FIRST = ["Tilda", "Bram", "Odell", "Sanna", "Quill", "Mirella", "Doran",
+         " Isolde", "Fenwick", "Liora", "Casimir", "Petra", "Aldous",
+         "Vesper", "Norwin", "Elswyth", "Garran", "Hollis", "Imogen",
+         "Jorunn", "Kelda", "Leander", "Moss", "Nerissa", "Orson",
+         "Prilla", "Roscoe", "Sable", "Tamsin", "Ulric", "Wrenna",
+         "Ysolde", "Zeph", "Anwen", "Borris", "Celandine", "Drystan",
+         "Eppie", "Fable", "Godric"]
+FIRST = [n.strip() for n in FIRST]
+LAST = ["Marsh", "Kettle", "Thistledown", "Barrow", "Fenwick", "Coppersmith",
+        "Halloway", "Brindle", "Ashcombe", "Winterbourne", "Plowright",
+        "Goodfellow", "Nettlefold", "Quarryman", "Ravensworth", "Slade",
+        "Tinker", "Underbough", "Vellacott", "Woolmer"]
+[0m
+[0m$ [0mcat scripts/claude_earcheck261_checks.py; echo '---PCHECKS---'; cat scripts/claude_earcheck261_pchecks.py
+#!/usr/bin/env python3
+"""Exp 261 -- build checker queries from ear predictions + dev rows.
+
+For each dev row: greedy raw -> brake -> canonicalise -> kept TEACH frames ->
+render claim + prompt. Writes checks.json [{id, prompt}] for the Qwen client
+and manifest.json {id: {row, turn, frame, claim}} for the theta sweep.
+
+Check ids: "<src>:<rowid>#t<k>" (k = index among kept TEACH frames).
+
+python claude_earcheck261_checks.py --dev DEV.jsonl --preds PREDS.json --src dc --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235b_tau as T  # noqa: E402 (gold_frames only)
+import claude_earcheck261_arms as A  # noqa: E402
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dev", required=True)
+    ap.add_argument("--preds", required=True)
+    ap.add_argument("--src", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    rows = [json.loads(x) for x in Path(a.dev).read_text().splitlines() if x.strip()]
+    preds = json.loads(Path(a.preds).read_text(encoding="utf-8"))["preds"]
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    checks, manif = [], {}
+    for row in rows:
+        p = preds[row["id"]]
+        arms = A.base_arms(p["raw"], row["turn"], p["greedy_lp"], p["beams"])
+        for k, q in enumerate(A.teach_with_p(arms["kept_canon"], row["turn"])):
+            cid = f"{a.src}:{row['id']}#t{k}"
+            checks.append(dict(id=cid, prompt=q["prompt"]))
+            manif[cid] = dict(row=row["id"], tag=row.get("tag"), turn=row["turn"],
+                              frame=q["frame"], claim=q["claim"])
+    (out / "checks.json").write_text(json.dumps(checks, indent=1))
+    (out / "manifest.json").write_text(json.dumps(manif, indent=1))
+    print(f"{len(rows)} rows -> {len(checks)} checks")
+
+
+if __name__ == "__main__":
+    main()
+---PCHECKS---
+#!/usr/bin/env python3
+"""Exp 261 -- panel checker-query builder.
+
+Reads panel turns + GPU ear preds, recomputes kept frames two ways
+(with canonicaliser -> "<id>#t<k>"; without -> "nc:<id>#t<k>"), renders
+claims/prompts, writes checks.json for the Qwen client and manifest.json.
+
+python claude_earcheck261_pchecks.py --turns TURNS.json --a-preds A.json --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235_model as E  # noqa: E402
+import claude_earcheck261_arms as A  # noqa: E402
+import claude_earcheck261_canon as C  # noqa: E402
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--turns", required=True)
+    ap.add_argument("--a-preds", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    turns = {t["id"]: t["turn"] for t in
+             json.loads(Path(a.turns).read_text(encoding="utf-8"))}
+    preds = json.loads(Path(a.a_preds).read_text(encoding="utf-8"))["preds"]
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    checks, manif = [], {}
+    for tid, turn in turns.items():
+        p = preds[tid]
+        arms = A.base_arms(p["raw"], turn, p["greedy_lp"], p["beams"])
+        for k, q in enumerate(A.teach_with_p(arms["kept_canon"], turn)):
+            cid = f"{tid}#t{k}"
+            checks.append(dict(id=cid, prompt=q["prompt"]))
+            manif[cid] = dict(row=tid, canon=True, turn=turn,
+                              frame=q["frame"], claim=q["claim"])
+        kept_nc = E.brake(E.parse_frames(p["raw"]), turn)[0]
+        n = 0
+        for f in kept_nc:
+            if f.get("act") != "TEACH":
+                continue
+            h = C.render_claim(f["subject"], f["relation"], f["value"])
+            cid = f"nc:{tid}#t{n}"
+            checks.append(dict(id=cid, prompt=C.build_prompt(turn, h)))
+            manif[cid] = dict(row=tid, canon=False, turn=turn,
+                              frame=f, claim=h)
+            n += 1
+    (out / "checks.json").write_text(json.dumps(checks, indent=1))
+    (out / "manifest.json").write_text(json.dumps(manif, indent=1))
+    print(f"{len(turns)} turns -> {len(checks)} checks")
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+r=json.load(open('artifacts/claude-smolear257-20260922/dev/devreport.json'))
+print(json.dumps(r,indent=1)[:1500])
+" 2>&1 | tail -30
+"unsure": 0,
+     "guard": 0,
+     "recall": null,
+     "wrong_rate": 0.5142857142857142,
+     "ask_hit": 0,
+     "ask_gold": 0,
+     "ask_extra": 0
+    },
+    "R2s": {
+     "rows": 20,
+     "nonq": 20,
+     "gold": 20,
+     "hit": 20,
+     "wrong": 0,
+     "unsure": 0,
+     "guard": 0,
+     "recall": 1.0,
+     "wrong_rate": 0.0,
+     "ask_hit": 0,
+     "ask_gold": 0,
+     "ask_extra": 0
+    },
+    "R3_indist": {
+     "rows": 60,
+     "nonq": 60,
+     "gold": 60,
+     "hit": 34,
+     "wrong": 26,
+     "unsure": 0,
+[0m
+[0m$ [0mfor f in scripts/claude_earcheck261_devset.py scripts/claude_earcheck261_devset2.py scripts/claude_earcheck261_devset3.py scripts/claude_earcheck261_devset4.py; do export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B $f --out /tmp/ds_test.jsonl >/dev/null 2>&1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "pass" 2>/dev/null; done; ls -la /tmp/ds_test.jsonl 2>&1; head -3 scripts/claude_earcheck261_devset2.py | tail -2
+-rw-r--r--  1 ben-hannan  wheel  36693 Sep 22 20:51 /tmp/ds_test.jsonl
+"""Exp 261 -- NEW checker dev set, sealed generator (v2: pools >= 30 with
+coprime strides, so all 210 turns are unique; v1 devset.py had period-10
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; for n in "" 2 3 4; do uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_devset$n.py --out /tmp/ds$n.jsonl >/dev/null 2>&1; done; shasum -a 256 /tmp/ds.jsonl /tmp/ds2.jsonl /tmp/ds3.jsonl /tmp/ds4.jsonl artifacts/claude-earcheck261-20260922/dev_checker.jsonl
+shasum: /tmp/ds.jsonl: No such file or directory
+shasum: /tmp/ds2.jsonl: No such file or directory
+bad024d59a0ffd88beb95d23c425afdb0f57ea96a14b1ad676848ae17945c2e0  /tmp/ds3.jsonl
+5e3e2a0f1bbfa21703a394bafedc8d7ffe249728aa4d7784b0aab26672fda45f  /tmp/ds4.jsonl
+5e3e2a0f1bbfa21703a394bafedc8d7ffe249728aa4d7784b0aab26672fda45f  artifacts/claude-earcheck261-20260922/dev_checker.jsonl
+[0m
+[0m$ [0mgrep -A5 -i "brake" artifacts/claude-smolear257-20260922/PASSMARKS.md | head -40; echo '---RESULTS---'; grep -B2 -A8 -i "dev.*brake\|brake.*dev" artifacts/claude-smolear257-20260922/RESULTS.md | head -40
+- Same output format, brake (claude_smolear235_model.brake) and gate (claude_smolear235b_beam.gate, k = 4).
+- Brake, gate and scorer are imported unchanged. The only thing they see differently is relation table v2, which is
+  installed by rebinding the model module's table globals (claude_smolear257_table.install); no code was edited.
+
+**Registered ear = v4.1.** Checkpoint sha256 `55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2`.
+It is kept on BensPC (out_v41); records are in train41/.
+
+--
+Dev at tau 9.3 (TEACH hit/gold and wrong; A = brake + gate), from dev/devreport.json:
+
+| dev slice | v3 A | v4.0 A | v4.1 A (registered) | v4.1 A_brake |
+|---|---|---|---|---|
+| all (incl. R3_indist) | 509/1069, 45 wrong | 809/1069, 27 wrong | 834/1069, 11 wrong | 1027/1069, 38 wrong |
+| base (235 dev) | 328/434, 3 | 374/434, 2 | 364/434, 2 | 428/434, 6 |
+| C1 verb decides | 3/63, 4 | 41/63, 0 | 43/63, 0 | 59/63, 4 |
+| C2 compound relatives | 10/51, 1 | 29/51, 13 | 41/51, 0 | 51/51, 0 |
+--
+The 235 dev split (training script dev_eval, 800 rows, v1 brake): v3 783/800, v4.0 781/800, v4.1 781/800. The
+families are identical except teach: v3 341/351, v4.x 339/351.
+
+Mac CPU: the disk has 5.3 GB free, below the 8 GB floor, so the full panel is not run on the CPU. **12-turn dev pilot
+(v4.1, checkpoint streamed over ssh, 1 thread): median 2085 ms, p90 4104, max 8825; CPU and GPU greedy agree 12/12.**
+GPU dev (1,590 turns, no gate timing): median 145 ms.
+--
+- Arms reported: A_raw, A_brake, A (registered) and B; per family and per tag.
+- **Fixture pilot** (a 150-line synthetic panel in the 257 schema, my own made-up turns):
+  - Predictions equal to gold score 114/114 TEACH and 40/40 ASK.
+  - A wrong hop 1 on the 15 chains drops ASK to 25/40, which shows hop-1 aliases really count.
+  - Two bad-schema fixtures exit with code 3; the wrong panel sha exits with code 4.
+  - Arm B ran on 3 fixture items.
+--
+## Marks (A = v4.1 ear + brake + gate, tau 9.3); same bars as 235b
+| mark | bar |
+|---|---|
+| M1 | no_save: TEACH frames saved ≤ 1 |
+| M2 | wrong saves across plain_teach + varied_teach + full_names + corrections + no_save ≤ 1 |
+| M3 | exact TEACH recall on plain_teach + varied_teach + full_names + corrections ≥ 85%, and ≥ B + 30 points |
+--
+| M5 | median GPU ms per turn (greedy + brake + beams + gate) ≤ 300 |
+
+---RESULTS---
+
+## Report-only comparisons (no bars)
+- **The 235 dev split** (800 rows, training script dev_eval, v1 brake): v3 783/800, v4.0 781/800, v4.1 781/800. Every
+  family is identical except teach, which is 339/351 vs v3's 341/351. Plain wording did not regress in any real way.
+- **v3 vs v4 on my new dev classes** (tau 9.3, arm A; full table in PASSMARKS.md and dev/devreport.json):
+  - All dev: v3 509/1069 with 45 wrong; v4.0 809 with 27 wrong; v4.1 834 with 11 wrong.
+  - By class, v3 → v4.1:
+    - C1, verb decides the relation: 3 → 43 of 63.
+    - C2, compound relatives: 10 → 41 of 51 (0 wrong).
+    - C3, pronouns: 25 → 103 of 136.
+    - C5, no-"?" questions: 4 wrong → 3.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,power.draw --format=csv' 2>&1 | head -5; ssh -o ConnectTimeout=15 benspc 'tasklist /FI "IMAGENAME eq llama-server.exe" /FO TABLE' 2>&1 | head -6
+index, name, memory.used [MiB], memory.total [MiB], utilization.gpu [%], power.draw [W]
+0, NVIDIA GeForce RTX 5070 Ti, 13682 MiB, 16303 MiB, 0 %, 8.50 W
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             13444 Services                   0 22,020,824 K
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,sys
+sys.path.insert(0,'scripts')
+import claude_smolear257_table as TB
+TB.install()
+import claude_smolear235_model as E
+import claude_smolear235_score as S
+import claude_smolear235b_tau as T
+rows=[json.loads(x) for x in open('artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl')]
+preds=json.load(open('artifacts/claude-smolear257-20260922/dev/v41_preds.json'))['preds']
+rep=json.load(open('artifacts/claude-smolear257-20260922/dev/devreport.json'))
+print('devreport keys:',list(rep.keys())[:20])
+" 2>&1 | tail -5
+devreport keys: ['tau', 'report']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,sys
+sys.path.insert(0,'scripts')
+import claude_smolear257_table as TB
+TB.install()
+import claude_smolear235_model as E
+import claude_smolear235_score as S
+import claude_smolear235b_tau as T
+rows=[json.loads(x) for x in open('artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl')]
+preds=json.load(open('artifacts/claude-smolear257-20260922/dev/v41_preds.json'))['preds']
+rep=json.load(open('artifacts/claude-smolear257-20260922/dev/devreport.json'))
+print('tau:',rep['tau'],'reportkeys:',list(rep['report'].keys())[:10])
+r=rep['report']
+for k in ['all','base','R3_indist','C1','C2']:
+    if k in r: print(k,r[k])
+" 2>&1 | tail -8
+tau: 9.3 reportkeys: ['v3', 'v40', 'v41']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,sys
+sys.path.insert(0,'scripts')
+import claude_smolear257_table as TB
+TB.install()
+import claude_smolear235_model as E
+import claude_smolear235_score as S
+import claude_smolear235b_tau as T
+rows=[json.loads(x) for x in open('artifacts/claude-smolear257-20260922/dev/dev_tau.jsonl')]
+preds=json.load(open('artifacts/claude-smolear257-20260922/dev/v41_preds.json'))['preds']
+# exact 257 A_brake: parse->brake, no canon
+agg={}
+for row in rows:
+    p=preds[row['id']]
+    kept,_=E.brake(E.parse_frames(p['raw']),row['turn'])
+    gold=T.gold_frames(row['frames'])
+    th,tx,tn=S.match(kept,gold,'TEACH')
+    a=agg.setdefault(row.get('tag'),[0,0,0,0]); a[0]+=1;a[1]+=th;a[2]+=tn;a[3]+=len(tx)
+tot=[sum(v[i] for v in agg.values()) for i in range(4)]
+print('recomputed 257 A_brake on dev_tau rows: rows=%d hit=%d gold=%d wrong=%d'%(tot[0],tot[1],tot[2],tot[3]))
+for k in sorted(agg): print(k,agg[k])
+" 2>&1 | tail -20
+recomputed 257 A_brake on dev_tau rows: rows=1530 hit=967 gold=1009 wrong=38
+C1 [60, 59, 63, 4]
+C2 [60, 51, 51, 0]
+C3 [60, 122, 136, 4]
+C4 [50, 49, 50, 1]
+C5 [70, 24, 24, 5]
+C6 [90, 71, 76, 2]
+C7 [40, 0, 0, 0]
+INF [20, 0, 0, 0]
+R1 [90, 143, 155, 9]
+R2 [70, 0, 0, 7]
+R2s [20, 20, 20, 0]
+base [900, 428, 434, 6]
+[0m
+[0m$ [0mgrep -rl "55284dec" scripts/ 2>&1 | head; echo '---'; grep -rh "out_v41" scripts/claude_smolear257_*.py artifacts/claude-smolear257-20260922/PASSMARKS.md 2>&1 | head -8
+---
+It is kept on BensPC (out_v41); records are in train41/.
+[0m
+[0m$ [0mls artifacts/claude-smolear257-20260922/train41/ 2>&1 | head; echo '---'; grep -rh "smolear235" scripts/claude_smolear257_turns.py 2>&1 | head -5; echo '---infer235b---'; grep -n "ssh\|benspc\|out_v\|checkpoint\|model" scripts/claude_smolear235b_infer.py 2>&1 | head -20
+CKPT.sha256.txt
+dev_eval.json
+train_log.txt
+---
+---infer235b---
+25:import claude_smolear235_model as E  # noqa: E402
+45:    # --ckpt - : read the checkpoint bytes from stdin (streamed from BensPC; keeps the
+50:        raise SystemExit(f"checkpoint hash mismatch {h}")
+[0m
+[0m→ [0mRead scripts/claude_smolear235b_infer.py
+[0m
+[0m$ [0mcat artifacts/claude-smolear257-20260922/train41/CKPT.sha256.txt 2>&1; echo '---'; grep -rh "ssh benspc" scripts/*.py scripts/*.sh 2>&1 | head -10
+55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2  smolear235.safetensors
+---
+[0m
+[0m$ [0mgrep -rl "EncodedCommand" scripts/ 2>&1 | head; echo '---'; ls artifacts/claude-smolear257-20260922/run/ 2>&1 | head
+---
+a_preds_gpu.json
+b_preds.json
+score.json
+turns.json
+[0m
+[0m$ [0mgrep -rh "benspc\|BensPC" artifacts/claude-smolear257-20260922/RESULTS.md 2>&1 | head -20
+3. **Trained v4.0 on the BensPC 5070 Ti** with the unchanged 235 recipe: 12.3 min, checkpoint `dc41533b…`.
+- **Checkpoints stay on BensPC:** C:\Users\benja\smolear235\out_v41 (v4.1, registered) and out_v4 (v4.0).
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('artifacts/claude-earcheck261-20260922/devcheck_earpreds.json'))
+print('keys:',list(d.keys())); print('summary:',json.dumps(d['summary'],indent=1))
+" 2>&1 | tail -15; grep -rln "paramiko\|subprocess.*ssh\|os.system.*ssh\|Popen.*ssh" scripts/*.py 2>&1 | head
+keys: ['summary', 'preds']
+summary: {
+ "n": 210,
+ "median_ms": 157.99720003269613,
+ "p90_ms": 300.9935999289155,
+ "max_ms": 408.91930006910115,
+ "n_beamed": 157,
+ "device": "cuda",
+ "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+ "torch": "2.11.0+cu128",
+ "threads": 6,
+ "tau": 9.3,
+ "k": 4,
+ "gpu": "NVIDIA GeForce RTX 5070 Ti"
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'echo $HOME; pwd; ls' 2>&1 | head -20
+$HOME; pwd; ls
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'echo HI2' 2>&1 | head -3
+HI2
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'whoami' 2>&1 | head -3
+benspc\benja
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Command python,python3 -ErrorAction SilentlyContinue | Select-Object Name,Source; Test-Path C:\Users\benja\smolear235\out_v41; Get-ChildItem C:\Users\benja\smolear235 | Select-Object Name"' 2>&1 | head -20
+Name                       Source                                                           
+----                       ------                                                           
+python.exe                 C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+python3.exe                C:\Users\benja\AppData\Local\Microsoft\WindowsApps\python3.exe   
+True
+artifacts                                                                                   
+base                                                                                        
+data                                                                                        
+data3                                                                                       
+data4                                                                                       
+data41                                                                                      
+dev257                                                                                      
+on235b_257                                                                                  
+out                                                                                         
+out_smoke                                                                                   
+out_smoke2                                                                                  
+out_v1                                                                                      
+out_v2                                                                                      
+out_v3
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\smolear235 | Select-Object Name; Get-ChildItem C:\Users\benja\smolear235\out_v41 | Select-Object Name,Length; python -c \"import torch; print(torch.__version__, torch.cuda.is_available())\""' 2>&1 | head -25
+2.11.0+cu128 True
+Name                      
+----                      
+artifacts                 
+base                      
+data                      
+data3                     
+data4                     
+data41                    
+dev257                    
+on235b_257                
+out                       
+out_smoke                 
+out_smoke2                
+out_v1                    
+out_v2                    
+out_v3                    
+out_v4                    
+out_v41                   
+run257                    
+scripts                   
+bench235.py               
+bench235b.py              
+claude_smolear235_infer.py
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\smolear235\scripts | Select-Object Name; Get-ChildItem C:\Users\benja\smolear235\run257 | Select-Object Name"' 2>&1 | head -40
+Name                          
+----                          
+__pycache__                   
+claude_earcheck261_canon.py   
+claude_earcheck261_checker.py 
+claude_earcheck261_qwen.py    
+claude_smolear235b_beam.py    
+claude_smolear235b_infer.py   
+claude_smolear235_data.py     
+claude_smolear235_infer.py    
+claude_smolear235_model.py    
+claude_smolear235_panel.py    
+claude_smolear235_score.py    
+claude_smolear235_train.py    
+claude_smolear257_armb.py     
+claude_smolear257_data.py     
+claude_smolear257_devreport.py
+claude_smolear257_devset.py   
+claude_smolear257_infer.py    
+claude_smolear257_on235b.py   
+claude_smolear257_panel.py    
+claude_smolear257_score.py    
+claude_smolear257_table.py    
+claude_smolear257_tau.py      
+claude_smolear257_turns.py    
+a_preds_gpu.json              
+turns.json
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\smolear235\scripts -Filter *261* | Select-Object Name,Length,LastWriteTime; Get-ChildItem C:\Users\benja\smolear235\run257 | Select-Object Name,Length; Test-Path C:\Users\benja\smolear235\run261"' 2>&1 | head -30
+Name                          Length LastWriteTime       
+----                          ------ -------------       
+claude_earcheck261_canon.py     3580 9/22/2026 8:14:53 PM
+claude_earcheck261_checker.py   4365 9/22/2026 8:15:56 PM
+claude_earcheck261_qwen.py      3491 9/22/2026 8:14:53 PM
+a_preds_gpu.json               94794                     
+turns.json                     11781                     
+False
+[0m
+[0m$ [0mscp -q benspc:'C:/Users/benja/smolear235/scripts/claude_earcheck261_checker.py' /tmp/staged_checker.py 2>&1; scp -q benspc:'C:/Users/benja/smolear235/scripts/claude_earcheck261_qwen.py' /tmp/staged_qwen.py 2>&1; scp -q benspc:'C:/Users/benja/smolear235/scripts/claude_earcheck261_canon.py' /tmp/staged_canon.py 2>&1; wc -c /tmp/staged_*.py scripts/claude_earcheck261_checker.py scripts/claude_earcheck261_qwen.py scripts/claude_earcheck261_canon.py
+3580 /tmp/staged_canon.py
+    4365 /tmp/staged_checker.py
+    3491 /tmp/staged_qwen.py
+    4365 scripts/claude_earcheck261_checker.py
+    3491 scripts/claude_earcheck261_qwen.py
+    3580 scripts/claude_earcheck261_canon.py
+   22872 total
+[0m
+[0m$ [0mdiff /tmp/staged_checker.py scripts/claude_earcheck261_checker.py && echo CHECKER-IDENTICAL; diff /tmp/staged_qwen.py scripts/claude_earcheck261_qwen.py && echo QWEN-IDENTICAL; diff /tmp/staged_canon.py scripts/claude_earcheck261_canon.py && echo CANON-IDENTICAL
+CHECKER-IDENTICAL
+QWEN-IDENTICAL
+CANON-IDENTICAL
+[0m
+[0m$ [0mgrep "P257" artifacts/fable-predictions-ledger.md | head -12; echo '---TAIL---'; tail -8 artifacts/fable-predictions-ledger.md
+- P257.1 (2026-09-22 18:15) Exp 257 (ear v4.1 = data v4 + C8, table v2; ckpt 55284dec…; tau 9.3 by the sealed rule, no fallback; SEAL.sha256.txt sha a2f8031fb0a3…): M1 passes (0-1 no_save saves), ~75 %.
+- P257.2 M2 wrong saves 2-4; pass (<= 1) ~25 %.
+- P257.3 M3 A recall 65-80 %: FAIL ~85 %; A_brake 85-95 %; B 10-25 %.
+- P257.4 M3b UNSURE 10-20 % of gold TEACH; pass (<= 12 %) ~35 %.
+- P257.5 M4 ASK recall 85-95 %; pass (>= 90 %) ~55 %.
+- P257.6 M5 GPU median 120-200 ms: pass ~97 %.
+- P257.7 Overall registered PASS ~5 %.
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+---TAIL---
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "Get-FileHash C:\Users\benja\smolear235\out_v41\smolear235.safetensors -Algorithm SHA256 | Select-Object Hash"' 2>&1 | head -6
+Hash                                                            
+----                                                            
+55284DEC92EA3E6D5D9D99C5AFA99AE80A73EAFAF644A0C2CA268DCB9FAD0BD2
+[0m
+[0m# [0mTodos
+[•] Verify prior work (theta repro, A_brake repro, ckpt sha, llama health)
+[ ] Synthetic fixture pilot of qbuild+scoremain plumbing (no panel contact)
+[ ] Write PASSMARKS.md, seal, append P261 ledger lines
+[ ] Verify panel SEAL OK, extract turns, GPU ear infer on BensPC
+[ ] Panel checker queries + llama-server run, arm B (Mac CPU)
+[ ] Score registered arms once + report-only 257-panel arm A
+[ ] Write RESULTS.md, stop llama-server PID 13444, confirm GPU release, final reply
+[0m
+[0m$ [0mgrep -n "def parse_frames" -A 30 scripts/claude_smolear235_model.py | head -45
+320:def parse_frames(text: str):
+321-    """Raw parse. Returns list of dicts; malformed lines become {'act':'BAD'}."""
+322-    frames = []
+323-    for line in str(text).splitlines():
+324-        line = line.strip()
+325-        if not line:
+326-            continue
+327-        parts = [p.strip() for p in line.split("|")]
+328-        act = parts[0].upper()
+329-        if act == "NONE" and len(parts) == 1:
+330-            continue
+331-        if act == "TEACH" and len(parts) == 4:
+332-            frames.append(dict(act="TEACH", subject=parts[1], relation=parts[2], value=parts[3]))
+333-        elif act == "ASK" and len(parts) == 3:
+334-            frames.append(dict(act="ASK", subject=parts[1],
+335-                               relation=[p.strip() for p in parts[2].split(">")]))
+336-        else:
+337-            frames.append(dict(act="BAD", raw=line))
+338-    return frames
+339-
+340-
+341-_TRIM = " \t\"'.,;:!?()[]{}"
+342-
+343-
+344-def _norm_span(s):
+345-    return " ".join(str(s).strip(_TRIM).split()).lower()
+346-
+347-
+348-def _in_turn(span, turn):
+349-    s = _norm_span(span)
+350-    if not s:
+[0m
+[0m$ [0mgrep -n "FAMIL\|families\|EXTRA_TAGS\|def check" scripts/claude_smolear257_panel.py | head -12; grep -n "FAMILIES\s*=" -A 10 scripts/claude_smolear257_panel.py | head -14
+29:EXTRA_TAGS = {"lower", "typo", "noq", "correction"}
+36:def check(lines):
+111:        tags = sorted({t for t in toks if re.fullmatch(r"R\d\w*", t)} | (set(toks) & EXTRA_TAGS))
+[0m
+[0m$ [0msed -n 20,110p scripts/claude_smolear257_panel.py
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear235b_panel as P5  # noqa: E402
+
+PANEL_SHA = "1d1b5588b787866bf986e6ea8500be70200b980dfe5734622a85b90e7d942fd3"
+ASK_KEYS = P5.ASK_KEYS | {"chain_aliases"}
+EXTRA_TAGS = {"lower", "typo", "noq", "correction"}
+
+
+def _strlist(x):
+    return isinstance(x, list) and all(isinstance(y, str) for y in x)
+
+
+def check(lines):
+    errs, ids, fam = [], set(), {}
+    for n, d in enumerate(lines):
+        where = f"line {n + 1}"
+        if not isinstance(d, dict) or set(d) != P5.LINE_KEYS:
+            errs.append(f"{where}: keys {sorted(d) if isinstance(d, dict) else type(d)}")
+            continue
+        if d["id"] in ids:
+            errs.append(f"{where}: duplicate id")
+        ids.add(d["id"])
+        if d["family"] not in P5.COUNTS:
+            errs.append(f"{where}: unknown family")
+        fam[d["family"]] = fam.get(d["family"], 0) + 1
+        if not isinstance(d["turn"], str) or not d["turn"].strip():
+            errs.append(f"{where}: bad turn")
+        if not isinstance(d["clear"], bool) or not isinstance(d["notes"], str):
+            errs.append(f"{where}: bad clear/notes type")
+        if not isinstance(d["gold"], list):
+            errs.append(f"{where}: gold not a list")
+            continue
+        for g in d["gold"]:
+            act = g.get("act") if isinstance(g, dict) else None
+            if act == "TEACH":
+                if set(g) != P5.TEACH_KEYS:
+                    errs.append(f"{where}: TEACH keys {sorted(g)}")
+            elif act == "ASK":
+                if set(g) != ASK_KEYS:
+                    errs.append(f"{where}: ASK keys {sorted(g)}")
+                    continue
+                ch, ca = g["chain"], g["chain_aliases"]
+                if ch is None:
+                    if ca is not None:
+                        errs.append(f"{where}: chain null but chain_aliases set")
+                elif not (isinstance(ch, list) and len(ch) == 2 and ch[-1] == g["relation"]):
+                    errs.append(f"{where}: bad chain")
+                elif not (isinstance(ca, list) and len(ca) == 2 and all(_strlist(x) for x in ca)):
+                    errs.append(f"{where}: bad chain_aliases")
+                elif ca[1] != g["relation_aliases"]:
+                    errs.append(f"{where}: chain_aliases[1] != relation_aliases")
+            else:
+                errs.append(f"{where}: bad act")
+            if isinstance(g, dict) and not _strlist(g.get("relation_aliases")):
+                errs.append(f"{where}: relation_aliases not a list of strings")
+    if len(lines) != 150:
+        errs.append(f"{len(lines)} lines, expected 150")
+    if fam != P5.COUNTS:
+        errs.append(f"family counts {fam}")
+    return errs
+
+
+def load_panel(path, check_sha=True):
+    raw = Path(path).read_bytes()
+    if check_sha and hashlib.sha256(raw).hexdigest() != PANEL_SHA:
+        print("PANEL-SHA-MISMATCH", file=sys.stderr)
+        sys.exit(4)
+    lines = [json.loads(x) for x in raw.decode("utf-8").splitlines() if x.strip()]
+    errs = check(lines)
+    if errs:
+        print("SCHEMA-MISMATCH:", *errs[:50], sep="\n  ", file=sys.stderr)
+        sys.exit(3)
+    items = []
+    for d in lines:
+        gold = []
+        for g in d["gold"]:
+            al = [str(x) for x in g["relation_aliases"]]
+            if g["act"] == "ASK" and g["chain"]:
+                hops = [str(x).strip() for x in g["chain"]]
+                aliases = [[str(y) for y in x] for x in g["chain_aliases"]]
+            else:
+                hops, aliases = [str(g["relation"]).strip()], [al]
+            fr = dict(act=g["act"], subject=str(g["subject"]), relation=hops, aliases=aliases)
+            if g["act"] == "TEACH":
+                fr["value"] = str(g["value"])
+            gold.append(fr)
+        toks = d["notes"].split()
+[0m
+[0m$ [0mgrep -n "LINE_KEYS\|TEACH_KEYS\|ASK_KEYS\|COUNTS" scripts/claude_smolear235b_panel.py | head; grep -n "LINE_KEYS\s*=\|TEACH_KEYS\s*=\|ASK_KEYS\s*=\|COUNTS\s*=" -A 4 scripts/claude_smolear235b_panel.py | head -20
+25:COUNTS = {"plain_teach": 25, "varied_teach": 30, "full_names": 15, "questions": 25,
+27:LINE_KEYS = {"id", "family", "turn", "gold", "clear", "notes"}
+28:TEACH_KEYS = {"act", "subject", "relation", "relation_aliases", "value"}
+29:ASK_KEYS = {"act", "subject", "relation", "chain", "relation_aliases"}
+36:        if not isinstance(d, dict) or set(d) != LINE_KEYS:
+42:        if d["family"] not in COUNTS:
+55:                if set(g) != TEACH_KEYS:
+58:                if set(g) != ASK_KEYS:
+70:    if fam != COUNTS:
+25:COUNTS = {"plain_teach": 25, "varied_teach": 30, "full_names": 15, "questions": 25,
+26-          "chain_questions": 15, "no_save": 25, "corrections": 15}
+27:LINE_KEYS = {"id", "family", "turn", "gold", "clear", "notes"}
+28:TEACH_KEYS = {"act", "subject", "relation", "relation_aliases", "value"}
+29:ASK_KEYS = {"act", "subject", "relation", "chain", "relation_aliases"}
+30-
+31-
+32-def check(lines):
+33-    errs, ids, fam = [], set(), {}
+[0m
+[0m← [0mWrite /tmp/fix261_gen.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/fix261_gen.py 2>&1 | tail -3
+fixture: 150 turns; 110 beamed
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_qbuild.py --mode panel --turns /tmp/fix261/panel.jsonl --a-preds /tmp/fix261/preds.json --prompt B --out /tmp/fix261/q 2>&1 | tail -3; ls /tmp/fix261/q/
+File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/json/decoder.py", line 341, in decode
+    raise JSONDecodeError("Extra data", s, end)
+json.decoder.JSONDecodeError: Extra data: line 2 column 1 (char 244)
+ls: /tmp/fix261/q/: No such file or directory
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+lines=[json.loads(x) for x in open('/tmp/fix261/panel.jsonl')]
+json.dump([dict(id=d['id'],turn=d['turn']) for d in lines], open('/tmp/fix261/turns.json','w'))
+print('turns written',len(lines))
+" 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_qbuild.py --mode panel --turns /tmp/fix261/turns.json --a-preds /tmp/fix261/preds.json --prompt B --out /tmp/fix261/q 2>&1 | tail -2
+turns written 150
+150 turns -> 220 checks (prompt B)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+man=json.load(open('/tmp/fix261/q/manifest.json'))
+lines={json.loads(x)['id']:json.loads(x) for x in open('/tmp/fix261/panel.jsonl')}
+out={}
+for cid,m in man.items():
+    fam=lines[m['row']]['family']
+    p=0.01 if fam=='no_save' else 0.99
+    out[cid]=dict(p=p,text='YES' if p>0.5 else 'NO',fallback=False,ms=250.0)
+json.dump(dict(summary=dict(n=len(out),fallbacks=0),checks=out),open('/tmp/fix261/pyes.json','w'))
+print('pyes',len(out))
+" 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_scoremain.py --panel /tmp/fix261/panel.jsonl --seal /tmp/fix261/seal.txt --a-preds /tmp/fix261/preds.json --b-preds /tmp/fix261/bpreds.json --theta 0.25 --pyes /tmp/fix261/pyes.json --no-sha --out /tmp/fix261/score.json 2>&1 | tail -30
+pyes 220
+   "M1_no_save_saved": 0,
+   "M2_wrong_saves": 0,
+   "M3_hit": 85,
+   "M3_gold": 85,
+   "M3_recall_pct": 100.0,
+   "M4_hit": 40,
+   "M4_gold": 40,
+   "M4_recall_pct": 100.0,
+   "question_stray_teach": 0
+  },
+  "B": {
+   "M1_no_save_saved": 0,
+   "M2_wrong_saves": 0,
+   "M3_hit": 0,
+   "M3_gold": 0,
+   "M3_recall_pct": null
+  }
+ },
+ "verdict": {
+  "M1": true,
+  "M2": true,
+  "M3": true,
+  "M3b": true,
+  "M4": true,
+  "M5": true,
+  "M6": true,
+  "ALL": true
+ },
+ "median_ms": 370.0
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+ls=open('/tmp/fix261/panel.jsonl').read().splitlines()
+open('/tmp/fix261/bad.jsonl','w').write('\n'.join(ls[:149])+'\n')
+" 2>&1 | tail -1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_scoremain.py --panel /tmp/fix261/bad.jsonl --seal /tmp/fix261/seal.txt --a-preds /tmp/fix261/preds.json --b-preds /tmp/fix261/bpreds.json --theta 0.25 --pyes /tmp/fix261/pyes.json --no-sha --out /tmp/fix261/bad_score.json 2>&1 | head -4; echo "EXIT:$?"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('/tmp/fix261/score.json'))
+print('curve len:',len(s['theta_curve']),'details:',len(s['details']),'m6:',s['m6_mismatch'],'tags sample:',sorted(s['by_tag']['A'].keys())[:6])
+" 2>&1 | tail -2
+SCHEMA-MISMATCH:
+  149 lines, expected 150
+  family counts {'plain_teach': 25, 'varied_teach': 30, 'full_names': 15, 'questions': 25, 'chain_questions': 15, 'no_save': 25, 'corrections': 14}
+EXIT:0
+curve len: 21 details: 25 m6: 0 tags sample: ['R1:stmt', 'R2:no_save', 'R2:stmt', 'R6:chain_questions', 'R8:no_save', 'R9:no_save']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_scoremain.py --panel /tmp/fix261/bad.jsonl --seal /tmp/fix261/seal.txt --a-preds /tmp/fix261/preds.json --b-preds /tmp/fix261/bpreds.json --theta 0.25 --pyes /tmp/fix261/pyes.json --no-sha --out /tmp/fix261/bad_score2.json >/tmp/fix261/bad_err.txt 2>&1; echo "EXIT:$?"
+EXIT:3
+[0m
+[0m# [0mTodos
+[✓] Verify prior work (theta repro, A_brake repro, ckpt sha, llama health)
+[✓] Synthetic fixture pilot of qbuild+scoremain plumbing (no panel contact)
+[•] Write PASSMARKS.md, seal, append P261 ledger lines
+[ ] Verify panel SEAL OK, extract turns, GPU ear infer on BensPC
+[ ] Panel checker queries + llama-server run, arm B (Mac CPU)
+[ ] Score registered arms once + report-only 257-panel arm A
+[ ] Write RESULTS.md, stop llama-server PID 13444, confirm GPU release, final reply
+[0m
+[0m← [0mWrite artifacts/claude-earcheck261-20260922/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_earcheck261_canon.py scripts/claude_earcheck261_arms.py scripts/claude_earcheck261_checker.py scripts/claude_earcheck261_qbuild.py scripts/claude_earcheck261_promptB.py scripts/claude_earcheck261_theta.py scripts/claude_earcheck261_panel.py scripts/claude_earcheck261_turns.py scripts/claude_earcheck261_armb.py scripts/claude_earcheck261_scoremain.py scripts/claude_earcheck261_devset4.py artifacts/claude-earcheck261-20260922/PASSMARKS.md artifacts/claude-earcheck261-20260922/theta.json artifacts/claude-earcheck261-20260922/dev_checker.jsonl artifacts/claude-earcheck261-20260922/dev257_manifest.json artifacts/claude-earcheck261-20260922/devcheck_manifest.json artifacts/claude-earcheck261-20260922/devcheck_earpreds.json artifacts/claude-earcheck261-20260922/devcheck_pyesB.json > artifacts/claude-earcheck261-20260922/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-earcheck261-20260922/SEAL.sha256.txt | tail -3; wc -l artifacts/claude-earcheck261-20260922/SEAL.sha256.txt
+artifacts/claude-earcheck261-20260922/devcheck_manifest.json: OK
+artifacts/claude-earcheck261-20260922/devcheck_earpreds.json: OK
+artifacts/claude-earcheck261-20260922/devcheck_pyesB.json: OK
+      18 artifacts/claude-earcheck261-20260922/SEAL.sha256.txt
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+EOF
+grep -c "P261" artifacts/fable-predictions-ledger.md
+8
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-earpanel261-20260922/SEAL.sha256.txt && uptime
+artifacts/claude-earpanel261-20260922/panel.jsonl: OK
+artifacts/claude-earpanel261-20260922/make_panel.py: OK
+21:01  up 2 days, 12:50, 2 users, load averages: 107.22 88.83 51.84
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_turns.py --panel artifacts/claude-earpanel261-20260922/panel.jsonl --seal artifacts/claude-earpanel261-20260922/SEAL.sha256.txt --out artifacts/claude-earcheck261-20260922/panel261_turns.json 2>&1 | tail -2
+150 turns
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -NoProfile -Command "New-Item -ItemType Directory -Force C:\Users\benja\smolear235\run261 | Select-Object FullName; Test-Path C:\Users\benja\smolear235\base\tokenizer.json"' 2>&1 | head -5
+FullName                        
+--------                        
+C:\Users\benja\smolear235\run261
+True
+[0m
+[0m$ [0mscp -q artifacts/claude-earcheck261-20260922/panel261_turns.json benspc:'C:/Users/benja/smolear235/run261/turns261.json' 2>&1 && echo SCP-OK; ssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "(Get-FileHash C:\Users\benja\smolear235\run261\turns261.json -Algorithm SHA256).Hash"' 2>&1 | head -4; shasum -a 256 artifacts/claude-earcheck261-20260922/panel261_turns.json
+SCP-OK
+9B69BCF540EB117B04FC604D6F46BDC0D9EE2FEB7CEEF5932BC669F015E9CDAA
+9b69bcf540eb117b04fc604d6f46bdc0d9ee2feb7ceef5932bc669f015e9cdaa  artifacts/claude-earcheck261-20260922/panel261_turns.json
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "cd C:\Users\benja\smolear235\scripts; python claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns C:\Users\benja\smolear235\run261\turns261.json --out C:\Users\benja\smolear235\run261\a_preds261.json --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3"' 2>&1 | tail -5
+{"n": 150, "median_ms": 139.3395500490442, "p90_ms": 280.57440009433776, "max_ms": 368.7299999874085, "n_beamed": 87, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mscp -q benspc:'C:/Users/benja/smolear235/run261/a_preds261.json' artifacts/claude-earcheck261-20260922/panel261_earpreds.json 2>&1; ssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "(Get-FileHash C:\Users\benja\smolear235\run261\a_preds261.json -Algorithm SHA256).Hash"' 2>&1 | head -3; shasum -a 256 artifacts/claude-earcheck261-20260922/panel261_earpreds.json
+67BDC011EE2E6D14579A60D124C803E23915721BD5E28D773E47FC465CB02639
+67bdc011ee2e6d14579a60d124c803e23915721bd5e28d773e47fc465cb02639  artifacts/claude-earcheck261-20260922/panel261_earpreds.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_qbuild.py --mode panel --turns artifacts/claude-earcheck261-20260922/panel261_turns.json --a-preds artifacts/claude-earcheck261-20260922/panel261_earpreds.json --prompt B --out artifacts/claude-earcheck261-20260922/panel261_q 2>&1 | tail -2; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+q=json.load(open('artifacts/claude-earcheck261-20260922/panel261_q/checks.json'))
+m=json.load(open('artifacts/claude-earcheck261-20260922/panel261_q/manifest.json'))
+import collections
+print('checks:',len(q),'canon:',sum(1 for v in m.values() if v['canon']),'nocanon:',sum(1 for v in m.values() if not v['canon']))
+print('sample prompt head:',q[0]['prompt'][:120].replace(chr(10),' | '))
+" 2>&1 | tail -3
+150 turns -> 228 checks (prompt B)
+checks: 228 canon: 114 nocanon: 114
+sample prompt head: /no_think | Message from the speaker: «I live in Vellmar.» | Claim: the speaker lives in Vellmar. | Does the message state thi
+[0m
+[0m$ [0mscp -q artifacts/claude-earcheck261-20260922/panel261_q/checks.json benspc:'C:/Users/benja/smolear235/run261/checks261.json' 2>&1 && echo SCP-OK && ssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "cd C:\Users\benja\smolear235\scripts; python claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in C:\Users\benja\smolear235\run261\checks261.json --out C:\Users\benja\smolear235\run261\pyes261.json"' 2>&1 | tail -3
+SCP-OK
+{"n": 228, "fallbacks": 0, "median_ms": 284.1, "p90_ms": 310.0, "max_ms": 430.1}
+[0m
+[0m$ [0muptime
+21:05  up 2 days, 12:55, 2 users, load averages: 106.87 114.08 74.93
+[0m
+[0m$ [0mscp -q benspc:'C:/Users/benja/smolear235/run261/pyes261.json' artifacts/claude-earcheck261-20260922/panel261_pyes.json 2>&1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,hashlib
+raw=open('artifacts/claude-earcheck261-20260922/panel261_pyes.json','rb').read()
+print('local sha:',hashlib.sha256(raw).hexdigest()[:16])
+d=json.loads(raw)
+print('n:',d['summary'],'keys ok:',len(d['checks']))
+" 2>&1 | tail -2
+local sha: fe444dc17b2dd06b
+n: {'n': 228, 'fallbacks': 0, 'median_ms': 284.1, 'p90_ms': 310.0, 'max_ms': 430.1} keys ok: 228
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('artifacts/claude-smolear257-20260922/run/b_preds.json'))
+print(type(d))
+if isinstance(d,dict):
+    ks=list(d.keys())[:3]; print('nkeys:',len(d))
+    for k in ks: print(k,str(d[k])[:300])
+" 2>&1 | tail -6
+<class 'dict'>
+nkeys: 110
+e257-001 {'triples': [], 'reply': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?", 'ms': 249.6}
+e257-002 {'triples': [['USER', 'sister', 'called Maelis']], 'reply': 'Saved: your sister is called Maelis.', 'ms': 34.5}
+e257-003 {'triples': [['Dorran', 'employer', 'Tamber Logistics']], 'reply': "Saved: Dorran's employer is Tamber Logistics.", 'ms': 3.0}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_armb.py --panel artifacts/claude-earpanel261-20260922/panel.jsonl --seal artifacts/claude-earpanel261-20260922/SEAL.sha256.txt --work /tmp/armb261_work --out artifacts/claude-earcheck261-20260922/panel261_bpreds.json 2>&1 | tail -3
+arm B: 110 statement items run
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_scoremain.py --panel artifacts/claude-earpanel261-20260922/panel.jsonl --seal artifacts/claude-earpanel261-20260922/SEAL.sha256.txt --a-preds artifacts/claude-earcheck261-20260922/panel261_earpreds.json --b-preds artifacts/claude-earcheck261-20260922/panel261_bpreds.json --theta 0.25 --pyes artifacts/claude-earcheck261-20260922/panel261_pyes.json --out artifacts/claude-earcheck261-20260922/panel261_score.json 2>&1 | tail -60
+"M4_hit": 39,
+   "M4_gold": 40,
+   "M4_recall_pct": 97.5,
+   "question_stray_teach": 0
+  },
+  "A_gate": {
+   "M1_no_save_saved": 1,
+   "M2_wrong_saves": 8,
+   "M3_hit": 79,
+   "M3_gold": 122,
+   "M3_recall_pct": 64.8,
+   "M4_hit": 39,
+   "M4_gold": 40,
+   "M4_recall_pct": 97.5,
+   "question_stray_teach": 0
+  },
+  "A": {
+   "M1_no_save_saved": 1,
+   "M2_wrong_saves": 9,
+   "M3_hit": 95,
+   "M3_gold": 122,
+   "M3_recall_pct": 77.9,
+   "M4_hit": 39,
+   "M4_gold": 40,
+   "M4_recall_pct": 97.5,
+   "question_stray_teach": 0,
+   "M3b_unsure": 6,
+   "M3b_unsure_pct": 4.9
+  },
+  "A_nocanon": {
+   "M1_no_save_saved": 1,
+   "M2_wrong_saves": 12,
+   "M3_hit": 92,
+   "M3_gold": 122,
+   "M3_recall_pct": 75.4,
+   "M4_hit": 39,
+   "M4_gold": 40,
+   "M4_recall_pct": 97.5,
+   "question_stray_teach": 0
+  },
+  "B": {
+   "M1_no_save_saved": 0,
+   "M2_wrong_saves": 1,
+   "M3_hit": 13,
+   "M3_gold": 122,
+   "M3_recall_pct": 10.7
+  }
+ },
+ "verdict": {
+  "M1": true,
+  "M2": false,
+  "M3": false,
+  "M3b": true,
+  "M4": true,
+  "M5": true,
+  "M6": true,
+  "ALL": false
+ },
+ "median_ms": 344.65
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('artifacts/claude-earcheck261-20260922/panel261_score.json'))
+for arm in ['A_raw','A_brake','A_gate','A','A_nocanon','B']:
+    m=s['marks'][arm]
+    print(arm,'M1:',m['M1_no_save_saved'],'M2:',m['M2_wrong_saves'],'M3:',str(m['M3_hit'])+'/'+str(m['M3_gold']),m['M3_recall_pct'],'M4:',m.get('M4_hit'),m.get('M4_hit') is not None and ('/'+str(m['M4_gold'])+' '+str(m['M4_recall_pct'])) or '')
+print('lat: med',s['median_ms'],'p90',s['p90_ms'],'max',s['max_ms'],'m6bad',s['m6_mismatch'])
+print('gpu:',json.dumps(s['gpu_summary']))
+print('curve:')
+for c in s['theta_curve']: print(' ',c)
+" 2>&1 | tail -35
+A_raw M1: 5 M2: 25 M3: 95/122 77.9 M4: 39 /40 97.5
+A_brake M1: 5 M2: 19 M3: 95/122 77.9 M4: 39 /40 97.5
+A_gate M1: 1 M2: 8 M3: 79/122 64.8 M4: 39 /40 97.5
+A M1: 1 M2: 9 M3: 95/122 77.9 M4: 39 /40 97.5
+A_nocanon M1: 1 M2: 12 M3: 92/122 75.4 M4: 39 /40 97.5
+B M1: 0 M2: 1 M3: 13/122 10.7 M4: None 
+lat: med 344.65 p90 700.91 max 1026.01 m6bad 0
+gpu: {"n": 150, "median_ms": 139.3395500490442, "p90_ms": 280.57440009433776, "max_ms": 368.7299999874085, "n_beamed": 87, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+curve:
+  {'theta': 0.0, 'recall': 0.7787, 'wrong': 19, 'wrong_rate': 0.1727}
+  {'theta': 0.05, 'recall': 0.7787, 'wrong': 11, 'wrong_rate': 0.1}
+  {'theta': 0.1, 'recall': 0.7787, 'wrong': 11, 'wrong_rate': 0.1}
+  {'theta': 0.15, 'recall': 0.7787, 'wrong': 11, 'wrong_rate': 0.1}
+  {'theta': 0.2, 'recall': 0.7787, 'wrong': 9, 'wrong_rate': 0.0818}
+  {'theta': 0.25, 'recall': 0.7787, 'wrong': 9, 'wrong_rate': 0.0818}
+  {'theta': 0.3, 'recall': 0.7787, 'wrong': 9, 'wrong_rate': 0.0818}
+  {'theta': 0.35, 'recall': 0.7787, 'wrong': 9, 'wrong_rate': 0.0818}
+  {'theta': 0.4, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.45, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.5, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.55, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.6, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.65, 'recall': 0.7787, 'wrong': 8, 'wrong_rate': 0.0727}
+  {'theta': 0.7, 'recall': 0.7787, 'wrong': 7, 'wrong_rate': 0.0636}
+  {'theta': 0.75, 'recall': 0.7787, 'wrong': 7, 'wrong_rate': 0.0636}
+  {'theta': 0.8, 'recall': 0.7787, 'wrong': 7, 'wrong_rate': 0.0636}
+  {'theta': 0.85, 'recall': 0.7705, 'wrong': 6, 'wrong_rate': 0.0545}
+  {'theta': 0.9, 'recall': 0.7623, 'wrong': 6, 'wrong_rate': 0.0545}
+  {'theta': 0.95, 'recall': 0.6066, 'wrong': 4, 'wrong_rate': 0.0364}
+  {'theta': 1.0, 'recall': 0.0, 'wrong': 0, 'wrong_rate': 0.0}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('artifacts/claude-earcheck261-20260922/panel261_score.json'))
+print('BY FAMILY (arm A):')
+for fam in ['plain_teach','varied_teach','full_names','corrections','no_save','questions','chain_questions']:
+    a=s['by_family']['A'][fam]
+    print(' ',fam,'n:',a['n'],'th:',str(a['teach_hit'])+'/'+str(a['teach_gold']),'wrong:',a['wrong'],'saved:',a['saved'],'ah:',str(a['ask_hit'])+'/'+str(a['ask_gold']),'exact:',a['exact'],'unsure:',a['unsure'])
+print('BY TAG (arm A), R-tags:')
+for t in sorted(s['by_tag']['A']):
+    if t.split(':')[0] in ('R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11','R12'):
+        a=s['by_tag']['A'][t]
+        print(' ',t,'n:',a['n'],'th:',str(a['teach_hit'])+'/'+str(a['teach_gold']),'wrong:',a['wrong'],'ah:',str(a['ask_hit'])+'/'+str(a['ask_gold']),'unsure:',a['unsure'])
+" 2>&1 | tail -30
+BY FAMILY (arm A):
+  plain_teach n: 25 th: 24/31 wrong: 3 saved: 27 ah: 0/0 exact: 20 unsure: 1
+  varied_teach n: 30 th: 37/50 wrong: 3 saved: 40 ah: 0/0 exact: 21 unsure: 4
+  full_names n: 15 th: 22/26 wrong: 0 saved: 22 ah: 0/0 exact: 13 unsure: 1
+  corrections n: 15 th: 12/15 wrong: 2 saved: 14 ah: 0/0 exact: 12 unsure: 0
+  no_save n: 25 th: 0/0 wrong: 1 saved: 1 ah: 0/0 exact: 23 unsure: 4
+  questions n: 25 th: 0/0 wrong: 0 saved: 0 ah: 24/25 exact: 24 unsure: 0
+  chain_questions n: 15 th: 0/0 wrong: 0 saved: 0 ah: 15/15 exact: 15 unsure: 0
+BY TAG (arm A), R-tags:
+  R10:stmt n: 4 th: 4/16 wrong: 0 ah: 0/0 unsure: 0
+  R11:stmt n: 4 th: 8/9 wrong: 1 ah: 0/0 unsure: 0
+  R12:stmt n: 4 th: 4/8 wrong: 0 ah: 0/0 unsure: 4
+  R1:stmt n: 7 th: 14/14 wrong: 0 ah: 0/0 unsure: 0
+  R2:no_save n: 4 th: 0/0 wrong: 0 ah: 0/0 unsure: 0
+  R2:stmt n: 3 th: 3/3 wrong: 0 ah: 0/0 unsure: 0
+  R3:stmt n: 5 th: 5/5 wrong: 0 ah: 0/0 unsure: 0
+  R4:questions n: 1 th: 0/0 wrong: 0 ah: 1/1 unsure: 0
+  R4:stmt n: 2 th: 2/2 wrong: 0 ah: 0/0 unsure: 0
+  R5:questions n: 2 th: 0/0 wrong: 0 ah: 2/2 unsure: 0
+  R5:stmt n: 6 th: 6/6 wrong: 0 ah: 0/0 unsure: 0
+  R6:chain_questions n: 6 th: 0/0 wrong: 0 ah: 6/6 unsure: 0
+  R7:stmt n: 4 th: 1/4 wrong: 2 ah: 0/0 unsure: 0
+  R8:no_save n: 3 th: 0/0 wrong: 0 ah: 0/0 unsure: 1
+  R8:stmt n: 3 th: 2/3 wrong: 0 ah: 0/0 unsure: 2
+  R9:no_save n: 5 th: 0/0 wrong: 0 ah: 0/0 unsure: 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('artifacts/claude-earcheck261-20260922/panel261_score.json'))
+d=s['details']
+print('details n:',len(d))
+for x in d:
+    print(x['status'],x['family'],','.join(x['tags']),'p='+str(x['pyes']),'|',x['claim'][:110])
+" 2>&1 | tail -25
+details n: 19
+WRONG plain_teach  p=0.973297 | the speaker's dog is NAME.
+WRONG plain_teach R7 p=0.971139 | the speaker's cat is NAME.
+HELD plain_teach R12 p=0.028201 | NAME lives in NAME.
+WRONG plain_teach typo p=0.848054 | NAME livs lives in NAME.
+WRONG varied_teach R7 p=0.962577 | the speaker's cat is NAME.
+HELD varied_teach R8 p=0.003493 | NAME works as pilot.
+HELD varied_teach R8 p=0.004661 | NAME lives in NAME.
+WRONG varied_teach R11 p=0.962008 | NAME's dog is NAME.
+HELD varied_teach R12 p=0.037956 | NAME speaks NAME.
+HELD varied_teach R12 p=0.019481 | NAME works for NAME.
+WRONG varied_teach typo p=0.679278 | the speaker's mother is bron in NAME.
+HELD full_names R12 p=0.039067 | NAME works for NAME.
+HELD no_save  p=0.172827 | darian lives in vellmar.
+HELD no_save  p=0.194676 | liora speaks kessic.
+HELD no_save  p=0.010558 | jovian works for copperline traders.
+WRONG no_save  p=0.368842 | NAME lives in NAME.
+HELD no_save R8 p=0.002938 | NAME works for NAME.
+WRONG corrections correction p=0.945935 | the speaker's dog is NAME.
+WRONG corrections  p=0.943365 | the speaker's cat is NAME.
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-earpanel257-20260922/SEAL.sha256.txt 2>&1 | head -3; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_turns.py --panel artifacts/claude-earpanel257-20260922/panel.jsonl --seal artifacts/claude-earpanel257-20260922/SEAL.sha256.txt --out /tmp/turns257.json 2>&1 | tail -1
+artifacts/claude-earpanel257-20260922/panel.jsonl: OK
+artifacts/claude-earpanel257-20260922/make_panel.py: OK
+  line 50: bad id 'e257-050'
+[0m
+[0m$ [0mhead -30 scripts/claude_smolear257_turns.py; echo '---'; head -20 scripts/claude_smolear257_panel.py | tail -12
+#!/usr/bin/env python3
+"""Exp 257 -- write the turn list [{id, turn}] for the GPU run from the strict 257 loader
+(panel sha + schema checked; nothing else read).
+python claude_smolear257_turns.py --panel P --out TURNS.json [--no-sha]"""
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_panel as P  # noqa: E402
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--panel", required=True)
+ap.add_argument("--out", required=True)
+ap.add_argument("--no-sha", action="store_true")
+a = ap.parse_args()
+items = P.load_panel(a.panel, check_sha=not a.no_sha)
+Path(a.out).write_text(json.dumps([dict(id=i["id"], turn=i["turn"]) for i in items], indent=1))
+print(len(items), "turns")
+---
+    chain_aliases[1] == relation_aliases
+Any deviation prints SCHEMA-MISMATCH and exits 3 (nothing scored). The panel file's sha256
+must equal the director's SEAL line (else exit 4).
+Scoring input: a two-hop ASK is scored on the hops in `chain`, with chain_aliases on EVERY hop;
+one hop uses relation_aliases. Tags: R-tags (R1, R1rel, R2tag, ...) and lower/typo/noq/correction
+from `notes`. `clear` is read for the schema only, never used for scoring.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_smolear257_turns.py --panel artifacts/claude-earpanel257-20260922/panel.jsonl --out /tmp/turns257.json 2>&1 | tail -1 && scp -q /tmp/turns257.json benspc:'C:/Users/benja/smolear235/run261/turns257.json' 2>&1 && echo SCP-OK
+150 turns
+SCP-OK
+[0m
+[0m$ [0msed -n 110,145p scripts/claude_smolear257_panel.py
+toks = d["notes"].split()
+        tags = sorted({t for t in toks if re.fullmatch(r"R\d\w*", t)} | (set(toks) & EXTRA_TAGS))
+        items.append(dict(id=d["id"], family=d["family"], turn=d["turn"], context=[], tags=tags, gold=gold))
+    return items
+[0m
+[0m$ [0msed -n 85,112p scripts/claude_smolear257_panel.py
+def load_panel(path, check_sha=True):
+    raw = Path(path).read_bytes()
+    if check_sha and hashlib.sha256(raw).hexdigest() != PANEL_SHA:
+        print("PANEL-SHA-MISMATCH", file=sys.stderr)
+        sys.exit(4)
+    lines = [json.loads(x) for x in raw.decode("utf-8").splitlines() if x.strip()]
+    errs = check(lines)
+    if errs:
+        print("SCHEMA-MISMATCH:", *errs[:50], sep="\n  ", file=sys.stderr)
+        sys.exit(3)
+    items = []
+    for d in lines:
+        gold = []
+        for g in d["gold"]:
+            al = [str(x) for x in g["relation_aliases"]]
+            if g["act"] == "ASK" and g["chain"]:
+                hops = [str(x).strip() for x in g["chain"]]
+                aliases = [[str(y) for y in x] for x in g["chain_aliases"]]
+            else:
+                hops, aliases = [str(g["relation"]).strip()], [al]
+            fr = dict(act=g["act"], subject=str(g["subject"]), relation=hops, aliases=aliases)
+            if g["act"] == "TEACH":
+                fr["value"] = str(g["value"])
+            gold.append(fr)
+        toks = d["notes"].split()
+        tags = sorted({t for t in toks if re.fullmatch(r"R\d\w*", t)} | (set(toks) & EXTRA_TAGS))
+        items.append(dict(id=d["id"], family=d["family"], turn=d["turn"], context=[], tags=tags, gold=gold))
+[0m
+[0m$ [0mgrep -n "b_frames\|bpreds\|b_preds" scripts/claude_smolear257_score.py | head -8; grep -n "def b_frames" -A 8 scripts/claude_smolear235_score.py | head -12
+38:    res = SC.score(items, apd["preds"], json.loads(Path(a.b_preds).read_text()), tau)
+109:def b_frames(rec):
+110-    out = []
+111-    for s, r, v in rec.get("triples", []):
+112-        out.append(dict(act="TEACH", subject=("me" if s == "USER" else s), relation=r, value=v))
+113-    return out
+114-
+115-
+116-def pct(a, b):
+117-    return round(100.0 * a / b, 1) if b else None
+[0m
+[0m← [0mWrite scripts/claude_earcheck261_score257.py
+Wrote file successfully.
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "cd C:\Users\benja\smolear235\scripts; python claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns C:\Users\benja\smolear235\run261\turns257.json --out C:\Users\benja\smolear235\run261\a_preds257.json --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3"' 2>&1 | tail -3
+{"n": 150, "median_ms": 142.25524995708838, "p90_ms": 277.49560005031526, "max_ms": 428.02560003474355, "n_beamed": 88, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mscp -q benspc:'C:/Users/benja/smolear235/run261/a_preds257.json' /tmp/a_preds257.json 2>&1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_qbuild.py --mode panel --turns /tmp/turns257.json --a-preds /tmp/a_preds257.json --prompt B --out /tmp/q257 2>&1 | tail -1
+150 turns -> 220 checks (prompt B)
+[0m
+[0m$ [0mscp -q /tmp/q257/checks.json benspc:'C:/Users/benja/smolear235/run261/checks257.json' 2>&1 && echo SCP-OK && ssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "cd C:\Users\benja\smolear235\scripts; python claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in C:\Users\benja\smolear235\run261\checks257.json --out C:\Users\benja\smolear235\run261\pyes257.json"' 2>&1 | tail -2
+SCP-OK
+{"n": 220, "fallbacks": 0, "median_ms": 285.9, "p90_ms": 315.1, "max_ms": 429.4}
+[0m
+[0m$ [0mscp -q benspc:'C:/Users/benja/smolear235/run261/pyes257.json' /tmp/pyes257.json 2>&1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_earcheck261_score257.py --a-preds /tmp/a_preds257.json --pyes /tmp/pyes257.json --theta 0.25 --out /tmp/score257.json 2>&1 | tail -10
+A_raw M1: 5 M2: 18 M3: 100/112 89.3 M4: 39 40 97.5 M3b: None None
+A_brake M1: 5 M2: 10 M3: 100/112 89.3 M4: 39 40 97.5 M3b: None None
+A_gate M1: 1 M2: 2 M3: 80/112 71.4 M4: 39 40 97.5 M3b: None None
+A M1: 3 M2: 6 M3: 100/112 89.3 M4: 39 40 97.5 M3b: 2 1.8
+A_nocanon M1: 3 M2: 8 M3: 98/112 87.5 M4: 39 40 97.5 M3b: None None
+B M1: 0 M2: 6 M3: 15/112 13.4 M4: None None None M3b: None None
+median_ms: 347.01 p90: 711.15 max: 1075.1 m6_mismatch: 0
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-earcheck261-20260922/SEAL.sha256.txt 2>&1 | grep -vc "OK"; shasum -a 256 -c artifacts/claude-earcheck261-20260922/SEAL.sha256.txt 2>&1 | grep -v "OK" | head -3; echo SEAL-CHECK-DONE
+0
+SEAL-CHECK-DONE
+[0m
+[0m← [0mWrite artifacts/claude-earcheck261-20260922/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P261 OUTCOME (2026-09-22, resume builder) registered FAIL on M2/M3: A (checker theta 0.25) M1 1 (pass), M2 9 wrong saves (bar 1), M3 95/122 = 77.9 % (B 13/122 = 10.7 %), M3b 6/122 = 4.9 % (pass), M4 39/40 = 97.5 % (pass), M5 median 344.7 ms (pass), M6 0 mismatches (pass). Others: A_raw M1 5/M2 25, A_brake 5/19, A_gate 1/8 with M3 79/122 = 64.8 %, A_nocanon 1/12 with M3 92/122. Panel theta curve flat 77.9 % recall theta 0-0.8, wrong 19->7. Miss drivers: R10 plural relatives 4/16, R7 1/4; 8/9 wrongs passed checker with pYES >= 0.68. P261.1/.5/.6/.7/.8 right; .4 pass with 4.9 just under 5-12 range; .2/.3 ranges wrong. Report only (after run, once): 261 pipeline on earpanel257: A M1 3/M2 6/M3 100/112=89.3 %/M3b 1.8 %/M4 39/40; A_gate+canon M1 1/M2 2/M3 80/112; 257 sealed A was M1 1/M2 4/M3 78/112/M3b 21.4 %. Seals: 261 18/18 OK after runs; panel 261 2/2 OK; panel 257 2/2 OK (own loaders).
+EOF
+grep -c "P261" artifacts/fable-predictions-ledger.md
+9
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc 'powershell -NoProfile -Command "Stop-Process -Id 13444 -Force; Start-Sleep -Seconds 8; Get-Process -Id 13444 -ErrorAction SilentlyContinue | Select-Object Id; tasklist /FI \"IMAGENAME eq llama-server.exe\""' 2>&1 | head -8
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc 'nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,power.draw --format=csv' 2>&1 | head -3; ssh -o ConnectTimeout=15 benspc 'curl -s -m 5 http://127.0.0.1:8081/health' 2>&1 | head -2; echo CURL-DONE
+index, name, memory.used [MiB], memory.total [MiB], utilization.gpu [%], power.draw [W]
+0, NVIDIA GeForce RTX 5070 Ti, 271 MiB, 16303 MiB, 0 %, 8.77 W
+CURL-DONE
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-earcheck261-20260922/SEAL.sha256.txt 2>&1 | grep -c ": OK"; git status --short artifacts/claude-earcheck261-20260922/ artifacts/fable-predictions-ledger.md scripts/claude_earcheck261_score257.py 2>&1 | head -20
+18
+ M artifacts/fable-predictions-ledger.md
+?? scripts/claude_earcheck261_score257.py
+[0m
+[0m# [0mTodos
+[✓] Verify prior work (theta repro, A_brake repro, ckpt sha, llama health)
+[✓] Synthetic fixture pilot of qbuild+scoremain plumbing (no panel contact)
+[✓] Write PASSMARKS.md, seal, append P261 ledger lines
+[✓] Verify panel SEAL OK, extract turns, GPU ear infer on BensPC
+[✓] Panel checker queries + llama-server run, arm B (Mac CPU)
+[✓] Score registered arms once + report-only 257-panel arm A
+[✓] Write RESULTS.md, stop llama-server PID 13444, confirm GPU release, final reply
+[0m

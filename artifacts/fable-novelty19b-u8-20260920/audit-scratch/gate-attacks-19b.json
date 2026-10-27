@@ -1,0 +1,343 @@
+{
+ "control: a true full pass": {
+  "case": "control: a true full pass",
+  "gates": "ok",
+  "rule_passed": true,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [],
+  "dev_passed_file": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/audit-scratch/gate19b-i0cjg886/DEV-PASSED.json",
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": true,
+  "as_expected": true
+ },
+ "one bounded cell at 57/64 in one seed": {
+  "case": "one bounded cell at 57/64 in one seed",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": true,
+   "999002": false,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999002:bounded_competence"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "one long cell strict 57, answers 64 (answers alone must not rescue)": {
+  "case": "one long cell strict 57, answers 64 (answers alone must not rescue)",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": false,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999001:bounded_competence"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "one F cell at 60/64 (mark is 61)": {
+  "case": "one F cell at 60/64 (mark is 61)",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": false
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999003:retention"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "one E guard cell at 57/64 strict pairs": {
+  "case": "one E guard cell at 57/64 strict pairs",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": false,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999001:guards"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "gain of exactly 13 (boundary: must PASS)": {
+  "case": "gain of exactly 13 (boundary: must PASS)",
+  "gates": "ok",
+  "rule_passed": true,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [],
+  "dev_passed_file": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/audit-scratch/gate19b-ape03qc8/DEV-PASSED.json",
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": true,
+  "as_expected": true
+ },
+ "gain of exactly 12 (boundary: must FAIL)": {
+  "case": "gain of exactly 12 (boundary: must FAIL)",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": false,
+   "999002": false,
+   "999003": false
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999001:treatment_effect",
+   "999002:treatment_effect",
+   "999003:treatment_effect"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "H loss of exactly 6 vs the awake anchor (must PASS)": {
+  "case": "H loss of exactly 6 vs the awake anchor (must PASS)",
+  "gates": "ok",
+  "rule_passed": true,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [],
+  "dev_passed_file": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/audit-scratch/gate19b-ydf2syj6/DEV-PASSED.json",
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": true,
+  "as_expected": true
+ },
+ "H loss of exactly 7 vs the awake anchor (must FAIL)": {
+  "case": "H loss of exactly 7 vs the awake anchor (must FAIL)",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": false,
+   "999002": false,
+   "999003": false
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999001:retention",
+   "999002:retention",
+   "999003:retention"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "missing endpoint: one awake anchor never scored": {
+  "case": "missing endpoint: one awake anchor never scored",
+  "gates": "ok",
+  "rule_passed": null,
+  "per_seed": {
+   "999001": null,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": null,
+  "failed_parts": [
+   "999001:retention"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "missing endpoint: one U5 control never scored": {
+  "case": "missing endpoint: one U5 control never scored",
+  "gates": "ok",
+  "rule_passed": null,
+  "per_seed": {
+   "999001": true,
+   "999002": null,
+   "999003": true
+  },
+  "provenance": null,
+  "failed_parts": [
+   "999002:treatment_effect"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "NaN counts in one cell": {
+  "case": "NaN counts in one cell",
+  "gates": "ok",
+  "report": "CRASH ValueError: cannot convert float NaN to integer",
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "swapped arm labels on one seed": {
+  "case": "swapped arm labels on one seed",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": null,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": false,
+  "failed_parts": [
+   "999001:bounded_competence",
+   "999001:guards",
+   "999001:retention",
+   "999001:treatment_effect"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "mixed source fingerprints across runs": {
+  "case": "mixed source fingerprints across runs",
+  "gates": "REFUSED: the merged runs were not produced by one frozen script version (2 distinct, differing in ['novelty19b_train']; 0 without a fingerprint).  Offending runs: ['offline-D-s999003-U8']",
+  "report": "REFUSED: the merged runs were not produced by one frozen script version (2 distinct).  Offending runs: ['offline-D-s999003-U8'].  The report was still written to /Users/ben-hannan/Desktop/projects/beautiful-mo",
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "drifted 19b DATA script between runs": {
+  "case": "drifted 19b DATA script between runs",
+  "gates": "REFUSED: the merged runs were not produced by one frozen script version (2 distinct, differing in ['novelty19b_data']; 0 without a fingerprint).  Offending runs: ['offline-D-s999002-U5']",
+  "report": "REFUSED: the merged runs were not produced by one frozen script version (2 distinct).  Offending runs: ['offline-D-s999002-U5'].  The report was still written to /Users/ben-hannan/Desktop/projects/beautiful-mo",
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "one run with no source fingerprint at all": {
+  "case": "one run with no source fingerprint at all",
+  "gates": "REFUSED: the merged runs were not produced by one frozen script version (1 distinct, differing in []; 1 without a fingerprint).  Offending runs: ['awake-D-s999001']",
+  "report": "REFUSED: the merged runs were not produced by one frozen script version (1 distinct).  Offending runs: ['awake-D-s999001'].  The report was still written to /Users/ben-hannan/Desktop/projects/beautiful-model/.",
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "duplicated run: the same run scored twice": {
+  "case": "duplicated run: the same run scored twice",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": false,
+  "failed_parts": [],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "one run scored on a different panel suite": {
+  "case": "one run scored on a different panel suite",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": false,
+  "failed_parts": [],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "a mid-run (1,500-update) checkpoint offered as the result": {
+  "case": "a mid-run (1,500-update) checkpoint offered as the result",
+  "gates": "ok",
+  "rule_passed": false,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": null
+  },
+  "provenance": false,
+  "failed_parts": [
+   "999003:bounded_competence",
+   "999003:guards",
+   "999003:retention",
+   "999003:treatment_effect"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "the two arms scored on different units in a contrast cell": {
+  "case": "the two arms scored on different units in a contrast cell",
+  "gates": "ok",
+  "rule_passed": null,
+  "per_seed": {
+   "999001": null,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [
+   "999001:treatment_effect"
+  ],
+  "dev_passed_file": null,
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": false,
+  "as_expected": true
+ },
+ "(rebuild for lockout tests)": {
+  "case": "(rebuild for lockout tests)",
+  "gates": "ok",
+  "rule_passed": true,
+  "per_seed": {
+   "999001": true,
+   "999002": true,
+   "999003": true
+  },
+  "provenance": true,
+  "failed_parts": [],
+  "dev_passed_file": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/audit-scratch/gate19b-ruzw97oe/DEV-PASSED.json",
+  "dev_passed_problems": [],
+  "DEV-PASSED.json on disk": true,
+  "as_expected": true
+ },
+ "lockout": {
+  "hand-made file, right shape, wrong schema": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a",
+  "experiment-19 DEV-PASSED.json presented verbatim": "experiment 19 has no DEV-PASSED.json on disk (it FAILED)",
+  "one offline checkpoint entry removed": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a",
+  "an extra checkpoint entry added": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a",
+  "checkpoint hash replaced by a non-sha string": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a",
+  "dev_panels manifest hash does not match the folder on disk": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a",
+  "empty file": "refused: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/a"
+ }
+}

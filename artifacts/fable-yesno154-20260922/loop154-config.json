@@ -1,0 +1,44 @@
+{
+ "daemon": {
+  "module": "Loop154Daemon (this file)"
+ },
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'",
+  "stand_in": "Loop154Ears (loop150 ears unchanged) over loop150 chain; yes/no is a loop-level stage (YesNo154Mixin over Loop150AgentLoop): an 'Is ...?' turn the forward path did not understand is rewritten into the wh-question the loop already answers and compared after the loop's own normalisation -- Yes on match, No only on single-valued last hops, 'I only know that ...' on multi-valued, honest abstain reply otherwise; never a write",
+  "tau_family": "tape",
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json"
+ },
+ "mouth": {
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth",
+  "stand_in": "FakeMouth (template sentences, content words from record)"
+ },
+ "notebook": {
+  "class": "Loop90Notebook",
+  "replacement": "none",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece"
+ },
+ "reasoner": {
+  "class": "QualifierAwareReasoner77",
+  "module": "scripts/fable_fix77_core.py",
+  "replacement": "none",
+  "stand_in": "none -- this reasoner IS the verified piece"
+ },
+ "sleeper": {
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "replacement": "scripts/fable_wire57_e2e.py install path",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks"
+ },
+ "sleep_threshold": 20,
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "replacement": "no further replacement; web text stays quarantined",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)"
+ }
+}

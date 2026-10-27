@@ -1,0 +1,13 @@
+---
+name: sleep-not-relations
+description: Ben 19:22 UTC 09-25 (angry): stop centring sleep/tests on family relations (~1% of the model's work); nights should almost always improve the model; threads should overlap functions
+metadata:
+  type: feedback
+---
+Ben, Fix-sleep thread, 2026-09-25 19:22 UTC: "I fucking hate how much you emphasize relations to this model ... genuinely 1% of the work this model will do." Also: nights making the model worse should be ~"1 in a billion"; compare RL, which rarely ends worse. And: threads should collaborate by partially overlapping their functions (coordinator relayed this to all threads 19:23).
+
+**Why:** every sleep test tonight (word sleeper, 363 school, 364 gates) was built on family-relation worlds because 0.1's word sleeper only learns relation words. Ben's goal is a general assistant (reasoning, creative, coding, tools, chat).
+**How to apply:** sleep must practise everything checkable the model does (creative lucky hits, puzzles, reasoning gym, code with tests, tool calls, chat quality via the grammar critic), with relations a small slice. Every night mixes in general/old practice (rehearsal), small steps, checked items only; target ≥95% of honest nights kept AND measurably better after a week. Undo is a rare safety net. Say plainly when a night design is at fault rather than implying nights naturally hurt. See [[fix-sleep-line]], [[brain-emulation-goal]].
+- Ben 19:26 UTC: proposed merging BORED + SLEEP into one downtime-learning mode (user points at topics; nights do more learning; only when unused). Asked why a failed self-check matters since RL "just improves itself". My answer (19:28): merge = yes (awake-idle practice gathers checked wins, periodic training step = night, stops when user speaks; 5 modes -> 4); make nights RL-shaped (many small steps, mixed practice, checker rewards only, KL leash to start); the check becomes a loose smoke alarm for big drops / broken checkers, not a per-night veto.
+- Ben 19:31: "You don't have to yes man me" -- give the rationale vs his idea; research before agreeing. My honest answer: per-night veto fits notebook writes, not weight training; our nights were SFT on hits, not RL (research pass on RL-vs-SFT forgetting running). Ben 19:37: "The model should rapidly improve for the work that it does day to day ... also for other stuff ... but specifically at the work its tasked with" => headline bar = fresh tasks of the day's kind clearly better next morning; other skills = no-drop, slow gain.
+- dl-1 (scripts/claude_dl1_nights.py, 7 nights, 1B puzzles, RL vs BIG) drafted, NOT registered; held for research. Base 1B arithmetic (a*b+c, a+b) scores ~0-2/10 thinking-off, so arithmetic is useless as a no-harm check.

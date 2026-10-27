@@ -1,0 +1,9 @@
+#!/bin/bash
+# FAKE date for the kit tests only: a virtual clock that runs FAKE_SPEED times faster than real time (pairs with the fake sleep) and
+# can be pushed forward by writing seconds into $FAKE/clock-jump. Without FAKE_SPEED it is the real date.
+REAL=/usr/bin/date
+[ -n "${FAKE_SPEED:-}" ] || exec $REAL "$@"
+rn=$($REAL +%s%N); j=$(cat "$FAKE/clock-jump" 2>/dev/null || echo 0)
+v=$(( FAKE_V0 + (rn - FAKE_R0) * FAKE_SPEED / 1000000000 + j ))
+for a in "$@"; do [ "$a" = "-d" ] && exec $REAL "$@"; done
+exec $REAL -d "@$v" "$@"

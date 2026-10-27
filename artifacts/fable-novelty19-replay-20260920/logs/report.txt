@@ -1,0 +1,441 @@
+================================================================================================
+novelty-19 report   experiment=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920
+seeds=[1900, 1901, 1902]   answers/strict are out of 64 per cell   "(missing)" means the run is not on disk
+score files found: 24   rejected: 0   runs expected: 24   missing: 0
+
+================================================================================================
+gates
+    awake fit D s1900 need 61/64 both: PASS   c1-r8=64/64  c1-r9=64/64  c1-r10=64/64  c2-r8=64/64  c2-r9=64/64  c3-r8=64/64  c3-r9=62/62
+    awake fit D s1901 need 61/64 both: PASS   c1-r8=64/64  c1-r9=64/64  c1-r10=64/64  c2-r8=64/64  c2-r9=64/64  c3-r8=64/64  c3-r9=64/64
+    awake fit D s1902 need 61/64 both: PASS   c1-r8=64/64  c1-r9=64/64  c1-r10=64/64  c2-r8=64/64  c2-r9=64/64  c3-r8=64/64  c3-r9=64/64
+    awake fit T s1900 need 61/64 both: PASS   c1-r8=64/64  c1-r9=64/64  c1-r10=64/64  c2-r8=64/64  c2-r9=64/64  c3-r8=64/64  c3-r9=64/64
+    awake fit T s1901 need 61/64 both: FAIL   c1-r8= 6/ 6  c1-r9= 4/ 4  c1-r10= 4/ 4  c2-r8= 4/ 4  c2-r9= 4/ 4  c3-r8= 5/ 5  c3-r9= 4/ 4
+    awake fit T s1902 need 61/64 both: FAIL   c1-r8= 5/ 5  c1-r9= 4/ 4  c1-r10= 4/ 4  c2-r8= 6/ 6  c2-r9= 5/ 5  c3-r8= 3/ 3  c3-r9= 5/ 5
+    generation gate s1900: PASS   c=4,r=8=117q/113w  c=4,r=9=102q/100w  c=5,r=8=31q/31w  c=5,r=9=44q/44w   identical_world_bytes=True  zero_composite_r10_exposure=True
+    generation gate s1901: PASS   c=4,r=8=96q/92w  c=4,r=9=106q/105w  c=5,r=8=34q/34w  c=5,r=9=34q/34w   identical_world_bytes=True  zero_composite_r10_exposure=True
+    generation gate s1902: PASS   c=4,r=8=118q/116w  c=4,r=9=99q/96w  c=5,r=8=37q/37w  c=5,r=9=40q/40w   identical_world_bytes=True  zero_composite_r10_exposure=True
+
+================================================================================================
+per seed x arch x arm x cell   (never averaged across seeds)
+
+--- arch D  seed 1900 ---
+    awake  awake-D-s1900          present
+    R      offline-D-s1900-R      present
+    G      offline-D-s1900-G      present
+    U      offline-D-s1900-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         4/ 0       4/ 0       5/ 0      46/46     +0    +46    58  fail
+    N-c4-p16        N    4         2/ 0       2/ 0       3/ 0      47/47     +0    +47    58  fail
+    N-c5-p6         N    5         3/ 0       6/ 0       3/ 0       6/ 0     +0     +0    58  fail
+    N-c5-p16        N    5         4/ 0       0/ 0       4/ 0       0/ 0     +0     +0    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-value      E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-irrelevant E    5         6/ 0       6/ 0       5/ 0       6/ 0     +0     +0    58  below
+    F-c1-r8         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r9         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r10        F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r8         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r9         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r8         F    3        64/64      64/64      63/63      64/64     -1     +0    61  mark
+    F-c3-r9         F    3        62/62      64/64      63/63      64/64     -1     +0    61  mark
+    P-c4-r8-p6      P    4         3/ 0       3/ 0       6/ 0      53/51     +0    +51    58  below
+    P-c4-r8-p16     P    4         6/ 0       6/ 0       2/ 0      49/48     +0    +48    58  below
+    P-c4-r9-p6      P    4         4/ 0       4/ 0       2/ 0      49/49     +0    +49    58  below
+    P-c4-r9-p16     P    4         5/ 0       5/ 0       3/ 0      49/48     +0    +48    58  below
+    P-c5-r8-p6      P    5         3/ 0       2/ 0       3/ 0       2/ 0     +0     +0    58  below
+    P-c5-r8-p16     P    5         1/ 0       2/ 0       1/ 0       2/ 0     +0     +0    58  below
+    P-c5-r9-p6      P    5         4/ 0       0/ 0       4/ 0       0/ 0     +0     +0    58  below
+    P-c5-r9-p16     P    5         1/ 0       3/ 0       1/ 0       3/ 0     +0     +0    58  below
+    H-c2-p6         H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c2-p16        H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c3-p6         H    3        63/63      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c3-p16        H    3        61/61      64/64      64/64      64/64     +0     +0     -  descriptive
+    L-c6-prac       L    6         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    L-c6-held       L    6         6/ 0       4/ 0       4/ 0       5/ 0     +0     +0    58  below
+    L-c7-prac       L    7         5/ 0       5/ 0       3/ 0       5/ 0     +0     +0    58  below
+    L-c7-held       L    7         5/ 0       5/ 0       8/ 0       5/ 0     +0     +0    58  below
+    L-c8-prac       L    8         2/ 0       2/ 0       6/ 0       4/ 0     +0     +0    58  below
+    L-c8-held       L    8         3/ 0       3/ 0       0/ 0       1/ 0     +0     +0    58  below
+
+--- arch D  seed 1901 ---
+    awake  awake-D-s1901          present
+    R      offline-D-s1901-R      present
+    G      offline-D-s1901-G      present
+    U      offline-D-s1901-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         3/ 0       3/ 0       3/ 0      62/61     +0    +61    58  fail
+    N-c4-p16        N    4         2/ 0       2/ 0       2/ 0      59/59     +0    +59    58  fail
+    N-c5-p6         N    5         1/ 0       0/ 0       6/ 0      52/51     +0    +51    58  fail
+    N-c5-p16        N    5         0/ 0       0/ 0       1/ 0      56/56     +0    +56    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       0/ 0      51/50     +0    +50    58  below
+    E-c5-value      E    5         0/ 0       0/ 0       0/ 0      48/48     +0    +48    58  below
+    E-c5-irrelevant E    5         3/ 0       2/ 0       5/ 0      54/54     +0    +54    58  below
+    F-c1-r8         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r9         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r10        F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r8         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r9         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r8         F    3        64/64      63/63      60/60      64/64     -3     +1    61  below
+    F-c3-r9         F    3        64/64      59/59      62/62      64/64     +3     +5    61  mark
+    P-c4-r8-p6      P    4         3/ 0       4/ 0       3/ 0      64/64     +0    +64    58  below
+    P-c4-r8-p16     P    4         6/ 0       6/ 0       6/ 0      62/62     +0    +62    58  below
+    P-c4-r9-p6      P    4         4/ 0       4/ 0       5/ 0      58/58     +0    +58    58  below
+    P-c4-r9-p16     P    4         5/ 0       5/ 0       5/ 0      60/60     +0    +60    58  below
+    P-c5-r8-p6      P    5         1/ 0       0/ 0       2/ 0      48/47     +0    +47    58  below
+    P-c5-r8-p16     P    5         2/ 0       1/ 0       2/ 0      52/51     +0    +51    58  below
+    P-c5-r9-p6      P    5         0/ 0       0/ 0       0/ 0      52/52     +0    +52    58  below
+    P-c5-r9-p16     P    5         3/ 0       1/ 0       3/ 0      53/53     +0    +53    58  below
+    H-c2-p6         H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c2-p16        H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c3-p6         H    3        64/64      64/64      63/62      64/64     -2     +0     -  descriptive
+    H-c3-p16        H    3        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    L-c6-prac       L    6         0/ 0       0/ 0       0/ 0       4/ 0     +0     +0    58  below
+    L-c6-held       L    6         0/ 0       0/ 0       4/ 0       7/ 1     +0     +1    58  below
+    L-c7-prac       L    7         2/ 0       5/ 0       5/ 0       3/ 0     +0     +0    58  below
+    L-c7-held       L    7         2/ 0       5/ 0       5/ 0       4/ 0     +0     +0    58  below
+    L-c8-prac       L    8         2/ 0       2/ 0       2/ 0       3/ 0     +0     +0    58  below
+    L-c8-held       L    8         2/ 0       3/ 0       2/ 0       4/ 0     +0     +0    58  below
+
+--- arch D  seed 1902 ---
+    awake  awake-D-s1902          present
+    R      offline-D-s1902-R      present
+    G      offline-D-s1902-G      present
+    U      offline-D-s1902-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         3/ 0       3/ 0       3/ 0      29/27     +0    +27    58  fail
+    N-c4-p16        N    4         2/ 0       2/ 0       2/ 0      29/27     +0    +27    58  fail
+    N-c5-p6         N    5         6/ 0       6/ 0       6/ 0      42/42     +0    +42    58  fail
+    N-c5-p16        N    5         0/ 0       0/ 0       0/ 0      43/42     +0    +42    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       0/ 0      33/32     +0    +32    58  below
+    E-c5-value      E    5         0/ 0       0/ 0       0/ 0      46/46     +0    +46    58  below
+    E-c5-irrelevant E    5         6/ 0       6/ 0       6/ 0      42/41     +0    +41    58  below
+    F-c1-r8         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r9         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r10        F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r8         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r9         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r8         F    3        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r9         F    3        64/64      64/64      63/63      64/64     -1     +0    61  mark
+    P-c4-r8-p6      P    4         3/ 0       3/ 0       3/ 0      59/59     +0    +59    58  below
+    P-c4-r8-p16     P    4         6/ 0       6/ 0       6/ 0      56/56     +0    +56    58  below
+    P-c4-r9-p6      P    4         4/ 0       4/ 0       4/ 0      55/54     +0    +54    58  below
+    P-c4-r9-p16     P    4         5/ 0       5/ 0       5/ 0      59/59     +0    +59    58  below
+    P-c5-r8-p6      P    5         2/ 0       2/ 0       2/ 0      38/37     +0    +37    58  below
+    P-c5-r8-p16     P    5         2/ 0       2/ 0       2/ 0      51/51     +0    +51    58  below
+    P-c5-r9-p6      P    5         0/ 0       0/ 0       0/ 0      46/45     +0    +45    58  below
+    P-c5-r9-p16     P    5         3/ 0       3/ 0       4/ 0      48/48     +0    +48    58  below
+    H-c2-p6         H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c2-p16        H    2        64/64      64/64      64/64      64/64     +0     +0     -  descriptive
+    H-c3-p6         H    3        64/64      64/64      63/62      27/24     -2    -40     -  descriptive
+    H-c3-p16        H    3        64/64      64/64      63/62      25/22     -2    -42     -  descriptive
+    L-c6-prac       L    6         0/ 0       0/ 0       0/ 0      13/11     +0    +11    58  below
+    L-c6-held       L    6         4/ 0       4/ 0       5/ 0      15/ 6     +0     +6    58  below
+    L-c7-prac       L    7         5/ 0       5/ 0       5/ 0       5/ 0     +0     +0    58  below
+    L-c7-held       L    7         5/ 0       5/ 0       5/ 0       4/ 1     +0     +1    58  below
+    L-c8-prac       L    8         2/ 0       2/ 0       2/ 0       2/ 0     +0     +0    58  below
+    L-c8-held       L    8         3/ 0       3/ 0       3/ 0       7/ 1     +0     +1    58  below
+
+--- arch T  seed 1900 ---
+    awake  awake-T-s1900          present
+    R      offline-T-s1900-R      present
+    G      offline-T-s1900-G      present
+    U      offline-T-s1900-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         1/ 0       1/ 0       3/ 0       3/ 0     +0     +0    58  fail
+    N-c4-p16        N    4         7/ 0       3/ 0       3/ 2       5/ 0     +2     +0    58  fail
+    N-c5-p6         N    5         2/ 0       0/ 0       6/ 5       5/ 0     +5     +0    58  fail
+    N-c5-p16        N    5         4/ 0       3/ 0       1/ 1       1/ 0     +1     +0    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-value      E    5         1/ 0       1/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-irrelevant E    5         3/ 0       1/ 0       5/ 2       4/ 2     +2     +2    58  below
+    F-c1-r8         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r9         F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c1-r10        F    1        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r8         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c2-r9         F    2        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r8         F    3        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    F-c3-r9         F    3        64/64      64/64      64/64      64/64     +0     +0    61  mark
+    P-c4-r8-p6      P    4         1/ 0       1/ 0      64/64      64/64    +64    +64    58  mark
+    P-c4-r8-p16     P    4         4/ 0       6/ 0      64/64      64/64    +64    +64    58  mark
+    P-c4-r9-p6      P    4         1/ 0       1/ 0      64/64      64/64    +64    +64    58  mark
+    P-c4-r9-p16     P    4         3/ 0       2/ 0      64/64      64/64    +64    +64    58  mark
+    P-c5-r8-p6      P    5         3/ 0       5/ 0      64/64      64/64    +64    +64    58  mark
+    P-c5-r8-p16     P    5         6/ 0       7/ 0      62/62      64/64    +62    +64    58  mark
+    P-c5-r9-p6      P    5         1/ 0       4/ 0      64/64      64/64    +64    +64    58  mark
+    P-c5-r9-p16     P    5         3/ 0       7/ 0      64/64      64/64    +64    +64    58  mark
+    H-c2-p6         H    2         8/ 8      25/25      31/31       6/ 5     +6    -20     -  descriptive
+    H-c2-p16        H    2         1/ 1      17/17      24/23       4/ 3     +6    -14     -  descriptive
+    H-c3-p6         H    3         6/ 0       5/ 0      18/13      14/ 0    +13     +0     -  descriptive
+    H-c3-p16        H    3         9/ 0       6/ 0       4/ 1       9/ 0     +1     +0     -  descriptive
+    L-c6-prac       L    6         2/ 0       0/ 0       4/ 0       4/ 0     +0     +0    58  below
+    L-c6-held       L    6         6/ 0       5/ 0       6/ 0       4/ 0     +0     +0    58  below
+    L-c7-prac       L    7         3/ 0       9/ 0       5/ 0       7/ 0     +0     +0    58  below
+    L-c7-held       L    7         8/ 0      10/ 0       0/ 0       3/ 0     +0     +0    58  below
+    L-c8-prac       L    8         7/ 0       7/ 0       1/ 0       5/ 0     +0     +0    58  below
+    L-c8-held       L    8         6/ 0       1/ 0       1/ 0       0/ 0     +0     +0    58  below
+
+--- arch T  seed 1901 ---
+    awake  awake-T-s1901          present
+    R      offline-T-s1901-R      present
+    G      offline-T-s1901-G      present
+    U      offline-T-s1901-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         5/ 0       1/ 0       3/ 3       4/ 2     +3     +2    58  fail
+    N-c4-p16        N    4         7/ 0       3/ 0       4/ 4       4/ 3     +4     +3    58  fail
+    N-c5-p6         N    5         5/ 0       5/ 0       5/ 5       6/ 6     +5     +6    58  fail
+    N-c5-p16        N    5         4/ 0       5/ 0       5/ 4       3/ 3     +4     +3    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       3/ 1       0/ 0     +1     +0    58  below
+    E-c5-value      E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-irrelevant E    5         3/ 0       1/ 0       3/ 3       5/ 5     +3     +5    58  below
+    F-c1-r8         F    1         6/ 6       3/ 3       5/ 5       7/ 7     +2     +4    61  below
+    F-c1-r9         F    1         4/ 4       2/ 2       3/ 3       4/ 4     +1     +2    61  below
+    F-c1-r10        F    1         4/ 4       2/ 2       7/ 7       4/ 4     +5     +2    61  below
+    F-c2-r8         F    2         4/ 4       2/ 2       5/ 5       4/ 4     +3     +2    61  below
+    F-c2-r9         F    2         4/ 4       6/ 6       1/ 1       4/ 4     -5     -2    61  below
+    F-c3-r8         F    3         5/ 5       6/ 6       4/ 4       3/ 3     -2     -3    61  below
+    F-c3-r9         F    3         4/ 4       6/ 6       6/ 6       2/ 2     +0     -4    61  below
+    P-c4-r8-p6      P    4         4/ 0       2/ 0       3/ 3       1/ 1     +3     +1    58  below
+    P-c4-r8-p16     P    4         3/ 0       5/ 0       6/ 6       5/ 5     +6     +5    58  below
+    P-c4-r9-p6      P    4         5/ 0       4/ 0       6/ 6       5/ 5     +6     +5    58  below
+    P-c4-r9-p16     P    4         1/ 0       0/ 0       7/ 7       7/ 7     +7     +7    58  below
+    P-c5-r8-p6      P    5         4/ 0       2/ 0       3/ 3       5/ 5     +3     +5    58  below
+    P-c5-r8-p16     P    5         1/ 0       3/ 0       3/ 2       5/ 5     +2     +5    58  below
+    P-c5-r9-p6      P    5         5/ 0       2/ 0       1/ 1       6/ 6     +1     +6    58  below
+    P-c5-r9-p16     P    5         3/ 0       1/ 0       4/ 4       2/ 2     +4     +2    58  below
+    H-c2-p6         H    2         3/ 3       1/ 0       3/ 0       5/ 3     +0     +3     -  descriptive
+    H-c2-p16        H    2         5/ 4       1/ 0       4/ 0       2/ 1     +0     +1     -  descriptive
+    H-c3-p6         H    3         2/ 2       0/ 0       4/ 1       2/ 0     +1     +0     -  descriptive
+    H-c3-p16        H    3         4/ 4       1/ 0       1/ 0       4/ 0     +0     +0     -  descriptive
+    L-c6-prac       L    6         1/ 0       1/ 0       4/ 0       3/ 0     +0     +0    58  below
+    L-c6-held       L    6         2/ 0       0/ 0       6/ 0       6/ 0     +0     +0    58  below
+    L-c7-prac       L    7         2/ 0       3/ 0       5/ 0       4/ 0     +0     +0    58  below
+    L-c7-held       L    7         4/ 0       2/ 0       3/ 0       4/ 0     +0     +0    58  below
+    L-c8-prac       L    8         3/ 0       2/ 0       6/ 0       4/ 0     +0     +0    58  below
+    L-c8-held       L    8         4/ 0       1/ 0       4/ 0       5/ 0     +0     +0    58  below
+
+--- arch T  seed 1902 ---
+    awake  awake-T-s1902          present
+    R      offline-T-s1902-R      present
+    G      offline-T-s1902-G      present
+    U      offline-T-s1902-U      present
+    cell            fam  c        awake          R          G          U    G-R    U-R  mark  verdict
+    ----------------------------------------------------------------------------------------
+    N-c4-p6         N    4         3/ 0       2/ 0       4/ 3      24/24     +3    +24    58  fail
+    N-c4-p16        N    4         5/ 0       1/ 0       3/ 3      25/25     +3    +25    58  fail
+    N-c5-p6         N    5         7/ 0       5/ 0       6/ 5       1/ 1     +5     +1    58  fail
+    N-c5-p16        N    5         3/ 0       1/ 0       1/ 1       2/ 2     +1     +2    58  fail
+    E-c5-link       E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-value      E    5         0/ 0       0/ 0       0/ 0       0/ 0     +0     +0    58  below
+    E-c5-irrelevant E    5         2/ 0       1/ 0       3/ 3       3/ 3     +3     +3    58  below
+    F-c1-r8         F    1         5/ 5       3/ 3       6/ 6      23/23     +3    +20    61  below
+    F-c1-r9         F    1         4/ 4       3/ 3       4/ 4      25/25     +1    +22    61  below
+    F-c1-r10        F    1         4/ 4       3/ 3       4/ 4      21/21     +1    +18    61  below
+    F-c2-r8         F    2         6/ 6       7/ 7       2/ 2      22/22     -5    +15    61  below
+    F-c2-r9         F    2         5/ 5       6/ 6       3/ 3      24/24     -3    +18    61  below
+    F-c3-r8         F    3         3/ 3       4/ 4       4/ 4      26/26     +0    +22    61  below
+    F-c3-r9         F    3         5/ 5       3/ 3       4/ 4      26/26     +1    +23    61  below
+    P-c4-r8-p6      P    4         3/ 0       3/ 0      51/51      25/25    +51    +25    58  below
+    P-c4-r8-p16     P    4         4/ 0       2/ 0      53/53      23/23    +53    +23    58  below
+    P-c4-r9-p6      P    4         3/ 0       4/ 0      57/57      31/31    +57    +31    58  below
+    P-c4-r9-p16     P    4         4/ 0       1/ 0      60/60      23/23    +60    +23    58  mark
+    P-c5-r8-p6      P    5         5/ 0       3/ 0      55/55      27/27    +55    +27    58  below
+    P-c5-r8-p16     P    5         6/ 0       3/ 0      16/16      22/22    +16    +22    58  below
+    P-c5-r9-p6      P    5         4/ 0       3/ 0      50/50      21/21    +50    +21    58  below
+    P-c5-r9-p16     P    5         7/ 0       3/ 0      55/55      24/24    +55    +24    58  below
+    H-c2-p6         H    2         4/ 4       3/ 3       6/ 6       8/ 8     +3     +5     -  descriptive
+    H-c2-p16        H    2         3/ 3       2/ 2       4/ 4       3/ 3     +2     +1     -  descriptive
+    H-c3-p6         H    3         4/ 4       5/ 5       5/ 5       1/ 1     +0     -4     -  descriptive
+    H-c3-p16        H    3         6/ 6       5/ 5       0/ 0       4/ 4     -5     -1     -  descriptive
+    L-c6-prac       L    6         4/ 0       3/ 0       6/ 0       6/ 0     +0     +0    58  below
+    L-c6-held       L    6         5/ 0       5/ 0       2/ 0       6/ 0     +0     +0    58  below
+    L-c7-prac       L    7         3/ 0       4/ 0       4/ 0       8/ 0     +0     +0    58  below
+    L-c7-held       L    7         4/ 0       2/ 0       3/ 0       2/ 0     +0     +0    58  below
+    L-c8-prac       L    8         2/ 0       4/ 0       4/ 0       4/ 0     +0     +0    58  below
+    L-c8-held       L    8         3/ 0       7/ 0       5/ 0       4/ 0     +0     +0    58  below
+
+================================================================================================
+primary rule: every N cell in every seed needs >= 58/64 answers AND strict in the generated arm, and >= 13/64 strict over that seed's replay arm
+    D arm G (registered primary): fail   0/12 cell-seeds pass, 12 decided
+        s1900|N-c4-p6              treat= 5/ 0 replay= 4/ 0 gain=+0 -> fail
+        s1900|N-c4-p16             treat= 3/ 0 replay= 2/ 0 gain=+0 -> fail
+        s1900|N-c5-p6              treat= 3/ 0 replay= 6/ 0 gain=+0 -> fail
+        s1900|N-c5-p16             treat= 4/ 0 replay= 0/ 0 gain=+0 -> fail
+        s1901|N-c4-p6              treat= 3/ 0 replay= 3/ 0 gain=+0 -> fail
+        s1901|N-c4-p16             treat= 2/ 0 replay= 2/ 0 gain=+0 -> fail
+        s1901|N-c5-p6              treat= 6/ 0 replay= 0/ 0 gain=+0 -> fail
+        s1901|N-c5-p16             treat= 1/ 0 replay= 0/ 0 gain=+0 -> fail
+        s1902|N-c4-p6              treat= 3/ 0 replay= 3/ 0 gain=+0 -> fail
+        s1902|N-c4-p16             treat= 2/ 0 replay= 2/ 0 gain=+0 -> fail
+        s1902|N-c5-p6              treat= 6/ 0 replay= 6/ 0 gain=+0 -> fail
+        s1902|N-c5-p16             treat= 0/ 0 replay= 0/ 0 gain=+0 -> fail
+    D arm U (unstructured control): fail   2/12 cell-seeds pass, 12 decided
+        s1900|N-c4-p6              treat=46/46 replay= 4/ 0 gain=+46 -> fail
+        s1900|N-c4-p16             treat=47/47 replay= 2/ 0 gain=+47 -> fail
+        s1900|N-c5-p6              treat= 6/ 0 replay= 6/ 0 gain=+0 -> fail
+        s1900|N-c5-p16             treat= 0/ 0 replay= 0/ 0 gain=+0 -> fail
+        s1901|N-c5-p6              treat=52/51 replay= 0/ 0 gain=+51 -> fail
+        s1901|N-c5-p16             treat=56/56 replay= 0/ 0 gain=+56 -> fail
+        s1902|N-c4-p6              treat=29/27 replay= 3/ 0 gain=+27 -> fail
+        s1902|N-c4-p16             treat=29/27 replay= 2/ 0 gain=+27 -> fail
+        s1902|N-c5-p6              treat=42/42 replay= 6/ 0 gain=+42 -> fail
+        s1902|N-c5-p16             treat=43/42 replay= 0/ 0 gain=+42 -> fail
+    T arm G (registered primary): fail   0/12 cell-seeds pass, 12 decided
+        s1900|N-c4-p6              treat= 3/ 0 replay= 1/ 0 gain=+0 -> fail
+        s1900|N-c4-p16             treat= 3/ 2 replay= 3/ 0 gain=+2 -> fail
+        s1900|N-c5-p6              treat= 6/ 5 replay= 0/ 0 gain=+5 -> fail
+        s1900|N-c5-p16             treat= 1/ 1 replay= 3/ 0 gain=+1 -> fail
+        s1901|N-c4-p6              treat= 3/ 3 replay= 1/ 0 gain=+3 -> fail
+        s1901|N-c4-p16             treat= 4/ 4 replay= 3/ 0 gain=+4 -> fail
+        s1901|N-c5-p6              treat= 5/ 5 replay= 5/ 0 gain=+5 -> fail
+        s1901|N-c5-p16             treat= 5/ 4 replay= 5/ 0 gain=+4 -> fail
+        s1902|N-c4-p6              treat= 4/ 3 replay= 2/ 0 gain=+3 -> fail
+        s1902|N-c4-p16             treat= 3/ 3 replay= 1/ 0 gain=+3 -> fail
+        s1902|N-c5-p6              treat= 6/ 5 replay= 5/ 0 gain=+5 -> fail
+        s1902|N-c5-p16             treat= 1/ 1 replay= 1/ 0 gain=+1 -> fail
+    T arm U (unstructured control): fail   0/12 cell-seeds pass, 12 decided
+        s1900|N-c4-p6              treat= 3/ 0 replay= 1/ 0 gain=+0 -> fail
+        s1900|N-c4-p16             treat= 5/ 0 replay= 3/ 0 gain=+0 -> fail
+        s1900|N-c5-p6              treat= 5/ 0 replay= 0/ 0 gain=+0 -> fail
+        s1900|N-c5-p16             treat= 1/ 0 replay= 3/ 0 gain=+0 -> fail
+        s1901|N-c4-p6              treat= 4/ 2 replay= 1/ 0 gain=+2 -> fail
+        s1901|N-c4-p16             treat= 4/ 3 replay= 3/ 0 gain=+3 -> fail
+        s1901|N-c5-p6              treat= 6/ 6 replay= 5/ 0 gain=+6 -> fail
+        s1901|N-c5-p16             treat= 3/ 3 replay= 5/ 0 gain=+3 -> fail
+        s1902|N-c4-p6              treat=24/24 replay= 2/ 0 gain=+24 -> fail
+        s1902|N-c4-p16             treat=25/25 replay= 1/ 0 gain=+25 -> fail
+        s1902|N-c5-p6              treat= 1/ 1 replay= 5/ 0 gain=+1 -> fail
+        s1902|N-c5-p16             treat= 2/ 2 replay= 1/ 0 gain=+2 -> fail
+
+================================================================================================
+secondary families (reported for completeness; they do not decide the primary claim)
+    D E exchangeability invariants: mark 58/64   0/36 scored rows reach it   0 (missing)
+    D F ordinary awake fit: mark 61/64   82/84 scored rows reach it   0 (missing)
+    D P pressure / longer chains: mark 58/64   6/96 scored rows reach it   0 (missing)
+    D H held-out relation types (descriptive): descriptive only, no mark   48/48 scored
+    D L length generalisation: mark 58/64   0/72 scored rows reach it   0 (missing)
+    T E exchangeability invariants: mark 58/64   0/36 scored rows reach it   0 (missing)
+    T F ordinary awake fit: mark 61/64   28/84 scored rows reach it   0 (missing)
+    T P pressure / longer chains: mark 58/64   17/96 scored rows reach it   0 (missing)
+    T H held-out relation types (descriptive): descriptive only, no mark   48/48 scored
+    T L length generalisation: mark 58/64   0/72 scored rows reach it   0 (missing)
+
+================================================================================================
+mean call / output-length ceiling diagnostic
+    D: mean_calls against ceiling 16; closest approach 6.047 at s1902|U|L-c8-held (c=8, headroom 9.953, 37.8% of ceiling)
+        cells at >= 75% of the ceiling: 0
+    T: mean_output_tokens against ceiling 12; closest approach 8.094 at s1901|R|N-c5-p6 (c=5, headroom 3.906, 67.5% of ceiling)
+        cells at >= 75% of the ceiling: 0
+
+================================================================================================
+replicated forgetting screen (ruling 7, SECONDARY -- it cannot alter the primary verdict): awake-final minus offline-final on the 7 F and 4 H cells, answers and strict kept apart, each out of 64 and never added
+    a trigger needs ONE fixed (arch, arm, cell, metric) losing >= 7/64 in >= 2 of the 3 registered seeds; the denominator stays 3 seeds
+
+    arch D: NO-TRIGGER   0 triggered, 0 still reachable, 66 (arm, cell, metric) combinations
+    arm|cell|metric                            s1900             s1901             s1902  reps  verdict
+    U|H-c3-p6|answers                     63->64 d-1        64->64 d+0       64->27 d+37     1  no
+    U|H-c3-p6|strict                      63->64 d-1        64->64 d+0       64->24 d+40     1  no
+    U|H-c3-p16|answers                    61->64 d-3        64->64 d+0       64->25 d+39     1  no
+    U|H-c3-p16|strict                     61->64 d-3        64->64 d+0       64->22 d+42     1  no
+        no combination reached or can still reach the replication rule
+    awake-fit qualification by seed: s1900=True  s1901=True  s1902=True
+
+    arch T: UNDETERMINED   0 triggered, 66 still reachable, 66 (arm, cell, metric) combinations
+    arm|cell|metric                            s1900             s1901             s1902  reps  verdict
+    R|F-c1-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c1-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c1-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c1-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c1-r10|answers                    64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c1-r10|strict                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c2-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c2-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c2-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c2-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c3-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c3-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c3-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    R|F-c3-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    R|H-c2-p6|answers               awake 8 not-elig       gate-failed       gate-failed     0  open
+    R|H-c2-p6|strict                awake 8 not-elig       gate-failed       gate-failed     0  open
+    R|H-c2-p16|answers              awake 1 not-elig       gate-failed       gate-failed     0  open
+    R|H-c2-p16|strict               awake 1 not-elig       gate-failed       gate-failed     0  open
+    R|H-c3-p6|answers               awake 6 not-elig       gate-failed       gate-failed     0  open
+    R|H-c3-p6|strict                awake 0 not-elig       gate-failed       gate-failed     0  open
+    R|H-c3-p16|answers              awake 9 not-elig       gate-failed       gate-failed     0  open
+    R|H-c3-p16|strict               awake 0 not-elig       gate-failed       gate-failed     0  open
+    G|F-c1-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c1-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c1-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c1-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c1-r10|answers                    64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c1-r10|strict                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c2-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c2-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c2-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c2-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c3-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c3-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c3-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    G|F-c3-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    G|H-c2-p6|answers               awake 8 not-elig       gate-failed       gate-failed     0  open
+    G|H-c2-p6|strict                awake 8 not-elig       gate-failed       gate-failed     0  open
+    G|H-c2-p16|answers              awake 1 not-elig       gate-failed       gate-failed     0  open
+    G|H-c2-p16|strict               awake 1 not-elig       gate-failed       gate-failed     0  open
+    G|H-c3-p6|answers               awake 6 not-elig       gate-failed       gate-failed     0  open
+    G|H-c3-p6|strict                awake 0 not-elig       gate-failed       gate-failed     0  open
+    G|H-c3-p16|answers              awake 9 not-elig       gate-failed       gate-failed     0  open
+    G|H-c3-p16|strict               awake 0 not-elig       gate-failed       gate-failed     0  open
+    U|F-c1-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c1-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c1-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c1-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c1-r10|answers                    64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c1-r10|strict                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c2-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c2-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c2-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c2-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c3-r8|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c3-r8|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c3-r9|answers                     64->64 d+0       gate-failed       gate-failed     0  open
+    U|F-c3-r9|strict                      64->64 d+0       gate-failed       gate-failed     0  open
+    U|H-c2-p6|answers               awake 8 not-elig       gate-failed       gate-failed     0  open
+    U|H-c2-p6|strict                awake 8 not-elig       gate-failed       gate-failed     0  open
+    U|H-c2-p16|answers              awake 1 not-elig       gate-failed       gate-failed     0  open
+    U|H-c2-p16|strict               awake 1 not-elig       gate-failed       gate-failed     0  open
+    U|H-c3-p6|answers               awake 6 not-elig       gate-failed       gate-failed     0  open
+    U|H-c3-p6|strict                awake 0 not-elig       gate-failed       gate-failed     0  open
+    U|H-c3-p16|answers              awake 9 not-elig       gate-failed       gate-failed     0  open
+    U|H-c3-p16|strict               awake 0 not-elig       gate-failed       gate-failed     0  open
+    awake-fit qualification by seed: s1900=True  s1901=False  s1902=False
+
+================================================================================================
+accepted practice-length mix actually present in the buffers (ruling 8; the 6.5% / 40% figures are neither a quota nor an exact prediction)
+    s1900 G: 294/4096 questions at c=4/5 (7.2%), 0 fallbacks   {'c=1,r=10': 509, 'c=1,r=8': 436, 'c=1,r=9': 430, 'c=2,r=8': 889, 'c=2,r=9': 906, 'c=3,r=8': 325, 'c=3,r=9': 307, 'c=4,r=8': 117, 'c=4,r=9': 102, 'c=5,r=8': 31, 'c=5,r=9': 44}
+    s1900 U: 1659/4096 questions at c=4/5 (40.5%), 0 fallbacks   {'c=1,r=10': 269, 'c=1,r=8': 267, 'c=1,r=9': 268, 'c=2,r=8': 439, 'c=2,r=9': 404, 'c=3,r=8': 410, 'c=3,r=9': 380, 'c=4,r=8': 425, 'c=4,r=9': 414, 'c=5,r=8': 407, 'c=5,r=9': 413}
+    s1901 G: 270/4096 questions at c=4/5 (6.6%), 0 fallbacks   {'c=1,r=10': 475, 'c=1,r=8': 430, 'c=1,r=9': 486, 'c=2,r=8': 903, 'c=2,r=9': 908, 'c=3,r=8': 337, 'c=3,r=9': 287, 'c=4,r=8': 96, 'c=4,r=9': 106, 'c=5,r=8': 34, 'c=5,r=9': 34}
+    s1901 U: 1676/4096 questions at c=4/5 (40.9%), 0 fallbacks   {'c=1,r=10': 259, 'c=1,r=8': 277, 'c=1,r=9': 285, 'c=2,r=8': 405, 'c=2,r=9': 397, 'c=3,r=8': 404, 'c=3,r=9': 393, 'c=4,r=8': 424, 'c=4,r=9': 427, 'c=5,r=8': 433, 'c=5,r=9': 392}
+    s1902 G: 294/4096 questions at c=4/5 (7.2%), 0 fallbacks   {'c=1,r=10': 490, 'c=1,r=8': 438, 'c=1,r=9': 453, 'c=2,r=8': 909, 'c=2,r=9': 852, 'c=3,r=8': 342, 'c=3,r=9': 318, 'c=4,r=8': 118, 'c=4,r=9': 99, 'c=5,r=8': 37, 'c=5,r=9': 40}
+    s1902 U: 1640/4096 questions at c=4/5 (40.0%), 0 fallbacks   {'c=1,r=10': 276, 'c=1,r=8': 307, 'c=1,r=9': 287, 'c=2,r=8': 414, 'c=2,r=9': 393, 'c=3,r=8': 384, 'c=3,r=9': 395, 'c=4,r=8': 404, 'c=4,r=9': 418, 'c=5,r=8': 406, 'c=5,r=9': 412}
+
+================================================================================================
+evidence provenance
+    trainer version across 24 merged runs: one frozen script version (1 distinct)
+    D and T question bytes per seed and arm: identical
+
+================================================================================================
+registered development rule (D-G): fail
+    generation_gate      pass      ruling 1: >= 16 distinct (world, question) instances over >= 16 worlds for each of the four new structures, in every seed
+    awake_fit_gate       pass      section 5: >= 61/64 answers AND strict in all 7 F cells, every seed, architecture D
+    primary              FAIL      section 6: every N cell in every seed, D-G >= 58/64 answers AND strict and >= 13/64 strict over D-R
+    guard_E              FAIL      section 6: required anti-shortcut guard, D-G >= 58/64 strict pair units in each E cell
+    retention_F          FAIL      section 6: required retention, D-G >= 61/64 answers AND strict in each F cell after offline practice
+    evidence_complete    pass      every registered run scored on every cell of one panel suite, at the registered caps, from each run's final checkpoint, by ONE frozen script version, with no conflicting and no rejected score files
+
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/report.json
+not writing /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/DEV-PASSED.json: the registered development rule is not met

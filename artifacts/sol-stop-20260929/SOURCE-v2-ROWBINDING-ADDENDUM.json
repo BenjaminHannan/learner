@@ -1,0 +1,32 @@
+{
+  "schema": "sol_stop.source-v2.rowbinding.v1",
+  "utc": "2026-09-30T03:33:18.810497+00:00",
+  "scope": "provenance only: sealed v2 policies/marks/budgets unchanged",
+  "files": {
+    "scripts/sol_stop_adapter.py": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5",
+    "scripts/sol_stop_readiness_v2.py": "cd2764a76007f22cac3b229838bbb1d853be757cd9d47f1833764646ee710fbd",
+    "artifacts/sol-stop-20260929/READINESS-SPEC-v2.json": "9658b6f0db52cdc36b0664a27f9f5e26f0f1c5c0550ecb8168c36abd41a28612",
+    "handoff/queue/sol-stop-readiness-source-v2.md": "4b6ab9a5033e55013616a1aadd555459f77f11588cdae77e7b042b5a5f5d9574"
+  },
+  "identity_algorithm": "SHA256(UTF8(json.dumps({kind,tokens,slot},sort_keys=True,separators=(comma,colon),ensure_ascii=True)))",
+  "label_hash_algorithm": "SHA256(UTF8(json.dumps(target,sort_keys=True,separators=(comma,colon),ensure_ascii=True)))",
+  "binding": "DEV score arrays order matches frozen-inputs.json[DEV][kind]; noise_raw arrays match frozen-inputs.json[noise][kind]; batch iteration contiguous slices of 8, append in original order",
+  "row_binding_fields": [
+    "split",
+    "kind",
+    "ordinal",
+    "input_sha256",
+    "target_sha256",
+    "frozen_inputs_sha256",
+    "spec_sha256",
+    "runner_sha256",
+    "adapter_sha256",
+    "checkpoint_file_sha256",
+    "head_file_sha256",
+    "core_state_sha256"
+  ],
+  "no_inference_or_rescore": true,
+  "caveat": "TRAIN collection saves aggregated positive label counts, not full per-round labels/predictions. Frozen target tensors plus scored prediction arrays support DEV/noise recount only. It does not supply missing evidence for other workers or qualify human-grounded weights.",
+  "stage_proof_status": "NOT SHOWN",
+  "accepted_stop_ready": false
+}

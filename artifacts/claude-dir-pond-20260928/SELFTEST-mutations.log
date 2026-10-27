@@ -1,0 +1,5 @@
+Mutation checks of scripts/claude_dir_pond_selftest.py (run 2026-09-29 by the pond helper, torch 2.14.0 CPU, one edit at a time to claude_dir_pond_stop.py, file restored after each):
+1. penalty sign flipped (exp_cost - lam * exp_rounds)                 -> FAILS: formula check vs the hand loop (0.5338 vs 0.5486)
+2. stop head fed the live (not detached) state                        -> FAILS: body must equal the harness learner exactly (clipping off)
+3. per-round costs not detached (CE gradient reaches the body)        -> FAILS: same body-identity check
+Unmutated file                                                        -> "selftest": "ok"

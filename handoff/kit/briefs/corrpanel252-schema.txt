@@ -1,0 +1,72 @@
+CORRECTION PANEL 252: EXACT SCHEMA. The director fixed it on 2026-09-22. It is shared by the panel writer and the 252 builder.
+
+Folder: artifacts/claude-corrpanel252-20260922/
+Files:
+- panel.jsonl (100 lines)
+- base138k.jsonl (100 lines, same ids, same order)
+- README.md (TEST-ONLY)
+- SEAL.sha256.txt
+SEAL (from the repo root): shasum -a 256 artifacts/claude-corrpanel252-20260922/panel.jsonl artifacts/claude-corrpanel252-20260922/base138k.jsonl > artifacts/claude-corrpanel252-20260922/SEAL.sha256.txt
+Base agent: scripts/claude_loop138k_agent.py with artifacts/claude-merge138k-20260922/loop138k-config.json. Each dialog gets one fresh work dir and runs setup turns, then turn, then followup, in one session.
+
+panel.jsonl has one JSON object per line with EXACTLY these 10 fields:
+  id             "c252-001" ... "c252-100", in the family-block order below.
+  family         one of the 9 families below.
+  setup          list of strings, non-empty. The teach turns. For contextual_denial, contextual_correction and ambiguous, the LAST setup turn is a question or request whose base reply states the fact(s) the user then disputes.
+  turn           string. The one scored user turn: the denial, correction or question.
+  followup       string. A question asked right after turn, in the same dialog, about the disputed relation.
+  stated_facts   list of [subject, relation, value]: what the base stored after the setup, copied exactly.
+  expect_gone    list of [subject, relation, value]: triples that must NOT be stored after turn. It is [] for question_trap, unstored_denial and ambiguous.
+  expect_store   list of [subject, relation, value]: triples that MUST be stored after turn.
+                 - Corrections: the new value plus every untouched stated fact.
+                 - Denials: stated_facts minus expect_gone.
+                 - question_trap, unstored_denial and ambiguous: exactly stated_facts.
+                 - control: what the base correctly stores.
+  gold_followup  string or null. The value(s) the followup reply must contain; "A; B" means every part. null means the followup must give NO value from expect_gone. That is the case for denials, where the honest answer is "I don't know".
+  note           string: the wording variant being tested.
+
+Families (exact counts, 100 in total):
+  verb_denial            14  "X doesn't work at Y.", "X doesn't live in Y anymore.", "X no longer works for Y.", "That's not true, X doesn't speak Y."
+  possessive_denial      10  "X's boss isn't Y.", "Y is not X's sister.", "X's city is not Y."
+  contextual_denial      12  After the assistant stated ONE fact: "That's not true.", "That's wrong.", "No, that's not right.", "nope, wrong"
+  contextual_correction  14  After the assistant stated ONE fact: "No, it's Z.", "Actually it's Z.", "No, she lives in Z now.", "It's Z, not Y."
+  explicit_correction    12  "Actually, X lives in Z, not Y.", "X doesn't work at Y, X works at Z.", "Correction: X's boss is Z.", "I was wrong, X speaks Z."
+  unstored_denial         8  Denies a fact that was never stored, either a known person with another value or an unknown person. Nothing may change.
+  ambiguous               6  "That's wrong." / "No, it's Z." when the previous reply stated 2+ facts, or when there was no previous stated fact. Nothing may change.
+  question_trap          12  Questions that look like denials: "Doesn't X live in Y?", "Isn't Y X's boss?", "Is it true that X doesn't work at Y?", "Wasn't X born in Y?". Nothing may change.
+  control                12  Turns the base already handles right: plain teaches, plain questions, and any denial or correction wording that 138k already gets right.
+
+base138k.jsonl has one JSON object per line with EXACTLY these 9 fields:
+  id                     same id as panel.jsonl
+  setup_replies          list of strings
+  stored_after_setup     list of [subject, relation, value]
+  turn_reply             string
+  stored_after_turn      list of [subject, relation, value]
+  followup_reply         string
+  stored_after_followup  list of [subject, relation, value]
+  base_right             bool (scoring rule below)
+  base_wrong_value       bool (scoring rule below)
+
+Scoring rules. The writer's base_right and the builder's scorer must be identical. Triples are compared case-insensitively on all three parts.
+  store_ok      = expect_store is a subset of stored_after_turn,
+                  AND no expect_gone triple is in stored_after_turn,
+                  AND stored_after_turn is a subset of (stored_after_setup ∪ expect_store). This last condition means no junk writes.
+  followup_ok   = if gold_followup is set: every part appears in followup_reply (case-insensitive), AND followup_reply does not start with "I don't know" or "I do not know".
+                  if gold_followup is null: no value from expect_gone appears in followup_reply (whole word, case-insensitive).
+  wrong value   = followup_reply contains a value from expect_gone (whole word, case-insensitive).
+  followup write = stored_after_followup differs from stored_after_turn.
+  right         = store_ok AND followup_ok AND no followup write.
+  control items are right only if, in addition, turn_reply and followup_reply are byte-identical to base138k's.
+Schema check on load: every file is present; the fields are exactly as above; there are 9 families with the exact counts; the 100 ids match across both files. Any mismatch prints SCHEMA-MISMATCH, exits with code 3, and gives no verdict (VOID).
+
+Writer acceptance rules:
+- Every setup teach was saved on the base, and stated_facts == stored_after_setup.
+- In the contextual families, the base's reply to the last setup turn contains exactly one stored value, the disputed one.
+- In ambiguous items, that reply states 2+ values, or no fact was stated.
+- In the 5 cause families (verb_denial, possessive_denial, contextual_denial, contextual_correction, explicit_correction), at most 2 items per family may have base_right true. Replace the rest, and report per family.
+- control: 12/12 base_right true.
+- Fictional names only, 1 to 4 words, spread over at least 6 relations.
+- In each cause family:
+  - at least 2 items are typed in lowercase;
+  - at least half of the items use a wording NOT listed in this schema.
+- Never read agent code, design notes, other panels or any builder's folder.

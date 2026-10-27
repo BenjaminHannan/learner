@@ -1,0 +1,321 @@
+{
+ "agent": "loop167e",
+ "cases_file": "cases167e.json",
+ "n": 34,
+ "counts": {
+  "OK": 34
+ },
+ "overall": "OK",
+ "stored_equal": true,
+ "events_equal": true,
+ "nokey_synthetic_bad": [],
+ "wall_seconds": 2.3,
+ "cases": [
+  {
+   "n": 0,
+   "turn": "Ada's place of birth is Paris.",
+   "want_template": "saved",
+   "key": "place_of_birth",
+   "reply": "Saved: Ada's place of birth is Paris.",
+   "reply_base": "Saved: Ada's place of birth is Paris.",
+   "verdict": "OK"
+  },
+  {
+   "n": 1,
+   "turn": "Ada's birth year is 1900.",
+   "want_template": "saved",
+   "key": "birth_year",
+   "reply": "Saved: Ada's birth year is 1900.",
+   "reply_base": "Saved: Ada's birth year is 1900.",
+   "verdict": "OK"
+  },
+  {
+   "n": 2,
+   "turn": "Ada's country of citizenship is Spain.",
+   "want_template": "saved",
+   "key": "country_of_citizenship",
+   "reply": "Saved: Ada's country of citizenship is Spain.",
+   "reply_base": "Saved: Ada's country of citizenship is Spain.",
+   "verdict": "OK"
+  },
+  {
+   "n": 3,
+   "turn": "Bex's city is Riga.",
+   "want_template": "saved",
+   "key": null,
+   "reply": "Saved: Bex's city is Riga.",
+   "reply_base": "Saved: Bex's city is Riga.",
+   "verdict": "OK"
+  },
+  {
+   "n": 4,
+   "turn": "Where is Ada's place of birth?",
+   "want_template": "answer",
+   "key": "place_of_birth",
+   "reply": "Ada's place of birth is Paris.",
+   "reply_base": "Ada's place of birth is Paris.",
+   "verdict": "OK"
+  },
+  {
+   "n": 5,
+   "turn": "Where is Ada's birth year?",
+   "want_template": "answer",
+   "key": "birth_year",
+   "reply": "Ada's birth year is 1900.",
+   "reply_base": "Ada's birth year is 1900.",
+   "verdict": "OK"
+  },
+  {
+   "n": 6,
+   "turn": "Where is Ada's country of citizenship?",
+   "want_template": "answer",
+   "key": "country_of_citizenship",
+   "reply": "Ada's country of citizenship is Spain.",
+   "reply_base": "Ada's country of citizenship is Spain.",
+   "verdict": "OK"
+  },
+  {
+   "n": 7,
+   "turn": "Where is Bex's place of birth?",
+   "want_template": "missing",
+   "key": "place_of_birth",
+   "reply": "I don't know Bex's place of birth.",
+   "reply_base": "I don't know Bex's place_of_birth.",
+   "verdict": "OK"
+  },
+  {
+   "n": 8,
+   "turn": "Where is Bex's birth year?",
+   "want_template": "missing",
+   "key": "birth_year",
+   "reply": "I don't know Bex's birth year.",
+   "reply_base": "I don't know Bex's birth_year.",
+   "verdict": "OK"
+  },
+  {
+   "n": 9,
+   "turn": "Where is Bex's country of citizenship?",
+   "want_template": "missing",
+   "key": "country_of_citizenship",
+   "reply": "I don't know Bex's country of citizenship.",
+   "reply_base": "I don't know Bex's country_of_citizenship.",
+   "verdict": "OK"
+  },
+  {
+   "n": 10,
+   "turn": "Ada's place of birth is Lyon.",
+   "want_template": "conflict",
+   "key": "place_of_birth",
+   "reply": "I have Ada's place of birth as Paris. Do you want me to change it to Lyon?",
+   "reply_base": "I have Ada's place_of_birth as Paris. Do you want me to change it to Lyon?",
+   "verdict": "OK"
+  },
+  {
+   "n": 11,
+   "turn": "no",
+   "want_template": "other",
+   "key": null,
+   "reply": "Okay, I left it as it was.",
+   "reply_base": "Okay, I left it as it was.",
+   "verdict": "OK"
+  },
+  {
+   "n": 12,
+   "turn": "Ada's birth year is 1901.",
+   "want_template": "conflict",
+   "key": "birth_year",
+   "reply": "I have Ada's birth year as 1900. Do you want me to change it to 1901?",
+   "reply_base": "I have Ada's birth_year as 1900. Do you want me to change it to 1901?",
+   "verdict": "OK"
+  },
+  {
+   "n": 13,
+   "turn": "no",
+   "want_template": "other",
+   "key": null,
+   "reply": "Okay, I left it as it was.",
+   "reply_base": "Okay, I left it as it was.",
+   "verdict": "OK"
+  },
+  {
+   "n": 14,
+   "turn": "Ada's country of citizenship is Portugal.",
+   "want_template": "conflict",
+   "key": "country_of_citizenship",
+   "reply": "I have Ada's country of citizenship as Spain. Do you want me to change it to Portugal?",
+   "reply_base": "I have Ada's country_of_citizenship as Spain. Do you want me to change it to Portugal?",
+   "verdict": "OK"
+  },
+  {
+   "n": 15,
+   "turn": "no",
+   "want_template": "other",
+   "key": null,
+   "reply": "Okay, I left it as it was.",
+   "reply_base": "Okay, I left it as it was.",
+   "verdict": "OK"
+  },
+  {
+   "n": 16,
+   "turn": "Who is Ada's place of birth's mother?",
+   "want_template": "broken",
+   "key": "place_of_birth",
+   "reply": "Ada's place of birth is Paris, which is not someone I can look up.",
+   "reply_base": "Ada's place_of_birth is Paris, which is not someone I can look up.",
+   "verdict": "OK"
+  },
+  {
+   "n": 17,
+   "turn": "Who is Ada's birth year's mother?",
+   "want_template": "broken",
+   "key": "birth_year",
+   "reply": "Ada's birth year is 1900, which is not someone I can look up.",
+   "reply_base": "Ada's birth_year is 1900, which is not someone I can look up.",
+   "verdict": "OK"
+  },
+  {
+   "n": 18,
+   "turn": "Who is Ada's country of citizenship's mother?",
+   "want_template": "broken",
+   "key": "country_of_citizenship",
+   "reply": "Ada's country of citizenship is Spain, which is not someone I can look up.",
+   "reply_base": "Ada's country_of_citizenship is Spain, which is not someone I can look up.",
+   "verdict": "OK"
+  },
+  {
+   "n": 19,
+   "turn": "Forget Ada's place of birth.",
+   "want_template": "forgotten",
+   "key": "place_of_birth",
+   "reply": "Forgotten: Ada's place of birth.",
+   "reply_base": "Forgotten: Ada's place_of_birth.",
+   "verdict": "OK"
+  },
+  {
+   "n": 20,
+   "turn": "Forget Ada's birth year.",
+   "want_template": "forgotten",
+   "key": "birth_year",
+   "reply": "Forgotten: Ada's birth year.",
+   "reply_base": "Forgotten: Ada's birth_year.",
+   "verdict": "OK"
+  },
+  {
+   "n": 21,
+   "turn": "Forget Ada's country of citizenship.",
+   "want_template": "forgotten",
+   "key": "country_of_citizenship",
+   "reply": "Forgotten: Ada's country of citizenship.",
+   "reply_base": "Forgotten: Ada's country_of_citizenship.",
+   "verdict": "OK"
+  },
+  {
+   "n": 22,
+   "turn": "Where is Ada's place of birth?",
+   "want_template": "missing",
+   "key": "place_of_birth",
+   "reply": "I don't know Ada's place of birth.",
+   "reply_base": "I don't know Ada's place_of_birth.",
+   "verdict": "OK"
+  },
+  {
+   "n": 23,
+   "turn": "Cara was born in Oslo.",
+   "want_template": "saved",
+   "key": "place_of_birth",
+   "reply": "Saved: Cara's place of birth is Oslo.",
+   "reply_base": "Saved: Cara's place of birth is Oslo.",
+   "verdict": "OK"
+  },
+  {
+   "n": 24,
+   "turn": "Where was Cara born?",
+   "want_template": "answer",
+   "key": null,
+   "reply": "Cara's place of birth is Oslo.",
+   "reply_base": "Cara's place of birth is Oslo.",
+   "verdict": "OK"
+  },
+  {
+   "n": 25,
+   "turn": "Forget Cara's place of birth.",
+   "want_template": "forgotten",
+   "key": "place_of_birth",
+   "reply": "Forgotten: Cara's place of birth.",
+   "reply_base": "Forgotten: Cara's place_of_birth.",
+   "verdict": "OK"
+  },
+  {
+   "n": 26,
+   "turn": "Actually, Bex's country of citizenship is Spain.",
+   "want_template": "saved",
+   "key": "country_of_citizenship",
+   "reply": "Saved: Bex's country of citizenship is Spain.",
+   "reply_base": "Saved: Bex's country of citizenship is Spain.",
+   "verdict": "OK"
+  },
+  {
+   "n": 27,
+   "turn": "Where is Bex's country of citizenship?",
+   "want_template": "answer",
+   "key": null,
+   "reply": "Bex's country of citizenship is Spain.",
+   "reply_base": "Bex's country of citizenship is Spain.",
+   "verdict": "OK"
+  },
+  {
+   "n": 28,
+   "turn": "Where was Ada born?",
+   "want_template": "missing",
+   "key": "place_of_birth",
+   "reply": "I don't know Ada's place of birth.",
+   "reply_base": "I don't know Ada's place_of_birth.",
+   "verdict": "OK"
+  },
+  {
+   "n": 29,
+   "turn": "Zed's city is Quito.",
+   "want_template": "saved",
+   "key": null,
+   "reply": "Saved: Zed's city is Quito.",
+   "reply_base": "Saved: Zed's city is Quito.",
+   "verdict": "OK"
+  },
+  {
+   "n": 30,
+   "turn": "Where is Zed's city?",
+   "want_template": "answer",
+   "key": null,
+   "reply": "Zed's city is Quito.",
+   "reply_base": "Zed's city is Quito.",
+   "verdict": "OK"
+  },
+  {
+   "n": 31,
+   "turn": "",
+   "want_template": "clarify",
+   "key": null,
+   "reply": "I didn't catch anything.",
+   "reply_base": "I didn't catch anything.",
+   "verdict": "OK"
+  },
+  {
+   "n": 32,
+   "turn": "blarg nonsense xyz",
+   "want_template": "clarify",
+   "key": null,
+   "reply": "I didn't understand that. Could you say it another way?",
+   "reply_base": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK"
+  },
+  {
+   "n": 33,
+   "turn": "yes",
+   "want_template": "other",
+   "key": null,
+   "reply": "I wasn't waiting for an answer.",
+   "reply_base": "I wasn't waiting for an answer.",
+   "verdict": "OK"
+  }
+ ]
+}

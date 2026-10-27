@@ -1,0 +1,77 @@
+EXP 241b BRIEF: the mouth, stage A v2. This is the one diagnosis-driven follow-up to 241's registered FAIL. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full. 241's registered FAIL stays FAIL.
+
+Diagnosis, from 241's RESULTS.md and the director's review of the grades:
+1. BROKEN_CHAIN (17 misses). "…, which is not someone I can look up." follows values that are not people. A kept it because it is a scorer anchor.
+2. CONFLICT (20 misses). The new value in "Do you want me to change it to V?" is copied verbatim for the 172b confirm needle. This gives lowercase names (15) and missing articles or units (5).
+3. FORGOTTEN_ONE (2 misses), both real A defects:
+   - agreement with a plural-looking value ("noodles is");
+   - a title's "The" lowercased.
+4. Repeated list items (3 misses). The sweep generator drew duplicate values.
+5. AMBIGUOUS. All 30 replies show internal entity codes, for example "I know more than one X: X Tindthain (E7563) and X Griolstin (E6581)." The part-3 grader let them pass. Under rule 8 they are machine text, and a user can't use them. When the full names already differ, the codes add nothing.
+6. M5 wall at +17%. A's render costs ~1 ms per line against the suites' ~5.6 ms, so the +5% wall allows only ~0.3 ms per line.
+7. M4 losses (M4 passed, 111/9):
+   - "Saved: You live in X." (3);
+   - the of-form with multi-word names (5).
+
+Base and names: same base as 241 (scripts/claude_loop228_agent.py with artifacts/claude-determinism228-20260922/loop228-config.json). 241b = 241's layer, revised. Never edit an existing file.
+- Code: scripts/claude_mouth241b_*.py and scripts/claude_loop241b_agent.py
+- Artifacts: artifacts/claude-mouth241b-20260922/
+- Ledger: P241b.n
+
+The one change: A v2, the same layer with these fixes, and nothing else.
+a. BROKEN_CHAIN wording must be correct for any value type (person, place, organisation, thing, date, number) and keep the meaning: the chain stops at V because nothing is saved about V.
+b. CONFLICT confirm question
+   - The new value is rendered as a value in running English: an article where English needs one, and the units the user gave.
+   - A value that is plainly a proper name starts with a capital. Use a value-kind column in the say table (name / common / number / date / free). Capitalise only all-lowercase values of kind "name". Never touch internal capitals, and never touch a value that starts with a lowercase particle (van, von, de, da, di, du, der, la, le, bin, al).
+   - The stored value never changes. Only the rendered text does.
+c. Agreement
+   - Restructure forms so an arbitrary value never becomes the subject of an agreeing verb, or agree correctly.
+   - Keep a title's own capital "The".
+d. Lists: an exact repeated item is said once.
+e. AMBIGUOUS: drop "(E…)" codes when the listed full names already differ. When two names are identical, pass the line through unchanged and count it; the owner is the ambiguity handler.
+f. Rule 7 (the round-trip parse-back) gets cheaper. Cache it by template and slot shape, or parse back only the lines A changed. It must keep the same safety: a failed round trip still falls back to legacy_text as a sev-1 bug. Target: the suite wall within +5%.
+g. Optional, only if it adds no risk:
+   - the "Saved:" capital;
+   - the possessive instead of the of-form, unless the possessive would stack three or more levels.
+
+Scorer anchors: the only way to change what the frozen scorers look for.
+- A changed phrase that a frozen scorer matches on (the 224a/224c decline markers, the rt143 and bench abstain lists, the 172b confirm needle) gets a NEW scorer version. Copy the scorer to a new file and extend its anchor list or loosen its match: case-insensitive, and article-insensitive for the needle.
+- Never edit the old file. List every new version in PASSMARKS with a one-line reason.
+- Identity check (registered, below): the new versions give exactly the old verdicts on every saved row the old versions scored. That covers 228's rows and 241's rows.
+
+Test sets and seals
+- The 241 sweep and pairs are now dev material. You may use them to build and to check the fixes. They are not the registered test.
+- A FRESH sweep with a new sealed seed (SEED241B):
+  - about 1,200 replies with the same strata and act blocks as 241;
+  - fillers drawn without replacement inside each reply;
+  - at least 30 AMBIGUOUS replies;
+  - include identical-name AMBIGUOUS cases only if the base can really produce them.
+- FRESH M4 pairs with a new sealed seed: 120 pairs, stratified by act.
+- Graders use the director's style sheet v2 (briefs/241b-stylesheet.txt, sealed with sha256 in briefs/241b-stylesheet.sha256.txt). It is stricter than v1:
+  - entity codes are errors;
+  - repeated list items are errors;
+  - proper-name values must be capitalised;
+  - "someone" must refer to a person.
+  - Copy it into PASSMARKS §6 verbatim. Do not add exemptions.
+- Seal first: PASSMARKS, code, the say table v2, unit tests, the new scorer versions, the sweep generator and the pairs sampler. Then generate the sweep and pairs, seal them into SEAL2, and message the director with their paths and SHAs. The director launches fresh graders and a fresh judge. Never grade or judge yourself.
+
+Registered marks. The bars are 241's, plus S1:
+- M1: ≥ 99.0% grammatical overall AND ≥ 97% in every act stratum, from the director's graders on the fresh sweep. Plus every mechanical sub-mark at 0.
+- M2(a, b, c) as in 241.
+- M3 as in 241:
+  - GATE clean;
+  - only predicted moves;
+  - 0 verdict changes, where 241b's rows are scored with the new scorer versions and the base's rows with the old ones;
+  - 0 flips toward an abstain.
+- M4: 241b wins ≥ 70% of non-tie pairs AND loses ≤ 10% of all pairs, on the fresh pairs, from a fresh judge.
+- M5:
+  - median render ≤ 2 ms and p99 ≤ 20 ms (1 thread);
+  - suite wall within +5% of 228 under 241's D6 protocol (median of 3 alternated runs);
+  - check the load first.
+- S1, the anchor identity check: the new scorer versions reproduce the old verdicts on 100% of the saved rows they replace (count them and list any difference).
+- Sleep smoke: identical to 228 except agent, label and seconds.
+- Report-only, no bar:
+  - the old 241 sweep re-rendered through A v2, with its 42 old misses listed as fixed or not fixed;
+  - the rerender238 counts.
+
+Keep every registered run under 25 minutes. Finish with RESULTS.md and your final message: verdict, marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean.

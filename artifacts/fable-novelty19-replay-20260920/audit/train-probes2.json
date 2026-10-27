@@ -1,0 +1,105 @@
+{
+ "lockout_contents_check": {
+  "cases": {
+   "empty-object": {
+    "accepted": true,
+    "guard": {
+     "is_confirmation": true,
+     "kind": "confirmation",
+     "namespace": "astra-novelty19-confirm-v1",
+     "dev_passed": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/lock2/DEV-PASSED.json",
+     "dev_passed_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    }
+   },
+   "wrong-schema": {
+    "accepted": true,
+    "guard": {
+     "is_confirmation": true,
+     "kind": "confirmation",
+     "namespace": "astra-novelty19-confirm-v1",
+     "dev_passed": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/lock2/DEV-PASSED.json",
+     "dev_passed_sha256": "9857d8059f9f125611e6c0195cd8804c51e21e8021ddaff9df66589b320a1199"
+    }
+   },
+   "one-seed": {
+    "accepted": true,
+    "guard": {
+     "is_confirmation": true,
+     "kind": "confirmation",
+     "namespace": "astra-novelty19-confirm-v1",
+     "dev_passed": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/lock2/DEV-PASSED.json",
+     "dev_passed_sha256": "3d0579e20406ca9886e11dd61b2741d347a3e9f5b0844501f18c5135c5d69291"
+    }
+   },
+   "not-json": {
+    "accepted": true,
+    "guard": {
+     "is_confirmation": true,
+     "kind": "confirmation",
+     "namespace": "astra-novelty19-confirm-v1",
+     "dev_passed": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/lock2/DEV-PASSED.json",
+     "dev_passed_sha256": "82d233c9388c8fecc2e2dc5d93933ba3cfee384c0a8bd599e2b7decf7a24af69"
+    }
+   }
+  },
+  "verdict": "guard_confirmation tests Path.exists() only; any bytes unlock confirmation"
+ },
+ "trainer_partial_cell_refusal": {
+  "manifest_hash_rewritten": "null",
+  "returncode": 1,
+  "stderr": "RuntimeError: panel changed on disk: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/dev-partial2/F-c1-r8.json",
+  "refused": true
+ },
+ "unregistered_scoring_knobs": {
+  "cases": {
+   "eval-cap-64": {
+    "returncode": 0,
+    "eval_cap": 64,
+    "answers": 8,
+    "oracle": false
+   },
+   "eval-cap-4": {
+    "returncode": 0,
+    "eval_cap": 4,
+    "answers": 8,
+    "oracle": false
+   },
+   "capacity-20": {
+    "returncode": 1,
+    "output_capacity": null,
+    "answers": null,
+    "stderr": "L-c8-held: the registered output capacity 20 would clamp a fixed position table -- output step index 19 >= OUT_STEP_SLOTS=16: BaselineTransformer.embed_stream w"
+   },
+   "capacity-9": {
+    "returncode": 0,
+    "output_capacity": 9,
+    "answers": 0,
+    "stderr": ""
+   }
+  },
+  "collect_scores_checks_cap": false,
+  "note": "score records eval_cap / output_capacity, but collect_scores, gates and report never read them back, so files produced at different caps merge silently; the ceiling diagnostic always divides by the registered constant"
+ },
+ "midrun_checkpoint": {
+  "returncode": 0,
+  "accepted": true,
+  "updates_done": 3,
+  "total_updates": 8,
+  "phase": "awake",
+  "run_key": "awake-D-s9991",
+  "note": "collect_scores keys only on arch/seed/phase/arm, so this file would be merged into the run as though it were the 6,000-update result"
+ },
+ "killed_chunk_resume": {
+  "returncode": 1,
+  "stderr": "refusing to overwrite /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/runs/killed/log-00000",
+  "refuses_to_continue": true,
+  "note": "a half-written chunk cannot be silently accepted, but the operator must delete the stale log by hand before the wave can be resumed"
+ },
+ "corrupt_checkpoint_resume": {
+  "returncode": 1,
+  "stderr": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/runs/corrupt already holds 8 updates but ha",
+  "refused": true,
+  "checkpoint_sha_verified_against_chunk_json": false,
+  "note": "the chunk-*.json records checkpoint_sha256 but resume never re-checks it"
+ }
+}

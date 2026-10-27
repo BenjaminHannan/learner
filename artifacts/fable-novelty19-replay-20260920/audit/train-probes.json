@@ -1,0 +1,320 @@
+{
+ "optimizer_reset": {
+  "awake-D": {
+   "updates_done": 8,
+   "phase": "awake",
+   "arm": null,
+   "optimizer_steps": [
+    8
+   ],
+   "n_param_groups": 1,
+   "lr": 0.00024,
+   "n_state_entries": 34
+  },
+  "awake-T": {
+   "updates_done": 8,
+   "phase": "awake",
+   "arm": null,
+   "optimizer_steps": [
+    8
+   ],
+   "n_param_groups": 1,
+   "lr": 3.2e-05,
+   "n_state_entries": 55
+  },
+  "off-D-R": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "R",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 0.00017999999999999998,
+   "n_state_entries": 34
+  },
+  "off-D-G": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "G",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 0.00017999999999999998,
+   "n_state_entries": 34
+  },
+  "off-D-U": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "U",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 0.00017999999999999998,
+   "n_state_entries": 34
+  },
+  "off-T-R": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "R",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 3.3e-05,
+   "n_state_entries": 55
+  },
+  "off-T-G": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "G",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 3.3e-05,
+   "n_state_entries": 55
+  },
+  "off-T-U": {
+   "updates_done": 6,
+   "phase": "offline",
+   "arm": "U",
+   "optimizer_steps": [
+    6
+   ],
+   "n_param_groups": 1,
+   "lr": 3.3e-05,
+   "n_state_entries": 55
+  }
+ },
+ "arm_fairness": {
+  "updates_compared": 6,
+  "world_index_order_shared": true,
+  "item_counts": {
+   "R": [
+    64,
+    64,
+    64,
+    64,
+    64,
+    64
+   ],
+   "G": [
+    64,
+    64,
+    64,
+    64,
+    64,
+    64
+   ],
+   "U": [
+    64,
+    64,
+    64,
+    64,
+    64,
+    64
+   ]
+  },
+  "owner_vectors_identical": true,
+  "story_bytes_identical": true,
+  "story_row_counts_identical": true,
+  "question_length_multisets": {
+   "R": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "G": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "U": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+   ]
+  },
+  "note": "the three arms must share the world bytes, the world order, the owner vector and the batch item count; only the question tokens may differ"
+ },
+ "frozen_operator": {
+  "sha256": "e7e5b6f3a6bfecf3890538bd0a14af7f5189b1565329e5cf411b52dd4d4dfbec",
+  "expected": "e7e5b6f3a6bfecf3890538bd0a14af7f5189b1565329e5cf411b52dd4d4dfbec",
+  "sha_matches": true,
+  "all_requires_grad_false": true,
+  "training_mode": false,
+  "operator_params_in_optimizer": false,
+  "operator_params_in_model": false,
+  "n_operator_params": 79316,
+  "dispatcher_params": 24035,
+  "foreign_checkpoint_refused": true,
+  "foreign_checkpoint_message": "frozen operator SHA-256 mismatch at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment",
+  "expect_is_always_registered_sha": true,
+  "fingerprint_unchanged_after_forward": true
+ },
+ "trained_hops": {
+  "awake/None": [
+   1,
+   2,
+   3
+  ],
+  "offline/R": [
+   1,
+   2,
+   3
+  ],
+  "offline/G": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "offline/U": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "held_out_relation_10_exposed": false,
+  "note": "only call counts, never relation ids or people identities; LE.trained_ranges uses them for annotation fields only"
+ },
+ "capacity_limits": {
+  "F-c1-r8": {
+   "awake/R": {
+    "unscorable_reason": null,
+    "needed_output_len": 2,
+    "needed_row_position_index": 9,
+    "needed_output_step_index": 11,
+    "row_position_slots": 16,
+    "output_step_slots": 16
+   },
+   "G/U": {
+    "unscorable_reason": null,
+    "needed_output_len": 2,
+    "needed_row_position_index": 9,
+    "needed_output_step_index": 11,
+    "row_position_slots": 16,
+    "output_step_slots": 16
+   },
+   "decision_independent_of_trained_hops": true
+  },
+  "N-c5-p16": {
+   "awake/R": {
+    "unscorable_reason": null,
+    "needed_output_len": 6,
+    "needed_row_position_index": 9,
+    "needed_output_step_index": 11,
+    "row_position_slots": 16,
+    "output_step_slots": 16
+   },
+   "G/U": {
+    "unscorable_reason": null,
+    "needed_output_len": 6,
+    "needed_row_position_index": 9,
+    "needed_output_step_index": 11,
+    "row_position_slots": 16,
+    "output_step_slots": 16
+   },
+   "decision_independent_of_trained_hops": true
+  },
+  "default_per_cell_caps": {
+   "N-c4-p6": 8,
+   "N-c4-p16": 8,
+   "N-c5-p6": 9,
+   "N-c5-p16": 9,
+   "E-c5-link": 9,
+   "E-c5-value": 9,
+   "E-c5-irrelevant": 9,
+   "F-c1-r8": 5,
+   "F-c1-r9": 5,
+   "F-c1-r10": 5,
+   "F-c2-r8": 6,
+   "F-c2-r9": 6,
+   "F-c3-r8": 7,
+   "F-c3-r9": 7,
+   "P-c4-r8-p6": 8,
+   "P-c4-r8-p16": 8,
+   "P-c4-r9-p6": 8,
+   "P-c4-r9-p16": 8,
+   "P-c5-r8-p6": 9,
+   "P-c5-r8-p16": 9,
+   "P-c5-r9-p6": 9,
+   "P-c5-r9-p16": 9,
+   "H-c2-p6": 6,
+   "H-c2-p16": 6,
+   "H-c3-p6": 7,
+   "H-c3-p16": 7,
+   "L-c6-prac": 10,
+   "L-c6-held": 10,
+   "L-c7-prac": 11,
+   "L-c7-held": 11,
+   "L-c8-prac": 12,
+   "L-c8-held": 12
+  },
+  "registered_fixed_capacity": 12
+ },
+ "marks": {
+  "FAMILY_MARK": {
+   "N": 58,
+   "E": 58,
+   "F": 61,
+   "P": 58,
+   "H": null,
+   "L": 58
+  },
+  "fit": [
+   "F-c1-r8",
+   "F-c1-r9",
+   "F-c1-r10",
+   "F-c2-r8",
+   "F-c2-r9",
+   "F-c3-r8",
+   "F-c3-r9"
+  ],
+  "primary": [
+   "N-c4-p6",
+   "N-c4-p16",
+   "N-c5-p6",
+   "N-c5-p16"
+  ],
+  "forget": [
+   "F-c1-r8",
+   "F-c1-r9",
+   "F-c1-r10",
+   "F-c2-r8",
+   "F-c2-r9",
+   "F-c3-r8",
+   "F-c3-r9",
+   "H-c2-p6",
+   "H-c2-p16",
+   "H-c3-p6",
+   "H-c3-p16"
+  ],
+  "E": [
+   "E-c5-link",
+   "E-c5-value",
+   "E-c5-irrelevant"
+  ],
+  "n_cells": 32
+ }
+}

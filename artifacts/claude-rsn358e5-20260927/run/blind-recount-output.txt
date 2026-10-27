@@ -1,0 +1,160 @@
+======================================================================
+1. INTEGRITY
+======================================================================
+warm  s3: arm=eq-replayall-warm  seed=3 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.2 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+warm  s4: arm=eq-replayall-warm  seed=4 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.8 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+warm  s5: arm=eq-replayall-warm  seed=5 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.3 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+warm  s6: arm=eq-replayall-warm  seed=6 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.0 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+warm  s7: arm=eq-replayall-warm  seed=7 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.0 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+warm  s8: arm=eq-replayall-warm  seed=8 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.7 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s3: arm=eq-replayall       seed=3 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=52.2 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s4: arm=eq-replayall       seed=4 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=51.3 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s5: arm=eq-replayall       seed=5 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=50.6 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s6: arm=eq-replayall       seed=6 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=50.9 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s7: arm=eq-replayall       seed=7 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=51.4 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+eq    s8: arm=eq-replayall       seed=8 size=small weights=1654446 torch=2.14.0+cu130 device=cpu minutes=51.7 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s3: arm=dense-replayall    seed=3 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=87.7 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s4: arm=dense-replayall    seed=4 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=86.2 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s5: arm=dense-replayall    seed=5 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=86.8 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s6: arm=dense-replayall    seed=6 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=85.9 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s7: arm=dense-replayall    seed=7 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=87.5 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+dense s8: arm=dense-replayall    seed=8 size=small weights=1646750 torch=2.14.0+cu130 device=cpu minutes=87.0 phases=['start', 'after_grids', 'after_sums', 'after_mazes']
+
+forced_batches (warm; marks say sums 225 after B, sums 225 + mazes 135 after C):
+  s3: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  s4: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  s5: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  s6: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  s7: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  s8: after B={'sums': 225, 'mazes': 0}  after C={'sums': 225, 'mazes': 135}  OK
+  eq: forced_batches key present in seeds [] (expected none)
+  dense: forced_batches key present in seeds [] (expected none)
+
+replayed counts (after B / after C), replayed_batches field:
+  warm  s3: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm  s4: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm  s5: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm  s6: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm  s7: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm  s8: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s3: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s4: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s5: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s6: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s7: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  eq    s8: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s3: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s4: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s5: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s6: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s7: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  dense s8: B replayed={'sums': {'grids': 250}, 'mazes': {}} replayed_batches=0 | C replayed={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} replayed_batches=None
+  warm replayed counts identical to eq on every seed and phase: True
+weights warm == eq on every seed: True
+integrity issues: none
+
+======================================================================
+2. REPRO: after-A (after_grids) dev scores, warm vs 358e4 eq-replayall
+======================================================================
+  s3: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=180 grids6=135 sums4=0 sums6=0 maze7=0
+  s4: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=159 grids6=101 sums4=0 sums6=0 maze7=0
+  s5: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=163 grids6=117 sums4=0 sums6=0 maze7=0
+  s6: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=173 grids6=136 sums4=0 sums6=0 maze7=0
+  s7: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=179 grids6=139 sums4=0 sums6=0 maze7=0
+  s8: scores identical (15 values: right/r16/any x 5 tasks)=True  | after-A expert_share identical=True | torch match=True (2.14.0+cu130 / 2.14.0+cu130) device match=True
+       warm after-A right: grids5=167 grids6=108 sums4=0 sums6=0 maze7=0
+REPRO scores: True; torch 2.14.0+cu130 on all warm and eq files: True
+  (same container cannot be checked from result.json; only torch/device are recorded)
+
+======================================================================
+3. M: new-group share (sum of experts 4-7 for sums4 after B; 8-11 for maze7 after C), per block
+======================================================================
+  s3: sums4 after B blocks=[0.87, 0.908] (True) | maze7 after C blocks=[0.347, 0.041] (True) -> seed meets M: True
+  s4: sums4 after B blocks=[0.667, 0.982] (True) | maze7 after C blocks=[0.734, 0.347] (True) -> seed meets M: True
+  s5: sums4 after B blocks=[0.988, 0.764] (True) | maze7 after C blocks=[0.534, 0.189] (True) -> seed meets M: True
+  s6: sums4 after B blocks=[1.0, 0.893] (True) | maze7 after C blocks=[0.745, 0.624] (True) -> seed meets M: True
+  s7: sums4 after B blocks=[0.938, 0.947] (True) | maze7 after C blocks=[0.653, 0.653] (True) -> seed meets M: True
+  s8: sums4 after B blocks=[0.949, 0.74] (True) | maze7 after C blocks=[0.526, 0.386] (True) -> seed meets M: True
+M: 6 of 6 seeds meet the 5% rule; need >= 5 -> True
+  for comparison, 358e4 eq-replayall on the same measure:
+    eq s3: sums4 B=[0.735, 0.787] maze7 C=[1.0, 0.121] -> True
+    eq s4: sums4 B=[0.0, 0.0] maze7 C=[0.694, 0.694] -> False
+    eq s5: sums4 B=[0.736, 0.815] maze7 C=[0.306, 0.0] -> True
+    eq s6: sums4 B=[0.863, 0.598] maze7 C=[0.0, 0.0] -> False
+    eq s7: sums4 B=[0.667, 0.904] maze7 C=[0.959, 0.653] -> True
+    eq s8: sums4 B=[0.966, 0.755] maze7 C=[0.0, 0.0] -> False
+    eq seeds meeting rule: 3 of 6
+  full expert_share lists (warm):
+    s3 sums4 after B: [[0.129, 0.0, 0.0, 0.0, 0.424, 0.123, 0.151, 0.172, 0.0, 0.0, 0.0, 0.0], [0.029, 0.0, 0.058, 0.005, 0.333, 0.13, 0.128, 0.317, 0.0, 0.0, 0.0, 0.0]]
+    s3 maze7 after C: [[0.0, 0.0, 0.23, 0.066, 0.356, 0.0, 0.0, 0.0, 0.041, 0.0, 0.0, 0.306], [0.0, 0.0, 0.034, 0.0, 0.306, 0.0, 0.619, 0.0, 0.041, 0.0, 0.0, 0.0]]
+    s4 sums4 after B: [[0.0, 0.0, 0.0, 0.333, 0.356, 0.311, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.001, 0.0, 0.017, 0.387, 0.195, 0.243, 0.157, 0.0, 0.0, 0.0, 0.0]]
+    s4 maze7 after C: [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.266, 0.387, 0.041, 0.0, 0.306], [0.387, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.266, 0.0, 0.041, 0.0, 0.306]]
+    s5 sums4 after B: [[0.0, 0.005, 0.0, 0.008, 0.122, 0.456, 0.207, 0.203, 0.0, 0.0, 0.0, 0.0], [0.169, 0.039, 0.029, 0.0, 0.341, 0.003, 0.205, 0.215, 0.0, 0.0, 0.0, 0.0]]
+    s5 maze7 after C: [[0.0, 0.0, 0.023, 0.06, 0.0, 0.0, 0.0, 0.383, 0.228, 0.306, 0.0, 0.0], [0.056, 0.32, 0.042, 0.0, 0.295, 0.056, 0.0, 0.041, 0.0, 0.043, 0.071, 0.075]]
+    s6 sums4 after B: [[0.0, 0.0, 0.0, 0.0, 0.277, 0.0, 0.48, 0.243, 0.0, 0.0, 0.0, 0.0], [0.001, 0.104, 0.002, 0.0, 0.281, 0.239, 0.333, 0.04, 0.0, 0.0, 0.0, 0.0]]
+    s6 maze7 after C: [[0.0, 0.0, 0.042, 0.0, 0.0, 0.0, 0.214, 0.0, 0.319, 0.001, 0.188, 0.237], [0.0, 0.0, 0.0, 0.0, 0.062, 0.308, 0.006, 0.0, 0.032, 0.269, 0.0, 0.323]]
+    s7 sums4 after B: [[0.005, 0.012, 0.0, 0.045, 0.313, 0.538, 0.048, 0.039, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.035, 0.018, 0.127, 0.251, 0.236, 0.333, 0.0, 0.0, 0.0, 0.0]]
+    s7 maze7 after C: [[0.0, 0.0, 0.0, 0.02, 0.02, 0.306, 0.0, 0.0, 0.0, 0.653, 0.0, 0.0], [0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.02, 0.306, 0.0, 0.0, 0.0, 0.653]]
+    s8 sums4 after B: [[0.0, 0.002, 0.0, 0.049, 0.359, 0.333, 0.257, 0.0, 0.0, 0.0, 0.0, 0.0], [0.077, 0.001, 0.059, 0.123, 0.352, 0.193, 0.044, 0.151, 0.0, 0.0, 0.0, 0.0]]
+    s8 maze7 after C: [[0.0, 0.301, 0.0, 0.0, 0.173, 0.0, 0.0, 0.0, 0.306, 0.22, 0.0, 0.0], [0.0, 0.031, 0.039, 0.021, 0.306, 0.21, 0.007, 0.0, 0.242, 0.0, 0.014, 0.13]]
+
+======================================================================
+4. N = sums4 after B + maze7 after C (right, of 400)
+======================================================================
+  s3: warm = 114 + 3 = 117 | eq = 75 + 7 =  82 | diff +35
+  s4: warm = 53 + 15 =  68 | eq = 0 + 0 =   0 | diff +68
+  s5: warm = 40 + 13 =  53 | eq = 84 + 11 =  95 | diff -42
+  s6: warm = 104 + 2 = 106 | eq = 113 + 0 = 113 | diff -7
+  s7: warm = 90 + 1 =  91 | eq = 78 + 2 =  80 | diff +11
+  s8: warm = 106 + 0 = 106 | eq = 108 + 0 = 108 | diff -2
+  mean N_warm = 90.17, mean N_eq = 79.67, gap = +10.50
+  seeds N_warm > N_eq: 3 of 6; seeds N_warm <= N_eq + 10: 3 of 6
+
+======================================================================
+5. VERDICT (marks in order: REPRO, M, PASS, proved wrong, else FAIL)
+======================================================================
+  REPRO: every after-A score equal on every seed = True; torch 2.14.0+cu130 both = True -> True
+  M: 6/6 seeds >= 5% in both (need 5) -> True
+  PASS (a): mean N_warm 90.17 >= mean N_eq + 50 = 129.67 -> False
+  PASS (b): N_warm > N_eq on 3/6 (need 5) -> False
+  Proved wrong: M=True; mean N_warm 90.17 <= mean N_eq + 10 = 89.67 -> False; N_warm <= N_eq + 10 on 3/6 (need 5) -> False -> False
+  VERDICT: FAIL
+
+======================================================================
+6. REPORT ONLY (never graded)
+======================================================================
+  s3: T warm=299 eq=261 dense=489 | warm-dense -190
+  s4: T warm=218 eq=148 dense=417 | warm-dense -199
+  s5: T warm=204 eq=238 dense=525 | warm-dense -321
+  s6: T warm=280 eq=285 dense=393 | warm-dense -113
+  s7: T warm=265 eq=243 dense=489 | warm-dense -224
+  s8: T warm=245 eq=264 dense=508 | warm-dense -263
+  mean T: warm 251.83, eq 239.83, dense 470.17; warm - dense = -218.33; seeds warm > dense: 0/6
+  358e4 bar row (+40 mean and 5 of 6 over dense): mean T_warm >= mean T_dense + 40 -> False; 0/6 >= 5 -> False
+  grids5 after B: warm [178, 150, 160, 175, 180, 155] mean 166.33 | eq [182, 146, 158, 176, 182, 156] mean 166.67 | dense [175, 156, 194, 133, 184, 181] mean 170.50
+  grids5 after C: warm [179, 146, 152, 171, 176, 145] mean 161.50 | eq [181, 148, 147, 176, 176, 158] mean 164.33 | dense [139, 103, 172, 60, 151, 143] mean 128.00
+  other per-seed scores (right), warm / eq / dense:
+    after_sums  grids5: warm [178, 150, 160, 175, 180, 155] eq [182, 146, 158, 176, 182, 156] dense [175, 156, 194, 133, 184, 181]
+    after_sums  grids6: warm [126, 93, 112, 121, 129, 97] eq [121, 95, 104, 116, 135, 96] dense [145, 116, 155, 84, 154, 138]
+    after_sums  sums4 : warm [114, 53, 40, 104, 90, 106] eq [75, 0, 84, 113, 78, 108] dense [200, 200, 200, 200, 200, 200]
+    after_sums  sums6 : warm [62, 16, 12, 68, 53, 58] eq [26, 0, 41, 73, 39, 59] dense [196, 196, 198, 200, 189, 198]
+    after_sums  maze7 : warm [0, 0, 0, 0, 0, 0] eq [0, 0, 0, 0, 0, 0] dense [0, 0, 0, 0, 0, 0]
+    after_mazes grids5: warm [179, 146, 152, 171, 176, 145] eq [181, 148, 147, 176, 176, 158] dense [139, 103, 172, 60, 151, 143]
+    after_mazes grids6: warm [117, 93, 104, 93, 124, 90] eq [106, 88, 96, 110, 110, 94] dense [62, 51, 136, 21, 83, 80]
+    after_mazes sums4 : warm [117, 57, 39, 107, 88, 100] eq [73, 0, 80, 109, 65, 106] dense [191, 195, 184, 195, 192, 194]
+    after_mazes sums6 : warm [59, 17, 11, 61, 51, 59] eq [31, 0, 42, 76, 34, 61] dense [168, 161, 161, 163, 147, 159]
+    after_mazes maze7 : warm [3, 15, 13, 2, 1, 0] eq [7, 0, 11, 0, 2, 0] dense [159, 119, 169, 138, 146, 171]
+
+======================================================================
+7. SENSITIVITY: alternative readings
+======================================================================
+  M with "all blocks" instead of "at least one block": 5/6
+  N using r16: warm [131, 73, 66, 108, 106, 111] mean 99.17 | eq [100, 0, 116, 119, 86, 123] mean 90.67 | gap +8.50 | >: 3/6, <=+10: 3/6
+  N using any: warm [186, 136, 110, 159, 149, 143] mean 147.17 | eq [151, 0, 155, 150, 132, 150] mean 123.00 | gap +24.17 | >: 4/6, <=+10: 3/6
+  N with sums4 after C (misreading): warm mean 90.33 eq mean 75.50 gap +14.83 >: 3/6
+  leave-one-seed-out mean gap (N_warm - N_eq): {3: 5.6, 4: -1.0, 5: 21.0, 6: 14, 7: 10.4, 8: 13}

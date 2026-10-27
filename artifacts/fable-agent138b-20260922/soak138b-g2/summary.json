@@ -1,0 +1,95 @@
+{
+ "status": "FAIL",
+ "seed": 931,
+ "turns_done": 4225,
+ "turns_planned": 6000,
+ "wall_s": 1500.6,
+ "plan_kinds": {
+  "teach": 3901,
+  "correct": 878,
+  "ask": 1221
+ },
+ "restarts": [
+  [
+   1063,
+   "kill"
+  ],
+  [
+   1075,
+   "kill"
+  ],
+  [
+   1232,
+   "kill"
+  ],
+  [
+   1585,
+   "kill"
+  ],
+  [
+   2067,
+   "kill"
+  ],
+  [
+   2266,
+   "kill"
+  ],
+  [
+   2891,
+   "kill"
+  ],
+  [
+   3862,
+   "kill"
+  ],
+  [
+   4677,
+   "kill"
+  ],
+  [
+   5844,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 6000 turns",
+   "pass": false,
+   "wrong": 1
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 10 restarts",
+   "pass": false
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 1.136,
+   "verify_s": 0.02
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": true,
+   "p99_1k_ms": 630.03,
+   "p99_end_ms": 4626.05
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": false,
+   "wall_s": 1500.6,
+   "turns_done": 4225
+  }
+ },
+ "fail": {
+  "mark": "K5",
+  "detail": "budget 1500.0s exceeded"
+ },
+ "final_stop_s": 0.28241896629333496,
+ "exactly_once": {
+  "replies_checked": 4225,
+  "doubled_sentence_replies": 0,
+  "doubled_seqs": [],
+  "receipt_ids": 4225,
+  "receipts_not_exactly_once": {}
+ }
+}

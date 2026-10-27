@@ -1,0 +1,14 @@
+BLIND PANEL SPEC: commapanel263 (no stored subject may contain a comma). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open scripts/claude_fix263_*, artifacts/claude-comma263-*, scripts/claude_fix260_* word lists or any builder dev file. Read only this spec, the openpanel260 spec (handoff/kit/briefs/openpanel260-spec.txt, for the field format, base-runner method and judgement rules ONLY) and OPUS-RULES.txt.
+
+Folder: artifacts/claude-commapanel263-20260923/ with panel.jsonl (60 items), base260.jsonl (60 rows), make_panel.py, run_base.py, README.md (category level only), SEAL.sha256.txt (sha256 of the four data/code files, repo-root paths).
+Base: the 260 arm = scripts/claude_loop260_agent.py with the 260 config from artifacts/claude-openers260-20260922/ (the file its RESULTS.md names). Run it exactly as the openpanel260 spec runs 138m. Same 10 panel fields and 10 base-row fields as openpanel260; ids c263-001 … c263-060.
+
+Families and exact counts (60):
+- unlisted_opener_teach 20: a teach that starts with an everyday opener or interjection most lists would miss, then a comma ("Yo,", "Listen,", "Right,", "Guess what,", "Get this,", "Honestly,", "Funny thing,", "Real talk,", "Heads up," ...), then a plain possessive or verb teach. expect_store = the plain teach's triple; the stored subject must be the name alone.
+- appositive_subject 10: "A, my R, works at B." / "A, who is my R, lives in B." Gold stores nothing whose subject contains a comma; expect_store holds what a plain reading stores (the fact about A), or [] when the base's plain teach of it stores nothing.
+- comma_value_ok 8: facts whose VALUE correctly contains a comma ("lives in Tollan, Vesk", "works at Fenwick, Ash and Rook"). The value may keep its comma; only subjects are guarded. expect_store = the plain teach's triple.
+- question 8: questions with an unlisted opener + comma. 0 writes; gold = the answer substring after setup teaches.
+- control 14: plain teaches and questions with no comma in the subject; must be byte-identical to base260.
+Rules: fictional names only; every item run once on base260 and stored; mark in note which items the base gets wrong. Report category level only: counts, how many base260 items store a comma subject (the junk count), SEAL lines and the shasum -c output. Never quote an item.

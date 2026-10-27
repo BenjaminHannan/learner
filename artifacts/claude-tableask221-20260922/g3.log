@@ -1,0 +1,32 @@
+G3 G3a (fable_loop167d_agent):
+    'Sabine works at Acme.' => "Saved: Sabine's employer is Acme."
+    'Where does Sabine work?' => "Sabine's employer is Acme."
+    stored=[['Sabine', 'employer', 'Acme']]
+    own-identical=True
+G3 G3b (fable_loop154d_agent):
+    "Bela's sister is Zuri." => "Saved: Bela's sister is Zuri."
+    "Is Zuri Bela's sister?" => "Yes, Bela's sister is Zuri."
+    stored=[['Bela', 'sister', 'Zuri']]
+    own-identical=True
+G3 G3c (fable_loop174_agent):
+    "Kim's boss is Lee." => "Saved: Kim's boss is Lee."
+    "Lee's city is Oslo." => "Saved: Lee's city is Oslo."
+    "What is the city of Kim's boss?" => "Kim's boss's city is Oslo."
+    stored=[['Kim', 'boss', 'Lee'], ['Lee', 'city', 'Oslo']]
+    own-identical=True
+G3 G3d (fable_loop173b_agent):
+    'My name is Juno.' => 'Saved: your name is Juno.'
+    'What is my name?' => 'Your name is Juno.'
+    stored=[['USER', 'name', 'Juno']]
+    own-identical=True
+G3 G3e (COMPOSED-167d-154e):
+    'Omar speaks Urdu.' => "Saved: Omar's language is Urdu."
+    'Omar speaks Hindi.' => "Saved: Omar's language is Hindi. (I also have Urdu.)"
+    "What is Omar's language?" => "Omar's language is Urdu and Hindi."
+    stored=[['Omar', 'language', 'Urdu'], ['Omar', 'language', 'Hindi']]
+G3 G3f (fable_loop154e_agent):
+    "Kim's boss is Lee." => "Saved: Kim's boss is Lee."
+    "No, Kim's boss is Sam, not Lee." => 'I can take one fact at a time — could you split that?'
+    stored=[['Kim', 'boss', 'Lee']]
+    own-identical=True
+G3 identical to sealed 138i: 6/6
