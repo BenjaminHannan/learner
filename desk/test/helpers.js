@@ -3,7 +3,9 @@ const http = require('http');
 
 // Scripted OpenAI-compatible streaming gateway. script: array of responses or functions(req)->response.
 // response: {content?, reasoning?, tool_calls?: [{name, arguments(object)}], delayMs?, hang?: true}
-function startGateway(script) {
+function startGateway(script, opts) {
+  const autoVerify = !!(opts && opts.autoVerify); // answer the agent's self-check turn with VERIFIED without consuming the script (e2e)
+  const checks = [];
   const requests = [];
   const headers = [];   // headers of each real request (parallel to requests)
   const warms = [];     // warm-up requests (X-Premonition-Warm): {body, headers}; they never consume the script
@@ -15,6 +17,14 @@ function startGateway(script) {
       if (req.url.endsWith('/models')) { res.setHeader('content-type', 'application/json'); return res.end('{"data":[]}'); }
       const parsed = JSON.parse(body || '{}');
       if (req.headers['x-premonition-warm']) { warms.push({ body: parsed, headers: req.headers }); res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '.' }, finish_reason: 'length' }] })); }
+      const lastMsg = (parsed.messages || []).at(-1);
+      if (autoVerify && lastMsg && lastMsg.role === 'user' && typeof lastMsg.content === 'string' && lastMsg.content.startsWith('[Self-check] Compare')) {
+        checks.push(parsed);
+        res.writeHead(200, { 'content-type': 'text/event-stream' });
+        res.write('data: ' + JSON.stringify({ choices: [{ index: 0, delta: { content: 'VERIFIED' }, finish_reason: null }] }) + '\n\n');
+        res.write('data: ' + JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] }) + '\n\n');
+        return res.end('data: [DONE]\n\n');
+      }
       requests.push(parsed); headers.push(req.headers);
       let r = script[Math.min(i, script.length - 1)];
       i++;
@@ -37,7 +47,7 @@ function startGateway(script) {
     });
   });
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({
-    url: 'http://127.0.0.1:' + server.address().port + '/v1', requests, headers, warms, close: () => { server.closeAllConnections && server.closeAllConnections(); server.close(); }
+    url: 'http://127.0.0.1:' + server.address().port + '/v1', requests, headers, warms, checks, close: () => { server.closeAllConnections && server.closeAllConnections(); server.close(); }
   })));
 }
 function chunk(s, n) { const o = []; for (let k = 0; k < s.length; k += n) o.push(s.slice(k, k + n)); return o; }

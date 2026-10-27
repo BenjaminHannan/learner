@@ -51,8 +51,13 @@ async function prepare(store) {
     // task 5: open_app(Safari) is refused
     () => ({ content: 'Opening Safari.', tool_calls: [{ name: 'open_app', arguments: { name: 'Safari' } }] }),
     (req) => { const t = lastTool(req); checks.push(['open_app refused Safari with a browser_go hint', /browser_go/.test(t) && /do not open a web browser/i.test(t)]); return { content: 'Right, I will use the built-in browser instead.' }; }
-  ]);
-  store.saveSettings({ gatewayUrl: gw.url, mode: 'hands-off', maxSteps: 20, helperMode: 'hands-off' });
+  ], { autoVerify: true }); // verify layer: the agent's self-check turn is answered VERIFIED without using up the script
+  store.saveSettings({ gatewayUrl: gw.url, mode: 'hands-off', maxSteps: 20, helperMode: 'hands-off', onboarded: true }); // first-run setup has its own section at the end
+  // sleep mode: a fake `python -m sleepmode` (test/fake-sleepmode.js) in the app's own temp dir, so nothing real is touched
+  const sleepHome = path.join(store.dir, 'sleepmode');
+  fs.mkdirSync(path.join(sleepHome, 'app'), { recursive: true });
+  store.saveSettings({ sleepPython: path.join(__dirname, 'fake-sleepmode.js') });
+  Object.assign(process.env, { FAKE_SLEEP_HOURS: '2.5', FAKE_SLEEP_CHECKIN: '1', FAKE_SLEEP_PERMISSION: '1' });
   return { site, gw, checks };
 }
 
@@ -86,7 +91,7 @@ const AUDIT = `(() => {
   return { n, bad };
 })()`;
 
-async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillWin, pillState, warmer, applySettings, env, pending, loginWaits, timing, getWin, showWindow, permsFake }) {
+async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, autoSleepTick, helpers, browsers, pillWin, pillState, warmer, applySettings, env, pending, loginWaits, timing, getWin, showWindow, permsFake }) {
   const fail = (m) => { console.error('E2E FAIL: ' + m); app.exit(1); };
   const timer = setTimeout(() => fail('timeout'), 170000);
   const wc = ui.webContents;
@@ -229,7 +234,7 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
     checks.push(['final answer rendered prominently', await ev('/Premonition result/.test((document.querySelector(".acol > .atext")||{}).textContent||"")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
     checks.push(['[Action: ...] lines are hidden', await ev('!/\\[Action/i.test(document.body.innerText)')]);
-    checks.push(['one activity group: "Did 3 things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did 3 things/.test(document.querySelector(".act-head").textContent) && !document.querySelector(".activity").classList.contains("open")')]);
+    checks.push(['one activity group: "Did 4 things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did 4 things/.test(document.querySelector(".act-head").textContent) && !document.querySelector(".activity").classList.contains("open")')]);
     checks.push(['chevron sits next to the label (not far right)', await ev('(() => { const t = document.querySelector(".act-title").getBoundingClientRect(), c = document.querySelector(".act-head .chev").getBoundingClientRect(); return c.left - t.right < 160; })()')]);
     checks.push(['card kept, no longer "browsing" after the run', await ev('!!document.querySelector(".bcard") && !document.querySelector(".bcard").classList.contains("active") && /Click to open/.test(document.querySelector(".bcard").textContent)')]);
     checks.push(['one assistant avatar per block', (await ev('document.querySelectorAll(".ablock > .avatar").length')) === 1]);
@@ -333,6 +338,7 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
     // reopen the thread: the card and the grouping come back
     await ev('document.querySelector("#btnThreads").click()');
     await sleep(300);
+    checks.push(['first-run setup stays out of the way once onboarded', await ev('document.querySelector("#onboard").hidden')]);
     await ev('document.querySelector("#threadList li").click()');
     await sleep(600);
     checks.push(['reopened thread restores browser card + activity groups', await ev('!!document.querySelector(".bcard .bc-thumb img") && document.querySelectorAll(".activity").length>=3')]);
@@ -352,8 +358,8 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
     // ---- settings sheet: every setting editable, applied at once and persisted
     await ev('window.__openSettings()');
     await sleep(300);
-    const keys = ['gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'vision', 'theme', 'textSize', 'highContrast', 'pill', 'openAtLogin', 'keepRunning', 'hotkey'];
-    checks.push(['settings sheet has a control for every setting', await ev('document.querySelectorAll("#settingsCol .s-row").length>=' + keys.length + ' && ' + JSON.stringify(['Model', 'Autonomy', 'Helpers', 'Memory', 'Screen control', 'Vision', 'Appearance', 'Startup']) + '.every((g)=>[...document.querySelectorAll(".s-group h2")].some((h)=>h.textContent===g))')]);
+    const keys = ['gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'verify', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'vision', 'theme', 'textSize', 'highContrast', 'pill', 'openAtLogin', 'keepRunning', 'hotkey'];
+    checks.push(['settings sheet has a control for every setting', await ev('document.querySelectorAll("#settingsCol .s-row").length>=' + keys.length + ' && ' + JSON.stringify(['Model', 'Autonomy', 'Glims', 'Diary', 'Memory', 'Screen control', 'Vision', 'Appearance', 'Startup']) + '.every((g)=>[...document.querySelectorAll(".s-group h2")].some((h)=>h.textContent===g))')]);
     checks.push(['settings: test connection button shows latency', await (async () => { await ev('document.querySelector("#testConn").click()'); return until(() => ev('/Connected · \\d+ ms/.test(document.querySelector("#testNote").textContent)'), 5000); })()]);
     checks.push(['settings: Open Accessibility / Screen Recording buttons present', await ev('[...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Accessibility settings/.test(b.textContent)) && [...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Screen Recording settings/.test(b.textContent))')]);
     checks.push(['settings: danger list shown', await ev('document.querySelectorAll(".danger-list li").length>=8')]);
@@ -392,6 +398,50 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
       checks.push(['text contrast AA in settings (dark)', a.bad.length === 0]);
     }
     await grab('ui-v2-settings.png');
+    // ---- Settings > Memory: add, list, edit, delete, refuse secrets; verify toggle
+    {
+      const typeIn = (sel, v, enter) => ev('(() => { const i=document.querySelector("' + sel + '"); i.focus(); i.value=' + JSON.stringify(v) + '; i.dispatchEvent(new Event("input",{bubbles:true})); ' + (enter ? 'i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));' : '') + ' })()');
+      const rows = () => ev('[...document.querySelectorAll("#memList .mem-row")].map((r)=>r.querySelector(".mem-text").value)');
+      checks.push(['memory: help text and empty state shown', await ev('/remembers these between chats/.test(document.querySelector("#settingsCol").innerText) && !!document.querySelector("#memList .mem-empty")')]);
+      await typeIn('#memTopic', 'classes');
+      await typeIn('#memNew', 'AP Chem is 3rd period with Mr. Phipps', true);
+      checks.push(['memory: Add (Enter) lists the fact and saves it', await until(async () => (await rows()).length === 1, 3000) && memory.list().length === 1 && memory.list()[0].text === 'AP Chem is 3rd period with Mr. Phipps' && memory.list()[0].topic === 'classes']);
+      await typeIn('#memTopic', 'school');
+      await typeIn('#memNew', 'Ben lives in Dresden and takes the bus to school');
+      await ev('document.querySelector("#memAdd").click()');
+      await until(async () => (await rows()).length === 2, 3000);
+      await typeIn('#memTopic', 'style');
+      await typeIn('#memNew', 'Prefers short answers without emoji');
+      await ev('document.querySelector("#memAdd").click()');
+      checks.push(['memory: Add button lists more facts', await until(async () => (await rows()).length === 3, 3000)]);
+      // edit: change the text, Enter saves
+      await ev('(() => { const i=document.querySelector("#memList .mem-text"); i.focus(); i.value="AP Chem is 4th period with Mr. Phipps"; i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true})); })()');
+      checks.push(['memory: editing a fact and pressing Enter saves it', await until(() => memory.list().some((f) => f.text === 'AP Chem is 4th period with Mr. Phipps'), 3000) && !memory.list().some((f) => /3rd period/.test(f.text))]);
+      // edit to a secret is refused inline and the old text stays
+      await ev('(() => { const i=document.querySelectorAll("#memList .mem-text")[1]; i.focus(); i.value="my password is hunter2"; i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true})); })()');
+      checks.push(['memory: editing to a secret is refused inline, old text kept', await until(() => ev('/Not saved/.test(document.querySelector("#memNote").textContent) && document.querySelector("#memNote").classList.contains("bad")'), 3000) && memory.list().every((f) => !/hunter2/.test(f.text)) && memory.list().length === 3]);
+      await typeIn('#memNew', 'The wifi password is hunter2', true);
+      await sleep(200);
+      checks.push(['memory: adding a secret-looking fact is refused inline and not stored', await until(() => ev('/Not saved: .*password/.test(document.querySelector("#memNote").textContent)'), 3000) && memory.list().length === 3 && (await rows()).length === 3]);
+      checks.push(['memory: a refused fact stays in the field so it can be fixed', await ev('document.querySelector("#memNew").value==="The wifi password is hunter2"')]);
+      await ev('document.querySelector("#memNew").value=""');
+      // the verify setting
+      checks.push(['settings: verify is on by default and the checkbox toggles it', store.getSettings().verify === true && await (async () => { await ev('document.querySelector("#settingsCol [aria-label^=\\"Double-check my work\\"]").click()'); const off = await until(() => store.getSettings().verify === false, 3000); await ev('document.querySelector("#settingsCol [aria-label^=\\"Double-check my work\\"]").click()'); return off && await until(() => store.getSettings().verify === true, 3000); })()]);
+      await ev('document.querySelector("#memNote").textContent=""; document.querySelector("#memNew").value=""');
+      await ev('document.querySelector("#memList").closest(".s-group").scrollIntoView({block:"start"})'); await sleep(400);
+      await ev('document.activeElement && document.activeElement.blur()');
+      await ev('(()=>{ let g=document.querySelector("#memList").closest(".s-group").nextElementSibling; while(g){ g.dataset.h="1"; g.style.display="none"; g=g.nextElementSibling; } })()'); // the screenshot is about Memory only
+      await ev('document.querySelector("#memList").closest(".s-group").scrollIntoView({block:"start"})');
+      await sleep(300);
+      await grab('ui-v2-memory.png');
+      await ev('document.querySelectorAll(".s-group[data-h]").forEach((g)=>{ g.style.display=""; delete g.dataset.h; })');
+      // delete
+      await ev('document.querySelector("#memList .mem-row .ghost").click()');
+      checks.push(['memory: Delete removes the fact from the list and the file', await until(async () => (await rows()).length === 2, 3000) && memory.list().length === 2]);
+      for (const f of memory.list()) memory.delete(f.id);
+      await ev('window.__openSettings()'); await sleep(300);
+      checks.push(['memory: list refreshes when Settings opens (facts changed behind its back)', await rows().then((r) => r.length === 0)]);
+    }
     checks.push(['settings: default hotkey is Alt+Space (Option+Space), keep running on, open at login off', store.getSettings().hotkey === 'Alt+Space' && store.getSettings().keepRunning === true && store.getSettings().openAtLogin === false]);
     await ev('document.querySelector("#settingsClose").click()');
 
@@ -415,7 +465,7 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
       }
       if (last.role === 'tool') return { content: 'The helper is on it.' };
       return { tool_calls: [{ name: 'agent_start', arguments: { name: 'site-checker', task: 'open the test shop and report its home page' } }] };
-    }]);
+    }], { autoVerify: true });
     store.saveSettings({ gatewayUrl: gw2.url });
     warmer.gatewayMoved();
     await send('Please have a helper check the shop home page');
@@ -436,11 +486,78 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
     checks.push(['helper listed idle with a summary', !!h0 && h0.status === 'idle' && /home page/.test(h0.lastSummary)]);
     await ev('document.querySelector("#btnThreads").click()');
     await sleep(300);
-    checks.push(['Agents section lists the helper', await ev('!document.querySelector("#agentsSec").hidden && document.querySelectorAll("#agentList li").length===1 && /site-checker/.test(document.querySelector("#agentList").innerText)')]);
+    checks.push(['Glims section lists the helper', await ev('!document.querySelector("#agentsSec").hidden && document.querySelectorAll("#agentList li").length===1 && /site-checker/.test(document.querySelector("#agentList").innerText)')]);
     await ev('document.querySelector("#agentList li").click()');
     await sleep(600);
     checks.push(['opening the helper thread shows its card and steps', await ev('!!document.querySelector(".bcard") && document.querySelectorAll(".step").length>=1 && /Report:/.test(document.body.innerText)')]);
     gw2.close();
+
+    // ---- memory_save in a run: the fact appears in Settings > Memory
+    {
+      const gw3 = await startGateway([
+        () => ({ content: 'Saving that.', tool_calls: [{ name: 'memory_save', arguments: { fact: 'Ben takes Spanish 2 in 5th period', topic: 'classes' } }] }),
+        () => ({ content: 'Got it, I will remember that.' })
+      ], { autoVerify: true });
+      store.saveSettings({ gatewayUrl: gw3.url });
+      warmer.gatewayMoved();
+      await ev('document.querySelector("#newThread").click()'); await sleep(300);
+      await send('Remember that I take Spanish 2 in 5th period');
+      await waitIdle('memory_save');
+      checks.push(['memory_save run: the step reads "Remembered: ..."', await ev('[...document.querySelectorAll(".step")].some((x)=>/Remembered: Ben takes Spanish 2/.test(x.innerText))')]);
+      checks.push(['memory_save run: the fact is stored with its topic', memory.list().some((f) => /Spanish 2/.test(f.text) && f.topic === 'classes')]);
+      await ev('window.__openSettings()'); await sleep(400);
+      checks.push(['memory_save run: the fact shows in Settings > Memory', await until(() => ev('[...document.querySelectorAll("#memList .mem-row")].some((r)=>/Spanish 2/.test(r.querySelector(".mem-text").value) && r.querySelector(".mem-chip").textContent==="classes")'), 3000)]);
+      await ev('document.querySelector("#settingsClose").click()');
+      for (const f of memory.list()) memory.delete(f.id);
+
+    // ---- sleep mode (fake sleepmode app): confirm sheet, asleep state, blocked runs, check-in alerts, wake, summary card
+    {
+      const vis = (sel) => ev('(()=>{const e=document.querySelector("' + sel + '"); return !!e && !e.hidden && e.getClientRects().length>0;})()');
+      await ev('window.__openSettings()'); await sleep(300);
+      checks.push(['sleep: Settings has a Sleep group, an enabled Sleep now button and a plain status line', await ev('[...document.querySelectorAll(".s-group h2")].some((h)=>h.textContent==="Sleep") && !document.querySelector("#sleepNow").disabled && /Has not slept yet/.test(document.querySelector("#sleepStat").textContent)')]);
+      await ev('document.querySelector("#settingsClose").click()');
+      checks.push(['sleep: the top bar has a Sleep button', await vis('#btnSleep')]);
+      await ev('document.querySelector("#btnSleep").click()'); await sleep(300);
+      checks.push(['sleep: confirm sheet says what happens and offers the scheduled-runs option (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /scheduled runs/.test(document.querySelector("#sleepSheet").innerText)')]);
+      await ev('document.querySelector("#sleepGo").click()');
+      checks.push(['sleep: confirming starts it and the sheet closes', await until(() => sl.asleep && sleeper.status().sleeping, 6000) && !(await vis('#sleepSheet'))]);
+      await until(() => ev('!document.querySelector("#sleepBar").hidden'), 3000);
+      checks.push(['sleep: composer shows a big Wake Glim button, Glim looks sleepy', await ev('document.querySelector("#btnWake").textContent==="Wake Glim" && document.querySelector("#btnSend").hidden && window.__mood()==="sleepy" && document.querySelector("#gw span").textContent==="Asleep"')]);
+      checks.push(['sleep: the pill rests as "Sleeping · 2.5 h" (demo run labelled, no invented quiz)', await until(() => !!pillState.sleep && /^Sleeping · 2\.5 h · demo$/.test(pillState.sleep.line), 4000)]);
+      checks.push(['sleep: scheduled Glim runs are held while asleep', helpers.o.hold() === true]);
+      checks.push(['sleep: sending is refused with a friendly message', await ev('window.desk.agent.send(window.__threadId ? window.__threadId() : "x", "hello").then((r) => !!r.sleeping && /asleep/i.test(r.error))')]);
+      checks.push(['sleep: a check-in alert flashes the pill and a notice appears; a missing permission is explained', await until(() => pillState.agents.has('sleep-alert') && /Quiz moved to today|check-in alert/.test(pillState.agents.get('sleep-alert').line), 5000) && await until(() => ev('/Check-in: .*Quiz moved/.test(document.body.innerText) && /need permission to read Calendar/.test(document.body.innerText) && /Automation/.test(document.body.innerText)'), 3000)]);
+      await ev('(()=>{const i=document.querySelector("#input");i.value="what is due tomorrow?";i.dispatchEvent(new Event("input"));i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));})()');
+      checks.push(['sleep: typing while asleep offers "Wake Glim and send this?" and keeps the text', await vis('#wakeAsk') && await ev('/Wake Glim and send this/.test(document.querySelector("#wakeAsk").innerText) && document.querySelector("#input").value==="what is due tomorrow?"')]);
+      await ev('document.querySelector("#wakeAskNo").click(); document.querySelector("#input").value=""');
+      await ev('document.querySelector("#scroll").scrollTop = 1e6'); await sleep(300);
+      await grab('ui-v2-sleep-asleep.png');
+      await ev('document.querySelector("#btnWake").click()');
+      checks.push(['sleep: Wake shows Waking up… then Glim is awake again', await until(() => ev('document.querySelector("#sleepBar").hidden && !document.querySelector("#btnSend").hidden'), 12000) && !sl.asleep && !sleeper.status().sleeping]);
+      checks.push(['sleep: a While you slept card shows the summary (rendered markdown, demo labelled)', await until(() => ev('(()=>{const c=document.querySelector(".wslept"); return !!c && /While you slept/.test(c.innerText) && /demo run/i.test(c.innerText) && c.querySelectorAll("li").length>=2 && !!c.querySelector("strong");})()'), 4000)]);
+      checks.push(['sleep: scheduled runs are released after wake', helpers.o.hold() === false]);
+      await ev('document.querySelector("#scroll").scrollTop = 1e6'); await sleep(400);
+      await grab('ui-v2-sleep-summary.png');
+      await ev('window.__openSettings()'); await sleep(300);
+      checks.push(['sleep: Settings status line after waking is a demo-run note, no made-up numbers', await ev('/Last slept/.test(document.querySelector("#sleepStat").textContent) && /demo run/.test(document.querySelector("#sleepStat").textContent) && !/→|quiz/.test(document.querySelector("#sleepStat").textContent)')]);
+      await ev('document.querySelector("#settingsClose").click()');
+      // second night: type first, wake and send in one go
+      await ev('document.querySelector("#btnSleep").click()'); await sleep(200); await ev('document.querySelector("#sleepGo").click()');
+      await until(() => sl.asleep && sleeper.status().sleeping, 6000);
+      await ev('(()=>{const i=document.querySelector("#input");i.value="good morning, Glim";i.dispatchEvent(new Event("input"));i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));})()');
+      await ev('document.querySelector("#wakeAskYes").click()');
+      checks.push(['sleep: Wake and send wakes Glim, then sends the message', await until(() => ev('[...document.querySelectorAll(".user")].some((u)=>/good morning, Glim/.test(u.innerText))'), 15000) && !sl.asleep]);
+      await waitIdle('after wake and send');
+      // an unavailable app is said plainly and disables the button
+      store.saveSettings({ sleepApp: '/no/such/folder' });
+      await ev('window.__openSettings()'); await sleep(300);
+      checks.push(['sleep: a missing app is reported plainly and Sleep is disabled', await ev('/not found/.test(document.querySelector("#sleepStat").textContent) && document.querySelector("#sleepNow").disabled && document.querySelector("#btnSleep").disabled')]);
+      store.saveSettings({ sleepApp: '' });
+      await ev('document.querySelector("#settingsClose").click()');
+      checks.push(['sleep: auto-sleep stays off by default (no sleep when the setting is off)', autoSleepTick(new Date(2026, 9, 26, 23, 45), { idleMs: 3600000 }).action === 'none' && !sl.asleep]);
+    }
+      gw3.close();
+    }
 
     // ---- error path: gateway gone -> the pill shows the sad Glim with details
     store.saveSettings({ gatewayUrl: 'http://127.0.0.1:1/v1' });
@@ -478,6 +595,71 @@ async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillW
     checks.push(['pill hides again when nothing is going on', await pev('document.querySelector("#pill").classList.contains("gone")')]);
     nativeTheme.themeSource = 'system';
     store.saveSettings({ gatewayUrl: gw.url });
+
+    // ---- first-run setup: Meet your Glims -> what for -> recurring Glims -> permissions. Everything else marks the app onboarded.
+    {
+      const nReq = gw.requests.length, nWin = BrowserWindow.getAllWindows().length;
+      const key = async (k) => { for (const type of ['keyDown', 'char', 'keyUp']) wc.sendInputEvent({ type, keyCode: k }); await sleep(450); };
+      const audit = async (label) => { const a = await ev(AUDIT); console.log('contrast audit (' + label + ', setup): ' + a.n + ' text elements, ' + a.bad.length + ' below AA' + (a.bad.length ? ': ' + a.bad.join(' | ') : '')); checks.push(['text contrast AA in setup (' + label + ')', a.bad.length === 0]); };
+      const stepIs = (n) => ev('document.querySelector("#onboard .ob-page").dataset.step==="' + n + '" && !document.querySelector("#onboard").hidden');
+      nativeTheme.themeSource = 'light'; await sleep(600);
+      await ev('document.querySelector("#btnThreads").click()'); await sleep(100); await ev('document.querySelector("#drawerShade").click()');
+      store.saveSettings({ onboarded: false, uses: [], usesOther: '' });
+      await new Promise((r) => { wc.once('did-finish-load', r); wc.reload(); });
+      await ev('new Promise(r=>{const t=setInterval(()=>{if(window.__ready){clearInterval(t);r()}},50)})');
+      await sleep(800);
+      checks.push(['setup: shows on first run (onboarded false), inside the main window', await stepIs(0) && BrowserWindow.getAllWindows().length === nWin]);
+      checks.push(['setup step 1: Meet your Glims with the main Glim and four small ones in different moods', await ev('/Meet your Glims/.test(document.querySelector("#onboard h1").textContent) && document.querySelectorAll("#onboard .ob-glim .mascot").length===4 && new Set([...document.querySelectorAll("#onboard .mascot")].map((m)=>m.dataset.mood)).size>=4')]);
+      checks.push(['setup: chrome text is not selectable', await ev('getComputedStyle(document.querySelector("#onboard .ob-lead")).userSelect==="none" && getComputedStyle(document.querySelector("#obNext")).userSelect==="none"')]);
+      await audit('light, meet');
+      await grab('ui-v2-onboard-a-meet.png');
+      await key('Return');
+      checks.push(['setup: Enter goes to the next step', await stepIs(1)]);
+      checks.push(['setup step 2: 8 multi-select tiles and a Something else field', await ev('document.querySelectorAll("#onboard .ob-tile").length===8 && [...document.querySelectorAll("#onboard .ob-tile")].every((t)=>t.querySelector("svg") && t.querySelector("b") && t.querySelector(".ob-txt span")) && !!document.querySelector("#obOther")')]);
+      await ev('document.querySelector("#onboard .ob-tile[data-id=email]").click(); document.querySelector("#onboard .ob-tile[data-id=briefing]").click()');
+      await ev('(()=>{const i=document.querySelector("#obOther");i.value="keep track of my game releases";i.dispatchEvent(new Event("input"))})()');
+      checks.push(['setup: tiles toggle (2 picked)', await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')]);
+      await ev('document.activeElement && document.activeElement.blur()'); await sleep(200);
+      await audit('light, uses');
+      await grab('ui-v2-onboard-b-uses-light.png');
+      nativeTheme.themeSource = 'dark'; await sleep(700);
+      await audit('dark, uses');
+      await grab('ui-v2-onboard-b-uses-dark.png');
+      nativeTheme.themeSource = 'light'; await sleep(600);
+      await key('Return');
+      checks.push(['setup: Enter on step 2 saves the picks as uses + usesOther', await stepIs(2) && JSON.stringify(store.getSettings().uses) === '["email","briefing"]' && store.getSettings().usesOther === 'keep track of my game releases']);
+      checks.push(['setup step 3: one row per recurring pick, each with a switch', await ev('document.querySelectorAll("#onboard .ob-row").length===2 && document.querySelectorAll("#onboard .ob-row .toggle[aria-checked=true]").length===2 && /Email watch/.test(document.body.innerText) && /every 30 min/.test(document.body.innerText) && /daily at 08:00/.test(document.body.innerText)')]);
+      await ev('document.querySelector("#onboard .ob-row[data-id=email] .toggle").click()');
+      checks.push(['setup: the button says how many Glims it will create', await ev('document.querySelector("#obNext").textContent==="Create 1 Glim"')]);
+      await audit('light, recurring');
+      await grab('ui-v2-onboard-c-recurring.png');
+      await key('Return');
+      checks.push(['setup: created the Morning briefing Glim (daily 08:00) and not the one switched off', await until(async () => !!helpers.find('Morning briefing'), 4000) && helpers.list().find((h) => h.name === 'Morning briefing').schedule === 'daily 08:00' && !helpers.find('Email watch')]);
+      checks.push(['setup: creating a Glim made no model call', gw.requests.length === nReq]);
+      checks.push(['setup step 4: the Permissions rows are embedded, with no sheet or Done of its own', await until(() => ev('document.querySelectorAll("#obPerms .p-row").length===3'), 4000) && await stepIs(3) && await ev('!document.querySelector("#obPerms #permsDone") && document.querySelector("#perms").hidden')]);
+      await sleep(300);
+      await audit('light, permissions');
+      await grab('ui-v2-onboard-d-permissions.png');
+      await key('Return');
+      checks.push(['setup: Enter on the last step finishes; onboarded saved', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true]);
+      checks.push(['welcome chips follow the picks', await ev('(() => { const c=[...document.querySelectorAll(".welcome .chips button")].map((b)=>b.textContent); return c.length===4 && c[0]==="Check my email" && c[1]==="Give me a morning briefing"; })()')]);
+      await grab('ui-v2-onboard-e-welcome.png');
+      await ev('document.querySelector("#btnThreads").click()'); await sleep(400);
+      checks.push(['sidebar section is called Glims and lists the new Glim', await ev('!document.querySelector("#agentsSec").hidden && /^Glims$/.test(document.querySelector("#agentsSec .drawer-label").textContent) && /Morning briefing/.test(document.querySelector("#agentList").innerText)')]);
+      await grab('ui-v2-onboard-f-sidebar.png');
+      await ev('document.querySelector("#drawerShade").click()');
+      // Settings > Run setup again, then Esc skips
+      await ev('window.__openSettings()'); await sleep(200);
+      checks.push(['settings: Run setup again button', await ev('!!document.querySelector("#runSetup")')]);
+      await ev('document.querySelector("#runSetup").click()'); await sleep(500);
+      checks.push(['setup again: opens over a closed Settings, keeps the old picks, shows the existing Glim as Created', await stepIs(0) && await ev('document.querySelector("#settings").hidden') && (await key('Return'), await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')) && (await key('Return'), await ev('!!document.querySelector("#onboard .ob-row.made") && /Created/.test(document.querySelector("#onboard").innerText)'))]);
+      store.saveSettings({ onboarded: false });
+      await key('Escape');
+      checks.push(['setup: Esc skips (closes and counts as onboarded)', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true]);
+      checks.push(['setup: no extra window was opened', BrowserWindow.getAllWindows().length === nWin]);
+      helpers.remove('Morning briefing');
+      nativeTheme.themeSource = 'system';
+    }
 
     let bad = 0;
     for (const [name, ok] of checks) { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) bad++; }

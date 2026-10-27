@@ -20,7 +20,8 @@ const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'desk-t-'));
 test('every setting has a default; saveSettings clamps, validates and ignores unknown keys', () => {
   const s = new Store(tmp());
   const d = s.getSettings();
-  for (const k of ['gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'vision', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'theme', 'textSize', 'highContrast', 'pill', 'openAtLogin', 'keepRunning', 'hotkey']) assert.ok(k in d, k);
+  for (const k of ['onboarded', 'uses', 'usesOther', 'gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'vision', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'theme', 'textSize', 'highContrast', 'verify', 'pill', 'openAtLogin', 'keepRunning', 'hotkey']) assert.ok(k in d, k);
+  assert.strictEqual(d.verify, true); assert.strictEqual(s.saveSettings({ verify: false }).verify, false); assert.strictEqual(s.saveSettings({ verify: 'x' }).verify, true);
   assert.strictEqual(d.keepRunning, true); assert.strictEqual(d.hotkey, 'Alt+Space'); assert.strictEqual(d.openAtLogin, false);
   const n = s.saveSettings({ maxSteps: 9999, maxParallel: 0, theme: 'neon', textSize: 'l', mode: 'hands-off', evil: 1, gatewayUrl: '  ', hotkey: 'Alt+Space ', vision: true });
   assert.strictEqual(n.maxSteps, 200); assert.strictEqual(n.maxParallel, 1); assert.strictEqual(n.theme, 'system'); assert.strictEqual(n.textSize, 'l');
@@ -158,4 +159,12 @@ test('theme tokens: all text pairs are at least 4.5:1 in dark and light (and hig
     assert.ok(ratio(t['on-accent'], t.accent) >= 4.5, name + ' on-accent');
     assert.ok(ratio(t['on-danger'], t.danger) >= 4.5, name + ' on-danger');
   }
+});
+
+test('sleep settings: defaults, HH:MM validation, idle minutes clamp', () => {
+  const s = new Store(tmp());
+  const d = s.getSettings();
+  assert.strictEqual(d.autoSleep, false); assert.strictEqual(d.sleepFrom, '23:00'); assert.strictEqual(d.sleepTo, '07:00'); assert.strictEqual(d.sleepIdleMin, 30); assert.strictEqual(d.wakeAt, false); assert.strictEqual(d.sleepPauseGlims, true); assert.strictEqual(d.sleepApp, '');
+  const n = s.saveSettings({ sleepFrom: '9:05', sleepTo: '25:00', sleepIdleMin: 99999, autoSleep: 1 });
+  assert.strictEqual(n.sleepFrom, '09:05'); assert.strictEqual(n.sleepTo, '07:00'); assert.strictEqual(n.sleepIdleMin, 720); assert.strictEqual(n.autoSleep, true);
 });

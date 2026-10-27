@@ -49,12 +49,20 @@ Gear icon in the top bar or **Cmd+,**. Everything applies immediately and is sav
 | Model | Gateway URL | `http://127.0.0.1:8090/v1` | `/chat/completions` is appended; **Test connection** shows the latency |
 | Model | Default mode | Auto (`qwen36-auto`) | Auto / Think (`qwen36`) / Fast (`qwen36-fast`), same as the top-bar pills |
 | Autonomy | Main agent | Ask first | Ask first or Hands-off |
-| Autonomy | Helpers (`helperMode`) | Hands-off | same choice for helper agents |
+| Autonomy | Glims on a schedule (`helperMode`) | Hands-off | same choice for the extra Glims (helper agents) |
+| Autonomy | Double-check my work (`verify`) | on | a quick second look before Glim says done, a little slower |
 | Autonomy | Max steps | 40 | model calls per task (1 to 200) |
 | Autonomy | Danger list | fixed | shown read-only; these shell commands always need your OK |
 | Helpers | Runs at once (`maxParallel`) | 2 | primary plus helpers; extra runs queue (1 to 4) |
-| Memory | Use my diary | on | adds/removes the `diary_search` tool right away |
-| Memory | diary_mcp.py path, Python path | `~/learner-ops/...`, venv or `python3` | |
+| Setup | Run setup again | button | reopens first-run setup (`onboarded`, `uses`, `usesOther` are saved settings) |
+| Diary | Use my diary | on | adds/removes the `diary_search` tool right away |
+| Diary | diary_mcp.py path, Python path | `~/learner-ops/...`, venv or `python3` | |
+| Memory | Remembered facts | empty | one row per fact (topic, editable text, Delete) and an Add field; secrets are refused; Glim adds to it itself |
+| Sleep | Sleep app folder, Sleep Python | `~/learner-ops/sleepmode/app`, first python found | where the separate sleep mode app lives; Sleep is disabled with a plain note if it is not found |
+| Sleep | Stop Glims' scheduled runs while asleep (`sleepPauseGlims`) | on | they wait, then catch up once after wake |
+| Sleep | Sleep when idle at night (`autoSleep`) | off | only when Glim is idle and the window is not in front |
+| Sleep | Night window (`sleepFrom`, `sleepTo`), idle minutes (`sleepIdleMin`) | 23:00 to 07:00, 30 | when auto-sleep may start |
+| Sleep | Wake at the end of the window (`wakeAt`) | off | only for a sleep Glim started by itself |
 | Screen control | deskhelper path | bundled | **Check permissions**, **Ask macOS**, and buttons that open System Settings > Privacy > Accessibility / Screen Recording |
 | Vision | Send screenshots to the model | off | newest image only |
 | Appearance | Theme | System | System / Light / Dark |
@@ -89,6 +97,15 @@ On launch, whenever the gateway comes back (checked every 5 s while down, 30 s w
 request (`X-Premonition-Warm: 1`, model `qwen36-fast`, `max_tokens` 1, user ".") with exactly the same system prompt and tools as a real request, so the
 gateway's prompt cache is warm before you type. The top bar says "Warming up..." then "Ready"; typing is never blocked. The window opens before the
 diary, helper scheduler, warm-up and browser start. Hover over an answer to see its time to first token.
+
+## First-run setup
+
+On first launch (setting `onboarded` false) a full-pane sheet in the main window walks through: Meet your Glims, What do you want Glims for? (8 tiles plus
+"Something else…"), Set up recurring Glims (toggles that create e.g. "Email watch" every 30 min or "Morning briefing" daily at 08:00 straight through
+`Helpers.add`, the same path as `agent_start`, no model call; each task is monitoring only) and Permissions (the same card as Settings, Skip allowed).
+Enter = next, Esc = skip. The picks (`uses`, `usesOther`) shape the welcome chips and ride in the first user message of a thread beside the date, never in the
+system prompt or tools. Templates and tile text live in `renderer/uses.js`. The e2e marks the app onboarded except in its own setup section.
+In the UI helper agents are called Glims; code and the `agent_*` tool names are unchanged.
 
 ## Helpers (sub-agents)
 

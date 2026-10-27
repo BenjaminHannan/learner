@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const { screenAfter, lookSummary } = require('./after');
+
 const NOT_INSTALLED = 'screen control helper not installed';
 
 // open_app is for Mac apps, never for browsing: the web goes through the built-in browser (browser_go).
@@ -71,6 +73,21 @@ function createScreen(getSettings, resourcesPath, onLook) {
     try { return 'data:image/jpeg;base64,' + fs.readFileSync(p).toString('base64'); } catch (e) { return null; }
   }
 
+  // After a state-changing action: look again (cheap, no screenshot) and say what changed since the last look.
+  let lastLook = null;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function after(kind, signal, extra) {
+    try {
+      await sleep(300);
+      const j = await run(['look', '--max', '80'], signal);
+      if (j.error) return '';
+      const note = screenAfter(lastLook, j, kind, extra && extra(j));
+      lastLook = lookSummary(j);
+      return '\n' + note;
+    } catch (e) { return ''; }
+  }
+  const withAfter = async (r, kind, signal, extra) => (typeof r === 'string' ? r + await after(kind, signal, extra) : r);
+
   const vis = () => { const v = getSettings().vision; return v === 'on' || v === true; };
 
   return {
@@ -85,6 +102,7 @@ function createScreen(getSettings, resourcesPath, onLook) {
         const j = await run(args, ctx && ctx.signal);
         if (j.error) return { text: 'Error: ' + j.error, error: true };
         const text = formatLook(j);
+        lastLook = lookSummary(j);
         const shot = await screenshot(1280);
         if (onLook) onLook({ text, image: shot, data: j }, ctx);
         return vis() && shot ? { text, image: shot } : text;
@@ -94,11 +112,16 @@ function createScreen(getSettings, resourcesPath, onLook) {
         if (a.id !== undefined && a.id !== null) j = await run(['press', String(a.id)], ctx && ctx.signal);
         else if (a.x !== undefined && a.y !== undefined) j = await run(['click', String(a.x), String(a.y)].concat(a.double ? ['--double'] : []), ctx && ctx.signal);
         else return { text: 'Error: give id, or x and y', error: true };
-        return res(j, 'Clicked.');
+        return withAfter(res(j, 'Clicked.'), 'click', ctx && ctx.signal);
       },
-      screen_type: async (a, ctx) => res(await run(['type', String(a.text || '')], ctx && ctx.signal), 'Typed.'),
-      screen_key: async (a, ctx) => res(await run(['key', String(a.keys || '')], ctx && ctx.signal), 'Pressed ' + a.keys + '.'),
-      open_app: async (a, ctx) => isBrowserApp(a.name) ? { text: BROWSER_REFUSAL, error: true } : res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.')
+      screen_type: async (a, ctx) => withAfter(res(await run(['type', String(a.text || '')], ctx && ctx.signal), 'Typed.'), 'type', ctx && ctx.signal),
+      screen_key: async (a, ctx) => withAfter(res(await run(['key', String(a.keys || '')], ctx && ctx.signal), 'Pressed ' + a.keys + '.'), 'key', ctx && ctx.signal),
+      open_app: async (a, ctx) => {
+        if (isBrowserApp(a.name)) return { text: BROWSER_REFUSAL, error: true };
+        const r = res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.');
+        const want = String(a.name || '').toLowerCase().replace(/\.app$/, '');
+        return withAfter(r, 'open', ctx && ctx.signal, (j) => (want && j.app && !String(j.app).toLowerCase().includes(want) ? 'WARNING: front app is "' + j.app + '", not "' + a.name + '"; it may not have opened' : ''));
+      }
     }
   };
 }

@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS = {
   model: 'qwen36-auto',   // qwen36-auto | qwen36 | qwen36-fast
   // Autonomy
   mode: 'ask',            // ask | hands-off (main agent)
+  verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
   helperMode: 'hands-off', // autonomy for helper agents
   maxSteps: 40,
   // Helpers
@@ -24,8 +25,20 @@ const DEFAULT_SETTINGS = {
   theme: 'system',        // system | light | dark
   textSize: 'm',          // s | m | l
   highContrast: false,    // stronger text and borders
+  onboarded: false,       // first-run setup (Meet your Glims) has been finished or skipped
+  uses: [],               // what Ben wants Glims for (ids from renderer/uses.js)
+  usesOther: '',          // free text "something else"
   permsSeen: false,       // the Permissions card has been shown once on first launch
   pill: true,             // the always-on-top status pill at the top of the screen
+  // Sleep (the separate sleepmode app trains on the diary while Glim is idle)
+  sleepApp: '',           // '' = ~/learner-ops/sleepmode/app
+  sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
+  sleepPauseGlims: true,  // hold the Glims' scheduled runs while asleep (they catch up once after wake)
+  autoSleep: false,       // sleep by itself at night when idle
+  sleepFrom: '23:00',     // night window start (HH:MM)
+  sleepTo: '07:00',       // night window end
+  sleepIdleMin: 30,       // minutes without use before auto-sleep
+  wakeAt: false,          // wake at the end of the window (only for a sleep Desk started by itself)
   // Startup
   openAtLogin: false,
   keepRunning: true,      // closing the window hides it; the app (and helpers) keep running
@@ -37,9 +50,13 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
-const BOOLS = ['permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast'];
-const NUMS = { maxSteps: [1, 200], maxParallel: [1, 4] };
-const STRS = ['gatewayUrl', 'model', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'autoSleep', 'wakeAt'];
+const NUMS = { maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720] };
+const TIMES = ['sleepFrom', 'sleepTo'];
+const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
+const STRS = ['gatewayUrl', 'model', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython'];
+const { cleanUses } = require('../renderer/uses');
+const USES_OTHER_MAX = 200;
 
 // Keep only known keys with sane values (bad values fall back to the default).
 function sanitize(patch) {
@@ -49,6 +66,9 @@ function sanitize(patch) {
     if (BOOLS.includes(k)) out[k] = !!v;
     else if (NUMS[k]) { const n = Math.round(Number(v)); out[k] = Number.isFinite(n) ? Math.min(NUMS[k][1], Math.max(NUMS[k][0], n)) : DEFAULT_SETTINGS[k]; }
     else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
+    else if (k === 'uses') out[k] = cleanUses(v);
+    else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
+    else if (TIMES.includes(k)) out[k] = cleanTime(v, DEFAULT_SETTINGS[k]);
     else if (STRS.includes(k)) out[k] = String(v == null ? '' : v).trim() || (k === 'gatewayUrl' || k === 'model' ? DEFAULT_SETTINGS[k] : '');
   }
   return out;
@@ -65,8 +85,8 @@ class Store {
     try {
       const raw = JSON.parse(fs.readFileSync(this.settingsFile, 'utf8'));
       if (raw.vision === true) raw.vision = 'on';
-      return { ...DEFAULT_SETTINGS, ...raw };
-    } catch (e) { return { ...DEFAULT_SETTINGS }; }
+      return { ...DEFAULT_SETTINGS, ...raw, uses: cleanUses(raw.uses) };
+    } catch (e) { return { ...DEFAULT_SETTINGS, uses: [] }; }
   }
   saveSettings(patch) {
     const cur = this.getSettings();

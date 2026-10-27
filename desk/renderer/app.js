@@ -19,6 +19,7 @@
     monitor: '<rect x="1.5" y="2.5" width="13" height="9" rx="1.5"/><path d="M5.5 14h5M8 11.5V14"/>',
     app: '<rect x="2" y="2" width="12" height="12" rx="3.5"/>',
     terminal: '<path d="M2 4l4 4-4 4M8 12h6"/>',
+    bookmark: '<path d="M4.5 2.5h7v11L8 10.8 4.5 13.5z"/>',
     book: '<path d="M3 2.5h8.5A1.5 1.5 0 0113 4v9.5H4.5A1.5 1.5 0 013 12z"/><path d="M3 12a1.5 1.5 0 011.5-1.5H13"/>',
     question: '<circle cx="8" cy="8" r="6"/><path d="M6.2 6.3A1.9 1.9 0 018 5a1.8 1.8 0 011 3.3c-.7.5-1 .8-1 1.5M8 11.6h.01"/>',
     person: '<circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.5-3 2.5-4 5-4s4.5 1 5 4"/>',
@@ -27,7 +28,7 @@
     spin: '<path d="M8 2a6 6 0 106 6" />',
     dot: '<circle cx="8" cy="8" r="2"/>'
   };
-  const TOOL_ICON = { web_search: 'search', browser_go: 'globe', browser_click: 'cursor', browser_type: 'keyboard', browser_scroll: 'scroll', browser_back: 'back', browser_read: 'doc', screen_look: 'monitor', screen_click: 'monitor', screen_type: 'monitor', screen_key: 'keyboard', open_app: 'app', run_shell: 'terminal', diary_search: 'book', ask_user: 'question', agent_start: 'person', agent_list: 'person', agent_stop: 'person' };
+  const TOOL_ICON = { web_search: 'search', browser_go: 'globe', browser_click: 'cursor', browser_type: 'keyboard', browser_scroll: 'scroll', browser_back: 'back', browser_read: 'doc', screen_look: 'monitor', screen_click: 'monitor', screen_type: 'monitor', screen_key: 'keyboard', open_app: 'app', run_shell: 'terminal', diary_search: 'book', verify: 'check', memory_save: 'bookmark', memory_forget: 'bookmark', ask_user: 'question', agent_start: 'person', agent_list: 'person', agent_stop: 'person' };
   const icon = (name) => svg(P[name] || P.dot);
   const CHEV = '<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -369,18 +370,21 @@
     $('#btnSend').textContent = r ? 'Steer' : 'Send'; $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
-    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a helper’s thread. Type here to steer it while it runs.' : 'Ask Glim to do something…';
+    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a Glim’s thread. Type here to steer it while it runs.' : 'Ask Glim to do something…';
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
   }
 
   // ---------- Glim's mood: one status source (main) + local run state ----------
+  let slp = { asleep: false, waking: false, available: true };
   let mood = 'idle', gw = { state: 'down' }, glim = 'idle', errorUntil = 0, doneUntil = 0, moodTimer = 0, lastActive = Date.now(), glanceTimer = 0;
   const logo = Mascot.el('idle', 28, { cls: 'follow' });
   $('#logo').append(logo);
   function refreshMood() {
     const now = Date.now();
     let m = 'idle';
-    if (gw.state === 'down' || gw.state === 'warming') m = 'sleepy';
+    if (slp.waking) m = 'thinking';
+    else if (slp.asleep) m = 'sleepy';
+    else if (gw.state === 'down' || gw.state === 'warming') m = 'sleepy';
     else if (document.querySelector('.card:not(.done)')) m = 'waiting';
     else if (running) m = document.querySelector('.step.run') ? 'working' : 'thinking';
     else if (errorUntil > now) m = 'error';
@@ -408,16 +412,74 @@
     const g = $('#gw');
     g.classList.remove('ready', 'warming', 'down');
     const st = gw.state === 'ready' ? 'ready' : gw.state === 'warming' ? 'warming' : 'down';
-    g.classList.add(st);
+    g.classList.add(st); g.classList.toggle('asleep', !!(slp.asleep || slp.waking));
     // one source of truth with the composer: while a run is on, both say what the run says
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : 'Offline';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : 'Offline';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : 'Gateway not reachable';
     refreshMood();
   }
   desk.onGateway((s) => { gw = s || gw; paintGateway(); });
   desk.onGlim((s) => { glim = s; refreshMood(); });
+
+  // ---------- sleep ----------
+  let awakeWaiters = [];
+  function paintSleep() {
+    const asleep = slp.asleep || slp.waking;
+    $('#composer').classList.toggle('asleep', asleep);
+    $('#sleepBar').hidden = !asleep;
+    $('#btnWake').textContent = slp.waking ? 'Waking up…' : 'Wake Glim'; $('#btnWake').disabled = !!slp.waking;
+    $('#sleepTitle').textContent = slp.waking ? 'Waking up…' : 'Glim is asleep';
+    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : ['Learning from your chats', slp.hours ? Math.round(slp.hours * 10) / 10 + ' h so far' : '', slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    $('#btnSend').hidden = asleep; $('#hint').hidden = asleep;
+    if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
+    else { input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
+    const b = $('#btnSleep'); b.disabled = !slp.available || asleep;
+    b.title = !slp.available ? (slp.reason || 'The sleep app was not found.') : 'Sleep: let Glim learn from your chats while you are away';
+    paintGateway();
+  }
+  function onSleepState(v) {
+    const was = slp.asleep || slp.waking; slp = v || slp; paintSleep();
+    if (was && !slp.asleep && !slp.waking) { const w = awakeWaiters; awakeWaiters = []; w.forEach((f) => f()); }
+    if ($('#settings').hidden === false) paintSleepSettings();
+  }
+  desk.onSleep(onSleepState);
+  desk.sleep.state().then(onSleepState);
+  desk.onSleepNotice((n) => addNotice('Sleep', n.text));
+  desk.onSleepWoke((w) => {
+    if (w.summary) {
+      const c = el('div', 'wslept sel');
+      const h = el('div', 'ws-head'); h.innerHTML = svg('<path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/>'); h.append(el('b', null, 'While you slept'));
+      if (w.demo) h.append(el('span', 'ws-tag', 'demo run'));
+      const body = el('div', 'ws-body atext'); body.innerHTML = md(w.summary.replace(/^#{1,3} +While you slept\s*\n+/i, ''));
+      c.append(h, body); msgs.append(c); newBlock(); toBottom();
+    } else addNotice('Sleep', 'Glim is awake. There was no summary this time.');
+    input.focus();
+  });
+  $('#btnWake').onclick = () => desk.sleep.wake();
+  $('#wakeAskNo').onclick = () => { $('#wakeAsk').hidden = true; input.focus(); };
+  $('#wakeAskYes').onclick = async () => {
+    const text = input.value; $('#wakeAsk').hidden = true;
+    await desk.sleep.wake();
+    await new Promise((r) => { if (!slp.asleep && !slp.waking) r(); else awakeWaiters.push(r); });
+    input.value = text; autosize(); submit(false);
+  };
+  function openSleepSheet() {
+    if (!slp.available || slp.asleep || slp.waking) return;
+    $('#sleepPause').checked = settings.sleepPauseGlims !== false; $('#sleepErr').hidden = true;
+    $('#sleepSheet').hidden = false; $('#sleepGo').focus();
+  }
+  const closeSleepSheet = () => { $('#sleepSheet').hidden = true; input.focus(); };
+  $('#btnSleep').onclick = openSleepSheet; desk.onSleepOpen(openSleepSheet);
+  $('#sleepCancel').onclick = closeSleepSheet;
+  $('#sleepGo').onclick = async () => {
+    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked });
+    if (r && r.error) { $('#sleepErr').textContent = r.error; $('#sleepErr').hidden = false; return; }
+    settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked }; closeSleepSheet();
+  };
+  $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
 
   // ---------- agent events ----------
   desk.onAgent((ev) => {
@@ -453,7 +515,7 @@
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
         if (ev.stopped) msgs.append(el('div', 'status', 'Stopped.'));
         if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
-        loadThreads(); toBottom(); break;
+        loadThreads(); toBottom(); if (!$('#settings').hidden) memRefresh(); break;
       }
     }
     refreshMood();
@@ -461,13 +523,12 @@
 
   // ---------- threads ----------
   const GREETINGS = ['I had a feeling you’d stop by.', 'What should we get done?', 'Something tells me you have a task for me.', 'Ready when you are.', 'I sensed a to-do list coming.', 'Good to see you. What’s first?'];
-  const SUGGESTIONS = ['Check my email', 'Plan my week', 'Find cheap flights to Boston next month', 'Every morning, brief me on the weather'];
   function welcome() {
     msgs.textContent = '';
     const w = el('div', 'welcome');
     w.append(Mascot.el(mood, 96, { cls: 'follow' }), el('h2', null, GREETINGS[Math.floor(Math.random() * GREETINGS.length)]), el('p', null, 'I can browse, search, run commands and drive Mac apps. I ask before anything risky.'));
     const chips = el('div', 'chips');
-    for (const t of SUGGESTIONS) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
+    for (const t of Uses.chipsFor(settings.uses)) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
     w.append(chips); msgs.append(w);
   }
   function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); }
@@ -560,7 +621,7 @@
       btns.append(
         mk('Run now', () => desk.helpers.run(h.id)),
         mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
-        mk('Delete', async () => { if (confirm('Delete helper "' + h.name + '" and its thread?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
+        mk('Delete', async () => { if (confirm('Delete Glim "' + h.name + '" and its thread?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
       li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns);
       li.onclick = () => openThread(h.threadId);
       ul.append(li);
@@ -596,11 +657,12 @@
     if (!text || submitting) return;
     if (!force && Guard.looksLikeSecret(text)) { $('#pwWarn').hidden = false; return; }
     $('#pwWarn').hidden = true;
+    if (slp.asleep || slp.waking) { $('#wakeAsk').hidden = false; return; } // keep the text; offer to wake first
     submitting = true;
     try {
       if (!thread) await newThread();
       input.value = ''; autosize();
-      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a helper’s thread. Use Run now in the Agents list, or ask the primary agent.')); toBottom(); return; }
+      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Glim’s thread. Use Run now in the Glims list, or ask your main Glim.')); toBottom(); return; }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
         const u = addUser(text, true, true); jumpBottom();
@@ -629,7 +691,7 @@
       else if (document.body.classList.contains('drawer-open')) closeDrawer();
       else if (running) desk.agent.stop(thread && thread.id);
     }
-    if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); openSettings(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); if (!Onboard.isOpen()) openSettings(); }
   });
 
   // ---------- top bar ----------
@@ -659,18 +721,35 @@
       { type: 'test', label: 'Test connection', help: 'Checks that the gateway answers and how long it takes.' }
     ] },
     { group: 'Autonomy', rows: [
-      { key: 'mode', type: 'seg', label: 'Main agent', help: 'Ask first: shell commands and Mac clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
-      { key: 'helperMode', type: 'seg', label: 'Helpers', help: 'The same choice for helper agents that run on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and Mac clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { key: 'helperMode', type: 'seg', label: 'Glims on a schedule', help: 'The same choice for the extra Glims that run on their own.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue (1 to 200).', min: 1, max: 200 },
+      { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
-    { group: 'Helpers', rows: [
-      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (you plus helpers). Extra runs wait their turn. 1 to 4.', min: 1, max: 4 }
+    { group: 'Glims', rows: [
+      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (your main Glim plus the others). Extra runs wait their turn. 1 to 4.', min: 1, max: 4 }
     ] },
-    { group: 'Memory', rows: [
+    { group: 'Setup', rows: [
+      { type: 'setup', label: 'Run setup again', help: 'Meet your Glims again: pick what you want them for, create recurring Glims and check permissions.' }
+    ] },
+    { group: 'Diary', rows: [
       { key: 'diaryEnabled', type: 'toggle', label: 'Use my diary', help: 'Lets Glim search past chats and notes. Applies right away.' },
       { key: 'diaryPath', type: 'text', label: 'diary_mcp.py path', help: 'Leave empty for ~/learner-ops/assistant/diary_mcp.py.', ph: '~/learner-ops/assistant/diary_mcp.py', wide: true },
       { key: 'pythonPath', type: 'text', label: 'Python path', help: 'Leave empty to use the learner-ops virtualenv if present, else python3.', ph: 'python3', wide: true }
+    ] },
+    { group: 'Memory', rows: [
+      { type: 'memory', label: 'What Glim remembers', help: 'Glim remembers these between chats. It adds to this list itself when it learns something lasting, like your classes.' }
+    ] },
+    { group: 'Sleep', rows: [
+      { type: 'sleepstat', label: 'Sleep mode', help: 'Glim learns from your chats while you are away and checks your mail and calendar once an hour (read-only). It only sleeps while Glim is idle, because your chats come first.' },
+      { key: 'sleepApp', type: 'text', label: 'Sleep app folder', help: 'Leave empty for ~/learner-ops/sleepmode/app.', ph: '~/learner-ops/sleepmode/app', wide: true },
+      { key: 'sleepPython', type: 'text', label: 'Sleep Python', help: 'Leave empty to pick the first python found: sleepmode/venv312, learner-ops/.venv, Homebrew, then python3.', ph: 'python3', wide: true },
+      { key: 'sleepPauseGlims', type: 'toggle', label: 'Stop Glims\' scheduled runs while asleep', help: 'They wait, then catch up once after you wake Glim.' },
+      { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
+      { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times.' },
+      { key: 'sleepIdleMin', type: 'number', label: 'Idle minutes before auto-sleep', help: 'How long you have to be away first (1 to 720).', min: 1, max: 720 },
+      { key: 'wakeAt', type: 'toggle', label: 'Wake at the end of the window', help: 'Only for a sleep that Glim started by itself.' }
     ] },
     { group: 'Screen control', rows: [
       { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your Mac. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },
@@ -687,18 +766,66 @@
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
-      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: 'Closing the window hides it; helpers keep going. Cmd+Q really quits.' },
+      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: 'Closing the window hides it; your Glims keep going. Cmd+Q really quits.' },
       { key: 'hotkey', type: 'hotkey', label: 'Global shortcut', help: 'Show or hide Glim from any app. Click, then press the keys. Backspace turns it off.' }
     ] }
   ];
   const controls = {};
+  // Memory: facts Glim keeps between chats (src/memory.js). Rows save on blur or Enter; refusals show inline.
+  let memRefresh = () => {};
+  function memUi() {
+    const box = el('div', 'mem'), list = el('div', 'mem-list'), note = el('div', 's-note mem-note');
+    note.id = 'memNote'; list.id = 'memList'; note.setAttribute('role', 'status');
+    const say = (msg, bad) => { note.className = 's-note mem-note ' + (bad ? 'bad' : 'ok'); note.textContent = msg || ''; };
+    const rowFor = (f) => {
+      const r = el('div', 'mem-row'); r.dataset.id = f.id;
+      const chip = el('span', 'mem-chip' + (f.topic ? '' : ' none'), f.topic || 'general');
+      const t = el('input', 'mem-text'); t.type = 'text'; t.value = f.text; t.spellcheck = false; t.maxLength = 300; t.setAttribute('aria-label', 'Remembered fact');
+      let saved = f.text, busy = false; t.dataset.saved = saved;
+      const commit = async () => {
+        const v = t.value.trim();
+        if (v === saved || busy) return;
+        busy = true;
+        const res = await desk.memory.edit(f.id, { text: v }).finally(() => { busy = false; });
+        if (res && res.ok) { saved = res.fact.text; t.value = saved; t.dataset.saved = saved; say('Saved.'); }
+        else { say((res && res.error) || 'Could not save.', true); t.value = saved; t.classList.add('bad'); setTimeout(() => t.classList.remove('bad'), 1600); }
+      };
+      t.addEventListener('blur', commit);
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); t.blur(); } else if (e.key === 'Escape') { t.value = saved; e.stopPropagation(); t.blur(); } });
+      const d = el('button', 'ghost sm del', 'Delete'); d.setAttribute('aria-label', 'Delete this fact');
+      d.onclick = async () => { await desk.memory.remove(f.id); say(''); memRefresh(); };
+      r.append(chip, t, d); return r;
+    };
+    memRefresh = async () => {
+      const facts = await desk.memory.list();
+      const ae = document.activeElement; if (ae && ae.classList && ae.classList.contains('mem-text') && list.contains(ae) && ae.value !== ae.dataset.saved) return; // never clobber an edit in progress
+      list.textContent = '';
+      if (!facts.length) list.append(el('div', 'mem-empty', 'Nothing yet. Add a fact below, or just tell Glim something to remember.'));
+      for (const f of facts) list.append(rowFor(f));
+    };
+    const add = el('div', 'mem-add');
+    const ai = el('input', 'mem-new'); ai.type = 'text'; ai.id = 'memNew'; ai.placeholder = 'Add a fact, e.g. "AP Chem is 3rd period with Mr. Phipps"'; ai.spellcheck = false; ai.maxLength = 300; ai.setAttribute('aria-label', 'Add a fact');
+    const at = el('input', 'mem-topic'); at.type = 'text'; at.id = 'memTopic'; at.placeholder = 'topic'; at.maxLength = 30; at.spellcheck = false; at.setAttribute('aria-label', 'Topic (optional)');
+    const ab = el('button', 'ghost sm', 'Add'); ab.id = 'memAdd';
+    const doAdd = async () => {
+      const v = ai.value.trim(); if (!v) return;
+      const tp = at.value.trim(); ai.value = ''; at.value = '';
+      const res = await desk.memory.add({ text: v, topic: tp || undefined });
+      if (res && res.ok) { say(res.replaced ? 'Updated a similar fact.' : 'Added.'); } else { ai.value = v; at.value = tp; say((res && res.error) || 'Could not save.', true); }
+      memRefresh();
+    };
+    ab.onclick = doAdd; ai.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
+    add.append(ai, at, ab);
+    box.append(list, add, note);
+    return box;
+  }
   function buildSettings() {
     const col = $('#settingsCol'); col.textContent = '';
     for (const g of SCHEMA) {
       const sec = el('section', 's-group'); sec.append(el('h2', null, g.group));
       const card = el('div', 's-card');
       for (const r of g.rows) {
-        const row = el('div', 's-row' + (r.type === 'danger' ? ' stack' : ''));
+        const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' ? ' stack' : ''));
         const lab = el('div', 's-lab'); lab.append(el('b', null, r.label), el('span', null, r.help));
         const ctl = el('div', 's-ctl');
         row.append(lab, ctl);
@@ -720,6 +847,21 @@
           const note = el('span', 's-note'); const b = el('button', 'ghost', 'Test connection');
           b.onclick = async () => { note.className = 's-note'; note.textContent = 'Testing…'; const t = await desk.gateway.test(); note.className = 's-note ' + (t.ok ? 'ok' : 'bad'); note.textContent = t.ok ? 'Connected · ' + t.ms + ' ms' : 'Could not connect' + (t.error ? ' (' + t.error + ')' : ''); };
           b.id = 'testConn'; note.id = 'testNote'; ctl.append(note, b);
+        } else if (r.type === 'setup') {
+          const b = el('button', 'ghost', 'Run setup again'); b.id = 'runSetup';
+          b.onclick = () => { closeSettings(); Onboard.show(); };
+          ctl.append(b);
+        } else if (r.type === 'sleepstat') {
+          const note = el('div', 's-note'); note.id = 'sleepStat';
+          const b = el('button', 'ghost', 'Sleep now'); b.id = 'sleepNow'; b.onclick = () => { closeSettings(); openSleepSheet(); };
+          const bw = el('button', 'ghost', 'Wake'); bw.id = 'sleepWakeS'; bw.onclick = () => desk.sleep.wake();
+          const bx = el('div'); bx.style.cssText = 'display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;text-align:right';
+          const rb = el('div'); rb.style.cssText = 'display:flex;gap:.4rem'; rb.append(b, bw); bx.append(rb, note); ctl.append(bx);
+        } else if (r.type === 'window') {
+          const mk = (key) => { const i = el('input'); i.type = 'time'; i.id = key; i.setAttribute('aria-label', key === 'sleepFrom' ? 'Night starts' : 'Night ends'); i.style.width = '8rem'; i.addEventListener('change', () => save({ [key]: i.value || undefined }).then(paintSettings)); controls[key] = { paint: () => { if (document.activeElement !== i) i.value = settings[key] || ''; } }; return i; };
+          const to = el('span', 'dim', 'to'); ctl.append(mk('sleepFrom'), to, mk('sleepTo'));
+        } else if (r.type === 'memory') {
+          row.removeChild(ctl); row.append(memUi());
         } else if (r.type === 'danger') {
           const ul = el('ul', 'danger-list'); for (const d of info.danger || []) ul.append(el('li', null, d)); lab.append(ul);
         } else if (r.type === 'perm') {
@@ -762,11 +904,18 @@
       sec.append(card); col.append(sec);
     }
   }
-  function paintSettings() { for (const c of Object.values(controls)) c.paint(); paintSegs(); }
+  function paintSleepSettings() {
+    const n = $('#sleepStat'); if (!n) return;
+    n.className = 's-note' + (slp.available ? '' : ' bad');
+    n.textContent = !slp.available ? slp.reason : (slp.error || slp.statusLine || '');
+    $('#sleepNow').disabled = !slp.available || slp.asleep || slp.waking; $('#sleepWakeS').hidden = !(slp.asleep || slp.waking);
+  }
+  function paintSettings() { for (const c of Object.values(controls)) c.paint(); paintSegs(); paintSleepSettings(); }
   let settingsBuilt = false;
   function openSettings() {
     if (!settingsBuilt) { buildSettings(); settingsBuilt = true; }
-    paintSettings(); $('#settings').hidden = false; $('#settingsClose').focus();
+    desk.sleep.state().then((v) => { slp = v; paintSleep(); paintSleepSettings(); });
+    paintSettings(); memRefresh(); $('#settings').hidden = false; $('#settingsClose').focus();
   }
   function closeSettings() { $('#settings').hidden = true; input.focus(); }
   $('#btnSettings').onclick = openSettings; $('#settingsClose').onclick = closeSettings;
@@ -775,6 +924,14 @@
 
   BrowserPanel.ctx.threadId = () => thread && thread.id;
   BrowserPanel.ctx.switchThread = async (id) => { if (id && (!thread || thread.id !== id)) await openThread(id); };
+
+  // first-run setup finished or skipped: pick up the saved picks, refresh the welcome chips, hand the keyboard back
+  window.addEventListener('onboard-done', async () => {
+    const s = await desk.settings.get(); const { _hotkey, ...rest } = s; settings = rest;
+    if (!running && msgs.querySelector('.welcome')) welcome();
+    desk.helpers.list().then(paintAgents);
+    input.focus();
+  });
 
   // ---------- boot ----------
   (async () => {
@@ -788,6 +945,7 @@
     else if (!info.e2e && list.length) await openThread(list[0].id);
     else await newThread();
     desk.helpers.list().then(paintAgents);
+    if (!settings.onboarded) Onboard.show();
     window.__ready = true;
   })();
 })();
