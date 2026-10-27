@@ -1,7 +1,7 @@
 # Premonition Desk
 
 Ben's own Mac assistant app (the assistant is called Glim): just a chat window. When Glim uses the web, a live browser
-card appears in the chat; click it to open the real page in a popup you can use too (sign-ins included).
+card appears in the chat; click it to open the real page in a browser panel inside the same window (a split on the right, or a full-window sheet on narrow windows) that you can use too (sign-ins included). A top-bar Browser button shows or hides it.
 The only brain is the local Premonition gateway (OpenAI-compatible chat completions). Everything the
 assistant does shows up as a step trail you can expand, and the whole thread is saved.
 The spec is in `DESIGN.md`.
@@ -16,7 +16,7 @@ npm test           # unit tests (node:test, no Electron needed, runs on Linux)
 npm run e2e        # real Electron under xvfb: fake gateway drives the browser view (Linux)
 ```
 
-The e2e writes screenshots to `desk/test/out/` (git-ignored) and copies them to `desk/docs/img/ui-v2-*.png`: chat (light/dark), welcome, running with a live browser card, the browser popup, the sign-in banner, the password guard, Settings, and the status pill (collapsed/expanded/working, light/dark).
+The e2e writes screenshots to `desk/test/out/` (git-ignored) and copies them to `desk/docs/img/ui-v2-*.png`: chat (light/dark), welcome, running with a live browser card, the in-window browser panel (wide, light/dark, and the narrow sheet), the sign-in banner, the Permissions card, the password guard, Settings, and the status pill (collapsed/expanded/working, light/dark).
 
 ## Build and install on the Mac (Apple silicon)
 
@@ -71,11 +71,11 @@ Autonomy switch in the top bar:
 - **Ask first**: shell commands and screen clicks/typing/keys need your OK on an inline card (Allow once / Allow for this task / Deny).
 - **Hands-off**: everything runs, except shell commands on the danger list (`rm -rf`, `sudo`, `diskutil`, `mkfs`, shutdown, writes to `/dev/`, `curl | sh`, force push, ...). The model is also told to call `ask_user` before sending, buying, paying or deleting.
 
-Passwords: the agent never types into a password or payment field. The popup opens with "Sign in here yourself; Glim can't see
+Passwords: the agent never types into a password or payment field. The browser panel opens with "Sign in here yourself; Glim can't see
 what you type. Click Done when finished." and Glim waits. The composer warns if a message looks like it contains a password.
 
 Stop (button or Esc) cancels the request and any running tool. Typing while a task runs queues a steer note that is injected before the next model call (shown once, as a "Steer" bubble).
-If the model repeats the same call three times, the app stops the loop; if it happens again it asks you (or opens the sign-in window on a sign-in/passkey page).
+If the model repeats the same call three times, the app stops the loop; if it happens again it asks you (or opens the sign-in hand-off on a sign-in/passkey page).
 
 ## Status pill
 
@@ -109,8 +109,17 @@ open (or running in the background: closing the window only hides it); a missed 
 
 ## Layout
 
-`main.js` (window, IPC, wiring), `preload*.js`, `src/agent.js` (loop, approvals, loop guard, compaction), `src/llm.js` (SSE, shared request builder),
-`src/warm.js` (self-warm), `src/popup.js` (browser popup), `src/pillwin.js` + `src/pillstate.js` (status pill), `src/cards.js`,
+`main.js` (window, browser views and panel stacking, IPC, wiring), `preload*.js`, `src/agent.js` (loop, approvals, loop guard, compaction), `src/llm.js` (SSE, shared request builder),
+`src/warm.js` (self-warm), `src/perms.js` (Permissions card helpers), `src/pillwin.js` + `src/pillstate.js` (status pill), `src/cards.js`,
 `src/prompt.js`, `src/store.js`, `src/helpers.js`, `src/tools/{browser,web,screen,shell,diary,agents}.js`, `renderer/`,
 `helper/deskhelper.swift` (Swift CLI for screen control), `test/`.
 Threads are JSON files in `userData/threads/`.
+
+## Browser panel and Permissions card
+The browser is not a separate window. The main window holds a stack of native views: the app UI (a transparent-background
+`WebContentsView` filling the window) and one browser view per thread. A closed panel keeps the browser view attached at the panel's
+full size *underneath* the UI, so the agent can keep browsing and the card thumbnails keep updating; opening the panel lifts that one
+view above the UI over the panel's content rect. Only the status pill is a second window.
+
+The Permissions card (first launch on a Mac, Settings > Screen control > Permissions, or when a screen tool is refused) has one row per
+macOS permission with a live status dot, an Open Settings button, and a draggable tile of the app icon to drop into System Settings.

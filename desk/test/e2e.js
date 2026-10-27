@@ -1,6 +1,6 @@
 'use strict';
 // Real-Electron end-to-end test. Run: xvfb-run -a -s "-screen 0 1440x900x24" npx electron . --no-sandbox --e2e
-// A fake gateway scripts the model; the real agent, browser views, popup, status pill and UI do the rest.
+// A fake gateway scripts the model; the real agent, browser views, in-window browser panel, status pill and UI do the rest.
 // main.js calls prepare() before the window exists (so the launch-time warm-up goes to the fake gateway), then run().
 const http = require('http');
 const path = require('path');
@@ -86,10 +86,11 @@ const AUDIT = `(() => {
   return { n, bad };
 })()`;
 
-async function run({ app, win, store, helpers, browsers, pillWin, pillState, warmer, applySettings, env, pending, loginWaits, timing, getWin, showWindow }) {
+async function run({ app, win, ui, panel, holds, store, helpers, browsers, pillWin, pillState, warmer, applySettings, env, pending, loginWaits, timing, getWin, showWindow, permsFake }) {
   const fail = (m) => { console.error('E2E FAIL: ' + m); app.exit(1); };
   const timer = setTimeout(() => fail('timeout'), 170000);
-  const wc = win.webContents;
+  const wc = ui.webContents;
+  const { BrowserWindow } = require('electron');
   const ev = (code) => wc.executeJavaScript(code);
   const pev = (code) => pillWin.win.webContents.executeJavaScript(code);
   const { site, gw, checks } = env;
@@ -97,8 +98,7 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
     fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(DOCS, { recursive: true });
     win.setBounds({ x: 0, y: 0, width: 1100, height: 860 });
     const { nativeTheme } = require('electron');
-    // Screenshots: the chat window via capturePage (a see-through background popup can sit above it under xvfb, which has no
-    // compositor); root=true grabs the whole X screen (popup windows).
+    // Screenshots: the UI view via capturePage; root=true grabs the whole X screen (UI + the page view in the panel).
     const grab = (file, root) => new Promise((resolve) => {
       const shot = path.join(OUT, file);
       try { fs.unlinkSync(shot); } catch (e) { /* none yet */ }
@@ -156,7 +156,11 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
       throw new Error(label + ': did not finish');
     };
     const until = async (fn, ms) => { for (let i = 0; i < (ms || 8000) / 100; i++) { if (await fn()) return true; await sleep(100); } return false; };
-    const brs = () => browsers.get('primary');
+    const brs = () => browsers.get(store.listThreads()[0] && store.listThreads()[0].id) || [...browsers.values()].find((r) => !r.helper);
+    const pv = (code) => ev(code);
+    const panelOpen = () => ev('document.body.classList.contains("bp-open")');
+    const inWin = (r) => { const [w, h] = win.getContentSize(); return r.x >= 0 && r.y >= 0 && r.x + r.width <= w + 1 && r.y + r.height <= h + 1 && r.width > 200 && r.height > 200; };
+    const order = () => win.contentView.children;
 
     // ---- composer guard: a password-looking message is stopped (Send anyway / Cancel)
     await ev('(()=>{const i=document.querySelector("#input");i.value="my password is hunter2";i.dispatchEvent(new Event("input"));document.querySelector("#btnSend").click();})()');
@@ -175,27 +179,52 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
     await grab('ui-v2-running.png');
     checks.push(['card says Glim is browsing while active', await until(() => ev('document.querySelector(".bcard").classList.contains("active") && /Glim is browsing/.test(document.querySelector(".bcard").textContent)'))]);
     checks.push(['activity group shows a live step line while running', await ev('!!document.querySelector(".activity.running .act-live .t") && document.querySelector(".activity.running .act-live .t").textContent.length>3')]);
-    checks.push(['popup is hidden until the card is clicked', !brs().popup.isVisible()]);
+    const b0 = brs();
+    checks.push(['browser panel is closed until the card is clicked', !(await panelOpen()) && !panel.open]);
+    checks.push(['closed browser view stays attached below the UI (UI is above it)', order().indexOf(b0.view) >= 0 && order().indexOf(b0.view) < order().indexOf(ui)]);
+    checks.push(['closed browser view has real panel size (not 0, not parked off-screen)', inWin(b0.view.getBounds())]);
+    checks.push(['top bar shows the Browser button once a browser exists', await ev('!document.querySelector("#btnBrowser").hidden')]);
     // wait for the held step (the click request): the run is mid-flight
     await until(async () => gw.requests.length >= 3, 12000);
     await ev('document.querySelector(".bcard").click()');
-    checks.push(['clicking the card opens the browser popup', await until(() => brs().popup.isVisible(), 5000)]);
+    checks.push(['clicking the card opens the in-window browser panel', await until(() => panelOpen(), 5000)]);
+    await sleep(600);
+    const pop = brs();
+    const vb = pop.view.getBounds();
+    checks.push(['panel: browser view lies inside the main window and is above the UI', inWin(vb) && order().indexOf(pop.view) > order().indexOf(ui)]);
+    checks.push(['panel: view sits on the right side (~58% wide) and fills the chrome slot', vb.x > 300 && vb.width >= 420 && Math.abs(vb.width - 1100 * 0.58) < 120 && (await ev('(() => { const r = document.querySelector("#bSlot").getBoundingClientRect(); return Math.abs(r.left - ' + vb.x + ') < 2 && Math.abs(r.top - ' + vb.y + ') < 2; })()'))]);
+    checks.push(['panel: chrome visible (title, address, buttons, close)', await ev('(() => { const v = (s) => { const r = document.querySelector(s).getBoundingClientRect(); return r.width > 0 && r.height > 0; }; return ["#bTitle", "#bAddr", "#bBack", "#bFwd", "#bReload", "#bClose", "#bTake"].every(v); })()')]);
+    checks.push(['panel: chat column reflowed to the left of the panel', await ev('document.querySelector("#msgs").getBoundingClientRect().right <= document.querySelector("#bpanel").getBoundingClientRect().left + 2')]);
+    checks.push(['panel shows the real live page (results)', /\/results\?q=premonition/.test(pop.view.webContents.getURL())]);
+    checks.push(['panel address bar shows the URL', /results\?q=premonition/.test(await ev('document.querySelector("#bAddr").value'))]);
+    checks.push(['panel shows who is in control (Glim is browsing) and offers Take over', /Glim is browsing/.test(await ev('document.querySelector("#bWho").textContent')) && /Take over/.test(await ev('document.querySelector("#bTake").textContent'))]);
+    checks.push(['only the main window and the status pill exist (no popup windows)', BrowserWindow.getAllWindows().length === 2 && BrowserWindow.getAllWindows().includes(win) && BrowserWindow.getAllWindows().includes(pillWin.win)]);
+    // the divider: drag it and the view follows
+    const before = pop.view.getBounds().width;
+    // (synthetic pointer events: sendInputEvent mouse moves are not delivered as pointer moves under xvfb)
+    await ev('(() => { const d = document.querySelector("#bdiv"), r = d.getBoundingClientRect(); const o = (t, x) => d.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerId: 1, clientX: x, clientY: r.top + 20, button: 0 })); o("pointerdown", r.left + 5); for (let i = 1; i <= 6; i++) o("pointermove", r.left + 5 - i * 30); o("pointerup", r.left - 175); })()');
     await sleep(500);
-    const pop = brs().popup;
-    checks.push(['popup shows the real live page (results)', /\/results\?q=premonition/.test(pop.view.webContents.getURL())]);
-    checks.push(['popup has address bar showing the URL', /results\?q=premonition/.test(await pop.win.webContents.executeJavaScript('document.querySelector("#addr").value'))]);
-    checks.push(['popup shows who is in control (Glim is browsing)', /Glim is browsing/.test(await pop.win.webContents.executeJavaScript('document.querySelector("#who").textContent'))]);
-    checks.push(['popup page sits under the toolbar (58px)', pop.view.getBounds().y === 58]);
-    await grab('ui-v2-popup.png', true);
-    // Ben can use the page himself: scroll it from his side (real input into the popup page)
+    const after = pop.view.getBounds();
+    checks.push(['dragging the divider widens the panel and the view follows', after.width > before + 100 && inWin(after) && order().indexOf(pop.view) > order().indexOf(ui)]);
+    // Ben can use the page himself: scroll it from his side (real input into the panel page)
     pop.view.webContents.sendInputEvent({ type: 'mouseWheel', x: 200, y: 200, deltaX: 0, deltaY: -50 });
-    await pop.win.webContents.executeJavaScript('document.querySelector("#close").click()');
-    checks.push(['closing the popup hides it', await until(() => !pop.isVisible(), 3000)]);
-    checks.push(['closing the popup does not stop the agent', await ev('!document.querySelector("#btnStop").hidden')]);
+    // Take over pauses Glim's browser tools; Hand back lets him go on
+    await ev('document.querySelector("#bTake").click()');
+    checks.push(['Take over: label flips to Hand back to Glim and the hold is set', await until(async () => holds.has(pop.key) && /Hand back/.test(await ev('document.querySelector("#bTake").textContent')), 3000)]);
+    await ev('document.querySelector("#bTake").click()');
+    checks.push(['Hand back releases the hold', await until(async () => !holds.has(pop.key), 3000)]);
+    const thumbBefore = await ev('(document.querySelector(".bcard .bc-thumb img")||{}).src||""');
+    await ev('document.querySelector("#bClose").click()');
+    checks.push(['closing the panel hides it and puts the view back under the UI', await until(async () => !(await panelOpen()) && !panel.open && order().indexOf(pop.view) < order().indexOf(ui), 3000)]);
+    checks.push(['closed panel: view keeps its full size inside the window', inWin(pop.view.getBounds())]);
+    checks.push(['closing the panel does not stop the agent', await ev('!document.querySelector("#btnStop").hidden')]);
     await waitIdle('task1');
     await sleep(700);
     const url = brs().br.wc.getURL();
-    checks.push(['agent went on and ended on /item/1', url === site.base + '/item/1']);
+    checks.push(['agent went on and ended on /item/1 (browsing continued with the panel closed)', url === site.base + '/item/1']);
+    checks.push(['card thumbnail kept updating while the panel was closed', await ev('(document.querySelector(".bcard .bc-thumb img")||{}).src||""') !== thumbBefore && /item\/1/.test(await ev('document.querySelector(".bcard .bc-url").textContent') + (pop.br.wc.getURL()))]);
+    const tb = await pop.br.thumb(360);
+    checks.push(['capturePage works on the covered view (non-empty JPEG)', !!tb && tb.length > 1500]);
     checks.push(['run state cleared (Send shown, Stop hidden)', await ev('document.querySelector("#btnStop").hidden && document.querySelector("#runState").hidden && document.querySelector("#btnSend").textContent==="Send"')]);
     checks.push(['final answer rendered prominently', await ev('/Premonition result/.test((document.querySelector(".acol > .atext")||{}).textContent||"")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
@@ -234,12 +263,12 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
     // ---- task 3: sign-in hand-off
     await send('Log in to the test mail site');
     checks.push(['hand-off: agent waits for Ben (login wait registered)', await until(async () => loginWaits.size > 0, 15000)]);
-    const pop2 = brs().popup;
-    checks.push(['hand-off: popup opens by itself', await until(() => pop2.isVisible(), 4000)]);
-    await sleep(500);
-    checks.push(['hand-off: banner says Sign in here yourself; Glim can\'t see what you type', await pop2.win.webContents.executeJavaScript('!document.querySelector("#banner").hidden && /Sign in here yourself; Glim can.t see what you type\\. Click Done when finished\\./.test(document.querySelector("#banner").textContent)')]);
+    const pop2 = brs();
+    checks.push(['hand-off: the browser panel opens by itself', await until(() => panelOpen(), 4000)]);
+    await sleep(700);
+    checks.push(['hand-off: banner says Sign in here yourself; Glim can\'t see what you type', await ev('!document.querySelector("#bBanner").hidden && /Sign in here yourself; Glim can.t see what you type\\. Click Done when finished\\./.test(document.querySelector("#bBanner").textContent)')]);
     checks.push(['hand-off: the password field is still empty (nothing typed)', (await pop2.view.webContents.executeJavaScript('document.querySelector("#p").value')) === '']);
-    checks.push(['hand-off: page is below toolbar + banner (118px)', pop2.view.getBounds().y === 118]);
+    checks.push(['hand-off: page view sits under the banner, inside the window', await ev('(() => { const r = document.querySelector("#bSlot").getBoundingClientRect(); const b = document.querySelector("#bBanner").getBoundingClientRect(); return r.top >= b.bottom - 1; })()') && inWin(pop2.view.getBounds()) && order().indexOf(pop2.view) > order().indexOf(ui)]);
     checks.push(['hand-off: chat card says sign-in needed', await until(() => ev('!!document.querySelector(".bcard.login") && /Sign-in needed/.test(document.querySelector(".bcard.login").textContent)'), 3000)]);
     checks.push(['hand-off: pill shows waiting for sign-in', await until(async () => /sign in/i.test(await pev('document.querySelector("#line").textContent')), 4000)]);
     checks.push(['after sending, the transcript is scrolled to the bottom', await until(() => ev('(() => { const s = document.querySelector("#scroll"); return s.scrollHeight - s.scrollTop - s.clientHeight < 4; })()'), 3000)]);
@@ -248,13 +277,28 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
     checks.push(['top status and composer agree while working', await ev('/Working|Waiting/.test(document.querySelector("#gw").textContent) && document.querySelector("#gw span").textContent === document.querySelector("#runState span").textContent')]);
     checks.push(['hand-off: agent still waiting (no further request)', gw.requests.length === 8]);
     await grab('ui-v2-signin.png', true);
+    const origTheme = nativeTheme.themeSource;
+    for (const theme of ['light', 'dark']) {
+      nativeTheme.themeSource = theme; await sleep(700);
+      await grab('ui-v2-panel-wide-' + theme + '.png', true);
+      const a = await ev(AUDIT);
+      checks.push(['text contrast AA with the panel open (' + theme + ')', a.bad.length === 0]);
+      if (a.bad.length) console.log('panel contrast: ' + a.bad.join(' | '));
+      // narrow window: the panel becomes a full-window sheet with a Chat button
+      win.setSize(900, 860); await sleep(900);
+      const nb = pop2.view.getBounds();
+      if (theme === 'light') checks.push(['narrow (<1000px): panel is a full-window sheet with a back-to-chat button', await ev('document.body.classList.contains("bp-narrow")') && nb.x === 0 && nb.width >= 890 && inWin(nb) && await ev('document.querySelector("#bChat").getBoundingClientRect().width > 0') && order().indexOf(pop2.view) > order().indexOf(ui)]);
+      await grab('ui-v2-panel-narrow-' + theme + '.png', true);
+      win.setSize(1100, 860); await sleep(900);
+    }
+    nativeTheme.themeSource = origTheme; await sleep(500);
     // Ben types his password himself (real key events into the page), then clicks Done
     await pop2.view.webContents.executeJavaScript('document.querySelector("#p").focus()');
     pop2.view.webContents.insertText('benspassword');
     await sleep(200);
-    await pop2.win.webContents.executeJavaScript('document.querySelector("#done").click()');
+    await ev('document.querySelector("#bDone").click()');
     await waitIdle('task3');
-    checks.push(['hand-off: popup closes after Done and the agent continued', !pop2.isVisible() && gw.requests.length === 9]);
+    checks.push(['hand-off: panel closes after Done and the agent continued', !(await panelOpen()) && gw.requests.length === 9]);
     checks.push(['hand-off: the model never saw what Ben typed', !JSON.stringify(gw.requests).includes('benspassword')]);
     checks.push(['hand-off: final answer shown', await ev('document.body.innerText.includes("you are signed in")')]);
 
@@ -292,6 +336,18 @@ async function run({ app, win, store, helpers, browsers, pillWin, pillState, war
     await ev('document.querySelector("#threadList li").click()');
     await sleep(600);
     checks.push(['reopened thread restores browser card + activity groups', await ev('!!document.querySelector(".bcard .bc-thumb img") && document.querySelectorAll(".activity").length>=3')]);
+
+    // ---- permissions card: rows with live status, Open Settings, a draggable app tile; flips green when macOS says yes
+    await ev('window.Perms.show()');
+    checks.push(['permissions card opens inside the main window with 3 rows (accessibility, screen recording, automation)', await until(() => ev('document.querySelectorAll("#perms .p-row").length===3'), 4000) && BrowserWindow.getAllWindows().length === 2]);
+    checks.push(['permissions rows start Off with an Open Settings button each', await ev('[...document.querySelectorAll("#perms .p-row")].slice(0,2).every((r) => /Off/.test(r.querySelector(".p-stat").textContent) && !r.classList.contains("on") && /Open Settings/.test(r.textContent))')]);
+    checks.push(['drag tile shows the app icon and name, with the hint and Finder label', await ev('(() => { const t = document.querySelector("#perms .p-tile"); return !!t && t.draggable && !!t.querySelector("img").src && /Premonition Desk/.test(t.textContent) && /Drag this into the list, then switch it on/.test(document.querySelector("#perms").textContent) && /click to show it in Finder/.test(t.title); })()')]);
+    await grab('ui-v2-permissions.png');
+    permsFake.accessibility = true;
+    checks.push(['row turns green when the permission flips (polled every 2 s)', await until(() => ev('(() => { const r = document.querySelector("#perms .p-row[data-id=accessibility]"); return !!r && r.classList.contains("on") && /On/.test(r.querySelector(".p-stat").textContent); })()'), 6000)]);
+    checks.push(['the other row stays Off', await ev('!document.querySelector("#perms .p-row[data-id=screen]").classList.contains("on")')]);
+    await ev('document.querySelector("#permsDone").click()');
+    checks.push(['permissions card closes with Done', await ev('document.querySelector("#perms").hidden')]);
 
     // ---- settings sheet: every setting editable, applied at once and persisted
     await ev('window.__openSettings()');

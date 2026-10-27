@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   theme: 'system',        // system | light | dark
   textSize: 'm',          // s | m | l
   highContrast: false,    // stronger text and borders
+  permsSeen: false,       // the Permissions card has been shown once on first launch
   pill: true,             // the always-on-top status pill at the top of the screen
   // Startup
   openAtLogin: false,
@@ -36,7 +37,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
-const BOOLS = ['diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast'];
+const BOOLS = ['permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast'];
 const NUMS = { maxSteps: [1, 200], maxParallel: [1, 4] };
 const STRS = ['gatewayUrl', 'model', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey'];
 

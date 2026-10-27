@@ -7,7 +7,7 @@ The only brain is the local Premonition gateway.
 
 ## Stack
 - Electron 33, plain JavaScript (CommonJS in main, plain ES in renderer), no bundler, no framework.
-- Built-in browser = an Electron `WebContentsView` in a popup host window (see "Browser: cards and popup"), persistent
+- Built-in browser = an Electron `WebContentsView` inside the main window (see "Browser: cards and in-window panel"), persistent
   partition `persist:desk` (sign-ins survive restarts). Created lazily on first use, driven from the main process
   (executeJavaScript + sendInputEvent). There is no permanent browser pane: the window is just the chat.
 - Screen control = `deskhelper`, a small Swift CLI (AXUIElement + CGEvent + NSWorkspace), compiled on the
@@ -114,26 +114,50 @@ Ben's feedback on v1: ugly, hard to see, huge empty right pane, walls of repeate
 - Glim is alive but calm: blink, an occasional glance while idle, sleepy after 5 min idle; he never pops up
   except for errors, "waiting for Ben" and finished helper results.
 
-## Browser: cards and popup
+## Browser: cards and in-window panel
+Ben's feedback on the popup: "It should be in a browser thing in the app, not just in its own window. Everything should be built into
+the original window." So there is no browser window any more; the only other window is the status pill.
 - Browser off by default. When the agent uses a browser tool, a **live browser card** appears in that task's activity
   group: favicon, title, host, a live thumbnail (`capturePage`, 360 px JPEG q55, refreshed after every action and every
-  1.5 s while the run is going) and a pulsing "Glim is browsing". The thumbnail is stored with the thread, so reopened
-  threads show the last capture. Screen control gets the same kind of card (latest screenshot; click for the full capture and element list).
-- Clicking the card opens the browser as a **popup**: a separate window (`src/popup.js`) with the real page in a
-  `WebContentsView` under a toolbar (back, forward, reload, address bar, "Glim is browsing / You're in control",
-  **Hand back to Glim**, close). Ben can click, scroll, type, sign in. Closing the popup never stops the agent.
-  Why a window and not an overlay: a WebContentsView always paints above the chat's DOM, so an in-chat panel would need holes; a window just works on macOS.
-- Hidden pages cannot be captured or typed into, so while closed the popup window stays "shown" but see-through
-  (`opacity .01`), click-through, unfocusable and on all Spaces (not a child of the chat window, so hiding the chat
-  window does not hide it). Opening it makes it opaque, centered over the chat. (Electron ignores opacity on Linux, so on Linux the closed popup is visible: dev/test only.)
-- Helpers keep their own browser (same partition); the card appears in the helper's thread; the popup is
-  destroyed with the helper's run. A card whose browser is gone opens the main browser at the card's URL.
+  1.5 s while the run is going) and a pulsing "Glim is browsing". The thumbnail is stored with the thread. Screen control gets the
+  same kind of card. Cards, a link in an answer, a sign-in hand-off and the pill's "Open browser" all open the panel.
+- **Panel** (renderer/panel.js + #bpanel): wide windows (>= 1000 px) get a right-hand split, default 58% of the width (min 420 px, chat
+  keeps >= 360 px), with a draggable divider (width remembered; double-click resets) and the chat column reflowing to its left. Narrow windows get
+  a full-window sheet under the top bar with a Chat (back) button. Chrome rendered by the main renderer: favicon + title, who is in control, **Take over / Hand back to Glim**,
+  close (x), back / forward / reload, address field, and the sign-in banner ("Sign in here yourself; Glim can't see what you type." + Done / Not now).
+  A top-bar **Browser** button appears once the open thread has a browser and toggles the panel. The panel shows the open thread's browser;
+  switching threads switches (or closes) it.
+- Take over really pauses Glim: the agent's browser tools wait (`holds` in main.js, abortable with Stop) until Hand back or close.
+- **One browser view per thread** (chat threads and helper threads alike, key = thread id, same `persist:desk` partition). Idle chat-thread browsers are
+  kept up to 4 besides the active one (oldest dropped); a helper's is dropped when its run ends; deleting a thread drops its browser. A card whose browser is gone opens a fresh one at the card's URL.
+- **Stacking** (main.js): the window's `contentView` holds `[idle browser views ..., UI view, the open browser view]`. The UI view fills the window and is
+  above every browser view that is not on show; it has a transparent view background (its page paints opaque) and the app starts with
+  `--disable-backgrounding-occluded-windows`. Without those two things Chromium treats a view that is fully covered by the UI as occluded and stops painting it:
+  measured under xvfb, a covered view had 0 animation frames and `capturePage` failed ("Current display surface not available"), and an off-window view was no better.
+  With them, a closed browser stays attached at the panel's full size (same viewport as when open), so agent browsing, `sendInputEvent`/`insertText`, snapshots and
+  card thumbnails all work with the panel closed. Nothing is parked off-screen or in another window.
+- The renderer measures the content rect (#bSlot) and reports it with `browser:layout`; main sets every browser view's bounds to it and lifts the open
+  one above the UI. The slide is a short JS animation: each frame moves the chrome and reports a shifted rect, so the page slides with it. While the divider is dragged,
+  Settings / the screen viewer / Permissions are open, or the narrow drawer is out, the view drops below the UI (those overlays live in the UI view).
+- "Closing" the window with keep-running on a Mac makes it see-through, click-through and unfocusable (not hidden) while browsers exist, because a hidden window stops painting its pages.
+- Known gap: not verified on macOS hardware (only Linux under xvfb); `sendInputEvent` mouse moves for the divider are not delivered as pointer moves under xvfb, so the e2e drives the divider with synthetic pointer events.
+
+## Permissions card (drag the app into System Settings)
+A sheet inside the main window (renderer/perms.js, src/perms.js, no extra window): shown on first launch (Mac), from Settings > Screen control > Permissions,
+and when a screen tool is refused for permissions (at most once a minute). One row each for Accessibility
+(`x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility`, falling back to the old `com.apple.preference.security` form), Screen Recording
+(`?Privacy_ScreenCapture`) and an optional Automation row (no status; macOS asks per app). Each row: a status dot (deskhelper `check` combined with Electron's
+`isTrustedAccessibilityClient(false)` / `getMediaAccessStatus('screen')`; polled every 2 s while the card is open and re-checked when the window regains focus), an Open Settings
+button (`shell.openExternal`), and turns green when the permission flips. Below: a draggable tile with the real app icon and name, "Drag this into the list, then switch it on";
+dragging calls `webContents.startDrag({file: <the .app bundle>, icon})` (IPC accepted only from the main window's webContents); clicking it calls `shell.showItemInFolder`.
+The bundle is found by walking up from `app.getPath('exe')` to the `.app` directory (dev: the Electron executable). If deskhelper still reports "no" while the app itself is allowed, macOS is
+listing the helper binary separately, so a second tile for deskhelper appears.
 
 ## Sign-in hand-off (no passwords in chat)
 - `browser_type` into a password or payment field never types: the tool returns "Login needed: Ben is signing in
-  himself" semantics: the popup opens with the banner "Sign in here yourself; Glim can't see what you type. Click Done
+  himself" semantics: the browser panel opens with the banner "Sign in here yourself; Glim can't see what you type. Click Done
   when finished.", the chat card turns "Sign-in needed", the pill shows "Waiting for you: sign in", and the agent waits
-  (abortable, holds no run slot). Done -> popup closes, the tool result is "Login needed: Ben is signing in himself. He
+  (abortable, holds no run slot). Done -> the panel closes, the tool result is "Login needed: Ben is signing in himself. He
   clicked Done. Fresh snapshot ...". "Not now" tells the model not to type credentials. Snapshots mask password values.
 - The prompt says: never ask Ben for passwords or codes in chat; for sign-in, 2-step or passkey pages just act and the app hands off.
 
@@ -162,12 +186,12 @@ Changes apply immediately and persist (`settings.json`, values validated in `sto
 rebuild the tool list (and re-warm); theme drives `nativeTheme.themeSource`; the hotkey is re-registered.
 
 ## Files
-desk/package.json, desk/main.js (window, views, IPC), desk/preload.js (+ preload-popup.js, preload-pill.js), desk/src/{agent,warm,popup,pillwin,pillstate,cards}.js,
+desk/package.json, desk/main.js (window, views, IPC), desk/preload.js (+ preload-pill.js), desk/src/{agent,warm,perms,pillwin,pillstate,cards}.js,
 desk/src/llm.js (SSE + tool-call parsing), desk/src/prompt.js (system prompt + tool schemas),
-desk/src/helpers.js (schedules, scheduler, run slots, screen lock, notices), desk/src/tools/{browser,screen,shell,web,diary,agents}.js, desk/src/store.js, desk/renderer/{index.html,popup.html,pill.html,*.css,app.js,md.js,guard.js,mascot.js,popup.js,pill.js},
+desk/src/helpers.js (schedules, scheduler, run slots, screen lock, notices), desk/src/tools/{browser,screen,shell,web,diary,agents}.js, desk/src/store.js, desk/renderer/{index.html,pill.html,*.css,app.js,panel.js,perms.js,md.js,guard.js,mascot.js,pill.js},
 desk/helper/deskhelper.swift, desk/build-mac.sh (npm ci, swiftc, @electron/packager darwin arm64,
 ad-hoc codesign, copy to /Applications/Premonition Desk.app), desk/test/*.test.js (node:test),
-desk/test/e2e.js (xvfb: fake gateway drives the real browser, popup, pill and UI against a local page; screenshots to test/out and docs/img/ui-v2-*.png).
+desk/test/e2e.js (xvfb: fake gateway drives the real browser, panel, permissions card, pill and UI against a local page; screenshots to test/out and docs/img/ui-v2-*.png).
 
 ## Vision (when the gateway can see)
 The deployed 3-bit model is text-only today; an image-capable server (mlx-vlm) is being added on the M3.
@@ -209,7 +233,7 @@ stopped), schedule, next run and the last result; `agent_stop(name_or_id)` abort
 - Autonomy: helpers use setting `helperMode` (default Hands-off) with the same danger list. An approval card or
   ask_user sets the helper to waiting-for-Ben, shows a notification, and the card waits in the helper's thread
   (replayed when Ben opens it).
-- Browser: one `Browser` per agent (constructor takes a `WebContentsView`), hosted in its own popup window (see "Browser: cards and popup"; same `persist:desk` partition, so sign-ins are shared), created at run start and
+- Browser: one `Browser` per agent (constructor takes a `WebContentsView`), attached under the UI like any thread browser (see "Browser: cards and in-window panel"; same `persist:desk` partition, so sign-ins are shared), created at run start and
   destroyed at run end. webRequest listeners are one per session, so a single dispatcher keys on webContents id.
 - Screen control: `screen_*` and `open_app` take a global FIFO lock, taken by an agent's first screen tool and held
   until its run ends; others wait (abortable).

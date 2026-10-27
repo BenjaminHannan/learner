@@ -8,7 +8,8 @@ contextBridge.exposeInMainWorld('desk', {
   settings: { get: inv('settings:get'), set: inv('settings:set') },
   threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename') },
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
-  browser: { open: inv('browser:open') },
+  browser: { open: inv('browser:open'), exists: inv('browser:exists'), layout: inv('browser:layout'), cmd: inv('browser:cmd') },
+  perms: { status: inv('perms:status'), open: inv('perms:open'), reveal: inv('perms:reveal'), drag: (which) => ipcRenderer.send('perms:drag', which) },
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },
   helpers: { list: inv('helpers:list'), run: inv('helpers:run'), pause: inv('helpers:pause'), remove: inv('helpers:delete') },
   openSystem: inv('system:open'),
@@ -22,5 +23,11 @@ contextBridge.exposeInMainWorld('desk', {
   onOpenThread: on('open-thread'),
   onOpenSettings: on('open-settings'),
   onNewThread: on('new-thread'),
+  onPermsShow: on('perms-show'),
+  onPermsRecheck: on('perms-recheck'),
+  onBrowserShow: on('browser-show'),
+  onBrowserHide: on('browser-hide'),
+  onBrowserState: on('browser-state'),
+  onBrowserGone: on('browser-gone'),
   onFocusComposer: on('focus-composer')
 });

@@ -134,8 +134,8 @@ function wireSession(ses) {
   ses.webRequest.onErrorOccurred(done);
 }
 
-// One Browser per agent. Its view lives in a host window (main.js: a hidden BrowserWindow that becomes the popup
-// when Ben clicks the card). All share the persist:desk partition (shared sign-ins).
+// One Browser per agent (one per thread). Its view is attached to the main window (main.js stacks it under the UI, or above it
+// while the browser panel shows it). All share the persist:desk partition (shared sign-ins).
 class Browser {
   constructor({ view, session, onState }) {
     this.onState = onState || (() => {});
@@ -154,6 +154,9 @@ class Browser {
     wc.on('did-start-navigation', (e, url, inPlace, main) => { if (main && !inPlace) this.favicon = ''; });
     wc.on('page-favicon-updated', (e, icons) => { this.favicon = (icons && icons[0]) || ''; push(); });
   }
+
+  // Give the page keyboard focus for the agent's typing, unless that would pull it away from Ben (the composer) while the panel is closed.
+  focusPage() { if (this.shouldFocus ? this.shouldFocus() : true) this.wc.focus(); }
 
   state() {
     const wc = this.wc;
@@ -246,7 +249,7 @@ class Browser {
     if (!p.ok) return { text: 'Error: ' + p.error, error: true };
     await sleep(250); // let the badge show
     if (p.hit) {
-      this.wc.focus();
+      this.focusPage();
       this.wc.sendInputEvent({ type: 'mouseMove', x: p.x, y: p.y });
       this.wc.sendInputEvent({ type: 'mouseDown', x: p.x, y: p.y, button: 'left', clickCount: 1 });
       this.wc.sendInputEvent({ type: 'mouseUp', x: p.x, y: p.y, button: 'left', clickCount: 1 });
@@ -271,7 +274,7 @@ class Browser {
     if (!p.ok) return { text: 'Error: ' + p.error, error: true };
     const f = await this.wc.executeJavaScript(call(pageFocusSelect, id));
     if (!f.ok || !f.editable) return { text: 'Error: element [' + id + '] is not a text field', error: true };
-    this.wc.focus();
+    this.focusPage();
     text = String(text == null ? '' : text);
     if (text) this.wc.insertText(text);
     await sleep(80);
