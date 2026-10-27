@@ -3,17 +3,55 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_SETTINGS = {
+  // Model
   gatewayUrl: 'http://127.0.0.1:8090/v1',
-  model: 'qwen36-auto',
-  maxSteps: 40,
-  mode: 'ask',            // ask | hands-off
+  model: 'qwen36-auto',   // qwen36-auto | qwen36 | qwen36-fast
+  // Autonomy
+  mode: 'ask',            // ask | hands-off (main agent)
   helperMode: 'hands-off', // autonomy for helper agents
+  maxSteps: 40,
+  // Helpers
   maxParallel: 2,         // model runs at once (primary + helpers)
-  vision: 'off',          // off | on
+  // Memory
+  diaryEnabled: true,
   diaryPath: '',          // path to diary_mcp.py ('' = ~/learner-ops/assistant/diary_mcp.py)
   pythonPath: '',         // '' = ~/learner-ops/.venv/bin/python if present, else python3
-  helperPath: ''          // '' = bundled deskhelper
+  // Screen control
+  helperPath: '',         // '' = bundled deskhelper
+  // Vision
+  vision: 'off',          // off | on
+  // Appearance
+  theme: 'system',        // system | light | dark
+  textSize: 'm',          // s | m | l
+  highContrast: false,    // stronger text and borders
+  pill: true,             // the always-on-top status pill at the top of the screen
+  // Startup
+  openAtLogin: false,
+  keepRunning: true,      // closing the window hides it; the app (and helpers) keep running
+  hotkey: 'Alt+Space'     // global shortcut that toggles the window ('' = off)
 };
+
+const ENUMS = {
+  model: null, // free text on purpose (a custom model name is allowed)
+  mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
+  theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
+};
+const BOOLS = ['diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast'];
+const NUMS = { maxSteps: [1, 200], maxParallel: [1, 4] };
+const STRS = ['gatewayUrl', 'model', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey'];
+
+// Keep only known keys with sane values (bad values fall back to the default).
+function sanitize(patch) {
+  const out = {};
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (!(k in DEFAULT_SETTINGS)) continue;
+    if (BOOLS.includes(k)) out[k] = !!v;
+    else if (NUMS[k]) { const n = Math.round(Number(v)); out[k] = Number.isFinite(n) ? Math.min(NUMS[k][1], Math.max(NUMS[k][0], n)) : DEFAULT_SETTINGS[k]; }
+    else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
+    else if (STRS.includes(k)) out[k] = String(v == null ? '' : v).trim() || (k === 'gatewayUrl' || k === 'model' ? DEFAULT_SETTINGS[k] : '');
+  }
+  return out;
+}
 
 class Store {
   constructor(dir) {
@@ -24,12 +62,14 @@ class Store {
   }
   getSettings() {
     try {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(this.settingsFile, 'utf8')) };
+      const raw = JSON.parse(fs.readFileSync(this.settingsFile, 'utf8'));
+      if (raw.vision === true) raw.vision = 'on';
+      return { ...DEFAULT_SETTINGS, ...raw };
     } catch (e) { return { ...DEFAULT_SETTINGS }; }
   }
   saveSettings(patch) {
     const cur = this.getSettings();
-    const next = { ...cur, ...patch };
+    const next = { ...cur, ...sanitize(patch) };
     fs.writeFileSync(this.settingsFile, JSON.stringify(next, null, 2));
     return next;
   }
@@ -67,4 +107,4 @@ class Store {
   }
 }
 
-module.exports = { Store, DEFAULT_SETTINGS };
+module.exports = { Store, DEFAULT_SETTINGS, sanitize };

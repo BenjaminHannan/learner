@@ -1,6 +1,7 @@
 # Premonition Desk
 
-Ben's own Mac assistant app: a chat on the left, a built-in browser and a screen view on the right.
+Ben's own Mac assistant app (the assistant is called Glim): just a chat window. When Glim uses the web, a live browser
+card appears in the chat; click it to open the real page in a popup you can use too (sign-ins included).
 The only brain is the local Premonition gateway (OpenAI-compatible chat completions). Everything the
 assistant does shows up as a step trail you can expand, and the whole thread is saved.
 The spec is in `DESIGN.md`.
@@ -15,7 +16,7 @@ npm test           # unit tests (node:test, no Electron needed, runs on Linux)
 npm run e2e        # real Electron under xvfb: fake gateway drives the browser view (Linux)
 ```
 
-The e2e writes a screenshot to `desk/test/out/ui.png` (git-ignored) and prints its path.
+The e2e writes screenshots to `desk/test/out/` (git-ignored) and copies them to `desk/docs/img/ui-v2-*.png`: chat (light/dark), welcome, running with a live browser card, the browser popup, the sign-in banner, the password guard, Settings, and the status pill (collapsed/expanded/working, light/dark).
 
 ## Build and install on the Mac (Apple silicon)
 
@@ -41,49 +42,75 @@ If you rebuild and re-sign the app, macOS may ask again.
 
 ## Settings
 
-Gear icon in the top bar. Saved in `settings.json` in the app's userData folder.
+Gear icon in the top bar or **Cmd+,**. Everything applies immediately and is saved in `settings.json` in the app's userData folder.
 
-| Setting | Default | Notes |
-| --- | --- | --- |
-| Gateway URL | `http://127.0.0.1:8090/v1` | `/chat/completions` is appended |
-| Default model | `qwen36-auto` | top bar pills: Auto = `qwen36-auto`, Think = `qwen36`, Fast = `qwen36-fast` |
-| Max steps | 40 | model calls per task |
-| Parallel runs | 2 | model runs at once, primary plus helpers; extra runs queue |
-| `helperMode` (settings.json only) | `hands-off` | autonomy for helper agents |
-| Vision | off | when on, screen looks and browser snapshots also send a JPEG (newest only) |
-| diary_mcp.py path | `~/learner-ops/assistant/diary_mcp.py` | stdio MCP server, tool `diary_search` |
-| Python path | `~/learner-ops/.venv/bin/python` if present, else `python3` | |
-| deskhelper path | bundled in the app's Resources | falls back to `desk/helper/deskhelper` or `desk/build/deskhelper` in dev |
+| Group | Setting | Default | Notes |
+| --- | --- | --- | --- |
+| Model | Gateway URL | `http://127.0.0.1:8090/v1` | `/chat/completions` is appended; **Test connection** shows the latency |
+| Model | Default mode | Auto (`qwen36-auto`) | Auto / Think (`qwen36`) / Fast (`qwen36-fast`), same as the top-bar pills |
+| Autonomy | Main agent | Ask first | Ask first or Hands-off |
+| Autonomy | Helpers (`helperMode`) | Hands-off | same choice for helper agents |
+| Autonomy | Max steps | 40 | model calls per task (1 to 200) |
+| Autonomy | Danger list | fixed | shown read-only; these shell commands always need your OK |
+| Helpers | Runs at once (`maxParallel`) | 2 | primary plus helpers; extra runs queue (1 to 4) |
+| Memory | Use my diary | on | adds/removes the `diary_search` tool right away |
+| Memory | diary_mcp.py path, Python path | `~/learner-ops/...`, venv or `python3` | |
+| Screen control | deskhelper path | bundled | **Check permissions**, **Ask macOS**, and buttons that open System Settings > Privacy > Accessibility / Screen Recording |
+| Vision | Send screenshots to the model | off | newest image only |
+| Appearance | Theme | System | System / Light / Dark |
+| Appearance | Text size | M | S / M / L |
+| Appearance | High contrast | off | stronger text and borders |
+| Appearance | Status pill | on | the floating pill at the top of the screen |
+| Startup | Open at login | off | starts hidden |
+| Startup | Keep running when the window is closed | on | closing hides the window; helpers keep going; Cmd+Q quits |
+| Startup | Global shortcut | Option+Space | shows/hides Glim from any app and focuses the composer; click the button and press the keys, Backspace turns it off |
 
-The diary tool is included in the tool list only if the diary server starts at app launch. The tool
-list is then fixed for that run (changes need a restart) so the model's prompt cache keeps hitting.
+Changing the model, gateway or diary setting re-warms the model (see below).
 
 Autonomy switch in the top bar:
-- **Ask first**: shell commands, screen clicks/typing/keys, and typing into password or payment fields need your OK on an inline card (Allow once / Allow for this task / Deny).
+- **Ask first**: shell commands and screen clicks/typing/keys need your OK on an inline card (Allow once / Allow for this task / Deny).
 - **Hands-off**: everything runs, except shell commands on the danger list (`rm -rf`, `sudo`, `diskutil`, `mkfs`, shutdown, writes to `/dev/`, `curl | sh`, force push, ...). The model is also told to call `ask_user` before sending, buying, paying or deleting.
 
-Stop (button or Esc) cancels the request and any running tool. Typing while a task runs queues a steer note that is injected before the next model call.
+Passwords: the agent never types into a password or payment field. The popup opens with "Sign in here yourself; Glim can't see
+what you type. Click Done when finished." and Glim waits. The composer warns if a message looks like it contains a password.
+
+Stop (button or Esc) cancels the request and any running tool. Typing while a task runs queues a steer note that is injected before the next model call (shown once, as a "Steer" bubble).
+If the model repeats the same call three times, the app stops the loop; if it happens again it asks you (or opens the sign-in window on a sign-in/passkey page).
+
+## Status pill
+
+A small pill pinned top-center on every Space (our own design): Glim plus one line ("Opened gmail.com", "Waiting for you",
+"Done: weather report", or a sad Glim and "Something went wrong"). Hover for the agent, current step, time, error text and
+buttons (Open, Stop, Allow/Deny). It fades 8 s after a task finishes; errors and "waiting" stay until you look. Turn it off in Settings > Appearance.
+
+## First reply speed
+
+On launch, whenever the gateway comes back (checked every 5 s while down, 30 s while up) and after a model/gateway change, the app sends one tiny
+request (`X-Premonition-Warm: 1`, model `qwen36-fast`, `max_tokens` 1, user ".") with exactly the same system prompt and tools as a real request, so the
+gateway's prompt cache is warm before you type. The top bar says "Warming up..." then "Ready"; typing is never blocked. The window opens before the
+diary, helper scheduler, warm-up and browser start. Hover over an answer to see its time to first token.
 
 ## Helpers (sub-agents)
 
 Ask Premonition to hand off a long or repeating job ("every morning at 8, check X and tell me what changed").
 It starts a helper with `agent_start` (one-off, `every` 30m/2h/1d, or daily `at` 08:00). Helpers run with the same
-prompt and tools, in their own hidden browser and their own thread, listed under **Agents** in the threads drawer
+prompt and tools, in their own browser (the card shows in the helper's thread) and their own thread, listed under **Agents** in the threads drawer
 (Run now / Pause / Delete). When one finishes you get a notification and a note in the chat that started it, which
 the assistant also sees with your next message. Schedules live in `helpers.json` and only fire while the app is
-open; a missed run happens once at launch. Details in `DESIGN.md`.
+open (or running in the background: closing the window only hides it); a missed run happens once at launch. Details in `DESIGN.md`.
 
 ## How it talks to the gateway
 
-- `POST {gatewayUrl}/chat/completions` with `stream: true`, `model`, `messages`, `tools` (18 tools, 17 without the diary).
-- The system prompt and tool schemas are constant (about 5.3k characters; a test keeps them under 9000). The date goes in a `[Tue 2026-10-27 14:05]` prefix on each user message.
+- `POST {gatewayUrl}/chat/completions` with `stream: true`, `model`, `messages`, `tools` (18 tools, 17 without the diary; `stream: true`, `tool_choice: auto`).
+- The system prompt and tool schemas are constant (about 6.4k characters; a test keeps them under 9000). The date goes in a `[Tue 2026-10-27 14:05]` prefix on each user message.
 - Streamed `delta.content`, `delta.reasoning_content` / `delta.reasoning` and `delta.tool_calls` (by index) are accumulated. If the server fails to parse a Qwen-style call, `<tool_call>{json}</tool_call>` and `<function=name><parameter=k>v</parameter></function>` in the text are parsed instead.
 - History is append-only. Past ~24k estimated tokens (chars / 3.5) old tool results are replaced once by `[older result omitted]`.
 - The gateway already logs every call to the diary, so the app does not.
 
 ## Layout
 
-`main.js` (window, IPC), `preload.js`, `src/agent.js` (loop, approvals, compaction), `src/llm.js` (SSE),
+`main.js` (window, IPC, wiring), `preload*.js`, `src/agent.js` (loop, approvals, loop guard, compaction), `src/llm.js` (SSE, shared request builder),
+`src/warm.js` (self-warm), `src/popup.js` (browser popup), `src/pillwin.js` + `src/pillstate.js` (status pill), `src/cards.js`,
 `src/prompt.js`, `src/store.js`, `src/helpers.js`, `src/tools/{browser,web,screen,shell,diary,agents}.js`, `renderer/`,
 `helper/deskhelper.swift` (Swift CLI for screen control), `test/`.
 Threads are JSON files in `userData/threads/`.

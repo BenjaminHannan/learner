@@ -42,7 +42,11 @@ test('schedule parsing: every / at / once, with clear errors', () => {
   assert.throws(() => parseSchedule({ every: '1m' }), /at least 5m/);
   assert.throws(() => parseSchedule({ at: '25:00' }), /at must look like/);
   assert.throws(() => parseSchedule({ at: '08:60' }), /at must look like/);
-  assert.throws(() => parseSchedule({ every: '1h', at: '08:00' }), /not both/);
+  // lenient: both given -> `at` wins (daily)
+  const daily = { kind: 'at', h: 8, m: 0, label: 'daily 08:00' };
+  assert.deepStrictEqual(parseSchedule({ every: '1d', at: '08:00' }), daily);
+  assert.deepStrictEqual(parseSchedule({ every: '24h', at: '08:00' }), daily);
+  assert.deepStrictEqual(parseSchedule({ every: '1h', at: '08:00' }), daily);
 });
 
 test('next run: every adds the interval; at picks the next local clock time, also across a day', () => {

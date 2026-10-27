@@ -39,13 +39,25 @@ function extractFallbackCalls(content) {
   return { calls, content: calls.length ? rest.trim() : content };
 }
 
+// The ONE place a chat request body is built, for real requests and for the warm-up request, so the
+// system prompt, tools, tool_choice and everything else that shapes the chat template are identical.
+function buildChatBody({ model, messages, tools, stream, maxTokens }) {
+  const body = { model, messages, stream: !!stream };
+  if (tools && tools.length) { body.tools = tools; body.tool_choice = 'auto'; }
+  if (maxTokens) body.max_tokens = maxTokens;
+  return body;
+}
+const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
+
 async function streamChat(opts) {
   const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, apiKey } = opts;
-  const url = String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
-  const body = { model, messages, stream: true };
-  if (tools && tools.length) { body.tools = tools; body.tool_choice = 'auto'; }
+  const url = chatUrl(gatewayUrl);
+  const body = buildChatBody({ model, messages, tools, stream: true });
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
   if (apiKey) headers.authorization = 'Bearer ' + apiKey;
+  const tStart = Date.now();
+  let firstTokenMs = null;
+  const firstToken = () => { if (firstTokenMs === null) firstTokenMs = Date.now() - tStart; };
   const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal });
   if (!res.ok) {
     let t = '';
@@ -71,6 +83,7 @@ async function streamChat(opts) {
     if (!ch) return;
     if (ch.finish_reason) finishReason = ch.finish_reason;
     const d = ch.delta || {};
+    if (d.content || d.reasoning_content || d.reasoning || (Array.isArray(d.tool_calls) && d.tool_calls.length)) firstToken();
     if (d.content) { content += d.content; if (onText) onText(d.content); }
     const r = d.reasoning_content || d.reasoning;
     if (r) { reasoning += r; if (onReasoning) onReasoning(r); }
@@ -124,7 +137,7 @@ async function streamChat(opts) {
     const fb = extractFallbackCalls(content);
     if (fb.calls.length) { toolCalls = fb.calls; content = fb.content; }
   }
-  return { content, reasoning, toolCalls, finishReason };
+  return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
 }
 
-module.exports = { streamChat, extractFallbackCalls };
+module.exports = { streamChat, extractFallbackCalls, buildChatBody, chatUrl };

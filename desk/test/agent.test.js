@@ -98,18 +98,36 @@ test('approvals: Ask first gates shell, deny reaches the model; hands-off runs s
   } finally { gw2.close(); }
 });
 
-test('"Allow for this task" suppresses later prompts of the same kind; password typing is gated in Ask first', async () => {
+test('"Allow for this task" suppresses later prompts of the same kind', async () => {
   const gw = await startGateway([
     { tool_calls: [{ name: 'screen_key', arguments: { keys: 'cmd+t' } }] },
     { tool_calls: [{ name: 'screen_key', arguments: { keys: 'cmd+w' } }] },
-    { tool_calls: [{ name: 'browser_type', arguments: { id: 3, text: 'hunter2' } }] },
     { content: 'ok' }
   ]);
   try {
     const asked = [];
-    const a = new Agent({ getSettings: settings(gw, { mode: 'ask' }), toolDefs: buildTools({}), tools: { screen_key: async () => 'k', browser_type: { run: async () => 'typed', gate: async () => 'password field' } }, emit: () => {}, approve: async (r) => { asked.push(r.kind); return 'task'; }, askUser: async () => '' });
+    const a = new Agent({ getSettings: settings(gw, { mode: 'ask' }), toolDefs: buildTools({}), tools: { screen_key: async () => 'k' }, emit: () => {}, approve: async (r) => { asked.push(r.kind); return 'task'; }, askUser: async () => '' });
     await a.run(mkThread(), 'go');
-    assert.deepStrictEqual(asked, ['screen', 'password']);
+    assert.deepStrictEqual(asked, ['screen']);
+  } finally { gw.close(); }
+});
+
+test('typing into a password field is never an approval card: the tool itself hands off to Ben (ctx.waitForBen)', async () => {
+  const gw = await startGateway([
+    { tool_calls: [{ name: 'browser_type', arguments: { id: 3, text: 'hunter2' } }] },
+    { content: 'ok' }
+  ]);
+  try {
+    const asked = []; const states = [];
+    let waited = false;
+    const t = mkThread();
+    const a = new Agent({ getSettings: settings(gw, { mode: 'ask' }), toolDefs: buildTools({}), onState: (s) => states.push(s),
+      tools: { browser_type: async (args, ctx) => { await ctx.waitForBen(async () => { waited = true; }); return 'Login needed: Ben is signing in himself. Done.'; } },
+      emit: () => {}, approve: async (r) => { asked.push(r.kind); return 'once'; }, askUser: async () => '' });
+    await a.run(t, 'go');
+    assert.deepStrictEqual(asked, []); assert.ok(waited);
+    assert.ok(states.includes('waiting'));
+    assert.match(t.messages.find((m) => m.role === 'tool').content, /^Login needed: Ben is signing in himself/);
   } finally { gw.close(); }
 });
 
@@ -130,13 +148,19 @@ test('steer: queued message is injected before the next model call', async () =>
   ]);
   try {
     let agent; const t = mkThread();
-    agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { slow: async () => { agent.steer('actually use blue'); return 'done'; } }, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const evs = [];
+    agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { slow: async () => { agent.steer('actually use blue'); return 'done'; } }, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
     await agent.run(t, 'paint it');
+    assert.strictEqual(evs.filter((e) => e.type === 'user').length, 1);
     const req2 = gw.requests[1].messages;
     const last = req2.at(-1);
     assert.strictEqual(last.role, 'user'); assert.match(last.content, /actually use blue$/);
     assert.strictEqual(req2.at(-2).role, 'tool');
     assert.strictEqual(agent.steer('late'), false); // not running any more
+    // regression: a steer typed once is injected once and announced once (the UI used to add its own bubble AND the event's)
+    assert.strictEqual(req2.filter((m) => m.role === 'user' && /actually use blue/.test(m.content)).length, 1);
+    assert.strictEqual(t.messages.filter((m) => m.role === 'user' && /actually use blue/.test(m.content)).length, 1);
+    assert.strictEqual(t.items.filter((i) => i.t === 'user' && i.text === 'actually use blue').length, 1);
   } finally { gw.close(); }
 });
 
@@ -191,5 +215,59 @@ test('vision on: image is appended as a follow-up user message, only the newest 
     const imgs = last.filter((m) => Array.isArray(m.content));
     assert.strictEqual(imgs.length, 1);
     assert.ok(last.some((m) => m.content === '[older screenshot omitted]'));
+  } finally { gw.close(); }
+});
+
+// ---- loop guard -----------------------------------------------------------------------------------
+test('loop guard: the 3rd identical call in a row is refused with a "stuck" result; the tool is not run again', async () => {
+  const call = { name: 'browser_click', arguments: { id: 7 } };
+  const gw = await startGateway([{ tool_calls: [call] }, { tool_calls: [call] }, { tool_calls: [call] }, { content: 'giving up' }]);
+  try {
+    let ran = 0; const t = mkThread();
+    const a = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { browser_click: async () => { ran++; return 'URL: https://x/ | page unchanged'; } }, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    await a.run(t, 'click continue');
+    assert.strictEqual(ran, 2);
+    const tools = t.messages.filter((m) => m.role === 'tool').map((m) => m.content);
+    assert.match(tools[1], /Nothing changed after clicking the same thing twice/); // page unchanged after 2 identical clicks
+    assert.match(tools[2], /^Stuck: .*Do NOT repeat/);
+  } finally { gw.close(); }
+});
+
+test('loop guard: a different call in between resets the count; scrolling is exempt', async () => {
+  const c = (n, id) => ({ tool_calls: [{ name: n, arguments: { id } }] });
+  const gw = await startGateway([c('browser_click', 1), c('browser_click', 1), c('browser_click', 2), c('browser_click', 1), c('browser_click', 1), { tool_calls: [{ name: 'browser_scroll', arguments: { direction: 'down' } }] }, { tool_calls: [{ name: 'browser_scroll', arguments: { direction: 'down' } }] }, { tool_calls: [{ name: 'browser_scroll', arguments: { direction: 'down' } }] }, { content: 'done' }]);
+  try {
+    let ran = 0;
+    const a = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { browser_click: async () => { ran++; return 'ok ' + ran; }, browser_scroll: async () => { ran++; return 's'; } }, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    await a.run(mkThread(), 'go');
+    assert.strictEqual(ran, 8);
+  } finally { gw.close(); }
+});
+
+test('loop guard: stuck again after a refusal pauses and asks Ben (onStuck); his answer is the tool result', async () => {
+  const call = { name: 'browser_click', arguments: { id: 7 } };
+  const gw = await startGateway([{ tool_calls: [call] }, { tool_calls: [call] }, { tool_calls: [call] }, { tool_calls: [call] }, { content: 'ok' }]);
+  try {
+    let ran = 0; const stuck = []; const states = []; const t = mkThread();
+    const a = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), onState: (s) => states.push(s), tools: { browser_click: async () => { ran++; return 'same'; } },
+      onStuck: async (info) => { stuck.push(info); return 'Ben completed the sign-in himself.'; }, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    await a.run(t, 'go');
+    assert.strictEqual(ran, 2); assert.strictEqual(stuck.length, 1);
+    assert.strictEqual(stuck[0].tool, 'browser_click'); assert.ok(states.includes('waiting'));
+    const tools = t.messages.filter((m) => m.role === 'tool').map((m) => m.content);
+    assert.match(tools[2], /^Stuck:/); assert.strictEqual(tools[3], 'Ben completed the sign-in himself.');
+  } finally { gw.close(); }
+});
+
+test('time to first token is logged per request on the thread and on the assistant item', async () => {
+  const gw = await startGateway([{ content: 'hello', delayMs: 5 }]);
+  try {
+    const t = mkThread(); const evs = [];
+    const a = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    await a.run(t, 'hi');
+    assert.strictEqual(t.requests.length, 1);
+    assert.ok(t.requests[0].ttftMs >= 0 && t.requests[0].ttftMs < 5000);
+    assert.strictEqual(typeof t.items.find((i) => i.t === 'assistant').ttftMs, 'number');
+    assert.strictEqual(evs.find((e) => e.type === 'assistant_end').toolCalls, 0);
   } finally { gw.close(); }
 });

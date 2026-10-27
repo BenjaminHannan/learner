@@ -24,6 +24,19 @@ const DANGER_PATTERNS = [
   /\blaunchctl\s+(unload|remove)\b/i,
   /\bkillall\b/i
 ];
+// Plain-language view of the list above (shown in Settings).
+const DANGER_LABELS = [
+  'Deleting files recursively or by force (rm -r, rm -f)',
+  'Running anything as administrator (sudo)',
+  'Disk tools (diskutil, mkfs, dd of=...)',
+  'Shutting down or rebooting the Mac',
+  'Writing to /dev devices',
+  'Piping a download into a shell (curl ... | sh)',
+  'Force-pushing or hard-resetting git',
+  'Opening permissions wide (chmod -R 777)',
+  'Fork bombs',
+  'Removing launch agents, killing all processes (launchctl unload, killall)'
+];
 function isDangerous(cmd) {
   const c = String(cmd || '');
   return DANGER_PATTERNS.some((r) => r.test(c));
@@ -110,6 +123,9 @@ function parseArgs(s) {
 }
 
 const SCREEN_GATED = new Set(['screen_click', 'screen_type', 'screen_key']);
+// Loop guard: tools where repeating the exact same call is normal.
+const REPEAT_OK = new Set(['ask_user', 'agent_list', 'agent_start', 'agent_stop', 'browser_scroll']);
+const STUCK_REPEATS = 3; // the 3rd identical call in a row is refused
 
 // ---- Agent -----------------------------------------------------------------------------------
 class Agent {
@@ -130,7 +146,11 @@ class Agent {
     this.taskAllow = new Set();
     this.threadId = null;
     this.release = null;
+    this.last = { key: '', count: 0, text: '' };
+    this.strikes = 0;
   }
+
+  toolDefs() { return typeof this.o.toolDefs === 'function' ? this.o.toolDefs() : this.o.toolDefs; }
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
 
@@ -160,6 +180,8 @@ class Agent {
     this.abort = new AbortController();
     this.taskAllow = new Set();
     this.steerQueue = [];
+    this.last = { key: '', count: 0, text: '' };
+    this.strikes = 0;
     this.threadId = thread.id;
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
@@ -213,7 +235,7 @@ class Agent {
             gatewayUrl: s.gatewayUrl,
             model: s.model,
             messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...thread.messages.map(cleanMsg)],
-            tools: this.o.toolDefs,
+            tools: this.toolDefs(),
             signal,
             apiKey: s.apiKey,
             onText: (d) => this.emit({ type: 'text', delta: d }),
@@ -234,15 +256,18 @@ class Agent {
           break;
         }
         const secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+        const ttftMs = Math.round(res.firstTokenMs || 0);
+        (thread.requests = thread.requests || []).push({ at: Date.now(), model: s.model, ttftMs, step });
+        if (thread.requests.length > 200) thread.requests.splice(0, thread.requests.length - 200);
         const msg = { role: 'assistant', content: res.content || '' };
         if (res.toolCalls.length) {
           msg.tool_calls = res.toolCalls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: c.arguments } }));
         }
         thread.messages.push(msg);
         if (res.content || res.reasoning) {
-          thread.items.push({ t: 'assistant', text: res.content, thinking: res.reasoning || '', thinkSecs: res.reasoning ? secs : 0 });
+          thread.items.push({ t: 'assistant', text: res.content, thinking: res.reasoning || '', thinkSecs: res.reasoning ? secs : 0, ttftMs });
         }
-        this.emit({ type: 'assistant_end', text: res.content, reasoning: res.reasoning, thinkSecs: res.reasoning ? secs : 0 });
+        this.emit({ type: 'assistant_end', text: res.content, reasoning: res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
         const plan = extractPlan(res.content);
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();
@@ -304,7 +329,7 @@ class Agent {
     };
     if (args === null) return { text: finish('Error: arguments were not valid JSON.', false) };
     const entry = this.o.tools[name];
-    const ctx = { signal, settings: this.o.getSettings(), thread };
+    const ctx = { signal, settings: this.o.getSettings(), thread, waitForBen: (fn) => this.waitingForBen(fn, signal), stepId };
     if (name === 'ask_user') {
       try {
         const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal), signal);
@@ -313,8 +338,21 @@ class Agent {
     }
     if (!entry) return { text: finish('Error: unknown tool ' + name, false) };
     const run = typeof entry === 'function' ? entry : entry.run;
-    const gate = typeof entry === 'object' ? entry.gate : null;
     try {
+      // loop guard: the same call again and again is a stuck model, not progress
+      const key = name + ':' + JSON.stringify(args);
+      if (!REPEAT_OK.has(name) && this.last.key === key && this.last.count >= STUCK_REPEATS - 1) {
+        this.strikes++;
+        const stuck = { tool: name, args, summary: summaryStart, count: this.last.count };
+        if (this.strikes >= 2 && this.o.onStuck) {
+          this.strikes = 0; this.last = { key: '', count: 0, text: '' };
+          const reply = await this.waitingForBen(() => this.o.onStuck(stuck, signal), signal);
+          if (signal.aborted) return { text: finish('[stopped by user]', false) };
+          return { text: finish(reply, true, 'Asked Ben for help: stuck on ' + short(summaryStart, 40)) };
+        }
+        this.last.count++;
+        return { text: finish('Stuck: you have made this exact call ' + this.last.count + ' times in a row and nothing changed. Do NOT repeat it. Try something different (another element, another page, a different tool) or call ask_user.', false, 'Stopped a loop: ' + short(summaryStart, 40)) };
+      }
       // approvals
       const settings = ctx.settings;
       const hands = settings.mode === 'hands-off';
@@ -325,10 +363,6 @@ class Agent {
         else if (!hands) need = { kind: 'shell', danger: false, text: String(args.command) };
       } else if (SCREEN_GATED.has(name) && !hands) {
         need = { kind: 'screen', danger: false, text: summaryStart };
-      } else if (name === 'browser_type' && !hands) {
-        let reason = null;
-        if (gate) { try { reason = await gate(args, ctx); } catch (e) { reason = null; } }
-        if (reason) need = { kind: 'password', danger: false, text: summaryStart + ' (' + reason + ')' };
       }
       if (need && !(!need.danger && this.taskAllow.has(need.kind))) {
         const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, ...need }, signal), signal);
@@ -337,7 +371,12 @@ class Agent {
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);
       }
       const r = await run(args, ctx);
-      const text = typeof r === 'string' ? r : (r && r.text) || '';
+      let text = typeof r === 'string' ? r : (r && r.text) || '';
+      if (this.last.key === key) {
+        this.last.count++;
+        if (!REPEAT_OK.has(name) && this.last.count === 2 && text === this.last.text && (name === 'browser_click' || name === 'screen_click')) text += '\n[Nothing changed after clicking the same thing twice. It is not responding: try something different.]';
+      } else this.last = { key, count: 1, text: '' };
+      this.last.text = typeof r === 'string' ? r : (r && r.text) || '';
       const summary = r && typeof r === 'object' && r.summary ? r.summary : null;
       const ok = !(r && typeof r === 'object' && r.error);
       const out = { text: finish(text, ok, summary) };
@@ -377,4 +416,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

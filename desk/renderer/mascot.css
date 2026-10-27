@@ -1,0 +1,38 @@
+/* mascot (Glim) */
+.mascot-wrap { display:inline-block; flex:none; line-height:0; }
+.mascot { width:100%; height:100%; display:block; overflow:visible; }
+.mascot .ball, .mascot .wisp, .mascot .eyes, .mascot .look, .mascot .swirl, .mascot .tilt, .mascot .glow, .mascot .qspark, .mascot .spark, .mascot .zz { transform-box:fill-box; transform-origin:center; }
+.mascot .ball { transform-box:view-box; transform-origin:50px 86px; animation:m-breathe 4.2s ease-in-out infinite; }
+.mascot .tilt { transform-box:view-box; transform-origin:50px 90px; transition:transform .4s ease; }
+.mascot .wisp { transform-origin:50% 100%; animation:m-flick 1.9s ease-in-out infinite; }
+.mascot .glow { animation:m-glow 4.2s ease-in-out infinite; }
+.mascot .blink { animation:m-blink 5.5s infinite; }
+.mascot .look { transition:transform .5s ease; }
+.mascot.glance .look { transform:translate(3px,-.5px); }
+.m-thinking .look { transform:translate(-1.5px,-3.5px); }
+.m-thinking .glow { animation:m-glow 1.4s ease-in-out infinite; }
+.m-thinking .swirl { transform-box:view-box; transform-origin:50px 52px; animation:m-spin 3.4s linear infinite; }
+.m-working .look { animation:m-dart 2.6s ease-in-out infinite; }
+.m-working .ball { animation-duration:2.4s; }
+.m-waiting .tilt { transform:rotate(-8deg); }
+.m-waiting .qspark { animation:m-pop 1.6s ease-in-out infinite; }
+.m-done .ball { animation:m-hop .7s ease-out 1; }
+.m-done .spark { animation:m-twinkle 1.6s ease-in-out infinite; } .m-done .spark.s2 { animation-delay:.6s; }
+.m-error .ball { animation:m-shiver 3s ease-in-out infinite; } .m-error .glow { animation:none; opacity:.35; }
+.m-sleepy .ball { animation-duration:7s; } .m-sleepy .glow { animation:none; opacity:.3; } .m-sleepy .wisp { animation:none; }
+.m-sleepy .zz { animation:m-z 3.2s ease-in infinite; } .m-sleepy .zz.z2 { animation-delay:1.6s; }
+.mascot.bounce .ball { animation:m-hop .42s ease-out 1; }
+.mascot.still *, .mascot.still { animation:none !important; }
+@keyframes m-breathe { 50% { transform:scale(1.03,1.05); } }
+@keyframes m-flick { 0%,100% { transform:rotate(-4deg) scaleY(1); } 50% { transform:rotate(4deg) scaleY(1.1); } }
+@keyframes m-glow { 50% { opacity:.45; } }
+@keyframes m-blink { 0%,93%,100% { transform:scaleY(1); } 96% { transform:scaleY(.08); } }
+@keyframes m-spin { to { transform:rotate(360deg); } }
+@keyframes m-dart { 0%,35% { transform:translate(3.5px,.5px); } 45%,80% { transform:translate(3.5px,-2px); } 90%,100% { transform:translate(3.5px,.5px); } }
+@keyframes m-pop { 0%,100% { transform:scale(1) rotate(0); } 50% { transform:scale(1.14) rotate(8deg); } }
+@keyframes m-hop { 0% { transform:translateY(0) scale(1); } 40% { transform:translateY(-6px) scale(.98,1.03); } 100% { transform:translateY(0) scale(1); } }
+@keyframes m-twinkle { 0%,100% { transform:scale(.6) rotate(0); opacity:.7; } 50% { transform:scale(1.1) rotate(20deg); opacity:1; } }
+@keyframes m-shiver { 0%,86%,100% { transform:translateX(0); } 89%,95% { transform:translateX(-1px); } 92%,98% { transform:translateX(1px); } }
+@keyframes m-z { 0% { transform:translate(-4px,6px) scale(.6); opacity:0; } 30% { opacity:1; } 100% { transform:translate(4px,-8px) scale(1); opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .mascot, .mascot * { animation:none !important; transition:none !important; } }
+.a-top .mascot-wrap { margin:-2px 0; }
