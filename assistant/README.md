@@ -1,7 +1,7 @@
 # Local assistant (OpenBot + MLX on the MacBook)
 
 Pieces
-- `gateway.py` — OpenAI-compatible proxy on 127.0.0.1:8090. Models: `qwen36` (thinks), `qwen36-fast` (no thinking), `k2-helper` (small; hidden when its server is down). Always sends `model=default_model` upstream, renames `reasoning` to `reasoning_content`, and writes the diary.
+- `gateway.py` — OpenAI-compatible proxy on 127.0.0.1:8090. Models: `qwen36-auto` (default: decides per user turn whether to think), `qwen36` (thinks), `qwen36-fast` (no thinking), `k2-helper` (small; hidden when its server is down). Always sends `model=default_model` upstream, renames `reasoning` to `reasoning_content`, and writes the diary. `qwen36-auto` first sends the big model a quick judge call (same prompt plus a hidden "rate 0/1/2" question, thinking off, so the prompt cache makes it cheap); 0 means thinking off, 1 or 2 on. The decision is remembered for that user turn (so tool-loop steps don't re-judge), falls back to thinking on if the judge fails, is logged as `auto: level N -> ...`, and is saved in the diary as `auto_level` / `judge_s`. The judge call itself is not diarised.
 - `diary_mcp.py` — MCP server giving the model `diary_search`, `diary_read`, `diary_days` over the diary.
 - `serve.sh` / `stop.sh` / `status.sh` — start, stop, inspect. `serve.sh` is safe to run twice; it writes `~/learner-ops/ASSISTANT_RUNNING` so experiment jobs know the Mac is in use, and asks first if `~/learner-ops/PAUSE_OTHERS` exists (`--yes` skips).
 - `opencode.json` — template for `~/.config/opencode/opencode.json` (`__HOME__`, `__PY__` are filled in by `install.sh`, which merges and backs up any existing file).

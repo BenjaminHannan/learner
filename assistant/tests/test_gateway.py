@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -65,11 +66,11 @@ MSGS = [{"role": "system", "content": "You are helpful."},
 
 
 class TestGateway(Base):
-    def test_models_lists_three(self):
+    def test_models_lists_four(self):
         c = http.client.HTTPConnection("127.0.0.1", self.port)
         c.request("GET", "/v1/models")
         ids = [m["id"] for m in json.loads(c.getresponse().read())["data"]]
-        self.assertEqual(ids, ["qwen36", "qwen36-fast", "k2-helper"])
+        self.assertEqual(ids, ["qwen36-auto", "qwen36", "qwen36-fast", "k2-helper"])
 
     def test_health_passthrough(self):
         c = http.client.HTTPConnection("127.0.0.1", self.port)
@@ -197,6 +198,81 @@ class TestGateway(Base):
             diary_mcp.DIARY_DIR = old
 
 
+class TestAuto(Base):
+    TOOLS = [{"type": "function", "function": {"name": "bash"}}]
+
+    def auto(self, msgs, **kw):
+        body = {"model": "qwen36-auto", "messages": msgs, "tools": self.TOOLS}
+        body.update(kw)
+        out = json.loads(self.post(body)[1].read())
+        self.assertEqual(out["model"], "qwen36-auto")
+        return self.big.requests[-1]
+
+    def test_judge_zero_is_fast(self):
+        self.big.judge_digit = 0
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(up["model"], "default_model")
+        self.assertEqual(len(self.big.judge_calls), 1)
+
+    def test_judge_two_thinks(self):
+        self.big.judge_digit = 2
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], True)
+
+    def test_decision_reused_in_tool_loop(self):
+        self.big.judge_digit = 0
+        self.auto(MSGS)
+        loop = MSGS + [{"role": "assistant", "content": None, "tool_calls": [
+            {"id": "c1", "type": "function", "function": {"name": "bash", "arguments": "{}"}}]},
+            {"role": "tool", "tool_call_id": "c1", "content": "done"}]
+        self.big.judge_digit = 2  # would flip the answer if asked again
+        up = self.auto(loop)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(len(self.big.judge_calls), 1)
+
+    def test_judge_failure_thinks(self):
+        self.big.judge_digit = None
+        up = self.auto(MSGS)
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], True)
+
+    def test_judge_request_shape(self):
+        self.auto(MSGS)
+        j = self.big.judge_calls[0]
+        self.assertEqual(j["messages"][:-1], MSGS)
+        self.assertTrue(j["messages"][-1]["content"].startswith("(Internal check, not from Ben.)"))
+        self.assertEqual(j["messages"][-1]["role"], "user")
+        self.assertEqual(j["tools"], self.TOOLS)
+        self.assertEqual(j["tool_choice"], "none")
+        self.assertIs(j["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual((j["temperature"], j["max_tokens"], j["stream"]), (0, 2, False))
+
+    def test_no_user_message_is_fast(self):
+        up = self.auto([{"role": "system", "content": "x"}])
+        self.assertIs(up["chat_template_kwargs"]["enable_thinking"], False)
+        self.assertEqual(self.big.judge_calls, [])
+
+    def test_diary_has_level_and_no_judge_turn(self):
+        self.big.judge_digit = 2
+        self.auto(MSGS)
+        for _ in range(50):  # the diary entry is queued just after the reply is sent
+            recs = self.lines()
+            if recs:
+                break
+            time.sleep(0.1)
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]["auto_level"], 2)
+        self.assertIsNotNone(recs[0]["judge_s"])
+        self.assertEqual(recs[0]["model"], "qwen36-auto")
+
+    def test_lru_bounded(self):
+        gw = self.srv.gw
+        for i in range(gateway.AUTO_CACHE_MAX + 5):
+            gw.auto_put(str(i), 1)
+        self.assertEqual(len(gw._auto), gateway.AUTO_CACHE_MAX)
+        self.assertIsNone(gw.auto_get("0"))
+
+
 class TestSmallDown(Base):
     small_up = False
 
@@ -204,7 +280,7 @@ class TestSmallDown(Base):
         c = http.client.HTTPConnection("127.0.0.1", self.port)
         c.request("GET", "/v1/models")
         ids = [m["id"] for m in json.loads(c.getresponse().read())["data"]]
-        self.assertEqual(ids, ["qwen36", "qwen36-fast"])
+        self.assertEqual(ids, ["qwen36-auto", "qwen36", "qwen36-fast"])
         self.post({"model": "k2-helper", "messages": MSGS})[1].read()
         up = self.big.requests[-1]
         self.assertFalse(up["chat_template_kwargs"]["enable_thinking"])
@@ -224,6 +300,8 @@ class PrepareTest(unittest.TestCase):
     def test_fast_and_thinking_share_system_prompt(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
         import gateway
+        a = gateway.prepare({"messages": [{"role": "system", "content": "I am qwen36-auto."}]}, True, 1)
+        self.assertEqual(a["messages"][0]["content"], "I am qwen36.")
         msgs = [{"role": "system", "content": "You are model premonition/qwen36-fast."},
                 {"role": "user", "content": "hi qwen36-fast"}]
         fast = gateway.prepare({"messages": msgs}, False, 100)

@@ -90,7 +90,7 @@ cat <<MSG
 
 Installed. Next steps:
   1. Double-click "Start Assistant" on the Desktop (first start loads the model; up to ~5 min).
-  2. In OpenBot pick the "Premonition (local Mac)" models (qwen36 thinks, qwen36-fast is quicker).
+  2. In OpenBot pick the "Premonition (local Mac)" models (qwen36-auto is the default and picks how hard to think; qwen36 always thinks, qwen36-fast never).
   3. Model choices live in $DEST/config.sh (blank ASSISTANT_SMALL_MODEL turns the K2 helper off).
   4. Double-click "Stop Assistant" when done. Check anything with $DEST/status.sh
 MSG

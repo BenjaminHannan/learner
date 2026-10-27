@@ -25,6 +25,14 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         self.server.requests.append(body)
+        last = (body.get("messages") or [{}])[-1].get("content")
+        if isinstance(last, str) and last.startswith("(Internal check"):
+            self.server.judge_calls.append(body)
+            if self.server.judge_digit is None:  # simulate a failing judge
+                return self._json({"error": {"message": "boom"}}, 500)
+            return self._json({"id": "j", "object": "chat.completion", "model": "default_model",
+                               "choices": [{"index": 0, "finish_reason": "length", "message": {
+                                   "role": "assistant", "content": str(self.server.judge_digit)}}]})
         usage = {"prompt_tokens": 100, "completion_tokens": 7, "total_tokens": 107,
                  "prompt_tokens_details": {"cached_tokens": 64}}
         if not body.get("stream"):
@@ -59,6 +67,7 @@ class H(BaseHTTPRequestHandler):
 def start(port=0):
     srv = ThreadingHTTPServer(("127.0.0.1", port), H)
     srv.requests, srv.gate = [], threading.Event()
+    srv.judge_calls, srv.judge_digit = [], 1  # judge_digit None -> HTTP 500
     srv.daemon_threads = True
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv

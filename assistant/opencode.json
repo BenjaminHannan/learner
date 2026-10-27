@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "premonition/qwen36",
+  "model": "premonition/qwen36-auto",
   "small_model": "premonition/k2-helper",
   "provider": {
     "premonition": {
@@ -8,6 +8,12 @@
       "name": "Premonition (local Mac)",
       "options": { "baseURL": "http://127.0.0.1:8090/v1", "apiKey": "local" },
       "models": {
+        "qwen36-auto": {
+          "name": "Qwen3.6 35B · auto (decides how hard to think)",
+          "limit": { "context": 65536, "output": 8192 },
+          "tool_call": true,
+          "reasoning": true
+        },
         "qwen36": {
           "name": "Qwen3.6 35B · thinks",
           "limit": { "context": 65536, "output": 8192 },

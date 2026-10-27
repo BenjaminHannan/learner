@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """OpenAI-compatible gateway in front of two mlx_lm.server processes.
 
-- Maps client model ids (qwen36, qwen36-fast, k2-helper) to an upstream.
+- Maps client model ids (qwen36-auto, qwen36, qwen36-fast, k2-helper) to an upstream.
+- qwen36-auto asks the big model (quick judge call) how hard to think, once per user turn.
 - Always sends model="default_model" upstream (mlx_lm.server would otherwise
   try to LOAD whatever id it is given).
 - Streams SSE straight through, renaming delta.reasoning -> reasoning_content.
@@ -9,6 +10,7 @@
 Stdlib only.
 """
 import argparse
+import collections
 import datetime
 import hashlib
 import http.client
@@ -24,8 +26,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-MODEL_IDS = ["qwen36", "qwen36-fast", "k2-helper"]
+MODEL_IDS = ["qwen36-auto", "qwen36", "qwen36-fast", "k2-helper"]
 BIG_MAX, SMALL_MAX = 8192, 2048
+AUTO_CACHE_MAX = 500
+JUDGE_TIMEOUT = 20
+JUDGE_PROMPT = (
+    "(Internal check, not from Ben.) Before answering, rate how much careful step-by-step "
+    "thinking the request above needs. Reply with one digit only: 0 = none (chat, simple "
+    "fact, a simple tool step), 1 = some, 2 = a lot (math, multi-step planning, debugging, "
+    "tricky reasoning).")
 CHAT_PATHS = ("/v1/chat/completions", "/chat/completions")
 
 
@@ -203,6 +212,8 @@ class Gateway:
         self.diary = Diary(diary_dir)
         self._small = (0.0, False)  # (checked_at, is_up)
         self._lock = threading.Lock()
+        self._auto = collections.OrderedDict()  # key -> level; LRU of auto decisions
+        self._auto_lock = threading.Lock()
 
     def small_up(self):
         """Probe small server's /v1/models (1 s timeout), cached 30 s."""
@@ -234,10 +245,56 @@ class Gateway:
             return ("big", self.big_url, False, BIG_MAX)
         return ("big", self.big_url, True, BIG_MAX)  # qwen36 and unknown ids
 
+    def auto_get(self, key):
+        with self._auto_lock:
+            lvl = self._auto.get(key)
+            if lvl is not None:
+                self._auto.move_to_end(key)
+            return lvl
+
+    def auto_put(self, key, level):
+        with self._auto_lock:
+            self._auto[key] = level
+            self._auto.move_to_end(key)
+            while len(self._auto) > AUTO_CACHE_MAX:
+                self._auto.popitem(last=False)
+
+    def judge(self, body):
+        """Ask the big model how hard to think -> (level 0-2, seconds). Defaults to 1 on error."""
+        t0 = time.time()
+        level = 1
+        try:
+            b = prepare(body, False, BIG_MAX)  # same prefix (and tools) as the real request
+            b["messages"] = list(b.get("messages") or []) + [
+                {"role": "user", "content": JUDGE_PROMPT}]
+            b.update(stream=False, temperature=0, max_tokens=2, tool_choice="none")
+            for k in ("stream_options", "max_completion_tokens", "top_p", "top_k", "min_p"):
+                b.pop(k, None)
+            u = urlparse(self.big_url)
+            conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=JUDGE_TIMEOUT)
+            try:
+                conn.request("POST", "/v1/chat/completions", json.dumps(b).encode(),
+                             {"Content-Type": "application/json"})
+                r = conn.getresponse()
+                data = r.read()
+            finally:
+                conn.close()
+            if r.status == 200:
+                msg = (json.loads(data).get("choices") or [{}])[0].get("message") or {}
+                m = re.search(r"\d", text_of(msg.get("content")))
+                if m:
+                    level = min(int(m.group()), 2)
+        except Exception as e:  # timeout, refused, bad JSON ... all mean "think"
+            log("auto: judge failed:", repr(e))
+        return level, time.time() - t0
+
     def models(self):
         ids = [m for m in MODEL_IDS if m != "k2-helper" or self.small_up()]
         return {"object": "list", "data": [
             {"id": m, "object": "model", "created": 0, "owned_by": "premonition"} for m in ids]}
+
+
+AUTO_FAST_RE = re.compile(r"qwen36-(?:auto|fast)")
 
 
 def prepare(body, thinking, default_max):
@@ -251,15 +308,15 @@ def prepare(body, thinking, default_max):
         b["chat_template_kwargs"] = ctk
     if b.get("max_tokens") is None:
         b["max_tokens"] = b.get("max_completion_tokens") or default_max
-    # OpenCode names the model in its system prompt, so "qwen36" and "qwen36-fast" would
-    # never share a cached prefix. Use one name for both (same weights anyway).
+    # OpenCode names the model in its system prompt, so "qwen36", "qwen36-fast" and
+    # "qwen36-auto" would never share a cached prefix. Use one name (same weights anyway).
     msgs = b.get("messages")
     if isinstance(msgs, list):
         fixed = []
         for m in msgs:
             if (isinstance(m, dict) and m.get("role") in ("system", "developer")
-                    and isinstance(m.get("content"), str) and "qwen36-fast" in m["content"]):
-                m = dict(m, content=m["content"].replace("qwen36-fast", "qwen36"))
+                    and isinstance(m.get("content"), str) and AUTO_FAST_RE.search(m["content"])):
+                m = dict(m, content=AUTO_FAST_RE.sub("qwen36", m["content"]))
             fixed.append(m)
         b["messages"] = fixed
     return b
@@ -316,11 +373,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(400, {"error": {"message": "invalid JSON body"}})
         self.chat(body)
 
-    def open_upstream(self, body, client_model):
+    def open_upstream(self, body, route_model):
         """Pick a route and connect; if small is unreachable, retry on big."""
         gw = self.server.gw
         for _ in range(2):
-            name, url, thinking, dmax = gw.route(client_model)
+            name, url, thinking, dmax = gw.route(route_model)
             payload = json.dumps(prepare(body, thinking, dmax)).encode()
             u = urlparse(url)
             conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=3600)
@@ -340,7 +397,10 @@ class Handler(BaseHTTPRequestHandler):
         gw = self.server.gw
         t0 = time.time()
         client_model = body.get("model") or "qwen36"
-        opened = self.open_upstream(body, client_model)
+        route_model, extra = client_model, None
+        if client_model == "qwen36-auto":
+            route_model, extra = self.decide_auto(body)
+        opened = self.open_upstream(body, route_model)
         if not opened:
             return self.send_503()
         upstream, thinking, conn, resp = opened
@@ -361,7 +421,28 @@ class Handler(BaseHTTPRequestHandler):
                 out_obj = self.relay_plain(resp, asm, client_model)
         finally:
             conn.close()
-        self.record(body, client_model, upstream, thinking, asm, t0, status, out_obj)
+        self.record(body, client_model, upstream, thinking, asm, t0, status, out_obj, extra)
+
+    def decide_auto(self, body):
+        """qwen36-auto -> (model id to route as, diary extras). One decision per user turn."""
+        gw = self.server.gw
+        msgs = body.get("messages") or []
+        last_user = next((m for m in reversed(msgs)
+                          if isinstance(m, dict) and m.get("role") == "user"), None)
+        if last_user is None:
+            log("auto: no user message -> thinking off")
+            return "qwen36-fast", {"auto_level": 0, "judge_s": None}
+        key = sha([conv_id_of(msgs), text_of(last_user.get("content"))])
+        level, judge_s = gw.auto_get(key), None
+        if level is None:
+            level, judge_s = gw.judge(body)
+            gw.auto_put(key, level)
+        think = level > 0
+        log("auto: level %d -> thinking %s (%s)" % (
+            level, "on" if think else "off",
+            "cached" if judge_s is None else "judge %.2fs" % judge_s))
+        return ("qwen36" if think else "qwen36-fast"), {
+            "auto_level": level, "judge_s": None if judge_s is None else round(judge_s, 3)}
 
     def relay_stream(self, resp, asm, client_model):
         self.send_response(200)
@@ -432,7 +513,8 @@ class Handler(BaseHTTPRequestHandler):
         return obj
 
     # -- logging + diary
-    def record(self, body, client_model, upstream, thinking, asm, t0, status, out_obj):
+    def record(self, body, client_model, upstream, thinking, asm, t0, status, out_obj,
+               extra=None):
         gw = self.server.gw
         now = time.time()
         usage = asm.usage or {}
@@ -450,21 +532,28 @@ class Handler(BaseHTTPRequestHandler):
             "" if status == "ok" else " (%s)" % status))
         try:
             rec, blobs, row = build_diary(body, client_model, upstream, thinking, asm, status,
-                                          now - t0, ttft)
+                                          now - t0, ttft, extra)
             gw.diary.submit(rec, blobs, row)
         except Exception as e:
             log("diary: build failed:", repr(e))
 
 
-def build_diary(body, client_model, upstream, thinking, asm, status, latency, ttft):
-    """-> (jsonl record, {hash: blob}, index row or None)."""
-    msgs = body.get("messages") or []
-    blobs = {}
+def conv_id_of(msgs):
+    """Stable id for a conversation: system prompt + first user message."""
     sys_text = "\n".join(text_of(m.get("content")) for m in msgs
                          if isinstance(m, dict) and m.get("role") in ("system", "developer"))
     first_user = next((text_of(m.get("content")) for m in msgs
                        if isinstance(m, dict) and m.get("role") == "user"), "")
-    conv_id = hashlib.sha256((sys_text + first_user).encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256((sys_text + first_user).encode("utf-8")).hexdigest()[:16]
+
+
+def build_diary(body, client_model, upstream, thinking, asm, status, latency, ttft, extra=None):
+    """-> (jsonl record, {hash: blob}, index row or None)."""
+    msgs = body.get("messages") or []
+    blobs = {}
+    first_user = next((text_of(m.get("content")) for m in msgs
+                       if isinstance(m, dict) and m.get("role") == "user"), "")
+    conv_id = conv_id_of(msgs)
 
     out_msgs = []
     for m in msgs:  # system content is stored once as a blob, referenced by hash
@@ -491,6 +580,7 @@ def build_diary(body, client_model, upstream, thinking, asm, status, latency, tt
         "ttft_s": None if ttft is None else round(ttft, 3),
         "status": status,
     }
+    rec.update(extra or {})  # auto_level, judge_s
     last = msgs[-1] if msgs else {}
     user = text_of(last.get("content")).strip() if isinstance(last, dict) and last.get("role") == "user" else ""
     asst = resp["content"].strip()
