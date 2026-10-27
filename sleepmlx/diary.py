@@ -133,6 +133,14 @@ def redact(text: str) -> str:
     return t
 
 
+# A turn that talks about credentials is dropped whole: pattern redaction misses forms like "X is my pass".
+_SECRET_TALK = re.compile(r"\b(pass(word|wd|code|phrase)?|login|log ?in|sign ?in|credentials?|2fa|otp|verification code|security code|pin)\b", re.I)
+
+
+def talks_secrets(text: str) -> bool:
+    return bool(_SECRET_TALK.search(text or ""))
+
+
 # ---------------------------------------------------------------- ignore list + test-mode records
 SEED_IGNORE = ["AP Chem 4th period", "Mr. Phipps", "I like short answers", "open example.com", "Remember that I take"]
 IGNORE_HEADER = ("# One phrase or regular expression per line (case-insensitive). A user turn that matches any line is dropped, with its answer.\n"
@@ -182,7 +190,7 @@ def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional
     """-> (conv_id, user_text, final_answer or None) for one raw record, or None."""
     if rec.get("model") in SKIP_MODELS or is_test_record(rec):
         return None
-    if rec.get("status") not in (None, 200):
+    if rec.get("status") not in (None, 200, "200", "ok", "OK"):   # the gateway logs "ok"
         return None
     req = rec.get("request") if isinstance(rec.get("request"), dict) else {}
     msgs = rec.get("messages") or req.get("messages") or []
@@ -281,7 +289,7 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
     for date in want:
         turns, seen = [], set()
         for user, answer in turns_of(alld[date], raw_dir / "blobs"):
-            if any(rx.search(user) for rx in ignore):   # dropped with its answer
+            if any(rx.search(user) for rx in ignore) or talks_secrets(user):   # dropped with its answer
                 continue
             u = redact(user).strip()
             if not u or u in seen:
