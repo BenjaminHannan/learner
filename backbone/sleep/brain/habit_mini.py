@@ -63,8 +63,11 @@ class Watch(threading.Thread):
 
     def flag(self):
         for n in ("PAUSE_OTHERS", "ASSISTANT_RUNNING"):
-            if os.environ.get(n, "") not in ("", "0") or any((d / n).exists() for d in (Path.cwd(), Path.home(), self.parent)):
+            if os.environ.get(n, "") not in ("", "0") or any((d / n).exists() for d in (Path.cwd(), Path.home(), Path.home() / "learner-ops", self.parent)):
                 return n
+        # Ben clicking Start Assistant runs serve.sh, which waits for free memory before it writes ASSISTANT_RUNNING; catch it early
+        if self.mac and self.sh(["pgrep", "-f", "assistant/serve.sh"]).strip():
+            return "assistant/serve.sh"
         return None
 
     def poll(self):
