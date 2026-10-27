@@ -1,0 +1,22 @@
+html,body { background:transparent !important; height:100%; overflow:hidden; display:block; }
+#pill { position:absolute; top:4px; left:50%; width:236px; margin-left:-118px; background:var(--surface); color:var(--text); border:1px solid var(--hair2); border-radius:19px; box-shadow:var(--shadow); overflow:hidden;
+  transition:width .19s cubic-bezier(.4,0,.2,1), margin-left .19s cubic-bezier(.4,0,.2,1), border-radius .19s cubic-bezier(.4,0,.2,1), opacity .3s, transform .3s; font-size:13px; line-height:1.35; }
+#pill.open { width:376px; margin-left:-188px; border-radius:22px; transition:width .28s cubic-bezier(.34,1.35,.5,1), margin-left .28s cubic-bezier(.34,1.35,.5,1), border-radius .28s, opacity .3s; }
+#pill.gone { opacity:0; transform:translateY(-8px) scale(.96); pointer-events:none; }
+.row1 { display:flex; align-items:center; gap:8px; height:36px; padding:0 14px 0 8px; cursor:pointer; }
+#line { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+#mini { color:var(--text2); font-size:12px; font-variant-numeric:tabular-nums; }
+#pill.error { border-color:var(--danger); } #pill.waiting { border-color:var(--accent-text); }
+#pill.error #line { color:var(--danger); }
+.more { max-height:0; opacity:0; padding:0 16px; transition:max-height .28s cubic-bezier(.34,1.2,.5,1), opacity .2s, padding .2s; }
+#pill.open .more { max-height:260px; opacity:1; padding:2px 16px 14px; }
+.kv { display:flex; gap:10px; padding:3px 0; border-top:1px solid var(--hair); } .kv:first-child { border-top:0; }
+.kv span { width:52px; color:var(--text2); flex:none; } .kv b { font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.err { margin:6px 0 2px; padding:6px 9px; border:1px solid var(--danger); background:var(--danger-soft); border-radius:10px; max-height:64px; overflow:auto; color:var(--text); }
+.ask { margin:6px 0 2px; padding:6px 9px; background:var(--accent-soft); border-radius:10px; max-height:64px; overflow:auto; }
+.others { color:var(--text2); font-size:12px; margin-top:4px; }
+.btns { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.btns button { border-radius:9px; padding:5px 12px; min-height:28px; font-weight:600; font-size:12.5px; border:1px solid var(--hair2); background:none; }
+.btns button:hover { border-color:var(--text2); }
+.btns .go { background:var(--accent); color:var(--on-accent); border:0; }
+.btns .no { border-color:var(--danger); color:var(--danger); }

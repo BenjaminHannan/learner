@@ -6,6 +6,11 @@ const os = require('os');
 
 const NOT_INSTALLED = 'screen control helper not installed';
 
+// open_app is for Mac apps, never for browsing: the web goes through the built-in browser (browser_go).
+const BROWSER_APPS = /^(safari( technology preview)?|google chrome( canary)?|chrome|chromium|firefox|mozilla firefox|arc|microsoft edge|edge|brave( browser)?|opera|vivaldi|orion|duckduckgo)(\.app)?$/i;
+const isBrowserApp = (name) => BROWSER_APPS.test(String(name || '').trim());
+const BROWSER_REFUSAL = 'Error: do not open a web browser app. Use browser_go (the built-in browser) for anything on the web. open_app is only for non-browser Mac apps.';
+
 function candidates(settings, resourcesPath) {
   const list = [];
   if (settings && settings.helperPath) list.push(settings.helperPath);
@@ -81,7 +86,7 @@ function createScreen(getSettings, resourcesPath, onLook) {
         if (j.error) return { text: 'Error: ' + j.error, error: true };
         const text = formatLook(j);
         const shot = await screenshot(1280);
-        if (onLook) onLook({ text, image: shot, data: j });
+        if (onLook) onLook({ text, image: shot, data: j }, ctx);
         return vis() && shot ? { text, image: shot } : text;
       },
       screen_click: async (a, ctx) => {
@@ -93,9 +98,9 @@ function createScreen(getSettings, resourcesPath, onLook) {
       },
       screen_type: async (a, ctx) => res(await run(['type', String(a.text || '')], ctx && ctx.signal), 'Typed.'),
       screen_key: async (a, ctx) => res(await run(['key', String(a.keys || '')], ctx && ctx.signal), 'Pressed ' + a.keys + '.'),
-      open_app: async (a, ctx) => res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.')
+      open_app: async (a, ctx) => isBrowserApp(a.name) ? { text: BROWSER_REFUSAL, error: true } : res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.')
     }
   };
 }
 
-module.exports = { createScreen, findHelper, formatLook, NOT_INSTALLED };
+module.exports = { createScreen, findHelper, formatLook, NOT_INSTALLED, isBrowserApp, BROWSER_REFUSAL };

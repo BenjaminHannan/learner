@@ -134,47 +134,55 @@ function wireSession(ses) {
   ses.webRequest.onErrorOccurred(done);
 }
 
-// One Browser per agent. The primary's is attached to the window; a helper's stays detached (hidden)
-// unless Ben opens that helper's thread. All share the persist:desk partition (shared sign-ins).
+// One Browser per agent. Its view lives in a host window (main.js: a hidden BrowserWindow that becomes the popup
+// when Ben clicks the card). All share the persist:desk partition (shared sign-ins).
 class Browser {
-  constructor({ view, session, window, onState }) {
-    this.window = window;
+  constructor({ view, session, onState }) {
     this.onState = onState || (() => {});
     this.inflight = 0;
     this.lastActivity = Date.now();
     this.readCache = { url: '', pages: [] };
     this.view = view;
     this.wc = view.webContents;
-    this.attached = false;
-    this.hiddenBounds = { x: 0, y: 0, width: 1100, height: 800 };
+    this.favicon = '';
     wireSession(session.fromPartition('persist:desk'));
     registry.set(this.wc.id, this);
     const wc = this.wc;
     wc.setWindowOpenHandler(({ url }) => { setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); }); return { action: 'deny' }; });
     const push = () => { if (!wc.isDestroyed()) this.onState(this.state()); };
     for (const ev of ['did-navigate', 'did-navigate-in-page', 'did-start-loading', 'did-stop-loading', 'page-title-updated']) wc.on(ev, push);
-    view.setBounds(this.hiddenBounds); // a detached page still needs a real viewport size
+    wc.on('did-start-navigation', (e, url, inPlace, main) => { if (main && !inPlace) this.favicon = ''; });
+    wc.on('page-favicon-updated', (e, icons) => { this.favicon = (icons && icons[0]) || ''; push(); });
   }
 
   state() {
     const wc = this.wc;
     const h = wc.navigationHistory;
-    return { url: wc.getURL(), title: wc.getTitle(), loading: wc.isLoading(), canGoBack: h ? h.canGoBack() : wc.canGoBack(), canGoForward: h ? h.canGoForward() : wc.canGoForward() };
+    return { url: wc.getURL(), title: wc.getTitle(), favicon: this.favicon, loading: wc.isLoading(), canGoBack: h ? h.canGoBack() : wc.canGoBack(), canGoForward: h ? h.canGoForward() : wc.canGoForward() };
   }
 
-  attach() {
-    if (!this.attached) { this.window.contentView.addChildView(this.view); this.attached = true; }
-  }
-  setBounds(b) { this.attach(); this.view.setBounds({ x: Math.round(b.x), y: Math.round(b.y), width: Math.max(0, Math.round(b.width)), height: Math.max(0, Math.round(b.height)) }); }
-  setVisible(v) { this.view.setVisible(!!v); }
-  detach() {
-    if (this.attached) { try { this.window.contentView.removeChildView(this.view); } catch (e) { /* window gone */ } this.attached = false; }
-    this.view.setBounds(this.hiddenBounds);
-  }
   destroy() {
     registry.delete(this.wc.id);
-    this.detach();
     try { if (!this.wc.isDestroyed()) this.wc.close(); } catch (e) { /* ignore */ }
+  }
+
+  // Small JPEG data URL of the page for the live card (cheap: ~360 px wide). null if the page cannot be captured.
+  async thumb(width) {
+    try {
+      const img = await Promise.race([this.wc.capturePage(), sleep(2000).then(() => null)]);
+      if (!img || img.isEmpty()) return null;
+      const s = img.getSize();
+      const small = s.width > (width || 360) ? img.resize({ width: width || 360 }) : img;
+      return 'data:image/jpeg;base64,' + small.toJPEG(55).toString('base64');
+    } catch (e) { return null; }
+  }
+
+  // Does this look like a sign-in / 2-step / passkey page? (used when the model gets stuck on one)
+  async looksLikeAuth() {
+    try {
+      const r = await this.wc.executeJavaScript('(function(){return (location.href+" "+document.title+" "+(document.body?document.body.innerText.slice(0,1500):"")).toLowerCase()})()');
+      return /passkey|security key|2-?step|two-?step|verification code|verify (it'?s|that it)|sign.?in|log.?in|authenticat|captcha|confirm (it'?s )?you/.test(r);
+    } catch (e) { return false; }
   }
 
   normalize(url) {
