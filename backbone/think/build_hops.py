@@ -63,23 +63,24 @@ def chain_lines(rng, obj, boxes, place):
     return lines + [rng.choice(AT_FORMS).format(a=path[-1], p=place)]
 
 
-def chain_lens(rng, depth):
-    """[depth, then CHAINS - 1 distractor lengths]: the distractors are drawn from U{1..MAX_DEPTH} until the row has LINES lines in all."""
+def chain_lens(rng, depth, lines=LINES, max_depth=MAX_DEPTH):
+    """[depth, then CHAINS - 1 distractor lengths]: the distractors are drawn from U{1..max_depth} until the row has `lines` lines in all."""
     while True:
-        lens = [rng.randint(1, MAX_DEPTH) for _ in range(CHAINS - 1)]
-        if sum(lens) == LINES - depth:
+        lens = [rng.randint(1, max_depth) for _ in range(CHAINS - 1)]
+        if sum(lens) == lines - depth:
             return [depth, *lens]
 
 
-def make_row(split, seed, i, depth):
-    """One row: a depth-`depth` query chain plus CHAINS - 1 distractor chains, LINES lines in all, shuffled; every chain ends at its own place."""
-    assert 1 <= depth <= MAX_DEPTH and CHAINS - 1 <= LINES - depth <= (CHAINS - 1) * MAX_DEPTH
+def make_row(split, seed, i, depth, lines=LINES, max_depth=MAX_DEPTH):
+    """One row: a depth-`depth` query chain plus CHAINS - 1 distractor chains, `lines` lines in all, shuffled; every chain ends at its own place.
+    lines and max_depth default to the Addendum G bed; mac_laps.py (Addendum H) builds a deeper one."""
+    assert 1 <= depth <= max_depth and CHAINS - 1 <= lines - depth <= (CHAINS - 1) * max_depth and lines - CHAINS <= len(BOXES)
     rng = random.Random(f"{split}:{seed}:{i}")
     objs, boxes = list(OBJECTS), list(BOXES)
     rng.shuffle(objs)
     rng.shuffle(boxes)
     chains = []
-    for k, place in zip(chain_lens(rng, depth), rng.sample(PLACES, CHAINS)):
+    for k, place in zip(chain_lens(rng, depth, lines, max_depth), rng.sample(PLACES, CHAINS)):
         obj, bx = objs.pop(), [boxes.pop() for _ in range(k - 1)]
         chains.append((obj, bx, place, chain_lines(rng, obj, bx, place)))
     lines = [ln for *_, c in chains for ln in c]

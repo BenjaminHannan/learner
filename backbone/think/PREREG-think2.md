@@ -273,3 +273,84 @@ Revision note. The first text (18:30Z) and its code had these faults, all fixed 
 - The code labelled a B fail without checking B3 < +1.
 - eval_adapter.py dropped W.
 The review is in backbone/results/hops/REVIEW-2026-10-27.md.
+
+## Addendum H (2026-10-27 20:05Z, before any run of it): do extra laps help the assistant's own big model, with no training?
+Why. Addendum G trains a loop into a 0.8B model on Ben's PC. This side test asks something cheaper first: can extra laps already help
+the big model the assistant runs, with no training at all? The model is Qwen3.6-35B-A3B at 3 bits, run under MLX on the M3, for
+inference only. It is a separate bed from village and from Addendum G's trained arms, and no number here is compared with theirs.
+What is known (backbone/results/laps/RESEARCH-2026-10-27.md):
+- Re-running middle layers with no training gave gains on one author's own probes for Qwen3.5-27B (RYS-II, same layer pattern; small
+  n, no intervals). It gave about +1 point, within noise, on Gemma 2 and Llama 3 (Lys et al. 2026), and losses on 7B+ models in
+  CircuitProbe (2026).
+- Our own K2 pre-screen (Oct 27) found that training-free repeats hurt or tie on village depth 4-6.
+- No source tests chain-following depth, a 3-bit MoE, or a stop rule on an untrained model. A null result is the likely outcome.
+
+The bed (backbone/think/mac_laps.py build; rows from build_hops.make_row; sha256 in backbone/results/laps/LAPS_REPORT.json)
+- Same row shape as Addendum G, but 64 lines and query chains of 1-16 hops. 7 chains per row, each ending at a different place, so
+  the floor is 1/7 = 14.3% at every depth.
+- dev: 40 rows per depth (640, seed 0). test: 100 rows per depth (1,600, seed 1, independent of dev).
+- sha256: dev 0c871990c46bb557..., test d372f0a2ce93448f...
+- Prompt: the facts and "Question: Where is the {object}? Answer with the place only." in one user turn, thinking off, and the
+  assistant turn pre-filled with "The {object} is at the". The answer is the place with the highest next-token log-prob among the
+  row's 7 places, each one token after a space (checked at run time; the run stops if not).
+
+Laps
+- A block is 1, 2 or 3 whole periods (4, 8 or 12 layers; each period is 3 linear-attention layers and 1 full-attention layer).
+  It starts on a period edge from layer 4 and ends at least 4 layers below the top: 21 blocks for 40 layers.
+- Lap 1 is the plain model. Lap r runs the block r times in a row, then the layers above it.
+- Every pass is a full-sequence pass, so each re-run linear-attention layer starts its state from zero. This equals a repeated
+  layer list with one cache entry per pass, which the tests check.
+
+Stages (automatic, in this order; each decision uses only the rows named)
+1. calib (dev, plain model): the deep slice D = the depths whose plain dev accuracy is in [24.3, 80]. If no depth qualifies, the
+   outcome is VOID.
+2. sweep (dev rows in D, lap 2, all 21 blocks): C* = the block with the highest dev accuracy on D. Ties go to the higher mean
+   log-prob of the answer, then the smaller block, then the earlier one.
+   If C* beats the plain model on dev D by less than +2 points, the run stops: NO CANDIDATE. The best of 21 blocks on dev is
+   biased upward, so if it cannot reach +2, the +5 test bar cannot pass.
+3. test (all 1,600 test rows): the plain model; C* at laps 2, 3 and 4; and a control block (same size as C*, the start farthest
+   from C*'s; ties go to the earlier start) at lap 2.
+
+Marks (test rows only; paired row bootstrap, 2,000 resamples, 95%)
+- V: the plain model scores at least 80 on depth 1, else VOID (it cannot read the bed).
+- H1: C* at lap 2 minus the plain model on D is at least +5, with CI lower bound above 0. Proved wrong: below +1.
+- H2: C* at lap 2 minus the plain model on depths below D is at least -2.
+- H3, adaptive, judged only after a PASS: answer-stable halting over laps 1-4 (the first r ≥ 2 whose answer equals lap r-1's,
+  else 4). Its accuracy minus the plain model on D must be at least +5 with CI above 0, AND Spearman(depth, laps used) over all
+  1,600 rows must be at least 0.3 with CI lower bound above 0.
+- Outcomes, first match wins:
+  - VOID: next, revise the bed so the plain model has headroom, before any rerun.
+  - NO CANDIDATE: stop this path.
+  - PROVED WRONG (H1 below +1): no free extra laps for this model; the trained loop (Addendum G) is the only route.
+  - NOT SHOWN: no follow-up unless Addendum G passes.
+  - TRADE-OFF (H1 passes, H2 fails): check H3 before anything else.
+  - PASS (H1 and H2): next, (1) the same test at 4 bits, (2) a general-ability guard (MMLU-Pro, 300 items, at most -2), (3) only
+    then ask Ben about a think-harder mode in the assistant.
+- Reported with no mark: accuracy by depth at each lap; the control block's gain; the halting laps by depth; the dev table of all
+  21 blocks; the hidden-state RMS at the last position per lap.
+
+Known biases and limits, stated in advance
+- One model, one quantization (3 bits), one prompt. Quantization error may add up with each extra pass, so a null here does not
+  rule out laps at 8 bits.
+- The control block is not a full compute-matched control: it shows whether the location matters, not whether any extra pass would
+  do.
+- Picking C* on dev and testing on fresh rows removes selection bias from H1, but D also comes from dev, which is fair because D
+  uses only the plain model.
+- The bootstrap SE of a paired difference on D (about 600 rows) is about 1.5-2 points, so the +5 bar is large.
+- Runs on the M3 (Ben does not use it) in a slot from the coordinator, with a free-memory check before loading (20 GB). It needs
+  about 2-4 hours, depending on the measured speed.
+
+Revision H.1 (2026-10-27 20:50Z, before any run; after an independent review of mac_laps.py). Wording and code only; no mark,
+bed or stage changed.
+- H2 when no depth lies below D (D starts at depth 1): not evaluable, and it counts as met.
+- Depths that are not in D but lie above its lowest depth (a gap in D, or the near-floor depths past it) count in neither H1 nor H2.
+  They are still reported by depth.
+- A depth whose true plain accuracy is at the floor (14.3%) can still reach 24.3 on 40 dev rows by chance (about 4% per depth).
+  Such a depth in D dilutes H1 towards zero, so this bias works against a PASS, never for one.
+- The run processes rows in depth-interleaved order, so a stopped run still covers every depth evenly. A summary made before every
+  test row is in is labelled PARTIAL, is not a result, and writes no SUMMARY or analysis file.
+- Stage files that end in a torn line (a crash mid-write) are cut back to their last complete record before resuming, and a resume
+  with different settings (meta.json) stops instead of mixing runs.
+- Every run starts with a self-check on the real model, before any row: all places in both splits are one token, the
+  layer-by-layer pass matches the model's own forward, and lap 2 of a middle block matches the model run with that block's layers
+  listed twice (largest log-prob gap below 0.05). If it fails, the run stops with no rows written.
