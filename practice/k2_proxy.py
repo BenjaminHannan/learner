@@ -26,6 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 STOP = "</ifm|tool_calls>"
+IM_END = "<|ifm|im_end|>"
 OPEN_BLOCK = "<ifm|tool_calls>"
 OPEN_CALL = "<ifm|tool_call>"
 CLOSE_CALL = "</ifm|tool_call>"
@@ -157,6 +158,17 @@ def map_messages(messages):
     return out
 
 
+def args_to_json(messages):
+    """map_messages output -> same messages with assistant tool_calls.arguments as JSON strings (vLLM json.loads them back into dicts for the template)."""
+    out = []
+    for m in messages:
+        if m.get("role") == "assistant" and m.get("tool_calls"):
+            m = dict(m)
+            m["tool_calls"] = [{**tc, "function": {**tc["function"], "arguments": json.dumps(tc["function"].get("arguments") or {}, ensure_ascii=False)}} for tc in m["tool_calls"]]
+        out.append(m)
+    return out
+
+
 def fix_tools(tools):
     out = []
     for t in tools or []:
@@ -224,15 +236,23 @@ class ContextTooLong(Exception):
     pass
 
 
+VLLM_PROXY_OPTS = {"upstream_extra": {"tool_choice": "none", "skip_special_tokens": False}, "args_as_json": True}
+
+
 class Proxy:
-    def __init__(self, upstream, log_dir, timeout=1800, max_prompt_chars=None):
+    def __init__(self, upstream, log_dir, timeout=1800, max_prompt_chars=None, upstream_model=None, upstream_extra=None, args_as_json=False):
+        """upstream_model: model name sent upstream (default "default_model", what mlx_lm.server maps to its --model; for vLLM the --served-model-name or a
+        --lora-modules name). upstream_extra: fields merged into every upstream body (vLLM: tool_choice "none" so its own parser stays off, skip_special_tokens
+        False so the <ifm|...> markers survive, stop_token_ids). args_as_json: send assistant tool_calls.arguments as JSON strings (what the OpenAI schema says and
+        what vLLM expects; mlx_lm's template needs dicts)."""
         self.upstream, self.timeout = upstream.rstrip("/"), timeout
+        self.upstream_extra, self.args_as_json = dict(upstream_extra or {}), bool(args_as_json)
         self.max_prompt_chars = max_prompt_chars  # Practice-2 M3 stage 0: a 30k-token prompt OOMed Metal and killed the server, so long prompts are refused
         self.log_dir = Path(log_dir)
         (self.log_dir / "tools").mkdir(parents=True, exist_ok=True)
         self.lock = threading.Lock()
         self.seq = {}
-        self._model = None
+        self._model = upstream_model
         self.httpd = None
 
     def upstream_model(self):
@@ -262,7 +282,10 @@ class Proxy:
         tools = fix_tools(body.get("tools"))
         if self.max_prompt_chars and len(json.dumps(messages)) + len(json.dumps(tools or [])) > self.max_prompt_chars:
             raise ContextTooLong(f"{CONTEXT_ERR}: prompt over {self.max_prompt_chars} characters")
-        up = {"model": self.upstream_model(), "messages": map_messages(messages), "stream": False, "stop": [STOP]}
+        up_msgs = map_messages(messages)
+        if self.args_as_json:
+            up_msgs = args_to_json(up_msgs)
+        up = {"model": self.upstream_model(), "messages": up_msgs, "stream": False, "stop": [STOP]}
         user_stop = body.get("stop")
         if user_stop:
             up["stop"] = [STOP] + ([user_stop] if isinstance(user_stop, str) else list(user_stop))
@@ -274,10 +297,14 @@ class Proxy:
         for k in PASS_PARAMS:
             if body.get(k) is not None:
                 up[k] = body[k]
+        for k, v in self.upstream_extra.items():
+            up.setdefault(k, v)
         r = self.upstream_chat(up)
         ch = (r.get("choices") or [{}])[0]
         m = ch.get("message") or {}
         text = m.get("content") or ""
+        while text.endswith(IM_END):  # a server that keeps the closing special token in the text (lessons add it themselves)
+            text = text[:-len(IM_END)]
         if m.get("tool_calls") and OPEN_BLOCK not in text and OPEN_CALL not in text:  # an upstream that did parse (newer mlx_lm): keep its calls
             calls_up = [{"name": tc["function"]["name"], "arguments": _loads(tc["function"].get("arguments"))} for tc in m["tool_calls"]]
             resp, calls = build_response("", tools, r.get("usage") or {}, r.get("model") or up["model"])
@@ -404,8 +431,10 @@ def main(argv=None):
     ap.add_argument("--upstream", default="http://127.0.0.1:18081")
     ap.add_argument("--log", required=True)
     ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument("--upstream-model", default=None, help='model name sent upstream (default "default_model"; vLLM: its served/LoRA name)')
+    ap.add_argument("--vllm", action="store_true", help="upstream is vLLM: tool_choice none, skip_special_tokens false, tool-call arguments as JSON strings")
     a = ap.parse_args(argv)
-    p = Proxy(a.upstream, a.log, a.timeout)
+    p = Proxy(a.upstream, a.log, a.timeout, upstream_model=a.upstream_model, **(VLLM_PROXY_OPTS if a.vllm else {}))
     s = p.make_server(a.port, a.host)
     print(f"k2_proxy on http://{a.host}:{a.port}/v1 -> {a.upstream}, logs in {a.log}", flush=True)
     try:

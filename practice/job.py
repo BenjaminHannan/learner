@@ -8,6 +8,9 @@ Backends. hf: the model stays loaded in this process (HF generate, stop at </inp
 generation phase (eval, day) and every night runs in its own subprocess (`python -m practice.job --spec FILE`), so vLLM and the HF training model never share
 the GPU and the memory is freed when the subprocess exits. The night saves its peft adapter (adapters/nightN); the next generation subprocess serves it as a
 vLLM LoRARequest without merging. If vLLM cannot be imported, or a phase fails with it, the lane falls back (vllm -> vllm-eager -> hf) and says so in the log.
+--harness opencode (Practice-2 on a CUDA box, PREREG-2 addendum 1): generation phases start a vLLM OpenAI server (practice.oc_cuda; K2 nothink chat template, LoRA
+adapter via --lora-modules, one server per phase) and drive `opencode run` through the in-process practice.k2_proxy; nights are the same HF LoRA nights, on the
+segment lessons (lessons lengths capped at --oc-train-tokens, bare final <answer> turns get no loss). No fallback to the native harness.
 Caps, equal for every arm: MAX_NEW 512 per turn, MAX_TURNS 6, MAX_CTX 4096."""
 import argparse
 import hashlib
@@ -25,6 +28,7 @@ from sleep2.askonce.eval_moves import eval_arc
 from sleep2.askonce.job_common import Logger, assert_finite_forward, device_dtype, env_info
 from sleep2.askonce.model_io import get_tokenizer, load_model
 
+from . import lessons as L
 from . import night as N
 from .tools import CLOSE_TAGS as _CLOSE_TAGS
 STOPS_CFG = list(_CLOSE_TAGS) + ["<|ifm|im_end|>"]
@@ -159,6 +163,7 @@ class Lane:
             name = "tiny:" + make_tiny(self.out / "tiny", [SYSTEM_PROMPT, "<tool>python</tool><input>print(1)</input> ANSWER: 1 0 1 2 3 4 5 6 7 8 9"] * 20)
         self.name = name
         self.modes, self.vpy, self.sub = ["hf"], sys.executable, False
+        self.oc = g("harness", "native") == "opencode"
         if not self.worker:
             self.probe_backends()
         if (not self.worker and not self.sub) or (self.worker and (self.kind == "night" or self.wmode == "hf")):  # CUDA is initialised only where HF runs
@@ -182,9 +187,13 @@ class Lane:
         elif not self.sub:
             self.model = load_model(name, self.dt, self.dev)
             assert_finite_forward(self.model, self.tok, self.log)
+            if self.oc:  # in-process OpenCode lane (CPU smoke against --oc-upstream): generation and nights share this process
+                self.backend = self.make_oc_backend(None)
         self.startup_s = round(time.time() - t, 1)
         self.H = None
-        if self.model is not None or self.backend is not None:
+        if self.oc:
+            self.H = self.backend.runner if self.backend is not None else None
+        elif self.model is not None or self.backend is not None:
             self.H = Harness(self.model, self.tok, 0.7, MAX_NEW, MAX_CTX, a.bs, MAX_TURNS, log=self.log, backend=self.backend)
         if not self.worker:
             self.write_config()
@@ -193,6 +202,20 @@ class Lane:
     def probe_backends(self):
         a = self.a
         want = getattr(a, "backend", "hf")
+        if self.oc:
+            if getattr(a, "oc_upstream", None) and not os.environ.get("PRACTICE_TEST_SUB"):  # tests: an existing upstream, everything in this process
+                self.modes = ["oc"]
+                self.log(f"backend: opencode against {a.oc_upstream} in this process (test)")
+                return
+            self.vpy = os.environ.get("VLLM_PY") or sys.executable
+            if not getattr(a, "oc_upstream", None):
+                r = subprocess.run([self.vpy, "-c", "import vllm; print(vllm.__version__)"], capture_output=True, text=True, timeout=600)
+                if r.returncode:
+                    raise SystemExit(f"--harness opencode needs vLLM in {self.vpy} (set VLLM_PY): {(r.stderr or r.stdout).strip()[-300:]}")
+                self.vllm_version = r.stdout.strip()
+            self.modes, self.sub = ["oc"], True
+            self.log(f"backend: opencode harness, vllm {getattr(self, 'vllm_version', '-')} via {self.vpy}; generation and nights run in subprocesses; no fallback")
+            return
         if a.smoke and os.environ.get("PRACTICE_TEST_SUB"):  # tests: exercise the subprocess plumbing with HF workers on the tiny model
             self.modes, self.sub = ["hf"], True
             self.log("backend: hf in subprocess phases (test)")
@@ -220,13 +243,28 @@ class Lane:
                "vllm_version": getattr(self, "vllm_version", None), "vllm": {"dtype": "float16", "max_model_len": MAX_CTX, "gpu_memory_utilization": VLLM_UTIL,
                "enable_prefix_caching": True, "enable_lora": True, "max_lora_rank": 16}, "hf_start_bs": a.bs, "tries": a.tries, "sibling_tries": getattr(a, "sib_tries", 1),
                "eval_nights": getattr(a, "eval_nights", "1,3"), "nights": a.nights, "practice_n": a.practice_n, "n_sft": a.n_sft, "epochs": a.epochs, "n_pairs": a.n_pairs,
-               "steps": a.steps, "model": a.model}
+               "steps": a.steps, "model": a.model, "harness": getattr(a, "harness", "native")}
+        if self.oc:
+            cfg["opencode"] = {k: getattr(a, k, None) for k in ("oc_concurrency", "oc_timeout", "oc_steps", "oc_max_len", "oc_util", "oc_max_seqs", "oc_train_tokens", "train_bare_answers", "web",
+                                                                 "chat_template")}
         jdump(self.out / "config.json", cfg)
+
+    def make_oc_backend(self, adapter):
+        from .oc_cuda import OCBackend
+        a = self.a
+        return OCBackend(a, self.tok, self.name, adapter, lora_id=int(getattr(a, "n", 0) or 0) + 1, log=self.log, out_dir=self.out,
+                         vpy=os.environ.get("VLLM_PY") or sys.executable)
+
+    def close(self):
+        if self.backend is not None and hasattr(self.backend, "close"):
+            self.backend.close()
 
     def setup_worker(self):
         """Phase subprocess: load only what the phase needs (night: HF model; generation: vLLM engine or HF model [+ adapter])."""
         a = self.a
-        if self.kind == "night" or self.wmode == "hf":
+        if self.wmode == "oc" and self.kind != "night":
+            self.backend = self.make_oc_backend(self.adapter)
+        elif self.kind == "night" or self.wmode == "hf":
             self.model = load_model(self.name, self.dt, self.dev)
             assert_finite_forward(self.model, self.tok, self.log)
             if self.kind != "night" and self.adapter:
@@ -256,6 +294,10 @@ class Lane:
 
     # ------------------------------------------------------------------ local phase bodies (in this process: in-process HF lane, or a phase worker)
     def _use_active(self):
+        if self.oc and not self.worker and self.backend is not None and self.backend.adapter != self.adapter:  # in-process OpenCode lane (tests): re-point at the new adapter
+            self.close()
+            self.backend = self.make_oc_backend(self.adapter)
+            self.H = self.backend.runner
         if self.backend is None:
             self.H.model = self.active_model()
 
@@ -270,10 +312,15 @@ class Lane:
         res = {"tag": tag, "backend": self.backend_name()}
         for name, ps, tr in [(k, v, tmap[k]) for k, v in (("test", self.test), ("sibling", self.sib)) if k in tmap]:
             path = self.out / "eval" / f"{tag}_{name}.jsonl"
-            path.unlink(missing_ok=True)
-            recs = self.H.run(ps, tr, seed * 10 + (1 if name == "test" else 2), deadline=self.end, label=f"{tag}/{name}")
-            for r in recs:
-                jl_append(path, r)
+            if self.oc:  # resumable: tries saved by an earlier attempt of this same eval are kept
+                self.H.run(ps, tr, seed * 10 + (1 if name == "test" else 2), deadline=self.end, label=f"{tag}/{name}", on_done=lambda r, path=path: jl_append(path, r),
+                           have={(r["id"], r["try"]) for r in jl(path)})
+                recs = jl(path)
+            else:
+                path.unlink(missing_ok=True)
+                recs = self.H.run(ps, tr, seed * 10 + (1 if name == "test" else 2), deadline=self.end, label=f"{tag}/{name}")
+                for r in recs:
+                    jl_append(path, r)
             res[name] = dict(summarize(recs), puzzle_scores=puzzle_scores(recs))
         t_arc = time.time()
         if self.arc:
@@ -290,9 +337,13 @@ class Lane:
         t = time.time()
         self._use_active()
         path = self.out / "day" / f"day{n}.jsonl"
-        path.unlink(missing_ok=True)
         ps = jl(s["puzzles"]) if s.get("puzzles") else self.pool  # Practice-2: fresh puzzles every day
-        recs = self.H.run(ps, self.a.tries, seed, deadline=s.get("deadline"), on_done=lambda r: jl_append(path, r), label=f"day{n}")
+        if self.oc:  # resumable: a retry after a crash continues the day from the tries already saved
+            self.H.run(ps, self.a.tries, seed, deadline=s.get("deadline"), on_done=lambda r: jl_append(path, r), label=f"day{n}", have={(r["id"], r["try"]) for r in jl(path)})
+            recs = jl(path)
+        else:
+            path.unlink(missing_ok=True)
+            recs = self.H.run(ps, self.a.tries, seed, deadline=s.get("deadline"), on_done=lambda r: jl_append(path, r), label=f"day{n}")
         res = dict(summarize(recs), planned=len(ps) * self.a.tries, seconds=round(time.time() - t, 1), backend=self.backend_name(), gen_stats=dict(self.H.stats))
         jdump(self.out / "results" / f"day{n}.json", res)
         self.log(f"DAY {n}: {res}")
@@ -311,8 +362,12 @@ class Lane:
             self.model = self.trainer.release()
             self.trainer = None
         anchors = [render(start_messages(p), True, self.tok.bos_token or "") for p in self.pool[:50]]
+        max_tokens = N.MAX_TRAIN_TOKENS
+        if self.oc:  # OpenCode lessons: the prompt alone is ~4k tokens; bare final <answer> turns are context, not trained (PREREG-2 addendum 2)
+            max_tokens = max(max_tokens, int(getattr(a, "oc_train_tokens", 6144)))
+            L.TRAIN_BARE_ANSWERS = bool(getattr(a, "train_bare_answers", False))
         self.trainer, st = N.train_night(self.model, self.tok, s.get("night_arm") or a.arm, self._store(n), seed, n, self.dev, self.dev == "cuda" and str(self.dt) == "torch.float16",
-                                         anchors, n_steps, n_sft, epochs, n_pairs, log=self.log, dedup=bool(s.get("dedup")))
+                                         anchors, n_steps, n_sft, epochs, n_pairs, log=self.log, dedup=bool(s.get("dedup")), max_tokens=max_tokens)
         adir = self.out / "adapters" / f"night{n}"
         self.trainer.pm.save_pretrained(str(adir))  # the next generation phase serves this (vLLM LoRARequest, never merged)
         st["adapter"] = str(adir)
@@ -375,7 +430,7 @@ class Lane:
                 self.log(f"PHASE {name} [{wm}] ok in {wall}s")
                 return res
             tail = (pdir / f"{name}.{wm}.out").read_text()[-1200:].replace("\n", " | ")
-            if not gen_phase or wm == "hf":
+            if not gen_phase or wm == "hf" or len(self.modes) < 2:
                 raise RuntimeError(f"phase {name} failed (rc {rc}): {tail}")
             self.modes.pop(0)
             self.log(f"WARNING vLLM backend failed in phase {name} (mode {wm}, rc {rc}): {tail}")
@@ -478,7 +533,7 @@ class Lane:
         return out
 
 
-def main(argv=None):
+def build_parser():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rg-skills", help="Practice-2: comma-separated Reasoning Gym skills, or auto (read <out>/stage0.json)")
     ap.add_argument("--stage0", action="store_true", help="Practice-2 stage 0: base model, 40 puzzles x 1 try per candidate skill (seed 100) -> <out>/stage0.json")
@@ -505,14 +560,36 @@ def main(argv=None):
     ap.add_argument("--backend", choices=["auto", "hf", "vllm"], default="auto")
     ap.add_argument("--eval-nights", default="1,3", help="nights after which the sealed test is run (A0 always is)")
     ap.add_argument("--sib-tries", type=int, default=1)
+    ap.add_argument("--harness", choices=["native", "opencode"], default="native", help="opencode = the agent OpenBot runs, K2 behind vLLM + practice/k2_proxy (PREREG-2 addendum 1)")
+    ap.add_argument("--chat-template", default=None, help="opencode: K2 chat template file for vLLM and lessons (default practice/k2_nothink.jinja)")
+    ap.add_argument("--oc-concurrency", type=int, default=32, help="opencode: tries running at once")
+    ap.add_argument("--oc-timeout", type=float, default=600, help="opencode: seconds per try")
+    ap.add_argument("--oc-steps", type=int, default=8, help="opencode: model calls per try")
+    ap.add_argument("--oc-train-tokens", type=int, default=6144, help="opencode: lesson length cap for the nights")
+    ap.add_argument("--oc-max-len", type=int, default=16384, help="opencode: vLLM --max-model-len")
+    ap.add_argument("--oc-util", type=float, default=VLLM_UTIL, help="opencode: vLLM --gpu-memory-utilization (the server is stopped before every night)")
+    ap.add_argument("--oc-max-seqs", type=int, default=64, help="opencode: vLLM --max-num-seqs")
+    ap.add_argument("--oc-port", type=int, default=18081)
+    ap.add_argument("--oc-eager", action="store_true", help="opencode: vLLM --enforce-eager")
+    ap.add_argument("--oc-upstream", default=None, help="opencode: use this OpenAI server instead of starting vLLM (tests)")
+    ap.add_argument("--train-bare-answers", action="store_true", help="opencode: also train the bare final <answer> turns (off since PREREG-2 addendum 2)")
+    ap.add_argument("--no-web", dest="web", action="store_false", help="opencode: turn the web tools off")
     ap.add_argument("--spec", help="internal: JSON file with all arguments of one phase subprocess")
     ap.add_argument("--pilot", action="store_true")
     ap.add_argument("--smoke", action="store_true")
+    return ap
+
+
+def main(argv=None):
+    ap = build_parser()
     a = ap.parse_args(argv)
     if a.spec:
         a = argparse.Namespace(**json.loads(Path(a.spec).read_text()))
         lane = Lane(a)
-        res = lane._local(vars(a))
+        try:
+            res = lane._local(vars(a))
+        finally:
+            lane.close()  # stops the vLLM server of an OpenCode phase
         res["startup_s"] = lane.startup_s
         Path(a.out, a.arm, "phase", f"{a.name}.result.json").write_text(json.dumps(res))
         lane.log(f"phase {a.name} done (startup {lane.startup_s}s)")

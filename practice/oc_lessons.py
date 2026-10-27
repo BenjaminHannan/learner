@@ -13,7 +13,8 @@ from .k2_proxy import STOP, map_messages, fix_tools
 
 IM_END = "<|ifm|im_end|>"
 _HERE = Path(__file__).resolve().parent.parent
-TEMPLATE_CANDIDATES = (_HERE / "assistant" / "k2_nothink.jinja", Path.home() / "learner-ops" / "assistant" / "k2_nothink.jinja", _HERE / "tests" / "k2_nothink.jinja")
+TEMPLATE_CANDIDATES = (_HERE / "assistant" / "k2_nothink.jinja", Path.home() / "learner-ops" / "assistant" / "k2_nothink.jinja",
+                       _HERE / "practice" / "k2_nothink.jinja", _HERE / "tests" / "k2_nothink.jinja")
 
 
 def load_template(template_path=None):

@@ -88,10 +88,10 @@ def extract_answer(texts):
 class OpenCodeHarness:
     def __init__(self, proxy_url="http://127.0.0.1:8095", log_dir=None, upstream=None, concurrency=4, timeout=900, max_new=1024, temperature=0.7,
                  max_steps=12, bash_timeout_ms=10000, web=True, opencode_bin="opencode", log=print, keep_dirs=False, embed_tools=True, progress_s=120,
-                 max_prompt_chars=40000, data_dir=None):
+                 max_prompt_chars=40000, data_dir=None, proxy_kw=None):
         self.proxy = None
         if proxy_url is None:  # in-process proxy; ~3.4 characters per K2 token, so 40k characters is about 12k tokens
-            self.proxy = Proxy(upstream, log_dir or tempfile.mkdtemp(prefix="k2proxy_"), max_prompt_chars=max_prompt_chars)
+            self.proxy = Proxy(upstream, log_dir or tempfile.mkdtemp(prefix="k2proxy_"), max_prompt_chars=max_prompt_chars, **(proxy_kw or {}))
             proxy_url = f"http://127.0.0.1:{self.proxy.start_thread(0)}"
             log_dir = str(self.proxy.log_dir)
         if log_dir is None:
@@ -182,14 +182,14 @@ class OpenCodeHarness:
         return rec
 
     # ---------------------------------------------------------------- many tries
-    def run(self, puzzles, tries, seed=0, deadline=None, inflight=None, on_done=None, label=""):
+    def run(self, puzzles, tries, seed=0, deadline=None, inflight=None, on_done=None, label="", skip=()):
         """Same contract as Harness.run: try 0 of every puzzle, then try 1 ...; returns the records; on_done(rec) is called in the calling thread."""
         rng = random.Random(seed)
         queue = []
         for k in range(tries):
             order = list(puzzles)
             rng.shuffle(order)
-            queue += [(p, k) for p in order]
+            queue += [(p, k) for p in order if (p["id"], k) not in skip]  # skip: (id, try) pairs already saved (resume)
         n = max(1, inflight or self.concurrency)
         self._slots = queue_mod.Queue()
         for i in range(n):

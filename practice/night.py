@@ -14,7 +14,7 @@ class MultiTurnTrainer(LoRATrainer):
     """LoRATrainer whose items may carry whole transcripts: sft target / pair chosen / rejected = a message list (prompt is then ignored)."""
 
     def encode(self, prompt, target):
-        if not isinstance(target, list):
+        if not isinstance(target, (list, dict)):  # dict = an OpenCode try (lessons.target_of: {"segs": [(text, trained?)]})
             return super().encode(prompt, target)
         ids, mask = [], []
         for text, trained in segments(target, self.tok.bos_token or ""):
@@ -24,10 +24,11 @@ class MultiTurnTrainer(LoRATrainer):
         return {"ids": ids, "mask": mask}
 
 
-def train_night(model, tok, arm, store, seed, night, dev, use_scaler, anchors, n_steps=N_STEPS, n_sft=N_SFT, epochs=EPOCHS, n_pairs=N_PAIRS, lr=LR, log=print, dedup=False):
+def train_night(model, tok, arm, store, seed, night, dev, use_scaler, anchors, n_steps=N_STEPS, n_sft=N_SFT, epochs=EPOCHS, n_pairs=N_PAIRS, lr=LR, log=print, dedup=False,
+                max_tokens=MAX_TRAIN_TOKENS):
     """Fresh adapter on the clean base `model`. Returns (trainer or None, stats). Trainer.pm is the adapted model for the next day; call trainer.release() before the
     next night. With no lessons the adapter stays at its zero init (= the base model)."""
-    items, st = build_lessons(arm, store, tok, seed, night, n_sft, epochs, n_pairs, dedup=dedup)
+    items, st = build_lessons(arm, store, tok, seed, night, n_sft, epochs, n_pairs, max_tokens=max_tokens, dedup=dedup)
     if n_steps is None:  # Practice-2: scaled to the lesson count
         n_steps = steps_for(len(items))
     st["steps"] = n_steps
