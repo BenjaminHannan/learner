@@ -29,7 +29,10 @@ from urllib.parse import urlparse
 MODEL_IDS = ["qwen36-auto", "qwen36", "qwen36-fast", "k2-helper"]
 BIG_MAX, SMALL_MAX = 8192, 2048
 AUTO_CACHE_MAX = 500
-JUDGE_TIMEOUT = 20
+# The judge prefills the whole prompt; the real call then reuses that cached prefix. A short
+# timeout doesn't stop the server's prefill, so on a long cold prompt it only made the real
+# call prefill everything a second time alongside it (M1, Oct 27: two 36k prefills at once).
+JUDGE_TIMEOUT = 600
 JUDGE_PROMPT = (
     "(Internal check, not from Ben.) Before answering, rate how much careful step-by-step "
     "thinking the request above needs. Reply with one digit only: 0 = none (chat, simple "
@@ -333,6 +336,19 @@ def prepare(body, thinking, default_max):
     return b
 
 
+def request_sizes(body):
+    """'system=8863 user=120 ... tools=22823' in chars (about 4 per token), for finding prompt bloat."""
+    sizes = {}
+    for m in body.get("messages") or []:
+        if isinstance(m, dict):
+            c = m.get("content")
+            n = len(c) if isinstance(c, str) else len(json.dumps(c or ""))
+            n += len(json.dumps(m["tool_calls"])) if m.get("tool_calls") else 0
+            sizes[m.get("role", "?")] = sizes.get(m.get("role", "?"), 0) + n
+    sizes["tools"] = len(json.dumps(body.get("tools") or []))
+    return " ".join("%s=%d" % kv for kv in sizes.items()) + " msgs=%d" % len(body.get("messages") or [])
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "premonition-gateway"
 
@@ -389,7 +405,9 @@ class Handler(BaseHTTPRequestHandler):
         gw = self.server.gw
         for _ in range(2):
             name, url, thinking, dmax = gw.route(route_model)
-            payload = json.dumps(prepare(body, thinking, dmax)).encode()
+            prepped = prepare(body, thinking, dmax)
+            payload = json.dumps(prepped).encode()
+            log("size: " + request_sizes(prepped) + " (before prepare: %d chars)" % len(json.dumps(body)))
             u = urlparse(url)
             conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=3600)
             try:

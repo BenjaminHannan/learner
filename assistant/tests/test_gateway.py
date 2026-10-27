@@ -323,6 +323,12 @@ class PrepareTest(unittest.TestCase):
         self.assertEqual(out[1], msgs[1])  # user text untouched
         self.assertIn("<available_skills>", msgs[0]["content"])  # input not mutated
 
+    def test_request_sizes(self):
+        import gateway
+        b = {"messages": [{"role": "system", "content": "abcd"}, {"role": "user", "content": "xy"},
+                          {"role": "user", "content": [{"type": "text", "text": "z"}]}], "tools": []}
+        self.assertTrue(gateway.request_sizes(b).startswith("system=4 user=%d tools=2" % (2 + len(json.dumps(b["messages"][2]["content"])))))
+
 
 if __name__ == "__main__":
     unittest.main()
