@@ -2,7 +2,7 @@
 # Stop the model servers and gateway, and clear the "assistant is running" marker.
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
-for n in gateway small big; do
+for n in watchdog gateway small big; do
   f="$RUN/$n.pid"
   [ -f "$f" ] || continue
   pid="$(cat "$f")"

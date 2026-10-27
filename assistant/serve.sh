@@ -112,6 +112,12 @@ write_marker() {
 }
 write_marker
 
+# Memory watchdog (stops everything at memory pressure "warning" or +2 GB swap).
+if ! alive watchdog; then
+  rm -f "$OPS/assistant/WATCHDOG_STOPPED"
+  launch watchdog /bin/bash "$DIR/watchdog.sh"
+fi
+
 BIG_WAIT=${ASSISTANT_BIG_TIMEOUT:-300}
 wait_for gateway $GW_PORT /v1/models 30 || { "$DIR/stop.sh"; exit 1; }
 echo "Waiting for the big model to load (up to $BIG_WAIT s) ..."

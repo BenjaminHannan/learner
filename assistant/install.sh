@@ -8,7 +8,7 @@ DET="$HOME/Library/Application Support/OpenBot/openbot-provider-detection-v1.jso
 
 mkdir -p "$DEST/run" "$HOME/learner-ops/diary/raw/blobs" "$HOME/.config/opencode" \
          "$(dirname "$DET")" "$DEST/launchers"
-cp "$SRC/gateway.py" "$SRC/diary_mcp.py" "$SRC/serve.sh" "$SRC/stop.sh" "$SRC/status.sh" \
+cp "$SRC/gateway.py" "$SRC/diary_mcp.py" "$SRC/serve.sh" "$SRC/stop.sh" "$SRC/status.sh" "$SRC/watchdog.sh" \
    "$SRC/k2_nothink.jinja" "$DEST/"
 rm -f "$DEST/opencode.json"   # an unfilled template here is read as a project config
 chmod +x "$DEST"/*.sh
