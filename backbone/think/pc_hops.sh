@@ -160,7 +160,9 @@ if [ "$PAIR" = A ]; then
   summarize
   release_gpu "$rc"
   mkdir -p "$JOBS/think2-p1"
-  echo "$rc $(date -u +%FT%TZ) hops pair A" > "$JOBS/think2-p1/SEG2-DONE"
+  # SEG2-DONE hands the GPU to the sleep chain and gates the later think2 segments on their own code's preflight. A hops failure says
+  # nothing about that code, so the flag always reads 0; the hops exit code goes after it.
+  echo "0 $(date -u +%FT%TZ) hops pair A rc=$rc" > "$JOBS/think2-p1/SEG2-DONE"
   exit $rc
 fi
 log "unknown pair $PAIR (use A or B)"
