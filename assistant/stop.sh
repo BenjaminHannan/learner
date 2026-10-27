@@ -20,4 +20,9 @@ for n in watchdog gateway vlm small big; do
   rm -f "$f"
 done
 rm -f "$OPS/ASSISTANT_RUNNING"
+# Stopped by hand: tell a recovering watchdog (watchdog.sh) not to bring it back.
+if [ -z "${WATCHDOG_CALL:-}" ] && [ -f "$OPS/assistant/WATCHDOG_STOPPED" ]; then
+  echo "$(date '+%F %T') $(cat "$OPS/assistant/WATCHDOG_STOPPED") (then stopped by hand)" >> "$RUN/watchdog-history.log"
+  rm -f "$OPS/assistant/WATCHDOG_STOPPED"
+fi
 echo "Assistant stopped."
