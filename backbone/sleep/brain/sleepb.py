@@ -37,6 +37,9 @@ left open after "<ifm|think_faster>\n") and generates at most NAMES_THINK_MAX = 
 Addendum 11c (PREREG-sleepB-addendum11c.md), K2 only: the names pass thinks fully. Stage 1 uses K2_NAMES_EFFORT = "high" (the template's default reasoning_effort, block left open after "<ifm|think>\n") with NAMES_THINK_MAX = 512 greedy
 thinking tokens, stopping at "</ifm|think>" or the end of the turn (Lang.think_eos("high")); strip_think and stage 2 use that effort's close tag ("</ifm|think>", added when stage 1 did not close the block, then the 12-token answer as before);
 and a reply whose first line starts with the word no / not / none / nothing / nope / unrelated is read as "no" (parse_rel_k2; Qwen keeps parse_rel).
+LFM3 port (no addendum; LiquidAI/LFM3-1.7B, --revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd, trust_remote_code): Lang(lfm3=True) takes the K2 think paths (names pass, --rem-chain-mode think / q_think, --think-eval) with ChatML tags: render = the template with
+enable_thinking=False (ends "<think></think>"), render_think = enable_thinking=True (ends "<think>", the effort is ignored: LFM3 has one close tag "</think>", Lang.shut), a turn ends with <|im_end|> (Lang.end). LoRA: LFM3_TARGETS (attention q/k/v/o, conv in_proj / out_proj,
+feed_forward w1 / w2 / w3: 142 modules on the real model), the smoke is a tiny random Lfm3ForCausalLM (real tokenizer, config and remote code); selftest_lfm3 checks the chat format and the regex. K2 and Qwen runs are unchanged.
 
 Addendum 13 (PREREG-sleepB-addendum13.md): --q4-eval (delta arms only) also scores the final model under F0 / Q0 / Q / Qf (bf16 and 4-bit, with and without the fp32 delta folded in, fresh or frozen 4-bit grid).
 Addendum 13b (PREREG-sleepB-addendum13b.md): --freeze-lora (training delta arms) re-freezes the LoRA in every Trainer, since leaving pm.disable_adapter() makes it trainable again.
@@ -74,7 +77,7 @@ every mlp.gate and mlp.shared_expert_gate: the recipe of mlx-community/Qwen3.6-3
   python backbone/sleep/brain/sleepb.py --arm ab --week backbone/sleep/brain/data/week1.json --out out/sleepb/ab
   python backbone/sleep/brain/sleepb.py --arm af --week ... --out out/sleepb/af --schedule out/sleepb/ab/result_ab.json
   python backbone/sleep/brain/sleepb.py --arm ab --smoke --out /tmp/x      # CPU, tiny random qwen3_5, built-in 2-day fixture
-  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15) + the sleep-efficiency card checks (--card-stats, --skip-known, --lora-plus, --lr-sched, --rem-views)
+  python backbone/sleep/brain/sleepb.py --selftest                         # SHY refactor + delta (full / merge) + local-plasticity + weighted-loss + rotation + time-budget + stale-filter + addendum-7 / -8 / -9 / -10 arm unit checks + the K2 names-pass think path (addenda 11b / 11c) + the LFM3 chat format and LoRA targets (selftest_lfm3) + the q4-eval conditions (addendum 13) + the K2 REM chain modes, units and step plan (addendum 14) + text-scale / dream-vary / reword (addendum 15) + the sleep-efficiency card checks (--card-stats, --skip-known, --lora-plus, --lr-sched, --rem-views)
   python backbone/sleep/brain/sleepb.py --arm ab_ob --smoke --out /tmp/x --budget-scale 8 --text-scale 4 --dream-vary mix --reword /tmp/smoke_reworded.json   # addendum 15 on the smoke fixture (a Week-2 file maps to none of its tests)
 
 Ground truth in the week file (items, mentions, class) is used ONLY for scoring and diagnostics, never by the sleeper.
@@ -108,8 +111,17 @@ for _p in (HERE.parent, HERE.parent.parent):
     sys.path.insert(0, str(_p))
 import facts as facts_mod  # noqa: E402
 from sleep1 import ARC_SMOKE, K2_END, K2_FAST_SHUT, K2_SHUT, K2_THINK_SHUT, SYS, Lang, generic_prompts, load_arc, parse_dream, score_arc  # noqa: E402
-from train import K2_TYPE, LORA_TARGETS, is_k2, load_model  # noqa: E402
+from train import K2_TYPE, LFM3_TYPE, LORA_TARGETS, is_k2, is_lfm3, load_model  # noqa: E402
 SHARED_RE = r".*\.layers\.\d+\.mlp\.shared_experts?\.(gate_proj|up_proj|down_proj)"  # the MoE shared expert (moe_bench.SHARED_RE)
+LFM3_TARGETS = r".*\.layers\.\d+\.(self_attn\.(q_proj|k_proj|v_proj|o_proj)|conv\.(in_proj|out_proj)|feed_forward\.(w1|w2|w3))"  # LFM3: attention q/k/v/o (not its heads-sized gate_proj), the short conv's in/out_proj (not conv.conv), the MLP w1/w2/w3
+
+
+def lora_targets(lm):  # LoRA target_modules of this model: LFM3's regex, else train.LORA_TARGETS
+    return LFM3_TARGETS if lm.config.model_type == LFM3_TYPE else LORA_TARGETS
+
+
+def lfm3_lora_count(cfg):  # modules LFM3_TARGETS matches in the real model: 5 per conv layer, 7 per attention layer (142 for LFM3-1.7B)
+    return sum(5 if t == "conv" else 7 for t in cfg.layer_types)
 
 K = 4
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
@@ -586,8 +598,8 @@ def think_eval(L, model, week, bs, cap=THINK_EVAL_MAX):
     sets = {"twohop": list(T["twohop"]), "forward_c24": [t for t in T["forward"] if t["class"] in ("C2", "C4")]}
     flat = [(k, t) for k, ts in sets.items() for t in ts]
     p1 = [think_plain_prompt(L, t["q"], THINK_EVAL_EFFORT) for _, t in flat]
-    th = [strip_think(x, THINK_EVAL_EFFORT) for x in L.generate(model, p1, max_new=cap, bs=bs, eos=L.think_eos(THINK_EVAL_EFFORT))]
-    ans = L.generate(model, [p + x + K2_THINK_SHUT[THINK_EVAL_EFFORT] for p, (x, _) in zip(p1, th)], max_new=20, bs=bs)
+    th = [strip_think(x, THINK_EVAL_EFFORT, L) for x in L.generate(model, p1, max_new=cap, bs=bs, eos=L.think_eos(THINK_EVAL_EFFORT))]
+    ans = L.generate(model, [p + x + L.shut(THINK_EVAL_EFFORT) for p, (x, _) in zip(p1, th)], max_new=20, bs=bs)
     rows = {k: [] for k in sets}
     for (k, t), (x, closed), a in zip(flat, th, ans):
         rows[k].append({"q": t["q"], "target": t["target"], "answer": a, "think": x[:400], "ok": has_ans(t["target"], a), "ok_any": has_ans(t["target"], x + " " + a), "_ntok": len(L.ids(x)), "_closed": closed})
@@ -2456,11 +2468,11 @@ def parse_rel(txt):  # names_prompt reply -> None for "no" (empty, "no", "no." o
     return re.sub(r"^yes\b[\s\W]*", "", lines[0], flags=re.I).strip(" \t\"'`\u201c\u201d\u2018\u2019.,;:!?-*()[]")[:40].strip()
 
 
-def strip_think(txt, effort="low"):  # addendum 11b: a stage-1 reply (thinking, stopped at the close tag or the end of the turn) -> (thinking text without trailing close tag / im_end, whether the model closed the block itself); effort (11c): whose close tag (default "low": 11b's)
-    txt, closed, close = str(txt or "").strip(), False, K2_THINK_SHUT[effort]
-    while txt.endswith(close) or txt.endswith(K2_END):
+def strip_think(txt, effort="low", L=None):  # addendum 11b: a stage-1 reply (thinking, stopped at the close tag or the end of the turn) -> (thinking text without trailing close tag / im_end, whether the model closed the block itself); effort (11c): whose close tag (default "low": 11b's); L: the Lang whose tags these are (None: K2's)
+    txt, closed, close, end = str(txt or "").strip(), False, *((K2_THINK_SHUT[effort], K2_END) if L is None else (L.shut(effort), L.end))
+    while txt.endswith(close) or txt.endswith(end):
         closed |= txt.endswith(close)
-        txt = txt[:-len(close if txt.endswith(close) else K2_END)].rstrip()
+        txt = txt[:-len(close if txt.endswith(close) else end)].rstrip()
     return txt, closed
 
 
@@ -2616,17 +2628,17 @@ class Brain:
             hits = sorted((m.start(), n) for n, p in pats.items() for m in [p.search(s.diary.low[t["i"]])] if m)  # candidates in this turn (case-insensitive, whole word), by first appearance
             st["turns_ge2"] += len(hits) >= 2
             ask += [(t, a, b) for a, b in name_pairs([(n, vocab[n]) for _, n in hits], s.items, s.dropped)]
-        k2 = getattr(s.L, "k2", False)  # (a stub Lang without .k2 is Qwen-style)
-        if k2:  # addendum 11b / 11c: stage 1 thinks (K2_NAMES_EFFORT, at most NAMES_THINK_MAX tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + close tag, then the answer as on Qwen
+        think = getattr(s.L, "think", getattr(s.L, "k2", False))  # K2 or LFM3 (a stub Lang without .think falls back to .k2; one without either is Qwen-style)
+        if think:  # addendum 11b / 11c: stage 1 thinks (K2_NAMES_EFFORT, at most NAMES_THINK_MAX tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + close tag, then the answer as on Qwen
             p1 = [names_prompt(s.L, t["text"], a, b, think=True, effort=K2_NAMES_EFFORT) for t, a, b in ask]
-            th = [strip_think(x, K2_NAMES_EFFORT) for x in s.gen(p1, s.mn(NAMES_THINK_MAX), eos=s.L.think_eos(K2_NAMES_EFFORT))]  # [(thinking, closed by the model)]
-            raw = s.gen([p + x + K2_THINK_SHUT[K2_NAMES_EFFORT] for p, (x, _) in zip(p1, th)], s.mn(12))
+            th = [strip_think(x, K2_NAMES_EFFORT, s.L) for x in s.gen(p1, s.mn(NAMES_THINK_MAX), eos=s.L.think_eos(K2_NAMES_EFFORT))]  # [(thinking, closed by the model)]
+            raw = s.gen([p + x + s.L.shut(K2_NAMES_EFFORT) for p, (x, _) in zip(p1, th)], s.mn(12))
         else:
             raw = s.gen([names_prompt(s.L, t["text"], a, b) for t, a, b in ask], s.mn(12))
-        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r, **({"think": th[i][0][:400]} if k2 else {})} for i, ((t, a, b), r) in list(enumerate(zip(ask, raw)))[:3]]
+        s.raw["names"] = [{"text": t["text"][:200], "pair": [a, b], "out": r, **({"think": th[i][0][:400]} if think else {})} for i, ((t, a, b), r) in list(enumerate(zip(ask, raw)))[:3]]
         got_of = {ti: got for ti, dd, got in s.tag_log if dd == d}  # the lists tag() logged for this day's turns (appended to in place: no second entry per turn)
         for (t, a, b), txt in zip(ask, raw):
-            rl = (parse_rel_k2 if k2 else parse_rel)(txt)  # 11c: K2 also reads a reply that starts with not / nothing / unrelated ... as no
+            rl = (parse_rel_k2 if think else parse_rel)(txt)  # 11c: K2 (and LFM3) also reads a reply that starts with not / nothing / unrelated ... as no
             if rl is None:
                 continue
             st["yes"] += 1
@@ -2646,7 +2658,7 @@ class Brain:
             st["appended"] += 1
         rec = {"candidates": len(vocab), "turns": len(turns), "turns_ge2": st["turns_ge2"], "pairs": len(ask), "yes": st["yes"], "new_items": st["new_items"], "appended": st["appended"],
                "dropped_invalid": st["dropped_invalid"], "dropped_not_in_turn": st["dropped_not_in_turn"]}
-        if k2:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
+        if think:  # thinking tokens per question (the thinking text, close tag not counted) and the stage-1 outputs that did not close the block themselves (cap hit, or the turn ended first)
             rec.update(think_tokens_mean=round(sum(len(s.L.ids(x)) for x, _ in th) / len(th), 1) if th else 0.0, think_capped=sum(not c for _, c in th))
         return rec
 
@@ -3158,8 +3170,8 @@ class Brain:
             s.raw.setdefault("rem", []).extend(raw[:1] + raw[len(smp):len(smp) + 1])
         else:  # addendum 14: chains (one or two stages), then the gists in their own call
             if think:  # stage 1 thinks (REM_EFFORT, at most REM_THINK_MAX sampled tokens, stops at that effort's close tag / end of turn); stage 2 = prompt + thinking + ONE close tag, then the reply (40 tokens)
-                th = [strip_think(x, REM_EFFORT) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=wb, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
-                craw = s.gen([c + x + K2_THINK_SHUT[REM_EFFORT] for c, (x, _) in zip(chains, th)], s.mn(40), base=wb, sample=True)
+                th = [strip_think(x, REM_EFFORT, s.L) for x in s.gen(chains, s.mn(REM_THINK_MAX), base=wb, sample=True, eos=s.L.think_eos(REM_EFFORT))]  # [(thinking, closed by the model)]
+                craw = s.gen([c + x + s.L.shut(REM_EFFORT) for c, (x, _) in zip(chains, th)], s.mn(40), base=wb, sample=True)
                 st["chain_think_tokens"], st["chain_think_capped"] = sum(len(s.L.ids(x)) for x, _ in th), sum(not c for _, c in th)
             else:
                 craw = s.gen(chains, s.mn(40), base=wb, sample=True)
@@ -4692,7 +4704,7 @@ def selftest_k2():
     # ... and through Brain.names_pass itself (stub gen, real tokenizer): the prompts it builds for stage 2 + the answer + im_end are the template's rendering of [system, user, assistant(think, answer)]
     from types import SimpleNamespace
     seen, cap = [], {}
-    Lc = SimpleNamespace(k2=True, ids=L.ids, think_eos=L.think_eos, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
+    Lc = SimpleNamespace(k2=True, ids=L.ids, think_eos=L.think_eos, shut=L.shut, end=L.end, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
 
     def gen_k2(prompts, n, **kw):
         seen.append((list(prompts), n, kw))
@@ -4708,6 +4720,128 @@ def selftest_k2():
     assert all(q == pp + x + K2_SHUT and q.count(K2_SHUT) == 1 and K2_END not in q[len(pp):] for q, pp, x in zip(p2, p1, th)) and rec["yes"] == 2 and rec["think_capped"] == 2, (rec, [q[-60:] for q in p2])  # one close tag also when stage 1 ran out of tokens
     return {**out, "names_render_tail_high": ph[-48:], "names_think_eos": kw1["eos"], "names_stage2_tail_high": p2[2][-60:],
             "render_tail": p[-48:], "think_render_tail": pt[-48:], "think_eos": L.think_eos(), "prompt_tail_ids": ids[-10:], "ex_qa_tail_ids": ids_q[-5:], "eos": L.eos}
+
+
+LFM3_REPO, LFM3_REV = "LiquidAI/LFM3-1.7B", "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd"  # the pinned LFM3 model
+
+
+def selftest_lfm3():
+    """LFM3 chat format and LoRA targets. Offline first (a fake tokenizer): Lang(lfm3=True) asks the template for enable_thinking False (render) / True (render_think) and nothing else, a changed template tail raises, shut / think_eos / end, the
+    Qwen and K2 Langs untouched, strip_think with the Lang's tags. Then, with the real tokenizer (downloaded from the Hub, no weights; skipped with a message when it cannot be): (i) render ends with "<think></think>", render_think with "<think>" (the
+    effort is ignored), both start with the bos string; (ii) the tags are single ids (124901 / 124902 / 124900), eos is <|im_end|> = 124900, think_eos [124902, 124900]; (iii) stage 2 (render_think + thinking + shut + answer + end) is the template's own finished
+    turn (it adds a newline after im_end), also through Brain.names_pass itself; ex_qa equals the template's turn with an empty reasoning_content; (iv) a tiny random LFM3 (load_model --smoke: real config, remote code, tokenizer; conv, full, conv,
+    sliding layers): LFM3_TARGETS hits 5 modules per conv layer and 7 per attention layer, never gate_proj / conv.conv, and the real layer_types give 142."""
+    import peft
+    from types import SimpleNamespace
+    cpu = torch.device("cpu")
+
+    class FakeTok:  # records the apply_chat_template keywords; two special ids
+        eos_token_id, unk_token_id = 1, 0
+
+        def __init__(self, tail=None):
+            self.tail, self.calls = tail, []
+
+        def apply_chat_template(self, msgs, **kw):
+            self.calls.append(kw)
+            return "".join(f"[{m['role']}]{m['content']}" for m in msgs) + "[assistant]" + (self.tail if self.tail is not None else "<think>" if kw["enable_thinking"] else "<think></think>")
+
+        def convert_tokens_to_ids(self, t):
+            return {"<|im_end|>": 19, "</think>": 53}.get(t, 0)
+
+    tk = FakeTok()
+    Lf = Lang(tk, False, cpu, lfm3=True)
+    assert Lf.think and Lf.lfm3 and not Lf.k2 and Lf.end == "<|im_end|>" and Lf.eos == 19 and Lf.shut() == Lf.shut("high") == "</think>" and Lf.think_eos() == Lf.think_eos("high") == [53, 19]
+    assert Lf.render("S", "U") == "[system]S[user]U[assistant]<think></think>" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True, "enable_thinking": False}, tk.calls[-1]
+    assert Lf.render_think("S", "U") == "[system]S[user]U[assistant]<think>" and tk.calls[-1] == {"tokenize": False, "add_generation_prompt": True, "enable_thinking": True}, tk.calls[-1]  # no reasoning_effort
+    assert Lf.render_think(None, "U", "high") == "[user]U[assistant]<think>" and names_prompt(Lf, "x", "A", "B", think=True, effort=K2_NAMES_EFFORT).endswith("[assistant]<think>") and names_prompt(Lf, "x", "A", "B").endswith("<think></think>")
+    for bad, fn in ((FakeTok("<think>\n"), "render_think"), (FakeTok("<think>"), "render")):  # the template's tail changed: the open (render_think) / closed (render) block is not what it was
+        try:
+            getattr(Lang(bad, False, cpu, lfm3=True), fn)("S", "U")
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("the changed LFM3 template tail should have raised")
+    q, k = Lang(tk, True, cpu), Lang(FakeTok("<ifm|think>\n"), False, cpu, k2=True)
+    assert not q.think and not q.lfm3 and q.end is None and q.eos == 1 and q.render("S", "U") == "system: S\nuser: U\nassistant: "  # (the smoke Qwen Lang)
+    assert k.think and k.end == K2_END and k.shut("high") == K2_SHUT and k.shut() == K2_FAST_SHUT and not k.lfm3
+    for bad, call in ((q, lambda L_: L_.render_think("S", "U")), (q, lambda L_: L_.think_eos()), (q, lambda L_: L_.shut())):
+        try:
+            call(bad)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("a Qwen Lang has no think path")
+    try:
+        Lang(tk, False, cpu, k2=True, lfm3=True)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("k2 and lfm3 are exclusive")
+    assert strip_think("abc def</think><|im_end|>", "high", Lf) == ("abc def", True) and strip_think("abc def<|im_end|>", "low", Lf) == ("abc def", False) and strip_think("abc def</think>", "low", Lf) == ("abc def", True)
+    assert strip_think("abc def" + K2_SHUT + K2_END, "high", Lf) == ("abc def" + K2_SHUT + K2_END, False) and strip_think("abc def</think>", "high") == ("abc def</think>", False)  # (K2's tags are not LFM3's, and the default is K2's)
+    assert strip_think("abc def" + K2_SHUT + K2_END, "high", k) == strip_think("abc def" + K2_SHUT + K2_END, "high") == ("abc def", True) and strip_think("abc" + K2_FAST_SHUT, "low", k) == strip_think("abc" + K2_FAST_SHUT) == ("abc", True)
+    assert lora_targets(SimpleNamespace(config=SimpleNamespace(model_type="qwen3_5"))) is LORA_TARGETS and lora_targets(SimpleNamespace(config=SimpleNamespace(model_type=LFM3_TYPE))) is LFM3_TARGETS
+    assert lfm3_lora_count(SimpleNamespace(layer_types=["conv", "full_attention", "conv", "sliding_attention"])) == 24
+    out = {"fake_tok": "ok"}
+    try:
+        from transformers import AutoConfig, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True)
+    except Exception as e:  # offline / Hub unreachable
+        return {**out, "skipped": f"LFM3 tokenizer not available ({type(e).__name__}); LFM3 checks on the real tokenizer not run"}
+    L = Lang(tok, False, cpu, lfm3=True)
+    u = "Where does Zelmir live?"
+    msgs = [{"role": "system", "content": SYS}, {"role": "user", "content": u}]
+    p, pt = L.render(SYS, u), L.render_think(SYS, u)
+    assert p.startswith("<|startoftext|><|im_start|>system\n") and p.endswith("<|im_start|>assistant\n<think></think>") and p.count("<think>") == 1 and p.count("</think>") == 1, p
+    assert pt.startswith("<|startoftext|>") and pt.endswith("<|im_start|>assistant\n<think>") and pt.count("<think>") == 1 and "</think>" not in pt and pt == p[:-len("</think>")], pt[-80:]
+    assert pt == tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True) and L.render_think(SYS, u, "high") == L.render_think(SYS, u, "medium") == pt  # (the template's default is thinking on; no effort levels)
+    sp = {t: tok.convert_tokens_to_ids(t) for t in ("<|startoftext|>", "<|im_start|>", "<|im_end|>", "<think>", "</think>")}
+    assert list(sp.values()) == [124894, 124899, 124900, 124901, 124902] and L.eos == tok.eos_token_id == sp["<|im_end|>"] == 124900 and L.end == "<|im_end|>", (sp, L.eos)
+    ids, pid = L.ids(p), L.ids(pt)
+    assert ids[0] == sp["<|startoftext|>"] and ids[-2:] == [sp["<think>"], sp["</think>"]] and pid == ids[:-1] and [ids.count(sp[t]) for t in sp] == [1, 3, 2, 1, 1], (ids[-6:], pid[-6:])
+    assert L.think_eos() == L.think_eos("high") == [124902, 124900] and L.shut() == "</think>"
+    stage2 = pt + "abc def" + L.shut() + "no" + L.end
+    assert stage2 + "\n" == tok.apply_chat_template(msgs + [{"role": "assistant", "content": "no", "reasoning_content": "abc def"}], tokenize=False), stage2[-100:]  # (the template adds "\n" after im_end)
+    assert L.ids(stage2)[len(pid):] == L.ids("abc def") + [124902] + L.ids("no") + [124900]
+    ids_q, st = ex_qa(L, u, "Oslo")
+    full = tok.apply_chat_template(msgs + [{"role": "assistant", "content": "Oslo", "reasoning_content": ""}], tokenize=False)
+    assert full.endswith("<think></think>Oslo<|im_end|>\n") and ids_q == L.ids(full[:-1]) and ids_q[-1] == 124900 and ids_q[st - 1] == 124902 and ids_q[st:-1] == L.ids("Oslo"), (ids_q[-6:], L.ids(full)[-6:])
+    ids_t, st_t = ex_text(L, "Zelmir lives in Oslo.")
+    assert ids_t[-1] == 124900 and st_t == 0
+    # ... through Brain.names_pass itself (stub gen, real tokenizer): stage 1 stops at </think> / im_end, stage 2 = stage 1 + thinking + ONE close tag, + the answer + im_end == the template's turn
+    seen = []
+
+    def gen_lfm3(prompts, n, **kw):
+        seen.append((list(prompts), n, kw))
+        return ["They are siblings.</think>", "z " * 60][:len(prompts)] + ["x"] * (len(prompts) - 2) if len(seen) == 1 else ["is the brother of", "No relation", "works at"][:len(prompts)]
+    dia = Diary({"diary": [{"role": "user", "day": 2, "text": "hey Magomen met Papirar and Torvald today"}]})
+    cap = {}
+    Lc = SimpleNamespace(think=True, ids=L.ids, think_eos=L.think_eos, shut=L.shut, end=L.end, render=L.render, render_think=lambda sy, uu, e="low": (cap.__setitem__("u", uu), L.render_think(sy, uu, e))[1])  # records the user message names_prompt builds
+    me = SimpleNamespace(L=Lc, diary=dia, items={}, dropped=set(), tag_log=[(0, 2, [])], raw={}, gen=gen_lfm3, mn=lambda n: n)
+    rec = Brain.names_pass(me, 2)
+    (p1, n1, kw1), (p2, n2, kw2) = seen
+    assert len(p1) == 3 and n1 == NAMES_THINK_MAX == 512 and kw1 == {"eos": [124902, 124900]} and n2 == 12 and kw2 == {} and all(p_.endswith("<|im_start|>assistant\n<think>") for p_ in p1), (kw1, [p_[-40:] for p_ in p1])
+    th = ["They are siblings.", ("z " * 60).strip(), "x"]
+    assert all(q_ == pp + x + "</think>" and q_.count("</think>") == 1 for q_, pp, x in zip(p2, p1, th)) and rec["yes"] == 2 and rec["think_capped"] == 2, (rec, [q_[-60:] for q_ in p2])  # one close tag also when stage 1 ran out of tokens
+    um = [{"role": "system", "content": "You extract facts from chat messages."}, {"role": "user", "content": cap["u"]}]  # (the last prompt's user message; the three differ only in the names)
+    assert p2[2] + "works at" + L.end + "\n" == tok.apply_chat_template(um + [{"role": "assistant", "content": "works at", "reasoning_content": "x"}], tokenize=False), p2[2][-120:]
+    # LoRA targets on a tiny random LFM3 (train.load_model --smoke: the real config + remote code + tokenizer) and on the real layer pattern
+    from train import load_model
+    lm, tk2 = load_model(SimpleNamespace(model=LFM3_REPO, revision=LFM3_REV, smoke=True, seed=0), cpu, torch.float32)
+    assert is_lfm3(SimpleNamespace(model=LFM3_REPO, smoke=True)) and not is_lfm3(SimpleNamespace(model="Qwen/Qwen3.5-2B", smoke=True)) and lm.config.model_type == LFM3_TYPE and lm.config.layer_types == ["conv", "full_attention", "conv", "sliding_attention"]
+    assert sum(n.endswith("self_attn.gate_proj") for n, _ in lm.named_modules()) == 2 and sum(n.endswith("conv.conv") for n, _ in lm.named_modules()) == 2  # (the modules the regex must leave alone exist)
+    pm = peft.get_peft_model(lm, peft.LoraConfig(r=4, lora_alpha=8, lora_dropout=0.0, target_modules=lora_targets(lm), bias="none"))
+    names = [n.removeprefix("base_model.model.model.layers.") for n, m in pm.named_modules() if isinstance(m, peft.tuners.lora.LoraLayer)]
+    per = {i: sorted(n.split(".", 1)[1] for n in names if n.split(".")[0] == str(i)) for i in range(4)}
+    conv_set, attn_set = ["conv.in_proj", "conv.out_proj", "feed_forward.w1", "feed_forward.w2", "feed_forward.w3"], ["feed_forward.w1", "feed_forward.w2", "feed_forward.w3", "self_attn.k_proj", "self_attn.o_proj", "self_attn.q_proj", "self_attn.v_proj"]
+    assert per == {0: conv_set, 1: attn_set, 2: conv_set, 3: attn_set} and len(names) == lfm3_lora_count(lm.config) == 24 and not any("gate_proj" in n or "conv.conv" in n for n in names), per
+    ids_s = torch.tensor([L.ids(pt)])
+    with torch.no_grad():
+        assert pm(input_ids=ids_s).logits.shape == (1, ids_s.shape[1], lm.config.vocab_size)
+    real = AutoConfig.from_pretrained(LFM3_REPO, revision=LFM3_REV, trust_remote_code=True)
+    assert real.model_type == "lfm3" and real.layer_types.count("conv") == 13 and lfm3_lora_count(real) == 5 * 13 + 7 * 11 == 142, (real.layer_types.count("conv"), lfm3_lora_count(real))
+    return {**out, "render_tail": p[-40:], "think_render_tail": pt[-40:], "think_eos": L.think_eos(), "eos": L.eos, "prompt_tail_ids": ids[-5:], "ex_qa_tail_ids": ids_q[-5:], "names_stage2_tail": p2[2][-30:],
+            "lora_tiny": {"modules": len(names), "per_layer": {"conv": len(conv_set), "attn": len(attn_set)}}, "lora_real": lfm3_lora_count(real)}
 
 
 # ------------------------------------------------------------------ main
@@ -5071,9 +5205,9 @@ def main():
     ap.add_argument("--week", help="week1.json; with --smoke and no --week the built-in 2-day fixture is used")
     ap.add_argument("--out")
     ap.add_argument("--model", default="Qwen/Qwen3.5-2B")
-    ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon: the pinned commit sha); default: the repo's main")
+    ap.add_argument("--revision", default=None, help="model repo revision (K2-Horizon / LFM3: the pinned commit sha); default: the repo's main")
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path and K2 REM chain-mode / unit / step-plan (addendum 14) and the text-scale / dream-vary / reword (addendum 15) unit checks and exit")
+    ap.add_argument("--selftest", action="store_true", help="run the SHY refactor, delta, local-plasticity, weighted-loss, rotation, time-budget, stale-filter, addendum-7 / -8 / -9 / -10 arm, K2 names-pass think-path, LFM3 chat-format / LoRA-target and K2 REM chain-mode / unit / step-plan (addendum 14) and the text-scale / dream-vary / reword (addendum 15) unit checks and exit")
     ap.add_argument("--bench-dtype", choices=["bf16", "fp16"], default="bf16", help="--bench-train only: fp16 for a T4 (no bf16)")
     ap.add_argument("--bench-train", action="store_true", help="time Trainer.step OLD vs NEW (FAST off / on) on a synthetic batch at tok budgets 1024..8192, write --out/bench_train.json, print it and exit")
     ap.add_argument("--schedule", help="result_ab.json whose nights[i].steps become this arm's per-night steps (compute match)")
@@ -5102,7 +5236,7 @@ def main():
     ap.add_argument("--rem-gist", type=int, default=30)
     ap.add_argument("--gist-min-days", type=int, default=3)
     ap.add_argument("--rem-chain-mode", choices=REM_CHAIN_MODES, default="default", help="addendum 14 (bridge arms, not x4): how REM writes a two-step dream. default: bridge_prompt, Question + Answer, think block closed (as before); q: bridge_q_prompt, only the question "
-                    "(the answer is the given far end); think / q_think (K2 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
+                    "(the answer is the given far end); think / q_think (K2 or LFM3 only): the same two prompts with the high-effort think block open first (stage 1: at most 512 sampled tokens, stage 2: prompt + thinking + close tag)")
     ap.add_argument("--rem-dirs", choices=["alt", "both"], default="alt", help="addendum 14 (bridge arms, not x4): alt: one direction per pair, alternating with the pair index (as before); both: each pair is two units (one per direction), tried every REM cycle until it has a kept dream, then never again")
     ap.add_argument("--rem-tries", type=int, default=1, help="addendum 14, with --rem-dirs both: samples per unit and cycle (unit-major); only the first sample that passes every check is kept")
     ap.add_argument("--rem-writer", choices=["adapter", "base"], default="adapter", help="addendum 18: who writes the REM dreams (chains and gists): adapter = the model as trained so far (as before); base = the base model, adapter off")
@@ -5129,7 +5263,7 @@ def main():
     ap.add_argument("--q4-mlx-moe", action="store_true", help="--q4-base, Qwen3.5/3.6 MoE: also quantize the fused 3-D expert tensors and the router Parameter, with 8 bits for every mlp.gate and mlp.shared_expert_gate "
                     "(the mlx-community/Qwen3.6-35B-A3B-4bit recipe)")
     ap.add_argument("--freeze-lora", action="store_true", help="addendum 13b (training delta arms only): every Trainer re-freezes the LoRA, so only the fp32 delta trains")
-    ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
+    ap.add_argument("--think-eval", action="store_true", help="addendum 14 (K2 or LFM3 only, report-only): after the final scoring, ask the two-hop and the C2 + C4 forward questions again with the high-effort think block open (at most 512 greedy tokens, then the answer), weights only -> result['think_eval']")
     ap.add_argument("--text-scale", type=float, default=None, help="addendum 15 (needs --budget-scale): the generation knobs (k, item cap, REM chain cap, REM gist cap, dream token budget) are x this instead of x the work scale; the training steps stay at --budget-scale. "
                     "Default: the knobs follow --budget-scale, as before")
     ap.add_argument("--dream-vary", choices=["off", "mix", "plain"], default="off", help="addendum 15 (open-book arms, not the twist arms): nrem_prompt asks for ceil(k/4) paraphrases (and k question cards), then the base model writes ceil(k/4) texts in each of 3 styles "
@@ -5161,6 +5295,7 @@ def main():
         print(json.dumps({"names_k2": selftest_names_k2()}))
         print(json.dumps({"rem_k2": selftest_rem_k2()}))
         print(json.dumps({"k2": selftest_k2()}))
+        print(json.dumps({"lfm3": selftest_lfm3()}))
         print(json.dumps({"add15": selftest_add15()}))
         print(json.dumps({"add17": selftest_add17()}))
         print(json.dumps({"add18": selftest_add18()}))
@@ -5172,8 +5307,8 @@ def main():
         torch.manual_seed(args.seed)
         device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
         lm, tok = load_model(args, device, {"bf16": torch.bfloat16, "fp16": torch.float16}[args.bench_dtype] if device.type == "cuda" else torch.float32)
-        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=LORA_TARGETS, bias="none"))
-        res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE), pm)
+        pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=lora_targets(lm), bias="none"))
+        res = bench_train(args, Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE, lfm3=lm.config.model_type == LFM3_TYPE), pm)
         Path(args.out).mkdir(parents=True, exist_ok=True)
         (Path(args.out) / "bench_train.json").write_text(json.dumps(res, indent=1))
         print(json.dumps(res, indent=1))
@@ -5225,8 +5360,8 @@ def main():
         ap.error("--rem-steps-mult must be positive")
     if args.think_eval and args.arm == "ad":
         ap.error("--think-eval needs a weights-only score (not arm ad)")
-    if (args.rem_chain_mode in ("think", "q_think") or args.think_eval) and not is_k2(args):
-        ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon model (--model IFM/K2-Horizon-3.7B)")
+    if (args.rem_chain_mode in ("think", "q_think") or args.think_eval) and not (is_k2(args) or is_lfm3(args)):
+        ap.error("--rem-chain-mode think / q_think and --think-eval are for a K2-Horizon (--model IFM/K2-Horizon-3.7B) or LFM3 (--model LiquidAI/LFM3-1.7B) model")
     if args.q4_mlx_moe and not args.q4_base:
         ap.error("--q4-mlx-moe needs --q4-base")
     if args.freeze_lora and args.arm not in TRAIN_DELTA_ARMS:
@@ -5265,18 +5400,19 @@ def main():
         q4 = q4_apply(lm, args.q4_group, args.q4_bits, *((Q4_MLX_MOE_BITS, Q4_MLX_MOE_PARAMS) if args.q4_mlx_moe else ()))
         log(f"[q4] fake-quantized base: {q4['tensors']} tensors quantized, {q4['skipped']} skipped, {q4['params']:,} params, mean rel Frobenius error {q4['mean_rel_fro']} (group {q4['group']}, bits {q4['bits']})"
             + (f", by bits {q4['by_bits']}" if "by_bits" in q4 else ""))
-    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE)
-    assert L.k2 or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon model"
+    L = Lang(tok, args.smoke, device, k2=lm.config.model_type == K2_TYPE, lfm3=lm.config.model_type == LFM3_TYPE)
+    assert L.think or not (args.rem_chain_mode in ("think", "q_think") or args.think_eval), "--rem-chain-mode think / q_think and --think-eval need a K2-Horizon or LFM3 model"
     week = json.loads(Path(args.week).read_text()) if args.week else smoke_week()
     check_week(week)
     diary = Diary(week)
-    if L.k2:  # once: what a K2 prompt looks like and how its end tokenizes (the specials must be single ids)
+    if L.think:  # once: what a K2 / LFM3 prompt looks like and how its end tokenizes (the specials must be single ids)
+        fam = "k2" if L.k2 else "lfm3"
         tp = tag_prompt(L, diary.turns[0]["text"])
-        log(f"[k2] tagger prompt: {tp!r}")
-        log(f"[k2] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
+        log(f"[{fam}] tagger prompt: {tp!r}")
+        log(f"[{fam}] last 10 token ids: {L.ids(tp)[-10:]} = {tok.convert_ids_to_tokens(L.ids(tp)[-10:])}; eos id {L.eos}")
         if args.arm in NAMES_ARMS:  # addendum 11b / 11c: the names pass's think-open prompt (stage 1, K2_NAMES_EFFORT) and its stop ids
             npk = names_prompt(L, diary.turns[0]["text"], "A", "B", think=True, effort=K2_NAMES_EFFORT)
-            log(f"[k2] names prompt tail (stage 1, block open, {K2_NAMES_EFFORT} effort): {npk[-60:]!r}; stops at ids {L.think_eos(K2_NAMES_EFFORT)} ({NAMES_THINK_MAX} tokens max)")
+            log(f"[{fam}] names prompt tail (stage 1, block open, {K2_NAMES_EFFORT} effort): {npk[-60:]!r}; stops at ids {L.think_eos(K2_NAMES_EFFORT)} ({NAMES_THINK_MAX} tokens max)")
     leak = {norm(x) for x in week.get("test_strings_norm", [])} | {norm(t["q"]) for k in KINDS for t in week["tests"][k]}
     days = sorted({t["day"] for t in diary.turns})
     sched = None
@@ -5305,18 +5441,19 @@ def main():
     model, brain, pm = lm, None, None
     if args.arm not in ("a0", "ad"):
         from peft import LoraConfig, get_peft_model
-        tm = f"(?:{LORA_TARGETS})|(?:{SHARED_RE})" if args.lora_shared else LORA_TARGETS  # addendum 12: + the MoE shared expert (its only dense MLP)
+        tm = f"(?:{lora_targets(lm)})|(?:{SHARED_RE})" if args.lora_shared else lora_targets(lm)  # addendum 12: + the MoE shared expert (its only dense MLP)
         pm = get_peft_model(lm, LoraConfig(r=args.rank, lora_alpha=args.alpha, lora_dropout=0.0, target_modules=tm, bias="none"))
         if args.lora_shared or getattr(lm.config, "num_experts", 0):
             from peft.tuners.lora import LoraLayer
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
             log(f"[lora] matched {len(mm)} modules ({sum('shared_expert' in n for n in mm)} shared-expert), trainable {sum(p.numel() for p in pm.parameters() if p.requires_grad):,}")
             assert not args.lora_shared or any("shared_expert" in n for n in mm), "--lora-shared matched no shared-expert module"
-        if L.k2:
+        if L.think:
             from peft.tuners.lora import LoraLayer
             mm = [n.removeprefix("base_model.model.") for n, m in pm.named_modules() if isinstance(m, LoraLayer)]
-            log(f"[k2] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
-            assert getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
+            log(f"[{'k2' if L.k2 else 'lfm3'}] LoRA matched {len(mm)} modules: {mm if len(mm) <= 40 else mm[:7] + ['...']}")
+            assert L.lfm3 or getattr(lm.config, "num_experts", 0) or len(mm) == 7 * lm.config.num_hidden_layers, "LORA_TARGETS should match q/k/v/o + gate/up/down in every layer of a dense K2"
+            assert not L.lfm3 or len(mm) == lfm3_lora_count(lm.config), "LFM3_TARGETS should match 5 modules per conv layer (in_proj, out_proj, w1, w2, w3) and 7 per attention layer (q/k/v/o, w1, w2, w3)"
         if args.arm in DELTA_ARMS:
             lora_n = sum(p.numel() for n, p in pm.named_parameters() if "lora_A" in n or "lora_B" in n)  # before freezing
             if args.delta_dtype == "bf16" and args.arm in TRAIN_DELTA_ARMS:

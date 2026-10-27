@@ -54,12 +54,16 @@ K2_OPEN, K2_SHUT, K2_END = "<ifm|think>\n", "</ifm|think>", "<|ifm|im_end|>"  # 
 K2_THINK_OPEN = {"low": "<ifm|think_faster>\n", "medium": "<ifm|think_fast>\n", "high": K2_OPEN}  # the generation prompt's tail per template reasoning_effort ("high" is the default)
 K2_FAST_SHUT = "</ifm|think_faster>"  # closes the low-effort block (render_think)
 K2_THINK_SHUT = {"low": K2_FAST_SHUT, "medium": "</ifm|think_fast>", "high": K2_SHUT}  # the tag that closes the block render_think opens at each effort
+LFM3_OPEN, LFM3_SHUT, LFM3_END = "<think>", "</think>", "<|im_end|>"  # LFM3 (ChatML): thinking on = the generation prompt ends "<think>" (block left open, no newline), off = "<think></think>"; a turn ends with im_end; one close tag, no effort levels
 
 
 class Lang:
-    def __init__(self, tok, smoke, device, k2=False):  # k2: K2-Horizon chat format (no-think prompt, im_end ends a turn); Qwen otherwise
-        self.tok, self.smoke, self.device, self.k2 = tok, smoke, device, k2
-        self.eos = tok.convert_tokens_to_ids(K2_END) if k2 else tok.eos_token_id
+    def __init__(self, tok, smoke, device, k2=False, lfm3=False):  # k2: K2-Horizon chat format (no-think prompt, im_end ends a turn); lfm3: LFM3 ChatML with <think> blocks; Qwen otherwise
+        assert not (k2 and lfm3), "k2 and lfm3 are exclusive"
+        self.tok, self.smoke, self.device, self.k2, self.lfm3 = tok, smoke, device, k2, lfm3
+        self.think = k2 or lfm3  # a think block exists: render_think / think_eos / shut work
+        self.end = K2_END if k2 else LFM3_END if lfm3 else None  # the tag that ends a turn (None: Qwen, no think path)
+        self.eos = tok.convert_tokens_to_ids(self.end) if self.think else tok.eos_token_id
 
     def render(self, system, user):
         msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": user}]
@@ -67,21 +71,33 @@ class Lang:
             t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
             assert t.endswith(K2_OPEN), f"K2 chat template changed: the generation prompt no longer ends with {K2_OPEN!r}: {t[-60:]!r}"
             return t + K2_SHUT
+        if self.lfm3:  # also in a smoke run (tiny random LFM3, real tokenizer and template); enable_thinking=False makes the template close the block itself
+            t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+            assert t.endswith(LFM3_OPEN + LFM3_SHUT), f"LFM3 chat template changed: the no-think generation prompt no longer ends with {LFM3_OPEN + LFM3_SHUT!r}: {t[-60:]!r}"
+            return t
         if hasattr(self.tok, "apply_chat_template") and not self.smoke:
             return self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
         return "".join(f"{m['role']}: {m['content']}\n" for m in msgs) + "assistant: "
 
-    def render_think(self, system, user, effort="low"):  # K2 only: the generation prompt with the think block left OPEN at reasoning_effort `effort` (low: "<ifm|think_faster>\n"); the caller generates the thinking and closes it
-        assert self.k2, "render_think is for K2-Horizon"
+    def render_think(self, system, user, effort="low"):  # K2 / LFM3 only: the generation prompt with the think block left OPEN (K2 at reasoning_effort `effort`, low: "<ifm|think_faster>\n"; LFM3: "<think>", effort ignored); the caller generates the thinking and closes it
+        assert self.think, "render_think is for K2-Horizon / LFM3"
         msgs = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": user}]
+        if self.lfm3:
+            t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=True)
+            assert t.endswith(LFM3_OPEN), f"LFM3 chat template changed: the thinking generation prompt no longer ends with {LFM3_OPEN!r}: {t[-60:]!r}"
+            return t
         t = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, reasoning_effort=effort)
         assert t.endswith(K2_THINK_OPEN[effort]), f"K2 chat template changed: the {effort}-effort generation prompt no longer ends with {K2_THINK_OPEN[effort]!r}: {t[-60:]!r}"
         return t
 
-    def think_eos(self, effort="low"):  # K2 only: stop ids of a think-open generation: the close tag of the block render_think opened at `effort` (default: the low-effort block), or the end of the turn
-        assert self.k2, "think_eos is for K2-Horizon"
-        close = self.tok.convert_tokens_to_ids(K2_THINK_SHUT[effort])
-        assert isinstance(close, int) and close != getattr(self.tok, "unk_token_id", None), f"{K2_THINK_SHUT[effort]!r} is not a single token of this tokenizer: {close!r}"
+    def shut(self, effort="low"):  # K2 / LFM3 only: the tag that closes the block render_think opened at `effort` (LFM3 has one tag for every effort)
+        assert self.think, "shut is for K2-Horizon / LFM3"
+        return K2_THINK_SHUT[effort] if self.k2 else LFM3_SHUT
+
+    def think_eos(self, effort="low"):  # K2 / LFM3 only: stop ids of a think-open generation: the close tag of the block render_think opened at `effort` (default: the low-effort block), or the end of the turn
+        assert self.think, "think_eos is for K2-Horizon / LFM3"
+        close = self.tok.convert_tokens_to_ids(self.shut(effort))
+        assert isinstance(close, int) and close != getattr(self.tok, "unk_token_id", None), f"{self.shut(effort)!r} is not a single token of this tokenizer: {close!r}"
         return [close, self.eos]
 
     def ids(self, text):
