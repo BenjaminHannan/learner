@@ -15,7 +15,7 @@ from pathlib import Path
 
 from .lessons import DPO_W, segments
 
-LR, RANK, SCALE, BETA = 1e-4, 16, 20.0, 0.1
+LR, RANK, SCALE, BETA = 1e-4, 16, 2.0, 0.1  # SCALE = lora_alpha / r = 32 / 16 as on Kaggle (mlx-lm's default 20.0 made night P1 diverge: loss 0.43 -> 8.4)
 
 
 def lessons_to_jsonl(items, path, bos=""):
@@ -68,9 +68,11 @@ def run(spec, log=print):
     except ImportError:  # pragma: no cover
         grad_checkpoint = None
     mx.random.seed(spec.get("seed", 0))
-    if spec.get("mem_limit_gb"):  # hard ceiling when the big assistant is resident
-        lim = int(spec["mem_limit_gb"] * 2 ** 30)
-        (getattr(mx, "set_memory_limit", None) or mx.metal.set_memory_limit)(lim)
+    # ceiling: 7 GB when the big assistant is resident, else 12 GB (uncapped, night P1 reached a 26 GB footprint next to the other arm's server)
+    lim = int(spec.get("mem_limit_gb", 12.0) * 2 ** 30)
+    (getattr(mx, "set_memory_limit", None) or mx.metal.set_memory_limit)(lim)
+    if hasattr(mx, "set_cache_limit"):
+        mx.set_cache_limit(2 * 2 ** 30)
     model, tok = load(spec["model"])
     tok = getattr(tok, "_tokenizer", tok)
     layers = model.layers if hasattr(model, "layers") else model.model.layers
@@ -136,7 +138,8 @@ def run(spec, log=print):
         z = beta * ((pc - ref[0]) - (pr - ref[1]))
         return weight * mx.logaddexp(0.0, -z)  # = -logsigmoid(z)
 
-    opt = optim.Adam(learning_rate=spec.get("lr", LR))
+    # as the Kaggle trainer: cosine decay over the night, grad-norm clip 1.0
+    opt = optim.Adam(learning_rate=optim.cosine_decay(spec.get("lr", LR), steps))
     vg = nn.value_and_grad(model, loss_fn)
     t0, hist = time.time(), []
     for s, batch in enumerate(schedule(items, steps, spec.get("seed", 0))):
@@ -150,6 +153,7 @@ def run(spec, log=print):
             mx.eval(acc, l)
             tot += float(l)
         if acc is not None:
+            acc, _ = optim.clip_grad_norm(acc, 1.0)
             opt.update(model, acc)
             mx.eval(model.parameters(), opt.state)
         mx.clear_cache() if hasattr(mx, "clear_cache") else None

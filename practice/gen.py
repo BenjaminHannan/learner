@@ -247,11 +247,16 @@ class OpenAIBackend:
                 err = e
                 time.sleep(2 * (a + 1))
         self.log(f"openai backend request failed after retries: {err!r}")
-        return ""
+        # raise, not "": an empty reply would be saved as a real (failed) try; a crashed run resumes cleanly instead
+        raise RuntimeError(f"openai backend request failed after retries: {err!r}")
 
     def generate(self, prompts, max_new, temperature, seed):
         futs = [self.pool.submit(self._one, p, max_new, temperature, seed * 1000003 + n) for n, p in enumerate(prompts)]
         return [f.result() for f in futs]
+
+
+PROMPT_CACHE_BYTES = 1 * 2 ** 30
+SERVER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mlx_server.py")  # mlx_lm.server, capped MLX buffer cache
 
 
 class ServerManager:
@@ -276,12 +281,14 @@ class ServerManager:
         return flag in self._help
 
     def cmd(self, model, adapter=None, concurrency=4):
-        c = [self.python, "-m", "mlx_lm.server", "--model", str(model), "--host", "127.0.0.1", "--port", str(self.port)]
+        c = [self.python, SERVER_SCRIPT, "--model", str(model), "--host", "127.0.0.1", "--port", str(self.port)]
         if adapter:
             c += ["--adapter-path", str(adapter)]
         for flag in ("--decode-concurrency", "--prompt-concurrency"):
             if self.supports(flag):
                 c += [flag, str(concurrency)]
+        if self.supports("--prompt-cache-bytes"):  # uncapped, the prompt cache grew each server to 14-16 GB on the 36 GB M3 (swap)
+            c += ["--prompt-cache-bytes", str(PROMPT_CACHE_BYTES)]
         return c + list(getattr(self, "extra", []))  # e.g. --chat-template for the OpenCode harness
 
     def start(self, model, adapter=None, concurrency=4):

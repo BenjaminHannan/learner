@@ -382,7 +382,7 @@ def test_server_manager_command():
     sm = ServerManager("py", 9000)
     sm._help = "--decode-concurrency N"
     c = sm.cmd("/m", "/adapters/n1", 2)
-    assert c[:4] == ["py", "-m", "mlx_lm.server", "--model"] and "--adapter-path" in c and c[c.index("--port") + 1] == "9000"
+    assert c[0] == "py" and c[1].endswith("mlx_server.py") and c[2] == "--model" and "--adapter-path" in c and c[c.index("--port") + 1] == "9000"
     assert "--decode-concurrency" in c and "--prompt-concurrency" not in c
 
 

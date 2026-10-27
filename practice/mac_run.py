@@ -33,7 +33,8 @@ from .web import WEB
 HERE = Path(__file__).resolve().parent
 PDATA = HERE / "data"
 OPS = Path(os.path.expanduser("~/learner-ops"))
-MIN_FREE_RAM_GB, ASSIST_PEAK_GB, MIN_FREE_DISK_GB = 12.0, 8.0, 20.0
+PRESSURE_REFUSE = int(os.environ.get("P1M_PRESSURE_REFUSE", "2"))  # 4: run through warn, back off only on critical (M1, coordinator 2026-10-26)
+MIN_FREE_RAM_GB, ASSIST_PEAK_GB, MIN_FREE_DISK_GB = 12.0, 8.0, 8.0  # disk floor 20 -> 8 GB (Practice-1M: a macOS update download was eating the disk; our runs write MBs)
 MAX_NEW, MAX_CTX = 512, 4096
 OURS = "practice1m"
 K2_Q4_CANDIDATES = ["mlx-community/K2-Horizon-3.7B-4bit", "mlx-community/K2-Horizon-3.7B-4bit-mlx", "mlx-community/K2-Horizon-3.7B-q4"]
@@ -58,7 +59,7 @@ def jl_append(path, rec):
 
 def jdump(path, obj):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    tmp = str(path) + ".tmp"
+    tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"  # unique per thread: status() is called from worker threads concurrently
     Path(tmp).write_text(json.dumps(obj, indent=1, ensure_ascii=False))
     os.replace(tmp, path)
 
@@ -227,7 +228,7 @@ class Mac:
             raise StopRun(f"refusing to start: free RAM {ram:.1f} GB < {need} GB")
         if disk < MIN_FREE_DISK_GB:
             raise StopRun(f"refusing to start: free disk {disk:.1f} GB < {MIN_FREE_DISK_GB} GB")
-        if info["pressure_level"] >= 2:
+        if info["pressure_level"] >= PRESSURE_REFUSE:
             raise StopRun("refusing to start: memory pressure is warn/critical")
         return info
 
@@ -251,7 +252,7 @@ class Mac:
     def backoff_memory(self, hard=False):
         """Wait (up to mem_wait_s) while pressure is warn/critical. hard: raise StopRun if still bad afterwards (between phases)."""
         t0 = time.time()
-        while pressure_level(self.sysrun) >= 2:
+        while pressure_level(self.sysrun) >= PRESSURE_REFUSE:
             if time.time() - t0 > self.mem_wait_s:
                 if hard:
                     raise StopRun("memory pressure stayed warn/critical; stopping cleanly (re-run to resume)")
@@ -347,7 +348,8 @@ class Mac:
 
     # ------------------------------------------------------------ generation phases
     def _make_backend(self, conc):
-        return OpenAIBackend(self.server.base_url, self.model, workers=conc, strip_prefix=self.bos if getattr(self, "strip_bos", False) else "", gate=self.gate, log=self.log)
+        # send_seed=False: mlx_lm.server serves any request carrying a seed one at a time (no batched decode); unseeded = ~4.5x throughput
+        return OpenAIBackend(self.server.base_url, self.model, workers=conc, send_seed=False, strip_prefix=self.bos if getattr(self, "strip_bos", False) else "", gate=self.gate, log=self.log)
 
     def serve(self, adapter):
         conc = self.concurrency()
@@ -456,7 +458,7 @@ class Mac:
         from .mlx_train import lessons_to_jsonl
         lj = d / f"lessons_night{n}.jsonl"
         lessons_to_jsonl(items, lj, self.bos)
-        spec = {"model": self.model, "out": str(adir), "lessons_jsonl": str(lj), "steps": night["steps"], "lr": night["lr"], "rank": night["rank"], "beta": night["beta"],
+        spec = {"model": self.model, "out": str(adir), "lessons_jsonl": str(lj), "steps": max(1, min(night["steps"], max(st.get("sft_examples", 0), st.get("pairs", 0)))), "lr": night["lr"], "rank": night["rank"], "beta": night["beta"],
                 "dpo_w": night["dpo_w"], "seed": self.a.seed * 100 + n, "max_tokens": night["train_max_tokens"]}
         if self.assistant():
             spec["mem_limit_gb"] = 7.0
@@ -676,7 +678,8 @@ class MacRG(Mac):
         if (root / "stage0.json").exists():
             return json.loads((root / "stage0.json").read_text())
         scores = {}
-        for skill in R.CANDIDATES:
+        only = a.rg_skills.split(",") if a.rg_skills and a.rg_skills != "auto" else None  # stage-0 redo of a few skills (M1, 2026-10-27)
+        for skill in only or R.CANDIDATES:
             f = root / "stage0" / skill / "eval_S0_test.jsonl"
             ps = R.make_puzzles(skill, a.stage0_n, R.STAGE0_SEED)
             self.run_phase(f"stage0_{skill}", lambda ps=ps, f=f, skill=skill: self.run_tries(f, ps, 1, None, 7, f"stage0 {skill}"))
@@ -721,6 +724,9 @@ class MacRG(Mac):
             self.setup()
             jdump(root / "rg_config.json", {k: v for k, v in vars(a).items() if isinstance(v, (int, float, str, bool, type(None), list, dict))})
             st = self.stage0() if a.stage0 else None
+            if a.stage0 and a.rg_skills and a.rg_skills != "auto":
+                self.log("stage0 only: --rg-skills named the skills to (re)score, no practice run")
+                return
             if a.rg_skills:
                 if a.rg_skills == "auto":
                     st = st or (json.loads((root / "stage0.json").read_text()) if (root / "stage0.json").exists() else None)
