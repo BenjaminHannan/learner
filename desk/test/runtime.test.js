@@ -11,7 +11,7 @@ const C = require('../src/runtime/constants');
 const R = require('../src/runtime/releases');
 const { downloadFile, sha256File } = require('../src/runtime/download');
 const { buildArgs, LlamaServer } = require('../src/runtime/llamaserver');
-const { createGateway, diaryRecord, diaryMessages, SseText } = require('../src/gateway');
+const { createGateway, diaryRecord, diaryMessages, SseText, mapRequest } = require('../src/gateway');
 const { workerCommand, workerEnv, convertCommand, sleepmlxParent, mayStart, WinSleep } = require('../src/sleepwin');
 const { shouldAutoSleep } = require('../src/sleep');
 const { pipTorchArgs, pipLibsArgs, snapshotArgs, planText } = require('../src/runtime/sleepinstall');
@@ -396,4 +396,22 @@ test('WinSleep converts only when adapter_model.safetensors is newer than the GG
   const ws = new WinSleep({ getSettings: () => ({}), root, installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) }, run: async (c, a) => { ran++; fs.writeFileSync(a[a.indexOf('--outfile') + 1], 'n'); return ''; }, hooks: {} });
   await ws._convert(); assert.strictEqual(ran, 0);
   fs.utimesSync(st, t0, t0); await ws._convert(); assert.strictEqual(ran, 1);
+});
+
+test('gateway: fast and auto turn LFM3 thinking off, main keeps it, an explicit setting wins', () => {
+  assert.deepStrictEqual(mapRequest({ model: 'fast', messages: [] }, 'default').chat_template_kwargs, { enable_thinking: false });
+  assert.deepStrictEqual(mapRequest({ model: 'auto' }).chat_template_kwargs, { enable_thinking: false });
+  assert.strictEqual(mapRequest({ model: 'main' }).chat_template_kwargs, undefined);
+  assert.deepStrictEqual(mapRequest({ model: 'auto', chat_template_kwargs: { enable_thinking: true } }).chat_template_kwargs, { enable_thinking: true });
+  assert.strictEqual(mapRequest({ model: 'fast' }, 'default').model, 'default');
+});
+
+test('bundled CPU engine: used when nothing is installed, source ref is its commit', () => {
+  const d = tmp('bund-'); const exe = path.join(d, 'llama-server.exe'); fs.writeFileSync(exe, 'x');
+  const { ChatInstaller } = require('../src/runtime/install');
+  const i = new ChatInstaller({ dir: path.join(d, 'rt'), bundledExe: exe });
+  assert.strictEqual(i.llamaExe('cpu').exe, exe); assert.strictEqual(i.llamaExe('cpu').tag, C.BUNDLED_LLAMA_COMMIT);
+  assert.strictEqual(i.llamaExe('vulkan'), null);
+  assert.strictEqual(R.llamaSourceUrl(C.BUNDLED_LLAMA_COMMIT), 'https://github.com/ggml-org/llama.cpp/archive/' + C.BUNDLED_LLAMA_COMMIT + '.zip');
+  assert.strictEqual(R.llamaSourceUrl('b12000'), 'https://github.com/ggml-org/llama.cpp/archive/refs/tags/b12000.zip');
 });

@@ -6,6 +6,9 @@ module.exports = {
   LLAMA_REPO: 'ggml-org/llama.cpp',
   LLAMA_MIN_PUBLISHED: '2026-10-27T16:06:00Z',
   LLAMA_MIN_TAG_NUMBER: 11938,           // tags up to b11937 point at commits before LFM3 support (19cce69); raise to the first tag that has it
+  // Until an official release has LFM3, the app ships its own CPU llama-server.exe (resources/llama), cross-built from this
+  // master commit with mingw-w64 (AVX2, static). Its tag doubles as the source ref for the sleep adapter converter.
+  BUNDLED_LLAMA_COMMIT: 'd05706b4f32a545814856e98ca518292585443b9',
   LLAMA_FLAVORS: ['vulkan', 'cpu'],      // tried in this order; cpu = the avx2 build, used when Vulkan will not start
   llamaAssetName: (tag, flavor) => 'llama-' + tag + '-bin-win-' + (flavor === 'cpu' ? 'cpu' : flavor) + '-x64.zip',
   // chat model

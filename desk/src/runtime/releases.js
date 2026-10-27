@@ -47,6 +47,6 @@ function pickPython(releases, series) {
   }
   return null;
 }
-const llamaSourceUrl = (tag) => 'https://github.com/' + C.LLAMA_REPO + '/archive/refs/tags/' + tag + '.zip';
+const llamaSourceUrl = (tag) => 'https://github.com/' + C.LLAMA_REPO + '/archive/' + (/^[0-9a-f]{40}$/.test(tag) ? '' : 'refs/tags/') + tag + '.zip';
 
 module.exports = { pickLlamaAsset, pickGguf, pickPython, hfResolveUrl, hfTreeUrl, llamaSourceUrl, tagNumber };

@@ -14,7 +14,7 @@ class Builtin {
     this.dir = path.join(o.root, 'runtime');
     this.diaryDir = path.join(o.root, 'diary', 'raw');
     this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', flavor: 'vulkan', lora: '' };
-    this.installer = new ChatInstaller({ dir: this.dir, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
+    this.installer = new ChatInstaller({ dir: this.dir, bundledExe: o.bundledExe, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
     this.server = null; this.gw = null; this.running = false; this.asleep = false; this.abort = null; this.cache = {};
   }
   state() { return { ...this.st }; }
@@ -52,7 +52,7 @@ class Builtin {
       // PREMONITION_LLAMA_FLAVOR=cpu skips the graphics build (testing on a PC whose GPU is busy)
       const first = process.env.PREMONITION_LLAMA_FLAVOR === 'cpu' ? 'cpu' : 'vulkan';
       try { r = await this._launch(first, opts && opts.lora); } catch (e) { r = { ok: false, error: e.message, download: true }; }
-      if (!r.ok && !r.download && first !== 'cpu') { // Vulkan would not start on this GPU/driver: the CPU build
+      if (!r.ok && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
         this._set({ phase: 'downloading', label: 'The graphics build did not start; getting the CPU build', pct: 0 });
         r = await this._launch('cpu', opts && opts.lora);
       }

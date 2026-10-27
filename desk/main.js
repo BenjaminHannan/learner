@@ -192,7 +192,7 @@ function autoSleepTick(now, over) {
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = path.join(app.getPath('appData'), 'Premonition');
-  builtin = new Builtin({ root, isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  builtin = new Builtin({ root, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
     getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery,

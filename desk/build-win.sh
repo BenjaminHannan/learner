@@ -22,7 +22,16 @@ else
   echo "WARNING: ../sleepmlx not found; the Windows build will not be able to sleep." >&2
 fi
 
-IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|README\.md|DESIGN\.md|build-mac\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
+# Our own CPU llama-server.exe (LFM3-capable master build) rides along as resources/llama, until an official release has LFM3
+if [[ -f vendor/llama/llama-server.exe ]]; then
+  echo "==> staging bundled llama-server.exe"
+  mkdir -p "$STAGE/llama" && cp vendor/llama/llama-server.exe vendor/llama/LICENSE* "$STAGE/llama/" 2>/dev/null || cp vendor/llama/llama-server.exe "$STAGE/llama/"
+  EXTRA+=(--extra-resource="$STAGE/llama")
+else
+  echo "WARNING: vendor/llama/llama-server.exe not found; the app will need an official llama.cpp release with LFM3." >&2
+fi
+
+IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
 OUT=build/win
 NAME="Premonition"
 DIR="$OUT/$NAME-win32-x64"

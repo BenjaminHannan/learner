@@ -37,7 +37,10 @@ class ChatInstaller {
 
   llamaExe(flavor) {
     const s = this.state(); const d = s.llama && s.llama[flavor];
-    return d && d.exe && fs.existsSync(d.exe) ? d : null;
+    if (d && d.exe && fs.existsSync(d.exe)) return d;
+    // the CPU engine shipped inside the app (no download needed)
+    if (flavor === 'cpu' && this.o.bundledExe && fs.existsSync(this.o.bundledExe)) return { tag: C.BUNDLED_LLAMA_COMMIT, flavor: 'cpu', exe: this.o.bundledExe, bundled: true };
+    return null;
   }
   async ensureLlama(flavor, signal) {
     flavor = flavor || 'vulkan';

@@ -20,8 +20,15 @@ function diaryRecord({ ts, model, requestBody, content }) {
   return { ts: new Date(ts).toISOString(), model, messages: diaryMessages(requestBody && requestBody.messages), response: { content: content || '' } };
 }
 // the upstream request body: our model alias replaced by what llama-server wants (it ignores the name; "default" is conventional)
+// LFM3 thinks by default, and on a laptop CPU that can cost 30 s+ before the answer: "fast" and "auto" turn thinking off,
+// "main" keeps it. A chat_template_kwargs the app sent itself wins.
+const NO_THINK = new Set(['fast', 'auto']);
 function mapRequest(body, upstreamModel) {
-  return { ...body, model: upstreamModel || 'default' };
+  const out = { ...body, model: upstreamModel || 'default' };
+  if (NO_THINK.has(body && body.model) && !(body.chat_template_kwargs && 'enable_thinking' in body.chat_template_kwargs)) {
+    out.chat_template_kwargs = { ...(body.chat_template_kwargs || {}), enable_thinking: false };
+  }
+  return out;
 }
 // accumulate assistant text from an SSE stream chunk by chunk
 class SseText {
