@@ -114,3 +114,26 @@ class DiaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SecretsAndStatusTest(unittest.TestCase):
+    def test_gateway_status_ok_is_kept(self):
+        from .helpers import rec
+        r = rec("Marta works at Orbix"); r["status"] = "ok"
+        self.assertIsNotNone(diary._record_turn(r, Path("/nonexistent")))
+        r["status"] = 500
+        self.assertIsNone(diary._record_turn(r, Path("/nonexistent")))
+
+    def test_turns_about_credentials_are_dropped_whole(self):
+        for t in ["hunter2 is my pass", "my password is x", "login with ben / secret1", "the verification code is 4411", "use this to sign in: abc"]:
+            self.assertTrue(diary.talks_secrets(t), t)
+        for t in ["Marta works at Orbix", "What are my upcoming assignments", "the passage was long", "a compass"]:
+            self.assertFalse(diary.talks_secrets(t), t)
+        with tempfile.TemporaryDirectory() as d:
+            from .helpers import write_raw
+            raw = Path(d) / "raw"
+            write_raw(raw, "2026-10-21", ["Marta works at Orbix", "hunter2 is my pass for gmail"])
+            week = diary.build_week(raw)
+            text = json.dumps(week)
+            self.assertIn("Orbix", text)
+            self.assertNotIn("hunter2", text)
