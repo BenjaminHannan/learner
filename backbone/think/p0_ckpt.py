@@ -104,8 +104,12 @@ def batches_of(prompts, args):
 
 @torch.no_grad()
 def model_readings(runner, board, enc, rows, meta, args, device):
-    """One prefill + think() per batch: the wiring reading, every lap's notes (kept on the CPU), and (if wanted) the true slot K/V of the last lap."""
+    """One prefill + think() per batch: the wiring reading, every lap's notes (kept on the CPU), and (if wanted) the true slot K/V of the last lap.
+    With --blind-laps, think() runs to the largest of those laps too and the slot K/V of each is kept for blind_lap_reading (lap_kv[lap][row])."""
     L, n = meta["lmax"], len(rows)
+    laps = sorted(set(args.blind_laps or []))
+    L_run = max([L] + laps)
+    lap_kv = {t: [None] * n for t in laps}
     prompts = [enc.prompt(r)[0] for r in rows]
     answers = [enc.ids(" " + r["answer"]) + [enc.eos] for r in rows]
     on, off = torch.full_like(board.alpha, WIRING_GATE), torch.zeros_like(board.alpha)
@@ -115,22 +119,25 @@ def model_readings(runner, board, enc, rows, meta, args, device):
         ps = [prompts[i] for i in ids]
         C, mask, p = B.prefill(runner, ps)
         lt = B.last_ids(ps, device)
-        kv, st = B.think(board, runner, C, mask, p, L, keep={L}, stats=False)
+        kv, st = B.think(board, runner, C, mask, p, L_run, keep={L, *laps}, stats=False)
         ans = [answers[i] for i in ids]
         lo = B.answer_logits(runner, on, C, mask, p, lt, ans, kv[L])[0]
         lz = B.answer_logits(runner, off, C, mask, p, lt, ans, kv[L])[0]
         d = (lo - lz).abs()
         dmax, dsum, dcnt = max(dmax, float(d.max())), dsum + float(d.sum()), dcnt + d.numel()
-        for t, e in enumerate(st["e"]):
+        for t, e in enumerate(st["e"][:L + 1]):
             if notes[t] is None:
                 notes[t] = torch.zeros(n, *e.shape[1:])
             notes[t][ids] = B.f32(e).cpu()
         if args.blind_on:
             for j, i in enumerate(ids):
                 kv_rows[i] = [(k[j].cpu(), v[j].cpu()) for k, v in kv[L]]
+        for t in laps:
+            for j, i in enumerate(ids):
+                lap_kv[t][i] = [(k[j].cpu(), v[j].cpu()) for k, v in kv[t]]
         print(f"[p0] batch of {len(ids)} rows done {time.time() - t0:.0f}s", flush=True)
     wiring = dict(gate=WIRING_GATE, rows=n, max_abs_dlogit=dmax, mean_abs_dlogit=dsum / max(dcnt, 1), bug=dmax <= 1e-3)
-    return wiring, notes, kv_rows, prompts
+    return wiring, notes, kv_rows, prompts, lap_kv
 
 
 def notes_reading(notes, rows):
@@ -194,6 +201,33 @@ def blind_reading(runner, board, enc, rows, prompts, kv_rows, args, device):
     return out
 
 
+@torch.no_grad()
+def blind_lap_reading(runner, board, enc, rows, prompts, lap_kv, args, device):
+    """Does looping compute? Greedy blind-pass accuracy (no prompt: the notes are the only route to the story) with the notes after each lap in
+    --blind-laps, overall and by depth. Laps past the trained lmax are extrapolation. Rows without a depth field count under depth None."""
+    gold = [T.normalise(r["answer"]) for r in rows]
+    depth = [r.get("depth") for r in rows]
+    out = dict(rows=len(rows), laps={})
+    for t, kvs in sorted(lap_kv.items()):
+        hits = ["0"] * len(rows)
+        nl = len(kvs[0])
+        for ids in batches_of(prompts, args):
+            ps = [prompts[i] for i in ids]
+            p = torch.tensor([len(x) - 1 for x in ps], device=device)
+            lt, dummy = B.last_ids(ps, device), torch.ones(len(ps), 1, dtype=torch.long, device=device)
+            skv = [(torch.stack([kvs[i][l][0] for i in ids]).to(device), torch.stack([kvs[i][l][1] for i in ids]).to(device)) for l in range(nl)]
+            gen = B.decode(runner, board, None, dummy, p, lt, skv, eos=enc.eos, blind=True)
+            for i, g in zip(ids, gen):
+                hits[i] = "1" if T.normalise(enc.tok.decode(g, skip_special_tokens=True)) == gold[i] else "0"
+        by = {}
+        for d in sorted(set(depth), key=lambda x: (x is None, x)):
+            idx = [i for i in range(len(rows)) if depth[i] == d]
+            by[str(d)] = dict(n=len(idx), acc=sum(hits[i] == "1" for i in idx) / len(idx))
+        out["laps"][str(t)] = dict(acc=hits.count("1") / len(rows), by_depth=by, hits="".join(hits))
+        print(f"[p0] blind lap {t}: {out['laps'][str(t)]['acc']:.3f}", flush=True)
+    return out
+
+
 # ---------------------------------------------------------------- run
 
 def run(args):
@@ -209,7 +243,9 @@ def run(args):
                device=str(device), dtype=str(dtype).replace("torch.", ""), smoke=args.smoke, env=K.env_info(device, dtype))
     out["gates"] = gate_reading(board)
     out["drift"] = drift_reading(board, start, fresh_start(args, runner, tok, meta, device))
-    out["wiring"], notes, kv_rows, prompts = model_readings(runner, board, enc, rows, meta, args, device)
+    out["wiring"], notes, kv_rows, prompts, lap_kv = model_readings(runner, board, enc, rows, meta, args, device)
+    if args.blind_laps:
+        out["blind_laps"] = blind_lap_reading(runner, board, enc, rows, prompts, lap_kv, args, device)
     out["notes"] = notes_reading(notes, rows)
     if args.blind_on:
         out["blind"] = blind_reading(runner, board, enc, rows, prompts, kv_rows, args, device)
@@ -251,6 +287,8 @@ def parse(argv=None):
     ap.add_argument("--seed", type=int, default=None, help="seed of the run (default: the one in think_block.pt)")
     ap.add_argument("--alpha-init", type=float, default=None, help="gate start of the run (default: think_block.pt, else the result JSON, else 0)")
     ap.add_argument("--blind", choices=("auto", "on", "off"), default="auto", help="blind baselines: auto = arm tf only")
+    ap.add_argument("--blind-laps", type=lambda v: [int(x) for x in v.split(",")], default=None,
+                    help="e.g. 0,1,2,4,8: blind-pass accuracy with the notes after each of these laps, overall and by depth (does looping compute?)")
     ap.add_argument("--smoke", action="store_true", help="the tiny random qwen3_5 of think1 --smoke (for tests)")
     args = ap.parse_args(argv)
     args.out = args.out or str(Path(args.ckpt) / "p0_readout.json")

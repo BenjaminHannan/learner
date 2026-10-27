@@ -116,6 +116,18 @@ def test_p0_tf_blind_baselines():
     assert "skipped" not in res2["blind"]
 
 
+def test_p0_blind_laps():
+    res, _ = p0("tf", more=("--limit", "8", "--blind-laps", "0,1,6"))
+    bl = res["blind_laps"]
+    assert sorted(bl["laps"]) == ["0", "1", "6"] and bl["rows"] == 8, bl
+    for t, r in bl["laps"].items():
+        assert 0 <= r["acc"] <= 1 and len(r["hits"]) == 8 and sum(d["n"] for d in r["by_depth"].values()) == 8, (t, r)
+    assert len(res["notes"]["lap_change"]["values"]) == res["lmax"]  # the notes reading still stops at the trained lmax
+    # the lap-lmax blind reading matches blind_reading's 'true' notes
+    res2, _ = p0("tf", more=("--limit", "8", "--blind-laps", str(res["lmax"])))
+    assert abs(res2["blind_laps"]["laps"][str(res["lmax"])]["acc"] - res2["blind"]["true"]) < 1e-9
+
+
 def test_p0_main_writes_json():
     out, data = ckpt("tj")
     f = Path(out) / "main.json"
@@ -125,7 +137,7 @@ def test_p0_main_writes_json():
 
 def run_all():
     tests = [test_p0_tj_readings, test_p0_wiring_rule_fires_when_the_read_is_cut, test_p0_drift_start_is_the_run_start_and_skips_when_not_deterministic,
-             test_p0_tf_blind_baselines, test_p0_main_writes_json]
+             test_p0_tf_blind_baselines, test_p0_blind_laps, test_p0_main_writes_json]
     fails = []
     for fn in tests:
         t0 = time.time()
