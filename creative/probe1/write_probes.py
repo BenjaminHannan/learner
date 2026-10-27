@@ -107,7 +107,11 @@ def job_seed(tid, s):
     return zlib.crc32(f"probe1|{tid}|{s}".encode()) % 2**31
 
 
-def select_tasks(results, only=None):
+def select_tasks(results, only=None, tasks_file=None):
+    """Default: the Guess-1 target tasks. tasks_file (Probe-4): every task in that jsonl (or just `only`), results is not read."""
+    if tasks_file:
+        ts = [json.loads(l) for l in open(tasks_file) if l.strip()]
+        return [t for t in ts if not only or t["id"] in only]
     byid = {t["id"]: t for t in load_tasks()}
     return [byid[i] for i in (only or target_ids(results))]
 

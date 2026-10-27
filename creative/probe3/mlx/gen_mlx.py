@@ -53,6 +53,7 @@ def main():
     ap.add_argument("--out-dir", default=C.P3)
     ap.add_argument("--out", default=None, help="explicit output file instead of the --arm name in --out-dir")
     ap.add_argument("--results", default=wp.DEFAULT_RESULTS, help="Guess-1 run dir; its target.json names the 48 tasks")
+    ap.add_argument("--tasks-file", default=None, help="Probe-4: jsonl of tasks to write tests for, instead of the 48 Guess-1 target tasks (--results is then unused)")
     ap.add_argument("--tasks", default="", help="comma-separated task ids instead of target.json (smoke tests)")
     ap.add_argument("--limit-tasks", type=int, default=0)
     ap.add_argument("--model", default=C.MODEL)
@@ -71,7 +72,7 @@ def main():
         sys.exit("--arm base is the untuned control: no --adapter")
     out = a.out or os.path.join(a.out_dir, OUT_NAMES[a.arm])
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    tasks = wp.select_tasks(a.results, [x for x in a.tasks.split(",") if x] or None)[:a.limit_tasks or None]
+    tasks = wp.select_tasks(a.results, [x for x in a.tasks.split(",") if x] or None, tasks_file=a.tasks_file)[:a.limit_tasks or None]
     done = {r["key"] for r in C.read_jsonl(out)} if os.path.exists(out) else set()
     todo = [(t, s) for t in tasks for s in range(a.samples) if f"{t['id']}|{s}" not in done]
     print(f"arm {a.arm}: {len(tasks) * a.samples} samples, {len(done)} done, {len(todo)} to write -> {out}", flush=True)
