@@ -353,4 +353,7 @@ bed or stage changed.
   with different settings (meta.json) stops instead of mixing runs.
 - Every run starts with a self-check on the real model, before any row: all places in both splits are one token, the
   layer-by-layer pass matches the model's own forward, and lap 2 of a middle block matches the model run with that block's layers
-  listed twice (largest log-prob gap below 0.05). If it fails, the run stops with no rows written.
+  listed twice (largest log-prob gap below 0.05). If it fails, the run stops with no rows written. Both sides apply the head to
+  the last position only (one row): on Metal, a quantized matmul over one row and over many rows rounds differently by about one
+  bf16 step, which a second review showed could fail a correct run (emulated on the 0.8B model's 3-bit head).
+- A summary reads stage files without rewriting them and counts each row id once; meta.json also records the bed's sha256.

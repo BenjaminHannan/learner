@@ -169,9 +169,10 @@ def record(row, cand_places, base, extra):
     return rec
 
 
-def read_jsonl(p):
-    """The complete records of a stage file. A torn last line (a crash mid-write) is cut off, and the file always ends in a
-    newline, so the next append starts a fresh record."""
+def read_jsonl(p, repair=True):
+    """The complete records of a stage file. With repair (the run itself, before appending), a torn last line (a crash
+    mid-write) is cut off and the file is made to end in a newline, so the next append starts a fresh record. Readers of a
+    live file (summarize) pass repair=False and simply stop at the first incomplete line."""
     if not p.exists():
         return []
     text = p.read_text()
@@ -186,7 +187,7 @@ def read_jsonl(p):
             keep = end
         pos = end + 1
     fixed = text[:keep] + ("\n" if keep else "")
-    if fixed != text:
+    if repair and fixed != text:
         p.write_text(fixed)
     return recs
 
@@ -369,7 +370,7 @@ def cmd_summarize(a):
         oc = "NO CANDIDATE"
         lines.append(f"OUTCOME: {oc} (best dev gain {sel['dev_gain']:+.2f} < +{CAND_MIN:.0f})")
     else:
-        test = read_jsonl(run / "test.jsonl")
+        test = list({r["id"]: r for r in read_jsonl(run / "test.jsonl", repair=False)}.values())  # one record per row id
         full = len(test) >= MAX_DEPTH * TEST_PER_DEPTH
         if not test or (not full and not a.partial):
             print(f"test has {len(test)} of {MAX_DEPTH * TEST_PER_DEPTH} rows (use --partial to look anyway)")
@@ -421,12 +422,13 @@ def check_data(data):
     have = {s: H.sha(Path(data) / f"{s}.jsonl") for s in ("dev", "test")}
     if have != {s: want[s]["sha256"] for s in have}:
         raise SystemExit(f"data sha256 differs from backbone/results/laps/LAPS_REPORT.json: {have}")
+    return have
 
 
 def cmd_run(a, load=None):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    check_data(a.data)
+    data_sha = check_data(a.data)
     if load is None:
         gb, t0 = free_gb(), time.time()
         while gb is not None and gb < a.min_free_gb and getattr(a, "wait", False):
@@ -442,15 +444,16 @@ def cmd_run(a, load=None):
     model, tok = load(a.model)
     lp = Laps(model)
     blocks = lp.blocks()
-    meta = dict(model=a.model, n_layers=lp.n, period=lp.period, blocks=[key(*b) for b in blocks], started=time.strftime("%FT%TZ", time.gmtime()))
+    meta = dict(model=a.model, n_layers=lp.n, period=lp.period, blocks=[key(*b) for b in blocks], data=data_sha,
+                started=time.strftime("%FT%TZ", time.gmtime()))
     if (out / "meta.json").exists():
         old = json.loads((out / "meta.json").read_text())
-        if any(old.get(k) != meta[k] for k in ("model", "n_layers", "period", "blocks")):
-            raise SystemExit(f"{out} holds a run of another model or block list ({old.get('model')}): use a fresh --out")
+        if any(old.get(k) != meta[k] for k in ("model", "n_layers", "period", "blocks", "data")):
+            raise SystemExit(f"{out} holds a run of another model, block list or bed ({old.get('model')}): use a fresh --out")
     else:
         (out / "meta.json").write_text(json.dumps(meta, indent=1) + "\n")
     dev, test = load_rows(a.data, "dev"), load_rows(a.data, "test")
-    ok, report = self_check(model, tok, lp, dev + test, TOL)
+    ok, report = self_check(model, tok, lp, dev + test, getattr(a, "tol", TOL))
     print(report, flush=True)
     if not ok:
         raise SystemExit("the layer-by-layer pass does not match this model's own forward: stopping before any row")
@@ -488,7 +491,10 @@ def cmd_run(a, load=None):
 def self_check(model, tok, lp, rows, tol):
     """On the model about to be used: every place in the rows is one token; the layer-by-layer pass equals the model's own
     forward; and lap 2 of a middle block equals the model run with that block's layers listed twice. Guards against an mlx_lm
-    whose internals differ from the ones the tests ran on. Returns (ok, report)."""
+    whose internals differ from the ones the tests ran on. The model's own side runs its text model (which ends in the final norm)
+    and then the head on the last position only, as Laps.read does: on Metal a quantized matmul over one row and over many rows
+    round differently (one bf16 step, up to ~0.1 in a log-prob), so a head over the whole sequence would not be like for like.
+    Returns (ok, report)."""
     mx = lp.mx
     for r in rows:
         cand_ids(tok, r["places"])
@@ -499,7 +505,7 @@ def self_check(model, tok, lp, rows, tol):
         orig = list(tm.layers)
         tm.layers = layers
         try:
-            lg = model(mx.array([ids]))[0, -1].astype(mx.float32)
+            lg = lp.head(tm(mx.array([ids]))[:, -1:, :])[0, -1].astype(mx.float32)
         finally:
             tm.layers = orig
         return (lg - mx.logsumexp(lg))[mx.array(cand)].tolist()
@@ -543,6 +549,7 @@ def main(argv=None):
     r.add_argument("--min-free-gb", type=float, default=20.0)
     r.add_argument("--yes", action="store_true")
     r.add_argument("--wait", action="store_true", help="wait (checking each minute) until --min-free-gb is free, then start")
+    r.add_argument("--tol", type=float, default=TOL, help="self-check tolerance (largest log-prob gap)")
     t = sub.add_parser("selftest")
     t.add_argument("--model", required=True)
     t.add_argument("--data", required=True)

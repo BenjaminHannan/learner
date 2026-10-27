@@ -126,6 +126,8 @@ def test_read_jsonl_cuts_a_torn_line_and_ends_in_a_newline(tmp_path):
     assert L.done_ids(p) == {"a", "b", "c"}
     p.write_text('{"id": "a"}\n')
     assert L.read_jsonl(p) == [{"id": "a"}] and p.read_text() == '{"id": "a"}\n'
+    p.write_text('{"id": "a"}\n{"id": "b", "ba')  # a reader of a live file (summarize) never rewrites it
+    assert L.read_jsonl(p, repair=False) == [{"id": "a"}] and p.read_text() == '{"id": "a"}\n{"id": "b", "ba'
     assert L.read_jsonl(tmp_path / "missing.jsonl") == []
 
 
@@ -145,6 +147,9 @@ def test_summarize_partial_and_full(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "OUTCOME: PARTIAL (800 of 1600 rows), not a result: PASS" in out and "NEXT:" not in out
     assert not (run / "SUMMARY_laps.txt").exists() and not (run / "analysis.json").exists()
+    with open(run / "test.jsonl", "a") as f:  # a duplicated row (two runs on one --out) is counted once
+        f.write(json.dumps(rows[0]) + "\n")
+    assert L.cmd_summarize(a) == 0 and "PARTIAL (800 of 1600 rows)" in capsys.readouterr().out
     with open(run / "test.jsonl", "a") as f:
         for r in rows[len(rows) // 2:]:
             f.write(json.dumps(r) + "\n")
