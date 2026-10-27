@@ -135,3 +135,7 @@ count). This tests that lead directly, with a matched control and with halting i
   same v1 generator and seed), built by backbone/think/build_fresh.py: 17,481 questions, 2,934 at depth 4-6, fresh.jsonl
   sha256 ffc2e0e8f67927534385b327519bccfb8d9f270255abfed75d5d5f2c4853b07d. No screen has read them. They are scored only
   for an arm that already passed on validation (br at r4 with its halting rule, and aplong), once each, with the same marks.
+- Hardware (added 2026-10-27 06:55Z, before any br result): the marks are judged on the RTX 5070 Ti runs (br, aplong,
+  aplus and tc on one card). A second br seed-0 run on the Radeon 7700 XT (ROCm) starts earlier. It is reported as a
+  hardware replicate, never used for the marks. It runs only after a numerics check: a_s0 scored on the Radeon must be
+  within 0.3 points of its 5070 Ti score, with at least 98% of rows giving the same hit.
