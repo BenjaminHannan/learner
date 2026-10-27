@@ -76,7 +76,12 @@ async function streamChat(opts) {
     if (r) { reasoning += r; if (onReasoning) onReasoning(r); }
     if (Array.isArray(d.tool_calls)) {
       for (const t of d.tool_calls) {
-        const i = t.index === undefined ? tc.length : t.index;
+        // Some servers omit `index`: a chunk with a new id (or the very first chunk) starts a new call, otherwise it continues the last one.
+        let i = t.index;
+        if (i === undefined) {
+          const last = tc.length - 1;
+          i = (last < 0 || (t.id && tc[last] && tc[last].id && tc[last].id !== t.id)) ? tc.length : last;
+        }
         const cur = tc[i] || (tc[i] = { id: '', name: '', arguments: '' });
         if (t.id) cur.id = t.id;
         if (t.function) {
@@ -87,7 +92,20 @@ async function streamChat(opts) {
     }
   };
 
-  const reader = res.body.getReader();
+  if (/application\/json/i.test(res.headers.get('content-type') || '')) {
+    // Server ignored stream:true and sent one JSON body.
+    let j = null;
+    try { j = JSON.parse(await res.text()); } catch (e) { /* fall through to empty result */ }
+    if (j && j.error) throw new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error)));
+    const m = j && j.choices && j.choices[0] && j.choices[0].message;
+    if (m) {
+      handle('data: ' + JSON.stringify({ choices: [{ finish_reason: j.choices[0].finish_reason, delta: {
+        content: m.content, reasoning_content: m.reasoning_content,
+        tool_calls: (m.tool_calls || []).map((t, k) => ({ index: k, id: t.id, function: { name: t.function && t.function.name, arguments: t.function && (typeof t.function.arguments === 'string' ? t.function.arguments : JSON.stringify(t.function.arguments || {})) } }))
+      } }] }));
+    }
+  }
+  const reader = (res.bodyUsed || !res.body) ? { read: async () => ({ done: true }) } : res.body.getReader();
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -101,7 +119,7 @@ async function streamChat(opts) {
   }
   if (buf) handle(buf);
 
-  let toolCalls = tc.filter(Boolean).filter((t) => t.name).map((t, i) => ({ id: t.id || 'call_' + i, name: t.name, arguments: t.arguments || '{}' }));
+  let toolCalls = tc.filter(Boolean).filter((t) => t.name).map((t, i) => ({ id: t.id || 'call_' + Date.now().toString(36) + '_' + i, name: t.name, arguments: t.arguments || '{}' }));
   if (!toolCalls.length && content && /<tool_call>|<function=/.test(content)) {
     const fb = extractFallbackCalls(content);
     if (fb.calls.length) { toolCalls = fb.calls; content = fb.content; }

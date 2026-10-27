@@ -148,6 +148,7 @@ class Agent {
       thread.messages.push({ role: 'user', content: datePrefix() + ' ' + text });
       thread.items.push({ t: 'user', text });
     };
+    repairHistory(thread.messages);
     pushUser(userText);
     save();
     let stopped = false;
@@ -244,6 +245,7 @@ class Agent {
     } catch (e) {
       this.emit({ type: 'error', message: String(e && e.message || e) });
     } finally {
+      repairHistory(thread.messages);
       this.running = false;
       this.abort = null;
       this.steerQueue = [];
@@ -315,6 +317,26 @@ class Agent {
   }
 }
 
+// Every assistant tool_call needs a tool message after it (a crash or error mid-run can leave one dangling,
+// which makes the API reject the whole thread forever). Returns number of stubs added.
+function repairHistory(messages) {
+  let n = 0;
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    if (m.role !== 'assistant' || !m.tool_calls) continue;
+    let j = i + 1;
+    const have = new Set();
+    while (j < messages.length && messages[j].role === 'tool') { have.add(messages[j].tool_call_id); j++; }
+    const missing = m.tool_calls.filter((c) => !have.has(c.id));
+    if (missing.length) {
+      messages.splice(j, 0, ...missing.map((c) => ({ role: 'tool', tool_call_id: c.id, content: '[interrupted]' })));
+      n += missing.length;
+      i = j + missing.length - 1;
+    }
+  }
+  return n;
+}
+
 function cleanMsg(m) {
   const o = { role: m.role, content: m.content };
   if (m.tool_calls) o.tool_calls = m.tool_calls;
@@ -322,4 +344,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { Agent, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
