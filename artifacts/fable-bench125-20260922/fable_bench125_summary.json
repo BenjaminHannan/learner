@@ -1,0 +1,210 @@
+{
+ "seconds": 727.1,
+ "scorer": "v2+contains-gold",
+ "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+ "arms": {
+  "smollm-incontext": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 52,
+    "abstain": 0,
+    "wrong": 148,
+    "contains_gold": 67
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 52,
+    "abstain": 0,
+    "wrong": 148,
+    "contains_gold": 57
+   },
+   "s2fresh_4hop_examples": [
+    {
+     "slot": "correct",
+     "id": "bench103-s2fresh-4hop-001",
+     "question": "What language is officially spoken in the country where the creator of the spouse of Derek Shepherd is a citizen?",
+     "golds": [
+      "Arabic",
+      "ar",
+      "Arabian language"
+     ],
+     "answer": "Arabic",
+     "verdict": "correct"
+    },
+    {
+     "slot": "correct",
+     "id": "bench103-s2fresh-4hop-003",
+     "question": "In what city, which is the capital of a country, is the director of the original broadcaster of Jimmy Kimmel Live! a citizen?",
+     "golds": [
+      "Charleroi"
+     ],
+     "answer": "Charleroi",
+     "verdict": "correct"
+    },
+    {
+     "slot": "wrong",
+     "id": "bench103-s2fresh-4hop-002",
+     "question": "What is the capital of the country that created the sport connected to the position played by Rony Seikaly?",
+     "golds": [
+      "Alwernia"
+     ],
+     "answer": "The capital of the country that created the sport connected to the position played by R",
+     "verdict": "wrong"
+    },
+    {
+     "slot": "wrong",
+     "id": "bench103-s2fresh-4hop-004",
+     "question": "In what city is the capital located, of the country where the director of the performer of Yesterday is a citizen?",
+     "golds": [
+      "Tirana",
+      "Tiran\u00eb",
+      "Tirane"
+     ],
+     "answer": "Yesterday is performed by The Beatles.",
+     "verdict": "wrong"
+    },
+    {
+     "slot": "wrong(substitute-for-missing-abstain)",
+     "id": "bench103-s2fresh-4hop-006",
+     "question": "Which language is the official tongue of the faith that the spouse of the performer of Diamond Dogs adheres to?",
+     "golds": [
+      "French",
+      "fra",
+      "fr"
+     ],
+     "answer": "Arabic",
+     "verdict": "wrong"
+    }
+   ]
+  },
+  "smollm-raglite": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 41,
+    "abstain": 0,
+    "wrong": 159,
+    "contains_gold": 58
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 33,
+    "abstain": 0,
+    "wrong": 167,
+    "contains_gold": 38
+   },
+   "s2fresh_4hop_examples": [
+    {
+     "slot": "correct",
+     "id": "bench103-s2fresh-4hop-001",
+     "question": "What language is officially spoken in the country where the creator of the spouse of Derek Shepherd is a citizen?",
+     "golds": [
+      "Arabic",
+      "ar",
+      "Arabian language"
+     ],
+     "answer": "Arabic",
+     "verdict": "correct"
+    },
+    {
+     "slot": "correct",
+     "id": "bench103-s2fresh-4hop-009",
+     "question": "What is the capital city of the country whose citizen is the spouse of the author of The Sandman?",
+     "golds": [
+      "Prague",
+      "Praha",
+      "City of Prague"
+     ],
+     "answer": "Prague",
+     "verdict": "correct"
+    },
+    {
+     "slot": "wrong",
+     "id": "bench103-s2fresh-4hop-002",
+     "question": "What is the capital of the country that created the sport connected to the position played by Rony Seikaly?",
+     "golds": [
+      "Alwernia"
+     ],
+     "answer": "The capital of the country that created the sport connected to the position played by R",
+     "verdict": "wrong"
+    },
+    {
+     "slot": "wrong",
+     "id": "bench103-s2fresh-4hop-003",
+     "question": "In what city, which is the capital of a country, is the director of the original broadcaster of Jimmy Kimmel Live! a citizen?",
+     "golds": [
+      "Charleroi"
+     ],
+     "answer": "Russian Empire",
+     "verdict": "wrong"
+    },
+    {
+     "slot": "wrong(substitute-for-missing-abstain)",
+     "id": "bench103-s2fresh-4hop-004",
+     "question": "In what city is the capital located, of the country where the director of the performer of Yesterday is a citizen?",
+     "golds": [
+      "Tirana",
+      "Tiran\u00eb",
+      "Tirane"
+     ],
+     "answer": "Alimentum",
+     "verdict": "wrong"
+    }
+   ]
+  },
+  "loop102": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 150,
+    "abstain": 50,
+    "wrong": 0,
+    "contains_gold": 150
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 0,
+    "abstain": 70,
+    "wrong": 130,
+    "contains_gold": 5
+   }
+  },
+  "loop113": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 150,
+    "abstain": 50,
+    "wrong": 0,
+    "contains_gold": 150
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 145,
+    "abstain": 50,
+    "wrong": 5,
+    "contains_gold": 146
+   }
+  },
+  "loop113b": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 150,
+    "abstain": 50,
+    "wrong": 0,
+    "contains_gold": 150
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 145,
+    "abstain": 50,
+    "wrong": 5,
+    "contains_gold": 146
+   }
+  }
+ },
+ "C1": {
+  "v2_correct_answer_items": 52,
+  "exp66_contains_gold_answer_items": 67,
+  "diff": -15,
+  "pass_within_3": false
+ },
+ "limit": null
+}

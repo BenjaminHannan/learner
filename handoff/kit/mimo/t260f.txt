@@ -1,0 +1,10 @@
+TASK 260f: finish exp 260 (openers). A previous agent (Claude Opus) built and sealed exp 260 and ran the registered M2–M6. It was then stopped by an account usage limit, not by any problem in the task.
+Brief: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/260-openers.txt (read it fully). Panel spec: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/openpanel260-spec.txt.
+State: artifacts/claude-openers260-20260922/ holds PASSMARKS.md, SEAL.sha256.txt, and run/regscore.txt. The sealed scorer says registered M2–M6 all PASS (written 18:21). M1 (the blind panel openpanel260) has NOT been run.
+Do, in order:
+1. From the repo root, run shasum -a 256 -c on artifacts/claude-openers260-20260922/SEAL.sha256.txt and on artifacts/claude-openpanel260-20260922/SEAL.sha256.txt. If any line fails, stop and report.
+2. Read PASSMARKS.md and find exactly how M1 must be run and scored (runner, scorer, arms). Use only the sealed scripts. If the M1 runner or scorer is missing from the seal, stop and report; never write a new scorer now that the panel is visible.
+3. Run the panel schema check, then run M1 ONCE on both arms (138m and 260) and score it with the sealed scorer. Keep the raw rows and the score output in run/.
+4. Append the ledger outcome line(s) P260.n (find the ledger file with grep -rl "P260." design artifacts | head).
+5. Write artifacts/claude-openers260-20260922/RESULTS.md as the brief and OPUS-RULES require: M1 per family with the 138m arm's number next to every figure, plus M2–M6 from run/regscore.txt. Write the design note design/v3/30-modes/260-openers-opus.md only if it does not exist yet.
+6. Final reply: verdict, every mark with integer counts, and every M1 item that moved against 138m, by id and category only (no item text).

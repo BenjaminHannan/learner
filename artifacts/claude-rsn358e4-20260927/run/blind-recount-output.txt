@@ -1,0 +1,90 @@
+== Integrity checks
+dense-replayall  s3: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=87.7
+dense-replayall  s4: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=86.2
+dense-replayall  s5: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=86.8
+dense-replayall  s6: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=85.9
+dense-replayall  s7: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=87.5
+dense-replayall  s8: weights=1646750 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=87.0
+eq-replayall     s3: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=52.2
+eq-replayall     s4: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=51.3
+eq-replayall     s5: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=50.6
+eq-replayall     s6: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=50.9
+eq-replayall     s7: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=51.4
+eq-replayall     s8: weights=1654446 (ok) torch=2.14.0+cu130 device=cpu size=small replay_B={'sums': {'grids': 250}, 'mazes': {}} (ok) replay_C={'sums': {'grids': 250}, 'mazes': {'sums': 75, 'grids': 75}} (ok) minutes=51.7
+torch versions seen: {'2.14.0+cu130'} (one version)
+
+== Per-seed numbers (right of 200; T,K of 600/400)
+arm              seed  g5@A  s4@B  g5@C  s4@C  m7@C    T    K    L
+dense-replayall     3   194   200   139   191   159  489  330  159
+dense-replayall     4   194   200   103   195   119  417  298  119
+dense-replayall     5   200   200   172   184   169  525  356  169
+dense-replayall     6   194   200    60   195   138  393  255  138
+dense-replayall     7   200   200   151   192   146  489  343  146
+dense-replayall     8   197   200   143   194   171  508  337  171
+eq-replayall        3   180    75   181    73     7  261  254    7
+eq-replayall        4   159     0   148     0     0  148  148    0
+eq-replayall        5   163    84   147    80    11  238  227   11
+eq-replayall        6   173   113   176   109     0  285  285    0
+eq-replayall        7   179    78   176    65     2  243  241    2
+eq-replayall        8   167   108   158   106     0  264  264    0
+
+== Means
+dense-replayall  g5A=196.50 s4B=200.00 g5C=128.00 s4C=191.83 m7C=150.33 T=470.17 K=319.83 L=150.33
+eq-replayall     g5A=170.17 s4B=76.33 g5C=164.33 s4C=72.17 m7C=3.33 T=239.83 K=236.50 L=3.33
+gap T (eq - dense) = -230.33
+gap K (eq - dense) = -83.33
+gap L (eq - dense) = -147.00
+
+== Per-seed comparisons (eq vs dense)
+s3: T_eq=261 < T_dense=489 (diff -228); K diff -76; L diff -152
+s4: T_eq=148 < T_dense=417 (diff -269); K diff -150; L diff -119
+s5: T_eq=238 < T_dense=525 (diff -287); K diff -129; L diff -158
+s6: T_eq=285 < T_dense=393 (diff -108); K diff +30; L diff -138
+s7: T_eq=243 < T_dense=489 (diff -246); K diff -102; L diff -144
+s8: T_eq=264 < T_dense=508 (diff -244); K diff -73; L diff -171
+T_eq > T_dense on 0 of 6; T_eq < T_dense on 6 of 6
+
+== V (ADDENDUM-1, unchanged from PASSMARKS)
+  grids5 after A >= 120, dense-replayall: s3=194, s4=194, s5=200, s6=194, s7=200, s8=197
+  grids5 after A >= 120, eq-replayall: s3=180, s4=159, s5=163, s6=173, s7=179, s8=167
+  sums4 after B >= 120, dense: s3=200, s4=200, s5=200, s6=200, s7=200, s8=200
+  V1 (grids5@A>=120 both arms, every seed) = True
+  V2 (sums4@B>=120 dense, every seed)      = True
+  V = True
+
+== PASS (ADDENDUM-1 + ADDENDUM-2)
+  P1 mean T_eq 239.83 >= mean T_dense + 40 = 510.17: False
+  P2 T_eq > T_dense on >= 5 of 6 (got 0): False
+  P3 mean L_eq 3.33 >= 100: False
+  P4 mean L_eq 3.33 >= mean L_dense - 20 = 130.33: False
+  PASS = False
+
+== Proved wrong (ADDENDUM-1, unchanged in ADDENDUM-2)
+  W1 mean T_eq 239.83 <= mean T_dense - 40 = 430.17: True
+  W2 T_eq < T_dense on >= 5 of 6 (got 6): True
+  PROVED WRONG = True
+
+== VERDICT: PROVED WRONG
+
+== ADDENDUM-3: tested the routing (eq only)
+  s3: sums4@B new-group(4-7) share per block = [0.735, 0.787] -> True; maze7@C new-group(8-11) share per block = [1.0, 0.121] -> True; tested=True
+       n experts per block: B [12, 12], C [12, 12]; block sums B [1.001, 1.0], C [1.0, 0.999]
+  s4: sums4@B new-group(4-7) share per block = [0.0, 0.0] -> False; maze7@C new-group(8-11) share per block = [0.694, 0.694] -> True; tested=False
+       n experts per block: B [12, 12], C [12, 12]; block sums B [1.0, 1.0], C [1.0, 1.0]
+  s5: sums4@B new-group(4-7) share per block = [0.736, 0.815] -> True; maze7@C new-group(8-11) share per block = [0.306, 0.0] -> True; tested=True
+       n experts per block: B [12, 12], C [12, 12]; block sums B [0.999, 1.0], C [1.0, 1.0]
+  s6: sums4@B new-group(4-7) share per block = [0.863, 0.598] -> True; maze7@C new-group(8-11) share per block = [0.0, 0.0] -> False; tested=False
+       n experts per block: B [12, 12], C [12, 12]; block sums B [1.0, 1.0], C [1.0, 1.0]
+  s7: sums4@B new-group(4-7) share per block = [0.667, 0.904] -> True; maze7@C new-group(8-11) share per block = [0.959, 0.653] -> True; tested=True
+       n experts per block: B [12, 12], C [12, 12]; block sums B [1.0, 1.0], C [0.999, 1.0]
+  s8: sums4@B new-group(4-7) share per block = [0.966, 0.755] -> True; maze7@C new-group(8-11) share per block = [0.0, 0.0] -> False; tested=False
+       n experts per block: B [12, 12], C [12, 12]; block sums B [1.0, 1.0], C [1.001, 1.0]
+  N tested the routing = 3 of 6 (seeds [3, 5, 7])
+  Wording branch: N <= 3 (says little about separate experts)
+
+== Robustness (report only, not a mark)
+  (a) per-single-expert reading of the 5% rule: N = 3 (seeds [3, 5, 7])
+  (b) field=r16: mean T_eq=237.67, mean T_dense=467.33, T_eq<T_dense on 6/6 -> proved-wrong conditions True
+  (b) field=any: mean T_eq=295.67, mean T_dense=501.17, T_eq<T_dense on 6/6 -> proved-wrong conditions True
+  (c) superseded PASSMARKS rule, seeds 3-6: mean T_eq=233.00, mean T_dense=456.00; proved wrong (<= -30) = True
+  (d) seeds with T_eq == T_dense: []

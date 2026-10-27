@@ -1,0 +1,157 @@
+{
+ "attack1_forged_registered_seeds": {
+  "returncode": 0,
+  "dev_passed_written": true,
+  "dev_passed": {
+   "awake_checkpoints": {
+    "D-1900": "abababababababababababababababababababababababababababababababab",
+    "D-1901": "abababababababababababababababababababababababababababababababab",
+    "D-1902": "abababababababababababababababababababababababababababababababab",
+    "T-1900": "abababababababababababababababababababababababababababababababab",
+    "T-1901": "abababababababababababababababababababababababababababababababab",
+    "T-1902": "abababababababababababababababababababababababababababababababab"
+   },
+   "dev_panels": {
+    "manifest_sha256": "af7e7aa6c1dbdc875ac2dbf5350cab21768a9ef1c8dbd0bcc52f3e6a640fdaa4",
+    "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/dev"
+   },
+   "offline_checkpoints": {
+    "D-G-1900": "abababababababababababababababababababababababababababababababab",
+    "D-G-1901": "abababababababababababababababababababababababababababababababab",
+    "D-G-1902": "abababababababababababababababababababababababababababababababab",
+    "D-R-1900": "abababababababababababababababababababababababababababababababab",
+    "D-R-1901": "abababababababababababababababababababababababababababababababab",
+    "D-R-1902": "abababababababababababababababababababababababababababababababab",
+    "D-U-1900": "abababababababababababababababababababababababababababababababab",
+    "D-U-1901": "abababababababababababababababababababababababababababababababab",
+    "D-U-1902": "abababababababababababababababababababababababababababababababab",
+    "T-G-1900": "abababababababababababababababababababababababababababababababab",
+    "T-G-1901": "abababababababababababababababababababababababababababababababab",
+    "T-G-1902": "abababababababababababababababababababababababababababababababab",
+    "T-R-1900": "abababababababababababababababababababababababababababababababab",
+    "T-R-1901": "abababababababababababababababababababababababababababababababab",
+    "T-R-1902": "abababababababababababababababababababababababababababababababab",
+    "T-U-1900": "abababababababababababababababababababababababababababababababab",
+    "T-U-1901": "abababababababababababababababababababababababababababababababab",
+    "T-U-1902": "abababababababababababababababababababababababababababababababab"
+   },
+   "report_sha256": "df2a689aeccbe8460bcde213738c332b9f2752eedd4d05b6ef4c9d409209de00",
+   "schema": "novelty19-dev-passed-v1",
+   "seeds": [
+    1900,
+    1901,
+    1902
+   ]
+  },
+  "development_rule_line": [
+   "registered development rule (D-G): PASS"
+  ],
+  "stderr": ""
+ },
+ "attack2_single_unregistered_seed": {
+  "returncode": 0,
+  "dev_passed_written": true,
+  "seeds_in_flag": [
+   9991
+  ],
+  "checkpoint_keys": [
+   "D-9991",
+   "T-9991"
+  ],
+  "expected_keys": [
+   "D-1900",
+   "D-1901",
+   "D-1902",
+   "T-1900",
+   "T-1901",
+   "T-1902"
+  ],
+  "development_rule_line": [
+   "registered development rule (D-G): PASS"
+  ],
+  "stderr": ""
+ },
+ "attack3_missing_run": {
+  "returncode": 0,
+  "dev_passed_written": false,
+  "development_rule_line": [
+   "registered development rule (D-G): (missing)",
+   "not writing /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/a3/DEV-PASSED.json: the registered development rule is undetermined"
+  ],
+  "missing_lines": [
+   "ws reach it   0 (missing)",
+   "    T L length generalisation: mark 58/64   72/72 scored rows reach it   0 (missing)",
+   "registered development rule (D-G): (missing)",
+   "    primary              (missing) section 6: every N cell in every seed, D-G >= 58/64 answers AND strict and >= 13/64 strict over D-R"
+  ]
+ },
+ "attack4_conflicting_scores": {
+  "returncode": 0,
+  "dev_passed_written": false,
+  "conflict_lines": [],
+  "development_rule_line": [
+   "registered development rule (D-G): fail",
+   "not writing /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/a4/DEV-PASSED.json: the registered development rule is not met"
+  ]
+ },
+ "attack5_empty_dev_passed_unlocks_confirmation": {
+  "returncode": 1,
+  "stderr": "FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/confirm-fake/F-c1-r8.json'",
+  "guard_rejected_on_flag_contents": false,
+  "note": "the guard only tests Path.exists(); the failure below is the panel loader, not the lockout"
+ },
+ "attack6_no_dev_passed_refused": {
+  "returncode": 1,
+  "stderr": "refusing to score confirmation panels: no /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/attack/lock/DEV-PASSED.json.  Confirmation is scored only after development passes without recipe changes."
+ },
+ "attack7_partial_cell": {
+  "returncode": 1,
+  "stderr": "RuntimeError: panel changed on disk: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch2/dev-partial/F-c1-r8.json",
+  "refused": true
+ },
+ "attack8_forgetting_screen": {
+  "same_cell_two_seeds": {
+   "outcome": "TRIGGER",
+   "triggered": [
+    "R|F-c2-r8|answers",
+    "R|F-c2-r8|strict",
+    "G|F-c2-r8|answers",
+    "G|F-c2-r8|strict"
+   ]
+  },
+  "different_cells": {
+   "outcome": "NO-TRIGGER",
+   "triggered": [],
+   "n_undetermined": 0
+  },
+  "h_cell_below_eligibility": {
+   "outcome": "NO-TRIGGER",
+   "triggered_on_H": [],
+   "statuses": [
+    "not_eligible"
+   ]
+  },
+  "one_seed_gate_failed": {
+   "outcome": "TRIGGER",
+   "triggered": [
+    "R|F-c2-r8|answers",
+    "R|F-c2-r8|strict",
+    "G|F-c2-r8|answers",
+    "G|F-c2-r8|strict",
+    "U|F-c2-r8|answers",
+    "U|F-c2-r8|strict"
+   ],
+   "gate": {
+    "1900": true,
+    "1901": true,
+    "1902": false
+   }
+  }
+ },
+ "attack9_gate_fail_plus_missing": {
+  "passed": null,
+  "expected": "False would be safest; None is reported",
+  "all_present_fail": false,
+  "missing_entry": null
+ }
+}

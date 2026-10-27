@@ -1,0 +1,121 @@
+==============================================================================
+VERDICT: PROVED WRONG
+  VALID=True  clause1=False  clause2=False  WORKS=False  NO_HARM=True  PROVED_WRONG=True
+==============================================================================
+
+VALID: steps_block_nograd per fine-tune (train json, max over trainlog, steps)
+  clean  s1: 0  (trainlog max 0, steps 3000)
+  clean  s2: 0  (trainlog max 0, steps 3000)
+  clean  s3: 0  (trainlog max 0, steps 3000)
+  clean  s4: 0  (trainlog max 0, steps 3000)
+  pencil s1: 0  (trainlog max 0, steps 3000)
+  pencil s2: 0  (trainlog max 0, steps 3000)
+  pencil s3: 0  (trainlog max 0, steps 3000)
+  pencil s4: 0  (trainlog max 0, steps 3000)
+
+Net sha256 vs NETS-358i2.sha256.txt
+  s1: d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261  match=True  (info seed 1)
+  s2: 4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594  match=True  (info seed 2)
+  s3: 5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a  match=True  (info seed 3)
+  s4: f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621  match=True  (info seed 4)
+
+---- pp-grids7 (UNIT) ----
+  net arm     states  dead  live wrongJ wrongO  wRate rightJ rightO  rRate    AUC cntAUC items
+  s1  orig      1744   680  1064    354      0  0.000   1309      0  0.000  0.451  0.830   238
+  s1  pencil     418   313   105    116      8  0.069    281      9  0.032  0.768  0.894    41
+  s1  clean      338   241    97    113      0  0.000    205      0  0.000  0.610  0.847    34
+  s2  orig      1099   657   442    253      0  0.000    707      1  0.001  0.527  0.766   122
+  s2  pencil     286   194    92     71     15  0.211    185     16  0.086  0.719  0.773    31
+  s2  clean      296   220    76    101      0  0.000    165      1  0.006  0.543  0.809    32
+  s3  orig      2276   876  1400    418      0  0.000   1848      0  0.000  0.544  0.768   255
+  s3  pencil     378   282    96    120     11  0.092    242     18  0.074  0.814  0.920    38
+  s3  clean      358   279    79    128      0  0.000    197      0  0.000  0.620  0.875    37
+  s4  orig      2223   875  1348    414      0  0.000   1741      0  0.000  0.440  0.826   275
+  s4  pencil     245   173    72     64      4  0.062    171      6  0.035  0.721  0.864    24
+  s4  clean      319   257    62    117      0  0.000    178      0  0.000  0.769  0.853    35
+  consistency: items where #judged marks != max k | judged marks with no state at same (item,check) | dead flag != derived from marks
+    s1 orig  : 0  0  0   (sum max k 1663, judged 1663, summary unjudged 212)
+    s1 pencil: 0  0  0   (sum max k 397, judged 397, summary unjudged 37)
+    s1 clean : 0  0  0   (sum max k 318, judged 318, summary unjudged 29)
+    s2 orig  : 0  0  0   (sum max k 960, judged 960, summary unjudged 81)
+    s2 pencil: 0  0  0   (sum max k 256, judged 256, summary unjudged 27)
+    s2 clean : 0  0  0   (sum max k 266, judged 266, summary unjudged 23)
+    s3 orig  : 0  0  0   (sum max k 2266, judged 2266, summary unjudged 266)
+    s3 pencil: 0  0  0   (sum max k 362, judged 362, summary unjudged 36)
+    s3 clean : 0  0  0   (sum max k 325, judged 325, summary unjudged 34)
+    s4 orig  : 0  0  0   (sum max k 2155, judged 2155, summary unjudged 229)
+    s4 pencil: 0  0  0   (sum max k 235, judged 235, summary unjudged 22)
+    s4 clean : 0  0  0   (sum max k 295, judged 295, summary unjudged 31)
+
+---- p-grids7 (report-only) ----
+  net arm     states  dead  live wrongJ wrongO  wRate rightJ rightO  rRate    AUC cntAUC items
+  s1  orig       561   225   336    107      0  0.000    431      0  0.000  0.406  0.792    80
+  s1  pencil     100    84    16     37      0  0.000     62      3  0.048  0.798  0.958    10
+  s1  clean      104    70    34     37      0  0.000     56      0  0.000  0.609  0.834    10
+  s2  orig       403   233   170     86      0  0.000    249      1  0.004  0.580  0.747    42
+  s2  pencil      97    68    29     19      2  0.105     57      2  0.035  0.791  0.915    11
+  s2  clean       75    63    12     23      1  0.043     47      0  0.000  0.601  0.890     8
+  s3  orig       656   264   392    122      0  0.000    529      0  0.000  0.606  0.771    76
+  s3  pencil      98    66    32     29      2  0.069     68      4  0.059  0.731  0.893     9
+  s3  clean      121   101    20     41      0  0.000     62      0  0.000  0.599  0.892    12
+  s4  orig       670   295   375    136      0  0.000    493      0  0.000  0.415  0.771    79
+  s4  pencil      76    63    13     29      1  0.034     45      1  0.022  0.598  0.816     7
+  s4  clean      103    86    17     42      0  0.000     51      0  0.000  0.707  0.863    11
+  consistency: items where #judged marks != max k | judged marks with no state at same (item,check) | dead flag != derived from marks
+    s1 orig  : 0  0  0   (sum max k 538, judged 538, summary unjudged 66)
+    s1 pencil: 0  0  0   (sum max k 99, judged 99, summary unjudged 10)
+    s1 clean : 0  0  0   (sum max k 93, judged 93, summary unjudged 10)
+    s2 orig  : 0  0  0   (sum max k 335, judged 335, summary unjudged 19)
+    s2 pencil: 0  0  0   (sum max k 76, judged 76, summary unjudged 8)
+    s2 clean : 0  0  0   (sum max k 70, judged 70, summary unjudged 7)
+    s3 orig  : 0  0  0   (sum max k 651, judged 651, summary unjudged 77)
+    s3 pencil: 0  0  0   (sum max k 97, judged 97, summary unjudged 9)
+    s3 clean : 0  0  0   (sum max k 103, judged 103, summary unjudged 7)
+    s4 orig  : 0  0  0   (sum max k 629, judged 629, summary unjudged 60)
+    s4 pencil: 0  0  0   (sum max k 74, judged 74, summary unjudged 7)
+    s4 clean : 0  0  0   (sum max k 93, judged 93, summary unjudged 10)
+
+Clause 1 per net (PENCIL, pp-grids7): counts(>=30 wrong judged) | wrong>=60% | right<=10% | beats CLEAN by >=20pp
+  s1: True (116) | False (0.0690) | True (0.0320) | False (diff 0.0690) -> all3 False
+  s2: True (71) | False (0.2113) | True (0.0865) | True (diff 0.2113) -> all3 False
+  s3: True (120) | False (0.0917) | True (0.0744) | False (diff 0.0917) -> all3 False
+  s4: True (64) | False (0.0625) | True (0.0351) | False (diff 0.0625) -> all3 False
+  nets meeting all three: 0 of 4 (need >=3) -> clause 1 False
+
+Clause 2: mean PENCIL AUC 0.755531 - mean PENCIL count-only AUC 0.862615 = -0.107085 (need >= 0.05) -> False
+  per net AUC - countAUC: s1 -0.1252, s2 -0.0540, s3 -0.1058, s4 -0.1434
+  pooled count-only AUC over 4 nets' PENCIL states: 0.867139  (pooled score AUC 0.737787, n=1327)
+  bootstrap (seed 393, 1000 resamples, 0 undefined dropped, n=1000): mean -0.106917, 2.5% -0.158817, 97.5% -0.056382 (linear); nearest-rank 2.5% -0.159085, 97.5% -0.056386
+  share of resamples with margin >= 0.05: 0.000; with margin <= 0: 1.000
+
+NO HARM (right of 300)
+  net    orig-grids6   orig-grids7    orig-sums6 pencil-grids6 pencil-grids7  pencil-sums6  clean-grids6  clean-grids7   clean-sums6
+  s1             292           186           299           300           285           290           299           286           299
+  s2             296           241           299           300           288           298           299           290           297
+  s3             283           173           298           298           291           295           299           291           296
+  s4             287           177           297           298           289           295           299           288           299
+  grids6: mean PENCIL-ORIG +9.50 (19/2), mean CLEAN-ORIG +9.50; per net PENCIL-ORIG +8, +4, +15, +11
+  grids7: mean PENCIL-ORIG +94.00 (94), mean CLEAN-ORIG +94.50; per net PENCIL-ORIG +99, +47, +118, +112
+  sums6: mean PENCIL-ORIG -3.75 (-15/4), mean CLEAN-ORIG -0.50; per net PENCIL-ORIG -9, -1, -3, -2
+  NO HARM (each mean >= -5): True
+
+PROVED WRONG clauses (counted nets: [1, 2, 3, 4])
+  (a) PENCIL wrong-overrule < 30% in >=3 counted nets: 4 nets -> True
+  (b) PENCIL wrong-overrule <= CLEAN's in >=3 counted nets: 0 nets -> False
+  (c) mean AUC <= mean count-only AUC: True
+
+Report-only: arm meets clause 1's first two thresholds (wrong>=60%, right<=10%) per net
+  orig: s1 False (wFalse/rTrue), s2 False (wFalse/rTrue), s3 False (wFalse/rTrue), s4 False (wFalse/rTrue)
+  clean: s1 False (wFalse/rTrue), s2 False (wFalse/rTrue), s3 False (wFalse/rTrue), s4 False (wFalse/rTrue)
+  pencil: s1 False (wFalse/rTrue), s2 False (wFalse/rTrue), s3 False (wFalse/rTrue), s4 False (wFalse/rTrue)
+
+Predictions
+  P393.1 (WORKS): WRONG
+  P393.2 (ORIG wrong-overrule < 30% in >=3 of 4): per net ['0.0000', '0.0000', '0.0000', '0.0000'] -> 4 nets -> RIGHT
+  P393.3 (ORIG < CLEAN < PENCIL on wrong-overrule rate): per net {1: False, 2: False, 3: False, 4: False}; >=3 nets False; pooled {'orig': (0, 1439, '0.0000'), 'pencil': (38, 371, '0.1024'), 'clean': (0, 459, '0.0000')} -> False; mean-of-rates {'orig': '0.0000', 'pencil': '0.1086', 'clean': '0.0000'} -> False
+
+Checks on the rows
+  none failed
+
+Recount vs run summaries (measure-*-sN.json)
+  no differences (counts exact; rates and AUCs within summary rounding 5e-5)

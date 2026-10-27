@@ -1,0 +1,76 @@
+MERGE 138n BRIEF: the reading line. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Goal: one agent that has everything 138m has, plus the reading pieces verified today, each doing on 138n what it did on its own agent, with every interaction predicted before the seal.
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json.
+- PASS, verifier CONFIRMED WITH CONCERNS.
+- Saved rows are in artifacts/claude-merge138m-20260922/run/.
+- Driver: scripts/claude_138m_runall.sh; scorers: scripts/claude_138m_l1.py and claude_138m_score.py.
+- Copy the pattern of 138m's PASSMARKS.md, RESULTS.md, predicted_moves138m.json and design/v3/30-modes/138m-merge-opus.md. Read them first.
+
+Pieces to add. Each piece's RESULTS.md, PASSMARKS.md and the director board (design/v3/30-modes/00-director-board.md) say what it does, its base and its verdict.
+- 221: relation-table questions (artifacts/claude-tableask221-20260922/)
+- 221b: stored-relation fallback (artifacts/claude-storedrel221b-20260922/)
+- 221c: question normalisation (artifacts/claude-qnorm221c-20260922/)
+- 229: table teaches (artifacts/claude-tableteach229-20260922/)
+- 237: aliases, the line piece only; NOT 237b, which goes into 138o (artifacts/claude-table237-20260922/)
+- 232c: multi-word names; it replaces 232b (artifacts/claude-fullname232c-20260922/)
+- 236: first-name resolution (artifacts/claude-firstname236-20260922/)
+- Not included: 231/231b (held back), 237b and 245–251 (138o), and 252/252b/255/258/259 (later).
+- scripts/claude_loop221x232c_agent.py shows one way 221 and 232c were already composed. Use it as a reference, not a base.
+
+Names
+- Agent: scripts/claude_loop138n_agent.py. Config: artifacts/claude-merge138n-20260922/loop138n-config.json.
+- Driver and scorers: scripts/claude_138n_*.
+- Artifacts: artifacts/claude-merge138n-20260922/. Ledger lines: P138n.n.
+- Design note: design/v3/30-modes/138n-merge-opus.md.
+- Never edit an existing file. Import every piece read-only.
+- SrcGuardMixin228 stays first, and install_srcguard228() runs at import.
+
+Phase 1: interaction analysis, before any build choice is final.
+- For each pair of pieces, and for each piece against 138m's layers (224c declines, 227c identity gate, 230c name line, 233/234 fixed replies, 212/216 gates, 209 write screen, 226 sources, 222 teaches), write down:
+  - which turns both could claim;
+  - which one wins, and why that order is better for the model.
+- Rules for the order:
+  - A layer that answers a question from the notebook must never override a gate that stops a write or a ghost answer.
+  - Questions never write.
+  - 224c's decline stays the fallback when no reader claims the turn.
+  - Inferred facts are never stored.
+- Put this in the design note, with the layer list.
+
+Registered marks. The verdict is PASS only if all pass.
+- M1, each piece's own sealed dev and case files (NOT blind panels).
+  - Arms: own (the piece's own agent), 138m and 138n.
+  - Driver fidelity: the own arm reproduces every sealed row the piece saved.
+  - Behaviour kept: every case where 138n differs from the own arm is predicted by id with its exact 138n record. Counts: 0 unpredicted, 0 predicted-but-wrong, 0 predicted-but-not-moved.
+- M2, frozen suites vs 138m's saved rows (fable_suitediff218; rt136 as 138m did; rt143 no-gate; sessions152; bench; marks123).
+  - The (id, class) move set equals your predicted list exactly.
+  - No new WRONG, WRONG-WRITE, junk write or lost OK, except rows you predict and justify by id as the piece's own registered behaviour.
+  - 0 unpredicted flips toward an abstain.
+- M3, sleep smoke (fable_sleepsmoke206): identical to 138m's except .agent, .config, .label, .seconds, .root and .report.
+- M4, bench byte-identical ×3.
+- M5, latency: median(138n) − median(138m) ≤ +5 ms, alternating processes as 138m's M5 did.
+- M6, restart and verifier dialogs (138m's M6 files plus artifacts/claude-verify-20260922/138m/probes.json and probes-supp.json):
+  - 0 ghost answers;
+  - 0 failed duplicate checks;
+  - 0 bad writes (events and the final notebook equal 138m's except predicted teach saves from 229/232c);
+  - every reply change predicted.
+- M7, the pieces' blind panels. They are TEST-ONLY: don't open their items; run them only after your seal, once, with each panel's own sealed scorer.
+  - Panels: tablepanel221, tablepanel221b, teachpanel229, namepanel232c, firstnamepanel236, aliaspanel237. Find their runners and scorers from each piece's PASSMARKS.
+  - Compare against the newest piece's registered rows on that panel.
+  - Bars, per panel:
+    - no item that was right on that piece's registered arm is wrong on 138n;
+    - 0 new wrong values;
+    - 0 writes from questions;
+    - 0 wrong writes.
+  - Report each panel's score next to the piece's registered score and 138m's.
+  - If a bar fails, list every item that moved, by id, with a category-level diagnosis. Put no item text in RESULTS.
+- After the registered runs, and not a mark: run the 239 conversation panel on 138n with the runner only (the same format as artifacts/claude-convpanel239-138m-20260922/: transcripts plus a changes file against 138m). Then message the director with the paths. Never grade it yourself.
+
+Order: phase 1 → build → pilots on M1–M6 → PASSMARKS with every predicted move by id → seal → ledger → registered M1–M6 → M7 → 239 runner → RESULTS.md.
+
+Limits
+- Check `uptime` and `df -g /` before each heavy step. Wait while load > 60. Stop and report if free disk is under 3 GB (it is about 5 GB now).
+- At most 4 parallel processes. Keep every registered run under 25 minutes; split the driver into steps if needed.
+
+Your final message follows OPUS-RULES: verdict, marks table with integer counts, every move, every miss, deviations, and what it means and doesn't mean, in plain English.

@@ -1,0 +1,9 @@
+#!/bin/bash
+# FAKE nvidia-smi for the kit tests only (runs "on the rental", which is this box). State files under $FAKE/gpu.
+case "$*" in
+  *utilization.gpu*) cat "$FAKE/gpu/util" 2>/dev/null || echo 97;;
+  *memory.free*) cat "$FAKE/gpu/free" 2>/dev/null || echo 20000;;
+  *query-compute-apps*) echo "4242, 5400 MiB";;
+  *name,memory.total,driver_version*) echo "NVIDIA GeForce RTX 3090, 24576 MiB, 580.159.03";;
+  *) echo "fake nvidia-smi: unhandled: $*" >&2; exit 1;;
+esac

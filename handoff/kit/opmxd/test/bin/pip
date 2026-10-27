@@ -1,0 +1,3 @@
+#!/bin/bash
+[ -e "$FAKE/py/pip-fail" ] && { echo "ERROR: No matching distribution found for torch==2.14.0"; exit 1; }
+echo "fake pip: $*" >> "$FAKE/py/calls.log"; echo "Successfully installed torch"

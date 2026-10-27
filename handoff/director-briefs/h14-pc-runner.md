@@ -1,0 +1,11 @@
+# H14: a PC-side job runner (brief, 2026-09-28 23:48 UTC)
+
+Problem: every BensPC job (GPU, RTX 5070 Ti, $0) is started from the Mac watcher over ssh, so the PC is idle whenever the Mac is down (it was down 23:1x UTC 09-28). Goal: a small runner on BensPC itself that needs the Mac for nothing. Serves every item (compute).
+
+Build (new files only, under handoff/kit/pcwatch/):
+- watcher.ps1 (or git-bash watcher.sh; whichever is more reliable on Windows; Python is C:/Users/benja/lis300/venv/Scripts/python.exe): every 120 s fetch origin/main over https, look for new handoff/queue/*.md whose header says "GPU: yes" and "RUNNER: pc" (a new header; existing Mac jobs stay Mac-only), run each ONE at a time (GPU-BUSY.txt rule, C:\Users\benja\GPU-BUSY.txt), same conventions as handoff/kit/mimo/watcher.sh (the queue file's fenced bash block is the job, .done/.exit/.reply/.err files, PUSH: lines, files under 5 MB, never weights), and push results to a branch pc-outbox under runs/<job>/. Dead-job handling: a stale .running marker (process not alive) is cleared at start; a job that ended with a fetch failure is retried after backoff, not marked done.
+- Status file status/pc-watcher.txt on pc-outbox (UTC, list of running/queued/finished, GPU util), pushed each cycle.
+- One-time setup for Ben (README with copy-paste commands, at most 6 lines): start the runner at logon (Task Scheduler) and how to stop it (STOP file). Auth: the runner needs read access to the private repo and write to pc-outbox over https; describe exactly what Ben has to create once (a fine-grained token limited to this repo) and where it lives (a file readable only by his user on the PC). Never read, print or commit the token; the runner must never echo it. First find out (in the README, as a question to Ben through the Director) what git credentials the PC already has.
+- Test what you can without the PC (fake queue folder, fake git remote); list what is untested. Say honestly that Windows behavior is untested from this cloud box.
+- Move the PC jobs to it: add "RUNNER: pc" to new copies (-pc suffix) of dst-t3-1..4 and dir-lead0-retell-benspc so they run on the PC runner instead of the Mac (do not edit the originals).
+Rules: rules.md and thread-helper-common.md (incl. MARKS SELF-CHECK n/a here). Explainer page as usual.

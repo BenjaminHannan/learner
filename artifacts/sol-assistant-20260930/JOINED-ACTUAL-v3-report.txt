@@ -1,0 +1,30 @@
+Actual joined bootstrap runtime — September 30 2026
+
+Both seed0/seed1 closed500 bundles loaded the real sealed English factory. No stub, no raw-question bypass to decoder, no training/evaluation panel used. Watcher joined-v3 rc0. Generation engineering checks16/16 each; populated optimizer restoration6/6 each. 106 actual Adam state entries restored perseed; next64 Python/CPU random draws exact. No optimizer step or CUDA RNG continuation tested. Source/core/reader/adapter file pins unchanged. Memory enters actual reasoner, output only canonical final query.
+
+Generation elapsed12.437s/12.921s; peak CUDA allocated4,739,554,816 bytes each. Includes2 TRAIN rows each, full and no-memory outputs plus publicfactory compatibility repeat. Query lengths16/8, notebook256 positions each. Repeated final/padding error0 all4rows. Remove memory latent maxabs: s0 .5034151673/.4126152694; s1 1.5073351860/1.6926734447. These demonstrate numerical conditioning, not useful recall.
+
+Actual qualitative examples (MODEL OUTPUT LOGS ONLY; NEVER TRAINING):
+Human TRAIN query: Which artist did Beyonce marry? Human annotation: Jay Z.
+Seed0 full: The school's mascot is the Beagle, and the school's colors are blue and white.
+Seed1 full: The name "The Beast" was inspired by the "Beast" from the 1980s animated film "The Beast from 20,000 Feet".
+The other query asks what entertainment venture Beyonce explored after her second solo album; human label acting. Seed0 repeats the same school sentence; seed1 produces an unrelated band/album sentence. All four full-memory outputs inspected are unrelated. No semantic score/benchmark claim; these2 TRAIN rows are a mechanics pilot, not unseen evaluation. Stop/sleep/general conversation remain unqualified. Outputs excluded from learning.
+
+Launch on BensPC in an interactive PowerShell terminal, when the GPU is available:
+Set-Location 'C:\Users\benja\sol-translator-human-v6'
+$env:PYTHONUTF8 = '1'
+$env:HF_HUB_OFFLINE = '1'
+$env:TRANSFORMERS_OFFLINE = '1'
+& 'C:\Users\benja\lis300\venv\Scripts\python.exe' -X utf8 -B scripts/sol_assistant_cli.py chat --bundle artifacts/sol-assistant-20260930/frozen-v6-s0-u500-r2/bundle.json --state artifacts/sol-assistant-20260930/chat-s0 --device cuda
+
+Actual factory and public.reply tested; live user terminal session not exercised by this smoke. User types directly: /correct TEXT records human correction, /quit exits. This launcher automatically captures user-turn bytes+sourceSHA/role/origin, stores restartable journal, excludes assistant turns. Corrections/assertions are NOT verified factual labels. Do not pipe imported/model-generated files through interactive-cli; provenance assumes genuinely typed human input. No per-turn consent/hash paperwork. Notebook uses owner's256-token context prefix and48-token question cap; unlimited recall unshown.
+
+Pinned seed0 bundle e5d7cf80907ec185956e9b0b331a876b9f4716b206ad1b6895c6697607bc6ad6.
+Pinned seed1 bundle cd0316c714d8fa279f0a2e3bef7b76c335fe3cc3c92d2ac9dd03feed3662ab74.
+Seed1 can use corresponding frozen-v6-s1-u500-r2 bundle and chat-s1 state. Bootstrap output quality is inadequate; this is a diagnostic command, not a usable assistant claim.
+
+Exact raw: joined-v3-s0/raw.json SHA1df41ce8243966afad0d2fdb4226eb1366251dc8b443b9c0283b69865064fc18; joined-v3-s1/raw.json SHAc167fa7f7eb96e604aca250f3b4b3bb18601054760acd6e50eb59cd61638108e; recovery-v3-s0/raw.json; recovery-v3-s1/raw.json. Returned archive SHA2ad1ddcc2b650e9c0991d5ec20e6e2f303bf0bb1a8e2b833c8d29833a69be2cc verified locally. Raw source provenance/masks/predictions retained. Prior v1 UTF8 failure preserved; no v1/v2 pilot generation occurred. v3 metadata-only intersection362 selected9076/9078 before output; memberships4/4.
+
+Execution commands are verbatim in queue-sol-assistant-joined-v6-pc-v3.md and joined-v6-r3-PC.log: freeze_v2 seed1, recovery eachseed, sol_assistant_joined_smoke_v2.py with JOINED-PLAN-v3/joined-TRAIN-v3 and exact r2 bundles. Python -X utf8, watcher only. No new training/SSH run by worker.
+
+Next: translator owner's predeclared frozen-prefix training/proof; replace bootstrap only with newly pinned immutable bundle. Epicurus's exact final-prefix checkpoint stop gate plus James-trusted independent receipt required before sleep. No gate transfer from current bootstrap. No broad proof promotion without fresh independent Sol raw+presealed-marks recount. This report is not that recount.

@@ -1,0 +1,89 @@
+{
+  "version": "sol-cloud-static-night-raw-collect-v4",
+  "collection_only": true,
+  "pc_source_spec_path": "artifacts/sol-stop-20260929/ordered-checkpoint-receipt-v1/STATIC-NIGHT-RAW-COLLECTION-SPEC-v1.json",
+  "pc_source_spec_sha256": "c9a5e0e3f48200943fa2af4f312c0c560f0fe0ac8ad90e64a140093632557e5d",
+  "source_pins": {
+    "receipt": {
+      "path": "C:/Users/benja/sol-compose-night-v2-s0/artifacts/sol-stop-20260929/ordered-checkpoint-receipt-v1/night-static-v2-s0/actual/receipt.json",
+      "sha256": "d154ce22538b53dc0df7304529640712e4aac23e1e1a32134685f63c5c8dbb3f"
+    },
+    "raw_probes": [
+      {
+        "path": "C:/Users/benja/sol-compose-night-v2-s0/artifacts/sol-stop-20260929/ordered-checkpoint-receipt-v1/night-static-v2-s0/actual/raw-probe-0.pt",
+        "sha256": "e2e4c9105285604057b8bcb7a30e910706deee551550723f52d67d6746bcc060"
+      },
+      {
+        "path": "C:/Users/benja/sol-compose-night-v2-s0/artifacts/sol-stop-20260929/ordered-checkpoint-receipt-v1/night-static-v2-s0/actual/raw-probe-1.pt",
+        "sha256": "f6e85a2aa52bd232b426d46bccee7037c152f3c43b1c49c176a917d578af73aa"
+      }
+    ],
+    "collection_only": true,
+    "no_inference": true,
+    "no_optimizer": true
+  },
+  "mac_interpreter": "/usr/bin/python3",
+  "verified_mac_python": "3.9.6",
+  "publisher_root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27",
+  "output_relative": "artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/collected-v4",
+  "bounds": {
+    "outer_seconds": 330,
+    "source_bytes": 67108864,
+    "mac_free_floor_bytes": 402653184,
+    "archive_bytes": 68157440,
+    "part_bytes": 4194304
+  },
+  "inventory": "Read-only process-image/PID, permanent claim names, GPU-BUSY marker, GPU and disk before copy; inventory Python PID identified",
+  "prohibited": [
+    "model or tensor imports",
+    "inference",
+    "optimizer",
+    "receipt writer rerun",
+    "sleep rerun",
+    "claim mutation",
+    "source removal",
+    "reserved or sealed panels"
+  ],
+  "old_failure": {
+    "ref": "5fe4e719eac987f3b4d56651b9f24b21b074714d",
+    "exit_path": "runs/sol-stop-static-night-raw-collect-v1/sol-stop-static-night-raw-collect-v1.exit",
+    "exit_blob_sha": "321433716569dadbf6fd8846770e0c0a4bc88b4e",
+    "returncode": 1,
+    "error_blob_sha": "efb250063b36cfcd2aa598461a3ca17008336d81",
+    "error": "/usr/local/bin/python3: Bad CPU type in executable"
+  },
+  "publication": "Exact original raw archived in bounded parts; JSON inventory/manifests in publisher root; full verified manifest printed into saved job stdout",
+  "guard_addendum": {
+    "reason": "Actual explicit /usr/bin/python3 invocation failed an inferred executable-alias gate before any PC access; preserve failure and avoid guessing reported internal path",
+    "invoked_interpreter": "/usr/bin/python3",
+    "runtime_report": [
+      "sys.executable",
+      "resolved executable",
+      "sys.version",
+      "platform.system",
+      "platform.machine"
+    ],
+    "runtime_requirements": {
+      "platform": "Darwin",
+      "version": "3.9.6"
+    },
+    "old_packet_preserved": "artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v2-runtimeguard-r1",
+    "old_failure": {
+      "returncode": 1,
+      "stage": "local preflight",
+      "error": "Verified native Mac interpreter identity required",
+      "checked_utc": "2026-09-30T07:38:41.783094+00:00",
+      "reply_blob_sha": "d0266b6136bf529715571d4869d7f2fdde0fd20a",
+      "model_calls": 0,
+      "PC_calls": 0,
+      "files_copied": 0
+    },
+    "decision_authority": "Root authorized fallback of printing actual native runtime without rejecting a guessed alias; explicit verified entrypoint remains unchanged"
+  },
+  "ssh_policy": {
+    "BatchMode": "yes",
+    "StrictHostKeyChecking": "yes",
+    "UpdateHostKeys": "no",
+    "connection": "Existing Mac benspc alias/authentication only; no credentials, hostkeys or persistent config changes"
+  }
+}

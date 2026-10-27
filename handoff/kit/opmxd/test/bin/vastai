@@ -1,0 +1,33 @@
+#!/bin/bash
+# FAKE vastai CLI for the kit tests only. State under $FAKE/vast. It never reads any key or config file.
+V=$FAKE/vast; mkdir -p "$V/instances"
+echo "$(date -u +%T) vastai $*" | cut -c1-300 >> "$V/calls.log"
+inst_json() {   # all instances as a json list; a "loading" instance becomes "running" after loading-polls listings
+  need=$(cat "$V/loading-polls" 2>/dev/null || echo 2)
+  for d in "$V"/instances/*; do [ -d "$d" ] || continue
+    if [ "$(cat "$d/status")" = loading ]; then p=$(( $(cat "$d/polls") + 1 )); echo $p > "$d/polls"; [ $p -ge "$need" ] && echo running > "$d/status"; fi; done
+  /usr/bin/python3 - "$V" <<'PY'
+import json, os, sys
+v = sys.argv[1]; out = []
+for i in sorted(os.listdir(v + "/instances")):
+    d = v + "/instances/" + i
+    g = lambda f: open(d + "/" + f).read().strip()
+    out.append({"id": int(i), "label": g("label") or None, "actual_status": g("status"), "ssh_host": "127.0.0.1", "ssh_port": 22022})
+print(json.dumps(out))
+PY
+}
+case "$1 $2" in
+  "show user") echo "{\"credit\": $(cat "$V/credit" 2>/dev/null || echo 23.73), \"fake\": true}";;
+  "search offers") cat "$V/offers.json";;
+  "show instances") inst_json;;
+  "create instance")
+    if [ -s "$V/create-fail" ] && [ "$(cat "$V/create-fail")" -gt 0 ]; then echo $(( $(cat "$V/create-fail") - 1 )) > "$V/create-fail"; echo '{"success": false, "msg": "fake: offer no longer available"}'; exit 0; fi
+    n=$(cat "$V/next_id" 2>/dev/null || echo 7000001); echo $((n+1)) > "$V/next_id"
+    label=""; prev=""; for a in "$@"; do [ "$prev" = --label ] && label=$a; prev=$a; done
+    mkdir -p "$V/instances/$n"; echo "$label" > "$V/instances/$n/label"; echo loading > "$V/instances/$n/status"; echo 0 > "$V/instances/$n/polls"
+    echo "{\"success\": true, \"new_contract\": $n}";;
+  "attach ssh") echo "attached $3 key-bytes $(printf %s "$4" | wc -c)" >> "$V/calls.log"; echo '{"success": true}';;
+  "destroy instance") [ -e "$V/destroy-fail" ] || rm -rf "$V/instances/$3"; echo "destroyed $3" >> "$V/destroyed.log"; echo '{"success": true}';;
+  "stop instance") [ -d "$V/instances/$3" ] && echo exited > "$V/instances/$3/status"; echo "stopped $3" >> "$V/stopped.log"; echo '{"success": true}';;
+  *) echo "fake vastai: unhandled: $*" >&2; exit 1;;
+esac

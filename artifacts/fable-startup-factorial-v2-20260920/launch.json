@@ -1,0 +1,215 @@
+{
+  "created_utc": "2026-09-20T19:18:06.859366+00:00",
+  "experiment": "astra-startup-factorial-v2",
+  "seeds": [
+    1300,
+    1301,
+    1302
+  ],
+  "arms": {
+    "A": {
+      "facts": 16,
+      "filler": false,
+      "note": "grow-blind's early phase"
+    },
+    "B": {
+      "facts": 16,
+      "filler": true,
+      "note": "fewer facts, full filler"
+    },
+    "C": {
+      "facts": 24,
+      "filler": false,
+      "note": "all facts, no filler"
+    },
+    "D": {
+      "facts": 24,
+      "filler": true,
+      "note": "the full story (= e0)"
+    }
+  },
+  "blind_lines": 16,
+  "parameters": 79316,
+  "schedule": {
+    "updates": 2500,
+    "visits_per_update": 16,
+    "warmup_updates": 100,
+    "flat_lr": 0.001,
+    "loss": "0.75 canonical + 0.25 monolithic",
+    "probe_every": 50,
+    "routing_every": 50,
+    "chunk_seconds_max": 1200
+  },
+  "onset": {
+    "metric": "attribute-only 512-question validation probe",
+    "threshold_correct": 461,
+    "n": 512,
+    "window_updates": 200,
+    "minimum_update": 200,
+    "definition": "earliest t>=200 with t-200,t-150,t-100,t-50,t all present and each >= 461/512; missing probes do not qualify"
+  },
+  "longrun": {
+    "arm": "D",
+    "updates": 18000,
+    "flat_until": 16000,
+    "final_lr": 0.0001,
+    "midpoint": 6000,
+    "routing_every": 250
+  },
+  "transfer": {
+    "cells": [
+      {
+        "name": "e6-f16-x0",
+        "entities": 6,
+        "fact_lines": 16,
+        "filler_fraction": 0.0
+      },
+      {
+        "name": "e6-f16-x50",
+        "entities": 6,
+        "fact_lines": 16,
+        "filler_fraction": 0.5
+      },
+      {
+        "name": "e6-f16-x100",
+        "entities": 6,
+        "fact_lines": 16,
+        "filler_fraction": 1.0
+      },
+      {
+        "name": "e6-f24-x0",
+        "entities": 6,
+        "fact_lines": 24,
+        "filler_fraction": 0.0
+      },
+      {
+        "name": "e6-f24-x50",
+        "entities": 6,
+        "fact_lines": 24,
+        "filler_fraction": 0.5
+      },
+      {
+        "name": "e6-f24-x100",
+        "entities": 6,
+        "fact_lines": 24,
+        "filler_fraction": 1.0
+      },
+      {
+        "name": "e16-f16-x0",
+        "entities": 16,
+        "fact_lines": 16,
+        "filler_fraction": 0.0
+      },
+      {
+        "name": "e16-f16-x50",
+        "entities": 16,
+        "fact_lines": 16,
+        "filler_fraction": 0.5
+      },
+      {
+        "name": "e16-f16-x100",
+        "entities": 16,
+        "fact_lines": 16,
+        "filler_fraction": 1.0
+      },
+      {
+        "name": "e16-f24-x0",
+        "entities": 16,
+        "fact_lines": 24,
+        "filler_fraction": 0.0
+      },
+      {
+        "name": "e16-f24-x50",
+        "entities": 16,
+        "fact_lines": 24,
+        "filler_fraction": 0.5
+      },
+      {
+        "name": "e16-f24-x100",
+        "entities": 16,
+        "fact_lines": 24,
+        "filler_fraction": 1.0
+      },
+      {
+        "name": "e16-f64-x0",
+        "entities": 16,
+        "fact_lines": 64,
+        "filler_fraction": 0.0
+      },
+      {
+        "name": "e16-f64-x50",
+        "entities": 16,
+        "fact_lines": 64,
+        "filler_fraction": 0.5
+      },
+      {
+        "name": "e16-f64-x100",
+        "entities": 16,
+        "fact_lines": 64,
+        "filler_fraction": 1.0
+      }
+    ],
+    "n": 512,
+    "threshold_correct": 461
+  },
+  "capacity": {
+    "max_audit_workers": 3,
+    "max_total_workers": 6
+  },
+  "exclusion_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/forbidden-semantics.json",
+  "plans": {
+    "1300": {
+      "exclusion_digest": "5f7c7f0356c8229371667b303fd1443e864dad55682fd327cb58e6fb8defaea5",
+      "exclusion_count": 11496,
+      "validation": "da1ac9077e93690f1ddf0ddffca5b3273106ea7246a6bac1dfcc842996de2632",
+      "confirmation": "96fa49a9e035a0560c3ac034148c2176a4aec0d6f46e9e987673ac34b7b6cbeb",
+      "routing": "d8cf7070f142b4258fd0e5277f65d76624f87513f5f4aa0f27241ecd8d66475e",
+      "initial_fingerprint": "47c0d6dd0674d75213dbe9c691eb7f47dc9ff9351ded7d0a08273506a39cf7e9"
+    },
+    "1301": {
+      "exclusion_digest": "8f9892da89817bbbee9bb47a679f807248526105cb9b4ee38b58599d5703c57f",
+      "exclusion_count": 11498,
+      "validation": "444a30c533eca06685355626fe025b16ed8f27756372ad8d8fc7b00c8d145df5",
+      "confirmation": "39e31643337c9a3d1e6cff3b8283d029520b53da35b0c525d42a8088f612ad35",
+      "routing": "183346024e8a7553267b1efba921f1a45f73f84e961a6047d748c7c97b7fe541",
+      "initial_fingerprint": "505b2774bd7c3ee9444eabe7152363298c5871d4f385cb71eda511742db3c456"
+    },
+    "1302": {
+      "exclusion_digest": "3bf099e7b494aadaa74d850c0a7f266179406fbb73040e3ed907be79e382477b",
+      "exclusion_count": 11494,
+      "validation": "0d404faa54328887267a40f2137daf6d93c2ab46cdb7ca6a1394eda86eeb5913",
+      "confirmation": "eca88b29cef12021d7a175abae9b1a2ef14a31a67ec300e9b7c74967b6b0a576",
+      "routing": "bec85e9ad83d5d8b775eb00aa9e380f2059a23c6de2a174c1e8365fdfe07ff5f",
+      "initial_fingerprint": "e75d9ecd60c504415a6edaf4d6ab93a660f7c75bda5f508e134d1895477c9947"
+    }
+  },
+  "v1_launch_sha256": "a269c4f25759f27f08b66451fecdcf3ba8a366e8e7c7ef5cd0bd39986a5b10c7",
+  "files": {
+    ".claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_startup_factorial_v2.py": "769a1af225f231eb439f4153196a9700a69fe40bc45e4239cc24fe80a5e18614",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/tests/test_fable_startup_factorial_v2.py": "f9ee10ad67703d6862e879137b44c90c9e165346fdbb6b58c225e205fa446815",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_startup_factorial.py": "1f9cd8006cf026b1e130bbef1086687b490bb617b9875066645cf68d959075e5",
+    "scripts/fable_operator_startup.py": "d429495ec39ff6358c34f3517b8a235e9cbf595aead214f1826c00b3467ab55f",
+    "scripts/fable_operator_variants.py": "d32d9cfcea9507684169275a5225b6585c1989529f4c96f3a6eabcdad2058776",
+    "scripts/premonition_token_memory.py": "4900c0ee89942caefd8e6de27a99e68ce09a7c5ce6518dcefbfb094bb224e6ee",
+    "scripts/premonition_token_evidence.py": "5418ce470908471e953d2ec22a5f703210636dbfc683d853de38cc514edf3dea",
+    "scripts/astra_canonical_operator.py": "74f1242e15a5ca68f12f572bdac656bb954e1b99ce41e7b365969481f3c48fea",
+    "scripts/astra_canonical_operator_run.py": "cc77bb87c625780ab6b3ea54e13b32165bb6acfa2d610381f21e4abfda4b626a",
+    "scripts/astra_canonical_operator_panels.py": "3a9274284a3c22dbdad6b0bcf7cec52462bc3a0d2e16bacf5c4d632ed8f12ef7",
+    "scripts/premonition_memnn_compare.py": "98de3e68b03153713f72163849c099bc50f3a89e570a6687ea6fdbafa92286de",
+    "scripts/premonition_memnn.py": "05db1e6af69639cb0456cc096d803b3e09e19427526a9fa07ddd64782adc94be",
+    "premonition/toy_ladder.py": "dc728463f505a86aa9537a4451903f5872d17ca77f44bfce36046afebda117c2",
+    "premonition/batch.py": "45c2e90590045b3c209ccd8b52e7c0b501fbfe42a969c3ec22fe9f6b756b99ee",
+    "scripts/premonition_pair_suite.py": "1d6c23791896f5b5e26d884f8f0514f2804661082141ed080112652fefddaaee",
+    "scripts/premonition_token_initialization_probe.py": "0435aae51c02dfbeeb2e83198e3c2c03513391560abcd7f316b2406b2b96bb56",
+    "design/v3/18-startup-factorial-v2-preregistration-draft.md": "9dae53c2bacf2be594a41882b8b5494bb1216d496f82f442125923996cb0b596",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/PREREGISTRATION.md": "f64b2c5f91130f493b8bbdabb5705f8a16b79edc04d8efdef3794b9f371cdea9",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/plan-seed-1300.json": "0240a93c6a54810664dc13dec6fd94cddb386ed6d794e6609d4953593455a9a9",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/exclusions-seed-1300.json": "f8f70c677d77d8a7a6fbad86c9a29cce94fc0c6618d8de495529db62bf24fd9a",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/plan-seed-1301.json": "cb808d6fa583cc5eecbb8bfaed92ad4c300956191bada28b0fb56fce9202e894",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/exclusions-seed-1301.json": "dbc2e6ce714017e64cbdee0ce89fcb8deb6717fdc689afe7c14d3a12291abe64",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/plan-seed-1302.json": "a97f2f67afee0ecdd972a1988e2dc5451f9f6dc61ddf72b3ff2edde4499e5250",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/exclusions-seed-1302.json": "68910f6a5dc1d0b6b9dcc1829c8b30395d3631d79f551c1fae671abc3da78593",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/transfer-plan.json": "ad73d2ecd966142676ec463497ed2d744136996e71ba1100ecaec112b2500bd0",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-startup-factorial-v2-20260920/plan/transfer-signatures.json": "9190c3def047763cc407f4b7db0bdcca5d66535e16c0be60ecaba779c754b67e"
+  }
+}

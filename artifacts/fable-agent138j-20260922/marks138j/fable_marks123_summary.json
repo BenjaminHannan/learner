@@ -1,0 +1,89 @@
+{
+ "agent": "scripts/fable_loop138j_agent.py",
+ "config": "artifacts/fable-agent138j-20260922/loop138j-config.json",
+ "suites": [
+  "p2",
+  "p3",
+  "p4",
+  "rt110",
+  "q1",
+  "bench",
+  "rt81",
+  "sleep",
+  "soak"
+ ],
+ "table": [
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "64 cases, OK->BUG 6, still-BUG 6",
+   "status": "FAIL",
+   "seconds": 10.3
+  },
+  {
+   "suite": "p3",
+   "bar": "L1-L6 all PASS",
+   "number": "l1:P/l2:F/l3:P/l4:P/l5z1:F/l5z2:F/l6:P",
+   "status": "FAIL",
+   "seconds": 74.9
+  },
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "30 sents, refusals 1, nonpass 2",
+   "status": "FAIL",
+   "seconds": 3.0
+  },
+  {
+   "suite": "rt110",
+   "bar": "62/62 executed, 0 harness-error",
+   "number": "62 cases, OK->BUG 3, still-BUG 7, herr 0",
+   "status": "PASS",
+   "seconds": 162.2
+  },
+  {
+   "suite": "q1",
+   "bar": "F5+M5 both OK",
+   "number": "F5=OK M5=OK",
+   "status": "PASS",
+   "seconds": 2.4
+  },
+  {
+   "suite": "bench",
+   "bar": "scorer v2; split-A 0 wrong (200+200)",
+   "number": "fable_edit_200 {'correct': 50, 'abstain': 51, 'wrong': 99}; s2fresh_4hop {'correct': 0, 'abstain': 6, 'wrong': 194}",
+   "status": "FAIL",
+   "seconds": 22.2
+  },
+  {
+   "suite": "rt81",
+   "bar": "74/74 OK, 0 wrong writes",
+   "number": "{'n': 74, 'ok': 54, 'bug': 1, 'unclear': 19}",
+   "status": "FAIL",
+   "seconds": 5.9
+  },
+  {
+   "suite": "sleep",
+   "bar": "Z1-Z5 if sleep path else SKIP+reason",
+   "number": "SKIP: agent fable_loop138j_agent.py has no Sleep104 maternal-grandmother install path ",
+   "status": "SKIP",
+   "seconds": 0.0
+  },
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "turns=2000 kills=3 lost=0 wrong=40 doubled=0",
+   "status": "FAIL",
+   "seconds": 243.7
+  },
+  {
+   "suite": "q4",
+   "bar": "0 relation-name underscore leaks",
+   "number": "leaks=[]",
+   "status": "PASS",
+   "seconds": 0.0
+  }
+ ],
+ "total_seconds": 351.3,
+ "pass": false
+}

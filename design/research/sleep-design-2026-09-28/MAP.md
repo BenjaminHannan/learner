@@ -1,0 +1,28 @@
+# Ben's sleep-and-memory idea, mapped against the evidence on main (2026-09-28 ~22:10 UTC)
+
+Thread helper (Sonnet). Nothing here was run. Labels: shown (a sealed result on main) / suggested (reasoning or literature) / untested.
+Small card experiments and the village model are kept out of every claim. Numbers are copied from files named in each row, not recounted by me.
+
+| # | Ben's piece | Status | Evidence (file) | Failure: idea or recipe? |
+|---|---|---|---|---|
+| 1 | Very sparse reasoner, each expert many layers | ALREADY TRIED, not settled | Frozen experts: 240 vs dense 470 of 600 (rsn-358e5/e6, `artifacts/fable-predictions-ledger.md:2688-2689`). Side-by-side experts: 0 mazes learned (Director, this session). Sparse loop (mixture inside each loop block): NOT PROMOTED, F_eq +3.88 / -6.25 vs loop, seed 1 also broke an old-kind gate (`artifacts/claude-sparse-20260928/RESULTS.md`). Deeper loop: lf-8 kept old grids 181/177 vs 120/61 of 200 but 3.9x bigger; "Deep or just big" pending. | Sparse loop: not rejected (seed 0 was above the loop), so the idea is not dead; the recipe did not win. Frozen experts: routing and freezing recipe, and it costs 230 points, so freeze is the suspect. Deep experts: undecided until same-size result. |
+| 2 | Model picks what goes into replay (incl. failed and successful creative ideas) | NEW for the reasoner; covered as design for the creative side | Reasoner sleep replays the day's puzzles plus a rehearsal store chosen by code (`artifacts/claude-dir-h6-sleeplen-20260928/PASSMARKS.md`). Older "surprise-ranked replay" prediction P149 came out FALSE, but that was the older Fable-era automatic-sleep test (exp42), not the current reasoner (`artifacts/fable-predictions-ledger.md:223`), so I do not count it either way. Weakest-first sampling is Lead 2 in `design/research/standing/03-...md` (proposed there, no result on main). Creative critic trained on drafts with outcomes: `design/v3/30-modes/creative-roadmap-2026-09-25.md`. | Never tested on the current reasoner. |
+| 3 | Fake replay from the model's own state, or old replay weighted toward newer | Fake: NEW. Newer-weighted: NEW | Our reasoner is a solver, it cannot write puzzles (standing note 03, "Not ranked"). So generated replay needs either code-made inputs (a disclosed cheat) or a new head. Newer-weighting has no test. Brain: replay is weighted, weakly stored memories gain most (tag M in note 03). | Untested. |
+| 4 | Distill from the current model; may replace stored replay | TRIED, NOT PASSED | Distill-in-sleep: +4.5 of 200 (sums) and +9.75 (grids) over R128, bar 20; cost 10-18 of 300 maze skill; store of 16 per kind collapses every arm to 3-26 of 200 (`artifacts/claude-distill-20260928/RESULTS.md`, quoted in note 03). NOT PROVED WRONG. | It matched the model's answers on the same stored items, so it could not add new coverage. Fresh inputs (T1 below) is the piece the test did not try. Recipe, not idea. |
+| 5 | Facts in a notebook, only skills protected in the reasoner | ALREADY THE DESIGN | Goals page and roadmap item 1 (reader, reasoner, talker, notebook with sources). Sleep tests already train only on code-made skill puzzles, no facts. Wipe-the-store test in design decisions log (`design/research/2026-09-18-decisions-log.md`). Caution: the card store proved wrong for lookup (G1k 17.5 of 300), keep out of claims (Director). | Nothing to test yet; item 1 (end to end) covers it. |
+| 6 | Separate skills notebook the model writes to | PARTLY TESTED | The patch race (`artifacts/claude-patch-eq-20260928`) tests a skills store. Result not sealed. Architecture change. | Wait for patch race. |
+| 7 | User sets sleep length, longer trains more | BEING TESTED (H6) | Long night (6,000 steps) only tied the short night (300) on sums and lost the grid gain (-33 to -94 of 400 on day grids, `.../claude-dir-h6-sleeplen-20260928/DESIGN.md` table). H6 arm B (same total change, spread thin, lr 1.5e-6) is the fix being tested; marks M1-M3c sealed there. | Recipe (step size), not shown to be the idea. |
+
+## Where the brain agrees and disagrees (suggested, from note 03 and older files; not checked here)
+- Agrees with 2, 3: replay is not uniform, weakly stored memories are favoured; the cortex learns new things interleaved with old ones (complementary learning systems).
+- Agrees with 5, 6 in part: facts in a fast store (hippocampus), skills slowly in cortex. But the brain's "skills notebook" is also weights (habits), not text, so piece 6 is a departure, not a copy.
+- Disagrees with 7 as stated: sleep is not "more is better"; the brain scales weights down and prunes (synaptic homeostasis), which fits H6's finding that a long night at full step size hurt.
+- Disagrees with 1 as a fix for forgetting: the brain is sparse but not frozen by expert; the frozen-expert result (240 vs 470) fits that.
+
+## What is new and worth one test each (all suggested, none run)
+See TESTS.md. T1 fake replay from code-made fresh questions with the model's own earlier answers as labels and no true store. T2 the model picks the 16 items per kind (hardest half plus random half) versus random 16. T3 newer-weighted rehearsal across 3 nights versus uniform.
+
+## Order I recommend
+1. Wait on what is already running (patch race, Deep or just big, H6 arm B, weights blend and weakest-first from note 03). They answer pieces 1, 6, 7 and part of 2.
+2. T2, then T1, then T3. T2 is the cheapest and its comparator (random 16) already exists in the distill store test.
+3. Architecture yes/no questions for Ben: sparse deep experts as the real reasoner (I say no for now), skills notebook outside the model (I say wait for patch race).

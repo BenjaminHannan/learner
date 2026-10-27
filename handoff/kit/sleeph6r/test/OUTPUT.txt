@@ -1,0 +1,308 @@
+kit sleeph6r dry-run tests, 2026-09-28T20:46:05Z (real clock; the fakes run a virtual clock 300 times faster)
+test repo /tmp/claude-0/-home-claude/f08969ea-01ba-5b6a-91be-8501c8841d1b/scratchpad/h7test.P0LH4y/repo, PIN 12a24b7e27b43f9d2052df427b59333d485b9c98
+
+== 0. static checks: bash syntax, bash-3.2 safety grep, python compile, no key reads, offers ranking
+   ok    bash -n vcommon.sh
+   ok    bash -n vstart.sh
+   ok    bash -n vguard.sh
+   ok    bash -n vcollect.sh
+   ok    bash -n box/drive.sh
+   ok    bash -n box/halt.sh
+   ok    bash -n test/run-tests.sh
+   ok    bash -n test/bin/vastai
+   ok    bash -n test/bin/ssh
+   ok    bash -n test/bin/python
+   ok    bash -n test/bin/date
+   ok    bash -n test/bin/sleep
+   ok    offers.py compiles
+   ok    scripts/claude_dir_h6_sleeplen.py compiles (py_compile only; torch is not installed here)
+   ok    no bash-4-only syntax (declare -A, mapfile, readarray, wait -n, |&, ${x,,}, ${x^^}, &>>)
+   ok    kit never uses the timeout command (macOS has none)
+   ok    kit never reads a vast key or ~/.config/vastai
+   ok    the only ssh key file read is the .pub (no cat of a private key)
+   ok    the launch line has no unbraced form
+   | offers.py on the fixture (best TFLOPS per $/h first): 1003 0.35 24 12 RTX_4090 82.6 24 1 5.08|1002 0.175 24 11 RTX_3090 35.8 25 1 11.71|1001 0.55 32 10 RTX_5090 104.8 33 1 4.0|
+   ok    ranking: 1003 (4090) first, then 1002 (3090), then 1001 (5090)
+   ok    offer 1004 excluded (reliability)
+   ok    offer 1005 excluded (memory)
+   ok    offer 1006 excluded (price)
+   ok    offer 1007 excluded (cuda)
+   ok    offer 1008 excluded (compute-capability)
+   ok    offer 1009 excluded (same-host)
+   ok    offer 1010 excluded (fit-check)
+   ok    offer 1011 excluded (cores)
+
+== 1. happy path: start, guard, 4 runs finish, copy-back, destroy, collect (+ a foreign instance that must stay)
+   | pinned commit: dir-h6 SEAL-code 3 of 3, slp-358n3 SEAL-code 18 of 18 match
+   | inputs: 358u loop-s13..16/final.pt sealed on main and matching on the Mac
+   | offers, best TFLOPS per $/h first (id $/h cores host gpu TFLOPS GB waves est_hours):
+   | 1003 0.35 24 12 RTX_4090 82.6 24 1 5.08
+   | 1002 0.175 24 11 RTX_3090 35.8 25 1 11.71
+   | 1001 0.55 32 10 RTX_5090 104.8 33 1 4.0
+   | STARTED
+   ok    start: pinned files match both seals
+   ok    start: inputs matched
+   ok    start: best offer (4090, id 1003) rented first
+   ok    start: printed STARTED
+   ok    the search asked for compute_cap>=800, cuda_max_good>=12.8, reliability>=0.98
+   ok    guard state and guard pid existed BEFORE the first upload
+   ok      (guard pid too)
+   ok    the attach carried only the public key (its exact byte count)
+   ok    launch used the braces form and answered promptly
+   ok    guard ended by itself
+   | 2026-09-28T20:49:32Z GUARD start pid 24025 instance 7000001
+   | 2026-09-28T21:17:08Z SNAPSHOT: the rental's small files copied to /tmp/claude-0/-home-claude/f08969ea-01ba-5b6a-91be-8501c8841d1b/scratchpad/h7test.P0LH4y/G/snap (not manifest-checked)
+   | 2026-09-28T21:38:42Z GUARD DONE
+   | 2026-09-28T21:39:27Z COPY-CHECK: 23 of 23 files arrived and match the rental's manifest
+   | 2026-09-28T21:39:32Z COPY-CHECK: all 4 runs, sizes and the torch record accounted for
+   | 2026-09-28T21:40:13Z DESTROYED 7000001 (confirmed gone), spent so far $0.30
+   | 2026-09-28T21:40:19Z GUARD-END DONE, spent $0.30
+   ok    END is DONE
+   ok    one snapshot was taken during the run (a 40 min run, snapshot every 30 min)
+   ok      ...and it holds the rental's progress file
+   ok    copy-back: every manifest file matched
+   ok    copy-back: all 4 runs accounted for
+   ok    destroyed exactly our id and nothing else
+   ok    foreign instance 999 was not touched
+   ok    no weights copied back (no .pt anywhere in the copy)
+   | 2026-09-28T21:39:32Z COPY-CHECK: all 4 runs, sizes and the torch record accounted for
+   | guard: END DONE spent 0.30
+   | guard: END DONE spent 0.30
+   | smoke: ok
+   | torch record: torch 2.11.0+cu128 12.8 True NVIDIA GeForce RTX 3090 8 6
+   | s13: result file yes; nights finished per arm N 3 of 3, S 3 of 3, L 3 of 3, B 3 of 3; torch 2.11.0+cu128; gpu NVIDIA GeForce RTX 3090 (fake); minutes 40; arm_lr {"N": 3e-05, "S": 3e-05, "L": 3e-05, "B": 1.5e-06}; plan_identical_L_
+   | s14: result file yes; nights finished per arm N 3 of 3, S 3 of 3, L 3 of 3, B 3 of 3; torch 2.11.0+cu128; gpu NVIDIA GeForce RTX 3090 (fake); minutes 40; arm_lr {"N": 3e-05, "S": 3e-05, "L": 3e-05, "B": 1.5e-06}; plan_identical_L_
+   | s15: result file yes; nights finished per arm N 3 of 3, S 3 of 3, L 3 of 3, B 3 of 3; torch 2.11.0+cu128; gpu NVIDIA GeForce RTX 3090 (fake); minutes 40; arm_lr {"N": 3e-05, "S": 3e-05, "L": 3e-05, "B": 1.5e-06}; plan_identical_L_
+   | s16: result file yes; nights finished per arm N 3 of 3, S 3 of 3, L 3 of 3, B 3 of 3; torch 2.11.0+cu128; gpu NVIDIA GeForce RTX 3090 (fake); minutes 40; arm_lr {"N": 3e-05, "S": 3e-05, "L": 3e-05, "B": 1.5e-06}; plan_identical_L_
+   | seed runs: 4 launched, 4 finished, 0 died (a seed with fewer than 4 finished arms counts as dead, PASSMARKS.md)
+   ok    collect: printed COLLECTED
+   ok    collect: 4 launched, 4 finished, 0 died
+   ok    collect: torch recorded 2.11.0+cu128 in each result
+   ok    collect: plan flags shown
+   ok    collect prints no score (no right-answer counts)
+   ok    result file in the repo: runs/s13/dirh6-seed13.json
+   ok    result file in the repo: runs/s14/dirh6-seed14.json
+   ok    result file in the repo: runs/s15/dirh6-seed15.json
+   ok    result file in the repo: runs/s16/dirh6-seed16.json
+   ok    run-vast has torch.txt, drive-state.txt, MANIFEST, sizes.json, smoke.txt, seals.txt
+   ok    torch record starts torch 2.11.0
+   ok    drive-state order: TORCH, SEAL, CHECKPOINTS, CHECKS-OK, SIZES, SMOKE ok, then 4 LAUNCH
+   ok    4 LAUNCH lines
+   ok    a second start is refused (DUPLICATE)
+
+== 2. refusals: nothing may be rented
+   ok    credit under $4
+   ok    no create call
+   ok    Mac checkpoint copy does not match its seal
+   ok    no create call
+   ok    a live instance with our label
+   ok    no create call
+   ok    555 not touched
+   ok    a verdict already on main
+   ok    pinned h6 script differs from SEAL-code (2 of 3)
+   ok    no create call
+   ok    pin not on origin/main
+   ok    no offer fits
+   ok    no create call
+
+== 3. an upload hangs on the first host: bounded, that rental destroyed, second host used, guard restarted for it
+   | 2026-09-28T20:48:29Z rental 1: instance 7000001 (offer 1003, host 12, RTX_4090, 82.6 TFLOPS, 24 GB, 24 cores, $0.35/h, 236 TFLOPS per $/h)
+   | 2026-09-28T20:49:54Z guard started (pid 26993) on 7000001 before any upload; estimate 5.08 h (1 waves at 24 GB; 5090 104.8 / RTX_4090 82.6 TFLOPS, never below 1x); time cap 27432 s (1.5x); money stop $3.00
+   | 2026-09-28T21:20:20Z rental 1: checkpoint upload failed or took over 1800 s
+   | 2026-09-28T21:21:24Z DESTROYED 7000001 (confirmed gone), spent so far $0.19
+   | 2026-09-28T21:21:49Z rental 2: instance 7000002 (offer 1002, host 11, RTX_3090, 35.8 TFLOPS, 25 GB, 24 cores, $0.175/h, 205 TFLOPS per $/h)
+   | 2026-09-28T21:23:08Z guard started (pid 27685) on 7000002 before any upload; estimate 11.71 h (1 waves at 25 GB; 5090 104.8 / RTX_3090 35.8 TFLOPS, never below 1x); time cap 63234 s (1.5x); money stop $3.00
+   ok    a checkpoint upload really hung (fake ssh never returned)
+   ok    the hung host was given up: bail message
+   ok    first rental destroyed by exact id 7000001
+   ok    second rental made (offer 1002)
+   ok    start still ends STARTED
+   ok    guard was running before the upload on BOTH hosts
+   ok    state names the second instance
+   ok    the first host's guard (pid 26993) was stopped by its exact pid before the second was started
+   ok    guard ended
+   ok    END DONE
+   ok    both ids destroyed, nothing else
+
+== 4. the braces launch returns at once; the unbraced form blocks until the job ends (the 358u bug)
+   | braces: 'launched' after 17 ms;  unbraced: 'launched' after 10026 ms (the fake job sleeps 10 s real)
+   ok    braces form returned in under 3 s while the job kept running
+   ok    unbraced form blocked for the whole job (negative control: the test can see the bug)
+
+== 5. drive.sh refuses on the rental: the guard halts, copies the logs back, destroys; nothing runs
+   ok    [torch28] guard ended
+   ok    [torch28] start reported START-FAIL
+   ok    [torch28] progress file says why
+   ok    [torch28] no seed run was launched
+   ok    [torch28] instance destroyed by exact id
+   ok    [torch28] copy-back verified
+   ok    [smoke] guard ended
+   ok    [smoke] start reported START-FAIL
+   ok    [smoke] progress file says why
+   ok    [smoke] no seed run was launched
+   ok    [smoke] instance destroyed by exact id
+   ok    [smoke] copy-back verified
+   | smoke: FAILED, first traceback verbatim (STOP: do not fix the script, report this):
+   | Traceback (most recent call last):
+   |   File "scripts/claude_dir_h6_sleeplen.py", line 123, in smoke
+   | AssertionError: FAKE smoke failure
+   ok    [smoke] collect prints the first traceback verbatim
+   ok    [smoke] and says stop
+   ok    [cc75] guard ended
+   ok    [cc75] start reported START-FAIL
+   ok    [cc75] progress file says why
+   ok    [cc75] no seed run was launched
+   ok    [cc75] instance destroyed by exact id
+   ok    [cc75] copy-back verified
+   ok    [pipfail] guard ended
+   ok    [pipfail] start reported START-FAIL
+   ok    [pipfail] progress file says why
+   ok    [pipfail] no seed run was launched
+   ok    [pipfail] instance destroyed by exact id
+   ok    [pipfail] copy-back verified
+
+== 6. one seed dies (rc 1): recorded as DIED, the other 3 finish, still verified and destroyed
+   ok    guard ended
+   ok    END DONE
+   ok    drive-state records DIED s15
+   ok    copy-back saw the DIED record
+   ok    destroyed after the verified copy
+   | s15: no result file (2026-09-28T21:05:06Z DIED s15 (rc 1, result json missing))
+   | seed runs: 4 launched, 3 finished, 1 died (a seed with fewer than 4 finished arms counts as dead, PASSMARKS.md)
+   ok    collect: 3 finished, 1 died
+   ok    collect: s15 has no result file
+
+== 7. money stop $3.00: runs halted by exact pid, partial copy-back verified, destroyed
+   ok    STARTED
+   ok    all 4 runs launched before the clock jump
+   ok    guard ended
+   | 2026-09-28T20:50:42Z GUARD start pid 1621 instance 7000001
+   | 2026-09-29T06:01:50Z GUARD BUDGET-STOP: spent $3.22
+   | halt: TERM to 6 pids, 0 needed KILL, 0 still alive
+   | 2026-09-29T06:03:03Z COPY-CHECK: 18 of 18 files arrived and match the rental's manifest
+   | 2026-09-29T06:03:54Z DESTROYED 7000001 (confirmed gone), spent so far $3.23
+   | 2026-09-29T06:04:01Z GUARD-END BUDGET-STOP, spent $3.23
+   ok    END BUDGET-STOP
+   ok    halt message: TERM sent to 6 pids (drive, 4 runs, monitor)
+   ok    the halt line is in the copied progress file
+   ok    none of the 4 run pids is alive after the halt
+   ok    partial copy-back verified
+   ok    destroyed by exact id
+   ok    collect: 4 launched, 0 finished, 0 died; s13 has no result file
+   ok      s13 no result file
+
+== 8. time cap (1.5 x the card's estimate) and STALL (30 min, no log growth, GPU idle)
+   ok    [time] all 4 runs launched before the clock jump
+   ok    [time] guard ended
+   ok    [time] END TIME-STOP
+   ok    [time] destroyed
+   ok    [stall] guard ended
+   ok    [stall] END STALL
+   ok    [stall] guard said why
+   ok    [stall] destroyed
+
+== 9. PRELAUNCH-STOP: drive.sh stuck before the first launch (smoke hangs), guard stops it after 45 min
+   ok    start did not claim success
+   ok    guard ended
+   ok    END PRELAUNCH-STOP
+   ok    destroyed
+   ok    logs came back
+
+== 10. host lost: guard stops (not destroys) the instance, flags the Director; collect uses the 30-minute snapshot
+   ok    a snapshot exists before the host dies
+   ok    guard ended
+   | 2026-09-28T20:50:43Z GUARD start pid 7689 instance 7000001
+   | 2026-09-28T21:23:50Z no ssh answer (1), status running
+   | 2026-09-28T21:29:17Z no ssh answer (2), status running
+   | 2026-09-28T21:34:46Z no ssh answer (3), status running
+   | 2026-09-28T21:40:15Z no ssh answer (4), status running
+   | 2026-09-28T21:40:18Z GUARD HOST-FAIL: no ssh answer for 20 min
+   | 2026-09-28T21:41:00Z STOPPED 7000001 (status exited; not destroyed, files kept on its disk), spent so far $0.30
+   | 2026-09-28T21:41:07Z GUARD-END HOST-FAIL-STOPPED-NOT-DESTROYED, spent $0.30
+   ok    END HOST-FAIL-STOPPED-NOT-DESTROYED
+handoff/kit/sleeph6r/test/run-tests.sh: line 59: /tmp/claude-0/-home-claude/f08969ea-01ba-5b6a-91be-8501c8841d1b/scratchpad/h7test.P0LH4y/fake/vast/destroyed.log: No such file or directory
+   ok    stopped, not destroyed
+   ok    collect prints FLAG-DIRECTOR
+   ok    collect says its files are the snapshot
+
+== 11. copy-back mismatch (a file grew after the manifest): first copy_back fails, second passes; permanent mismatch keeps the rental stopped
+   ok    [retry] guard ended
+   | 2026-09-28T21:08:32Z copy-back try 1: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:09:00Z copy-back try 2: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:09:27Z copy-back try 3: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:09:48Z COPY-CHECK FAIL: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:10:38Z COPY-CHECK: 23 of 23 files arrived and match the rental's manifest
+   | 2026-09-28T21:10:43Z COPY-CHECK: all 4 runs, sizes and the torch record accounted for
+   | 2026-09-28T21:11:33Z DESTROYED 7000001 (confirmed gone), spent so far $0.13
+   ok    [retry] a mismatch was seen and logged
+   ok    [retry] second copy_back matched
+   ok    [retry] END DONE
+   ok    [retry] destroyed
+   ok    [perm] guard ended
+   | 2026-09-28T21:10:13Z COPY-CHECK FAIL: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:12:19Z COPY-CHECK FAIL: 22 of 23 files match the rental's manifest
+   | 2026-09-28T21:12:58Z STOPPED 7000001 (status exited; not destroyed, files kept on its disk), spent so far $0.13
+   | 2026-09-28T21:13:04Z GUARD-END DONE-STOPPED-NOT-DESTROYED, spent $0.13
+   ok    [perm] COPY-CHECK FAIL logged
+   ok    [perm] END DONE-STOPPED-NOT-DESTROYED
+handoff/kit/sleeph6r/test/run-tests.sh: line 59: /tmp/claude-0/-home-claude/f08969ea-01ba-5b6a-91be-8501c8841d1b/scratchpad/h7test.P0LH4y/fake/vast/destroyed.log: No such file or directory
+   ok    [perm] NOT destroyed, stopped
+
+== 12. destroy and stop only ids this task created (rentals.txt)
+   | 2026-09-28T20:47:55Z REFUSED destroy 999: not created by this task
+   | destroy rc 1
+   | 2026-09-28T20:47:59Z REFUSED stop 999: not created by this task
+   | stop rc 1
+   ok    destroy 999 refused
+   ok    stop 999 refused
+   ok    both returned 1
+   ok    the fake vast saw no destroy or stop call at all
+
+== 13. start job killed after the rental exists but before its guard: (a) TERM to vstart.sh (a process-group kill), (b) SIGALRM to the job wrapper only (what the watcher's 75-minute alarm does)
+   ok    [a] found the vstart.sh child (pid 12352) of the job wrapper (pid 12335)
+   ok    [a] vstart.sh exited after TERM
+   | 2026-09-28T20:55:27Z start ended before the guard was running: destroying 7000001 (nothing on it to save)
+   | 2026-09-28T20:56:21Z DESTROYED 7000001 (confirmed gone), spent so far $0.03
+   ok    [a] cleanup ran
+   ok    [a] instance destroyed
+   ok    [a] rentals.txt has its end time
+handoff/kit/sleeph6r/test/run-tests.sh: line 241: 12820 Alarm clock             bash "$j" > "$T/out/alarm.txt" 2>&1
+   ok    [b] job wrapper died of SIGALRM
+   ok    [b] vstart.sh (pid 12837) is still running on its own
+   ok    [b] orphaned vstart.sh finished by itself
+   | 2026-09-28T21:33:05Z DESTROYED 7000001 (confirmed gone), spent so far $0.25
+   | 2026-09-28T22:15:29Z DESTROYED 7000002 (confirmed gone), spent so far $0.37
+   | 2026-09-28T22:57:36Z DESTROYED 7000003 (confirmed gone), spent so far $0.75
+   | 2026-09-28T22:57:42Z HOST-FAIL: no rental got as far as launching; spent $0.75
+   ok    [b] HOST-FAIL logged by the orphan
+   ok    [b] all three rentals destroyed by exact id
+
+== 14. no host answers ssh, 3 hosts in a row: each destroyed, HOST-FAIL, spend recorded
+   | 2026-09-28T20:50:31Z rental 1: instance 7000001 (offer 1003, host 12, RTX_4090, 82.6 TFLOPS, 24 GB, 24 cores, $0.35/h, 236 TFLOPS per $/h)
+   | 2026-09-28T21:30:17Z rental 1: no ssh within 15 min (status loading)
+   | 2026-09-28T21:31:08Z DESTROYED 7000001 (confirmed gone), spent so far $0.24
+   | 2026-09-28T21:31:29Z rental 2: instance 7000002 (offer 1002, host 11, RTX_3090, 35.8 TFLOPS, 25 GB, 24 cores, $0.175/h, 205 TFLOPS per $/h)
+   | 2026-09-28T22:12:23Z rental 2: no ssh within 15 min (status loading)
+   | 2026-09-28T22:13:16Z DESTROYED 7000002 (confirmed gone), spent so far $0.36
+   | 2026-09-28T22:13:37Z rental 3: instance 7000003 (offer 1001, host 10, RTX_5090, 104.8 TFLOPS, 33 GB, 32 cores, $0.55/h, 191 TFLOPS per $/h)
+   | 2026-09-28T22:53:51Z rental 3: no ssh within 15 min (status loading)
+   | 2026-09-28T22:54:40Z DESTROYED 7000003 (confirmed gone), spent so far $0.73
+   | 2026-09-28T22:54:46Z HOST-FAIL: no rental got as far as launching; spent $0.73
+   ok    3 rentals tried
+   ok    HOST-FAIL logged
+   ok    all three destroyed by exact id
+   ok    create failing on all 3 offers: HOST-FAIL and nothing destroyed or left
+   ok    no instances exist
+
+== 15. the read-only Mac input check job (000-bash-h7-dirh6-inputs): match, then a tampered checkpoint
+   | loop-s13/final.pt: sealed de0eda2afa64729b4e1c0766ddcb0338be1d8248f93941fee8290099eeaa01f2, Mac copy matches
+   | loop-s14/final.pt: sealed 9f9f7e0fe8f5ea416aac04f938109e5ef6b6d6e87cf2fefd2064582120fd9e83, Mac copy matches
+   | loop-s15/final.pt: sealed f78e2840e152a73b519bb3fa2aac4c4ae44f0f44ad484421638043f5828ce459, Mac copy matches
+   | loop-s16/final.pt: sealed fc41de882c64b3637aca050427eddad222b967669bf8c88a14fba0642d9ac298, Mac copy matches
+   | 4 of 4 Mac checkpoints match their seals
+   ok    all 4 match
+   ok    prints no key or credential path content
+   ok    a tampered copy is caught
+   ok      and named
+
+SUMMARY: 181 checks passed, 0 failed (scratch folder /tmp/claude-0/-home-claude/f08969ea-01ba-5b6a-91be-8501c8841d1b/scratchpad/h7test.P0LH4y)

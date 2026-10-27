@@ -1,0 +1,49 @@
+{
+ "suite_records_dev_passed_sha256": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02",
+ "first_unlock_sha": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02",
+ "second_unlock_sha": "16394cc0a16f8c4c831b5d11adff4eb1a42b4defe950c424b37dd17be9ad4ced",
+ "suite_is_bound_to_the_first": true,
+ "two_unlocks_both_valid_and_different": true,
+ "cases": [
+  {
+   "case": "the original unlock (control)",
+   "accepted": true,
+   "bound": true,
+   "sha": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02"
+  },
+  {
+   "case": "a second, independently valid unlock",
+   "accepted": false,
+   "message": "8b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02.  This is a VALID verdict but not THE one these panels were unlocked by -- present the original DEV-PASSED.json, or rebuild the confirmation suite from this one."
+  },
+  {
+   "case": "manifest dev_passed.sha256 removed",
+   "accepted": false,
+   "message": "lay-20260920/audit/scratch4/confirm/manifest.json records no dev_passed.sha256, so there is nothing tying this suite to the verdict that unlocked it.  Rebuild the suite with build_dev_panels(confirmation=True)."
+  },
+  {
+   "case": "manifest dev_passed.sha256 blank",
+   "accepted": false,
+   "message": "lay-20260920/audit/scratch4/confirm/manifest.json records no dev_passed.sha256, so there is nothing tying this suite to the verdict that unlocked it.  Rebuild the suite with build_dev_panels(confirmation=True)."
+  },
+  {
+   "case": "manifest dev_passed block removed",
+   "accepted": false,
+   "message": "lay-20260920/audit/scratch4/confirm/manifest.json records no dev_passed.sha256, so there is nothing tying this suite to the verdict that unlocked it.  Rebuild the suite with build_dev_panels(confirmation=True)."
+  },
+  {
+   "case": "the original unlock again (control after restore)",
+   "accepted": true,
+   "bound": true,
+   "sha": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02"
+  }
+ ],
+ "legitimate_unlock_passes": true,
+ "every_attack_refused": true,
+ "development_suite_unaffected": {
+  "is_confirmation": false,
+  "kind": "development",
+  "namespace": "astra-novelty19-dev-v1"
+ },
+ "closed": true
+}

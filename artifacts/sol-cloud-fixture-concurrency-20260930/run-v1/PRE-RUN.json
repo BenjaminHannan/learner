@@ -1,0 +1,30 @@
+{
+  "schema": "sol.cloud.fixture-concurrency-plan.v1",
+  "created_utc": "2026-09-30T08:43:36.100519+00:00",
+  "source_pins": {
+    "scripts/sol_cloud_fixture_v1.py": "0480ffced7883e8be721842e53ba9439102a019149027f81ca2455f8492dff24",
+    "scripts/sol_cloud_day_adapter_v1.py": "5cef30bf8cc46667a41635ee6f4167b2cb4ab1f4915023d7ed7d2ba8db4f774f",
+    "scripts/sol_cloud_trainonly_v1.py": "a730907978cca5856c8b6ca318d2dac25e85d2df15390a5f085549884698cadf",
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-PACKET.json": "46ae697a2dc183048832fed4ef42144888afa08fe5e82db5ccb338c5703fea7e",
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-MANIFEST.json": "690bd7f6b12fadc5c350ed65d710c82e4e4bd1d8e1dda968e5f8f50b8fc75b7b"
+  },
+  "test_source_sha256": "4141c1d2f287d6395341d841034b3d8b61452d158d698c6db1faaa6ee5744fee",
+  "human_train_record_id": "5733be284776f41900661182",
+  "cases": [
+    "two rounds of simultaneous independent claims",
+    "simultaneous dispatch lifecycle starts",
+    "committed activity across process boundaries",
+    "read-only readers under actual dirty writer transaction",
+    "complete/failed lifecycle claims cannot be re-admitted"
+  ],
+  "claim_competitors": 4,
+  "claim_rounds": 2,
+  "idle_seconds": 1,
+  "child_barrier_timeout_seconds": 15,
+  "child_result_timeout_seconds": 20,
+  "actual_user_day": false,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "live_queue": false,
+  "scope": "engineering concurrency/lifecycle; no executed sleep or semantics"
+}

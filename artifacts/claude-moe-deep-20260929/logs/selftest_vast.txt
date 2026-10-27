@@ -1,0 +1,77 @@
+/root/w/scripts/claude_moe_deep_run.py:578: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  rep[f"dispatch_{path}_value_max_abs_diff"] = float((yp.reshape(-1, 256) - ref).abs().max())
+{
+ "utc": "2026-09-29T13:45:19Z",
+ "torch": "2.8.0+cu128",
+ "dispatch_padded_value_max_abs_diff": 1.7881393432617188e-07,
+ "dispatch_padded_grad_max_abs_diff": 1.430511474609375e-06,
+ "batch_independence_padded_max_abs_diff": 0.0,
+ "dispatch_segments_value_max_abs_diff": 1.7881393432617188e-07,
+ "dispatch_segments_grad_max_abs_diff": 1.430511474609375e-06,
+ "batch_independence_segments_max_abs_diff": 2.9802322387695312e-08,
+ "contract_L8-E64": {
+  "cells": 48,
+  "stops": 48,
+  "cell_shape": [
+   2,
+   81,
+   125
+  ],
+  "gradient_check": {
+   "matrix_count": 76,
+   "nonzero_all": true,
+   "missing_both": []
+  },
+  "expert_gradient_check": {
+   "alive_per_layer": [
+    42,
+    45,
+    42,
+    39,
+    42,
+    46,
+    48,
+    42
+   ],
+   "experts_per_layer": 64,
+   "alive_total": 346,
+   "experts_total": 512
+  }
+ },
+ "contract_L8-dense-act": {
+  "cells": 48,
+  "stops": 48,
+  "cell_shape": [
+   2,
+   81,
+   125
+  ],
+  "gradient_check": {
+   "matrix_count": 52,
+   "nonzero_all": true,
+   "missing_both": []
+  },
+  "expert_gradient_check": null
+ },
+ "contract_plain-big": {
+  "cells": 1,
+  "stops": 0,
+  "cell_shape": [
+   2,
+   81,
+   125
+  ],
+  "gradient_check": {
+   "matrix_count": 51,
+   "nonzero_all": true,
+   "missing_both": []
+  },
+  "expert_gradient_check": null
+ },
+ "learner_steps_per_batch": 4,
+ "learner_router_terms_left": 0,
+ "learner_changed_params": 160,
+ "selftest": "ok"
+}
+{"L8-E64": [19517438, 4694014], "L2-E64": [4928798, 1222942], "L4-E64": [9791678, 2379966], "L16-E64": [38968958, 9322110], "L8-E16": [6713342, 4595710], "L8-E32": [10981374, 4628478], "L8-E128": [36589566, 4825086], "L8-dense-act": [4546558, 4546558], "L8-dense-tot": [19517950, 19517950], "plain-big": [19517181, 19517181]}

@@ -1,0 +1,35 @@
+{
+  "captured_utc": "2026-09-30T02:47:52.479938+00:00",
+  "records": [
+    {
+      "job": "sol-ops-runtime-smoke-20260929",
+      "scope": "infrastructure; no training or scientific quality claim",
+      "exit": "rc=0\n",
+      "exit_sha256": "93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494",
+      "stdout": "Wed Sep 30 02:40:49 UTC 2026\n{\"scope\": \"infrastructure smoke only; no empirical model claim\", \"torch\": \"2.14.0\", \"mps_available\": true, \"cuda_available\": false, \"seeds\": [{\"seed\": 0, \"cpu_identity_ok\": true}, {\"seed\": 1, \"cpu_identity_ok\": true}]}\nrc=0\n",
+      "stdout_sha256": "573a6d6e3c9436b34c0e3bccd3629fb002a6450f2d6ff0d6e3a1784914bd4ebc",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "job": "sol-ops-pc-smoke-20260929",
+      "scope": "infrastructure; no training or scientific quality claim",
+      "exit": "rc=1\n",
+      "exit_sha256": "91d957f8f2748a950526d4d21e0d5cd3bf5518e6c60b1beb470a13be1f978b1d",
+      "stdout": "Wed Sep 30 02:40:49 UTC 2026\nrc=1\n",
+      "stdout_sha256": "2d1b10accaaa0963cb0f36d820405be415084b0b670d11c636df1a1419dbbfc7",
+      "stderr": "Traceback (most recent call last):\r\n  File \"<string>\", line 1, in <module>\r\n  File \"<string>\", line 1\r\n    for seed in (0,1):\\n torch.manual_seed(seed)\\n x=torch.randn(4,4,device=\"cuda\")\\n with torch.no_grad():\\n  ok=bool(torch.equal(x@torch.eye(4,device=\"cuda\"),x))\\n assert ok\\n results.append({\"seed\":seed,\"identity_ok\":ok})\r\n                       ^\r\nSyntaxError: unexpected character after line continuation character\r\n",
+      "stderr_sha256": "da3b1128ee6915aae05a6a67a7f8ba80ff326845bb944fb77a6fe60681cea994"
+    },
+    {
+      "job": "sol-ops-pc-smoke-20260929-r2",
+      "scope": "infrastructure; no training or scientific quality claim",
+      "exit": "rc=0\n",
+      "exit_sha256": "93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494",
+      "stdout": "Wed Sep 30 02:45:20 UTC 2026\n{\"scope\": \"infrastructure only; no trained-model evidence\", \"torch\": \"2.11.0+cu128\", \"cuda\": \"12.8\", \"gpu\": \"NVIDIA GeForce RTX 5070 Ti\", \"results\": [{\"seed\": 0, \"finite_identity_ok\": true}, {\"seed\": 1, \"finite_identity_ok\": true}]}\r\nrc=0\n",
+      "stdout_sha256": "021b97d6269b054bb5f2fd937690b99c62dd8e0522ce590e493d572248fc1928",
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+ "client": "stub -- StubClient never calls a model",
+ "direction_prompt": "Answer with one word, YES or NO, and nothing else.\n\nSentence A: {a}\nSentence B: {b}\n\nDoes B say exactly the same fact as A, about the same person, in the same direction?\n",
+ "examples": {
+  "ask.attr.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {R}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n\nSENTENCE: what is {OWNER}'s {R}?\n",
+  "ask.link.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {R}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n\nSENTENCE: who is {OWNER}'s {R}?\n",
+  "correct.attr.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {R}, {V}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n- {V} is the belonging itself\n\nSENTENCE: actually, {OWNER}'s {R} is a {V}.\n",
+  "correct.link.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {O}, {R}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {O} is a second person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n\nSENTENCE: actually, {OWNER}'s {R} is {O}.\n",
+  "tell.attr.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {R}, {V}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n- {V} is the belonging itself\n\nSENTENCE: {OWNER}'s {R} is a {V}.\n",
+  "tell.link.000": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in 8 different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {OWNER}, {O}, {R}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n- {OWNER} is a person's name; it is hidden from you on purpose\n- {O} is a second person's name; it is hidden from you on purpose\n- {R} is the kind of belonging being talked about\n\nSENTENCE: {OWNER}'s {R} is {O}.\n"
+ },
+ "note": "PROMPT TEMPLATES ONLY. No model was called. A Qwen night needs Ben's yes (design section 7) and blocks training on BensPC while it runs.",
+ "paraphrase_prompt": "You are helping build practice sentences for a very small language model.\n\nRewrite the SENTENCE below in {n} different ways that a person might really say. Keep the\nmeaning exactly the same.\n\nHard rules:\n- Keep every placeholder exactly as written and use each one exactly once: {slots}.\n- Never replace a placeholder with a real word, a name, or an example.\n- Never add a new placeholder.\n- Use simple words a seven-year-old knows. One short sentence each. All lower case.\n- Do not explain. Output one rewrite per line and nothing else.\n\nThe placeholders mean:\n{meanings}\n\nSENTENCE: {template}\n",
+ "slot_meanings": {
+  "{O2}": "{O2} is another person's name; it is hidden from you on purpose",
+  "{OLD}": "{OLD} is the wrong answer that is being replaced",
+  "{OWNER_OF}": "{OWNER_OF} is a person's name; it is hidden from you on purpose",
+  "{OWNER}": "{OWNER} is a person's name; it is hidden from you on purpose",
+  "{O}": "{O} is a second person's name; it is hidden from you on purpose",
+  "{R2}": "{R2} is a second kind of belonging",
+  "{R}": "{R} is the kind of belonging being talked about",
+  "{V2}": "{V2} is a second belonging",
+  "{V}": "{V} is the belonging itself"
+ },
+ "target_paraphrases": 1500,
+ "verifier": {
+  "checks": [
+   "placeholders present exactly once and none added",
+   "no literal name, value or relation word leaked into a slot",
+   "the reference parser recovers the same act, subject, relation path, object and old value on six random fillings",
+   "person-to-person relations keep their direction",
+   "a yes/no Qwen check that B says exactly the fact A says"
+  ],
+  "on_failure": "the paraphrase is dropped, never repaired"
+ }
+}

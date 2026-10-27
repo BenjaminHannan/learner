@@ -1,0 +1,25 @@
+rv-391 dev 2 critic probe (label rv391critic) SOURCES
+date_utc 2026-09-26T21:06:32Z (runs finished; started 2026-09-26T20:27:44Z)
+code origin/main bcbbd35025f5f525ac522e0cae6ae4beefdd603c (sealed; SEAL-critic 14/14 OK, never edited)
+torch 2.14.0 (uv --offline --no-project --python 3.12 --with torch --with numpy)
+env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; Mac CPU, fp32, no autocast
+
+nets (~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-sN/final.pt, sha256 as checked = SEAL-run line):
+s1 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832
+s2 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt 1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5
+s3 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt 7bb0a62fd5c2ae63cac389c54c8d83d1cdc6949fb9b12f0a043a334169959fa4
+s4 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s4/final.pt 088f49d1cf9f8ed52689ef500ca21b9ff63102e586198e926ad4882def66cb26
+
+r0 untrained control (built in $D/RAND, never pushed):
+untrained loop net RAND/loop-r0.pt init seed 0 weights 6438302 weights_sha256 05f2870442dbceae7bf61c82e0ea14d588d77d7bd0910e5e6f0fb530b0787b40 file_sha256 a1acc254aba65fa424a06908dac74525d1a7e30d7c5dd09a030e0eed8fadf483
+r0 ckpt used for probe: $D/RAND/loop-r0.pt (file_sha256 a1acc254aba65fa424a06908dac74525d1a7e30d7c5dd09a030e0eed8fadf483)
+
+minutes per run (from critic json sec; wall batch1 s1-s3 ~16 min, batch2 s4+r0 ~19 min; 85-min stop not needed, all 5 finished):
+s1 915 sec = 15.25 min
+s2 957 sec = 15.95 min
+s3 835 sec = 13.92 min
+s4 964 sec = 16.07 min
+r0 1136 sec = 18.93 min
+
+outputs per net: critic-sN.json + critic-sN.rows.jsonl + log-sN.txt (s1-s4, r0); 5 nets ran, 0 skipped
+train/practice only; no test puzzle

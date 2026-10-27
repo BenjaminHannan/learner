@@ -1,0 +1,104 @@
+schema OK
+FAIL  that_denial >= 10/12: mine=7 252b=0
+FAIL  that_correction >= 10/12: mine=3 252b=0
+FAIL  pure_denial_that >= 9/10: mine=6 252b=2
+PASS  junk writes over 80 == 0: mine=0 252b=2
+FAIL  wrong values in 3 families == 0: mine=18 252b=31
+PASS  false claims in 3 families == 0: mine=0 252b=4
+PASS  other_tail_denial newly wrong vs 252b == 0: mine=0 252b=0
+PASS  question_tail 6/6: mine=6 252b=6
+PASS  unstored_tail 6/6: mine=6 252b=6
+PASS  keep 8/8 (byte-identical to base252b): mine=8 252b=8
+PASS  control 16/16 (byte-identical to base252b): mine=16 252b=16
+family that_denial: mine {'n': 12, 'right': 7, 'junk': 0, 'wrong_value': 5, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 12, 'right': 0, 'junk': 1, 'wrong_value': 12, 'false_claim': 4, 'followup_write': 0}
+family that_correction: mine {'n': 12, 'right': 3, 'junk': 0, 'wrong_value': 9, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 12, 'right': 0, 'junk': 0, 'wrong_value': 12, 'false_claim': 0, 'followup_write': 0}
+family pure_denial_that: mine {'n': 10, 'right': 6, 'junk': 0, 'wrong_value': 4, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 10, 'right': 2, 'junk': 1, 'wrong_value': 7, 'false_claim': 0, 'followup_write': 0}
+family other_tail_denial: mine {'n': 10, 'right': 1, 'junk': 0, 'wrong_value': 9, 'false_claim': 1, 'followup_write': 0} | 252b {'n': 10, 'right': 1, 'junk': 0, 'wrong_value': 9, 'false_claim': 1, 'followup_write': 0}
+family keep: mine {'n': 8, 'right': 8, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 8, 'right': 8, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0}
+family question_tail: mine {'n': 6, 'right': 6, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 6, 'right': 6, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0}
+family unstored_tail: mine {'n': 6, 'right': 6, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 6, 'right': 6, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0}
+family control: mine {'n': 16, 'right': 16, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0} | 252b {'n': 16, 'right': 16, 'junk': 0, 'wrong_value': 0, 'false_claim': 0, 'followup_write': 0}
+writer base fields per family: {"base_right": {"that_denial": 0, "that_correction": 0, "pure_denial_that": 2, "other_tail_denial": 1, "keep": 8, "question_tail": 6, "unstored_tail": 6, "control": 16}, "base_wrong_value": {"that_denial": 12, "that_correction": 12, "pure_denial_that": 7, "other_tail_denial": 9, "keep": 0, "question_tail": 0, "unstored_tail": 0, "control": 0}, "base_false_claim": {"that_denial": 4, "that_correction": 0, "pure_denial_that": 0, "other_tail_denial": 1, "keep": 0, "question_tail": 0, "unstored_tail": 0, "control": 0}}
+items whose rows or scores differ between arms: ['t258-001', 't258-002', 't258-003', 't258-008', 't258-009', 't258-010', 't258-011', 't258-013', 't258-015', 't258-016', 't258-019', 't258-023', 't258-024', 't258-025', 't258-026', 't258-027', 't258-029', 't258-030', 't258-031', 't258-033', 't258-034', 't258-059', 't258-064']
+t258-001 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-002 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=True
+t258-003 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=True
+t258-004 that_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-005 that_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-006 that_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-007 that_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-008 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-009 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=True wv=True fc=False
+t258-010 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=True
+t258-011 that_denial: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=True
+t258-012 that_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-013 that_correction: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-014 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-015 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-016 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-017 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-018 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-019 that_correction: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-020 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-021 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-022 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-023 that_correction: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-024 that_correction: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-025 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-026 pure_denial_that: mine right=False junk=False wv=True fc=False | 252b right=False junk=True wv=False fc=False
+t258-027 pure_denial_that: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-028 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-029 pure_denial_that: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-030 pure_denial_that: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-031 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-032 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-033 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-034 pure_denial_that: mine right=True junk=False wv=False fc=False | 252b right=False junk=False wv=True fc=False
+t258-035 other_tail_denial: mine right=False junk=False wv=True fc=True | 252b right=False junk=False wv=True fc=True
+t258-036 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-037 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-038 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-039 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-040 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-041 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-042 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-043 other_tail_denial: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-044 other_tail_denial: mine right=False junk=False wv=True fc=False | 252b right=False junk=False wv=True fc=False
+t258-045 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-046 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-047 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-048 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-049 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-050 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-051 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-052 keep: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-053 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-054 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-055 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-056 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-057 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-058 question_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-059 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-060 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-061 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-062 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-063 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-064 unstored_tail: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-065 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-066 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-067 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-068 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-069 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-070 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-071 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-072 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-073 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-074 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-075 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-076 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-077 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-078 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-079 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+t258-080 control: mine right=True junk=False wv=False fc=False | 252b right=True junk=False wv=False fc=False
+M1 FAIL
+score exit=0

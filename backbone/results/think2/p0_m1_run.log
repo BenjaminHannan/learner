@@ -1,0 +1,59 @@
+== tj 19:06:33
+[p0] arm tj seed 0 K 16 lmax 4 alpha_init 0.0 rows 200 device cpu
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[p0] batch of 8 rows done 105s
+[p0] batch of 8 rows done 207s
+[p0] batch of 9 rows done 309s
+[p0] batch of 9 rows done 410s
+[p0] batch of 10 rows done 510s
+[p0] batch of 10 rows done 615s
+[p0] batch of 11 rows done 724s
+[p0] batch of 11 rows done 833s
+[p0] batch of 12 rows done 945s
+[p0] batch of 13 rows done 1053s
+[p0] batch of 13 rows done 1161s
+[p0] batch of 14 rows done 1284s
+[p0] batch of 15 rows done 1409s
+[p0] batch of 16 rows done 2315s
+[p0] batch of 16 rows done 3199s
+[p0] batch of 16 rows done 4065s
+[p0] batch of 9 rows done 4148s
+[p0] wrote ../ckpt/tj_s0/p0_readout.json: wiring max|dlogit| 16.4 mean|tanh a| 0.0509 refiner drift rho differs between the re-created start (0.019453832879662514) and the checkpoint (0.019453834742307663): different base weights or code path rules {'row1_wiring_bug': False, 'row2_gate_closed': True, 'row3_block_barely_trained': None, 'row5_notes_story_independent': True, 'row6_refiner_stuck': False, 'note': 'row 5 uses the between-story ratio (ratio_across_rows if there is one story); row 6 uses the change into the last lap'}
+== tj rc=0 4154s
+== tf 20:15:47
+[p0] arm tf seed 0 K 16 lmax 4 alpha_init 0.0 rows 200 device cpu
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[p0] batch of 8 rows done 103s
+[p0] batch of 8 rows done 204s
+[p0] batch of 9 rows done 303s
+[p0] batch of 9 rows done 401s
+[p0] batch of 10 rows done 501s
+[p0] batch of 10 rows done 600s
+[p0] batch of 11 rows done 701s
+[p0] batch of 11 rows done 800s
+[p0] batch of 12 rows done 903s
+[p0] batch of 13 rows done 1007s
+[p0] batch of 13 rows done 1106s
+== tf 21:46:45 (restart)
+[p0] arm tf seed 0 K 16 lmax 4 alpha_init 0.0 rows 200 device cpu
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[p0] batch of 8 rows done 102s
+[p0] batch of 8 rows done 201s
+[p0] batch of 9 rows done 301s
+[p0] batch of 9 rows done 399s
+[p0] batch of 10 rows done 500s
+[p0] batch of 10 rows done 600s
+[p0] batch of 11 rows done 704s
+[p0] batch of 11 rows done 806s
+[p0] batch of 12 rows done 909s
+[p0] batch of 13 rows done 1010s
+[p0] batch of 13 rows done 1111s
+[p0] batch of 14 rows done 1224s
+[p0] batch of 15 rows done 1340s
+[p0] batch of 16 rows done 2347s
+[p0] batch of 16 rows done 3300s
+[p0] batch of 16 rows done 4092s
+[p0] batch of 9 rows done 4174s
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[p0] wrote ../ckpt/tf_s0/p0_readout.json: wiring max|dlogit| 15.6 mean|tanh a| 0.1234 refiner drift rho differs between the re-created start (0.019453832879662514) and the checkpoint (0.019453834742307663): different base weights or code path rules {'row1_wiring_bug': False, 'row2_gate_closed': False, 'row3_block_barely_trained': None, 'row5_notes_story_independent': True, 'row6_refiner_stuck': False, 'note': 'row 5 uses the between-story ratio (ratio_across_rows if there is one story); row 6 uses the change into the last lap'}
+== tf rc=0 10043s

@@ -1,0 +1,318 @@
+{
+  "budget": {
+    "configs": 4,
+    "limit": 4
+  },
+  "conclusion": "The rl arm CAN reach ~1.0 training reward on the oracle operator inside 6000 updates, but only with enough exploration pressure. At the brief defaults (K=8, entropy 0.01) it locks onto the one-hop / direct-subject shortcut by update ~200 and never leaves it. K=16 with entropy 0.2 -> 0.02 (cfgC) escapes and learns the true two-hop decomposition from final-answer reward alone. No action supervision or shaping was added to the rl arm.",
+  "configs": [
+    {
+      "curve": [
+        [
+          1,
+          0.01953,
+          0.07
+        ],
+        [
+          200,
+          0.53469,
+          1.001
+        ],
+        [
+          500,
+          0.53211,
+          1.154
+        ],
+        [
+          1000,
+          0.53074,
+          1.154
+        ],
+        [
+          2000,
+          0.52709,
+          1.175
+        ],
+        [
+          3000,
+          0.52691,
+          1.659
+        ],
+        [
+          4000,
+          0.53545,
+          1.719
+        ],
+        [
+          5000,
+          0.53338,
+          1.713
+        ],
+        [
+          6000,
+          0.5275,
+          1.535
+        ]
+      ],
+      "entropy": [
+        0.01,
+        0.001
+      ],
+      "final_entropy": 0.1686435893177986,
+      "final_invalid_fraction": 0.0,
+      "final_mean_calls": 1.5348828125,
+      "final_sampled_reward": 0.5275,
+      "k": 8,
+      "lr": 0.003,
+      "name": "cfgA-default",
+      "rationale": "the brief defaults",
+      "seconds": 202.62411779200193,
+      "seed": 900001,
+      "updates": 6000,
+      "updates_per_second": 29.61147994316812
+    },
+    {
+      "curve": [
+        [
+          1,
+          0.01953,
+          0.068
+        ],
+        [
+          200,
+          0.52912,
+          1.24
+        ],
+        [
+          500,
+          0.53133,
+          1.242
+        ],
+        [
+          1000,
+          0.52957,
+          1.25
+        ],
+        [
+          2000,
+          0.53398,
+          1.855
+        ],
+        [
+          3000,
+          0.53383,
+          1.74
+        ],
+        [
+          4000,
+          0.53055,
+          1.743
+        ],
+        [
+          5000,
+          0.53139,
+          1.859
+        ],
+        [
+          6000,
+          0.52797,
+          1.873
+        ]
+      ],
+      "entropy": [
+        0.05,
+        0.005
+      ],
+      "final_entropy": 0.21568793386220933,
+      "final_invalid_fraction": 0.0,
+      "final_mean_calls": 1.87349609375,
+      "final_sampled_reward": 0.52796875,
+      "k": 8,
+      "lr": 0.003,
+      "name": "cfgB-entropy05",
+      "rationale": "more exploration pressure at the same K",
+      "seconds": 220.15797687499435,
+      "seed": 900002,
+      "updates": 6000,
+      "updates_per_second": 27.253157415262763
+    },
+    {
+      "curve": [
+        [
+          1,
+          0.01758,
+          0.08
+        ],
+        [
+          200,
+          0.85053,
+          1.908
+        ],
+        [
+          500,
+          0.99913,
+          2.241
+        ],
+        [
+          1000,
+          0.99986,
+          2.266
+        ],
+        [
+          2000,
+          0.99999,
+          2.272
+        ],
+        [
+          3000,
+          1.0,
+          2.269
+        ],
+        [
+          4000,
+          1.0,
+          2.269
+        ],
+        [
+          5000,
+          1.0,
+          2.273
+        ],
+        [
+          6000,
+          0.99994,
+          2.258
+        ]
+      ],
+      "entropy": [
+        0.2,
+        0.02
+      ],
+      "final_entropy": 0.15673441663384438,
+      "final_invalid_fraction": 4.8828125e-05,
+      "final_mean_calls": 2.25763671875,
+      "final_sampled_reward": 0.99994140625,
+      "k": 16,
+      "lr": 0.003,
+      "name": "cfgC-k16-ent20",
+      "rationale": "more RLOO samples per question plus a much larger entropy bonus",
+      "seconds": 377.9474661250133,
+      "seed": 900003,
+      "updates": 6000,
+      "updates_per_second": 15.875222187666118
+    },
+    {
+      "curve": [
+        [
+          1,
+          0.02734,
+          0.078
+        ],
+        [
+          200,
+          0.38364,
+          0.704
+        ],
+        [
+          500,
+          0.49521,
+          0.906
+        ],
+        [
+          1000,
+          0.99463,
+          2.412
+        ],
+        [
+          2000,
+          0.99957,
+          2.672
+        ],
+        [
+          3000,
+          0.99988,
+          2.705
+        ],
+        [
+          4000,
+          0.99996,
+          2.707
+        ],
+        [
+          5000,
+          0.99997,
+          2.705
+        ],
+        [
+          6000,
+          0.99999,
+          2.709
+        ]
+      ],
+      "entropy": [
+        0.5,
+        0.02
+      ],
+      "final_entropy": 0.22980584904551507,
+      "final_invalid_fraction": 0.0,
+      "final_mean_calls": 2.708681640625,
+      "final_sampled_reward": 0.999990234375,
+      "k": 16,
+      "lr": 0.001,
+      "name": "cfgD-k16-ent50-lr1e3",
+      "rationale": "as C with a still larger bonus and a gentler learning rate",
+      "seconds": 393.0809579170018,
+      "seed": 900004,
+      "updates": 6000,
+      "updates_per_second": 15.26403118531854
+    }
+  ],
+  "greedy_training_stream_probe": {
+    "cfgA-default": {
+      "behaviour": "direct-question-subject shortcut: subject = the asker, operation = the LAST operation position (the LINK is skipped), then a redundant repeat call",
+      "one_hop": "256/256",
+      "two_hop": "19/256"
+    },
+    "cfgC-k16-ent20": {
+      "behaviour": "the true chain: subject=question position 1, op=position 2 (LINK), CONTINUE; subject=the most recent result, op=position 3, STOP",
+      "one_hop": "256/256",
+      "two_hop": "256/256"
+    }
+  },
+  "purpose": "development tuning of the rl arm only; ORACLE operator only; judged ONLY by training-stream reward on the 1- and 2-hop training questions. No panel was consulted. Registered seeds 0, 1, 2 were not trained.",
+  "recommended_defaults": {
+    "clip": 1.0,
+    "entropy": 0.2,
+    "entropy_final": 0.02,
+    "k": 16,
+    "lr": 0.003,
+    "note": "cfgC. cfgD also reached ~1.0 but used more calls per episode under sampling.",
+    "time_cap": 1500,
+    "updates": 6000,
+    "visits": 16,
+    "warmup": 100,
+    "width": 32
+  },
+  "seeds": "non-registered, 900001+",
+  "smoke_runs": [
+    {
+      "arm": "rl",
+      "name": "smoke-rl-realop",
+      "operator": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_seed-1/final.pt",
+      "purpose": "NON-REGISTERED plumbing check of the real-operator path, table cache and scoring. Its panel scores are NOT results and must not be reported as such.",
+      "seed": 900005,
+      "updates": 200,
+      "updates_per_second": 8.123792915438045
+    },
+    {
+      "arm": "supervised",
+      "name": "smoke-supervised-realop",
+      "operator": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_seed-1/final.pt",
+      "purpose": "NON-REGISTERED plumbing check of the real-operator path, table cache and scoring. Its panel scores are NOT results and must not be reported as such.",
+      "seed": 900006,
+      "updates": 200,
+      "updates_per_second": 10.801245116046754
+    }
+  ],
+  "total_tuning_cpu_minutes": 19.9,
+  "total_tuning_cpu_seconds": 1193.8
+}

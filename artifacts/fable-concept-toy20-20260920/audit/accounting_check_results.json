@@ -1,0 +1,262 @@
+{
+ "results": [
+  {
+   "check": "G: independent forward-op recomputation matches the builder's table",
+   "pass": true,
+   "detail": "mine=178,881 builder=178,881"
+  },
+  {
+   "check": "G: independent per-update cost matches the builder's table",
+   "pass": true,
+   "detail": "mine=2,229,520 builder=2,229,520"
+  },
+  {
+   "check": "T: independent forward-op recomputation matches the builder's table",
+   "pass": true,
+   "detail": "mine=241,917 builder=241,917"
+  },
+  {
+   "check": "T: independent per-update cost matches the builder's table",
+   "pass": true,
+   "detail": "mine=2,999,392 builder=2,999,392"
+  },
+  {
+   "check": "the transformer is charged DENSE 17x17 attention, as ruling A1 requires when that is what executes",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "G: the frozen reservation itemises every category ruling A1 names",
+   "pass": true,
+   "detail": "missing=none; present=['final_audit_forward', 'final_audit_loss', 'initial_audit_forward', 'initial_audit_loss', 'initial_query_panel_forward', 'initialization', 'rung_query_panel_forward', 'selection_forward', 'selection_loss']"
+  },
+  {
+   "check": "G: loss computation is charged for every scored set",
+   "pass": true,
+   "detail": "missing=none"
+  },
+  {
+   "check": "T: the frozen reservation itemises every category ruling A1 names",
+   "pass": true,
+   "detail": "missing=none; present=['final_audit_forward', 'final_audit_loss', 'initial_audit_forward', 'initial_audit_loss', 'initial_query_panel_forward', 'initialization', 'rung_query_panel_forward', 'selection_forward', 'selection_loss']"
+  },
+  {
+   "check": "T: loss computation is charged for every scored set",
+   "pass": true,
+   "detail": "missing=none"
+  },
+  {
+   "check": "G: the fitting loss is inside the per-update charge",
+   "pass": true,
+   "detail": "update=2,229,520; forward-only 3x bound=2,146,572"
+  },
+  {
+   "check": "T: the fitting loss is inside the per-update charge",
+   "pass": true,
+   "detail": "update=2,999,392; forward-only 3x bound=2,903,004"
+  },
+  {
+   "check": "total optimizer updates per fit, by convention / tier / arm",
+   "pass": null,
+   "detail": "{\n \"registered (MAC=2, dense 17x17 attention, backward=2x)\": {\n  \"L/G\": 370,\n  \"L/T\": 254,\n  \"H/G\": 2163,\n  \"H/T\": 1588\n },\n \"alternative (MAC=1 fused, causal-triangular attention, backward=2x, elementwise/activation/LN/softmax all 1 op)\": {\n  \"L/G\": 773,\n  \"L/T\": 618,\n  \"H/G\": 4177,\n  \"H/T\": 3403\n },\n \"third (registered operators but backward=1x and no optimizer charge)\": {\n  \"L/G\": 577,\n  \"L/T\": 394,\n  \"H/G\": 3372,\n  \"H/T\": 2461\n }\n}"
+  },
+  {
+   "check": "the builder's own frozen step table (current build)",
+   "pass": null,
+   "detail": "{\"L/G\": 370, \"L/T\": 254, \"H/G\": 2163, \"H/T\": 1588}"
+  },
+  {
+   "check": "my registered-convention recomputation reproduces the builder's step table",
+   "pass": true,
+   "detail": "{\"L/G\": [370, 370], \"L/T\": [254, 254], \"H/G\": [2163, 2163], \"H/T\": [1588, 1588]}"
+  },
+  {
+   "check": "the provisional 378 (G) / 262 (T) headline",
+   "pass": null,
+   "detail": "under the reconciled ledger the tier-L totals are G=370 and T=254 updates per fit (1480 and 1016 sampled examples). The 378/262 figures quoted before reconciliation were computed WITHOUT initialization, the initial query panel or loss, so they were upper bounds; ruling A1 already calls them provisional."
+  },
+  {
+   "check": "sensitivity of the update total to the op-counting convention [registered, alternative, third]",
+   "pass": null,
+   "detail": "{\"L/G\": [370, 773, 577], \"L/T\": [254, 618, 394], \"H/G\": [2163, 4177, 3372], \"H/T\": [1588, 3403, 2461]}"
+  },
+  {
+   "check": "tier L: planned counted use is within 5% across arms at EVERY rung and never over the allowance",
+   "pass": true,
+   "detail": "per-rung relative gaps B=32:0.0006, B=64:0.0010, B=128:0.0141, B=256:0.0008, B=512:0.0001; worst=0.0141"
+  },
+  {
+   "check": "tier H: planned counted use is within 5% across arms at EVERY rung and never over the allowance",
+   "pass": true,
+   "detail": "per-rung relative gaps B=32:0.0006, B=64:0.0002, B=128:0.0001, B=256:0.0002, B=512:0.0004; worst=0.0006"
+  },
+  {
+   "check": "does the budget confound a 'too hard' verdict?",
+   "pass": null,
+   "detail": "Tier L buys G=370 and T=254 complete optimizer updates for an ENTIRE fit across all five nested rungs, i.e. 1480 and 1016 sampled (episode, endpoint) examples total, from a 5,921/6,881-parameter model. That is two to three orders of magnitude below what a small sequence model normally needs to fit an eight-step forecasting task, so a tier-L 'too hard' verdict is NOT separable from under-training on its own evidence. Ruling A3 already forbids reading it that way and requires tier H. Tier H buys G=2163 and T=1588 updates, ~5x more, which is a controlled increase but still small in absolute terms: even an H failure supports only 'not learned by these baselines under either registered budget', exactly as ruling A3 step 5 words it."
+  },
+  {
+   "check": "worst-case L+H counted work for wave 1",
+   "pass": null,
+   "detail": "one world x seed for BOTH arms costs 1,989,500,390 ops at tier L and 9,988,218,678 at tier H; over 12 worlds x 3 seeds that is 71,622,014,040 (L) + 359,575,872,408 (H) = 431,197,886,448 counted operations for the complete fallback schedule, i.e. tier H alone is 5.0x tier L. Ruling A3 requires the projection to be made in SECONDS from a synthetic-timing fixture at the real vectorised shapes, including scoring and writes, with the 1.5x margin and the 300 s reserve inside 1,200 s. Counted operations are not seconds: for models this small the wave is dominated by per-kernel launch overhead, not arithmetic, so the reported ~80 s for L cannot be scaled by the op ratio to project L+H. The preflight measurement is still OUTSTANDING and is a must-fix before the freeze."
+  }
+ ],
+ "summary": {
+  "registered (MAC=2, dense 17x17 attention, backward=2x)": {
+   "L/G": {
+    "per_update_ops": 2229520,
+    "steps_per_rung": [
+     62,
+     81,
+     81,
+     80,
+     66
+    ],
+    "total_updates_per_fit": 370,
+    "examples_seen": 1480
+   },
+   "L/T": {
+    "per_update_ops": 2999392,
+    "steps_per_rung": [
+     39,
+     58,
+     57,
+     57,
+     43
+    ],
+    "total_updates_per_fit": 254,
+    "examples_seen": 1016
+   },
+   "H/G": {
+    "per_update_ops": 2229520,
+    "steps_per_rung": [
+     421,
+     440,
+     439,
+     438,
+     425
+    ],
+    "total_updates_per_fit": 2163,
+    "examples_seen": 8652
+   },
+   "H/T": {
+    "per_update_ops": 2999392,
+    "steps_per_rung": [
+     306,
+     325,
+     324,
+     323,
+     310
+    ],
+    "total_updates_per_fit": 1588,
+    "examples_seen": 6352
+   }
+  },
+  "alternative (MAC=1 fused, causal-triangular attention, backward=2x, elementwise/activation/LN/softmax all 1 op)": {
+   "L/G": {
+    "per_update_ops": 1175689,
+    "steps_per_rung": [
+     143,
+     162,
+     161,
+     160,
+     147
+    ],
+    "total_updates_per_fit": 773,
+    "examples_seen": 3092
+   },
+   "L/T": {
+    "per_update_ops": 1436377,
+    "steps_per_rung": [
+     112,
+     131,
+     130,
+     129,
+     116
+    ],
+    "total_updates_per_fit": 618,
+    "examples_seen": 2472
+   },
+   "H/G": {
+    "per_update_ops": 1175689,
+    "steps_per_rung": [
+     824,
+     842,
+     842,
+     841,
+     828
+    ],
+    "total_updates_per_fit": 4177,
+    "examples_seen": 16708
+   },
+   "H/T": {
+    "per_update_ops": 1436377,
+    "steps_per_rung": [
+     669,
+     688,
+     687,
+     686,
+     673
+    ],
+    "total_updates_per_fit": 3403,
+    "examples_seen": 13612
+   }
+  },
+  "third (registered operators but backward=1x and no optimizer charge)": {
+   "L/G": {
+    "per_update_ops": 1431084,
+    "steps_per_rung": [
+     97,
+     127,
+     126,
+     124,
+     103
+    ],
+    "total_updates_per_fit": 577,
+    "examples_seen": 2308
+   },
+   "L/T": {
+    "per_update_ops": 1935372,
+    "steps_per_rung": [
+     60,
+     90,
+     89,
+     88,
+     67
+    ],
+    "total_updates_per_fit": 394,
+    "examples_seen": 1576
+   },
+   "H/G": {
+    "per_update_ops": 1431084,
+    "steps_per_rung": [
+     656,
+     686,
+     685,
+     683,
+     662
+    ],
+    "total_updates_per_fit": 3372,
+    "examples_seen": 13488
+   },
+   "H/T": {
+    "per_update_ops": 1935372,
+    "steps_per_rung": [
+     474,
+     503,
+     503,
+     501,
+     480
+    ],
+    "total_updates_per_fit": 2461,
+    "examples_seen": 9844
+   }
+  }
+ },
+ "builder_step_totals": {
+  "L/G": 370,
+  "L/T": 254,
+  "H/G": 2163,
+  "H/T": 1588
+ }
+}

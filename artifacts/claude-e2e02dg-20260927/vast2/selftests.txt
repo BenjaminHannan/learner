@@ -1,0 +1,42 @@
+Traceback (most recent call last):
+  File "/root/r/scripts/claude_e2e02d.py", line 463, in <module>
+    selftest()
+  File "/root/r/scripts/claude_e2e02d.py", line 358, in selftest
+    import claude_lis300_compiler as CMP
+  File "/root/r/scripts/claude_lis300_compiler.py", line 23, in <module>
+    REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/r/design/v3/60-listener/relation-names.txt'
+rc=1
+Traceback (most recent call last):
+  File "/root/r/scripts/claude_e2e02d_g.py", line 444, in <module>
+    main()
+  File "/root/r/scripts/claude_e2e02d_g.py", line 429, in main
+    selftest()
+  File "/root/r/scripts/claude_e2e02d_g.py", line 248, in selftest
+    import claude_lis300_compiler as CMP
+  File "/root/r/scripts/claude_lis300_compiler.py", line 23, in <module>
+    REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/r/design/v3/60-listener/relation-names.txt'
+rc=1
+PASS equal rows compare equal
+PASS a changed cite differs
+PASS only text, cites, when compared; raw counted apart
+PASS unparsed differs from no notes
+PASS p90 nearest rank
+PASS W2 fails on any non-heard recall row
+E2E02DG-CHECKS-SELFTEST PASS 6/6
+rc=0

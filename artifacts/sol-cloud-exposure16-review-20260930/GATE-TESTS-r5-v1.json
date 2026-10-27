@@ -1,0 +1,216 @@
+{
+  "GPU_calls": 0,
+  "Windows_target_runtime_timeout_verified": false,
+  "actual_processes_launched": 0,
+  "all_gate_tests_passed": true,
+  "all_generated_artifacts_are_nontraining": true,
+  "driver_sha256": "9e01bc1505a87fce53831e6a618239dbf76217aebc8312cb1125fdf5259092db",
+  "gate_test_count": 20,
+  "gate_tests": [
+    {
+      "name": "missing_JOB_TREE_run_rejects_before_Torch",
+      "passed": true
+    },
+    {
+      "mock_only": true,
+      "name": "mock_positive_seed0",
+      "passed": true,
+      "rows": 16,
+      "scheduled_updates": 800
+    },
+    {
+      "mock_only": true,
+      "name": "mock_positive_seed1",
+      "passed": true,
+      "rows": 16,
+      "scheduled_updates": 800
+    },
+    {
+      "name": "bridge_unresolved",
+      "passed": true,
+      "rejection": "exact reviewed fit release absent or bridge priority unresolved"
+    },
+    {
+      "name": "no_parent_release",
+      "passed": true,
+      "rejection": "exact reviewed fit release absent or bridge priority unresolved"
+    },
+    {
+      "name": "wrong_release_seal",
+      "passed": true,
+      "rejection": "exact reviewed fit release absent or bridge priority unresolved"
+    },
+    {
+      "name": "independent_review_not_approved",
+      "passed": true,
+      "rejection": "independent pre-run review has not approved this exact seal"
+    },
+    {
+      "name": "wrong_review_seal",
+      "passed": true,
+      "rejection": "independent pre-run review has not approved this exact seal"
+    },
+    {
+      "name": "stale_inventory",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "future_inventory",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "GPU_inventory_unverified",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "project_GPU_process_present",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "other_watcher_claim_present",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "checkpoint_closure_unverified",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "serialization_bound_unverified",
+      "passed": true,
+      "rejection": "fresh exclusive PC/GPU/watcher/closure inventory required"
+    },
+    {
+      "name": "delivery_over_cap",
+      "passed": true,
+      "rejection": "actual delivered code/packet bytes exceed included delivery allowance"
+    },
+    {
+      "name": "delivery_missing",
+      "passed": true,
+      "rejection": "actual delivered code/packet bytes exceed included delivery allowance"
+    },
+    {
+      "name": "delivery_boolean_rejected",
+      "passed": true,
+      "rejection": "actual delivered code/packet bytes exceed included delivery allowance"
+    },
+    {
+      "name": "startup_free_one_byte_short",
+      "passed": true,
+      "rejection": "current startup free space below sealed reserve"
+    },
+    {
+      "name": "wrong_physical_warm_checkpoint_pin",
+      "passed": true,
+      "rejection": "original V11 closed200 tuple differs: parent"
+    }
+  ],
+  "mock_release_and_mock_physical_pins_only": true,
+  "models_loaded": 0,
+  "no_real_release_or_inventory_created": true,
+  "observed_utc": "2026-09-30T08:58:17.264365+00:00",
+  "optimizer_updates": 0,
+  "raw_official_corpus_opened": false,
+  "reserved_content_opened": false,
+  "schema": "sol.cloud.exposure16.independent.mock-gate-tests.v1",
+  "seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "supervisor_test_count": 3,
+  "supervisor_tests": [
+    {
+      "actual_processes_killed": 0,
+      "actual_processes_launched": 0,
+      "mock_calls": [
+        [
+          "Popen_mock",
+          true,
+          true,
+          null
+        ],
+        [
+          "wait",
+          570
+        ]
+      ],
+      "name": "posix_normal",
+      "passed": true
+    },
+    {
+      "actual_processes_killed": 0,
+      "actual_processes_launched": 0,
+      "mock_calls": [
+        [
+          "Popen_mock",
+          true,
+          false,
+          512
+        ],
+        [
+          "wait",
+          570
+        ],
+        [
+          "taskkill_mock",
+          [
+            "taskkill",
+            "/PID",
+            "424242",
+            "/T",
+            "/F"
+          ],
+          {
+            "check": true,
+            "timeout": 10
+          }
+        ],
+        [
+          "wait",
+          10
+        ]
+      ],
+      "name": "nt_timeout",
+      "passed": true
+    },
+    {
+      "actual_processes_killed": 0,
+      "actual_processes_launched": 0,
+      "mock_calls": [
+        [
+          "Popen_mock",
+          true,
+          true,
+          null
+        ],
+        [
+          "wait",
+          570
+        ],
+        [
+          "killpg_mock",
+          424242,
+          15
+        ],
+        [
+          "wait",
+          3
+        ],
+        [
+          "killpg_mock",
+          424242,
+          9
+        ],
+        [
+          "wait",
+          10
+        ]
+      ],
+      "name": "posix_timeout",
+      "passed": true
+    }
+  ]
+}

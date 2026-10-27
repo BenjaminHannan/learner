@@ -1,0 +1,28 @@
+# Stage 1 run log
+
+2026-10-23 ~20:15Z. Settings fixed before launch (the prereg left these open): STEPS=1500, bsz 16, max-len 2048
+(1024 would cut the evidence out of ~60% of contexts), LoRA r16, lr 2e-4 cosine, seed 0. A per-arm time
+budget can lower the step count once at step 20 (logged as steps vs steps_requested); any such cut is reported.
+Boxes (Vast, run in parallel, each self-stops at 3 h):
+- 57420072 claude-bb-a  A100 PCIE 40GB $0.443/h: arms a0, a
+- 57420069 claude-bb-b  A100 SXM4 40GB $0.539/h: arm b, then b with --eval-loops 1
+- 57420065 claude-bb-a2 A100 SXM4 40GB $0.416/h: arm a2 (Qwen3.5-2B), micro-batch 2
+- 57420074 claude-bb-27b RTX PRO 6000 96GB $1.20/h: Qwen3.8-27B untrained 3-shot reference (vLLM, max-len 4096; no mark)
+First launch (~20:05Z) failed at unpack (no xz in the image; boxes destroyed after ~10 min, < $0.40 total); relaunched 20:17Z with gzip.
+Second launch (20:15Z) failed: the runtime image has no C compiler, which Triton needs for the linear-attention
+kernels (fla, and vLLM's). Relaunched 20:27Z on the -devel image: a 57421039, b 57421036, a2 57421035, 27b 57421042.
+20:58Z: the time budget cut arm b to 418 steps (about 4 s/step on the A100 with the loop). Arm a's own budget will
+give it more steps, so an extra box runs arm a at exactly 418 steps (claude-bb-a418) for the prereg's equal-steps
+comparison; the longer arm a run is reported too. 27B box relaunched with max_num_seqs=256 (vLLM refused 1024:
+too few linear-attention state slots).
+- 23:12Z claude-bb-probes: arm a, 418 steps (no budget), also scored on the generalization thread's P0 and Pword probes (generalize.probes @21b4d92b7, seed 101, 500 visits each, generated on the box with that commit's learnlab in backbone/genlab).
+- 23:17Z: boxes a2 (57421035) and a418 (57424117) never returned logs (Vast log API failed for that California host the whole run), so their results are lost; destroyed. a2 relaunched in New York at a fixed 418 steps + probes (claude-bb-a2b); a418 is replaced by claude-bb-probes.
+- 00:08Z Sleep-1 box claude-bb-sleep1 (A100 SXM4 NY, $0.54/h): arms s2,s0,ic,s1 on Qwen3.5-2B.
+- 00:46Z claude-bb-probes2: arm a 418 steps, probes Pname,Pdepth,Prule (requested by the generalization thread).
+- 00:48Z claude-bb-creative1 (NY A100): Creative-1 arms f0,c16,sleep on Qwen3.5-0.8B.
+- 01:17Z sleep1 and creative1 boxes on NY hosts never uploaded logs (S3 403 for 70+ min); destroyed and relaunched (Quebec, Slovenia). Boxes now also write result summaries into their instance label.
+- 01:47Z creative1 box 57448229 finished; result JSONs pulled with `vast.py cat` after stopping (cat only works on stopped boxes), then destroyed.
+- 01:58Z claude-bb-creative2 (Slovenia A100, box 57450816): Creative-2 = Creative-1 arms with CREATIVE_FLAGS=--no-branch.
+- 12:20Z claude-bb-loop1l (Spain A100 PCIE 80GB, $0.47/h, 5 h cap): Loop-1L arms a,b,c x seeds 0-3 (addenda 1-2). First box (57508429) destroyed before start to add random passes.
+- 2026-10-24T12:40:06Z Loop-1L box 57514215 (offer 57072745 A100 80GB FR $0.936/h, --hours 2, disk 120). Third attempt after curl fix.
+- 2026-10-24T14:58:58Z Loop-1L box 57514215 destroyed after pull; ~$2.0 (+$0.7 failed starts). See RESULTS-loop1L.md.

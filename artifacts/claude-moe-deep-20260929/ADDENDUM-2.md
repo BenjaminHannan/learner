@@ -1,0 +1,11 @@
+# ADDENDUM-2: a CUDA crash in a report-only check; rerun of phase 1 with a fixed wrapper
+
+Written 2026-09-29 13:44 UTC (date -u), before any maze score of this test (no maze ladder has started on any machine). Thresholds, comparator and order in PASSMARKS.md and ADDENDUM-1.md are unchanged.
+
+**What happened (shown, from the instance log of vast 53347127):** both seeds finished all 12,000 source-practice steps (last-250-step mean loss 0.0147 in seed 1; routing probe at step 12,000: 0 dead experts, busiest/mean load 1.80 on sums and 1.62 on grids), then crashed at 12:56 and 12:58 UTC in `expert_gradient_check` with "Expected all tensors to be on the same device ... cuda:0 and cpu". Cause: under `torch.set_default_device('cuda')` the per-expert tally `torch.zeros(...)` is made on the GPU, and `|=` with a CPU tensor fails. It is a report-only count (V2 gates only the harness gradient check). No source.json was written, so no V1 result exists for those nets; the box could only run its pinned code, so it was destroyed (spend to that point, both rentals: $1.31, credit $21.29 -> $19.98). The smoke-check rental 53348838 never reported (status never readable) and was destroyed.
+
+**Fix (no sealed file edited):** `scripts/claude_moe_deep_run2.py` imports the sealed driver, replaces two report-only helpers and exposes the same command line: `cpu_state()` returns clones (ADDENDUM-1's smoke fix, so the smoke run through it is the corrected one) and `expert_gradient_check()` builds its tally on the CPU. Training, scoring, data, ladder, holdout and marks are the sealed code.
+
+**Rerun:** a new rental runs `vast/box2.py`: selftest, then `vast/dryrun.py` (the whole pipeline once on the GPU with toy budgets, in a scratch folder; nothing real is run unless it prints PLUMBING OK), then the corrected smoke, then phase 1 from scratch (both seeds, same seeds and recipe; the lost practice is simply redone), then the holdout only after the dev records are committed to main. Bundle lines are now 400 characters (the log cuts at 500).
+
+**Money:** Ben asked for vast. This rerun's guard: stop (not destroy, so files can be read) at $3.00 for this rental. Expected about 4.5 h at about $0.33/h, about $1.50 (suggested; the first rental measured 7,374 s for 12,000 practice steps with the two seeds sharing the GPU).

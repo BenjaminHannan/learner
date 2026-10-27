@@ -1,0 +1,9 @@
+COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.
+GPU: no (Mac CPU only; about 10 network calls to OpenRouter, a few minutes, under $0.10).
+
+YOUR TASK: ideajudge-teacher, a DEV agreement check (no training). Code: scripts/claude_ideajudge_teacher.py (read its docstring). Run it, never edit it; if it breaks, stop and report the exact error.
+KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.
+1. Put these origin/main files in a temp dir with `git archive origin/main scripts/claude_ideajudge_teacher.py artifacts/claude-cre333e-dev-20260924/items.jsonl artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl artifacts/claude-blurt1-dev-20260925/labels | tar -x -C <tmp>`, and run from there (python via uv run --offline --no-project --python 3.12 python -B; standard library only):
+   python -B scripts/claude_ideajudge_teacher.py --dev artifacts/claude-cre333e-dev-20260924 --blurts artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl --labels artifacts/claude-blurt1-dev-20260925/labels/labels0.jsonl,artifacts/claude-blurt1-dev-20260925/labels/labels1.jsonl --out artifacts/claude-blurt2-20260925/teacher
+2. Copy artifacts/claude-blurt2-20260925/teacher/ (labels_teacher.jsonl, agreement.json) and the console log (as teacher/log.txt) into the worktree. Report the last printed line.
+PUSH: artifacts/claude-blurt2-20260925/teacher

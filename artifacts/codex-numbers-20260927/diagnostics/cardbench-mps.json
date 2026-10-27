@@ -1,0 +1,242 @@
+{
+  "device": "mps",
+  "dtype": "float32",
+  "torch": "2.11.0",
+  "smoke_data_seed": 9276991,
+  "smoke_model_seed": 9276992,
+  "width": 256,
+  "batch": 128,
+  "free_rounds": 5,
+  "graded_rounds": 3,
+  "practice_kinds": [
+    "sums4",
+    "grids5",
+    "numbers4"
+  ],
+  "results": [
+    {
+      "variant": "baseline",
+      "weights": 1646494,
+      "warmup_steps": 3,
+      "measured_steps": 15,
+      "seconds_per_step_mean": 0.08061510833322245,
+      "seconds_per_step_min": 0.060779500000535336,
+      "seconds_per_step_max": 0.112015749999955,
+      "measured_kind_sequence": [
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4"
+      ],
+      "all_core_gradients_finite": true,
+      "all_card_gradients_finite": null,
+      "all_card_gradients_nonzero": null,
+      "trainer_gradient_audit": {
+        "steps_seen": 18,
+        "block_linear_matrices": 8,
+        "steps_block_missing": 0,
+        "steps_block_allzero": 0,
+        "steps_block_nograd": 0,
+        "grad_norms": [
+          {
+            "step": 1,
+            "block0": 1.6278349161148071,
+            "block1": 1.602790355682373
+          }
+        ],
+        "card_gradient_check": {
+          "parameters": 0,
+          "multi_grad_steps": 0,
+          "single_grad_steps_exempt": 0,
+          "multi_grad_steps_nograd": 0,
+          "per_parameter_counts": {},
+          "per_parameter_norms": []
+        }
+      },
+      "losses": [
+        4.329016208648682,
+        4.586701393127441,
+        4.561689376831055,
+        3.932265520095825,
+        4.229190349578857,
+        4.2726874351501465,
+        3.750141143798828,
+        4.022436618804932,
+        4.097972393035889,
+        3.6675188541412354,
+        3.881671190261841,
+        3.980360984802246,
+        3.621953010559082,
+        3.7717788219451904,
+        3.8988893032073975
+      ],
+      "input_tensors_preloaded_on_device": true,
+      "data_generation_and_transfer_timed": false,
+      "extra_per_step_finite_gradient_validation_included": true,
+      "mps_current_allocated_bytes_post_step_max_observed": 33724672,
+      "mps_driver_allocated_bytes_post_step_max_observed": 1435402240
+    },
+    {
+      "variant": "candidate",
+      "weights": 1659424,
+      "warmup_steps": 3,
+      "measured_steps": 15,
+      "seconds_per_step_mean": 0.09931283039998864,
+      "seconds_per_step_min": 0.07768099999975675,
+      "seconds_per_step_max": 0.1323586250000517,
+      "measured_kind_sequence": [
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4",
+        "sums4",
+        "grids5",
+        "numbers4"
+      ],
+      "all_core_gradients_finite": true,
+      "all_card_gradients_finite": true,
+      "all_card_gradients_nonzero": true,
+      "trainer_gradient_audit": {
+        "steps_seen": 18,
+        "block_linear_matrices": 8,
+        "steps_block_missing": 0,
+        "steps_block_allzero": 0,
+        "steps_block_nograd": 0,
+        "grad_norms": [
+          {
+            "step": 1,
+            "block0": 1.6263234615325928,
+            "block1": 1.6012468338012695
+          }
+        ],
+        "card_gradient_check": {
+          "parameters": 8,
+          "multi_grad_steps": 18,
+          "single_grad_steps_exempt": 0,
+          "multi_grad_steps_nograd": 0,
+          "per_parameter_counts": {
+            "addresses": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "wq.weight": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "wk.weight": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "wv.weight": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "read_gate.weight": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "read_gate.bias": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "write_gate.weight": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            },
+            "write_gate.bias": {
+              "missing_steps": 0,
+              "finite_steps": 18,
+              "nonfinite_steps": 0,
+              "nonfinite_any_step": 0,
+              "nonzero_steps": 18,
+              "zero_steps": 0
+            }
+          },
+          "per_parameter_norms": [
+            {
+              "step": 1,
+              "addresses": 9.808471986616496e-06,
+              "wq.weight": 0.00012799716205336154,
+              "wk.weight": 1.357204200758133e-05,
+              "wv.weight": 0.027559444308280945,
+              "read_gate.weight": 0.006208334118127823,
+              "read_gate.bias": 0.0005105992895551026,
+              "write_gate.weight": 0.0007857172167859972,
+              "write_gate.bias": 6.461286102421582e-05
+            }
+          ]
+        }
+      },
+      "losses": [
+        4.329486846923828,
+        4.5874433517456055,
+        4.560737133026123,
+        3.9329044818878174,
+        4.229977130889893,
+        4.2720627784729,
+        3.7508649826049805,
+        4.023051738739014,
+        4.09765100479126,
+        3.6681668758392334,
+        3.8820059299468994,
+        3.9803450107574463,
+        3.622526168823242,
+        3.771918535232544,
+        3.899165391921997
+      ],
+      "input_tensors_preloaded_on_device": true,
+      "data_generation_and_transfer_timed": false,
+      "extra_per_step_finite_gradient_validation_included": true,
+      "mps_current_allocated_bytes_post_step_max_observed": 39281152,
+      "mps_driver_allocated_bytes_post_step_max_observed": 1452359680
+    }
+  ],
+  "candidate_over_baseline_step_time_ratio": 1.2319381869398374
+}

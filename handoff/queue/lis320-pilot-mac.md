@@ -1,0 +1,12 @@
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU only; 30 network calls to OpenRouter, GLM 5.3 Flash; expected well under $1). No reader, no rental, no BensPC. Label: lis320-pilot. TIME CAP: 40 minutes. DISK: 1.
+KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.
+WHY: Ben chose "Retrain first" (16:46 UTC): the next reader (lis-320) trains only on GLM-written chats with code-written, code-checked labels. This pilot measures the code-check pass rate, the cost per 1,000 rows and how chat-like GLM's wording is, before any full run. Nothing is trained.
+
+1. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/pilot; mkdir -p $O.
+2. python3 -B scripts/claude_lis320_seed.py --seed 320 --n 30 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --out $O/seeds.jsonl   (record the printed counts)
+3. python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl   (30 calls; record the printed totals: calls, parsed, tokens, cost_usd). If a call fails 4 times the script moves on; report how many.
+4. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)
+5. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)
+6. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, style.json) into artifacts/claude-lis320-20260926/pilot/ of your worktree and write RESULTS.md there: every printed count verbatim, the total cost in USD from step 3 (if the usage has no cost, give the token totals), wall time, and any error. GLM output may be quoted (it is not Claude text), but keep RESULTS.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis320-20260926/pilot

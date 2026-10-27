@@ -1,0 +1,17 @@
+EARS rung 2 registered training wave — running log (arm C, SciBERT + frame head)
+Started 2026-09-22 ~02:06 UTC. Seal verified from artifacts/fable-ears47-20260921/:
+12/12 OK (PASSMARKS.md, relation_classes.json, 10 panels).
+Predictions P47.1/P47.2 appended to artifacts/fable-predictions-ledger.md before the run;
+outcome forecasts P205-P208 stand as written 2026-09-21.
+
+02:06 UTC — seal OK, ledger appended. Next: copy files to BensPC C:\Users\benja\fable47\.
+02:1x UTC — BensPC: snapshot ensured at C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1; pytorch_model.bin 442,221,694 bytes (~442 MB, ~440 MB as stated).
+Pool built per PASSMARKS s6 (no --qwen, skipped per s2.13): kept=140903 dropped=614 -> pool.jsonl. (60000 synth + 81517 webred - 614 dropped = 140903. Matches s3.3.)
+Next: smoke run 200 steps seed 4701 --smoke on CUDA.
+Smoke per PASSMARKS 3.5 (--smoke, pool 2048): only 64 steps possible (2048/32=64/epoch x1 epoch; script caps at min(64,200)). Result: cuda, 0.118 s/step, dev_act_acc 0.547. No step-200 print (total<200).
+Extra discarded timing probe (same recipe, full pool, --epochs 2 --steps-cap 200): step200 tokens/s=8285, 0.108 s/step. Full seed = 2*ceil(140903/32)=8808 steps -> ~951 s + overhead ~= 17-18 min/seed, well under 40 min. NO fallback (freeze_layers=0). Both smoke dirs discarded.
+Next: registered seeds 4701,4702,4703 sequentially, fixed recipe.
+Resumed 2026-09-22 (new agent session). Seal re-verified from artifact dir: 12/12 OK. P47.1/P47.2 ledger predictions already present — not duplicated. Found on BensPC: pool.jsonl (140903 rows per 4701 meta), snapshot ensured, seed 4701 REGISTERED run COMPLETE (8808 steps, 2 epochs, batch 32, lr 3e-5, bf16, cuda, freeze 0, dev_act_acc 0.886, ~14.8 min; checkpoint runs/c-4701/ear.pt 438 MB + meta.json). Smoke/probe discarded per PASSMARKS 3.5. Continuing: seeds 4702, 4703 sequentially, same fixed recipe.
+Seed 4702 COMPLETE (8808 steps, cuda, freeze 0, dev_act_acc 0.890, ~7.9 min; 19634 tok/s at step 200).
+Seed 4703 first launch FAILED FAST on a mistyped snapshot hash (FileNotFoundError before training, no state written); re-launched with the correct snapshot 24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1 — COMPLETE (8808 steps, cuda, freeze 0, dev_act_acc 0.888, ~7.9 min).
+Scored on BensPC with the sealed scripts (same panels/snapshot; Mac has no torch): tau0=0.7532 tau_exec=0.8766. Verdict: registered FAIL (SAFE 2 silent, SEEN/NEW exec sub-marks missed, WEB 0/46 executed). Checkpoints (ear.pt+meta.json x3), train logs, report.json, score.log copied back to runs/ on the Mac. Ledger outcomes appended (P47.1 TRUE, P47.2 TRUE, P205 FALSE, P206 MIXED, P207 TRUE, P208 N/A). RESULTS.md written (947 words). Wave closed — no fix cycle per PASSMARKS s7.

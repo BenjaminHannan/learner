@@ -1,0 +1,185 @@
+kit opcpu dry-run tests, 2026-09-29T04:12:39Z (real clock; the fakes run a virtual clock 60 times faster)
+test repo $TMPDIR/opctest.y5UvAG/repo, PIN 69ce86e7246554579648d528e9809997927e6e4e (PIN0 without the s1 folder: 86fcd93571c52b77201eee4bf431638aa6189b31)
+
+== 0. static checks
+   ok    bash -n vcommon.sh
+   ok    bash -n vstart.sh
+   ok    bash -n vguard.sh
+   ok    bash -n vcollect.sh
+   ok    bash -n box/drive.sh
+   ok    bash -n box/pack.sh
+   ok    bash -n box/jlib.sh
+   ok    bash -n box/job-ks.sh
+   ok    bash -n box/job-s2think.sh
+   ok    bash -n box/job-trn.sh
+   ok    bash -n box/job-pond.sh
+   ok    bash -n box/job-doubt.sh
+   ok    bash -n box/job-s1.sh
+   ok    bash -n test/fake_run.sh
+   ok    bash -n test/bin/vastai
+   ok    bash -n test/bin/ssh
+   ok    bash -n test/bin/date
+   ok    bash -n test/bin/sleep
+   ok    bash -n test/bin/caffeinate
+   ok    fake python parses
+   ok    no bash-4-only syntax in the Mac-side scripts (declare -A, mapfile, readarray, wait -n, |&, ${x,,}, &>>)
+   ok    the Mac-side scripts never use the timeout command (macOS has none)
+   ok    kit never reads a vast key or ~/.config/vastai
+   ok    the only ssh key file read is the .pub (no cat of a private key)
+   ok    the launch line has no unbraced form
+   ok    guard and drive read no GPU utilisation
+   ok    no git commit / push / checkout / add / reset in the kit scripts
+   ok    no job opens holdout / test.pt / readpanel / blind panels
+   ok    vcollect writes only under the cpu-vast folder
+   ok    the collect queue file's PUSH is only that folder
+   ok    collect file is HELD
+   ok    no LOAD-LIGHT line in either queue file
+   ok    start file has BASH-ONLY: yes
+   ok    start file has the PIN placeholder
+
+== 1. happy path: start, guard, verified copy, destroy by exact id, collect, second start refused
+   ok    start prints STARTED
+   | 2026-09-29T04:13:56Z inputs: 14 files; plain=1 trn=1
+   | offers, lowest $/h per CPU core first (id $/h cores host gpu milli-$/h-per-core est_hours):
+   | 2026-09-29T04:14:11Z rental 1: instance 7000001 (offer 2006, host 26, gpu RTX_3060 unused, 40 cores, $0.15/h, 3.75 milli-$/h per core)
+   | 2026-09-29T04:16:16Z estimate 5.0 h; time cap 25200 s (7 h); money stop $2.50
+   | 2026-09-29T04:16:19Z INPUTS 14 files match
+   | 2026-09-29T04:16:27Z TORCH torch 2.14.0+cpu numpy 2.4.6 cuda False built-with-cuda None
+   | 2026-09-29T04:16:28Z LAUNCH ks-1-lead0 subshell 7874
+   | 2026-09-29T04:16:28Z LAUNCH pond-a-dev subshell 7883
+   | 2026-09-29T04:16:30Z LAUNCH pond-b-dev subshell 7898
+   | 2026-09-29T04:16:31Z LAUNCH pond-c-dev subshell 7915
+   | 2026-09-29T04:16:32Z LAUNCH pond-z-dev subshell 7943
+   | 2026-09-29T04:16:34Z LAUNCH s1-loop subshell 7974
+   ok    the cheapest $/h per core was rented (offer 2006: 40 cores at $0.15/h)
+   ok    the excluded host, the too-few-core and the over-price offers were never created
+   ok    the image is a plain pytorch image
+   ok    the rental venv python is the FAKE (the real pip/python never runs in these tests)
+   ok    drive-state: torch check ok (2.14.0+cpu, cuda False)
+   ok    drive-state: inputs hash-checked on the rental (4 + 4 plain + 6 trn = 14 files)
+   | END: END DONE spent 0.03
+   ok    guard ended DONE
+   ok    all 10 jobs ended rc 0
+   ok    wave 1 launched ks, pond a/b/c/z, s1-loop, s1-plain before LAUNCHED-ALL
+   ok    COPY-CHECK passed
+   ok    destroyed by exact id 7000001
+   ok    nothing was stopped-not-destroyed
+   ok    no .pt file was copied back
+   ok    the rental did have .pt files (nets stay there)
+   ok    ks nets are where the later jobs read them (KS_NETS)
+   ok    no .pt in the copied manifest
+   ok    pack.sh keeps a normal small file
+   ok    pack.sh drops a .pt, a holdout file and a blind panel file
+   ok    pack.sh recorded them as excluded
+   ok    pond-a ran in its own private folder
+   ok    pond-b ran in its own private folder
+   ok    pond-c ran in its own private folder
+   ok    pond-z ran in its own private folder
+   ok    s1-loop and s1-plain ran in private folders
+   ok    pond-doubt saw the arms through links
+   ok    pond-doubt skipped no arm
+   ok    s2think traced the rebuilt nets (k64, k16384)
+   ok    trn-decode ran (the fake checks it found the loop k16384 link)
+   ok    collect prints COLLECTED
+   | ks-1-lead0: JOB ks-1-lead0 START;JOB ks-1-lead0 END rc 0; files: 14
+   | s2think: JOB s2think START;JOB s2think END rc 0; files: 19
+   | trn-decode: JOB trn-decode START;JOB trn-decode END rc 0; files: 5
+   | pond-a-dev: JOB pond-a-dev START;JOB pond-a-dev END rc 0; files: 10
+   | pond-b-dev: JOB pond-b-dev START;JOB pond-b-dev END rc 0; files: 10
+   | pond-c-dev: JOB pond-c-dev START;JOB pond-c-dev END rc 0; files: 10
+   | pond-z-dev: JOB pond-z-dev START;JOB pond-z-dev END rc 0; files: 10
+   | pond-doubt: JOB pond-doubt START;JOB pond-doubt END rc 0; files: 31
+   | s1-loop: JOB s1-loop START;JOB s1-loop END rc 0; files: 12
+   | s1-plain: JOB s1-plain START;JOB s1-plain END rc 0; files: 12
+   ok    collected ks-1-lead0/artifacts/claude-dir-ks-20260928/lead0/s0-k64.json
+   ok    collected ks-1-lead0/artifacts/claude-dir-ks-20260928/prep/s1.json
+   ok    collected s2think/artifacts/claude-sweep-s2-20260929/JUDGE.txt
+   ok    collected trn-decode/artifacts/claude-dir-trn-20260929/run/mazes.json
+   ok    collected pond-a-dev/artifacts/claude-dir-pond-20260928/JUDGE-dev-a.json
+   ok    collected pond-z-dev/artifacts/claude-dir-pond-20260928/SHA256-pond-z-dev.txt
+   ok    collected pond-doubt/artifacts/claude-dir-pond-20260928/doubt/DOUBT-TABLE-c.txt
+   ok    collected s1-loop/artifacts/claude-s1-d4-20260929/eq-runs/s1-loop-pre-s0/vote.json
+   ok    collected s1-plain/artifacts/claude-s1-d4-20260929/SHA256-s1-plain-dev.txt
+   ok    collected _rental/COLLECT.txt
+   ok    collected _rental/DEVIATIONS.md
+   ok    collected _rental/drive-state.txt
+   ok    collected _rental/INPUTS.txt
+   ok    collected _rental/ks-1-lead0.stdout.txt
+   ok    no .pt in the repo folder
+   ok    nothing outside artifacts/opus-manager-20260929/cpu-vast/ changed in the repo
+   ok    no sealed folder touched
+   ok    a second start is refused (DUPLICATE)
+
+== 2. start refusals: nothing is rented
+   ok    a missing Mac input (qual-loop-s1 source.pt)
+   ok      nothing rented (a missing Mac input (qual-loop-s1 source.pt))
+   ok      no rental record
+   ok    a Mac source.json that does not match SHA256-EQ-RAW.txt
+   ok      nothing rented (a Mac source.json that does not match SHA256-EQ-RAW.txt)
+   ok      no rental record
+   ok    a Mac source.pt that does not match checkpoints-sha256.txt
+   ok      nothing rented (a Mac source.pt that does not match checkpoints-sha256.txt)
+   ok      no rental record
+   ok    credit under $2.50
+   ok      nothing rented (credit)
+   ok    a live instance with the label
+   ok      nothing rented (a live instance with the label)
+   ok      no rental record
+   ok    a pinned commit that lacks the s1 seal
+   ok      nothing rented (a pinned commit that lacks the s1 seal)
+   ok      no rental record
+   ok    no offer fits (over-price, excluded host, too few cores)
+   ok      nothing rented (no offer)
+   ok    no offer fits the estimate x price <= 0.8 x cap rule (est 20 h)
+   ok      nothing rented (fit rule)
+
+== 3. budget stop: jobs still running, jobs halted, partial copy verified, destroyed
+   ok    start prints STARTED
+   | END: END BUDGET-STOP spent 0.95
+   ok    guard ended BUDGET-STOP
+   ok    the jobs were halted before the copy
+   ok    no drive/job/python process is left on the rental
+   ok    partial copy verified against its manifest
+   ok    destroyed by exact id
+
+== 4. drive.sh FAILED (torch pin; pip failure; too few cores): logs copied back, destroyed, START-FAIL
+   ok    start says drive.sh did not launch the jobs
+   ok    END START-FAIL
+   ok    instance destroyed after a verified logs copy
+   ok    no job ran
+   ok    a failed pip install fails closed
+   ok    END START-FAIL
+   ok    a box with too few cores fails closed
+   ok    END START-FAIL
+
+== 5. copy check fails twice: instance STOPPED, not destroyed; collect flags the Director
+   ok    start prints STARTED
+   | END: END DONE-STOPPED-NOT-DESTROYED spent 0.04
+   ok    COPY-CHECK FAIL logged
+   ok    guard ended DONE-STOPPED-NOT-DESTROYED
+   ok    the instance was NOT destroyed
+   ok    it was stopped by exact id
+   ok    collect prints FLAG-DIRECTOR
+
+== 6. missing optional inputs and one failing job: s1-plain and trn-decode SKIPPED, the failure recorded, the rest finish
+   ok    start prints STARTED
+   | END: END DONE spent 0.03
+   ok    s1-plain SKIPPED with its reason
+   ok    trn-decode SKIPPED with its reason
+   ok    the failing job's return code is recorded
+   ok    the other pond arms finished rc 0
+   ok    pond-doubt noted the arm that did not finish and went on
+   ok    pond-doubt ended rc 0
+   ok    guard ended DONE (every job accounted for)
+   ok    destroyed
+   ok    INPUTS.txt says why
+
+== 7. time stop at the time cap: jobs halted, partial copy verified, destroyed
+   ok    start prints STARTED
+   | END: END TIME-STOP spent 0.20
+   ok    guard ended TIME-STOP
+   ok    no drive/job/python process is left
+   ok    destroyed by exact id
+
+passed 137, failed 0
+exit 0

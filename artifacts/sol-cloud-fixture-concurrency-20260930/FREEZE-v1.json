@@ -1,0 +1,57 @@
+{
+  "schema": "sol.cloud.fixture-concurrency-evidence-freeze.v1",
+  "created_utc": "2026-09-30T08:44:29.820669+00:00",
+  "cases_passed": 5,
+  "cases_total": 5,
+  "spawned_child_actions": 27,
+  "successful_child_actions": 10,
+  "expected_rejections": 17,
+  "all_rejections_fixture_errors": true,
+  "production_and_human_packet_pins_unchanged": {
+    "scripts/sol_cloud_fixture_v1.py": true,
+    "scripts/sol_cloud_day_adapter_v1.py": true,
+    "scripts/sol_cloud_trainonly_v1.py": true,
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-PACKET.json": true,
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-MANIFEST.json": true
+  },
+  "human_train_record_id": "5733be284776f41900661182",
+  "actual_user_day": false,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "network_calls": 0,
+  "queue_created": false,
+  "source_mutations": 0,
+  "files": [
+    {
+      "path": "scripts/test_sol_cloud_fixture_concurrency_v1.py",
+      "sha256": "4141c1d2f287d6395341d841034b3d8b61452d158d698c6db1faaa6ee5744fee",
+      "bytes": 17129
+    },
+    {
+      "path": "artifacts/sol-cloud-fixture-concurrency-20260930/run-v1/EVENTS.jsonl",
+      "sha256": "05505da9f96bf1fc30b06d8abbd5c9b180e5c67903d70ad3044ebb547f0bb4b5",
+      "bytes": 548
+    },
+    {
+      "path": "artifacts/sol-cloud-fixture-concurrency-20260930/run-v1/PRE-RUN.json",
+      "sha256": "455e3045eac777241668ca1dc8b61cca687c5154fae7ba83bfa6d9367a196c9a",
+      "bytes": 1487
+    },
+    {
+      "path": "artifacts/sol-cloud-fixture-concurrency-20260930/run-v1/RAW.json",
+      "sha256": "a60b67bdb7af1a16ed8229252bbc672dd92b29fb7f63849fc1533b67b638e58a",
+      "bytes": 18412
+    },
+    {
+      "path": "artifacts/sol-cloud-fixture-concurrency-20260930/run-v1/REPORT.json",
+      "sha256": "c1d671d5b4cabdde7c1c651fe55a06bf4babc083c04bdebcae1d67d79a6ddf55",
+      "bytes": 2510
+    }
+  ],
+  "limits": [
+    "These are SQLite engineering lifecycle tests, not executed sleep or semantic evidence.",
+    "Complete/failed are state-machine test transitions; no real candidate rollback occurred.",
+    "Activity invalidation is checked after activity commit, not during an optimizer step.",
+    "SQLite BEGIN IMMEDIATE permits readers; an exclusive writer lock is outside this test."
+  ]
+}

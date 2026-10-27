@@ -1,0 +1,50 @@
+PASS C1 no duplicate canonical names
+PASS C2 no alias/storage key maps to two relations
+PASS C3 inverse phrasings point to existing relations, never stored, labelled
+PASS C4 coverage of code inventory (125 keys) and suite/bench data (142 keys)
+PASS C5 templates well formed (222 templates)
+PASS C6 no expanded template shared by two relations without a value guard
+
+INFO counts
+  relations: 101 (NEW: 8; known: 93)
+  NEW relations: parent, grandmother, grandfather, painter, designer, architect, nickname, date_of_death
+  aliases: 52; storage keys beyond canonical: 15; inverse storage keys: 13
+  written templates: 222 (16 generic + 206 relation-specific, of which 51 relation-specific inverse)
+  templates by status: {'NEW': 148, 'layer_c': 3, 'live': 59, 'not_live': 12}
+  expanded per-relation patterns (generic x surfaces x wh): 3004
+  code inventory keys: 125; suite/bench keys: 142; exclusions: 16
+
+INFO table-only matcher on the task's evidence sentences (NOT the agent):
+  'Sam is the boss of Kim.': 1 reading(s)
+      boss/teach {'Y': 'Sam', 'X': 'Kim'}
+  'Lena is the mother of Theo.': 1 reading(s)
+      mother/teach {'Y': 'Lena', 'X': 'Theo'}
+  'Ada Pell is the composer of Blue Rain.': 1 reading(s)
+      composer/teach {'Y': 'Ada Pell', 'X': 'Blue Rain'}
+  "Blue Rain's composer is Ada Pell.": 1 reading(s)
+      composer/teach {'X': 'Blue Rain', 'Y': 'Ada Pell'}
+  'Who composed Blue Rain?': 1 reading(s)
+      composer/ask {'X': 'Blue Rain'}
+  'What did Ada Pell compose?': 1 reading(s)
+      composer/inverse [never_store: worked out backwards] {'Y': 'Ada Pell'}
+  'My birthday is in June.': 1 reading(s)
+      birthday/teach {'Y': 'June', 'X': '<user>'}
+  'When is my birthday?': 1 reading(s)
+      birthday/ask {'X': '<user>'}
+  "Pia's birthday is in May.": 1 reading(s)
+      birthday/teach {'X': 'Pia', 'Y': 'May'}
+  'What is the manager of Kim?': 1 reading(s)
+      boss/ask {'X': 'Kim'}
+  "Who is Kim's manager?": 1 reading(s)
+      boss/ask {'X': 'Kim'}
+  'Sabine works at Acme.': 1 reading(s)
+      employer/teach {'X': 'Sabine', 'Y': 'Acme'}
+  'Who works at Acme?': 1 reading(s)
+      employer/inverse [never_store: worked out backwards] {'Y': 'Acme'}
+  "Who is Kim's?": 0 reading(s)
+  "May is Tom's sister.": 1 reading(s)
+      sister/teach {'Y': 'May', 'X': 'Tom'}
+  'Tom was born in May.': 1 reading(s)
+      date_of_birth/teach {'X': 'Tom', 'Y': 'May'}
+
+RESULT: PASS (all checks)

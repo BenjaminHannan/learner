@@ -1,0 +1,256 @@
+[
+ {
+  "problems": [
+   {
+    "claim": "Job 1: any sleep that states a lure or loses a taught answer 'is rejected through the existing accepted flag (fable_agent_loop.py:383-392, SHOWN)'.",
+    "issue": "The accepted flag cannot reject or undo a sleep. In _sleep_tick it is read from the sleeper's own outcome after sleeper.sleep() has already returned. By then the install and the report row are committed. The flag only decides whether the experience log is cleared and where sleep_mark is set. No rollback path exists, and the notebook is append-only, so the sleep-derived report row cannot be removed, only superseded.",
+    "evidence": "SHOWN: /home/user/learner/scripts/fable_agent_loop.py:383-391: `outcome = self.sleeper.sleep(...)`, then `accepted = bool(outcome.get('accepted'))`, then `if accepted: self.experience = []; self.sleep_mark = 0 else: self.sleep_mark = len(self.experience)`. The install writes happen inside Sleep130Sleeper._commit_one (/home/user/learner/scripts/fable_sleep130_agent.py:760-768, the report row is asserted into the notebook) before the flag exists.",
+    "severity": "wrong",
+    "fix": "Say that rejection and rollback do not exist today. Job 1 then needs a prior single change: snapshot sleep145-words.json before sleep and restore it on reject, plus a retraction event for the report row. The hunt must run before commit (inside the sleeper, against a staged copy), not after _sleep_tick. The claim that Premonition 'can audit or undo a night' is UNTESTED until that exists."
+   },
+   {
+    "claim": "Section 4 rule 6: 'Every sleep can be rejected and rolled back. Frozen tensors are hash-checked (SHOWN in 130). Adapters are split per night.'",
+    "issue": "This presents a design goal as partly shown. 130's hashes check that frozen word slots do not change during a slot grow. They are not a rollback mechanism. No per-night adapter split exists. The only related evidence is 104 Z4: a kill-9 in the middle of sleep reboots clean. That is crash safety, not rejecting a finished sleep.",
+    "evidence": "SHOWN: fable_sleep145_agent.py docstring ('_run_exp46_grow with pre/post sha256 frozen hashes'); board line 1044 (104 Z4: kill mid-SLEEP, restart clean, install absent). No restore/rollback code was found in fable_sleep1*.py.",
+    "severity": "overclaim",
+    "fix": "Mark rule 6 as a requirement for the next build (UNTESTED). Cite only 104 Z4 (crash-clean) and 130 frozen hashes (slot integrity) as SHOWN."
+   },
+   {
+    "claim": "'What it writes... a sleep-derived report row into the main notebook... This breaks Ben's rule that derived facts live only in a separate disposable layer.'",
+    "issue": "Half right. The row is written (SHOWN), but it is a JSON install summary on a special entity (SLEEP130/SLEEP145, relation sleep_report), not a derived world fact. Learned-route answers are computed live by the inner reasoner from taught rows. They are then relabelled source='sleep-derived', with the report fid put at the head of the trail. So today's answers are already 're-derived live', which is exactly what rule 2 proposes. The draft also omits that the contract gives sleep write rights to 'inferred' and 'proposed', which is the bigger policy gap.",
+    "evidence": "SHOWN: fable_sleep130_agent.py:124-125 (REPORT_RELATION130='sleep_report', SLEEP_ENTITY130='SLEEP130'); :753-764 (summary literal = word, chain, episodes, oof...); :172-192 (answer = self.inner.answer(...), then relabel source to sleep-derived); fable_notebook_contract.py:59 (`'sleep': {'sleep-derived', 'inferred', 'proposed'}`).",
+    "severity": "overclaim",
+    "fix": "Say: 'sleep writes an install-log row (not a world fact) into the main notebook, and the contract lets sleep write inferred rows, which answer (line 51 and line 59)'. Keep the proposal to move both out. Drop 'breaks Ben's rule' or narrow it to the contract permission."
+   },
+   {
+    "claim": "Which sleeper: '0.1 uses the Sleep145Sleeper chain... StubSleeper is only the fallback (fable_sleep145_agent.py:121, claude_age334_agent.py:44-56).'",
+    "issue": "The substance is right, but the citations do not show it. fable_sleep145_agent.py:121 is just the class definition. claude_age334_agent.py:44-56 is the 334 agenda wrapper and has nothing about a fallback. The fallback is fable_agent_loop.py:213. The swap happens in fable_loop138j_agent.py:688/740 (HardGate46Sleeper is built, then retrofit_sleep145 replaces it). Also, claude_loop292t_agent.py, claude_loop292_agent.py and claude_loop274_agent.py are NOT in this checkout, although 330c imports them. The 292t -> 138k -> 138j link can only be confirmed through a scratchpad copy (bo/scripts), not the repo.",
+    "evidence": "SHOWN: fable_agent_loop.py:213 `self.sleeper = sleeper or StubSleeper()`; fable_loop138j_agent.py:688 (HardGate46Sleeper), :740 (S145.retrofit_sleep145), :741 note; fable_sleep145_agent.py:139-152 (retrofit sets loop.sleeper = Sleep145Sleeper); `ls scripts/claude_loop292t_agent.py` fails in /home/user/learner.",
+    "severity": "missing-citation",
+    "fix": "Cite fable_loop138j_agent.py:688,740 and fable_sleep145_agent.py:139-152 for the swap, and fable_agent_loop.py:213 for the fallback. Add that the 292t/292/274 builder files are missing from the repo checkout."
+   },
+   {
+    "claim": "'The smoke test logs 0 sleeps on 274.'",
+    "issue": "Could not confirm. The mut-1 results (artifacts/claude-mut1-20260924/results.json, RESULTS.md) are not in this checkout. The recorded evidence points the other way: mut-0 ran the smoke on 292t, 273 and F1, and each logged 1 sleep and 1 install. The smoke also catches mutant k1 (wrong order), so it is not blind to sleep in general. The known blind spot is k3 (sleep never due). The likely cause is that Sleep145's taught-first rule lets the probes pass without an install, but that is SUGGESTED.",
+    "evidence": "SHOWN: board line 37 (mut-0: smoke 'RAN on all 3 (each: 1 sleep installed, probes 5/5...)'); board mut-1 entry (smoke catches k1, k2, k4; misses k3); handoff/queue/mut1-build.md:14-17 (k1 = sleep_due before inbox, k3 = sleep never due). `ls artifacts | grep mut` returns nothing.",
+    "severity": "missing-citation",
+    "fix": "Replace with: 'mut-1: the 90-turn panel misses k1 (wrong-time sleep) and k3 (missing sleep); the smoke misses k3 (missing sleep)'. Cite the board mut-1 entry and mut1-build.md. Drop '0 sleeps on 274' unless the results file is produced."
+   },
+   {
+    "claim": "'The ~1 s sleeps in 330c DEV probably did no training (SUGGESTED).'",
+    "issue": "No source in the repo records ~1 s sleeps for 330c DEV. I searched the board, the handoff/queue/rent-330c-dev*.md files, the 336 artifacts, /mnt/project-files/month-end and the commit messages. The inference is labelled SUGGESTED, but the premise is stated as fact.",
+    "evidence": "grep over design/, handoff/, artifacts/claude-e2e33*/ and git log found no 330c sleep timing.",
+    "severity": "missing-citation",
+    "fix": "Cite the DEV run file that shows the timing, or drop the sentence. The honest version: 'no measured sleep time on the 330c stack exists in the repo'."
+   },
+   {
+    "claim": "3B pass mark: 'at least 32/40 lives hold the right preference on day 3, after sleep and restart (P339.3, never judged before)'.",
+    "issue": "This misnames P339.3. P339.3 is the day-3 follow rate: replies a blind judge says follow the preference, at least 80%, with the proved-wrong line below 60%. It is not a count of lives holding a stored preference. Storing a preference is not the same as following it, and a system that saves correctly but ignores the preference would pass the draft's mark.",
+    "evidence": "SHOWN: artifacts/claude-style339-20260924/PASSMARKS.md:36 ('P339.3 day-3 replies a blind judge says follow the preference... \u2265 80%'), :41 (proved wrong if P339.3 < 60%); VERIFY-339.md:11 (not run).",
+    "severity": "wrong",
+    "fix": "Use two marks: saved right in at least 32/40 lives (P339.1 form), and a blind-judged follow rate of at least 80% on day 3 (P339.3), with a proved-wrong line below 60%."
+   },
+   {
+    "claim": "3B: '0/20 control saves', with a yes from the simulated user as the only path to a save.",
+    "issue": "The 336 harness answers confirm questions mechanically. confirm_answer says 'yes' only if a truth-sheet fact's value and owner appear in the reply. So on control lives the oracle will almost always say 'no'. '0 control saves' then measures the oracle, not the detector, and a detector that proposes on every turn could still pass. For feedback lives the oracle has no preference-aware rule, so a correct candidate may get 'no' and fail for harness reasons.",
+    "evidence": "SHOWN: /home/user/learner/scripts/claude_e2e336_run.py:9-13 and 121-139 (confirm_answer matches fact value + owner from truth.jsonl).",
+    "severity": "overclaim",
+    "fix": "Pre-register a preference-aware confirm oracle, sealed before the run. Add a mark on candidates proposed in control lives (the 3A bound, carried into 3B), not only on saves. Report the confirm-question count per life."
+   },
+   {
+    "claim": "3A: 'offline decoder bench on 339's logged lives', where the 1B reads (reply, next user turn) pairs.",
+    "issue": "The logged lives contain no user text. The 336/339 harness writes only the reply, ms and notebook events, so the (reply, next turn) pairs need the escrowed TEST-ONLY 339 bank. That panel has already been scored, with P = 17/40 known. Using it to build or check a new decoder risks tuning on a test panel. The draft adds a fresh blind panel 'as well', but the primary pass marks still sit on the reused panel.",
+    "evidence": "SHOWN: claude_e2e336_run.py:28-29 ('User text is never printed or copied into the output (the bank may be TEST-ONLY)'), :178-186 (row fields); claude_style339_run.py:101 (user text comes from the bank's turns, not the logs); VERIFY-339.md ('Nobody read the panel'); /mnt/project-files/escrow-339 exists.",
+    "severity": "overclaim",
+    "fix": "Make the fresh blind panel in 339 format the registered panel for 3A. Use the old 339 bank once, as a secondary transfer check, never for development."
+   },
+   {
+    "claim": "1A: 'the twin [today's wire51 audit] must catch fewer than 12/20, or the hunt adds nothing'.",
+    "issue": "This bar is trivially met. The wire51 audit only checks experience kinds, non-taught rows that supersede taught ones, and web-quarantine/proposed rows that answer. By design, none of the four planted fault types (CV-passing wrong routes, derived rows answering untaught questions, shadowing without supersedes, lures in the disposable layer) would trip it, so the twin scores near 0/20. The faults are also chosen by the same people who design the hunt, which is circular. 'Wrong word routes that pass cross-validation' are probably uncatchable by re-asking the day's questions, because CV already agrees with the taught episodes. So the 18/20 bar may hinge on 5 near-impossible items. Finally, a trivial 'reject every sleep that changes anything' rule would catch 20/20. It fails only if every clean sleep makes a real change, which the draft does not require.",
+    "evidence": "SHOWN: fable_wire51_adapters.py:486-509 (audit body); board line 1044 (104: episodes are read from the notebook, so they agree with it).",
+    "severity": "overclaim",
+    "fix": "Have an agent blind to the hunt's design write the faults, or derive them by mutating real sleeper code. Require every clean sleep to install or change something. Replace the twin bar with 'hunt \u2212 twin \u2265 8/20'. Report each fault family separately, and give a family-level expectation for CV-passing wrong routes, with held-out taught examples if the hunt is meant to catch them."
+   },
+   {
+    "claim": "1B: '0 lures stated as known across at least 60 lure questions' and 'day-3 recall of day-1 facts no lower than the twin (M9)'.",
+    "issue": "Attribution problem. In 330c most free-form claims come from 338b (base-1B open conversation), 333d creative and think299b, not from sleep. A sleep gate can only reject sleeps, so it cannot remove lure statements made by those layers. The mark can fail or pass for reasons unrelated to the change. M9 is also mislabelled: M9 is 'day-1 saved facts kept at end' (storage, bar 100%), not answer recall.",
+    "evidence": "SHOWN: scripts/claude_e2e330c.py:1-18 (layer list: 333d, think299b, 338b, vary330c, nb-323); artifacts/claude-e2e336-20260924/PASSMARKS.md:27 (M9 definition), :29 (M11 = measured confirm_rows/user turns \u2264 1/8, a bar, not an enforced cap).",
+    "severity": "overclaim",
+    "fix": "Score only lure statements that are new after a sleep, diffing pre-sleep and post-sleep answers on the same lure set, and report which layer produced each one. Call M9 storage, and add a separate day-3 recall mark if that is what is meant. Describe M11 as a test bar, not a cap."
+   },
+   {
+    "claim": "2A: blind three-step at least 15/30 on the 296 panels, fresh total at least 228; 2B: '0 answers stated without a supporting notebook row', '+5/30 over the twin'.",
+    "issue": "2A reuses reasonpanel296, whose category results (three-step 0/30) are known from 296, the recount and 296b. And practising 2-4 hops puts three-step in the training distribution, so this tests coverage, not composition or length generalisation. Adding coverage alone could lift the total past 228 (296 got 225/217). 2A's proved-wrong line is good. In 2B, '0 unsupported answers' is passable by abstaining, and +5/30 on one 30-item panel with no stated seed count is within noise. 2B also silently requires the learned reasoner to be wired into the agent (0.1 uses the code reasoner, and the learned one 'stays research'). That wiring is a second change.",
+    "evidence": "SHOWN: board line 35 (296 three-step 0/30, totals 225/217 vs 228); 296-sleep-school-practice.md:25-45 (panel296, 30 three-step items never practised); 330r-rebalance-2026-09-24.md:52 (learned loop reasoner not in 0.1).",
+    "severity": "overclaim",
+    "fix": "2A: write a fresh blind panel that includes 3-hop and 5-hop items (5 never practised), and report the untrained length separately. 2B: add a minimum answered-rate or right-answer floor next to the no-invention mark, use at least 2 seeds, and register 'learned reasoner joined behind the rule checker' as its own prior experiment."
+   },
+   {
+    "claim": "CardFold (toy): 'fresh verified practice reached 94\u201399% on unseen inputs, while replaying raw logs reached 3\u20139%.'",
+    "issue": "The per-seed ranges could not be confirmed, and the key caveat is missing. The repo review records averages of 96.3% vs 6.0% at trained lengths, but only 4.7% at lengths 9-10. One preregistered seed was VOID, and the gain is confounded with more oracle supervision. That collapse is exactly the risk for Job 2's chain-length plan.",
+    "evidence": "SHOWN: design/v3/30-modes/38-sleep-review-gpt-xhigh.md:1-3, 10-11.",
+    "severity": "overclaim",
+    "fix": "Quote 96.3% vs 6.0% at trained lengths and 4.7% at lengths 9-10, note the VOID seed and the supervision confound, and add the length collapse to Job 2's main risk."
+   },
+   {
+    "claim": "Payne 2009: 'after a nap, false recall went up, while it fell 22.4% in the wake group'.",
+    "issue": "The 22.4% comparison comes from the overnight study, not the nap. In the sleep group, critical-word recall changed by +2.1%, which was not significant. The nap study replicated the selectivity, but the 22.4% figure is not from it.",
+    "evidence": "SHOWN (full text in scratchpad payne.txt:87, :136): 'decreased significantly... only in the Wake group [\u221222.4\u00b18.6%]... increased, albeit non-significantly, after sleep (+2.1\u00b19.0%)'. The nap is Experiment 3.",
+    "severity": "wrong",
+    "fix": "Write: 'after a night's sleep, false recall held level (+2.1%, n.s.) while it fell 22.4% after a day awake; sleep beat wake at p = .05; a nap study showed the same pattern'."
+   },
+   {
+    "claim": "Gekhman: 'Wrong fine-tuning facts raise hallucination, and \"I don't know\" relabels protect: 61.8% accuracy on answered questions against 38.8%.'",
+    "issue": "The paper is about new (unknown to the model) facts, not wrong ones. The comparison also mixes denominators: 61.8% is accuracy on the 55.6-58.7% of questions answered, while 38.8% (convergence) or 43.0% (early stop) is over 100% answered.",
+    "evidence": "SHOWN: scratchpad 2405.05904.txt:660-661 (Table 3: D 43.0/100.0, 38.8/100.0; DIDK 61.8/58.7, 61.8/55.6).",
+    "severity": "minor",
+    "fix": "Say 'fine-tuning on facts the model didn't know'. Quote both columns: 61.8% on 56-59% answered vs 38.8-43.0% on all."
+   },
+   {
+    "claim": "Section 4 rule 8: 'No notebook-based sleep gate can detect a fact that was taught wrong... (104, SHOWN).'",
+    "issue": "104 showed something narrower: the sleep gate cannot see a wrong fact taught before any question, because its episodes are read from the notebook. It did not show that no notebook check could, and the draft's own Q8 (contradiction checks) is a counterexample in principle.",
+    "evidence": "SHOWN: board line 1044 ('a wrong fact taught BEFORE any question is invisible to the sleep gate (episodes are read from the notebook, so they agree with it)').",
+    "severity": "minor",
+    "fix": "Narrow it to 'the current sleep gate cannot...'. Leave contradiction detection as UNTESTED in Q8."
+   },
+   {
+    "claim": "'339 failed in the ear's fixed rules, not in sleep'; 'M11 caps them at 1 per 8 turns'; 'A real install takes up to about 89 s (older stacks)'.",
+    "issue": "Three small inaccuracies. RULES339 live in the 339 turn wrapper (claude_style339_agent.py:35), not in the ear or listener stack. M11 is a measured pass bar, not an enforced cap. The 89 s smoke timings include 292t, which is 0.1's base, not only older stacks, and they are an upper bound that includes teaching.",
+    "evidence": "SHOWN: scripts/claude_style339_agent.py:8, 35; 336 PASSMARKS.md:29; board line 37.",
+    "severity": "minor",
+    "fix": "Say 'the 339 wrapper's fixed feedback rules', 'M11 bar \u2264 1/8', and 'up to ~89 s on 292t/273/F1 (upper bound incl. teaching)'."
+   },
+   {
+    "claim": "Files checked (read-only) list.",
+    "issue": "The list leaves out files the draft cites as SHOWN: fable_sleep145_agent.py, claude_age334_agent.py, claude_e2e336_run.py, fable_agent_loop.py, VERIFY-339.md, 38-sleep-review-gpt-xhigh.md.",
+    "evidence": "Draft body vs its files list.",
+    "severity": "minor",
+    "fix": "List every file cited."
+   }
+  ],
+  "missing": [
+   "The installed word route barely changes answers on the 0.1 stack. Sleep130Reasoner.answer takes the inner reasoner's taught-derived answer and only relabels its source (fable_sleep130_agent.py:172-192), and 145's taught-first rule answers from taught rows first. So 'what sleep changes' today is mostly the provenance label plus routing for untaught people. This is probably also why the smoke cannot see missing sleep (SUGGESTED).",
+   "The contract lets sleep write 'inferred' rows (fable_notebook_contract.py:59), and 'inferred' is an answering source (line 51). This matters more for Ben's 'derived stays out of the notebook' rule than the report row does.",
+   "Several builder files that 330c imports are missing from this checkout: claude_loop292t_agent.py, claude_loop292_agent.py, claude_loop274_agent.py. Claims about the 0.1 sleep path cannot be fully checked from the repo alone.",
+   "339 is NOT joined in 330c (claude_e2e330c.py:16-17), so Job 3's village test has to add a layer the 0.1 agent does not have. That should be stated as part of the single change.",
+   "Actual 296 spend was ~$2.09 (board line 35), not the planned $1.3-1.5. Job 2's cost line should use the measured figure.",
+   "The 104 install cost (71-77 s per install, board line 1044) and the 'deaf ~72 s' finding are direct evidence for Job 1 and Job 2's added sleep-time budgets. 1B's 'added sleep time at most 60 s' should be judged against that baseline.",
+   "The claim that exp 42 found the number of episodes to be the bottleneck was not confirmed in 41/42 docs. Only 'surprise-ranked replay was slightly worse' (41-shared-subspace-sleep-review-fable.md:18, 57) was found.",
+   "No plain-language note that Job 1's reject/rollback needs new plumbing. The Ben summary says sleep will 'throw out any night that makes it worse', and today nothing can do that."
+  ],
+  "ranking_comment": "Most of the draft's repo facts check out against the code and the board. Confirmed: sleep_threshold=100000 at claude_e2e330_arms.py:45; the 336 end_day forcing at claude_e2e336_run.py:93-106; 27 numbers, MIN_EPISODES 8 and the 4-fold gate at fable_wire51_adapters.py:460-472; 12 words in WORDS130; the report row at fable_sleep130_agent.py:760-764; ANSWERING_SOURCES at contract:51; board lines 26/27/35/37/60; 294's two-step 6/11 of 30 against 296's 30/30; 339's 17/40 and 2/20; 334's 2-per-day oldest-first agenda. The corrections to the brief are right.\n\nThe ranking has one serious flaw. Job 1 is ranked first on the premise that a bad night can be rejected through the existing accepted flag, and that mechanism does not exist. The flag is read after the sleeper has already committed, and nothing rolls back. So Job 1 needs a staged-commit/rollback change first, and its test (1A) uses circular, self-planted faults with a twin bar that is trivially met.\n\nJob 3 has the most direct evidence of all the jobs: 339 failed in detection, 23/40 lives saved nothing. It is cheap, touches no weights, and writes nothing without a yes. It is arguably the best first experiment, once 3A moves to a fresh blind panel and 3B uses the real P339.3 follow-rate mark and a preference-aware confirm oracle.\n\nJob 2 is ranked sensibly below both, given four registered failures. 2A should use a fresh panel with an untrained length, and 2B hides a second change: joining the learned reasoner to the agent.\n\nSuggested order: 3 (decoder bench), then 1 (after a rollback plumbing piece), then 2A."
+ },
+ {
+  "problems": [
+   {
+    "claim": "Job 1 brain link: \"after a nap, false recall went up, while it fell 22.4% in the wake group (Payne 2009). SHOWN.\"",
+    "issue": "Two different experiments are merged into one sentence. The -22.4% wake drop is from Experiment 1, the overnight 12-hour study, where the sleep group changed by +2.1%, which is not significant. So sleep preserved false recall there; it did not raise it. The nap result is Experiment 3, a between-group comparison: 4.3 vs 2.9 critical words, about 50% more after the nap. The nap study has no 22.4% figure.",
+    "evidence": "SHOWN, Payne et al. 2009 full text (PMC2789473, scratch payne.txt). Line 87: \"Recall of critical words also decreased significantly from baseline, but only in the Wake group [-22.4\u00b18.6%] ... increased, albeit non-significantly, after sleep (+2.1\u00b19.0%)\" (Experiment 1). Line 169: \"Nap group recalled significantly more critical words than those in the Wake group [4.3\u00b10.4 vs. 2.9\u00b10.4]\" (Experiment 3).",
+    "severity": "wrong",
+    "fix": "Suggested wording: \"Overnight, false recall of lure words fell 22.4% across a day awake but held steady across sleep (+2.1%, not significant). In a separate nap study, nappers recalled about 50% more lure words than people who stayed awake (4.3 vs 2.9), while true recall was the same (Payne 2009, Exp. 1 and 3).\""
+   },
+   {
+    "claim": "Job 1 evidence: \"Wrong fine-tuning facts raise hallucination, and 'I don't know' relabels protect (Gekhman 2405.05904).\"",
+    "issue": "Gekhman's 'Unknown' fine-tuning examples are correct facts the model did not already know. They are not wrong facts. The paper's finding is that learning new knowledge by fine-tuning goes along with more hallucination. Section 4 rule 3 of the draft states this correctly; Job 1 does not. The comparison is also not like for like: 61.8% is accuracy on the 55-59% of questions the model chose to answer, while 38.8% is accuracy on all questions. The model is PaLM 2-M, trained closed-book.",
+    "evidence": "SHOWN, 2405.05904 Section 7 and Table 3: \"we replace the label of the Unknown fine-tuning examples with 'I don't know'\"; D: 43.0/38.8 accuracy at 100% answered; D_IDK: 61.8/61.8 accuracy at 58.7/55.6% answered; \"accuracy is measured on the subset of the test questions that were answered\".",
+    "severity": "wrong",
+    "fix": "Say \"Fine-tuning on facts new to the model (true, but unknown to it) goes along with more hallucination. Relabelling those examples 'I don't know' raised accuracy on the questions the model still answered from 38.8% to 61.8%, while it answered only about 56% of them (Gekhman, Table 3, closed-book PaLM 2-M).\""
+   },
+   {
+    "claim": "Job 6 evidence: \"O-LoRA held a long task sequence at 75.8 where sequential LoRA collapsed to 1.6 (T5-large). SHOWN.\"",
+    "issue": "The numbers come from two different benchmarks. 75.8 is O-LoRA's average on the Standard CL Benchmark (5 tasks), where SeqLoRA scored 43.7. On the 15-task long sequence, O-LoRA scored 69.6 and SeqLoRA 1.6. On the long sequence, O-LoRA was also beaten by ProgPrompt (77.9) and by per-task fine-tuning (78.1).",
+    "evidence": "SHOWN, 2310.14152 Table 2. Standard CL avg: SeqLoRA 43.7, O-LoRA 75.8. Large Number of Tasks avg: SeqLoRA 1.6, IncLoRA 61.2, Replay 54.2, O-LoRA 69.6, ProgPrompt 77.9.",
+    "severity": "wrong",
+    "fix": "Say \"On a 15-task sequence (T5-large), O-LoRA kept 69.6 average accuracy while a single LoRA trained task after task fell to 1.6. Plain replay kept 54.2.\" Also note that O-LoRA assumes each adapter is a separate task, which may clash with refining the same skill every night."
+   },
+   {
+    "claim": "Job 1 evidence: \"Model self-confidence is unreliable at 3B (R-Tuning), so the check must be the notebook, not the model. SHOWN.\"",
+    "issue": "R-Tuning never says this. It fine-tuned OpenLLaMA-3B, LLaMA-7B and LLaMA-13B. Its 3B model learned to refuse 87-96% of unanswerable questions. The only claim about size is that calibration and precision gains grow with scale, and that \"refusal ability is an emergent ability\". Calling 3B confidence \"unreliable\" is an inference, and the draft's own design reason, not a finding of the paper.",
+    "evidence": "SHOWN, 2311.09677 Table 3 refusal rates for OpenLLaMA-3B: FalseQA 87.32, NEC 95.72, SA 90.99. Section 5.2: \"score differences become more salient as the models get larger. We conclude that refusal ability is an emergent ability.\"",
+    "severity": "overclaim",
+    "fix": "Relabel as SUGGESTED: \"R-Tuning found that a model's ability to rate its own certainty improves with size (3B-13B). A 1B model's self-confidence is therefore likely weak, so the check should be the notebook.\" Keep the design choice, but give it as our own reasoning."
+   },
+   {
+    "claim": "Job 7 evidence: \"Wagner 2004: 59.1% found the hidden shortcut after sleep against 22.7% after wake. SHOWN.\"",
+    "issue": "The drafter's scratch folder has no Wagner full text, and my searches only turned up \"more than twice as many subjects\" from the abstract. The exact percentages are plausible (13/22 vs 5/22) but I could not check them. Two further problems. First, the brain evidence for 'REM-style' creativity is weaker than the job's framing implies: Wagner used a full night of sleep, not REM specifically. Several studies found no sleep benefit for insight (Cordi & Rasch 2021; Sch\u00f6nauer 2018; Brodt 2018). Newer nap studies point to N1 (Lacaux 2021) or N2 (L\u00f6we/Petzka preregistered, 2024), not REM. Second, Hu 2020 found that cueing memories during REM had no effect.",
+    "evidence": "Abstract-only for the Wagner numbers (PubMed 14737168 / Nature 427:352: \"more than twice as many\"). SHOWN, L\u00f6we, Petzka, Tzegka & Schuck, CCN 2024 preregistered study, full PDF: \"The evidence for sleep supporting insight, however, is inconclusive ... other studies did not find any benefits of sleep on insight\"; their result is \"N2 sleep, but not N1 sleep increases the likelihood of insight\". SHOWN, Hu 2020 (hu.txt line 42): \"TMR was not effective during REM sleep\".",
+    "severity": "missing-citation",
+    "fix": "Label the percentages SUGGESTED (abstract-only) unless the Nature full text is checked. Add that the sleep-insight effect has mixed replications and that the sleep stage involved is unsettled (N1 or N2, not clearly REM). Consider renaming Job 7 'offline recombination' instead of 'REM-style'."
+   },
+   {
+    "claim": "Job 1 brain link: \"A meta-analysis found no overall effect (Newbury & Monaghan 2019). SHOWN.\"",
+    "issue": "The citation is correct but selective. The same meta-analysis found that in recall tests, the kind of test closest to Premonition answering an open question, sleep significantly increased false recall of lure words (g = 0.61). The overall null comes from recognition tests and a moderating effect of list length. That split supports Job 1 more strongly than the draft says.",
+    "evidence": "SHOWN, Newbury & Monaghan full text (PMC6488554, newbury.txt). Line 338: overall lure g = .129, p = .540. Line 375: \"The recall studies showed a medium effect of sleep, with sleep increasing the number of lure words that were falsely recalled ... g = 0.606 ... p = .043\"; recognition g = -0.150, not significant.",
+    "severity": "minor",
+    "fix": "Add: \"...no overall effect, but in free-recall tests sleep did raise false recall (g \u2248 0.6); the null comes from recognition tests.\""
+   },
+   {
+    "claim": "Job 3 evidence: RESPECT \"completion rose from 31% to 82%, with over 90% precision ... on an 8B model with real users\", used to support a 1B that decodes preferences and missed teachings.",
+    "issue": "The numbers are right, but the task differs from Job 3 in two ways. RESPECT's decoder labels only whether the user was satisfied (positive, neutral or negative) in a MultiRef reference game. It does not pull out what the preference is, such as \"don't call me buddy\" or a missed fact. Its gains also came from retraining the model's weights over 6 rounds, not from memory. The 90% precision is for the prompted IDEFICS2-8B decoder, with positives and neutrals counted together.",
+    "evidence": "SHOWN, 2410.13852: \"We use IDEFICS2-8B\"; \"B-FFT improves interaction-level success rate by 51% (31%\u219282%)\"; \"above 90% precision consistently, after combining actual positives and neutrals\"; \"not only does negative feedback not help meaningfully, it seems to confuse the learner\".",
+    "severity": "overclaim",
+    "fix": "Say that RESPECT shows an 8B model can read whether the user was satisfied from the next turn in a narrow game. It does not show that any model can pull out what the preference is. Keep \"that a 1B can do this: SUGGESTED at best\", and note that the extraction step has no outside evidence."
+   },
+   {
+    "claim": "Job 2 evidence: \"STaR: binary answers produce bad rationales. SHOWN. This matches 296b's comparing result, stuck at chance.\"",
+    "issue": "STaR raises this in its limitations section; it did not measure it. The mechanism is filtering rationales by whether the final answer is right, and a binary answer is right half the time by luck. 296b's labels come from an exact code solver, so the cause of its chance-level comparing is probably different. Calling it a \"match\" overstates the link. STaR also says the starting model must be big enough: GPT-2 could not bootstrap even arithmetic. That point is more relevant to the ~30M reasoner and is left out.",
+    "evidence": "SHOWN, 2203.14465 Limitations: \"settings with a high level of chance performance (e.g. binary decisions) yield many poor rationales, confounding the STaR approach\"; \"the initial model must be big enough ... GPT-2 was not able to bootstrap from few-shot reasoning in even the arithmetic domain.\"",
+    "severity": "minor",
+    "fix": "Label as \"STaR notes as a limitation (not measured)\". Say 296b's failure may have a different cause. Add STaR's minimum-size warning to Open Question 1."
+   },
+   {
+    "claim": "Job 5 evidence: \"Uniform replay 'works surprisingly well' against clever selection (Hayes 2104.04132). SHOWN ... The evidence here is thin to negative.\"",
+    "issue": "The quote is real, but it comes from a review summarising large-scale supervised studies. The same review says selective replay has helped in small-scale settings and in RL (interference-based replay, prioritized experience replay), and Premonition is small-scale. The draft also leaves out the CLS line most relevant to 'what to replay': McClelland, McNaughton & Lampinen 2020, and the 2022 PNAS follow-up on similarity-weighted interleaved learning, showed that replaying only old items similar to the new one gives fast integration with little interference. The Mattar & Daw link is also loose. Their 'gain' is the reward gained from a change of policy in value backups, and 'need' is how often a state will be visited in future. The draft defines only a gain proxy and never says what 'need' is.",
+    "evidence": "SHOWN, hayes.txt lines 649-660: \"replaying these interfered samples improved performance over randomly replaying ... While selective replay has demonstrated promising results in some small-scale settings, several large-scale studies have found that uniform random sampling works surprisingly well\"; lines 813-815 on RL benefits. SHOWN, mattar.txt line 15 defines gain \u00d7 need. McClelland 2020 / SWIL PNAS 2022: SUGGESTED (search snippets only).",
+    "severity": "overclaim",
+    "fix": "Change to \"mixed: uniform replay is a strong baseline at scale; similarity-targeted replay has CLS-model support.\" Define 'need' for Premonition (for example, how likely a fact is to be asked about). Cite McClelland et al. 2020 and SWIL as the prior work for gain \u00d7 need."
+   },
+   {
+    "claim": "Job 2 brain link: \"Complementary learning systems: interleaved replay teaches cortex without wrecking old knowledge (McClelland 1995, penguin simulation). SHOWN.\"",
+    "issue": "Correct. The penguin simulation is in the paper: learning penguin on its own caused interference, and interleaving it with old items did not. One caveat: the draft's rule 3 depends on the notebook text sitting in the input, and CLS 1995 says nothing about training with the facts visible in context. That safety claim rests on Gekhman and Kang, which are both closed-book studies. So \"having the notebook in the input prevents learning to guess\" is SUGGESTED, not SHOWN.",
+    "evidence": "SHOWN, mcc95.txt: 13 mentions of penguin, and interleaved learning is discussed. Gekhman and Kang: closed-book QA (2405.05904 Section 7; 2403.05612 abstract).",
+    "severity": "minor",
+    "fix": "Label rule 3's mechanism (\"notebook in the input, so no guessing is learned\") SUGGESTED, and make it a pass mark in 2A/2B: false-answer rate on missing-row items must not rise."
+   },
+   {
+    "claim": "Job 4: \"About 5\u00d7 less test-time compute for the same accuracy, and up to +13/+18% on API-scale models (Lin/Snell 2504.13171). SHOWN.\"",
+    "issue": "The numbers are correct. But the paper's main condition is left out: sleep-time compute helps most when the user's query is predictable from the context, and they measured predictability with Llama2-70B. Premonition's questions after an open chat may be much less predictable, and no model below GPT-4o-mini was tested.",
+    "evidence": "SHOWN, 2504.13171 abstract: \"~5\u00d7 on Stateful GSM-Symbolic and Stateful AIME ... up to 13% ... and 18%\"; \"the predictability of the user query to be well correlated with the efficacy of sleep-time compute\"; models used: GPT-4o-mini, GPT-4o, o1, o3-mini and others.",
+    "severity": "minor",
+    "fix": "Add: \"Gains depend on how predictable the questions are. Test this on Premonition's logged questions before building Job 4.\""
+   },
+   {
+    "claim": "Job 3 brain link: \"Targeted memory reactivation has a modest effect, g = 0.29 (Hu 2020). SHOWN.\"",
+    "issue": "The number is correct. Two omissions: after correcting for publication bias the effect drops to g = 0.18, and the effect was absent during REM. TMR also means playing a cue during sleep to trigger a specific memory, which is only loosely related to re-reading chats.",
+    "evidence": "SHOWN, hu.txt line 42: \"Hedges' g=0.29 ... TMR was not effective during REM sleep\"; line 1853: trim-and-fill adjusted \"g=0.18\".",
+    "severity": "minor",
+    "fix": "Add the adjusted g = 0.18 and the REM null (the null also bears on Job 7). Mark TMR as an analogy, not a mechanism."
+   },
+   {
+    "claim": "Rule 5: \"a sleep-extracted gist becomes 'I saw it' (Payne 2009, SHOWN)\"; Job 1: \"A brain cannot audit or undo a night.\"",
+    "issue": "Payne measured free recall of lure words. It did not measure whether people believed they had seen them (no remember/know or source judgments), so the 'I saw it' wording goes beyond the data. 'A brain cannot audit' is a rhetorical claim with no source; people do run reality and source monitoring when they remember.",
+    "evidence": "SHOWN, payne.txt: the outcomes are recall counts; the authors note different results with recognition (Diekelmann 2008). No citation is given for the audit claim.",
+    "severity": "minor",
+    "fix": "Say \"sleep can make people recall related words they never studied (Payne 2009).\" Soften the brain-audit line to \"the brain has no exact record to check a night against\" (UNTESTED)."
+   },
+   {
+    "claim": "Job 5/Job 6 brain links: \"Tononi & Cirelli's local sleep pressure (SHOWN)\"; \"Synaptic down-selection (Tononi & Cirelli). SHOWN as a hypothesis. It is debated (Seibt & Frank, abstract-only).\"",
+    "issue": "Mostly correct. Tononi & Cirelli (Neuron 2014) review evidence for local, use-dependent slow-wave activity, citing Huber 2004 and Vyazovskiy 2011, so 'local sleep' is really those authors' finding, which the review summarises. Seibt & Frank 2019 exists (Front. Syst. Neurosci.) and argues that sleep strengthens synapses primed during waking, which cuts against pure downscaling. The abstract-only label is right.",
+    "evidence": "SHOWN, tononi.txt lines 75 and 140 (local SWA increases; Vyazovskiy 2011 local OFF periods). Seibt & Frank: abstract-only via search (PubMed 30774586).",
+    "severity": "minor",
+    "fix": "Cite the primary source: \"Huber 2004 / Vyazovskiy 2011, reviewed in Tononi & Cirelli 2014\"."
+   }
+  ],
+  "missing": [
+   "Atomic-claim fact checking: FActScore (Min et al. 2023, 2305.14251, SUGGESTED from abstract) splits an answer into atomic facts and checks each against a knowledge source. That is exactly Job 1's 'every claim in every answer checked against the notebook', and it supplies a method and an error-rate benchmark. Chain-of-Verification and SelfCheckGPT (a check needing no reference, based on whether sampled answers agree) are also candidates for the 104 blind spot (UNTESTED).",
+   "Training open-book on the notebook: RAFT (Zhang et al. 2024, 2403.10131, SUGGESTED from abstract/snippet) trains with the source text plus distractor documents in context, which is Job 2's design, and gives a ready way to make lures (distractor notebook rows). Caution from memory, not checked: RAFT deliberately leaves the gold document out of part of the training set, which would break rule 3. Premonition would have to keep it in every time, or label the gold-missing items 'I don't know'.",
+   "Self-improvement with a length ladder and verification: Lee et al. 2025, 'Self-Improving Transformers Overcome Easy-to-Hard and Length Generalization Challenges' (2502.01612, SUGGESTED from abstract) have a model train on its own filtered solutions at gradually harder lengths, going from 10-digit to 100-digit addition. That is the most direct precedent for #14 loop-ladder sleep and for Job 2A's three-step gap. Also Fan et al. 2024, 'Looped Transformers for Length Generalization' (2409.15647, ICLR 2025, SUGGESTED), which fits Ben's loop reasoner.",
+   "Similarity-weighted interleaved replay: McClelland, McNaughton & Lampinen 2020 (Phil Trans B) and the 2022 PNAS SWIL paper (SUGGESTED from snippets). Replaying only related old items cut the amount of interleaving needed. This is the main CLS evidence for Job 5 and Open Question 2, and the draft leaves it out.",
+   "Sleep-like replay for neural networks: the Bazhenov/Krishnan line, 'Sleep Replay Consolidation'. The drafter's scratch folder holds 2402.10956 (SHOWN, first page read): an unsupervised Hebbian 'sleep' phase raised MNIST accuracy when data were scarce (0.5-10%) but slightly hurt it with more data. Its first two authors are high-school students (Del Norte HS), which is useful for Ben. Generative replay (Shin 2017; van de Ven & Tolias) and self-synthesized rehearsal (2403.01244) are ways to replay old skills without keeping their data (all SUGGESTED here).",
+   "Direct 2026 prior work on nightly LLM consolidation, relevant to the novelty claim. PDFs are in the drafter's scratch folder and I read only their first pages, so these are SUGGESTED. Dennis et al. 2605.24657: nightly LoRA consolidation of preferences and corrections on one consumer GPU, 80.4% retained vs 36.8% for compaction. It is a direct comparator for Job 3's later weight-training step, and it bakes facts into weights, which Premonition's rule 3 forbids. Behrouz et al. 2606.03979 'Language Models Need Sleep' (distillation plus RL 'dreaming'). Lee et al. 2605.26099 (offline recurrent passes during 'sleep', with the biggest gains on deeper reasoning), which is close to #14. The draft should say what is new relative to these: an exact notebook, a code verifier, and a gate that can reject a whole night.",
+   "LoRA vs full fine-tuning forgetting: 'LoRA Learns Less and Forgets Less' (Biderman et al. 2405.09673, TMLR 2024; in scratch, abstract seen, SUGGESTED) bears directly on Open Question 1 (LoRA on the 1B vs the ~30M reasoner) and on Job 6.",
+   "Compositional-generalization failure evidence for Job 2's two-step to three-step gap. Examples: Wang et al. 2024 'Grokked Transformers are Implicit Reasoners' (two-hop composition fails out of distribution), and the systematicity critique in the drafter's scratch folder (2606.14512, Goodale & Mascarenhas). Useful for predicting that length or depth generalization will need explicit ladder training (UNTESTED)."
+  ],
+  "ranking_comment": "The ranking is mostly defensible, but Jobs 2 and 3 should probably swap places, and Job 1's evidence is weaker than it looks.\n\nJob 1 (confabulation gate) at the top: reasonable as a precondition. It is cheap, touches no weights, and every other job needs it. Two cautions:\n- Its cited evidence is indirect. Gekhman and Generative Agents motivate a gate but don't test one. The directly relevant method, atomic-claim checking against a source (FActScore), isn't cited.\n- A gate only earns its cost once sleep actually changes something. In 0.1, sleep learns one word route and almost never runs, so Job 1 should be built together with whichever job first writes, not alone.\n\nJob 3 (re-read chats) above Job 2 (reasoning practice): I would put Job 3 second. It targets a concrete registered failure (339: 17/40, and the draft says detection is the bottleneck), it serves more of the 0.1 priorities (conversation, learning over time, no wrong saves), it costs inference only, and it can be undone. Its weak spot is that no paper shows a model below 8B extracting what the preference actually is: RESPECT only decodes satisfied vs not.\n\nJob 2 (sleep school on the notebook): every local attempt has failed its registered bar. The outside papers that would help (self-improvement with a length ladder, looped transformers, RAFT-style open-book training) aren't cited, and 2A should borrow from them. Keeping Job 2 third, or second with 2A only, is fine if 2A is framed as a cheap toy test.\n\nJob 4 (sleep-time thinking): correctly low. Its gains depend on questions being predictable and were only shown on API-scale models.\n\nJob 5 (when to sleep and what to replay): 'thin to negative' is too pessimistic. The CLS work on similarity-weighted replay is positive evidence. It should stay low mainly because the test harness can't yet see wrong-time or missing sleep.\n\nJob 6 (adapter housekeeping): its headline O-LoRA numbers need fixing (69.6 vs 1.6, not 75.8 vs 1.6). Per-task orthogonal adapters may also clash with refining the same skill every night.\n\nJob 7 (creative recombination): deferring it is right. Its 'REM' framing isn't supported: insight results point to N1 or N2, replications are mixed, and memory cueing did nothing during REM (Hu 2020)."
+ }
+]

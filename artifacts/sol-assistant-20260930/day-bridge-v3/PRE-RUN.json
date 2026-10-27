@@ -1,0 +1,20 @@
+{
+  "scope": "real cross-process SQLite concurrency mechanics only, no model or human-origin fixtures",
+  "seeds": [
+    0,
+    1
+  ],
+  "comparator": "read-only child must read zero-event existing store while parent holds BEGIN IMMEDIATE; missing store must fail; no write side effects",
+  "budget": "3 child processes perseed each <=3sec; zero optimizer/inference/network",
+  "marks_per_seed": [
+    "read under active writer lock",
+    "repeat exact event count",
+    "missing read-only store refused without creation"
+  ],
+  "noise": "repeated eventcount exact difference measured; no timing-performance claim",
+  "source_pins": {
+    "scripts/sol_assistant_day_v3.py": "43570f43d72777f71d63b6713d0dc53eb3f3c7ff7e4731f477a08088753d604e",
+    "scripts/sol_assistant_watcher_bridge_v3.py": "02d48c5de099c64ae4eae14581b719c7e9db4c4cc6fc50eb989d6736c3ec58ab",
+    "scripts/sol_assistant_day_chat_v3.py": "8dc63b0dc32619e10dc34e95b12eab27ad5a43cc36dc8f5e33de3103bf51ab4e"
+  }
+}

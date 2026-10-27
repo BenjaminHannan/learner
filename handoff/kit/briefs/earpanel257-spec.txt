@@ -1,0 +1,68 @@
+EAR PANEL 257: SPEC. The director wrote this on 2026-09-22 at 17:20. It is shared by the panel writer and the exp 257 builder.
+
+Folder: artifacts/claude-earpanel257-20260922/
+Files:
+- panel.jsonl (150 lines)
+- make_panel.py: a generator that holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks.
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel257-20260922/panel.jsonl artifacts/claude-earpanel257-20260922/make_panel.py > artifacts/claude-earpanel257-20260922/SEAL.sha256.txt
+
+Schema
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e257-001" … "e257-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: string with tags.
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value are the exact words from the turn, in the same case. "me" stands for the speaker.
+- relation is a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school …). relation_aliases lists accepted alternative names.
+- Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example in this spec word for word.
+- R1, pronoun reference across clauses: at least 10 turns, spread over varied_teach and full_names.
+  - A later clause uses she/he/they/it for a named third person.
+  - At least 3 of these have the pronoun refer to the speaker's relative while a first-person clause is also present.
+  - Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 10 turns in no_save, gold [].
+  - Include tag questions, a rising "so …?", and doubled "??".
+  - At least 6 of them have NO question mark at all (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact. These go in varied_teach with a TEACH gold.
+- R3, the verb decides the relation, not a noun in the value: at least 8 turns in varied_teach and full_names.
+  - Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+  - Mark clear: false only where two relations are really defensible.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-, second cousin): at least 8 items across the teach families and questions. Gold keeps the full relation (e.g. sister_in_law, step_brother), with no plain-relative alias.
+- R5, everyday relations beyond the core list: at least 10 items across all families. Examples: housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours.
+- R6, two-hop questions whose first hop is a relative: at least 6 of the chain_questions.
+- The rest spreads over:
+  - plain facts, pets, jobs, languages and birthplaces;
+  - full names of 2–4 words;
+  - lowercase and typo'd chat: at least 15 turns in all;
+  - corrections, which hold only the new value (a negated old value is never in gold).
+- questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, other panels, or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - the R1–R6 quotas;
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.

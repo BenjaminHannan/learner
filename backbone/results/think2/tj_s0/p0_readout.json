@@ -1,0 +1,76 @@
+{
+ "ckpt": "../ckpt/tj_s0",
+ "arm": "tj",
+ "seed": 0,
+ "k_slots": 16,
+ "lmax": 4,
+ "alpha_init": 0.0,
+ "rows": 200,
+ "device": "cpu",
+ "dtype": "float32",
+ "smoke": false,
+ "env": {
+  "gpu": "cpu",
+  "dtype": "float32",
+  "torch": "2.14.1",
+  "transformers": "5.19.0",
+  "peft": "0.21.2",
+  "flash_linear_attention": null
+ },
+ "gates": {
+  "mean_abs_tanh": 0.05093392729759216,
+  "per_layer": [
+   0.03432,
+   0.05798,
+   0.03543,
+   0.06668,
+   0.03722,
+   0.07397
+  ],
+  "max": 0.16042619943618774,
+  "min": 0.001720827305689454
+ },
+ "drift": {
+  "skipped": "rho differs between the re-created start (0.019453832879662514) and the checkpoint (0.019453834742307663): different base weights or code path"
+ },
+ "wiring": {
+  "gate": 0.5,
+  "rows": 200,
+  "max_abs_dlogit": 16.370349884033203,
+  "mean_abs_dlogit": 0.7958828412319783,
+  "bug": false
+ },
+ "notes": {
+  "rows": 200,
+  "stories": 23,
+  "mean_sq_note": 0.00037637361674569547,
+  "var_across_rows": 7.708494287328449e-09,
+  "ratio_across_rows": 2.0480963447915774e-05,
+  "var_across_stories": 1.6355155008085376e-09,
+  "ratio_across_stories": 4.3454573541843316e-06,
+  "lap_change": {
+   "first_lap": 1,
+   "values": [
+    0.07173312455415726,
+    0.07115918397903442,
+    0.07018807530403137,
+    0.0686969980597496
+   ]
+  }
+ },
+ "blind": {
+  "skipped": "arm tj is not tf-style blind-capable (use --blind on to force)"
+ },
+ "bridge": {
+  "skipped": "TODO: row 7 (bridge probe) is not implemented"
+ },
+ "rules": {
+  "row1_wiring_bug": false,
+  "row2_gate_closed": true,
+  "row3_block_barely_trained": null,
+  "row5_notes_story_independent": true,
+  "row6_refiner_stuck": false,
+  "note": "row 5 uses the between-story ratio (ratio_across_rows if there is one story); row 6 uses the change into the last lap"
+ },
+ "seconds": 4151.051826953888
+}

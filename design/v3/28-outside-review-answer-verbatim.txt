@@ -1,0 +1,869 @@
+--- page 1 ---
+Benjamin <benjamin.a.hannan@gmail.com>
+Outside review: all open problems for the teachable assistant project
+Timothy Hannan <timothy.hannan@gmail.com> Mon, Sep 21 at 6:26 AM
+To: <benjamin.a.hannan@gmail.com>
+The project has a viable engineering goal, but it does not currently have evidence for its central learned-reasoning claim.
+Those are different problems. A useful teachable notebook assistant can use a deterministic executor. A claim that a learned
+controller discovers a length-general algorithm requires evidence you do not yet have.
+I would preserve that distinction rather than keep the entire project dependent on rescuing the dispatcher.
+I treat R1–R8 as reported measurements, not independently verified results. The probabilities below are subjective forecasts
+for the specified experiments, conditional on correct implementation—not estimates established by three seeds. Proposed
+pass marks are new proposals, not reinterpretations of your existing registrations.
+The experiments below are a menu, not 44 simultaneous assignments. Use saved-checkpoint probes first. For new training,
+establish throughput before registration; fit each diagnostic into your wave limit, and use separate waves for additional
+seeds. Report a budget-limited failure as such, rather than silently extending it or calling it architectural impossibility.
+A. Reasoning core 1. Should the dispatcher be learned at all?
+Severity: Blocking for the learned length-generalisation claim; not blocking for a teachable assistant.
+For a question already supplied as an ordered relation path, the desired algorithm is already specified: apply its elements in
+order. Discovering that algorithm through terminal-reward RL is unnecessary for the product. It creates a difficult learning
+problem without adding a user capability.
+Hard-code the loop for the assistant. What you lose is the claim that the model learned sequencing or iteration. What
+remains is learned language interpretation, possibly learned memory access, and externally stored factual knowledge. Do
+not describe the resulting length generalisation as something the controller learned.
+The likely problem is that your controller learned a training-distribution policy rather than an invariant transition rule. I would
+change that diagnosis if an unchanged controller generalised reliably on fresh, longer, non-shortcut chains.
+Cheapest test: Run the fixed executor and learned dispatcher against the same frozen operator, on identical 1–10-hop
+cases, recording every intermediate answer. Include chains deliberately constructed so that skipping a link changes the final
+answer.
+Forecast: Probability 0.85 that the fixed executor removes most controller-attributable long-chain failures on the two
+successful operator seeds; 0.20 that the existing learned dispatcher reaches ≥99% at every tested length.
+2. Why “third call = attribute,” and what is the minimal repair?
+Severity: Serious; blocking for the present controller.
+On training paths of at most three operations, “at the third call, choose the final attribute” is a valid shortcut. The training
+data cannot penalise it at the position where it differs from the intended algorithm. A GRU can represent elapsed execution
+through its hidden state even without an explicit call counter.
+The minimal principled architectural change is to make the operation head depend on position relative to the previously
+selected path occurrence, rather than unrestricted recurrent history. Maintain a cursor storing the last selected occurrence;
+let a shared scorer learn which relative position comes next. Initialise the cursor before the path. Do not hard-mask
+everything except the correct next operation—that would supply the answer.
+This is an explicit inductive bias and external state, not discovery from nothing. Also, point to occurrences, not just relation
+types: repeated relations otherwise create an ambiguity.
+Cheapest test: First probe existing checkpoints with correct two-step prefixes on matched three- and four-operation paths.
+Then, in one bounded training contrast, change only the operation head’s positional representation. Leave subject and STOP
+mechanisms unchanged.
+
+--- page 2 ---
+Falsifier: If errors follow particular relation identities rather than elapsed position, or remain unchanged after eliminating
+access to call-count information, the diagnosis is incomplete.
+Forecast: 0.70 that the positional change reduces premature final-attribute selection by at least half; 0.30 that it alone
+produces ≥99% accuracy through ten operations.
+3. What caused constant-call collapse, and what should replace this RL setup?
+Severity: Serious.
+My leading explanation is poor success-signal coverage combined with a readily learnable preference for shorter failures,
+not RLOO inherently being unsuitable.
+With reward R = 1[correct] − 0.01L, a group containing only unsuccessful trajectories still supplies a useful gradient: prefer
+the shorter failures. If a successful trajectory has probability 1%, approximately 0.99^16 = 85% of sixteen-sample groups
+contain none. This is an illustration, not a measurement of your runs.
+Correctly implemented leave-one-out baselines do not by themselves change the expected policy-gradient objective. RLOO
+is a variance-reduction method, not an exploration solution. Its published successes do not establish suitability for your
+sparse algorithm-learning problem.
+Cheapest decisive experiment: Replace only the controller-training objective with supervised cross-entropy on exact
+execution traces. Your generator already knows those traces. Compare free-running execution, not merely teacher-forced
+action accuracy.
+Forecast: 0.80 that trace supervision substantially improves training-length execution or sample efficiency; 0.30 that it alone
+achieves ≥95% on every 4–8-hop cell. Representation-induced shortcuts may remain.
+Evidence against my diagnosis would be abundant successful long trajectories, sustained operation entropy, and correct
+gradient implementation throughout collapse.
+My recommendation is imitation first, then training on the learner’s own visited states if necessary. That addresses the
+distribution shift between oracle prefixes and actual execution; DAgger is the relevant established framework. Add RL only
+when optimising something the available labels do not already specify. Planning-as-inference is unnecessary machinery
+here.
+4. How should you handle seed variance?
+Severity: Serious for reliability claims; not a reason to stop experimentation.
+Two successful seeds out of three establish that the procedure sometimes works. They do not establish dependable
+training. For the actual 2/3 result, the two-sided exact 95% binomial interval is approximately 0.094–0.992, assuming
+exchangeable independent training runs.
+Seed sensitivity is evidence that the training procedure as a whole is fragile. It does not isolate architecture from
+optimisation, initialisation, data order, or numerical implementation.
+Separate two quantities: reliability of an already-trained checkpoint, and probability that the training recipe produces a
+reliable checkpoint. Thousands of questions improve knowledge of the first, not the second.
+Cheapest experiment: Before retraining, subject all three existing seeds to identical counterfactual and per-hop probes.
+Then run one additional, preselected seed under the unchanged recipe. Preserve every result and disclose checkpoint-
+selection rules.
+Forecast: Under an illustrative uniform Beta prior and genuinely unchanged protocol, my next-seed pass probability is 0.60.
+The corresponding probability that the next three all pass is about 0.29, not 0.60^3, because uncertainty about the
+underlying success rate is shared.
+Do not spend the project trying to certify 90% training reliability. Even 29/29 successes are needed for a one-sided 95%
+lower bound just above 90%.
+5. How much of the combined-variant experiments survives?
+Severity: Serious attribution failure.
+Keep the observations. Withdraw the causal attribution.
+R1 still establishes that those exact combined systems failed under those training procedures. It does not establish that
+
+--- page 3 ---
+wider curricula are generally ineffective, that STOP is the primary defect, or that either individual variant caused the
+combined result.
+Likewise, 64/64 correct STOP decisions after oracle prefixes establish conditional competence on those prefixes. They do
+not establish reliable stopping after the controller’s own erroneous actions. Eleven checkpoints are also not eleven
+independent training replications.
+Cheapest test: Finish the existing no-training probe. On identical saved episodes, intervene on one pointer at a time and
+record the earliest error, subsequent errors, and final correctness. Avoid interpreting a recovered final answer as proof that
+the entire trace was repaired.
+Clean rerun: Restore the last uncombined reference implementation. Only then compare short versus wider training, holding
+the other mechanisms fixed. Add either defective variant back separately only if its individual effect remains an important
+question.
+Forecast: 0.80 that the probe materially narrows or changes the current explanation; 0.25 that removing the confound
+reveals a controller already capable of reliable long-chain generalisation.
+6. What baseline comparison would convince a sceptic?
+Severity: Serious. The 9.2% parameter mismatch invalidates your stated matching claim, not the underlying measurements.
+The larger problem is unequal assistance and tuning. Count operator pretraining, trace labels, curriculum selection,
+unsuccessful experiments, repeated inference calls, and external structures—not just trainable parameter totals.
+Use three separate comparisons:
+1. A deterministic lookup executor, establishing the task’s non-neural ceiling.
+2. A learned parser plus deterministic memory/executor, testing whether the neural reader/controller adds value.
+3. A competitive transformer, receiving equivalent facts, relevant supervision, and a declared tuning allowance.
+Match parameters for a capacity comparison. Report training compute and inference cost separately. You cannot generally
+hold parameters, FLOPs, supervision, tuning history, and architecture fixed simultaneously; publish a small performance–
+cost comparison rather than pretend one number settles fairness.
+Cheapest experiment: Produce an assistance-and-compute ledger for existing runs, then give the transformer one
+predeclared improvement opportunity comparable to an important advantage your system received—for example trace
+supervision.
+Falsifier: If the modular system retains its advantage across equivalent-information, equivalent-supervision comparisons,
+unfair assistance becomes a weaker explanation.
+Forecast: 0.80 that the ledger reveals a more consequential mismatch than the 8,722 parameters; 0.60 that a better-
+assisted baseline substantially narrows the claimed advantage.
+7. What is the smallest useful move toward realism?
+Severity: Blocking for claims about ordinary teaching; not blocking for the synthetic result.
+Do not begin by enlarging the vocabulary. Begin by testing whether the intended user interactions fit the representation.
+Cheapest experiment: Have Ben write 30 short, natural teaching, correction, and question turns without looking at the
+generator’s frames. Independently annotate their intended meanings. Before training any talker, attempt to represent each
+meaning using the current notebook and thought schema.
+Record separately: representable, ambiguous and requiring clarification, and impossible under the schema. For
+representable examples, supply gold structured inputs to isolate execution from parsing.
+Pass mark: At least 27/30 unambiguous, in-scope meanings representable without dropping information. Scope must be
+written before Ben authors the set.
+Likely cause of failure: Missing representation for identity, multiple assertions, time, or contextual references—not
+insufficient neural capacity.
+Falsifier: Nearly all independent turns fit cleanly and execute correctly once gold-parsed.
+Forecast: 0.75 that more than three turns expose a missing representation or an unspecified interpretation policy. That is
+cheap, useful failure.
+
+--- page 4 ---
+8. Can unseen relations be handled without relation codes?
+Severity: Blocking for open-ended teachability.
+Distinguish three problems:
+New wording for a known relation is language interpretation. A new arbitrary relation with explicitly supplied facts requires a
+dynamic key. A genuinely new operation, such as “oldest,” requires semantics beyond key lookup.
+Codes are not the only representation. Exact text keys, span pointers, and descriptions compiled into a small executable
+language are alternatives. But arbitrary new relations need some contextual binding mechanism. A fixed classifier over
+relation labels cannot become open-ended merely by seeing more examples.
+The likely cause of R6 is a representation/training regime that treats relation identity as a fixed learned category. I would
+revise that if the model already receives usable dynamic keys and still fails exact matching.
+Cheapest experiment: After entity copying works, replace only relation identity with a dynamic key representation. Train on
+randomly renamed relation labels; evaluate on freshly generated labels, first one hop and then two.
+Forecast: 0.65 that a generic key-matching reader achieves ≥95% unseen-relation one-hop accuracy; 0.40 for the same
+threshold on two-hop compositions within the initial budget. Neither would establish learning a new computational operation
+from English.
+9. Which additional reasoning operations break the lookup loop?
+Severity: Blocking for general reasoning.
+The current single-entity, scalar-valued chain cannot express most of that list without additional state or primitives.
+“Same teacher” requires a reverse lookup or join. Counting requires a collection and distinctness policy. Comparison
+requires typed values. “Or” requires union or branching. Time requires selecting a version of a fact. Negation requires an
+explicit distinction between false and unknown.
+These do not defeat a database-backed architecture. They defeat the claim that one scalar lookup loop is a sufficient
+reasoning language.
+Cheapest experiment: Write ten desired questions and their exact executable meanings before training anything. Use a tiny
+deterministic relational executor with operations such as LOOKUP, FILTER, JOIN, UNION, COUNT, and COMPARE. Test each
+new primitive separately.
+Falsifier: If the current interface already supports collections, branching, and typed predicates, my description of its
+limitation is wrong.
+Forecast: 0.95 that at least three questions require an interface extension. Do not invent a separate learned “reasoning
+module” for arithmetic that a deterministic primitive can perform exactly.
+B. New names 10. Is freezing the name scale a fix or a dodge?
+Severity: Serious optimisation defect. Freezing is a legitimate intervention.
+There is nothing scientifically disreputable about fixing a scale or temperature. The important questions are whether the
+choice uses forbidden test information and whether the mechanism is robust beyond that value.
+Experiment 27 is a good sufficiency test: does preventing attenuation allow the unchanged system to learn? A failure would
+reject “scale freezing is sufficient,” not necessarily your evidence that output-side gradients caused the original collapse.
+Your mechanism is plausible given the reported gradient decomposition. However, the exact “zero trap” depends on the
+computation graph, constraints, optimiser, and which gradients vanish. Verify it with finite differences rather than relying
+solely on the verbal explanation.
+Cheapest experiment: Run 27 exactly as registered. Do not simultaneously normalise codes, untie scales, add auxiliary loss,
+and change initialisation.
+Forecast: 0.80 that all three seeds show substantial link improvement over the collapsed treatment; 0.30 that all three meet
+every existing pass cell.
+Afterward, the principled successor is normalised addressing with an explicitly controlled temperature, or pointer output.
+Separate input/output scales alone do not prevent the output scale from collapsing.
+
+--- page 5 ---
+11. Should output be pointer/copy rather than a global code prediction?
+Severity: Serious design issue; pointer output is my preferred end state.
+When the desired entity already occurs in the memory being read, predicting its identity from a global vocabulary is solving
+an unnecessary reconstruction problem. Select a memory value or entity handle and copy it.
+Pointer networks were explicitly designed to select positions from variable-sized inputs; pointer-generator models combine
+copying with ordinary lexical generation. This is established machinery, not a concession that invalidates the assistant.
+For multi-hop execution, resolve the selected occurrence to a canonical entity ID. Feed that exact ID into the next lookup. Do
+not feed a diffuse attention-weighted mixture of several name vectors.
+Multiple occurrences of the same entity should map to the same ID. Training should accept any equivalent occurrence, or
+aggregate their probabilities.
+Cheapest experiment: Replace only the entity-output head with a pointer over eligible memory values, preserving the rest of
+the reader.
+Falsifier: If memory selection itself is wrong and pointer output does not improve links, reconstruction was not the dominant
+remaining problem.
+Forecast: 0.70 that this outperforms frozen-scale global decoding on unseen-name links under equal training effort; 0.50
+that it clears all current name-test cells in three seeds.
+12. Where do 48-dimensional random codes break?
+Severity: Serious measurement question, not evidence that 48 dimensions are inherently insufficient.
+First distinguish exact identity, noisy retrieval, and softmax confidence.
+Assume independent, uniformly distributed unit vectors in 48 dimensions. Pairwise cosine similarity has mean zero and
+variance 1/48. My spherical-tail calculation gives approximately:
+For one specified code among 4,096, roughly one competitor exceeds cosine 0.48.
+Across all pairs in that table, roughly one pair exceeds 0.66.
+At 10,000 codes, those thresholds rise to approximately 0.51 and 0.69.
+These are approximate tail-count thresholds, not measured properties of your table or hard capacity limits.
+If the query is exactly the correct unit code, its self-similarity is one: it wins against every distinct code regardless of how
+many there are. Failure arises when the query is noisy, codes have problematic norms, or implementation precision destroys
+the margin.
+For an ideal copied query and logits β qᵀe_j, a Gaussian approximation gives
+p_correct ≈ [1 + (M−1)e^(−β+β²/(2d))]^−1.
+At M=4096,d=48, this is approximately 0.949 at β=13 and 0.987 at β=15. Thus your estimate is plausible for confident
+softmax output under these assumptions—not a guarantee about learned queries. Temperature changes confidence, not an
+unchanged argmax.
+Cheapest experiment: Round-trip the actual code table through the output rule using ideal copied queries, then separately
+test measured model queries and controlled perturbations. Report margin distributions and errors by table seed.
+Forecast: 0.95 that ideal normalised copying is essentially perfect; 0.80 that query error or norm handling becomes limiting
+before literal vector collision.
+A fixed pool of 4,096 unique identifiers also has an obvious separate limit: it cannot name more than 4,096 simultaneous
+distinct entities without expansion.
+13. How should real identity be represented?
+Severity: Blocking for a useful notebook.
+A name is a label, not an identity. Use a stable opaque entity ID with separate aliases and display names.
+“Priyanka,” a typo, and a later married name can refer to one entity. Two people called Mira must remain separate.
+Ambiguous references should produce clarification, not an automatic merge. Never regenerate an entity’s ID from its current
+
+--- page 6 ---
+spelling.
+Name vectors can help a model address entities; they should not be the authoritative identity system.
+Cheapest experiment: An identity-only suite of 40 events: introduce, rename, add alias, query by old name, distinguish
+homonyms, and handle an uncertain typo. Test the resolver independently of the language model.
+Pass mark: Zero false merges; all explicit identity updates preserved across restart. Report unresolved cases rather than
+forcing decisions.
+Falsifier: If the existing system already maintains canonical IDs and alias history independently of codes, the fundamental
+issue is resolved and only extraction remains.
+Forecast: 0.85 that a spelling- or code-only identity scheme fails at least one case; 0.85 that a small explicit registry handles
+the unambiguous cases perfectly.
+14. Was the original operator just memorising embeddings?
+Severity: Serious interpretive uncertainty.
+It may have learned to address a familiar vocabulary without learning arbitrary-code binding. Those are different capabilities.
+But fixed entity embeddings do not imply memorised world facts. If facts are independently redrawn for each world, a model
+must use some information from the supplied world to answer them. It could still exploit row order, entity-specific
+addressing, or other shortcuts.
+Swapping in unseen codes after training is a distribution-shift test. Failure does not prove the model ignored the original
+story.
+Cheapest experiment: Using a successful fixed-name checkpoint, change one queried fact while holding names and
+formatting constant. Separately permute row order and consistently permute familiar entity labels.
+Pass mark: Answers track the changed fact and respect the label permutation, with unaffected queries remaining
+unchanged.
+Falsifier: Failure to track a changed fact would support memorisation or a stronger shortcut explanation.
+Forecast: 0.90 that it tracks in-distribution fact edits; 0.55 that it is invariant to every tested ordering and relabelling
+transformation. Passing still does not establish arbitrary new-code binding.
+C. Memory / notebook 15. Is “a database with a neural reader” a fair description?
+Severity: Cosmetic if acknowledged; serious if presented as a novel learning mechanism.
+Yes. At present, that is substantially what you have.
+External-memory updates can honestly be called system-level learning if teaching changes future behaviour. You should
+specify what changes: stored facts, not weights. No rule requires overwriting, forgetting, or retrieval to be learned for the
+assistant to be useful.
+The strongest near-term learned component is interpreting an unstructured teaching utterance into the right proposed
+memory operation. A database row inserted by your script does not establish that capability.
+Cheapest experiment: Conduct complete teach–query–correct–query episodes from previously unseen human phrasing.
+Hide intermediate gold rows from the model. Score the actual notebook mutation and later answers, not just fluent
+acknowledgements.
+Likely failure: The ingestion boundary, especially correction and reference resolution.
+Falsifier: Accurate independent-language ingestion followed by persistent correct retrieval.
+Forecast: 0.80 that ingestion contributes more errors than exact database retrieval. The honest milestone is “learns user-
+provided facts through a learned language interface,” with the storage and execution mechanisms explicitly identified.
+16. What happens at 10,000 facts?
+Severity: Serious; no demonstrated scalability failure yet.
+The failed 64-person run cannot establish a memory-capacity limit if identity processing had already collapsed.
+
+--- page 7 ---
+Also, “attention over memory” does not automatically mean quadratic cost. One query attending to F precomputed memory
+items can be approximately linear in F; a full self-attention encoder over all memory tokens is different. Your actual
+computation graph matters.
+You do not need learned retrieval for a table keyed by entity and relation. Use an exact index. Learned retrieval becomes
+relevant when the query cannot be mapped reliably to those keys or the evidence is unstructured.
+Cheapest experiment: Once identity is working, keep the queried support chain fixed and increase irrelevant memory
+through a registered ladder. Compare full neural reading with exact indexed retrieval. Do not simultaneously change naming
+conventions or relation semantics.
+Pass mark: ≥99% retrieval correctness in every size cell, with latency and memory reported separately.
+Forecast: 0.75 that the unchanged dense reader misses that mark before 10,000 facts; 0.95 that exact indexing meets it for
+valid structured keys.
+Retrieval failures can hide intact facts, but that is access interference, not necessarily forgetting from storage. Measure
+them separately.
+17. What is the minimal correction and contradiction policy?
+Severity: Blocking before persistent teaching.
+Define policy before training examples.
+My minimal design is an append-only event log plus a derived current view. Each assertion records entity ID, relation ID,
+typed value, source, observation time, applicable time when known, and status. A correction explicitly supersedes an earlier
+assertion; it does not silently erase history.
+For this milestone, assume relations are declared single-valued unless otherwise specified. An explicit user correction can
+replace that user’s current assertion. Conflicting web sources do not win merely by arriving later. Unresolved conflicts return
+a conflict status. Inferences retain their dependencies and are invalidated when supporting facts change.
+Deletion must remove the fact from active retrieval and invalidate dependent caches. Specify separately whether history is
+retained or physically purged.
+Cheapest experiment: Replay 30 hand-written event sequences, including repeated delivery, correction versus genuine
+change over time, contradiction, retraction, and deletion.
+Pass mark: Exact expected state after every event; zero arbitrary conflict resolutions.
+Likely failure: An underspecified “latest row wins” policy.
+Falsifier: Existing policies already distinguish authority, observation time, and valid time.
+Forecast: 0.85 that the current implicit policy fails at least one sequence. This is a software contract problem; training longer
+cannot repair undefined semantics.
+18. How do you preserve “I don’t know”?
+Severity: Blocking for trustworthy factual replies.
+Do not ask the decoder to infer missingness from a vague latent vector.
+The executor should return a discrete status such as UNKNOWN_ENTITY, MISSING_FACT, BROKEN_CHAIN,
+AMBIGUOUS_REFERENCE, or CONFLICT, together with the failed step and available supporting records. An unsuccessful
+result should not contain an answer object that can accidentally be verbalised as a success.
+For now, render unsuccessful statuses with deterministic templates. Permit learned variation only after testing that it
+preserves the status. “I know her teacher, but not that person’s gift” can be composed from verified structure.
+This is not the same as probability calibration. Database absence can be determined exactly; confidence in parsing or
+source correctness cannot.
+Cheapest experiment: A balanced suite of answerable and unanswerable questions, with missingness inserted at each chain
+position. Compare the ordinary decoder with status-controlled rendering, changing only that boundary.
+Pass mark: Zero unsupported factual answers and ≥95% answerable-question completion.
+
+--- page 8 ---
+Forecast: 0.85 that unconstrained rendering produces at least one unsupported answer; 0.95 that a correctly implemented
+status gate eliminates those answers without requiring retraining.
+19. Is never consolidating facts into weights a dead end?
+Severity: Not a current problem. Consolidation would create unnecessary problems now.
+Keep personal facts external. The system can improve over time through accumulated memory without embedding those
+facts in its parameters. Nonparametric memory has long been used to augment models without retraining the underlying
+language model; that does not, by itself, guarantee faithful or authoritative retrieval.
+Consolidation might later help acquire reusable procedures or reduce retrieval cost. Neither need is demonstrated here. A
+cache with explicit invalidation is a much cheaper first response to repeated lookup.
+Cheapest experiment: Hold weights fixed across a sequence of teaching sessions, restart the process, and test earlier facts,
+corrections, and deletions afterward.
+Likely failure: Persistence, indexing, or invalidation—not absence of weight consolidation.
+Falsifier: A demonstrated capability that requires statistical abstraction across episodes and cannot be achieved within the
+external system’s declared representation.
+Forecast: 0.90 that consolidation provides no necessary benefit for the next four-week milestone. Do not add continual-
+learning research to fix a limitation you have not encountered.
+D. Talker 20. Is the 416-number thought bottleneck sensible?
+Severity: Serious; blocking if treated as an enforceable factual boundary.
+It is a possible interface, not evidence of semantic transparency.
+The 256-number gist is an obvious bypass, but even continuous “typed” fields can encode unintended information.
+Research on concept bottlenecks documents exactly this distinction between an interpretable label and what a continuous
+representation actually carries.
+Moreover, 256 float16 values have 4,096 raw representational bits. A 48-token sentence from an 8,192-token vocabulary
+needs only 624 bits to specify its token indices. This is not an estimate of learned channel capacity, but it demonstrates that
+the gist is not intrinsically too small to encode the entire sentence.
+The opposite problem is also real: three relation slots impose a three-relation interface ceiling, regardless of a ten-hop
+operator.
+Cheapest experiment: On factual acts, hold typed fields fixed while swapping or zeroing gist between examples; separately
+change the notebook answer while holding the input thought fixed. Check whether factual output follows verified execution
+or the latent side channel.
+Forecast: 0.80 that unconstrained joint training makes gist causally relevant to factual content.
+Falsifier: Factual outputs are invariant to gist interventions and change correctly with verified memory interventions. My
+recommendation is a variable-length structured event/program interface, with gist excluded from factual authority.
+21. How should real phrasing generalisation be measured?
+Severity: Blocking for an English-generalisation claim.
+Your present split mostly measures new surface forms within familiar constructions. Call it that.
+Use three distinct evaluations: unseen wording, unseen syntactic/compositional constructions, and independently authored
+human input. These should have separate scores. COGS is a useful precedent because it deliberately separates ordinary
+test accuracy from systematic gaps in word–structure combinations; high ordinary accuracy did not imply compositional
+generalisation.
+Ben’s 100 sentences need to exist before the implementation is tuned to their quirks. Keep a separate development set.
+Label intended acts, arguments, ambiguity, and expected state changes independently of the generator’s parser.
+Cheapest experiment: Compare exact semantic-frame accuracy on 100 generator-held-out sentences and the sealed 100
+human sentences, using the same checkpoint and fixed scope.
+Forecast: 0.75 that the human score is at least ten percentage points lower.
+
+--- page 9 ---
+A failure would not prove grammar-generated data are universally hopeless. A reasonable stopping rule for this recipe is
+≥99% generated-data accuracy but <70% independent-human accuracy after two predeclared, bounded repairs. That
+would make further expansion of the same grammar a poor investment.
+22. How much paraphrased data is needed?
+Severity: Serious. No defensible token count can be inferred from 449 frames.
+The danger is not merely repetition. It is that the model can learn your generator’s correlations between wording, argument
+order, and act labels instead of robust interpretation.
+Start with 2,000 candidate paraphrases, not millions. Preserve the canonical intended meaning, but have independent
+annotators reconstruct meaning from the paraphrase without seeing that canonical label. Review disagreements and a
+random sample of agreements. Automatically round-tripping through the original parser is not independent verification.
+A second model can flag disagreements; it should not be the sole judge.
+Cheapest experiment: Add only the verified paraphrase subset to a fixed training recipe. Keep the independent evaluation
+set unchanged and measure exact frame accuracy, particularly negation, corrections, and argument reversal.
+Pass mark: At least a five-point improvement on a development set of genuinely different wording without degraded write
+precision.
+Forecast: 0.60 that the first batch helps by that amount; 0.20 that it closes the human-language gap. Increase quantity only
+when the learning curve, not the generator’s convenience, justifies it.
+23. What are the consequences of sentence-level children’s-text training?
+Severity: Serious for the broad assistant goal; acceptable for a narrow reply generator.
+Expect weak preparation for multi-turn reference, instructions embedded in long context, document structure, code, exact
+tool arguments, and sustained dialogue state. Short-story fluency is not equivalent to those abilities. TinyStories
+demonstrates impressive restricted-domain generation by very small models, not general terminal-agent competence.
+The separator issue needs a conditional answer. If sentences are independent examples with attention reset, missing inter-
+sentence separators is not itself contamination. If sentences are concatenated into one stream without boundaries, training
+invents continuity that was not present. Either way, termination needs a defined representation.
+Cheapest experiment: A 40-case capability inventory containing paired sentences, pronouns requiring the previous turn,
+explicit corrections, quoted statements, and a simple structured tool result. Test comprehension through exact semantic
+outputs, not fluent continuation.
+Falsifier: Strong performance on these structures despite their absence from the stated training regime.
+Forecast: 0.85 that discourse-dependent cases substantially underperform independent sentences. This does not matter for
+templated one-turn replies; it matters immediately for “her brother’s” and tool-result handling.
+24. What damage can heuristic name masking cause?
+Severity: Blocking for identity fidelity.
+Your architecture turns missed detection into a particularly severe error: an entity that never enters the copy inventory may
+become impossible to name correctly. False positives can remove ordinary lexical information and replace it with spurious
+identity structure.
+Capitalisation is not a sufficient authority for permanent identity creation. Preserve the raw text and candidate spans. Let
+uncertain mentions remain unresolved. Distinguish proposing an entity from committing a new identity.
+Cheapest experiment: Build a 100-sentence masking test with sentence-initial common words, “I,” titles, lowercase names,
+multiword names, possessives, brands, places, and repeated aliases. Annotate spans independently. Evaluate exact mention
+identity and downstream recoverability, not only token-level detection scores.
+Pass mark: Zero irreversible identity merges or lost required output names; uncertain cases must remain recoverable.
+Likely cause: The hard copy-only output amplifies upstream detection errors.
+Falsifier: The pipeline retains recoverable raw spans and can repair the mention inventory before replying.
+Forecast: 0.95 that the capitalisation heuristic fails this suite; 0.80 that some failures prevent otherwise-correct replies.
+
+--- page 10 ---
+25. What training order avoids the frozen-decoder problem?
+Severity: Serious.
+The likely failure is interface mismatch: the decoder learns the encoder’s latent distribution, while the thinker later produces
+a different distribution. Teacher-forced decoder success can conceal this.
+Train in this order: establish a canonical reply representation; train rendering from those canonical replies; train input parsing
+into the same structured interface; execute notebook operations; then train any optional thinker against explicit reply-state
+targets.
+For the earliest assistant, a deterministic renderer is the strongest debugging control.
+Cheapest experiment: Feed the frozen decoder both gold reply thoughts and thinker-produced reply thoughts for the same
+200 cases. Measure semantic fidelity, copied identities, and status preservation separately.
+Pass mark: The thinker-to-decoder path loses no more than two percentage points relative to gold thoughts.
+Forecast: 0.75 that the initial loss exceeds that threshold.
+Falsifier: Matched fidelity despite measurable latent-distribution differences.
+If necessary, unfreeze the decoder’s interface adapter first, with canonical-thought rehearsal. Do not immediately jointly
+unfreeze everything, especially the operator: that destroys the localisation of failures and can let fluent text compensate for
+incorrect structured execution.
+26. What should happen to and future argument slots?
+Severity: Serious interface defect, not a reason to keep widening one flat vector.
+Pass the replaced value as a structured reference returned by the correction transaction. The language module should not
+reconstruct history that the notebook already knows.
+Use a fixed envelope, not a fixed list of every conceivable argument: act type, argument references, result status, evidence
+references, and an optional list of typed values. Individual act schemas can vary without changing a global thought width.
+This moves some information outside the neural bottleneck. That is acceptable; document it rather than pretending the
+bottleneck is the entire computation.
+Cheapest experiment: Render all correction cases requiring old values using an externally supplied old_value_ref, changing
+only that interface.
+Pass mark: Exact old/new value distinction in every case, including repeated corrections.
+Forecast: 0.95 that this solves the missing-information problem without widening the latent vector. If it does not, the failure
+is reference handling or rendering, not insufficient representational capacity.
+27. Are 33M parameters and 1.2B tokens enough, and what are reasonable gates?
+Severity: Not an established capacity problem; serious uncertainty about this architecture and task.
+There is good precedent for coherent restricted-domain English at much smaller sizes. TinyStories reports fluent multi-
+paragraph stories from models below ten million parameters. Your proposed model has enough scale to make short, simple
+replies plausible. The paper does not establish that your encoder–bottleneck–thinker–decoder arrangement will learn
+effectively.
+Expect formulaic fluency before robust semantics. Token count cannot compensate for a missing slot, a leaking evaluation
+set, or an unreachable copy target.
+Suggested gates:
+S0: Overfit a tiny fixed set, verify every copy action and status, and pass restart tests. Any structural failure blocks longer
+runs.
+S1: On 200 independent held-out sentences, ≥95% human-judged meaning preservation under free decoding, with exact
+identity copying. Demonstrate that changing the latent changes the reconstructed meaning; teacher-forced loss alone is
+insufficient.
+S2: ≥98% exact act-plus-arguments accuracy on fresh generated combinations, with zero incorrect committed writes in a
+
+--- page 11 ---
+dedicated 200-case write test.
+S3: ≥90/100 correct complete human-authored turns, ≥90% coverage of answerable cases, and zero unsupported factual
+assertions. These are engineering gates, not strong rare-failure guarantees.
+Cheapest experiment: A bounded S0/S1 learning-curve pilot, with no architectural changes during it.
+Forecast: 0.75 that the model can eventually produce fluent narrow-domain replies at the stated scale; 0.45 that the first
+complete implementation passes the proposed semantic gates without interface repairs.
+28. How should the ordinary LM yardstick receive facts?
+Severity: Serious fairness issue.
+Give it the facts in its context. Otherwise you are testing access to information, not architecture.
+Start with oracle-correct current facts that fit comfortably within its window. Then compare both models with the same
+retrieved subset. Test persistent ingestion separately, where each system must process the same teaching sequence.
+Also, 33M versus 29M is approximately a 13.8% mismatch, assuming those estimates survive exact counting. Your talker
+comparison currently has its own version of R3.
+The baseline should receive comparable entity/copy assistance in an additional control. Otherwise a victory may come from
+an external resolver rather than the thought architecture.
+Cheapest experiment: On identical notebook states and questions, compare the modular system with the ordinary LM
+supplied the relevant facts. Include corrections and missing facts, not just positive queries.
+Forecast: 0.65 that the ordinary LM matches or beats initial modular end-to-end accuracy at small memory sizes.
+If it wins, say so. The modular system could still offer explicit provenance, predictable updates, or stronger abstention
+boundaries—but those become the claims, and each needs measurement.
+29. What other leakage routes should be audited?
+Severity: Blocking for final evaluation.
+Audit the entire data-production dependency graph, not just final sample membership.
+Important routes include tokenizer fitting, entity lexicons, near-duplicate paraphrases, shared story worlds, frame identifiers,
+source ordering, curriculum selection, checkpoint selection, and code pools. A smoke-test shard that is a training-stream
+prefix is fine for debugging, but it is not an independent evaluation set.
+Tokenizer exposure does not automatically equal answer-label leakage. It does invalidate a stricter claim of wholly unseen
+text when that exposure was forbidden.
+Cheapest experiment: Regenerate a miniature complete pipeline from a manifest containing artificial forbidden canaries.
+Audit membership at raw text, tokenised examples, entity tables, code assignments, and final batches. Independently
+inspect the actual generator’s split logic.
+Pass mark: No forbidden content reaches a prohibited stage; deliberate contamination is detected.
+Forecast: 0.70 that one additional leakage or split-definition problem appears.
+The unused broken spans do not retroactively invalidate computations that demonstrably never consumed them. They must
+nevertheless be fixed before any stage begins relying on them.
+30. How should unattended Windows runs work?
+Severity: Blocking for approved overnight runs.
+Assuming the existing installation already supports your GPU, replace bash orchestration with a small native Python
+launcher using only installed dependencies. Do not make success depend on installing WSL, new drivers, or a different
+framework.
+A resumable checkpoint needs model, optimiser, scheduler, mixed-precision state when applicable, all relevant random-
+number states, global sample position, and sampler state. Save at optimiser-step boundaries unless accumulated gradients
+are also preserved.
+
+--- page 12 ---
+Use deterministic sample IDs, initially num_workers=0, an explicit main entry point, local checkpoint files, temporary-file
+writes followed by replacement, and retention of the previous validated checkpoint. Poll a stop file instead of relying on Unix
+signal behaviour. A supervisor may retry a transient crash a bounded number of times; it should not repeatedly restart NaNs
+or configuration mismatches.
+Cheapest experiment: Compare uninterrupted training with save–terminate–resume on the same machine, configuration,
+and sample sequence. Check the next batch IDs, optimiser state, subsequent loss, and final parameters. Separately
+interrupt a checkpoint write and verify recovery from the previous version.
+Forecast: 0.80 that the current implementation reveals a state-restoration or data-position defect; 0.85 that these can be
+repaired without installations.
+Do not demand cross-platform bit identity. Do demand same-platform reproducibility where supported, with any numerical
+tolerance declared in advance. No six-hour run until this passes.
+E. Scale-up and data 31. Can masking keep world facts out of weights?
+Severity: Blocking for the literal “starts knowing no facts” promise.
+No. Masking names does not remove facts expressed through common nouns, numbers, relations, events, or recurring
+structures. Nor does it stop a model learning associations among masked positions.
+More fundamentally, your requirement should be behavioural and architectural: personal or episodic factual claims require
+authorised supporting memory, even though the language model contains linguistic and general-world regularities. That is
+testable. Proving that no factual information exists anywhere in weights is not a realistic consequence of entity masking.
+Cheapest experiment: Prepare counterfactual fact sets, including facts without proper names. For each query, test fresh
+sessions with memory absent, memory agreeing, memory contradicting the training association, and relevant memory
+deleted. Clear conversation state and caches so they are not mistaken for weights.
+Measure unsupported answers, correct obedience to task-authoritative memory, and abstention after deletion. For a direct
+memorisation assay, plant fictional canary facts only in training and test their recovery without memory.
+Falsifier: Strong invariance to training-associated facts and correct dependence on memory would support the enforcement
+boundary, though not the stronger claim of fact-free weights.
+Forecast: 0.90 that name masking alone fails the behavioural test after broad-text training; 0.85 that separating factual
+execution from free text makes the boundary substantially more reliable.
+32. Is 209M on 4B tokens realistic, and how should $27 be used?
+Severity: Serious scheduling risk; not obviously a VRAM impossibility.
+For a conventional dense-transformer approximation,
+6ND = 6(209×10^6)(4×10^9) ≈ 5.0×10^18 FLOPs.
+That accounting is only a first estimate for your multi-stage architecture. Compute-optimal scaling work concerns explicit
+parameter/data/compute trade-offs; its ratios are not guarantees for a particular small encoder–decoder implementation.
+Finishing in 50–110 hours requires approximately 22,200–10,100 training tokens per second, or 28–13 sustained TFLOP/s
+under that approximation. Those are requirements to measure, not throughput I can confirm from a GPU model name.
+Standard Adam-style parameter, gradient, and optimiser storage can be on the order of 3–4 GB at this parameter count,
+before activations and runtime overhead. Fitting may be feasible; throughput remains unverified.
+Cheapest experiment: Run a 15–20-minute representative training benchmark with the real sequence length, batch
+construction, precision, optimiser, evaluation, and checkpoint overhead.
+Forecast: 0.50 that the present implementation supports the 50–110-hour estimate. Even the favourable estimate becomes
+150–330 GPU-hours for three seeds, before baselines and repairs.
+Cut the 90M intermediate milestone and all 209M training for now.
+Keep the $27 until a specific run passes preflight. As checked for this review, Runpod lists RTX 4090 pods at $0.74/hour and
+RTX 5090 pods at $0.99/hour; storage and availability are additional considerations. Use rental money for an independent
+confirmation or a demonstrated environment bottleneck, not open-ended tuning.
+33. What established work should you reproduce?
+
+--- page 13 ---
+Severity: Serious research-positioning problem.
+Yes, much of the architecture revisits established ideas. That is entirely reasonable for a student project. The mistake would
+be treating an old mechanism as novel while omitting the baselines that already expose its limitations.
+The closest precedents are End-to-End Memory Networks for recurrent fact reading, Pointer Networks for dynamic output
+identities, and Neural Programmer-Interpreters for learned execution supported by program structure and traces.
+Retrieval-augmented systems, kNN language models, RETRO, and MemGPT-style memory orchestration demonstrate
+different ways to place knowledge or context outside ordinary model parameters. None makes retrieved material
+automatically correct or guarantees that the generator follows it.
+For your project, the likely failure modes are incorrect addressing, noisy intermediate state, retrieval misses, parser errors,
+and programs that obtain the correct answer for the wrong reason. The last problem is central to learning programs from
+final answers alone.
+Cheapest useful replication: Reproduce a small Memory Network baseline on the published bAbI one-, two-, and three-
+supporting-fact tasks. Then add your renaming or length split as a clearly labelled extension. For language composition, use
+an established SCAN or COGS split rather than relying exclusively on your own held-out frames.
+Forecast: 0.80 that one replication supplies a stronger diagnostic or baseline than another custom controller variant.
+Do not start all these replications. Choose one relevant to the claim you keep. I would choose Memory Network/copying for
+the current notebook thread, not DNC or RETRO infrastructure.
+F. Ben’s newer ideas 34. What should “guess freely, check strictly” measure?
+Severity: Serious conceptual issue; not a current priority.
+A checker can establish consistency with supplied premises, not the truth of those premises. Keep proposed hypotheses
+separate from accepted facts.
+A useful toy uses a finite hypothesis language—for example short relational rules—and hidden evaluation worlds where rule
+truth can be checked independently. The generator sees demonstrations; the checker sees allowed verification evidence,
+not the hidden answers.
+Cheapest experiment: Give a fixed candidate budget to the learned generator, random sampling, and systematic
+enumeration. Use the identical verifier and score true rules discovered, false rules accepted, duplicate proposals,
+verification cost, and performance on new worlds.
+Pass mark: More true rules per verification call than enumeration at the same budget, without a higher false-acceptance
+rate.
+The generator’s contribution is not that it avoids enumeration in principle. It must prioritise useful candidates better when
+exhaustive enumeration is costly.
+Likely failure: The learned generator either redistributes trivial candidates or exploits weaknesses in the checker.
+Falsifier: A reproducible efficiency advantage on held-out rule families with independently verified truth.
+Forecast: 0.70 that simple enumeration matches or beats the first learned generator on a sufficiently small, exactly
+checkable toy. That would make the learned generator unnecessary there.
+35. What is the minimum viable web design?
+Severity: Blocking for autonomous ingestion from the web.
+A large model rewriting pages is a legitimate component, but then that model performs much of the reading. Attribute the
+capability to the pipeline, not solely to Ben’s tiny model.
+Initially, web-derived assertions should enter a quarantine, not the trusted notebook. Retain the original source, quoted
+supporting span, retrieval time, extraction method, and any transformation. A user approval or explicitly defined source
+policy promotes an assertion. Neither page text nor a rewriting model can grant itself that authority.
+Do not confuse source reputation, extraction confidence, and factual truth. They are separate fields.
+Cheapest experiment: Use local page fixtures containing ordinary facts, conflicting facts, quoted instructions, and attempts
+to induce unrelated memory changes. No live browsing is necessary.
+
+--- page 14 ---
+Pass mark: Zero unauthorised memory writes; ≥90% faithful extraction on the simple, unambiguous subset. Report
+extraction and authority enforcement separately.
+Forecast: 0.95 that a genuinely isolated quarantine blocks automatic writes; only 0.40 that the initial tiny reader meets the
+extraction mark on realistic page text.
+The cheapest first web feature is “show potentially relevant sources for Ben to review,” not “autonomously learn from the
+internet.”
+36. Is the proposed tool-call exam meaningful?
+Severity: Useful component test, but blockingly incomplete as a harness-readiness test.
+Choosing among five familiar tools and filling arguments measures narrow semantic parsing. It does not establish that the
+model can operate a terminal agent.
+Real integration requires a particular wire protocol, call identifiers, tool-result association, multi-turn state, exact strings,
+error handling, and appropriate termination. OpenAI’s function-calling interface, for example, distinguishes calls from their
+outputs and links results through call_id; structured schema conformity does not establish that the chosen operation is
+correct.
+Current Codex documentation also distinguishes model-provider configuration and connection details. Pin the exact fork
+and protocol rather than assuming “OpenAI-compatible” identifies one complete contract.
+Cheapest experiment: Before using a learned model, replay 20 golden multi-turn transcripts through the adapter using a
+scripted oracle model and stub tools. Include a tool error, no-tool answer, repeated result, long result, and exact
+path/number handling. This isolates integration from intelligence.
+Then test the learned model on end-to-end task completion, not call classification. Include withheld argument combinations,
+ambiguous requests, irrelevant tools, unavailable tools, and tool descriptions whose names are permuted.
+Forecast: 0.80 that the first adapter fails at least one golden transcript; 0.20 that a model scoring 95% on the proposed
+one-turn exam also completes ≥95% of these multi-turn tasks without additional training.
+Keep all execution read-only or stubbed. A 95% call-selection score is not an acceptable write-authorisation boundary.
+37. Is putting the model behind a terminal agent a research result?
+Severity: Cosmetic if called a demo; serious if used as evidence of general agent competence.
+The interface is a demo. The measured capability behind it may be a research result.
+The honest claim could be: “A small model selects among a restricted set of read-only tools from bounded language inputs,
+through a custom adapter.” It is not “a small replacement for a general coding agent” unless the corresponding task
+distribution is tested.
+The likely source of overstatement is attributing the surrounding harness’s capabilities to the model.
+Cheapest experiment: Run the same sealed task set through both a bare test driver and the terminal interface. Record which
+decisions the model makes and which are supplied by adapter logic, templates, or hard-coded routing.
+Falsifier: The model independently performs the same broad decisions that the stronger agent would perform, on
+comparable tasks.
+Forecast: 0.90 that the first integration primarily demonstrates interface compatibility rather than a new model capability.
+That can still be a worthwhile student demo.
+G. Method and honesty 38. Is preregistration helping, or becoming theatre?
+Severity: Serious process-design issue.
+It is helping where it prevents outcome-dependent pass marks, seed suppression, and retrospective claim changes. The
+independent audit already caught consequential defects.
+It does not make a weak comparison strong, a correlated sample independent, or a post-hoc story true.
+Separate discovery from confirmation. Discovery still gets a short timestamped manifest: hypothesis, intervention, budget,
+predicted observable, and failure classification. Confirmation gets frozen code, data, seeds, metrics, selection rules, and an
+independent audit. Do not require a committee proceeding to inspect a gradient.
+
+--- page 15 ---
+After an unexpected result, write competing explanations and identify an observation on which they disagree. The next
+experiment should distinguish them. A fluent retrospective explanation is not a finding.
+Cheapest experiment: Apply this lightweight format to the next three cheap diagnostic waves. Record human/agent
+preparation effort, computational effort, and whether each wave actually changes a decision.
+Forecast: 0.85 that preparation overhead falls by at least half without losing a substantive safeguard.
+Falsifier: Important ambiguity or unreported flexibility reappears because the lighter manifest omits necessary commitments.
+Restore the particular missing safeguard, not the entire bureaucracy.
+39. How do you catch shared AI blind spots?
+Severity: Serious. Separate agents are not equivalent to independent assumptions.
+Independence should come from different mechanisms of verification: hand-worked examples, a small symbolic oracle,
+property tests, and deliberately broken controls—not only another prose review.
+Ben should personally verify a small number of complete cases. For each, he should know the source facts, expected
+intermediate state, expected answer, and why the scoring code should distinguish a wrong answer. He should also witness
+that teaching changes memory while the weight tensors remain unchanged.
+Cheapest experiment: Introduce deliberate defects into a disposable test copy: always choose the first entity, ignore
+corrections, omit a queried fact, reverse a relation, or expose a forbidden canary. Ask the audit pipeline to detect them
+without being told which defect is present.
+Pass mark: Every defect is caught by the intended test, and ordinary valid cases remain accepted.
+Likely failure: All agents have relied on the same generator, labels, or informal task interpretation.
+Falsifier: Independent hand traces and independent executable oracles consistently agree with the implementation and
+catch the injected defects.
+Forecast: 0.75 that this reveals at least one blind spot missed by ordinary model review.
+40. How should forecasts be scored when outcomes are unforeseen?
+Severity: Serious calibration issue, but not a reason to abandon forecasting.
+Forecast outcomes at two levels: whether the gate passes, and what broad failure class occurs. Suggested classes are
+partial learning, unchanged failure, regression/collapse, and invalid run. Include an “other valid outcome” category.
+You did not need to predict the exact R4 scalar mechanism to assign probability to catastrophic optimisation failure.
+Use Brier or log scores on the registered events. A forecast of 0.80 followed by failure has Brier loss 0.8² = 0.64. Do not
+retrospectively redefine “success” or subdivide one experiment-level forecast into three independent mistakes because
+three seeds shared the same failure.
+Keep separate records for forecasts and later causal diagnoses. A correct diagnosis after observation does not improve the
+original forecast score.
+Cheapest experiment: Score every existing forecast whose original event definition is recoverable. Mark ambiguous
+forecasts unscorable rather than reconstructing convenient meanings. Compare against a simple historical pass-rate
+forecaster.
+Forecast: 0.75 that the confident model forecasts underperform that simple reference over the recoverable record. The
+sample may be too small for a strong calibration conclusion, but it can still justify less aggressive confidence and more
+cheap failure-mode probes.
+41. What should happen to the concept toy?
+Severity: Serious calibration failure for that benchmark; not evidence of a general impossibility.
+Choose (a): park it for the next four weeks.
+“Too hard” is valid as a registered statement about those baselines under those budgets and pass marks. It does not
+establish that the concepts are unlearnable. Conversely, “not yet learned” is a label for current failure, not proof that
+additional compute will fix it.
+
+--- page 16 ---
+The likely explanation is a combination of insufficient successful fitting and a smaller genuine transfer problem. I would
+revise that if independent auditing showed that “not learned” fits actually achieve the relevant training objective, or that
+observations cannot identify the hidden concept.
+Cheapest reopening experiment—not a current priority: Choose two “not learned” cases by a predeclared index rule and
+increase only their training budget. Freeze dataset, architecture, optimiser/schedule treatment, fit classification, and
+evaluation. Specify whether this is continuation or training from scratch; those are different experiments.
+Forecast: 0.65 that at least one improves materially; 0.30 that merely doubling the full budget would achieve the original
+9/12 criterion.
+Do not replace the original verdict. A later easier benchmark or larger-budget result receives a new version.
+Yes: weeks of procedural work for a 62-second calibration run indicate a mis-sized process.
+42. What single thread should own the next four weeks?
+Severity: Blocking project-management problem.
+Build a small English interface for teaching, correcting, and querying a persistent factual notebook.
+Use stable IDs, a learned supervised parser, a deterministic executor, and initially deterministic replies. Keep the neural
+operator as an ablation, not a dependency whose seed failure prevents the entire assistant from working.
+The central question becomes: How well can a small learned language interface manage explicit facts under independent
+human phrasing, and which errors remain after execution is made exact?
+Freeze the concept toy, dispatcher RL, broad-text scale-up, web ingestion, dreamer, and terminal-agent fork.
+Cheapest decisive experiment: The sealed 100-turn end-to-end test described above, plus a fixed lifecycle suite for
+corrections, aliases, missing facts, persistence, and deletion. Require ≥90 correct complete turns, ≥90% answerable
+coverage, and no incorrect committed writes in the dedicated write suite. Report every seed separately.
+Forecast: 0.70 that this narrowed project yields a credible bounded demonstration within four weeks; 0.20 that the current
+simultaneous programme yields convincing evidence for all its central claims.
+The most likely cause of failure would be language interpretation and undefined scope. That is a useful, localised research
+outcome—not a reason to add a larger thinker.
+43. What is the honest description of the current system?
+Severity: Serious if the description exceeds this evidence.
+We have a small neural reader trained on synthetic worlds with a fixed vocabulary and relation set. When a hand-written
+executor supplies an ordered sequence of lookups, two of three trained reader seeds answer the tested chains correctly
+through ten hops. A learned controller has not reliably generalised beyond its training lengths, and some controller
+experiments combined mechanisms later found to have separate defects. New facts can be added to an externally managed
+table without changing weights, but reliable handling of new entity codes and relation types has not been demonstrated. A
+larger English interface is under construction and has not yet established independent human-language performance. The
+system has not demonstrated general conversation, concept learning, web reading, or terminal-agent competence.
+The likely source of inflation is describing planned integration as existing capability.
+Cheapest experiment: Attach a specific evaluation artifact to every capability sentence in the project description. Delete or
+qualify any sentence without one.
+Forecast: 0.95 that at least one current headline claim needs narrowing. A new sealed end-to-end result would justify
+updating the paragraph; an architectural diagram would not.
+44. What could be new, and what should make you stop?
+Severity: Blocking for a novelty claim, not for educational value.
+Basic external memory, copying, modular execution, and length generalisation are not new. Even recurrent-model length
+generalisation remains an active, specifically studied area; a longer successful chain alone does not establish novelty.
+Your best candidate for new evidence is the R4 mechanism: a minimal, reproducible account of how a tied identity pathway
+becomes self-suppressing, supported by gradient analysis, controlled interventions, and clearly specified conditions under
+which it does or does not occur. A useful contribution would show more than one failed seed or one rescued hyperparameter
+
+--- page 17 ---
+value.
+A second candidate is a rigorous resource-bounded comparison showing an advantage of a particular modular interface
+under independent language, renaming, corrections, and length shift. It would need stronger baselines and an identified
+advantage—not merely a functioning demo. Neither candidate’s novelty is established by this review; closely matched prior
+work still needs exclusion.
+Cheapest experiment: Turn R4 into a minimal causal reproduction and independently replicate its predicted gradient signs
+and collapse/rescue behaviour before expanding the architecture.
+Forecast: 0.70 that it yields a convincing mechanism-level result; 0.25 that the eventual finding is sufficiently distinct from
+existing work to support a substantive research contribution.
+Stop rules: After two bounded, clean repairs, stop the learned controller branch if it still lacks reliable out-of-length
+execution. Stop requiring a neural reader if exact retrieval is more accurate and no compensating capability is demonstrated.
+Stop scaling when a smaller model already fits training data but fails the independent semantic tests.
+Stop a claim or component—not Ben’s opportunity to learn from the result.
+MISSED PROBLEMS
+M1. The output candidate set is ambiguous. You describe 4,096 output candidates but chance performance of 1/16. Those
+can coexist if training and evaluation use different masks, but that distinction is consequential. Specify the candidate set
+used by the loss, decoding, and chance calculation.
+M2. “Never trained” codes may have appeared as negatives. If all 4,096 codes participate in the training softmax, the held-
+out half influences the objective even when never used as positive labels or inputs. A stronger zero-shot test generates
+fresh codes after training.
+M3. Sampling codes with replacement can create actual identity collisions. Sixteen independent draws from 4,096 codes
+have about a 2.9% probability of at least one repeated code. Assert uniqueness within each world. Persistent global identity
+requires a different allocation policy.
+M4. Rebinding codes between worlds is not persistent identity management. A procedure valid for independent training
+episodes can corrupt a notebook if reused across sessions.
+M5. Long chains in small worlds can collapse semantically. Repeated nodes, cycles, shared destinations, and small final-
+answer sets can make an incorrect shorter execution return the same answer. Test deliberately non-shortcut chains and
+verify traces.
+M6. One-hop accuracy under random queries may overstate multi-hop reliability. Intermediate entities reached during
+execution need not follow the same distribution as uniformly sampled subjects. Evaluate atomic accuracy conditional on
+being reached at each hop.
+M7. Pipeline reliability compounds. Under an illustrative independence assumption, five components each succeeding 99%
+of the time yield only about 95% end-to-end success. Do not substitute excellent isolated slot scores for full-turn
+correctness.
+M8. The unit of evaluation may be wrong. Hundreds of questions drawn from a handful of worlds are not hundreds of
+independent tests of world generalisation. Preserve world IDs and report world-level structure.
+M9. “Perfect” needs a denominator and dependence caveat. Even 512 independent error-free trials permit a one-sided 95%
+error-rate upper bound of about 0.58%. Correlated trials justify less confidence.
+M10. The act count needs clarification. You list nine act families and an eight-number act field. That is fine for an eight-
+dimensional embedding, but impossible as a one-hot encoding of nine mutually exclusive acts. Verify the actual contract.
+M11. Arbitrary literal values need representation. Names are not the only out-of-vocabulary problem. Addresses, quotations,
+dates, measurements, filenames, and free-text notes need lossless storage and copying too.
+M12. The copy inventory may omit entities introduced by retrieval. A question can ask for someone never mentioned in the
+current utterance. Copy targets must include eligible notebook and tool-result values, not only input-side names.
+M13. Slot-wise accuracy can conceal unusable joint accuracy. Correct act, subject, relation, and object must occur together.
+Register exact whole-event correctness.
+M14. Autoencoding can succeed while the latent is largely ignored. Teacher forcing gives the decoder previous gold words.
+Evaluate generation from the latent alone and perform latent counterfactuals.
+
+--- page 18 ---
+M15. Raw-text skip paths can defeat the advertised bottleneck. Encoder cross-attention, residual routes, cached states, and
+auxiliary inputs must be included in the information-flow audit.
+M16. Acknowledgement is not transaction success. “I’ll remember that” must only be emitted after a validated durable write,
+not merely after predicting the TELL act.
+M17. Quotes, hypotheticals, and reported speech are not assertions. “Suppose Mira had a drum” and “Jon falsely said Mira
+had a drum” must not write the same fact as “Mira has a drum.”
+M18. Working context and durable memory need separate namespaces. A temporary assumption used to answer one
+question should not silently become a permanent belief.
+M19. Schema changes can invalidate old memories and checkpoints. Version entity records, relation semantics, thought
+schemas, and migrations. Round-trip tests should survive restart and upgrade.
+M20. Repeated delivery can duplicate mutations. Tool retries and resumed sessions need event IDs or another idempotency
+mechanism. Otherwise corrections, counts, and histories can be applied twice.
+M21. Deleting a source fact may leave derived answers alive. Track dependency invalidation in caches, inferred facts, and
+summaries—not only the main table.
+M22. The parameter count is not the complete system size. Report frozen parameters, non-trainable code tables, external
+memory bytes, preprocessing, and execution logic. None is illegitimate; none should be invisible.
+M23. The same model seed can hide several randomness sources. Separate weight initialisation, data order, codebook,
+world generation, and evaluation seeds. This makes a failure reproducible and diagnosable.
+M24. Exact restart can fail through data replay even when weights restore. A restored model that receives repeated or
+skipped batches is not the continuation you think you ran.
+M25. Constant-call policies may exploit answer-frequency imbalance. Evaluate majority-value, most-recent-value, first-row,
+and random-active-entity controls. Use the actual candidate distribution when computing chance.
+M26. The concept toy may be observationally underdetermined. Different hidden concepts can agree on all visible training
+evidence but imply different held-out labels. Check identifiability before treating every failure as an optimisation problem.
+M27. Data volume is not distinct information. Track unique source documents, duplicate rates, template families, and
+repeated semantic events. “1.2B tokens” can hide a much smaller effective training distribution.
+M28. Dataset provenance is part of reproducibility. Freeze exact versions, filtering rules, source licences/terms, and
+synthetic-generation recipes. A named dataset alone does not identify the training corpus.
+M29. Cost accounting should include preparation. Generated data, failed launches, evaluation, checkpointing, and agent
+review can dominate a tiny model’s actual research cost.
+M30. You need a task-selection stopping rule. Continually choosing a new toy whenever the current one fails can create
+project-level selection bias even when every individual run is honestly registered.
+TOP 10 NEXT
+1. Freeze one four-week claim. Build the teach–correct–query notebook assistant. Write the supported acts, values,
+relation semantics, and uncertainty behaviour before adding more model components.
+2. Create the independent human benchmark now. Keep development and sealed evaluation separate. Define exact
+expected memory changes and answers, including ambiguous and unsupported cases.
+3. Write the executable memory contract. Stable IDs, aliases, correction semantics, provenance, missingness, deletion,
+and persistence should have deterministic tests before a model controls them.
+4. Finish the existing no-training controller audit. Preserve R1 as observations about particular combined configurations.
+Withdraw causal claims that the probe cannot support. Do not start another broad RL curriculum.
+5. Run experiment 27 unchanged. Resolve the output-candidate and code-allocation definitions first. Report scale
+freezing as one intervention, with all original pass cells and all seeds.
+6. Test pointer output as the next separate name intervention. Use canonical entity handles between hops. Do not
+bundle this with input normalisation or relation changes.
+7. Establish exact execution as the assistant’s reference path. Use the fixed loop or indexed lookup. Compare the neural
+
+--- page 19 ---
+reader against it rather than making the assistant depend on it.
+8. Train the smallest supervised language interface that can test the claim. Start with act/argument prediction and
+deterministic rendering. The 33M talker is not automatically the cheapest experiment.
+9. Pass Windows restart and data-position tests before overnight training. Only then authorise a bounded larger run.
+Keep cloud money available for a specific verified need.
+10. Run one locked comparative evaluation and write the result. Include the ordinary LM with equivalent facts, the
+deterministic baseline, every seed, costs, and failures. Decide which component earns continued work from that
+evidence.
+STOP DOING
+Stop treating more parameters or more text as remedies for undefined interfaces.
+Stop using sparse terminal-reward RL to discover a trace your generator already knows, unless discovering that trace
+is itself the narrowly isolated research question.
+Stop combining unvalidated mechanisms and attributing the outcome to one of them.
+Stop calling familiar-frame paraphrases compositional English generalisation.
+Stop treating output fluency, reconstruction loss, or individual slot scores as end-to-end semantic correctness.
+Stop calling the model fact-free because names are masked.
+Stop calling code-pool holdout equivalent to real identity handling.
+Stop maintaining simultaneous active branches for concepts, dreamer, web, tools, and 200M scale-up.
+Stop spending weeks of procedure on cheap diagnostics. Preserve commitments and auditability; remove ceremony
+that does not protect a concrete inference.
+Stop defending a component because it was difficult to build. Keep it only if it contributes a measured capability, a
+useful scientific question, or a clearly labelled educational result.
+The next credible result is not “we built a tiny general assistant.” It is “we identified exactly what a small learned language
+interface can reliably do with explicit, correctable memory—and exactly where it fails.”

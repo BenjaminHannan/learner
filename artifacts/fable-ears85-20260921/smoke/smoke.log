@@ -1,0 +1,32 @@
+smoke encoder_params 149,014,272  device cpu
+[4701] step 1/20 loss 20.7848 1.315s/step
+[4701] step 2/20 loss 17.6746 1.206s/step
+[4701] step 3/20 loss 15.6936 1.199s/step
+[4701] step 4/20 loss 16.1765 1.154s/step
+[4701] step 5/20 loss 14.9175 1.136s/step
+[4701] step 6/20 loss 15.7731 1.135s/step
+[4701] step 7/20 loss 15.0117 1.101s/step
+[4701] step 8/20 loss 14.7949 1.078s/step
+[4701] step 9/20 loss 12.6311 1.079s/step
+[4701] step 10/20 loss 11.9227 1.087s/step
+[4701] step 11/20 loss 12.3987 1.088s/step
+[4701] step 12/20 loss 11.6126 1.080s/step
+[4701] step 13/20 loss 12.3837 1.079s/step
+[4701] step 14/20 loss 11.8440 1.072s/step
+[4701] step 15/20 loss 12.5788 1.073s/step
+[4701] step 16/20 loss 12.2382 1.064s/step
+[4701] step 17/20 loss 10.8052 1.061s/step
+[4701] step 18/20 loss 10.4243 1.056s/step
+[4701] step 19/20 loss 10.9664 1.040s/step
+[4701] step 20/20 loss 10.5383 1.028s/step
+smoke full-set eval loss before=20.0755 after=11.1993
+smoke rss post-train: 3405 MB
+smoke rss post-cal-encode: 3405 MB
+smoke loss step1=20.7848 step20=10.5383 decreases=True width=22
+smoke rss pre-tempfit: 3405 MB
+smoke rss post-tempfit: 3405 MB
+smoke rss post-save: 3405 MB
+reload ckpt keys=['encoder_params', 'freeze_layers', 'seed', 'state', 'temps'] head_identical=True temps_identical=True
+smoke rss post-reload: 4387 MB
+cal_score n=5000 unscorable=0 correct=435 executed=0 echoed=0 rephrased=5000 silent_wrong_write=0 tau_exec=0.5074
+{"n": 5000, "correct": 435, "executed": 0, "echoed": 0, "rephrased": 5000, "silent_wrong_write": 0}

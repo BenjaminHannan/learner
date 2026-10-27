@@ -1,0 +1,29 @@
+items: 200 from data/open/bench65/fable_edit_200.jsonl
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   2%|▏         | 7/290 [00:00<00:04, 69.96it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 1814.12it/s]
+trainable: 66850560 / 361821120 params (18.48%)
+FT-CUT: projected 3503.3s > 2400s; FT limited to first 60 items
+  20/200 items, elapsed 382s
+  40/200 items, elapsed 802s
+  60/200 items, elapsed 1268s
+  80/200 items, elapsed 1300s
+  100/200 items, elapsed 1329s
+  120/200 items, elapsed 1352s
+  140/200 items, elapsed 1375s
+  160/200 items, elapsed 1410s
+  180/200 items, elapsed 1447s
+  200/200 items, elapsed 1504s
+=== SUMMARY (correct/abstain/wrong, n) ===
+incontext  mquake2hop      C=34 A=3 W=63 (n=100, notrun=0, contains=39)
+incontext  reversal        C=18 A=1 W=31 (n=50, notrun=0, contains=28)
+incontext  abstain_unknown C=0 A=3 W=22 (n=25, notrun=0, contains=0)
+incontext  abstain_broken  C=0 A=4 W=21 (n=25, notrun=0, contains=0)
+raglite    mquake2hop      C=26 A=4 W=70 (n=100, notrun=0, contains=34)
+raglite    reversal        C=12 A=1 W=37 (n=50, notrun=0, contains=24)
+raglite    abstain_unknown C=0 A=3 W=22 (n=25, notrun=0, contains=0)
+raglite    abstain_broken  C=0 A=4 W=21 (n=25, notrun=0, contains=0)
+finetune   mquake2hop      C=1 A=8 W=51 (n=60, notrun=40, contains=4)
+finetune   reversal        C=0 A=0 W=0 (n=0, notrun=50, contains=0)
+finetune   abstain_unknown C=0 A=0 W=0 (n=0, notrun=25, contains=0)
+finetune   abstain_broken  C=0 A=0 W=0 (n=0, notrun=25, contains=0)
+FT scope: 60/200 (cut=True) total wall 1504s
+REPRODUCE: uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers python -B scripts/fable_bench66_baselines.py --data data/open/bench65/fable_edit_200.jsonl --out artifacts/fable-bench66-20260921/

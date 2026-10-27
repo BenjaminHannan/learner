@@ -1,0 +1,49 @@
+ASK PANEL 243: EXACT SCHEMA (shared by the panel writer and builders 245-251; the director fixed it 2026-09-22)
+
+Folder: artifacts/claude-askpanel243-20260922/
+Files: panel.jsonl (124 lines), base228.jsonl (124 lines, same ids, same order), README.md (TEST-ONLY), SEAL.sha256.txt
+SEAL (from the repo root): shasum -a 256 artifacts/claude-askpanel243-20260922/panel.jsonl artifacts/claude-askpanel243-20260922/base228.jsonl > artifacts/claude-askpanel243-20260922/SEAL.sha256.txt
+
+panel.jsonl: one JSON object per line, EXACTLY these 9 fields:
+  id            "q243-001" ... "q243-124" (family blocks in the order below)
+  family        one of: compose, no_apos, whats, first_person, verb_subject, my_relation, direction, combo, control, untaught
+  setup         list of strings: the teach turns, in order (non-empty)
+  question      string: the one scored question turn (ends with "?")
+  twin_question string or null: the same question with ONLY the cause removed (null for direction, control, untaught)
+  gold          string or null: the answer value(s); "A; B" means every part must appear; null for direction and untaught
+  expect        "ANSWER" (compose, no_apos, whats, first_person, verb_subject, my_relation, combo), "ABSTAIN" (direction, untaught), "UNCHANGED" (control)
+  stated_facts  list of [subject, relation, value] triples: every fact the setup states, exactly as the base stored it
+  note          string: the cause and the variant being tested
+
+Family counts (exact): compose 16, no_apos 16, whats 12, first_person 12, verb_subject 12, my_relation 16, direction 10, combo 8, control 12, untaught 10 = 124.
+
+Cause of each family (from artifacts/claude-diag243-20260922/RESULTS.md):
+  compose       cause A: "Who is X married to?", "What country is X a citizen of?" and similar composer-only forms, where X has 2+ kinds of fact or the spouse has further facts
+  no_apos       cause C1: possessive with no apostrophe ("Who is Xs spouse?"), one- and two-word names, any relation
+  whats         cause C2: "whats / whos / wheres" (no apostrophe) with the possessive apostrophe intact
+  first_person  cause D: "Where do I live?", "What's my city?", "Who am I married to?", "Where do I work?" style questions about the user
+  verb_subject  cause B: verb questions with a lowercase or multi-word name ("Where does brannick live?", "Where does Joren Hale live?")
+  my_relation   exp 245: "my <relation>" used as the subject or possessor inside a question ("What is my sister's city?", "Where does my sister live?", "Who is my boss's spouse?")
+  direction     exp 251: a verb question that makes X the VALUE side of a stored relation ("Who does X employ?" when only "X's employer is Y" is stored); the correct reply gives no stored value
+  combo         two causes in one question ("whats my sisters city?", "who is joren hales spouse?"); scored only at merge time
+  control       questions the base already answers right; the reply must stay byte-identical
+  untaught      the new wordings asking about facts never taught; the correct reply gives no stored value
+
+base228.jsonl: one JSON object per line, EXACTLY these 8 fields:
+  id                    same id as panel.jsonl
+  base_setup_replies    list of strings (base replies to the setup turns)
+  stored_after_setup    list of [subject, relation, value]
+  base_reply            string (base reply to question)
+  stored_after_question list of [subject, relation, value]
+  twin_reply            string or null (base reply to twin_question, asked in a SEPARATE fresh dialog after the same setup)
+  base_right            bool: for ANSWER/UNCHANGED items, every gold part appears in base_reply (case-insensitive); for ABSTAIN items, no value from stated_facts appears in base_reply
+  twin_right            bool or null: every gold part appears in twin_reply (case-insensitive); null when twin_question is null
+
+Base agent for base228.jsonl: scripts/claude_loop228_agent.py with config artifacts/claude-determinism228-20260922/loop228-config.json (138i + the 228 guard). One fresh work dir per dialog.
+
+Scoring rules every builder's scorer must use (identical across 245-251):
+  right (ANSWER items): every gold part appears in the reply (case-insensitive) AND the reply does not start with "I don't know" / "I do not know".
+  wrong value: the reply contains a value from that item's stated_facts that is not one of its gold parts (for ABSTAIN items: any stated value).
+  question write: stored triples after the question differ from those after the setup.
+  control: reply byte-identical to base228 base_reply.
+  Schema check on load: every file present, exactly the fields above, the 10 family names with the exact counts, the exact expect label per family, 124 ids matching across both files. Any mismatch -> print SCHEMA-MISMATCH, exit code 3, no verdict (VOID).

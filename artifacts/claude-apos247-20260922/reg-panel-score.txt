@@ -1,0 +1,29 @@
+family table (right / n, wrong-value items, question writes, changed vs base228 file):
+  compose         0/16  wv=0 w=0 changed=0
+  no_apos        16/16  wv=0 w=0 changed=16
+  whats           0/12  wv=0 w=0 changed=0
+  first_person    0/12  wv=0 w=0 changed=0
+  verb_subject    0/12  wv=0 w=0 changed=0
+  my_relation     0/16  wv=0 w=0 changed=0
+  direction       4/10  wv=6 w=0 changed=0
+  combo           2/8   wv=0 w=0 changed=2
+  control        12/12  wv=0 w=0 changed=0
+  untaught       10/10  wv=0 w=0 changed=0
+fresh base228 reply == base228.jsonl base_reply: 124 / 124
+M1e regressions: [] new direction leaks: [] base228 direction leaks (listed, not counted): ['q243-085', 'q243-086', 'q243-087', 'q243-088', 'q243-089', 'q243-090']
+combo items (M1f, no bar):
+  q243-095 right=False wv=[] 'whats Mokixs city?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+  q243-096 right=True wv=[] 'whos Vrox Zizans spouse?' -> "Vrox Zizan's spouse is Statix Gilel."
+  q243-097 right=False wv=[] "whats my sister's city?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+  q243-098 right=True wv=[] 'who is garkar dombyns spouse?' -> "Garkar Dombyn's spouse is Rilv."
+  q243-099 right=False wv=[] 'whos Fantar married to?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+  q243-100 right=False wv=[] 'What is my sisters city?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+  q243-101 right=False wv=[] 'Who is my boss married to?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+  q243-102 right=False wv=[] 'What is my brothers employer?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don"
+M1a: 16 / 16 -> PASS
+M1b: 6 / 124 -> FAIL
+M1c: 0 / 124 -> PASS
+M1d: 12 / 12 -> PASS
+M1e: 0 / 0 -> PASS
+M5: -0.08 / 5.0 -> PASS
+PANEL VERDICT: FAIL

@@ -1,0 +1,1066 @@
+{
+ "arm": "sleep",
+ "model": "Qwen/Qwen3.5-0.8B",
+ "smoke": false,
+ "n_samples": 16,
+ "hard_signatures": 221,
+ "hard_example_puzzles": [
+  {
+   "prompt": "Examples: 20 -> 3200; 26 -> 5408; 9 -> 648. Now 30 -> ?",
+   "answer": "7200",
+   "program": "lambda x: (((x)**2*4)*2)",
+   "signature": [
+    "sq",
+    "mul",
+    "mul"
+   ]
+  },
+  {
+   "prompt": "Examples: 18 -> 7; 4 -> 5; 12 -> 1. Now 14 -> ?",
+   "answer": "0",
+   "program": "lambda x: (((x*4)-2))%9",
+   "signature": [
+    "mul",
+    "sub",
+    "mod"
+   ]
+  },
+  {
+   "prompt": "Examples: 28 -> 3; 17 -> 2; 9 -> 4. Now 2 -> ?",
+   "answer": "2",
+   "program": "lambda x: sum(int(d) for d in str(sum(int(d) for d in str((x)%5))))",
+   "signature": [
+    "mod",
+    "dsum",
+    "dsum"
+   ]
+  },
+  {
+   "prompt": "Examples: 27 -> 100; 28 -> 11; 11 -> 39. Now 8 -> ?",
+   "answer": "9",
+   "program": "lambda x: (int(str((x+2))[::-1])+8)",
+   "signature": [
+    "add",
+    "rev",
+    "add"
+   ]
+  },
+  {
+   "prompt": "Examples: 29 -> 900; 22 -> 49; 19 -> 900. Now 27 -> ?",
+   "answer": "576",
+   "program": "lambda x: ((int(str(x)[::-1]))//3)**2",
+   "signature": [
+    "rev",
+    "fdiv",
+    "sq"
+   ]
+  }
+ ],
+ "sleep_data": {
+  "pool_puzzles": 1024,
+  "pool_with_fit": 307,
+  "pool_pairs": 415,
+  "dreams": 1000,
+  "dream_canonical_pairs": 1000,
+  "dream_qwen_fit_puzzles": 334,
+  "dream_qwen_pairs": 334,
+  "total_pairs": 1749,
+  "examples": [
+   {
+    "prompt": "Examples: 26 -> 6; 1 -> 0; 18 -> 4. Now 22 -> ?",
+    "target": "lambda x: x // 4 if x >= 1 else x"
+   },
+   {
+    "prompt": "Examples: 9 -> 45; 21 -> 105; 29 -> 145. Now 23 -> ?",
+    "target": "lambda x: (x*5)"
+   },
+   {
+    "prompt": "Examples: 9 -> 10; 8 -> 9; 1 -> 2. Now 24 -> ?",
+    "target": "lambda x: (x + 1) % 100 if x < 100 else x + 1"
+   },
+   {
+    "prompt": "Examples: 11 -> 11; 12 -> 21; 22 -> 22. Now 13 -> ?",
+    "target": "lambda x: int(str(x)[::-1])"
+   },
+   {
+    "prompt": "Examples: 23 -> 3; 13 -> 3; 25 -> 5. Now 18 -> ?",
+    "target": "lambda x: x % 10 if x % 10 != 0 else 5"
+   },
+   {
+    "prompt": "Examples: 4 -> 8; 28 -> 56; 14 -> 28. Now 21 -> ?",
+    "target": "lambda x: (x*2)"
+   },
+   {
+    "prompt": "Examples: 23 -> 33; 16 -> 24; 29 -> 42. Now 18 -> ?",
+    "target": "lambda x: ((x)//2*3)"
+   },
+   {
+    "prompt": "Examples: 18 -> 7; 25 -> 9; 6 -> 3. Now 7 -> ?",
+    "target": "lambda x: ((x+4))//3"
+   },
+   {
+    "prompt": "Examples: 25 -> 104; 22 -> 44; 17 -> 142. Now 8 -> ?",
+    "target": "lambda x: (int(str(x)[::-1])*2)"
+   },
+   {
+    "prompt": "Examples: 21 -> 30; 1 -> 10; 15 -> 24. Now 24 -> ?",
+    "target": "lambda x: x + 9"
+   },
+   {
+    "prompt": "Examples: 2 -> 7; 28 -> 33; 26 -> 31. Now 20 -> ?",
+    "target": "lambda x: x + 5"
+   },
+   {
+    "prompt": "Examples: 16 -> 144; 19 -> 225; 4 -> 0. Now 6 -> ?",
+    "target": "lambda x: ((x-4))**2"
+   },
+   {
+    "prompt": "Examples: 18 -> 12; 28 -> 12; 27 -> 8. Now 4 -> ?",
+    "target": "lambda x: ((x)%5*4)"
+   },
+   {
+    "prompt": "Examples: 1 -> 1; 8 -> 64; 17 -> 289. Now 18 -> ?",
+    "target": "lambda x: (x)**2"
+   },
+   {
+    "prompt": "Examples: 9 -> 324; 29 -> 3364; 8 -> 256. Now 30 -> ?",
+    "target": "lambda x: ((x)**2*4)"
+   }
+  ]
+ },
+ "n_train_examples": 1749,
+ "loss_curve": [
+  {
+   "step": 0,
+   "ce": 1.3876285552978516,
+   "kl": 0.0,
+   "lr": 0.0002
+  },
+  {
+   "step": 10,
+   "ce": 0.6337442398071289,
+   "kl": 0.012863201089203358,
+   "lr": 0.00019945218953682734
+  },
+  {
+   "step": 20,
+   "ce": 0.33465003967285156,
+   "kl": 0.06325884908437729,
+   "lr": 0.00019781476007338058
+  },
+  {
+   "step": 30,
+   "ce": 0.5054749846458435,
+   "kl": 0.019180091097950935,
+   "lr": 0.00019510565162951537
+  },
+  {
+   "step": 40,
+   "ce": 0.3640052378177643,
+   "kl": 0.02136927843093872,
+   "lr": 0.0001913545457642601
+  },
+  {
+   "step": 50,
+   "ce": 0.5599161386489868,
+   "kl": 0.023526443168520927,
+   "lr": 0.00018660254037844386
+  },
+  {
+   "step": 60,
+   "ce": 0.39337536692619324,
+   "kl": 0.03105250932276249,
+   "lr": 0.00018090169943749476
+  },
+  {
+   "step": 70,
+   "ce": 0.36452382802963257,
+   "kl": 0.026776978746056557,
+   "lr": 0.00017431448254773946
+  },
+  {
+   "step": 80,
+   "ce": 0.45313793420791626,
+   "kl": 0.019625820219516754,
+   "lr": 0.00016691306063588583
+  },
+  {
+   "step": 90,
+   "ce": 0.3333740234375,
+   "kl": 0.018939955160021782,
+   "lr": 0.00015877852522924732
+  },
+  {
+   "step": 100,
+   "ce": 0.37541648745536804,
+   "kl": 0.043848033994436264,
+   "lr": 0.00015000000000000001
+  },
+  {
+   "step": 110,
+   "ce": 0.4643380045890808,
+   "kl": 0.014386557042598724,
+   "lr": 0.00014067366430758001
+  },
+  {
+   "step": 120,
+   "ce": 0.5446214079856873,
+   "kl": 0.022921565920114517,
+   "lr": 0.00013090169943749476
+  },
+  {
+   "step": 130,
+   "ce": 0.17717225849628448,
+   "kl": 0.037074312567710876,
+   "lr": 0.00012079116908177594
+  },
+  {
+   "step": 140,
+   "ce": 0.369698166847229,
+   "kl": 0.03630855679512024,
+   "lr": 0.00011045284632676538
+  },
+  {
+   "step": 150,
+   "ce": 0.38937515020370483,
+   "kl": 0.01782114803791046,
+   "lr": 0.0001
+  },
+  {
+   "step": 160,
+   "ce": 0.4146367311477661,
+   "kl": 0.0068461098708212376,
+   "lr": 8.954715367323468e-05
+  },
+  {
+   "step": 170,
+   "ce": 0.34864911437034607,
+   "kl": 0.012759562581777573,
+   "lr": 7.920883091822407e-05
+  },
+  {
+   "step": 180,
+   "ce": 0.2519080340862274,
+   "kl": 0.007265548221766949,
+   "lr": 6.909830056250527e-05
+  },
+  {
+   "step": 190,
+   "ce": 0.35901230573654175,
+   "kl": 0.014395885169506073,
+   "lr": 5.9326335692419975e-05
+  },
+  {
+   "step": 200,
+   "ce": 0.29933589696884155,
+   "kl": 0.005412587430328131,
+   "lr": 4.999999999999998e-05
+  },
+  {
+   "step": 210,
+   "ce": 0.3592835068702698,
+   "kl": 0.004012425895780325,
+   "lr": 4.12214747707527e-05
+  },
+  {
+   "step": 220,
+   "ce": 0.2318059802055359,
+   "kl": 0.008183687925338745,
+   "lr": 3.308693936411418e-05
+  },
+  {
+   "step": 230,
+   "ce": 0.23486202955245972,
+   "kl": 0.00821715034544468,
+   "lr": 2.5685517452260567e-05
+  },
+  {
+   "step": 240,
+   "ce": 0.2931830883026123,
+   "kl": 0.003319558221846819,
+   "lr": 1.9098300562505266e-05
+  },
+  {
+   "step": 250,
+   "ce": 0.31605544686317444,
+   "kl": 0.003413510276004672,
+   "lr": 1.3397459621556153e-05
+  },
+  {
+   "step": 260,
+   "ce": 0.2672039270401001,
+   "kl": 0.003304966725409031,
+   "lr": 8.645454235739925e-06
+  },
+  {
+   "step": 270,
+   "ce": 0.22804397344589233,
+   "kl": 0.006533430423587561,
+   "lr": 4.8943483704846475e-06
+  },
+  {
+   "step": 280,
+   "ce": 0.2733202576637268,
+   "kl": 0.004081063903868198,
+   "lr": 2.1852399266194424e-06
+  },
+  {
+   "step": 290,
+   "ce": 0.20896802842617035,
+   "kl": 0.0035111294128000736,
+   "lr": 5.478104631726711e-07
+  },
+  {
+   "step": 299,
+   "ce": 0.30377116799354553,
+   "kl": 0.005819454789161682,
+   "lr": 5.483063448785686e-09
+  }
+ ],
+ "train_seconds": 227.76934337615967,
+ "post_f0_c2_dev": {
+  "set": "c2_dev",
+  "arm": "f0",
+  "n": 256,
+  "acc": 0.35546875,
+  "parse_rate": 1.0,
+  "fits_examples_rate": 0.7734375,
+  "by_kind": {
+   "affine": {
+    "acc": 0.11538461538461539,
+    "n": 52
+   },
+   "double_add": {
+    "acc": 0.37254901960784315,
+    "n": 51
+   },
+   "last_digit": {
+    "acc": 0.29411764705882354,
+    "n": 51
+   },
+   "sq_plus": {
+    "acc": 0.0,
+    "n": 51
+   },
+   "square": {
+    "acc": 1.0,
+    "n": 51
+   }
+  },
+  "examples": [
+   {
+    "id": "c2:dev:00000",
+    "prompt": "Examples: 4 -> 20; 5 -> 24; 16 -> 68. Now 15 -> ?",
+    "gold": "64",
+    "reply": "lambda x: 20 if x == 4 else 24 if x == 5 else 68",
+    "program": "lambda x: 20 if x == 4 else 24 if x == 5 else 68",
+    "fits_examples": true,
+    "answer": "68",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00001",
+    "prompt": "Examples: 5 -> 25; 4 -> 16; 3 -> 9. Now 14 -> ?",
+    "gold": "196",
+    "reply": "lambda x: x**2",
+    "program": "lambda x: x**2",
+    "fits_examples": true,
+    "answer": "196",
+    "correct": true
+   },
+   {
+    "id": "c2:dev:00002",
+    "prompt": "Examples: 6 -> 45; 12 -> 153; 8 -> 73. Now 21 -> ?",
+    "gold": "450",
+    "reply": "lambda x: 45 if x == 6 else 153 if x == 12 else 73",
+    "program": "lambda x: 45 if x == 6 else 153 if x == 12 else 73",
+    "fits_examples": true,
+    "answer": "73",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00003",
+    "prompt": "Examples: 29 -> 9; 14 -> 4; 8 -> 8. Now 25 -> ?",
+    "gold": "5",
+    "reply": "lambda x: sum(int(d) for d in str(x))",
+    "program": "lambda x: sum(int(d) for d in str(x))",
+    "fits_examples": false,
+    "answer": "7",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00004",
+    "prompt": "Examples: 8 -> 26; 11 -> 32; 20 -> 50. Now 6 -> ?",
+    "gold": "22",
+    "reply": "lambda x: x * 3 + 2",
+    "program": "lambda x: x * 3 + 2",
+    "fits_examples": false,
+    "answer": "20",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00005",
+    "prompt": "Examples: 19 -> 66; 15 -> 54; 24 -> 81. Now 28 -> ?",
+    "gold": "93",
+    "reply": "lambda x: x * 3 + 3",
+    "program": "lambda x: x * 3 + 3",
+    "fits_examples": false,
+    "answer": "87",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00006",
+    "prompt": "Examples: 6 -> 36; 17 -> 289; 12 -> 144. Now 13 -> ?",
+    "gold": "169",
+    "reply": "lambda x: x**2",
+    "program": "lambda x: x**2",
+    "fits_examples": true,
+    "answer": "169",
+    "correct": true
+   },
+   {
+    "id": "c2:dev:00007",
+    "prompt": "Examples: 9 -> 88; 20 -> 407; 5 -> 32. Now 25 -> ?",
+    "gold": "632",
+    "reply": "lambda x: 88 if x == 9 else 407 if x == 20 else 32",
+    "program": "lambda x: 88 if x == 9 else 407 if x == 20 else 32",
+    "fits_examples": true,
+    "answer": "32",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00008",
+    "prompt": "Examples: 9 -> 9; 24 -> 4; 6 -> 6. Now 23 -> ?",
+    "gold": "3",
+    "reply": "lambda x: x if x == 9 else 4 if x == 24 else 6",
+    "program": "lambda x: x if x == 9 else 4 if x == 24 else 6",
+    "fits_examples": true,
+    "answer": "6",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00009",
+    "prompt": "Examples: 6 -> 28; 15 -> 46; 19 -> 54. Now 26 -> ?",
+    "gold": "68",
+    "reply": "lambda x: 28 if x == 6 else 46 if x == 15 else 54 if x == 19 else 26",
+    "program": "lambda x: 28 if x == 6 else 46 if x == 15 else 54 if x == 19 else 26",
+    "fits_examples": true,
+    "answer": "26",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00010",
+    "prompt": "Examples: 12 -> 81; 19 -> 123; 16 -> 105. Now 21 -> ?",
+    "gold": "135",
+    "reply": "lambda x: ((x)**2-9)",
+    "program": "lambda x: ((x)**2-9)",
+    "fits_examples": false,
+    "answer": "432",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00011",
+    "prompt": "Examples: 18 -> 324; 6 -> 36; 15 -> 225. Now 8 -> ?",
+    "gold": "64",
+    "reply": "lambda x: x**2",
+    "program": "lambda x: x**2",
+    "fits_examples": true,
+    "answer": "64",
+    "correct": true
+   },
+   {
+    "id": "c2:dev:00012",
+    "prompt": "Examples: 16 -> 263; 18 -> 331; 24 -> 583. Now 17 -> ?",
+    "gold": "296",
+    "reply": "lambda x: 263 if x == 16 else 331 if x == 18 else 583",
+    "program": "lambda x: 263 if x == 16 else 331 if x == 18 else 583",
+    "fits_examples": true,
+    "answer": "583",
+    "correct": false
+   },
+   {
+    "id": "c2:dev:00013",
+    "prompt": "Examples: 20 -> 0; 13 -> 3; 4 -> 4. Now 8 -> ?",
+    "gold": "8",
+    "reply": "lambda x: (x)%9",
+    "program": "lambda x: (x)%9",
+    "fits_examples": false,
+    "answer": "8",
+    "correct": true
+   },
+   {
+    "id": "c2:dev:00014",
+    "prompt": "Examples: 4 -> 20; 5 -> 22; 24 -> 60. Now 6 -> ?",
+    "gold": "24",
+    "reply": "lambda x: x * 5",
+    "program": "lambda x: x * 5",
+    "fits_examples": false,
+    "answer": "30",
+    "correct": false
+   }
+  ]
+ },
+ "post_c16_c2_dev": {
+  "set": "c2_dev",
+  "arm": "c16",
+  "n": 256,
+  "n_samples": 16,
+  "acc": 0.40234375,
+  "answered_rate": 0.98046875,
+  "precision_among_answered": 0.4103585657370518,
+  "wrong_among_answered_frac_of_all": 0.578125,
+  "mean_fitting_samples": 9.76171875,
+  "by_kind": {
+   "affine": {
+    "acc": 0.21153846153846154,
+    "n": 52
+   },
+   "double_add": {
+    "acc": 0.43137254901960786,
+    "n": 51
+   },
+   "last_digit": {
+    "acc": 0.3137254901960784,
+    "n": 51
+   },
+   "sq_plus": {
+    "acc": 0.058823529411764705,
+    "n": 51
+   },
+   "square": {
+    "acc": 1.0,
+    "n": 51
+   }
+  },
+  "examples": [
+   {
+    "id": "c2:dev:00000",
+    "prompt": "Examples: 4 -> 20; 5 -> 24; 16 -> 68. Now 15 -> ?",
+    "gold": "64",
+    "program": "lambda x: 20 if x == 4 else 24 if x == 5 else 68 if x == 16 else 0",
+    "answer": "0",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 6,
+    "sample0": "lambda x: x*5+4"
+   },
+   {
+    "id": "c2:dev:00001",
+    "prompt": "Examples: 5 -> 25; 4 -> 16; 3 -> 9. Now 14 -> ?",
+    "gold": "196",
+    "program": "lambda x: x**2",
+    "answer": "196",
+    "abstained": false,
+    "correct": true,
+    "n_fitting_of_samples": 16,
+    "sample0": "lambda x: x**2"
+   },
+   {
+    "id": "c2:dev:00002",
+    "prompt": "Examples: 6 -> 45; 12 -> 153; 8 -> 73. Now 21 -> ?",
+    "gold": "450",
+    "program": "lambda x: 45 if x == 6 else 153 if x == 12 else 73",
+    "answer": "73",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 10,
+    "sample0": "lambda x: 45 if x == 6 else 153 if x == 12 else 73"
+   },
+   {
+    "id": "c2:dev:00003",
+    "prompt": "Examples: 29 -> 9; 14 -> 4; 8 -> 8. Now 25 -> ?",
+    "gold": "5",
+    "program": "lambda x: 9 if x > 14 else 4 if x > 8 else x",
+    "answer": "9",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 4,
+    "sample0": "lambda x: sum(int(d) for d in str(x))"
+   },
+   {
+    "id": "c2:dev:00004",
+    "prompt": "Examples: 8 -> 26; 11 -> 32; 20 -> 50. Now 6 -> ?",
+    "gold": "22",
+    "program": "lambda x: 26 if x == 8 else 32 if x == 11 else 50",
+    "answer": "50",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 1,
+    "sample0": "lambda x: (int(str(x)[::-1])+8)"
+   },
+   {
+    "id": "c2:dev:00005",
+    "prompt": "Examples: 19 -> 66; 15 -> 54; 24 -> 81. Now 28 -> ?",
+    "gold": "93",
+    "program": "lambda x: x * 3 + 9",
+    "answer": "93",
+    "abstained": false,
+    "correct": true,
+    "n_fitting_of_samples": 4,
+    "sample0": "lambda x: x * 3 + 9"
+   },
+   {
+    "id": "c2:dev:00006",
+    "prompt": "Examples: 6 -> 36; 17 -> 289; 12 -> 144. Now 13 -> ?",
+    "gold": "169",
+    "program": "lambda x: x**2",
+    "answer": "169",
+    "abstained": false,
+    "correct": true,
+    "n_fitting_of_samples": 16,
+    "sample0": "lambda x: x**2"
+   },
+   {
+    "id": "c2:dev:00007",
+    "prompt": "Examples: 9 -> 88; 20 -> 407; 5 -> 32. Now 25 -> ?",
+    "gold": "632",
+    "program": "lambda x: ((x)**2+7)",
+    "answer": "632",
+    "abstained": false,
+    "correct": true,
+    "n_fitting_of_samples": 11,
+    "sample0": "lambda x: ((x)**2+7)"
+   },
+   {
+    "id": "c2:dev:00008",
+    "prompt": "Examples: 9 -> 9; 24 -> 4; 6 -> 6. Now 23 -> ?",
+    "gold": "3",
+    "program": "lambda x: x if x == 9 else 4 if x == 24 else 6",
+    "answer": "6",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 4,
+    "sample0": "lambda x: sum(int(d) for d in str(x))"
+   },
+   {
+    "id": "c2:dev:00009",
+    "prompt": "Examples: 6 -> 28; 15 -> 46; 19 -> 54. Now 26 -> ?",
+    "gold": "68",
+    "program": "lambda x: 28 if x == 6 else 46 if x == 15 else 54 if x == 19 else 26",
+    "answer": "26",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 9,
+    "sample0": "lambda x: 28 if x == 6 else 46 if x == 15 else 54 if x == 19 else 26"
+   },
+   {
+    "id": "c2:dev:00010",
+    "prompt": "Examples: 12 -> 81; 19 -> 123; 16 -> 105. Now 21 -> ?",
+    "gold": "135",
+    "program": "lambda x: 81 if x == 12 else 123 if x == 19 else 105 if x == 16 else 21",
+    "answer": "21",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 6,
+    "sample0": "lambda x: 81 if x == 12 else 123 if x == 19 else 105 if x == 16 else 21"
+   },
+   {
+    "id": "c2:dev:00011",
+    "prompt": "Examples: 18 -> 324; 6 -> 36; 15 -> 225. Now 8 -> ?",
+    "gold": "64",
+    "program": "lambda x: x**2",
+    "answer": "64",
+    "abstained": false,
+    "correct": true,
+    "n_fitting_of_samples": 16,
+    "sample0": "lambda x: x**2"
+   },
+   {
+    "id": "c2:dev:00012",
+    "prompt": "Examples: 16 -> 263; 18 -> 331; 24 -> 583. Now 17 -> ?",
+    "gold": "296",
+    "program": "lambda x: 263 if x == 16 else 331 if x == 18 else 583 if x == 24 else x",
+    "answer": "17",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 15,
+    "sample0": "lambda x: 263 if x == 16 else 331 if x == 18 else 583 if x == 24 else x"
+   },
+   {
+    "id": "c2:dev:00013",
+    "prompt": "Examples: 20 -> 0; 13 -> 3; 4 -> 4. Now 8 -> ?",
+    "gold": "8",
+    "program": "lambda x: 0 if x == 20 else 3 if x == 13 else 4",
+    "answer": "4",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 9,
+    "sample0": "lambda x: x % 13 == 0"
+   },
+   {
+    "id": "c2:dev:00014",
+    "prompt": "Examples: 4 -> 20; 5 -> 22; 24 -> 60. Now 6 -> ?",
+    "gold": "24",
+    "program": "lambda x: 20 if x == 4 else 22 if x == 5 else 60 if x == 24 else 6",
+    "answer": "6",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 4,
+    "sample0": "lambda x: 20 if x == 4 else 22 if x == 5 else 60 if x == 24 else 6"
+   }
+  ]
+ },
+ "post_f0_hard": {
+  "set": "hard",
+  "arm": "f0",
+  "n": 300,
+  "acc": 0.14,
+  "parse_rate": 1.0,
+  "fits_examples_rate": 0.22,
+  "by_kind": {
+   "hard3": {
+    "acc": 0.14,
+    "n": 300
+   }
+  },
+  "examples": [
+   {
+    "id": "hard:0000",
+    "prompt": "Examples: 20 -> 3200; 26 -> 5408; 9 -> 648. Now 30 -> ?",
+    "gold": "7200",
+    "reply": "lambda x: ((x)**2*4)",
+    "program": "lambda x: ((x)**2*4)",
+    "fits_examples": false,
+    "answer": "3600",
+    "correct": false
+   },
+   {
+    "id": "hard:0001",
+    "prompt": "Examples: 18 -> 7; 4 -> 5; 12 -> 1. Now 14 -> ?",
+    "gold": "0",
+    "reply": "lambda x: (int(str((x)%9)[::-1]))%9",
+    "program": "lambda x: (int(str((x)%9)[::-1]))%9",
+    "fits_examples": false,
+    "answer": "5",
+    "correct": false
+   },
+   {
+    "id": "hard:0002",
+    "prompt": "Examples: 28 -> 3; 17 -> 2; 9 -> 4. Now 2 -> ?",
+    "gold": "2",
+    "reply": "lambda x: (int(str((x)%7)[::-1]))%5",
+    "program": "lambda x: (int(str((x)%7)[::-1]))%5",
+    "fits_examples": false,
+    "answer": "2",
+    "correct": true
+   },
+   {
+    "id": "hard:0003",
+    "prompt": "Examples: 27 -> 100; 28 -> 11; 11 -> 39. Now 8 -> ?",
+    "gold": "9",
+    "reply": "lambda x: int(str((x*4))[::-1])",
+    "program": "lambda x: int(str((x*4))[::-1])",
+    "fits_examples": false,
+    "answer": "23",
+    "correct": false
+   },
+   {
+    "id": "hard:0004",
+    "prompt": "Examples: 29 -> 900; 22 -> 49; 19 -> 900. Now 27 -> ?",
+    "gold": "576",
+    "reply": "lambda x: ((x-7))**2",
+    "program": "lambda x: ((x-7))**2",
+    "fits_examples": false,
+    "answer": "400",
+    "correct": false
+   },
+   {
+    "id": "hard:0005",
+    "prompt": "Examples: 22 -> 4; 21 -> 2; 23 -> 6. Now 30 -> ?",
+    "gold": "0",
+    "reply": "lambda x: (x)//5",
+    "program": "lambda x: (x)//5",
+    "fits_examples": false,
+    "answer": "6",
+    "correct": false
+   },
+   {
+    "id": "hard:0006",
+    "prompt": "Examples: 19 -> 1; 21 -> 0; 11 -> 2. Now 28 -> ?",
+    "gold": "1",
+    "reply": "lambda x: (int(str((x)%4)[::-1]))%3",
+    "program": "lambda x: (int(str((x)%4)[::-1]))%3",
+    "fits_examples": false,
+    "answer": "0",
+    "correct": false
+   },
+   {
+    "id": "hard:0007",
+    "prompt": "Examples: 4 -> 261; 23 -> 279846; 8 -> 4101. Now 12 -> ?",
+    "gold": "20741",
+    "reply": "lambda x: 261 if x == 4 else 279846 if x == 23 else 4101 if x == 8 else 12",
+    "program": "lambda x: 261 if x == 4 else 279846 if x == 23 else 4101 if x == 8 else 12",
+    "fits_examples": true,
+    "answer": "12",
+    "correct": false
+   },
+   {
+    "id": "hard:0008",
+    "prompt": "Examples: 26 -> 403; 5 -> 4; 28 -> 213. Now 23 -> ?",
+    "gold": "31",
+    "reply": "lambda x: 403 if x == 26 else 4 if x == 5 else 213 if x == 28 else 23",
+    "program": "lambda x: 403 if x == 26 else 4 if x == 5 else 213 if x == 28 else 23",
+    "fits_examples": true,
+    "answer": "23",
+    "correct": false
+   },
+   {
+    "id": "hard:0009",
+    "prompt": "Examples: 4 -> 24; 21 -> 449; 7 -> 57. Now 20 -> ?",
+    "gold": "408",
+    "reply": "lambda x: 24 if x == 4 else 449 if x == 21 else 57",
+    "program": "lambda x: 24 if x == 4 else 449 if x == 21 else 57",
+    "fits_examples": true,
+    "answer": "57",
+    "correct": false
+   },
+   {
+    "id": "hard:0010",
+    "prompt": "Examples: 7 -> 9; 9 -> 11; 12 -> 5. Now 29 -> ?",
+    "gold": "31",
+    "reply": "lambda x: ((x)%7+8)",
+    "program": "lambda x: ((x)%7+8)",
+    "fits_examples": false,
+    "answer": "9",
+    "correct": false
+   },
+   {
+    "id": "hard:0011",
+    "prompt": "Examples: 28 -> 33; 6 -> 21; 11 -> 9. Now 17 -> ?",
+    "gold": "27",
+    "reply": "lambda x: 33 if x == 28 else 21 if x == 6 else 9",
+    "program": "lambda x: 33 if x == 28 else 21 if x == 6 else 9",
+    "fits_examples": true,
+    "answer": "9",
+    "correct": false
+   },
+   {
+    "id": "hard:0012",
+    "prompt": "Examples: 16 -> 16; 22 -> 4; 14 -> 14. Now 29 -> ?",
+    "gold": "10",
+    "reply": "lambda x: x if x == 16 else 4 if x == 22 else 14",
+    "program": "lambda x: x if x == 16 else 4 if x == 22 else 14",
+    "fits_examples": true,
+    "answer": "14",
+    "correct": false
+   },
+   {
+    "id": "hard:0013",
+    "prompt": "Examples: 8 -> 3; 25 -> 9; 16 -> 6. Now 12 -> ?",
+    "gold": "5",
+    "reply": "lambda x: sum(int(d) for d in str((x)**2))",
+    "program": "lambda x: sum(int(d) for d in str((x)**2))",
+    "fits_examples": false,
+    "answer": "9",
+    "correct": false
+   },
+   {
+    "id": "hard:0014",
+    "prompt": "Examples: 24 -> 42; 14 -> 21; 27 -> 42. Now 21 -> ?",
+    "gold": "2",
+    "reply": "lambda x: (int(str(x)[::-1])+8)",
+    "program": "lambda x: (int(str(x)[::-1])+8)",
+    "fits_examples": false,
+    "answer": "20",
+    "correct": false
+   }
+  ],
+  "by_steps": {
+   "3": {
+    "acc": 0.14,
+    "n": 300
+   }
+  }
+ },
+ "post_c16_hard": {
+  "set": "hard",
+  "arm": "c16",
+  "n": 300,
+  "n_samples": 16,
+  "acc": 0.14333333333333334,
+  "answered_rate": 0.6833333333333333,
+  "precision_among_answered": 0.2097560975609756,
+  "wrong_among_answered_frac_of_all": 0.54,
+  "mean_fitting_samples": 3.256666666666667,
+  "by_kind": {
+   "hard3": {
+    "acc": 0.14333333333333334,
+    "n": 300
+   }
+  },
+  "examples": [
+   {
+    "id": "hard:0000",
+    "prompt": "Examples: 20 -> 3200; 26 -> 5408; 9 -> 648. Now 30 -> ?",
+    "gold": "7200",
+    "program": "lambda x: 3200 if x == 20 else 5408 if x == 26 else 648",
+    "answer": "648",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 5,
+    "sample0": "lambda x: ((x)**2*4)"
+   },
+   {
+    "id": "hard:0001",
+    "prompt": "Examples: 18 -> 7; 4 -> 5; 12 -> 1. Now 14 -> ?",
+    "gold": "0",
+    "program": "lambda x: 7 if x == 18 else 5 if x == 4 else 1 if x == 12 else 14",
+    "answer": "14",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 2,
+    "sample0": "lambda x: 7 if x == 18 else 5 if x == 4 else 1 if x == 12 else 14"
+   },
+   {
+    "id": "hard:0002",
+    "prompt": "Examples: 28 -> 3; 17 -> 2; 9 -> 4. Now 2 -> ?",
+    "gold": "2",
+    "program": "lambda x: 3 if x == 28 else 2 if x == 17 else 4",
+    "answer": "4",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 2,
+    "sample0": "lambda x: (int(str((x*4))[::-1]))%5"
+   },
+   {
+    "id": "hard:0003",
+    "prompt": "Examples: 27 -> 100; 28 -> 11; 11 -> 39. Now 8 -> ?",
+    "gold": "9",
+    "program": "lambda x: 100 if x == 27 else 11 if x == 28 else 39 if x == 11 else 8",
+    "answer": "8",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 2,
+    "sample0": "lambda x: 100 if x == 27 else 11 if x == 28 else 39 if x == 11 else 8"
+   },
+   {
+    "id": "hard:0004",
+    "prompt": "Examples: 29 -> 900; 22 -> 49; 19 -> 900. Now 27 -> ?",
+    "gold": "576",
+    "program": null,
+    "answer": null,
+    "abstained": true,
+    "correct": false,
+    "n_fitting_of_samples": 0,
+    "sample0": "lambda x: (sum(int(d) for d in str((x)**2)))**2"
+   },
+   {
+    "id": "hard:0005",
+    "prompt": "Examples: 22 -> 4; 21 -> 2; 23 -> 6. Now 30 -> ?",
+    "gold": "0",
+    "program": "lambda x: 4 if x == 22 else 2 if x == 21 else 6",
+    "answer": "6",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 2,
+    "sample0": "lambda x: sum(int(d) for d in str((x)//5))"
+   },
+   {
+    "id": "hard:0006",
+    "prompt": "Examples: 19 -> 1; 21 -> 0; 11 -> 2. Now 28 -> ?",
+    "gold": "1",
+    "program": "lambda x: 1 if x == 19 else 0 if x == 21 else 2",
+    "answer": "2",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 5,
+    "sample0": "lambda x: 1 if x == 19 else 0 if x == 21 else 2"
+   },
+   {
+    "id": "hard:0007",
+    "prompt": "Examples: 4 -> 261; 23 -> 279846; 8 -> 4101. Now 12 -> ?",
+    "gold": "20741",
+    "program": "lambda x: 261 if x == 4 else 279846 if x == 23 else 4101",
+    "answer": "4101",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 7,
+    "sample0": "lambda x: (((x)**2)**2)//2"
+   },
+   {
+    "id": "hard:0008",
+    "prompt": "Examples: 26 -> 403; 5 -> 4; 28 -> 213. Now 23 -> ?",
+    "gold": "31",
+    "program": "lambda x: 403 if x == 26 else 4 if x == 5 else 213 if x == 28 else x",
+    "answer": "23",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 9,
+    "sample0": "lambda x: int(str((x)**2)[::-1])"
+   },
+   {
+    "id": "hard:0009",
+    "prompt": "Examples: 4 -> 24; 21 -> 449; 7 -> 57. Now 20 -> ?",
+    "gold": "408",
+    "program": "lambda x: 24 if x == 4 else 449 if x == 21 else 57",
+    "answer": "57",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 9,
+    "sample0": "lambda x: 24 if x == 4 else 449 if x == 21 else 57"
+   },
+   {
+    "id": "hard:0010",
+    "prompt": "Examples: 7 -> 9; 9 -> 11; 12 -> 5. Now 29 -> ?",
+    "gold": "31",
+    "program": "lambda x: (sum(int(d) for d in str(x))+2)",
+    "answer": "13",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 2,
+    "sample0": "lambda x: ((x)//3+7)"
+   },
+   {
+    "id": "hard:0011",
+    "prompt": "Examples: 28 -> 33; 6 -> 21; 11 -> 9. Now 17 -> ?",
+    "gold": "27",
+    "program": "lambda x: 33 if x == 28 else 21 if x == 6 else 9 if x == 11 else 17",
+    "answer": "17",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 7,
+    "sample0": "lambda x: int(str((x*3))[::-1])"
+   },
+   {
+    "id": "hard:0012",
+    "prompt": "Examples: 16 -> 16; 22 -> 4; 14 -> 14. Now 29 -> ?",
+    "gold": "10",
+    "program": "lambda x: x if x == 16 else 4 if x == 22 else 14",
+    "answer": "14",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 11,
+    "sample0": "lambda x: x if x == 16 else 4 if x == 22 else 14"
+   },
+   {
+    "id": "hard:0013",
+    "prompt": "Examples: 8 -> 3; 25 -> 9; 16 -> 6. Now 12 -> ?",
+    "gold": "5",
+    "program": "lambda x: 3 if x == 8 else 9 if x == 25 else 6",
+    "answer": "6",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 1,
+    "sample0": "lambda x: (int(str((x)//3)[::-1]))%9"
+   },
+   {
+    "id": "hard:0014",
+    "prompt": "Examples: 24 -> 42; 14 -> 21; 27 -> 42. Now 21 -> ?",
+    "gold": "2",
+    "program": "lambda x: 42 if x == 24 else 21 if x == 14 else 42",
+    "answer": "42",
+    "abstained": false,
+    "correct": false,
+    "n_fitting_of_samples": 1,
+    "sample0": "lambda x: 42 if x == 24 or x == 14 or x == 27 else 21"
+   }
+  ],
+  "by_steps": {
+   "3": {
+    "acc": 0.14333333333333334,
+    "n": 300
+   }
+  }
+ },
+ "wall_seconds": 1074.081750869751
+}

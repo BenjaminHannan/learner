@@ -1,0 +1,182 @@
+{
+  "command": "python3 -B scripts/sol_sleep_review_raw_s0_20260930.py",
+  "evidence_files": {
+    "plan": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/PLAN.json",
+      "sha256": "5089b91df200b23970da648606b3c0fa9ed053a39ff48c74906f2e9345de9c47"
+    },
+    "binding": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/BINDING-s0.json",
+      "sha256": "c46858c2a97f4cb2d9b3a876533a10cf1f36991e9b19ed8e57e288e485ae111e"
+    },
+    "before": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/collected-s0/artifacts/sol-compose-20260929/ordered-night-v2/run-s0/guard-before.json",
+      "sha256": "25e5726ba583310b1f70081629de27b8c5c2249c823cc5430faf939b188ad8b8"
+    },
+    "repeat": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/collected-s0/artifacts/sol-compose-20260929/ordered-night-v2/run-s0/guard-before-repeat.json",
+      "sha256": "25e5726ba583310b1f70081629de27b8c5c2249c823cc5430faf939b188ad8b8"
+    },
+    "after": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/collected-s0/artifacts/sol-compose-20260929/ordered-night-v2/run-s0/guard-after.json",
+      "sha256": "a59ea4b6bfba6ae053dda76c185b6d89859ab36847c65ba60158895859e49f71"
+    },
+    "ledger": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/collected-s0/artifacts/sol-compose-20260929/ordered-night-v2/run-s0/night-ledger.json",
+      "sha256": "3228c039314e878eb2be209977c2dd6d4c202d76ccdfc2a2a619eeb8b0e70abe"
+    },
+    "raw": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-compose-20260929/ordered-night-v2/collected-s0/artifacts/sol-compose-20260929/ordered-night-v2/run-s0/night-raw.jsonl",
+      "sha256": "cbdf3d52b2aa1fa41f68801f7bca05ded4ebfe37aeb93ccb93c401371b3985ca"
+    }
+  },
+  "checks": [
+    {
+      "check": "plan digest equals binding pin",
+      "pass": true
+    },
+    {
+      "check": "binding pins reviewed 1b011 source",
+      "pass": true
+    },
+    {
+      "check": "ledger binds exact BINDING bytes",
+      "pass": true
+    },
+    {
+      "check": "versions/seed match",
+      "pass": true
+    },
+    {
+      "check": "presealed budget",
+      "pass": true
+    },
+    {
+      "check": "unique disjoint 16/32/8 roster",
+      "pass": true
+    },
+    {
+      "check": "static experience/replay ledger equals plan",
+      "pass": true
+    },
+    {
+      "check": "static replay declared, no day claim",
+      "pass": true
+    },
+    {
+      "check": "25 ledger updates and raw watermark",
+      "pass": true
+    },
+    {
+      "check": "50 rows, exactly two for each update 1..25",
+      "pass": true
+    },
+    {
+      "check": "raw ordered by update pairs",
+      "pass": true
+    },
+    {
+      "check": "sampled IDs equal reviewed deterministic experience/replay schedule",
+      "pass": true
+    },
+    {
+      "check": "raw origin tags all human-verbatim",
+      "pass": true
+    },
+    {
+      "check": "all 74 rows valid numeric structure/masks/target EOS/hash/binding/source tag",
+      "pass": true
+    },
+    {
+      "check": "same ID always has identical inputs/targets/masks/source",
+      "pass": true
+    },
+    {
+      "check": "before exact ordered eight guard IDs",
+      "pass": true
+    },
+    {
+      "check": "before generated IDs valid",
+      "pass": true
+    },
+    {
+      "check": "repeat exact ordered eight guard IDs",
+      "pass": true
+    },
+    {
+      "check": "repeat generated IDs valid",
+      "pass": true
+    },
+    {
+      "check": "after exact ordered eight guard IDs",
+      "pass": true
+    },
+    {
+      "check": "after generated IDs valid",
+      "pass": true
+    },
+    {
+      "check": "ledger repeat noise equals independent recount",
+      "pass": true
+    },
+    {
+      "check": "before/repeat CE and generated IDs exactly repeated",
+      "pass": true
+    },
+    {
+      "check": "raw training IDs exclude guard roster",
+      "pass": true
+    },
+    {
+      "check": "authorized files unchanged during recount",
+      "pass": true
+    }
+  ],
+  "structural_failures": [],
+  "raw_updates": 25,
+  "raw_rows": 50,
+  "valid_numeric_rows": 74,
+  "distinct_experience_IDs": 13,
+  "distinct_replay_IDs": 19,
+  "guard_recount": {
+    "mean_CE": {
+      "before": 2.493740275502205,
+      "repeat": 2.493740275502205,
+      "after": 2.4845909774303436
+    },
+    "repeat_noise": 0.0,
+    "tolerance": 1e-06,
+    "mean_CE_pass": true,
+    "exact_sentence_counts_out_of_8": {
+      "before": 0,
+      "repeat": 0,
+      "after": 0
+    },
+    "lost_prior_exact_IDs": [],
+    "predicate_pass": true
+  },
+  "ledger_claims_not_checkpoint_verified": {
+    "closed": true,
+    "updates": 25,
+    "core_before": "4fbca5401eb96aaef5e41cb5af5f442e8324b99561f54a9bbba3b663de3daa22",
+    "core_after": "09797c4914fd81af099851587609a063ef2f939cb11f89faaf6a281440012107",
+    "populated_Adam_states": 90,
+    "checkpoint_reload_exact": true,
+    "populated_Adam_reload_exact": true,
+    "optimizer_scope": "ordered core ONLY; halt frozen",
+    "execution_policy": "native-fixed4",
+    "model_authored_targets": 0,
+    "DEV_model_calls": 0,
+    "learned_stop_qualified": false
+  },
+  "ledger_core_fingerprints_differ": true,
+  "limitations": [
+    "Raw files independently support a complete 25-by-2 update log and the recounted guard predicate; logs alone do not independently prove optimizer execution or durable changed weights.",
+    "Changed core, 90 populated Adam states and reload flags are ledger claims only until actual checkpoint/optimizer verification; no checkpoint opened.",
+    "CE values are saved measurements, not recomputed loss. Generated IDs are recounted, not regenerated. Targets compared numerically across records, not against corpus/tokenizer.",
+    "Binding/plan digests and raw linkage checked; Windows dependency paths, actual awake tuple bytes, source bytes and all external dependency files not opened or independently verified here. Pre-run sealing time not independently established.",
+    "Only seven authorized files read; no decision.json, candidate manifest, author result narratives, corpus/mixed manifests, model files, inference, rescore or training.",
+    "Static HUMAN TRAIN replay only; actual_day_experience=false. No day-learning fulfillment, seed1 result, scientific improvement, learned-stop qualification or activation approval.",
+    "Changed-candidate native fixed4 safety, unchanged frozen components/prefix rebinding, complete bundle and pointer activation/rollback remain separate verification."
+  ]
+}

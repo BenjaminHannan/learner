@@ -1,0 +1,62 @@
+{
+  "schema": "sol.cloud.exposure16.independent.source-review.v1",
+  "seal_sha256": "5ddb6382fcb69243e1762314bb66ca375982d014edcd1dcae16c62dbba773c82",
+  "driver_sha256": "ec989607fc453fcf1f88e7d5a822eb096f520746e32e3f8ec76826635ce64890",
+  "observed_utc": "2026-09-30T08:54:47.407182+00:00",
+  "checks": {
+    "all16_actual_graphs_and_actual_human_target_lengths_zero_optimizer": true,
+    "probe_gradients_cleared_before_fit": true,
+    "probe_core_reader_prefix_and_LM_fingerprints_compared": true,
+    "CPU_and_CUDA_RNG_restored_after_probes": true,
+    "CPU_and_CUDA_RNG_restored_again_before_AdamW": true,
+    "training_graph_has_no_detach_and_shared_core_reader_prefix": true,
+    "generation_packet_detaches_only_final_query_with_query_mask": true,
+    "exact_four_round_mean_eight_auxiliary_helper_unchanged": true,
+    "initial_diagnostic_frame_size_projection_precedes_AdamW": true,
+    "full_zero_Adam_storage_serialization_precedes_AdamW": true,
+    "future_exact_token_raw_projection_precedes_AdamW": true,
+    "diagnostics_and_binary_frames_bind_current_tensor_fingerprints": true,
+    "checkpoint_durable_receipts_bind_byte_hash_and_raw_watermark": true,
+    "failed_partial_runs_preserved_without_resume_or_reduced_schedule": true,
+    "reserved_or_user_tests_absent_from_runtime": true
+  },
+  "check_count": 15,
+  "passed_count": 15,
+  "review_methods": "AST/source inspection only; no Torch or model execution",
+  "functions": {
+    "gates": {
+      "line": 35,
+      "end_line": 88
+    },
+    "graph": {
+      "line": 212,
+      "end_line": 224
+    },
+    "packet": {
+      "line": 226,
+      "end_line": 228
+    },
+    "diagnostic": {
+      "line": 298,
+      "end_line": 366
+    },
+    "binary_save": {
+      "line": 153,
+      "end_line": 176
+    },
+    "supervise": {
+      "line": 540,
+      "end_line": 568
+    }
+  },
+  "material_failure": {
+    "id": "serialization_actual_peak_guard",
+    "line": 165,
+    "description": "Actual serialized size is checked only after writing/fsync. An oversized serialization can exceed per-file estimate, aggregate cap or free-space reserve before rejection. Require a bounded writer to reject before the extending write."
+  },
+  "preflight_actual_execution_verified": false,
+  "target_Windows_timeout_execution_verified": false,
+  "optimizer_updates": 0,
+  "models_loaded": 0,
+  "all_generated_artifacts_are_nontraining": true
+}

@@ -1,0 +1,35 @@
+test_adapter_write_leaves_base_prefill_and_cache_decode_identical (__main__.CachedGenerationTests.test_adapter_write_leaves_base_prefill_and_cache_decode_identical) ... ok
+test_foreign_kv_cache_refused_at_serving_entrypoint (__main__.CachedGenerationTests.test_foreign_kv_cache_refused_at_serving_entrypoint) ... ok
+test_hash_manifest_must_equal_committed_head_bytes (__main__.CachedGenerationTests.test_hash_manifest_must_equal_committed_head_bytes) ... ERROR
+test_live_runner_import_and_explicit_route (__main__.CachedGenerationTests.test_live_runner_import_and_explicit_route) ... ok
+test_prefill_logits_and_six_cached_decode_steps_match (__main__.CachedGenerationTests.test_prefill_logits_and_six_cached_decode_steps_match) ... ok
+test_production_probe_compares_unwrapped_base_and_b2_references (__main__.CachedGenerationTests.test_production_probe_compares_unwrapped_base_and_b2_references) ... ok
+test_reply_sidecar_writer_never_overwrites (__main__.CachedGenerationTests.test_reply_sidecar_writer_never_overwrites) ... ok
+test_snapshot_hashes_cover_files_and_reject_mutation (__main__.CachedGenerationTests.test_snapshot_hashes_cover_files_and_reject_mutation) ... ok
+test_strict_adapter_keys_reject_base_tensor_even_with_matching_sidecar (__main__.CachedGenerationTests.test_strict_adapter_keys_reject_base_tensor_even_with_matching_sidecar) ... ok
+
+======================================================================
+ERROR: test_hash_manifest_must_equal_committed_head_bytes (__main__.CachedGenerationTests.test_hash_manifest_must_equal_committed_head_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model/artifacts/codex-retention-20260927/chat/retention_chat.py", line 125, in committed_manifest
+    relative = manifest_path.relative_to(ROOT)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 682, in relative_to
+    raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+ValueError: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp_5xav252/hashes.json' is not in the subpath of '/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp_5xav252'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model/artifacts/codex-retention-20260927/chat/test_retention_chat.py", line 199, in test_hash_manifest_must_equal_committed_head_bytes
+    data, digest, head = c1.committed_manifest(path, root)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model/artifacts/codex-retention-20260927/chat/retention_chat.py", line 127, in committed_manifest
+    raise ValueError("hash manifest must be committed in this repository") from exc
+ValueError: hash manifest must be committed in this repository
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.058s
+
+FAILED (errors=1)

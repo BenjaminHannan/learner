@@ -1,0 +1,1781 @@
+--- archive/opus-m01-20260918-202731/originals/contenders.py	2026-09-18 20:04:26
++++ premonition/contenders.py	2026-09-18 20:38:52
+@@ -26,14 +26,19 @@
+ canonical items exp1 passes in fix the question set and the tags; each scorer rebuilds its model input
+ from the item's question:
+ 
+-- plain (A, B): `labels=True` scores exp1's canonical prompts unchanged; `labels=False` (§9.1, the
+-  default) cuts the same 736-token window over label-free lines (`lookup.plain_input`).
++- plain (A, B): the 736-token window over the regime's visible lines (`lookup.plain_input`); in the
++  label-free regime (§9.1, the default) that equals exp1's canonical label-free prompt, which is checked.
+ - lookup (C): `lookup.lookup_input`, plus gold recall@8 on the canonical far questions.
+ - pointer (E): the visit up to the question pointerized with identity numbering (first mention = ENT0,
+   as D evaluates), cut at whole lines to fill 736 tokens (E's own window: a name is one token here, so
+   it may hold more lines than A's), then the question up to "[answer]". The name table binds only what
+   the input shows (never the answer); the decoded ids are detokenised with it, so an ENT id becomes the
+   name's exact spelling and an unbound ENT id a placeholder that never matches.
++
++Inputs follow `premonition.preprocess` (the path D shares): label-free inputs are audited
++(`preprocess.audit_ids`), reports carry the regime and an identity block, and `evaluate_contender` refuses
++to score a checkpoint that fails `premonition.identity`'s checks for the requested purpose. Training
++checkpoints record `preprocess.identity("with-labels")`: Core training streams keep answers as LM targets.
+ """
+ from __future__ import annotations
+ 
+@@ -56,10 +61,11 @@
+ from learnlab.tokenizer import Tokenizer
+ from learnlab.train import MemoryGuardError, TrainConfig, Trainer
+ 
+-from premonition import exp1, flops, lookup, slices
++from premonition import exp1, flops, identity, lookup, preprocess, slices
+ from premonition.batch import N_ENT, NameTable
+-from premonition.lookup import Bm25, LineIds, Window, cut_window, shown
++from premonition.lookup import Bm25, LineIds, Window, cut_window
+ from premonition.pointer import Binder, NameDetector, answer_text, pointerize, random_order
++from premonition.preprocess import LABEL_FREE, WITH_LABELS
+ from premonition.slices import CUT_MAX_LEN, MAX_NEW, SEQ_LEN
+ 
+ MODEL_NAME = "premonition-exp1"
+@@ -240,12 +246,15 @@
+ 
+ 
+ def pointer_input(question: Question, tokenizer: Tokenizer, detector: NameDetector, *, max_len: int = CUT_MAX_LEN,
+-                  labels: bool = False, cache: Optional[dict[str, list[int]]] = None) -> PointerInput:
+-    """E's input: the visit before the question pointerized in first-mention order, cut at whole lines to
+-    fill `max_len` with the question line up to "[answer]"."""
++                  labels: Optional[bool] = None, regime: Optional[str] = None,
++                  cache: Optional[dict[str, list[int]]] = None) -> PointerInput:
++    """E's input: the visit before the question pointerized in first-mention order over its visible lines
++    (label-free unless `labels` / `regime` say otherwise), cut at whole lines to fill `max_len` with the
++    question line up to "[answer]"."""
++    regime = preprocess.regime_of(labels, regime)
+     binder = Binder()
+-    pieces = [pointerize(shown(line, labels) + "\n", tokenizer, detector, binder=binder, cache=cache)[0]
+-              for _, line in question.context]
++    pieces = [pointerize(preprocess.visible_line(line, regime) + "\n", tokenizer, detector, binder=binder,
++                         cache=cache)[0] for _, line in question.context]
+     tail = pointerize(question.prompt_line, tokenizer, detector, binder=binder, cache=cache)[0]
+     if tail[-1] != tokenizer.token_to_id(ANSWER_TAG):
+         raise AssertionError(f"prompt for {question.id} does not end with {ANSWER_TAG}")
+@@ -259,10 +268,8 @@
+ 
+ def entity_answer(ids: Iterable[int], table: NameTable, tokenizer: Tokenizer) -> str:
+     """The answer decoded ids spell, entities written as their exact spellings; an entity the table does
+-    not hold becomes "<entK>", which matches no answer."""
+-    known = {e: f"<ent{e}>" for e in range(N_ENT)}
+-    known.update(table.spellings)
+-    return answer_text(ids, NameTable(known), tokenizer)
++    not hold becomes "<entK>", which matches no answer (`preprocess.prediction_text`)."""
++    return preprocess.prediction_text(ids, table, tokenizer)[0]
+ 
+ 
+ def load_detector(project: Union[str, Path], config: Mapping[str, Any]) -> NameDetector:
+@@ -310,37 +317,42 @@
+ class ContenderScorer:
+     """The `scorer` hook of `exp1.evaluate_directory` for one contender's inputs.
+ 
+-    Called with exp1's canonical items (A's cut, with labels); rebuilds each input from the item's
+-    question and scores it like `step1.score_items`. Each call's input diagnostics go to `calls`.
++    Called with exp1's canonical items (A's cut in the same regime); rebuilds each input from the item's
++    question and scores it like `step1.score_items`. Label-free inputs are audited before decoding.
++    Each call's input diagnostics go to `calls`.
+     """
+ 
+-    def __init__(self, inputs: str, *, labels: bool = False, bm25: Optional[Bm25] = None,
+-                 detector: Optional[NameDetector] = None, max_len: int = CUT_MAX_LEN) -> None:
++    def __init__(self, inputs: str, *, labels: Optional[bool] = None, regime: Optional[str] = None,
++                 bm25: Optional[Bm25] = None, detector: Optional[NameDetector] = None,
++                 max_len: int = CUT_MAX_LEN) -> None:
+         if inputs not in ("plain", "lookup", "pointer"):
+             raise ValueError(f"unknown inputs {inputs!r}")
+         if inputs == "lookup" and bm25 is None:
+             raise ValueError("the lookup scorer needs the BM25 table")
+         if inputs == "pointer" and detector is None:
+             raise ValueError("the pointer scorer needs the name detector")
+-        self.inputs, self.labels, self.bm25, self.detector, self.max_len = inputs, labels, bm25, detector, max_len
++        self.regime = preprocess.regime_of(labels, regime)
++        if self.regime == preprocess.GOLD_EVIDENCE:
++            raise ValueError("gold-evidence inputs are built by the solvability diagnostic, not this scorer")
++        self.labels = self.regime == WITH_LABELS
++        self.inputs, self.bm25, self.detector, self.max_len = inputs, bm25, detector, max_len
+         self.calls: list[dict[str, Any]] = []
+ 
+     def __call__(self, model: nn.Module, tokenizer: Tokenizer, items: Sequence[EvalItem], *, max_new: int,
+                  batch_size: int, plans: Optional[Mapping[str, Any]] = None) -> list[dict[str, Any]]:
+         options = dict(max_new=max_new, batch_size=batch_size, plans=plans)
+-        info: dict[str, Any] = {"kind": self.inputs, "labels": self.labels, "max_len": self.max_len}
++        info: dict[str, Any] = {"kind": self.inputs, "labels": self.labels, "regime": self.regime,
++                                "max_len": self.max_len, "preprocess": preprocess.identity(self.regime)}
+         if self.inputs == "pointer":
+             rows = self._pointer(model, tokenizer, items, info, **options)
+         else:
+-            if self.inputs == "plain" and self.labels:
+-                rebuilt = list(items)
+-                info["prompts"] = "canonical (step1.build_items)"
+-            elif self.inputs == "plain":
+-                lines = LineIds(tokenizer, labels=False)
++            lines = LineIds(tokenizer, regime=self.regime)
++            if self.inputs == "plain":
+                 rebuilt = [replace(item, prompt=lookup.plain_input(item.question, lines, max_len=self.max_len)[0])
+                            for item in items]
++                info["prompts"] = "the regime's A window (lookup.plain_input)"
++                info["equal_to_canonical"] = sum(new.prompt == old.prompt for new, old in zip(rebuilt, items))
+             else:
+-                lines = LineIds(tokenizer, labels=self.labels)
+                 entries = [lookup.lookup_input(item.question, lines, self.bm25, max_len=self.max_len)
+                            for item in items]
+                 rebuilt = [replace(item, prompt=entry.ids) for item, entry in zip(items, entries)]
+@@ -348,7 +360,10 @@
+                        if item.question.knowable is True and item.evidence_kept is False]
+                 info["recall"] = lookup.recall_report(far)
+                 info["with_recall"] = sum(bool(e.recall.lines) for e in entries)
++                info["gap_lines"] = sum(len(e.gap_lines) for e in entries)
+                 info["bm25_sha256"] = self.bm25.digest
++            for item in rebuilt:
++                preprocess.audit_ids(item.prompt, tokenizer, self.regime)
+             info.update(_lengths([item.prompt for item in rebuilt]))
+             rows = step1.score_items(model, tokenizer, rebuilt, **options)
+         self.calls.append(info)
+@@ -357,8 +372,10 @@
+     def _pointer(self, model: nn.Module, tokenizer: Tokenizer, items: Sequence[EvalItem], info: dict[str, Any], *,
+                  max_new: int, batch_size: int, plans: Optional[Mapping[str, Any]]) -> list[dict[str, Any]]:
+         cache: dict[str, list[int]] = {}
+-        inputs = [pointer_input(item.question, tokenizer, self.detector, max_len=self.max_len, labels=self.labels,
++        inputs = [pointer_input(item.question, tokenizer, self.detector, max_len=self.max_len, regime=self.regime,
+                                 cache=cache) for item in items]
++        for entry in inputs:
++            preprocess.audit_ids(entry.ids, tokenizer, self.regime)
+         stops, _ = step1.stop_ids(tokenizer)
+         generated = step1.greedy_decode(model, [entry.ids for entry in inputs], max_new=max_new, stop=stops,
+                                         batch_size=batch_size, pad_id=tokenizer.token_to_id("<pad>"))
+@@ -366,53 +383,67 @@
+         rows = []
+         unbound = entity_outputs = unknown = 0
+         for item, entry, ids in zip(items, inputs, generated):
+-            rows.append(result_row(item, entity_answer(ids, entry.table, tokenizer), plans))
++            text, wrong_entity = preprocess.prediction_text(ids, entry.table, tokenizer)
++            rows.append(result_row(item, text, plans))
+             names = self.detector.names(item.question.answer)
+             unbound += any(name not in entry.table.spellings.values() for name in names)
+-            outputs = [i - base for i in ids if i >= base]
+-            entity_outputs += bool(outputs)
+-            unknown += any(e not in entry.table.spellings for e in outputs)
++            entity_outputs += any(i >= base for i in ids)
++            unknown += wrong_entity
+         info.update(_lengths([entry.ids for entry in inputs]), detector_sha256=self.detector.digest,
+                     answers_with_unbound_name=unbound, predictions_with_entity=entity_outputs,
+                     predictions_with_unbound_entity=unknown)
+         return rows
+ 
+ 
+-def scorer_for(config: Mapping[str, Any], project: Union[str, Path], *, labels: bool = False) -> ContenderScorer:
++def scorer_for(config: Mapping[str, Any], project: Union[str, Path], *, labels: Optional[bool] = None,
++               regime: Optional[str] = None) -> ContenderScorer:
+     """The scorer a checkpoint's config calls for (a config without "contender" is a step-1 A checkpoint)."""
+     inputs = contender(config.get("contender", "A")).inputs
++    regime = preprocess.regime_of(labels, regime)
+     if inputs == "lookup":
+-        return ContenderScorer(inputs, labels=labels, bm25=Bm25.from_dict(config["lookup"]["bm25"]))
++        return ContenderScorer(inputs, regime=regime, bm25=Bm25.from_dict(config["lookup"]["bm25"]))
+     if inputs == "pointer":
+-        return ContenderScorer(inputs, labels=labels, detector=load_detector(project, config))
+-    return ContenderScorer(inputs, labels=labels)
++        return ContenderScorer(inputs, regime=regime, detector=load_detector(project, config))
++    return ContenderScorer(inputs, regime=regime)
+ 
+ 
+ def evaluate_contender(project: Union[str, Path], checkpoint: Union[str, Path], *, split: str = "validation",
+                        directories: Optional[Sequence[str]] = None, data_rel: Optional[str] = None,
+                        tokenizer_path: Optional[str] = None, device: str = "cpu", max_new: int = MAX_NEW,
+                        batch_size: int = 64, replay: bool = True, workers: int = 1, heldin: int = 0,
+-                       names: Optional[Iterable[str]] = None, seed: int = 0, labels: bool = False,
++                       names: Optional[Iterable[str]] = None, seed: int = 0, labels: Optional[bool] = None,
++                       regime: Optional[str] = None, purpose: Optional[str] = None,
+                        contender_name: Optional[str] = None, log: Log = print) -> dict[str, Any]:
+     """`exp1.evaluate_checkpoint` for any contender checkpoint, with its own inputs (see the module doc).
+ 
+     The contender is the checkpoint's own ("A" for a step-1 checkpoint) unless `contender_name` says
+     otherwise (a step-1 28M checkpoint scored as "B28"). The report has exp1's layout (so `exp1.verdict`,
+     `format_report` and `save_report` take it) plus "inputs": the scorer's settings and, per directory,
+-    its diagnostics (C: gold recall@8 on far questions). `labels=False` (design/06 §9.1) scores
+-    label-free inputs; `exp1.evaluate_checkpoint` scores inputs with labels, the same as `labels=True`
+-    here, so never pair reports of the two modes.
++    its diagnostics (C: gold recall@8 on far questions). The regime is label-free unless `regime` (or the
++    older `labels=True`) says "with-labels", a diagnostic that never enters a verdict. `purpose` (default:
++    "primary" for label-free) selects the checkpoint checks that must pass (`identity.admit`); the
++    tokenizer digest is checked even when `tokenizer_path` overrides the path.
+     """
++    regime = preprocess.regime_of(labels, regime)
++    purpose = exp1.default_purpose(regime, purpose)
+     project = Path(project)
+     path = Path(checkpoint) if Path(checkpoint).is_absolute() else project / checkpoint
+-    model, config = exp1.load_core(path, device)
++    from learnlab.ckpt import read_config
++
++    config = read_config(path)
+     name = contender_name or config.get("contender", "A")
+     if contender(name).inputs != contender(config.get("contender", "A")).inputs:
+         raise ValueError(f"a {config.get('contender', 'A')} checkpoint cannot be scored with {name}'s inputs")
+     tokenizer_info = config.get("tokenizer") or {}
+-    data = exp1.open_data(project, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"],
+-                          tokenizer_sha=None if tokenizer_path else tokenizer_info.get("sha256"))
+-    scorer = scorer_for(config, project, labels=labels)
++    if tokenizer_path is None and not tokenizer_info.get("path"):
++        raise identity.CheckpointIncompatible(f"{checkpoint} records no tokenizer path; pass tokenizer_path")
++    data = exp1.open_data(project, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"])
++    spec = contender(name)
++    problems = identity.admit(
++        exp1.core_checks(config, data.tokenizer, name, entity_ids=spec.inputs == "pointer", inputs=spec.inputs),
++        data.tokenizer, regime=regime, purpose=purpose)
++    model, config = exp1.load_core(path, device)
++    scorer = scorer_for(config, project, regime=regime)
+     if directories is None:
+         directories = [split] + ([slices.long_name(split)] if data.has(slices.long_name(split)) else [])
+     names = None if names is None else list(names)
+@@ -422,14 +453,15 @@
+     fresh: list[Mapping[str, Any]] = []
+     for directory in directories:
+         rows, info = exp1.evaluate_directory(model, data, directory, max_new=max_new, batch_size=batch_size,
+-                                             replay=replay, workers=workers, names=names, scorer=scorer, log=log)
++                                             replay=replay, workers=workers, names=names, scorer=scorer,
++                                             regime=regime, log=log)
+         reports[directory] = info
+         diagnostics[directory] = scorer.calls.pop()
+         items[directory] = [{key: row[key] for key in exp1._ITEM_KEYS} for row in rows]
+         if directory == split:
+             fresh = [r for r in rows if "fresh_names" in r["slices"]]
+         cell = info["summary"]["decision_cells"]
+-        log(f"premonition exp1 {name} {directory}: " + ", ".join(
++        log(f"premonition exp1 {name} [{regime}] {directory}: " + ", ".join(
+             f"{slice_name} {exp1._pct(cell[slice_name])}" for slice_name in slices.DECISION_SLICES))
+         recall = diagnostics[directory].get("recall")
+         if recall:
+@@ -440,7 +472,7 @@
+         rows, info = exp1.evaluate_directory(model, data, "train", max_new=max_new, batch_size=batch_size,
+                                              replay=False, names=names,
+                                              questions=exp1.heldin_questions(data, heldin, seed),
+-                                             source=exp1.HELDIN_SOURCE, scorer=scorer, log=log)
++                                             source=exp1.HELDIN_SOURCE, scorer=scorer, regime=regime, log=log)
+         reports[exp1.HELDIN_SOURCE] = info
+         diagnostics[exp1.HELDIN_SOURCE] = scorer.calls.pop()
+         seen = [r for r in rows if "seen_names" in r["slices"]]
+@@ -448,12 +480,17 @@
+         if seen and fresh:
+             name_gap["gap"] = name_gap["seen_names"]["accuracy"] - name_gap["fresh_names"]["accuracy"]
+     return {
+-        "command": "premonition eval", "experiment": 1, "contender": name, "wipe": None,
++        "command": "premonition eval", "experiment": 1, "contender": name, "wipe": None, "regime": regime,
++        "identity": identity.report_identity(
++            regime=regime, purpose=purpose, tokenizer=data.tokenizer, tokenizer_path=data.tokenizer_path,
++            model_kind="core", model_config=config.get("core") or {}, parameters=model.num_parameters(),
++            checkpoint=path, checkpoint_config=config, data_tag=data.tag, problems=problems),
+         "checkpoint": str(checkpoint), "parameters": model.num_parameters(), "device": device,
+         "config": config, "data": {"dir": data.rel, "tag": data.tag},
+         "tokenizer": {"path": data.tokenizer_path, "sha256": data.tokenizer.digest},
+         "cut": {"seq_len": slices.SEQ_LEN, "max_new": max_new, "max_len": CUT_MAX_LEN},
+-        "inputs": {"kind": scorer.inputs, "labels": labels, "per_directory": diagnostics},
++        "inputs": {"kind": scorer.inputs, "labels": scorer.labels, "regime": regime,
++                   "per_directory": diagnostics},
+         "split": split, "directories": reports, "name_gap": name_gap, "items": items,
+     }
+ 
+@@ -558,6 +595,7 @@
+     train_info = {**result, "flops": achieved, "flops_per_second": achieved / max(seconds, 1e-9)}
+     ckpt_config = {
+         "model": MODEL_NAME, "experiment": 1, "contender": name, "inputs": spec.inputs,
++        "preprocess": preprocess.identity(WITH_LABELS),      # Core training streams keep answers (§9.1)
+         "core": asdict(config), "train": asdict(train_config), "tokenizer": data.tokenizer_info,
+         "data": {"dir": data.rel, "tag": data.tag}, "seed": seed, "max_new": MAX_NEW,
+         "flops": {k: flop_info[k] for k in ("per_step", "per_token", "budget_kind", "target", "achieved")},
+--- archive/opus-m01-20260918-202731/originals/data.py	2026-09-18 19:33:49
++++ premonition/data.py	2026-09-18 20:40:26
+@@ -26,6 +26,20 @@
+ otherwise). Unrendered evidence (a silent record) is dropped and counted. The batch holds the newest MAX_GOLD
+ gold lines and the first MAX_ANSWER answer tokens; the cache keeps them whole and counts what a batch would cut.
+ Pass `detector=None` for the names-as-ordinary-tokens control (D-noptr).
++
++Two cache kinds (design/06 §11.1):
++
++- regime=None: the LEGACY v1 cache, unchanged (its files keep their old path and identity). It encodes whole
++  question lines, answers and feedback included, and binds names over them; `train.label_free` then only
++  drops answer tokens from batches, so names seen only in labels still enter the name table and shift the
++  entity numbering. Core training streams (E) use it: their answers are LM targets.
++- regime="label-free" (what D trains and is evaluated on): a v2 cache built with `premonition.preprocess`.
++  Question lines are cut through "[answer]" BEFORE names are bound and anything is encoded, so the tokens,
++  offsets, spans, card boundaries, entity mentions, name tables and masks are all computed on the visible
++  text. `answer_end` is then one past the newline after "[answer]" (so L_lm skips "[answer]" -> newline),
++  targets are bound with the visible prefix's names, and `target_unbound` [Q] flags a target naming someone
++  the visible prefix never did. Its path carries the preprocessing digest: premonition-v2-<tokenizer>-<names>-
++  <preprocess>/<split>.pt, so a changed rule never reuses an old file.
+ """
+ from __future__ import annotations
+ 
+@@ -47,11 +61,13 @@
+ from learnlab.step1 import ANSWER_TAG, FEEDBACK_TAG, QUESTION_TAG, ShardFormatError
+ from learnlab.tokenizer import Tokenizer
+ 
++from . import preprocess
+ from .batch import MAX_ANSWER, MAX_GOLD, MAX_LINE_ENTS, N_ENT, PAD_ID, NameTable, VisitBatch
+ from .pointer import NameDetector, lowercase_words, pointerize_lines, random_order
+ 
+ CACHE_FORMAT = "premonition.visits"
+-CACHE_VERSION = 1
++CACHE_VERSION = 1                   # the legacy with-labels cache (regime=None)
++PREPARED_CACHE_VERSION = 2          # caches built through premonition.preprocess (they record its identity)
+ DETECTOR_FILE = "premonition-names.json"
+ IGNORE = -100
+ Log = Callable[[str], None]
+@@ -149,9 +165,20 @@
+     visit_ids: list[str]
+     names: list[list[str]]
+     info: dict[str, Any] = field(default_factory=dict)
++    target_unbound: Optional[torch.Tensor] = None   # bool [Q] (v2 caches): the target names someone unbound
+ 
+     def __len__(self) -> int:
+         return len(self.visit_ids)
++
++    @property
++    def regime(self) -> str:
++        """The input regime of the cached tokens: a legacy v1 cache holds whole lines (with labels)."""
++        return self.info.get("regime", preprocess.WITH_LABELS)
++
++    @property
++    def preprocess_identity(self) -> Optional[dict[str, Any]]:
++        """`preprocess.identity` of a v2 cache; None for a legacy v1 cache."""
++        return self.info.get("preprocess")
+ 
+     @cached_property
+     def lengths(self) -> torch.Tensor:
+@@ -193,16 +220,27 @@
+ 
+     def to_bytes(self) -> bytes:
+         buffer = io.BytesIO()
+-        torch.save({"format": CACHE_FORMAT, "version": CACHE_VERSION,
+-                    **{f.name: getattr(self, f.name) for f in fields(self)}}, buffer)
++        version = PREPARED_CACHE_VERSION if self.preprocess_identity else CACHE_VERSION
++        values = {f.name: getattr(self, f.name) for f in fields(self)}
++        if version == CACHE_VERSION:
++            values.pop("target_unbound")            # the v1 layout, byte for byte
++        torch.save({"format": CACHE_FORMAT, "version": version, **values}, buffer)
+         return bytes(buffer.getbuffer())
+ 
+     @classmethod
+     def load(cls, path: Path) -> VisitCache:
+         data = torch.load(Path(path), weights_only=True)
+-        if data.pop("format", None) != CACHE_FORMAT or data.pop("version", None) != CACHE_VERSION:
+-            raise ValueError(f"{path} is not a {CACHE_FORMAT} v{CACHE_VERSION} file")
+-        return cls(**data)
++        found, version = data.pop("format", None), data.pop("version", None)
++        if found != CACHE_FORMAT or version not in (CACHE_VERSION, PREPARED_CACHE_VERSION):
++            raise ValueError(f"{path} is not a {CACHE_FORMAT} v{CACHE_VERSION}/v{PREPARED_CACHE_VERSION} file")
++        cache = cls(**data)
++        if version == PREPARED_CACHE_VERSION:
++            problems = preprocess.identity_problems(cache.preprocess_identity)
++            if problems:
++                raise ValueError(f"{path}: {'; '.join(problems)}")
++        elif cache.preprocess_identity is not None:
++            raise ValueError(f"{path}: a v{CACHE_VERSION} file must not claim a preprocessing identity")
++        return cache
+ 
+ 
+ _WORKER: dict[str, Any] = {}
+@@ -226,8 +264,10 @@
+ 
+ 
+ def encode_shard(text: Path, meta: Path, split: str, tokenizer: Tokenizer, detector: Optional[NameDetector],
+-                 cache: Optional[dict[str, list[int]]] = None) -> dict[str, Any]:
+-    """One shard's visits and questions as plain lists (merged by `build_cache`)."""
++                 cache: Optional[dict[str, list[int]]] = None, regime: Optional[str] = None) -> dict[str, Any]:
++    """One shard's visits and questions as plain lists (merged by `build_cache`); `regime` None is legacy v1."""
++    if regime is not None:
++        return _encode_prepared(text, meta, split, tokenizer, detector, {} if cache is None else cache, regime)
+     cache = {} if cache is None else cache
+     base = tokenizer.vocab_size
+     answer_id, feedback_id, eos = (tokenizer.token_to_id(t) for t in (ANSWER_TAG, FEEDBACK_TAG, "<eos>"))
+@@ -331,11 +371,118 @@
+     return out
+ 
+ 
+-def _encode_task(task: tuple[str, str, str]) -> dict[str, Any]:
+-    text, meta, split = task
+-    return encode_shard(Path(text), Path(meta), split, _WORKER["tokenizer"], _WORKER["detector"], _WORKER["cache"])
++def _shard_questions(text: Path, meta: Path, split: str) -> tuple[list[list[tuple[int, str]]], list[dict[str, Any]],
++                                                                   dict[int, list[step1.Question]]]:
++    visits = step1.read_visits(Path(text))
++    rows = step1.read_records(Path(meta), "visit")
++    if rows and len(rows) != len(visits):
++        raise ShardFormatError(f"{Path(text).name}: {len(visits)} visits but {len(rows)} visit records")
++    by_visit: dict[int, list[step1.Question]] = {}
++    for question in step1.read_questions(Path(text), Path(meta), split):
++        by_visit.setdefault(question.visit, []).append(question)
++    return visits, rows, by_visit
++
++
++def _encode_prepared(text: Path, meta: Path, split: str, tokenizer: Tokenizer, detector: Optional[NameDetector],
++                     cache: dict[str, list[int]], regime: str) -> dict[str, Any]:
++    """`encode_shard` for a v2 cache: every line through `preprocess.prepare_visit` (see the module doc)."""
++    preprocess.check_regime(regime)
++    base = tokenizer.vocab_size
++    answer_id, feedback_id = tokenizer.token_to_id(ANSWER_TAG), tokenizer.token_to_id(FEEDBACK_TAG)
++    visits, rows, by_visit = _shard_questions(text, meta, split)
++    stats: Counter[str] = Counter()
++    out: dict[str, Any] = {key: [] for key in (
++        "line_lengths", "visit_line_counts", "line_is_question", "line_ents", "visit_question_counts", "q_line",
++        "q_span", "answer_end", "answers", "gold", "depth", "knowable", "question_ids", "visit_ids", "names",
++        "target_unbound")}
++    tokens = array("h")
++    for v, visit in enumerate(visits):
++        first = visit[0][0]
++        lines = [line for _, line in visit]
++        if rows:
++            row = rows[v]
++            if row.get("first_line") != first or row.get("lines") != len(lines):
++                raise ShardFormatError(f"{Path(text).name}: visit record {v} does not match the text")
++        try:
++            prepared = preprocess.prepare_visit(lines, tokenizer, detector, regime=regime, cache=cache)
++        except (preprocess.MalformedInput, preprocess.MalformedTarget) as error:
++            raise ShardFormatError(f"{Path(text).name}: visit {v}: {error}") from None
++        ids, starts = prepared.pieces, prepared.starts
++        spellings = [prepared.table.spellings[e] for e in range(len(prepared.table.spellings))]
++        is_question = [line.startswith(QUESTION_TAG) for line in lines]
++        for k, piece in enumerate(ids):
++            shown = piece[:prepared.questions[k].span[1] - starts[k]] if is_question[k] else piece
++            ents = list(dict.fromkeys(i - base for i in shown if i >= base))
++            stats["line_ents_over_max"] += len(ents) > MAX_LINE_ENTS
++            out["line_ents"].append(ents[:MAX_LINE_ENTS] + [-1] * (MAX_LINE_ENTS - len(ents[:MAX_LINE_ENTS])))
++            tokens.extend(piece)
++        out["line_lengths"].extend(len(piece) for piece in ids)
++        out["line_is_question"].extend(is_question)
++        out["visit_line_counts"].append(len(lines))
++        out["visit_ids"].append(str(rows[v]["id"]) if rows else f"{Path(text).stem}/{v}")
++        out["names"].append(spellings)
++        stats["names_max"] = max(stats["names_max"], len(spellings))
++        stats["label_only_names"] += len(prepared.label_only_names)
++        stats["visits_with_label_only_names"] += bool(prepared.label_only_names)
++        questions = by_visit.get(v, [])
++        out["visit_question_counts"].append(len(questions))
++        for question in questions:
++            k = question.line - first
++            if not (0 <= k < len(lines) and is_question[k]):
++                raise ShardFormatError(f"{question.id}: line {question.line} is not a question line of its visit")
++            asked = prepared.questions[k]
++            start, end = asked.span
++            if regime == preprocess.WITH_LABELS:
++                piece, a = ids[k], end - 1 - starts[k]
++                stop = starts[k] + (piece.index(feedback_id, a) if feedback_id in piece[a:] else len(piece) - 1)
++            else:
++                stop = end + 1                      # mask only "[answer]" -> newline
++            gold: list[int] = []
++            for line in question.evidence:
++                if line < 0:
++                    stats["evidence_unrendered"] += 1
++                    continue
++                local = line - first
++                if not (0 <= local < k) or is_question[local]:
++                    raise ShardFormatError(f"{question.id}: evidence line {line} is not a card before the question")
++                gold.append(local)
++            gold = sorted(set(gold))
++            knowable = question.knowable is not False
++            if not knowable and gold:
++                stats["unknowable_with_evidence"] += 1
++                gold = []
++            stats["knowable_without_gold"] += knowable and not gold
++            stats["gold_over_max"] += len(gold) > MAX_GOLD
++            stats["gold_max"] = max(stats["gold_max"], len(gold))
++            stats["answer_max"] = max(stats["answer_max"], len(asked.target))
++            stats["question_max"] = max(stats["question_max"], end - start)
++            stats["answers_over_max"] += len(asked.target) > MAX_ANSWER
++            stats["target_names_unbound"] += bool(asked.unbound)
++            if ids[k][end - 1 - starts[k]] != answer_id:
++                raise ShardFormatError(f"{question.id}: its span does not end at {ANSWER_TAG}")
++            out["q_line"].append(k)
++            out["q_span"].append((start, end))
++            out["answer_end"].append(stop)
++            out["answers"].append(list(asked.target))
++            out["target_unbound"].append(bool(asked.unbound))
++            out["gold"].append(gold)
++            out["depth"].append(int(question.depth or 0) if knowable else 0)
++            out["knowable"].append(knowable)
++            out["question_ids"].append(question.id)
++        stats["visit_tokens_max"] = max(stats["visit_tokens_max"], starts[-1])
++    if sum(out["visit_question_counts"]) != sum(len(qs) for qs in by_visit.values()):
++        raise ShardFormatError(f"{Path(text).name}: questions outside every visit")
++    out["tokens"] = tokens.tobytes()
++    out["stats"] = dict(stats)
++    return out
+ 
+ 
++def _encode_task(task: tuple[str, str, str, Optional[str]]) -> dict[str, Any]:
++    text, meta, split, regime = task
++    return encode_shard(Path(text), Path(meta), split, _WORKER["tokenizer"], _WORKER["detector"], _WORKER["cache"],
++                        regime=regime)
++
++
+ def _offsets(counts: Iterable[int], dtype: torch.dtype = torch.long) -> torch.Tensor:
+     return torch.cumsum(torch.tensor([0, *counts], dtype=torch.long), 0).to(dtype)
+ 
+@@ -345,13 +492,19 @@
+ 
+ 
+ def build_cache(split_dir: Path, tokenizer: Tokenizer, detector: Optional[NameDetector], *,
+-                split: Optional[str] = None, workers: int = 1) -> VisitCache:
+-    """Encode every shard of `split_dir` (split: the directory name before any "-suffix", unless given)."""
++                split: Optional[str] = None, workers: int = 1, regime: Optional[str] = None) -> VisitCache:
++    """Encode every shard of `split_dir` (split: the directory name before any "-suffix", unless given).
++
++    `regime` None builds the legacy v1 cache (whole lines); a regime builds a v2 cache through
++    `premonition.preprocess` ("label-free" for D).
++    """
+     check_tokenizer(tokenizer)
++    if regime is not None:
++        preprocess.check_regime(regime)
+     split_dir = Path(split_dir)
+     split = split or split_dir.name.split("-")[0]
+     pairs = step1.shard_files(split_dir)
+-    tasks = [(str(text), str(meta), split) for text, meta in pairs]
++    tasks = [(str(text), str(meta), split, regime) for text, meta in pairs]
+     payload = (tokenizer.to_json(), None if detector is None else detector.to_json())
+     if workers > 1 and len(tasks) > 1:
+         with step1.spawn_safe_main():
+@@ -366,6 +519,7 @@
+         for key, value in part.items():
+             if key not in ("tokens", "stats"):
+                 merged.setdefault(key, []).extend(value)
++    unbound = merged.pop("target_unbound", None)
+     tokens = torch.frombuffer(bytearray(b"".join(part["tokens"] for part in parts)) or bytearray(2),
+                               dtype=torch.int16)[: sum(merged["line_lengths"])].clone()
+     stats: Counter[str] = Counter()
+@@ -392,29 +546,46 @@
+               "tokenizer_sha256": tokenizer.digest,
+               "detector_sha256": None if detector is None else detector.digest, "pointers": detector is not None,
+               "visits": len(merged["visit_ids"]), "questions": len(merged["question_ids"]),
+-              "tokens": int(tokens.numel()), "stats": dict(stats)},
++              "tokens": int(tokens.numel()), "stats": dict(stats),
++              **({} if regime is None else {"regime": regime, "preprocess": preprocess.identity(regime)})},
++        target_unbound=None if regime is None else torch.tensor(unbound or [], dtype=torch.bool),
+     )
+     return cache
+ 
+ 
+-def cache_relative(data_rel: str, name: str, tokenizer: Tokenizer, detector: Optional[NameDetector]) -> str:
++def cache_relative(data_rel: str, name: str, tokenizer: Tokenizer, detector: Optional[NameDetector],
++                   regime: Optional[str] = None) -> str:
++    """Where a cache lives. Legacy v1 (regime None): premonition-v1-<tokenizer>-<names>/<name>.pt, as before.
++    v2: premonition-v2-<tokenizer>-<names>-<preprocessing digest>/<name>.pt."""
+     names = "plain" if detector is None else detector.digest[:12]
+-    return f"{data_rel}/premonition-v{CACHE_VERSION}-{tokenizer.digest[:12]}-{names}/{name}.pt"
++    if regime is None:
++        return f"{data_rel}/premonition-v{CACHE_VERSION}-{tokenizer.digest[:12]}-{names}/{name}.pt"
++    return (f"{data_rel}/premonition-v{PREPARED_CACHE_VERSION}-{tokenizer.digest[:12]}-{names}-"
++            f"{preprocess.digest(regime)[:12]}/{name}.pt")
+ 
+ 
+ def load_or_build(budget: Any, data_rel: str, name: str, tokenizer: Tokenizer, detector: Optional[NameDetector], *,
+-                  split: Optional[str] = None, workers: int = 1, log: Log = print) -> VisitCache:
+-    """The cache of `<data_rel>/<name>/`: loaded when written before, else built and written through the budget."""
+-    relative = cache_relative(data_rel, name, tokenizer, detector)
++                  split: Optional[str] = None, workers: int = 1, regime: Optional[str] = None,
++                  log: Log = print) -> VisitCache:
++    """The cache of `<data_rel>/<name>/`: loaded when written before, else built and written through the budget.
++
++    `regime` None is the legacy v1 cache; "label-free" the v2 cache D reads (see the module doc).
++    """
++    relative = cache_relative(data_rel, name, tokenizer, detector, regime)
+     path = Path(budget.root) / relative
+     if path.is_file():
+-        return VisitCache.load(path)
++        cache = VisitCache.load(path)
++        if regime is not None and (cache.preprocess_identity or {}).get("regime") != regime:
++            raise ValueError(f"{relative} holds a {cache.regime} cache, not {regime}")
++        return cache
+     started = time.perf_counter()
+-    cache = build_cache(Path(budget.root) / data_rel / name, tokenizer, detector, split=split, workers=workers)
++    cache = build_cache(Path(budget.root) / data_rel / name, tokenizer, detector, split=split, workers=workers,
++                        regime=regime)
+     data = cache.to_bytes()
+     budget.atomic_write(relative, len(data), lambda handle: handle.write(data))
+     stats = cache.info["stats"]
+-    log(f"premonition cache {name}: {len(cache):,} visits, {cache.info['questions']:,} questions, "
++    log(f"premonition cache {name} [{regime or 'legacy v1'}]: {len(cache):,} visits, "
++        f"{cache.info['questions']:,} questions, "
+         f"{cache.info['tokens']:,} tokens in {time.perf_counter() - started:.1f}s; stats {json.dumps(stats)}")
+     if stats.get("gold_over_max") or stats.get("answers_over_max"):
+         log(f"premonition cache {name}: WARNING {stats.get('gold_over_max', 0)} questions have more than "
+@@ -549,7 +720,8 @@
+ 
+ 
+ __all__ = [
+-    "CACHE_FORMAT", "CACHE_VERSION", "VisitCache", "batches", "build_cache", "cache_relative", "check_tokenizer",
++    "CACHE_FORMAT", "CACHE_VERSION", "PREPARED_CACHE_VERSION", "VisitCache", "batches", "build_cache",
++    "cache_relative", "check_tokenizer",
+     "collate", "encode_shard", "fit_detector", "length_batches", "load_or_build", "name_detector",
+     "pattern_templates",
+ ]
+--- archive/opus-m01-20260918-202731/originals/exp1.py	2026-09-18 19:33:38
++++ premonition/exp1.py	2026-09-18 20:39:08
+@@ -17,6 +17,16 @@
+    correctness keyed by question id so contenders can be paired later.
+ 5. Verdict. `decide` applies the §6 table as a pure function of per-item correctness and the
+    decision slices; `verdict` feeds it from saved reports.
++
++Inputs and identity (design/06 §9.1, §9.8, §11). Evaluation is label-free by default: A's canonical
++prompts and the near/far cut are built over `premonition.preprocess.visible_line` (no earlier answer or
++feedback), and every input is audited for it. "with-labels" is a reported diagnostic. Every report records
++its regime and an identity block (`premonition.identity.report_identity`: preprocessing digest, tokenizer,
++model and checkpoint digests, purpose, and whether it is primary). A checkpoint is scored only after the
++fail-closed checks of `premonition.identity` (tokenizer digest always checked, even with an override path;
++vocabulary, model configuration, preprocessing). `verdict` refuses mixed regimes, reports without a regime
++(legacy/unknown), with-labels or gold-evidence reports and non-primary reports; its outcome is the §6
++decision table on label-free items, not a full §9/§10 verdict (`identity.SCOPE`).
+ """
+ from __future__ import annotations
+ 
+@@ -41,7 +51,9 @@
+ from learnlab.step1 import ANSWER_TAG, EvalItem, Question
+ from learnlab.tokenizer import Tokenizer
+ 
+-from premonition import slices
++from premonition import identity, preprocess, slices
++from premonition.identity import CheckpointIncompatible, VerdictRefused
++from premonition.preprocess import LABEL_FREE, WITH_LABELS
+ from premonition.slices import CUT_MAX_LEN, DECISION_SLICES, MAX_NEW, SliceTags
+ 
+ TARGET_ITEMS = 400                  # design/06 §6 item 2: the target per decision cell (MIN_ITEMS is the floor)
+@@ -159,11 +171,13 @@
+     return model.to(device).eval(), config
+ 
+ 
+-def audit_items(tokenizer: Tokenizer, items: Sequence[EvalItem], *, max_len: int = CUT_MAX_LEN) -> dict[str, int]:
++def audit_items(tokenizer: Tokenizer, items: Sequence[EvalItem], *, max_len: int = CUT_MAX_LEN,
++                regime: str = LABEL_FREE) -> dict[str, int]:
+     """Every input ends with its own question line cut just after [answer] and fits A's cut.
+ 
+     Nothing of the gold answer follows [answer]; an input that already shows the answer (a
+-    repeat) is counted here and kept out of the decision cells by its tags.
++    repeat) is counted here and kept out of the decision cells by its tags. Label-free inputs
++    also hold no [feedback] and no text after any earlier [answer] (`preprocess.audit_ids`).
+     """
+     answer_id = tokenizer.token_to_id(ANSWER_TAG)
+     for item in items:
+@@ -171,7 +185,9 @@
+         if item.prompt[-1] != answer_id or item.prompt[-len(tail):] != tail or len(item.prompt) > max_len:
+             raise AssertionError(f"evaluation input for {item.question.id} does not end with its own question "
+                                  f"line cut at {ANSWER_TAG} within {max_len} tokens")
+-    return {"inputs": len(items), "answer_already_in_input": sum(item.repeat_in_context for item in items),
++        preprocess.audit_ids(item.prompt, tokenizer, regime)
++    return {"inputs": len(items), "regime": regime,
++            "answer_already_in_input": sum(item.repeat_in_context for item in items),
+             "truncated": sum(item.truncated for item in items)}
+ 
+ 
+@@ -244,11 +260,12 @@
+                        batch_size: int = 64, replay: bool = True, workers: int = 1,
+                        names: Optional[Iterable[str]] = None, questions: Optional[Sequence[Question]] = None,
+                        source: Optional[str] = None, scorer: Scorer = step1.score_items,
+-                       log: Log = print) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+-    """(tagged rows, directory report) for every question of `directory`.
++                       regime: str = LABEL_FREE, log: Log = print) -> tuple[list[dict[str, Any]], dict[str, Any]]:
++    """(tagged rows, directory report) for every question of `directory`, items cut in `regime`.
+ 
+     Given `questions` (a sample of the directory's), those are scored instead and nothing is
+-    replayed; `source` names the item set in the tags (default: the directory).
++    replayed; `source` names the item set in the tags (default: the directory). The scorer
++    receives A's canonical items of the regime (label-free prompts by default).
+     """
+     started = time.perf_counter()
+     split = split_of(directory)
+@@ -271,12 +288,12 @@
+     if questions is None:
+         questions = split_questions(data, directory, split, signatures)
+     items, tags = slices.tag_questions(data.tokenizer, questions, seen=data.seen, source=source,
+-                                       replays=replays, names=names)
+-    audit = audit_items(data.tokenizer, items)
++                                       replays=replays, names=names, regime=regime)
++    audit = audit_items(data.tokenizer, items, regime=regime)
+     results = score_read_only(model, data.tokenizer, items, max_new=max_new, batch_size=batch_size,
+                               plans=plans, scorer=scorer)
+     rows = attach(results, tags)
+-    info = {"directory": directory, "source": source, "split": split,
++    info = {"directory": directory, "source": source, "split": split, "regime": regime,
+             "signatures": "oracle" if signatures else "text",
+             "plan_worlds": len(plans), "replay": replay_info, "input_audit": audit,
+             "summary": slice_report(rows), "seconds": time.perf_counter() - started}
+@@ -286,23 +303,61 @@
+ _ITEM_KEYS = ("id", "correct", "exact", "prediction", "answer", "decision", "slices", "stale")
+ 
+ 
++def default_purpose(regime: str, purpose: Optional[str]) -> str:
++    """Primary for label-free scoring unless said otherwise; with-labels and gold-evidence are diagnostics."""
++    if purpose is not None:
++        return identity.check_purpose(purpose)
++    return "primary" if regime in preprocess.VERDICT_REGIMES else "diagnostic"
++
++
++def core_checks(config: Mapping[str, Any], tokenizer: Tokenizer, contender: str, *, entity_ids: bool = False,
++                inputs: str = "plain") -> list[str]:
++    """`identity.checkpoint_problems` for a `Core` checkpoint scored as `contender`."""
++    from premonition import contenders
++    core = config.get("core")
++    problems: list[str] = []
++    recorded_inputs = config.get("inputs", contenders.contender(config.get("contender", "A")).inputs)
++    if recorded_inputs != inputs:
++        problems.append(f"inputs: a checkpoint trained on {recorded_inputs} inputs cannot be scored with "
++                        f"{inputs} inputs")
++    expected = None
++    if core is not None:
++        spec = contenders.contender(contender)
++        d_model, layers, heads = spec.shape
++        expected = {"d_model": d_model, "n_layers": layers, "n_heads": heads, "context": slices.SEQ_LEN}
++    return problems + identity.checkpoint_problems(
++        config, tokenizer, model_vocab=None if core is None else int(core["vocab_size"]), entity_ids=entity_ids,
++        expected_shape=expected, shape=core)
++
++
+ def evaluate_checkpoint(project: Union[str, Path], checkpoint: Union[str, Path], *, contender: str = "A",
+                         split: str = "validation", directories: Optional[Sequence[str]] = None,
+                         data_rel: Optional[str] = None, tokenizer_path: Optional[str] = None,
+                         device: str = "cpu", max_new: int = MAX_NEW, batch_size: int = 64,
+                         replay: bool = True, workers: int = 1, heldin: int = 0,
+-                        names: Optional[Iterable[str]] = None, seed: int = 0, log: Log = print) -> dict[str, Any]:
+-    """Score a `Core` checkpoint on every question of `split` (and `<split>-long` if built); a JSON-able report.
++                        names: Optional[Iterable[str]] = None, seed: int = 0, regime: str = LABEL_FREE,
++                        purpose: Optional[str] = None, log: Log = print) -> dict[str, Any]:
++    """Score a plain-input `Core` checkpoint on every question of `split` (and `<split>-long` if built).
+ 
+-    Data and tokenizer default to the ones recorded in the checkpoint's config. `heldin` > 0
+-    also scores that many trained-on questions for the seen-name side of the name gap.
++    Label-free by default (design/06 §9.1): A's canonical prompts over visible lines. `regime="with-labels"`
++    is the older convention, a diagnostic. Data and tokenizer default to the ones recorded in the checkpoint's
++    config; the tokenizer's digest must match the checkpoint's even when `tokenizer_path` overrides the path.
++    `purpose` (default: "primary" for label-free) decides which checks may fail (`identity.admit`);
++    CheckpointIncompatible is raised before any scoring otherwise. `heldin` > 0 also scores that many
++    trained-on questions for the seen-name side of the name gap.
+     """
++    preprocess.check_regime(regime)
++    purpose = default_purpose(regime, purpose)
+     project = Path(project)
+     path = Path(checkpoint) if Path(checkpoint).is_absolute() else project / checkpoint
+-    model, config = load_core(path, device)
++    config = read_config(path)
+     tokenizer_info = config.get("tokenizer") or {}
+-    data = open_data(project, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"],
+-                     tokenizer_sha=None if tokenizer_path else tokenizer_info.get("sha256"))
++    if tokenizer_path is None and not tokenizer_info.get("path"):
++        raise CheckpointIncompatible(f"{checkpoint} records no tokenizer path; pass tokenizer_path")
++    data = open_data(project, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"])
++    problems = identity.admit(core_checks(config, data.tokenizer, contender), data.tokenizer, regime=regime,
++                              purpose=purpose)
++    model, config = load_core(path, device)
+     if directories is None:
+         directories = [split] + ([slices.long_name(split)] if data.has(slices.long_name(split)) else [])
+     names = None if names is None else list(names)
+@@ -311,26 +366,30 @@
+     fresh: list[Mapping[str, Any]] = []
+     for directory in directories:
+         rows, info = evaluate_directory(model, data, directory, max_new=max_new, batch_size=batch_size,
+-                                        replay=replay, workers=workers, names=names, log=log)
++                                        replay=replay, workers=workers, names=names, regime=regime, log=log)
+         reports[directory] = info
+         items[directory] = [{key: row[key] for key in _ITEM_KEYS} for row in rows]
+         if directory == split:
+             fresh = [r for r in rows if "fresh_names" in r["slices"]]
+         cell = info["summary"]["decision_cells"]
+-        log(f"premonition exp1 {contender} {directory}: " + ", ".join(
++        log(f"premonition exp1 {contender} [{regime}] {directory}: " + ", ".join(
+             f"{name} {_pct(cell[name])}" for name in DECISION_SLICES))
+     name_gap: dict[str, Any] = {"fresh_names": _cell(fresh)}
+     if heldin > 0:
+         rows, info = evaluate_directory(model, data, "train", max_new=max_new, batch_size=batch_size,
+                                         replay=False, names=names, questions=heldin_questions(data, heldin, seed),
+-                                        source=HELDIN_SOURCE, log=log)
++                                        source=HELDIN_SOURCE, regime=regime, log=log)
+         reports[HELDIN_SOURCE] = info
+         seen = [r for r in rows if "seen_names" in r["slices"]]
+         name_gap["seen_names"] = _cell(seen)
+         if seen and fresh:
+             name_gap["gap"] = name_gap["seen_names"]["accuracy"] - name_gap["fresh_names"]["accuracy"]
+     return {
+-        "command": "premonition eval", "experiment": 1, "contender": contender, "wipe": None,
++        "command": "premonition eval", "experiment": 1, "contender": contender, "wipe": None, "regime": regime,
++        "identity": identity.report_identity(
++            regime=regime, purpose=purpose, tokenizer=data.tokenizer, tokenizer_path=data.tokenizer_path,
++            model_kind="core", model_config=config.get("core") or {}, parameters=model.num_parameters(),
++            checkpoint=path, checkpoint_config=config, data_tag=data.tag, problems=problems),
+         "checkpoint": str(checkpoint), "parameters": model.num_parameters(), "device": device,
+         "config": config, "data": {"dir": data.rel, "tag": data.tag},
+         "tokenizer": {"path": data.tokenizer_path, "sha256": data.tokenizer.digest},
+@@ -371,9 +430,13 @@
+ 
+ def format_report(report: Mapping[str, Any]) -> str:
+     """A readable summary of an evaluation report."""
++    ident = report.get("identity") or {}
+     lines = [f"PREMONITION exp1 eval: {report['contender']}{' W-' + report['wipe'] if report.get('wipe') else ''} "
+              f"({report['parameters']:,} params) on {report['data']['tag']}, tokenizer "
+-             f"{report['tokenizer']['sha256'][:12]}, cut {report['cut']['max_len']}"]
++             f"{report['tokenizer']['sha256'][:12]}, cut {report['cut']['max_len']}",
++             f"regime {identity.report_regime(report)}, purpose {ident.get('purpose', 'unknown')}, "
++             f"primary {ident.get('primary', False)}"
++             + (f" ({'; '.join(ident['problems'])})" if ident.get("problems") else "")]
+     for directory, info in report["directories"].items():
+         summary = info["summary"]
+         lines.append(f"{directory}: {summary['items']} items, {summary['decision_items']} in decisions "
+@@ -566,10 +629,19 @@
+     return WIPE_FULL if contender == "D" and wipe == "full" else f"{contender}/W-{wipe}"
+ 
+ 
+-def verdict(reports: Sequence[Mapping[str, Any]], *, directory: Optional[str] = None, **options: Any) -> dict[str, Any]:
+-    """`decide` over saved evaluation reports (all on the same split, data and tokenizer)."""
++def verdict(reports: Sequence[Mapping[str, Any]], *, directory: Optional[str] = None, allow_fixture: bool = False,
++            **options: Any) -> dict[str, Any]:
++    """`decide` over saved evaluation reports (all on the same split, data, tokenizer and regime).
++
++    Refused (VerdictRefused) unless every report is a primary label-free report with today's preprocessing
++    identity (`identity.verdict_problems`): mixed regimes, a report without a regime (legacy/unknown),
++    with-labels or gold-evidence reports and non-primary reports never produce a verdict. With
++    `allow_fixture`, reports that are ALL unit-test fixtures run the mechanics, marked as such. The outcome
++    is the design/06 §6 decision table on label-free items, NOT a full §9/§10 verdict ("scope").
++    """
+     if not reports:
+         raise ValueError("verdict needs at least one report")
++    scope = identity.guard_verdict(reports, allow_fixture=allow_fixture)
+     directory = directory or reports[0]["split"]
+     digests = {r["tokenizer"]["sha256"] for r in reports}
+     tags = {r["data"]["tag"] for r in reports}
+@@ -590,13 +662,14 @@
+             raise ValueError(f"{key}'s report tags {len(clash)} items differently (e.g. {clash[0]})")
+         slices_of.update(mine)
+     decision = decide(results, slices_of, **options)
+-    decision.update(directory=directory, contenders=sorted(results))
++    decision.update(directory=directory, contenders=sorted(results), **scope)
+     return decision
+ 
+ 
+ __all__ = [
+-    "B_CONTENDERS", "CONTENDERS", "EvalData", "LEAD", "TARGET_ITEMS", "WIPE_FULL", "WIPE_NEAR_SHARE", "attach",
+-    "audit_items", "decide", "evaluate_checkpoint", "evaluate_directory", "format_report", "heldin_questions",
+-    "jsonable", "load_core", "open_data", "paired", "results_key", "save_report", "score_read_only",
+-    "slice_report", "split_of", "split_questions", "verdict",
++    "B_CONTENDERS", "CONTENDERS", "CheckpointIncompatible", "EvalData", "LEAD", "TARGET_ITEMS", "VerdictRefused",
++    "WIPE_FULL", "WIPE_NEAR_SHARE", "attach", "audit_items", "core_checks", "decide", "default_purpose",
++    "evaluate_checkpoint", "evaluate_directory", "format_report", "heldin_questions", "jsonable", "load_core",
++    "open_data", "paired", "results_key", "save_report", "score_read_only", "slice_report", "split_of",
++    "split_questions", "verdict",
+ ]
+--- archive/opus-m01-20260918-202731/originals/lookup.py	2026-09-18 19:55:53
++++ premonition/lookup.py	2026-09-18 20:44:12
+@@ -28,9 +28,20 @@
+    target, hit when the lookup recalled it (`metrics.recall_at_k` over the selected lines in rank
+    order); the unbudgeted top 8 is reported too.
+ 
+-Label-free inputs (design/06 §9.1): with `labels=False` every earlier question line keeps its question
+-and drops its "[answer] ... [feedback] ..." spans (`label_free`); the window cut, A's window start and
+-so the candidates are computed on those lines. Training rows keep labels (answers are LM targets).
++Label-free inputs (design/06 §9.1, §11): lines go through `premonition.preprocess.visible_line`, shared
++with D. In the label-free regime (the default for new evaluation) every earlier question line keeps its text
++through "[answer]" and drops the answer and feedback spans; the window cuts and the candidates are computed
++on those lines. Training rows keep labels (answers are LM targets). `label_free` below is the older rule
++(the question text without its "[answer]" tag), kept for reference; no input uses it any more.
++
++Candidates (design/06 §11.5). Every non-question line before C's OWN final window start is eligible. The
++window depends on the recalled block's length, so `lookup_input` iterates from A's window start: recall over
++the lines before the current start, cut C's window beside that block, and if the window no longer reaches
++the current start, move the start to the window's start (the lines in between become candidates) and
++recall again. The start only moves forward, so this ends; the final window then begins exactly at the
++start, so no line is both recalled and in the window, no line between them is lost, and the input fits.
++`candidates_rule="before-a-window"` keeps the older rule (candidates before A's window only), whose gap is
++reported by `gap_lines`.
+ """
+ from __future__ import annotations
+ 
+@@ -55,6 +66,7 @@
+ from learnlab.step1 import ANSWER_TAG, QUESTION_TAG, Question
+ from learnlab.tokenizer import Tokenizer
+ 
++from premonition import preprocess
+ from premonition.slices import CUT_MAX_LEN, SEQ_LEN
+ 
+ K1 = 1.2
+@@ -84,14 +96,15 @@
+ 
+ 
+ def label_free(line: str) -> str:
+-    """A question line without its answer and feedback spans (design/06 §9.1); other lines unchanged."""
++    """LEGACY (no longer used by any input): a question line cut before its "[answer]" tag."""
+     if line.startswith(QUESTION_TAG) and ANSWER_TAG in line:
+         return line[: line.index(ANSWER_TAG)].rstrip()
+     return line
+ 
+ 
+-def shown(line: str, labels: bool) -> str:
+-    return line if labels else label_free(line)
++def shown(line: str, labels: bool = False, *, regime: Optional[str] = None) -> str:
++    """A line as the model sees it: `preprocess.visible_line` of the regime (label-free unless `labels`)."""
++    return preprocess.visible_line(line, preprocess.regime_of(labels, regime))
+ 
+ 
+ @lru_cache(maxsize=500_000)
+@@ -218,10 +231,16 @@
+ 
+ 
+ class LineIds:
+-    """Token ids of stream lines as the model reads them (label-free if asked), each with its newline; cached."""
++    """Token ids of stream lines as the model reads them in a regime, each with its newline; cached.
+ 
+-    def __init__(self, tokenizer: Tokenizer, labels: bool = True) -> None:
+-        self.tokenizer, self.labels = tokenizer, labels
++    `labels=True` (the default, for training rows) is the with-labels regime; `labels=False` or
++    `regime="label-free"` the label-free one.
++    """
++
++    def __init__(self, tokenizer: Tokenizer, labels: Optional[bool] = None, *, regime: Optional[str] = None) -> None:
++        self.tokenizer = tokenizer
++        self.regime = preprocess.regime_of(True if labels is None and regime is None else labels, regime)
++        self.labels = self.regime == preprocess.WITH_LABELS
+         self._cache: dict[str, list[int]] = {}
+ 
+     def __call__(self, line: str) -> list[int]:
+@@ -229,7 +248,7 @@
+         if found is None:
+             if len(self._cache) >= 200_000:
+                 self._cache.clear()
+-            found = self._cache[line] = self.tokenizer.encode(shown(line, self.labels) + "\n")
++            found = self._cache[line] = self.tokenizer.encode(preprocess.visible_line(line, self.regime) + "\n")
+         return found
+ 
+ 
+@@ -314,40 +333,89 @@
+ class LookupInput:
+     ids: list[int]              # the model input, ending with "[answer]"
+     recall: Recall
+-    a_start: int                # A's window start (shard line): candidates are the lines before it
++    a_start: int                # A's window start (shard line)
+     window: Window              # C's own window (shorter than A's by the recalled block)
+     masked: int                 # leading tokens that are never targets: <eos>, recalled lines, <bos>, visit <eos>
+-    evidence_before: tuple[int, ...]   # evidence lines before A's window start (the recall targets)
++    evidence_before: tuple[int, ...]   # evidence lines among the candidates (the recall targets)
++    candidates_rule: str = preprocess.LOOKUP_CANDIDATES
++    boundary: int = -1          # candidates are the non-question lines before this shard line
++    rounds: int = 1             # recall rounds until C's window reached the boundary
+ 
++    @property
++    def gap_lines(self) -> tuple[int, ...]:
++        """Visit lines neither eligible nor in C's window (always empty under the current rule)."""
++        if self.window is None or self.boundary >= self.window.start:
++            return ()
++        return tuple(range(self.boundary, self.window.start))
+ 
++
+ def candidates(question: Question, before: int) -> list[tuple[int, str]]:
+     """Non-question lines of the question's visit before shard line `before`."""
+     return [(n, line) for n, line in question.context if n < before and not line.startswith(QUESTION_TAG)]
++
++
++def window_from(numbers: Sequence[int], pieces: Sequence[Sequence[int]], start: int, room: int, eos: int,
++                question_line: int) -> Window:
++    """The window of every visit line from shard line `start` on (it must fit `room`), <eos> first if whole."""
++    kept = [index for index, number in enumerate(numbers) if number >= start]
++    used = sum(len(pieces[index]) for index in kept)
++    if used > room:
++        raise AssertionError(f"lines from {start} need {used} tokens, more than {room}")
++    whole = len(kept) == len(pieces)
++    prefix = whole and used + 1 <= room
++    ids = [eos] if prefix else []
++    for index in kept:
++        ids.extend(pieces[index])
++    return Window(ids=ids, start=numbers[kept[0]] if kept else question_line, kept=len(kept), whole=whole,
++                  prefix=prefix)
+ 
+ 
+ def lookup_input(question: Question, lines: LineIds, bm25: Bm25, *, max_len: int = CUT_MAX_LEN,
+-                 top_k: int = TOP_K, budget: int = RECALL_TOKENS) -> LookupInput:
+-    """C's input for one question (design/06 §5 step 4)."""
++                 top_k: int = TOP_K, budget: int = RECALL_TOKENS,
++                 candidates_rule: str = preprocess.LOOKUP_CANDIDATES) -> LookupInput:
++    """C's input for one question (design/06 §5 step 4; candidates as design/06 §11.5)."""
++    if candidates_rule not in (preprocess.LOOKUP_CANDIDATES, preprocess.LEGACY_LOOKUP_CANDIDATES):
++        raise ValueError(f"unknown candidates rule {candidates_rule!r}")
+     tokenizer = lines.tokenizer
+     eos, bos = tokenizer.token_to_id("<eos>"), tokenizer.token_to_id(SEPARATOR)
+     tail = question_tail(tokenizer, question)
+     numbers = [n for n, _ in question.context]
+     pieces = [lines(line) for _, line in question.context]
+-    a_window = cut_window(numbers, pieces, max_len - len(tail), eos, question.line)
+-    found = recall(bm25, question.question, candidates(question, a_window.start), lambda text: len(lines(text)),
+-                   top_k=top_k, budget=budget)
++    room = max_len - len(tail)
++    a_window = cut_window(numbers, pieces, room, eos, question.line)
+     text_of = dict(question.context)
+-    block = [eos]
+-    for number in found.lines:
+-        block.extend(lines(text_of[number]))
+-    block.append(bos)
+-    window = cut_window(numbers, pieces, max_len - len(tail) - len(block), eos, question.line)
++    length = lambda text: len(lines(text))  # noqa: E731
++
++    def block_of(found: Recall) -> list[int]:
++        block = [eos]
++        for number in found.lines:
++            block.extend(lines(text_of[number]))
++        block.append(bos)
++        return block
++
++    boundary, rounds = a_window.start, 1
++    found = recall(bm25, question.question, candidates(question, boundary), length, top_k=top_k, budget=budget)
++    block = block_of(found)
++    window = cut_window(numbers, pieces, room - len(block), eos, question.line)
++    if candidates_rule == preprocess.LOOKUP_CANDIDATES:
++        while window.start > boundary:          # the block pushed C's window past the boundary: widen the pool
++            boundary, rounds = window.start, rounds + 1
++            found = recall(bm25, question.question, candidates(question, boundary), length, top_k=top_k,
++                           budget=budget)
++            block = block_of(found)
++            window = cut_window(numbers, pieces, room - len(block), eos, question.line)
++        window = window_from(numbers, pieces, boundary, room - len(block), eos, question.line)
+     ids = block + window.ids + tail
+     if len(ids) > max_len or ids[-1] != tail[-1]:
+         raise AssertionError(f"C input for {question.id} has {len(ids)} tokens (max {max_len})")
+-    evidence = tuple(sorted({e for e in question.evidence if 0 <= e < a_window.start}))
++    if any(number >= min(boundary, question.line) for number in found.lines):
++        raise AssertionError(f"C input for {question.id} recalls a line at or after its candidate boundary")
++    if candidates_rule == preprocess.LOOKUP_CANDIDATES and window.start != boundary and window.kept:
++        raise AssertionError(f"C input for {question.id} leaves lines between its candidates and its window")
++    evidence = tuple(sorted({e for e in question.evidence if 0 <= e < boundary}))
+     return LookupInput(ids=ids, recall=found, a_start=a_window.start, window=window,
+-                       masked=len(block) + int(window.prefix), evidence_before=evidence)
++                       masked=len(block) + int(window.prefix), evidence_before=evidence,
++                       candidates_rule=candidates_rule, boundary=boundary, rounds=rounds)
+ 
+ 
+ def is_far(question: Question, a_start: int) -> bool:
+@@ -356,8 +424,10 @@
+ 
+ 
+ def recall_report(entries: Sequence[LookupInput], k: int = TOP_K) -> dict[str, Any]:
+-    """Gold recall@k of far questions' inputs (design/06 §5 step 6): one target per evidence line before
+-    A's window, hit when recalled; `all_gold_recalled` is over the questions that have a target."""
++    """Gold recall@k of far questions' inputs (design/06 §5 step 6): one target per evidence line among the
++    candidates (before C's window under the current rule, before A's under the legacy one), hit when
++    recalled; `all_gold_recalled` is over the questions that have a target. `gap_lines` counts visit lines
++    that were neither eligible nor in C's window (the legacy rule's gap; 0 under the current rule)."""
+     ranked: list[tuple[int, ...]] = []
+     top: list[tuple[int, ...]] = []
+     targets: list[int] = []
+@@ -378,6 +448,8 @@
+         "all_gold_recalled": complete / with_targets if with_targets else None,
+         "mean_recalled_lines": sum(len(e.recall.lines) for e in entries) / n if n else None,
+         "mean_candidates": sum(e.recall.candidates for e in entries) / n if n else None,
++        "gap_lines": sum(len(e.gap_lines) for e in entries),
++        "candidates_rule": sorted({e.candidates_rule for e in entries}),
+     }
+ 
+ 
+@@ -577,5 +649,5 @@
+     "B", "Bm25", "K1", "LineIds", "LookupInput", "LookupStream", "RECALL_TOKENS", "Recall", "SEPARATOR", "STATS_FILE",
+     "STOPWORDS", "ShardRows", "TOP_K", "Window", "candidates", "cut_window", "fit_bm25", "is_far", "label_free",
+     "lookup_input", "plain_input", "query_terms", "question_row", "question_tail", "recall", "recall_report",
+-    "shard_rows", "shown", "split_lines", "terms", "train_bm25",
++    "shard_rows", "shown", "split_lines", "terms", "train_bm25", "window_from",
+ ]
+--- archive/opus-m01-20260918-202731/originals/pointer.py	2026-09-18 19:28:05
++++ premonition/pointer.py	2026-09-18 20:33:54
+@@ -165,6 +165,10 @@
+ 
+     def entity_of(self, spelling: str) -> Optional[int]:
+         return self._entity.get(spelling)
++
++    def bound(self) -> dict[str, int]:
++        """A copy of spelling -> entity for every name bound so far (the mapping of the text read so far)."""
++        return dict(self._entity)
+ 
+ 
+ _CACHE_LIMIT = 200_000
+--- archive/opus-m01-20260918-202731/originals/slices.py	2026-09-18 19:27:10
++++ premonition/slices.py	2026-09-18 20:36:44
+@@ -5,7 +5,9 @@
+ 
+ 1. near / far: knowable questions whose evidence lines all survive A's cut (`step1.build_items`
+    at max_len 768 - 32 = 736), or not. Step 1's `visible` (2,048 characters, 40 records) is not
+-   the model's window and is not used here.
++   the model's window and is not used here. The cut is taken over the lines of the input regime
++   (design/06 §11.3): label-free by default (earlier question lines through "[answer]", as A reads
++   them), so "far" means outside the window A actually has; `regime="with-labels"` is the older cut.
+ 3. multi-hop: knowable with depth 2-5 (depths 4-5 are untrained for every contender); also per depth.
+ 4. changed: the visit is replayed with the scheduler (`generate_visit`, spied on like
+    `step1.capture_asks`) and `oracle.ask` is called for the question after every earlier step;
+@@ -37,11 +39,15 @@
+ import time
+ from typing import Any, Callable, Iterable, Mapping, Optional, Sequence
+ 
++from dataclasses import replace
++
+ from learnlab import step1
+ from learnlab.leaks import normalize
+ from learnlab.step1 import ANSWER_TAG, QUESTION_TAG, EvalItem, Question, ShardFormatError
+ from learnlab.tokenizer import Tokenizer
+ 
++from premonition.preprocess import LABEL_FREE, WITH_LABELS, check_regime, visible_line
++
+ SEQ_LEN = 768                       # every contender's context (design/06 §0)
+ MAX_NEW = 32                        # answer tokens decoded
+ CUT_MAX_LEN = SEQ_LEN - MAX_NEW     # A's cut: the canonical near/far boundary for every contender
+@@ -185,9 +191,17 @@
+ 
+ 
+ def canonical_items(tokenizer: Tokenizer, questions: Sequence[Question], *, seen: Mapping[str, set[str]],
+-                    max_len: int = CUT_MAX_LEN) -> list[EvalItem]:
+-    """A's inputs: step 1's `build_items` at A's cut. Their `evidence_kept` defines near and far."""
+-    return step1.build_items(tokenizer, questions, max_len=max_len, seen=seen)
++                    max_len: int = CUT_MAX_LEN, regime: str = LABEL_FREE) -> list[EvalItem]:
++    """A's inputs: step 1's `build_items` at A's cut over the regime's visible lines (label-free by default).
++
++    Their `evidence_kept` defines near and far. Each item keeps the ORIGINAL question (whole lines), so a
++    scorer can rebuild its own input from it; only the prompt and the cut come from the visible lines.
++    """
++    if check_regime(regime) == WITH_LABELS:
++        return step1.build_items(tokenizer, questions, max_len=max_len, seen=seen)
++    shown = [replace(q, context=tuple((n, visible_line(line, regime)) for n, line in q.context)) for q in questions]
++    items = step1.build_items(tokenizer, shown, max_len=max_len, seen=seen)
++    return [replace(item, question=q) for item, q in zip(items, questions)]
+ 
+ 
+ def window_start(item: EvalItem) -> int:
+@@ -210,15 +224,15 @@
+ 
+ def tag_questions(tokenizer: Tokenizer, questions: Sequence[Question], *, seen: Mapping[str, set[str]],
+                   source: str, replays: Optional[Mapping[str, "Replayed"]] = None,
+-                  names: Optional[Iterable[str]] = None, max_len: int = CUT_MAX_LEN
++                  names: Optional[Iterable[str]] = None, max_len: int = CUT_MAX_LEN, regime: str = LABEL_FREE
+                   ) -> tuple[list[EvalItem], dict[str, SliceTags]]:
+-    """(A's evaluation items, question id -> tags) for the questions of one directory.
++    """(A's evaluation items, question id -> tags) for the questions of one directory, cut in `regime`.
+ 
+     With `replays` (from `replay_split`), every question must have been replayed with the
+     shard's own answer; anything else means the shards do not come from this simulator.
+     """
+     pool = None if names is None else frozenset(names)
+-    items = canonical_items(tokenizer, questions, seen=seen, max_len=max_len)
++    items = canonical_items(tokenizer, questions, seen=seen, max_len=max_len, regime=regime)
+     tags: dict[str, SliceTags] = {}
+     for item in items:
+         q = item.question
+--- archive/opus-m01-20260918-202731/originals/train.py	2026-09-18 20:19:46
++++ premonition/train.py	2026-09-18 20:50:38
+@@ -20,7 +20,13 @@
+ - Experiment-1 scoring for D (`d_scorer`, `evaluate_d_checkpoint`): exp1 only scores `Core` checkpoints, so
+   D plugs its own scorer into `exp1.evaluate_directory` (items, tags, replay, attach and slice report are
+   exp1's); the report has exp1's shape, so `exp1.verdict` takes it unchanged.
+-- Checkpoints through `learnlab.ckpt`, with the config, tokenizer digest, detector digest and data tag.
++- Checkpoints through `learnlab.ckpt`, with the config, tokenizer digest, detector digest, data tag and the
++  preprocessing identity of the visits D read (`premonition.preprocess.identity("label-free")`).
++- Inputs (design/06 §9.1, §11): D trains and is scored on the label-free v2 visit cache
++  (`premonition.data.load_or_build(..., regime="label-free")`), where answers and feedback were removed from
++  the text before names were bound. `label_free` below is the LEGACY batch-level rule (it drops answer tokens
++  after encoding, when names from labels have already been bound); it is kept for the toy task, whose
++  question lines carry no names, and for comparison.
+ - `train_toy` (build step 4, `premonition.toy`), `train_d` (the village run a CLI calls) and `smoke` (CPU).
+ 
+ Risks watched (design/06 §7 and the model review), all from `card_stats`:
+@@ -52,6 +58,7 @@
+ from learnlab.policy import BUDGET_TOLERANCE
+ from learnlab.train import MemoryGuardError, TrainConfig, Trainer
+ from premonition import data as pdata
++from premonition import identity, preprocess
+ from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
+ from premonition.config import MiniConfig
+ from premonition.flops import FlopFit, fit_flops, measure_mini
+@@ -510,7 +517,10 @@
+ 
+ 
+ def label_free(batch: VisitBatch) -> VisitBatch:
+-    """design/06 §9.1: the reader stream without any question's answer or feedback span.
++    """LEGACY design/06 §9.1 rule, on encoded batches: the reader stream without any answer or feedback span.
++
++    Names bound from those spans stay bound (name table and entity numbering): use the label-free v2 cache
++    for village data. Kept for the toy task and as the "before" of the milestone-1 leakage comparison.
+ 
+     On every question line the tokens after "[answer]" are dropped except the line's last token (its
+     newline), so the line reads "[question] ... [answer]\\n". Answers stay only as decoder targets. Token
+@@ -560,10 +570,8 @@
+ 
+ def entity_text(ids: Iterable[int], table: Any, tokenizer: Any) -> str:
+     """`pointer.answer_text`, except that an entity id the name table does not hold is written "<entK>" (it
+-    matches no answer) instead of raising (design/06 §9.12)."""
+-    known = {e: f"<ent{e}>" for e in range(N_ENT)}
+-    known.update(table.spellings)
+-    return answer_text(ids, NameTable(known), tokenizer)
++    matches no answer) instead of raising (design/06 §9.12; `preprocess.prediction_text`)."""
++    return preprocess.prediction_text(ids, table, tokenizer)[0]
+ 
+ 
+ def _strip(ids: Sequence[int], stop: set[int]) -> list[int]:
+@@ -579,7 +587,9 @@
+ 
+ def judge(answers: Answers, batch: VisitBatch, *, tokenizer: Any = None, stop: Optional[Iterable[int]] = None,
+           eos: int = 2) -> tuple[list[bool], list[str]]:
+-    """(exact match per question, prediction text). With a tokenizer: `pointer.answer_text` of both sides and
++    """(exact match per question, prediction text). With a tokenizer: the prediction through
++    `preprocess.prediction_text` (an unbound entity is a wrong answer) and the target through the strict
++    `preprocess.target_text` (a malformed target raises MalformedTarget, never scores as wrong), compared by
+     `step1.exact_match` (step 1's scoring); without: the ids up to the first stop id."""
+     stops = set(stop) if stop is not None else {eos}
+     predicted = answers.ids()
+@@ -593,7 +603,7 @@
+             continue
+         table = batch.names[int(batch.q_visit[q])]
+         said = entity_text(ids, table, tokenizer)
+-        expected = entity_text([t for t in gold[q] if t != IGNORE_INDEX], table, tokenizer)
++        expected = preprocess.target_text([t for t in gold[q] if t != IGNORE_INDEX], table, tokenizer)
+         correct.append(step1.exact_match(said, expected))
+         texts.append(said)
+     return correct, texts
+@@ -700,10 +710,16 @@
+ 
+ def checkpoint_config(trainer: MiniTrainer, *, contender: str, tokenizer: Optional[Mapping[str, Any]] = None,
+                       detector: Optional[str] = None, data: Optional[Mapping[str, Any]] = None,
+-                      extra: Optional[Mapping[str, Any]] = None) -> dict[str, Any]:
+-    """The JSON config a Premonition-mini checkpoint carries (enough to rebuild and audit the run)."""
++                      extra: Optional[Mapping[str, Any]] = None,
++                      preprocess_identity: Optional[Mapping[str, Any]] = None) -> dict[str, Any]:
++    """The JSON config a Premonition-mini checkpoint carries (enough to rebuild and audit the run).
++
++    `preprocess_identity` is the identity of the visits it trained on (`preprocess.identity("label-free")`
++    for village runs); without one the checkpoint is legacy/unknown and never scores a primary report.
++    """
+     return {
+         "format": FORMAT, "format_version": FORMAT_VERSION, "contender": contender,
++        "preprocess": None if preprocess_identity is None else dict(preprocess_identity),
+         "mini": mini_config_dict(trainer.model.config), "parameters": trainer.model.num_parameters(),
+         "train": asdict(trainer.config), "curriculum": asdict(trainer.curriculum), "seed": trainer.seed,
+         "flops": {"budget": trainer.flop_budget, "spent": trainer.flops, "tolerance": trainer.tolerance,
+@@ -763,16 +779,25 @@
+ 
+ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens: int = 16_384,
+              device: Union[str, torch.device] = "cpu", diagnostics: Optional[dict[str, Any]] = None,
+-             labels: bool = False) -> Callable[..., list[dict[str, Any]]]:
++             labels: Optional[bool] = None, regime: Optional[str] = None) -> Callable[..., list[dict[str, Any]]]:
+     """A `scorer` for `exp1.evaluate_directory`: D's answers for the items, as `step1.score_items` rows.
+ 
+     D reads each question's whole visit from `cache` (the directory's pointerized cache) up to its
+-    "[answer]", label-free (§9.1) unless `labels` (the reported, never gated "with labels" variant); with
+-    `wipe`, A's window defines the wipe line. Exact match is step 1's; answerable plan
+-    questions whose world is known also count any plan the oracle accepts. `diagnostics` (a dict) receives
+-    recall, loop, halting and card statistics.
++    "[answer]". Label-free (§9.1, §11) unless `regime` / `labels` ask for the reported, never gated
++    "with-labels" variant; the cache must be of that regime (a label-free run needs the v2 label-free
++    cache, whose streams are audited here; the legacy v1 cache is the with-labels one). With `wipe`, A's
++    window defines the wipe line. Exact match is step 1's; answerable plan questions whose world is known
++    also count any plan the oracle accepts. `diagnostics` (a dict) receives recall, loop, halting and card
++    statistics, the targets flagged unbound, and predictions naming an entity the table does not hold.
+     """
+     device = torch.device(device)
++    regime = preprocess.regime_of(labels, regime)
++    if cache.regime != regime:
++        raise ValueError(f"a {regime} D evaluation needs a {regime} visit cache, not {cache.regime}")
++    if regime != preprocess.WITH_LABELS:
++        problems = preprocess.identity_problems(cache.preprocess_identity)
++        if problems:
++            raise ValueError("the visit cache: " + "; ".join(problems))
+ 
+     def score(model: PremonitionMini, tokenizer: Any, items: Sequence[Any], *, max_new: int, batch_size: int,
+               plans: Optional[Mapping[str, Any]] = None) -> list[dict[str, Any]]:
+@@ -792,7 +817,10 @@
+         groups = pdata.length_batches([lengths[v] for v in visits], max_tokens)
+         for group in groups:
+             batch = pdata.collate(cache, [visits[i] for i in group])
+-            batch = (batch if labels else label_free(batch)).to(device)
++            if regime != preprocess.WITH_LABELS:
++                for row in range(batch.size[0]):
++                    preprocess.audit_stream(batch.tokens[row, :int(batch.lengths[row])].tolist(), tokenizer, regime)
++            batch = batch.to(device)
+             window = None
+             if wipe:
+                 window = torch.tensor([windows.get(qid, 0) for qid in batch.question_ids], dtype=torch.long,
+@@ -803,8 +831,10 @@
+                 answers = model.answer(batch, stop=stops, **lesion)
+             _, texts = judge(answers, batch, tokenizer=tokenizer, stop=stops)
+             predictions.update(zip(batch.question_ids, texts))
++            unbound = sum(preprocess.prediction_text(ids, batch.names[int(batch.q_visit[q])], tokenizer)[1]
++                          for q, ids in enumerate(answers.ids()))
+             _add(stats, {"questions": batch.q_visit.shape[0], "loops": int(answers.loops.sum()),
+-                         "halted": int((answers.halt_prob > 0.5).sum())})
++                         "halted": int((answers.halt_prob > 0.5).sum()), "unbound_predictions": unbound})
+             if recorder is not None:
+                 _add(cards, card_stats(recorder.calls, batch, answers.loops, model.config.card_rows, offset=1))
+         results = []
+@@ -826,59 +856,112 @@
+             })
+         if diagnostics is not None:
+             n = max(stats.get("questions", 0), 1)
++            flagged = 0
++            if cache.target_unbound is not None:
++                flagged = sum(bool(cache.target_unbound[position[qid]]) for qid in wanted)
+             diagnostics.update(questions=stats.get("questions", 0), loops_mean=stats.get("loops", 0) / n,
+-                               halt_rate=stats.get("halted", 0) / n,
++                               halt_rate=stats.get("halted", 0) / n, regime=regime,
++                               preprocess=cache.preprocess_identity, targets_unbound=flagged,
++                               predictions_with_unbound_entity=stats.get("unbound_predictions", 0),
+                                cards=summarize_cards(cards) if cards else None)
+         return results
+ 
+     return score
+ 
+ 
++def d_checks(config: Mapping[str, Any], tokenizer: Any, model: PremonitionMini, detector_digest: Optional[str]
++             ) -> list[str]:
++    """`identity.checkpoint_problems` for a Premonition-mini checkpoint (see `premonition.identity`)."""
++    mini = config.get("mini")
++    problems: list[str] = []
++    expected = None
++    if mini is not None:
++        full = MiniConfig.preset(config.get("contender", "D"), "full", vocab_size=int(mini["vocab_size"]),
++                                 check_band=False)
++        expected = {key: getattr(full, key) for key in ("d_model", "n_ent", "key_dim", "store", "pointers")}
++    if model.config.pointers:
++        recorded = (config.get("detector") or {}).get("sha256")
++        if not recorded:
++            problems.append("inputs: the checkpoint records no name detector digest")
++        elif recorded != detector_digest:
++            problems.append(f"inputs: name detector {str(detector_digest)[:12]} differs from the checkpoint's "
++                            f"{recorded[:12]}")
++    return problems + identity.checkpoint_problems(
++        config, tokenizer, model_vocab=None if mini is None else int(mini["vocab_size"]), entity_ids=False,
++        expected_shape=expected, shape=mini, reader="visit")
++
++
+ def evaluate_d_checkpoint(budget: Any, checkpoint: Union[str, Path], *, split: str = "validation",
+                           wipe: Optional[str] = None, directories: Optional[Sequence[str]] = None,
+                           data_rel: Optional[str] = None, tokenizer_path: Optional[str] = None,
+                           device: str = "cpu", max_tokens: int = 16_384, replay: bool = True, workers: int = 1,
+-                          names: Optional[Iterable[str]] = None, log: Log = print) -> dict[str, Any]:
++                          names: Optional[Iterable[str]] = None, regime: str = preprocess.LABEL_FREE,
++                          purpose: Optional[str] = None, log: Log = print) -> dict[str, Any]:
+     """Score a D / D-noask / D-noptr checkpoint like `exp1.evaluate_checkpoint` scores a Core one.
+ 
+     Same report shape (so `exp1.verdict` pairs it with the others), plus "retrieval" diagnostics per
+-    directory. The visit caches come from `premonition.data.load_or_build` (built once through the budget).
++    directory. Label-free by default: the visit caches are the v2 label-free caches of
++    `premonition.data.load_or_build` (built once through the budget); "with-labels" reads the legacy v1
++    cache and is a diagnostic. The checkpoint must pass `premonition.identity`'s checks for `purpose`
++    (tokenizer digest even with an override path, vocabulary, configuration, name detector, and a recorded
++    label-free preprocessing identity) before anything is scored.
+     """
+-    from learnlab.tokenizer import Tokenizer
++    from learnlab.ckpt import read_config
+     from premonition import exp1, slices
++    preprocess.check_regime(regime)
++    if regime == preprocess.GOLD_EVIDENCE:
++        raise ValueError("gold-evidence D (D-gold) is built by the solvability diagnostic, not here")
++    purpose = exp1.default_purpose(regime, purpose)
+     root = Path(budget.root)
+     path = Path(checkpoint) if Path(checkpoint).is_absolute() else root / checkpoint
+-    model, config, _ = load_mini(path, device)
++    config = read_config(path)
++    if config.get("format") != FORMAT:
++        raise identity.CheckpointIncompatible(f"{path} is not a {FORMAT} (format {config.get('format')!r})")
+     tokenizer_info = config.get("tokenizer") or {}
+-    data = exp1.open_data(root, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"],
+-                          tokenizer_sha=None if tokenizer_path else tokenizer_info.get("sha256"))
++    if tokenizer_path is None and not tokenizer_info.get("path"):
++        raise identity.CheckpointIncompatible(f"{checkpoint} records no tokenizer path; pass tokenizer_path")
++    data = exp1.open_data(root, data_rel or config["data"]["dir"], tokenizer_path or tokenizer_info["path"])
++    mini = mini_config_from(config["mini"]) if config.get("mini") else None
+     detector = None
+-    if model.config.pointers:
++    if mini is not None and mini.pointers:
+         detector = pdata.name_detector(budget, data.rel, workers=workers, log=log)
+-        expected = (config.get("detector") or {}).get("sha256")
+-        if expected and detector.digest != expected:
+-            raise ValueError(f"name detector {detector.digest[:12]} differs from the checkpoint's {expected[:12]}")
++    probe = PremonitionMini(mini) if mini is not None else None
++    if probe is None:
++        raise identity.CheckpointIncompatible(f"{checkpoint} records no model configuration")
++    problems = identity.admit(d_checks(config, data.tokenizer, probe, None if detector is None else detector.digest),
++                              data.tokenizer, regime=regime, purpose=purpose)
++    model, config, _ = load_mini(path, device)
+     if directories is None:
+         directories = [split] + ([slices.long_name(split)] if data.has(slices.long_name(split)) else [])
++    cache_regime = None if regime == preprocess.WITH_LABELS else regime     # with labels: the legacy v1 cache
+     reports: dict[str, Any] = {}
+     items: dict[str, list[dict[str, Any]]] = {}
+     fresh: list[Mapping[str, Any]] = []
+     for directory in directories:
+-        cache = pdata.load_or_build(budget, data.rel, directory, data.tokenizer, detector, workers=workers, log=log)
++        cache = pdata.load_or_build(budget, data.rel, directory, data.tokenizer, detector, workers=workers,
++                                    regime=cache_regime, log=log)
+         diagnostics: dict[str, Any] = {}
+-        scorer = d_scorer(cache, wipe=wipe, max_tokens=max_tokens, device=device, diagnostics=diagnostics)
++        scorer = d_scorer(cache, wipe=wipe, max_tokens=max_tokens, device=device, diagnostics=diagnostics,
++                          regime=regime)
+         rows, info = exp1.evaluate_directory(model, data, directory, replay=replay, workers=workers,
+-                                             names=None if names is None else list(names), scorer=scorer, log=log)
++                                             names=None if names is None else list(names), scorer=scorer,
++                                             regime=regime, log=log)
+         info["retrieval"] = diagnostics
+         reports[directory] = info
+         items[directory] = [{key: row[key] for key in exp1._ITEM_KEYS} for row in rows]
+         if directory == split:
+             fresh = [r for r in rows if "fresh_names" in r["slices"]]
+         cell = info["summary"]["decision_cells"]
+-        log(f"premonition exp1 {config['contender']}{' W-' + wipe if wipe else ''} {directory}: " + ", ".join(
+-            f"{name} {exp1._pct(cell[name])}" for name in slices.DECISION_SLICES))
++        log(f"premonition exp1 {config['contender']}{' W-' + wipe if wipe else ''} [{regime}] {directory}: "
++            + ", ".join(f"{name} {exp1._pct(cell[name])}" for name in slices.DECISION_SLICES))
+     return {
+         "command": "premonition eval", "experiment": 1, "contender": config["contender"], "wipe": wipe,
++        "regime": regime,
++        "identity": identity.report_identity(
++            regime=regime, purpose=purpose, tokenizer=data.tokenizer, tokenizer_path=data.tokenizer_path,
++            model_kind="premonition-mini", model_config=config.get("mini") or {},
++            parameters=model.num_parameters(), checkpoint=path, checkpoint_config=config, data_tag=data.tag,
++            problems=problems),
+         "checkpoint": str(checkpoint), "parameters": model.num_parameters(), "device": device,
+         "config": config, "data": {"dir": data.rel, "tag": data.tag},
+         "tokenizer": {"path": data.tokenizer_path, "sha256": data.tokenizer.digest},
+@@ -973,16 +1056,17 @@
+     root = Path(budget.root)
+     tokenizer = Tokenizer.load(root / tokenizer_path)
+     detector = None if variant == "D-noptr" else pdata.name_detector(budget, data_rel, workers=workers, log=log)
+-    train_cache = pdata.load_or_build(budget, data_rel, "train", tokenizer, detector, workers=workers, log=log)
+-    valid_cache = pdata.load_or_build(budget, data_rel, "validation", tokenizer, detector, workers=workers, log=log)
++    train_cache = pdata.load_or_build(budget, data_rel, "train", tokenizer, detector, workers=workers,
++                                      regime=preprocess.LABEL_FREE, log=log)
++    valid_cache = pdata.load_or_build(budget, data_rel, "validation", tokenizer, detector, workers=workers,
++                                      regime=preprocess.LABEL_FREE, log=log)
+     torch.manual_seed(seed)
+     config = MiniConfig.preset(variant, size, vocab_size=tokenizer.vocab_size)
+     model = PremonitionMini(config)
+     trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
+                                                    eval_every=eval_every), device, flop_budget=flop_budget,
+                           seed=seed)
+-    stream = (label_free(b) for b in pdata.batches(train_cache, max_tokens, seed=seed, epochs=None,
+-                                                   max_visits=max_visits))
++    stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
+     head = [next(stream) for _ in range(calibration_batches)]
+     fit = trainer.calibrate(head)
+     log(f"premonition train {variant}: {model.num_parameters():,} params, F = {flop_budget:.3e}; FLOP fit "
+@@ -995,13 +1079,14 @@
+     except (FileNotFoundError, KeyError, ValueError) as error:
+         log(f"premonition train: validation slices unavailable ({error}); reporting overall accuracy only")
+     groups = pdata.length_batches(valid_cache.lengths[chosen].tolist(), max_tokens, max_visits=max_visits)
+-    eval_batches = [label_free(pdata.collate(valid_cache, [chosen[i] for i in g], slices=tags)) for g in groups]
++    eval_batches = [pdata.collate(valid_cache, [chosen[i] for i in g], slices=tags) for g in groups]
+     stops = sorted(step1.stop_ids(tokenizer)[0])
+     hook = validation_hook(eval_batches, tokenizer=tokenizer, stop=stops)
+     report: dict[str, Any] = {"command": "premonition train", "contender": variant, "parameters": model.num_parameters(),
+                               "device": device, "seed": seed, "data": {"dir": data_rel, "tag": Path(data_rel).name},
+                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
+-                              "detector": None if detector is None else detector.digest}
++                              "detector": None if detector is None else detector.digest,
++                              "preprocess": preprocess.identity(preprocess.LABEL_FREE)}
+     try:
+         report.update(status="completed", **trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
+                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))
+@@ -1014,7 +1099,8 @@
+         ckpt_config = checkpoint_config(trainer, contender=variant,
+                                         tokenizer={"path": tokenizer_path, "sha256": tokenizer.digest},
+                                         detector=None if detector is None else detector.digest,
+-                                        data={"dir": data_rel, "tag": Path(data_rel).name})
++                                        data={"dir": data_rel, "tag": Path(data_rel).name},
++                                        preprocess_identity=preprocess.identity(preprocess.LABEL_FREE))
+         report["checkpoint"] = str(save_mini_checkpoint(budget, checkpoint, trainer, ckpt_config))
+     return report
+ 
+@@ -1046,18 +1132,18 @@
+         texts = [text.read_text(encoding="utf-8") for text, _ in step1.shard_files(root / "d" / "train")]
+         tokenizer = Tokenizer.train(texts, vocab_size=1200, syllables=SYLLABLES)
+         detector = pdata.fit_detector(root / "d" / "train")
+-        train_cache = pdata.build_cache(root / "d" / "train", tokenizer, detector)
+-        valid_cache = pdata.build_cache(root / "d" / "validation", tokenizer, detector)
++        train_cache = pdata.build_cache(root / "d" / "train", tokenizer, detector, regime=preprocess.LABEL_FREE)
++        valid_cache = pdata.build_cache(root / "d" / "validation", tokenizer, detector, regime=preprocess.LABEL_FREE)
+         built = time.perf_counter() - started
+         torch.manual_seed(seed)
+         model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=tokenizer.vocab_size))
+         trainer = MiniTrainer(model, mini_train_config(lr=3e-3, warmup_steps=10, log_every=log_every),
+                               "cpu", flop_budget=1.0, seed=seed)
+-        stream = (label_free(b) for b in pdata.batches(train_cache, max_tokens, seed=seed, epochs=None))
++        stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None)          # label-free v2 cache
+         head = [next(stream) for _ in range(2)]
+         trainer.calibrate(head)
+         trainer.flop_budget = budget_for_steps(trainer, head, steps)
+-        valid = [label_free(b) for b in pdata.batches(valid_cache, max_tokens)]
++        valid = list(pdata.batches(valid_cache, max_tokens))
+         stops = sorted(step1.stop_ids(tokenizer)[0])
+         before = trainer.evaluate(validation_hook(valid, tokenizer=tokenizer, stop=stops))
+         report = trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
+@@ -1076,7 +1162,8 @@
+         # A checkpoint round trip through learnlab.ckpt.
+         budget = Budget(root, hard=10_000_000_000, steady=8_000_000_000)
+         config = checkpoint_config(trainer, contender="D", tokenizer={"path": "(smoke)", "sha256": tokenizer.digest},
+-                                   detector=detector.digest, data={"dir": "d", "tag": "smoke"})
++                                   detector=detector.digest, data={"dir": "d", "tag": "smoke"},
++                                   preprocess_identity=preprocess.identity(preprocess.LABEL_FREE))
+         save_mini_checkpoint(budget, "ckpt/smoke-D", trainer, config)
+         loaded, loaded_config, _ = load_mini(root / "ckpt" / "smoke-D")
+         with read_only(loaded):
+@@ -1110,7 +1197,8 @@
+ 
+ __all__ = [
+     "Curriculum", "InsertLog", "MiniTrainer", "Plan", "answer_with_gold", "budget_for_steps", "card_stats",
+-    "checkpoint_config", "d_scorer", "entity_text", "evaluate_d_checkpoint", "format_record", "judge", "label_free",
++    "checkpoint_config", "d_checks", "d_scorer", "entity_text", "evaluate_d_checkpoint", "format_record", "judge",
++    "label_free",
+     "load_mini",
+     "mini_config_from", "mini_train_config", "planned_loops", "resume_trainer", "save_mini_checkpoint", "smoke",
+     "summarize_cards", "train_d", "train_toy", "validate", "validation_hook",
+--- archive/opus-m01-20260918-202731/originals/tests/test_premonition_contenders.py	2026-09-18 20:04:48
++++ tests/test_premonition_contenders.py	2026-09-18 21:05:01
+@@ -149,11 +149,11 @@
+             entry = lookup.lookup_input(item.question, lines, self.bm25)
+             self.assertEqual(entry.a_start, slices.window_start(item))
+ 
+-    def check_inputs(self, max_len: int, labels: bool) -> int:
++    def check_inputs(self, max_len: int, labels: bool, rule: str = lookup.preprocess.LOOKUP_CANDIDATES) -> int:
+         lines = lookup.LineIds(self.tokenizer, labels=labels)
+         recalled = 0
+         for q in self.questions:
+-            entry = lookup.lookup_input(q, lines, self.bm25, max_len=max_len)
++            entry = lookup.lookup_input(q, lines, self.bm25, max_len=max_len, candidates_rule=rule)
+             ids = entry.ids
+             # Prompt shape: <eos>, recalled lines, <bos>, window, the question up to [answer].
+             self.assertLessEqual(len(ids), max_len)
+@@ -166,18 +166,26 @@
+             block = 1 + sum(len(lines(dict(q.context)[n])) for n in entry.recall.lines)
+             self.assertEqual(ids[block], self.ids["<bos>"])
+             self.assertEqual(entry.masked, block + 1 + int(entry.window.prefix))
+-            # BM25 never recalls the window or anything later, nor a question line.
++            # BM25 never recalls the window or anything later, nor a question line. Under the current rule
++            # (design/06 §11.5) the candidates are every line before C's own window, so no line is lost
++            # between them; the legacy rule stops at A's window start and leaves that gap.
+             context = dict(q.context)
++            legacy = rule == lookup.preprocess.LEGACY_LOOKUP_CANDIDATES
+             for number in entry.recall.lines:
+-                self.assertLess(number, entry.a_start)
++                self.assertLess(number, entry.a_start if legacy else entry.window.start)
+                 self.assertIn(number, context)
+                 self.assertFalse(context[number].startswith(QUESTION_TAG))
+             self.assertLessEqual(entry.a_start, entry.window.start)        # C's window is inside A's
++            if not legacy:
++                self.assertEqual(entry.boundary, entry.window.start if entry.window.kept else entry.boundary)
++                self.assertEqual(entry.gap_lines, ())
+             self.assertEqual(list(entry.recall.lines), sorted(entry.recall.lines))
+             self.assertLessEqual(len(entry.recall.lines), lookup.TOP_K)
+             self.assertLessEqual(entry.recall.tokens, lookup.RECALL_TOKENS)
+             if not labels:
+-                self.assertEqual(ids.count(self.ids[ANSWER_TAG]), 1)       # only the question's own [answer]
++                # Label-free (design/06 §11.2): every earlier question line ends at its own [answer], then a
++                # newline; no answer text and no [feedback] anywhere.
++                lookup.preprocess.audit_ids(ids, self.tokenizer, lookup.preprocess.LABEL_FREE)
+                 self.assertNotIn(self.ids[FEEDBACK_TAG], ids)
+             recalled += bool(entry.recall.lines)
+         return recalled
+@@ -186,19 +194,28 @@
+         self.assertGreater(self.check_inputs(slices.CUT_MAX_LEN, labels=True), 10)
+         self.assertGreater(self.check_inputs(slices.CUT_MAX_LEN, labels=False), 10)
+         self.assertGreater(self.check_inputs(240, labels=True), 50)       # a short window: many candidates
++        legacy = lookup.preprocess.LEGACY_LOOKUP_CANDIDATES
++        self.assertGreater(self.check_inputs(slices.CUT_MAX_LEN, labels=True, rule=legacy), 10)
++        self.assertGreater(self.check_inputs(240, labels=True, rule=legacy), 50)
+ 
+     def test_a_planted_perfect_match_in_the_window_or_later_is_never_recalled(self) -> None:
+         lines = lookup.LineIds(self.tokenizer)
+-        q = next(q for q in self.questions
+-                 if lookup.lookup_input(q, lines, self.bm25).a_start > q.context[0][0] + 5)
+-        question = replace(q, raw_line="[question] Where is Zyzzq? [answer] x [feedback] y", question="Where is Zyzzq?")
+-        a_start = lookup.lookup_input(question, lines, self.bm25).a_start
+         bait = "[world] Zyzzq."          # shorter than any line it replaces, so A's window only grows
+-        planted = tuple((n, bait if n >= a_start else line) for n, line in q.context)
+-        entry = lookup.lookup_input(replace(question, context=planted), lines, self.bm25)
++        # The first question with a long context and a world/teacher line before A's window after planting.
++        for q in self.questions:
++            if lookup.lookup_input(q, lines, self.bm25).a_start <= q.context[0][0] + 5:
++                continue
++            question = replace(q, raw_line="[question] Where is Zyzzq? [answer] x [feedback] y", question="Where is Zyzzq?")
++            a_start = lookup.lookup_input(question, lines, self.bm25).a_start
++            planted = tuple((n, bait if n >= a_start else line) for n, line in q.context)
++            entry = lookup.lookup_input(replace(question, context=planted), lines, self.bm25)
++            early = next((n for n, line in q.context if n < entry.a_start and not line.startswith(QUESTION_TAG)), None)
++            if early is not None:
++                break
++        else:
++            self.fail("no question has a line before its window")
+         self.assertLessEqual(entry.a_start, a_start)
+         self.assertEqual(entry.recall.lines, ())
+-        early = next(n for n, line in q.context if n < entry.a_start and not line.startswith(QUESTION_TAG))
+         planted = tuple((n, bait if n == early else line) for n, line in planted)
+         entry = lookup.lookup_input(replace(question, context=planted), lines, self.bm25)
+         self.assertEqual(entry.recall.lines, (early,))
+@@ -286,7 +303,8 @@
+                 self.assertEqual(ids[-1], answer_id)
+                 self.assertTrue(all(0 <= i < base + N_ENT for i in ids))
+                 if not labels:
+-                    self.assertEqual(ids.count(answer_id), 1)
++                    # design/06 §11.2: earlier question lines end at their [answer] (+ newline), like D's.
++                    lookup.preprocess.audit_ids(ids, tokenizer, lookup.preprocess.LABEL_FREE)
+                     self.assertNotIn(tokenizer.token_to_id(FEEDBACK_TAG), ids)
+                 # The table holds exactly the names of what the input is built from: the answer is never bound.
+                 shown = [lookup.shown(line, labels) for _, line in q.context] + [q.prompt_line]
+@@ -421,7 +439,7 @@
+                 cls.budget, cls.data, name, flops_budget=6.2 * per_step, batch=2, size="tiny", log_every=2, log=QUIET)
+             cls.evals[name] = contenders.evaluate_contender(
+                 cls.root, cls.reports[name]["checkpoint"], replay=False, max_new=8, batch_size=64,
+-                heldin=12 if name == "E" else 0, log=QUIET)
++                heldin=12 if name == "E" else 0, purpose="fixture", log=QUIET)   # tiny models, test tokenizer
+ 
+     def test_budget_stop_lands_within_tolerance(self) -> None:
+         for name, report in self.reports.items():
+@@ -473,24 +491,35 @@
+         self.assertGreater(recall["targets"], 0)
+         self.assertIsNotNone(recall["recall_at_8"])
+         self.assertIn(exp1.HELDIN_SOURCE, self.evals["E"]["directories"])
+-        verdict = exp1.verdict(list(self.evals.values()))
++        verdict = exp1.verdict(list(self.evals.values()), allow_fixture=True)
+         self.assertEqual(verdict["contenders"], ["A", "B12", "B28", "C", "E"])
+         self.assertEqual(verdict["verdict"], "INSUFFICIENT")                  # no D, and too few items
++        self.assertTrue(verdict["fixture"])
++        self.assertFalse(verdict["full_verdict"])
++        with self.assertRaises(exp1.VerdictRefused):                          # fixtures are never a verdict
++            exp1.verdict(list(self.evals.values()))
+ 
+     def test_contender_override_must_share_inputs(self) -> None:
+         with self.assertRaises(ValueError):
+             contenders.evaluate_contender(self.root, self.reports["E"]["checkpoint"], contender_name="A",
+-                                          replay=False, log=QUIET)
++                                          replay=False, purpose="fixture", log=QUIET)
+         report = contenders.evaluate_contender(self.root, self.reports["A"]["checkpoint"], contender_name="B28",
+-                                               directories=["validation"], replay=False, max_new=4, log=QUIET)
++                                               directories=["validation"], replay=False, max_new=4,
++                                               purpose="fixture", log=QUIET)
+         self.assertEqual(report["contender"], "B28")
+ 
+     def test_with_labels_matches_exp1_for_plain_contenders(self) -> None:
+-        ours = contenders.evaluate_contender(self.root, self.reports["A"]["checkpoint"], replay=False, max_new=8,
+-                                             labels=True, log=QUIET)
+-        theirs = exp1.evaluate_checkpoint(self.root, self.reports["A"]["checkpoint"], replay=False, max_new=8,
+-                                          log=QUIET)
+-        self.assertEqual(ours["items"], theirs["items"])
++        # exp1.evaluate_checkpoint now defaults to label-free (design/06 §11.2); the with-labels comparison
++        # names its regime explicitly, and the label-free pair must agree too (two independent prompt builders).
++        for regime in (lookup.preprocess.WITH_LABELS, lookup.preprocess.LABEL_FREE):
++            ours = contenders.evaluate_contender(self.root, self.reports["A"]["checkpoint"], replay=False,
++                                                 max_new=8, regime=regime, purpose="fixture", log=QUIET)
++            theirs = exp1.evaluate_checkpoint(self.root, self.reports["A"]["checkpoint"], replay=False, max_new=8,
++                                              regime=regime, purpose="fixture", log=QUIET)
++            self.assertEqual(ours["items"], theirs["items"], regime)
++            self.assertEqual(ours["regime"], regime)
++            diagnostics = ours["inputs"]["per_directory"]["validation"]
++            self.assertEqual(diagnostics["equal_to_canonical"], diagnostics["inputs"])
+ 
+ 
+ if __name__ == "__main__":
+--- archive/opus-m01-20260918-202731/originals/tests/test_premonition_slices.py	2026-09-18 19:31:51
++++ tests/test_premonition_slices.py	2026-09-18 20:44:12
+@@ -20,7 +20,7 @@
+ from learnlab.metrics import mcnemar_greater
+ from learnlab.readonly import ReadOnlyViolation
+ from memorylab.storage import Budget
+-from premonition import exp1, slices
++from premonition import exp1, preprocess, slices
+ from tests.test_learnlab_step1 import NAMES, Workspace, repeat_shard, tiny_tokenizer
+ 
+ QUIET = lambda _message: None  # noqa: E731
+@@ -240,11 +240,15 @@
+         torch.manual_seed(0)
+         cls.config = CoreConfig(cls.data.tokenizer.vocab_size, 768, 32, 2, 2)
+         cls.model = Core(cls.config)
++        # A checkpoint now records the preprocessing identity it was trained under, and a toy tokenizer is
++        # scored only as an explicit test fixture (design/06 §11.4; premonition.identity).
+         save_checkpoint(cls.work.budget, "artifacts/tiny.ckpt", model=cls.model,
+                         config={"core": asdict(cls.config), "data": {"dir": cls.data.rel, "tag": cls.data.tag},
+-                                "tokenizer": cls.data.tokenizer_info})
++                                "tokenizer": cls.data.tokenizer_info,
++                                "preprocess": preprocess.identity(preprocess.WITH_LABELS)})
+         cls.report = exp1.evaluate_checkpoint(cls.work.root, "artifacts/tiny.ckpt", heldin=20, max_new=8,
+-                                              names=NAMES["train"] + NAMES["validation"], log=QUIET)
++                                              names=NAMES["train"] + NAMES["validation"], purpose="fixture",
++                                              log=QUIET)
+ 
+     @classmethod
+     def tearDownClass(cls) -> None:
+@@ -300,17 +304,17 @@
+         other["contender"] = "D"
+         for row in other["items"]["validation"]:
+             row["correct"] = not row["correct"]
+-        decision = exp1.verdict([self.report, other])
++        decision = exp1.verdict([self.report, other], allow_fixture=True)
+         self.assertEqual(decision["contenders"], ["A", "D"])
+         self.assertEqual(decision["verdict"], "INSUFFICIENT")                 # too few items, no C, E, B
+         self.assertEqual(decision["cells"]["overall"], self.report["directories"]["validation"]["summary"]
+                          ["decision_items"])
+         with self.assertRaises(ValueError):
+-            exp1.verdict([self.report, self.report])                            # two reports for A
++            exp1.verdict([self.report, self.report], allow_fixture=True)       # two reports for A
+         clash = json.loads(json.dumps(other))
+         clash["items"]["validation"][0]["slices"] = ["overall", "far"]
+         with self.assertRaises(ValueError):
+-            exp1.verdict([self.report, clash])
++            exp1.verdict([self.report, clash], allow_fixture=True)
+ 
+ 
+ # ----------------------------------------------------------------- decision rules
+--- archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md	2026-09-18 20:11:57
++++ design/06-premonition-mini-spec.md	2026-09-18 21:07:12
+@@ -271,3 +271,16 @@
+    - Gold evidence fails at shallow depth → no new mechanisms.
+ 
+ Revised contender list: A, E, E-long, C, C\*, D ×3 seeds, D-noask, D-soft, D-noptr, D-no-oracle, plus the gold diagnostics (D-gold, C-gold). B12/B28 run once, as the scale reference.
++
++## 11. Trustworthy label-free inputs and evaluation (Opus milestone 1, 2026-09-18) — overrides §0-§10 where they conflict
++
++Implemented and tested (tests/test_premonition_label_free.py); evidence in reviews/opus-milestone-01-m01-20260918-202731.md. Items marked **PROPOSAL** are not implemented.
++
++1. **One versioned label-free path (`premonition/preprocess.py`).** Answers and feedback are removed from the *text* before names are bound or anything is encoded (masking a loss never removed them from a reader). A question line becomes its text through `[answer]`, then a newline; other lines are unchanged, and a non-question line carrying `[answer]`/`[feedback]` is malformed. Entity ids are bound in first-mention order over visible text only, so a name written only in a label never enters the name table or shifts later ids. The current answer (the only target) is bound with the mapping of the visible prefix through its own `[answer]`; a target name that prefix never mentioned stays ordinary tokens and is flagged (`target_unbound`), never imported. The rules are data (`preprocess.spec`); their SHA-256 is the preprocessing identity (label-free `9add8e2fded1…`, with-labels `bdf907371b40…`, gold-evidence `05ca83849d11…`, format `premonition.preprocess` v1). A golden visit pins the output to the digest: a rule change must bump the version.
++2. **D's visit cache v2.** `data.load_or_build(..., regime="label-free")` builds through that path and lives at `premonition-v2-<tokenizer>-<names>-<preprocessing digest>/<split>.pt`; offsets, spans, card boundaries, entity mentions, name tables, targets and masks are all computed on the visible text (`answer_end` = one past the newline after `[answer]`, so L_lm never targets the `[answer]` → newline step). The legacy v1 cache keeps its path, bytes and identity (`regime=None`); E's LM stream still uses it (Core training streams keep answers, §9.1). D training, validation, smoke and scoring read only the v2 label-free cache; `d_scorer` refuses any other and audits every stream.
++3. **Evaluation defaults to label-free, with the regime recorded.** A, B, C and E prompts use the same line form as D (earlier question lines end at `[answer]` + newline). The canonical near/far cut (§6.1) is taken over the regime's visible lines, so "far" means outside the window A really has (validation, large build: 466 of 3,074 with-labels "far" items are near under the label-free cut). Every input is audited: no `[feedback]`, and nothing after any earlier `[answer]`. Every report carries `regime` and an `identity` block (preprocessing identity, tokenizer digest/vocab/status, model-config and checkpoint-manifest digests, the checkpoint's training preprocessing, purpose, `primary`, problems, scope). Regimes: label-free (the only verdict regime), with-labels (diagnostic), gold-evidence (privileged diagnostic; its inputs are milestone 3's).
++4. **Checkpoints fail closed (`premonition/identity.py`).** Before scoring: the checkpoint's tokenizer digest must equal the scoring tokenizer's (also when a tokenizer path is overridden — this closed a bypass), the model vocabulary must equal the tokenizer's (+16 entity ids for E), the model configuration must exist and match the contender's shape, the plain scorer refuses lookup/pointer checkpoints, and the checkpoint must record a preprocessing identity this code produces (D's must be label-free, and its name-detector digest must match). Purposes: **primary** (every check, plus the v2 contender tokenizer `data/tokenizer/premonition-tok-v2-fallback.json`, 7,068 ids, digest `2c9d06aed330…`, verified through `Tokenizer.load`), **diagnostic** (every checkpoint check; for with-labels runs), **fixture** (unit tests only: a non-contender tokenizer, full-size shape waived), **legacy** (missing metadata allowed, never a verdict row; token-id mismatches still refused). The v1 tokenizer is retired and refused for any primary report; every existing step-1 checkpoint is refused as primary. New Core checkpoints record `preprocess.identity("with-labels")`, D checkpoints `preprocess.identity("label-free")`.
++5. **Verdicts.** `exp1.verdict` refuses mixed regimes, reports without a regime (legacy/unknown — never assumed label-free), with-labels or gold-evidence reports, stale preprocessing digests and non-primary reports; fixtures run only as all-fixture "mechanics". Its outcome is the §6 decision table on label-free items and says so (`full_verdict: false`, `scope`): it is **not** a §9/§10 verdict (no visit-clustered bootstrap, no D vs D-noask store claim, no C*/D-soft/E-long, no seeds).
++6. **C's candidates (§9.12 made true).** Candidates are every non-question line before C's *own final* window start. Because the window depends on the recalled block, recall starts from A's window start and repeats while the block pushes C's window later, moving the boundary to the new window start; the boundary only moves forward, so it ends, and the final window starts exactly at the boundary: no overlap, no future line, no line lost between them, no budget overflow. The old rule is kept as `candidates_rule="before-a-window"`. On the large validation split the old rule left a gap in 5,378 of 8,675 inputs (23,048 lines), including 464 evidence lines of 413 questions that C could neither recall nor see; the new rule has no gap and recalls 231 of those lines.
++7. **Scoring boundaries.** An output entity the name table does not hold becomes `<entK>`, a wrong prediction that is counted, never an exception (D, E). A gold target that cannot be detokenised raises `MalformedTarget`; a broken input raises `MalformedInput`; both are errors, distinct from wrong answers.
++8. **PROPOSALS (not implemented).** (a) Under label-free inputs an earlier asking of the same question no longer shows its answer; repeats stay excluded from decision cells for now (conservative) — revisit with Astra. (b) The gold-evidence input builders (D-gold, C-gold) and label-free question-centred Core training belong to the solvability milestone. (c) §9.4 visit-clustered statistics, §9.5 orthogonal lesions, §9.7 compute additions, §9.9 targets and §9.10 leak statistics remain open. (d) A `run.py premonition` CLI should expose `--regime` and `--purpose`.
+--- archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md	2026-09-18 20:24:51
++++ design/research/2026-09-18-decisions-log.md	2026-09-18 21:10:01
+@@ -71,3 +71,39 @@
+   rental requires a separate exact quote and explicit approval.
+ - Decide subsequent research stages from the first-stage results. This approval
+   does not replace the long-term design or approve the full spending plan.
++
++**Opus milestone 1 — trustworthy label-free inputs (implemented 2026-09-18, run m01-20260918-202731; report reviews/opus-milestone-01-m01-20260918-202731.md; contract in design/06 §11):**
++- *Implemented.* Labels (answers and feedback) are removed from text before name binding and encoding, through one versioned module shared by D and the Core prompts (`premonition/preprocess.py`). Its identity is the SHA-256 of a rules-as-data spec, pinned by a golden-output test; a source-code hash was rejected because a comment edit would then retire every checkpoint.
++- *Implemented.* One label-free line form for every contender: an earlier question line ends at `[answer]` + newline. D needs `[answer]` on every question line (each question is answered at its own tag); the older Core form (question text without the tag) was dropped so the path is truly shared. Two contender tests asserted "exactly one `[answer]`" and now assert the stricter structural audit instead.
++- *Implemented.* Near/far is cut over the regime's visible lines (label-free by default). Using the with-labels cut would call 466 validation items "far" that A's label-free window actually shows.
++- *Implemented.* D's label-free cache is a new v2 identity; the v1 cache is untouched and still feeds E's LM stream. On unperturbed real data the v2 cache reproduces "v1 + batch masking" bit for bit (no village visit writes a name only in a label), so the old D path was not leaking in practice; the fix closes the structural hole, proven with planted fresh names.
++- *Implemented.* Checkpoint purposes (primary / diagnostic / fixture / legacy) with fail-closed admission; unit tests now declare `purpose="fixture"` and record a preprocessing identity (a legitimate contract change: the toy tokenizer must never pass as a contender). The tokenizer-path override no longer skips the digest check.
++- *Implemented.* C's candidates follow §9.12 via a forward-only fixed point; the old rule stays selectable.
++- *Kept, flagged.* Repeats remain excluded under label-free evaluation (conservative); Astra to decide.
++- *Observed.* During this milestone another agent edited `learnlab/patterns.py`, `learnlab/village/render.py`, `scripts/gen_patterns.py` and `tests/test_learnlab_patterns.py`, and created `data/village/patterns/bank-v1.json` (edits seen 20:56–21:05, still ongoing). The pattern bank changes the rendered village used by every test fixture. While it was in flux, one pre-existing contender test (`test_a_planted_perfect_match_in_the_window_or_later_is_never_recalled`) errored, identically with the untouched pre-milestone code; on the 21:05 bank it passes again. Test outcomes in this checkout currently depend on another agent's in-progress files (`learnlab/` is outside this milestone). Hashes of the external files at the final run: archive/opus-m01-20260918-202731/external-state-at-final-run.sha256.
++- No training, no rental. New rental total $0.00 / $30.00.
++
++**Astra improvement research and Ben's TST suggestion (2026-09-18):**
++- Completed a primary-source literature review and inspection of the current
++  training/retrieval code. No engineering changes or training by Astra. Memo:
++  design/research/2026-09-18-improvement-research.md.
++- Highest-priority hypothesis: hard detached card selection prevents answer
++  errors from directly training the query/key selector. Verify gradients; test
++  the already specified D-soft separately. Also separate retrieval, answer
++  generation and early stopping, and measure whether toy language loss helps.
++- Answer-only retrieval must remove all gold-dependent behavior, including
++  answer-loss weighting; setting the evidence-loss coefficient to zero is
++  insufficient. This is an experimental-integrity requirement, not a measured
++  explanation of the old toy score.
++- Ben suggested Token Superposition Training. Recommend a free local three-arm
++  pilot after correctness and an ordinary learning baseline: standard ordered
++  pretraining, pairwise TST plus normal-token recovery, and ordered inputs with
++  bag targets plus recovery. Compare subsequent reasoning at measured cost.
++  Research consideration is not a finding of improvement or permanent adoption.
++- New Opus handoffs: reviews/opus-research-learning-diagnostics.md (addendum
++  within the existing learning milestone's time/tuning cap) and
++  reviews/opus-research-tst-pilot.md (separate 30-minute local training cap).
++  No rental allocation added. All paid runs still require Ben's exact approval.
++- Opus's new completion entry reports concurrent generator/pattern-bank edits.
++  Freeze their identities across arms; correctness acceptance remains separate
++  from this research report. New rental spending remains $0.00 / $30.00.

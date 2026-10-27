@@ -1,0 +1,85 @@
+{
+ "ckpt": "../ckpt/tf_s0",
+ "arm": "tf",
+ "seed": 0,
+ "k_slots": 16,
+ "lmax": 4,
+ "alpha_init": 0.0,
+ "rows": 200,
+ "device": "cpu",
+ "dtype": "float32",
+ "smoke": false,
+ "env": {
+  "gpu": "cpu",
+  "dtype": "float32",
+  "torch": "2.14.1",
+  "transformers": "5.19.0",
+  "peft": "0.21.2",
+  "flash_linear_attention": null
+ },
+ "gates": {
+  "mean_abs_tanh": 0.1234227642416954,
+  "per_layer": [
+   0.02645,
+   0.10643,
+   0.15556,
+   0.15367,
+   0.07677,
+   0.22165
+  ],
+  "max": 0.512048065662384,
+  "min": 0.0009494952973909676
+ },
+ "drift": {
+  "skipped": "rho differs between the re-created start (0.019453832879662514) and the checkpoint (0.019453834742307663): different base weights or code path"
+ },
+ "wiring": {
+  "gate": 0.5,
+  "rows": 200,
+  "max_abs_dlogit": 15.642019271850586,
+  "mean_abs_dlogit": 0.7759477970901841,
+  "bug": false
+ },
+ "notes": {
+  "rows": 200,
+  "stories": 23,
+  "mean_sq_note": 0.00037712627090513706,
+  "var_across_rows": 1.1339258890075143e-05,
+  "ratio_across_rows": 0.030067539084084223,
+  "var_across_stories": 1.93307005247334e-06,
+  "ratio_across_stories": 0.00512578995845025,
+  "lap_change": {
+   "first_lap": 1,
+   "values": [
+    0.09320459514856339,
+    0.0919400006532669,
+    0.08952345699071884,
+    0.0867713913321495
+   ]
+  }
+ },
+ "blind": {
+  "rows": 200,
+  "true": 0.37,
+  "zeroed": 0.055,
+  "gates_off": 0.055,
+  "swapped": 0.065,
+  "true_on_swapped_rows": 0.37,
+  "swapped_n": 200,
+  "swapped_same_story_rows": 0,
+  "swap_cost": 0.305,
+  "zero_cost": 0.315
+ },
+ "bridge": {
+  "skipped": "TODO: row 7 (bridge probe) is not implemented"
+ },
+ "rules": {
+  "row1_wiring_bug": false,
+  "row2_gate_closed": false,
+  "row3_block_barely_trained": null,
+  "row5_notes_story_independent": true,
+  "row6_refiner_stuck": false,
+  "note": "row 5 uses the between-story ratio (ratio_across_rows if there is one story); row 6 uses the change into the last lap"
+ },
+ "seconds": 10038.780038118362
+}

@@ -1,0 +1,38 @@
+{
+  "stage": "frozen-parent-decoder-TRAIN-only",
+  "source_seeds": [
+    0,
+    1
+  ],
+  "decoder_seeds": [
+    0,
+    1
+  ],
+  "arms": [
+    "loop",
+    "no_state",
+    "embedding",
+    "untrained",
+    "shuffled_state"
+  ],
+  "training_steps": 500,
+  "batch": 2,
+  "lr": 0.001,
+  "fixed_core_rounds": 4,
+  "cache_wall_seconds": 600,
+  "train_wall_seconds": 2700,
+  "queue_wall_seconds": 3950,
+  "max_generated_tokens": 64,
+  "max_question_tokens": 48,
+  "max_notebook_tokens": 256,
+  "target_cap": 64,
+  "noise": "INSUFFICIENT: no measured decoder-repeat variance; no scientific promotion",
+  "dev_policy": "NO DEV generation or scoring in this package; separate once-only frozen-head evaluation later",
+  "parent_must_be_actual_human_checkpoint": true,
+  "parent_frozen": true,
+  "LM_precision": "FULL FP32 frozen",
+  "raw_required": "IDs labels predictions masks source/ckpt/versionhashes",
+  "plain": "separate qualified parent pending; not faked",
+  "initialization": "closed bootstrap adapter, same per parent across all arms/replicas; random TRAIN sampling by decoder_seed",
+  "runtime_selection": "source seed0/1, decoder seed0 loop after500updates; predeclared before any DEV"
+}

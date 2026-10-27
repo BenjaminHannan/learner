@@ -1,0 +1,1064 @@
+{
+  "toy": {
+    "baseline": {
+      "n": 15,
+      "stuck": 4,
+      "stuck_seeds": [
+        0,
+        8,
+        12,
+        13
+      ],
+      "reads": 14,
+      "practised": 11,
+      "heldout": 1,
+      "all_three": 1,
+      "heldout_among_learned": [
+        1,
+        11
+      ],
+      "updates": [
+        12250,
+        12251
+      ],
+      "train_seconds_range": [
+        2256.96,
+        4920.16
+      ]
+    },
+    "shortcut": {
+      "n": 15,
+      "stuck": 7,
+      "stuck_seeds": [
+        1,
+        2,
+        6,
+        7,
+        8,
+        9,
+        14
+      ],
+      "reads": 14,
+      "practised": 8,
+      "heldout": 8,
+      "all_three": 7,
+      "heldout_among_learned": [
+        8,
+        8
+      ],
+      "updates": [
+        12250,
+        12251
+      ],
+      "train_seconds_range": [
+        2300.31,
+        5005.1
+      ]
+    }
+  },
+  "statistics": {
+    "fisher_two_sided": 0.4497251374312843,
+    "paired_stuck": {
+      "shortcut_worse": 6,
+      "shortcut_better": 3,
+      "mcnemar_exact_two_sided": 0.5078125
+    },
+    "one_sided_95_CP": {
+      "36/40": 0.7856023614838554,
+      "77/80": 0.9059254534747863
+    },
+    "certification_acceptance": {
+      "0.9": 0.0353062584811377,
+      "0.95": 0.4284486372204311,
+      "0.97": 0.7806667053075955,
+      "0.98": 0.9231450089376378,
+      "0.99": 0.9913408111071393
+    },
+    "sign_tests": {
+      "10": {
+        "critical_wins": 9,
+        "size": 0.0107421875,
+        "power": {
+          "0.7": 0.14930834589999994,
+          "0.75": 0.24402523040771484,
+          "0.8": 0.37580963840000015,
+          "0.85": 0.5442998237655273
+        }
+      },
+      "16": {
+        "critical_wins": 12,
+        "size": 0.0384063720703125,
+        "power": {
+          "0.7": 0.4499041198249044,
+          "0.75": 0.6301861752290279,
+          "0.8": 0.7982454417653762,
+          "0.85": 0.9209487016330568
+        }
+      },
+      "24": {
+        "critical_wins": 17,
+        "size": 0.03195732831954956,
+        "power": {
+          "0.7": 0.564674009933431,
+          "0.75": 0.7662041693168753,
+          "0.8": 0.9108287412264922,
+          "0.85": 0.9801306906182636
+        }
+      }
+    }
+  },
+  "village": [
+    {
+      "file": "artifacts/claude-pointer-ablation-20260919/eval-A-s0-1789852585682485100-18996.json",
+      "contender": "A",
+      "seed": 0,
+      "parameters": 5549824,
+      "purpose": "legacy",
+      "overall": [
+        1000,
+        4623
+      ],
+      "fresh": [
+        16,
+        801
+      ],
+      "fresh_qtypes_unavailable": true,
+      "seen": {
+        "n": 373,
+        "hits": 114,
+        "accuracy": 0.30563002680965146,
+        "wilson95": [
+          0.2610575164979071,
+          0.35416528713476647
+        ],
+        "enough": true,
+        "target_met": false
+      },
+      "input_audit": {
+        "inputs": 5204,
+        "regime": "label-free",
+        "answer_already_in_input": 160,
+        "truncated": 4224
+      },
+      "tokenizer": {
+        "path": "data/tokenizer/premonition-tok-v2.json",
+        "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+        "vocab_size": 7289,
+        "status": "other"
+      },
+      "config": {
+        "contender": "A",
+        "core": {
+          "context": 2048,
+          "d_model": 256,
+          "mlp_ratio": 4,
+          "n_heads": 4,
+          "n_layers": 4,
+          "vocab_size": 7289
+        },
+        "data": {
+          "dir": "data/village/stream/cache/medium-seed0-53292765806d",
+          "tag": "medium-seed0-53292765806d"
+        },
+        "experiment": 1,
+        "flops": {
+          "achieved": 19474153472000000,
+          "budget_kind": "steps",
+          "per_step": 1947415347200,
+          "per_token": 59430400.0,
+          "target": 10000
+        },
+        "inputs": "plain",
+        "max_new": 32,
+        "model": "premonition-exp1",
+        "preprocess": {
+          "digest": "bdf907371b40740e50dbd054ca1617904ed327d72e5b548da08885019e51f40b",
+          "format": "premonition.preprocess",
+          "regime": "with-labels",
+          "version": 1
+        },
+        "seed": 0,
+        "tokenizer": {
+          "built": false,
+          "manifest": "data/tokenizer/premonition-tok-v2.manifest.json",
+          "path": "data/tokenizer/premonition-tok-v2.json",
+          "provisional": false,
+          "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+          "village_patterns": "village-patterns-v1+fill:6a274b3c7fed",
+          "vocab_size": 7289
+        },
+        "train": {
+          "batch": 16,
+          "beta1": 0.9,
+          "beta2": 0.99,
+          "eps": 1e-08,
+          "eval_every": 0,
+          "grad_clip": 1.0,
+          "log_every": 100,
+          "lr": 0.001,
+          "memory_check_every": 50,
+          "memory_limit_bytes": 15032385536,
+          "seq_len": 2048,
+          "warmup_steps": 100,
+          "weight_decay": 0.1
+        }
+      }
+    },
+    {
+      "file": "artifacts/claude-pointer-ablation-20260919/eval-A-s1-1789853666582249700-18996.json",
+      "contender": "A",
+      "seed": 1,
+      "parameters": 5549824,
+      "purpose": "legacy",
+      "overall": [
+        926,
+        4623
+      ],
+      "fresh": [
+        9,
+        801
+      ],
+      "fresh_qtypes_unavailable": true,
+      "seen": {
+        "n": 373,
+        "hits": 115,
+        "accuracy": 0.30831099195710454,
+        "wilson95": [
+          0.26359912491554666,
+          0.356930950391159
+        ],
+        "enough": true,
+        "target_met": false
+      },
+      "input_audit": {
+        "inputs": 5204,
+        "regime": "label-free",
+        "answer_already_in_input": 160,
+        "truncated": 4224
+      },
+      "tokenizer": {
+        "path": "data/tokenizer/premonition-tok-v2.json",
+        "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+        "vocab_size": 7289,
+        "status": "other"
+      },
+      "config": {
+        "contender": "A",
+        "core": {
+          "context": 2048,
+          "d_model": 256,
+          "mlp_ratio": 4,
+          "n_heads": 4,
+          "n_layers": 4,
+          "vocab_size": 7289
+        },
+        "data": {
+          "dir": "data/village/stream/cache/medium-seed0-53292765806d",
+          "tag": "medium-seed0-53292765806d"
+        },
+        "experiment": 1,
+        "flops": {
+          "achieved": 19474153472000000,
+          "budget_kind": "steps",
+          "per_step": 1947415347200,
+          "per_token": 59430400.0,
+          "target": 10000
+        },
+        "inputs": "plain",
+        "max_new": 32,
+        "model": "premonition-exp1",
+        "preprocess": {
+          "digest": "bdf907371b40740e50dbd054ca1617904ed327d72e5b548da08885019e51f40b",
+          "format": "premonition.preprocess",
+          "regime": "with-labels",
+          "version": 1
+        },
+        "seed": 1,
+        "tokenizer": {
+          "built": false,
+          "manifest": "data/tokenizer/premonition-tok-v2.manifest.json",
+          "path": "data/tokenizer/premonition-tok-v2.json",
+          "provisional": false,
+          "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+          "village_patterns": "village-patterns-v1+fill:6a274b3c7fed",
+          "vocab_size": 7289
+        },
+        "train": {
+          "batch": 16,
+          "beta1": 0.9,
+          "beta2": 0.99,
+          "eps": 1e-08,
+          "eval_every": 0,
+          "grad_clip": 1.0,
+          "log_every": 100,
+          "lr": 0.001,
+          "memory_check_every": 50,
+          "memory_limit_bytes": 15032385536,
+          "seq_len": 2048,
+          "warmup_steps": 100,
+          "weight_decay": 0.1
+        }
+      }
+    },
+    {
+      "file": "artifacts/claude-pointer-ablation-20260919/eval-E-s0-1789853127684002800-18996.json",
+      "contender": "E",
+      "seed": 0,
+      "parameters": 5553920,
+      "purpose": "legacy",
+      "overall": [
+        908,
+        4623
+      ],
+      "fresh": [
+        12,
+        801
+      ],
+      "fresh_qtypes_unavailable": true,
+      "seen": {
+        "n": 373,
+        "hits": 83,
+        "accuracy": 0.2225201072386059,
+        "wilson95": [
+          0.1832585019737627,
+          0.26743887976391606
+        ],
+        "enough": true,
+        "target_met": false
+      },
+      "input_audit": {
+        "inputs": 5204,
+        "regime": "label-free",
+        "answer_already_in_input": 160,
+        "truncated": 4224
+      },
+      "tokenizer": {
+        "path": "data/tokenizer/premonition-tok-v2.json",
+        "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+        "vocab_size": 7289,
+        "status": "other"
+      },
+      "config": {
+        "contender": "E",
+        "core": {
+          "context": 2048,
+          "d_model": 256,
+          "mlp_ratio": 4,
+          "n_heads": 4,
+          "n_layers": 4,
+          "vocab_size": 7305
+        },
+        "data": {
+          "dir": "data/village/stream/cache/medium-seed0-53292765806d",
+          "tag": "medium-seed0-53292765806d"
+        },
+        "experiment": 1,
+        "flops": {
+          "achieved": 19482206535680000,
+          "budget_kind": "steps",
+          "per_step": 1948220653568,
+          "per_token": 59454976.0,
+          "target": 10000
+        },
+        "inputs": "pointer",
+        "max_new": 32,
+        "model": "premonition-exp1",
+        "pointer": {
+          "cache": "data/village/stream/cache/medium-seed0-53292765806d/premonition-v1-2460b1347b04-ef6b1d4dc52d/train.pt",
+          "cache_stats": {
+            "answer_max": 64,
+            "answer_names_unseen": 0,
+            "answers_over_max": 3,
+            "gold_max": 15,
+            "gold_over_max": 0,
+            "knowable_without_gold": 0,
+            "line_ents_over_max": 0,
+            "names_max": 12,
+            "question_max": 32,
+            "visit_tokens_max": 1907
+          },
+          "detector": "data/village/stream/cache/medium-seed0-53292765806d/premonition-names.json",
+          "entities": 16,
+          "sha256": "ef6b1d4dc52dd6f03b4f2c3ee036cc56ef7fa9668fb84d3aa15b698eaad17f22"
+        },
+        "preprocess": {
+          "digest": "bdf907371b40740e50dbd054ca1617904ed327d72e5b548da08885019e51f40b",
+          "format": "premonition.preprocess",
+          "regime": "with-labels",
+          "version": 1
+        },
+        "seed": 0,
+        "tokenizer": {
+          "built": false,
+          "manifest": "data/tokenizer/premonition-tok-v2.manifest.json",
+          "path": "data/tokenizer/premonition-tok-v2.json",
+          "provisional": false,
+          "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+          "village_patterns": "village-patterns-v1+fill:6a274b3c7fed",
+          "vocab_size": 7289
+        },
+        "train": {
+          "batch": 16,
+          "beta1": 0.9,
+          "beta2": 0.99,
+          "eps": 1e-08,
+          "eval_every": 0,
+          "grad_clip": 1.0,
+          "log_every": 100,
+          "lr": 0.001,
+          "memory_check_every": 50,
+          "memory_limit_bytes": 15032385536,
+          "seq_len": 2048,
+          "warmup_steps": 100,
+          "weight_decay": 0.1
+        }
+      }
+    },
+    {
+      "file": "artifacts/claude-pointer-ablation-20260919/eval-E-s1-1789854208904283600-18996.json",
+      "contender": "E",
+      "seed": 1,
+      "parameters": 5553920,
+      "purpose": "legacy",
+      "overall": [
+        1103,
+        4623
+      ],
+      "fresh": [
+        25,
+        801
+      ],
+      "fresh_qtypes_unavailable": true,
+      "seen": {
+        "n": 373,
+        "hits": 126,
+        "accuracy": 0.3378016085790885,
+        "wilson95": [
+          0.29167418412617185,
+          0.3872358795948868
+        ],
+        "enough": true,
+        "target_met": false
+      },
+      "input_audit": {
+        "inputs": 5204,
+        "regime": "label-free",
+        "answer_already_in_input": 160,
+        "truncated": 4224
+      },
+      "tokenizer": {
+        "path": "data/tokenizer/premonition-tok-v2.json",
+        "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+        "vocab_size": 7289,
+        "status": "other"
+      },
+      "config": {
+        "contender": "E",
+        "core": {
+          "context": 2048,
+          "d_model": 256,
+          "mlp_ratio": 4,
+          "n_heads": 4,
+          "n_layers": 4,
+          "vocab_size": 7305
+        },
+        "data": {
+          "dir": "data/village/stream/cache/medium-seed0-53292765806d",
+          "tag": "medium-seed0-53292765806d"
+        },
+        "experiment": 1,
+        "flops": {
+          "achieved": 19482206535680000,
+          "budget_kind": "steps",
+          "per_step": 1948220653568,
+          "per_token": 59454976.0,
+          "target": 10000
+        },
+        "inputs": "pointer",
+        "max_new": 32,
+        "model": "premonition-exp1",
+        "pointer": {
+          "cache": "data/village/stream/cache/medium-seed0-53292765806d/premonition-v1-2460b1347b04-ef6b1d4dc52d/train.pt",
+          "cache_stats": {
+            "answer_max": 64,
+            "answer_names_unseen": 0,
+            "answers_over_max": 3,
+            "gold_max": 15,
+            "gold_over_max": 0,
+            "knowable_without_gold": 0,
+            "line_ents_over_max": 0,
+            "names_max": 12,
+            "question_max": 32,
+            "visit_tokens_max": 1907
+          },
+          "detector": "data/village/stream/cache/medium-seed0-53292765806d/premonition-names.json",
+          "entities": 16,
+          "sha256": "ef6b1d4dc52dd6f03b4f2c3ee036cc56ef7fa9668fb84d3aa15b698eaad17f22"
+        },
+        "preprocess": {
+          "digest": "bdf907371b40740e50dbd054ca1617904ed327d72e5b548da08885019e51f40b",
+          "format": "premonition.preprocess",
+          "regime": "with-labels",
+          "version": 1
+        },
+        "seed": 1,
+        "tokenizer": {
+          "built": false,
+          "manifest": "data/tokenizer/premonition-tok-v2.manifest.json",
+          "path": "data/tokenizer/premonition-tok-v2.json",
+          "provisional": false,
+          "sha256": "2460b1347b04e0b75e5c7a5d99d894ccbd6e5476fcce1d8f0afee7484a138fd6",
+          "village_patterns": "village-patterns-v1+fill:6a274b3c7fed",
+          "vocab_size": 7289
+        },
+        "train": {
+          "batch": 16,
+          "beta1": 0.9,
+          "beta2": 0.99,
+          "eps": 1e-08,
+          "eval_every": 0,
+          "grad_clip": 1.0,
+          "log_every": 100,
+          "lr": 0.001,
+          "memory_check_every": 50,
+          "memory_limit_bytes": 15032385536,
+          "seq_len": 2048,
+          "warmup_steps": 100,
+          "weight_decay": 0.1
+        }
+      }
+    }
+  ],
+  "softread_smokes": [
+    {
+      "name": "smoke30-noask-gpuport",
+      "steps_done": null,
+      "steps_per_second": null,
+      "seconds_train": 4.93,
+      "seconds_total": 16.79,
+      "oracle_use": null
+    },
+    {
+      "name": "smoke30-noask",
+      "steps_done": 31,
+      "steps_per_second": 7.698,
+      "seconds_train": 4.03,
+      "seconds_total": 13.2,
+      "oracle_use": {
+        "channels": {
+          "ask_set_target": false,
+          "teacher_insertions": false,
+          "early_ans_weighting": false,
+          "should_search_bce": false
+        },
+        "any_evidence_label": false,
+        "answer_supervision": true,
+        "answer_supervision_is_an_evidence_label": false,
+        "note": "answer supervision (the answer tokens for L_ans, the visit text for L_lm and answer-correctness for L_halt) is NOT an evidence label and is used by every arm; this arm has no card store, so no evidence channel exists"
+      }
+    },
+    {
+      "name": "smoke50-answer-grad",
+      "steps_done": 51,
+      "steps_per_second": 5.8939,
+      "seconds_train": 8.65,
+      "seconds_total": 16.36,
+      "oracle_use": {
+        "channels": {
+          "ask_set_target": true,
+          "teacher_insertions": true,
+          "early_ans_weighting": true,
+          "should_search_bce": true
+        },
+        "any_evidence_label": true,
+        "answer_supervision": true,
+        "answer_supervision_is_an_evidence_label": false,
+        "note": "answer supervision (the answer tokens for L_ans, the visit text for L_lm and answer-correctness for L_halt) is NOT an evidence label and is used by every arm"
+      }
+    },
+    {
+      "name": "smoke50-baseline",
+      "steps_done": 51,
+      "steps_per_second": 5.9748,
+      "seconds_train": 8.54,
+      "seconds_total": 15.93,
+      "oracle_use": {
+        "channels": {
+          "ask_set_target": true,
+          "teacher_insertions": true,
+          "early_ans_weighting": true,
+          "should_search_bce": true
+        },
+        "any_evidence_label": true,
+        "answer_supervision": true,
+        "answer_supervision_is_an_evidence_label": false,
+        "note": "answer supervision (the answer tokens for L_ans, the visit text for L_lm and answer-correctness for L_halt) is NOT an evidence label and is used by every arm"
+      }
+    },
+    {
+      "name": "smoke50-soft-no-oracle",
+      "steps_done": 50,
+      "steps_per_second": 5.9666,
+      "seconds_train": 8.38,
+      "seconds_total": 17.97,
+      "oracle_use": {
+        "channels": {
+          "ask_set_target": false,
+          "teacher_insertions": false,
+          "early_ans_weighting": false,
+          "should_search_bce": false
+        },
+        "any_evidence_label": false,
+        "answer_supervision": true,
+        "answer_supervision_is_an_evidence_label": false,
+        "note": "answer supervision (the answer tokens for L_ans, the visit text for L_lm and answer-correctness for L_halt) is NOT an evidence label and is used by every arm"
+      }
+    }
+  ],
+  "handoff": {
+    "shortcut": {
+      "bootstrap": {
+        "resamples": 10000,
+        "delta": 0.075,
+        "one_sided_99_lower": 0.064453,
+        "one_sided_99_upper": 0.085547,
+        "bootstrap_mean": 0.074932,
+        "bootstrap_sd": 0.004567
+      },
+      "advancement": {
+        "checks": {
+          "1_primary_effect": {
+            "pass": false,
+            "delta": 0.075,
+            "lower99": 0.064453,
+            "need": "delta >= 0.15 and lower99 > 0.05"
+          },
+          "2_seed_spread": {
+            "pass": false,
+            "gains": [
+              0.0078,
+              0.0,
+              0.0,
+              0.0332,
+              0.334
+            ],
+            "need": ">=2 seeds gain >=0.15 and no seed loses more than 0.03"
+          },
+          "3_quality": {
+            "pass": false,
+            "qd": [
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              0.998
+            ],
+            "need": "QD >= 0.80 in >=4 of 5 seeds"
+          },
+          "4_controls": {
+            "pass": true,
+            "qd_minus_qw_mean": 0.4207,
+            "n_equals_u": true,
+            "one_hop_qd_minus_q": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "one_hop_u_minus_q": [
+              -0.0078,
+              -0.5156,
+              -0.5703,
+              0.0,
+              -0.0703
+            ],
+            "need": "QD-QW >= 0.15, N == U, one-hop QD-Q == 0, one-hop Q loses <= 0.03"
+          },
+          "5_fresh_confirmation": {
+            "pass": null,
+            "status": "NOT_RUN (D2 is sealed; run only if 1-4 pass)"
+          }
+        },
+        "adequate_coverage": false,
+        "mean_d": 0.0754,
+        "d_per_seed": [
+          0.0078,
+          0.0,
+          0.0,
+          0.0332,
+          0.3359
+        ],
+        "no_useful_effect_rule": {
+          "pass": false,
+          "delta": 0.075,
+          "upper99": 0.085547,
+          "need": "coverage and delta < 0.05 and upper99 < 0.10"
+        },
+        "verdict_d1": "INCONCLUSIVE",
+        "note": "conditional on this fixed panel of five training replications; not a population claim"
+      }
+    },
+    "baseline": {
+      "bootstrap": {
+        "resamples": 10000,
+        "delta": 0.000781,
+        "one_sided_99_lower": 0.0,
+        "one_sided_99_upper": 0.002344,
+        "bootstrap_mean": 0.000769,
+        "bootstrap_sd": 0.000549
+      },
+      "advancement": {
+        "checks": {
+          "1_primary_effect": {
+            "pass": false,
+            "delta": 0.000781,
+            "lower99": 0.0,
+            "need": "delta >= 0.15 and lower99 > 0.05"
+          },
+          "2_seed_spread": {
+            "pass": false,
+            "gains": [
+              0.0,
+              0.0,
+              0.002,
+              0.0,
+              0.002
+            ],
+            "need": ">=2 seeds gain >=0.15 and no seed loses more than 0.03"
+          },
+          "3_quality": {
+            "pass": false,
+            "qd": [
+              0.0,
+              0.0,
+              0.2539,
+              0.0156,
+              0.0039
+            ],
+            "need": "QD >= 0.80 in >=4 of 5 seeds"
+          },
+          "4_controls": {
+            "pass": false,
+            "qd_minus_qw_mean": 0.0164,
+            "n_equals_u": true,
+            "one_hop_qd_minus_q": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "one_hop_u_minus_q": [
+              -0.4609,
+              0.0,
+              0.0,
+              0.0,
+              -0.0469
+            ],
+            "need": "QD-QW >= 0.15, N == U, one-hop QD-Q == 0, one-hop Q loses <= 0.03"
+          },
+          "5_fresh_confirmation": {
+            "pass": null,
+            "status": "NOT_RUN (D2 is sealed; run only if 1-4 pass)"
+          }
+        },
+        "adequate_coverage": true,
+        "mean_d": 0.6742,
+        "d_per_seed": [
+          1.0,
+          0.0,
+          0.748,
+          0.625,
+          0.998
+        ],
+        "no_useful_effect_rule": {
+          "pass": true,
+          "delta": 0.000781,
+          "upper99": 0.002344,
+          "need": "coverage and delta < 0.05 and upper99 < 0.10"
+        },
+        "verdict_d1": "REJECT_NO_USEFUL_EFFECT",
+        "note": "conditional on this fixed panel of five training replications; not a population claim"
+      }
+    }
+  },
+  "address_confirmation": [
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "choose:one_hop",
+      "address": 500,
+      "pooled": 147,
+      "n": 512,
+      "point": 0.6895,
+      "lower": 0.6406,
+      "upper": 0.7363,
+      "clusters": 256,
+      "items": 512,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "combine:two_hop_trained_rel",
+      "address": 132,
+      "pooled": 136,
+      "n": 337,
+      "point": -0.0119,
+      "lower": -0.0841,
+      "upper": 0.0614,
+      "clusters": 228,
+      "items": 337,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "combine:two_hop_heldout_rel",
+      "address": 65,
+      "pooled": 61,
+      "n": 175,
+      "point": 0.0229,
+      "lower": -0.0747,
+      "upper": 0.1167,
+      "clusters": 147,
+      "items": 175,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "read:one_hop",
+      "address": 512,
+      "pooled": 512,
+      "n": 512,
+      "point": 0.0,
+      "lower": 0.0,
+      "upper": 0.0,
+      "clusters": 256,
+      "items": 512,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "triplets/x_correct",
+      "address": 243,
+      "pooled": 76,
+      "n": 256,
+      "point": 0.6523,
+      "lower": 0.5781,
+      "upper": 0.7266,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "triplets/invariant_both_correct",
+      "address": 241,
+      "pooled": 54,
+      "n": 256,
+      "point": 0.7305,
+      "lower": 0.6602,
+      "upper": 0.7969,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 0,
+      "condition": "O",
+      "metric": "triplets/relevant_both_correct",
+      "address": 238,
+      "pooled": 1,
+      "n": 256,
+      "point": 0.9258,
+      "lower": 0.8828,
+      "upper": 0.9609,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "choose:one_hop",
+      "address": 466,
+      "pooled": 164,
+      "n": 512,
+      "point": 0.5898,
+      "lower": 0.5332,
+      "upper": 0.6445,
+      "clusters": 256,
+      "items": 512,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "combine:two_hop_trained_rel",
+      "address": 111,
+      "pooled": 114,
+      "n": 337,
+      "point": -0.0089,
+      "lower": -0.076,
+      "upper": 0.0593,
+      "clusters": 228,
+      "items": 337,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "combine:two_hop_heldout_rel",
+      "address": 55,
+      "pooled": 62,
+      "n": 175,
+      "point": -0.04,
+      "lower": -0.1307,
+      "upper": 0.053,
+      "clusters": 147,
+      "items": 175,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "read:one_hop",
+      "address": 512,
+      "pooled": 480,
+      "n": 512,
+      "point": 0.0625,
+      "lower": 0.0391,
+      "upper": 0.0879,
+      "clusters": 256,
+      "items": 512,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "triplets/x_correct",
+      "address": 233,
+      "pooled": 71,
+      "n": 256,
+      "point": 0.6328,
+      "lower": 0.5586,
+      "upper": 0.7032,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "triplets/invariant_both_correct",
+      "address": 231,
+      "pooled": 51,
+      "n": 256,
+      "point": 0.7031,
+      "lower": 0.6289,
+      "upper": 0.7734,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    },
+    {
+      "seed": 1,
+      "condition": "O",
+      "metric": "triplets/relevant_both_correct",
+      "address": 218,
+      "pooled": 1,
+      "n": 256,
+      "point": 0.8477,
+      "lower": 0.793,
+      "upper": 0.8984,
+      "clusters": 256,
+      "items": 256,
+      "one_sided": 0.99
+    }
+  ],
+  "toy_manifest": {
+    "spec": {
+      "entities": 6,
+      "relations": 3,
+      "values": 16,
+      "fillers": 24,
+      "distractors": 4,
+      "gap": 128,
+      "one_hop": 2,
+      "two_hop": 2,
+      "heldout_relation": 2
+    },
+    "vocab_size": 52,
+    "chance": 0.0625,
+    "seeds": {
+      "train": 1101,
+      "validation": 1202,
+      "test": 1303,
+      "paired": 1505
+    },
+    "visits_per_batch": 16,
+    "label_free": "premonition.train.label_free (legacy toy rule)",
+    "vocabulary": "toy synthetic ids (diagnostic exception to the v2 tokenizer rule)",
+    "privilege": "gold-evidence diagnostic: the 5 supplied cards per question come from the generator",
+    "splits": {
+      "validation": {
+        "seed": 1202,
+        "batches": 16,
+        "visits": 256,
+        "questions": 1024,
+        "one_hop": 512,
+        "two_hop": 512,
+        "two_hop_heldout": 171,
+        "file": "artifacts/opus-ovn-20260918-235851/exp1/data/validation.pt",
+        "sha256": "3ba2f6ca380059fea8a763f03042c5df0279238b86003e015d3e784d0eb6d1a9"
+      },
+      "test": {
+        "seed": 1303,
+        "batches": 16,
+        "visits": 256,
+        "questions": 1024,
+        "one_hop": 512,
+        "two_hop": 512,
+        "two_hop_heldout": 189,
+        "file": "artifacts/opus-ovn-20260918-235851/exp1/data/test.pt",
+        "sha256": "85c14090cd3ca56e9619159fe6e14dd018d59f8a7e9edc01b7bb2258915d55cd"
+      },
+      "train": {
+        "seed": 1101,
+        "batches_digested": 4000,
+        "heldout_two_hop_in_train": 0,
+        "digest_of_digests": "7da7fc2804475317147d22b14e8e84b9f334e26cf40b5cdc3fe7a95f94a524e5"
+      }
+    },
+    "overlap_visits": {
+      "test&train": 0,
+      "test&validation": 0,
+      "train&validation": 0
+    },
+    "shortcut_ceilings_validation": {
+      "one_hop": {
+        "entity_match_any_relation": 0.5371,
+        "relation_match_any_entity": 0.5332,
+        "random_attribute_card": 0.3037,
+        "entity_not_in_question": 0.0703,
+        "object_of_any_link": 0.0,
+        "relation_match_and_object_of_a_link_whose_subject_has_a_card": 0.0,
+        "relation_match_and_entity_not_a_link_object": 0.5332
+      },
+      "two_hop": {
+        "entity_match_any_relation": 0.0586,
+        "relation_match_any_entity": 0.3013,
+        "random_attribute_card": 0.3013,
+        "entity_not_in_question": 0.3822,
+        "object_of_any_link": 0.5342,
+        "relation_match_and_object_of_a_link_whose_subject_has_a_card": 0.5342,
+        "relation_match_and_entity_not_a_link_object": 0.0684
+      }
+    }
+  }
+}

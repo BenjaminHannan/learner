@@ -1,0 +1,90 @@
+{
+  "scope": "contract only; random initialized; no empirical task performance",
+  "seeds": [
+    0,
+    1
+  ],
+  "torch": "2.14.0",
+  "checks": {
+    "s0_symbolic_labels_disjoint_structures_and_order": true,
+    "s0_full_bptt_program_attention_router_gradients_no_updates": true,
+    "s0_communication_causal_and_cut_isolated": true,
+    "s0_no_table_prompt_passthrough_and_no_cached_batch": true,
+    "s0_learned_stop_removes_rows_and_cap": true,
+    "s0_human_raw_notebook_digest_latent_only_boundary": true,
+    "s1_symbolic_labels_disjoint_structures_and_order": true,
+    "s1_full_bptt_program_attention_router_gradients_no_updates": true,
+    "s1_communication_causal_and_cut_isolated": true,
+    "s1_no_table_prompt_passthrough_and_no_cached_batch": true,
+    "s1_learned_stop_removes_rows_and_cap": true,
+    "s1_human_raw_notebook_digest_latent_only_boundary": true,
+    "source_tensor_api_notebook_attention_export_empty_memory": true,
+    "serialization_roundtrip_and_idle_STOP_guards_no_updates": true,
+    "no_training_no_optimizer_steps": true
+  },
+  "passed": 15,
+  "total": 15,
+  "evidence": {
+    "s0_gradient_l1": {
+      "record.record_gru.weight_ih": 4.269600868225098,
+      "numeric.recurrent.weight_ih": 20.161785125732422,
+      "blocks.0.attention.q.weight": 3.8350648880004883,
+      "blocks.0.router.weight": 27.6457462310791
+    },
+    "s0_batch_isolation_error": 8.344650268554688e-07,
+    "parameter_counts": {
+      "compose": {
+        "stored": 323160,
+        "trainable": 323160,
+        "transformer": 83464,
+        "record": 119970,
+        "numeric": 41840
+      },
+      "no_communication": {
+        "stored": 323160,
+        "trainable": 323160,
+        "transformer": 83464,
+        "record": 119970,
+        "numeric": 41840
+      },
+      "joint": {
+        "stored": 323180,
+        "trainable": 323180,
+        "transformer": 245294,
+        "record": 0,
+        "numeric": 0
+      },
+      "plain": {
+        "stored": 322860,
+        "trainable": 322860,
+        "transformer": 244974,
+        "record": 0,
+        "numeric": 0
+      },
+      "record_only": {
+        "stored": 281320,
+        "trainable": 281320,
+        "transformer": 83464,
+        "record": 119970,
+        "numeric": 0
+      },
+      "numeric_only": {
+        "stored": 203190,
+        "trainable": 203190,
+        "transformer": 83464,
+        "record": 0,
+        "numeric": 41840
+      }
+    },
+    "s1_gradient_l1": {
+      "record.record_gru.weight_ih": 1.397292971611023,
+      "numeric.recurrent.weight_ih": 5.897700309753418,
+      "blocks.0.attention.q.weight": 0.459668904542923,
+      "blocks.0.router.weight": 6.569847106933594
+    },
+    "s1_batch_isolation_error": 5.960464477539062e-07
+  },
+  "optimizer_steps": 0,
+  "trained": false,
+  "holdout_opened": false
+}

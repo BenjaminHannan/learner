@@ -1,0 +1,160 @@
+{
+  "arms": {
+    "R": {
+      "awake": 1.0,
+      "regression_by_op": {
+        "OP0": 0.985,
+        "OP1": 0.92,
+        "OP2": 0.84,
+        "OP3": 0.455,
+        "OP4": 0.4,
+        "OP5": 0.94
+      },
+      "regression_drop": 0.0,
+      "regression_mean": 0.7566666666666667,
+      "test_fresh": 0.03,
+      "test_long": 0.0,
+      "training": {
+        "first_loss": 2.1434333324432373,
+        "last_loss": 0.07565191388130188,
+        "tail_mean_loss": 0.08010421134531498
+      }
+    },
+    "S": {
+      "awake": 0.35,
+      "regression_by_op": {
+        "OP0": 0.925,
+        "OP1": 0.98,
+        "OP2": 0.91,
+        "OP3": 0.515,
+        "OP4": 0.53,
+        "OP5": 0.93
+      },
+      "regression_drop": 0.0,
+      "regression_mean": 0.7983333333333333,
+      "test_fresh": 0.34,
+      "test_long": 0.0,
+      "training": {
+        "first_loss": 2.2696950435638428,
+        "last_loss": 0.15816187858581543,
+        "tail_mean_loss": 0.1923971450328827
+      }
+    },
+    "S0": {
+      "awake": 0.35,
+      "regression_by_op": {
+        "OP0": 0.0,
+        "OP1": 0.0,
+        "OP2": 0.01,
+        "OP3": 0.0,
+        "OP4": 0.0,
+        "OP5": 0.01
+      },
+      "regression_drop": 0.6941666666666666,
+      "regression_mean": 0.0033333333333333335,
+      "test_fresh": 0.385,
+      "test_long": 0.0,
+      "training": {
+        "first_loss": 3.976875066757202,
+        "last_loss": 0.08239737153053284,
+        "tail_mean_loss": 0.08289786532521248
+      }
+    }
+  },
+  "base": {
+    "regression_by_op": {
+      "OP0": 0.95,
+      "OP1": 0.8,
+      "OP2": 0.745,
+      "OP3": 0.35,
+      "OP4": 0.435,
+      "OP5": 0.905
+    },
+    "regression_mean": 0.6974999999999999,
+    "training": {
+      "first_loss": 3.1723031997680664,
+      "last_loss": 0.16880039870738983,
+      "tail_mean_loss": 0.23837087124586107
+    }
+  },
+  "constants": {
+    "M1": 0.8,
+    "M2": 0.2,
+    "M3": 0.5,
+    "M4": 0.03,
+    "M5": 0.95,
+    "awake_count": 20,
+    "base_lr": 0.002,
+    "base_updates": 1200,
+    "batch_size": 48,
+    "d_ff": 640,
+    "d_model": 160,
+    "dropout": 0.0,
+    "grad_clip": 1.0,
+    "long_lengths": [
+      9,
+      10
+    ],
+    "max_positions": 256,
+    "model_layers": 4,
+    "n_heads": 4,
+    "position_offset_max": 192,
+    "practice_count": 400,
+    "regression_per_op": 200,
+    "selftest_updates": 1,
+    "sleep_lr": 0.001,
+    "sleep_updates": 300,
+    "test_fresh_count": 200,
+    "test_long_count": 200,
+    "train_lengths": [
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "weight_decay": 0.01
+  },
+  "induction": {
+    "consistent_count": 3,
+    "corrupted_consistent_count": 0,
+    "selected": "ROTL1 -> FOLD -> INC3",
+    "selected_primitives": [
+      "ROTL1",
+      "FOLD",
+      "INC3"
+    ],
+    "verified": true
+  },
+  "model_parameters": 1243860,
+  "pass_marks": {
+    "M1": false,
+    "M2": true,
+    "M3": false,
+    "M4": true,
+    "M5": false
+  },
+  "script_sha256": "d9a2f9fc3d345b7eeea554aecf317641372a93cc51c2ffb32122625966b04a9a",
+  "seed": 4001,
+  "selftest": false,
+  "split_sizes": {
+    "awake": 20,
+    "practice": 400,
+    "regression_per_op": 200,
+    "regression_total": 1200,
+    "test_fresh": 200,
+    "test_long": 200
+  },
+  "stage": "all",
+  "torch_version": "2.14.0",
+  "verdict": "VOID",
+  "wall_seconds": {
+    "arm_R": 10.976195459006703,
+    "arm_S": 10.946260750002693,
+    "arm_S0": 10.915384417006862,
+    "base": 37.531117625010666,
+    "sleep": 32.84160200000042,
+    "split_build": 0.006738124997355044,
+    "total": 70.3848520419997
+  }
+}\n

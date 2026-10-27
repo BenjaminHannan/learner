@@ -1,0 +1,220 @@
+{
+ "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+ "seed": 6601,
+ "data": "data/open/bench65/fable_edit_200.jsonl",
+ "n_items": 3,
+ "ft_scope": 3,
+ "ft_cut": false,
+ "ft_steps": 20,
+ "total_wall_s": 53.73135590553284,
+ "k4_note": "prompts and FT text built only from sentences+question; gold used solely for scoring",
+ "rows": [
+  {
+   "id": "bench65-mquake-001",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Latvia",
+    "LAT",
+    "Latvija",
+    "LVA",
+    "lv",
+    "Latvian Republic",
+    "Latveja",
+    "Latvejas Republika",
+    "Latvijas Republika",
+    "Le\u0163m\u043e\u0304",
+    "Le\u0163m\u043e\u0304 Vab\u0101m\u043e\u0304",
+    "\ud83c\uddf1\ud83c\uddfb",
+    "Republic of Latvia"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Latvia",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-002",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-003",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Russian",
+    "Russkiy",
+    "Russkiy yazyk",
+    "ru",
+    "Russian language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "AJ Lee speaks the language of Russian.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Korean",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  }
+ ],
+ "summary": {
+  "incontext": {
+   "mquake2hop": {
+    "correct": 1,
+    "abstain": 0,
+    "wrong": 2,
+    "contains_gold": 2,
+    "n": 3,
+    "not_run": 0
+   },
+   "reversal": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   }
+  },
+  "raglite": {
+   "mquake2hop": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 3,
+    "contains_gold": 0,
+    "n": 3,
+    "not_run": 0
+   },
+   "reversal": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   }
+  },
+  "finetune": {
+   "mquake2hop": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 3,
+    "contains_gold": 0,
+    "n": 3,
+    "not_run": 0
+   },
+   "reversal": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 0
+   }
+  }
+ }
+}

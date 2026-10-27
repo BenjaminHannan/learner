@@ -1,0 +1,71 @@
+{
+  "seed": 1901,
+  "arms": [
+    "U5",
+    "U8"
+  ],
+  "identical_world_bytes": true,
+  "zero_composite_r10_exposure": true,
+  "paired_streams": {
+    "arms": [
+      "U5",
+      "U8"
+    ],
+    "shared_candidate_slots": 4027,
+    "start_mismatches": 0,
+    "length_law_mismatches": 0,
+    "verified": true,
+    "mapping_sha256": "685264df864fd31974ae0857f8566a35d3fb7af51d55696e102c59996d266142",
+    "note": "the RNG key never contains the arm, so a shared candidate slot binds the same start person in both arms"
+  },
+  "u5_vs_experiment19_u": {
+    "compared": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/buffers-1901",
+    "items": 4096,
+    "other_items": 4096,
+    "identical_items": true,
+    "first_differences": [],
+    "identical_world_rows": true,
+    "item_view_sha256": "80e7d1ff1ebbeb4b00f2abbe0014efe366b26fe555d0c9b1d24ca28645e6ce48",
+    "other_item_view_sha256": "80e7d1ff1ebbeb4b00f2abbe0014efe366b26fe555d0c9b1d24ca28645e6ce48",
+    "byte_identical_file": false,
+    "note": "U5 reuses experiment 19's memory, keys and 1..5 law, so it reproduces buffer-U item for item; the .pt differs only in the block's own kind string and execution profile, which is why identity is asserted at the item level"
+  },
+  "fallbacks": {
+    "U5": 0,
+    "U8": 0
+  },
+  "length_histogram": {
+    "U5": {
+      "c=2,r=9": 397,
+      "c=3,r=9": 393,
+      "c=4,r=8": 424,
+      "c=2,r=8": 405,
+      "c=3,r=8": 404,
+      "c=1,r=8": 277,
+      "c=5,r=8": 433,
+      "c=5,r=9": 392,
+      "c=1,r=9": 285,
+      "c=4,r=9": 427,
+      "c=1,r=10": 259
+    },
+    "U8": {
+      "c=4,r=9": 258,
+      "c=5,r=9": 267,
+      "c=7,r=8": 258,
+      "c=3,r=8": 278,
+      "c=6,r=8": 255,
+      "c=2,r=8": 244,
+      "c=1,r=10": 176,
+      "c=8,r=9": 278,
+      "c=1,r=9": 167,
+      "c=7,r=9": 247,
+      "c=4,r=8": 237,
+      "c=8,r=8": 267,
+      "c=3,r=9": 246,
+      "c=2,r=9": 272,
+      "c=6,r=9": 227,
+      "c=5,r=8": 244,
+      "c=1,r=8": 175
+    }
+  }
+}

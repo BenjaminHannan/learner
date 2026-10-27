@@ -1,0 +1,108 @@
+{
+  "bias_symmetry": {
+    "axes_tested": [
+      1,
+      2,
+      3
+    ],
+    "shuffled_cloud": true,
+    "symmetries_2d": 4
+  },
+  "block_math": {
+    "layouts_ok_and_permutation_equivariant": {
+      "1axis": true,
+      "2axis": true,
+      "3axis": true
+    },
+    "matches_base_block_with_rho_scaled_tables": 0.0
+  },
+  "budget": {
+    "gap_vs_loop_pct": 0.004861076509698455,
+    "gap_vs_loop_weights": 80,
+    "gap_vs_plain_pct": 1.5951579200785202,
+    "loop_stored": 1645726,
+    "persistent_coefficients": 1645806,
+    "plain_stored": 1619965,
+    "rho": 0.3,
+    "stored": 1645806,
+    "tie_weights": 80
+  },
+  "cross_mask": {
+    "allowed_narrow_cells_cross": 3425,
+    "allowed_narrow_cells_strip": 2025,
+    "of": 6561
+  },
+  "device": "cpu",
+  "gradients": {
+    "gradient_check": {
+      "matrix_count": 18,
+      "missing_both": [],
+      "nonzero_all": true
+    },
+    "tie_grad_abs_sum": [
+      0.06507163494825363,
+      0.06942693889141083
+    ]
+  },
+  "learner": {
+    "sleep_updates": 3,
+    "tie_moved": true,
+    "updates_after_batch": 4
+  },
+  "net_equivariance": {
+    "grid": [
+      7,
+      5
+    ],
+    "tied_net_max_abs_error": {
+      "flip_cols": 7.152557373046875e-07,
+      "flip_rows": 9.5367431640625e-07,
+      "transpose": 7.748603820800781e-07
+    },
+    "untied_loop_transpose_gap": 0.2815910577774048
+  },
+  "plugin": "claude_dir_r2g_net",
+  "practice_smoke": {
+    "loss_first": 4.991535615921021,
+    "loss_last": 3.1406631231307984,
+    "reload_identical": true,
+    "steps": 60,
+    "tie_mean_abs_after_smoke": [
+      0.0039995997212827206,
+      0.0035635766107589006
+    ]
+  },
+  "residual_scale": {
+    "residual_max_abs_error": 2.980232238769531e-07,
+    "rho": 0.3
+  },
+  "same_loop": {
+    "loop_tensors_equal": true,
+    "tie_all_zero": true
+  },
+  "selftest": "ok",
+  "shapes": {
+    "infer_rounds": [
+      2,
+      48,
+      81
+    ],
+    "loop_rounds": 48
+  },
+  "timing_cpu": {
+    "loop": {
+      "infer_48_rounds_9x9_batch32_s": 2.2346744559999934,
+      "maze_batch_9x9_s": 1.9051915910000048,
+      "practice_step_grids5_s": 0.8882673789999558,
+      "practice_step_sums4_s": 0.41163507300001356
+    },
+    "r2g": {
+      "infer_48_rounds_9x9_batch32_s": 2.290659981000033,
+      "maze_batch_9x9_s": 1.8644114680000143,
+      "practice_step_grids5_s": 1.1152132029999962,
+      "practice_step_sums4_s": 0.4306115460000228
+    }
+  },
+  "torch": "2.14.0+cpu",
+  "utc": "2026-09-28T21:24:16Z"
+}

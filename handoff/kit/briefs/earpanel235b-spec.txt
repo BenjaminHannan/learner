@@ -1,0 +1,52 @@
+EAR PANEL 235b: SPEC. The director wrote this on 2026-09-22. The panel writer and the 235b builder share it.
+
+Folder: artifacts/claude-earpanel235b-20260922/
+Files:
+- panel.jsonl (150 lines)
+- make_panel.py (a generator that holds the items by hand and writes panel.jsonl deterministically, with self-checks)
+- README.md (TEST-ONLY)
+- SEAL.sha256.txt, made from the repo root:
+  shasum -a 256 artifacts/claude-earpanel235b-20260922/panel.jsonl artifacts/claude-earpanel235b-20260922/make_panel.py > artifacts/claude-earpanel235b-20260922/SEAL.sha256.txt
+
+Schema. Same as ear panel 235, whose README (artifacts/claude-earpanel235-20260922/README.md) the writer may read. The writer must NOT read that panel's panel.jsonl or make_panel.py.
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e235b-001" … "e235b-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames; [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: string.
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases}.
+  - chain is null for one hop.
+  - For two hops, chain = [first relation, second relation], relation = the second one, and subject = the start person.
+- subject and value are the exact words from the turn, in the same case. "me" stands for the speaker.
+- relation is a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet …). relation_aliases lists accepted alternative names. Keep one fixed alias list in the generator, so the same relation always gets the same aliases.
+
+Families and exact counts (150):
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+The diagnosed risks get dedicated items. All wordings are new; don't copy any example below word for word.
+- R1, pronoun reference across clauses: at least 10 turns, spread over varied_teach and full_names.
+  - A second clause uses she/he/they/it for a named third person ("My cousin is X and she …", "X started at Y last week, he …").
+  - At least 3 turns where the pronoun refers to the speaker's relative and a first-person clause is also present.
+  - Gold subjects are the resolved names, which appear in the turn.
+- R2, questions shaped like statements: at least 10 turns in no_save, gold [].
+  - Tag questions ("X lives in Y, right?", "…, doesn't she?"), rising "so X works at Y?", "X speaks Y??", and a question with no "?" in lowercase chat style.
+  - Plus at least 3 statements that contain a question word but state a fact ("I know who X's boss is: it's Y."). These are not no_save; their gold is the TEACH frame, placed in varied_teach.
+- R3, the verb decides the relation, not a noun in the value: at least 8 turns in varied_teach and full_names.
+  - "teaches at X School" means workplace; "studies at Y College" means school; "coaches at Z Club" means workplace; "works at the W Library" means employer or workplace.
+  - Mark clear: false where two relations are really defensible, and list both in relation_aliases only when both are really right.
+- The rest spreads over plain facts, relatives, pets, jobs, languages, birthplaces, full names with 2–4 words, lowercase and typo'd chat, and corrections. Corrections hold only the new value; a negated old value must never be in gold.
+- questions and chain_questions: new wordings, including verb forms and possessives, and at least 5 lowercase or no-"?" questions.
+
+Writer rules:
+- Blind. Read nothing but this spec, OPUS-RULES.txt and the 235 README's schema and judgement-call sections. Never read code, relation tables, design notes, results, other panels, or any builder's folder.
+- Fictional names only. No name or place from the 235 README's examples.
+- make_panel.py checks: family counts; no duplicate turn; every subject and value (other than "me") appears word for word in its turn; R1/R2/R3 quotas, tagged in notes as "R1", "R2" or "R3".
+- Report category-level only.

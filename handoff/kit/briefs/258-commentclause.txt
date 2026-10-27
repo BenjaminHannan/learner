@@ -1,0 +1,77 @@
+EXP 258 BRIEF: commentary clauses after a denial or correction. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why
+- Exp 252b is a registered FAIL on one junk write. After the assistant answers "Kasia's employer is Norbeck.", the user says "That's wrong, that's old news." 252's contextual-correction path reads "that's Z" as the new value and stores employer = "old news". 252b's value screen only catches contractions typed without an apostrophe, so it misses this.
+- In 252b's own safety set (artifacts/claude-correct252b-20260922/dev252b.jsonl, a dev set you may read), 37 of 38 denials and corrections that end with an extra clause are not carried out.
+  - The old fact stays stored.
+  - In 5 of them, 252/252b now give a false reply such as "I don't have Brimwell, that's outdated as Arlo's employer, so I didn't change anything." while Brimwell IS stored. 138k asked the user to rephrase instead.
+  - Exp 259 handles that false reply from the value side, in parallel. This experiment handles it from the clause side. See "Overlap" below.
+- Diagnosis: after a denial, a clause like "that's old news", "that was last year" or "which is outdated" talks ABOUT the old fact. It is commentary, not a new value.
+
+Base: 252b = scripts/claude_loop252b_agent.py with artifacts/claude-correct252b-20260922/loop252b-config.json.
+- One change: a single new mixin, scripts/claude_fix258_comment.py, placed in scripts/claude_loop258_agent.py.
+- Artifacts: artifacts/claude-comment258-20260922/. Ledger lines: P258.n. Never edit an existing file.
+
+The one change
+- On a turn that 252/252b already treats as a denial or a correction (use their own detection; add no new detection grammar), look for a trailing commentary clause:
+  - It starts after a clause boundary: ", " " - " " — " "; " or an opening bracket.
+  - It opens with that's / that is / that was / that isn't / that's not / which is / which was / this is, including the forms typed without an apostrophe ("thats").
+  - It runs to the end of the turn, or to the closing bracket.
+- Remove that clause before 252's parse, and never take a value from it. Then let 252b handle the shortened turn exactly as it would if the user had typed it that way. For example:
+  - "That's wrong, that's old news." is handled as "That's wrong."
+  - "No, it's Quarry, that's outdated." is handled as "No, it's Quarry."
+  - "X doesn't work at Y (that was last year)." is handled as "X doesn't work at Y."
+- Every other turn stays byte-identical, including teach turns with an appositive ("X works at Y, which is a bakery.") and questions.
+- Safety:
+  - No write or removal happens except through 252b's existing paths on the shortened turn.
+  - Question turns never write.
+  - The user's name keeps its confirm flow.
+  - Inferred facts are never stored or removed.
+
+Overlap with 259
+- Exp 259 (built in parallel on the same base) changes 252's explicit-denial path: a stored value followed by a clause boundary counts as the denied value.
+- The two changes meet on explicit denials that carry a that-clause. Both should remove the stored fact there. A later small merge checks that they agree.
+- Don't read or import 259's files.
+
+Blind panel
+- A separate writer is building artifacts/claude-corrtail258-20260922/ under the exact schema in corrtail258-spec.txt (same folder). Your scorer must implement that schema check and those scoring rules exactly.
+- Do NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed.
+- After your seal:
+  - wait for its SEAL.sha256.txt to exist and check OK from the repo root;
+  - run your schema check;
+  - run the panel ONCE on both arms (252b and yours) and score it.
+- If the panel is not ready 40 minutes after your seal, report and stop.
+
+Order of work
+1. Reproduce the failures on 252b with your own dev dialogs (probe runner in OPUS-RULES).
+2. Write your dev cases: at least 50 scored dialogs in your own wording. They must include:
+   - at least 12 commentary-clause denials and 10 commentary-clause corrections (both contextual and explicit);
+   - at least 8 pure denials with a commentary clause;
+   - at least 12 must-not-change turns (appositive teaches, questions with such clauses, chat);
+   - at least 6 question traps;
+   - at least 4 restart cases.
+3. Build the fix. Pilot on your dev set, on dev252b, on the suites and on the sleep smoke.
+4. Write PASSMARKS.md with every predicted move by id (suites, dev252b and the corrpanel252 rows). Seal, append the ledger lines, then do the registered runs once each: M2, M3, M4, M5, M6, M7 and then M1.
+
+Registered marks
+- M1, panel corrtail258 (80 items), on your arm:
+  - that_denial ≥ 10/12
+  - that_correction ≥ 10/12
+  - pure_denial_that ≥ 9/10
+  - 0 junk writes over all 80
+  - 0 wrong values and 0 false claims in those three families
+  - no item in other_tail_denial newly wrong compared with 252b
+  - question_tail 6/6 and unstored_tail 6/6 right
+  - keep 8/8 and control 16/16 right, byte-identical to base252b
+  - Report the 252b arm's numbers next to every figure.
+- M2, dev252b (scripts/claude_corr252b_score.py dev, read-only, against 252b's rows made in the same session):
+  - 0 junk writes (b252-035 fixed), 0 wrong removals, 0 question writes;
+  - controls identical to 252b's in every field except ms_per_turn;
+  - every other change is exactly as predicted.
+- M3, corrpanel252 (TEST-ONLY: run it only after your seal, never read its items before). Rows vs 252b's registered rows (artifacts/claude-correct252b-20260922/run/panel-252b.jsonl): changes exactly as predicted; 0 new wrong values or junk writes.
+- M4, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench against the rows 252b used (see artifacts/claude-correct252b-20260922/PASSMARKS.md). Bars: the move list equals 252b's, and there are 0 new WRONG, WRONG-WRITE, junk or lost OK.
+- M5, sleep smoke: identical to 252b's (artifacts/claude-correct252b-20260922/run/smoke-252b.json) except labels, paths and timing.
+- M6, restart dialogs (the same files 252b used for its M6): 0 ghost answers, 0 failed duplicate checks, and replies identical to 252b's except predicted moves.
+- M7, latency: median added time per turn ≤ +5 ms against 252b, measured in the same session.
+
+Finish with RESULTS.md and a final message as OPUS-RULES requires, plus a design note: design/v3/30-modes/258-commentclause-opus.md.

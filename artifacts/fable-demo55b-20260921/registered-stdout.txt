@@ -1,0 +1,28 @@
+========================================================================
+FABLE DEMO 55b — Q11 forgetting arm (QA-drilled baseline, 60 s fine-tune)
+========================================================================
+
+notebook Q10 before 20/20, Q10 after 20/20, Q11 new 5/5, wrong writes 0, identity Q10=True Q11=True
+
+--- baseline: QA-drilled, then 60 s fine-tune per seed ---
+baseline seed 5401: QA 250 updates 71.02s (loss 0.057234), Q10 before 19/20, Q11 before 0/5, fine-tune 43585 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+baseline seed 5402: QA 250 updates 71.09s (loss 0.006541), Q10 before 20/20, Q11 before 0/5, fine-tune 41214 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+baseline seed 5403: QA 250 updates 71.41s (loss 0.006296), Q10 before 20/20, Q11 before 0/5, fine-tune 41669 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+
+========================================================================
+SCOREBOARD — new facts /5 and old Q10 /20 before+after (never averaged)
+========================================================================
+notebook: Q10 before 20/20, Q11 new 5/5, Q10 after 20/20
+baseline 5401: Q11 new 0/5 -> 0/5 (43585 steps, 60.0s); Q10 old 19/20 -> 0/20
+baseline 5402: Q11 new 0/5 -> 0/5 (41214 steps, 60.0s); Q10 old 20/20 -> 0/20
+baseline 5403: Q11 new 0/5 -> 0/5 (41669 steps, 60.0s); Q10 old 20/20 -> 0/20
+
+PASS MARKS (sealed in PASSMARKS.md before this registered run)
+  B1_notebook_old_20_of_20_after   PASS  20/20
+  B2_notebook_new_5_of_5           PASS  5/5
+  B3_wrong_writes_zero             PASS  0
+  B4_baseline_reported_per_seed    PASS  3/3 seeds x (20+5+5+20) integers, decode cross-check ok
+  B5_under_10_minutes              PASS  399.5s
+story identity Q10=True Q11=True; wrong writes counted=0
+wrote artifacts/fable-demo55b-20260921/demo55b-results.json
+TOTAL_ELAPSED_SECONDS 399.5

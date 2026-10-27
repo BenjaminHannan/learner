@@ -1,0 +1,187 @@
+{
+  "schema": "sol.cloud.exposure16.r5-r2.seed1.saved-failure-inventory.v1",
+  "observed_utc": "2026-09-30T12:39:38.217644+00:00",
+  "scope": "update800 actual condition only, exact three failures from saved generated IDs; no new model scoring",
+  "seed": 1,
+  "pins": {
+    "prior_recount": {
+      "path": "artifacts/sol-cloud-verifier-20260930/EXPOSURE16-R5-R2-S1-SAVED-RECOUNT-v1.json",
+      "sha256": "a2b3003754fd29d9399023e1c8bc30c502329b4dc704fc7be06912b32b469790"
+    },
+    "original_DIAGNOSTIC_raw_sha256": "2c499bb03eb009c293a53764650c684c1460a6569604a6e200ae6bcc21b4a59c",
+    "input_frame_sha256": "c449ed7951740531f4196a4ca830040aef9c8bb6e136eab378955abbb0e0203e",
+    "released_human_reference_sha256": "0547e57975445a61dbfee544106c15b4d96634b79dedb80afe096c4285619142"
+  },
+  "actual_condition_records": 16,
+  "exact_correct": 13,
+  "failure_count": 3,
+  "category_counts": {
+    "empty": 0,
+    "truncated_expected_target_prefix": 0,
+    "nonempty_mismatch": 3
+  },
+  "other_released_target_collision_count": 3,
+  "definition": "Truncated means a nonempty strict proper prefix of the intended target; merely shorter erroneous output is not classified as target truncation. Longest prefix is compared against the fixed16 saved target-ID sequences.",
+  "failures": [
+    {
+      "id": "5733a70c4776f41900660f64",
+      "HUMAN_reference_target": "Learning Resource Center",
+      "expected_answer_ids_without_EOS": [
+        35410,
+        20598,
+        5203
+      ],
+      "MODEL_generated_ids": [
+        4420,
+        529
+      ],
+      "generated_length": 2,
+      "expected_length_without_EOS": 3,
+      "category": "nonempty_mismatch",
+      "shorter_than_expected": true,
+      "matching_intended_target_prefix_tokens": 0,
+      "exact_other_released16TRAIN_target_collisions": [
+        {
+          "id": "5733a7bd4776f41900660f6a",
+          "HUMAN_reference_target": "1854",
+          "target_ids_without_EOS": [
+            4420,
+            529
+          ],
+          "lookup_only_not_new_decode": true
+        }
+      ],
+      "longest_matching_released16TRAIN_target_prefix": {
+        "tokens": 2,
+        "ids": [
+          4420,
+          529
+        ],
+        "target_matches": [
+          {
+            "id": "5733a7bd4776f41900660f6a",
+            "HUMAN_reference_target": "1854",
+            "full_target_exact": true
+          }
+        ]
+      },
+      "MODEL_generated_text_storage": "omitted; exact IDs and pinned tokenizer retained",
+      "raw_original_answer_expected_human_id": "5733a70c4776f41900660f64"
+    },
+    {
+      "id": "5733a70c4776f41900660f62",
+      "HUMAN_reference_target": "five",
+      "expected_answer_ids_without_EOS": [
+        579,
+        975
+      ],
+      "MODEL_generated_ids": [
+        4420,
+        529
+      ],
+      "generated_length": 2,
+      "expected_length_without_EOS": 2,
+      "category": "nonempty_mismatch",
+      "shorter_than_expected": false,
+      "matching_intended_target_prefix_tokens": 0,
+      "exact_other_released16TRAIN_target_collisions": [
+        {
+          "id": "5733a7bd4776f41900660f6a",
+          "HUMAN_reference_target": "1854",
+          "target_ids_without_EOS": [
+            4420,
+            529
+          ],
+          "lookup_only_not_new_decode": true
+        }
+      ],
+      "longest_matching_released16TRAIN_target_prefix": {
+        "tokens": 2,
+        "ids": [
+          4420,
+          529
+        ],
+        "target_matches": [
+          {
+            "id": "5733a7bd4776f41900660f6a",
+            "HUMAN_reference_target": "1854",
+            "full_target_exact": true
+          }
+        ]
+      },
+      "MODEL_generated_text_storage": "omitted; exact IDs and pinned tokenizer retained",
+      "raw_original_answer_expected_human_id": "5733a70c4776f41900660f62"
+    },
+    {
+      "id": "5733ae924776f41900661015",
+      "HUMAN_reference_target": "the top 10 to 15 in the nation",
+      "expected_answer_ids_without_EOS": [
+        1820,
+        2684,
+        730,
+        1155,
+        811,
+        730,
+        1386,
+        797,
+        779,
+        5671
+      ],
+      "MODEL_generated_ids": [
+        6403,
+        1399,
+        730,
+        14671,
+        7255
+      ],
+      "generated_length": 5,
+      "expected_length_without_EOS": 10,
+      "category": "nonempty_mismatch",
+      "shorter_than_expected": true,
+      "matching_intended_target_prefix_tokens": 0,
+      "exact_other_released16TRAIN_target_collisions": [
+        {
+          "id": "5733ae924776f41900661017",
+          "HUMAN_reference_target": "more than 750 miles",
+          "target_ids_without_EOS": [
+            6403,
+            1399,
+            730,
+            14671,
+            7255
+          ],
+          "lookup_only_not_new_decode": true
+        }
+      ],
+      "longest_matching_released16TRAIN_target_prefix": {
+        "tokens": 5,
+        "ids": [
+          6403,
+          1399,
+          730,
+          14671,
+          7255
+        ],
+        "target_matches": [
+          {
+            "id": "5733ae924776f41900661017",
+            "HUMAN_reference_target": "more than 750 miles",
+            "full_target_exact": true
+          }
+        ]
+      },
+      "MODEL_generated_text_storage": "omitted; exact IDs and pinned tokenizer retained",
+      "raw_original_answer_expected_human_id": "5733ae924776f41900661015"
+    }
+  ],
+  "human_reference_lookup_status": "Collision display text is the previously frozen HUMAN target attached to an exactly identical saved token-ID sequence. No generated text was freshly decoded.",
+  "model_calls": 0,
+  "fresh_tokenization": false,
+  "fresh_decode": false,
+  "rescore": false,
+  "optimizer_updates": 0,
+  "heldout_reads": 0,
+  "training_eligible": false,
+  "scientific_or_semantic_promotion": false,
+  "causal_claims": false
+}

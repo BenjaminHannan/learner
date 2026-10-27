@@ -1,0 +1,41 @@
+00 'Pella is a friend of Doran.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'  [+0 ev]
+00 -- RESTART 1 --
+00 "Who are Doran's friends?" -> "I don't know anyone called Doran."  [+0 ev]
+00 'Where did you learn that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+00   TRIPLES []
+00   STORED []  dup_ok=True
+01 "Garrow's boss is Minta." -> "Saved: Garrow's boss is Minta."  [+4 ev]
+01 -- RESTART 1 --
+01 'Whose boss is Minta?' -> "Garrow's boss is Minta."  [+0 ev]
+01 'Where did you learn that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+01 "What can't you do?" -> "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?"  [+0 ev]
+01   TRIPLES [['Garrow', 'boss', 'Minta']]
+01   STORED [['Garrow', 'boss', 'Minta']]  dup_ok=True
+02 "Hesper's parrot is called Juniper." -> "Saved: Hesper's parrot is called Juniper."  [+3 ev]
+02 -- RESTART 1 --
+02 "What is Hesper's parrot?" -> "Hesper's parrot is called Juniper."  [+0 ev]
+02   TRIPLES [['Hesper', 'parrot', 'called Juniper']]
+02   STORED [['Hesper', 'parrot', 'called Juniper']]  dup_ok=True
+03 'My favourite fruit is plum.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'  [+0 ev]
+03 -- RESTART 1 --
+03 'What is my favourite fruit?' -> 'I do not have favourites.'  [+0 ev]
+03   TRIPLES []
+03   STORED []  dup_ok=True
+04 "Tamsin's birthday is in October." -> "Saved: Tamsin's birthday is in October."  [+3 ev]
+04 "Tamsin's city is Oldport." -> "Saved: Tamsin's city is Oldport."  [+2 ev]
+04 -- RESTART 1 --
+04 "When is Tamsin's birthday?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+04 'Who lives in Oldport?' -> "Tamsin's city is Oldport."  [+0 ev]
+04 'How do you know that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+04   TRIPLES [['Tamsin', 'birthday', 'in October'], ['Tamsin', 'city', 'Oldport']]
+04   STORED [['Tamsin', 'birthday', 'in October'], ['Tamsin', 'city', 'Oldport']]  dup_ok=True
+05 "Rook's sister is Anwen." -> "Saved: Rook's sister is Anwen."  [+4 ev]
+05 "Rook's sister is Bexley." -> "Saved: Rook's sister is Bexley. (I also have Anwen.)"  [+2 ev]
+05 'Yes.' -> "I wasn't waiting for an answer."  [+0 ev]
+05 -- RESTART 1 --
+05 "Who is Rook's sister?" -> "Rook's sister is Anwen and Bexley."  [+0 ev]
+05 'Who told you that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+05 -- RESTART 2 --
+05 'Whose sister is Anwen?' -> "Rook's sister is Anwen."  [+0 ev]
+05   TRIPLES [['Rook', 'sister', 'Anwen'], ['Rook', 'sister', 'Bexley']]
+05   STORED [['Rook', 'sister', 'Anwen'], ['Rook', 'sister', 'Bexley']]  dup_ok=True

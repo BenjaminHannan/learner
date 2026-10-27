@@ -1,0 +1,39 @@
+STEP start 2026-09-27T04:25:50Z
+versions torch 2.14.0+cpu transformers 5.17.0 python 3.11.15 threads 4
+artifacts/claude-gr7-20260927/PASSMARKS-gr7.md: OK
+scripts/claude_gr7.py: OK
+artifacts/claude-gr7-20260927/cpu/chain.sh: OK
+scripts/claude_gr5.py: OK
+scripts/claude_gr4.py: OK
+artifacts/claude-gr6-20260927/train/rows.jsonl: OK
+artifacts/claude-gr6-20260927/cpu/chain.sh: OK
+scripts/claude_gr5.py: OK
+scripts/claude_gr4.py: OK
+scripts/claude_gr5_devclean.py: OK
+squares.jsonl: OK
+lookalikes.jsonl: OK
+unseen.jsonl: OK
+writings.json: OK
+formats-kept.json: OK
+STEP train 2026-09-27T04:25:53Z
+train {"device": "cpu", "train_rows": 1072, "examples_seen": 3216, "mean_loss_by_epoch_4_to_6": [0.0107, 0.0111, 0.0021], "epoch6_loss": 0.0021, "minutes": 117.4}
+adapter c8f9555773d6bb3ac4e99157a37a93e6d65c593dec5abc3e947b5b3b356d05a1 bytes 16568343
+STEP dev 2026-09-27T06:23:23Z
+dev {"devlayout_square_exact": 64, "devlayout_square_n": 64, "devlayout_square_none": 0, "devlayout_square_wrong": 0, "fresh_exact": 10, "fresh_n": 10, "fresh_none": 0, "fresh_wrong": 0, "heldout_none_exact": 139, "heldout_none_n": 139, "heldout_none_none": 139, "heldout_none_wrong": 0, "heldout_square_exact": 121, "heldout_square_gr5rows_exact": 72, "heldout_square_gr5rows_n": 72, "heldout_square_gr5rows_none": 0, "heldout_square_gr5rows_wrong": 0, "heldout_square_n": 123, "heldout_square_new_exact": 49, "heldout_square_new_n": 51, "heldout_square_new_none": 1, "heldout_square_new_wrong": 1, "heldout_square_none": 1, "heldout_square_wrong": 1, "nosquare_exact": 10, "nosquare_n": 10, "nosquare_none": 10, "nosquare_wrong": 0, "seconds_per_message": 4.1, "smoke_exact": 10, "smoke_n": 10, "smoke_none": 0, "smoke_wrong": 0, "epoch6_loss": 0.0021, "epoch6_loss_at_most_0.001": false, "outcome": "PASS", "dev_gate": "PASS"}
+STEP L7_squares 2026-09-27T06:47:36Z
+run {"arm": "L7", "task": "squares", "rows": 100, "read_as_square": 100}
+STEP L7_lookalikes 2026-09-27T06:57:46Z
+run {"arm": "L7", "task": "lookalikes", "rows": 60, "read_as_square": 3}
+STEP L7_unseen 2026-09-27T06:58:56Z
+run {"arm": "L7", "task": "unseen", "rows": 60, "read_as_square": 59}
+STEP L7_general 2026-09-27T07:05:18Z
+run {"arm": "L7", "task": "general", "rows": 300, "read_as_square": 0}
+STEP G5_squares 2026-09-27T07:08:32Z
+run {"arm": "G5", "task": "squares", "rows": 100, "read_as_square": 100}
+STEP G5_lookalikes 2026-09-27T07:19:20Z
+run {"arm": "G5", "task": "lookalikes", "rows": 60, "read_as_square": 3}
+STEP G5_unseen 2026-09-27T07:20:43Z
+run {"arm": "G5", "task": "unseen", "rows": 60, "read_as_square": 54}
+STEP score 2026-09-27T07:27:13Z
+score {"L7": {"squares_exact": 97, "squares_wrong": 3, "squares_none": 0, "unseen_exact": 54, "unseen_wrong": 5, "unseen_none": 1, "lookalikes_false_square": 2, "lookalikes_with_square_read_as_square": 1, "lookalikes_with_square_same_grid": 0, "lookalikes_with_square_read_as_none": 7, "general_read_as_square": 0}, "G5": {"squares_exact": 98, "squares_wrong": 2, "squares_none": 0, "unseen_exact": 39, "unseen_wrong": 15, "unseen_none": 6, "lookalikes_false_square": 2, "lookalikes_with_square_read_as_square": 1, "lookalikes_with_square_same_grid": 0, "lookalikes_with_square_read_as_none": 7}, "C": {"squares_exact": 100, "squares_wrong": 0, "squares_none": 0, "unseen_exact": 0, "unseen_wrong": 0, "unseen_none": 60, "lookalikes_false_square": 0, "general_read_as_square": 0}, "unseen_n_sep_seen": 51, "incomplete_L7": 0, "lookalikes_truth_none": 52, "ms_median_squares_L7": 6152.5, "marks": {"R1": true, "R2": false, "R3": false, "R4": true, "U1": true, "U2": false}, "gr7_pass": false, "gr7U_pass": false, "proved_wrong_L7_U1_not_above_G5": false, "prediction_L7_U1_at_least_G5_plus_6": true}
+STEP done 2026-09-27T07:27:13Z

@@ -1,0 +1,22 @@
+concept-toy20 wave 1 -- ct20-v1.1  (fixture)
+
+data            : /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/fixture-v1.1
+worlds x seeds  : 2 x 3, arms G, T  -> 12 fits per tier
+concurrency     : 3 single-thread processes
+wall clock      : 8.8 s (preflight charged 5.8 s)
+
+isolation (rulings 2): PASS -- with the batch shape held fixed, replacing every other sequence in the batch -- including the paired counterpart -- changes no prediction bit; reordering changes no prediction bit; repartitioning agrees bit for bit wherever the batch size is preserved and within 1e-06 absolute otherwise, from float32 matrix-multiply blocking inside one sequence's own algebra
+
+tier L:
+  preflight            : fits (remaining 381.1 s with the 1.5x margin against 894.2 s usable)
+  fits                 : 1 shards, 12 fits (1 run now, 11 reused sha-verified from disk), all ok = True
+  accounting           : valid = True, worst per-rung gap = 0.044376  [equal counted operations under the registered estimate]
+  complete wave        : True (12/12 cells)
+  startup labels       : 12, pending = 0, independent agreement = True (12 spelling reconciliations)
+  gate verdict         : calibration-invalid/missing-required-result
+
+two-tier status : complete
+final verdict   : calibration-invalid/missing-required-result
+explanation     : Stopped without escalation: a numerical failure, missing required result, invalid accounting or failed integrity audit is never a budget question.
+
+Cost language: the arms are matched on equal counted operations under the registered estimate.  This is not equal hardware work, elapsed time or energy.

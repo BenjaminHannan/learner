@@ -1,0 +1,30 @@
+L2: m >= ln(0.1)/ln(1-0.02) = 113.9741 -> 114 (doc 59 sec 3: 114 accepted with 0 errors)
+L2: exact-tail needs: k=0 -> m=114, k=1 -> m=194 (doc 59 sec 3: ~195)
+tape: CAL n=5000, grid G_eff=12 (tau_1=0.9453 .. tau_end=0.0000)
+  cand  1: tau=0.9453 m=    0 k=  0 p=1.0000 bound=1.0000 STOP
+tape: tau-hat = ABSTAIN-ALL (stopped at cand 1)
+bigru: CAL n=5000, grid G_eff=11 (tau_1=0.9321 .. tau_end=0.0000)
+  cand  1: tau=0.9321 m=    0 k=  0 p=1.0000 bound=1.0000 STOP
+bigru: tau-hat = ABSTAIN-ALL (stopped at cand 1)
+tape/t_seen: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=667 wrong=0 rate=0.0000 cov=0.5924 | tau0 writes=702 wrong=0 rate=0.0000 cov=0.6234
+tape/t_new: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=722 wrong=0 rate=0.0000 cov=0.4781 | tau0 writes=772 wrong=0 rate=0.0000 cov=0.5113
+tape/t_hard: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=109 wrong=0 rate=0.0000 cov=0.4022 | tau0 writes=120 wrong=0 rate=0.0000 cov=0.4428
+bigru/t_seen: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=659 wrong=0 rate=0.0000 cov=0.5853 | tau0 writes=664 wrong=0 rate=0.0000 cov=0.5897
+bigru/t_new: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=675 wrong=0 rate=0.0000 cov=0.4470 | tau0 writes=780 wrong=0 rate=0.0000 cov=0.5166
+bigru/t_hard: LTT writes=0 wrong=0 rate=0/0 (abstain-all) cov=0.0000 | reg@0.5 writes=107 wrong=0 rate=0.0000 cov=0.3948 | tau0 writes=117 wrong=1 rate=0.0085 cov=0.4317
+L1 tape/t_seen: PASS (vacuous: 0/0, abstain-all)
+L1 tape/t_new: PASS (vacuous: 0/0, abstain-all)
+L1 tape/t_hard: PASS (vacuous: 0/0, abstain-all)
+L1 bigru/t_seen: PASS (vacuous: 0/0, abstain-all)
+L1 bigru/t_new: PASS (vacuous: 0/0, abstain-all)
+L1 bigru/t_hard: PASS (vacuous: 0/0, abstain-all)
+L3 coverage reported on 6/6 panel-arms: PASS
+input per_sentence_bigru_cal.json sha256=bd064ee740979114…
+input per_sentence_bigru_t_hard.json sha256=93743c9afc91d95a…
+input per_sentence_bigru_t_new.json sha256=bfe9ff0280c83e4a…
+input per_sentence_bigru_t_seen.json sha256=fe24db5e45b24b0b…
+input per_sentence_tape_cal.json sha256=e2d25a1238d52ad1…
+input per_sentence_tape_t_hard.json sha256=14872b797bd87aed…
+input per_sentence_tape_t_new.json sha256=025a936aff97c522…
+input per_sentence_tape_t_seen.json sha256=f8d20fc41951f270…
+L1 PASS · L2 PASS · L3 PASS · L4 PASS

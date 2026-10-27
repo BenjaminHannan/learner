@@ -1,0 +1,48 @@
+00 "Tobrin's boss is Quilla." -> "Saved: Tobrin's boss is Quilla."  [+4 ev]
+00 "Quilla's city is Oslo." -> "Saved: Quilla's city is Oslo."  [+2 ev]
+00 "Marnaby's boss is Tobrin." -> "Saved: Marnaby's boss is Tobrin."  [+2 ev]
+00 -- RESTART 1 --
+00 "Forget Quilla's city." -> "Forgotten: Quilla's city."  [+2 ev]
+00 "What is Quilla's city?" -> "I don't know Quilla's city."  [+0 ev]
+00 'Whose city is Oslo?' -> 'Oslo is the city of Quilla.'  [+0 ev]
+00 "What is Tobrin's boss's city?" -> "I don't know Quilla's city."  [+0 ev]
+00 "What is Marnaby's boss's boss's city?" -> "I don't know Quilla's city."  [+0 ev]
+00   TRIPLES [('Tobrin', 'boss', 'Quilla'), ('Quilla', 'city', 'Oslo'), ('Marnaby', 'boss', 'Tobrin'), ('Tobrin', 'boss', 'Quilla'), ('Marnaby', 'boss', 'Tobrin')]
+00   STORED [('Tobrin', 'boss', 'Quilla'), ('Quilla', 'city', 'Oslo'), ('Marnaby', 'boss', 'Tobrin'), ('Tobrin', 'boss', 'Quilla'), ('Marnaby', 'boss', 'Tobrin')]
+01 'Dorrit lives in Oslo.' -> "Saved: Dorrit's city is Oslo."  [+3 ev]
+01 "Fenwick's boss is Dorrit." -> "Saved: Fenwick's boss is Dorrit."  [+3 ev]
+01 -- RESTART 1 --
+01 'Actually Dorrit lives in Bergen.' -> "Saved: Dorrit's city is Bergen."  [+1 ev]
+01 'Where does Dorrit live?' -> "Dorrit's city is Bergen."  [+0 ev]
+01 'Who lives in Oslo?' -> 'I have no opinions.'  [+0 ev]
+01 'Who lives in Bergen?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+01 "Where does Fenwick's boss live?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+01 'Whose city is Oslo?' -> 'Oslo is the city of Dorrit.'  [+0 ev]
+01   STORED [('Dorrit', 'city', 'Oslo'), ('Fenwick', 'boss', 'Dorrit'), ('Dorrit', 'city', 'Bergen'), ('Fenwick', 'boss', 'Dorrit')]
+02 "Yselle's city is Tromso." -> "Saved: Yselle's city is Tromso."  [+3 ev]
+02 "Harlan's boss is Yselle." -> "Saved: Harlan's boss is Yselle."  [+3 ev]
+02 -- RESTART 1 --
+02 -- RESTART 2 --
+02 "What is Harlan's boss's city?" -> "Harlan's boss's city is Tromso."  [+0 ev]
+02 'Whose city is Tromso?' -> 'Tromso is the city of Yselle.'  [+0 ev]
+02 "Forget Yselle's city." -> "Forgotten: Yselle's city."  [+2 ev]
+02 -- RESTART 3 --
+02 'Whose city is Tromso?' -> "I don't know anyone whose city is Tromso."  [+0 ev]
+02 "What is Yselle's city?" -> "I don't know Yselle's city."  [+0 ev]
+02 "Yselle's city is Narvik." -> "Saved: Yselle's city is Narvik."  [+1 ev]
+02 -- RESTART 4 --
+02 -- RESTART 5 --
+02 "What is Yselle's city?" -> "Yselle's city is Narvik."  [+0 ev]
+02 'Whose city is Tromso?' -> "I don't know anyone whose city is Tromso."  [+0 ev]
+02 'Whose city is Narvik?' -> 'Narvik is the city of Yselle.'  [+0 ev]
+02 "What is Harlan's boss's city?" -> "Harlan's boss's city is Narvik."  [+0 ev]
+02   STORED [('Harlan', 'boss', 'Yselle'), ('Yselle', 'city', 'Narvik'), ('Harlan', 'boss', 'Yselle'), ('Yselle', 'city', 'Narvik')]
+03 "Pellam's city is Kiruna." -> "Saved: Pellam's city is Kiruna."  [+3 ev]
+03 -- RESTART 1 --
+03 "Pellam's city is Umea." -> "I have Pellam's city as Kiruna. Do you want me to change it to Umea?"  [+0 ev]
+03 'Yes.' -> "Saved: Pellam's city is Umea."  [+1 ev]
+03 -- RESTART 2 --
+03 'Whose city is Kiruna?' -> "I don't know anyone whose city is Kiruna."  [+0 ev]
+03 'Whose city is Umea?' -> 'Umea is the city of Pellam.'  [+0 ev]
+03 "What is Pellam's city?" -> "Pellam's city is Umea."  [+0 ev]
+03   STORED [('Pellam', 'city', 'Umea'), ('Pellam', 'city', 'Umea')]

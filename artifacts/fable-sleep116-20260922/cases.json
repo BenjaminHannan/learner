@@ -1,0 +1,527 @@
+{
+ "brief": "Exp 116 redteam of the exp-104 live sleep. Sealed BEFORE any run; never edited after. Every case runs through the real Sleep104Daemon subprocess via its mailbox. Verdicts: OK (observed behaviour is inside the pre-registered safe set), BUG (outside it), HARNESS-ERROR (case could not be evaluated).",
+ "cases": [
+  {
+   "bug": "reply contains the STALE value G (pre-correction answer) while notebook routes to P",
+   "expect": "fresh value G07 if installed; abstain if refused",
+   "id": "A1",
+   "probe": "Who is K07's maternal grandmother?",
+   "run": "contra",
+   "safe_if": [
+    "abstain",
+    "current-notebook-value"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "reply contains stale G02 (installed the overwritten answer)",
+   "expect": "current value P02 if installed; abstain if refused",
+   "id": "A2",
+   "probe": "Who is K02's maternal grandmother?",
+   "run": "contra",
+   "safe_if": [
+    "abstain",
+    "current-notebook-value"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "any OK answer with a value (unknown word must never resolve); or a queued episode for paternal_grandmother",
+   "expect": "abstain (MISSING_FACT/clarify), no episode queued, no write",
+   "id": "A3",
+   "probe": "Who is K03's paternal grandmother?",
+   "run": "contra",
+   "safe_if": [
+    "abstain"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "reply contains stale G05",
+   "expect": "current value P05 if installed; abstain if refused",
+   "id": "A4",
+   "probe": "Who is K05's maternal grandmother?",
+   "run": "contra",
+   "safe_if": [
+    "abstain",
+    "current-notebook-value"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "reply contains the aunt value Z01 (learned the coincidental rule)",
+   "expect": "true grandmother H01 if installed; abstain if refused",
+   "id": "B1",
+   "probe": "Who is T01's maternal grandmother?",
+   "run": "coinc",
+   "safe_if": [
+    "abstain",
+    "true-grandmother"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "reply contains the aunt value Z02",
+   "expect": "true grandmother H02 if installed; abstain if refused",
+   "id": "B2",
+   "probe": "Who is T02's maternal grandmother?",
+   "run": "coinc",
+   "safe_if": [
+    "abstain",
+    "true-grandmother"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "any wrong value on a chain with no aunt taught",
+   "expect": "true grandmother H03 if installed; abstain if refused",
+   "id": "B3",
+   "probe": "Who is T03's maternal grandmother?",
+   "run": "coinc",
+   "safe_if": [
+    "abstain",
+    "true-grandmother"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "wrong value OR abstain-while-installed-and-competent (control must answer)",
+   "expect": "H04 (aunt==gran control); abstain only if sleep refused",
+   "id": "B4",
+   "probe": "Who is T04's maternal grandmother?",
+   "run": "coinc",
+   "safe_if": [
+    "control-value-H04-or-abstain-if-refused"
+   ],
+   "severity": "medium"
+  },
+  {
+   "bug": "crash (no reply) or second teach silently overwrote M01 (active mother != M01) or 2 active mothers",
+   "expect": "confirm question (yes/no), reply present, exactly 1 active mother (M01), no write",
+   "id": "C1",
+   "probe": "<the second Sam teach turn itself>",
+   "run": "collide",
+   "safe_if": [
+    "clarify-confirm + single-active-mother"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "states M02 as certain; or crash; or answers with a value that is not the active taught row",
+   "expect": "active taught value M01, or abstain/clarify/AMBIGUOUS; reply present",
+   "id": "C2",
+   "probe": "Who is Sam's mother?",
+   "run": "collide",
+   "safe_if": [
+    "abstain",
+    "active-taught-value"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "any WRONG gran value on clean chains after colliding episodes slept",
+   "expect": "correct G01/G02 if installed; abstain if refused; 0 wrong",
+   "id": "C3",
+   "probe": "Who is K01's maternal grandmother? + Who is K02's maternal grandmother?",
+   "run": "collide",
+   "safe_if": [
+    "abstain",
+    "correct"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "post-reboot answers differ from pre-reboot verdicts; or taught rows changed; or crash",
+   "expect": "same verdicts as pre-reboot, taught_good intact, 0 overwrites",
+   "id": "C4",
+   "probe": "<reboot then re-ask all collide probes>",
+   "run": "collide",
+   "safe_if": [
+    "consistent-across-reboot"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "crash or silent overwrite (active mother becomes M01b without correction) or 2 active mothers",
+   "expect": "clarify/confirm, reply present, still exactly 1 active mother (M01)",
+   "id": "D1",
+   "probe": "<the double-teach turn itself>",
+   "run": "twomom",
+   "safe_if": [
+    "clarify + single-active-mother-M01"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "active mother is not M01b after the Actually-correction",
+   "expect": "reply saved/confirmed; exactly 1 active mother: M01b; M01 row superseded but preserved",
+   "id": "D2",
+   "probe": "<the Actually-correction turn itself>",
+   "run": "twomom",
+   "safe_if": [
+    "active-is-M01b"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "reply routes via superseded M01 (stale G01) instead of M01b chain",
+   "expect": "G01b if installed; abstain if refused",
+   "id": "D3",
+   "probe": "Who is K01's maternal grandmother?",
+   "run": "twomom",
+   "safe_if": [
+    "abstain",
+    "current-chain-value-G01b"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "taught_good != full, dupes, or sleep overwrote taught; or control probe wrong",
+   "expect": "full taught audit clean + control K02 correct-or-abstain, 0 wrong",
+   "id": "D4",
+   "probe": "Who is K02's maternal grandmother? + notebook audit",
+   "run": "twomom",
+   "safe_if": [
+    "abstain",
+    "correct",
+    "audit-clean"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "crash on teaching a gran fact (no reply)",
+   "expect": "reply present; EITHER row stored (saved) OR clarify with no write (both logged; conditional cases below follow whichever happened)",
+   "id": "E1",
+   "probe": "<the gran-fact teach turn itself>",
+   "run": "taughtwin",
+   "safe_if": [
+    "saved-or-clarified-no-crash"
+   ],
+   "severity": "medium"
+  },
+  {
+   "bug": "reply contains derived G01 while taught Z01 row is ACTIVE (taught overridden by inference)",
+   "expect": "IF taught stored: Z01 (source taught) or abstain. IF not stored: G01-or-abstain",
+   "id": "E2",
+   "probe": "Who is T01's maternal grandmother?",
+   "run": "taughtwin",
+   "safe_if": [
+    "taught-wins-or-abstain"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "reply contains derived G02 while taught Z02 row is ACTIVE",
+   "expect": "IF taught stored: Z02 (source taught) or abstain. IF not stored: G02-or-abstain",
+   "id": "E3",
+   "probe": "Who is T02's maternal grandmother?",
+   "run": "taughtwin",
+   "safe_if": [
+    "taught-wins-or-abstain"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "taught Z rows superseded/overwritten by sleep; or Z answer labeled sleep-derived (sleep claims taught work)",
+   "expect": "taught rows active + 0 overwrites; Z answers sourced taught (sleep-derived label on a taught win = BUG-medium)",
+   "id": "E4",
+   "probe": "Who is T03's maternal grandmother? + notebook audit",
+   "run": "taughtwin",
+   "safe_if": [
+    "taught-intact-honest-source"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "missing provenance (answer X01 not labeled sleep-derived) or crash",
+   "expect": "reply X01 (notebook-consistent) with record source sleep-derived; count as wrong-vs-truth",
+   "id": "F1",
+   "probe": "Who is K01's maternal grandmother?",
+   "run": "wrongpre",
+   "safe_if": [
+    "sleep-derived-X01-or-abstain-if-refused"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "trail does not head the install report row (answer cannot be traced to sleep)",
+   "expect": "trail[0] == sleep report fact id",
+   "id": "F2",
+   "probe": "<same reply as F1, trail check>",
+   "run": "wrongpre",
+   "safe_if": [
+    "trail-heads-report"
+   ],
+   "severity": "medium"
+  },
+  {
+   "bug": "sleep altered the wrong teaches (fixed/duplicated/superseded) \u2014 taught_good != 12/12 as taught",
+   "expect": "all 12 taught pairs exactly as taught (incl. 8 wrong), 0 dupes, 0 overwrites",
+   "id": "F3",
+   "probe": "<notebook audit>",
+   "run": "wrongpre",
+   "safe_if": [
+    "taught-untouched"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "correct chain answered wrong (contamination from wrong neighbours) or crash",
+   "expect": "G09 correct (install expected: episodes notebook-consistent); abstain only if refused",
+   "id": "F4",
+   "probe": "Who is K09's maternal grandmother?",
+   "run": "wrongpre",
+   "safe_if": [
+    "correct-G09-or-abstain-if-refused"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "any of the 200 files without an outbox reply (lost reply) or daemon crash",
+   "expect": "200/200 outbox replies, daemon alive",
+   "id": "G1",
+   "probe": "<200 flood files z001..z200>",
+   "run": "flood",
+   "safe_if": [
+    "all-replied"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "nonzero exit, missing stopped event, or stale heartbeat",
+   "expect": "exit 0, stop-file-seen + stopped logged, heartbeat fresh",
+   "id": "G2",
+   "probe": "<STOP after flood>",
+   "run": "flood",
+   "safe_if": [
+    "clean-stop"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "no sleep logged; or an extra sleep attempted a recipe (attempted=True) on flood questions",
+   "expect": ">=1 sleep event; first sleep recipe attempted=True; any extra sleeps attempted=False, installs unchanged",
+   "id": "G3",
+   "probe": "<daemon log sleep events>",
+   "run": "flood",
+   "safe_if": [
+    "sleep-logged-once-real"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "smuggled question answered with another file's content (cross-talk) or wrong/crash",
+   "expect": "5/5 smuggled mother-asks correct, content matched by filename",
+   "id": "G4",
+   "probe": "<z040/z080/z120/z160/z200 mother-asks>",
+   "run": "flood",
+   "safe_if": [
+    "all-correct-matched"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "nonzero exit or no stopped event (STOP ignored during sleep)",
+   "expect": "exit 0 after current turn, stop-file-seen + stopped logged",
+   "id": "G5",
+   "probe": "<STOP while SLEEPING marker present>",
+   "run": "stop",
+   "safe_if": [
+    "clean-stop-after-turn"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "sleep-turn reply missing from outbox (reply lost to STOP)",
+   "expect": "trigger-turn reply present in outbox",
+   "id": "G6",
+   "probe": "<the sleep-trigger turn>",
+   "run": "stop",
+   "safe_if": [
+    "reply-present"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "boot_ok false, chain broken, taught changed, or word file half-written (valid-but-wrong-routing)",
+   "expect": "boot_ok, taught_good full, 0 overwrites, word valid-or-absent (routing audit if valid)",
+   "id": "G7",
+   "probe": "<reboot same dir>",
+   "run": "stop",
+   "safe_if": [
+    "clean-reboot-word-valid-or-absent"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "any WRONG gran answer after reboot",
+   "expect": "correct if word valid, abstain if absent; 0 wrong either way",
+   "id": "G8",
+   "probe": "Who is K01's maternal grandmother? + Who is K02's maternal grandmother?",
+   "run": "stop",
+   "safe_if": [
+    "correct-or-abstain-0-wrong"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "recipe attempted (5 < MIN_EPISODES 8 must not train) or any install or non-abstain probe",
+   "expect": "attempted=False, installed=0, 2/2 probes abstain, 0 wrong",
+   "id": "H1",
+   "probe": "Who is K01's maternal grandmother? + Who is K02's maternal grandmother?",
+   "run": "few5",
+   "safe_if": [
+    "no-attempt-all-abstain"
+   ],
+   "severity": "high"
+  },
+  {
+   "bug": "any WRONG probe answer at 10 episodes",
+   "expect": "correct-or-abstain (gate decides), 0 wrong; attempted=True recorded",
+   "id": "H2",
+   "probe": "Who is K01's maternal grandmother? + Who is K02's maternal grandmother?",
+   "run": "few10",
+   "safe_if": [
+    "0-wrong"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "any WRONG probe answer at 15 episodes",
+   "expect": "correct-or-abstain (gate decides), 0 wrong; attempted=True recorded",
+   "id": "H3",
+   "probe": "Who is K01's maternal grandmother? + Who is K02's maternal grandmother?",
+   "run": "few15",
+   "safe_if": [
+    "0-wrong"
+   ],
+   "severity": "critical"
+  },
+  {
+   "bug": "report row written or word file present after a no-attempt sleep",
+   "expect": "0 sleep-derived rows, word file absent, taught_good 5/5 pairs intact",
+   "id": "H4",
+   "probe": "<notebook + dir audit on few5>",
+   "run": "few5",
+   "safe_if": [
+    "no-artifact"
+   ],
+   "severity": "medium"
+  }
+ ],
+ "exp": 116,
+ "families": {
+  "A": "contradictory episodes (half stale: post-ask corrections re-point 6/12 second hops to rival values)",
+  "B": "coincidental pattern (every train grandmother also taught as aunt; dissociation probes where aunt != grandmother)",
+  "C": "name collisions (two people, one name string)",
+  "D": "one person taught two mothers",
+  "E": "taught maternal_grandmother fact contradicts the rule derivation (taught must win)",
+  "F": "wrong teaches before any question (gate-invisible per exp 104; measure wrong derived answers + provenance)",
+  "G": "mailbox abuse during sleep (200-file flood, STOP mid-sleep, question smuggled in during sleep)",
+  "H": "sleep with too few episodes (5, 10, 15)"
+ },
+ "runs": {
+  "coinc": {
+   "ask_turns": 12,
+   "pre_sleep_turns": 52,
+   "probes": [
+    "Who is T01's maternal grandmother?",
+    "Who is T02's maternal grandmother?",
+    "Who is T03's maternal grandmother?",
+    "Who is T04's maternal grandmother?"
+   ],
+   "setup": "12 K/M/G chains + each K taught aunt=G (coincidence); 12 asks; 4 T/N/H test chains (T01 aunt Z01, T02 aunt Z02, T03 no aunt, T04 aunt H04); sleep; 4 probes"
+  },
+  "collide": {
+   "ask_turns": 10,
+   "pre_sleep_turns": 32,
+   "probes": [
+    "Who is Sam's mother?",
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "8 clean chains + Sam's mother taught as M01 then M02 (same string, two intended people); 8 clean + 2 Sam gran asks; sleep; probes; reboot + re-ask"
+  },
+  "contra": {
+   "ask_turns": 12,
+   "pre_sleep_turns": 70,
+   "probes": [
+    "Who is K07's maternal grandmother?",
+    "Who is K02's maternal grandmother?",
+    "Who is K03's paternal grandmother?",
+    "Who is K05's maternal grandmother?"
+   ],
+   "setup": "12 K/M/G chains + 12 rival R/P chains; 12 gran asks (12 episodes queued); then 6 post-ask corrections re-pointing M01..M06 second hops to rival P values (6 stale / 6 fresh episodes); sleep; 4 probes"
+  },
+  "few10": {
+   "ask_turns": 10,
+   "pre_sleep_turns": 32,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "10 chains, 10 asks, sleep, 2 probes"
+  },
+  "few15": {
+   "ask_turns": 15,
+   "pre_sleep_turns": 47,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "15 chains, 15 asks, sleep, 2 probes"
+  },
+  "few5": {
+   "ask_turns": 5,
+   "pre_sleep_turns": 17,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "5 chains, 5 asks (< MIN_EPISODES 8), threshold reached, 2 probes"
+  },
+  "flood": {
+   "ask_turns": 12,
+   "pre_sleep_turns": 38,
+   "probes": [],
+   "setup": "12 chains + 12 asks + fillers (threshold 41); during the ~70 s sleep turn 200 files (z001..z200: 195 smalltalk + 5 taught mother-asks) submitted; then clean STOP"
+  },
+  "stop": {
+   "ask_turns": 8,
+   "pre_sleep_turns": 26,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "8 chains + 8 asks; STOP file written while SLEEPING marker present; observe exit; reboot same dir; 2 probes"
+  },
+  "taughtwin": {
+   "ask_turns": 8,
+   "pre_sleep_turns": 40,
+   "probes": [
+    "Who is T01's maternal grandmother?",
+    "Who is T02's maternal grandmother?",
+    "Who is T03's maternal grandmother?"
+   ],
+   "setup": "8 train chains + 4 T/N/H test chains + taught gran facts T0i's maternal grandmother is Z0i (contradict rule derivation); 8 asks; sleep; 3 probes"
+  },
+  "twomom": {
+   "ask_turns": 8,
+   "pre_sleep_turns": 31,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K02's maternal grandmother?"
+   ],
+   "setup": "8 chains; K01's mother taught as M01 then taught again as M01b (conflict path), then corrected with Actually to M01b; M01b's mother G01b taught; 8 asks; sleep; 2 probes"
+  },
+  "wrongpre": {
+   "ask_turns": 12,
+   "pre_sleep_turns": 40,
+   "probes": [
+    "Who is K01's maternal grandmother?",
+    "Who is K09's maternal grandmother?"
+   ],
+   "setup": "12 chains; 8 with WRONG second hop (M's mother taught as X before any question), 4 correct; 12 asks; sleep; probe wrong-chain K01 (truth G01, notebook X01) + correct-chain K09 (G09)"
+  }
+ }
+}

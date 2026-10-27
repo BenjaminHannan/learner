@@ -1,0 +1,214 @@
+<title>Premonition Next Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column on graph paper; maze-path teal marks "works", amber marks "stuck at the cap". */
+:root{
+  --paper:#f3f6f7; --grid:#e1e8eb; --ink:#17222c; --muted:#56646f; --card:#ffffff;
+  --path:#0e7a70; --cap:#b4570d; --line:#cdd7dc; --chip:#e6efef;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11181e; --grid:#1a242c; --ink:#e4ecef; --muted:#9aaab4; --card:#172129;
+  --path:#3cc4b5; --cap:#e79a4f; --line:#2b3943; --chip:#1d2c33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11181e; --grid:#1a242c; --ink:#e4ecef; --muted:#9aaab4; --card:#172129;
+  --path:#3cc4b5; --cap:#e79a4f; --line:#2b3943; --chip:#1d2c33; color-scheme:dark}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:46rem;margin:0 auto;padding-inline:16px;padding-block:40px 64px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.55rem;font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.15rem;color:var(--ink)}
+.muted{color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fact b{font-family:var(--mono);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.fact span{font-size:.93rem;color:var(--muted)}
+.angles{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.angles li{display:grid;grid-template-columns:9.5rem 1fr;gap:12px;align-items:baseline}
+.angles li strong{font-family:var(--display);font-size:1rem}
+@media (max-width:560px){.angles li{grid-template-columns:1fr;gap:2px}}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.fig svg{display:block;width:100%;height:auto}
+.fig .cap{font-size:.9rem;color:var(--muted)}
+.mazes{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+@media (max-width:560px){.mazes{grid-template-columns:repeat(4,1fr)}}
+.mazes figure{margin:0;display:flex;flex-direction:column;gap:4px;align-items:center}
+.mazes figcaption{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.tests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px;counter-reset:t}
+.test{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.test header{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.rank{font-family:var(--mono);font-weight:600;color:var(--path);font-size:1.1rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:.72rem;background:var(--chip);border-radius:3px;padding:2px 8px;color:var(--ink)}
+dl{margin:0;display:grid;grid-template-columns:7.5rem 1fr;gap:6px 12px}
+dt{font-family:var(--mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+dd{margin:0;min-width:0}
+@media (max-width:560px){dl{grid-template-columns:1fr}dt{padding-top:6px}}
+.labels{display:flex;flex-direction:column;gap:6px;font-size:.95rem}
+.labels b{font-family:var(--mono);font-size:.82rem}
+code{font-family:var(--mono);font-size:.85em}
+a{color:var(--path)}
+a:focus-visible{outline:2px solid var(--path);outline-offset:2px}
+footer{font-size:.9rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">Premonition · research lead · 29 Sep 2026</div>
+  <h1>What to test next, and why</h1>
+  <p class="lede">Seven research helpers each read one corner of the literature on small thinking machines. Here is what they found, one clue we spotted in our own results, and the five tests most likely to move the finish line.</p>
+</header>
+
+<section>
+  <div class="eyebrow">Where the model stands</div>
+  <div class="facts">
+    <div class="fact"><b>51 vs 34</b><span>Few-example maze score: practised loop vs plain net of the same size (fresh loop: 21). Two seeds each.</span></div>
+    <div class="fact"><b>300 / 300</b><span>New mazes where the stop never fires and thinking runs to the 48-round limit.</span></div>
+    <div class="fact"><b>4 / 300</b><span>Number puzzles solved, below the 12 a fixed guess gets.</span></div>
+    <div class="fact"><b>3 nights</b><span>Longest sleep run so far. "Gets better with use" has never been measured over many days.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>What the seven angles found</h2>
+  <ul class="angles">
+    <li><strong>Looped solvers</strong><span>TRM and HRM win with two plain tricks: grade the answer after every round, and lots of free variety (each maze turned and flipped 8 ways). The fancy two-level design mattered little.</span></li>
+    <li><strong>New kinds</strong><span>ARC winners adapt at test time on turned and flipped copies. Removing those copies is their biggest single loss. Our ruler gives the net only the k mazes, never their copies.</span></li>
+    <li><strong>Search</strong><span>Small nets learn search on puzzles like ours only with hundreds of thousands of fresh puzzles or a better way to grade answers when many are correct.</span></li>
+    <li><strong>Stopping</strong><span>Nets that settle on the same answer from different starting points can think longer safely. Nobody has measured whether ours settles.</span></li>
+    <li><strong>Sleep</strong><span>Big pretrained nets forget less. Plain nets slowly lose the ability to learn new things over many tasks, and scale only delays it.</span></li>
+    <li><strong>Memory</strong><span>For assistant memory, which notes get found matters more than clever memory systems. Small readers fall apart on long chats.</span></li>
+    <li><strong>Everything else</strong><span>Repeating a layer is worth less than adding a new one when models grow, so "the loop's lead holds at bigger sizes" still needs a real test.</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>A clue in our own numbers</h2>
+  <p>The stop usually runs to the limit even when the answer is already right. But after one long sleep it suddenly works: 8 of 300 hit the limit instead of 300. Sleep never trains the stop part. It only changes the rest of the net. That suggests the stop part is fine, and the thinking on mazes just doesn't "look familiar" to it yet.</p>
+  <div class="fig">
+    <svg id="capchart" viewBox="0 0 640 250" role="img" aria-label="Bar chart of runs hitting the 48-round limit, seed 0, by stage"></svg>
+    <p class="cap">Seed 0, 300 held-out 9×9 mazes. Bar = mazes that hit the 48-round limit. The number inside each bar is mazes answered right. Source: RESULTS-EQ.md holdout table.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The cheapest big lever: eight views of one maze</h2>
+  <p>A maze turned or flipped is still a maze with the same answer. The best tiny solvers train on all eight views. Ours never sees them when it learns a new kind. Test 1 gives it the eight views and costs no extra training steps.</p>
+  <div class="fig">
+    <div class="mazes" id="mazes"></div>
+    <p class="cap">One 7×7 maze in its 8 symmetric views. The teal cells are the answer path, and it moves with the maze.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The five tests, ranked</h2>
+  <p class="muted">Ranked by chance of passing × how much of the finish line it moves × whether it keeps helping with use and size. Chances are our guesses. Pass marks are fixed before any run.</p>
+  <ol class="tests">
+    <li class="test">
+      <header><span class="rank">1</span><h3>Show it all eight views of each new maze</h3></header>
+      <div class="chips"><span class="chip">few examples</span><span class="chip">carry-over</span><span class="chip">~35%</span><span class="chip">CPU or GPU, $0</span></div>
+      <dl>
+        <dt>Change</dt><dd>While learning mazes from k examples, turn or flip each one at random. Same examples, same number of steps. Every net gets the same treatment.</dd>
+        <dt>Pass</dt><dd>Practised loop gains at least 8 points on the maze score (at least 4 in each seed), and still beats the plain net by as much as today.</dd>
+        <dt>Proved wrong</dt><dd>Gain under 4 in both seeds, or the plain net gains just as much.</dd>
+        <dt>Why it scales</dt><dd>Every example you give it counts eight times. That helps any size of model.</dd>
+      </dl>
+    </li>
+    <li class="test">
+      <header><span class="rank">2</span><h3>Watch the saved nets think, round by round</h3></header>
+      <div class="chips"><span class="chip">own thinking time</span><span class="chip">no training</span><span class="chip">Mac CPU, $0</span></div>
+      <dl>
+        <dt>Change</dt><dd>None. For each of the 48 rounds, record how much the thought moves, the stop signal, and whether the answer flips. Compare against a run from a different starting point, and against the net after sleep.</dd>
+        <dt>Decides</dt><dd>Whether the stop part, a flickering answer, or thinking that never settles is to blame. That tells us which of the three queued stop fixes to trust.</dd>
+        <dt>Proved wrong</dt><dd>All three signals look fine, yet the stop still rarely fires.</dd>
+      </dl>
+    </li>
+    <li class="test">
+      <header><span class="rank">3</span><h3>Grade number puzzles against the nearest correct answer</h3></header>
+      <div class="chips"><span class="chip">search</span><span class="chip">~25%</span><span class="chip">GPU ~2 h, $0</span></div>
+      <dl>
+        <dt>Change</dt><dd>Today the "right answer" is whichever one a brute-force search finds first. Copying that means redoing the search, dead ends and all. Instead, count the net right when it matches any correct answer, and teach it toward the closest one.</dd>
+        <dt>Pass</dt><dd>It fits practice (90% or more valid) and solves at least 36 of 300 new puzzles in both seeds.</dd>
+        <dt>Proved wrong</dt><dd>It still can't fit practice (under 60%).</dd>
+      </dl>
+    </li>
+    <li class="test">
+      <header><span class="rank">4</span><h3>Five days, five new kinds: does it keep learning?</h3></header>
+      <div class="chips"><span class="chip">sleep</span><span class="chip">gets better with use</span><span class="chip">GPU 2–4 h, $0</span></div>
+      <dl>
+        <dt>Change</dt><dd>Each night, practise old kinds on fresh generated puzzles instead of 16 stored ones. After every night, check how fast it learns 64 new mazes.</dd>
+        <dt>Pass</dt><dd>Old kinds kept clearly better than with the small store, and learning speed on night 5 is within 8 points of night 0.</dd>
+        <dt>Proved wrong</dt><dd>No gain over the store, or learning speed falls by more than 15 points. That would be the "slowly loses plasticity" problem.</dd>
+      </dl>
+    </li>
+    <li class="test">
+      <header><span class="rank">5</span><h3>Can the talker read the right notes?</h3></header>
+      <div class="chips"><span class="chip">notebook memory</span><span class="chip">decisive either way</span><span class="chip">GPU &lt;1 h, $0</span></div>
+      <dl>
+        <dt>Change</dt><dd>On 100 practice questions from the memory benchmark, hand the 1.2B talker the perfect notes, the top 10 found notes, or those 10 rewritten as short facts. The other 400 questions stay sealed.</dd>
+        <dt>Pass</dt><dd>Perfect notes give 50% or more, and short facts beat raw notes by 10 points.</dd>
+        <dt>Proved wrong</dt><dd>Under 30% even with perfect notes. Then the talker is the bottleneck, not the search.</dd>
+      </dl>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <h2>How sure is any of this?</h2>
+  <div class="labels">
+    <p><b>SHOWN</b> A number measured in our repo or in a paper. Most paper numbers come from the authors alone, and the helpers read mostly abstracts.</p>
+    <p><b>SUGGESTED</b> Reasoning from those numbers, including every chance above.</p>
+    <p><b>UNTESTED</b> All five tests. Nothing here has been run yet.</p>
+  </div>
+  <p class="muted">One correction: a helper called the number-puzzle answer "arbitrary". Checking the code showed it is the first answer a fixed search finds. That changed test 3.</p>
+</section>
+
+<footer>Full write-up: <code>design/research/lead-sweep-2026-09-29/SYNTHESIS.md</code>, plus one file per angle. Outside-opinion prompt for GPT: <code>reviews/gpt-diagnose-stop-and-numbers-2026-09-29.md</code>.</footer>
+</div>
+
+<script>
+(function(){
+  // Cap-hit bars, seed 0, holdout (RESULTS-EQ.md lines 75-83).
+  const data=[["k=64",300,137],["256",300,256],["1,024",300,271],["4,096",300,257],["16,384",163,274],["sleep 64",300,156],["sleep 16k",8,289]];
+  const svg=document.getElementById('capchart'), NS='http://www.w3.org/2000/svg';
+  const L=46,T=14,W=580,H=180, bw=W/data.length;
+  const y=v=>T+H-(v/300)*H;
+  const STY=new Set(['fill','stroke','font-family']);
+  const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a){if(STY.has(k))e.style.setProperty(k,a[k]);else e.setAttribute(k,a[k]);}if(t!=null)e.textContent=t;svg.appendChild(e);return e};
+  [0,100,200,300].forEach(v=>{el('line',{x1:L,x2:L+W,y1:y(v),y2:y(v),stroke:'var(--line)','stroke-width':1});
+    el('text',{x:L-8,y:y(v)+4,'text-anchor':'end','font-family':'var(--mono)','font-size':11,fill:'var(--muted)'},v)});
+  data.forEach((d,i)=>{const x=L+i*bw+bw*.18,w=bw*.64,capped=d[1]>=150;
+    el('rect',{x,y:y(d[1]),width:w,height:Math.max(1,(d[1]/300)*H),fill:capped?'var(--cap)':'var(--path)',rx:2});
+    const inside=d[1]>40;
+    el('text',{x:x+w/2,y:inside?y(d[1])+16:y(d[1])-6,'text-anchor':'middle','font-family':'var(--mono)','font-size':11,fill:inside?'var(--card)':'var(--ink)'},inside?d[2]+'✓':d[1]+' · '+d[2]+'✓');
+    el('text',{x:x+w/2,y:T+H+18,'text-anchor':'middle','font-family':'var(--mono)','font-size':11,fill:'var(--muted)'},d[0]);});
+  el('text',{x:12,y:T+H/2,transform:`rotate(-90 12 ${T+H/2})`,'text-anchor':'middle','font-family':'var(--mono)','font-size':11,fill:'var(--muted)'},'hit 48-round limit');
+
+  // One 7x7 maze (# wall, . open, S start, G goal, o path) and its 8 D4 views.
+  const M=["#######","#S..#.#","###.#.#","#...#.#","#.###.#","#....G#","#######"];
+  const P=[[1,1],[1,2],[1,3],[2,3],[3,3],[3,2],[3,1],[4,1],[5,1],[5,2],[5,3],[5,4],[5,5]];
+  const n=7, onP=new Set(P.map(p=>p.join(',')));
+  const views=[["as is",(r,c)=>[r,c]],["turn 90°",(r,c)=>[c,n-1-r]],["turn 180°",(r,c)=>[n-1-r,n-1-c]],["turn 270°",(r,c)=>[n-1-c,r]],
+    ["flip ↔",(r,c)=>[r,n-1-c]],["flip ↕",(r,c)=>[n-1-r,c]],["diagonal",(r,c)=>[c,r]],["anti-diag.",(r,c)=>[n-1-c,n-1-r]]];
+  const box=document.getElementById('mazes');
+  views.forEach(([name,f])=>{
+    const fig=document.createElement('figure'), s=document.createElementNS(NS,'svg');
+    s.setAttribute('viewBox','0 0 70 70'); s.setAttribute('role','img'); s.setAttribute('aria-label','maze, '+name);
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++){const [rr,cc]=f(r,c),ch=M[r][c],k=r+','+c;
+      const fill=ch==='#'?'var(--ink)':(ch==='S'||ch==='G')?'var(--cap)':onP.has(k)?'var(--path)':'var(--card)';
+      const q=document.createElementNS(NS,'rect');q.setAttribute('x',cc*10);q.setAttribute('y',rr*10);q.setAttribute('width',10);q.setAttribute('height',10);q.style.fill=fill;
+      q.style.stroke='var(--line)';q.setAttribute('stroke-width','.4');s.appendChild(q);}
+    const cap=document.createElement('figcaption');cap.textContent=name;fig.appendChild(s);fig.appendChild(cap);box.appendChild(fig);});
+})();
+</script>

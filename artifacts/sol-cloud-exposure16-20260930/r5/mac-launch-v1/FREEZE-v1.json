@@ -1,0 +1,63 @@
+{
+  "schema": "sol.cloud.exposure16.mac-launch-freeze.v1",
+  "created_utc": "2026-09-30T09:59:05.238719+00:00",
+  "files": [
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/CHECKS-v1.json",
+      "sha256": "72debb42e718baf916b7201d3ccadad67791c4157e2506ff453e8ef7471de116",
+      "bytes": 1294
+    },
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/HELD-queue-sol-cloud-exposure16-r5-s0-benspc.md",
+      "sha256": "6f4c661f545ce1ebe7869dd26b8f5541b9730fb05617221236d6e2423d914307",
+      "bytes": 2964
+    },
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/HELD-queue-sol-cloud-exposure16-r5-s1-benspc.md",
+      "sha256": "07b73be25dbfc2bb2ca6b9c9ae1675b110bb8bd1fa8714ab20d88fa6566702a5",
+      "bytes": 2964
+    },
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/MAC-LAUNCH.py",
+      "sha256": "1dff12fceffc88e8502d705e6422defec990988ca29bcc7ddcc8449c8fd5e8a7",
+      "bytes": 13988
+    },
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/SPEC-s0.json",
+      "sha256": "2985b23fbe466dd8850107fe17295bff2fcdfadbe30306ecabdaea9e68f90d5a",
+      "bytes": 1726
+    },
+    {
+      "path": "artifacts/sol-cloud-exposure16-20260930/r5/mac-launch-v1/SPEC-s1.json",
+      "sha256": "dbddb0be31d3782bfdcb372a5f186cdd54e732a455dbdced213cf4c96ca494fe",
+      "bytes": 1726
+    }
+  ],
+  "checks": {
+    "passed": 11,
+    "total": 11
+  },
+  "PC_source_package_pins": {
+    "package": {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/exposure16-r5-v1/PACKAGE.json",
+      "sha256": "dde4182f33ce36020db0be4bef5a0b5d8de3be1dcb4b41693b47540d0776ad0e"
+    },
+    "payload": {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/exposure16-r5-v1/payload.tar.gz",
+      "sha256": "7bdf9eacb831905dd960f7a7b3a5a8156660dccf597e3290b160cafcb2532afb"
+    },
+    "bootstrap": {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/exposure16-r5-v1/PC-BOOTSTRAP.py",
+      "sha256": "8c24d91e418aafca58f5b876dc8be30bbdb402b494093388ff3ea6048de348c5"
+    }
+  },
+  "status": "Runnable HELD templates; integrator sole live publisher. Seed0 first, seed1 after actual closed integer returncode.",
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "live_queue_created": false,
+  "limits": [
+    "PC bootstrap parent cap subtracts actual preflight elapsed plus15-second cleanup/return reserve; fixed driver570-second supervisor unchanged.",
+    "Any bootstrap/transport failure retains namespace and never silently restarts seed.",
+    "Prior bridge was innercomplete with outertransportfailure; both receipts remain disclosed."
+  ]
+}

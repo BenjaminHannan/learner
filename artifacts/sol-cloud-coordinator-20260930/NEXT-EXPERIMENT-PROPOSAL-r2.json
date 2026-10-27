@@ -1,0 +1,53 @@
+{
+  "status": "PROPOSAL ONLY; NOT A RELEASED EXPERIMENT OR SEAL",
+  "decision_owner": "Derek",
+  "training_material": false,
+  "model_authored_training_allowed": false,
+  "basis": "V12 reportedly establishes four-row capacity, while no-notebook retains most or all answers. Its saved semantic raw still needs exact-byte recovery. Useful conversation and notebook dependence remain unshown.",
+  "authorized_preparation": {
+    "operation": "Bounded read-only search in existing official SQuAD TRAIN beyond the previous five-article scan",
+    "prerequisite": "Exact reserved ID and passage exclusion metadata is applied before candidate text decoding. Do not open reserved content to discover exclusions.",
+    "source": "Existing SHA-pinned train-v1.1.json only; no new generated questions or answers",
+    "proposed_ceiling": "At most 40 additional eligible articles or 10000 eligible human questions, whichever occurs first",
+    "primary_candidate": "Byte-identical human question in different contexts with genuinely incompatible accepted human answers",
+    "non_candidates": "Compatible answers of different precision, including a year versus a date in that year; normalized paraphrases; generated questions; question-ID lookup tables",
+    "output": "Source hashes, row IDs, passage hashes, exact-question hash, accepted human spans and verbatim evidence-sentence offsets, exclusions and scan counts. Derek verifies semantic incompatibility before experiment release."
+  },
+  "next_experiment_if_candidate_found": {
+    "status": "Await Derek decision and full pre-run seal",
+    "purpose": "Small TRAIN-only notebook-conditioning diagnosis with an unavoidable context distinction",
+    "architecture": "Existing shared connected reader/core/prefix and final-query-latent-only decoder; no TABLE arm in production",
+    "targets": "Existing verbatim human evidence sentences, if relevant and grammatical; no generated response templates",
+    "seeds": [
+      0,
+      1
+    ],
+    "required_controls": "Same question with both contexts, no notebook, swapped notebook, no state and shuffled final state, with all budgets and interventions fixed before execution",
+    "unfixed_fields": "Candidate identities, exact update budget, learning rate, comparator budget, numerical-noise threshold and raw marks need Derek-approved sealing before any run",
+    "limits": "Development conditioning only. No holdout consumption, generality claim, learned-stopping qualification or model activation. Any gain claim requires both seeds and a separately isolated saved-raw recount."
+  },
+  "if_no_candidate_found": "Report the bounded negative search. Do not synthesize questions or run the unapproved 16-rows-times-50-visits alternative.",
+  "immediate_authorized_work": "Complete one new fixture capture/batch/idle-watcher/25-core-update/durable-candidate/validation/explicit-rollback engineering cycle with actual_user_day=false. Do not rerun V12 or static25.",
+  "supersedes_proposal": {
+    "path": "artifacts/sol-cloud-coordinator-20260930/NEXT-EXPERIMENT-PROPOSAL.json",
+    "sha256": "fa7012e6bb111b1648e77adbd5b7eb9feced1527d8915c04d635e6888b5e4c22",
+    "preserved": true
+  },
+  "updated_utc": "2026-09-30T07:42:44.480228+00:00",
+  "director_research_note": {
+    "source": "https://aclanthology.org/2024.cl-1.5.pdf",
+    "title": "Analyzing Semantic Faithfulness of Language Models via Input Intervention on Question Answering",
+    "authors": "Chaturvedi et al.",
+    "year": 2024,
+    "verified_primary_abstract": true,
+    "measurement_transfer": "Training that improved support-deletion behavior did not establish sensitivity to negation or predicate-argument structure. Apply the distinction to measurement, without adopting this paper\u2019s data or training method.",
+    "new_data_or_run_authorized": false
+  },
+  "separate_measures": {
+    "notebook_removal": "Record whether the model abstains appropriately when support is absent. This cannot qualify evidence-sensitive answer changes.",
+    "meaning_changing_evidence": "Separately record whether a byte-identical human question receives the incompatible answer supported by each approved human context. Correct direction matters, not merely any output change.",
+    "compatible_or_irrelevant_changes": "Report stability separately if an approved eligible pair exists; do not synthesize text to fill a missing control.",
+    "claims": "Keep these counts separate. Neither optimization/memorization nor support-deletion success proves semantic faithfulness."
+  },
+  "16_row_alternative": "UNRELEASED optimization/memorization diagnosis: 16 existing human TRAIN rows times 50 visits = 800 batch-one updates per seed. Not a notebook-dependence or generality test."
+}

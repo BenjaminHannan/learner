@@ -1,0 +1,106 @@
+{
+  "sealed_utc": "2026-09-30T02:39:03Z",
+  "experiment": "gru_update_bias_ih_add_1_v1",
+  "development_only": true,
+  "seeds": [
+    1,
+    0
+  ],
+  "arms": [
+    "top1_base",
+    "top1_bias_plus1",
+    "qualified_dense"
+  ],
+  "updates": 512,
+  "queue_sha256": "bcf7294d08ae94c8d5a9155d449a06d6d7db1d48aef8614141d2ff8c18b32c0b",
+  "absolute_screen_counts": {
+    "mazes9": 48,
+    "mazes11": 32
+  },
+  "noise": {
+    "status": "INSUFFICIENT",
+    "historical_observed_bundle_spread_of64": 64,
+    "denominator": 64,
+    "repeat_run_noise_measured": false,
+    "confounds": [
+      "source embedding",
+      "TRAIN pool",
+      "initialization",
+      "order"
+    ],
+    "records": {
+      "reviews/premonition-moe-2026-09-29/spatial-horizon512-s0.json": {
+        "sha256": "a973e9aa9348db933c2309ca656ed153a8a312233eeeb868e5ccff3a1fca3cc6",
+        "top1_depth48": {
+          "mazes9": 64,
+          "mazes11": 64
+        },
+        "TRAIN_ce": 0.025954763064873987
+      },
+      "reviews/premonition-moe-2026-09-29/spatial-horizon512-s1.json": {
+        "sha256": "0b88ddd7a0009156179655c94ccbe881212e21592713d5af6b688f35cbceb804",
+        "top1_depth48": {
+          "mazes9": 0,
+          "mazes11": 0
+        },
+        "TRAIN_ce": 0.536589253693819
+      }
+    }
+  },
+  "training": {
+    "device": "cpu",
+    "dtype": "float32",
+    "threads": 2,
+    "interop_threads": 1,
+    "updates_per_arm": 512,
+    "batch": 8,
+    "unique_memories": 64,
+    "D4_views_per_memory": 8,
+    "rounds": 24,
+    "full_BPTT": true,
+    "supervised_rounds": [
+      23,
+      24
+    ],
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "weight_decay": 0.1,
+    "warmup_updates": 32,
+    "gradient_clip": 1.0,
+    "router_auxiliary_loss": 0,
+    "sleep_updates": 0,
+    "replay_presentations": 0
+  },
+  "diagnostic": {
+    "seed_labels": [
+      0,
+      1
+    ],
+    "memories_per_probe": 2,
+    "probes": 10,
+    "optimizer_steps": 0,
+    "rounds": 24,
+    "queries": 0
+  },
+  "smoke": {
+    "seed_labels": [
+      0,
+      1
+    ],
+    "synthetic_grid": [
+      2,
+      2,
+      3
+    ],
+    "rounds": 24,
+    "optimizer_steps": 0,
+    "semantic_scores": 0
+  },
+  "total_updates": 3072,
+  "total_presentation_slots": 24576,
+  "architecture_caveat": "spatial GRU pilot, not full target attention/MLP reasoner"
+}

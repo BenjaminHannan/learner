@@ -1,0 +1,27 @@
+STEP start 2026-09-27T07:43:42Z
+artifacts/claude-gr7d-20260927/PLAN-gr7d.md: OK
+scripts/claude_gr7_diag.py: OK
+scripts/claude_gr7.py: OK
+scripts/claude_gr5.py: OK
+artifacts/claude-gr7d-20260927/cpu/chain.sh: OK
+squares.jsonl: OK
+unseen.jsonl: OK
+lookalikes.jsonl: OK
+formats.json: OK
+STEP L7_lookalikes 2026-09-27T07:43:42Z
+run {"arm": "L7", "task": "lookalikes", "rows": 150, "read_as_square": 6}
+STEP L7_squares 2026-09-27T07:48:26Z
+run {"arm": "L7", "task": "squares", "rows": 200, "read_as_square": 200}
+STEP L7_unseen 2026-09-27T08:11:40Z
+run {"arm": "L7", "task": "unseen", "rows": 200, "read_as_square": 195}
+STEP G5_lookalikes 2026-09-27T08:34:26Z
+run {"arm": "G5", "task": "lookalikes", "rows": 150, "read_as_square": 6}
+STEP G5_squares 2026-09-27T08:40:30Z
+run {"arm": "G5", "task": "squares", "rows": 200, "read_as_square": 200}
+STEP G5_unseen 2026-09-27T09:02:31Z
+run {"arm": "G5", "task": "unseen", "rows": 200, "read_as_square": 193}
+STEP count 2026-09-27T09:27:19Z
+{"G5_false_A": 4, "G5_false_C": 2, "G5_false_nonsquare_A": 4, "G5_false_nonsquare_C": 2, "G5_lookalikes_incomplete": 0, "G5_lookalikes_none": 144, "G5_squares_exact": 198, "G5_squares_incomplete": 0, "G5_squares_wrong_B": 2, "G5_unseen_incomplete": 0, "G5_unseen_sepnew_exact": 38, "G5_unseen_sepnew_none": 6, "G5_unseen_sepnew_wrong_A": 26, "G5_unseen_sepnew_wrong_B": 7, "G5_unseen_sepnew_wrong_C": 23, "G5_unseen_sepseen_exact": 70, "G5_unseen_sepseen_none": 1, "G5_unseen_sepseen_wrong_A": 18, "G5_unseen_sepseen_wrong_B": 6, "G5_unseen_sepseen_wrong_C": 5, "G5_wrong_A": 44, "G5_wrong_B": 15, "G5_wrong_C": 28, "L7_false_A": 4, "L7_false_C": 2, "L7_false_nonsquare_A": 4, "L7_false_nonsquare_C": 2, "L7_lookalikes_incomplete": 0, "L7_lookalikes_none": 144, "L7_squares_exact": 200, "L7_squares_incomplete": 0, "L7_unseen_incomplete": 0, "L7_unseen_sepnew_exact": 83, "L7_unseen_sepnew_none": 3, "L7_unseen_sepnew_wrong_A": 1, "L7_unseen_sepnew_wrong_B": 3, "L7_unseen_sepnew_wrong_C": 10, "L7_unseen_sepseen_exact": 96, "L7_unseen_sepseen_none": 2, "L7_unseen_sepseen_wrong_A": 1, "L7_unseen_sepseen_wrong_C": 1, "L7_wrong_A": 2, "L7_wrong_B": 3, "L7_wrong_C": 11}
+{"G5_false_nonsquare_not_whole_block": 6, "G5_squares_wrong_same_size": 2, "G5_unseen_sepnew_wrong_other_size": 38, "G5_unseen_sepnew_wrong_same_size": 18, "G5_unseen_sepseen_wrong_other_size": 18, "G5_unseen_sepseen_wrong_same_size": 11, "L7_false_nonsquare_not_whole_block": 6, "L7_unseen_sepnew_wrong_other_size": 9, "L7_unseen_sepnew_wrong_same_size": 5, "L7_unseen_sepseen_wrong_other_size": 2}
+{"L7_wrong_grids": 16, "L7_false_squares": 6, "L7_wrong_A_share": 0.125, "L7_wrong_B_share": 0.188, "G5_wrong_grids": 87, "G5_false_squares": 6, "G5_wrong_A_share": 0.506, "G5_wrong_B_share": 0.172, "distractor_block_idea": "SUNK"}
+STEP done 2026-09-27T09:27:19Z

@@ -1,0 +1,73 @@
+  buffer-U5: 4096 questions, 0 fallbacks, 2.5s
+  buffer-U8: 4096 questions, 0 fallbacks, 5.1s
+{
+  "seed": 1902,
+  "arms": [
+    "U5",
+    "U8"
+  ],
+  "identical_world_bytes": true,
+  "zero_composite_r10_exposure": true,
+  "paired_streams": {
+    "arms": [
+      "U5",
+      "U8"
+    ],
+    "shared_candidate_slots": 4019,
+    "start_mismatches": 0,
+    "length_law_mismatches": 0,
+    "verified": true,
+    "mapping_sha256": "685264df864fd31974ae0857f8566a35d3fb7af51d55696e102c59996d266142",
+    "note": "the RNG key never contains the arm, so a shared candidate slot binds the same start person in both arms"
+  },
+  "u5_vs_experiment19_u": {
+    "compared": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/buffers-1902",
+    "items": 4096,
+    "other_items": 4096,
+    "identical_items": true,
+    "first_differences": [],
+    "identical_world_rows": true,
+    "item_view_sha256": "40b3e1104ec5eb9c052f37ca82ed2b97dce4a1e5b0b16c703514efe92f40c1ff",
+    "other_item_view_sha256": "40b3e1104ec5eb9c052f37ca82ed2b97dce4a1e5b0b16c703514efe92f40c1ff",
+    "byte_identical_file": false,
+    "note": "U5 reuses experiment 19's memory, keys and 1..5 law, so it reproduces buffer-U item for item; the .pt differs only in the block's own kind string and execution profile, which is why identity is asserted at the item level"
+  },
+  "fallbacks": {
+    "U5": 0,
+    "U8": 0
+  },
+  "length_histogram": {
+    "U5": {
+      "c=5,r=8": 406,
+      "c=1,r=8": 307,
+      "c=5,r=9": 412,
+      "c=3,r=8": 384,
+      "c=2,r=9": 393,
+      "c=2,r=8": 414,
+      "c=4,r=9": 418,
+      "c=4,r=8": 404,
+      "c=3,r=9": 395,
+      "c=1,r=10": 276,
+      "c=1,r=9": 287
+    },
+    "U8": {
+      "c=3,r=9": 263,
+      "c=1,r=8": 183,
+      "c=8,r=9": 259,
+      "c=6,r=8": 232,
+      "c=2,r=8": 283,
+      "c=4,r=8": 277,
+      "c=7,r=8": 257,
+      "c=4,r=9": 244,
+      "c=7,r=9": 266,
+      "c=3,r=8": 237,
+      "c=1,r=10": 171,
+      "c=8,r=8": 240,
+      "c=5,r=9": 256,
+      "c=5,r=8": 252,
+      "c=6,r=9": 247,
+      "c=2,r=9": 267,
+      "c=1,r=9": 162
+    }
+  }
+}

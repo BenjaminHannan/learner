@@ -1,0 +1,14 @@
+COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.
+GPU: no (Mac CPU only; about 30-60 network calls to OpenRouter, well under $1). Ben chose "Use GLM" at 16:39:45 UTC 09-26 (Thread manager card): GLM 5.3 Flash writes the practice chats and labels the drafts; the model is the script default z-ai/glm-5.3-flash.
+
+YOUR TASK: k1e-teacher, phase 1: (a) does the teacher label the 1B's creative drafts like the blind judges did (DEV agreement check), and (b) the teacher writes 240 practice chats. No training here. Code: scripts/claude_k1e_teacher.py (read its docstring). Run it, never edit it; if it breaks, stop and report the exact error.
+KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.
+1. Put these origin/main files in a temp dir with `git archive origin/main scripts/claude_k1e_teacher.py artifacts/claude-k1e-20260926/dev | tar -x -C <tmp>`, and run from there (python via uv run --offline --no-project --python 3.12 python -B; standard library only):
+   python -B scripts/claude_k1e_teacher.py selftest                      -> "k1e teacher selftest 2/2 ok", else stop
+   python -B scripts/claude_k1e_teacher.py label --packet artifacts/claude-k1e-20260926/dev/packet_dev.jsonl --out artifacts/claude-k1e-20260926/teacher-dev
+   python -B scripts/claude_k1e_teacher.py agree --labels artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl --key artifacts/claude-k1e-20260926/dev/key_dev.json --verdicts artifacts/claude-k1e-20260926/dev/verdicts_dev.json
+   python -B scripts/claude_k1e_teacher.py write --out artifacts/claude-k1e-20260926/train
+2. Copy into the worktree: artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl, artifacts/claude-k1e-20260926/train/items.jsonl, and the console log as artifacts/claude-k1e-20260926/teacher-log.txt. Report every printed JSON line.
+PUSH: artifacts/claude-k1e-20260926/teacher-dev artifacts/claude-k1e-20260926/train artifacts/claude-k1e-20260926/teacher-log.txt
+
+Phase 2 (a later job, after the thread samples the 1B's 4 drafts for each practice chat on CPU and writes the packet): python -B scripts/claude_k1e_teacher.py label --packet artifacts/claude-k1e-20260926/train/packet_train.jsonl --out artifacts/claude-k1e-20260926/teacher-train. The critic trains on those labels only if phase 1's agreement passes the label rule (>= 85% and kappa >= 0.5).

@@ -1,0 +1,100 @@
+{
+  "note": "Independent isolation witness on fixture-v1.1 with untrained parameters. No fitting, no published score.",
+  "models_source_sha256": "0b5711f4ef8c378284e784032c6d8560fe169f686c4a76a8af5b4abc918d34ff",
+  "deltas": {
+    "G/companion_replacement": 0.0,
+    "G/reordering": 0.0,
+    "G/paired_branch_replacement": 0.0,
+    "G/repartition_same_size": 0.0,
+    "G/batch_size_1_vs_96": 5.960464477539063e-08,
+    "G/batch_shape_worst_over_rows": 1.1920928955078125e-07,
+    "G/companion_content_poisoning": 0.0,
+    "T/companion_replacement": 0.0,
+    "T/reordering": 0.0,
+    "T/paired_branch_replacement": 0.0,
+    "T/repartition_same_size": 0.0,
+    "T/batch_size_1_vs_96": 1.4901161193847656e-08,
+    "T/batch_shape_worst_over_rows": 1.7881393432617188e-07,
+    "T/companion_content_poisoning": 0.0
+  },
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "results": [
+    {
+      "check": "I0 a real panel-3 pair was located in the fixture",
+      "status": "PASS",
+      "detail": "treated=row4 control=row7"
+    },
+    {
+      "check": "I1 arm G: replacing all 15 companions leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I2 arm G: reversing the batch order leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I3 arm G: removing the paired counterpart leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I4 arm G: a different partition at equal batch size is bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I5 arm G: changing the batch SHAPE moves the prediction only at float32 rounding scale",
+      "status": "PASS",
+      "detail": "delta=5.960464477539063e-08"
+    },
+    {
+      "check": "I6 arm G: worst batch-shape delta across sampled rows is tiny",
+      "status": "PASS",
+      "detail": "worst=1.1920928955078125e-07"
+    },
+    {
+      "check": "I7 arm G: corrupting a companion's CONTENT leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I1 arm T: replacing all 15 companions leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I2 arm T: reversing the batch order leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I3 arm T: removing the paired counterpart leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I4 arm T: a different partition at equal batch size is bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    },
+    {
+      "check": "I5 arm T: changing the batch SHAPE moves the prediction only at float32 rounding scale",
+      "status": "PASS",
+      "detail": "delta=1.4901161193847656e-08"
+    },
+    {
+      "check": "I6 arm T: worst batch-shape delta across sampled rows is tiny",
+      "status": "PASS",
+      "detail": "worst=1.7881393432617188e-07"
+    },
+    {
+      "check": "I7 arm T: corrupting a companion's CONTENT leaves the target bit-identical",
+      "status": "PASS",
+      "detail": "delta=0.0"
+    }
+  ]
+}

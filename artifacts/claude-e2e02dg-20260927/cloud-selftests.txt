@@ -1,0 +1,63 @@
+# 0.2d-G checks in the cloud session (no model), Sun Sep 27 23:25:10 UTC 2026
+
+sha256 scripts/claude_e2e02d.py: 4870333c7ad562f5635b09b7b92629f6fd26cb30b9de5e0f3779891de33a3929
+
+$ python -B scripts/claude_e2e02d.py selftest
+PASS reply returned
+PASS first turn: no W rows
+PASS confident fact saved as USER
+PASS below threshold not saved
+PASS W input holds earlier turns only
+PASS newest value wins
+PASS events logged
+PASS notes point at raw turns
+PASS reasoner result reaches the talker
+PASS clash square: no finished square offered
+PASS non-grid turn: no reasoner note
+PASS chat window <= 6 pairs + turn
+PASS facts survive restart
+PASS turn count and date survive restart
+PASS after restart the W input has day-1 turns
+PASS log: every turn, grid turns counted
+PASS user placement: block only in the latest user message
+PASS too long: store top-k used
+PASS talker check: the pinned LFM snapshot passes
+PASS talker check: a MiniCPM path or no path fails closed
+E2E02D-WIRING-SELFTEST PASS 20/20
+
+$ python -B scripts/claude_e2e02d_g.py selftest
+PASS W3 same replies
+PASS W3 the talker saw the same input on every turn
+PASS W3 fact book as 0.2d's (the reader's saved facts)
+PASS W3 heard rows as 0.2d's
+PASS W3 0.2d's per-turn log unchanged but for time
+PASS N0 rows gone (counted as dropped)
+PASS G called once per user turn
+PASS G gets kind chat, the date line, the earlier turns (user and replies) and the new turn
+PASS W2 every note row points at the raw user turn it was written on
+PASS note rows = G's notes (text + when), cites kept in memory
+PASS unparsed turn: no note, counted
+PASS W2 recall returns heard rows only
+PASS W2 a note reaches its raw turn (via)
+PASS notes log: one row per turn, counts only
+PASS G kept as a bound method only
+PASS restart: turn count, date and pointers continue
+PASS W top-k: raw lines only reach the talker
+PASS slot empty: N0 fallback, rows as 0.2d's
+PASS E2E02D_NOTES moves the slot
+PASS an empty slot stays empty (env cannot fill it)
+PASS wrong G weights refused
+PASS missing G refused
+PASS wrong adapter refused before merging
+PASS no model code loaded
+PASS header carries ADDENDUM-K's wording
+E2E02DG-WIRING-SELFTEST PASS 25/25
+
+$ python -B artifacts/claude-e2e02dg-20260927/checks.py selftest
+PASS equal rows compare equal
+PASS a changed cite differs
+PASS only text, cites, when compared; raw counted apart
+PASS unparsed differs from no notes
+PASS p90 nearest rank
+PASS W2 fails on any non-heard recall row
+E2E02DG-CHECKS-SELFTEST PASS 6/6

@@ -1,0 +1,40 @@
+EXP 241 BRIEF: the mouth, stage A (grammar layer and say forms). The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Goal (Ben): grammar at 99%+, and talking with Premonition should feel as close to talking with a person as possible. Exp 238 measured today's real replies at 87.4% grammatical and 44.1% natural (artifacts/claude-grammar238-20260922/RESULTS.md and bugclasses.md). You build stage A from the 240 design: a rule-based grammar layer plus one say form per relation, placed at the outermost turn(). It cannot invent content, and it becomes the fallback every later learned mouth relies on.
+
+READ FIRST, fully: design/v3/30-modes/240-mouth-design-opus.md. It is your spec. Sections 1, 3.1, 4 and 6 are binding: the frame interface, what A builds, brake v2 and the registered marks.
+Then read artifacts/claude-grammar238-20260922/RESULTS.md and bugclasses.md.
+You may NOT read 238's grades.jsonl, renders.jsonl, templates.jsonl, harvest.jsonl or probes/. They are the measuring set, and reading them would be tuning on the test.
+Also never read: any panel (reading94/94b, 208, 221, 221b, 229, 230b/c, 232*, 236, 237/237b, askpanel243, convpanel239), the convjudge239 grades or examples, or test.pt.
+
+Base: scripts/claude_loop228_agent.py with artifacts/claude-determinism228-20260922/loop228-config.json (138i + the 228 guard).
+- Mouth241 is one mixin at the front of the outermost loop class, with SrcGuardMixin228 kept first.
+- No existing file is edited.
+- Names:
+  - code: scripts/claude_mouth241_*.py and scripts/claude_loop241_agent.py
+  - artifacts: artifacts/claude-mouth241-20260922/
+  - ledger: P241.n
+
+What to build (240 §3.1):
+- The say table, say_forms.json. One row per relation in artifacts/claude-table237-20260922/relation_table_v1_1.json, plus every relation the base's replies actually use that the table lacks. Each row has affirm / abstain_missing / inverse / yes / no / user / self forms and possessive_ok. Direction is checked by the round trip, not by eye.
+- Morphology helpers as pure, unit-tested functions: a/an by sound, articles, possessives (X's for singular names including names ending in s; prefer the verb or "of" form for s/x/z endings), lists ("A and B", "A, B and C", no Oxford comma), counts (0, 1 and many; numbers 0-9 as words in running text), pronouns (only I/me/my and you/your, never he/she/they for a third party), and sentence case plus final punctuation fixed once at the end.
+- Parse-back of the known reply templates into frames (240 §0.3 and §1.3).
+- Brake v2 (§4) run on A's own output as a self-check. On failure, fall back to legacy_text and log it as a sev-1 bug.
+- Fixed acts (identity sheet, small talk, screens) pass through unchanged. Unframed lines pass through byte-identical and are counted.
+
+Before the seal, write these into PASSMARKS.md:
+1. Every substring the frozen scorers and 224a's shared decline detector match on. A forms keep those anchors, or the move is pre-registered as a scorer change with a reason.
+2. 238's bug classes, one line each, marked "covered by A" or "outside A (owner: ...)". Examples of outside owners: the stacked decline belongs to 224c; "--", missing "?" and "Teach me like" belong to the fixed-act owners; "I have no opinions." on lookups belongs to the ears. Every covered class becomes a sub-mark of M1: fixed on the sweep.
+3. The predicted moves by act (240 §6, last paragraph), and the exact M1-M5 bars from 240 §6.
+
+Seal: PASSMARKS, code, say table, unit tests, the sweep generator (with a sealed seed) and the pairwise sampler.
+
+After the seal, in this order:
+(a) Generate the M1 sweep. Aim for about 1,200 rendered replies: every act × every relation row it can take × 4 tricky-filler classes, stratified, with fictional fillers drawn from a pool made with the sealed seed. Write sweep.jsonl with fields id, act, text. Keep a separate sweep-frames.jsonl for M2. The grader must never see the frames or the code.
+(b) Generate the M4 pairs: 120 pairs stratified by act. Each pair is one user turn, today's base reply and the 241 reply, in random order labelled X/Y, plus the frame's facts. Write pairs.jsonl, and keep the X/Y key in a separate pairs-key.jsonl that the judge never sees.
+(c) Seal sweep.jsonl, sweep-frames.jsonl, pairs.jsonl and pairs-key.jsonl (append to a second seal file, SEAL2.sha256.txt). Then SEND THE DIRECTOR A MESSAGE with the paths and SHAs. The director launches an independent grader for M1 and a separate judge for M4. You must not grade or judge them yourself.
+(d) While they work, run M2 (a, b, c), M3 (suitediff, --only rt136,rt143,sessions152,bench, GATE clean, only predicted moves; any flip toward an abstain is run alone 5 times), M5 latency, and the sleep smoke.
+(e) Report-only extra (no bar): re-render the in-scope real replies from 238 through your parse-back and layer, and have the director's grader grade them too. To do this, write rerender238.jsonl (id, text) from 238's harvest.jsonl without reading its grades. You may read harvest.jsonl ONLY after your seal, and only to re-render it, never to change code.
+(f) When the director sends you the grader's and judge's output paths, compute M1 and M4 with your sealed scorer, then write RESULTS.md and your final message: verdict, marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean.
+
+Keep every registered run under 25 minutes and check the load first, as the rules require.

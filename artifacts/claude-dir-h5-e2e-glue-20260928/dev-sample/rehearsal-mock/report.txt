@@ -1,0 +1,24 @@
+scorer rules from: claude_e2e336_score (imported)
+arms found: JC_s13, J_s13, JnoR_s13, JnoRd_s13, Jscaf_s13
+panel counts: {'solve5': 2, 'solve6': 2, 'solve7': 1, 'broken': 1, 'sq_lookalike': 1, 'num_lookalike': 2, 'ask_answerable': 6, 'ask_never': 3, 'smalltalk': 4}
+
+per-arm counts
+arm         solve56_ solve7_r wrong_sq broken_f broken_c look_rea sq_look_ ans_righ correcte backref_ never_id never_ma small_no small_cu
+JC_s13             4        1        0        0        0        0        0        0        0        0        0        3        0        0
+J_s13              4        1        0        0        1        1        1        4        2        0        3        0        4        0
+JnoR_s13           0        0        0        0        0        0        0        4        2        0        3        0        4        0
+JnoRd_s13          4        1        0        0        1        1        1        3        1        0        3        0        4        0
+Jscaf_s13          0        0        0        0        0        0        0        4        2        0        3        0        4        0
+   columns: solve56_right, solve7_right, wrong_square_56, broken_finished, broken_cannot, look_reasoner_called, sq_look_unasked_solution, ans_right, corrected_right, backref_right, never_idk, never_madeup, small_nonempty, small_cut
+
+VERDICT: REHEARSAL: counts only, no bars applied
+
+readings this scorer makes (not in PASSMARKS; the Director should confirm or change BEFORE any run):
+  - R1 'each mark must also hold at 70% of its bar on each half taken alone' is read as: an at-least count needs, in each half, ceil(0.7 x bar x (half items / pooled items)); a difference mark (E2, E9, E10) likewise on the half's difference; an at-most count must not exceed the pooled bar in either half. Marks that compare against a twin (E3's 'fewest twin', E6's 'best twin minus 3', E8's 'fewest twin') are judged pooled only.
+  - R2 'J' in E1-E5 means BOTH loop nets: each mark must hold for J_s13 AND J_s14 (E2/E3 with each net's own counts). E6-E11 and the ablation marks use J_s13, the only net that runs the other arms (PASSMARKS 'Arms').
+  - R3 'valid solution' = final_grid(reply, size) exists and is a full Latin square agreeing with every clue of the TRUE puzzle (claude_rsn358b2_bridge.is_solution). 'wrong square' = a final grid exists and is not one. Broken squares: 'finished square' = any final_grid run of s rows of s numbers 1..s.
+  - R4 'states it cannot' (E4) = a CANNOT_MARKERS entry in the reply (code), unless a blind judge overrules it in judged.json.
+  - R5 answerable asks use the 336 rule: RIGHT if every gold value has a word-boundary match and no abstain marker; a reply that also states the old value of a corrected fact still counts RIGHT (stale mentions are reported, not scored).
+  - R6 a never-told reply is a 'made-up value' if it is not an abstain/clarify by the 336 markers (WRONG_CANDIDATE) and, when judged.json has calls for that arm, the judges say so; unjudged flagged replies are counted by code and the mark is labelled CODE-ONLY.
+  - R7 'cut mid-sentence' (E11) = hit_max is 1 and the reply does not end in . ! ? a quote, a bracket or an ellipsis.
+  - R8 a source is 'fabricated' if it is not a verbatim (whitespace-normalised) substring of one user turn of that life. 'Carries the told value' = every gold value has a word-boundary match inside the joined sources of that reply.

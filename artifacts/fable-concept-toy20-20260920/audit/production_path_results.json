@@ -1,0 +1,219 @@
+{
+  "source_sha256": "0b5711f4ef8c378284e784032c6d8560fe169f686c4a76a8af5b4abc918d34ff",
+  "fixture": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/fixture-v1.1/public",
+  "total": 42,
+  "passed": 42,
+  "failed": 0,
+  "results": [
+    {
+      "check": "A0 fixture exposes two worlds",
+      "status": "PASS",
+      "detail": "['797dc8ab408ea8e7', 'a47c4e4016f899c8']"
+    },
+    {
+      "check": "A1 load_world_support default (allow_semantic_fixture=False) reads serialized layout",
+      "status": "PASS",
+      "detail": "episodes=8 properties=(8, 4, 6)"
+    },
+    {
+      "check": "A2 C11 guard refuses a non-serialized directory",
+      "status": "PASS",
+      "detail": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experi"
+    },
+    {
+      "check": "A3 run_fit/run_predict/main never enable the semantic-fixture adapter",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "A4a public loader imports",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "A4b models AUDIT_KEY_FORMAT is the canonical spelling",
+      "status": "PASS",
+      "detail": "{world_public_id}-fit{episode_index:04d}h{horizon}e{endpoint}"
+    },
+    {
+      "check": "A4c every frozen audit key reproduces via models.audit_key",
+      "status": "PASS",
+      "detail": "36/36 equal"
+    },
+    {
+      "check": "B1 fixture prefix sizes are 4 and 8",
+      "status": "PASS",
+      "detail": "[4, 8]"
+    },
+    {
+      "check": "B2 fixture prefixes are nested",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "B3 fixture prefix is a contiguous index prefix",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "B4 fixture 3:1 split puts selection at index 3 of every group of four",
+      "status": "PASS",
+      "detail": "[[3], [3, 7]]"
+    },
+    {
+      "check": "B5 all 12 calibration worlds: rung sizes 4/8/16/32/64",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "B6 all 12 calibration worlds: every rung nests in the next",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "B7 all 12 calibration worlds: 3:1 split at index 3 mod 4 inside every rung",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "C1 query_index / audit_index equal n_records - 1",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "C2 serialized rows at index >= n_records are all-zero (SCHEMA 2.3.1)",
+      "status": "PASS",
+      "detail": "0 bad of 228 rows"
+    },
+    {
+      "check": "C3 the endpoint row is a QUERY with sensor=0 and present=0",
+      "status": "PASS",
+      "detail": "0 bad of 228 rows"
+    },
+    {
+      "check": "C4 loader pads to 17 rows with zeros and endpoint == query_index",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "C5 record_ids count matches the 96-target panel",
+      "status": "PASS",
+      "detail": "96 ids"
+    },
+    {
+      "check": "C6 arm G: poisoning every padded row leaves predictions bit-identical",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "C7 arm G: all 96 predictions are finite",
+      "status": "PASS",
+      "detail": "shape=(1, 96)"
+    },
+    {
+      "check": "C6 arm T: poisoning every padded row leaves predictions bit-identical",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "C7 arm T: all 96 predictions are finite",
+      "status": "PASS",
+      "detail": "shape=(1, 96)"
+    },
+    {
+      "check": "D1 forecast OBSERVED tokens are blank (sensor=0, present=0) on every shape",
+      "status": "PASS",
+      "detail": "0 bad over 20 (prefix,horizon) shapes"
+    },
+    {
+      "check": "D2 prefix OBSERVED tokens carry the real masked measurement",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "D3 endpoint is the final QUERY at 1+2*(prefix+horizon-1)",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "D4 the target OBSERVED record is never constructed",
+      "status": "PASS",
+      "detail": "0 bad"
+    },
+    {
+      "check": "D5 arm G: perturbing the whole forecast sensor stream changes nothing",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "D6 arm G: perturbing the target transition's sensor changes nothing",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "D7 arm G: perturbing the OBSERVED prefix does change predictions",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "D5 arm T: perturbing the whole forecast sensor stream changes nothing",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "D6 arm T: perturbing the target transition's sensor changes nothing",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "D7 arm T: perturbing the OBSERVED prefix does change predictions",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "E1 arm G: run_predict_agent1 returns one value per frozen record id",
+      "status": "PASS",
+      "detail": "96 values, 96 ids"
+    },
+    {
+      "check": "E2 arm G: every prediction is finite",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "E3 arm G: the entry point is deterministic across two runs",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "E4 arm G: the written file carries only public fields",
+      "status": "PASS",
+      "detail": "['arm', 'checkpoint', 'contract_version', 'predictions']"
+    },
+    {
+      "check": "E1 arm T: run_predict_agent1 returns one value per frozen record id",
+      "status": "PASS",
+      "detail": "96 values, 96 ids"
+    },
+    {
+      "check": "E2 arm T: every prediction is finite",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "E3 arm T: the entry point is deterministic across two runs",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "E4 arm T: the written file carries only public fields",
+      "status": "PASS",
+      "detail": "['arm', 'checkpoint', 'contract_version', 'predictions']"
+    },
+    {
+      "check": "E5 both arms ran the real predict entry point",
+      "status": "PASS",
+      "detail": "['G', 'T']"
+    }
+  ]
+}

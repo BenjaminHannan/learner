@@ -1,0 +1,4059 @@
+{
+ "entry": {
+  "module_dir": [
+   "ALIAS_TABLE",
+   "CANONICAL",
+   "DENYLIST",
+   "EXCEPTIONS",
+   "INVERSE_TABLE",
+   "NAME_TO_PID",
+   "Optional",
+   "PROPS_DIR",
+   "Path",
+   "ROOT",
+   "TABLE_DIR",
+   "Tuple",
+   "_LEAD_ART",
+   "_LEAD_AUX",
+   "__annotations__",
+   "__builtins__",
+   "__cached__",
+   "__doc__",
+   "__file__",
+   "__loader__",
+   "__name__",
+   "__package__",
+   "__spec__",
+   "_direct_lookup",
+   "_fh",
+   "_line",
+   "_load_json",
+   "_n",
+   "_p",
+   "_pid_for",
+   "_r",
+   "_rel",
+   "_resolve",
+   "_rule_variants",
+   "_split",
+   "annotations",
+   "canon",
+   "json",
+   "norm_relation"
+  ],
+  "tried": [
+   {
+    "name": "canon",
+    "sig": "(relation_string: 'str') -> 'Tuple[Optional[str], Optional[str], bool]'",
+    "probe_ok": true
+   }
+  ],
+  "chosen": "canon"
+ },
+ "paraphrases": [
+  {
+   "id": "p001",
+   "phrase": "country it sits in is",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p002",
+   "phrase": "lies in the country of",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p003",
+   "phrase": "is in the nation of",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p004",
+   "phrase": "sits inside the state of",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p005",
+   "phrase": "is located in the country of",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p006",
+   "phrase": "has diplomatic ties with",
+   "gold": "diplomatic relation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p007",
+   "phrase": "keeps an embassy open in",
+   "gold": "diplomatic relation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p008",
+   "phrase": "holds formal relations with",
+   "gold": "diplomatic relation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p009",
+   "phrase": "exchanges ambassadors with",
+   "gold": "diplomatic relation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p010",
+   "phrase": "maintains ties of diplomacy with",
+   "gold": "diplomatic relation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p011",
+   "phrase": "lies inside the district of",
+   "gold": "located in the administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p012",
+   "phrase": "sits in the borough of",
+   "gold": "located in the administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p013",
+   "phrase": "is in the county of",
+   "gold": "located in the administrative territorial entity",
+   "raw": "'located in the administrative territorial entity'",
+   "norm": "located_in_the_administrative_territorial_entity",
+   "verdict": "correct"
+  },
+  {
+   "id": "p014",
+   "phrase": "falls under the province of",
+   "gold": "located in the administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p015",
+   "phrase": "is within the municipality of",
+   "gold": "located in the administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p016",
+   "phrase": "borders on",
+   "gold": "shares border with",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p017",
+   "phrase": "shares a frontier with",
+   "gold": "shares border with",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p018",
+   "phrase": "has a common border with",
+   "gold": "shares border with",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p019",
+   "phrase": "adjoins directly",
+   "gold": "shares border with",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p020",
+   "phrase": "is bordered by",
+   "gold": "shares border with",
+   "raw": "'shares border with'",
+   "norm": "shares_border_with",
+   "verdict": "correct"
+  },
+  {
+   "id": "p021",
+   "phrase": "is split into districts of",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p022",
+   "phrase": "has as a subdivision",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p023",
+   "phrase": "contains the province of",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p024",
+   "phrase": "is made of counties like",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p025",
+   "phrase": "covers the region of",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p026",
+   "phrase": "holds citizenship of",
+   "gold": "country of citizenship",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p027",
+   "phrase": "is a citizen of",
+   "gold": "country of citizenship",
+   "raw": "'country of citizenship'",
+   "norm": "country_of_citizenship",
+   "verdict": "correct"
+  },
+  {
+   "id": "p028",
+   "phrase": "carries the passport of",
+   "gold": "country of citizenship",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p029",
+   "phrase": "is a national of",
+   "gold": "country of citizenship",
+   "raw": "'country of citizenship'",
+   "norm": "country_of_citizenship",
+   "verdict": "correct"
+  },
+  {
+   "id": "p030",
+   "phrase": "has the nationality of",
+   "gold": "country of citizenship",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p031",
+   "phrase": "has as its capital",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p032",
+   "phrase": "whose capital is",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p033",
+   "phrase": "with capital city",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p034",
+   "phrase": "capital city being",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p035",
+   "phrase": "has its seat of government at",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p036",
+   "phrase": "is headquartered in",
+   "gold": "headquarters location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p037",
+   "phrase": "has its head office in",
+   "gold": "headquarters location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p038",
+   "phrase": "bases its HQ at",
+   "gold": "headquarters location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p039",
+   "phrase": "main office sits in",
+   "gold": "headquarters location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p040",
+   "phrase": "is run from offices in",
+   "gold": "headquarters location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p041",
+   "phrase": "serves as capital to",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p042",
+   "phrase": "is capital city of",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p043",
+   "phrase": "is the seat of government for",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p044",
+   "phrase": "is the administrative centre of",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p045",
+   "phrase": "does duty as capital of",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p046",
+   "phrase": "prices are rising at",
+   "gold": "inflation rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p047",
+   "phrase": "inflation runs at",
+   "gold": "inflation rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p048",
+   "phrase": "the CPI is up by",
+   "gold": "inflation rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p049",
+   "phrase": "the cost of living climbs at",
+   "gold": "inflation rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p050",
+   "phrase": "shop prices grow at",
+   "gold": "inflation rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p051",
+   "phrase": "plays for the side",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p052",
+   "phrase": "is on the books of the club",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p053",
+   "phrase": "turns out for the team",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p054",
+   "phrase": "is signed to the squad",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p055",
+   "phrase": "represents the club",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p056",
+   "phrase": "includes as a part",
+   "gold": "has part",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p057",
+   "phrase": "has as a component",
+   "gold": "has part",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p058",
+   "phrase": "is composed of",
+   "gold": "has part",
+   "raw": "'has part'",
+   "norm": "has_part",
+   "verdict": "correct"
+  },
+  {
+   "id": "p059",
+   "phrase": "comprises the section",
+   "gold": "has part",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p060",
+   "phrase": "contains as a division",
+   "gold": "has part",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p061",
+   "phrase": "has oxidation number",
+   "gold": "oxidation state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p062",
+   "phrase": "oxidation level of",
+   "gold": "oxidation state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p063",
+   "phrase": "takes the oxidation value of",
+   "gold": "oxidation state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p064",
+   "phrase": "shows an oxidation state of",
+   "gold": "oxidation state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p065",
+   "phrase": "has an oxidation number of",
+   "gold": "oxidation state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p066",
+   "phrase": "forms part of",
+   "gold": "part of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p067",
+   "phrase": "is a section of",
+   "gold": "part of",
+   "raw": "'part of'",
+   "norm": "part_of",
+   "verdict": "correct"
+  },
+  {
+   "id": "p068",
+   "phrase": "is a component of",
+   "gold": "part of",
+   "raw": "'part of'",
+   "norm": "part_of",
+   "verdict": "correct"
+  },
+  {
+   "id": "p069",
+   "phrase": "belongs as a piece to",
+   "gold": "part of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p070",
+   "phrase": "is a division of",
+   "gold": "part of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p071",
+   "phrase": "is on the continent of",
+   "gold": "continent",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p072",
+   "phrase": "lies within the continent of",
+   "gold": "continent",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p073",
+   "phrase": "belongs to the continent of",
+   "gold": "continent",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p074",
+   "phrase": "sits on the continent of",
+   "gold": "continent",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p075",
+   "phrase": "is situated in the continent of",
+   "gold": "continent",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p076",
+   "phrase": "is married to",
+   "gold": "spouse",
+   "raw": "'spouse'",
+   "norm": "spouse",
+   "verdict": "correct"
+  },
+  {
+   "id": "p077",
+   "phrase": "is wedded to",
+   "gold": "spouse",
+   "raw": "'spouse'",
+   "norm": "spouse",
+   "verdict": "correct"
+  },
+  {
+   "id": "p078",
+   "phrase": "took as a spouse",
+   "gold": "spouse",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p079",
+   "phrase": "is the husband of",
+   "gold": "spouse",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p080",
+   "phrase": "is the wife of",
+   "gold": "spouse",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p081",
+   "phrase": "was born in the village of",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p082",
+   "phrase": "first saw light in",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p083",
+   "phrase": "birthplace is",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p084",
+   "phrase": "entered the world in",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p085",
+   "phrase": "was delivered in",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p086",
+   "phrase": "belongs to the party",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p087",
+   "phrase": "is a card-carrying member of",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p088",
+   "phrase": "sits for the party",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p089",
+   "phrase": "joined the party",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p090",
+   "phrase": "is affiliated with the party",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p091",
+   "phrase": "belongs to the society",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p092",
+   "phrase": "holds membership of the club",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p093",
+   "phrase": "is enrolled in the association",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p094",
+   "phrase": "is on the roll of the group",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p095",
+   "phrase": "is a fellow of the society",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p096",
+   "phrase": "is performed by",
+   "gold": "performer",
+   "raw": "'performer'",
+   "norm": "performer",
+   "verdict": "correct"
+  },
+  {
+   "id": "p097",
+   "phrase": "was performed by",
+   "gold": "performer",
+   "raw": "'performer'",
+   "norm": "performer",
+   "verdict": "correct"
+  },
+  {
+   "id": "p098",
+   "phrase": "has as its performer",
+   "gold": "performer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p099",
+   "phrase": "was sung by",
+   "gold": "performer",
+   "raw": "'performer'",
+   "norm": "performer",
+   "verdict": "correct"
+  },
+  {
+   "id": "p100",
+   "phrase": "was played by the musician",
+   "gold": "performer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p101",
+   "phrase": "is owned by",
+   "gold": "owned by",
+   "raw": "'owned by'",
+   "norm": "owned_by",
+   "verdict": "correct"
+  },
+  {
+   "id": "p102",
+   "phrase": "is the property of",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p103",
+   "phrase": "belongs to as property",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p104",
+   "phrase": "is held by its owner",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p105",
+   "phrase": "ownership rests with",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p106",
+   "phrase": "was born on the date",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p107",
+   "phrase": "birthday falls on",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p108",
+   "phrase": "date of birth is",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p109",
+   "phrase": "was born on the day of",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p110",
+   "phrase": "birth date reads",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p111",
+   "phrase": "codes for the protein",
+   "gold": "encodes",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p112",
+   "phrase": "carries the code for",
+   "gold": "encodes",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p113",
+   "phrase": "gives rise to the protein",
+   "gold": "encodes",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p114",
+   "phrase": "is the gene behind",
+   "gold": "encodes",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p115",
+   "phrase": "produces the protein",
+   "gold": "encodes",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p116",
+   "phrase": "stars in the cast of",
+   "gold": "cast member",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p117",
+   "phrase": "appears in the cast of",
+   "gold": "cast member",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p118",
+   "phrase": "is billed in the cast of",
+   "gold": "cast member",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p119",
+   "phrase": "plays a part in the film",
+   "gold": "cast member",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p120",
+   "phrase": "is credited in the cast of",
+   "gold": "cast member",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p121",
+   "phrase": "comes from the country of",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p122",
+   "phrase": "originates in the land of",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p123",
+   "phrase": "is a product of the nation",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p124",
+   "phrase": "hails from the country of",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p125",
+   "phrase": "was first made in the land of",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p126",
+   "phrase": "died in the town of",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p127",
+   "phrase": "passed away at",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p128",
+   "phrase": "breathed last in",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p129",
+   "phrase": "met death in",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p130",
+   "phrase": "death place is",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p131",
+   "phrase": "works for the firm",
+   "gold": "employer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p132",
+   "phrase": "is employed by",
+   "gold": "employer",
+   "raw": "'employer'",
+   "norm": "employer",
+   "verdict": "correct"
+  },
+  {
+   "id": "p133",
+   "phrase": "is on the payroll of",
+   "gold": "employer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p134",
+   "phrase": "does shifts for",
+   "gold": "employer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p135",
+   "phrase": "earns a wage from",
+   "gold": "employer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p136",
+   "phrase": "was formed in the city",
+   "gold": "location of formation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p137",
+   "phrase": "came together in",
+   "gold": "location of formation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p138",
+   "phrase": "first got together in",
+   "gold": "location of formation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p139",
+   "phrase": "started out in",
+   "gold": "location of formation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p140",
+   "phrase": "first met in",
+   "gold": "location of formation",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p141",
+   "phrase": "owns outright",
+   "gold": "owner of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p142",
+   "phrase": "is the owner of",
+   "gold": "owner of",
+   "raw": "'owner of'",
+   "norm": "owner_of",
+   "verdict": "correct"
+  },
+  {
+   "id": "p143",
+   "phrase": "holds the deeds to",
+   "gold": "owner of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p144",
+   "phrase": "has in its portfolio",
+   "gold": "owner of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p145",
+   "phrase": "is proprietor of",
+   "gold": "owner of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p146",
+   "phrase": "wrote the book",
+   "gold": "author",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p147",
+   "phrase": "is the author of",
+   "gold": "author",
+   "raw": "'notable work'",
+   "norm": "notable_work",
+   "verdict": "wrong"
+  },
+  {
+   "id": "p148",
+   "phrase": "penned the novel",
+   "gold": "author",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p149",
+   "phrase": "authored the piece",
+   "gold": "author",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p150",
+   "phrase": "is credited as writer of",
+   "gold": "author",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p151",
+   "phrase": "has as its official tongue",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p152",
+   "phrase": "uses officially",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p153",
+   "phrase": "recognises as official",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p154",
+   "phrase": "does business officially in",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p155",
+   "phrase": "is administered in",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p156",
+   "phrase": "plays in the division",
+   "gold": "league",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p157",
+   "phrase": "competes in the competition",
+   "gold": "league",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p158",
+   "phrase": "turns out in the league",
+   "gold": "league",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p159",
+   "phrase": "takes part in the tournament",
+   "gold": "league",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p160",
+   "phrase": "is in the top flight of",
+   "gold": "league",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p161",
+   "phrase": "is run by",
+   "gold": "operator",
+   "raw": "'operator'",
+   "norm": "operator",
+   "verdict": "correct"
+  },
+  {
+   "id": "p162",
+   "phrase": "is operated by",
+   "gold": "operator",
+   "raw": "'operator'",
+   "norm": "operator",
+   "verdict": "correct"
+  },
+  {
+   "id": "p163",
+   "phrase": "is managed as a service by",
+   "gold": "operator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p164",
+   "phrase": "the enterprise behind it is",
+   "gold": "operator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p165",
+   "phrase": "is kept going by",
+   "gold": "operator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p166",
+   "phrase": "went to school at",
+   "gold": "educated at",
+   "raw": "'educated at'",
+   "norm": "educated_at",
+   "verdict": "correct"
+  },
+  {
+   "id": "p167",
+   "phrase": "studied at the college",
+   "gold": "educated at",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p168",
+   "phrase": "attended the academy",
+   "gold": "educated at",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p169",
+   "phrase": "was schooled at",
+   "gold": "educated at",
+   "raw": "'educated at'",
+   "norm": "educated_at",
+   "verdict": "correct"
+  },
+  {
+   "id": "p170",
+   "phrase": "read history at",
+   "gold": "educated at",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p171",
+   "phrase": "joblessness stands at",
+   "gold": "unemployment rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p172",
+   "phrase": "share out of work is",
+   "gold": "unemployment rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p173",
+   "phrase": "unemployment sits at",
+   "gold": "unemployment rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p174",
+   "phrase": "portion without jobs is",
+   "gold": "unemployment rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p175",
+   "phrase": "out-of-work rate is",
+   "gold": "unemployment rate",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p176",
+   "phrase": "was set up by",
+   "gold": "founded by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p177",
+   "phrase": "was started by",
+   "gold": "founded by",
+   "raw": "'founded by'",
+   "norm": "founded_by",
+   "verdict": "correct"
+  },
+  {
+   "id": "p178",
+   "phrase": "was launched by",
+   "gold": "founded by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p179",
+   "phrase": "owes its founding to",
+   "gold": "founded by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p180",
+   "phrase": "was established by",
+   "gold": "founded by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p181",
+   "phrase": "has as prime minister",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p182",
+   "phrase": "is led by the premier",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p183",
+   "phrase": "has as chancellor",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p184",
+   "phrase": "is governed by the first minister",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p185",
+   "phrase": "premiership is held by",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p186",
+   "phrase": "is sited at",
+   "gold": "location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p187",
+   "phrase": "stands at the spot",
+   "gold": "location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p188",
+   "phrase": "is found at",
+   "gold": "location",
+   "raw": "'location of discovery'",
+   "norm": "location_of_discovery",
+   "verdict": "wrong"
+  },
+  {
+   "id": "p189",
+   "phrase": "happened at",
+   "gold": "location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p190",
+   "phrase": "takes place at",
+   "gold": "location",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p191",
+   "phrase": "has as its parent body",
+   "gold": "parent organization",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p192",
+   "phrase": "answers to the parent group",
+   "gold": "parent organization",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p193",
+   "phrase": "is a branch of the wider group",
+   "gold": "parent organization",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p194",
+   "phrase": "comes under the head organisation",
+   "gold": "parent organization",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p195",
+   "phrase": "is a unit of the parent firm",
+   "gold": "parent organization",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p196",
+   "phrase": "school becomes compulsory at age",
+   "gold": "compulsory education (minimum age)",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p197",
+   "phrase": "kids must start school at",
+   "gold": "compulsory education (minimum age)",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p198",
+   "phrase": "compulsory schooling begins at",
+   "gold": "compulsory education (minimum age)",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p199",
+   "phrase": "schooling is mandatory from age",
+   "gold": "compulsory education (minimum age)",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p200",
+   "phrase": "children must enter school at",
+   "gold": "compulsory education (minimum age)",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p201",
+   "phrase": "came into being in",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p202",
+   "phrase": "dates back to",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p203",
+   "phrase": "originated in the year",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p204",
+   "phrase": "was created back in",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p205",
+   "phrase": "got its start in",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p206",
+   "phrase": "holds as law in",
+   "gold": "applies to jurisdiction",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p207",
+   "phrase": "is enforced across",
+   "gold": "applies to jurisdiction",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p208",
+   "phrase": "applies within the territory",
+   "gold": "applies to jurisdiction",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p209",
+   "phrase": "covers legally",
+   "gold": "applies to jurisdiction",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p210",
+   "phrase": "is on the books in",
+   "gold": "applies to jurisdiction",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p211",
+   "phrase": "died on the day",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p212",
+   "phrase": "passed on the date",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p213",
+   "phrase": "death date reads",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p214",
+   "phrase": "lost life on",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p215",
+   "phrase": "drew last breath on",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p216",
+   "phrase": "is grouped under the family",
+   "gold": "parent taxon",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p217",
+   "phrase": "falls within the order",
+   "gold": "parent taxon",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p218",
+   "phrase": "belongs to the genus",
+   "gold": "parent taxon",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p219",
+   "phrase": "sits in the family",
+   "gold": "parent taxon",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p220",
+   "phrase": "is classed in the taxon",
+   "gold": "parent taxon",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p221",
+   "phrase": "was developed by",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p222",
+   "phrase": "was built by the studio",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p223",
+   "phrase": "was made by the developer",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p224",
+   "phrase": "comes from the software house",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p225",
+   "phrase": "was coded by",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p226",
+   "phrase": "was followed by",
+   "gold": "followed by",
+   "raw": "'followed by'",
+   "norm": "followed_by",
+   "verdict": "correct"
+  },
+  {
+   "id": "p227",
+   "phrase": "was succeeded by",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p228",
+   "phrase": "gave way next to",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p229",
+   "phrase": "had as its successor",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p230",
+   "phrase": "next up after it was",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p231",
+   "phrase": "is twinned with",
+   "gold": "twinned administrative body",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p232",
+   "phrase": "has as its twin town",
+   "gold": "twinned administrative body",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p233",
+   "phrase": "is a sister city of",
+   "gold": "twinned administrative body",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p234",
+   "phrase": "is paired in friendship with",
+   "gold": "twinned administrative body",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p235",
+   "phrase": "holds a twinning link with",
+   "gold": "twinned administrative body",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p236",
+   "phrase": "is famed for",
+   "gold": "notable work",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p237",
+   "phrase": "best-known work is",
+   "gold": "notable work",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p238",
+   "phrase": "made a name with",
+   "gold": "notable work",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p239",
+   "phrase": "is remembered for",
+   "gold": "notable work",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p240",
+   "phrase": "signature piece is",
+   "gold": "notable work",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p241",
+   "phrase": "is a type of",
+   "gold": "subclass of",
+   "raw": "'subclass of'",
+   "norm": "subclass_of",
+   "verdict": "correct"
+  },
+  {
+   "id": "p242",
+   "phrase": "is a kind of",
+   "gold": "subclass of",
+   "raw": "'subclass of'",
+   "norm": "subclass_of",
+   "verdict": "correct"
+  },
+  {
+   "id": "p243",
+   "phrase": "counts as a subtype of",
+   "gold": "subclass of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p244",
+   "phrase": "falls in the class of",
+   "gold": "subclass of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p245",
+   "phrase": "is a variety of",
+   "gold": "subclass of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p246",
+   "phrase": "has as its subsidiary",
+   "gold": "subsidiary",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p247",
+   "phrase": "runs a subordinate outfit",
+   "gold": "subsidiary",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p248",
+   "phrase": "owns the daughter firm",
+   "gold": "subsidiary",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p249",
+   "phrase": "controls the child company",
+   "gold": "subsidiary",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p250",
+   "phrase": "has a spin-off unit under it",
+   "gold": "subsidiary",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p251",
+   "phrase": "sits beside the lake",
+   "gold": "located in or next to body of water",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p252",
+   "phrase": "stands on the shore of",
+   "gold": "located in or next to body of water",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p253",
+   "phrase": "lies on the banks of",
+   "gold": "located in or next to body of water",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p254",
+   "phrase": "is on the coast of",
+   "gold": "located in or next to body of water",
+   "raw": "'located in or next to body of water'",
+   "norm": "located_in_or_next_to_body_of_water",
+   "verdict": "correct"
+  },
+  {
+   "id": "p255",
+   "phrase": "looks over the bay of",
+   "gold": "located in or next to body of water",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p256",
+   "phrase": "can speak the tongue",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p257",
+   "phrase": "is fluent in",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p258",
+   "phrase": "chats in",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p259",
+   "phrase": "writes in",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p260",
+   "phrase": "uses at home",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p261",
+   "phrase": "comes after",
+   "gold": "follows",
+   "raw": "'follows'",
+   "norm": "follows",
+   "verdict": "correct"
+  },
+  {
+   "id": "p262",
+   "phrase": "comes right after",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p263",
+   "phrase": "is next after",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p264",
+   "phrase": "takes over from in the list",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p265",
+   "phrase": "succeeds in the running order",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p266",
+   "phrase": "serves as president of",
+   "gold": "head of state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p267",
+   "phrase": "reigns as monarch over",
+   "gold": "head of state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p268",
+   "phrase": "holds the presidency of",
+   "gold": "head of state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p269",
+   "phrase": "is the ceremonial head of",
+   "gold": "head of state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p270",
+   "phrase": "is king over",
+   "gold": "head of state",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p271",
+   "phrase": "is mum to",
+   "gold": "child",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p272",
+   "phrase": "is dad to",
+   "gold": "child",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p273",
+   "phrase": "has as a son",
+   "gold": "child",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p274",
+   "phrase": "is the father of",
+   "gold": "child",
+   "raw": "'child'",
+   "norm": "child",
+   "verdict": "correct"
+  },
+  {
+   "id": "p275",
+   "phrase": "is the parent of",
+   "gold": "child",
+   "raw": "'child'",
+   "norm": "child",
+   "verdict": "correct"
+  },
+  {
+   "id": "p276",
+   "phrase": "was directed by",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p277",
+   "phrase": "had as director",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p278",
+   "phrase": "was helmed by",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p279",
+   "phrase": "was shot by the filmmaker",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p280",
+   "phrase": "direction was by",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p281",
+   "phrase": "has a day-long exposure cap of",
+   "gold": "time-weighted average exposure limit",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p282",
+   "phrase": "safe shift dose is",
+   "gold": "time-weighted average exposure limit",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p283",
+   "phrase": "workers can face at most",
+   "gold": "time-weighted average exposure limit",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p284",
+   "phrase": "exposure ceiling at work is",
+   "gold": "time-weighted average exposure limit",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p285",
+   "phrase": "allowed dose over the shift is",
+   "gold": "time-weighted average exposure limit",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p286",
+   "phrase": "takes its name from",
+   "gold": "named after",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p287",
+   "phrase": "is named for",
+   "gold": "named after",
+   "raw": "'named after'",
+   "norm": "named_after",
+   "verdict": "correct"
+  },
+  {
+   "id": "p288",
+   "phrase": "owes its name to",
+   "gold": "named after",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p289",
+   "phrase": "was christened after",
+   "gold": "named after",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p290",
+   "phrase": "borrows its name from",
+   "gold": "named after",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p291",
+   "phrase": "plays internationally for",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p292",
+   "phrase": "turns out for the national side of",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p293",
+   "phrase": "represents at sport",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p294",
+   "phrase": "wears the national shirt of",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p295",
+   "phrase": "is capped by the country",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p296",
+   "phrase": "was crafted by",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p297",
+   "phrase": "was made by the maker",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p298",
+   "phrase": "is the creation of",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p299",
+   "phrase": "was dreamed up by",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "p300",
+   "phrase": "was put together by",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  }
+ ],
+ "fabricated": [
+  {
+   "id": "f001",
+   "phrase": "had chips with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f002",
+   "phrase": "shared chips with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f003",
+   "phrase": "burnt the toast for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f004",
+   "phrase": "pinched a chip from",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f005",
+   "phrase": "licked the spoon for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f006",
+   "phrase": "made a brew for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f007",
+   "phrase": "poured a cuppa for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f008",
+   "phrase": "saved the last biscuit for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f009",
+   "phrase": "argued over the last slice with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f010",
+   "phrase": "did the washing-up for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f011",
+   "phrase": "dried the dishes with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f012",
+   "phrase": "peeled the spuds with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f013",
+   "phrase": "stirred the gravy for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f014",
+   "phrase": "fetched the milk for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f015",
+   "phrase": "left the crusts for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f016",
+   "phrase": "waved across the street to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f017",
+   "phrase": "shouted hello to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f018",
+   "phrase": "blew a kiss to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f019",
+   "phrase": "nodded good morning to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f020",
+   "phrase": "tipped a hat to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f021",
+   "phrase": "shook hands with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f022",
+   "phrase": "hugged goodbye to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f023",
+   "phrase": "waved off at the stop with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f024",
+   "phrase": "saw to the gate with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f025",
+   "phrase": "walked to the corner with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f026",
+   "phrase": "waited at the shelter with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f027",
+   "phrase": "shared a brolly with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f028",
+   "phrase": "got soaked beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f029",
+   "phrase": "sheltered with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f030",
+   "phrase": "dripped all over",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f031",
+   "phrase": "texted goodnight to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f032",
+   "phrase": "rang for a natter with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f033",
+   "phrase": "left a voicemail for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f034",
+   "phrase": "sent a postcard to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f035",
+   "phrase": "scribbled a note for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f036",
+   "phrase": "slipped a note under the door of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f037",
+   "phrase": "emailed the photos to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f038",
+   "phrase": "forwarded the meme to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f039",
+   "phrase": "liked the photo of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f040",
+   "phrase": "commented under the snap of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f041",
+   "phrase": "tagged in the group snap",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f042",
+   "phrase": "hearted the message of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f043",
+   "phrase": "saved a seat for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f044",
+   "phrase": "sat opposite on the bus to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f045",
+   "phrase": "queued behind",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f046",
+   "phrase": "waved through in the queue",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f047",
+   "phrase": "missed the bus with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f048",
+   "phrase": "caught the early train with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f049",
+   "phrase": "stood all the way with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f050",
+   "phrase": "gave up a seat for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f051",
+   "phrase": "squeezed up for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f052",
+   "phrase": "shared the armrest with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f053",
+   "phrase": "tapped off beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f054",
+   "phrase": "waited three stops with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f055",
+   "phrase": "had a row with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f056",
+   "phrase": "fell out over the remote with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f057",
+   "phrase": "made it up with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f058",
+   "phrase": "said sorry first to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f059",
+   "phrase": "forgave the dent in the car of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f060",
+   "phrase": "laughed it off with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f061",
+   "phrase": "sulked till teatime with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f062",
+   "phrase": "slammed the door on",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f063",
+   "phrase": "made peace over chips with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f064",
+   "phrase": "agreed to disagree with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f065",
+   "phrase": "shook on it with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f066",
+   "phrase": "sneezed all over",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f067",
+   "phrase": "coughed beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f068",
+   "phrase": "snored next to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f069",
+   "phrase": "trod on the toes of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f070",
+   "phrase": "stood on the foot of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f071",
+   "phrase": "brushed past",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f072",
+   "phrase": "bumped trolleys with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f073",
+   "phrase": "nudged gently",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f074",
+   "phrase": "yawned through the meeting with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f075",
+   "phrase": "hiccuped beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f076",
+   "phrase": "shivered beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f077",
+   "phrase": "dreamt about",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f078",
+   "phrase": "had a nightmare featuring",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f079",
+   "phrase": "woke grinning about",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f080",
+   "phrase": "felt chuffed for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f081",
+   "phrase": "felt gutted for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f082",
+   "phrase": "was cross about the queue with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f083",
+   "phrase": "fretted over the bill with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f084",
+   "phrase": "gloated gently over",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f085",
+   "phrase": "cheered up with a brew for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f086",
+   "phrase": "sat quiet beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f087",
+   "phrase": "gazed out the window with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f088",
+   "phrase": "hummed in the queue with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f089",
+   "phrase": "lent the mower to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f090",
+   "phrase": "brought the ladder round for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f091",
+   "phrase": "returned the shears to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f092",
+   "phrase": "posted the parcel for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f093",
+   "phrase": "queued at the parcel counter with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f094",
+   "phrase": "carried the bags for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f095",
+   "phrase": "held the ladder for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f096",
+   "phrase": "passed the spanner to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f097",
+   "phrase": "fetched the paper for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f098",
+   "phrase": "watered the tomatoes of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f099",
+   "phrase": "fed the neighbour's cat for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f100",
+   "phrase": "took in the parcel for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f101",
+   "phrase": "got rained off with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f102",
+   "phrase": "waited out the shower with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f103",
+   "phrase": "slipped on the ice beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f104",
+   "phrase": "crunched through the frost with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f105",
+   "phrase": "paddled beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f106",
+   "phrase": "skimmed stones with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f107",
+   "phrase": "flew a kite with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f108",
+   "phrase": "chased a hat for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f109",
+   "phrase": "lost a hat with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f110",
+   "phrase": "shared the shade with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f111",
+   "phrase": "sipped water beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f112",
+   "phrase": "fanned with the menu for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f113",
+   "phrase": "laughed at the joke of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f114",
+   "phrase": "groaned at the pun of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f115",
+   "phrase": "retold the gossip to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f116",
+   "phrase": "swore to keep the secret of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f117",
+   "phrase": "kept schtum for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f118",
+   "phrase": "spilled the beans to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f119",
+   "phrase": "put the kettle on for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f120",
+   "phrase": "nattered over the fence with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f121",
+   "phrase": "gossiped over chips with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f122",
+   "phrase": "moaned about the traffic with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f123",
+   "phrase": "bragged about the tomatoes to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f124",
+   "phrase": "shared the holiday snaps with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f125",
+   "phrase": "dreamt the same dream as",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f126",
+   "phrase": "sneezed in threes with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f127",
+   "phrase": "snored in harmony with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f128",
+   "phrase": "sleepwalked past",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f129",
+   "phrase": "talked in sleep beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f130",
+   "phrase": "hogged the duvet from",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f131",
+   "phrase": "stole the pillow of",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f132",
+   "phrase": "set two alarms for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f133",
+   "phrase": "hit snooze with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f134",
+   "phrase": "made the morning pot for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f135",
+   "phrase": "buttered soldiers for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f136",
+   "phrase": "cut the toast into soldiers for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f137",
+   "phrase": "counted sheep with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f138",
+   "phrase": "shared the blanket with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f139",
+   "phrase": "argued over the thermostat with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f140",
+   "phrase": "hogged the remote from",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f141",
+   "phrase": "fought over the window seat with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f142",
+   "phrase": "raced to the gate with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f143",
+   "phrase": "slogged through the mud with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f144",
+   "phrase": "paddled in the shallows with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f145",
+   "phrase": "built a snowman with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f146",
+   "phrase": "had a snowball fight with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f147",
+   "phrase": "came in from the cold with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f148",
+   "phrase": "warmed hands beside",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f149",
+   "phrase": "shared the thermos with",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "f150",
+   "phrase": "poured a second cup for",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  }
+ ],
+ "nearmiss": [
+  {
+   "id": "n001",
+   "phrase": "is the capital city of",
+   "gold": "capital of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n002",
+   "phrase": "has as its capital city",
+   "gold": "capital",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n003",
+   "phrase": "a capital idea",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n004",
+   "phrase": "was born in the town of",
+   "gold": "place of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n005",
+   "phrase": "was born on the morning of",
+   "gold": "date of birth",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n006",
+   "phrase": "died in the city of",
+   "gold": "place of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n007",
+   "phrase": "died on the date of",
+   "gold": "date of death",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n008",
+   "phrase": "walked down the aisle with",
+   "gold": "spouse",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n009",
+   "phrase": "got married in the chapel at",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n010",
+   "phrase": "is engaged to",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n011",
+   "phrase": "is the mother of",
+   "gold": "child",
+   "raw": "'child'",
+   "norm": "child",
+   "verdict": "correct"
+  },
+  {
+   "id": "n012",
+   "phrase": "mothers the toddler",
+   "gold": "child",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n013",
+   "phrase": "fathers a son",
+   "gold": "child",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n014",
+   "phrase": "was followed by the sequel",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n015",
+   "phrase": "comes just before the finale",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n016",
+   "phrase": "comes just after the opener",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n017",
+   "phrase": "is next in the list after",
+   "gold": "follows",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n018",
+   "phrase": "is next in the list before",
+   "gold": "followed by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n019",
+   "phrase": "owns the corner shop",
+   "gold": "owner of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n020",
+   "phrase": "is owned by the corner shop",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n021",
+   "phrase": "belongs to the landlord",
+   "gold": "owned by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n022",
+   "phrase": "includes the appendix as a part",
+   "gold": "has part",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n023",
+   "phrase": "is included as a part of",
+   "gold": "part of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n024",
+   "phrase": "is a member of the first team",
+   "gold": "member of sports team",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n025",
+   "phrase": "is a member of the local party branch",
+   "gold": "member of political party",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n026",
+   "phrase": "is a member of the choir",
+   "gold": "member of",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n027",
+   "phrase": "runs the ferry crossing",
+   "gold": "operator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n028",
+   "phrase": "runs the country day to day",
+   "gold": "head of government",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n029",
+   "phrase": "school of fish",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n030",
+   "phrase": "wrote the screenplay for",
+   "gold": "author",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n031",
+   "phrase": "dreamed up the character for",
+   "gold": "creator",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n032",
+   "phrase": "built the game engine for",
+   "gold": "developer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n033",
+   "phrase": "was behind the camera on",
+   "gold": "director",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n034",
+   "phrase": "works the tills for",
+   "gold": "employer",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n035",
+   "phrase": "set the firm up",
+   "gold": "founded by",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n036",
+   "phrase": "got the firm going in the year",
+   "gold": "inception",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n037",
+   "phrase": "sits in the county",
+   "gold": "located in the administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n038",
+   "phrase": "covers the county",
+   "gold": "contains administrative territorial entity",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n039",
+   "phrase": "touches the county line",
+   "gold": "shares border with",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n040",
+   "phrase": "lies within the nation of",
+   "gold": "country",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n041",
+   "phrase": "votes as a citizen of",
+   "gold": "country of citizenship",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n042",
+   "phrase": "was first brewed in the land of",
+   "gold": "country of origin",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n043",
+   "phrase": "is capped at senior level by",
+   "gold": "country for sport",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n044",
+   "phrase": "speaks at home",
+   "gold": "languages spoken, written or signed",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n045",
+   "phrase": "is the tongue of administration in",
+   "gold": "official language",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n046",
+   "phrase": "studied law at",
+   "gold": "educated at",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n047",
+   "phrase": "gave a guest lecture at",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n048",
+   "phrase": "followed the band on tour",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n049",
+   "phrase": "follows online",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  },
+  {
+   "id": "n050",
+   "phrase": "is part of the deal",
+   "gold": "UNKNOWN",
+   "raw": "None",
+   "norm": "none",
+   "verdict": "abstain"
+  }
+ ]
+}
