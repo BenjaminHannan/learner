@@ -5387,7 +5387,8 @@ def main():
             result["items"] = brain.summary_items()
             result["coverage"] = dict(brain.cov)
             log(f"[diag] {json.dumps(result['diagnostics'])}")
-        pm.save_pretrained(out / "adapter")
+        if os.environ.get("SLEEPB_SAVE_ADAPTER", "1") != "0":  # SLEEPB_SAVE_ADAPTER=0 (Ben's PC, C: nearly full): no adapter files (~70-140 MB); nothing reads them back
+            pm.save_pretrained(out / "adapter")
     model.eval()
     dreamed = brain.dreamed_twohop() if brain else None
     result["scores"] = {}

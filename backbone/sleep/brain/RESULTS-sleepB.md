@@ -884,3 +884,6 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
   matches 005265d6fb apart from timing and the four new `args` entries. selftest_add18 and selftest_rem_k2 pass.
 - **PC chain `pc/sleepb_pc8.sh`** replaces pc7: slot 1 runs the pre-check and then add17; slot 2 runs add18 if Go, else arm A; then R8
   and V8 as agreed. If add18 takes arm A's slot, addendum 15's base is the defaults (the sealed rule's fallback when A has no result).
+- **PC disk (2026-10-27 ~18:40Z):** C: on Ben's PC has about 210 MB free. Each run's results and logs take a few MB, but the LoRA
+  adapter that sleepb saves at the end takes ~70-140 MB, and nothing reads it back. `SLEEPB_SAVE_ADAPTER=0` now skips that save; it
+  changes no number. The chain is `pc/sleepb_pc9.sh`: pc8 plus that setting, code src-cap4, and C:'s free space in its log.
