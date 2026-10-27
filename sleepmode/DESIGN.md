@@ -208,3 +208,9 @@ For each item the agent checks the answer (mostly `diary_search`; `python` for a
 written in as the answer and `fixed: true`; UNKNOWN too with `--keep-unknown`), `quarantine.jsonl` (UNKNOWN, with `reason`, for browsing weird-but-maybe-true dreams; not with `--keep-unknown`), `dropped.jsonl` (with `reason`), `stats.json`. Items keep their
 shape plus `verdict`, `fixed`, `tool_calls`. A model error or missing verdict counts as UNKNOWN. A CommandWorker-style trainer calls this on its
 dreams before training and trains on `kept.jsonl`.
+
+## Check-in source (Oct 27)
+On Ben's Mac, Mail.app and Calendar.app did not answer AppleScript (every read timed out, even "count messages"). Ben chose the
+claude.ai connectors instead: an hourly scheduled task reads Gmail (unread inbox, last 2 h, no promotions/social) and Google Calendar
+(next 3 h), read-only, flags with the same rules, dedupes via /mnt/project-files/sleepmode/checkin-notified.json, logs to
+checkin-log.jsonl, and messages Ben only when something needs him. The local osascript scanners stay in the code, off by default.

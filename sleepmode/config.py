@@ -47,8 +47,8 @@ class Config:
     heldout_families: List[str] = field(default_factory=lambda: ["percent_change", "top_n_per_group", "split_fullname"])
     practice_tools: bool = True     # tools (python, diary search, web) during practice
     # check-in
-    mail_enabled: bool = True
-    calendar_enabled: bool = True
+    mail_enabled: bool = False      # Mail.app reads hang on Ben's Mac; the hourly check-in runs on Gmail + Google Calendar connectors instead
+    calendar_enabled: bool = False
     mail_lookback_h: float = 24.0
     mail_max_scan: int = 150         # newest inbox messages looked at
     calendar_ahead_h: float = 12.0
