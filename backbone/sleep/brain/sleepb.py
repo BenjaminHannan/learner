@@ -772,6 +772,17 @@ def cuda_tidy():  # hand cached CUDA blocks back between generation and training
         torch.cuda.empty_cache()
 
 
+def cuda_cap():  # SLEEPB_CUDA_CAP_GIB=<GiB> caps PyTorch's CUDA memory. Changes no number. Under WSL a full card does not report out of memory:
+    # new blocks silently land in system memory and training crawls, so the cache never gets handed back. Under a cap the allocator frees
+    # its cached blocks and retries before it would pass the cap (Ben's PC: reserved reached 16.0 GiB on a 15.9 GiB card, 2026-10-27).
+    cap = float(os.environ.get("SLEEPB_CUDA_CAP_GIB") or 0)
+    if cap <= 0 or not torch.cuda.is_available():
+        return None
+    tot = torch.cuda.get_device_properties(0).total_memory / 2**30
+    torch.cuda.set_per_process_memory_fraction(min(1.0, cap / tot))
+    return cap, tot
+
+
 def tgt_logits(pm, ids, mask, tm):  # fp32 logits at the shifted target positions tm; FAST: run the decoder only and apply lm_head to those hidden states
     m = pm.get_base_model() if hasattr(pm, "get_base_model") else pm  # peft -> Qwen3_5ForCausalLM; LoRA layers / delta_w hooks live inside the decoder's Linears, so disable_adapter() still applies
     if not FAST or m.lm_head._forward_hooks or m.lm_head._forward_pre_hooks or hasattr(m.lm_head, "delta_w") or hasattr(m.lm_head, "lora_A"):
@@ -3429,7 +3440,7 @@ class Brain:
                     s.cov["rem_steps"] += n_rem
         lap("train")
         if torch.cuda.is_available():  # log only (the result JSON is unchanged): a slow night or a nearly full card shows here at once
-            s.log(f"[night {d}] trained {done} steps in {time.time() - t_tr:.0f} s (REM writing included); cuda peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB, reserved {torch.cuda.memory_reserved() / 2**30:.1f} GiB")
+            s.log(f"[night {d}] trained {done} steps in {time.time() - t_tr:.0f} s (REM writing included); cuda peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB, reserved {torch.cuda.memory_reserved() / 2**30:.1f} GiB (max {torch.cuda.max_memory_reserved() / 2**30:.2f})")
         rec.update({"steps": done, "steps_nrem": nrem_n, "steps_rem": rem_n, "rem_stats": rem_stats, "loss_curve": tr.curve[-6:]})
         if s.track:
             rec["cards"] = s.card_summary()
@@ -5068,6 +5079,9 @@ def main():
     ap.add_argument("--q4-eval", action="store_true", help="addendum 13 (delta arms only, not with --q4-base): after the final scoring, also score the final model under F0 / Q0 / Q / Qf (--q4-group / --q4-bits) -> result['q4_eval']")
     args = ap.parse_args()
     globals()["TOK_BUDGET"] = args.tok_budget
+    cap = cuda_cap()
+    if cap:
+        print(f"[cuda] PyTorch memory capped at {cap[0]:.1f} of {cap[1]:.1f} GiB (SLEEPB_CUDA_CAP_GIB)", flush=True)
     if args.selftest:
         print(json.dumps(selftest_shy()))
         print(json.dumps({"delta": selftest_delta()}))

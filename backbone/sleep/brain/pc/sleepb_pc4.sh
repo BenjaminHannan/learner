@@ -5,8 +5,9 @@
 #   arm A: $H/GO-SLEEP-A (written by the sleep race's round 1); R8: think2-p1/SEG2-DONE; V8: think2-p1/SEG3-DONE (the looping thread's).
 # When a step ends, even if it fails, it clears its GPU-BUSY.txt and job card, then writes "<rc> <time>" to the next owner's flag:
 # $H/GO-LOOP-P1 after arm A, $H/GO-LOOP-P2A after R8, $H/GO-LOOP-P2B after V8. There are no time-outs: a missing flag means waiting.
-# K2 on this 16 GB card: PyTorch's default CUDA allocator (expandable segments failed under WSL), --tok-budget 256, code $J/src-fix
-# (the selftest_shy memory fix, cuda_tidy between generation and training, and a log line every 200 training steps; it includes the
+# K2 on this 16 GB card: PyTorch's default CUDA allocator (expandable segments failed under WSL) capped at SLEEPB_CUDA_CAP_GIB=14 (a full
+# card under WSL spills into system memory instead of reporting out of memory), --tok-budget 256, code $J/src-cap
+# (the selftest_shy memory fix, cuda_tidy between generation and training, the cap, and a log line every 200 training steps; it includes the
 # addendum-15 code). A watchdog stops a run whose log is silent for 90 min (a full card spilling into system memory trained ~30x slower).
 # - Arm A (addendum 14, k2c): its sealed flags, at --gen-bs 24 (B used 48); on running out of memory, again from the start at 16.
 # - Addendum 15 (sealed, 02dca0a42e) R8 and V8: base flags from the sealed rule (B failed no harm, so A's flags if A passes no harm, else
@@ -14,6 +15,7 @@
 #   uses 8 too.
 # Small files go to $P (pull4/). The base decision is written to $P/base.txt before R8 runs.
 set -uo pipefail
+export SLEEPB_CUDA_CAP_GIB=${SLEEPB_CUDA_CAP_GIB:-14}
 J=${J:-$HOME/sleepb-pc}
 R=${R:-/mnt/c/Users/benja/pc-jobs/sleepb-pc}
 W=/mnt/c/Users/benja
@@ -43,14 +45,14 @@ release() {  # release NEXT_FLAG RC
 }
 mem() { grep -qs "OutOfMemoryError\|CUDA out of memory\|device not ready" "$1/sleepb.log"; }
 A=ab_ob_b4_nb
-run() {  # run NAME OUT EXTRA...: one sleepb run from $J/src-next; log and result JSON are copied to pull4/NAME when it ends
+run() {  # run NAME OUT EXTRA...: one sleepb run from $J/src-cap; log and result JSON are copied to pull4/NAME when it ends
   local n=$1 o=$2; shift 2
   if [ -f "$o/result_$A.json" ]; then echo "-- skip $n (done)"; return 0; fi
   mkdir -p "$o"
   echo "$o/sleepb.log" > "$R/cur4"
   echo "-- $n start $(date -u +%T) $*"
   touch "$o/sleepb.log"
-  (cd "$J/src-fix" && exec python3 backbone/sleep/brain/sleepb.py --arm "$A" --out "$o" "$@") >> "$o/sleepb.log" 2>&1 &
+  (cd "$J/src-cap" && exec python3 backbone/sleep/brain/sleepb.py --arm "$A" --out "$o" "$@") >> "$o/sleepb.log" 2>&1 &
   local py=$!
   ( while sleep 300; do
       if [ $(( $(date +%s) - $(stat -c %Y "$o/sleepb.log") )) -gt 5400 ]; then

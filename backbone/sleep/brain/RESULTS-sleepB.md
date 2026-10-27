@@ -818,3 +818,19 @@ even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allo
 - **Fourth try (sleepb_pc5, same PC slot):** the same flags, but with `--tok-budget 256` (rounding only), the new code, and a watchdog
   that stops the run if its log is silent for 90 min. It ends by writing pull3/DONE, so the next PC job starts.
 - **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same code and `--tok-budget 256`, with the same watchdog.
+
+## Addendum 17, fourth try: still about 9x slow; fifth try with a memory cap (recorded 2026-10-27 ~07:45Z, before it runs)
+- **Fourth try (sleepb_pc5, 06:46Z):** night 1 no longer stalls. It trained its 296 steps in 1897 s, and the whole night took 2051 s
+  (arc_val 0.881, probe_post 0.667, not reverted). On the 5090, arm B's night 1 took 227 s, so the PC is about 9x slower per step. The
+  5090 took about 3.1 h for B's seven nights, so at this rate add17 would need about a day of PC time.
+- **Cause, suggested:** PyTorch's reserved memory reached 16.0 GiB on a card with 15.9 GiB in total, with only 12.9 GiB in use. The
+  rest can only have been system memory. Under WSL a full card does not report out of memory, so PyTorch never hands its cache back.
+- **Code change (memory only, no number changes):** `cuda_cap()` reads `SLEEPB_CUDA_CAP_GIB` and caps PyTorch with
+  `torch.cuda.set_per_process_memory_fraction`. Under the cap, the allocator frees cached blocks and retries instead of spilling. The
+  night line also logs the most memory reserved. Nothing runs off CUDA or without the variable.
+- **Rule, fixed now:** the fourth try keeps going if night 2 trains at 2.5 s per step or faster, measured at its latest 200-step log
+  line. Otherwise it is stopped (without its DONE), and **the fifth try (sleepb_pc6)** runs the same flags with a 14 GiB cap. If it runs
+  out of memory under the cap, it starts again once at `--gen-bs 16`.
+  - pc6 stops itself if its log is silent for 90 min, or if, after night 2 or later, the remaining nights at 1.25x the last night's time
+    plus 75 min of final scoring would end after 18:00Z. Either way it writes pull3/DONE, so the looping thread's segment 1 starts.
+- **The arm A / R8 / V8 chain (sleepb_pc4)** uses the same cap and code.
