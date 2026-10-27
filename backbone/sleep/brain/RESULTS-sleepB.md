@@ -740,3 +740,54 @@ handed over), then the thinking thread's P1/P2. Both runs use the commit with th
   - The token budget changes rounding only.
   - If it runs out of memory, it starts again from the beginning at gen-bs 16; the log says which.
   - Marks are unchanged: S1 and S2 are against B's sealed numbers.
+
+## Addendum 16 result (2026-10-27): neither efficiency fix helps
+Ben's PC (RTX 5070 Ti), Qwen3.5-2B, Week-2, seed 1, `ab_ob_b4_nb` at 2x work, `--tok-budget 1024` and `--gen-bs 32` for all three runs (no
+memory fallback was needed). The fast `causal_conv1d` kernel is not installed on the PC, so transformers used its slower reference version
+of that layer in all three runs. Code 7325e1ea60. Results: `results_pc/run2/add16-{C,T1,T2}/`. About 78 min per run.
+
+| | C (control) | T1 (+ skip known 0.25) | T2 (+ REM views 20) |
+|---|---|---|---|
+| recall C2+C4 (200) | 75.5 | 75.5 (25 vs 25, p = 1.0) | 78.0 (+2.5; 19 vs 24, p = 0.54) |
+| C2 / C4 | 71 / 80 | 68 / 83 | 67 / 89 |
+| reverse C2+C4 | 73.5 | 74.5 (p = 0.89) | 79.0 (+5.5, p = 0.15) |
+| two-hop (78) | 32.1 | 26.9 (-5.1; 13 vs 9, p = 0.52) | 29.5 (-2.6; 11 vs 9, p = 0.82) |
+| two-hop dreamed / right when dreamed | 32 / 78% | 28 / 75% | 26 / 88% |
+| changed new | 96.7 | 86.7 | 93.3 |
+| ARC-Easy 500 | 94.0 | 92.4 | 92.6 |
+| diary pooled (base 79.7) | 82.5 | 81.4 | 84.8 |
+| nights undone | none | none | none |
+| known_share, mean of nights 3-7 | 0.35 | 0.28 | 0.29 |
+| REM practices per night (nights 2-7) | 2,805 each | 2,805 each | 100, 478, 926, 1,503, 2,259, 2,788 |
+
+**E0 (waste meter, C):**
+- known_share over nights 3-7 averages 0.35. That is between the marks (>= 0.40 room for E1; < 0.20 unlikely), so no decision mark fires.
+- `rem_cb` known_at_step is 0.97-0.99 on nights 2-5: REM over-practice **confirmed**. Every REM practice was of a card the model
+  already answered right.
+- The last quarter's known_share is 0.46-0.53, never >= 0.80, so no plateau stop.
+- Not wrong: known_share is above 0.20 on every night.
+
+**E1 (skip known cards): FAIL, and refuted.** T1 recall equals C's (75.5), so the "wrong if T1 <= C" condition fires. The mechanism did act:
+known_share fell from 0.35 to 0.28, and about 2,800-3,000 known draws a night were redrawn. Two-hop -5.1 also misses its >= C - 5 mark by
+0.1. No harm passes, with changed-new at exactly its mark (86.7).
+
+**E2 (cap REM drill): FAIL, not refuted.** +2.5 recall, p = 0.54 (the mark was +3 with p < 0.05). Two-hop 29.5 >= C - 5 passes. No harm
+passes. Bonus check: no night was undone. The cap moved 2,000-2,700 REM practices a night to NREM cards on nights 2-5.
+
+**What it means (suggested):**
+- Over-practising known cards is real waste, but it is not what limits recall at 2x work.
+- Freeing those steps for other cards does not buy a measurable gain on one seed.
+- The 4x reference (91.5) shows that more total work helps. Spending the same work more cleverly did not.
+- Neither fix is adopted. Per the prereg, there is no seed-2 rerun and no E7.
+- C's recall (75.5) is below my expectation of 82-87. Possible reasons are the PC differences above (card, token budget, slow conv
+  kernel) or plain run-to-run noise (untested).
+
+## Addendum 17: second and third PC tries (recorded 2026-10-27 ~03:50Z, before any result)
+- **Second try (sleepb_pc2.sh, 02:17Z):** add17 died at night 1's first training step, in the KL's `log_softmax`, with "CUDA driver error:
+  device not ready". This happened at gen-bs 24 and again at 16, with tok-budget 512.
+  - By estimate, that step needs well under 16 GB: replay KL covers about 400 target positions.
+  - So the error may not be plain memory exhaustion (suggested).
+- **Third try (sleepb_pc3.sh, launched ~03:50Z):** the same flags and code, but with PyTorch's default CUDA allocator instead of expandable
+  segments, and a 5 s nvidia-smi memory log. The allocator does not change any numbers.
+  - If it fails again, add17 waits for a 24 GB+ card (the 4090s, or Vast after the Nov 1 budget reset), and the PC goes to the thinking
+    thread.
