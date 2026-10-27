@@ -150,3 +150,28 @@ test('prompt: memory rule present, constant, and total stays under 9000 chars', 
   assert.ok(promptSize() < 9000, String(promptSize()));
   assert.ok(!/\d{4}-\d\d-\d\d/.test(SYSTEM_PROMPT));
 });
+
+test('memory: a "remember ..." ask answered without memory_save is sent back to save it (no model check call)', async () => {
+  const m = mem();
+  const gw = await startGateway([{ content: "Got it, I've saved that." }, { tool_calls: [{ name: 'memory_save', arguments: { fact: 'Ben takes AP Chem 4th period', topic: 'classes' } }] }, { content: 'Saved.' }]);
+  try {
+    const steps = [];
+    const agent = new Agent({ getSettings: () => ({ gatewayUrl: gw.url, model: 'm', maxSteps: 10, mode: 'hands-off', verify: false }), toolDefs: buildTools({}), tools: {}, memory: m, emit: (e) => { if (e.type === 'step_end') steps.push(e); }, approve: async () => 'once', askUser: async () => '' });
+    const t = { id: 't', messages: [], items: [] };
+    await agent.run(t, 'Remember that I take AP Chem 4th period');
+    assert.strictEqual(gw.requests.length, 3);
+    assert.match(gw.requests[1].messages.at(-1).content, /did not call memory_save/);
+    assert.ok(steps.some((s) => s.tool === 'verify' && /not saved/.test(s.summary)));
+    assert.match(m.block(), /AP Chem 4th period/);
+  } finally { gw.close(); }
+});
+
+test('memory: ordinary tasks and asks that did save get no memory re-check', async () => {
+  const m = mem();
+  const gw = await startGateway([{ content: 'Hello!' }]);
+  try {
+    const agent = new Agent({ getSettings: () => ({ gatewayUrl: gw.url, model: 'm', maxSteps: 10, mode: 'hands-off', verify: false }), toolDefs: buildTools({}), tools: {}, memory: m, emit() {}, approve: async () => 'once', askUser: async () => '' });
+    await agent.run({ id: 't', messages: [], items: [] }, 'hi there');
+    assert.strictEqual(gw.requests.length, 1);
+  } finally { gw.close(); }
+});
