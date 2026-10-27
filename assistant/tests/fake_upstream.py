@@ -25,8 +25,8 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         self.server.requests.append(body)
-        last = (body.get("messages") or [{}])[-1].get("content")
-        if isinstance(last, str) and last.startswith("(Internal check"):
+        first = (body.get("messages") or [{}])[0].get("content")
+        if isinstance(first, str) and first.startswith("(Internal check"):
             self.server.judge_calls.append(body)
             if self.server.judge_digit is None:  # simulate a failing judge
                 return self._json({"error": {"message": "boom"}}, 500)

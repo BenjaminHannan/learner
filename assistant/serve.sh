@@ -17,6 +17,10 @@ BIG_PREFILL_STEP="${ASSISTANT_PREFILL_STEP:-2048}"
 # 1 = gateway drops OpenCode's skills listing (~7k tokens) from system prompts; 0 = pass it through.
 export ASSISTANT_STRIP_SKILLS="${ASSISTANT_STRIP_SKILLS:-1}"
 
+# 1 = run the big server through mlx_server_persist.py, which saves the warmed system-prefix KV cache
+# to disk and reloads it after a restart (untested on the Mac; leave 0 until verified).
+PERSIST_CACHE="${ASSISTANT_PERSIST_CACHE:-0}"
+
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -87,7 +91,12 @@ fi
 if [ $need_big = 1 ]; then
   alive big && kill "$(cat "$RUN/big.pid")" 2>/dev/null
   echo "Starting big model ($BIG_MODEL) ..."
-  launch big "$PY" -m mlx_lm.server --model "$BIG_MODEL" --host 127.0.0.1 --port $BIG_PORT \
+  if [ "$PERSIST_CACHE" = 1 ]; then
+    BIG_CMD=("$PY" "$DIR/mlx_server_persist.py" --cache-dir "$RUN/kvcache")
+  else
+    BIG_CMD=("$PY" -m mlx_lm.server)
+  fi
+  launch big "${BIG_CMD[@]}" --model "$BIG_MODEL" --host 127.0.0.1 --port $BIG_PORT \
     --max-tokens 8192 --prompt-cache-size "$BIG_CACHE_SIZE" --prompt-cache-bytes "$BIG_CACHE_BYTES" \
     --prefill-step-size "$BIG_PREFILL_STEP" \
     --temp 0.6 --top-p 0.95 --top-k 20
@@ -111,7 +120,8 @@ if [ $need_gw = 1 ]; then
   echo "Starting gateway on port $GW_PORT ..."
   launch gateway "$PY" -u "$DIR/gateway.py" --big-url "http://127.0.0.1:$BIG_PORT" \
     --small-url "http://127.0.0.1:$SMALL_PORT" --port $GW_PORT --diary-dir "$OPS/diary" \
-    --prefix-file "$RUN/prefix.json"   # prewarms the last chat's system prompt + tools
+    --prefix-file "$RUN/prefix.json" \
+    $([ "$PERSIST_CACHE" = 1 ] && echo --persist-cache)   # prewarms the last chat's system prompt + tools
 fi
 
 # Tell experiment jobs that Ben is using the Mac.

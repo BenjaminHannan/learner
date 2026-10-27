@@ -239,13 +239,26 @@ class TestAuto(Base):
     def test_judge_request_shape(self):
         self.auto(MSGS)
         j = self.big.judge_calls[0]
-        self.assertEqual(j["messages"][:-1], MSGS)
-        self.assertTrue(j["messages"][-1]["content"].startswith("(Internal check, not from Ben.)"))
-        self.assertEqual(j["messages"][-1]["role"], "user")
-        self.assertEqual(j["tools"], self.TOOLS)
-        self.assertEqual(j["tool_choice"], "none")
+        self.assertEqual([m["role"] for m in j["messages"]], ["system", "user"])
+        self.assertTrue(j["messages"][0]["content"].startswith("(Internal check, not from Ben.)"))
+        self.assertEqual(j["messages"][1]["content"], "Where is the pineapple?")
+        self.assertNotIn("tools", j)
+        self.assertNotIn("tool_choice", j)
         self.assertIs(j["chat_template_kwargs"]["enable_thinking"], False)
         self.assertEqual((j["temperature"], j["max_tokens"], j["stream"]), (0, 2, False))
+
+    def test_judge_request_is_small(self):
+        big = "<openbot-developer-instructions>\n" + "x" * 30000 + "\n</openbot-developer-instructions>\nhi"
+        msgs = [{"role": "system", "content": "s" * 30000},
+                {"role": "user", "content": "y" * 30000}, {"role": "user", "content": big}]
+        self.auto(msgs)
+        j = self.big.judge_calls[0]
+        self.assertEqual(j["messages"][1]["content"], "hi")
+        self.assertLess(len(json.dumps(j)), 3000)
+        long = [{"role": "user", "content": "z" * 10000}]
+        self.big.judge_calls.clear()
+        self.auto(long)
+        self.assertEqual(len(self.big.judge_calls[0]["messages"][1]["content"]), gateway.JUDGE_MAX_CHARS)
 
     def test_no_user_message_is_fast(self):
         up = self.auto([{"role": "system", "content": "x"}])
@@ -328,6 +341,45 @@ class PrepareTest(unittest.TestCase):
         b = {"messages": [{"role": "system", "content": "abcd"}, {"role": "user", "content": "xy"},
                           {"role": "user", "content": [{"type": "text", "text": "z"}]}], "tools": []}
         self.assertTrue(gateway.request_sizes(b).startswith("system=4 user=%d tools=2" % (2 + len(json.dumps(b["messages"][2]["content"])))))
+
+
+OBI = "<openbot-developer-instructions>\nBe brief.\n</openbot-developer-instructions>\n"
+CAT = "<system-update>\nThe Code Mode tool catalog has changed. v%d\n</system-update>"
+
+
+class TestDedupe(unittest.TestCase):
+    def msgs(self, *users):
+        return [{"role": "system", "content": "sys"}] + [{"role": "user", "content": u} for u in users]
+
+    def contents(self, msgs):
+        return [m["content"] for m in gateway.prepare({"messages": msgs}, False, 10)["messages"]]
+
+    def test_keeps_first_instructions_and_last_catalog(self):
+        out = self.contents(self.msgs(OBI + "role\n" + CAT % 1, OBI + "hi\n" + CAT % 2,
+                                      OBI + "hi\n" + CAT % 3))
+        self.assertEqual(out, ["sys", OBI + "role\n", "hi\n", "hi\n" + CAT % 3])
+
+    def test_changed_instructions_kept(self):
+        obi2 = OBI.replace("brief", "briefer")
+        out = self.contents(self.msgs(OBI + "a", obi2 + "b", OBI + "c"))
+        self.assertEqual(out, ["sys", OBI + "a", obi2 + "b", "c"])
+
+    def test_history_prefix_stable_across_turns(self):
+        t1 = self.contents(self.msgs(OBI + "a", OBI + "b"))
+        t2 = self.contents(self.msgs(OBI + "a", OBI + "b", OBI + "c"))
+        self.assertEqual(t2[:len(t1)], t1)
+
+    def test_switch_off(self):
+        m = self.msgs(OBI + "a", OBI + "b")
+        gateway.DEDUPE = False
+        try:
+            self.assertEqual(self.contents(m), ["sys", OBI + "a", OBI + "b"])
+        finally:
+            gateway.DEDUPE = True
+
+    def test_assistant_and_tool_messages_untouched(self):
+        m = self.msgs(OBI + "a") + [{"role": "assistant", "content": OBI}, {"role": "tool", "content": OBI}]
+        self.assertEqual(self.contents(m)[2:], [OBI, OBI])
 
 
 class PrewarmTest(Base):

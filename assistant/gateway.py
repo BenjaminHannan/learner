@@ -29,14 +29,14 @@ from urllib.parse import urlparse
 MODEL_IDS = ["qwen36-auto", "qwen36", "qwen36-fast", "k2-helper"]
 BIG_MAX, SMALL_MAX = 8192, 2048
 AUTO_CACHE_MAX = 500
-# The judge prefills the whole prompt; the real call then reuses that cached prefix. A short
-# timeout doesn't stop the server's prefill, so on a long cold prompt it only made the real
-# call prefill everything a second time alongside it (M1, Oct 27: two 36k prefills at once).
-JUDGE_TIMEOUT = 600
+# The judge sees only the last user message (no history, no tools): a few hundred tokens.
+# Judging on the whole prompt cost a second cold prefill (M1, Oct 27: 49k-token judge, 254 s).
+JUDGE_TIMEOUT = 60
+JUDGE_MAX_CHARS = 2000
 REWARM_IDLE_S = 60  # after the last request ends, re-send the warm prefix (cheap when still cached)
 JUDGE_PROMPT = (
-    "(Internal check, not from Ben.) Before answering, rate how much careful step-by-step "
-    "thinking the request above needs. Reply with one digit only: 0 = none (chat, simple "
+    "(Internal check, not from Ben.) Rate how much careful step-by-step "
+    "thinking the user's request needs. Reply with one digit only: 0 = none (chat, simple "
     "fact, a simple tool step), 1 = some, 2 = a lot (math, multi-step planning, debugging, "
     "tricky reasoning).")
 CHAT_PATHS = ("/v1/chat/completions", "/chat/completions")
@@ -210,7 +210,8 @@ def fix_reasoning(obj):
 # ---------------------------------------------------------------- gateway core
 
 class Gateway:
-    def __init__(self, big_url, small_url, diary_dir, prefix_file=None):
+    def __init__(self, big_url, small_url, diary_dir, prefix_file=None, persist_cache=False):
+        self.persist_cache = persist_cache  # ask mlx_server_persist.py to save the warmed prefix cache
         self.big_url = big_url.rstrip("/")
         self.small_url = (small_url or "").rstrip("/")
         self.diary = Diary(diary_dir)
@@ -274,12 +275,35 @@ class Gateway:
             log("prewarm: %s prompt=%s cached=%s in %.1fs" % (
                 "ok" if r.status == 200 else "HTTP %d" % r.status, usage.get("prompt_tokens"),
                 (usage.get("prompt_tokens_details") or {}).get("cached_tokens"), time.time() - t0))
+            if r.status == 200 and self.persist_cache:
+                self.save_prefix_cache()
             return time.time() - t0
         except (OSError, http.client.HTTPException, ValueError) as e:
             log("prewarm: failed:", repr(e))
             return None
         finally:
             self._warm_lock.release()
+
+    def save_prefix_cache(self, timeout=180):
+        """Ask the persist wrapper to write the warmed system-prefix cache to disk. Never raises."""
+        try:
+            u = urlparse(self.big_url)
+            conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=timeout)
+            try:
+                conn.request("POST", "/v1/internal/save_prefix", b"{}",
+                             {"Content-Type": "application/json"})
+                r = conn.getresponse()
+                data = r.read()
+            finally:
+                conn.close()
+            if r.status == 404:
+                log("prewarm: save_prefix not available (server is not mlx_server_persist.py); "
+                    "disabling cache persistence")
+                self.persist_cache = False
+            else:
+                log("prewarm: save_prefix HTTP %d %s" % (r.status, data[:200].decode("utf-8", "replace")))
+        except (OSError, http.client.HTTPException) as e:
+            log("prewarm: save_prefix failed:", repr(e))
 
     def warm_at_start(self, wait_s=900):
         """Background: once the big server answers, warm the saved prefix."""
@@ -365,12 +389,10 @@ class Gateway:
         t0 = time.time()
         level = 1
         try:
-            b = prepare(body, False, BIG_MAX)  # same prefix (and tools) as the real request
-            b["messages"] = list(b.get("messages") or []) + [
-                {"role": "user", "content": JUDGE_PROMPT}]
-            b.update(stream=False, temperature=0, max_tokens=2, tool_choice="none")
-            for k in ("stream_options", "max_completion_tokens", "top_p", "top_k", "min_p"):
-                b.pop(k, None)
+            b = {"model": "default_model", "stream": False, "temperature": 0, "max_tokens": 2,
+                 "chat_template_kwargs": {"enable_thinking": False},
+                 "messages": [{"role": "system", "content": JUDGE_PROMPT},
+                              {"role": "user", "content": judge_text(body)}]}
             u = urlparse(self.big_url)
             conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=JUDGE_TIMEOUT)
             try:
@@ -405,8 +427,46 @@ SKILLS_RE = re.compile(
 STRIP_SKILLS = os.environ.get("ASSISTANT_STRIP_SKILLS", "1") != "0"  # config.sh switch
 
 
+def judge_text(body):
+    """The last user message without wrapper blocks (OpenBot instructions, tool catalogs), capped."""
+    last = next((m for m in reversed(body.get("messages") or [])
+                 if isinstance(m, dict) and m.get("role") == "user"), None)
+    t = text_of(last.get("content")) if last else ""
+    bare = WRAPPER_RE.sub("", t).strip()
+    return (bare or t.strip())[-JUDGE_MAX_CHARS:]
+
+
+# OpenBot repeats its ~21k-char instructions in every user message and appends a Code Mode
+# tool catalog to each one (M1, Oct 27: 6 user msgs = 166k chars for a "hi").
+OBI_RE = re.compile(r"<openbot-developer-instructions>.*?</openbot-developer-instructions>\n?", re.S)
+CATALOG_RE = re.compile(r"<system-update>\nThe Code Mode tool catalog has changed\..*?</system-update>\n?", re.S)
+WRAPPER_RE = re.compile(r"<(openbot-developer-instructions|system-update)>.*?</\1>", re.S)
+DEDUPE = os.environ.get("ASSISTANT_DEDUPE", "1") != "0"  # config.sh switch
+
+
+def dedupe(msgs):
+    """Drop repeated OpenBot blocks from user messages. Earlier messages keep their first copy
+    so the cached history prefix stays the same from turn to turn."""
+    users = [i for i, m in enumerate(msgs) if isinstance(m, dict) and m.get("role") == "user"
+             and isinstance(m.get("content"), str)]
+    seen, out = set(), list(msgs)
+    for i in users:
+        c = out[i]["content"]
+        def keep_first(mo):
+            if mo.group() in seen:
+                return ""
+            seen.add(mo.group())
+            return mo.group()
+        c = OBI_RE.sub(keep_first, c)
+        if i != users[-1]:
+            c = CATALOG_RE.sub("", c)
+        if c != out[i]["content"]:
+            out[i] = dict(out[i], content=c)
+    return out
+
+
 def prepare(body, thinking, default_max):
-    """Copy of the request body adjusted for mlx_lm.server. Messages untouched."""
+    """Copy of the request body adjusted for mlx_lm.server (system names unified, OpenBot repeats deduped)."""
     b = dict(body)
     b["model"] = "default_model"  # never let mlx try to load another model
     b.pop("reasoning_effort", None)
@@ -430,7 +490,7 @@ def prepare(body, thinking, default_max):
                 if c != m["content"]:
                     m = dict(m, content=c)
             fixed.append(m)
-        b["messages"] = fixed
+        b["messages"] = dedupe(fixed) if DEDUPE else fixed
     return b
 
 
@@ -528,7 +588,8 @@ class Handler(BaseHTTPRequestHandler):
             if name == "big" and route_model != "k2-helper":
                 gw.note_prefix(prepped)
             payload = json.dumps(prepped).encode()
-            log("size: " + request_sizes(prepped) + " (before prepare: %d chars)" % len(json.dumps(body)))
+            log("size: " + request_sizes(prepped) + " (before prepare: %d chars, after: %d)" % (
+                len(json.dumps(body)), len(payload)))
             u = urlparse(url)
             conn = http.client.HTTPConnection(u.hostname, u.port or 80, timeout=3600)
             try:
@@ -752,10 +813,11 @@ def build_diary(body, client_model, upstream, thinking, asm, status, latency, tt
     return rec, blobs, row
 
 
-def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1", prefix_file=None):
+def make_server(big_url, small_url, port, diary_dir, host="127.0.0.1", prefix_file=None,
+                persist_cache=False):
     srv = ThreadingHTTPServer((host, port), Handler)
     srv.daemon_threads = True
-    srv.gw = Gateway(big_url, small_url, diary_dir, prefix_file)
+    srv.gw = Gateway(big_url, small_url, diary_dir, prefix_file, persist_cache)
     return srv
 
 
@@ -768,8 +830,13 @@ def main():
     ap.add_argument("--diary-dir", default=e("DIARY_DIR", "~/learner-ops/diary"))
     ap.add_argument("--prefix-file", default=e("GATEWAY_PREFIX_FILE"),
                     help="save the last chat's system prompt + tools here and prewarm it at start")
+    ap.add_argument("--persist-cache", action="store_true",
+                    default=e("ASSISTANT_PERSIST_CACHE") == "1",
+                    help="after a successful warm, POST /v1/internal/save_prefix to the big server "
+                         "(needs assistant/mlx_server_persist.py)")
     a = ap.parse_args()
-    srv = make_server(a.big_url, a.small_url, a.port, a.diary_dir, prefix_file=a.prefix_file)
+    srv = make_server(a.big_url, a.small_url, a.port, a.diary_dir, prefix_file=a.prefix_file,
+                      persist_cache=a.persist_cache)
     if a.prefix_file:
         srv.gw.warm_at_start()
     log("gateway on 127.0.0.1:%d  big=%s small=%s diary=%s" % (
