@@ -46,6 +46,65 @@ class SseText {
   }
 }
 
+// LFM3 often writes its reasoning and then "</think>" into the plain content even with thinking off (store test, Oct 27:
+// 70 of 80 chats). Split it: everything up to the last "</think>" becomes reasoning_content, the rest stays the reply.
+const THINK_END = '</think>';
+function splitThink(text) {
+  const i = (text || '').lastIndexOf(THINK_END);
+  if (i < 0) return { reasoning: '', content: text || '' };
+  return { reasoning: text.slice(0, i).replace(/^\s*<think>/, '').trim(), content: text.slice(i + THINK_END.length).replace(/^\s+/, '') };
+}
+// The same for a stream: content deltas are held back (and shown as reasoning_content, so the app's "thinking" line moves)
+// until "</think>" appears, the stream ends, or HOLD_MAX chars pass with no "</think>" (then it was a plain reply).
+const HOLD_MAX = 1200;
+// Holding every reply would hide plain answers until the end, so decide from the opening: LFM3's stray reasoning reads
+// like "The user wants…", "We need to…", "Okay, …". Anything else streams straight through (the app strips a late tag).
+const DECIDE_AT = 24;
+const LOOKS_LIKE_THINKING = /^\s*(<think>|the user|user (wants|asks|is)|we (need|have|should|must|are)|okay\b|ok,|alright|let me|let's|let us|i (need|should|will|think|must)|so,? (the|we)|hmm|first,|to answer)/i;
+class SseThink {
+  constructor() { this.buf = ''; this.held = ''; this.mode = 'hold'; this.last = null; }
+  _line(obj) { return 'data: ' + JSON.stringify(obj) + '\n\n'; }
+  _withDelta(j, delta) { const c = { ...j.choices[0], delta }; return { ...j, choices: [c] }; }
+  // returns the SSE text to send for this chunk
+  push(chunk) {
+    this.buf += chunk; let out = ''; let i;
+    while ((i = this.buf.indexOf('\n')) >= 0) {
+      const raw = this.buf.slice(0, i + 1); this.buf = this.buf.slice(i + 1);
+      const line = raw.trim();
+      if (!line.startsWith('data:')) { out += raw; continue; }
+      const d = line.slice(5).trim();
+      if (d === '[DONE]') { out += this.flush() + raw; continue; }
+      let j; try { j = JSON.parse(d); } catch (e) { out += raw; continue; }
+      const c = j.choices && j.choices[0]; const t = c && c.delta && c.delta.content;
+      if (this.mode !== 'hold' || typeof t !== 'string' || !t) { if (c && c.finish_reason) out += this.flush(j); out += raw; continue; }
+      this.last = j; this.held += t;
+      if (!this.held.includes(THINK_END) && this.held.length >= DECIDE_AT && !LOOKS_LIKE_THINKING.test(this.held)) { out += this.flush(j); continue; }
+      const k = this.held.lastIndexOf(THINK_END);
+      if (k >= 0) {
+        const before = this.held.slice(0, k); const after = this.held.slice(k + THINK_END.length).replace(/^\s+/, '');
+        const shown = this.shown || 0; const rest = before.slice(shown);
+        this.mode = 'pass'; this.held = '';
+        const { content, ...noContent } = c.delta;
+        if (rest) out += this._line(this._withDelta(j, { ...noContent, reasoning_content: rest }));
+        if (after) out += this._line(this._withDelta(j, { ...noContent, content: after }));
+      } else if (this.held.length > HOLD_MAX) {
+        out += this.flush(j);
+      } else {
+        // show it as thinking for now, minus a possible "</thi" tail
+        const safe = this.held.length - (THINK_END.length - 1); const shown = this.shown || 0;
+        if (safe > shown) { const { content, ...noContent } = c.delta; out += this._line(this._withDelta(j, { ...noContent, reasoning_content: this.held.slice(shown, safe) })); this.shown = safe; }
+      }
+    }
+    return out;
+  }
+  // no "</think>" came: what was held is the reply after all
+  flush(j) {
+    if (this.mode !== 'hold' || !this.held) { this.mode = 'pass'; return ''; }
+    const base = j || this.last; const text = this.held; this.held = ''; this.mode = 'pass';
+    return base ? this._line(this._withDelta(base, { content: text })) : '';
+  }
+}
+
 function createGateway(o) {
   const upstream = o.upstream;                   // 'http://127.0.0.1:18090'
   const f = o.fetch || fetch;
@@ -79,11 +138,14 @@ function createGateway(o) {
         if (body.stream && r.body) {
           const sse = new SseText(); const dec = new TextDecoder();
           const reader = r.body.getReader();
-          for (;;) { const { value, done } = await reader.read(); if (done) break; res.write(value); sse.push(dec.decode(value, { stream: true })); }
+          const think = new SseThink();
+          for (;;) { const { value, done } = await reader.read(); if (done) break; const out = think.push(dec.decode(value, { stream: true })); if (out) { res.write(out); sse.push(out); } }
+          const tail = think.push('\n') + think.flush(); if (tail) { res.write(tail); sse.push(tail); }
           res.end();
-          if (r.ok && !warm) logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: sse.text }));
+          if (r.ok && !warm) logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: splitThink(sse.text).content }));
         } else {
-          const text = await r.text();
+          let text = await r.text();
+          try { const j = JSON.parse(text); const m = j.choices && j.choices[0] && j.choices[0].message; if (m && typeof m.content === 'string' && m.content.includes(THINK_END)) { const sp = splitThink(m.content); m.content = sp.content; m.reasoning_content = [m.reasoning_content, sp.reasoning].filter(Boolean).join('\n'); text = JSON.stringify(j); } } catch (e) { /* not json: pass through */ }
           res.end(text);
           if (r.ok && !warm) { let c = ''; try { c = JSON.parse(text).choices[0].message.content || ''; } catch (e) { /* not json */ } logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: c })); }
         }
@@ -103,4 +165,4 @@ function createGateway(o) {
   };
 }
 
-module.exports = { createGateway, diaryRecord, diaryMessages, mapRequest, SseText, MODEL_NAMES, dayOf };
+module.exports = { createGateway, splitThink, SseThink, diaryRecord, diaryMessages, mapRequest, SseText, MODEL_NAMES, dayOf };

@@ -432,3 +432,25 @@ test('userData drives every runtime path (--user-data-dir)', () => {
   assert.ok(/migrateUserData\(app\.getPath\('appData'\), app\.getPath\('userData'\)\)/.test(src));
   assert.ok(typeof WinSleep === 'function');
 });
+
+test('gateway: LFM3 reasoning before "</think>" leaves the reply (non-stream and stream, tag split across chunks)', () => {
+  const { splitThink, SseThink } = require('../src/gateway');
+  assert.deepStrictEqual(splitThink('The user wants hi. </think>\n\nHi!'), { reasoning: 'The user wants hi.', content: 'Hi!' });
+  assert.deepStrictEqual(splitThink('Hi!'), { reasoning: '', content: 'Hi!' });
+  const ev = (t, extra) => 'data: ' + JSON.stringify({ id: 'x', choices: [{ index: 0, delta: t == null ? {} : { content: t }, finish_reason: null, ...(extra || {}) }] }) + '\n\n';
+  const run = (parts) => {
+    const s = new SseThink(); let out = '';
+    for (const p of parts) out += s.push(p);
+    out += s.push('data: [DONE]\n\n') + s.flush();
+    const sse = new SseText(); sse.push(out);
+    let reasoning = ''; for (const l of out.split('\n')) { if (!l.startsWith('data: {')) continue; const d = JSON.parse(l.slice(6)).choices[0].delta; if (d.reasoning_content) reasoning += d.reasoning_content; }
+    return { content: sse.text, reasoning, done: out.includes('[DONE]') };
+  };
+  const a = run([ev('We need to say hi. '), ev('</thi'), ev('nk>\n\nHel'), ev('lo!'), ev(null, { finish_reason: 'stop' })]);
+  assert.strictEqual(a.content, 'Hello!'); assert.strictEqual(a.reasoning, 'We need to say hi. '); assert.ok(a.done);
+  const b = run([ev('Hello '), ev('there!'), ev(null, { finish_reason: 'stop' })]); // no tag: the held text is the reply
+  assert.strictEqual(b.content, 'Hello there!');
+  const long = 'x'.repeat(1300);
+  const c = run([ev(long), ev(' more'), ev(null, { finish_reason: 'stop' })]);
+  assert.strictEqual(c.content, long + ' more');
+});

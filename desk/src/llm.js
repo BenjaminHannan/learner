@@ -132,6 +132,9 @@ async function streamChat(opts) {
   }
   if (buf) handle(buf);
 
+  // LFM3 can leave its reasoning and a "</think>" in the reply itself (the built-in gateway catches most of it live)
+  const te = content.lastIndexOf('</think>');
+  if (te >= 0) { reasoning = [reasoning, content.slice(0, te).replace(/^\s*<think>/, '').trim()].filter(Boolean).join('\n'); content = content.slice(te + 8).replace(/^\s+/, ''); }
   let toolCalls = tc.filter(Boolean).filter((t) => t.name).map((t, i) => ({ id: t.id || 'call_' + Date.now().toString(36) + '_' + i, name: t.name, arguments: t.arguments || '{}' }));
   if (!toolCalls.length && content && /<tool_call>|<function=/.test(content)) {
     const fb = extractFallbackCalls(content);
