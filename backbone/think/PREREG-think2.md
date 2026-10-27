@@ -101,7 +101,7 @@ Raised by Ben: the assistant must decide by itself how many laps each problem ge
 - Wrong if the laps used don't rise with depth (Spearman rho <= 0.1 between depth and laps), or S_halt < S_fixed - 1.5.
 - It never changes another test's verdict; its run counts toward the 18 R cap.
 
-## Addendum F (2026-10-27 11:30Z, before any br or aplong result): loop the model's own layers
+## Addendum F (2026-10-27 06:05Z, before any br or aplong result): loop the model's own layers
 Ben: "You have to get the loop to work." The notes block has failed every test so far, but Think-1's arm b (the
 model's own middle block run 3 times) beat aplus by about +0.85 over 3 seeds (suggested: not compute-matched, one loop
 count). This tests that lead directly, with a matched control and with halting in mind.
