@@ -4,7 +4,8 @@
 #                               (kill -STOP, never kill: its EXIT trap would hand the GPU on), waits for the running race arm to end, runs
 #                               the hops preflight and pair B, then puts GPU-BUSY back, writes handoff/HOPS-B-DONE and resumes the driver.
 #   bash pc_hops.sh A SRC OUT   pair A (hplain, hloop) in the GO-LOOP-P1 slot: waits for handoff/GO-LOOP-P1, runs pair B first if it has not
-#                               run (race-mini ended before B got its gap), then pair A, then writes think2-p1/SEG2-DONE for the sleep chain.
+#                               run (race-mini ended before B got its gap), then pair A, then writes DONE_FLAG (default think2-p1/SEG2-DONE,
+#                               the sleep chain's flag) and handoff/HOPS-A-DONE.
 # SRC holds backbone/ (a git archive of the committed branch). OUT is the run root: OUT/data (built here and checked against the committed
 # sha256), OUT/runs/<arm>_s0, OUT/pair<X>.log, OUT/<arm>.log, OUT/SUMMARY_hops.txt. Every arm already finished is skipped on a rerun.
 set -u
@@ -18,6 +19,7 @@ CARD=$JOBS/hops-$PAIR.md
 PY=${PY:-$HOME/bbvenv/bin/python}
 MIN_FREE_MB=${MIN_FREE_MB:-3000}
 POLL=${POLL:-60}  # seconds between checks
+DONE_FLAG=${DONE_FLAG:-$JOBS/think2-p1/SEG2-DONE}  # pair A's last flag: it hands the GPU on (handoff/GO-RACE-MINI since 19:35Z Oct 27)
 mkdir -p "$OUT/runs"
 LOG=$OUT/pair$PAIR.log
 DRV=""
@@ -159,10 +161,11 @@ if [ "$PAIR" = A ]; then
   rc=$?
   summarize
   release_gpu "$rc"
-  mkdir -p "$JOBS/think2-p1"
-  # SEG2-DONE hands the GPU to the sleep chain and gates the later think2 segments on their own code's preflight. A hops failure says
-  # nothing about that code, so the flag always reads 0; the hops exit code goes after it.
-  echo "0 $(date -u +%FT%TZ) hops pair A rc=$rc" > "$JOBS/think2-p1/SEG2-DONE"
+  mkdir -p "$(dirname "$DONE_FLAG")"
+  # The flag hands the GPU on (to race-mini, whose bridge then writes SEG2-DONE; SEG2-DONE gates the later think2 segments on their own
+  # code's preflight). A hops failure says nothing about that code, so the flag always reads 0; the hops exit code goes after it.
+  echo "0 $(date -u +%FT%TZ) hops pair A rc=$rc" > "$DONE_FLAG"
+  echo "$rc $(date -u +%FT%TZ)" > "$HAND/HOPS-A-DONE"
   exit $rc
 fi
 log "unknown pair $PAIR (use A or B)"

@@ -367,12 +367,9 @@ def test_preflight_hops_worst_case(tmp_path):
     assert PF.main(["--smoke", "--data", str(data), "--out", str(tmp_path / "pf2"), "--arms", "ws"]) == 1  # a village arm still needs arm a's adapter
 
 
-def test_pc_hops_pauses_race_mini_and_hands_back(tmp_path):
-    """pc_hops.sh B, dry run with stub scripts: it pauses a fake race-mini driver, waits for the running race arm to end, runs pair B with no
-    race arm running and its own GPU-BUSY line, then puts race-mini's line back, writes HOPS-B-DONE and resumes the driver, which finishes."""
+def _pc_stubs(tmp_path):
+    """Stub build_hops / preflight / think1 / summarize_hops for the pc_*.sh dry runs; think1 logs each arm, whether a race arm runs, and GPU-BUSY."""
     import shutil
-    import subprocess
-    import time
     src, out, race, jobs = (tmp_path / x for x in ("src", "out", "race", "jobs"))
     (src / "backbone" / "think").mkdir(parents=True)
     (src / "backbone" / "results" / "hops").mkdir(parents=True)
@@ -386,12 +383,21 @@ def test_pc_hops_pauses_race_mini_and_hands_back(tmp_path):
             "preflight.py": "import sys, pathlib\np = pathlib.Path(sys.argv[sys.argv.index('--out') + 1]); p.mkdir(parents=True, exist_ok=True)\n"
                             "(p / 'preflight.json').write_text('{}'); print('PREFLIGHT OK: stub')\n",
             "think1.py": "import sys, pathlib, subprocess\na = sys.argv; arm = a[a.index('--arm') + 1]; p = pathlib.Path(a[a.index('--out') + 1]); p.mkdir(parents=True, exist_ok=True)\n"
-                         "racing = subprocess.run(['pgrep', '-f', 'race_mini.py'], capture_output=True).stdout.strip() != b''\n"
+                         f"racing = subprocess.run(['pgrep', '-f', {str(race / 'race_mini.py')!r}], capture_output=True).stdout.strip() != b''\n"
                          f"open({str(calls)!r}, 'a').write(f'{{arm}} racing={{racing}} busy={{open({str(busy)!r}).read().strip()}}\\n')\n"
                          "(p / f'result_{arm}_s0.json').write_text('{}')\n",
             "summarize_hops.py": "print('OUTCOME B: stub')\n"}
     for name, body in stub.items():
         (src / "backbone" / "think" / name).write_text(body)
+    return src, out, race, jobs, busy, calls
+
+
+def test_pc_hops_pauses_race_mini_and_hands_back(tmp_path):
+    """pc_hops.sh B, dry run with stub scripts: it pauses a fake race-mini driver, waits for the running race arm to end, runs pair B with no
+    race arm running and its own GPU-BUSY line, then puts race-mini's line back, writes HOPS-B-DONE and resumes the driver, which finishes."""
+    import subprocess
+    import time
+    src, out, race, jobs, busy, calls = _pc_stubs(tmp_path)
     (race / "race_mini.py").write_text("import time\ntime.sleep(3)\n")
     (race / "pc_race_mini.sh").write_text(f"for i in 1 2 3; do python3 {race}/race_mini.py $i; echo \"arm $i done\" >> {race}/job.log; done\n"
                                           f"echo end >> {race}/job.log\n")
@@ -411,3 +417,50 @@ def test_pc_hops_pauses_race_mini_and_hands_back(tmp_path):
     assert (race / "job.log").read_text().split("\n")[:4] == ["arm 1 done", "arm 2 done", "arm 3 done", "end"] and not (jobs / "hops-B.md").exists()
     log = (out / "pairB.log").read_text()
     assert log.index("paused") < log.index("start hplains") < log.index("resumed") and "OUTCOME B: stub" in log
+
+
+def test_pc_hops_pair_a_runs_b_first_and_hands_to_race_mini(tmp_path):
+    """pc_hops.sh A with DONE_FLAG=handoff/GO-RACE-MINI (PC order of 19:35Z Oct 27): on GO-LOOP-P1 it runs pair B (never run) and then pair A
+    under its own GPU-BUSY line, empties GPU-BUSY, then writes GO-RACE-MINI reading 0 and HOPS-A-DONE, and never SEG2-DONE."""
+    import os
+    import subprocess
+    src, out, race, jobs, busy, calls = _pc_stubs(tmp_path)
+    busy.write_text("")
+    (jobs / "handoff" / "GO-LOOP-P1").write_text("go\n")
+    env = dict(**os.environ, JOBS=str(jobs), BUSY=str(busy), CDRIVE=str(tmp_path), PY=sys.executable, MIN_FREE_MB="1", POLL="1",
+               DONE_FLAG=str(jobs / "handoff" / "GO-RACE-MINI"))
+    r = subprocess.run(["bash", str(HERE / "pc_hops.sh"), "A", str(src), str(out)], env=env, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr
+    lines = calls.read_text().splitlines()
+    assert [x.split()[0] for x in lines] == ["hplains", "hloops", "hplain", "hloop"] and all("busy=hops pair A" in x for x in lines), lines
+    assert busy.read_text() == "" and not (jobs / "hops-A.md").exists()
+    assert (jobs / "handoff" / "GO-RACE-MINI").read_text().startswith("0 ") and (jobs / "handoff" / "HOPS-A-DONE").read_text().startswith("0 ")
+    assert not (jobs / "think2-p1" / "SEG2-DONE").exists()
+
+
+def test_pc_race_bridge(tmp_path):
+    """pc_race_bridge.sh writes SEG2-DONE (first field 0) after a fresh RACE-MINI-DONE; with hops pair A done and no race-mini driver it gives
+    up after STALL_S; stale flags from before its start are ignored."""
+    import os
+    import subprocess
+    import time
+    jobs = tmp_path / "jobs"
+    (jobs / "handoff").mkdir(parents=True)
+    seg2 = jobs / "think2-p1" / "SEG2-DONE"
+    env = dict(**os.environ, JOBS=str(jobs), LOG=str(tmp_path / "bridge.log"), POLL="1", STALL_S="2")
+    run = ["bash", str(HERE / "pc_race_bridge.sh")]
+    for f in ("RACE-MINI-DONE", "HOPS-A-DONE"):  # stale: written before the bridge starts
+        (jobs / "handoff" / f).write_text("old\n")
+    time.sleep(0.05)
+    with subprocess.Popen(run, env=env) as p:
+        time.sleep(4)
+        assert not seg2.exists()  # stale flags do not count
+        (jobs / "handoff" / "RACE-MINI-DONE").write_text("rc 0\n")
+        p.wait(timeout=30)
+    assert p.returncode == 0 and seg2.read_text().startswith("0 ") and "race-mini v2 done" in seg2.read_text()
+    seg2.unlink()
+    with subprocess.Popen(run, env=env) as p:
+        time.sleep(1.5)
+        (jobs / "handoff" / "HOPS-A-DONE").write_text("0\n")  # no pc_race_mini.sh driver runs in this test
+        p.wait(timeout=30)
+    assert seg2.read_text().startswith("0 ") and "race-mini skipped" in seg2.read_text()
