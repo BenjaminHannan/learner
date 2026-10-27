@@ -1,0 +1,159 @@
+<title>Premonition Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one column of picture cards, like pages in a picture book; app's own espresso + amber colors */
+:root{
+  --bg:#f6f1ea; --card:#fffaf3; --ink:#2a211b; --muted:#7a6a5c; --line:#e3d6c6;
+  --amber:#d98a00; --amber-soft:#fbe7c2; --glass:#efe5d8; --ok:#3f9a55; --stop:#d2513f;
+  --disp:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14110f; --card:#1c1815; --ink:#efe7de; --muted:#a89a8c; --line:#3a322b;
+  --amber:#f5a524; --amber-soft:#3b2a12; --glass:#25201c; --ok:#7cc68b; --stop:#ef6b5b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14110f; --card:#1c1815; --ink:#efe7de; --muted:#a89a8c; --line:#3a322b;
+  --amber:#f5a524; --amber-soft:#3b2a12; --glass:#25201c; --ok:#7cc68b; --stop:#ef6b5b; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:12px}
+.hero{border-color:var(--amber)}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(34px,8vw,52px);line-height:1;margin:0;text-wrap:balance}
+h2{font-family:var(--disp);font-weight:600;font-size:clamp(22px,5vw,28px);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0;color:var(--muted);max-width:60ch}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);fill:var(--ink)}
+.tag{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:var(--amber-soft);color:var(--ink);padding:2px 8px;border-radius:99px;justify-self:start}
+footer{font-size:13px;color:var(--muted);padding-inline:4px}
+</style>
+
+<main>
+
+<section class="card hero">
+  <h1>Premonition Desk</h1>
+  <p>Your own helper app on the Mac: you type a job, it does the clicking.</p>
+  <svg viewBox="0 0 640 330" role="img" aria-label="The app window: chat on the left, a web browser on the right">
+    <rect x="4" y="4" width="632" height="322" rx="16" fill="var(--glass)" stroke="var(--line)"/>
+    <circle cx="26" cy="24" r="6" fill="var(--stop)"/><circle cx="46" cy="24" r="6" fill="var(--amber)"/><circle cx="66" cy="24" r="6" fill="var(--ok)"/>
+    <rect x="18" y="44" width="230" height="268" rx="10" fill="var(--card)"/>
+    <rect x="96" y="58" width="140" height="34" rx="12" fill="var(--amber-soft)" stroke="var(--amber)"/>
+    <text x="108" y="80" font-size="14">find cheap flights</text>
+    <circle cx="36" cy="118" r="6" fill="var(--amber)"/><text x="50" y="123" font-size="13">Opened kayak.com</text>
+    <circle cx="36" cy="146" r="6" fill="var(--amber)"/><text x="50" y="151" font-size="13">Typed "Boston"</text>
+    <circle cx="36" cy="174" r="6" fill="var(--amber)"/><text x="50" y="179" font-size="13">Clicked Search</text>
+    <text x="30" y="214" font-size="14" font-weight="700">Cheapest: $142, Fri</text>
+    <rect x="30" y="268" width="206" height="32" rx="10" fill="var(--glass)" stroke="var(--line)"/>
+    <text x="42" y="289" font-size="13" style="fill:var(--muted)">Ask it to do something…</text>
+    <rect x="262" y="44" width="360" height="268" rx="10" fill="var(--card)"/>
+    <rect x="276" y="56" width="332" height="24" rx="12" fill="var(--glass)"/>
+    <text x="290" y="73" font-size="12" style="fill:var(--muted)">kayak.com/flights</text>
+    <rect x="290" y="104" width="300" height="48" rx="8" fill="var(--glass)"/>
+    <rect x="290" y="164" width="300" height="48" rx="8" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="2"/>
+    <rect x="290" y="224" width="300" height="48" rx="8" fill="var(--glass)"/>
+    <text x="304" y="194" font-size="15" font-weight="700">$142</text>
+    <text x="40" y="34" font-size="0">.</text>
+    <text x="140" y="36" font-size="12" style="fill:var(--muted)">chat</text>
+    <text x="420" y="36" font-size="12" style="fill:var(--muted)">its own browser</text>
+  </svg>
+  <span class="tag">picture is an example job</span>
+</section>
+
+<section class="card">
+  <h2>It has its own web browser</h2>
+  <p>It gives every button a number, then says "click 7", the way you'd point.</p>
+  <svg viewBox="0 0 640 220" role="img" aria-label="A web page with numbered buttons and the helper choosing number 7">
+    <rect x="20" y="20" width="380" height="180" rx="12" fill="var(--glass)" stroke="var(--line)"/>
+    <g font-size="15">
+      <rect x="44" y="44" width="150" height="36" rx="8" fill="var(--card)"/><text x="56" y="67">[5] Search box</text>
+      <rect x="214" y="44" width="160" height="36" rx="8" fill="var(--card)"/><text x="226" y="67">[6] Sign in</text>
+      <rect x="44" y="100" width="330" height="36" rx="8" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="2"/><text x="56" y="123" font-weight="700">[7] Add to cart</text>
+      <rect x="44" y="150" width="330" height="36" rx="8" fill="var(--card)"/><text x="56" y="173">[8] Reviews</text>
+    </g>
+    <path d="M430 118 H520" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M430 118 l14 -10 M430 118 l14 10" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
+    <rect x="530" y="88" width="96" height="60" rx="14" fill="var(--amber)"/>
+    <text x="578" y="124" font-size="18" font-weight="700" text-anchor="middle" style="fill:#1c1815">click 7</text>
+  </svg>
+</section>
+
+<section class="card">
+  <h2>It can use your Mac apps too</h2>
+  <p>A small helper reads each app's buttons and moves the mouse and keys for it.</p>
+  <svg viewBox="0 0 640 220" role="img" aria-label="A Notes app window, a list of its buttons, and a mouse pointer">
+    <rect x="20" y="20" width="300" height="180" rx="12" fill="var(--glass)" stroke="var(--line)"/>
+    <text x="40" y="50" font-size="15" font-weight="700">Notes</text>
+    <rect x="40" y="66" width="90" height="30" rx="6" fill="var(--card)"/><text x="52" y="86" font-size="13">New note</text>
+    <rect x="40" y="108" width="260" height="76" rx="6" fill="var(--card)"/>
+    <text x="52" y="132" font-size="13" style="fill:var(--muted)">Milk, eggs, bread|</text>
+    <path d="M118 80 l0 26 l7 -7 l6 12 l5 -2 l-6 -12 l10 0 z" fill="var(--ink)" stroke="var(--card)" stroke-width="1.5"/>
+    <rect x="360" y="20" width="260" height="180" rx="12" fill="var(--card)" stroke="var(--line)"/>
+    <text x="378" y="48" font-size="13" style="fill:var(--muted)">what the helper sees</text>
+    <g font-size="14"><text x="378" y="80">[1] button "New note"</text><text x="378" y="108">[2] text "Milk, eggs…"</text><text x="378" y="136">[3] button "Share"</text><text x="378" y="164">[4] search "Search"</text></g>
+  </svg>
+</section>
+
+<section class="card">
+  <h2>Far less to read before every chat</h2>
+  <p>OpenBot sends a huge setup note each time; this app sends a short one, so first replies come much sooner.</p>
+  <svg viewBox="0 0 640 170" role="img" aria-label="Bar chart: OpenBot setup about 36,000 tokens, Desk about 1,300">
+    <text x="20" y="40" font-size="15" font-weight="700">OpenBot</text>
+    <rect x="130" y="22" width="490" height="28" rx="6" fill="var(--muted)" opacity=".55"/>
+    <text x="610" y="42" font-size="14" text-anchor="end" font-weight="700">~36,000</text>
+    <text x="20" y="100" font-size="15" font-weight="700">Desk</text>
+    <rect x="130" y="82" width="18" height="28" rx="4" fill="var(--amber)"/>
+    <text x="158" y="102" font-size="14" font-weight="700">~1,300</text>
+    <text x="130" y="146" font-size="13" style="fill:var(--muted)">word-pieces the model must read first (bars to scale)</text>
+  </svg>
+  <span class="tag">Desk number is our estimate from 4,374 letters</span>
+</section>
+
+<section class="card">
+  <h2>You stay the boss</h2>
+  <p>Pick "Ask first" or "Hands-off"; it always asks before buying, sending or deleting, and Stop works any time.</p>
+  <svg viewBox="0 0 640 150" role="img" aria-label="A switch with Ask first and Hands-off, and a Stop button">
+    <rect x="20" y="40" width="360" height="64" rx="32" fill="var(--glass)" stroke="var(--line)"/>
+    <rect x="26" y="46" width="170" height="52" rx="26" fill="var(--amber)"/>
+    <text x="111" y="79" font-size="18" font-weight="700" text-anchor="middle" style="fill:#1c1815">Ask first</text>
+    <text x="290" y="79" font-size="18" text-anchor="middle" style="fill:var(--muted)">Hands-off</text>
+    <rect x="440" y="40" width="180" height="64" rx="16" fill="var(--stop)"/>
+    <rect x="474" y="60" width="24" height="24" rx="3" fill="var(--card)"/>
+    <text x="512" y="80" font-size="20" font-weight="700" style="fill:var(--card)">Stop</text>
+  </svg>
+</section>
+
+<section class="card">
+  <h2>Two switches you flip once</h2>
+  <p>System Settings → Privacy &amp; Security: turn on Premonition Desk under both of these.</p>
+  <svg viewBox="0 0 640 170" role="img" aria-label="Two settings: Accessibility and Screen Recording, both switched on for Premonition Desk">
+    <rect x="20" y="16" width="600" height="62" rx="12" fill="var(--glass)"/>
+    <text x="40" y="44" font-size="17" font-weight="700">Accessibility</text>
+    <text x="40" y="66" font-size="13" style="fill:var(--muted)">lets it press buttons and type</text>
+    <rect x="530" y="32" width="64" height="32" rx="16" fill="var(--ok)"/><circle cx="578" cy="48" r="12" fill="var(--card)"/>
+    <rect x="20" y="92" width="600" height="62" rx="12" fill="var(--glass)"/>
+    <text x="40" y="120" font-size="17" font-weight="700">Screen &amp; System Audio Recording</text>
+    <text x="40" y="142" font-size="13" style="fill:var(--muted)">lets it take pictures of the screen</text>
+    <rect x="530" y="108" width="64" height="32" rx="16" fill="var(--ok)"/><circle cx="578" cy="124" r="12" fill="var(--card)"/>
+  </svg>
+  <span class="tag">macOS asks again after each rebuild</span>
+</section>
+
+<section class="card">
+  <h2>What happens next</h2>
+  <p>It's installed on the M3; it starts working once the M3's model server is back on.</p>
+  <svg viewBox="0 0 640 140" role="img" aria-label="Steps: built and installed done, model server back, live test, seeing screenshots">
+    <g font-size="14" text-anchor="middle">
+      <circle cx="80" cy="50" r="26" fill="var(--ok)"/><text x="80" y="56" font-weight="700" style="fill:var(--card)">✓</text>
+      <text x="80" y="104">Installed</text>
+      <line x1="110" y1="50" x2="210" y2="50" stroke="var(--line)" stroke-width="4"/>
+      <circle cx="240" cy="50" r="26" fill="var(--amber)"/><text x="240" y="104">Model server</text><text x="240" y="122">back on</text>
+      <line x1="270" y1="50" x2="370" y2="50" stroke="var(--line)" stroke-width="4"/>
+      <circle cx="400" cy="50" r="26" fill="var(--glass)" stroke="var(--line)" stroke-width="2"/><text x="400" y="104">Live test</text>
+      <line x1="430" y1="50" x2="530" y2="50" stroke="var(--line)" stroke-width="4"/>
+      <circle cx="560" cy="50" r="26" fill="var(--glass)" stroke="var(--line)" stroke-width="2"/><text x="560" y="104">Sees screenshots</text><text x="560" y="122">(when ready)</text>
+    </g>
+  </svg>
+</section>
+
+<footer>Sources: PR #139 (desk/ folder, tests: 30 unit + 1 browser run pass), build on the M3 at commit 35de6f8, OpenBot setup size measured by the assistant thread on Oct 27. Flight and Notes pictures are examples.</footer>
+</main>
