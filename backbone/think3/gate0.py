@@ -188,6 +188,46 @@ def generate(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
     return res
 
 
+def generate_mlx(llm, tok, template, rows, effort, max_tokens, skip, ev_lines=None):
+    """Same contract as generate(), on Apple silicon via mlx-lm (greedy, one row at a time). Token ids are decoded with the HF tokenizer
+    (skip_special_tokens=False) so the think tags survive, and generation stops at STOP as vLLM's stop string does. A pre-screen only: the sealed
+    Gate 0 is the vLLM bf16 run; mlx models are usually 4-bit."""
+    from mlx_lm import stream_generate
+    from mlx_lm.sample_utils import make_sampler
+    sampler = make_sampler(temp=0.0)
+    res = {}
+    t0 = time.time()
+    for k, i in enumerate(j for j in range(len(rows)) if j not in skip):
+        prompt = render_ev(tok, template, rows[i], ev_lines[rows[i]["id"]]) if ev_lines is not None else render(tok, template, rows[i], effort)
+        ids, out, finish = tok(prompt, add_special_tokens=False)["input_ids"], [], "length"
+        for r in stream_generate(llm, tok, ids, max_tokens=max_tokens, sampler=sampler):
+            out.append(r.token)
+            if r.finish_reason is not None and r.finish_reason != "length":
+                finish = "stop"
+                break
+            if STOP in tok.decode(out[-8:], skip_special_tokens=False):
+                finish = "stop"
+                break
+        text = tok.decode(out, skip_special_tokens=False)
+        res[i] = dict(text=text.split(STOP)[0], n_out=len(out), finish=finish)
+        if k % 10 == 0:
+            print(f"[gate0-mlx] {k + 1} rows, {time.time() - t0:.0f}s", flush=True)
+    return res
+
+
+def depth_table(rows, **hits):
+    """Accuracy per depth (and depth 1-3 vs 4-6) for each hits list: train stops at depth 3, so 4-6 is where a loop would have to help."""
+    groups = {str(d): [d] for d in sorted({r.get("depth") for r in rows}, key=lambda x: (x is None, x))} | {"1-3": [1, 2, 3], "4-6": [4, 5, 6]}
+    out = {}
+    for name, h in hits.items():
+        out[name] = {}
+        for g, ds in groups.items():
+            idx = [i for i, r in enumerate(rows) if r.get("depth") in ds]
+            if idx:
+                out[name][g] = dict(n=len(idx), acc=sum(bool(h[i]) for i in idx) / len(idx))
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="out/data", help="dir with train.jsonl dev.jsonl validation.jsonl")
@@ -203,6 +243,7 @@ def main(argv=None):
     ap.add_argument("--gpu-util", type=float, default=0.90)
     ap.add_argument("--max-num-seqs", type=int, default=64)
     ap.add_argument("--model-impl", default=None, help="e.g. transformers, if the native vLLM implementation fails")
+    ap.add_argument("--backend", default="vllm", choices=("vllm", "mlx"), help="mlx: Apple-silicon pre-screen with mlx-lm (e.g. --model mlx-community/K2-Horizon-3.7B-4bit); not the sealed Gate 0")
     a = ap.parse_args(argv)
 
     arms = [x.strip() for x in a.arms.split(",") if x.strip()]
@@ -211,7 +252,9 @@ def main(argv=None):
     if a.traces:
         arms = ["on"]
     from transformers import AutoTokenizer
-    from vllm import LLM
+    global generate
+    if a.backend == "mlx":
+        generate = generate_mlx
     template = TEMPLATE_PATH.read_text()
     rows = T.read_jsonl(Path(a.data) / f"{a.split}.jsonl", limit=a.limit)
     tok = AutoTokenizer.from_pretrained(a.model, trust_remote_code=True)
@@ -231,11 +274,16 @@ def main(argv=None):
     max_new = a.max_tokens_on if "on" in arms else a.max_tokens_off
     mml, skip = pick_model_len(plen, max_new, a.max_model_len_cap)
     print(f"[gate0] arms {arms}; {len(rows)} rows, prompt tokens p50 {pct(plen, .5)} p99 {pct(plen, .99)} max {max(plen)}; max_model_len {mml}; skipped {len(skip)}", flush=True)
-    kw = dict(model=a.model, trust_remote_code=True, dtype="bfloat16", max_model_len=mml, gpu_memory_utilization=a.gpu_util,
-              enable_prefix_caching=True, max_num_seqs=a.max_num_seqs)
-    if a.model_impl:
-        kw["model_impl"] = a.model_impl
-    llm = LLM(**kw)
+    if a.backend == "mlx":
+        from mlx_lm import load
+        llm = load(a.model)[0]
+    else:
+        from vllm import LLM
+        kw = dict(model=a.model, trust_remote_code=True, dtype="bfloat16", max_model_len=mml, gpu_memory_utilization=a.gpu_util,
+                  enable_prefix_caching=True, max_num_seqs=a.max_num_seqs)
+        if a.model_impl:
+            kw["model_impl"] = a.model_impl
+        llm = LLM(**kw)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     prompt_info = dict(prompt_tokens_p50=pct(plen, .5), prompt_tokens_p99=pct(plen, .99), prompt_tokens_max=max(plen), max_model_len=mml, n_skipped_too_long=len(skip))
@@ -297,6 +345,8 @@ def main(argv=None):
         res.update(g0ev_decision(res["hits_off"], res["hits_ev"]))
     elif "hits_ev" in res:
         res.update(acc_ev=sum(res["hits_ev"]) / len(rows), gap_ev=None, g0ev_pass=None)  # no off arm to compare with
+    res["by_depth"] = depth_table(rows, **{k[5:]: res[k] for k in ("hits_off", "hits_on", "hits_ev") if k in res})
+    res["backend"] = a.backend
     res["seconds"] = time.time() - t0
     path.write_text(json.dumps(res))
     print(json.dumps({k: v for k, v in res.items() if k not in ("ids", "hits_off", "hits_on", "hits_ev", "n_ev_lines")}, indent=1))
