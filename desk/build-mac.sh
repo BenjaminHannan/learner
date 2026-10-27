@@ -8,6 +8,15 @@ if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
   exit 1
 fi
 
+# An x64 Node (Rosetta) silently produces no app; prefer Homebrew's arm64 Node.
+if [[ "$(node -p process.arch 2>/dev/null)" != "arm64" && -x /opt/homebrew/bin/node ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+if [[ "$(node -p process.arch 2>/dev/null)" != "arm64" ]]; then
+  echo "Node must be arm64 (found: $(command -v node) $(node -p process.arch 2>/dev/null))." >&2
+  exit 1
+fi
+
 echo "==> npm ci"
 npm ci
 
@@ -30,6 +39,7 @@ npx @electron/packager . "Premonition Desk" \
   ${EXTRA[@]+"${EXTRA[@]}"}
 
 APP="build/app/Premonition Desk-darwin-arm64/Premonition Desk.app"
+[[ -d "$APP" ]] || { echo "Packaging produced no app at $APP." >&2; exit 1; }
 echo "==> ad-hoc codesign"
 codesign --force --deep -s - "$APP"
 
