@@ -188,7 +188,7 @@
     const c = card(ev.danger ? 'danger' : '', ev.danger ? 'Risky command: needs your OK' : (ev.kind === 'password' ? 'Sensitive field: needs your OK' : 'Needs your OK'));
     if (ev.kind === 'shell') { const code = el('code', 'cmd', ev.text); c.append(code); } else c.append(el('div', null, ev.text));
     const btns = el('div', 'btns');
-    const done = (v, label) => { window.desk.agent.respond(ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); };
+    const done = (v, label) => { window.desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); };
     const once = el('button', 'amber-btn', 'Allow once'); once.onclick = () => done('once', 'Allowed once');
     btns.append(once);
     if (!ev.danger) { const task = el('button', 'ghost', 'Allow for this task'); task.onclick = () => done('task', 'Allowed for this task'); btns.append(task); }
@@ -211,10 +211,16 @@
     c.append(ta, btns); ensureTrail().append(c); toBottom(); setTimeout(() => ta.focus(), 50);
   }
 
+  function addNotice(who, text) {
+    const n = el('div', 'notice');
+    n.append(el('b', null, who ? who + ': ' : ''), document.createTextNode(text || ''));
+    msgs.append(n); turn = null; trail = null; toBottom();
+  }
+
   function setRunning(r) {
     running = r;
     $('#btnSend').textContent = r ? 'Steer' : 'Send'; $('#btnStop').hidden = !r; $('#runState').hidden = !r;
-    $('#input').placeholder = r ? 'Add a note to steer the current task…' : 'Ask Premonition to do something on your Mac…';
+    $('#input').placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a helper’s thread. Type here to steer it while it runs.' : 'Ask Premonition to do something on your Mac…';
   }
   // Send stays usable while running (steer): Enter sends the note.
 
@@ -230,6 +236,9 @@
       case 'ask': onAsk(ev); break;
       case 'plan': setPlan(ev.items); break;
       case 'user': addUser(ev.text, ev.steer); break;
+      case 'notice': addNotice(ev.helper, ev.text); break;
+      case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; break;
+      case 'started': $('#runState span').textContent = 'Working…'; break;
       case 'compacted': break;
       case 'error': { const e = el('div', 'errline', ev.message); ensureTurn().root.append(e); toBottom(); break; }
       case 'done': {
@@ -255,8 +264,9 @@
         trail = null;
       } else if (it.t === 'step') {
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);
-        ensureTrail().append(w);
-      } else if (it.t === 'plan') plan = it.items;
+        ensureTrail().append(w); stepEls.set(it.id, w);
+      } else if (it.t === 'notice') { addNotice(it.helper, it.text); }
+      else if (it.t === 'plan') plan = it.items;
     }
     setPlan(plan); turn = null; trail = null; stick = true; scroller.scrollTop = scroller.scrollHeight;
   }
@@ -264,21 +274,23 @@
   async function openThread(id) {
     const t = await desk.threads.load(id);
     if (!t) return;
-    thread = { id: t.id, title: t.title };
+    thread = { id: t.id, title: t.title, helper: t.helper || null };
     $('#title').textContent = t.title;
     renderThread(t);
+    setRunning(!!t.running);
+    for (const ev of t.pendingCards || []) { if (ev.type === 'approval') onApproval(ev); else if (ev.type === 'ask') onAsk(ev); }
     closeDrawer(); loadThreads();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
   }
   async function newThread() {
     const t = await desk.threads.create();
-    thread = { id: t.id, title: t.title };
-    $('#title').textContent = t.title; renderThread(t); closeDrawer(); loadThreads(); $('#input').focus();
+    thread = { id: t.id, title: t.title, helper: null };
+    $('#title').textContent = t.title; renderThread(t); setRunning(false); closeDrawer(); loadThreads(); $('#input').focus();
   }
   async function loadThreads() {
     const list = await desk.threads.list();
     const ul = $('#threadList'); ul.textContent = '';
-    for (const t of list) {
+    for (const t of list.filter((x) => !x.helper)) {
       const li = el('li', t.id === (thread && thread.id) ? 'on' : '');
       const title = el('span', 't', t.title); const d = el('span', 'd', ago(t.updated));
       const x = el('button', null, '✕'); x.title = 'Delete';
@@ -288,11 +300,42 @@
     }
     if (thread) { const cur = list.find((t) => t.id === thread.id); if (cur) $('#title').textContent = cur.title; }
   }
+  // ---------- agents (helpers) ----------
+  const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped' };
+  function when(ts) {
+    if (!ts) return '';
+    const d = new Date(ts), p = (n) => String(n).padStart(2, '0'), hm = p(d.getHours()) + ':' + p(d.getMinutes());
+    return d.toDateString() === new Date().toDateString() ? hm : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + hm;
+  }
+  function paintAgents(list) {
+    const ul = $('#agentList'); ul.textContent = '';
+    $('#agentsSec').hidden = !list.length;
+    for (const h of list) {
+      const li = el('li', t_on(h.threadId));
+      const top = el('div', 'a-top');
+      const dot = el('i', 'dot ' + h.status.replace(/[^\w]/g, ''));
+      dot.title = STATUS_TEXT[h.status] || h.status;
+      top.append(dot, el('span', 't', h.name), el('span', 'd', STATUS_TEXT[h.status] || h.status));
+      const meta = el('div', 'a-meta dim small', h.schedule + (h.paused ? ' (paused)' : '') + (h.next ? ' · next ' + when(h.next) : ''));
+      const btns = el('div', 'a-btns');
+      const mk = (label, fn, cls) => { const b = el('button', cls || 'ghost sm', label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; };
+      btns.append(
+        mk('Run now', () => desk.helpers.run(h.id)),
+        mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
+        mk('Delete', async () => { if (confirm('Delete helper "' + h.name + '" and its thread?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
+      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns);
+      li.onclick = () => openThread(h.threadId);
+      ul.append(li);
+    }
+  }
+  function t_on(id) { return thread && thread.id === id ? 'on' : ''; }
+  desk.onHelpers(paintAgents);
+  desk.onOpenThread((id) => openThread(id));
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
     if (m < 1) return 'now'; if (m < 60) return m + 'm'; if (m < 1440) return Math.round(m / 60) + 'h'; return Math.round(m / 1440) + 'd';
   }
-  function openDrawer() { document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); loadThreads(); }
+  function openDrawer() { document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); loadThreads(); desk.helpers.list().then(paintAgents); }
   function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
   $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
   $('#drawerShade').onclick = closeDrawer;
@@ -308,6 +351,7 @@
     if (!text) return;
     if (!thread) await newThread();
     input.value = ''; autosize();
+    if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a helper’s thread. Use Run now in the Agents list, or ask the primary agent.')); toBottom(); return; }
     if (running) { addUser(text, true); await desk.agent.send(thread.id, text); return; }
     addUser(text);
     stick = true;
@@ -318,8 +362,8 @@
   }
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } });
   $('#btnSend').onclick = submit;
-  $('#btnStop').onclick = () => desk.agent.stop();
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('#sheetWrap').hidden) closeSheet(); else if (document.body.classList.contains('drawer-open')) closeDrawer(); else if (running) desk.agent.stop(); } });
+  $('#btnStop').onclick = () => desk.agent.stop(thread && thread.id);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('#sheetWrap').hidden) closeSheet(); else if (document.body.classList.contains('drawer-open')) closeDrawer(); else if (running) desk.agent.stop(thread && thread.id); } });
 
   // ---------- top bar ----------
   function paintSegs() {
@@ -348,7 +392,8 @@
   new ResizeObserver(syncView).observe($('#browserHost'));
   window.addEventListener('resize', syncView);
   desk.onBrowser((s) => {
-    if (s.url && s.url !== 'about:blank' && !hasPage) { hasPage = true; $('#browserHost .empty').style.display = 'none'; }
+    hasPage = !!s.url && s.url !== 'about:blank';
+    $('#browserHost .empty').style.display = hasPage ? 'none' : '';
     if (document.activeElement !== $('#addr')) $('#addr').value = s.url === 'about:blank' ? '' : s.url;
     $('#bBack').disabled = !s.canGoBack; $('#bFwd').disabled = !s.canGoForward;
     $('#bBack').style.opacity = s.canGoBack ? 1 : .35; $('#bFwd').style.opacity = s.canGoForward ? 1 : .35;
@@ -377,7 +422,7 @@
 
   // ---------- settings ----------
   function openSheet() {
-    $('#sGateway').value = settings.gatewayUrl || ''; $('#sModel').value = settings.model || ''; $('#sSteps').value = settings.maxSteps || 40;
+    $('#sGateway').value = settings.gatewayUrl || ''; $('#sModel').value = settings.model || ''; $('#sSteps').value = settings.maxSteps || 40; $('#sParallel').value = settings.maxParallel || 2;
     $('#sVision').value = settings.vision === 'on' ? 'on' : 'off'; $('#sDiary').value = settings.diaryPath || ''; $('#sPython').value = settings.pythonPath || ''; $('#sHelper').value = settings.helperPath || '';
     $('#sheetWrap').hidden = false; syncView();
   }
@@ -385,7 +430,7 @@
   $('#btnSettings').onclick = openSheet; $('#sheetClose').onclick = closeSheet;
   $('#sheetWrap').addEventListener('mousedown', (e) => { if (e.target.id === 'sheetWrap') closeSheet(); });
   $('#sheetSave').onclick = async () => {
-    settings = await desk.settings.set({ gatewayUrl: $('#sGateway').value.trim(), model: $('#sModel').value.trim() || 'qwen36-auto', maxSteps: Math.max(1, Number($('#sSteps').value) || 40), vision: $('#sVision').value, diaryPath: $('#sDiary').value.trim(), pythonPath: $('#sPython').value.trim(), helperPath: $('#sHelper').value.trim() });
+    settings = await desk.settings.set({ gatewayUrl: $('#sGateway').value.trim(), model: $('#sModel').value.trim() || 'qwen36-auto', maxSteps: Math.max(1, Number($('#sSteps').value) || 40), maxParallel: Math.min(4, Math.max(1, Number($('#sParallel').value) || 2)), vision: $('#sVision').value, diaryPath: $('#sDiary').value.trim(), pythonPath: $('#sPython').value.trim(), helperPath: $('#sHelper').value.trim() });
     paintSegs(); closeSheet(); ping();
   };
   const permShow = (r) => {
@@ -407,6 +452,7 @@
     else if (!info.e2e && list.length) await openThread(list[0].id);
     else await newThread();
     const st = await desk.browser.state(); if (st && st.url && st.url !== 'about:blank') desk.browser.visible(true);
+    desk.helpers.list().then(paintAgents);
     window.__ready = true;
   })();
 })();

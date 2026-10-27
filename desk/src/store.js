@@ -7,6 +7,8 @@ const DEFAULT_SETTINGS = {
   model: 'qwen36-auto',
   maxSteps: 40,
   mode: 'ask',            // ask | hands-off
+  helperMode: 'hands-off', // autonomy for helper agents
+  maxParallel: 2,         // model runs at once (primary + helpers)
   vision: 'off',          // off | on
   diaryPath: '',          // path to diary_mcp.py ('' = ~/learner-ops/assistant/diary_mcp.py)
   pythonPath: '',         // '' = ~/learner-ops/.venv/bin/python if present, else python3
@@ -54,7 +56,7 @@ class Store {
       if (!f.endsWith('.json')) continue;
       try {
         const t = JSON.parse(fs.readFileSync(path.join(this.threadsDir, f), 'utf8'));
-        out.push({ id: t.id, title: t.title, updated: t.updated, created: t.created });
+        out.push({ id: t.id, title: t.title, updated: t.updated, created: t.created, helper: t.helper || null });
       } catch (e) { /* skip corrupt */ }
     }
     return out.sort((a, b) => b.updated - a.updated);

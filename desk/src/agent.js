@@ -1,6 +1,7 @@
 'use strict';
 const { streamChat } = require('./llm');
 const { SYSTEM_PROMPT } = require('./prompt');
+const { takeNotices } = require('./helpers');
 
 const COMPACT_TOKENS = 24000;
 const MAX_TOOL_CHARS = 8000;
@@ -119,6 +120,7 @@ class Agent {
    *  toolDefs: array of OpenAI tool schemas (constant per run)
    *  emit(event), approve(req)->'once'|'task'|'deny', askUser(question, signal)->string
    *  onThreadChange(thread) optional save hook
+   *  slot: Limiter (shared run slots), onState('queued'|'running'|'waiting'), onEnd() optional
    */
   constructor(o) {
     this.o = o;
@@ -126,6 +128,8 @@ class Agent {
     this.steerQueue = [];
     this.abort = null;
     this.taskAllow = new Set();
+    this.threadId = null;
+    this.release = null;
   }
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
@@ -134,25 +138,49 @@ class Agent {
 
   stop() { if (this.abort) this.abort.abort(); }
 
+  state(s) { try { this.o.onState && this.o.onState(s); } catch (e) { /* ignore */ } }
+  free() { const r = this.release; this.release = null; if (r) r(); }
+  // Waiting for Ben must not hold a run slot (two helpers waiting would block the primary forever).
+  async waitingForBen(fn, signal) {
+    this.state('waiting');
+    return this.withoutSlot(fn, signal, true);
+  }
+  // Run fn (something that can block on others) without holding a run slot, then queue for a slot again.
+  async withoutSlot(fn, signal, report) {
+    this.free();
+    try { return await fn(); } finally {
+      if (this.o.slot && !signal.aborted) { try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued */ } }
+      if (report && !signal.aborted) this.state('running');
+    }
+  }
+
   async run(thread, userText) {
     if (this.running) throw new Error('already running');
     this.running = true;
     this.abort = new AbortController();
     this.taskAllow = new Set();
     this.steerQueue = [];
+    this.threadId = thread.id;
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
     thread.items = thread.items || [];
     const save = () => { try { this.o.onThreadChange && this.o.onThreadChange(thread); } catch (e) { /* ignore */ } };
     const pushUser = (text) => {
-      thread.messages.push({ role: 'user', content: datePrefix() + ' ' + text });
+      const notes = takeNotices(thread); // finished-helper updates ride along with Ben's next message
+      thread.messages.push({ role: 'user', content: datePrefix() + ' ' + (notes ? notes + '\n' : '') + text });
       thread.items.push({ t: 'user', text });
     };
     repairHistory(thread.messages);
     pushUser(userText);
     save();
     let stopped = false;
+    let failure = null;
     try {
+      if (this.o.slot) {
+        if (this.o.slot.full()) { this.state('queued'); this.emit({ type: 'queued' }); }
+        try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued: the loop below sees it */ }
+        if (!signal.aborted) { this.state('running'); this.emit({ type: 'started' }); }
+      }
       let step = 0;
       for (;;) {
         if (signal.aborted) { stopped = true; break; }
@@ -193,7 +221,8 @@ class Agent {
           });
         } catch (e) {
           if (signal.aborted) { stopped = true; break; }
-          this.emit({ type: 'error', message: String(e && e.message || e) });
+          failure = String(e && e.message || e);
+          this.emit({ type: 'error', message: failure });
           break;
         }
         if (signal.aborted) {
@@ -243,15 +272,19 @@ class Agent {
         if (stopped) break;
       }
     } catch (e) {
-      this.emit({ type: 'error', message: String(e && e.message || e) });
+      failure = String(e && e.message || e);
+      this.emit({ type: 'error', message: failure });
     } finally {
       repairHistory(thread.messages);
+      this.free();
+      try { this.o.onEnd && this.o.onEnd(); } catch (e) { /* ignore */ }
       this.running = false;
       this.abort = null;
       this.steerQueue = [];
       save();
       this.emit({ type: 'done', stopped });
     }
+    return { stopped, error: failure };
   }
 
   async runTool(call, thread, signal) {
@@ -271,10 +304,10 @@ class Agent {
     };
     if (args === null) return { text: finish('Error: arguments were not valid JSON.', false) };
     const entry = this.o.tools[name];
-    const ctx = { signal, settings: this.o.getSettings() };
+    const ctx = { signal, settings: this.o.getSettings(), thread };
     if (name === 'ask_user') {
       try {
-        const answer = await this.o.askUser(String(args.question || ''), signal);
+        const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal), signal);
         return { text: finish(answer, !signal.aborted, 'Asked Ben: ' + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
@@ -298,7 +331,7 @@ class Agent {
         if (reason) need = { kind: 'password', danger: false, text: summaryStart + ' (' + reason + ')' };
       }
       if (need && !(!need.danger && this.taskAllow.has(need.kind))) {
-        const verdict = await this.o.approve({ id: stepId, tool: name, args, ...need }, signal);
+        const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, ...need }, signal), signal);
         if (signal.aborted) return { text: finish('[stopped by user]', false) };
         if (verdict === 'deny') return { text: finish('Ben denied this action. Do not retry it; ask him what to do instead.', false, 'Denied: ' + summaryStart) };
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);

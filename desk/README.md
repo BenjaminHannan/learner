@@ -48,6 +48,8 @@ Gear icon in the top bar. Saved in `settings.json` in the app's userData folder.
 | Gateway URL | `http://127.0.0.1:8090/v1` | `/chat/completions` is appended |
 | Default model | `qwen36-auto` | top bar pills: Auto = `qwen36-auto`, Think = `qwen36`, Fast = `qwen36-fast` |
 | Max steps | 40 | model calls per task |
+| Parallel runs | 2 | model runs at once, primary plus helpers; extra runs queue |
+| `helperMode` (settings.json only) | `hands-off` | autonomy for helper agents |
 | Vision | off | when on, screen looks and browser snapshots also send a JPEG (newest only) |
 | diary_mcp.py path | `~/learner-ops/assistant/diary_mcp.py` | stdio MCP server, tool `diary_search` |
 | Python path | `~/learner-ops/.venv/bin/python` if present, else `python3` | |
@@ -62,10 +64,19 @@ Autonomy switch in the top bar:
 
 Stop (button or Esc) cancels the request and any running tool. Typing while a task runs queues a steer note that is injected before the next model call.
 
+## Helpers (sub-agents)
+
+Ask Premonition to hand off a long or repeating job ("every morning at 8, check X and tell me what changed").
+It starts a helper with `agent_start` (one-off, `every` 30m/2h/1d, or daily `at` 08:00). Helpers run with the same
+prompt and tools, in their own hidden browser and their own thread, listed under **Agents** in the threads drawer
+(Run now / Pause / Delete). When one finishes you get a notification and a note in the chat that started it, which
+the assistant also sees with your next message. Schedules live in `helpers.json` and only fire while the app is
+open; a missed run happens once at launch. Details in `DESIGN.md`.
+
 ## How it talks to the gateway
 
-- `POST {gatewayUrl}/chat/completions` with `stream: true`, `model`, `messages`, `tools` (15 tools, 14 without the diary).
-- The system prompt and tool schemas are constant (about 4.4k characters; a test keeps them under 9000). The date goes in a `[Tue 2026-10-27 14:05]` prefix on each user message.
+- `POST {gatewayUrl}/chat/completions` with `stream: true`, `model`, `messages`, `tools` (18 tools, 17 without the diary).
+- The system prompt and tool schemas are constant (about 5.3k characters; a test keeps them under 9000). The date goes in a `[Tue 2026-10-27 14:05]` prefix on each user message.
 - Streamed `delta.content`, `delta.reasoning_content` / `delta.reasoning` and `delta.tool_calls` (by index) are accumulated. If the server fails to parse a Qwen-style call, `<tool_call>{json}</tool_call>` and `<function=name><parameter=k>v</parameter></function>` in the text are parsed instead.
 - History is append-only. Past ~24k estimated tokens (chars / 3.5) old tool results are replaced once by `[older result omitted]`.
 - The gateway already logs every call to the diary, so the app does not.
@@ -73,6 +84,6 @@ Stop (button or Esc) cancels the request and any running tool. Typing while a ta
 ## Layout
 
 `main.js` (window, IPC), `preload.js`, `src/agent.js` (loop, approvals, compaction), `src/llm.js` (SSE),
-`src/prompt.js`, `src/store.js`, `src/tools/{browser,web,screen,shell,diary}.js`, `renderer/`,
+`src/prompt.js`, `src/store.js`, `src/helpers.js`, `src/tools/{browser,web,screen,shell,diary,agents}.js`, `renderer/`,
 `helper/deskhelper.swift` (Swift CLI for screen control), `test/`.
 Threads are JSON files in `userData/threads/`.
