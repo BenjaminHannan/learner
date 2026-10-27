@@ -987,14 +987,19 @@ def qs_mods(pm):  # [(name, base Linear)] of every module with a qs grid
     return [(n, m.base_layer) for n, m in lora_mods(pm) if hasattr(m.base_layer, "qs_q")]
 
 
-def setup_qs(pm, group, bits, store_dtype):
+def setup_qs(pm, group, bits, store_dtype, fmt="affine"):
     """Give every LoRA-target base Linear its 4-bit grid (codes qs_q uint8, qs_s0 / qs_b0 fp32, read off its already fake-quantized weight with q4_quant
     at store_dtype) and trainable zero fp32 qs_u / qs_v (one each per group); a forward hook adds QSDelta while _QS["on"]. pm.disable_adapter also switches
-    the qs change off (nesting-safe), as setup_delta does. Returns {modules, groups, trainable, max_recon_err_over_scale}."""
+    the qs change off (nesting-safe), as setup_delta does. Returns {modules, groups, trainable, max_recon_err_over_scale}.
+    fmt "q4_0" (llama.cpp Q4_0 served base, group 32, no offset): codes from q40_quant, only the scales train (S = s0 (1 + u), B = -8 S, so the change is
+    s0 u (q - 8)); qs_v is then a plain zero tensor (not a Parameter) and the hook uses v = -8 u."""
     mods, ng, worst = lora_mods(pm), 0, 0.0
+    sym = fmt == "q4_0"
     for _, m in mods:
         bl = m.base_layer
         pk = getattr(bl, "packed", None)
+        if pk is not None and sym:
+            raise ValueError("--qs-format q4_0 reads the dense fake-quantized base, not the packed affine one")
         if pk is not None:  # --q4-packed: the base's own codes (no copy) and grid, exactly the numbers it dequantizes with
             assert pk.bits == 4 and pk.group == group, (pk.bits, pk.group)
             bl.qs_q = pk.codes
@@ -1002,18 +1007,21 @@ def setup_qs(pm, group, bits, store_dtype):
         else:
             W0 = bl.weight.detach()
             assert W0.shape[-1] % group == 0, f"in dim {W0.shape[-1]} not divisible by group {group}"
-            q, sc, bi = q4_quant(W0.float(), group, bits, store_dtype)
+            q, sc, bi = q40_quant(W0.float(), group, store_dtype) if sym else q4_quant(W0.float(), group, bits, store_dtype)
             q, sc, bi = q.reshape(W0.shape[0], -1, group), sc.reshape(W0.shape[0], -1, 1), bi.reshape(W0.shape[0], -1, 1)
             rec = (q * sc + bi).reshape(W0.shape)
             worst = max(worst, float(((rec - W0.float()).abs().reshape(q.shape) / sc).max()))
             bl.qs_q = q.to(torch.uint8)
         bl.qs_s0, bl.qs_b0 = sc.contiguous(), bi.contiguous()
         bl.qs_u = torch.nn.Parameter(torch.zeros_like(sc))
-        bl.qs_v = torch.nn.Parameter(torch.zeros_like(sc))
+        bl.qs_v = torch.zeros_like(sc) if sym else torch.nn.Parameter(torch.zeros_like(sc))
+        bl.qs_sym = sym
         ng += sc.numel()
 
         def hook(mod, inp, out):
-            return out + QSDelta.apply(inp[0], mod.qs_u, mod.qs_v, mod.qs_q, mod.qs_s0) if _QS["on"] else out
+            if not _QS["on"]:
+                return out
+            return out + QSDelta.apply(inp[0], mod.qs_u, -8 * mod.qs_u if mod.qs_sym else mod.qs_v, mod.qs_q, mod.qs_s0)
         bl.register_forward_hook(hook)
     orig = pm.disable_adapter
 
@@ -1026,7 +1034,7 @@ def setup_qs(pm, group, bits, store_dtype):
         finally:
             _QS["on"] = prev
     pm.disable_adapter = disable_adapter
-    return {"modules": len(mods), "groups": ng, "trainable": 2 * ng, "max_recon_err_over_scale": worst}
+    return {"modules": len(mods), "groups": ng, "trainable": (1 if sym else 2) * ng, "max_recon_err_over_scale": worst, "format": fmt}
 
 
 def round_to(x, dtype, mode, gen=None):
@@ -1053,9 +1061,14 @@ def qs_morning(pm, factor, store_dtype, mode, gen):
         u, v, s0, b0 = bl.qs_u.data, bl.qs_v.data, bl.qs_s0, bl.qs_b0
         u.mul_(factor)
         v.mul_(factor)
-        S, B = s0 * (1 + u), b0 + s0 * v
-        Sr, Br = round_to(S, store_dtype, mode, gen), round_to(B, store_dtype, mode, gen)
-        u2, v2 = Sr / s0 - 1, (Br - b0) / s0
+        S = s0 * (1 + u)
+        Sr = round_to(S, store_dtype, mode, gen)
+        u2 = Sr / s0 - 1
+        if getattr(bl, "qs_sym", False):  # Q4_0: only the scale is stored; B = -8 S follows it exactly, v stays 0 (the hook uses -8 u)
+            Br, v2 = -8 * Sr, v
+        else:
+            Br = round_to(b0 + s0 * v, store_dtype, mode, gen)
+            v2 = (Br - b0) / s0
         e_pre += float(u.double().pow(2).sum() + v.double().pow(2).sum())
         e_err += float((u2 - u).double().pow(2).sum() + (v2 - v).double().pow(2).sum())
         u.copy_(u2)
@@ -1149,6 +1162,52 @@ def selftest_qs():
     yp = QSDelta.apply(xi, bl.qs_u, bl.qs_v, pc, bl.qs_s0)
     assert torch.equal(qs_codes(pc, bl.qs_s0), bl.qs_q.float()) and torch.allclose(yq, yp), float((yq - yp).abs().max())
     out["packed_codes_match"] = True
+    import numpy as np  # (vi) Q4_0: q40_quant equals gguf-py's Q4_0.quantize_blocks (copied here); the scale-only hook is exact and trains u only
+    blk = (torch.randn(64, 32, generator=g) * 0.02)
+    blk[3] = 0
+    blk[5, :2] = torch.tensor([0.05, -0.05])  # a tie on |x|: the first wins
+    nb = blk.numpy()
+    imax = abs(nb).argmax(axis=-1, keepdims=True)
+    dn = np.take_along_axis(nb, imax, axis=-1) / -8
+    with np.errstate(divide="ignore"):
+        idn = np.where(dn == 0, 0, 1 / dn)
+    qn = np.trunc((nb * idn) + np.float32(8.5), dtype=np.float32).astype(np.uint8).clip(0, 15)
+    wn = dn.astype(np.float16).astype(np.float32) * (qn.astype(np.int8) - np.int8(8)).astype(np.float32)
+    q0, s0q, b0q = q40_quant(blk, 32)
+    assert np.array_equal(q0.reshape(64, 32).numpy().astype(np.uint8), qn) and np.allclose((q0 * s0q + b0q).reshape(64, 32).numpy(), wn, atol=1e-9)
+    with torch.random.fork_rng():
+        torch.manual_seed(2)
+        net2 = torch.nn.Sequential()
+        net2.add_module("layers", torch.nn.ModuleList([torch.nn.Module()]))
+        net2.layers[0].add_module("mlp", torch.nn.Module())
+        net2.layers[0].mlp.add_module("up_proj", torch.nn.Linear(i, o, bias=False))
+    with torch.no_grad():
+        w2 = net2.layers[0].mlp.up_proj.weight
+        qq, ss, bb = q40_quant(w2.float(), 32)
+        w2.copy_((qq * ss + bb).reshape(o, i))
+    pm2 = get_peft_model(Wrap(net2), LoraConfig(r=2, lora_alpha=4, target_modules=r".*\.layers\.\d+\.mlp\.up_proj", lora_dropout=0.0))
+    for n_, p in pm2.named_parameters():
+        p.requires_grad_(False)
+    st2 = setup_qs(pm2, 32, 4, torch.float16, fmt="q4_0")
+    (_, bl2), = qs_mods(pm2)
+    assert st2["max_recon_err_over_scale"] < 1e-4 and st2["trainable"] == st2["groups"] and not isinstance(bl2.qs_v, torch.nn.Parameter), st2
+    assert [n_ for n_, _ in pm2.named_parameters() if "qs_" in n_] == [n_ for n_, _ in pm2.named_parameters() if n_.endswith("qs_u")]
+    with torch.no_grad():
+        bl2.qs_u.copy_(torch.randn(bl2.qs_u.shape, generator=g) * 0.05)
+    bl2.qs_u.requires_grad_(True)
+    y3 = pm2(xi)
+    ref3 = F.linear(xi, ((bl2.qs_q.float() - 8) * bl2.qs_s0 * (1 + bl2.qs_u)).reshape(o, i))
+    assert float((y3 - ref3).abs().max()) < 1e-4, float((y3 - ref3).abs().max())
+    gq, = torch.autograd.grad(y3.square().sum(), bl2.qs_u)
+    gr, = torch.autograd.grad(ref3.square().sum(), bl2.qs_u)
+    assert torch.allclose(gq, gr, rtol=1e-4, atol=1e-6)
+    with torch.no_grad():
+        m2 = qs_morning(pm2, 0.85, torch.float16, "nearest", g)
+        S2 = bl2.qs_s0 * (1 + bl2.qs_u)
+        assert float((S2 - S2.to(torch.float16).float()).abs().max() / S2.abs().max()) < 1e-6 and float(bl2.qs_v.abs().max()) == 0
+        y4 = pm2(xi)
+        assert float((y4 - F.linear(xi, ((bl2.qs_q.float() - 8) * S2.to(torch.float16).float()).reshape(o, i))).abs().max()) < 1e-4
+    out["q4_0"] = {"matches_gguf": True, "hook_exact_err": float((y3 - ref3).abs().max()), "share_S_changed": m2["share_S_changed"]}
     return out
 
 
@@ -3359,6 +3418,20 @@ def q4_quant(x, group, bits, store_dtype, grid=None):
     scale, bias = scale.to(store_dtype).float(), mn.to(store_dtype).float()
     scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)  # a rounded-to-zero scale (underflow) stays safe
     return torch.clamp(torch.round((xg - bias) / scale), 0, levels), scale, bias
+
+
+def q40_quant(x, group=32, store_dtype=torch.float16):
+    """llama.cpp Q4_0 (quantize_row_q4_0_ref) of the float32 tensor x along its last dim, in q4_quant's affine form (q, scale, bias), shaped
+    [-1, groups, group] / [-1, groups, 1], float32: per block m = the signed value of largest |x| (first on ties), d = m / -8, q = min(15, trunc(x / d + 8.5))
+    with 1/d from the fp32 d (0 when d == 0), d stored at store_dtype (fp16 in GGUF); w = (q - 8) d, i.e. bias = -8 scale. A zero block gets scale 1e-8 (still w = 0)."""
+    xg = x.reshape(-1, x.shape[-1] // group, group)
+    m = xg.gather(-1, xg.abs().argmax(-1, keepdim=True))
+    d = m / -8
+    inv = torch.where(d == 0, torch.zeros_like(d), 1 / d)
+    q = torch.clamp(torch.trunc(xg * inv + 8.5), max=15)
+    scale = d.to(store_dtype).float()
+    scale = torch.where(scale == 0, torch.full_like(scale, 1e-8), scale)
+    return q, scale, -8 * scale
 
 
 def q4_fake(w, group=64, bits=4, store_dtype=None, grid=None):
