@@ -887,3 +887,18 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
 - **PC disk (2026-10-27 ~18:40Z):** C: on Ben's PC has about 210 MB free. Each run's results and logs take a few MB, but the LoRA
   adapter that sleepb saves at the end takes ~70-140 MB, and nothing reads it back. `SLEEPB_SAVE_ADAPTER=0` now skips that save; it
   changes no number. The chain is `pc/sleepb_pc9.sh`: pc8 plus that setting, code src-cap4, and C:'s free space in its log.
+
+## The small tier moves to LFM3-1.7B; addendum 19 sealed (2026-10-27 ~20:45Z)
+
+- Ben (19:45Z): "remember we use LFM3 now instead of K2." So the two-step goal now applies to LiquidAI/LFM3-1.7B.
+- **Port (f35dd7e840):** sleepb runs LFM3 with every K2 think path (names pass, REM `q_think` writer, think-eval) and LoRA on 142
+  modules.
+  - Shown, CPU: the K2 and Qwen smoke results are unchanged.
+  - Shown, real LFM3 weights: batched left-padded generation equals one prompt at a time (`results_a19/pad_check.log`).
+- **Addendum 19 (sealed 09e4139256):** addendum 18's recipe on LFM3, Week-2, seed 1.
+  - It runs in this thread's next PC slot instead of addendum 18 (K2), after a 1 h Week-1 card-writer check that stops it only if the
+    port is broken.
+  - Marks: G two-hop >= 75/78; recall >= 88.5; two-hop >= 39 (K2 arm B's), paired; the usual no-harm marks.
+- Addendum 17 (K2) keeps running. Its gate result carries over to any model.
+- The chain script `pc/sleepb_pc10.sh` takes over from pc9 once addendum 17 has passed its turn on (mock-tested on all three slot-2
+  paths).
