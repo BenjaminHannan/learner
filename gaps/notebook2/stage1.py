@@ -64,6 +64,22 @@ def make_chat(a):
                     print("chat retry", att, repr(e)[:200], flush=True); time.sleep(5 * (att + 1) if att < 4 else 300)
             raise RuntimeError("chat failed")
         return chat
+    if a.backend == "k2raw":  # llama.cpp llama-server /completion with K2's no-think format rendered here (no remote code)
+        url = a.base_url.rstrip("/").removesuffix("/v1") + "/completion"
+        IM_START, IM_END, TH = "<|ifm|im_start|>", "<|ifm|im_end|>", "<ifm|think>\n</ifm|think>"
+        pause = os.path.expanduser("~/learner-ops/PAUSE_OTHERS")
+        def chat(messages, max_tokens):
+            prompt = "".join(f"{IM_START}{x['role']}\n{x['content']}{IM_END}" for x in messages) + f"{IM_START}assistant\n{TH}"
+            body = dict(prompt=prompt, n_predict=max_tokens, temperature=0, top_k=1, stop=[IM_END], cache_prompt=True)
+            for att in range(4 + 24):
+                while os.path.exists(pause): time.sleep(300)
+                try:
+                    req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json"})
+                    return clean(json.load(urllib.request.urlopen(req, timeout=1800))["content"] or "")
+                except Exception as e:
+                    print("chat retry", att, repr(e)[:200], flush=True); time.sleep(5 * (att + 1) if att < 4 else 300)
+            raise RuntimeError("chat failed")
+        return chat
     # hf: transformers, greedy, fp16 on CUDA (copied from the askonce-job1 loading approach)
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -144,7 +160,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--make-subset", action="store_true")
     ap.add_argument("--data", default=SUB)
-    ap.add_argument("--backend", choices=["openai", "hf", "fake"], default="openai")
+    ap.add_argument("--backend", choices=["openai", "hf", "k2raw", "fake"], default="openai")
     ap.add_argument("--base-url", default="http://127.0.0.1:8080/v1")
     ap.add_argument("--model", default="model"); ap.add_argument("--model-path")
     ap.add_argument("--reader", help="name used in rows_{reader}.jsonl (default from model)")
