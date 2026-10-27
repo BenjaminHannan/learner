@@ -14,6 +14,7 @@ A try is keyed by the `X-Practice-Try` header, or a `/t/<key>/v1/...` path prefi
 """
 import argparse
 import hashlib
+import io
 import json
 import re
 import sys
@@ -238,13 +239,52 @@ class ContextTooLong(Exception):
 
 VLLM_PROXY_OPTS = {"upstream_extra": {"tool_choice": "none", "skip_special_tokens": False}, "args_as_json": True}
 
+# ------------------------------------------------------------------ render_local: llama.cpp's raw /completion
+# llama-server's own defaults sample with top_k 40 / top_p 0.95 / min_p 0.05; vLLM and mlx_lm sample from the plain temperature distribution, so these are pinned.
+LLAMA_SAMPLING = {"top_k": 0, "top_p": 1.0, "min_p": 0.0, "repeat_penalty": 1.0}
+LLAMA_PARAM_NAMES = {"repetition_penalty": "repeat_penalty"}
+LLAMA_N_PREDICT = 2048  # when the client sends no max_tokens
+
+
+def completion_body(prompt, body, strip_bos="", n_predict_default=LLAMA_N_PREDICT):
+    """Request body for llama-server POST /completion: the already-rendered prompt (a string), stop strings [</ifm|tool_calls>, <|ifm|im_end|>], no tool parsing.
+    strip_bos: the template's bos_token text, removed from the front when the server adds its own BOS (so the model sees exactly one)."""
+    if strip_bos and prompt.startswith(strip_bos):
+        prompt = prompt[len(strip_bos):]
+    stop = [STOP, IM_END]
+    user_stop = body.get("stop")
+    if user_stop:
+        stop += [user_stop] if isinstance(user_stop, str) else list(user_stop)
+    up = {"prompt": prompt, "n_predict": body.get("max_tokens") or body.get("max_completion_tokens") or n_predict_default, "stop": stop,
+          "cache_prompt": True, "stream": False, "id_slot": -1, **LLAMA_SAMPLING}  # id_slot -1: llama-server picks the slot whose cached prompt shares the longest prefix
+    for k in PASS_PARAMS:
+        if body.get(k) is not None:
+            up[LLAMA_PARAM_NAMES.get(k, k)] = body[k]
+    return up
+
+
+def completion_to_chat(r):
+    """llama-server /completion response -> the chat-completions shape Proxy.complete reads. `content` is the text without the stop string, so the matched
+    </ifm|tool_calls> (`stopping_word`) is put back; stop_type "limit" = n_predict reached -> finish_reason length."""
+    text = r.get("content") or ""
+    if r.get("stopping_word") == STOP:
+        text += STOP
+    t = r.get("timings") or {}
+    n_p = r.get("tokens_evaluated", t.get("prompt_n"))
+    n_c = r.get("tokens_predicted", t.get("predicted_n"))
+    usage = {"prompt_tokens": n_p, "completion_tokens": n_c, "total_tokens": (n_p or 0) + (n_c or 0), "cache_n": t.get("cache_n", r.get("tokens_cached")),
+             "prompt_ms": t.get("prompt_ms"), "predicted_ms": t.get("predicted_ms"), "stop_type": r.get("stop_type"), "stopping_word": r.get("stopping_word") or None}
+    return {"model": r.get("model") or "llama.cpp", "choices": [{"message": {"content": text}, "finish_reason": "length" if r.get("stop_type") == "limit" else "stop"}],
+            "usage": usage}
+
 
 class Proxy:
-    def __init__(self, upstream, log_dir, timeout=1800, max_prompt_chars=None, upstream_model=None, upstream_extra=None, args_as_json=False):
+    def __init__(self, upstream, log_dir, timeout=1800, max_prompt_chars=None, upstream_model=None, upstream_extra=None, args_as_json=False, render_local=None):
         """upstream_model: model name sent upstream (default "default_model", what mlx_lm.server maps to its --model; for vLLM the --served-model-name or a
         --lora-modules name). upstream_extra: fields merged into every upstream body (vLLM: tool_choice "none" so its own parser stays off, skip_special_tokens
         False so the <ifm|...> markers survive, stop_token_ids). args_as_json: send assistant tool_calls.arguments as JSON strings (what the OpenAI schema says and
-        what vLLM expects; mlx_lm's template needs dicts)."""
+        what vLLM expects; mlx_lm's template needs dicts). render_local: {"tokenizer", "template", "strip_bos"} = render the prompt here with oc_lessons.render_prompt (the
+        function the lessons use, so train and serve match) and call llama-server's raw POST /completion; `upstream` is then the llama-server base URL."""
         self.upstream, self.timeout = upstream.rstrip("/"), timeout
         self.upstream_extra, self.args_as_json = dict(upstream_extra or {}), bool(args_as_json)
         self.max_prompt_chars = max_prompt_chars  # Practice-2 M3 stage 0: a 30k-token prompt OOMed Metal and killed the server, so long prompts are refused
@@ -254,6 +294,8 @@ class Proxy:
         self.seq = {}
         self._model = upstream_model
         self.httpd = None
+        self.render_local = dict(render_local) if render_local is not None else None
+        self._render_lock = threading.Lock()
 
     def upstream_model(self):
         """mlx_lm.server maps "default_model" to its --model (and --adapter-path). Not the first /v1/models id: that endpoint lists every model in the
@@ -264,6 +306,23 @@ class Proxy:
         req = urllib.request.Request(self.upstream + "/v1/chat/completions", json.dumps(body).encode(), {"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=self.timeout) as r:
             return json.load(r)
+
+    def upstream_completion(self, body):
+        req = urllib.request.Request(self.upstream + "/completion", json.dumps(body).encode(), {"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            raw = e.read()
+            if e.code == 400 and b"context" in raw.lower() and b"exceed" in raw.lower():  # "the request exceeds the available context size"
+                raise ContextTooLong(f"{CONTEXT_ERR}: {raw[:300].decode(errors='replace')}")
+            raise urllib.error.HTTPError(e.url, e.code, e.msg, e.hdrs, io.BytesIO(raw))
+
+    def render_prompt_text(self, messages, tools):
+        from .oc_lessons import render_prompt
+        rl = self.render_local
+        with self._render_lock:  # one HF tokenizer / jinja environment shared by the handler threads
+            return render_prompt(messages, tools, rl.get("tokenizer"), rl.get("template"), bos=rl.get("bos"))
 
     def log(self, key, rec, tools):
         h = rec["tools_hash"]
@@ -282,24 +341,31 @@ class Proxy:
         tools = fix_tools(body.get("tools"))
         if self.max_prompt_chars and len(json.dumps(messages)) + len(json.dumps(tools or [])) > self.max_prompt_chars:
             raise ContextTooLong(f"{CONTEXT_ERR}: prompt over {self.max_prompt_chars} characters")
-        up_msgs = map_messages(messages)
-        if self.args_as_json:
-            up_msgs = args_to_json(up_msgs)
-        up = {"model": self.upstream_model(), "messages": up_msgs, "stream": False, "stop": [STOP]}
-        user_stop = body.get("stop")
-        if user_stop:
-            up["stop"] = [STOP] + ([user_stop] if isinstance(user_stop, str) else list(user_stop))
-        if tools:
-            up["tools"] = tools
-        mt = body.get("max_tokens") or body.get("max_completion_tokens")
-        if mt:
-            up["max_tokens"] = mt
-        for k in PASS_PARAMS:
-            if body.get(k) is not None:
-                up[k] = body[k]
-        for k, v in self.upstream_extra.items():
-            up.setdefault(k, v)
-        r = self.upstream_chat(up)
+        if self.render_local:
+            up = completion_body(self.render_prompt_text(messages, tools), body, self.render_local.get("strip_bos") or "")
+            r = completion_to_chat(self.upstream_completion(up))
+            params = {"max_tokens": up["n_predict"], **{k: body[k] for k in PASS_PARAMS if body.get(k) is not None}}
+            up = {"model": "llama.cpp"}
+        else:
+            up_msgs = map_messages(messages)
+            if self.args_as_json:
+                up_msgs = args_to_json(up_msgs)
+            up = {"model": self.upstream_model(), "messages": up_msgs, "stream": False, "stop": [STOP]}
+            user_stop = body.get("stop")
+            if user_stop:
+                up["stop"] = [STOP] + ([user_stop] if isinstance(user_stop, str) else list(user_stop))
+            if tools:
+                up["tools"] = tools
+            mt = body.get("max_tokens") or body.get("max_completion_tokens")
+            if mt:
+                up["max_tokens"] = mt
+            for k in PASS_PARAMS:
+                if body.get(k) is not None:
+                    up[k] = body[k]
+            for k, v in self.upstream_extra.items():
+                up.setdefault(k, v)
+            r = self.upstream_chat(up)
+            params = {k: up[k] for k in ("max_tokens", *PASS_PARAMS) if k in up}
         ch = (r.get("choices") or [{}])[0]
         m = ch.get("message") or {}
         text = m.get("content") or ""
@@ -320,7 +386,7 @@ class Proxy:
         self.log(key, {"ts": round(t0, 3), "key": key, "request_messages": messages, "tools_hash": tools_hash(tools) if tools else None,
                        "completion_text": text, "tool_calls": calls, "response_message": resp["choices"][0]["message"], "finish_reason": resp["choices"][0]["finish_reason"],
                        "usage": r.get("usage"), "latency_s": round(time.time() - t0, 3), "upstream_model": up["model"],
-                       "params": {k: up[k] for k in ("max_tokens", *PASS_PARAMS) if k in up}}, tools)
+                       "params": params}, tools)
         return resp, key
 
     def make_server(self, port, host="127.0.0.1"):
@@ -433,8 +499,18 @@ def main(argv=None):
     ap.add_argument("--timeout", type=int, default=1800)
     ap.add_argument("--upstream-model", default=None, help='model name sent upstream (default "default_model"; vLLM: its served/LoRA name)')
     ap.add_argument("--vllm", action="store_true", help="upstream is vLLM: tool_choice none, skip_special_tokens false, tool-call arguments as JSON strings")
+    ap.add_argument("--render-local", action="store_true", help="upstream is llama-server: render the K2 prompt here (oc_lessons.render_prompt) and call its raw /completion")
+    ap.add_argument("--template", default=None, help="--render-local: K2 chat template file (default practice/k2_nothink.jinja)")
+    ap.add_argument("--model", default=None, help="--render-local: HF tokenizer id or dir (default IFM/K2-Horizon-3.7B)")
+    ap.add_argument("--strip-bos", action="store_true", help="--render-local: llama-server adds its own BOS, so cut the template's")
     a = ap.parse_args(argv)
-    p = Proxy(a.upstream, a.log, a.timeout, upstream_model=a.upstream_model, **(VLLM_PROXY_OPTS if a.vllm else {}))
+    rl = None
+    if a.render_local:
+        from .oc_cuda import DEFAULT_TEMPLATE
+        from transformers import AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(a.model or "IFM/K2-Horizon-3.7B", trust_remote_code=True)
+        rl = {"tokenizer": tok, "template": a.template or str(DEFAULT_TEMPLATE), "strip_bos": (tok.bos_token or "") if a.strip_bos else ""}
+    p = Proxy(a.upstream, a.log, a.timeout, upstream_model=a.upstream_model, render_local=rl, **(VLLM_PROXY_OPTS if a.vllm else {}))
     s = p.make_server(a.port, a.host)
     print(f"k2_proxy on http://{a.host}:{a.port}/v1 -> {a.upstream}, logs in {a.log}", flush=True)
     try:

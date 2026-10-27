@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -33,6 +34,7 @@ from . import night as N
 from .tools import CLOSE_TAGS as _CLOSE_TAGS
 STOPS_CFG = list(_CLOSE_TAGS) + ["<|ifm|im_end|>"]
 from .harness import Harness, render, start_messages, summarize
+from .oc_llama import LlamaServer, use_llama
 from .tools import MAX_TURNS
 
 HERE = Path(__file__).resolve().parent
@@ -202,6 +204,14 @@ class Lane:
     def probe_backends(self):
         a = self.a
         want = getattr(a, "backend", "hf")
+        if self.oc and use_llama(a):
+            if not getattr(a, "oc_upstream", None) and not (a.ll_gguf and a.ll_exe and (os.path.exists(a.ll_exe) or shutil.which(a.ll_exe))):
+                raise SystemExit("--server llamacpp needs --ll-exe (llama-server.exe) and --ll-gguf (the K2 Q4_K_M GGUF), both must exist")
+            self.modes, self.sub = ["oc"], not (getattr(a, "oc_upstream", None) and not os.environ.get("PRACTICE_TEST_SUB"))
+            self.log(f"backend: opencode harness, llama.cpp {a.ll_exe} -np {a.ll_parallel}; generation and nights run in {'subprocesses' if self.sub else 'this process (test)'}; no fallback")
+            return
+        if use_llama(a):
+            raise SystemExit("--backend/--server llamacpp needs --harness opencode")
         if self.oc:
             if getattr(a, "oc_upstream", None) and not os.environ.get("PRACTICE_TEST_SUB"):  # tests: an existing upstream, everything in this process
                 self.modes = ["oc"]
@@ -246,7 +256,7 @@ class Lane:
                "steps": a.steps, "model": a.model, "harness": getattr(a, "harness", "native")}
         if self.oc:
             cfg["opencode"] = {k: getattr(a, k, None) for k in ("oc_concurrency", "oc_timeout", "oc_steps", "oc_max_len", "oc_util", "oc_max_seqs", "oc_train_tokens", "train_bare_answers", "web",
-                                                                 "chat_template")}
+                                                                 "chat_template", "server", "ll_exe", "ll_gguf", "ll_ctx", "ll_parallel", "ll_host", "ll_extra", "ll_adapter_mode", "ll_strip_bos")}
         jdump(self.out / "config.json", cfg)
 
     def make_oc_backend(self, adapter):
@@ -423,6 +433,8 @@ class Lane:
                 rc = proc.wait()
             wall = round(time.time() - t, 1)
             kill_group(proc.pid)
+            if use_llama(self.a) and gen_phase:
+                LlamaServer.kill_leftover(self.a.ll_exe)  # the Windows llama-server outlives its WSL parent when the worker was killed
             self.wait_gpu_free()
             if rc == 0 and rp.exists():
                 res = json.loads(rp.read_text())
@@ -557,7 +569,7 @@ def build_parser():
     ap.add_argument("--n-sft", type=int, default=N.N_SFT)
     ap.add_argument("--epochs", type=int, default=N.EPOCHS)
     ap.add_argument("--n-pairs", type=int, default=N.N_PAIRS)
-    ap.add_argument("--backend", choices=["auto", "hf", "vllm"], default="auto")
+    ap.add_argument("--backend", choices=["auto", "hf", "vllm", "llamacpp"], default="auto", help="llamacpp = --harness opencode --server llamacpp")
     ap.add_argument("--eval-nights", default="1,3", help="nights after which the sealed test is run (A0 always is)")
     ap.add_argument("--sib-tries", type=int, default=1)
     ap.add_argument("--harness", choices=["native", "opencode"], default="native", help="opencode = the agent OpenBot runs, K2 behind vLLM + practice/k2_proxy (PREREG-2 addendum 1)")
@@ -571,6 +583,16 @@ def build_parser():
     ap.add_argument("--oc-max-seqs", type=int, default=64, help="opencode: vLLM --max-num-seqs")
     ap.add_argument("--oc-port", type=int, default=18081)
     ap.add_argument("--oc-eager", action="store_true", help="opencode: vLLM --enforce-eager")
+    ap.add_argument("--server", choices=["vllm", "llamacpp"], default="vllm", help="opencode: vllm (CUDA box) or llamacpp (Radeon PC: Windows llama-server.exe from WSL, practice.oc_llama)")
+    ap.add_argument("--ll-exe", default=os.environ.get("LLAMA_SERVER_EXE"), help="llamacpp: llama-server.exe (a /mnt/c/... path from WSL) [env LLAMA_SERVER_EXE]")
+    ap.add_argument("--ll-gguf", default=os.environ.get("LLAMA_GGUF"), help="llamacpp: the K2-Horizon-3.7B Q4_K_M GGUF [env LLAMA_GGUF]")
+    ap.add_argument("--ll-ctx", type=int, default=0, help="llamacpp: -c, TOTAL context shared by the slots (0 = ll-parallel x oc-max-len)")
+    ap.add_argument("--ll-parallel", type=int, default=6, help="llamacpp: -np (slots; keep --oc-concurrency <= this)")
+    ap.add_argument("--ll-host", default="127.0.0.1", help="llamacpp: address WSL uses for the exe's port (not 127.0.0.1 = the exe binds 0.0.0.0)")
+    ap.add_argument("--ll-extra", default="", help="llamacpp: extra llama-server arguments, e.g. '-fa on -ctk q8_0 -ctv q8_0'")
+    ap.add_argument("--ll-src", default=os.environ.get("LLAMA_CPP_SRC", os.path.expanduser("~/llama.cpp")), help="llamacpp: llama.cpp checkout with convert_lora_to_gguf.py / convert_hf_to_gguf.py")
+    ap.add_argument("--ll-adapter-mode", choices=["auto", "lora", "merged"], default="auto", help="llamacpp: adapter as --lora GGUF, or merged + Q4_K_M; auto = lora first, merged if it fails")
+    ap.add_argument("--ll-strip-bos", choices=["auto", "yes", "no"], default="auto", help="llamacpp: cut the template's BOS because llama-server adds one (auto = probe /tokenize)")
     ap.add_argument("--oc-upstream", default=None, help="opencode: use this OpenAI server instead of starting vLLM (tests)")
     ap.add_argument("--train-bare-answers", action="store_true", help="opencode: also train the bare final <answer> turns (off since PREREG-2 addendum 2)")
     ap.add_argument("--no-web", dest="web", action="store_false", help="opencode: turn the web tools off")

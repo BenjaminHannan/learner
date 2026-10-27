@@ -48,6 +48,9 @@ def vllm_cmd(vpy, model, port, template, adapter=None, lora_name=None, max_len=1
 
 
 class VLLMServer:
+    label = "vLLM"
+    cwd = None
+
     def __init__(self, cmd, port, log_path, log=print, wait_s=1500):
         self.cmd, self.port, self.log_path, self.log, self.wait_s = cmd, int(port), log_path, log, wait_s
         self.proc = self.logf = None
@@ -63,22 +66,26 @@ class VLLMServer:
         self.stop()
         Path(self.log_path).parent.mkdir(parents=True, exist_ok=True)
         self.logf = open(self.log_path, "a")
-        self.log("starting vLLM server: " + " ".join(self.cmd))
+        self.log(f"starting {self.label} server: " + " ".join(self.cmd))
         # same process group as the phase worker: job.kill_group(worker) takes the server (and its engine children) with it
-        self.proc = subprocess.Popen(self.cmd, stdout=self.logf, stderr=subprocess.STDOUT, env=dict(os.environ, VLLM_WORKER_MULTIPROC_METHOD="spawn"))
+        self.proc = subprocess.Popen(self.cmd, stdout=self.logf, stderr=subprocess.STDOUT, cwd=self.cwd,
+                                     env=dict(os.environ, VLLM_WORKER_MULTIPROC_METHOD="spawn"))
         t0 = time.time()
         while time.time() - t0 < self.wait_s:
             if self.proc.poll() is not None:
-                raise RuntimeError(f"vLLM server exited early (code {self.proc.returncode}); see {self.log_path}")
+                raise RuntimeError(f"{self.label} server exited early (code {self.proc.returncode}); see {self.log_path}")
             try:
-                with urllib.request.urlopen(self.base_url + "/v1/models", timeout=3) as r:
-                    ids = [m["id"] for m in json.load(r).get("data", [])]
-                self.log(f"vLLM server up in {time.time() - t0:.0f}s, models {ids}")
-                return ids
+                info = self.ready()
+                self.log(f"{self.label} server up in {time.time() - t0:.0f}s, {info}")
+                return info
             except Exception:  # noqa: BLE001
                 time.sleep(3)
         self.stop()
-        raise TimeoutError(f"vLLM server did not answer /v1/models in {self.wait_s}s; see {self.log_path}")
+        raise TimeoutError(f"{self.label} server was not ready in {self.wait_s}s; see {self.log_path}")
+
+    def ready(self):
+        with urllib.request.urlopen(self.base_url + "/v1/models", timeout=3) as r:
+            return [m["id"] for m in json.load(r).get("data", [])]
 
     def stop(self):
         if self.proc is not None and self.proc.poll() is None:
@@ -158,7 +165,13 @@ class OCBackend:
         ext["stop_token_ids"] = sorted({i for i in ids if isinstance(i, int) and i >= 0})
         self.server = None
         upstream = getattr(a, "oc_upstream", None)
-        if not upstream:
+        proxy_kw = {"upstream_model": alias, "upstream_extra": ext, "args_as_json": True}
+        from .oc_llama import use_llama
+        self.llama = use_llama(a)
+        if self.llama:  # llama.cpp: no vLLM, the proxy renders the prompt itself and calls /completion
+            from .oc_llama import llama_setup
+            self.server, upstream, proxy_kw, alias = llama_setup(a, tok, self.template, adapter, out_dir, log, upstream)
+        elif not upstream:
             cmd = vllm_cmd(vpy or sys.executable, model_name, a.oc_port, self.template, adapter, alias, a.oc_max_len, a.oc_util, getattr(a, "oc_max_seqs", 64),
                            int(getattr(a, "seed", 1) or 1), bool(getattr(a, "oc_eager", False)))
             self.server = VLLMServer(cmd, a.oc_port, out_dir / "server_logs" / f"vllm_{int(time.time())}.log", log)
@@ -166,13 +179,12 @@ class OCBackend:
             upstream = self.server.base_url
         self.conc = int(a.oc_concurrency)
         self.harness = OpenCodeHarness(None, str(out_dir / "proxy_logs"), upstream=upstream, concurrency=self.conc, timeout=a.oc_timeout, max_steps=a.oc_steps,
-                                       web=bool(getattr(a, "web", True)), log=log,
-                                       proxy_kw={"upstream_model": alias, "upstream_extra": ext, "args_as_json": True})
+                                       web=bool(getattr(a, "web", True)), log=log, proxy_kw=proxy_kw)
         self.runner = OCRunner(self.harness, tok, self.template, restart=self.server.start if self.server else None, log=log)
         log(f"OpenCode harness: concurrency {self.conc}, upstream model {alias!r}, adapter {adapter}, template {self.template}")
 
     def describe(self):
-        return f"opencode via vllm concurrency={self.conc}" + (f" adapter={self.adapter}" if self.adapter else "")
+        return f"opencode via {'llamacpp' if self.llama else 'vllm'} concurrency={self.conc}" + (f" adapter={self.adapter}" if self.adapter else "")
 
     def arc_eval(self, arc, render):
         raise NotImplementedError("ARC-Easy is not run through the OpenCode harness (Practice-2 uses --arc-n 0)")
