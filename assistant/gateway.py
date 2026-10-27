@@ -43,6 +43,7 @@ TITLE_MAX_CHARS, TITLE_MAX_TOKENS = 1000, 24
 # Qwen3.6 model card, "Instruct (or non-thinking) mode", except presence_penalty 1.0 (card: 1.5; on
 # the M1 1 in 4 short replies rambled to the cap with new questions); used only when the client sends none.
 FAST_SAMPLING = {"temperature": 0.7, "top_p": 0.8, "presence_penalty": 1.0}
+PREFIX_KEEP = 3  # distinct system+tools prefixes kept warm (one per client app)
 REWARM_IDLE_S = 60  # after the last request ends, re-send the warm prefix (cheap when still cached)
 JUDGE_PROMPT = (
     "(Internal check, not from Ben.) Rate how much careful step-by-step "
@@ -278,10 +279,13 @@ class Gateway:
         # Prewarm: the system prompt + tools of the last real chat, kept in mlx_lm's prompt cache
         # so a new chat only prefills its own messages (a cold OpenBot prefix is ~36k tokens).
         self.prefix_file = Path(prefix_file).expanduser() if prefix_file else None
-        self._prefix = None
+        # Several clients (OpenBot, Desk) each have their own prefix: keep the last few distinct
+        # ones, newest first, and warm them all, so every app is warm after a restart.
+        self._prefixes = []
         if self.prefix_file and self.prefix_file.exists():
             try:
-                self._prefix = json.loads(self.prefix_file.read_text())
+                saved = json.loads(self.prefix_file.read_text())
+                self._prefixes = ([saved] if isinstance(saved, dict) else list(saved))[:PREFIX_KEEP]
             except ValueError:
                 pass
         self._inflight = 0
@@ -289,28 +293,43 @@ class Gateway:
         self._warm_timer = None
 
     # -- prewarm
+    @property
+    def _prefix(self):  # the most recent one
+        return self._prefixes[0] if self._prefixes else None
+
     def note_prefix(self, prepped):
         """Remember (and save) the stable prefix of a real big-model request."""
         p = extract_prefix(prepped)
         if p is None or p == self._prefix:
             return
-        if self._prefix is not None:
-            log("prewarm: prefix changed at char %d of system text" % first_diff(
+        if p not in self._prefixes and self._prefixes:
+            log("prewarm: new prefix (differs from the latest at char %d of system text)" % first_diff(
                 prefix_text(self._prefix), prefix_text(p)))
-        self._prefix = p
+        self._prefixes = ([p] + [q for q in self._prefixes if q != p])[:PREFIX_KEEP]
         if self.prefix_file:
             try:
                 tmp = self.prefix_file.with_suffix(".tmp")
-                tmp.write_text(json.dumps(p, ensure_ascii=False))
+                tmp.write_text(json.dumps(self._prefixes, ensure_ascii=False))
                 tmp.replace(self.prefix_file)
             except OSError as e:
                 log("prewarm: save failed:", repr(e))
 
     def warm(self, timeout=900):
-        """Send the saved prefix with max_tokens=1 so mlx_lm caches it. -> seconds, or None if skipped."""
-        p = self._prefix
-        if p is None or not self._warm_lock.acquire(blocking=False):
+        """Warm every saved prefix, oldest first so the newest ends most recently used.
+        -> seconds, or None if skipped."""
+        if not self._prefixes or not self._warm_lock.acquire(blocking=False):
             return None
+        t0 = time.time()
+        try:
+            for p in reversed(list(self._prefixes)):
+                if self._inflight:  # a real request came in: it goes first
+                    break
+                self._warm_one(p, timeout)
+            return time.time() - t0
+        finally:
+            self._warm_lock.release()
+
+    def _warm_one(self, p, timeout):
         t0 = time.time()
         try:
             b = {"model": "default_model", "messages": p["messages"] + [{"role": "user", "content": "."}],
@@ -331,14 +350,10 @@ class Gateway:
             log("prewarm: %s prompt=%s cached=%s in %.1fs" % (
                 "ok" if r.status == 200 else "HTTP %d" % r.status, usage.get("prompt_tokens"),
                 (usage.get("prompt_tokens_details") or {}).get("cached_tokens"), time.time() - t0))
-            if r.status == 200 and self.persist_cache:
+            if r.status == 200 and self.persist_cache and p is self._prefix:
                 self.save_prefix_cache()
-            return time.time() - t0
         except (OSError, http.client.HTTPException, ValueError) as e:
             log("prewarm: failed:", repr(e))
-            return None
-        finally:
-            self._warm_lock.release()
 
     def save_prefix_cache(self, timeout=180):
         """Ask the persist wrapper to write the warmed system-prefix cache to disk. Never raises."""
@@ -1013,7 +1028,10 @@ class Handler(BaseHTTPRequestHandler):
                 out_obj = self.relay_plain(resp, asm, client_model)
         finally:
             conn.close()
-        self.record(body, client_model, upstream, thinking, asm, t0, status, out_obj, extra)
+        if self.headers.get("X-Premonition-Warm") == "1":  # a client warming its own prefix
+            log("warm request from client: %.1fs" % (time.time() - t0))
+        else:
+            self.record(body, client_model, upstream, thinking, asm, t0, status, out_obj, extra)
 
     def decide_auto(self, body):
         """qwen36-auto -> (model id to route as, diary extras). One decision per user turn."""

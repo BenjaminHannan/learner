@@ -437,7 +437,7 @@ class PrewarmTest(Base):
             _, r = self.post({"model": "qwen36-fast", "messages": MSGS, "tools": self.TOOLS})
             r.read()
             want = {"messages": [MSGS[0]], "tools": self.TOOLS}
-            self.assertEqual(json.loads(pf.read_text()), want)
+            self.assertEqual(json.loads(pf.read_text()), [want])
             for _ in range(50):  # idle rewarm fires after the request ends
                 if len(self.big.requests) >= 2:
                     break
@@ -458,6 +458,39 @@ class PrewarmTest(Base):
             self.assertEqual(self.big.requests[-1]["max_tokens"], 1)
         finally:
             gateway.REWARM_IDLE_S = old
+
+    def test_several_prefixes_kept_and_warmed(self):
+        pf = Path(self.tmp.name) / "prefix.json"
+        gw = self.srv.gw
+        gw.prefix_file = pf
+        old = gateway.REWARM_IDLE_S
+        gateway.REWARM_IDLE_S = -1  # no idle rewarm in this test
+        try:
+            for i in range(4):
+                msgs = [{"role": "system", "content": "app %d" % i}, {"role": "user", "content": "hi"}]
+                self.post({"model": "qwen36-fast", "messages": msgs})[1].read()
+            self.post({"model": "qwen36-fast", "messages": [
+                {"role": "system", "content": "app 2"}, {"role": "user", "content": "hi"}]})[1].read()
+            saved = json.loads(pf.read_text())
+            self.assertEqual([p["messages"][0]["content"] for p in saved], ["app 2", "app 3", "app 1"])
+            g2 = gateway.Gateway(gw.big_url, "", self.tmp.name, pf)
+            n = len(self.big.requests)
+            g2.warm()
+            warmed = [r["messages"][0]["content"] for r in self.big.requests[n:]]
+            self.assertEqual(warmed, ["app 1", "app 3", "app 2"])  # newest last = most recently used
+            pf.write_text(json.dumps({"messages": [{"role": "system", "content": "old"}], "tools": None}))
+            self.assertEqual(gateway.Gateway(gw.big_url, "", self.tmp.name, pf)._prefix["messages"][0]["content"], "old")
+        finally:
+            gateway.REWARM_IDLE_S = old
+
+    def test_client_warm_request_not_in_diary(self):
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        c.request("POST", "/v1/chat/completions", json.dumps({"model": "qwen36-fast", "max_tokens": 1, "messages": [
+            {"role": "system", "content": "desk"}, {"role": "user", "content": "."}]}),
+            {"Content-Type": "application/json", "X-Premonition-Warm": "1"})
+        self.assertEqual(c.getresponse().status, 200)
+        self.assertEqual(self.lines(), [])
+        self.assertEqual(self.srv.gw._prefix["messages"][0]["content"], "desk")
 
     def test_extract_prefix(self):
         self.assertIsNone(gateway.extract_prefix({"messages": [{"role": "user", "content": "hi"}]}))
