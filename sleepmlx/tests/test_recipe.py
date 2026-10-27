@@ -33,7 +33,7 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(z, 0)
 
     def test_profiles(self):
-        k2, lfm, cpu = load_profile("k2"), load_profile("lfm3"), load_profile("lfm3_cpu")
+        k2, lfm, cpu = load_profile("k2"), load_profile("lfm3_cuda"), load_profile("lfm3_cpu")
         self.assertEqual(k2.stop_token, "<|ifm|im_end|>")
         self.assertEqual(lfm.stop_token, "<|im_end|>")
         self.assertEqual(cpu.lora["rank"], 8)
@@ -159,7 +159,7 @@ class NightTests(unittest.TestCase):
     def test_thinking_path_is_used_for_k2_and_not_for_lfm3(self):
         be, _ = self.full_night()
         self.assertTrue(any(m == 512 for m in be.max_tokens_seen))      # K2: the 512-token thinking stage
-        env = Env(profile="lfm3")
+        env = Env(profile="lfm3_cuda")
         try:
             be3 = env.backend()
             r = env.sleeper(be3).run(env.week(), dry_run=True)

@@ -1,6 +1,9 @@
 """python -m sleepmlx  <command>
 
-  recall "question"    base + adapter, answers in one short line (no-think, max 64 tokens). For the Desk's recall tool.
+  recall "question" [--profile P] [--server URL]
+                       base + adapter, answers in one short line (no-think, max 64 tokens). For the Desk's recall tool.
+                       --server: ask a running llama-server (started with --lora adapter.gguf) instead of loading the model here;
+                       if the server is unreachable, falls back to loading the model with the torch / MLX backend.
   status               what has been slept, what is waiting, the adapter, any night in progress (JSON).
   night [...]          run one chunk by hand (same as python -m sleepmlx.worker; --budget-s 1200 --dry-run ...).
   export-gguf --llama-cpp DIR --base HF_BASE_DIR [--out adapter.gguf]
@@ -40,6 +43,26 @@ def recall(question: str, backend, R, prof, adapter_dir=None) -> str:
     return clean_answer(out, prof)
 
 
+def recall_server(url: str, question: str, prof, timeout: float = 60.0) -> str:
+    """Ask a llama-server (llama.cpp) through its /completion endpoint with the profile's no-think prompt. Raises OSError / ValueError on failure."""
+    import urllib.request
+    p = load_profile_manual(prof)
+    body = json.dumps({"prompt": Renderer(p, None).render(RECALL_SYS, question), "n_predict": 64, "temperature": 0.0, "stop": [prof.stop_token] if prof.stop_token else [],
+                       "cache_prompt": True}).encode()
+    req = urllib.request.Request(url.rstrip("/") + "/completion", data=body, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        data = json.loads(r.read().decode())
+    return clean_answer(data.get("content", ""), prof)
+
+
+def load_profile_manual(prof):
+    """A copy of the profile that renders with its own template strings (the server tokenizes; we do not load a tokenizer for that)."""
+    import copy
+    p = copy.copy(prof)
+    p.template_mode = "manual"
+    return p
+
+
 def status(paths: Paths, prof) -> dict:
     st = read_json(paths.state, {}) or {}
     week = diary_mod.build_week(paths.diary_dir, ignore_file=paths.ignore)
@@ -72,16 +95,25 @@ def main(argv=None) -> int:
         print(json.dumps(status(paths, prof), indent=1))
         return 0
     if cmd == "recall":
-        prof_name = None
-        if "--profile" in rest:
-            i = rest.index("--profile")
-            prof_name = rest[i + 1]
-            del rest[i:i + 2]
+        def take(flag):
+            if flag in rest:
+                i = rest.index(flag)
+                v = rest[i + 1]
+                del rest[i:i + 2]
+                return v
+            return None
+        prof_name, server = take("--profile"), take("--server")
         q = " ".join(rest).strip()
         if not q:
-            print("usage: python -m sleepmlx recall \"question\"", file=sys.stderr)
+            print("usage: python -m sleepmlx recall \"question\" [--profile P] [--server URL]", file=sys.stderr)
             return 2
         prof = load_profile(prof_name)
+        if server:
+            try:
+                print(recall_server(server, q, prof))
+                return 0
+            except (OSError, ValueError) as e:
+                print("llama-server at %s did not answer (%s); loading the model here instead (slow)" % (server, e), file=sys.stderr)
         from .worker import make_backend
         be, tok = make_backend(prof)
         print(recall(q, be, Renderer(prof, tok), prof, paths.adapter if paths.adapter.exists() else None))
@@ -98,7 +130,8 @@ def main(argv=None) -> int:
         if not llama or not base:
             print("usage: export-gguf --llama-cpp DIR --base HF_BASE_DIR [--out FILE]", file=sys.stderr)
             return 2
-        cmd_ = [sys.executable, str(os.path.join(os.path.expanduser(llama), "convert_lora_to_gguf.py")), str(paths.adapter), "--base", os.path.expanduser(base), "--outfile", out]
+        from .export import export_command
+        cmd_ = export_command(llama, base, paths.adapter, out)
         print(" ".join(cmd_))
         return subprocess.call(cmd_)
     if cmd == "diary":

@@ -76,6 +76,8 @@ class Config:
     kl_every: int = 1             # KL replay every n-th step (CPU profile: 4)
     gate_n: int = 40              # general questions in the gate
     gate_max_tokens: int = 24
+    llama_cpp_dir: Optional[str] = None      # set: export a GGUF LoRA when a night commits (torch backend)
+    gguf_base_dir: Optional[str] = None      # the HF base model dir the converter needs
 
 
 def clip_scale(budget_s: float, t_step: float, t_gen: float, ref_steps: int, ref_gen_batches: float) -> float:
@@ -222,6 +224,7 @@ class Sleeper:
         self.who = cfg.who
         self.sec_per_batch_tok = None   # seconds per generated token per batch (measured)
         self.t_step = None
+        self.exporter = None            # tests inject a fake exporter
         self.leak = {norm(q) for q, _ in gate_mod.GENERAL_QA}
 
     # ---- persistence
@@ -848,6 +851,14 @@ class Sleeper:
             for it in E:
                 if it.para or it.qa:
                     it.trained = True
+            if cfg.llama_cpp_dir:   # a failure here never fails the night
+                try:
+                    from . import export as export_mod
+                    ok, msg = (self.exporter or export_mod.export_gguf)(cfg.llama_cpp_dir, cfg.gguf_base_dir, P_.adapter, P_.home / "adapter.gguf")
+                except Exception as e:
+                    ok, msg = False, "%s: %s" % (type(e).__name__, e)
+                res["gguf"] = {"ok": ok, "message": msg}
+                self.log("[night] gguf export: %s %s" % ("ok" if ok else "FAILED", msg))
         self.state["nights"] += 1
         if N["date"] not in self.state["slept_days"]:
             self.state["slept_days"].append(N["date"])

@@ -32,6 +32,10 @@ def cfg_from_env(env=os.environ, prof=None) -> Config:
         if hasattr(c, k):
             setattr(c, k, v)
     c.who = env.get("SLEEPMLX_WHO", c.who)
+    rt = (prof.runtime if prof is not None else {}) or {}
+    c.llama_cpp_dir = env.get("SLEEPMLX_LLAMA_CPP_DIR") or rt.get("llama_cpp_dir") or c.llama_cpp_dir
+    if prof is not None and prof.model_dir:
+        c.gguf_base_dir = prof.expanded_model_dir
     for name, cast in (("SLEEPMLX_NIGHT_BUDGET_S", float), ("SLEEPMLX_SCALE", float), ("SLEEPMLX_MIN_CARDS", int), ("SLEEPMLX_MIN_ITEM_DAYS", int),
                        ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float)):
         if env.get(name):
@@ -64,10 +68,31 @@ def make_backend(prof, env=os.environ):
                           mem_limit=float(env.get("SLEEPMLX_MEM_LIMIT", rt.get("mem_limit", 5e9))),
                           cache_limit=float(env.get("SLEEPMLX_CACHE_LIMIT", rt.get("cache_limit", 0.5e9))))
         return be, tok
+    os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
     from . import torch_backend as T
-    src = prof.expanded_model_dir if prof.model_dir and os.path.exists(prof.expanded_model_dir) else (prof.hf_id or prof.expanded_model_dir)
-    model, tok = T.load(src, prof.trust_remote_code)
+    src = torch_source(prof)
+    model, tok = T.load(src, prof.trust_remote_code, mps_gb=rt.get("mps_mem_gb"))
     return T.TorchBackend(model, tok, prof, src, tok_budget=tok_budget, grad_ckpt=gc, gen_batch=gen_batch), tok
+
+
+class ModelMissing(RuntimeError):
+    pass
+
+
+def download_command(prof) -> str:
+    return "huggingface-cli download %s --local-dir %s" % (prof.hf_id, prof.expanded_model_dir)
+
+
+def torch_source(prof) -> str:
+    """The local HF dir if the profile names one, else the HF id (downloaded into the HF cache). A configured dir that is missing is an error
+    that prints the exact download command."""
+    if prof.model_dir:
+        if os.path.isdir(prof.expanded_model_dir):
+            return prof.expanded_model_dir
+        if prof.hf_id:
+            raise ModelMissing("model dir %s is missing. Download it with:\n  %s" % (prof.expanded_model_dir, download_command(prof)))
+        raise ModelMissing("model dir %s is missing" % prof.expanded_model_dir)
+    return prof.hf_id or prof.expanded_model_dir
 
 
 def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: bool = False, log: Callable[[str], None] = print,
@@ -121,7 +146,7 @@ def _paths_from(env) -> Paths:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m sleepmlx.worker")
     ap.add_argument("--dry-run", action="store_true", help="tag and write cards only; no training, adapter untouched")
-    ap.add_argument("--profile", default=None, help="k2 (default) | lfm3 | path to a profile json")
+    ap.add_argument("--profile", default=None, help="lfm3 (default: lfm3_mps on macOS, lfm3_cuda / lfm3_cpu elsewhere) | k2 | a profile name or json path")
     ap.add_argument("--date", default=None, help="sleep this diary date (YYYY-MM-DD) instead of the oldest unslept one")
     ap.add_argument("--budget-s", type=float, default=None, help="chunk budget (default: env SLEEPMODE_BUDGET_S)")
     ap.add_argument("--out", default=None, help="output json (default: env SLEEPMODE_OUT)")
@@ -153,7 +178,10 @@ def main(argv=None) -> int:
     try:
         out = run_chunk(env, dry_run=a.dry_run, log=log, guards=guards, only_date=a.date, profile=a.profile)
     except Exception as e:  # never leave SLEEPMODE_OUT missing
-        traceback.print_exc()
+        if isinstance(e, ModelMissing):
+            print(str(e), file=sys.stderr, flush=True)
+        else:
+            traceback.print_exc()
         out = {"quiz": None, "steps": 0, "interrupted": False, "error": "%s: %s" % (type(e).__name__, e)}
         rc = 1
     out_path.parent.mkdir(parents=True, exist_ok=True)

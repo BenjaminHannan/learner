@@ -1,6 +1,6 @@
 {
-  "name": "lfm3",
-  "model_dir": "",
+  "name": "lfm3_mps",
+  "model_dir": "~/learner-ops/models/lfm3-1.7b-hf",
   "hf_id": "LiquidAI/LFM3-1.7B",
   "backend": "torch",
   "loader": null,
@@ -25,13 +25,9 @@
       "self_attn.k_proj",
       "self_attn.v_proj",
       "self_attn.o_proj",
-      "conv.in_proj",
-      "conv.out_proj",
-      "feed_forward.w1",
-      "feed_forward.w2",
-      "feed_forward.w3"
+      "conv.out_proj"
     ],
-    "target_modules": ".*\\.layers\\.\\d+\\.(self_attn\\.(q_proj|k_proj|v_proj|o_proj)|conv\\.(in_proj|out_proj)|feed_forward\\.(w1|w2|w3))"
+    "target_modules": ".*\\.layers\\.\\d+\\.(self_attn\\.(q_proj|k_proj|v_proj|o_proj)|conv\\.out_proj)"
   },
   "quirks": {
     "tag_think": false,
@@ -41,10 +37,15 @@
     "rem_chain_mode": "q",
     "rem_think_tokens": 0
   },
+  "recipe": {
+    "max_seq_len": 512
+  },
   "runtime": {
     "tok_budget": 512,
     "grad_ckpt": true,
-    "gen_batch": 8
+    "gen_batch": 8,
+    "mps_mem_gb": 10,
+    "min_free_ram_gb": 2.0
   },
-  "note": "LFM3: released mlx_lm cannot load it yet (shown, 2026-10-27), so this profile uses the torch backend. K2 stays the Mac default."
+  "note": "Apple silicon via torch on MPS (released mlx_lm cannot load LFM3). Frozen base in fp16, LoRA params fp32; memory capped with torch.mps.set_per_process_memory_fraction."
 }

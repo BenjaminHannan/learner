@@ -8,7 +8,7 @@ It is a port of the `ab_ob_b4_nb` recipe from `backbone/sleep/brain/sleepb.py` (
 run as a Sleep Mode worker (`sleepmode/workers.py` `CommandWorker`, branch `origin/claude/project-thread-sl2x88`).
 
 **Status, read this first.** Everything that touches MLX (`model.py`) or PyTorch (`torch_backend.py`) has never run: there is no
-Mac or Windows machine here. What *is* shown (37 unit tests, Linux, fake model): the diary converter, the night pipeline logic,
+Mac or Windows machine here. What *is* shown (50 unit tests, Linux, fake model): the diary converter, the night pipeline logic,
 budget stop and resume, the gate and its undo, the worker's output format (also checked against the real `CommandWorker` class),
 recall, status, the SHY maths in numpy. Everything else is "untested until the Mac run".
 
@@ -66,7 +66,7 @@ Preview it first: `python -m sleepmlx diary`.
 ```
 python -m sleepmlx.worker                 # the Sleep Mode CommandWorker entry (reads SLEEPMODE_BUDGET_S, SLEEPMODE_OUT, SLEEPMODE_PRACTICE [accepted, unused], SLEEPMODE_WORKDIR)
 python -m sleepmlx.worker --dry-run       # tag and write cards, no training; day stays unslept
-python -m sleepmlx recall "question"      # base + adapter, one short line, no-think, max 64 tokens (for the Desk's recall tool)
+python -m sleepmlx recall "question" [--server URL]   # base + adapter, one short line, no-think, max 64 tokens (for the Desk's recall tool)
 python -m sleepmlx status                 # JSON: slept days, next day, night in progress, adapter, card count, last night
 python -m sleepmlx night --budget-s 1200  # same as the worker, flags instead of env
 python -m sleepmlx diary [--date D]       # preview the converted diary
@@ -77,6 +77,11 @@ python -m sleepmlx export-gguf --llama-cpp DIR --base HF_BASE_DIR   # torch back
 
 ### A 20-minute test night on the Mac
 
+**Default model is now LFM3-1.7B on the torch backend (MPS)**, profile `lfm3_mps`. Download the HF weights once (the worker prints this exact command if the folder is missing):
+```
+huggingface-cli download LiquidAI/LFM3-1.7B --local-dir ~/learner-ops/models/lfm3-1.7b-hf
+```
+The venv needs `torch transformers peft safetensors psutil`. K2 on MLX stays available: add `--profile k2` (or `SLEEPMLX_PROFILE=k2`) to any command below.
 The assistant's model servers must be stopped (no `ASSISTANT_RUNNING`, nothing else big in memory). Use the venv python.
 ```
 cd ~/learner   # the repo, on this branch
@@ -103,15 +108,25 @@ With one day of diary the first night is likely a dry run by design: fewer than 
 * **Windows CPU, LFM3-1.7B (profile `lfm3_cpu`)**: bf16 frozen base (~3.4 GB), LoRA rank 8 on attention + `conv.out_proj`, 4 cards per step, micro-batch token budget 256, gradient checkpointing, `torch.set_num_threads(cores-1)`,
   KL replay every 4th step, 20 gate questions with 16 new tokens, abort if free RAM < 1 GB. **No CPU timing has been measured.** A rough guess: 1.7B parameters x ~6 FLOPs x ~600 tokens plus recompute
   is ~15-20 TFLOP per step, so roughly 1-3 minutes per step on a laptop CPU, and generation of a few tokens per second. The night measures its own step time and shrinks to the budget (s down to 0.25), so a 1-3 h night is a small night (tens of steps, dozens of cards). Treat all of this as a guess until it runs.
-* **LFM3 on the Mac**: released `mlx_lm` cannot load LFM3 yet (shown, 2026-10-27), so profile `lfm3` uses the torch backend (MPS/CPU). K2 stays the default.
+* **LFM3 on the Mac (profile `lfm3_mps`, torch on MPS)**: released `mlx_lm` cannot load LFM3 yet (shown), so the Mac uses PyTorch on the GPU (MPS). Frozen base in fp16 (bf16 is shaky on M1), LoRA weights and the loss in fp32,
+  so no loss scaling is needed (the safe option: only the frozen weights are half precision); `PYTORCH_ENABLE_MPS_FALLBACK=1` is set; memory is capped with `torch.mps.set_per_process_memory_fraction` at about 10 GB (`runtime.mps_mem_gb`);
+  LoRA rank 16 on attention q/k/v/o + `conv.out_proj`; token budget 512; gradient checkpointing on. **No timing or memory number exists for this path yet**: the 33 s/step figure above belongs to K2 on MLX. LFM3 is 1.7B (K2 3.7B), so it should be faster, but that is a guess. The night measures its own step time and scales to the budget.
 
 ## Models and backends (profiles)
 
 A profile (`sleepmlx/profiles/*.json`, or any path) holds the model dir / HF id, loader, chat-template mode and strings, think and no-think markers, stop token, LoRA targets, per-model parsing quirks, recipe overrides and runtime settings.
-`k2` (default; MLX), `lfm3` (torch, `LiquidAI/LFM3-1.7B`, LoRA on attention + conv + feed-forward by regex), `lfm3_cpu` (torch, the small-laptop settings above). Select with `SLEEPMLX_PROFILE` or `--profile`.
+**Default `lfm3`** is an alias: `lfm3_mps` on macOS, `lfm3_cuda` on Windows/Linux with a CUDA card, otherwise `lfm3_cpu`.
+`lfm3_mps` (torch on MPS, HF dir `~/learner-ops/models/lfm3-1.7b-hf`), `lfm3_cuda` (LoRA on attention + conv + feed-forward by regex), `lfm3_cpu` (the small-laptop settings above), `k2` (MLX, still available). Select with `SLEEPMLX_PROFILE` or `--profile`.
+The torch backend picks its device in the order cuda, mps, cpu. If a profile's `model_dir` is set but missing, the worker prints `huggingface-cli download <hf_id> --local-dir <dir>` and stops with that error; a profile with no `model_dir` loads `hf_id` from the Hugging Face cache.
 Overrides: `SLEEPMLX_MODEL_DIR`, `SLEEPMLX_HF_ID`, `SLEEPMLX_LOADER=module:function` (+ `SLEEPMLX_LOADER_PATH`; the function takes the model dir and returns `(model, tokenizer)`), `SLEEPMLX_BACKEND_KIND=mlx|torch`.
-K2 loads with plain `mlx_lm.load(path, trust_remote_code=True)`; the loader hook is kept anyway. Another runtime can be plugged in with `SLEEPMLX_BACKEND=module:function` returning `(backend, tokenizer)`; the `Backend` interface is in `backend.py`.
+K2 (MLX) loads with plain `mlx_lm.load(path, trust_remote_code=True)`; the loader hook is kept anyway. Another runtime can be plugged in with `SLEEPMLX_BACKEND=module:function` returning `(backend, tokenizer)`; the `Backend` interface is in `backend.py`.
 The K2 quirks live in the profile: full thinking (512 tokens) for tagger and names pass, the "not / none / nothing / nope / unrelated = no" reply rule, REM chain mode `q_think`. LFM3 profiles ask without thinking (`<think></think>`).
+
+**Recall on the Mac.** `recall` with the torch backend loads the model each call (slow). `--server http://127.0.0.1:8080` instead asks a running llama-server (started with `--lora ~/learner-ops/sleepmlx/adapter.gguf`, built with LFM3 support) through `/completion`
+with the same no-think prompt; if the server does not answer it prints a note on stderr and falls back to the slow load.
+
+**Automatic GGUF at night end.** When a night commits (not when it is undone), `adapter.gguf` is exported into the sleep root if `SLEEPMLX_LLAMA_CPP_DIR` (or the profile's `runtime.llama_cpp_dir`) is set and the HF base dir exists
+(the profile's `model_dir`). Any failure is logged and returned in the chunk output as `gguf: {ok, message}`; it never fails the night. Only the torch backend writes the PEFT adapter the converter needs.
 
 **Windows / GGUF.** The torch backend saves the adapter in PEFT format. To use it in the app: `python -m sleepmlx export-gguf --llama-cpp <llama.cpp dir> --base <HF dir of LiquidAI/LFM3-1.7B> --out adapter.gguf`
 (this runs `convert_lora_to_gguf.py <adapter dir> --base <HF dir> --outfile adapter.gguf`; it needs the HF base directory, not the GGUF), then start `llama-server -m <base>.gguf --lora adapter.gguf`. Untested; the LFM3 llama.cpp support was merged only on 2026-10-27.
@@ -134,7 +149,7 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 ## Tests
 
 `python3 -m unittest discover -s sleepmlx/tests -t .` (Linux, no mlx / torch needed; a fake model learns name pairs from its training examples and advances a fake clock).
-Covers: diary converter (dedupe, tool loops, blob refs, helper records, block stripping, redaction, ignore list, test-mode records, the app's simple format), week-JSON validity against sleepb's `check_week` rules,
+Covers: device order with a mocked torch, profile choice per platform, the `lfm3_mps` profile, the missing-model download command, `recall --server` against a local HTTP stub, GGUF export on commit (and its failure), diary converter (dedupe, tool loops, blob refs, helper records, block stripping, redaction, ignore list, test-mode records, the app's simple format), week-JSON validity against sleepb's `check_week` rules,
 the full night and a second night (adapter.prev, replay of earlier cards), dry run and the too-little-data path, held-out cards never trained, budget stop and resume (no step repeated, no finished generation batch repeated),
 external stops (assistant running, PAUSE_OTHERS, memory pressure, SIGTERM-style), wake mid-training checkpoint, gate judge and undo (including the first night), the CommandWorker output format
 (including a subprocess run of `python -m sleepmlx.worker`), recall with a fake model, status, profiles and templates, Windows paths, the SHY maths.
