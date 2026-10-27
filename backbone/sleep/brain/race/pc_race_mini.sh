@@ -70,6 +70,18 @@ G=$(gap c75_s1 lora_s1); log "validity seed 1: 300-step - 75-step = ${G:-missing
 if [ -z "${RM_SKIP_GATE:-}" ] && { [ -z "$G" ] || python -c "import sys; sys.exit(0 if float('$G') < 2 else 1)"; }; then
   log "VALIDITY FAILED or missing: stopping (both sides rethink)"; RC=${RC:-0}; [ $RC -eq 0 ] && RC=3; exit
 fi
+# 1b. the second control seed, then the ceiling decision (addendum 1), logged from c75 alone before any treatment arm runs
+run c75_s2 $R2 --storage lora $S --seed 2
+H=$(python - "$OUT" <<'PY'
+import json, sys, pathlib
+try:
+    v = [json.loads((pathlib.Path(sys.argv[1]) / f"c75_s{k}" / "result.json").read_text())["scores"]["final"]["forward"]["C24"] for k in (1, 2)]
+    print(f"{sum(v) / 2:.4f} {'night4' if sum(v) / 2 >= 0.90 else 'final'}")
+except Exception as e:
+    print(f"missing final ({type(e).__name__})")
+PY
+)
+log "CEILING DECISION (c75 only): pooled c75 final C2+C4 = ${H% *}; headline = ${H##* }"; echo "$H" > "$OUT/headline.txt"
 # 2. seed 1: add-on LoRA+ x16, whole-model lr scout (Week-1 tape, 3 nights, fixed rule), whole-model qs
 run lp16_s1 $R2 --storage lora --lora-plus 16 $S --seed 1
 for LR in 1e-3 3e-3 1e-2; do
@@ -92,8 +104,7 @@ PY
 )
 log "qs lr picked: $QLR"; echo "$QLR" > "$OUT/qs_lr.txt"
 run qs_s1 $R2 --storage qs --lr "$QLR" $S --seed 1
-# 3. seed 2 for all three arms (the dose check is seed 1 only)
-run c75_s2 $R2 --storage lora $S --seed 2
+# 3. seed 2 of both treatment arms (the dose check is seed 1 only)
 run lp16_s2 $R2 --storage lora --lora-plus 16 $S --seed 2
 run qs_s2 $R2 --storage qs --lr "$QLR" $S --seed 2
 log "all runs attempted"
