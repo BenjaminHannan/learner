@@ -1,0 +1,50 @@
+{
+  "name": "lfm3",
+  "model_dir": "",
+  "hf_id": "LiquidAI/LFM3-1.7B",
+  "backend": "torch",
+  "loader": null,
+  "loader_path": null,
+  "trust_remote_code": true,
+  "template_mode": "tokenizer",
+  "template": {
+    "system": "<|im_start|>system\n{content}<|im_end|>\n",
+    "user": "<|im_start|>user\n{content}<|im_end|>\n",
+    "assistant_open": "<|im_start|>assistant\n"
+  },
+  "nothink_suffix": "<think></think>",
+  "think_open": "<think>",
+  "think_close": "</think>",
+  "stop_token": "<|im_end|>",
+  "lora": {
+    "rank": 16,
+    "scale": 2.0,
+    "dropout": 0.0,
+    "keys": [
+      "self_attn.q_proj",
+      "self_attn.k_proj",
+      "self_attn.v_proj",
+      "self_attn.o_proj",
+      "conv.in_proj",
+      "conv.out_proj",
+      "feed_forward.w1",
+      "feed_forward.w2",
+      "feed_forward.w3"
+    ],
+    "target_modules": ".*\\.layers\\.\\d+\\.(self_attn\\.(q_proj|k_proj|v_proj|o_proj)|conv\\.(in_proj|out_proj)|feed_forward\\.(w1|w2|w3))"
+  },
+  "quirks": {
+    "tag_think": false,
+    "names_think": false,
+    "think_tokens": 0,
+    "negative_word_parse": false,
+    "rem_chain_mode": "q",
+    "rem_think_tokens": 0
+  },
+  "runtime": {
+    "tok_budget": 512,
+    "grad_ckpt": true,
+    "gen_batch": 8
+  },
+  "note": "LFM3: released mlx_lm cannot load it yet (shown, 2026-10-27), so this profile uses the torch backend. K2 stays the Mac default."
+}

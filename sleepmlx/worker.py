@@ -1,0 +1,166 @@
+"""Sleep Mode worker: `python -m sleepmlx.worker`  (the CommandWorker entry).
+
+Contract (sleepmode/workers.py CommandWorker): reads env SLEEPMODE_BUDGET_S (seconds for this chunk), SLEEPMODE_OUT (JSON path to write),
+SLEEPMODE_PRACTICE (os.pathsep-joined practice files; accepted, not used) and SLEEPMODE_WORKDIR. Writes
+{"quiz": float|null, "steps": int, "interrupted": bool, ...info}. quiz = recall % on the night's held-out cards, only on the chunk where the night
+finishes (null otherwise). `general` (the 40-question score) rides along for the scheduler's forgetting guard.
+Stops cleanly (checkpoint, then exit 0) on SIGTERM, when ~/learner-ops/ASSISTANT_RUNNING or PAUSE_OTHERS appears, on memory pressure > 1,
+or when the chunk budget is nearly spent. The next chunk resumes the night.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import signal
+import sys
+import time
+import traceback
+from pathlib import Path
+from typing import Callable, Optional
+
+from . import diary as diary_mod
+from .backend import Clock, Guards
+from .paths import Paths, read_json, write_json
+from .profile import Renderer, load_profile
+from .recipe import Config, Sleeper, next_day
+
+
+def cfg_from_env(env=os.environ, prof=None) -> Config:
+    c = Config()
+    for k, v in ((prof.recipe if prof is not None else {}) or {}).items():   # profile overrides first, then env
+        if hasattr(c, k):
+            setattr(c, k, v)
+    c.who = env.get("SLEEPMLX_WHO", c.who)
+    for name, cast in (("SLEEPMLX_NIGHT_BUDGET_S", float), ("SLEEPMLX_SCALE", float), ("SLEEPMLX_MIN_CARDS", int), ("SLEEPMLX_MIN_ITEM_DAYS", int),
+                       ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float)):
+        if env.get(name):
+            setattr(c, {"SLEEPMLX_NIGHT_BUDGET_S": "night_budget_s", "SLEEPMLX_SCALE": "scale", "SLEEPMLX_MIN_CARDS": "min_cards",
+                        "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max"}[name], cast(env[name]))
+    return c
+
+
+def choose_backend(prof) -> str:
+    if prof.backend in ("mlx", "torch"):
+        return prof.backend
+    try:
+        import mlx.core  # noqa: F401
+        return "mlx"
+    except ImportError:
+        return "torch"
+
+
+def make_backend(prof, env=os.environ):
+    """Load the model for `prof` and wrap it in the MLX or the torch backend. -> (backend, tokenizer)."""
+    rt = prof.runtime or {}
+    kind = choose_backend(prof)
+    tok_budget = int(env.get("SLEEPMLX_TOK_BUDGET", rt.get("tok_budget", 256)))
+    gc = env.get("SLEEPMLX_GC", "1" if rt.get("grad_ckpt", True) else "0") != "0"
+    gen_batch = int(env.get("SLEEPMLX_GEN_BATCH", rt.get("gen_batch", 8)))
+    if kind == "mlx":
+        from . import model as M
+        model, tok = M.load(prof.expanded_model_dir, prof.loader, prof.loader_path, prof.trust_remote_code)
+        be = M.MLXBackend(model, tok, prof, prof.expanded_model_dir, tok_budget=tok_budget, grad_ckpt=gc, gen_batch=gen_batch,
+                          mem_limit=float(env.get("SLEEPMLX_MEM_LIMIT", rt.get("mem_limit", 5e9))),
+                          cache_limit=float(env.get("SLEEPMLX_CACHE_LIMIT", rt.get("cache_limit", 0.5e9))))
+        return be, tok
+    from . import torch_backend as T
+    src = prof.expanded_model_dir if prof.model_dir and os.path.exists(prof.expanded_model_dir) else (prof.hf_id or prof.expanded_model_dir)
+    model, tok = T.load(src, prof.trust_remote_code)
+    return T.TorchBackend(model, tok, prof, src, tok_budget=tok_budget, grad_ckpt=gc, gen_batch=gen_batch), tok
+
+
+def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: bool = False, log: Callable[[str], None] = print,
+              guards: Optional[Guards] = None, only_date: Optional[str] = None, profile: Optional[str] = None) -> dict:
+    """One chunk. Returns the dict that goes to SLEEPMODE_OUT. backend_factory(prof) -> (backend, tokenizer) (tests pass a fake)."""
+    env = dict(os.environ if env is None else env)
+    t0 = time.time()
+    paths = _paths_from(env) if "SLEEPMLX_HOME" in env else Paths.from_env()
+    paths.mk()
+    budget = float(env.get("SLEEPMODE_BUDGET_S", "1200"))
+    prof = load_profile(profile, env)
+    cfg = cfg_from_env(env, prof)
+    guards = guards or Guards(paths, min_free_gb=float(prof.runtime.get("min_free_ram_gb", 1.0)))
+    out = {"quiz": None, "steps": 0, "interrupted": False, "profile": prof.name}
+    r = guards.reason()
+    if r:
+        out.update(interrupted=True, stop_reason=r, message="not started: " + r)
+        return out
+    week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore))
+    state = read_json(paths.state, {}) or {}
+    resuming = paths.night_json.exists()
+    if not resuming and not next_day(week, state) and not only_date:
+        out.update(message="no new diary day to sleep on", days_in_diary=len(week["dates"]), slept=len(state.get("slept_days", [])))
+        return out
+    if backend_factory is None and env.get("SLEEPMLX_BACKEND"):   # 'module:function' returning (backend, tokenizer); tests and other runtimes
+        import importlib
+        mod, _, fn = env["SLEEPMLX_BACKEND"].partition(":")
+        backend_factory = getattr(importlib.import_module(mod), fn)
+    be, tok = (backend_factory or make_backend)(prof)
+    try:
+        clock = Clock(budget, guards)
+        sl = Sleeper(be, Renderer(prof, tok), prof, cfg, paths, clock, log)
+        res = sl.run(week, dry_run=dry_run, only_date=only_date)
+    finally:
+        be.close()
+    out.update({k: v for k, v in res.items() if k not in ("steps",)})
+    out["steps"] = int(res.get("steps") or 0)
+    out["quiz"] = res.get("quiz")
+    out["interrupted"] = bool(res.get("interrupted"))
+    out["elapsed_s"] = time.time() - t0
+    return out
+
+
+def _paths_from(env) -> Paths:
+    home = Path(os.path.expanduser(env["SLEEPMLX_HOME"]))
+    ops = Path(os.path.expanduser(env.get("LEARNER_OPS", str(home.parent))))
+    diary = Path(os.path.expanduser(env.get("SLEEPMLX_DIARY_DIR", str(ops / "diary" / "raw"))))
+    return Paths(home, diary, ops)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(prog="python -m sleepmlx.worker")
+    ap.add_argument("--dry-run", action="store_true", help="tag and write cards only; no training, adapter untouched")
+    ap.add_argument("--profile", default=None, help="k2 (default) | lfm3 | path to a profile json")
+    ap.add_argument("--date", default=None, help="sleep this diary date (YYYY-MM-DD) instead of the oldest unslept one")
+    ap.add_argument("--budget-s", type=float, default=None, help="chunk budget (default: env SLEEPMODE_BUDGET_S)")
+    ap.add_argument("--out", default=None, help="output json (default: env SLEEPMODE_OUT)")
+    a = ap.parse_args(argv)
+    env = dict(os.environ)
+    if a.budget_s:
+        env["SLEEPMODE_BUDGET_S"] = str(a.budget_s)
+    out_path = Path(a.out or env.get("SLEEPMODE_OUT", "sleepmlx_chunk_out.json"))
+    paths = Paths.from_env()
+    paths.mk()
+    guards = Guards(paths)
+
+    def on_term(signum, frame):
+        guards.signal("sigterm")
+
+    signal.signal(signal.SIGTERM, on_term)
+    signal.signal(signal.SIGINT, on_term)
+
+    def log(msg):
+        line = "%s %s" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg)
+        print(line, flush=True)
+        try:
+            with open(str(paths.log), "a") as f:
+                f.write(line + "\n")
+        except OSError:
+            pass
+
+    rc = 0
+    try:
+        out = run_chunk(env, dry_run=a.dry_run, log=log, guards=guards, only_date=a.date, profile=a.profile)
+    except Exception as e:  # never leave SLEEPMODE_OUT missing
+        traceback.print_exc()
+        out = {"quiz": None, "steps": 0, "interrupted": False, "error": "%s: %s" % (type(e).__name__, e)}
+        rc = 1
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out))
+    log("chunk done: %s" % {k: v for k, v in out.items() if k in ("quiz", "steps", "status", "phase", "message", "stop_reason", "error")})
+    return rc
+
+
+if __name__ == "__main__":
+    sys.exit(main())
