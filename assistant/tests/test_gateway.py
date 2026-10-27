@@ -311,6 +311,18 @@ class PrepareTest(unittest.TestCase):
         self.assertEqual(fast["messages"][1]["content"], "hi qwen36-fast")  # user text untouched
         self.assertEqual(msgs[0]["content"], "You are model premonition/qwen36-fast.")  # input not mutated
 
+    def test_skills_listing_stripped(self):
+        import gateway
+        sysmsg = ("Intro.\nSkills provide specialized instructions and workflows for specific tasks.\n"
+                  "Use the skill tool to load a skill when a task matches its description.\n"
+                  "<available_skills>\n  <skill>\n    <name>x</name>\n  </skill>\n</available_skills>\nOutro.")
+        msgs = [{"role": "system", "content": sysmsg},
+                {"role": "user", "content": "<available_skills>keep</available_skills>"}]
+        out = gateway.prepare({"messages": msgs}, None, 1)["messages"]
+        self.assertEqual(out[0]["content"], "Intro.\nOutro.")
+        self.assertEqual(out[1], msgs[1])  # user text untouched
+        self.assertIn("<available_skills>", msgs[0]["content"])  # input not mutated
+
 
 if __name__ == "__main__":
     unittest.main()

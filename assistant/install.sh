@@ -66,6 +66,26 @@ json.dump(d, open(p, "w"), indent=2)
 print("wrote", p)
 PYEOF
 
+# OpenBot provider list: one "Premonition" entry with readable model names (OpenBot reads it at launch).
+python3 - "$(dirname "$DET")/openbot-custom-providers-v1.json" <<'PYEOF'
+import json, os, shutil, sys, time
+p, url = sys.argv[1], "http://127.0.0.1:8090/v1"
+ours = {"id": "server-127-0-0-1-8090", "name": "Premonition", "baseUrl": url, "secret": None, "models": [
+    {"id": "qwen36-auto", "name": "Premonition Auto"},
+    {"id": "qwen36", "name": "Premonition Thinking"},
+    {"id": "qwen36-fast", "name": "Premonition Fast"}]}
+d = {"version": 1, "providers": []}
+if os.path.exists(p):
+    shutil.copy(p, p + time.strftime(".bak-%Y%m%d-%H%M%S"))
+    try:
+        d = json.load(open(p))
+    except ValueError:
+        pass
+d["providers"] = [x for x in d.get("providers", []) if x.get("baseUrl", "").rstrip("/") != url] + [ours]
+json.dump(d, open(p, "w"), separators=(",", ":"))
+print("wrote", p)
+PYEOF
+
 # Double-clickable launchers.
 cat > "$DEST/launchers/Start Assistant.command" <<'CMD'
 #!/bin/bash

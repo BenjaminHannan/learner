@@ -295,6 +295,13 @@ class Gateway:
 
 
 AUTO_FAST_RE = re.compile(r"qwen36-(?:auto|fast)")
+# OpenCode lists every Claude Code skill (~7k tokens on Ben's Macs) in its system prompt.
+# A local model never needs them, and the extra prefill made cold turns 40-70 s on the M1.
+SKILLS_RE = re.compile(
+    r"Skills provide specialized instructions and workflows for specific tasks\.\n"
+    r"Use the skill tool to load a skill when a task matches its description\.\n"
+    r"<available_skills>.*?</available_skills>\n?", re.S)
+STRIP_SKILLS = os.environ.get("ASSISTANT_STRIP_SKILLS", "1") != "0"  # config.sh switch
 
 
 def prepare(body, thinking, default_max):
@@ -315,8 +322,12 @@ def prepare(body, thinking, default_max):
         fixed = []
         for m in msgs:
             if (isinstance(m, dict) and m.get("role") in ("system", "developer")
-                    and isinstance(m.get("content"), str) and AUTO_FAST_RE.search(m["content"])):
-                m = dict(m, content=AUTO_FAST_RE.sub("qwen36", m["content"]))
+                    and isinstance(m.get("content"), str)):
+                c = AUTO_FAST_RE.sub("qwen36", m["content"])
+                if STRIP_SKILLS:
+                    c = SKILLS_RE.sub("", c)
+                if c != m["content"]:
+                    m = dict(m, content=c)
             fixed.append(m)
         b["messages"] = fixed
     return b

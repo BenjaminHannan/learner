@@ -8,6 +8,12 @@ BIG_MODEL="${ASSISTANT_BIG_MODEL:-mlx-community/Qwen3.6-35B-A3B-4bit}"
 SMALL_MODEL="${ASSISTANT_SMALL_MODEL:-}"   # empty = no small server
 SMALL_ARGS="${ASSISTANT_SMALL_ARGS:-}"     # e.g. "--trust-remote-code"
 SMALL_TEMPLATE="${ASSISTANT_SMALL_TEMPLATE:-}"  # jinja file; K2 needs its no-think template
+# Qwen3.6 caches cannot be trimmed, so every turn stores a full entry (~0.3 GB at a 16k OpenCode prefix);
+# 1 GB kept only ~3 and evicted the shared system prefix (46 s re-prefill). 3 GB keeps ~10.
+BIG_CACHE_SIZE="${ASSISTANT_CACHE_SIZE:-16}"
+BIG_CACHE_BYTES="${ASSISTANT_CACHE_BYTES:-3GB}"
+# 1 = gateway drops OpenCode's skills listing (~7k tokens) from system prompts; 0 = pass it through.
+export ASSISTANT_STRIP_SKILLS="${ASSISTANT_STRIP_SKILLS:-1}"
 
 OPS="$HOME/learner-ops"
 RUN="$OPS/assistant/run"
@@ -80,7 +86,7 @@ if [ $need_big = 1 ]; then
   alive big && kill "$(cat "$RUN/big.pid")" 2>/dev/null
   echo "Starting big model ($BIG_MODEL) ..."
   launch big "$PY" -m mlx_lm.server --model "$BIG_MODEL" --host 127.0.0.1 --port $BIG_PORT \
-    --max-tokens 8192 --prompt-cache-size 8 --prompt-cache-bytes 1GB \
+    --max-tokens 8192 --prompt-cache-size "$BIG_CACHE_SIZE" --prompt-cache-bytes "$BIG_CACHE_BYTES" \
     --temp 0.6 --top-p 0.95 --top-k 20
 fi
 if [ $need_small = 1 ]; then
