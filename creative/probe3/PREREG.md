@@ -43,3 +43,13 @@ Probe-then-pick with a tuned K2 becomes the "many guesses" picker; the next test
 
 ## Cost
 Haiku batch ~$0.26. One T4 (or a 4090) for ~1 h: training plus 192 generations.
+
+## Addendum 1 (2026-10-27 ~06:20Z, before any training or generation has run)
+No CUDA box is available (Kaggle quota spent until ~Oct 31, the PC booked for days, the rented 4090s cancelled), so
+the run moves to Ben's M3 Pro with MLX. Changes, and only these:
+- Backend: mlx-lm, K2 in bf16 (no quantization), same LoRA settings, data, loss and schedule as above; generation
+  with mlx-lm at the same sampler (T0.7, top_p 0.95, 4 samples, max 768 tokens) and the same k2_nothink prompt text.
+- Backend control: the untuned K2 writes Probe-2's tests again on the same MLX stack (MLX-BASE). Reported beside the
+  tuned arm. If MLX-BASE alone reaches the P1 mark (>= 39.4%), a pass of the tuned arm is not credited to training
+  and the verdict is INCONCLUSIVE.
+- Pass marks and the PROVED WRONG mark (<= 37.5%, Probe-2's vLLM K2 + 1) are unchanged.
