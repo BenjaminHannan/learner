@@ -47,9 +47,32 @@
   const msgs = $('#msgs');
   const scroller = $('#scroll');
   const input = $('#input');
-  let stick = true;
-  scroller.addEventListener('scroll', () => { stick = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80; });
-  const toBottom = () => { if (stick) scroller.scrollTop = scroller.scrollHeight; };
+  // Scroll follow: pinned to the bottom while Ben is at/near it; if he scrolled up we leave him alone and offer a jump button.
+  let stick = true, forceUntil = 0;
+  const jumpBtn = $('#jump');
+  const gap = () => scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+  scroller.addEventListener('scroll', () => {
+    if (Date.now() < forceUntil) return; // a smooth jump to the bottom is in flight
+    stick = gap() < 80;
+    if (stick) jumpBtn.hidden = true;
+  });
+  const toBottom = () => { if (stick) { scroller.scrollTop = scroller.scrollHeight; jumpBtn.hidden = true; } else if (running) jumpBtn.hidden = false; };
+  // Ben sent something (or asked to jump): go to the newest message now (smooth, instant if far away)
+  function jumpBottom() {
+    stick = true; jumpBtn.hidden = true;
+    const far = gap() > 1500;
+    forceUntil = Date.now() + (far ? 0 : 600);
+    if (far) scroller.scrollTop = scroller.scrollHeight;
+    else scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+  }
+  jumpBtn.onclick = jumpBottom;
+  // content grew (streaming, cards, images): keep following if pinned; otherwise just flag it
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => { if (stick) { if (Date.now() >= forceUntil) scroller.scrollTop = scroller.scrollHeight; } else if (running) jumpBtn.hidden = false; }).observe(msgs);
+    new ResizeObserver(() => document.documentElement.style.setProperty('--composer-h', $('#composer').offsetHeight + 'px')).observe($('#composer'));
+  }
+  // opening/closing a block by hand must not drag the view to the bottom
+  msgs.addEventListener('click', (e) => { if (e.target.closest('.act-head, .step .pill, details > summary')) { stick = false; forceUntil = 0; } }, true);
   const secs = (ms) => { const s = Math.max(1, Math.round(ms / 1000)); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + (s % 60 ? s % 60 + ' s' : ''); };
   const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u || ''; } };
 
@@ -158,7 +181,9 @@
         if (!clean) t.text.remove();
         else { t.text.innerHTML = md(t.raw); const n = ttftNote(ev.ttftMs); if (n) t.text.append(el('span', 'ttft', n)); }
       }
+      const wasStuck = stick;
       if (act && !act.finished) finishAct(act);
+      if (wasStuck) { stick = true; scroller.scrollTop = scroller.scrollHeight; }
       toBottom();
       return;
     }
@@ -168,7 +193,7 @@
     if (t.text) {
       const norm = clean.toLowerCase().replace(/\W+/g, ' ');
       const isPlan = /^\s*\d+[.)]\s/m.test(clean); // the plan has its own checklist
-      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; a.body.append(el('div', 'nar sel', clean.replace(/\s+/g, ' '))); }
+      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); }; }
       t.text.remove();
     }
     toBottom();
@@ -338,7 +363,8 @@
   function setRunning(r) {
     running = r;
     $('#btnSend').textContent = r ? 'Steer' : 'Send'; $('#btnStop').hidden = !r; $('#runState').hidden = !r;
-    refreshMood();
+    $('#runState span').textContent = 'Working…';
+    paintGateway();
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a helper’s thread. Type here to steer it while it runs.' : 'Ask Glim to do something…';
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
   }
@@ -379,7 +405,10 @@
     g.classList.remove('ready', 'warming', 'down');
     const st = gw.state === 'ready' ? 'ready' : gw.state === 'warming' ? 'warming' : 'down';
     g.classList.add(st);
-    g.querySelector('span').textContent = st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : 'Offline';
+    // one source of truth with the composer: while a run is on, both say what the run says
+    const busy = running && st !== 'down';
+    g.classList.toggle('busy', busy);
+    g.querySelector('span').textContent = busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : 'Offline';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : 'Gateway not reachable';
     refreshMood();
   }
@@ -411,8 +440,8 @@
         addUser(ev.text, ev.steer); break;
       }
       case 'notice': addNotice(ev.helper, ev.text); break;
-      case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; break;
-      case 'started': $('#runState span').textContent = 'Working…'; break;
+      case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
+      case 'started': $('#runState span').textContent = 'Working…'; paintGateway(); break;
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
@@ -463,7 +492,7 @@
     if (!t.running) finishAll();
     else if (act) { act.t0 = Date.now() - 1000; relabel(act); }
     if (t.running && act) { /* keep the live group running */ }
-    stick = true; scroller.scrollTop = scroller.scrollHeight;
+    stick = true; forceUntil = 0; jumpBtn.hidden = true; scroller.scrollTop = scroller.scrollHeight;
   }
 
   async function openThread(id) {
@@ -569,14 +598,14 @@
       if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a helper’s thread. Use Run now in the Agents list, or ask the primary agent.')); toBottom(); return; }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
-        const u = addUser(text, true, true); stick = true;
+        const u = addUser(text, true, true); jumpBottom();
         pendingSteers.push({ text, el: u });
         const r = await desk.agent.send(thread.id, text);
         if (r && r.error) { u.classList.remove('queued'); msgs.append(el('div', 'errline', r.error)); }
         return;
       }
       addUser(text);
-      stick = true;
+      jumpBottom();
       setRunning(true); // before the call: a fast run can finish before send() resolves
       const r = await desk.agent.send(thread.id, text);
       if (r && r.error) { setRunning(false); msgs.append(el('div', 'errline', r.error)); return; }
