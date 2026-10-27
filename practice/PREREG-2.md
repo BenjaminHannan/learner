@@ -44,3 +44,6 @@ Pilot 2: the same day-1 tries, a new night with this rule, the same 40-puzzle te
 ## Addendum 3 (Oct 27 ~04:10Z): stage-0 result and skill pick
 Stage 0 (opencode harness, 10 puzzles x 1 try; word_ladder, family_relationships and futoshiki redone on the M1 after the M3 server crash): knights_knaves 2/10, zebra_puzzles 2/10, family_relationships 4/10, countdown, cryptarithm, mini_sudoku, futoshiki, word_ladder 0/10.
 Three skills tie at 10 points from 30%. Tie-break (fixed now, before any main run): the lower score first, since it leaves more room to improve. So the main run uses knights_knaves and zebra_puzzles; family_relationships (fast, ~53 tokens, 0.5 tool calls per try) is the spare. Stage 0 used 10 puzzles per skill instead of 40 because the Mac is slow; the 4090 run re-measures A0 on its own 300-puzzle tests.
+
+## Addendum 4 (Oct 27 06:20Z, before any main run): smaller days for free compute
+The two rented 4090s are not coming. To fit one free GPU per skill (Ben's PC 5070 Ti, Kaggle T4 after the Oct 30-31 reset), each practice day is 500 fresh puzzles x 4 tries per arm (was 1000 x 4). Everything else is unchanged: 3 days, 3 nights, the 300-puzzle test x 2 tries, the same pass marks (S1 P3 >= A0 + 10, p < 0.05; S2 P3 >= C3 + 5; S3 no harm). The pilot had 35 wins a night; at the pilot's ~29% practice solve rate this gives about 580 tries won per day.
