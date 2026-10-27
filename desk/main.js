@@ -463,7 +463,11 @@ const appFile = () => perms.appBundlePath(app.getPath('exe'), process.execPath);
 async function iconFor(file) {
   if (dragIcons.has(file)) return dragIcons.get(file);
   let img = null;
-  try { img = await app.getFileIcon(file, { size: 'large' }); } catch (e) { /* use the bundled icon */ }
+  // app.getFileIcon kills Electron 33 on macOS 26 (SIGTRAP in a thread-pool worker, any .app path),
+  // which crashed the app whenever the permissions card opened. macOS uses the bundled icon instead.
+  if (process.platform !== 'darwin') {
+    try { img = await app.getFileIcon(file, { size: 'large' }); } catch (e) { /* use the bundled icon */ }
+  }
   if (!img || img.isEmpty()) img = nativeImage.createFromPath(ICON);
   img = img.resize({ width: 64, height: 64 });
   dragIcons.set(file, img);
