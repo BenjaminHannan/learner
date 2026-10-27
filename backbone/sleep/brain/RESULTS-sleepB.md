@@ -791,3 +791,17 @@ passes. Bonus check: no night was undone. The cap moved 2,000-2,700 REM practice
   segments, and a 5 s nvidia-smi memory log. The allocator does not change any numbers.
   - If it fails again, add17 waits for a 24 GB+ card (the 4090s, or Vast after the Nov 1 budget reset), and the PC goes to the thinking
     thread.
+
+## Arm A and addendum 15 on Ben's PC (recorded 2026-10-27 ~06:30Z, before any of these runs)
+Ben's borrowed 4090s are treated as not coming. K2 bf16 can only run on Ben's PC: Kaggle's T4/P100 have no proper bf16, and the Macs use
+the 4-bit path. The coordinator set the PC order: addendum 17, the thinking-loop thread's segment 1, the sleep race's round 1, then arm A,
+looping P1, R8, looping P2a, V8, looping P2b. `pc/sleepb_pc4.sh` waits for each turn on flag files and passes the turn on when a run ends,
+even if it fails. Every run uses code 7325e1ea60 and PyTorch's default CUDA allocator. Differences from the sealed plans:
+- **`--tok-budget 512`** everywhere, not 1024. This only cuts training batches into smaller pieces, so it changes rounding only.
+- **Arm A at `--gen-bs 24`** (B: 48), or at 16 from the start again if 24 runs out of memory. As noted before, this acts like a
+  sampling-seed change.
+- **Addendum 15's base** is chosen by the sealed rule. B failed no harm (recall 82.5), so the base is A's flags if A passes no harm
+  (recall >= 93.5, ARC >= pre - 5, diary >= base - 5), else the defaults. The script writes the decision and its numbers to
+  `pull4/base.txt` before R8, and I check it before R8 starts. If A has no result, R8 and V8 are skipped.
+- **R8 and V8 at `--gen-bs 16`**, as sealed. If R8 runs out of memory at 16, both run at 8; `pull4/add15-genbs.txt` says which.
+- D8 and V8p come later, if the PC has room.
