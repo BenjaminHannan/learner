@@ -10,6 +10,9 @@ It runs 20 steps of tsd and 20 of ws on Qwen/Qwen3.5-0.8B in bf16 with CUDA (--s
 It prints the peak GPU memory of each run. steps.py also checks at import that peft's adapter switch toggles.
 --arms br (Addendum F) instead runs 20 steps of br with every step at the largest training loop count (6), so the peak memory is the worst case, and
 checks that the loop counts, the r-tags and the halting readout were written.
+--arms hloops,hplains (Addendum G, the hops bed; --data is the hops data, no --a-adapter) runs 20 steps of hloops with every row at the largest
+training loop count (6, plus its hop read), then 20 x ratio steps of hplains, and checks the losses, that W left zero (its gradient flows), the
+inject.pt round trip, and that r1-r12 were scored with answers and log-probabilities.
 """
 from __future__ import annotations
 
@@ -111,28 +114,41 @@ def run_arm(arm, args, adapter, out):
         return real(self, *a, **k)
 
     a = K.parse(["--arm", arm, "--seed", str(args.seed), "--data", str(args.data), "--out", str(out / f"{arm}_s{args.seed}"), "--model", args.model,
-                 "--steps", str(args.steps), "--limit-eval", "16", "--a-adapter", str(adapter), "--alpha-init", str(args.alpha_init), "--micro-bsz", str(args.micro_bsz),
-                 *(["--smoke"] if args.smoke else [])])
+                 "--steps", str(args.steps), "--limit-eval", "16", *([] if arm in K.HOPS else ["--a-adapter", str(adapter)]), "--alpha-init", str(args.alpha_init),
+                 "--micro-bsz", str(args.micro_bsz), *(["--smoke"] if args.smoke else [])])
     if args.smoke:
         a.gate_step, a.log_every, a.max_len, a.bsz, a.micro_bsz = 4, 10**6, 256, 8, 4
     torch.optim.AdamW.step = spy
-    sched = K.loop_schedule
+    sched, plan = K.loop_schedule, K.hops_plan
     if arm == "br":  # every step at the largest training loop count: the worst-case memory
         K.loop_schedule = lambda steps, seed, **kw: [K.BR_TRAIN_MAX] * steps
+    if arm == "hloops":  # every row at the largest training loop count (and so a hop read at k up to 5): the worst-case memory
+        K.hops_plan = lambda *x, **y: [{i: K.BR_TRAIN_MAX for i in st} for st in plan(*x, **y)]
     try:
         rc = K.run_arm(a)
     finally:
         torch.optim.AdamW.step = real
-        K.loop_schedule = sched
+        K.loop_schedule, K.hops_plan = sched, plan
     need(rc == 0, f"{arm}: run_arm returned {rc}")
     res = json.loads((out / f"{arm}_s{args.seed}" / f"result_{arm}_s{args.seed}.json").read_text())
-    need(len(res["train"]["step_losses"]) == args.steps and all(x == x and abs(x) < 1e6 for x in res["train"]["step_losses"]), f"{arm}: non-finite or missing losses")
+    want = res.get("steps_stage1") if arm == "hplains" else args.steps
+    need(len(res["train"]["step_losses"]) == want and all(x == x and abs(x) < 1e6 for x in res["train"]["step_losses"]), f"{arm}: non-finite or missing losses")
     if arm == "tsd":
         need(seen["g"].get("declora", 0) > 0, "tsd: the first optimizer step gave the dec LoRA no gradient")
         need((out / f"tsd_s{args.seed}" / "adapter" / "dec" / "adapter_config.json").exists(), "tsd: save_pretrained did not write adapter/dec")
         need((out / f"tsd_s{args.seed}" / "adapter" / "adapter_config.json").exists(), "tsd: the main adapter was not saved")
         need(res.get("decoder") and res["decoder"]["tokens"] > 0, "tsd: no decoder accuracy")
         need(res.get("gate_closed") in (True, False), "tsd: gate_closed not recorded")
+    elif arm in K.HOPS:
+        v = res["eval"]["validation"]
+        need(res["stage1_adapter"] is None, f"{arm}: started from a stage-1 adapter")
+        if arm == "hloops":
+            need(res["train"].get("loops_hist_rows") == {str(K.BR_TRAIN_MAX): args.steps * a.bsz}, f"hloops: loop counts not as forced: {res['train'].get('loops_hist_rows')}")
+            need(res["inject"]["roundtrip_equal"] and res["inject"]["weight_norm"] > 0, f"hloops: W did not move or did not round-trip: {res['inject']}")
+            need(all(f"r{r}" in v and len(v[f"r{r}"]["preds"]) == len(v[f"r{r}"]["logp"]) == v[f"r{r}"]["n"] for r in K.HOPS_EVAL_LOOPS), "hloops: r1-r12 answers missing")
+            need(f"r{K.HOPS_MAIN}_w0" in v, "hloops: the W = 0 lesion is missing")
+        else:
+            need(set(v) == {"main"} and res["steps_stage1"] > args.steps, f"{arm}: not a compute-matched plain run: {set(v)}, {res['steps_stage1']} steps")
     elif arm == "br":
         need(res["train"].get("loops_hist") == {str(K.BR_TRAIN_MAX): args.steps}, f"br: loop counts not as forced: {res['train'].get('loops_hist')}")
         need({f"r{r}" for r in K.BR_EVAL_LOOPS} | {"main"} <= set(res["eval"]["validation"]) and res.get("halting"), "br: r-tags or the halting readout missing")
@@ -143,7 +159,7 @@ def run_arm(arm, args, adapter, out):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--a-adapter", required=True)
+    ap.add_argument("--a-adapter", default=None, help="arm a's adapter (not for the hops arms)")
     ap.add_argument("--data", default="out/data")
     ap.add_argument("--out", required=True)
     ap.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
@@ -154,19 +170,20 @@ def main(argv=None):
     ap.add_argument("--lmax", type=int, default=4)
     ap.add_argument("--smoke", action="store_true", help="tiny random model on the CPU (tests this script)")
     ap.add_argument("--micro-bsz", type=int, default=4, help="as the run it checks (run_box MICRO); 2 on a 12 GB card if 4 does not fit")
-    ap.add_argument("--arms", default="tsd,ws", help="tsd,ws (P1 / P2b, with the gradient checks) or br (Addendum F, worst-case loops)")
+    ap.add_argument("--arms", default="tsd,ws", help="tsd,ws (P1 / P2b, with the gradient checks), br (Addendum F, worst-case loops) or hloops,hplains "
+                    "(Addendum G)")
     args = ap.parse_args(argv)
-    out, adapter = Path(args.out), Path(args.a_adapter)
+    out, adapter = Path(args.out), Path(args.a_adapter) if args.a_adapter else None
     if not args.smoke and not torch.cuda.is_available():
         print("PREFLIGHT FAIL: no CUDA GPU (the preflight is about the real model in bf16)")
         return 1
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
     try:
-        need(any((adapter / f).exists() for f in ("adapter_config.json",)), f"no stage-1 adapter at {adapter}")
+        arms = args.arms.split(",")
+        need(all(x in K.HOPS for x in arms) or (adapter is not None and (adapter / "adapter_config.json").exists()), f"no stage-1 adapter at {adapter}")
         gargs = argparse.Namespace(smoke=args.smoke, seed=args.seed, model=args.model, data=args.data, max_len=256 if args.smoke else args.max_len,
                                    alpha_init=args.alpha_init, lmax=args.lmax)
-        arms = args.arms.split(",")
         report = {}
         if "tsd" in arms:
             report["grad_checks"] = grad_checks(gargs, device, dtype, adapter)

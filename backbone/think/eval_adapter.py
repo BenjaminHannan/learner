@@ -4,7 +4,9 @@
       --ref OUT/think/a_s0/result_a_s0.json --ref-tag main
   python3 backbone/think/eval_adapter.py --adapter OUT/think/br_s0/adapter --data FRESH --file fresh.jsonl --loops 1,4,8 --out X/fresh_br.json
 
---loops r1,r2,... scores the model with the default block (layers 8-11) run r times (arm br); without it, one plain pass. --board-path decodes
+--loops r1,r2,... scores the model with the default block (layers 8-11) run r times (arms br, hloop, hloops); without it, one plain pass. An
+inject.pt beside the adapter directory (arms hloopi, hloopd, hloops, Addendum G) is loaded into the runner, so those arms are scored with their W.
+--keep-preds keeps each row's answer and its log-probability (the hops stop rules need them). --board-path decodes
 as arms a / aplus / aplong are scored. --ref compares the hits with a stored result's on the same rows: accuracy difference and the share of rows
 with the same hit (Addendum F's Radeon check: within 0.3 points, >= 98% the same). --smoke: the tiny CPU model (tests this script).
 """
@@ -44,6 +46,7 @@ def main(argv=None):
     ap.add_argument("--out", required=True, help="result JSON")
     ap.add_argument("--loops", default=None, help="comma list of loop counts of the default block (arm br); default: one plain pass")
     ap.add_argument("--board-path", action="store_true", help="decode as arms a / aplus / aplong are scored")
+    ap.add_argument("--keep-preds", action="store_true", help="store each row's answer and answer log-probability")
     ap.add_argument("--ref", default=None, help="a think1 result JSON scored on the same rows")
     ap.add_argument("--ref-tag", default="main")
     ap.add_argument("--limit-eval", type=int, default=None)
@@ -64,14 +67,20 @@ def main(argv=None):
     pm = PeftModel.from_pretrained(lm, a.adapter)
     pm.eval()
     runner = T.Runner(pm.base_model.model, loops=1)
+    inj = Path(a.adapter).parent / "inject.pt"
+    if inj.exists():  # Addendum G arms with input injection: W was saved beside the adapter
+        runner.inject = T.Inject(runner.cfg.hidden_size).to(device)
+        runner.inject.load_state_dict(torch.load(inj, map_location=device))
     enc = T.Encoder(tok, a.max_len)
     rows = T.read_jsonl(Path(a.data) / a.file, limit=a.limit_eval)
     res = dict(adapter=str(a.adapter), adapter_sha=K.adapter_sha(a.adapter), data=str(Path(a.data) / a.file), n=len(rows), env=K.env_info(device, dtype),
-               board_path=a.board_path, eval={})
+               board_path=a.board_path, eval={},
+               inject=dict(path=str(inj), weight_norm=float(runner.inject.proj.weight.detach().norm())) if runner.inject is not None else None)
     t0 = time.time()
     tags = [(f"r{r}", T.block_order(runner.n, runner.start, r, runner.size)) for r in map(int, a.loops.split(","))] if a.loops else [("main", None)]
     for tag, order in tags:
-        e = K.eval_greedy(runner, enc, rows, device, args, order=order, name=tag, board_path=a.board_path)
+        e = K.eval_greedy(runner, enc, rows, device, args, order=order, name=tag, board_path=a.board_path, keep_preds=a.keep_preds,
+                          keep_logp=a.keep_preds)
         by = {}
         for r, h in zip(rows, e["hits"]):
             g = by.setdefault(str(r.get("depth")), [0, 0])

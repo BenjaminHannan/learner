@@ -139,3 +139,137 @@ count). This tests that lead directly, with a matched control and with halting i
   aplus and tc on one card). A second br seed-0 run on the Radeon 7700 XT (ROCm) starts earlier. It is reported as a
   hardware replicate, never used for the marks. It runs only after a numerics check: a_s0 scored on the Radeon must be
   within 0.3 points of its 5070 Ti score, with at least 98% of rows giving the same hit.
+
+## Addendum G (2026-10-27 18:30Z; revised 19:00Z after an independent review of the code and this text, still before any hops run exists): can a loop work where depth really is serial?
+Why. br failed on village (Addendum F: r4 71.26 vs aplong 71.97; r8 collapsed to 66.05). backbone/results/think2/DEEP_BREAKDOWN.txt
+then showed that village's depth 4-6 slice is not a clean "more serial steps" measure:
+- 83% of it is three question banks. plan_get (32%) has multi-step action-list answers. where_before (31%) uses a held-out
+  question wording and scores 18-33% even at trained depth 3. compare_count (21%) is near its ceiling.
+- An oracle over br's six loop counts (78.41) does not beat an oracle over three separately trained plain arms (78.93).
+So the village null cannot tell "loops don't work" from "this task doesn't need serial depth". This addendum tests loops on a task
+where depth is exactly the number of serial steps. It first runs a positive control: the one published recipe shown to install a
+working loop in a small pretrained model with LoRA (Shapiro 2026, arXiv 2608.11233, 0.5B Qwen2.5 + rank-16 LoRA). It is a new
+bed. No number from it is ever compared with a village number.
+
+The hops bed (backbone/think/build_hops.py; rows fixed by seed; sha256 below and in HOPS_REPORT.json)
+- Each row has 32 shuffled fact lines and one question, "Where is the {object}?".
+  - The object sits in a container, which sits in another, and so on, until the last container sits at a place.
+  - depth = the number of lines on that chain. The answer is the place (one token).
+  - Every row has 7 chains: the query chain and 6 distractor chains of length 1-10, drawn until the row has 32 lines. Each chain
+    ends at its own place. So the number of lines, chains and places does not depend on depth, and naming a random place of the
+    row scores 1/7 = 14.3% at every depth (the floor).
+  - Every name is one token, and is the located item (the thing said to be inside or at something) of at most one line, so the
+    chain is unique. Each line uses one of two phrasings per relation, picked at random.
+  - One weak depth trend remains: the distractor chains' mean length is (32 - depth) / 6 lines. It gives no answer.
+- train: 128,000 rows at depths 1-4, so no arm sees a row twice. dev: 1,000 at depths 1-4. validation: 400 at each depth 1-10
+  (4,000 rows; every mark reads these). fresh: 400 at each depth 1-10 from seed 1, for final claims only.
+- sha256: train 81b37025025a4756..., dev 434db59ee77e5d5f..., validation c9b2c9f55aa07d28..., fresh 1b8817e3bf7ec012...
+- Slices: "trained" = depths 1-4. "near" = depths 5-6 (800 rows): the marked unseen depths. "far" = depths 7-10: reported, no
+  mark. Why near: Shapiro's adapter arm reached about 1.45x its trained depth (support 4 -> frontier 5.75). Depths 7-10 also need
+  loop counts 7-12, which no arm trains, so a miss there cannot separate the loop from loop-count extrapolation.
+
+Arms (Qwen3.5-0.8B; all start from a fresh LoRA r=16 with no stage-1 adapter; same batch stream, seed 0; LR and optimizer as
+Think-2; batch 16, micro-batch 8, passed at launch; Ben's RTX 5070 Ti):
+- `hloops` (positive control), 4,000 steps. The block is layers 8-11.
+  - Every pass after the first starts from x + W.rms(e). e is the hidden state entering pass 1. W starts at zero.
+  - Each row runs depth + U{0,1,2} loops (1-6 on the trained depths).
+  - Loss: the answer after the last loop, plus the answer read after one random earlier loop k. That read is trained to name hop k
+    of the chain (or the place, once the chain has ended).
+  - Three things differ from br: re-injection, loops tied to hops, and graded laps. This is deliberate. It is the published
+    recipe, run as a positive control, not a one-change arm.
+- `hplains`: plain LoRA given hloops' layer passes as extra steps, fixed from hloops' plan before training: ratio 1.874 (the
+  12-layer read counted), so 7,495 steps, on fresh rows.
+- `hloop`: br's recipe exactly, 4,000 steps: random loop counts 1 + Poisson(m - 1), capped at 6, ramp 1 -> 4; no injection;
+  final-pass loss.
+- `hplain`: plain LoRA given hloop's extra layer passes: ratio 1.303, so 5,213 steps.
+- All looped arms are scored at r = 1-12 on validation, with answers and answer log-probabilities kept. Dev is scored at r = 6.
+  Arms with W are also scored at r = 6 with W = 0.
+- PC order: pair B first (hplains, then hloops; about 4-5 h), between two race-mini arms. Pair A (hplain, then hloop; about 3-4 h)
+  takes the GO-LOOP-P1 slot.
+- Code: backbone/think/think1.py (arms), backbone/train.py (Inject, hidden_multi), backbone/think/summarize_hops.py (these marks
+  and decisions; it prints each outcome with its next step), backbone/think/eval_adapter.py (fresh rows; loads W). Tests:
+  backbone/think/test_hops.py.
+
+Validity. If V1 or V2 fails, that pair is VOID, not a refutation.
+- V1: plain >= 80 on depths 1-2 (it learned the task).
+- V2: plain <= 70 on near (there is room above it).
+- V3 (pair B only): hloops at r = depth >= 80 on the trained depths (the loop is installed). If it fails, the outcome is NOT
+  INSTALLED.
+
+Pair B: hloops vs hplains, at hloops' deployable score. That score is the answer-stable stop rule: stop at the first r whose answer
+equals the answer at r - 1, else 12. A model that fits its targets stops at depth + 1, so on depth-6 rows the rule reads one lap (7)
+that no arm trains.
+- B1: near, halting - hplains >= +5, with the paired 95% interval above 0. Proved wrong below +1.
+- B2: trained depths, halting - hplains >= -2.
+- B3 (mechanism; no claim about deployment): near, hloops at r = depth - hplains >= +5, with the interval above 0. Below +1
+  counts toward a fail.
+- B4: Spearman(depth, loops chosen by the stop rule) over depths 1-6 >= 0.5, with a 2,000-resample row-bootstrap interval above
+  0.3. Proved wrong at <= 0.1. On depths 1-4 the pattern (hop k at loop k, then the place) is trained. So B4 says the trained stop
+  pattern holds and carries on into depths 5-6. It does not show that the model "decides" in any further sense.
+- PASS B = B1, B2 and B4.
+
+Pair B outcomes and decisions, checked in this order:
+1. VOID (V1 or V2 fails). No claim either way. Redesign the bed in a new addendum before more loop runs on it.
+2. NOT INSTALLED (V3 fails). Not a refutation. Check the wiring: |W|, step accuracy, the W = 0 lesion. If it is sound, run
+   hloops + hplains once at 10,500 steps (Shapiro's length) before any claim.
+3. PASS. The first working loop, on seed 0 only. Next:
+   - a seed-1 replicate of hloops and hplains;
+   - if that passes too, score the fresh rows once (eval_adapter.py --loops 1,...,12 --keep-preds, through these same functions);
+   - then round 2, with marks fixed before it runs, removing one ingredient at a time: hloopd = hloops without the graded laps;
+     hloopi = hloopd with random loop counts;
+   - then transfer toward the assistant.
+4. TOLD ONLY (B3 passes, B1 does not). The loop works when told how many laps; the stop rule is the gap. Next: a seed-1
+   replicate, then a trained stop signal on hloops' states.
+5. TRADE-OFF (B1 passes, B2 fails). Next: a seed-1 replicate, then find which trained depths lose.
+6. NOT ADAPTIVE (B1 and B2 pass, B4 fails). The gain is real but the laps do not follow depth. Next: a seed-1 replicate, then a
+   trained stop signal.
+7. PROVED WRONG (B1 below +1 and B3 below +1). The published recipe does not install a working loop on this model at this budget
+   (4,000 steps, seed 0). Next: one hloops + hplains run at 10,500 steps. If that also fails, we stop retrofitting loops onto the
+   0.8B, and the loop line moves to one of:
+   - a natively looped model (an Ouro-1.4B probe; it needs remote code, so it needs Ben's words on the PC);
+   - written steps (P1, Think-3).
+8. NOT SHOWN (anything else, between the bars). Next: a seed-1 replicate of both arms. No design change.
+
+Pair A: hloop vs hplain, at a fixed 6 loops (br's own question, on this bed).
+- A1: near, S(r6) - hplain >= +5, with the interval above 0. Proved wrong below +1.
+- A2: trained depths, S(r6) - hplain >= -2.
+- A3: near, S(r6) - S(r1) >= +5, with the interval above 0. Proved wrong below +1.
+- PASS A = A1, A2 and A3. On a valid bed, anything else is "A fails". Both stop rules are reported for hloop, with no mark.
+
+Pair A decisions. Pair B decides the loop line's next step; pair A only says how to read the village null.
+- A passes. br's recipe works where depth is serial, so the village null is about village (its deep rows are not serial
+  problems). Next, after B's step: a village measure that is.
+- A fails and B passes. The recipe, not looping itself, is what failed on village. Next: bring the missing ingredients to village
+  through round 2's ablations.
+- A passes and B is PROVED WRONG. The results conflict. Run a seed-1 replicate of both pairs before acting on either.
+- A fails and B does not pass. No step beyond B's.
+
+Reported with no mark: far and deep (5-10) accuracies under every rule; the max-confidence stop rule (Fan et al. 2024); accuracy at
+each fixed r; step accuracy (how often the answer after loop r names hop r, on rows deeper than r); the W = 0 lesion and |W|;
+accuracy by depth; the floor.
+
+Known biases and limits, stated in advance:
+- One seed. A pass needs a seed-1 replicate before it is called a result. The fresh rows are then scored once for each passing arm.
+- Budget: Shapiro's adapter arm passed its installation check at 4,000 steps, with an unknown batch, and was trained for 10,500.
+  Our 4,000 steps at batch 16 may be short. A fail here is a fail at this budget; that is why decision 7 runs 10,500 steps before
+  stopping.
+- hloops differs from br in three ways, and it gets a second supervised target per row (hop k), which hplains never sees. A B pass
+  credits the recipe as a whole, not looping alone. Round 2 separates the parts. A against B does not isolate one ingredient either.
+- hplains gets 1.87x hloops' steps on fresh rows (the compute match): about 1.87x more distinct training rows. That is the usual
+  equal-compute comparison, and it can only make the bar harder for hloops.
+- hloops draws its read k per micro-batch, so micro-batch 8 (as registered) is a different random draw from micro-batch 4. No bias
+  is expected.
+- The 0.8B's block (layers 8-11) has 3 Gated DeltaNet layers and 1 full-attention layer. No paper we found loops DeltaNet layers.
+- Two fixed-r comparisons (A1, A3) and two halting comparisons (B1, B4) are read. The +5 bars are large against a paired SE of
+  about 2 points on the 800 near rows.
+
+Revision note. The first text (18:30Z) and its code had these faults, all fixed before any run:
+- "deep" was depths 5-10, which mixed chain-length and loop-count extrapolation.
+- Places were drawn at random, so naming the most-mentioned place scored 19-23%, rising with depth.
+- The number of chains fell with depth.
+- There were 64,000 train rows, so the plain arms repeated rows.
+- The arms were scored at r = 1-10 and 12, so the stop rule compared 12 with 10.
+- There was no installation check (V3), and several outcomes had no decision.
+- The code labelled a B fail without checking B3 < +1.
+- eval_adapter.py dropped W.
+The review is in backbone/results/hops/REVIEW-2026-10-27.md.

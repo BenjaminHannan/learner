@@ -14,7 +14,7 @@ Arms:  a      LoRA on the village rows (stage 1, 418 steps)         b      a + l
        wsham  as ws with each row's step text replaced by the same number of filler tokens (" ." dot by dot)
        tsd    tj plus a step decoder that reads only the notes (codi-plan P2b, steps.py): lap k's notes -> written step k (later laps -> the answer)
        tsd1   control for tsd: the refiner runs once and its lap-1 notes feed all four decoder passes (same parameters, decoder passes and targets)
-`--smoke` runs every arm end to end on a tiny random qwen3_5 on CPU (into OUT/smoke/) and then summarize.py.
+`--smoke` runs every village arm end to end on a tiny random qwen3_5 on CPU (into OUT/smoke/) and then summarize.py.
 The village `test` split is never read. Step counts are per-arm defaults, not flags to change in the prereg run.
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ import board as B  # noqa: E402
 import steps as S  # noqa: E402
 from xent import fixed_cross_entropy  # noqa: E402
 
-ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong")
+ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong", "hplain", "hloop", "hloopi", "hloopd", "hplains", "hloops")
 STAGE1, STAGE2 = ("a", "b"), ("aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong")
 BOARD = ("t", "t1", "tw", "tj", "tf", "tc", "tsd", "tsd1")  # BOARD arms build a ThinkBoard; only tj / tf / tc / tsd / tsd1 also train the LoRA (tc: board shut and frozen)
 JOINT = ("tj", "tf", "tc", "tsd", "tsd1")
@@ -53,6 +53,17 @@ FMT_ROWS = 500  # P1 format check: gold steps as input, on the first 500 validat
 MAX_NEW_STEPS = 384  # P1: tokens a model may write for its steps and answer
 BR_EVAL_LOOPS = (1, 2, 3, 4, 6, 8)  # arm br (Addendum F): validation is scored at each of these loop counts of the repeated block; "main" is BR_MAIN
 BR_MAIN, BR_TRAIN_MAX, BR_RAMP = 4, 6, 0.75  # training loop counts: 1 + Poisson(m - 1), capped at 6, with the mean m ramped 1 -> 4 over the first 75% of steps
+# Addendum G, the hops bed (build_hops.py data): every arm is a fresh LoRA (no stage-1 adapter) on the same batch stream.
+#   hloop = br's recipe (random loop counts, no injection, final-pass loss); hplain = plain LoRA given hloop's extra layer passes as extra steps.
+#   hloopi = hloop + Inject. hloopd = Inject, and each row runs depth + U{0..HOPS_EXTRA} loops (capped at BR_TRAIN_MAX), final-pass loss.
+#   hloops = hloopd + one more answer read at a random earlier loop k, trained to name hop k (row["hops_path"]): the recipe of Shapiro 2026
+#   (arXiv 2608.11233: re-injection, loops = hops, every loop graded), as a positive control. hplains = plain LoRA given hloops' extra layer passes.
+HOPS = ("hplain", "hloop", "hloopi", "hloopd", "hplains", "hloops")
+HOPS_LOOPED = ("hloop", "hloopi", "hloopd", "hloops")
+HOPS_PLAN = ("hloopd", "hloops", "hplains")  # arms whose loop counts come from hops_plan (per row) rather than loop_schedule (per step)
+HOPS_STEPS, HOPS_MAIN, HOPS_EXTRA = 4000, 6, 2
+HOPS_EVAL_LOOPS = tuple(range(1, 13))  # validation loop counts of the looped hops arms (r = depth and depth + 1 for every depth 1-10, so the
+#   answer-stable rule can stop at depth + 1); dev at HOPS_MAIN only
 
 
 def loop_schedule(steps, seed, top=BR_MAIN, cap=BR_TRAIN_MAX, ramp=BR_RAMP):
@@ -67,6 +78,25 @@ def loop_schedule(steps, seed, top=BR_MAIN, cap=BR_TRAIN_MAX, ramp=BR_RAMP):
             prod *= rng.random()
         out.append(min(cap, 1 + k))
     return out
+
+
+def hops_plan(rows, steps, order_seed, bsz, seed, extra=HOPS_EXTRA, cap=BR_TRAIN_MAX):
+    """Arms hloopd / hloops: {row index: loop count} for every step's batch (the stream train_lora draws with order_seed), loop count =
+    depth + U{0..extra} from Random(seed), capped. A fixed list, so the compute-matched control can be sized before training."""
+    rng, stream = random.Random(seed), batches(len(rows), order_seed, bsz)
+    return [{i: min(cap, int(rows[i]["depth"]) + rng.randint(0, extra)) for i in next(stream)} for _ in range(steps)]
+
+
+def plan_ratio(plan, n_layers, size, coda=0):
+    """Layer passes per row of a hops_plan over those of one plain pass. coda: layers run again for hloops' extra read (rows with >= 2 loops)."""
+    rs = [r for st in plan for r in st.values()]
+    return sum(n_layers + size * (r - 1) + coda * (r >= 2) for r in rs) / (len(rs) * n_layers)
+
+
+def hop_target(row, k):
+    """The name hloops is trained to give after loop k: hop k of the chain, or the place once the chain has ended."""
+    path = row["hops_path"]
+    return path[min(k, len(path)) - 1]
 
 
 def compute_ratio(loops, n_layers, size):
@@ -93,6 +123,36 @@ def halting_readout(rows, preds, hits, loops=BR_EVAL_LOOPS):
     deep = [(r["depth"], chosen[i]) for i, r in enumerate(rows) if isinstance(r.get("depth"), int) and r["depth"] >= 1]
     return dict(acc=acc, mean_loops=sum(chosen) / max(len(chosen), 1), by_depth=by, spearman_depth_loops=spearman([d for d, _ in deep], [c for _, c in deep]),
                 rule="first r in %s whose answer equals the previous r's; else %d" % (list(loops[1:]), loops[-1]))
+
+
+def by_depth_loops(rows, chosen, hits):
+    """{depth: n, mean loops, accuracy} for one chosen loop count per row."""
+    by = {}
+    for d in sorted({r.get("depth") for r in rows}, key=lambda x: (x is None, x)):
+        idx = [i for i, r in enumerate(rows) if r.get("depth") == d]
+        by[str(d)] = dict(n=len(idx), mean_loops=sum(chosen[i] for i in idx) / len(idx), acc=sum(hits[chosen[i]][i] == "1" for i in idx) / len(idx))
+    return by
+
+
+def halting_conf(rows, logps, hits, loops):
+    """Max-confidence halting (Fan et al. 2024, Addendum G): for each row, the loop count whose greedy answer has the highest summed log-probability
+    (ties: the fewest loops). Same fields as halting_readout."""
+    chosen = [max(loops, key=lambda r: (logps[r][i], -r)) for i in range(len(rows))]
+    deep = [(r["depth"], chosen[i]) for i, r in enumerate(rows) if isinstance(r.get("depth"), int) and r["depth"] >= 1]
+    return dict(acc=sum(hits[r][i] == "1" for i, r in enumerate(chosen)) / max(len(rows), 1), mean_loops=sum(chosen) / max(len(chosen), 1),
+                by_depth=by_depth_loops(rows, chosen, hits), spearman_depth_loops=spearman([d for d, _ in deep], [c for _, c in deep]),
+                rule="the r in %s whose greedy answer has the highest summed log-probability" % (list(loops),))
+
+
+def oracle_depth(rows, hits):
+    """Accuracy when each row gets r = its depth (when that r was scored): the loop count hloopd was trained to use. No pass mark."""
+    idx = [i for i, r in enumerate(rows) if isinstance(r.get("depth"), int) and r["depth"] in hits]
+    by = {}
+    for i in idx:
+        g = by.setdefault(str(rows[i]["depth"]), [0, 0])
+        g[0], g[1] = g[0] + (hits[rows[i]["depth"]][i] == "1"), g[1] + 1
+    return dict(acc=sum(hits[rows[i]["depth"]][i] == "1" for i in idx) / max(len(idx), 1), n=len(idx),
+                by_depth={d: dict(n=n, acc=k / n) for d, (k, n) in sorted(by.items(), key=lambda kv: int(kv[0]))})
 
 
 def spearman(x, y):
@@ -184,6 +244,23 @@ def answer_loss_fixed(runner, batch, device):
     return fixed_cross_entropy(logits, tgt, reduction="sum"), len(tgt)
 
 
+def answer_loss_read(runner, batch, r, k, tgt, device):
+    """Arm hloops: answer_loss_fixed with the block run r times, plus (k not None) cross-entropy of the first answer position read after loop k
+    against tgt (one token id per row). Returns (summed loss, number of targets)."""
+    ids, mask = T.right_pad([p + a for p, a in batch])
+    ids, mask = ids.to(device), mask.to(device)
+    hs = runner.hidden_multi(ids, mask, (mask.cumsum(1) - 1).clamp(min=0), r, {r} | ({k} if k else set()))
+    sb = torch.tensor([b for b, (_, a) in enumerate(batch) for _ in a], device=device)
+    st = torch.tensor([len(p) + j - 1 for p, a in batch for j in range(len(a))], device=device)
+    t = torch.tensor([x for _, a in batch for x in a], device=device)
+    s, n = fixed_cross_entropy(runner.logits(hs[r][sb, st]).float(), t, reduction="sum"), len(t)
+    if k:
+        rb, pb = torch.arange(len(batch), device=device), torch.tensor([len(p) - 1 for p, _ in batch], device=device)
+        s = s + fixed_cross_entropy(runner.logits(hs[k][rb, pb]).float(), torch.tensor(tgt, device=device), reduction="sum")
+        n += len(batch)
+    return s, n
+
+
 def lora_model(lm, adapter=None):
     from peft import LoraConfig, PeftModel, get_peft_model
     if adapter:
@@ -191,10 +268,14 @@ def lora_model(lm, adapter=None):
     return get_peft_model(lm, LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, target_modules=T.LORA_TARGETS, bias="none"))
 
 
-def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr, written=None, loops=None):
+def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, tr, written=None, loops=None, extra=(), main=BR_MAIN, plan=None, read=None):
     """written (arms ws / wsham): "gold" or "sham". Every row of a batch is then also added as a written example (steps_of / filler text, " [steps]"
-    prompt), after the direct examples; the rows, their order and the optimizer are those of aplus, and the loss is normalised by all target tokens."""
-    params = [p for p in pm.parameters() if p.requires_grad]
+    prompt), after the direct examples; the rows, their order and the optimizer are those of aplus, and the loss is normalised by all target tokens.
+    extra: more trainable parameters in the same optimizer and clip (arm hloopi's Inject). main: the loop count the runner is left at after a looped run.
+    plan (arms hloopd / hloops): hops_plan's list of {row index: loop count}. The batch's rows are then split into micro-batches of one loop count
+    each (same rows; loops is ignored). read (arm hloops): a Random; every micro-batch run r >= 2 times also reads its answer after a loop
+    k = read.randint(1, r - 1), trained to name hop_target(row, k); the step's loss is normalised by all answer tokens plus those reads."""
+    params = [p for p in pm.parameters() if p.requires_grad] + list(extra)
     opt = torch.optim.AdamW(params, lr=LR, weight_decay=0.0, betas=(0.9, 0.999))
     stream = batches(len(rows), order_seed, args.bsz)
     pm.train()
@@ -210,12 +291,29 @@ def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, t
             cw = tr.setdefault("written_cut", dict(rows=0, cut_for_target=0))  # rows drawn, and of them those whose prompt lost context to make room for the written target
             cw["rows"] += len(ids)
             cw["cut_for_target"] += sum(S.cut_for_target(enc, rows[i], written == "sham") for i in ids)
-        n_ans = sum(len(a) for _, a in batch)
+        if plan is not None:
+            groups = {}
+            for i, ex in zip(ids, batch):
+                groups.setdefault(plan[step][i], []).append((i, ex))
+            chunks = [(r, g[k:k + args.micro_bsz]) for r, g in sorted(groups.items()) for k in range(0, len(g), args.micro_bsz)]
+            hist = tr.setdefault("loops_hist_rows", {})
+            for r, g in groups.items():
+                hist[str(r)] = hist.get(str(r), 0) + len(g)
+        else:
+            chunks = [(None, [(None, ex) for ex in batch[k:k + args.micro_bsz]]) for k in range(0, len(batch), args.micro_bsz)]  # written rows included
+        reads = [read.randint(1, r - 1) if read is not None and r >= 2 else None for r, _ in chunks]
+        n_ans = sum(len(a) for _, a in batch) + sum(len(ch) for (_, ch), k in zip(chunks, reads) if k)
         for g in opt.param_groups:
             g["lr"] = T.cosine_lr(step, steps, LR, warmup)
         total = 0.0
-        for k in range(0, len(batch), args.micro_bsz):
-            s, _ = answer_loss_fixed(runner, batch[k:k + args.micro_bsz], device)
+        for (r, ch), k in zip(chunks, reads):
+            if r is not None:
+                runner.loops = r
+            exs = [ex for _, ex in ch]
+            if read is not None:
+                s, _ = answer_loss_read(runner, exs, r, k, [enc.ids(" " + hop_target(rows[i], k))[0] for i, _ in ch] if k else None, device)
+            else:
+                s, _ = answer_loss_fixed(runner, exs, device)
             (s / n_ans).backward()
             total += s.item()
         torch.nn.utils.clip_grad_norm_(params, 1.0)
@@ -231,7 +329,8 @@ def train_lora(runner, pm, enc, rows, device, args, steps, warmup, order_seed, t
     tr["seconds"] = time.time() - t0
     if loops is not None:
         tr["loops_hist"] = {str(r): loops.count(r) for r in sorted(set(loops))}
-        runner.loops = BR_MAIN
+    if loops is not None or plan is not None:
+        runner.loops = main
     if written:
         print(f"[written] prompts cut to make room for the written target: {tr['written_cut']['cut_for_target']} of {tr['written_cut']['rows']} drawn rows", flush=True)
     pm.eval()
@@ -244,7 +343,7 @@ def entry(hits):
 
 
 @torch.no_grad()
-def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False, keep_preds=False):
+def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name="", board_path=False, keep_preds=False, keep_logp=False):
     """Greedy exact-match hits for arms a/b/aplus/bplus. Batches are built in descending length order, or ascending if reverse
     (different batch composition: used for the eval-noise rerun). Returns the entry with hits in file order.
     board_path (arms a, aplus): decode with board.prefill of prompt[:-1] + board.decode with no board read, the code eval_board runs on the same batches (same two segments), so S(8) and
@@ -253,7 +352,7 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
     order = order or runner.order
     prompts = [enc.prompt(r)[0] for r in rows]
     hit, t0, nb, done = ["0"] * len(rows), time.time(), 0, 0
-    preds = [""] * len(rows)
+    preds, logps = [""] * len(rows), [0.0] * len(rows)
     h = min(HEAD, len(rows))  # board path: two separately sorted segments (rows < HEAD, rest) and no chunk across the boundary, exactly eval_board's batches
     segs = (range(h), range(h, len(rows))) if board_path and not reverse else (range(len(rows)),)
     for seg in segs:
@@ -272,7 +371,11 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
                 C, mask, p = B.prefill(runner, ps)
                 gen = B.decode(runner, None, C, mask, p, B.last_ids(ps, device), None, eos=enc.eos)
             else:
-                gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order)
+                lp = [] if keep_logp else None
+                gen = T.greedy(runner, ps, device, enc.eos, cache=not args.no_cache, order=order, logp=lp)
+                if keep_logp:
+                    for i, v in zip(chunk, lp):
+                        logps[i] = round(v, 5)
             for i, g in zip(chunk, gen):
                 preds[i] = T.normalise(enc.tok.decode(g, skip_special_tokens=True))
                 hit[i] = "1" if preds[i] == T.normalise(rows[i]["answer"]) else "0"
@@ -281,7 +384,7 @@ def eval_greedy(runner, enc, rows, device, args, order=None, reverse=False, name
             nb += 1
             if nb % 20 == 0:
                 print(f"[eval {name}] {done}/{len(rows)} {time.time() - t0:.0f}s", flush=True)
-    return entry(hit) | (dict(preds=preds) if keep_preds else {})
+    return entry(hit) | (dict(preds=preds) if keep_preds else {}) | (dict(logp=logps) if keep_logp and not board_path else {})
 
 
 @torch.no_grad()
@@ -816,7 +919,7 @@ def run_arm(args):
     device = torch.device("cuda" if torch.cuda.is_available() and not args.smoke else "cpu")
     dtype = torch.bfloat16 if device.type == "cuda" else torch.float32
     stage2 = arm in STAGE2
-    steps = args.steps or (STEPS2 if stage2 else STEPS1)
+    steps = args.steps or (STEPS2 if stage2 else HOPS_STEPS if arm in HOPS else STEPS1)
     k_slots = (args.k or (144 if arm == "tw" else 16)) if arm in BOARD else 0
     src = None
     if arm in ("aplus", "t", "t1", "tw", "tj", "tf", "tc", *WRITTEN, *SD, "br", "aplong"):
@@ -899,24 +1002,49 @@ def run_arm(args):
         result["params_trainable"] = sum(p.numel() for p in pm.parameters() if p.requires_grad)
         print(f"[lora] trainable params {result['params_trainable']:,}", flush=True)
         warm = min(100, steps // 10 or 1) if not stage2 else (2 if args.smoke else 60)
-        loops = None
-        if arm in ("br", "aplong"):  # Addendum F: br trains with random loop counts of the block; aplong is plain LoRA given br's extra layer passes as extra steps
-            loops = loop_schedule(steps, args.seed + 5000)
+        loops, extra, plan = None, (), None
+        coda = runner.n - runner.start - runner.size
+        if arm in HOPS_PLAN:  # Addendum G: loop counts per row (depth + U{0..2}); hplains is sized from hloops' plan
+            plan = hops_plan(train_rows, steps, args.seed, args.bsz, args.seed + 6000)
+            ratio = plan_ratio(plan, runner.n, runner.size, coda if arm in ("hloops", "hplains") else 0)
+            rs = [r for st_ in plan for r in st_.values()]
+            result["loop_schedule"] = dict(seed=args.seed + 6000, plan="depth + U{0..%d}, cap %d" % (HOPS_EXTRA, BR_TRAIN_MAX), mean=sum(rs) / len(rs),
+                                           compute_ratio=ratio, block=[runner.start, runner.start + runner.size], eval_loops=list(HOPS_EVAL_LOOPS), main=HOPS_MAIN,
+                                           read_k=arm == "hloops", coda_counted=arm in ("hloops", "hplains"))
+            if arm == "hplains":
+                steps, plan = round(steps * ratio), None
+                result["steps_stage1"] = steps
+        elif arm in ("br", "aplong", *HOPS):  # Addendum F / G: br (hloop, hloopi) trains with random loop counts of the block; aplong (hplain) is plain LoRA
+            loops = loop_schedule(steps, args.seed + 5000)  # given those extra layer passes as extra steps
             ratio = compute_ratio(loops, runner.n, runner.size)
             result["loop_schedule"] = dict(seed=args.seed + 5000, mean=sum(loops) / len(loops), compute_ratio=ratio, block=[runner.start, runner.start + runner.size],
-                                           eval_loops=list(BR_EVAL_LOOPS), main=BR_MAIN)
-            if arm == "aplong":
+                                           eval_loops=list(HOPS_EVAL_LOOPS if arm in HOPS else BR_EVAL_LOOPS), main=HOPS_MAIN if arm in HOPS else BR_MAIN)
+            if arm in ("aplong", "hplain"):
                 steps, loops = round(steps * ratio), None
-                result["steps_stage2"] = steps
-            print(f"[loop] arm {arm}: br schedule mean {result['loop_schedule']['mean']:.2f} loops, compute ratio {ratio:.3f}; this run trains {steps} steps", flush=True)
+                result["steps_stage2" if stage2 else "steps_stage1"] = steps
+        if "loop_schedule" in result:
+            if arm in ("hloopi", "hloopd", "hloops"):
+                runner.inject = T.Inject(runner.cfg.hidden_size).to(device)
+                extra = list(runner.inject.parameters())
+                result["params_trainable"] += sum(p.numel() for p in extra)
+            print(f"[loop] arm {arm}: loop counts mean {result['loop_schedule']['mean']:.2f}, compute ratio {ratio:.3f}; this run trains {steps} steps", flush=True)
         if arm in WRITTEN:
             with_steps = sum(bool(S.steps_of(r)) for r in train_rows)
             result["written"] = dict(tail=S.STEPS_TAIL, sham=arm == "wsham", max_new=args.max_new_steps, train_rows=len(train_rows), train_rows_with_steps=with_steps)
             print(f"[written] arm {arm}: {with_steps:,} of {len(train_rows):,} train rows have steps; each row is trained twice per batch", flush=True)
         train_lora(runner, pm, enc, train_rows, device, args, steps, warm, args.seed + 1000 if stage2 else args.seed, tr,
-                   written={"ws": "gold", "wsham": "sham"}.get(arm), loops=loops)
+                   written={"ws": "gold", "wsham": "sham"}.get(arm), loops=loops, extra=extra, main=HOPS_MAIN if arm in HOPS else BR_MAIN,
+                   plan=plan, read=random.Random(args.seed + 7000) if arm == "hloops" else None)
         pm.save_pretrained(out / "adapter")
         result["adapter_sha"] = adapter_sha(out / "adapter")
+        if runner.inject is not None:  # hloopi: W is saved beside the adapter, and read back (the eval below runs on the reloaded copy)
+            torch.save(runner.inject.state_dict(), out / "inject.pt")
+            back = T.Inject(runner.cfg.hidden_size).to(device)
+            back.load_state_dict(torch.load(out / "inject.pt", map_location=device))
+            same = all(torch.equal(a, b) for a, b in zip(runner.inject.state_dict().values(), back.state_dict().values()))
+            runner.inject = back
+            result["inject"] = dict(weight_norm=float(back.proj.weight.detach().norm()), roundtrip_equal=same)
+            print(f"[inject] |W| {result['inject']['weight_norm']:.4f}; save / load round trip equal: {same}", flush=True)
     runner.checkpoint = False
     if aborted:
         result["aborted"] = aborted
@@ -939,14 +1067,23 @@ def run_arm(args):
                         idx = [i for i, r in enumerate(rows) if S.steps_of(r)][:FMT_ROWS]
                         ev[split]["fmt"] = dict(eval_written(runner, enc, [rows[i] for i in idx], device, args, sham, gold=True, name="format check"), row_idx=idx)
                     continue
-                if arm == "br":  # every loop count on validation (with the answers, for the halting readout); dev at BR_MAIN only
-                    rs = BR_EVAL_LOOPS if split == "validation" else (BR_MAIN,)
+                if arm in ("br", *HOPS_LOOPED):  # every loop count on validation (with the answers, for the halting readout); dev at the main count only
+                    ls, main = (HOPS_EVAL_LOOPS, HOPS_MAIN) if arm in HOPS else (BR_EVAL_LOOPS, BR_MAIN)
+                    rs = ls if split == "validation" else (main,)
                     for r in rs:
                         ev[split][f"r{r}"] = eval_greedy(runner, enc, rows, device, args, order=T.block_order(runner.n, runner.start, r, runner.size),
-                                                         name=f"{split} r{r}", keep_preds=split == "validation")
-                    ev[split]["main"] = {k: v for k, v in ev[split][f"r{BR_MAIN}"].items() if k != "preds"}
+                                                         name=f"{split} r{r}", keep_preds=split == "validation", keep_logp=split == "validation" and arm in HOPS)
+                    ev[split]["main"] = {k: v for k, v in ev[split][f"r{main}"].items() if k != "preds"}
+                    if split == "validation" and runner.inject is not None:  # hloopi's lesion: the same weights with W = 0 (no injection), at the main count
+                        inj, runner.inject = runner.inject, None
+                        ev[split][f"r{main}_w0"] = eval_greedy(runner, enc, rows, device, args, order=T.block_order(runner.n, runner.start, main, runner.size),
+                                                               name=f"{split} r{main} W=0")
+                        runner.inject = inj
                     if split == "validation":
-                        result["halting"] = halting_readout(rows, {r: ev[split][f"r{r}"]["preds"] for r in rs}, {r: ev[split][f"r{r}"]["hits"] for r in rs})
+                        result["halting"] = halting_readout(rows, {r: ev[split][f"r{r}"]["preds"] for r in rs}, {r: ev[split][f"r{r}"]["hits"] for r in rs}, loops=ls)
+                        if arm in HOPS:
+                            result["halting_conf"] = halting_conf(rows, {r: ev[split][f"r{r}"]["logp"] for r in rs}, {r: ev[split][f"r{r}"]["hits"] for r in rs}, loops=ls)
+                            result["oracle_depth"] = oracle_depth(rows, {r: ev[split][f"r{r}"]["hits"] for r in rs})
                         print(f"[halt] br answer-stable halting: {result['halting']['acc'] * 100:.2f}% at mean {result['halting']['mean_loops']:.2f} loops; "
                               f"Spearman(depth, loops) {result['halting']['spearman_depth_loops']}", flush=True)
                     continue
@@ -997,7 +1134,7 @@ def smoke(args):
     root = Path(args.out) / "smoke"
     data = smoke_data(args.data, root)
     rcs, t0 = {}, time.time()
-    arms = [args.arm] if args.arm else list(ARMS)
+    arms = [args.arm] if args.arm else [a for a in ARMS if a not in HOPS]  # the hops arms need the hops bed (--arm with --data HOPS_DIR)
     if args.arm in (*JOINT, *WRITTEN, "br", "aplong") and not args.a_adapter and not (root / f"a_s{args.seed}" / "adapter" / "adapter_config.json").exists():
         arms.insert(0, "a")  # tj / tf / tc start from a's adapter: train a first
     for arm in arms:
