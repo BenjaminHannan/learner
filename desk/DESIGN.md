@@ -41,7 +41,7 @@ Autonomy switch (top bar): "Ask first" vs "Hands-off".
   mkfs, shutdown, `> /dev/`, curl|sh, git push --force ...) and anything the model itself flags with
   ask_user. Stop is always one click (also Esc).
 
-## Tools (14, short schemas)
+## Tools (17, short schemas)
 web_search(query)                       DuckDuckGo HTML results, top 8 (title, url, snippet). Main-process fetch.
 browser_go(url)                         Navigate; returns snapshot.
 browser_click(id)                       Click element [id] from the last snapshot; returns snapshot.
@@ -57,6 +57,7 @@ open_app(name)                          Launch/focus a Mac app.
 run_shell(command)                      zsh -lc, cwd ~, 60 s timeout.
 diary_search(query)                     Search past chats (only when diary_mcp.py is available).
 ask_user(question)                      Pause and ask Ben; his reply is the tool result.
+agent_start(name, task, every?, at?)    Start a helper agent (see Helpers). agent_list(). agent_stop(name_or_id).
 
 Snapshot format (browser): first line `URL: ... | Title: ...`, then up to ~120 visible interactive
 elements as `[12] button "Add to cart"`, `[13] input(text) "Search" value=""`, `[14] link "Docs" -> /docs`,
@@ -98,7 +99,7 @@ Threads are saved as JSON in app.getPath('userData')/threads/.
 ## Files
 desk/package.json, desk/main.js (window, views, IPC), desk/preload.js, desk/src/agent.js,
 desk/src/llm.js (SSE + tool-call parsing), desk/src/prompt.js (system prompt + tool schemas),
-desk/src/tools/{browser,screen,shell,web,diary}.js, desk/src/store.js, desk/renderer/{index.html,app.css,app.js},
+desk/src/helpers.js (schedules, scheduler, run slots, screen lock, notices), desk/src/tools/{browser,screen,shell,web,diary,agents}.js, desk/src/store.js, desk/renderer/{index.html,app.css,app.js},
 desk/helper/deskhelper.swift, desk/build-mac.sh (npm ci, swiftc, @electron/packager darwin arm64,
 ad-hoc codesign, copy to /Applications/Premonition Desk.app), desk/test/*.test.js (node:test),
 desk/test/e2e.js (xvfb: fake gateway drives the real browser view against a local page).
@@ -118,3 +119,36 @@ ones become "[older screenshot omitted]") so context stays small. Off = text-onl
   the UI shows the latest plan pinned above the trail.
 - Steer while running: Ben can type while the agent works; the message is queued and injected as a user
   message before the next model call (like a "steer"), instead of waiting for the task to end.
+
+## Helpers (sub-agents, including recurring ones)
+The primary agent can delegate with `agent_start(name, task, every?, at?)`: no schedule = run once now;
+`every` ("30m", "2h", "1d", minimum 5m) = run now, then at that interval; `at` ("08:00") = daily at that local
+time (first run at the next 08:00). `agent_list()` shows status (idle / queued / running / waiting-for-Ben /
+stopped), schedule, next run and the last result; `agent_stop(name_or_id)` aborts and removes the schedule
+(the helper and its thread stay, as "stopped", until Ben deletes it). One prompt line tells the model to use them.
+- Same prompt, same tool list: a helper is the same Agent class with the same system prompt and tool schemas
+  (so the gateway's prompt cache is shared). The agent_* tools just answer "helpers can't start helpers" for a helper.
+- A run's user message: `[date] You are helper '<name>'. Task: <task>. Finish with a short report.` Recurring
+  helpers also get the previous report (<= 600 chars) so they can say what changed. Each run starts with fresh
+  model history (the report carries over); the visible step trail keeps growing (last 400 items).
+- Own thread per helper (`helper: id`, saved like any thread, listed under Agents, not Threads). Ben can open it and
+  watch live. Typing in it steers a running helper; it cannot start a run (use Run now).
+- When a run finishes: a UI-only "notice" item goes into the thread that started it (not in model history), a
+  macOS notification shows the summary, and the queued notices are prepended to Ben's next message as one line,
+  `[helper updates] name: summary; ...`, then cleared.
+- Scheduler (`src/helpers.js`, state in `userData/helpers.json`): ticks every 30 s while the app is open. A helper
+  whose time passed while the app was closed runs once on startup (its next run is a single time, then recomputed
+  from now), never once per missed slot. Paused helpers are skipped.
+- Concurrency: setting `maxParallel` (default 2; the M1 gives ~30 tok/s each at 2). Primary and helpers share one
+  FIFO limiter; extra runs queue ("Waiting for a free slot"). A run waiting for Ben's answer gives its slot back.
+- Autonomy: helpers use setting `helperMode` (default Hands-off) with the same danger list. An approval card or
+  ask_user sets the helper to waiting-for-Ben, shows a notification, and the card waits in the helper's thread
+  (replayed when Ben opens it).
+- Browser: one `Browser` per agent (constructor takes a `WebContentsView`). A helper gets a hidden view (never
+  attached to the window, same `persist:desk` partition, so sign-ins are shared), created at run start and
+  destroyed at run end. The Browser tab shows the browser of the open thread (a running helper's view is attached
+  while its thread is open). webRequest listeners are one per session, so a single dispatcher keys on webContents id.
+- Screen control: `screen_*` and `open_app` take a global FIFO lock, taken by an agent's first screen tool and held
+  until its run ends; others wait (abortable).
+- UI: threads drawer has an Agents section above Threads: status dot, name, schedule ("every 2h", "daily 08:00",
+  "once"), next run, last result, and Run now / Pause (Resume) / Delete.

@@ -12,7 +12,7 @@ test('system prompt + tool schemas stay under 9000 chars', () => {
 
 test('tool list is constant; diary tool only when diary is available', () => {
   const a = buildTools({ diary: true }), b = buildTools({ diary: false });
-  assert.strictEqual(a.length, 15); assert.strictEqual(b.length, 14);
+  assert.strictEqual(a.length, 18); assert.strictEqual(b.length, 17);
   assert.ok(!b.some((t) => t.function.name === 'diary_search'));
   assert.strictEqual(JSON.stringify(buildTools({ diary: true })), JSON.stringify(a));
 });
@@ -20,4 +20,11 @@ test('tool list is constant; diary tool only when diary is available', () => {
 test('prompt has no per-chat content (no digits that look like dates or paths)', () => {
   assert.ok(!/\d{4}-\d{2}-\d{2}/.test(SYSTEM_PROMPT));
   assert.ok(!/\/Users\//.test(SYSTEM_PROMPT));
+});
+
+test('helper tools are in the list and the prompt tells the model to delegate', () => {
+  const names = buildTools({ diary: false }).map((t) => t.function.name);
+  for (const n of ['agent_start', 'agent_list', 'agent_stop']) assert.ok(names.includes(n), n);
+  assert.match(SYSTEM_PROMPT, /agent_start/);
+  assert.match(SYSTEM_PROMPT, /agent_list/);
 });

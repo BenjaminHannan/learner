@@ -26,7 +26,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function lastTool(req) { const m = req.messages.filter((x) => x.role === 'tool'); return m.length ? m[m.length - 1].content : ''; }
 function idOf(text, re) { const m = new RegExp('\\[(\\d+)\\] ' + re).exec(text); if (!m) throw new Error('no element matching ' + re + ' in snapshot:\n' + text); return Number(m[1]); }
 
-async function run({ app, win, store, browser }) {
+async function run({ app, win, store, browser, helpers }) {
   const fail = (m) => { console.error('E2E FAIL: ' + m); app.exit(1); };
   const timer = setTimeout(() => fail('timeout'), 120000);
   const wc = win.webContents;
@@ -99,6 +99,45 @@ async function run({ app, win, store, browser }) {
     checks.push(['thread saved', !!t && t.messages.length >= 10 && t.items.filter((i) => i.t === 'step').length === 4]);
     checks.push(['thread titled from first message', !!t && /premonition item/.test(t.title)]);
     checks.push(['model got date-prefixed user message', /^\[\w{3} \d{4}-/.test(gw.requests[0].messages.find((m) => m.role === 'user').content)]);
+
+    // ---- task 3: primary starts a one-off helper; it browses in its own hidden browser; notice + saved thread
+    const primaryUrl = browser.wc.getURL();
+    const gw2 = await startGateway([(req) => {
+      const first = req.messages.find((m) => m.role === 'user').content;
+      const last = req.messages[req.messages.length - 1];
+      if (/You are helper 'site-checker'/.test(first)) {
+        if (last.role !== 'tool') return { tool_calls: [{ name: 'browser_go', arguments: { url: site.base + '/' } }] };
+        checks.push(['helper got the page snapshot from its own browser', /Title: Test Shop/.test(last.content)]);
+        return { content: 'Report: the shop home page says Welcome to the shop.' };
+      }
+      if (last.role === 'tool') return { content: 'The helper is on it.' };
+      return { tool_calls: [{ name: 'agent_start', arguments: { name: 'site-checker', task: 'open the test shop and report its home page' } }] };
+    }]);
+    store.saveSettings({ gatewayUrl: gw2.url, mode: 'hands-off' });
+    await send('Please have a helper check the shop home page');
+    await waitIdle('task3');
+    let helperThread = null;
+    for (let i = 0; i < 150 && !helperThread; i++) {
+      await sleep(200);
+      const ht = store.listThreads().find((x) => x.helper);
+      const full = ht && store.loadThread(ht.id);
+      if (full && full.messages.some((m) => m.role === 'assistant' && /^Report:/.test(m.content || ''))) helperThread = full;
+    }
+    checks.push(['helper thread saved with its report', !!helperThread]);
+    checks.push(['helper thread has its browser_go step', !!helperThread && helperThread.items.some((i) => i.t === 'step' && i.tool === 'browser_go')]);
+    checks.push(['primary browser untouched by the helper', browser.wc.getURL() === primaryUrl]);
+    let notice = false;
+    for (let i = 0; i < 50 && !notice; i++) { await sleep(100); notice = await ev('!!document.querySelector(".notice")'); }
+    checks.push(['notice shown in the primary thread', notice]);
+    const h0 = helpers.list()[0];
+    checks.push(['helper listed idle with a summary', !!h0 && h0.status === 'idle' && /home page/.test(h0.lastSummary)]);
+    await ev('document.querySelector("#btnThreads").click()');
+    await sleep(300);
+    checks.push(['Agents section lists the helper', await ev('!document.querySelector("#agentsSec").hidden && document.querySelectorAll("#agentList li").length===1 && /site-checker/.test(document.querySelector("#agentList").innerText)')]);
+    await ev('document.querySelector("#agentList li").click()');
+    await sleep(500);
+    checks.push(['opening the helper thread shows its steps', await ev('document.querySelectorAll(".step").length>=1 && /Report:/.test(document.body.innerText)')]);
+    gw2.close();
 
     let bad = 0;
     for (const [name, ok] of checks) { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) bad++; }

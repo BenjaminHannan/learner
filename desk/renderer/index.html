@@ -30,6 +30,8 @@
   <section id="chat">
     <aside id="drawer" aria-hidden="true">
       <div class="drawer-head"><b>Threads</b><button id="newThread" class="amber-btn">+ New</button></div>
+      <div id="agentsSec" hidden><div class="drawer-label">Agents</div><ul id="agentList"></ul></div>
+      <div class="drawer-label">Threads</div>
       <ul id="threadList"></ul>
     </aside>
     <div id="drawerShade"></div>
@@ -79,6 +81,7 @@
         <label>Default model<input id="sModel" spellcheck="false"></label>
         <label>Max steps<input id="sSteps" type="number" min="1" max="200"></label>
       </div>
+      <label>Parallel runs (primary + helpers)<input id="sParallel" type="number" min="1" max="4"></label>
       <label>Vision (send screenshots to the model)
         <select id="sVision"><option value="off">Off (text only)</option><option value="on">On</option></select></label>
       <label>diary_mcp.py path<input id="sDiary" placeholder="~/learner-ops/assistant/diary_mcp.py" spellcheck="false"></label>

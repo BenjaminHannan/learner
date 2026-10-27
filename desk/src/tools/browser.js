@@ -121,26 +121,39 @@ function pageEnsureValue(id, text) {
 const call = (fn, ...args) => '(' + fn.toString() + ').apply(null,' + JSON.stringify(args) + ')';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// webRequest listeners are one per session, so one dispatcher serves every Browser (by webContents id).
+const registry = new Map(); // webContents id -> Browser
+const wired = new WeakSet();
+function wireSession(ses) {
+  if (wired.has(ses)) return;
+  wired.add(ses);
+  const hit = (d, fn) => { const b = registry.get(d.webContentsId); if (b) fn(b); };
+  ses.webRequest.onBeforeRequest((d, cb) => { hit(d, (b) => { b.inflight++; b.lastActivity = Date.now(); }); cb({}); });
+  const done = (d) => hit(d, (b) => { b.inflight = Math.max(0, b.inflight - 1); b.lastActivity = Date.now(); });
+  ses.webRequest.onCompleted(done);
+  ses.webRequest.onErrorOccurred(done);
+}
+
+// One Browser per agent. The primary's is attached to the window; a helper's stays detached (hidden)
+// unless Ben opens that helper's thread. All share the persist:desk partition (shared sign-ins).
 class Browser {
-  constructor({ WebContentsView, session, window, onState }) {
+  constructor({ view, session, window, onState }) {
     this.window = window;
     this.onState = onState || (() => {});
     this.inflight = 0;
     this.lastActivity = Date.now();
     this.readCache = { url: '', pages: [] };
-    this.view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false } });
-    this.wc = this.view.webContents;
+    this.view = view;
+    this.wc = view.webContents;
     this.attached = false;
-    const ses = session.fromPartition('persist:desk');
-    const bump = () => { this.lastActivity = Date.now(); };
-    ses.webRequest.onBeforeRequest((d, cb) => { this.inflight++; bump(); cb({}); });
-    const done = () => { this.inflight = Math.max(0, this.inflight - 1); bump(); };
-    ses.webRequest.onCompleted(done);
-    ses.webRequest.onErrorOccurred(done);
+    this.hiddenBounds = { x: 0, y: 0, width: 1100, height: 800 };
+    wireSession(session.fromPartition('persist:desk'));
+    registry.set(this.wc.id, this);
     const wc = this.wc;
-    wc.setWindowOpenHandler(({ url }) => { setImmediate(() => wc.loadURL(url).catch(() => {})); return { action: 'deny' }; });
-    const push = () => this.onState(this.state());
+    wc.setWindowOpenHandler(({ url }) => { setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); }); return { action: 'deny' }; });
+    const push = () => { if (!wc.isDestroyed()) this.onState(this.state()); };
     for (const ev of ['did-navigate', 'did-navigate-in-page', 'did-start-loading', 'did-stop-loading', 'page-title-updated']) wc.on(ev, push);
+    view.setBounds(this.hiddenBounds); // a detached page still needs a real viewport size
   }
 
   state() {
@@ -154,6 +167,15 @@ class Browser {
   }
   setBounds(b) { this.attach(); this.view.setBounds({ x: Math.round(b.x), y: Math.round(b.y), width: Math.max(0, Math.round(b.width)), height: Math.max(0, Math.round(b.height)) }); }
   setVisible(v) { this.view.setVisible(!!v); }
+  detach() {
+    if (this.attached) { try { this.window.contentView.removeChildView(this.view); } catch (e) { /* window gone */ } this.attached = false; }
+    this.view.setBounds(this.hiddenBounds);
+  }
+  destroy() {
+    registry.delete(this.wc.id);
+    this.detach();
+    try { if (!this.wc.isDestroyed()) this.wc.close(); } catch (e) { /* ignore */ }
+  }
 
   normalize(url) {
     url = String(url || '').trim();
@@ -177,7 +199,6 @@ class Browser {
   }
 
   async go(url) {
-    this.attach();
     const u = this.normalize(url);
     this.readCache = { url: '', pages: [] };
     try { await this.wc.loadURL(u); } catch (e) {

@@ -10,10 +10,13 @@ contextBridge.exposeInMainWorld('desk', {
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   browser: { go: inv('browser:go'), back: inv('browser:back'), forward: inv('browser:forward'), reload: inv('browser:reload'), bounds: inv('browser:bounds'), visible: inv('browser:visible'), state: inv('browser:state') },
   screen: { check: inv('screen:check'), ask: inv('screen:ask'), shot: inv('screen:shot') },
+  helpers: { list: inv('helpers:list'), run: inv('helpers:run'), pause: inv('helpers:pause'), remove: inv('helpers:delete') },
   openExternal: inv('open:external'),
   ping: inv('gateway:ping'),
   onAgent: on('agent'),
   onBrowser: on('browser-state'),
   onScreen: on('screen'),
-  onThreads: on('threads:changed')
+  onThreads: on('threads:changed'),
+  onHelpers: on('helpers:changed'),
+  onOpenThread: on('open-thread')
 });
