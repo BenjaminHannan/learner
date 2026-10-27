@@ -82,3 +82,12 @@ Written after Stage-0 S0-S4 results were seen; S5 is a new arm, not a re-analysi
   <= S2 + 3 on (b). Only if S5 passes: night roll-up cards (merge same-topic facts across sessions), pass multi-session
   >= S5 + 8.
 - Cost cap $5 (estimate about $2.5 at Haiku 5.5 batch prices).
+
+## Amendment D (2026-10-27 20:25Z, small reader K2 -> LFM3-1.7B)
+Written before any Stage-1 reader output was seen (Qwen3.6 rows exist only from the 2-question smoke test; no K2 rows).
+Ben switched the small tier to LFM3-1.7B (19:45Z Oct 27). P3 now uses **LiquidAI/LFM3-1.7B**, GGUF QAD-Q4_0 via llama.cpp
+(`llama-server --jinja`, a build at/after the LFM3 merge) or transformers bf16 if no such build is at hand; the runtime and
+quantization are logged with the rows. Thinking off (`enable_thinking=False`; any `<think>` text is stripped before scoring, as for
+Qwen); temperature 0. Same 120 questions, arms, retriever (S2), judge and pass mark as P3 had for K2. Reader name `lfm3q4`
+(or `lfm3bf16`). The K2 run is dropped. Recall-then-read (Stage 2) stays on K2 until the sleep code's LFM3 port lands, then
+moves to LFM3 with its own note.
