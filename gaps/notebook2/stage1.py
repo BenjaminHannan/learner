@@ -52,13 +52,16 @@ def make_chat(a):
         def chat(messages, max_tokens):
             body = dict(model=a.model, messages=messages, max_tokens=max_tokens, temperature=0,
                         chat_template_kwargs={"enable_thinking": False})
-            for att in range(4):
+            pause = os.path.expanduser("~/learner-ops/PAUSE_OTHERS")
+            for att in range(4 + 24):  # 4 quick retries, then every 5 min for ~2 h (server watchdog may restart it)
+                while os.path.exists(pause):
+                    print("PAUSE_OTHERS present; waiting", flush=True); time.sleep(300)
                 try:
                     req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json", "Authorization": "Bearer none"})
                     r = json.load(urllib.request.urlopen(req, timeout=1800))
                     return clean(r["choices"][0]["message"]["content"] or "")
                 except Exception as e:
-                    print("chat retry", att, repr(e)[:200], flush=True); time.sleep(5 * (att + 1))
+                    print("chat retry", att, repr(e)[:200], flush=True); time.sleep(5 * (att + 1) if att < 4 else 300)
             raise RuntimeError("chat failed")
         return chat
     # hf: transformers, greedy, fp16 on CUDA (copied from the askonce-job1 loading approach)
