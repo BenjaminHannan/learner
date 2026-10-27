@@ -271,7 +271,7 @@
       foot.append(live, lbl, open);
       root.append(top, th, foot);
       c = { id: ev.id, root, fav, title, url, th, ph, lbl, key: ev.key, favicon: '', thumbImg: null };
-      root.onclick = () => desk.browser.open(c.key, c.urlFull);
+      root.onclick = () => desk.browser.open(c.key, c.urlFull, false, thread && thread.id);
       bcards.set(ev.id, c);
       ensureActTracked().cards.append(root);
     }
@@ -289,9 +289,13 @@
     c.root.classList.toggle('active', !!c.active && !c.login);
     c.root.classList.toggle('login', !!c.login);
     c.lbl.textContent = c.login ? 'Sign-in needed: click to open' : c.active ? 'Glim is browsing' : 'Click to open the browser';
-    c.root.title = c.login ? 'Open the sign-in window' : 'Open this page in a popup you can use';
+    c.root.title = c.login ? 'Open the browser to sign in' : 'Open this page in the browser panel';
+    syncBrowserKeys();
     toBottom();
     return c;
+  }
+  function syncBrowserKeys() {
+    BrowserPanel.setKeys([...bcards.values()].filter((c) => c.urlFull !== undefined || c.key).map((c) => ({ key: c.key, url: c.urlFull })));
   }
   function upsertSCard(ev) {
     let c = scards.get(ev.id);
@@ -466,7 +470,7 @@
     for (const t of SUGGESTIONS) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
     w.append(chips); msgs.append(w);
   }
-  function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); rids.clear(); pendingSteers = []; newBlock(); }
+  function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); }
   function renderThread(t) {
     resetView();
     const items = t.items || [];
@@ -506,12 +510,13 @@
     for (const ev of t.pendingCards || []) { if (ev.type === 'approval') onApproval(ev); else if (ev.type === 'ask') onAsk(ev); }
     errorUntil = 0; doneUntil = 0; refreshMood();
     closeDrawer(); loadThreads();
+    BrowserPanel.threadChanged();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
   }
   async function newThread() {
     const t = await desk.threads.create();
     thread = { id: t.id, title: t.title, helper: null };
-    $('#title').textContent = t.title; renderThread(t); setRunning(false); closeDrawer(); loadThreads(); input.focus();
+    $('#title').textContent = t.title; renderThread(t); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
   }
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
@@ -574,12 +579,12 @@
   $('#title').onclick = renameTitle;
   $('#title').addEventListener('keydown', (e) => { if (e.key === 'Enter') renameTitle(); });
 
-  // links in answers open in the browser popup
+  // links in answers open in the browser panel
   msgs.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-href]');
     if (!a) return;
     e.preventDefault();
-    desk.browser.open('primary', a.getAttribute('data-href'), true);
+    desk.browser.open(thread.id, a.getAttribute('data-href'), true, thread.id);
   });
 
   // ---------- composer ----------
@@ -725,7 +730,7 @@
           const rowb = el('div'); rowb.style.cssText = 'display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end';
           rowb.append(mk('Check permissions', async () => { out.textContent = 'Checking…'; show(await desk.screen.check()); }), mk('Ask macOS', async () => { out.textContent = 'Asking macOS…'; const a = await desk.screen.ask(); show(a.error ? a : await desk.screen.check()); }));
           const rowc = el('div'); rowc.style.cssText = rowb.style.cssText;
-          rowc.append(mk('Open Accessibility settings', () => desk.openSystem('accessibility')), mk('Open Screen Recording settings', () => desk.openSystem('screen')));
+          rowc.append(mk('Permissions…', () => Perms.show()), mk('Open Accessibility settings', () => desk.openSystem('accessibility')), mk('Open Screen Recording settings', () => desk.openSystem('screen')));
           bx.append(rowb, rowc, out); ctl.append(bx);
         } else if (r.type === 'hotkey') {
           const b = el('button', 'ghost hotkey'); const note = el('span', 's-note'); b.id = 'hotkeyBtn';
@@ -767,6 +772,9 @@
   $('#btnSettings').onclick = openSettings; $('#settingsClose').onclick = closeSettings;
   desk.onOpenSettings(openSettings);
   window.__openSettings = openSettings;
+
+  BrowserPanel.ctx.threadId = () => thread && thread.id;
+  BrowserPanel.ctx.switchThread = async (id) => { if (id && (!thread || thread.id !== id)) await openThread(id); };
 
   // ---------- boot ----------
   (async () => {

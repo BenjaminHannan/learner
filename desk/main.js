@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -11,6 +11,9 @@ if (E2E) {
   app.commandLine.appendSwitch('disable-gpu');
 }
 if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
+// Browser views sit underneath the opaque UI view while the panel is closed; without this switch Chromium treats a fully covered
+// view as occluded and stops painting it (no capturePage thumbnails, no animation frames, stalled typing).
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 const { Store } = require('./src/store');
 const { Agent, DANGER_LABELS } = require('./src/agent');
@@ -25,10 +28,12 @@ const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
 const { PillState } = require('./src/pillstate');
 const { ensureCard } = require('./src/cards');
-const { Popup } = require('./src/popup');
 const { PillWindow } = require('./src/pillwin');
+const perms = require('./src/perms');
 
 let win = null;
+let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
+let concealed = false;
 let store = null;
 let agent = null;
 let diary = null;
@@ -43,9 +48,13 @@ let pillWin = null;
 let quitting = false;
 let gwState = { state: 'down' };
 let e2eEnv = null;
+const permsFake = E2E ? { accessibility: false, screenRecording: false } : null; // the e2e stands in for macOS
+const dragIcons = new Map(); // bundle path -> 64 px nativeImage (the Finder icon of the app)
 const timing = {}; // startup marks (checked by the e2e: the window must show before the deferred work starts)
 const screenLock = new ScreenLock();
-const browsers = new Map();   // 'primary' | helper thread id -> {key, label, br, popup}  (created on first use)
+const browsers = new Map();   // thread id (chat threads and helper threads alike) -> {key, label, view, br, helper, onTop, used}  (created on first use)
+const holds = new Map();      // browser key -> {p, release}: Ben took over, the agent's browser tools wait
+const panel = { key: null, open: false, top: false, rect: null }; // what the renderer last told us about the in-window browser panel
 const loginWaits = new Map(); // browser key -> finish(value): a sign-in hand-off is waiting for Ben
 let openThreadId = null;  // thread the UI has open
 const SCREEN_TOOLS = new Set(['screen_look', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
@@ -54,14 +63,14 @@ const pending = new Map(); // approval/ask id -> resolve
 const cards = new Map();   // approval/ask id -> {threadId, ev}: replayed when Ben opens that thread later
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const send = (channel, payload) => { if (win && !win.isDestroyed()) win.webContents.send(channel, payload); };
+const send = (channel, payload) => { if (ui && !ui.webContents.isDestroyed()) ui.webContents.send(channel, payload); };
 const dark = () => nativeTheme.shouldUseDarkColors;
 
 // ---- one state source for Glim (pill, top bar, dock badge) -------------------------------------
 const pillState = new PillState({ onChange: () => { schedulePill(); } });
 let pillTimer = null;
 function schedulePill() { if (pillTimer) return; pillTimer = setTimeout(() => { pillTimer = null; updatePill(); }, 30); }
-function chatInFront() { return !E2E && win && !win.isDestroyed() && win.isVisible() && win.isFocused(); }
+function chatInFront() { return !E2E && windowShown() && win.isFocused(); }
 function updatePill() {
   const st = pillState.status();
   send('glim-state', st);
@@ -94,56 +103,131 @@ function notify(title, body, threadId) {
 }
 
 // ---- window --------------------------------------------------------------------------------------
+// One BrowserWindow. Its content is a stack of views: [idle browser views ... , the app UI, the open browser panel's view].
+// The UI view fills the window and sits above every browser view that is not on show, so those pages stay attached at full
+// panel size (they paint, take input and can be captured) while hidden behind the opaque UI. Opening the panel lifts that
+// one view above the UI, over the panel's content rect (the renderer measures it and tells us).
 function showWindow(focusComposer) {
   if (!win || win.isDestroyed()) createWindow();
+  if (concealed) revealWindow();
   if (win.isMinimized()) win.restore();
   win.show(); win.focus();
+  if (ui && !ui.webContents.isDestroyed()) ui.webContents.focus();
   if (focusComposer) send('focus-composer', true);
   updatePill();
 }
+// "Closing" the window keeps the app running. A hidden window would stop painting its pages (no thumbnails, no typing), so while
+// browsers exist the window stays shown but see-through, click-through and unfocusable instead of hidden.
+function hideWindow() {
+  if (!win || win.isDestroyed()) return;
+  if (browsers.size && process.platform === 'darwin') {
+    concealed = true;
+    win.setIgnoreMouseEvents(true);
+    try { win.setFocusable(false); win.setOpacity(0); win.setHiddenInMissionControl(true); win.setHasShadow(false); } catch (e) { /* ignore */ }
+  } else win.hide();
+  updatePill();
+}
+function revealWindow() {
+  concealed = false;
+  try { win.setIgnoreMouseEvents(false); win.setFocusable(true); win.setOpacity(1); win.setHiddenInMissionControl(false); win.setHasShadow(true); } catch (e) { /* ignore */ }
+}
+const windowShown = () => !!win && !win.isDestroyed() && win.isVisible() && !concealed;
 function toggleWindow() {
-  if (win && !win.isDestroyed() && win.isVisible() && win.isFocused()) win.hide();
+  if (windowShown() && win.isFocused()) hideWindow();
   else showWindow(true);
+}
+
+function fitUi() {
+  if (!win || win.isDestroyed() || !ui) return;
+  const [w, h] = win.getContentSize();
+  ui.setBounds({ x: 0, y: 0, width: w, height: h });
 }
 
 function createWindow() {
   timing.created = Date.now();
   const mac = process.platform === 'darwin';
+  const bg = dark() ? '#17120f' : '#faf6f0';
   win = new BrowserWindow({
     width: 1000, height: 840, minWidth: 560, minHeight: 520,
-    show: false, // shown on ready-to-show: no white flash, no half-painted window
-    backgroundColor: dark() ? '#17120f' : '#faf6f0',
+    show: false, // shown once the UI has loaded: no white flash, no half-painted window
+    backgroundColor: bg,
     title: 'Premonition Desk',
     icon: mac ? undefined : ICON,
     titleBarStyle: mac ? 'hiddenInset' : 'default',
-    trafficLightPosition: mac ? { x: 16, y: 18 } : undefined,
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: false, nodeIntegration: false }
+    trafficLightPosition: mac ? { x: 16, y: 18 } : undefined
   });
-  win.once('ready-to-show', () => {
+  ui = new WebContentsView({ webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: false, nodeIntegration: false } });
+  // A transparent view background keeps Chromium from treating the browser views stacked beneath this UI as occluded (an
+  // occluded page stops painting: no thumbnails, no rAF). The page itself paints an opaque background, so nothing shows through.
+  ui.setBackgroundColor('#00000000');
+  win.contentView.addChildView(ui);
+  fitUi();
+  // (on X11 the content size can lag one event behind the window size, so fit again shortly after)
+  for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
+  ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
     const hidden = !E2E && process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAsHidden;
-    if (!hidden) win.show();
+    if (!hidden) { win.show(); ui.webContents.focus(); }
     setTimeout(() => afterFirstPaint().catch((e) => console.error('startup', e)), 0);
   });
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  ui.webContents.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.on('close', (e) => {
     if (quitting || !store || !store.getSettings().keepRunning) return;
-    e.preventDefault(); win.hide(); // keep running in the background (Cmd+Q really quits)
+    e.preventDefault(); hideWindow(); // keep running in the background (Cmd+Q really quits)
   });
-  for (const ev of ['focus', 'blur', 'show', 'hide']) win.on(ev, () => { if (ev === 'focus' || ev === 'show') pillState.markSeen(openThreadId); updatePill(); });
-  win.on('closed', () => { win = null; if (!quitting && store && !store.getSettings().keepRunning) app.quit(); });
+  for (const ev of ['focus', 'blur', 'show', 'hide']) win.on(ev, () => {
+    if (ev === 'focus' || ev === 'show') pillState.markSeen(openThreadId);
+    if (ev === 'focus') send('perms-recheck', true);
+    if (ev === 'focus' && ui && !ui.webContents.isDestroyed()) {
+      const top = [...browsers.values()].find((r) => r.onTop);
+      if (!(top && top.view.webContents.isFocused())) ui.webContents.focus();
+    }
+    updatePill();
+  });
+  win.on('closed', () => { win = null; ui = null; if (!quitting && store && !store.getSettings().keepRunning) app.quit(); });
   return win;
 }
 
-// ---- browsers: one per agent, created on first use; each has a hidden popup window that Ben can open ----
-function makeBrowser(key, label) {
+// ---- browsers: one per thread (helper threads too), created on first use ---------------------------------------
+// Stacking: see "window" above. placeView puts a view on top of the UI only while the panel is open, showing that browser,
+// and not suspended (Settings / a modal / the dragged divider need the UI on top).
+function defaultRect() {
+  const [w, h] = win && !win.isDestroyed() ? win.getContentSize() : [1000, 800];
+  const pw = w < 1000 ? w : Math.max(420, Math.round(w * 0.58));
+  return { x: w - pw, y: 150, width: pw, height: Math.max(100, h - 160) };
+}
+function placeView(rec) {
+  if (!win || win.isDestroyed()) return;
+  const r = panel.rect || defaultRect();
+  const top = panel.open && panel.top && panel.key === rec.key;
+  rec.view.setBounds(r);
+  if (top !== rec.onTop) {
+    rec.onTop = top;
+    try { win.contentView.addChildView(rec.view, top ? undefined : 0); } catch (e) { /* ignore */ }
+  }
+}
+function applyPanel() { for (const rec of browsers.values()) placeView(rec); }
+
+function bstate(key) {
+  const rec = browsers.get(key);
+  if (!rec || rec.br.wc.isDestroyed()) return null;
+  return { key, ...rec.br.state(), active: !!rec.active, login: loginWaits.has(key), held: holds.has(key), label: rec.label };
+}
+function pushBState(key) { const s = bstate(key); if (s) send('browser-state', s); }
+
+function makeBrowser(key, label, opts) {
   let rec = browsers.get(key);
-  if (rec) return rec;
+  if (rec) { rec.used = Date.now(); return rec; }
   const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
-  const popup = new Popup({ parent: win, view, title: label || 'Browser', dark: dark(), quitting: () => quitting });
-  const br = new Browser({ view, session, onState: (s) => popup.sendState(s) });
-  rec = { key, label, br, popup };
+  const br = new Browser({ view, session, onState: () => pushBState(key) });
+  br.shouldFocus = () => !(ui && !ui.webContents.isDestroyed() && ui.webContents.isFocused()) || (panel.open && panel.key === key);
+  rec = { key, label, view, br, helper: !!(opts && opts.helper), onTop: false, active: false, used: Date.now() };
   browsers.set(key, rec);
+  try { rec.br.wc.setBackgroundThrottling(false); } catch (e) { /* ignore */ }
+  if (win && !win.isDestroyed()) { win.contentView.addChildView(view, 0); placeView(rec); }
+  // keep a handful of idle thread browsers; the oldest idle one goes first
+  const idle = [...browsers.values()].filter((r) => r.key !== key && !r.helper && !r.active && !loginWaits.has(r.key) && !(panel.open && panel.key === r.key) && !holds.has(r.key));
+  if (idle.length > 4) { idle.sort((a, b) => a.used - b.used); dropBrowser(idle[0].key); }
   return rec;
 }
 function dropBrowser(key) {
@@ -151,25 +235,40 @@ function dropBrowser(key) {
   if (!rec) return;
   browsers.delete(key);
   const f = loginWaits.get(key); if (f) f('stopped');
-  rec.br.destroy(); rec.popup.destroy();
+  setHold(key, false);
+  try { if (win && !win.isDestroyed()) win.contentView.removeChildView(rec.view); } catch (e) { /* ignore */ }
+  rec.br.destroy();
+  if (panel.key === key) send('browser-gone', { key });
 }
-const primary = () => makeBrowser('primary', 'Glim’s browser');
+function setHold(key, on) {
+  if (on && !holds.has(key)) { let release; const p = new Promise((r) => { release = r; }); holds.set(key, { p, release }); }
+  else if (!on && holds.has(key)) { holds.get(key).release(); holds.delete(key); }
+  pushBState(key);
+}
+// Ben took over: the agent's browser tools wait here until he hands back (or Stop is pressed)
+function gate(key, signal) {
+  const h = holds.get(key);
+  if (!h) return null;
+  return Promise.race([h.p, new Promise((r) => { if (signal) { if (signal.aborted) r(); else signal.addEventListener('abort', () => r(), { once: true }); } })]);
+}
 
-// A sign-in hand-off: show the popup with the banner and wait (abortably) until Ben clicks Done or Not now.
+// A sign-in hand-off: open the panel with the banner and wait (abortably) until Ben clicks Done or Not now.
 function signInWait(key, threadId, signal) {
   return new Promise((resolve) => {
     const rec = browsers.get(key);
     if (!rec) return resolve('skip');
     const finish = (v) => {
       if (!loginWaits.has(key)) return;
-      loginWaits.delete(key); rec.popup.setBanner(false); rec.popup.hide();
+      loginWaits.delete(key); pushBState(key);
+      send('browser-hide', { key });
       send('agent', { threadId, type: 'resumed', key });
       resolve(v);
     };
     loginWaits.set(key, finish);
     if (signal) { if (signal.aborted) return finish('stopped'); signal.addEventListener('abort', () => finish('stopped'), { once: true }); }
-    if (win && !win.isDestroyed() && !win.isVisible()) showWindow();
-    rec.popup.show({ banner: true });
+    if (win && !win.isDestroyed() && !windowShown()) showWindow();
+    pushBState(key);
+    send('browser-show', { key, threadId, login: true });
     send('agent', { threadId, type: 'login', key });
     const a = [...pillState.agents.values()].find((x) => x.threadId === threadId);
     if (a) pillState.onEvent(a.key, a.name, threadId, { type: 'login' });
@@ -183,9 +282,9 @@ const afterSignIn = async (br, v) => v === 'done'
 // One Agent per run owner: the primary, and a fresh one for each helper run. Same prompt, same tool list.
 function createAgent({ helper, rec }) {
   const isHelper = !!helper;
-  const br = rec ? rec.br : null;                  // helpers get theirs up front; the primary's is created on first use
-  const bKey = isHelper ? helper.threadId : 'primary';
-  const getBr = () => (isHelper ? br : primary().br);
+  // one browser per thread: a helper's is made up front (its thread id), a chat thread's on its first browser tool
+  const bk = () => (isHelper ? helper.threadId : a.threadId);
+  const getBr = () => (isHelper ? rec : makeBrowser(bk(), activeThread && activeThread.title)).br;
   const pKey = isHelper ? helper.id : 'main';
   const pName = isHelper ? helper.name : 'Glim';
   const holder = screenLock.holder();
@@ -195,13 +294,13 @@ function createAgent({ helper, rec }) {
   const live = { item: null, timer: null, busy: false, thread: null };
   const cardEvent = (active) => {
     const it = live.item; if (!it) return;
-    send('agent', { threadId: a.threadId, type: 'bcard', id: it.id, key: bKey, url: it.url, title: it.title, favicon: it.favicon, thumb: it.thumb, active, login: loginWaits.has(bKey) });
+    send('agent', { threadId: a.threadId, type: 'bcard', id: it.id, key: bk(), url: it.url, title: it.title, favicon: it.favicon, thumb: it.thumb, active, login: loginWaits.has(bk()) });
   };
   const capture = async () => {
     const it = live.item; if (!it || live.busy) return;
     live.busy = true;
     try {
-      const cur = browsers.get(bKey);
+      const cur = browsers.get(bk());
       if (!cur) return;
       const s = cur.br.state();
       it.url = s.url; it.title = s.title; it.favicon = s.favicon;
@@ -212,9 +311,9 @@ function createAgent({ helper, rec }) {
   };
   const touchCard = (thread) => {
     live.thread = thread;
-    const it = ensureCard(thread, 'browser', bKey);
+    const it = ensureCard(thread, 'browser', bk());
     if (live.item !== it) { live.item = it; cardEvent(true); }
-    const cur = browsers.get(bKey); if (cur) cur.popup.setActive(true);
+    const cur = browsers.get(bk()); if (cur) { cur.active = true; cur.used = Date.now(); pushBState(bk()); }
     if (!live.timer) { live.timer = setInterval(capture, 1500); live.timer.unref && live.timer.unref(); }
   };
   const endCard = async () => {
@@ -222,7 +321,7 @@ function createAgent({ helper, rec }) {
     const it = live.item, thread = live.thread;
     if (!it) return;
     await capture();
-    const cur = browsers.get(bKey); if (cur) cur.popup.setActive(false);
+    const cur = browsers.get(bk()); if (cur) { cur.active = false; pushBState(bk()); }
     cardEvent(false);
     live.item = null; live.thread = null;
     try { if (thread) store.saveThread(thread); } catch (e) { /* ignore */ }
@@ -234,10 +333,10 @@ function createAgent({ helper, rec }) {
     browser_click: (x) => getBr().click(x.id),
     browser_type: async (x, ctx) => {
       const b = getBr();
-      // Never type into a password / payment field: Ben signs in himself in the popup while we wait.
+      // Never type into a password / payment field: Ben signs in himself in the browser panel while we wait.
       const why = await b.sensitiveReason(x.id);
       if (why) {
-        const v = await ctx.waitForBen(() => signInWait(bKey, a.threadId, ctx.signal));
+        const v = await ctx.waitForBen(() => signInWait(bk(), a.threadId, ctx.signal));
         return { text: await afterSignIn(b, v), summary: 'Waited while Ben signed in', error: v === 'stopped' };
       }
       return b.type(x.id, x.text, x.enter);
@@ -254,6 +353,8 @@ function createAgent({ helper, rec }) {
   for (const n of BROWSER_TOOLS) {
     const run = tools[n];
     tools[n] = async (x, ctx) => {
+      const g = gate(bk(), ctx.signal); // Ben took over: wait until he hands back
+      if (g) { await g; if (ctx.signal && ctx.signal.aborted) return { text: '[stopped by user]', error: true }; }
       touchCard(ctx.thread);
       let r = await run(x, ctx);
       if (typeof r === 'string') r = { text: r };
@@ -267,7 +368,13 @@ function createAgent({ helper, rec }) {
   for (const n of SCREEN_TOOLS) {
     const run = tools[n];
     // (waiting for the lock must not hold a run slot: the lock holder may be queued for one)
-    tools[n] = async (x, ctx) => { if (!holder.held()) await agentRef.withoutSlot(() => holder.ensure(ctx.signal), ctx.signal); return run(x, ctx); };
+    tools[n] = async (x, ctx) => {
+      if (!holder.held()) await agentRef.withoutSlot(() => holder.ensure(ctx.signal), ctx.signal);
+      const r = await run(x, ctx);
+      const txt = typeof r === 'string' ? r : (r && r.text) || '';
+      if (/^Error:.*(accessib|permission|not trusted|screen recording)/i.test(txt)) showPerms('a screen tool was refused');
+      return r;
+    };
   }
   const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
   const a = new Agent({
@@ -292,10 +399,10 @@ function createAgent({ helper, rec }) {
     },
     // the model keeps repeating itself: a sign-in / passkey page goes to Ben, anything else is a question to Ben
     onStuck: async (stuck, signal) => {
-      if (stuck.tool.startsWith('browser_') && browsers.get(bKey) && await browsers.get(bKey).br.looksLikeAuth()) {
-        const b = browsers.get(bKey).br;
-        const v = await signInWait(bKey, a.threadId, signal);
-        return v === 'done' ? 'You were stuck on a sign-in page. Ben completed that step himself in the browser window. Fresh snapshot:\n' + (await b.snapshot()) : v === 'stopped' ? '[stopped by user]' : 'Ben did not complete the sign-in. Stop trying that page and tell him what is blocked.';
+      if (stuck.tool.startsWith('browser_') && browsers.get(bk()) && await browsers.get(bk()).br.looksLikeAuth()) {
+        const b = browsers.get(bk()).br;
+        const v = await signInWait(bk(), a.threadId, signal);
+        return v === 'done' ? 'You were stuck on a sign-in page. Ben completed that step himself in the browser panel. Fresh snapshot:\n' + (await b.snapshot()) : v === 'stopped' ? '[stopped by user]' : 'Ben did not complete the sign-in. Stop trying that page and tell him what is blocked.';
       }
       const answer = await a.o.askUser('I keep repeating "' + stuck.summary + '" and nothing changes. What should I do instead?', signal);
       return 'You were stuck repeating ' + stuck.summary + '. Ben says: ' + answer;
@@ -305,9 +412,9 @@ function createAgent({ helper, rec }) {
   return a;
 }
 
-// Helper run: its own browser (hidden popup, same partition), destroyed when the run ends.
+// Helper run: its own browser (attached but covered, same partition), destroyed when the run ends.
 function makeHelperAgent(h, { onState }) {
-  const rec = makeBrowser(h.threadId, h.name + '’s browser');
+  const rec = makeBrowser(h.threadId, h.name + '’s browser', { helper: true });
   const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, onState }, rec });
   return { agent, dispose: () => dropBrowser(h.threadId) };
 }
@@ -349,6 +456,39 @@ function buildAgent() {
   });
   agent = createAgent({ helper: null, rec: null });
 }
+
+// ---- permissions card (drag the app into System Settings) ------------------------------------------------------
+const permsSupported = () => process.platform === 'darwin' || E2E;
+const appFile = () => perms.appBundlePath(app.getPath('exe'), process.execPath);
+async function iconFor(file) {
+  if (dragIcons.has(file)) return dragIcons.get(file);
+  let img = null;
+  try { img = await app.getFileIcon(file, { size: 'large' }); } catch (e) { /* use the bundled icon */ }
+  if (!img || img.isEmpty()) img = nativeImage.createFromPath(ICON);
+  img = img.resize({ width: 64, height: 64 });
+  dragIcons.set(file, img);
+  return img;
+}
+async function permsStatus() {
+  const mac = process.platform === 'darwin';
+  let helperR = null; let electronR = {};
+  if (permsFake) { helperR = { accessibility: permsFake.accessibility, screenRecording: permsFake.screenRecording }; electronR = { accessibility: permsFake.accessibility, screen: permsFake.screenRecording }; }
+  else if (mac) {
+    if (screen.findHelper()) helperR = await screen.check();
+    try { electronR = { accessibility: systemPreferences.isTrustedAccessibilityClient(false), screen: systemPreferences.getMediaAccessStatus('screen') === 'granted' }; } catch (e) { /* not available */ }
+  }
+  const c = perms.combine(helperR, electronR);
+  const file = appFile();
+  const helperFile = c.helperTile ? screen.findHelper() : null;
+  const icon = await iconFor(file);
+  return {
+    supported: permsSupported(), missing: c.missing, appName: 'Premonition Desk', appPath: file, icon: icon.toDataURL(),
+    helperPath: helperFile, helperError: helperR && helperR.error ? helperR.error : null,
+    rows: c.rows.map((r) => ({ ...r, ...perms.ROWS.find((x) => x.id === r.id), pane: undefined }))
+  };
+}
+let lastPermsShow = 0;
+function showPerms(reason) { if (!permsSupported() || Date.now() - lastPermsShow < 60000) return; lastPermsShow = Date.now(); showWindow(); send('perms-show', { reason }); }
 
 // ---- settings side effects -----------------------------------------------------------------------
 async function refreshDiary() {
@@ -401,11 +541,12 @@ async function afterFirstPaint() {
   const hk = registerHotkey(s.hotkey);
   if (!hk.ok) console.warn('hotkey:', hk.error);
   if (!E2E) setLoginItem(s.openAtLogin);
+  if (!E2E && permsSupported() && !s.permsSeen) { store.saveSettings({ permsSeen: true }); lastPermsShow = Date.now(); send('perms-show', { reason: 'first launch' }); }
   toolsReady = Promise.resolve();
   if (E2E) {
     require('./test/e2e.js').run({
-      app, win, store, helpers, send, browsers, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
-      loginWaits, timing, getWin: () => win, showWindow
+      app, win, ui, store, helpers, send, browsers, panel, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
+      loginWaits, timing, getWin: () => win, showWindow, holds, permsFake, permsStatus
     }).catch((e) => { console.error('E2E crashed', e); app.exit(1); });
   }
 }
@@ -436,10 +577,10 @@ function registerIpc() {
     const hp = helpers.byThread(id);
     t.running = hp ? helpers.isRunning(hp.id) : !!(agent.running && activeThread && activeThread.id === id);
     t.pendingCards = [...cards.values()].filter((c) => c.threadId === id).map((c) => c.ev);
-    t.loginWaiting = [...loginWaits.keys()].some((k) => (k === 'primary' ? (activeThread && activeThread.id === id) : k === id));
+    t.loginWaiting = loginWaits.has(id);
     return t;
   });
-  h('threads:delete', (id) => { if (!helpers.byThread(id)) store.deleteThread(id); return true; });
+  h('threads:delete', (id) => { if (!helpers.byThread(id)) { store.deleteThread(id); dropBrowser(id); } return true; });
   h('threads:rename', (id, title) => { store.renameThread(id, title); return true; });
   h('agent:send', async (threadId, text) => {
     const hp = helpers.byThread(threadId);
@@ -464,15 +605,60 @@ function registerIpc() {
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
   h('respond', (id, value) => { const r = pending.get(id); if (r) { pending.delete(id); r(value); } return true; });
-  // browser popup: open the real page for Ben (a card was clicked, or a link in the chat)
-  h('browser:open', async (key, url, navigate) => {
-    let rec = browsers.get(key);
-    const fresh = !rec;
-    if (!rec) rec = primary(); // that agent's browser is gone (helper finished / app restarted): use the main one
-    if (url && (navigate || fresh || !rec.br.wc.getURL() || rec.br.wc.getURL() === 'about:blank')) rec.br.go(url).catch(() => {});
-    await rec.popup.show({ banner: loginWaits.has(rec.key) });
+  // in-window browser panel: a card or a link was clicked. The thread's own browser is used (made now if it is gone, e.g.
+  // after a restart or for a finished helper), then the renderer slides the panel open and reports where it sits.
+  h('browser:open', async (key, url, navigate, threadId) => {
+    const k = browsers.has(key) ? key : (threadId || key);
+    const fresh = !browsers.has(k);
+    const rec = makeBrowser(k, null);
+    const cur = rec.br.wc.getURL();
+    if (url && (navigate || fresh || !cur || cur === 'about:blank')) rec.br.go(url).catch(() => {});
+    send('browser-show', { key: k, threadId: threadId || k });
+    pushBState(k);
+    return { key: k };
+  });
+  h('browser:exists', (key) => browsers.has(key));
+  // the renderer measured the panel's content rect (window coordinates) and whether the browser should sit above the UI
+  h('browser:layout', (p) => {
+    p = p || {};
+    panel.key = p.key || null; panel.open = !!p.open; panel.top = !!p.top;
+    if (p.rect) {
+      const z = ui && !ui.webContents.isDestroyed() ? ui.webContents.getZoomFactor() : 1;
+      const r = p.rect;
+      panel.rect = { x: Math.round(r.x * z), y: Math.round(r.y * z), width: Math.max(1, Math.round(r.width * z)), height: Math.max(1, Math.round(r.height * z)) };
+    }
+    applyPanel();
     return true;
   });
+  // panel chrome (address bar, back/forward, take over / hand back, sign-in Done, close)
+  h('browser:cmd', async (key, cmd, arg) => {
+    const rec = browsers.get(key);
+    if (!rec) return null;
+    const wc = rec.br.wc;
+    const hst = wc.navigationHistory;
+    switch (cmd) {
+      case 'back': if (hst.canGoBack()) hst.goBack(); break;
+      case 'forward': if (hst.canGoForward()) hst.goForward(); break;
+      case 'reload': wc.reload(); break;
+      case 'go': rec.br.go(arg).catch(() => {}); break;
+      case 'takeover': setHold(key, true); break;
+      case 'handback': case 'close': setHold(key, false); break;
+      case 'done': { const f = loginWaits.get(key); if (f) f('done'); break; }
+      case 'skip': { const f = loginWaits.get(key); if (f) f('skip'); break; }
+      case 'focus': try { wc.focus(); } catch (e) { /* ignore */ } break;
+      case 'state': return bstate(key);
+      default: break;
+    }
+    return true;
+  });
+  h('perms:status', () => permsStatus());
+  h('perms:open', (id) => perms.openPane(shell, id));
+  h('perms:reveal', (which) => { const f = which === 'helper' ? screen.findHelper() : appFile(); if (f) shell.showItemInFolder(f); return !!f; });
+  ipcMain.on('perms:drag', perms.makeDragHandler({
+    getSender: () => (ui && !ui.webContents.isDestroyed() ? ui.webContents : null),
+    getFiles: () => ({ app: appFile(), helper: screen.findHelper() }),
+    getIcon: (which) => dragIcons.get(which === 'helper' ? screen.findHelper() : appFile()) || nativeImage.createFromPath(ICON).resize({ width: 64, height: 64 })
+  }));
   h('screen:check', async () => {
     if (!screen.findHelper()) return { error: 'screen control helper not installed' };
     return screen.check();
@@ -500,26 +686,6 @@ function registerIpc() {
   });
   h('info', () => ({ platform: process.platform, e2e: E2E, diary: toolDefs.some((t) => t.function.name === 'diary_search'), danger: DANGER_LABELS, version: app.getVersion() }));
 
-  // popup chrome (address bar, back/forward, hand back, close)
-  ipcMain.handle('popup:cmd', async (e, cmd, arg) => {
-    const rec = [...browsers.values()].find((r) => r.popup.wcId === e.sender.id);
-    if (!rec) return null;
-    const wc = rec.br.wc;
-    const hst = wc.navigationHistory;
-    switch (cmd) {
-      case 'back': if (hst.canGoBack()) hst.goBack(); break;
-      case 'forward': if (hst.canGoForward()) hst.goForward(); break;
-      case 'reload': wc.reload(); break;
-      case 'go': rec.br.go(arg).catch(() => {}); break;
-      case 'close': rec.popup.hide(); break;
-      case 'done': { const f = loginWaits.get(rec.key); if (f) f('done'); else rec.popup.hide(); break; }
-      case 'skip': { const f = loginWaits.get(rec.key); if (f) f('skip'); else rec.popup.hide(); break; }
-      case 'handback': { const f = loginWaits.get(rec.key); if (f) f('done'); else rec.popup.hide(); break; }
-      case 'state': return { ...rec.br.state(), active: !!rec.popup.active, banner: rec.popup.banner, label: rec.label };
-      default: break;
-    }
-    return true;
-  });
   // status pill actions
   ipcMain.handle('pill:act', async (e, name, arg) => {
     switch (name) {
@@ -527,7 +693,7 @@ function registerIpc() {
       case 'open': { showWindow(); if (arg && arg.threadId) send('open-thread', arg.threadId); if (arg && arg.key) pillState.dismiss(arg.key); break; }
       case 'stop': if (arg === 'main') agent.stop(); else helpers.abort(arg); break;
       case 'respond': { const r = pending.get(arg.rid); if (r) { pending.delete(arg.rid); r(arg.value); send('agent', { threadId: arg.threadId, type: 'resolved', rid: arg.rid, value: arg.value }); } break; }
-      case 'openBrowser': { const key = arg === 'main' ? 'primary' : arg; const rec = browsers.get(key); if (rec) { showWindow(); rec.popup.show({ banner: loginWaits.has(key) }); } break; }
+      case 'openBrowser': { const pa = [...pillState.agents.values()].find((x) => x.key === arg); const key = pa && pa.threadId; if (key && browsers.has(key)) { showWindow(); send('browser-show', { key, threadId: key, login: loginWaits.has(key) }); } break; }
       case 'dismiss': pillState.dismiss(arg); break;
       default: break;
     }
