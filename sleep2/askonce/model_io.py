@@ -47,7 +47,9 @@ def get_tokenizer(name):
     return t
 
 
-def load_model(name, dtype=torch.float16, device="cuda"):
+def load_model(name, dtype=torch.float16, device="cuda", nf4=False):
+    """nf4=True: bitsandbytes NF4 base weights (QLoRA) for 12 GB cards, where K2 LoRA at fp16/bf16 runs out of memory even at batch 1.
+    peft's prepare_model_for_kbit_training is deliberately not called: it upcasts the embeddings and head to fp32 (+2.4 GiB on K2)."""
     from transformers import AutoModelForCausalLM
     kw = dict(trust_remote_code=True, attn_implementation="sdpa")
     src = name[5:] if is_tiny(name) else (name or MODEL_ID)
@@ -55,11 +57,15 @@ def load_model(name, dtype=torch.float16, device="cuda"):
         kw = {}
     elif str(device).startswith("cuda"):
         kw["device_map"] = {"": 0}  # load straight onto the GPU (CUDA_VISIBLE_DEVICES picks the lane's card); avoids ~10 GB of host RAM per lane
+    nf4 = nf4 and not is_tiny(name)
+    if nf4:
+        from transformers import BitsAndBytesConfig
+        kw["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=dtype, bnb_4bit_use_double_quant=True)
     try:
         m = AutoModelForCausalLM.from_pretrained(src, dtype=dtype, **kw)
     except TypeError:  # older transformers: torch_dtype
         m = AutoModelForCausalLM.from_pretrained(src, torch_dtype=dtype, **kw)
-    if next(m.parameters()).device.type != str(device).split(":")[0]:
+    if not nf4 and next(m.parameters()).device.type != str(device).split(":")[0]:  # a 4-bit model is placed by device_map and cannot be .to()'d
         m = m.to(device)
     m.config.use_cache = True
     return m

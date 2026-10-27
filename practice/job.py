@@ -187,7 +187,7 @@ class Lane:
         if self.worker:
             self.setup_worker()
         elif not self.sub:
-            self.model = load_model(name, self.dt, self.dev)
+            self.model = load_model(name, self.dt, self.dev, nf4=bool(g("nf4")))
             assert_finite_forward(self.model, self.tok, self.log)
             if self.oc:  # in-process OpenCode lane (CPU smoke against --oc-upstream): generation and nights share this process
                 self.backend = self.make_oc_backend(None)
@@ -275,7 +275,7 @@ class Lane:
         if self.wmode == "oc" and self.kind != "night":
             self.backend = self.make_oc_backend(self.adapter)
         elif self.kind == "night" or self.wmode == "hf":
-            self.model = load_model(self.name, self.dt, self.dev)
+            self.model = load_model(self.name, self.dt, self.dev, nf4=bool(getattr(a, "nf4", False)))
             assert_finite_forward(self.model, self.tok, self.log)
             if self.kind != "night" and self.adapter:
                 from peft import PeftModel
@@ -383,6 +383,9 @@ class Lane:
         st["adapter"] = str(adir)
         st["n_sft_pilot"] = n_sft
         st["seconds_total"] = round(time.time() - t, 1)
+        if self.dev == "cuda":
+            import torch
+            st["peak_gib"], st["nf4"] = round(torch.cuda.max_memory_allocated() / 2 ** 30, 2), bool(getattr(a, "nf4", False))
         jdump(self.out / "results" / f"night{n}.json", st)
         return st
 
@@ -596,6 +599,7 @@ def build_parser():
     ap.add_argument("--oc-upstream", default=None, help="opencode: use this OpenAI server instead of starting vLLM (tests)")
     ap.add_argument("--train-bare-answers", action="store_true", help="opencode: also train the bare final <answer> turns (off since PREREG-2 addendum 2)")
     ap.add_argument("--no-web", dest="web", action="store_false", help="opencode: turn the web tools off")
+    ap.add_argument("--nf4", action="store_true", help="HF model (nights) with NF4 4-bit base weights, QLoRA: the Radeon RX 7700 XT (12 GB) runs out of memory at fp16 even at batch 1")
     ap.add_argument("--spec", help="internal: JSON file with all arguments of one phase subprocess")
     ap.add_argument("--pilot", action="store_true")
     ap.add_argument("--smoke", action="store_true")
