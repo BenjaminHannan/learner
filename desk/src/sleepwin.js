@@ -15,12 +15,15 @@ const NO_WORK = /no new diary day/i;
 
 // ---- pure builders (tested) -----------------------------------------------------------------------------------------
 function workerEnv(o) {
-  return {
+  const env = {
     SLEEPMODE_BUDGET_S: String(o.budgetS || CHUNK_BUDGET_S), SLEEPMODE_OUT: o.outFile, SLEEPMODE_PRACTICE: (o.practice || []).join(path.delimiter), SLEEPMODE_WORKDIR: o.home,
     SLEEPMLX_HOME: o.home, SLEEPMLX_DIARY_DIR: o.diaryDir, LEARNER_OPS: o.home,
     PYTHONPATH: o.sleepmlxParent + (o.basePythonPath ? path.delimiter + o.basePythonPath : ''), PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
-    HF_HOME: o.hfHome, HF_HUB_OFFLINE: '1', TOKENIZERS_PARALLELISM: 'false'
+    HF_HOME: o.hfHome, HF_HUB_CACHE: o.hfHome, HF_HUB_OFFLINE: '1', TOKENIZERS_PARALLELISM: 'false'
   };
+  // the snapshot folder snapshot_download printed: the worker loads the model straight from it (no cache lookup, works offline)
+  if (o.hfDir) env.SLEEPMLX_MODEL_DIR = o.hfDir;
+  return env;
 }
 function workerCommand(o) { return { cmd: o.python, args: ['-m', 'sleepmlx.worker', '--profile', o.profile || C.SLEEP_PROFILE], env: workerEnv(o), cwd: o.sleepmlxParent }; }
 function convertCommand(o) { return { cmd: o.python, args: [o.convertScript, o.adapterDir, '--base', o.hfDir, '--outfile', o.outFile] }; }
@@ -32,7 +35,7 @@ function sleepmlxParent(resourcesPath, devRoot, exists) {
 }
 // may a sleep start now? (manual and scheduled both honour "only when plugged in")
 function mayStart(settings, onBattery) {
-  if (settings && settings.sleepOnlyPlugged !== false && onBattery) return { ok: false, error: 'The laptop is on battery. Plug it in first (sleep is slow and uses a lot of power), or turn off "Only sleep when plugged in" in Settings > Sleep.' };
+  if (settings && settings.sleepOnlyPlugged === true && onBattery) return { ok: false, error: 'The laptop is on battery. Plug it in first (sleep is slow and uses a lot of power), or turn off "Only sleep when plugged in" in Settings > Sleep.' };
   return { ok: true };
 }
 
@@ -92,8 +95,7 @@ class WinSleep extends Sleep {
     const outFile = path.join(this.home, 'chunk_out.json');
     try { fs.rmSync(outFile, { force: true }); } catch (e) { /* none */ }
     const st = this.installer.state();
-    const cmd = workerCommand({ python: this.python(), home: this.home, outFile, diaryDir: this.diaryDir, sleepmlxParent: this.parent, hfHome: path.join(this.installer.dir, 'hf'), budgetS: CHUNK_BUDGET_S, basePythonPath: '' });
-    void st;
+    const cmd = workerCommand({ python: this.python(), home: this.home, outFile, diaryDir: this.diaryDir, sleepmlxParent: this.parent, hfHome: path.join(this.installer.dir, 'hf'), hfDir: st.hfDir, budgetS: CHUNK_BUDGET_S, basePythonPath: '' });
     return new Promise((resolve) => {
       let c;
       try { c = spawn(cmd.cmd, cmd.args, { cwd: cmd.cwd, env: { ...process.env, ...cmd.env }, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] }); } catch (e) { return resolve({ error: String(e.message || e) }); }
@@ -111,7 +113,7 @@ class WinSleep extends Sleep {
 
   async _run() {
     try {
-      if (this.hooks.pauseModel) this.hooks.pauseModel();
+      if (this.hooks.pauseModel) await this.hooks.pauseModel();
       for (let i = 0; i < 200 && !this.wakeReq; i++) {
         const out = await this._chunk();
         this._event({ kind: 'chunk', quiz: out.quiz == null ? null : out.quiz, steps: out.steps || 0, interrupted: !!out.interrupted, message: out.message || '', error: out.error || '' });
@@ -132,7 +134,7 @@ class WinSleep extends Sleep {
     const adapterDir = path.join(this.home, 'adapter');
     if (!fs.existsSync(adapterDir) || !st.convert || !st.hfDir) return;
     // only when the adapter is newer than the GGUF we already have
-    try { if (fs.existsSync(this.adapterGguf) && fs.statSync(this.adapterGguf).mtimeMs >= fs.statSync(adapterDir).mtimeMs) return; } catch (e) { /* convert */ }
+    try { if (fs.existsSync(this.adapterGguf) && fs.statSync(this.adapterGguf).mtimeMs >= fs.statSync(path.join(adapterDir, 'adapter_model.safetensors')).mtimeMs) return; } catch (e) { /* convert */ }
     this.phase = 'converting';
     const next = path.join(this.home, 'adapter.next.gguf');
     const cmd = convertCommand({ python: this.python(), convertScript: st.convert, adapterDir, hfDir: st.hfDir, outFile: next });

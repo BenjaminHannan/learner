@@ -245,7 +245,7 @@ test('schedule and plugged-in logic: night window 01:00-06:00, idle, and never o
   assert.strictEqual(shouldAutoSleep({ ...base, onBattery: true, settings: { ...s, sleepOnlyPlugged: false } }).sleep, true);
   assert.strictEqual(shouldAutoSleep({ ...base, now: new Date(2026, 9, 28, 12, 0) }).sleep, false);
   assert.strictEqual(mayStart({ sleepOnlyPlugged: true }, true).ok, false); assert.match(mayStart({ sleepOnlyPlugged: true }, true).error, /Plug it in/);
-  assert.strictEqual(mayStart({ sleepOnlyPlugged: false }, true).ok, true); assert.strictEqual(mayStart({}, false).ok, true);
+  assert.strictEqual(mayStart({ sleepOnlyPlugged: false }, true).ok, true); assert.strictEqual(mayStart({}, false).ok, true); assert.strictEqual(mayStart({}, true).ok, true, 'the Mac default is off');
   assert.deepStrictEqual(Platform.defaultSleepWindow('win32'), ['01:00', '06:00']);
 });
 
@@ -300,4 +300,97 @@ test('platform: Windows defaults to the built-in model and gets the preset; Mac 
   assert.deepStrictEqual(Platform.presetsFor('win32').map((x) => x.label), ['Premonition gateway', 'llama.cpp server', 'Built-in (LFM3)']);
   assert.deepStrictEqual(Platform.presetsFor('darwin').map((x) => x.id), ['premonition', 'llamacpp']);
   assert.strictEqual(Platform.features('win32').builtin, true); assert.strictEqual(Platform.features('linux').builtin, false);
+});
+
+// ---- review fixes ------------------------------------------------------------------------------------------------------------
+const { tarExe } = require('../src/runtime/install');
+const { parseNetstat, parseTasklistImage, reclaimPort } = require('../src/runtime/llamaserver');
+const { Builtin } = require('../src/runtime/builtin');
+const { DEFAULT_SETTINGS } = require('../src/store');
+
+test('sleep worker loads the downloaded snapshot directly and the HF cache vars agree', () => {
+  const e = workerEnv({ python: 'p', home: 'h', outFile: 'o', diaryDir: 'd', sleepmlxParent: 'r', hfHome: 'C:\\R\\hf', hfDir: 'C:\\R\\hf\\models--x\\snapshots\\abc' });
+  assert.strictEqual(e.SLEEPMLX_MODEL_DIR, 'C:\\R\\hf\\models--x\\snapshots\\abc');
+  assert.strictEqual(e.HF_HUB_CACHE, 'C:\\R\\hf'); assert.strictEqual(e.HF_HOME, 'C:\\R\\hf'); assert.strictEqual(e.HF_HUB_OFFLINE, '1');
+  assert.strictEqual('SLEEPMLX_MODEL_DIR' in workerEnv({ python: 'p', home: 'h', outFile: 'o', diaryDir: 'd', sleepmlxParent: 'r', hfHome: 'x' }), false);
+});
+
+test('Windows extraction uses System32\\tar.exe, not whatever tar is on PATH', () => {
+  const real = process.env.SystemRoot; process.env.SystemRoot = 'C:\\WINDOWS';
+  try { assert.strictEqual(tarExe('win32'), path.join('C:\\WINDOWS', 'System32', 'tar.exe')); assert.strictEqual(tarExe('linux'), 'tar'); } finally { if (real === undefined) delete process.env.SystemRoot; else process.env.SystemRoot = real; }
+});
+
+test('Mac: "only when plugged in" is off by default (Windows only)', () => {
+  assert.strictEqual(DEFAULT_SETTINGS.sleepOnlyPlugged, process.platform === 'win32');
+  assert.strictEqual(shouldAutoSleep({ settings: { autoSleep: true, sleepFrom: '01:00', sleepTo: '06:00', sleepIdleMin: 1 }, now: new Date(2026, 9, 28, 2, 0), idleMs: 9e7, systemIdleMs: 9e7, available: true, onBattery: true }).sleep, true);
+});
+
+test('gateway: when the app disconnects mid-stream the upstream request is cancelled', async () => {
+  let upstreamClosed = false;
+  const up = http.createServer((req, res) => {
+    if (req.url === '/health') { res.writeHead(200); return res.end('{}'); }
+    req.resume(); res.writeHead(200, { 'content-type': 'text/event-stream' }); res.write('data: {"choices":[{"delta":{"content":"x"}}]}\n\n');
+    res.on('close', () => { upstreamClosed = true; }); // never ends by itself
+  });
+  const upPort = await listen(up);
+  const gw = createGateway({ upstream: 'http://127.0.0.1:' + upPort, diaryDir: tmp('gwa-') }); const port = await gw.listen(0);
+  try {
+    const ctl = new AbortController();
+    const r = await fetch('http://127.0.0.1:' + port + '/v1/chat/completions', { method: 'POST', body: JSON.stringify({ model: 'fast', messages: [{ role: 'user', content: 'hi' }], stream: true }), signal: ctl.signal });
+    await r.body.getReader().read();
+    ctl.abort();
+    for (let i = 0; i < 100 && !upstreamClosed; i++) await new Promise((x) => setTimeout(x, 20));
+    assert.strictEqual(upstreamClosed, true);
+  } finally { await gw.close(); await close(up); }
+});
+
+test('llama-server: two crashes after it was healthy switch to the CPU build; a launch that times out is killed (one server at a time)', async () => {
+  const kids = []; const exes = [];
+  const mk = () => { const c = fakeChild(); return c; };
+  const srv = new LlamaServer({ exe: 'vk.exe', model: 'm', flavor: 'vulkan', spawn: (exe) => { exes.push(exe); const c = mk(); kids.push(c); return c; }, fetch: async () => ({ ok: true }), pollMs: 5, fastRetry: true, reclaim: async () => 0, cpuFallback: async () => ({ exe: 'cpu.exe' }) });
+  await srv.start();
+  kids[0].emit('exit', 1); await new Promise((r) => setTimeout(r, 40));
+  kids[1].emit('exit', 1); await new Promise((r) => setTimeout(r, 60));
+  assert.deepStrictEqual(exes.slice(0, 3), ['vk.exe', 'vk.exe', 'cpu.exe']); assert.strictEqual(srv.o.flavor, 'cpu');
+  srv.stop();
+  let killed = 0;
+  const slow = new LlamaServer({ exe: 'x', model: 'm', spawn: () => { const c = fakeChild(); c.kill = () => { killed++; }; return c; }, fetch: async () => ({ ok: false }), pollMs: 5, startTimeoutMs: 30, reclaim: async () => 0 });
+  const r = await slow.start(); assert.strictEqual(r.ok, false); assert.ok(killed >= 1, 'the timed-out launch was killed');
+});
+
+test('orphaned llama-server on :18090 is found and killed, but only if the image is llama-server.exe', async () => {
+  const net = 'Active Connections\r\n  TCP    0.0.0.0:135    0.0.0.0:0    LISTENING    900\r\n  TCP    127.0.0.1:18090    0.0.0.0:0    LISTENING    4321\r\n  TCP    127.0.0.1:18090    127.0.0.1:50000    ESTABLISHED    4321\r\n';
+  assert.strictEqual(parseNetstat(net, 18090), 4321); assert.strictEqual(parseNetstat(net, 9999), 0);
+  assert.strictEqual(parseTasklistImage('"llama-server.exe","4321","Console","1","900,000 K"\r\n'), 'llama-server.exe');
+  const calls = [];
+  const ex = (image) => async (cmd, args) => { calls.push(cmd); return cmd === 'netstat' ? net : cmd === 'tasklist' ? '"' + image + '","4321"' : ''; };
+  assert.strictEqual(await reclaimPort(18090, ex('llama-server.exe')), 4321); assert.ok(calls.includes('taskkill'));
+  calls.length = 0;
+  assert.strictEqual(await reclaimPort(18090, ex('chrome.exe')), 0); assert.ok(!calls.includes('taskkill'));
+});
+
+test('Builtin pause/resume: no-ops when the preset is not in use, report ok from the real phase, never start while asleep', async () => {
+  let wanted = false; const stops = [];
+  const b = new Builtin({ root: tmp('bi-'), isWanted: () => wanted });
+  b.server = { stop: async () => { stops.push('stop'); }, start: async () => { b.st.phase = 'ready'; return { ok: true }; }, o: {} };
+  assert.deepStrictEqual(await b.pauseForSleep(), { ok: true, skipped: true }); assert.deepStrictEqual(stops, []);
+  assert.strictEqual((await b.resume('x')).skipped, true);
+  wanted = true; b.running = true;
+  await b.pauseForSleep(); assert.deepStrictEqual(stops, ['stop']); assert.strictEqual(b.asleep, true);
+  assert.strictEqual((await b.start()).phase, 'off', 'a download finishing during sleep cannot start the model');
+  const r = await b.resume(''); assert.strictEqual(r.ok, true); assert.strictEqual(b.asleep, false);
+  b.server = null; b.running = false; // no server object: resume goes through start() instead of crashing
+  b.start = async () => ({ phase: 'error', error: 'boom' });
+  assert.deepStrictEqual(await b.resume(''), { ok: false, error: 'boom' });
+});
+
+test('WinSleep converts only when adapter_model.safetensors is newer than the GGUF (not the folder mtime)', async () => {
+  const root = tmp('wf-'); const home = path.join(root, 'sleep'); const ad = path.join(home, 'adapter'); fs.mkdirSync(ad, { recursive: true });
+  const st = path.join(ad, 'adapter_model.safetensors'); fs.writeFileSync(st, 'w'); const g = path.join(home, 'adapter.gguf'); fs.writeFileSync(g, 'g');
+  const t0 = Date.now() / 1000;
+  fs.utimesSync(st, t0 - 100, t0 - 100); fs.utimesSync(g, t0 - 50, t0 - 50); fs.utimesSync(ad, t0, t0); // the folder is "new" but the weights are old
+  let ran = 0;
+  const ws = new WinSleep({ getSettings: () => ({}), root, installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) }, run: async (c, a) => { ran++; fs.writeFileSync(a[a.indexOf('--outfile') + 1], 'n'); return ''; }, hooks: {} });
+  await ws._convert(); assert.strictEqual(ran, 0);
+  fs.utimesSync(st, t0, t0); await ws._convert(); assert.strictEqual(ran, 1);
 });

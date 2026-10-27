@@ -44,16 +44,20 @@ async function downloadFile(o) {
     const total = len ? len + have : 0;
     let done = have;
     const out = fs.createWriteStream(part, { flags });
+    let outErr = null;
+    out.on('error', (e) => { outErr = e; });
     try {
       const reader = r.body.getReader();
       for (;;) {
         const { value, done: fin } = await reader.read();
         if (fin) break;
-        await new Promise((res, rej) => out.write(value, (e) => (e ? rej(e) : res())));
+        if (outErr) throw outErr;
+        await new Promise((res, rej) => { out.once('error', rej); out.write(value, (e) => (e ? rej(e) : res())); });
         done += value.length;
         if (o.onProgress) o.onProgress({ done, total });
       }
     } finally { await new Promise((res) => out.end(res)); }
+    if (outErr) throw outErr;
     if (total && size(part) < total) throw new Error('download cut short (' + size(part) + ' of ' + total + ' bytes); run it again to resume');
     break;
   }

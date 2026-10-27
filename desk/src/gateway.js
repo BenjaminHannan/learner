@@ -64,13 +64,14 @@ function createGateway(o) {
         let body; try { body = JSON.parse(raw); } catch (e) { res.writeHead(400, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ error: { message: 'bad JSON' } })); }
         const warm = req.headers['x-premonition-warm'] !== undefined;
         const ts = now();
-        const r = await f(upstream + '/v1/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(mapRequest(body, o.upstreamModel)) });
+        const ctl = new AbortController();
+        res.on('close', () => { if (!res.writableEnded) { try { ctl.abort(); } catch (e) { /* ignore */ } } }); // the app pressed Stop (or went away): stop the model too
+        const r = await f(upstream + '/v1/chat/completions', { signal: ctl.signal, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(mapRequest(body, o.upstreamModel)) });
         const ct = r.headers.get('content-type') || 'application/json';
         res.writeHead(r.status, { 'content-type': ct, 'cache-control': 'no-cache' });
         if (body.stream && r.body) {
           const sse = new SseText(); const dec = new TextDecoder();
           const reader = r.body.getReader();
-          req.on('close', () => { try { reader.cancel(); } catch (e) { /* ignore */ } });
           for (;;) { const { value, done } = await reader.read(); if (done) break; res.write(value); sse.push(dec.decode(value, { stream: true })); }
           res.end();
           if (r.ok && !warm) logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: sse.text }));

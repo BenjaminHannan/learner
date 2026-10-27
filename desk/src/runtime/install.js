@@ -21,9 +21,11 @@ function findFile(dir, name) {
   return hit;
 }
 // Windows 10+ ships bsdtar as tar.exe, which reads .zip and .tar.gz
+// the Windows system tar (bsdtar): a tar.exe from Git or MSYS earlier on PATH may not read zip files
+const tarExe = (platform) => ((platform || process.platform) === 'win32' ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'tar');
 const defaultExtract = (archive, dest) => new Promise((resolve, reject) => {
   fs.mkdirSync(dest, { recursive: true });
-  execFile('tar', ['-xf', archive, '-C', dest], { windowsHide: true }, (err, so, se) => (err ? reject(new Error('could not unpack ' + path.basename(archive) + ': ' + (se || err.message))) : resolve()));
+  execFile(tarExe(), ['-xf', archive, '-C', dest], { windowsHide: true }, (err, so, se) => (err ? reject(new Error('could not unpack ' + path.basename(archive) + ': ' + (se || err.message))) : resolve()));
 });
 
 class ChatInstaller {
@@ -72,4 +74,4 @@ class ChatInstaller {
   installed(flavor) { const s = this.state(); return !!(this.llamaExe(flavor || 'vulkan') && s.model && fs.existsSync(s.model.file)); }
 }
 
-module.exports = { ChatInstaller, findFile, defaultExtract };
+module.exports = { ChatInstaller, findFile, defaultExtract, tarExe };

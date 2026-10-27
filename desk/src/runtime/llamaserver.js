@@ -1,7 +1,7 @@
 'use strict';
 // llama-server supervisor: builds the command line, waits until /health says ok, restarts it after a crash (with a back-off)
 // and stops it when the app quits. spawn / fetch are injectable for tests.
-const { spawn: realSpawn } = require('child_process');
+const { spawn: realSpawn, execFile } = require('child_process');
 const C = require('./constants');
 
 // -np 1 matters: by default llama-server splits the context over several slots (4), which would leave 2048 tokens per chat.
@@ -11,6 +11,29 @@ function buildArgs(o) {
   if (o.lora) a.push('--lora', o.lora);
   if (o.threads) a.push('-t', String(o.threads));
   return a;
+}
+
+// ---- an orphaned llama-server from a crashed run may still hold the port (Windows) ----------------------------
+// `netstat -ano -p tcp` line: "  TCP    127.0.0.1:18090   0.0.0.0:0   LISTENING   4321"
+function parseNetstat(text, port) {
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const m = /^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$/i.exec(line);
+    if (m && Number(m[1]) === Number(port)) return Number(m[2]);
+  }
+  return 0;
+}
+// `tasklist /FI "PID eq N" /FO CSV /NH` -> "llama-server.exe","4321",...
+function parseTasklistImage(csv) { const m = /^"([^"]+)"/.exec(String(csv || '').trim()); return m ? m[1] : ''; }
+const run = (cmd, args) => new Promise((resolve) => execFile(cmd, args, { windowsHide: true, timeout: 8000 }, (e, so) => resolve(e ? '' : String(so))));
+// Kills the listener on `port` only when it is a llama-server.exe. Returns the pid killed or 0.
+async function reclaimPort(port, exec) {
+  exec = exec || run;
+  const pid = parseNetstat(await exec('netstat', ['-ano', '-p', 'tcp']), port);
+  if (!pid) return 0;
+  const image = parseTasklistImage(await exec('tasklist', ['/FI', 'PID eq ' + pid, '/FO', 'CSV', '/NH']));
+  if (image.toLowerCase() !== 'llama-server.exe') return 0;
+  await exec('taskkill', ['/PID', String(pid), '/F']);
+  return pid;
 }
 
 class LlamaServer {
@@ -23,6 +46,7 @@ class LlamaServer {
     this.healthy = false;
     this.crashes = [];
     this.timer = null;
+    this.postHealthyCrashes = 0;
     this.gen = 0;
     this.state = 'stopped';
   }
@@ -53,7 +77,7 @@ class LlamaServer {
         else if (this.wanted && gen === this.gen) this._crashed(code, was);
       });
       const poll = setInterval(async () => { if (await this._health()) { this.healthy = true; fin({ ok: true }); } }, this.o.pollMs || 500);
-      const limit = setTimeout(() => fin({ ok: false, error: 'llama-server did not become ready in time' }), this.o.startTimeoutMs || 180000);
+      const limit = setTimeout(() => { if (!settled) { this._kill(); fin({ ok: false, error: 'llama-server did not become ready in time' }); } }, this.o.startTimeoutMs || 180000); // never leave a half-started server behind
     });
   }
   // Start (or restart with new options). Resolves {ok, error?}.
@@ -61,12 +85,19 @@ class LlamaServer {
     if (opts && 'lora' in opts) this.lora = opts.lora;
     this.wanted = true;
     this._kill();
+    if ((this.o.platform || process.platform) === 'win32' || this.o.reclaim) { try { await (this.o.reclaim || reclaimPort)(this.o.port || C.SERVER_PORT, this.o.exec); } catch (e) { /* best effort */ } }
+    this.postHealthyCrashes = 0;
     this._set('starting');
     const r = await this._launch();
     if (r.ok) this._set('ready'); else { this._kill(); this._set('error', { error: r.error, exitedEarly: r.exitedEarly }); }
     return r;
   }
-  _crashed(code) {
+  async _crashed(code, wasHealthy) {
+    if (wasHealthy) this.postHealthyCrashes++;
+    // the graphics build keeps dying after it was running: switch to the CPU build
+    if (this.postHealthyCrashes >= 2 && this.o.flavor !== 'cpu' && this.o.cpuFallback) {
+      try { const r = await this.o.cpuFallback(); if (r && r.exe) { this.o.exe = r.exe; this.o.cwd = r.cwd || this.o.cwd; this.o.flavor = 'cpu'; this.postHealthyCrashes = 0; this._set('restarting', { code, flavor: 'cpu' }); } } catch (e) { /* keep trying vulkan */ }
+    }
     const now = Date.now();
     this.crashes = this.crashes.filter((t) => now - t < 300000); this.crashes.push(now);
     if (this.crashes.length > 5) { this._set('error', { error: 'llama-server keeps crashing (exit ' + code + ')' }); return; }
@@ -75,13 +106,21 @@ class LlamaServer {
     clearTimeout(this.timer);
     this.timer = setTimeout(async () => {
       if (!this.wanted) return;
+      this._kill(); this.wanted = true; // exactly one server at a time
       const r = await this._launch();
       if (r.ok) this._set('ready'); else if (this.wanted) this._crashed(-1);
     }, delay);
     if (this.timer.unref) this.timer.unref();
   }
-  _kill() { clearTimeout(this.timer); const c = this.child; this.child = null; this.healthy = false; this.gen++; if (c) { try { c.kill(); } catch (e) { /* gone */ } } }
-  stop() { this.wanted = false; this._kill(); this._set('stopped'); }
+  _kill() { clearTimeout(this.timer); const c = this.child; this.child = null; this.healthy = false; this.gen++; if (c) { try { c.kill(); } catch (e) { /* gone */ } } return c; }
+  // resolves once the process has really exited (the RAM is free), or after a few seconds
+  stop() {
+    this.wanted = false;
+    const c = this._kill();
+    this._set('stopped');
+    if (!c || c.exitCode !== undefined && c.exitCode !== null) return Promise.resolve();
+    return new Promise((resolve) => { const t = setTimeout(resolve, this.o.stopWaitMs || 8000); if (t.unref) t.unref(); c.once('exit', () => { clearTimeout(t); resolve(); }); });
+  }
 }
 
-module.exports = { LlamaServer, buildArgs };
+module.exports = { LlamaServer, buildArgs, parseNetstat, parseTasklistImage, reclaimPort };

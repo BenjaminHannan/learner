@@ -15,7 +15,7 @@ class Builtin {
     this.diaryDir = path.join(o.root, 'diary', 'raw');
     this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', flavor: 'vulkan', lora: '' };
     this.installer = new ChatInstaller({ dir: this.dir, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
-    this.server = null; this.gw = null; this.running = false; this.abort = null; this.cache = {};
+    this.server = null; this.gw = null; this.running = false; this.asleep = false; this.abort = null; this.cache = {};
   }
   state() { return { ...this.st }; }
   _set(patch) { this.st = { ...this.st, ...patch }; if (this.o.onState) { try { this.o.onState(this.state()); } catch (e) { /* ignore */ } } }
@@ -33,6 +33,8 @@ class Builtin {
       this.server = (this.o.makeServer || ((x) => new LlamaServer(x)))({
         exe: exe.exe, model: model.file, flavor, lora, cwd: path.dirname(exe.exe), spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
         port: C.SERVER_PORT, ctx: C.CTX,
+        // the graphics build died twice after running: fetch (if needed) and switch to the CPU build
+        cpuFallback: async () => { const e = this.installer.llamaExe('cpu') || await this.installer.ensureLlama('cpu', this.abort && this.abort.signal); return { exe: e.exe, cwd: path.dirname(e.exe) }; },
         onState: (s, info) => { if (s === 'ready') this._set({ phase: 'ready', label: 'Ready', pct: 100, error: '' }); else if (s === 'restarting') this._set({ phase: 'starting', label: 'Restarting the model' }); else if (s === 'error' && this.running) this._set({ phase: 'error', error: info.error || 'the model stopped' }); }
       });
     }
@@ -42,6 +44,7 @@ class Builtin {
 
   // Download if needed, start llama-server (Vulkan first, the CPU build if that will not start) and the gateway.
   async start(opts) {
+    if (this.asleep) return this.state();          // asleep: nothing may start the model (a download finishing, a settings change)
     if (this.running) return this.state();
     this.running = true; this.abort = new AbortController();
     try {
@@ -63,24 +66,33 @@ class Builtin {
     }
     return this.state();
   }
-  async retry() { this.running = false; this._set({ phase: 'off', error: '' }); return this.start(); }
+  async retry() { if (this.asleep) return this.state(); this.running = false; this._set({ phase: 'off', error: '' }); return this.start(); }
 
-  // Sleep needs the RAM: stop the model while asleep, bring it back (optionally with the new adapter) on wake.
-  pauseForSleep() { if (this.server) this.server.stop(); this._set({ phase: 'off', label: 'Asleep', pct: 0 }); }
+  // Sleep needs the RAM: stop the model while asleep (resolves when the process has really exited), bring it back (optionally
+  // with the new adapter) on wake. Both do nothing when this preset is not the one in use (the user chose another server).
+  async pauseForSleep() {
+    if (this.o.isWanted && !this.o.isWanted()) return { ok: true, skipped: true };
+    this.asleep = true;
+    if (this.server) await this.server.stop();
+    this._set({ phase: 'off', label: 'Asleep', pct: 0 });
+    return { ok: true };
+  }
   async resume(lora) {
-    if (!this.running) return this.start({ lora });
+    if (this.o.isWanted && !this.o.isWanted()) { this.asleep = false; return { ok: true, skipped: true }; }
+    this.asleep = false;
+    if (!this.running || !this.server) { this.running = false; const st = await this.start({ lora }); return { ok: st.phase === 'ready', error: st.error }; }
     this._set({ phase: 'starting', label: 'Starting the model' });
     const r = await this.server.start({ lora: lora || '' });
     if (!r.ok && lora) { // the new adapter did not load: back to the plain model
       this._set({ error: '' }); const r2 = await this.server.start({ lora: '' });
-      return { ...r2, loraFailed: true, error: r.error };
+      return { ok: this.st.phase === 'ready', loraFailed: true, error: r.error };
     }
-    return r;
+    return { ok: this.st.phase === 'ready', error: r.ok ? '' : r.error };
   }
   async stop() {
     this.running = false;
     if (this.abort) { try { this.abort.abort(); } catch (e) { /* ignore */ } }
-    if (this.server) this.server.stop();
+    if (this.server) await this.server.stop();
     if (this.gw) { await this.gw.close(); this.gw = null; }
     this._set({ phase: 'off' });
   }

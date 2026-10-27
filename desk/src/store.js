@@ -44,7 +44,7 @@ const DEFAULT_SETTINGS = {
   autoSleep: false,       // sleep by itself at night when idle
   sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 01:00 on Windows
   sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 06:00 on Windows
-  sleepOnlyPlugged: true, // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
+  sleepOnlyPlugged: process.platform === 'win32', // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
   sleepIdleMin: 30,       // minutes without use before auto-sleep
   wakeAt: false,          // wake at the end of the window (only for a sleep Desk started by itself)
   // Startup

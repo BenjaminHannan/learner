@@ -231,7 +231,7 @@ function shouldAutoSleep(i) {
   if (i.lastKey === key) return no('already handled tonight');
   if (i.runActive) return no('a run is active');
   if (i.gatewayBusy) return no('the gateway is busy');
-  if (s.sleepOnlyPlugged !== false && i.onBattery) return no('on battery');
+  if (s.sleepOnlyPlugged === true && i.onBattery) return no('on battery');
   if (i.windowFocused) return no('Desk is in front');
   const need = Math.max(1, Number(s.sleepIdleMin) || 30) * 60000;
   // Desk's own idle time AND the Mac's (keyboard, mouse in any app): Ben working in another app is not idle
