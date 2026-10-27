@@ -385,7 +385,7 @@ class Mac:
                 if rec.get("harness") == "opencode":  # lesson segments as K2 saw them, then drop the 13 KB tools copy
                     from .oc_lessons import oc_segments
                     try:
-                        rec["segs"] = oc_segments(rec, self.tok, self.a.chat_template, bos=self.bos)
+                        rec["segs"] = oc_segments(rec, self.tok, self.a.chat_template, bos=self.bos, train_bare_answers=True)  # stored as served; lessons.target_of applies the bare-answer rule
                     except Exception as e:  # noqa: BLE001
                         rec["segs_error"] = repr(e)
                     rec.pop("proxy_tools", None)
@@ -441,6 +441,7 @@ class Mac:
         for k in range(1, n + 1):
             store += jl(d / f"day{k}.jsonl")
         night = self.a.night
+        L.TRAIN_BARE_ANSWERS = getattr(self.a, "train_bare_answers", False)
         if getattr(self.a, "harness", "native") == "opencode":
             night = dict(night, train_max_tokens=max(night["train_max_tokens"], self.a.oc_train_tokens))  # OpenCode prompts alone are ~4k tokens
         dd = getattr(self, "rg_mode", False)  # Practice-2: one win per solved puzzle; C gets exactly P's item counts
@@ -606,6 +607,7 @@ def parse_args(argv=None):
     ap.add_argument("--harness", choices=["native", "opencode"], default="native", help="opencode = the agent OpenBot runs (PREREG-2 addendum 1)")
     ap.add_argument("--chat-template", default=None, help="opencode: K2 template file for mlx_lm.server and lessons (default: oc_lessons search path)")
     ap.add_argument("--oc-timeout", type=float, default=600, help="opencode: seconds per try")
+    ap.add_argument("--train-bare-answers", action="store_true", help="opencode: also train the bare final <answer> turns (off since PREREG-2 addendum 2)")
     ap.add_argument("--oc-train-tokens", type=int, default=6144, help="opencode: lesson length cap for the nights")
     ap.add_argument("--oc-steps", type=int, default=8, help="opencode: model calls per try")
     ap.add_argument("--practice-n", type=int, default=120)

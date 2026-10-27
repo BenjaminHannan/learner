@@ -183,7 +183,7 @@ def test_oc_segments_chain_and_lessons():
     assert [t for _, t in segs] == [False, True] and segs[1][0].startswith(c1)
     assert segs[0][0] == render_prompt(sys_u, [], None, None)
     r = {"id": "a", "try": 0, "correct": True, "messages": sys_u, "segs": segs}
-    assert L.segments(L.target_of(r)) == segs
+    assert L.segments(L.target_of(r)) == [(segs[0][0], False), (segs[1][0], False)]  # a bare <answer> turn is context only (addendum 2)
     assert L.target_of({"messages": sys_u}) is sys_u
 
 
@@ -213,3 +213,14 @@ def test_run_tries_redoes_errored_tries(tmp_path):
     o.run_tries(f, [{"id": "a"}, {"id": "b"}], 1, None, 1, "t")
     recs = M.jl(f)
     assert sorted(r["id"] for r in recs) == ["a", "b"] and all(r["end"] == "answer" for r in recs) and Srv.stops == 1
+
+
+def test_bare_answer_turns_are_not_trained():
+    from practice import lessons as L
+    r = {"messages": [], "segs": [("P1", False), ("Let me check.<ifm|tool_calls>x</ifm|tool_calls><|ifm|im_end|>", True), ("P2", False), ("<answer>A is a knight</answer><|ifm|im_end|>", True)]}
+    assert [tr for _, tr in L.segments(L.target_of(r))] == [False, True, False, False]
+    L.TRAIN_BARE_ANSWERS = True
+    try:
+        assert [tr for _, tr in L.segments(L.target_of(r))] == [False, True, False, True]
+    finally:
+        L.TRAIN_BARE_ANSWERS = False

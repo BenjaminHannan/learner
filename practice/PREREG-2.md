@@ -33,3 +33,10 @@ Rule: keep the 2 skills whose A0 is closest to 30%, among those between 10% and 
 
 ## Addendum 1 (Oct 26 17:55Z, before any run): run inside Ben's OpenBot harness
 Ben (17:49Z): "Put it in the open bot harness on my Mac." OpenBot drives the OpenCode agent, so practice and test tries run headless through `opencode run`: the same agent, with a short practice-agent prompt and only the bash/read/write/webfetch tools. K2 runs behind practice/k2_proxy.py, which turns K2's native tool-call text into OpenAI tool calls (mlx_lm 0.32.2 has no K2 parser). Lessons are rendered from the proxy log, exactly as served. All arms, A0 included, use this same harness, so the pass marks are unchanged. If the OpenCode prompt makes K2 fail stage 0 (every candidate under 10%), the run falls back to the Practice-1 harness and the results say so.
+
+## Addendum 2 (Oct 27 ~03:40Z, after the M1 pilot, before pilot 2): bare final answers are not lessons
+Pilot (knights_knaves, M1, opencode harness, 60 puzzles x 2 tries, 1 night, 40-puzzle test): A0 42.5% (17/40) -> P1 32.5% (13/40); tool calls per try 1.15 -> 0.125.
+Ruled out (shown): the shortest-win pick (SFT wins used 1.39 tool calls, more than failures) and memorising (each of the 50 items was trained once; SFT loss 0.46 -> 0.40; the logged 0.0 was 4 empty steps).
+Suggested cause: 25 trained segments (SFT + chosen) are a bare `<answer>...</answer>` turn right after the assistant header, so K2 learned "an assistant turn starts with <answer>"; first-turn answer-first went 13/40 (A0) -> 31/40 (P1).
+One change: a completion that is only `<answer>...</answer>` stays in the lesson as context but gets no loss (`lessons.TRAIN_BARE_ANSWERS = False`; `--train-bare-answers` restores the old rule). Also fixed: no empty steps (steps = min(steps, max(SFT items, pairs))).
+Pilot 2: the same day-1 tries, a new night with this rule, the same 40-puzzle test. Pass marks (fixed now): first-turn answer-first <= 20/40, tool calls per try >= 0.58 (half of A0's), and accuracy >= 37.5% (A0 - 5). Wrong if: tool calls per try < 0.3 again (then the bare answers are not the cause).

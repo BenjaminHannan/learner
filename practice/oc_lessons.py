@@ -6,6 +6,7 @@ So training on a pair trains on exactly what K2 saw and said. OpenCode prompts a
 2048-token lesson cap: use `lengths` to see how long, the cap is not changed here.
 """
 import json
+import re
 from pathlib import Path
 
 from .k2_proxy import STOP, map_messages, fix_tools
@@ -84,7 +85,14 @@ def lengths(rec, tokenizer, template_path=None, cap=2048, tools_by_hash=None):
     return rows
 
 
-def oc_segments(rec, tokenizer=None, template_path=None, tools_by_hash=None, bos=""):
+_BARE_ANSWER = re.compile(r"\s*<answer>.*?</answer>\s*(?:<\|ifm\|im_end\|>)?\s*\Z", re.S)
+
+
+def is_bare_answer(completion):
+    return bool(_BARE_ANSWER.match(completion))
+
+
+def oc_segments(rec, tokenizer=None, template_path=None, tools_by_hash=None, bos="", train_bare_answers=True):
     """-> [(text, trained?)] for one OpenCode try, the lesson form of lessons.segments. One sequence when each call's prompt extends the previous prompt +
     completion (the template re-renders history the way K2 wrote it); otherwise only the last call (its prompt untrained, its completion trained).
     The rendered prompts start with the template's bos_token, so it is removed here and `bos` is put in front (as lessons.segments does)."""
@@ -97,7 +105,7 @@ def oc_segments(rec, tokenizer=None, template_path=None, tools_by_hash=None, bos
     for p, c in calls:
         if not p.startswith(seen):
             p, c = calls[-1]
-            return ([(bos, False)] if bos else []) + [(p, False), (c, True)]
-        segs += [(p[len(seen):], False), (c, True)]
+            return ([(bos, False)] if bos else []) + [(p, False), (c, train_bare_answers or not is_bare_answer(c))]
+        segs += [(p[len(seen):], False), (c, train_bare_answers or not is_bare_answer(c))]  # PREREG-2 addendum 2: a bare final <answer> turn is context, not a lesson
         seen = p + c
     return ([(bos, False)] if bos else []) + [s for s in segs if s[0]]

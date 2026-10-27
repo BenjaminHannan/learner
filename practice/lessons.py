@@ -24,8 +24,14 @@ def segments(messages, bos=""):
     return segs
 
 
+TRAIN_BARE_ANSWERS = False  # PREREG-2 addendum 2: pilot P1 learned "an assistant turn starts with <answer>" from the bare final turns (first-turn answer-first 13/40 -> 31/40)
+
+
 def target_of(r):
-    return {"segs": r["segs"]} if r.get("segs") else r["messages"]
+    if not r.get("segs"):
+        return r["messages"]
+    from .oc_lessons import is_bare_answer
+    return {"segs": [(t, bool(tr) and (TRAIN_BARE_ANSWERS or not is_bare_answer(t))) for t, tr in r["segs"]]}
 
 
 def transcript_len(tok, messages):
