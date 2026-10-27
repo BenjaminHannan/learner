@@ -131,3 +131,7 @@ count). This tests that lead directly, with a matched control and with halting i
   (arm a's reverse-order rerun moved 0.04 points).
 - Seeds: with seeds 0-2 present, the 3-seed means decide (as in P1/P2b), so aplong and tc must run at the same seeds as br.
   The S(r8) >= S(r4) - 1.0 condition also counts toward the "within 1 point" seed rule.
+- Fresh rows for final claims (fixed 2026-10-27 06:40Z, before any br result): validation shards 4-11 (visits 1,000-2,999,
+  same v1 generator and seed), built by backbone/think/build_fresh.py: 17,481 questions, 2,934 at depth 4-6, fresh.jsonl
+  sha256 ffc2e0e8f67927534385b327519bccfb8d9f270255abfed75d5d5f2c4853b07d. No screen has read them. They are scored only
+  for an arm that already passed on validation (br at r4 with its halting rule, and aplong), once each, with the same marks.
