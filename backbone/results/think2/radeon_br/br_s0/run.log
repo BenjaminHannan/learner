@@ -1,0 +1,22 @@
+== think run_box 2026-10-27T08:19:05Z jobs=br:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- br seed 0 08:19:05
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 159/320 [00:00<00:00, 1582.82it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2319.49it/s]
+[lora] trainable params 10,822,656
+[loop] arm br: br schedule mean 2.80 loops, compute ratio 1.300; this run trains 1254 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+/home/timot/rvenv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py:170: UserWarning: Mem Efficient attention on Current AMD GPU is still experimental. Enable it with TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1. (Triggered internally at /pytorch/aten/src/ATen/native/transformers/hip/sdp_utils.cpp:360.)
+  attn_output = torch.nn.functional.scaled_dot_product_attention(
+[train] step 50/1254 loss 0.1397 684s
+[train] step 100/1254 loss 0.1827 1370s
+[train] step 150/1254 loss 0.2881 2115s
+[train] step 200/1254 loss 0.2964 2882s
+[train] step 250/1254 loss 0.1785 3596s
+[train] step 300/1254 loss 0.2031 4336s
+[train] step 350/1254 loss 0.2055 5071s
+[train] step 400/1254 loss 0.2783 5868s
+[train] step 450/1254 loss 0.1858 6673s
+[train] step 500/1254 loss 0.2449 7464s
+[train] step 550/1254 loss 0.1431 8278s
+[train] step 600/1254 loss 0.1933 9115s
+[train] step 650/1254 loss 0.2176 9948s
+[train] step 700/1254 loss 0.1545 10831s

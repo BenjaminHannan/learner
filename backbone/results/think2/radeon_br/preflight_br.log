@@ -1,0 +1,23 @@
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 101/320 [00:00<00:00, 1004.31it/s]Loading weights:  67%|██████▋   | 213/320 [00:00<00:00, 1070.65it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 1564.59it/s]
+[lora] trainable params 10,822,656
+[loop] arm br: br schedule mean 6.00 loops, compute ratio 1.833; this run trains 20 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+/home/timot/rvenv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py:170: UserWarning: Mem Efficient attention on Current AMD GPU is still experimental. Enable it with TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1. (Triggered internally at /pytorch/aten/src/ATen/native/transformers/hip/sdp_utils.cpp:360.)
+  attn_output = torch.nn.functional.scaled_dot_product_attention(
+[train] step 20/20 loss 0.3706 580s
+/home/timot/rvenv/lib/python3.12/site-packages/peft/utils/save_and_load.py:313: UserWarning: Could not find a config file in Qwen/Qwen3.5-0.8B - will assume that the vocabulary was not modified.
+  warnings.warn(
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[halt] br answer-stable halting: 68.75% at mean 2.19 loops; Spearman(depth, loops) -0.0497328000436399
+[result] br s0 validation r1 acc 68.75 (n=16)
+[result] br s0 validation r2 acc 68.75 (n=16)
+[result] br s0 validation r3 acc 68.75 (n=16)
+[result] br s0 validation r4 acc 62.50 (n=16)
+[result] br s0 validation r6 acc 68.75 (n=16)
+[result] br s0 validation r8 acc 37.50 (n=16)
+[result] br s0 validation main acc 62.50 (n=16)
+[result] br s0 dev r4 acc 75.00 (n=16)
+[result] br s0 dev main acc 75.00 (n=16)
+[done] wrote /home/timot/think2r/out/preflight_br/br_s0/result_br_s0.json
+[preflight] br ok: {'peak_gpu_mem_gb': 7.348740577697754, 'seconds': 580.133273601532, 'first_step_grad_tensors': {None: 372}, 'final_loss': 0.4094771759610781}
+PREFLIGHT OK: bf16=True, peak GPU memory 7.35 GB (br 7.348740577697754)
