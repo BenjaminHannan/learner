@@ -875,6 +875,9 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
 - **Shown (addendum 14 probe, Week-1, one night, base model):** of 537 samples, 72 were kept, 244 dropped as bad, 210 unverified and
   2 failed to parse. The rejected examples show a 20-token verifier cut before the answer, pairs made of one fact extracted twice,
   and questions followed by more thinking on the same line.
+- **Shown (B's eligible items at week end, rebuilt offline with REM's pairing rule):** 186 pairs, of which 42 have far ends that
+  contain one another (one fact extracted twice). The other 144 pairs include a pair for 77 of the 78 two-hop tests, so dropping the
+  42 removes no test chain. 186 pairs make 372 units against a cap of 240 tried per cycle; the 144 make 288.
 - **Next:** addendum 18 (sealed 85a786fd95) fixes the writer with four switches: the base model writes, distinct pairs only, the
   question is cut at its first "?", and the verifier gets 96 tokens. A one-hour generation-only pre-check on Week-1 decides whether the
   full arm runs; its Go mark is fixed in the addendum. Code: the switches default to today's behaviour. A CPU smoke run with them off
