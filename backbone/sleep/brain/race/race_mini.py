@@ -14,6 +14,7 @@ ARC-Easy 500 at the end (base ARC-Easy 500 once, cached next to --out), mean KL 
 """
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -93,6 +94,8 @@ def main():
     ap.add_argument("--model", default=K2)
     ap.add_argument("--revision", default=K2_REV)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--mem-cap-gb", type=float, default=float(os.environ.get("SLEEPB_CUDA_CAP_GIB") or 0) or None,
+                    help="cuda: cap GPU memory (sleepb.mem_cap; default $SLEEPB_CUDA_CAP_GIB). Under WSL an uncapped run spills into system memory and crawls instead of failing")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--smoke-k2", action="store_true", help="with --smoke: a tiny random K2 (real tokenizer and chat template) instead of the tiny Qwen")
     a = ap.parse_args()
@@ -119,6 +122,7 @@ def main():
     torch.manual_seed(a.seed)
     device = torch.device("cuda" if torch.cuda.is_available() and not a.smoke else "cpu")
     dtype = {"auto": torch.bfloat16, "bf16": torch.bfloat16, "fp16": torch.float16}[a.dtype] if device.type == "cuda" else torch.float32
+    sb.mem_cap(a, device, log)
     if a.dtype == "fp16" and device.type == "cuda":
         sb.LOSS_SCALE[0] = 128.0
     la = Namespace(model=a.model, revision=a.revision, smoke=a.smoke, q4_base=a.base == "q4", q4_packed=a.base == "q4" and not a.smoke, q4_group=64, q4_bits=4,
