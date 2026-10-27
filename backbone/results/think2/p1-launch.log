@@ -1,0 +1,104 @@
+2026-10-27T05:34:27Z armed pid 1253, waiting for fresh pull3/DONE
+2026-10-27T06:10:27Z armed pid 1598, waiting for fresh pull3/DONE
+2026-10-27T06:16:26Z seg1 armed pid 1758, waiting for /mnt/c/Users/benja/pc-jobs/sleepb-pc/pull3/DONE newer than 2026-10-27T05:01:00Z
+2026-10-27T06:19:52Z seg2 armed pid 1792, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-P1 newer than 2026-10-27T00:00:00Z
+2026-10-27T06:19:56Z seg3 armed pid 1805, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-P2A newer than 2026-10-27T00:00:00Z
+2026-10-27T06:20:00Z seg4 armed pid 1817, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-P2B newer than 2026-10-27T00:00:00Z
+2026-10-27T06:40:30Z seg1 armed pid 2175, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-BR newer than 2026-10-27T05:01:00Z
+2026-10-27T06:55:37Z seg1 armed pid 3010, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-BR newer than 2026-10-27T05:01:00Z
+2026-10-27T10:07:43Z seg1 trigger seen: 0 2026-10-27T10:07:43Z
+2026-10-27T10:07:43Z seg1 go: preflight br -> aplong -> br, ~7.5 h
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 83/320 [00:00<00:00, 824.62it/s]Loading weights:  60%|██████    | 192/320 [00:00<00:00, 974.60it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 1490.38it/s]
+[lora] trainable params 10,822,656
+[loop] arm br: br schedule mean 6.00 loops, compute ratio 1.833; this run trains 20 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[train] step 20/20 loss 0.3671 153s
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[halt] br answer-stable halting: 68.75% at mean 2.19 loops; Spearman(depth, loops) -0.0497328000436399
+[result] br s0 validation r1 acc 68.75 (n=16)
+[result] br s0 validation r2 acc 68.75 (n=16)
+[result] br s0 validation r3 acc 68.75 (n=16)
+[result] br s0 validation r4 acc 62.50 (n=16)
+[result] br s0 validation r6 acc 62.50 (n=16)
+[result] br s0 validation r8 acc 43.75 (n=16)
+[result] br s0 validation main acc 62.50 (n=16)
+[result] br s0 dev r4 acc 75.00 (n=16)
+[result] br s0 dev main acc 75.00 (n=16)
+[done] wrote /home/benja/think2/out_p/preflight_br/br_s0/result_br_s0.json
+[preflight] br ok: {'peak_gpu_mem_gb': 4.580122947692871, 'seconds': 152.57749462127686, 'first_step_grad_tensors': {None: 372}, 'final_loss': 0.40922746691905276}
+PREFLIGHT OK: bf16=True, peak GPU memory 4.58 GB (br 4.580122947692871)
+[W1027 06:10:59.714607981 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+[W1027 06:11:01.233332959 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+== think run_box 2026-10-27T10:11:01Z jobs=aplong:0,br:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- aplong seed 0 10:11:01
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  60%|█████▉    | 191/320 [00:00<00:00, 1907.67it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3013.97it/s]
+[lora] trainable params 10,822,656
+[loop] arm aplong: br schedule mean 2.80 loops, compute ratio 1.300; this run trains 1630 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[train] step 50/1630 loss 0.1303 207s
+[train] step 100/1630 loss 0.2041 405s
+[train] step 150/1630 loss 0.2352 616s
+[train] step 200/1630 loss 0.2258 826s
+[train] step 250/1630 loss 0.2067 1031s
+[train] step 300/1630 loss 0.1994 1236s
+[train] step 350/1630 loss 0.2290 1440s
+[train] step 400/1630 loss 0.2321 1644s
+[train] step 450/1630 loss 0.1996 1850s
+[train] step 500/1630 loss 0.1708 2051s
+[train] step 550/1630 loss 0.1817 2254s
+[train] step 600/1630 loss 0.2385 2460s
+[train] step 650/1630 loss 0.1710 2664s
+[train] step 700/1630 loss 0.1797 2876s
+[train] step 750/1630 loss 0.1491 3078s
+[train] step 800/1630 loss 0.2019 3286s
+[train] step 850/1630 loss 0.1694 3493s
+2026-10-27T11:10:05Z seg4 re-armed (v8 variant) pid 9165, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-P2B newer than 2026-10-27T00:00:00Z
+[train] step 900/1630 loss 0.1100 3701s
+[train] step 950/1630 loss 0.1360 3909s
+[train] step 1000/1630 loss 0.1190 4116s
+[train] step 1050/1630 loss 0.1056 4321s
+[train] step 1100/1630 loss 0.0988 4530s
+[train] step 1150/1630 loss 0.1127 4735s
+[train] step 1200/1630 loss 0.0708 4937s
+[train] step 1250/1630 loss 0.0738 5149s
+[train] step 1300/1630 loss 0.0907 5355s
+[train] step 1350/1630 loss 0.1048 5562s
+[train] step 1400/1630 loss 0.0986 5769s
+[train] step 1450/1630 loss 0.1267 5977s
+[train] step 1500/1630 loss 0.0810 6186s
+[train] step 1550/1630 loss 0.0725 6392s
+[train] step 1600/1630 loss 0.1018 6599s
+[train] step 1630/1630 loss 0.1141 6725s
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[eval dev main] 390/4000 51s
+[eval dev main] 881/4000 105s
+[eval dev main] 1509/4000 160s
+[eval dev main] 2143/4000 213s
+[eval dev main] 2568/4000 265s
+[eval dev main] 3109/4000 320s
+[eval dev main] 3823/4000 375s
+[eval validation main] 369/8675 56s
+[eval validation main] 832/8675 112s
+[eval validation main] 1417/8675 171s
+[eval validation main] 2080/8675 230s
+[eval validation main] 2431/8675 289s
+[eval validation main] 2808/8675 344s
+[eval validation main] 3209/8675 400s
+[eval validation main] 3637/8675 457s
+[eval validation main] 4097/8675 517s
+[eval validation main] 4594/8675 575s
+[eval validation main] 5126/8675 632s
+[eval validation main] 5695/8675 693s
+[eval validation main] 6310/8675 755s
+[eval validation main] 6982/8675 816s
+[eval validation main] 7745/8675 877s
+[eval validation main] 8675/8675 939s
+[result] aplong s0 validation main acc 71.97 (n=8675)
+[result] aplong s0 dev main acc 88.17 (n=4000)
+[done] wrote /home/benja/think2/out_p/think/aplong_s0/result_aplong_s0.json
+[W1027 08:25:33.772287429 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-- br seed 0 12:25:34
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  59%|█████▉    | 190/320 [00:00<00:00, 1898.00it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2827.70it/s]
+[lora] trainable params 10,822,656
+[loop] arm br: br schedule mean 2.80 loops, compute ratio 1.300; this run trains 1254 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.

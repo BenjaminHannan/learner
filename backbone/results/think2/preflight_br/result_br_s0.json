@@ -1,0 +1,295 @@
+{
+ "arm": "br",
+ "seed": 0,
+ "model": "Qwen/Qwen3.5-0.8B",
+ "smoke": false,
+ "steps_stage1": 418,
+ "steps_stage2": 20,
+ "k_slots": 0,
+ "alpha_init": 0.0,
+ "params_trainable": 10822656,
+ "train": {
+  "loss_curve": [
+   [
+    10,
+    0.9321970291800697
+   ],
+   [
+    20,
+    0.36714800005454695
+   ]
+  ],
+  "seconds": 152.57749462127686,
+  "gate_log": [],
+  "dev_log": [],
+  "step_losses": [
+   0.9464667588472366,
+   1.0621546633103314,
+   1.4735259656552915,
+   0.8598460931044358,
+   1.1131266376428437,
+   0.8146130514144897,
+   0.6766048184147587,
+   0.8844276124780829,
+   0.6847376823425293,
+   0.8064670085906982,
+   0.5304191918440269,
+   0.36008022142493207,
+   0.4285211184445549,
+   0.6079880661434598,
+   0.3436523918378151,
+   0.35553248175259294,
+   0.14934591365897137,
+   0.2734668521738764,
+   0.21324629634618758,
+   0.40922746691905276
+  ],
+  "loops_hist": {
+   "6": 20
+  }
+ },
+ "aborted": null,
+ "eval": {
+  "validation": {
+   "r1": {
+    "acc": 0.6875,
+    "n": 16,
+    "hits": "1110100101110111",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, pick up the black pan",
+     "zero",
+     "the hut",
+     "the mill",
+     "things from the bakery go to the playground every evening",
+     "the hut",
+     "the hut",
+     "the bakery",
+     "yes",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the barn",
+     "dagi",
+     "the grey loaf and the white pot",
+     "the tower"
+    ]
+   },
+   "r2": {
+    "acc": 0.6875,
+    "n": 16,
+    "hits": "1110101101110101",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, pick up the black pan",
+     "zero",
+     "the hut",
+     "the mill",
+     "things from the bakery go to the playground every evening",
+     "the bakery",
+     "the hut",
+     "the bakery",
+     "yes",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the barn",
+     "dagi",
+     "the black loaf, the green sock, the grey loaf, the red pot and the white pot",
+     "the tower"
+    ]
+   },
+   "r3": {
+    "acc": 0.6875,
+    "n": 16,
+    "hits": "1110101101110101",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, pick up the black pan",
+     "zero",
+     "the hut",
+     "the mill",
+     "things from the bakery go to the playground every evening",
+     "the bakery",
+     "the hut",
+     "the bakery",
+     "yes",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the barn",
+     "dagi",
+     "the grey loaf and the red pot",
+     "the tower"
+    ]
+   },
+   "r4": {
+    "acc": 0.625,
+    "n": 16,
+    "hits": "1110101100110101",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, pick up the black pan",
+     "zero",
+     "the hut",
+     "the mill",
+     "things from the bakery go to the playground every evening",
+     "the bakery",
+     "the hut",
+     "the bakery",
+     "no",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the barn",
+     "dagi",
+     "the grey loaf and the red pot",
+     "the tower"
+    ]
+   },
+   "r6": {
+    "acc": 0.625,
+    "n": 16,
+    "hits": "1010100101110111",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, pick up the black pan out of the cup",
+     "zero",
+     "the hut",
+     "the mill",
+     "things put in the bakery go to the playground every year",
+     "the mill",
+     "the hut",
+     "the bakery",
+     "yes",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the barn",
+     "dagi",
+     "the grey loaf and the white pot",
+     "the tower"
+    ]
+   },
+   "r8": {
+    "acc": 0.4375,
+    "n": 16,
+    "hits": "1010100101110000",
+    "row_offset": 0,
+    "preds": [
+     "the hut",
+     "go to the hut, ask sali for the red money, ask the black pan for the black pan",
+     "zero",
+     "the hut",
+     "the mill",
+     "things put in the bakery go to the playground",
+     "the mill",
+     "the hut",
+     "the bakery",
+     "yes",
+     "go to the stable, pick up the red loaf",
+     "the stable",
+     "the well",
+     "nuli",
+     "the black and the white pot",
+     "the t"
+    ]
+   },
+   "main": {
+    "acc": 0.625,
+    "n": 16,
+    "hits": "1110101100110101",
+    "row_offset": 0
+   }
+  },
+  "dev": {
+   "r4": {
+    "acc": 0.75,
+    "n": 16,
+    "hits": "1101011110011111",
+    "row_offset": 0
+   },
+   "main": {
+    "acc": 0.75,
+    "n": 16,
+    "hits": "1101011110011111",
+    "row_offset": 0
+   }
+  }
+ },
+ "label_nums": {
+  "r1": 68.75,
+  "r2": 68.75,
+  "r3": 68.75,
+  "r4": 62.5,
+  "r6": 62.5,
+  "r8": 43.75,
+  "v": 62.5,
+  "dr4": 75.0,
+  "d": 75.0
+ },
+ "bsz": 16,
+ "micro_bsz": 4,
+ "max_len": 2048,
+ "stage1_adapter": "/home/benja/think2/out_p/think/a_s0/adapter",
+ "loops": 1,
+ "loop_block": null,
+ "stage1_adapter_sha": "740d61488544ca464af9bb41599d341d7e94837a85451fdfa9d4aeee68f72bfa",
+ "adapter_sha": "a1cbbe36d9f6a8b959edfdceeeea6f24ba93b193a2444f3af129166aee29c473",
+ "env": {
+  "gpu": "NVIDIA GeForce RTX 5070 Ti",
+  "dtype": "bfloat16",
+  "torch": "2.9.1+cu128",
+  "transformers": "5.20.2",
+  "peft": "0.21.2",
+  "flash_linear_attention": "0.6.0"
+ },
+ "loop_schedule": {
+  "seed": 5000,
+  "mean": 6.0,
+  "compute_ratio": 1.8333333333333333,
+  "block": [
+   8,
+   12
+  ],
+  "eval_loops": [
+   1,
+   2,
+   3,
+   4,
+   6,
+   8
+  ],
+  "main": 4
+ },
+ "halting": {
+  "acc": 0.6875,
+  "mean_loops": 2.1875,
+  "by_depth": {
+   "1": {
+    "n": 5,
+    "mean_loops": 2.4,
+    "acc": 0.6
+   },
+   "2": {
+    "n": 6,
+    "mean_loops": 2.0,
+    "acc": 0.6666666666666666
+   },
+   "3": {
+    "n": 4,
+    "mean_loops": 2.25,
+    "acc": 0.75
+   },
+   "4": {
+    "n": 1,
+    "mean_loops": 2.0,
+    "acc": 1.0
+   }
+  },
+  "spearman_depth_loops": -0.0497328000436399,
+  "rule": "first r in [2, 3, 4, 6, 8] whose answer equals the previous r's; else 8"
+ },
+ "wall_seconds": 190.72319149971008,
+ "peak_gpu_mem_gb": 4.580122947692871
+}
