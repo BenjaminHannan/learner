@@ -15,7 +15,7 @@ namespace Premonition
 {
     static class Ui
     {
-        static readonly string[] Actionable = { "Button", "CheckBox", "RadioButton", "ComboBox", "Edit", "Hyperlink", "ListItem", "MenuItem", "TabItem", "TreeItem", "Slider", "SplitButton", "Spinner", "DataItem" };
+        static readonly string[] Actionable = { "Button", "CheckBox", "RadioButton", "ComboBox", "Edit", "Hyperlink", "ListItem", "MenuItem", "TabItem", "TreeItem", "Slider", "SplitButton", "Spinner", "DataItem", "Document" };
         static readonly string[] TextRoles = { "Edit", "ComboBox", "Spinner" };
         static readonly string[] LeafRoles = { "Button", "CheckBox", "RadioButton", "ComboBox", "Edit", "MenuItem", "TabItem", "Slider", "SplitButton", "Spinner", "Hyperlink" };
 
@@ -95,7 +95,7 @@ namespace Premonition
                         string label = LabelOf(el, c, role);
                         bool keep = true;
                         if (role == "ListItem" || role == "DataItem" || role == "TreeItem") keep = label.Length > 0;
-                        if (role == "Edit" || role == "ComboBox") keep = true;
+                        if (role == "Edit" || role == "ComboBox" || role == "Document") keep = true; // Document: e.g. the Windows 11 Notepad text area
                         if (keep)
                         {
                             string value = "", outRole = role;
@@ -123,6 +123,62 @@ namespace Premonition
         }
 
         static int[] FrameArr(Rect r) { return new int[] { (int)Math.Round(r.X), (int)Math.Round(r.Y), (int)Math.Round(r.Width), (int)Math.Round(r.Height) }; }
+
+        // ---- typing: find where the keystrokes should land, and whether they did ----------------------------------------
+        static bool Editable(AutomationElement e)
+        {
+            try
+            {
+                ControlType t = e.Current.ControlType;
+                return (t == ControlType.Edit || t == ControlType.Document) && e.Current.IsEnabled;
+            }
+            catch (Exception) { return false; }
+        }
+        // The focused element if it takes text; else the biggest visible text box / document of the front window, focused
+        // (and clicked, if focusing is refused). Returns null when there is nothing to type into (the keys go wherever).
+        public static AutomationElement FocusEditable()
+        {
+            try
+            {
+                AutomationElement f = AutomationElement.FocusedElement;
+                if (f != null && Editable(f)) return f;
+                IntPtr h = Native.GetForegroundWindow();
+                if (h == IntPtr.Zero) return null;
+                AutomationElement root = AutomationElement.FromHandle(h);
+                Condition cond = new AndCondition(
+                    new OrCondition(new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Document), new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)),
+                    new PropertyCondition(AutomationElement.IsOffscreenProperty, false),
+                    new PropertyCondition(AutomationElement.IsEnabledProperty, true));
+                AutomationElement best = null; double area = 0;
+                foreach (AutomationElement e in root.FindAll(TreeScope.Descendants, cond))
+                {
+                    try { Rect r = e.Current.BoundingRectangle; double a = r.Width * r.Height; if (!r.IsEmpty && a > area) { area = a; best = e; } } catch (Exception) { }
+                }
+                if (best == null) return null;
+                try { best.SetFocus(); }
+                catch (Exception)
+                {
+                    try { Rect r = best.Current.BoundingRectangle; Input.ClickRaw((int)(r.X + r.Width / 2), (int)(r.Y + r.Height / 2)); } catch (Exception) { }
+                }
+                System.Threading.Thread.Sleep(80);
+                return best;
+            }
+            catch (Exception) { return null; }
+        }
+        // The element's text, only to tell whether typing changed it (never printed). null = can't tell (or a password field).
+        public static string TextOf(AutomationElement e)
+        {
+            if (e == null) return null;
+            try
+            {
+                if (e.Current.IsPassword) return null;
+                object o;
+                if (e.TryGetCurrentPattern(TextPattern.Pattern, out o)) return ((TextPattern)o).DocumentRange.GetText(20000);
+                if (e.TryGetCurrentPattern(ValuePattern.Pattern, out o)) return ((ValuePattern)o).Current.Value;
+            }
+            catch (Exception) { }
+            return null;
+        }
 
         public static void Look(string appName, int max)
         {

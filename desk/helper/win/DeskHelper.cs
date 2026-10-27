@@ -532,6 +532,7 @@ namespace Premonition
 
         public static void Type(string text)
         {
+            AutomationTarget t = AutomationTarget.Prepare();
             int n = 0;
             foreach (char ch in text)
             {
@@ -542,8 +543,11 @@ namespace Premonition
                 n++;
                 if (n % 20 == 0) Thread.Sleep(15);
             }
-            Program.Out(Apps2.D("ok", true, "chars", text.Length));
+            Thread.Sleep(200);
+            if (t.Unchanged()) { Program.Out(Apps2.D("ok", false, "chars", text.Length, "error", "typed, but the text box did not change: the keys did not land in it. Click into the text area (or open a new document) and try again.")); return; }
+            Program.Out(Apps2.D("ok", true, "chars", text.Length, "verified", t.Readable));
         }
+        public static void ClickRaw(int x, int y) { Click(x, y, false, false); }
     }
     static class Apps2
     {
@@ -587,5 +591,17 @@ namespace Premonition
                 }
             }
         }
+    }
+}
+
+namespace Premonition
+{
+    // wraps Ui so Input does not need the UIA types in its signatures
+    class AutomationTarget
+    {
+        System.Windows.Automation.AutomationElement el; string before;
+        public bool Readable { get { return before != null; } }
+        public static AutomationTarget Prepare() { AutomationTarget t = new AutomationTarget(); t.el = Ui.FocusEditable(); t.before = Ui.TextOf(t.el); return t; }
+        public bool Unchanged() { if (before == null) return false; string after = Ui.TextOf(el); return after != null && after == before; }
     }
 }

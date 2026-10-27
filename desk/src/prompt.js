@@ -40,7 +40,7 @@ const TOOL_DEFS = {
   browser_read: fn('browser_read', 'Read the main text of the current page.', obj({ page: { type: 'integer', description: 'page number, default 1' } })),
   screen_look: fn('screen_look', 'List windows and numbered UI elements of a non-browser ' + W.apps + ' app.', obj({ app: S('app name; default front app') })),
   screen_click: fn('screen_click', 'Click UI element [id] from screen_look, or a point.', obj({ id: { type: 'integer' }, x: { type: 'number' }, y: { type: 'number' }, double: { type: 'boolean' } })),
-  screen_type: fn('screen_type', 'Type text into the focused ' + W.apps + ' control.', obj({ text: S('text') }, ['text'])),
+  screen_type: fn('screen_type', 'Type text into the focused ' + W.apps + ' control. For new writing in an app that may have a file open (e.g. Notepad), press "' + W.keyEx.replace('+t', '+n') + '" first.', obj({ text: S('text') }, ['text'])),
   screen_key: fn('screen_key', 'Press keys, e.g. "' + W.keyEx + '" or "return".', obj({ keys: S('key combo') }, ['keys'])),
   open_app: fn('open_app', 'Launch or focus a non-browser ' + W.apps + ' app. Refuses ' + W.browsers.replace(/, /g, '/').replace(' or ', '/') + ': use browser_go for the web.', obj({ name: S('app name') }, ['name'])),
   run_shell: fn('run_shell', 'Run a ' + W.shell + ' command in the home folder (60 s limit).', obj({ command: S('shell command') }, ['command'])),
