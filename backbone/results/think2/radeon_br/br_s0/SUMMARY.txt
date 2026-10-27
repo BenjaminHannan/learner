@@ -1,0 +1,76 @@
+THINK-1 SUMMARY  (accuracy in percent, validation unless said)
+data: /home/timot/think2r/out/data (8675 validation rows)
+
+== 1. What each run scored ==
+arm    seed   dev    val   notes
+a      0     81.53  67.29   10,822,656 trainable, 0.48 h
+br     0     87.35  71.49   10,822,656 trainable, 5.83 h
+
+Means over seeds, and the floors the marks use:
+  a 67.29  aplus --  b --  bplus --
+  A_ref = 67.29  = max(66.72, a, aplus)
+  B_ref = 67.12  = max(67.12, b, bplus)
+  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0
+  a seed 0 scored twice: 67.29 vs 67.29  (noise 0.00, R2 tol 0.30)
+
+== 2. Arm t: score by laps (L=0 is pause slots) ==
+lap     n      s0     s1     s2    mean   vs prev
+L0       --    --    --    --       --         
+L1       --    --    --    --       --         
+L2       --    --    --    --       --         
+L4       --    --    --    --       --         
+L8       --    --    --    --       --         
+L12      --    --    --    --       --         
+L16      --    --    --    --       --         
+L24      --    --    --    --       --         
+t1 (one refinement): L0 --  L1 --  L8 --
+tw (144 slots, L1, seed 0): --  vs t1 seed 0: --  vs t L8 seed 0: --
+dev, arm t: L0 --  L1 --  L8 --
+
+== 3. Lesions (arm t, L=8) ==
+swap board         --   costs --
+mean board         --   costs --
+repeat delta1      --   costs --
+gates off          --   rows unlike the same batches without a board: -- (must be 0)
+arm b: 3 loops --, 1 pass --
+
+== 4. PASS marks ==
+seeds in: a 0  b -  aplus -  bplus -  t -  t1 -  tw -   (marks need 012)
+G gain: not-enough-data
+not-enough-data  G    S(8) -- needs >= 70.29  (best floor 67.29 + 3.0)
+R1 slope: not-enough-data
+not-enough-data  R1a  S(8)-S(1) -- needs >= 1.5
+not-enough-data  R1b  per seed -- each >= 0.5
+R2 monotone: not-enough-data
+not-enough-data  R2a  S(2) -- vs S(1) -- - tol 0.30
+not-enough-data  R2b  S(4) -- vs S(2) -- - tol 0.30
+not-enough-data  R2c  S(8) -- vs S(4) -- - tol 0.30
+R3 no collapse: not-enough-data
+not-enough-data  R3a  S(12)-S(8) -- needs >= -1.0
+not-enough-data  R3b  per seed -- each >= -2.0
+R4 laps, not parameters: not-enough-data
+not-enough-data  R4a  S(8)-T1 -- needs >= 2.0
+not-enough-data  R4b  S(8)-repeat -- needs >= 1.0
+PASS needs G and R:  G not-enough-data, R not-enough-data
+
+== 5. Wrong-if rules (triggered = the idea is refuted) ==
+not-enough-data  W1   S(8) - T1 < 1.0 (laps add nothing)   now --
+not-enough-data  W2   S(8) - S(2) < 0.5 (done by lap 2)   now --
+not-enough-data  W3   swap lesion < 1.0 (board unused)   now --
+not-enough-data  W4   S(8) < A_ref + 1.0   now --
+
+== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==
+not-enough-data  F1   S_0(8) < 68.0   now --
+not-enough-data  F2   S_0(8) - T1_0 < 1.0   now --
+not-enough-data  F3   S_0(8) - S_0(2) < 0.5   now --
+not-enough-data  F4   swap lesion_0 < 1.0   now --
+
+== 7. Secondary (no weight in PASS) ==
+not-enough-data  M1   chain banks (n=--): S(8)-T1 -- needs >= 3.0
+not-enough-data  M2   depth >= 4 (n=--): S(8)-T1 -- needs >= 2.0
+
+== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==
+not-enough-data  needs br, aplus, tc and aplong at one seed
+
+VERDICT: INCOMPLETE
+  missing seeds: t [0, 1, 2]; t1 [0, 1, 2]; a [1, 2]; aplus [0, 1, 2]; b [0, 1, 2]
