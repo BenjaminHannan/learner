@@ -664,11 +664,14 @@
     stick = true; forceUntil = 0; jumpBtn.hidden = true; scroller.scrollTop = scroller.scrollHeight;
   }
 
+  // One Glim to talk to: the window is titled "Glim", or the Spark's name when a Spark's own log is open. Threads stay under the hood.
+  const sparkName = (t) => String(t.title || '').replace(/^Glim:\s*/, '') || 'Spark';
+  function paintTitle(t) { $('#title').textContent = t && t.helper ? sparkName(t) + ' · Spark' : 'Glim'; }
   async function openThread(id) {
     const t = await desk.threads.load(id);
     if (!t) return;
     thread = { id: t.id, title: t.title, helper: t.helper || null };
-    $('#title').textContent = t.title;
+    paintTitle(t);
     renderThread(t);
     setRunning(!!t.running);
     if (t.loginWaiting) { const c = lastBCard(); if (c) upsertBCard({ id: c.id, login: true, active: true }); }
@@ -682,25 +685,38 @@
     const t = await desk.threads.create();
     try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
     thread = { id: t.id, title: t.title, helper: null };
-    $('#title').textContent = t.title; renderThread(t); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
+    paintTitle(t); renderThread(t); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
   }
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
     if (m < 1) return 'now'; if (m < 60) return m + 'm'; if (m < 1440) return Math.round(m / 60) + 'h'; return Math.round(m / 1440) + 'd';
   }
   async function renameCurrent(cur) { const n = prompt('Rename thread', cur); return n; }
+  // The main Glim is the newest ordinary conversation (calls are kept apart); everything older sits under "Earlier conversations".
+  const isCall = (t) => t.title === 'Call';
+  async function mainThreadId() {
+    const list = (await desk.threads.list()).filter((x) => !x.helper && !isCall(x));
+    return list.length ? list[0].id : null;
+  }
   async function loadThreads() {
-    const list = await desk.threads.list();
+    const list = (await desk.threads.list()).filter((x) => !x.helper);
+    const main = list.find((x) => !isCall(x)) || null;
+    const ml = $('#mainList'); ml.textContent = '';
+    const li = el('li', main && thread && thread.id === main.id ? 'on main' : 'main');
+    const dot = Mascot.el(running ? 'working' : 'idle', 28, { still: !running });
+    const top = el('div', 'a-top'); top.append(dot, el('span', 't', 'Glim'), el('span', 'd', running ? 'working' : 'main Glim'));
+    li.append(top); li.onclick = async () => { const id = await mainThreadId(); if (id) openThread(id); else newThread(); };
+    ml.append(li);
     const ul = $('#threadList'); ul.textContent = '';
-    for (const t of list.filter((x) => !x.helper)) {
-      const li = el('li', t.id === (thread && thread.id) ? 'on' : '');
+    for (const t of list.filter((x) => !main || x.id !== main.id)) {
+      const row = el('li', t.id === (thread && thread.id) ? 'on' : '');
       const title = el('span', 't', t.title); const d = el('span', 'd', ago(t.updated));
-      const x = el('button', null, '✕'); x.title = 'Delete'; x.setAttribute('aria-label', 'Delete thread');
-      x.onclick = async (e) => { e.stopPropagation(); if (confirm('Delete "' + t.title + '"?')) { await desk.threads.remove(t.id); if (thread && thread.id === t.id) { await newThread(); } else loadThreads(); } };
-      title.ondblclick = async (e) => { e.stopPropagation(); const n = await renameCurrent(t.title); if (n) { await desk.threads.rename(t.id, n); if (thread && thread.id === t.id) $('#title').textContent = n; loadThreads(); } };
-      li.append(title, d, x); li.onclick = () => openThread(t.id); ul.append(li);
+      const x = el('button', null, '✕'); x.title = 'Delete'; x.setAttribute('aria-label', 'Delete conversation');
+      x.onclick = async (e) => { e.stopPropagation(); if (confirm('Delete "' + t.title + '"?')) { await desk.threads.remove(t.id); if (thread && thread.id === t.id) { const id = await mainThreadId(); if (id) await openThread(id); else await newThread(); } else loadThreads(); } };
+      row.append(title, d, x); row.onclick = () => openThread(t.id); ul.append(row);
     }
-    if (thread) { const cur = list.find((t) => t.id === thread.id); if (cur) $('#title').textContent = cur.title; }
+    $('#histSec').hidden = !ul.children.length;
+    if (thread && !thread.helper) $('#title').textContent = 'Glim';
   }
 
   // ---------- agents (helpers) ----------
@@ -729,7 +745,7 @@
       btns.append(
         mk('Run now', () => desk.helpers.run(h.id)),
         mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
-        mk('Delete', async () => { if (confirm('Delete Glim "' + h.name + '" and its thread?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
+        mk('Delete', async () => { if (confirm('Delete Spark "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
       li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns);
       li.onclick = () => openThread(h.threadId);
       ul.append(li);
@@ -744,9 +760,6 @@
   $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
   $('#drawerShade').onclick = closeDrawer;
   $('#newThread').onclick = newThread;
-  const renameTitle = async () => { if (!thread) return; const n = prompt('Rename thread', $('#title').textContent); if (n) { await desk.threads.rename(thread.id, n); $('#title').textContent = n; loadThreads(); } };
-  $('#title').onclick = renameTitle;
-  $('#title').addEventListener('keydown', (e) => { if (e.key === 'Enter') renameTitle(); });
 
   // links in answers open in the browser panel
   msgs.addEventListener('click', (e) => {
@@ -768,7 +781,7 @@
     try {
       if (!thread) await newThread();
       input.value = ''; autosize();
-      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Glim’s thread. Use Run now in the Glims list, or ask your main Glim.')); toBottom(); return; }
+      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Spark’s log. Use Run now in the Sparks list, or ask your main Glim.')); toBottom(); return; }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
         const u = addUser(text, true, true); jumpBottom();
@@ -1109,8 +1122,10 @@
     gw = (await desk.gateway.state()) || gw; if (gw.state === 'down') await loadWhy(); paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
     const list = await desk.threads.list();
-    if (!info.e2e && last && list.find((t) => t.id === last)) await openThread(last);
-    else if (!info.e2e && list.length) await openThread(list[0].id);
+    const lastT = last && list.find((t) => t.id === last);
+    const mainId = await mainThreadId();
+    if (!info.e2e && lastT && !isCall(lastT) && !lastT.helper) await openThread(last); // back to the Glim you were talking to (a Spark's log or a call is not the home screen)
+    else if (!info.e2e && mainId) await openThread(mainId);
     else await newThread();
     desk.helpers.list().then(paintAgents);
     if (!settings.onboarded) Onboard.show();

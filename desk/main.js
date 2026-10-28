@@ -721,7 +721,7 @@ function buildAgent() {
       queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});
     },
-    onNeedBen: (h) => notify("Glim '" + h.name + "' needs you", 'Open its thread to answer.', h.threadId)
+    onNeedBen: (h) => notify("Spark '" + h.name + "' needs you", 'Open it to answer.', h.threadId)
   });
   agent = createAgent({ helper: null, rec: null });
 }

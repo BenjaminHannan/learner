@@ -398,10 +398,10 @@ test('failure: status failed, one quick retry for a recurring Glim, reset on suc
 
 test('batchNotice: one, several, and several with a failure', () => {
   const a = { name: 'A', summary: 'did a', threadId: 'ta', parent: 'p' }, b = { name: 'B', summary: 'did b', threadId: 'tb', parent: 'p' }, c = { name: 'C', summary: 'Failed: x', threadId: 'tc', parent: 'p', failed: true };
-  assert.deepStrictEqual(batchNotice([a]), { title: "Glim 'A' finished", body: 'did a', threadId: 'ta' });
-  assert.strictEqual(batchNotice([c]).title, "Glim 'C' couldn't finish");
-  const two = batchNotice([a, b]); assert.strictEqual(two.title, '2 Glims finished'); assert.strictEqual(two.body, 'A, B: did a'); assert.strictEqual(two.threadId, 'p');
-  assert.strictEqual(batchNotice([a, b, c]).title, "3 Glims finished (1 couldn't finish)");
+  assert.deepStrictEqual(batchNotice([a]), { title: "Spark 'A' finished", body: 'did a', threadId: 'ta' });
+  assert.strictEqual(batchNotice([c]).title, "Spark 'C' couldn't finish");
+  const two = batchNotice([a, b]); assert.strictEqual(two.title, '2 Sparks finished'); assert.strictEqual(two.body, 'A, B: did a'); assert.strictEqual(two.threadId, 'p');
+  assert.strictEqual(batchNotice([a, b, c]).title, "3 Sparks finished (1 couldn't finish)");
   assert.strictEqual(batchNotice([a, { ...b, parent: 'q' }]).threadId, null);
 });
 

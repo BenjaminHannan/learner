@@ -12,10 +12,10 @@
 <body>
 <header id="topbar">
   <span id="logo" class="logo" title="Glim"></span>
-  <button id="btnThreads" class="icon-btn" title="Threads" aria-label="Threads">
+  <button id="btnThreads" class="icon-btn" title="Glims" aria-label="Glims">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
   </button>
-  <div id="title" title="Rename thread" role="button" tabindex="0">New thread</div>
+  <div id="title" title="Who you are talking to">Glim</div>
   <div class="spacer"></div>
   <div class="seg" id="modelSeg" hidden role="group" aria-label="Model">
     <button data-slot="modelAuto" data-model="qwen36-auto">Auto</button><button data-slot="modelMain" data-model="qwen36">Think</button><button data-slot="modelFast" data-model="qwen36-fast">Fast</button>
@@ -37,10 +37,10 @@
 
 <main id="chat">
   <aside id="drawer" aria-hidden="true">
-    <div class="drawer-head"><span>Threads</span><button id="newThread" class="amber-btn sm">+ New</button></div>
-    <div id="agentsSec" hidden><div class="drawer-label">Glims</div><ul id="agentList"></ul></div>
-    <div class="drawer-label">Threads</div>
-    <ul id="threadList"></ul>
+    <div class="drawer-head"><span>Glims</span><button id="newThread" class="amber-btn sm" title="Start a fresh conversation with Glim">Fresh start</button></div>
+    <ul id="mainList"></ul>
+    <div id="agentsSec" hidden><div class="drawer-label">Sparks</div><ul id="agentList"></ul></div>
+    <details id="histSec" class="hist"><summary>Earlier conversations</summary><ul id="threadList"></ul></details>
   </aside>
   <div id="drawerShade"></div>
   <div id="scroll"><div id="msgs"></div></div>
