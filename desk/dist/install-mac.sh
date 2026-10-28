@@ -84,14 +84,15 @@ main() {
   step "2/4" "Putting Premonition in $DEST_DIR"
   run mkdir -p "$DEST_DIR" || die "could not create $DEST_DIR."
   [[ "$DRY_RUN" == 1 || -w "$DEST_DIR" ]] || die "$DEST_DIR is not writable for you." "Try again with:  INSTALL_DIR=\"\$HOME/Applications\" bash"
-  # quit a running copy first, so the old app can be replaced
+  # quit a running copy first, so the old app can be replaced. Only the copy at THIS path: another Premonition elsewhere is left alone.
+  local OLD_APP="$DEST_DIR/$APP_NAME.app" RUN_PAT="$DEST_DIR/$APP_NAME.app/Contents/MacOS/"
   if [[ "$DRY_RUN" == 1 ]]; then
-    say "  (dry run) quit Premonition if it is running"
-  elif pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+    say "  (dry run) quit Premonition if it is running from $DEST_DIR"
+  elif pgrep -f "$RUN_PAT" >/dev/null 2>&1; then
     say "  Premonition is open; closing it first."
-    osascript -e "tell application \"$APP_NAME\" to quit" >/dev/null 2>&1 || true
-    for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -x "$APP_NAME" >/dev/null 2>&1 || break; sleep 1; done
-    pgrep -x "$APP_NAME" >/dev/null 2>&1 && pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+    osascript -e "tell application \"$OLD_APP\" to quit" >/dev/null 2>&1 || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -f "$RUN_PAT" >/dev/null 2>&1 || break; sleep 1; done
+    pgrep -f "$RUN_PAT" >/dev/null 2>&1 && pkill -f "$RUN_PAT" >/dev/null 2>&1 || true
   fi
   STAGE="$DEST_DIR/.$APP_NAME-install.$$"   # inside DEST_DIR so the final move is a plain rename
   run mkdir -p "$STAGE"
