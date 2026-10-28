@@ -224,6 +224,9 @@ function defaultSummary(name, a) {
     case 'memory_forget': return 'Forgot: ' + short(a.match || a.id, 50);
     case 'track_add': return 'Tracking: ' + short(a.what, 50);
     case 'track_done': return 'Tracking done: ' + short(a.what, 50);
+    case 'agent_start': return 'Starting Mote ' + short(a.name, 40);
+    case 'agent_update': return 'Updating Mote ' + short(a.name_or_id, 40);
+    case 'agent_list': return 'Listing Motes';
     case 'verify': return 'Checking its work';
     case 'ask_user': return P('Asked Ben');
     default: return name;
