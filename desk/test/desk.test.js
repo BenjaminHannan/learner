@@ -205,11 +205,13 @@ test('pill: a helper working quietly never reaches the pill or badge while Show 
 test('pill says Thinking or Writing while the model works with no tool step, never a stale Starting', () => {
   const p = new PillState({ now: () => 1000, onChange: () => {} });
   p.onEvent('main', 'Glim', 't1', { type: 'started' });
-  assert.strictEqual(p.view().line, 'Starting');
+  assert.strictEqual(p.view().line, 'Thinking'); // from the first moment: a local model can take a minute before its first word
   p.onEvent('main', 'Glim', 't1', { type: 'reasoning', delta: '' });
   assert.strictEqual(p.view().line, 'Thinking'); assert.strictEqual(p.view().top.step, 'Thinking');
   p.onEvent('main', 'Glim', 't1', { type: 'step_start', summary: 'Opened gmail.com' });
   assert.notStrictEqual(p.view().line, 'Thinking');
+  p.onEvent('main', 'Glim', 't1', { type: 'step_end', id: 'x' });
+  assert.strictEqual(p.view().line, 'Thinking');
   p.onEvent('main', 'Glim', 't1', { type: 'text', delta: 'Hi' });
   assert.strictEqual(p.view().line, 'Writing');
 });

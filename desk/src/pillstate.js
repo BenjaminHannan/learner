@@ -45,7 +45,12 @@ class PillState {
       if (a && a.status === 'working') { const l = t === 'reasoning' ? 'Thinking' : 'Writing'; if (a.line !== l) { a.line = l; a.step = l; this._touch(a); } }
       return;
     }
-    if (t === 'compacted' || t === 'bcard' || t === 'scard' || t === 'user' || t === 'notice' || t === 'plan' || t === 'step_end') return;
+    if (t === 'step_end') { // the tool is done and the model is deciding the next step
+      const a = this.agents.get(key);
+      if (a && a.status === 'working' && a.line !== 'Thinking') { a.line = 'Thinking'; a.step = 'Thinking'; this._touch(a); }
+      return;
+    }
+    if (t === 'compacted' || t === 'bcard' || t === 'scard' || t === 'user' || t === 'notice' || t === 'plan') return;
     if (t === 'done') {
       const a = this.agents.get(key);
       if (!a) return;
@@ -60,7 +65,7 @@ class PillState {
     const a = this._get(key, name, threadId);
     if (meta && meta.title) a.title = meta.title;
     if (t === 'queued') { a.status = 'working'; a.line = 'Waiting for a free slot'; a.step = ''; }
-    else if (t === 'started') { a.status = 'working'; a.line = 'Starting'; a.step = ''; a.startedAt = this.now(); a.error = ''; a.endedAt = 0; a.said = ''; }
+    else if (t === 'started') { a.status = 'working'; a.line = 'Thinking'; a.step = 'Thinking'; a.startedAt = this.now(); a.error = ''; a.endedAt = 0; a.said = ''; }
     else if (t === 'status') { a.said = String(ev.text || ''); if (a.status === 'working') { a.step = a.said; a.line = short(a.said, 40); } }
     // what the pill says is what Glim wrote with set_status; until it has, just "Working"
     else if (t === 'step_start') { a.status = 'working'; a.step = a.said || 'Working'; a.line = short(a.step, 40); a.approval = null; }
