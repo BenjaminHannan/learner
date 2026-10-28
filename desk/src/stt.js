@@ -6,8 +6,8 @@
 // Which Python (first one that can `import mlx_vlm` wins):
 //   1. env PREMONITION_STT_PYTHON (+ PREMONITION_STT_HF_HOME)
 //   2. ~/learner-ops/stt/.venv/bin/python with HF_HOME=~/learner-ops/stt/hf
-//   3. the managed runtime python (sleep installer)
-// TODO: install mlx-vlm and download the model through the managed runtime (like the sleep installer) instead of the error below.
+//   3. <userData>/voice/.venv/bin/python with HF_HOME=<userData>/voice/hf (made by the "Get voice" installer, runtime/voiceinstall.js)
+//   4. the managed runtime python (sleep installer)
 // TODO (Windows): same server, with an ONNX / llama.cpp build of the model; the protocol is unchanged.
 const fs = require('fs');
 const path = require('path');
@@ -29,6 +29,7 @@ function candidates(o) {
   if (env.PREMONITION_STT_PYTHON) list.push({ python: env.PREMONITION_STT_PYTHON, hfHome: env.PREMONITION_STT_HF_HOME || '' });
   const root = path.join(home, 'learner-ops', 'stt');
   list.push({ python: path.join(root, '.venv', 'bin', 'python'), hfHome: path.join(root, 'hf') });
+  if (o.voiceDir) list.push({ python: path.join(o.voiceDir, '.venv', 'bin', 'python'), hfHome: path.join(o.voiceDir, 'hf') });
   const m = o.managedPython && o.managedPython();
   if (m) list.push({ python: m, hfHome: '' });
   return list;
@@ -75,7 +76,7 @@ class Stt {
     const script = this.script();
     if (!this.exists(script)) throw new Error('Voice needs the speech helper script, which is missing from this build.');
     const pick = await this.pick();
-    if (!pick) throw new Error(MISSING);
+    if (!pick) { const e = new Error(MISSING); e.needsVoice = true; throw e; }
     return new Promise((resolve, reject) => {
       let c, buf = '', err = '', done = false;
       const finish = (fn, v) => { if (done) return; done = true; clearTimeout(t); fn(v); };

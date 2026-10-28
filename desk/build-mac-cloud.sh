@@ -33,12 +33,19 @@ if [[ -f "$HELPER" ]]; then
     cffaedfe|cafebabe|bebafeca) echo "==> including the committed Mac screen helper ($HELPER)"; EXTRA=(--extra-resource="$HELPER") ;;
     *) echo "$HELPER is not a Mac (Mach-O) binary; remove it or rebuild it on a Mac with: swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist" >&2; exit 1 ;;
   esac
+  # the committed binary is rebuilt on a Mac from helper/deskhelper.swift; say so when the source changed since
+  if [[ -f "$HELPER.swift.sha256" ]] && [[ "$(cat "$HELPER.swift.sha256")" != "$( (sha256sum helper/deskhelper.swift 2>/dev/null || shasum -a 256 helper/deskhelper.swift) | awk '{print $1}')" ]]; then
+    echo "WARNING: helper/deskhelper.swift changed since $HELPER was built; the zip has the OLD helper. Rebuild it on a Mac (build-mac.sh, then copy Contents/Resources/deskhelper here and update $HELPER.swift.sha256)." >&2
+  fi
 else
   echo "NOTE: $HELPER not found; building WITHOUT screen control (only a Mac can compile helper/deskhelper.swift:" >&2
   echo "      swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist, then commit it and rebuild)." >&2
 fi
 
-IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
+# the local speech-to-text server rides along as resources/stt, as in build-mac.sh (src/stt.js)
+if [[ -f stt/lfm_stt.py ]]; then STT_STAGE="$(mktemp -d)/stt"; mkdir -p "$STT_STAGE" && cp stt/lfm_stt.py "$STT_STAGE/"; EXTRA+=(--extra-resource="$STT_STAGE"); fi
+
+IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)' --ignore='^/stt($|/)')
 
 echo "==> packaging (darwin arm64)"
 rm -rf "$OUT"

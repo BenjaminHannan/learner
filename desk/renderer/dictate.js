@@ -28,9 +28,12 @@
     const $ = (s) => document.querySelector(s);
     let desk, ctx, btn, input, note, active = false, ignoring = false, st = null, saved = '', lastWritten = '';
 
-    const showNote = (msg, pane) => {
+    let voiceShown = null;
+    const showNote = (msg, pane, needsVoice) => {
       $('#dictNoteText').textContent = msg;
       const b = $('#dictSettings'); b.hidden = !pane; b.onclick = () => desk.openSystem(pane);
+      if (!voiceShown && typeof VoiceGet !== 'undefined') voiceShown = VoiceGet.wire(desk, $('#dictGetVoice'), $('#dictNoteText'));
+      if (voiceShown) voiceShown(!!needsVoice);
       note.hidden = false;
     };
     const hideNote = () => { note.hidden = true; };
@@ -58,7 +61,7 @@
       st = DictateText.begin(input.value); ignoring = false; lastWritten = input.value;
       saved = input.placeholder; active = true; paint(); input.focus();
       const r = await desk.dictate.start();
-      if (r && r.error) { active = false; paint(); if (input.placeholder === 'Listening…') input.placeholder = saved; showNote(r.error); }
+      if (r && r.error) { active = false; paint(); if (input.placeholder === 'Listening…') input.placeholder = saved; showNote(r.error, '', r.needsVoice); }
     }
     function stop() { if (active) desk.dictate.stop(); }
     const toggle = () => (active ? stop() : start());

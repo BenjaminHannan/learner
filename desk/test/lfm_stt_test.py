@@ -48,5 +48,17 @@ class T(unittest.TestCase):
         self.assertEqual(post(self.port, "/nope", b"")[0], 404)
 
 
+class IdleTests(unittest.TestCase):
+    def test_idle_unload_frees_and_reloads(self):
+        import threading, time
+        m = lfm_stt.MlxModel("x")
+        m.model, m.proc = object(), object()
+        last = [time.time() - 10]
+        t = threading.Thread(target=lfm_stt.idle_unloader, args=(m, threading.Lock(), last, 1, 0.05), daemon=True)
+        t.start()
+        time.sleep(0.3)
+        self.assertIsNone(m.model)
+
+
 if __name__ == "__main__":
     unittest.main()
