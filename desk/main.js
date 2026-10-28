@@ -603,7 +603,7 @@ function createAgent({ helper, rec, voice }) {
     ask_user: () => '',
     diary_search: (x) => diary.search(x.query),
     ...screen.tools,
-    ...agentTools(helpers, { isHelper })
+    ...agentTools(helpers, { isHelper, selfId: isHelper ? helper.id : null })
   };
   for (const n of BROWSER_TOOLS) {
     const run = tools[n];
@@ -690,7 +690,7 @@ function queueFinish(x) {
 // Ben's next message) and a macOS notification.
 function postNotice(threadId, name, summary) {
   const live = activeThread && activeThread.id === threadId && agent.running;
-  const t = live ? activeThread : store.loadThread(threadId);
+  const t = live ? activeThread : (helpers && helpers.liveThread(threadId)) || store.loadThread(threadId); // a Glim's child reporting while that Glim still runs
   if (!t) return;
   addNotice(t, name, summary);
   store.saveThread(t);

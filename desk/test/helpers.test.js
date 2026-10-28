@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, nextRun, addNotice, takeNotices, helperText, batchNotice } = require('../src/helpers');
-const { agentTools, NO } = require('../src/tools/agents');
+const { agentTools, NO, MAX_KIDS } = require('../src/tools/agents');
 const { Agent } = require('../src/agent');
 const { Store } = require('../src/store');
 const { buildTools } = require('../src/prompt');
@@ -174,17 +174,38 @@ test('screen lock is FIFO, held per run, abortable', async () => {
   const e = lock.holder(); await e.ensure(); assert.ok(e.held()); e.release();
 });
 
-test('agent_* tools: the same for Glims and the primary; agent_update changes a Glim in place', async () => {
+test('Glim tools: a Glim lists, moves its own time, starts up to MAX_KIDS one level deep, stops only its own', async () => {
   const { m, runs } = mkManager();
-  // a Glim may start, list, change and stop Glims too (it used to be refused)
-  const helperTools = agentTools(m, { isHelper: true });
-  const hs = await helperTools.agent_start({ name: 'sub', task: 'y', every: '1h' }, { thread: { id: 'th' } });
-  assert.match(hs.text, /Started Glim 'sub'/); assert.strictEqual(m.list().length, 1);
-  assert.match(helperTools.agent_update({ name_or_id: 'sub', at: '07:00' }, {}).text, /Updated Glim 'sub': daily 07:00/);
-  assert.strictEqual(m.find('sub').every, '1h'); // at wins over every in parseSchedule; both stay stored
-  assert.match(helperTools.agent_stop({ name_or_id: 'sub' }, {}).text, /Stopped Glim 'sub'/);
-  m.remove('sub');
-  assert.strictEqual(m.list().length, 0); assert.ok(runs.length >= 1);
+  assert.strictEqual(agentTools(m, { isHelper: true }).agent_start({ name: 'x', task: 'y' }, {}).text, NO); // no known self: refuse
+  const top = agentTools(m, { isHelper: false });
+  top.agent_start({ name: 'brief', task: 'morning briefing', at: '08:00' }, { thread: { id: 'tp' } });
+  top.agent_start({ name: 'other', task: 'unrelated job', at: '09:00' }, { thread: { id: 'tp' } });
+  const me = m.find('brief');
+  const g = agentTools(m, { isHelper: true, selfId: me.id });
+  assert.match(g.agent_list(), /brief \(you\)/);
+  const mv = g.agent_start({ name: 'brief', at: '07:00' }, {});
+  assert.match(mv.text, /Your schedule is now 'daily 07:00'/); assert.strictEqual(m.find('brief').at, '07:00');
+  assert.match(g.agent_start({ name: 'Brief' }, {}).text, /give at/);
+  const kid = g.agent_start({ name: 'k1', task: 'fetch the weather' }, { thread: { id: me.threadId } });
+  assert.match(kid.text, /Started Glim 'k1'/); assert.strictEqual(m.find('k1').byHelper, me.id);
+  const kg = agentTools(m, { isHelper: true, selfId: m.find('k1').id });
+  assert.match(kg.agent_start({ name: 'k1a', task: 'deeper still' }, {}).text, /Started Glim 'k1a'/); // MAX_DEPTH 2: a grandchild is fine
+  const kga = agentTools(m, { isHelper: true, selfId: m.find('k1a').id });
+  assert.match(kga.agent_start({ name: 'k1b', task: 'deepest omega' }, {}).text, /cannot start more/);
+  for (let i = 2; i <= MAX_KIDS; i++) g.agent_start({ name: 'k' + i, task: 'job number ' + i + ' alpha' + i }, {});
+  assert.match(g.agent_start({ name: 'k9', task: 'one too many zeta' }, {}).text, /already run 5 Glims/);
+  const rec = m.active.get(m.find('k1').id) || {}; rec.thread = { id: 'th-live' };
+  if (m.active.has(m.find('k1').id)) assert.strictEqual(m.liveThread('th-live'), rec.thread);
+  assert.strictEqual(m.liveThread('nope'), null);
+  assert.match(g.agent_stop({ name_or_id: 'other' }).text, /not yours to change/); assert.notStrictEqual(m.find('other').status, 'stopped');
+  assert.match(g.agent_stop({ name_or_id: 'k1' }).text, /Stopped Glim 'k1'/);
+  assert.match(g.agent_start({ name: 'k9', task: 'one more now fits zeta' }, {}).text, /Started Glim 'k9'/);
+  assert.match(g.agent_stop({ name_or_id: 'brief' }).text, /Stopped Glim 'brief'/);
+  assert.ok(runs.length > 0);
+});
+
+test('primary agent_* tools', async () => {
+  const { m } = mkManager();
   const t = agentTools(m, { isHelper: false });
   const bad = t.agent_start({ name: 'x', task: 'y', every: 'often' }, {});
   assert.strictEqual(bad.error, true); assert.match(bad.text, /every must look like/);
