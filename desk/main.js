@@ -47,7 +47,7 @@ const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
-const { Sleep, UnavailableSleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -238,18 +238,18 @@ function autoSleepTick(now, over) {
   return { action: 'none', reason: d.reason };
 }
 
-// ---- built-in local model + Windows sleep -------------------------------------------------------------
-// Windows: the app runs LFM3 itself (src/runtime) and sleeps with the sleepmlx trainer (src/sleepwin.js). Off elsewhere.
+// ---- built-in local model + its sleep --------------------------------------------------------------------
+// Windows and a Mac without Ben's assistant: the app runs LFM3 itself (src/runtime) and sleeps with the sleepmlx trainer
+// (src/sleepwin.js; MPS on a Mac). Ben's Macs use the sleepmode app instead.
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
   builtin = new Builtin({ root, platform: process.platform, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
-  sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
-  if (FEATURES.sleepSoon) sleeper = new UnavailableSleep({ getSettings: () => store.getSettings(), home: path.join(root, 'sleep-unavailable'), note: Platform.SLEEP_MAC_NOTE });
-  else sleeper = new WinSleep({
+  sleepInstaller = new SleepInstaller({ root, platform: process.platform, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
+  sleeper = new WinSleep({
     getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
-    hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
+    hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), servedUrl: () => (builtin.server && builtin.server.url ? builtin.server.url() : ''), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
   });
 }
 // One hourly check-in (Windows sleep): due Glims run, then the check-in task goes through the normal agent in its own

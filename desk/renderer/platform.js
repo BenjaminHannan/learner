@@ -61,24 +61,23 @@
   const modifierHint = (p) => (isMac(p) ? 'Option, Cmd, Ctrl' : 'Ctrl, Alt, Shift');
 
   // ---- feature gating -----------------------------------------------------------------------------
-  // perms: the macOS Privacy card (Windows needs no permission to click or look). sleep: the Sleep group and top-bar button
-  // (the sleep app only runs on the Macs for now). tray: hide-to-tray instead of the Mac "see-through window".
+  // perms: the macOS Privacy card (Windows needs no permission to click or look). sleep: the Sleep group and top-bar button.
+  // sleepBuiltin: sleep runs through the app's own runner (src/sleepwin.js) on the built-in model; else through the sleepmode app. tray: hide-to-tray instead of the Mac "see-through window".
   // o.hasLocalAssistant: true when this is one of Ben's Macs (~/learner-ops/assistant/serve.sh exists). main.js looks at the disk and
   // passes it in, so this file stays pure. The built-in model runs on Windows, and on any Mac that is known to have no such assistant
   // (an unknown value keeps the old behaviour: the assistant gateway).
   const builtinOn = (p, o) => isWin(p) || (isMac(p) && !!o && o.hasLocalAssistant === false);
-  // The built-in Mac has no sleep yet (Windows sleeps through its own runner, Ben's Macs through the sleepmode app; this Mac has neither).
-  const SLEEP_MAC_NOTE = 'Sleep is not available on this Mac yet.';
+  // Every platform sleeps: Windows and the built-in Mac through the app's own runner (the trainer's base is the built-in model's
+  // base, so the night's adapter is loaded into the daytime model), Ben's Macs through the sleepmode app.
   function features(p, o) {
-    const mb = isMac(p) && builtinOn(p, o);
-    return { perms: isMac(p), sleep: !mb, sleepSoon: mb, builtin: builtinOn(p, o), tray: isWin(p), dock: isMac(p), call: isMac(p), dictate: isMac(p), menuBarAutoHide: isWin(p) };
+    return { perms: isMac(p), sleep: true, sleepSoon: false, sleepBuiltin: builtinOn(p, o), builtin: builtinOn(p, o), tray: isWin(p), dock: isMac(p), call: isMac(p), dictate: isMac(p), menuBarAutoHide: isWin(p) };
   }
   const PERMS_NOTE_WIN = "Windows doesn't need extra permissions.";
-  // What Settings shows for the gated rows. Sleep works on Windows through the built-in runner; only the Mac-specific rows
-  // (the sleepmode app folder and Python) are replaced there by the plain-language rows.
+  // What Settings shows for the gated rows. With the built-in runner (Windows, built-in Mac) the sleepmode-app rows (its folder and
+  // Python) are replaced by the plain-language rows (sleepWindows: the name is historical).
   function settingsGating(p, o) {
     const f = features(p, o);
-    return { showSleepGroup: true, sleepUnavailable: f.sleepSoon, sleepNote: f.sleepSoon ? SLEEP_MAC_NOTE : '', sleepWindows: isWin(p), showPermRow: f.perms, permsNote: f.perms ? '' : (isWin(p) ? PERMS_NOTE_WIN : 'Nothing to set up on this system.'), showSleepButton: f.sleep };
+    return { showSleepGroup: true, sleepUnavailable: false, sleepNote: '', sleepWindows: f.sleepBuiltin, showPermRow: f.perms, permsNote: f.perms ? '' : (isWin(p) ? PERMS_NOTE_WIN : 'Nothing to set up on this system.'), showSleepButton: f.sleep };
   }
   // Onboarding: the Permissions step exists only on a Mac (and in the Linux e2e, which fakes macOS).
   const needsPermsStep = (p, e2e) => isMac(p) || !!e2e;
@@ -140,7 +139,7 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
   const defaultSleepWindow = (p) => ['23:00', '08:00'];
   const presetFor = (gatewayUrl) => { const u = String(gatewayUrl || '').replace(/\/+$/, ''); return PRESETS.find((x) => x.gatewayUrl === u) || null; };
 
-  const api = { isWin, isMac, helperFileName, helperCommand, helperCandidates, mapKeys, defaultHotkey, hotkeyLabel, modifierHint, features, builtinOn, settingsGating, needsPermsStep, pillOptions, pillPosition, closeBehavior, quitHint, loginItemOptions, startedHidden, windowOptions, osWords, PRESETS, presetsFor, defaultPreset, defaultSleepWindow, presetFor, PERMS_NOTE_WIN, SLEEP_MAC_NOTE };
+  const api = { isWin, isMac, helperFileName, helperCommand, helperCandidates, mapKeys, defaultHotkey, hotkeyLabel, modifierHint, features, builtinOn, settingsGating, needsPermsStep, pillOptions, pillPosition, closeBehavior, quitHint, loginItemOptions, startedHidden, windowOptions, osWords, PRESETS, presetsFor, defaultPreset, defaultSleepWindow, presetFor, PERMS_NOTE_WIN };
   root.Platform = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

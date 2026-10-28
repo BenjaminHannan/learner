@@ -18,6 +18,33 @@ def export_command(llama_cpp_dir: str, base_dir: str, adapter_dir, out) -> list:
             "--base", os.path.expanduser(base_dir), "--outfile", str(out)]
 
 
+def prev_path(out) -> Path:
+    out = Path(out)
+    return out.with_name(out.name[:-len(".gguf")] + ".prev.gguf" if out.name.endswith(".gguf") else out.name + ".prev")
+
+
+def sidecar_path(out) -> Path:
+    """adapter.gguf -> adapter.gguf.json: which base the adapter was trained on. Loaders refuse an adapter whose base does not match."""
+    return Path(str(out) + ".json")
+
+
+def restore_prev(out) -> bool:
+    """Put adapter.prev.gguf (and its sidecar) back as adapter.gguf; with no previous one, remove adapter.gguf. -> True if one was restored."""
+    out, prev = Path(out), prev_path(out)
+    if prev.exists():
+        os.replace(str(prev), str(out))
+        ps = sidecar_path(prev)
+        if ps.exists():
+            os.replace(str(ps), str(sidecar_path(out)))
+        return True
+    for f in (out, sidecar_path(out)):
+        try:
+            f.unlink()
+        except OSError:
+            pass
+    return False
+
+
 def export_gguf(llama_cpp_dir: Optional[str], base_dir: Optional[str], adapter_dir, out, run: Callable = subprocess.run, timeout: float = 900) -> Tuple[bool, str]:
     """-> (ok, message). Skips (False, reason) when llama_cpp_dir is not configured, the converter, the HF base or a PEFT adapter is missing."""
     if not llama_cpp_dir:
@@ -37,6 +64,20 @@ def export_gguf(llama_cpp_dir: Optional[str], base_dir: Optional[str], adapter_d
             return False, "converter exit %s: %s" % (r.returncode, (r.stderr or "")[-300:])
         if not tmp.exists():
             return False, "converter wrote no file"
+        if out.exists():   # the last good one stays as the fallback (adapter.prev.gguf), with its record
+            os.replace(str(out), str(prev_path(out)))
+            if sidecar_path(out).exists():
+                os.replace(str(sidecar_path(out)), str(sidecar_path(prev_path(out))))
+            else:
+                try:
+                    sidecar_path(prev_path(out)).unlink()
+                except OSError:
+                    pass
+        else:   # a stale record with no file is not carried onto the new one
+            try:
+                sidecar_path(out).unlink()
+            except OSError:
+                pass
         os.replace(str(tmp), str(out))
         return True, str(out)
     except Exception as e:   # includes timeouts

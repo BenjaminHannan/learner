@@ -8,6 +8,9 @@
   night [...]          run one chunk by hand (same as python -m sleepmlx.worker; --budget-s 1200 --dry-run ...).
   export-gguf --llama-cpp DIR --base HF_BASE_DIR [--out adapter.gguf]
                        torch backend only: convert the PEFT adapter to a llama.cpp GGUF LoRA (run llama-server with --lora adapter.gguf).
+  served-check --server URL [--n 8]
+                       ask a llama-server started with --lora the gate questions and the latest held-out cards, adapter on and off
+                       (per-request lora scale); exit 0 = the adapter is fine as served, 1 = worse or broken, 2 = no answer.
   diary [--date D]     preview the converted diary (what a night would read), secrets already redacted.
 """
 from __future__ import annotations
@@ -134,6 +137,9 @@ def main(argv=None) -> int:
         cmd_ = export_command(llama, base, paths.adapter, out)
         print(" ".join(cmd_))
         return subprocess.call(cmd_)
+    if cmd == "served-check":
+        from .served import main as smain
+        return smain(rest)
     if cmd == "diary":
         date = rest[rest.index("--date") + 1] if "--date" in rest else None
         week = diary_mod.build_week(paths.diary_dir, dates=[date] if date else None, ignore_file=diary_mod.ensure_ignore(paths.ignore))

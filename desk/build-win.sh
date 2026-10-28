@@ -32,6 +32,14 @@ if [[ -d ../sleepmlx ]]; then
 else
   echo "WARNING: ../sleepmlx not found; the Windows build will not be able to sleep." >&2
 fi
+SLEEPMODE_SRC="${SLEEPMODE_SRC:-$HOME/learner-ops/sleepmode/app}"
+if [[ -d "$SLEEPMODE_SRC/sleepmode" ]]; then
+  echo "==> staging the dream checker (sleepmode)"
+  (cd "$SLEEPMODE_SRC" && tar -c --exclude='__pycache__' --exclude='*.pyc' --exclude='tests' --exclude='*.bak-*' sleepmode) | tar -x -C "$STAGE"
+  EXTRA+=(--extra-resource="$STAGE/sleepmode")
+else
+  echo "NOTE: $SLEEPMODE_SRC/sleepmode not found; sleep will run without the dream check (the morning summary says so)." >&2
+fi
 
 # Our own CPU llama-server.exe (LFM3-capable master build) rides along as resources/llama, until an official release has LFM3
 if [[ -f vendor/llama/llama-server.exe ]]; then

@@ -65,11 +65,12 @@ def memory_pressure_level(min_free_gb: float = 1.0) -> int:
 
 
 class Guards:
-    """External stop conditions, polled at most every poll_s: SIGTERM flag, ASSISTANT_RUNNING, PAUSE_OTHERS, memory pressure > 1."""
+    """External stop conditions, polled at most every poll_s: SIGTERM flag, ASSISTANT_RUNNING, PAUSE_OTHERS, memory pressure > 1
+    on `hot_polls` polls in a row (one reading is not enough: loading the model lifts an 8 GB Mac to "warn" for a few seconds)."""
 
     def __init__(self, paths=None, poll_s: float = 10.0, pressure: Optional[Callable[[], int]] = None, min_free_gb: float = 1.0,
-                 now: Callable[[], float] = time.time):
-        self.paths, self.poll_s, self.now = paths, poll_s, now
+                 now: Callable[[], float] = time.time, hot_polls: int = 2):
+        self.paths, self.poll_s, self.now, self.hot_polls, self._hot = paths, poll_s, now, max(1, hot_polls), 0
         self.pressure = pressure or (lambda: memory_pressure_level(min_free_gb))
         self.signalled: Optional[str] = None
         self._last, self._reason = -1e18, None
@@ -89,8 +90,10 @@ class Guards:
                     r = "assistant_running"
                 elif os.path.exists(str(self.paths.pause_file)):
                     r = "pause_others"
-            if r is None and self.pressure() > 1:
-                r = "memory_pressure"
+            if r is None:
+                self._hot = self._hot + 1 if self.pressure() > 1 else 0
+                if self._hot >= self.hot_polls:
+                    r = "memory_pressure"
             self._reason = r
         return self._reason
 

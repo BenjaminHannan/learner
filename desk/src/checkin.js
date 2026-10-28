@@ -56,9 +56,11 @@ function checkinDue(i) {
 
 // the model for a check-in: the newest GATE-PASSED adapter (the converted adapter.gguf; sleep/adapter is what the worker promotes
 // after its gate), else the plain base model (''). Never the half-trained work adapter.
-function checkinAdapter(home, exists) {
-  const f = path.join(home, 'adapter.gguf');
-  return exists(f) ? f : '';
+// fits(f): the adapter was trained on the built-in model's base (adapter.gguf.json); then adapter.prev.gguf when the newest was set aside.
+function checkinAdapter(home, exists, fits) {
+  const ok = (f) => exists(f) && (!fits || fits(f));
+  for (const n of ['adapter.gguf', 'adapter.prev.gguf']) { const f = path.join(home, n); if (ok(f)) return f; }
+  return '';
 }
 
 // Port of triage() in sleepmode/checkin.py for structured items {source:'mail'|'calendar', sender, subject, snippet, startsInMin}.

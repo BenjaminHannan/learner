@@ -119,6 +119,7 @@ class NightTests(unittest.TestCase):
         # day 2 arrives
         from .helpers import write_raw
         write_raw(e.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="c2")
+        e.cfg.gate_min_gain = 0      # this test is about adapter rotation and replay; the gain rule has its own tests
         be2 = e.backend()
         res = e.sleeper(be2).run(e.week())
         self.assertEqual(res["status"], "done", res)
@@ -148,10 +149,10 @@ class NightTests(unittest.TestCase):
             self.assertIn("trainable cards", res["message"])
             self.assertEqual(be.steps_seen, [])
             self.assertEqual(read_json(env.paths.state)["slept_days"] if env.paths.state.exists() else [], [])
-            # same data again: answered at once, no new generation
+            # same data again: the small day is passed over at once (no new generation); with no other day there is no work
             be2 = env.backend()
             res2 = env.sleeper(be2).run(env.week())
-            self.assertEqual(res2["status"], "dry_run")
+            self.assertEqual(res2["status"], "no_new_day")
             self.assertEqual(be2.calls["generate"], 0)
         finally:
             env.close()
@@ -295,6 +296,44 @@ class GateTests(unittest.TestCase):
         self.assertEqual(len(gate_mod.GENERAL_QA), 40)
         self.assertEqual(len(gate_mod.gate_questions(20)), 20)
         self.assertTrue(gate_mod.correct("It is 42.", ["42"]) and not gate_mod.correct("142", ["42"]))
+
+    def test_strict_grading(self):
+        c = gate_mod.correct
+        self.assertFalse(c("I would add some sauce.", ["au"]))            # no substrings
+        self.assertTrue(c("Au", ["au"]))
+        self.assertFalse(c("7 or 8", ["7", "seven"]))                       # a hedge with two numbers is wrong
+        self.assertTrue(c("The answer is 15.", ["15", "fifteen"]))
+        self.assertFalse(c("Hmm.\nParis", ["paris"]))                     # only the first line counts
+        self.assertFalse(c("Let me think about all of the many possible capitals of this country first, maybe Paris", ["paris"]))
+        self.assertTrue(c("<think>x</think>Paris.", ["paris"]))
+        self.assertTrue(gate_mod.recall_hit("Marta", "Marta works there."))
+        self.assertFalse(gate_mod.recall_hit("Ann", "Annabel"))
+        self.assertFalse(gate_mod.recall_hit("Orbix", "I don't know.\nOrbix"))
+
+    def test_decide(self):
+        ok = {"harm_ok": True, "harm": 0.0}
+        self.assertEqual(gate_mod.decide(ok, {"hits": 0}, {"n": 3, "hits": 2}), [])
+        self.assertIn("did not improve", gate_mod.decide(ok, {"hits": 1}, {"n": 3, "hits": 1})[0])
+        self.assertIn("got worse", gate_mod.decide(ok, {"hits": 2}, {"n": 3, "hits": 1})[0])
+        self.assertIn("no held-out", gate_mod.decide(ok, None, {"n": 0})[0])
+        self.assertIn("general questions dropped", gate_mod.decide({"harm_ok": False, "harm": 5.0}, {"hits": 0}, {"n": 2, "hits": 2})[0])
+        self.assertEqual(gate_mod.decide(ok, {"hits": 1}, {"n": 3, "hits": 1}, min_gain=0), [])
+
+    def test_a_night_that_teaches_nothing_is_undone(self):
+        env = Env()
+        try:
+            r1 = env.sleeper(env.backend()).run(env.week())
+            self.assertFalse(r1["reverted"])
+            before = (env.paths.adapter / "adapters.safetensors").read_text()
+            from .helpers import write_raw
+            write_raw(env.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="c2")
+            env.cfg.gate_min_gain = 99
+            r2 = env.sleeper(env.backend()).run(env.week())
+            self.assertTrue(r2["reverted"])
+            self.assertIn("did not improve", r2["message"])
+            self.assertEqual((env.paths.adapter / "adapters.safetensors").read_text(), before)
+        finally:
+            env.close()
 
     def test_harm_undoes_the_night(self):
         env = Env()

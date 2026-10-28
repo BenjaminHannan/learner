@@ -3,6 +3,16 @@
 (a) GENERAL: 40 fixed simple questions (facts and arithmetic). The base model's answers are recorded the first time; the adapter may not
     lose more than HARM_MAX points (percentage points of the 40).
 (b) RECALL: held-out cards of the night (never trained on): closed-book question -> answer. quiz = recall %.
+    This is the one quiz metric on the Mac (the old -NLL x 100 of sleepmode/mlx_worker.py is not used by this trainer).
+
+Grading is strict (see `correct` / `recall_hit`): only the reply's first line counts, at most HEAD_WORDS words of it, and an answer must
+appear there as a whole word or phrase (no substrings: "au" is not found in "sauce", "42" not in "142"). A reply that names two different
+numbers when one is asked for counts as wrong. The night is kept only when (see `decide`):
+    1. general harm <= harm_max (the base model's own score on the 40 questions is the reference), AND
+    2. held-out recall did not drop against the adapter the night started from (the committed one), AND
+    3. it rose by at least `min_gain` held-out cards (a night that taught nothing measurable is not worth the risk), AND
+    4. there was at least one held-out card to measure it on.
+Anything else undoes the night: the committed adapter stays.
 """
 from __future__ import annotations
 
@@ -57,23 +67,60 @@ GENERAL_QA: List[tuple] = [
 ]
 
 
+HEAD_WORDS = 12          # only this many words of the reply's first line are graded
+MIN_GAIN = 1             # held-out cards the night must add over the adapter it started from
+
+
+GRADER = "strict-2"   # stored with recorded scores: a score from another grader is not compared with this one
+_SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹", "01234567890123456789")
+
+
 def normalize(s: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\-. ]+", " ", str(s).lower())).strip()
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\- ]+", " ", str(s).translate(_SUB).lower().replace("'s ", " "))).strip()
 
 
-def correct(reply: str, accepted: Sequence[str]) -> bool:
-    r = normalize(reply)
-    toks = set(re.findall(r"[a-z0-9\-]+", r))
-    for a in accepted:
-        a = normalize(a)
-        if a.isdigit():
-            if a in re.findall(r"\d+", r):   # whole number, not a substring of a larger one
-                return True
-        elif a in r:
-            return True
-        elif a in toks:
-            return True
-    return False
+_THINK = re.compile(r"<think>.*?</think>", re.S | re.I)
+
+
+def head(reply: str, words: int = HEAD_WORDS) -> str:
+    """The graded part of a reply: think blocks dropped, first non-empty line, first `words` words, normalized."""
+    t = _THINK.sub(" ", str(reply or ""))
+    t = t.split("</think>")[-1]
+    lines = [x for x in t.splitlines() if normalize(x)]
+    # a label-only first line ("**Answer:**") is not the answer: take the next line
+    while len(lines) > 1 and lines[0].strip().strip("*_# ").endswith(":") and len(normalize(lines[0]).split()) <= 3:
+        lines = lines[1:]
+    return " ".join(normalize(lines[0] if lines else "").split()[:words])
+
+
+def has_phrase(text: str, phrase: str) -> bool:
+    """phrase (normalized) occurs in normalized text as whole words."""
+    p = normalize(phrase)
+    return bool(p) and re.search(r"(?<![a-z0-9])" + re.escape(p) + r"(?![a-z0-9])", text) is not None
+
+
+_NUM = re.compile(r"(?<![a-z0-9.])\d+(?![a-z0-9])")
+
+
+def correct(reply: str, accepted: Sequence[str], question: str = "") -> bool:
+    """Strict: an accepted answer appears as a whole word/phrase in the head of the reply. When the accepted answers are numbers, the
+    first number of the head that is not in the question must be an accepted one (a hedge such as "7 or 8" for 8 is wrong, while
+    "7 + 8 = 15" or "100 C (212 F)" are right)."""
+    r = head(reply)
+    nums_ok = {normalize(a) for a in accepted if normalize(a).isdigit()}
+    if nums_ok:
+        asked = set(_NUM.findall(normalize(question)))
+        found = [x for x in _NUM.findall(r) if x not in asked]
+        if found and found[0] not in nums_ok:
+            return False
+        if len(set(found)) > 1 and re.search(r"\d+ (?:or|to) \d+", r):   # "7 or 8", "7 to 8": a hedge
+            return False
+    return any(has_phrase(r, a) for a in accepted)
+
+
+def recall_hit(answer: str, reply: str) -> bool:
+    """A held-out card is answered when its answer (a name) appears as a whole phrase in the head of the reply."""
+    return has_phrase(head(reply), answer)
 
 
 def gate_questions(n: int = 40) -> List[tuple]:
@@ -93,7 +140,7 @@ def score_general(backend, R, adapter: bool, max_tokens: int = 24, n: int = 40) 
     out: List[str] = []
     for i in range(0, len(ps), backend.gen_batch):
         out += backend.generate(ps[i:i + backend.gen_batch], max_tokens, 0.0, adapter)
-    return [correct(o, a) for o, (_, a) in zip(out, gate_questions(n))]
+    return [correct(o, a, q) for o, (q, a) in zip(out, gate_questions(n))]
 
 
 def pct(flags: Sequence[bool]) -> Optional[float]:
@@ -104,7 +151,7 @@ def judge(base_flags: Sequence[bool], adapter_flags: Sequence[bool], harm_max: f
     """harm = base points - adapter points (positive = the adapter got worse). Fails when harm > harm_max."""
     b, a = pct(base_flags), pct(adapter_flags)
     harm = (b - a) if b is not None and a is not None else 0.0
-    return {"general_base": b, "general": a, "harm": harm, "harm_ok": harm <= harm_max + 1e-9}
+    return {"general_base": b, "general": a, "harm": harm, "harm_ok": harm <= harm_max + 1e-9, "harm_max": harm_max}
 
 
 def score_recall(backend, R, cards: Sequence[dict], adapter: bool = True, sys_prompt: str = "Answer with just the name.",
@@ -116,9 +163,34 @@ def score_recall(backend, R, cards: Sequence[dict], adapter: bool = True, sys_pr
     out: List[str] = []
     for i in range(0, len(ps), backend.gen_batch):
         out += backend.generate(ps[i:i + backend.gen_batch], max_tokens, 0.0, adapter)
-    flags = [c["a"].lower() in o.lower() for c, o in zip(cards, out)]
+    flags = [recall_hit(c["a"], o) for c, o in zip(cards, out)]
     by: Dict[str, List[bool]] = {}
     for c, f in zip(cards, flags):
         by.setdefault(c.get("dir", "forward"), []).append(f)
-    return {"recall": pct(flags), "n": len(flags), "by_dir": {k: pct(v) for k, v in by.items()},
+    return {"recall": pct(flags), "n": len(flags), "hits": sum(flags), "flags": flags, "by_dir": {k: pct(v) for k, v in by.items()},
             "samples": [{"q": c["q"], "a": c["a"], "out": o[:60]} for c, o in list(zip(cards, out))[:3]]}
+
+
+def _hits(r: Optional[Dict], n: int) -> int:
+    r = r or {}
+    if r.get("hits") is not None:
+        return int(r["hits"])
+    return int(round((r.get("recall") or 0.0) * n / 100.0))
+
+
+def decide(general: Dict, pre: Optional[Dict], post: Dict, min_gain: int = MIN_GAIN) -> List[str]:
+    """The morning decision. general: judge() result; pre / post: score_recall() of the same held-out cards with the adapter the night
+    started from and with tonight's adapter. Returns the reasons to undo the night ([] = keep it)."""
+    reasons = []
+    if not general.get("harm_ok", False):
+        reasons.append("general questions dropped %.1f points (max %.1f)" % (general.get("harm") or 0.0, general.get("harm_max", HARM_MAX)))
+    n = int(post.get("n") or 0)
+    if n == 0:
+        reasons.append("no held-out cards to check what was learned")
+        return reasons
+    hp, ha = _hits(pre, n), _hits(post, n)
+    if ha < hp:
+        reasons.append("held-out recall got worse (%d -> %d of %d)" % (hp, ha, n))
+    elif ha - hp < min_gain:
+        reasons.append("held-out recall did not improve (%d -> %d of %d; need +%d)" % (hp, ha, n, min_gain))
+    return reasons

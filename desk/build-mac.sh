@@ -31,6 +31,25 @@ else
   echo "WARNING: swiftc or helper/deskhelper.swift missing; building without screen control (install Xcode command line tools: xcode-select --install)." >&2
 fi
 
+# The sleep trainer (a Python package, no model, no Python) and the dream checker ride along as resources (resources/sleepmlx,
+# resources/sleepmode): the built-in Mac sleeps with them (src/sleepwin.js). SLEEPMODE_SRC: the folder holding sleepmode/.
+STAGE=build/stage; rm -rf "$STAGE"; mkdir -p "$STAGE"
+if [[ -d ../sleepmlx ]]; then
+  echo "==> staging sleepmlx"
+  (cd .. && tar -c --exclude='__pycache__' --exclude='*.pyc' --exclude='tests' sleepmlx) | tar -x -C "$STAGE"
+  EXTRA+=(--extra-resource="$STAGE/sleepmlx")
+else
+  echo "WARNING: ../sleepmlx not found; a Mac without the assistant will not be able to sleep." >&2
+fi
+SLEEPMODE_SRC="${SLEEPMODE_SRC:-$HOME/learner-ops/sleepmode/app}"
+if [[ -d "$SLEEPMODE_SRC/sleepmode" ]]; then
+  echo "==> staging the dream checker (sleepmode)"
+  (cd "$SLEEPMODE_SRC" && tar -c --exclude='__pycache__' --exclude='*.pyc' --exclude='tests' --exclude='*.bak-*' sleepmode) | tar -x -C "$STAGE"
+  EXTRA+=(--extra-resource="$STAGE/sleepmode")
+else
+  echo "NOTE: $SLEEPMODE_SRC/sleepmode not found; sleep will run without the dream check (the morning summary says so)." >&2
+fi
+
 echo "==> packaging"
 rm -rf build/app
 # The bundle id MUST stay what it was when the app was called "Premonition Desk": packager derives it from the app name
