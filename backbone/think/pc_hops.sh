@@ -10,8 +10,10 @@
 #                               round-2 arms and pair A's seed-1 replicate): waits for GO_FLAG and an empty GPU-BUSY, runs HOPS_ARMS (env,
 #                               space-separated, in order, stopping at the first failure; default "hplains hloops" = pair B with its preflight, as before)
 #                               at SEED (default 1), writes OUT/SUMMARY_$HOPS_NAME.txt, empties GPU-BUSY, then writes DONE_FLAG and, if set,
-#                               THEN_FLAG (the next job's go flag; a directory of that name, used to hold the next job back, is removed first). The
-#                               preflight and data of the first run are reused.
+#                               THEN_FLAG (the next job's go flag). THEN_FLAG may be an EMPTY DIRECTORY, or a directory holding one file named exactly
+#                               HOLD, put there to hold the next job back (its waiter wants a file): hand_on removes HOLD (only that name, never rm -rf)
+#                               and the directory, then writes the flag. If anything else is inside, the directory and HOLD are left alone, the log
+#                               says "could not write THEN_FLAG ..." and the next job stays held back. The preflight and data of the first run are reused.
 #                               Names (the env names are all HOPS_*: a bare NAME or ARMS may already be set by the shell, WSL sets NAME to the Windows
 #                               computer name): HOPS_NAME defaults to hops<_s SEED if SEED > 0> for the default pair, so the committed SUMMARY_hops.txt and
 #                               SUMMARY_hops_s1.txt are only ever written by the default pair, and to hops_<arms joined by ->< _s SEED> for any other
@@ -194,10 +196,19 @@ hand_on() {  # R and F, after release_gpu: the flags hand the GPU on whatever ha
   echo "0 $(date -u +%FT%TZ) $2 rc=$1" > "$DONE_FLAG"  # as in pair A: the flags hand the GPU on whatever happened
   log "wrote $DONE_FLAG"
   if [ -n "${THEN_FLAG:-}" ]; then
-    [ -d "$THEN_FLAG" ] && rmdir "$THEN_FLAG"
-    echo "go $(date -u +%FT%TZ) after $2" > "$THEN_FLAG"
-    log "wrote $THEN_FLAG"
+    if [ -d "$THEN_FLAG" ]; then  # a directory of that name holds the next job back: it may contain one file named exactly HOLD, nothing else is ever removed
+      if [ -z "$(find "$THEN_FLAG" -mindepth 1 -maxdepth 1 ! -name HOLD 2>/dev/null)" ]; then
+        [ -f "$THEN_FLAG/HOLD" ] && rm -f "$THEN_FLAG/HOLD"
+        rmdir "$THEN_FLAG"
+      fi
+      if [ -d "$THEN_FLAG" ]; then
+        log "could not write THEN_FLAG $THEN_FLAG: it is a directory that cannot be removed (inside: $(ls -A "$THEN_FLAG" | tr '\n' ' ')); the next job stays held back"
+        return 0
+      fi
+    fi
+    if echo "go $(date -u +%FT%TZ) after $2" > "$THEN_FLAG"; then log "wrote $THEN_FLAG"; else log "could not write THEN_FLAG $THEN_FLAG (the write failed); the next job is not released"; fi
   fi
+  return 0
 }
 
 trap finish EXIT

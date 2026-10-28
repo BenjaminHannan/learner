@@ -1171,3 +1171,368 @@ def test_pc_race_bridge(tmp_path):
         (jobs / "handoff" / "HOPS-A-DONE").write_text("0\n")  # no pc_race_mini.sh driver runs in this test
         p.wait(timeout=30)
     assert seg2.read_text().startswith("0 ") and "race-mini skipped" in seg2.read_text()
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# The PC order of Oct 28 (coordinator): seed-1 replicate (running, an OLDER pc_hops.sh) -> hloopi seed 0 -> race-mini -> pair A seed 1 + fresh rows -> hloopd
+# seed 0 -> SEG2-DONE. Hold directory, bridge AFTER_FLAG / THEN_CMD, pc_hops_chain.sh, and the whole order on stubs. Stub scripts only: no GPU, no ssh.
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+OLD_PC_HOPS_COMMIT = "5d892429a5"  # the pc_hops.sh that runs on BensPC now (seed-1 replicate, started before hand_on knew HOLD)
+
+
+def _old_pc_hops(tmp_path):
+    """The pc_hops.sh of OLD_PC_HOPS_COMMIT, written to a temp file (the copy that is running on BensPC); the test is skipped if this checkout lacks that commit."""
+    import subprocess
+    import pytest
+    r = subprocess.run(["git", "-C", str(HERE), "show", f"{OLD_PC_HOPS_COMMIT}:backbone/think/pc_hops.sh"], capture_output=True, text=True)
+    if r.returncode != 0:
+        pytest.skip(f"commit {OLD_PC_HOPS_COMMIT} is not in this checkout: {r.stderr.strip()}")
+    p = tmp_path / "old_pc_hops.sh"
+    p.write_text(r.stdout)
+    return p
+
+
+def _wait_until(pred, timeout=120, step=0.05):
+    import time
+    end = time.time() + timeout
+    while time.time() < end:
+        if pred():
+            return True
+        time.sleep(step)
+    return pred()
+
+
+def test_pc_hops_hold_directory_old_and_new(tmp_path):
+    """THEN_FLAG naming a directory holds the next job back (its waiter wants a FILE). With a file HOLD inside: the OLD R script (commit 5d892429a5, running on
+    the PC) cannot remove the directory nor write into it, so it stays a directory and no file appears (race-mini stays held); the new hand_on removes exactly
+    HOLD, removes the directory and writes the flag (R and F alike). A directory with anything else inside is left alone (HOLD too), nothing is deleted, and the
+    log says it could not write THEN_FLAG; DONE_FLAG is still written and GPU-BUSY is still emptied."""
+    import subprocess
+    old = _old_pc_hops(tmp_path)
+    new = HERE / "pc_hops.sh"
+    cases = [("old", old, "R", {}), ("new", new, "R", {}), ("newF", new, "F", dict(HOPS_ARMS="hplains", HOPS_SEEDS="0")), ("other", new, "R", {}), ("nested", new, "R", {})]
+    for tag, script, pair, extra in cases:
+        d = tmp_path / tag
+        src, out, race, jobs, busy, calls = _pc_stubs(d)
+        hand = jobs / "handoff"
+        busy.write_text("")
+        (hand / "GO").write_text("go\n")
+        hold = hand / "GO-RACE-MINI"
+        hold.mkdir()
+        (hold / "HOLD").write_text("keep race-mini back\n")
+        if tag == "other":
+            (hold / "notes.txt").write_text("someone else's file\n")
+        if tag == "nested":  # HOLD that is not a file (a directory with a file in it) is not the mark: nothing under it is ever removed
+            (hold / "HOLD").unlink()
+            (hold / "HOLD").mkdir()
+            (hold / "HOLD" / "deep.txt").write_text("deep\n")
+        r = subprocess.run(["bash", str(script), pair, str(src), str(out)], env=_pc_r_env(d, jobs, busy, GO_FLAG=str(hand / "GO"), DONE_FLAG=str(hand / "HOPS-S1-DONE"),
+                                                                                    THEN_FLAG=str(hold), **extra), capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, (tag, r.stdout + r.stderr)
+        assert (hand / "HOPS-S1-DONE").read_text().startswith("0 ") and busy.read_text() == "", tag  # the done flag and GPU-BUSY do not depend on THEN_FLAG
+        log = (out / f"pair{pair}.log").read_text()
+        if tag == "old":
+            assert hold.is_dir() and sorted(x.name for x in hold.iterdir()) == ["HOLD"], tag  # race-mini's waiter (wants a file) is still held back
+            assert "Directory not empty" in r.stderr and "Is a directory" in r.stderr, r.stderr  # the failures the old script prints and goes on from
+        elif tag in ("new", "newF"):
+            assert hold.is_file() and hold.read_text().startswith("go ") and "after hops" in hold.read_text(), tag
+            assert f"wrote {hold}" in log and "could not write" not in log and not r.stderr.strip(), (tag, log, r.stderr)
+            assert log.index(f"wrote {hand / 'HOPS-S1-DONE'}") < log.index(f"wrote {hold}")  # as before: DONE_FLAG first, then THEN_FLAG
+        elif tag == "other":
+            assert hold.is_dir() and sorted(x.name for x in hold.iterdir()) == ["HOLD", "notes.txt"], tag  # left alone, HOLD included
+            assert (hold / "notes.txt").read_text() == "someone else's file\n" and (hold / "HOLD").read_text() == "keep race-mini back\n"
+            assert f"could not write THEN_FLAG {hold}" in log and "notes.txt" in log and f"wrote {hold}" not in log, log
+        else:
+            assert (hold / "HOLD" / "deep.txt").read_text() == "deep\n" and hold.is_dir()
+            assert f"could not write THEN_FLAG {hold}" in log and f"wrote {hold}" not in log, log
+    # an empty hold directory and a plain missing flag behave as before (the earlier tests cover them end to end); a write that fails is not reported as written
+    d = tmp_path / "ro"
+    src, out, race, jobs, busy, calls = _pc_stubs(d)
+    hand = jobs / "handoff"
+    busy.write_text("")
+    (hand / "GO").write_text("go\n")
+    r = subprocess.run(["bash", str(new), "R", str(src), str(out)], env=_pc_r_env(d, jobs, busy, GO_FLAG=str(hand / "GO"), DONE_FLAG=str(hand / "D"),
+                                                                                  THEN_FLAG=str(hand / "no-such-dir" / "GO-NEXT")), capture_output=True, text=True, timeout=120)
+    log = (out / "pairR.log").read_text()
+    assert r.returncode == 0 and f"could not write THEN_FLAG {hand / 'no-such-dir' / 'GO-NEXT'}" in log and f"wrote {hand / 'no-such-dir'}" not in log, log
+
+
+def test_pc_race_bridge_after_flag_and_then_cmd(tmp_path):
+    """pc_race_bridge.sh with AFTER_FLAG and THEN_CMD: THEN_CMD does not run before RACE-MINI-DONE (nor on a stale one, nor on hops pair A's flag once AFTER_FLAG
+    names another), runs to its end in the foreground, and only then is OUTFLAG written, with its exit code ("... ; then rc=N"). The stall rule counts from AFTER_FLAG.
+    With neither setting, the text of OUTFLAG is what it always was (the old test checks the behaviour)."""
+    import os
+    import re
+    import subprocess
+    import time
+    jobs = tmp_path / "jobs"
+    hand = jobs / "handoff"
+    hand.mkdir(parents=True)
+    seg2 = jobs / "think2-p1" / "SEG2-DONE"
+    marker, after = tmp_path / "then.txt", hand / "HOPS-R-round2_hloopi-DONE"
+    base = dict(**os.environ, JOBS=str(jobs), LOG=str(tmp_path / "bridge.log"), POLL="1", STALL_S="2")
+    run = ["bash", str(HERE / "pc_race_bridge.sh")]
+    # 1. race-mini done -> THEN_CMD (rc 7) -> OUTFLAG with "then rc=7"
+    env = dict(base, AFTER_FLAG=str(after), THEN_CMD=f"echo started > {marker}; sleep 3; echo finished >> {marker}; exit 7")
+    (hand / "RACE-MINI-DONE").write_text("stale\n")
+    time.sleep(0.05)
+    with subprocess.Popen(run, env=env) as p:
+        time.sleep(1)
+        (hand / "HOPS-A-DONE").write_text("0\n")  # the default AFTER_FLAG: with AFTER_FLAG set, it starts no stall check (STALL_S is 2 s, no driver runs)
+        time.sleep(4)
+        assert p.poll() is None and not marker.exists() and not seg2.exists()  # nothing ran: stale RACE-MINI-DONE, HOPS-A-DONE is not AFTER_FLAG
+        (hand / "RACE-MINI-DONE").write_text("rc 0\n")
+        assert _wait_until(marker.exists, 20) and not seg2.exists()  # THEN_CMD runs first, OUTFLAG is not there while it runs
+        assert _wait_until(seg2.exists, 30)
+        assert marker.read_text() == "started\nfinished\n"  # OUTFLAG came after THEN_CMD's last line
+        p.wait(timeout=30)
+    t = seg2.read_text()
+    assert p.returncode == 0 and re.fullmatch(r"0 \S+Z race-mini v2 done: rc 0 ; then rc=7\n", t), t
+    log = (tmp_path / "bridge.log").read_text()
+    assert "AFTER_FLAG=" in log and log.index("then-command start") < log.index("then-command end rc=7") < log.index("wrote")
+    # 2. AFTER_FLAG there, no race-mini driver: the stall rule gives up on race-mini, THEN_CMD still runs before OUTFLAG
+    seg2.unlink()
+    marker.unlink()
+    (hand / "RACE-MINI-DONE").unlink()
+    env = dict(base, AFTER_FLAG=str(after), THEN_CMD=f"echo ran > {marker}")
+    with subprocess.Popen(run, env=env) as p:
+        time.sleep(1.5)
+        after.write_text("0 hloopi\n")
+        p.wait(timeout=30)
+    t = seg2.read_text()
+    assert re.fullmatch(r"0 \S+Z no race-mini driver for 2 s after HOPS-R-round2_hloopi-DONE; race-mini skipped; then rc=0\n", t), t
+    assert marker.read_text() == "ran\n"
+    # 3. defaults: exactly the old text, no "then", the stall rule on HOPS-A-DONE
+    seg2.unlink()
+    (hand / "HOPS-A-DONE").write_text("stale\n")
+    time.sleep(0.05)
+    with subprocess.Popen(run, env=base) as p:
+        time.sleep(1.5)
+        (hand / "HOPS-A-DONE").write_text("0\n")
+        p.wait(timeout=30)
+    assert re.fullmatch(r"0 \S+Z no race-mini driver for 2 s after hops pair A; race-mini skipped\n", seg2.read_text()), seg2.read_text()
+    seg2.unlink()
+    with subprocess.Popen(run, env=base) as p:
+        time.sleep(1.5)
+        (hand / "RACE-MINI-DONE").write_text("rc 0\n")
+        p.wait(timeout=30)
+    assert re.fullmatch(r"0 \S+Z race-mini v2 done: rc 0 \n", seg2.read_text()), seg2.read_text()
+
+
+def _chain_setup(tmp_path, s0=None, s1=None, **more):
+    """A src with the stubs of _pc_stubs plus the real pc_hops.sh (the chain runs it from SRC), and a summarize_hops stub whose --json prints the file named by
+    $SUMJSON_<seed> (exit 1 if there is none). s0 / s1 are the summaries the stub gives at seed 0 / 1: dicts, a raw string, or None (no summary: the stub fails).
+    Returns (src, out, jobs, busy, calls, env)."""
+    import shutil
+    src, out, race, jobs, busy, calls = _pc_stubs(tmp_path)
+    think = src / "backbone" / "think"
+    for name in ("pc_hops.sh", "pc_hops_chain.sh"):
+        shutil.copy(HERE / name, think / name)
+    sj = think / "summarize_hops.py"
+    sumlog = tmp_path / "summaries.txt"
+    sj.write_text("import os, sys, pathlib\na = sys.argv\nif '--json' in a:\n    s = a[a.index('--seed') + 1]\n"
+                  f"    open({str(sumlog)!r}, 'a').write(f'json seed={{s}} runs={{pathlib.Path(a[1]).name}} data={{pathlib.Path(a[a.index(\"--data\") + 1]).name}}\\n')\n"
+                  "    f = os.environ.get('SUMJSON_' + s)\n"
+                  "    if not f or not os.path.exists(f):\n        sys.stderr.write('stub: no summary for seed ' + s + '\\n'); sys.exit(1)\n"
+                  "    sys.stdout.write(open(f).read()); sys.exit(0)\n" + sj.read_text())
+    busy.write_text("")
+    extra = {}
+    for seed, s in ((0, s0), (1, s1)):
+        if s is not None:
+            p = tmp_path / f"sum_s{seed}.json"
+            p.write_text(s if isinstance(s, str) else json.dumps(s))
+            extra[f"SUMJSON_{seed}"] = str(p)
+    # what a shell or the bridge may leave in the environment: the chain must clear every one of them
+    junk = dict(GO_FLAG=str(tmp_path / "no-such" / "GO"), DONE_FLAG=str(jobs / "handoff" / "STRAY-DONE"), THEN_FLAG=str(jobs / "handoff" / "STRAY-NEXT"),
+                HOPS_ARMS="hplains", HOPS_SEEDS="7", HOPS_NAME="bogus", SEED="9")
+    env = _pc_r_env(tmp_path, jobs, busy, **junk, **extra, **more)
+    return src, out, jobs, busy, calls, env
+
+
+def _summ(b=None, a=None, hloopi=None, hloopd=None, drop_r2=False):
+    """What summarize_hops.py --json carries that the chain reads: B.key, A.key, R2.<arm>.works / stops_itself (a mark left out is a key that is missing)."""
+    o = {"seed": 0, "n": 10, "arms": []}
+    if b:
+        o["B"] = {"key": b}
+    if a:
+        o["A"] = {"key": a}
+    o["R2"] = {} if drop_r2 else {x: {"works": v[0], "stops_itself": v[1]} for x, v in (("hloopi", hloopi), ("hloopd", hloopd)) if v is not None}
+    return o
+
+
+def _run_chain(src, out, env, rc=0):
+    import subprocess
+    r = subprocess.run(["bash", str(src / "backbone" / "think" / "pc_hops_chain.sh"), str(src), str(out)], env=env, capture_output=True, text=True, timeout=300)
+    assert r.returncode == rc, r.stdout + r.stderr
+    return r
+
+
+def test_pc_hops_chain_runs_every_step_in_order(tmp_path):
+    """pc_hops_chain.sh with B PASS at seeds 0 and 1, A REPLICATES at seed 1, hloopi works, hloopd stops itself: pc_hops.sh runs in the order a (R pair A seed 1),
+    F pairB, F pairA, F hloopi, R hloopd, F hloopd, each with its own HOPS_NAME, DONE_FLAG default, go flag and the arms / seeds fixed for it, holding the GPU under its
+    own GPU-BUSY line; the environment's GO_FLAG, DONE_FLAG, THEN_FLAG, HOPS_ARMS, HOPS_SEEDS, HOPS_NAME and SEED are cleared first (and set here to junk);
+    chain.log has every decision, HOPS-CHAIN-DONE the list of what ran; exit 0."""
+    src, out, jobs, busy, calls, env = _chain_setup(tmp_path, s0=_summ(b="PASS", a="FAILS", hloopi=(True, False), hloopd=(False, True)), s1=_summ(b="PASS", a="REPLICATES"))
+    hand = jobs / "handoff"
+    r = _run_chain(src, out, env)
+    lines = calls.read_text().splitlines()
+    assert [x.split()[0] for x in lines] == ["hplain", "hloop", "fresh", "fresh", "fresh", "hloopd", "fresh"], lines
+    assert all("racing=False busy=hops pair R seed 1 " in x and x.endswith("seed=1") for x in lines[:2]), lines  # pair A's seed-1 replicate
+    want = [("arms=hplains,hloops seeds=0,1", "pair F seed 0 1"), ("arms=hplain,hloop seeds=0,1", "pair F seed 0 1"), ("arms=hloopi,hplain seeds=0 ", "pair F seed 0 ")]
+    for x, (a, b) in zip(lines[2:5], want):
+        assert x.startswith(f"fresh {a}") and f"runs=runs data=data busy=hops {b}" in x, x
+    assert "hloopd racing=False busy=hops pair R seed 0 " in lines[5] and lines[5].endswith("seed=0"), lines[5]
+    assert lines[6].startswith("fresh arms=hloopd,hplains seeds=0 ") and "busy=hops pair F seed 0 " in lines[6]
+    flags = ["HOPS-R-pairA_s1-DONE", "HOPS-F-pairB-DONE", "HOPS-F-pairA-DONE", "HOPS-F-hloopi-DONE", "HOPS-R-round2_hloopd-DONE", "HOPS-F-hloopd-DONE"]
+    for f in flags:
+        assert (hand / f).read_text().startswith("0 ") and "rc=0" in (hand / f).read_text(), f
+    assert sorted(x.name for x in hand.iterdir()) == sorted(flags + ["HOPS-CHAIN-GO", "HOPS-CHAIN-DONE"]), sorted(x.name for x in hand.iterdir())  # no STRAY-*, no bogus, no HOPS-R-DONE
+    assert (hand / "HOPS-CHAIN-GO").read_text().startswith("go ") and busy.read_text() == "" and not (tmp_path / "no-such").exists()
+    assert sorted(x.name for x in out.glob("SUMMARY_*")) == ["SUMMARY_fresh_hloopd_s0.txt", "SUMMARY_fresh_hloopi_s0.txt", "SUMMARY_fresh_pairA_s0.txt", "SUMMARY_fresh_pairA_s1.txt",
+                                                            "SUMMARY_fresh_pairB_s0.txt", "SUMMARY_fresh_pairB_s1.txt", "SUMMARY_pairA_s1.txt", "SUMMARY_round2_hloopd.txt"]
+    assert (out / "runs" / "hloopd_s0" / "result_hloopd_s0.json").exists() and (out / "runs" / "hloop_s1" / "result_hloop_s1.json").exists()
+    done = (hand / "HOPS-CHAIN-DONE").read_text()
+    assert done.startswith("0 ") and done.count("\n") == 1 and "ran: R pairA_s1 rc=0; F pairB rc=0; F pairA rc=0; F hloopi rc=0; R round2_hloopd rc=0; F hloopd rc=0; skipped: nothing; exit 0" in done, done
+    clog = (out / "chain.log").read_text()
+    for needle in ("decision F pairB: yes", "decision F pairA: yes", "decision F hloopi: yes", "decision R round2_hloopd: yes", "decision F hloopd: yes", "pair B key PASS at seed 0",
+                   "pair A key REPLICATES at seed 1", "hloopi works=True stops_itself=False at seed 0", "hloopd works=False stops_itself=True at seed 0"):
+        assert needle in clog, (needle, clog)
+    assert "json seed=1 runs=runs data=data" in (tmp_path / "summaries.txt").read_text() and (out / "pairR.log").exists() and "exit 0" in clog
+    assert r.stdout.count("pc_hops_chain.sh start") == 1
+
+
+def test_pc_hops_chain_skips_what_is_not_met_or_not_readable(tmp_path):
+    """The chain decides each group from the summary it can read and never guesses. B failing at seed 1: no pairB group and no hloopd. B failing at seed 0: the same.
+    A summary that fails, is not JSON, or lacks the key: the groups that need it are skipped and logged as not readable (the others still run). hloopd that neither works
+    nor stops itself: its run happens, its fresh group does not. A step that fails does not stop the later ones (exit 1), and a failed hloopd run has no fresh group."""
+    def run(tag, s0, s1, rc=0, **more):
+        d = tmp_path / tag
+        src, out, jobs, busy, calls, env = _chain_setup(d, s0=s0, s1=s1, **more)
+        _run_chain(src, out, env, rc)
+        import re
+        short = lambda x: re.sub(r"^(\w+) racing=\w+ busy=.* seed=(\d+)$", r"\1 seed=\2", x).split(" busy=")[0]  # think1 lines: arm and seed; fresh lines: without GPU-BUSY
+        lines = [short(x) for x in calls.read_text().splitlines()]
+        return lines, (out / "chain.log").read_text(), (jobs / "handoff" / "HOPS-CHAIN-DONE").read_text(), jobs / "handoff"
+    ok0, ok1 = _summ(b="PASS", a="FAILS", hloopi=(True, True), hloopd=(True, True)), _summ(b="PASS", a="REPLICATES")
+    # B fails at seed 1: a, F pairA, F hloopi; no F pairB, no hloopd at all
+    lines, clog, done, hand = run("b1", ok0, _summ(b="NOT SHOWN", a="REPLICATES"))
+    assert lines == ["hplain seed=1", "hloop seed=1", "fresh arms=hplain,hloop seeds=0,1 runs=runs data=data", "fresh arms=hloopi,hplain seeds=0 runs=runs data=data"], lines
+    assert "decision F pairB: no (seed 0: yes" in clog and "pair B key NOT SHOWN at seed 1" in clog and "skip R round2_hloopd" in clog and "skip F hloopd" in clog
+    assert not (hand / "HOPS-F-pairB-DONE").exists() and not (hand / "HOPS-R-round2_hloopd-DONE").exists() and "skipped: F pairB (" in done and "R round2_hloopd (" in done and done.endswith("exit 0\n")
+    # B fails at seed 0 (seed 1 passes): the same
+    lines, clog, done, hand = run("b0", _summ(b="TOLD ONLY", a="FAILS", hloopi=(False, False)), ok1)
+    assert lines == ["hplain seed=1", "hloop seed=1", "fresh arms=hplain,hloop seeds=0,1 runs=runs data=data"], lines  # hloopi neither works nor stops itself: no group
+    assert "decision F hloopi: no" in clog and "mark not met" in clog and "pair B key TOLD ONLY at seed 0" in clog
+    # seed 0 has no summary (the stub exits 1): pairB, hloopi and hloopd are skipped as not readable, pair A (seed 1) still runs
+    lines, clog, done, hand = run("nos0", None, ok1)
+    assert lines == ["hplain seed=1", "hloop seed=1", "fresh arms=hplain,hloop seeds=0,1 runs=runs data=data"], lines
+    assert sum(1 for x in clog.splitlines() if " skip " in x and "not readable, not guessed" in x) == 3 and "exited 1" in clog and "stub: no summary for seed 0" in clog and "decision F pairB: unreadable" in clog
+    # seed 1 is not JSON: pair A is skipped, hloopi (seed 0) still runs, and pair B is unreadable so no hloopd
+    lines, clog, done, hand = run("junk1", ok0, "this is not json {")
+    assert lines == ["hplain seed=1", "hloop seed=1", "fresh arms=hloopi,hplain seeds=0 runs=runs data=data"], lines
+    assert "decision F pairA: unreadable" in clog and "decision F pairB: unreadable" in clog and "decision R round2_hloopd: unreadable" in clog
+    # the key is missing: no B in the seed-0 summary (pair B not computed), no hloopi among its round-2 arms
+    lines, clog, done, hand = run("nokey", _summ(a="FAILS", drop_r2=True), ok1)
+    assert lines == ["hplain seed=1", "hloop seed=1", "fresh arms=hplain,hloop seeds=0,1 runs=runs data=data"], lines
+    assert "seed 0 summary has no B mark (KeyError: 'B')" in clog and "seed 0 summary has no R2:hloopi mark (KeyError: 'hloopi')" in clog
+    # hloopd neither works nor stops itself: its run happens, no fresh group
+    lines, clog, done, hand = run("d0", _summ(b="PASS", a="FAILS", hloopi=(False, False), hloopd=(False, False)), ok1)
+    assert [x.split()[0] for x in lines] == ["hplain", "hloop", "fresh", "fresh", "hloopd"] and lines[-1] == "hloopd seed=0", lines  # pairB and pairA groups ran, hloopi's did not
+    assert "decision F hloopd: no" in clog and "skip F hloopd: mark not met" in clog and "R round2_hloopd rc=0; skipped: F hloopi (" in done
+    # step failures: a (hplain) fails -> the later steps still run, exit 1, the code is in the flag text; the flag still reads 0 in its first field
+    lines, clog, done, hand = run("faila", ok0, ok1, rc=1, FAIL_ARM="hplain")
+    assert [x.split()[0] for x in lines] == ["hplain", "fresh", "fresh", "fresh", "hloopd", "fresh"], lines  # hloop is not run after hplain failed (stop at the first failure)
+    assert "R pairA_s1 rc=3; F pairB rc=0" in done and done.startswith("0 ") and done.endswith("exit 1\n"), done
+    # hloopd's own run fails: its fresh group does not run, exit 1, the others are unaffected
+    lines, clog, done, hand = run("faild", ok0, ok1, rc=1, FAIL_ARM="hloopd")
+    assert [x.split()[0] for x in lines] == ["hplain", "hloop", "fresh", "fresh", "fresh", "hloopd"], lines
+    assert "R round2_hloopd rc=3" in done and "skip F hloopd: the hloopd run did not exit 0" in clog and not (hand / "HOPS-F-hloopd-DONE").exists()
+    assert (hand / "HOPS-R-round2_hloopd-DONE").read_text().startswith("0 ") and "rc=3" in (hand / "HOPS-R-round2_hloopd-DONE").read_text()
+
+
+def test_pc_planned_order_end_to_end_on_stubs(tmp_path):
+    """The whole order of Oct 28 on stubs. GO-RACE-MINI is a directory holding HOLD. The OLD R (commit 5d892429a5, seed 1) runs and writes HOPS-S1-DONE, fails to
+    release GO-RACE-MINI; the new hloopi R (GO_FLAG=HOPS-S1-DONE, THEN_FLAG=GO-RACE-MINI) runs next and swaps the directory for the flag file; only then does a fake
+    race-mini waiter (a pc_race_mini.sh driver that polls for the file and an empty GPU-BUSY) start; the new bridge (AFTER_FLAG, THEN_CMD=the chain) sees
+    RACE-MINI-DONE, runs the chain, and writes SEG2-DONE only after HOPS-CHAIN-DONE. Two owners never hold GPU-BUSY at once."""
+    import subprocess
+    import threading
+    old = _old_pc_hops(tmp_path)
+    src, out, jobs, busy, calls, env = _chain_setup(tmp_path, s0=_summ(b="PASS", a="FAILS", hloopi=(True, False), hloopd=(False, True)), s1=_summ(b="PASS", a="REPLICATES"))
+    for k in ("GO_FLAG", "DONE_FLAG", "THEN_FLAG", "HOPS_ARMS", "HOPS_SEEDS", "HOPS_NAME", "SEED"):
+        env.pop(k)  # the jobs below get their own; the bridge is started without any of them
+    hand, seg2 = jobs / "handoff", jobs / "think2-p1" / "SEG2-DONE"
+    race = tmp_path / "race"
+    hold = hand / "GO-RACE-MINI"
+    hold.mkdir()
+    (hold / "HOLD").write_text("held\n")  # arming step 1
+    # race-mini's waiter: polls for the flag FILE and an empty GPU-BUSY, then takes GPU-BUSY (it must find it empty), runs ~3 s, empties it, writes RACE-MINI-DONE
+    (race / "pc_race_mini.sh").write_text(
+        f"until [ -f {hold} ] && [ ! -s {busy} ]; do sleep 1; done\n"
+        f"echo \"race-mini start go=$(head -c 2 {hold}) hloopi_done=$(test -f {hand / 'HOPS-R-round2_hloopi-DONE'} && echo yes || echo no) busy_was=[$(cat {busy})]\" >> {calls}\n"
+        f"echo \"race-mini (sleep race, both sides) since $(date -u +%FT%TZ)\" > {busy}\n"
+        f"sleep 3\n"
+        f"echo \"race-mini end busy=$(cat {busy})\" >> {calls}\n"
+        f": > {busy}\n"
+        f"echo \"0 $(date -u +%FT%TZ) rc 0\" > {hand / 'RACE-MINI-DONE'}\n")
+    seen, bad, stop = [], [], threading.Event()
+    watch = {"HOPS-S1-DONE": lambda: (hand / "HOPS-S1-DONE").exists(), "HOPS-R-round2_hloopi-DONE": lambda: (hand / "HOPS-R-round2_hloopi-DONE").exists(),
+             "GO-RACE-MINI file": lambda: hold.is_file(), "RACE-MINI-DONE": lambda: (hand / "RACE-MINI-DONE").exists(), "HOPS-CHAIN-GO": lambda: (hand / "HOPS-CHAIN-GO").exists(),
+             "HOPS-CHAIN-DONE": lambda: (hand / "HOPS-CHAIN-DONE").exists(), "SEG2-DONE": seg2.exists}
+
+    def sampler():  # order of first sight; two facts checked in the order that cannot race: the later flag first, then the one that must already be there
+        while not stop.is_set():
+            if hold.is_file() and not (hand / "HOPS-R-round2_hloopi-DONE").exists():
+                bad.append("GO-RACE-MINI was a file before hloopi's done flag")
+            if seg2.exists() and not (hand / "HOPS-CHAIN-DONE").exists():
+                bad.append("SEG2-DONE before HOPS-CHAIN-DONE")
+            if hold.is_file() and not (hand / "HOPS-S1-DONE").exists():
+                bad.append("GO-RACE-MINI file before the seed-1 replicate was done")
+            for k, f in watch.items():
+                if k not in seen and f():
+                    seen.append(k)
+            stop.wait(0.02)
+    th = threading.Thread(target=sampler, daemon=True)
+    procs = []
+    try:
+        th.start()
+        mk = lambda argv, e: procs.append(subprocess.Popen(argv, env=e, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)) or procs[-1]
+        mk(["bash", str(race / "pc_race_mini.sh")], env)
+        old_r = mk(["bash", str(old), "R", str(src), str(out)], dict(env, GO_FLAG=str(hand / "HOPS-A-DONE"), DONE_FLAG=str(hand / "HOPS-S1-DONE"), THEN_FLAG=str(hold)))
+        new_r = mk(["bash", str(HERE / "pc_hops.sh"), "R", str(src), str(out)], dict(env, GO_FLAG=str(hand / "HOPS-S1-DONE"), HOPS_ARMS="hloopi", SEED="0", HOPS_NAME="round2_hloopi",
+                                                                                      THEN_FLAG=str(hold)))
+        bridge = mk(["bash", str(HERE / "pc_race_bridge.sh")], dict(env, LOG=str(tmp_path / "bridge.log"), STALL_S="2",
+                                                                      AFTER_FLAG=str(hand / "HOPS-R-round2_hloopi-DONE"),
+                                                                      THEN_CMD=f"bash {src}/backbone/think/pc_hops_chain.sh {src} {out}"))
+        import time
+        time.sleep(3)
+        assert old_r.poll() is None and new_r.poll() is None and bridge.poll() is None and not calls.exists()  # all waiting: nothing has the GPU yet
+        (hand / "HOPS-A-DONE").write_text("0\n")  # the seed-1 replicate gets its go
+        assert _wait_until(seg2.exists, 170), (calls.read_text() if calls.exists() else "", (out / "chain.log").read_text() if (out / "chain.log").exists() else "")
+        assert _wait_until(lambda: "SEG2-DONE" in seen, 10)  # the sampler has seen it too
+        for p in (old_r, new_r, bridge):
+            p.wait(timeout=30)
+        assert old_r.returncode == 0 and new_r.returncode == 0 and bridge.returncode == 0
+    finally:
+        stop.set()
+        th.join(timeout=5)
+        for p in procs:
+            if p.poll() is None:
+                p.kill()
+            p.wait()
+    assert not bad, sorted(set(bad))
+    assert seen == list(watch), seen  # first sight in the order of the plan (the dict's order is the plan's; the checks above are the ones that cannot race)
+    lines = calls.read_text().splitlines()
+    names = [x.split()[0] if not x.startswith("race-mini") else " ".join(x.split()[:2]) for x in lines]
+    assert names == ["hplains", "hloops", "hloopi", "race-mini start", "race-mini end", "hplain", "hloop", "fresh", "fresh", "fresh", "hloopd", "fresh"], names
+    assert "busy=hops pair R seed 1 " in lines[0] and "busy=hops pair R seed 1 " in lines[1] and "busy=hops pair R seed 0 " in lines[2]  # each held GPU-BUSY under its own line
+    assert "go=go hloopi_done=yes busy_was=[]" in lines[3]  # race-mini started on the flag FILE, after hloopi, and found GPU-BUSY empty
+    assert lines[4].startswith("race-mini end busy=race-mini (sleep race") and "busy=hops pair R seed 1 " in lines[5] and "busy=hops pair R seed 1 " in lines[6]
+    assert all("busy=hops pair F seed " in x for x in lines[7:10]) and "busy=hops pair R seed 0 " in lines[10] and "busy=hops pair F seed 0 " in lines[11]
+    assert not hold.is_dir() and hold.read_text().startswith("go ") and "after hops replicate seed 0" in hold.read_text() and busy.read_text() == ""
+    assert (hand / "HOPS-S1-DONE").read_text().startswith("0 ") and "rc=0" in (hand / "HOPS-R-round2_hloopi-DONE").read_text()
+    t = seg2.read_text()
+    assert t.startswith("0 ") and "race-mini v2 done: 0 " in t and t.endswith("rc 0 ; then rc=0\n"), t  # the fake race-mini's own flag text, then the chain's code
+    assert "exit 0" in (hand / "HOPS-CHAIN-DONE").read_text() and "F hloopd rc=0" in (hand / "HOPS-CHAIN-DONE").read_text()
+    blog = (tmp_path / "bridge.log").read_text()
+    assert blog.index("then-command start") < blog.index("then-command end rc=0") < blog.index("wrote")
