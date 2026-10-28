@@ -524,3 +524,20 @@ test("Ben's chat first: a running Glim waits before its next model call without 
     assert.ok(states.indexOf('running', states.indexOf('queued:ben')) > 0);
   } finally { gw.close(); }
 });
+
+test('pauseForSleep: a run in progress stops, stays due, and a one-time Glim still runs after wake', async () => {
+  let asleep = true;
+  const { m, runs, clock, finished } = mkManager({ hold: () => asleep });
+  m.add({ name: 'research', task: 't' });                       // one-time
+  m.tick(true);
+  assert.strictEqual(runs.length, 1);
+  assert.strictEqual(m.pauseForSleep(), 1);
+  runs[0].done({ stopped: true });
+  await until(() => !m.isRunning(m.find('research').id));
+  const h = m.find('research');
+  assert.strictEqual(h.status, 'idle'); assert.ok(h.next && h.next <= clock.t); assert.strictEqual(h.dueHeld, true);
+  assert.strictEqual(finished.length, 0);                       // no bogus "finished" notice
+  m.tick(); assert.strictEqual(runs.length, 1);                 // held while asleep
+  asleep = false; m.tick();
+  assert.strictEqual(runs.length, 2);                           // runs once after wake
+});
