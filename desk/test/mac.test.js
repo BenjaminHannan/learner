@@ -33,8 +33,9 @@ test('mac asset name is the arm64 tar.gz (no zip for macOS); the Windows names a
   assert.strictEqual(C.llamaExeName('darwin'), 'llama-server'); assert.strictEqual(C.llamaExeName('win32'), 'llama-server.exe');
 });
 
-test('mac asset pick: newest macos-arm64 release at or above the LFM3 floor (b11938, 2026-10-27T23:57:45Z), drafts and prereleases skipped', () => {
-  const rels = [mac('b11937', '2026-10-27T22:00:00Z'), mac('b11938', '2026-10-27T23:57:45Z'), mac('b11945', '2026-10-28T09:00:00Z'), mac('b11990', '2026-10-29T09:00:00Z', { prerelease: true }), mac('b11991', '2026-10-29T10:00:00Z', { draft: true })];
+test('mac asset pick: newest macos-arm64 release at or above the LFM3 floor (b11938, 2026-10-27T23:57:45Z), drafts skipped', () => {
+  const rels = [mac('b11937', '2026-10-27T22:00:00Z'), mac('b11938', '2026-10-27T23:57:45Z'), mac('b11945', '2026-10-28T09:00:00Z'), mac('b11991', '2026-10-29T10:00:00Z', { draft: true })];
+  assert.strictEqual(R.pickLlamaAsset([mac('b11946', '2026-10-28T09:00:00Z', { prerelease: true })], { platform: 'darwin' }).tag, 'b11946'); // llama.cpp marks every release a prerelease
   const a = R.pickLlamaAsset(rels, { platform: 'darwin' });
   assert.strictEqual(a.tag, 'b11945'); assert.strictEqual(a.name, 'llama-b11945-bin-macos-arm64.tar.gz'); assert.strictEqual(a.url, 'https://x/b11945/llama-b11945-bin-macos-arm64.tar.gz'); assert.strictEqual(a.sha256, 'e'.repeat(64));
   assert.strictEqual(R.pickLlamaAsset([rels[0]], { platform: 'darwin' }), null);        // b11937 predates LFM3

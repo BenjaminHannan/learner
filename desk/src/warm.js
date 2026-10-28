@@ -41,13 +41,17 @@ class Warmer {
   rewarm() { this.need = true; if (!this.stopped && !this.warming) { clearTimeout(this.timer); this._tick(); } }
   gatewayMoved() { this.wasUp = false; this.rewarm(); }
 
+  // one slow answer (the Mac is busy, the model server is reloading) must not flip the app to Offline: wait up to 6 s, retry once
   async ping() {
     const base = String(this.o.getSettings().gatewayUrl).replace(/\/+$/, '');
     const f = this.o.fetch || fetch;
-    const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 2500);
-    const t0 = Date.now();
-    try { const r = await f(base + '/models', { signal: ctl.signal }); this.lastPingMs = Date.now() - t0; return !!r.ok; } catch (e) { return false; } finally { clearTimeout(t); }
+    for (let i = 0; i < 2; i++) {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 6000);
+      const t0 = Date.now();
+      try { const r = await f(base + '/models', { signal: ctl.signal }); this.lastPingMs = Date.now() - t0; if (r.ok) return true; } catch (e) { /* retry */ } finally { clearTimeout(t); }
+    }
+    return false;
   }
 
   async warm() {

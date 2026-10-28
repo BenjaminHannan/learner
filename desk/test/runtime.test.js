@@ -32,8 +32,8 @@ test('llama.cpp asset: newest release at or after the LFM3 floor date, Vulkan fi
   assert.strictEqual(R.pickLlamaAsset(rels, { flavor: 'cpu', minTag: 0 }).name, 'llama-b9020-bin-win-cpu-x64.zip');
   // releases before the floor never qualify, even if they are the only ones
   assert.strictEqual(R.pickLlamaAsset([rels[0]], { flavor: 'vulkan', minTag: 0 }), null);
-  // a newest release that lacks the asset falls through to the previous one; drafts and prereleases are skipped
-  const odd = [rel('b9030', '2026-10-29T00:00:00Z', ['cpu']), rel('b9020', '2026-10-28T09:00:00Z', ['vulkan']), rel('b9040', '2026-10-30T00:00:00Z', ['vulkan'], { prerelease: true })];
+  // a newest release that lacks the asset falls through to the previous one; drafts are skipped
+  const odd = [rel('b9030', '2026-10-29T00:00:00Z', ['cpu']), rel('b9020', '2026-10-28T09:00:00Z', ['vulkan']), rel('b9040', '2026-10-30T00:00:00Z', ['vulkan'], { draft: true })];
   assert.strictEqual(R.pickLlamaAsset(odd, { flavor: 'vulkan', minTag: 0 }).tag, 'b9020');
   assert.strictEqual(R.pickLlamaAsset(rels, { flavor: 'vulkan', minTag: 9025 }), null);
   assert.ok(Date.parse(C.LLAMA_MIN_PUBLISHED) === Date.parse('2026-10-27T16:06:00Z'));
