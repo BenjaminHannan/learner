@@ -177,6 +177,15 @@ const GOALS_ASK = 'Setup is done. One more thing, so I can help over the long ru
 const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal to memory. Then make a short plan for each goal: '
   + '2 to 4 milestones and the first small step for this week. Ask at most one question if something important is unclear. If they have no goals yet, '
   + 'help them brainstorm a few first. Finally offer Sparks that would help (for example a weekly check-in or a reminder for the first step), and ask before creating any.\n\n';
+// "go learn about X": learning mode. Hidden note in front of the message; the scroll shows only the person's words.
+const LEARN_ASK = /^\s*(?:(?:please|ok|okay|hey)[ ,]+)?(?:go\s+|can you\s+|could you\s+)?(?:learn|study)\s+(?:about\s+|how to\s+|to\s+)?\S/i;
+const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat it as building a skill that you keep.] '
+  + '1) Research it: search the web and read 3 to 5 good sources, not just the first hit. '
+  + '2) Save what you learned as a skill with memory_save, topic "skill: <short name>": 5 to 8 short, true, useful notes, each with its source and, if it can go stale, an expiry. Never save a guess. '
+  + '3) Test yourself: write 5 practice questions, answer them from your notes, check each answer against a source, and save one note with the score and the weak spots. '
+  + '4) Study the weak spots once more, then tell the person in plain words what you can now do and what is still shaky. '
+  + 'Your saved notes and this practice are what sleep trains into you overnight. Keep going until you finish all four steps.\n\n';
+const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
   o = o || {};
@@ -1056,8 +1065,8 @@ function registerIpc() {
     const t = store.loadThread(threadId) || store.newThread();
     if (!t.title || t.title === 'New thread') t.title = String(text).replace(/\s+/g, ' ').trim().slice(0, 48) || 'New thread';
     activeThread = t;
-    const goals = isGoalsAnswer(t);
-    agent.run(t, goals ? GOALS_NOTE + text : text, goals ? { display: text } : undefined).then((r) => {
+    const goals = isGoalsAnswer(t), learn = !goals && isLearnAsk(t, text);
+    agent.run(t, goals ? GOALS_NOTE + text : learn ? LEARN_NOTE + text : text, goals || learn ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
