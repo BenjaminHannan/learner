@@ -394,7 +394,8 @@
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
-    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a Glim’s thread. Type here to steer it while it runs.' : 'Ask Glim to do something…';
+    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Spark’s log, not talk to it.' : 'You can read this Spark’s log, not talk to it.') : 'Ask Glim to do something…';
+    input.readOnly = !!(thread && thread.helper);
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
   }
 
@@ -695,7 +696,7 @@
     const t0 = await desk.threads.load(id);
     if (!t0) return;
     // A Spark's log is never shown (Ben: if he can't talk to it he shouldn't see it), unless it is waiting on him for an answer or approval.
-    if (t0.helper && !(t0.pendingCards || []).length && !t0.loginWaiting) { const mid = await mainThreadId(); if (mid && mid !== id) return openThread(mid); if (!mid) return newThread(); }
+    if (t0.helper && !settings.showSparks && !(t0.pendingCards || []).length && !t0.loginWaiting) { const mid = await mainThreadId(); if (mid && mid !== id) return openThread(mid); if (!mid) return newThread(); }
     const t = await withHistory(t0);
     thread = { id: t.id, title: t.title, helper: t.helper || null };
     paintTitle(t);
@@ -761,7 +762,8 @@
     list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
-    $('#btnThreads').hidden = !list.length; if (!list.length) closeDrawer(); // no Sparks, no side panel: the Glim scroll is the whole window
+    const showList = !!settings.showSparks && list.length > 0;
+    $('#btnThreads').hidden = !showList; if (!showList) closeDrawer(); // no Sparks, no side panel: the Glim scroll is the whole window
     for (const h of list) {
       const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
       const top = el('div', 'a-top');
@@ -775,7 +777,7 @@
         mk('Run now', () => desk.helpers.run(h.id)),
         mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
         mk('Delete', async () => { if (confirm('Delete Spark "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
-      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns);
+      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns); li.onclick = () => openThread(h.threadId); // only reachable when Show Sparks is on li.onclick = () => openThread(h.threadId); // only reachable when Show Sparks is on
       ul.append(li);
     }
   }
@@ -802,6 +804,7 @@
   input.addEventListener('input', autosize);
   let submitting = false;
   async function submit(force) {
+    if (thread && thread.helper) return; // a Spark's log is view only
     const text = input.value.trim();
     if (!text || submitting) return;
     if (slp.asleep || slp.waking) { $('#wakeAsk').hidden = false; return; } // keep the text; offer to wake first
@@ -856,6 +859,7 @@
     const h = document.documentElement;
     h.classList.remove('ts-s', 'ts-m', 'ts-l'); h.classList.add('ts-' + (settings.textSize || 'm'));
     h.classList.toggle('hc', !!settings.highContrast);
+    try { desk.helpers.list().then(paintAgents).catch(() => {}); } catch (e) { /* not ready yet */ }
   }
   async function save(patch) {
     const r = await desk.settings.set(patch);
@@ -930,6 +934,7 @@
     { group: 'Appearance', rows: [
       { key: 'theme', type: 'seg', label: 'Theme', help: 'System follows your computer.', options: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'textSize', type: 'seg', label: 'Text size', help: 'Small, medium or large text everywhere.', options: [['s', 'S'], ['m', 'M'], ['l', 'L']] },
+      { key: 'showSparks', type: 'toggle', label: 'Show Sparks', help: 'Shows a Sparks list and lets you read what each Spark did. Sparks are Glim’s helpers that run on their own, so you can look but not talk to them.' },
       { key: 'highContrast', type: 'toggle', label: 'High contrast', help: 'Stronger text and borders everywhere.' },
       { key: 'pill', type: 'toggle', label: 'Status pill at the top of the screen', help: 'A small floating pill that shows what Glim is doing across apps. Hover it for details.' }
     ] },
