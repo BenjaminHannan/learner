@@ -487,3 +487,40 @@ test('fmtWhenRel: today / tomorrow / weekday with how long until', () => {
   assert.strictEqual(fmtWhenRel(new Date(2026, 9, 31, 8, 0).getTime(), now), 'Sat 08:00 (in 3 days)');
   assert.strictEqual(fmtWhenRel(null, now), '-');
 });
+
+test("Ben's chat first: a due Glim waits while Ben's chat is busy, then runs exactly once", async () => {
+  let ben = true;
+  const { m, runs, clock } = mkManager({ yieldTo: () => ben });
+  m.add({ name: 'mail', task: 't', every: '1h', deferFirst: true });
+  clock.t += 61 * 60000;
+  m.tick(); m.tick();
+  assert.strictEqual(runs.length, 0);                  // held, not lost
+  assert.ok(m.find('mail').next <= clock.t);           // still due
+  m.tick(true);                                        // forced (sleep check-in) ignores the hold
+  assert.strictEqual(runs.length, 1);
+  runs[0].done(); await until(() => m.find('mail').status !== 'running');
+  ben = true; clock.t += 61 * 60000; m.tick();
+  assert.strictEqual(runs.length, 1);
+  ben = false; m.tick(); m.tick();
+  assert.strictEqual(runs.length, 2);                  // fires once on the first quiet tick, no double run
+  assert.ok(m.find('mail').next > clock.t);
+});
+
+test("Ben's chat first: a running Glim waits before its next model call without holding a run slot", async () => {
+  const gw = await startGateway([{ content: 'Done.' }]);
+  try {
+    let ben = true; const states = [];
+    const slot = new Limiter(() => 1);
+    const a = new Agent({ getSettings: () => ({ gatewayUrl: gw.url, model: 'm', maxSteps: 5, mode: 'hands-off', vision: 'off', verify: false }), toolDefs: buildTools({}), tools: {}, slot, benBusy: () => ben, benPollMs: 10,
+      onState: (s, info) => states.push(s + (info && info.ben ? ':ben' : '')), emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = { id: 'h', title: 'x', messages: [], items: [] };
+    const p = a.run(t, 'check mail');
+    await until(() => states.includes('queued:ben'));
+    assert.strictEqual(gw.requests.length, 0);
+    assert.strictEqual(slot.full(), false);            // Ben's own run can take the slot
+    ben = false;
+    await p;
+    assert.strictEqual(gw.requests.length, 1);
+    assert.ok(states.indexOf('running', states.indexOf('queued:ben')) > 0);
+  } finally { gw.close(); }
+});
