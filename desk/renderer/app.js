@@ -859,7 +859,7 @@
       { key: 'pythonPath', type: 'text', label: 'Python path', help: 'Leave empty to use the learner-ops virtualenv if present, else python3.', ph: 'python3', wide: true }
     ] },
     { group: 'Memory', rows: [
-      { type: 'memory', label: 'What Glim remembers', help: 'Glim remembers these between chats. It adds to this list itself when it learns something lasting, like your classes.' }
+      { type: 'memory', label: 'What Glim remembers', help: 'This is a markdown file Glim reads at the start of every chat and adds to itself when it learns something lasting, like your classes. Write anything in it.' }
     ] },
     { group: 'Keeping track of', rows: [
       { type: 'tracking', label: 'Things Glim is watching', help: 'Orders, bookings, applications and deadlines Glim keeps an eye on for you. It adds to this list itself when you mention one, and flags what is due while you sleep.' }
@@ -899,53 +899,40 @@
     ] }
   ];
   const controls = {};
-  // Memory: facts Glim keeps between chats (src/memory.js). Rows save on blur or Enter; refusals show inline.
+  // Memory: memory.md as plain text (src/memory.js). Saves on Cmd+S, on blur and with the button; Glim's own additions show up unless an edit is in progress.
   let memRefresh = () => {};
   function memUi() {
-    const box = el('div', 'mem'), list = el('div', 'mem-list'), note = el('div', 's-note mem-note');
-    note.id = 'memNote'; list.id = 'memList'; note.setAttribute('role', 'status');
-    const say = (msg, bad) => { note.className = 's-note mem-note ' + (bad ? 'bad' : 'ok'); note.textContent = msg || ''; };
-    const rowFor = (f) => {
-      const r = el('div', 'mem-row'); r.dataset.id = f.id;
-      const chip = el('span', 'mem-chip' + (f.topic ? '' : ' none'), f.topic || 'general');
-      const t = el('input', 'mem-text'); t.type = 'text'; t.value = f.text; t.spellcheck = false; t.maxLength = 300; t.setAttribute('aria-label', 'Remembered fact');
-      let saved = f.text, busy = false; t.dataset.saved = saved;
-      const commit = async () => {
-        const v = t.value.trim();
-        if (v === saved || busy) return;
-        busy = true;
-        const res = await desk.memory.edit(f.id, { text: v }).finally(() => { busy = false; });
-        if (res && res.ok) { saved = res.fact.text; t.value = saved; t.dataset.saved = saved; say('Saved.'); }
-        else { say((res && res.error) || 'Could not save.', true); t.value = saved; t.classList.add('bad'); setTimeout(() => t.classList.remove('bad'), 1600); }
-      };
-      t.addEventListener('blur', commit);
-      t.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); t.blur(); } else if (e.key === 'Escape') { t.value = saved; e.stopPropagation(); t.blur(); } });
-      const d = el('button', 'ghost sm del', 'Delete'); d.setAttribute('aria-label', 'Delete this fact');
-      d.onclick = async () => { await desk.memory.remove(f.id); say(''); memRefresh(); };
-      r.append(chip, t, d); return r;
+    const box = el('div', 'mem'), note = el('div', 's-note mem-note quiet');
+    note.id = 'memNote'; note.setAttribute('role', 'status');
+    const say = (msg, bad) => { note.className = 's-note mem-note ' + (bad ? 'bad' : 'quiet'); note.textContent = msg || ''; };
+    const ta = el('textarea', 'mem-md'); ta.id = 'memText'; ta.spellcheck = false; ta.setAttribute('aria-label', 'memory.md');
+    let saved = '', busy = false;
+    const lf = (t) => String(t).replace(/\r\n?/g, '\n');   // a textarea always holds LF
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(Math.max(ta.scrollHeight + 2, 128), 480) + 'px'; };
+    const dirty = () => ta.value !== saved;
+    const save = async () => {
+      if (!dirty() || busy) return;
+      const v = ta.value; busy = true;
+      const res = await desk.memory.write(v).catch((e) => ({ ok: false, error: String(e && e.message || e) })).finally(() => { busy = false; });
+      if (res && res.ok) { saved = v; say(dirty() ? '' : 'Saved'); if (dirty() && document.activeElement !== ta) return save(); } else say('Not saved: ' + ((res && res.error) || 'could not write the file.'), true);
     };
     memRefresh = async () => {
-      const facts = await desk.memory.list();
-      const ae = document.activeElement; if (ae && ae.classList && ae.classList.contains('mem-text') && list.contains(ae) && ae.value !== ae.dataset.saved) return; // never clobber an edit in progress
-      list.textContent = '';
-      if (!facts.length) list.append(el('div', 'mem-empty', 'Nothing yet. Add a fact below, or just tell Glim something to remember.'));
-      for (const f of facts) list.append(rowFor(f));
+      const r = await desk.memory.read().catch(() => null);
+      if (!r || typeof r.text !== 'string' || dirty() || busy || lf(r.text) === saved) return; // never clobber an edit in progress; a focused but untouched box still picks up Glim's additions
+      const a = ta.selectionStart, b = ta.selectionEnd;
+      ta.value = r.text; saved = ta.value; fit();
+      try { if (document.activeElement === ta) ta.setSelectionRange(a, b); } catch (e) { /* ignore */ }
     };
-    const add = el('div', 'mem-add');
-    const ai = el('input', 'mem-new'); ai.type = 'text'; ai.id = 'memNew'; ai.placeholder = 'Add a fact, e.g. "AP Chem is 3rd period with Mr. Phipps"'; ai.spellcheck = false; ai.maxLength = 300; ai.setAttribute('aria-label', 'Add a fact');
-    const at = el('input', 'mem-topic'); at.type = 'text'; at.id = 'memTopic'; at.placeholder = 'topic'; at.maxLength = 30; at.spellcheck = false; at.setAttribute('aria-label', 'Topic (optional)');
-    const ab = el('button', 'ghost sm', 'Add'); ab.id = 'memAdd';
-    const doAdd = async () => {
-      const v = ai.value.trim(); if (!v) return;
-      const tp = at.value.trim(); ai.value = ''; at.value = '';
-      const res = await desk.memory.add({ text: v, topic: tp || undefined });
-      if (res && res.ok) { say(res.replaced ? 'Updated a similar fact.' : 'Added.'); } else { ai.value = v; at.value = tp; say((res && res.error) || 'Could not save.', true); }
-      memRefresh();
-    };
-    ab.onclick = doAdd; ai.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
-    add.append(ai, at, ab);
-    const show = el('button', 'ghost sm', 'Show memory.md'); show.id = 'memShow'; show.title = 'These notes are a plain text file. Opens its folder.'; show.onclick = () => desk.memory.reveal();
-    box.append(list, add, show, note);
+    ta.addEventListener('input', () => { fit(); say(''); });
+    ta.addEventListener('blur', save);
+    ta.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
+    const bar = el('div', 'mem-add');
+    const sv = el('button', 'ghost sm', 'Save'); sv.id = 'memSave'; sv.onclick = save;
+    const op = el('button', 'ghost sm', 'Open in editor'); op.id = 'memShow'; op.title = 'Opens memory.md in the default app for text files.';
+    op.onclick = async () => { await save(); const r = await desk.memory.open(); if (r && !r.ok) say('Could not open it: ' + (r.error || 'no app found.'), true); };
+    bar.append(sv, op, note);
+    box.append(ta, bar);
+    setInterval(() => { if (!$('#settings').hidden) memRefresh(); }, 3000);
     return box;
   }
   // Keeping track of: active items from src/tracking.js, with Done and Remove per item.

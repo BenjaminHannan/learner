@@ -16,12 +16,12 @@ test('main.js creates the memory after the Store, passes it to the Agent and han
   assert.ok(m.indexOf('store = new Store(') < m.indexOf('memory = createMemory(app.getPath(\'userData\'))'));
   assert.match(m, /new Agent\(\{\s*memory,/);
   assert.strictEqual((m.match(/new Agent\(/g) || []).length, 1); // helpers use the same createAgent, so they get memory too
-  for (const ch of ['memory:list', 'memory:add', 'memory:edit', 'memory:delete']) assert.ok(m.includes("h('" + ch + "'"), ch);
+  for (const ch of ['memory:list', 'memory:add', 'memory:edit', 'memory:delete', 'memory:read', 'memory:write', 'memory:open']) assert.ok(m.includes("h('" + ch + "'"), ch);
 });
 
-test('preload exposes desk.memory.{list,add,edit,remove} on the matching channels', () => {
+test('preload exposes desk.memory.{list,add,edit,remove,read,write,open} on the matching channels', () => {
   const p = read('preload.js');
-  assert.match(p, /memory: \{ list: inv\('memory:list'\), add: inv\('memory:add'\), edit: inv\('memory:edit'\), remove: inv\('memory:delete'\), reveal: inv\('memory:reveal'\) \}/);
+  assert.match(p, /memory: \{ list: inv\('memory:list'\), add: inv\('memory:add'\), edit: inv\('memory:edit'\), remove: inv\('memory:delete'\), reveal: inv\('memory:reveal'\), read: inv\('memory:read'\), write: inv\('memory:write'\), open: inv\('memory:open'\) \}/);
 });
 
 test('the memory API behind the channels: add, list, edit, delete, refusals', () => {
