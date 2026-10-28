@@ -85,7 +85,7 @@ test('memory: the block is a snapshot written into the stored user turn when the
     assert.ok(!r0.messages[0].content.includes('AP Chem'));
     assert.strictEqual(r1.messages.filter((x) => x.role === 'user')[0].content, users[0].content);
     assert.strictEqual(t.messages[0].content, users[0].content);               // stored, so identical in every later request
-    assert.deepStrictEqual(t.items[0], { t: 'user', text: 'first' });           // the UI renders the item text only, never the block
+    assert.deepStrictEqual({ ...t.items[0], ts: undefined }, { t: 'user', text: 'first', ts: undefined });           // the UI renders the item text only, never the block
     await agent.run(t, 'second');
     const r2 = gw.requests[2].messages;
     assert.strictEqual(r2[1].content, users[0].content);                         // the old turn is byte-identical (no cello in it)

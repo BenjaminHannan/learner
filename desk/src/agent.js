@@ -325,7 +325,7 @@ class Agent {
       if (!thread.messages.some((m) => m.role === 'user') && this.o.sleepInfo) { try { const sl = this.o.sleepInfo(); if (sl) ctx += (ctx ? ' ' : '') + sl; } catch (e) { /* no sleep line */ } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
       thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
-      if (!hidden) thread.items.push({ t: 'user', text: shown || text }); // a hidden turn (Glim relaying a helper's report) shows no bubble from Ben
+      if (!hidden) thread.items.push({ t: 'user', text: shown || text, ts: Date.now() }); // a hidden turn (Glim relaying a helper's report) shows no bubble from Ben
     };
     repairHistory(thread.messages);
     pushUser(userText, opts && opts.display, opts && opts.hidden);
@@ -400,7 +400,7 @@ class Agent {
         }
         thread.messages.push(msg);
         if (res.content || res.reasoning) {
-          thread.items.push({ t: 'assistant', text: res.content, thinking: !!res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs }); // Ben Oct 28: the reasoning is not kept for reading, only that Glim thought
+          thread.items.push({ t: 'assistant', text: res.content, thinking: !!res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, ts: Date.now() }); // Ben Oct 28: the reasoning is not kept for reading, only that Glim thought
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';

@@ -230,15 +230,15 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['run state cleared (Send shown, Stop hidden)', await ev('document.querySelector("#btnStop").hidden && document.querySelector("#runState").hidden && document.querySelector("#btnSend").textContent==="Send"')]);
     checks.push(['final answer rendered prominently', await ev('/Premonition result/.test((document.querySelector(".acol > .atext")||{}).textContent||"")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
-    checks.push(['thumbs up / down under the final answer, not under the narration', await ev('document.querySelectorAll(".acol > .atext + .rate .rate-b").length===2 && !document.querySelector(".activity .rate")')]);
+    checks.push(['thumbs up / down under the final answer, not under the narration', await ev('document.querySelectorAll(".acol > .atext + .stamp + .rate .rate-b").length===2 && !document.querySelector(".activity .rate")')]);
     {
       const fbFile = path.join(app.getPath('userData'), 'feedback.jsonl');
       const before = fs.existsSync(fbFile) ? fs.readFileSync(fbFile, 'utf8').split('\n').length : 1;
-      await ev('document.querySelector(".acol > .atext + .rate .rate-b").click()'); await sleep(300);
+      await ev('document.querySelector(".acol > .atext + .stamp + .rate .rate-b").click()'); await sleep(300);
       const last = fs.existsSync(fbFile) ? fs.readFileSync(fbFile, 'utf8').trim().split('\n').pop() : '{}';
-      checks.push(['thumbs up marks the answer and logs it for sleep', await ev('document.querySelector(".acol > .atext + .rate .rate-b").getAttribute("aria-pressed")==="true"') && fs.readFileSync(fbFile, 'utf8').split('\n').length === before + 1 && JSON.parse(last).fb === 1 && /Premonition result/.test(JSON.parse(last).answer)]);
-      await ev('document.querySelector(".acol > .atext + .rate .rate-b").click()'); await sleep(300);
-      checks.push(['a second tap takes it back (fb 0)', await ev('document.querySelector(".acol > .atext + .rate .rate-b").getAttribute("aria-pressed")==="false"') && JSON.parse(fs.readFileSync(fbFile, 'utf8').trim().split('\n').pop()).fb === 0]);
+      checks.push(['thumbs up marks the answer and logs it for sleep', await ev('document.querySelector(".acol > .atext + .stamp + .rate .rate-b").getAttribute("aria-pressed")==="true"') && fs.readFileSync(fbFile, 'utf8').split('\n').length === before + 1 && JSON.parse(last).fb === 1 && /Premonition result/.test(JSON.parse(last).answer)]);
+      await ev('document.querySelector(".acol > .atext + .stamp + .rate .rate-b").click()'); await sleep(300);
+      checks.push(['a second tap takes it back (fb 0)', await ev('document.querySelector(".acol > .atext + .stamp + .rate .rate-b").getAttribute("aria-pressed")==="false"') && JSON.parse(fs.readFileSync(fbFile, 'utf8').trim().split('\n').pop()).fb === 0]);
     }
     checks.push(['[Action: ...] lines are hidden', await ev('!/\\[Action/i.test(document.body.innerText)')]);
     checks.push(['one activity group: "Did N things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did [34] things/.test(document.querySelector(".act-head").textContent) && document.querySelector(".act-head").getAttribute("aria-expanded")==="false"')]);
