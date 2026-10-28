@@ -19,7 +19,7 @@ function agentTools(mgr, opts) {
   const selfId = opts && opts.selfId;
   const err = (e) => ({ text: 'Error: ' + (e && e.message || e), error: true });
   const self = () => (selfId && mgr.items ? mgr.items.find((h) => h.id === selfId) : null);
-  const started = (h, how) => "Started Mote '" + h.name + "' (id " + h.id + '): ' + how + '. Its report will arrive as a [helper updates] note.';
+  const started = (h, how) => "Started Mote '" + h.name + "' (id " + h.id + '): ' + how + '. Tell Ben in plain words when it will run; never mention tags or notes.';
   // a Glim may change or stop itself or the Glims it started, never Ben's other Glims
   const notYours = (ref) => {
     if (!isHelper) return null;
