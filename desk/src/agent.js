@@ -314,7 +314,7 @@ class Agent {
     thread.messages = thread.messages || [];
     thread.items = thread.items || [];
     const save = () => { try { this.o.onThreadChange && this.o.onThreadChange(thread); } catch (e) { /* ignore */ } };
-    const pushUser = (text, shown) => {
+    const pushUser = (text, shown, hidden) => {
       const notes = takeNotices(thread); // finished-helper updates ride along with Ben's next message
       // Ben's picks from first-run setup ride in the first user message of a thread, beside the date. Never in the system prompt or tools.
       let ctx = '';
@@ -323,10 +323,10 @@ class Agent {
       if (!thread.messages.some((m) => m.role === 'user') && this.o.sleepInfo) { try { const sl = this.o.sleepInfo(); if (sl) ctx += (ctx ? ' ' : '') + sl; } catch (e) { /* no sleep line */ } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
       thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
-      thread.items.push({ t: 'user', text: shown || text });
+      if (!hidden) thread.items.push({ t: 'user', text: shown || text }); // a hidden turn (Glim relaying a helper's report) shows no bubble from Ben
     };
     repairHistory(thread.messages);
-    pushUser(userText, opts && opts.display);
+    pushUser(userText, opts && opts.display, opts && opts.hidden);
     save();
     let stopped = false;
     let failure = null;

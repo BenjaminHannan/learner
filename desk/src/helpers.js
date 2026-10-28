@@ -119,7 +119,7 @@ function addNotice(thread, name, summary) {
   summary = short(summary, SUMMARY_KEEP);
   thread.items = thread.items || [];
   thread.pendingNotices = thread.pendingNotices || [];
-  thread.items.push({ t: 'notice', helper: name, text: summary });
+  // Ben Oct 28: helpers do not report to Ben. The report waits for the main Glim (pendingNotices), which tells him in its own words.
   thread.pendingNotices.push({ name, summary });
 }
 // One short line for the model, or '' when nothing is queued. Clears the queue.
