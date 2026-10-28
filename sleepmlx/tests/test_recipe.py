@@ -373,5 +373,19 @@ class GateTests(unittest.TestCase):
             env.close()
 
 
+class ParseFactsTests(unittest.TestCase):
+    def test_trailing_text_after_array(self):
+        # real LFM3 tag replies: "[]" then more text, which a greedy match made a parse failure
+        self.assertEqual(P.parse_facts("[]\n]"), [])
+        self.assertEqual(P.parse_facts('[]\n```json\n[]\n```\nno named things here'), [])
+        f = P.parse_facts('[\n {"subject": "Ben", "relation": "uses", "object": "gmail"}\n]\n\nNote: [] is not right because ...')
+        self.assertEqual(f, [{"subject": "Ben", "relation": "uses", "object": "gmail"}])
+
+    def test_fallbacks_kept(self):
+        self.assertEqual(P.parse_facts('{"subject": "A", "relation": "r", "object": "B"}'), [{"subject": "A", "relation": "r", "object": "B"}])
+        self.assertIsNone(P.parse_facts("no"))
+        self.assertEqual(P.parse_facts('see [1, 2] then [{"subject": "A", "object": "B"}]'), [{"subject": "A", "object": "B"}])
+
+
 if __name__ == "__main__":
     unittest.main()

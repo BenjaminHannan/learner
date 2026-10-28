@@ -100,12 +100,16 @@ def parse_lesson(txt: str) -> Optional[dict]:
     return d if isinstance(d, dict) else None
 
 def parse_facts(txt: str):
-    m = re.search(r"\[.*\]", txt, re.S)
-    if m:
+    # the first complete JSON array wins: LFM3 often writes "[]" and then keeps going ("[]\n]", a ```json block, a note with
+    # brackets), which a greedy "\[.*\]" turned into invalid JSON and counted as a parse failure
+    dec = json.JSONDecoder()
+    for m in re.finditer(r"\[", txt):
         try:
-            return [x for x in json.loads(m.group(0)) if isinstance(x, dict)]
-        except Exception:
-            pass
+            v, _ = dec.raw_decode(txt, m.start())
+        except ValueError:
+            continue
+        if isinstance(v, list) and all(isinstance(x, dict) for x in v):
+            return list(v)
     out = []
     for o in re.findall(r"\{[^{}]*\}", txt):
         try:
