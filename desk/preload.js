@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('desk', {
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   call: { start: inv('call:start'), stop: inv('call:stop'), mute: inv('call:mute') },
   onCall: on('call'),
+  dictate: { start: inv('dictate:start'), stop: inv('dictate:stop') },
+  onDictate: on('dictate'),
   browser: { open: inv('browser:open'), exists: inv('browser:exists'), layout: inv('browser:layout'), cmd: inv('browser:cmd') },
   perms: { status: inv('perms:status'), open: inv('perms:open'), reveal: inv('perms:reveal'), drag: (which) => ipcRenderer.send('perms:drag', which) },
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },

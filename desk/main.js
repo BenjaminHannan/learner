@@ -60,6 +60,7 @@ const CK = require('./src/checkin');
 const { Builtin, runtimeRoot } = require('./src/runtime/builtin');
 const { SleepInstaller } = require('./src/runtime/sleepinstall');
 const { Call } = require('./src/call');
+const { Dictation } = require('./src/dictate');
 
 let win = null;
 let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
@@ -396,6 +397,8 @@ function createWindow() {
   win.on('enter-full-screen', () => send('fullscreen', true)); win.on('leave-full-screen', () => send('fullscreen', false));
   // a window that opens already in full screen fires neither event, so the page would keep the gap: tell it on every load
   ui.webContents.on('did-finish-load', () => send('fullscreen', win.isFullScreen()));
+  // a reload mid-dictation leaves the page without its mic state: stop the helper at once
+  ui.webContents.on('did-start-navigation', (e, url, inPlace, isMainFrame) => { if (isMainFrame) { try { stopDictate(true); } catch (err) { /* ignore */ } } });
   for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
   ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
@@ -419,7 +422,7 @@ function createWindow() {
     }
     updatePill();
   });
-  win.on('closed', () => { win = null; ui = null; if (!quitting && store && !store.getSettings().keepRunning) app.quit(); });
+  win.on('closed', () => { try { stopDictate(true); } catch (e) { /* ignore */ } win = null; ui = null; if (!quitting && store && !store.getSettings().keepRunning) app.quit(); });
   return win;
 }
 
@@ -738,6 +741,7 @@ async function callAsk(text, { onDelta, signal }) {
 function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
   if (call) return { error: 'You are already on a call.' };
+  if (dictation) return { error: 'Stop dictation first, then call.' };
   if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first, then call.' };
   if (agent.running) return { error: 'Glim is busy with a task. Stop it or wait, then call.' };
   const bin = screen.findHelper();
@@ -756,6 +760,26 @@ function startCall() {
   c.start();
   return { ok: true, threadId: callThread.id };
 }
+
+// ---- Dictation (speech to text in the chat box, Mac) -----------------------------------------------------------------
+// One `deskhelper dictate` process; its partial / final text goes to the renderer on the 'dictate' channel. Never together with a call.
+let dictation = null;
+function startDictate() {
+  if (!FEATURES.dictate) return { error: 'Dictation is coming to Windows soon.' };
+  if (call) return { error: 'End the call before dictating.' };
+  if (dictation) return { error: 'Dictation is already on.' };
+  const bin = screen.findHelper();
+  if (!bin) return { error: 'Dictation needs the Glim helper, which is not installed in this build.' };
+  const d = new Dictation({
+    helper: bin,
+    spawn: (cmd, args) => require('child_process').spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+    onEvent: (ev) => { send('dictate', ev); if (ev.type === 'state' && ev.state === 'ended' && dictation === d) dictation = null; }
+  });
+  dictation = d;
+  d.start();
+  return { ok: true };
+}
+function stopDictate(hard) { const d = dictation; if (!d) return; if (hard) { dictation = null; d.close(); } else d.stop('stopped'); }
 
 // ---- permissions card (drag the app into System Settings) ------------------------------------------------------
 const FEATURES = Platform.features(process.platform, PLATFORM_OPTS);
@@ -943,6 +967,8 @@ function registerIpc() {
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
+  h('dictate:start', () => startDictate());
+  h('dictate:stop', () => { stopDictate(false); return true; });
   h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else agent.stop(); return true; });
   // First-run setup: create the picked recurring Glims through the same Helpers.add that agent_start uses (no model call).
   h('onboard:create', (ids) => (Array.isArray(ids) ? ids : []).map((use) => {
@@ -1110,7 +1136,7 @@ const gotLock = E2E || app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
-app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
+app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {

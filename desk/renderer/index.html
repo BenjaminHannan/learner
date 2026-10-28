@@ -56,9 +56,11 @@
         <span>Glim is asleep. Wake Glim and send this?</span>
         <button id="wakeAskNo" class="ghost sm">Cancel</button><button id="wakeAskYes" class="amber-btn sm">Wake and send</button>
       </div>
+      <div id="dictNote" hidden role="alert"><span id="dictNoteText"></span><button id="dictSettings" class="amber-btn sm" hidden>Open Settings</button><button id="dictNoteClose" class="ghost sm" aria-label="Dismiss">Dismiss</button></div>
       <div id="runState" hidden><i></i><span>Working…</span></div>
       <div class="box">
         <textarea id="input" rows="1" placeholder="Ask Glim to do something…" spellcheck="true" aria-label="Message"></textarea>
+        <button id="btnDictate" class="callbtn dictbtn" title="Dictate: speak instead of typing (Cmd+Shift+D)" aria-label="Dictate" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.6" y="1.8" width="4.8" height="8" rx="2.4"/><path d="M3.2 7.6a4.8 4.8 0 009.6 0M8 12.4v1.8"/></svg></button>
         <button id="btnCall" class="callbtn" title="Call Glim: talk hands-free (Cmd+Shift+C)" aria-label="Call Glim"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 2.5h2.3l1.1 2.9-1.4.9a8 8 0 003.5 3.5l.9-1.4 2.9 1.1v2.3a1.4 1.4 0 01-1.5 1.4A10.2 10.2 0 011.8 4a1.4 1.4 0 011.4-1.5z"/></svg></button>
         <button id="btnSend" class="send" title="Send (Enter)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg><span class="sr">Send</span></button>
         <button id="btnStop" class="stop" title="Stop (Esc)" hidden><i></i><span class="sr">Stop</span></button>
@@ -171,6 +173,7 @@
 <script src="panel.js"></script>
 <script src="perms.js"></script>
 <script src="call.js"></script>
+<script src="dictate.js"></script>
 <script src="onboard.js"></script>
 <script src="app.js"></script>
 </body>

@@ -326,7 +326,7 @@ class Agent {
             signal,
             apiKey: s.apiKey,
             onText: (d) => this.emit({ type: 'text', delta: d }),
-            onReasoning: (d) => this.emit({ type: 'reasoning', delta: d })
+            onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) // only that Glim is thinking; the text never leaves the main process
           });
         } catch (e) {
           if (signal.aborted) { stopped = true; break; }
@@ -352,11 +352,11 @@ class Agent {
         }
         thread.messages.push(msg);
         if (res.content || res.reasoning) {
-          thread.items.push({ t: 'assistant', text: res.content, thinking: res.reasoning || '', thinkSecs: res.reasoning ? secs : 0, ttftMs });
+          thread.items.push({ t: 'assistant', text: res.content, thinking: !!res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs }); // Ben Oct 28: the reasoning is not kept for reading, only that Glim thought
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
-        this.emit({ type: 'assistant_end', text: res.content, reasoning: res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
+        this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
         const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();

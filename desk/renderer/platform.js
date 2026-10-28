@@ -71,7 +71,7 @@
   const SLEEP_MAC_NOTE = 'Sleep is not available on this Mac yet.';
   function features(p, o) {
     const mb = isMac(p) && builtinOn(p, o);
-    return { perms: isMac(p), sleep: !mb, sleepSoon: mb, builtin: builtinOn(p, o), tray: isWin(p), dock: isMac(p), call: isMac(p), menuBarAutoHide: isWin(p) };
+    return { perms: isMac(p), sleep: !mb, sleepSoon: mb, builtin: builtinOn(p, o), tray: isWin(p), dock: isMac(p), call: isMac(p), dictate: isMac(p), menuBarAutoHide: isWin(p) };
   }
   const PERMS_NOTE_WIN = "Windows doesn't need extra permissions.";
   // What Settings shows for the gated rows. Sleep works on Windows through the built-in runner; only the Mac-specific rows
