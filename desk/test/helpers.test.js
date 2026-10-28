@@ -187,20 +187,20 @@ test('Glim tools: a Glim lists, moves its own time, starts up to MAX_KIDS one le
   assert.match(mv.text, /Your schedule is now 'daily 07:00'/); assert.strictEqual(m.find('brief').at, '07:00');
   assert.match(g.agent_start({ name: 'Brief' }, {}).text, /give at/);
   const kid = g.agent_start({ name: 'k1', task: 'fetch the weather' }, { thread: { id: me.threadId } });
-  assert.match(kid.text, /Started Glim 'k1'/); assert.strictEqual(m.find('k1').byHelper, me.id);
+  assert.match(kid.text, /Started Mote 'k1'/); assert.strictEqual(m.find('k1').byHelper, me.id);
   const kg = agentTools(m, { isHelper: true, selfId: m.find('k1').id });
-  assert.match(kg.agent_start({ name: 'k1a', task: 'deeper still' }, {}).text, /Started Glim 'k1a'/); // MAX_DEPTH 2: a grandchild is fine
+  assert.match(kg.agent_start({ name: 'k1a', task: 'deeper still' }, {}).text, /Started Mote 'k1a'/); // MAX_DEPTH 2: a grandchild is fine
   const kga = agentTools(m, { isHelper: true, selfId: m.find('k1a').id });
   assert.match(kga.agent_start({ name: 'k1b', task: 'deepest omega' }, {}).text, /cannot start more/);
   for (let i = 2; i <= MAX_KIDS; i++) g.agent_start({ name: 'k' + i, task: 'job number ' + i + ' alpha' + i }, {});
-  assert.match(g.agent_start({ name: 'k9', task: 'one too many zeta' }, {}).text, /already run 5 Glims/);
+  assert.match(g.agent_start({ name: 'k9', task: 'one too many zeta' }, {}).text, /already run 5 Motes/);
   const rec = m.active.get(m.find('k1').id) || {}; rec.thread = { id: 'th-live' };
   if (m.active.has(m.find('k1').id)) assert.strictEqual(m.liveThread('th-live'), rec.thread);
   assert.strictEqual(m.liveThread('nope'), null);
   assert.match(g.agent_stop({ name_or_id: 'other' }).text, /not yours to change/); assert.notStrictEqual(m.find('other').status, 'stopped');
-  assert.match(g.agent_stop({ name_or_id: 'k1' }).text, /Stopped Glim 'k1'/);
-  assert.match(g.agent_start({ name: 'k9', task: 'one more now fits zeta' }, {}).text, /Started Glim 'k9'/);
-  assert.match(g.agent_stop({ name_or_id: 'brief' }).text, /Stopped Glim 'brief'/);
+  assert.match(g.agent_stop({ name_or_id: 'k1' }).text, /Stopped Mote 'k1'/);
+  assert.match(g.agent_start({ name: 'k9', task: 'one more now fits zeta' }, {}).text, /Started Mote 'k9'/);
+  assert.match(g.agent_stop({ name_or_id: 'brief' }).text, /Stopped Mote 'brief'/);
   assert.ok(runs.length > 0);
 });
 
@@ -210,20 +210,20 @@ test('primary agent_* tools', async () => {
   const bad = t.agent_start({ name: 'x', task: 'y', every: 'often' }, {});
   assert.strictEqual(bad.error, true); assert.match(bad.text, /every must look like/);
   const ok = t.agent_start({ name: 'x', task: 'y', every: '1h' }, { thread: { id: 'tp' } });
-  assert.match(ok.text, /Started Glim 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
+  assert.match(ok.text, /Started Mote 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
   assert.strictEqual(m.list()[0].parent, 'tp');
   assert.match(t.agent_list(), /x \| queued \| every 1h \| next (?:\w{3} )?\d\d:\d\d \| last: none yet/);
   const dup = t.agent_start({ name: 'X', task: 'y' }, {}); assert.match(dup.text, /already exists/);
   const up = t.agent_update({ name_or_id: 'x', at: '07:00', every: '' });
-  assert.match(up.text, /Updated Glim 'x': daily 07:00, next run/); assert.strictEqual(m.find('x').every, null);
+  assert.match(up.text, /Updated Mote 'x': daily 07:00, next run/); assert.strictEqual(m.find('x').every, null);
   assert.match(t.agent_update({ name_or_id: 'x', paused: true }).text, /\(paused\)/);
-  assert.match(t.agent_update({ name_or_id: 'x', new_name: 'renamed' }).text, /Updated Glim 'renamed'/);
-  assert.match(t.agent_update({ name_or_id: 'zzz', at: '07:00' }).text, /no Glim/);
+  assert.match(t.agent_update({ name_or_id: 'x', new_name: 'renamed' }).text, /Updated Mote 'renamed'/);
+  assert.match(t.agent_update({ name_or_id: 'zzz', at: '07:00' }).text, /no Mote/);
   assert.match(t.agent_update({ name_or_id: 'renamed', at: '25:00' }).text, /at must look like/);
-  assert.match(t.agent_stop({ name_or_id: 'renamed' }).text, /Stopped Glim 'renamed'/);
+  assert.match(t.agent_stop({ name_or_id: 'renamed' }).text, /Stopped Mote 'renamed'/);
   assert.match(t.agent_list(), /renamed \| stopped \| once/);
   assert.strictEqual(m.find('renamed').next, null);
-  assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no Glim/);
+  assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no Mote/);
 });
 
 test('agent_update run: true starts a helper now; an idle one-off with no time says it will not run', async () => {
@@ -235,7 +235,7 @@ test('agent_update run: true starts a helper now; an idle one-off with no time s
   assert.match(t.agent_list(), /research \| idle, not scheduled \| once \| next none/);
   assert.match(t.agent_update({ name_or_id: 'research', task: 'read AI news again' }).text, /Not scheduled: it will not run unless/);
   const r = t.agent_update({ name_or_id: 'research', run: true });
-  assert.match(r.text, /; started now; status (queued|working)/); assert.match(r.summary, /^Started Glim research/);
+  assert.match(r.text, /; started now; status (queued|working)/); assert.match(r.summary, /^Started Mote research/);
   assert.strictEqual(runs.length, 2); assert.ok(m.isRunning(m.find('research').id));
   assert.match(t.agent_update({ name_or_id: 'research', run: true }).text, /it was already running/);
   assert.strictEqual(runs.length, 2);
@@ -335,7 +335,7 @@ test('agent + fake gateway: primary calls agent_start -> helper runs -> notice q
       onFinish: (h, summary, parent) => { addNotice(primary.thread, h.name, summary); notified({ h, parent }); }
     });
     await mkAgent(false).run(primary.thread, 'start a helper to compute the answer');
-    assert.match(primary.thread.items.find((i) => i.t === 'step').preview, /Started Glim 'ticker'/);
+    assert.match(primary.thread.items.find((i) => i.t === 'step').preview, /Started Mote 'ticker'/);
     const { h, parent } = await done;
     assert.strictEqual(parent, primary.thread.id);
     // the helper ran against the same gateway with the same system prompt and tool list as the primary
@@ -390,8 +390,8 @@ test('Helpers.add: deferFirst waits for the next slot, and a per-Glim mode is ke
 test('Helpers.add: refuses a near-duplicate of an active Glim on the same schedule, allows different ones', () => {
   const { m } = mkManager();
   m.add({ name: 'Morning briefing', task: 'Brief Ben on weather and calendar', at: '08:00', deferFirst: true });
-  assert.throws(() => m.add({ name: 'morning briefing agent', task: 'give the morning brief', at: '08:00' }), /similar Glim 'Morning briefing'/);
-  assert.throws(() => m.add({ name: 'wake-up', task: 'Brief Ben on weather and calendar', at: '08:00' }), /similar Glim/);
+  assert.throws(() => m.add({ name: 'morning briefing agent', task: 'give the morning brief', at: '08:00' }), /similar Mote 'Morning briefing'/);
+  assert.throws(() => m.add({ name: 'wake-up', task: 'Brief Ben on weather and calendar', at: '08:00' }), /similar Mote/);
   m.add({ name: 'Evening briefing', task: 'Summarize the day', at: '20:00' });            // other schedule: fine
   m.add({ name: 'Email watch', task: 'Check mail', every: '30m', deferFirst: true });       // other name and task: fine
   m.stop('Morning briefing');
