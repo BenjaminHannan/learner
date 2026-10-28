@@ -48,6 +48,7 @@ const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { idleSummary } = require('./src/pillidle');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -115,9 +116,21 @@ function updatePill() {
   const st = pillState.status();
   send('glim-state', st);
   try { if (process.platform === 'darwin' && app.dock) app.dock.setBadge(st === 'error' || st === 'waiting' ? '!' : ''); } catch (e) { /* ignore */ }
-  if (pillWin) pillWin.update(pillState.view(), chatInFront());
+  if (pillWin) { const v = pillState.view(); if (!v.visible && process.platform === 'darwin') v.idle = idleInfo(); pillWin.update(v, chatInFront()); }
 }
-setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible)) updatePill(); }, 1000).unref();
+// hover card of the resting pill (Mac): rebuilt at most every 5 s, not on every 1 s tick
+let idleCache = null;
+function idleInfo() {
+  const now = Date.now();
+  if (idleCache && now - idleCache.at < 5000) return idleCache.v;
+  const s = store.getSettings();
+  const v = idleSummary({ now, helpers: helpers ? helpers.list() : [], autoSleep: s.autoSleep, sleepFrom: effectiveWindow(s, learnedNow(new Date())).from, asleep: sl.asleep, gateway: gwState.state });
+  idleCache = { at: now, v };
+  return v;
+}
+// the resting pill's card also refreshes when its 5 s cache runs out, so "in 12 min" and the assistant state stay current
+const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view && !pillWin.view.visible && !(idleCache && Date.now() - idleCache.at < 5000);
+setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale()) updatePill(); }, 1000).unref();
 
 // ---- sleep mode ---------------------------------------------------------------------------------------
 // The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
