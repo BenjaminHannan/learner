@@ -759,7 +759,7 @@
     return r;
   }
   document.querySelectorAll('#modelSeg button').forEach((b) => b.onclick = () => { save({ model: b.dataset.model }); if ($('#settings').hidden === false) paintSettings(); });
-  document.querySelectorAll('#modeSeg button').forEach((b) => b.onclick = () => { save({ mode: b.dataset.mode }); if ($('#settings').hidden === false) paintSettings(); });
+  // the mode is shown here but changed only in Settings (and at onboarding)
 
   // ---------- settings ----------
   const isMac = () => document.body.classList.contains('darwin');

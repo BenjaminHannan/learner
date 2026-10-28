@@ -13,9 +13,10 @@
     view = v;
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
-    const t = v.top;
-    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping'); pill.classList.add(v.status);
+    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'idle'); pill.classList.add(v.status);
     Mascot.set(g, v.mood);
+    if (v.status === 'idle') { close(); return; } // just the icon
+    const t = v.top;
     $('#line').textContent = v.line || '';
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
     $('#dName').textContent = t.name + (t.title && t.name === 'Glim' ? ' · ' + t.title : '');
@@ -38,9 +39,9 @@
   }
   function open() { clearTimeout(closeT); clearTimeout(openT); openT = setTimeout(() => pill.classList.add('open'), 150); }
   function close() { clearTimeout(openT); clearTimeout(closeT); closeT = setTimeout(() => { pill.classList.remove('open'); P.act('hover', false); }, 220); }
-  pill.addEventListener('mouseenter', () => { if (!view || !view.visible) return; P.act('hover', true); open(); });
+  pill.addEventListener('mouseenter', () => { if (!view || !view.visible || view.status === 'idle') return; P.act('hover', true); open(); });
   pill.addEventListener('mouseleave', () => { clearTimeout(openT); close(); });
-  $('.row1').addEventListener('click', () => { if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
+  $('.row1').addEventListener('click', () => { if (view && view.status === 'idle') P.act('open', { threadId: null, key: null }); else if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
   P.onView(paint);
   window.__open = () => { clearTimeout(closeT); pill.classList.add('open'); };       // for screenshots
   window.__close = () => { pill.classList.remove('open'); };

@@ -81,6 +81,7 @@ test('pill window: Mac is an all-Spaces panel, Windows a frameless screen-saver-
   assert.strictEqual(w.options.focusable, false); assert.strictEqual(w.level, 'screen-saver'); assert.strictEqual(w.allWorkspaces, false); assert.strictEqual(w.hideInMissionControl, false);
   assert.deepStrictEqual(P.pillPosition({ x: 0, y: 0, width: 1920, height: 1040 }, 420), { x: 750, y: 6 });
   assert.deepStrictEqual(P.pillPosition({ x: 100, y: 25, width: 1440, height: 875 }, 420), { x: 610, y: 31 });
+  assert.deepStrictEqual(P.pillPosition({ x: 0, y: 0, width: 1512, height: 982 }, 420, 37), { x: 546, y: 43 }); // full-screen on a notched Mac stays under the camera
 });
 
 test('closing: Windows hides to the tray, Mac conceals only while browsers exist, off means quit', () => {
