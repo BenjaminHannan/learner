@@ -1,5 +1,5 @@
 'use strict';
-// The side panel beside the chat (wide windows only): Now (what Glim is doing, the plan, Sparks), Goals (goals and skills kept in memory),
+// The side panel beside the chat (wide windows only): Now (what Glim is doing, the plan, Motes), Goals (goals and skills kept in memory),
 // Ideas (starter cards that put a request in the box). app.js feeds Now through Side.set*; Goals reads memory when opened.
 (function () {
   const $ = (s) => document.querySelector(s);
@@ -17,7 +17,7 @@
     ['Get ready for tomorrow', 'What do I have tomorrow, and what should I do tonight to be ready?']
   ];
 
-  const st = { tab: get(KEY_TAB, 'now'), open: get(KEY_OPEN, '1') !== '0', said: '', running: false, plan: [], sparks: [], onPick: null, desk: null };
+  const st = { tab: get(KEY_TAB, 'now'), open: get(KEY_OPEN, '1') !== '0', said: '', running: false, plan: [], sparks: [], showMotes: false, onPick: null, desk: null };
   let root, body, tabs;
 
   function nowView() {
@@ -31,9 +31,10 @@
       for (const p of st.plan) ol.append(el('li', null, String(p).replace(/\*\*|__|`/g, '')));
       s.append(ol); v.append(s);
     }
-    const s2 = el('div', 'sd-sec'); s2.append(el('div', 'sd-label', 'Sparks'));
+    if (!st.showMotes) return v; // one Glim: its helpers stay invisible unless Show Motes is on
+    const s2 = el('div', 'sd-sec'); s2.append(el('div', 'sd-label', 'Motes'));
     const list = st.sparks.filter((h2) => !(h2.status === 'stopped' && h2.schedule === 'once'));
-    if (!list.length) s2.append(el('div', 'sd-dim', 'None yet. Ask Glim for a Spark and it will show up here.'));
+    if (!list.length) s2.append(el('div', 'sd-dim', 'None yet. Ask Glim for a helper and it will show up here.'));
     for (const sp of list) {
       const r = el('div', 'sd-row'); r.append(el('b', null, sp.name), el('span', 'sd-dim', (sp.status === 'running' ? 'working' : sp.paused ? 'paused' : sp.next ? 'next ' + new Date(sp.next).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : sp.status || '')));
       s2.append(r);
@@ -98,7 +99,7 @@
     setRunning(r) { st.running = !!r; if (!r) st.said = ''; if (st.tab === 'now') paint(); },
     setSaid(t) { st.said = String(t || '').slice(0, 160); if (st.tab === 'now') paint(); },
     setPlan(items) { st.plan = Array.isArray(items) ? items.slice(0, 8) : []; if (st.tab === 'now') paint(); },
-    setSparks(list) { st.sparks = Array.isArray(list) ? list : []; if (st.tab === 'now') paint(); },
+    setSparks(list, show) { st.sparks = Array.isArray(list) ? list : []; st.showMotes = !!show; if (st.tab === 'now') paint(); },
     refresh() { if (st.open && st.tab === 'goals') paint(); }
   };
   window.Side = api;

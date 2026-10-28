@@ -368,12 +368,15 @@
 
   // ---------- approvals / questions ----------
   function card(cls, why) { const c = el('div', 'card ' + (cls || '')); c.append(el('div', 'why', why)); return c; }
+  // Ben Oct 28: anything that needs him sits right above the text box, light, and leaves a one-line record in the chat once answered
+  const dock = () => $('#askDock');
+  function settleDock(c, label) { setTimeout(() => c.remove(), 900); try { ensureActTracked().cards.append(el('div', 'dim small', label)); } catch (e) { /* no group yet */ } }
   function onApproval(ev) {
-    const host = ensureActTracked().cards;
+    const host = dock();
     const c = card(ev.danger ? 'danger' : '', ev.danger ? 'Risky command: needs your OK' : 'Needs your OK');
     if (ev.kind === 'shell') { c.append(el('code', 'cmd sel', ev.text)); } else c.append(el('div', null, ev.text));
     const btns = el('div', 'btns');
-    const done = (v, label, remote) => { if (c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); refreshMood(); };
+    const done = (v, label, remote) => { if (c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); settleDock(c, label + (ev.kind === 'shell' ? ': ' + String(ev.text).slice(0, 80) : '')); refreshMood(); };
     const once = el('button', 'amber-btn', 'Allow once'); once.onclick = () => done('once', 'Allowed once');
     btns.append(once);
     if (!ev.danger) { const task = el('button', 'ghost', 'Allow for this task'); task.onclick = () => done('task', 'Allowed for this task'); btns.append(task); }
@@ -384,14 +387,14 @@
     host.append(c); toBottom(); refreshMood();
   }
   function onAsk(ev) {
-    const host = ensureActTracked().cards;
+    const host = dock();
     const c = card('', 'Glim asks');
     c.append(el('div', null, ev.question));
     const ta = el('textarea'); ta.placeholder = 'Your answer…'; ta.setAttribute('aria-label', 'Your answer');
     ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; });
     const btns = el('div', 'btns');
     const send = el('button', 'amber-btn', 'Reply');
-    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); { const you = el('div', 'dim small', 'You: ' + text); you.style.whiteSpace = 'pre-wrap'; c.append(you); } refreshMood(); };
+    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); { const you = el('div', 'dim small', 'You: ' + text); you.style.whiteSpace = 'pre-wrap'; c.append(you); } settleDock(c, 'You: ' + String(text).slice(0, 120)); refreshMood(); };
     send.onclick = () => reply(ta.value.trim());
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
     btns.append(send);
@@ -413,7 +416,7 @@
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
-    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Spark’s log, not talk to it.' : 'You can read this Spark’s log, not talk to it.') : 'Ask Glim to do something…';
+    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
     input.readOnly = !!(thread && thread.helper);
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
   }
@@ -660,7 +663,7 @@
     w.append(chips); msgs.append(w);
     w.prepend(makeOffCard('in-welcome')); paintOffCard();
   }
-  function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); paintOffCard(); }
+  function resetView() { msgs.textContent = ''; dock().textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); paintOffCard(); }
   function renderThread(t) {
     resetView();
     const items = t.items || [];
@@ -690,9 +693,9 @@
     stick = true; forceUntil = 0; jumpBtn.hidden = true; scroller.scrollTop = scroller.scrollHeight;
   }
 
-  // One Glim to talk to: the window is titled "Glim", or the Spark's name when a Spark's own log is open. Threads stay under the hood.
-  const sparkName = (t) => String(t.title || '').replace(/^Glim:\s*/, '') || 'Spark';
-  function paintTitle(t) { $('#title').textContent = t && t.helper ? sparkName(t) + ' · Spark' : 'Glim'; }
+  // One Glim to talk to: the window is titled "Glim", or the Mote's name when a Mote's own log is open. Threads stay under the hood.
+  const sparkName = (t) => String(t.title || '').replace(/^Glim:\s*/, '') || 'Mote';
+  function paintTitle(t) { $('#title').textContent = t && t.helper ? sparkName(t) + ' · Mote' : 'Glim'; }
   // One endless scroll: the main Glim's view starts with everything said in its earlier conversations (a day divider between them).
   const HIST_ITEMS = 400;
   async function withHistory(t) {
@@ -714,7 +717,7 @@
   async function openThread(id) {
     const t0 = await desk.threads.load(id);
     if (!t0) return;
-    // A Spark's log is never shown (Ben: if he can't talk to it he shouldn't see it), unless it is waiting on him for an answer or approval.
+    // A Mote's log is never shown (Ben: if he can't talk to it he shouldn't see it), unless it is waiting on him for an answer or approval.
     if (t0.helper && !settings.showSparks && !(t0.pendingCards || []).length && !t0.loginWaiting) { const mid = await mainThreadId(); if (mid && mid !== id) return openThread(mid); if (!mid) return newThread(); }
     const t = await withHistory(t0);
     thread = { id: t.id, title: t.title, helper: t.helper || null };
@@ -778,12 +781,12 @@
     return d.toDateString() === new Date().toDateString() ? hm : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + hm;
   }
   function paintAgents(list) {
-    if (window.Side) Side.setSparks(list);
-    list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
+    if (window.Side) Side.setSparks(list, !!settings.showSparks);
+    list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Motes are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
     const showList = !!settings.showSparks && list.length > 0;
-    $('#btnThreads').hidden = !showList; if (!showList) closeDrawer(); // no Sparks, no side panel: the Glim scroll is the whole window
+    $('#btnThreads').hidden = !showList; if (!showList) closeDrawer(); // no Motes, no side panel: the Glim scroll is the whole window
     for (const h of list) {
       const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
       const top = el('div', 'a-top');
@@ -796,8 +799,8 @@
       btns.append(
         mk('Run now', () => desk.helpers.run(h.id)),
         mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
-        mk('Delete', async () => { if (confirm('Delete Spark "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
-      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns); li.onclick = () => openThread(h.threadId); // only reachable when Show Sparks is on li.onclick = () => openThread(h.threadId); // only reachable when Show Sparks is on
+        mk('Delete', async () => { if (confirm('Delete Mote "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
+      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns); li.onclick = () => openThread(h.threadId); // only reachable when Show Motes is on li.onclick = () => openThread(h.threadId); // only reachable when Show Motes is on
       ul.append(li);
     }
   }
@@ -847,7 +850,7 @@
   input.addEventListener('input', autosize);
   let submitting = false;
   async function submit(force) {
-    if (thread && thread.helper) return; // a Spark's log is view only
+    if (thread && thread.helper) return; // a Mote's log is view only
     const text = input.value.trim();
     if (!text || submitting) return;
     if (slp.asleep || slp.waking) { $('#wakeAsk').hidden = false; return; } // keep the text; offer to wake first
@@ -855,7 +858,7 @@
     try {
       if (!thread) await newThread();
       input.value = ''; autosize();
-      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Spark’s log. Use Run now in the Sparks list, or ask your main Glim.')); toBottom(); return; }
+      if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Mote’s log. Use Run now in the Motes list, or ask your main Glim.')); toBottom(); return; }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
         const u = addUser(text, true, true, true); jumpBottom();
@@ -978,7 +981,7 @@
     { group: 'Appearance', rows: [
       { key: 'theme', type: 'seg', label: 'Theme', help: 'System follows your computer.', options: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'textSize', type: 'seg', label: 'Text size', help: 'Small, medium or large text everywhere.', options: [['s', 'S'], ['m', 'M'], ['l', 'L']] },
-      { key: 'showSparks', type: 'toggle', label: 'Show Sparks', help: 'Shows a Sparks list and lets you read what each Spark did. Sparks are Glim’s helpers that run on their own, so you can look but not talk to them.' },
+      { key: 'showSparks', type: 'toggle', label: 'Show Motes', help: 'Shows a Motes list and lets you read what each Mote did. Motes are Glim’s helpers that run on their own, so you can look but not talk to them.' },
       { key: 'highContrast', type: 'toggle', label: 'High contrast', help: 'Stronger text and borders everywhere.' },
       { key: 'pill', type: 'toggle', label: 'Status pill at the top of the screen', help: 'A small floating pill that shows what Glim is doing across apps. Hover it for details.' }
     ] },
@@ -1218,7 +1221,7 @@
     const list = await desk.threads.list();
     const lastT = last && list.find((t) => t.id === last);
     const mainId = await mainThreadId();
-    if (!info.e2e && lastT && !isCall(lastT) && !lastT.helper) await openThread(last); // back to the Glim you were talking to (a Spark's log or a call is not the home screen)
+    if (!info.e2e && lastT && !isCall(lastT) && !lastT.helper) await openThread(last); // back to the Glim you were talking to (a Mote's log or a call is not the home screen)
     else if (!info.e2e && mainId) await openThread(mainId);
     else await newThread();
     desk.helpers.list().then(paintAgents);

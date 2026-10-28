@@ -110,7 +110,7 @@ const send = (channel, payload) => { if (ui && !ui.webContents.isDestroyed()) ui
 const dark = () => nativeTheme.shouldUseDarkColors;
 
 // ---- one state source for Glim (pill, top bar, dock badge) -------------------------------------
-const pillState = new PillState({ onChange: () => { schedulePill(); } });
+const pillState = new PillState({ onChange: () => { schedulePill(); }, showHelpers: () => !!store.getSettings().showSparks });
 let pillTimer = null;
 function schedulePill() { if (pillTimer) return; pillTimer = setTimeout(() => { pillTimer = null; updatePill(); }, 30); }
 function chatInFront() { return !E2E && windowShown() && win.isFocused(); }
@@ -176,7 +176,7 @@ const GOALS_ASK = 'Setup is done. One more thing, so I can help over the long ru
 // rides (hidden) in front of the first answer to GOALS_ASK; the scroll shows only the person's words
 const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal with memory_save (topic "goal"), and each milestone or first step as its own note with topic "goal", so they show in the Goals tab. Then make a short plan for each goal: '
   + '2 to 4 milestones and the first small step for this week. Ask at most one question if something important is unclear. If they have no goals yet, '
-  + 'help them brainstorm a few first. Finally offer Sparks that would help (for example a weekly check-in or a reminder for the first step), and ask before creating any.\n\n';
+  + 'help them brainstorm a few first. Finally offer helpers (agent_start) that would help, for example a weekly check-in or a reminder for the first step, and ask before creating any.\n\n';
 // "go learn about X": learning mode. Hidden note in front of the message; the scroll shows only the person's words.
 const LEARN_ASK = /^\s*(?:(?:please|ok|okay|hey)[ ,]+)?(?:go\s+|can you\s+|could you\s+)?(?:learn|study)\s+(?:about\s+|how to\s+|to\s+)?\S/i;
 const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat it as building a skill that you keep.] '
@@ -779,7 +779,7 @@ function buildAgent() {
       queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});
     },
-    onNeedBen: (h) => notify("Spark '" + h.name + "' needs you", 'Open it to answer.', h.threadId)
+    onNeedBen: (h) => notify("Mote '" + h.name + "' needs you", 'Open it to answer.', h.threadId)
   });
   agent = createAgent({ helper: null, rec: null });
 }

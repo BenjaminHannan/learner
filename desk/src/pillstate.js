@@ -10,6 +10,7 @@ class PillState {
   constructor(o) {
     o = o || {};
     this.now = o.now || Date.now;
+    this.showHelpers = o.showHelpers || (() => true); // Ben Oct 28: one Glim; its helpers (Motes) are invisible unless the setting is on
     this.onChange = o.onChange || (() => {});
     this.doneMs = o.doneMs || 8000;
     this.agents = new Map();
@@ -27,6 +28,8 @@ class PillState {
     if (threadId) a.threadId = threadId;
     return a;
   }
+  _helper(a) { return !['main', 'call', 'sleep-alert'].includes(a.key); }
+  _name(a) { return this._helper(a) && !this.showHelpers() ? 'Glim' : a.name; }
   _touch(a) { a.at = this.now(); this.onChange(); }
 
   // ev: the same events the chat gets. meta: {title}
@@ -101,8 +104,8 @@ class PillState {
       return { visible: true, status: 'call', mood: 'idle', line, top: { key: 'call', name: 'Glim', threadId: null, status: 'call', step: 'Talking hands-free', line, error: '', approval: null, title: '', elapsedMs: secs * 1000 }, others: [], now };
     }
     if (!top) return { visible: false, status: 'idle', mood: 'idle', line: '', top: null, others: [] };
-    const pack = (a) => ({ key: a.key, name: a.name, threadId: a.threadId, status: a.status, step: a.step, line: a.line, error: a.error, approval: a.approval, title: a.title, elapsedMs: Math.max(0, (a.endedAt || now) - a.startedAt) });
-    return { visible: true, status: top.status, mood: MOOD[top.status], line: top.line, top: pack(top), others: [...this.agents.values()].filter((a) => a !== top).sort((x, y) => PRIORITY[y.status] - PRIORITY[x.status]).slice(0, 3).map((a) => ({ key: a.key, name: a.name, status: a.status, line: a.line })), now };
+    const pack = (a) => ({ key: a.key, name: this._name(a), threadId: a.threadId, status: a.status, step: a.step, line: a.line, error: a.error, approval: a.approval, title: a.title, elapsedMs: Math.max(0, (a.endedAt || now) - a.startedAt) });
+    return { visible: true, status: top.status, mood: MOOD[top.status], line: top.line, top: pack(top), others: [...this.agents.values()].filter((a) => a !== top && (this._helper(a) ? this.showHelpers() : this.showHelpers() || !this._helper(top))).sort((x, y) => PRIORITY[y.status] - PRIORITY[x.status]).slice(0, 3).map((a) => ({ key: a.key, name: this._name(a), status: a.status, line: a.line })), now };
   }
 }
 
