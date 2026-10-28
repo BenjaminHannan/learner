@@ -92,6 +92,12 @@ function sanitize(patch) {
   return out;
 }
 
+// The model defaults depend on the machine (Windows and Macs without Ben's assistant start on the built-in model). main.js calls this
+// once, before the first Store is made, with Platform.defaultPreset(process.platform, {hasLocalAssistant}). A saved settings.json still wins.
+function applyPresetDefaults(preset) {
+  for (const k of ['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'compactTokens', 'maxToolChars']) if (preset && preset[k] !== undefined) DEFAULT_SETTINGS[k] = preset[k];
+}
+
 class Store {
   constructor(dir) {
     this.dir = dir;
@@ -152,4 +158,4 @@ class Store {
   }
 }
 
-module.exports = { Store, DEFAULT_SETTINGS, sanitize };
+module.exports = { Store, DEFAULT_SETTINGS, sanitize, applyPresetDefaults };

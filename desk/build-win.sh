@@ -42,7 +42,7 @@ else
   echo "WARNING: vendor/llama/llama-server.exe not found; the app will need an official llama.cpp release with LFM3." >&2
 fi
 
-IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
+IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
 OUT=build/win
 NAME="Premonition"
 DIR="$OUT/$NAME-win32-x64"

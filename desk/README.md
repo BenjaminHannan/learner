@@ -53,6 +53,12 @@ Premonition runs on Windows with its own built-in model, so there is no Python g
 - `run_shell` runs PowerShell. The diary MCP (`diary_mcp.py`) is optional and simply off when Python or the file is missing.
 - Settings and chats live in Electron's user-data folder, `%APPDATA%\Premonition` by default; the model runtime, diary and sleep folders live inside it too, so `--user-data-dir=DIR` moves all of it. If you used the app as "Premonition Desk" they are copied there once, and the old folder is left as a backup.
 
+## Built-in model on a Mac without Ben's assistant (Emma's setup)
+
+A Mac where `~/learner-ops/assistant/serve.sh` does not exist (main.js checks the disk and passes `hasLocalAssistant` to `Platform`) runs the same built-in model as Windows: the official llama.cpp release asset `llama-bNNNN-bin-macos-arm64.tar.gz` (newest one at or after the LFM3 floor, unpacked with `/usr/bin/tar` into `~/Library/Application Support/Premonition/runtime/llama-bNNNN-metal/llama-bNNNN/`, dylibs beside `llama-server`, quarantine flag cleared) and the 1 GB GGUF, with the same flags as Windows (`-c 8192 -np 1 --jinja --no-webui -ngl 99`; Metal is automatic, no CPU fallback). Context 8192 keeps the KV cache small (about 100 MB to 1 GB depending on the model's layer layout), so model + KV + Electron fit an 8 GB Mac. Sleep is not available there yet (the moon button and File > Sleep are hidden; Settings > Sleep shows a note). Ben's Macs are unchanged (qwen through serve.sh, Sleep Mode app).
+
+One-step install: `curl -fsSL https://github.com/BenjaminHannan/learner/raw/main/desk/dist/install-mac.sh | bash` (downloads `dist/Premonition-mac-arm64.zip`, installs to /Applications or ~/Applications, `xattr -cr`, ad-hoc `codesign`, opens the app; `DRY_RUN=1` prints the steps; guide: `dist/emma-guide.html`). Build the zip on Linux or a Mac with `./build-mac-cloud.sh` (Git LFS stores `dist/*.zip`). The Swift screen helper can only be compiled on a Mac: if `vendor/helper/deskhelper` (arm64) is committed it is packed in, otherwise the app runs without screen control (those tools reply "screen control helper not installed"; chat, the browser panel, Glims and the permission prompts still work).
+
 ## Permissions to click once (Mac)
 
 Screen control needs two macOS permissions for "Premonition" (System Settings > Privacy & Security):

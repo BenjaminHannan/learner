@@ -38,7 +38,7 @@ APP_BUNDLE_ID="com.electron.premonition desk"
 npx @electron/packager . "Premonition" \
   --app-bundle-id="$APP_BUNDLE_ID" \
   --platform=darwin --arch=arm64 --out=build/app --overwrite --icon=assets/icon.icns \
-  --ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-win\.sh|build-win\.ps1)($|/)' \
+  --ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' \
   --ignore='^/helper($|/)' \
   ${EXTRA[@]+"${EXTRA[@]}"}
 

@@ -63,15 +63,22 @@
   // ---- feature gating -----------------------------------------------------------------------------
   // perms: the macOS Privacy card (Windows needs no permission to click or look). sleep: the Sleep group and top-bar button
   // (the sleep app only runs on the Macs for now). tray: hide-to-tray instead of the Mac "see-through window".
-  function features(p) {
-    return { perms: isMac(p), sleep: true, builtin: isWin(p), tray: isWin(p), dock: isMac(p), menuBarAutoHide: isWin(p) };
+  // o.hasLocalAssistant: true when this is one of Ben's Macs (~/learner-ops/assistant/serve.sh exists). main.js looks at the disk and
+  // passes it in, so this file stays pure. The built-in model runs on Windows, and on any Mac that is known to have no such assistant
+  // (an unknown value keeps the old behaviour: the assistant gateway).
+  const builtinOn = (p, o) => isWin(p) || (isMac(p) && !!o && o.hasLocalAssistant === false);
+  // The built-in Mac has no sleep yet (Windows sleeps through its own runner, Ben's Macs through the sleepmode app; this Mac has neither).
+  const SLEEP_MAC_NOTE = 'Sleep is not available on this Mac yet.';
+  function features(p, o) {
+    const mb = isMac(p) && builtinOn(p, o);
+    return { perms: isMac(p), sleep: !mb, sleepSoon: mb, builtin: builtinOn(p, o), tray: isWin(p), dock: isMac(p), menuBarAutoHide: isWin(p) };
   }
   const PERMS_NOTE_WIN = "Windows doesn't need extra permissions.";
   // What Settings shows for the gated rows. Sleep works on Windows through the built-in runner; only the Mac-specific rows
   // (the sleepmode app folder and Python) are replaced there by the plain-language rows.
-  function settingsGating(p) {
-    const f = features(p);
-    return { showSleepGroup: f.sleep, sleepWindows: isWin(p), showPermRow: f.perms, permsNote: f.perms ? '' : (isWin(p) ? PERMS_NOTE_WIN : 'Nothing to set up on this system.'), showSleepButton: f.sleep };
+  function settingsGating(p, o) {
+    const f = features(p, o);
+    return { showSleepGroup: true, sleepUnavailable: f.sleepSoon, sleepNote: f.sleepSoon ? SLEEP_MAC_NOTE : '', sleepWindows: isWin(p), showPermRow: f.perms, permsNote: f.perms ? '' : (isWin(p) ? PERMS_NOTE_WIN : 'Nothing to set up on this system.'), showSleepButton: f.sleep };
   }
   // Onboarding: the Permissions step exists only on a Mac (and in the Linux e2e, which fakes macOS).
   const needsPermsStep = (p, e2e) => isMac(p) || !!e2e;
@@ -123,17 +130,17 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
   const PRESETS = [
     { id: 'premonition', label: 'Premonition gateway', gatewayUrl: 'http://127.0.0.1:8090/v1', modelAuto: 'qwen36-auto', modelMain: 'qwen36', modelFast: 'qwen36-fast', model: 'qwen36-auto', compactTokens: 24000, maxToolChars: 8000 },
     { id: 'llamacpp', label: 'llama.cpp server', gatewayUrl: 'http://127.0.0.1:8080/v1', modelAuto: 'default', modelMain: 'default', modelFast: 'default', model: 'default', compactTokens: 12000, maxToolChars: 6000 },
-    // The model the app runs itself (Windows): LFM3 1.7B through llama-server behind the built-in gateway. ctx 8192, of which the
+    // The model the app runs itself (Windows, and Macs without Ben's assistant): LFM3 1.7B through llama-server behind the built-in gateway. ctx 8192, of which the
     // system prompt + tools take ~2k tokens, so history is compacted early and tool results are kept short.
     { id: 'builtin', label: 'Built-in (LFM3)', gatewayUrl: 'http://127.0.0.1:18091/v1', modelAuto: 'auto', modelMain: 'main', modelFast: 'fast', model: 'auto', compactTokens: 4500, maxToolChars: 3000, builtin: true }
   ];
-  const presetsFor = (p) => PRESETS.filter((x) => !x.builtin || isWin(p));
-  const defaultPreset = (p) => (isWin(p) ? PRESETS.find((x) => x.id === 'builtin') : PRESETS[0]);
+  const presetsFor = (p, o) => PRESETS.filter((x) => !x.builtin || builtinOn(p, o));
+  const defaultPreset = (p, o) => (builtinOn(p, o) ? PRESETS.find((x) => x.id === 'builtin') : PRESETS[0]);
   // sleep window default: never before 11 pm, until 8 am, on every platform (the app then fits it to Ben's routine, src/rhythm.js)
   const defaultSleepWindow = (p) => ['23:00', '08:00'];
   const presetFor = (gatewayUrl) => { const u = String(gatewayUrl || '').replace(/\/+$/, ''); return PRESETS.find((x) => x.gatewayUrl === u) || null; };
 
-  const api = { isWin, isMac, helperFileName, helperCommand, helperCandidates, mapKeys, defaultHotkey, hotkeyLabel, modifierHint, features, settingsGating, needsPermsStep, pillOptions, pillPosition, closeBehavior, quitHint, loginItemOptions, startedHidden, windowOptions, osWords, PRESETS, presetsFor, defaultPreset, defaultSleepWindow, presetFor, PERMS_NOTE_WIN };
+  const api = { isWin, isMac, helperFileName, helperCommand, helperCandidates, mapKeys, defaultHotkey, hotkeyLabel, modifierHint, features, builtinOn, settingsGating, needsPermsStep, pillOptions, pillPosition, closeBehavior, quitHint, loginItemOptions, startedHidden, windowOptions, osWords, PRESETS, presetsFor, defaultPreset, defaultSleepWindow, presetFor, PERMS_NOTE_WIN, SLEEP_MAC_NOTE };
   root.Platform = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

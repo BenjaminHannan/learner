@@ -10,7 +10,11 @@ module.exports = {
   // master commit with mingw-w64 (AVX2, static). Its tag doubles as the source ref for the sleep adapter converter.
   BUNDLED_LLAMA_COMMIT: 'd05706b4f32a545814856e98ca518292585443b9',
   LLAMA_FLAVORS: ['vulkan', 'cpu'],      // tried in this order; cpu = the avx2 build, used when Vulkan will not start
-  llamaAssetName: (tag, flavor) => 'llama-' + tag + '-bin-win-' + (flavor === 'cpu' ? 'cpu' : flavor) + '-x64.zip',
+  // Windows: llama-<tag>-bin-win-<vulkan|cpu>-x64.zip. macOS (Apple silicon only): llama-<tag>-bin-macos-arm64.tar.gz (there is no zip for
+  // macOS; Metal is built in, so the one asset serves the single 'metal' flavor). The platform defaults to win32 so older callers are unchanged.
+  llamaAssetName: (tag, flavor, platform) => (platform === 'darwin' ? 'llama-' + tag + '-bin-macos-arm64.tar.gz' : 'llama-' + tag + '-bin-win-' + (flavor === 'cpu' ? 'cpu' : flavor) + '-x64.zip'),
+  llamaFlavors: (platform) => (platform === 'darwin' ? ['metal'] : ['vulkan', 'cpu']),
+  llamaExeName: (platform) => (platform === 'darwin' ? 'llama-server' : 'llama-server.exe'),
   // chat model
   MODEL_REPO: 'LiquidAI/LFM3-1.7B-GGUF',
   MODEL_FILE: 'LFM3-1.7B-QAD-Q4_0.gguf', // preferred exact name; if absent the repo listing is searched for a q4_0 .gguf

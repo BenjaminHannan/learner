@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premonition: a guide for Emma</title>
+<style>
+:root{--bg:#faf6f0;--card:#fff;--ink:#241b14;--ink2:#4f4237;--faint:#6a5c4f;--line:rgba(36,27,20,.14);--amber:#c9710a;--amber-soft:#fde9c8;--ok:#2f7d4f;--warn:#b3401f}
+@media (prefers-color-scheme:dark){:root{--bg:#16120f;--card:#1f1a16;--ink:#f7f1e9;--ink2:#d2c5b6;--faint:#b9ab9b;--line:rgba(247,241,233,.16);--amber:#f5a524;--amber-soft:#3a2a14;--ok:#6fcf97;--warn:#ff8a65}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 16px 4rem}
+h1{font-size:2rem;margin:.2rem 0}h2{font-size:1.4rem;margin:0 0 .4rem}
+.lead{color:var(--ink2);font-size:1.1rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:1.1rem;padding:1.2rem 1.2rem 1.3rem;margin:1.1rem 0}
+.num{display:inline-flex;width:2rem;height:2rem;border-radius:50%;background:var(--amber);color:#fff;align-items:center;justify-content:center;font-weight:700;margin-right:.5rem}
+svg{display:block;width:100%;height:auto;margin:.8rem 0}
+.t{fill:var(--ink)}.t2{fill:var(--ink2)}.stroke{stroke:var(--ink2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.box{fill:var(--bg);stroke:var(--line);stroke-width:2}.amber{fill:var(--amber)}.soft{fill:var(--amber-soft)}
+.note{background:var(--amber-soft);border-radius:.8rem;padding:.7rem .9rem;margin:.8rem 0}
+.warn{border-left:5px solid var(--warn)}
+ul{padding-left:1.2rem}li{margin:.25rem 0}
+code,kbd{background:var(--amber-soft);border-radius:.35rem;padding:.05rem .4rem;font-size:.95em}
+.cmd{display:flex;gap:.6rem;align-items:stretch;margin:.8rem 0}
+.cmd pre{flex:1;margin:0;padding:.8rem .9rem;border-radius:.8rem;background:#241b14;color:#fdf3e3;font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere}
+.cmd button{flex:none;border:0;border-radius:.8rem;background:var(--amber);color:#fff;font:600 15px system-ui,sans-serif;padding:0 1rem;cursor:pointer;min-height:2.75rem}
+.cmd button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:.45rem .3rem;text-align:left}
+</style>
+</head>
+<body>
+<main>
+<h1>Premonition for your Mac</h1>
+<p class="lead">A helper that lives on your laptop. You talk to it like a chat, and it can look things up, read pages, use your apps and keep an eye on things for you. Nothing you say leaves your computer. Setting it up takes about ten minutes, most of it waiting.</p>
+
+<section>
+<h2><span class="num">1</span>Open Terminal</h2>
+<svg viewBox="0 0 640 150" role="img" aria-label="Press Command and Space, type Terminal, press Return">
+  <rect x="15" y="25" width="180" height="100" rx="14" class="box"/><rect x="38" y="48" width="62" height="34" rx="8" class="soft"/><text x="48" y="71" class="t" font-size="16">&#8984;</text><rect x="108" y="48" width="62" height="34" rx="8" class="soft"/><text x="116" y="71" class="t" font-size="13">space</text><text x="30" y="112" class="t" font-size="14">Press both keys</text>
+  <path d="M205 75h40" class="stroke"/><path d="M235 67l12 8-12 8" class="stroke"/>
+  <rect x="255" y="25" width="180" height="100" rx="14" class="box"/><rect x="272" y="45" width="146" height="30" rx="15" class="soft"/><text x="288" y="65" class="t" font-size="15">Terminal</text><text x="270" y="112" class="t" font-size="14">Type it</text>
+  <path d="M445 75h40" class="stroke"/><path d="M475 67l12 8-12 8" class="stroke"/>
+  <rect x="495" y="25" width="130" height="100" rx="14" class="box"/><rect x="512" y="42" width="96" height="40" rx="6" fill="#241b14"/><text x="520" y="67" fill="#fdf3e3" font-size="13">&#36; _</text><text x="512" y="112" class="t" font-size="14">Press Return</text>
+</svg>
+<p>Press <kbd>Cmd</kbd> + <kbd>Space</kbd> (the Spotlight search), type <b>Terminal</b>, and press <kbd>Return</kbd>. A window with a blinking cursor opens. That is fine and safe; you only need it this once.</p>
+</section>
+
+<section>
+<h2><span class="num">2</span>Paste this one line</h2>
+<p>Copy the line below, click inside the Terminal window, press <kbd>Cmd</kbd> + <kbd>V</kbd>, then <kbd>Return</kbd>.</p>
+<div class="cmd">
+<pre id="line">curl -fsSL https://github.com/BenjaminHannan/learner/raw/main/desk/dist/install-mac.sh | bash</pre>
+<button id="copy" type="button">Copy</button>
+</div>
+<p>It prints a few friendly progress lines (download, install, finish). Wait for <b>"Done."</b> The app downloads (about 100 MB), goes into your Applications folder, and opens by itself. You do not need a password and nothing else gets installed.</p>
+<div class="note">If it says something went wrong, read the plain sentence it prints, check that the Wi-Fi is on, and paste the same line again. It is safe to run as many times as you like, and it also installs updates.</div>
+</section>
+
+<section>
+<h2><span class="num">3</span>The first start downloads its brain</h2>
+<p>The first time, a progress screen appears inside the window while Premonition downloads its small language model. This happens once, and the model then lives on your Mac.</p>
+<table>
+<tr><th>What</th><th>Size</th></tr>
+<tr><td>The program that runs the model</td><td>about 16 MB</td></tr>
+<tr><td>The language model (LFM3, small and quick)</td><td>about 1 GB</td></tr>
+</table>
+<svg viewBox="0 0 640 90" role="img" aria-label="A progress bar"><rect x="20" y="30" width="600" height="26" rx="13" class="box"/><rect x="20" y="30" width="360" height="26" rx="13" class="amber"/><text x="30" y="80" class="t2" font-size="14">Downloading the language model. 60%</text></svg>
+<div class="note">If your Wi-Fi drops, open Premonition again (or press <b>Try again</b>). It carries on where it stopped. Plan on a few minutes on good Wi-Fi, and leave the lid open while it works.</div>
+<p>Then it asks a few setup questions: what you want Glims (your helpers) for, how much it should ask you first (pick <b>Ask first</b> to begin with), and any jobs to repeat on a schedule. You can skip any of it and change it later in Settings.</p>
+</section>
+
+<section>
+<h2>macOS will ask for two permissions</h2>
+<p>Your Mac keeps apps from watching or controlling it until you say yes. Premonition shows a small card that walks you through it. Both are optional, and you can turn them off again whenever you like.</p>
+<ul>
+<li><b>Screen Recording:</b> lets Glim see your screen when you ask it to look at something or a job needs it.</li>
+<li><b>Accessibility:</b> lets Glim click and type in other apps for you, only when you ask it to.</li>
+</ul>
+<p>In System Settings, open <b>Privacy &amp; Security</b>, find the permission, and switch <b>Premonition</b> on. macOS may ask you to quit and reopen the app afterwards: say yes.</p>
+<div class="note warn"><b>If macOS says it "can't verify" Premonition or "can't be opened":</b> the installer normally avoids this. If it shows up anyway, open <b>System Settings</b>, then <b>Privacy &amp; Security</b>, scroll down to the message about Premonition, click <b>Open Anyway</b>, and enter your Mac password. You only do this once. (Or paste the install line into Terminal again.)</div>
+</section>
+
+<section>
+<h2>Chatting</h2>
+<ul>
+<li>Type what you want and press Return. Ask questions, ask it to look something up, or give it a job.</li>
+<li>The top bar has <b>Auto</b>, <b>Think</b> and <b>Fast</b>. Fast answers quickest. Think takes longer on harder questions.</li>
+<li><b>Ask first</b> means Glim checks with you before it clicks or types on your computer. <b>Hands-off</b> lets it go ahead (it still asks before anything risky).</li>
+<li>Press <kbd>Option</kbd> + <kbd>Space</kbd> from any app to show or hide Premonition. Quit for real with <kbd>Cmd</kbd> + <kbd>Q</kbd>.</li>
+</ul>
+<div class="note warn"><b>Passwords stay with you.</b> If a page needs a sign-in, Premonition opens it for you to type in yourself. Glim never sees what you type there and will never ask for a password in chat.</div>
+<p>This is a small model that runs on your own laptop (small enough for an 8 GB Mac). It is quick and private, but it can make mistakes. Check anything important. <b>Sleep</b>, the way Glim learns overnight, is not available on this Mac yet.</p>
+</section>
+
+<section>
+<h2>Privacy</h2>
+<ul>
+<li>The model runs on your Mac. Your chats are not sent to any AI company.</li>
+<li>The only internet traffic is what you ask for (searching or opening a page) and the one-time downloads.</li>
+<li>Chats and memories live in <code>~/Library/Application Support/Premonition</code>.</li>
+</ul>
+</section>
+
+<section>
+<h2>If something is odd</h2>
+<ul>
+<li><b>It says Offline:</b> the model is still starting (it takes a moment after launch). Wait a minute, or click <b>Offline</b> in the top bar to start it.</li>
+<li><b>The download stops:</b> open the app again; it resumes. If it says it cannot start the model, press <b>Try again</b>.</li>
+<li><b>Slow answers:</b> Fast mode helps, and closing heavy apps frees memory.</li>
+<li><b>Update:</b> paste the install line into Terminal again.</li>
+</ul>
+</section>
+
+<section>
+<h2>Uninstall</h2>
+<ol>
+<li>Quit Premonition (<kbd>Cmd</kbd> + <kbd>Q</kbd>).</li>
+<li>Drag <b>Premonition</b> from your Applications folder to the Bin.</li>
+<li>To erase everything it saved and downloaded, also delete the folder <code>~/Library/Application Support/Premonition</code> (this removes your chats and the 1 GB model).</li>
+</ol>
+</section>
+</main>
+<script>
+(function () {
+  var b = document.getElementById('copy'), p = document.getElementById('line');
+  b.addEventListener('click', function () {
+    var t = p.textContent.trim();
+    var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, select); } else select();
+    function select() { var r = document.createRange(); r.selectNodeContents(p); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Now press Cmd+C'; }
+  });
+})();
+</script>
+</body>
+</html>
