@@ -137,10 +137,10 @@
     a.root.classList.remove('running'); a.root.classList.add('done');
     a.ico.innerHTML = svg(P.check);
     a.live.hidden = true;
-    if (a.plan) a.plan.classList.add('done');
+    if (a.plan) { a.plan.classList.add('done'); a.plan.open = false; }
     a.root.querySelectorAll('.step.run').forEach((s) => { s.classList.remove('run'); s.classList.add('bad'); });
     for (const c of a.cards.querySelectorAll('.bcard.active')) c.classList.remove('active');
-    if (!a.steps && !a.cards.children.length && !a.body.children.length) a.root.remove();
+    if (!a.steps && !a.plan && !a.cards.children.length && !a.body.children.length) a.root.remove();
     relabel(a);
   }
   const finishAll = () => { document.querySelectorAll('.activity.running').forEach((r) => { if (r._act) finishAct(r._act); }); if (act) finishAct(act); };
@@ -210,7 +210,7 @@
       // the plan has its own checklist; same rule as extractPlan in src/agent.js (2+ numbered lines, each short)
       const nums = clean.split('\n').filter((l) => /^\s*\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\s*\d+[.)]\s+/, '').replace(/\*\*|__|`/g, '').trim());
       const isPlan = nums.length >= 2 && nums.every((l) => l.length <= 120);
-      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); }; }
+      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); if (!a.finished) { a.said = true; a.liveT.textContent = one; } }; }
       t.text.remove();
     }
     toBottom();
@@ -235,8 +235,9 @@
     const ol = el('ol');
     for (const i of items) ol.append(planItem(i));
     d.append(s, ol);
-    a.body.prepend(d); a.plan = d;
-    if (a.finished) d.classList.add('done');
+    // Ben Oct 28: the plan stays in view even when the steps are folded away (it folds itself once the work is done)
+    a.root.insertBefore(d, a.cards); a.plan = d;
+    if (a.finished) { d.classList.add('done'); d.open = false; }
   }
 
   // ---------- steps ----------
@@ -264,7 +265,7 @@
     const w = stepEl(ev.id, ev.tool, ev.args, ev.summary, 'run');
     a.body.append(w); stepEls.set(ev.id, w);
     a.steps++; relabel(a);
-    a.liveT.textContent = ev.summary;
+    if (!a.said) a.liveT.textContent = ev.summary; // Glim's own sentence (below) beats the tool's summary
     a.body.scrollTop = a.body.scrollHeight;
     toBottom();
   }
