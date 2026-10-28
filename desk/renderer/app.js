@@ -755,6 +755,7 @@
     return d.toDateString() === new Date().toDateString() ? hm : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + hm;
   }
   function paintAgents(list) {
+    list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
     for (const h of list) {
