@@ -32,7 +32,7 @@ function idleSummary(i) {
   if (last) lines.push('Last: ' + clip(last.name, 24) + ' ran ' + agoLabel(last.lastRun, now));
   if (i.autoSleep && i.sleepFrom && !i.asleep) lines.push('Sleeps around ' + i.sleepFrom);
   lines.push(i.gateway === 'ready' ? 'Assistant is on' : i.gateway === 'down' ? 'Assistant is off' : 'Assistant is starting');
-  return { head: 'Glim · ' + (busy.length ? 'Running ' + clip(busy[0].name, 24) : up.length ? 'Nothing running right now' : 'Ready'), lines };
+  return { head: busy.length ? 'Glim · Running ' + clip(busy[0].name, 24) : 'Glimmering', lines };
 }
 
 module.exports = { idleSummary, whenLabel, agoLabel };

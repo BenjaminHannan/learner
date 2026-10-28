@@ -139,7 +139,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['warm request has X-Premonition-Warm: 1', !!gw.warms[0] && gw.warms[0].headers['x-premonition-warm'] === '1']);
     checks.push(['warm request: qwen36-fast, non-streaming, max_tokens 1, user "."', !!gw.warms[0] && gw.warms[0].body.model === 'qwen36-fast' && gw.warms[0].body.stream === false && gw.warms[0].body.max_tokens === 1 && gw.warms[0].body.messages[1].content === '.']);
     await sleep(300);
-    checks.push(['top bar shows Ready after warming', await ev('document.querySelector("#gw").classList.contains("ready") && /Ready/.test(document.querySelector("#gw").textContent)')]);
+    checks.push(['top bar shows Glimmering after warming', await ev('document.querySelector("#gw").classList.contains("ready") && /Glimmering/.test(document.querySelector("#gw").textContent)')]);
 
     // ---- layout: chat only, centered column, bigger text
     checks.push(['no permanent work pane or splitter', await ev('!document.querySelector("#work") && !document.querySelector("#splitter") && !document.querySelector(".tabs")')]);
