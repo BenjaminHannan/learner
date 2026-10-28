@@ -17,9 +17,10 @@
     pill.classList.toggle('notch', !!geo.notchH);
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
+    $('#dIdle').hidden = true;
     pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'call', 'idle'); pill.classList.add(v.status);
     Mascot.set(g, v.mood);
-    if (v.status === 'idle') { close(); return; } // just the icon
+    if (v.status === 'idle') { idle(v); return; } // just the icon; hover opens the summary card
     const t = v.top;
     $('#line').textContent = v.line || '';
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
@@ -42,6 +43,15 @@
     if (v.status === 'working' || v.status === 'waiting') b.append(btn('Stop', 'no', () => P.act('stop', t.key)));
     if (v.status === 'done' || v.status === 'error') b.append(btn('Dismiss', '', () => P.act('dismiss', t.key)));
   }
+  // resting pill: a plain summary (set by main.js as v.idle) and an Open button
+  function idle(v) {
+    const i = v.idle, d = $('#dIdle');
+    $('#line').textContent = i ? i.head : '';
+    d.textContent = ''; d.hidden = !i;
+    if (i) for (const l of i.lines) d.append(el('div', '', l));
+    const b = $('#btns'); b.textContent = ''; b.append(btn('Open', 'go', () => P.act('open', { threadId: null, key: null })));
+    if (!i) close();
+  }
   function open() { clearTimeout(closeT); clearTimeout(openT); openT = setTimeout(() => pill.classList.add('open'), 150); }
   function close() { clearTimeout(openT); clearTimeout(closeT); closeT = setTimeout(() => { pill.classList.remove('open'); if (!pill.classList.contains('hover')) P.act('hover', false); }, 220); } // a hovered island stays clickable
   // notched Mac: hovering the island grows it a little (OpenBot-style) and makes it clickable, even when idle
@@ -49,7 +59,7 @@
     clearTimeout(closeT);
     if (!view || !view.visible) return;
     if (pill.classList.contains('notch')) { pill.classList.add('hover'); P.act('hover', true); }
-    if (view.status === 'idle') return;
+    if (view.status === 'idle' && !view.idle) return;
     P.act('hover', true); open();
   });
   pill.addEventListener('mouseleave', () => { clearTimeout(openT); pill.classList.remove('hover'); close(); });

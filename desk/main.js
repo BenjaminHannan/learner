@@ -48,6 +48,7 @@ const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { idleSummary } = require('./src/pillidle');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -115,9 +116,21 @@ function updatePill() {
   const st = pillState.status();
   send('glim-state', st);
   try { if (process.platform === 'darwin' && app.dock) app.dock.setBadge(st === 'error' || st === 'waiting' ? '!' : ''); } catch (e) { /* ignore */ }
-  if (pillWin) pillWin.update(pillState.view(), chatInFront());
+  if (pillWin) { const v = pillState.view(); if (!v.visible && process.platform === 'darwin') v.idle = idleInfo(); pillWin.update(v, chatInFront()); }
 }
-setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible)) updatePill(); }, 1000).unref();
+// hover card of the resting pill (Mac): rebuilt at most every 5 s, not on every 1 s tick
+let idleCache = null;
+function idleInfo() {
+  const now = Date.now();
+  if (idleCache && now - idleCache.at < 5000) return idleCache.v;
+  const s = store.getSettings();
+  const v = idleSummary({ now, helpers: helpers ? helpers.list() : [], autoSleep: s.autoSleep, sleepFrom: effectiveWindow(s, learnedNow(new Date())).from, asleep: sl.asleep, gateway: gwState.state });
+  idleCache = { at: now, v };
+  return v;
+}
+// the resting pill's card also refreshes when its 5 s cache runs out, so "in 12 min" and the assistant state stay current
+const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view && !pillWin.view.visible && !(idleCache && Date.now() - idleCache.at < 5000);
+setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale()) updatePill(); }, 1000).unref();
 
 // ---- sleep mode ---------------------------------------------------------------------------------------
 // The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
@@ -521,12 +534,13 @@ const afterSignIn = async (br, v) => v === 'done'
 
 // ---- agents ------------------------------------------------------------------------------------
 // One Agent per run owner: the primary, and a fresh one for each helper run. Same prompt, same tool list.
-function createAgent({ helper, rec }) {
+function createAgent({ helper, rec, voice }) {
   const isHelper = !!helper;
+  const isVoice = !!voice; // the call's own agent: it runs beside the main agent, so a call works while a task is running
   // one browser per thread: a helper's is made up front (its thread id), a chat thread's on its first browser tool
   const bk = () => (isHelper ? helper.threadId : a.threadId);
-  const getBr = () => (isHelper ? rec : makeBrowser(bk(), activeThread && activeThread.title)).br;
-  const pKey = isHelper ? helper.id : 'main';
+  const getBr = () => (isHelper ? rec : makeBrowser(bk(), isVoice ? 'Call' : activeThread && activeThread.title)).br;
+  const pKey = isHelper ? helper.id : isVoice ? 'call' : 'main';
   const pName = isHelper ? helper.name : 'Glim';
   const holder = screenLock.holder();
   const agentRef = { withoutSlot: (fn, signal) => a.withoutSlot(fn, signal) };
@@ -617,11 +631,11 @@ function createAgent({ helper, rec }) {
       return r;
     };
   }
-  const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
+  const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : (activeThread && activeThread.title) });
   const a = new Agent({
     memory, tracking,
     getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' })
-      : () => { const s = store.getSettings(); return callTurn ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
+      : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
     slot: limiter,
@@ -716,17 +730,20 @@ function buildAgent() {
 // turn in one thread titled "Call" (kept as a chat). The instruction to answer briefly rides in the user message, NEVER in the system
 // prompt (the cached prefix must stay byte-identical).
 const VOICE_PREFIX = '[voice call] Answer out loud: one to three short spoken sentences, no lists, no markdown, no emoji. ';
+// the date and time in plain words, so "what time is it" is answered from this turn and not guessed (rides in the user message, never the system prompt)
+const nowWords = (d) => 'It is now ' + d.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + '. ';
 let call = null, callThread = null;
-let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the main agent
+let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the call's own agent
+let callAgent = null; // separate from the main agent, so a call works while a task runs
 async function callAsk(text, { onDelta, signal }) {
   if (sl.asleep || sl.waking) throw new Error('Glim is asleep');
-  for (let i = 0; i < 100 && agent.running && callTurn; i++) await sleep(30); // the turn we just interrupted is still unwinding
-  if (agent.running) throw new Error('Glim is busy with another task');
+  if (!callAgent) callAgent = createAgent({ helper: null, rec: null, voice: true });
+  for (let i = 0; i < 100 && callAgent.running && callTurn; i++) await sleep(30); // the turn we just interrupted is still unwinding
+  if (callAgent.running) throw new Error('Glim is busy with another turn of this call');
   await Promise.race([toolsReady, sleep(3000)]);
   if (signal.aborted) return;
-  if (agent.running) throw new Error('Glim is busy with another task');
+  if (callAgent.running) throw new Error('Glim is busy with another turn of this call');
   const t = callThread;
-  activeThread = t;
   callTurn = {
     threadId: t.id,
     onEvent: (ev) => {
@@ -736,17 +753,16 @@ async function callAsk(text, { onDelta, signal }) {
       else if (ev.type === 'approval' || ev.type === 'ask') onDelta('I need your OK in the chat for that.\n'); // a voice call cannot answer cards
     }
   };
-  const stop = () => agent.stop();
+  const stop = () => callAgent.stop();
   signal.addEventListener('abort', stop);
   send('agent', { threadId: t.id, type: 'user', text });
-  try { await agent.run(t, VOICE_PREFIX + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
+  try { await callAgent.run(t, VOICE_PREFIX + nowWords(new Date()) + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
 }
 function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
   if (call) return { error: 'You are already on a call.' };
   if (dictation) return { error: 'Stop dictation first, then call.' };
   if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first, then call.' };
-  if (agent.running) return { error: 'Glim is busy with a task. Stop it or wait, then call.' };
   const bin = screen.findHelper();
   if (!bin) return { error: 'Calling needs the Glim helper, which is not installed in this build.' };
   callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
