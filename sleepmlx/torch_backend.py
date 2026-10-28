@@ -35,6 +35,28 @@ def pick_device_dtype(torch):
     return "cpu", torch.bfloat16
 
 
+MPS_RAM_SHARE = 0.45   # a Mac with more RAM gets this share of it as the MPS cap; the profile's mps_mem_gb stays the floor
+
+
+def ram_bytes() -> Optional[float]:
+    try:
+        return float(os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE"))
+    except (ValueError, OSError, AttributeError):
+        return None
+
+
+def mps_cap_gb(profile_gb, env=None, ram: Optional[float] = None) -> Optional[float]:
+    """The MPS cap for this machine: env SLEEPMLX_MPS_MEM_GB if set, else max(profile mps_mem_gb, MPS_RAM_SHARE x RAM).
+    The profile's 10 GB (sized for 8 GB Macs) out-of-memoried LFM3 training on a 32 GB M1 Pro; a bigger Mac now gets a bigger cap."""
+    env = os.environ if env is None else env
+    if env.get("SLEEPMLX_MPS_MEM_GB"):
+        return float(env["SLEEPMLX_MPS_MEM_GB"])
+    if not profile_gb:
+        return None
+    ram = ram_bytes() if ram is None else ram
+    return max(float(profile_gb), MPS_RAM_SHARE * ram / 1e9) if ram else float(profile_gb)
+
+
 def set_mps_cap(torch, gb: float) -> float:
     """Cap this process's MPS memory at about gb GB via torch.mps.set_per_process_memory_fraction (a fraction of the recommended working set)."""
     total = None
@@ -94,7 +116,8 @@ class TorchBackend(Backend):
         self.tok_budget, self.gen_batch = tok_budget, gen_batch
         self.device, self.dtype = pick_device_dtype(torch)
         self.threads = set_cpu_threads(prof.runtime.get("threads", "cores-1")) if self.device == "cpu" else None
-        self.mps_fraction = set_mps_cap(torch, float(prof.runtime["mps_mem_gb"])) if self.device == "mps" and prof.runtime.get("mps_mem_gb") else None
+        cap = mps_cap_gb(prof.runtime.get("mps_mem_gb")) if self.device == "mps" else None
+        self.mps_fraction = set_mps_cap(torch, cap) if cap else None
         self.lora_cfg = dict(prof.lora)
         targets = self.lora_cfg.get("target_modules") or [k.split(".")[-1] for k in self.lora_cfg["keys"]]   # a regex string or a list of names
         r = int(self.lora_cfg["rank"])
