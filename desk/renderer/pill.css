@@ -25,7 +25,28 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.idle { width:44px; margin-left:-22px; border-radius:19px; opacity:.85; }
 #pill.idle #line, #pill.idle #mini, #pill.idle .more { display:none; }
 #pill.idle .row1 { padding:0 10px; }
-/* notched Mac, idle: the notch grows a black wing on each side (like an iPhone's Dynamic Island) and Glim sits in the right
-   wing, so the icon is part of the camera housing rather than a separate bubble */
-#pill.idle.notch { top:0; left:50%; margin-left:calc(var(--nw) / -2 - 40px); width:calc(var(--nw) + 80px); height:calc(var(--nh) + 4px); background:#000; border:0; border-radius:0 0 14px 14px; box-shadow:none; opacity:1; }
-#pill.idle.notch .row1 { height:calc(var(--nh) + 4px); padding:0 9px 0 0; justify-content:flex-end; }
+/* Notched Mac: the pill IS the notch, the way OpenBot's island does it. A black body hugs the camera with concave shoulders that
+   melt into the bezel, Glim sits in the left ear and the state in the right ear; nothing is ever drawn behind the camera. Hover
+   grows it a little, and a running task opens downward out of the notch (wider, rounder, shadowed) instead of a separate bubble. */
+#pill.notch { --surface:#000; --text:#f5f5f7; --text2:#a1a1a6; --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.16); --sh:6px; --ear:38px;
+  top:0; width:calc(var(--nw) + var(--ear) * 2); margin-left:calc(var(--nw) / -2 - var(--ear)); min-height:var(--nh); background:#000; border:0; border-radius:0 0 14px 14px; box-shadow:none; opacity:1; overflow:visible;
+  transition:width .45s cubic-bezier(.22,1,.36,1), margin-left .45s cubic-bezier(.22,1,.36,1), border-radius .45s cubic-bezier(.22,1,.36,1), filter .25s, opacity .3s, transform .3s; }
+#pill.notch::before, #pill.notch::after { content:''; position:absolute; top:0; width:var(--sh); height:var(--sh); transition:width .45s cubic-bezier(.22,1,.36,1), height .45s cubic-bezier(.22,1,.36,1); }
+#pill.notch::before { left:calc(var(--sh) * -1); background:radial-gradient(circle at 0 100%, transparent calc(var(--sh) - .5px), #000 var(--sh)); }
+#pill.notch::after { right:calc(var(--sh) * -1); background:radial-gradient(circle at 100% 100%, transparent calc(var(--sh) - .5px), #000 var(--sh)); }
+#pill.notch .more { overflow:hidden; }
+#pill.notch .row1 { height:var(--nh); padding:0 10px; gap:0; justify-content:space-between; flex-wrap:wrap; }
+#pill.notch #g { order:1; height:var(--nh); display:flex; align-items:center; }
+#pill.notch #mini { order:2; height:var(--nh); display:flex; align-items:center; font-size:11.5px; color:var(--text2); }
+#pill.notch #line { display:none; order:3; flex-basis:100%; padding:6px 6px 2px; }
+#pill.notch #mini:empty::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--b, transparent); }
+#pill.notch.waiting #mini:empty, #pill.notch.error #mini:empty, #pill.notch.done #mini:empty, #pill.notch.sleeping #mini:empty { width:14px; justify-content:center; }
+#pill.notch.waiting { --b:var(--accent); } #pill.notch.error { --b:var(--danger); } #pill.notch.done { --b:#30d158; } #pill.notch.sleeping { --b:#636366; }
+#pill.notch.idle { width:calc(var(--nw) + var(--ear) * 2); margin-left:calc(var(--nw) / -2 - var(--ear)); border-radius:0 0 14px 14px; opacity:1; }
+#pill.notch.idle .row1 { padding:0 10px; }
+#pill.notch.idle #mini { display:none; } /* a stopped run's last time must not stay frozen in the ear */
+#pill.notch.hover { --ear:54px; filter:drop-shadow(0 0 10px rgba(0,0,0,.45)); }
+#pill.notch.hover .row1 { height:calc(var(--nh) + 8px); }
+#pill.notch.open { --sh:19px; width:362px; margin-left:-181px; border-radius:0 0 24px 24px; filter:drop-shadow(0 0 10px rgba(0,0,0,.45)); }
+#pill.notch.open .row1 { height:auto; }
+#pill.notch.open #line { display:block; }

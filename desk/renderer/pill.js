@@ -42,9 +42,16 @@
     if (v.status === 'done' || v.status === 'error') b.append(btn('Dismiss', '', () => P.act('dismiss', t.key)));
   }
   function open() { clearTimeout(closeT); clearTimeout(openT); openT = setTimeout(() => pill.classList.add('open'), 150); }
-  function close() { clearTimeout(openT); clearTimeout(closeT); closeT = setTimeout(() => { pill.classList.remove('open'); P.act('hover', false); }, 220); }
-  pill.addEventListener('mouseenter', () => { if (!view || !view.visible || view.status === 'idle') return; P.act('hover', true); open(); });
-  pill.addEventListener('mouseleave', () => { clearTimeout(openT); close(); });
+  function close() { clearTimeout(openT); clearTimeout(closeT); closeT = setTimeout(() => { pill.classList.remove('open'); if (!pill.classList.contains('hover')) P.act('hover', false); }, 220); } // a hovered island stays clickable
+  // notched Mac: hovering the island grows it a little (OpenBot-style) and makes it clickable, even when idle
+  pill.addEventListener('mouseenter', () => {
+    clearTimeout(closeT);
+    if (!view || !view.visible) return;
+    if (pill.classList.contains('notch')) { pill.classList.add('hover'); P.act('hover', true); }
+    if (view.status === 'idle') return;
+    P.act('hover', true); open();
+  });
+  pill.addEventListener('mouseleave', () => { clearTimeout(openT); pill.classList.remove('hover'); close(); });
   $('.row1').addEventListener('click', () => { if (view && view.status === 'idle') P.act('open', { threadId: null, key: null }); else if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
   P.onView(paint);
   window.__open = () => { clearTimeout(closeT); pill.classList.add('open'); };       // for screenshots

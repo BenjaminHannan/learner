@@ -119,7 +119,7 @@ function awakeFindings(i) {
   if (diskLow(i.disk)) out.push({ key: 'disk', line: 'The disk is almost full (' + (i.disk.free / 1024 ** 3).toFixed(1) + ' GB left).' });
   for (const h of i.helpers || []) {
     if (!(h.every || h.at) || h.paused || h.status === 'stopped') continue;
-    if (/^Failed:/.test(h.lastSummary || '')) out.push({ key: 'glim:' + h.id + ':' + (h.lastRun || ''), line: 'The Glim "' + h.name + '" failed on its last run.' });
+    if (h.status === 'failed' || /^Failed:/.test(h.lastSummary || '')) out.push({ key: 'glim:' + h.id + ':' + (h.lastRun || ''), line: 'The Glim "' + h.name + '" failed on its last run.' });
   }
   for (const d of T.dueItems(i.tracked || [], i.today, T.SOON_DAYS)) out.push({ key: 'track:' + T.describe(d.item) + ':' + d.reason, line: T.describe(d.item) + ' is ' + d.reason + '.' });
   return out;
