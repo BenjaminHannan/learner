@@ -208,9 +208,11 @@
     return { d, s };
   }
   let raf = 0;
+  // Ben Oct 28: "it can think, but it should just give the answer normally". Some replies carry their reasoning in the text up to a "</think>"; only what follows is the answer.
+  const answerOf = (raw) => { const i = raw.lastIndexOf('</think>'); return (i >= 0 ? raw.slice(i + 8) : raw).replace(/^\s*<think>[\s\S]*$/, '').replace(/^\s+/, ''); };
   function paintText() {
     if (raf) return;
-    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(tn.raw).text); toBottom(); } });
+    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(answerOf(tn.raw)).text); toBottom(); } });
   }
   function onReasoning(d) {
     const t = tn || startTn();
@@ -243,6 +245,7 @@
     tn = null;
     const hasTools = (ev.toolCalls || 0) > 0;
     if (!t) return;
+    t.raw = answerOf(t.raw);
     const clean = Md.stripActions(t.raw).trim();
     if (t.think) { t.think.d.classList.remove('live'); t.think.s.textContent = 'Thought for ' + (ev.thinkSecs || Math.max(1, Math.round((Date.now() - t.t0) / 1000))) + ' s'; }
     if (!hasTools) {

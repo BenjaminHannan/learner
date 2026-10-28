@@ -345,7 +345,7 @@ class Helpers {
     return true;
   }
   // Sleep is starting: stop every run in progress but keep each one due, so it runs once after Glim wakes (nothing is lost, a one-time Glim included).
-  pauseForSleep() { let n = 0; for (const [id, a] of this.active) { a.requeue = true; a.ctl.abort(); n++; } return n; }
+  pauseForSleep(note) { let n = 0; for (const [id, a] of this.active) { a.requeue = true; a.requeueNote = note || ''; a.ctl.abort(); n++; } return n; }
   abort(id) { const a = this.active.get(id); if (a) a.ctl.abort(); return !!a; }
   steer(id, text) { const a = this.active.get(id); return !!(a && a.agent && a.agent.steer(text)); }
   isRunning(id) { return this.active.has(id); }
@@ -406,7 +406,7 @@ class Helpers {
     res = res || {};
     if (rec.requeue && h.status !== 'stopped') {   // paused for sleep: due again right away, held until Glim wakes
       h.status = 'idle'; h.hold = null; h.next = this.now(); h.dueHeld = !!(this.o.hold && this.o.hold());
-      h.lastSummary = 'Paused for sleep; runs again after Glim wakes up';
+      h.lastSummary = rec.requeueNote || 'Paused for sleep; runs again after Glim wakes up';
       this.changed();
       return;
     }
