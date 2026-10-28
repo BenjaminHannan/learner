@@ -730,6 +730,8 @@ function buildAgent() {
 // turn in one thread titled "Call" (kept as a chat). The instruction to answer briefly rides in the user message, NEVER in the system
 // prompt (the cached prefix must stay byte-identical).
 const VOICE_PREFIX = '[voice call] Answer out loud: one to three short spoken sentences, no lists, no markdown, no emoji. ';
+// the date and time in plain words, so "what time is it" is answered from this turn and not guessed (rides in the user message, never the system prompt)
+const nowWords = (d) => 'It is now ' + d.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + '. ';
 let call = null, callThread = null;
 let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the call's own agent
 let callAgent = null; // separate from the main agent, so a call works while a task runs
@@ -754,7 +756,7 @@ async function callAsk(text, { onDelta, signal }) {
   const stop = () => callAgent.stop();
   signal.addEventListener('abort', stop);
   send('agent', { threadId: t.id, type: 'user', text });
-  try { await callAgent.run(t, VOICE_PREFIX + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
+  try { await callAgent.run(t, VOICE_PREFIX + nowWords(new Date()) + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
 }
 function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
