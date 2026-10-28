@@ -22,7 +22,7 @@ if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
 // view as occluded and stops painting it (no capturePage thumbnails, no animation frames, stalled typing).
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
-const { Store } = require('./src/store');
+const { Store, applyPresetDefaults } = require('./src/store');
 const { Agent, DANGER_LABELS } = require('./src/agent');
 const { buildTools } = require('./src/prompt');
 const { Browser } = require('./src/tools/browser');
@@ -34,7 +34,7 @@ const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
-const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { Sleep, UnavailableSleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -122,11 +122,14 @@ function resetModelToDefault() {
   const s = store.getSettings(); const want = s[s.modelDefault] || s.modelAuto;
   if (want && s.model !== want) { store.saveSettings({ model: want }); }
 }
+// Ben's Macs have the assistant (qwen through serve.sh); any other Mac runs the built-in model like Windows does.
+const SERVE_SH = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh');
+const hasLocalAssistant = process.platform === 'darwin' && fs.existsSync(SERVE_SH);
+const PLATFORM_OPTS = { hasLocalAssistant };
 function modelStartCommand(st) {
   const c = String(st.modelStartCmd || '').trim();
   if (c) return c;
-  const serve = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh'); // Ben's Macs
-  return process.platform === 'darwin' && fs.existsSync(serve) ? '"' + serve + '" --yes' : '';
+  return hasLocalAssistant ? '"' + SERVE_SH + '" --yes' : '';
 }
 // the night window learned from Ben's routine (null when "Fit sleep to my routine" is off or there is not enough data yet)
 const learnedNow = (now) => { try { return rhythm && store.getSettings().sleepAdapt ? rhythm.learned(now) : null; } catch (e) { return null; } };
@@ -222,9 +225,10 @@ function autoSleepTick(now, over) {
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
-  builtin = new Builtin({ root, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
-  sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
-  sleeper = new WinSleep({
+  builtin = new Builtin({ root, platform: process.platform, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
+  if (FEATURES.sleepSoon) sleeper = new UnavailableSleep({ getSettings: () => store.getSettings(), home: path.join(root, 'sleep-unavailable'), note: Platform.SLEEP_MAC_NOTE });
+  else sleeper = new WinSleep({
     getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
     hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
@@ -677,7 +681,7 @@ function buildAgent() {
 }
 
 // ---- permissions card (drag the app into System Settings) ------------------------------------------------------
-const FEATURES = Platform.features(process.platform);
+const FEATURES = Platform.features(process.platform, PLATFORM_OPTS);
 const permsSupported = () => FEATURES.perms || E2E;
 const appFile = () => perms.appBundlePath(app.getPath('exe'), process.execPath);
 async function iconFor(file) {
@@ -790,7 +794,7 @@ function buildMenu() {
   const openSettings = () => { showWindow(); send('open-settings', true); };
   const tpl = [
     ...(mac ? [{ label: app.name, submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }] }] : []),
-    { label: 'File', submenu: [{ label: 'New thread', accelerator: 'CmdOrCtrl+N', click: () => { showWindow(); send('new-thread', true); } }, { label: 'Sleep…', click: () => { showWindow(); send('sleep-open', true); } }, ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
+    { label: 'File', submenu: [{ label: 'New thread', accelerator: 'CmdOrCtrl+N', click: () => { showWindow(); send('new-thread', true); } }, ...(FEATURES.sleepSoon ? [] : [{ label: 'Sleep…', click: () => { showWindow(); send('sleep-open', true); } }]), ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
     { role: 'editMenu' },
     { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
     { role: 'windowMenu' }
@@ -958,7 +962,7 @@ function registerIpc() {
       return { ok: r.ok, ms: Date.now() - t0, status: r.status };
     } catch (e) { return { ok: false, error: ctl.signal.aborted ? 'No answer within 4 s' : String(e && e.cause && e.cause.code || e.message) }; } finally { clearTimeout(t); }
   });
-  h('info', () => ({ platform: process.platform, e2e: E2E, diary: toolDefs.some((t) => t.function.name === 'diary_search'), danger: DANGER_LABELS, version: app.getVersion() }));
+  h('info', () => ({ platform: process.platform, hasLocalAssistant, e2e: E2E, diary: toolDefs.some((t) => t.function.name === 'diary_search'), danger: DANGER_LABELS, version: app.getVersion() }));
 
   // status pill actions
   ipcMain.handle('pill:act', async (e, name, arg) => {
@@ -986,6 +990,7 @@ app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { 
 
 app.whenReady().then(async () => {
   if (!gotLock) return;
+  applyPresetDefaults(Platform.defaultPreset(process.platform, PLATFORM_OPTS));
   store = new Store(app.getPath('userData'));
   memory = createMemory(app.getPath('userData'));
   tracking = createTracking(app.getPath('userData'));

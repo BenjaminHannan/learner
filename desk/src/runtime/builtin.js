@@ -13,8 +13,9 @@ class Builtin {
     this.o = o;
     this.dir = path.join(o.root, 'runtime');
     this.diaryDir = path.join(o.root, 'diary', 'raw');
-    this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', flavor: 'vulkan', lora: '' };
-    this.installer = new ChatInstaller({ dir: this.dir, bundledExe: o.bundledExe, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
+    this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', flavor: (o.platform || process.platform) === 'darwin' ? 'metal' : 'vulkan', lora: '' };
+    this.platform = o.platform || process.platform;
+    this.installer = new ChatInstaller({ dir: this.dir, platform: o.platform, unquarantine: o.unquarantine, bundledExe: o.bundledExe, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
     this.server = null; this.gw = null; this.running = false; this.asleep = false; this.abort = null; this.cache = {};
   }
   state() { return { ...this.st }; }
@@ -23,7 +24,7 @@ class Builtin {
     const pct = p.total ? Math.min(100, Math.round((p.done / p.total) * 100)) : 0;
     this._set({ phase: 'downloading', stage: p.stage, label: p.label, pct, done: p.done, total: p.total });
   }
-  needsDownload() { return !this.installer.installed('vulkan') && !this.installer.installed('cpu'); }
+  needsDownload() { return !C.llamaFlavors(this.platform).some((f) => this.installer.installed(f)); }
 
   async _launch(flavor, lora) {
     const exe = this.installer.llamaExe(flavor) || await this.installer.ensureLlama(flavor, this.abort && this.abort.signal);
@@ -31,7 +32,7 @@ class Builtin {
     this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor });
     if (!this.server) {
       this.server = (this.o.makeServer || ((x) => new LlamaServer(x)))({
-        exe: exe.exe, model: model.file, flavor, lora, cwd: path.dirname(exe.exe), spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
+        exe: exe.exe, model: model.file, flavor, lora, cwd: path.dirname(exe.exe), platform: this.o.platform, spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
         port: C.SERVER_PORT, ctx: C.CTX,
         // the graphics build died twice after running: fetch (if needed) and switch to the CPU build
         cpuFallback: async () => { const e = this.installer.llamaExe('cpu') || await this.installer.ensureLlama('cpu', this.abort && this.abort.signal); return { exe: e.exe, cwd: path.dirname(e.exe) }; },
@@ -50,9 +51,11 @@ class Builtin {
     try {
       let r;
       // PREMONITION_LLAMA_FLAVOR=cpu skips the graphics build (testing on a PC whose GPU is busy)
-      const first = process.env.PREMONITION_LLAMA_FLAVOR === 'cpu' ? 'cpu' : 'vulkan';
+      // macOS has the one Metal build and no CPU fallback
+      const mac = this.platform === 'darwin';
+      const first = mac ? 'metal' : (process.env.PREMONITION_LLAMA_FLAVOR === 'cpu' ? 'cpu' : 'vulkan');
       try { r = await this._launch(first, opts && opts.lora); } catch (e) { r = { ok: false, error: e.message, download: true }; }
-      if (!r.ok && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
+      if (!r.ok && !mac && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
         this._set({ phase: 'downloading', label: 'The graphics build did not start; getting the CPU build', pct: 0 });
         r = await this._launch('cpu', opts && opts.lora);
       }

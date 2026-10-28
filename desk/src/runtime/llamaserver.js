@@ -24,10 +24,20 @@ function parseNetstat(text, port) {
 }
 // `tasklist /FI "PID eq N" /FO CSV /NH` -> "llama-server.exe","4321",...
 function parseTasklistImage(csv) { const m = /^"([^"]+)"/.exec(String(csv || '').trim()); return m ? m[1] : ''; }
+// macOS: `lsof -nP -iTCP:<port> -sTCP:LISTEN -t` prints the pid(s) listening; `ps -p <pid> -o comm=` prints the command path.
+const lsofArgs = (port) => ['-nP', '-iTCP:' + port, '-sTCP:LISTEN', '-t'];
+const parseLsofPid = (text) => { const m = /^\s*(\d+)\s*$/m.exec(String(text || '')); return m ? Number(m[1]) : 0; };
+const isLlamaServerComm = (comm) => /(^|\/)llama-server$/.test(String(comm || '').trim());
 const run = (cmd, args) => new Promise((resolve) => execFile(cmd, args, { windowsHide: true, timeout: 8000 }, (e, so) => resolve(e ? '' : String(so))));
 // Kills the listener on `port` only when it is a llama-server.exe. Returns the pid killed or 0.
-async function reclaimPort(port, exec) {
+async function reclaimPort(port, exec, platform) {
   exec = exec || run;
+  if ((platform || process.platform) === 'darwin') {
+    const mpid = parseLsofPid(await exec('/usr/sbin/lsof', lsofArgs(port)));
+    if (!mpid || !isLlamaServerComm(await exec('/bin/ps', ['-p', String(mpid), '-o', 'comm=']))) return 0;
+    await exec('/bin/kill', [String(mpid)]);
+    return mpid;
+  }
   const pid = parseNetstat(await exec('netstat', ['-ano', '-p', 'tcp']), port);
   if (!pid) return 0;
   const image = parseTasklistImage(await exec('tasklist', ['/FI', 'PID eq ' + pid, '/FO', 'CSV', '/NH']));
@@ -85,7 +95,7 @@ class LlamaServer {
     if (opts && 'lora' in opts) this.lora = opts.lora;
     this.wanted = true;
     this._kill();
-    if ((this.o.platform || process.platform) === 'win32' || this.o.reclaim) { try { await (this.o.reclaim || reclaimPort)(this.o.port || C.SERVER_PORT, this.o.exec); } catch (e) { /* best effort */ } }
+    if (['win32', 'darwin'].includes(this.o.platform || process.platform) || this.o.reclaim) { try { await (this.o.reclaim || reclaimPort)(this.o.port || C.SERVER_PORT, this.o.exec, this.o.platform); } catch (e) { /* best effort */ } }
     this.postHealthyCrashes = 0;
     this._set('starting');
     const r = await this._launch();
@@ -123,4 +133,4 @@ class LlamaServer {
   }
 }
 
-module.exports = { LlamaServer, buildArgs, parseNetstat, parseTasklistImage, reclaimPort };
+module.exports = { LlamaServer, buildArgs, parseNetstat, parseTasklistImage, reclaimPort, parseLsofPid, lsofArgs, isLlamaServerComm };

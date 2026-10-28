@@ -441,7 +441,7 @@
     refreshMood();
   }
   desk.onGateway((s) => { gw = s || gw; if (gw.state !== 'down') gwStarting = 0; paintGateway(); });
-  // Offline chip: click to start the model (Settings > Model > Start command; the built-in model on Windows)
+  // Offline chip: click to start the model (Settings > Model > Start command; the built-in model on Windows and on Macs without the assistant)
   let gwStarting = 0;
   $('#gw').addEventListener('click', async () => {
     if (gw.state !== 'down' || slp.asleep || slp.waking || (gwStarting && Date.now() - gwStarting < 120000)) return;
@@ -517,7 +517,7 @@
   $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
 
-  // ---------- built-in local model (Windows): first-run download screen ----------
+  // ---------- built-in local model (Windows, and Macs without Ben's assistant): first-run download screen ----------
   const mb = (n) => (n / 1048576 >= 1024 ? (n / 1073741824).toFixed(2) + ' GB' : Math.round(n / 1048576) + ' MB');
   let rtHidden = false;
   function paintRuntime(st) {
@@ -787,12 +787,13 @@
   // ---------- settings ----------
   const isMac = () => document.body.classList.contains('darwin');
   const plat = () => (info && info.platform) || (isMac() ? 'darwin' : 'linux');
-  const gate = () => Platform.settingsGating(plat());
+  const popts = () => ({ hasLocalAssistant: !!(info && info.hasLocalAssistant) });
+  const gate = () => Platform.settingsGating(plat(), popts());
   const SCHEMA = [
     { group: 'Model', rows: [
       { key: 'gatewayUrl', type: 'text', label: 'Gateway URL', help: 'Where the Premonition gateway listens. /chat/completions is added for you.', wide: true },
-      { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Offline in the top bar. Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows.', wide: true },
-      { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself on Windows. llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
+      { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Offline in the top bar. Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows and on Macs without the assistant.', wide: true },
+      { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself (Windows, and Macs without the local assistant). llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
       { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer, Fast answers quickest. Same as the top-bar pills.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
       { key: 'modelAuto', type: 'text', label: 'Auto model name', help: 'The model id sent for Auto. "default" works for llama.cpp.', ph: 'qwen36-auto' },
       { key: 'modelMain', type: 'text', label: 'Think model name', help: 'The model id sent for Think.', ph: 'qwen36' },
@@ -935,6 +936,7 @@
     const gt = gate();
     // gated rows: Windows has no Sleep group and no Mac permissions card; say so in plain words instead
     const groups = SCHEMA.map((g) => {
+      if (g.group === 'Sleep' && gt.sleepUnavailable) return { group: g.group, rows: [{ type: 'note', label: 'Sleep', help: gt.sleepNote }] };
       if (g.group === 'Sleep') return { group: g.group, rows: g.rows.filter((r) => (gt.sleepWindows ? r.key !== 'sleepApp' && r.key !== 'sleepPython' : r.key !== 'sleepOnlyPlugged')) };
       if (g.group === 'Screen control' && !gt.showPermRow && !info.e2e) return { group: g.group, rows: g.rows.map((r) => (r.type === 'perm' ? { type: 'note', label: 'Permissions', help: gt.permsNote } : r)) };
       return g;
@@ -965,7 +967,7 @@
           ctl.append(seg); controls[r.key] = { paint: () => btns.forEach((b) => { b.dataset.v = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.slot === (settings.modelDefault || 'modelAuto')); }) };
         } else if (r.type === 'preset') {
           const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
-          const btns = Platform.presetsFor(plat()).map((pr) => { const b = el('button', null, pr.label); b.dataset.preset = pr.id; b.onclick = () => { const { id, label, builtin, ...patch } = pr; save(patch).then(paintSettings); }; seg.append(b); return b; });
+          const btns = Platform.presetsFor(plat(), popts()).map((pr) => { const b = el('button', null, pr.label); b.dataset.preset = pr.id; b.onclick = () => { const { id, label, builtin, ...patch } = pr; save(patch).then(paintSettings); }; seg.append(b); return b; });
           ctl.append(seg); controls.preset = { paint: () => { const cur = Platform.presetFor(settings.gatewayUrl); btns.forEach((b) => b.classList.toggle('on', !!cur && cur.id === b.dataset.preset)); } };
         } else if (r.type === 'toggle') {
           const b = el('button', 'toggle'); b.setAttribute('role', 'switch'); b.setAttribute('aria-label', r.label);
@@ -1070,7 +1072,7 @@
   (async () => {
     info = await desk.info();
     document.body.classList.add(info.platform);
-    if (!gate().showSleepButton) $('#btnSleep').hidden = true; // Windows: Sleep runs on the Macs for now
+    if (!gate().showSleepButton) $('#btnSleep').hidden = true; // hidden on a Windows PC and on a Mac without Ben's assistant (Sleep runs on Ben's Macs for now); the File menu item is left out there too
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
     gw = (await desk.gateway.state()) || gw; paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
