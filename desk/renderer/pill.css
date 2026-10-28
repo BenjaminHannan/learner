@@ -5,7 +5,7 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.gone { opacity:0; transform:translateY(-8px) scale(.96); pointer-events:none; }
 .row1 { display:flex; align-items:center; gap:8px; height:36px; padding:0 14px 0 8px; cursor:pointer; }
 #line { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
-#mini { color:var(--text2); font-size:12px; font-variant-numeric:tabular-nums; }
+#mini { color:var(--text2); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; flex:none; }
 #pill.error { border-color:var(--danger); } #pill.waiting { border-color:var(--accent-text); }
 #pill.call { border-color:var(--accent); } #pill.sleeping { border-color:var(--hair2); } #pill.sleeping #line { color:var(--text2); font-weight:500; }
 #pill.error #line { color:var(--danger); }
@@ -54,3 +54,4 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.notch.open { --sh:19px; width:362px; margin-left:-181px; border-radius:0 0 24px 24px; filter:drop-shadow(0 0 10px rgba(0,0,0,.45)); }
 #pill.notch.open .row1 { height:auto; }
 #pill.notch.open #line { display:block; }
+#pill.notch.long { --ear:58px; } #pill.notch.long.hover { --ear:72px; }
