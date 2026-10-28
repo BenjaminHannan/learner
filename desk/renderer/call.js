@@ -27,10 +27,13 @@ window.CallUI = (() => {
     clearInterval(timer); timer = setInterval(() => { if (active) $('#callTime').textContent = mmss(); }, 1000); $('#callTime').textContent = '0:00';
     paint(); $('#callHang').focus();
   }
-  function showError(msg, kind) {
+  let voiceShown = null;
+  function showError(msg, kind, needsVoice) {
     $('#callErrText').textContent = msg;
     const pane = kind === 'mic-denied' ? 'microphone' : '';
     const b = $('#callSettings'); b.hidden = !pane; b.onclick = () => desk.openSystem(pane);
+    if (!voiceShown && typeof VoiceGet !== 'undefined') voiceShown = VoiceGet.wire(desk, $('#callGetVoice'), $('#callErrText'));
+    if (voiceShown) voiceShown(!!needsVoice);
     $('#callErr').hidden = false;
   }
   function close() {
@@ -43,7 +46,7 @@ window.CallUI = (() => {
     if (active || isOpen() || !ctx.enabled) return;
     open();
     const r = await desk.call.start();
-    if (r && r.error) { active = false; hadError = true; showError(r.error); paint(); return; }
+    if (r && r.error) { active = false; hadError = true; showError(r.error, '', r.needsVoice); paint(); return; }
     threadId = r && r.threadId;
   }
   async function hangup() { if (active) { await desk.call.stop(); } else close(); }

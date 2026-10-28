@@ -57,7 +57,7 @@
         <span>Glim is asleep. Wake Glim and send this?</span>
         <button id="wakeAskNo" class="ghost sm">Cancel</button><button id="wakeAskYes" class="amber-btn sm">Wake and send</button>
       </div>
-      <div id="dictNote" hidden role="alert"><span id="dictNoteText"></span><button id="dictSettings" class="amber-btn sm" hidden>Open Settings</button><button id="dictNoteClose" class="ghost sm" aria-label="Dismiss">Dismiss</button></div>
+      <div id="dictNote" hidden role="alert"><span id="dictNoteText"></span><button id="dictSettings" class="amber-btn sm" hidden>Open Settings</button><button id="dictGetVoice" class="amber-btn sm" hidden>Get voice (1.6 GB)</button><button id="dictNoteClose" class="ghost sm" aria-label="Dismiss">Dismiss</button></div>
       <div id="runState" hidden><i></i><span>Working…</span></div>
       <div class="box">
         <textarea id="input" rows="1" placeholder="Ask Glim to do something…" spellcheck="true" aria-label="Message"></textarea>
@@ -143,7 +143,7 @@
     <div id="callYou" class="call-cap you" aria-live="off"></div>
     <div id="callSay" class="call-cap glim"></div>
     <div id="callNote" class="call-note" hidden></div>
-    <div id="callErr" class="call-err" hidden role="alert"><span id="callErrText"></span><button id="callSettings" class="amber-btn sm" hidden>Open Settings</button></div>
+    <div id="callErr" class="call-err" hidden role="alert"><span id="callErrText"></span><button id="callSettings" class="amber-btn sm" hidden>Open Settings</button><button id="callGetVoice" class="amber-btn sm" hidden>Get voice (1.6 GB)</button></div>
     <div class="call-btns">
       <button id="callMute" class="ghost" aria-pressed="false">Mute</button>
       <button id="callHang" class="hang">Hang up</button>
@@ -173,6 +173,7 @@
 <script src="acts.js"></script>
 <script src="panel.js"></script>
 <script src="perms.js"></script>
+<script src="voice.js"></script>
 <script src="call.js"></script>
 <script src="dictate.js"></script>
 <script src="onboard.js"></script>

@@ -803,9 +803,12 @@ async function callAsk(text, { onDelta, signal }) {
 }
 // Local speech to text (src/stt.js): one LFM3-Audio server for the whole app, started on the first call / dictation.
 let sttSrv = null;
-const getStt = () => sttSrv || (sttSrv = new (require('./src/stt').Stt)({ resourcesPath: process.resourcesPath, devRoot: __dirname, managedPython: () => { try { return sleepInstaller && sleepInstaller.pythonExe(); } catch (e) { return null; } } }));
+const getStt = () => sttSrv || (sttSrv = new (require('./src/stt').Stt)({ resourcesPath: process.resourcesPath, devRoot: __dirname, voiceDir: voiceDir(), managedPython: () => { try { return sleepInstaller && sleepInstaller.pythonExe(); } catch (e) { return null; } } }));
+const voiceDir = () => require('path').join(app.getPath('userData'), 'voice');
+let voiceInstaller = null;
+const getVoiceInstaller = () => voiceInstaller || (voiceInstaller = new (require('./src/runtime/voiceinstall').VoiceInstaller)({ dir: voiceDir(), onProgress: (p) => send('voice:install-progress', p) }));
 async function sttUrl() {
-  try { const u = await getStt().ensure(); getStt().warm(); return { url: u }; } catch (e) { return { error: String((e && e.message) || e) }; }
+  try { const u = await getStt().ensure(); getStt().warm(); return { url: u }; } catch (e) { return { error: String((e && e.message) || e), needsVoice: !!(e && e.needsVoice) }; }
 }
 async function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
@@ -817,7 +820,7 @@ async function startCall() {
   calling = true;
   const stt = await sttUrl();
   calling = false;
-  if (stt.error) return { error: stt.error };
+  if (stt.error) return { error: stt.error, needsVoice: stt.needsVoice };
   if (call || dictation) return { error: 'You are already on a call.' };
   callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
   const c = new Call({
@@ -846,7 +849,7 @@ async function startDictate() {
   dictStarting = true;
   const stt = await sttUrl();
   dictStarting = false;
-  if (stt.error) return { error: stt.error };
+  if (stt.error) return { error: stt.error, needsVoice: stt.needsVoice };
   if (call || dictation) return { error: 'Dictation is already on.' };
   const d = new Dictation({
     helper: bin,
@@ -1086,6 +1089,10 @@ function registerIpc() {
   h('sleep:install', async () => {
     try { await sleepInstaller.install(); } catch (e) { send('sleep:install-progress', { stage: 'error', label: String(e.message || e), pct: 0 }); return { error: String(e.message || e) }; }
     return startSleep({ auto: false });
+  });
+  h('voice:install', async () => {
+    try { await getVoiceInstaller().install(); getStt().stop(); } catch (e) { send('voice:install-progress', { stage: 'error', label: String(e.message || e), pct: 0 }); return { error: String(e.message || e) }; }
+    return { ok: true };
   });
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
