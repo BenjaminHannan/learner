@@ -29,7 +29,7 @@ claim() {
 }
 log "waiting for $GO and an empty GPU-BUSY.txt"
 until [ -f "$GO" ] && { [ ! -s "$BUSY" ]; }; do sleep 60; done
-rm -f "$GO"; claim
+[ -n "${RM_GO_KEEP:-}" ] || rm -f "$GO"; claim  # RM_GO_KEEP: another job still reads the flag
 RC=0
 finish() {
   : > "$BUSY"; rm -f "$CARD"
