@@ -177,12 +177,20 @@
     }
     return row;
   }
-  function addUser(text, steer, queued, receipt) {
+  // Ben Oct 28: every message shows when it was sent ("5:33 PM", with the day when it is not today)
+  function stamp(ts, cls) {
+    if (ts === 0) return el('div', 'stamp-none'); // a stored message from before timestamps: show nothing rather than a wrong time
+    const d = new Date(ts || Date.now()), now = new Date();
+    const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const day = d.toDateString() === now.toDateString() ? '' : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ';
+    const e = el('div', 'stamp ' + (cls || ''), day + time); e.title = d.toLocaleString(); return e;
+  }
+  function addUser(text, steer, queued, receipt, ts) {
     const w = msgs.querySelector('.welcome'); if (w) { w.remove(); paintOffCard(); }
     if (act && !act.finished) finishAct(act);
     const u = el('div', 'user' + (steer ? ' steer' : '') + (queued ? ' queued' : ''), text);
     lockChoices(); // Ben moved on: older chips are used up
-    msgs.append(u);
+    msgs.append(u); msgs.append(stamp(ts, 'r'));
     if (receipt) { msgs.querySelectorAll('.receipt').forEach((r) => r.remove()); msgs.append(el('div', 'receipt unread', 'Unread')); }
     newBlock(); toBottom();
     return u;
@@ -243,8 +251,9 @@
         else {
           const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
           const rate = thread && !thread.helper ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
-          if (rate) t.text.after(rate);
-          if (pc.choices.length && !(thread && thread.helper)) (rate || t.text).after(choicesRow(pc.choices)); // (a stored thread's row is locked again when a later message follows)
+          const st = stamp(ev.ts); t.text.after(st);
+          if (rate) st.after(rate);
+          if (pc.choices.length && !(thread && thread.helper)) (rate || st).after(choicesRow(pc.choices)); // (a stored thread's row is locked again when a later message follows)
         }
       }
       const wasStuck = stick;
@@ -727,13 +736,13 @@
     const items = t.items || [];
     if (!items.length) { welcome(); return; }
     items.forEach((it, i) => {
-      if (it.t === 'user') addUser(it.text);
+      if (it.t === 'user') addUser(it.text, false, false, false, it.ts || 0);
       else if (it.t === 'assistant') {
         const nextIsTool = items[i + 1] && items[i + 1].t === 'step';
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0 });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);
