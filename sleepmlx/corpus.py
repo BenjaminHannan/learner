@@ -28,7 +28,8 @@ def has_ans(target: str, ans: str) -> bool:
 class Diary:
     """User turns of the whole diary. Callers filter by day number."""
 
-    def __init__(s, week: dict):
+    def __init__(s, week: dict, who: str = ""):
+        s.who = who.lower()   # every turn here is this person's (helper runs are kept apart in week["helper_runs"]): occurs(who) is all of them
         s.turns = [dict(t, i=i) for i, t in enumerate(x for x in week["diary"] if x["role"] == "user")]
         s.low = [t["text"].lower() for t in s.turns]
         s.occ_cache: Dict[str, frozenset] = {}
@@ -45,6 +46,8 @@ class Diary:
 
     def occurs(s, string: str) -> frozenset:
         k = string.lower()
+        if k == s.who and k not in s.occ_cache:
+            s.occ_cache[k] = frozenset(range(len(s.turns)))
         if k not in s.occ_cache:
             p = pat(k)
             s.occ_cache[k] = frozenset(i for i, x in enumerate(s.low) if p.search(x))

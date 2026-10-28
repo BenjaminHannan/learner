@@ -29,9 +29,10 @@ def diary_prompt(R, diary, q: str, upto=None) -> str:
 
 
 def tag_prompt(R, text: str, who: str = "Ben", think: bool = False) -> str:
-    u = ("Message from %s:\n\"%s\"\n\nList the facts this message states about specific named people, places, organisations or things, as "
+    u = ("Message from %s:\n\"%s\"\n\nList the facts this message states about specific named people, places, organisations or things, "
+         "and about %s himself (his plans, school, work, family, likes; write \"%s\" for I, me and my), as "
          "short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: "
-         "[{\"subject\": \"...\", \"relation\": \"...\", \"object\": \"...\"}]. If there are none, reply []." % (who, text))
+         "[{\"subject\": \"...\", \"relation\": \"...\", \"object\": \"...\"}]. If there are none, reply []." % (who, text, who, who))
     return R.render_think(EXTRACT, u) if think else R.render(EXTRACT, u)
 
 
@@ -85,6 +86,13 @@ def lesson_prompt(R, ctx: str, what: str, who: str = "Ben") -> str:
          "\"instead\": \"what Glim should do next time\", \"wrong_value\": \"the wrong thing Glim said, or empty\", "
          "\"q\": \"a question about what is right or what to do instead\", \"a\": \"its answer, 1 to 4 words copied exactly from the chat above\"}. "
          "Each of did, wrong and instead is one short sentence. If %s corrected Glim, the answer is what %s said is right." % (who, what, ctx, who, who))
+    return R.render(REVIEW, u)
+
+
+def note_qa_prompt(R, text: str, who: str = "Ben") -> str:
+    """One quiz card for a saved note (recipe.note_qas). New with the notes quiz."""
+    u = ("A note saved about %s:\n\"%s\"\n\nWrite one question that this note answers, and its answer: 1 to 4 words copied exactly from the note. "
+         "The question must not contain the answer. Reply with only JSON: {\"q\": \"...\", \"a\": \"...\"}." % (who, text))
     return R.render(REVIEW, u)
 
 
