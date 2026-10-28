@@ -167,13 +167,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     const inWin = (r) => { const [w, h] = win.getContentSize(); return r.x >= 0 && r.y >= 0 && r.x + r.width <= w + 1 && r.y + r.height <= h + 1 && r.width > 200 && r.height > 200; };
     const order = () => win.contentView.children;
 
-    // ---- composer guard: a password-looking message is stopped (Send anyway / Cancel)
-    await ev('(()=>{const i=document.querySelector("#input");i.value="my password is hunter2";i.dispatchEvent(new Event("input"));document.querySelector("#btnSend").click();})()');
-    await sleep(150);
-    checks.push(['password guard warns and does not send', await ev('!document.querySelector("#pwWarn").hidden && /Don.t paste passwords here; I.ll open a sign-in window instead/.test(document.querySelector("#pwWarn").textContent) && !document.querySelector(".user") && document.querySelector("#input").value.length>0')]);
-    await grab('ui-v2-password-guard.png');
-    await ev('document.querySelector("#pwCancel").click()');
-    checks.push(['Cancel keeps the text, hides the warning, sends nothing', await ev('document.querySelector("#pwWarn").hidden && document.querySelector("#input").value==="my password is hunter2" && !document.querySelector(".user")') && gw.requests.length === 0]);
+    // ---- passwords may be pasted into the chat (local and private, Ben Oct 28): no composer guard
     await ev('(()=>{const i=document.querySelector("#input");i.value="";i.dispatchEvent(new Event("input"))})()');
 
     // ---- task 1: browse (Hands-off). While the model is "thinking" on the last step, use the popup.

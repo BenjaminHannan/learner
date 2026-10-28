@@ -16,6 +16,12 @@ class DiaryTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_turns_with_passwords_never_reach_the_sleep_data(self):
+        write_raw(self.raw, "2026-10-20", ["my gmail password is hunter2", "what is on my calendar", "wifi pin: 4821"])
+        users = [t["text"] for t in diary.build_week(self.raw)["diary"] if t["role"] == "user"]
+        self.assertEqual(users, ["what is on my calendar"])
+        self.assertTrue(diary.looks_secret("the password is x") and not diary.looks_secret("open my mail"))
+
     def test_dedupe_prefixes_keeps_newest_turn_per_call(self):
         write_raw(self.raw, "2026-10-20", ["first thing", "second thing", "third thing"])
         week = diary.build_week(self.raw)
