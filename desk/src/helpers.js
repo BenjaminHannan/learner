@@ -74,6 +74,19 @@ function fmtWhen(ts, now) {
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + hm;
 }
 
+// Model-facing time (Ben Oct 28 "it should know when"): "today 14:00 (in 3 h)", "tomorrow 08:00 (in 14 h)", "Fri 08:00 (in 2 days)"
+function fmtWhenRel(ts, now) {
+  if (!ts) return '-';
+  now = now || Date.now();
+  const d = new Date(ts), n = new Date(now);
+  const hm = p2(d.getHours()) + ':' + p2(d.getMinutes());
+  const days = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5);
+  const day = days === 0 ? 'today' : days === 1 ? 'tomorrow' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+  const mins = Math.max(0, Math.round((ts - now) / 60000));
+  const inTxt = mins < 60 ? mins + ' min' : mins < 48 * 60 ? Math.round(mins / 60) + ' h' : Math.round(mins / 1440) + ' days';
+  return day + ' ' + hm + ' (in ' + inTxt + ')';
+}
+
 // ---- run slots (concurrency limit) and the screen lock: one FIFO queue -------------------------
 class Limiter {
   constructor(getMax) { this.getMax = typeof getMax === 'function' ? getMax : () => getMax; this.active = 0; this.q = []; }
@@ -426,4 +439,4 @@ function createRunner({ store, makeAgent }) {
   };
 }
 
-module.exports = { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, addNotice, takeNotices, helperText, batchNotice, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };
+module.exports = { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, fmtWhenRel, addNotice, takeNotices, helperText, batchNotice, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };

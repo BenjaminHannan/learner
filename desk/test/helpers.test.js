@@ -212,7 +212,7 @@ test('primary agent_* tools', async () => {
   const ok = t.agent_start({ name: 'x', task: 'y', every: '1h' }, { thread: { id: 'tp' } });
   assert.match(ok.text, /Started Mote 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
   assert.strictEqual(m.list()[0].parent, 'tp');
-  assert.match(t.agent_list(), /x \| queued \| every 1h \| next (?:\w{3} )?\d\d:\d\d \| last: none yet/);
+  assert.match(t.agent_list(), /x \| queued \| every 1h \| next (?:\w+ )?\d\d:\d\d \(in [^)]+\) \| last: none yet/);
   const dup = t.agent_start({ name: 'X', task: 'y' }, {}); assert.match(dup.text, /already exists/);
   const up = t.agent_update({ name_or_id: 'x', at: '07:00', every: '' });
   assert.match(up.text, /Updated Mote 'x': daily 07:00, next run/); assert.strictEqual(m.find('x').every, null);
@@ -477,4 +477,13 @@ test('a Glim report is its final answer without leading "I need to / Let me" nar
   assert.strictEqual(lastAssistantText(msgs), 'Weather: 34F, fair. School 8:00.');
   assert.strictEqual(lastAssistantText([{ role: 'assistant', content: 'Let me look.', tool_calls: [{ id: '1' }] }, { role: 'assistant', content: 'Done: all good.' }]), 'Done: all good.');
   assert.strictEqual(lastAssistantText([{ role: 'assistant', content: 'Let me look.', tool_calls: [{ id: '1' }] }]), 'Let me look.'); // only narration exists: keep it
+});
+
+test('fmtWhenRel: today / tomorrow / weekday with how long until', () => {
+  const { fmtWhenRel } = require('../src/helpers');
+  const now = new Date(2026, 9, 28, 17, 0).getTime();
+  assert.strictEqual(fmtWhenRel(new Date(2026, 9, 28, 17, 30).getTime(), now), 'today 17:30 (in 30 min)');
+  assert.strictEqual(fmtWhenRel(new Date(2026, 9, 29, 8, 0).getTime(), now), 'tomorrow 08:00 (in 15 h)');
+  assert.strictEqual(fmtWhenRel(new Date(2026, 9, 31, 8, 0).getTime(), now), 'Sat 08:00 (in 3 days)');
+  assert.strictEqual(fmtWhenRel(null, now), '-');
 });
