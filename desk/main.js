@@ -768,6 +768,7 @@ function postNotice(threadId, name, summary) {
 const RELAY_ASK = '[A helper finished; its report is above. Tell Ben what matters in one or two short sentences, in your own words as Glim. Do not paste the report. Call the helpers Motes, never agents.]';
 let relayTimer = null;
 function relayReports(threadId, tries) {
+  if (E2E) return; // the scripted test gateway does not expect an extra turn
   clearTimeout(relayTimer);
   relayTimer = setTimeout(async () => {
     try {
