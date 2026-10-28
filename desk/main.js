@@ -1069,6 +1069,16 @@ function registerIpc() {
     try { const v = helpers.add({ name: t.name, task: t.task, every: t.every, at: t.at, deferFirst: true, mode: 'ask' }); return { use, ok: true, name: v.name, id: v.id, schedule: v.schedule }; }
     catch (e) { return { use, ok: false, name: t.name, error: String(e && e.message || e) }; }
   }));
+  // After first-run setup Glim asks about long-term goals: the question is written into the open chat as Glim's own first message
+  h('onboard:goals', (id) => {
+    const st = store.getSettings();
+    if (st.goalsAsked) return { ok: false };
+    const t = store.loadThread(id); if (!t || t.helper || (t.messages || []).length) return { ok: false };
+    const text = 'Setup is done. One more thing, so I can help over the long run: what are your short-term and long-term goals? Anything counts, big or small: school, a skill, a project, a habit, money, health. If you are not sure yet, tell me what matters to you and I can help you brainstorm some. Then I will turn them into a plan with clear steps, and offer to check in on them for you.';
+    t.messages = [{ role: 'assistant', content: text }]; t.items = [...(t.items || []), { t: 'assistant', text }];
+    store.saveThread(t); store.saveSettings({ goalsAsked: true });
+    return { ok: true };
+  });
   h('memory:list', () => memory.list());
   h('memory:read', () => memory.read());
   h('memory:write', (text) => memory.write(text));

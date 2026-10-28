@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS = {
   // Appearance
   theme: 'system',        // system | light | dark
   textSize: 'm',          // s | m | l
+  goalsAsked: false,     // Glim has asked about long-term goals once, right after first-run setup
   autoUpdateCheck: true, // look for a newer Premonition at launch and every 6 hours (an update still needs your click)
   showSparks: false,     // list Sparks (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
   highContrast: false,    // stronger text and borders
@@ -70,7 +71,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
 const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
