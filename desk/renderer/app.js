@@ -1170,8 +1170,10 @@
   BrowserPanel.ctx.switchThread = async (id) => { if (id && (!thread || thread.id !== id)) await openThread(id); };
 
   // first-run setup finished or skipped: pick up the saved picks, refresh the welcome chips, hand the keyboard back
-  window.addEventListener('onboard-done', async () => {
+  window.addEventListener('onboard-done', async (ev) => {
     const s = await desk.settings.get(); const { _hotkey, ...rest } = s; settings = rest;
+    // finished (not skipped) setup: Glim asks about long-term goals in the chat you are looking at
+    try { if (!(ev.detail && ev.detail.skipped) && thread && !thread.helper && !running && (await desk.onboard.goals(thread.id)).ok) { await openThread(thread.id); } } catch (e) { /* the chat still works */ }
     if (!running && msgs.querySelector('.welcome')) welcome();
     desk.helpers.list().then(paintAgents);
     input.focus();

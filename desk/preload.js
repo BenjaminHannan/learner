@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld('desk', {
   sleep: { state: inv('sleep:state'), start: inv('sleep:start'), wake: inv('sleep:wake'), summary: inv('sleep:summary') },
   update: { status: inv('update:status'), check: inv('update:check'), install: inv('update:install') },
   onUpdate: on('update:state'),
-  onboard: { create: inv('onboard:create') },
+  onboard: { create: inv('onboard:create'), goals: inv('onboard:goals') },
   openSystem: inv('system:open'),
   openExternal: inv('open:external'),
   startOver: inv('app:startOver'),
