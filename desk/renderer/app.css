@@ -184,7 +184,10 @@ body[data-acts="closed"] .act-body { display:none; }
 body.drawer-open #drawer { transform:none; visibility:visible; box-shadow:var(--shadow); transition:transform .22s var(--ease); }
 #drawerShade { position:absolute; inset:0; z-index:19; display:none; background:rgba(0,0,0,.35); } body.drawer-open #drawerShade { display:block; }
 .drawer-head { display:flex; justify-content:space-between; align-items:center; padding:.9rem 1rem; border-bottom:1px solid var(--hair); font-weight:650; }
-#threadList { list-style:none; margin:0; padding:.5rem; overflow:auto; flex:1; }
+#threadList, #mainList { list-style:none; margin:0; padding:.5rem; }
+#mainList { padding-bottom:0; } #mainList li { display:flex; align-items:center; gap:.3rem; padding:.55rem .7rem; border-radius:.7rem; cursor:pointer; min-height:2.6rem; } #mainList li:hover { background:var(--raised); } #mainList li.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
+#mainList .a-top { display:flex; align-items:center; gap:.5rem; flex:1; } #mainList .t { flex:1; font-weight:700; } #mainList .d { color:var(--text2); font-size:.78rem; }
+.hist { flex:1; overflow:auto; border-top:1px solid var(--hair); margin-top:.5rem; } .hist summary { cursor:pointer; list-style:none; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); padding:.8rem 1rem .3rem; } .hist summary::-webkit-details-marker { display:none; } .hist[open] #threadList { overflow:auto; }
 #threadList li { display:flex; align-items:center; gap:.3rem; padding:.55rem .7rem; border-radius:.7rem; cursor:pointer; min-height:2.6rem; }
 #threadList li:hover { background:var(--raised); } #threadList li.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
 #threadList .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #threadList .d { color:var(--text2); font-size:.78rem; }

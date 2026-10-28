@@ -1,31 +1,61 @@
 'use strict';
-// agent_start / agent_list / agent_update / agent_stop. Helpers get the same tool list as the primary (shared prompt cache) and the
-// same abilities: a Glim may start, list, change and stop other Glims (the Glim count cap and the duplicate check still apply).
+// agent_start / agent_list / agent_update (also stops) / agent_stop. Glims get the same tool list as the main Glim (shared prompt cache).
+// A Glim can do almost everything the main Glim can (Ben, Oct 28: "make the glims able to do as much as possible"):
+// list Glims, edit or move its own schedule, stop itself or the Glims it started, never Ben's other Glims, and start new ones,
+// up to MAX_DEPTH Glims deep and MAX_KIDS live children each (a runaway guard, not a policy).
 const { fmtWhen, short } = require('../helpers');
 
-const NO = "Error: Glims can't start Glims"; // kept for old callers; helpers can now start Glims
+const NO = "Error: Glims can't start Glims"; // a Glim run with no known id (should not happen)
+const MAX_DEPTH = 2;
+const MAX_KIDS = 5;
 
 function agentTools(mgr, opts) {
+  const isHelper = !!(opts && opts.isHelper);
+  const selfId = opts && opts.selfId;
   const err = (e) => ({ text: 'Error: ' + (e && e.message || e), error: true });
+  const self = () => (selfId && mgr.items ? mgr.items.find((h) => h.id === selfId) : null);
+  const started = (h, how) => "Started Glim '" + h.name + "' (id " + h.id + '): ' + how + '. Its report will arrive as a [helper updates] note.';
+  // a Glim may change or stop itself or the Glims it started, never Ben's other Glims
+  const notYours = (ref) => {
+    if (!isHelper) return null;
+    const t = mgr.find(ref);
+    return t && t.id !== selfId && t.byHelper !== selfId ? { text: "Error: '" + t.name + "' is not yours to change; only Ben or the main Glim can", error: true } : null;
+  };
   const stopTool = (a) => {
+    const no = notYours(a.name_or_id); if (no) return no;
     const h = mgr.stop(a.name_or_id);
     return h ? { text: "Stopped Glim '" + h.name + "' and removed its schedule.", summary: 'Stopped Glim ' + h.name } : { text: "Error: no Glim '" + a.name_or_id + "'", error: true };
   };
   return {
     agent_start: (a, ctx) => {
       try {
-        const h = mgr.add({ name: a.name, task: a.task, every: a.every, at: a.at, parent: ctx && ctx.thread && ctx.thread.id });
+        if (isHelper) {
+          const me = self();
+          const same = me && mgr.find(a.name);
+          if (me && same && same.id === me.id) { // "change my time": move this Glim's own schedule
+            if (!a.every && !a.at) return { text: 'Error: give at ("07:00") or every ("2h") to change your schedule', error: true };
+            const v = mgr.reschedule(me.id, { every: a.every, at: a.at });
+            return { text: "Your schedule is now '" + v.schedule + "', next run " + fmtWhen(v.next) + '. Finish this run as usual.', summary: 'Moved to ' + v.schedule };
+          }
+          if (!me) return { text: NO, error: true };
+          if (mgr.depth(me.id) + 1 > MAX_DEPTH) return { text: 'Error: this Glim was started by another Glim, so it cannot start more. Do the work yourself.', error: true };
+          const kids = mgr.items.filter((h) => h.byHelper === me.id && h.status !== 'stopped' && (mgr.isRunning(h.id) || h.every || h.at)).length; // a finished one-time child no longer counts
+          if (kids >= MAX_KIDS) return { text: 'Error: you already run ' + kids + ' Glims; stop one first (agent_update with stop) or do the work yourself.', error: true };
+        }
+        const h = mgr.add({ name: a.name, task: a.task, every: a.every, at: a.at, parent: ctx && ctx.thread && ctx.thread.id, byHelper: isHelper ? selfId : undefined });
         const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') ? h.schedule + ', next run ' + fmtWhen(h.next) : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
-        return { text: "Started Glim '" + h.name + "' (id " + h.id + '): ' + when + '. Its report will arrive as a [helper updates] note.', summary: 'Started Glim ' + h.name };
+        return { text: started(h, when), summary: 'Started Glim ' + h.name };
       } catch (e) { return err(e); }
     },
     agent_list: () => {
       const l = mgr.list();
       if (!l.length) return 'No Glims.';
-      return l.map((h) => h.id + ' ' + h.name + ' | ' + h.status + (h.paused ? ' (paused)' : '') + ' | ' + h.schedule + ' | next ' + fmtWhen(h.next) + ' | last: ' + (short(h.lastSummary, 120) || 'none yet')).join('\n');
+      return l.map((h) => h.id + ' ' + h.name + (h.id === selfId ? ' (you)' : '') + ' | ' + h.status + (h.paused ? ' (paused)' : '') + ' | ' + h.schedule + ' | next ' + fmtWhen(h.next) + ' | last: ' + (short(h.lastSummary, 120) || 'none yet')).join('\n');
     },
+    // edit in place: schedule (at / every, "" clears one), task, new_name, paused; stop: true cancels it
     agent_update: (a) => {
       try {
+        const no = notYours(a.name_or_id); if (no) return no;
         if (a.stop) return stopTool(a);
         const patch = {};
         for (const k of ['task', 'every', 'at']) if (a[k] !== undefined && a[k] !== null) patch[k] = a[k];
@@ -41,4 +71,4 @@ function agentTools(mgr, opts) {
   };
 }
 
-module.exports = { agentTools, NO };
+module.exports = { agentTools, NO, MAX_DEPTH, MAX_KIDS };

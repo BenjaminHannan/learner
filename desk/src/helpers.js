@@ -140,9 +140,9 @@ function helperText(h) {
 // (a lone Glim opens its own thread; several open the thread that started them all, or just the window)
 function batchNotice(list) {
   const f = list.filter((x) => x.failed).length;
-  if (list.length === 1) return { title: "Glim '" + list[0].name + "' " + (f ? "couldn't finish" : 'finished'), body: list[0].summary, threadId: list[0].threadId };
+  if (list.length === 1) return { title: "Spark '" + list[0].name + "' " + (f ? "couldn't finish" : 'finished'), body: list[0].summary, threadId: list[0].threadId };
   const parent = list.every((x) => x.parent && x.parent === list[0].parent) ? list[0].parent : null;
-  return { title: list.length + ' Glims finished' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
+  return { title: list.length + ' Sparks finished' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
 }
 
 // A Glim's report is its FINAL answer: the last assistant message with no tool call, minus any leading "I need to... / Let me..." narration
@@ -208,7 +208,7 @@ class Helpers {
   sched(h) { try { return parseSchedule(h); } catch (e) { return { kind: 'once', label: 'once' }; } }
   view(h) {
     return { id: h.id, name: h.name, task: h.task, status: h.status, schedule: this.sched(h).label, next: h.next || null, paused: !!h.paused,
-      threadId: h.threadId, parent: h.parent, lastRun: h.lastRun || null, lastSummary: h.lastSummary || '', quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
+      threadId: h.threadId, parent: h.parent, byHelper: h.byHelper || null, lastRun: h.lastRun || null, lastSummary: h.lastSummary || '', quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
   }
   list() { return this.items.map((h) => this.view(h)); }
   find(ref) {
@@ -220,7 +220,7 @@ class Helpers {
   byThread(threadId) { return this.items.find((h) => h.threadId === threadId) || null; }
 
   // deferFirst: do not run now; the first run is the next scheduled slot. mode: 'ask' | 'hands-off' for this Glim only (default: the helperMode setting).
-  add({ name, task, every, at, parent, deferFirst, mode }) {
+  add({ name, task, every, at, parent, deferFirst, mode, byHelper }) {
     name = short(name, 40);
     task = String(task || '').trim();
     if (!name) throw new Error('name is required');
@@ -236,6 +236,7 @@ class Helpers {
     this.o.store.saveThread(t);
     const h = { id, name, task, every: every || null, at: at || null, next: null, paused: false, status: 'idle', threadId: t.id, parent: parent || null, created: this.now(), lastRun: null, lastReport: '', lastSummary: '' };
     if (mode === 'ask' || mode === 'hands-off') h.mode = mode;
+    if (byHelper) h.byHelper = byHelper; // started by another Glim (agent_start from a helper run)
     this.items.push(h);
     if (sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
     return this.view(h);
@@ -277,6 +278,19 @@ class Helpers {
     this.changed();
     return this.view(h);
   }
+  // New schedule for an existing Glim (a Glim moving its own time). A run in progress keeps going; the next one uses the new time.
+  reschedule(ref, { every, at }) {
+    const h = this.find(ref);
+    if (!h) return null;
+    const sched = parseSchedule({ every, at });
+    h.every = every || null; h.at = at || null;
+    if (h.status === 'stopped') h.status = 'idle';
+    h.next = sched.kind === 'once' ? null : nextRun(sched, this.now());
+    this.changed();
+    return this.view(h);
+  }
+  // How many Glims up the chain started this one (0: started by Ben or the main Glim).
+  depth(id) { let d = 0, h = this.items.find((x) => x.id === id); while (h && h.byHelper && d < 10) { d++; h = this.items.find((x) => x.id === h.byHelper); } return d; }
 
   // Cancel the schedule, abort a running run, keep the helper (and its thread) as "stopped".
   stop(ref) {
@@ -317,6 +331,8 @@ class Helpers {
   abort(id) { const a = this.active.get(id); if (a) a.ctl.abort(); return !!a; }
   steer(id, text) { const a = this.active.get(id); return !!(a && a.agent && a.agent.steer(text)); }
   isRunning(id) { return this.active.has(id); }
+  // The in-memory thread of a running Glim (its run saves this object, so a notice must go here, not to a stored copy).
+  liveThread(threadId) { for (const r of this.active.values()) if (r.thread && r.thread.id === threadId) return r.thread; return null; }
 
   // Run every helper whose time has come. A helper whose time passed while the app was closed is due once
   // (its next time is a single value, recomputed from "now" when the run starts), not once per missed slot.
@@ -362,7 +378,7 @@ class Helpers {
     };
     let res;
     try {
-      res = await this.o.runner(h, helperText(h), { signal: rec.ctl.signal, onState, attach: (a) => { rec.agent = a; } });
+      res = await this.o.runner(h, helperText(h), { signal: rec.ctl.signal, onState, attach: (a, t) => { rec.agent = a; rec.thread = t || null; } });
     } catch (e) { res = { error: String(e && e.message || e) }; }
     rec.done = true;
     this.active.delete(h.id);
@@ -398,7 +414,7 @@ function createRunner({ store, makeAgent }) {
     thread.title = 'Glim: ' + h.name; thread.helper = h.id;
     if (signal.aborted) return { stopped: true };
     const made = await makeAgent(h, { onState });
-    attach(made.agent);
+    attach(made.agent, thread);
     const onAbort = () => made.agent.stop();
     if (signal.aborted) onAbort(); else signal.addEventListener('abort', onAbort, { once: true });
     let r;
