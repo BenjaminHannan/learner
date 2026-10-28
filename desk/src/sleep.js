@@ -61,10 +61,14 @@ class Sleep {
     if (!python) return { ok: false, app, python, reason: PY_MISSING };
     return { ok: true, app, python, reason: '' };
   }
-  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home }; }
+  // SLEEPMLX_NIGHT_BUDGET_S: how long this sleep may last (about 85% of the chosen time); the trainer scales its work to it.
+  // The sleepmode app's CommandWorker starts the trainer with dict(os.environ) + its own vars, so it inherits this
+  // (checked in sleepmode/workers.py on origin/claude/project-thread-sl2x88).
+  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home, ...(this.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(this.nightBudgetS)) } : {}) }; }
 
   // Start sleeping: a detached process with its output in a log file. It outlives Desk.
-  start() {
+  start(o) {
+    this.nightBudgetS = (o && o.budgetS) || 0; this.wakeAtMs = (o && o.wakeAt) || null;
     const a = this.available();
     if (!a.ok) return { ok: false, error: a.reason };
     if (this.status().sleeping) return { ok: false, error: 'Already sleeping.' };
@@ -246,6 +250,39 @@ function wakeKey({ sleepKey, now, settings }) {
   const s = settings || {};
   return inWindow(now, s.sleepFrom, s.sleepTo) ? windowKey(now, s.sleepFrom, s.sleepTo) : null;
 }
+// ---- sleep length (pure) ------------------------------------------------------------------------------------
+const DURATIONS = { '30': 30, '60': 60, '120': 120, '240': 240, morning: 'morning', open: null };
+const OPEN_SLEEP_H = 8;   // "until I wake it" plans for 8 hours of work
+const BUDGET_SHARE = 0.85; // the rest is for converting the adapter and waking up
+// when should this sleep end? minutes (number) | 'morning' (the next time the Settings night end comes round) | null (until woken) -> ms or null
+function computeWakeAt(now, d, settings) {
+  if (typeof d === 'number' && d > 0) return now.getTime() + d * 60000;
+  if (d === 'morning') {
+    const m = hm((settings || {}).sleepTo, 7 * 60);
+    const t = new Date(now); t.setHours(Math.floor(m / 60), m % 60, 0, 0);
+    if (t.getTime() <= now.getTime()) t.setDate(t.getDate() + 1); // already past it today: tomorrow's (a night that crosses midnight)
+    return t.getTime();
+  }
+  return null;
+}
+// seconds the trainer may spend: ~85% of the sleep, 8 h when open-ended; at least 5 minutes
+function nightBudgetS(startMs, wakeAtMs) {
+  const total = wakeAtMs ? (wakeAtMs - startMs) / 1000 : OPEN_SLEEP_H * 3600;
+  return Math.max(300, Math.floor(total * BUDGET_SHARE));
+}
+// the sleepDuration setting ('30' ... 'morning', 'open') -> what startSleep takes
+const durationFromSetting = (v) => (Object.prototype.hasOwnProperty.call(DURATIONS, String(v)) ? DURATIONS[String(v)] : 'morning');
+// "wakes at 3:40 (1 h 12 m left)" / "until you wake it"
+function wakeLabel(wakeAtMs, nowMs) {
+  if (!wakeAtMs) return 'until you wake it';
+  const left = Math.max(0, Math.round((wakeAtMs - nowMs) / 60000));
+  const t = new Date(wakeAtMs); const h = t.getHours() % 12 || 12;
+  const at = h + ':' + String(t.getMinutes()).padStart(2, '0');
+  return 'wakes at ' + at + ' (' + (left >= 60 ? Math.floor(left / 60) + ' h ' + (left % 60) + ' m' : left + ' m') + ' left)';
+}
+// the 60-second tick: is a timed sleep over?
+const shouldTimedWake = (i) => !!(i.asleep && !i.waking && i.wakeAt && i.nowMs >= i.wakeAt);
+
 // Optional wake at the end of the window (only for a sleep Desk started itself)
 function shouldAutoWake(i) {
   const s = i.settings || {};
@@ -254,4 +291,4 @@ function shouldAutoWake(i) {
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };
+module.exports = { computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };

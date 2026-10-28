@@ -518,7 +518,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('document.querySelector("#settingsClose").click()');
       checks.push(['sleep: the top bar has a Sleep button', await vis('#btnSleep')]);
       await ev('document.querySelector("#btnSleep").click()'); await sleep(300);
-      checks.push(['sleep: confirm sheet says what happens and offers the scheduled-runs option (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /scheduled runs/.test(document.querySelector("#sleepSheet").innerText)')]);
+      checks.push(['sleep: confirm sheet says what happens and offers the check-in option and the six lengths (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /Hourly check-in/.test(document.querySelector("#sleepSheet").innerText) && document.querySelectorAll("#sleepDur button").length === 6 && document.querySelectorAll("#sleepDur button.on").length === 1 && /learns more/.test(document.querySelector("#sleepDurNote").innerText)')]);
       await ev('document.querySelector("#sleepGo").click()');
       checks.push(['sleep: confirming starts it and the sheet closes', await until(() => sl.asleep && sleeper.status().sleeping, 6000) && !(await vis('#sleepSheet'))]);
       await until(() => ev('!document.querySelector("#sleepBar").hidden'), 3000);

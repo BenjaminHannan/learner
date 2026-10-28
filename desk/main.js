@@ -32,7 +32,7 @@ const { Diary } = require('./src/tools/diary');
 const { createScreen } = require('./src/tools/screen');
 const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
-const { Sleep, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine } = require('./src/sleep');
+const { Sleep, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -100,28 +100,44 @@ setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.
 // ---- sleep mode ---------------------------------------------------------------------------------------
 // The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
 // While asleep: runs are blocked, scheduled Glim runs wait (the missed-run catch-up fires them once after wake), the pill rests.
-const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
+const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, wakeAt: null, checkingIn: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
 function sleepView() {
   const st = sleeper.status(); const av = sleeper.available();
-  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, error: sl.bad };
+  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, error: sl.bad };
 }
 function pushSleep() {
   const v = sleepView();
-  pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : 'Training on your chats; Glim answers again when you wake it' } : null);
+  pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : 'Training on your chats; ' + v.wakeLabel } : null);
   send('sleep:state', v);
 }
 const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
 function sleepNotice(text) { send('sleep:notice', { text }); }
+// each launch and each new thread starts on the default pill (Auto unless Settings says otherwise); the top-bar pills change only the current one
+function resetModelToDefault() {
+  const s = store.getSettings(); const want = s[s.modelDefault] || s.modelAuto;
+  if (want && s.model !== want) { store.saveSettings({ model: want }); }
+}
+function modelStartCommand(st) {
+  const c = String(st.modelStartCmd || '').trim();
+  if (c) return c;
+  const serve = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh'); // Ben's Macs
+  return process.platform === 'darwin' && fs.existsSync(serve) ? '"' + serve + '" --yes' : '';
+}
 function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
   if ((agent && agent.running) || (helpers && helpers.active.size)) return { error: 'Glim is busy with a run right now. Sleep starts only when it is idle, because your chats come first.' };
   if (typeof o.pauseGlims === 'boolean') store.saveSettings({ sleepPauseGlims: o.pauseGlims });
-  const r = sleeper.start();
+  // how long: minutes | 'morning' | null (until woken). Auto-sleep: to the end of the night window.
+  const now0 = new Date(), cfg = store.getSettings();
+  const dur = o.auto ? 'morning' : ('minutes' in o ? o.minutes : durationFromSetting(cfg.sleepDuration));
+  if (!o.auto && 'minutes' in o) store.saveSettings({ sleepDuration: o.minutes === null ? 'open' : String(o.minutes) });
+  const until = computeWakeAt(now0, dur, cfg);
+  const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: until });
   if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
   if (!r.ok) return { error: r.error };
   { const n = new Date(), st = store.getSettings(); sl.sleepKey = inWindow(n, st.sleepFrom, st.sleepTo) ? windowKey(n, st.sleepFrom, st.sleepTo) : null; } // the night this sleep belongs to (if any)
-  sleeper.mark(); sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
+  sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   pushSleep(); updatePill();
   return { ok: true };
 }
@@ -140,7 +156,7 @@ async function wakeNow() {
 async function onWoke() {
   sl.waking = true; sl.starting = 0; pushSleep(); updatePill();
   if (warmer) { warmer.gatewayMoved(); for (let i = 0; i < 240 && warmer.state !== 'ready'; i++) await new Promise((r) => setTimeout(r, E2E ? 100 : 500)); }
-  sl.asleep = false; sl.waking = false; sl.lastActive = Date.now();
+  sl.asleep = false; sl.waking = false; sl.wakeAt = null; sl.lastActive = Date.now();
   const summary = sleeper.readSummary();
   pushSleep(); updatePill();
   send('sleep:woke', { summary, demo: sleeper.status().demo });
@@ -182,6 +198,7 @@ function autoSleepTick(now, over) {
   const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto };
   const w = shouldAutoWake({ ...common, asleep: sl.asleep && !sl.waking });
   if (w.wake) { wakeNow(); return { action: 'wake' }; }
+  if (shouldTimedWake({ asleep: sl.asleep, waking: sl.waking, wakeAt: sl.wakeAt, nowMs: now.getTime() })) { wakeNow(); return { action: 'wake', reason: 'the chosen sleep time is up' }; }
   const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
   if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + s.sleepFrom + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
   return { action: 'none', reason: d.reason };
@@ -192,13 +209,30 @@ function autoSleepTick(now, over) {
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
-  builtin = new Builtin({ root, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  builtin = new Builtin({ root, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
     getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery,
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
-    hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora) }
+    hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
   });
+}
+// One hourly check-in (Windows sleep): due Glims run, then the check-in task goes through the normal agent in its own
+// hidden thread ('ask' mode, so nothing that needs approval goes ahead). Returns {reply}. The caller owns the model server.
+async function runCheckin({ signal, task }) {
+  sl.checkingIn = true; pushSleep();
+  try {
+    if (helpers) {
+      helpers.tick(true);
+      while (helpers.active.size && !signal.aborted) await sleep(500);
+      if (signal.aborted) { for (const id of [...helpers.active.keys()]) helpers.abort(id); return { aborted: true, reason: 'time or woken' }; }
+    }
+    const h = { id: 'sleep-checkin', name: 'Check-in', threadId: 'sleep-checkin', mode: 'ask' };
+    const r = await createRunner({ store, makeAgent: makeHelperAgent })(h, task, { signal, onState: () => {}, attach: () => {} });
+    if (signal.aborted) return { aborted: true };
+    if (r.error) return { error: String(r.error) };
+    return { reply: r.report || '' };
+  } finally { sl.checkingIn = false; pushSleep(); }
 }
 function waitFor(id, signal, fallback, card) {
   return new Promise((resolve) => {
@@ -295,6 +329,8 @@ function createWindow() {
   win.contentView.addChildView(ui);
   fitUi();
   // (on X11 the content size can lag one event behind the window size, so fit again shortly after)
+  // macOS full screen hides the traffic lights, so the top bar drops the space it keeps for them
+  win.on('enter-full-screen', () => send('fullscreen', true)); win.on('leave-full-screen', () => send('fullscreen', false));
   for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
   ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
@@ -720,7 +756,7 @@ function registerIpc() {
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
   h('threads:list', () => store.listThreads());
-  h('threads:new', () => { const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
+  h('threads:new', () => { resetModelToDefault(); const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
   h('threads:load', (id) => {
     const t = store.loadThread(id);
     if (!t) return t;
@@ -848,6 +884,20 @@ function registerIpc() {
   });
   h('open:external', (url) => { if (/^https?:/.test(url)) shell.openExternal(url); return true; });
   h('gateway:state', () => gwState);
+  // Click on "Offline": start the model. Windows built-in: restart it. Otherwise the start command from Settings (Mac default:
+  // the assistant's serve.sh), run detached; the warmer notices when the gateway answers.
+  h('gateway:start', () => {
+    if (builtinWanted()) { builtin.retry(); return { ok: true, via: 'builtin' }; }
+    const cmd = modelStartCommand(store.getSettings());
+    if (!cmd) return { error: 'No start command is set. Add one in Settings > Model (for example the script that starts your model server).' };
+    try {
+      const sh = process.platform === 'win32' ? ['powershell.exe', ['-NoProfile', '-Command', cmd]] : ['/bin/zsh', ['-lc', cmd]];
+      const c = require('child_process').spawn(sh[0], sh[1], { cwd: os.homedir(), detached: true, stdio: 'ignore', windowsHide: true });
+      c.on('error', () => {}); c.unref();
+      for (const ms of [5000, 15000, 30000, 60000, 90000]) setTimeout(() => { if (warmer) warmer.gatewayMoved(); }, ms).unref();
+      return { ok: true, via: 'command' };
+    } catch (e) { return { error: String(e && e.message || e) }; }
+  });
   h('gateway:test', async () => {
     const s = store.getSettings();
     const ctl = new AbortController();
@@ -890,6 +940,7 @@ app.whenReady().then(async () => {
   memory = createMemory(app.getPath('userData'));
   if (FEATURES.builtin || process.env.PREMONITION_BUILTIN) setupBuiltin(); else sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
+  resetModelToDefault();
   applyTheme(store.getSettings());
   diary = new Diary(() => store.getSettings());
   buildMenu();

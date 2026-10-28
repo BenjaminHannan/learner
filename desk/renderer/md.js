@@ -28,15 +28,16 @@
       }
       let list = null;
       let para = [];
+      let olNext = 0; // a numbered list split by blank lines keeps counting (models write "1." ... blank ... "2." or even "1." again)
       const flushP = () => { if (para.length) { out.push('<p>' + para.map(inline).join('<br>') + '</p>'); para = []; } };
-      const flushL = () => { if (list) { out.push('<' + list.t + '>' + list.items.map((x) => '<li>' + inline(x) + '</li>').join('') + '</' + list.t + '>'); list = null; } };
+      const flushL = () => { if (list) { if (list.t === 'ol') olNext = list.start + list.items.length; out.push('<' + list.t + (list.t === 'ol' && list.start !== 1 ? ' start="' + list.start + '"' : '') + '>' + list.items.map((x) => '<li>' + inline(x) + '</li>').join('') + '</' + list.t + '>'); list = null; } };
       for (const line of part.split('\n')) {
         let m;
         if ((m = /^\s*[-*•]\s+(.*)/.exec(line))) { flushP(); if (!list || list.t !== 'ul') { flushL(); list = { t: 'ul', items: [] }; } list.items.push(m[1]); }
-        else if ((m = /^\s*\d+[.)]\s+(.*)/.exec(line))) { flushP(); if (!list || list.t !== 'ol') { flushL(); list = { t: 'ol', items: [] }; } list.items.push(m[1]); }
+        else if ((m = /^\s*(\d+)[.)]\s+(.*)/.exec(line))) { flushP(); if (!list || list.t !== 'ol') { flushL(); const n = parseInt(m[1], 10); list = { t: 'ol', items: [], start: olNext && n <= 1 ? olNext : n }; } list.items.push(m[2]); }
         else if (!line.trim()) { flushP(); flushL(); }
-        else if ((m = /^#{1,4}\s+(.*)/.exec(line))) { flushP(); flushL(); out.push('<p><strong>' + inline(m[1]) + '</strong></p>'); }
-        else { flushL(); para.push(line); }
+        else if ((m = /^#{1,4}\s+(.*)/.exec(line))) { flushP(); flushL(); olNext = 0; out.push('<p><strong>' + inline(m[1]) + '</strong></p>'); }
+        else { flushL(); olNext = 0; para.push(line); }
       }
       flushP(); flushL();
     });

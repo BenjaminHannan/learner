@@ -260,8 +260,8 @@ class Helpers {
 
   // Run every helper whose time has come. A helper whose time passed while the app was closed is due once
   // (its next time is a single value, recomputed from "now" when the run starts), not once per missed slot.
-  tick() {
-    if (this.o.hold && this.o.hold()) return; // e.g. sleeping: due runs wait and fire once after wake
+  tick(force) {
+    if (!force && this.o.hold && this.o.hold()) return; // force: the sleep check-in runs what is due // e.g. sleeping: due runs wait and fire once after wake
     const now = this.now();
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;

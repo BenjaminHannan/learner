@@ -111,6 +111,7 @@ function createGateway(o) {
   const now = o.now || (() => Date.now());
   const logDiary = (rec) => {
     if (!o.diaryDir || !rec.response.content || !rec.messages.length) return;
+    if (o.skipDiary && o.skipDiary()) return; // the sleep check-in's own turns are not something to learn from
     try { fs.mkdirSync(o.diaryDir, { recursive: true }); fs.appendFileSync(path.join(o.diaryDir, dayOf(new Date(rec.ts)) + '.jsonl'), JSON.stringify(rec) + '\n'); } catch (e) { /* the diary never breaks chat */ }
   };
   const readBody = (req) => new Promise((resolve, reject) => { const b = []; req.on('data', (d) => b.push(d)); req.on('end', () => resolve(Buffer.concat(b).toString('utf8'))); req.on('error', reject); });
