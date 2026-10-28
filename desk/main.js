@@ -940,14 +940,22 @@ function registerIpc() {
   h('gateway:state', () => gwState);
   // Click on "Offline": start the model. Windows built-in: restart it. Otherwise the start command from Settings (Mac default:
   // the assistant's serve.sh), run detached; the warmer notices when the gateway answers.
-  h('gateway:start', () => {
+  h('gateway:start', async () => {
     if (builtinWanted()) { builtin.retry(); return { ok: true, via: 'builtin' }; }
     const cmd = modelStartCommand(store.getSettings());
     if (!cmd) return { error: 'No start command is set. Add one in Settings > Model (for example the script that starts your model server).' };
     try {
       const sh = process.platform === 'win32' ? ['powershell.exe', ['-NoProfile', '-Command', cmd]] : ['/bin/zsh', ['-lc', cmd]];
-      const c = require('child_process').spawn(sh[0], sh[1], { cwd: os.homedir(), detached: true, stdio: 'ignore', windowsHide: true });
-      c.on('error', () => {}); c.unref();
+      // the command's output goes to a log, so a start that dies at once can say why instead of doing nothing
+      const logFile = path.join(app.getPath('userData'), 'model-start.log');
+      let fd = 'ignore'; try { fd = fs.openSync(logFile, 'w'); } catch (e) { /* no log */ }
+      const c = require('child_process').spawn(sh[0], sh[1], { cwd: os.homedir(), detached: true, stdio: ['ignore', fd, fd], windowsHide: true });
+      const early = await new Promise((resolve) => { c.on('error', (e) => resolve({ code: -1, msg: String(e && e.message || e) })); c.on('exit', (code) => resolve({ code })); setTimeout(() => resolve(null), 6000); });
+      c.unref(); if (typeof fd === 'number') try { fs.closeSync(fd); } catch (e) { /* ignore */ }
+      if (early && early.code !== 0) {
+        let tail = early.msg || ''; try { tail = tail || fs.readFileSync(logFile, 'utf8').trim().split('\n').slice(-3).join(' | '); } catch (e) { /* ignore */ }
+        return { error: 'The start command stopped at once (exit ' + early.code + ')' + (tail ? ': ' + tail.slice(0, 300) : '') + '.' };
+      }
       for (const ms of [5000, 15000, 30000, 60000, 90000]) setTimeout(() => { if (warmer) warmer.gatewayMoved(); }, ms).unref();
       return { ok: true, via: 'command' };
     } catch (e) { return { error: String(e && e.message || e) }; }
