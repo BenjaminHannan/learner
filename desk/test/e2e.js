@@ -374,7 +374,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await ev('window.__openSettings()');
     await sleep(300);
     const keys = ['gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'verify', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'vision', 'theme', 'textSize', 'highContrast', 'pill', 'openAtLogin', 'keepRunning', 'hotkey'];
-    checks.push(['settings sheet has a control for every setting', await ev('document.querySelectorAll("#settingsCol .s-row").length>=' + keys.length + ' && ' + JSON.stringify(['Model', 'Autonomy', 'Glims', 'Diary', 'Memory', 'Screen control', 'Vision', 'Appearance', 'Startup']) + '.every((g)=>[...document.querySelectorAll(".s-group h2")].some((h)=>h.textContent===g))')]);
+    checks.push(['settings sheet has a control for every setting', await ev('document.querySelectorAll("#settingsCol .s-row").length>=' + keys.length + ' && ' + JSON.stringify(['Model', 'Autonomy', 'Running', 'Diary', 'Memory', 'Screen control', 'Vision', 'Appearance', 'Startup']) + '.every((g)=>[...document.querySelectorAll(".s-group h2")].some((h)=>h.textContent===g))')]);
     checks.push(['settings: test connection button shows latency', await (async () => { await ev('document.querySelector("#testConn").click()'); return until(() => ev('/Connected · \\d+ ms/.test(document.querySelector("#testNote").textContent)'), 5000); })()]);
     checks.push(['settings: Open Accessibility / Screen Recording buttons present', await ev('[...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Accessibility settings/.test(b.textContent)) && [...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Screen Recording settings/.test(b.textContent))')]);
     checks.push(['settings: danger list shown', await ev('document.querySelectorAll(".danger-list li").length>=8')]);
@@ -624,7 +624,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('new Promise(r=>{const t=setInterval(()=>{if(window.__ready){clearInterval(t);r()}},50)})');
       await sleep(800);
       checks.push(['setup: shows on first run (onboarded false), inside the main window', await stepIs(0) && BrowserWindow.getAllWindows().length === nWin]);
-      checks.push(['setup step 1: Meet your Glims with the main Glim and four small ones in different moods', await ev('/Meet your Glims/.test(document.querySelector("#onboard h1").textContent) && document.querySelectorAll("#onboard .ob-glim .mascot").length===4 && new Set([...document.querySelectorAll("#onboard .mascot")].map((m)=>m.dataset.mood)).size>=4')]);
+      checks.push(['setup step 1: Meet Glim with the main Glim and four small ones in different moods', await ev('/Meet Glim/.test(document.querySelector("#onboard h1").textContent) && document.querySelectorAll("#onboard .ob-glim .mascot").length===4 && new Set([...document.querySelectorAll("#onboard .mascot")].map((m)=>m.dataset.mood)).size>=4')]);
       checks.push(['setup: chrome text is not selectable', await ev('getComputedStyle(document.querySelector("#onboard .ob-lead")).userSelect==="none" && getComputedStyle(document.querySelector("#obNext")).userSelect==="none"')]);
       await audit('light, meet');
       await grab('ui-v2-onboard-a-meet.png');
@@ -650,7 +650,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['setup: Enter on step 2 saves the picks as uses + usesOther', await stepIs(2) && JSON.stringify(store.getSettings().uses) === '["email","briefing"]' && store.getSettings().usesOther === 'keep track of my game releases']);
       checks.push(['setup step 3: one row per recurring pick, each with a switch', await ev('document.querySelectorAll("#onboard .ob-row").length===2 && document.querySelectorAll("#onboard .ob-row .toggle[aria-checked=true]").length===2 && /Email watch/.test(document.body.innerText) && /every 30 min/.test(document.body.innerText) && /daily at 08:00/.test(document.body.innerText)')]);
       await ev('document.querySelector("#onboard .ob-row[data-id=email] .toggle").click()');
-      checks.push(['setup: the button says how many Glims it will create', await ev('document.querySelector("#obNext").textContent==="Create 1 Glim"')]);
+      checks.push(['setup: the button says how many routines it will create', await ev('document.querySelector("#obNext").textContent==="Create 1 routine"')]);
       await audit('light, recurring');
       await grab('ui-v2-onboard-c-recurring.png');
       await key('Return');

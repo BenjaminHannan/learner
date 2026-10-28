@@ -140,9 +140,9 @@ function helperText(h) {
 // (a lone Glim opens its own thread; several open the thread that started them all, or just the window)
 function batchNotice(list) {
   const f = list.filter((x) => x.failed).length;
-  if (list.length === 1) return { title: "Mote '" + list[0].name + "' " + (f ? "couldn't finish" : 'finished'), body: list[0].summary, threadId: list[0].threadId };
+  if (list.length === 1) return { title: (f ? "Glim couldn't finish: " : 'Glim finished: ') + list[0].name, body: list[0].summary, threadId: list[0].threadId };
   const parent = list.every((x) => x.parent && x.parent === list[0].parent) ? list[0].parent : null;
-  return { title: list.length + ' Motes finished' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
+  return { title: 'Glim finished ' + list.length + ' tasks' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
 }
 
 // A Glim's report is its FINAL answer: the last assistant message with no tool call, minus any leading "I need to... / Let me..." narration
