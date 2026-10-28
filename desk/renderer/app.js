@@ -711,13 +711,11 @@
 
   // ---------- composer ----------
   function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 9.2 * parseFloat(getComputedStyle(document.documentElement).fontSize)) + 'px'; }
-  input.addEventListener('input', () => { autosize(); if ($('#pwWarn').hidden === false && !Guard.looksLikeSecret(input.value)) $('#pwWarn').hidden = true; });
+  input.addEventListener('input', autosize);
   let submitting = false;
   async function submit(force) {
     const text = input.value.trim();
     if (!text || submitting) return;
-    if (!force && Guard.looksLikeSecret(text)) { $('#pwWarn').hidden = false; return; }
-    $('#pwWarn').hidden = true;
     if (slp.asleep || slp.waking) { $('#wakeAsk').hidden = false; return; } // keep the text; offer to wake first
     submitting = true;
     try {
@@ -742,8 +740,6 @@
   }
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(false); } });
   $('#btnSend').onclick = () => submit(false);
-  $('#pwSend').onclick = () => submit(true);
-  $('#pwCancel').onclick = () => { $('#pwWarn').hidden = true; input.focus(); };
   $('#btnStop').onclick = () => desk.agent.stop(thread && thread.id);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

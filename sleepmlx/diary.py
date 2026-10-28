@@ -185,6 +185,22 @@ def is_test_record(rec: dict) -> bool:
     return False
 
 
+# Ben may paste passwords into the chat (local and private), but a password in the diary would be trained into the weights and
+# could be repeated later: such turns never reach the sleep data. Same idea as the app's memory refusal (src/memory.js).
+_SECRET_RES = [re.compile(p, re.I) for p in (
+    r"\b(password|passwords|passwd|passcode|pass\s?phrase|pwd|cvv|cvc|otp|2fa)\b",
+    r"\b(pin|secret|secret key|api[ _-]?key|token|access key|private key)\b\s*(is|are|was|:|=|\d)",
+    r"\b(?:\d[ -]?){13,19}\b",
+    r"\b(sk|pk|ghp|gho|xox[bap]|AKIA)[-_A-Za-z0-9]{16,}",
+    r"\b(verification|security|login|sign-?in|one-?time|sms|auth(?:entication)?)\s+code\b",
+)]
+
+
+def looks_secret(text: str) -> bool:
+    t = text or ""
+    return any(r.search(t) for r in _SECRET_RES)
+
+
 # ---------------------------------------------------------------- raw logs -> turns
 def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional[str]]]:
     """-> (conv_id, user_text, final_answer or None) for one raw record, or None."""
@@ -206,6 +222,8 @@ def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional
     if not resp.get("tool_calls"):
         a = strip_assistant(flatten(resp.get("content"), blob_dir))
         ans = a or None
+    if looks_secret(user) or looks_secret(ans or ""):
+        return None
     conv = str(rec.get("conv_id") or "")
     return conv, user, ans
 
