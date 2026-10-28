@@ -313,3 +313,30 @@ class NightTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LessonHoldoutTests(unittest.TestCase):
+    """Lesson cards are held out 1 in 5 (min 1 when 3+ lessons), so the recall quiz measures them; notes weigh little and do not start a night."""
+
+    def _items(self, n):
+        from sleepmlx.recipe import Item
+        return {"l%d" % i: Item("l%d" % i, "Ben", "x%d" % i, "lesson", 3, first=3, para=["p1 %d" % i], qa=[["q1 %d" % i, "a"], ["q2 %d" % i, "a"]], kind="lesson") for i in range(n)}
+
+    def test_holdout_needs_three_lessons_and_keeps_two_trainable_cards(self):
+        from sleepmlx.recipe import Config, Sleeper
+        s = object.__new__(Sleeper)
+        s.cfg = Config()
+        s.items = self._items(2)
+        st = Counter(); s.hold_lessons(3, st)
+        self.assertEqual(st["lessons_held_out"], 0)
+        s.items = self._items(3)
+        st = Counter(); s.hold_lessons(3, st)
+        self.assertEqual(st["lessons_held_out"], 1)
+        held = [it for it in s.items.values() if it.held]
+        self.assertEqual(len(held), 1)
+        self.assertGreaterEqual(len(held[0].para) + len(held[0].qa), 2)
+
+    def test_notes_weigh_little(self):
+        from sleepmlx.recipe import Config, Item, Sleeper
+        s = object.__new__(Sleeper)
+        self.assertEqual(s.prio(Item("n", "Ben", "x", "note", 1, kind="note")), 0.25)
