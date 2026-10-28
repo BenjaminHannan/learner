@@ -158,6 +158,7 @@ function sleepInfo() {
 // Ben's chat first (Oct 28): while the main Glim is running, or ran in the last 2 min, Glims (helpers) wait before each model call
 // and due ones do not start, so Ben's chat keeps the one local model and its prompt cache. Setting benFirst: false turns it off.
 const BEN_FIRST_MS = 120000;
+const HELPER_COMPACT = 10000;
 let benLastTurn = 0;
 const benBusy = () => store.getSettings().benFirst !== false && (!!(agent && agent.running) || !!(call && callAgent && callAgent.running) || Date.now() - benLastTurn < BEN_FIRST_MS);
 const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
@@ -740,7 +741,7 @@ function createAgent({ helper, rec, voice }) {
   const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : '' }); // the main Glim has no chat title on the pill (Ben Oct 28)
   const a = new Agent({
     memory, tracking,
-    getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' })
+    getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT) }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
       : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
