@@ -6,7 +6,7 @@
   const pill = $('#pill');
   const g = Mascot.el('idle', 24, {}); $('#g').append(g);
   let view = null, openT = 0, closeT = 0;
-  const mmss = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? s + ' s' : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const mmss = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? s + ' s' : s < 3600 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
   function btn(label, cls, fn) { const b = el('button', cls, label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; }
   function paint(v) {
@@ -24,6 +24,7 @@
     const t = v.top;
     $('#line').textContent = v.line || '';
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
+    pill.classList.toggle('long', $('#mini').textContent.length > 5); // a long run's time must not be clipped by the notch ear
     $('#dName').textContent = t.name; $('#dName').parentElement.hidden = !!v.oneGlim; // the main one is just "Glim", never a chat title like "Plan my week"
     $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : v.status === 'sleeping' ? 'Resting while you are away' : '-');
     $('#dTime').textContent = mmss(t.elapsedMs);
