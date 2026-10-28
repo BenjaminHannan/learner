@@ -43,7 +43,7 @@ const DEFAULT_SETTINGS = {
   sleepApp: '',           // '' = ~/learner-ops/sleepmode/app
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
   sleepPauseGlims: true,  // hold the Glims' scheduled runs while asleep (they catch up once after wake)
-  autoSleep: false,       // sleep by itself at night when idle
+  autoSleep: true,        // sleep by itself at night when idle (Ben Oct 28: on by default)
   sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 23:00 by default (until the routine is learned)
   sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 08:00 by default
   sleepOnlyPlugged: process.platform === 'win32', // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
