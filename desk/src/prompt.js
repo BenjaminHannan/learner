@@ -33,7 +33,7 @@ const S = (d) => ({ type: 'string', description: d });
 const fn = (name, description, parameters) => ({ type: 'function', function: { name, description, parameters } });
 
 const TOOL_DEFS = {
-  web_search: fn('web_search', 'Search the web (top 8 results).', obj({ query: S('search terms') }, ['query'])),
+  web_search: fn('web_search', 'Search the web (top 8 results).', obj({ query: { type: 'string' } }, ['query'])),
   browser_go: fn('browser_go', 'Open a URL in the built-in browser (the only way to browse the web); returns a snapshot.', obj({ url: S('full URL') }, ['url'])),
   browser_click: fn('browser_click', 'Click element [id] from the latest snapshot.', obj({ id: { type: 'integer' } }, ['id'])),
   browser_type: fn('browser_type', 'Replace the text of input [id]; optional Enter.', obj({ id: { type: 'integer' }, text: S('text to type'), enter: { type: 'boolean' } }, ['id', 'text'])),
@@ -47,12 +47,12 @@ const TOOL_DEFS = {
   open_app: fn('open_app', 'Launch or focus a non-browser ' + W.apps + ' app (not a browser: use browser_go).', obj({ name: S('app name') }, ['name'])),
   run_shell: fn('run_shell', 'Run a ' + W.shell + ' command in the home folder (60 s).', obj({ command: S('shell command') }, ['command'])),
   diary_search: fn('diary_search', 'Search past chats and notes.', obj({ query: S('search terms') }, ['query'])),
-  agent_start: fn('agent_start', 'Start a helper. Recurring: at ("08:00") alone, or every ("30m","2h") alone.', obj({ name: S('short name'), task: S('what to do'), every: S('interval'), at: S('daily time') }, ['name', 'task'])),
+  agent_start: fn('agent_start', 'Start a helper. Recurring: at ("08:00") alone, or every ("30m","2h") alone.', obj({ name: { type: 'string' }, task: { type: 'string' }, every: { type: 'string' }, at: { type: 'string' } }, ['name', 'task'])),
   agent_list: fn('agent_list', 'List helpers and their status.', obj({})),
-  agent_stop: fn('agent_stop', 'Stop a helper and cancel its schedule.', obj({ name_or_id: S('helper name or id') }, ['name_or_id'])),
-  memory_save: fn('memory_save', 'Remember a stable fact about Ben.', obj({ fact: S('short fact'), topic: S('e.g. classes') }, ['fact'])),
+  agent_update: fn('agent_update', 'Edit or stop a helper in place; never re-create it ("" clears at/every).', obj({ name_or_id: { type: 'string' }, at: { type: 'string' }, every: { type: 'string' }, task: { type: 'string' }, new_name: { type: 'string' }, paused: { type: 'boolean' }, stop: { type: 'boolean' } }, ['name_or_id'])),
+  memory_save: fn('memory_save', 'Remember a stable fact about Ben.', obj({ fact: { type: 'string' }, topic: { type: 'string' } }, ['fact'])),
   memory_forget: fn('memory_forget', 'Forget saved facts by matching text.', obj({ match: S('text in the fact') })),
-  track_add: fn('track_add', 'Track an order or deadline.', obj({ what: S('item'), source: S('where from'), until: S('YYYY-MM-DD') }, ['what'])),
+  track_add: fn('track_add', 'Track an order or deadline.', obj({ what: { type: 'string' }, source: { type: 'string' }, until: S('YYYY-MM-DD') }, ['what'])),
   track_done: fn('track_done', 'Mark a tracked item done.', obj({ what: S('text in the item') }, ['what'])),
   ask_user: fn('ask_user', 'Ask Ben a question; his reply is the result.', obj({ question: S('question for Ben') }, ['question']))
 };

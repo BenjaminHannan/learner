@@ -174,14 +174,17 @@ test('screen lock is FIFO, held per run, abortable', async () => {
   const e = lock.holder(); await e.ensure(); assert.ok(e.held()); e.release();
 });
 
-test('helper-can\'t-spawn: agent_* refuse for helpers, work for the primary', async () => {
+test('agent_* tools: the same for Glims and the primary; agent_update changes a Glim in place', async () => {
   const { m, runs } = mkManager();
+  // a Glim may start, list, change and stop Glims too (it used to be refused)
   const helperTools = agentTools(m, { isHelper: true });
-  for (const n of ['agent_start', 'agent_list', 'agent_stop']) {
-    const r = await helperTools[n]({ name: 'x', task: 'y' }, {});
-    assert.strictEqual(r.error, true); assert.strictEqual(r.text, NO); assert.match(r.text, /Glims can't start Glims/);
-  }
-  assert.strictEqual(m.list().length, 0); assert.strictEqual(runs.length, 0);
+  const hs = await helperTools.agent_start({ name: 'sub', task: 'y', every: '1h' }, { thread: { id: 'th' } });
+  assert.match(hs.text, /Started Glim 'sub'/); assert.strictEqual(m.list().length, 1);
+  assert.match(helperTools.agent_update({ name_or_id: 'sub', at: '07:00' }, {}).text, /Updated Glim 'sub': daily 07:00/);
+  assert.strictEqual(m.find('sub').every, '1h'); // at wins over every in parseSchedule; both stay stored
+  assert.match(helperTools.agent_stop({ name_or_id: 'sub' }, {}).text, /Stopped Glim 'sub'/);
+  m.remove('sub');
+  assert.strictEqual(m.list().length, 0); assert.ok(runs.length >= 1);
   const t = agentTools(m, { isHelper: false });
   const bad = t.agent_start({ name: 'x', task: 'y', every: 'often' }, {});
   assert.strictEqual(bad.error, true); assert.match(bad.text, /every must look like/);
@@ -190,21 +193,28 @@ test('helper-can\'t-spawn: agent_* refuse for helpers, work for the primary', as
   assert.strictEqual(m.list()[0].parent, 'tp');
   assert.match(t.agent_list(), /x \| queued \| every 1h \| next (?:\w{3} )?\d\d:\d\d \| last: none yet/);
   const dup = t.agent_start({ name: 'X', task: 'y' }, {}); assert.match(dup.text, /already exists/);
-  assert.match(t.agent_stop({ name_or_id: 'x' }).text, /Stopped Glim 'x'/);
-  assert.match(t.agent_list(), /x \| stopped \| once/);
-  assert.strictEqual(m.find('x').next, null);
+  const up = t.agent_update({ name_or_id: 'x', at: '07:00', every: '' });
+  assert.match(up.text, /Updated Glim 'x': daily 07:00, next run/); assert.strictEqual(m.find('x').every, null);
+  assert.match(t.agent_update({ name_or_id: 'x', paused: true }).text, /\(paused\)/);
+  assert.match(t.agent_update({ name_or_id: 'x', new_name: 'renamed' }).text, /Updated Glim 'renamed'/);
+  assert.match(t.agent_update({ name_or_id: 'zzz', at: '07:00' }).text, /no Glim/);
+  assert.match(t.agent_update({ name_or_id: 'renamed', at: '25:00' }).text, /at must look like/);
+  assert.match(t.agent_stop({ name_or_id: 'renamed' }).text, /Stopped Glim 'renamed'/);
+  assert.match(t.agent_list(), /renamed \| stopped \| once/);
+  assert.strictEqual(m.find('renamed').next, null);
   assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no Glim/);
 });
 
+const HNEW = "Work on your own: if a tool or a step fails, fix it or try another way yourself (agent_update changes a helper); do not ask Ben about errors or tool problems. Finish with a short report of the result only, with no notes about your own tools.";
 test('helper user message: date prefix, name, task; recurring runs carry the previous report (<= 600 chars)', async () => {
   const { m, runs } = mkManager();
   m.add({ name: 'w', task: 'check weather', every: '1h' });
-  assert.strictEqual(runs[0].text, "You are helper 'w'. Task: check weather. Finish with a short report.");
+  assert.strictEqual(runs[0].text, "You are helper 'w'. Task: check weather. " + HNEW);
   runs[0].done({ report: 'R'.repeat(900) });
   await until(() => m.find('w').status === 'idle');
   m.runNow('w');
   const t = runs[1].text;
-  assert.match(t, /^You are helper 'w'\. Task: check weather\. Finish with a short report\.\nPrevious report: R+…/);
+  assert.match(t, /^You are helper 'w'\. Task: check weather\. Work on your own: .*no notes about your own tools\.\nPrevious report: R+…/);
   assert.ok(t.includes('R'.repeat(599)) && !t.includes('R'.repeat(601)));
   const once = { name: 'o', task: 't', lastReport: 'old' };
   assert.ok(!/Previous report/.test(helperText(once)), 'one-off helpers have no previous report');
@@ -419,4 +429,16 @@ test('interrupted one-time Glim resumes once after a restart, then not again', (
   a.status = 'running'; m.save();
   const m2 = new Helpers({ file, store, now: () => t0, runner: async () => ({}) });
   assert.match(m2.find('a').lastSummary, /Interrupted twice/); assert.strictEqual(m2.find('a').next, null, 'no third try');
+});
+
+test('a Glim report is its final answer without leading "I need to / Let me" narration', () => {
+  const { lastAssistantText } = require('../src/helpers');
+  const msgs = [
+    { role: 'assistant', content: 'I need to check the agent list first.', tool_calls: [{ id: '1' }] },
+    { role: 'tool', content: 'x' },
+    { role: 'assistant', content: "I need to finish the briefing myself. Let me gather the data. Weather: 34F, fair. School 8:00." }
+  ];
+  assert.strictEqual(lastAssistantText(msgs), 'Weather: 34F, fair. School 8:00.');
+  assert.strictEqual(lastAssistantText([{ role: 'assistant', content: 'Let me look.', tool_calls: [{ id: '1' }] }, { role: 'assistant', content: 'Done: all good.' }]), 'Done: all good.');
+  assert.strictEqual(lastAssistantText([{ role: 'assistant', content: 'Let me look.', tool_calls: [{ id: '1' }] }]), 'Let me look.'); // only narration exists: keep it
 });

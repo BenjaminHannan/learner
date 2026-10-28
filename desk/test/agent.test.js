@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { Agent, isDangerous, estimateTokens, compactMessages, datePrefix, extractPlan, dropOldImages } = require('../src/agent');
+const { Agent, isDangerous, estimateTokens, compactMessages, datePrefix, nowStamp, extractPlan, dropOldImages } = require('../src/agent');
 const { buildTools } = require('../src/prompt');
 const { startGateway } = require('./helpers');
 
@@ -316,4 +316,12 @@ test('extractPlan: long numbered items are reasons, not steps, so no plan card',
     '2. **Play for you** - I can\'t actually play chess games for you or make strategic moves in a game. Chess requires active participation and decision-making that I can\'t replicate as an agent.';
   assert.strictEqual(extractPlan(text), null);
   assert.deepStrictEqual(extractPlan('1. Open chess.com\n2. Sign in with Google'), ['Open chess.com', 'Sign in with Google']);
+});
+
+test('nowStamp: plain stamp on the same day, a new-day warning after an overnight gap', () => {
+  const wed = new Date(2026, 9, 28, 8, 5);
+  assert.equal(nowStamp([], wed), '[Wed 2026-10-28 08:05]');
+  assert.equal(nowStamp([{ role: 'user', content: 'mem\n[Wed 2026-10-28 07:50] hi' }], wed), '[Wed 2026-10-28 08:05]');
+  const s = nowStamp([{ role: 'user', content: '[Tue 2026-10-27 22:40] skipping school tomorrow' }, { role: 'assistant', content: 'ok' }, { role: 'user', content: [{ type: 'text', text: 'x' }] }], wed);
+  assert.match(s, /^\[Wed 2026-10-28 08:05\] \(New day: today is Wednesday, October 28\. The earlier messages here were on 2026-10-27/);
 });
