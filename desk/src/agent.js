@@ -319,6 +319,8 @@ class Agent {
       // Ben's picks from first-run setup ride in the first user message of a thread, beside the date. Never in the system prompt or tools.
       let ctx = '';
       if (!thread.messages.some((m) => m.role === 'user')) { try { const s = this.o.getSettings && this.o.getSettings(); ctx = s ? usesLine(s.uses, s.usesOther) : ''; } catch (e) { ctx = ''; } }
+      // Ben Oct 28: Glim should know it can sleep. Its sleep line rides in the same first turn, never in the system prompt.
+      if (!thread.messages.some((m) => m.role === 'user') && this.o.sleepInfo) { try { const sl = this.o.sleepInfo(); if (sl) ctx += (ctx ? ' ' : '') + sl; } catch (e) { /* no sleep line */ } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
       thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
       thread.items.push({ t: 'user', text: shown || text });
