@@ -3,8 +3,8 @@
   W (wide):   every value keeps its tape cards and gets up to 8 MORE paraphrases and 8 MORE Q&A, written by Claude Haiku (Batches) to differ in
               structure from the ones it already has. New lines that are near copies (token Jaccard >= 0.8) of a kept line are dropped; same leak filter as
               race_tape.py. Same steps a night, so each card is seen about half as often ("more distinct cards at equal steps", cf. sleep addendum 15 D8).
-  L (linked): for every other Week-2 two-hop test pair (39 of 78, "carded"), the first fact's tape value gets 1 linked sentence that names both facts and the
-              middle person, and 2 two-hop Q&A in wordings that are not the test's (template-built, no model). The other 39 pairs get nothing ("uncarded").
+  L (linked): for half of the Week-2 two-hop test pairs (40 of 78, "carded"; balanced over the two test templates), the first fact's tape value gets 1 linked sentence that names both facts and the
+              middle person, and 2 two-hop Q&A in wordings that are not the test's (template-built, no model). The other 38 pairs get nothing ("uncarded").
               Same number of linked cards per carded pair.
 
   python backbone/sleep/brain/datashape/make_tapes.py --arm L --out backbone/sleep/brain/datashape/tapes/tape_week2_L.json
@@ -59,12 +59,13 @@ def leak_fn(week):
 
 
 def carded(week):
-    """[(test index, carded?)] over week['tests']['twohop']: every other test within each chain kind is carded (index 0, 2, ... of that kind)."""
+    """[(test index, carded?)] over week['tests']['twohop']: within each chain kind, tests k with (k // 2) % 2 == 0 are carded (k = 0, 1, 4, 5, ...).
+    week.make_tests alternates the question template with k % 2, so carded and uncarded pairs get both templates equally."""
     seen, out = {}, []
     for j, t in enumerate(week["tests"]["twohop"]):
         k = seen.get(t["hop"], 0)
         seen[t["hop"]] = k + 1
-        out.append((j, k % 2 == 0))
+        out.append((j, (k // 2) % 2 == 0))
     return out
 
 

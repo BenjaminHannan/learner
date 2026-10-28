@@ -17,6 +17,7 @@ MA="--model LiquidAI/LFM3-1.7B --revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aeba
 export SLEEPB_CUDA_CAP_GIB=${SLEEPB_CUDA_CAP_GIB:-11} HSA_ENABLE_DXG_DETECTION=1
 mkdir -p "$OUT"
 V=${VENV:-$HOME/rvenv}; [ -f "$V/bin/activate" ] && source "$V/bin/activate"
+command -v python >/dev/null || { echo "no python (venv $V missing?)" >&2; exit 127; }
 unset PYTORCH_CUDA_ALLOC_CONF
 B=$SRC/backbone/sleep/brain
 T=$B/datashape/tapes
@@ -44,4 +45,4 @@ run L_s1 --tape "$T/tape_week2_L.json" --seed 1
 run c75_s2 --tape "$B/race/tapes/tape_week2.json" --seed 2
 run W_s2 --tape "$T/tape_week2_W.json" --seed 2
 run L_s2 --tape "$T/tape_week2_L.json" --seed 2
-python "$B/datashape/analyze.py" --ctl "$OUT/c75_s1" "$OUT/c75_s2" --W "$OUT/W_s1" "$OUT/W_s2" --L "$OUT/L_s1" "$OUT/L_s2" --json "$OUT/verdict.json" >> "$OUT/job.log" 2>&1
+python "$B/datashape/analyze.py" --ctl "$OUT/c75_s1" "$OUT/c75_s2" --W "$OUT/W_s1" "$OUT/W_s2" --L "$OUT/L_s1" "$OUT/L_s2" --json "$OUT/verdict.json" >> "$OUT/job.log" 2>&1 || RC=$?

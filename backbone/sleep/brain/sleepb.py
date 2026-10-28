@@ -4698,8 +4698,9 @@ def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap
 
 def mem_cap(args, device, log=print):  # --mem-cap-gb: cuda only (per-process fraction of the card), a no-op elsewhere
     if args.mem_cap_gb and device.type == "cuda":
-        tot = torch.cuda.get_device_properties(device).total_memory
-        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_cap_gb * 2 ** 30 / tot), device)
+        idx = device.index if device.index is not None else torch.cuda.current_device()  # ROCm torch rejects an unindexed torch.device("cuda") here
+        tot = torch.cuda.get_device_properties(idx).total_memory
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_cap_gb * 2 ** 30 / tot), idx)
         log(f"[mem] GPU memory capped at {args.mem_cap_gb} GiB of {tot / 2 ** 30:.1f}")
 
 

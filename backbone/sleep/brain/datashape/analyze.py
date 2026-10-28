@@ -61,7 +61,8 @@ def main():
              "arc": [r.get("arc") for r in arm], "arc_base": [r.get("arc_base") for r in arm], "kl": [r.get("kl_heldout") for r in arm],
              "reverse": [r["scores"]["final"]["reverse"]["C24"] for r in arm], "changed_new": [r["scores"]["final"]["changed"]["new"] for r in arm],
              "C1": [r["scores"]["final"]["forward"]["C1"] for r in arm]}
-        d["harm"] = any(isinstance(r.get("arc"), float) and r["arc"] < r["arc_base"] - 0.05 for r in arm)
+        d["harm"] = any(not isinstance(r.get("arc"), float) or r["arc"] < r["arc_base"] - 0.05 for r in arm)  # an ARC error counts as harm (unchecked)
+        d["lead"] = 0.05 <= d["p"] < 0.2  # race-mini rule 9: seed 3 before calling it
         return d
 
     if a.W:
@@ -73,12 +74,12 @@ def main():
     if a.L:
         L = load(a.L)
         d = common(L)
-        th = lambda rs, want: sum(([r["ok"] for r, c in zip(rows(x, "final", "twohop"), cflags) if c == want] for x in rs), [])  # noqa: E731
+        th = lambda rs, want: sum(([r["ok"] for r, c in zip(rows(x, tag, "twohop"), cflags) if c == want] for x in rs), [])  # noqa: E731
         lc, lu, cc, cu = th(L, True), th(L, False), th(ctl, True), th(ctl, False)
         pu, g, l = mcnemar(cu, lu)
         d.update({"twohop_carded": pct(lc), "twohop_uncarded": pct(lu), "ctl_twohop_carded": pct(cc), "ctl_twohop_uncarded": pct(cu),
                   "uncarded_p": round(pu, 5), "uncarded_gain": g, "uncarded_loss": l})
-        d["L1"] = "PASS" if pct(lc) >= 50 and pct(lc) >= pct(lu) + 30 else "FAIL"
+        d["L1"] = "PASS" if pct(lc) >= 50 and pct(lc) >= pct(lu) + 30 else "WRONG" if pct(lc) < pct(cc) + 10 else "FAIL"
         d["L2"] = "PASS" if pct(lu) >= pct(cu) + 10 and pu < 0.05 else "FAIL"
         d["no_harm"] = "PASS" if d["diff"] > -3 and not d["harm"] else "FAIL"
         out["L"] = d

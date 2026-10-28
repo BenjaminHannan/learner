@@ -24,9 +24,9 @@ Steps are unchanged, so each card is drawn about half as often. Same idea as sle
 - Reported, not judged: per-seed recall, reverse, changed-new/stale, C1 (should stay low), KL, wall time.
 
 ## Arm L: linked two-hop cards (one change: the tape)
-For 40 of the 78 Week-2 two-hop test pairs (every other pair within each chain kind, `make_tapes.carded`), the first fact's tape value gets
+For 41 of the 78 Week-2 two-hop test pairs (within each chain kind, tests k with (k // 2) % 2 == 0, `make_tapes.carded`; balanced over the two test question templates), the first fact's tape value gets
 1 linked sentence naming both facts and the middle person (e.g. "Raiflibas's mentor, Rabrituth, lives in Gigadrith.") and 2 two-hop Q&A in wordings that are
-not the test's (template-built from ground truth, no model writer; leak-checked). The other 38 pairs get nothing. The number of linked cards per carded pair is fixed (3).
+not the test's (template-built from ground truth, no model writer; leak-checked). The other 37 pairs get nothing. The number of linked cards per carded pair is fixed (3).
 - Why: sleep thread addendum 14: a dreamed chain is answered right 87-96% (Qwen3.5-2B), 0-4% when not dreamed (shown, other model and storage).
   Balesni et al. (two-hop curse, arXiv 2411.16353): training on some two-hop pairs did not generalize to held-out pairs (shown in their synthetic setting).
   New here: gold cards with no writer in the way, on LFM3 4-bit + LoRA, and the carded-vs-uncarded split.
@@ -42,7 +42,13 @@ WSL ~/rvenv, cap 11 GiB) after lfm3q4 arm G (coordinator 02:31Z Oct 28). Free co
 
 ## Tape facts (built before sealing)
 - W: Haiku batch msgbatch_014BNQNZzkByRo5ajSG7yMh9, est. $1.29; 344 values, 8 replies unparseable (those values keep only the shared cards), +2686 paraphrases and +2672 Q&A kept (dropped: 7 near copies, 2 leaks, 9 bad answers); mean 15.8 paraphrases and 15.2 Q&A per value (shared tape: ~8 + 8).
-- L: 40 carded / 38 uncarded pairs (week order, every other pair within each chain kind).
+- L: 41 carded / 37 uncarded pairs.
 
 ## Seals
 Tapes: `tapes/tape_week2_W.json`, `tapes/tape_week2_L.json` (sha256 in SEALS-datashape-r1.sha256 together with this file).
+
+## Amendment 1 (2026-10-28 ~02:40Z, before any W, L or control run finished; the first launch died in 8 s on every arm)
+- Review found the first L split (every other pair, k % 2) put all carded pairs on test template 0 and all uncarded on template 1 (week.make_tests picks the
+  template with k % 2), mixing L1 with question wording. Split changed to (k // 2) % 2 (41 / 37, both templates on both sides); L tape rebuilt and resealed.
+- analyze.py: two-hop uses the same headline tag (final or night-4) as recall; L1 WRONG-if is now computed; an ARC error counts as harm; rule-9 "lead" flagged.
+- sleepb.mem_cap: indexed device (ROCm torch rejects torch.device("cuda") in set_per_process_memory_fraction). Changes no number.
