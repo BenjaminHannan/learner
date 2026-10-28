@@ -44,6 +44,7 @@
   const stepEls = new Map();
   const bcards = new Map();   // card id -> {root, key, ...}
   const scards = new Map();   // screen card id -> {thumb, text, image}
+  let pendingAsk = null;      // the open ask card: text sent from the composer answers it
   const rids = new Map();     // approval rid / ask id -> {card, btns}
   let pendingSteers = [];     // steer notes shown but not yet confirmed by the agent
   const msgs = $('#msgs');
@@ -164,10 +165,23 @@
   // ---------- Ben's messages ----------
   // "Unread" under Ben's newest message until Glim picks it up, then "Read" (only the newest message shows one)
   function markRead() { msgs.querySelectorAll('.receipt.unread').forEach((r) => { r.classList.remove('unread'); r.textContent = 'Read'; }); }
+  // Ben Oct 28: choices under a final answer are chips; a click sends the text like typing it. Only the newest answer's row is live.
+  function lockChoices() { msgs.querySelectorAll('.choices:not(.used)').forEach((r) => { r.classList.add('used'); r.querySelectorAll('button').forEach((b) => { b.disabled = true; }); }); }
+  function choicesRow(list) {
+    lockChoices();
+    const row = el('div', 'choices');
+    for (const q of list) {
+      const b = el('button', 'choice', q); b.type = 'button';
+      b.onclick = async () => { if (row.classList.contains('used') || (thread && thread.helper)) return; const draft = input.value; input.value = q; await submit(false); if (input.value === q) { input.value = draft; autosize(); return; } /* not sent (asleep or busy): the chips stay live */ row.classList.add('used'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); b.classList.add('picked'); if (draft && !input.value) { input.value = draft; autosize(); } };
+      row.append(b);
+    }
+    return row;
+  }
   function addUser(text, steer, queued, receipt) {
     const w = msgs.querySelector('.welcome'); if (w) { w.remove(); paintOffCard(); }
     if (act && !act.finished) finishAct(act);
     const u = el('div', 'user' + (steer ? ' steer' : '') + (queued ? ' queued' : ''), text);
+    lockChoices(); // Ben moved on: older chips are used up
     msgs.append(u);
     if (receipt) { msgs.querySelectorAll('.receipt').forEach((r) => r.remove()); msgs.append(el('div', 'receipt unread', 'Unread')); }
     newBlock(); toBottom();
@@ -187,7 +201,7 @@
   let raf = 0;
   function paintText() {
     if (raf) return;
-    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(tn.raw); toBottom(); } });
+    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(tn.raw).text); toBottom(); } });
   }
   function onReasoning(d) {
     const t = tn || startTn();
@@ -226,7 +240,12 @@
       // the answer: stays prominent below the (collapsed) activity group
       if (t.text) {
         if (!clean) t.text.remove();
-        else { t.text.innerHTML = md(t.raw); if (thread && !thread.helper) t.text.after(rateRow(ev.text != null ? ev.text : t.raw, ev.fb)); }
+        else {
+          const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
+          const rate = thread && !thread.helper ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
+          if (rate) t.text.after(rate);
+          if (pc.choices.length && !(thread && thread.helper)) (rate || t.text).after(choicesRow(pc.choices)); // (a stored thread's row is locked again when a later message follows)
+        }
       }
       const wasStuck = stick;
       if (act && !act.finished) finishAct(act);
@@ -433,6 +452,7 @@
     } else { btns.append(send); for (const q of ['Yes, go ahead', 'No']) { const b = el('button', 'ghost', q); b.onclick = () => reply(q); btns.append(b); } }
     c.append(ta, btns); host.append(c); toBottom(); if (!opts.length) setTimeout(() => ta.focus(), 50);
     rids.set(ev.id, { done: (v) => reply(String(v), true) });
+    pendingAsk = { c, reply };
     refreshMood();
   }
   function addNotice(who, text) {
@@ -680,7 +700,7 @@
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
-        setRunning(false); tn = null; finishAll(); markRead();
+        setRunning(false); tn = null; finishAll(); markRead(); pendingAsk = null; // a stopped run's question is no longer open
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
         if (ev.stopped) msgs.append(el('div', 'status', 'Stopped.'));
         if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
@@ -701,7 +721,7 @@
     w.append(chips); msgs.append(w);
     w.prepend(makeOffCard('in-welcome')); paintOffCard();
   }
-  function resetView() { msgs.textContent = ''; dock().textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); paintOffCard(); }
+  function resetView() { msgs.textContent = ''; dock().textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingAsk = null; pendingSteers = []; newBlock(); paintOffCard(); }
   function renderThread(t) {
     resetView();
     const items = t.items || [];
@@ -897,6 +917,9 @@
       if (!thread) await newThread();
       input.value = ''; autosize();
       if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Mote’s log. Use Run now in the Motes list, or ask your main Glim.')); toBottom(); return; }
+      if (running && pendingAsk && pendingAsk.c.isConnected && !pendingAsk.c.classList.contains('done')) { // Ben Oct 28: typing while Glim asks answers the question
+        const pa = pendingAsk; pendingAsk = null; pa.reply(text); return;
+      }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
         const u = addUser(text, true, true, true); jumpBottom();
@@ -975,6 +998,7 @@
       { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
+      { key: 'followUp', type: 'toggle', label: 'Follow up on its own', help: 'Once a day, when you open Glim, it checks on things you left open and offers quick choices. Off: it only answers you.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
     { group: 'Running', rows: [
