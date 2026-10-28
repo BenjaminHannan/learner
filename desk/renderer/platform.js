@@ -87,7 +87,9 @@
     return { options: base, level: 'screen-saver', allWorkspaces: false, hideInMissionControl: false };
   }
   // top-center of the primary display's work area (below the menu bar on a Mac, clear of the taskbar on Windows)
-  const pillPosition = (workArea, width) => ({ x: Math.round(workArea.x + (workArea.width - width) / 2), y: Math.round(workArea.y + 6) });
+  // minTop: the biggest menu-bar/notch height seen on this display (workArea.y - bounds.y). In a full-screen app the menu bar hides and
+// workArea.y drops to 0, which would put the pill behind the camera notch, so it never rides higher than that.
+const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + (workArea.width - width) / 2), y: Math.round(Math.max(workArea.y, minTop || 0) + 6) });
 
   // ---- window / startup ---------------------------------------------------------------------------
   // What closing the window does. 'quit' (keep-running off), 'tray' (Windows), 'conceal' (Mac with browser views alive), 'hide'.

@@ -187,7 +187,7 @@ test('helper-can\'t-spawn: agent_* refuse for helpers, work for the primary', as
   const ok = t.agent_start({ name: 'x', task: 'y', every: '1h' }, { thread: { id: 'tp' } });
   assert.match(ok.text, /Started Glim 'x' \(id h\w+\)/); assert.match(ok.text, /every 1h/); assert.match(ok.text, /next run/);
   assert.strictEqual(m.list()[0].parent, 'tp');
-  assert.match(t.agent_list(), /x \| queued \| every 1h \| next \d\d:\d\d \| last: none yet/);
+  assert.match(t.agent_list(), /x \| queued \| every 1h \| next (?:\w{3} )?\d\d:\d\d \| last: none yet/);
   const dup = t.agent_start({ name: 'X', task: 'y' }, {}); assert.match(dup.text, /already exists/);
   assert.match(t.agent_stop({ name_or_id: 'x' }).text, /Stopped Glim 'x'/);
   assert.match(t.agent_list(), /x \| stopped \| once/);

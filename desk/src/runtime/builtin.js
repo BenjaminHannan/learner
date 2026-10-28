@@ -58,7 +58,7 @@ class Builtin {
       }
       if (!r.ok) throw new Error(r.error || 'the model did not start');
       if (!this.gw) {
-        this.gw = createGateway({ upstream: this.server.url(), diaryDir: this.diaryDir, upstreamModel: 'default', fetch: this.o.gwFetch });
+        this.gw = createGateway({ upstream: this.server.url(), diaryDir: this.diaryDir, upstreamModel: 'default', fetch: this.o.gwFetch, skipDiary: this.o.skipDiary });
         await this.gw.listen(this.o.gatewayPort === undefined ? C.GATEWAY_PORT : this.o.gatewayPort, '127.0.0.1');
       }
       this._set({ phase: 'ready', label: 'Ready', pct: 100, error: '' });

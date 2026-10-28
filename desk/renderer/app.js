@@ -416,11 +416,21 @@
     // one source of truth with the composer: while a run is on, both say what the run says
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : 'Offline';
-    g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : 'Gateway not reachable';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Offline';
+    g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : 'Model is off. Click to start it';
+    g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     refreshMood();
   }
-  desk.onGateway((s) => { gw = s || gw; paintGateway(); });
+  desk.onGateway((s) => { gw = s || gw; if (gw.state !== 'down') gwStarting = 0; paintGateway(); });
+  // Offline chip: click to start the model (Settings > Model > Start command; the built-in model on Windows)
+  let gwStarting = 0;
+  $('#gw').addEventListener('click', async () => {
+    if (gw.state !== 'down' || slp.asleep || slp.waking || (gwStarting && Date.now() - gwStarting < 120000)) return;
+    gwStarting = Date.now(); paintGateway();
+    const r = await desk.gateway.start();
+    if (r && r.error) { gwStarting = 0; paintGateway(); $('#gw').title = r.error; addNotice('Model', r.error); }
+  });
+  desk.onFullscreen((on) => document.body.classList.toggle('fullscreen', !!on));
   desk.onGlim((s) => { glim = s; refreshMood(); });
 
   // ---------- sleep ----------
@@ -431,7 +441,7 @@
     $('#sleepBar').hidden = !asleep;
     $('#btnWake').textContent = slp.waking ? 'Waking up…' : 'Wake Glim'; $('#btnWake').disabled = !!slp.waking;
     $('#sleepTitle').textContent = slp.waking ? 'Waking up…' : 'Glim is asleep';
-    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : ['Learning from your chats', slp.hours ? Math.round(slp.hours * 10) / 10 + ' h so far' : '', slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : ['Learning from your chats', slp.wakeLabel || '', slp.checkingIn ? 'checking in' : '', slp.hours ? Math.round(slp.hours * 10) / 10 + ' h so far' : '', slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
     $('#btnSend').hidden = asleep; $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
     else { input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
@@ -465,8 +475,15 @@
     await new Promise((r) => { if (!slp.asleep && !slp.waking) r(); else awakeWaiters.push(r); });
     input.value = text; autosize(); submit(false);
   };
+  let sleepPick = 'morning';
+  const paintDur = () => {
+    for (const b of document.querySelectorAll('#sleepDur button')) { const on = b.dataset.d === sleepPick; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.classList.toggle('on', on); }
+    $('#sleepDurNote').textContent = sleepPick === 'morning' ? 'Until ' + (settings.sleepTo || '07:00') + '. Longer sleep learns more.' : sleepPick === 'open' ? 'It keeps going until you press Wake (it plans for about 8 hours). Longer sleep learns more.' : 'Longer sleep learns more.';
+  };
+  for (const b of document.querySelectorAll('#sleepDur button')) b.onclick = () => { sleepPick = b.dataset.d; paintDur(); };
   function openSleepSheet() {
     if (!slp.available || slp.asleep || slp.waking) return;
+    sleepPick = ['30', '60', '120', '240', 'morning', 'open'].includes(String(settings.sleepDuration)) ? String(settings.sleepDuration) : 'morning'; paintDur();
     $('#sleepPause').checked = settings.sleepPauseGlims !== false; $('#sleepErr').hidden = true;
     $('#sleepSheet').hidden = false; $('#sleepGo').focus();
   }
@@ -474,9 +491,9 @@
   $('#btnSleep').onclick = openSleepSheet; desk.onSleepOpen(openSleepSheet);
   $('#sleepCancel').onclick = closeSleepSheet;
   $('#sleepGo').onclick = async () => {
-    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked });
+    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick) });
     if (r && r.error) { $('#sleepErr').textContent = r.error; $('#sleepErr').hidden = false; return; }
-    settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked }; closeSleepSheet();
+    settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked, sleepDuration: sleepPick }; closeSleepSheet();
   };
   $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
@@ -607,6 +624,7 @@
   }
   async function newThread() {
     const t = await desk.threads.create();
+    try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
     thread = { id: t.id, title: t.title, helper: null };
     $('#title').textContent = t.title; renderThread(t); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
   }
@@ -741,7 +759,7 @@
     return r;
   }
   document.querySelectorAll('#modelSeg button').forEach((b) => b.onclick = () => { save({ model: b.dataset.model }); if ($('#settings').hidden === false) paintSettings(); });
-  document.querySelectorAll('#modeSeg button').forEach((b) => b.onclick = () => { save({ mode: b.dataset.mode }); if ($('#settings').hidden === false) paintSettings(); });
+  // the mode is shown here but changed only in Settings (and at onboarding)
 
   // ---------- settings ----------
   const isMac = () => document.body.classList.contains('darwin');
@@ -750,6 +768,7 @@
   const SCHEMA = [
     { group: 'Model', rows: [
       { key: 'gatewayUrl', type: 'text', label: 'Gateway URL', help: 'Where the Premonition gateway listens. /chat/completions is added for you.', wide: true },
+      { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Offline in the top bar. Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows.', wide: true },
       { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself on Windows. llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
       { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer, Fast answers quickest. Same as the top-bar pills.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
       { key: 'modelAuto', type: 'text', label: 'Auto model name', help: 'The model id sent for Auto. "default" works for llama.cpp.', ph: 'qwen36-auto' },
@@ -782,7 +801,9 @@
       { type: 'sleepstat', label: 'Sleep mode', help: 'Glim learns from your chats while you are away and checks your mail and calendar once an hour (read-only). It only sleeps while Glim is idle, because your chats come first.' },
       { key: 'sleepApp', type: 'text', label: 'Sleep app folder', help: 'Leave empty for ~/learner-ops/sleepmode/app.', ph: '~/learner-ops/sleepmode/app', wide: true },
       { key: 'sleepPython', type: 'text', label: 'Sleep Python', help: 'Leave empty to pick the first python found: sleepmode/venv312, learner-ops/.venv, Homebrew, then python3.', ph: 'python3', wide: true },
-      { key: 'sleepPauseGlims', type: 'toggle', label: 'Stop Glims\' scheduled runs while asleep', help: 'They wait, then catch up once after you wake Glim.' },
+      { key: 'sleepPauseGlims', type: 'toggle', label: 'Hourly check-in while asleep', help: 'Once an hour Glim wakes with its old model, runs any Glims that are due and checks your mail and calendar. Otherwise the Glims wait and catch up after you wake it.' },
+      { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Windows. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
+      { key: 'sleepCheckinTask', type: 'text', label: 'Check-in task', help: 'What Glim does at each check-in. Reply NOTHING means nothing needs you.', wide: true },
       { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
       { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times.' },
       { key: 'sleepOnlyPlugged', type: 'toggle', label: 'Only sleep when plugged in', help: 'Sleep is slow and uses a lot of power on a laptop. Keep it plugged in overnight.' },
@@ -888,8 +909,8 @@
           ctl.append(el('span', 's-note', ''));
         } else if (r.type === 'modelseg') {
           const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
-          const btns = r.options.map(([slot, l]) => { const b = el('button', null, l); b.dataset.slot = slot; b.onclick = () => { save({ model: settings[slot] }).then(paintSettings); }; seg.append(b); return b; });
-          ctl.append(seg); controls[r.key] = { paint: () => btns.forEach((b) => { b.dataset.v = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.v === settings.model); }) };
+          const btns = r.options.map(([slot, l]) => { const b = el('button', null, l); b.dataset.slot = slot; b.onclick = () => { save({ model: settings[slot], modelDefault: slot }).then(paintSettings); }; seg.append(b); return b; });
+          ctl.append(seg); controls[r.key] = { paint: () => btns.forEach((b) => { b.dataset.v = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.slot === (settings.modelDefault || 'modelAuto')); }) };
         } else if (r.type === 'preset') {
           const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
           const btns = Platform.presetsFor(plat()).map((pr) => { const b = el('button', null, pr.label); b.dataset.preset = pr.id; b.onclick = () => { const { id, label, builtin, ...patch } = pr; save(patch).then(paintSettings); }; seg.append(b); return b; });

@@ -89,3 +89,11 @@ test('pill state: sleeping is the resting state, a flash (check-in alert) shows 
   assert.strictEqual(p.view().status, 'sleeping');
   p.setSleep(null); assert.strictEqual(p.view().visible, false);
 });
+
+test('markdown: a numbered list split by blank lines keeps counting', () => {
+  const { md } = require('../renderer/md.js');
+  const h = md('1. **A** - x\n\n1. **B** - y\n\n1. C');
+  assert.ok(h.includes('<ol start="2">') && h.includes('<ol start="3">'));
+  assert.ok(h.includes('<strong>A</strong>'));
+  assert.ok(!md('1. a\n2. b').includes('start='));
+});

@@ -16,6 +16,10 @@ const MAX_VERIFY = 2;                 // check turns per task (so it can never l
 const VERIFY_MODEL = 'qwen36-fast';
 const VERIFY_MAX_TOKENS = 200;
 const CHECK_MARK = '[Self-check]';
+// a reply that asks Ben for a password / login details (the prompt forbids it; a small model still does it)
+const SECRET_WORD = /\b(password|passcode|passphrase|credentials|login details|log-?in info|verification code|2fa code|one-time code)\b/i;
+const ASK_WORD = /\b(need|provide|send|share|give|tell me|what is|what's|enter|type|could you|can you|please)\b/i;
+function asksForSecret(text) { return String(text || '').split(/(?<=[.?!\n])\s+/).some((s) => SECRET_WORD.test(s) && (ASK_WORD.test(s) || /\?\s*$/.test(s))); }
 const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence in the tool results above (After lines, page text, command output). Reply VERIFIED if every claim is backed by that evidence, or NOT DONE: <what is missing>. One short line. Do not call tools.';
 const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
 // "remember that ..." style asks: the small model sometimes says "saved" without calling memory_save, so the check catches it.
@@ -144,7 +148,7 @@ function datePrefix(d) {
 
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
-  const items = lines.filter((l) => /^\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\d+[.)]\s+/, ''));
+  const items = lines.filter((l) => /^\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\d+[.)]\s+/, '').replace(/\*\*|__|`/g, ''));
   return items.length >= 2 ? items : null;
 }
 
@@ -251,7 +255,7 @@ class Agent {
     this.usedState = false; this.usedWeb = false;
     this.verifyCount = 0;
     this.memBlock = '';
-    this.taskText = String(userText || ''); this.usedMemSave = false; this.memChecks = 0;
+    this.taskText = String(userText || ''); this.usedMemSave = false; this.memChecks = 0; this.secretChecks = 0;
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     this.threadId = thread.id;
     const signal = this.abort.signal;
@@ -345,7 +349,7 @@ class Agent {
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
         this.emit({ type: 'assistant_end', text: res.content, reasoning: res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
-        const plan = extractPlan(res.content);
+        const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();
 
@@ -400,6 +404,17 @@ class Agent {
   // One cheap check turn before accepting a final answer on a task that changed things. Same system prompt and tools (cache hit),
   // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
   async verifyAnswer(thread, s, signal, answer) {
+    // Asked Ben for a password: send it back once to use the sign-in hand-off instead (no model call needed).
+    if (asksForSecret(answer) && this.secretChecks < 1) {
+      this.secretChecks++;
+      const id = 'secretcheck_' + this.secretChecks;
+      const summary = 'Re-checking: never ask for a password';
+      thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'the reply asked for login details' });
+      this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
+      this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary, preview: 'the reply asked for login details', result: '' });
+      thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.' });
+      return 'continue';
+    }
     // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).
     if (this.o.memory && !this.usedMemSave && REMEMBER_ASK.test(this.taskText) && String(answer || '').trim()) {
       const fact = rememberFact(this.taskText);
@@ -574,4 +589,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

@@ -518,7 +518,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('document.querySelector("#settingsClose").click()');
       checks.push(['sleep: the top bar has a Sleep button', await vis('#btnSleep')]);
       await ev('document.querySelector("#btnSleep").click()'); await sleep(300);
-      checks.push(['sleep: confirm sheet says what happens and offers the scheduled-runs option (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /scheduled runs/.test(document.querySelector("#sleepSheet").innerText)')]);
+      checks.push(['sleep: confirm sheet says what happens and offers the check-in option and the six lengths (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /Hourly check-in/.test(document.querySelector("#sleepSheet").innerText) && document.querySelectorAll("#sleepDur button").length === 6 && document.querySelectorAll("#sleepDur button.on").length === 1 && /learns more/.test(document.querySelector("#sleepDurNote").innerText)')]);
       await ev('document.querySelector("#sleepGo").click()');
       checks.push(['sleep: confirming starts it and the sheet closes', await until(() => sl.asleep && sleeper.status().sleeping, 6000) && !(await vis('#sleepSheet'))]);
       await until(() => ev('!document.querySelector("#sleepBar").hidden'), 3000);
@@ -627,6 +627,11 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await grab('ui-v2-onboard-b-uses-dark.png');
       nativeTheme.themeSource = 'light'; await sleep(600);
       await key('Return');
+      checks.push(['setup: the Ask first / Hands-off question comes after the picks', await stepIs(4) && await ev('document.querySelectorAll("#onboard .ob-tile").length===2 && /ask first/i.test(document.querySelector("#onboard").innerText)')]);
+      await ev('document.querySelectorAll("#onboard .ob-tile")[1].click()');
+      await key('Return');
+      checks.push(['setup: choosing Hands-off at onboarding saves mode', await until(() => store.getSettings().mode === 'hands-off', 3000)]);
+      store.saveSettings({ mode: 'ask' });
       checks.push(['setup: Enter on step 2 saves the picks as uses + usesOther', await stepIs(2) && JSON.stringify(store.getSettings().uses) === '["email","briefing"]' && store.getSettings().usesOther === 'keep track of my game releases']);
       checks.push(['setup step 3: one row per recurring pick, each with a switch', await ev('document.querySelectorAll("#onboard .ob-row").length===2 && document.querySelectorAll("#onboard .ob-row .toggle[aria-checked=true]").length===2 && /Email watch/.test(document.body.innerText) && /every 30 min/.test(document.body.innerText) && /daily at 08:00/.test(document.body.innerText)')]);
       await ev('document.querySelector("#onboard .ob-row[data-id=email] .toggle").click()');
@@ -652,7 +657,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('window.__openSettings()'); await sleep(200);
       checks.push(['settings: Run setup again button', await ev('!!document.querySelector("#runSetup")')]);
       await ev('document.querySelector("#runSetup").click()'); await sleep(500);
-      checks.push(['setup again: opens over a closed Settings, keeps the old picks, shows the existing Glim as Created', await stepIs(0) && await ev('document.querySelector("#settings").hidden') && (await key('Return'), await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')) && (await key('Return'), await ev('!!document.querySelector("#onboard .ob-row.made") && /Created/.test(document.querySelector("#onboard").innerText)'))]);
+      checks.push(['setup again: opens over a closed Settings, keeps the old picks, shows the existing Glim as Created', await stepIs(0) && await ev('document.querySelector("#settings").hidden') && (await key('Return'), await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')) && (await key('Return'), await key('Return'), await ev('!!document.querySelector("#onboard .ob-row.made") && /Created/.test(document.querySelector("#onboard").innerText)'))]);
       store.saveSettings({ onboarded: false });
       await key('Escape');
       checks.push(['setup: Esc skips (closes and counts as onboarded)', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true]);

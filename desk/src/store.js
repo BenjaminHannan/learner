@@ -6,12 +6,14 @@ const Platform = require('../renderer/platform');
 
 const DEFAULT_SETTINGS = {
   // Model
+  modelStartCmd: '',      // run when the Offline chip is clicked; empty = the Mac assistant's serve.sh if present
   gatewayUrl: Platform.defaultPreset(process.platform).gatewayUrl, // Windows: the built-in model
   model: Platform.defaultPreset(process.platform).model,   // the model id in use (one of the three below, or a custom name)
   modelAuto: Platform.defaultPreset(process.platform).modelAuto, // the ids behind the Auto / Think / Fast pills (all "default" on a llama.cpp server)
   modelMain: Platform.defaultPreset(process.platform).modelMain,
   modelFast: Platform.defaultPreset(process.platform).modelFast, // also used for the warm-up and the self-check
   // Autonomy
+  modelDefault: 'modelAuto', // which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
   mode: 'ask',            // ask | hands-off (main agent)
   verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
   helperMode: 'hands-off', // autonomy for helper agents
@@ -46,6 +48,9 @@ const DEFAULT_SETTINGS = {
   sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 06:00 on Windows
   sleepOnlyPlugged: process.platform === 'win32', // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
   sleepIdleMin: 30,       // minutes without use before auto-sleep
+  sleepDuration: 'morning', // last pick in the sleep sheet: 30 | 60 | 120 | 240 | morning | open
+  sleepCheckinMins: 60,   // Windows: the hourly check-in while asleep
+  sleepCheckinTask: require('./checkin').DEFAULT_TASK, // what the hourly check-in does (empty = this default)
   wakeAt: false,          // wake at the end of the window (only for a sleep Desk started by itself)
   // Startup
   openAtLogin: false,
@@ -59,10 +64,11 @@ const ENUMS = {
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720] };
+const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
+const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
-const STRS = ['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython'];
+const STRS = ['modelDefault', 'modelStartCmd', 'gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython', 'sleepCheckinTask'];
 const { cleanUses } = require('../renderer/uses');
 const USES_OTHER_MAX = 200;
 
@@ -76,6 +82,7 @@ function sanitize(patch) {
     else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
     else if (k === 'uses') out[k] = cleanUses(v);
     else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
+    else if (k === 'sleepDuration') out[k] = DURATION_PICKS.includes(String(v)) ? String(v) : DEFAULT_SETTINGS[k];
     else if (TIMES.includes(k)) out[k] = cleanTime(v, DEFAULT_SETTINGS[k]);
     else if (STRS.includes(k)) out[k] = String(v == null ? '' : v).trim() || (['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast'].includes(k) ? DEFAULT_SETTINGS[k] : '');
   }

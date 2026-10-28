@@ -377,3 +377,12 @@ body.darwin .ob-head { padding-left:5.6rem; }
 #sleepSetup, #runtime { position:fixed; inset:0; z-index:135; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
 #sleepSetup[hidden], #runtime[hidden] { display:none; }
 .rt-bar { height:.6rem; border-radius:.4rem; background:var(--hair2); overflow:hidden; } .rt-bar i { display:block; height:100%; width:0; background:var(--accent-text); transition:width .3s; }
+
+/* full screen: no traffic lights, so no space kept for them */
+body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.fullscreen .ob-head { padding-left:1rem; }
+#gw.startable { cursor:pointer; } #gw.startable:hover { border-color:var(--accent); }
+.sl-dur { display:flex; flex-wrap:wrap; gap:.4rem; margin:.2rem 0 .1rem; }
+.sl-dur button { flex:1 1 auto; padding:.45rem .7rem; border:1px solid var(--hair2); border-radius:.7rem; background:var(--bg); color:inherit; font:inherit; cursor:pointer; }
+.sl-dur button.on { border-color:var(--accent-text); color:var(--accent-text); font-weight:600; }
+
+#modeSeg { pointer-events:none; cursor:default; }

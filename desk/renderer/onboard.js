@@ -21,6 +21,7 @@ window.Onboard = (() => {
   const CHECK = svgIcon('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
   const STEPS = ['Meet your Glims', 'What for', 'Recurring Glims', 'Permissions'];
 
+  let mode = 'ask';
   let step = 0, picks = new Set(), other = '', info = null, perms = null;
   let wants = new Map();            // use id -> create this Glim (toggle)
   let made = new Map();             // use id -> name of the Glim that exists now (created here, or before)
@@ -29,7 +30,7 @@ window.Onboard = (() => {
   let body, nextBtn, backBtn, dots, skipBtn;
 
   const needsPerms = () => !!(info && Platform.needsPermsStep(info.platform, info.e2e));
-  const stepList = () => (showPermsStep ? [0, 1, 2, 3] : [0, 1, 2]);
+  const stepList = () => (showPermsStep ? [0, 1, 4, 2, 3] : [0, 1, 4, 2]); // 4 = how much Glim asks
   const lastStep = () => stepList()[stepList().length - 1];
 
   function build() {
@@ -68,6 +69,7 @@ window.Onboard = (() => {
     if (step === 0) paintMeet(page);
     else if (step === 1) paintUses(page);
     else if (step === 2) paintSchedules(page);
+    else if (step === 4) paintMode(page);
     else paintPerms(page);
     if (step === lastStep()) nextBtn.textContent = 'Finish';
     if (step === 0) nextBtn.textContent = 'Get started';
@@ -88,6 +90,24 @@ window.Onboard = (() => {
     stage.append(main, row);
     page.append(stage);
     page.append(el('p', 'ob-fine', 'You stay in charge: Glims only watch and report. They ask before they send, buy or delete anything.'));
+  }
+
+  function paintMode(page) {
+    page.append(el('h1', null, 'How much should Glim ask first?'));
+    page.append(el('p', 'ob-lead', 'You can change this later in Settings only; it is not on the main screen, so it cannot flip by accident.'));
+    const grid = el('div', 'ob-grid'); grid.setAttribute('role', 'radiogroup');
+    const opts = [['ask', 'Ask first', 'Glim asks before it runs shell commands or clicks and types on your screen. Best to start with.'], ['hands-off', 'Hands-off', 'Glim just does it. Only a short danger list (delete, send, buy) still needs your OK.']];
+    const tiles = [];
+    for (const [id, title, text] of opts) {
+      const b = el('button', 'ob-tile'); b.type = 'button'; b.setAttribute('role', 'radio');
+      const txt = el('span', 'ob-txt'); txt.append(el('b', null, title), el('span', null, text));
+      b.append(txt);
+      tiles.push([id, b]);
+      b.onclick = () => { mode = id; sync(); };
+      grid.append(b);
+    }
+    const sync = () => tiles.forEach(([id, b]) => { b.classList.toggle('on', id === mode); b.setAttribute('aria-checked', String(id === mode)); });
+    sync(); page.append(grid);
   }
 
   function paintUses(page) {
@@ -184,6 +204,7 @@ window.Onboard = (() => {
   async function next() {
     if (!isOpen()) return;
     if (step === 1) await desk.settings.set({ uses: [...picks], usesOther: other });
+    if (step === 4) await desk.settings.set({ mode });
     if (step === 2) { const ok = await createGlims(); if (ok === false) { paint(); return; } }
     if (step === lastStep()) return finish(false);
     go(1);
@@ -215,7 +236,7 @@ window.Onboard = (() => {
       for (const u of Uses.USES) if (u.tpl && have.has(u.tpl.name.toLowerCase())) made.set(u.id, u.tpl.name);
     } catch (e) { /* ignore */ }
     if (!root.firstChild) build();
-    step = 0; root.hidden = false; paint();
+    step = 0; mode = 'ask'; root.hidden = false; paint();
   }
   const isOpen = () => !root.hidden;
 

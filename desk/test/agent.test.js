@@ -271,3 +271,17 @@ test('time to first token is logged per request on the thread and on the assista
     assert.strictEqual(evs.find((e) => e.type === 'assistant_end').toolCalls, 0);
   } finally { gw.close(); }
 });
+
+test('asksForSecret: catches a reply that asks for a password, not one that explains the sign-in hand-off', () => {
+  const { asksForSecret } = require('../src/agent');
+  assert.ok(asksForSecret('I need the email and password for that specific chess platform.'));
+  assert.ok(asksForSecret('Your chess.com username/email and password?'));
+  assert.ok(!asksForSecret('I opened the sign-in window; sign in there and click Done.'));
+  assert.ok(!asksForSecret('Your password is never seen by me.'));
+  assert.ok(!asksForSecret('Done! Opened chess.com.'));
+});
+
+test('extractPlan strips markdown marks from plan items', () => {
+  const { extractPlan } = require('../src/agent');
+  assert.deepStrictEqual(extractPlan('1. **Open** the site\n2. `Type` the query'), ['Open the site', 'Type the query']);
+});
