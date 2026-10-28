@@ -296,7 +296,7 @@ test('notices: queued in the primary thread, injected as one line before Ben\'s 
   const t = { id: 'p', messages: [], items: [] };
   addNotice(t, 'news', 'Three new stories.\nTop: X');
   addNotice(t, 'disk', 'Disk is 80% full');
-  assert.deepStrictEqual(t.items.map((i) => i.t), ['notice', 'notice']);   // visible in the UI right away
+  assert.deepStrictEqual(t.items.map((i) => i.t), []);   // Ben Oct 28: a helper never reports to Ben directly; Glim relays it
   assert.strictEqual(t.messages.length, 0);                                // not in model history yet
   assert.strictEqual(takeNotices(t), '[helper updates] news: Three new stories. Top: X; disk: Disk is 80% full');
   assert.strictEqual(takeNotices(t), '');
@@ -351,7 +351,7 @@ test('agent + fake gateway: primary calls agent_start -> helper runs -> notice q
     assert.strictEqual(ht.messages.at(-1).content, 'Report: the answer is 42.');
     assert.match(mgr.find('ticker').lastSummary, /answer is 42/);
     // notice visible in the primary thread, but not in model history until the next user turn
-    assert.ok(primary.thread.items.some((i) => i.t === 'notice' && /42/.test(i.text)));
+    assert.ok(!primary.thread.items.some((i) => i.t === 'notice')); assert.ok(primary.thread.pendingNotices.some((n) => /42/.test(n.summary)));
     assert.ok(!primary.thread.messages.some((m) => m.role === 'user' && typeof m.content === 'string' && /helper updates/.test(m.content)));
     await mkAgent(false).run(primary.thread, 'what happened?');
     const users = primary.thread.messages.filter((m) => m.role === 'user');

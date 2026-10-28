@@ -355,3 +355,15 @@ test('sleep line rides only in the first user turn of a chat', async () => {
     assert.strictEqual(t.items[0].text, 'hello');
   } finally { gw.close(); }
 });
+
+test('a hidden turn (Glim relaying a helper report) shows no user bubble but still carries the report', async () => {
+  const gw = await startGateway([{ content: 'Your research finished.' }]);
+  try {
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread(); t.pendingNotices = [{ name: 'research', summary: 'found 3 papers' }];
+    await agent.run(t, 'relay please', { hidden: true });
+    assert.ok(!t.items.some((i) => i.t === 'user'));
+    assert.match(t.messages.find((m) => m.role === 'user').content, /\[helper updates\] research: found 3 papers/);
+    assert.ok(t.items.some((i) => i.t === 'assistant'));
+  } finally { gw.close(); }
+});

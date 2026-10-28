@@ -760,7 +760,26 @@ function postNotice(threadId, name, summary) {
   if (!t) return;
   addNotice(t, name, summary);
   store.saveThread(t);
-  send('agent', { threadId, type: 'notice', helper: name, text: short(summary, 200) });
+  relayReports(threadId, 0);
+}
+// Ben Oct 28: "I don't want the subagents to report to me. everything should be filtered through the Glim." A finished helper's report
+// waits in the thread's pendingNotices; when Glim is free it reads the reports and tells Ben what matters in its own words (a hidden turn).
+const RELAY_ASK = '[A helper finished; its report is above. Tell Ben what matters in one or two short sentences, in your own words as Glim. Do not paste the report and do not mention helpers by their internal names.]';
+let relayTimer = null;
+function relayReports(threadId, tries) {
+  clearTimeout(relayTimer);
+  relayTimer = setTimeout(async () => {
+    try {
+      const t = (activeThread && activeThread.id === threadId && agent.running) ? null : store.loadThread(threadId);
+      if (!t || !t.pendingNotices || !t.pendingNotices.length) return;
+      if (agent.running || sl.asleep || sl.waking) { if (tries < 30) relayReports(threadId, tries + 1); return; } // Ben's chat first; the notes also ride with his next message
+      activeThread = t;
+      const r = await agent.run(t, RELAY_ASK, { hidden: true });
+      send('threads:changed', {});
+      if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has news', t.title, t.id);
+    } catch (e) { /* the reports stay queued for Ben's next message */ }
+  }, tries ? 20000 : 4000);
+  if (relayTimer.unref) relayTimer.unref();
 }
 
 function buildAgent() {
