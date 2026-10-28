@@ -222,7 +222,7 @@
       // the plan has its own checklist; same rule as extractPlan in src/agent.js (2+ numbered lines, each short)
       const nums = clean.split('\n').filter((l) => /^\s*\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\s*\d+[.)]\s+/, '').replace(/\*\*|__|`/g, '').trim());
       const isPlan = nums.length >= 2 && nums.every((l) => l.length <= 120);
-      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); if (!a.finished) { a.said = true; a.liveT.textContent = one; } }; }
+      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); if (!a.finished) { a.said = true; a.liveT.textContent = one; if (window.Side) Side.setSaid(one); } }; }
       t.text.remove();
     }
     toBottom();
@@ -240,6 +240,7 @@
 
   function setPlan(items) {
     if (!items || !items.length) return;
+    if (window.Side) Side.setPlan(items);
     const a = ensureActTracked();
     if (a.plan) a.plan.remove();
     const d = el('details', 'plan'); d.open = true;
@@ -407,6 +408,7 @@
   // ---------- run state ----------
   function setRunning(r) {
     running = r;
+    if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
@@ -632,7 +634,7 @@
       }
       case 'notice': addNotice(ev.helper, ev.text); break;
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
-      case 'started': $('#runState span').textContent = 'Working…'; markRead(); paintGateway(); break;
+      case 'started': $('#runState span').textContent = 'Working…'; markRead(); if (window.Side) Side.setPlan([]); paintGateway(); break;
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
@@ -775,6 +777,7 @@
     return d.toDateString() === new Date().toDateString() ? hm : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()] + ' ' + hm;
   }
   function paintAgents(list) {
+    if (window.Side) Side.setSparks(list);
     list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
@@ -819,6 +822,7 @@
   $('#updateGo').onclick = async () => { paintUpdate(await desk.update.install()); };
   $('#updateLater').onclick = () => { if (upd) updLater = upd.version; $('#updateBar').hidden = true; };
   desk.onUpdate(paintUpdate); desk.update.status().then(paintUpdate).catch(() => {});
+  if (window.Side) Side.init(desk, (text) => { input.value = text; autosize(); input.focus(); input.setSelectionRange(text.length, text.length); });
   desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => newThread());

@@ -174,7 +174,7 @@ function sampleRhythm(now) {
 }
 const GOALS_ASK = 'Setup is done. One more thing, so I can help over the long run: what are your short-term and long-term goals? Anything counts, big or small: school, a skill, a project, a habit, money, health. If you are not sure yet, tell me what matters to you and I can help you brainstorm some. Then I will turn them into a plan with clear steps, and offer to check in on them for you.';
 // rides (hidden) in front of the first answer to GOALS_ASK; the scroll shows only the person's words
-const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal to memory. Then make a short plan for each goal: '
+const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal with memory_save (topic "goal"), and each milestone or first step as its own note with topic "goal", so they show in the Goals tab. Then make a short plan for each goal: '
   + '2 to 4 milestones and the first small step for this week. Ask at most one question if something important is unclear. If they have no goals yet, '
   + 'help them brainstorm a few first. Finally offer Sparks that would help (for example a weekly check-in or a reminder for the first step), and ask before creating any.\n\n';
 // "go learn about X": learning mode. Hidden note in front of the message; the scroll shows only the person's words.

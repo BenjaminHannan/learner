@@ -26,7 +26,7 @@ body.darwin #topbar { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 /* chat column */
 #chat { flex:1; display:flex; flex-direction:column; position:relative; min-height:0; }
 #scroll { flex:1; overflow-y:auto; min-height:0; }
-#msgs { max-width:760px; margin:0 auto; padding:1.6rem 1.25rem 1.5rem; display:flex; flex-direction:column; gap:1.1rem; min-height:100%; }
+#msgs { max-width:860px; margin:0 auto; padding:1.6rem 1.25rem 1.5rem; display:flex; flex-direction:column; gap:1.1rem; min-height:100%; }
 .user { align-self:flex-end; max-width:85%; padding:.65rem 1rem; background:var(--bubble); border-radius:1.15rem 1.15rem .3rem 1.15rem; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; position:relative; }
 .user.steer::before { content:"Steer"; display:block; font-size:.72rem; font-weight:700; letter-spacing:.08em; color:var(--accent-text); text-transform:uppercase; margin-bottom:.1rem; }
 .user.queued { opacity:.78; }
@@ -152,7 +152,7 @@ body[data-acts="closed"] .act-body { display:none; }
 
 /* composer */
 #composer { padding:.4rem 1.25rem 1rem; }
-.cwrap { max-width:760px; margin:0 auto; }
+.cwrap { max-width:860px; margin:0 auto; }
 #pwWarn { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; padding:.6rem .85rem; margin-bottom:.5rem; background:var(--danger-soft); border:1px solid var(--danger); border-radius:.9rem; color:var(--text); }
 #pwWarn span { flex:1; min-width:12rem; }
 #composer .box { display:flex; align-items:flex-end; gap:.5rem; background:var(--surface); border:1px solid var(--line-ui); border-radius:1.3rem; padding:.45rem .45rem .45rem 1.1rem; }
@@ -478,3 +478,27 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 #updateBar { display:flex; align-items:center; gap:.7rem; padding:.45rem 1rem; background:var(--amber-bg,#3a2e17); border-bottom:1px solid var(--hair); font-size:.9rem; }
 #updateBar[hidden] { display:none; }
 #updateBar #updateText { flex:1; }
+
+/* side panel: wide windows only, not while the browser panel is open */
+#side, #btnSide { display:none; }
+@media (min-width:1100px) {
+  #btnSide { display:inline-grid; }
+  body.side-on:not(.bp-open) #side { display:flex; position:absolute; top:0; right:0; bottom:0; width:19.5rem; flex-direction:column; border-left:1px solid var(--hair2); background:var(--surface); z-index:5; }
+  body.side-on:not(.bp-open) #chat { padding-right:19.5rem; }
+}
+.sd-head { display:flex; align-items:center; gap:.4rem; padding:.6rem .7rem; border-bottom:1px solid var(--hair2); }
+.sd-tabs { display:flex; gap:.25rem; flex:1; }
+.sd-tabs button { background:none; border:0; color:var(--text2); font:inherit; font-weight:600; padding:.35rem .7rem; border-radius:.6rem; cursor:pointer; }
+.sd-tabs button.on { background:var(--accent-soft); color:var(--text); }
+.sd-x { background:none; border:0; color:var(--text2); font-size:1.2rem; cursor:pointer; border-radius:.5rem; width:2rem; height:2rem; }
+.sd-body { flex:1; overflow-y:auto; padding:.9rem .9rem 1.4rem; }
+.sd-view { display:flex; flex-direction:column; gap:1.1rem; }
+.sd-label { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text); margin-bottom:.3rem; }
+.sd-big { font-size:1rem; line-height:1.4; overflow-wrap:anywhere; }
+.sd-dim { color:var(--text2); font-size:.88rem; line-height:1.4; }
+.sd-plan { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:.3rem; font-size:.92rem; }
+.sd-row { display:flex; flex-direction:column; padding:.35rem 0; border-top:1px solid var(--hair); }
+.sd-goal { display:flex; gap:.55rem; align-items:flex-start; padding:.4rem 0; border-top:1px solid var(--hair); font-size:.92rem; line-height:1.4; cursor:pointer; }
+.sd-goal.done span { text-decoration:line-through; color:var(--text2); }
+.sd-idea { display:flex; flex-direction:column; gap:.2rem; text-align:left; background:var(--raised); border:1px solid var(--hair); border-radius:.9rem; padding:.7rem .85rem; color:var(--text); font:inherit; cursor:pointer; }
+.sd-idea:hover { border-color:var(--accent-text); }
