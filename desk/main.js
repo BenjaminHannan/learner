@@ -152,7 +152,7 @@ function pushSleep() {
 function sleepInfo() {
   if (!sleeper || !sleeper.available().ok || (sleeper.needsRuntime && sleeper.needsRuntime())) return '';
   const s = store.getSettings(), w = effectiveWindow(s, learnedNow(new Date()));
-  return '[You can sleep: at night (' + w.from + '-' + w.to + ') your local model trains on the day\'s chats and saved notes and skills, so you remember them and get better. '
+  return '[You can sleep: at night (' + w.from + '-' + w.to + ') your local model trains on the day\'s chats and saved notes and skills, so you remember them and get better. Feedback is how you improve: thumbs up/down, corrections and reviews of your Motes\' ideas all feed sleep, so take it as a lesson, never as criticism, and say what you will do differently. '
     + (s.autoSleep ? 'It starts by itself when the person is away then, or ' : 'It starts ') + 'when they press Sleep; while asleep you cannot chat. When this chat began: ' + sleeper.statusLine() + ']';
 }
 const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
