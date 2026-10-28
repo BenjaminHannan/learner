@@ -90,6 +90,17 @@ function pageReadText() {
   return lines.join('\n');
 }
 
+// Re-measure just before the click: a page that moved during the badge pause (claude.ai's login buttons shift as it
+// loads) would otherwise get the click on the old spot, i.e. on the button that slid there (Ben Oct 28: Google -> Apple).
+function pagePoint(id) {
+  const el = document.querySelector('[data-desk-id="' + id + '"]');
+  if (!el) return { ok: false };
+  const r = el.getBoundingClientRect();
+  const x = Math.round(r.left + r.width / 2), y = Math.round(r.top + r.height / 2);
+  const hit = document.elementFromPoint(x, y);
+  return { ok: true, x, y, hit: !!hit && (hit === el || el.contains(hit) || hit.contains(el)) };
+}
+
 function pagePrepare(id, wantPoint) {
   const el = document.querySelector('[data-desk-id="' + id + '"]');
   if (!el) return { ok: false, error: 'no element [' + id + '] in the latest snapshot (take a new one)' };
@@ -278,6 +289,8 @@ class Browser {
     const p = await this.wc.executeJavaScript(call(pagePrepare, id));
     if (!p.ok) return { text: 'Error: ' + p.error, error: true };
     await sleep(250); // let the badge show
+    const q = await this.wc.executeJavaScript(call(pagePoint, id)).catch(() => null);
+    if (q && q.ok) { p.x = q.x; p.y = q.y; p.hit = q.hit; } // where it is now, not where it was 250 ms ago
     if (p.hit) {
       this.focusPage();
       this.wc.sendInputEvent({ type: 'mouseMove', x: p.x, y: p.y });
