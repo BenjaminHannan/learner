@@ -418,7 +418,7 @@ function createRunner({ store, makeAgent }) {
     const onAbort = () => made.agent.stop();
     if (signal.aborted) onAbort(); else signal.addEventListener('abort', onAbort, { once: true });
     let r;
-    try { r = await made.agent.run(thread, text); } finally { try { made.dispose && made.dispose(); } catch (e) { /* ignore */ } }
+    try { r = await made.agent.run(thread, text, { display: 'Run at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' (' + short(h.task, 90) + ')' }); } finally { try { made.dispose && made.dispose(); } catch (e) { /* ignore */ } }
     return { report: lastAssistantText(thread.messages), stopped: !!(r && r.stopped), error: r && r.error };
   };
 }

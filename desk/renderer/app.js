@@ -483,6 +483,8 @@
   }
   async function loadWhy() { if (slp.asleep || slp.waking) return; try { gwWhy = (await desk.gateway.why()) || { kind: 'unknown' }; } catch (e) { gwWhy = { kind: 'unknown' }; } paintOffCard(); }
   desk.onFullscreen((on) => document.body.classList.toggle('fullscreen', !!on));
+  // backup in case the main-process event is missed (window opened already full screen)
+  try { const fsq = matchMedia('(display-mode: fullscreen)'); const fsSync = () => { if (fsq.matches) document.body.classList.add('fullscreen'); }; fsSync(); fsq.addEventListener('change', (e) => { if (e.matches) document.body.classList.add('fullscreen'); }); } catch (e) { /* ignore */ }
   // the traffic lights don't zoom with the page: keep their gap at 84 screen points at any zoom (Cmd+- shrank it under them)
   const fitLights = () => { const z = (desk.zoom && desk.zoom()) || 1; document.documentElement.style.setProperty('--tl-pad', Math.ceil(84 / z) + 'px'); };
   fitLights(); window.addEventListener('resize', fitLights); if (window.visualViewport) window.visualViewport.addEventListener('resize', fitLights);
@@ -656,6 +658,7 @@
       else if (it.t === 'screen') upsertSCard({ id: it.id, thumb: it.thumb, text: it.text });
       else if (it.t === 'notice') addNotice(it.helper, it.text);
       else if (it.t === 'plan') setPlan(it.items);
+      else if (it.t === 'divider') msgs.append(el('div', 'day-divider', it.text));
     });
     tn = null;
     if (!t.running) finishAll();
@@ -667,9 +670,30 @@
   // One Glim to talk to: the window is titled "Glim", or the Spark's name when a Spark's own log is open. Threads stay under the hood.
   const sparkName = (t) => String(t.title || '').replace(/^Glim:\s*/, '') || 'Spark';
   function paintTitle(t) { $('#title').textContent = t && t.helper ? sparkName(t) + ' · Spark' : 'Glim'; }
+  // One endless scroll: the main Glim's view starts with everything said in its earlier conversations (a day divider between them).
+  const HIST_ITEMS = 400;
+  async function withHistory(t) {
+    if (t.helper || isCall(t)) return t;
+    let older = [];
+    try { older = (await desk.threads.list()).filter((x) => !x.helper && !isCall(x) && x.id !== t.id && x.updated <= (t.updated || Infinity)).sort((a, b) => a.updated - b.updated).slice(-12); } catch (e) { return t; }
+    let items = [];
+    for (const o of older) {
+      const full = await desk.threads.load(o.id).catch(() => null);
+      if (!full || !(full.items || []).length) continue;
+      items.push({ t: 'divider', text: new Date(o.updated).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) });
+      items = items.concat((full.items || []).filter((it) => it.t === 'user' || it.t === 'assistant' || it.t === 'notice'));
+    }
+    if (!items.length) return t;
+    items = items.slice(-HIST_ITEMS);
+    items.push({ t: 'divider', text: 'Today' });
+    return { ...t, items: items.concat(t.items || []) };
+  }
   async function openThread(id) {
-    const t = await desk.threads.load(id);
-    if (!t) return;
+    const t0 = await desk.threads.load(id);
+    if (!t0) return;
+    // A Spark's log is never shown (Ben: if he can't talk to it he shouldn't see it), unless it is waiting on him for an answer or approval.
+    if (t0.helper && !(t0.pendingCards || []).length && !t0.loginWaiting) { const mid = await mainThreadId(); if (mid && mid !== id) return openThread(mid); if (!mid) return newThread(); }
+    const t = await withHistory(t0);
     thread = { id: t.id, title: t.title, helper: t.helper || null };
     paintTitle(t);
     renderThread(t);
@@ -685,7 +709,7 @@
     const t = await desk.threads.create();
     try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
     thread = { id: t.id, title: t.title, helper: null };
-    paintTitle(t); renderThread(t); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
+    paintTitle(t); renderThread(await withHistory(t)); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
   }
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
@@ -715,7 +739,7 @@
       x.onclick = async (e) => { e.stopPropagation(); if (confirm('Delete "' + t.title + '"?')) { await desk.threads.remove(t.id); if (thread && thread.id === t.id) { const id = await mainThreadId(); if (id) await openThread(id); else await newThread(); } else loadThreads(); } };
       row.append(title, d, x); row.onclick = () => openThread(t.id); ul.append(row);
     }
-    $('#histSec').hidden = !ul.children.length;
+    $('#histSec').hidden = true; // history lives in the one scroll now
     if (thread && !thread.helper) $('#title').textContent = 'Glim';
   }
 
@@ -747,7 +771,6 @@
         mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
         mk('Delete', async () => { if (confirm('Delete Spark "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
       li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns);
-      li.onclick = () => openThread(h.threadId);
       ul.append(li);
     }
   }
