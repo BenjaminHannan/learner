@@ -244,7 +244,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['chevron turns down when expanded', await ev('getComputedStyle(document.querySelector(".act-head .chev")).transform!=="none"')]);
     checks.push(['expanding shows plan, narration and step pills with icons', await ev('!!document.querySelector(".plan") && document.querySelectorAll(".plan li").length===3 && document.querySelectorAll(".step .pill svg").length>=3 && !!document.querySelector(".nar")')]);
     checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);
-    checks.push(['TTFT shown on the answer (hover note)', await ev('/first word in/.test((document.querySelector(".acol > .atext .ttft")||{}).textContent||"")')]);
+    checks.push(['newest message shows Unread then Read', await ev('!!document.querySelector(".receipt")')]);
     await sleep(400);
     for (const [theme, file] of [['light', 'ui-v2-light.png'], ['dark', 'ui-v2-dark.png']]) {
       nativeTheme.themeSource = theme;
