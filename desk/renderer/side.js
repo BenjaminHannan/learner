@@ -23,7 +23,7 @@
   function nowView() {
     const v = el('div', 'sd-view');
     const h = el('div', 'sd-sec');
-    h.append(el('div', 'sd-label', 'Glim'), el('div', 'sd-big', st.running ? (st.said || 'Working…') : 'Ready'));
+    h.append(el('div', 'sd-label', 'Glim'), el('div', 'sd-big', st.running ? (st.said || 'Working…') : 'Glimmering'));
     v.append(h);
     if (st.plan.length) {
       const s = el('div', 'sd-sec'); s.append(el('div', 'sd-label', 'Plan'));

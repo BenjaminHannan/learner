@@ -472,7 +472,7 @@
     // one source of truth with the composer: while a run is on, both say what the run says
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     paintOffCard();
