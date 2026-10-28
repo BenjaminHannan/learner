@@ -147,11 +147,15 @@
   const ensureActTracked = ensureAct;
 
   // ---------- Ben's messages ----------
-  function addUser(text, steer, queued) {
+  // "Unread" under Ben's newest message until Glim picks it up, then "Read" (only the newest message shows one)
+  function markRead() { msgs.querySelectorAll('.receipt.unread').forEach((r) => { r.classList.remove('unread'); r.textContent = 'Read'; }); }
+  function addUser(text, steer, queued, receipt) {
     const w = msgs.querySelector('.welcome'); if (w) { w.remove(); paintOffCard(); }
     if (act && !act.finished) finishAct(act);
     const u = el('div', 'user' + (steer ? ' steer' : '') + (queued ? ' queued' : ''), text);
-    msgs.append(u); newBlock(); toBottom();
+    msgs.append(u);
+    if (receipt) { msgs.querySelectorAll('.receipt').forEach((r) => r.remove()); msgs.append(el('div', 'receipt unread', 'Unread')); }
+    newBlock(); toBottom();
     return u;
   }
 
@@ -179,7 +183,6 @@
     if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); }
     t.raw += d; paintText();
   }
-  function ttftNote(ms) { return ms ? 'first word in ' + (ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1) + ' s') : ''; }
   function onAssistantEnd(ev) {
     const t = tn;
     tn = null;
@@ -191,7 +194,7 @@
       // the answer: stays prominent below the (collapsed) activity group
       if (t.text) {
         if (!clean) t.text.remove();
-        else { t.text.innerHTML = md(t.raw); const n = ttftNote(ev.ttftMs); if (n) t.text.append(el('span', 'ttft', n)); }
+        else t.text.innerHTML = md(t.raw);
       }
       const wasStuck = stick;
       if (act && !act.finished) finishAct(act);
@@ -610,17 +613,17 @@
       case 'user': {
         if (ev.steer) {
           const i = pendingSteers.findIndex((p) => p.text === ev.text);
-          if (i >= 0) { const p = pendingSteers.splice(i, 1)[0]; p.el.classList.remove('queued'); break; } // already shown when typed: confirm, do not add again
+          if (i >= 0) { const p = pendingSteers.splice(i, 1)[0]; p.el.classList.remove('queued'); markRead(); break; } // already shown when typed: confirm, do not add again
         }
         addUser(ev.text, ev.steer); break;
       }
       case 'notice': addNotice(ev.helper, ev.text); break;
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
-      case 'started': $('#runState span').textContent = 'Working…'; paintGateway(); break;
+      case 'started': $('#runState span').textContent = 'Working…'; markRead(); paintGateway(); break;
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
-        setRunning(false); tn = null; finishAll();
+        setRunning(false); tn = null; finishAll(); markRead();
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
         if (ev.stopped) msgs.append(el('div', 'status', 'Stopped.'));
         if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
@@ -837,13 +840,13 @@
       if (thread.helper && !running) { msgs.append(el('div', 'errline', 'This is a Spark’s log. Use Run now in the Sparks list, or ask your main Glim.')); toBottom(); return; }
       if (running) {
         // shown at once (queued); the agent's 'user' event confirms it instead of adding it again
-        const u = addUser(text, true, true); jumpBottom();
+        const u = addUser(text, true, true, true); jumpBottom();
         pendingSteers.push({ text, el: u });
         const r = await desk.agent.send(thread.id, text);
         if (r && r.error) { u.classList.remove('queued'); msgs.append(el('div', 'errline', r.error)); }
         return;
       }
-      addUser(text);
+      addUser(text, false, false, true);
       jumpBottom();
       setRunning(true); // before the call: a fast run can finish before send() resolves
       const r = await desk.agent.send(thread.id, text);
