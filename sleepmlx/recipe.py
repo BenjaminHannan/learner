@@ -33,6 +33,8 @@ from .corpus import Diary, has_ans, norm, pat
 from .paths import Paths, read_json, write_json
 
 GENERIC = {"ben", "i", "me", "my", "we", "you", "he", "she", "they", "it", "user", "the user", "someone", "somebody"}
+SELF = {"i", "me", "my", "myself", "mine", "user", "the user"}   # Ben speaking of himself: these become `who`
+CARD_LINES = re.compile(r"^\s*(?:[-*]\s*)?[^=>\n]+?\s*=>\s*[^=>\n]+?\s*=>\s*[^=>\n]+?\s*$")   # "Subject => relation => Object": ingested as fact Items elsewhere
 IMP_RE = re.compile(r"remember|important|don'?t forget", re.I)
 COR_RE = re.compile(r"\bactually\b|correction|no, it'?s", re.I)
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
@@ -137,6 +139,23 @@ def key_of(a: str, b: str) -> str:
     return norm(a) + "|" + norm(b)
 
 
+def is_card_note(n: dict) -> bool:
+    return n["topic"].strip().lower() == "card" and bool(card_lines(n["text"]))
+
+
+def card_lines(text: str) -> List[Tuple[str, str, str]]:
+    out = []
+    for l in re.split(r"[\n;]", text):   # a saved note is one line (the Desk collapses whitespace): several cards are told apart by ";"
+        if CARD_LINES.match(l):
+            sj, rl, ob = (x.strip() for x in re.sub(r"^\s*[-*]\s+", "", l).split("=>"))
+            out.append((sj, rl, ob))
+    return out
+
+
+def note_sig(n: dict) -> str:
+    return hashlib.sha1(("%s|%s|%s" % (n["id"], n["topic"], n["text"])).encode()).hexdigest()[:16]
+
+
 @dataclass
 class Item:
     key: str
@@ -161,6 +180,8 @@ class Item:
     kind: str = "fact"            # fact (tagged from the diary) | lesson | habit | note | track (lessons.py; their cards are made, not dreamed)
     source: str = ""              # where a non-fact item came from (kept on its cards)
     until: str = ""               # YYYY-MM-DD: after this day the item is not trained (tracked items)
+    line: str = ""                # fact from a saved card note: the card line "Subject => relation => Object" (its dream context when no chat turn names both sides)
+    sig: str = ""                 # note items: hash of the note's id and text the quiz card was made for (unchanged note = same card, no regeneration)
 
     @property
     def fact(self) -> str:
@@ -204,8 +225,15 @@ def cap_names(text: str) -> List[str]:
     return out
 
 
-def triple_status(diary: Diary, dropped: set, ti: int, sj: str, ob: str) -> str:
-    if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob) or norm(sj) in GENERIC or norm(ob) in GENERIC:
+def selfify(x: str, who: str) -> str:
+    return who if norm(x) in SELF or norm(x) == norm(who) else x
+
+
+def triple_status(diary: Diary, dropped: set, ti: int, sj: str, ob: str, who: str = "") -> str:
+    """`who` (Ben) may be one side of a fact he states about himself (not both, not next to a generic word)."""
+    w = norm(who) if who else None
+    gen = lambda x: norm(x) in GENERIC and norm(x) != w   # noqa: E731
+    if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob) or gen(sj) or gen(ob):
         return "invalid"
     if ti not in diary.occurs(sj) or ti not in diary.occurs(ob):
         return "not_in_turn"
@@ -326,6 +354,7 @@ class Sleeper:
     # ---- 1. tagging
     def tag(self, d: int, st: Counter) -> None:
         turns = [t for t in self.diary.turns if t["day"] == d]
+        self.diary.who = self.who.lower()   # occurs(Ben) = every turn, so a fact Ben states about himself is "in the turn"
         q = self.prof
         texts = [t["text"][:1500] for t in turns]
         if q.thinks and q.quirk("tag_think"):
@@ -343,7 +372,8 @@ class Sleeper:
             for f in fx[:5]:
                 st["extracted"] += 1
                 sj, rl, ob = (str(f.get(k) or "").strip() for k in ("subject", "relation", "object"))
-                ck = triple_status(self.diary, self.dropped, t["i"], sj, ob)
+                sj, ob = selfify(sj, self.who), selfify(ob, self.who)   # I / my / me -> Ben
+                ck = triple_status(self.diary, self.dropped, t["i"], sj, ob, self.who)
                 if ck != "ok":
                     if ck != "dropped":
                         st["dropped_" + ck] += 1
@@ -398,6 +428,40 @@ class Sleeper:
                 self.items[key] = Item(key, a, b, rl or "is linked to", d)
                 st["names_new_items"] += 1
 
+    def ctx_of(self, it: Item, d: int, newest_first: bool = False) -> str:
+        """Chat turns naming both sides (newest first for dreams), plus the saved card line for a card-note fact."""
+        idx = self.diary.containing(it.subj, it.obj, d)
+        txt = self.diary.label(idx[::-1][:4] if newest_first else idx[-4:])
+        return (txt + "\n" if txt else "") + ("[Saved card note] " + it.line if it.line else "")
+
+    def card_notes(self, d: int, st: Counter) -> None:
+        """Saved notes with the topic "card" and lines "Subject => relation => Object" become fact Items (no chat turn needed; I/me/my -> Ben).
+        A card note that is gone (forgotten, ignored, lines removed) retires its facts."""
+        if not self.cfg.use_userdata:
+            return
+        have, ud = set(), self.paths.userdata_dir
+        for n in L_mod.read_notes(ud, diary_mod.load_ignore(self.paths.ignore)):
+            if not is_card_note(n):
+                continue
+            for sj, rl, ob in card_lines(n["text"]):
+                sj, ob = selfify(sj, self.who), selfify(ob, self.who)
+                if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob):
+                    st["card_invalid"] += 1
+                    continue
+                key = key_of(sj, ob)
+                have.add(key)
+                it = self.items.get(key)
+                if it is None:
+                    self.items[key] = Item(key, sj, ob, rl, d, first=d, days=1, nment=1, imp=True, line="%s %s %s." % (sj, rl, ob), source="saved card note")
+                    st["card_new"] += 1
+                elif it.dead and it.line:   # the card note is back
+                    it.dead, it.line = False, "%s %s %s." % (sj, rl, ob)
+                    st["card_new"] += 1
+        for it in self.items.values():
+            if it.line and not it.dead and it.key not in have:
+                it.dead = True
+                st["card_retired"] += 1
+
     def refresh(self, d: int) -> None:
         for it in self.items.values():
             if it.dead or it.kind != "fact":
@@ -405,6 +469,8 @@ class Sleeper:
             idx = self.diary.containing(it.subj, it.obj, d)
             days = {self.diary.turns[i]["day"] for i in idx}
             it.nment, it.days, it.first = len(idx), len(days), (min(days) if days else it.born)
+            if it.line:   # a saved card note counts as one mention, however many chat turns also name both sides
+                it.nment, it.days = max(it.nment, 1), max(it.days, 1)
             it.imp = it.imp or any(IMP_RE.search(self.diary.turns[i]["text"]) for i in idx)
             it.cor = it.cor or any(COR_RE.search(self.diary.turns[i]["text"]) for i in idx)
 
@@ -428,8 +494,7 @@ class Sleeper:
             return self.dream_templated(d, need, st)
         prompts, ctxs = [], {}
         for it in need:
-            idx = self.diary.containing(it.subj, it.obj, d)[::-1][:4]
-            ctxs[it.key] = self.diary.label(idx)
+            ctxs[it.key] = self.ctx_of(it, d, True)
             prompts.append(P.nrem_prompt(self.R, ctxs[it.key], it.subj, it.obj, self.k, self.who))
         raw = self.gen(prompts, self.dream_tokens, sample=True, salt="dream")
         cp, cq = [], []
@@ -498,7 +563,7 @@ class Sleeper:
         done = []
         for it in need:
             idx = self.diary.containing(it.subj, it.obj, d)
-            note = self.diary.turns[idx[-1]]["text"][:300] if idx else it.fact
+            note = self.diary.turns[idx[-1]]["text"][:300] if idx else (it.line or it.fact)
             paras, qas = P.templated_cards(it.subj, it.rel, it.obj, note)
             seen, g = {norm(h["q"]) for h in it.held}, {"p": [], "q": []}
             for kind, x in [("p", p) for p in paras] + [("q", qa) for qa in qas]:
@@ -531,7 +596,7 @@ class Sleeper:
         spent = N.setdefault("dc_spent_s", 0.0)
         budget = max(0.0, min(cfg.dreamcheck_share * B - spent, self.clock.left() - 120.0))
         model = dreamhook.LocalChat(self.be, getattr(self.R, "tok", None), self.prof, adapter=False)
-        src = lambda o: self.diary.label(self.diary.containing(o.subj, o.obj, N["day"])[-4:]) if isinstance(o, Item) else ""   # noqa: E731
+        src = lambda o: self.ctx_of(o, N["day"]) if isinstance(o, Item) else ""   # noqa: E731
         r = dreamhook.check([{"q": q, "a": a, "source": src(o)} for o, q, a in rows], model, str(self.paths.diary_dir), budget,
                             now=self.clock.now, checker=self.dream_checker, cache=N.setdefault("dc_cache", {}), log=self.log)
         N["dc_spent_s"] = spent + r["stats"].get("elapsed_s", 0.0)
@@ -675,7 +740,7 @@ class Sleeper:
         """Habit cards from repeated tool jobs, and cards for the Desk's saved notes and Keeping track of list. These cards are built from
         the logs and files word for word (no model writes them). Each carries its source; a tracked item past its until date, finished or
         removed, and a forgotten note, leave the training pool."""
-        cfg, today, want = self.cfg, self.today(), {}
+        cfg, today, want, sigs = self.cfg, self.today(), {}, {}
         if cfg.use_habits:
             for h in L_mod.habits(week, d, cfg.habit_min):
                 para, qa = L_mod.habit_cards(h, self.who)
@@ -694,19 +759,25 @@ class Sleeper:
         if cfg.use_userdata:
             ignore = diary_mod.load_ignore(self.paths.ignore)
             ud = self.paths.userdata_dir
-            for n in L_mod.read_notes(ud, ignore):
-                para, qa = L_mod.note_cards(n, self.who)
-                want["note|" + n["id"]] = ("note", n["text"][:60], para, qa, "saved note" + (", updated " + n["updated"] if n["updated"] else ""), "", 1)
+            notes = L_mod.read_notes(ud, ignore)
+            notes = [n for n in notes if not is_card_note(n)]   # card notes are fact Items (card_notes), not note cards
+            nqa = self.note_qas(notes, d, st)
+            for n in notes:
+                para, _ = L_mod.note_cards(n, self.who)
+                key, old = "note|" + n["id"], self.items.get("note|" + n["id"])
+                keep = bool(old and not old.dead and old.sig == note_sig(n))   # unchanged note: its card (trainable or held) stays as it is
+                sigs[key] = note_sig(n) if keep or n["id"] in nqa else ""
+                want[key] = ("note", n["text"][:60], para, old.qa if keep else nqa.get(n["id"], []), "saved note" + (", updated " + n["updated"] if n["updated"] else ""), "", 1)
             for t in L_mod.read_tracking(ud, today, ignore):
                 para, qa = L_mod.track_cards(t, self.who)
                 want["track|" + norm(t["what"])] = ("track", t["what"][:60], para, qa, t["source"] or "Keeping track of list", t["until"], 1)
         for key, (kind, obj, para, qa, src, until, days) in want.items():
             it = self.items.get(key)
-            if it and not it.dead and it.para == para and it.qa == qa:
+            if it and not it.dead and it.para == para and it.qa == qa and it.sig == sigs.get(key, it.sig):
                 it.source, it.until, it.days = src, until, days
                 continue
             self.items[key] = Item(key, self.who, obj, kind, d, first=d, days=days, nment=1, para=para, qa=qa, seen_ment=1, dreamed_night=d,
-                                   kind=kind, source=src, until=until)
+                                   kind=kind, source=src, until=until, sig=sigs.get(key, ""))
             st[kind + "_new" if not it else kind + "_changed"] += 1
         for it in self.items.values():
             if it.kind in ("habit", "note", "track", "liked", "delegate", "idea") and not it.dead and it.key not in want:
@@ -719,6 +790,54 @@ class Sleeper:
         st["delegate"] = sum(1 for k in want if k.startswith("delegate|"))
         st["idea"] = sum(1 for k in want if k.startswith("idea|"))
 
+    def note_qas(self, notes: List[dict], d: int, st: Counter) -> Dict[str, List[List[str]]]:
+        """One quiz card per new or changed saved note (at most max_lessons x s a night): the base model writes q and a (a = 1 to 4 words of the
+        note), checked like a lesson: the answer is in the note, the question does not leak the test or the answer, and the base model gives the
+        answer back from the note alone. Returns note id -> [[q, a]] or [] for a note tried and dropped (it is not tried again until it changes);
+        a note left out for the cap is tried on a later night. A note made of "Subject => relation => Object" lines is a fact source: no card here."""
+        out, todo = {}, []
+        for n in notes:
+            old = self.items.get("note|" + n["id"])
+            if old and not old.dead and old.sig == note_sig(n):
+                continue
+            lines = [l for l in re.split(r"[\n;]", n["text"]) if l.strip()]
+            if lines and all(CARD_LINES.match(l) for l in lines):
+                out[n["id"]] = []
+                st["note_qa_skipped_card_lines"] += 1
+            else:
+                todo.append(n)
+        todo = todo[:self.sc(self.cfg.max_lessons)]
+        if not todo:
+            return out
+        raw = self.gen([P.note_qa_prompt(self.R, n["text"], self.who) for n in todo], self.cfg.lesson_tokens, salt="note_qa")
+        cand = []
+        for n, txt in zip(todo, raw):
+            out[n["id"]] = []
+            c = P.parse_lesson(txt)
+            q, a = (str(c.get("q") or "").strip(), str(c.get("a") or "").strip().rstrip(".")) if c else ("", "")
+            if not (q and a):
+                why = "parse_fail"
+            elif not 1 <= len(a.split()) <= 4 or not pat(norm(a)).search(norm(n["text"])):
+                why = "answer_not_in_note"
+            elif norm(a) in norm(q):
+                why = "answer_in_question"
+            elif self.leaky(q):
+                why = "test_leak"
+            else:
+                why = None
+            if why:
+                st["note_qa_dropped_" + why] += 1
+            else:
+                cand.append((n, q, a))
+        ver = self.gen([P.ctx_prompt(self.R, n["text"], q, self.who) for n, q, a in cand], self.cfg.verify_tokens, salt="note_qa_verify")
+        for (n, q, a), v in zip(cand, ver):
+            if has_ans(a, v):
+                out[n["id"]] = [[q, a]]
+                st["note_qa_kept"] += 1
+            else:
+                st["note_qa_dropped_unverified"] += 1
+        return out
+
     def leaky(self, text: str) -> bool:
         n = norm(text)
         return any(l in n or (len(n) >= 10 and n in l) for l in self.leak)
@@ -728,13 +847,12 @@ class Sleeper:
         its fact is still taught by other wordings and the other direction: the quiz then tests paraphrase and reverse. On a small
         night where no fact has 3 cards, a fact keeps at least 1 (a paraphrase) instead."""
         total = sum(len(it.para) + len(it.qa) for it in fresh)
-        want = int(round(self.cfg.holdout_frac * total))
-        if total >= self.cfg.min_cards:
-            want = max(want, 1)
         key = lambda it: hashlib.sha1((str(self.cfg.seed) + it.key).encode()).hexdigest()   # noqa: E731
         order = sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 3), key=key)
-        if not order:   # a small night (one or two cards per fact): still hold some out, or the gate has nothing to check and undoes it
-            order = sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 2), key=key)
+        # a small night (one or two cards per fact) still holds some out, or the gate has nothing to check and undoes it: items with
+        # 3+ cards first, then those with 2 (they keep one card)
+        order += sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) == 2), key=key)
+        want = max(2, int(round(self.cfg.holdout_frac * total))) if order else 0
         n = 0
         for it in order:
             if n >= want:
@@ -761,6 +879,21 @@ class Sleeper:
             it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
             n += 1
         st["lessons_held_out"] = n
+
+    def top_up_holdout(self, d: int, st: Counter) -> None:
+        """A night must end with at least 2 held-out cards (the gate undoes a night with none). If facts and lessons gave fewer, hold out the
+        Q&A of tonight's new lessons (even when fewer than 3), then of new notes. The item keeps its paraphrase: never its only card."""
+        n = sum(1 for it in self.items.values() for h in it.held if h["night"] == d)
+        key = lambda it: hashlib.sha1((str(self.cfg.seed) + "topup" + it.key).encode()).hexdigest()   # noqa: E731
+        pool = lambda kind: sorted((it for it in self.items.values() if it.kind == kind and it.first == d and not it.dead and it.qa and len(it.para) + len(it.qa) >= 2), key=key)   # noqa: E731
+        k = 0
+        for it in pool("lesson") + pool("note"):
+            if n + k >= 2:
+                break
+            q, a = it.qa.pop(0)
+            it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
+            k += 1
+        st["topup_held_out"] = k
 
     # ---- 7. REM
     def rem(self, E: List[Item], d: int, ci: int, st: Counter) -> None:
@@ -816,7 +949,7 @@ class Sleeper:
                 st["rem_dropped_bad"] += 1
             else:
                 idx = sorted(set(self.diary.containing(p.subj, p.obj, d)[-2:]) | set(self.diary.containing(q.subj, q.obj, d)[-2:]))
-                cand.append(("chain", (p, q), qq, es[0], self.diary.label(idx)))
+                cand.append(("chain", (p, q), qq, es[0], "\n".join(x for x in (self.diary.label(idx), p.line, q.line) if x)))
         for it, txt in zip(gist, graw):
             st["gist_gen"] += 1
             r = P.parse_qa1(txt)
@@ -831,7 +964,7 @@ class Sleeper:
             elif len(es) != 1 or es[0].lower() in qq.lower() or other_e.lower() not in qq.lower():
                 st["rem_dropped_bad"] += 1
             else:
-                cand.append(("gist", (it,), qq, es[0], self.diary.label(self.diary.containing(it.subj, it.obj, d)[-4:])))
+                cand.append(("gist", (it,), qq, es[0], self.ctx_of(it, d)))
         ver = self.gen([P.ctx_prompt(self.R, c, q, self.who) for _, _, q, _, c in cand], self.cfg.verify_tokens, salt=salt + "v")
         have = {(norm(x["q"]), x["a"].lower()) for x in self.rem_pool}
         for (kind, its, q, ans, c), v in zip(cand, ver):
@@ -938,7 +1071,7 @@ class Sleeper:
                       "dry_run": bool(dry_run), "started": time.time()}
         N = self.N
         N["chunks"] += 1
-        self.diary = Diary(week)
+        self.diary = Diary(week, self.who)
         dry_cache = self.paths.home / "dry_gen_cache.jsonl"    # a dry run's generations are kept, so the real night after it does not redo them
         self.cache = GenCache(dry_cache if dry_run else self.paths.gen_cache)
         if not dry_run:
@@ -1010,6 +1143,7 @@ class Sleeper:
             st = Counter()
             self.tag(d, st)
             self.names_pass(d, st)
+            self.card_notes(d, st)
             self.refresh(d)
             if cfg.use_lessons:
                 self.corrections(week, d, st)
@@ -1029,6 +1163,9 @@ class Sleeper:
             if "lesson_holdout_done" not in N:
                 self.hold_lessons(d, st)
                 N["lesson_holdout_done"] = True
+            if "topup_holdout_done" not in N:
+                self.top_up_holdout(d, st)
+                N["topup_holdout_done"] = True
             st_all["lessons"] = dict(st)
             self.log("[night] lessons and habits %s" % st_all["lessons"])
             st_all["cleanup"] = self.cleanup()
@@ -1143,10 +1280,12 @@ class Sleeper:
             N["done_steps"] = i
             N["steps_this_chunk"] = N.get("steps_this_chunk", 0) + 1
             self._trained_since_ckpt += 1
-            if self._trained_since_ckpt >= cfg.ckpt_every:
+            ck = self._trained_since_ckpt >= cfg.ckpt_every
+            if ck:
                 self.be.save_adapter(self.paths.work_adapter)
                 self._trained_since_ckpt = 0
                 self.save_night()
+            if ck or i == total:   # the sleep bar reads "step N/N": the last step is always logged
                 self.log("[night] step %d/%d ce %s %.1fs" % (i, total, last_ce, dt))
         self.be.save_adapter(self.paths.work_adapter)
         self._trained_since_ckpt = 0
@@ -1158,6 +1297,7 @@ class Sleeper:
         N, cfg, P_ = self.N, self.cfg, self.paths
         self.clock.check(90)
         self.be.load_adapter(P_.work_adapter)
+        self.log("[night] quiz")
         held = [h for it in self.items.values() for h in it.held if h["night"] == d]
         post = gate_mod.score_recall(self.be, self.R, held, adapter=True)
         base = read_json(P_.gate_base, {}) or {}

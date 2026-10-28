@@ -140,6 +140,9 @@ class FakeBackend(Backend):
             return json.dumps({"did": "Glim answered without checking", "wrong": "the answer did not match what Ben said",
                                "instead": "check what Ben said before answering", "wrong_value": wrongs[0] if wrongs else "",
                                "q": "What is the right answer here?", "a": fresh[0]})
+        if "Write one question that this note answers" in user:
+            note = user.split('A note saved about Ben:\n"', 1)[1].split('"\n\nWrite one', 1)[0]
+            return json.dumps({"q": "What detail does the saved note give?", "a": note.split()[-1].strip(".,")})
         if "Fact about" in user:
             return "Question: Where does Ben go?\nAnswer: nowhere"
         if "Question: " in user and ("Messages from" in user):
