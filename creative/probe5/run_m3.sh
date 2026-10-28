@@ -131,7 +131,7 @@ echo "llama.cpp: $(git -C "$LLAMA_CPP_DIR" log -1 --format='%H %cI' 2>/dev/null 
 [ ! -f "$HF_DIR/model.safetensors" ] || [ "$(filesize "$HF_DIR/model.safetensors")" = "$HF_BYTES" ] || echo "note: $HF_DIR/model.safetensors has $(filesize "$HF_DIR/model.safetensors") bytes, the pinned revision has $HF_BYTES (a partial download? delete it to re-fetch)"
 [ ! -f "$GGUF" ] || [ "$(filesize "$GGUF")" = "$GGUF_BYTES" ] || echo "note: $GGUF has $(filesize "$GGUF") bytes, the pinned revision has $GGUF_BYTES"
 have_adapter=0; [ -s "$OUT/adapter.gguf" ] && have_adapter=1
-need_hf=0; [ $have_adapter = 1 ] || [ -f "$HF_DIR/model.safetensors" ] && [ -f "$HF_DIR/config.json" ] && [ -f "$HF_DIR/tokenizer.json" ] || need_hf=1
+need_hf=0; [ $have_adapter = 1 ] || { [ -f "$HF_DIR/model.safetensors" ] && [ -f "$HF_DIR/config.json" ] && [ -f "$HF_DIR/tokenizer.json" ]; } || need_hf=1
 need_gguf=0; [ -f "$GGUF" ] || [ "${STOP_AFTER_ADAPTER:-0}" = 1 ] || need_gguf=1
 if [ "${DROP_HF:-0}" = 1 ] && [ $have_adapter = 1 ] && [ -f "$HF_DIR/.probe5_downloaded" ]; then
   echo "== DROP_HF=1: OUT/adapter.gguf exists; deleting the HF weights this script downloaded ($HF_DIR) before the GGUF download"; rm -rf "$HF_DIR"
