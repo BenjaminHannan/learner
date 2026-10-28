@@ -215,8 +215,8 @@
     raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(answerOf(tn.raw)).text); toBottom(); } });
   }
   function onReasoning(d) {
-    const t = tn || startTn();
-    if (!t.think) { const b = thinkBlock(0, '', true); t.think = b; ensureBlock().col.append(b.d); }
+    // Ben Oct 28: "make it so that I can't see them at all": no "Thinking… / Thought for N s" line either. Glim just shows its answer.
+    if (!tn) startTn();
   }
   function onText(d) {
     const t = tn || startTn();
