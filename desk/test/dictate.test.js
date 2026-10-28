@@ -96,8 +96,6 @@ test('dictation: permission errors carry a kind and a clear message', () => {
   const e = events.find((x) => x.type === 'error');
   assert.strictEqual(e.kind, 'mic-denied'); assert.match(e.message, /Microphone/);
   assert.strictEqual(d.state, 'ended');
-  const s = mk(); s.d.start(); s.h.say({ error: 'speech-denied' });
-  assert.match(s.events.find((x) => x.type === 'error').message, /Speech Recognition/);
   const u = mk(); u.d.start(); u.h.say({ error: 'speech recognizer unavailable' });
   assert.match(u.events.find((x) => x.type === 'error').message, /speech recognizer unavailable/);
 });

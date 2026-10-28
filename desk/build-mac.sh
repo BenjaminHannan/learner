@@ -24,7 +24,7 @@ mkdir -p build
 EXTRA=()
 if command -v swiftc >/dev/null 2>&1 && [[ -f helper/deskhelper.swift ]]; then
   echo "==> compiling deskhelper"
-  # the Info.plist is linked into the binary so the helper has its own microphone / speech usage strings (Call Glim)
+  # the Info.plist is linked into the binary so the helper has its own microphone usage string (Call Glim)
   swiftc -O helper/deskhelper.swift -o build/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist
   EXTRA=(--extra-resource=build/deskhelper)
 else
@@ -40,6 +40,12 @@ if [[ -d ../sleepmlx ]]; then
   EXTRA+=(--extra-resource="$STAGE/sleepmlx")
 else
   echo "WARNING: ../sleepmlx not found; a Mac without the assistant will not be able to sleep." >&2
+fi
+# The local speech-to-text server (stt/lfm_stt.py, LFM3-Audio via mlx-vlm) rides along as resources/stt (src/stt.js).
+if [[ -d stt ]]; then
+  echo "==> staging stt"
+  mkdir -p "$STAGE/stt" && cp stt/lfm_stt.py "$STAGE/stt/"
+  EXTRA+=(--extra-resource="$STAGE/stt")
 fi
 SLEEPMODE_SRC="${SLEEPMODE_SRC:-$HOME/learner-ops/sleepmode/app}"
 if [[ -d "$SLEEPMODE_SRC/sleepmode" ]]; then
@@ -60,7 +66,7 @@ npx @electron/packager . "Premonition" \
   --platform=darwin --arch=arm64 --out=build/app --overwrite --icon=assets/icon.icns \
   --extend-info=assets/Info.extra.plist \
   --ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' \
-  --ignore='^/helper($|/)' \
+  --ignore='^/helper($|/)' --ignore='^/stt($|/)' \
   ${EXTRA[@]+"${EXTRA[@]}"}
 
 APP="build/app/Premonition-darwin-arm64/Premonition.app"

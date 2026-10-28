@@ -29,7 +29,7 @@ window.CallUI = (() => {
   }
   function showError(msg, kind) {
     $('#callErrText').textContent = msg;
-    const pane = kind === 'mic-denied' ? 'microphone' : kind === 'speech-denied' ? 'speech' : '';
+    const pane = kind === 'mic-denied' ? 'microphone' : '';
     const b = $('#callSettings'); b.hidden = !pane; b.onclick = () => desk.openSystem(pane);
     $('#callErr').hidden = false;
   }
@@ -62,7 +62,7 @@ window.CallUI = (() => {
       case 'level': $('#callRing').style.setProperty('--lv', Math.min(1, ev.level)); break;
       case 'bargein': $('#callSay').textContent = ''; break;
       case 'note': {
-        const n = ev.note === 'offline-unavailable' ? 'Offline speech recognition is not installed on this Mac, so Apple’s servers may be used to understand you.' : ev.note === 'no-echo-cancel' ? 'Echo cancelling is not available here. Use headphones so Glim does not hear itself.' : '';
+        const n = ev.note === 'no-echo-cancel' ? 'Echo cancelling is not available here. Use headphones so Glim does not hear itself.' : '';
         if (n) { $('#callNote').textContent = n; $('#callNote').hidden = false; }
         break;
       }

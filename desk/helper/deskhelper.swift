@@ -4,7 +4,6 @@
 import AppKit
 import ApplicationServices
 import AVFoundation
-import Speech
 import CoreGraphics
 import Foundation
 
@@ -550,49 +549,52 @@ func out(_ obj: [String: Any]) {
 
 // dictate = true is `deskhelper dictate`: same listening path, but plain input (no voice processing, so other audio is not ducked), no
 // speech, no barge-in. Commands: {"stop"} flushes the words heard so far as a final and exits; {"quit"} / EOF exits.
+//
+// Speech to text is NOT done here: the app runs a local LFM3-Audio server (stt/lfm_stt.py, passed as `--stt URL`). This process only
+// captures the mic, converts it to 16 kHz mono Int16, finds utterance boundaries by energy (speech starts above a gate, ends after
+// ~600 ms of quiet), and POSTs the audio-so-far every ~1 s (partial) and at the end (final). No Apple speech recognition is used.
 final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
     var dictate = false
+    var sttURL: URL!
     let engine = AVAudioEngine()
     let synth = AVSpeechSynthesizer()
-    var recognizer: SFSpeechRecognizer?
-    var onDevice = false
-    let lock = NSLock()               // guards request, muted, level, lastVoice (the audio thread touches them)
-    var request: SFSpeechAudioBufferRecognitionRequest?
-    var task: SFSpeechRecognitionTask?
-    var gen = 0                       // bumped on every new recognition task; stale callbacks are ignored
+    let sttQueue = DispatchQueue(label: "deskhelper.stt")   // all HTTP; the audio thread never waits on it
+    let lock = NSLock()               // guards samples, inSpeech, voiced, gen, floorGen, muted, level, lastVoice, partialInFlight (audio thread)
+    var samples: [Int16] = []         // 16 kHz mono: a 0.3 s lead-in while quiet, the whole utterance while speaking
+    var inSpeech = false
+    var voiced = 0                    // samples heard above the gate in this utterance
+    var gen = 0                       // bumped at every endpoint / mute; stale partials are dropped
+    var floorGen = 0                  // finals from before the last mute are dropped
+    var partialInFlight = false
     var muted = false
     var restartingEngine = false      // the config-change handler is mid-restart
     var level: Float = 0
     var lastVoice = Date.distantPast  // last time the mic RMS was above the gate
-    var pending = ""                  // newest partial text of the current utterance
-    var lastChange = Date.distantPast // when the partial text last changed
-    var taskStart = Date()
+    var lastPartialAt = Date.distantPast
+    var pending = ""                  // newest partial text (main thread)
     var utts = Set<AVSpeechUtterance>()
     var speaking = false
     var bargeSent = false
     var voice: AVSpeechSynthesisVoice?
-    var fails: [Date] = []
     var lastLevel: Double = 0
     var monoFmt: AVAudioFormat?
+    var converter: AVAudioConverter?
+    let outFmt = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: true)!
     var timer: Timer?
+    var sttFails = 0                  // consecutive failed requests (sttQueue)
+    var sttFirst = true               // the first request may wait for the model to load (sttQueue)
+    let gate: Float = 0.012
+    let silenceEnd = 0.6              // seconds of quiet that end an utterance
+    let maxUtterance = 16000 * 25     // samples; longer is cut here
 
     func begin() {
         AVCaptureDevice.requestAccess(for: .audio) { micOK in
             guard micOK else { out(["error": "mic-denied"]); exit(1) }
-            SFSpeechRecognizer.requestAuthorization { st in
-                guard st == .authorized else { out(["error": "speech-denied"]); exit(1) }
-                DispatchQueue.main.async { self.setup() }
-            }
+            DispatchQueue.main.async { self.setup() }
         }
     }
 
     func setup() {
-        guard let r = SFSpeechRecognizer(locale: Locale(identifier: "en-US")) ?? SFSpeechRecognizer(), r.isAvailable else {
-            out(["error": "speech recognizer unavailable"]); exit(1)
-        }
-        recognizer = r
-        onDevice = r.supportsOnDeviceRecognition
-        if !onDevice { out(["note": "offline-unavailable"]) }
         if !dictate {
             voice = bestVoice(); synth.delegate = self
             // voice processing = echo cancellation + noise suppression, so Glim's own voice does not come back as "the user speaking"
@@ -610,9 +612,7 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
             s.restartingEngine = true; defer { s.restartingEngine = false }
             s.engine.inputNode.removeTap(onBus: 0)
             do { try s.startEngine() } catch { out(["error": "audio-failed: \(error.localizedDescription)"]); exit(1) }
-            s.startTask() // the new tap may have a new format; the old request would crash on it
         }
-        startTask()
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in self?.tick() }
         out(["ready": true])
     }
@@ -621,13 +621,31 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
         let input = engine.inputNode
         let fmt = input.outputFormat(forBus: 0)
         guard fmt.sampleRate > 0 else { throw NSError(domain: "call", code: 1, userInfo: [NSLocalizedDescriptionKey: "no microphone input"]) }
-        monoFmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: fmt.sampleRate, channels: 1, interleaved: false)
+        let mono = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: fmt.sampleRate, channels: 1, interleaved: false)
+        monoFmt = mono
+        converter = mono.flatMap { AVAudioConverter(from: $0, to: outFmt) }
+        guard converter != nil else { throw NSError(domain: "call", code: 2, userInfo: [NSLocalizedDescriptionKey: "cannot convert the microphone format"]) }
         input.installTap(onBus: 0, bufferSize: 1024, format: fmt) { [weak self] buf, _ in self?.onBuffer(buf) }
         engine.prepare()
         try engine.start()
     }
 
-    // audio thread
+    // mono Float32 at the mic rate -> 16 kHz mono Int16 (audio thread)
+    func toPCM16(_ b: AVAudioPCMBuffer) -> [Int16] {
+        guard let conv = converter else { return [] }
+        let cap = AVAudioFrameCount(Double(b.frameLength) * 16000.0 / b.format.sampleRate) + 64
+        guard let o = AVAudioPCMBuffer(pcmFormat: outFmt, frameCapacity: cap) else { return [] }
+        var fed = false
+        var err: NSError?
+        conv.convert(to: o, error: &err) { _, st in
+            if fed { st.pointee = .noDataNow; return nil }
+            fed = true; st.pointee = .haveData; return b
+        }
+        guard err == nil, let d = o.int16ChannelData else { return [] }
+        return Array(UnsafeBufferPointer(start: d[0], count: Int(o.frameLength)))
+    }
+
+    // audio thread: measure, convert, append. Never waits on the network.
     func onBuffer(_ buf: AVAudioPCMBuffer) {
         let n = Int(buf.frameLength)
         guard n > 0, let ch = buf.floatChannelData else { return }
@@ -635,83 +653,101 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
         let p = ch[0]
         for i in 0..<n { sum += p[i] * p[i] }
         let rms = (sum / Float(n)).squareRoot()
-        // voice processing can hand back several channels; the recognizer wants one
+        // voice processing can hand back several channels; take the first
         var b = buf
-        if buf.format.channelCount > 1, let mf = monoFmt, let m = AVAudioPCMBuffer(pcmFormat: mf, frameCapacity: buf.frameLength) {
+        if buf.format.channelCount > 1 || buf.format.isInterleaved, let mf = monoFmt, let m = AVAudioPCMBuffer(pcmFormat: mf, frameCapacity: buf.frameLength) {
             m.frameLength = buf.frameLength
             if let md = m.floatChannelData { memcpy(md[0], p, n * MemoryLayout<Float>.size) }
             b = m
         }
+        let pcm = toPCM16(b)
         lock.lock(); defer { lock.unlock() }
         if muted { return }
         level = max(level, rms)
-        if rms > 0.012 { lastVoice = Date() }
-        request?.append(b)
-    }
-
-    func startTask() {
-        lock.lock()
-        gen += 1
-        let g = gen
-        request?.endAudio()
-        let req = SFSpeechAudioBufferRecognitionRequest()
-        req.shouldReportPartialResults = true
-        if onDevice { req.requiresOnDeviceRecognition = true } // else the server is allowed (we said so with a note)
-        request = req
-        lock.unlock()
-        task?.cancel()
-        pending = ""; bargeSent = false; taskStart = Date()
-        task = recognizer?.recognitionTask(with: req) { [weak self] res, err in
-            DispatchQueue.main.async { self?.onResult(g, res, err) }
+        if rms > gate {
+            lastVoice = Date()
+            inSpeech = true
+            voiced += pcm.count
         }
-    }
-
-    func restartSoon() {
-        let g = gen
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { if g == self.gen { self.startTask() } }
-    }
-
-    func onResult(_ g: Int, _ res: SFSpeechRecognitionResult?, _ err: Error?) {
-        guard g == gen, !isMuted() else { return }
-        if let res = res {
-            let t = res.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !t.isEmpty && t != pending {
-                pending = t; lastChange = Date()
-                out(["partial": t])
-                if speaking && !bargeSent { bargeSent = true; out(["bargein": true]) }
-            }
-            if res.isFinal { finish(); return }
-        }
-        if let e = err {
-            // tasks end on their own (about a minute, or no speech heard): keep what we have and start a fresh one
-            if !pending.isEmpty { finish(); return }
-            let now = Date()
-            fails = fails.filter { now.timeIntervalSince($0) < 5 } + [now]
-            if fails.count >= 5 { out(["error": "recognizer-failed: \(e.localizedDescription)"]); exit(1) }
-            restartSoon()
-        }
-    }
-
-    func finish() {
-        let t = pending
-        if !t.isEmpty { out(["final": t]) }
-        startTask()
+        samples.append(contentsOf: pcm)
+        if !inSpeech && samples.count > 4800 { samples.removeFirst(samples.count - 4800) } // 0.3 s lead-in so the first word is not clipped
     }
 
     func isMuted() -> Bool { lock.lock(); defer { lock.unlock() }; return muted }
 
     func tick() {
         let now = Date()
-        lock.lock(); let lv = level; level = 0; let ago = now.timeIntervalSince(lastVoice); let m = muted; lock.unlock()
+        lock.lock(); let lv = level; level = 0; let ago = now.timeIntervalSince(lastVoice); let m = muted; let sp = inSpeech; let n = samples.count; let v = voiced; lock.unlock()
         let l = m ? 0 : (min(1.0, Double(lv) * 10) * 100).rounded() / 100
         if l > 0 || lastLevel > 0 { out(["level": l]) }
         lastLevel = l
-        if m { return }
-        // end of utterance: ~0.9 s since the words last changed, and the mic is quiet too (or 1.8 s regardless, for a noisy room)
-        if !pending.isEmpty {
-            let since = now.timeIntervalSince(lastChange)
-            if since > 0.9 && (ago > 0.5 || since > 1.8) { finish() }
-        } else if now.timeIntervalSince(taskStart) > 50 { startTask() } // before the recognizer's own timeout
+        if m || !sp { return }
+        if ago > silenceEnd || n > maxUtterance { endpoint(); return }
+        // talking over Glim: stop it from the sound alone (0.3 s of voice), not after a transcription comes back
+        if speaking && !bargeSent && v >= 4800 { bargeSent = true; out(["bargein": true]) }
+        if now.timeIntervalSince(lastPartialAt) >= 1.0 && v >= 4800 { requestPartial(now) }
+    }
+
+    // the utterance is over: transcribe all of it and emit the final
+    func endpoint() {
+        lock.lock()
+        let s = samples, v = voiced
+        samples = []; inSpeech = false; voiced = 0; gen += 1
+        let g = gen
+        lock.unlock()
+        pending = ""; bargeSent = false
+        if v < 3200 { return } // under 0.2 s above the gate: a click or a cough
+        sttQueue.async {
+            let t = self.transcribe(s, final: true)
+            DispatchQueue.main.async {
+                self.lock.lock(); let keep = g > self.floorGen && !self.muted; self.lock.unlock()
+                if keep, let t = t, !t.isEmpty { out(["final": t]) }
+            }
+        }
+    }
+
+    // utterance so far -> partial text. One at a time; dropped if the utterance ended or was muted meanwhile.
+    func requestPartial(_ now: Date) {
+        lock.lock()
+        if partialInFlight { lock.unlock(); return }
+        partialInFlight = true
+        let s = samples, g = gen
+        lock.unlock()
+        lastPartialAt = now
+        sttQueue.async {
+            let t = self.transcribe(s)
+            DispatchQueue.main.async {
+                self.lock.lock(); self.partialInFlight = false; let ok = g == self.gen && self.inSpeech && !self.muted; self.lock.unlock()
+                guard ok, let t = t, !t.isEmpty, t != self.pending else { return }
+                self.pending = t
+                out(["partial": t])
+                if self.speaking && !self.bargeSent { self.bargeSent = true; out(["bargein": true]) }
+            }
+        }
+    }
+
+    // POST 16 kHz mono Int16 to the local server (sttQueue only). nil on failure; 3 failed finals in a row end the call
+    // (a slow or failed partial does not count).
+    func transcribe(_ s: [Int16], final: Bool = false) -> String? {
+        var req = URLRequest(url: sttURL.appendingPathComponent("transcribe"))
+        req.httpMethod = "POST"
+        req.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = sttFirst ? 180 : 30 // the first one loads the model
+        let body = s.withUnsafeBufferPointer { Data(buffer: $0) } // Apple Silicon is little-endian
+        let sem = DispatchSemaphore(value: 0)
+        var text: String?, why = "no answer"
+        URLSession.shared.uploadTask(with: req, from: body) { data, resp, err in
+            defer { sem.signal() }
+            if let err = err { why = err.localizedDescription; return }
+            let j = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            if let t = j?["text"] as? String { text = t.trimmingCharacters(in: .whitespacesAndNewlines) } else { why = (j?["error"] as? String) ?? "bad reply" }
+        }.resume()
+        sem.wait()
+        if text != nil { sttFails = 0; sttFirst = false; return text }
+        if !final { return nil }
+        sttFails += 1
+        if sttFails >= 3 { out(["error": "stt-failed: \(why)"]); exit(1) }
+        return nil
     }
 
     func bestVoice() -> AVSpeechSynthesisVoice? {
@@ -748,16 +784,22 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
     func handle(_ line: String) {
         guard let d = line.data(using: .utf8), let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
         if dictate {
-            if j["stop"] as? Bool == true && !pending.isEmpty { out(["final": pending]) } // keep what was heard
-            if j["stop"] as? Bool == true || j["quit"] as? Bool == true { shutdown() }
+            if j["stop"] as? Bool == true {
+                // keep what was heard: transcribe it, then exit once the final has gone out (same queue, same order)
+                lock.lock(); let sp = inSpeech; lock.unlock()
+                if sp { endpoint() }
+                sttQueue.async { DispatchQueue.main.async { self.shutdown() } }
+            } else if j["quit"] as? Bool == true { shutdown() }
             return
         }
         if let s = j["say"] as? String { say(s) }
         if j["stop"] as? Bool == true { stopSpeaking() }
         if let id = j["voice"] as? String, let v = AVSpeechSynthesisVoice(identifier: id) { voice = v }
         if let m = j["mute"] as? Bool {
-            lock.lock(); muted = m; lock.unlock()
-            startTask() // drop half-heard words on mute; on unmute, recognition was dead while muted
+            lock.lock()
+            muted = m; samples = []; inSpeech = false; voiced = 0; gen += 1; floorGen = gen // drop half-heard words on mute and on unmute
+            lock.unlock()
+            pending = ""
         }
         if j["quit"] as? Bool == true { shutdown() }
     }
@@ -765,14 +807,15 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
     func shutdown() -> Never {
         synth.stopSpeaking(at: .immediate)
         engine.inputNode.removeTap(onBus: 0); engine.stop()
-        task?.cancel()
         exit(0)
     }
 }
 
-func runCall(dictate: Bool = false) -> Never {
+func runCall(dictate: Bool = false, stt: String?) -> Never {
+    guard let s = stt, let url = URL(string: s) else { out(["error": "stt-missing: the speech server address was not given (--stt URL)"]); exit(1) }
     let session = CallSession()
     session.dictate = dictate
+    session.sttURL = url
     session.begin()
     DispatchQueue.global().async {
         while let line = readLine() { DispatchQueue.main.async { session.handle(line) } }
@@ -787,10 +830,10 @@ let command = args.removeFirst()
 
 switch command {
 case "call":
-    runCall()
+    runCall(stt: stringFlag(&args, "--stt"))
 
 case "dictate":
-    runCall(dictate: true)
+    runCall(dictate: true, stt: stringFlag(&args, "--stt"))
 
 case "notch":
     // the camera notch of the menu-bar screen: the gap between the two menu-bar areas beside it (macOS 12+); 0 when there is none.
