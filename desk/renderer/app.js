@@ -696,6 +696,7 @@
       case 'text': markRead(); onText(ev.delta); break;
       case 'reasoning': markRead(); onReasoning(ev.delta); break;
       case 'assistant_end': onAssistantEnd(ev); break;
+      case 'discard': if (tn) { try { tn.text && tn.text.remove(); tn.think && tn.think.d.remove(); } catch (e) { /* gone */ } tn = null; } break;
       case 'step_start': markRead(); onStepStart(ev); Mascot.bounce(logo); break;
       case 'step_end': onStepEnd(ev); break;
       case 'bcard': upsertBCard(ev); break;
