@@ -147,6 +147,13 @@ function pushSleep() {
   pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : 'Training on your chats; ' + v.wakeLabel } : null);
   send('sleep:state', v);
 }
+// Ben Oct 28: "It should also be aware of its ability to sleep". One line in the first turn of a chat: what sleep does, when, and the last sleep.
+function sleepInfo() {
+  if (!sleeper || !sleeper.available().ok || (sleeper.needsRuntime && sleeper.needsRuntime())) return '';
+  const s = store.getSettings(), w = effectiveWindow(s, learnedNow(new Date()));
+  return '[You can sleep: at night (' + w.from + '-' + w.to + ') your local model trains on the day\'s chats and saved notes and skills, so you remember them and get better. '
+    + (s.autoSleep ? 'It starts by itself when the person is away then, or ' : 'It starts ') + 'when they press Sleep; while asleep you cannot chat. When this chat began: ' + sleeper.statusLine() + ']';
+}
 const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
 function sleepNotice(text) { send('sleep:notice', { text }); }
 // each launch and each new thread starts on the default pill (Auto unless Settings says otherwise); the top-bar pills change only the current one
@@ -695,6 +702,7 @@ function createAgent({ helper, rec, voice }) {
       : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
+    sleepInfo: isHelper ? null : sleepInfo,
     slot: limiter,
     onState: helper && helper.onState,
     onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); },

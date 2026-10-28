@@ -341,3 +341,17 @@ test('approvals: looking commands need no card; anything that writes, chains or 
   for (const c of ['ls -la ~/Documents', 'cat notes.txt | head -5', 'pwd', 'date', 'find . -name "*.js" | wc -l']) assert.ok(isReadOnly(c), c);
   for (const c of ['rm x', 'ls > out.txt', 'ls; rm x', 'cat ~/.ssh/id_rsa', 'find . -delete', 'find . -exec rm {} +', 'ls $(whoami)', 'cat x | sh', 'echo hi > f']) assert.ok(!isReadOnly(c), c);
 });
+
+test('sleep line rides only in the first user turn of a chat', async () => {
+  const gw = await startGateway([{ content: 'Hi.' }, { content: 'Again.' }]);
+  try {
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, sleepInfo: () => '[You can sleep: test]', emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await agent.run(t, 'hello');
+    await agent.run(t, 'again');
+    const users = t.messages.filter((m) => m.role === 'user');
+    assert.match(users[0].content, /\[You can sleep: test\] hello$/);
+    assert.ok(!users[1].content.includes('You can sleep'));
+    assert.strictEqual(t.items[0].text, 'hello');
+  } finally { gw.close(); }
+});
