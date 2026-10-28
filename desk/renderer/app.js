@@ -74,7 +74,19 @@
     new ResizeObserver(() => document.documentElement.style.setProperty('--composer-h', $('#composer').offsetHeight + 'px')).observe($('#composer'));
   }
   // opening/closing a block by hand must not drag the view to the bottom
-  msgs.addEventListener('click', (e) => { if (e.target.closest('.act-head, .step .pill, details > summary')) { stick = false; forceUntil = 0; } }, true);
+  // and the block you clicked stays where it was on screen: opening one (the fold state is shared by every group) grows content above it
+  let anchor = null;
+  msgs.addEventListener('click', (e) => {
+    const h = e.target.closest('.act-head, .step .pill, details > summary');
+    if (!h) return;
+    stick = false; forceUntil = 0;
+    anchor = { el: h, top: h.getBoundingClientRect().top }; setTimeout(() => { anchor = null; }, 400);
+  }, true);
+  new ResizeObserver(() => {
+    if (!anchor || !anchor.el.isConnected) return;
+    const d = anchor.el.getBoundingClientRect().top - anchor.top;
+    if (d) scroller.scrollTop += d;
+  }).observe(msgs);
   const secs = (ms) => { const s = Math.max(1, Math.round(ms / 1000)); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + (s % 60 ? s % 60 + ' s' : ''); };
   const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u || ''; } };
 
