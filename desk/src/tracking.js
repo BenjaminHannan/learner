@@ -6,7 +6,18 @@
 // by the agent like the memory notes (data, never instructions); the hourly check-in flags items that are due.
 const fs = require('fs');
 const path = require('path');
-const { overlap, refusal } = require('./memory');
+const { overlap, looksSecret, SECRET_MSG } = require('./memory');
+
+// Items are data injected into later turns. Secrets and links are refused, and so is text that tries to give the agent standing
+// orders. Ordinary to-dos ("Pay rent by Friday", "Send form back") are fine: they are what this list is for.
+const LINK_RE = /\bhttps?:\/\/|\bwww\.|\b[\w.+-]+@[\w-]+\.[\w.-]+/i;
+const INJECT_RE = /^\W*(please\s+)?(always|never|ignore|disregard|override|forget|execute|run|install|download|forward|transfer|wire)\b|\b(ignore|disregard)\b[^.]{0,40}\b(instructions|previous|above|rules)\b|\b(from now on|you must|you should)\b/i;
+function refusal(what, source) {
+  if (looksSecret(what) || looksSecret(source)) return SECRET_MSG;
+  if (LINK_RE.test(what) || LINK_RE.test(source || '')) return 'Not added: items cannot contain links or email addresses.';
+  if (INJECT_RE.test(what) || INJECT_RE.test(source || '')) return 'Not added: that reads like an instruction, not something to keep track of.';
+  return '';
+}
 
 const MAX_ACTIVE = 40;
 const MAX_DONE = 30;          // finished items kept in the Done section (oldest dropped)

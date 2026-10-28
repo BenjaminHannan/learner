@@ -8,7 +8,7 @@ const E2E = process.argv.includes('--e2e');
 const Platform = require('./renderer/platform');
 const APP_NAME = 'Premonition';
 app.setName(APP_NAME);
-if (!E2E) {
+if (!E2E && !app.commandLine.hasSwitch('user-data-dir')) { // a test profile must start empty, never a copy of the real data
   // renamed from "Premonition Desk": bring the old settings/threads/memory/helpers along, once (the old folder stays as a backup)
   try { const r = require('./src/migrate').migrateUserData(app.getPath('appData'), app.getPath('userData')); if (r.migrated) console.log('userData copied from', r.from); } catch (e) { /* start fresh */ }
 }
