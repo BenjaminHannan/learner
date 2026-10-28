@@ -201,3 +201,15 @@ test('pill: a helper working quietly never reaches the pill or badge while Show 
   p.onEvent('h1', 'Email watch', 'th', { type: 'approval', rid: 'th:1', kind: 'shell', text: 'mkdir x' });
   const v = p.view(); assert.strictEqual(v.status, 'waiting'); assert.strictEqual(v.top.name, 'Glim'); assert.strictEqual(v.oneGlim, true);
 });
+
+test('pill says Thinking or Writing while the model works with no tool step, never a stale Starting', () => {
+  const p = new PillState({ now: () => 1000, onChange: () => {} });
+  p.onEvent('main', 'Glim', 't1', { type: 'started' });
+  assert.strictEqual(p.view().line, 'Starting');
+  p.onEvent('main', 'Glim', 't1', { type: 'reasoning', delta: '' });
+  assert.strictEqual(p.view().line, 'Thinking'); assert.strictEqual(p.view().top.step, 'Thinking');
+  p.onEvent('main', 'Glim', 't1', { type: 'step_start', summary: 'Opened gmail.com' });
+  assert.notStrictEqual(p.view().line, 'Thinking');
+  p.onEvent('main', 'Glim', 't1', { type: 'text', delta: 'Hi' });
+  assert.strictEqual(p.view().line, 'Writing');
+});

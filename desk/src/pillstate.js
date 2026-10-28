@@ -39,7 +39,13 @@ class PillState {
   onEvent(key, name, threadId, ev, meta) {
     if (!ev || !ev.type) return;
     const t = ev.type;
-    if (t === 'text' || t === 'reasoning' || t === 'compacted' || t === 'bcard' || t === 'scard' || t === 'user' || t === 'notice' || t === 'plan' || t === 'step_end') return;
+    // Ben Oct 28: the pill must say what Glim is doing now. While the model thinks or writes (no tool step running) show that, not a stale "Starting".
+    if (t === 'reasoning' || t === 'text') {
+      const a = this.agents.get(key);
+      if (a && a.status === 'working') { const l = t === 'reasoning' ? 'Thinking' : 'Writing'; if (a.line !== l) { a.line = l; a.step = l; this._touch(a); } }
+      return;
+    }
+    if (t === 'compacted' || t === 'bcard' || t === 'scard' || t === 'user' || t === 'notice' || t === 'plan' || t === 'step_end') return;
     if (t === 'done') {
       const a = this.agents.get(key);
       if (!a) return;
