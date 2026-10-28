@@ -118,13 +118,17 @@
     act = a;
     return a;
   }
+  // Glim's own bookkeeping (checking its work) is not something Ben asked for: not shown, not counted
+  const shownSteps = (a) => a.body.querySelectorAll('.step:not([data-tool="verify"])').length;
   function relabel(a) {
     if (a.finished) {
-      a.title.textContent = 'Did ' + (a.steps === 1 ? '1 thing' : a.steps + ' things');
+      const n = shownSteps(a);
+      a.title.textContent = n ? 'Did ' + (n === 1 ? '1 thing' : n + ' things') : 'Done';
       a.sub.textContent = '· ' + secs(a.endT - a.t0) + (a.bad ? ' · ' + a.bad + ' failed' : '');
     } else {
       a.title.textContent = 'Glim is working';
-      a.sub.textContent = a.steps ? '· ' + (a.steps === 1 ? '1 step' : a.steps + ' steps') : '';
+      const n = shownSteps(a);
+      a.sub.textContent = n ? '· ' + (n === 1 ? '1 step' : n + ' steps') : '';
     }
   }
   function finishAct(a) {
@@ -249,7 +253,7 @@
     fill(preview);
     row.onclick = () => { detail.hidden = !detail.hidden; wrap.classList.toggle('open', !detail.hidden); };
     wrap.append(row, detail);
-    wrap._fill = fill; wrap._sum = sum; wrap._ico = ico; wrap._tool = tool;
+    wrap._fill = fill; wrap._sum = sum; wrap._ico = ico; wrap._tool = tool; wrap.dataset.tool = tool;
     return wrap;
   }
   function onStepStart(ev) {
@@ -1082,6 +1086,7 @@
     document.body.classList.add(info.platform);
     if (!gate().showSleepButton) $('#btnSleep').hidden = true; // hidden on a Windows PC and on a Mac without Ben's assistant (Sleep runs on Ben's Macs for now); the File menu item is left out there too
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
+    CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     gw = (await desk.gateway.state()) || gw; paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
     const list = await desk.threads.list();

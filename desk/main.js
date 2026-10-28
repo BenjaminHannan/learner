@@ -59,6 +59,7 @@ const { WinSleep, sleepmlxParent } = require('./src/sleepwin');
 const CK = require('./src/checkin');
 const { Builtin, runtimeRoot } = require('./src/runtime/builtin');
 const { SleepInstaller } = require('./src/runtime/sleepinstall');
+const { Call } = require('./src/call');
 
 let win = null;
 let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
@@ -613,23 +614,24 @@ function createAgent({ helper, rec }) {
   const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
   const a = new Agent({
     memory, tracking,
-    getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' }) : () => store.getSettings(),
+    getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' })
+      : () => { const s = store.getSettings(); return callTurn ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
     slot: limiter,
     onState: helper && helper.onState,
     onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); },
-    emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); },
+    emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     approve: (req, signal) => {
       const rid = a.threadId + ':' + req.id;
       const ev = { threadId: a.threadId, type: 'approval', rid, ...req };
-      send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta());
+      send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
       return waitFor(rid, signal, 'deny', { threadId: a.threadId, ev });
     },
     askUser: (question, signal) => {
       const id = 'ask_' + Date.now() + '_' + a.threadId;
       const ev = { threadId: a.threadId, type: 'ask', id, question };
-      send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta());
+      send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
       return waitFor(id, signal, '[stopped by user]', { threadId: a.threadId, ev });
     },
     // the model keeps repeating itself: a sign-in / passkey page goes to Ben, anything else is a question to Ben
@@ -701,6 +703,58 @@ function buildAgent() {
     onNeedBen: (h) => notify("Glim '" + h.name + "' needs you", 'Open its thread to answer.', h.threadId)
   });
   agent = createAgent({ helper: null, rec: null });
+}
+
+// ---- Call Glim (speech to speech, Mac) ------------------------------------------------------------------
+// One `deskhelper call` process hears and speaks; src/call.js cuts the streamed answer into sentences. Each spoken turn is a normal agent
+// turn in one thread titled "Call" (kept as a chat). The instruction to answer briefly rides in the user message, NEVER in the system
+// prompt (the cached prefix must stay byte-identical).
+const VOICE_PREFIX = '[voice call] Answer out loud: one to three short spoken sentences, no lists, no markdown, no emoji. ';
+let call = null, callThread = null;
+let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the main agent
+async function callAsk(text, { onDelta, signal }) {
+  if (sl.asleep || sl.waking) throw new Error('Glim is asleep');
+  for (let i = 0; i < 100 && agent.running && callTurn; i++) await sleep(30); // the turn we just interrupted is still unwinding
+  if (agent.running) throw new Error('Glim is busy with another task');
+  await Promise.race([toolsReady, sleep(3000)]);
+  if (signal.aborted) return;
+  if (agent.running) throw new Error('Glim is busy with another task');
+  const t = callThread;
+  activeThread = t;
+  callTurn = {
+    threadId: t.id,
+    onEvent: (ev) => {
+      if (ev.type === 'text') onDelta(ev.delta);
+      else if (ev.type === 'assistant_end') onDelta('\n');
+      else if (ev.type === 'step_start' && call) call.toolStarted();
+      else if (ev.type === 'approval' || ev.type === 'ask') onDelta('I need your OK in the chat for that.\n'); // a voice call cannot answer cards
+    }
+  };
+  const stop = () => agent.stop();
+  signal.addEventListener('abort', stop);
+  send('agent', { threadId: t.id, type: 'user', text });
+  try { await agent.run(t, VOICE_PREFIX + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
+}
+function startCall() {
+  if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
+  if (call) return { error: 'You are already on a call.' };
+  if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first, then call.' };
+  if (agent.running) return { error: 'Glim is busy with a task. Stop it or wait, then call.' };
+  const bin = screen.findHelper();
+  if (!bin) return { error: 'Calling needs the Glim helper, which is not installed in this build.' };
+  callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
+  const c = new Call({
+    helper: bin,
+    spawn: (cmd, args) => require('child_process').spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+    ask: callAsk,
+    onEvent: (ev) => {
+      send('call', ev);
+      if (ev.type === 'state' && ev.state === 'ended') { call = null; pillState.setCall(null); if (!((callThread.items || []).length)) store.deleteThread(callThread.id); send('threads:changed', {}); } // a call nobody spoke in leaves no empty chat
+    }
+  });
+  call = c; pillState.setCall(Date.now()); send('threads:changed', {});
+  c.start();
+  return { ok: true, threadId: callThread.id };
 }
 
 // ---- permissions card (drag the app into System Settings) ------------------------------------------------------
@@ -876,15 +930,19 @@ function registerIpc() {
       return { error: 'Premonition is busy in another thread.' };
     }
     await Promise.race([toolsReady, sleep(3000)]); // the tool list must be final before the first request (prompt cache)
+    if (agent.running) return { error: 'Premonition is busy in another thread.' };
     const t = store.loadThread(threadId) || store.newThread();
     if (!t.title || t.title === 'New thread') t.title = String(text).replace(/\s+/g, ' ').trim().slice(0, 48) || 'New thread';
     activeThread = t;
     agent.run(t, text).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
-    });
+    }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
     return { started: true, title: t.title };
   });
+  h('call:start', () => startCall());
+  h('call:stop', () => { if (call) call.hangup(); return true; });
+  h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
   h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else agent.stop(); return true; });
   // First-run setup: create the picked recurring Glims through the same Helpers.add that agent_start uses (no model call).
   h('onboard:create', (ids) => (Array.isArray(ids) ? ids : []).map((use) => {
@@ -933,6 +991,7 @@ function registerIpc() {
   h('browser:layout', (p) => {
     p = p || {};
     panel.key = p.key || null; panel.open = !!p.open; panel.top = !!p.top;
+    if (panel.lastTop !== panel.top) { panel.lastTop = panel.top; console.log('[browser:layout] top=' + panel.top + ' open=' + panel.open + ' key=' + (panel.key || '-')); } // a blank panel = top false while open
     if (p.rect) {
       const z = ui && !ui.webContents.isDestroyed() ? ui.webContents.getZoomFactor() : 1;
       const r = p.rect;
@@ -983,7 +1042,7 @@ function registerIpc() {
     return screen.askPermissions();
   });
   h('system:open', (pane) => {
-    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture' };
+    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone', speech: 'x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition' };
     if (urls[pane]) { try { shell.openExternal(urls[pane]); } catch (e) { /* not on a Mac */ } }
     return true;
   });
@@ -1040,6 +1099,7 @@ function registerIpc() {
       case 'openBrowser': { const pa = [...pillState.agents.values()].find((x) => x.key === arg); const key = pa && pa.threadId; if (key && browsers.has(key)) { showWindow(); send('browser-show', { key, threadId: key, login: loginWaits.has(key) }); } break; }
       case 'dismiss': pillState.dismiss(arg); break;
       case 'wake': wakeNow(); break;
+      case 'hangup': if (call) call.hangup(); break;
       default: break;
     }
     return true;
@@ -1050,7 +1110,7 @@ const gotLock = E2E || app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
-app.on('before-quit', () => { quitting = true; try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
+app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {

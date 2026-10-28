@@ -17,7 +17,7 @@
     pill.classList.toggle('notch', !!geo.notchH);
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
-    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'idle'); pill.classList.add(v.status);
+    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'call', 'idle'); pill.classList.add(v.status);
     Mascot.set(g, v.mood);
     if (v.status === 'idle') { close(); return; } // just the icon
     const t = v.top;
@@ -37,6 +37,7 @@
       b.append(btn('Deny', 'no', () => P.act('respond', { rid: ap.rid, value: 'deny', threadId: t.threadId })));
     }
     if (ap && ap.kind === 'login') b.append(btn('Open browser', '', () => P.act('openBrowser', t.key)));
+    if (v.status === 'call') { b.textContent = ''; b.append(btn('Open', 'go', () => P.act('open', {})), btn('Hang up', 'no', () => P.act('hangup'))); return; }
     if (v.status === 'sleeping') { b.textContent = ''; b.append(btn('Wake Glim', 'go', () => P.act('wake'))); return; }
     if (v.status === 'working' || v.status === 'waiting') b.append(btn('Stop', 'no', () => P.act('stop', t.key)));
     if (v.status === 'done' || v.status === 'error') b.append(btn('Dismiss', '', () => P.act('dismiss', t.key)));

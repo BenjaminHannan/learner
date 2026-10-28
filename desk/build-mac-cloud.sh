@@ -31,11 +31,11 @@ if [[ -f "$HELPER" ]]; then
   # a Mac binary must be Mach-O arm64; refuse anything else (a Linux/Windows file by mistake)
   case "$(head -c4 "$HELPER" | od -An -tx1 | tr -d ' \n')" in
     cffaedfe|cafebabe|bebafeca) echo "==> including the committed Mac screen helper ($HELPER)"; EXTRA=(--extra-resource="$HELPER") ;;
-    *) echo "$HELPER is not a Mac (Mach-O) binary; remove it or rebuild it on a Mac with: swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper" >&2; exit 1 ;;
+    *) echo "$HELPER is not a Mac (Mach-O) binary; remove it or rebuild it on a Mac with: swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist" >&2; exit 1 ;;
   esac
 else
   echo "NOTE: $HELPER not found; building WITHOUT screen control (only a Mac can compile helper/deskhelper.swift:" >&2
-  echo "      swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper, then commit it and rebuild)." >&2
+  echo "      swiftc -O helper/deskhelper.swift -o vendor/helper/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist, then commit it and rebuild)." >&2
 fi
 
 IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
@@ -45,6 +45,7 @@ rm -rf "$OUT"
 npx @electron/packager . "$NAME" \
   --app-bundle-id="$APP_BUNDLE_ID" \
   --platform=darwin --arch=arm64 --out="$OUT" --overwrite --icon=assets/icon.icns \
+  --extend-info=assets/Info.extra.plist \
   "${IGNORE[@]}" ${EXTRA[@]+"${EXTRA[@]}"} "$@"
 
 [[ -d "$APP" ]] || { echo "Packaging produced no app at $APP." >&2; exit 1; }

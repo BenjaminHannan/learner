@@ -166,6 +166,10 @@ body[data-acts="closed"] .act-body { display:none; }
 .stop i { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
 #runState i { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; }
+.callbtn { background:none; color:var(--text2); border:1.5px solid var(--hair2); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
+.callbtn svg { width:1.05rem; height:1.05rem; }
+.callbtn:hover:not(:disabled) { color:var(--accent-text); border-color:var(--accent-text); }
+.callbtn:disabled { opacity:.45; cursor:default; }
 .hint { color:var(--faint); font-size:.78rem; text-align:center; padding-top:.45rem; }
 
 /* drawer */
@@ -288,6 +292,7 @@ body.bp-narrow #bSlot { margin:0; }
 
 /* permissions card */
 #perms { position:fixed; inset:0; z-index:120; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+body.bp-open:not(.bp-narrow) #perms { right:var(--bp, 0px); } /* the browser page sits above the UI on the right: keep the card beside it */
 .p-card { width:100%; max-width:38rem; max-height:100%; overflow:auto; background:var(--surface); border:1px solid var(--hair2); border-radius:1.2rem; box-shadow:var(--shadow); padding:1.2rem 1.3rem 1.3rem; display:flex; flex-direction:column; gap:.8rem; }
 .p-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; } .p-head h2 { margin:0; font-size:1.25rem; }
 .p-sub { margin:0; color:var(--text2); line-height:1.45; }
@@ -412,3 +417,40 @@ body[data-acts="closed"] .bc-fav { width:1.2rem; height:1.2rem; }
 body[data-acts="closed"] .bc-url { display:none; }
 body[data-acts="closed"] .bc-foot { padding:.4rem .7rem; flex:none; }
 body[data-acts="closed"] .bcard:not(.login) .bc-foot .lbl { display:none; }
+
+/* Call Glim overlay */
+#call { position:fixed; inset:0; z-index:125; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+#call[hidden] { display:none; }
+.call-card { width:100%; max-width:34rem; display:flex; flex-direction:column; align-items:center; gap:.9rem; text-align:center; }
+.call-time { color:var(--text2); font-variant-numeric:tabular-nums; }
+.call-orb { position:relative; width:11rem; height:11rem; display:grid; place-items:center; margin:.5rem 0; }
+.call-orb .mascot-wrap { position:relative; z-index:1; }
+#callRing { position:absolute; inset:0; border-radius:50%; border:2px solid var(--accent); background:var(--accent-soft); opacity:.55; transform:scale(calc(.78 + var(--lv, 0) * .22)); transition:transform .1s linear, opacity .2s; }
+#call.speaking #callRing { animation:pulse 1.4s infinite; }
+#call.muted #callRing { opacity:.15; }
+.call-status { font-size:1.25rem; font-weight:650; }
+.call-cap { min-height:1.6em; max-width:100%; overflow-wrap:anywhere; line-height:1.45; }
+.call-cap.you { color:var(--text2); font-style:italic; }
+.call-cap.glim { color:var(--text); font-size:1.1rem; }
+.call-note { color:var(--text2); font-size:.85rem; }
+.call-err { display:flex; flex-direction:column; align-items:center; gap:.6rem; padding:.8rem 1rem; border:1px solid var(--danger); background:var(--danger-soft); border-radius:.9rem; }
+.call-err[hidden], .call-note[hidden] { display:none; }
+.call-btns { display:flex; gap:.8rem; margin-top:.6rem; }
+.call-btns button { min-width:7.5rem; min-height:2.8rem; border-radius:1.4rem; font-weight:650; }
+.call-btns .hang { background:var(--danger); color:var(--on-danger); border:0; padding:.45rem 1.2rem; }
+.call-btns .hang:hover { filter:brightness(1.08); }
+.call-btns .ghost[aria-pressed="true"] { border-color:var(--accent-text); color:var(--accent-text); }
+.call-hint { color:var(--faint); font-size:.78rem; }
+
+/* Calm activity (Ben: "too much is going on"): a quiet one-line header with no box around it, and when opened, a plain list of
+   what Glim did. The model's in-between narration and its self-checks stay out of it (the answer below says the result). */
+.activity { border:0; background:none; border-radius:0; overflow:visible; }
+.act-head { padding:.2rem .1rem; min-height:2rem; font-weight:500; color:var(--text2); border-radius:.6rem; }
+.act-head:hover { background:none; color:var(--text); }
+.activity.running .act-head { color:var(--text); }
+.act-live { padding:0 .1rem .3rem 1.75rem; font-size:.88rem; }
+.act-body { border-top:0; border-left:2px solid var(--hair); margin:.15rem 0 .5rem .6rem; padding:.1rem 0 .1rem .9rem; gap:.15rem; max-height:16rem; }
+.act-body .nar, .act-body .step[data-tool="verify"] { display:none; }
+.act-body .step .pill { background:none; border:0; padding:.15rem 0; min-height:1.7rem; font-size:.88rem; gap:.45rem; }
+.act-body .step .ico { width:1.1rem; height:1.1rem; background:none; }
+.act-body .step.bad .pill { border:0; color:var(--danger); }

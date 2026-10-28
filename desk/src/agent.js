@@ -250,7 +250,8 @@ class Agent {
     }
   }
 
-  async run(thread, userText) {
+  // opts.display: what the transcript shows as Ben's message when userText carries a hidden per-turn instruction (voice calls)
+  async run(thread, userText, opts) {
     if (this.running) throw new Error('already running');
     this.running = true;
     this.abort = new AbortController();
@@ -269,17 +270,17 @@ class Agent {
     thread.messages = thread.messages || [];
     thread.items = thread.items || [];
     const save = () => { try { this.o.onThreadChange && this.o.onThreadChange(thread); } catch (e) { /* ignore */ } };
-    const pushUser = (text) => {
+    const pushUser = (text, shown) => {
       const notes = takeNotices(thread); // finished-helper updates ride along with Ben's next message
       // Ben's picks from first-run setup ride in the first user message of a thread, beside the date. Never in the system prompt or tools.
       let ctx = '';
       if (!thread.messages.some((m) => m.role === 'user')) { try { const s = this.o.getSettings && this.o.getSettings(); ctx = s ? usesLine(s.uses, s.usesOther) : ''; } catch (e) { ctx = ''; } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
       thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + datePrefix() + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
-      thread.items.push({ t: 'user', text });
+      thread.items.push({ t: 'user', text: shown || text });
     };
     repairHistory(thread.messages);
-    pushUser(userText);
+    pushUser(userText, opts && opts.display);
     save();
     let stopped = false;
     let failure = null;

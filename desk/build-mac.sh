@@ -24,7 +24,8 @@ mkdir -p build
 EXTRA=()
 if command -v swiftc >/dev/null 2>&1 && [[ -f helper/deskhelper.swift ]]; then
   echo "==> compiling deskhelper"
-  swiftc -O helper/deskhelper.swift -o build/deskhelper
+  # the Info.plist is linked into the binary so the helper has its own microphone / speech usage strings (Call Glim)
+  swiftc -O helper/deskhelper.swift -o build/deskhelper -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker helper/deskhelper-Info.plist
   EXTRA=(--extra-resource=build/deskhelper)
 else
   echo "WARNING: swiftc or helper/deskhelper.swift missing; building without screen control (install Xcode command line tools: xcode-select --install)." >&2
@@ -38,6 +39,7 @@ APP_BUNDLE_ID="com.electron.premonition desk"
 npx @electron/packager . "Premonition" \
   --app-bundle-id="$APP_BUNDLE_ID" \
   --platform=darwin --arch=arm64 --out=build/app --overwrite --icon=assets/icon.icns \
+  --extend-info=assets/Info.extra.plist \
   --ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' \
   --ignore='^/helper($|/)' \
   ${EXTRA[@]+"${EXTRA[@]}"}
