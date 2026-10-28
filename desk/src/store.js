@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   modelMain: Platform.defaultPreset(process.platform).modelMain,
   modelFast: Platform.defaultPreset(process.platform).modelFast, // also used for the warm-up and the self-check
   // Autonomy
-  modelDefault: 'modelAuto', // which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
+  modelDefault: 'modelFast', // Oct 28: the Auto router's judge call alone took 9-60 s before the first token; Fast answers at once, Think is one tap away. Which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
   mode: 'ask',            // ask | hands-off (main agent)
   followUp: true,         // once a day, when Ben opens the chat, Glim checks on what he left open and offers clickable choices
   ideaJudgeDay: '',       // the day (YYYY-MM-DD) the Motes' ideas were last judged
