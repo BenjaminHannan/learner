@@ -842,7 +842,7 @@
   const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped', failed: "couldn't finish" };
   const HELPER_MOOD = { idle: 'idle', queued: 'thinking', running: 'working', 'waiting-for-Ben': 'waiting', stopped: 'sleepy', failed: 'error' };
   // why a Glim is not running yet, in plain words
-  const holdText = (h) => h.hold === 'slot' ? 'waiting: ' + (h.holdCount > 1 ? h.holdCount + ' other tasks are running' : h.holdCount ? 'another task is running' : 'a slot is busy') : h.hold === 'screen' ? 'waiting for the screen' : h.dueHeld ? 'will run after Glim wakes up' : '';
+  const holdText = (h) => h.hold === 'ben' ? 'waiting: you are chatting with Glim' : h.hold === 'slot' ? 'waiting: ' + (h.holdCount > 1 ? h.holdCount + ' other tasks are running' : h.holdCount ? 'another task is running' : 'a slot is busy') : h.hold === 'screen' ? 'waiting for the screen' : h.dueHeld ? 'will run after Glim wakes up' : '';
   const statusText = (h) => h.status === 'queued' ? holdText(h) || 'starting' : h.status === 'idle' && h.dueHeld ? holdText(h) : STATUS_TEXT[h.status] || h.status;
   function when(ts) {
     if (!ts) return '';

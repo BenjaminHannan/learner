@@ -155,6 +155,11 @@ function sleepInfo() {
   return '[You can sleep: at night (' + w.from + '-' + w.to + ') your local model trains on the day\'s chats and saved notes and skills, so you remember them and get better. Feedback is how you improve: thumbs up/down, corrections and reviews of your Motes\' ideas all feed sleep, so take it as a lesson, never as criticism, and say what you will do differently. '
     + (s.autoSleep ? 'It starts by itself when the person is away then, or ' : 'It starts ') + 'when they press Sleep; while asleep you cannot chat. When this chat began: ' + sleeper.statusLine() + ']';
 }
+// Ben's chat first (Oct 28): while the main Glim is running, or ran in the last 2 min, Glims (helpers) wait before each model call
+// and due ones do not start, so Ben's chat keeps the one local model and its prompt cache. Setting benFirst: false turns it off.
+const BEN_FIRST_MS = 120000;
+let benLastTurn = 0;
+const benBusy = () => store.getSettings().benFirst !== false && (!!(agent && agent.running) || !!(call && callAgent && callAgent.running) || Date.now() - benLastTurn < BEN_FIRST_MS);
 const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
 function sleepNotice(text) { send('sleep:notice', { text }); }
 // each launch and each new thread starts on the default pill (Auto unless Settings says otherwise); the top-bar pills change only the current one
@@ -741,7 +746,8 @@ function createAgent({ helper, rec, voice }) {
     sleepInfo: isHelper ? null : sleepInfo,
     slot: limiter,
     onState: helper && helper.onState,
-    onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); },
+    benBusy: isHelper ? benBusy : null,
+    onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); if (!isHelper) benLastTurn = Date.now(); },
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
     approve: (req, signal) => {
@@ -883,6 +889,7 @@ function buildAgent() {
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
     hold: sleepHold,
+    yieldTo: benBusy,
     runner: createRunner({ store, makeAgent: makeHelperAgent }),
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent, flags) => {

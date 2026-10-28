@@ -16,6 +16,7 @@ const SUMMARY_IN_CHARS = 12000;   // the newest part of the left-out text the su
 const SUMMARY_MAX_TOKENS = 400;
 const SUMMARY_TAG = '[Chat summary request]';   // sleep's diary skips user messages starting with this (sleepmlx/diary.py APP_USER_TAGS)
 const LEFT_OUT = '[Earlier messages in this chat are left out to keep you fast; if you need something from them, ask Ben.]';
+const BEN_FIRST_MAX_MS = 10 * 60000;   // a Glim never waits longer than this for Ben's chat per model call
 const MAX_TOOL_CHARS = 8000;
 
 // ---- verification layer ----------------------------------------------------------------------
@@ -137,6 +138,17 @@ const DANGER_LABELS = [
 function isDangerous(cmd) {
   const c = String(cmd || '');
   return DANGER_PATTERNS.some((r) => r.test(c));
+}
+
+// Resolve once cond() is false, the signal aborts, or maxMs passes (polling every pollMs).
+function waitWhile(cond, signal, pollMs, maxMs) {
+  return new Promise((res) => {
+    const end = Date.now() + maxMs; let t = null;
+    const done = () => { clearTimeout(t); signal.removeEventListener('abort', done); res(); };
+    signal.addEventListener('abort', done, { once: true });
+    const tick = () => { if (signal.aborted || !cond() || Date.now() >= end) return done(); t = setTimeout(tick, pollMs); };
+    tick();
+  });
 }
 
 function estimateTokens(messages) {
@@ -330,6 +342,13 @@ class Agent {
     this.state('waiting');
     return this.withoutSlot(fn, signal, true);
   }
+  // Ben's chat first: a Glim (helper) waits before each model call while Ben's chat is busy, so the one local model is not split
+  // three ways with each chat re-reading its whole prompt (Oct 28: 40-150 s first token). No run slot is held while waiting; capped.
+  async yieldToBen(signal) {
+    if (!this.o.benBusy || signal.aborted || !this.o.benBusy()) return;
+    this.state('queued', { ben: true });
+    await this.withoutSlot(() => waitWhile(this.o.benBusy, signal, this.o.benPollMs || 2000, this.o.benMaxMs || BEN_FIRST_MAX_MS), signal, true);
+  }
   // Run fn (something that can block on others) without holding a run slot, then queue for a slot again.
   async withoutSlot(fn, signal, report) {
     this.free();
@@ -406,6 +425,7 @@ class Agent {
           if (compactMessages(thread.messages, 2)) this.emit({ type: 'compacted' });
         }
         dropOldImages(thread.messages);
+        await this.yieldToBen(signal);
         const was = trimWindow(thread, Number(s.contextTokens) || CONTEXT_TOKENS);
         if (was >= 0) { await this.summarizeLeftOut(thread, s, signal, was); save(); this.emit({ type: 'compacted' }); }
         if (signal.aborted) { stopped = true; break; }
@@ -579,6 +599,7 @@ class Agent {
       this.emit({ type: 'step_end', id, tool: 'verify', ok, summary, preview: '', result: '' });
     };
     let verdict = null;
+    await this.yieldToBen(signal);
     try {
       const r = await streamChat({
         gatewayUrl: s.gatewayUrl, model: s.verifyModel || s.modelFast || VERIFY_MODEL,
@@ -735,4 +756,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, trimWindow, plainText, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

@@ -360,6 +360,7 @@ class Helpers {
       if (n) this.changed(); // so the list can say "will run after Glim wakes up"
       return;
     }
+    if (!force && this.o.yieldTo && this.o.yieldTo()) return; // Ben's chat is busy: due runs stay due and start on the first quiet tick (once each)
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;
       if (h.next && h.next <= now) this._run(h);
@@ -386,7 +387,7 @@ class Helpers {
     const onState = (s, info) => {
       if (rec.done || h.status === 'stopped') return;
       const next = s === 'waiting' ? 'waiting-for-Ben' : s;
-      const hold = s === 'queued' ? 'slot' : null; // why it is waiting: every run slot is busy (the screen lock wait is not reported)
+      const hold = s === 'queued' ? (info && info.ben ? 'ben' : 'slot') : null; // why it is waiting: Ben's chat goes first, or every run slot is busy (the screen lock wait is not reported)
       if (h.status === next && h.hold === hold) return;
       h.status = next; h.hold = hold; h.holdCount = hold && info && info.running || 0;
       this.changed();
