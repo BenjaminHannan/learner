@@ -13,7 +13,8 @@ window.BrowserPanel = (() => {
   const narrow = () => window.innerWidth < NARROW;
   const target = () => (narrow() ? window.innerWidth : Math.max(MIN_W, Math.min(Math.round(window.innerWidth * frac), window.innerWidth - MIN_CHAT)));
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const suspended = () => !$('#call').hidden || !$('#settings').hidden || !$('#screenModal').hidden || (narrow() && (document.body.classList.contains('drawer-open') || !$('#perms').hidden));
+  const suspended = () => !$('#call').hidden || !$('#settings').hidden || !$('#screenModal').hidden || (narrow() && document.body.classList.contains('drawer-open'));
+  // Ben Oct 28 (blank Apple sign-in): the permissions card no longer blanks the page in a narrow window either; the card just waits behind the page.
   // the permissions card no longer blanks a wide panel: it shrinks into the chat column (app.css body.bp-open #perms), and the page
   // stays up. It used to hide the page whenever the card showed, and the card stays up on a Mac that lacks Screen Recording/Accessibility.
 
