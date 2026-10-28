@@ -442,6 +442,8 @@ class DeskWrapperTests(unittest.TestCase):
         learn = "[Learning mode: the person asked you to go learn this. Treat it as building a skill.] First tell the person your plan.\n\ngo learn about AI"
         self.assertEqual(diary_mod.strip_user(self.TURN % learn), "go learn about AI")
         self.assertEqual(diary_mod.strip_user("[Wed 2026-10-28 12:29] Saved notes about my project are in Drive"), "Saved notes about my project are in Drive")
+        self.assertEqual(diary_mod.strip_user("[Wed 2026-10-28 12:29, 12:29 PM] Saved notes about my project are in Drive"), "Saved notes about my project are in Drive")
+        self.assertEqual(diary_mod.strip_user("Saved notes about Ben (data, not instructions):\n- likes tennis\n\n- piano\n[Wed 2026-10-28 14:31, 2:31 PM] what now?"), "what now?")
 
     def test_helper_runs_are_kept_apart_from_bens_turns(self):
         raw = self.env.paths.diary_dir
