@@ -16,6 +16,13 @@ const CHUNK_BUDGET_S = 900;
 const NO_WORK = /no new diary day/i;
 
 // ---- pure builders (tested) -----------------------------------------------------------------------------------------
+// The night's lesson cards (what went wrong in a chat and what to do instead), as the worker's chunk output lists them.
+const LESSONS_SHOWN = 8;
+function lessonsSection(lessons, reverted) {
+  const items = (lessons || []).map((l) => String(l).replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, LESSONS_SHOWN);
+  if (!items.length) return '';
+  return 'Lessons' + (reverted ? ' (not kept: the night was undone by its safety check)' : '') + ':\n' + items.map((l) => '- ' + l).join('\n');
+}
 function workerEnv(o) {
   const env = {
     SLEEPMODE_BUDGET_S: String(o.budgetS || CHUNK_BUDGET_S), ...(o.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(o.nightBudgetS)) } : {}), SLEEPMODE_OUT: o.outFile, SLEEPMODE_PRACTICE: (o.practice || []).join(path.delimiter), SLEEPMODE_WORKDIR: o.home,
@@ -23,6 +30,8 @@ function workerEnv(o) {
     PYTHONPATH: o.sleepmlxParent + (o.basePythonPath ? path.delimiter + o.basePythonPath : ''), PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8',
     HF_HOME: o.hfHome, HF_HUB_CACHE: o.hfHome, HF_HUB_OFFLINE: '1', TOKENIZERS_PARALLELISM: 'false'
   };
+  // the app's userData (memory.json, tracking.md): sleep turns saved notes and the "Keeping track of" list into cards too
+  if (o.userData) env.SLEEPMLX_USERDATA = o.userData;
   // the snapshot folder snapshot_download printed: the worker loads the model straight from it (no cache lookup, works offline)
   if (o.hfDir) env.SLEEPMLX_MODEL_DIR = o.hfDir;
   return env;
@@ -76,7 +85,7 @@ class WinSleep extends Sleep {
   /** o: {budgetS (the whole sleep, seconds), wakeAt (ms or null)} */
   start(o) {
     this.nightBudgetS = (o && o.budgetS) || 0; this.wakeAtMs = (o && o.wakeAt) || null; this.lastCheckinAt = null; this.checkins = []; this.ckAbort = null;
-    this.finishedNight = false; this.nothingNew = false;
+    this.finishedNight = false; this.nothingNew = false; this.lessons = []; this.lessonsReverted = false;
     if (this.active) return { ok: false, error: 'Already sleeping.' };
     if (this.needsRuntime()) return { ok: false, needsRuntime: true, error: 'Sleep needs a one-time download first.', plan: this.installer.plan() };
     const m = mayStart(this.getSettings(), this.onBattery());
@@ -101,7 +110,7 @@ class WinSleep extends Sleep {
     const outFile = path.join(this.home, 'chunk_out.json');
     try { fs.rmSync(outFile, { force: true }); } catch (e) { /* none */ }
     const st = this.installer.state();
-    const cmd = workerCommand({ python: this.python(), home: this.home, outFile, diaryDir: this.diaryDir, sleepmlxParent: this.parent, hfHome: path.join(this.installer.dir, 'hf'), hfDir: st.hfDir, budgetS: CHUNK_BUDGET_S, nightBudgetS: this.nightBudgetS, basePythonPath: '' });
+    const cmd = workerCommand({ python: this.python(), home: this.home, outFile, diaryDir: this.diaryDir, sleepmlxParent: this.parent, hfHome: path.join(this.installer.dir, 'hf'), hfDir: st.hfDir, budgetS: CHUNK_BUDGET_S, nightBudgetS: this.nightBudgetS, basePythonPath: '', userData: this.o.userData || this.root });
     return new Promise((resolve) => {
       let c;
       try { c = spawn(cmd.cmd, cmd.args, { cwd: cmd.cwd, env: { ...process.env, ...cmd.env }, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] }); } catch (e) { return resolve({ error: String(e.message || e) }); }
@@ -125,6 +134,7 @@ class WinSleep extends Sleep {
         this._event({ kind: 'chunk', quiz: out.quiz == null ? null : out.quiz, steps: out.steps || 0, interrupted: !!out.interrupted, message: out.message || '', error: out.error || '' });
         if (out.error) { this.exit = { error: out.error }; break; }
         if (out.quiz != null) this.lastQuiz = out.quiz;
+        if (Array.isArray(out.lessons) && out.lessons.length) { this.lessons = out.lessons.map((l) => String(l)).slice(0, LESSONS_SHOWN); this.lessonsReverted = !!out.reverted; }
         this._writeStatus();
         if (out.quiz != null || NO_WORK.test(out.message || '')) { this.finishedNight = out.quiz != null; this.nothingNew = NO_WORK.test(out.message || ''); break; }
         const m = mayStart(this.getSettings(), this.onBattery());
@@ -208,9 +218,10 @@ class WinSleep extends Sleep {
       : this.wakeReq ? 'Woken early. What was learned so far is saved and the night continues next time.' : 'Sleep ended.';
     const early = (this.finishedNight || this.nothingNew) && this.wakeAtMs && Date.now() < this.wakeAtMs - 120000;
     const lines = [early ? 'Finished early: it practiced everything new.' : '', line];
+    if (this.lessons && this.lessons.length) lines.push(lessonsSection(this.lessons, this.lessonsReverted));
     if (this.checkins && this.checkins.length) lines.push('Check-ins that needed you:\n' + this.checkins.map((c) => '- ' + c).join('\n'));
     try { fs.mkdirSync(this.home, { recursive: true }); fs.writeFileSync(this.p.summary, '# Sleep summary\n\n' + lines.filter(Boolean).join('\n\n') + '\n\nSlept ' + (Math.round(hrs * 10) / 10) + ' h.\n'); } catch (e) { /* ignore */ }
   }
 }
 
-module.exports = { WinSleep, workerCommand, workerEnv, convertCommand, sleepmlxParent, mayStart, CHUNK_BUDGET_S };
+module.exports = { WinSleep, lessonsSection, workerCommand, workerEnv, convertCommand, sleepmlxParent, mayStart, CHUNK_BUDGET_S };

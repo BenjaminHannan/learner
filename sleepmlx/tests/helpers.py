@@ -35,7 +35,7 @@ class Env:
     def __init__(self, days=(("2026-10-20", FACTS_DAY1),), profile="k2", **cfg):
         self.tmp = tempfile.TemporaryDirectory()
         root = Path(self.tmp.name)
-        self.paths = Paths(root / "home", root / "raw", root)
+        self.paths = Paths(root / "home", root / "raw", root, root / "userdata")   # never the real Desk folder
         for date, users in days:
             write_raw(self.paths.diary_dir, date, users)
         self.prof = load_profile(profile)

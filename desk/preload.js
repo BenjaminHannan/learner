@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('desk', {
   onboard: { create: inv('onboard:create') },
   openSystem: inv('system:open'),
   openExternal: inv('open:external'),
+  startOver: inv('app:startOver'),
   gateway: { state: inv('gateway:state'), test: inv('gateway:test'), start: inv('gateway:start') },
   onFullscreen: on('fullscreen'),
   onAgent: on('agent'),

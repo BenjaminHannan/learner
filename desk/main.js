@@ -949,6 +949,12 @@ function registerIpc() {
     if (urls[pane]) { try { shell.openExternal(urls[pane]); } catch (e) { /* not on a Mac */ } }
     return true;
   });
+  // "Start setup over": setup counts as not done and the app restarts into it. Chats, memory and everything else stay.
+  h('app:startOver', () => {
+    store.saveSettings({ onboarded: false, permsSeen: false });
+    if (!E2E) { app.relaunch(); setTimeout(() => app.exit(0), 300); }
+    return { ok: true };
+  });
   h('open:external', (url) => { if (/^https?:/.test(url)) shell.openExternal(url); return true; });
   h('gateway:state', () => gwState);
   // Click on "Offline": start the model. Windows built-in: restart it. Otherwise the start command from Settings (Mac default:

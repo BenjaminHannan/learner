@@ -202,18 +202,68 @@ def looks_secret(text: str) -> bool:
 
 
 # ---------------------------------------------------------------- raw logs -> turns
-def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional[str]]]:
-    """-> (conv_id, user_text, final_answer or None) for one raw record, or None."""
+# User messages the app writes itself, not Ben: its verifier's notes and the screenshot carrier. The turn is Ben's message before them.
+APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]")
+# A tool result that means the step failed (the Desk agent's own wording: src/agent.js runTool / finish).
+FAILED_RESULT = re.compile(r"^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\.", re.I)
+STOP_RESULT = re.compile(r"\[stopped by user\]", re.I)
+TOOL_TXT = 200
+
+
+def _short(t, n: int = TOOL_TXT) -> str:
+    t = " ".join(str(t or "").split())
+    return t if len(t) <= n else t[:n - 1] + "\u2026"
+
+
+def _tool_steps(rec: dict, msgs: list, start: int, blob_dir: Path) -> List[dict]:
+    """The turn's tool steps [{name, args, ok, result}]: the Desk gateway's `tools` field if present, else read from the request messages
+    after Ben's message (the Mac gateway keeps assistant tool_calls and tool results there). Text that looks secret is hidden."""
+    out = []
+    if isinstance(rec.get("tools"), list):
+        for x in rec["tools"]:
+            if isinstance(x, dict) and x.get("name"):
+                out.append({"name": str(x["name"]), "args": _short(x.get("args")), "ok": bool(x.get("ok", True)), "result": _short(x.get("result"))})
+    else:
+        res = {}
+        for m in msgs[start + 1:]:
+            if isinstance(m, dict) and m.get("role") == "tool" and m.get("tool_call_id"):
+                res[m["tool_call_id"]] = flatten(m.get("content"), blob_dir)
+        for m in msgs[start + 1:]:
+            if not (isinstance(m, dict) and m.get("role") == "assistant" and isinstance(m.get("tool_calls"), list)):
+                continue
+            for c in m["tool_calls"]:
+                c = c if isinstance(c, dict) else {}
+                f = c.get("function") or {}
+                r = res.get(c.get("id"), "")
+                a = f.get("arguments")
+                out.append({"name": str(f.get("name") or ""), "args": _short(a if isinstance(a, str) else json.dumps(a or {})),
+                            "ok": not FAILED_RESULT.search(r or ""), "result": _short(r)})
+    for x in out:
+        for k in ("args", "result"):
+            if looks_secret(x[k]):
+                x[k] = "[hidden]"
+    return [x for x in out if x["name"]]
+
+
+def record_turn_meta(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional[str], dict]]:
+    """-> (conv_id, user_text, final_answer or None, meta) for one raw record, or None.
+    meta (only non-empty keys): tools [{name, args, ok, result}], checks [the app's self-check notes], stopped (Ben pressed Stop)."""
     if rec.get("model") in SKIP_MODELS or is_test_record(rec):
         return None
     if rec.get("status") not in (None, 200, "200", "ok", "OK"):   # the gateway logs "ok"
         return None
     req = rec.get("request") if isinstance(rec.get("request"), dict) else {}
     msgs = rec.get("messages") or req.get("messages") or []
-    user = None
-    for m in reversed(msgs):
+    user, start, checks = None, -1, []
+    for i in range(len(msgs) - 1, -1, -1):
+        m = msgs[i]
         if isinstance(m, dict) and m.get("role") == "user":
-            user = strip_user(flatten(m.get("content"), blob_dir))
+            raw = flatten(m.get("content"), blob_dir).strip()
+            if raw.startswith(APP_USER_TAGS):
+                if raw.startswith(APP_USER_TAGS[0]):
+                    checks.insert(0, _short(raw[len(APP_USER_TAGS[0]):]))
+                continue
+            user, start = strip_user(raw), i
             break
     if not user:
         return None
@@ -224,8 +274,25 @@ def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional
         ans = a or None
     if looks_secret(user) or looks_secret(ans or ""):
         return None
+    if isinstance(rec.get("checks"), list) and not checks:
+        checks = [_short(c) for c in rec["checks"] if isinstance(c, str)]
+    meta = {}
+    tools = _tool_steps(rec, msgs, start, blob_dir)
+    if tools:
+        meta["tools"] = tools
+    checks = [c for c in checks if c and not looks_secret(c)]
+    if checks:
+        meta["checks"] = checks
+    if rec.get("stopped") is True or any(STOP_RESULT.search(t["result"]) for t in tools):
+        meta["stopped"] = True
     conv = str(rec.get("conv_id") or "")
-    return conv, user, ans
+    return conv, user, ans, meta
+
+
+def _record_turn(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Optional[str]]]:
+    """-> (conv_id, user_text, final_answer or None) for one raw record, or None."""
+    got = record_turn_meta(rec, blob_dir)
+    return got[:3] if got else None
 
 
 def _rec_date(rec: dict) -> Optional[str]:
@@ -271,22 +338,40 @@ def load_days(raw_dir: Path) -> Dict[str, List[dict]]:
     return days
 
 
-def turns_of(records: Iterable[dict], blob_dir: Path) -> List[Tuple[str, str]]:
-    """The deduped (user text, answer or '') turns of one day's records, in order."""
+def turns_meta_of(records: Iterable[dict], blob_dir: Path) -> List[Tuple[str, str, dict]]:
+    """The deduped (user text, answer or '', meta) turns of one day's records, in order. A turn's meta is merged over its records
+    (a tool loop logs the same turn several times): the longest tool list, all self-check notes, stopped if any record was."""
     order: List[Tuple[str, str]] = []
     ans: Dict[Tuple[str, str], str] = {}
+    meta: Dict[Tuple[str, str], dict] = {}
     for rec in records:
-        got = _record_turn(rec, blob_dir)
+        got = record_turn_meta(rec, blob_dir)
         if got is None:
             continue
-        conv, user, a = got
+        conv, user, a, m = got
         key = (conv, user)
         if key not in ans:
             order.append(key)
             ans[key] = ""
+            meta[key] = {}
         if a:
             ans[key] = a  # the last final answer of the turn
-    return [(u, ans[(c, u)]) for c, u in order]
+        mk = meta[key]
+        if m.get("tools") and len(m["tools"]) >= len(mk.get("tools", [])):
+            mk["tools"] = m["tools"]
+        for c in m.get("checks", []):
+            if c not in mk.setdefault("checks", []):
+                mk["checks"].append(c)
+        if not mk.get("checks"):
+            mk.pop("checks", None)
+        if m.get("stopped"):
+            mk["stopped"] = True
+    return [(u, ans[(c, u)], meta[(c, u)]) for c, u in order]
+
+
+def turns_of(records: Iterable[dict], blob_dir: Path) -> List[Tuple[str, str]]:
+    """The deduped (user text, answer or '') turns of one day's records, in order."""
+    return [(u, a) for u, a, _ in turns_meta_of(records, blob_dir)]
 
 
 def day_turns(raw_dir: Path, date: str) -> List[Tuple[str, str]]:
@@ -306,26 +391,47 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
     diary, daymap = [], {}
     for date in want:
         turns, seen = [], set()
-        for user, answer in turns_of(alld[date], raw_dir / "blobs"):
+        for user, answer, meta in turns_meta_of(alld[date], raw_dir / "blobs"):
             if any(rx.search(user) for rx in ignore) or talks_secrets(user):   # dropped with its answer
                 continue
             u = redact(user).strip()
             if not u or u in seen:
                 continue
             seen.add(u)
-            turns.append((u, redact(answer).strip()))
+            turns.append((u, redact(answer).strip(), _clean_meta(meta)))
         if not turns:
             continue
         day = len(daymap) + 1
         daymap[day] = date
-        for k, (u, a) in enumerate(turns):
-            diary.append({"day": day, "session": 0, "turn": k, "role": "user", "text": u, "mentions": []})
+        for k, (u, a, meta) in enumerate(turns):
+            row = {"day": day, "session": 0, "turn": k, "role": "user", "text": u, "mentions": []}
+            row.update(meta)   # optional: tools, checks, stopped (sleep's lessons and habits read them; the fact pipeline ignores them)
+            diary.append(row)
             if a:
                 diary.append({"day": day, "session": 0, "turn": k, "role": "assistant", "text": a, "mentions": []})
     week = {"seed": 1, "user": who, "items": [], "diary": diary, "tests": {k: [] for k in KINDS},
             "test_strings_norm": [], "dates": {str(k): v for k, v in daymap.items()}}
     check_week(week)
     return week
+
+
+def _clean_meta(meta: dict) -> dict:
+    """Redact the tool steps and notes like the turn text; a step whose text talks about credentials loses that text."""
+    out = {}
+    tools = []
+    for t in meta.get("tools", []):
+        t = dict(t)
+        for k in ("args", "result"):
+            t[k] = "[hidden]" if talks_secrets(t[k]) else redact(t[k])
+        tools.append(t)
+    if tools:
+        out["tools"] = tools
+    checks = [redact(c) for c in meta.get("checks", []) if not talks_secrets(c)]
+    if checks:
+        out["checks"] = checks
+    if meta.get("stopped"):
+        out["stopped"] = True
+    return out
 
 
 def check_week(week: dict) -> None:

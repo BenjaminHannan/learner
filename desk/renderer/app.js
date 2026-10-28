@@ -982,7 +982,9 @@
         } else if (r.type === 'setup') {
           const b = el('button', 'ghost', 'Run setup again'); b.id = 'runSetup';
           b.onclick = () => { closeSettings(); Onboard.show(); };
-          ctl.append(b);
+          const so = el('button', 'ghost', 'Restart and start over'); so.id = 'startOver'; so.title = 'Restarts Premonition and goes through first-time setup again. Your chats and memory are kept.';
+          so.onclick = () => { if (confirm('Restart Premonition and go through first-time setup again? Your chats and memory are kept.')) desk.startOver(); };
+          ctl.append(b, so);
         } else if (r.type === 'sleepstat') {
           const note = el('div', 's-note'); note.id = 'sleepStat';
           const b = el('button', 'ghost', 'Sleep now'); b.id = 'sleepNow'; b.onclick = () => { closeSettings(); openSleepSheet(); };

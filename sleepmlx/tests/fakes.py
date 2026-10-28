@@ -127,6 +127,19 @@ class FakeBackend(Backend):
                 return "Thinking about the bridge."
             start = re.search(r'names "(.*?)", does not name', user).group(1)
             return "Who is two steps away from %s?" % start
+        if "Write a short post-mortem" in user:
+            chat = user.split("Something went wrong here:", 1)[1].split("Write a short post-mortem", 1)[0]
+            lines = [l.strip() for l in chat.splitlines()]
+            ben = [l for l in lines if " then said: " in l] or [l for l in lines if l.startswith("Ben: ")]
+            glim = " ".join(l.split(": ", 1)[1] for l in lines if l.startswith("Glim: "))
+            cands = names(ben[-1].split(": ", 1)[1]) if ben else []
+            fresh = [n for n in cands if n not in glim] or cands
+            wrongs = [n for n in names(glim) if n not in cands]
+            if not fresh:
+                return "{}"
+            return json.dumps({"did": "Glim answered without checking", "wrong": "the answer did not match what Ben said",
+                               "instead": "check what Ben said before answering", "wrong_value": wrongs[0] if wrongs else "",
+                               "q": "What is the right answer here?", "a": fresh[0]})
         if "Fact about" in user:
             return "Question: Where does Ben go?\nAnswer: nowhere"
         if "Question: " in user and ("Messages from" in user):

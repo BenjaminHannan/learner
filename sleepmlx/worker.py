@@ -140,7 +140,8 @@ def _paths_from(env) -> Paths:
     home = Path(os.path.expanduser(env["SLEEPMLX_HOME"]))
     ops = Path(os.path.expanduser(env.get("LEARNER_OPS", str(home.parent))))
     diary = Path(os.path.expanduser(env.get("SLEEPMLX_DIARY_DIR", str(ops / "diary" / "raw"))))
-    return Paths(home, diary, ops)
+    ud = env.get("SLEEPMLX_USERDATA")
+    return Paths(home, diary, ops, Path(os.path.expanduser(ud)) if ud else None)
 
 
 def main(argv=None) -> int:
