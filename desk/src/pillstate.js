@@ -1,4 +1,5 @@
 'use strict';
+const IDLE_WORD = 'Glimmering'; // what the pill says when Glim has nothing more specific to show
 // One state source for "what is Glim doing right now", with a fixed priority (error > waiting for Ben > working >
 // done). It feeds the top pill, the top-bar Glim and the dock badge, so they never disagree. Pure Node (unit tested).
 const { doingLine } = require('../renderer/doing');
@@ -67,8 +68,8 @@ class PillState {
     if (t === 'queued') { a.status = 'working'; a.line = 'Waiting for a free slot'; a.step = ''; }
     else if (t === 'started') { a.status = 'working'; a.line = 'Thinking'; a.step = 'Thinking'; a.startedAt = this.now(); a.error = ''; a.endedAt = 0; a.said = ''; }
     else if (t === 'status') { a.said = String(ev.text || ''); if (a.status === 'working') { a.step = a.said; a.line = short(a.said, 40); } }
-    // what the pill says is what Glim wrote with set_status; until it has, just "Working"
-    else if (t === 'step_start') { a.status = 'working'; a.step = a.said || 'Working'; a.line = short(a.step, 40); a.approval = null; }
+    // what the pill says is what Glim wrote with set_status; until it has, "Glimmering" (Ben Oct 28: never a blank or "-")
+    else if (t === 'step_start') { a.status = 'working'; a.step = a.said || IDLE_WORD; a.line = short(a.step, 40); a.approval = null; }
     else if (t === 'assistant_end') {
       if (ev.text) a.lastText = ev.text;
       // what the pill says is what Glim itself said it is doing (its line before the tool calls)
@@ -78,7 +79,7 @@ class PillState {
     else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger, always: ev.alwaysLabel || '' }; a.line = 'Waiting for you'; }
     else if (t === 'ask') { a.status = 'waiting'; a.approval = { rid: ev.id, kind: 'ask', text: ev.question }; a.line = 'Waiting for you'; }
     else if (t === 'login') { a.status = 'waiting'; a.approval = { rid: null, kind: 'login', text: 'Sign in in the browser window, then click Done.' }; a.line = 'Waiting for you: sign in'; }
-    else if (t === 'resumed') { a.status = 'working'; a.approval = null; a.line = short(a.step, 40) || 'Working'; }
+    else if (t === 'resumed') { a.status = 'working'; a.approval = null; a.line = short(a.step, 40) || IDLE_WORD; }
     else if (t === 'error') { a.status = 'error'; a.error = String(ev.message || 'Unknown error'); a.line = 'Something went wrong'; a.endedAt = this.now(); }
     else return;
     this._touch(a);
