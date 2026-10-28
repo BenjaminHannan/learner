@@ -46,7 +46,7 @@ function agentTools(mgr, opts) {
           if (kids >= MAX_KIDS) return { text: 'Error: you already run ' + kids + ' Motes; stop one first (agent_update with stop) or do the work yourself.', error: true };
         }
         const h = mgr.add({ name: a.name, task: a.task, every: a.every, at: a.at, parent: ctx && ctx.thread && ctx.thread.id, byHelper: isHelper ? selfId : undefined });
-        const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') ? h.schedule + ', next run ' + fmtWhen(h.next) : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
+        const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') ? h.schedule + ', next run ' + fmtWhen(h.next) + ' (NOT running now; tell Ben that time, and use agent_update run: true to run it now)' : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
         return { text: started(h, when), summary: 'Started Mote ' + h.name };
       } catch (e) { return err(e); }
     },
@@ -77,7 +77,7 @@ function agentTools(mgr, opts) {
         }
         const v = mgr.find(h.id) ? mgr.view(mgr.find(h.id)) : h;
         const when = v.next ? ', next run ' + fmtWhen(v.next) : mgr.isRunning(v.id) ? '' : (v.paused ? '' : '. Not scheduled: it will not run unless you set at/every or run it now (run: true)');
-        return { text: "Updated Mote '" + v.name + "': " + v.schedule + (v.paused ? ' (paused)' : '') + when + (ran ? '; ' + ran : '') + '; status ' + liveStatus(v), summary: (ran.startsWith('started now') ? 'Started Mote ' : 'Updated Mote ') + v.name };
+        return { text: "Updated Mote '" + v.name + "': " + v.schedule + (v.paused ? ' (paused)' : '') + when + (ran ? '; ' + ran : '') + '; status ' + liveStatus(v) + (v.next && !mgr.isRunning(v.id) && !ran.startsWith('started now') ? '. It is NOT running now; tell Ben it next runs ' + fmtWhen(v.next) : ''), summary: (ran.startsWith('started now') ? 'Started Mote ' : 'Updated Mote ') + v.name };
       } catch (e) { return err(e); }
     },
     agent_stop: stopTool // still callable by name (older chats); the tool list offers it through agent_update
