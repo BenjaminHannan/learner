@@ -1,5 +1,6 @@
 """Corrections, lessons, habits, saved notes and the tracking list (lessons.py and its use in recipe.py). Linux, fake model."""
 import json
+import tempfile
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -565,3 +566,38 @@ class DelegationTests(unittest.TestCase):
         sl.extras(week, 1, st)
         self.assertTrue(cards[0].dead)
         self.assertEqual(st["delegate_retired"], 1)
+
+
+class IdeaVerdictTests(unittest.TestCase):
+    V = [{"id": "a1", "ts": "2026-10-22T09:00:00Z", "verdict": "poor", "reason": "Too vague to test.", "helper": "Scout", "idea": "Train on everything"},
+         {"id": "b2", "ts": "2026-10-22T09:00:00Z", "verdict": "good", "reason": "Cheap and measurable.", "helper": "Scout", "idea": "Quiz after each sleep"},
+         {"id": "c3", "ts": "2026-10-21T09:00:00Z", "verdict": "poor", "reason": "Old.", "helper": "Scout", "idea": "Another"}]
+
+    def week(self):
+        return {"diary": [], "dates": {"1": "2026-10-22"}, "helper_runs": [{"date": "2026-10-22", "name": "Scout", "task": "t", "answer": "", "tools": []}], "idea_verdicts": self.V}
+
+    def test_poor_verdict_is_a_delegation_failure_with_idea_context(self):
+        f = [x for x in L.find_failures(self.week(), 1) if "idea_poor" in x["signals"]]
+        self.assertEqual([(x["kind"], x["turn"], x["helper"], x["answer"]) for x in f], [("delegation", 2000, "Scout", ""), ("delegation", 2002, "Scout", "")])   # the 10-21 verdict has no diary day: it joins the next one
+        ctx = L.failure_context(f[0])
+        self.assertIn("Glim's Mote 'Scout' proposed this idea: Train on everything", ctx)
+        self.assertIn("A reviewer judged it poor: Too vague to test.", ctx)
+
+    def test_verdict_day_maps_to_next_diary_day_never_dropped(self):
+        w = dict(self.week(), dates={"1": "2026-10-22", "2": "2026-10-25"})
+        w["idea_verdicts"] = [dict(self.V[0], day="2026-10-23", ts="2026-10-24T03:00:00Z"), dict(self.V[0], id="z", day="2026-10-30", idea="Late")]
+        self.assertEqual([x["user"] for x in L.find_failures(w, 1) if "idea_poor" in x["signals"]], [])
+        self.assertEqual([x["user"] for x in L.find_failures(w, 2) if "idea_poor" in x["signals"]], ["Train on everything", "Late"])
+
+    def test_good_verdict_is_one_idea_card(self):
+        g = L.good_ideas(self.week())
+        self.assertEqual([v["id"] for v in g], ["b2"])
+        para, qa = L.idea_cards(g[0], "Ben")
+        self.assertEqual(para, ["Glim's Mote 'Scout' had a good idea for Ben's project: Quiz after each sleep (a reviewer said: Cheap and measurable.)"])
+        self.assertEqual(qa, [["What good idea did Glim's Mote 'Scout' have?", "Quiz after each sleep"]])
+
+    def test_read_idea_verdicts(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(L.read_idea_verdicts(Path(d)), [])
+            (Path(d) / "idea-verdicts.jsonl").write_text(json.dumps(self.V[0]) + "\nnot json\n" + json.dumps({"verdict": "meh", "idea": "x"}) + "\n")
+            self.assertEqual(L.read_idea_verdicts(Path(d)), [self.V[0]])

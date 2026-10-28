@@ -812,6 +812,27 @@ async function followUpTick(over) {
   } catch (e) { /* tomorrow is another day */ } finally { followBusy = false; }
 }
 
+// Ben Oct 28: Claude judges the Motes' IDEA lines once a day (the day is saved first, so a failure waits for tomorrow). Feedback goes back to the Mote
+// (helperText) and to its parent chat as a notice that Glim relays to Ben.
+const IJ = require('./src/ideajudge');
+let ideaJudging = false;
+async function ideaJudgeTick() {
+  if (ideaJudging || E2E || !helpers) return;
+  const s = store.getSettings(), today = FU.dayKey(new Date());
+  if (s.ideaJudgeDay === today || sl.asleep || sl.waking) return;
+  const dir = app.getPath('userData');
+  if (!IJ.findKey(dir) || !IJ.pending(dir).length) return;
+  ideaJudging = true;
+  try {
+    store.saveSettings({ ideaJudgeDay: today });
+    await IJ.runJudge({ dir, onFeedback: (name, text, vs) => {
+      helpers.setFeedback(name, text);
+      const h = helpers.find(name), good = vs.filter((x) => x.verdict === 'good').length;
+      if (h && h.parent) postNotice(h.parent, 'Idea review', name + ': ' + good + ' good, ' + (vs.length - good) + ' poor. ' + IJ.clean(text, 600));
+    } });
+  } catch (e) { /* tomorrow */ } finally { ideaJudging = false; }
+}
+
 function buildAgent() {
   screen = createScreen(() => store.getSettings(), process.resourcesPath, (look, ctx) => {
     // screen card: latest capture as a small thumbnail in the chat; the full image rides along for the viewer
@@ -834,6 +855,7 @@ function buildAgent() {
       if (flags && flags.quiet) return send('helpers:changed', helpers.list()); // nothing new: no notice, no notification
       // Ben Oct 28: a helper never reports to Ben itself. With a parent chat, Glim reads the report and tells him (relayReports, its own
       // notification); only a helper with no chat to report to gets the plain desktop notification.
+      if (flags && flags.report && !E2E) { try { require('./src/ideas').appendIdeas(app.getPath('userData'), h.name, h.threadId, require('./src/ideas').parseIdeas(flags.report)); } catch (e) { /* ideas are a bonus */ } }
       if (parent) postNotice(parent, h.name, summary);
       else queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});
@@ -1055,7 +1077,7 @@ async function afterFirstPaint() {
     if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
-  if (!E2E) setInterval(() => followUpTick().catch(() => {}), 60000).unref();
+  if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); }, 60000).unref();
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;

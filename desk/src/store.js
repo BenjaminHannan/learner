@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   modelDefault: 'modelAuto', // which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
   mode: 'ask',            // ask | hands-off (main agent)
   followUp: true,         // once a day, when Ben opens the chat, Glim checks on what he left open and offers clickable choices
+  ideaJudgeDay: '',       // the day (YYYY-MM-DD) the Motes' ideas were last judged
   followupDay: '',        // the day (YYYY-MM-DD) that follow-up last ran
   verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
   helperMode: 'hands-off', // autonomy for helper agents
@@ -79,7 +80,7 @@ const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSte
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
-const STRS = ['modelDefault', 'modelStartCmd', 'gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython', 'sleepCheckinTask', 'followupDay'];
+const STRS = ['modelDefault', 'modelStartCmd', 'gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'diaryPath', 'pythonPath', 'helperPath', 'hotkey', 'sleepApp', 'sleepPython', 'sleepCheckinTask', 'followupDay', 'ideaJudgeDay'];
 const { cleanUses } = require('../renderer/uses');
 const USES_OTHER_MAX = 200;
 

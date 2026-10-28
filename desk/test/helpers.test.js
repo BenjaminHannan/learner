@@ -245,7 +245,7 @@ const HNEW = "Work on your own: if a tool or a step fails, fix it or try another
 test('helper user message: date prefix, name, task; recurring runs carry the previous report (<= 600 chars)', async () => {
   const { m, runs } = mkManager();
   m.add({ name: 'w', task: 'check weather', every: '1h' });
-  assert.strictEqual(runs[0].text, "You are helper 'w'. Task: check weather. " + HNEW);
+  assert.strictEqual(runs[0].text, "You are helper 'w'. Task: check weather. " + HNEW + '\nIf the run found ideas worth testing, put each on its own line starting "IDEA: " (one line, with a short why).');
   runs[0].done({ report: 'R'.repeat(900) });
   await until(() => m.find('w').status === 'idle');
   m.runNow('w');
