@@ -155,9 +155,10 @@
   function thinkBlock(secsN, text, live) {
     const d = el('details', 'think' + (live ? ' live' : ''));
     const s = el('summary', null, live ? 'Thinking…' : 'Thought for ' + (secsN || 1) + ' s');
-    const pre = el('pre', null, text || '');
-    d.append(s, pre);
-    return { d, s, pre };
+    // the reasoning itself is never put on screen: only the "Thinking… / Thought for N s" line, which cannot be opened
+    s.addEventListener('click', (e) => e.preventDefault());
+    d.append(s);
+    return { d, s };
   }
   let raf = 0;
   function paintText() {
@@ -167,8 +168,6 @@
   function onReasoning(d) {
     const t = tn || startTn();
     if (!t.think) { const b = thinkBlock(0, '', true); t.think = b; ensureBlock().col.append(b.d); }
-    t.thinkRaw += d; t.think.pre.textContent = t.thinkRaw;
-    t.think.pre.scrollTop = t.think.pre.scrollHeight;
   }
   function onText(d) {
     const t = tn || startTn();
