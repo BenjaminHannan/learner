@@ -203,6 +203,39 @@ const LEARN_ANGLES = ['core concepts and how they connect', 'worked examples and
 const LEARN_MOTE = (topic, angle) => 'Go learn: ' + topic + (angle ? ', focusing on ' + angle : '') + '. Each run, dig into something new and never repeat a note you already saved. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
   + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots. 4) Study the weak spots once more. Sleep trains your notes into you overnight. Finish with exactly: NO_UPDATE\n';
+// Learn mode: "go learn X" sends Motes off to study quietly (different angles, repeating, stopping at the end time); sleep trains their cards in.
+function startLearn(topic, count, hours) {
+  topic = String(topic || '').trim().slice(0, 200);
+  if (!topic) return { error: 'no topic' };
+  if (sl.asleep || sl.waking) return { error: 'Glim is asleep.' };
+  const n = Math.max(1, Math.min(12, parseInt(count, 10) || 3)), hrs = Math.max(0, Number(hours) || 0);
+  const until = hrs ? Date.now() + hrs * 3600000 : 0, made = [];
+  for (let i = 0; i < n; i++) {
+    const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
+    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }); made.push(v.name); }
+    catch (e) { if (!made.length) return { error: String(e && e.message || e) }; break; }
+  }
+  return { ok: true, count: made.length, topic };
+}
+// "go learn spreadsheets with 5 motes for 2 hours" -> { topic, count, hours }
+function parseLearn(text) {
+  let t = String(text || '').replace(/^\s*(?:(?:please|ok|okay|hey)[ ,]+)?(?:go\s+|can you\s+|could you\s+)?(?:learn|study)\s+(?:about\s+|how to\s+|to\s+)?/i, '');
+  let count = 0, hours = 0, m;
+  if ((m = t.match(/\b(?:with\s+|using\s+)?(\d{1,2})\s+motes?\b/i))) { count = +m[1]; t = t.replace(m[0], ' '); }
+  if ((m = t.match(/\bfor\s+(\d{1,2})\s*(?:hours?|hrs?|h)\b/i))) { hours = +m[1]; t = t.replace(m[0], ' '); }
+  return { topic: t.replace(/\s+/g, ' ').replace(/[\s,.;]+$/, '').trim(), count, hours };
+}
+const pendingLearn = new Map();
+const NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12 };
+const isLearnAnswer = (text) => String(text || '').length < 90 && /\bmotes?\b|\bhours?\b|\bhrs?\b|until|forever|stop|\d/i.test(text);
+function parseLearnAnswer(text) {
+  const t = String(text || '').toLowerCase();
+  let count = 0, hours = 0, m;
+  if ((m = t.match(/(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s+motes?\b/))) count = NUMW[m[1]] || +m[1];
+  if ((m = t.match(/(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(?:hours?|hrs?|h)\b/))) hours = NUMW[m[1]] || +m[1];
+  if (/until|forever|no limit|stop them/.test(t) && !/\d\s*(?:hours?|hrs?|h)\b/.test(t)) hours = 0;
+  return { count: count || 3, hours };
+}
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
@@ -1211,8 +1244,26 @@ function registerIpc() {
     activeThread = t;
     // Ben Oct 28: "the chat should just never get slow". The local model serves one request at a time, so a Mote mid-reply would make his message wait: stop them now, they run again once he is done.
     if (store.getSettings().benFirst !== false && helpers && helpers.active.size) helpers.pauseForSleep('Paused so your chat stays fast; runs again when you are done');
-    const goals = isGoalsAnswer(t), learn = !goals && isLearnAsk(t, text);
-    agent.run(t, goals ? GOALS_NOTE + text : learn ? LEARN_NOTE + text : text, goals || learn ? { display: text } : undefined).then((r) => {
+    const goals = isGoalsAnswer(t);
+    // Learn mode: "go learn X" -> Glim asks how many Motes and for how long -> Ben's answer starts them.
+    let learn = false, learnNote = LEARN_NOTE;
+    const pend = pendingLearn.get(t.id); pendingLearn.delete(t.id);
+    if (!goals && pend && isLearnAnswer(text)) {
+      const a = parseLearnAnswer(text), r = startLearn(pend, a.count, a.hours);
+      learn = true;
+      learnNote = r.ok ? '[Learn mode is on: ' + r.count + ' Motes are studying "' + r.topic + '" quietly' + (a.hours ? ' for ' + a.hours + ' hours' : ' until Ben stops them') + '; their notes train into you at the next sleep. Answer in one short sentence saying so. Do not research it yourself, wait for them or report on them.] ' : LEARN_NOTE;
+    } else if (!goals && isLearnAsk(t, text)) {
+      learn = true;
+      const pl = parseLearn(text);
+      if (pl.count || pl.hours) {
+        const r = startLearn(pl.topic, pl.count, pl.hours);
+        if (r.ok) learnNote = '[Learn mode is on: ' + r.count + ' Motes are studying "' + r.topic + '" quietly; their notes train into you at the next sleep. Answer in one short sentence saying so. Do not research it yourself, wait for them or report on them.] ';
+      } else if (pl.topic) {
+        pendingLearn.set(t.id, pl.topic);
+        learnNote = '[Learn mode: Ben wants you to go learn "' + pl.topic + '". Motes are your small background helpers. Ask in one short sentence how many Motes he wants on it and for how long, then end with exactly these choices as "→ " lines: "→ 3 Motes, until I stop them", "→ 1 Mote, 1 hour", "→ 6 Motes, 8 hours". Do nothing else yet.] ';
+      }
+    }
+    agent.run(t, goals ? GOALS_NOTE + text : learn ? learnNote + text : text, goals || learn ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
@@ -1269,19 +1320,6 @@ function registerIpc() {
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
   // "Learn" button: a Mote goes off to study a topic quietly; sleep trains its notes and fact cards in overnight.
-  h('helpers:learn', (topic, count, hours) => {
-    topic = String(topic || '').trim().slice(0, 200);
-    if (!topic) return { error: 'Type what to learn.' };
-    if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first.' };
-    const n = Math.max(1, Math.min(12, parseInt(count, 10) || 1)), hrs = Math.max(0, Number(hours) || 0);
-    const until = hrs ? Date.now() + hrs * 3600000 : 0, made = [];
-    for (let i = 0; i < n; i++) {
-      const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
-      try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }); made.push(v.name); }
-      catch (e) { if (!made.length) return { error: String(e && e.message || e) }; break; }
-    }
-    return { ok: true, count: made.length };
-  });
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
   h('respond', (id, value) => { const r = pending.get(id); if (r) { pending.delete(id); r(value); } return true; });
