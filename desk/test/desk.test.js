@@ -168,3 +168,18 @@ test('sleep settings: defaults, HH:MM validation, idle minutes clamp', () => {
   const n = s.saveSettings({ sleepFrom: '9:05', sleepTo: '25:00', sleepIdleMin: 99999, autoSleep: 1 });
   assert.strictEqual(n.sleepFrom, '09:05'); assert.strictEqual(n.sleepTo, '08:00'); assert.strictEqual(n.sleepIdleMin, 720); assert.strictEqual(n.autoSleep, true);
 });
+
+test('user name: from the account, never a stranger called Ben', () => {
+  const { firstName } = require('../src/user');
+  assert.strictEqual(firstName('ben-hannan'), 'Ben');
+  assert.strictEqual(firstName('Emma Parent'), 'Emma');
+  assert.strictEqual(firstName('admin'), 'the user');
+  assert.strictEqual(firstName(''), 'the user');
+});
+
+test('user name: another user gets their name and they/them in the prompt; Ben gets his own text unchanged', () => {
+  const run = (name) => require('child_process').execFileSync(process.execPath, ['-e', "const p=require('./src/prompt');process.stdout.write(p.SYSTEM_PROMPT)"], { cwd: require('path').join(__dirname, '..'), env: { ...process.env, PREMONITION_USER_NAME: name, NODE_TEST_CONTEXT: '' } }).toString();
+  const emma = run('Emma Parent'), ben = run('Ben Hannan');
+  assert.ok(/Emma's local assistant/.test(emma) && !/\bBen\b/.test(emma) && !/\bhis\b/.test(emma));
+  assert.ok(/Ben's local assistant/.test(ben));
+});

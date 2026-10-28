@@ -396,6 +396,7 @@
 
   // ---------- Glim's mood: one status source (main) + local run state ----------
   let slp = { asleep: false, waking: false, available: true };
+  let gwWasUp = false; // the model answered earlier in this session and has since gone quiet: usually the memory guard stopped it
   let mood = 'idle', gw = { state: 'down' }, glim = 'idle', errorUntil = 0, doneUntil = 0, moodTimer = 0, lastActive = Date.now(), glanceTimer = 0;
   const logo = Mascot.el('idle', 28, { cls: 'follow' });
   $('#logo').append(logo);
@@ -437,11 +438,11 @@
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
     g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Offline';
-    g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : 'Model is off. Click to start it';
+    g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     refreshMood();
   }
-  desk.onGateway((s) => { gw = s || gw; if (gw.state !== 'down') gwStarting = 0; paintGateway(); });
+  desk.onGateway((s) => { const was = gw.state; gw = s || gw; if (gw.state !== 'down') { gwStarting = 0; gwWasUp = true; } paintGateway(); });
   // Offline chip: click to start the model (Settings > Model > Start command; the built-in model on Windows and on Macs without the assistant)
   let gwStarting = 0;
   $('#gw').addEventListener('click', async () => {

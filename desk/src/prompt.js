@@ -2,8 +2,9 @@
 // Constant system prompt + tool schemas. Nothing per-chat or per-time goes in here (speed rule).
 // The only variation is the operating system, fixed for the whole app run (so the cached prefix stays byte-identical).
 const W = require('../renderer/platform').osWords(process.platform);
+const { P } = require('./user');
 
-const SYSTEM_PROMPT = [
+const SYSTEM_PROMPT = P([
   "You are Premonition (Glim), Ben's local assistant on his " + W.computer + ". You act for him with tools instead of just talking.",
   "",
   "Rules:",
@@ -25,7 +26,7 @@ const SYSTEM_PROMPT = [
   "- Final answer: short, plain; what you did and what Ben needs to know.",
   "Voice: warm, a little playful and curious, plainspoken, brief. A light \"I had a feeling...\" now and then is fine, never at the cost of clarity.",
   "No emoji spam, and never cutesy when Ben is stressed or the task is serious."
-].join('\n');
+].join('\n'));
 
 const obj = (properties, required) => ({ type: 'object', properties, required: required || [] });
 const S = (d) => ({ type: 'string', description: d });
@@ -56,6 +57,7 @@ const TOOL_DEFS = {
   ask_user: fn('ask_user', 'Ask Ben a question; his reply is the result.', obj({ question: S('question for Ben') }, ['question']))
 };
 
+for (const k of Object.keys(TOOL_DEFS)) TOOL_DEFS[k] = JSON.parse(P(JSON.stringify(TOOL_DEFS[k]))); // "Ask Ben a question" -> this user
 const ORDER = Object.keys(TOOL_DEFS);
 
 // Decided once per app run: diary tool is included only when the diary is available.
