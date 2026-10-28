@@ -681,6 +681,10 @@ class Sleeper:
                 para, qa = L_mod.habit_cards(h, self.who)
                 src = "diary tool log: %d uses on %d days, %s to %s" % (h["n"], h["days"], diary_mod.date_of_day(week, h["first"]), diary_mod.date_of_day(week, h["last"]))
                 want[h["key"]] = ("habit", h["target"], para, qa, src, "", h["days"])
+        if cfg.use_lessons:   # Ben's thumbs up: the answer he liked, word for word (a thumbs down becomes a lesson in lessons())
+            for l in L_mod.liked(week):
+                para, qa = L_mod.liked_cards(l, self.who)
+                want[l["key"]] = ("liked", l["user"][:60], para, qa, "chat %s, turn %d: %s liked the answer" % (diary_mod.date_of_day(week, l["day"]), l["turn"] + 1, self.who), "", 1)
         if cfg.use_userdata:
             ignore = diary_mod.load_ignore(self.paths.ignore)
             ud = self.paths.userdata_dir
@@ -699,12 +703,13 @@ class Sleeper:
                                    kind=kind, source=src, until=until)
             st[kind + "_new" if not it else kind + "_changed"] += 1
         for it in self.items.values():
-            if it.kind in ("habit", "note", "track") and not it.dead and it.key not in want:
+            if it.kind in ("habit", "note", "track", "liked") and not it.dead and it.key not in want:
                 it.dead = True
                 st[it.kind + "_retired"] += 1
         st["habit"] = sum(1 for k in want if k.startswith("habit|"))
         st["note"] = sum(1 for k in want if k.startswith("note|"))
         st["track"] = sum(1 for k in want if k.startswith("track|"))
+        st["liked"] = sum(1 for k in want if k.startswith("liked|"))
 
     def leaky(self, text: str) -> bool:
         n = norm(text)

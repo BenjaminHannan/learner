@@ -195,6 +195,23 @@
     if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); }
     t.raw += d; paintText();
   }
+  // Ben Oct 28: like / dislike an answer. Kept on the thread and logged for sleep (src/feedback.js): liked answers become examples
+  // Glim practises, disliked ones lessons. Clicking the same one again clears it.
+  const THUMB = '<path d="M5 7v7M5 7l2.4-4.6a1.5 1.5 0 012.1 1.6L9 6.5h3.5a1.4 1.4 0 011.4 1.7l-1 4.5a1.5 1.5 0 01-1.5 1.3H5M5 7H2.5v7H5"/>';
+  function rateRow(raw, fb) {
+    const row = el('div', 'rate'), id = thread && thread.id;
+    let cur = fb === 1 || fb === -1 ? fb : 0;
+    const mk = (v, label) => {
+      const b = el('button', 'rate-b' + (v < 0 ? ' down' : '')); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
+      b.innerHTML = svg(THUMB);
+      b.onclick = async () => { const nv = cur === v ? 0 : v; const r = await desk.threads.feedback(id, raw, nv); if (r && r.ok) { cur = nv; sync(); } };
+      return b;
+    };
+    const up = mk(1, 'Good answer'), down = mk(-1, 'Bad answer');
+    const sync = () => { up.setAttribute('aria-pressed', String(cur === 1)); down.setAttribute('aria-pressed', String(cur === -1)); row.classList.toggle('set', !!cur); };
+    sync(); row.append(up, down);
+    return row;
+  }
   function onAssistantEnd(ev) {
     const t = tn;
     tn = null;
@@ -206,7 +223,7 @@
       // the answer: stays prominent below the (collapsed) activity group
       if (t.text) {
         if (!clean) t.text.remove();
-        else t.text.innerHTML = md(t.raw);
+        else { t.text.innerHTML = md(t.raw); if (thread && !thread.helper) t.text.after(rateRow(ev.text != null ? ev.text : t.raw, ev.fb)); }
       }
       const wasStuck = stick;
       if (act && !act.finished) finishAct(act);
@@ -683,7 +700,7 @@
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);

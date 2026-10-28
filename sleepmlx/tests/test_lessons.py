@@ -239,6 +239,34 @@ class NightTests(unittest.TestCase):
         sl.diary, sl.cache = Diary(week), GenCache(None)
         return sl, week
 
+    def test_liked_answers_become_cards_and_leave_when_unliked(self):
+        e = self.env
+        write_recs(e.paths.diary_dir, "2026-10-19", chat([("Plan my study week", "Study chem Monday and Wednesday. Bio on Thursday.", {})], ts0=1_699_900_000.0))
+        ud = e.paths.userdata_dir
+        ud.mkdir(parents=True, exist_ok=True)
+        (ud / "feedback.jsonl").write_text(json.dumps({"fb": 1, "user": "Plan my study week", "answer": "Study chem Monday and Wednesday. Bio on Thursday."}) + "\n")
+        sl, _ = self.sleeper_on(None)
+        week = diary_mod.build_week(e.paths.diary_dir, "Ben", feedback=L.read_feedback(ud))
+        sl.today = lambda: "2026-10-28"
+        st = Counter()
+        sl.extras(week, 1, st)
+        liked = [it for k, it in sl.items.items() if k.startswith("liked|") and not it.dead]
+        self.assertEqual(len(liked), 1)
+        self.assertEqual(st["liked"], 1)
+        self.assertIn("Ben liked the answer", liked[0].source)
+        self.assertTrue(sl.elig(liked[0]))
+        sl.write_cards()
+        rows = [json.loads(l) for l in e.paths.cards.read_text().splitlines()]
+        self.assertTrue(any(r["kind"] == "liked_qa" and r["a"] == "Study chem Monday and Wednesday." for r in rows))
+        # Ben takes the thumbs up back: the card leaves the pool
+        with open(str(ud / "feedback.jsonl"), "a") as f:
+            f.write(json.dumps({"fb": 0, "user": "Plan my study week", "answer": "Study chem Monday and Wednesday. Bio on Thursday."}) + "\n")
+        week = diary_mod.build_week(e.paths.diary_dir, "Ben", feedback=L.read_feedback(ud))
+        st = Counter()
+        sl.extras(week, 1, st)
+        self.assertTrue(liked[0].dead)
+        self.assertEqual(st["liked_retired"], 1)
+
     def test_lessons_are_capped_per_night(self):
         e = Env(days=(), max_lessons=2)
         try:
@@ -340,3 +368,56 @@ class LessonHoldoutTests(unittest.TestCase):
         from sleepmlx.recipe import Config, Item, Sleeper
         s = object.__new__(Sleeper)
         self.assertEqual(s.prio(Item("n", "Ben", "x", "note", 1, kind="note")), 0.25)
+
+
+class FeedbackTests(unittest.TestCase):
+    """Ben's like / dislike from the Desk (feedback.jsonl in its userData): a thumbs down is a lesson, a thumbs up a card."""
+    def setUp(self):
+        self.env = Env(days=())
+
+    def tearDown(self):
+        self.env.close()
+
+    def test_marks_reach_the_week_newest_wins(self):
+        raw = self.env.paths.diary_dir
+        write_recs(raw, "2026-10-22", chat([
+            ("Summarize my inbox", "You have 3 new emails: one from Ms. Lee about the lab.", {}),
+            ("[Mon 2026-10-22 09:00] What's due this week?", "The chem lab on Friday.", {}),
+            ("Find the bus times", "The 42 leaves at 7:10.", {}),
+            ("Plan my week", "Here is a different answer.", {}),
+        ]))
+        write_recs(raw, "2026-10-23", chat([("check my email", "Done.", {})], ts0=1_700_400_000.0))
+        write_recs(raw, "2026-10-26", chat([("check my email", "Done.", {})], ts0=1_700_500_000.0))
+        ud = self.env.paths.userdata_dir
+        ud.mkdir(parents=True, exist_ok=True)
+        ts = "2026-10-22T15:00:00Z"
+        lines = [{"ts": ts, "fb": 1, "user": "Summarize my inbox", "answer": "You have 3 new emails:  one from Ms. Lee about the lab."},
+                 {"ts": ts, "fb": -1, "user": "What's due this week?", "answer": "The chem lab on Friday."},
+                 {"ts": ts, "fb": 1, "user": "Find the bus times", "answer": "The 42 leaves at 7:10."},
+                 {"ts": ts, "fb": 0, "user": "Find the bus times", "answer": "The 42 leaves at 7:10."},   # liked, then taken back
+                 {"ts": ts, "fb": -1, "user": "Plan my week", "answer": "What the Desk showed"},          # answer not in the diary: no match
+                 {"ts": "2026-10-26T08:00:00Z", "fb": -1, "user": "check my email", "answer": "Done."}]   # only that day's "Done."
+        (ud / "feedback.jsonl").write_text("\n".join(json.dumps(x) for x in lines) + "\nnot json\n")
+        fb = L.read_feedback(ud)
+        self.assertEqual(len(fb), 6)
+        week = diary_mod.build_week(raw, "Ben", feedback=fb)
+        users = [r for r in week["diary"] if r["role"] == "user"]
+        self.assertEqual([u.get("fb") for u in users], [1, -1, None, None, None, -1])
+        self.assertEqual(L.read_feedback(ud / "missing"), [])
+
+    def test_dislike_is_a_lesson_and_like_a_card(self):
+        w = FailureTests.week(None, [
+            ("Summarize my inbox", "You have 3 new emails. One is from Ms. Lee.", {"fb": 1}),
+            ("What's due this week?", "The chem lab on Friday.", {"fb": -1}),
+            ("No, it's the bio lab.", "Sorry, the bio lab.", {"fb": -1}),
+        ])
+        f = L.find_failures(w, 1)
+        self.assertEqual([(x["turn"], x["kind"]) for x in f], [(1, "disliked"), (2, "correction")])
+        self.assertIn("Ben gave this answer a thumbs down.", L.failure_context(f[0]))
+        self.assertEqual(L.KIND_WORDS["disliked"], "Ben gave the answer a thumbs down")
+        li = L.liked(w)
+        self.assertEqual([(x["turn"], x["user"]) for x in li], [(0, "Summarize my inbox")])
+        para, qa = L.liked_cards(li[0])
+        self.assertIn('Ben liked how Glim answered "Summarize my inbox"', para[0])
+        self.assertEqual(qa[0][1], "You have 3 new emails.")
+        self.assertTrue(li[0]["key"].startswith("liked|"))

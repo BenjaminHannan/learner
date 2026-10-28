@@ -42,6 +42,7 @@ const { Browser } = require('./src/tools/browser');
 const { webSearch } = require('./src/tools/web');
 const { runShell } = require('./src/tools/shell');
 const { Diary } = require('./src/tools/diary');
+const Feedback = require('./src/feedback');
 const { createScreen } = require('./src/tools/screen');
 const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
@@ -1079,6 +1080,17 @@ function registerIpc() {
   });
   h('threads:delete', (id) => { if (!helpers.byThread(id)) { store.deleteThread(id); dropBrowser(id); } return true; });
   h('threads:rename', (id, title) => { store.renameThread(id, title); return true; });
+  // like / dislike an answer (src/feedback.js): kept on the item and logged for sleep. A running thread is the live object, so its next save keeps the mark.
+  h('threads:feedback', (id, answer, fb) => {
+    if (helpers && helpers.byThread(id)) return { ok: false }; // a helper's log is not Ben's chat
+    const live = agent && agent.running && activeThread && activeThread.id === id;
+    const t = live ? activeThread : (helpers && helpers.liveThread(id)) || store.loadThread(id);
+    const r = Feedback.rate(t, answer, fb);
+    if (!r) return { ok: false };
+    store.saveThread(t);
+    try { Feedback.record(app.getPath('userData'), { ts: new Date().toISOString(), thread: id, fb, user: r.user, answer: r.answer }); } catch (e) { /* the mark is still on the thread */ }
+    return { ok: true };
+  });
   h('agent:send', async (threadId, text) => {
     sl.lastActive = Date.now();
     if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };

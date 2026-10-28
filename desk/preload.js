@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('desk', {
   zoom: () => { try { return webFrame.getZoomFactor(); } catch (e) { return 1; } },
   info: inv('info'),
   settings: { get: inv('settings:get'), set: inv('settings:set') },
-  threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename') },
+  threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename'), feedback: inv('threads:feedback') },
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   call: { start: inv('call:start'), stop: inv('call:stop'), mute: inv('call:mute') },
   voice: { install: inv('voice:install'), onProgress: on('voice:install-progress') },
