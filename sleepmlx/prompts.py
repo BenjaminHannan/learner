@@ -96,6 +96,20 @@ def note_qa_prompt(R, text: str, who: str = "Ben") -> str:
     return R.render(REVIEW, u)
 
 
+def rated_prompt(R, ctx: str, fb: int, who: str = "Ben") -> str:
+    """Flashcards from one turn Ben rated with a thumbs up or down (recipe.rated_stage). New with the rated-turns cards."""
+    if fb == 1:
+        goal = ("%s gave Glim's answer a thumbs up. Write questions about what %s asked for and the useful facts in the answer %s liked." % (who, who, who))
+    else:
+        goal = ("%s gave Glim's answer a thumbs down. Write questions about what went wrong and what is right, or what Glim should do instead. "
+                "If %s corrected Glim afterwards, the answers come from %s's own words." % (who, who, who))
+    u = ("Part of a chat between %s and his assistant Glim:\n%s\n\n%s\n"
+         "Write flashcards from this chat. Reply with only JSON of the form {\"summary\": \"one sentence saying what happened and what is right\", "
+         "\"cards\": [{\"q\": \"a question\", \"a\": \"its answer\"}]} with 2 to 4 cards. Each answer is 1 to 6 words copied exactly from the chat above. "
+         "A question must end with a question mark and must not contain its answer." % (who, ctx, goal))
+    return R.render(REVIEW, u)
+
+
 # ---------------------------------------------------------------- parsers
 def parse_lesson(txt: str) -> Optional[dict]:
     m = re.search(r"\{.*\}", str(txt or ""), re.S)

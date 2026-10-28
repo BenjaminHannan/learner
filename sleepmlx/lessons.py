@@ -362,6 +362,43 @@ def liked(week: dict) -> List[dict]:
     return out
 
 
+def rated(week: dict) -> List[dict]:
+    """Every turn Ben rated (thumbs up fb 1, thumbs down fb -1), across the whole diary, oldest first:
+    [{key, day, turn, fb, user, answer, ctx, next_user}]. ctx is the chat text a card is written from and checked against: up to 2 turns
+    before, the rated turn (marked), and Ben's next message with Glim's reply. A turn without answer text, or that talks secrets, is skipped.
+    The key hashes the same text as liked()'s ("rated|" + 12 hex), so the same turn is found again on any night."""
+    out = []
+    who = "Ben"
+    for d in sorted({r["day"] for r in week.get("diary", [])}):
+        turns = _day_turns(week, d)
+        keys = sorted(turns)
+        for n, k in enumerate(keys):
+            t = turns[k]
+            fb = t["user"].get("fb")
+            user, ans = " ".join(str(t["user"].get("text") or "").split()), " ".join((t["answer"] or "").split())
+            if fb not in (1, -1) or not ans or not user:
+                continue
+            if any(diary_mod.looks_secret(x) or diary_mod.talks_secrets(x) for x in (user, ans)):
+                continue
+            lines = []
+            for pk in keys[max(0, n - 2):n]:
+                pt = turns[pk]
+                lines.append("%s: %s" % (who, " ".join(pt["user"]["text"].split())[:300]))
+                if (pt["answer"] or "").strip():
+                    lines.append("Glim: %s" % " ".join(pt["answer"].split())[:300])
+            lines.append("%s: %s" % (who, user[:500]))
+            lines.append("Glim: %s (%s gave this answer a thumbs %s)" % (ans[:800], who, "up" if fb == 1 else "down"))
+            nxt = turns[keys[n + 1]] if n + 1 < len(keys) else None
+            if nxt:
+                lines.append("%s then said: %s" % (who, " ".join(nxt["user"]["text"].split())[:300]))
+                if (nxt["answer"] or "").strip():
+                    lines.append("Glim: %s" % " ".join(nxt["answer"].split())[:300])
+            key = "rated|" + hashlib.sha1(("%s|%s" % (t["user"]["text"], t["answer"])).encode()).hexdigest()[:12]
+            out.append({"key": key, "day": d, "turn": k, "fb": fb, "user": user, "answer": ans, "ctx": "\n".join(lines),
+                        "next_user": " ".join(nxt["user"]["text"].split()) if nxt else ""})
+    return out
+
+
 def liked_cards(l: dict, who: str = "Ben"):
     """-> (paraphrases, [[q, a]]) for one liked answer, word for word from the chat (no model writes them)."""
     ask = " ".join(l["user"].split())[:200]
