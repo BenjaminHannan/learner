@@ -382,11 +382,11 @@ def _pc_stubs(tmp_path):
     stub = {"build_hops.py": f"import sys, shutil, pathlib\np = pathlib.Path(sys.argv[1]); p.mkdir(parents=True, exist_ok=True)\nshutil.copy({str(report)!r}, p / 'HOPS_REPORT.json')\n",
             "preflight.py": "import sys, pathlib\np = pathlib.Path(sys.argv[sys.argv.index('--out') + 1]); p.mkdir(parents=True, exist_ok=True)\n"
                             "(p / 'preflight.json').write_text('{}'); print('PREFLIGHT OK: stub')\n",
-            "think1.py": "import sys, pathlib, subprocess\na = sys.argv; arm = a[a.index('--arm') + 1]; p = pathlib.Path(a[a.index('--out') + 1]); p.mkdir(parents=True, exist_ok=True)\n"
+            "think1.py": "import sys, pathlib, subprocess\na = sys.argv; arm = a[a.index('--arm') + 1]; seed = a[a.index('--seed') + 1]; p = pathlib.Path(a[a.index('--out') + 1]); p.mkdir(parents=True, exist_ok=True)\n"
                          f"racing = subprocess.run(['pgrep', '-f', {str(race / 'race_mini.py')!r}], capture_output=True).stdout.strip() != b''\n"
-                         f"open({str(calls)!r}, 'a').write(f'{{arm}} racing={{racing}} busy={{open({str(busy)!r}).read().strip()}}\\n')\n"
-                         "(p / f'result_{arm}_s0.json').write_text('{}')\n",
-            "summarize_hops.py": "print('OUTCOME B: stub')\n"}
+                         f"open({str(calls)!r}, 'a').write(f'{{arm}} racing={{racing}} busy={{open({str(busy)!r}).read().strip()}} seed={{seed}}\\n')\n"
+                         "(p / f'result_{arm}_s{seed}.json').write_text('{}')\n",
+            "summarize_hops.py": "import sys\nprint('OUTCOME B: stub, seed', sys.argv[sys.argv.index('--seed') + 1])\n"}
     for name, body in stub.items():
         (src / "backbone" / "think" / name).write_text(body)
     return src, out, race, jobs, busy, calls
@@ -436,6 +436,37 @@ def test_pc_hops_pair_a_runs_b_first_and_hands_to_race_mini(tmp_path):
     assert busy.read_text() == "" and not (jobs / "hops-A.md").exists()
     assert (jobs / "handoff" / "GO-RACE-MINI").read_text().startswith("0 ") and (jobs / "handoff" / "HOPS-A-DONE").read_text().startswith("0 ")
     assert not (jobs / "think2-p1" / "SEG2-DONE").exists()
+
+
+def test_pc_hops_replicate_holds_race_mini_back(tmp_path):
+    """The seed-1 slot (coordinator, 04:48Z Oct 28): a directory named GO-RACE-MINI holds race-mini back, so pair A's write of that flag fails
+    while HOPS-A-DONE is still written; pc_hops.sh R then waits for HOPS-A-DONE and an empty GPU-BUSY, runs pair B at seed 1 under its own
+    GPU-BUSY line, writes SUMMARY_hops_s1.txt, empties GPU-BUSY, writes HOPS-S1-DONE, then swaps the directory for the GO-RACE-MINI file."""
+    import os
+    import subprocess
+    import time
+    src, out, race, jobs, busy, calls = _pc_stubs(tmp_path)
+    hand = jobs / "handoff"
+    busy.write_text("")
+    (hand / "GO-RACE-MINI").mkdir()
+    env = dict(**os.environ, JOBS=str(jobs), BUSY=str(busy), CDRIVE=str(tmp_path), PY=sys.executable, MIN_FREE_MB="1", POLL="1")
+    renv = dict(env, GO_FLAG=str(hand / "HOPS-A-DONE"), DONE_FLAG=str(hand / "HOPS-S1-DONE"), THEN_FLAG=str(hand / "GO-RACE-MINI"))
+    with subprocess.Popen(["bash", str(HERE / "pc_hops.sh"), "R", str(src), str(out)], env=renv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as rp:
+        time.sleep(3)
+        assert rp.poll() is None and not calls.exists()  # waiting for pair A
+        (hand / "GO-LOOP-P1").write_text("go\n")
+        a = subprocess.run(["bash", str(HERE / "pc_hops.sh"), "A", str(src), str(out)], env=dict(env, DONE_FLAG=str(hand / "GO-RACE-MINI")),
+                           capture_output=True, text=True, timeout=120)
+        assert a.returncode == 0 and "Is a directory" in a.stderr, a.stdout + a.stderr
+        assert (hand / "HOPS-A-DONE").read_text().startswith("0 ") and (hand / "GO-RACE-MINI").is_dir()
+        rp.wait(timeout=120)
+        assert rp.returncode == 0, rp.stdout.read()
+    lines = calls.read_text().splitlines()
+    assert [x.split()[0] for x in lines] == ["hplains", "hloops", "hplain", "hloop", "hplains", "hloops"], lines
+    assert all("seed=1" in x and "busy=hops pair R seed 1" in x for x in lines[4:]) and all("seed=0" in x for x in lines[:4]), lines
+    assert busy.read_text() == "" and (hand / "HOPS-S1-DONE").read_text().startswith("0 ") and (hand / "GO-RACE-MINI").is_file()
+    assert "OUTCOME B: stub, seed 1" in (out / "SUMMARY_hops_s1.txt").read_text() and (out / "runs" / "hloops_s1" / "result_hloops_s1.json").exists()
+    assert (out / "hloops_s1.log").exists() and (out / "hloops.log").exists() and not (jobs / "think2-p1" / "SEG2-DONE").exists()
 
 
 def test_pc_race_bridge(tmp_path):

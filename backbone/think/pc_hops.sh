@@ -6,8 +6,12 @@
 #   bash pc_hops.sh A SRC OUT   pair A (hplain, hloop) in the GO-LOOP-P1 slot: waits for handoff/GO-LOOP-P1, runs pair B first if it has not
 #                               run (race-mini ended before B got its gap), then pair A, then writes DONE_FLAG (default think2-p1/SEG2-DONE,
 #                               the sleep chain's flag) and handoff/HOPS-A-DONE.
+#   bash pc_hops.sh R SRC OUT   the seed-1 replicate of pair B (Addendum G's next step after a pair B PASS): waits for GO_FLAG and an empty
+#                               GPU-BUSY, runs hplains and hloops at SEED (default 1), writes OUT/SUMMARY_hops_s<SEED>.txt, empties GPU-BUSY,
+#                               then writes DONE_FLAG (default handoff/HOPS-R-DONE) and, if set, THEN_FLAG (the next job's go flag; a directory
+#                               of that name, used to hold the next job back, is removed first). The preflight and data of the first run are reused.
 # SRC holds backbone/ (a git archive of the committed branch). OUT is the run root: OUT/data (built here and checked against the committed
-# sha256), OUT/runs/<arm>_s0, OUT/pair<X>.log, OUT/<arm>.log, OUT/SUMMARY_hops.txt. Every arm already finished is skipped on a rerun.
+# sha256), OUT/runs/<arm>_s<seed>, OUT/pair<X>.log, OUT/<arm>.log (OUT/<arm>_s<seed>.log for seed > 0), OUT/SUMMARY_hops.txt. Every arm already finished is skipped on a rerun.
 set -u
 PAIR=$1 SRC=$2 OUT=$3
 JOBS=${JOBS:-/mnt/c/Users/benja/pc-jobs}  # the overrides are for the CPU dry run in test_hops.py
@@ -19,7 +23,15 @@ CARD=$JOBS/hops-$PAIR.md
 PY=${PY:-$HOME/bbvenv/bin/python}
 MIN_FREE_MB=${MIN_FREE_MB:-3000}
 POLL=${POLL:-60}  # seconds between checks
-DONE_FLAG=${DONE_FLAG:-$JOBS/think2-p1/SEG2-DONE}  # pair A's last flag: it hands the GPU on (handoff/GO-RACE-MINI since 19:35Z Oct 27)
+if [ "$PAIR" = R ]; then
+  SEED=${SEED:-1}
+  GO_FLAG=${GO_FLAG:?pair R needs GO_FLAG, the flag that gives it the GPU}
+  DONE_FLAG=${DONE_FLAG:-$HAND/HOPS-R-DONE}
+else
+  SEED=${SEED:-0}
+  DONE_FLAG=${DONE_FLAG:-$JOBS/think2-p1/SEG2-DONE}  # pair A's last flag: it hands the GPU on (handoff/GO-RACE-MINI since 19:35Z Oct 27)
+fi
+SUF=""; [ "$SEED" = 0 ] || SUF=_s$SEED
 mkdir -p "$OUT/runs"
 LOG=$OUT/pair$PAIR.log
 DRV=""
@@ -70,8 +82,8 @@ EOF
 
 take_gpu() {
   OWN=1
-  echo "hops pair $PAIR (loop thread, Addendum G) since $(date -u +%FT%TZ)" > "$BUSY"
-  printf 'job: hops pair %s (PREREG-think2 Addendum G)\nthread: Make the thinking block pay off\nlog: %s\nstarted: %s\n' "$PAIR" "$LOG" "$(date -u +%FT%TZ)" > "$CARD"
+  echo "hops pair $PAIR seed $SEED (loop thread, Addendum G) since $(date -u +%FT%TZ)" > "$BUSY"
+  printf 'job: hops pair %s seed %s (PREREG-think2 Addendum G)\nthread: Make the thinking block pay off\nlog: %s\nstarted: %s\n' "$PAIR" "$SEED" "$LOG" "$(date -u +%FT%TZ)" > "$CARD"
 }
 
 release_gpu() {  # before any flag that hands the GPU on, so the next owner's GPU-BUSY line is never wiped
@@ -95,10 +107,10 @@ finish() {
 }
 
 run_arm() {
-  local arm=$1 res=$OUT/runs/${1}_s0/result_${1}_s0.json
-  if [ -f "$res" ]; then log "$arm already done"; return 0; fi
-  log "start $arm"
-  (cd "$SRC" && "$PY" backbone/think/think1.py --arm "$arm" --seed 0 --data "$OUT/data" --out "$OUT/runs/${arm}_s0" --micro-bsz 8) >> "$OUT/$arm.log" 2>&1
+  local arm=$1 res=$OUT/runs/${1}_s$SEED/result_${1}_s$SEED.json
+  if [ -f "$res" ]; then log "$arm seed $SEED already done"; return 0; fi
+  log "start $arm seed $SEED"
+  (cd "$SRC" && "$PY" backbone/think/think1.py --arm "$arm" --seed "$SEED" --data "$OUT/data" --out "$OUT/runs/${arm}_s$SEED" --micro-bsz 8) >> "$OUT/$arm$SUF.log" 2>&1
   local rc=$?
   log "end $arm rc=$rc"
   return $rc
@@ -115,8 +127,8 @@ pair_b() {
 }
 
 summarize() {
-  (cd "$SRC" && "$PY" backbone/think/summarize_hops.py "$OUT/runs" --data "$OUT/data") > "$OUT/SUMMARY_hops.txt" 2>&1
-  log "summary: $(grep -E 'OUTCOME' "$OUT/SUMMARY_hops.txt" | tr '\n' ' ')"
+  (cd "$SRC" && "$PY" backbone/think/summarize_hops.py "$OUT/runs" --data "$OUT/data" --seed "$SEED") > "$OUT/SUMMARY_hops$SUF.txt" 2>&1
+  log "summary: $(grep -E 'OUTCOME' "$OUT/SUMMARY_hops$SUF.txt" | tr '\n' ' ')"
 }
 
 trap finish EXIT
@@ -156,7 +168,7 @@ if [ "$PAIR" = A ]; then
   while [ ! -f "$HAND/GO-LOOP-P1" ]; do sleep "$POLL"; done
   wait_room
   take_gpu
-  if [ ! -f "$OUT/runs/hloops_s0/result_hloops_s0.json" ]; then pair_b; fi
+  if [ ! -f "$OUT/runs/hloops_s$SEED/result_hloops_s$SEED.json" ]; then pair_b; fi
   run_arm hplain && run_arm hloop
   rc=$?
   summarize
@@ -168,5 +180,23 @@ if [ "$PAIR" = A ]; then
   echo "$rc $(date -u +%FT%TZ)" > "$HAND/HOPS-A-DONE"
   exit $rc
 fi
-log "unknown pair $PAIR (use A or B)"
+if [ "$PAIR" = R ]; then
+  log "waiting for $GO_FLAG and an empty GPU-BUSY"
+  until [ -f "$GO_FLAG" ] && [ ! -s "$BUSY" ]; do sleep "$POLL"; done
+  wait_room
+  take_gpu
+  pair_b
+  rc=$?
+  summarize
+  release_gpu "$rc"
+  mkdir -p "$(dirname "$DONE_FLAG")"
+  echo "0 $(date -u +%FT%TZ) hops replicate seed $SEED rc=$rc" > "$DONE_FLAG"  # as in pair A: the flags hand the GPU on whatever happened
+  if [ -n "${THEN_FLAG:-}" ]; then
+    [ -d "$THEN_FLAG" ] && rmdir "$THEN_FLAG"
+    echo "go $(date -u +%FT%TZ) after hops replicate seed $SEED" > "$THEN_FLAG"
+    log "wrote $THEN_FLAG"
+  fi
+  exit $rc
+fi
+log "unknown pair $PAIR (use A, B or R)"
 exit 2

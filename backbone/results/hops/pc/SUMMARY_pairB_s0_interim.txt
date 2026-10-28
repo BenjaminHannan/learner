@@ -1,0 +1,24 @@
+ADDENDUM G, ROUND 1: THE HOPS BED (percent; trained = depth 1-4; near = depth 5-6, the marked unseen depths; far = depth 7-10, no mark;
+not comparable with any village number)
+seed 0, 4000 validation rows; arms: hloops, hplains
+floor: naming a random place of the row scores 14.3 at every depth
+-- pair A: hloop (br's recipe) vs hplain: NOT COMPUTED (hloop missing, hplain missing)
+   OUTCOME A: not computed
+-- pair B: hloops (positive control) vs hplains, at the answer-stable stop rule
+   PASS V1 hplains depth 1-2 = 100.00 (>= 80);  PASS V2 hplains near = 62.75 (<= 70)
+   PASS V3 hloops at r = depth, trained depths = 100.00 (>= 80: the loop is installed)
+   PASS B1 near halting - hplains = +35.75  95% [+32.38, +39.12] (>= +5, interval above 0; proved wrong below +1)
+   PASS B2 trained halting - hplains = +0.00 (>= -2)
+   PASS B3 (mechanism, no deploy claim) near r = depth - hplains = +36.50  95% [+33.25, +39.88] (>= +5, interval above 0)
+   PASS B4 Spearman(depth 1-6, halting loops) = 0.99 [0.99, 1.00] (>= 0.5, interval above 0.3; proved wrong <= 0.1); depth 1-10, no mark: 0.91
+   no mark: far halting - hplains = +14.44; far r = depth - hplains = +18.44
+   no mark: W = 0 lesion: r6 69.35 -> 20.50 (near 99.25 -> 0.00); |W| = 3.97
+   step accuracy (answer at loop r names hop r, rows deeper than r): r1 100.00  r2 100.00  r3 99.89  r4 99.17  r5 87.90  r6 17.56  r7 0.00  r8 0.00  r9 0.00
+   trained accuracy by fixed loop count: r1 25.00  r2 50.00  r3 75.00  r4 100.00  r5 100.00  r6 100.00  r7 100.00  r8 100.00  r9 100.00  r10 100.00  r11 100.00  r12 99.25
+   near accuracy by fixed loop count: r1 0.00  r2 0.00  r3 0.00  r4 0.00  r5 58.38  r6 99.25  r7 99.00  r8 98.75  r9 98.75  r10 98.75  r11 98.25  r12 94.75
+   far accuracy by fixed loop count: r1 0.00  r2 0.00  r3 0.00  r4 0.00  r5 1.19  r6 23.75  r7 34.06  r8 39.75  r9 43.94  r10 46.81  r11 48.31  r12 46.25
+   halting (answer-stable): 73.70 all, 100.00 trained, 98.50 near, 35.00 far; loops by depth d1:2.00 d2:3.00 d3:4.00 d4:5.00 d5:6.00 d6:6.82 d7:7.18 d8:7.43 d9:7.45 d10:7.47
+   halting (max confidence, no mark): 19.25 all, 44.56 trained, 7.00 near, 0.06 far; loops by depth d1:1.34 d2:1.43 d3:1.55 d4:1.70 d5:1.53 d6:1.36 d7:1.18 d8:1.14 d9:1.15 d10:1.18
+   OUTCOME B: PASS: the published loop recipe, choosing its own lap count, beats plain training on unseen chain lengths (seed 0 only: a seed-1 replicate must pass before this counts)
+   NEXT (fixed in Addendum G): seed-1 replicate of hloops and hplains; if it also passes, score the fresh rows once, then round 2 (hloopd, hloopi)
+accuracy by depth (each arm's main tag): d1: hloops 100.00,hplains 100.00  d2: hloops 100.00,hplains 100.00  d3: hloops 100.00,hplains 100.00  d4: hloops 100.00,hplains 100.00  d5: hloops 100.00,hplains 77.75  d6: hloops 98.50,hplains 47.75  d7: hloops 62.75,hplains 31.25  d8: hloops 12.00,hplains 18.25  d9: hloops 11.00,hplains 17.50  d10: hloops 9.25,hplains 15.25
