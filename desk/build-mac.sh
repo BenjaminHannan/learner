@@ -48,6 +48,15 @@ APP="build/app/Premonition-darwin-arm64/Premonition.app"
 [[ -d "$APP" ]] || { echo "Packaging produced no app at $APP." >&2; exit 1; }
 echo "==> ad-hoc codesign"
 codesign --force --deep -s - "$APP"
+# An ad-hoc signature's default designated requirement is its cdhash, which changes on every build, so macOS dropped the
+# Accessibility / Screen Recording / Microphone grants after each update. Pin the requirement to the bundle id instead
+# (inner deskhelper first, then the app, so the app's seal covers the re-signed helper).
+HELPER_BIN="$APP/Contents/Resources/deskhelper"
+if [[ -f "$HELPER_BIN" ]]; then
+  codesign --force -s - -i com.premonition.deskhelper -r='designated => identifier "com.premonition.deskhelper"' "$HELPER_BIN"
+fi
+codesign --force -s - -r="designated => identifier \"$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")\"" "$APP"
+codesign --verify --deep --strict "$APP"
 
 # INSTALL_DIR: where the app goes (default /Applications); point it at a temp folder to build without installing.
 INSTALL_DIR="${INSTALL_DIR:-/Applications}"
