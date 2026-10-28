@@ -382,11 +382,14 @@ def list_dates(raw_dir: Path) -> List[str]:
     return sorted(load_days(raw_dir))
 
 
-def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] = None, ignore_file: Optional[Path] = None) -> dict:
-    """Week JSON for all days that have turns (day numbers follow the date order)."""
+def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] = None, ignore_file: Optional[Path] = None,
+               feedback: Optional[List[dict]] = None) -> dict:
+    """Week JSON for all days that have turns (day numbers follow the date order). feedback: Ben's like/dislike marks from the Desk
+    (lessons.read_feedback); a turn whose answer (or, failing that, request) matches one gets fb 1 or -1 on its user row."""
     raw_dir = Path(raw_dir)
     alld = load_days(raw_dir)
     ignore = load_ignore(ignore_file)
+    fb_of = feedback_matcher(feedback or [])
     want = sorted(alld) if dates is None else sorted(d for d in dates if d in alld)
     diary, daymap = [], {}
     for date in want:
@@ -398,7 +401,11 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
             if not u or u in seen:
                 continue
             seen.add(u)
-            turns.append((u, redact(answer).strip(), _clean_meta(meta)))
+            m = _clean_meta(meta)
+            fb = fb_of(date, user, answer)
+            if fb:
+                m["fb"] = fb
+            turns.append((u, redact(answer).strip(), m))
         if not turns:
             continue
         day = len(daymap) + 1
@@ -413,6 +420,40 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
             "test_strings_norm": [], "dates": {str(k): v for k, v in daymap.items()}}
     check_week(week)
     return week
+
+
+def _fb_norm(text: str) -> str:
+    return " ".join(str(text or "").split()).lower()[:300]
+
+
+def feedback_matcher(feedback: List[dict]):
+    """(date, user, answer) -> 1 / -1 / 0. A mark matches a turn when the answer text is the one the Desk showed AND the turn's request
+    ends with the request the Desk showed (the diary's user text carries the Desk's hidden prefixes), and the mark was given within a day of it
+    (its ts is UTC). A daily request with a stock answer ("Done.") on another day is not marked. The newest mark wins."""
+    by_ans: Dict[str, list] = {}
+    for f in feedback:
+        if f.get("fb") not in (1, -1, 0) or not f.get("answer"):
+            continue
+        by_ans.setdefault(_fb_norm(f["answer"]), []).append((" ".join(str(f.get("user") or "").split()).lower(), str(f.get("ts") or "")[:10], f["fb"]))
+
+    def fb_of(date: str, user: str, answer: str) -> int:
+        marks = by_ans.get(_fb_norm(answer))
+        if not marks:
+            return 0
+        u = " ".join(str(user or "").split()).lower()
+        for k, day, v in reversed(marks):
+            if k and not u.endswith(k):
+                continue
+            if day and date and DAY_RE.match(day) and not (_plus_days(date, -1) <= day <= _plus_days(date, 1)):
+                continue
+            return v
+        return 0
+    return fb_of
+
+
+def _plus_days(date: str, n: int) -> str:
+    from datetime import date as _d, timedelta
+    return (_d.fromisoformat(date) + timedelta(days=n)).isoformat()
 
 
 def _clean_meta(meta: dict) -> dict:

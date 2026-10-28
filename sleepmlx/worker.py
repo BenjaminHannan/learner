@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from . import diary as diary_mod
+from . import lessons as L_mod
 from .backend import Clock, Guards
 from .paths import Paths, appdata_root, is_windows, ops_dir, read_json, write_json
 from .profile import Renderer, load_profile
@@ -117,7 +118,8 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     if r:
         out.update(interrupted=True, stop_reason=r, message="not started: " + r)
         return out
-    week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore))
+    week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore),
+                                feedback=L_mod.read_feedback(paths.userdata_dir))
     state = read_json(paths.state, {}) or {}
     resuming = paths.night_json.exists()
     if not resuming and not next_day(week, state) and not only_date:

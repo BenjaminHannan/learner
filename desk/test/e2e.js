@@ -230,6 +230,16 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['run state cleared (Send shown, Stop hidden)', await ev('document.querySelector("#btnStop").hidden && document.querySelector("#runState").hidden && document.querySelector("#btnSend").textContent==="Send"')]);
     checks.push(['final answer rendered prominently', await ev('/Premonition result/.test((document.querySelector(".acol > .atext")||{}).textContent||"")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
+    checks.push(['thumbs up / down under the final answer, not under the narration', await ev('document.querySelectorAll(".acol > .atext + .rate .rate-b").length===2 && !document.querySelector(".activity .rate")')]);
+    {
+      const fbFile = path.join(app.getPath('userData'), 'feedback.jsonl');
+      const before = fs.existsSync(fbFile) ? fs.readFileSync(fbFile, 'utf8').split('\n').length : 1;
+      await ev('document.querySelector(".acol > .atext + .rate .rate-b").click()'); await sleep(300);
+      const last = fs.existsSync(fbFile) ? fs.readFileSync(fbFile, 'utf8').trim().split('\n').pop() : '{}';
+      checks.push(['thumbs up marks the answer and logs it for sleep', await ev('document.querySelector(".acol > .atext + .rate .rate-b").getAttribute("aria-pressed")==="true"') && fs.readFileSync(fbFile, 'utf8').split('\n').length === before + 1 && JSON.parse(last).fb === 1 && /Premonition result/.test(JSON.parse(last).answer)]);
+      await ev('document.querySelector(".acol > .atext + .rate .rate-b").click()'); await sleep(300);
+      checks.push(['a second tap takes it back (fb 0)', await ev('document.querySelector(".acol > .atext + .rate .rate-b").getAttribute("aria-pressed")==="false"') && JSON.parse(fs.readFileSync(fbFile, 'utf8').trim().split('\n').pop()).fb === 0]);
+    }
     checks.push(['[Action: ...] lines are hidden', await ev('!/\\[Action/i.test(document.body.innerText)')]);
     checks.push(['one activity group: "Did 4 things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did 4 things/.test(document.querySelector(".act-head").textContent) && document.querySelector(".act-head").getAttribute("aria-expanded")==="false"')]);
     checks.push(['chevron sits next to the label (not far right)', await ev('(() => { const t = document.querySelector(".act-title").getBoundingClientRect(), c = document.querySelector(".act-head .chev").getBoundingClientRect(); return c.left - t.right < 160; })()')]);
@@ -647,6 +657,8 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await key('Return');
       checks.push(['setup: choosing Hands-off at onboarding saves mode', await until(() => store.getSettings().mode === 'hands-off', 3000)]);
       store.saveSettings({ mode: 'ask' });
+      checks.push(['setup: a step explains the thumbs up / down and how sleep uses them', await stepIs(5) && await ev('/Teach Glim what you like/.test(document.querySelector("#onboard h1").textContent) && document.querySelectorAll("#onboard .ob-rate").length===2 && /sleeps/.test(document.querySelector("#onboard").innerText)')]);
+      await key('Return');
       checks.push(['setup: Enter on step 2 saves the picks as uses + usesOther', await stepIs(2) && JSON.stringify(store.getSettings().uses) === '["email","briefing"]' && store.getSettings().usesOther === 'keep track of my game releases']);
       checks.push(['setup step 3: one row per recurring pick, each with a switch', await ev('document.querySelectorAll("#onboard .ob-row").length===2 && document.querySelectorAll("#onboard .ob-row .toggle[aria-checked=true]").length===2 && /Email watch/.test(document.body.innerText) && /every 30 min/.test(document.body.innerText) && /daily at 08:00/.test(document.body.innerText)')]);
       await ev('document.querySelector("#onboard .ob-row[data-id=email] .toggle").click()');
@@ -679,7 +691,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('window.__openSettings()'); await sleep(200);
       checks.push(['settings: Run setup again button', await ev('!!document.querySelector("#runSetup")')]);
       await ev('document.querySelector("#runSetup").click()'); await sleep(500);
-      checks.push(['setup again: opens over a closed Settings, keeps the old picks, shows the existing Glim as Created', await stepIs(0) && await ev('document.querySelector("#settings").hidden') && (await key('Return'), await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')) && (await key('Return'), await key('Return'), await ev('!!document.querySelector("#onboard .ob-row.made") && /Created/.test(document.querySelector("#onboard").innerText)'))]);
+      checks.push(['setup again: opens over a closed Settings, keeps the old picks, shows the existing Glim as Created', await stepIs(0) && await ev('document.querySelector("#settings").hidden') && (await key('Return'), await ev('document.querySelectorAll("#onboard .ob-tile[aria-checked=true]").length===2')) && (await key('Return'), await key('Return'), await key('Return'), await ev('!!document.querySelector("#onboard .ob-row.made") && /Created/.test(document.querySelector("#onboard").innerText)'))]);
       store.saveSettings({ onboarded: false });
       await key('Escape');
       checks.push(['setup: Esc skips (closes and counts as onboarded)', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true]);

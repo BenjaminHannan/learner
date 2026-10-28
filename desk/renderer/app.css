@@ -30,6 +30,10 @@ body.darwin #topbar { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 .user { align-self:flex-end; max-width:85%; padding:.65rem 1rem; background:var(--bubble); border-radius:1.15rem 1.15rem .3rem 1.15rem; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; position:relative; }
 .user.steer::before { content:"Steer"; display:block; font-size:.72rem; font-weight:700; letter-spacing:.08em; color:var(--accent-text); text-transform:uppercase; margin-bottom:.1rem; }
 .user.queued { opacity:.78; }
+.rate { display:flex; gap:.15rem; margin:-.35rem 0 0; opacity:.55; transition:opacity .15s; } .rate:hover, .rate.set, .rate:focus-within { opacity:1; }
+.rate-b { background:none; border:0; padding:.3rem; border-radius:.45rem; color:var(--text2); cursor:pointer; display:grid; place-items:center; }
+.rate-b svg { width:1rem; height:1rem; } .rate-b.down svg { transform:rotate(180deg); }
+.rate-b:hover { background:var(--surface); color:var(--text); } .rate-b[aria-pressed=true] { color:var(--accent-text); } .rate-b[aria-pressed=true] svg { fill:currentColor; fill-opacity:.25; }
 .receipt { align-self:flex-end; margin:-.2rem .5rem 0 0; font-size:.72rem; color:var(--faint); }
 .ablock { display:grid; grid-template-columns:1.9rem 1fr; gap:.7rem; align-items:start; }
 .ablock > .avatar { margin-top:.1rem; }
@@ -335,6 +339,7 @@ body.darwin .ob-head { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 @keyframes ob-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 .ob-page h1 { margin:0 0 .5rem; font-size:1.9rem; line-height:1.2; font-weight:700; letter-spacing:-.01em; text-align:center; }
 .ob-lead { margin:0 auto 1.5rem; max-width:34rem; text-align:center; color:var(--text2); line-height:1.55; font-size:1.02rem; }
+.ob-rate { cursor:default; padding-right:.85rem; } .ob-rate:hover { transform:none; border-color:var(--hair2); } .ob-ico.down svg { transform:rotate(180deg); }
 .ob-fine { margin:1rem auto 0; max-width:34rem; text-align:center; color:var(--text2); font-size:.9rem; line-height:1.45; }
 .ob-fine.bad { color:var(--danger); }
 .ob-foot { flex:none; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:1rem; padding:.8rem 1.5rem; border-top:1px solid var(--hair); background:var(--bg); }

@@ -30,7 +30,7 @@ window.Onboard = (() => {
   let body, nextBtn, backBtn, dots, skipBtn;
 
   const needsPerms = () => !!(info && Platform.needsPermsStep(info.platform, info.e2e));
-  const stepList = () => (showPermsStep ? [0, 1, 4, 2, 3] : [0, 1, 4, 2]); // 4 = how much Glim asks
+  const stepList = () => (showPermsStep ? [0, 1, 4, 5, 2, 3] : [0, 1, 4, 5, 2]); // 4 = how much Glim asks, 5 = like / dislike
   const lastStep = () => stepList()[stepList().length - 1];
 
   function build() {
@@ -70,6 +70,7 @@ window.Onboard = (() => {
     else if (step === 1) paintUses(page);
     else if (step === 2) paintSchedules(page);
     else if (step === 4) paintMode(page);
+    else if (step === 5) paintRate(page);
     else paintPerms(page);
     if (step === lastStep()) nextBtn.textContent = 'Finish';
     if (step === 0) nextBtn.textContent = 'Get started';
@@ -108,6 +109,23 @@ window.Onboard = (() => {
     }
     const sync = () => tiles.forEach(([id, b]) => { b.classList.toggle('on', id === mode); b.setAttribute('aria-checked', String(id === mode)); });
     sync(); page.append(grid);
+  }
+
+  // Ben Oct 28: say what the thumbs under each answer are for (sleep learns from them; src/feedback.js)
+  function paintRate(page) {
+    page.append(el('h1', null, 'Teach Glim what you like'));
+    page.append(el('p', 'ob-lead', 'Under each answer there is a thumbs up and a thumbs down. One tap tells Glim how it did.'));
+    const grid = el('div', 'ob-grid');
+    const THUMB = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7v7M5 7l2.4-4.6a1.5 1.5 0 012.1 1.6L9 6.5h3.5a1.4 1.4 0 011.4 1.7l-1 4.5a1.5 1.5 0 01-1.5 1.3H5M5 7H2.5v7H5"/></svg>';
+    for (const [cls, title, text] of [['', 'Thumbs up', 'Glim keeps that answer as an example and practises it while it sleeps, so you get more answers like it.'],
+      ['down', 'Thumbs down', 'While it sleeps, Glim works out what went wrong and what to do next time, like when you correct it.']]) {
+      const card = el('div', 'ob-tile ob-rate');
+      const ico = el('span', 'ob-ico' + (cls ? ' ' + cls : '')); ico.innerHTML = THUMB;
+      const txt = el('span', 'ob-txt'); txt.append(el('b', null, title), el('span', null, text));
+      card.append(ico, txt); grid.append(card);
+    }
+    page.append(grid);
+    page.append(el('p', 'ob-fine', 'Glim learns from every chat anyway; your taps tell it which ones to copy and which to fix. They stay on this computer, and a second tap takes one back.'));
   }
 
   function paintUses(page) {

@@ -36,9 +36,9 @@ NOT_WRONG_RE = re.compile(r"\bwrong (?:with|about me)\b|\bwhat'?s wrong\b|\bnoth
 GAVE_UP_RE = re.compile(r"\bI (?:couldn'?t|could not|can'?t|cannot|was unable to|am unable to|wasn'?t able to|am not able to|'m not able to|'m unable to)\b"
                         r"|\bI reached the step limit\b|\bunable to (?:complete|finish|find|access|open)\b", re.I)
 NOT_DONE_RE = re.compile(r"\bnot done\b", re.I)
-KIND_WORDS = {"correction": "Ben corrected Glim", "tool_error": "a tool step failed", "stopped": "Ben stopped Glim",
-              "gave_up": "Glim gave up", "self_check": "Glim's own check found the answer was not done yet"}
-KIND_ORDER = ["correction", "tool_error", "stopped", "gave_up", "self_check"]
+KIND_WORDS = {"correction": "Ben corrected Glim", "disliked": "Ben gave the answer a thumbs down", "tool_error": "a tool step failed",
+              "stopped": "Ben stopped Glim", "gave_up": "Glim gave up", "self_check": "Glim's own check found the answer was not done yet"}
+KIND_ORDER = ["correction", "disliked", "tool_error", "stopped", "gave_up", "self_check"]
 
 
 def is_correction(text: str) -> bool:
@@ -76,6 +76,8 @@ def find_failures(week: dict, day: int) -> List[dict]:
             sig.append("correction")
         if any(not x.get("ok", True) and "[stopped by user]" not in x.get("result", "") for x in tools):
             sig.append("tool_error")
+        if row.get("fb") == -1:   # Ben's thumbs down in the Desk
+            sig.append("disliked")
         if row.get("stopped"):
             sig.append("stopped")
         if GAVE_UP_RE.search(t["answer"] or ""):
@@ -130,6 +132,8 @@ def failure_context(f: dict, who: str = "Ben") -> str:
         lines.append("%s pressed Stop." % who)
     if f["answer"]:
         lines.append("Glim: %s" % f["answer"][:500])
+    if "disliked" in f.get("signals", []):
+        lines.append("%s gave this answer a thumbs down." % who)
     return "\n".join(lines)
 
 
@@ -254,6 +258,44 @@ def habit_cards(h: dict, who: str = "Ben"):
         para, q = "%s often has Glim %s." % (who, TOOL_PHRASE.get(t, "use " + t)), None
     qa = [[q, t]] if (q and h["top"]) else []
     return [para], qa
+
+
+# ---------------------------------------------------------------- likes and dislikes
+def read_feedback(user_data: Path) -> List[dict]:
+    """The Desk's feedback.jsonl ({ts, thread, fb: 1 | -1 | 0, user, answer}, appended on each click), in file order."""
+    out = []
+    try:
+        lines = (Path(user_data) / "feedback.jsonl").read_text(errors="replace").splitlines()
+    except (OSError, ValueError, TypeError):
+        return out
+    for line in lines:
+        try:
+            f = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(f, dict) and f.get("fb") in (1, -1, 0):
+            out.append(f)
+    return out
+
+
+def liked(week: dict) -> List[dict]:
+    """Turns Ben gave a thumbs up, across the week: [{key, day, turn, user, answer}] (an answer without text is skipped)."""
+    out = []
+    for d in sorted({r["day"] for r in week.get("diary", [])}):
+        for k, t in sorted(_day_turns(week, d).items()):
+            if t["user"].get("fb") == 1 and (t["answer"] or "").strip():
+                key = "liked|" + hashlib.sha1(("%s|%s" % (t["user"]["text"], t["answer"])).encode()).hexdigest()[:12]
+                out.append({"key": key, "day": d, "turn": k, "user": t["user"]["text"], "answer": t["answer"]})
+    return out
+
+
+def liked_cards(l: dict, who: str = "Ben"):
+    """-> (paraphrases, [[q, a]]) for one liked answer, word for word from the chat (no model writes them)."""
+    ask = " ".join(l["user"].split())[:200]
+    ans = " ".join(l["answer"].split())
+    first = re.split(r"(?<=[.!?])\s+", ans)[0][:200]
+    para = "%s liked how Glim answered \"%s\": %s" % (who, ask, ans[:500])
+    return [para], [["How did Glim answer %s's request \"%s\" in a way %s liked?" % (who, ask[:120], who), first]]
 
 
 # ---------------------------------------------------------------- the Desk's saved notes and tracking list
