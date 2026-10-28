@@ -822,6 +822,7 @@
       { key: 'sleepPython', type: 'text', label: 'Sleep Python', help: 'Leave empty to pick the first python found: sleepmode/venv312, learner-ops/.venv, Homebrew, then python3.', ph: 'python3', wide: true },
       { key: 'sleepPauseGlims', type: 'toggle', label: 'Hourly check-in while asleep', help: 'Once an hour Glim wakes with its old model, runs any Glims that are due and checks your mail and calendar. Otherwise the Glims wait and catch up after you wake it.' },
       { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Windows. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
+      { key: 'awakeCheckinMins', type: 'number', label: 'Minutes between awake check-ins', help: 'While Glim is awake and you are away from the chat, a quick read-only look at mail, calendar, things Glim is tracking and the model server. It speaks up only if something needs you. 0 turns it off (0 to 720).', min: 0, max: 720 },
       { key: 'sleepCheckinTask', type: 'text', label: 'Check-in task', help: 'What Glim does at each check-in. Reply NOTHING means nothing needs you.', wide: true },
       { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
       { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times. This is the window in effect when Fit sleep to my routine is off, and until it has learned yours.' },

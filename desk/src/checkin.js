@@ -1,5 +1,5 @@
 'use strict';
-// Hourly check-in while asleep (Windows). Pure helpers, no Electron.
+// Hourly check-in while asleep (Windows), and the lighter awake check-in (every 30 min). Pure helpers, no Electron.
 // The rules for "what needs Ben" are a port of the Sleep Mode app's hourly check-in:
 //   sleepmode/checkin.py (triage) and sleepmode/config.py (urgent_words, vip_senders, event_soon_h, mail_lookback_h, calendar_ahead_h)
 //   on origin/claude/project-thread-sl2x88 (PR #126). The Python package is not used; only its rules are copied.
@@ -86,4 +86,57 @@ function triage(items, rules) {
 // Once per item (sleepmode keeps notified.json): the same line is not announced twice in a night
 function isRepeat(seen, line) { const k = String(line).toLowerCase().replace(/\W+/g, ' ').trim(); if (seen.has(k)) return true; seen.add(k); return false; }
 
-module.exports = { trackedRule, DEFAULT_TASK, RULES, CHECKIN_CAP_MS, CHECKIN_PERIOD_MIN, checkinTask, parseReply, checkinDue, checkinAdapter, triage, isRepeat };
+// ---- awake check-in (every awakeCheckinMins while Glim is up and Ben is not using it) ----------------------------------------
+const AWAKE_TASK = 'Quick check-in while you are awake: look at my email and calendar in the browser if I am signed in. Reply exactly NOTHING if nothing needs me; otherwise one short line saying what needs me.';
+const AWAKE_DEFAULT_MINS = 30;
+const AWAKE_IDLE_MAX_MS = 2 * 3600000; // idle longer than this: the sleep path covers it
+const DISK_LOW_FRAC = 0.05, DISK_LOW_BYTES = 2 * 1024 ** 3;
+
+// Is an awake check-in due now?  i: {now, last, mins, asleep, runActive, focused, idleMs, sleepBusy}  (now/last in ms; last = 0/null when none yet)
+function shouldAwakeCheckin(i) {
+  const mins = Number(i.mins);
+  if (!(mins > 0)) return { due: false, reason: 'off' };
+  if (i.asleep || i.sleepBusy) return { due: false, reason: 'asleep' };
+  if (i.runActive) return { due: false, reason: 'run active' };
+  if (i.focused) return { due: false, reason: 'chat focused' };
+  if (i.idleMs != null && i.idleMs > AWAKE_IDLE_MAX_MS) return { due: false, reason: 'idle' };
+  if (i.last && !(i.now - i.last >= mins * 60000)) return { due: false, reason: 'not yet' };
+  return { due: true, reason: 'due' };
+}
+
+// the free-space test: stats {total, free} in bytes
+function diskLow(stats) {
+  if (!stats || !(stats.total > 0)) return false;
+  return stats.free < DISK_LOW_BYTES || stats.free / stats.total < DISK_LOW_FRAC;
+}
+
+// cheap deterministic checks, no model. i: {gateway:'down'|'warming'|'ready', disk:{total,free}|null, helpers:[{id,name,every,at,paused,status,lastSummary,lastRun}], tracked:[...], today:'YYYY-MM-DD', builtinStarting}
+// -> [{key, line}]; the key changes when the situation changes, so a fixed problem can be announced again later
+function awakeFindings(i) {
+  const out = [];
+  const T = require('./tracking');
+  if (i.gateway === 'down' && !i.builtinStarting) out.push({ key: 'gateway', line: 'The model server is not answering.' });
+  if (diskLow(i.disk)) out.push({ key: 'disk', line: 'The disk is almost full (' + (i.disk.free / 1024 ** 3).toFixed(1) + ' GB left).' });
+  for (const h of i.helpers || []) {
+    if (!(h.every || h.at) || h.paused || h.status === 'stopped') continue;
+    if (/^Failed:/.test(h.lastSummary || '')) out.push({ key: 'glim:' + h.id + ':' + (h.lastRun || ''), line: 'The Glim "' + h.name + '" failed on its last run.' });
+  }
+  for (const d of T.dueItems(i.tracked || [], i.today, T.SOON_DAYS)) out.push({ key: 'track:' + T.describe(d.item) + ':' + d.reason, line: T.describe(d.item) + ' is ' + d.reason + '.' });
+  return out;
+}
+
+// Notified-state (like sleepmode's notified.json, but a Set of keys that forgets a key once it stops showing up, so a problem
+// that came back is announced again but one that is still there is not announced twice). Returns the fresh findings.
+function freshFindings(seen, findings) {
+  const now = new Set(findings.map((f) => f.key));
+  for (const k of [...seen]) if (!now.has(k)) seen.delete(k);
+  const fresh = findings.filter((f) => !seen.has(f.key));
+  for (const f of fresh) seen.add(f.key);
+  return fresh;
+}
+
+// the model part (mail and calendar through the browser, read only) reuses the sleep check-in task text and rules; the tracking list is
+// handled by awakeFindings, so it is not repeated here
+function awakeTask(settings, rules) { return checkinTask({ ...(settings || {}), sleepCheckinTask: AWAKE_TASK }, rules, []); }
+
+module.exports = { AWAKE_TASK, AWAKE_DEFAULT_MINS, AWAKE_IDLE_MAX_MS, shouldAwakeCheckin, diskLow, awakeFindings, freshFindings, awakeTask, trackedRule, DEFAULT_TASK, RULES, CHECKIN_CAP_MS, CHECKIN_PERIOD_MIN, checkinTask, parseReply, checkinDue, checkinAdapter, triage, isRepeat };

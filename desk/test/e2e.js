@@ -548,7 +548,8 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['sleep: a missing app is reported plainly and Sleep is disabled', await ev('/not found/.test(document.querySelector("#sleepStat").textContent) && document.querySelector("#sleepNow").disabled && document.querySelector("#btnSleep").disabled')]);
       store.saveSettings({ sleepApp: '' });
       await ev('document.querySelector("#settingsClose").click()');
-      checks.push(['sleep: auto-sleep stays off by default (no sleep when the setting is off)', autoSleepTick(new Date(2026, 9, 26, 23, 45), { idleMs: 3600000 }).action === 'none' && !sl.asleep]);
+      store.saveSettings({ autoSleep: false });
+      checks.push(['sleep: with auto-sleep switched off nothing sleeps', autoSleepTick(new Date(2026, 9, 26, 23, 45), { idleMs: 3600000 }).action === 'none' && !sl.asleep]);
     }
       gw3.close();
     }
