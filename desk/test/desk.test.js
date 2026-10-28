@@ -192,3 +192,12 @@ test('pill: with Show Motes off, helper runs read as plain "Glim" and are not li
   let v = p.view(); assert.strictEqual(v.top.name, 'Glim'); assert.deepStrictEqual(v.others, []);
   show = true; v = p.view(); assert.strictEqual(v.top.name, 'Email watch'); assert.strictEqual(v.others[0].name, 'Glim');
 });
+
+test('pill: a helper working quietly never reaches the pill or badge while Show Motes is off; it shows as Glim once it needs Ben', () => {
+  const { PillState } = require('../src/pillstate');
+  const p = new PillState({ showHelpers: () => false });
+  p.onEvent('h1', 'Email watch', 'th', { type: 'started' });
+  assert.strictEqual(p.view().visible, false); assert.strictEqual(p.status(), 'idle');
+  p.onEvent('h1', 'Email watch', 'th', { type: 'approval', rid: 'th:1', kind: 'shell', text: 'mkdir x' });
+  const v = p.view(); assert.strictEqual(v.status, 'waiting'); assert.strictEqual(v.top.name, 'Glim'); assert.strictEqual(v.oneGlim, true);
+});

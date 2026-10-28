@@ -19,7 +19,7 @@ window.Onboard = (() => {
     news: svgIcon('<path d="M5 20h12.5a2.5 2.5 0 002.5-2.5V4.5H8.5v13A2.5 2.5 0 015.5 20 2.5 2.5 0 013 17.5V9.5h5.5"/><path d="M12 8.5h4.5M12 12h4.5M12 15.5h4.5"/>')
   };
   const CHECK = svgIcon('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
-  const STEPS = ['Meet your Glims', 'What for', 'Recurring Glims', 'Permissions'];
+  const STEPS = ['Meet Glim', 'What for', 'Routines', 'Permissions'];
 
   let mode = 'ask';
   let step = 0, picks = new Set(), other = '', info = null, perms = null;
@@ -39,7 +39,7 @@ window.Onboard = (() => {
     dots = el('div', 'ob-dots'); dots.setAttribute('role', 'img');
     skipBtn = el('button', 'ghost sm', 'Skip setup'); skipBtn.id = 'obSkip'; skipBtn.title = 'Skip setup (Esc)';
     skipBtn.onclick = () => finish(true);
-    head.append(el('span', 'ob-brand', 'Set up Glims'), dots, skipBtn);
+    head.append(el('span', 'ob-brand', 'Set up Glim'), dots, skipBtn);
     body = el('div', 'ob-body'); body.id = 'obBody';
     const foot = el('div', 'ob-foot');
     backBtn = el('button', 'ghost', 'Back'); backBtn.id = 'obBack'; backBtn.onclick = () => go(-1);
@@ -79,9 +79,9 @@ window.Onboard = (() => {
   }
 
   function paintMeet(page) {
-    page.append(el('h1', null, 'Meet your Glims'));
+    page.append(el('h1', null, 'Meet Glim'));
     const lead = el('p', 'ob-lead');
-    lead.textContent = 'Glim is your main assistant: you talk, it gets things done. It can also make more Glims. Each one has a single job, runs on its own on a schedule, and taps you on the shoulder when it finds something.';
+    lead.textContent = 'Glim is your assistant: you talk, it gets things done. It can also take care of things on its own, on a schedule, and taps you on the shoulder when something needs you.';
     page.append(lead);
     const stage = el('div', 'ob-stage');
     const main = el('div', 'ob-main'); main.append(Mascot.el('idle', 112, { cls: 'follow' }), el('b', null, 'Glim'), el('span', null, 'Your main assistant'));
@@ -89,7 +89,7 @@ window.Onboard = (() => {
     row.append(glimRow('working', 64, 'Watching your email'), glimRow('done', 64, 'Briefing ready'), glimRow('waiting', 64, 'Needs a quick OK'), glimRow('sleepy', 64, 'Resting until 8:00'));
     stage.append(main, row);
     page.append(stage);
-    page.append(el('p', 'ob-fine', 'You stay in charge: Glims only watch and report. They ask before they send, buy or delete anything.'));
+    page.append(el('p', 'ob-fine', 'You stay in charge: on its own, Glim only watches and reports. It asks before it sends, buys or deletes anything.'));
   }
 
   function paintMode(page) {
@@ -111,9 +111,9 @@ window.Onboard = (() => {
   }
 
   function paintUses(page) {
-    page.append(el('h1', null, 'What do you want Glims for?'));
-    page.append(el('p', 'ob-lead', 'Pick as many as you like. This only tunes the suggestions and the Glims we offer next; you can change it any time.'));
-    const grid = el('div', 'ob-grid'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'What you want Glims for');
+    page.append(el('h1', null, 'What do you want Glim for?'));
+    page.append(el('p', 'ob-lead', 'Pick as many as you like. This only tunes the suggestions and the routines we offer next; you can change it any time.'));
+    const grid = el('div', 'ob-grid'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'What you want Glim for');
     for (const u of Uses.USES) {
       const b = el('button', 'ob-tile'); b.type = 'button'; b.dataset.id = u.id; b.setAttribute('role', 'checkbox');
       const ico = el('span', 'ob-ico'); ico.innerHTML = ICONS[u.id] || '';
@@ -138,7 +138,7 @@ window.Onboard = (() => {
 
   function paintSchedules(page) {
     const ids = withTpl();
-    page.append(el('h1', null, ids.length ? 'Set up recurring Glims' : 'Nothing to schedule yet'));
+    page.append(el('h1', null, ids.length ? 'Set up routines' : 'Nothing to schedule yet'));
     if (!ids.length) {
       page.append(el('p', 'ob-lead', picks.size ? 'Your picks are one-off jobs, so there is nothing to put on a timer. Just ask Glim in the chat any time.' : 'You did not pick anything, and that is fine. Ask Glim for something in the chat, and say "every morning" when you want it to repeat.'));
       const e = el('div', 'ob-empty'); e.append(Mascot.el('idle', 88)); page.append(e);
@@ -173,7 +173,7 @@ window.Onboard = (() => {
   function updateNext() {
     if (step !== 2) return;
     const n = withTpl().filter((id) => !made.has(id) && wants.get(id) !== false).length;
-    nextBtn.textContent = n ? (n === 1 ? 'Create 1 Glim' : 'Create ' + n + ' Glims') : 'Continue';
+    nextBtn.textContent = n ? (n === 1 ? 'Create 1 routine' : 'Create ' + n + ' routines') : 'Continue';
   }
 
   function paintPerms(page) {

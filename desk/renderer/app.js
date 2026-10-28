@@ -773,7 +773,7 @@
   const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped', failed: "couldn't finish" };
   const HELPER_MOOD = { idle: 'idle', queued: 'thinking', running: 'working', 'waiting-for-Ben': 'waiting', stopped: 'sleepy', failed: 'error' };
   // why a Glim is not running yet, in plain words
-  const holdText = (h) => h.hold === 'slot' ? 'waiting: ' + (h.holdCount > 1 ? h.holdCount + ' other Glims are running' : h.holdCount ? 'another Glim is running' : 'a slot is busy') : h.hold === 'screen' ? 'waiting for the screen' : h.dueHeld ? 'will run after Glim wakes up' : '';
+  const holdText = (h) => h.hold === 'slot' ? 'waiting: ' + (h.holdCount > 1 ? h.holdCount + ' other tasks are running' : h.holdCount ? 'another task is running' : 'a slot is busy') : h.hold === 'screen' ? 'waiting for the screen' : h.dueHeld ? 'will run after Glim wakes up' : '';
   const statusText = (h) => h.status === 'queued' ? holdText(h) || 'starting' : h.status === 'idle' && h.dueHeld ? holdText(h) : STATUS_TEXT[h.status] || h.status;
   function when(ts) {
     if (!ts) return '';
@@ -934,16 +934,16 @@
     { group: 'Autonomy', rows: [
       { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and screen clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'alwaysAllow', type: 'always', label: 'Always allowed', help: 'Kinds of action you chose "Always allow" for. Risky commands always ask, whatever is listed here.' },
-      { key: 'helperMode', type: 'seg', label: 'Glims on a schedule', help: 'The same choice for the extra Glims that run on their own.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
-    { group: 'Glims', rows: [
-      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (your main Glim plus the others). 0 means no limit; with a limit, extra runs wait their turn.', min: 0, max: 64 }
+    { group: 'Running', rows: [
+      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (Glim plus the things it runs on its own). 0 means no limit; with a limit, extra runs wait their turn.', min: 0, max: 64 }
     ] },
     { group: 'Setup', rows: [
-      { type: 'setup', label: 'Run setup again', help: 'Meet your Glims again: pick what you want them for, create recurring Glims and check permissions.' }
+      { type: 'setup', label: 'Run setup again', help: 'Meet Glim again: pick what you want it for, set up routines and check permissions.' }
     ] },
     { group: 'Diary', rows: [
       { key: 'diaryEnabled', type: 'toggle', label: 'Use my diary', help: 'Lets Glim search past chats and notes. Applies right away.' },
@@ -960,7 +960,7 @@
       { type: 'sleepstat', label: 'Sleep mode', help: 'Glim learns from your chats while you are away and checks your mail and calendar once an hour (read-only). It only sleeps while Glim is idle, because your chats come first.' },
       { key: 'sleepApp', type: 'text', label: 'Sleep app folder', help: 'Leave empty for ~/learner-ops/sleepmode/app.', ph: '~/learner-ops/sleepmode/app', wide: true },
       { key: 'sleepPython', type: 'text', label: 'Sleep Python', help: 'Leave empty to pick the first python found: sleepmode/venv312, learner-ops/.venv, Homebrew, then python3.', ph: 'python3', wide: true },
-      { key: 'sleepPauseGlims', type: 'toggle', label: 'Hourly check-in while asleep', help: 'Once an hour Glim wakes with its old model, runs any Glims that are due and checks your mail and calendar. Otherwise the Glims wait and catch up after you wake it.' },
+      { key: 'sleepPauseGlims', type: 'toggle', label: 'Hourly check-in while asleep', help: 'Once an hour Glim wakes with its old model, runs any routines that are due and checks your mail and calendar. Otherwise the Glims wait and catch up after you wake it.' },
       { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Built-in model only. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
       { key: 'awakeCheckinMins', type: 'number', label: 'Minutes between awake check-ins', help: 'While Glim is awake and you are away from the chat, a quick read-only look at mail, calendar, things Glim is tracking and the model server. It speaks up only if something needs you. 0 turns it off (0 to 720).', min: 0, max: 720 },
       { key: 'sleepCheckinTask', type: 'text', label: 'Check-in task', help: 'What Glim does at each check-in. Reply NOTHING means nothing needs you.', wide: true },
@@ -991,7 +991,7 @@
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
-      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: () => 'Closing the window hides it; your Glims keep going. Quit for real with ' + Platform.quitHint(plat()) + '.' },
+      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: () => 'Closing the window hides it; Glim keeps going. Quit for real with ' + Platform.quitHint(plat()) + '.' },
       { key: 'hotkey', type: 'hotkey', label: 'Global shortcut', help: 'Show or hide Glim from any app. Click, then press the keys. Backspace turns it off.' }
     ] }
   ];
