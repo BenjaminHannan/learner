@@ -240,6 +240,8 @@ function parseArgs(s) {
 
 const SCREEN_GATED = new Set(['screen_click', 'screen_type', 'screen_key']);
 // Loop guard: tools where repeating the exact same call is normal.
+// tap-to-answer choices for ask_user: up to 4 short strings (Ben Oct 28: as little typing as possible)
+const cleanOptions = (o) => (Array.isArray(o) ? o : []).map((x) => String(x == null ? '' : x).replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean).slice(0, 4);
 const REPEAT_OK = new Set(['ask_user', 'agent_list', 'agent_start', 'agent_update', 'agent_stop', 'browser_scroll']);
 const STUCK_REPEATS = 3; // the 3rd identical call in a row is refused
 
@@ -538,7 +540,7 @@ class Agent {
     const ctx = { signal, settings: this.o.getSettings(), thread, waitForBen: (fn) => this.waitingForBen(fn, signal), stepId };
     if (name === 'ask_user') {
       try {
-        const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal), signal);
+        const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal, cleanOptions(args.options)), signal);
         return { text: finish(answer, !signal.aborted, P('Asked Ben: ') + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
@@ -658,4 +660,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

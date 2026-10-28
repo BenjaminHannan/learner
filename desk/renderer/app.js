@@ -409,16 +409,21 @@
     const host = dock();
     const c = card('', 'Glim asks');
     c.append(el('div', null, ev.question));
-    const ta = el('textarea'); ta.placeholder = 'Your answer…'; ta.setAttribute('aria-label', 'Your answer');
+    const opts = Array.isArray(ev.options) ? ev.options : [];
+    const ta = el('textarea'); ta.placeholder = 'Your answer…'; ta.setAttribute('aria-label', 'Your answer'); ta.hidden = opts.length > 0; // with choices, typing is the fallback
     ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; });
     const btns = el('div', 'btns');
     const send = el('button', 'amber-btn', 'Reply');
-    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); { const you = el('div', 'dim small', 'You: ' + text); you.style.whiteSpace = 'pre-wrap'; c.append(you); } settleDock(c, 'You: ' + String(text).slice(0, 120)); refreshMood(); };
+    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); c.querySelectorAll('.ask-opts').forEach((x) => x.remove()); { const you = el('div', 'dim small', 'You: ' + text); you.style.whiteSpace = 'pre-wrap'; c.append(you); } settleDock(c, 'You: ' + String(text).slice(0, 120)); refreshMood(); };
     send.onclick = () => reply(ta.value.trim());
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
-    btns.append(send);
-    for (const q of ['Yes, go ahead', 'No']) { const b = el('button', 'ghost', q); b.onclick = () => reply(q); btns.append(b); }
-    c.append(ta, btns); host.append(c); toBottom(); setTimeout(() => ta.focus(), 50);
+    if (opts.length) { // tap an answer; "Something else…" opens the box
+      const chips = el('div', 'ask-opts');
+      for (const q of opts) { const b = el('button', 'ask-opt', q); b.onclick = () => reply(q); chips.append(b); }
+      const other = el('button', 'ask-opt other', 'Something else…'); other.onclick = () => { ta.hidden = false; send.hidden = false; other.remove(); ta.focus(); };
+      chips.append(other); send.hidden = true; btns.append(send); c.append(chips);
+    } else { btns.append(send); for (const q of ['Yes, go ahead', 'No']) { const b = el('button', 'ghost', q); b.onclick = () => reply(q); btns.append(b); } }
+    c.append(ta, btns); host.append(c); toBottom(); if (!opts.length) setTimeout(() => ta.focus(), 50);
     rids.set(ev.id, { done: (v) => reply(String(v), true) });
     refreshMood();
   }
