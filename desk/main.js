@@ -541,6 +541,7 @@ function makeBrowser(key, label, opts) {
   if (rec && rec.br.wc.isDestroyed()) { dropBrowser(key); rec = null; } // the page closed itself: start a fresh one
   if (rec) { rec.used = Date.now(); return rec; }
   const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
+  try { view.setBackgroundColor('#ffffff'); } catch (e) { /* ignore */ } // an empty page shows white, so it is not mistaken for a broken panel
   const br = new Browser({ view, session, onState: () => pushBState(key) });
   br.shouldFocus = () => !(ui && !ui.webContents.isDestroyed() && ui.webContents.isFocused()) || (panel.open && panel.key === key);
   rec = { key, label, view, br, helper: !!(opts && opts.helper), onTop: false, active: false, used: Date.now() };
