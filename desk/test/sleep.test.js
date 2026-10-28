@@ -232,3 +232,16 @@ test('assistant marker: start refuses in plain words while the chat model runs, 
   fs.writeFileSync(path.join(home, 'desk-sleep.log'), 'x\nThe assistant is running (y exists); sleeping would stop at once.\n\n');
   assert.match(sl.lastLogLine(), /assistant is running/);
 });
+
+test("poll(): check-in entries read 'Sender: Subject' (no time stamp, address or 'model triage' line)", () => {
+  const { home, sl } = mk();
+  const ib = path.join(home, 'inbox.md');
+  fs.writeFileSync(ib, '## 2026-10-28T14:00:00-04:00  Old <a@b.c>: seen before\nmodel triage\n\n');
+  sl.mark();
+  fs.writeFileSync(ib, '## 2026-10-28T15:07:02-04:00  Facebook <reminders@facebookmail.com>: You have 35 notifications about Parker and others\nmodel triage\n\n'
+    + '## 2026-10-28T15:07:01-04:00  IFTTT <mail_at_ifttt_com_gkdx8smyzq_c11f: We\'re IFTTT.ai\nmodel triage\n\n'
+    + '## 2026-10-28T15:07:00-04:00  Event soon: Piano\n18:30 (starts within 2 h)\n\n'
+    + '## 2026-10-28T14:00:00-04:00  Old <a@b.c>: seen before\nmodel triage\n\n');
+  assert.deepStrictEqual(sl.poll().map((e) => e.line), ['Facebook: You have 35 notifications about Parker and others', "IFTTT: We're IFTTT.ai", 'Event soon: Piano, 18:30']);
+  assert.deepStrictEqual(sl.poll(), []);
+});

@@ -35,6 +35,11 @@ function pidAlive(pid) {
 const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return null; } };
 const readText = (f) => { try { return fs.readFileSync(f, 'utf8'); } catch (e) { return ''; } };
 
+// '## 2026-10-28T15:07:02-04:00  Facebook <reminders@facebookmail.com>: You have 35 …' -> 'Facebook: You have 35 …' (the address may be cut off unclosed)
+function inboxHead(l) {
+  return l.replace(/^##\s+\S+\s+/, '').replace(/\s*<[^>:]*>?(?=:\s)/, '').trim();
+}
+
 class Sleep {
   /**
    * getSettings() -> settings; home: sleepmode state dir; onEvent(ev) for each new events.jsonl line ({kind, ...}) and
@@ -195,7 +200,15 @@ class Sleep {
     this.inboxSig = sig;
     const lines = (sig ? readText(this.p.inbox) : '').split('\n').map((l) => l.trim()).filter(Boolean);
     if (this.inboxSeen == null) this.inboxSeen = new Set(lines);
-    else for (const l of lines) if (!this.inboxSeen.has(l)) { this.inboxSeen.add(l); out.push({ kind: 'inbox', line: l.replace(/^[-*]\s*/, '') }); }
+    else {
+      let head = null; // the sleep check-in writes '## <time>  Sender <addr>: Subject' then one reason line ('model triage'): show only 'Sender: Subject'
+      for (const l of lines) {
+        const fresh = !this.inboxSeen.has(l); if (fresh) this.inboxSeen.add(l);
+        if (l.startsWith('## ')) { head = fresh ? { kind: 'inbox', line: inboxHead(l) } : {}; if (fresh) out.push(head); continue; }
+        if (head) { if (fresh && /^Event soon:/.test(head.line || '')) head.line += ', ' + l.replace(/\s*\([^)]*\)$/, ''); head = null; continue; }   // the reason line (a calendar item's time is kept)
+        if (fresh) out.push({ kind: 'inbox', line: l.replace(/^[-*]\s*/, '') });
+      }
+    }
     return out;
   }
   // baseline for poll(): everything already there counts as seen
