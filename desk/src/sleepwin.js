@@ -153,7 +153,7 @@ class WinSleep extends Sleep {
     try {
       const up = this.hooks.resumeModel ? await this.hooks.resumeModel(lora) : { ok: true };
       if (up && up.ok === false) res = { error: 'the model did not start for the check-in: ' + (up.error || '') };
-      else res = (await this.hooks.checkin({ signal: ac.signal, task: CK.checkinTask(st, this.o.rules), capMs: this.o.checkinCapMs || CK.CHECKIN_CAP_MS })) || {};
+      else res = (await this.hooks.checkin({ signal: ac.signal, task: CK.checkinTask(st, this.o.rules, this.o.tracked && this.o.tracked()), capMs: this.o.checkinCapMs || CK.CHECKIN_CAP_MS })) || {};
     } catch (e) { res = { error: String(e && e.message || e) }; }
     clearTimeout(cap); this.ckAbort = null;
     try { if (this.hooks.pauseModel) await this.hooks.pauseModel(); } catch (e) { /* the next chunk needs the RAM; the exit was awaited by the hook */ }

@@ -17,12 +17,21 @@ const RULES = {
 const CHECKIN_CAP_MS = 5 * 60000;
 const CHECKIN_PERIOD_MIN = 60;
 
+// "Keeping track of" items (src/tracking.js) that are past their until date or due within 2 days need Ben. tracked: [{what, source, until}]
+function trackedRule(tracked) {
+  const T = require('./tracking');
+  const today = new Date(); const pad = (n) => String(n).padStart(2, '0');
+  const due = T.dueItems(tracked || [], today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate()), T.SOON_DAYS);
+  if (!due.length) return '';
+  return '\n\nThings I am keeping track of that need me (past their date or due within ' + T.SOON_DAYS + ' days): ' + due.map((d) => T.describe(d.item) + ' [' + d.reason + ']').join('; ') + '. Say so in your reply even if mail and calendar are quiet.';
+}
+
 // the task the agent gets: Ben's text plus the triage rules in words (so the system prompt stays byte-constant)
-function checkinTask(settings, rules) {
+function checkinTask(settings, rules, tracked) {
   const s = settings || {}; const r = { ...RULES, ...(rules || {}) };
   const base = String(s.sleepCheckinTask || '').trim() || DEFAULT_TASK;
   const vip = r.vipSenders.length ? ' Anything from these senders needs me: ' + r.vipSenders.join(', ') + '.' : '';
-  return base + '\n\nRead only: do not send, reply, delete, archive, accept or change anything. Unread mail from the last ' + r.mailLookbackH + ' hours needs me if its subject or text has one of these words: ' + r.urgentWords.join(', ') + '.' + vip +
+  return base + trackedRule(tracked) + '\n\nRead only: do not send, reply, delete, archive, accept or change anything. Unread mail from the last ' + r.mailLookbackH + ' hours needs me if its subject or text has one of these words: ' + r.urgentWords.join(', ') + '.' + vip +
     ' A calendar event in the next ' + r.calendarAheadH + ' hours needs me only if it starts within ' + r.eventSoonH + ' hours. If you are not signed in, do not try to sign in: reply NOTHING.';
 }
 
@@ -77,4 +86,4 @@ function triage(items, rules) {
 // Once per item (sleepmode keeps notified.json): the same line is not announced twice in a night
 function isRepeat(seen, line) { const k = String(line).toLowerCase().replace(/\W+/g, ' ').trim(); if (seen.has(k)) return true; seen.add(k); return false; }
 
-module.exports = { DEFAULT_TASK, RULES, CHECKIN_CAP_MS, CHECKIN_PERIOD_MIN, checkinTask, parseReply, checkinDue, checkinAdapter, triage, isRepeat };
+module.exports = { trackedRule, DEFAULT_TASK, RULES, CHECKIN_CAP_MS, CHECKIN_PERIOD_MIN, checkinTask, parseReply, checkinDue, checkinAdapter, triage, isRepeat };

@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('desk', {
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },
   helpers: { list: inv('helpers:list'), run: inv('helpers:run'), pause: inv('helpers:pause'), remove: inv('helpers:delete') },
   memory: { list: inv('memory:list'), add: inv('memory:add'), edit: inv('memory:edit'), remove: inv('memory:delete') },
+  tracking: { list: inv('tracking:list'), done: inv('tracking:done'), remove: inv('tracking:remove') },
   sleep: { state: inv('sleep:state'), start: inv('sleep:start'), wake: inv('sleep:wake'), summary: inv('sleep:summary') },
   onboard: { create: inv('onboard:create') },
   openSystem: inv('system:open'),
