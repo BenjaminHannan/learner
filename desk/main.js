@@ -525,7 +525,31 @@ function placeView(rec) {
     rec.onTop = top;
     try { win.contentView.addChildView(rec.view, top ? undefined : 0); } catch (e) { /* ignore */ }
     if (top) { try { rec.view.setVisible(true); rec.view.webContents.invalidate(); } catch (e) { /* ignore */ } } // Ben Oct 28: a page that loaded while the view was hidden (e.g. right after a restart) stayed blank until repainted
+    if (top) diagView(rec, r);
   }
+}
+// Ben Oct 28: the panel showed a dark empty page on his Mac (top=true, right rect) for every URL. One log line per panel open,
+// and one 2 s later, says whether the page loaded and painted: url, loading, crashed, renderer pid, bounds, and whether a
+// capture of the page is one flat colour (nothing painted).
+function diagView(rec, r) {
+  const line = async (tag) => {
+    try {
+      const wc = rec.br.wc;
+      if (wc.isDestroyed()) return console.log('[browser:diag] ' + tag + ' destroyed');
+      const [cw, ch] = win && !win.isDestroyed() ? win.getContentSize() : [0, 0];
+      let paint = '?';
+      try {
+        const img = await wc.capturePage();
+        const sz = img.getSize(), bmp = img.toBitmap();
+        if (!sz.width || !bmp.length) paint = 'empty';
+        else { let diff = 0; for (let i = 4; i < bmp.length && diff < 50; i += 4 * 97) if (bmp[i] !== bmp[0] || bmp[i + 1] !== bmp[1] || bmp[i + 2] !== bmp[2]) diff++; paint = (diff ? 'content' : 'flat') + ' ' + sz.width + 'x' + sz.height; }
+      } catch (e) { paint = 'capture failed: ' + (e && e.message); }
+      const b = rec.view.getBounds();
+      console.log('[browser:diag] ' + tag + ' url=' + String(wc.getURL()).slice(0, 80) + ' loading=' + wc.isLoading() + ' crashed=' + wc.isCrashed() + ' pid=' + wc.getOSProcessId() + ' bounds=' + [b.x, b.y, b.width, b.height].join(',') + ' rect=' + [r.x, r.y, r.width, r.height].join(',') + ' content=' + cw + 'x' + ch + ' children=' + win.contentView.children.length + ' topIsView=' + (win.contentView.children[win.contentView.children.length - 1] === rec.view) + ' paint=' + paint);
+    } catch (e) { console.log('[browser:diag] ' + tag + ' error ' + (e && e.message)); }
+  };
+  line('open');
+  setTimeout(() => line('open+2s'), 2000);
 }
 function applyPanel() { for (const rec of browsers.values()) placeView(rec); }
 
@@ -548,6 +572,10 @@ function makeBrowser(key, label, opts) {
   browsers.set(key, rec);
   const made = rec;
   // a page that closes its own window (window.close) destroys the view: forget it so the next use makes a new one
+  // (diagnostics) why a page would show nothing
+  br.wc.on('did-fail-load', (e, code, desc, url, main) => { if (main) console.log('[browser:diag] fail-load ' + code + ' ' + desc + ' ' + String(url).slice(0, 80)); });
+  br.wc.on('render-process-gone', (e, d) => console.log('[browser:diag] renderer gone ' + (d && d.reason)));
+  br.wc.on('unresponsive', () => console.log('[browser:diag] page unresponsive ' + String(br.wc.getURL()).slice(0, 80)));
   br.wc.once('destroyed', () => setImmediate(() => { if (browsers.get(key) === made) dropBrowser(key); }));
   try { rec.br.wc.setBackgroundThrottling(false); } catch (e) { /* ignore */ }
   if (win && !win.isDestroyed()) { win.contentView.addChildView(view, 0); placeView(rec); }
