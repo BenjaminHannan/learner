@@ -255,3 +255,11 @@ test('Builtin on a Mac: downloads, starts llama-server from the unpacked folder 
   assert.strictEqual(b.needsDownload(), false);
   await b.stop();
 });
+
+test('ensureModel pressed twice while the download runs shares one download', async () => {
+  const d = tmp('mac-dup-'); const seen = [];
+  const inst = new ChatInstaller({ dir: path.join(d, 'runtime'), platform: 'darwin', fetch: macFetch([], Buffer.alloc(0), seen) });
+  const [a, b] = await Promise.all([inst.ensureModel(), inst.ensureModel()]);
+  assert.strictEqual(a.file, b.file);
+  assert.strictEqual(seen.filter((u) => /\.gguf$/.test(u)).length, 1);
+});

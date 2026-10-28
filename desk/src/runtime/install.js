@@ -102,7 +102,12 @@ class ChatInstaller {
     this._save({ llama: { ...(cur.llama || {}), [flavor]: { tag: a.tag, flavor, exe } } });
     return { tag: a.tag, flavor, exe };
   }
-  async ensureModel(signal) {
+  // Turn on pressed twice while the download runs must share one download: two writers appended to the same .part and corrupted it.
+  ensureModel(signal) {
+    if (!this._modelJob) this._modelJob = this._ensureModel(signal).finally(() => { this._modelJob = null; });
+    return this._modelJob;
+  }
+  async _ensureModel(signal) {
     const s = this.state();
     if (s.model && s.model.file && fs.existsSync(s.model.file)) return s.model;
     const files = await getJson(R.hfTreeUrl(C.MODEL_REPO), this.f);
