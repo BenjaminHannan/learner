@@ -82,7 +82,7 @@ window.Onboard = (() => {
   function paintMeet(page) {
     page.append(el('h1', null, 'Meet Glim'));
     const lead = el('p', 'ob-lead');
-    lead.textContent = 'Glim is your assistant: you talk, it gets things done. It can also take care of things on its own, on a schedule, and taps you on the shoulder when something needs you.';
+    lead.textContent = 'Glim is your assistant: you talk, it gets things done. It can also take care of things on its own, on a schedule, and taps you on the shoulder when something needs you. The small helpers it sends off to work in the background are called Motes.';
     page.append(lead);
     const stage = el('div', 'ob-stage');
     const main = el('div', 'ob-main'); main.append(Mascot.el('idle', 112, { cls: 'follow' }), el('b', null, 'Glim'), el('span', null, 'Your main assistant'));
@@ -124,6 +124,10 @@ window.Onboard = (() => {
       const txt = el('span', 'ob-txt'); txt.append(el('b', null, title), el('span', null, text));
       card.append(ico, txt); grid.append(card);
     }
+    const lc = el('div', 'ob-tile ob-rate');
+    const lico = el('span', 'ob-ico'); lico.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5l5.5 2.7L8 8 2.5 5.2zM4.5 7v3c0 1 1.6 2 3.5 2s3.5-1 3.5-2V7"/></svg>';
+    const ltxt = el('span', 'ob-txt'); ltxt.append(el('b', null, 'Learn mode'), el('span', null, 'A Mote is a small helper that works in the background for Glim. Say "go learn about spreadsheets" and Glim asks how many Motes you want on it and for how long. They study it quietly, and sleep trains it in, so Glim already knows it next time.'));
+    lc.append(lico, ltxt); grid.append(lc);
     page.append(grid);
     page.append(el('p', 'ob-fine', 'Glim learns from every chat anyway; your taps tell it which ones to copy and which to fix. They stay on this computer, and a second tap takes one back.'));
   }
