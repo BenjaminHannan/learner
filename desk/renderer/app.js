@@ -755,7 +755,7 @@
     } finally { submitting = false; }
   }
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(false); } });
-  $('#btnSend').onclick = () => submit(false);
+  $('#btnSend').onclick = () => { DictateUI.stop(); submit(false); };
   $('#btnStop').onclick = () => desk.agent.stop(thread && thread.id);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1087,6 +1087,7 @@
     if (!gate().showSleepButton) $('#btnSleep').hidden = true; // hidden on a Windows PC and on a Mac without Ben's assistant (Sleep runs on Ben's Macs for now); the File menu item is left out there too
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
     CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
+    DictateUI.init({ platform: plat(), popts: popts(), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     gw = (await desk.gateway.state()) || gw; paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
     const list = await desk.threads.list();

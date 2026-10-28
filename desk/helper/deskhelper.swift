@@ -548,7 +548,10 @@ func out(_ obj: [String: Any]) {
     }
 }
 
+// dictate = true is `deskhelper dictate`: same listening path, but plain input (no voice processing, so other audio is not ducked), no
+// speech, no barge-in. Commands: {"stop"} flushes the words heard so far as a final and exits; {"quit"} / EOF exits.
 final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
+    var dictate = false
     let engine = AVAudioEngine()
     let synth = AVSpeechSynthesizer()
     var recognizer: SFSpeechRecognizer?
@@ -590,13 +593,15 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
         recognizer = r
         onDevice = r.supportsOnDeviceRecognition
         if !onDevice { out(["note": "offline-unavailable"]) }
-        voice = bestVoice(); synth.delegate = self
-        // voice processing = echo cancellation + noise suppression, so Glim's own voice does not come back as "the user speaking"
-        do { try engine.inputNode.setVoiceProcessingEnabled(true) } catch { out(["note": "no-echo-cancel"]) }
-        if #available(macOS 14.0, *) {
-            var d = AVAudioVoiceProcessingOtherAudioDuckingConfiguration()
-            d.enableAdvancedDucking = false; d.duckingLevel = .min
-            engine.inputNode.voiceProcessingOtherAudioDuckingConfiguration = d
+        if !dictate {
+            voice = bestVoice(); synth.delegate = self
+            // voice processing = echo cancellation + noise suppression, so Glim's own voice does not come back as "the user speaking"
+            do { try engine.inputNode.setVoiceProcessingEnabled(true) } catch { out(["note": "no-echo-cancel"]) }
+            if #available(macOS 14.0, *) {
+                var d = AVAudioVoiceProcessingOtherAudioDuckingConfiguration()
+                d.enableAdvancedDucking = false; d.duckingLevel = .min
+                engine.inputNode.voiceProcessingOtherAudioDuckingConfiguration = d
+            }
         }
         do { try startEngine() } catch { out(["error": "audio-failed: \(error.localizedDescription)"]); exit(1) }
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
@@ -742,6 +747,11 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
 
     func handle(_ line: String) {
         guard let d = line.data(using: .utf8), let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
+        if dictate {
+            if j["stop"] as? Bool == true && !pending.isEmpty { out(["final": pending]) } // keep what was heard
+            if j["stop"] as? Bool == true || j["quit"] as? Bool == true { shutdown() }
+            return
+        }
         if let s = j["say"] as? String { say(s) }
         if j["stop"] as? Bool == true { stopSpeaking() }
         if let id = j["voice"] as? String, let v = AVSpeechSynthesisVoice(identifier: id) { voice = v }
@@ -760,8 +770,9 @@ final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
     }
 }
 
-func runCall() -> Never {
+func runCall(dictate: Bool = false) -> Never {
     let session = CallSession()
+    session.dictate = dictate
     session.begin()
     DispatchQueue.global().async {
         while let line = readLine() { DispatchQueue.main.async { session.handle(line) } }
@@ -771,12 +782,15 @@ func runCall() -> Never {
 }
 
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call|dictate") }
 let command = args.removeFirst()
 
 switch command {
 case "call":
     runCall()
+
+case "dictate":
+    runCall(dictate: true)
 
 case "notch":
     // the camera notch of the menu-bar screen: the gap between the two menu-bar areas beside it (macOS 12+); 0 when there is none.

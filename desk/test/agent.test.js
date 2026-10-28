@@ -215,6 +215,18 @@ test('maxSteps 0 means no limit: a task keeps going past the old 40-step cap', a
   } finally { gw.close(); }
 });
 
+test('reasoning stays private: no reasoning text in events or in the saved thread, only that Glim thought', async () => {
+  const gw = await startGateway([{ reasoning: 'SECRET-CHAIN step one', content: 'answer' }]);
+  try {
+    const events = []; const th = mkThread();
+    const agent = new Agent({ getSettings: settings(gw, { verify: false }), toolDefs: buildTools({}), tools: {}, emit: (e) => events.push(e), approve: async () => 'once', askUser: async () => '' });
+    await agent.run(th, 'hi');
+    assert.ok(!JSON.stringify(events).includes('SECRET-CHAIN'), 'not sent to the window');
+    assert.ok(!JSON.stringify(th.items).includes('SECRET-CHAIN'), 'not saved in the thread');
+    const it = th.items.find((x) => x.t === 'assistant'); assert.strictEqual(it.thinking, true);
+  } finally { gw.close(); }
+});
+
 test('vision on: image is appended as a follow-up user message, only the newest kept', async () => {
   const gw = await startGateway([
     { tool_calls: [{ name: 'shot', arguments: {} }] }, { tool_calls: [{ name: 'shot', arguments: {} }] }, { content: 'seen' }

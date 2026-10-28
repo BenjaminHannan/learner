@@ -170,6 +170,12 @@ body[data-acts="closed"] .act-body { display:none; }
 .callbtn svg { width:1.05rem; height:1.05rem; }
 .callbtn:hover:not(:disabled) { color:var(--accent-text); border-color:var(--accent-text); }
 .callbtn:disabled { opacity:.45; cursor:default; }
+.dictbtn.on { color:var(--on-accent); background:var(--accent); border-color:var(--accent); animation:dictpulse 1.2s ease-in-out infinite; }
+@keyframes dictpulse { 0%,100% { box-shadow:0 0 0 0 var(--accent-soft); } 50% { box-shadow:0 0 0 .4rem var(--accent-soft); } }
+@media (prefers-reduced-motion: reduce) { .dictbtn.on { animation:none; } }
+#dictNote { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; padding:.5rem .85rem; margin-bottom:.5rem; background:var(--accent-soft); border:1px solid var(--accent-text); border-radius:.9rem; font-size:.88rem; }
+#dictNote[hidden] { display:none; }
+#dictNoteText { flex:1 1 12rem; }
 .hint { color:var(--faint); font-size:.78rem; text-align:center; padding-top:.45rem; }
 
 /* drawer */
