@@ -357,3 +357,90 @@ bed or stage changed.
   the last position only (one row): on Metal, a quantized matmul over one row and over many rows rounds differently by about one
   bf16 step, which a second review showed could fail a correct run (emulated on the 0.8B model's 3-bit head).
 - A summary reads stage files without rewriting them and counts each row id once; meta.json also records the bed's sha256.
+
+## Addendum I (2026-10-28 10:00Z, before any hloopi or hloopd run, before pair A's seed-1 runs, and before any seed-1 pair B result was read; hplains seed 1 is training): round 2, which part of the loop recipe lets it stop by itself?
+Why. Round 1 (Addendum G, seed 0, backbone/results/hops/pc/SUMMARY_hops.txt) passed both pairs. Near (depths 5-6): hloops halting
+98.50 vs hplains 62.75; hloop at 6 laps 96.50 vs hplain 59.13. Ben's aim is a loop that decides by itself how much thinking each
+problem gets, so what matters next is the stop rule, and which training labels it needs. Real requests have no hop labels and no
+known depth, so only a recipe trained on the answer alone can move to the assistant. Of the round-1 arms, only hloop is one.
+What seed 0 shows about stopping (read before this addendum; no mark; scratch script, numbers on the validation rows):
+- hloops, answer-stable rule (online: it runs one lap past the lap it answers with): near 98.50, laps run = depth + 1. Its laps are
+  graded, so each lap names one more hop, and the answer stops changing when the chain ends.
+- hloop, answer-stable rule: near 87.25, about 2 laps at every depth (Spearman(depth 1-6, laps) 0.43). Its answer often repeats
+  between laps 1 and 2 while still wrong, so the rule stops too early.
+- hloop, max-confidence rule: near 95.88, and the lap it picks rises with depth (1.4 -> 6.2). But this rule is not a stop rule: it
+  runs all 12 laps and then picks one, so it saves no compute. Online confidence rules did worse on the same rows: a threshold on the
+  answer's probability (0.5-0.99) gave near 65.5-86.5, because wrong early answers are often very confident (log-prob above -0.01);
+  "stop after 4 laps without a confidence gain" gave near 95.75 but ran 5.4 laps even on depth-1 rows.
+So the answer-only recipe can pick a good lap only after running them all. Round 2 asks which ingredient gives a stop rule that
+works online, and whether that ingredient needs labels that real data lacks.
+
+The ladder (each arm differs from the one before it in one way; all exist in think1.py, seed 0, 4,000 steps, as in Addendum G):
+- hloop (br's recipe, done): random lap counts per step (1 + Poisson(m - 1), capped at 6, ramped), no injection, answer loss after the
+  last lap.
+- hloopi = hloop + re-injection (W, as hloops). Needs only the answer. Its control is hplain (seed 0, reused: hloopi's lap schedule is
+  hloop's, so the compute match holds; W adds a hidden x hidden matrix, about 1M trained parameters that hplain lacks).
+- hloopd = hloopi with lap counts tied to depth (depth + U{0..2} per row, hops_plan) instead of random. Needs the depth. Its control
+  is hplains (seed 0, reused; hplains was sized from hloops' plan with the extra read counted, so it gets slightly more compute than
+  hloopd: a bias against hloopd).
+- hloops = hloopd + graded laps (done). Needs the hop labels.
+
+Runs, in this order, on Ben's PC (training is PC-only), each in a slot from the coordinator:
+1. hloopi seed 0 (about 2 h). It runs whatever pair B's seed-1 result is: it tests the answer-only line.
+2. Pair A's seed-1 replicate: hplain then hloop, seed 1 (about 3.5 h). Addendum G requires it before pair A counts as a result. It
+   also runs whatever pair B's seed-1 result is.
+3. hloopd seed 0 (about 4.5 h), only if pair B's seed-1 replicate passes (it takes hloops apart, which only matters if hloops holds).
+4. Fresh rows, scored once (Addendum G), after the run they depend on: pair B's arms (hloops, hplains; seeds 0 and 1) once pair B
+   seed 1 passes; pair A's arms (hloop, hplain; seeds 0 and 1) once pair A seed 1 passes; each round-2 arm that passes, with its
+   control. Looped arms at r = 1-12 with answers and log-probs kept; plain arms one pass. The same marks are recomputed on fresh
+   rows, by the same functions. A mark that passed on validation and fails on fresh rows is reported as "did not hold on fresh rows",
+   and no claim rests on it. Every number told to Ben as a result is a fresh-row number.
+
+Marks (validation rows, the same functions as Addendum G: paired row bootstrap, 2,000 resamples, 95%; near = depths 5-6; trained =
+depths 1-4; the stop rule is Addendum G's answer-stable rule over r = 1-12 for every arm, fixed now; max-confidence is reported with no
+mark, as a pick rule that runs all 12 laps)
+- Validity: the reused controls already passed V1 and V2 at seed 0. For seed 1, pair A's V1 and V2 apply unchanged (hplain seed 1).
+- Installed: hloopi at r = 6, and hloopd at r = depth, on the trained depths >= 80. Else NOT INSTALLED (not a refutation).
+- For X = hloopi (control hplain) and X = hloopd (control hplains):
+  - F1 (works at fixed laps): near, X at r = 6 minus control >= +5, interval above 0. Proved wrong below +1.
+  - F2: trained, X at r = 6 minus control >= -2.
+  - S1 (stops by itself): near, X under the stop rule minus control >= +5, interval above 0. Proved wrong below +1.
+  - S2: trained, X under the stop rule minus control >= -2.
+  - S3: Spearman(depth 1-6, laps chosen by the stop rule) >= 0.5, with the 2,000-resample row-bootstrap interval above 0.3. Proved
+    wrong at <= 0.1.
+  - WORKS = F1 and F2. STOPS ITSELF = S1, S2 and S3.
+- Pair A seed 1 (hloop vs hplain): Addendum G's A1-A3, unchanged. New marks, fixed now, read at seed 1 only (seed 0 was seen):
+  - A4: near, hloop under the stop rule minus hplain >= +5, interval above 0. Proved wrong below +1. (Seed 0, not a test: +28.12.)
+  - A5: trained, hloop under the stop rule minus hplain >= -2. (Seed 0: -0.06.)
+  - A6: Spearman(depth 1-6, laps chosen by the stop rule) >= 0.5, interval above 0.3. Proved wrong at <= 0.1. (Seed 0: 0.43.)
+  - Pair A REPLICATES = A1, A2 and A3 at seed 1. STOPS ITSELF = A4, A5 and A6.
+- One-change readouts (no mark; paired intervals on the same rows, seed 0): hloopi - hloop (injection), hloopd - hloopi (laps tied to
+  depth), hloops - hloopd (graded laps), each at r = 6 and under the stop rule, on near and far, plus their Spearman values and laps
+  by depth. The W = 0 lesion and |W| for hloopi and hloopd.
+
+Decisions (fixed now):
+- hloopi STOPS ITSELF: injection is what br's recipe lacked, and it needs no extra labels. It is the candidate for the assistant.
+  Next: hloopi seed 1 (and hplain seed 1, if pair A's replicate has not run it) before any claim, then its fresh rows.
+- hloopi WORKS but does not stop itself: injection alone does not give an online stop. Read hloopd (if it runs).
+  - hloopd STOPS ITSELF: laps tied to depth, not graded laps, give the stop, but real data has no depth. Next (a new addendum): a lap
+    count the model can set without depth labels, e.g. a curriculum that adds laps only while the answer loss still falls.
+  - hloopd does not stop itself (and pair B seed 1 passed): the graded laps give the stop, and real data has no hop labels. Next (a
+    new addendum): a trained stop signal that needs only the answer (a halting head trained on the model's own lap-by-lap
+    correctness, PonderNet-style), on hloop or hloopi.
+- hloopi does not WORK (F1 fails): with W, br's recipe loses its fixed-lap gain on this bed. Proved wrong (F1 below +1) means
+  injection hurts here; else not shown. Either way, the stop-signal addendum above runs on hloop.
+- Pair A REPLICATES: br's fixed-lap result holds on two seeds. If it also STOPS ITSELF at seed 1 (not expected from seed 0), the
+  stop-rule question for hloop is reopened before anything moves to the assistant. If pair A does not replicate, no claim rests on
+  pair A, and the village reading of Addendum G's pair A decision waits for a seed-2 run.
+- Nothing moves into the assistant until one answer-only recipe both REPLICATES its fixed-lap gain and STOPS ITSELF on two seeds,
+  with fresh rows. Until then, the assistant keeps no loop.
+
+Known biases and limits, stated in advance:
+- The stop rule was fixed after seeing seed 0's stop-rule numbers for hloop and hloops, but before any hloopi, hloopd or seed-1
+  pair A run. Seed 0 of pair A is excluded from A4-A6. The rule is Addendum G's own, not one tuned here.
+- hloopi and hloopd are seed 0 only. A round-2 pass is a lead until seed 1 agrees.
+- hloopi has about 1M more trained parameters than hplain (W); hloopd's control gets slightly more compute than hloopd.
+- The one-change readouts compare arms trained on the same batch stream; they are not compute-matched to each other (hloopd and
+  hloops run more lap passes than hloop and hloopi).
+- Max-confidence numbers are reported but never marked: as a pick over 12 laps it costs 12 laps on every row, which does not meet
+  Ben's aim (deciding how much thinking to spend).
