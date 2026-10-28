@@ -204,7 +204,7 @@ function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
   if (sl.stopping && !o.assistantStopped) return { error: 'Turning off the chat model first. One moment.' };
-  if ((agent && agent.running) || (helpers && helpers.active.size)) return { error: 'Glim is busy with a run right now. Sleep starts only when it is idle, because your chats come first.' };
+  if (agent && agent.running) return { error: 'Glim is busy answering you right now. Sleep starts when it is idle, because your chats come first.' };
   if (typeof o.pauseGlims === 'boolean') store.saveSettings({ sleepPauseGlims: o.pauseGlims });
   // how long: minutes | 'morning' | null (until woken). Auto-sleep: to the end of the night window.
   const now0 = new Date(), cfg = store.getSettings();
@@ -228,6 +228,7 @@ function startSleep(o) {
   if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
   if (!r.ok) return { error: r.error };
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
+  sl.asleep = true; if (helpers && helpers.active.size) helpers.pauseForSleep();   // Motes mid-run stop and run again once after wake; they no longer block sleep (asleep first so their due runs are held)
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   pushSleep(); updatePill();
   return { ok: true };
