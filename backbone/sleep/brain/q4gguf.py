@@ -135,7 +135,7 @@ def apply_gguf(lm, path, dtype=None, per_tensor=False):
         if hf == "lm_head.weight" and hf not in params:
             hf = "model.embed_tokens.weight"
         w = params[hf]
-        new = x.to(dtype or w.dtype)
+        new = x.to(device=w.device, dtype=dtype or w.dtype)  # x is a CPU tensor; the model may already be on the GPU
         r = float((new.float() - w.float()).norm() / w.float().norm().clamp_min(1e-30))
         w.data.copy_(new)
         d = by[ty]
