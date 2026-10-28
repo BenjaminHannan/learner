@@ -213,6 +213,13 @@ function inWindow(now, from, to) {
   if (a === b) return false;
   return a < b ? t >= a && t < b : t >= a || t < b;
 }
+// The window auto-sleep uses: the one learned from Ben's routine (src/rhythm.js) when "Fit sleep to my routine" is on and there is one,
+// else the one set by hand in Settings (also what is used while it is still learning). Every check of "is it night" goes through here so they cannot disagree.
+function effectiveWindow(settings, learned) {
+  const s = settings || {};
+  if (s.sleepAdapt && learned && learned.from && learned.to) return { from: learned.from, to: learned.to, learned: true };
+  return { from: s.sleepFrom, to: s.sleepTo, learned: false };
+}
 // one key per night (the date the window started), so Ben waking at 2 am is not put back to sleep at 2:30
 function windowKey(now, from, to) {
   const t = now.getHours() * 60 + now.getMinutes(), a = hm(from, 23 * 60), b = hm(to, 7 * 60);
@@ -222,7 +229,7 @@ function windowKey(now, from, to) {
 }
 /**
  * Should Desk put Glim to sleep now? i: {now: Date, settings, idleMs (since Ben last used Desk), runActive, gatewayBusy,
- * windowFocused, asleep, available, lastKey (night already handled)} -> {sleep, reason, key}
+ * windowFocused, asleep, available, lastKey (night already handled), learned ({from, to} from src/rhythm.js or null)} -> {sleep, reason, key}
  */
 function shouldAutoSleep(i) {
   const s = i.settings || {};
@@ -230,14 +237,15 @@ function shouldAutoSleep(i) {
   if (!s.autoSleep) return no('off');
   if (i.asleep) return no('already asleep');
   if (i.available === false) return no('sleep app not found');
-  if (!inWindow(i.now, s.sleepFrom, s.sleepTo)) return no('outside the night window');
-  const key = windowKey(i.now, s.sleepFrom, s.sleepTo);
+  const w = effectiveWindow(s, i.learned);
+  if (!inWindow(i.now, w.from, w.to)) return no('outside the night window');
+  const key = windowKey(i.now, w.from, w.to);
   if (i.lastKey === key) return no('already handled tonight');
   if (i.runActive) return no('a run is active');
   if (i.gatewayBusy) return no('the gateway is busy');
   if (s.sleepOnlyPlugged === true && i.onBattery) return no('on battery');
   if (i.windowFocused) return no('Desk is in front');
-  const need = Math.max(1, Number(s.sleepIdleMin) || 30) * 60000;
+  const need = Math.max(1, Number(s.sleepIdleMin) || 120) * 60000;
   // Desk's own idle time AND the Mac's (keyboard, mouse in any app): Ben working in another app is not idle
   const idle = Math.min(Number(i.idleMs) || 0, i.systemIdleMs == null ? Infinity : Number(i.systemIdleMs) || 0);
   if (!(idle >= need)) return no('not idle long enough');
@@ -245,20 +253,20 @@ function shouldAutoSleep(i) {
 }
 // The night key to remember when Ben wakes Glim: the one recorded when this sleep STARTED, else the current night if now is inside the window.
 // Waking at 08:00 (or auto-waking at 07:00) must never block tonight's auto-sleep.
-function wakeKey({ sleepKey, now, settings }) {
+function wakeKey({ sleepKey, now, settings, learned }) {
   if (sleepKey) return sleepKey;
-  const s = settings || {};
-  return inWindow(now, s.sleepFrom, s.sleepTo) ? windowKey(now, s.sleepFrom, s.sleepTo) : null;
+  const w = effectiveWindow(settings, learned);
+  return inWindow(now, w.from, w.to) ? windowKey(now, w.from, w.to) : null;
 }
 // ---- sleep length (pure) ------------------------------------------------------------------------------------
 const DURATIONS = { '30': 30, '60': 60, '120': 120, '240': 240, morning: 'morning', open: null };
 const OPEN_SLEEP_H = 8;   // "until I wake it" plans for 8 hours of work
 const BUDGET_SHARE = 0.85; // the rest is for converting the adapter and waking up
 // when should this sleep end? minutes (number) | 'morning' (the next time the Settings night end comes round) | null (until woken) -> ms or null
-function computeWakeAt(now, d, settings) {
+function computeWakeAt(now, d, settings, learned) {
   if (typeof d === 'number' && d > 0) return now.getTime() + d * 60000;
   if (d === 'morning') {
-    const m = hm((settings || {}).sleepTo, 7 * 60);
+    const m = hm(effectiveWindow(settings, learned).to, 7 * 60);
     const t = new Date(now); t.setHours(Math.floor(m / 60), m % 60, 0, 0);
     if (t.getTime() <= now.getTime()) t.setDate(t.getDate() + 1); // already past it today: tomorrow's (a night that crosses midnight)
     return t.getTime();
@@ -287,8 +295,9 @@ const shouldTimedWake = (i) => !!(i.asleep && !i.waking && i.wakeAt && i.nowMs >
 function shouldAutoWake(i) {
   const s = i.settings || {};
   if (!s.wakeAt || !s.autoSleep || !i.asleep || !i.startedAuto) return { wake: false };
-  if (inWindow(i.now, s.sleepFrom, s.sleepTo)) return { wake: false };
+  const w = effectiveWindow(s, i.learned);
+  if (inWindow(i.now, w.from, w.to)) return { wake: false };
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };
+module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };

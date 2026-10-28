@@ -367,7 +367,7 @@
   // ---------- run state ----------
   function setRunning(r) {
     running = r;
-    $('#btnSend').textContent = r ? 'Steer' : 'Send'; $('#btnStop').hidden = !r; $('#runState').hidden = !r;
+    paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? 'This is a Glim’s thread. Type here to steer it while it runs.' : 'Ask Glim to do something…';
@@ -478,7 +478,7 @@
   let sleepPick = 'morning';
   const paintDur = () => {
     for (const b of document.querySelectorAll('#sleepDur button')) { const on = b.dataset.d === sleepPick; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.classList.toggle('on', on); }
-    $('#sleepDurNote').textContent = sleepPick === 'morning' ? 'Until ' + (settings.sleepTo || '07:00') + '. Longer sleep learns more.' : sleepPick === 'open' ? 'It keeps going until you press Wake (it plans for about 8 hours). Longer sleep learns more.' : 'Longer sleep learns more.';
+    $('#sleepDurNote').textContent = sleepPick === 'morning' ? 'Until ' + (slp.nightTo || settings.sleepTo || '08:00') + '. Longer sleep learns more.' : sleepPick === 'open' ? 'It keeps going until you press Wake (it plans for about 8 hours). Longer sleep learns more.' : 'Longer sleep learns more.';
   };
   for (const b of document.querySelectorAll('#sleepDur button')) b.onclick = () => { sleepPick = b.dataset.d; paintDur(); };
   function openSleepSheet() {
@@ -744,6 +744,14 @@
   });
 
   // ---------- top bar ----------
+  // round icon buttons: arrow up = send, a turning arrow = steer; the words stay for screen readers and tooltips
+  const SEND_ICO = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg>';
+  const STEER_ICO = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13V8.5A2.5 2.5 0 015.5 6H13M10 3l3 3-3 3"/></svg>';
+  function paintSend(running) {
+    const b = $('#btnSend'), word = running ? 'Steer' : 'Send';
+    b.innerHTML = (running ? STEER_ICO : SEND_ICO) + '<span class="sr">' + word + '</span>';
+    b.title = running ? 'Steer: send a note to the running Glim (Enter)' : 'Send (Enter)';
+  }
   function paintSegs() {
     document.querySelectorAll('#modelSeg button').forEach((b) => { if (b.dataset.slot && settings[b.dataset.slot]) b.dataset.model = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.model === settings.model); });
     document.querySelectorAll('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === settings.mode));
@@ -808,9 +816,10 @@
       { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Windows. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
       { key: 'sleepCheckinTask', type: 'text', label: 'Check-in task', help: 'What Glim does at each check-in. Reply NOTHING means nothing needs you.', wide: true },
       { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
-      { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times.' },
+      { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times. This is the window in effect when Fit sleep to my routine is off, and until it has learned yours.' },
+      { key: 'sleepAdapt', type: 'toggle', label: 'Fit sleep to my routine', help: 'Learns when you usually stop in the evening and start in the morning (from the last 3 weeks, once it has 5 days) and sleeps in that gap instead of the night window. It still waits for the idle time below. Off: the night window you set is used as it is.' },
       { key: 'sleepOnlyPlugged', type: 'toggle', label: 'Only sleep when plugged in', help: 'Sleep is slow and uses a lot of power on a laptop. Keep it plugged in overnight.' },
-      { key: 'sleepIdleMin', type: 'number', label: 'Idle minutes before auto-sleep', help: 'How long you have to be away first (1 to 720).', min: 1, max: 720 },
+      { key: 'sleepIdleMin', type: 'number', label: 'Idle minutes before auto-sleep', help: 'How long you have to be away first, 120 minutes (2 hours) unless you change it (1 to 720).', min: 1, max: 720 },
       { key: 'wakeAt', type: 'toggle', label: 'Wake at the end of the window', help: 'Only for a sleep that Glim started by itself.' }
     ] },
     { group: 'Screen control', rows: [
@@ -963,6 +972,7 @@
         } else if (r.type === 'window') {
           const mk = (key) => { const i = el('input'); i.type = 'time'; i.id = key; i.setAttribute('aria-label', key === 'sleepFrom' ? 'Night starts' : 'Night ends'); i.style.width = '8rem'; i.addEventListener('change', () => save({ [key]: i.value || undefined }).then(paintSettings)); controls[key] = { paint: () => { if (document.activeElement !== i) i.value = settings[key] || ''; } }; return i; };
           const to = el('span', 'dim', 'to'); ctl.append(mk('sleepFrom'), to, mk('sleepTo'));
+          const ln = el('div', 's-note dim'); ln.id = 'sleepLearned'; lab.append(ln);
         } else if (r.type === 'memory') {
           row.removeChild(ctl); row.append(memUi());
         } else if (r.type === 'tracking') {
@@ -1013,6 +1023,8 @@
     const n = $('#sleepStat'); if (!n) return;
     n.className = 's-note' + (slp.available ? '' : ' bad');
     n.textContent = !slp.available ? slp.reason : (slp.error || slp.statusLine || '');
+    const ln = $('#sleepLearned');
+    if (ln) ln.textContent = !settings.sleepAdapt ? 'In effect: the times above.' : slp.learned ? 'In effect, learned from your last ' + slp.learned.days + ' days: ' + slp.learned.from + ' to ' + slp.learned.to + '.' : 'Still learning your routine (it needs 5 days): the times above are in effect.';
     $('#sleepNow').disabled = !slp.available || slp.asleep || slp.waking; $('#sleepWakeS').hidden = !(slp.asleep || slp.waking);
   }
   function paintSettings() { for (const c of Object.values(controls)) c.paint(); paintSegs(); paintSleepSettings(); }

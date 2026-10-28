@@ -128,8 +128,8 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
   ];
   const presetsFor = (p) => PRESETS.filter((x) => !x.builtin || isWin(p));
   const defaultPreset = (p) => (isWin(p) ? PRESETS.find((x) => x.id === 'builtin') : PRESETS[0]);
-  // sleep window defaults: a laptop sleeps in the small hours; the Macs keep the old evening window
-  const defaultSleepWindow = (p) => (isWin(p) ? ['01:00', '06:00'] : ['23:00', '07:00']);
+  // sleep window default: never before 11 pm, until 8 am, on every platform (the app then fits it to Ben's routine, src/rhythm.js)
+  const defaultSleepWindow = (p) => ['23:00', '08:00'];
   const presetFor = (gatewayUrl) => { const u = String(gatewayUrl || '').replace(/\/+$/, ''); return PRESETS.find((x) => x.gatewayUrl === u) || null; };
 
   const api = { isWin, isMac, helperFileName, helperCommand, helperCandidates, mapKeys, defaultHotkey, hotkeyLabel, modifierHint, features, settingsGating, needsPermsStep, pillOptions, pillPosition, closeBehavior, quitHint, loginItemOptions, startedHidden, windowOptions, osWords, PRESETS, presetsFor, defaultPreset, defaultSleepWindow, presetFor, PERMS_NOTE_WIN };

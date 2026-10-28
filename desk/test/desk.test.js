@@ -164,7 +164,7 @@ test('theme tokens: all text pairs are at least 4.5:1 in dark and light (and hig
 test('sleep settings: defaults, HH:MM validation, idle minutes clamp', () => {
   const s = new Store(tmp());
   const d = s.getSettings();
-  assert.strictEqual(d.autoSleep, false); assert.strictEqual(d.sleepFrom, '23:00'); assert.strictEqual(d.sleepTo, '07:00'); assert.strictEqual(d.sleepIdleMin, 30); assert.strictEqual(d.wakeAt, false); assert.strictEqual(d.sleepPauseGlims, true); assert.strictEqual(d.sleepDuration, 'morning'); assert.strictEqual(d.sleepCheckinMins, 60); assert.strictEqual(d.sleepApp, '');
+  assert.strictEqual(d.autoSleep, false); assert.strictEqual(d.sleepFrom, '23:00'); assert.strictEqual(d.sleepTo, '08:00'); assert.strictEqual(d.sleepIdleMin, 120); assert.strictEqual(d.sleepAdapt, true); assert.strictEqual(d.wakeAt, false); assert.strictEqual(d.sleepPauseGlims, true); assert.strictEqual(d.sleepDuration, 'morning'); assert.strictEqual(d.sleepCheckinMins, 60); assert.strictEqual(d.sleepApp, '');
   const n = s.saveSettings({ sleepFrom: '9:05', sleepTo: '25:00', sleepIdleMin: 99999, autoSleep: 1 });
-  assert.strictEqual(n.sleepFrom, '09:05'); assert.strictEqual(n.sleepTo, '07:00'); assert.strictEqual(n.sleepIdleMin, 720); assert.strictEqual(n.autoSleep, true);
+  assert.strictEqual(n.sleepFrom, '09:05'); assert.strictEqual(n.sleepTo, '08:00'); assert.strictEqual(n.sleepIdleMin, 720); assert.strictEqual(n.autoSleep, true);
 });
