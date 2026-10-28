@@ -534,12 +534,13 @@ const afterSignIn = async (br, v) => v === 'done'
 
 // ---- agents ------------------------------------------------------------------------------------
 // One Agent per run owner: the primary, and a fresh one for each helper run. Same prompt, same tool list.
-function createAgent({ helper, rec }) {
+function createAgent({ helper, rec, voice }) {
   const isHelper = !!helper;
+  const isVoice = !!voice; // the call's own agent: it runs beside the main agent, so a call works while a task is running
   // one browser per thread: a helper's is made up front (its thread id), a chat thread's on its first browser tool
   const bk = () => (isHelper ? helper.threadId : a.threadId);
-  const getBr = () => (isHelper ? rec : makeBrowser(bk(), activeThread && activeThread.title)).br;
-  const pKey = isHelper ? helper.id : 'main';
+  const getBr = () => (isHelper ? rec : makeBrowser(bk(), isVoice ? 'Call' : activeThread && activeThread.title)).br;
+  const pKey = isHelper ? helper.id : isVoice ? 'call' : 'main';
   const pName = isHelper ? helper.name : 'Glim';
   const holder = screenLock.holder();
   const agentRef = { withoutSlot: (fn, signal) => a.withoutSlot(fn, signal) };
@@ -630,11 +631,11 @@ function createAgent({ helper, rec }) {
       return r;
     };
   }
-  const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
+  const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : (activeThread && activeThread.title) });
   const a = new Agent({
     memory, tracking,
     getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' })
-      : () => { const s = store.getSettings(); return callTurn ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
+      : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
     slot: limiter,
@@ -730,16 +731,17 @@ function buildAgent() {
 // prompt (the cached prefix must stay byte-identical).
 const VOICE_PREFIX = '[voice call] Answer out loud: one to three short spoken sentences, no lists, no markdown, no emoji. ';
 let call = null, callThread = null;
-let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the main agent
+let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the call's own agent
+let callAgent = null; // separate from the main agent, so a call works while a task runs
 async function callAsk(text, { onDelta, signal }) {
   if (sl.asleep || sl.waking) throw new Error('Glim is asleep');
-  for (let i = 0; i < 100 && agent.running && callTurn; i++) await sleep(30); // the turn we just interrupted is still unwinding
-  if (agent.running) throw new Error('Glim is busy with another task');
+  if (!callAgent) callAgent = createAgent({ helper: null, rec: null, voice: true });
+  for (let i = 0; i < 100 && callAgent.running && callTurn; i++) await sleep(30); // the turn we just interrupted is still unwinding
+  if (callAgent.running) throw new Error('Glim is busy with another turn of this call');
   await Promise.race([toolsReady, sleep(3000)]);
   if (signal.aborted) return;
-  if (agent.running) throw new Error('Glim is busy with another task');
+  if (callAgent.running) throw new Error('Glim is busy with another turn of this call');
   const t = callThread;
-  activeThread = t;
   callTurn = {
     threadId: t.id,
     onEvent: (ev) => {
@@ -749,17 +751,16 @@ async function callAsk(text, { onDelta, signal }) {
       else if (ev.type === 'approval' || ev.type === 'ask') onDelta('I need your OK in the chat for that.\n'); // a voice call cannot answer cards
     }
   };
-  const stop = () => agent.stop();
+  const stop = () => callAgent.stop();
   signal.addEventListener('abort', stop);
   send('agent', { threadId: t.id, type: 'user', text });
-  try { await agent.run(t, VOICE_PREFIX + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
+  try { await callAgent.run(t, VOICE_PREFIX + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
 }
 function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
   if (call) return { error: 'You are already on a call.' };
   if (dictation) return { error: 'Stop dictation first, then call.' };
   if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first, then call.' };
-  if (agent.running) return { error: 'Glim is busy with a task. Stop it or wait, then call.' };
   const bin = screen.findHelper();
   if (!bin) return { error: 'Calling needs the Glim helper, which is not installed in this build.' };
   callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
