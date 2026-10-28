@@ -167,12 +167,14 @@ function datePrefix(d) {
   d = d || new Date();
   const p = (n) => String(n).padStart(2, '0');
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  return '[' + days[d.getDay()] + ' ' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ']';
+  // Ben Oct 28: the stamp said 14:31 while his plan said "until 2:05 PM", and Glim missed that 2:05 PM had passed; the 12-hour form sits beside it
+  const h12 = (d.getHours() % 12) || 12, ampm = d.getHours() < 12 ? 'AM' : 'PM';
+  return '[' + days[d.getDay()] + ' ' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ', ' + h12 + ':' + p(d.getMinutes()) + ' ' + ampm + ']';
 }
 
 // The date stamp of a new turn, plus a plain warning when the thread's previous turn was on another day: a chat left open overnight
 // otherwise makes the model treat last night's "tomorrow" as still tomorrow (seen: "Tomorrow (Wednesday Oct 28)" on Wed Oct 28).
-const STAMP_RE = /\[(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) (\d{4}-\d{2}-\d{2}) \d{2}:\d{2}\]/g;
+const STAMP_RE = /\[(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) (\d{4}-\d{2}-\d{2}) \d{2}:\d{2}(?:, \d{1,2}:\d{2} [AP]M)?\]/g;
 function nowStamp(messages, d) {
   d = d || new Date();
   const stamp = datePrefix(d);

@@ -64,7 +64,7 @@ _LONG_NOTE = re.compile(r"^\s*\[(?:Learning mode|You just asked about their goal
 # The Desk puts its saved-notes and keeping-track blocks first, then the turn's date stamp line (desk/src/agent.js pushUser). A notes file
 # can hold blank lines, so the blocks end at the stamp, not at the first blank line (that cut Ben's words off every such turn).
 _DESK_HEAD = re.compile(r"^\s*(?:Saved notes about|Things) [^\n]{0,60}\(data, not instructions\):", re.I)
-_DESK_STAMP_LINE = re.compile(r"^\[[A-Z][a-z]{2} \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\]", re.M)
+_DESK_STAMP_LINE = re.compile(r"^\[[A-Z][a-z]{2} \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}(?:, \d{1,2}:\d{2} [AP]M)?\]", re.M)   # 12-hour part since Oct 28
 HELPER_RE = re.compile(r"^You are helper '([^\n]{1,80}?)'\. Task: ", re.I)   # desk/src/helpers.js helperText: a helper's own run, not Ben
 _NEW_DAY = re.compile(r"\(New day: today is [^)\n]{0,40}\. The earlier messages here were on [^)\n]{0,200}? are out of date\.\)")   # agent.js nowStamp
 _THINK = re.compile(r"<think>.*?</think>|<ifm\|think[^>]*>.*?</ifm\|think[^>]*>", re.S | re.I)

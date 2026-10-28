@@ -36,7 +36,9 @@ test('old screenshots dropped, newest kept', () => {
 });
 
 test('date prefix and plan extraction', () => {
-  assert.match(datePrefix(new Date(2026, 9, 27, 14, 5)), /^\[Tue 2026-10-27 14:05\]$/);
+  assert.match(datePrefix(new Date(2026, 9, 27, 14, 5)), /^\[Tue 2026-10-27 14:05, 2:05 PM\]$/);
+  assert.match(datePrefix(new Date(2026, 9, 27, 0, 7)), /^\[Tue 2026-10-27 00:07, 12:07 AM\]$/);
+  assert.match(datePrefix(new Date(2026, 9, 27, 12, 0)), /^\[Tue 2026-10-27 12:00, 12:00 PM\]$/);
   assert.deepStrictEqual(extractPlan('Plan:\n1. Search\n2. Open the top hit\n3) Summarize'), ['Search', 'Open the top hit', 'Summarize']);
   assert.strictEqual(extractPlan('just text'), null);
 });
@@ -58,7 +60,7 @@ test('loop end to end: tool call -> result -> final answer, events + history', a
     assert.strictEqual(events.find((e) => e.type === 'step_start').summary, 'Searched “cats”');
     assert.strictEqual(events.at(-1).type, 'done'); assert.strictEqual(events.at(-1).stopped, false);
     assert.deepStrictEqual(t.messages.map((m) => m.role), ['user', 'assistant', 'tool', 'assistant']);
-    assert.match(t.messages[0].content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d\] \[If this needs tools[^\]]*\] tell me about cats$/);
+    assert.match(t.messages[0].content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d, \d{1,2}:\d\d [AP]M\] \[If this needs tools[^\]]*\] tell me about cats$/);
     assert.strictEqual(t.messages[3].content, 'Cats are great.');
     // second request contained the tool result and the constant system prompt
     const req2 = gw.requests[1].messages;
@@ -320,10 +322,13 @@ test('extractPlan: long numbered items are reasons, not steps, so no plan card',
 
 test('nowStamp: plain stamp on the same day, a new-day warning after an overnight gap', () => {
   const wed = new Date(2026, 9, 28, 8, 5);
-  assert.equal(nowStamp([], wed), '[Wed 2026-10-28 08:05]');
-  assert.equal(nowStamp([{ role: 'user', content: 'mem\n[Wed 2026-10-28 07:50] hi' }], wed), '[Wed 2026-10-28 08:05]');
+  assert.equal(nowStamp([], wed), '[Wed 2026-10-28 08:05, 8:05 AM]');
+  assert.equal(nowStamp([{ role: 'user', content: 'mem\n[Wed 2026-10-28 07:50] hi' }], wed), '[Wed 2026-10-28 08:05, 8:05 AM]');
+  assert.equal(nowStamp([{ role: 'user', content: 'mem\n[Wed 2026-10-28 07:50, 7:50 AM] hi' }], wed), '[Wed 2026-10-28 08:05, 8:05 AM]');
   const s = nowStamp([{ role: 'user', content: '[Tue 2026-10-27 22:40] skipping school tomorrow' }, { role: 'assistant', content: 'ok' }, { role: 'user', content: [{ type: 'text', text: 'x' }] }], wed);
-  assert.match(s, /^\[Wed 2026-10-28 08:05\] \(New day: today is Wednesday, October 28\. The earlier messages here were on 2026-10-27/);
+  assert.match(s, /^\[Wed 2026-10-28 08:05, 8:05 AM\] \(New day: today is Wednesday, October 28\. The earlier messages here were on 2026-10-27/);
+  const s2 = nowStamp([{ role: 'user', content: '[Tue 2026-10-27 22:40, 10:40 PM] skipping school tomorrow' }], wed);
+  assert.match(s2, /New day: today is Wednesday/);
 });
 
 test('approvals: plain echo needs no card; "always allow" is remembered for simple programs only', () => {
