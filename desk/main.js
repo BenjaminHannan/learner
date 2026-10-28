@@ -659,7 +659,7 @@ function buildAgent() {
     if (thumb) it.thumb = thumb;
     send('agent', { threadId: thread.id, type: 'scard', id: it.id, thumb: it.thumb, text: it.text, image: look.image || null });
   });
-  limiter = new Limiter(() => store.getSettings().maxParallel || 2);
+  limiter = new Limiter(() => store.getSettings().maxParallel); // 0 = unlimited
   helpers = new Helpers({
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,

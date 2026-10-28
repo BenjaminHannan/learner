@@ -807,7 +807,7 @@
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
     { group: 'Glims', rows: [
-      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (your main Glim plus the others). Extra runs wait their turn. 1 to 4.', min: 1, max: 4 }
+      { key: 'maxParallel', type: 'number', label: 'Runs at once', help: 'How many model runs go at the same time (your main Glim plus the others). 0 means no limit; with a limit, extra runs wait their turn.', min: 0, max: 64 }
     ] },
     { group: 'Setup', rows: [
       { type: 'setup', label: 'Run setup again', help: 'Meet your Glims again: pick what you want them for, create recurring Glims and check permissions.' }

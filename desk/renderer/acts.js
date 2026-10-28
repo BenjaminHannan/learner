@@ -3,7 +3,7 @@
 // Pure helpers so the stored value and the body attribute are testable in node.
 (function (root) {
   const KEY = 'actsCollapsed';
-  const parse = (stored) => stored === '1' || stored === 'true';        // anything else (null, junk) = expanded
+  const parse = (stored) => !(stored === '0' || stored === 'false');    // collapsed unless Ben expanded it (null, junk = collapsed: less on screen)
   const attr = (collapsed) => (collapsed ? 'closed' : 'open');          // value of body[data-acts]
   const isCollapsed = (bodyAttr) => bodyAttr === 'closed';
   const api = { KEY, parse, attr, isCollapsed };

@@ -23,8 +23,8 @@ test('every setting has a default; saveSettings clamps, validates and ignores un
   for (const k of ['onboarded', 'uses', 'usesOther', 'gatewayUrl', 'model', 'mode', 'helperMode', 'maxSteps', 'maxParallel', 'vision', 'diaryEnabled', 'diaryPath', 'pythonPath', 'helperPath', 'theme', 'textSize', 'highContrast', 'verify', 'pill', 'openAtLogin', 'keepRunning', 'hotkey']) assert.ok(k in d, k);
   assert.strictEqual(d.verify, true); assert.strictEqual(s.saveSettings({ verify: false }).verify, false); assert.strictEqual(s.saveSettings({ verify: 'x' }).verify, true);
   assert.strictEqual(d.keepRunning, true); assert.strictEqual(d.hotkey, 'Alt+Space'); assert.strictEqual(d.openAtLogin, false);
-  const n = s.saveSettings({ maxSteps: 9999, maxParallel: 0, theme: 'neon', textSize: 'l', mode: 'hands-off', evil: 1, gatewayUrl: '  ', hotkey: 'Alt+Space ', vision: true });
-  assert.strictEqual(n.maxSteps, 200); assert.strictEqual(n.maxParallel, 1); assert.strictEqual(n.theme, 'system'); assert.strictEqual(n.textSize, 'l');
+  const n = s.saveSettings({ maxSteps: 9999, maxParallel: -3, theme: 'neon', textSize: 'l', mode: 'hands-off', evil: 1, gatewayUrl: '  ', hotkey: 'Alt+Space ', vision: true });
+  assert.strictEqual(n.maxSteps, 200); assert.strictEqual(n.maxParallel, 0); assert.strictEqual(n.theme, 'system'); assert.strictEqual(n.textSize, 'l');
   assert.strictEqual(n.mode, 'hands-off'); assert.ok(!('evil' in n)); assert.strictEqual(n.gatewayUrl, DEFAULT_SETTINGS.gatewayUrl); assert.strictEqual(n.vision, 'on');
   assert.strictEqual(new Store(s.dir).getSettings().textSize, 'l'); // persisted
   assert.deepStrictEqual(sanitize({ pill: 0, keepRunning: 'x' }), { pill: false, keepRunning: true });

@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
   compactTokens: Platform.defaultPreset(process.platform).compactTokens, // history size that triggers compaction (small local models have small context)
   maxToolChars: Platform.defaultPreset(process.platform).maxToolChars,
   // Helpers
-  maxParallel: 2,         // model runs at once (primary + helpers)
+  maxParallel: 0,         // model runs at once (primary + helpers); 0 = no limit
   // Memory
   diaryEnabled: true,
   diaryPath: '',          // path to diary_mcp.py ('' = ~/learner-ops/assistant/diary_mcp.py)
@@ -44,6 +44,7 @@ const DEFAULT_SETTINGS = {
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
   sleepPauseGlims: true,  // hold the Glims' scheduled runs while asleep (they catch up once after wake)
   autoSleep: true,        // sleep by itself at night when idle (Ben Oct 28: on by default)
+  sleepPlan: 2,           // settings migration marker: 2 = the 23:00-08:00 / 2 h idle / adaptive plan
   sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 23:00 by default (until the routine is learned)
   sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 08:00 by default
   sleepOnlyPlugged: process.platform === 'win32', // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
@@ -66,7 +67,7 @@ const ENUMS = {
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
+const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
@@ -102,6 +103,12 @@ class Store {
     try {
       const raw = JSON.parse(fs.readFileSync(this.settingsFile, 'utf8'));
       if (raw.vision === true) raw.vision = 'on';
+      // Ben Oct 28: sleep by itself after 2 h idle, 23:00-08:00, then fit his routine. Settings files from before that move onto the plan once;
+      // anything he changes in Settings afterwards sticks (sleepPlan marks the migration as done).
+      if ((raw.sleepPlan || 0) < 2) {
+        const w = Platform.defaultSleepWindow(process.platform);
+        Object.assign(raw, { autoSleep: true, sleepAdapt: true, sleepFrom: w[0], sleepTo: w[1], sleepIdleMin: 120, sleepPlan: 2 });
+      }
       return { ...DEFAULT_SETTINGS, ...raw, uses: cleanUses(raw.uses) };
     } catch (e) { return { ...DEFAULT_SETTINGS, uses: [] }; }
   }

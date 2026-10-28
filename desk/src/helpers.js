@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const MIN_EVERY_MS = 5 * 60 * 1000;
-const MAX_HELPERS = 12;
+const MAX_HELPERS = 500;   // effectively unlimited (Ben Oct 28); only a runaway guard
 const TICK_MS = 30000;
 const REPORT_KEEP = 600;
 const SUMMARY_KEEP = 200;
@@ -73,7 +73,7 @@ function fmtWhen(ts, now) {
 // ---- run slots (concurrency limit) and the screen lock: one FIFO queue -------------------------
 class Limiter {
   constructor(getMax) { this.getMax = typeof getMax === 'function' ? getMax : () => getMax; this.active = 0; this.q = []; }
-  max() { return Math.max(1, Math.floor(Number(this.getMax())) || 1); }
+  max() { const n = Math.floor(Number(this.getMax())); return n > 0 ? n : Infinity; } // 0 / unset = no limit
   full() { return this.active >= this.max() || this.q.length > 0; }
   // resolves to a release function; rejects (Error 'aborted') if the signal fires while queued
   acquire(signal) {
