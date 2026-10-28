@@ -11,12 +11,13 @@ const tagNumber = (tag) => { const m = /(\d+)/.exec(String(tag || '')); return m
  * llama-<tag>-bin-macos-arm64.tar.gz).
  */
 function pickLlamaAsset(releases, o) {
+  if (!Array.isArray(releases)) return null; // an API error object (rate limit) or garbage
   o = o || {};
   const platform = o.platform || 'win32';
   const flavor = o.flavor || (platform === 'darwin' ? 'metal' : 'vulkan');
   const floor = Date.parse(o.minPublished || C.LLAMA_MIN_PUBLISHED);
   const minTag = o.minTag == null ? C.LLAMA_MIN_TAG_NUMBER : o.minTag;
-  const list = (releases || []).filter((r) => r && !r.draft && Date.parse(r.published_at) >= floor && tagNumber(r.tag_name) >= minTag)
+  const list = releases.filter((r) => r && !r.draft && Date.parse(r.published_at) >= floor && tagNumber(r.tag_name) >= minTag)
     .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
   for (const r of list) {
     const want = C.llamaAssetName(r.tag_name, flavor, platform);

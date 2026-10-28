@@ -148,7 +148,7 @@
 
   // ---------- Ben's messages ----------
   function addUser(text, steer, queued) {
-    const w = msgs.querySelector('.welcome'); if (w) w.remove();
+    const w = msgs.querySelector('.welcome'); if (w) { w.remove(); paintOffCard(); }
     if (act && !act.finished) finishAct(act);
     const u = el('div', 'user' + (steer ? ' steer' : '') + (queued ? ' queued' : ''), text);
     msgs.append(u); newBlock(); toBottom();
@@ -441,21 +441,51 @@
     // one source of truth with the composer: while a run is on, both say what the run says
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Offline';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Ready' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
+    paintOffCard();
     refreshMood();
   }
-  desk.onGateway((s) => { const was = gw.state; gw = s || gw; if (gw.state !== 'down') { gwStarting = 0; gwWasUp = true; } paintGateway(); });
-  // Offline chip: click to start the model (Settings > Model > Start command; the built-in model on Windows and on Macs without the assistant)
-  let gwStarting = 0;
-  $('#gw').addEventListener('click', async () => {
-    if (gw.state !== 'down' || slp.asleep || slp.waking || (gwStarting && Date.now() - gwStarting < 120000)) return;
-    gwStarting = Date.now(); paintGateway();
-    const r = await desk.gateway.start();
-    if (r && r.error) { gwStarting = 0; paintGateway(); $('#gw').title = r.error; addNotice('Model', r.error); }
-  });
+  desk.onGateway((s) => { const was = gw.state; gw = s || gw; if (gw.state !== 'down') { gwStarting = 0; gwWasUp = true; gwErr = ''; } else if (was !== 'down') loadWhy(); paintGateway(); });
+  // Offline chip and the "Turn on" card share one start path (Settings > Model > Start command; the built-in model on Windows and on Macs without the assistant)
+  let gwStarting = 0, gwWhy = { kind: 'unknown' }, gwErr = '';
+  const gwIsStarting = () => !!(gwStarting && Date.now() - gwStarting < 120000);
+  async function startGateway() {
+    if (gw.state !== 'down' || slp.asleep || slp.waking || gwIsStarting()) return;
+    gwStarting = Date.now(); gwErr = ''; paintGateway(); setTimeout(paintGateway, 120500); loadWhy();
+    let r; try { r = await desk.gateway.start(); } catch (e) { r = { error: String(e && e.message || e) }; }
+    if (r && r.error) { gwStarting = 0; gwErr = r.error; paintGateway(); $('#gw').title = r.error; addNotice('Model', r.error); }
+  }
+  $('#gw').addEventListener('click', startGateway);
+  // the card that says the assistant is off: on the welcome screen and above the composer in an open thread
+  const offCards = [];
+  function makeOffCard(cls) {
+    const c = el('div', 'offcard ' + cls); c.setAttribute('role', 'status');
+    const b = el('button', 'amber-btn', 'Turn on'); b.onclick = startGateway;
+    c.append(el('div', 'oc-text'), b); c.hidden = true; offCards.push(c); return c;
+  }
+  const composerOff = makeOffCard('in-composer'); $('#composer .cwrap').prepend(composerOff);
+  function paintOffCard() {
+    const down = gw.state === 'down' && !slp.asleep && !slp.waking, starting = gwIsStarting();
+    const mem = gwWhy.kind === 'memory';
+    for (const c of offCards.slice()) {
+      if (!c.isConnected && !c.classList.contains('in-composer')) { offCards.splice(offCards.indexOf(c), 1); continue; }
+      c.hidden = !down || (c.classList.contains('in-composer') && !!msgs.querySelector('.welcome'));
+      if (c.hidden) continue;
+      const t = c.querySelector('.oc-text'); t.textContent = '';
+      t.append(el('b', null, mem ? 'Your assistant was stopped to save memory' : 'Your assistant is turned off'));
+      if (mem && gwWhy.at) t.append(el('em', null, ' at ' + gwWhy.at));
+      t.append(el('span', null, starting ? 'Starting… this takes about a minute' : 'Glim can\u2019t answer until it\u2019s on. Starting takes about a minute.'));
+      if (gwErr && !starting) t.append(el('span', 'oc-err', gwErr));
+      const b = c.querySelector('button'); b.disabled = starting; b.textContent = starting ? 'Starting…' : 'Turn on';
+    }
+  }
+  async function loadWhy() { if (slp.asleep || slp.waking) return; try { gwWhy = (await desk.gateway.why()) || { kind: 'unknown' }; } catch (e) { gwWhy = { kind: 'unknown' }; } paintOffCard(); }
   desk.onFullscreen((on) => document.body.classList.toggle('fullscreen', !!on));
+  // the traffic lights don't zoom with the page: keep their gap at 84 screen points at any zoom (Cmd+- shrank it under them)
+  const fitLights = () => { const z = (desk.zoom && desk.zoom()) || 1; document.documentElement.style.setProperty('--tl-pad', Math.ceil(84 / z) + 'px'); };
+  fitLights(); window.addEventListener('resize', fitLights); if (window.visualViewport) window.visualViewport.addEventListener('resize', fitLights);
   desk.onGlim((s) => { glim = s; refreshMood(); });
 
   // ---------- sleep ----------
@@ -603,8 +633,9 @@
     const chips = el('div', 'chips');
     for (const t of Uses.chipsFor(settings.uses)) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
     w.append(chips); msgs.append(w);
+    w.prepend(makeOffCard('in-welcome')); paintOffCard();
   }
-  function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); }
+  function resetView() { msgs.textContent = ''; stepEls.clear(); bcards.clear(); BrowserPanel.setKeys([]); rids.clear(); pendingSteers = []; newBlock(); paintOffCard(); }
   function renderThread(t) {
     resetView();
     const items = t.items || [];
@@ -801,7 +832,7 @@
   const SCHEMA = [
     { group: 'Model', rows: [
       { key: 'gatewayUrl', type: 'text', label: 'Gateway URL', help: 'Where the Premonition gateway listens. /chat/completions is added for you.', wide: true },
-      { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Offline in the top bar. Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows and on Macs without the assistant.', wide: true },
+      { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Turn on (or Off in the top bar). Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows and on Macs without the assistant.', wide: true },
       { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself (Windows, and Macs without the local assistant). llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
       { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer, Fast answers quickest. Same as the top-bar pills.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
       { key: 'modelAuto', type: 'text', label: 'Auto model name', help: 'The model id sent for Auto. "default" works for llama.cpp.', ph: 'qwen36-auto' },
@@ -1088,7 +1119,7 @@
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
     CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     DictateUI.init({ platform: plat(), popts: popts(), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
-    gw = (await desk.gateway.state()) || gw; paintGateway();
+    gw = (await desk.gateway.state()) || gw; if (gw.state === 'down') await loadWhy(); paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
     const list = await desk.threads.list();
     if (!info.e2e && last && list.find((t) => t.id === last)) await openThread(last);

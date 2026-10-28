@@ -1,9 +1,10 @@
 'use strict';
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require('electron');
 const inv = (c) => (...a) => ipcRenderer.invoke(c, ...a);
 const on = (ch) => (cb) => { const f = (e, p) => cb(p); ipcRenderer.on(ch, f); return () => ipcRenderer.removeListener(ch, f); };
 
 contextBridge.exposeInMainWorld('desk', {
+  zoom: () => { try { return webFrame.getZoomFactor(); } catch (e) { return 1; } },
   info: inv('info'),
   settings: { get: inv('settings:get'), set: inv('settings:set') },
   threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename') },
@@ -23,7 +24,7 @@ contextBridge.exposeInMainWorld('desk', {
   openSystem: inv('system:open'),
   openExternal: inv('open:external'),
   startOver: inv('app:startOver'),
-  gateway: { state: inv('gateway:state'), test: inv('gateway:test'), start: inv('gateway:start') },
+  gateway: { state: inv('gateway:state'), test: inv('gateway:test'), start: inv('gateway:start'), why: inv('gateway:why') },
   onFullscreen: on('fullscreen'),
   onAgent: on('agent'),
   onGateway: on('gateway'),

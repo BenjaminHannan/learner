@@ -97,15 +97,84 @@ test('mac install: picks the tar.gz, unpacks with the real tar, finds llama-serv
   assert.strictEqual(findFile(path.join(d, 'runtime'), 'llama-server'), l.exe);
 });
 
-test('mac install: no qualifying release gives a plain-English error', async () => {
-  const inst = new ChatInstaller({ dir: tmp('mac-none-'), platform: 'darwin', fetch: async () => Response.json([mac('b11937', '2026-10-27T22:00:00Z')]) });
-  await assert.rejects(() => inst.ensureLlama(), /No llama\.cpp build for macOS \(Apple silicon\) from 2026-10-27 or later/);
+const PIN = 'https://github.com/ggml-org/llama.cpp/releases/download/' + C.LLAMA_FALLBACK_TAG + '/llama-' + C.LLAMA_FALLBACK_TAG + '-bin-macos-arm64.tar.gz';
+const fastInst = (o) => new ChatInstaller({ retryDelayMs: 0, minEngineBytes: 0, fallbackSha256: {}, unquarantine: async () => {}, ...o });
+
+test('mac install: normal release list picks the newest valid asset (API path first, no pinned download)', async () => {
+  const d = tmp('mac-new-'); const seen = []; const tarball = fakeMacTarball(d, 'b11945');
+  const inst = fastInst({ dir: path.join(d, 'runtime'), platform: 'darwin', fetch: macFetch(releasesFor(tarball), tarball, seen) });
+  assert.strictEqual((await inst.ensureLlama()).tag, 'b11945'); assert.ok(!seen.includes(PIN));
 });
 
-test('windows install message and flavor default are unchanged', async () => {
-  const inst = new ChatInstaller({ dir: tmp('win-none-'), platform: 'win32', fetch: async () => Response.json([]) });
-  await assert.rejects(() => inst.ensureLlama('vulkan'), /No llama\.cpp vulkan build for Windows from 2026-10-27 or later was found/);
+test('mac install: API rate-limit object falls back to the pinned release by direct URL (no checksum), after one retry', async () => {
+  const d = tmp('mac-rate-'); const seen = []; const tarball = fakeMacTarball(d, C.LLAMA_FALLBACK_TAG);
+  const base = macFetch([], tarball, seen);
+  const f = async (url, o) => (/api\.github\.com/.test(url) ? (seen.push(String(url)), Response.json({ message: 'API rate limit exceeded for 1.2.3.4' })) : base(url, o));
+  const inst = fastInst({ dir: path.join(d, 'runtime'), platform: 'darwin', fetch: f });
+  const l = await inst.ensureLlama();
+  assert.strictEqual(l.tag, C.LLAMA_FALLBACK_TAG); assert.ok(seen.includes(PIN));
+  assert.strictEqual(seen.filter((u) => /api\.github\.com/.test(u)).length, 2, 'the list is tried twice');
+  assert.ok(fs.existsSync(l.exe));
+});
+
+test('mac install: API throwing once is retried and used; throwing twice falls back to the pinned release', async () => {
+  const d = tmp('mac-throw-'); const tarball = fakeMacTarball(d, 'b11945');
+  let n = 0; const seen = []; const base = macFetch(releasesFor(tarball), tarball, seen);
+  const once = async (url, o) => { if (/api\.github\.com/.test(url) && n++ === 0) throw new Error('ECONNRESET'); return base(url, o); };
+  assert.strictEqual((await fastInst({ dir: path.join(d, 'r1'), platform: 'darwin', fetch: once }).ensureLlama()).tag, 'b11945');
+  const seen2 = []; const base2 = macFetch([], fakeMacTarball(tmp('mac-t2-'), C.LLAMA_FALLBACK_TAG), seen2);
+  const always = async (url, o) => { if (/api\.github\.com/.test(url)) throw new Error('ECONNRESET'); return base2(url, o); };
+  assert.strictEqual((await fastInst({ dir: path.join(d, 'r2'), platform: 'darwin', fetch: always }).ensureLlama()).tag, C.LLAMA_FALLBACK_TAG);
+  assert.ok(seen2.includes(PIN));
+});
+
+test('mac install: a list with no qualifying release also uses the pinned release', async () => {
+  const d = tmp('mac-none-'); const seen = []; const tarball = fakeMacTarball(d, C.LLAMA_FALLBACK_TAG);
+  const inst = fastInst({ dir: path.join(d, 'runtime'), platform: 'darwin', fetch: macFetch([mac('b11937', '2026-10-27T22:00:00Z')], tarball, seen) });
+  assert.strictEqual((await inst.ensureLlama()).tag, C.LLAMA_FALLBACK_TAG); assert.ok(seen.includes(PIN));
+});
+
+test('mac install: when the list and the pinned download both fail the error says what failed', async () => {
+  const inst = fastInst({ dir: tmp('mac-fail-'), platform: 'darwin', fetch: async (url) => (/api\.github\.com/.test(url) ? Response.json({ message: 'API rate limit exceeded' }) : new Response('no', { status: 404 })) });
+  await assert.rejects(() => inst.ensureLlama(), (e) => /^Could not download the model engine from GitHub \(.*rate limit.*404.*\)\. Check the internet connection and press Try again\.$/.test(e.message) && !/later/.test(e.message));
+});
+
+test('windows install: the fallback uses the flavor asset name; an empty list does not throw the old message', async () => {
+  const seen = [];
+  const inst = fastInst({ dir: tmp('win-none-'), platform: 'win32', fetch: async (u) => { seen.push(String(u)); return /api\./.test(u) ? Response.json([]) : new Response('no', { status: 404 }); } });
+  await assert.rejects(() => inst.ensureLlama('cpu'), /Could not download the model engine from GitHub/);
+  assert.ok(seen.includes('https://github.com/ggml-org/llama.cpp/releases/download/' + C.LLAMA_FALLBACK_TAG + '/llama-' + C.LLAMA_FALLBACK_TAG + '-bin-win-cpu-x64.zip'));
   assert.strictEqual(inst.installed(), false);
+  assert.strictEqual(R.pickLlamaAsset({ message: 'API rate limit exceeded' }, { flavor: 'vulkan' }), null);
+  assert.strictEqual(R.pickLlamaAsset(undefined, {}), null);
+});
+
+test('pinned fallback: real sha256s are pinned for every asset it can ask for; a tiny file is rejected and removed; a bad archive is cleaned up', async () => {
+  for (const [f, p] of [['metal', 'darwin'], ['vulkan', 'win32'], ['cpu', 'win32']]) assert.match(C.LLAMA_FALLBACK_SHA256[C.llamaAssetName(C.LLAMA_FALLBACK_TAG, f, p)], /^[0-9a-f]{64}$/);
+  const api = (u) => /api\.github\.com/.test(u);
+  const d = tmp('mac-small-');
+  const small = new ChatInstaller({ dir: path.join(d, 'r'), platform: 'darwin', retryDelayMs: 0, fallbackSha256: {}, fetch: async (u) => (api(u) ? Response.json({ message: 'x' }) : new Response('tiny', { status: 200 })) });
+  await assert.rejects(() => small.ensureLlama(), /Could not download the model engine from GitHub \(x; then the file is too small/);
+  assert.ok(!fs.existsSync(path.join(d, 'r', C.llamaAssetName(C.LLAMA_FALLBACK_TAG, 'metal', 'darwin'))));
+  const bad = new ChatInstaller({ dir: path.join(d, 'r2'), platform: 'darwin', retryDelayMs: 0, minEngineBytes: 0, fallbackSha256: {}, fetch: async (u) => (api(u) ? Response.json([]) : new Response('not a tarball')) });
+  await assert.rejects(() => bad.ensureLlama(), /Could not download the model engine from GitHub \(.*could not unpack/);
+  assert.deepStrictEqual(fs.readdirSync(path.join(d, 'r2')).filter((n) => /llama-/.test(n)), []);
+});
+
+test('install: a retry that succeeds leaves no stale reason; a cancelled signal stops without a fallback', async () => {
+  const d = tmp('mac-stale-'); const tarball = fakeMacTarball(d, 'b11945'); const seen = [];
+  const base = macFetch(releasesFor(tarball), tarball, seen); let n = 0;
+  const flaky = async (u, o) => { if (/api\.github\.com/.test(u) && n++ === 0) throw new Error('boom'); return base(u, o); };
+  const l = await fastInst({ dir: path.join(d, 'r'), platform: 'darwin', fetch: flaky }).ensureLlama();
+  assert.strictEqual(l.tag, 'b11945');
+  const ac = new AbortController(); ac.abort(); seen.length = 0;
+  await assert.rejects(() => fastInst({ dir: tmp('mac-ab-'), platform: 'darwin', fetch: base }).ensureLlama('metal', ac.signal), /cancelled/);
+  assert.strictEqual(seen.length, 0);
+  // a stalled API honours the signal passed to fetch
+  let got = null;
+  const stall = async (u, o) => { if (/api\.github\.com/.test(u)) got = got || o.signal; throw new Error('stalled'); };
+  await fastInst({ dir: tmp('mac-st-'), platform: 'darwin', fetch: stall }).ensureLlama().catch(() => {});
+  assert.ok(got instanceof AbortSignal, 'getJson gives fetch a timeout signal');
 });
 
 // ---- llama-server arguments -------------------------------------------------------------------------------------------

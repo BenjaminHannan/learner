@@ -57,6 +57,7 @@ const { PillWindow } = require('./src/pillwin');
 const perms = require('./src/perms');
 const { WinSleep, sleepmlxParent } = require('./src/sleepwin');
 const CK = require('./src/checkin');
+const StartLog = require('./src/startlog');
 const { Builtin, runtimeRoot } = require('./src/runtime/builtin');
 const { SleepInstaller } = require('./src/runtime/sleepinstall');
 const { Call } = require('./src/call');
@@ -84,6 +85,7 @@ let warmer = null;
 let pillWin = null;
 let quitting = false;
 let gwState = { state: 'down' };
+let gwReadyAt = 0; // last time the gateway was seen ready (0 = not this session)
 let e2eEnv = null;
 const permsFake = E2E ? { accessibility: false, screenRecording: false } : null; // the e2e stands in for macOS
 const dragIcons = new Map(); // bundle path -> 64 px nativeImage (the Finder icon of the app)
@@ -140,11 +142,12 @@ function resetModelToDefault() {
 // Ben's Macs have the assistant (qwen through serve.sh); any other Mac runs the built-in model like Windows does.
 const SERVE_SH = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh');
 const hasLocalAssistant = process.platform === 'darwin' && fs.existsSync(SERVE_SH);
+const WATCHDOG_FILE = path.join(os.homedir(), 'learner-ops', 'assistant', 'WATCHDOG_STOPPED');
 const PLATFORM_OPTS = { hasLocalAssistant };
 function modelStartCommand(st) {
   const c = String(st.modelStartCmd || '').trim();
   if (c) return c;
-  return hasLocalAssistant ? '"' + SERVE_SH + '" --yes' : '';
+  return hasLocalAssistant ? '"' + SERVE_SH + '" --autostart' : ''; // --autostart keeps serve.sh's memory check (--yes skips it)
 }
 // the night window learned from Ben's routine (null when "Fit sleep to my routine" is off or there is not enough data yet)
 const learnedNow = (now) => { try { return rhythm && store.getSettings().sleepAdapt ? rhythm.learned(now) : null; } catch (e) { return null; } };
@@ -886,7 +889,7 @@ async function afterFirstPaint() {
   await refreshDiary();
   warmer = new Warmer({
     getSettings: () => store.getSettings(), getTools: () => toolDefs, busy: () => !!(agent && agent.running),
-    onState: (state, info) => { gwState = { state, ...info }; send('gateway', gwState); }
+    onState: (state, info) => { if (state === 'ready') gwReadyAt = Date.now(); gwState = { state, ...info }; send('gateway', gwState); }
   });
   warmer.start();
   if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
@@ -1094,6 +1097,12 @@ function registerIpc() {
       const c = require('child_process').spawn(sh[0], sh[1], { cwd: os.homedir(), detached: true, stdio: ['ignore', fd, fd], windowsHide: true });
       const early = await new Promise((resolve) => { c.on('error', (e) => resolve({ code: -1, msg: String(e && e.message || e) })); c.on('exit', (code) => resolve({ code })); setTimeout(() => resolve(null), 6000); });
       c.unref(); if (typeof fd === 'number') try { fs.closeSync(fd); } catch (e) { /* ignore */ }
+      // serve.sh --autostart declines (exit 0, within a second or two) when memory is short or another job runs
+      if (early && early.code === 0) {
+        let log = ''; try { log = fs.readFileSync(logFile, 'utf8'); } catch (e) { /* no log */ }
+        const refusal = StartLog.parseRefusal(log);
+        if (refusal) return { error: refusal.error, reason: refusal.reason };
+      }
       if (early && early.code !== 0) {
         let tail = early.msg || ''; try { tail = tail || fs.readFileSync(logFile, 'utf8').trim().split('\n').slice(-3).join(' | '); } catch (e) { /* ignore */ }
         return { error: 'The start command stopped at once (exit ' + early.code + ')' + (tail ? ': ' + tail.slice(0, 300) : '') + '.' };
@@ -1101,6 +1110,15 @@ function registerIpc() {
       for (const ms of [5000, 15000, 30000, 60000, 90000]) setTimeout(() => { if (warmer) warmer.gatewayMoved(); }, ms).unref();
       return { ok: true, via: 'command' };
     } catch (e) { return { error: String(e && e.message || e) }; }
+  });
+  // Why the assistant is down: the watchdog leaves a marker when it stops it to save memory; without it, it was turned off.
+  h('gateway:why', () => {
+    if (!hasLocalAssistant || builtinWanted() || String(store.getSettings().modelStartCmd || '').trim()) return { kind: 'unknown' };
+    try {
+      // a marker from before the assistant last ran (or older than 12 h when unknown) is stale: it was stopped by hand since
+      const m = fs.statSync(WATCHDOG_FILE).mtimeMs;
+      if (gwReadyAt ? m < gwReadyAt : Date.now() - m > 12 * 3600e3) return { kind: 'off' };
+      const w = StartLog.parseWatchdog(fs.readFileSync(WATCHDOG_FILE, 'utf8')); return { kind: 'memory', at: w.at, text: w.text }; } catch (e) { return { kind: 'off' }; }
   });
   h('gateway:test', async () => {
     const s = store.getSettings();
