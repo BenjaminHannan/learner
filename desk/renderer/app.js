@@ -179,6 +179,7 @@
   }
   // Ben Oct 28: every message shows when it was sent ("5:33 PM", with the day when it is not today)
   function stamp(ts, cls) {
+    if (ts === 0) return el('div', 'stamp-none'); // a stored message from before timestamps: show nothing rather than a wrong time
     const d = new Date(ts || Date.now()), now = new Date();
     const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const day = d.toDateString() === now.toDateString() ? '' : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ';
@@ -735,13 +736,13 @@
     const items = t.items || [];
     if (!items.length) { welcome(); return; }
     items.forEach((it, i) => {
-      if (it.t === 'user') addUser(it.text, false, false, false, it.ts);
+      if (it.t === 'user') addUser(it.text, false, false, false, it.ts || 0);
       else if (it.t === 'assistant') {
         const nextIsTool = items[i + 1] && items[i + 1].t === 'step';
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0 });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);
