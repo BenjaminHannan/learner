@@ -616,10 +616,10 @@
   desk.onAgent((ev) => {
     if (!thread || ev.threadId !== thread.id) return;
     switch (ev.type) {
-      case 'text': onText(ev.delta); break;
-      case 'reasoning': onReasoning(ev.delta); break;
+      case 'text': markRead(); onText(ev.delta); break;
+      case 'reasoning': markRead(); onReasoning(ev.delta); break;
       case 'assistant_end': onAssistantEnd(ev); break;
-      case 'step_start': onStepStart(ev); Mascot.bounce(logo); break;
+      case 'step_start': markRead(); onStepStart(ev); Mascot.bounce(logo); break;
       case 'step_end': onStepEnd(ev); break;
       case 'bcard': upsertBCard(ev); break;
       case 'scard': upsertSCard(ev); break;
@@ -638,7 +638,7 @@
       }
       case 'notice': addNotice(ev.helper, ev.text); break;
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
-      case 'started': $('#runState span').textContent = 'Working…'; markRead(); if (window.Side) Side.setPlan([]); paintGateway(); break;
+      case 'started': $('#runState span').textContent = 'Working…'; if (window.Side) Side.setPlan([]); paintGateway(); break;
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {
