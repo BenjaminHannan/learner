@@ -24,7 +24,7 @@
     const t = v.top;
     $('#line').textContent = v.line || '';
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
-    $('#dName').textContent = t.name; // the main one is just "Glim", never a chat title like "Plan my week"
+    $('#dName').textContent = t.name; $('#dName').parentElement.hidden = !!v.oneGlim; // the main one is just "Glim", never a chat title like "Plan my week"
     $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : v.status === 'sleeping' ? 'Resting while you are away' : '-');
     $('#dTime').textContent = mmss(t.elapsedMs);
     $('#dErr').hidden = !t.error; $('#dErr').textContent = t.error || '';
