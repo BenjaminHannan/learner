@@ -366,9 +366,10 @@
     const c = card('', 'Glim asks');
     c.append(el('div', null, ev.question));
     const ta = el('textarea'); ta.placeholder = 'Your answer…'; ta.setAttribute('aria-label', 'Your answer');
+    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; });
     const btns = el('div', 'btns');
     const send = el('button', 'amber-btn', 'Reply');
-    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); c.append(el('div', 'dim small', 'You: ' + text)); refreshMood(); };
+    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); { const you = el('div', 'dim small', 'You: ' + text); you.style.whiteSpace = 'pre-wrap'; c.append(you); } refreshMood(); };
     send.onclick = () => reply(ta.value.trim());
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
     btns.append(send);
