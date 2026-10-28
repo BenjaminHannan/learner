@@ -761,6 +761,7 @@
     list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
+    $('#btnThreads').hidden = !list.length; if (!list.length) closeDrawer(); // no Sparks, no side panel: the Glim scroll is the whole window
     for (const h of list) {
       const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
       const top = el('div', 'a-top');
@@ -778,7 +779,7 @@
       ul.append(li);
     }
   }
-  desk.onHelpers(paintAgents);
+  desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => newThread());
   desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); });
