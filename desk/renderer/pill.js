@@ -26,7 +26,7 @@
     $('#mini').textContent = v.status === 'working' ? mmss(t.elapsedMs) : '';
     pill.classList.toggle('long', $('#mini').textContent.length > 5); // a long run's time must not be clipped by the notch ear
     $('#dName').textContent = t.name; $('#dName').parentElement.hidden = !!v.oneGlim; // the main one is just "Glim", never a chat title like "Plan my week"
-    $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : v.status === 'sleeping' ? 'Resting while you are away' : '-');
+    $('#dStep').textContent = t.step || (v.status === 'done' ? 'Finished' : v.status === 'sleeping' ? 'Resting while you are away' : v.status === 'working' ? t.line || 'Working' : '-');
     $('#dTime').textContent = mmss(t.elapsedMs);
     $('#dErr').hidden = !t.error; $('#dErr').textContent = t.error || '';
     const ap = t.approval;
