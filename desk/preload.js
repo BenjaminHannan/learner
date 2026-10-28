@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld('desk', {
   browser: { open: inv('browser:open'), exists: inv('browser:exists'), layout: inv('browser:layout'), cmd: inv('browser:cmd') },
   perms: { status: inv('perms:status'), open: inv('perms:open'), reveal: inv('perms:reveal'), drag: (which) => ipcRenderer.send('perms:drag', which) },
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },
-  helpers: { list: inv('helpers:list'), run: inv('helpers:run'), pause: inv('helpers:pause'), remove: inv('helpers:delete') },
+  helpers: { list: inv('helpers:list'), run: inv('helpers:run'), pause: inv('helpers:pause'), remove: inv('helpers:delete'), learn: inv('helpers:learn') },
   memory: { list: inv('memory:list'), add: inv('memory:add'), edit: inv('memory:edit'), remove: inv('memory:delete'), reveal: inv('memory:reveal'), read: inv('memory:read'), write: inv('memory:write'), open: inv('memory:open') },
   tracking: { list: inv('tracking:list'), done: inv('tracking:done'), remove: inv('tracking:remove') },
   sleep: { state: inv('sleep:state'), start: inv('sleep:start'), wake: inv('sleep:wake'), summary: inv('sleep:summary') },
