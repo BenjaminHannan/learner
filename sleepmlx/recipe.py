@@ -662,7 +662,7 @@ class Sleeper:
             q = L_mod.scrub(les["q"].strip(), bad)
             key = L_mod.failure_key(date, f)
             self.items[key] = Item(key, "Glim", a, "lesson", d, first=d, days=1, nment=1, imp=True, cor=True, para=[text], qa=[[q, a]], seen_ment=1,
-                                   dreamed_night=d, kind="lesson", source=("helper run %s: %s" % (date, f["helper"]) if f["kind"] == "delegation" else "chat %s, turn %d: %s" % (date, f["turn"] + 1, L_mod.KIND_WORDS[f["kind"]])))
+                                   dreamed_night=d, kind="lesson", source=(("idea review %s: %s" if "idea_poor" in f["signals"] else "helper run %s: %s") % (date, f["helper"]) if f["kind"] == "delegation" else "chat %s, turn %d: %s" % (date, f["turn"] + 1, L_mod.KIND_WORDS[f["kind"]])))
             if f["kind"] == "correction" and wv and norm(wv) != norm(a):
                 ti = self.turn_index(d, f["turn"])
                 for it in (self.turn_items(ti) if ti is not None else []):
@@ -688,6 +688,9 @@ class Sleeper:
             for l in L_mod.liked(week):
                 para, qa = L_mod.liked_cards(l, self.who)
                 want[l["key"]] = ("liked", l["user"][:60], para, qa, "chat %s, turn %d: %s liked the answer" % (diary_mod.date_of_day(week, l["day"]), l["turn"] + 1, self.who), "", 1)
+            for v in L_mod.good_ideas(week):   # Ben Oct 28: a Mote's idea a reviewer called good
+                para, qa = L_mod.idea_cards(v, self.who)
+                want["idea|" + hashlib.sha1(str(v.get("id") or v["idea"]).encode()).hexdigest()[:12]] = ("idea", v["idea"][:60], para, qa, "idea review %s: %s" % (str(v.get("ts") or "")[:10], v.get("helper") or ""), "", 1)
         if cfg.use_userdata:
             ignore = diary_mod.load_ignore(self.paths.ignore)
             ud = self.paths.userdata_dir
@@ -706,7 +709,7 @@ class Sleeper:
                                    kind=kind, source=src, until=until)
             st[kind + "_new" if not it else kind + "_changed"] += 1
         for it in self.items.values():
-            if it.kind in ("habit", "note", "track", "liked", "delegate") and not it.dead and it.key not in want:
+            if it.kind in ("habit", "note", "track", "liked", "delegate", "idea") and not it.dead and it.key not in want:
                 it.dead = True
                 st[it.kind + "_retired"] += 1
         st["habit"] = sum(1 for k in want if k.startswith("habit|"))
@@ -714,6 +717,7 @@ class Sleeper:
         st["track"] = sum(1 for k in want if k.startswith("track|"))
         st["liked"] = sum(1 for k in want if k.startswith("liked|"))
         st["delegate"] = sum(1 for k in want if k.startswith("delegate|"))
+        st["idea"] = sum(1 for k in want if k.startswith("idea|"))
 
     def leaky(self, text: str) -> bool:
         n = norm(text)

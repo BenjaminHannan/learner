@@ -121,6 +121,7 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore),
                                 feedback=L_mod.read_feedback(paths.userdata_dir))
     week["helper_state"] = L_mod.read_helpers(paths.userdata_dir)
+    week["idea_verdicts"] = L_mod.read_idea_verdicts(paths.userdata_dir)
     state = read_json(paths.state, {}) or {}
     resuming = paths.night_json.exists()
     if not resuming and not next_day(week, state) and not only_date:

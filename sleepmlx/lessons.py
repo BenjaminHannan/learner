@@ -61,6 +61,15 @@ def _day_turns(week: dict, day: int) -> Dict[int, dict]:
     return {k: v for k, v in out.items() if v["user"] is not None}
 
 
+def _verdict_date(week: dict, v: dict) -> Optional[str]:
+    """The diary date a verdict belongs to: its local day, or the next diary day after it (the last one if none), so none is dropped."""
+    vd = str(v.get("day") or str(v.get("ts") or "")[:10])
+    ds = sorted((week.get("dates") or {}).values())
+    if not ds or not vd:
+        return None
+    return next((d for d in ds if d >= vd), ds[-1])
+
+
 def find_failures(week: dict, day: int) -> List[dict]:
     """The day's failures, at most one per turn (the strongest signal wins; all signals are listed).
     -> [{kind, signals, day, turn, user, answer, tools, checks, stopped, prev_user, prev_answer, prev_tools}]"""
@@ -112,6 +121,13 @@ def find_failures(week: dict, day: int) -> List[dict]:
         out.append({"kind": "delegation", "signals": sig, "day": day, "turn": 1000 + i, "user": r.get("task") or "", "answer": r.get("answer") or "",
                     "tools": r.get("tools") or [], "checks": r.get("checks") or [], "stopped": bool(r.get("stopped")), "prev_user": "", "prev_answer": "",
                     "prev_tools": [], "helper": name, "error": err})
+    # Ben Oct 28: a reviewer judged a Mote's idea poor that day: the idea itself is the lesson (turn 2000+ never collides with helper runs at 1000+)
+    for i, v in enumerate(week.get("idea_verdicts") or []):
+        if date is None or v.get("verdict") != "poor" or _verdict_date(week, v) != date or not _idea_ok(v):
+            continue
+        out.append({"kind": "delegation", "signals": ["idea_poor"], "day": day, "turn": 2000 + i, "user": " ".join(v["idea"].split()), "answer": "",
+                    "tools": [], "checks": [], "stopped": False, "prev_user": "", "prev_answer": "", "prev_tools": [],
+                    "helper": v.get("helper") or "", "error": "", "reason": " ".join(str(v.get("reason") or "").split())})
     return out
 
 
@@ -147,6 +163,8 @@ def _tool_lines(tools: List[dict], n: int = 6) -> List[str]:
 def failure_context(f: dict, who: str = "Ben") -> str:
     """The chat text a lesson is written from and checked against."""
     lines = []
+    if "idea_poor" in f.get("signals", []):
+        return "Glim's Mote '%s' proposed this idea: %s\nA reviewer judged it poor: %s" % (f.get("helper", ""), f["user"][:500], (f.get("reason") or "")[:300])
     if f["kind"] == "delegation":
         lines.append("Glim gave helper '%s' this task: %s" % (f.get("helper", ""), f["user"][:500]))
         if f["tools"]:
@@ -396,6 +414,48 @@ def helper_cards(h: dict, who: str = "Ben"):
 
 
 # ---------------------------------------------------------------- the Desk's saved notes and tracking list
+# ---------------------------------------------------------------- Motes' ideas, judged by a reviewer
+def read_idea_verdicts(user_data: Optional[Path]) -> List[dict]:
+    """The Desk's idea-verdicts.jsonl ({id, ts, verdict: good | poor, reason, helper, idea}), in file order; [] when missing or bad."""
+    out = []
+    try:
+        lines = (Path(user_data) / "idea-verdicts.jsonl").read_text(errors="replace").splitlines()
+    except (OSError, ValueError, TypeError):
+        return out
+    for line in lines:
+        try:
+            v = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(v, dict) and v.get("verdict") in ("good", "poor") and isinstance(v.get("idea"), str) and v["idea"].strip():
+            out.append(v)
+    return out
+
+
+def _idea_ok(v: dict) -> bool:
+    if not isinstance(v.get("idea"), str) or len(v["idea"]) > 300 or not isinstance(v.get("reason", ""), str):
+        return False
+    return not any(diary_mod.looks_secret(str(v.get(k) or "")) or diary_mod.talks_secrets(str(v.get(k) or "")) for k in ("idea", "reason", "helper"))
+
+
+def good_ideas(week: dict) -> List[dict]:
+    """The week's ideas a reviewer called good (secrets skipped), one per id."""
+    seen, out = set(), []
+    for v in week.get("idea_verdicts") or []:
+        k = v.get("id") or v.get("idea")
+        if v.get("verdict") == "good" and k not in seen and _idea_ok(v):
+            seen.add(k)
+            out.append(v)
+    return out
+
+
+def idea_cards(v: dict, who: str = "Ben"):
+    """-> (paraphrases, [[q, a]]) for one idea a reviewer called good."""
+    idea = " ".join(v["idea"].split())
+    name, why = v.get("helper") or "", " ".join(str(v.get("reason") or "").split())
+    return ["Glim's Mote '%s' had a good idea for %s's project: %s (a reviewer said: %s)" % (name, who, idea, why)], [["What good idea did Glim's Mote '%s' have?" % name, idea[:160]]]
+
+
 def default_user_data() -> Path:
     import os
     import sys
