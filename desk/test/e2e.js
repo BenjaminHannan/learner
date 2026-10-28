@@ -350,7 +350,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await ev('document.querySelector("#btnThreads").click()');
     await sleep(300);
     checks.push(['first-run setup stays out of the way once onboarded', await ev('document.querySelector("#onboard").hidden')]);
-    await ev('document.querySelector("#threadList li").click()');
+    await ev('document.querySelector("#mainList li").click()');
     await sleep(600);
     checks.push(['message box and answer boxes hide their scrollbar', await ev('getComputedStyle(document.querySelector("#input")).scrollbarWidth==="none"')]);
     await ev('document.querySelector(".act-head").click()');

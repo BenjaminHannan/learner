@@ -173,6 +173,7 @@ function sampleRhythm(now) {
 function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
+  if (sl.stopping && !o.assistantStopped) return { error: 'Turning off the chat model first. One moment.' };
   if ((agent && agent.running) || (helpers && helpers.active.size)) return { error: 'Glim is busy with a run right now. Sleep starts only when it is idle, because your chats come first.' };
   if (typeof o.pauseGlims === 'boolean') store.saveSettings({ sleepPauseGlims: o.pauseGlims });
   // how long: minutes | 'morning' | null (until woken). Auto-sleep: to the end of the night window.
@@ -181,12 +182,50 @@ function startSleep(o) {
   if (!o.auto && 'minutes' in o) store.saveSettings({ sleepDuration: o.minutes === null ? 'open' : String(o.minutes) });
   const until = computeWakeAt(now0, dur, cfg, learnedNow(now0));
   const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: until });
+  // the big chat model is on and holds the memory sleep needs: the sheet offers "Turn it off for now" (stopAssistant), which
+  // stops it, sleeps, and turns it back on at wake
+  if (r.assistantOn && hasLocalAssistant) {
+    if (o.stopAssistant && !o.assistantStopped) {
+      sl.stopping = true;
+      return stopAssistantForSleep().then((e) => {
+        const r2 = e ? { error: e } : startSleep({ ...o, stopAssistant: false, assistantStopped: true });
+        if (r2.ok) sleepNotice('Turned off the chat model for now so Glim can sleep. It turns back on when Glim wakes.'); else restoreAssistant();
+        return r2;
+      }).finally(() => { sl.stopping = false; });
+    }
+    return { error: "Glim's chat model is on and using the memory sleep needs.", assistantOn: true };
+  }
   if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
   if (!r.ok) return { error: r.error };
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   pushSleep(); updatePill();
   return { ok: true };
+}
+// stop.sh stops the model servers and gateway and clears ASSISTANT_RUNNING; resolves '' or a plain error
+function stopAssistantForSleep() {
+  return new Promise((resolve) => {
+    require('child_process').execFile('/bin/bash', [path.join(path.dirname(SERVE_SH), 'stop.sh')], { timeout: 60000 }, (err) => {
+      if (sleeper.assistantState() === 'on') return resolve("Could not turn off Glim's big chat model, so sleep could not start" + (err ? ' (' + String(err.message || err).slice(0, 120) + ')' : '') + '.');
+      sl.assistantOff = true; resolve('');
+    });
+  });
+}
+// the chat model was turned off for this sleep: start it again (when Glim wakes, or when the sleep never started)
+function restoreAssistant() {
+  if (!sl.assistantOff) return;
+  sl.assistantOff = false;
+  const cmd = modelStartCommand(store.getSettings());
+  if (cmd) try { require('child_process').spawn('/bin/zsh', ['-lc', cmd], { cwd: os.homedir(), detached: true, stdio: 'ignore' }).unref(); } catch (e) { /* the Offline button still works */ }
+}
+// plain words for the last line the sleep app printed before it stopped
+function sleepWhy(line) {
+  if (/assistant is running/i.test(line)) return "Glim's chat model was on and using the memory sleep needs. Press Sleep and choose Turn it off for now.";
+  if (/Already sleeping/i.test(line)) return 'Sleep was already running. Press Wake, then Sleep.';
+  if (/No module named|ModuleNotFoundError|ImportError/.test(line)) return 'The sleep app is missing a Python package (' + short(line, 100) + '). Check the Sleep Python path in Settings > Sleep.';
+  if (/No space left|ENOSPC/i.test(line)) return 'The disk is full, so sleep could not start. Free a few GB and press Sleep again.';
+  if (/memory|MemoryError|out of memory/i.test(line)) return 'There was not enough free memory to sleep. Close big apps and press Sleep again.';
+  return line ? 'The sleep app stopped right away: ' + short(line, 160) : 'The sleep app stopped right away (see ' + sleeper.p.log + ').';
 }
 async function wakeNow() {
   if (!sl.asleep || sl.waking) return { ok: true };
@@ -202,6 +241,7 @@ async function wakeNow() {
 // the sleep app has stopped: wait for the gateway to answer again, then show the morning summary
 async function onWoke() {
   sl.waking = true; sl.starting = 0; pushSleep(); updatePill();
+  restoreAssistant();
   if (warmer) { warmer.gatewayMoved(); for (let i = 0; i < 240 && warmer.state !== 'ready'; i++) await new Promise((r) => setTimeout(r, E2E ? 100 : 500)); }
   sl.asleep = false; sl.waking = false; sl.wakeAt = null; sl.lastActive = Date.now();
   const summary = sleeper.readSummary();
@@ -231,8 +271,8 @@ function onSleepPoll(st, events) {
   let now = st.sleeping;
   if (sl.starting) {
     if (st.sleeping) sl.starting = 0;
-    else if (sleeper.exit && (sleeper.exit.error || sleeper.exit.code)) { sl.starting = 0; sl.asleep = false; sl.bad = 'The sleep app stopped right away (see ' + sleeper.p.log + ').'; sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
-    else if (Date.now() - sl.starting > 20000) { sl.starting = 0; sl.asleep = false; sl.bad = 'The sleep app did not start (see ' + sleeper.p.log + ').'; sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
+    else if (sleeper.exit && (sleeper.exit.error || sleeper.exit.code)) { sl.starting = 0; sl.asleep = false; sl.bad = sleepWhy(sleeper.lastLogLine()); restoreAssistant(); sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
+    else if (Date.now() - sl.starting > 20000) { sl.starting = 0; sl.asleep = false; sl.bad = 'The sleep app did not start (see ' + sleeper.p.log + ').'; restoreAssistant(); sleepNotice(sl.bad); pushSleep(); updatePill(); return; }
     else now = true;
   }
   if (!was && now && !sl.waking) { sl.asleep = true; sl.startedAuto = false; pushSleep(); updatePill(); return; } // started from outside (Mac launcher)

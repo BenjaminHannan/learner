@@ -547,11 +547,14 @@
   const closeSleepSheet = () => { $('#sleepSheet').hidden = true; input.focus(); };
   $('#btnSleep').onclick = openSleepSheet; desk.onSleepOpen(openSleepSheet);
   $('#sleepCancel').onclick = closeSleepSheet;
-  $('#sleepGo').onclick = async () => {
-    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick) });
-    if (r && r.error) { $('#sleepErr').textContent = r.error; $('#sleepErr').hidden = false; return; }
+  const goSleep = async (stopAssistant) => {
+    $('#sleepGo').disabled = true;
+    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick), stopAssistant });
+    $('#sleepGo').disabled = false;
+    if (r && r.error) { $('#sleepErr').textContent = r.error + ' '; if (r.assistantOn) { const b = el('button', '', 'Turn it off for now'); b.onclick = () => { b.disabled = true; goSleep(true); }; $('#sleepErr').append(b); } $('#sleepErr').hidden = false; return; }
     settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked, sleepDuration: sleepPick }; closeSleepSheet();
   };
+  $('#sleepGo').onclick = () => goSleep(false);
   $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
 
@@ -758,6 +761,7 @@
     list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Sparks are clutter
     const ul = $('#agentList'); ul.textContent = '';
     $('#agentsSec').hidden = !list.length;
+    $('#btnThreads').hidden = !list.length; if (!list.length) closeDrawer(); // no Sparks, no side panel: the Glim scroll is the whole window
     for (const h of list) {
       const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
       const top = el('div', 'a-top');
@@ -775,7 +779,7 @@
       ul.append(li);
     }
   }
-  desk.onHelpers(paintAgents);
+  desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => newThread());
   desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); });
