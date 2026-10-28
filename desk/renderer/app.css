@@ -1,6 +1,7 @@
 /* top bar */
 #topbar { height:3.4rem; flex:none; display:flex; align-items:center; gap:.5rem; padding:0 .9rem; background:var(--bg); border-bottom:1px solid var(--hair); -webkit-app-region:drag; position:relative; z-index:5; }
-body.darwin #topbar { padding-left:max(5.6rem,84px); }
+/* room for the traffic lights, in full screen too (macOS slides them back over the top bar when the pointer reaches the top) */
+body.darwin #topbar { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 #topbar button, #topbar .seg, #topbar #title, #topbar .chip { -webkit-app-region:no-drag; }
 .spacer { flex:1; }
 .logo { -webkit-app-region:no-drag; display:flex; }
@@ -201,7 +202,7 @@ body.drawer-open #drawer { transform:none; visibility:visible; box-shadow:var(--
 
 /* settings sheet */
 #settings { position:fixed; inset:0; z-index:100; background:var(--bg); display:flex; flex-direction:column; }
-body.darwin .s-head { padding-left:max(5.6rem,84px); }
+body.darwin .s-head { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 .s-head { display:flex; align-items:center; justify-content:space-between; padding:.7rem 1.25rem; border-bottom:1px solid var(--hair); -webkit-app-region:drag; height:3.4rem; } .s-head button { -webkit-app-region:no-drag; }
 .s-head h1 { font-size:1.15rem; margin:0; }
 .s-body { flex:1; overflow:auto; }
@@ -321,7 +322,7 @@ body.bp-open:not(.bp-narrow) #perms { right:var(--bp, 0px); } /* the browser pag
 /* first-run setup sheet (Meet your Glims) */
 #onboard { position:fixed; inset:0; z-index:110; background:var(--bg); display:flex; flex-direction:column; }
 .ob-head { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; height:3.4rem; flex:none; padding:0 1.25rem; border-bottom:1px solid var(--hair); -webkit-app-region:drag; }
-body.darwin .ob-head { padding-left:max(5.6rem,84px); }
+body.darwin .ob-head { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 .ob-head button { -webkit-app-region:no-drag; justify-self:end; }
 .ob-brand { font-weight:650; }
 .ob-dots { display:flex; gap:.45rem; }
@@ -400,8 +401,6 @@ body.darwin .ob-head { padding-left:max(5.6rem,84px); }
 #sleepSetup[hidden], #runtime[hidden] { display:none; }
 .rt-bar { height:.6rem; border-radius:.4rem; background:var(--hair2); overflow:hidden; } .rt-bar i { display:block; height:100%; width:0; background:var(--accent-text); transition:width .3s; }
 
-/* full screen: no traffic lights, so no space kept for them */
-body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.fullscreen .ob-head { padding-left:1rem; }
 #gw.startable { cursor:pointer; } #gw.startable:hover { border-color:var(--accent); }
 .sl-dur { display:flex; flex-wrap:wrap; gap:.4rem; margin:.2rem 0 .1rem; }
 .sl-dur button { flex:1 1 auto; padding:.45rem .7rem; border:1px solid var(--hair2); border-radius:.7rem; background:var(--bg); color:inherit; font:inherit; cursor:pointer; }
@@ -460,3 +459,13 @@ body[data-acts="closed"] .bcard:not(.login) .bc-foot .lbl { display:none; }
 .act-body .step .pill { background:none; border:0; padding:.15rem 0; min-height:1.7rem; font-size:.88rem; gap:.45rem; }
 .act-body .step .ico { width:1.1rem; height:1.1rem; background:none; }
 .act-body .step.bad .pill { border:0; color:var(--danger); }
+
+/* assistant is off */
+.offcard { display:flex; align-items:center; gap:.9rem; padding:.65rem .8rem .65rem 1rem; margin-bottom:.5rem; background:var(--surface); border:1px solid var(--hair2); border-left:3px solid var(--accent); border-radius:1rem; text-align:left; }
+.offcard[hidden] { display:none; }
+.offcard .oc-text { flex:1; min-width:0; color:var(--text2); font-size:.9rem; }
+.offcard .oc-text b { color:var(--text); font-weight:650; }
+.offcard .oc-text em { font-style:normal; color:var(--text2); }
+.offcard .oc-text span { display:block; }
+.offcard .oc-err { margin-top:.25rem; color:var(--accent-text); }
+.offcard.in-welcome { margin:0 auto 1.2rem; max-width:30rem; }

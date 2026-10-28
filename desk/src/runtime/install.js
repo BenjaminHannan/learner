@@ -56,15 +56,43 @@ class ChatInstaller {
     flavor = flavor || (mac ? 'metal' : 'vulkan');
     const have = this.llamaExe(flavor);
     if (have) return have;
-    const rel = await getJson('https://api.github.com/repos/' + C.LLAMA_REPO + '/releases?per_page=30', this.f);
-    const a = R.pickLlamaAsset(rel, { flavor, platform: this.platform });
-    if (!a) throw new Error('No llama.cpp ' + (mac ? 'build for macOS (Apple silicon)' : flavor + ' build for Windows') + ' from ' + C.LLAMA_MIN_PUBLISHED.slice(0, 10) + ' or later was found (LFM3 needs it). Try again later.');
+    // The release list picks the newest build. If GitHub will not give it (rate limit, network, nothing usable), download the pinned one.
+    const url = 'https://api.github.com/repos/' + C.LLAMA_REPO + '/releases?per_page=30';
+    let rel = null; let why = '';
+    const sleep = (ms) => new Promise((resolve, reject) => {
+      const t = setTimeout(resolve, ms);
+      if (signal) signal.addEventListener('abort', () => { clearTimeout(t); reject(new Error('cancelled')); }, { once: true });
+    });
+    for (let attempt = 0; attempt < 2 && !Array.isArray(rel); attempt++) {
+      if (signal && signal.aborted) throw new Error('cancelled');
+      if (attempt) await sleep(this.o.retryDelayMs == null ? 1500 : this.o.retryDelayMs);
+      why = '';
+      try { rel = await getJson(url, this.f, null, signal); if (!Array.isArray(rel)) why = (rel && rel.message) || 'unexpected reply from GitHub'; } catch (e) { if (signal && signal.aborted) throw e; why = e.message; }
+    }
+    let a = R.pickLlamaAsset(rel, { flavor, platform: this.platform });
+    const pinned = !a;
+    if (pinned) {
+      const name = C.llamaAssetName(C.LLAMA_FALLBACK_TAG, flavor, this.platform);
+      a = { tag: C.LLAMA_FALLBACK_TAG, name, url: 'https://github.com/' + C.LLAMA_REPO + '/releases/download/' + C.LLAMA_FALLBACK_TAG + '/' + name, sha256: (this.o.fallbackSha256 || C.LLAMA_FALLBACK_SHA256)[name] || null };
+    }
+    const friendly = (e) => new Error('Could not download the model engine from GitHub (' + (why ? why + '; then ' : '') + e.message + '). Check the internet connection and press Try again.');
     const zip = path.join(this.o.dir, a.name);
-    await downloadFile({ url: a.url, dest: zip, sha256: a.sha256, fetch: this.f, signal, onProgress: this._prog('llama', 'Downloading the model engine') });
     const dest = path.join(this.o.dir, 'llama-' + a.tag + '-' + flavor);
+    try {
+      await downloadFile({ url: a.url, dest: zip, sha256: a.sha256, fetch: this.f, signal, onProgress: this._prog('llama', 'Downloading the model engine') });
+      if (pinned && fs.statSync(zip).size < (this.o.minEngineBytes == null ? 1048576 : this.o.minEngineBytes)) throw new Error('the file is too small to be the engine');
+    } catch (e) {
+      if (pinned) try { fs.rmSync(zip, { force: true }); } catch (e2) { /* keep */ }
+      if (!pinned || (signal && signal.aborted)) throw e;
+      throw friendly(e);
+    }
     fs.rmSync(dest, { recursive: true, force: true });
     if (this.o.onProgress) this.o.onProgress({ stage: 'llama', label: 'Unpacking the model engine', done: 0, total: 0 });
-    await this.extract(zip, dest);
+    try { await this.extract(zip, dest); } catch (e) {
+      try { fs.rmSync(zip, { force: true }); fs.rmSync(dest, { recursive: true, force: true }); } catch (e2) { /* keep */ }
+      if (!pinned) throw e;
+      throw friendly(e);
+    }
     const exeName = C.llamaExeName(this.platform);
     const exe = findFile(dest, exeName);
     if (!exe) throw new Error(exeName + ' was not inside ' + a.name);

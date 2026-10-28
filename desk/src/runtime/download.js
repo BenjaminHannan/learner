@@ -71,8 +71,9 @@ async function downloadFile(o) {
   return { dest: o.dest, bytes: size(o.dest), resumed, verified };
 }
 
-async function getJson(url, f, headers) {
-  const r = await (f || fetch)(url, { headers: { accept: 'application/json', 'user-agent': 'premonition', ...(headers || {}) } });
+async function getJson(url, f, headers, signal, timeoutMs) {
+  const t = AbortSignal.timeout(timeoutMs || 10000); // a stalled server must not hang the install
+  const r = await (f || fetch)(url, { signal: signal ? AbortSignal.any([signal, t]) : t, headers: { accept: 'application/json', 'user-agent': 'premonition', ...(headers || {}) } });
   if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url);
   return r.json();
 }

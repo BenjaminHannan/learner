@@ -6,6 +6,12 @@ module.exports = {
   LLAMA_REPO: 'ggml-org/llama.cpp',
   LLAMA_MIN_PUBLISHED: '2026-10-27T16:06:00Z',
   LLAMA_MIN_TAG_NUMBER: 11938,           // tags up to b11937 point at commits before LFM3 support (19cce69); raise to the first tag that has it
+  LLAMA_FALLBACK_TAG: 'b11946',          // downloaded by direct URL (no API, no checksum) when the GitHub release list cannot be read or has nothing usable
+  LLAMA_FALLBACK_SHA256: {               // sha256 of the pinned release's assets (checked on the fallback path)
+    'llama-b11946-bin-macos-arm64.tar.gz': 'd618da5e7bbb19077f086e6a7e1d77eab55b9bfd481f7531aadada86d13db9ed',
+    'llama-b11946-bin-win-vulkan-x64.zip': 'b65b2837c584ca2d37033b8a947513fc02649199077a17455f416921aa6eb8f5',
+    'llama-b11946-bin-win-cpu-x64.zip': '8a702bb07c873b133c56eb3acd92a48d7c5c9ad339c6435eddc5185e46e1a043',
+  },
   // Until an official release has LFM3, the app ships its own CPU llama-server.exe (resources/llama), cross-built from this
   // master commit with mingw-w64 (AVX2, static). Its tag doubles as the source ref for the sleep adapter converter.
   BUNDLED_LLAMA_COMMIT: 'd05706b4f32a545814856e98ca518292585443b9',
