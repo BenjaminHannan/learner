@@ -190,7 +190,7 @@ function nowStamp(messages, d) {
 }
 
 // Ben Oct 28: "tell me what you plan to do and what you are doing, not straight into the task". Per-turn (user message), so the cached system prompt stays small.
-const NARRATE = '[If this needs tools: first say your plan in 2 to 4 short lines, then before each step say in one short line what you do next. No tools needed: just answer.]';
+const NARRATE = '[If this needs tools: first say your plan in 2 to 4 short lines, then before each step say in one short line what you do next (plain words, no thinking out loud, no "Next:"). No tools needed: just answer.]';
 const PLAN_STEP_MAX = 120;
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
