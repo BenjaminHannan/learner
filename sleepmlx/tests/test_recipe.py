@@ -335,6 +335,22 @@ class GateTests(unittest.TestCase):
         finally:
             env.close()
 
+    def test_a_night_with_nothing_held_out_is_skipped_not_trained_and_undone(self):
+        # Oct 28: a resumed night trained on cards that could never pass the gate (no held-out card). Skip it: no training, day unslept.
+        env = Env()
+        try:
+            be = env.backend()
+            sl = env.sleeper(be)
+            sl.split_holdout = lambda fresh, d, st: None     # nothing set aside
+            sl.hold_lessons = lambda d, st: None
+            res = sl.run(env.week())
+            self.assertEqual(res["status"], "dry_run")
+            self.assertIn("no held-out cards", res["message"])
+            self.assertEqual(be.steps_seen, [])
+            self.assertFalse(env.paths.adapter.exists() and (env.paths.adapter / "adapters.safetensors").exists())
+        finally:
+            env.close()
+
     def test_harm_undoes_the_night(self):
         env = Env()
         try:

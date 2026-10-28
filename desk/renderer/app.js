@@ -584,13 +584,18 @@
 
   // ---------- sleep ----------
   let awakeWaiters = [];
+  // "asleep 1 h 5 m" from when this sleep began (hours_slept counts training time only, so it read "0 h so far" all night)
+  const asleepFor = (since) => { if (!since) return ''; const m = Math.max(0, Math.round((Date.now() - since) / 60000)); return 'asleep ' + (m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' m' : m + ' m'); };
   function paintSleep() {
     const asleep = slp.asleep || slp.waking;
     $('#composer').classList.toggle('asleep', asleep);
     $('#sleepBar').hidden = !asleep;
     $('#btnWake').textContent = slp.waking ? 'Waking up…' : 'Wake Glim'; $('#btnWake').disabled = !!slp.waking;
     $('#sleepTitle').textContent = slp.waking ? 'Waking up…' : 'Glim is asleep';
-    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : ['Learning from your chats', slp.wakeLabel || '', slp.checkingIn ? 'checking in' : '', slp.hours ? Math.round(slp.hours * 10) / 10 + ' h so far' : '', slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : [slp.checkingIn ? 'Checking your mail' : (slp.live && slp.live.now) || 'Learning from your chats', slp.wakeLabel || '', asleepFor(slp.since), slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    // Ben Oct 28: "tell you what it's doing right now in its sleep": the earlier steps of tonight, newest last
+    const rec = !slp.waking && slp.live && slp.live.recent ? slp.live.recent.slice(0, -1) : [];
+    const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line))); ul.hidden = !rec.length;
     $('#btnSend').hidden = asleep; $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
     else { input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }

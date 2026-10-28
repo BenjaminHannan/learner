@@ -178,6 +178,14 @@ class Sleep {
     return pillLine(st);
   }
 
+  // What it is doing right now (see sleepNow): reads only the tails of the trainer log and events.jsonl.
+  liveNow(st) {
+    st = st || this.status();
+    const logs = [process.env.SLEEPMLX_HOME && path.join(process.env.SLEEPMLX_HOME, 'sleepmlx.log'), path.join(path.dirname(this.home), 'sleepmlx', 'sleepmlx.log'), path.join(path.dirname(this.home), 'sleepmlx.log')].filter(Boolean);
+    const lf = logs.find(isFile);
+    const events = tailText(this.p.events, 65536).split('\n').map((l) => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
+    return sleepNow({ log: lf ? tailText(lf, 65536) : '', events, since: st.since });
+  }
   // New events since the last poll (offset based; a truncated file restarts from 0) and new inbox lines.
   poll() {
     const out = [];
@@ -220,6 +228,60 @@ class Sleep {
     if (this.timer.unref) this.timer.unref();
   }
   stop() { if (this.timer) clearInterval(this.timer); this.timer = null; }
+}
+
+// ---- what Glim is doing right now in its sleep (pure) ---------------------------------------------------------
+// Built from the trainer's log (sleepmlx.log, local "YYYY-MM-DD HH:MM:SS msg" lines) and events.jsonl, both since this sleep began.
+// Only what they report is shown; nothing reported yet -> 'Learning from your chats'.
+const REVERT_WORDS = [[/no held-out cards/i, 'no quiz cards to check it with'], [/general questions dropped/i, 'it got worse at general questions'], [/harm/i, 'it hurt other answers']];
+const kept = (o, k) => { const m = new RegExp("'" + k + "': (\\d+)").exec(o); return m ? +m[1] : null; };
+function logPhase(msg) {
+  let m;
+  if ((m = /^\[night\] step (\d+)\/(\d+)/.exec(msg))) return +m[1] >= +m[2] ? 'Checking what it learned (quiz)' : 'Learning from today\'s chats (step ' + m[1] + ' of ' + m[2] + ')';
+  if (/^\[night \d+\] day /.test(msg)) return 'Reading today\'s chats';
+  if (/^\[night\] tagging /.test(msg)) { const n = kept(msg, 'kept'); return n != null ? 'Picked out ' + n + ' facts from today\'s chats' : 'Picking out facts from today\'s chats'; }
+  if (/^\[night\] lessons and habits /.test(msg)) return 'Looking for lessons in its mistakes';
+  if (/^\[night\] dream check/.test(msg)) return 'Dreaming: checking what it remembers';
+  if (/^\[night\] dream /.test(msg)) { const n = kept(msg, 'items'); return n ? 'Made ' + n + ' practice cards' : 'Making practice cards'; }
+  if (/^\[night\] correction: /.test(msg)) return 'Fixing a fact it had wrong';
+  if (/^\[night\] gguf export/.test(msg)) return 'Saving what it learned';
+  if (/^\[night\] served check/.test(msg)) return 'Testing the saved version';
+  return null;
+}
+function eventPhase(e) {
+  const i = e.info || {};
+  if (e.kind === 'checkin') { const c = e.counts || {}; const bits = []; if (c.mail != null) bits.push(c.mail + ' email' + (c.mail === 1 ? '' : 's')); if (c.calendar) bits.push(c.calendar + ' event' + (c.calendar === 1 ? '' : 's')); return 'Checked your mail' + (bits.length ? ' (' + bits.join(', ') + ')' : ''); }
+  if (e.kind === 'wake') return 'Getting ready to wake';
+  if (e.kind !== 'chunk_done') return null;
+  if (i.reverted) {
+    const why = (Array.isArray(i.revert_reason) ? i.revert_reason : [i.revert_reason]).filter(Boolean).map((r) => { const w = REVERT_WORDS.find(([re]) => re.test(r)); return w ? w[1] : String(r); });
+    return 'Done for tonight: kept nothing' + (why.length ? ' (' + [...new Set(why)].join('; ') + ')' : '');
+  }
+  if (i.error) return /out of memory/i.test(i.error) ? 'Stopped: ran out of memory' : 'Stopped: hit an error';
+  if (i.status === 'no_new_day') return 'Done for tonight: nothing new to learn';
+  if (i.status === 'done') return 'Done for tonight: kept what it learned' + (i.lessons && i.lessons.length ? ' (' + i.lessons.length + ' lesson' + (i.lessons.length === 1 ? '' : 's') + ')' : '');
+  if (/only \d+ trainable cards/.test(i.message || '')) return 'Done for tonight: not enough new facts to learn';
+  return null; // a plain chunk (no phase) says nothing new
+}
+const parseLogTs = (l) => { const m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d) (.*)$/.exec(l); return m ? { t: new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(), msg: m[7] } : null; };
+// {log: text, events: [..], since: ms} -> {now: 'Learning from today's chats (step 4 of 19)', recent: [{t, line}] (last 5, newest last)}
+function sleepNow({ log, events, since, nowMs }) {
+  const items = [];
+  if (!since) return { now: 'Learning from your chats', recent: [] };   // no start time yet: never show last night's lines
+  for (const l of String(log || '').split('\n')) { const p = parseLogTs(l); if (!p || (since && p.t < since - 1000)) continue; const line = logPhase(p.msg); if (line) items.push({ t: p.t, line }); }
+  for (const e of events || []) { const t = Date.parse(e.ts); if (!Number.isFinite(t) || (since && t < since - 1000)) continue; const line = eventPhase(e); if (line) items.push({ t, line }); }
+  items.sort((a, b) => a.t - b.t);
+  const recent = [];
+  for (const it of items) { const last = recent[recent.length - 1]; if (last && /^Learning from today's chats \(step/.test(last.line) && /^Learning from today's chats \(step/.test(it.line)) recent[recent.length - 1] = it; else if (!last || last.line !== it.line) recent.push(it); }
+  // a mail check is news for a minute; then the bar goes back to the training step it interrupted
+  let cur = recent[recent.length - 1];
+  if (cur && /^Checked your mail/.test(cur.line) && (nowMs || Date.now()) - cur.t > 60000) cur = recent[recent.length - 2] || null;
+  const now = cur ? cur.line : 'Learning from your chats';
+  return { now, recent: recent.slice(-5) };
+}
+// last ~maxBytes of a file, whole lines only
+function tailText(f, maxBytes) {
+  try { const size = fs.statSync(f).size; const n = Math.min(size, maxBytes || 65536); const b = Buffer.alloc(n); const fd = fs.openSync(f, 'r'); fs.readSync(fd, b, 0, n, size - n); fs.closeSync(fd); const s = b.toString('utf8'); return n < size ? s.slice(s.indexOf('\n') + 1) : s; } catch (e) { return ''; }
 }
 
 function fmtHours(h) { return (Math.round(h * 10) / 10) + ' h'; }
@@ -326,4 +388,4 @@ function shouldAutoWake(i) {
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };
+module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours, sleepNow };
