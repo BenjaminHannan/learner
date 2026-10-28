@@ -3,6 +3,7 @@
   const $ = (s) => document.querySelector(s);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const desk = window.desk;
+  if (/Mac/i.test(navigator.platform || navigator.userAgent || '')) document.body.classList.add('darwin'); // before desk.info() answers, so the top bar never sits under the traffic lights
   const md = Md.md;
   window.__md = md; // for tests
 
