@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('desk', {
   memory: { list: inv('memory:list'), add: inv('memory:add'), edit: inv('memory:edit'), remove: inv('memory:delete'), reveal: inv('memory:reveal'), read: inv('memory:read'), write: inv('memory:write'), open: inv('memory:open') },
   tracking: { list: inv('tracking:list'), done: inv('tracking:done'), remove: inv('tracking:remove') },
   sleep: { state: inv('sleep:state'), start: inv('sleep:start'), wake: inv('sleep:wake'), summary: inv('sleep:summary') },
+  update: { status: inv('update:status'), check: inv('update:check'), install: inv('update:install') },
+  onUpdate: on('update:state'),
   onboard: { create: inv('onboard:create') },
   openSystem: inv('system:open'),
   openExternal: inv('open:external'),

@@ -781,6 +781,28 @@
       ul.append(li);
     }
   }
+  // ---------- updates ----------
+  let upd = null, updLater = '';
+  function paintUpdate(st) {
+    upd = st; const bar = $('#updateBar'); if (!bar || !st) return;
+    const busy = st.phase === 'downloading' || st.phase === 'installing' || st.phase === 'restarting';
+    const show = (st.phase === 'available' && updLater !== st.version) || busy;
+    bar.hidden = !show;
+    $('#updateText').textContent = st.phase === 'downloading' ? 'Downloading Premonition ' + st.version + '… ' + (st.pct || 0) + '%' : st.phase === 'installing' ? 'Installing…' : st.phase === 'restarting' ? 'Restarting Premonition…'
+      : 'Premonition ' + st.version + ' is ready.' + (st.notes ? ' ' + st.notes : '') + (st.error ? ' ' + st.error : '');
+    $('#updateGo').hidden = busy; $('#updateLater').hidden = busy;
+    const sn = $('#updateStat'); if (sn) sn.textContent = updateLine(st);
+  }
+  function updateLine(st) {
+    if (!st) return '';
+    if (st.phase === 'checking') return 'Checking…';
+    if (st.phase === 'available') return 'Version ' + st.version + ' is available.';
+    if (st.phase === 'downloading' || st.phase === 'installing' || st.phase === 'restarting') return 'Updating…';
+    return st.error || 'You have the newest version (' + st.current + ').';
+  }
+  $('#updateGo').onclick = async () => { paintUpdate(await desk.update.install()); };
+  $('#updateLater').onclick = () => { if (upd) updLater = upd.version; $('#updateBar').hidden = true; };
+  desk.onUpdate(paintUpdate); desk.update.status().then(paintUpdate).catch(() => {});
   desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => newThread());
@@ -938,6 +960,10 @@
       { key: 'highContrast', type: 'toggle', label: 'High contrast', help: 'Stronger text and borders everywhere.' },
       { key: 'pill', type: 'toggle', label: 'Status pill at the top of the screen', help: 'A small floating pill that shows what Glim is doing across apps. Hover it for details.' }
     ] },
+    { group: 'Updates', rows: [
+      { type: 'update', label: 'Premonition updates', help: 'Premonition looks for a newer version now and then. It only installs when you press Update now; your chats, memory and settings are kept.' },
+      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every few hours.' }
+    ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
       { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: () => 'Closing the window hides it; your Glims keep going. Quit for real with ' + Platform.quitHint(plat()) + '.' },
@@ -1057,6 +1083,13 @@
           const so = el('button', 'ghost', 'Restart and start over'); so.id = 'startOver'; so.title = 'Restarts Premonition and goes through first-time setup again. Your chats and memory are kept.';
           so.onclick = () => { if (confirm('Restart Premonition and go through first-time setup again? Your chats and memory are kept.')) desk.startOver(); };
           ctl.append(b, so);
+        } else if (r.type === 'update') {
+          const note = el('div', 's-note'); note.id = 'updateStat'; note.textContent = updateLine(upd);
+          const b = el('button', 'ghost', 'Check for updates'); b.id = 'updateCheck'; b.onclick = async () => paintUpdate(await desk.update.check());
+          const g = el('button', 'ghost', 'Update now'); g.onclick = async () => paintUpdate(await desk.update.install());
+          const bx = el('div'); bx.style.cssText = 'display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;text-align:right';
+          const rb = el('div'); rb.style.cssText = 'display:flex;gap:.4rem'; rb.append(b, g); bx.append(rb, note); ctl.append(bx);
+          lab.append(el('div', 's-note dim', 'Version ' + (info.version || '')));
         } else if (r.type === 'sleepstat') {
           const note = el('div', 's-note'); note.id = 'sleepStat';
           const b = el('button', 'ghost', 'Sleep now'); b.id = 'sleepNow'; b.onclick = () => { closeSettings(); openSleepSheet(); };
