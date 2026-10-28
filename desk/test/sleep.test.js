@@ -213,3 +213,22 @@ test('auto-sleep idle uses the Mac idle time too: working in another app is not 
   assert.ok(!d({ idleMs: 5 * 60000, systemIdleMs: 90 * 60000 }).sleep);      // the smaller of the two decides
   assert.ok(d({ idleMs: 40 * 60000 }).sleep);                                // no system reading: Desk idle alone
 });
+
+test('assistant marker: start refuses in plain words while the chat model runs, and clears a marker left by a crash', () => {
+  const ops = tmp(), home = path.join(ops, 'sleepmode'), marker = path.join(ops, 'ASSISTANT_RUNNING'); // its own ops dir, not the shared tmp
+  fs.mkdirSync(path.join(home, 'app'), { recursive: true });
+  const sl = new Sleep({ home, getSettings: () => ({ sleepPython: FAKE }) });
+  assert.strictEqual(sl.p.assistant, marker);
+  assert.strictEqual(sl.assistantState(), 'off');
+  fs.writeFileSync(marker, 'started: now\nbig pid: ' + process.pid + '\ngateway pid: 999999\n');
+  assert.strictEqual(sl.assistantState(), 'on');
+  const r = sl.start({});
+  assert.strictEqual(r.ok, false); assert.ok(r.assistantOn); assert.match(r.error, /using the memory sleep needs/);
+  fs.writeFileSync(marker, 'big pid: 999998\ngateway pid: 999999\n');
+  assert.strictEqual(sl.assistantState(), 'stale');
+  sl.spawn = () => ({ pid: 1, on() {}, unref() {} });
+  assert.ok(sl.start({}).ok);
+  assert.strictEqual(fs.existsSync(marker), false);
+  fs.writeFileSync(path.join(home, 'desk-sleep.log'), 'x\nThe assistant is running (y exists); sleeping would stop at once.\n\n');
+  assert.match(sl.lastLogLine(), /assistant is running/);
+});

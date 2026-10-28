@@ -50,7 +50,7 @@ class Sleep {
     this.inboxSeen = null;
     this.child = null;
     this.lastError = '';
-    this.p = { status: path.join(this.home, 'status.json'), events: path.join(this.home, 'events.jsonl'), inbox: path.join(this.home, 'inbox.md'), summary: path.join(this.home, 'summary.md'), sleeping: path.join(this.home, 'SLEEPING'), wake: path.join(this.home, 'WAKE'), log: path.join(this.home, 'desk-sleep.log') };
+    this.p = { status: path.join(this.home, 'status.json'), events: path.join(this.home, 'events.jsonl'), inbox: path.join(this.home, 'inbox.md'), summary: path.join(this.home, 'summary.md'), sleeping: path.join(this.home, 'SLEEPING'), wake: path.join(this.home, 'WAKE'), log: path.join(this.home, 'desk-sleep.log'), assistant: path.join(path.dirname(this.home), 'ASSISTANT_RUNNING') };
   }
   app() { return appDir(this.getSettings(), this.home); }
   python() { return findPython(this.getSettings(), this.home, this.o.pythonExists, this.o.platform); }
@@ -61,6 +61,16 @@ class Sleep {
     if (!python) return { ok: false, app, python, reason: PY_MISSING };
     return { ok: true, app, python, reason: '' };
   }
+  // The sleep app refuses to start while ~/learner-ops/ASSISTANT_RUNNING exists (the big chat model needs the same memory).
+  // 'on': a pid it names is alive; 'stale': the marker is there but its pids are gone (a crash); 'off': no marker.
+  assistantState() {
+    const t = readText(this.p.assistant);
+    if (!t && !isFile(this.p.assistant)) return 'off';
+    const pids = [...t.matchAll(/pid:\s*(\d+)/g)].map((m) => Number(m[1]));
+    return !pids.length || pids.some((p) => pidAlive(p)) ? 'on' : 'stale';
+  }
+  // the last thing the sleep app printed, for a plain error instead of a log path
+  lastLogLine() { return readText(this.p.log).trim().split('\n').filter(Boolean).slice(-1)[0] || ''; }
   // SLEEPMLX_NIGHT_BUDGET_S: how long this sleep may last (about 85% of the chosen time); the trainer scales its work to it.
   // The sleepmode app's CommandWorker starts the trainer with dict(os.environ) + its own vars, so it inherits this
   // (checked in sleepmode/workers.py on origin/claude/project-thread-sl2x88).
@@ -72,6 +82,9 @@ class Sleep {
     const a = this.available();
     if (!a.ok) return { ok: false, error: a.reason };
     if (this.status().sleeping) return { ok: false, error: 'Already sleeping.' };
+    const as = this.assistantState();
+    if (as === 'on') return { ok: false, assistantOn: true, error: "Glim's chat model is on and using the memory sleep needs." };
+    if (as === 'stale') { try { fs.unlinkSync(this.p.assistant); } catch (e) { /* gone */ } } // left by a crash: nothing is running
     try {
       fs.mkdirSync(this.home, { recursive: true });
       try { fs.unlinkSync(this.p.wake); } catch (e) { /* none */ }

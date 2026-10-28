@@ -547,11 +547,14 @@
   const closeSleepSheet = () => { $('#sleepSheet').hidden = true; input.focus(); };
   $('#btnSleep').onclick = openSleepSheet; desk.onSleepOpen(openSleepSheet);
   $('#sleepCancel').onclick = closeSleepSheet;
-  $('#sleepGo').onclick = async () => {
-    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick) });
-    if (r && r.error) { $('#sleepErr').textContent = r.error; $('#sleepErr').hidden = false; return; }
+  const goSleep = async (stopAssistant) => {
+    $('#sleepGo').disabled = true;
+    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick), stopAssistant });
+    $('#sleepGo').disabled = false;
+    if (r && r.error) { $('#sleepErr').textContent = r.error + ' '; if (r.assistantOn) { const b = el('button', '', 'Turn it off for now'); b.onclick = () => { b.disabled = true; goSleep(true); }; $('#sleepErr').append(b); } $('#sleepErr').hidden = false; return; }
     settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked, sleepDuration: sleepPick }; closeSleepSheet();
   };
+  $('#sleepGo').onclick = () => goSleep(false);
   $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
 
