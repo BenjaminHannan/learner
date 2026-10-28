@@ -108,6 +108,8 @@ class Config:
     use_lessons: bool = True      # post-mortems of the day's failures -> lesson cards (and corrections retire the fact they replace)
     max_lessons: int = 8          # lessons written per night (x work scale)
     lesson_tokens: int = 200
+    max_rated: int = 12           # thumbs-rated turns carded per night (x work scale), oldest first
+    rated_tokens: int = 300
     use_habits: bool = True       # the same tool job on habit_min+ turns -> habit cards
     habit_min: int = 3
     use_userdata: bool = True     # the Desk's saved notes (memory.json) and Keeping track of list (tracking.md)
@@ -177,7 +179,7 @@ class Item:
     dead: bool = False
     trained: bool = False
     dreamed_night: int = 0
-    kind: str = "fact"            # fact (tagged from the diary) | lesson | habit | note | track (lessons.py; their cards are made, not dreamed)
+    kind: str = "fact"            # fact (tagged from the diary) | lesson | rated | habit | note | track (lessons.py; their cards are made, not dreamed)
     source: str = ""              # where a non-fact item came from (kept on its cards)
     until: str = ""               # YYYY-MM-DD: after this day the item is not trained (tracked items)
     line: str = ""                # fact from a saved card note: the card line "Subject => relation => Object" (its dream context when no chat turn names both sides)
@@ -736,6 +738,107 @@ class Sleeper:
                 self.N["lessons"].append(text)
             st["lessons_kept"] += 1
 
+    def rated_stage(self, week: dict, d: int, st: Counter) -> None:
+        """Flashcards from every turn Ben rated (thumbs up or down), oldest first, at most max_rated x s a night. The base model reads the chat
+        around the turn and writes 2 to 4 question-answer cards plus a one-sentence summary; each answer must be in the chat text (for a
+        thumbs down that Ben corrected, in Ben's own words), must not be a known wrong value, and the base model must give it back from the
+        chat text alone. A turn already carded is never regenerated; a turn that gave no card is remembered (an empty item) and not retried
+        unless its text or rating changes. A thumbs-up turn with no card keeps its word-for-word liked card (extras)."""
+        if not self.cfg.use_lessons:
+            return
+        date_of = lambda x: diary_mod.date_of_day(week, x) or self.N["date"]   # noqa: E731
+        every = L_mod.rated(week)
+        have = {r["key"] for r in every}
+        for it in self.items.values():
+            if it.kind == "rated" and not it.dead and it.key not in have:
+                it.dead = True   # Ben took the rating back, or the turn is gone from the diary
+                st["rated_retired"] += 1
+        todo = [r for r in every if not (self.items.get(r["key"]) and not self.items[r["key"]].dead and self.items[r["key"]].sig == str(r["fb"]))]
+        st["rated_turns"] = len(every)
+        todo = todo[:self.sc(self.cfg.max_rated)]
+        if not todo:
+            return
+        raw = self.gen([P.rated_prompt(self.R, r["ctx"], r["fb"], self.who) for r in todo], self.cfg.rated_tokens, salt="rated")
+        cand = []   # (turn, summary, [[q, a]] checked, wrong values)
+        for r, txt in zip(todo, raw):
+            j = P.parse_lesson(txt)
+            cards = j.get("cards") if j else None
+            if not isinstance(cards, list):
+                st["rated_parse_fail"] += 1
+                cand.append((r, "", [], set()))
+                continue
+            wrong = set()
+            if r["fb"] == -1:
+                wrong = self.wrong_for_turn(r["day"], {"turn": r["turn"], "kind": "disliked", "user": r["user"]}) | {norm(x) for x in L_mod.not_terms(r["next_user"])}
+            truth = r["next_user"] if r["fb"] == -1 and r["next_user"] and L_mod.is_correction(r["next_user"]) else r["ctx"]   # a correction's truth is Ben's words
+            good, seen = [], set()
+            for c in cards[:6]:
+                q, a = (str(c.get("q") or "").strip(), str(c.get("a") or "").strip().rstrip(".")) if isinstance(c, dict) else ("", "")
+                if not (q and a):
+                    why = "malformed"
+                elif not 1 <= len(a.split()) <= 6 or len(a) > 60:
+                    why = "answer_too_long"
+                elif not q.endswith("?"):
+                    why = "not_a_question"
+                elif not norm(a) or not pat(norm(a)).search(norm(truth)):
+                    why = "answer_not_in_chat"
+                elif norm(a) in norm(q):
+                    why = "answer_in_question"
+                elif norm(a) in wrong:
+                    why = "answer_is_the_wrong_value"
+                elif any(diary_mod.looks_secret(x) or diary_mod.talks_secrets(x) for x in (q, a)):
+                    why = "secret"
+                elif self.leaky(q):
+                    why = "test_leak"
+                elif norm(q) in seen:
+                    why = "dup"
+                else:
+                    why = None
+                if why:
+                    st["rated_qa_dropped_" + why] += 1
+                else:
+                    seen.add(norm(q))
+                    good.append([q, a])
+            cand.append((r, " ".join(str(j.get("summary") or "").split()), good[:4], wrong))
+        flat = [(i, q, a) for i, (r, _, good, _) in enumerate(cand) for q, a in good]
+        ver = self.gen([P.ctx_prompt(self.R, cand[i][0]["ctx"], q, self.who) for i, q, a in flat], self.cfg.verify_tokens, salt="rated_verify")
+        kept = defaultdict(list)
+        for (i, q, a), v in zip(flat, ver):
+            if has_ans(a, v):
+                kept[i].append([q, a])
+                st["rated_qa_kept"] += 1
+            else:
+                st["rated_qa_dropped_unverified"] += 1
+        for i, (r, summary, _, wrong) in enumerate(cand):
+            key, qa = r["key"], kept[i]
+            if not qa:
+                st["rated_none"] += 1
+                self.items[key] = Item(key, self.who, r["user"][:60], "rated", d, first=d, kind="rated", sig=str(r["fb"]), source="chat %s, turn %d: no cards" % (date_of(r["day"]), r["turn"] + 1))
+                continue
+            ask = r["user"][:200]
+            if r["fb"] == 1:
+                fallback = "%s liked how Glim answered \"%s\": %s" % (self.who, ask, r["answer"][:300])
+            else:
+                fallback = "%s gave Glim's answer to \"%s\" a thumbs down." % (self.who, ask) + (" %s then said: %s" % (self.who, r["next_user"][:300]) if r["next_user"] else "")
+            text = L_mod.scrub(summary if 15 <= len(summary) <= 400 and not (diary_mod.looks_secret(summary) or diary_mod.talks_secrets(summary)) else fallback, wrong)
+            if self.leaky(text):
+                text = fallback
+            self.items[key] = Item(key, self.who, r["user"][:60], "rated", d, first=d, days=1, nment=1, imp=True, cor=r["fb"] == -1, para=[text], qa=qa, seen_ment=1,
+                                   dreamed_night=d, kind="rated", sig=str(r["fb"]),
+                                   source="chat %s, turn %d: thumbs %s" % (date_of(r["day"]), r["turn"] + 1, "up" if r["fb"] == 1 else "down"))
+            st["rated_new"] += 1
+
+    def hold_rated(self, d: int, st: Counter) -> None:
+        """Hold out 1 Q&A of each new rated item that has 2 or more (it keeps the rest), so a night of only rated turns still has a quiz."""
+        n = 0
+        for it in sorted(self.items.values(), key=lambda it: it.key):
+            if it.kind == "rated" and it.first == d and not it.dead and not it.held and len(it.qa) >= 2:
+                h = int(hashlib.sha1((str(self.cfg.seed) + "rated" + it.key).encode()).hexdigest(), 16)
+                q, a = it.qa.pop(h % len(it.qa))
+                it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
+                n += 1
+        st["rated_held_out"] = n
+
     def extras(self, week: dict, d: int, st: Counter) -> None:
         """Habit cards from repeated tool jobs, and cards for the Desk's saved notes and Keeping track of list. These cards are built from
         the logs and files word for word (no model writes them). Each carries its source; a tracked item past its until date, finished or
@@ -751,6 +854,10 @@ class Sleeper:
                 want[h["key"]] = ("delegate", h["name"], para, qa, "helper runs: %d good runs" % h["n"], "", 1)
         if cfg.use_lessons:   # Ben's thumbs up: the answer he liked, word for word (a thumbs down becomes a lesson in lessons())
             for l in L_mod.liked(week):
+                r = self.items.get("rated|" + l["key"].split("|", 1)[1])
+                if r and not r.dead and (r.para or r.qa or r.held):
+                    st["liked_skipped_rated"] += 1   # carded by rated_stage: no second card for the same turn
+                    continue
                 para, qa = L_mod.liked_cards(l, self.who)
                 want[l["key"]] = ("liked", l["user"][:60], para, qa, "chat %s, turn %d: %s liked the answer" % (diary_mod.date_of_day(week, l["day"]), l["turn"] + 1, self.who), "", 1)
             for v in L_mod.good_ideas(week):   # Ben Oct 28: a Mote's idea a reviewer called good
@@ -887,7 +994,7 @@ class Sleeper:
         key = lambda it: hashlib.sha1((str(self.cfg.seed) + "topup" + it.key).encode()).hexdigest()   # noqa: E731
         pool = lambda kind: sorted((it for it in self.items.values() if it.kind == kind and it.first == d and not it.dead and it.qa and len(it.para) + len(it.qa) >= 2), key=key)   # noqa: E731
         k = 0
-        for it in pool("lesson") + pool("note"):
+        for it in pool("lesson") + pool("rated") + pool("note"):
             if n + k >= 2:
                 break
             q, a = it.qa.pop(0)
@@ -1159,10 +1266,14 @@ class Sleeper:
             st_all["dream"] = dict(st)
             st = Counter()
             self.lessons_stage(week, d, st)
+            self.rated_stage(week, d, st)
             self.extras(week, d, st)
             if "lesson_holdout_done" not in N:
                 self.hold_lessons(d, st)
                 N["lesson_holdout_done"] = True
+            if "rated_holdout_done" not in N:
+                self.hold_rated(d, st)
+                N["rated_holdout_done"] = True
             if "topup_holdout_done" not in N:
                 self.top_up_holdout(d, st)
                 N["topup_holdout_done"] = True

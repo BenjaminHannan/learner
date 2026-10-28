@@ -143,6 +143,16 @@ class FakeBackend(Backend):
         if "Write one question that this note answers" in user:
             note = user.split('A note saved about Ben:\n"', 1)[1].split('"\n\nWrite one', 1)[0]
             return json.dumps({"q": "What detail does the saved note give?", "a": note.split()[-1].strip(".,")})
+        if "Write flashcards from this chat" in user:
+            chat = user.split("Glim:\n", 1)[1].split("Write flashcards from this chat", 1)[0]
+            lines = [l.strip() for l in chat.splitlines()]
+            down = "thumbs down" in chat
+            said = [l for l in lines if " then said: " in l]
+            rated = [l for l in lines if "(Ben gave this answer a thumbs" in l]
+            src = said[0] if (down and said) else (rated[0] if rated else "")
+            ns = list(dict.fromkeys(names(src.split(": ", 1)[-1])))
+            cards = [{"q": "Which name matters in point %d of this chat?" % (i + 1), "a": n} for i, n in enumerate(ns[:3])]
+            return json.dumps({"summary": "Ben rated a turn, and the useful names are %s." % ", ".join(ns), "cards": cards})
         if "Fact about" in user:
             return "Question: Where does Ben go?\nAnswer: nowhere"
         if "Question: " in user and ("Messages from" in user):
