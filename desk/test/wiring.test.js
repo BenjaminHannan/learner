@@ -21,7 +21,7 @@ test('main.js creates the memory after the Store, passes it to the Agent and han
 
 test('preload exposes desk.memory.{list,add,edit,remove} on the matching channels', () => {
   const p = read('preload.js');
-  assert.match(p, /memory: \{ list: inv\('memory:list'\), add: inv\('memory:add'\), edit: inv\('memory:edit'\), remove: inv\('memory:delete'\) \}/);
+  assert.match(p, /memory: \{ list: inv\('memory:list'\), add: inv\('memory:add'\), edit: inv\('memory:edit'\), remove: inv\('memory:delete'\), reveal: inv\('memory:reveal'\) \}/);
 });
 
 test('the memory API behind the channels: add, list, edit, delete, refusals', () => {

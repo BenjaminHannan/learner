@@ -1,5 +1,6 @@
 'use strict';
-// Small persistent fact memory ("what you know about Ben"): JSON file in the app's userData dir, next to settings.json.
+// Small persistent fact memory ("what you know about Ben"): memory.md in the app's userData dir (plain markdown Ben can open and edit,
+// one note per line like tracking.md; an old memory.json is converted once and kept as memory.json.bak).
 // Facts are injected into the newest user turn by the agent (never into the system prompt) and written via memory_save / memory_forget.
 const fs = require('fs');
 const path = require('path');
@@ -35,7 +36,11 @@ const LINK_RE = /\bhttps?:\/\/|\bwww\.|\b[\w.+-]+@[\w-]+\.[\w.-]+/i;
 const IMPERATIVE_RE = /^\W*(please\s+)?(always|never|forward|send|ignore|disregard|delete|pay|buy|email|transfer|wire|run|execute|open|visit|click|override|install|download|forget)\b|\b(ignore|disregard)\b[^.]{0,40}\b(instructions|previous|above|rules)\b|\b(from now on|you must|you should)\b/i;
 const LINK_MSG = 'Not saved: notes cannot contain links or email addresses.';
 const ORDER_MSG = P('Not saved: that reads like an instruction, not a fact about Ben. Notes are only facts (classes, schedule, people, preferences).');
+// a fragment of a file the agent read (HTML comment, the notes file's own name) is not a fact about Ben
+const JUNK_RE = /<!--|-->|\bMEMORY\.md\b/i;
+const JUNK_MSG = 'Not saved: that is a piece of a file, not a fact.';
 function refusal(text, topic) {
+  if (JUNK_RE.test(text) || JUNK_RE.test(topic || '')) return JUNK_MSG;
   if (looksSecret(text) || looksSecret(topic)) return SECRET_MSG;
   if (LINK_RE.test(text) || LINK_RE.test(topic || '')) return LINK_MSG;
   if (IMPERATIVE_RE.test(text) || IMPERATIVE_RE.test(topic || '')) return ORDER_MSG;
@@ -53,16 +58,51 @@ function overlap(a, b) {
 }
 const norm = (s, n) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n);
 
+const HEADING = '# What Glim remembers\n\nOne note per line. You can edit this file; keep the "- note | topic: x | id: y | updated: date" shape, or just write "- a note".\n\n';
+const dayOf = (ms) => { const t = new Date(ms); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
+const hashId = (t) => 'h' + require('crypto').createHash('sha1').update(String(t).toLowerCase()).digest('hex').slice(0, 7);
+// "- text | topic: x | id: m1 | updated: 2026-10-28" -> {id, text, topic, updated (ms)}; pipes in a note become slashes on write
+function parseMd(text, fallbackMs) {
+  const out = [];
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const m = /^\s*[-*]\s+(.*\S)\s*$/.exec(line);
+    if (!m) continue;
+    const parts = m[1].split(/\s+\|\s+/);
+    const f = { text: parts.shift().trim(), id: '', topic: undefined, updated: fallbackMs };
+    for (const p of parts) {
+      const kv = /^(topic|id|updated):\s*(.*)$/i.exec(p.trim());
+      if (!kv) continue;
+      const k = kv[1].toLowerCase(), v = kv[2].trim();
+      if (k === 'topic' && v) f.topic = v; else if (k === 'id' && v) f.id = v; else if (k === 'updated' && /^\d{4}-\d\d-\d\d$/.test(v)) f.updated = Date.parse(v + 'T00:00:00');
+    }
+    if (!f.text) continue;
+    if (!f.id) f.id = hashId(f.text);
+    out.push(f);
+  }
+  return out;
+}
+const renderMd = (facts) => HEADING + facts.map((f) => '- ' + f.text.replace(/\s*\|\s*/g, ' / ') + (f.topic ? ' | topic: ' + f.topic.replace(/\s*\|\s*/g, ' / ') : '') + ' | id: ' + f.id + ' | updated: ' + dayOf(f.updated)).join('\n') + '\n';
+
 function createMemory(dir, opts) {
-  const file = path.join(dir, 'memory.json');
+  const file = path.join(dir, 'memory.md');
+  const oldFile = path.join(dir, 'memory.json');
   const now = (opts && opts.now) || Date.now;
   const size = (facts) => facts.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0);
 
-  function load() {
+  function loadOld() {
     try {
-      const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const j = JSON.parse(fs.readFileSync(oldFile, 'utf8'));
       return (Array.isArray(j) ? j : j.facts || []).filter((f) => f && typeof f.text === 'string' && f.id);
     } catch (e) { return []; }
+  }
+  function load() {
+    let st = null; try { st = fs.statSync(file); } catch (e) { /* no file yet */ }
+    if (!st) {
+      const old = loadOld();   // one-time move from memory.json
+      if (old.length) { try { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(file, renderMd(old)); fs.renameSync(oldFile, oldFile + '.bak'); } catch (e) { /* keep the old file */ } }
+      return old;
+    }
+    return parseMd(fs.readFileSync(file, 'utf8'), st.mtimeMs).filter((f) => f.text.length <= 2000);
   }
   function persist(facts) {
     // evict oldest-updated first until within both caps
@@ -71,7 +111,7 @@ function createMemory(dir, opts) {
     while (facts.length > MAX_FACTS || (size(facts) > MAX_CHARS && facts.length > 1)) facts.splice(byAge(), 1);
     fs.mkdirSync(dir, { recursive: true });
     const tmp = file + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify({ facts }, null, 1));
+    fs.writeFileSync(tmp, renderMd(facts));
     fs.renameSync(tmp, file);
     return facts;
   }

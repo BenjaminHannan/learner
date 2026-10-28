@@ -69,7 +69,7 @@ let sleepInstaller = null;
 let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
 let tracking = null; // things Glim keeps track of (userData/tracking.md)
 let rhythm = null;   // when Ben is usually up (userData/rhythm.json); auto-sleep fits its window to it
-let memory = null;   // Ben's saved facts (userData/memory.json)
+let memory = null;   // Ben's saved facts (userData/memory.md)
 let agent = null;
 let diary = null;
 let screen = null;
@@ -861,6 +861,7 @@ function registerIpc() {
     catch (e) { return { use, ok: false, name: t.name, error: String(e && e.message || e) }; }
   }));
   h('memory:list', () => memory.list());
+  h('memory:reveal', () => { try { if (fs.existsSync(memory.file)) shell.showItemInFolder(memory.file); else shell.openPath(app.getPath('userData')); } catch (e) { /* ignore */ } return true; });
   h('memory:add', (o) => memory.add(o));
   h('memory:edit', (id, o) => memory.edit(id, o));
   h('memory:delete', (id) => memory.delete(id));
