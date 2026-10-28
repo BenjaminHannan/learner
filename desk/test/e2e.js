@@ -50,7 +50,10 @@ async function prepare(store) {
     (req) => { const n = req.messages.filter((m) => m.role === 'user' && /use the blue one/.test(m.content)).length; checks.push(['steer injected exactly once', n === 1]); return { content: 'Switched to blue.' }; },
     // task 5: open_app(Safari) is refused
     () => ({ content: 'Opening Safari.', tool_calls: [{ name: 'open_app', arguments: { name: 'Safari' } }] }),
-    (req) => { const t = lastTool(req); checks.push(['open_app refused Safari with a browser_go hint', /browser_go/.test(t) && /do not open a web browser/i.test(t)]); return { content: 'Right, I will use the built-in browser instead.' }; }
+    (req) => { const t = lastTool(req); checks.push(['open_app refused Safari with a browser_go hint', /browser_go/.test(t) && /do not open a web browser/i.test(t)]); return { content: 'Right, I will use the built-in browser instead.' }; },
+    // task 6: Glim asks a question; once Ben answers, only the question and his answer stay
+    () => ({ content: 'Checking something.', tool_calls: [{ name: 'ask_user', arguments: { question: 'Which colour do you want?' } }] }),
+    (req) => { checks.push(['ask: the answer reached the model', /teal please/.test(lastTool(req))]); return { content: 'Teal it is.' }; }
   ], { autoVerify: true }); // verify layer: the agent's self-check turn is answered VERIFIED without using up the script
   store.saveSettings({ gatewayUrl: gw.url, mode: 'hands-off', maxSteps: 20, helperMode: 'hands-off', onboarded: true }); // first-run setup has its own section at the end
   // sleep mode: a fake `python -m sleepmode` (test/fake-sleepmode.js) in the app's own temp dir, so nothing real is touched
@@ -228,11 +231,20 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['final answer rendered prominently', await ev('/Premonition result/.test((document.querySelector(".acol > .atext")||{}).textContent||"")')]);
     checks.push(['markdown bold rendered', await ev('!!document.querySelector(".atext strong")')]);
     checks.push(['[Action: ...] lines are hidden', await ev('!/\\[Action/i.test(document.body.innerText)')]);
-    checks.push(['one activity group: "Did 4 things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did 4 things/.test(document.querySelector(".act-head").textContent) && !document.querySelector(".activity").classList.contains("open")')]);
+    checks.push(['one activity group: "Did 4 things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did 4 things/.test(document.querySelector(".act-head").textContent) && document.querySelector(".act-head").getAttribute("aria-expanded")==="true"')]);
     checks.push(['chevron sits next to the label (not far right)', await ev('(() => { const t = document.querySelector(".act-title").getBoundingClientRect(), c = document.querySelector(".act-head .chev").getBoundingClientRect(); return c.left - t.right < 160; })()')]);
     checks.push(['card kept, no longer "browsing" after the run', await ev('!!document.querySelector(".bcard") && !document.querySelector(".bcard").classList.contains("active") && /Click to open/.test(document.querySelector(".bcard").textContent)')]);
     checks.push(['one assistant avatar per block', (await ev('document.querySelectorAll(".ablock > .avatar").length')) === 1]);
+    const vis = '(() => { const b = document.querySelector(".act-body"); return !!b && getComputedStyle(b).display !== "none"; })()';
+    checks.push(['tool-use details are visible by default', await ev(vis)]);
     await ev('document.querySelector(".act-head").click()');
+    checks.push(['clicking the header collapses the details, header stays', await ev('document.body.dataset.acts==="closed" && !(' + vis + ') && document.querySelector(".act-head").getAttribute("aria-expanded")==="false" && /Did 4 things/.test(document.querySelector(".act-head").textContent)')]);
+    await sleep(300);
+    checks.push(['chevron points right when collapsed, down when expanded', await ev('getComputedStyle(document.querySelector(".act-head .chev")).transform==="none"')]);
+    checks.push(['collapse choice is remembered', await ev('localStorage.getItem("actsCollapsed")==="1"')]);
+    await ev('document.querySelector(".act-head").focus()');
+    await ev('document.querySelector(".act-head").click()');
+    checks.push(['clicking again expands it (button, so Enter/Space work)', await ev('document.body.dataset.acts==="open" && ' + vis + ' && document.querySelector(".act-head").tagName==="BUTTON" && document.querySelector(".act-head").getAttribute("aria-expanded")==="true" && localStorage.getItem("actsCollapsed")==="0"')]);
     checks.push(['expanding shows plan, narration and step pills with icons', await ev('!!document.querySelector(".plan") && document.querySelectorAll(".plan li").length===3 && document.querySelectorAll(".step .pill svg").length>=3 && !!document.querySelector(".nar")')]);
     checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);
     checks.push(['TTFT shown on the answer (hover note)', await ev('/first word in/.test((document.querySelector(".acol > .atext .ttft")||{}).textContent||"")')]);
@@ -317,6 +329,14 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await waitIdle('task5');
     checks.push(['open_app Safari: refusal visible as a failed step', await ev('document.querySelectorAll(".step.bad").length>=1')]);
 
+    // ---- task 6: Glim asks; answering removes the text box and buttons
+    await send('Pick a colour for me');
+    checks.push(['ask card shows a text box and buttons', await until(() => ev('!!document.querySelector(".card textarea") && document.querySelectorAll(".card .btns button").length===3'), 10000)]);
+    checks.push(['answer box hides its scrollbar', await ev('getComputedStyle(document.querySelector(".card textarea")).scrollbarWidth==="none"')]);
+    await ev('(()=>{const t=document.querySelector(".card textarea");t.value="teal please";t.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true}));})()');
+    await waitIdle('task6');
+    checks.push(['after answering, text box and buttons are gone; question and "You: ..." remain', await ev('(() => { const c = [...document.querySelectorAll(".card")].find((x) => /Glim asks/.test(x.textContent)); return !!c && !c.querySelector("textarea") && !c.querySelector(".btns") && !c.querySelector("button") && /Which colour/.test(c.textContent) && /You: teal please/.test(c.textContent); })()')]);
+
     // ---- persistence
     await sleep(300);
     const list = store.listThreads();
@@ -335,6 +355,10 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['first-run setup stays out of the way once onboarded', await ev('document.querySelector("#onboard").hidden')]);
     await ev('document.querySelector("#threadList li").click()');
     await sleep(600);
+    checks.push(['message box and answer boxes hide their scrollbar', await ev('getComputedStyle(document.querySelector("#input")).scrollbarWidth==="none"')]);
+    await ev('document.querySelector(".act-head").click()');
+    checks.push(['collapse applies to every tool-use group in the reopened thread', await ev('document.querySelectorAll(".activity").length>=3 && [...document.querySelectorAll(".act-body")].every((b) => getComputedStyle(b).display==="none") && [...document.querySelectorAll(".act-head")].every((h) => h.getAttribute("aria-expanded")==="false")')]);
+    await ev('document.querySelector(".act-head").click()');
     checks.push(['reopened thread restores browser card + activity groups', await ev('!!document.querySelector(".bcard .bc-thumb img") && document.querySelectorAll(".activity").length>=3')]);
 
     // ---- permissions card: rows with live status, Open Settings, a draggable app tile; flips green when macOS says yes

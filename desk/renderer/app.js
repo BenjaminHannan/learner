@@ -88,10 +88,17 @@
     blk = { root, col };
     return blk;
   }
+  // one fold state for every tool-use group (all threads, also later ones): body[data-acts] + one CSS rule, remembered across launches
+  function setActsCollapsed(collapsed) {
+    document.body.dataset.acts = Acts.attr(collapsed);
+    document.querySelectorAll('.act-head').forEach((h) => h.setAttribute('aria-expanded', String(!collapsed)));
+    try { localStorage.setItem(Acts.KEY, collapsed ? '1' : '0'); } catch (e) { /* ignore */ }
+  }
+  { let st = null; try { st = localStorage.getItem(Acts.KEY); } catch (e) { /* ignore */ } document.body.dataset.acts = Acts.attr(Acts.parse(st)); }
   function ensureAct(before) {
     if (act && !act.finished) return act;
     const b = ensureBlock();
-    const root = el('div', 'activity running open');
+    const root = el('div', 'activity running');
     const head = el('button', 'act-head');
     const ico = el('span', 'act-ico'); ico.innerHTML = svg(P.spin);
     const title = el('span', 'act-title', 'Glim is working');
@@ -102,8 +109,9 @@
     const cards = el('div', 'act-cards');
     const body = el('div', 'act-body');
     root.append(head, live, cards, body);
-    const a = { root, head, ico, title, sub, live, liveT: live.lastChild, cards, body, steps: 0, bad: 0, t0: Date.now(), userToggled: false, finished: false, lastNar: '', plan: null };
-    head.onclick = () => { a.userToggled = true; root.classList.toggle('open'); };
+    const a = { root, head, ico, title, sub, live, liveT: live.lastChild, cards, body, steps: 0, bad: 0, t0: Date.now(), finished: false, lastNar: '', plan: null };
+    head.setAttribute('aria-expanded', String(!Acts.isCollapsed(document.body.dataset.acts)));
+    head.onclick = () => setActsCollapsed(!Acts.isCollapsed(document.body.dataset.acts));
     if (before && before.parentNode === b.col) b.col.insertBefore(root, before); else b.col.append(root);
     root._act = a;
     act = a;
@@ -124,7 +132,6 @@
     a.root.classList.remove('running'); a.root.classList.add('done');
     a.ico.innerHTML = svg(P.check);
     a.live.hidden = true;
-    if (!a.userToggled) a.root.classList.remove('open');
     if (a.plan) a.plan.classList.add('done');
     a.root.querySelectorAll('.step.run').forEach((s) => { s.classList.remove('run'); s.classList.add('bad'); });
     for (const c of a.cards.querySelectorAll('.bcard.active')) c.classList.remove('active');
@@ -361,7 +368,7 @@
     const ta = el('textarea'); ta.placeholder = 'Your answer…'; ta.setAttribute('aria-label', 'Your answer');
     const btns = el('div', 'btns');
     const send = el('button', 'amber-btn', 'Reply');
-    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.disabled = true; btns.remove(); c.append(el('div', 'dim small', 'You: ' + text)); refreshMood(); };
+    const reply = (text, remote) => { if (!text || c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.id, text); c.classList.add('done'); ta.remove(); btns.remove(); c.append(el('div', 'dim small', 'You: ' + text)); refreshMood(); };
     send.onclick = () => reply(ta.value.trim());
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
     btns.append(send);
