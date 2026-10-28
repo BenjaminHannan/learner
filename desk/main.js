@@ -688,7 +688,7 @@ function createAgent({ helper, rec, voice }) {
       return r;
     };
   }
-  const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : (activeThread && activeThread.title) });
+  const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : '' }); // the main Glim has no chat title on the pill (Ben Oct 28)
   const a = new Agent({
     memory, tracking,
     getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' })
