@@ -1147,7 +1147,7 @@ function buildMenu() {
   const openSettings = () => { showWindow(); send('open-settings', true); };
   const tpl = [
     ...(mac ? [{ label: app.name, submenu: [{ role: 'about' }, { type: 'separator' }, { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }] }] : []),
-    { label: 'File', submenu: [{ label: 'New thread', accelerator: 'CmdOrCtrl+N', click: () => { showWindow(); send('new-thread', true); } }, ...(FEATURES.sleepSoon ? [] : [{ label: 'Sleep…', click: () => { showWindow(); send('sleep-open', true); } }]), ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
+    { label: 'File', submenu: [...(FEATURES.sleepSoon ? [] : [{ label: 'Sleep…', click: () => { showWindow(); send('sleep-open', true); } }]), ...(mac ? [] : [{ label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings }, { type: 'separator' }]), mac ? { role: 'close' } : { role: 'quit' }] },
     { role: 'editMenu' },
     { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
     { role: 'windowMenu' }
