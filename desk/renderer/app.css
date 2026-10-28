@@ -64,7 +64,7 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .chev { display:inline-block; width:.9rem; height:.9rem; flex:none; transition:transform .15s; color:var(--text2); }
 body:not([data-acts="closed"]) .act-head .chev, .step.open .chev { transform:rotate(90deg); }
 .act-live { padding:0 .9rem .6rem; color:var(--text2); font-size:.92rem; display:flex; align-items:center; gap:.5rem; min-width:0; }
-.act-live .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.act-live .t { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; }
 .act-live .dot { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; flex:none; }
 .act-cards { padding:0 .75rem .75rem; display:flex; flex-direction:column; gap:.6rem; }
 .act-cards:empty { display:none; }
@@ -73,6 +73,7 @@ body:not([data-acts="closed"]) .act-head .chev, .step.open .chev { transform:rot
 body[data-acts="closed"] .act-body { display:none; }
 .nar { color:var(--text2); font-size:.92rem; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:.1rem 0; min-height:1.45em; }
 .plan { border-left:3px solid var(--accent); padding:.1rem 0 .1rem .75rem; margin:.1rem 0 .3rem; }
+.activity > .plan { margin:.3rem .9rem .5rem; }
 .plan > summary { cursor:pointer; list-style:none; font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text); display:flex; align-items:center; gap:.4rem; min-height:1.6rem; }
 .plan ol { list-style:none; margin:.2rem 0 0; padding:0; counter-reset:p; }
 .plan li { display:flex; gap:.5rem; align-items:baseline; color:var(--text); font-size:.92rem; margin:.15rem 0; }
