@@ -840,7 +840,7 @@
     const ul = $('#threadList'); ul.textContent = '';
     for (const t of list.filter((x) => !main || x.id !== main.id)) {
       const row = el('li', t.id === (thread && thread.id) ? 'on' : '');
-      const title = el('span', 't', t.title); const d = el('span', 'd', ago(t.updated));
+      const title = el('span', 't', t.title === 'Call' ? t.title : 'Glim'); const d = el('span', 'd', ago(t.updated));
       const x = el('button', null, '✕'); x.title = 'Delete'; x.setAttribute('aria-label', 'Delete conversation');
       x.onclick = async (e) => { e.stopPropagation(); if (confirm('Delete "' + t.title + '"?')) { await desk.threads.remove(t.id); if (thread && thread.id === t.id) { const id = await mainThreadId(); if (id) await openThread(id); else await newThread(); } else loadThreads(); } };
       row.append(title, d, x); row.onclick = () => openThread(t.id); ul.append(row);

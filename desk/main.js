@@ -1240,7 +1240,7 @@ function registerIpc() {
     await Promise.race([toolsReady, sleep(3000)]); // the tool list must be final before the first request (prompt cache)
     if (agent.running) return { error: 'Premonition is busy in another thread.' };
     const t = store.loadThread(threadId) || store.newThread();
-    if (!t.title || t.title === 'New thread') t.title = String(text).replace(/\s+/g, ' ').trim().slice(0, 48) || 'New thread';
+    if (!t.title || t.title === 'New thread') t.title = 'Glim'; // one Glim: no chat is named after its first message
     activeThread = t;
     // Ben Oct 28: "the chat should just never get slow". The local model serves one request at a time, so a Mote mid-reply would make his message wait: stop them now, they run again once he is done.
     if (store.getSettings().benFirst !== false && helpers && helpers.active.size) helpers.pauseForSleep('Paused so your chat stays fast; runs again when you are done');
