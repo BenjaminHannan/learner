@@ -10,8 +10,9 @@ function resolvePaths(settings) {
   const diary = (settings.diaryPath || '').replace(/^~/, home) || path.join(home, 'learner-ops', 'assistant', 'diary_mcp.py');
   let py = (settings.pythonPath || '').replace(/^~/, home);
   if (!py) {
-    const venv = path.join(home, 'learner-ops', '.venv', 'bin', 'python');
-    py = fs.existsSync(venv) ? venv : 'python3';
+    const win = process.platform === 'win32';
+    const venv = win ? path.join(home, 'learner-ops', '.venv', 'Scripts', 'python.exe') : path.join(home, 'learner-ops', '.venv', 'bin', 'python');
+    py = fs.existsSync(venv) ? venv : (win ? 'python' : 'python3');
   }
   return { diary, py };
 }
@@ -34,6 +35,7 @@ class Diary {
       let p;
       try { p = spawn(py, [diary], { stdio: ['pipe', 'pipe', 'ignore'] }); } catch (e) { return reject(e); }
       this.proc = p;
+      p.stdin.on('error', () => { /* python missing or exited: the 'error'/'exit' handlers report it once */ });
       p.on('error', (e) => { this._fail(e); reject(e); });
       p.on('exit', () => { this._fail(new Error('diary process exited')); });
       p.stdout.on('data', (d) => {

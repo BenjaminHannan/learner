@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('desk', {
   onOpenSettings: on('open-settings'),
   onNewThread: on('new-thread'),
   onPermsShow: on('perms-show'),
+  runtime: { state: inv('runtime:state'), retry: inv('runtime:retry'), onState: (cb) => on('runtime:state')(cb) },
+  sleepInstall: { run: inv('sleep:install'), onProgress: on('sleep:install-progress'), onNeeded: on('sleep:needs-runtime') },
   onPermsRecheck: on('perms-recheck'),
   onBrowserShow: on('browser-show'),
   onBrowserHide: on('browser-hide'),

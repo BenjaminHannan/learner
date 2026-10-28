@@ -1,4 +1,4 @@
-# Premonition Desk: design (v2)
+# Premonition: design (v2)  (formerly "Premonition Desk")
 
 Ben's own Mac assistant app. Ideas borrowed from OpenBot (desktop chat app with threads and tool cards)
 and Meta's Muse agent (built-in browser, long autonomous multi-step tasks, acts for you), but every line
@@ -227,7 +227,7 @@ desk/package.json, desk/main.js (window, views, IPC), desk/preload.js (+ preload
 desk/src/llm.js (SSE + tool-call parsing), desk/src/prompt.js (system prompt + tool schemas),
 desk/src/helpers.js (schedules, scheduler, run slots, screen lock, notices), desk/src/tools/{browser,screen,shell,web,diary,agents}.js, desk/src/store.js, desk/renderer/{index.html,pill.html,*.css,app.js,panel.js,perms.js,md.js,guard.js,mascot.js,pill.js},
 desk/helper/deskhelper.swift, desk/build-mac.sh (npm ci, swiftc, @electron/packager darwin arm64,
-ad-hoc codesign, copy to /Applications/Premonition Desk.app), desk/test/*.test.js (node:test),
+ad-hoc codesign, copy to /Applications/Premonition.app), desk/test/*.test.js (node:test),
 desk/test/e2e.js (xvfb: fake gateway drives the real browser, panel, permissions card, pill and UI against a local page; screenshots to test/out and docs/img/ui-v2-*.png).
 
 ## Vision (when the gateway can see)
@@ -276,3 +276,11 @@ stopped), schedule, next run and the last result; `agent_stop(name_or_id)` abort
   until its run ends; others wait (abortable).
 - UI: threads drawer has an Agents section above Threads: status dot, name, schedule ("every 2h", "daily 08:00",
   "once"), next run, last result, and Run now / Pause (Resume) / Delete.
+
+
+## Windows (v2.1)
+- Same app, `process.platform` decides: `renderer/platform.js` holds every platform difference as pure functions (helper command, key mapping, hotkey default, feature gating, pill options, close behaviour, login item, model presets); it is unit-tested by passing a platform string.
+- Screen: `helper/win/DeskHelper.cs` (compiled to `deskhelper.exe` by `helper/win/build.sh`; PowerShell was dropped after a Defender false positive) speaks the same CLI/JSON as deskhelper (check, look, press, click, type, key, scroll, open-app, screenshot) with UI Automation (cached tree walk, password fields reported as `SecureEdit`, never read) and SendInput.
+- Built-in model (src/runtime, src/gateway.js): first-run download (`install.js`, `download.js` resumable + SHA256, `releases.js` picks the llama.cpp asset published on or after `LLAMA_MIN_PUBLISHED`), `llamaserver.js` (supervised, Vulkan then CPU), `builtin.js` (state machine shown as a progress sheet), `gateway.js` (OpenAI proxy + diary). Constants in `constants.js`.
+- Sleep: `src/sleepwin.js` implements the Sleep interface with the sleepmlx worker (chunks, stop model while asleep, convert adapter, restart with `--lora`, previous adapter as fallback); `src/runtime/sleepinstall.js` downloads the sleep runtime on demand.
+- Renamed from "Premonition Desk": `src/migrate.js` copies the old userData folder once; the Mac bundle id stays `com.electron.premonition desk` (set in build-mac.sh).

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; script-src 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Premonition Desk</title>
+<title>Premonition</title>
 <link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="mascot.css">
 <link rel="stylesheet" href="app.css">
@@ -18,7 +18,7 @@
   <div id="title" title="Rename thread" role="button" tabindex="0">New thread</div>
   <div class="spacer"></div>
   <div class="seg" id="modelSeg" role="group" aria-label="Model">
-    <button data-model="qwen36-auto">Auto</button><button data-model="qwen36">Think</button><button data-model="qwen36-fast">Fast</button>
+    <button data-slot="modelAuto" data-model="qwen36-auto">Auto</button><button data-slot="modelMain" data-model="qwen36">Think</button><button data-slot="modelFast" data-model="qwen36-fast">Fast</button>
   </div>
   <div class="seg mode" id="modeSeg" role="group" aria-label="Autonomy">
     <button data-mode="ask">Ask first</button><button data-mode="hands-off">Hands-off</button>
@@ -30,7 +30,7 @@
   <button id="btnSleep" class="tb-btn" title="Sleep: let Glim learn from your chats while you are away" aria-label="Sleep">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg><span>Sleep</span>
   </button>
-  <button id="btnSettings" class="icon-btn" title="Settings (Cmd+,)" aria-label="Settings">
+  <button id="btnSettings" class="icon-btn" title="Settings" aria-label="Settings">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
   </button>
 </header>
@@ -109,6 +109,28 @@
   </div>
 </div>
 
+<div id="sleepSetup" hidden role="dialog" aria-modal="true" aria-label="Set up sleep">
+  <div class="p-card sl-card">
+    <div class="sl-moon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg></div>
+    <h2>One-time download for sleep</h2>
+    <p class="p-sub" id="ssText"></p>
+    <p class="p-sub dim small">Sleep is slow on a laptop. Keep it plugged in and let it run overnight.</p>
+    <div class="rt-bar" id="ssBarWrap" hidden><i id="ssBar"></i></div>
+    <div class="p-sub small" id="ssStatus" aria-live="polite"></div>
+    <div class="sl-btns"><button id="ssCancel" class="ghost">Not now</button><button id="ssGo" class="amber-btn">Download and sleep</button></div>
+  </div>
+</div>
+
+<div id="runtime" hidden role="dialog" aria-modal="true" aria-label="Setting up the local model">
+  <div class="p-card sl-card">
+    <h2 id="rtTitle">Setting up Premonition</h2>
+    <p class="p-sub" id="rtText">The first time, Premonition downloads its own language model (about 1.2 GB). It stays on this computer and you only do this once.</p>
+    <div class="rt-bar"><i id="rtBar"></i></div>
+    <div class="p-sub small" id="rtStatus" aria-live="polite"></div>
+    <div class="sl-btns"><button id="rtRetry" class="amber-btn" hidden>Try again</button><button id="rtHide" class="ghost">Hide</button></div>
+  </div>
+</div>
+
 <div id="perms" hidden role="dialog" aria-label="Permissions"></div>
 
 <div id="onboard" hidden role="dialog" aria-modal="true" aria-label="Set up Glims"></div>
@@ -122,6 +144,7 @@
   <div class="in"><div class="sm-head"><span>What Glim saw</span><button id="screenClose" class="ghost sm">Close</button></div><img id="screenImg" alt="Latest screen capture"><pre id="screenText" class="sel"></pre></div>
 </div>
 
+<script src="platform.js"></script>
 <script src="mascot.js"></script>
 <script src="uses.js"></script>
 <script src="md.js"></script>

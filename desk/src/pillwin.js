@@ -4,6 +4,7 @@
 // except over the pill itself. Collapsed it is one line with Glim; hovering expands it into a details card.
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
+const Platform = require('../renderer/platform');
 
 const W = 420, H = 300;
 
@@ -12,14 +13,14 @@ class PillWindow {
     this.view = { visible: false };
     this.enabled = true;
     this.hideTimer = null;
+    const po = Platform.pillOptions(process.platform, W, H); // Mac: NSPanel on all Spaces. Windows: frameless 'screen-saver'-level window, no 'panel' type
     this.win = new BrowserWindow({
-      width: W, height: H, show: false, transparent: true, frame: false, hasShadow: false, resizable: false, movable: false,
-      focusable: false, skipTaskbar: true, ...(process.platform === 'darwin' ? { type: 'panel' } : {}), alwaysOnTop: true, fullscreenable: false, backgroundColor: '#00000000',
+      ...po.options,
       webPreferences: { preload: path.join(__dirname, '..', 'preload-pill.js'), contextIsolation: true, sandbox: false, nodeIntegration: false, backgroundThrottling: false }
     });
-    try { this.win.setAlwaysOnTop(true, 'screen-saver'); } catch (e) { /* platform without levels */ }
-    try { this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true }); } catch (e) { /* ignore */ }
-    try { if (process.platform === 'darwin') this.win.setHiddenInMissionControl(true); } catch (e) { /* ignore */ }
+    try { this.win.setAlwaysOnTop(true, po.level); } catch (e) { /* platform without levels */ }
+    if (po.allWorkspaces) { try { this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true }); } catch (e) { /* ignore */ } }
+    try { if (po.hideInMissionControl) this.win.setHiddenInMissionControl(true); } catch (e) { /* ignore */ }
     this.win.setIgnoreMouseEvents(true, { forward: true });
     this.position();
     this.win.loadFile(path.join(__dirname, '..', 'renderer', 'pill.html'));
@@ -31,7 +32,8 @@ class PillWindow {
     if (this.win.isDestroyed()) return;
     const d = screen.getPrimaryDisplay();
     const a = d.workArea; // starts below the menu bar on macOS
-    this.win.setBounds({ x: Math.round(a.x + (a.width - W) / 2), y: Math.round(a.y + 6), width: W, height: H });
+    const pos = Platform.pillPosition(a, W);
+    this.win.setBounds({ x: pos.x, y: pos.y, width: W, height: H });
   }
   setInteractive(on) { if (!this.win.isDestroyed()) this.win.setIgnoreMouseEvents(!on, { forward: true }); }
   // v: PillState.view(); hidden: true when the chat window is in front (the pill would be redundant)

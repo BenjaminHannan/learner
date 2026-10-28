@@ -481,6 +481,37 @@
   $('#sleepSheet').addEventListener('mousedown', (e) => { if (e.target === $('#sleepSheet')) closeSleepSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sleepSheet').hidden) { e.stopPropagation(); closeSleepSheet(); } }, true);
 
+  // ---------- built-in local model (Windows): first-run download screen ----------
+  const mb = (n) => (n / 1048576 >= 1024 ? (n / 1073741824).toFixed(2) + ' GB' : Math.round(n / 1048576) + ' MB');
+  let rtHidden = false;
+  function paintRuntime(st) {
+    const box = $('#runtime');
+    if (!st) { box.hidden = true; return; }
+    const busy = st.phase === 'downloading' || (st.phase === 'starting' && st.label !== 'Restarting the model');
+    const show = (busy || st.phase === 'error') && !rtHidden;
+    box.hidden = !show;
+    if (!show) { if (st.phase === 'ready') rtHidden = false; return; }
+    $('#rtBar').style.width = (st.phase === 'starting' ? 100 : st.pct || 0) + '%';
+    $('#rtTitle').textContent = st.phase === 'error' ? 'The local model did not start' : 'Setting up Premonition';
+    $('#rtStatus').textContent = st.phase === 'error' ? st.error : (st.label || '') + (st.total ? ' · ' + mb(st.done) + ' of ' + mb(st.total) + ' (' + (st.pct || 0) + '%)' : '');
+    $('#rtRetry').hidden = st.phase !== 'error';
+  }
+  $('#rtRetry').onclick = () => { rtHidden = false; desk.runtime.retry(); };
+  $('#rtHide').onclick = () => { rtHidden = true; $('#runtime').hidden = true; };
+  desk.runtime.onState(paintRuntime);
+  desk.runtime.state().then(paintRuntime);
+
+  // Windows sleep: the first time, explain and download the sleep runtime (Python + torch + weights), then sleep
+  desk.sleepInstall.onNeeded((plan) => { closeSleepSheet(); $('#ssText').textContent = plan.text; $('#ssBarWrap').hidden = true; $('#ssStatus').textContent = ''; $('#ssGo').disabled = false; $('#sleepSetup').hidden = false; $('#ssGo').focus(); });
+  desk.sleepInstall.onProgress((p) => { if (p.stage === 'error') { $('#ssStatus').textContent = p.label; $('#ssGo').disabled = false; return; } $('#ssBarWrap').hidden = false; $('#ssBar').style.width = (p.pct || 0) + '%'; $('#ssStatus').textContent = p.label + (p.pct ? ' (' + p.pct + '%)' : '…'); });
+  $('#ssCancel').onclick = () => { $('#sleepSetup').hidden = true; };
+  $('#ssGo').onclick = async () => {
+    $('#ssGo').disabled = true; $('#ssStatus').textContent = 'Starting…';
+    const r = await desk.sleepInstall.run();
+    if (r && r.error) { $('#ssStatus').textContent = r.error; $('#ssGo').disabled = false; return; }
+    $('#sleepSetup').hidden = true;
+  };
+
   // ---------- agent events ----------
   desk.onAgent((ev) => {
     if (!thread || ev.threadId !== thread.id) return;
@@ -526,7 +557,7 @@
   function welcome() {
     msgs.textContent = '';
     const w = el('div', 'welcome');
-    w.append(Mascot.el(mood, 96, { cls: 'follow' }), el('h2', null, GREETINGS[Math.floor(Math.random() * GREETINGS.length)]), el('p', null, 'I can browse, search, run commands and drive Mac apps. I ask before anything risky.'));
+    w.append(Mascot.el(mood, 96, { cls: 'follow' }), el('h2', null, GREETINGS[Math.floor(Math.random() * GREETINGS.length)]), el('p', null, 'I can browse, search, run commands and drive ' + Platform.osWords(info.platform).apps + ' apps. I ask before anything risky.'));
     const chips = el('div', 'chips');
     for (const t of Uses.chipsFor(settings.uses)) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
     w.append(chips); msgs.append(w);
@@ -696,7 +727,7 @@
 
   // ---------- top bar ----------
   function paintSegs() {
-    document.querySelectorAll('#modelSeg button').forEach((b) => b.classList.toggle('on', b.dataset.model === settings.model));
+    document.querySelectorAll('#modelSeg button').forEach((b) => { if (b.dataset.slot && settings[b.dataset.slot]) b.dataset.model = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.model === settings.model); });
     document.querySelectorAll('#modeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.mode === settings.mode));
   }
   function applyAppearance() {
@@ -714,14 +745,20 @@
 
   // ---------- settings ----------
   const isMac = () => document.body.classList.contains('darwin');
+  const plat = () => (info && info.platform) || (isMac() ? 'darwin' : 'linux');
+  const gate = () => Platform.settingsGating(plat());
   const SCHEMA = [
     { group: 'Model', rows: [
       { key: 'gatewayUrl', type: 'text', label: 'Gateway URL', help: 'Where the Premonition gateway listens. /chat/completions is added for you.', wide: true },
-      { key: 'model', type: 'seg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer, Fast answers quickest. Same as the top-bar pills.', options: [['qwen36-auto', 'Auto'], ['qwen36', 'Think'], ['qwen36-fast', 'Fast']] },
+      { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself on Windows. llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
+      { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer, Fast answers quickest. Same as the top-bar pills.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
+      { key: 'modelAuto', type: 'text', label: 'Auto model name', help: 'The model id sent for Auto. "default" works for llama.cpp.', ph: 'qwen36-auto' },
+      { key: 'modelMain', type: 'text', label: 'Think model name', help: 'The model id sent for Think.', ph: 'qwen36' },
+      { key: 'modelFast', type: 'text', label: 'Fast model name', help: 'The model id sent for Fast. Also used for the warm-up and the double-check.', ph: 'qwen36-fast' },
       { type: 'test', label: 'Test connection', help: 'Checks that the gateway answers and how long it takes.' }
     ] },
     { group: 'Autonomy', rows: [
-      { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and Mac clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and screen clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'helperMode', type: 'seg', label: 'Glims on a schedule', help: 'The same choice for the extra Glims that run on their own.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue (1 to 200).', min: 1, max: 200 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
@@ -748,25 +785,26 @@
       { key: 'sleepPauseGlims', type: 'toggle', label: 'Stop Glims\' scheduled runs while asleep', help: 'They wait, then catch up once after you wake Glim.' },
       { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
       { type: 'window', label: 'Night window', help: 'Auto-sleep only starts between these times.' },
+      { key: 'sleepOnlyPlugged', type: 'toggle', label: 'Only sleep when plugged in', help: 'Sleep is slow and uses a lot of power on a laptop. Keep it plugged in overnight.' },
       { key: 'sleepIdleMin', type: 'number', label: 'Idle minutes before auto-sleep', help: 'How long you have to be away first (1 to 720).', min: 1, max: 720 },
       { key: 'wakeAt', type: 'toggle', label: 'Wake at the end of the window', help: 'Only for a sleep that Glim started by itself.' }
     ] },
     { group: 'Screen control', rows: [
-      { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your Mac. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },
+      { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your computer. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },
       { type: 'perm', label: 'Mac permissions', help: 'Screen control needs Accessibility and Screen Recording for this app.' }
     ] },
     { group: 'Vision', rows: [
       { key: 'vision', type: 'toggle', label: 'Send screenshots to the model', help: 'Only turn on if the model can see images. Off keeps everything text-only and fast.', on: 'on' }
     ] },
     { group: 'Appearance', rows: [
-      { key: 'theme', type: 'seg', label: 'Theme', help: 'System follows your Mac.', options: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']] },
+      { key: 'theme', type: 'seg', label: 'Theme', help: 'System follows your computer.', options: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'textSize', type: 'seg', label: 'Text size', help: 'Small, medium or large text everywhere.', options: [['s', 'S'], ['m', 'M'], ['l', 'L']] },
       { key: 'highContrast', type: 'toggle', label: 'High contrast', help: 'Stronger text and borders everywhere.' },
       { key: 'pill', type: 'toggle', label: 'Status pill at the top of the screen', help: 'A small floating pill that shows what Glim is doing across apps. Hover it for details.' }
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
-      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: 'Closing the window hides it; your Glims keep going. Cmd+Q really quits.' },
+      { key: 'keepRunning', type: 'toggle', label: 'Keep running when the window is closed', help: () => 'Closing the window hides it; your Glims keep going. Quit for real with ' + Platform.quitHint(plat()) + '.' },
       { key: 'hotkey', type: 'hotkey', label: 'Global shortcut', help: 'Show or hide Glim from any app. Click, then press the keys. Backspace turns it off.' }
     ] }
   ];
@@ -821,12 +859,19 @@
   }
   function buildSettings() {
     const col = $('#settingsCol'); col.textContent = '';
-    for (const g of SCHEMA) {
+    const gt = gate();
+    // gated rows: Windows has no Sleep group and no Mac permissions card; say so in plain words instead
+    const groups = SCHEMA.map((g) => {
+      if (g.group === 'Sleep') return { group: g.group, rows: g.rows.filter((r) => (gt.sleepWindows ? r.key !== 'sleepApp' && r.key !== 'sleepPython' : r.key !== 'sleepOnlyPlugged')) };
+      if (g.group === 'Screen control' && !gt.showPermRow && !info.e2e) return { group: g.group, rows: g.rows.map((r) => (r.type === 'perm' ? { type: 'note', label: 'Permissions', help: gt.permsNote } : r)) };
+      return g;
+    });
+    for (const g of groups) {
       const sec = el('section', 's-group'); sec.append(el('h2', null, g.group));
       const card = el('div', 's-card');
       for (const r of g.rows) {
         const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' ? ' stack' : ''));
-        const lab = el('div', 's-lab'); lab.append(el('b', null, r.label), el('span', null, r.help));
+        const lab = el('div', 's-lab'); lab.append(el('b', null, r.label), el('span', null, typeof r.help === 'function' ? r.help() : r.help));
         const ctl = el('div', 's-ctl');
         row.append(lab, ctl);
         if (r.type === 'text' || r.type === 'number') {
@@ -839,6 +884,16 @@
           const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
           for (const [v, l] of r.options) { const b = el('button', null, l); b.dataset.v = v; b.onclick = () => { save({ [r.key]: v }).then(paintSettings); }; seg.append(b); }
           ctl.append(seg); controls[r.key] = { paint: () => seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === settings[r.key])) };
+        } else if (r.type === 'note') {
+          ctl.append(el('span', 's-note', ''));
+        } else if (r.type === 'modelseg') {
+          const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
+          const btns = r.options.map(([slot, l]) => { const b = el('button', null, l); b.dataset.slot = slot; b.onclick = () => { save({ model: settings[slot] }).then(paintSettings); }; seg.append(b); return b; });
+          ctl.append(seg); controls[r.key] = { paint: () => btns.forEach((b) => { b.dataset.v = settings[b.dataset.slot]; b.classList.toggle('on', b.dataset.v === settings.model); }) };
+        } else if (r.type === 'preset') {
+          const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', r.label);
+          const btns = Platform.presetsFor(plat()).map((pr) => { const b = el('button', null, pr.label); b.dataset.preset = pr.id; b.onclick = () => { const { id, label, builtin, ...patch } = pr; save(patch).then(paintSettings); }; seg.append(b); return b; });
+          ctl.append(seg); controls.preset = { paint: () => { const cur = Platform.presetFor(settings.gatewayUrl); btns.forEach((b) => b.classList.toggle('on', !!cur && cur.id === b.dataset.preset)); } };
         } else if (r.type === 'toggle') {
           const b = el('button', 'toggle'); b.setAttribute('role', 'switch'); b.setAttribute('aria-label', r.label);
           b.onclick = () => { const cur = b.getAttribute('aria-checked') === 'true'; save({ [r.key]: r.on ? (cur ? 'off' : r.on) : !cur }).then(paintSettings); };
@@ -876,7 +931,7 @@
           bx.append(rowb, rowc, out); ctl.append(bx);
         } else if (r.type === 'hotkey') {
           const b = el('button', 'ghost hotkey'); const note = el('span', 's-note'); b.id = 'hotkeyBtn';
-          const show = (acc) => { b.textContent = acc ? (isMac() ? acc.replace(/\bAlt\b/g, 'Option').replace(/\bCommand\b/g, 'Cmd').replace(/\bControl\b/g, 'Ctrl') : acc) : 'Off'; };
+          const show = (acc) => { b.textContent = Platform.hotkeyLabel(plat(), acc); };
           let rec = false;
           const stop = () => { rec = false; b.classList.remove('rec'); show(settings.hotkey); };
           b.onclick = () => { rec = true; b.classList.add('rec'); b.textContent = 'Press keys…'; note.textContent = ''; b.focus(); };
@@ -890,7 +945,7 @@
             const mods = [e.metaKey && 'Command', e.ctrlKey && 'Control', e.altKey && 'Alt', e.shiftKey && 'Shift'].filter(Boolean);
             const c = e.code; let k = null;
             if (/^Key[A-Z]$/.test(c)) k = c.slice(3); else if (/^Digit\d$/.test(c)) k = c.slice(5); else if (/^F\d{1,2}$/.test(c)) k = c; else if (c === 'Space') k = 'Space'; else if (/^Arrow/.test(c)) k = c.slice(5); else if (c === 'Enter') k = 'Return'; else if (c === 'Tab') k = 'Tab';
-            if (!k || (!mods.length && !/^F\d/.test(k))) { note.className = 's-note bad'; note.textContent = 'Use at least one modifier key (Option, Cmd, Ctrl).'; return; }
+            if (!k || (!mods.length && !/^F\d/.test(k))) { note.className = 's-note bad'; note.textContent = 'Use at least one modifier key (' + Platform.modifierHint(plat()) + ').'; return; }
             const acc = mods.concat(k).join('+');
             rec = false; b.classList.remove('rec');
             const res = await save({ hotkey: acc }); show(settings.hotkey);
@@ -937,6 +992,7 @@
   (async () => {
     info = await desk.info();
     document.body.classList.add(info.platform);
+    if (!gate().showSleepButton) $('#btnSleep').hidden = true; // Windows: Sleep runs on the Macs for now
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
     gw = (await desk.gateway.state()) || gw; paintGateway();
     let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }

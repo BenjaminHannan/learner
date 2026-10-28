@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premonition: a guide for Jacob</title>
+<style>
+:root{--bg:#faf6f0;--card:#fff;--ink:#241b14;--ink2:#4f4237;--faint:#6a5c4f;--line:rgba(36,27,20,.14);--amber:#c9710a;--amber-soft:#fde9c8;--ok:#2f7d4f;--warn:#b3401f}
+@media (prefers-color-scheme:dark){:root{--bg:#16120f;--card:#1f1a16;--ink:#f7f1e9;--ink2:#d2c5b6;--faint:#b9ab9b;--line:rgba(247,241,233,.16);--amber:#f5a524;--amber-soft:#3a2a14;--ok:#6fcf97;--warn:#ff8a65}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 16px 4rem}
+h1{font-size:2rem;margin:.2rem 0}h2{font-size:1.4rem;margin:0 0 .4rem}
+.lead{color:var(--ink2);font-size:1.1rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:1.1rem;padding:1.2rem 1.2rem 1.3rem;margin:1.1rem 0}
+.num{display:inline-flex;width:2rem;height:2rem;border-radius:50%;background:var(--amber);color:#fff;align-items:center;justify-content:center;font-weight:700;margin-right:.5rem}
+svg{display:block;width:100%;height:auto;margin:.8rem 0}
+.t{fill:var(--ink)}.t2{fill:var(--ink2)}.stroke{stroke:var(--ink2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.box{fill:var(--bg);stroke:var(--line);stroke-width:2}.amber{fill:var(--amber)}.soft{fill:var(--amber-soft)}
+.note{background:var(--amber-soft);border-radius:.8rem;padding:.7rem .9rem;margin:.8rem 0}
+.warn{border-left:5px solid var(--warn)}
+ul{padding-left:1.2rem}li{margin:.25rem 0}
+code,kbd{background:var(--amber-soft);border-radius:.35rem;padding:.05rem .4rem;font-size:.95em}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:.45rem .3rem;text-align:left}
+</style>
+</head>
+<body>
+<main>
+<h1>Premonition</h1>
+<p class="lead">A helper that lives on your laptop. You talk to it like a chat, and it can look things up, read pages, use your apps and keep an eye on things for you. Nothing you say leaves your computer.</p>
+
+<svg viewBox="0 0 640 200" role="img" aria-label="You, the Premonition chat, and your helpers called Glims, all inside your laptop">
+  <rect x="10" y="10" width="620" height="180" rx="22" class="box"/>
+  <text x="30" y="38" class="t2" font-size="15">Your laptop</text>
+  <circle cx="90" cy="115" r="34" class="soft"/><circle cx="90" cy="105" r="9" class="amber"/><path d="M68 140q22-30 44 0" class="stroke"/>
+  <text x="62" y="170" class="t" font-size="15">You</text>
+  <path d="M135 115h80" class="stroke"/><path d="M205 107l12 8-12 8" class="stroke"/>
+  <rect x="225" y="70" width="170" height="90" rx="16" class="box"/>
+  <rect x="240" y="85" width="100" height="16" rx="8" class="soft"/><rect x="290" y="110" width="90" height="16" rx="8" class="amber"/>
+  <text x="250" y="150" class="t" font-size="15">Premonition (chat)</text>
+  <path d="M400 115h50" class="stroke"/><path d="M440 107l12 8-12 8" class="stroke"/>
+  <g><circle cx="500" cy="85" r="20" class="amber"/><circle cx="494" cy="82" r="3" fill="#fff"/><circle cx="506" cy="82" r="3" fill="#fff"/>
+  <circle cx="560" cy="120" r="20" class="amber"/><circle cx="554" cy="117" r="3" fill="#fff"/><circle cx="566" cy="117" r="3" fill="#fff"/>
+  <circle cx="500" cy="150" r="20" class="amber"/><circle cx="494" cy="147" r="3" fill="#fff"/><circle cx="506" cy="147" r="3" fill="#fff"/></g>
+  <text x="470" y="185" class="t" font-size="15">Glims (your helpers)</text>
+</svg>
+
+<section>
+<h2>What is it?</h2>
+<p><b>Premonition</b> is the app. The assistant inside it is called <b>Glim</b>. You can also ask it to start more helpers, called <b>Glims</b>. A Glim is a little helper with one job, like "check my email every morning" or "watch this page for news". Glims keep working even when you close the window.</p>
+</section>
+
+<section>
+<h2><span class="num">1</span>Install it</h2>
+<svg viewBox="0 0 640 150" role="img" aria-label="Unzip, double-click Premonition.exe, click More info then Run anyway">
+  <rect x="15" y="25" width="180" height="100" rx="14" class="box"/><rect x="45" y="45" width="40" height="52" rx="6" class="soft"/><path d="M65 45v52" class="stroke"/><text x="30" y="118" class="t" font-size="14">Unzip the file</text>
+  <path d="M205 75h40" class="stroke"/><path d="M235 67l12 8-12 8" class="stroke"/>
+  <rect x="255" y="25" width="180" height="100" rx="14" class="box"/><circle cx="300" cy="68" r="20" class="amber"/><text x="270" y="118" class="t" font-size="14">Premonition.exe</text>
+  <path d="M445 75h40" class="stroke"/><path d="M475 67l12 8-12 8" class="stroke"/>
+  <rect x="495" y="25" width="130" height="100" rx="14" class="box"/><rect x="510" y="40" width="100" height="24" rx="6" class="soft"/><rect x="510" y="75" width="100" height="24" rx="6" class="amber"/><text x="522" y="92" fill="#fff" font-size="13">Run anyway</text>
+</svg>
+<ol>
+<li>Unzip <code>Premonition-win32-x64.zip</code> anywhere (your Documents folder is fine).</li>
+<li>Open the folder and double-click <code>Premonition.exe</code>.</li>
+<li>Windows may show a blue box, <b>"Windows protected your PC"</b>. That is normal: the app is not signed with a paid certificate. Click <b>More info</b>, then <b>Run anyway</b>.</li>
+</ol>
+</section>
+
+<section>
+<h2><span class="num">2</span>The first start downloads its brain</h2>
+<p>The first time, a progress screen appears inside the window. Premonition downloads the part that runs the language model and the model itself. It only happens once.</p>
+<table>
+<tr><th>What</th><th>Size</th></tr>
+<tr><td>The program that runs the model (uses your graphics chip if it can)</td><td>about 50 to 100 MB</td></tr>
+<tr><td>The language model (LFM3, small and quick)</td><td>about 1 GB</td></tr>
+</table>
+<svg viewBox="0 0 640 90" role="img" aria-label="A progress bar"><rect x="20" y="30" width="600" height="26" rx="13" class="box"/><rect x="20" y="30" width="360" height="26" rx="13" class="amber"/><text x="30" y="80" class="t2" font-size="14">Downloading the language model. 60%</text></svg>
+<div class="note">If your Wi-Fi drops, just open Premonition again. It carries on where it stopped. Plan on a few minutes on good Wi-Fi.</div>
+</section>
+
+<section>
+<h2><span class="num">3</span>Chatting</h2>
+<ul>
+<li>Type what you want and press Enter. Ask questions, ask it to look something up, or give it a job.</li>
+<li>The top bar has <b>Auto</b>, <b>Think</b> and <b>Fast</b>. Fast answers quickest. Think takes longer on harder questions.</li>
+<li><b>Ask first</b> means Glim checks with you before it clicks or types on your computer. <b>Hands-off</b> lets it go ahead (it still asks before anything risky). Start with Ask first.</li>
+<li>Press <kbd>Ctrl</kbd>+<kbd>Space</kbd> from any app to show or hide Premonition. Closing the window just tucks it into the tray (bottom right, near the clock). Right-click the tray icon to Quit for real.</li>
+<li>A little pill at the top of your screen shows what Glim is doing while you are in other apps.</li>
+</ul>
+<svg viewBox="0 0 640 130" role="img" aria-label="A chat bubble from you and an answer from Glim"><rect x="330" y="10" width="290" height="38" rx="19" class="soft"/><text x="350" y="35" class="t" font-size="15">What is due this week?</text><circle cx="40" cy="88" r="18" class="amber"/><rect x="70" y="68" width="330" height="40" rx="12" class="box"/><text x="85" y="93" class="t" font-size="15">Let me check. First, a quick plan...</text></svg>
+</section>
+
+<section>
+<h2>What can Glims do?</h2>
+<ul>
+<li>Search the web and read pages in the built-in browser (you can watch, and take over any time).</li>
+<li>Use other apps on the computer, like Notepad or Word, when you ask.</li>
+<li>Run on a schedule: "every morning at 8, summarize my email".</li>
+<li>Remember things about you, like your classes, so you do not repeat yourself.</li>
+</ul>
+<div class="note warn"><b>Passwords stay with you.</b> If a page needs a sign-in, Premonition opens it for you to type in yourself. Glim never sees what you type there and will never ask for a password in chat.</div>
+<p>This is a small model that runs on your own laptop. It is quick and private, but it can make mistakes. Check anything important.</p>
+</section>
+
+<section>
+<h2><span class="num">4</span>Sleep: how it learns</h2>
+<p>People learn while they sleep, and so can Glim. When you are away, Premonition can <b>sleep</b>: it stops answering, looks back over your chats, and practices what it saw there. When you wake it, Glim is a little better at your things: your classes, your words, your habits.</p>
+<svg viewBox="0 0 640 170" role="img" aria-label="Day: you chat and the diary fills. Night: sleep practices. Morning: Glim wakes up smarter.">
+  <rect x="10" y="20" width="190" height="130" rx="16" class="box"/><circle cx="50" cy="60" r="16" class="amber"/><text x="30" y="105" class="t" font-size="14">Day: you chat</text><text x="30" y="125" class="t2" font-size="13">chats saved on this laptop</text>
+  <path d="M205 85h35" class="stroke"/><path d="M230 77l12 8-12 8" class="stroke"/>
+  <rect x="225" y="20" width="190" height="130" rx="16" class="soft"/><path d="M300 45a22 22 0 1 0 22 28 17 17 0 0 1-22-28z" class="amber"/><text x="245" y="105" class="t" font-size="14">Night: sleep</text><text x="245" y="125" class="t2" font-size="13">it practices your chats</text>
+  <path d="M420 85h35" class="stroke"/><path d="M445 77l12 8-12 8" class="stroke"/>
+  <rect x="440" y="20" width="190" height="130" rx="16" class="box"/><circle cx="480" cy="60" r="16" class="amber"/><path d="M472 56l5 5 9-10" stroke="#fff" fill="none" stroke-width="3"/><text x="458" y="105" class="t" font-size="14">Morning: wake</text><text x="458" y="125" class="t2" font-size="13">Glim remembers more</text>
+</svg>
+<h3>Start it</h3>
+<ul>
+<li><b>Right now:</b> click the moon button in the top bar and choose <b>Go to sleep</b>. Press <b>Wake</b> when you are back.</li>
+<li><b>On a schedule:</b> Settings, then <b>Sleep</b>. Turn on <b>Sleep when idle at night</b>. The default window is <b>1:00 am to 6:00 am</b>; change it if you like. Premonition only sleeps when you have been away for a while.</li>
+<li><b>Only sleep when plugged in</b> is on by default. Leave it on.</li>
+</ul>
+<div class="note warn"><b>Sleep is slow on a laptop like the X1 Carbon.</b> Practicing uses the processor, not a big graphics card, so a night can take many hours and the laptop gets warm and works hard. Leave it <b>plugged in overnight</b> with the lid open or the power plan set to not sleep when plugged in.</div>
+<p><b>The first time</b> you turn sleep on, Premonition explains and asks to download its practice tools once:</p>
+<table>
+<tr><th>What</th><th>Size</th></tr>
+<tr><td>A private copy of Python</td><td>about 0.1 GB</td></tr>
+<tr><td>The learning libraries</td><td>about 1 GB</td></tr>
+<tr><td>The language model's full-size weights</td><td>about 3.4 GB</td></tr>
+</table>
+<p>So that is roughly 4.5 GB. Use Wi-Fi and plan some time. While it sleeps, the chat model is switched off to free memory, so Glim will not answer until you wake it. On wake it loads what it learned, and if that ever fails it quietly keeps the previous version.</p>
+</section>
+
+<section>
+<h2>Privacy</h2>
+<svg viewBox="0 0 640 120" role="img" aria-label="Everything stays inside the laptop; nothing goes to the cloud"><rect x="20" y="15" width="380" height="90" rx="16" class="soft"/><text x="40" y="50" class="t" font-size="16">Your chats, the model, what it learned</text><text x="40" y="78" class="t2" font-size="14">all stored on this laptop</text><path d="M430 60h120" class="stroke" stroke-dasharray="6 8"/><path d="M455 40l50 40M505 40l-50 40" stroke="var(--warn)" stroke-width="4" stroke-linecap="round"/><text x="470" y="105" class="t2" font-size="14">no cloud AI</text></svg>
+<ul>
+<li>The model runs on your laptop. Your chats are not sent to any AI company.</li>
+<li>The only internet traffic is what you ask for (searching or opening a page) and the one-time downloads.</li>
+<li>Chats, memories and the diary sleep learns from live in <code>%APPDATA%\Premonition</code> (type that into File Explorer's address bar).</li>
+</ul>
+</section>
+
+<section>
+<h2>Uninstall</h2>
+<ol>
+<li>Right-click the tray icon (bottom right) and choose <b>Quit</b>.</li>
+<li>Delete the Premonition folder you unzipped.</li>
+<li>To erase everything it saved and downloaded, also delete <code>%APPDATA%\Premonition</code> (this removes your chats and the multi-gigabyte downloads).</li>
+<li>If you turned on <b>Open at login</b>: Settings, then Apps, then Startup, and switch Premonition off (or untick it in Premonition's own Settings before you delete it).</li>
+</ol>
+</section>
+
+<section>
+<h2>If something is odd</h2>
+<ul>
+<li><b>It says Offline:</b> the model is still starting (it takes a moment after launch) or is stopped for sleep. Wait a minute, or open Settings and press <b>Test connection</b>.</li>
+<li><b>The download stops:</b> open the app again; it resumes. If it says it cannot start the model, press <b>Try again</b>.</li>
+<li><b>Slow answers:</b> small laptops are slower. Fast mode helps, and closing heavy apps frees memory.</li>
+</ul>
+</section>
+</main>
+</body>
+</html>

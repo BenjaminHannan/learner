@@ -9,8 +9,8 @@ const WARM_MODEL = 'qwen36-fast';
 const WARM_HEADER = 'X-Premonition-Warm';
 
 // Same builder as real requests; only the user text, stream flag and max_tokens differ (all after the tools/system part).
-function buildWarmBody(tools) {
-  return buildChatBody({ model: WARM_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: '.' }], tools, stream: false, maxTokens: 1 });
+function buildWarmBody(tools, model) {
+  return buildChatBody({ model: model || WARM_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: '.' }], tools, stream: false, maxTokens: 1 });
 }
 
 class Warmer {
@@ -62,8 +62,10 @@ class Warmer {
     try {
       const headers = { 'content-type': 'application/json', [WARM_HEADER]: '1' };
       if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
-      const r = await f(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(buildWarmBody(this.o.getTools())), signal: ctl.signal });
+      const r = await f(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(buildWarmBody(this.o.getTools(), s.modelFast)), signal: ctl.signal });
       try { await r.text(); } catch (e) { /* body not needed */ }
+      // A server that does not know X-Premonition-Warm just ignores it. If it refuses the request anyway (non-2xx), nothing is warm: no count.
+      if (r.ok === false) return;
       this.warmCount++;
       this.lastWarmMs = Date.now() - t0;
     } catch (e) { /* the real request will warm it the slow way */ } finally { clearTimeout(t); this.warming = false; }

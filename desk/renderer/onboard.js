@@ -28,7 +28,7 @@ window.Onboard = (() => {
   let showPermsStep = true;
   let body, nextBtn, backBtn, dots, skipBtn;
 
-  const needsPerms = () => !!(info && (info.platform === 'darwin' || info.e2e));
+  const needsPerms = () => !!(info && Platform.needsPermsStep(info.platform, info.e2e));
   const stepList = () => (showPermsStep ? [0, 1, 2, 3] : [0, 1, 2]);
   const lastStep = () => stepList()[stepList().length - 1];
 

@@ -73,7 +73,14 @@ const DANGER_PATTERNS = [
   /\bchmod\s+-R\s+0?777\b/i,
   /:\(\)\s*\{/,
   /\blaunchctl\s+(unload|remove)\b/i,
-  /\bkillall\b/i
+  /\bkillall\b/i,
+  // Windows / PowerShell twins of the above
+  /\bRemove-Item\b[^;&|]*-Recurse/i,
+  /\b(del|erase|rmdir|rd)\b[^;&|]*\s\/[sq]\b/i,
+  /\b(Format-Volume|diskpart|Clear-Disk|Stop-Computer|Restart-Computer)\b/i,
+  /\bformat\s+[a-z]:/i,
+  /\bStart-Process\b[^;&|]*-Verb\s+RunAs/i,
+  /\b(iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^;&]*\|\s*(iex|Invoke-Expression)\b/i
 ];
 // Plain-language view of the list above (shown in Settings).
 const DANGER_LABELS = [
@@ -86,7 +93,8 @@ const DANGER_LABELS = [
   'Force-pushing or hard-resetting git',
   'Opening permissions wide (chmod -R 777)',
   'Fork bombs',
-  'Removing launch agents, killing all processes (launchctl unload, killall)'
+  'Removing launch agents, killing all processes (launchctl unload, killall)',
+  'Windows: Remove-Item -Recurse, del /s, format, diskpart, Stop-Computer, running as administrator, piping a download into iex'
 ];
 function isDangerous(cmd) {
   const c = String(cmd || '');
@@ -290,7 +298,7 @@ class Agent {
           break;
         }
         step++;
-        if (estimateTokens(thread.messages) > COMPACT_TOKENS) {
+        if (estimateTokens(thread.messages) > (Number(s.compactTokens) || COMPACT_TOKENS)) {
           if (compactMessages(thread.messages, 2)) this.emit({ type: 'compacted' });
         }
         dropOldImages(thread.messages);
@@ -427,7 +435,7 @@ class Agent {
     let verdict = null;
     try {
       const r = await streamChat({
-        gatewayUrl: s.gatewayUrl, model: s.verifyModel || VERIFY_MODEL,
+        gatewayUrl: s.gatewayUrl, model: s.verifyModel || s.modelFast || VERIFY_MODEL,
         messages: [...this.requestMessages(thread), { role: 'user', content: CHECK_MESSAGE }],
         tools: this.toolDefs(), maxTokens: VERIFY_MAX_TOKENS, signal, apiKey: s.apiKey
       });
@@ -448,9 +456,10 @@ class Agent {
     const item = { t: 'step', id: stepId, tool: name, args: args || call.arguments, summary: summaryStart, ok: true, preview: '' };
     thread.items.push(item);
     this.emit({ type: 'step_start', id: stepId, tool: name, args: args || call.arguments, summary: summaryStart });
+    const MAXC = (() => { try { return Number((this.o.getSettings() || {}).maxToolChars) || MAX_TOOL_CHARS; } catch (e) { return MAX_TOOL_CHARS; } })();
     const finish = (text, ok, summary) => {
       text = String(text == null ? '' : text);
-      if (text.length > MAX_TOOL_CHARS) text = text.slice(0, MAX_TOOL_CHARS) + '\n[truncated]';
+      if (text.length > MAXC) text = text.slice(0, MAXC) + '\n[truncated]';
       item.ok = ok; item.preview = short(text, 400); if (summary) item.summary = summary;
       this.emit({ type: 'step_end', id: stepId, tool: name, ok, summary: item.summary, preview: item.preview, result: text.slice(0, 2000) });
       return text;

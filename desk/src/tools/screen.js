@@ -5,33 +5,36 @@ const path = require('path');
 const os = require('os');
 
 const { screenAfter, lookSummary } = require('./after');
+const Platform = require('../../renderer/platform');
 
 const NOT_INSTALLED = 'screen control helper not installed';
 
 // open_app is for Mac apps, never for browsing: the web goes through the built-in browser (browser_go).
-const BROWSER_APPS = /^(safari( technology preview)?|google chrome( canary)?|chrome|chromium|firefox|mozilla firefox|arc|microsoft edge|edge|brave( browser)?|opera|vivaldi|orion|duckduckgo)(\.app)?$/i;
+const BROWSER_APPS = /^(safari( technology preview)?|google chrome( canary)?|chrome|chromium|firefox|mozilla firefox|arc|microsoft edge|msedge|edge|iexplore|internet explorer|brave( browser)?|opera( gx)?|vivaldi|orion|duckduckgo)(\.app|\.exe)?$/i;
 const isBrowserApp = (name) => BROWSER_APPS.test(String(name || '').trim());
-const BROWSER_REFUSAL = 'Error: do not open a web browser app. Use browser_go (the built-in browser) for anything on the web. open_app is only for non-browser Mac apps.';
+const BROWSER_REFUSAL = 'Error: do not open a web browser app. Use browser_go (the built-in browser) for anything on the web. open_app is only for non-browser apps.';
 
-function candidates(settings, resourcesPath) {
-  const list = [];
-  if (settings && settings.helperPath) list.push(settings.helperPath);
-  if (resourcesPath) list.push(path.join(resourcesPath, 'deskhelper'));
-  list.push(path.join(__dirname, '..', '..', 'helper', 'deskhelper'));
-  list.push(path.join(__dirname, '..', '..', 'build', 'deskhelper'));
-  return list;
+function candidates(settings, resourcesPath, platform) {
+  return Platform.helperCandidates(platform || process.platform, path.join, settings, resourcesPath, path.join(__dirname, '..', '..'));
 }
 
-function findHelper(settings, resourcesPath) {
-  for (const c of candidates(settings, resourcesPath)) {
+function findHelper(settings, resourcesPath, platform) {
+  for (const c of candidates(settings, resourcesPath, platform)) {
     try { if (fs.statSync(c).isFile()) return c; } catch (e) { /* next */ }
   }
   return null;
 }
 
+// What to execute for a helper file: the Swift binary itself on a Mac, deskhelper.exe on Windows (run directly: no PowerShell).
+function helperInvocation(bin, args, platform) {
+  const h = Platform.helperCommand(platform || process.platform, bin);
+  return { cmd: h.cmd, args: h.prefix.concat(args) };
+}
+
 function callHelper(bin, args, signal) {
   return new Promise((resolve) => {
-    execFile(bin, args, { timeout: 30000, maxBuffer: 8 * 1024 * 1024, signal }, (err, stdout) => {
+    const inv = helperInvocation(bin, args);
+    execFile(inv.cmd, inv.args, { windowsHide: true, timeout: 30000, maxBuffer: 8 * 1024 * 1024, signal }, (err, stdout) => {
       let j = null;
       try { j = JSON.parse(String(stdout || '').trim()); } catch (e) { /* not json */ }
       if (j) return resolve(j);
@@ -115,7 +118,7 @@ function createScreen(getSettings, resourcesPath, onLook) {
         return withAfter(res(j, 'Clicked.'), 'click', ctx && ctx.signal);
       },
       screen_type: async (a, ctx) => withAfter(res(await run(['type', String(a.text || '')], ctx && ctx.signal), 'Typed.'), 'type', ctx && ctx.signal),
-      screen_key: async (a, ctx) => withAfter(res(await run(['key', String(a.keys || '')], ctx && ctx.signal), 'Pressed ' + a.keys + '.'), 'key', ctx && ctx.signal),
+      screen_key: async (a, ctx) => withAfter(res(await run(['key', Platform.mapKeys(process.platform, String(a.keys || ''))], ctx && ctx.signal), 'Pressed ' + a.keys + '.'), 'key', ctx && ctx.signal),
       open_app: async (a, ctx) => {
         if (isBrowserApp(a.name)) return { text: BROWSER_REFUSAL, error: true };
         const r = res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.');
@@ -126,4 +129,4 @@ function createScreen(getSettings, resourcesPath, onLook) {
   };
 }
 
-module.exports = { createScreen, findHelper, formatLook, NOT_INSTALLED, isBrowserApp, BROWSER_REFUSAL };
+module.exports = { createScreen, findHelper, helperInvocation, candidates, formatLook, NOT_INSTALLED, isBrowserApp, BROWSER_REFUSAL };

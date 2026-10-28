@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build "Premonition Desk.app" on an Apple-silicon Mac and install it to /Applications.
+# Build "Premonition.app" on an Apple-silicon Mac and install it to /Applications.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -32,18 +32,25 @@ fi
 
 echo "==> packaging"
 rm -rf build/app
-npx @electron/packager . "Premonition Desk" \
+# The bundle id MUST stay what it was when the app was called "Premonition Desk": packager derives it from the app name
+# ("com.electron." + lowercased name), and macOS ties the Accessibility / Screen Recording grants to it.
+APP_BUNDLE_ID="com.electron.premonition desk"
+npx @electron/packager . "Premonition" \
+  --app-bundle-id="$APP_BUNDLE_ID" \
   --platform=darwin --arch=arm64 --out=build/app --overwrite --icon=assets/icon.icns \
-  --ignore='^/(build|test|docs|reviews|scripts|README\.md|DESIGN\.md|build-mac\.sh)($|/)' \
+  --ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-win\.sh|build-win\.ps1)($|/)' \
   --ignore='^/helper($|/)' \
   ${EXTRA[@]+"${EXTRA[@]}"}
 
-APP="build/app/Premonition Desk-darwin-arm64/Premonition Desk.app"
+APP="build/app/Premonition-darwin-arm64/Premonition.app"
 [[ -d "$APP" ]] || { echo "Packaging produced no app at $APP." >&2; exit 1; }
 echo "==> ad-hoc codesign"
 codesign --force --deep -s - "$APP"
 
 echo "==> installing to /Applications"
-rm -rf "/Applications/Premonition Desk.app"
+rm -rf "/Applications/Premonition.app"
 cp -R "$APP" /Applications/
-echo "Done. Open it from /Applications (first launch: right-click > Open if macOS complains)."
+if [[ -d "/Applications/Premonition Desk.app" ]]; then
+  echo "NOTE: the old \"Premonition Desk.app\" is still in /Applications. It can be removed once Premonition works (not deleted automatically). Your settings and chats were copied over on first launch; the old data folder stays as a backup."
+fi
+echo "Done. Open Premonition from /Applications (first launch: right-click > Open if macOS complains)."
