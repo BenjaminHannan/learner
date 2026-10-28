@@ -6,6 +6,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { looksSecret } = require('./memory');
 
 const MODEL_NAMES = ['fast', 'main', 'auto'];
 const dayOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -16,8 +17,47 @@ const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((
 function diaryMessages(messages) {
   return (messages || []).filter((m) => m && m.role !== 'system').map((m) => ({ role: m.role, content: textOf(m.content) })).filter((m) => m.content !== '');
 }
-function diaryRecord({ ts, model, requestBody, content }) {
-  return { ts: new Date(ts).toISOString(), model, messages: diaryMessages(requestBody && requestBody.messages), response: { content: content || '' } };
+// Extra fields for sleep (added only when there is something to say, so a plain chat record keeps exactly the old four keys):
+//   tools:   the tool steps of the current turn (since Ben's newest message): [{name, args, ok, result}], args/result cut short;
+//            ok is false for an error, a refusal, a loop stop, a denial or a stop by Ben (the agent's own result wording)
+//   checks:  the app's [Self-check] notes in this turn (its verifier found the answer was not done yet)
+//   stopped: true when Ben pressed Stop (the request was aborted) and the record holds whatever came before
+// Text that looks like a password, code or key is replaced by [hidden] (the same test as the memory refusal).
+const TOOL_ARGS_MAX = 160;
+const TOOL_RESULT_MAX = 200;
+const CHECK_TAG = '[Self-check]';
+const SHOT_TAG = '[screenshot of the result above]';
+const FAILED_RESULT = /^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\./i;
+const cut = (s, n) => { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+const hideSecret = (s) => (looksSecret(s) ? '[hidden]' : s);
+const isBen = (m) => m && m.role === 'user' && !textOf(m.content).startsWith(CHECK_TAG) && !textOf(m.content).startsWith(SHOT_TAG);
+function turnSteps(messages) {
+  const ms = (messages || []).filter((m) => m && m.role !== 'system');
+  let start = -1;
+  for (let i = ms.length - 1; i >= 0; i--) if (isBen(ms[i])) { start = i; break; }
+  const tools = [], checks = [];
+  if (start < 0) return { tools, checks };
+  const results = new Map();
+  for (const m of ms.slice(start + 1)) if (m.role === 'tool' && m.tool_call_id) results.set(m.tool_call_id, textOf(m.content));
+  for (const m of ms.slice(start + 1)) {
+    if (m.role === 'user' && textOf(m.content).startsWith(CHECK_TAG)) checks.push(hideSecret(cut(textOf(m.content).slice(CHECK_TAG.length), TOOL_RESULT_MAX)));
+    if (m.role !== 'assistant' || !Array.isArray(m.tool_calls)) continue;
+    for (const c of m.tool_calls) {
+      const f = (c && c.function) || {};
+      const res = results.has(c.id) ? results.get(c.id) : '';
+      const args = typeof f.arguments === 'string' ? f.arguments : JSON.stringify(f.arguments || {});
+      tools.push({ name: String(f.name || ''), args: hideSecret(cut(args, TOOL_ARGS_MAX)), ok: !FAILED_RESULT.test(res), result: hideSecret(cut(res, TOOL_RESULT_MAX)) });
+    }
+  }
+  return { tools, checks };
+}
+function diaryRecord({ ts, model, requestBody, content, stopped }) {
+  const rec = { ts: new Date(ts).toISOString(), model, messages: diaryMessages(requestBody && requestBody.messages), response: { content: content || '' } };
+  const { tools, checks } = turnSteps(requestBody && requestBody.messages);
+  if (tools.length) rec.tools = tools;
+  if (checks.length) rec.checks = checks;
+  if (stopped) rec.stopped = true;
+  return rec;
 }
 // the upstream request body: our model alias replaced by what llama-server wants (it ignores the name; "default" is conventional)
 // LFM3 thinks by default, and on a laptop CPU that can cost 30 s+ before the answer: "fast" and "auto" turn thinking off,
@@ -110,7 +150,7 @@ function createGateway(o) {
   const f = o.fetch || fetch;
   const now = o.now || (() => Date.now());
   const logDiary = (rec) => {
-    if (!o.diaryDir || !rec.response.content || !rec.messages.length) return;
+    if (!o.diaryDir || (!rec.response.content && !rec.stopped) || !rec.messages.length) return;
     if (o.skipDiary && o.skipDiary()) return; // the sleep check-in's own turns are not something to learn from
     try { fs.mkdirSync(o.diaryDir, { recursive: true }); fs.appendFileSync(path.join(o.diaryDir, dayOf(new Date(rec.ts)) + '.jsonl'), JSON.stringify(rec) + '\n'); } catch (e) { /* the diary never breaks chat */ }
   };
@@ -118,6 +158,7 @@ function createGateway(o) {
 
   async function handle(req, res) {
     const url = (req.url || '').split('?')[0].replace(/^\/v1/, '');
+    let stoppedRun = null; // set once a chat request is under way: if Ben presses Stop, the diary still gets a record marked stopped
     try {
       if (req.method === 'GET' && (url === '/models' || url === '/health')) {
         let up = false;
@@ -132,12 +173,13 @@ function createGateway(o) {
         const warm = req.headers['x-premonition-warm'] !== undefined;
         const ts = now();
         const ctl = new AbortController();
+        stoppedRun = { ctl, warm, ts, body, sse: null };
         res.on('close', () => { if (!res.writableEnded) { try { ctl.abort(); } catch (e) { /* ignore */ } } }); // the app pressed Stop (or went away): stop the model too
         const r = await f(upstream + '/v1/chat/completions', { signal: ctl.signal, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(mapRequest(body, o.upstreamModel)) });
         const ct = r.headers.get('content-type') || 'application/json';
         res.writeHead(r.status, { 'content-type': ct, 'cache-control': 'no-cache' });
         if (body.stream && r.body) {
-          const sse = new SseText(); const dec = new TextDecoder();
+          const sse = new SseText(); const dec = new TextDecoder(); stoppedRun.sse = sse;
           const reader = r.body.getReader();
           const think = new SseThink();
           for (;;) { const { value, done } = await reader.read(); if (done) break; const out = think.push(dec.decode(value, { stream: true })); if (out) { res.write(out); sse.push(out); } }
@@ -154,6 +196,8 @@ function createGateway(o) {
       }
       res.writeHead(404, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { message: 'not found' } }));
     } catch (e) {
+      const sr = stoppedRun;
+      if (sr && sr.ctl.signal.aborted && !sr.warm) logDiary(diaryRecord({ ts: sr.ts, model: sr.body.model, requestBody: sr.body, content: sr.sse ? splitThink(sr.sse.text).content : '', stopped: true }));
       if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' });
       try { res.end(JSON.stringify({ error: { message: 'local model unavailable: ' + (e && e.message || e) } })); } catch (e2) { /* closed */ }
     }
@@ -166,4 +210,4 @@ function createGateway(o) {
   };
 }
 
-module.exports = { createGateway, splitThink, SseThink, diaryRecord, diaryMessages, mapRequest, SseText, MODEL_NAMES, dayOf };
+module.exports = { createGateway, splitThink, SseThink, diaryRecord, diaryMessages, turnSteps, mapRequest, SseText, MODEL_NAMES, dayOf };

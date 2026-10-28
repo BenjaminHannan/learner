@@ -6,6 +6,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
 def is_windows() -> bool:
@@ -28,6 +29,7 @@ class Paths:
     home: Path
     diary_dir: Path
     ops: Path
+    user_data: Optional[Path] = None   # the Desk's userData (memory.json, tracking.md); None = env SLEEPMLX_USERDATA or the app's default folder
 
     @classmethod
     def from_env(cls) -> "Paths":
@@ -38,7 +40,15 @@ class Paths:
             home_d, diary_d = ops / "sleepmlx", ops / "diary" / "raw"
         home = Path(os.path.expanduser(os.environ.get("SLEEPMLX_HOME", str(home_d))))
         diary = Path(os.path.expanduser(os.environ.get("SLEEPMLX_DIARY_DIR", str(diary_d))))
-        return cls(home, diary, ops)
+        ud = os.environ.get("SLEEPMLX_USERDATA")
+        return cls(home, diary, ops, Path(os.path.expanduser(ud)) if ud else None)
+
+    @property
+    def userdata_dir(self) -> Path:
+        if self.user_data is not None:
+            return Path(self.user_data)
+        from .lessons import default_user_data
+        return default_user_data()
 
     @property
     def state(self): return self.home / "state.json"

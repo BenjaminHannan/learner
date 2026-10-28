@@ -8,7 +8,7 @@ It is a port of the `ab_ob_b4_nb` recipe from `backbone/sleep/brain/sleepb.py` (
 run as a Sleep Mode worker (`sleepmode/workers.py` `CommandWorker`, branch `origin/claude/project-thread-sl2x88`).
 
 **Status, read this first.** Everything that touches MLX (`model.py`) or PyTorch (`torch_backend.py`) has never run: there is no
-Mac or Windows machine here. What *is* shown (50 unit tests, Linux, fake model): the diary converter, the night pipeline logic,
+Mac or Windows machine here. What *is* shown (unit tests, Linux, fake model): the diary converter, the night pipeline logic,
 budget stop and resume, the gate and its undo, the worker's output format (also checked against the real `CommandWorker` class),
 recall, status, the SHY maths in numpy. Everything else is "untested until the Mac run".
 
@@ -20,6 +20,24 @@ One night = one new diary day (days already slept are tracked in `state.json`; a
 2. **Tag** the day's facts: for each turn the model lists subject-relation-object triples (`tag_prompt`, "Sam" is now "Ben"). K2 thinks first (up to 512 tokens).
 3. **Names pass**: pairs of capitalised names in a turn that no fact links yet are asked about ("how are A and B related?"). Verifier prompts and parsers are sleepb's.
 4. **NREM cards**: per fact, the base model (adapter off) writes paraphrases and question/answer pairs in both directions; each Q&A is verified by asking the base model from the chat text alone; leaks of the gate questions, duplicates and cards that miss the names are dropped.
+4b. **Corrections, lessons, habits, notes** (`lessons.py`, new, not from sleepb; on by default, switch off with `use_lessons` / `use_habits` / `use_userdata`):
+   * *Corrections, newest wins*: when Ben corrects Glim ("no, it's X", "that's wrong", "X, not Y"), the facts in his correction get the corrected flag
+     (priority x2 or more), and an older fact about the same name that it replaces is retired (dead, in `dropped`, never re-made); its value is kept in
+     `items.json` `wrong`, and any paraphrase or question card that mentions a wrong value for that name is dropped (`dropped_wrong_claim`).
+   * *Lessons*: the day's failures (Ben corrected Glim, a tool step failed or was retried, Glim gave up, its self-check said "not done", Ben pressed Stop)
+     each get a short post-mortem by the base model (`lesson_prompt`: what Glim did, what went wrong, what to do instead, plus one question and a
+     1-4 word answer). Checked like other cards: the answer must be in the chat text (in Ben's own words for a correction), must not be a wrong value,
+     and the base model must give it back from the chat text alone. Kept lessons become one text card and one Q&A card (priority like an important,
+     corrected fact), at most `max_lessons` (8) x s per night. The wrong value Glim said is replaced by "the wrong answer" in the card text.
+     The night's lessons are in the chunk output (`lessons`), in `nights.jsonl`, and in the Windows sleep summary under **Lessons**.
+   * *Habits*: the same kind of tool job (open the same website or app, run the same command, search the web) on 3+ turns becomes a habit card;
+     the most used job of each kind also gets a question card. Built from the logged tool steps, word for word (no model writes them).
+   * *Saved notes and the Keeping track of list*: `memory.json` and `tracking.md` in the Desk's userData folder (`SLEEPMLX_USERDATA`; default the
+     app's folder) become cards (tracked items with source and until questions). Every such card carries `source` (and `until`) in `cards.jsonl`.
+     A tracked item past its until date, finished or removed, and a forgotten note, leave the training pool. Secret-looking or ignored text is left out.
+   The diary converter now also reads, per turn, the tool steps (`tools`: name, short args, ok, short result), the app's self-check notes (`checks`)
+   and `stopped`, which the Desk gateway adds to its records (it adds fields, the old ones are unchanged). The app's own "[Self-check]" and screenshot
+   messages are no longer taken as Ben's turns.
 5. **Hold-out**: about 10% of the night's new cards (Q&A only) are held out and never trained on. Each fact keeps at least 2 other cards, so the held-out question tests a *new wording* of a taught fact, and (alternating) the *reverse* direction.
 6. **Train** a LoRA in 4 cycles. Each step is 16 cards (text paraphrases, closed-book Q&A, and 50% open-book Q&A where the prompt carries BM25 notes from the diary) plus 8 generic replay sequences with a KL penalty against the base (LoRA scale 0 = base). Cards of earlier nights stay in the pool, so they are replayed. After each cycle's NREM steps comes **REM**: the current adapter writes two-step "chain" questions that combine two facts through a shared name (K2: `q_think` variant), and "gist" habit questions for facts seen on 3+ days; the base model verifies them from the chat text; kept dreams join the practice pool. Cosine learning rate, fresh AdamW per night, gradient clip 1.0.
 7. **Downscale (SHY)**: every LoRA's weight change is SVD'd, its singular values x 0.85, those under 5% of the largest zeroed (sleepb defaults).
@@ -135,7 +153,7 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 ## Simplifications (each one is a place where this differs from sleepb.py)
 
 1. **Gate**: 40 own questions + held-out recall instead of 100 ARC-Easy questions; no "consolidated items recall" rule (there are no morning probes).
-2. **No morning probes, consolidation or update detection** (`detect`, `now_prompt`, "reconsolidation" of changed facts such as a new address). Priority is days seen x (1 + important + corrected) x 2; an item is eligible after 1 day (`min_item_days`, sleepb needs 2). Facts that change are not yet handled specially: both values can end up as cards.
+2. **No morning probes, consolidation or update detection** (`detect`, `now_prompt`, "reconsolidation" of changed facts such as a new address). Priority is days seen x (1 + important + corrected) x 2; an item is eligible after 1 day (`min_item_days`, sleepb needs 2). Facts that change are handled only when Ben corrects Glim (step 4b); a plain change without a correction can still leave both values as cards. Lesson, habit and note cards are not held out, so the recall quiz does not measure them.
 3. **Held-out cards replace sleepb's probe** (sleepb's probe is also an untrained card, but one per fact and used for priority).
 4. **KL replay set**: 34 generic prompts rendered as sequences (KL on all their tokens), not base-model answers to 200 generic prompts.
 5. **No optimizer state across chunks**; the batch stream is re-seeded per step (deterministic), so a resumed night is equivalent but not bit-identical to an uninterrupted one.
@@ -143,7 +161,7 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 7. **MLX specifics**: LoRA through `linear_to_lora_layers` (all layers, 7 projection keys), logits only at target positions, right padding without a mask (causal), generation by `batch_generate` with the stop tag applied after the fact (a thinking stage runs to its cap if the close tag is not a stop token), memory caps by `mx.set_memory_limit`. SHY runs in numpy on the CPU (QR of the thin factors, as sleepb).
 8. **The recall/gate check never uses the open-book notes** (closed book only).
 9. **CPU profile**: KL replay every 4th step; 4 cards per step instead of 16; rank 8, attention only.
-10. **Practice data** (`SLEEPMODE_PRACTICE`) is accepted and ignored for now.
+10. **Practice data** (`SLEEPMODE_PRACTICE`) is accepted and ignored for now. The practice checkers on `origin/claude/project-thread-nilgf9` (`practice/grade.py`) are simple, but practice there is expert iteration with its own trainer (SFT + DPO on solved tries, multi-turn transcripts) and its pilots did not show a significant gain, so it was not wired into this night.
 11. Redaction and block stripping are heuristics (passwords, PINs and codes after their keyword, Luhn-valid card numbers, SSNs, API-key shapes, long random tokens).
 
 ## Tests
@@ -152,4 +170,6 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 Covers: device order with a mocked torch, profile choice per platform, the `lfm3_mps` profile, the missing-model download command, `recall --server` against a local HTTP stub, GGUF export on commit (and its failure), diary converter (dedupe, tool loops, blob refs, helper records, block stripping, redaction, ignore list, test-mode records, the app's simple format), week-JSON validity against sleepb's `check_week` rules,
 the full night and a second night (adapter.prev, replay of earlier cards), dry run and the too-little-data path, held-out cards never trained, budget stop and resume (no step repeated, no finished generation batch repeated),
 external stops (assistant running, PAUSE_OTHERS, memory pressure, SIGTERM-style), wake mid-training checkpoint, gate judge and undo (including the first night), the CommandWorker output format
-(including a subprocess run of `python -m sleepmlx.worker`), recall with a fake model, status, profiles and templates, Windows paths, the SHY maths.
+(including a subprocess run of `python -m sleepmlx.worker`), recall with a fake model, status, profiles and templates, Windows paths, the SHY maths;
+`test_lessons.py`: tool steps / self-checks / stops in the diary (both log formats, secrets hidden), failure kinds and correction words, lesson checks, a correction night
+(old fact retired, no positive card for the wrong value, lesson trained, `lessons` in the output), the lesson cap, habits, notes and tracking cards with source and expiry.

@@ -75,7 +75,30 @@ def gist_prompt(R, fx: str, nd: int, who: str = "Ben") -> str:
     return R.render(STUDY, u)
 
 
+REVIEW = "You review an assistant's mistakes and write short lessons."
+
+
+def lesson_prompt(R, ctx: str, what: str, who: str = "Ben") -> str:
+    """Post-mortem of one failure (lessons.py). New for the lessons stage (not from sleepb). `what` is lessons.KIND_WORDS[kind]."""
+    u = ("Part of a chat between %s and his assistant Glim. Something went wrong here: %s.\n%s\n\n"
+         "Write a short post-mortem. Reply with only JSON of the form {\"did\": \"what Glim did\", \"wrong\": \"what went wrong\", "
+         "\"instead\": \"what Glim should do next time\", \"wrong_value\": \"the wrong thing Glim said, or empty\", "
+         "\"q\": \"a question about what is right or what to do instead\", \"a\": \"its answer, 1 to 4 words copied exactly from the chat above\"}. "
+         "Each of did, wrong and instead is one short sentence. If %s corrected Glim, the answer is what %s said is right." % (who, what, ctx, who, who))
+    return R.render(REVIEW, u)
+
+
 # ---------------------------------------------------------------- parsers
+def parse_lesson(txt: str) -> Optional[dict]:
+    m = re.search(r"\{.*\}", str(txt or ""), re.S)
+    if not m:
+        return None
+    try:
+        d = json.loads(m.group(0))
+    except Exception:
+        return None
+    return d if isinstance(d, dict) else None
+
 def parse_facts(txt: str):
     m = re.search(r"\[.*\]", txt, re.S)
     if m:

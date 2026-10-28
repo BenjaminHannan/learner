@@ -19,11 +19,13 @@ import shutil
 import time
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field
+from datetime import date as _date
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
 from . import diary as diary_mod
 from . import gate as gate_mod
+from . import lessons as L_mod
 from . import prompts as P
 from .backend import Backend, Clock, Stop
 from .corpus import Diary, has_ans, norm, pat
@@ -78,6 +80,13 @@ class Config:
     gate_max_tokens: int = 24
     llama_cpp_dir: Optional[str] = None      # set: export a GGUF LoRA when a night commits (torch backend)
     gguf_base_dir: Optional[str] = None      # the HF base model dir the converter needs
+    # Extra sources (lessons.py). Not part of ab_ob_b4_nb: they only add cards to the same pool; every setting above is unchanged.
+    use_lessons: bool = True      # post-mortems of the day's failures -> lesson cards (and corrections retire the fact they replace)
+    max_lessons: int = 8          # lessons written per night (x work scale)
+    lesson_tokens: int = 200
+    use_habits: bool = True       # the same tool job on habit_min+ turns -> habit cards
+    habit_min: int = 3
+    use_userdata: bool = True     # the Desk's saved notes (memory.json) and Keeping track of list (tracking.md)
 
 
 def clip_scale(budget_s: float, t_step: float, t_gen: float, ref_steps: int, ref_gen_batches: float) -> float:
@@ -127,9 +136,14 @@ class Item:
     dead: bool = False
     trained: bool = False
     dreamed_night: int = 0
+    kind: str = "fact"            # fact (tagged from the diary) | lesson | habit | note | track (lessons.py; their cards are made, not dreamed)
+    source: str = ""              # where a non-fact item came from (kept on its cards)
+    until: str = ""               # YYYY-MM-DD: after this day the item is not trained (tracked items)
 
     @property
     def fact(self) -> str:
+        if self.kind != "fact":
+            return "%s: %s" % (self.kind, self.source or self.obj)
         return "%s %s %s." % (self.subj, self.rel, self.obj)
 
     @classmethod
@@ -226,6 +240,7 @@ class Sleeper:
         self.t_step = None
         self.exporter = None            # tests inject a fake exporter
         self.leak = {norm(q) for q, _ in gate_mod.GENERAL_QA}
+        self.today = lambda: _date.today().isoformat()   # expiry of tracked items is checked against the real date (tests pin it)
 
     # ---- persistence
     def load_items(self):
@@ -235,10 +250,12 @@ class Sleeper:
         self.rem_done = Counter(d.get("rem_done", {}))
         self.gist_done = Counter(d.get("gist_done", {}))
         self.dropped = set(d.get("dropped", []))
+        self.wrong: Dict[str, set] = {k: set(v) for k, v in (d.get("wrong") or {}).items()}   # name -> values a correction said are wrong
 
     def save_items(self):
         write_json(self.paths.items, {"items": {k: asdict(v) for k, v in self.items.items()}, "rem_pool": self.rem_pool,
-                                      "rem_done": dict(self.rem_done), "gist_done": dict(self.gist_done), "dropped": sorted(self.dropped)})
+                                      "rem_done": dict(self.rem_done), "gist_done": dict(self.gist_done), "dropped": sorted(self.dropped),
+                                      "wrong": {k: sorted(v) for k, v in self.wrong.items()}})
 
     def load_state(self):
         st = read_json(self.paths.state, {}) or {}
@@ -355,7 +372,7 @@ class Sleeper:
 
     def refresh(self, d: int) -> None:
         for it in self.items.values():
-            if it.dead:
+            if it.dead or it.kind != "fact":
                 continue
             idx = self.diary.containing(it.subj, it.obj, d)
             days = {self.diary.turns[i]["day"] for i in idx}
@@ -364,14 +381,18 @@ class Sleeper:
             it.cor = it.cor or any(COR_RE.search(self.diary.turns[i]["text"]) for i in idx)
 
     def elig(self, it: Item) -> bool:
+        if it.kind != "fact":
+            return not it.dead and (not it.until or it.until >= self.today())
         return not it.dead and (it.days >= self.cfg.min_item_days) and (it.days >= 2 or self.cfg.min_item_days <= 1 or it.imp or it.cor)
 
     def prio(self, it: Item) -> float:
+        if it.kind in ("note", "track"):
+            return 1.0   # the Desk already shows these in every turn; a long notes file must not crowd out the night's facts
         return max(it.days, 1) * (1 + it.imp + it.cor) * 2   # surprise = 1 always (no morning probes)
 
     # ---- 4. NREM cards
     def dream(self, d: int, E: List[Item], st: Counter) -> List[Item]:
-        need = [it for it in E if it.dirty or it.seen_ment < it.nment or (it.fails and not (it.para or it.qa))]
+        need = [it for it in E if it.kind == "fact" and (it.dirty or it.seen_ment < it.nment or (it.fails and not (it.para or it.qa)))]
         need.sort(key=lambda it: (-it.days, -it.nment))
         st["backlog"] = max(0, len(need) - self.cap_items)
         need = need[:self.cap_items]
@@ -391,6 +412,8 @@ class Sleeper:
                 st["paraphrases_gen"] += 1
                 if self.leaky(p):
                     st["dropped_test_leak"] += 1
+                elif self.says_wrong(it, p):
+                    st["dropped_wrong_claim"] += 1
                 elif not all(e.lower() in p.lower() for e in ents):
                     st["dropped_missing_entities"] += 1
                 else:
@@ -400,6 +423,8 @@ class Sleeper:
                 es = [e for e in ents if e.lower() in ans.lower()]
                 if self.leaky(q):
                     st["dropped_test_leak"] += 1
+                elif self.says_wrong(it, q + " " + ans):
+                    st["dropped_wrong_claim"] += 1
                 elif len(es) != 1 or es[0].lower() in q.lower():
                     st["dropped_bad_answer"] += 1
                 else:
@@ -438,6 +463,153 @@ class Sleeper:
         st["items"] = len(need)
         return done
 
+    def says_wrong(self, it: Item, text: str) -> bool:
+        """Does a card text for `it` mention a value a correction said is wrong for one of its names (newest wins)?"""
+        vals = (self.wrong.get(norm(it.subj), set()) | self.wrong.get(norm(it.obj), set())) - {norm(it.subj), norm(it.obj)}
+        n = norm(text)
+        return any(v and re.search(r"(?<!\w)" + re.escape(v) + r"(?!\w)", n) for v in vals)
+
+    # ---- corrections, lessons, habits, notes (lessons.py)
+    def turn_index(self, d: int, turn: int) -> Optional[int]:
+        for t in self.diary.turns:
+            if t["day"] == d and t.get("turn") == turn:
+                return t["i"]
+        return None
+
+    def turn_items(self, ti: int) -> List[Item]:
+        return [it for it in self.items.values() if not it.dead and it.kind == "fact" and ti in self.diary.occurs(it.subj) and ti in self.diary.occurs(it.obj)]
+
+    def corrections(self, week: dict, d: int, st: Counter) -> None:
+        """Ben corrected Glim: the facts stated in the correction get the corrected flag (higher priority), and an older fact about the
+        same name that the correction replaces is retired (dead, never re-made) and its value is remembered as wrong for that name, so no
+        positive card says it again. Replaced = same name and relation, or its value is what Glim said, or the correction says "not <it>"."""
+        for f in L_mod.find_failures(week, d):
+            if "correction" not in f["signals"]:
+                continue
+            ti = self.turn_index(d, f["turn"])
+            if ti is None:
+                continue
+            st["corrections"] += 1
+            nots = {norm(x): x for x in L_mod.not_terms(f["user"])}
+            for it in self.turn_items(ti):
+                it.cor = True
+                for o in list(self.items.values()):
+                    if o is it or o.dead or o.kind != "fact" or norm(o.subj) != norm(it.subj) or norm(o.obj) == norm(it.obj):
+                        continue
+                    if ti in self.diary.occurs(o.subj) and ti in self.diary.occurs(o.obj):
+                        continue   # stated in the correction itself
+                    said = o.obj.lower() in (f["prev_answer"] or "").lower()
+                    if norm(o.rel) == norm(it.rel) or said or norm(o.obj) in nots:
+                        o.dead = True
+                        self.dropped.add(o.key)
+                        self.wrong.setdefault(norm(it.subj), set()).add(norm(o.obj))
+                        st["superseded"] += 1
+                        self.log("[night] correction: '%s' replaces '%s'" % (it.fact, o.fact))
+                for n, x in nots.items():
+                    if n in (norm(it.subj), norm(it.obj)):
+                        continue
+                    self.wrong.setdefault(norm(it.subj), set()).add(n)
+                    for k in (key_of(it.subj, x), key_of(x, it.subj)):
+                        self.dropped.add(k)
+                        if k in self.items and not self.items[k].dead:
+                            self.items[k].dead = True
+                            st["superseded"] += 1
+
+    def wrong_for_turn(self, d: int, f: dict) -> set:
+        ti = self.turn_index(d, f["turn"])
+        out = set()
+        for it in (self.turn_items(ti) if ti is not None else []):
+            out |= self.wrong.get(norm(it.subj), set()) | self.wrong.get(norm(it.obj), set())
+        if f["kind"] == "correction":
+            out |= {norm(x) for x in L_mod.not_terms(f["user"])}
+        return out
+
+    def lessons_stage(self, week: dict, d: int, st: Counter) -> None:
+        """Post-mortems of the day's failures (at most max_lessons x s), written by the base model, checked like other cards: the answer must
+        be in the chat text (in Ben's own words for a correction), must not be a wrong value, and the base model must give it back from the
+        chat text alone. A kept lesson is one text card and one question-answer card, trained with the night's other cards."""
+        if not self.cfg.use_lessons:
+            return
+        date = self.N["date"]
+        fails = [f for f in L_mod.find_failures(week, d) if L_mod.failure_key(date, f) not in self.items]
+        st["failures"] = len(fails)
+        for f in fails:
+            st["failure_" + f["kind"]] += 1
+        fails = fails[:self.sc(self.cfg.max_lessons)]
+        if not fails:
+            return
+        ctxs = [L_mod.failure_context(f, self.who) for f in fails]
+        raw = self.gen([P.lesson_prompt(self.R, c, L_mod.KIND_WORDS[f["kind"]], self.who) for f, c in zip(fails, ctxs)], self.cfg.lesson_tokens, salt="lesson")
+        cand = []
+        for f, c, txt in zip(fails, ctxs, raw):
+            les = P.parse_lesson(txt)
+            if les is None:
+                st["lesson_parse_fail"] += 1
+                continue
+            wrong = self.wrong_for_turn(d, f)
+            why = L_mod.lesson_ok(les, f, c, wrong)
+            if why is None and self.leaky(les["q"]):
+                why = "test_leak"
+            if why:
+                st["lesson_dropped_" + why] += 1
+                continue
+            cand.append((f, c, les, wrong))
+        ver = self.gen([P.ctx_prompt(self.R, c, les["q"].strip(), self.who) for f, c, les, _ in cand], self.cfg.verify_tokens, salt="lesson_verify")
+        for (f, c, les, wrong), v in zip(cand, ver):
+            a = les["a"].strip().rstrip(".")
+            if not has_ans(a, v):
+                st["lesson_dropped_unverified"] += 1
+                continue
+            wv = " ".join(str(les.get("wrong_value") or "").split()).strip(" .")
+            bad = {x for x in wrong | ({wv} if wv else set()) if norm(x) != norm(a)}
+            text = L_mod.scrub(L_mod.lesson_text(les, f, date), bad)
+            q = L_mod.scrub(les["q"].strip(), bad)
+            key = L_mod.failure_key(date, f)
+            self.items[key] = Item(key, "Glim", a, "lesson", d, first=d, days=1, nment=1, imp=True, cor=True, para=[text], qa=[[q, a]], seen_ment=1,
+                                   dreamed_night=d, kind="lesson", source="chat %s, turn %d: %s" % (date, f["turn"] + 1, L_mod.KIND_WORDS[f["kind"]]))
+            if f["kind"] == "correction" and wv and norm(wv) != norm(a):
+                ti = self.turn_index(d, f["turn"])
+                for it in (self.turn_items(ti) if ti is not None else []):
+                    self.wrong.setdefault(norm(it.subj), set()).add(norm(wv))
+            if text not in self.N.setdefault("lessons", []):
+                self.N["lessons"].append(text)
+            st["lessons_kept"] += 1
+
+    def extras(self, week: dict, d: int, st: Counter) -> None:
+        """Habit cards from repeated tool jobs, and cards for the Desk's saved notes and Keeping track of list. These cards are built from
+        the logs and files word for word (no model writes them). Each carries its source; a tracked item past its until date, finished or
+        removed, and a forgotten note, leave the training pool."""
+        cfg, today, want = self.cfg, self.today(), {}
+        if cfg.use_habits:
+            for h in L_mod.habits(week, d, cfg.habit_min):
+                para, qa = L_mod.habit_cards(h, self.who)
+                src = "diary tool log: %d uses on %d days, %s to %s" % (h["n"], h["days"], diary_mod.date_of_day(week, h["first"]), diary_mod.date_of_day(week, h["last"]))
+                want[h["key"]] = ("habit", h["target"], para, qa, src, "", h["days"])
+        if cfg.use_userdata:
+            ignore = diary_mod.load_ignore(self.paths.ignore)
+            ud = self.paths.userdata_dir
+            for n in L_mod.read_notes(ud, ignore):
+                para, qa = L_mod.note_cards(n, self.who)
+                want["note|" + n["id"]] = ("note", n["text"][:60], para, qa, "saved note" + (", updated " + n["updated"] if n["updated"] else ""), "", 1)
+            for t in L_mod.read_tracking(ud, today, ignore):
+                para, qa = L_mod.track_cards(t, self.who)
+                want["track|" + norm(t["what"])] = ("track", t["what"][:60], para, qa, t["source"] or "Keeping track of list", t["until"], 1)
+        for key, (kind, obj, para, qa, src, until, days) in want.items():
+            it = self.items.get(key)
+            if it and not it.dead and it.para == para and it.qa == qa:
+                it.source, it.until, it.days = src, until, days
+                continue
+            self.items[key] = Item(key, self.who, obj, kind, d, first=d, days=days, nment=1, para=para, qa=qa, seen_ment=1, dreamed_night=d,
+                                   kind=kind, source=src, until=until)
+            st[kind + "_new" if not it else kind + "_changed"] += 1
+        for it in self.items.values():
+            if it.kind in ("habit", "note", "track") and not it.dead and it.key not in want:
+                it.dead = True
+                st[it.kind + "_retired"] += 1
+        st["habit"] = sum(1 for k in want if k.startswith("habit|"))
+        st["note"] = sum(1 for k in want if k.startswith("note|"))
+        st["track"] = sum(1 for k in want if k.startswith("track|"))
+
     def leaky(self, text: str) -> bool:
         n = norm(text)
         return any(l in n or (len(n) >= 10 and n in l) for l in self.leak)
@@ -465,6 +637,7 @@ class Sleeper:
 
     # ---- 7. REM
     def rem(self, E: List[Item], d: int, ci: int, st: Counter) -> None:
+        E = [it for it in E if it.kind == "fact"]   # chains and gist dreams join facts only
         by = defaultdict(list)
         for it in E:
             for x in {norm(it.subj), norm(it.obj)}:
@@ -553,6 +726,8 @@ class Sleeper:
     def cleanup(self) -> Dict[str, int]:
         st = Counter()
         for it in list(self.items.values()):
+            if it.kind != "fact":
+                continue
             if not it.dead and it.nment == 0 and it.days == 0 and it.born > 0:   # its turns are gone from the diary (ignored, or removed)
                 it.dead = True
                 st["dropped_unseen"] += 1
@@ -563,7 +738,7 @@ class Sleeper:
                 st["dropped_failed"] += 1
         groups = defaultdict(list)
         for it in self.items.values():
-            if not it.dead:
+            if not it.dead and it.kind == "fact":
                 groups[frozenset(it.key.split("|"))].append(it)
         for g in groups.values():
             if len(g) > 1:
@@ -709,6 +884,8 @@ class Sleeper:
             self.tag(d, st)
             self.names_pass(d, st)
             self.refresh(d)
+            if cfg.use_lessons:
+                self.corrections(week, d, st)
             st_all["tagging"] = dict(st)
             self.log("[night] tagging %s" % st_all["tagging"])
             E = [it for it in self.items.values() if self.elig(it)]
@@ -718,6 +895,11 @@ class Sleeper:
                 self.split_holdout(fresh, d, st)
                 N["holdout_done"] = True
             st_all["dream"] = dict(st)
+            st = Counter()
+            self.lessons_stage(week, d, st)
+            self.extras(week, d, st)
+            st_all["lessons"] = dict(st)
+            self.log("[night] lessons and habits %s" % st_all["lessons"])
             st_all["cleanup"] = self.cleanup()
             self.log("[night] dream %s" % st_all["dream"])
             E = [it for it in self.items.values() if self.elig(it)]
@@ -727,7 +909,7 @@ class Sleeper:
             self.write_cards()
             if dry_run or ncards < cfg.min_cards:
                 why = "dry run requested" if dry_run else "only %d trainable cards (need %d): cards written, no training tonight; the day stays unslept" % (ncards, cfg.min_cards)
-                res.update(status="dry_run", dry_run=True, message=why, cards=ncards, quiz=None, harm=None)
+                res.update(status="dry_run", dry_run=True, message=why, cards=ncards, quiz=None, harm=None, lessons=list(N.get("lessons", [])))
                 self.append_night(res, extra={"dry_run_reason": why, "stats": st_all})
                 if not dry_run:
                     self.state.setdefault("small", {})[N["date"]] = sum(1 for t in self.diary.turns if t["day"] == d)
@@ -768,7 +950,7 @@ class Sleeper:
                 write_json(self.paths.gate_base, {"flags": flags, "score": gate_mod.pct(flags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n})
             self.save_night()
         if "total_steps" not in N:
-            n_act = sum(1 for it in E if it.para or it.qa)
+            n_act = sum(1 for it in E if (it.para or it.qa) and it.kind == "fact")   # night length planned from facts only, as before; extra cards share the steps
             ref_n = min(300, 40 + 4 * n_act)
             N["ref_steps"] = ref_n
             N["total_steps"] = self.sc(ref_n)
@@ -869,8 +1051,9 @@ class Sleeper:
         self.write_cards()
         res.update(status="done", quiz=quiz, harm=j["harm"], general=j["general"], general_base=j["general_base"], reverted=reverted,
                    revert_reason=reasons, recall_pre=(N.get("pre") or {}).get("recall"), held_out=post["n"], recall_by_dir=post["by_dir"],
-                   steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""))
-        self.append_night(res, extra={"stats": N["stats"], "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
+                   steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""),
+                   lessons=list(N.get("lessons", [])))
+        self.append_night(res, extra={"stats": N["stats"], "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"], "lessons": res["lessons"],
                                       "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")})
         N["phase"] = "done"
         shutil.rmtree(str(P_.work), ignore_errors=True)
@@ -886,6 +1069,13 @@ class Sleeper:
             if it.dead:
                 continue
             status = "trained" if it.trained else "pending"
+            if it.kind != "fact":
+                extra = {"source": it.source, "until": it.until or None}
+                for p in it.para:
+                    rows.append(dict({"item": it.fact, "kind": it.kind, "text": p, "night": it.dreamed_night, "status": status}, **extra))
+                for q, a in it.qa:
+                    rows.append(dict({"item": it.fact, "kind": it.kind + "_qa", "q": q, "a": a, "night": it.dreamed_night, "status": status}, **extra))
+                continue
             for p in it.para:
                 rows.append({"item": it.fact, "kind": "paraphrase", "text": p, "night": it.dreamed_night, "status": status})
             for q, a in it.qa:
