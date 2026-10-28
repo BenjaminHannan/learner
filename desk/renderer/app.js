@@ -481,7 +481,7 @@
   function setRunning(r) {
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
-    { const nb = $('#btnNewChat'); if (nb) { nb.disabled = !!r; nb.title = r ? 'New chat (wait until Glim stops working)' : 'New chat (Cmd+N). Your notes and memory carry over.'; } }
+    { const nb = $('#btnNewChat'); if (nb) nb.title = r ? 'Stop what Glim is doing and start a new chat (Cmd+N)' : 'Start a new chat (Cmd+N). Your notes and memory carry over.'; }
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
@@ -800,6 +800,8 @@
     BrowserPanel.threadChanged();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
   }
+  // New chat button / Cmd+N: a run in progress is stopped first, so the button always works (Ben Oct 28)
+  async function freshChat() { if (running) { try { await desk.agent.stop(thread && thread.id); } catch (e) { /* already over */ } } return newThread(); }
   async function newThread() {
     const t = await desk.threads.create();
     try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
@@ -898,14 +900,14 @@
   if (window.Side) Side.init(desk, (text) => { input.value = text; autosize(); input.focus(); input.setSelectionRange(text.length, text.length); });
   desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
-  desk.onNewThread(() => newThread());
+  desk.onNewThread(() => freshChat());
   desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); });
   function openDrawer() { document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); loadThreads(); desk.helpers.list().then(paintAgents); }
   function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
   $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
   $('#drawerShade').onclick = closeDrawer;
   $('#newThread').onclick = newThread;
-  $('#btnNewChat').onclick = () => { if (!running) newThread(); };
+  $('#btnNewChat').onclick = freshChat;
 
   // links in answers open in the browser panel
   msgs.addEventListener('click', (e) => {
