@@ -530,7 +530,9 @@ function placeView(rec) {
   rec.view.setBounds(r);
   if (top !== rec.onTop) {
     rec.onTop = top;
-    try { win.contentView.addChildView(rec.view, top ? undefined : 0); } catch (e) { /* ignore */ }
+    // Ben Oct 28 "I can't see the browser": addChildView(view, undefined) did NOT raise the view on macOS (Electron 33; diag said
+    // topIsView=false), so the page stayed under the opaque UI. Re-adding with no index is what moves a child to the top.
+    try { if (top) win.contentView.addChildView(rec.view); else win.contentView.addChildView(rec.view, 0); } catch (e) { /* ignore */ }
     if (top) { try { rec.view.setVisible(true); rec.view.webContents.invalidate(); } catch (e) { /* ignore */ } } // Ben Oct 28: a page that loaded while the view was hidden (e.g. right after a restart) stayed blank until repainted
     if (top) diagView(rec, r);
   }
