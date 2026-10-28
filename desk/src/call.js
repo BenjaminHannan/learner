@@ -1,6 +1,6 @@
 'use strict';
-// "Call Glim": hands-free speech to speech. A Call owns one `deskhelper call` child process (Mac): it hears you (on-device
-// speech recognition), we run the text through ask() (the normal agent), cut the streamed answer into sentences and send each
+// "Call Glim": hands-free speech to speech. A Call owns one `deskhelper call` child process (Mac): it hears you (speech to text runs on this Mac,
+// src/stt.js), we run the text through ask() (the normal agent), cut the streamed answer into sentences and send each
 // one to the helper to speak, so speech starts after the first sentence. Talking over Glim stops it (barge-in).
 // Pure Node, no Electron: spawn/ask/onEvent are injected so the tests can drive it with a fake helper.
 const MIN_SENTENCE = 20, MAX_SENTENCE = 220;
@@ -70,8 +70,7 @@ class Chunker {
 }
 
 const MESSAGES = {
-  'mic-denied': 'Glim needs the Microphone. Open System Settings > Privacy & Security > Microphone and switch Premonition on, then call again.',
-  'speech-denied': 'Glim needs Speech Recognition. Open System Settings > Privacy & Security > Speech Recognition and switch Premonition on, then call again.'
+  'mic-denied': 'Glim needs the Microphone. Open System Settings > Privacy & Security > Microphone and switch Premonition on, then call again.'
 };
 
 class Call {

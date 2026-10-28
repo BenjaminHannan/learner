@@ -1,12 +1,11 @@
 'use strict';
-// Dictation: speech to text for the chat box (Mac). A Dictation owns one `deskhelper dictate` child process (plain mic input, on-device
-// speech recognition, no speaking, no barge-in) and forwards its partial / final text. It also ends itself after SILENCE_MS without
+// Dictation: speech to text for the chat box (Mac). A Dictation owns one `deskhelper dictate` child process (plain mic input, local
+// speech to text, no speaking, no barge-in) and forwards its partial / final text. It also ends itself after SILENCE_MS without
 // speech or MAX_MS in total. Pure Node, no Electron: spawn/onEvent are injected so the tests can drive it with a fake helper.
 const SILENCE_MS = 8000, MAX_MS = 120000, VOICE_LEVEL = 0.12;
 
 const MESSAGES = {
-  'mic-denied': 'Dictation needs the Microphone. Open System Settings > Privacy & Security > Microphone and switch Premonition on, then try again.',
-  'speech-denied': 'Dictation needs Speech Recognition. Open System Settings > Privacy & Security > Speech Recognition and switch Premonition on, then try again.'
+  'mic-denied': 'Dictation needs the Microphone. Open System Settings > Privacy & Security > Microphone and switch Premonition on, then try again.'
 };
 
 class Dictation {
@@ -75,7 +74,7 @@ class Dictation {
     clearTimeout(this.silenceT); clearTimeout(this.maxT);
     if (!this.child) return this._end();
     this.send({ stop: true });
-    this.killT = this.timer(() => this._end(), 1500); // the helper did not exit by itself
+    this.killT = this.timer(() => this._end(), 20000); // the helper did not exit by itself (its last words go through the speech model first)
   }
   fail(message, kind) {
     if (this.state === 'ended') return;

@@ -773,7 +773,7 @@ function buildAgent() {
 const VOICE_PREFIX = '[voice call] Answer out loud: one to three short spoken sentences, no lists, no markdown, no emoji. ';
 // the date and time in plain words, so "what time is it" is answered from this turn and not guessed (rides in the user message, never the system prompt)
 const nowWords = (d) => 'It is now ' + d.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + '. ';
-let call = null, callThread = null;
+let call = null, callThread = null, calling = false, dictStarting = false;
 let callTurn = null; // {threadId, onEvent(ev)} while a spoken turn runs on the call's own agent
 let callAgent = null; // separate from the main agent, so a call works while a task runs
 async function callAsk(text, { onDelta, signal }) {
@@ -799,17 +799,28 @@ async function callAsk(text, { onDelta, signal }) {
   send('agent', { threadId: t.id, type: 'user', text });
   try { await callAgent.run(t, VOICE_PREFIX + nowWords(new Date()) + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
 }
-function startCall() {
+// Local speech to text (src/stt.js): one LFM3-Audio server for the whole app, started on the first call / dictation.
+let sttSrv = null;
+const getStt = () => sttSrv || (sttSrv = new (require('./src/stt').Stt)({ resourcesPath: process.resourcesPath, devRoot: __dirname, managedPython: () => { try { return sleepInstaller && sleepInstaller.pythonExe(); } catch (e) { return null; } } }));
+async function sttUrl() {
+  try { const u = await getStt().ensure(); getStt().warm(); return { url: u }; } catch (e) { return { error: String((e && e.message) || e) }; }
+}
+async function startCall() {
   if (!FEATURES.call) return { error: 'Calling is coming to Windows soon.' };
-  if (call) return { error: 'You are already on a call.' };
-  if (dictation) return { error: 'Stop dictation first, then call.' };
+  if (call || calling) return { error: 'You are already on a call.' };
+  if (dictation || dictStarting) return { error: 'Stop dictation first, then call.' };
   if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first, then call.' };
   const bin = screen.findHelper();
   if (!bin) return { error: 'Calling needs the Glim helper, which is not installed in this build.' };
+  calling = true;
+  const stt = await sttUrl();
+  calling = false;
+  if (stt.error) return { error: stt.error };
+  if (call || dictation) return { error: 'You are already on a call.' };
   callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
   const c = new Call({
     helper: bin,
-    spawn: (cmd, args) => require('child_process').spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+    spawn: (cmd, args) => require('child_process').spawn(cmd, [...args, '--stt', stt.url], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
     ask: callAsk,
     onEvent: (ev) => {
       send('call', ev);
@@ -824,15 +835,20 @@ function startCall() {
 // ---- Dictation (speech to text in the chat box, Mac) -----------------------------------------------------------------
 // One `deskhelper dictate` process; its partial / final text goes to the renderer on the 'dictate' channel. Never together with a call.
 let dictation = null;
-function startDictate() {
+async function startDictate() {
   if (!FEATURES.dictate) return { error: 'Dictation is coming to Windows soon.' };
-  if (call) return { error: 'End the call before dictating.' };
-  if (dictation) return { error: 'Dictation is already on.' };
+  if (call || calling) return { error: 'End the call before dictating.' };
+  if (dictation || dictStarting) return { error: 'Dictation is already on.' };
   const bin = screen.findHelper();
   if (!bin) return { error: 'Dictation needs the Glim helper, which is not installed in this build.' };
+  dictStarting = true;
+  const stt = await sttUrl();
+  dictStarting = false;
+  if (stt.error) return { error: stt.error };
+  if (call || dictation) return { error: 'Dictation is already on.' };
   const d = new Dictation({
     helper: bin,
-    spawn: (cmd, args) => require('child_process').spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+    spawn: (cmd, args) => require('child_process').spawn(cmd, [...args, '--stt', stt.url], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
     onEvent: (ev) => { send('dictate', ev); if (ev.type === 'state' && ev.state === 'ended' && dictation === d) dictation = null; }
   });
   dictation = d;
@@ -1135,7 +1151,7 @@ function registerIpc() {
     return screen.askPermissions();
   });
   h('system:open', (pane) => {
-    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone', speech: 'x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition' };
+    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone' };
     if (urls[pane]) { try { shell.openExternal(urls[pane]); } catch (e) { /* not on a Mac */ } }
     return true;
   });
@@ -1218,7 +1234,7 @@ const gotLock = E2E || app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
-app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
+app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { sttSrv && sttSrv.stop(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {

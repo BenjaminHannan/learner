@@ -76,7 +76,7 @@
           finish();
         } break;
         case 'error': {
-          const pane = ev.kind === 'mic-denied' ? 'microphone' : ev.kind === 'speech-denied' ? 'speech' : '';
+          const pane = ev.kind === 'mic-denied' ? 'microphone' : '';
           showNote(ev.message, pane);
           finish(); break;
         }
