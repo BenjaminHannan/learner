@@ -538,12 +538,16 @@ function pushBState(key) { const s = bstate(key); if (s) send('browser-state', s
 
 function makeBrowser(key, label, opts) {
   let rec = browsers.get(key);
+  if (rec && rec.br.wc.isDestroyed()) { dropBrowser(key); rec = null; } // the page closed itself: start a fresh one
   if (rec) { rec.used = Date.now(); return rec; }
   const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
   const br = new Browser({ view, session, onState: () => pushBState(key) });
   br.shouldFocus = () => !(ui && !ui.webContents.isDestroyed() && ui.webContents.isFocused()) || (panel.open && panel.key === key);
   rec = { key, label, view, br, helper: !!(opts && opts.helper), onTop: false, active: false, used: Date.now() };
   browsers.set(key, rec);
+  const made = rec;
+  // a page that closes its own window (window.close) destroys the view: forget it so the next use makes a new one
+  br.wc.once('destroyed', () => setImmediate(() => { if (browsers.get(key) === made) dropBrowser(key); }));
   try { rec.br.wc.setBackgroundThrottling(false); } catch (e) { /* ignore */ }
   if (win && !win.isDestroyed()) { win.contentView.addChildView(view, 0); placeView(rec); }
   // keep a handful of idle thread browsers; the oldest idle one goes first
@@ -623,7 +627,7 @@ function createAgent({ helper, rec, voice }) {
     live.busy = true;
     try {
       const cur = browsers.get(bk());
-      if (!cur) return;
+      if (!cur || cur.br.wc.isDestroyed()) return;
       const s = cur.br.state();
       it.url = s.url; it.title = s.title; it.favicon = s.favicon;
       const t = await cur.br.thumb(360);

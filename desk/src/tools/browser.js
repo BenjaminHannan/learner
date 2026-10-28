@@ -162,6 +162,15 @@ function wireSession(ses) {
   ses.webRequest.onErrorOccurred(done);
 }
 
+// a sign-in provider's popup (it needs window.opener to hand the sign-in back to the page that opened it)
+const AUTH_HOSTS = ['accounts.google.com', 'appleid.apple.com', 'login.microsoftonline.com', 'login.live.com', 'github.com'];
+function isAuthPopup(url) {
+  let u; try { u = new URL(url); } catch (e) { return false; }
+  if (u.protocol !== 'https:') return false;
+  if (u.hostname === 'github.com') return u.pathname.startsWith('/login');
+  return AUTH_HOSTS.includes(u.hostname);
+}
+
 // One Browser per agent (one per thread). Its view is attached to the main window (main.js stacks it under the UI, or above it
 // while the browser panel shows it). All share the persist:desk partition (shared sign-ins).
 class Browser {
@@ -175,9 +184,17 @@ class Browser {
     this.wc = view.webContents;
     this.favicon = '';
     wireSession(session.fromPartition('persist:desk'));
-    registry.set(this.wc.id, this);
+    this.id = this.wc.id; // kept: a destroyed webContents can no longer be asked
+    registry.set(this.id, this);
     const wc = this.wc;
-    wc.setWindowOpenHandler(({ url }) => { setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); }); return { action: 'deny' }; });
+    // Sign-in popups (Google / Apple "Continue with ...") get a real small window that keeps its opener: the page signs in by
+    // messaging the opener and then closes itself. Loaded in place (below) it had no opener, and its window.close() destroyed
+    // this browser (Ben Oct 28: "the browser isn't opening now"). Any other popup still opens in place.
+    wc.setWindowOpenHandler(({ url }) => {
+      if (isAuthPopup(url)) return { action: 'allow', overrideBrowserWindowOptions: { width: 520, height: 680, title: 'Sign in', autoHideMenuBar: true, backgroundColor: '#ffffff' } };
+      setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); });
+      return { action: 'deny' };
+    });
     const push = () => { if (!wc.isDestroyed()) this.onState(this.state()); };
     for (const ev of ['did-navigate', 'did-navigate-in-page', 'did-start-loading', 'did-stop-loading', 'page-title-updated']) wc.on(ev, push);
     wc.on('did-start-navigation', (e, url, inPlace, main) => { if (main && !inPlace) this.favicon = ''; });
@@ -189,12 +206,13 @@ class Browser {
 
   state() {
     const wc = this.wc;
+    if (wc.isDestroyed()) return { url: '', title: '', favicon: '', loading: false, canGoBack: false, canGoForward: false, gone: true };
     const h = wc.navigationHistory;
     return { url: wc.getURL(), title: wc.getTitle(), favicon: this.favicon, loading: wc.isLoading(), canGoBack: h ? h.canGoBack() : wc.canGoBack(), canGoForward: h ? h.canGoForward() : wc.canGoForward() };
   }
 
   destroy() {
-    registry.delete(this.wc.id);
+    registry.delete(this.id);
     try { if (!this.wc.isDestroyed()) this.wc.close(); } catch (e) { /* ignore */ }
   }
 
@@ -378,4 +396,4 @@ class Browser {
   }
 }
 
-module.exports = { Browser, SNAPSHOT_MAX, PAGE_CHARS, pageSnapshot, pageReadText };
+module.exports = { Browser, isAuthPopup, SNAPSHOT_MAX, PAGE_CHARS, pageSnapshot, pageReadText };
