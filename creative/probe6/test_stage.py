@@ -34,7 +34,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--p5", required=True); ap.add_argument("--choice", required=True)
     ap.add_argument("--judge", required=True); ap.add_argument("--haiku", required=True)
-    ap.add_argument("--tasks", default=None); ap.add_argument("--out", required=True)
+    ap.add_argument("--tasks", default=None); ap.add_argument("--tries", default=None, help="decompressed tries/results.jsonl (the repo copy is .gz)"); ap.add_argument("--out", required=True)
     ap.add_argument("--skip-commit-check", action="store_true")
     a = ap.parse_args()
     if not a.skip_commit_check:
@@ -44,7 +44,7 @@ def main():
     import analyze_e2e as E
     P, an = E.P, E.an
     choice = json.load(open(a.choice))
-    alltasks, tasks, rows = E.load_inputs(a.tasks or P.TASKS_NEW, os.path.join(a.p5, "tries", "results.jsonl"))
+    alltasks, tasks, rows = E.load_inputs(a.tasks or P.TASKS_NEW, a.tries or os.path.join(a.p5, "tries", "results.jsonl"))
     rate, states = E.gate(alltasks, rows)
     if rate < 0.99:
         sys.exit(f"replay gate failed ({100 * rate:.2f}% < 99%)")
