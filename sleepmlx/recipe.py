@@ -1053,6 +1053,17 @@ class Sleeper:
             self.save_night()
         E = [it for it in self.items.values() if self.elig(it)]
         # ---- training
+        # Oct 28: a night with nothing held out can never pass the morning gate (it needs >= 1 held-out card), so training it is wasted time;
+        # a resumed night skipped the min_cards check above and trained on 7 note cards. Skip it the same way: no training, the day stays unslept.
+        if N["phase"] == "train" and not dry_run and not any(h["night"] == d for it in self.items.values() for h in it.held):
+            why = "no held-out cards to check what was learned: no training tonight; the day stays unslept"
+            res.update(status="dry_run", dry_run=True, message=why, cards=st_all.get("trainable_cards"), quiz=None, harm=None, lessons=list(N.get("lessons", [])))
+            self.append_night(res, extra={"dry_run_reason": why, "stats": st_all})
+            self.state.setdefault("small", {})[N["date"]] = sum(1 for t in self.diary.turns if t["day"] == d)
+            write_json(self.paths.state, self.state)
+            shutil.rmtree(str(self.paths.work), ignore_errors=True)
+            N["phase"] = "done"
+            return
         if N["phase"] == "train":
             self._train(week, d, E, res)
         if N["phase"] == "downscale":

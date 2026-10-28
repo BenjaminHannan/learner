@@ -245,3 +245,44 @@ test("poll(): check-in entries read 'Sender: Subject' (no time stamp, address or
   assert.deepStrictEqual(sl.poll().map((e) => e.line), ['Facebook: You have 35 notifications about Parker and others', "IFTTT: We're IFTTT.ai", 'Event soon: Piano, 18:30']);
   assert.deepStrictEqual(sl.poll(), []);
 });
+
+test('sleepNow: tells what Glim is doing in its sleep, from the trainer log and events', () => {
+  const { sleepNow } = require('../src/sleep');
+  const since = new Date(2026, 9, 28, 15, 6, 31).getTime();
+  const log = [
+    '2026-10-28 02:07:41 [night 1] day 2026-10-27 scale 0.40',   // an older sleep: ignored
+    '2026-10-28 15:07:10 [night 1] day 2026-10-28 scale 0.43',
+    "2026-10-28 15:07:15 [night] tagging {'tag_empty': 4, 'kept': 3, 'extracted': 5}",
+    "2026-10-28 15:07:20 [night] dream {'backlog': 0, 'items': 6, 'held_out': 1}",
+    '2026-10-28 15:07:30 [night] step 4/19 ce 2.2 8.6s',
+    '2026-10-28 15:07:40 [night] step 8/19 ce 2.0 8.6s',
+    'not a log line'
+  ].join('\n');
+  const ev = [{ ts: '2026-10-28T15:07:02', kind: 'checkin', counts: { mail: 8, calendar: 0 } }];
+  let r = sleepNow({ log, events: ev, since });
+  assert.equal(r.now, "Learning from today's chats (step 8 of 19)");
+  assert.deepEqual(r.recent.map((x) => x.line), ['Checked your mail (8 emails)', "Reading today's chats", "Picked out 3 facts from today's chats", 'Made 6 practice cards', "Learning from today's chats (step 8 of 19)"]);
+  r = sleepNow({ log: log + '\n2026-10-28 15:07:50 [night] step 19/19 ce 1.9 8s', events: ev, since });
+  assert.equal(r.now, 'Checking what it learned (quiz)');
+  ev.push({ ts: '2026-10-28T15:07:54', kind: 'chunk_done', info: { status: 'done', reverted: true, revert_reason: ['no held-out cards to check what was learned'] } });
+  assert.equal(sleepNow({ log, events: ev, since }).now, 'Done for tonight: kept nothing (no quiz cards to check it with)');
+  assert.equal(sleepNow({ log: '', events: [], since }).now, 'Learning from your chats');
+  assert.equal(sleepNow({ log, events: [], since: null }).now, 'Learning from your chats');   // no start time: last night's lines are not shown
+  const late = [{ ts: '2026-10-28T15:08:00', kind: 'checkin', counts: { mail: 2 } }];
+  assert.equal(sleepNow({ log, events: late, since, nowMs: Date.parse('2026-10-28T15:08:30') }).now, 'Checked your mail (2 emails)');
+  assert.equal(sleepNow({ log, events: late, since, nowMs: Date.parse('2026-10-28T15:20:00') }).now, "Learning from today's chats (step 8 of 19)");
+  assert.equal(sleepNow({ log: '', events: [{ ts: '2026-10-28T15:08:00', kind: 'chunk_done', info: { error: 'RuntimeError: MPS backend out of memory' } }], since }).now, 'Stopped: ran out of memory');
+  assert.equal(sleepNow({ log: '', events: [{ ts: '2026-10-28T15:08:00', kind: 'chunk_done', steps: 100 }], since }).now, 'Learning from your chats');
+});
+
+test('Sleep.liveNow reads the real files next to the sleep home', () => {
+  const { Sleep } = require('../src/sleep');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'live-'));
+  const home = path.join(root, 'sleepmode'); fs.mkdirSync(home); fs.mkdirSync(path.join(root, 'sleepmlx'));
+  fs.writeFileSync(path.join(root, 'sleepmlx', 'sleepmlx.log'), '2026-10-28 15:07:30 [night] step 4/19 ce 2.2 8.6s\n');
+  fs.writeFileSync(path.join(home, 'events.jsonl'), '{"ts":"2026-10-28T15:07:02","kind":"checkin","counts":{"mail":1}}\n');
+  const s = new Sleep({ home });
+  const r = s.liveNow({ since: new Date(2026, 9, 28, 15, 6, 0).getTime() });
+  assert.equal(r.now, "Learning from today's chats (step 4 of 19)");
+  assert.equal(r.recent[0].line, 'Checked your mail (1 email)');
+});

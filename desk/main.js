@@ -141,11 +141,11 @@ setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.
 const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, wakeAt: null, checkingIn: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
 function sleepView() {
   const st = sleeper.status(); const av = sleeper.available();
-  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, nightTo: effectiveWindow(store.getSettings(), learnedNow(new Date())).to, learned: learnedNow(new Date()), error: sl.bad };
+  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', live: sl.asleep ? sleeper.liveNow(st) : null, hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, nightTo: effectiveWindow(store.getSettings(), learnedNow(new Date())).to, learned: learnedNow(new Date()), error: sl.bad };
 }
 function pushSleep() {
   const v = sleepView();
-  pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : 'Training on your chats; ' + v.wakeLabel } : null);
+  pillState.setSleep(sl.asleep && !sl.waking ? { line: v.line, detail: v.demo ? 'Demo run: nothing real is being trained' : (v.live ? v.live.now : 'Learning from your chats') + '; ' + v.wakeLabel } : null);
   send('sleep:state', v);
 }
 // Ben Oct 28: "It should also be aware of its ability to sleep". One line in the first turn of a chat: what sleep does, when, and the last sleep.
