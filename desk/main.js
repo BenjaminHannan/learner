@@ -199,7 +199,8 @@ const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check each answer against a source, and save one note with the score and the weak spots. '
   + '4) Study the weak spots once more, then tell the person in plain words what you can now do and what is still shaky. '
   + 'Your saved notes and this practice are what sleep trains into you overnight. Keep going until you finish all four steps.\n\n';
-const LEARN_MOTE = (topic) => 'Go learn: ' + topic + '. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
+const LEARN_ANGLES = ['core concepts and how they connect', 'worked examples and practice problems with checkable answers', 'common mistakes, edge cases and gotchas', 'advanced techniques and shortcuts', 'real-world use and tools', 'history, vocabulary and key facts'];
+const LEARN_MOTE = (topic, angle) => 'Go learn: ' + topic + (angle ? ', focusing on ' + angle : '') + '. Each run, dig into something new and never repeat a note you already saved. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
   + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots. 4) Study the weak spots once more. Sleep trains your notes into you overnight. Finish with exactly: NO_UPDATE\n';
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
@@ -1268,12 +1269,18 @@ function registerIpc() {
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
   // "Learn" button: a Mote goes off to study a topic quietly; sleep trains its notes and fact cards in overnight.
-  h('helpers:learn', (topic) => {
+  h('helpers:learn', (topic, count, hours) => {
     topic = String(topic || '').trim().slice(0, 200);
     if (!topic) return { error: 'Type what to learn.' };
     if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first.' };
-    try { const v = helpers.add({ name: ('Learn: ' + topic).slice(0, 40), task: LEARN_MOTE(topic) }); return { ok: true, name: v.name }; }
-    catch (e) { return { error: String(e && e.message || e) }; }
+    const n = Math.max(1, Math.min(12, parseInt(count, 10) || 1)), hrs = Math.max(0, Number(hours) || 0);
+    const until = hrs ? Date.now() + hrs * 3600000 : 0, made = [];
+    for (let i = 0; i < n; i++) {
+      const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
+      try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }); made.push(v.name); }
+      catch (e) { if (!made.length) return { error: String(e && e.message || e) }; break; }
+    }
+    return { ok: true, count: made.length };
   });
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));

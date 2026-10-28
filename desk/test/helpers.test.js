@@ -541,3 +541,15 @@ test('pauseForSleep: a run in progress stops, stays due, and a one-time Glim sti
   asleep = false; m.tick();
   assert.strictEqual(runs.length, 2);                           // runs once after wake
 });
+
+test('learn Motes: similar tasks allowed when asked, and a Mote stops itself at its end time', async () => {
+  const { m, runs, clock } = mkManager();
+  const task = 'Go learn: spreadsheet formulas. Each run dig into something new and save notes.';
+  m.add({ name: 'Learn 1: sheets', task, every: '30m', until: clock.t + 3600000, allowSimilar: true });
+  m.add({ name: 'Learn 2: sheets', task, every: '30m', until: clock.t + 3600000, allowSimilar: true });
+  assert.throws(() => m.add({ name: 'other', task, every: '30m' }), /similar/);
+  runs.forEach((r) => r.done()); await until(() => m.find('Learn 1: sheets').status === 'idle' && m.find('Learn 2: sheets').status === 'idle');
+  clock.t += 2 * 3600000; m.tick();
+  assert.strictEqual(m.find('Learn 1: sheets').status, 'stopped');
+  assert.strictEqual(m.find('Learn 2: sheets').status, 'stopped');
+});

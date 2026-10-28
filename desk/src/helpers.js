@@ -236,14 +236,14 @@ class Helpers {
   byThread(threadId) { return this.items.find((h) => h.threadId === threadId) || null; }
 
   // deferFirst: do not run now; the first run is the next scheduled slot. mode: 'ask' | 'hands-off' for this Glim only (default: the helperMode setting).
-  add({ name, task, every, at, parent, deferFirst, mode, byHelper }) {
+  add({ name, task, every, at, parent, deferFirst, mode, byHelper, until, allowSimilar }) {
     name = short(name, 40);
     task = String(task || '').trim();
     if (!name) throw new Error('name is required');
     if (!task) throw new Error('task is required');
     const sched = parseSchedule({ every, at });
     if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
-    const dup = this.similar(name, task, sched.label);
+    const dup = allowSimilar ? null : this.similar(name, task, sched.label);
     if (dup) throw new Error("a similar Mote '" + dup.name + "' already exists (" + dup.schedule + '); use it, or stop it first');
     if (this.items.length >= MAX_HELPERS) throw new Error('too many Motes (max ' + MAX_HELPERS + '); delete one first');
     const id = 'h' + this.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5);
@@ -252,6 +252,7 @@ class Helpers {
     this.o.store.saveThread(t);
     const h = { id, name, task, every: every || null, at: at || null, next: null, paused: false, status: 'idle', threadId: t.id, parent: parent || null, created: this.now(), lastRun: null, lastReport: '', lastSummary: '' };
     if (mode === 'ask' || mode === 'hands-off') h.mode = mode;
+    if (until > this.now()) h.until = until; // learn button: stops itself at this time
     if (byHelper) h.byHelper = byHelper; // started by another Glim (agent_start from a helper run)
     this.items.push(h);
     if (sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
@@ -365,6 +366,7 @@ class Helpers {
     if (!force && this.o.yieldTo && this.o.yieldTo()) return; // Ben's chat is busy: due runs stay due and start on the first quiet tick (once each)
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;
+      if (h.until && h.until <= now) { this.stop(h.id); continue; }
       if (h.next && h.next <= now) this._run(h);
     }
   }
