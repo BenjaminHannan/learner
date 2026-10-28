@@ -1204,7 +1204,8 @@ function registerIpc() {
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
   h('threads:list', () => store.listThreads());
-  h('threads:new', () => { resetModelToDefault(); const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
+  // One Glim chat (Ben Oct 28): "new thread" hands back the existing main chat; only the very first run creates one.
+  h('threads:new', () => { resetModelToDefault(); const old = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); if (old) { const t = store.loadThread(old.id); if (t) { openThreadId = t.id; return t; } } const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
   h('threads:load', (id) => {
     const t = store.loadThread(id);
     if (!t) return t;
