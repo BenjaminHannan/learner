@@ -190,15 +190,17 @@ function trimWindow(thread, limit) {
 }
 
 // Replace old tool results with a stub, keeping the newest `keep`. Returns number changed.
-function compactMessages(messages, keep) {
+// minStub: do nothing until at least that many results (or ~4k tokens of them) are stubbable. The Mac model (Qwen3.6, linear-attention
+// layers) cannot trim its prompt cache, so any edit inside the prompt re-reads everything after it; stubbing one result per step in a
+// chat over the limit made every step a full re-read (Oct 28). Stubbing in batches makes that one step in five.
+function compactMessages(messages, keep, minStub) {
   keep = keep === undefined ? 2 : keep;
   const idx = [];
   messages.forEach((m, i) => { if (m.role === 'tool') idx.push(i); });
-  let n = 0;
-  for (const i of idx.slice(0, Math.max(0, idx.length - keep))) {
-    if (messages[i].content !== '[older result omitted]') { messages[i].content = '[older result omitted]'; n++; }
-  }
-  return n;
+  const todo = idx.slice(0, Math.max(0, idx.length - keep)).filter((i) => messages[i].content !== '[older result omitted]');
+  if (minStub && todo.length < minStub && estimateTokens(todo.map((i) => messages[i])) < 4000) return 0;
+  for (const i of todo) messages[i].content = '[older result omitted]';
+  return todo.length;
 }
 
 // Only the newest image message keeps its picture.
@@ -422,7 +424,7 @@ class Agent {
         }
         step++;
         if (estimateTokens(thread.messages) > (Number(s.compactTokens) || COMPACT_TOKENS)) {
-          if (compactMessages(thread.messages, 2)) this.emit({ type: 'compacted' });
+          if (compactMessages(thread.messages, 2, 4)) this.emit({ type: 'compacted' });
         }
         dropOldImages(thread.messages);
         await this.yieldToBen(signal);

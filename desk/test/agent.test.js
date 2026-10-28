@@ -468,3 +468,14 @@ test('long chat: no cut on a screenshot stub; a stopped summary keeps the old wi
     assert.match(gw.requests[0].messages[1].content, /hi$/);
   } finally { gw.close(); }
 });
+
+test('compaction in batches: no stub until 4 results (or ~4k tokens) are stubbable, so the cached prompt is not edited every step', () => {
+  const r = (t) => ({ role: 'tool', content: t });
+  const m = [{ role: 'user', content: 'u' }, r('a'), r('b'), r('c'), r('d'), r('e')];
+  assert.strictEqual(compactMessages(m, 2, 4), 0);
+  m.push(r('f'));
+  assert.strictEqual(compactMessages(m, 2, 4), 4);
+  assert.deepStrictEqual(m.filter((x) => x.role === 'tool').map((x) => x.content.slice(0, 1)), ['[', '[', '[', '[', 'e', 'f']);
+  const big = [r('x'.repeat(20000)), r('y'), r('z')];
+  assert.strictEqual(compactMessages(big, 2, 4), 1);   // one big result is worth it
+});
