@@ -83,7 +83,7 @@ let toolDefs = buildTools({ diary: false }); // replaced once the diary probe is
 let toolsReady = Promise.resolve();
 let activeThread = null; // thread object being run by the primary agent
 let helpers = null;
-let limiter = null;
+let limiter = null, helperLimiter = null;
 let warmer = null;
 let pillWin = null;
 let quitting = false;
@@ -785,7 +785,7 @@ function createAgent({ helper, rec, voice }) {
     tools,
     toolDefs: () => toolDefs,
     sleepInfo: isHelper ? null : sleepInfo,
-    slot: limiter,
+    slot: isHelper ? helperLimiter : limiter,
     onState: helper && helper.onState,
     benBusy: isHelper ? benBusy : null,
     onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); if (!isHelper) benLastTurn = Date.now(); },
@@ -926,6 +926,8 @@ function buildAgent() {
     send('agent', { threadId: thread.id, type: 'scard', id: it.id, thumb: it.thumb, text: it.text, image: look.image || null });
   });
   limiter = new Limiter(() => store.getSettings().maxParallel); // 0 = unlimited
+  // Motes share Glim's one local model: 12 at once swapped the Mac and made Ben's chat crawl (Oct 28). Two at a time, the rest wait their turn; Glim's own chat never waits behind them.
+  helperLimiter = new Limiter(() => { const m = store.getSettings().maxParallel; return m > 0 ? m : hasLocalAssistant ? 2 : 0; });
   helpers = new Helpers({
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
