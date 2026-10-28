@@ -919,8 +919,8 @@
   $('#btnLearn').onclick = () => { learnBar.hidden = !learnBar.hidden; learnMsg.textContent = ''; if (!learnBar.hidden) learnTopic.focus(); };
   $('#learnCancel').onclick = () => { learnBar.hidden = true; };
   async function sendLearn() {
-    const r = await desk.helpers.learn(learnTopic.value);
-    if (r && r.ok) { learnTopic.value = ''; learnMsg.textContent = 'A Mote is learning it. It will know it after the next sleep.'; setTimeout(() => { learnBar.hidden = true; }, 2500); }
+    const r = await desk.helpers.learn(learnTopic.value, $('#learnCount').value, $('#learnHours').value);
+    if (r && r.ok) { learnTopic.value = ''; learnMsg.textContent = (r.count > 1 ? r.count + ' Motes are' : 'A Mote is') + ' learning it. They will know it after the next sleep.'; setTimeout(() => { learnBar.hidden = true; }, 2500); }
     else learnMsg.textContent = (r && r.error) || 'Could not start.';
   }
   $('#learnGo').onclick = sendLearn; learnTopic.onkeydown = (e) => { if (e.key === 'Enter') sendLearn(); };
