@@ -44,10 +44,11 @@ const DEFAULT_SETTINGS = {
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
   sleepPauseGlims: true,  // hold the Glims' scheduled runs while asleep (they catch up once after wake)
   autoSleep: false,       // sleep by itself at night when idle
-  sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 01:00 on Windows
-  sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 06:00 on Windows
+  sleepFrom: Platform.defaultSleepWindow(process.platform)[0], // night window start (HH:MM); 23:00 by default (until the routine is learned)
+  sleepTo: Platform.defaultSleepWindow(process.platform)[1],   // night window end; 08:00 by default
   sleepOnlyPlugged: process.platform === 'win32', // never start a sleep on battery (Windows laptops: sleep is slow and power hungry)
-  sleepIdleMin: 30,       // minutes without use before auto-sleep
+  sleepAdapt: true,       // fit the night window to Ben's routine (src/rhythm.js); off = the sleepFrom/sleepTo window as set
+  sleepIdleMin: 120,      // minutes without use before auto-sleep
   sleepDuration: 'morning', // last pick in the sleep sheet: 30 | 60 | 120 | 240 | morning | open
   sleepCheckinMins: 60,   // Windows: the hourly check-in while asleep
   sleepCheckinTask: require('./checkin').DEFAULT_TASK, // what the hourly check-in does (empty = this default)
@@ -63,7 +64,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'wakeAt'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
 const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];

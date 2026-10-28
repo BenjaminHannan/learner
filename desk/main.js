@@ -33,7 +33,8 @@ const { createScreen } = require('./src/tools/screen');
 const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
-const { Sleep, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { Rhythm } = require('./src/rhythm');
+const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -53,6 +54,7 @@ let builtin = null;  // the built-in local model (Windows): download, llama-serv
 let sleepInstaller = null;
 let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
 let tracking = null; // things Glim keeps track of (userData/tracking.md)
+let rhythm = null;   // when Ben is usually up (userData/rhythm.json); auto-sleep fits its window to it
 let memory = null;   // Ben's saved facts (userData/memory.json)
 let agent = null;
 let diary = null;
@@ -105,7 +107,7 @@ setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.
 const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, wakeAt: null, checkingIn: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
 function sleepView() {
   const st = sleeper.status(); const av = sleeper.available();
-  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, error: sl.bad };
+  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, nightTo: effectiveWindow(store.getSettings(), learnedNow(new Date())).to, learned: learnedNow(new Date()), error: sl.bad };
 }
 function pushSleep() {
   const v = sleepView();
@@ -125,6 +127,14 @@ function modelStartCommand(st) {
   const serve = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh'); // Ben's Macs
   return process.platform === 'darwin' && fs.existsSync(serve) ? '"' + serve + '" --yes' : '';
 }
+// the night window learned from Ben's routine (null when "Fit sleep to my routine" is off or there is not enough data yet)
+const learnedNow = (now) => { try { return rhythm && store.getSettings().sleepAdapt ? rhythm.learned(now) : null; } catch (e) { return null; } };
+// the 60-second sample: Ben counts as active when the machine had input in the last 2 minutes or he used Desk
+function sampleRhythm(now) {
+  if (!rhythm) return;
+  let idleS = Infinity; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* not available: Desk's own use below */ }
+  rhythm.record(now || new Date(), idleS < 120 || Date.now() - sl.lastActive < 120000);
+}
 function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
@@ -134,11 +144,11 @@ function startSleep(o) {
   const now0 = new Date(), cfg = store.getSettings();
   const dur = o.auto ? 'morning' : ('minutes' in o ? o.minutes : durationFromSetting(cfg.sleepDuration));
   if (!o.auto && 'minutes' in o) store.saveSettings({ sleepDuration: o.minutes === null ? 'open' : String(o.minutes) });
-  const until = computeWakeAt(now0, dur, cfg);
+  const until = computeWakeAt(now0, dur, cfg, learnedNow(now0));
   const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: until });
   if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
   if (!r.ok) return { error: r.error };
-  { const n = new Date(), st = store.getSettings(); sl.sleepKey = inWindow(n, st.sleepFrom, st.sleepTo) ? windowKey(n, st.sleepFrom, st.sleepTo) : null; } // the night this sleep belongs to (if any)
+  { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   pushSleep(); updatePill();
   return { ok: true };
@@ -147,7 +157,7 @@ async function wakeNow() {
   if (!sl.asleep || sl.waking) return { ok: true };
   sl.waking = true; sl.wakingAt = Date.now();
   const now = new Date(), s = store.getSettings();
-  const wk = wakeKey({ sleepKey: sl.sleepKey, now, settings: s }); // never a key from outside the window: waking at 08:00 must not block tonight
+  const wk = wakeKey({ sleepKey: sl.sleepKey, now, settings: s, learned: learnedNow(now) }); // never a key from outside the window: waking at 08:00 must not block tonight
   if (wk) sl.lastKey = wk;
   pushSleep(); updatePill();
   const r = await sleeper.wake();
@@ -197,12 +207,12 @@ function onSleepPoll(st, events) {
 }
 function autoSleepTick(now, over) {
   const s = store.getSettings(); now = now || new Date();
-  const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto };
+  const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto, learned: learnedNow(now) };
   const w = shouldAutoWake({ ...common, asleep: sl.asleep && !sl.waking });
   if (w.wake) { wakeNow(); return { action: 'wake' }; }
   if (shouldTimedWake({ asleep: sl.asleep, waking: sl.waking, wakeAt: sl.wakeAt, nowMs: now.getTime() })) { wakeNow(); return { action: 'wake', reason: 'the chosen sleep time is up' }; }
   const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
-  if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + s.sleepFrom + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
+  if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + effectiveWindow(s, common.learned).from + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
   return { action: 'none', reason: d.reason };
 }
 
@@ -333,6 +343,8 @@ function createWindow() {
   // (on X11 the content size can lag one event behind the window size, so fit again shortly after)
   // macOS full screen hides the traffic lights, so the top bar drops the space it keeps for them
   win.on('enter-full-screen', () => send('fullscreen', true)); win.on('leave-full-screen', () => send('fullscreen', false));
+  // a window that opens already in full screen fires neither event, so the page would keep the gap: tell it on every load
+  ui.webContents.on('did-finish-load', () => send('fullscreen', win.isFullScreen()));
   for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
   ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
@@ -719,7 +731,7 @@ async function afterFirstPaint() {
   if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
   if (FEATURES.sleep) {
     sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
-    if (!E2E) setInterval(() => autoSleepTick(), 60000).unref();
+    if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); }, 60000).unref(); }
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
@@ -944,6 +956,7 @@ app.whenReady().then(async () => {
   store = new Store(app.getPath('userData'));
   memory = createMemory(app.getPath('userData'));
   tracking = createTracking(app.getPath('userData'));
+  rhythm = new Rhythm(path.join(app.getPath('userData'), 'rhythm.json'));
   if (FEATURES.builtin || process.env.PREMONITION_BUILTIN) setupBuiltin(); else sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   resetModelToDefault();

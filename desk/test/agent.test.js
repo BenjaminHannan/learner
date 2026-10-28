@@ -285,3 +285,11 @@ test('extractPlan strips markdown marks from plan items', () => {
   const { extractPlan } = require('../src/agent');
   assert.deepStrictEqual(extractPlan('1. **Open** the site\n2. `Type` the query'), ['Open the site', 'Type the query']);
 });
+
+test('extractPlan: long numbered items are reasons, not steps, so no plan card', () => {
+  const { extractPlan } = require('../src/agent');
+  const text = '1. **Login access** - You mentioned "the gmail one" but didn\'t provide the login credentials for your chess account. I need the email and password for that specific chess platform.\n' +
+    '2. **Play for you** - I can\'t actually play chess games for you or make strategic moves in a game. Chess requires active participation and decision-making that I can\'t replicate as an agent.';
+  assert.strictEqual(extractPlan(text), null);
+  assert.deepStrictEqual(extractPlan('1. Open chess.com\n2. Sign in with Google'), ['Open chess.com', 'Sign in with Google']);
+});

@@ -249,7 +249,7 @@ test('schedule and plugged-in logic: night window 01:00-06:00, idle, and never o
   assert.strictEqual(shouldAutoSleep({ ...base, now: new Date(2026, 9, 28, 12, 0) }).sleep, false);
   assert.strictEqual(mayStart({ sleepOnlyPlugged: true }, true).ok, false); assert.match(mayStart({ sleepOnlyPlugged: true }, true).error, /Plug it in/);
   assert.strictEqual(mayStart({ sleepOnlyPlugged: false }, true).ok, true); assert.strictEqual(mayStart({}, false).ok, true); assert.strictEqual(mayStart({}, true).ok, true, 'the Mac default is off');
-  assert.deepStrictEqual(Platform.defaultSleepWindow('win32'), ['01:00', '06:00']);
+  assert.deepStrictEqual(Platform.defaultSleepWindow('win32'), ['23:00', '08:00']); assert.deepStrictEqual(Platform.defaultSleepWindow('darwin'), ['23:00', '08:00']);
 });
 
 test('WinSleep: asks for the runtime first; then runs chunks, stops the model, converts the adapter, restarts with --lora, keeps the old one as fallback', async () => {

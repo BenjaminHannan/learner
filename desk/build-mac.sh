@@ -47,10 +47,13 @@ APP="build/app/Premonition-darwin-arm64/Premonition.app"
 echo "==> ad-hoc codesign"
 codesign --force --deep -s - "$APP"
 
-echo "==> installing to /Applications"
-rm -rf "/Applications/Premonition.app"
-cp -R "$APP" /Applications/
-if [[ -d "/Applications/Premonition Desk.app" ]]; then
+# INSTALL_DIR: where the app goes (default /Applications); point it at a temp folder to build without installing.
+INSTALL_DIR="${INSTALL_DIR:-/Applications}"
+echo "==> installing to $INSTALL_DIR"
+mkdir -p "$INSTALL_DIR"
+rm -rf "$INSTALL_DIR/Premonition.app"
+cp -R "$APP" "$INSTALL_DIR/"
+if [[ "$INSTALL_DIR" == /Applications && -d "/Applications/Premonition Desk.app" ]]; then
   echo "NOTE: the old \"Premonition Desk.app\" is still in /Applications. It can be removed once Premonition works (not deleted automatically). Your settings and chats were copied over on first launch; the old data folder stays as a backup."
 fi
-echo "Done. Open Premonition from /Applications (first launch: right-click > Open if macOS complains)."
+echo "Done. Open Premonition from $INSTALL_DIR (first launch: right-click > Open if macOS complains)."

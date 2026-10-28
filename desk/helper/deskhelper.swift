@@ -535,10 +535,18 @@ func boolFlag(_ args: inout [String], _ name: String) -> Bool {
 }
 
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch") }
 let command = args.removeFirst()
 
 switch command {
+case "notch":
+    // the camera notch of the menu-bar screen: the gap between the two menu-bar areas beside it (macOS 12+); 0 when there is none.
+    // Needs no permission. Its width in points changes with the display scaling (16" M3: 250 pt at "More Space").
+    if #available(macOS 12.0, *), let s = NSScreen.screens.first, let l = s.auxiliaryTopLeftArea, let r = s.auxiliaryTopRightArea {
+        emit(["width": Double(r.minX - l.maxX), "height": Double(s.safeAreaInsets.top)] as [String: Any])
+    }
+    emit(["width": 0, "height": 0] as [String: Any])
+
 case "check":
     emit(["accessibility": AXIsProcessTrusted(), "screenRecording": CGPreflightScreenCaptureAccess()] as [String: Any])
 

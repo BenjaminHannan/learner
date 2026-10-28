@@ -76,7 +76,12 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .plan ol { list-style:none; margin:.2rem 0 0; padding:0; counter-reset:p; }
 .plan li { display:flex; gap:.5rem; align-items:baseline; color:var(--text); font-size:.92rem; margin:.15rem 0; }
 .plan li::before { content:""; width:.8rem; height:.8rem; border:1.5px solid var(--text2); border-radius:50%; flex:none; position:relative; top:.12rem; }
-.plan.done li::before { background:var(--ok); border-color:var(--ok); }
+.plan .pt { min-width:0; display:flex; flex-direction:column; gap:.05rem; }
+.plan .ph { font-weight:600; }
+.plan .pd { color:var(--text2); font-size:.86rem; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.plan .pd.solo { color:var(--text); font-size:.92rem; }
+/* done: a small check, not a solid green dot (a row of green discs read as status lights) */
+.plan.done li::before { content:"\2713"; border:0; color:var(--ok); font-size:.8rem; font-weight:700; line-height:.8rem; text-align:center; }
 
 /* step pills */
 .step { display:flex; flex-direction:column; align-items:flex-start; }
@@ -151,10 +156,13 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 #composer .box { display:flex; align-items:flex-end; gap:.5rem; background:var(--surface); border:1px solid var(--line-ui); border-radius:1.3rem; padding:.45rem .45rem .45rem 1.1rem; }
 #composer .box:focus-within { border-color:var(--accent-text); box-shadow:0 0 0 .2rem var(--accent-soft); }
 #input { flex:1; border:0; background:none; resize:none; outline:none; max-height:9.2rem; min-height:1.5rem; padding:.45rem 0; line-height:1.5; }
-.send { background:var(--accent); color:var(--on-accent); border:0; border-radius:999px; padding:.4rem 1.15rem; min-height:2.4rem; font-weight:700; }
+.send { background:var(--accent); color:var(--on-accent); border:0; border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
+.send svg { width:1.05rem; height:1.05rem; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .send:hover { filter:brightness(1.07); }
-.stop { background:var(--danger); color:var(--on-danger); border:0; border-radius:999px; padding:.4rem 1.1rem; min-height:2.4rem; font-weight:700; display:flex; align-items:center; gap:.45rem; }
-.stop span { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
+.stop { background:transparent; color:var(--danger); border:1.5px solid var(--danger); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
+.stop:hover { background:var(--danger); color:var(--on-danger); }
+.stop i { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
 #runState i { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; }
 .hint { color:var(--faint); font-size:.78rem; text-align:center; padding-top:.45rem; }
@@ -388,3 +396,4 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 .sl-dur button.on { border-color:var(--accent-text); color:var(--accent-text); font-weight:600; }
 
 #modeSeg { pointer-events:none; cursor:default; }
+#modelSeg[hidden], #modeSeg[hidden] { display:none; } /* model and mode live in Settings only */

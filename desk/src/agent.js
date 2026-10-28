@@ -146,10 +146,13 @@ function datePrefix(d) {
   return '[' + days[d.getDay()] + ' ' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ']';
 }
 
+const PLAN_STEP_MAX = 120;
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
   const items = lines.filter((l) => /^\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\d+[.)]\s+/, '').replace(/\*\*|__|`/g, ''));
-  return items.length >= 2 ? items : null;
+  // Steps are short. Long numbered items are reasons or caveats ("Login access - You mentioned ... I need the password"),
+  // and a plan card would tick them off as done; leave those as text. The renderer's isPlan uses the same rule.
+  return items.length >= 2 && items.every((s) => s.length <= PLAN_STEP_MAX) ? items : null;
 }
 
 function short(s, n) { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
