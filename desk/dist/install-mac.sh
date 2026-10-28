@@ -109,8 +109,11 @@ main() {
   run xattr -cr "$APP" || die "could not clear the download flag on the app."
   # the cloud build has no valid seal, so seal it here (free, local, no Apple account needed)
   run codesign --force --deep -s - "$APP" || die "could not sign the app on this Mac." "Try: open System Settings > Privacy & Security and look for Open Anyway next to Premonition."
-  # re-signing makes macOS see a new app, so a switch left On from an older install no longer counts: clear them so they can be added fresh
-  for svc in Accessibility ScreenCapture; do tccutil reset "$svc" "com.electron.premonition desk" >/dev/null 2>&1 || true; done
+  # pin the signature to the bundle id (not the build's hash) so macOS keeps the Accessibility / Screen Recording / Microphone grants across updates
+  APP_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist" 2>/dev/null || true)"
+  if [[ -n "$APP_ID" ]]; then
+    run codesign --force -s - -r="designated => identifier \"$APP_ID\"" "$APP" || die "could not sign the app on this Mac." "Try: open System Settings > Privacy & Security and look for Open Anyway next to Premonition."
+  fi
 
   # ---- 4. open it -----------------------------------------------------------------------------------------------------------------------
   step "4/4" "Opening Premonition"
