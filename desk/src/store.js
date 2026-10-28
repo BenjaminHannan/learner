@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
   helperMode: 'hands-off', // autonomy for helper agents
   maxSteps: 0,            // model calls per task before Glim stops and asks; 0 = no limit (Ben Oct 28: threads are unlimited)
   stepsPlan: 2,           // settings migration marker: 1 = the old 40-step default moved to no limit; 2 = runs at once moved to no limit
+  contextTokens: Platform.defaultPreset(process.platform).contextTokens, // past this the model reads a summary of the older part of a chat plus the recent part (agent.js trimWindow)
   compactTokens: Platform.defaultPreset(process.platform).compactTokens, // history size that triggers compaction (small local models have small context)
   maxToolChars: Platform.defaultPreset(process.platform).maxToolChars,
   // Helpers
@@ -76,7 +77,7 @@ const ENUMS = {
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
+const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
@@ -105,7 +106,7 @@ function sanitize(patch) {
 // The model defaults depend on the machine (Windows and Macs without Ben's assistant start on the built-in model). main.js calls this
 // once, before the first Store is made, with Platform.defaultPreset(process.platform, {hasLocalAssistant}). A saved settings.json still wins.
 function applyPresetDefaults(preset) {
-  for (const k of ['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'compactTokens', 'maxToolChars']) if (preset && preset[k] !== undefined) DEFAULT_SETTINGS[k] = preset[k];
+  for (const k of ['gatewayUrl', 'model', 'modelAuto', 'modelMain', 'modelFast', 'compactTokens', 'contextTokens', 'maxToolChars']) if (preset && preset[k] !== undefined) DEFAULT_SETTINGS[k] = preset[k];
 }
 
 class Store {

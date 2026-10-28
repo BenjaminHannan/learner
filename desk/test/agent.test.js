@@ -385,3 +385,86 @@ test('ask_user passes up to 4 short tap-to-answer options to the UI', async () =
     assert.deepStrictEqual(got, { q: 'Which?', o: ['Red', 'Blue'] });
   } finally { gw.close(); }
 });
+
+test('long chat: window starts at a turn of Ben\'s, never splits a tool call from its result', () => {
+  const { trimWindow, plainText, CHECK_MARK } = require('../src/agent');
+  const big = 'x'.repeat(700);   // 200 tokens
+  const m = [];
+  for (let k = 0; k < 6; k++) m.push({ role: 'user', content: 'q' + k + ' ' + big }, { role: 'assistant', content: '', tool_calls: [{ id: 'c' + k, type: 'function', function: { name: 'f', arguments: '{}' } }] }, { role: 'tool', tool_call_id: 'c' + k, content: big }, { role: 'assistant', content: 'a' + k });
+  m.push({ role: 'user', content: CHECK_MARK + ' check' });
+  const t = { messages: m };
+  assert.strictEqual(trimWindow(t, 100000), -1);
+  assert.strictEqual(t.ctxFrom, undefined);
+  assert.strictEqual(trimWindow(t, 1500), 0);
+  assert.ok(t.ctxFrom > 0);
+  assert.strictEqual(m[t.ctxFrom].role, 'user');
+  assert.match(m[t.ctxFrom].content, /^q\d/);
+  assert.ok(estimateTokens(m.slice(t.ctxFrom)) <= 1500 * 0.6);
+  const was = t.ctxFrom;
+  assert.strictEqual(trimWindow(t, 1500), -1);   // under the limit now: no move
+  assert.strictEqual(t.ctxFrom, was);
+  assert.strictEqual(m.length, 25);              // stored history untouched
+  const txt = plainText(m, 0, was);
+  assert.match(txt, /^Ben: q0/); assert.match(txt, /Glim: a0/);
+  assert.ok(!txt.includes(CHECK_MARK)); assert.ok(!/Glim: $/m.test(txt));
+});
+
+test('long chat: older part summarized by one cheap call, model sees the summary then the recent turns', async () => {
+  const { SUMMARY_TAG } = require('../src/agent');
+  const gw = await startGateway([{ content: '<think>hm</think>Ben wants a gym plan at 6 PM.' }, { content: 'Sure.' }]);
+  try {
+    const evs = [];
+    const agent = new Agent({ getSettings: settings(gw, { contextTokens: 1500, modelFast: 'fast' }), toolDefs: buildTools({}), tools: {}, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    for (let k = 0; k < 10; k++) t.messages.push({ role: 'user', content: 'old question ' + k + ' ' + 'y'.repeat(700) }, { role: 'assistant', content: 'old answer ' + k });
+    await agent.run(t, 'what next?');
+    const [sumReq, mainReq] = gw.requests;
+    assert.strictEqual(sumReq.model, 'fast');
+    assert.ok(!sumReq.tools || sumReq.tools.length === 0);
+    assert.ok(sumReq.messages[1].content.startsWith(SUMMARY_TAG));
+    assert.match(sumReq.messages[1].content, /Ben: old question 0/);
+    assert.strictEqual(t.ctxSummary, 'Ben wants a gym plan at 6 PM.');
+    const firstUser = mainReq.messages[1];
+    assert.strictEqual(firstUser.role, 'user');
+    assert.match(firstUser.content, /^\[Summary of earlier messages in this chat[\s\S]*gym plan at 6 PM\.\n\]/);
+    assert.ok(!mainReq.messages.some((x) => typeof x.content === 'string' && x.content.includes('old question 0 ')));
+    assert.ok(mainReq.messages.at(-1).content.endsWith('what next?'));
+    assert.ok(t.messages.length >= 22);                       // nothing deleted from the chat
+    assert.ok(!t.messages.some((x) => typeof x.content === 'string' && x.content.startsWith('[Summary')));   // note is not stored as a message
+    assert.ok(evs.some((e) => e.type === 'compacted'));
+  } finally { gw.close(); }
+});
+
+test('long chat: if the summary call returns nothing the model is told older messages were left out', async () => {
+  const gw = await startGateway([{ content: '' }, { content: 'Ok.' }]);
+  try {
+    const agent = new Agent({ getSettings: settings(gw, { contextTokens: 1500 }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    for (let k = 0; k < 10; k++) t.messages.push({ role: 'user', content: 'q' + k + ' ' + 'y'.repeat(700) }, { role: 'assistant', content: 'a' + k });
+    await agent.run(t, 'next');
+    assert.match(gw.requests[1].messages[1].content, /^\[Earlier messages in this chat are left out/);
+  } finally { gw.close(); }
+});
+
+test('long chat: no cut on a screenshot stub; a stopped summary keeps the old window; stale window reset', async () => {
+  const { trimWindow } = require('../src/agent');
+  const big = 'x'.repeat(700);
+  const m = [{ role: 'user', content: 'q0 ' + big }, { role: 'assistant', content: 'a0 ' + big }];
+  for (let k = 0; k < 6; k++) m.push({ role: 'user', content: '[older screenshot omitted]' }, { role: 'assistant', content: 'b' + k + ' ' + big });
+  m.push({ role: 'user', content: 'q1 short' }, { role: 'assistant', content: 'a1' });
+  const t = { messages: m };
+  assert.strictEqual(trimWindow(t, 1500), 0);
+  assert.match(m[t.ctxFrom].content, /^q1/);
+  const gw = await startGateway([{ content: 'Ok.' }]);
+  try {
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const th = { messages: m.slice(0, 4), ctxFrom: 12 };
+    const ac = new AbortController(); ac.abort();
+    await agent.summarizeLeftOut(th, settings(gw)(), ac.signal, 2);
+    assert.strictEqual(th.ctxFrom, 2); assert.strictEqual(th.ctxNote, undefined);
+    const st = mkThread(); st.ctxFrom = 30; st.ctxNote = 'stale'; st.ctxSummary = 's';
+    await agent.run(st, 'hi');
+    assert.strictEqual(st.ctxFrom, undefined); assert.strictEqual(st.ctxNote, undefined);
+    assert.match(gw.requests[0].messages[1].content, /hi$/);
+  } finally { gw.close(); }
+});
