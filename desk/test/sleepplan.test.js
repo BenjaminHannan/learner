@@ -126,3 +126,37 @@ test('WinSleep: wake and the early finish note', () => {
   w._writeSummary();
   assert.ok(/Finished early: it practiced everything new\./.test(fs.readFileSync(w.p.summary, 'utf8')));
 });
+
+test('awake check-in: when it is due, and when it stays out of the way', () => {
+  const b = { now: 31 * 60000, last: 0, mins: 30, asleep: false, runActive: false, focused: false, idleMs: 600000 };
+  assert.strictEqual(CK.shouldAwakeCheckin(b).due, true);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, last: 10 * 60000 }).due, false);                       // 21 min since the last one
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, last: 60000 }).due, true);                             // exactly 30 min
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, mins: 0 }).reason, 'off');
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, asleep: true }).due, false);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, sleepBusy: true }).due, false);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, runActive: true }).due, false);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, focused: true }).due, false);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, idleMs: 2 * 3600000 + 1 }).due, false);
+  assert.strictEqual(CK.shouldAwakeCheckin({ ...b, idleMs: 2 * 3600000 }).due, true);
+});
+
+test('awake check-in: cheap findings, and each one is announced once', () => {
+  const G = 1024 ** 3;
+  assert.strictEqual(CK.diskLow({ total: 500 * G, free: 1 * G }), true);
+  assert.strictEqual(CK.diskLow({ total: 100 * G, free: 4 * G }), true);     // under 5 percent
+  assert.strictEqual(CK.diskLow({ total: 500 * G, free: 100 * G }), false);
+  assert.strictEqual(CK.diskLow(null), false);
+  const base = { gateway: 'ready', disk: { total: 500 * G, free: 100 * G }, helpers: [], tracked: [], today: '2026-10-28' };
+  assert.deepStrictEqual(CK.awakeFindings(base), []);                         // nothing to say
+  const f = CK.awakeFindings({ ...base, gateway: 'down', disk: { total: 500 * G, free: G }, tracked: [{ what: 'Parcel', until: '2026-10-29' }, { what: 'Far', until: '2026-12-01' }],
+    helpers: [{ id: 'a', name: 'News', every: '1h', status: 'idle', lastSummary: 'Failed: boom', lastRun: 5 }, { id: 'b', name: 'Once', status: 'idle', lastSummary: 'Failed: x' }, { id: 'c', name: 'Paused', every: '1h', paused: true, lastSummary: 'Failed: x' }] });
+  assert.deepStrictEqual(f.map((x) => x.key.split(':')[0]), ['gateway', 'disk', 'glim', 'track']);
+  const seen = new Set();
+  assert.strictEqual(CK.freshFindings(seen, f).length, 4);
+  assert.strictEqual(CK.freshFindings(seen, f).length, 0);                    // same again: silent
+  assert.strictEqual(CK.freshFindings(seen, f.slice(1)).length, 0);          // the gateway came back
+  assert.strictEqual(CK.freshFindings(seen, f).length, 1);                    // and went down again: announced again
+  const t = CK.awakeTask({ sleepCheckinTask: 'custom' });
+  assert.ok(t.startsWith(CK.AWAKE_TASK) && /Read only/.test(t) && /do not try to sign in/.test(t));
+});
