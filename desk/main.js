@@ -1084,7 +1084,7 @@ function registerIpc() {
   });
   // "Start setup over": setup counts as not done and the app restarts into it. Chats, memory and everything else stay.
   h('app:startOver', () => {
-    store.saveSettings({ onboarded: false, permsSeen: false });
+    store.saveSettings({ onboarded: false, permsSeen: false, onboardAt: '' });
     if (!E2E) { app.relaunch(); setTimeout(() => app.exit(0), 300); }
     return { ok: true };
   });

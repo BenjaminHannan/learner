@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS = {
   uses: [],               // what Ben wants Glims for (ids from renderer/uses.js)
   usesOther: '',          // free text "something else"
   permsSeen: false,       // the Permissions card has been shown once on first launch
+  onboardAt: '',          // 'perms' = setup reached its Permissions page (macOS makes you quit and reopen after a switch; setup resumes there)
   pill: true,             // the always-on-top status pill at the top of the screen
   // Sleep (the separate sleepmode app trains on the diary while Glim is idle)
   sleepApp: '',           // '' = ~/learner-ops/sleepmode/app
@@ -65,7 +66,7 @@ const DEFAULT_SETTINGS = {
 const ENUMS = {
   model: null, // free text on purpose (a custom model name is allowed)
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
-  theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
+  theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
 const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
@@ -106,9 +107,19 @@ class Store {
     this.settingsFile = path.join(dir, 'settings.json');
     fs.mkdirSync(this.threadsDir, { recursive: true });
   }
+  // settings.json is written atomically (tmp + rename) with the previous good copy kept as settings.json.bak. If the file is ever
+  // unreadable (a crash or a quit in the middle of an older, non-atomic write) the backup is used, never the defaults:
+  // falling back to defaults meant onboarded=false, so the first-run setup came back after a restart.
+  _readSettings() {
+    for (const f of [this.settingsFile, this.settingsFile + '.bak']) {
+      try { const raw = JSON.parse(fs.readFileSync(f, 'utf8')); if (raw && typeof raw === 'object') return raw; } catch (e) { /* try the next copy */ }
+    }
+    return null;
+  }
   getSettings() {
     try {
-      const raw = JSON.parse(fs.readFileSync(this.settingsFile, 'utf8'));
+      const raw = this._readSettings();
+      if (!raw) return { ...DEFAULT_SETTINGS, uses: [] };
       if (raw.vision === true) raw.vision = 'on';
       // Ben Oct 28: sleep by itself after 2 h idle, 23:00-08:00, then fit his routine. Settings files from before that move onto the plan once;
       // anything he changes in Settings afterwards sticks (sleepPlan marks the migration as done).
@@ -126,7 +137,10 @@ class Store {
   saveSettings(patch) {
     const cur = this.getSettings();
     const next = { ...cur, ...sanitize(patch) };
-    fs.writeFileSync(this.settingsFile, JSON.stringify(next, null, 2));
+    const tmp = this.settingsFile + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(next, null, 2));
+    try { if (this._readSettings()) fs.copyFileSync(this.settingsFile, this.settingsFile + '.bak'); } catch (e) { /* no good copy yet */ }
+    fs.renameSync(tmp, this.settingsFile);
     return next;
   }
   _file(id) { return path.join(this.threadsDir, String(id).replace(/[^\w\-]/g, '') + '.json'); }

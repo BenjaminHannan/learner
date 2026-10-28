@@ -21,7 +21,7 @@ from typing import Callable, Optional
 
 from . import diary as diary_mod
 from .backend import Clock, Guards
-from .paths import Paths, read_json, write_json
+from .paths import Paths, appdata_root, is_windows, ops_dir, read_json, write_json
 from .profile import Renderer, load_profile
 from .recipe import Config, Sleeper, next_day
 
@@ -39,10 +39,10 @@ def cfg_from_env(env=os.environ, prof=None) -> Config:
     if prof is not None and prof.model_dir:
         c.gguf_base_dir = prof.expanded_model_dir
     for name, cast in (("SLEEPMLX_NIGHT_BUDGET_S", float), ("SLEEPMLX_SCALE", float), ("SLEEPMLX_MIN_CARDS", int), ("SLEEPMLX_MIN_ITEM_DAYS", int),
-                       ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float)):
+                       ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float), ("SLEEPMLX_CARD_SHAPE", str)):
         if env.get(name):
             setattr(c, {"SLEEPMLX_NIGHT_BUDGET_S": "night_budget_s", "SLEEPMLX_SCALE": "scale", "SLEEPMLX_MIN_CARDS": "min_cards",
-                        "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max"}[name], cast(env[name]))
+                        "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max", "SLEEPMLX_CARD_SHAPE": "card_shape"}[name], cast(env[name]))
     return c
 
 
@@ -158,8 +158,10 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
 
 def _paths_from(env) -> Paths:
     home = Path(os.path.expanduser(env["SLEEPMLX_HOME"]))
-    ops = Path(os.path.expanduser(env.get("LEARNER_OPS", str(home.parent))))
-    diary = Path(os.path.expanduser(env.get("SLEEPMLX_DIARY_DIR", str(ops / "diary" / "raw"))))
+    # ops and the diary default as in Paths.from_env, not home.parent: a SLEEPMLX_HOME outside learner-ops (a test copy) lost the diary
+    ops = Path(os.path.expanduser(env["LEARNER_OPS"])) if env.get("LEARNER_OPS") else ops_dir()
+    diary_d = appdata_root() / "diary" if is_windows() else ops / "diary" / "raw"
+    diary = Path(os.path.expanduser(env.get("SLEEPMLX_DIARY_DIR", str(diary_d))))
     ud = env.get("SLEEPMLX_USERDATA")
     return Paths(home, diary, ops, Path(os.path.expanduser(ud)) if ud else None)
 

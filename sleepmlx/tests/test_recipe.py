@@ -389,3 +389,58 @@ class ParseFactsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CardShapeTests(unittest.TestCase):
+    """Config.card_shape: "model" (default, unchanged) | "templated12" (raw note + 5 rewrites + 6 Q&A per fact, no model)."""
+
+    def cards(self, **cfg):
+        env = Env(**cfg)
+        self.addCleanup(env.close)
+        be = env.backend()
+        s = env.sleeper(be)
+        res = s.run(env.week(), dry_run=True)
+        return env, be, s, [it for it in s.items.values() if it.kind == "fact" and (it.para or it.qa or it.held)]
+
+    def test_default_is_model_cards(self):
+        self.assertEqual(Config().card_shape, "model")
+        _, _, s, items = self.cards()
+        self.assertTrue(items)
+        for it in items:
+            self.assertLessEqual(len(it.para), s.k)
+            self.assertLessEqual(len(it.qa) + len(it.held), s.k)
+            self.assertFalse(any(p.startswith("Fact:") or "'s " in p and " is " in p and p.endswith("'s.") for p in it.para))
+
+    def test_templated12_makes_twelve_cards_both_directions(self):
+        env, be, s, items = self.cards(card_shape="templated12")
+        self.assertTrue(items)
+        for it in items:
+            qa = it.qa + [[h["q"], h["a"]] for h in it.held]
+            self.assertEqual(len(it.para) + len(qa), 12, it.key)
+            self.assertEqual(len(it.para), 6)       # raw note + 5 rewrites
+            self.assertEqual(len(qa), 6)
+            self.assertEqual(sum(a == it.obj for _, a in qa), 3)
+            self.assertEqual(sum(a == it.subj for _, a in qa), 3)   # reverse-direction questions
+            self.assertTrue(all(it.subj in p and it.obj in p for p in it.para[1:]))
+            self.assertIn(it.obj, it.para[0])       # the raw diary message
+
+    def test_templated12_skips_dream_and_verify_generation(self):
+        _, be_m, _, _ = self.cards()
+        _, be_t, _, _ = self.cards(card_shape="templated12")
+        self.assertLess(be_t.calls["generate"], be_m.calls["generate"])
+
+    def test_templated_cards_shapes(self):
+        for rel, note in (("sister", "n1"), ("is the mentor of", "n2"), ("works at", "n3"), ("owns the boat", "n4")):
+            paras, qas = P.templated_cards("Devin Marsh", rel, "Talia Okafor", note)
+            self.assertEqual((len(paras), len(qas), paras[0]), (6, 6, note))
+            self.assertEqual([a for _, a in qas], ["Talia Okafor"] * 3 + ["Devin Marsh"] * 3)
+            self.assertEqual(len({q for q, _ in qas} | set(paras)), 12)
+        self.assertEqual(P.noun_rel("is the mentor of"), "mentor")
+        self.assertIsNone(P.noun_rel("works at"))
+        self.assertEqual(P.templated_cards("A B", "sister", "C D", "x")[1][0], ("What is A B's sister?", "C D"))
+
+    def test_env_override(self):
+        from sleepmlx import worker
+        p = load_profile("lfm3_cpu")
+        self.assertEqual(worker.cfg_from_env({}, p).card_shape, "model")
+        self.assertEqual(worker.cfg_from_env({"SLEEPMLX_CARD_SHAPE": "templated12"}, p).card_shape, "templated12")
