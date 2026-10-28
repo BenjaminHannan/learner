@@ -481,6 +481,7 @@
   function setRunning(r) {
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
+    { const nb = $('#btnNewChat'); if (nb) { nb.disabled = !!r; nb.title = r ? 'New chat (wait until Glim stops working)' : 'New chat (Cmd+N). Your notes and memory carry over.'; } }
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
     $('#runState span').textContent = 'Working…';
     paintGateway();
@@ -904,6 +905,7 @@
   $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
   $('#drawerShade').onclick = closeDrawer;
   $('#newThread').onclick = newThread;
+  $('#btnNewChat').onclick = () => { if (!running) newThread(); };
 
   // links in answers open in the browser panel
   msgs.addEventListener('click', (e) => {
