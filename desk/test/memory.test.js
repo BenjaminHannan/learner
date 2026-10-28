@@ -294,3 +294,24 @@ test('memory.md: hand-written pipes, indents, BOM and CRLF survive Glim and Sett
   m.write('# Me\n\n- a\n');                                              // the textarea gives LF; a CRLF file stays CRLF
   assert.strictEqual(fs.readFileSync(f, 'utf8'), '# Me\r\n\r\n- a\r\n');
 });
+
+test('fact cards: own cap, never evict Ben\'s notes, kept out of the chat digest, replaced only by the same subject+relation', () => {
+  const { MAX_CARDS } = require('../src/memory');
+  const m = mem();
+  assert.ok(m.save('Ben takes AP Chemistry', 'school').ok);
+  assert.ok(m.save('Coca-Cola Scholarship => deadline => October 31', 'card').ok);
+  assert.ok(m.save('Gates Scholarship => deadline => September 15', 'card').ok);   // shares words with the first card: a different card
+  let r = m.save('Coca-Cola Scholarship => deadline => October 30', 'card');
+  assert.equal(r.replaced, true);                                                    // same subject and relation: the fact changed
+  const d = m.block();
+  assert.match(d, /AP Chemistry/); assert.doesNotMatch(d, /Scholarship/);
+  for (let i = 0; i < MAX_CARDS + 5; i++) m.save('Word' + i + ' => means => thing' + i, 'card');
+  const txt = m.block(); assert.match(txt, /AP Chemistry/);
+  const all = m.list ? m.list() : null;
+  if (all) { assert.ok(all.some((f) => /AP Chemistry/.test(f.text))); assert.ok(all.filter((f) => f.topic === 'card').length <= MAX_CARDS); }
+});
+
+test('the prompt tells Glim and its Motes to save fact cards as they work', () => {
+  assert.match(SYSTEM_PROMPT, /topic \\"card\\"|topic "card"/);
+  assert.match(SYSTEM_PROMPT, /A => relation => B/);
+});
