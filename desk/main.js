@@ -524,6 +524,7 @@ function placeView(rec) {
   if (top !== rec.onTop) {
     rec.onTop = top;
     try { win.contentView.addChildView(rec.view, top ? undefined : 0); } catch (e) { /* ignore */ }
+    if (top) { try { rec.view.setVisible(true); rec.view.webContents.invalidate(); } catch (e) { /* ignore */ } } // Ben Oct 28: a page that loaded while the view was hidden (e.g. right after a restart) stayed blank until repainted
   }
 }
 function applyPanel() { for (const rec of browsers.values()) placeView(rec); }

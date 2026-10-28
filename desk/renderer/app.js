@@ -190,8 +190,9 @@
     if (act && !act.finished) finishAct(act);
     const u = el('div', 'user' + (steer ? ' steer' : '') + (queued ? ' queued' : ''), text);
     lockChoices(); // Ben moved on: older chips are used up
-    msgs.append(u); msgs.append(stamp(ts, 'r'));
-    if (receipt) { msgs.querySelectorAll('.receipt').forEach((r) => r.remove()); msgs.append(el('div', 'receipt unread', 'Unread')); }
+    msgs.append(u);
+    const meta = el('div', 'umeta'); meta.append(stamp(ts, 'r')); msgs.append(meta); // one quiet line under the bubble: time, then Unread/Read
+    if (receipt) { msgs.querySelectorAll('.receipt').forEach((r) => r.remove()); meta.append(el('div', 'receipt unread', 'Unread')); }
     newBlock(); toBottom();
     return u;
   }
