@@ -81,7 +81,7 @@ class VoiceInstaller {
       try { fs.chmodSync(base, 0o755); } catch (e) { /* tar kept the mode */ }
     }
     // 2. venv + mlx-vlm (a half-made venv is rebuilt)
-    if (!this.state().libs) {
+    if (!this.state().libs || !fs.existsSync(py)) {
       this._p('libs', 'Setting up the speech engine', 10);
       fs.rmSync(path.join(this.dir, '.venv'), { recursive: true, force: true });
       await this.run(base, venvArgs(path.join(this.dir, '.venv')));

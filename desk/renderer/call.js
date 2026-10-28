@@ -43,7 +43,7 @@ window.CallUI = (() => {
     const i = $('#input'); if (i) i.focus();
   }
   async function start() {
-    if (active || isOpen() || !ctx.enabled) return;
+    if (active || (isOpen() && !hadError) || !ctx.enabled) return; // after a failed start (e.g. voice just installed) the phone tries again
     open();
     const r = await desk.call.start();
     if (r && r.error) { active = false; hadError = true; showError(r.error, '', r.needsVoice); paint(); return; }

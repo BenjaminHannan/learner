@@ -23,13 +23,15 @@ function scriptPath(resourcesPath, devRoot, exists) {
   return packaged && exists(packaged) ? packaged : path.join(devRoot, 'stt', 'lfm_stt.py');
 }
 
+function voiceDone(dir) { try { return !!JSON.parse(fs.readFileSync(path.join(dir, 'state.json'), 'utf8')).done; } catch (e) { return false; } }
 // [{python, hfHome}] in priority order
 function candidates(o) {
   const env = o.env || process.env, home = o.home || os.homedir(), list = [];
   if (env.PREMONITION_STT_PYTHON) list.push({ python: env.PREMONITION_STT_PYTHON, hfHome: env.PREMONITION_STT_HF_HOME || '' });
   const root = path.join(home, 'learner-ops', 'stt');
   list.push({ python: path.join(root, '.venv', 'bin', 'python'), hfHome: path.join(root, 'hf') });
-  if (o.voiceDir) list.push({ python: path.join(o.voiceDir, '.venv', 'bin', 'python'), hfHome: path.join(o.voiceDir, 'hf') });
+  // the "Get voice" folder counts only once its install finished (model downloaded): a half-done one would fail offline
+  if (o.voiceDir && voiceDone(o.voiceDir)) list.push({ python: path.join(o.voiceDir, '.venv', 'bin', 'python'), hfHome: path.join(o.voiceDir, 'hf') });
   const m = o.managedPython && o.managedPython();
   if (m) list.push({ python: m, hfHome: '' });
   return list;
