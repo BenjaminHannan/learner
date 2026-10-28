@@ -228,8 +228,8 @@ class Helpers {
     const sched = parseSchedule({ every, at });
     if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
     const dup = this.similar(name, task, sched.label);
-    if (dup) throw new Error("a similar Glim '" + dup.name + "' already exists (" + dup.schedule + '); use it, or stop it first');
-    if (this.items.length >= MAX_HELPERS) throw new Error('too many Glims (max ' + MAX_HELPERS + '); delete one first');
+    if (dup) throw new Error("a similar Mote '" + dup.name + "' already exists (" + dup.schedule + '); use it, or stop it first');
+    if (this.items.length >= MAX_HELPERS) throw new Error('too many Motes (max ' + MAX_HELPERS + '); delete one first');
     const id = 'h' + this.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5);
     const t = this.o.store.newThread();
     t.title = 'Glim: ' + name; t.helper = id;
