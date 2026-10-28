@@ -906,3 +906,18 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
   reasoning and a stray `</think>` with thinking off (70 of 80 chats). With sleepb's own prompts, the full-precision model wrote no
   `</think>` in any of 32 replies (16 test questions, 8 tagger messages greedy and 4 sampled, 4 verifier prompts). No code change for
   addendum 19.
+
+## Addendum 17's fifth try stopped by its budget; addendum 20 moves R8 and V8 to LFM3 (recorded 2026-10-28 ~00:30Z)
+- **Addendum 18's pre-check (shown, Ben's PC, Week-1, one night, generation only, `results_pc/run4/probe18`):** GO.
+  - The fixed writer carded 27 of 27 reachable two-hop tests forward; the old writer carded 16.
+  - It kept 112 of 163 samples (69%); the old one kept 72 of 534 (13%). Bad and unverified samples fell from 241 and 208 to 19 and 19.
+- **Addendum 17, fifth try (shown):**
+  - At `--gen-bs 24` it ran out of memory in night 2. The 14 GiB cap now turns a full card into a real out-of-memory error, not a
+    slow spill.
+  - At 16, night 1 took 826 s and night 2 took 5265 s, against 227 and 1379 s on the RTX 5090: 3.6-3.8x slower, not 9x.
+  - Its projector stopped it after night 2 (projected end 07:48Z, budget 05:38Z), so there is no result.
+  - It is not tried again: the small tier is now LFM3, and addendum 19 carries the same gate.
+- **Addendum 20 (sealed):** addendum 15's R8 and V8 run on LFM3, not K2, with addendum 19's flags as their base if addendum 19
+  passes no harm and P1 (else the defaults).
+  - Addendum 19's K2 fallback is dropped.
+  - Chain script `pc/sleepb_pc11.sh` replaces pc10 while pc10 waits.
