@@ -835,8 +835,12 @@ function dockBesideSettings() {
     win.show();
     const script = 'tell application "System Settings" to set bounds of window 1 to {' + [wa.x + half, wa.y + 25, wa.x + wa.width, wa.y + wa.height].join(', ') + '}';
     let tries = 0;
+    // The first move asks Ben to let Premonition control System Settings (Automation). A short timeout killed osascript while
+    // that prompt was up, so the prompt vanished and the move never happened: give him a minute, and stop if he said no (-1743).
     const go = () => {
-      require('child_process').execFile('osascript', ['-e', script], { timeout: 4000 }, (err) => { if (err && ++tries < 5) setTimeout(go, 700); });
+      require('child_process').execFile('osascript', ['-e', script], { timeout: 60000 }, (err, out, stderr) => {
+        if (err && !/-1743|not allowed/i.test(String(stderr || err.message)) && ++tries < 5) setTimeout(go, 700);
+      });
     };
     setTimeout(go, 900);
   } catch (e) { /* layout is a convenience */ }
@@ -981,7 +985,10 @@ function registerIpc() {
     catch (e) { return { use, ok: false, name: t.name, error: String(e && e.message || e) }; }
   }));
   h('memory:list', () => memory.list());
+  h('memory:read', () => memory.read());
+  h('memory:write', (text) => memory.write(text));
   h('memory:reveal', () => { try { if (fs.existsSync(memory.file)) shell.showItemInFolder(memory.file); else shell.openPath(app.getPath('userData')); } catch (e) { /* ignore */ } return true; });
+  h('memory:open', async () => { try { if (!fs.existsSync(memory.file)) memory.write(memory.read().text); const err = await shell.openPath(memory.file); return err ? { ok: false, error: err } : { ok: true }; } catch (e) { return { ok: false, error: String(e && e.message || e) }; } });
   h('memory:add', (o) => memory.add(o));
   h('memory:edit', (id, o) => memory.edit(id, o));
   h('memory:delete', (id) => memory.delete(id));

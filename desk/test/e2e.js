@@ -413,49 +413,48 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['text contrast AA in settings (dark)', a.bad.length === 0]);
     }
     await grab('ui-v2-settings.png');
-    // ---- Settings > Memory: add, list, edit, delete, refuse secrets; verify toggle
+    // ---- Settings > Memory: plain markdown editor for memory.md (type, Save, blur, Glim's additions appear, hand-written text survives)
     {
-      const typeIn = (sel, v, enter) => ev('(() => { const i=document.querySelector("' + sel + '"); i.focus(); i.value=' + JSON.stringify(v) + '; i.dispatchEvent(new Event("input",{bubbles:true})); ' + (enter ? 'i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));' : '') + ' })()');
-      const rows = () => ev('[...document.querySelectorAll("#memList .mem-row")].map((r)=>r.querySelector(".mem-text").value)');
-      checks.push(['memory: help text and empty state shown', await ev('/remembers these between chats/.test(document.querySelector("#settingsCol").innerText) && !!document.querySelector("#memList .mem-empty")')]);
-      await typeIn('#memTopic', 'classes');
-      await typeIn('#memNew', 'AP Chem is 3rd period with Mr. Phipps', true);
-      checks.push(['memory: Add (Enter) lists the fact and saves it', await until(async () => (await rows()).length === 1, 3000) && memory.list().length === 1 && memory.list()[0].text === 'AP Chem is 3rd period with Mr. Phipps' && memory.list()[0].topic === 'classes']);
-      await typeIn('#memTopic', 'school');
-      await typeIn('#memNew', 'Ben lives in Dresden and takes the bus to school');
-      await ev('document.querySelector("#memAdd").click()');
-      await until(async () => (await rows()).length === 2, 3000);
-      await typeIn('#memTopic', 'style');
-      await typeIn('#memNew', 'Prefers short answers without emoji');
-      await ev('document.querySelector("#memAdd").click()');
-      checks.push(['memory: Add button lists more facts', await until(async () => (await rows()).length === 3, 3000)]);
-      // edit: change the text, Enter saves
-      await ev('(() => { const i=document.querySelector("#memList .mem-text"); i.focus(); i.value="AP Chem is 4th period with Mr. Phipps"; i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true})); })()');
-      checks.push(['memory: editing a fact and pressing Enter saves it', await until(() => memory.list().some((f) => f.text === 'AP Chem is 4th period with Mr. Phipps'), 3000) && !memory.list().some((f) => /3rd period/.test(f.text))]);
-      // edit to a secret is refused inline and the old text stays
-      await ev('(() => { const i=document.querySelectorAll("#memList .mem-text")[1]; i.focus(); i.value="my password is hunter2"; i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true})); })()');
-      checks.push(['memory: editing to a secret is refused inline, old text kept', await until(() => ev('/Not saved/.test(document.querySelector("#memNote").textContent) && document.querySelector("#memNote").classList.contains("bad")'), 3000) && memory.list().every((f) => !/hunter2/.test(f.text)) && memory.list().length === 3]);
-      await typeIn('#memNew', 'The wifi password is hunter2', true);
+      const ta = (js) => ev('(() => { const t=document.querySelector("#memText"); ' + js + ' })()');
+      const typeText = (v) => ta('t.focus(); t.value=' + JSON.stringify(v) + '; t.dispatchEvent(new Event("input",{bubbles:true}));');
+      const fileText = () => memory.read().text;
+      checks.push(['memory: editor and help text shown', await ev('/markdown file Glim reads/.test(document.querySelector("#settingsCol").innerText) && document.querySelector("#memText").tagName==="TEXTAREA" && !document.querySelector("#memList") && !document.querySelector("#memNew")')]);
+      await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n');
+      await ev('document.querySelector("#memSave").click()');
+      checks.push(['memory: Save button writes the text to memory.md', await until(() => fileText() === '# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n', 3000) && memory.list().length === 1 && memory.list()[0].text === 'AP Chem is 3rd period with Mr. Phipps']);
+      checks.push(['memory: a Saved note is shown', await until(() => ev('/Saved/.test(document.querySelector("#memNote").textContent)'), 3000)]);
+      await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 4th period with Mr. Phipps\n');
+      await ev('document.querySelector("#memText").blur()');
+      checks.push(['memory: leaving the box (blur) saves it', await until(() => /4th period/.test(fileText()) && !/3rd period/.test(fileText()), 3000)]);
+      await typeText('- Prefers short answers\n');
+      await ev('document.querySelector("#memText").dispatchEvent(new KeyboardEvent("keydown",{key:"s",metaKey:true,bubbles:true,cancelable:true}))');
+      checks.push(['memory: Cmd+S saves', await until(() => fileText() === '- Prefers short answers\n', 3000)]);
+      checks.push(['memory: previous version kept as memory.md.bak', require('fs').existsSync(memory.file + '.bak')]);
+      // an edit in progress is never clobbered by a change on disk
+      await typeText('- unsaved typing');
+      memory.save('Ben takes Spanish 2 in 5th period', 'classes');
+      await sleep(3600);
+      checks.push(['memory: unsaved typing survives a change on disk', await ev('document.querySelector("#memText").value==="- unsaved typing"')]);
+      await ev('document.querySelector("#memText").value="- Prefers short answers\n"; document.querySelector("#memText").dispatchEvent(new Event("input",{bubbles:true})); document.activeElement && document.activeElement.blur()');
       await sleep(200);
-      checks.push(['memory: adding a secret-looking fact is refused inline and not stored', await until(() => ev('/Not saved: .*password/.test(document.querySelector("#memNote").textContent)'), 3000) && memory.list().length === 3 && (await rows()).length === 3]);
-      checks.push(['memory: a refused fact stays in the field so it can be fixed', await ev('document.querySelector("#memNew").value==="The wifi password is hunter2"')]);
-      await ev('document.querySelector("#memNew").value=""');
-      // the verify setting
+      // with nothing unsaved, what Glim adds shows up on the next refresh
+      await ev('window.__openSettings()'); await sleep(400);
+      checks.push(['memory: text Glim added appears in the editor', await until(() => ev('/Spanish 2/.test(document.querySelector("#memText").value)'), 4000)]);
+      checks.push(['memory: hand-written lines survive Glim\'s additions', /^- Prefers short answers$/m.test(fileText()) || /- Prefers short answers/.test(fileText())]);
+      await ev('document.querySelector("#memText").value=""'); await ev('document.querySelector("#memText").blur()');
+      for (const f of memory.list()) memory.delete(f.id);
+      await ev('window.__openSettings()'); await sleep(300);
+      checks.push(['memory: editor refreshes when Settings opens (file changed behind its back)', await until(() => ev('document.querySelector("#memText").value.indexOf("Spanish")<0'), 4000)]);
+
       checks.push(['settings: verify is on by default and the checkbox toggles it', store.getSettings().verify === true && await (async () => { await ev('document.querySelector("#settingsCol [aria-label^=\\"Double-check my work\\"]").click()'); const off = await until(() => store.getSettings().verify === false, 3000); await ev('document.querySelector("#settingsCol [aria-label^=\\"Double-check my work\\"]").click()'); return off && await until(() => store.getSettings().verify === true, 3000); })()]);
-      await ev('document.querySelector("#memNote").textContent=""; document.querySelector("#memNew").value=""');
-      await ev('document.querySelector("#memList").closest(".s-group").scrollIntoView({block:"start"})'); await sleep(400);
+      await ev('document.querySelector("#memNote").textContent=""');
+      await ev('document.querySelector("#memText").closest(".s-group").scrollIntoView({block:"start"})'); await sleep(400);
       await ev('document.activeElement && document.activeElement.blur()');
-      await ev('(()=>{ let g=document.querySelector("#memList").closest(".s-group").nextElementSibling; while(g){ g.dataset.h="1"; g.style.display="none"; g=g.nextElementSibling; } })()'); // the screenshot is about Memory only
-      await ev('document.querySelector("#memList").closest(".s-group").scrollIntoView({block:"start"})');
+      await ev('(()=>{ let g=document.querySelector("#memText").closest(".s-group").nextElementSibling; while(g){ g.dataset.h="1"; g.style.display="none"; g=g.nextElementSibling; } })()'); // the screenshot is about Memory only
+      await ev('document.querySelector("#memText").closest(".s-group").scrollIntoView({block:"start"})');
       await sleep(300);
       await grab('ui-v2-memory.png');
       await ev('document.querySelectorAll(".s-group[data-h]").forEach((g)=>{ g.style.display=""; delete g.dataset.h; })');
-      // delete
-      await ev('document.querySelector("#memList .mem-row .ghost").click()');
-      checks.push(['memory: Delete removes the fact from the list and the file', await until(async () => (await rows()).length === 2, 3000) && memory.list().length === 2]);
-      for (const f of memory.list()) memory.delete(f.id);
-      await ev('window.__openSettings()'); await sleep(300);
-      checks.push(['memory: list refreshes when Settings opens (facts changed behind its back)', await rows().then((r) => r.length === 0)]);
     }
     checks.push(['settings: default hotkey is Alt+Space (Option+Space), keep running on, open at login off', store.getSettings().hotkey === 'Alt+Space' && store.getSettings().keepRunning === true && store.getSettings().openAtLogin === false]);
     await ev('document.querySelector("#settingsClose").click()');
@@ -521,7 +520,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['memory_save run: the step reads "Remembered: ..."', await ev('[...document.querySelectorAll(".step")].some((x)=>/Remembered: Ben takes Spanish 2/.test(x.innerText))')]);
       checks.push(['memory_save run: the fact is stored with its topic', memory.list().some((f) => /Spanish 2/.test(f.text) && f.topic === 'classes')]);
       await ev('window.__openSettings()'); await sleep(400);
-      checks.push(['memory_save run: the fact shows in Settings > Memory', await until(() => ev('[...document.querySelectorAll("#memList .mem-row")].some((r)=>/Spanish 2/.test(r.querySelector(".mem-text").value) && r.querySelector(".mem-chip").textContent==="classes")'), 3000)]);
+      checks.push(['memory_save run: the fact shows in Settings > Memory', await until(() => ev('/Spanish 2/.test(document.querySelector("#memText").value) && /topic: classes/.test(document.querySelector("#memText").value)'), 4000)]);
       await ev('document.querySelector("#settingsClose").click()');
       for (const f of memory.list()) memory.delete(f.id);
 
