@@ -28,7 +28,7 @@
     spin: '<path d="M8 2a6 6 0 106 6" />',
     dot: '<circle cx="8" cy="8" r="2"/>'
   };
-  const TOOL_ICON = { web_search: 'search', browser_go: 'globe', browser_click: 'cursor', browser_type: 'keyboard', browser_scroll: 'scroll', browser_back: 'back', browser_read: 'doc', screen_look: 'monitor', screen_click: 'monitor', screen_type: 'monitor', screen_key: 'keyboard', open_app: 'app', run_shell: 'terminal', diary_search: 'book', verify: 'check', memory_save: 'bookmark', memory_forget: 'bookmark', ask_user: 'question', agent_start: 'person', agent_list: 'person', agent_stop: 'person' };
+  const TOOL_ICON = { web_search: 'search', browser_go: 'globe', browser_click: 'cursor', browser_type: 'keyboard', browser_scroll: 'scroll', browser_back: 'back', browser_read: 'doc', screen_look: 'monitor', screen_click: 'monitor', screen_type: 'monitor', screen_key: 'keyboard', open_app: 'app', run_shell: 'terminal', diary_search: 'book', verify: 'check', memory_save: 'bookmark', memory_forget: 'bookmark', track_add: 'bookmark', track_done: 'bookmark', ask_user: 'question', agent_start: 'person', agent_list: 'person', agent_stop: 'person' };
   const icon = (name) => svg(P[name] || P.dot);
   const CHEV = '<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -563,7 +563,7 @@
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
         if (ev.stopped) msgs.append(el('div', 'status', 'Stopped.'));
         if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
-        loadThreads(); toBottom(); if (!$('#settings').hidden) memRefresh(); break;
+        loadThreads(); toBottom(); if (!$('#settings').hidden) { memRefresh(); trackRefresh(); } break;
       }
     }
     refreshMood();
@@ -797,6 +797,9 @@
     { group: 'Memory', rows: [
       { type: 'memory', label: 'What Glim remembers', help: 'Glim remembers these between chats. It adds to this list itself when it learns something lasting, like your classes.' }
     ] },
+    { group: 'Keeping track of', rows: [
+      { type: 'tracking', label: 'Things Glim is watching', help: 'Orders, bookings, applications and deadlines Glim keeps an eye on for you. It adds to this list itself when you mention one, and flags what is due while you sleep.' }
+    ] },
     { group: 'Sleep', rows: [
       { type: 'sleepstat', label: 'Sleep mode', help: 'Glim learns from your chats while you are away and checks your mail and calendar once an hour (read-only). It only sleeps while Glim is idle, because your chats come first.' },
       { key: 'sleepApp', type: 'text', label: 'Sleep app folder', help: 'Leave empty for ~/learner-ops/sleepmode/app.', ph: '~/learner-ops/sleepmode/app', wide: true },
@@ -878,6 +881,30 @@
     box.append(list, add, note);
     return box;
   }
+  // Keeping track of: active items from src/tracking.js, with Done and Remove per item.
+  let trackRefresh = () => {};
+  function trackUi() {
+    const box = el('div', 'mem'), list = el('div', 'mem-list');
+    list.id = 'trackList';
+    trackRefresh = async () => {
+      const items = await desk.tracking.list();
+      list.textContent = '';
+      if (!items.length) list.append(el('div', 'mem-empty', 'Nothing yet. Tell Glim you ordered something or have a deadline, and it will appear here.'));
+      for (const it of items) {
+        const r = el('div', 'mem-row'); r.dataset.what = it.what;
+        const chip = el('span', 'mem-chip' + (it.until ? '' : ' none'), it.until || 'no date');
+        const t = el('div', 'track-text'); t.append(el('span', null, it.what));
+        if (it.source) t.append(el('small', 'dim', 'from ' + it.source));
+        const dn = el('button', 'ghost sm', 'Done'); dn.setAttribute('aria-label', 'Mark done: ' + it.what);
+        dn.onclick = async () => { await desk.tracking.done(it.what); trackRefresh(); };
+        const rm = el('button', 'ghost sm del', 'Remove'); rm.setAttribute('aria-label', 'Remove: ' + it.what);
+        rm.onclick = async () => { await desk.tracking.remove(it.what); trackRefresh(); };
+        r.append(chip, t, dn, rm); list.append(r);
+      }
+    };
+    box.append(list);
+    return box;
+  }
   function buildSettings() {
     const col = $('#settingsCol'); col.textContent = '';
     const gt = gate();
@@ -891,7 +918,7 @@
       const sec = el('section', 's-group'); sec.append(el('h2', null, g.group));
       const card = el('div', 's-card');
       for (const r of g.rows) {
-        const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' ? ' stack' : ''));
+        const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' || r.type === 'tracking' ? ' stack' : ''));
         const lab = el('div', 's-lab'); lab.append(el('b', null, r.label), el('span', null, typeof r.help === 'function' ? r.help() : r.help));
         const ctl = el('div', 's-ctl');
         row.append(lab, ctl);
@@ -938,6 +965,8 @@
           const to = el('span', 'dim', 'to'); ctl.append(mk('sleepFrom'), to, mk('sleepTo'));
         } else if (r.type === 'memory') {
           row.removeChild(ctl); row.append(memUi());
+        } else if (r.type === 'tracking') {
+          row.removeChild(ctl); row.append(trackUi());
         } else if (r.type === 'danger') {
           const ul = el('ul', 'danger-list'); for (const d of info.danger || []) ul.append(el('li', null, d)); lab.append(ul);
         } else if (r.type === 'perm') {
@@ -991,7 +1020,7 @@
   function openSettings() {
     if (!settingsBuilt) { buildSettings(); settingsBuilt = true; }
     desk.sleep.state().then((v) => { slp = v; paintSleep(); paintSleepSettings(); });
-    paintSettings(); memRefresh(); $('#settings').hidden = false; $('#settingsClose').focus();
+    paintSettings(); memRefresh(); trackRefresh(); $('#settings').hidden = false; $('#settingsClose').focus();
   }
   function closeSettings() { $('#settings').hidden = true; input.focus(); }
   $('#btnSettings').onclick = openSettings; $('#settingsClose').onclick = closeSettings;

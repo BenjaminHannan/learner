@@ -8,7 +8,7 @@ const E2E = process.argv.includes('--e2e');
 const Platform = require('./renderer/platform');
 const APP_NAME = 'Premonition';
 app.setName(APP_NAME);
-if (!E2E) {
+if (!E2E && !app.commandLine.hasSwitch('user-data-dir')) { // a test profile must start empty, never a copy of the real data
   // renamed from "Premonition Desk": bring the old settings/threads/memory/helpers along, once (the old folder stays as a backup)
   try { const r = require('./src/migrate').migrateUserData(app.getPath('appData'), app.getPath('userData')); if (r.migrated) console.log('userData copied from', r.from); } catch (e) { /* start fresh */ }
 }
@@ -32,6 +32,7 @@ const { Diary } = require('./src/tools/diary');
 const { createScreen } = require('./src/tools/screen');
 const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
+const { createTracking } = require('./src/tracking');
 const { Sleep, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
@@ -51,6 +52,7 @@ let store = null;
 let builtin = null;  // the built-in local model (Windows): download, llama-server, gateway (src/runtime)
 let sleepInstaller = null;
 let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
+let tracking = null; // things Glim keeps track of (userData/tracking.md)
 let memory = null;   // Ben's saved facts (userData/memory.json)
 let agent = null;
 let diary = null;
@@ -212,7 +214,7 @@ function setupBuiltin() {
   builtin = new Builtin({ root, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
-    getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery,
+    getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
     hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
   });
@@ -548,7 +550,7 @@ function createAgent({ helper, rec }) {
   }
   const meta = () => ({ title: isHelper ? helper.name : (activeThread && activeThread.title) });
   const a = new Agent({
-    memory,
+    memory, tracking,
     getSettings: isHelper ? () => ({ ...store.getSettings(), mode: helper.mode || store.getSettings().helperMode || 'hands-off' }) : () => store.getSettings(),
     tools,
     toolDefs: () => toolDefs,
@@ -732,7 +734,7 @@ async function afterFirstPaint() {
   toolsReady = Promise.resolve();
   if (E2E) {
     require('./test/e2e.js').run({
-      app, win, ui, store, memory, sleeper, sl, autoSleepTick, helpers, send, browsers, panel, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
+      app, win, ui, store, memory, tracking, sleeper, sl, autoSleepTick, helpers, send, browsers, panel, pillWin, pillState, warmer, applySettings, env: e2eEnv, pending,
       loginWaits, timing, getWin: () => win, showWindow, holds, permsFake, permsStatus
     }).catch((e) => { console.error('E2E crashed', e); app.exit(1); });
   }
@@ -800,6 +802,9 @@ function registerIpc() {
   h('memory:add', (o) => memory.add(o));
   h('memory:edit', (id, o) => memory.edit(id, o));
   h('memory:delete', (id) => memory.delete(id));
+  h('tracking:list', () => tracking.list());
+  h('tracking:done', (what) => tracking.done({ what }));
+  h('tracking:remove', (what) => tracking.remove(what));
   h('helpers:list', () => helpers.list());
   h('helpers:run', (id) => ((sl.asleep || sl.waking) ? { error: 'Glim is asleep. Wake it first.' } : helpers.runNow(id)));
   h('sleep:state', () => sleepView());
@@ -938,6 +943,7 @@ app.whenReady().then(async () => {
   if (!gotLock) return;
   store = new Store(app.getPath('userData'));
   memory = createMemory(app.getPath('userData'));
+  tracking = createTracking(app.getPath('userData'));
   if (FEATURES.builtin || process.env.PREMONITION_BUILTIN) setupBuiltin(); else sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   resetModelToDefault();

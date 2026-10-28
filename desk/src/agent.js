@@ -174,6 +174,8 @@ function defaultSummary(name, a) {
     case 'diary_search': return 'Searched diary “' + short(a.query, 40) + '”';
     case 'memory_save': return 'Remembered: ' + short(a.fact, 50);
     case 'memory_forget': return 'Forgot: ' + short(a.match || a.id, 50);
+    case 'track_add': return 'Tracking: ' + short(a.what, 50);
+    case 'track_done': return 'Tracking done: ' + short(a.what, 50);
     case 'verify': return 'Checking its work';
     case 'ask_user': return 'Asked Ben';
     default: return name;
@@ -257,6 +259,7 @@ class Agent {
     this.memBlock = '';
     this.taskText = String(userText || ''); this.usedMemSave = false; this.memChecks = 0; this.secretChecks = 0;
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
+    try { const tb = this.o.tracking ? this.o.tracking.block() : ''; if (tb) this.memBlock += (this.memBlock ? '\n' : '') + tb; } catch (e) { /* no tracking block */ }
     this.threadId = thread.id;
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
@@ -505,6 +508,16 @@ class Agent {
         }
         const r = this.o.memory.forget({ id: args.id, match: args.match });
         return { text: finish(r.ok ? 'Forgot ' + r.removed.length + ' fact(s): ' + r.removed.map((f) => f.text).join(' | ') : r.error, r.ok, r.ok ? 'Forgot ' + r.removed.length + ' fact(s)' : 'Nothing to forget') };
+      } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
+    }
+    if ((name === 'track_add' || name === 'track_done') && this.o.tracking) {
+      try {
+        if (name === 'track_add') {
+          const r = this.o.tracking.add({ what: args.what, source: args.source, until: args.until });
+          return { text: finish(r.ok ? (r.replaced ? 'Updated tracked item: ' : 'Now tracking: ') + r.item.what + (r.item.until ? ' (until ' + r.item.until + ')' : '') : r.error, r.ok, r.ok ? 'Tracking: ' + short(r.item.what, 50) : 'Did not track: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
+        }
+        const r = this.o.tracking.done({ what: args.what });
+        return { text: finish(r.ok ? 'Marked done: ' + r.item.what : r.error, r.ok, r.ok ? 'Tracking done: ' + short(r.item.what, 50) : 'Nothing to mark done') };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
     if (!entry) return { text: finish('Error: unknown tool ' + name, false) };
