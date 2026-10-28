@@ -49,6 +49,7 @@ const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
+const { Updater } = require('./src/updater');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
@@ -85,6 +86,7 @@ let limiter = null;
 let warmer = null;
 let pillWin = null;
 let quitting = false;
+let updater = null; // in-app updates (src/updater.js)
 let gwState = { state: 'down' };
 let gwReadyAt = 0; // last time the gateway was seen ready (0 = not this session)
 let e2eEnv = null;
@@ -1008,6 +1010,13 @@ function buildMenu() {
 
 function registerIpc() {
   const h = (name, fn) => ipcMain.handle(name, async (e, ...a) => fn(...a));
+  h('update:status', () => updater ? updater.state : null);
+  h('update:check', () => updater ? updater.check() : null);
+  h('update:install', () => {
+    if (!updater) return null;
+    if ((agent && agent.running) || (helpers && helpers.active.size)) return { ...updater.state, error: 'Glim is busy with a run. Try again when it finishes.' };
+    return updater.install();
+  });
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
   h('threads:list', () => store.listThreads());
@@ -1253,6 +1262,9 @@ app.whenReady().then(async () => {
   if (FEATURES.tray && Platform.startedHidden(process.platform, process.argv)) ensureTray();
   buildAgent();
   registerIpc();
+  updater = new Updater({ version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
+    onState: (st) => send('update:state', st), quit: () => { quitting = true; app.quit(); } });
+  if (app.isPackaged && !E2E && store.getSettings().autoUpdateCheck !== false) updater.startTimer(30000);
   createWindow(); // shown on ready-to-show; diary, helpers, warm-up, pill, hotkey start after that (afterFirstPaint)
 });
 
