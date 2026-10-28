@@ -299,8 +299,8 @@ class Agent {
           this.emit({ type: 'user', text: t, steer: true });
         }
         const s = this.o.getSettings();
-        const maxSteps = Number(s.maxSteps) || 40;
-        if (step >= maxSteps) {
+        const maxSteps = Number(s.maxSteps) || 0; // 0 = no limit
+        if (maxSteps && step >= maxSteps) {
           const note = 'I reached the step limit (' + maxSteps + ') and stopped. Tell me to continue if you want me to keep going.';
           thread.messages.push({ role: 'assistant', content: note });
           thread.items.push({ t: 'assistant', text: note });

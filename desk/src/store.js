@@ -17,7 +17,8 @@ const DEFAULT_SETTINGS = {
   mode: 'ask',            // ask | hands-off (main agent)
   verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
   helperMode: 'hands-off', // autonomy for helper agents
-  maxSteps: 40,
+  maxSteps: 0,            // model calls per task before Glim stops and asks; 0 = no limit (Ben Oct 28: threads are unlimited)
+  stepsPlan: 2,           // settings migration marker: 1 = the old 40-step default moved to no limit; 2 = runs at once moved to no limit
   compactTokens: Platform.defaultPreset(process.platform).compactTokens, // history size that triggers compaction (small local models have small context)
   maxToolChars: Platform.defaultPreset(process.platform).maxToolChars,
   // Helpers
@@ -67,7 +68,7 @@ const ENUMS = {
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
+const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
@@ -115,6 +116,10 @@ class Store {
         const w = Platform.defaultSleepWindow(process.platform);
         Object.assign(raw, { autoSleep: true, sleepAdapt: true, sleepFrom: w[0], sleepTo: w[1], sleepIdleMin: 120, sleepPlan: 2 });
       }
+      // Ben Oct 28: threads and concurrent Glims are unlimited. Old settings files carry the old caps (40 steps, 2 or 4 runs at once): drop them once;
+      // a number Ben picks in Settings afterwards sticks.
+      if ((raw.stepsPlan || 0) < 1 && raw.maxSteps === 40) raw.maxSteps = 0;
+      if ((raw.stepsPlan || 0) < 2) { raw.maxParallel = 0; raw.stepsPlan = 2; }
       return { ...DEFAULT_SETTINGS, ...raw, uses: cleanUses(raw.uses) };
     } catch (e) { return { ...DEFAULT_SETTINGS, uses: [] }; }
   }

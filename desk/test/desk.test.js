@@ -24,7 +24,7 @@ test('every setting has a default; saveSettings clamps, validates and ignores un
   assert.strictEqual(d.verify, true); assert.strictEqual(s.saveSettings({ verify: false }).verify, false); assert.strictEqual(s.saveSettings({ verify: 'x' }).verify, true);
   assert.strictEqual(d.keepRunning, true); assert.strictEqual(d.hotkey, 'Alt+Space'); assert.strictEqual(d.openAtLogin, false);
   const n = s.saveSettings({ maxSteps: 9999, maxParallel: -3, theme: 'neon', textSize: 'l', mode: 'hands-off', evil: 1, gatewayUrl: '  ', hotkey: 'Alt+Space ', vision: true });
-  assert.strictEqual(n.maxSteps, 200); assert.strictEqual(n.maxParallel, 0); assert.strictEqual(n.theme, 'system'); assert.strictEqual(n.textSize, 'l');
+  assert.strictEqual(n.maxSteps, 1000); assert.strictEqual(n.maxParallel, 0); assert.strictEqual(n.theme, 'system'); assert.strictEqual(n.textSize, 'l');
   assert.strictEqual(n.mode, 'hands-off'); assert.ok(!('evil' in n)); assert.strictEqual(n.gatewayUrl, DEFAULT_SETTINGS.gatewayUrl); assert.strictEqual(n.vision, 'on');
   assert.strictEqual(new Store(s.dir).getSettings().textSize, 'l'); // persisted
   assert.deepStrictEqual(sanitize({ pill: 0, keepRunning: 'x' }), { pill: false, keepRunning: true });
