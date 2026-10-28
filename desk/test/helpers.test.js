@@ -340,7 +340,7 @@ test('agent + fake gateway: primary calls agent_start -> helper runs -> notice q
     assert.ok(!primary.thread.messages.some((m) => m.role === 'user' && typeof m.content === 'string' && /helper updates/.test(m.content)));
     await mkAgent(false).run(primary.thread, 'what happened?');
     const users = primary.thread.messages.filter((m) => m.role === 'user');
-    assert.match(users.at(-1).content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d\] \[helper updates\] ticker: Report: the answer is 42\.\nwhat happened\?$/);
+    assert.match(users.at(-1).content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d\] \[If this needs tools[^\]]*\] \[helper updates\] ticker: Report: the answer is 42\.\nwhat happened\?$/);
     assert.strictEqual(primary.thread.items.filter((i) => i.t === 'user').at(-1).text, 'what happened?');
     assert.deepStrictEqual(primary.thread.pendingNotices, []);
   } finally { gw.close(); }

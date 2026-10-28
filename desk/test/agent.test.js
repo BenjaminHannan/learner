@@ -58,7 +58,7 @@ test('loop end to end: tool call -> result -> final answer, events + history', a
     assert.strictEqual(events.find((e) => e.type === 'step_start').summary, 'Searched “cats”');
     assert.strictEqual(events.at(-1).type, 'done'); assert.strictEqual(events.at(-1).stopped, false);
     assert.deepStrictEqual(t.messages.map((m) => m.role), ['user', 'assistant', 'tool', 'assistant']);
-    assert.match(t.messages[0].content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d\] tell me about cats$/);
+    assert.match(t.messages[0].content, /^\[\w{3} \d{4}-\d\d-\d\d \d\d:\d\d\] \[If this needs tools[^\]]*\] tell me about cats$/);
     assert.strictEqual(t.messages[3].content, 'Cats are great.');
     // second request contained the tool result and the constant system prompt
     const req2 = gw.requests[1].messages;

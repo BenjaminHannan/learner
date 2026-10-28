@@ -180,7 +180,7 @@ const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save
 // "go learn about X": learning mode. Hidden note in front of the message; the scroll shows only the person's words.
 const LEARN_ASK = /^\s*(?:(?:please|ok|okay|hey)[ ,]+)?(?:go\s+|can you\s+|could you\s+)?(?:learn|study)\s+(?:about\s+|how to\s+|to\s+)?\S/i;
 const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat it as building a skill that you keep.] '
-  + '1) Research it: search the web and read 3 to 5 good sources, not just the first hit. '
+  + 'First tell the person your plan in 2 to 4 short lines, and say a short line before each step. 1) Research it: search the web and read 3 to 5 good sources, not just the first hit. '
   + '2) Save what you learned as a skill with memory_save, topic "skill: <short name>": 5 to 8 short, true, useful notes, each with its source and, if it can go stale, an expiry. Never save a guess. '
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check each answer against a source, and save one note with the score and the weak spots. '
   + '4) Study the weak spots once more, then tell the person in plain words what you can now do and what is still shaky. '
