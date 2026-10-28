@@ -367,3 +367,16 @@ test('a hidden turn (Glim relaying a helper report) shows no user bubble but sti
     assert.ok(t.items.some((i) => i.t === 'assistant'));
   } finally { gw.close(); }
 });
+
+test('ask_user passes up to 4 short tap-to-answer options to the UI', async () => {
+  const { cleanOptions } = require('../src/agent');
+  assert.deepStrictEqual(cleanOptions(['Yes', '  No  ', '', 'A'.repeat(100), 'c', 'd', 'e']).map((x) => x.length), [3, 2, 60, 1]);
+  assert.deepStrictEqual(cleanOptions('nope'), []); assert.deepStrictEqual(cleanOptions(undefined), []);
+  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Which?', options: ['Red', 'Blue'] } }] }, { content: 'Done.' }]);
+  try {
+    let got = null;
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async (q, s, o) => { got = { q, o }; return 'Red'; } });
+    await agent.run(mkThread(), 'pick one');
+    assert.deepStrictEqual(got, { q: 'Which?', o: ['Red', 'Blue'] });
+  } finally { gw.close(); }
+});

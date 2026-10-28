@@ -715,9 +715,9 @@ function createAgent({ helper, rec, voice }) {
       send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
       return waitFor(rid, signal, 'deny', { threadId: a.threadId, ev });
     },
-    askUser: (question, signal) => {
+    askUser: (question, signal, options) => {
       const id = 'ask_' + Date.now() + '_' + a.threadId;
-      const ev = { threadId: a.threadId, type: 'ask', id, question };
+      const ev = { threadId: a.threadId, type: 'ask', id, question, options: options && options.length ? options : undefined };
       send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
       return waitFor(id, signal, '[stopped by user]', { threadId: a.threadId, ev });
     },

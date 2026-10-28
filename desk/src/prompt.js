@@ -54,7 +54,7 @@ const TOOL_DEFS = {
   memory_forget: fn('memory_forget', 'Forget saved facts by matching text.', obj({ match: S('text in the fact') })),
   track_add: fn('track_add', 'Track an order or deadline.', obj({ what: { type: 'string' }, source: { type: 'string' }, until: S('YYYY-MM-DD') }, ['what'])),
   track_done: fn('track_done', 'Mark a tracked item done.', obj({ what: S('text in the item') }, ['what'])),
-  ask_user: fn('ask_user', 'Ask Ben a question; his reply is the result.', obj({ question: S('question for Ben') }, ['question']))
+  ask_user: fn('ask_user', 'Ask Ben; give 2-4 tap options.', obj({ question: { type: 'string' }, options: { type: 'array', items: { type: 'string' } } }, ['question']))
 };
 
 for (const k of Object.keys(TOOL_DEFS)) TOOL_DEFS[k] = JSON.parse(P(JSON.stringify(TOOL_DEFS[k]))); // "Ask Ben a question" -> this user
