@@ -661,6 +661,7 @@ function createAgent({ helper, rec, voice }) {
         const v = await signInWait(bk(), a.threadId, signal);
         return v === 'done' ? 'You were stuck on a sign-in page. Ben completed that step himself in the browser panel. Fresh snapshot:\n' + (await b.snapshot()) : v === 'stopped' ? '[stopped by user]' : 'Ben did not complete the sign-in. Stop trying that page and tell him what is blocked.';
       }
+      if (isHelper) return 'You were stuck repeating ' + stuck.summary + '. Do not ask Ben. Try a different approach, or finish with a short report of what worked and what could not be done.'; // a Glim fixes it itself
       const answer = await a.o.askUser('I keep repeating "' + stuck.summary + '" and nothing changes. What should I do instead?', signal);
       return 'You were stuck repeating ' + stuck.summary + '. Ben says: ' + answer;
     },

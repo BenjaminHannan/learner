@@ -131,7 +131,7 @@ function takeNotices(thread) {
 }
 
 function helperText(h) {
-  let t = "You are helper '" + h.name + "'. Task: " + h.task + '. Finish with a short report.';
+  let t = "You are helper '" + h.name + "'. Task: " + h.task + '. Work on your own: if a tool or a step fails, fix it or try another way yourself (agent_update changes a helper); do not ask Ben about errors or tool problems. Finish with a short report of the result only, with no notes about your own tools.';
   if (h.lastReport && (h.every || h.at)) t += '\nPrevious report: ' + short(h.lastReport, REPORT_KEEP) + '\nSay what changed since then.' + P('\nIf nothing worth telling Ben changed since then, reply with exactly: NO_UPDATE');
   return t;
 }
@@ -145,10 +145,22 @@ function batchNotice(list) {
   return { title: list.length + ' Glims finished' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
 }
 
+// A Glim's report is its FINAL answer: the last assistant message with no tool call, minus any leading "I need to... / Let me..." narration
+// (with thinking off the model writes a planning sentence before each tool call, and those must not become the summary shown in the list and pill).
+const NARRATION = /^(?:i need to|i'll|i will|i'm going to|i am going to|i should|let me|let's|first,|now,|okay,|ok,|alright,|next,)\b/i;
+function stripNarration(text) {
+  const parts = String(text || '').trim().split(/(?<=[.!?:])\s+/);
+  let k = 0;
+  while (k < parts.length - 1 && NARRATION.test(parts[k].trim())) k++;
+  return parts.slice(k).join(' ').trim();
+}
 function lastAssistantText(messages) {
-  for (let i = (messages || []).length - 1; i >= 0; i--) {
-    const m = messages[i];
-    if (m.role === 'assistant' && typeof m.content === 'string' && m.content.trim()) return m.content.trim();
+  const ok = (m, withCalls) => m.role === 'assistant' && typeof m.content === 'string' && m.content.trim() && (withCalls || !(m.tool_calls && m.tool_calls.length));
+  for (const withCalls of [false, true]) {
+    for (let i = (messages || []).length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (ok(m, withCalls)) return stripNarration(m.content) || m.content.trim();
+    }
   }
   return '';
 }
@@ -239,6 +251,31 @@ class Helpers {
       if (overlap(n, words(h.name)) >= 0.5 || overlap(t, words(h.task)) >= 0.7) return this.view(h);
     }
     return null;
+  }
+
+  // Change a Glim in place: its task, name and/or schedule (every / at; an empty string clears that one), without stopping and re-creating it.
+  update(ref, { name, task, every, at }) {
+    const h = this.find(ref);
+    if (!h) return null;
+    const newEvery = every !== undefined ? (every || null) : h.every, newAt = at !== undefined ? (at || null) : h.at;
+    const scheduleChanged = every !== undefined || at !== undefined;
+    const sched = scheduleChanged ? parseSchedule({ every: newEvery, at: newAt }) : this.sched(h);
+    if (name !== undefined) {
+      name = short(name, 40);
+      if (!name) throw new Error('name cannot be empty');
+      const other = this.find(name);
+      if (other && other !== h && other.status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists");
+      h.name = name;
+    }
+    if (task !== undefined) { task = String(task || '').trim(); if (!task) throw new Error('task cannot be empty'); h.task = task; }
+    if (scheduleChanged) {
+      h.every = newEvery; h.at = newAt;
+      h.next = sched.kind === 'once' ? null : nextRun(sched, this.now());
+      h.dueHeld = false;
+      if (h.status === 'stopped' && sched.kind !== 'once') h.status = 'idle'; // a stopped Glim given a schedule is live again
+    }
+    this.changed();
+    return this.view(h);
   }
 
   // Cancel the schedule, abort a running run, keep the helper (and its thread) as "stopped".

@@ -24,7 +24,7 @@ test('prompt has no per-chat content (no digits that look like dates or paths)',
 
 test('helper tools are in the list and the prompt tells the model to delegate', () => {
   const names = buildTools({ diary: false }).map((t) => t.function.name);
-  for (const n of ['agent_start', 'agent_list', 'agent_stop']) assert.ok(names.includes(n), n);
+  for (const n of ['agent_start', 'agent_list', 'agent_update']) assert.ok(names.includes(n), n);
   assert.match(SYSTEM_PROMPT, /agent_start/);
   assert.match(SYSTEM_PROMPT, /agent_list/);
 });

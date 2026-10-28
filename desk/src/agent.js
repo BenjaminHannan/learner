@@ -147,6 +147,25 @@ function datePrefix(d) {
   return '[' + days[d.getDay()] + ' ' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ']';
 }
 
+// The date stamp of a new turn, plus a plain warning when the thread's previous turn was on another day: a chat left open overnight
+// otherwise makes the model treat last night's "tomorrow" as still tomorrow (seen: "Tomorrow (Wednesday Oct 28)" on Wed Oct 28).
+const STAMP_RE = /\[(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) (\d{4}-\d{2}-\d{2}) \d{2}:\d{2}\]/g;
+function nowStamp(messages, d) {
+  d = d || new Date();
+  const stamp = datePrefix(d);
+  let prev = null;
+  for (let i = (messages || []).length - 1; i >= 0 && !prev; i--) {
+    const m = messages[i];
+    if (!m || m.role !== 'user' || typeof m.content !== 'string') continue;
+    const all = [...m.content.matchAll(STAMP_RE)];
+    if (all.length) prev = all[all.length - 1][1];
+  }
+  const today = stamp.slice(5, 15);
+  if (!prev || prev === today) return stamp;
+  const long = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return stamp + ' (New day: today is ' + long + '. The earlier messages here were on ' + prev + ', so their "today" and "tomorrow" are out of date.)';
+}
+
 const PLAN_STEP_MAX = 120;
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
@@ -196,7 +215,7 @@ function parseArgs(s) {
 
 const SCREEN_GATED = new Set(['screen_click', 'screen_type', 'screen_key']);
 // Loop guard: tools where repeating the exact same call is normal.
-const REPEAT_OK = new Set(['ask_user', 'agent_list', 'agent_start', 'agent_stop', 'browser_scroll']);
+const REPEAT_OK = new Set(['ask_user', 'agent_list', 'agent_start', 'agent_update', 'agent_stop', 'browser_scroll']);
 const STUCK_REPEATS = 3; // the 3rd identical call in a row is refused
 
 // ---- Agent -----------------------------------------------------------------------------------
@@ -276,7 +295,7 @@ class Agent {
       let ctx = '';
       if (!thread.messages.some((m) => m.role === 'user')) { try { const s = this.o.getSettings && this.o.getSettings(); ctx = s ? usesLine(s.uses, s.usesOther) : ''; } catch (e) { ctx = ''; } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
-      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + datePrefix() + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
+      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
       thread.items.push({ t: 'user', text: shown || text });
     };
     repairHistory(thread.messages);
@@ -607,4 +626,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
