@@ -240,7 +240,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await ev('document.querySelector(".act-head").focus()');
     await ev('document.querySelector(".act-head").click()');
     await sleep(300);
-    checks.push(['clicking the header expands the details (button, so Enter/Space work), and the choice is remembered', await ev('document.body.dataset.acts==="open" && ' + vis + ' && document.querySelector(".act-head").tagName==="BUTTON" && document.querySelector(".act-head").getAttribute("aria-expanded")==="true" && localStorage.getItem("actsCollapsed")==="0"')]);
+    checks.push(['clicking the header expands the details of that group (button, so Enter/Space work)', await ev('document.querySelector(".activity.open") && ' + vis + ' && document.querySelector(".act-head").tagName==="BUTTON" && document.querySelector(".act-head").getAttribute("aria-expanded")==="true"')]);
     checks.push(['chevron turns down when expanded', await ev('getComputedStyle(document.querySelector(".act-head .chev")).transform!=="none"')]);
     checks.push(['expanding shows plan, narration and step pills with icons', await ev('!!document.querySelector(".plan") && document.querySelectorAll(".plan li").length===3 && document.querySelectorAll(".step .pill svg").length>=3 && !!document.querySelector(".nar")')]);
     checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);

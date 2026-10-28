@@ -101,13 +101,13 @@
     blk = { root, col };
     return blk;
   }
-  // one fold state for every tool-use group (all threads, also later ones): body[data-acts] + one CSS rule, remembered across launches
-  function setActsCollapsed(collapsed) {
-    document.body.dataset.acts = Acts.attr(collapsed);
-    document.querySelectorAll('.act-head').forEach((h) => h.setAttribute('aria-expanded', String(!collapsed)));
-    try { localStorage.setItem(Acts.KEY, collapsed ? '1' : '0'); } catch (e) { /* ignore */ }
+  // Ben Oct 28: only one step group is open at a time. Every group starts closed; opening one closes the others.
+  document.body.dataset.acts = Acts.attr(true);
+  function toggleAct(root) {
+    const open = !root.classList.contains('open');
+    msgs.querySelectorAll('.activity.open').forEach((o) => { o.classList.remove('open'); const h = o.querySelector('.act-head'); if (h) h.setAttribute('aria-expanded', 'false'); });
+    if (open) { root.classList.add('open'); const h = root.querySelector('.act-head'); if (h) h.setAttribute('aria-expanded', 'true'); }
   }
-  { let st = null; try { st = localStorage.getItem(Acts.KEY); } catch (e) { /* ignore */ } document.body.dataset.acts = Acts.attr(Acts.parse(st)); }
   function ensureAct(before) {
     if (act && !act.finished) return act;
     const b = ensureBlock();
@@ -123,8 +123,8 @@
     const body = el('div', 'act-body');
     root.append(head, live, cards, body);
     const a = { root, head, ico, title, sub, live, liveT: live.lastChild, cards, body, steps: 0, bad: 0, t0: Date.now(), finished: false, lastNar: '', plan: null };
-    head.setAttribute('aria-expanded', String(!Acts.isCollapsed(document.body.dataset.acts)));
-    head.onclick = () => setActsCollapsed(!Acts.isCollapsed(document.body.dataset.acts));
+    head.setAttribute('aria-expanded', 'false');
+    head.onclick = () => toggleAct(root);
     if (before && before.parentNode === b.col) b.col.insertBefore(root, before); else b.col.append(root);
     root._act = a;
     act = a;
@@ -407,7 +407,13 @@
   }
   function addNotice(who, text) {
     const n = el('div', 'notice sel');
-    n.append(el('b', null, who ? who + ': ' : ''), document.createTextNode(text || ''));
+    const body = el('div', 'nbody atext'); body.innerHTML = md(text || ''); // a helper's report is markdown: no stray ** marks
+    n.append(el('b', null, who || 'Glim'), body);
+    if ((text || '').length > 260) { // a long report shows its first lines; one click shows the rest
+      n.classList.add('clamp');
+      const more = el('button', 'nmore', 'Show more'); more.onclick = () => { const c = n.classList.toggle('clamp'); more.textContent = c ? 'Show more' : 'Show less'; };
+      n.append(more);
+    }
     msgs.append(n); newBlock(); toBottom();
   }
 

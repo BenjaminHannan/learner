@@ -43,7 +43,10 @@ body.darwin #topbar { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 .atext pre code { background:none; padding:0; }
 .status { color:var(--text2); font-size:.9rem; padding:0 .2rem; align-self:center; }
 .errline { color:var(--danger); font-size:.95rem; padding:.55rem .8rem; border:1px solid var(--danger); border-radius:.8rem; background:var(--danger-soft); }
-.notice { align-self:flex-start; max-width:92%; padding:.45rem .8rem; border-left:3px solid var(--accent); color:var(--text2); font-size:.92rem; overflow-wrap:anywhere; background:var(--surface); border-radius:0 .6rem .6rem 0; } .notice b { color:var(--text); font-weight:600; }
+.notice { align-self:flex-start; max-width:92%; padding:.45rem .8rem; border-left:3px solid var(--accent); color:var(--text2); font-size:.92rem; overflow-wrap:anywhere; background:var(--surface); border-radius:0 .6rem .6rem 0; } .notice b { color:var(--text); font-weight:600; display:block; }
+.notice .nbody > :first-child { margin-top:.15rem; } .notice .nbody > :last-child { margin-bottom:0; }
+.notice.clamp .nbody { max-height:5.6em; overflow:hidden; -webkit-mask-image:linear-gradient(#000 60%,transparent); mask-image:linear-gradient(#000 60%,transparent); }
+.notice .nmore { background:none; border:0; padding:.2rem 0 0; color:var(--accent-text); font-size:.85rem; cursor:pointer; }
 
 /* thinking */
 details.think { color:var(--text2); font-size:.9rem; }
@@ -62,7 +65,7 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .act-head .act-sub { color:var(--text2); font-weight:400; white-space:nowrap; }
 .act-head .act-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .chev { display:inline-block; width:.9rem; height:.9rem; flex:none; transition:transform .15s; color:var(--text2); }
-body:not([data-acts="closed"]) .act-head .chev, .step.open .chev { transform:rotate(90deg); }
+.activity.open .act-head .chev, .step.open .chev { transform:rotate(90deg); }
 .act-live { padding:0 .9rem .6rem; color:var(--text2); font-size:.92rem; display:flex; align-items:center; gap:.5rem; min-width:0; }
 .act-live .t { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere; }
 .act-live .dot { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; flex:none; }
@@ -70,7 +73,7 @@ body:not([data-acts="closed"]) .act-head .chev, .step.open .chev { transform:rot
 .act-cards:empty { display:none; }
 .act-body { border-top:1px solid var(--hair); padding:.6rem .9rem .8rem; display:flex; flex-direction:column; gap:.4rem; max-height:22rem; overflow:auto; }
 .act-body > * { flex:none; }
-body[data-acts="closed"] .act-body { display:none; }
+.activity:not(.open) .act-body { display:none; }
 .nar { color:var(--text2); font-size:.92rem; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:.1rem 0; min-height:1.45em; }
 .plan { border-left:3px solid var(--accent); padding:.1rem 0 .1rem .75rem; margin:.1rem 0 .3rem; }
 .activity > .plan { margin:.3rem .9rem .5rem; }
@@ -412,15 +415,15 @@ body.darwin .ob-head { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 textarea { scrollbar-width:none; }
 textarea::-webkit-scrollbar { display:none; }
 /* folded tool use (Ben Oct 28: "I still can't compact the box"): the browser / screen cards shrink to one line too; no big preview */
-body[data-acts="closed"] .act-cards { gap:.35rem; padding-bottom:.4rem; }
-body[data-acts="closed"] .bcard { flex-direction:row; align-items:center; border-radius:.75rem; box-shadow:none; }
-body[data-acts="closed"] .bcard:hover { transform:none; }
-body[data-acts="closed"] .bc-thumb { display:none; }
-body[data-acts="closed"] .bc-top { flex:1; padding:.4rem .7rem; }
-body[data-acts="closed"] .bc-fav { width:1.2rem; height:1.2rem; }
-body[data-acts="closed"] .bc-url { display:none; }
-body[data-acts="closed"] .bc-foot { padding:.4rem .7rem; flex:none; }
-body[data-acts="closed"] .bcard:not(.login) .bc-foot .lbl { display:none; }
+.activity:not(.open) .act-cards { gap:.35rem; padding-bottom:.4rem; }
+.activity:not(.open) .bcard { flex-direction:row; align-items:center; border-radius:.75rem; box-shadow:none; }
+.activity:not(.open) .bcard:hover { transform:none; }
+.activity:not(.open) .bc-thumb { display:none; }
+.activity:not(.open) .bc-top { flex:1; padding:.4rem .7rem; }
+.activity:not(.open) .bc-fav { width:1.2rem; height:1.2rem; }
+.activity:not(.open) .bc-url { display:none; }
+.activity:not(.open) .bc-foot { padding:.4rem .7rem; flex:none; }
+.activity:not(.open) .bcard:not(.login) .bc-foot .lbl { display:none; }
 
 /* Call Glim overlay */
 #call { position:fixed; inset:0; z-index:125; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
