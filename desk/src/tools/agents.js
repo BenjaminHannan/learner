@@ -3,7 +3,7 @@
 // A Glim can do almost everything the main Glim can (Ben, Oct 28: "make the glims able to do as much as possible"):
 // list Glims, edit or move its own schedule, stop itself or the Glims it started, never Ben's other Glims, and start new ones,
 // up to MAX_DEPTH Glims deep and MAX_KIDS live children each (a runaway guard, not a policy).
-const { fmtWhen, short } = require('../helpers');
+const { fmtWhenRel, short } = require('../helpers');
 
 const NO = "Error: Motes can't start Motes"; // a Glim run with no known id (should not happen)
 const MAX_DEPTH = 2;
@@ -14,6 +14,8 @@ function liveStatus(h) { return h.status === 'idle' && !h.next && !h.paused ? 'i
 
 function agentTools(mgr, opts) {
   const isHelper = !!(opts && opts.isHelper);
+  // relative times on the Motes' own clock: the model reads "tomorrow 08:00 (in 14 h)", not a bare weekday
+  const fmtWhen = (ts) => fmtWhenRel(ts, mgr.now ? mgr.now() : Date.now());
   const selfId = opts && opts.selfId;
   const err = (e) => ({ text: 'Error: ' + (e && e.message || e), error: true });
   const self = () => (selfId && mgr.items ? mgr.items.find((h) => h.id === selfId) : null);
@@ -45,9 +47,10 @@ function agentTools(mgr, opts) {
           const kids = mgr.items.filter((h) => h.byHelper === me.id && h.status !== 'stopped' && (mgr.isRunning(h.id) || h.every || h.at)).length; // a finished one-time child no longer counts
           if (kids >= MAX_KIDS) return { text: 'Error: you already run ' + kids + ' Motes; stop one first (agent_update with stop) or do the work yourself.', error: true };
         }
+        const both = a.every && a.at ? " (every '" + a.every + "' was ignored: at wins, so it runs once a day)" : '';
         const h = mgr.add({ name: a.name, task: a.task, every: a.every, at: a.at, parent: ctx && ctx.thread && ctx.thread.id, byHelper: isHelper ? selfId : undefined });
         const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') ? h.schedule + ', next run ' + fmtWhen(h.next) + ' (NOT running now; tell Ben that time, and use agent_update run: true to run it now)' : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
-        return { text: started(h, when), summary: 'Started Mote ' + h.name };
+        return { text: started(h, when + both), summary: 'Started Mote ' + h.name };
       } catch (e) { return err(e); }
     },
     agent_list: () => {
