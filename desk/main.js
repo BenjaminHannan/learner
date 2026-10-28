@@ -199,6 +199,9 @@ const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check each answer against a source, and save one note with the score and the weak spots. '
   + '4) Study the weak spots once more, then tell the person in plain words what you can now do and what is still shaky. '
   + 'Your saved notes and this practice are what sleep trains into you overnight. Keep going until you finish all four steps.\n\n';
+const LEARN_MOTE = (topic) => 'Go learn: ' + topic + '. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
+  + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
+  + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots. 4) Study the weak spots once more. Sleep trains your notes into you overnight. Finish with exactly: NO_UPDATE\n';
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
@@ -1264,6 +1267,14 @@ function registerIpc() {
   });
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
+  // "Learn" button: a Mote goes off to study a topic quietly; sleep trains its notes and fact cards in overnight.
+  h('helpers:learn', (topic) => {
+    topic = String(topic || '').trim().slice(0, 200);
+    if (!topic) return { error: 'Type what to learn.' };
+    if (sl.asleep || sl.waking) return { error: 'Glim is asleep. Wake it first.' };
+    try { const v = helpers.add({ name: ('Learn: ' + topic).slice(0, 40), task: LEARN_MOTE(topic) }); return { ok: true, name: v.name }; }
+    catch (e) { return { error: String(e && e.message || e) }; }
+  });
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
   h('respond', (id, value) => { const r = pending.get(id); if (r) { pending.delete(id); r(value); } return true; });
