@@ -222,14 +222,13 @@
       // the plan has its own checklist; same rule as extractPlan in src/agent.js (2+ numbered lines, each short)
       const nums = clean.split('\n').filter((l) => /^\s*\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\s*\d+[.)]\s+/, '').replace(/\*\*|__|`/g, '').trim());
       const isPlan = nums.length >= 2 && nums.every((l) => l.length <= 120);
-      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); if (!a.finished) { a.said = true; const b = briefSaid(one); a.liveT.textContent = b; if (window.Side) Side.setSaid(b); } }; }
+      if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); if (!a.finished) { a.said = true; const b = Doing.doingLine(clean) || one; a.liveT.textContent = b; if (window.Side) Side.setSaid(b); } }; }
       t.text.remove();
     }
     toBottom();
   }
 
   // the live line is one short sentence of what Glim is doing now; the longer narration stays in the expandable steps
-  function briefSaid(t) { const f = String(t).split(/(?<=[.!?])\s+/)[0] || t; return f.length > 90 ? f.slice(0, 89).trimEnd() + '…' : f; }
 
   // "Login access - You mentioned ... I need ..." reads as a wall of text: show the short head in bold and the rest as a
   // muted two-line note (full text on hover). Old saved threads still carry ** marks, so strip them here too.
