@@ -127,11 +127,11 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
   // ---- model presets (Settings > Model) --------------------------------------------------------------
   // gatewayUrl includes /v1 (the app appends /chat/completions). llama-server ignores the model name, so all three are "default".
   const PRESETS = [
-    { id: 'premonition', label: 'Premonition gateway', gatewayUrl: 'http://127.0.0.1:8090/v1', modelAuto: 'qwen36-auto', modelMain: 'qwen36', modelFast: 'qwen36-fast', model: 'qwen36-auto', compactTokens: 24000, maxToolChars: 8000 },
-    { id: 'llamacpp', label: 'llama.cpp server', gatewayUrl: 'http://127.0.0.1:8080/v1', modelAuto: 'default', modelMain: 'default', modelFast: 'default', model: 'default', compactTokens: 12000, maxToolChars: 6000 },
+    { id: 'premonition', label: 'Premonition gateway', gatewayUrl: 'http://127.0.0.1:8090/v1', modelAuto: 'qwen36-auto', modelMain: 'qwen36', modelFast: 'qwen36-fast', model: 'qwen36-auto', compactTokens: 24000, contextTokens: 50000, maxToolChars: 8000 },
+    { id: 'llamacpp', label: 'llama.cpp server', gatewayUrl: 'http://127.0.0.1:8080/v1', modelAuto: 'default', modelMain: 'default', modelFast: 'default', model: 'default', compactTokens: 12000, contextTokens: 24000, maxToolChars: 6000 },
     // The model the app runs itself (Windows, and Macs without Ben's assistant): LFM3 1.7B through llama-server behind the built-in gateway. ctx 8192, of which the
     // system prompt + tools take ~2k tokens, so history is compacted early and tool results are kept short.
-    { id: 'builtin', label: 'Built-in (LFM3)', gatewayUrl: 'http://127.0.0.1:18091/v1', modelAuto: 'auto', modelMain: 'main', modelFast: 'fast', model: 'auto', compactTokens: 4500, maxToolChars: 3000, builtin: true }
+    { id: 'builtin', label: 'Built-in (LFM3)', gatewayUrl: 'http://127.0.0.1:18091/v1', modelAuto: 'auto', modelMain: 'main', modelFast: 'fast', model: 'auto', compactTokens: 4500, contextTokens: 4500, maxToolChars: 3000, builtin: true }
   ];
   const presetsFor = (p, o) => PRESETS.filter((x) => !x.builtin || builtinOn(p, o));
   const defaultPreset = (p, o) => (builtinOn(p, o) ? PRESETS.find((x) => x.id === 'builtin') : PRESETS[0]);

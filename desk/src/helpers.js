@@ -425,7 +425,7 @@ class Helpers {
 function createRunner({ store, makeAgent }) {
   return async (h, text, { signal, onState, attach }) => {
     const thread = store.loadThread(h.threadId) || { ...store.newThread(), id: h.threadId, title: 'Glim: ' + h.name, helper: h.id };
-    thread.messages = []; // fresh context per run; the last report rides in the message
+    thread.messages = []; delete thread.ctxFrom; delete thread.ctxSummary; delete thread.ctxNote; // fresh context per run; the last report rides in the message
     thread.items = (thread.items || []).slice(-MAX_ITEMS);
     thread.title = 'Glim: ' + h.name; thread.helper = h.id;
     if (signal.aborted) return { stopped: true };

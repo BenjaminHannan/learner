@@ -603,3 +603,12 @@ class IdeaVerdictTests(unittest.TestCase):
             self.assertEqual(L.read_idea_verdicts(Path(d)), [])
             (Path(d) / "idea-verdicts.jsonl").write_text(json.dumps(self.V[0]) + "\nnot json\n" + json.dumps({"verdict": "meh", "idea": "x"}) + "\n")
             self.assertEqual(L.read_idea_verdicts(Path(d)), [self.V[0]])
+
+
+class ChatSummaryCallSkipped(unittest.TestCase):
+    def test_summary_request_is_not_a_turn(self):
+        # The Desk's long-chat summary call (src/agent.js summarizeLeftOut) is the app talking, not Ben: never a training turn.
+        rec = desk_rec("[Chat summary request]\nChat:\nBen: plan my week\nGlim: ok", "Ben wants a week plan.", 1_700_000_000.0,
+                       history=[{"role": "system", "content": "You summarize a chat between Ben and his assistant Glim."}])
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(diary_mod.record_turn_meta(rec, Path(d)))
