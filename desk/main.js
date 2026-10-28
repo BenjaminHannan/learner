@@ -804,8 +804,10 @@ function buildAgent() {
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent, flags) => {
       if (flags && flags.quiet) return send('helpers:changed', helpers.list()); // nothing new: no notice, no notification
+      // Ben Oct 28: a helper never reports to Ben itself. With a parent chat, Glim reads the report and tells him (relayReports, its own
+      // notification); only a helper with no chat to report to gets the plain desktop notification.
       if (parent) postNotice(parent, h.name, summary);
-      queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
+      else queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});
     },
     onNeedBen: (h) => notify('Glim needs you', h.name + ': open it to answer.', h.threadId)

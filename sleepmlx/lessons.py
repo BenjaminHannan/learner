@@ -37,8 +37,9 @@ GAVE_UP_RE = re.compile(r"\bI (?:couldn'?t|could not|can'?t|cannot|was unable to
                         r"|\bI reached the step limit\b|\bunable to (?:complete|finish|find|access|open)\b", re.I)
 NOT_DONE_RE = re.compile(r"\bnot done\b", re.I)
 KIND_WORDS = {"correction": "Ben corrected Glim", "disliked": "Ben gave the answer a thumbs down", "tool_error": "a tool step failed",
-              "stopped": "Ben stopped Glim", "gave_up": "Glim gave up", "self_check": "Glim's own check found the answer was not done yet"}
-KIND_ORDER = ["correction", "disliked", "tool_error", "stopped", "gave_up", "self_check"]
+              "stopped": "Ben stopped Glim", "gave_up": "Glim gave up", "self_check": "Glim's own check found the answer was not done yet",
+              "delegation": "a helper Glim's run went wrong"}
+KIND_ORDER = ["correction", "disliked", "delegation", "tool_error", "stopped", "gave_up", "self_check"]
 
 
 def is_correction(text: str) -> bool:
@@ -84,6 +85,8 @@ def find_failures(week: dict, day: int) -> List[dict]:
             sig.append("gave_up")
         if any(NOT_DONE_RE.search(c) for c in row.get("checks") or []):
             sig.append("self_check")
+        if row.get("fb") == -1 and any(x.get("name") in ("agent_start", "agent_update") for x in tools):
+            sig.append("delegation")   # a thumbs down on a turn that handed work to a helper
         if not sig:
             continue
         kind = min(sig, key=KIND_ORDER.index)
@@ -92,7 +95,43 @@ def find_failures(week: dict, day: int) -> List[dict]:
              "prev_user": prev["user"]["text"] if prev else "", "prev_answer": prev["answer"] if prev else "",
              "prev_tools": (prev["user"].get("tools") or []) if prev else []}
         out.append(f)
+    date = (week.get("dates") or {}).get(str(day))
+    runs = week.get("helper_runs") or []
+    last = {r.get("name"): i for i, r in enumerate(runs)}
+    for i, r in enumerate(runs):
+        if date is None or r.get("date") != date:
+            continue
+        name = r.get("name") or ""
+        sig = helper_signals(r)
+        err = ""
+        if last[name] == i and _helper_state(week, name).get("status") == "failed":
+            sig.append("helper_failed")
+            err = str(_helper_state(week, name).get("lastError") or "")
+        if not sig:
+            continue
+        out.append({"kind": "delegation", "signals": sig, "day": day, "turn": 1000 + i, "user": r.get("task") or "", "answer": r.get("answer") or "",
+                    "tools": r.get("tools") or [], "checks": r.get("checks") or [], "stopped": bool(r.get("stopped")), "prev_user": "", "prev_answer": "",
+                    "prev_tools": [], "helper": name, "error": err})
     return out
+
+
+def _helper_state(week: dict, name: str) -> dict:
+    h = (week.get("helper_state") or {}).get(name)
+    return h if isinstance(h, dict) else {}
+
+
+def helper_signals(r: dict) -> List[str]:
+    """What went wrong in one helper run (its own tool steps, a stop, a give-up report, no report at all); [] when it went fine."""
+    sig = []
+    if any(not x.get("ok", True) and "[stopped by user]" not in x.get("result", "") for x in r.get("tools") or []):
+        sig.append("tool_error")
+    if r.get("stopped"):
+        sig.append("stopped")
+    if GAVE_UP_RE.search(r.get("answer") or ""):
+        sig.append("gave_up")
+    if not (r.get("answer") or "").strip():
+        sig.append("empty_answer")
+    return sig
 
 
 def _tool_lines(tools: List[dict], n: int = 6) -> List[str]:
@@ -108,6 +147,20 @@ def _tool_lines(tools: List[dict], n: int = 6) -> List[str]:
 def failure_context(f: dict, who: str = "Ben") -> str:
     """The chat text a lesson is written from and checked against."""
     lines = []
+    if f["kind"] == "delegation":
+        lines.append("Glim gave helper '%s' this task: %s" % (f.get("helper", ""), f["user"][:500]))
+        if f["tools"]:
+            lines.append("The helper's tool steps:")
+            lines += _tool_lines(f["tools"])
+        for c in f["checks"][:2]:
+            lines.append("The helper's self-check: %s" % c[:200])
+        if f["stopped"]:
+            lines.append("The helper was stopped.")
+        if f["answer"]:
+            lines.append("The helper's report: %s" % f["answer"][:500])
+        if "helper_failed" in f["signals"]:
+            lines.append("The helper's last run failed: %s" % (f.get("error") or "")[:200])
+        return "\n".join(lines)
     if f["kind"] == "correction":
         lines.append("%s: %s" % (who, f["prev_user"][:500]))
         if f["prev_tools"]:
@@ -134,6 +187,8 @@ def failure_context(f: dict, who: str = "Ben") -> str:
         lines.append("Glim: %s" % f["answer"][:500])
     if "disliked" in f.get("signals", []):
         lines.append("%s gave this answer a thumbs down." % who)
+    if "delegation" in f.get("signals", []):
+        lines.append("Glim handed part of this to a helper.")
     return "\n".join(lines)
 
 
@@ -296,6 +351,48 @@ def liked_cards(l: dict, who: str = "Ben"):
     first = re.split(r"(?<=[.!?])\s+", ans)[0][:200]
     para = "%s liked how Glim answered \"%s\": %s" % (who, ask, ans[:500])
     return [para], [["How did Glim answer %s's request \"%s\" in a way %s liked?" % (who, ask[:120], who), first]]
+
+
+# ---------------------------------------------------------------- helpers (Motes) working together
+def read_helpers(user_data: Optional[Path]) -> Dict[str, dict]:
+    """The Desk's helpers.json (a list of helper records, or {"helpers": [...]}) -> {name: {status, lastError, fails}}; {} when missing or bad."""
+    try:
+        j = json.loads((Path(user_data) / "helpers.json").read_text())
+    except (OSError, ValueError, TypeError):
+        return {}
+    if isinstance(j, dict):
+        j = j.get("helpers")
+    out = {}
+    for h in j if isinstance(j, list) else []:
+        if isinstance(h, dict) and isinstance(h.get("name"), str) and h["name"].strip():
+            f = h.get("fails")
+            out[h["name"]] = {"status": str(h.get("status") or ""), "lastError": str(h.get("lastError") or ""), "fails": f if isinstance(f, int) else 0}
+    return out
+
+
+def helper_habits(week: dict, min_n: int = 3) -> List[dict]:
+    """Helpers with at least min_n runs that went fine (no failure signal) and whose last run did not fail.
+    -> [{key, name, task (the newest good run's), n}]"""
+    good: Dict[str, List[dict]] = {}
+    for r in week.get("helper_runs") or []:
+        name = r.get("name") or ""
+        if name and not helper_signals(r):
+            good.setdefault(name, []).append(r)
+    out = []
+    for name, rs in good.items():
+        task = " ".join(str(rs[-1].get("task") or "").split())
+        if len(rs) < min_n or not task or _helper_state(week, name).get("status") == "failed":   # the helper's last run failed
+            continue
+        if diary_mod.looks_secret(name) or diary_mod.looks_secret(task):
+            continue
+        out.append({"key": "delegate|" + norm(name), "name": name, "task": task, "n": len(rs)})
+    return sorted(out, key=lambda h: h["key"])
+
+
+def helper_cards(h: dict, who: str = "Ben"):
+    """-> (paraphrases, [[q, a]]) for one reliable helper. No counts in the text, so it stays the same night to night."""
+    first = re.split(r"(?<=[.!?])\s+", h["task"])[0]
+    return ["Glim's helper '%s' reliably handles this for %s: %s" % (h["name"], who, first[:200])], [["Which helper does Glim use for %s?" % first[:120].rstrip(" .!?;:"), h["name"]]]
 
 
 # ---------------------------------------------------------------- the Desk's saved notes and tracking list

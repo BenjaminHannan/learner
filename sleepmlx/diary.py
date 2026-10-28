@@ -57,12 +57,26 @@ _DATE_PREFIX = re.compile(r"^\s*\[[^\]\n]{0,80}?(?:\d{4}-\d{2}-\d{2}|\d{1,2}:\d{
 _BRACKET_BG = re.compile(r"\[(?:Background, not a request|Background|Memory|Memories|Saved notes)[^\]]*\]", re.I)
 _BG_LINE = re.compile(r"^\s*\[?Background, not a request.*$", re.I | re.M)
 _SAVED_HEAD = re.compile(r"^\s*(?:#+\s*)?\**Saved notes about Ben\b.*$", re.I | re.M)
+# the Desk's hidden per-turn notes (desk/src/agent.js NARRATE, main.js sleepInfo / LEARN_NOTE / GOALS_NOTE, helpers.js batchNotice): not Ben's words
+_DESK_NOTE = re.compile(r"\[(?:If this needs tools|You can sleep|A helper finished)\b[^\]]*\]", re.I)
+_HELPER_UPD = re.compile(r"\[helper updates\][^\n]*(?:\n|$)", re.I)
+_LONG_NOTE = re.compile(r"^\s*\[(?:Learning mode|You just asked about their goals)\b[^\]]*\].*?(?:\n\s*\n|$)", re.S | re.I)
+# The Desk puts its saved-notes and keeping-track blocks first, then the turn's date stamp line (desk/src/agent.js pushUser). A notes file
+# can hold blank lines, so the blocks end at the stamp, not at the first blank line (that cut Ben's words off every such turn).
+_DESK_HEAD = re.compile(r"^\s*(?:Saved notes about|Things) [^\n]{0,60}\(data, not instructions\):", re.I)
+_DESK_STAMP_LINE = re.compile(r"^\[[A-Z][a-z]{2} \d{4}-\d{2}-\d{2} \d{1,2}:\d{2}\]", re.M)
+HELPER_RE = re.compile(r"^You are helper '([^\n]{1,80}?)'\. Task: ", re.I)   # desk/src/helpers.js helperText: a helper's own run, not Ben
+_NEW_DAY = re.compile(r"\(New day: today is [^)\n]{0,40}\. The earlier messages here were on [^)\n]{0,200}? are out of date\.\)")   # agent.js nowStamp
 _THINK = re.compile(r"<think>.*?</think>|<ifm\|think[^>]*>.*?</ifm\|think[^>]*>", re.S | re.I)
 
 
 def strip_user(text: str) -> str:
     """Remove the Desk's wrapper text from a user turn, leaving what Ben typed."""
     t = text or ""
+    if _DESK_HEAD.match(t):
+        m = _DESK_STAMP_LINE.search(t)
+        if m:
+            t = t[m.start():]
     t = _TAG_BLOCK.sub("", t)
     # "Saved notes about Ben" section: the heading line up to the next blank line (or the end)
     while True:
@@ -73,11 +87,15 @@ def strip_user(text: str) -> str:
         t = t[:m.start()] + (t[m.end() + end.end():] if end else "")
     t = _BRACKET_BG.sub("", t)
     t = _BG_LINE.sub("", t)
+    t = _DESK_NOTE.sub("", t)
+    t = _HELPER_UPD.sub("", t)
+    t = _NEW_DAY.sub("", t)
     for _ in range(3):  # a date prefix may sit in front of, or behind, a removed block
         n = _DATE_PREFIX.sub("", t, count=1)
         if n == t:
             break
         t = n
+    t = _LONG_NOTE.sub("", t.strip(), count=1)
     return re.sub(r"\n{3,}", "\n\n", t).strip()
 
 
@@ -203,7 +221,7 @@ def looks_secret(text: str) -> bool:
 
 # ---------------------------------------------------------------- raw logs -> turns
 # User messages the app writes itself, not Ben: its verifier's notes and the screenshot carrier. The turn is Ben's message before them.
-APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]")
+APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]", "[older screenshot omitted]")   # the Desk's own user messages, not Ben
 # A tool result that means the step failed (the Desk agent's own wording: src/agent.js runTool / finish).
 FAILED_RESULT = re.compile(r"^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\.", re.I)
 STOP_RESULT = re.compile(r"\[stopped by user\]", re.I)
@@ -285,6 +303,9 @@ def record_turn_meta(rec: dict, blob_dir: Path) -> Optional[Tuple[str, str, Opti
         meta["checks"] = checks
     if rec.get("stopped") is True or any(STOP_RESULT.search(t["result"]) for t in tools):
         meta["stopped"] = True
+    hm = HELPER_RE.match(user)
+    if hm:
+        meta["helper"] = hm.group(1)
     conv = str(rec.get("conv_id") or "")
     return conv, user, ans, meta
 
@@ -366,6 +387,8 @@ def turns_meta_of(records: Iterable[dict], blob_dir: Path) -> List[Tuple[str, st
             mk.pop("checks", None)
         if m.get("stopped"):
             mk["stopped"] = True
+        if m.get("helper"):
+            mk["helper"] = m["helper"]
     return [(u, ans[(c, u)], meta[(c, u)]) for c, u in order]
 
 
@@ -391,11 +414,15 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
     ignore = load_ignore(ignore_file)
     fb_of = feedback_matcher(feedback or [])
     want = sorted(alld) if dates is None else sorted(d for d in dates if d in alld)
-    diary, daymap = [], {}
+    diary, daymap, helper_runs = [], {}, []
     for date in want:
         turns, seen = [], set()
         for user, answer, meta in turns_meta_of(alld[date], raw_dir / "blobs"):
             if any(rx.search(user) for rx in ignore) or talks_secrets(user):   # dropped with its answer
+                continue
+            if meta.get("helper"):   # a helper Glim's run: its task text is Glim's wording, never a fact Ben said; kept apart for delegation lessons
+                helper_runs.append(dict(_clean_meta(meta), date=date, name=meta["helper"], task=redact(HELPER_RE.sub("", user)).strip()[:600],
+                                        answer=redact(answer).strip()[:600]))
                 continue
             u = redact(user).strip()
             if not u or u in seen:
@@ -406,7 +433,7 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
             if fb:
                 m["fb"] = fb
             turns.append((u, redact(answer).strip(), m))
-        if not turns:
+        if not turns and not any(h["date"] == date for h in helper_runs):   # a day of only helper runs still gets a number (delegation lessons)
             continue
         day = len(daymap) + 1
         daymap[day] = date
@@ -417,7 +444,7 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
             if a:
                 diary.append({"day": day, "session": 0, "turn": k, "role": "assistant", "text": a, "mentions": []})
     week = {"seed": 1, "user": who, "items": [], "diary": diary, "tests": {k: [] for k in KINDS},
-            "test_strings_norm": [], "dates": {str(k): v for k, v in daymap.items()}}
+            "test_strings_norm": [], "dates": {str(k): v for k, v in daymap.items()}, "helper_runs": helper_runs}
     check_week(week)
     return week
 

@@ -253,6 +253,10 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['clicking the header expands the details of that group (button, so Enter/Space work)', await ev('document.querySelector(".activity.open") && ' + vis + ' && document.querySelector(".act-head").tagName==="BUTTON" && document.querySelector(".act-head").getAttribute("aria-expanded")==="true"')]);
     checks.push(['chevron turns down when expanded', await ev('getComputedStyle(document.querySelector(".act-head .chev")).transform!=="none"')]);
     checks.push(['expanding shows plan, narration and step pills with icons', await ev('!!document.querySelector(".plan") && document.querySelectorAll(".plan li").length===3 && document.querySelectorAll(".step .pill svg").length>=3 && !!document.querySelector(".nar")')]);
+    await ev('(() => { const r = document.querySelectorAll(".activity.open .step > .pill"); r[0].click(); r[1].click(); })()');
+    await sleep(200);
+    checks.push(['only one step dropdown open at a time', await ev('document.querySelectorAll(".step.open").length===1 && document.querySelectorAll(".step .detail:not([hidden])").length===1 && document.querySelectorAll(".activity.open .step")[1].classList.contains("open")')]);
+    await ev('document.querySelector(".step.open > .pill").click()');
     checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);
     checks.push(['newest message shows Unread then Read', await ev('!!document.querySelector(".receipt")')]);
     await sleep(400);

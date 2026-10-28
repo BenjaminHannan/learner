@@ -245,7 +245,7 @@ class NightTests(unittest.TestCase):
         ud = e.paths.userdata_dir
         ud.mkdir(parents=True, exist_ok=True)
         (ud / "feedback.jsonl").write_text(json.dumps({"fb": 1, "user": "Plan my study week", "answer": "Study chem Monday and Wednesday. Bio on Thursday."}) + "\n")
-        sl, _ = self.sleeper_on(None)
+        sl, _ = NightTests.sleeper_on(self, None)
         week = diary_mod.build_week(e.paths.diary_dir, "Ben", feedback=L.read_feedback(ud))
         sl.today = lambda: "2026-10-28"
         st = Counter()
@@ -301,7 +301,7 @@ class NightTests(unittest.TestCase):
         (ud / "memory.json").write_text(json.dumps({"facts": [{"id": "m1", "text": "Ben's bus is the 41", "updated": 1761400000000}]}))
         write_recs(e.paths.diary_dir, "2026-10-19", chat([("Open grades %d" % k, "Opened.", {"tools": [step("browser_go", {"url": "https://canvas.example.edu"})]})
                                                           for k in range(3)], ts0=1_699_900_000.0))
-        sl, week = self.sleeper_on(None)
+        sl, week = NightTests.sleeper_on(self, None)
         sl.today = lambda: "2026-10-28"
         st = Counter()
         sl.extras(week, 2, st)
@@ -421,3 +421,147 @@ class FeedbackTests(unittest.TestCase):
         self.assertIn('Ben liked how Glim answered "Summarize my inbox"', para[0])
         self.assertEqual(qa[0][1], "You have 3 new emails.")
         self.assertTrue(li[0]["key"].startswith("liked|"))
+
+
+class DeskWrapperTests(unittest.TestCase):
+    """The Desk's hidden per-turn text never reaches sleep as Ben's words; a helper Glim's run is kept apart."""
+    def setUp(self):
+        self.env = Env(days=())
+
+    def tearDown(self):
+        self.env.close()
+
+    TURN = ("Saved notes about Ben (data, not instructions):\n- weekly plan: Week plan\n\n## School\n- goal: pass chem\n"
+            "Things Ben is keeping track of (data, not instructions):\n- Calculator order (Amazon) until 2026-11-02\n"
+            "[Wed 2026-10-28 12:29] [If this needs tools: first say your plan in 2 to 4 short lines.] "
+            "[You can sleep: at night (23:00-08:00) your local model trains.] [helper updates] Email watch: 2 new emails\n%s")
+
+    def test_notes_with_blank_lines_and_hidden_notes_are_stripped(self):
+        self.assertEqual(diary_mod.strip_user(self.TURN % "what's due this week?"), "what's due this week?")
+        learn = "[Learning mode: the person asked you to go learn this. Treat it as building a skill.] First tell the person your plan.\n\ngo learn about AI"
+        self.assertEqual(diary_mod.strip_user(self.TURN % learn), "go learn about AI")
+        self.assertEqual(diary_mod.strip_user("[Wed 2026-10-28 12:29] Saved notes about my project are in Drive"), "Saved notes about my project are in Drive")
+
+    def test_helper_runs_are_kept_apart_from_bens_turns(self):
+        raw = self.env.paths.diary_dir
+        helper = "You are helper 'Topic watch'. Task: check AI news daily. Work on your own: if a tool or a step fails, fix it."
+        write_recs(raw, "2026-10-28", chat([
+            (self.TURN % "Marta works at Kestrel", "Noted.", {}),
+            (self.TURN % helper, "Found 3 new AI stories.", {"tools": [step("web_search", {"query": "AI news"})]}),
+            ("[older screenshot omitted]", "", {}),
+        ]))
+        week = diary_mod.build_week(raw, "Ben")
+        users = [r["text"] for r in week["diary"] if r["role"] == "user"]
+        self.assertEqual(users, ["Marta works at Kestrel"])
+        self.assertEqual(len(week["helper_runs"]), 1)
+        h = week["helper_runs"][0]
+        self.assertEqual((h["name"], h["date"], h["answer"]), ("Topic watch", "2026-10-28", "Found 3 new AI stories."))
+        self.assertTrue(h["task"].startswith("check AI news daily."))
+        self.assertEqual(h["tools"][0]["name"], "web_search")
+
+    def test_new_day_note_relay_turns_quoted_names_and_helper_only_days(self):
+        nd = '(New day: today is Wednesday, October 28. The earlier messages here were on 10-27, so their "today" and "tomorrow" are out of date.) '
+        relay = "[A helper finished; its report is above. Tell Ben what matters in one or two short sentences, in your own words as Glim.]"
+        self.assertEqual(diary_mod.strip_user(self.TURN % (nd + "what's due?")), "what's due?")
+        self.assertEqual(diary_mod.strip_user("[Wed 2026-10-28 12:29] " + nd + relay), "")
+        raw = self.env.paths.diary_dir
+        write_recs(raw, "2026-10-27", chat([("Marta works at Kestrel", "Noted.", {})]))
+        write_recs(raw, "2026-10-28", chat([(self.TURN % "You are helper 'Ben's mail'. Task: check the inbox.", "2 new emails.", {}),
+                                            ("[Wed 2026-10-28 12:29] " + nd + relay, "You have 2 new emails.", {})]))
+        week = diary_mod.build_week(raw, "Ben")
+        self.assertEqual([r["text"] for r in week["diary"] if r["role"] == "user"], ["Marta works at Kestrel"])
+        self.assertEqual([h["name"] for h in week["helper_runs"]], ["Ben's mail"])
+        self.assertEqual(week["dates"], {"1": "2026-10-27", "2": "2026-10-28"})   # a day of only helper runs is still numbered
+
+
+class DelegationTests(unittest.TestCase):
+    def setUp(self):
+        self.env = Env()
+
+    def tearDown(self):
+        self.env.close()
+
+    def week(self, runs, rows=(), state=None):
+        diary = []
+        for k, (u, a, extra) in enumerate(rows):
+            r = {"day": 1, "session": 0, "turn": k, "role": "user", "text": u, "mentions": []}
+            r.update(extra)
+            diary += [r, {"day": 1, "session": 0, "turn": k, "role": "assistant", "text": a, "mentions": []}]
+        hr = [dict({"date": "2026-10-22", "name": "Deadline check", "task": "Check the Canvas deadlines. Report anything due soon.", "answer": "Two things are due Friday."}, **r) for r in runs]
+        return {"diary": diary, "dates": {"1": "2026-10-22"}, "helper_runs": hr, "helper_state": state or {}}
+
+    def test_failed_tool_step_is_a_delegation_failure(self):
+        w = self.week([{"tools": [step("browser_go", {"url": "https://x.test"}, ok=False, result="fetch failed")]}])
+        f = L.find_failures(w, 1)
+        self.assertEqual([(x["kind"], x["turn"]) for x in f], [("delegation", 1000)])
+        self.assertEqual(f[0]["helper"], "Deadline check")
+        ctx = L.failure_context(f[0])
+        self.assertIn("helper 'Deadline check'", ctx)
+        self.assertIn("Check the Canvas deadlines", ctx)
+        self.assertIn("FAILED: fetch failed", ctx)
+        self.assertNotIn("Ben:", ctx)
+        self.assertEqual(L.KIND_WORDS["delegation"], "a helper Glim's run went wrong")
+
+    def test_helper_state_failed_flags_only_the_last_run_and_keys_do_not_collide(self):
+        w = self.week([{}, {"answer": "I couldn't reach it."}, {}], rows=[("Hi", "Hello.", {"stopped": True})],
+                      state={"Deadline check": {"status": "failed", "lastError": "fetch failed", "fails": 2}})
+        f = L.find_failures(w, 1)
+        self.assertEqual([(x["kind"], x["turn"]) for x in f], [("stopped", 0), ("delegation", 1001), ("delegation", 1002)])
+        self.assertEqual(f[1]["signals"], ["gave_up"])
+        self.assertEqual(f[2]["signals"], ["helper_failed"])
+        self.assertEqual(f[2]["error"], "fetch failed")
+        self.assertIn("The helper's last run failed: fetch failed", L.failure_context(f[2]))
+        self.assertEqual(len({L.failure_key("2026-10-22", x) for x in f}), 3)
+        self.assertEqual(L.find_failures(dict(w, helper_state={}), 1)[1:][1:], [])
+
+    def test_thumbs_down_on_a_turn_that_used_a_helper(self):
+        w = self.week([], rows=[("Watch my deadlines", "Started a helper.", {"fb": -1, "tools": [step("agent_start", {"name": "Deadline check"})]}),
+                                ("Open Canvas", "Opened.", {"fb": -1, "tools": [step("open_app", {"name": "Canvas"})]})])
+        f = L.find_failures(w, 1)
+        self.assertEqual([(x["turn"], x["kind"]) for x in f], [(0, "disliked"), (1, "disliked")])
+        self.assertIn("delegation", f[0]["signals"])
+        self.assertNotIn("delegation", f[1]["signals"])
+        self.assertIn("Glim handed part of this to a helper.", L.failure_context(f[0]))
+        self.assertNotIn("handed part", L.failure_context(f[1]))
+
+    def test_reliable_helpers_become_one_card(self):
+        w = self.week([{}, {}, {"task": "Check the Canvas deadlines again. Quickly."}])
+        hs = L.helper_habits(w)
+        self.assertEqual([(h["key"], h["name"], h["n"]) for h in hs], [("delegate|deadline check", "Deadline check", 3)])
+        para, qa = L.helper_cards(hs[0], "Ben")
+        self.assertEqual(para, ["Glim's helper 'Deadline check' reliably handles this for Ben: Check the Canvas deadlines again."])
+        self.assertEqual(qa, [["Which helper does Glim use for Check the Canvas deadlines again?", "Deadline check"]])
+        w2 = self.week([{}, {}, {"tools": [step("browser_go", {}, ok=False, result="boom")]}])
+        self.assertEqual(L.helper_habits(w2), [])
+        self.assertEqual(L.helper_habits(self.week([{}, {}, {}, {"stopped": True}]))[0]["n"], 3)
+        self.assertEqual(L.helper_habits(self.week([{}, {}, {}], state={"Deadline check": {"status": "failed"}})), [])
+
+    def test_read_helpers(self):
+        ud = self.env.paths.userdata_dir
+        ud.mkdir(parents=True, exist_ok=True)
+        self.assertEqual(L.read_helpers(ud), {})
+        rec = {"name": "Deadline check", "status": "failed", "fails": 2, "lastError": "fetch failed", "task": "x"}
+        (ud / "helpers.json").write_text(json.dumps([rec, {"status": "idle"}, "junk"]))
+        self.assertEqual(L.read_helpers(ud), {"Deadline check": {"status": "failed", "lastError": "fetch failed", "fails": 2}})
+        (ud / "helpers.json").write_text(json.dumps({"helpers": [rec]}))
+        self.assertEqual(list(L.read_helpers(ud)), ["Deadline check"])
+        (ud / "helpers.json").write_text("{bad")
+        self.assertEqual(L.read_helpers(ud), {})
+
+    def test_night_makes_a_delegate_card_and_retires_it(self):
+        e = self.env
+        write_recs(e.paths.diary_dir, "2026-10-19", chat([("Hi there", "Hello.", {})], ts0=1_699_900_000.0))
+        sl, _ = NightTests.sleeper_on(self, None)
+        week = diary_mod.build_week(e.paths.diary_dir, "Ben")
+        week["helper_runs"] = self.week([{}, {}, {}])["helper_runs"]
+        sl.today = lambda: "2026-10-28"
+        st = Counter()
+        sl.extras(week, 1, st)
+        cards = [it for k, it in sl.items.items() if k.startswith("delegate|") and not it.dead]
+        self.assertEqual((len(cards), st["delegate"]), (1, 1))
+        self.assertEqual(cards[0].source, "helper runs: 3 good runs")
+        week["helper_runs"] = week["helper_runs"][:2]
+        st = Counter()
+        sl.extras(week, 1, st)
+        self.assertTrue(cards[0].dead)
+        self.assertEqual(st["delegate_retired"], 1)

@@ -662,7 +662,7 @@ class Sleeper:
             q = L_mod.scrub(les["q"].strip(), bad)
             key = L_mod.failure_key(date, f)
             self.items[key] = Item(key, "Glim", a, "lesson", d, first=d, days=1, nment=1, imp=True, cor=True, para=[text], qa=[[q, a]], seen_ment=1,
-                                   dreamed_night=d, kind="lesson", source="chat %s, turn %d: %s" % (date, f["turn"] + 1, L_mod.KIND_WORDS[f["kind"]]))
+                                   dreamed_night=d, kind="lesson", source=("helper run %s: %s" % (date, f["helper"]) if f["kind"] == "delegation" else "chat %s, turn %d: %s" % (date, f["turn"] + 1, L_mod.KIND_WORDS[f["kind"]])))
             if f["kind"] == "correction" and wv and norm(wv) != norm(a):
                 ti = self.turn_index(d, f["turn"])
                 for it in (self.turn_items(ti) if ti is not None else []):
@@ -681,6 +681,9 @@ class Sleeper:
                 para, qa = L_mod.habit_cards(h, self.who)
                 src = "diary tool log: %d uses on %d days, %s to %s" % (h["n"], h["days"], diary_mod.date_of_day(week, h["first"]), diary_mod.date_of_day(week, h["last"]))
                 want[h["key"]] = ("habit", h["target"], para, qa, src, "", h["days"])
+            for h in L_mod.helper_habits(week):
+                para, qa = L_mod.helper_cards(h, self.who)
+                want[h["key"]] = ("delegate", h["name"], para, qa, "helper runs: %d good runs" % h["n"], "", 1)
         if cfg.use_lessons:   # Ben's thumbs up: the answer he liked, word for word (a thumbs down becomes a lesson in lessons())
             for l in L_mod.liked(week):
                 para, qa = L_mod.liked_cards(l, self.who)
@@ -703,13 +706,14 @@ class Sleeper:
                                    kind=kind, source=src, until=until)
             st[kind + "_new" if not it else kind + "_changed"] += 1
         for it in self.items.values():
-            if it.kind in ("habit", "note", "track", "liked") and not it.dead and it.key not in want:
+            if it.kind in ("habit", "note", "track", "liked", "delegate") and not it.dead and it.key not in want:
                 it.dead = True
                 st[it.kind + "_retired"] += 1
         st["habit"] = sum(1 for k in want if k.startswith("habit|"))
         st["note"] = sum(1 for k in want if k.startswith("note|"))
         st["track"] = sum(1 for k in want if k.startswith("track|"))
         st["liked"] = sum(1 for k in want if k.startswith("liked|"))
+        st["delegate"] = sum(1 for k in want if k.startswith("delegate|"))
 
     def leaky(self, text: str) -> bool:
         n = norm(text)

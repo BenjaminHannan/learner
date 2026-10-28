@@ -103,10 +103,13 @@
   }
   // Ben Oct 28: only one step group is open at a time. Every group starts closed; opening one closes the others.
   document.body.dataset.acts = Acts.attr(true);
+  // ... and the same for the fold-outs in the scroll (plans, thinking): opening one closes the others ('toggle' does not bubble, so capture)
+  msgs.addEventListener('toggle', (e) => { const d = e.target; if (d.tagName === 'DETAILS' && d.open) msgs.querySelectorAll('details[open]').forEach((o) => { if (o !== d && !o.contains(d) && !d.contains(o)) o.open = false; }); }, true);
   function toggleAct(root) {
     const open = !root.classList.contains('open');
     msgs.querySelectorAll('.activity.open').forEach((o) => { o.classList.remove('open'); const h = o.querySelector('.act-head'); if (h) h.setAttribute('aria-expanded', 'false'); });
     if (open) { root.classList.add('open'); const h = root.querySelector('.act-head'); if (h) h.setAttribute('aria-expanded', 'true'); }
+    msgs.querySelectorAll('.step.open').forEach((o) => { if (!root.contains(o) || !open) { o.classList.remove('open'); const d = o.querySelector('.detail'); if (d) d.hidden = true; } }); // a step left open in another group closes too
   }
   function ensureAct(before) {
     if (act && !act.finished) return act;
@@ -287,7 +290,12 @@
       if (pv) { detail.append(document.createTextNode('\n')); detail.append(document.createTextNode(pv)); }
     };
     fill(preview);
-    row.onclick = () => { detail.hidden = !detail.hidden; wrap.classList.toggle('open', !detail.hidden); };
+    // Ben Oct 28: only one dropdown at a time. Opening a step's details closes any other open step.
+    row.onclick = () => {
+      const open = detail.hidden;
+      if (open) msgs.querySelectorAll('.step.open').forEach((o) => { if (o !== wrap) { o.classList.remove('open'); const d = o.querySelector('.detail'); if (d) d.hidden = true; } });
+      detail.hidden = !open; wrap.classList.toggle('open', open);
+    };
     wrap.append(row, detail);
     wrap._fill = fill; wrap._sum = sum; wrap._ico = ico; wrap._tool = tool; wrap.dataset.tool = tool;
     return wrap;
