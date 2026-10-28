@@ -926,8 +926,8 @@ function buildAgent() {
     send('agent', { threadId: thread.id, type: 'scard', id: it.id, thumb: it.thumb, text: it.text, image: look.image || null });
   });
   limiter = new Limiter(() => store.getSettings().maxParallel); // 0 = unlimited
-  // Motes share Glim's one local model: 12 at once swapped the Mac and made Ben's chat crawl (Oct 28). Two at a time, the rest wait their turn; Glim's own chat never waits behind them.
-  helperLimiter = new Limiter(() => { const m = store.getSettings().maxParallel; return m > 0 ? m : hasLocalAssistant ? 2 : 0; });
+  // Motes share Glim's one local model: 12 at once while Ben chatted swapped the Mac and made his chat crawl (Oct 28). Ben wants many at once, so while he is away there is no cap; while he chats (or just did) only a couple run and the rest queue. Glim's own chat never waits behind them.
+  helperLimiter = new Limiter(() => { const m = store.getSettings().maxParallel; return m > 0 ? m : hasLocalAssistant && benBusy() ? 2 : 0; });
   helpers = new Helpers({
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
