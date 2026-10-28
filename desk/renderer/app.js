@@ -377,6 +377,7 @@
     const once = el('button', 'amber-btn', 'Allow once'); once.onclick = () => done('once', 'Allowed once');
     btns.append(once);
     if (!ev.danger) { const task = el('button', 'ghost', 'Allow for this task'); task.onclick = () => done('task', 'Allowed for this task'); btns.append(task); }
+    if (!ev.danger && ev.always) { const al = el('button', 'ghost', 'Always allow'); al.title = 'Always allow ' + (ev.alwaysLabel || 'this') + ' (undo in Settings)'; al.onclick = () => done('always', 'Always allowed: ' + (ev.alwaysLabel || 'this')); btns.append(al); }
     const deny = el('button', 'deny', 'Deny'); deny.onclick = () => done('deny', 'Denied');
     btns.append(deny); c.append(btns);
     rids.set(ev.rid || ev.id, { done });
@@ -929,6 +930,7 @@
     ] },
     { group: 'Autonomy', rows: [
       { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and screen clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { key: 'alwaysAllow', type: 'always', label: 'Always allowed', help: 'Kinds of action you chose "Always allow" for. Risky commands always ask, whatever is listed here.' },
       { key: 'helperMode', type: 'seg', label: 'Glims on a schedule', help: 'The same choice for the extra Glims that run on their own.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
@@ -1103,6 +1105,10 @@
           const so = el('button', 'ghost', 'Restart and start over'); so.id = 'startOver'; so.title = 'Restarts Premonition and goes through first-time setup again. Your chats and memory are kept.';
           so.onclick = () => { if (confirm('Restart Premonition and go through first-time setup again? Your chats and memory are kept.')) desk.startOver(); };
           ctl.append(b, so);
+        } else if (r.type === 'always') {
+          const note = el('div', 's-note'); const b = el('button', 'ghost', 'Forget all'); b.onclick = () => save({ alwaysAllow: [] }).then(paintSettings);
+          controls[r.key] = { paint: () => { const l = settings.alwaysAllow || []; note.textContent = l.length ? l.map((k) => k.replace(/^shell:/, '').replace('screen', 'app clicks and typing')).join(', ') : 'Nothing yet.'; b.hidden = !l.length; } };
+          const bx = el('div'); bx.style.cssText = 'display:flex;flex-direction:column;gap:.4rem;align-items:flex-end;text-align:right'; bx.append(note, b); ctl.append(bx);
         } else if (r.type === 'update') {
           const note = el('div', 's-note'); note.id = 'updateStat'; note.textContent = updateLine(upd);
           const b = el('button', 'ghost', 'Check for updates'); b.id = 'updateCheck'; b.onclick = async () => paintUpdate(await desk.update.check());

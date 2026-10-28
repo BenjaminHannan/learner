@@ -58,7 +58,7 @@ class PillState {
       if (ev.text && ev.toolCalls > 0) { const l = firstLine(ev.text); if (l) { a.said = l; if (a.status === 'working') { a.step = l; a.line = short(l, 40); } } }
       return;
     }
-    else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger }; a.line = 'Waiting for you'; }
+    else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger, always: ev.alwaysLabel || '' }; a.line = 'Waiting for you'; }
     else if (t === 'ask') { a.status = 'waiting'; a.approval = { rid: ev.id, kind: 'ask', text: ev.question }; a.line = 'Waiting for you'; }
     else if (t === 'login') { a.status = 'waiting'; a.approval = { rid: null, kind: 'login', text: 'Sign in in the browser window, then click Done.' }; a.line = 'Waiting for you: sign in'; }
     else if (t === 'resumed') { a.status = 'working'; a.approval = null; a.line = short(a.step, 40) || 'Working'; }

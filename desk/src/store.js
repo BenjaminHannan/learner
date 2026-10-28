@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS = {
   // Appearance
   theme: 'system',        // system | light | dark
   textSize: 'm',          // s | m | l
+  alwaysAllow: [],       // actions Ben chose "Always allow" for: 'shell:<program>' and 'screen' (never risky commands)
   goalsAsked: false,     // Glim has asked about long-term goals once, right after first-run setup
   autoUpdateCheck: true, // look for a newer Premonition at launch and every 6 hours (an update still needs your click)
   showSparks: false,     // list Sparks (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
@@ -88,6 +89,7 @@ function sanitize(patch) {
     if (BOOLS.includes(k)) out[k] = !!v;
     else if (NUMS[k]) { const n = Math.round(Number(v)); out[k] = Number.isFinite(n) ? Math.min(NUMS[k][1], Math.max(NUMS[k][0], n)) : DEFAULT_SETTINGS[k]; }
     else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
+    else if (k === 'alwaysAllow') out[k] = (Array.isArray(v) ? v : []).map((x) => String(x)).filter((x) => /^[\w:.\/+-]{1,60}$/.test(x)).slice(0, 60);
     else if (k === 'uses') out[k] = cleanUses(v);
     else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
     else if (k === 'sleepDuration') out[k] = DURATION_PICKS.includes(String(v)) ? String(v) : DEFAULT_SETTINGS[k];
