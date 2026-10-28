@@ -1,0 +1,58 @@
+{
+  "name": "lfm3_cpu",
+  "model_dir": "",
+  "hf_id": "LiquidAI/LFM3-1.7B",
+  "backend": "torch",
+  "loader": null,
+  "loader_path": null,
+  "trust_remote_code": true,
+  "template_mode": "tokenizer",
+  "template": {
+    "system": "<|im_start|>system\n{content}<|im_end|>\n",
+    "user": "<|im_start|>user\n{content}<|im_end|>\n",
+    "assistant_open": "<|im_start|>assistant\n"
+  },
+  "nothink_suffix": "<think></think>",
+  "think_open": "<think>",
+  "think_close": "</think>",
+  "stop_token": "<|im_end|>",
+  "lora": {
+    "rank": 8,
+    "scale": 2.0,
+    "dropout": 0.0,
+    "keys": [
+      "self_attn.q_proj",
+      "self_attn.k_proj",
+      "self_attn.v_proj",
+      "self_attn.o_proj",
+      "conv.out_proj"
+    ],
+    "target_modules": ".*\\.layers\\.\\d+\\.(self_attn\\.(q_proj|k_proj|v_proj|o_proj)|conv\\.out_proj)"
+  },
+  "quirks": {
+    "tag_think": false,
+    "names_think": false,
+    "think_tokens": 0,
+    "negative_word_parse": false,
+    "rem_chain_mode": "q",
+    "rem_think_tokens": 0
+  },
+  "recipe": {
+    "bsz": 4,
+    "replay_bsz": 2,
+    "kl_every": 4,
+    "gate_n": 20,
+    "gate_max_tokens": 16,
+    "harm_max": 5.0,
+    "max_seq_len": 256,
+    "max_dream_items": 160
+  },
+  "runtime": {
+    "tok_budget": 256,
+    "grad_ckpt": true,
+    "gen_batch": 4,
+    "threads": "cores-1",
+    "min_free_ram_gb": 1.0
+  },
+  "note": "Jacob's laptop: no NVIDIA card, ~8 GB RAM, Windows. bf16 frozen base on CPU, LoRA r8 on attention + conv.out_proj."
+}

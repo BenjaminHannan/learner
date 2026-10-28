@@ -1,0 +1,17 @@
+# Example systemd user unit. Install:
+#   mkdir -p ~/.config/systemd/user && cp gpuq.service ~/.config/systemd/user/
+#   (edit the path below) systemctl --user daemon-reload && systemctl --user enable --now gpuq
+#   loginctl enable-linger $USER      # keep it running when logged out
+[Unit]
+Description=gpuq GPU job queue daemon
+
+[Service]
+ExecStart=/usr/bin/python3 %h/gpuq/gpuq.py daemon
+Environment=GPUQ_HOME=%h/gpuq
+Restart=always
+RestartSec=10
+# Do not kill running jobs when the daemon stops/restarts; they are adopted again.
+KillMode=process
+
+[Install]
+WantedBy=default.target

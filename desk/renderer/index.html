@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; script-src 'self'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premonition</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="mascot.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header id="topbar">
+  <span id="logo" class="logo" title="Glim"></span>
+  <button id="btnThreads" class="icon-btn" title="Motes" aria-label="Motes" hidden>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
+  </button>
+  <div id="title" title="Who you are talking to">Glim</div>
+  <div class="spacer"></div>
+  <div class="seg" id="modelSeg" hidden role="group" aria-label="Model">
+    <button data-slot="modelAuto" data-model="qwen36-auto">Auto</button><button data-slot="modelMain" data-model="qwen36">Think</button><button data-slot="modelFast" data-model="qwen36-fast">Fast</button>
+  </div>
+  <div class="seg mode" id="modeSeg" hidden role="group" aria-label="Autonomy (change in Settings)" title="Change this in Settings">
+    <button data-mode="ask">Ask first</button><button data-mode="hands-off">Hands-off</button>
+  </div>
+  <button id="btnBrowser" class="tb-btn" hidden title="Show or hide Glim's browser" aria-pressed="false">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span>Browser</span>
+  </button>
+  <div id="gw" class="chip" title="Gateway"><i></i><span>Offline</span></div>
+  <button id="btnNewChat" class="tb-btn" title="Start a new chat (Cmd+N). Your notes and memory carry over." aria-label="New chat">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg><span>New chat</span>
+  </button>
+  <button id="btnSide" class="icon-btn" title="Show or hide the side panel (Now, Goals, Ideas)" aria-label="Side panel" aria-pressed="true">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M10 3v10"/></svg>
+  </button>
+  <button id="btnSleep" class="tb-btn" title="Sleep: let Glim learn from your chats while you are away" aria-label="Sleep">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg><span>Sleep</span>
+  </button>
+  <button id="btnSettings" class="icon-btn" title="Settings" aria-label="Settings">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 6.71L14.47 6.69 14.47 9.31 12.83 9.29 12.33 10.51 13.5 11.65 11.65 13.5 10.51 12.33 9.29 12.83 9.31 14.47 6.69 14.47 6.71 12.83 5.49 12.33 4.35 13.5 2.5 11.65 3.67 10.51 3.17 9.29 1.53 9.31 1.53 6.69 3.17 6.71 3.67 5.49 2.5 4.35 4.35 2.5 5.49 3.67 6.71 3.17 6.69 1.53 9.31 1.53 9.29 3.17 10.51 3.67 11.65 2.5 13.5 4.35 12.33 5.49Z"/><circle cx="8" cy="8" r="2.1"/></svg>
+  </button>
+</header>
+<div id="updateBar" hidden><span id="updateText"></span><button id="updateGo" class="amber-btn sm">Update now</button><button id="updateLater" class="ghost sm">Later</button></div>
+
+<main id="chat">
+  <aside id="drawer" aria-hidden="true">
+    <div class="drawer-head"><span>Motes</span><button id="newThread" class="amber-btn sm" hidden>Fresh start</button></div>
+    <ul id="mainList" hidden></ul>
+    <div id="agentsSec" hidden><div class="drawer-label">Motes</div><ul id="agentList"></ul></div>
+    <details id="histSec" class="hist" hidden><summary>Earlier conversations</summary><ul id="threadList"></ul></details>
+  </aside>
+  <div id="drawerShade"></div>
+  <aside id="side" aria-label="Now, goals and ideas"></aside>
+  <div id="scroll"><div id="msgs"></div></div>
+  <button id="jump" hidden>↓ New messages</button>
+  <div id="composer">
+    <div class="cwrap">
+      <div id="sleepBar" hidden role="status">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg>
+        <div class="sb-text"><b id="sleepTitle">Glim is asleep</b><span id="sleepSub"></span></div>
+        <button id="btnWake" class="amber-btn big">Wake Glim</button>
+      </div>
+      <div id="wakeAsk" hidden role="alert">
+        <span>Glim is asleep. Wake Glim and send this?</span>
+        <button id="wakeAskNo" class="ghost sm">Cancel</button><button id="wakeAskYes" class="amber-btn sm">Wake and send</button>
+      </div>
+      <div id="dictNote" hidden role="alert"><span id="dictNoteText"></span><button id="dictSettings" class="amber-btn sm" hidden>Open Settings</button><button id="dictGetVoice" class="amber-btn sm" hidden>Get voice (1.6 GB)</button><button id="dictNoteClose" class="ghost sm" aria-label="Dismiss">Dismiss</button></div>
+      <div id="askDock" aria-live="polite"></div>
+      <div id="runState" hidden><i></i><span>Working…</span></div>
+      <div class="box">
+        <textarea id="input" rows="1" placeholder="Ask Glim to do something…" spellcheck="true" aria-label="Message"></textarea>
+        <button id="btnDictate" class="callbtn dictbtn" title="Dictate: speak instead of typing (Cmd+Shift+D)" aria-label="Dictate" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.6" y="1.8" width="4.8" height="8" rx="2.4"/><path d="M3.2 7.6a4.8 4.8 0 009.6 0M8 12.4v1.8"/></svg></button>
+        <button id="btnCall" class="callbtn" title="Call Glim: talk hands-free (Cmd+Shift+C)" aria-label="Call Glim"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 2.5h2.3l1.1 2.9-1.4.9a8 8 0 003.5 3.5l.9-1.4 2.9 1.1v2.3a1.4 1.4 0 01-1.5 1.4A10.2 10.2 0 011.8 4a1.4 1.4 0 011.4-1.5z"/></svg></button>
+        <button id="btnSend" class="send" title="Send (Enter)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg><span class="sr">Send</span></button>
+        <button id="btnStop" class="stop" title="Stop (Esc)" hidden><i></i><span class="sr">Stop</span></button>
+      </div>
+      <div class="hint" id="hint">Enter to send · Shift+Enter for a new line</div>
+    </div>
+  </div>
+</main>
+
+<section id="bpanel" aria-label="Glim's browser">
+  <div id="bdiv" role="separator" aria-orientation="vertical" title="Drag to resize"><i></i></div>
+  <div id="bcard2">
+    <div class="bhead">
+      <button id="bChat" class="tb-btn" title="Back to chat"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg><span>Chat</span></button>
+      <span id="bFav" class="bfav"></span>
+      <span id="bTitle" class="btitle">Browser</span>
+      <span id="bWho" class="bwho"><i></i><span>You’re in control</span></span>
+      <button id="bTake" class="amber-btn sm">Take over</button>
+      <button id="bClose" class="icon-btn sm" aria-label="Close browser" title="Close (Glim keeps working)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+    <div class="baddr">
+      <button id="bBack" class="icon-btn sm" aria-label="Back" title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
+      <button id="bFwd" class="icon-btn sm" aria-label="Forward" title="Forward"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+      <button id="bReload" class="icon-btn sm" aria-label="Reload" title="Reload"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8a5 5 0 11-1.6-3.7M13 2.5V5.5H10"/></svg></button>
+      <input id="bAddr" type="text" placeholder="Search or enter address" spellcheck="false" aria-label="Address">
+    </div>
+    <div id="bBanner" hidden role="status">
+      <svg viewBox="0 0 16 16" class="lock" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>
+      <span>Sign in here yourself; Glim can't see what you type. Click Done when finished.</span>
+      <button id="bDone" class="amber-btn sm">Done</button><button id="bSkip" class="ghost sm">Not now</button>
+    </div>
+    <div id="bSlot"></div>
+  </div>
+</section>
+
+<div id="sleepSheet" hidden role="dialog" aria-modal="true" aria-label="Sleep">
+  <div class="p-card sl-card">
+    <div class="sl-moon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg></div>
+    <h2>Put Glim to sleep?</h2>
+    <p class="p-sub">Glim will stop answering while it learns from your chats. Wake it any time.</p>
+    <p class="p-sub dim small">It checks your mail and calendar once an hour (read-only) and tells you if something needs you.</p>
+    <div id="sleepDur" class="sl-dur" role="radiogroup" aria-label="How long to sleep">
+      <button type="button" role="radio" data-d="30">30 min</button><button type="button" role="radio" data-d="60">1 h</button><button type="button" role="radio" data-d="120">2 h</button><button type="button" role="radio" data-d="240">4 h</button><button type="button" role="radio" data-d="morning">Until morning</button><button type="button" role="radio" data-d="open">Until I wake it</button>
+    </div>
+    <p id="sleepDurNote" class="p-sub dim small">Longer sleep learns more.</p>
+    <label class="sl-check"><input type="checkbox" id="sleepPause" checked><span>Hourly check-in while asleep</span></label>
+    <div id="sleepErr" class="errline" hidden></div>
+    <div class="sl-btns"><button id="sleepCancel" class="ghost">Not now</button><button id="sleepGo" class="amber-btn">Go to sleep</button></div>
+  </div>
+</div>
+
+<div id="sleepSetup" hidden role="dialog" aria-modal="true" aria-label="Set up sleep">
+  <div class="p-card sl-card">
+    <div class="sl-moon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg></div>
+    <h2>One-time download for sleep</h2>
+    <p class="p-sub" id="ssText"></p>
+    <p class="p-sub dim small">Sleep is slow on a laptop. Keep it plugged in and let it run overnight.</p>
+    <div class="rt-bar" id="ssBarWrap" hidden><i id="ssBar"></i></div>
+    <div class="p-sub small" id="ssStatus" aria-live="polite"></div>
+    <div class="sl-btns"><button id="ssCancel" class="ghost">Not now</button><button id="ssGo" class="amber-btn">Download and sleep</button></div>
+  </div>
+</div>
+
+<div id="runtime" hidden role="dialog" aria-modal="true" aria-label="Setting up the local model">
+  <div class="p-card sl-card">
+    <h2 id="rtTitle">Setting up Premonition</h2>
+    <p class="p-sub" id="rtText">The first time, Premonition downloads its own language model (about 1.2 GB). It stays on this computer and you only do this once.</p>
+    <div class="rt-bar"><i id="rtBar"></i></div>
+    <div class="p-sub small" id="rtStatus" aria-live="polite"></div>
+    <div class="sl-btns"><button id="rtRetry" class="amber-btn" hidden>Try again</button><button id="rtHide" class="ghost">Hide</button></div>
+  </div>
+</div>
+
+<div id="call" hidden role="dialog" aria-modal="true" aria-label="Call with Glim">
+  <div class="call-card">
+    <div class="call-time" id="callTime">0:00</div>
+    <div class="call-orb"><i id="callRing"></i><span id="callGlim"></span></div>
+    <div id="callStatus" class="call-status" aria-live="polite">Connecting…</div>
+    <div id="callYou" class="call-cap you" aria-live="off"></div>
+    <div id="callSay" class="call-cap glim"></div>
+    <div id="callNote" class="call-note" hidden></div>
+    <div id="callErr" class="call-err" hidden role="alert"><span id="callErrText"></span><button id="callSettings" class="amber-btn sm" hidden>Open Settings</button><button id="callGetVoice" class="amber-btn sm" hidden>Get voice (1.6 GB)</button></div>
+    <div class="call-btns">
+      <button id="callMute" class="ghost" aria-pressed="false">Mute</button>
+      <button id="callHang" class="hang">Hang up</button>
+    </div>
+    <div class="call-hint">Just talk. Talk over Glim to interrupt. Esc hangs up.</div>
+  </div>
+</div>
+
+<div id="perms" hidden role="dialog" aria-label="Permissions"></div>
+
+<div id="onboard" hidden role="dialog" aria-modal="true" aria-label="Set up Glim"></div>
+
+<div id="settings" hidden role="dialog" aria-label="Settings">
+  <div class="s-head"><h1>Settings</h1><button id="settingsClose" class="amber-btn">Done</button></div>
+  <div class="s-body"><div class="s-col" id="settingsCol"></div></div>
+</div>
+
+<div id="screenModal" hidden role="dialog" aria-label="Screen capture">
+  <div class="in"><div class="sm-head"><span>What Glim saw</span><button id="screenClose" class="ghost sm">Close</button></div><img id="screenImg" alt="Latest screen capture"><pre id="screenText" class="sel"></pre></div>
+</div>
+
+<script src="platform.js"></script>
+<script src="mascot.js"></script>
+<script src="uses.js"></script>
+<script src="doing.js"></script>
+<script src="choices.js"></script>
+<script src="md.js"></script>
+<script src="guard.js"></script>
+<script src="acts.js"></script>
+<script src="panel.js"></script>
+<script src="perms.js"></script>
+<script src="voice.js"></script>
+<script src="call.js"></script>
+<script src="dictate.js"></script>
+<script src="onboard.js"></script>
+<script src="side.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

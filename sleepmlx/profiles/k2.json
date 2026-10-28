@@ -1,0 +1,50 @@
+{
+  "name": "k2",
+  "model_dir": "~/learner-ops/sleep-m2/models/k2-3.7b-4bit",
+  "hf_id": null,
+  "backend": "mlx",
+  "loader": null,
+  "loader_path": null,
+  "trust_remote_code": true,
+  "template_mode": "tokenizer",
+  "template": {
+    "system": "<|ifm|im_start|>system\n{content}<|ifm|im_end|>\n",
+    "user": "<|ifm|im_start|>user\n{content}<|ifm|im_end|>\n",
+    "assistant_open": "<|ifm|im_start|>assistant\n"
+  },
+  "nothink_suffix": "<ifm|think>\n</ifm|think>",
+  "think_open": "<ifm|think>\n",
+  "think_close": "</ifm|think>",
+  "stop_token": "<|ifm|im_end|>",
+  "lora": {
+    "rank": 16,
+    "scale": 2.0,
+    "dropout": 0.0,
+    "keys": [
+      "self_attn.q_proj",
+      "self_attn.k_proj",
+      "self_attn.v_proj",
+      "self_attn.o_proj",
+      "mlp.gate_proj",
+      "mlp.up_proj",
+      "mlp.down_proj"
+    ]
+  },
+  "quirks": {
+    "tag_think": true,
+    "names_think": true,
+    "think_tokens": 512,
+    "negative_word_parse": true,
+    "rem_chain_mode": "q_think",
+    "rem_think_tokens": 512
+  },
+  "runtime": {
+    "tok_budget": 256,
+    "grad_ckpt": true,
+    "gen_batch": 8,
+    "mem_limit": 5000000000.0,
+    "cache_limit": 500000000.0,
+    "min_free_ram_gb": 1.0
+  },
+  "note": "K2-Horizon on MLX. Still available (profile k2); no longer the default."
+}
