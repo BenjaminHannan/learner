@@ -8,9 +8,13 @@ const { Stt, candidates } = require('../src/stt');
 const { VoiceInstaller, VOICE, pipArgs, venvArgs, snapshotArgs, snapshotEnv } = require('../src/runtime/voiceinstall');
 
 test('voice: candidate order puts <userData>/voice after learner-ops and before the managed python', () => {
-  const c = candidates({ home: '/h', env: { PREMONITION_STT_PYTHON: '/p/py' }, voiceDir: '/ud/voice', managedPython: () => '/m/py' });
-  assert.deepStrictEqual(c.map((x) => x.python), ['/p/py', '/h/learner-ops/stt/.venv/bin/python', '/ud/voice/.venv/bin/python', '/m/py']);
-  assert.strictEqual(c[2].hfHome, '/ud/voice/hf');
+  const vd = fs.mkdtempSync(path.join(os.tmpdir(), 'vd-'));
+  const c0 = candidates({ home: '/h', env: {}, voiceDir: vd, managedPython: () => '/m/py' });
+  assert.deepStrictEqual(c0.map((x) => x.python), ['/h/learner-ops/stt/.venv/bin/python', '/m/py']); // not finished: skipped
+  fs.writeFileSync(path.join(vd, 'state.json'), JSON.stringify({ libs: true, model: 'x', done: true }));
+  const c = candidates({ home: '/h', env: { PREMONITION_STT_PYTHON: '/p/py' }, voiceDir: vd, managedPython: () => '/m/py' });
+  assert.deepStrictEqual(c.map((x) => x.python), ['/p/py', '/h/learner-ops/stt/.venv/bin/python', path.join(vd, '.venv/bin/python'), '/m/py']);
+  assert.strictEqual(c[2].hfHome, path.join(vd, 'hf'));
 });
 
 test('voice: MISSING error carries needsVoice; other errors do not', async () => {
@@ -39,7 +43,7 @@ function mk(o = {}) {
       return { ok: true, status: 200, headers: { get: () => '3' }, body: { getReader: () => { let d = false; return { read: async () => (d ? { done: true } : (d = true, { value: Buffer.from('abc') })) }; } } };
     },
     extract: async (arc, dest) => { fs.mkdirSync(path.join(dest, 'python', 'bin'), { recursive: true }); fs.writeFileSync(path.join(dest, 'python', 'bin', 'python3'), ''); },
-    run: async (cmd, args, opts) => { runs.push({ cmd, args, opts }); return '/v/hf/hub/models--x/snapshots/abc\n'; },
+    run: async (cmd, args, opts) => { runs.push({ cmd, args, opts }); if (args[0] === '-m' && args[1] === 'venv') { fs.mkdirSync(path.join(args[2], 'bin'), { recursive: true }); fs.writeFileSync(path.join(args[2], 'bin', 'python'), ''); } return '/v/hf/hub/models--x/snapshots/abc\n'; },
     ...o
   });
   return { inst, dir, runs, prog };
@@ -72,10 +76,10 @@ test('voice: full install runs venv, pip, import check, snapshot; second call is
 
 test('voice: resumes after a failed model download without redoing pip, and rechecks only the model size', async () => {
   let fail = true, free = 50e9;
-  const { inst, runs } = mk({ free: () => free, run: async (cmd, args) => { runs.push(args[0]); if (args[0] === '-c' && fail) { fail = false; throw new Error('network down'); } return 'x\n'; } });
+  const { inst, runs } = mk({ free: () => free, run: async (cmd, args) => { runs.push(args[0]); if (args[1] === 'venv') { fs.mkdirSync(path.join(args[2], 'bin'), { recursive: true }); fs.writeFileSync(path.join(args[2], 'bin', 'python'), ''); } if (args[0] === '-c' && fail) { fail = false; throw new Error('network down'); } return 'x\n'; } });
   await assert.rejects(inst.install(), /network down/);
   assert.ok(inst.state().libs && !inst.state().model);
-  const before = runs.length; free = 3e9; // 3 GB is enough for the 2.4 GB left
+  const before = runs.length; free = 3e9; // 3 GB is enough for the 1.6 GB left
   await inst.install();
   assert.deepStrictEqual(runs.slice(before), ['-c']);
   assert.strictEqual(inst.state().done, true);
