@@ -515,3 +515,8 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 #askDock .card .btns { gap:.35rem; margin-top:0; }
 #askDock .card .btns button { padding:.25rem .7rem; min-height:2rem; font-size:.88rem; }
 #askDock .card textarea { min-height:2.4rem; }
+/* Ben Oct 28: progress is concise: the plan shows one short line per step, the live line is a single line */
+.plan .ph + .pd { display:none; }
+.plan .pd.solo, .plan .ph { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -webkit-line-clamp:1; }
+.plan li { margin:.05rem 0; font-size:.88rem; }
+.act-live .t { -webkit-line-clamp:1; }
