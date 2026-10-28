@@ -73,7 +73,7 @@ def make_backend(prof, env=os.environ):
     os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
     from . import torch_backend as T
     src = torch_source(prof)
-    model, tok = T.load(src, prof.trust_remote_code, mps_gb=rt.get("mps_mem_gb"))
+    model, tok = T.load(src, prof.trust_remote_code, mps_gb=T.mps_cap_gb(rt.get("mps_mem_gb")))
     return T.TorchBackend(model, tok, prof, src, tok_budget=tok_budget, grad_ckpt=gc, gen_batch=gen_batch), tok
 
 

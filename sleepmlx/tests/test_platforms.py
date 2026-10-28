@@ -38,6 +38,13 @@ class DeviceTests(unittest.TestCase):
         t.mps.recommended_max_memory = lambda: 4e9           # never above 1.0
         self.assertEqual(torch_backend.set_mps_cap(t, 10), 1.0)
 
+    def test_mps_cap_scales_with_ram(self):
+        cap = torch_backend.mps_cap_gb
+        self.assertEqual(cap(10, {}, ram=8e9), 10)                       # 8 GB Mac: the profile's 10 GB floor, as before
+        self.assertAlmostEqual(cap(10, {}, ram=32e9), 0.45 * 32)          # 32 GB M1 Pro: 14.4 GB
+        self.assertEqual(cap(10, {"SLEEPMLX_MPS_MEM_GB": "6"}, ram=32e9), 6.0)   # env wins, even below the floor
+        self.assertIsNone(cap(None, {}, ram=32e9))                       # no cap in the profile: none
+
     def test_mps_fallback_env_is_set(self):
         self.assertEqual(os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK"), "1")
 
