@@ -699,6 +699,7 @@ function createAgent({ helper, rec, voice }) {
     onState: helper && helper.onState,
     onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); },
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
+    rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
     approve: (req, signal) => {
       const rid = a.threadId + ':' + req.id;
       const ev = { threadId: a.threadId, type: 'approval', rid, ...req };

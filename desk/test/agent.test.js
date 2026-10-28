@@ -325,3 +325,13 @@ test('nowStamp: plain stamp on the same day, a new-day warning after an overnigh
   const s = nowStamp([{ role: 'user', content: '[Tue 2026-10-27 22:40] skipping school tomorrow' }, { role: 'assistant', content: 'ok' }, { role: 'user', content: [{ type: 'text', text: 'x' }] }], wed);
   assert.match(s, /^\[Wed 2026-10-28 08:05\] \(New day: today is Wednesday, October 28\. The earlier messages here were on 2026-10-27/);
 });
+
+test('approvals: plain echo needs no card; "always allow" is remembered for simple programs only', () => {
+  const { SAFE_ECHO, shellProgram } = require('../src/agent');
+  assert.ok(SAFE_ECHO.test('echo "Opening browser to check email"'));
+  assert.ok(!SAFE_ECHO.test('echo $(rm -rf x)') && !SAFE_ECHO.test('echo "a" > f') && !SAFE_ECHO.test('echo hi; ls'));
+  assert.strictEqual(shellProgram('ls -la ~/Documents'), 'ls');
+  assert.strictEqual(shellProgram('ls | grep x'), '');
+  assert.strictEqual(shellProgram('bash -c "ls"'), '');
+  assert.strictEqual(shellProgram('python3 x.py'), '');
+});

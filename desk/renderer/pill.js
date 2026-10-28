@@ -35,6 +35,7 @@
     b.append(btn('Open', 'go', () => P.act('open', { threadId: t.threadId, key: v.status === 'done' || v.status === 'error' ? t.key : null })));
     if (ap && (ap.kind === 'shell' || ap.kind === 'screen')) {
       b.append(btn('Allow once', '', () => P.act('respond', { rid: ap.rid, value: 'once', threadId: t.threadId })));
+      if (!ap.danger && ap.always) b.append(btn('Always allow', '', () => P.act('respond', { rid: ap.rid, value: 'always', threadId: t.threadId })));
       b.append(btn('Deny', 'no', () => P.act('respond', { rid: ap.rid, value: 'deny', threadId: t.threadId })));
     }
     if (ap && ap.kind === 'login') b.append(btn('Open browser', '', () => P.act('openBrowser', t.key)));

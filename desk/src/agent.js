@@ -63,6 +63,16 @@ function parseCheckLoose(text) {
 }
 
 // ---- helpers (exported for tests) ------------------------------------------------------------
+// a plain echo/printf of text only prints it (the model uses it to narrate): no approval card
+const SAFE_ECHO = /^\s*(?:echo|printf)\s+(?:"[^"`$\\;&|<>]*"|'[^']*'|[\w .,:!?'-]*)\s*$/;
+// the program a command runs ("ls -la" -> "ls"), or '' when it is a compound command (pipes, &&, ;, redirects): those are never "always allowed"
+function shellProgram(cmd) {
+  const c = String(cmd || '').trim();
+  if (!c || /[|&;<>`$()\n]/.test(c)) return '';
+  const w = c.split(/\s+/)[0].replace(/^.*[\\/]/, '');
+  // programs that run anything they are given are never "always allowed" as a whole
+  return /^[\w.+-]{1,30}$/.test(w) && !/^(?:sh|bash|zsh|fish|dash|python[\d.]*|node|ruby|perl|php|osascript|env|xargs|eval|exec|sudo|su|ssh|open|curl|wget|nc|powershell|pwsh|cmd)$/i.test(w) ? w.toLowerCase() : '';
+}
 const DANGER_PATTERNS = [
   /\brm\s+(-[a-z]*\s+)*-[a-z]*[rf][a-z]*\b/i,          // rm -rf, rm -fr, rm -r, rm -f
   /\brm\s+--(recursive|force)\b/i,
@@ -227,7 +237,7 @@ class Agent {
    *  getSettings(): {gatewayUrl, model, maxSteps, vision, mode:'ask'|'hands-off'}
    *  tools: { name: fn(args, ctx) | {run, gate?} }  results: string | {text, image?, summary?}
    *  toolDefs: array of OpenAI tool schemas (constant per run)
-   *  emit(event), approve(req)->'once'|'task'|'deny', askUser(question, signal)->string
+   *  emit(event), approve(req)->'once'|'task'|'always'|'deny', askUser(question, signal)->string
    *  onThreadChange(thread) optional save hook
    *  slot: Limiter (shared run slots), onState('queued'|'running'|'waiting'), onEnd() optional
    */
@@ -568,19 +578,24 @@ class Agent {
       // approvals
       const settings = ctx.settings;
       const hands = settings.mode === 'hands-off';
-      let need = null; // {kind, danger, text}
+      let need = null; // {kind, danger, text, always: key for "Always allow", alwaysLabel}
       if (name === 'run_shell') {
         const danger = isDangerous(args.command);
+        const prog = shellProgram(args.command);
         if (danger) need = { kind: 'shell', danger: true, text: String(args.command) };
-        else if (!hands) need = { kind: 'shell', danger: false, text: String(args.command) };
+        else if (!hands && !SAFE_ECHO.test(String(args.command))) need = { kind: 'shell', danger: false, text: String(args.command), always: prog ? 'shell:' + prog : '', alwaysLabel: prog ? '"' + prog + '" commands' : '' };
       } else if (SCREEN_GATED.has(name) && !hands) {
-        need = { kind: 'screen', danger: false, text: summaryStart };
+        need = { kind: 'screen', danger: false, text: summaryStart, always: 'screen', alwaysLabel: 'clicks and typing in apps' };
       }
+      let allowed = [];
+      try { const a = ctx.settings.alwaysAllow; if (Array.isArray(a)) allowed = a; } catch (e) { /* none */ }
+      if (need && !need.danger && need.always && allowed.includes(need.always)) need = null; // Ben chose "Always allow" for this kind of action
       if (need && !(!need.danger && this.taskAllow.has(need.kind))) {
         const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, ...need }, signal), signal);
         if (signal.aborted) return { text: finish('[stopped by user]', false) };
         if (verdict === 'deny') return { text: finish(P('Ben denied this action. Do not retry it; ask him what to do instead.'), false, 'Denied: ' + summaryStart) };
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);
+        if (verdict === 'always' && !need.danger) { this.taskAllow.add(need.kind); if (need.always && this.o.rememberAlways) { try { this.o.rememberAlways(need.always); } catch (e) { /* ignore */ } } }
       }
       const r = await run(args, ctx);
       let text = typeof r === 'string' ? r : (r && r.text) || '';
@@ -628,4 +643,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
