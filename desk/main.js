@@ -168,9 +168,10 @@ function resetModelToDefault() {
   const s = store.getSettings(); const want = s[s.modelDefault] || s.modelAuto;
   if (want && s.model !== want) { store.saveSettings({ model: want }); }
 }
-// Ben's Macs have the assistant (qwen through serve.sh); any other Mac runs the built-in model like Windows does.
+// Ben's Macs have the big assistant (qwen through serve.sh, ~20 GB). Ben Oct 28: "20gb is too much", so the small built-in model (LFM3, ~2 GB) is the
+// default there too, like on Windows and Emma's Mac; the big one is the optional "deep thinker", used only when an empty USE_BIG_MODEL file sits next to serve.sh.
 const SERVE_SH = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh');
-const hasLocalAssistant = process.platform === 'darwin' && fs.existsSync(SERVE_SH);
+const hasLocalAssistant = process.platform === 'darwin' && fs.existsSync(SERVE_SH) && fs.existsSync(path.join(path.dirname(SERVE_SH), 'USE_BIG_MODEL'));
 const WATCHDOG_FILE = path.join(os.homedir(), 'learner-ops', 'assistant', 'WATCHDOG_STOPPED');
 const PLATFORM_OPTS = { hasLocalAssistant };
 function modelStartCommand(st) {
@@ -1419,10 +1420,26 @@ app.on('activate', () => { if (store) showWindow(); });
 app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { sttSrv && sttSrv.stop(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
+// One time on a Mac that has the big assistant but is not set to use it: a saved settings.json still points at the big gateway, so move it to the small
+// built-in model and turn the big one off to give its ~20 GB back. Never touches a Mac that opted in (USE_BIG_MODEL).
+function moveToSmallModel() {
+  try {
+    const marker = path.join(app.getPath('userData'), 'small-model.json');
+    if (process.platform !== 'darwin' || hasLocalAssistant || !fs.existsSync(SERVE_SH) || fs.existsSync(marker)) return;
+    const small = Platform.PRESETS.find((x) => x.builtin), cur = store.getSettings();
+    if (Platform.presetFor(cur.gatewayUrl) && Platform.presetFor(cur.gatewayUrl).id === 'premonition') {
+      store.saveSettings({ gatewayUrl: small.gatewayUrl, model: small.model, modelAuto: small.modelAuto, modelMain: small.modelMain, modelFast: small.modelFast, compactTokens: small.compactTokens, contextTokens: small.contextTokens, maxToolChars: small.maxToolChars });
+      try { require('child_process').execFile('/bin/bash', [path.join(path.dirname(SERVE_SH), 'stop.sh')], { timeout: 60000 }, () => {}); } catch (e) { /* it was not running */ }
+    }
+    fs.writeFileSync(marker, JSON.stringify({ at: new Date().toISOString() }));
+  } catch (e) { /* the old settings keep working */ }
+}
+
 app.whenReady().then(async () => {
   if (!gotLock) return;
   applyPresetDefaults(Platform.defaultPreset(process.platform, PLATFORM_OPTS));
   store = new Store(app.getPath('userData'));
+  moveToSmallModel();
   memory = createMemory(app.getPath('userData'));
   tracking = createTracking(app.getPath('userData'));
   rhythm = new Rhythm(path.join(app.getPath('userData'), 'rhythm.json'));
