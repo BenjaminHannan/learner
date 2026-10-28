@@ -172,6 +172,12 @@ function sampleRhythm(now) {
   let idleS = Infinity; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* not available: Desk's own use below */ }
   rhythm.record(now || new Date(), idleS < 120 || Date.now() - sl.lastActive < 120000);
 }
+const GOALS_ASK = 'Setup is done. One more thing, so I can help over the long run: what are your short-term and long-term goals? Anything counts, big or small: school, a skill, a project, a habit, money, health. If you are not sure yet, tell me what matters to you and I can help you brainstorm some. Then I will turn them into a plan with clear steps, and offer to check in on them for you.';
+// rides (hidden) in front of the first answer to GOALS_ASK; the scroll shows only the person's words
+const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal to memory. Then make a short plan for each goal: '
+  + '2 to 4 milestones and the first small step for this week. Ask at most one question if something important is unclear. If they have no goals yet, '
+  + 'help them brainstorm a few first. Finally offer Sparks that would help (for example a weekly check-in or a reminder for the first step), and ask before creating any.\n\n';
+const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
@@ -1050,7 +1056,8 @@ function registerIpc() {
     const t = store.loadThread(threadId) || store.newThread();
     if (!t.title || t.title === 'New thread') t.title = String(text).replace(/\s+/g, ' ').trim().slice(0, 48) || 'New thread';
     activeThread = t;
-    agent.run(t, text).then((r) => {
+    const goals = isGoalsAnswer(t);
+    agent.run(t, goals ? GOALS_NOTE + text : text, goals ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
@@ -1074,7 +1081,7 @@ function registerIpc() {
     const st = store.getSettings();
     if (st.goalsAsked) return { ok: false };
     const t = store.loadThread(id); if (!t || t.helper || (t.messages || []).length) return { ok: false };
-    const text = 'Setup is done. One more thing, so I can help over the long run: what are your short-term and long-term goals? Anything counts, big or small: school, a skill, a project, a habit, money, health. If you are not sure yet, tell me what matters to you and I can help you brainstorm some. Then I will turn them into a plan with clear steps, and offer to check in on them for you.';
+    const text = GOALS_ASK;
     t.messages = [{ role: 'assistant', content: text }]; t.items = [...(t.items || []), { t: 'assistant', text }];
     store.saveThread(t); store.saveSettings({ goalsAsked: true });
     return { ok: true };
