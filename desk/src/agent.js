@@ -333,7 +333,13 @@ class Agent {
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
 
-  steer(text) { if (this.running && text && text.trim()) { this.steerQueue.push(text.trim()); return true; } return false; }
+  steer(text) {
+    if (!(this.running && text && text.trim())) return false;
+    this.steerQueue.push(text.trim());
+    // Ben Oct 28: "make it so that the message is read in < 3 seconds". A reply being written is dropped so the loop reads his message at once, instead of after the whole reply.
+    if (this.reqCtl) { this.reqSteered = true; try { this.reqCtl.abort(); } catch (e) { /* already over */ } }
+    return true;
+  }
 
   stop() { if (this.abort) this.abort.abort(); }
 
@@ -434,23 +440,30 @@ class Agent {
 
         const t0 = Date.now();
         let res;
+        const rc = new AbortController(), onRun = () => rc.abort();
+        signal.addEventListener('abort', onRun, { once: true });
+        this.reqCtl = rc; this.reqSteered = false;
         try {
           res = await streamChat({
             gatewayUrl: s.gatewayUrl,
             model: s.model,
             messages: this.requestMessages(thread),
             tools: this.toolDefs(),
-            signal,
+            signal: rc.signal,
             apiKey: s.apiKey,
             onText: (d) => this.emit({ type: 'text', delta: d }),
             onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) // only that Glim is thinking; the text never leaves the main process
           });
         } catch (e) {
+          signal.removeEventListener('abort', onRun); this.reqCtl = null;
           if (signal.aborted) { stopped = true; break; }
+          if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.emit({ type: 'discard' }); continue; }   // his message is read now; the half-written reply is dropped
           failure = String(e && e.message || e);
           this.emit({ type: 'error', message: failure });
           break;
         }
+        signal.removeEventListener('abort', onRun); this.reqCtl = null;
+        if (this.reqSteered && this.steerQueue.length && !(res && res.toolCalls && res.toolCalls.length)) { this.reqSteered = false; this.emit({ type: 'discard' }); continue; }
         if (signal.aborted) {
           stopped = true;
           if (res && res.content) {

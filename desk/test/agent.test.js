@@ -166,6 +166,25 @@ test('steer: queued message is injected before the next model call', async () =>
   } finally { gw.close(); }
 });
 
+test('steer while the model is writing: the half-written reply is dropped and his message is read at once', async () => {
+  const gw = await startGateway([{ content: 'a long reply that is still being written', hang: true }, { content: 'got it, blue' }]);
+  try {
+    let agent; const t = mkThread(); const evs = [];
+    agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const done = agent.run(t, 'paint it');
+    const t0 = Date.now();
+    while (!evs.some((e) => e.type === 'text')) await new Promise((r) => setTimeout(r, 10));   // the first reply is streaming
+    assert.strictEqual(agent.steer('actually use blue'), true);
+    await done;
+    assert.ok(Date.now() - t0 < 3000, 'read in under 3 seconds, not after the whole reply');
+    assert.ok(evs.some((e) => e.type === 'discard'));
+    assert.strictEqual(gw.requests.length, 2);
+    assert.match(gw.requests[1].messages.at(-1).content, /actually use blue$/);
+    assert.ok(!t.messages.some((m) => m.role === 'assistant' && /still being written/.test(m.content || '')), 'the dropped reply is not kept');
+    assert.ok(t.messages.some((m) => m.role === 'assistant' && /got it, blue/.test(m.content || '')));
+  } finally { gw.close(); }
+});
+
 test('stop: aborts a streaming request and a running tool, history stays valid', async () => {
   const gw = await startGateway([{ content: 'thinking out loud', tool_calls: [{ name: 'hang', arguments: {} }] }, { content: 'never' }]);
   try {
