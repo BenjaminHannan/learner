@@ -226,6 +226,21 @@ test('primary agent_* tools', async () => {
   assert.match(t.agent_stop({ name_or_id: 'nope' }).text, /no Glim/);
 });
 
+test('agent_update run: true starts a helper now; an idle one-off with no time says it will not run', async () => {
+  const { m, runs } = mkManager();
+  const t = agentTools(m, { isHelper: false });
+  t.agent_start({ name: 'research', task: 'read AI news' }, {});
+  runs[0].done({ report: 'done' });
+  await until(() => m.find('research').status === 'idle');
+  assert.match(t.agent_list(), /research \| idle, not scheduled \| once \| next none/);
+  assert.match(t.agent_update({ name_or_id: 'research', task: 'read AI news again' }).text, /Not scheduled: it will not run unless/);
+  const r = t.agent_update({ name_or_id: 'research', run: true });
+  assert.match(r.text, /; started now; status (queued|working)/); assert.match(r.summary, /^Started Glim research/);
+  assert.strictEqual(runs.length, 2); assert.ok(m.isRunning(m.find('research').id));
+  assert.match(t.agent_update({ name_or_id: 'research', run: true }).text, /it was already running/);
+  assert.strictEqual(runs.length, 2);
+});
+
 const HNEW = "Work on your own: if a tool or a step fails, fix it or try another way yourself (agent_update changes a helper); do not ask Ben about errors or tool problems. Finish with a short report of the result only, with no notes about your own tools.";
 test('helper user message: date prefix, name, task; recurring runs carry the previous report (<= 600 chars)', async () => {
   const { m, runs } = mkManager();

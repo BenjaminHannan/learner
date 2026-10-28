@@ -9,6 +9,9 @@ const NO = "Error: Glims can't start Glims"; // a Glim run with no known id (sho
 const MAX_DEPTH = 2;
 const MAX_KIDS = 5;
 
+// what the model reads as a Glim's state: a running one says so, an idle one with no next time says it will not run
+function liveStatus(h) { return h.status === 'idle' && !h.next && !h.paused ? 'idle, not scheduled' : h.status; }
+
 function agentTools(mgr, opts) {
   const isHelper = !!(opts && opts.isHelper);
   const selfId = opts && opts.selfId;
@@ -50,7 +53,7 @@ function agentTools(mgr, opts) {
     agent_list: () => {
       const l = mgr.list();
       if (!l.length) return 'No Glims.';
-      return l.map((h) => h.id + ' ' + h.name + (h.id === selfId ? ' (you)' : '') + ' | ' + h.status + (h.paused ? ' (paused)' : '') + ' | ' + h.schedule + ' | next ' + fmtWhen(h.next) + ' | last: ' + (short(h.lastSummary, 120) || 'none yet')).join('\n');
+      return l.map((h) => h.id + ' ' + h.name + (h.id === selfId ? ' (you)' : '') + ' | ' + liveStatus(h) + (h.paused ? ' (paused)' : '') + ' | ' + h.schedule + ' | next ' + (h.next ? fmtWhen(h.next) : 'none') + ' | last: ' + (short(h.lastSummary, 120) || 'none yet')).join('\n');
     },
     // edit in place: schedule (at / every, "" clears one), task, new_name, paused; stop: true cancels it
     agent_update: (a) => {
@@ -63,8 +66,18 @@ function agentTools(mgr, opts) {
         const h = mgr.update(a.name_or_id, patch);
         if (!h) return { text: "Error: no Glim '" + a.name_or_id + "'", error: true };
         if (a.paused !== undefined) mgr.pause(h.id, !!a.paused);
+        // run: true starts it now (Ben Oct 28: Glim set "once" with no time, then a time already past, and said they would run)
+        let ran = '';
+        if (a.run) {
+          const kids = isHelper ? mgr.items.filter((k) => k.byHelper === selfId && k.id !== h.id && mgr.isRunning(k.id)).length : 0;
+          ran = mgr.isRunning(h.id) ? 'it was already running'
+            : mgr.o && mgr.o.hold && mgr.o.hold() ? 'not started: Glim is asleep, so it runs after wake if it is due'
+            : kids >= MAX_KIDS ? 'not started: you already run ' + kids + ' Glims'
+            : mgr.runNow(h.id) ? 'started now' + (mgr.find(h.id).paused ? ' (its schedule stays paused)' : '') : 'could not start it';
+        }
         const v = mgr.find(h.id) ? mgr.view(mgr.find(h.id)) : h;
-        return { text: "Updated Glim '" + v.name + "': " + v.schedule + (v.paused ? ' (paused)' : '') + (v.next ? ', next run ' + fmtWhen(v.next) : ''), summary: 'Updated Glim ' + v.name };
+        const when = v.next ? ', next run ' + fmtWhen(v.next) : mgr.isRunning(v.id) ? '' : (v.paused ? '' : '. Not scheduled: it will not run unless you set at/every or run it now (run: true)');
+        return { text: "Updated Glim '" + v.name + "': " + v.schedule + (v.paused ? ' (paused)' : '') + when + (ran ? '; ' + ran : '') + '; status ' + liveStatus(v), summary: (ran.startsWith('started now') ? 'Started Glim ' : 'Updated Glim ') + v.name };
       } catch (e) { return err(e); }
     },
     agent_stop: stopTool // still callable by name (older chats); the tool list offers it through agent_update
