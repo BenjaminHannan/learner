@@ -74,7 +74,7 @@ test('onboarding skips the Permissions step on Windows (Mac and the Linux e2e ke
 
 test('pill window: Mac is an all-Spaces panel, Windows a frameless screen-saver-level window with no panel type', () => {
   const m = P.pillOptions('darwin', 420, 300);
-  assert.strictEqual(m.options.type, 'panel'); assert.strictEqual(m.allWorkspaces, true);
+  assert.strictEqual(m.options.type, 'panel'); assert.strictEqual(m.allWorkspaces, true); assert.strictEqual(m.options.enableLargerThanScreen, true); // may sit in the menu-bar band beside the notch
   const w = P.pillOptions('win32', 420, 300);
   assert.strictEqual('type' in w.options, false);
   assert.strictEqual(w.options.frame, false); assert.strictEqual(w.options.alwaysOnTop, true); assert.strictEqual(w.options.skipTaskbar, true);

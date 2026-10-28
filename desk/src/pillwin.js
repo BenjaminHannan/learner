@@ -8,6 +8,17 @@ const Platform = require('../renderer/platform');
 
 const W = 420, H = 300;
 
+// The real notch width from the screen helper (`deskhelper notch`): it varies with the Mac and its display scaling (185-250 pt),
+// and a guessed 200 put the cap half under the camera on a 16" at "More Space". 200 when the helper is missing or says nothing.
+function notchWidth() {
+  try {
+    const { findHelper } = require('./tools/screen');
+    const bin = findHelper({}, process.resourcesPath, process.platform);
+    const r = bin ? JSON.parse(require('child_process').execFileSync(bin, ['notch'], { timeout: 2000 }).toString()) : null;
+    return r && r.width > 0 ? Math.round(r.width) : 200;
+  } catch (e) { return 200; }
+}
+
 class PillWindow {
   constructor({ dark }) {
     this.view = { visible: false };
@@ -36,9 +47,9 @@ class PillWindow {
     this.topInset = Math.max(this.topInset || 0, a.y - d.bounds.y);
     const pos = Platform.pillPosition(a, W, d.bounds.y + this.topInset);
     // the window starts at the very top of the screen; the pill hangs down by `pt`, and on a notched Mac the idle icon sits IN the
-    // menu-bar band beside the camera (black, fused to the notch). Electron has no notch width, so ~200 pt is assumed (14"/16" range 185-205).
+    // menu-bar band beside the camera (black, fused to the notch). Electron has no notch width, so the screen helper measures it (notchWidth).
     const notched = process.platform === 'darwin' && this.topInset >= 32;
-    this.geo = { pt: pos.y - d.bounds.y, notchH: notched ? this.topInset : 0, notchW: notched ? 200 : 0 };
+    this.geo = { pt: pos.y - d.bounds.y, notchH: notched ? this.topInset : 0, notchW: notched ? notchWidth() : 0 };
     this.win.setBounds({ x: pos.x, y: d.bounds.y, width: W, height: H + this.geo.pt });
     if (this.view && this.lastSent) this.win.webContents.send('pill-view', { ...this.lastSent, geo: this.geo });
   }
