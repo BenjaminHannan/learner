@@ -59,6 +59,7 @@
       <div id="runState" hidden><i></i><span>Working…</span></div>
       <div class="box">
         <textarea id="input" rows="1" placeholder="Ask Glim to do something…" spellcheck="true" aria-label="Message"></textarea>
+        <button id="btnCall" class="callbtn" title="Call Glim: talk hands-free (Cmd+Shift+C)" aria-label="Call Glim"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 2.5h2.3l1.1 2.9-1.4.9a8 8 0 003.5 3.5l.9-1.4 2.9 1.1v2.3a1.4 1.4 0 01-1.5 1.4A10.2 10.2 0 011.8 4a1.4 1.4 0 011.4-1.5z"/></svg></button>
         <button id="btnSend" class="send" title="Send (Enter)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5"/></svg><span class="sr">Send</span></button>
         <button id="btnStop" class="stop" title="Stop (Esc)" hidden><i></i><span class="sr">Stop</span></button>
       </div>
@@ -131,6 +132,23 @@
   </div>
 </div>
 
+<div id="call" hidden role="dialog" aria-modal="true" aria-label="Call with Glim">
+  <div class="call-card">
+    <div class="call-time" id="callTime">0:00</div>
+    <div class="call-orb"><i id="callRing"></i><span id="callGlim"></span></div>
+    <div id="callStatus" class="call-status" aria-live="polite">Connecting…</div>
+    <div id="callYou" class="call-cap you" aria-live="off"></div>
+    <div id="callSay" class="call-cap glim"></div>
+    <div id="callNote" class="call-note" hidden></div>
+    <div id="callErr" class="call-err" hidden role="alert"><span id="callErrText"></span><button id="callSettings" class="amber-btn sm" hidden>Open Settings</button></div>
+    <div class="call-btns">
+      <button id="callMute" class="ghost" aria-pressed="false">Mute</button>
+      <button id="callHang" class="hang">Hang up</button>
+    </div>
+    <div class="call-hint">Just talk. Talk over Glim to interrupt. Esc hangs up.</div>
+  </div>
+</div>
+
 <div id="perms" hidden role="dialog" aria-label="Permissions"></div>
 
 <div id="onboard" hidden role="dialog" aria-modal="true" aria-label="Set up Glims"></div>
@@ -152,6 +170,7 @@
 <script src="acts.js"></script>
 <script src="panel.js"></script>
 <script src="perms.js"></script>
+<script src="call.js"></script>
 <script src="onboard.js"></script>
 <script src="app.js"></script>
 </body>

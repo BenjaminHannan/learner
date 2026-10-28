@@ -203,6 +203,18 @@ test('maxSteps ends a runaway loop', async () => {
   } finally { gw.close(); }
 });
 
+test('maxSteps 0 means no limit: a task keeps going past the old 40-step cap', async () => {
+  const script = Array.from({ length: 45 }, () => ({ tool_calls: [{ name: 'noop', arguments: {} }] })).concat([{ content: 'done' }]);
+  const gw = await startGateway(script);
+  try {
+    const events = [];
+    const agent = new Agent({ getSettings: settings(gw, { maxSteps: 0, verify: false }), toolDefs: buildTools({}), tools: { noop: async () => 'k' }, emit: (e) => events.push(e), approve: async () => 'once', askUser: async () => '' });
+    await agent.run(mkThread(), 'long job');
+    assert.strictEqual(gw.requests.length, 46);
+    assert.ok(!events.some((e) => e.type === 'text' && /step limit/.test(e.delta)));
+  } finally { gw.close(); }
+});
+
 test('vision on: image is appended as a follow-up user message, only the newest kept', async () => {
   const gw = await startGateway([
     { tool_calls: [{ name: 'shot', arguments: {} }] }, { tool_calls: [{ name: 'shot', arguments: {} }] }, { content: 'seen' }

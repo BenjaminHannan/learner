@@ -13,7 +13,9 @@ window.BrowserPanel = (() => {
   const narrow = () => window.innerWidth < NARROW;
   const target = () => (narrow() ? window.innerWidth : Math.max(MIN_W, Math.min(Math.round(window.innerWidth * frac), window.innerWidth - MIN_CHAT)));
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const suspended = () => !$('#settings').hidden || !$('#screenModal').hidden || (narrow() && document.body.classList.contains('drawer-open')) || !$('#perms').hidden;
+  const suspended = () => !$('#call').hidden || !$('#settings').hidden || !$('#screenModal').hidden || (narrow() && (document.body.classList.contains('drawer-open') || !$('#perms').hidden));
+  // the permissions card no longer blanks a wide panel: it shrinks into the chat column (app.css body.bp-open #perms), and the page
+  // stays up. It used to hide the page whenever the card showed, and the card stays up on a Mac that lacks Screen Recording/Accessibility.
 
   function rect() {
     const t = target();
@@ -121,7 +123,7 @@ window.BrowserPanel = (() => {
   window.addEventListener('resize', () => { if (open && !anim) vis = target(); layout(); report(); });
   new ResizeObserver(report).observe(slot);
   const mo = new MutationObserver(report);
-  for (const id of ['#settings', '#screenModal', '#perms']) { const n = $(id); if (n) mo.observe(n, { attributes: true, attributeFilter: ['hidden'] }); }
+  for (const id of ['#settings', '#screenModal', '#perms', '#call']) { const n = $(id); if (n) mo.observe(n, { attributes: true, attributeFilter: ['hidden'] }); }
   mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   // ---- chrome

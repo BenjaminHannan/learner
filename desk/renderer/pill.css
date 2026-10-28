@@ -7,7 +7,7 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #line { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
 #mini { color:var(--text2); font-size:12px; font-variant-numeric:tabular-nums; }
 #pill.error { border-color:var(--danger); } #pill.waiting { border-color:var(--accent-text); }
-#pill.sleeping { border-color:var(--hair2); } #pill.sleeping #line { color:var(--text2); font-weight:500; }
+#pill.call { border-color:var(--accent); } #pill.sleeping { border-color:var(--hair2); } #pill.sleeping #line { color:var(--text2); font-weight:500; }
 #pill.error #line { color:var(--danger); }
 .more { max-height:0; opacity:0; padding:0 16px; transition:max-height .28s cubic-bezier(.34,1.2,.5,1), opacity .2s, padding .2s; }
 #pill.open .more { max-height:260px; opacity:1; padding:2px 16px 14px; }
@@ -40,8 +40,8 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.notch #mini { order:2; height:var(--nh); display:flex; align-items:center; font-size:11.5px; color:var(--text2); }
 #pill.notch #line { display:none; order:3; flex-basis:100%; padding:6px 6px 2px; }
 #pill.notch #mini:empty::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--b, transparent); }
-#pill.notch.waiting #mini:empty, #pill.notch.error #mini:empty, #pill.notch.done #mini:empty, #pill.notch.sleeping #mini:empty { width:14px; justify-content:center; }
-#pill.notch.waiting { --b:var(--accent); } #pill.notch.error { --b:var(--danger); } #pill.notch.done { --b:#30d158; } #pill.notch.sleeping { --b:#636366; }
+#pill.notch.waiting #mini:empty, #pill.notch.error #mini:empty, #pill.notch.done #mini:empty, #pill.notch.sleeping #mini:empty, #pill.notch.call #mini:empty { width:14px; justify-content:center; }
+#pill.notch.waiting { --b:var(--accent); } #pill.notch.error { --b:var(--danger); } #pill.notch.done { --b:#30d158; } #pill.notch.sleeping { --b:#636366; } #pill.notch.call { --b:var(--accent); }
 #pill.notch.idle { width:calc(var(--nw) + var(--ear) * 2); margin-left:calc(var(--nw) / -2 - var(--ear)); border-radius:0 0 14px 14px; opacity:1; }
 #pill.notch.idle .row1 { padding:0 10px; }
 #pill.notch.idle #mini { display:none; } /* a stopped run's last time must not stay frozen in the ear */

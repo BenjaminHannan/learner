@@ -3,6 +3,8 @@
 // Prints JSON on stdout. Errors: {"error": "..."} with exit code 1.
 import AppKit
 import ApplicationServices
+import AVFoundation
+import Speech
 import CoreGraphics
 import Foundation
 
@@ -534,11 +536,248 @@ func boolFlag(_ args: inout [String], _ name: String) -> Bool {
     return true
 }
 
+// MARK: - call (speech to speech; long-running, JSON lines on stdout, commands as JSON lines on stdin)
+// out: {"ready"} {"partial"} {"final"} {"level"} {"speaking"} {"bargein"} {"note"} {"error"}. in: {"say"} {"stop"} {"voice"} {"mute"} {"quit"}.
+let outLock = NSLock()
+func out(_ obj: [String: Any]) {
+    outLock.lock(); defer { outLock.unlock() }
+    var opts: JSONSerialization.WritingOptions = [.sortedKeys]
+    opts.insert(.withoutEscapingSlashes)
+    if let d = try? JSONSerialization.data(withJSONObject: obj, options: opts) {
+        FileHandle.standardOutput.write(d + Data([10]))
+    }
+}
+
+final class CallSession: NSObject, AVSpeechSynthesizerDelegate {
+    let engine = AVAudioEngine()
+    let synth = AVSpeechSynthesizer()
+    var recognizer: SFSpeechRecognizer?
+    var onDevice = false
+    let lock = NSLock()               // guards request, muted, level, lastVoice (the audio thread touches them)
+    var request: SFSpeechAudioBufferRecognitionRequest?
+    var task: SFSpeechRecognitionTask?
+    var gen = 0                       // bumped on every new recognition task; stale callbacks are ignored
+    var muted = false
+    var restartingEngine = false      // the config-change handler is mid-restart
+    var level: Float = 0
+    var lastVoice = Date.distantPast  // last time the mic RMS was above the gate
+    var pending = ""                  // newest partial text of the current utterance
+    var lastChange = Date.distantPast // when the partial text last changed
+    var taskStart = Date()
+    var utts = Set<AVSpeechUtterance>()
+    var speaking = false
+    var bargeSent = false
+    var voice: AVSpeechSynthesisVoice?
+    var fails: [Date] = []
+    var lastLevel: Double = 0
+    var monoFmt: AVAudioFormat?
+    var timer: Timer?
+
+    func begin() {
+        AVCaptureDevice.requestAccess(for: .audio) { micOK in
+            guard micOK else { out(["error": "mic-denied"]); exit(1) }
+            SFSpeechRecognizer.requestAuthorization { st in
+                guard st == .authorized else { out(["error": "speech-denied"]); exit(1) }
+                DispatchQueue.main.async { self.setup() }
+            }
+        }
+    }
+
+    func setup() {
+        guard let r = SFSpeechRecognizer(locale: Locale(identifier: "en-US")) ?? SFSpeechRecognizer(), r.isAvailable else {
+            out(["error": "speech recognizer unavailable"]); exit(1)
+        }
+        recognizer = r
+        onDevice = r.supportsOnDeviceRecognition
+        if !onDevice { out(["note": "offline-unavailable"]) }
+        voice = bestVoice(); synth.delegate = self
+        // voice processing = echo cancellation + noise suppression, so Glim's own voice does not come back as "the user speaking"
+        do { try engine.inputNode.setVoiceProcessingEnabled(true) } catch { out(["note": "no-echo-cancel"]) }
+        if #available(macOS 14.0, *) {
+            var d = AVAudioVoiceProcessingOtherAudioDuckingConfiguration()
+            d.enableAdvancedDucking = false; d.duckingLevel = .min
+            engine.inputNode.voiceProcessingOtherAudioDuckingConfiguration = d
+        }
+        do { try startEngine() } catch { out(["error": "audio-failed: \(error.localizedDescription)"]); exit(1) }
+        NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            // headphones plugged in, default device changed: rebuild the tap and carry on
+            guard let s = self, !s.restartingEngine else { return }
+            s.restartingEngine = true; defer { s.restartingEngine = false }
+            s.engine.inputNode.removeTap(onBus: 0)
+            do { try s.startEngine() } catch { out(["error": "audio-failed: \(error.localizedDescription)"]); exit(1) }
+            s.startTask() // the new tap may have a new format; the old request would crash on it
+        }
+        startTask()
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in self?.tick() }
+        out(["ready": true])
+    }
+
+    func startEngine() throws {
+        let input = engine.inputNode
+        let fmt = input.outputFormat(forBus: 0)
+        guard fmt.sampleRate > 0 else { throw NSError(domain: "call", code: 1, userInfo: [NSLocalizedDescriptionKey: "no microphone input"]) }
+        monoFmt = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: fmt.sampleRate, channels: 1, interleaved: false)
+        input.installTap(onBus: 0, bufferSize: 1024, format: fmt) { [weak self] buf, _ in self?.onBuffer(buf) }
+        engine.prepare()
+        try engine.start()
+    }
+
+    // audio thread
+    func onBuffer(_ buf: AVAudioPCMBuffer) {
+        let n = Int(buf.frameLength)
+        guard n > 0, let ch = buf.floatChannelData else { return }
+        var sum: Float = 0
+        let p = ch[0]
+        for i in 0..<n { sum += p[i] * p[i] }
+        let rms = (sum / Float(n)).squareRoot()
+        // voice processing can hand back several channels; the recognizer wants one
+        var b = buf
+        if buf.format.channelCount > 1, let mf = monoFmt, let m = AVAudioPCMBuffer(pcmFormat: mf, frameCapacity: buf.frameLength) {
+            m.frameLength = buf.frameLength
+            if let md = m.floatChannelData { memcpy(md[0], p, n * MemoryLayout<Float>.size) }
+            b = m
+        }
+        lock.lock(); defer { lock.unlock() }
+        if muted { return }
+        level = max(level, rms)
+        if rms > 0.012 { lastVoice = Date() }
+        request?.append(b)
+    }
+
+    func startTask() {
+        lock.lock()
+        gen += 1
+        let g = gen
+        request?.endAudio()
+        let req = SFSpeechAudioBufferRecognitionRequest()
+        req.shouldReportPartialResults = true
+        if onDevice { req.requiresOnDeviceRecognition = true } // else the server is allowed (we said so with a note)
+        request = req
+        lock.unlock()
+        task?.cancel()
+        pending = ""; bargeSent = false; taskStart = Date()
+        task = recognizer?.recognitionTask(with: req) { [weak self] res, err in
+            DispatchQueue.main.async { self?.onResult(g, res, err) }
+        }
+    }
+
+    func restartSoon() {
+        let g = gen
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { if g == self.gen { self.startTask() } }
+    }
+
+    func onResult(_ g: Int, _ res: SFSpeechRecognitionResult?, _ err: Error?) {
+        guard g == gen, !isMuted() else { return }
+        if let res = res {
+            let t = res.bestTranscription.formattedString.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !t.isEmpty && t != pending {
+                pending = t; lastChange = Date()
+                out(["partial": t])
+                if speaking && !bargeSent { bargeSent = true; out(["bargein": true]) }
+            }
+            if res.isFinal { finish(); return }
+        }
+        if let e = err {
+            // tasks end on their own (about a minute, or no speech heard): keep what we have and start a fresh one
+            if !pending.isEmpty { finish(); return }
+            let now = Date()
+            fails = fails.filter { now.timeIntervalSince($0) < 5 } + [now]
+            if fails.count >= 5 { out(["error": "recognizer-failed: \(e.localizedDescription)"]); exit(1) }
+            restartSoon()
+        }
+    }
+
+    func finish() {
+        let t = pending
+        if !t.isEmpty { out(["final": t]) }
+        startTask()
+    }
+
+    func isMuted() -> Bool { lock.lock(); defer { lock.unlock() }; return muted }
+
+    func tick() {
+        let now = Date()
+        lock.lock(); let lv = level; level = 0; let ago = now.timeIntervalSince(lastVoice); let m = muted; lock.unlock()
+        let l = m ? 0 : (min(1.0, Double(lv) * 10) * 100).rounded() / 100
+        if l > 0 || lastLevel > 0 { out(["level": l]) }
+        lastLevel = l
+        if m { return }
+        // end of utterance: ~0.9 s since the words last changed, and the mic is quiet too (or 1.8 s regardless, for a noisy room)
+        if !pending.isEmpty {
+            let since = now.timeIntervalSince(lastChange)
+            if since > 0.9 && (ago > 0.5 || since > 1.8) { finish() }
+        } else if now.timeIntervalSince(taskStart) > 50 { startTask() } // before the recognizer's own timeout
+    }
+
+    func bestVoice() -> AVSpeechSynthesisVoice? {
+        let en = AVSpeechSynthesisVoice.speechVoices().filter { $0.language == "en-US" }
+        func rank(_ v: AVSpeechSynthesisVoice) -> Int { v.quality == .premium ? 3 : v.quality == .enhanced ? 2 : 1 }
+        if let best = en.max(by: { rank($0) < rank($1) }), rank(best) > 1 { return best }
+        return AVSpeechSynthesisVoice(language: "en-US")
+    }
+
+    func say(_ s: String) {
+        let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        let u = AVSpeechUtterance(string: t)
+        u.voice = voice; u.preUtteranceDelay = 0; u.postUtteranceDelay = 0
+        utts.insert(u); synth.speak(u)
+    }
+
+    func stopSpeaking() {
+        synth.stopSpeaking(at: .immediate)
+        utts.removeAll()
+        if speaking { speaking = false; out(["speaking": false]) }
+    }
+
+    func done(_ u: AVSpeechUtterance) {
+        utts.remove(u)
+        if utts.isEmpty && speaking { speaking = false; out(["speaking": false]) }
+    }
+    func speechSynthesizer(_ s: AVSpeechSynthesizer, didStart u: AVSpeechUtterance) {
+        if !speaking { speaking = true; bargeSent = false; out(["speaking": true]) }
+    }
+    func speechSynthesizer(_ s: AVSpeechSynthesizer, didFinish u: AVSpeechUtterance) { done(u) }
+    func speechSynthesizer(_ s: AVSpeechSynthesizer, didCancel u: AVSpeechUtterance) { done(u) }
+
+    func handle(_ line: String) {
+        guard let d = line.data(using: .utf8), let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
+        if let s = j["say"] as? String { say(s) }
+        if j["stop"] as? Bool == true { stopSpeaking() }
+        if let id = j["voice"] as? String, let v = AVSpeechSynthesisVoice(identifier: id) { voice = v }
+        if let m = j["mute"] as? Bool {
+            lock.lock(); muted = m; lock.unlock()
+            startTask() // drop half-heard words on mute; on unmute, recognition was dead while muted
+        }
+        if j["quit"] as? Bool == true { shutdown() }
+    }
+
+    func shutdown() -> Never {
+        synth.stopSpeaking(at: .immediate)
+        engine.inputNode.removeTap(onBus: 0); engine.stop()
+        task?.cancel()
+        exit(0)
+    }
+}
+
+func runCall() -> Never {
+    let session = CallSession()
+    session.begin()
+    DispatchQueue.global().async {
+        while let line = readLine() { DispatchQueue.main.async { session.handle(line) } }
+        DispatchQueue.main.async { session.shutdown() } // stdin closed: the app is gone
+    }
+    dispatchMain()
+}
+
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call") }
 let command = args.removeFirst()
 
 switch command {
+case "call":
+    runCall()
+
 case "notch":
     // the camera notch of the menu-bar screen: the gap between the two menu-bar areas beside it (macOS 12+); 0 when there is none.
     // Needs no permission. Its width in points changes with the display scaling (16" M3: 250 pt at "More Space").

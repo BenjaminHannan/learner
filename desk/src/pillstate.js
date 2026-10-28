@@ -13,8 +13,10 @@ class PillState {
     this.onChange = o.onChange || (() => {});
     this.doneMs = o.doneMs || 8000;
     this.agents = new Map();
+    this.callSince = 0; // while a Call Glim call is on: when it started
     this.sleep = null; // {line, detail, since} while the sleep app runs (the pill's quiet resting state)
   }
+  setCall(since) { this.callSince = since || 0; this.onChange(); }
   setSleep(info) { this.sleep = info ? { ...info, since: (this.sleep && this.sleep.since) || this.now() } : null; this.onChange(); }
   // a short heads-up (e.g. a check-in alert) that fades like a finished run
   flash(line, name) { const a = this._get('sleep-alert', name || 'Glim', null); a.status = 'done'; a.line = short(line, 60); a.step = short(line, 120); a.endedAt = this.now(); a.startedAt = this.now(); a.error = ''; a.approval = null; this._touch(a); }
@@ -79,13 +81,17 @@ class PillState {
     return best;
   }
   // status for the top-bar Glim / dock badge: 'idle' when nothing is going on
-  status() { const t = this.top(); return t ? t.status : this.sleep ? 'sleeping' : 'idle'; }
+  status() { const t = this.top(); return t ? t.status : this.callSince ? 'call' : this.sleep ? 'sleeping' : 'idle'; }
   view() {
     const top = this.top();
     const now = this.now();
     if (!top && this.sleep) {
       const sl = this.sleep;
       return { visible: true, status: 'sleeping', mood: 'sleepy', line: sl.line, top: { key: 'sleep', name: 'Glim', threadId: null, status: 'sleeping', step: sl.detail || '', line: sl.line, error: '', approval: null, title: '', elapsedMs: Math.max(0, now - sl.since) }, others: [], now };
+    }
+    if (!top && this.callSince) {
+      const secs = Math.max(0, Math.floor((now - this.callSince) / 1000)), line = 'On a call · ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+      return { visible: true, status: 'call', mood: 'idle', line, top: { key: 'call', name: 'Glim', threadId: null, status: 'call', step: 'Talking hands-free', line, error: '', approval: null, title: '', elapsedMs: secs * 1000 }, others: [], now };
     }
     if (!top) return { visible: false, status: 'idle', mood: 'idle', line: '', top: null, others: [] };
     const pack = (a) => ({ key: a.key, name: a.name, threadId: a.threadId, status: a.status, step: a.step, line: a.line, error: a.error, approval: a.approval, title: a.title, elapsedMs: Math.max(0, (a.endedAt || now) - a.startedAt) });

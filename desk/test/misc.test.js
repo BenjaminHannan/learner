@@ -97,3 +97,19 @@ test('markdown: a numbered list split by blank lines keeps counting', () => {
   assert.ok(h.includes('<strong>A</strong>'));
   assert.ok(!md('1. a\n2. b').includes('start='));
 });
+
+test('threads and concurrent Glims have no limit by default; the old 40 default migrates to 0, a picked number stays', () => {
+  const fresh = fs.mkdtempSync(path.join(os.tmpdir(), 'steps-'));
+  assert.strictEqual(new Store(fresh).getSettings().maxSteps, 0);
+  const old = fs.mkdtempSync(path.join(os.tmpdir(), 'steps-'));
+  fs.writeFileSync(path.join(old, 'settings.json'), JSON.stringify({ maxSteps: 40, maxParallel: 2 }));
+  const s = new Store(old); assert.strictEqual(s.getSettings().maxSteps, 0); assert.strictEqual(s.getSettings().maxParallel, 0, 'concurrent Glims: no cap');
+  s.saveSettings({ maxSteps: 25, maxParallel: 3 }); assert.strictEqual(new Store(old).getSettings().maxSteps, 25, 'a number Ben picks sticks');
+  assert.strictEqual(new Store(old).getSettings().maxParallel, 3);
+  const mid = fs.mkdtempSync(path.join(os.tmpdir(), 'steps-')); // already on plan 1 (picked 40 steps on purpose), still has an old run cap
+  fs.writeFileSync(path.join(mid, 'settings.json'), JSON.stringify({ maxSteps: 40, maxParallel: 4, stepsPlan: 1 }));
+  assert.strictEqual(new Store(mid).getSettings().maxSteps, 40); assert.strictEqual(new Store(mid).getSettings().maxParallel, 0);
+  const picked = fs.mkdtempSync(path.join(os.tmpdir(), 'steps-'));
+  fs.writeFileSync(path.join(picked, 'settings.json'), JSON.stringify({ maxSteps: 12 }));
+  assert.strictEqual(new Store(picked).getSettings().maxSteps, 12);
+});
