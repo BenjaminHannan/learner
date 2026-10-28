@@ -198,3 +198,17 @@ test('memory: rememberFact turns the ask into a third-person fact', () => {
   assert.strictEqual(rememberFact("Don't forget I'm allergic to peanuts"), 'Ben is allergic to peanuts');
   assert.strictEqual(rememberFact('what time is it'), '');
 });
+
+test('memory: stored as plain memory.md; old memory.json moves over once; hand-written lines work; file fragments are refused', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mem-md-'));
+  fs.writeFileSync(path.join(dir, 'memory.json'), JSON.stringify({ facts: [{ id: 'm1', text: 'AP Chem is 3rd period', topic: 'classes', updated: Date.parse('2026-10-20T10:00:00') }] }));
+  const m = createMemory(dir);
+  assert.deepStrictEqual(m.list().map((f) => [f.id, f.text, f.topic]), [['m1', 'AP Chem is 3rd period', 'classes']]);
+  assert.ok(fs.existsSync(path.join(dir, 'memory.md')) && fs.existsSync(path.join(dir, 'memory.json.bak')) && !fs.existsSync(path.join(dir, 'memory.json')));
+  fs.appendFileSync(path.join(dir, 'memory.md'), '- Lunch is at noon\n');            // a line Ben typed by hand
+  const l = m.list();
+  assert.strictEqual(l.length, 2); assert.ok(l[1].id.startsWith('h'));
+  assert.ok(m.save('Gym is on Tuesdays', 'schedule').ok);
+  assert.match(fs.readFileSync(path.join(dir, 'memory.md'), 'utf8'), /^# What Glim remembers[\s\S]*- Gym is on Tuesdays \| topic: schedule \| id: m/m);
+  assert.strictEqual(m.save('is not part of the file. MEMORY.md <!-- Your curated long-term notes').ok, false);
+});

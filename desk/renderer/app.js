@@ -906,7 +906,8 @@
     };
     ab.onclick = doAdd; ai.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
     add.append(ai, at, ab);
-    box.append(list, add, note);
+    const show = el('button', 'ghost sm', 'Show memory.md'); show.id = 'memShow'; show.title = 'These notes are a plain text file. Opens its folder.'; show.onclick = () => desk.memory.reveal();
+    box.append(list, add, show, note);
     return box;
   }
   // Keeping track of: active items from src/tracking.js, with Done and Remove per item.

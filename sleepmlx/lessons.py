@@ -271,8 +271,39 @@ def _safe(text: str, ignore) -> bool:
     return bool(text) and not diary_mod.looks_secret(text) and not diary_mod.talks_secrets(text) and not any(rx.search(text) for rx in ignore)
 
 
+def _read_memory_md(user_data: Path) -> Optional[List[dict]]:
+    """Port of src/memory.js parseMd: '- text | topic: x | id: y | updated: YYYY-MM-DD' lines. None when there is no memory.md."""
+    import hashlib
+    try:
+        text = (user_data / "memory.md").read_text()
+    except (OSError, ValueError):
+        return None
+    out = []
+    for line in text.splitlines():
+        m = re.match(r"^\s*[-*]\s+(.*\S)\s*$", line)
+        if not m:
+            continue
+        parts = re.split(r"\s+\|\s+", m.group(1))
+        note = {"text": " ".join(parts[0].split()), "id": "", "topic": "", "updated": ""}
+        for p in parts[1:]:
+            kv = re.match(r"^(topic|id|updated):\s*(.*)$", p.strip(), re.I)
+            if kv and kv.group(2).strip():
+                note[kv.group(1).lower()] = kv.group(2).strip()
+        if not note["text"]:
+            continue
+        if not note["id"]:
+            note["id"] = "h" + hashlib.sha1(note["text"].lower().encode()).hexdigest()[:7]
+        if not DATE_RE.match(note["updated"]):
+            note["updated"] = ""
+        out.append(note)
+    return out
+
+
 def read_notes(user_data: Optional[Path], ignore=()) -> List[dict]:
-    """memory.json (src/memory.js) -> [{id, text, topic, updated (YYYY-MM-DD)}]; secret-looking or ignored notes are left out."""
+    """memory.md (src/memory.js; an older memory.json still works) -> [{id, text, topic, updated (YYYY-MM-DD)}]; secret-looking or ignored notes are left out."""
+    md = _read_memory_md(Path(user_data)) if user_data else None
+    if md is not None:
+        return [n for n in md if _safe(n["text"] + " " + n["topic"], ignore)]
     try:
         j = json.loads((Path(user_data) / "memory.json").read_text())
     except (OSError, ValueError, TypeError):
