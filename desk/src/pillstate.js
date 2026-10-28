@@ -1,6 +1,7 @@
 'use strict';
 // One state source for "what is Glim doing right now", with a fixed priority (error > waiting for Ben > working >
 // done). It feeds the top pill, the top-bar Glim and the dock badge, so they never disagree. Pure Node (unit tested).
+const { doingLine } = require('../renderer/doing');
 const PRIORITY = { error: 4, waiting: 3, working: 2, done: 1 };
 const MOOD = { error: 'error', waiting: 'waiting', working: 'working', done: 'done' };
 const short = (s, n) => { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
@@ -60,7 +61,7 @@ class PillState {
     else if (t === 'assistant_end') {
       if (ev.text) a.lastText = ev.text;
       // what the pill says is what Glim itself said it is doing (its line before the tool calls)
-      if (ev.text && ev.toolCalls > 0) { const l = firstLine(ev.text); if (l) { a.said = l; if (a.status === 'working') { a.step = l; a.line = short(l, 40); } } }
+      if (ev.text && ev.toolCalls > 0) { const l = doingLine(ev.text); if (l) { a.said = l; if (a.status === 'working') { a.step = l; a.line = short(l, 40); } } }
       return;
     }
     else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger, always: ev.alwaysLabel || '' }; a.line = 'Waiting for you'; }
