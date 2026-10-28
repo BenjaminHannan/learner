@@ -43,6 +43,7 @@ const { ensureCard } = require('./src/cards');
 const { PillWindow } = require('./src/pillwin');
 const perms = require('./src/perms');
 const { WinSleep, sleepmlxParent } = require('./src/sleepwin');
+const CK = require('./src/checkin');
 const { Builtin, runtimeRoot } = require('./src/runtime/builtin');
 const { SleepInstaller } = require('./src/runtime/sleepinstall');
 
@@ -239,12 +240,44 @@ async function runCheckin({ signal, task }) {
       while (helpers.active.size && !signal.aborted) await sleep(500);
       if (signal.aborted) { for (const id of [...helpers.active.keys()]) helpers.abort(id); return { aborted: true, reason: 'time or woken' }; }
     }
-    const h = { id: 'sleep-checkin', name: 'Check-in', threadId: 'sleep-checkin', mode: 'ask' };
-    const r = await createRunner({ store, makeAgent: makeHelperAgent })(h, task, { signal, onState: () => {}, attach: () => {} });
-    if (signal.aborted) return { aborted: true };
-    if (r.error) return { error: String(r.error) };
-    return { reply: r.report || '' };
+    return await checkinAgent('sleep-checkin', task, signal);
   } finally { sl.checkingIn = false; pushSleep(); }
+}
+async function checkinAgent(id, task, signal) {
+  const h = { id, name: 'Check-in', threadId: id, mode: 'ask' };
+  const r = await createRunner({ store, makeAgent: makeHelperAgent })(h, task, { signal, onState: () => {}, attach: () => {} });
+  if (signal.aborted) return { aborted: true };
+  if (r.error) return { error: String(r.error) };
+  return { reply: r.report || '' };
+}
+// Awake check-in (every awakeCheckinMins): cheap checks first (tracking list, model server, disk, failed recurring Glims), then the
+// same read-only mail/calendar triage through the model, only when the model server is up. Silent unless something is new.
+// It never touches sl.lastActive (it is not Ben), and never runs while asleep, waking, mid-run, or with the chat in front.
+const awake = { last: Date.now(), running: false, seen: new Set() };
+function awakeDiskStats() { try { const f = fs.statfsSync(app.getPath('userData')); return { total: f.blocks * f.bsize, free: f.bavail * f.bsize }; } catch (e) { return null; } }
+async function awakeCheckinTick(now, over) {
+  const s = store.getSettings(); now = now || Date.now();
+  if (awake.running) return { action: 'none', reason: 'running' };
+  const sysIdle = (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return Infinity; } })();
+  const d = CK.shouldAwakeCheckin({ now, last: awake.last, mins: s.awakeCheckinMins, asleep: sl.asleep || sl.waking || !!sl.starting, sleepBusy: sl.checkingIn, runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), focused: !!(win && !win.isDestroyed() && win.isFocused()), idleMs: Math.min(Date.now() - sl.lastActive, sysIdle), ...over });
+  if (!d.due) return { action: 'none', reason: d.reason };
+  awake.last = now; awake.running = true;
+  try {
+    const t = new Date(now); const pad = (n) => String(n).padStart(2, '0');
+    const findings = CK.awakeFindings({ gateway: gwState.state, disk: awakeDiskStats(), helpers: helpers ? helpers.items : [], tracked: tracking.list(), today: t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()) });
+    let line = '';
+    if (gwState.state === 'ready' && !sl.asleep && !sl.starting) {
+      const ac = new AbortController(); const cap = setTimeout(() => ac.abort(), CK.CHECKIN_CAP_MS); if (cap.unref) cap.unref();
+      try {
+        const res = await checkinAgent('awake-checkin', CK.awakeTask(s), ac.signal);
+        if (!res.error && !res.aborted) { const p = CK.parseReply(res.reply); if (!p.nothing) line = p.line; }
+      } catch (e) { /* a failed look is not news */ } finally { clearTimeout(cap); }
+    }
+    if (line) findings.push({ key: 'model:' + line.toLowerCase().replace(/\W+/g, ' ').trim(), line });
+    const fresh = CK.freshFindings(awake.seen, findings);
+    if (fresh.length) { notify('Glim checked in', fresh.slice(0, 3).map((f) => f.line).join('\n')); pillState.flash(fresh[0].line); updatePill(); }
+    return { action: 'checkin', found: findings.length, fresh: fresh.length };
+  } finally { awake.running = false; }
 }
 function waitFor(id, signal, fallback, card) {
   return new Promise((resolve) => {
@@ -731,7 +764,7 @@ async function afterFirstPaint() {
   if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
   if (FEATURES.sleep) {
     sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
-    if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); }, 60000).unref(); }
+    if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s

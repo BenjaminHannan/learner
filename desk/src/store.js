@@ -52,6 +52,7 @@ const DEFAULT_SETTINGS = {
   sleepDuration: 'morning', // last pick in the sleep sheet: 30 | 60 | 120 | 240 | morning | open
   sleepCheckinMins: 60,   // Windows: the hourly check-in while asleep
   sleepCheckinTask: require('./checkin').DEFAULT_TASK, // what the hourly check-in does (empty = this default)
+  awakeCheckinMins: 30,   // quick check-in every N minutes while Glim is awake and you are away from the chat (0 = off)
   wakeAt: false,          // wake at the end of the window (only for a sleep Desk started by itself)
   // Startup
   openAtLogin: false,
@@ -65,7 +66,7 @@ const ENUMS = {
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l']
 };
 const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'verify', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720] };
+const NUMS = { compactTokens: [1500, 200000], maxToolChars: [500, 20000], maxSteps: [1, 200], maxParallel: [1, 4], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };
