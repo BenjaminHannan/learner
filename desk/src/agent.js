@@ -2,6 +2,7 @@
 const { streamChat } = require('./llm');
 const { SYSTEM_PROMPT } = require('./prompt');
 const { takeNotices } = require('./helpers');
+const { NAME, P } = require('./user');
 const { usesLine } = require('../renderer/uses');
 
 const COMPACT_TOKENS = 24000;
@@ -37,9 +38,9 @@ function thirdPerson(v) {
 function rememberFact(text) {
   const m = String(text || '').match(/\b(?:remember|don'?t forget|keep in mind|make a note|note)\b[\s,:]*(?:that\s+|of\s+)?([\s\S]+)/i);
   if (!m) return '';
-  return m[1].trim().replace(/[\s.!]+$/, '').replace(/\bI'm\b/gi, 'Ben is').replace(/\bI am\b/gi, 'Ben is').replace(/\bI (\w+)/g, (m0, v) => 'Ben ' + thirdPerson(v)).replace(/\bI\b/g, 'Ben').replace(/\bmy\b/gi, "Ben's").replace(/\bme\b/gi, 'Ben').slice(0, 300);
+  return m[1].trim().replace(/[\s.!]+$/, '').replace(/\bI'm\b/gi, NAME + ' is').replace(/\bI am\b/gi, NAME + ' is').replace(/\bI (\w+)/g, (m0, v) => NAME + ' ' + thirdPerson(v)).replace(/\bI\b/g, NAME).replace(/\bmy\b/gi, NAME + "'s").replace(/\bme\b/gi, NAME).slice(0, 300);
 }
-const factWords = (s) => new Set((String(s || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => w.length > 2 && !['ben', 'bens', 'that', 'the', 'and', 'remember'].includes(w)));
+const factWords = (s) => new Set((String(s || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => w.length > 2 && ![NAME.toLowerCase(), 'ben', 'bens', 'that', 'the', 'and', 'remember'].includes(w)));
 function relatesTo(fact, ask) { const a = factWords(fact), b = factWords(ask); if (!a.size || !b.size) return false; let n = 0; for (const w of b) if (a.has(w)) n++; return n / b.size >= 0.3; }
 const verifyOn = (s) => !(s && (s.verify === false || s.verify === 'off'));
 // 'VERIFIED' -> {ok:true}; 'NOT DONE: x' -> {ok:false, reason:x}; anything unclear -> null (accept the answer, never block on noise)
@@ -180,7 +181,7 @@ function defaultSummary(name, a) {
     case 'track_add': return 'Tracking: ' + short(a.what, 50);
     case 'track_done': return 'Tracking done: ' + short(a.what, 50);
     case 'verify': return 'Checking its work';
-    case 'ask_user': return 'Asked Ben';
+    case 'ask_user': return P('Asked Ben');
     default: return name;
   }
 }
@@ -418,7 +419,7 @@ class Agent {
       thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'the reply asked for login details' });
       this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
       this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary, preview: 'the reply asked for login details', result: '' });
-      thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.' });
+      thread.messages.push({ role: 'user', content: CHECK_MARK + P(' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.') });
       return 'continue';
     }
     // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).
@@ -439,7 +440,7 @@ class Agent {
       // Second miss: save Ben's own words directly, so "remember ..." always works with the small model.
       if (fact) {
         let r; try { r = this.o.memory.save(fact); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
-        if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true, 'Saved Ben\'s words directly'); }
+        if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true, P('Saved Ben\'s words directly')); }
         else step('Did not save: ' + short(String(r.error || '').replace(/^Not saved: /, ''), 60), false, r.error || '');
       }
     }
@@ -491,7 +492,7 @@ class Agent {
     if (name === 'ask_user') {
       try {
         const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal), signal);
-        return { text: finish(answer, !signal.aborted, 'Asked Ben: ' + short(args.question, 60)) };
+        return { text: finish(answer, !signal.aborted, P('Asked Ben: ') + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
     if ((name === 'memory_save' || name === 'memory_forget') && this.o.memory) {
@@ -502,7 +503,7 @@ class Agent {
           if (web && ctx.settings.mode !== 'hands-off' && !this.taskAllow.has('memory')) {
             const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, kind: 'memory', danger: false, text: 'Remember this after reading the web? ' + short(args.fact, 200) }, signal), signal);
             if (signal.aborted) return { text: finish('[stopped by user]', false) };
-            if (verdict === 'deny') return { text: finish('Ben did not want that saved. Do not retry it.', false, 'Denied: remember ' + short(args.fact, 40)) };
+            if (verdict === 'deny') return { text: finish(P('Ben did not want that saved. Do not retry it.'), false, 'Denied: remember ' + short(args.fact, 40)) };
             if (verdict === 'task') this.taskAllow.add('memory');
           }
           const r = this.o.memory.save(args.fact, args.topic);
@@ -537,7 +538,7 @@ class Agent {
           this.strikes = 0; this.last = { key: '', count: 0, text: '' };
           const reply = await this.waitingForBen(() => this.o.onStuck(stuck, signal), signal);
           if (signal.aborted) return { text: finish('[stopped by user]', false) };
-          return { text: finish(reply, true, 'Asked Ben for help: stuck on ' + short(summaryStart, 40)) };
+          return { text: finish(reply, true, P('Asked Ben for help: stuck on ') + short(summaryStart, 40)) };
         }
         this.last.count++;
         return { text: finish('Stuck: you have made this exact call ' + this.last.count + ' times in a row and nothing changed. Do NOT repeat it. Try something different (another element, another page, a different tool) or call ask_user.', false, 'Stopped a loop: ' + short(summaryStart, 40)) };
@@ -556,7 +557,7 @@ class Agent {
       if (need && !(!need.danger && this.taskAllow.has(need.kind))) {
         const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, ...need }, signal), signal);
         if (signal.aborted) return { text: finish('[stopped by user]', false) };
-        if (verdict === 'deny') return { text: finish('Ben denied this action. Do not retry it; ask him what to do instead.', false, 'Denied: ' + summaryStart) };
+        if (verdict === 'deny') return { text: finish(P('Ben denied this action. Do not retry it; ask him what to do instead.'), false, 'Denied: ' + summaryStart) };
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);
       }
       const r = await run(args, ctx);

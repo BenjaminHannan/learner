@@ -12,6 +12,19 @@ if (!E2E && !app.commandLine.hasSwitch('user-data-dir')) { // a test profile mus
   // renamed from "Premonition Desk": bring the old settings/threads/memory/helpers along, once (the old folder stays as a backup)
   try { const r = require('./src/migrate').migrateUserData(app.getPath('appData'), app.getPath('userData')); if (r.migrated) console.log('userData copied from', r.from); } catch (e) { /* start fresh */ }
 }
+// main-process log: userData/logs/main.log (kept to the last ~1 MB), so "what went wrong" is not lost when the app closes
+if (!E2E) {
+  try {
+    const dir = path.join(app.getPath('userData'), 'logs'); fs.mkdirSync(dir, { recursive: true });
+    const f = path.join(dir, 'main.log');
+    try { if (fs.statSync(f).size > 1048576) fs.renameSync(f, f + '.old'); } catch (e) { /* none yet */ }
+    for (const lvl of ['log', 'warn', 'error']) {
+      const orig = console[lvl].bind(console);
+      console[lvl] = (...a) => { orig(...a); try { fs.appendFileSync(f, new Date().toISOString() + ' ' + lvl + ' ' + a.map((x) => (x && x.stack) || (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n'); } catch (e) { /* ignore */ } };
+    }
+    process.on('uncaughtException', (e) => { console.error('uncaught', e); });
+  } catch (e) { /* no log */ }
+}
 if (E2E) {
   app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'desk-e2e-')));
   app.commandLine.appendSwitch('no-sandbox');
