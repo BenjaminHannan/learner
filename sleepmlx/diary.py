@@ -58,7 +58,7 @@ _BRACKET_BG = re.compile(r"\[(?:Background, not a request|Background|Memory|Memo
 _BG_LINE = re.compile(r"^\s*\[?Background, not a request.*$", re.I | re.M)
 _SAVED_HEAD = re.compile(r"^\s*(?:#+\s*)?\**Saved notes about Ben\b.*$", re.I | re.M)
 # the Desk's hidden per-turn notes (desk/src/agent.js NARRATE, main.js sleepInfo / LEARN_NOTE / GOALS_NOTE, helpers.js batchNotice): not Ben's words
-_DESK_NOTE = re.compile(r"\[(?:If this needs tools|You can sleep|A helper finished)\b[^\]]*\]", re.I)
+_DESK_NOTE = re.compile(r"\[(?:If this needs tools|You can sleep|A helper finished|Daily follow-up)\b[^\]]*\]", re.I)
 _HELPER_UPD = re.compile(r"\[helper updates\][^\n]*(?:\n|$)", re.I)
 _LONG_NOTE = re.compile(r"^\s*\[(?:Learning mode|You just asked about their goals)\b[^\]]*\].*?(?:\n\s*\n|$)", re.S | re.I)
 # The Desk puts its saved-notes and keeping-track blocks first, then the turn's date stamp line (desk/src/agent.js pushUser). A notes file

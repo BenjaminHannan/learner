@@ -493,6 +493,7 @@ function createWindow() {
     if (quitting || !store || !store.getSettings().keepRunning) return;
     e.preventDefault(); hideWindow(); // keep running in the background (Cmd+Q really quits)
   });
+  win.on('focus', () => { const t = setTimeout(() => followUpTick().catch(() => {}), 1500); if (t.unref) t.unref(); });
   for (const ev of ['focus', 'blur', 'show', 'hide']) win.on(ev, () => {
     if (ev === 'focus' || ev === 'show') pillState.markSeen(openThreadId);
     if (ev === 'focus') sl.lastActive = Date.now();
@@ -784,6 +785,33 @@ function relayReports(threadId, tries) {
   if (relayTimer.unref) relayTimer.unref();
 }
 
+// Ben Oct 28: "make it proactive". Once a day, when Ben brings the chat to the front, Glim follows up on what he left open (a hidden turn in
+// his latest main thread). The day is recorded first, so a failure never repeats it. NO_UPDATE means nothing needed him: the turn leaves no trace.
+const FU = require('./src/followup');
+let followBusy = false;
+async function followUpTick(over) {
+  if (followBusy || E2E || !agent) return;
+  const s = store.getSettings(), now = new Date();
+  if (!s.onboarded) return;
+  const latest = store.listThreads().find((x) => !x.helper && x.updated);
+  const t0 = latest && store.loadThread(latest.id);
+  if (!t0 || !(t0.messages || []).length) return;
+  if (!FU.shouldFollowUp({ now, lastDay: s.followupDay, hour: now.getHours(), front: chatInFront(), busy: agent.running, asleep: sl.asleep || sl.waking || !!sl.starting, lastActivity: t0.updated, enabled: s.followUp, ...over })) return;
+  followBusy = true;
+  try {
+    await Promise.race([toolsReady, sleep(3000)]);
+    if (agent.running || sl.asleep || sl.waking) return; // Ben started something meanwhile: try again on the next tick
+    store.saveSettings({ followupDay: FU.dayKey(now) });
+    const t = t0, nm = t.messages.length, ni = (t.items || []).length;
+    activeThread = t;
+    const r = await agent.run(t, FU.FOLLOWUP_ASK, { hidden: true });
+    const last = (t.items || []).filter((i) => i.t === 'assistant').pop();
+    if (!r.stopped && !r.error && last && String(last.text || '').trim() === 'NO_UPDATE' && !t.items.slice(ni).some((i) => i.t === 'user') && t.messages.length > nm) { t.items.splice(ni); t.messages.splice(nm); store.saveThread(t); } // nothing to say: drop the hidden turn
+    else if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has a question', t.title, t.id);
+    send('threads:changed', {}); if (!openThreadId || openThreadId === t.id) send('open-thread', t.id); // repaint his view; never pull him off another chat
+  } catch (e) { /* tomorrow is another day */ } finally { followBusy = false; }
+}
+
 function buildAgent() {
   screen = createScreen(() => store.getSettings(), process.resourcesPath, (look, ctx) => {
     // screen card: latest capture as a small thumbnail in the chat; the full image rides along for the viewer
@@ -1027,6 +1055,7 @@ async function afterFirstPaint() {
     if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
+  if (!E2E) setInterval(() => followUpTick().catch(() => {}), 60000).unref();
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;
