@@ -1,5 +1,5 @@
 html,body { background:transparent !important; height:100%; overflow:hidden; display:block; }
-#pill { position:absolute; top:4px; left:50%; width:236px; margin-left:-118px; background:var(--surface); color:var(--text); border:1px solid var(--hair2); border-radius:19px; box-shadow:var(--shadow); overflow:hidden;
+#pill { position:absolute; top:var(--pt, 4px); left:50%; width:236px; margin-left:-118px; background:var(--surface); color:var(--text); border:1px solid var(--hair2); border-radius:19px; box-shadow:var(--shadow); overflow:hidden;
   transition:width .19s cubic-bezier(.4,0,.2,1), margin-left .19s cubic-bezier(.4,0,.2,1), border-radius .19s cubic-bezier(.4,0,.2,1), opacity .3s, transform .3s; font-size:13px; line-height:1.35; }
 #pill.open { width:376px; margin-left:-188px; border-radius:22px; transition:width .28s cubic-bezier(.34,1.35,.5,1), margin-left .28s cubic-bezier(.34,1.35,.5,1), border-radius .28s, opacity .3s; }
 #pill.gone { opacity:0; transform:translateY(-8px) scale(.96); pointer-events:none; }
@@ -25,3 +25,6 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.idle { width:44px; margin-left:-22px; border-radius:19px; opacity:.85; }
 #pill.idle #line, #pill.idle #mini, #pill.idle .more { display:none; }
 #pill.idle .row1 { padding:0 10px; }
+/* notched Mac, idle: a black cap fused to the camera notch, so the icon looks like part of it */
+#pill.idle.notch { top:0; left:calc(50% + var(--nw) / 2 - 8px); margin-left:0; width:58px; height:var(--nh); background:#000; border:0; border-radius:0 0 18px 0; box-shadow:none; opacity:1; }
+#pill.idle.notch .row1 { height:var(--nh); padding:0 0 0 14px; justify-content:center; }

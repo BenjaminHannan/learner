@@ -11,6 +11,10 @@
   function btn(label, cls, fn) { const b = el('button', cls, label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; }
   function paint(v) {
     view = v;
+    const geo = v.geo || {};
+    pill.style.setProperty('--pt', (geo.pt != null ? geo.pt : 4) + 'px');
+    pill.style.setProperty('--nh', (geo.notchH || 36) + 'px'); pill.style.setProperty('--nw', (geo.notchW || 0) + 'px');
+    pill.classList.toggle('notch', !!geo.notchH);
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
     pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'idle'); pill.classList.add(v.status);

@@ -35,7 +35,12 @@ class PillWindow {
     // remember the tallest menu bar / notch band seen; full-screen apps report 0 and would slide the pill under the camera
     this.topInset = Math.max(this.topInset || 0, a.y - d.bounds.y);
     const pos = Platform.pillPosition(a, W, d.bounds.y + this.topInset);
-    this.win.setBounds({ x: pos.x, y: pos.y, width: W, height: H });
+    // the window starts at the very top of the screen; the pill hangs down by `pt`, and on a notched Mac the idle icon sits IN the
+    // menu-bar band beside the camera (black, fused to the notch). Electron has no notch width, so ~200 pt is assumed (14"/16" range 185-205).
+    const notched = process.platform === 'darwin' && this.topInset >= 32;
+    this.geo = { pt: pos.y - d.bounds.y, notchH: notched ? this.topInset : 0, notchW: notched ? 200 : 0 };
+    this.win.setBounds({ x: pos.x, y: d.bounds.y, width: W, height: H + this.geo.pt });
+    if (this.view && this.lastSent) this.win.webContents.send('pill-view', { ...this.lastSent, geo: this.geo });
   }
   setInteractive(on) { if (!this.win.isDestroyed()) this.win.setIgnoreMouseEvents(!on, { forward: true }); }
   // v: PillState.view(); hidden: true when the chat window is in front (the pill would be redundant)
@@ -45,7 +50,8 @@ class PillWindow {
     // idle: a small Glim icon so Ben can tell it is there while he is in another window
     if (!v.visible && process.platform === 'darwin') v = { ...v, visible: true, status: 'idle', mood: 'idle', line: '', top: null, others: [] };
     const show = this.enabled && v.visible && !hidden;
-    this.win.webContents.send('pill-view', { ...v, visible: show });
+    this.lastSent = { ...v, visible: show };
+    this.win.webContents.send('pill-view', { ...this.lastSent, geo: this.geo });
     clearTimeout(this.hideTimer);
     if (show) { if (!this.win.isVisible()) this.win.showInactive(); }
     else if (this.win.isVisible()) { this.setInteractive(false); this.hideTimer = setTimeout(() => { if (!this.win.isDestroyed()) this.win.hide(); }, 450); }
