@@ -6,12 +6,26 @@
 #   bash pc_hops.sh A SRC OUT   pair A (hplain, hloop) in the GO-LOOP-P1 slot: waits for handoff/GO-LOOP-P1, runs pair B first if it has not
 #                               run (race-mini ended before B got its gap), then pair A, then writes DONE_FLAG (default think2-p1/SEG2-DONE,
 #                               the sleep chain's flag) and handoff/HOPS-A-DONE.
-#   bash pc_hops.sh R SRC OUT   the seed-1 replicate of pair B (Addendum G's next step after a pair B PASS): waits for GO_FLAG and an empty
-#                               GPU-BUSY, runs hplains and hloops at SEED (default 1), writes OUT/SUMMARY_hops_s<SEED>.txt, empties GPU-BUSY,
-#                               then writes DONE_FLAG (default handoff/HOPS-R-DONE) and, if set, THEN_FLAG (the next job's go flag; a directory
-#                               of that name, used to hold the next job back, is removed first). The preflight and data of the first run are reused.
+#   bash pc_hops.sh R SRC OUT   a later run of hops arms (the seed-1 replicate of pair B, Addendum G's next step after a pair B PASS; Addendum I's
+#                               round-2 arms and pair A's seed-1 replicate): waits for GO_FLAG and an empty GPU-BUSY, runs HOPS_ARMS (env,
+#                               space-separated, in order, stopping at the first failure; default "hplains hloops" = pair B with its preflight, as before)
+#                               at SEED (default 1), writes OUT/SUMMARY_$HOPS_NAME.txt, empties GPU-BUSY, then writes DONE_FLAG and, if set,
+#                               THEN_FLAG (the next job's go flag; a directory of that name, used to hold the next job back, is removed first). The
+#                               preflight and data of the first run are reused.
+#                               Names (the env names are all HOPS_*: a bare NAME or ARMS may already be set by the shell, WSL sets NAME to the Windows
+#                               computer name): HOPS_NAME defaults to hops<_s SEED if SEED > 0> for the default pair, so the committed SUMMARY_hops.txt and
+#                               SUMMARY_hops_s1.txt are only ever written by the default pair, and to hops_<arms joined by ->< _s SEED> for any other
+#                               arms, so a different run never overwrites them. DONE_FLAG defaults to handoff/HOPS-R-DONE for the default pair with no
+#                               HOPS_NAME, else to handoff/HOPS-R-<HOPS_NAME>-DONE: a later job gated on a flag never finds an earlier run's. Examples:
+#                                 HOPS_ARMS=hloopi SEED=0 HOPS_NAME=round2_hloopi      HOPS_ARMS="hplain hloop" SEED=1 HOPS_NAME=pairA_s1
+#   bash pc_hops.sh F SRC OUT   the fresh rows, scored once (Addendum I, item 4): the same wait as R, then fresh_hops.py on HOPS_ARMS (default "hplains
+#                               hloops") and HOPS_SEEDS (env, space-separated numbers, default "0 1"; anything else exits 2 at launch) from OUT/runs into
+#                               OUT/fresh, then OUT/SUMMARY_fresh_<HOPS_NAME, default hops for the default pair, else hops_<arms joined by ->>_s<seed>.txt
+#                               per seed (summarize_hops.py --split fresh --validation OUT/runs: each mark is held against its validation read), empties
+#                               GPU-BUSY, then DONE_FLAG (default handoff/HOPS-F-DONE, else handoff/HOPS-F-<HOPS_NAME>-DONE, as in R) and THEN_FLAG as in R.
 # SRC holds backbone/ (a git archive of the committed branch). OUT is the run root: OUT/data (built here and checked against the committed
-# sha256), OUT/runs/<arm>_s<seed>, OUT/pair<X>.log, OUT/<arm>.log (OUT/<arm>_s<seed>.log for seed > 0), OUT/SUMMARY_hops.txt. Every arm already finished is skipped on a rerun.
+# sha256), OUT/runs/<arm>_s<seed>, OUT/pair<X>.log, OUT/<arm>.log (OUT/<arm>_s<seed>.log for seed > 0), OUT/fresh.log, OUT/fresh/<arm>_s<seed>,
+# OUT/SUMMARY_hops.txt. Every arm already finished is skipped on a rerun.
 set -u
 PAIR=$1 SRC=$2 OUT=$3
 JOBS=${JOBS:-/mnt/c/Users/benja/pc-jobs}  # the overrides are for the CPU dry run in test_hops.py
@@ -23,15 +37,36 @@ CARD=$JOBS/hops-$PAIR.md
 PY=${PY:-$HOME/bbvenv/bin/python}
 MIN_FREE_MB=${MIN_FREE_MB:-3000}
 POLL=${POLL:-60}  # seconds between checks
-if [ "$PAIR" = R ]; then
+if [ "$PAIR" = R ] || [ "$PAIR" = F ]; then
   SEED=${SEED:-1}
-  GO_FLAG=${GO_FLAG:?pair R needs GO_FLAG, the flag that gives it the GPU}
-  DONE_FLAG=${DONE_FLAG:-$HAND/HOPS-R-DONE}
+  GO_FLAG=${GO_FLAG:?pair $PAIR needs GO_FLAG, the flag that gives it the GPU}
+  ARMS=${HOPS_ARMS:-hplains hloops}
+  for arm in $ARMS; do
+    case $arm in hplain|hloop|hloopi|hloopd|hplains|hloops) ;; *) echo "pc_hops.sh $PAIR: $arm is not a hops arm (hplain hloop hloopi hloopd hplains hloops)" >&2; exit 2 ;; esac
+  done
+  ARMS=$(echo $ARMS)  # one space between arms, whatever HOPS_ARMS was separated with; the comma list for fresh_hops.py is built from these words
+  [ -n "$ARMS" ] || { echo "pc_hops.sh $PAIR: HOPS_ARMS names no arm" >&2; exit 2; }
 else
   SEED=${SEED:-0}
   DONE_FLAG=${DONE_FLAG:-$JOBS/think2-p1/SEG2-DONE}  # pair A's last flag: it hands the GPU on (handoff/GO-RACE-MINI since 19:35Z Oct 27)
 fi
 SUF=""; [ "$SEED" = 0 ] || SUF=_s$SEED
+TAG=hops  # the default pair (hplains hloops) keeps the committed names; any other arms get their own, so they never overwrite those
+if [ "$PAIR" = R ] || [ "$PAIR" = F ]; then [ "$ARMS" = "hplains hloops" ] || TAG=hops_${ARMS// /-}; fi
+case $PAIR in R) NAME=${HOPS_NAME:-$TAG$SUF} ;; F) NAME=${HOPS_NAME:-$TAG} ;; *) NAME=hops$SUF ;; esac  # R: OUT/SUMMARY_$NAME.txt, F: OUT/SUMMARY_fresh_${NAME}_s<seed>.txt; A and B keep the committed names
+if [ "$PAIR" = R ] || [ "$PAIR" = F ]; then
+  if [ -n "${HOPS_NAME:-}" ] || [ "$TAG" != hops ]; then DONE_FLAG=${DONE_FLAG:-$HAND/HOPS-$PAIR-$NAME-DONE}; else DONE_FLAG=${DONE_FLAG:-$HAND/HOPS-$PAIR-DONE}; fi  # per run, so an earlier run's flag never opens a later gate
+fi
+if [ "$PAIR" = F ]; then  # F scores several seeds; SEED then only labels GPU-BUSY and the logs
+  SEEDS=${HOPS_SEEDS:-0 1}
+  for s in $SEEDS; do
+    case $s in *[!0-9]*) echo "pc_hops.sh F: seed '$s' in HOPS_SEEDS is not a number (space-separated, e.g. \"0 1\"; a comma list is fresh_hops.py's own syntax)" >&2; exit 2 ;; esac
+  done
+  SEEDS=$(echo $SEEDS)
+  [ -n "$SEEDS" ] || { echo "pc_hops.sh F: HOPS_SEEDS names no seed" >&2; exit 2; }
+  SEED=$SEEDS
+fi
+csv() { local IFS=,; echo "$*"; }  # csv a b c -> a,b,c: the words are split before the call, so a tab or a newline in the env never glues two names together
 mkdir -p "$OUT/runs"
 LOG=$OUT/pair$PAIR.log
 DRV=""
@@ -95,6 +130,7 @@ release_gpu() {  # before any flag that hands the GPU on, so the next owner's GP
     fi
     rm -f "$CARD"
     if [ "$PAIR" = B ]; then echo "$1 $(date -u +%FT%TZ)" > "$HAND/HOPS-B-DONE"; fi
+    log "released GPU-BUSY (rc $1)"
   fi
   OWN=0
 }
@@ -126,9 +162,42 @@ pair_b() {
   run_arm hplains && run_arm hloops
 }
 
+run_arms() {  # R: ARMS in order, stopping at the first failure; the default pair is pair B with its preflight, exactly as before
+  if [ "$ARMS" = "hplains hloops" ]; then pair_b; return $?; fi
+  local a
+  for a in $ARMS; do run_arm "$a" || return $?; done
+}
+
 summarize() {
-  (cd "$SRC" && "$PY" backbone/think/summarize_hops.py "$OUT/runs" --data "$OUT/data" --seed "$SEED") > "$OUT/SUMMARY_hops$SUF.txt" 2>&1
-  log "summary: $(grep -E 'OUTCOME' "$OUT/SUMMARY_hops$SUF.txt" | tr '\n' ' ')"
+  (cd "$SRC" && "$PY" backbone/think/summarize_hops.py "$OUT/runs" --data "$OUT/data" --seed "$SEED") > "$OUT/SUMMARY_$NAME.txt" 2>&1
+  log "summary: $(grep -E 'OUTCOME' "$OUT/SUMMARY_$NAME.txt" | tr '\n' ' ')"
+}
+
+fresh() {  # F: fresh_hops.py checks fresh.jsonl against the committed sha256 itself; the summaries are written for whatever it scored, even if an arm failed;
+  # each is held against the validation read in OUT/runs (a mark that passed there and fails on fresh rows "did not hold")
+  local rc s
+  log "start fresh rows: arms $ARMS, seeds $SEEDS"
+  (cd "$SRC" && "$PY" backbone/think/fresh_hops.py "$OUT/runs" --data "$OUT/data" --out "$OUT/fresh" --arms "$(csv $ARMS)" --seeds "$(csv $SEEDS)") >> "$OUT/fresh.log" 2>&1
+  rc=$?
+  log "end fresh rc=$rc"
+  if [ -d "$OUT/fresh" ]; then
+    for s in $SEEDS; do
+      (cd "$SRC" && "$PY" backbone/think/summarize_hops.py "$OUT/fresh" --data "$OUT/data" --split fresh --validation "$OUT/runs" --seed "$s") > "$OUT/SUMMARY_fresh_${NAME}_s$s.txt" 2>&1
+      log "fresh summary seed $s: $(grep -E 'OUTCOME' "$OUT/SUMMARY_fresh_${NAME}_s$s.txt" | tr '\n' ' ')"
+    done
+  fi
+  return $rc
+}
+
+hand_on() {  # R and F, after release_gpu: the flags hand the GPU on whatever happened, the exit code ($1) is recorded after a leading 0; $2 says what ran
+  mkdir -p "$(dirname "$DONE_FLAG")"
+  echo "0 $(date -u +%FT%TZ) $2 rc=$1" > "$DONE_FLAG"  # as in pair A: the flags hand the GPU on whatever happened
+  log "wrote $DONE_FLAG"
+  if [ -n "${THEN_FLAG:-}" ]; then
+    [ -d "$THEN_FLAG" ] && rmdir "$THEN_FLAG"
+    echo "go $(date -u +%FT%TZ) after $2" > "$THEN_FLAG"
+    log "wrote $THEN_FLAG"
+  fi
 }
 
 trap finish EXIT
@@ -185,18 +254,23 @@ if [ "$PAIR" = R ]; then
   until [ -f "$GO_FLAG" ] && [ ! -s "$BUSY" ]; do sleep "$POLL"; done
   wait_room
   take_gpu
-  pair_b
+  run_arms
   rc=$?
   summarize
   release_gpu "$rc"
-  mkdir -p "$(dirname "$DONE_FLAG")"
-  echo "0 $(date -u +%FT%TZ) hops replicate seed $SEED rc=$rc" > "$DONE_FLAG"  # as in pair A: the flags hand the GPU on whatever happened
-  if [ -n "${THEN_FLAG:-}" ]; then
-    [ -d "$THEN_FLAG" ] && rmdir "$THEN_FLAG"
-    echo "go $(date -u +%FT%TZ) after hops replicate seed $SEED" > "$THEN_FLAG"
-    log "wrote $THEN_FLAG"
-  fi
+  hand_on "$rc" "hops replicate seed $SEED"
   exit $rc
 fi
-log "unknown pair $PAIR (use A, B or R)"
+if [ "$PAIR" = F ]; then
+  log "waiting for $GO_FLAG and an empty GPU-BUSY"
+  until [ -f "$GO_FLAG" ] && [ ! -s "$BUSY" ]; do sleep "$POLL"; done
+  wait_room
+  take_gpu
+  fresh
+  rc=$?
+  release_gpu "$rc"
+  hand_on "$rc" "hops fresh rows seeds $SEEDS"
+  exit $rc
+fi
+log "unknown pair $PAIR (use A, B, R or F)"
 exit 2
