@@ -208,7 +208,7 @@ class Helpers {
   sched(h) { try { return parseSchedule(h); } catch (e) { return { kind: 'once', label: 'once' }; } }
   view(h) {
     return { id: h.id, name: h.name, task: h.task, status: h.status, schedule: this.sched(h).label, next: h.next || null, paused: !!h.paused,
-      threadId: h.threadId, parent: h.parent, byHelper: h.byHelper || null, lastRun: h.lastRun || null, lastSummary: h.lastSummary || '', quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
+      threadId: h.threadId, parent: h.parent, byHelper: h.byHelper || null, lastRun: h.lastRun || null, lastSummary: stripNarration(h.lastSummary || ''), quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
   }
   list() { return this.items.map((h) => this.view(h)); }
   find(ref) {
