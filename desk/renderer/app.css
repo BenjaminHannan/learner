@@ -62,7 +62,7 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .act-head .act-sub { color:var(--text2); font-weight:400; white-space:nowrap; }
 .act-head .act-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .chev { display:inline-block; width:.9rem; height:.9rem; flex:none; transition:transform .15s; color:var(--text2); }
-.activity.open > .act-head .chev, .step.open .chev { transform:rotate(90deg); }
+body:not([data-acts="closed"]) .act-head .chev, .step.open .chev { transform:rotate(90deg); }
 .act-live { padding:0 .9rem .6rem; color:var(--text2); font-size:.92rem; display:flex; align-items:center; gap:.5rem; min-width:0; }
 .act-live .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .act-live .dot { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; flex:none; }
@@ -70,6 +70,7 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .act-cards:empty { display:none; }
 .act-body { border-top:1px solid var(--hair); padding:.6rem .9rem .8rem; display:flex; flex-direction:column; gap:.4rem; max-height:22rem; overflow:auto; }
 .act-body > * { flex:none; }
+body[data-acts="closed"] .act-body { display:none; }
 .nar { color:var(--text2); font-size:.92rem; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:.1rem 0; min-height:1.45em; }
 .plan { border-left:3px solid var(--accent); padding:.1rem 0 .1rem .75rem; margin:.1rem 0 .3rem; }
 .plan > summary { cursor:pointer; list-style:none; font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text); display:flex; align-items:center; gap:.4rem; min-height:1.6rem; }
@@ -397,3 +398,7 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 
 #modeSeg { pointer-events:none; cursor:default; }
 #modelSeg[hidden], #modeSeg[hidden] { display:none; } /* model and mode live in Settings only */
+
+/* no scrollbar on text boxes: they still scroll by wheel, touch and keys */
+textarea { scrollbar-width:none; }
+textarea::-webkit-scrollbar { display:none; }

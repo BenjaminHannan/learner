@@ -107,6 +107,7 @@ test('tick skips paused and stopped helpers, and ones that are still running', a
 });
 
 test('concurrency limit: extra runs queue FIFO, a slot frees when a run ends, abort leaves the queue', async () => {
+  assert.strictEqual(new Limiter(() => 0).max(), Infinity); assert.strictEqual(new Limiter(() => 0).full(), false); // 0 = unlimited
   const lim = new Limiter(() => 2);
   const r1 = await lim.acquire(), r2 = await lim.acquire();
   assert.strictEqual(lim.full(), true);
