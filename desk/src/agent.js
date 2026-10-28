@@ -234,7 +234,7 @@ class Agent {
 
   stop() { if (this.abort) this.abort.abort(); }
 
-  state(s) { try { this.o.onState && this.o.onState(s); } catch (e) { /* ignore */ } }
+  state(s, info) { try { this.o.onState && this.o.onState(s, info); } catch (e) { /* ignore */ } }
   free() { const r = this.release; this.release = null; if (r) r(); }
   // Waiting for Ben must not hold a run slot (two helpers waiting would block the primary forever).
   async waitingForBen(fn, signal) {
@@ -285,7 +285,7 @@ class Agent {
     let failure = null;
     try {
       if (this.o.slot) {
-        if (this.o.slot.full()) { this.state('queued'); this.emit({ type: 'queued' }); }
+        if (this.o.slot.full()) { this.state('queued', { running: this.o.slot.active }); this.emit({ type: 'queued' }); }
         try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued: the loop below sees it */ }
         if (!signal.aborted) { this.state('running'); this.emit({ type: 'started' }); }
       }

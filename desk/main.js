@@ -48,7 +48,7 @@ const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
 const { Sleep, UnavailableSleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
-const { Helpers, Limiter, ScreenLock, createRunner, addNotice, short } = require('./src/helpers');
+const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { Warmer } = require('./src/warm');
 const { PillState } = require('./src/pillstate');
@@ -654,6 +654,15 @@ function makeHelperAgent(h, { onState }) {
   return { agent, dispose: () => dropBrowser(h.threadId) };
 }
 
+// Glims finishing close together share one desktop notification (needs-you ones are urgent and skip this)
+let finishBuf = [], finishTimer = null;
+function queueFinish(x) {
+  finishBuf.push(x);
+  if (finishTimer) return;
+  finishTimer = setTimeout(() => { const n = batchNotice(finishBuf); finishBuf = []; finishTimer = null; notify(n.title, n.body, n.threadId); }, 8000);
+  if (finishTimer.unref) finishTimer.unref();
+}
+
 // A finished helper leaves a notice in the thread that started it (injected into the model's history on
 // Ben's next message) and a macOS notification.
 function postNotice(threadId, name, summary) {
@@ -683,9 +692,10 @@ function buildAgent() {
     hold: sleepHold,
     runner: createRunner({ store, makeAgent: makeHelperAgent }),
     onChange: () => send('helpers:changed', helpers.list()),
-    onFinish: (h, summary, parent) => {
+    onFinish: (h, summary, parent, flags) => {
+      if (flags && flags.quiet) return send('helpers:changed', helpers.list()); // nothing new: no notice, no notification
       if (parent) postNotice(parent, h.name, summary);
-      notify("Glim '" + h.name + "' finished", summary, h.threadId);
+      queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});
     },
     onNeedBen: (h) => notify("Glim '" + h.name + "' needs you", 'Open its thread to answer.', h.threadId)

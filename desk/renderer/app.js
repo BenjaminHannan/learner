@@ -669,8 +669,11 @@
   }
 
   // ---------- agents (helpers) ----------
-  const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped' };
-  const HELPER_MOOD = { idle: 'idle', queued: 'thinking', running: 'working', 'waiting-for-Ben': 'waiting', stopped: 'sleepy' };
+  const STATUS_TEXT = { idle: 'idle', queued: 'waiting for a slot', running: 'running', 'waiting-for-Ben': 'waiting for you', stopped: 'stopped', failed: "couldn't finish" };
+  const HELPER_MOOD = { idle: 'idle', queued: 'thinking', running: 'working', 'waiting-for-Ben': 'waiting', stopped: 'sleepy', failed: 'error' };
+  // why a Glim is not running yet, in plain words
+  const holdText = (h) => h.hold === 'slot' ? 'waiting: ' + (h.holdCount > 1 ? h.holdCount + ' other Glims are running' : h.holdCount ? 'another Glim is running' : 'a slot is busy') : h.hold === 'screen' ? 'waiting for the screen' : h.dueHeld ? 'will run after Glim wakes up' : '';
+  const statusText = (h) => h.status === 'queued' ? holdText(h) || 'starting' : h.status === 'idle' && h.dueHeld ? holdText(h) : STATUS_TEXT[h.status] || h.status;
   function when(ts) {
     if (!ts) return '';
     const d = new Date(ts), p = (n) => String(n).padStart(2, '0'), hm = p(d.getHours()) + ':' + p(d.getMinutes());
@@ -683,8 +686,8 @@
       const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
       const top = el('div', 'a-top');
       const dot = Mascot.el(HELPER_MOOD[h.status] || 'idle', 24, { still: h.status === 'idle' || h.status === 'stopped' });
-      dot.title = STATUS_TEXT[h.status] || h.status;
-      top.append(dot, el('span', 't', h.name), el('span', 'd', STATUS_TEXT[h.status] || h.status));
+      dot.title = statusText(h);
+      top.append(dot, el('span', 't', h.name), el('span', 'd', statusText(h)));
       const meta = el('div', 'a-meta dim small', h.schedule + (h.paused ? ' (paused)' : '') + (h.next ? ' · next ' + when(h.next) : ''));
       const btns = el('div', 'a-btns');
       const mk = (label, fn, cls) => { const b = el('button', cls || 'ghost sm', label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; };

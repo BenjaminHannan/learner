@@ -4,7 +4,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, nextRun, addNotice, takeNotices, helperText } = require('../src/helpers');
+const { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, nextRun, addNotice, takeNotices, helperText, batchNotice } = require('../src/helpers');
 const { agentTools, NO } = require('../src/tools/agents');
 const { Agent } = require('../src/agent');
 const { Store } = require('../src/store');
@@ -350,4 +350,73 @@ test('Helpers.add: refuses a near-duplicate of an active Glim on the same schedu
   m.add({ name: 'Email watch', task: 'Check mail', every: '30m', deferFirst: true });       // other name and task: fine
   m.stop('Morning briefing');
   m.add({ name: 'morning briefing agent', task: 'give the morning brief', at: '08:00' }); // the old one is stopped: fine
+});
+
+// ---- coordination UX: quiet runs, failures + retry, hold reasons, batching, interrupted recovery ----
+test('quiet run: NO_UPDATE keeps the last report, flags quiet, and the prompt only asks for it on recurring Glims', async () => {
+  const flags = [];
+  const { m, runs, clock } = mkManager({ onFinish: (h, s, p, f) => flags.push(f) });
+  m.add({ name: 'once', task: 'x' }); runs[0].done(); await until(() => flags.length === 1);
+  m.add({ name: 'watch', task: 'w', every: '1h' }); runs[1].done({ report: 'Real report' }); await until(() => flags.length === 2);
+  assert.ok(!/NO_UPDATE/.test(runs[1].text), 'no previous report yet');
+  clock.t += 3600000; m.tick(); assert.match(runs[2].text, /reply with exactly: NO_UPDATE/);
+  runs[2].done({ report: '  no_update. ' }); await until(() => flags.length === 3);
+  const h = m.find('watch');
+  assert.deepStrictEqual(flags[2], { quiet: true, failed: false });
+  assert.strictEqual(h.lastReport, 'Real report'); assert.match(h.lastSummary, /^No change \(checked/); assert.strictEqual(h.quiet, true);
+  clock.t += 3600000; m.tick(); runs[3].done({ report: 'New thing' }); await until(() => flags.length === 4);
+  assert.strictEqual(m.find('watch').quiet, false); assert.strictEqual(m.find('watch').lastReport, 'New thing');
+  assert.ok(!/NO_UPDATE/.test(helperText({ name: 'o', task: 't', lastReport: 'r' })), 'one-time Glims never get it');
+});
+
+test('failure: status failed, one quick retry for a recurring Glim, reset on success, survives load()', async () => {
+  const flags = [];
+  const { m, runs, clock, store, dir } = mkManager({ onFinish: (h, s, p, f) => flags.push({ s, f }) });
+  m.add({ name: 'f', task: 't', every: '2h' });
+  runs[0].done({ error: 'fetch failed' }); await until(() => flags.length === 1);
+  const h = m.find('f');
+  assert.strictEqual(h.status, 'failed'); assert.strictEqual(h.fails, 1); assert.strictEqual(h.lastError, 'fetch failed');
+  assert.strictEqual(h.next, clock.t + 5 * 60000); assert.deepStrictEqual(flags[0], { s: 'Failed: fetch failed', f: { quiet: false, failed: true } });
+  clock.t += 5 * 60000; m.tick(); assert.strictEqual(runs.length, 2, 'failed does not block a due run');
+  runs[1].done({ error: 'again' }); await until(() => flags.length === 2);
+  assert.strictEqual(h.fails, 2); assert.ok(h.next > clock.t + 3600000, 'no second early retry');
+  const m2 = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, runner: async () => ({}) });
+  assert.strictEqual(m2.find('f').status, 'failed');
+  clock.t += 2 * 3600000; m.tick(); runs[2].done({ report: 'fine' }); await until(() => flags.length === 3);
+  assert.strictEqual(h.status, 'idle'); assert.strictEqual(h.fails, 0); assert.strictEqual(h.lastError, null);
+});
+
+test('batchNotice: one, several, and several with a failure', () => {
+  const a = { name: 'A', summary: 'did a', threadId: 'ta', parent: 'p' }, b = { name: 'B', summary: 'did b', threadId: 'tb', parent: 'p' }, c = { name: 'C', summary: 'Failed: x', threadId: 'tc', parent: 'p', failed: true };
+  assert.deepStrictEqual(batchNotice([a]), { title: "Glim 'A' finished", body: 'did a', threadId: 'ta' });
+  assert.strictEqual(batchNotice([c]).title, "Glim 'C' couldn't finish");
+  const two = batchNotice([a, b]); assert.strictEqual(two.title, '2 Glims finished'); assert.strictEqual(two.body, 'A, B: did a'); assert.strictEqual(two.threadId, 'p');
+  assert.strictEqual(batchNotice([a, b, c]).title, "3 Glims finished (1 couldn't finish)");
+  assert.strictEqual(batchNotice([a, { ...b, parent: 'q' }]).threadId, null);
+});
+
+test('hold reasons: dueHeld while sleeping, cleared on run; queued reports slot count', () => {
+  let hold = true;
+  const { m, runs, clock } = mkManager({ hold: () => hold });
+  m.add({ name: 'd', task: 't', every: '1h', deferFirst: true });
+  clock.t += 3600000; m.tick();
+  assert.strictEqual(runs.length, 0); assert.strictEqual(m.list()[0].dueHeld, true);
+  hold = false; m.tick(); assert.strictEqual(runs.length, 1); assert.strictEqual(m.list()[0].dueHeld, false);
+  runs[0].hooks.onState('queued', { running: 2 });
+  assert.deepStrictEqual([m.list()[0].hold, m.list()[0].holdCount], ['slot', 2]);
+  runs[0].hooks.onState('running'); assert.strictEqual(m.list()[0].hold, null);
+});
+
+test('interrupted one-time Glim resumes once after a restart, then not again', () => {
+  const dir = tmp(), store = new Store(dir), file = path.join(dir, 'helpers.json'), t0 = 1e12;
+  fs.writeFileSync(file, JSON.stringify({ helpers: [
+    { id: 'a', name: 'a', task: 't', status: 'running', lastReport: '', next: null },
+    { id: 'b', name: 'b', task: 't', every: '1h', status: 'running', lastReport: '', next: t0 + 5 },
+    { id: 'c', name: 'c', task: 't', status: 'idle', lastReport: '', next: null }] }));
+  const m = new Helpers({ file, store, now: () => t0, runner: async () => ({}) });
+  const a = m.find('a'); assert.strictEqual(a.status, 'idle'); assert.strictEqual(a.next, t0 + 60000); assert.strictEqual(a.resumed, 1);
+  assert.match(a.lastSummary, /Interrupted when the app closed/); assert.strictEqual(m.find('b').next, t0 + 5); assert.strictEqual(m.find('c').next, null);
+  a.status = 'running'; m.save();
+  const m2 = new Helpers({ file, store, now: () => t0, runner: async () => ({}) });
+  assert.match(m2.find('a').lastSummary, /Interrupted twice/); assert.strictEqual(m2.find('a').next, null, 'no third try');
 });

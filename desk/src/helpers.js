@@ -3,6 +3,7 @@
 // Pure Node (no Electron) so it can be unit tested. main.js wires in the real agent, browser and notifications.
 const fs = require('fs');
 const path = require('path');
+const { P } = require('./user');
 
 const MIN_EVERY_MS = 5 * 60 * 1000;
 const MAX_HELPERS = 500;   // effectively unlimited (Ben Oct 28); only a runaway guard
@@ -10,6 +11,9 @@ const TICK_MS = 30000;
 const REPORT_KEEP = 600;
 const SUMMARY_KEEP = 200;
 const MAX_ITEMS = 400;
+const RETRY_MS = 5 * 60 * 1000;   // a recurring Glim that failed once tries again soon, not at its next slot
+const RESUME_MS = 60 * 1000;     // a one-time Glim cut off by quitting runs again shortly after launch
+const QUIET_RE = /^\s*NO_UPDATE\W*$/i;
 
 const short = (s, n) => { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 const p2 = (n) => String(n).padStart(2, '0');
@@ -128,8 +132,17 @@ function takeNotices(thread) {
 
 function helperText(h) {
   let t = "You are helper '" + h.name + "'. Task: " + h.task + '. Finish with a short report.';
-  if (h.lastReport && (h.every || h.at)) t += '\nPrevious report: ' + short(h.lastReport, REPORT_KEEP) + '\nSay what changed since then.';
+  if (h.lastReport && (h.every || h.at)) t += '\nPrevious report: ' + short(h.lastReport, REPORT_KEEP) + '\nSay what changed since then.' + P('\nIf nothing worth telling Ben changed since then, reply with exactly: NO_UPDATE');
   return t;
+}
+
+// One desktop notification for the Glims that finished close together. list: [{name, summary, threadId, parent, failed}] -> {title, body, threadId}
+// (a lone Glim opens its own thread; several open the thread that started them all, or just the window)
+function batchNotice(list) {
+  const f = list.filter((x) => x.failed).length;
+  if (list.length === 1) return { title: "Glim '" + list[0].name + "' " + (f ? "couldn't finish" : 'finished'), body: list[0].summary, threadId: list[0].threadId };
+  const parent = list.every((x) => x.parent && x.parent === list[0].parent) ? list[0].parent : null;
+  return { title: list.length + ' Glims finished' + (f ? ' (' + f + " couldn't finish)" : ''), body: list.map((x) => x.name).join(', ') + ': ' + short(list[0].summary, 100), threadId: parent };
 }
 
 function lastAssistantText(messages) {
@@ -158,7 +171,17 @@ class Helpers {
 
   load() {
     try { this.items = JSON.parse(fs.readFileSync(this.o.file, 'utf8')).helpers || []; } catch (e) { this.items = []; }
-    for (const h of this.items) if (h.status !== 'stopped') h.status = 'idle'; // nothing survives a restart mid-run
+    const now = this.now();
+    for (const h of this.items) {
+      const cut = h.status === 'running' || h.status === 'queued' || h.status === 'waiting-for-Ben';
+      if (h.status !== 'stopped' && h.status !== 'failed') h.status = 'idle'; // nothing survives a restart mid-run
+      h.hold = null; h.dueHeld = false;
+      // a one-time Glim cut off by quitting would never run again: give it one more go, but only one
+      if (cut && !h.every && !h.at && !h.lastReport) {
+        if (h.resumed) { h.next = null; h.lastSummary = 'Interrupted twice; use Run now to try again.'; }
+        else { h.resumed = 1; h.next = now + RESUME_MS; h.lastSummary = 'Interrupted when the app closed; running again.'; }
+      }
+    }
   }
   save() {
     try {
@@ -173,7 +196,7 @@ class Helpers {
   sched(h) { try { return parseSchedule(h); } catch (e) { return { kind: 'once', label: 'once' }; } }
   view(h) {
     return { id: h.id, name: h.name, task: h.task, status: h.status, schedule: this.sched(h).label, next: h.next || null, paused: !!h.paused,
-      threadId: h.threadId, parent: h.parent, lastRun: h.lastRun || null, lastSummary: h.lastSummary || '' };
+      threadId: h.threadId, parent: h.parent, lastRun: h.lastRun || null, lastSummary: h.lastSummary || '', quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
   }
   list() { return this.items.map((h) => this.view(h)); }
   find(ref) {
@@ -261,8 +284,13 @@ class Helpers {
   // Run every helper whose time has come. A helper whose time passed while the app was closed is due once
   // (its next time is a single value, recomputed from "now" when the run starts), not once per missed slot.
   tick(force) {
-    if (!force && this.o.hold && this.o.hold()) return; // force: the sleep check-in runs what is due // e.g. sleeping: due runs wait and fire once after wake
     const now = this.now();
+    if (!force && this.o.hold && this.o.hold()) { // force: the sleep check-in runs what is due // e.g. sleeping: due runs wait and fire once after wake
+      let n = 0;
+      for (const h of this.items) if (!h.dueHeld && !h.paused && h.status !== 'stopped' && !this.active.has(h.id) && h.next && h.next <= now) { h.dueHeld = true; n++; }
+      if (n) this.changed(); // so the list can say "will run after Glim wakes up"
+      return;
+    }
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;
       if (h.next && h.next <= now) this._run(h);
@@ -273,7 +301,9 @@ class Helpers {
     this.timer = setInterval(() => this.tick(), this.o.tickMs || TICK_MS);
     if (this.timer.unref) this.timer.unref();
   }
-  close() { if (this.timer) clearInterval(this.timer); this.timer = null; for (const id of [...this.active.keys()]) this.abort(id); }
+  // closing: the app is quitting. Runs it aborts must not finish normally (that would save them as done, so an interrupted one-time
+  // Glim would never resume, and would post a bogus "finished" notice); their saved running state is what load() resumes from.
+  close() { this.closing = true; if (this.timer) clearInterval(this.timer); this.timer = null; for (const id of [...this.active.keys()]) this.abort(id); }
 
   async _run(h) {
     if (this.active.has(h.id)) return;
@@ -281,14 +311,15 @@ class Helpers {
     this.active.set(h.id, rec);
     const sched = this.sched(h);
     const start = this.now();
-    h.status = 'queued'; h.lastRun = start;
+    h.status = 'queued'; h.lastRun = start; h.dueHeld = false; h.hold = null; h.quiet = false;
     h.next = sched.kind === 'once' ? null : nextRun(sched, start);
     this.changed();
-    const onState = (s) => {
+    const onState = (s, info) => {
       if (rec.done || h.status === 'stopped') return;
       const next = s === 'waiting' ? 'waiting-for-Ben' : s;
-      if (h.status === next) return;
-      h.status = next;
+      const hold = s === 'queued' ? 'slot' : null; // why it is waiting: every run slot is busy (the screen lock wait is not reported)
+      if (h.status === next && h.hold === hold) return;
+      h.status = next; h.hold = hold; h.holdCount = hold && info && info.running || 0;
       this.changed();
       if (s === 'waiting') { try { this.o.onNeedBen && this.o.onNeedBen(this.view(h)); } catch (e) { /* ignore */ } }
     };
@@ -299,15 +330,24 @@ class Helpers {
     rec.done = true;
     this.active.delete(h.id);
     if (rec.deleteThread) { try { this.o.store.deleteThread(h.threadId); } catch (e) { /* ignore */ } }
+    if (this.closing) return;
     res = res || {};
     const wasStopped = h.status === 'stopped';
-    if (!wasStopped) h.status = 'idle';
+    h.hold = null;
+    const failed = !!res.error && !res.stopped && !wasStopped, recurring = !!(h.every || h.at);
+    const quiet = !failed && !wasStopped && !res.error && recurring && !!h.lastReport && QUIET_RE.test(res.report || '');
+    if (!wasStopped) h.status = failed ? 'failed' : 'idle';
     let report = res.report || '';
     if (!report) report = res.error ? 'Failed: ' + res.error : res.stopped ? 'Stopped before finishing.' : 'Finished with no report.';
-    h.lastReport = report;
-    h.lastSummary = short(report, SUMMARY_KEEP);
+    if (failed) {
+      h.lastError = short(res.error, 150); h.fails = (h.fails || 0) + 1;
+      report = 'Failed: ' + h.lastError;
+      if (h.fails === 1 && recurring) h.next = h.next ? Math.min(h.next, this.now() + RETRY_MS) : this.now() + RETRY_MS;
+    } else if (!wasStopped && !res.stopped) { h.fails = 0; h.lastError = null; }
+    if (quiet) { h.quiet = true; h.lastSummary = 'No change (checked ' + fmtWhen(this.now(), this.now()) + ')'; } // lastReport stays: the next run compares against real content
+    else { if (!failed) h.lastReport = report; h.lastSummary = short(report, SUMMARY_KEEP); }
     this.changed();
-    if (!wasStopped) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent); } catch (e) { /* ignore */ } }
+    if (!wasStopped) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent, { quiet, failed }); } catch (e) { /* ignore */ } }
   }
 }
 
@@ -330,4 +370,4 @@ function createRunner({ store, makeAgent }) {
   };
 }
 
-module.exports = { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, addNotice, takeNotices, helperText, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };
+module.exports = { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, addNotice, takeNotices, helperText, batchNotice, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };
