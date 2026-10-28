@@ -218,9 +218,10 @@
     // Ben Oct 28: "make it so that I can't see them at all": no "Thinking… / Thought for N s" line either. Glim just shows its answer.
     if (!tn) startTn();
   }
+  let runTexts = []; // every text node of the reply being written: a steer aborts the reply, and all its half-written text goes (newBlock() can orphan the first node)
   function onText(d) {
     const t = tn || startTn();
-    if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); }
+    if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); runTexts.push(t.text); }
     t.raw += d; paintText();
   }
   // Ben Oct 28: like / dislike an answer. Kept on the thread and logged for sleep (src/feedback.js): liked answers become examples
@@ -241,6 +242,7 @@
     return row;
   }
   function onAssistantEnd(ev) {
+    runTexts = [];
     const t = tn;
     tn = null;
     const hasTools = (ev.toolCalls || 0) > 0;
@@ -696,7 +698,7 @@
       case 'text': markRead(); onText(ev.delta); break;
       case 'reasoning': markRead(); onReasoning(ev.delta); break;
       case 'assistant_end': onAssistantEnd(ev); break;
-      case 'discard': if (tn) { try { tn.text && tn.text.remove(); tn.think && tn.think.d.remove(); } catch (e) { /* gone */ } tn = null; } break;
+      case 'discard': try { runTexts.forEach((n) => n.remove()); if (tn) { tn.text && tn.text.remove(); tn.think && tn.think.d.remove(); } } catch (e) { /* gone */ } runTexts = []; tn = null; break;
       case 'step_start': markRead(); onStepStart(ev); Mascot.bounce(logo); break;
       case 'step_end': onStepEnd(ev); break;
       case 'bcard': upsertBCard(ev); break;
