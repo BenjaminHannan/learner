@@ -729,6 +729,7 @@ async function permsStatus() {
     try { electronR = { accessibility: systemPreferences.isTrustedAccessibilityClient(false), screen: systemPreferences.getMediaAccessStatus('screen') === 'granted' }; } catch (e) { /* not available */ }
   }
   const c = perms.combine(helperR, electronR);
+  if (!c.missing && preDockBounds) undockFromSettings();
   const file = appFile();
   const helperFile = c.helperTile ? screen.findHelper() : null;
   const icon = await iconFor(file);
@@ -738,6 +739,28 @@ async function permsStatus() {
     rows: c.rows.map((r) => ({ ...r, ...perms.ROWS.find((x) => x.id === r.id), pane: undefined }))
   };
 }
+
+// Put Premonition on the left half of the screen and System Settings on the right, so the drag tile sits next to the list.
+// Moving System Settings goes through AppleScript and may be refused; then it just opens where macOS puts it.
+let preDockBounds = null;
+function dockBesideSettings() {
+  try {
+    if (!win || win.isDestroyed()) return;
+    const { screen: scr } = require('electron');
+    const wa = scr.getDisplayMatching(win.getBounds()).workArea;
+    if (!preDockBounds) preDockBounds = win.getBounds();
+    const half = Math.floor(wa.width / 2);
+    win.setBounds({ x: wa.x, y: wa.y, width: half, height: wa.height });
+    win.show();
+    const script = 'tell application "System Settings" to set bounds of window 1 to {' + [wa.x + half, wa.y + 25, wa.x + wa.width, wa.y + wa.height].join(', ') + '}';
+    let tries = 0;
+    const go = () => {
+      require('child_process').execFile('osascript', ['-e', script], { timeout: 4000 }, (err) => { if (err && ++tries < 5) setTimeout(go, 700); });
+    };
+    setTimeout(go, 900);
+  } catch (e) { /* layout is a convenience */ }
+}
+function undockFromSettings() { try { if (preDockBounds && win && !win.isDestroyed()) win.setBounds(preDockBounds); } catch (e) { /* ignore */ } preDockBounds = null; }
 let lastPermsShow = 0;
 function showPerms(reason) { if (!permsSupported() || Date.now() - lastPermsShow < 60000) return; lastPermsShow = Date.now(); showWindow(); send('perms-show', { reason }); }
 
@@ -940,7 +963,11 @@ function registerIpc() {
     return true;
   });
   h('perms:status', () => permsStatus());
-  h('perms:open', (id) => perms.openPane(shell, id));
+  h('perms:open', async (id) => {
+    const ok = await perms.openPane(shell, id);
+    if (ok && process.platform === 'darwin' && !E2E) dockBesideSettings();
+    return ok;
+  });
   h('perms:reveal', (which) => { const f = which === 'helper' ? screen.findHelper() : appFile(); if (f) shell.showItemInFolder(f); return !!f; });
   ipcMain.on('perms:drag', perms.makeDragHandler({
     getSender: () => (ui && !ui.webContents.isDestroyed() ? ui.webContents : null),

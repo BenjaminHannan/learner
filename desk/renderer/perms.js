@@ -50,6 +50,7 @@ window.createPerms = (root, opts) => {
     const hint = el('div', 'p-hint');
     hint.append(el('b', null, 'Drag this into the list, then switch it on'), el('span', null, 'Drag ' + st.appName + ' into System Settings, or click to show it in Finder.'));
     if (st.helperPath) hint.append(el('span', 'p-note', 'macOS also lists the helper (' + st.helperPath.split('/').pop() + ') on its own: add it the same way if Glim still cannot click or see.'));
+    if (st.rows.some((r) => r.granted === false)) hint.append(el('span', 'p-note', 'Already switched on but still Off here? Select it in the list, click the minus, then drag the tile in again. A new install counts as a new app.'));
     drag.append(tiles, hint);
     card.append(drag);
     root.append(card);
