@@ -230,7 +230,7 @@ class Browser {
   async go(url) {
     const u = this.normalize(url);
     this.readCache = { url: '', pages: [] };
-    try { await this.wc.loadURL(u); } catch (e) {
+    try { await Promise.race([this.wc.loadURL(u), sleep(30000).then(() => { throw new Error('load timed out after 30 s'); })]); } catch (e) {
       if (!/ERR_ABORTED/.test(String(e.message))) {
         if (!this.wc.getURL() || this.wc.getURL() === 'about:blank') return { text: 'Error: could not open ' + u + ' (' + String(e.message).split('\n')[0] + ')', error: true };
       }
@@ -266,7 +266,15 @@ class Browser {
     return r;
   }
 
+  // no page open yet: a click/type/read on an empty browser used to wait forever for a page that never loads
+  noPage() {
+    let u = ''; try { u = this.wc.getURL(); } catch (e) { /* destroyed */ }
+    if (u && u !== 'about:blank') return null;
+    return { text: 'Error: no page is open. Use browser_go with a URL or a search first.', error: true };
+  }
+
   async click(id) {
+    const np = this.noPage(); if (np) return np;
     const p = await this.wc.executeJavaScript(call(pagePrepare, id));
     if (!p.ok) return { text: 'Error: ' + p.error, error: true };
     await sleep(250); // let the badge show
@@ -292,6 +300,7 @@ class Browser {
   }
 
   async type(id, text, enter) {
+    const np = this.noPage(); if (np) return np;
     const p = await this.wc.executeJavaScript(call(pagePrepare, id));
     if (!p.ok) return { text: 'Error: ' + p.error, error: true };
     const f = await this.wc.executeJavaScript(call(pageFocusSelect, id));
@@ -314,6 +323,7 @@ class Browser {
   }
 
   async scroll(direction) {
+    const np = this.noPage(); if (np) return np;
     const dy = direction === 'up' ? -0.85 : 0.85;
     await this.wc.executeJavaScript('window.scrollBy(0, Math.round(window.innerHeight*' + dy + '))');
     await sleep(350);
@@ -331,6 +341,7 @@ class Browser {
   }
 
   async read(page) {
+    const np = this.noPage(); if (np) return np;
     const url = this.wc.getURL();
     if (this.readCache.url !== url || !this.readCache.pages.length) {
       let t = '';
