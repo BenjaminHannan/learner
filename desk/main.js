@@ -1121,6 +1121,7 @@ async function afterFirstPaint() {
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
   if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); }, 60000).unref();
+  if (!E2E) { try { require('./src/standing').seedStanding(helpers, app.getPath('userData')); } catch (e) { /* optional */ } }
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;
