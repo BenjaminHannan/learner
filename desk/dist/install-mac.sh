@@ -109,6 +109,8 @@ main() {
   run xattr -cr "$APP" || die "could not clear the download flag on the app."
   # the cloud build has no valid seal, so seal it here (free, local, no Apple account needed)
   run codesign --force --deep -s - "$APP" || die "could not sign the app on this Mac." "Try: open System Settings > Privacy & Security and look for Open Anyway next to Premonition."
+  # re-signing makes macOS see a new app, so a switch left On from an older install no longer counts: clear them so they can be added fresh
+  for svc in Accessibility ScreenCapture; do tccutil reset "$svc" "com.electron.premonition desk" >/dev/null 2>&1 || true; done
 
   # ---- 4. open it -----------------------------------------------------------------------------------------------------------------------
   step "4/4" "Opening Premonition"
