@@ -28,6 +28,15 @@ function parseEvery(s) {
   return ms;
 }
 
+// "2026-11-02 15:30" (local): a one-off reminder at that date and time
+function parseOn(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
+  if (!m) return null;
+  const ts = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
+  if (!(Number(m[4]) <= 23 && Number(m[5]) <= 59) || isNaN(ts)) throw new Error('at must look like "08:00" or "2026-11-02 15:30" (local time)');
+  return ts;
+}
+
 function parseAt(s) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
   if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) throw new Error('at must look like "08:00" (24 hour, local time)');
@@ -49,6 +58,7 @@ function parseSchedule(o) {
   const at = o.at != null && o.at !== '' ? o.at : null;
   // Models often send both for "every morning at 8:00"; `at` wins (daily), whatever `every` says.
   if (every && !at) { const ms = parseEvery(every); return { kind: 'every', ms, label: 'every ' + everyLabel(ms) }; }
+  if (at && parseOn(at) != null) { const ts = parseOn(at); const d = new Date(ts); return { kind: 'on', ts, label: 'on ' + d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) }; }
   if (at) { const t = parseAt(at); return { kind: 'at', h: t.h, m: t.m, label: 'daily ' + p2(t.h) + ':' + p2(t.m) }; }
   return { kind: 'once', label: 'once' };
 }
@@ -57,6 +67,7 @@ function parseSchedule(o) {
 // moves "08:00" by zero hours on the clock, not by 24 h of elapsed time.
 function nextRun(sched, from) {
   if (sched.kind === 'every') return from + sched.ms;
+  if (sched.kind === 'on') return sched.ts > from ? sched.ts : null;
   if (sched.kind === 'at') {
     const d = new Date(from);
     let t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), sched.h, sched.m, 0, 0).getTime();
@@ -242,6 +253,7 @@ class Helpers {
     if (!name) throw new Error('name is required');
     if (!task) throw new Error('task is required');
     const sched = parseSchedule({ every, at });
+    if (sched.kind === 'on' && sched.ts <= this.now()) throw new Error('that date and time has already passed');
     if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
     const dup = allowSimilar ? null : this.similar(name, task, sched.label);
     if (dup) throw new Error("a similar Mote '" + dup.name + "' already exists (" + dup.schedule + '); use it, or stop it first');
@@ -255,7 +267,7 @@ class Helpers {
     if (until > this.now()) h.until = until; // learn button: stops itself at this time
     if (byHelper) h.byHelper = byHelper; // started by another Glim (agent_start from a helper run)
     this.items.push(h);
-    if (sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
+    if (sched.kind === 'on' || sched.kind === 'at' || (deferFirst && sched.kind === 'every')) { h.next = nextRun(sched, this.now()); this.changed(); } else { this.changed(); this._run(h); }
     return this.view(h);
   }
 

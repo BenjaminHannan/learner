@@ -553,3 +553,17 @@ test('learn Motes: similar tasks allowed when asked, and a Mote stops itself at 
   assert.strictEqual(m.find('Learn 1: sheets').status, 'stopped');
   assert.strictEqual(m.find('Learn 2: sheets').status, 'stopped');
 });
+
+test('dated reminder: at "YYYY-MM-DD HH:MM" runs once at that time, a past time is refused', async () => {
+  const { m, runs, clock } = mkManager();
+  const d = new Date(clock.t + 2 * 86400000), p = (n) => String(n).padStart(2, '0');
+  const at = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  const h = m.add({ name: 'Call dentist', task: 'remind Ben to call the dentist', at });
+  assert.strictEqual(runs.length, 0, 'waits for its time');
+  assert.ok(Math.abs(m.find('Call dentist').next - (clock.t + 2 * 86400000)) < 60000);
+  assert.throws(() => m.add({ name: 'old', task: 't', at: '2020-01-01 09:00' }), /passed/);
+  clock.t += 2 * 86400000 + 61000; m.tick();
+  assert.strictEqual(runs.length, 1);
+  runs[0].done(); await until(() => m.find('Call dentist').status === 'idle');
+  assert.strictEqual(m.find('Call dentist').next, null, 'does not repeat');
+});
