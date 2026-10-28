@@ -5,11 +5,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const CARDS = ' Save every concrete fact you learn with memory_save, topic "card", written "Subject => relation => Object". Never ask Ben questions: use his saved notes, goals and chats. Report in 3 short lines, and only when something is new.';
+const CARDS = ' Save every concrete fact you learn with memory_save, topic "card", written "Subject => relation => Object". Never ask Ben questions: use his saved notes, goals and chats. Work quietly: do not report tips or status; reply exactly NO_UPDATE unless Ben must act.';
 const STANDING = [
-  { name: 'Model ideas', every: '2h', task: 'Come up with concrete ideas to make Ben\'s Premonition model better at reasoning and at the tasks he gives you: read his recent chats and the saved notes, find where you were slow or wrong, and write each idea with why it should help and how to test it. Dig into something new each run and do not repeat an idea you already saved.' + CARDS },
+  { name: 'Model ideas', every: '2h', task: 'Learn by practice: come up with concrete ideas to make Ben\'s Premonition model better at reasoning and at the tasks he gives you: read his recent chats and the saved notes, find where you were slow or wrong, and save each idea as a note with why it should help and how to test it, and try it on a practice task. Dig into something new each run and do not repeat an idea you already saved.' + CARDS },
   { name: 'Week planner', at: '18:00', task: 'Plan Ben\'s week around his extracurriculars, gym days, sleep, meals, health and supplements, using his saved notes, goals and calendar. On Sundays write the whole week; on other days adjust the plan and say what changed. Put the plan in his goals.' + CARDS },
-  { name: 'Organizer', at: '08:00', task: 'Check Ben\'s mail, calendar and goals. Tell him in 3 lines what matters today and what is overdue or falling through the cracks. Read only; do not send or delete anything.' + CARDS },
+  { name: 'Organizer', at: '08:00', task: 'Check Ben\'s mail, calendar and goals. Save what matters today and what is overdue as notes and goals. Read only; do not send or delete anything.' + CARDS },
 ];
 
 function seedStanding(helpers, dir) {
