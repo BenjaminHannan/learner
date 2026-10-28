@@ -151,10 +151,13 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 #composer .box { display:flex; align-items:flex-end; gap:.5rem; background:var(--surface); border:1px solid var(--line-ui); border-radius:1.3rem; padding:.45rem .45rem .45rem 1.1rem; }
 #composer .box:focus-within { border-color:var(--accent-text); box-shadow:0 0 0 .2rem var(--accent-soft); }
 #input { flex:1; border:0; background:none; resize:none; outline:none; max-height:9.2rem; min-height:1.5rem; padding:.45rem 0; line-height:1.5; }
-.send { background:var(--accent); color:var(--on-accent); border:0; border-radius:999px; padding:.4rem 1.15rem; min-height:2.4rem; font-weight:700; }
+.send { background:var(--accent); color:var(--on-accent); border:0; border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
+.send svg { width:1.05rem; height:1.05rem; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .send:hover { filter:brightness(1.07); }
-.stop { background:var(--danger); color:var(--on-danger); border:0; border-radius:999px; padding:.4rem 1.1rem; min-height:2.4rem; font-weight:700; display:flex; align-items:center; gap:.45rem; }
-.stop span { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
+.stop { background:transparent; color:var(--danger); border:1.5px solid var(--danger); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
+.stop:hover { background:var(--danger); color:var(--on-danger); }
+.stop i { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
 #runState i { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; }
 .hint { color:var(--faint); font-size:.78rem; text-align:center; padding-top:.45rem; }
@@ -388,3 +391,4 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 .sl-dur button.on { border-color:var(--accent-text); color:var(--accent-text); font-weight:600; }
 
 #modeSeg { pointer-events:none; cursor:default; }
+#modelSeg[hidden], #modeSeg[hidden] { display:none; } /* model and mode live in Settings only */
