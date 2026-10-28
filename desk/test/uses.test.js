@@ -80,6 +80,19 @@ test('settings: onboarded / uses / usesOther defaults, validation and persistenc
   assert.strictEqual(s.getSettings().onboarded, false);
 });
 
+test('settings: a damaged settings.json falls back to the last good copy, so setup does not come back', () => {
+  const s = new Store(tmp());
+  s.saveSettings({ onboarded: true, permsSeen: true });
+  s.saveSettings({ theme: 'dark' });
+  fs.writeFileSync(s.settingsFile, '{"onboarded": tru'); // a write cut off by a quit or a crash
+  const g = s.getSettings();
+  assert.strictEqual(g.onboarded, true); assert.strictEqual(g.permsSeen, true);
+  s.saveSettings({ textSize: 'large' }); // the next save heals the file
+  assert.strictEqual(JSON.parse(fs.readFileSync(s.settingsFile, 'utf8')).onboarded, true);
+  const n = new Store(tmp()); fs.writeFileSync(n.settingsFile, 'garbage');
+  assert.strictEqual(n.getSettings().onboarded, false); // nothing good anywhere: defaults, as before
+});
+
 test('picks reach the model only in the first user message beside the date; prompt and tools stay constant', async () => {
   const before = JSON.stringify([SYSTEM_PROMPT, buildTools({ diary: true })]);
   assert.ok(!/mostly wants Glims for/.test(before));

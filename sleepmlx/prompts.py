@@ -197,3 +197,33 @@ def strip_think(txt: str, close: str, end: str = "") -> Tuple[str, bool]:
     if close and close in txt:  # the model closed the block and kept writing: keep the thinking only
         txt, closed = txt.split(close, 1)[0].rstrip(), True
     return txt, closed
+
+
+# ---------------------------------------------------------------- templated cards (Config.card_shape "templated12")
+PREPS = {"at", "in", "on", "to", "for", "with", "by", "from", "of"}
+
+
+def noun_rel(rel: str) -> Optional[str]:
+    """The relation as a bare noun phrase ("is the mentor of" -> "mentor", "sister" -> "sister"); None for a verb phrase ("works at", "owns the boat")."""
+    w = re.sub(r"\s+of$", "", re.sub(r"^(?:the|a|an)\s+", "", re.sub(r"^(?:is|are|was)\s+", "", rel.strip().lower()))).strip()
+    ws = w.split()
+    if not ws or len(ws) > 3 or ws[-1] in PREPS or {"the", "a", "an"} & set(ws[1:]):
+        return None
+    return w
+
+
+def templated_cards(s: str, rel: str, o: str, note: str) -> Tuple[List[str], List[Tuple[str, str]]]:
+    """Arm B of the card-shape experiment: ([raw note + 5 rewrites (3 forward, 2 reverse)], 6 Q&A (3 forward, 3 reverse)). No model."""
+    n = noun_rel(rel)
+    if n:
+        paras = [note, "%s's %s is %s." % (s, n, o), "The %s of %s is %s." % (n, s, o), "For %s, the %s is %s." % (s, n, o),
+                 "%s is the person whose %s is %s." % (s, n, o), "Whose %s is %s? It is %s's." % (n, o, s)]
+        qas = [("What is %s's %s?" % (s, n), o), ("Tell me the %s of %s." % (n, s), o), ("Remind me of %s's %s." % (s, n), o),
+               ("Whose %s is %s?" % (n, o), s), ("Who has %s as their %s?" % (o, n), s), ("%s is the %s of which person?" % (o, n), s)]
+    else:   # verb relation ("works at"): same shape, worded around the verb
+        r = rel.strip()
+        paras = [note, "%s %s %s." % (s, r, o), "Fact: %s %s %s." % (s, r, o), "As far as I know, %s %s %s." % (s, r, o),
+                 "%s is linked to %s: %s %s %s." % (o, s, s, r, o), "Who %s %s? It is %s." % (r, o, s)]
+        qas = [("Complete the sentence: %s %s ..." % (s, r), o), ("Remind me what %s %s." % (s, r), o), ("What is it that %s %s?" % (s, r), o),
+               ("Who %s %s?" % (r, o), s), ("Which person %s %s?" % (r, o), s), ("Tell me who %s %s." % (r, o), s)]
+    return paras, qas

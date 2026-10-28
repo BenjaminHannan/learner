@@ -183,7 +183,7 @@ window.Onboard = (() => {
     page.append(host);
     if (!perms || perms.host !== host) { perms = window.createPerms(host, { embedded: true }); perms.host = host; }
     perms.show();
-    desk.settings.set({ permsSeen: true });
+    desk.settings.set({ permsSeen: true, onboardAt: 'perms' });   // Screen Recording needs a quit and reopen: come back to this page, not the start
   }
 
   async function createGlims() {
@@ -218,7 +218,7 @@ window.Onboard = (() => {
     if (!isOpen()) return;
     if (perms) perms.hide();
     root.hidden = true;
-    const patch = { onboarded: true, uses: [...picks], usesOther: other };
+    const patch = { onboarded: true, onboardAt: '', uses: [...picks], usesOther: other };
     if (step === 3) patch.permsSeen = true;
     await desk.settings.set(patch);
     window.dispatchEvent(new CustomEvent('onboard-done', { detail: { skipped: !!skipped, created: [...made.values()] } }));
@@ -236,7 +236,8 @@ window.Onboard = (() => {
       for (const u of Uses.USES) if (u.tpl && have.has(u.tpl.name.toLowerCase())) made.set(u.id, u.tpl.name);
     } catch (e) { /* ignore */ }
     if (!root.firstChild) build();
-    step = 0; mode = 'ask'; root.hidden = false; paint();
+    step = !s.onboarded && s.onboardAt === 'perms' && showPermsStep ? 3 : 0;   // a finished setup run again starts at the top
+    mode = 'ask'; root.hidden = false; paint();
   }
   const isOpen = () => !root.hidden;
 

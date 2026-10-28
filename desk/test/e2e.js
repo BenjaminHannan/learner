@@ -660,8 +660,15 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await sleep(300);
       await audit('light, permissions');
       await grab('ui-v2-onboard-d-permissions.png');
+      // macOS makes you quit and reopen after the Screen Recording switch: setup comes back on Permissions, Glims are not made twice
+      checks.push(['setup: reaching Permissions is remembered', store.getSettings().onboardAt === 'perms' && store.getSettings().onboarded === false]);
+      await new Promise((r) => { wc.once('did-finish-load', r); wc.reload(); });
+      await ev('new Promise(r=>{const t=setInterval(()=>{if(window.__ready){clearInterval(t);r()}},50)})');
+      await sleep(800);
+      checks.push(['setup: a reopen mid-setup resumes on Permissions, not the start', await until(() => stepIs(3), 4000) && await ev('document.querySelectorAll("#obPerms .p-row").length===3')]);
+      checks.push(['setup: resuming made no second Morning briefing', helpers.list().filter((h) => h.name === 'Morning briefing').length === 1]);
       await key('Return');
-      checks.push(['setup: Enter on the last step finishes; onboarded saved', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true]);
+      checks.push(['setup: Enter on the last step finishes; onboarded saved', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true && store.getSettings().onboardAt === '']);
       checks.push(['welcome chips follow the picks', await ev('(() => { const c=[...document.querySelectorAll(".welcome .chips button")].map((b)=>b.textContent); return c.length===4 && c[0]==="Check my email" && c[1]==="Give me a morning briefing"; })()')]);
       await grab('ui-v2-onboard-e-welcome.png');
       await ev('document.querySelector("#btnThreads").click()'); await sleep(400);

@@ -29,6 +29,19 @@ class WorkerTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_paths_from_home_outside_learner_ops(self):
+        # a SLEEPMLX_HOME copy elsewhere keeps the real ops dir and diary (was home.parent/diary/raw)
+        p = worker._paths_from({"SLEEPMLX_HOME": "/tmp/copy/sm", "LEARNER_OPS": str(self.root)})
+        self.assertEqual((p.ops, p.diary_dir), (self.root, self.root / "diary" / "raw"))
+        old = os.environ.pop("LEARNER_OPS", None)
+        try:
+            p = worker._paths_from({"SLEEPMLX_HOME": "/tmp/copy/sm"})
+            self.assertEqual(p.ops, worker.ops_dir())
+            self.assertNotEqual(p.ops, Path("/tmp/copy"))
+        finally:
+            if old is not None:
+                os.environ["LEARNER_OPS"] = old
+
     def test_run_chunk_output_matches_the_commandworker_contract(self):
         def fac(prof):
             prof.template_mode = "manual"

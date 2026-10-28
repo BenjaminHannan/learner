@@ -88,6 +88,7 @@ class Config:
     night_budget_s: Optional[float] = None   # s = clip(B / R, 0.25, 4); None = this chunk's budget
     scale: Optional[float] = None            # pin s (tests)
     ckpt_every: int = 10
+    card_shape: str = "model"     # "templated12": per fact the raw note + 5 rewrites + 6 Q&A from templates, no model (data A/B arm B), instead of model-written cards
     max_seq_len: int = 640        # training sequences longer than this fall back to closed-book
     harm_max: float = gate_mod.HARM_MAX
     gate_min_gain: int = gate_mod.MIN_GAIN   # held-out cards the night must add over the adapter it started from (gate.decide)
@@ -423,6 +424,8 @@ class Sleeper:
         need.sort(key=lambda it: (-it.days, -it.nment))
         st["backlog"] = max(0, len(need) - self.cap_items)
         need = need[:self.cap_items]
+        if self.cfg.card_shape == "templated12":
+            return self.dream_templated(d, need, st)
         prompts, ctxs = [], {}
         for it in need:
             idx = self.diary.containing(it.subj, it.obj, d)[::-1][:4]
@@ -487,6 +490,33 @@ class Sleeper:
             it.seen_ment, it.dirty = it.nment, False
             st["paraphrases_kept"] += len(g["p"])
             st["qa_kept"] += len(g["q"])
+        st["items"] = len(need)
+        return done
+
+    def dream_templated(self, d: int, need: List[Item], st: Counter) -> List[Item]:
+        """card_shape templated12: the newest diary message naming both sides + 5 rewrites as docs, 6 Q&A in both directions."""
+        done = []
+        for it in need:
+            idx = self.diary.containing(it.subj, it.obj, d)
+            note = self.diary.turns[idx[-1]]["text"][:300] if idx else it.fact
+            paras, qas = P.templated_cards(it.subj, it.rel, it.obj, note)
+            seen, g = {norm(h["q"]) for h in it.held}, {"p": [], "q": []}
+            for kind, x in [("p", p) for p in paras] + [("q", qa) for qa in qas]:
+                txt = x if kind == "p" else x[0]
+                st["paraphrases_gen" if kind == "p" else "qa_gen"] += 1
+                if norm(txt) in seen:
+                    st["dropped_dup"] += 1
+                elif kind == "q" and self.leaky(txt):
+                    st["dropped_test_leak"] += 1
+                else:
+                    seen.add(norm(txt))
+                    g[kind].append(x if kind == "p" else list(x))
+            it.para, it.qa, it.fails, it.trained, it.dreamed_night = g["p"], g["q"], 0, False, d
+            it.seen_ment, it.dirty = it.nment, False
+            st["items_with_dreams"] += 1
+            st["paraphrases_kept"] += len(g["p"])
+            st["qa_kept"] += len(g["q"])
+            done.append(it)
         st["items"] = len(need)
         return done
 
