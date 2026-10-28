@@ -166,6 +166,8 @@ function nowStamp(messages, d) {
   return stamp + ' (New day: today is ' + long + '. The earlier messages here were on ' + prev + ', so their "today" and "tomorrow" are out of date.)';
 }
 
+// Ben Oct 28: "tell me what you plan to do and what you are doing, not straight into the task". Per-turn (user message), so the cached system prompt stays small.
+const NARRATE = '[If this needs tools: first say your plan in 2 to 4 short lines, then before each step say in one short line what you do next. No tools needed: just answer.]';
 const PLAN_STEP_MAX = 120;
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
@@ -295,7 +297,7 @@ class Agent {
       let ctx = '';
       if (!thread.messages.some((m) => m.role === 'user')) { try { const s = this.o.getSettings && this.o.getSettings(); ctx = s ? usesLine(s.uses, s.usesOther) : ''; } catch (e) { ctx = ''; } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
-      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
+      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
       thread.items.push({ t: 'user', text: shown || text });
     };
     repairHistory(thread.messages);

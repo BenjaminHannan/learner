@@ -103,7 +103,7 @@ test('picks reach the model only in the first user message beside the date; prom
     const a = mk();
     await a.run(t, 'hello'); await a.run(t, 'again');
     const users = gw.requests[1].messages.filter((m) => m.role === 'user');
-    assert.match(users[0].content, /^\[\w{3} \d{4}-\d{2}-\d{2} \d\d:\d\d\] \[Background, not a request: Ben mostly wants Glims for email monitoring, game news. Do not start Glims unless he asks.\] hello$/);
+    assert.match(users[0].content, /^\[\w{3} \d{4}-\d{2}-\d{2} \d\d:\d\d\] \[If this needs tools[^\]]*\] \[Background, not a request: Ben mostly wants Glims for email monitoring, game news. Do not start Glims unless he asks.\] hello$/);
     assert.ok(!/mostly wants Glims for/.test(users[1].content));
     assert.ok(!/mostly wants Glims for/.test(gw.requests[0].messages[0].content), 'not in the system prompt');
     assert.strictEqual(JSON.stringify(gw.requests[0].tools), JSON.stringify(gw.requests[1].tools));

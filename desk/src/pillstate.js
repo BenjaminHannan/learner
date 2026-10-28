@@ -48,9 +48,16 @@ class PillState {
     const a = this._get(key, name, threadId);
     if (meta && meta.title) a.title = meta.title;
     if (t === 'queued') { a.status = 'working'; a.line = 'Waiting for a free slot'; a.step = ''; }
-    else if (t === 'started') { a.status = 'working'; a.line = 'Starting'; a.step = ''; a.startedAt = this.now(); a.error = ''; a.endedAt = 0; }
-    else if (t === 'step_start') { a.status = 'working'; a.step = ev.summary || ev.tool; a.line = short(a.step, 40); a.approval = null; }
-    else if (t === 'assistant_end') { if (ev.text) a.lastText = ev.text; return; }
+    else if (t === 'started') { a.status = 'working'; a.line = 'Starting'; a.step = ''; a.startedAt = this.now(); a.error = ''; a.endedAt = 0; a.said = ''; }
+    else if (t === 'status') { a.said = String(ev.text || ''); if (a.status === 'working') { a.step = a.said; a.line = short(a.said, 40); } }
+    // what the pill says is what Glim wrote with set_status; until it has, just "Working"
+    else if (t === 'step_start') { a.status = 'working'; a.step = a.said || 'Working'; a.line = short(a.step, 40); a.approval = null; }
+    else if (t === 'assistant_end') {
+      if (ev.text) a.lastText = ev.text;
+      // what the pill says is what Glim itself said it is doing (its line before the tool calls)
+      if (ev.text && ev.toolCalls > 0) { const l = firstLine(ev.text); if (l) { a.said = l; if (a.status === 'working') { a.step = l; a.line = short(l, 40); } } }
+      return;
+    }
     else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger }; a.line = 'Waiting for you'; }
     else if (t === 'ask') { a.status = 'waiting'; a.approval = { rid: ev.id, kind: 'ask', text: ev.question }; a.line = 'Waiting for you'; }
     else if (t === 'login') { a.status = 'waiting'; a.approval = { rid: null, kind: 'login', text: 'Sign in in the browser window, then click Done.' }; a.line = 'Waiting for you: sign in'; }

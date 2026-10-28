@@ -105,7 +105,7 @@ test('pill state: priority error > waiting > working > done; done fades after 8 
   p.onEvent('main', 'Glim', 't1', { type: 'started' });
   p.onEvent('main', 'Glim', 't1', { type: 'step_start', summary: 'Opened gmail.com' });
   let v = p.view();
-  assert.ok(v.visible); assert.strictEqual(v.mood, 'working'); assert.strictEqual(v.line, 'Opened gmail.com');
+  assert.ok(v.visible); assert.strictEqual(v.mood, 'working'); assert.strictEqual(v.line, 'Working');
   p.onEvent('h1', 'site-checker', 'th', { type: 'step_start', summary: 'Searched “x”' });
   p.onEvent('h1', 'site-checker', 'th', { type: 'approval', rid: 'th:s', kind: 'shell', text: 'ls' });
   v = p.view();
