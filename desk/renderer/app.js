@@ -193,11 +193,23 @@
     if (t.think) { a.body.append(t.think.d); }
     if (t.text) {
       const norm = clean.toLowerCase().replace(/\W+/g, ' ');
-      const isPlan = /^\s*\d+[.)]\s/m.test(clean); // the plan has its own checklist
+      // the plan has its own checklist; same rule as extractPlan in src/agent.js (2+ numbered lines, each short)
+      const nums = clean.split('\n').filter((l) => /^\s*\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\s*\d+[.)]\s+/, '').replace(/\*\*|__|`/g, '').trim());
+      const isPlan = nums.length >= 2 && nums.every((l) => l.length <= 120);
       if (clean && !isPlan && norm !== a.lastNar) { a.lastNar = norm; { const one = clean.replace(/\s+/g, ' '); const n = el('div', 'nar sel', one); n.title = one; a.body.append(n); }; }
       t.text.remove();
     }
     toBottom();
+  }
+
+  // "Login access - You mentioned ... I need ..." reads as a wall of text: show the short head in bold and the rest as a
+  // muted two-line note (full text on hover). Old saved threads still carry ** marks, so strip them here too.
+  function planItem(text) {
+    const t = String(text).replace(/\*\*|__|`/g, '').trim();
+    const li = el('li'); const box = el('span', 'pt'); box.title = t;
+    const m = /^(.{2,40}?)(?:\s+[-–—]\s+|:\s+)(.+)$/.exec(t);
+    if (m) box.append(el('b', 'ph', m[1]), el('span', 'pd', m[2])); else box.append(el('span', 'pd solo', t));
+    li.append(box); return li;
   }
 
   function setPlan(items) {
@@ -207,7 +219,7 @@
     const d = el('details', 'plan'); d.open = true;
     const s = el('summary'); s.append(document.createTextNode('Plan · ' + items.length + ' steps'));
     const ol = el('ol');
-    for (const i of items) ol.append(el('li', null, i));
+    for (const i of items) ol.append(planItem(i));
     d.append(s, ol);
     a.body.prepend(d); a.plan = d;
     if (a.finished) d.classList.add('done');

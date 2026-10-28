@@ -343,6 +343,8 @@ function createWindow() {
   // (on X11 the content size can lag one event behind the window size, so fit again shortly after)
   // macOS full screen hides the traffic lights, so the top bar drops the space it keeps for them
   win.on('enter-full-screen', () => send('fullscreen', true)); win.on('leave-full-screen', () => send('fullscreen', false));
+  // a window that opens already in full screen fires neither event, so the page would keep the gap: tell it on every load
+  ui.webContents.on('did-finish-load', () => send('fullscreen', win.isFullScreen()));
   for (const ev of ['resize', 'resized', 'maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen', 'restore', 'show']) win.on(ev, () => { fitUi(); if (!panel.rect) applyPanel(); setTimeout(fitUi, 80); });
   ui.webContents.once('did-finish-load', () => {
     timing.readyToShow = Date.now();
