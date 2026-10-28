@@ -8,15 +8,16 @@ const Platform = require('../renderer/platform');
 
 const W = 420, H = 300;
 
-// The real notch width from the screen helper (`deskhelper notch`): it varies with the Mac and its display scaling (185-250 pt),
-// and a guessed 200 put the cap half under the camera on a 16" at "More Space". 200 when the helper is missing or says nothing.
-function notchWidth() {
+// The real notch from the screen helper (`deskhelper notch`): its width varies with the Mac and its display scaling (185-250 pt),
+// and it is known even when the menu bar is hidden (full-screen app at launch, auto-hide), where workArea.y says 0 and the
+// icon used to fall back to a floating circle under the camera. null when the helper is missing or the screen has no notch.
+function notchSize() {
   try {
     const { findHelper } = require('./tools/screen');
     const bin = findHelper({}, process.resourcesPath, process.platform);
     const r = bin ? JSON.parse(require('child_process').execFileSync(bin, ['notch'], { timeout: 2000 }).toString()) : null;
-    return r && r.width > 0 ? Math.round(r.width) : 200;
-  } catch (e) { return 200; }
+    return r && r.height > 0 ? { width: Math.round(r.width) || 200, height: Math.round(r.height) } : null;
+  } catch (e) { return null; }
 }
 
 class PillWindow {
@@ -44,12 +45,12 @@ class PillWindow {
     const d = screen.getPrimaryDisplay();
     const a = d.workArea; // starts below the menu bar on macOS
     // remember the tallest menu bar / notch band seen; full-screen apps report 0 and would slide the pill under the camera
-    this.topInset = Math.max(this.topInset || 0, a.y - d.bounds.y);
+    const notch = process.platform === 'darwin' ? notchSize() : null;
+    this.topInset = Math.max(this.topInset || 0, a.y - d.bounds.y, notch ? notch.height : 0);
     const pos = Platform.pillPosition(a, W, d.bounds.y + this.topInset);
     // the window starts at the very top of the screen; the pill hangs down by `pt`, and on a notched Mac the idle icon sits IN the
-    // menu-bar band beside the camera (black, fused to the notch). Electron has no notch width, so the screen helper measures it (notchWidth).
-    const notched = process.platform === 'darwin' && this.topInset >= 32;
-    this.geo = { pt: pos.y - d.bounds.y, notchH: notched ? this.topInset : 0, notchW: notched ? notchWidth() : 0 };
+    // menu-bar band around the camera (black, fused to the notch). Electron has no notch size, so the screen helper measures it.
+    this.geo = { pt: pos.y - d.bounds.y, notchH: notch ? notch.height : 0, notchW: notch ? notch.width : 0 };
     this.win.setBounds({ x: pos.x, y: d.bounds.y, width: W, height: H + this.geo.pt });
     if (this.view && this.lastSent) this.win.webContents.send('pill-view', { ...this.lastSent, geo: this.geo });
   }

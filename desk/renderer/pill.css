@@ -25,6 +25,7 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.idle { width:44px; margin-left:-22px; border-radius:19px; opacity:.85; }
 #pill.idle #line, #pill.idle #mini, #pill.idle .more { display:none; }
 #pill.idle .row1 { padding:0 10px; }
-/* notched Mac, idle: a black cap fused to the camera notch, so the icon looks like part of it */
-#pill.idle.notch { top:0; left:calc(50% + var(--nw) / 2 - 8px); margin-left:0; width:58px; height:var(--nh); background:#000; border:0; border-radius:0 0 18px 0; box-shadow:none; opacity:1; }
-#pill.idle.notch .row1 { height:var(--nh); padding:0 0 0 14px; justify-content:center; }
+/* notched Mac, idle: the notch grows a black wing on each side (like an iPhone's Dynamic Island) and Glim sits in the right
+   wing, so the icon is part of the camera housing rather than a separate bubble */
+#pill.idle.notch { top:0; left:50%; margin-left:calc(var(--nw) / -2 - 40px); width:calc(var(--nw) + 80px); height:calc(var(--nh) + 4px); background:#000; border:0; border-radius:0 0 14px 14px; box-shadow:none; opacity:1; }
+#pill.idle.notch .row1 { height:calc(var(--nh) + 4px); padding:0 9px 0 0; justify-content:flex-end; }
