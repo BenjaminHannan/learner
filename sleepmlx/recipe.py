@@ -387,7 +387,7 @@ class Sleeper:
 
     def prio(self, it: Item) -> float:
         if it.kind in ("note", "track"):
-            return 1.0   # the Desk already shows these in every turn; a long notes file must not crowd out the night's facts
+            return 0.25  # the Desk already shows these in every turn: a weight copy is mostly redundant, and a long notes file must not crowd out the night's facts
         return max(it.days, 1) * (1 + it.imp + it.cor) * 2   # surprise = 1 always (no morning probes)
 
     # ---- 4. NREM cards
@@ -634,6 +634,21 @@ class Sleeper:
             it.held.append({"q": q, "a": a, "dir": "forward" if norm(a) == norm(it.obj) else "reverse", "night": d})
             n += 1
         st["held_out"] = n
+
+    def hold_lessons(self, d: int, st: Counter) -> None:
+        """Hold out 1 in 5 of tonight's new lesson cards (at least one when there are 3 or more lessons) so the recall quiz sees them.
+        Same rule as the facts: Q&A only, and the lesson keeps at least 2 trainable cards."""
+        new = [it for it in self.items.values() if it.kind == "lesson" and it.first == d and not it.dead and not it.held]
+        if len(new) < 3:
+            return
+        cands = sorted((it for it in new if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 3),
+                       key=lambda it: hashlib.sha1((str(self.cfg.seed) + "lesson" + it.key).encode()).hexdigest())
+        n = 0
+        for it in cands[:max(1, int(round(len(new) / 5.0)))]:
+            q, a = it.qa.pop(0)
+            it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
+            n += 1
+        st["lessons_held_out"] = n
 
     # ---- 7. REM
     def rem(self, E: List[Item], d: int, ci: int, st: Counter) -> None:
@@ -898,12 +913,16 @@ class Sleeper:
             st = Counter()
             self.lessons_stage(week, d, st)
             self.extras(week, d, st)
+            if "lesson_holdout_done" not in N:
+                self.hold_lessons(d, st)
+                N["lesson_holdout_done"] = True
             st_all["lessons"] = dict(st)
             self.log("[night] lessons and habits %s" % st_all["lessons"])
             st_all["cleanup"] = self.cleanup()
             self.log("[night] dream %s" % st_all["dream"])
             E = [it for it in self.items.values() if self.elig(it)]
-            ncards = sum(len(it.para) + len(it.qa) for it in E)
+            # notes and tracking cards do not start a night: a low-fact day should skip, not train mostly on notes
+            ncards = sum(len(it.para) + len(it.qa) for it in E if it.kind not in ("note", "track"))
             st_all["trainable_cards"] = ncards
             self.save_items()
             self.write_cards()
