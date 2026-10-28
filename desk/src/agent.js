@@ -471,8 +471,8 @@ class Agent {
     thread.items.push(item);
     this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary: item.summary });
     const end = (summary, ok, preview) => {
-      item.summary = summary; item.ok = ok; item.preview = preview || '';
-      this.emit({ type: 'step_end', id, tool: 'verify', ok, summary, preview: item.preview, result: item.preview });
+      item.summary = summary; item.ok = ok; item.preview = ''; // the verifier's reasoning stays out of the chat
+      this.emit({ type: 'step_end', id, tool: 'verify', ok, summary, preview: '', result: '' });
     };
     let verdict = null;
     try {
