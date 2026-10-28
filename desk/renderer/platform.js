@@ -83,7 +83,8 @@
       width, height, show: false, transparent: true, frame: false, hasShadow: false, resizable: false, movable: false,
       focusable: false, skipTaskbar: true, alwaysOnTop: true, fullscreenable: false, backgroundColor: '#00000000'
     };
-    if (isMac(p)) return { options: { ...base, type: 'panel' }, level: 'screen-saver', allWorkspaces: true, hideInMissionControl: true };
+    // enableLargerThanScreen: otherwise macOS pushes the window below the menu bar (y=44 on a 16") and the idle icon can't reach the notch
+    if (isMac(p)) return { options: { ...base, type: 'panel', enableLargerThanScreen: true }, level: 'screen-saver', allWorkspaces: true, hideInMissionControl: true };
     return { options: base, level: 'screen-saver', allWorkspaces: false, hideInMissionControl: false };
   }
   // top-center of the primary display's work area (below the menu bar on a Mac, clear of the taskbar on Windows)
