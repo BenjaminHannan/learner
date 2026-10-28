@@ -14,7 +14,6 @@ const R = require('../src/runtime/releases');
 const { ChatInstaller, findFile, tarExe, tarArgs } = require('../src/runtime/install');
 const { buildArgs, reclaimPort, parseLsofPid, lsofArgs, isLlamaServerComm } = require('../src/runtime/llamaserver');
 const { Builtin } = require('../src/runtime/builtin');
-const { UnavailableSleep, shouldAutoSleep } = require('../src/sleep');
 const { DEFAULT_SETTINGS, applyPresetDefaults } = require('../src/store');
 const P = require('../renderer/platform');
 
@@ -214,15 +213,18 @@ test('Platform: a Mac without the local assistant gets the built-in model; Ben\'
   assert.strictEqual(P.features('darwin', emma).perms, true); assert.strictEqual(P.needsPermsStep('darwin', false), true);
 });
 
-test('Platform: sleep is off (with the honest note) only on a Mac running the built-in model', () => {
+test('Platform: every Mac sleeps; the built-in Mac through the app\'s own runner (no "not available" note any more)', () => {
   const emma = { hasLocalAssistant: false };
   const g = P.settingsGating('darwin', emma);
-  assert.strictEqual(g.sleepUnavailable, true); assert.strictEqual(g.sleepNote, 'Sleep is not available on this Mac yet.'); assert.strictEqual(g.showSleepButton, false); assert.strictEqual(g.showPermRow, true);
-  assert.strictEqual(P.features('darwin', emma).sleep, false);
+  assert.strictEqual(g.sleepUnavailable, false); assert.strictEqual(g.sleepNote, ''); assert.strictEqual(g.showSleepButton, true); assert.strictEqual(g.showPermRow, true);
+  assert.strictEqual(g.sleepWindows, true, 'the built-in runner rows (no sleepmode folder / Python rows)');
+  assert.strictEqual(P.features('darwin', emma).sleep, true); assert.strictEqual(P.features('darwin', emma).sleepBuiltin, true);
+  assert.strictEqual(P.SLEEP_MAC_NOTE, undefined);
   for (const [p, o] of [['darwin', { hasLocalAssistant: true }], ['darwin', undefined], ['win32', undefined], ['win32', emma], ['linux', undefined]]) {
     const x = P.settingsGating(p, o);
     assert.strictEqual(x.sleepUnavailable, false, p); assert.strictEqual(x.showSleepButton, true, p); assert.strictEqual(P.features(p, o).sleep, true, p);
   }
+  assert.strictEqual(P.features('darwin', { hasLocalAssistant: true }).sleepBuiltin, false, 'Ben\'s Macs keep the sleepmode app');
 });
 
 test('store defaults follow the preset main.js passes in (a saved settings file still wins over them)', () => {
@@ -234,20 +236,6 @@ test('store defaults follow the preset main.js passes in (a saved settings file 
     applyPresetDefaults(P.defaultPreset('darwin', { hasLocalAssistant: true }));
     assert.strictEqual(DEFAULT_SETTINGS.gatewayUrl, 'http://127.0.0.1:8090/v1'); assert.strictEqual(DEFAULT_SETTINGS.model, 'qwen36-auto'); assert.strictEqual(DEFAULT_SETTINGS.compactTokens, 24000);
   } finally { Object.assign(DEFAULT_SETTINGS, keep); }
-});
-
-// ---- sleep stub ---------------------------------------------------------------------------------------------------------------------
-test('UnavailableSleep: never starts, never writes, says so in plain words, and auto-sleep cannot fire', async () => {
-  const home = path.join(tmp('nosleep-'), 'sleep-unavailable');
-  const s = new UnavailableSleep({ getSettings: () => ({}), home });
-  assert.strictEqual(s.available().ok, false); assert.strictEqual(s.available().reason, 'Sleep is not available on this Mac yet.');
-  assert.deepStrictEqual(s.start({ budgetS: 3600 }), { ok: false, error: 'Sleep is not available on this Mac yet.' });
-  assert.strictEqual(s.statusLine(), 'Sleep is not available on this Mac yet.'); assert.strictEqual(s.status().sleeping, false);
-  assert.strictEqual(s.needsRuntime(), false); assert.strictEqual(s.currentLora(), '');
-  assert.strictEqual((await s.wake()).ok, true);
-  assert.strictEqual(fs.existsSync(home), false);
-  const d = shouldAutoSleep({ settings: { autoSleep: true }, now: new Date('2026-10-29T02:00:00'), available: s.available().ok, idleMs: 9e9, systemIdleMs: 9e9, runActive: false, gatewayBusy: false, windowFocused: false, onBattery: false });
-  assert.strictEqual(d.sleep, false);
 });
 
 // ---- the Builtin on a Mac ---------------------------------------------------------------------------------------------------------

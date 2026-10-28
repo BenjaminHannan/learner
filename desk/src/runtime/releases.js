@@ -41,9 +41,11 @@ const hfResolveUrl = (repo, file) => 'https://huggingface.co/' + repo + '/resolv
 const hfTreeUrl = (repo) => 'https://huggingface.co/api/models/' + repo + '/tree/main';
 
 // python-build-standalone: cpython-3.12.x+<date>-x86_64-pc-windows-msvc-install_only(_stripped).tar.gz in the newest release
-function pickPython(releases, series) {
+// python-build-standalone target triple per platform (Windows x64, Apple-silicon Mac)
+const pythonTriple = (platform) => (platform === 'darwin' ? 'aarch64-apple-darwin' : 'x86_64-pc-windows-msvc');
+function pickPython(releases, series, platform) {
   series = series || C.PYTHON_SERIES;
-  const re = new RegExp('^cpython-(' + series.replace('.', '\\.') + '\\.\\d+)\\+\\d+-x86_64-pc-windows-msvc-install_only\\.tar\\.gz$');
+  const re = new RegExp('^cpython-(' + series.replace('.', '\\.') + '\\.\\d+)\\+\\d+-' + pythonTriple(platform) + '-install_only\\.tar\\.gz$');
   for (const r of (releases || []).slice().sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))) {
     const hits = (r.assets || []).filter((a) => re.test(a.name)).sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }));
     if (hits[0]) return { name: hits[0].name, url: hits[0].browser_download_url, size: hits[0].size || 0, sha256: /^sha256:([0-9a-f]{64})$/i.test(hits[0].digest || '') ? hits[0].digest.slice(7).toLowerCase() : null, tag: r.tag_name };
@@ -52,4 +54,4 @@ function pickPython(releases, series) {
 }
 const llamaSourceUrl = (tag) => 'https://github.com/' + C.LLAMA_REPO + '/archive/' + (/^[0-9a-f]{40}$/.test(tag) ? '' : 'refs/tags/') + tag + '.zip';
 
-module.exports = { pickLlamaAsset, pickGguf, pickPython, hfResolveUrl, hfTreeUrl, llamaSourceUrl, tagNumber };
+module.exports = { pickLlamaAsset, pickGguf, pickPython, pythonTriple, hfResolveUrl, hfTreeUrl, llamaSourceUrl, tagNumber };

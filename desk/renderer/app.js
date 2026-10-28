@@ -573,7 +573,7 @@
   desk.runtime.onState(paintRuntime);
   desk.runtime.state().then(paintRuntime);
 
-  // Windows sleep: the first time, explain and download the sleep runtime (Python + torch + weights), then sleep
+  // Built-in sleep (Windows, built-in Mac): the first time, explain and download the sleep runtime (Python + torch + weights), then sleep
   desk.sleepInstall.onNeeded((plan) => { closeSleepSheet(); $('#ssText').textContent = plan.text; $('#ssBarWrap').hidden = true; $('#ssStatus').textContent = ''; $('#ssGo').disabled = false; $('#sleepSetup').hidden = false; $('#ssGo').focus(); });
   desk.sleepInstall.onProgress((p) => { if (p.stage === 'error') { $('#ssStatus').textContent = p.label; $('#ssGo').disabled = false; return; } $('#ssBarWrap').hidden = false; $('#ssBar').style.width = (p.pct || 0) + '%'; $('#ssStatus').textContent = p.label + (p.pct ? ' (' + p.pct + '%)' : '…'); });
   $('#ssCancel').onclick = () => { $('#sleepSetup').hidden = true; };
@@ -869,7 +869,7 @@
       { key: 'sleepApp', type: 'text', label: 'Sleep app folder', help: 'Leave empty for ~/learner-ops/sleepmode/app.', ph: '~/learner-ops/sleepmode/app', wide: true },
       { key: 'sleepPython', type: 'text', label: 'Sleep Python', help: 'Leave empty to pick the first python found: sleepmode/venv312, learner-ops/.venv, Homebrew, then python3.', ph: 'python3', wide: true },
       { key: 'sleepPauseGlims', type: 'toggle', label: 'Hourly check-in while asleep', help: 'Once an hour Glim wakes with its old model, runs any Glims that are due and checks your mail and calendar. Otherwise the Glims wait and catch up after you wake it.' },
-      { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Windows. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
+      { key: 'sleepCheckinMins', type: 'number', label: 'Minutes between check-ins', help: 'Built-in model only. A check-in happens at the next training break after this (10 to 720).', min: 10, max: 720 },
       { key: 'awakeCheckinMins', type: 'number', label: 'Minutes between awake check-ins', help: 'While Glim is awake and you are away from the chat, a quick read-only look at mail, calendar, things Glim is tracking and the model server. It speaks up only if something needs you. 0 turns it off (0 to 720).', min: 0, max: 720 },
       { key: 'sleepCheckinTask', type: 'text', label: 'Check-in task', help: 'What Glim does at each check-in. Reply NOTHING means nothing needs you.', wide: true },
       { key: 'autoSleep', type: 'toggle', label: 'Sleep when idle at night', help: 'Only when no run is active, the gateway is idle and the Glim window is not in front.' },
@@ -962,7 +962,7 @@
   function buildSettings() {
     const col = $('#settingsCol'); col.textContent = '';
     const gt = gate();
-    // gated rows: Windows has no Sleep group and no Mac permissions card; say so in plain words instead
+    // gated rows: Windows has no Mac permissions card; say so in plain words instead
     const groups = SCHEMA.map((g) => {
       if (g.group === 'Sleep' && gt.sleepUnavailable) return { group: g.group, rows: [{ type: 'note', label: 'Sleep', help: gt.sleepNote }] };
       if (g.group === 'Sleep') return { group: g.group, rows: g.rows.filter((r) => (gt.sleepWindows ? r.key !== 'sleepApp' && r.key !== 'sleepPython' : r.key !== 'sleepOnlyPlugged')) };
@@ -1102,7 +1102,7 @@
   (async () => {
     info = await desk.info();
     document.body.classList.add(info.platform);
-    if (!gate().showSleepButton) $('#btnSleep').hidden = true; // hidden on a Windows PC and on a Mac without Ben's assistant (Sleep runs on Ben's Macs for now); the File menu item is left out there too
+    if (!gate().showSleepButton) $('#btnSleep').hidden = true; // every platform sleeps now; kept for a future gate
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
     CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     DictateUI.init({ platform: plat(), popts: popts(), blocked: () => Onboard.isOpen() || !$('#settings').hidden });

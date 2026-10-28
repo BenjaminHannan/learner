@@ -174,6 +174,7 @@ class NightExportTests(unittest.TestCase):
             self.assertEqual(seen[0][:2], ("/some/llama.cpp", "/some/hf"))
             self.assertEqual(seen[0][2], str(env.paths.adapter))      # the committed adapter, after the move
             write_raw(env.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="c2")
+            env.cfg.gate_min_gain = 0   # about the export, not the gain rule
             sl2 = env.sleeper(env.backend())
 
             def boom(*a):

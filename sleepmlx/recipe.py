@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import itertools
 import json
+import os
 import math
 import random
 import re
@@ -50,6 +51,21 @@ GENERIC_PROMPTS = (
     + ["Give me three fun facts about %s." % t for t in ("the ocean", "jazz", "glaciers", "the internet", "dinosaurs", "coffee")])
 
 
+def dc_total(stats: dict) -> Optional[dict]:
+    """The night's dream-check counts, NREM cards and every REM cycle added up."""
+    parts = [stats.get("dreamcheck")] + [r.get("dreamcheck") for r in stats.get("rem", []) if isinstance(r, dict)]
+    parts = [p for p in parts if isinstance(p, dict) and p.get("n")]
+    if not parts:
+        return None
+    out = {"available": all(p.get("available", True) for p in parts)}
+    for k in ("n", "supported", "contradicted", "unknown", "unchecked", "dropped", "elapsed_s"):
+        out[k] = sum(p.get(k, 0) or 0 for p in parts)
+    reasons = [p.get("reason") for p in parts if p.get("reason")]
+    if reasons:
+        out["reason"] = reasons[0]
+    return out
+
+
 # ---------------------------------------------------------------- config
 @dataclass
 class Config:
@@ -74,12 +90,17 @@ class Config:
     ckpt_every: int = 10
     max_seq_len: int = 640        # training sequences longer than this fall back to closed-book
     harm_max: float = gate_mod.HARM_MAX
+    gate_min_gain: int = gate_mod.MIN_GAIN   # held-out cards the night must add over the adapter it started from (gate.decide)
     verify_tokens: int = 20
     kl_every: int = 1             # KL replay every n-th step (CPU profile: 4)
     gate_n: int = 40              # general questions in the gate
     gate_max_tokens: int = 24
     llama_cpp_dir: Optional[str] = None      # set: export a GGUF LoRA when a night commits (torch backend)
     gguf_base_dir: Optional[str] = None      # the HF base model dir the converter needs
+    dreamcheck: bool = True                  # check the night's Q&A dreams against the diary before training (dreamhook.py)
+    dreamcheck_share: float = 0.10           # at most this share of the night's budget goes to it (the rest stay unchecked, kept)
+    llama_server: Optional[str] = None       # set with base_gguf: check the exported adapter inside llama-server (served.py)
+    base_gguf: Optional[str] = None          # the GGUF the daytime model serves (must be the same base as the profile)
     # Extra sources (lessons.py). Not part of ab_ob_b4_nb: they only add cards to the same pool; every setting above is unchanged.
     use_lessons: bool = True      # post-mortems of the day's failures -> lesson cards (and corrections retire the fact they replace)
     max_lessons: int = 8          # lessons written per night (x work scale)
@@ -219,12 +240,16 @@ class GenCache:
 
 
 def next_day(week: dict, st: dict) -> Optional[Tuple[int, str]]:
-    """The oldest day not slept yet. A slept day with at least RESLEEP_TURNS new turns since (the Desk was used after the night) counts as new again."""
+    """The oldest day not slept yet. A slept day with at least RESLEEP_TURNS new turns since (the Desk was used after the night) counts as new again.
+    A day already found too small with the same turns ("small") is passed over, so a thin day never blocks the days after it (its cards
+    stay in items.json and are trained with a later night's)."""
     dates = week.get("dates", {})
     for k in sorted(dates, key=int):
         date = dates[k]
         n = sum(1 for t in week["diary"] if t["role"] == "user" and t["day"] == int(k))
         if date not in st.get("slept_days", []):
+            if st.get("small", {}).get(date) == n:
+                continue
             return int(k), date
         if n >= st.get("slept_turns", {}).get(date, 10 ** 9) + RESLEEP_TURNS:
             return int(k), date
@@ -239,6 +264,8 @@ class Sleeper:
         self.sec_per_batch_tok = None   # seconds per generated token per batch (measured)
         self.t_step = None
         self.exporter = None            # tests inject a fake exporter
+        self.served_checker = None      # and a fake served check
+        self.dream_checker = None       # and a fake dream checker: item -> verdict
         self.leak = {norm(q) for q, _ in gate_mod.GENERAL_QA}
         self.today = lambda: _date.today().isoformat()   # expiry of tracked items is checked against the real date (tests pin it)
 
@@ -463,6 +490,45 @@ class Sleeper:
         st["items"] = len(need)
         return done
 
+    def check_dreams(self, rows, kind: str) -> dict:
+        """Dream check (dreamhook.py): drop CONTRADICTED Q&A dreams. rows: (owner, q, a), owner an Item (NREM card) or a rem_pool entry.
+        An item whose every new Q&A card is contradicted loses its new paraphrases too (the fact itself is suspect)."""
+        from . import dreamhook
+        cfg, N = self.cfg, self.N
+        if not cfg.dreamcheck or not rows:
+            return {"available": False, "reason": "turned off (dreamcheck=False)", "n": len(rows), "unchecked": len(rows)} if rows else {"n": 0}
+        B = cfg.night_budget_s or self.clock.budget_s
+        spent = N.setdefault("dc_spent_s", 0.0)
+        budget = max(0.0, min(cfg.dreamcheck_share * B - spent, self.clock.left() - 120.0))
+        model = dreamhook.LocalChat(self.be, getattr(self.R, "tok", None), self.prof, adapter=False)
+        src = lambda o: self.diary.label(self.diary.containing(o.subj, o.obj, N["day"])[-4:]) if isinstance(o, Item) else ""   # noqa: E731
+        r = dreamhook.check([{"q": q, "a": a, "source": src(o)} for o, q, a in rows], model, str(self.paths.diary_dir), budget,
+                            now=self.clock.now, checker=self.dream_checker, cache=N.setdefault("dc_cache", {}), log=self.log)
+        N["dc_spent_s"] = spent + r["stats"].get("elapsed_s", 0.0)
+        bad = {k for k, v in r["verdicts"].items() if v == "CONTRADICTED"}
+        if bad:
+            gone = set()
+            for o, q, a in rows:
+                if dreamhook.item_id(q, a) not in bad:
+                    continue
+                if isinstance(o, Item):
+                    o.qa = [x for x in o.qa if not (x[0] == q and x[1] == a)]
+                    if not o.qa:
+                        o.para = []
+                else:
+                    gone.add(id(o))
+            if gone:
+                self.rem_pool = [x for x in self.rem_pool if id(x) not in gone]
+        st = dict(r["stats"], kind=kind, dropped=len(bad))
+        self.log("[night] dream check (%s): %s" % (kind, st))
+        try:
+            with open(str(self.paths.home / "dreamcheck.jsonl"), "a") as f:
+                for o, q, a in rows:
+                    f.write(json.dumps({"night": N["date"], "kind": kind, "q": q, "a": a, "verdict": r["verdicts"].get(dreamhook.item_id(q, a))}) + "\n")
+        except OSError:
+            pass
+        return st
+
     def says_wrong(self, it: Item, text: str) -> bool:
         """Does a card text for `it` mention a value a correction said is wrong for one of its names (newest wins)?"""
         vals = (self.wrong.get(norm(it.subj), set()) | self.wrong.get(norm(it.obj), set())) - {norm(it.subj), norm(it.obj)}
@@ -616,13 +682,16 @@ class Sleeper:
 
     def split_holdout(self, fresh: List[Item], d: int, st: Counter) -> None:
         """Hold out ~holdout_frac of tonight's new cards (Q&A only, never trained on). An item keeps at least 2 trainable cards, so
-        its fact is still taught by other wordings and the other direction: the quiz then tests paraphrase and reverse."""
+        its fact is still taught by other wordings and the other direction: the quiz then tests paraphrase and reverse. On a small
+        night where no fact has 3 cards, a fact keeps at least 1 (a paraphrase) instead."""
         total = sum(len(it.para) + len(it.qa) for it in fresh)
         want = int(round(self.cfg.holdout_frac * total))
         if total >= self.cfg.min_cards:
             want = max(want, 1)
-        order = sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 3),
-                       key=lambda it: hashlib.sha1((str(self.cfg.seed) + it.key).encode()).hexdigest())
+        key = lambda it: hashlib.sha1((str(self.cfg.seed) + it.key).encode()).hexdigest()   # noqa: E731
+        order = sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 3), key=key)
+        if not order:   # a small night (one or two cards per fact): still hold some out, or the gate has nothing to check and undoes it
+            order = sorted((it for it in fresh if len(it.qa) >= 1 and len(it.para) + len(it.qa) >= 2), key=key)
         n = 0
         for it in order:
             if n >= want:
@@ -906,6 +975,7 @@ class Sleeper:
             E = [it for it in self.items.values() if self.elig(it)]
             st = Counter()
             fresh = self.dream(d, E, st)
+            st_all["dreamcheck"] = self.check_dreams([(it, q, a) for it in fresh for q, a in it.qa], "nrem")
             if "holdout_done" not in N:
                 self.split_holdout(fresh, d, st)
                 N["holdout_done"] = True
@@ -959,14 +1029,16 @@ class Sleeper:
             self.be.load_adapter(self.paths.work_adapter)
         else:
             self.be.load_adapter(self.paths.adapter if self.paths.adapter.exists() else None)
+        if "pre" in N and (N["pre"] or {}).get("grader") != gate_mod.GRADER and "total_steps" not in N:
+            del N["pre"]   # measured by an older grader before training started: measure again
         if "pre" not in N:
             self.clock.check(60)
             held = [h for it in self.items.values() for h in it.held if h["night"] == d]
             N["held_n"] = len(held)
-            N["pre"] = gate_mod.score_recall(self.be, self.R, held, adapter=True)
+            N["pre"] = dict(gate_mod.score_recall(self.be, self.R, held, adapter=True), grader=gate_mod.GRADER)
             if not self.paths.gate_base.exists():
                 flags = gate_mod.score_general(self.be, self.R, adapter=False, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-                write_json(self.paths.gate_base, {"flags": flags, "score": gate_mod.pct(flags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n})
+                write_json(self.paths.gate_base, {"flags": flags, "score": gate_mod.pct(flags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n, "grader": gate_mod.GRADER})
             self.save_night()
         if "total_steps" not in N:
             n_act = sum(1 for it in E if (it.para or it.qa) and it.kind == "fact")   # night length planned from facts only, as before; extra cards share the steps
@@ -993,6 +1065,8 @@ class Sleeper:
             if kind == "r" and ci not in N["rem_done"]:
                 st = Counter()
                 self.rem(E, d, ci, st)
+                new = [x for x in self.rem_pool if x.get("night") == d and x.get("cycle") == ci]
+                st["dreamcheck"] = self.check_dreams([(x, x["q"], x["a"]) for x in new], "rem")
                 N["rem_done"].append(ci)
                 N["stats"].setdefault("rem", []).append(dict(st))
                 self.save_items()
@@ -1034,12 +1108,14 @@ class Sleeper:
         post = gate_mod.score_recall(self.be, self.R, held, adapter=True)
         base = read_json(P_.gate_base, {}) or {}
         flags = gate_mod.score_general(self.be, self.R, adapter=True, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-        bflags = base.get("flags") if base.get("n", 40) == cfg.gate_n and len(base.get("flags", [])) == len(flags) else None
-        if bflags is None:   # recorded for another question set (profile changed): record the base again now (adapter off)
+        bflags = base.get("flags") if (base.get("n", 40) == cfg.gate_n and len(base.get("flags", [])) == len(flags)
+                                       and base.get("grader") == gate_mod.GRADER) else None
+        if bflags is None:   # recorded for another question set or by another grader: record the base again now (adapter off)
             bflags = gate_mod.score_general(self.be, self.R, adapter=False, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-            write_json(P_.gate_base, {"flags": bflags, "score": gate_mod.pct(bflags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n})
+            write_json(P_.gate_base, {"flags": bflags, "score": gate_mod.pct(bflags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n, "grader": gate_mod.GRADER})
         j = gate_mod.judge(bflags, flags, cfg.harm_max)
-        reasons = [] if j["harm_ok"] else ["general questions dropped %.1f points (max %.1f)" % (j["harm"], cfg.harm_max)]
+        pre = N.get("pre") if (N.get("pre") or {}).get("grader") == gate_mod.GRADER else None   # an older grader's score is not comparable
+        reasons = gate_mod.decide(j, pre, post, cfg.gate_min_gain)
         quiz = post["recall"]
         reverted = bool(reasons)
         if reverted:   # undo the night: the committed adapter stays; memory goes back to it
@@ -1060,6 +1136,8 @@ class Sleeper:
                     ok, msg = False, "%s: %s" % (type(e).__name__, e)
                 res["gguf"] = {"ok": ok, "message": msg}
                 self.log("[night] gguf export: %s %s" % ("ok" if ok else "FAILED", msg))
+                if ok:
+                    self._after_export(P_.home / "adapter.gguf", res)
         self.state["nights"] += 1
         if N["date"] not in self.state["slept_days"]:
             self.state["slept_days"].append(N["date"])
@@ -1071,7 +1149,7 @@ class Sleeper:
         res.update(status="done", quiz=quiz, harm=j["harm"], general=j["general"], general_base=j["general_base"], reverted=reverted,
                    revert_reason=reasons, recall_pre=(N.get("pre") or {}).get("recall"), held_out=post["n"], recall_by_dir=post["by_dir"],
                    steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""),
-                   lessons=list(N.get("lessons", [])))
+                   lessons=list(N.get("lessons", [])), dreamcheck=dc_total(N["stats"]))
         self.append_night(res, extra={"stats": N["stats"], "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"], "lessons": res["lessons"],
                                       "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")})
         N["phase"] = "done"
@@ -1080,6 +1158,49 @@ class Sleeper:
             (P_.home / "dry_gen_cache.jsonl").unlink()
         except OSError:
             pass
+
+    def _after_export(self, gguf: Path, res: dict) -> None:
+        """Record the adapter's base next to it (adapter.gguf.json; export_gguf rotated the old record with the old file). The served
+        check (finish_served) runs after the night, once the worker has unloaded the trainer's model: on an 8 GB Mac the fp16 model
+        and a llama-server do not fit together."""
+        from . import export as export_mod
+        cfg = self.cfg
+        write_json(export_mod.sidecar_path(gguf), {"base_hf_id": self.prof.hf_id, "profile": self.prof.name, "base_dir": cfg.gguf_base_dir,
+                                                   "date": self.N.get("date"), "night": self.state.get("nights", 0) + 1, "created": time.time()})
+        if not (cfg.llama_server and cfg.base_gguf):
+            res["served"] = {"ok": None, "reasons": ["not checked: no llama-server configured (SLEEPMLX_LLAMA_SERVER, SLEEPMLX_BASE_GGUF)"]}
+            return
+        d = self.N["day"]
+        held = [{"q": h["q"], "a": h["a"]} for it in self.items.values() for h in it.held if h["night"] == d]
+        self.served_pending = (gguf, held)
+        res["served"] = {"ok": None, "pending": True, "reasons": ["checked after the trainer's model is unloaded"]}
+
+    def finish_served(self, res: dict) -> None:
+        """The served check of tonight's GGUF (served.check_gguf: our own llama-server, adapter on vs off). A GGUF that scores worse, or
+        that the server will not load while the plain model loads fine, is replaced by the previous one. A check that could not run
+        (no memory, port, timeout) changes nothing and says so."""
+        from . import export as export_mod
+        from . import served as served_mod
+        pend, self.served_pending = getattr(self, "served_pending", None), None
+        if not pend:
+            return
+        gguf, held = pend
+        cfg = self.cfg
+        r = (self.served_checker or served_mod.check_gguf)(cfg.llama_server, cfg.base_gguf, str(gguf), held,
+                                                             log=str(self.paths.home / "served_check.log"))
+        res["served"] = r
+        self.log("[night] served check (llama-server, adapter on vs off): %s" % r)
+        if r.get("ok") is False:
+            restored = export_mod.restore_prev(gguf)
+            res["served"]["fallback"] = "previous adapter.gguf" if restored else "plain model (no adapter.gguf)"
+            res["served"]["note"] = "the trained adapter was kept for the next night; the daytime GGUF is the older one"
+        else:
+            try:
+                side = read_json(export_mod.sidecar_path(gguf), {}) or {}
+                side["served"] = r
+                write_json(export_mod.sidecar_path(gguf), side)
+            except OSError:
+                pass
 
     # ---- outputs
     def card_rows(self) -> List[dict]:

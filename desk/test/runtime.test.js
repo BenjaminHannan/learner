@@ -221,7 +221,7 @@ test('system prompt + tools leave plenty of the 8192-token context (about 3.5 ch
 
 // ---- sleep on Windows --------------------------------------------------------------------------------------------------------
 test('sleep worker command: python -m sleepmlx.worker with the env contract and the shipped sleepmlx on PYTHONPATH', () => {
-  const o = { python: 'C:\\R\\python\\python.exe', home: 'C:\\A\\sleep', outFile: 'C:\\A\\sleep\\chunk_out.json', diaryDir: 'C:\\A\\diary\\raw', sleepmlxParent: 'C:\\App\\resources', hfHome: 'C:\\R\\hf', budgetS: 600, practice: [] };
+  const o = { platform: 'win32', python: 'C:\\R\\python\\python.exe', home: 'C:\\A\\sleep', outFile: 'C:\\A\\sleep\\chunk_out.json', diaryDir: 'C:\\A\\diary\\raw', sleepmlxParent: 'C:\\App\\resources', hfHome: 'C:\\R\\hf', budgetS: 600, practice: [] };
   const c = workerCommand(o);
   assert.strictEqual(c.cmd, o.python); assert.deepStrictEqual(c.args, ['-m', 'sleepmlx.worker', '--profile', C.SLEEP_PROFILE]);
   const e = workerEnv(o);

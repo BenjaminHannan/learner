@@ -196,19 +196,6 @@ class Sleep {
   stop() { if (this.timer) clearInterval(this.timer); this.timer = null; }
 }
 
-// A Mac running the built-in model has no sleep runner yet: every question is answered "not available", nothing is ever started,
-// and nothing is written to disk. (Auto-sleep checks available().ok, so it never fires either.)
-class UnavailableSleep extends Sleep {
-  constructor(o) { super(o); this.note = (o && o.note) || 'Sleep is not available on this Mac yet.'; }
-  available() { return { ok: false, app: '', python: '', reason: this.note }; }
-  start() { return { ok: false, error: this.note }; }
-  wake() { return Promise.resolve({ ok: true, via: 'none' }); }
-  statusLine() { return this.note; }
-  needsRuntime() { return false; }
-  currentLora() { return ''; }
-  watch() { /* nothing to watch */ }
-}
-
 function fmtHours(h) { return (Math.round(h * 10) / 10) + ' h'; }
 function pillLine(st) {
   const bits = ['Sleeping'];
@@ -313,4 +300,4 @@ function shouldAutoWake(i) {
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { UnavailableSleep, effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };
+module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours };

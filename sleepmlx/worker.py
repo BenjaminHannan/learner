@@ -34,6 +34,8 @@ def cfg_from_env(env=os.environ, prof=None) -> Config:
     c.who = env.get("SLEEPMLX_WHO", c.who)
     rt = (prof.runtime if prof is not None else {}) or {}
     c.llama_cpp_dir = env.get("SLEEPMLX_LLAMA_CPP_DIR") or rt.get("llama_cpp_dir") or c.llama_cpp_dir
+    c.llama_server = env.get("SLEEPMLX_LLAMA_SERVER") or rt.get("llama_server") or c.llama_server
+    c.base_gguf = env.get("SLEEPMLX_BASE_GGUF") or rt.get("base_gguf") or c.base_gguf
     if prof is not None and prof.model_dir:
         c.gguf_base_dir = prof.expanded_model_dir
     for name, cast in (("SLEEPMLX_NIGHT_BUDGET_S", float), ("SLEEPMLX_SCALE", float), ("SLEEPMLX_MIN_CARDS", int), ("SLEEPMLX_MIN_ITEM_DAYS", int),
@@ -108,6 +110,10 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     guards = guards or Guards(paths, min_free_gb=float(prof.runtime.get("min_free_ram_gb", 1.0)))
     out = {"quiz": None, "steps": 0, "interrupted": False, "profile": prof.name}
     r = guards.reason()
+    if not r and getattr(guards, "_hot", 0):   # one high memory reading: look again before loading the model, not after
+        time.sleep(min(guards.poll_s, 10.0))
+        guards._last = -1e18
+        r = guards.reason()
     if r:
         out.update(interrupted=True, stop_reason=r, message="not started: " + r)
         return out
@@ -115,19 +121,33 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     state = read_json(paths.state, {}) or {}
     resuming = paths.night_json.exists()
     if not resuming and not next_day(week, state) and not only_date:
-        out.update(message="no new diary day to sleep on", days_in_diary=len(week["dates"]), slept=len(state.get("slept_days", [])))
+        out.update(status="no_new_day", message="no new diary day to sleep on", days_in_diary=len(week["dates"]), slept=len(state.get("slept_days", [])))
         return out
     if backend_factory is None and env.get("SLEEPMLX_BACKEND"):   # 'module:function' returning (backend, tokenizer); tests and other runtimes
         import importlib
         mod, _, fn = env["SLEEPMLX_BACKEND"].partition(":")
         backend_factory = getattr(importlib.import_module(mod), fn)
     be, tok = (backend_factory or make_backend)(prof)
+    sl = None
     try:
         clock = Clock(budget, guards)
         sl = Sleeper(be, Renderer(prof, tok), prof, cfg, paths, clock, log)
         res = sl.run(week, dry_run=dry_run, only_date=only_date)
     finally:
         be.close()
+    # the served check starts a llama-server: unload the trainer's model first (an 8 GB Mac cannot hold both)
+    if getattr(sl, "served_pending", None):
+        sl.be = None
+        del be
+        import gc
+        gc.collect()
+        try:
+            import torch
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+        except Exception:
+            pass
+        sl.finish_served(res)
     out.update({k: v for k, v in res.items() if k not in ("steps",)})
     out["steps"] = int(res.get("steps") or 0)
     out["quiz"] = res.get("quiz")
