@@ -183,3 +183,12 @@ test('user name: another user gets their name and they/them in the prompt; Ben g
   assert.ok(/Emma's local assistant/.test(emma) && !/\bBen\b/.test(emma) && !/\bhis\b/.test(emma));
   assert.ok(/Ben's local assistant/.test(ben));
 });
+
+test('pill: with Show Motes off, helper runs read as plain "Glim" and are not listed', () => {
+  const { PillState } = require('../src/pillstate');
+  let show = false; const p = new PillState({ showHelpers: () => show });
+  p.onEvent('main', 'Glim', 't1', { type: 'started' });
+  p.onEvent('h1', 'Email watch', 'th', { type: 'started' }); p.onEvent('h1', 'Email watch', 'th', { type: 'approval', rid: 'r', kind: 'shell', text: 'ls' });
+  let v = p.view(); assert.strictEqual(v.top.name, 'Glim'); assert.deepStrictEqual(v.others, []);
+  show = true; v = p.view(); assert.strictEqual(v.top.name, 'Email watch'); assert.strictEqual(v.others[0].name, 'Glim');
+});

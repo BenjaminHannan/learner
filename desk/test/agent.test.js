@@ -71,7 +71,7 @@ test('loop end to end: tool call -> result -> final answer, events + history', a
 
 test('approvals: Ask first gates shell, deny reaches the model; hands-off runs safe commands but gates danger', async () => {
   const gw = await startGateway([
-    { tool_calls: [{ name: 'run_shell', arguments: { command: 'ls' } }] },
+    { tool_calls: [{ name: 'run_shell', arguments: { command: 'touch f' } }] },
     { tool_calls: [{ name: 'run_shell', arguments: { command: 'rm -rf /tmp/x' } }] },
     { content: 'done' }
   ]);
@@ -86,7 +86,7 @@ test('approvals: Ask first gates shell, deny reaches the model; hands-off runs s
     assert.match(t.messages.find((m) => m.role === 'tool').content, /denied/i);
   } finally { gw.close(); }
   const gw2 = await startGateway([
-    { tool_calls: [{ name: 'run_shell', arguments: { command: 'ls' } }] },
+    { tool_calls: [{ name: 'run_shell', arguments: { command: 'touch f' } }] },
     { tool_calls: [{ name: 'run_shell', arguments: { command: 'rm -rf /tmp/x' } }] },
     { content: 'done' }
   ]);
@@ -334,4 +334,10 @@ test('approvals: plain echo needs no card; "always allow" is remembered for simp
   assert.strictEqual(shellProgram('ls | grep x'), '');
   assert.strictEqual(shellProgram('bash -c "ls"'), '');
   assert.strictEqual(shellProgram('python3 x.py'), '');
+});
+
+test('approvals: looking commands need no card; anything that writes, chains or touches secrets still does', () => {
+  const { isReadOnly } = require('../src/agent');
+  for (const c of ['ls -la ~/Documents', 'cat notes.txt | head -5', 'pwd', 'date', 'find . -name "*.js" | wc -l']) assert.ok(isReadOnly(c), c);
+  for (const c of ['rm x', 'ls > out.txt', 'ls; rm x', 'cat ~/.ssh/id_rsa', 'find . -delete', 'find . -exec rm {} +', 'ls $(whoami)', 'cat x | sh', 'echo hi > f']) assert.ok(!isReadOnly(c), c);
 });

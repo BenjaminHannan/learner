@@ -65,6 +65,19 @@ function parseCheckLoose(text) {
 // ---- helpers (exported for tests) ------------------------------------------------------------
 // a plain echo/printf of text only prints it (the model uses it to narrate): no approval card
 const SAFE_ECHO = /^\s*(?:echo|printf)\s+(?:"[^"`$\\;&|<>]*"|'[^']*'|[\w .,:!?'-]*)\s*$/;
+// commands that only look (list, read, count): no approval card. Pipes between them are fine; anything else (redirects, ;, &&, $(), find -exec) is not.
+const READONLY = new Set(['ls', 'cat', 'pwd', 'date', 'whoami', 'head', 'tail', 'wc', 'grep', 'which', 'df', 'du', 'uptime', 'hostname', 'uname', 'file', 'stat', 'sw_vers', 'sort', 'uniq', 'basename', 'dirname', 'realpath', 'id', 'find', 'echo', 'printf']);
+const SENSITIVE = /\.ssh\b|\.aws\b|\.gnupg\b|keychain|\.env\b|id_rsa|id_ed25519|\.netrc|passw|secret|token|cookies?\b|login data/i;
+function isReadOnly(cmd) {
+  const c = String(cmd || '').trim();
+  if (!c || /[&;<>`$()\n\\]/.test(c) || SENSITIVE.test(c)) return false;
+  return c.split('|').every((st) => {
+    const w = st.trim().split(/\s+/)[0].toLowerCase();
+    if (!READONLY.has(w)) return false;
+    if (w === 'find' && /\s-(exec|execdir|ok|okdir|delete|fprint\w*|fls)\b/.test(st)) return false;
+    return true;
+  });
+}
 // the program a command runs ("ls -la" -> "ls"), or '' when it is a compound command (pipes, &&, ;, redirects): those are never "always allowed"
 function shellProgram(cmd) {
   const c = String(cmd || '').trim();
@@ -583,7 +596,7 @@ class Agent {
         const danger = isDangerous(args.command);
         const prog = shellProgram(args.command);
         if (danger) need = { kind: 'shell', danger: true, text: String(args.command) };
-        else if (!hands && !SAFE_ECHO.test(String(args.command))) need = { kind: 'shell', danger: false, text: String(args.command), always: prog ? 'shell:' + prog : '', alwaysLabel: prog ? '"' + prog + '" commands' : '' };
+        else if (!hands && !SAFE_ECHO.test(String(args.command)) && !isReadOnly(args.command)) need = { kind: 'shell', danger: false, text: String(args.command), always: prog ? 'shell:' + prog : '', alwaysLabel: prog ? '"' + prog + '" commands' : '' };
       } else if (SCREEN_GATED.has(name) && !hands) {
         need = { kind: 'screen', danger: false, text: summaryStart, always: 'screen', alwaysLabel: 'clicks and typing in apps' };
       }
@@ -643,4 +656,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS = {
   alwaysAllow: [],       // actions Ben chose "Always allow" for: 'shell:<program>' and 'screen' (never risky commands)
   goalsAsked: false,     // Glim has asked about long-term goals once, right after first-run setup
   autoUpdateCheck: true, // look for a newer Premonition at launch and every 6 hours (an update still needs your click)
-  showSparks: false,     // list Sparks (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
+  showSparks: false,     // list Motes (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
   highContrast: false,    // stronger text and borders
   onboarded: false,       // first-run setup (Meet your Glims) has been finished or skipped
   uses: [],               // what Ben wants Glims for (ids from renderer/uses.js)
