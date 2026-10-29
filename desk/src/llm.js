@@ -71,8 +71,11 @@ async function streamChat(opts) {
   const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal });
   if (!res.ok) {
     let t = '';
-    try { t = (await res.text()).slice(0, 400); } catch (e) { /* ignore */ }
-    throw new Error('Gateway error ' + res.status + (t ? ': ' + t : ''));
+    try { t = (await res.text()).slice(0, 16384); } catch (e) { /* ignore */ }
+    const error = new Error('Gateway error ' + res.status + (t ? ': ' + t.slice(0, 400) : ''));
+    error.status = res.status;
+    try { error.details = JSON.parse(t); } catch (e) { /* an unstructured error is not a typed overflow */ }
+    throw error;
   }
   let content = '';
   let reasoning = '';

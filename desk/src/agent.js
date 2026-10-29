@@ -7,6 +7,7 @@ const { usesLine } = require('../renderer/uses');
 const creative = require('./creative');
 const { EvidenceRegistry } = require('./evidence');
 const { looksSecret } = require('./memory');
+const budget = require('./context-budget');
 
 const COMPACT_TOKENS = 24000;
 const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it is among the newest messages
@@ -242,26 +243,33 @@ function plainLines(msgs, a, b) {
   return out;
 }
 // The newest whole lines of [a, b) that fit SUMMARY_IN_CHARS, and the index of the first message they cover (a when all of it fits).
-function plainTail(msgs, a, b) {
+function plainTail(msgs, a, b, fits) {
   const lines = plainLines(msgs, a, b);
-  let k = lines.length, len = 0;
-  while (k > 0 && (k === lines.length || len + lines[k - 1].line.length + 1 <= SUMMARY_IN_CHARS)) len += lines[--k].line.length + 1;
-  return { text: lines.slice(k).map((x) => x.line).join('\n').slice(-SUMMARY_IN_CHARS), start: k > 0 ? lines[k].i : a };
+  let k = lines.length, len = 0, text = '';
+  while (k > 0) {
+    const line = lines[k - 1].line;
+    const candidate = line + (text ? '\n' + text : '');
+    if (len + line.length + 1 > SUMMARY_IN_CHARS || (fits && !fits(candidate))) break;
+    text = candidate; len += line.length + 1; k--;
+  }
+  return { text, start: k > 0 ? (k === lines.length ? b : lines[k].i) : a };
 }
 function plainText(msgs, a, b) { return plainTail(msgs, a, b).text; }
 
-// One summary call on the fast model: a part of the chat in, at most 8 short lines out ('' if it fails). Each part is summarized on its
-// own and the lines are appended (keepNewest): Ben Oct 29, a small model asked to merge a summary with new text kept only the newest part
-// (his work hours, piano and an Nov 1 deadline were lost while "Glim updated an agent" stayed twice).
+const SUMMARY_SYSTEM = 'Summarize this part of a chat between Ben and his assistant Glim in at most 8 short plain lines. Keep facts about Ben and the people he mentions, what he wants, decisions, plans and deadlines with their dates and times, open questions, and anything Glim promised. Skip Glim\'s routine actions (started or updated an agent, ran a tool). Start each line with its date when known. No preamble.';
+const summaryMessages = (text) => [{ role: 'system', content: SUMMARY_SYSTEM }, { role: 'user', content: SUMMARY_TAG + '\nChat:\n' + text }];
+function summaryFits(s, text) {
+  const limit = budget.contextLimit(s, s.modelFast || s.model);
+  return !limit || budget.requestTokens(summaryMessages(text), []) <= limit - SUMMARY_MAX_TOKENS - 512;
+}
+// The caller selects complete lines before invoking this; never silently drop
+// part of an excerpt after its message indices have been marked as covered.
 async function summaryCall(s, signal, text) {
+  if (!summaryFits(s, text)) return '';
   try {
-    const r = await streamChat({
-      gatewayUrl: s.gatewayUrl, model: s.modelFast || s.model, maxTokens: SUMMARY_MAX_TOKENS, signal, apiKey: s.apiKey, tools: [],
-      messages: [
-        { role: 'system', content: 'Summarize this part of a chat between Ben and his assistant Glim in at most 8 short plain lines. Keep facts about Ben and the people he mentions, what he wants, decisions, plans and deadlines with their dates and times, open questions, and anything Glim promised. Skip Glim\'s routine actions (started or updated an agent, ran a tool). Start each line with its date when known. No preamble.' },
-        { role: 'user', content: SUMMARY_TAG + '\nChat:\n' + text }
-      ]
-    });
+    const model = s.modelFast || s.model;
+    const messages = summaryMessages(text);
+    const r = await streamChat({ gatewayUrl: s.gatewayUrl, model, maxTokens: SUMMARY_MAX_TOKENS, signal, apiKey: s.apiKey, tools: [], messages });
     return String(r.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim().slice(0, 2000);
   } catch (e) { return ''; }
 }
@@ -295,9 +303,14 @@ async function rollupGapStep(thread, s, signal) {
   if (!Array.isArray(g)) { if (thread.ctxGaps) { delete thread.ctxGaps; return true; } return false; }
   const lines = plainLines(thread.messages || [], g[0], g[1]);
   if (!lines.length) { done(); return true; }
-  let n = 0, len = 0;
-  while (n < lines.length && (n === 0 || len + lines[n].line.length + 1 <= SUMMARY_IN_CHARS)) len += lines[n++].line.length + 1;
-  const sum = await summaryCall(s, signal, lines.slice(0, n).map((x) => x.line).join('\n').slice(0, SUMMARY_IN_CHARS));
+  let n = 0, len = 0, text = '';
+  while (n < lines.length) {
+    const line = lines[n].line, candidate = text ? text + '\n' + line : line;
+    if (len + line.length + 1 > SUMMARY_IN_CHARS || !summaryFits(s, candidate)) break;
+    text = candidate; len += line.length + 1; n++;
+  }
+  if (!n) return false; // even one whole line cannot fit; retain the gap
+  const sum = await summaryCall(s, signal, text);
   if ((signal && signal.aborted) || !sum) return false;
   thread.ctxOlder = keepNewest((thread.ctxOlder ? thread.ctxOlder + '\n' : '') + sum, OLDER_KEEP_CHARS);
   if (n < lines.length) thread.ctxGaps = [[lines[n].i, g[1]], ...gaps.slice(1)]; else done();
@@ -306,13 +319,14 @@ async function rollupGapStep(thread, s, signal) {
 
 // Move thread.ctxFrom (where the model's window starts) forward to a turn of Ben's when the window is over `limit`.
 // Returns the old start when it moved (the summary then covers [old start, new start)), else -1.
-function trimWindow(thread, limit) {
+function trimWindow(thread, limit, protectedIndex) {
   const msgs = thread.messages;
   let from = Math.min(thread.ctxFrom || 0, msgs.length);
   if (estimateTokens(msgs.slice(from)) <= limit) return -1;
   const isTurn = (m) => m && m.role === 'user' && typeof m.content === 'string' && !m.content.startsWith(CHECK_MARK) && !m.content.startsWith('[older screenshot omitted]') && !m.content.startsWith('[screenshot');
   let lastTurn = -1;
-  for (let i = msgs.length - 1; i > from && lastTurn < 0; i--) if (isTurn(msgs[i])) lastTurn = i;
+  const lastEligible = Number.isInteger(protectedIndex) ? Math.min(protectedIndex, msgs.length - 1) : msgs.length - 1;
+  for (let i = lastEligible; i > from && lastTurn < 0; i--) if (isTurn(msgs[i])) lastTurn = i;
   if (lastTurn < 0) return -1;
   let cut = lastTurn;
   for (let i = from + 1; i < lastTurn; i++) if (isTurn(msgs[i]) && estimateTokens(msgs.slice(i)) <= limit * CONTEXT_KEEP) { cut = i; break; }
@@ -552,6 +566,8 @@ class Agent {
       if (!hidden) thread.items.push({ t: 'user', text: shown || text, ts: Date.now() }); // a hidden turn (Glim relaying a helper's report) shows no bubble from Ben
     };
     repairHistory(thread.messages);
+    const taskStart = thread.messages.length;
+    this.taskStart = taskStart;
     pushUser(userText, opts && opts.display, opts && opts.hidden);
     let creativeTurn = !(opts && (opts.hidden || opts.display));
     save();
@@ -587,15 +603,20 @@ class Agent {
         // measured on the model's window, not the whole stored chat: a long chat was over the limit on every step, so the tool results of
         // the task in progress were stubbed after two (same message objects, so stubbing the window stubs the stored chat)
         { const win = thread.messages.slice(Math.min(thread.ctxFrom || 0, thread.messages.length));
-          if (estimateTokens(win) > (Number(s.compactTokens) || COMPACT_TOKENS) && compactMessages(win, 2, 4)) this.emit({ type: 'compacted' }); }
+          if (!budget.contextLimit(s, this.stepModel(s)) && estimateTokens(win) > (Number(s.compactTokens) || COMPACT_TOKENS) && compactMessages(win, 2, 4)) this.emit({ type: 'compacted' }); }
         dropOldImages(thread.messages);
         await this.yieldToBen(signal);
-        const was = trimWindow(thread, Number(s.contextTokens) || CONTEXT_TOKENS);
+        const smallCap = budget.contextLimit(s, this.stepModel(s));
+        // The history estimator uses chars/3.5; the full-request estimator uses
+        // a more conservative chars/2.5 and includes the system/tools template.
+        const overhead = smallCap ? budget.requestTokens([{ role: 'system', content: SYSTEM_PROMPT }], this.toolDefs()) : 0;
+        const historyBudget = smallCap ? Math.max(1, Math.floor((smallCap - budget.REPLY_RESERVE - 512 - overhead) * 2.5 / 3.5)) : Number(s.contextTokens) || CONTEXT_TOKENS;
+        const was = trimWindow(thread, historyBudget, smallCap ? taskStart : undefined);
         if (was >= 0) {
           // the notes copy this task relied on (memAt) can fall out of the new window: put the notes in the window's first turn (it is
           // re-read anyway now that the window moved), so Glim does not lose Ben's saved notes for the rest of the task
           const m0 = thread.messages[thread.ctxFrom];
-          if (this.memBlock && !(thread.memAt >= thread.ctxFrom) && m0 && m0.role === 'user' && typeof m0.content === 'string' && !m0.content.includes(this.memBlock)) {
+          if (!smallCap && this.memBlock && !(thread.memAt >= thread.ctxFrom) && m0 && m0.role === 'user' && typeof m0.content === 'string' && !m0.content.includes(this.memBlock)) {
             m0.content = this.memBlock + '\n' + m0.content; thread.memAt = thread.ctxFrom; thread.memSig = this.memBlock;
           }
           await this.summarizeLeftOut(thread, s, signal, was); save(); this.emit({ type: 'compacted' });
@@ -625,10 +646,10 @@ class Agent {
           const approaches = step === 1 && creativeTurn ? await creative.propose({ text: userText, settings: s, model: this.stepModel(s), signal: rc.signal }) : null;
           proposalMs = Date.now() - proposalStart;
           if (rc.signal.aborted) throw new Error('request interrupted');
-          res = await streamChat({
+          const request = {
             gatewayUrl: s.gatewayUrl,
             model: this.stepModel(s),
-            messages: creative.withApproaches(this.requestMessages(thread), approaches),
+            messages: creative.withApproaches(this.requestMessages(thread, !!budget.contextLimit(s, this.stepModel(s))), approaches),
             tools: this.toolDefs(),
             signal: rc.signal,
             apiKey: s.apiKey,
@@ -638,7 +659,8 @@ class Agent {
             },
             onReasoning: onThink,
             onToolDelta: () => { cap.tool = true; }
-          });
+          };
+          res = await this.requestWithBudget(thread, s, request);
         } catch (e) {
           clearTimeout(cap.timer);
           signal.removeEventListener('abort', onRun); this.reqCtl = null;
@@ -657,7 +679,7 @@ class Agent {
               save();
               continue;
             }
-            if (!res) continue;   // the forced reply came back empty: the run goes on (step 2, no cap), rather than ending on the cut request's abort
+            if (!res && err === e) continue;   // the forced reply came back empty: the run goes on (step 2, no cap), rather than ending on the cut request's abort
           }
           if (!res) {
             failure = String(err && err.message || err);
@@ -764,7 +786,7 @@ class Agent {
   async summarizeLeftOut(thread, s, signal, from) {
     let sl = ''; try { sl = this.o.sleepInfo ? this.o.sleepInfo() || '' : ''; } catch (e) { sl = ''; }
     noteOldGap(thread, from);   // a thread summarized by an older build: its unread part first
-    const { text, start } = plainTail(thread.messages, from, thread.ctxFrom);
+    const { text, start } = plainTail(thread.messages, from, thread.ctxFrom, (candidate) => summaryFits(s, candidate));
     const sum = text ? await summaryCall(s, signal, text) : '';
     if (signal && signal.aborted) { thread.ctxFrom = from || undefined; return; }   // stopped mid-summary: keep the old window, summarize next time
     thread.ctxV = CTX_V;
@@ -779,11 +801,11 @@ class Agent {
   // of that thinking, thinks briefly and writes a one- or two-sentence reply (Ben Oct 29: "the short reply should think"). [continue] at its end, or a plain "I'll ..." that does not wait on
   // Ben, means it still has steps to do: {plan: true} and the run goes on. Otherwise the reply is the turn's answer. A tool call is just used.
   async replyAfterCap(thread, s, signal, secs, thinking) {
-    const messages = [...this.requestMessages(thread), { role: 'user', content: capNote(secs, String(thinking || '').trim().slice(-CAP_KEEP_CHARS)) }];
+    const messages = [...this.requestMessages(thread, !!budget.contextLimit(s, s.modelMain || s.model)), { role: 'user', content: capNote(secs, String(thinking || '').trim().slice(-CAP_KEEP_CHARS)) }];
     const ctl = new AbortController(), onRun = () => ctl.abort(), timer = setTimeout(() => ctl.abort(), CAP_REPLY_SECS * 1000);
     signal.addEventListener('abort', onRun, { once: true });
     let r, got = '';
-    try { r = await streamChat({ gatewayUrl: s.gatewayUrl, model: s.modelMain || s.model, messages, tools: this.toolDefs(), signal: ctl.signal, apiKey: s.apiKey, maxTokens: CAP_REPLY_TOKENS, onText: (d) => { got += d; }, onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) }); }
+    try { r = await this.requestWithBudget(thread, s, { gatewayUrl: s.gatewayUrl, model: s.modelMain || s.model, messages, tools: this.toolDefs(), signal: ctl.signal, apiKey: s.apiKey, maxTokens: CAP_REPLY_TOKENS, onText: (d) => { got += d; }, onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) }); }
     catch (e) { if (signal.aborted || !ctl.signal.aborted) { if (signal.aborted) return null; throw e; } r = { content: got, toolCalls: [], reasoning: '', firstTokenMs: 0 }; }   // its own timer: keep what it wrote
     finally { clearTimeout(timer); signal.removeEventListener('abort', onRun); }
     const tagged = /\[continue\]/i.test(r.content || '');
@@ -807,14 +829,52 @@ class Agent {
 
   // Messages for one request: constant system prompt + the stored history from ctxFrom (each task's memory snapshot is already in its user turn),
   // with the summary note in front of the first kept turn.
-  requestMessages(thread) {
+  requestMessages(thread, preserveMemory) {
     const from = Math.min(thread.ctxFrom || 0, thread.messages.length);
     // Ben Oct 29: an older chat held many replies that claimed steps no tool ever did, and the model kept copying them (it even listed
     // made-up assignments). Such a reply (straight after a user turn, claims actions) reaches the model as a plain note instead.
     const msgs = thread.messages.slice(from).map((m, i, a) => (m.role === 'assistant' && !m.tool_calls && !m.plan && i > 0 && a[i - 1].role === 'user' && claimsAction(m.content)
       ? { role: 'assistant', content: PRETEND_NOTE } : cleanMsg(m)));
-    if (from > 0 && msgs[0] && msgs[0].role === 'user' && typeof msgs[0].content === 'string' && thread.ctxNote) msgs[0] = { ...msgs[0], content: thread.ctxNote + '\n' + msgs[0].content };
+    if (from > 0 && msgs[0] && msgs[0].role === 'user' && typeof msgs[0].content === 'string') {
+      if (preserveMemory && this.memBlock && !(thread.memAt >= from) && !msgs[0].content.includes(this.memBlock)) msgs[0] = { ...msgs[0], content: this.memBlock + '\n' + msgs[0].content };
+      if (thread.ctxNote) msgs[0] = { ...msgs[0], content: thread.ctxNote + '\n' + msgs[0].content };
+    }
     return [{ role: 'system', content: SYSTEM_PROMPT }, ...msgs];
+  }
+
+  // Fit each individual model request without changing the saved transcript.
+  // Retry only an explicit native pre-generation overflow and only once.
+  async requestWithBudget(thread, settings, options) {
+    const request = { ...options }, model = request.model;
+    const originalMessages = request.messages;
+    const from = thread.ctxFrom || 0;
+    const start = Number.isInteger(this.taskStart) ? this.taskStart : from;
+    const protectedIndex = Math.max(1, start - from + 1);
+    const retainedContext = [thread.ctxNote, this.memBlock].filter((note) => note && originalMessages.some((m) => typeof m.content === 'string' && m.content.includes(note)));
+    const reserve = request.maxTokens || budget.REPLY_RESERVE;
+    const limit = budget.contextLimit(settings, model);
+    if (limit) request.messages = budget.fitRequest(originalMessages, request.tools, limit - reserve - 512, protectedIndex, retainedContext).messages;
+    let emitted = false;
+    for (const name of ['onText', 'onReasoning', 'onToolDelta']) {
+      const cb = request[name];
+      request[name] = (...args) => { emitted = true; if (cb) cb(...args); };
+    }
+    try { return await streamChat(request); }
+    catch (e) {
+      const overflow = budget.contextOverflow(e);
+      if (!overflow || emitted || (request.signal && request.signal.aborted)) throw e;
+      budget.learnLimit(settings, model, overflow.limit);
+      const currentEstimate = budget.requestTokens(request.messages, request.tools);
+      const target = Math.min(overflow.limit - reserve - 512, Math.floor(currentEstimate * Math.min(0.8, (overflow.limit / overflow.requested) * 0.85)));
+      const retry = budget.fitRequest(request.messages, request.tools, target, protectedIndex - (originalMessages.length - request.messages.length), retainedContext);
+      if (!retry.removed) throw new Error('The current task and required context are too large for this model. Shorten the task or start a new chat.');
+      request.messages = retry.messages;
+      try { return await streamChat(request); }
+      catch (again) {
+        if (budget.contextOverflow(again)) throw new Error('The current task and required context are too large for this model. Shorten the task or start a new chat.');
+        throw again;
+      }
+    }
   }
 
   // One cheap check turn before accepting a final answer on a task that changed things. Same system prompt and tools (cache hit),
@@ -868,15 +928,17 @@ class Agent {
     let verdict = null;
     await this.yieldToBen(signal);
     try {
-      const r = await streamChat({
-        gatewayUrl: s.gatewayUrl, model: s.verifyModel || s.modelFast || VERIFY_MODEL,
-        messages: [...this.requestMessages(thread), { role: 'user', content: CHECK_MESSAGE }],
+      const verifyModel = s.verifyModel || s.modelFast || VERIFY_MODEL;
+      const r = await this.requestWithBudget(thread, s, {
+        gatewayUrl: s.gatewayUrl, model: verifyModel,
+        messages: [...this.requestMessages(thread, !!budget.contextLimit(s, verifyModel)), { role: 'user', content: CHECK_MESSAGE }],
         tools: this.toolDefs(), maxTokens: VERIFY_MAX_TOKENS, signal, apiKey: s.apiKey
       });
       if (!r.toolCalls.length) verdict = parseCheck(r.content) || (!String(r.content || '').trim() && r.reasoning ? parseCheckLoose(r.reasoning) : null);
-    } catch (e) { if (signal.aborted) { end('Check stopped', false); return 'stop'; } }
+    } catch (e) { if (signal.aborted) { end('Check stopped', false); return 'stop'; } end('Check unavailable', false); return 'accept'; }
     if (signal.aborted) { end('Check stopped', false); return 'stop'; }
-    if (!verdict || verdict.ok) { end('Checked its work', true, verdict ? 'VERIFIED' : 'no verdict; accepted'); return 'accept'; }
+    if (!verdict) { end('Check unavailable', false); return 'accept'; }
+    if (verdict.ok) { end('Checked its work', true, verdict ? 'VERIFIED' : 'no verdict; accepted'); return 'accept'; }
     end('Re-checking: ' + short(verdict.reason, 80), true, verdict.reason);
     thread.messages.push({ role: 'user', content: CHECK_MARK + ' Not done yet: ' + verdict.reason + '. Look at the page or screen again, fix it with tools, then answer.' });
     return 'continue';
