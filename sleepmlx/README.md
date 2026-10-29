@@ -45,7 +45,7 @@ One night = one new diary day (days already slept are tracked in `state.json`; a
    a. 40 fixed general questions (facts, arithmetic; `gate.py`). The base model's correctness is recorded the first time (`gate_base.json`); the adapter may not lose more than 3 percentage points (with 40 questions: at most 1 more wrong).
    b. Recall quiz on the held-out cards, closed book, adapter on. `quiz` = recall %.
    If (a) fails the night is undone: the committed adapter stays, the model in memory goes back to it.
-9. **Commit** on pass: `adapter/` becomes the new adapter, the old one moves to `adapter.prev/`.
+9. **Commit** on pass: publish the immutable adapter under `adapters/<night-id>/` and atomically update `adapters.json` with the current and previous paths. The prior adapter and the night's checkpoint stay available throughout promotion.
 
 Flags that equal `ab_ob_b4_nb` (sleepb defaults): work scale s (see below), bsz 16, replay 8, KL weight 1, lr 2e-4, LoRA rank 16 / alpha 32,
 SHY 0.85 / 0.05, 160 items, 30 REM chains, 30 gist dreams (all x s), NREM share 0.80/0.65/0.50/0.35 per cycle, 50% open-book,
@@ -60,14 +60,15 @@ chunk. Steps, cards per fact, item cap, REM chains and gist dreams all scale wit
 Sleep Mode calls the worker once per "hour". The worker stops cleanly, checkpoints, writes `SLEEPMODE_OUT` and exits 0 when:
 the chunk budget (minus a reserve of max(20 s, 5%)) would be exceeded by the next generation batch or training step; SIGTERM/SIGINT; `ASSISTANT_RUNNING` appears; `PAUSE_OTHERS`
 exists; memory pressure is above 1 (Mac `sysctl`; elsewhere psutil available RAM below `min_free_ram_gb`, skipped if psutil is missing).
-State: `night/night.json` (phase, step), `night/gen_cache.jsonl` (every finished generation batch, so a resumed chunk redoes none), `night/adapter/` (checkpoint every 10 steps and on stop).
+State: `night/night.json` is the publication manifest for an immutable `night/checkpoints/<generation>/` containing matching phase, step count, items/REM bookkeeping, and adapter weights. New weights checkpoint every 10 steps, before REM generation, on stop, and at the SHY boundary. Metadata-only generations share immutable weight files where the filesystem supports hard links. Prior generations remain until the night completes; incomplete generations are ignored. An unexpected failure resumes the last published generation, replaying any unsaved updates. A required missing checkpoint fails explicitly instead of restarting from the base.
 The next chunk resumes mid-night. Optimizer state is not saved: AdamW restarts on resume (the learning-rate schedule continues from the saved step).
+The gate decision and final state are journaled before promotion. Restarting finalization preserves the candidate, promotes once, and writes one state increment and one history row. Legacy `night/adapter/` checkpoints and committed `adapter/` folders are readable. GGUF export and the later served-model check remain separate: an interrupted Python export is reported as incomplete and needs an explicit `export-gguf` retry; these tests do not establish recovery through a power loss or a model-server restart.
 `quiz` is `null` in every chunk except the one where the night finishes. When no unslept day is waiting the worker answers in a moment without loading the model.
 
 ## Files
 
 Sleep root: Mac `~/learner-ops/sleepmlx/` (env `SLEEPMLX_HOME`); Windows `%APPDATA%/Premonition/sleep`.
-`adapter/` (`adapters.safetensors` + `adapter_config.json`, mlx_lm format; PEFT format on the torch backend), `adapter.prev/`, `cards.jsonl` (every card with status
+`adapters.json` (current and previous immutable adapter paths), `adapters/<night-id>/` (`adapters.safetensors` + `adapter_config.json`, mlx_lm format; PEFT format on the torch backend), legacy `adapter/` and `adapter.prev/`, `cards.jsonl` (every card with status
 `trained` / `pending` / `held_out`), `nights.jsonl` (one row per night: scale, quiz, harm, steps, stats), `items.json`, `state.json`, `gate_base.json`, `ignore.txt`, `sleepmlx.log`.
 Diary input: Mac `~/learner-ops/diary/raw/YYYY-MM-DD.jsonl` (+ `blobs/<sha1>`; `{"$blob": sha}` content refs are resolved; `k2-helper` records skipped);
 Windows app `%APPDATA%/Premonition/diary/*.jsonl` of `{ts, model, messages:[{role, content}], response:{content}}` (any file name; days are taken from `ts`). Override with `SLEEPMLX_DIARY_DIR`.
@@ -155,7 +156,7 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 1. **Gate**: 40 own questions + held-out recall instead of 100 ARC-Easy questions; no "consolidated items recall" rule (there are no morning probes).
 2. **No morning probes, consolidation or update detection** (`detect`, `now_prompt`, "reconsolidation" of changed facts such as a new address). Priority is days seen x (1 + important + corrected) x 2; an item is eligible after 1 day (`min_item_days`, sleepb needs 2). Facts that change are handled only when Ben corrects Glim (step 4b); a plain change without a correction can still leave both values as cards. Lesson, habit and note cards are not held out, so the recall quiz does not measure them.
 3. **Held-out cards replace sleepb's probe** (sleepb's probe is also an untrained card, but one per fact and used for priority).
-4. **KL replay set**: 34 generic prompts rendered as sequences (KL on all their tokens), not base-model answers to 200 generic prompts.
+4. **KL replay set**: generic prompts rendered as sequences (KL on all their tokens), with normalized exact matches to promotion-gate and independent-monitor questions excluded. Opt-in `SLEEPMLX_REPLAY_MODE=continuation` adds frozen-base answer contexts and masks prompt tokens; the default remains `prompt` until paired retention and learning measurements justify changing it. `SLEEPMLX_REPLAY_MAX_TOKENS` caps teacher generation (default 128); each context also fits `max_seq_len`. Empty responses, generation timeouts, and answers that do not fit fall back to bounded prompt replay. External stops still checkpoint normally. `replay_cache.json` records base-only, temperature-zero provenance, content integrity, source revision, local weight path/size/mtime, tokenizer/config hashes, rendered prompts, template, runtime versions, and token limits. Large weight files are not content hashed. Teacher answers are references, not independently fact-checked truth; text-only generation cannot certify EOS completion, and bounded prefixes are used only as KL contexts. Private diary facts and previous adapter answers never enter this cache.
 5. **No optimizer state across chunks**; the batch stream is re-seeded per step (deterministic), so a resumed night is equivalent but not bit-identical to an uninterrupted one.
 6. **No twist / vary / x4 / efficiency flags** (they are off in `ab_ob_b4_nb`); `--rem-dirs alt`, `--rem-tries 1`, REM writer = the adapter, as defaults.
 7. **MLX specifics**: LoRA through `linear_to_lora_layers` (all layers, 7 projection keys), logits only at target positions, right padding without a mask (causal), generation by `batch_generate` with the stop tag applied after the fact (a thinking stage runs to its cap if the close tag is not a stop token), memory caps by `mx.set_memory_limit`. SHY runs in numpy on the CPU (QR of the thin factors, as sleepb).
@@ -165,6 +166,8 @@ Model environment for torch: `pip install torch transformers peft psutil safeten
 11. Redaction and block stripping are heuristics (passwords, PINs and codes after their keyword, Luhn-valid card numbers, SSNs, API-key shapes, long random tokens).
 
 ## Tests
+
+`python -m sleepmlx.replay_monitor --profile lfm3_cpu --model-dir /cached/model --output /tmp/replay-report.json` runs an isolated, offline paired replay experiment from identical adapter tensors with fresh optimizers. Its 12 retention questions are excluded from replay and promotion-gate questions; four fictional training facts have differently worded held-out probes. The exploratory marks are fixed before training: no previously correct monitor answer lost and at least one held-out fact gained. This small fixture does not establish a quality improvement or enable continuation replay automatically.
 
 `python3 -m unittest discover -s sleepmlx/tests -t .` (Linux, no mlx / torch needed; a fake model learns name pairs from its training examples and advances a fake clock).
 Covers: device order with a mocked torch, profile choice per platform, the `lfm3_mps` profile, the missing-model download command, `recall --server` against a local HTTP stub, GGUF export on commit (and its failure), diary converter (dedupe, tool loops, blob refs, helper records, block stripping, redaction, ignore list, test-mode records, the app's simple format), week-JSON validity against sleepb's `check_week` rules,

@@ -8,6 +8,14 @@ const { buildChatBody, chatUrl } = require('./llm');
 const WARM_MODEL = 'qwen36-fast';
 const WARM_HEADER = 'X-Premonition-Warm';
 
+function completedChat(text) {
+  try {
+    const response = JSON.parse(text);
+    return !response.error && Array.isArray(response.choices) && response.choices.some((choice) =>
+      choice && choice.message && typeof choice.message === 'object' && !Array.isArray(choice.message));
+  } catch (e) { return false; }
+}
+
 // Same builder as real requests; only the user text, stream flag and max_tokens differ (all after the tools/system part).
 function buildWarmBody(tools, model) {
   return buildChatBody({ model: model || WARM_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: '.' }], tools, stream: false, maxTokens: 1 });
@@ -38,8 +46,13 @@ class Warmer {
   start() { this.stopped = false; this._tick(); }
   stop() { this.stopped = true; clearTimeout(this.timer); this.timer = null; }
   // after a settings change that affects the prefix (model, gateway, tool list)
-  rewarm() { this.need = true; if (!this.stopped && !this.warming) { clearTimeout(this.timer); this._tick(); } }
-  gatewayMoved() { this.wasUp = false; this.rewarm(); }
+  rewarm() { this.gatewayMoved(); }
+  gatewayMoved() {
+    this.wasUp = false; this.need = true; this.gen++; this.set('down');
+    if (this.warmAbort) this.warmAbort.abort();
+    clearTimeout(this.timer);
+    if (!this.stopped) { this.timer = setTimeout(() => this._tick(), 0); if (this.timer.unref) this.timer.unref(); }
+  }
 
   // one slow answer (the Mac is busy, the model server is reloading) must not flip the app to Offline: wait up to 6 s, retry once
   async ping() {
@@ -55,24 +68,26 @@ class Warmer {
   }
 
   async warm() {
-    if (this.warming) return; // never two warm requests at once
+    if (this.warming) return false; // never two warm requests at once
     this.warming = true;
     const s = this.o.getSettings();
     const f = this.o.fetch || fetch;
     this.set('warming');
     const t0 = Date.now();
     const ctl = new AbortController();
+    const gen = this.gen; this.warmAbort = ctl;
     const t = setTimeout(() => ctl.abort(), this.o.timeoutMs || 180000);
     try {
       const headers = { 'content-type': 'application/json', [WARM_HEADER]: '1' };
       if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
       const r = await f(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(buildWarmBody(this.o.getTools(), s.modelFast)), signal: ctl.signal });
-      try { await r.text(); } catch (e) { /* body not needed */ }
+      const text = await r.text(); // a disconnected or error response is not evidence the model is ready
       // A server that does not know X-Premonition-Warm just ignores it. If it refuses the request anyway (non-2xx), nothing is warm: no count.
-      if (r.ok === false) return;
+      if (r.ok === false || gen !== this.gen || !completedChat(text)) return false;
       this.warmCount++;
       this.lastWarmMs = Date.now() - t0;
-    } catch (e) { /* the real request will warm it the slow way */ } finally { clearTimeout(t); this.warming = false; }
+      return true;
+    } catch (e) { return false; } finally { clearTimeout(t); this.warming = false; if (this.warmAbort === ctl) this.warmAbort = null; }
   }
 
   async _tick() {
@@ -86,8 +101,21 @@ class Warmer {
     else {
       if (!this.wasUp || this.need) {
         this.wasUp = true; this.need = false;
-        if (this.o.busy && this.o.busy()) this.set('ready'); // a real request is already warming it
-        else await this.warm();
+        if (this.o.busy && this.o.busy()) {
+          this.need = true; this.set('warming'); // check chat readiness once the current task releases the model
+          this.timer = setTimeout(() => this._tick(), this.o.downMs || 5000);
+          if (this.timer.unref) this.timer.unref();
+          return;
+        }
+        if (!await this.warm()) {
+          if (!this.stopped && gen === this.gen) {
+            this.wasUp = false; this.need = true;
+            this.set('down', { error: 'The gateway answered, but the chat model is not ready yet.' });
+            this.timer = setTimeout(() => this._tick(), this.o.downMs || 5000);
+            if (this.timer.unref) this.timer.unref();
+          }
+          return;
+        }
         if (this.stopped || gen !== this.gen) return;
       }
       this.set('ready', { ms: this.lastWarmMs });

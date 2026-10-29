@@ -13,6 +13,7 @@ Grading is gate.correct / gate.recall_hit (strict).
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import socket
 import subprocess
@@ -22,6 +23,133 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence
 
 from . import gate as gate_mod
+from .paths import read_json, write_json
+
+
+def artifact_hash(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def pending_check(paths):
+    from .export import sidecar_path
+    side = read_json(sidecar_path(paths.home / "adapter.gguf"), {}) or {}
+    return isinstance(side, dict) and isinstance(side.get("served_pending"), dict)
+
+
+def _record_finalization(paths, night_id, verdict):
+    """Keep an unfinished night from replaying an obsolete pending result."""
+    from .checkpoint import Checkpoints
+    if not paths.night_json.exists():
+        return
+    checkpoints = Checkpoints(paths)
+    night, items = checkpoints.load()
+    if night.get("id") == night_id and night.get("finalization"):
+        result = night["finalization"]["result"]
+        result["served"] = verdict
+        if not result.get("gguf", {}).get("ok"):
+            result["gguf"] = {"ok": True, "message": str(paths.home / "adapter.gguf")}
+        checkpoints.publish(night, items if items is not None else read_json(paths.items, {}) or {})
+
+
+def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
+    """Finish a generation-bound check, even after night cleanup.
+
+    Save the verdict before applying it. A recorded previous hash lets replay
+    recognize an interrupted rollback without removing the restored adapter.
+    """
+    from . import export as export_mod
+    gguf = paths.home / "adapter.gguf"
+    side_path = export_mod.sidecar_path(gguf)
+    side = read_json(side_path, {}) or {}
+    pending = side.get("served_pending") if isinstance(side, dict) else None
+    if not isinstance(pending, dict):
+        return None
+
+    def deferred(reason):
+        return {"ok": None, "pending": True, "reasons": [reason]}
+
+    if (pending.get("version") != 1 or pending.get("profile") != prof.name
+            or pending.get("base_hf_id") != prof.hf_id
+            or pending.get("base_gguf") != cfg.base_gguf
+            or pending.get("llama_server") != cfg.llama_server):
+        return deferred("not checked: pending adapter belongs to another model or server configuration")
+    if (not isinstance(pending.get("night_id"), str) or not pending["night_id"]
+            or not isinstance(pending.get("sha256"), str) or len(pending["sha256"]) != 64
+            or not isinstance(pending.get("held"), list)):
+        return deferred("not checked: invalid pending adapter descriptor")
+    try:
+        generation = paths.adapter.relative_to(paths.home).as_posix()
+    except (RuntimeError, ValueError):
+        generation = None
+    if (generation != pending.get("adapter") or side.get("night_id") != pending["night_id"]
+            or side.get("profile") != prof.name or side.get("base_hf_id") != prof.hf_id):
+        return deferred("not checked: pending adapter identity no longer matches the current artifact")
+    verdict = pending.get("verdict")
+    previous = export_mod.prev_path(gguf)
+    current_hash = artifact_hash(gguf) if gguf.is_file() else None
+    # The weights may already be restored while the sidecar still has pending.
+    restored = (verdict and verdict.get("ok") is False and
+                ((pending.get("previous_hash") is None and current_hash is None and not previous.exists()) or
+                 (pending.get("previous_hash") == current_hash and not previous.exists())))
+    if restored:
+        old_side = export_mod.sidecar_path(previous)
+        if old_side.exists():
+            os.replace(old_side, side_path)
+        else:
+            side_path.unlink(missing_ok=True)
+        return verdict
+
+    def matches():
+        latest = read_json(side_path, {}) or {}
+        try:
+            generation = paths.adapter.relative_to(paths.home).as_posix()
+        except (RuntimeError, ValueError):
+            generation = None
+        descriptor = latest.get("served_pending") if isinstance(latest, dict) else None
+        return (isinstance(descriptor, dict) and latest.get("night_id") == pending.get("night_id")
+                and latest.get("profile") == prof.name and latest.get("base_hf_id") == prof.hf_id
+                and descriptor.get("sha256") == pending.get("sha256")
+                and generation == pending.get("adapter") and gguf.is_file()
+                and artifact_hash(gguf) == pending.get("sha256"))
+
+    if not matches():
+        return deferred("not checked: pending adapter identity no longer matches the current artifact")
+    if verdict is None:
+        try:
+            verdict = (checker or check_gguf)(cfg.llama_server, cfg.base_gguf, str(gguf), pending["held"],
+                                             log=str(paths.home / "served_check.log"))
+        except Exception as error:
+            return deferred("not checked: %s: %s" % (type(error).__name__, error))
+        if not matches():
+            return deferred("not applied: adapter changed during its served check")
+        if verdict.get("ok") is None:
+            return dict(verdict, pending=True)
+        if verdict.get("ok") is False:
+            verdict = dict(verdict, fallback="previous adapter.gguf" if pending.get("previous_hash") else "plain model (no adapter.gguf)",
+                           note="the trained adapter was kept for the next night; the daytime GGUF is the older one")
+        # Keep serving blocked until sidecar publication or rollback completes.
+        pending["verdict"] = verdict
+        side["served_pending"] = pending
+        write_json(side_path, side)
+    # Persist the matching night result before applying the verdict: a crash
+    # after rollback may remove the sidecar that held the deferred work.
+    _record_finalization(paths, pending["night_id"], verdict)
+    if verdict.get("ok") is False:
+        expected_previous = pending.get("previous_hash")
+        actual_previous = artifact_hash(previous) if previous.is_file() else None
+        if actual_previous != expected_previous:
+            return deferred("not restored: previous adapter changed during its served check")
+        export_mod.restore_prev(gguf)
+    else:
+        side.pop("served_pending", None)
+        side["served"] = verdict
+        write_json(side_path, side)
+    log("[night] served check (llama-server, adapter on vs off): %s" % verdict)
+    return verdict
 
 N_GENERAL = 8
 MAX_HELD = 12

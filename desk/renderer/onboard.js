@@ -27,6 +27,7 @@ window.Onboard = (() => {
   let made = new Map();             // use id -> name of the Glim that exists now (created here, or before)
   let createNote = '';
   let showPermsStep = true;
+  let busy = false;
   let body, nextBtn, backBtn, dots, skipBtn;
 
   const needsPerms = () => !!(info && Platform.needsPermsStep(info.platform, info.e2e));
@@ -38,11 +39,11 @@ window.Onboard = (() => {
     const head = el('div', 'ob-head');
     dots = el('div', 'ob-dots'); dots.setAttribute('role', 'img');
     skipBtn = el('button', 'ghost sm', 'Skip setup'); skipBtn.id = 'obSkip'; skipBtn.title = 'Skip setup (Esc)';
-    skipBtn.onclick = () => finish(true);
+    skipBtn.onclick = () => guarded(() => finish(true));
     head.append(el('span', 'ob-brand', 'Set up Glim'), dots, skipBtn);
     body = el('div', 'ob-body'); body.id = 'obBody';
     const foot = el('div', 'ob-foot');
-    backBtn = el('button', 'ghost', 'Back'); backBtn.id = 'obBack'; backBtn.onclick = () => go(-1);
+    backBtn = el('button', 'ghost', 'Back'); backBtn.id = 'obBack'; backBtn.onclick = () => { if (!busy) go(-1); };
     const hint = el('span', 'ob-hint', 'Enter for next · Esc to skip');
     nextBtn = el('button', 'amber-btn', 'Next'); nextBtn.id = 'obNext'; nextBtn.onclick = () => next();
     foot.append(backBtn, hint, nextBtn);
@@ -223,7 +224,22 @@ window.Onboard = (() => {
     return bad.length === 0;
   }
 
-  async function next() {
+  async function guarded(fn) {
+    if (busy || !isOpen()) return;
+    busy = true;
+    const controls = [nextBtn, backBtn, skipBtn];
+    controls.forEach((button) => { button.disabled = true; });
+    try {
+      return await fn();
+    } finally {
+      busy = false;
+      controls.forEach((button) => { button.disabled = false; });
+    }
+  }
+
+  function next() { return guarded(nextWork); }
+
+  async function nextWork() {
     if (!isOpen()) return;
     if (step === 1) await desk.settings.set({ uses: [...picks], usesOther: other });
     if (step === 4) await desk.settings.set({ mode });
@@ -265,7 +281,7 @@ window.Onboard = (() => {
 
   document.addEventListener('keydown', (e) => {
     if (!isOpen()) return;
-    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); finish(true); return; }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); guarded(() => finish(true)); return; }
     if (e.key === 'Enter' && !e.isComposing && !e.shiftKey) {
       const t = e.target;
       // buttons keep their own Enter (Back, Skip, Open Settings...); tiles, switches and the text field go to the next step

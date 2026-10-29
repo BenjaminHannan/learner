@@ -79,7 +79,7 @@ class Sleep {
   // SLEEPMLX_NIGHT_BUDGET_S: how long this sleep may last (about 85% of the chosen time); the trainer scales its work to it.
   // The sleepmode app's CommandWorker starts the trainer with dict(os.environ) + its own vars, so it inherits this
   // (checked in sleepmode/workers.py on origin/claude/project-thread-sl2x88).
-  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home, ...(this.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(this.nightBudgetS)) } : {}) }; }
+  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home, SLEEPMODE_WAKE_AT_MS: this.wakeAtMs ? String(this.wakeAtMs) : '', ...(this.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(this.nightBudgetS)) } : {}) }; }
 
   // Start sleeping: a detached process with its output in a log file. It outlives Desk.
   start(o) {
@@ -148,6 +148,7 @@ class Sleep {
     return {
       sleeping, marker, pid: alive ? pid : 0, mode: j.mode || null, state: j.state || null,
       since: Number.isFinite(since) ? since : null, hours: Math.round(hours * 100) / 100,
+      wakeAt: Number.isFinite(j.wake_at_ms) && j.wake_at_ms > 0 ? j.wake_at_ms : null,
       lastQuiz: typeof j.last_quiz === 'number' ? j.last_quiz : null,
       lastCheckin: j.last_checkin ? Date.parse(j.last_checkin) || null : null,
       needsPermission: j.needs_permission || null, demo: this.isDemo(j), raw: j

@@ -25,12 +25,22 @@ const sleepProfile = (platform) => (platform === 'darwin' ? 'lfm3_mps' : C.SLEEP
 // ---- adapter records (adapter.gguf.json next to each GGUF) ------------------------------------------------------------
 const sidecar = (gguf) => gguf + '.json';
 function readSidecar(gguf) { try { return JSON.parse(fs.readFileSync(sidecar(gguf), 'utf8')); } catch (e) { return null; } }
+function committedAdapter(home) {
+  const manifest = path.join(home, 'adapters.json');
+  if (!fs.existsSync(manifest)) return { dir: path.join(home, 'adapter'), generation: null };
+  const r = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+  if (r.version !== 1 || typeof r.current !== 'string' || !r.current || path.isAbsolute(r.current)
+      || r.current.split(/[\\/]/).includes('..')) throw new Error('Invalid committed adapter manifest');
+  const dir = path.join(home, r.current);
+  if (!fs.statSync(dir).isDirectory()) throw new Error('Committed adapter generation is missing');
+  return { dir, generation: r.current };
+}
 // May this GGUF be loaded on the built-in model? Only when it was trained on the same base. A GGUF with no record predates the
 // records and was made by this runner, which only ever trains LORA_BASE, so it fits.
 function loraFits(gguf, base) {
   if (!gguf || !fs.existsSync(gguf)) return false;
   const r = readSidecar(gguf);
-  if (r && r.served && r.served.ok === false) return false;   // it scored worse in the model server once: never again
+  if (r && r.served && (r.served.ok === false || r.served.pending === true)) return false;   // failed or still awaiting its persisted served check
   return !r || !r.base_hf_id || r.base_hf_id === (base || LORA_BASE);
 }
 function moveWithSidecar(from, to) {
@@ -218,12 +228,19 @@ class WinSleep extends Sleep {
 
   async _convert() {
     const st = this.installer.state();
-    const adapterDir = path.join(this.home, 'adapter');
+    let committed;
+    try { committed = committedAdapter(this.home); }
+    catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); return; }
+    const adapterDir = committed.dir;
     if (!fs.existsSync(adapterDir) || !st.convert || !st.hfDir) return;
     const src = path.join(adapterDir, 'adapter_model.safetensors');
     let srcMtime = null; try { srcMtime = fs.statSync(src).mtimeMs; } catch (e) { /* no weights file to compare: convert */ }
     // only when the adapter is newer than the GGUF we already have, and is not one already set aside as worse
-    if (srcMtime != null) {
+    if (committed.generation) {
+      if (fs.existsSync(this.adapterGguf) && (readSidecar(this.adapterGguf) || {}).source_generation === committed.generation) return;
+      if ((readSidecar(this.adapterRejected) || {}).source_generation === committed.generation) return;
+    }
+    if (!committed.generation && srcMtime != null) {
       try { if (fs.existsSync(this.adapterGguf) && fs.statSync(this.adapterGguf).mtimeMs >= srcMtime) return; } catch (e) { /* convert */ }
       const rej = readSidecar(this.adapterRejected);
       if (rej && rej.source_mtime === srcMtime) return;
@@ -236,7 +253,7 @@ class WinSleep extends Sleep {
       if (!fs.existsSync(next)) throw new Error('the converter wrote no file');
       if (fs.existsSync(this.adapterGguf)) moveWithSidecar(this.adapterGguf, this.adapterPrev);
       fs.renameSync(next, this.adapterGguf);
-      fs.writeFileSync(sidecar(this.adapterGguf), JSON.stringify({ base_hf_id: LORA_BASE, profile: sleepProfile(this.platform), source_mtime: srcMtime, date: this.night && this.night.date || null, created: new Date().toISOString() }, null, 2));
+      fs.writeFileSync(sidecar(this.adapterGguf), JSON.stringify({ base_hf_id: LORA_BASE, profile: sleepProfile(this.platform), source_mtime: srcMtime, source_generation: committed.generation, date: this.night && this.night.date || null, created: new Date().toISOString() }, null, 2));
       this.converted = true;
       this._event({ kind: 'converted' });
     } catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); try { fs.rmSync(next, { force: true }); } catch (x) { /* none */ } }

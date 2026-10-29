@@ -223,7 +223,7 @@ def looks_secret(text: str) -> bool:
 
 # ---------------------------------------------------------------- raw logs -> turns
 # User messages the app writes itself, not Ben: its verifier's notes and the screenshot carrier. The turn is Ben's message before them.
-APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]", "[older screenshot omitted]", "[Chat summary request]")   # the Desk's own user messages, not Ben
+APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]", "[older screenshot omitted]", "[Chat summary request]", "[Creative proposal data]")   # the Desk's own user messages, not Ben
 # A tool result that means the step failed (the Desk agent's own wording: src/agent.js runTool / finish).
 FAILED_RESULT = re.compile(r"^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\.", re.I)
 STOP_RESULT = re.compile(r"\[stopped by user\]", re.I)
@@ -452,18 +452,28 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
 
 
 def _fb_norm(text: str) -> str:
-    return " ".join(str(text or "").split()).lower()[:300]
+    return " ".join(str(text or "").split()).lower()
 
 
 def feedback_matcher(feedback: List[dict]):
     """(date, user, answer) -> 1 / -1 / 0. A mark matches a turn when the answer text is the one the Desk showed AND the turn's request
     ends with the request the Desk showed (the diary's user text carries the Desk's hidden prefixes), and the mark was given within a day of it
-    (its ts is UTC). A daily request with a stock answer ("Done.") on another day is not marked. The newest mark wins."""
+    (its ts is UTC). A daily request with a stock answer ("Done.") on another day is not marked. A late clear also cancels the most recent
+    prior event with the same thread, request, and full answer while retaining that event's original date anchor. Legacy logs lack message
+    ids, so repeated identical turns within the same thread remain ambiguous. The newest matching mark wins."""
     by_ans: Dict[str, list] = {}
+    latest = {}
     for f in feedback:
         if f.get("fb") not in (1, -1, 0) or not f.get("answer"):
             continue
-        by_ans.setdefault(_fb_norm(f["answer"]), []).append((" ".join(str(f.get("user") or "").split()).lower(), str(f.get("ts") or "")[:10], f["fb"]))
+        answer = _fb_norm(f["answer"])
+        user = " ".join(str(f.get("user") or "").split()).lower()
+        identity = (str(f.get("thread") or ""), user, answer)
+        mark = [user, str(f.get("ts") or "")[:10], f["fb"]]
+        if f["fb"] == 0 and identity in latest:
+            latest[identity][2] = 0
+        by_ans.setdefault(answer, []).append(mark)
+        latest[identity] = mark
 
     def fb_of(date: str, user: str, answer: str) -> int:
         marks = by_ans.get(_fb_norm(answer))

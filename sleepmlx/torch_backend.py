@@ -11,7 +11,6 @@ import gc
 import json
 import math
 import os
-import shutil
 import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
@@ -267,7 +266,7 @@ class TorchBackend(Backend):
             loss.backward()
             ce += float(loss.detach())
         kl = 0.0
-        rdenom = max(sum(max(len(e[0]) - 1, 0) for e in replay), 1)
+        rdenom = max(sum(max(len(e[0]) - max(e[1], 1), 0) for e in replay), 1)
         for mb in pack(replay, self.tok_budget):
             ids, att, bi, ti, tgt = self._arrays(mb)
             with t.no_grad(), self.model.disable_adapter():
@@ -284,16 +283,15 @@ class TorchBackend(Backend):
 
     # ---- adapter (PEFT format)
     def save_adapter(self, path) -> None:
-        path = Path(path)
-        tmp = path.with_name(path.name + ".tmp")
-        shutil.rmtree(str(tmp), ignore_errors=True)
-        self.model.save_pretrained(str(tmp))
-        shutil.rmtree(str(path), ignore_errors=True)
-        tmp.rename(path)
+        from .checkpoint import save_adapter_directory
+        save_adapter_directory(path, lambda tmp: self.model.save_pretrained(str(tmp)))
 
     def load_adapter(self, path) -> None:
+        if path is not None:
+            from .checkpoint import validate_adapter
+            validate_adapter(path)
         t = self.torch
-        if path is None or not Path(path).exists():
+        if path is None:
             with t.no_grad():
                 for n, p in self.model.named_parameters():
                     if "lora_B" in n:

@@ -115,6 +115,8 @@ class ServedTests(unittest.TestCase):
             def exporter(llama, base, adapter, out):
                 if Path(out).exists():
                     Path(out).replace(export.prev_path(out))
+                    if export.sidecar_path(out).exists():
+                        export.sidecar_path(out).replace(export.sidecar_path(export.prev_path(out)))
                 Path(out).write_text("night%d" % (1 + export.prev_path(out).exists()))
                 return True, str(out)
             sl = env.sleeper(env.backend())
@@ -146,6 +148,16 @@ class ServedTests(unittest.TestCase):
             export.sidecar_path(g).write_text("{}")
             self.assertFalse(export.restore_prev(g))
             self.assertFalse(g.exists() or export.sidecar_path(g).exists())
+
+    def test_restore_legacy_previous_drops_rejected_candidate_metadata(self):
+        with tempfile.TemporaryDirectory() as d:
+            g = Path(d) / "adapter.gguf"
+            g.write_text("candidate")
+            export.prev_path(g).write_text("legacy")
+            export.sidecar_path(g).write_text('{"base_hf_id": "wrong-base"}')
+            self.assertTrue(export.restore_prev(g))
+            self.assertEqual(g.read_text(), "legacy")
+            self.assertFalse(export.sidecar_path(g).exists())
 
 
 if __name__ == "__main__":

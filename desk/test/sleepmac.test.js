@@ -61,6 +61,20 @@ test('adapter records: an adapter trained on another base is never loaded; an ol
   assert.strictEqual(CK.checkinAdapter(home, fs.existsSync), g, 'without a fit test: the old behaviour');
 });
 
+test('startup keeps the previous adapter while a candidate awaits its persisted served check', (t) => {
+  const root = tmp('pending-lora-'), home = path.join(root, 'sleep'); fs.mkdirSync(home, { recursive: true });
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const candidate = path.join(home, 'adapter.gguf'), previous = path.join(home, 'adapter.prev.gguf');
+  fs.writeFileSync(candidate, 'candidate'); fs.writeFileSync(previous, 'previous');
+  fs.writeFileSync(candidate + '.json', JSON.stringify({ base_hf_id: LORA_BASE, served: { ok: null, pending: true } }));
+  fs.writeFileSync(previous + '.json', JSON.stringify({ base_hf_id: LORA_BASE, served: { ok: true } }));
+  const ws = new WinSleep({ root, getSettings: () => ({}) });
+  assert.strictEqual(loraFits(candidate), false);
+  assert.strictEqual(ws.currentLora(), previous);
+  fs.writeFileSync(candidate + '.json', JSON.stringify({ base_hf_id: LORA_BASE, served: { ok: true } }));
+  assert.strictEqual(ws.currentLora(), candidate);
+});
+
 test('wake: a converted adapter gets its record, is loaded, checked in the model server once, and the summary says so', async () => {
   const root = tmp('sm-'); const home = path.join(root, 'sleep');
   const night = { quiz: 50, recall_pre: 0, held_out: 4, general: 95, general_base: 95, reverted: false, status: 'done', date: '2026-10-26', dreamcheck: { available: true, n: 12, supported: 4, unknown: 7, contradicted: 1, unchecked: 0 } };

@@ -5,11 +5,12 @@
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { execFile } = require('child_process');
 const { startGateway } = require('./helpers');
 
-const OUT = path.join(__dirname, 'out');
-const DOCS = path.join(__dirname, '..', 'docs', 'img');
+const OUT = process.env.PREMONITION_E2E_OUTPUT ? path.join(process.env.PREMONITION_E2E_OUTPUT, 'out') : path.join(__dirname, 'out');
+const DOCS = process.env.PREMONITION_E2E_OUTPUT ? path.join(process.env.PREMONITION_E2E_OUTPUT, 'docs') : path.join(__dirname, '..', 'docs', 'img');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function lastTool(req) { const m = req.messages.filter((x) => x.role === 'tool'); return m.length ? m[m.length - 1].content : ''; }
 function idOf(text, re) { const m = new RegExp('\\[(\\d+)\\] ' + re).exec(text); if (!m) throw new Error('no element matching ' + re + ' in snapshot:\n' + text); return Number(m[1]); }
@@ -55,7 +56,7 @@ async function prepare(store) {
     () => ({ content: 'Checking something.', tool_calls: [{ name: 'ask_user', arguments: { question: 'Which colour do you want?' } }] }),
     (req) => { checks.push(['ask: the answer reached the model', /teal please/.test(lastTool(req))]); return { content: 'Teal it is.' }; }
   ], { autoVerify: true }); // verify layer: the agent's self-check turn is answered VERIFIED without using up the script
-  store.saveSettings({ gatewayUrl: gw.url, mode: 'hands-off', maxSteps: 20, helperMode: 'hands-off', onboarded: true }); // first-run setup has its own section at the end
+  store.saveSettings({ gatewayUrl: gw.url, mode: 'hands-off', maxSteps: 20, helperMode: 'hands-off', onboarded: true, benFirst: false, showSparks: true }); // explicitly exercise visible, immediately running Motes
   // sleep mode: a fake `python -m sleepmode` (test/fake-sleepmode.js) in the app's own temp dir, so nothing real is touched
   const sleepHome = path.join(store.dir, 'sleepmode');
   fs.mkdirSync(path.join(sleepHome, 'app'), { recursive: true });
@@ -103,6 +104,71 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
   const pev = (code) => pillWin.win.webContents.executeJavaScript(code);
   const { site, gw, checks } = env;
   try {
+    if (process.env.PREMONITION_E2E_SLEEP_ONLY) {
+      const assert = require('assert');
+      const untilSleep = async (fn, ms = 10000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(50); } return false; };
+      const input = (text) => ev('(()=>{const i=document.querySelector("#input");i.value=' + JSON.stringify(text) + ';i.dispatchEvent(new Event("input"));i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));})()');
+      const check = (name, value) => { assert.ok(value, name); console.log('PASS ' + name); };
+      await ev('new Promise(r=>{const t=setInterval(()=>{if(window.__ready){clearInterval(t);r()}},50)})');
+      check('gateway initially ready', await untilSleep(() => warmer.state === 'ready'));
+      await ev('document.querySelector("#btnSleep").click()');
+      check('sleep sheet opens', await untilSleep(() => ev('!document.querySelector("#sleepSheet").hidden')));
+      const { nativeTheme } = require('electron');
+      const shots = process.env.PREMONITION_E2E_OUTPUT || path.join(os.tmpdir(), 'premonition-e2e-sleep');
+      fs.mkdirSync(shots, { recursive: true });
+      win.setMinimumSize(0, 0);
+      for (const [width, label] of [[1100, 'wide'], [420, 'narrow']]) {
+        win.setSize(width, 860);
+        for (const theme of ['light', 'dark']) {
+          nativeTheme.themeSource = theme; await sleep(400);
+          const audit = await ev(AUDIT);
+          check('contrast ' + label + ' ' + theme, audit.bad.length === 0);
+          check('sleep sheet fits ' + label + ' ' + theme, await ev('(()=>{const e=document.querySelector("#sleepSheet"), r=e.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth+1 && e.scrollWidth<=e.clientWidth+1})()'));
+          const file = path.join(shots, 'sleep-sheet-' + label + '-' + theme + '.png');
+          fs.writeFileSync(file, (await wc.capturePage()).toPNG()); console.log('SCREENSHOT ' + file);
+        }
+      }
+      await ev('document.documentElement.classList.remove("ts-m");document.documentElement.classList.add("ts-l","hc")');
+      await sleep(400);
+      const accessibleAudit = await ev(AUDIT);
+      check('contrast narrow high contrast large text', accessibleAudit.bad.length === 0);
+      check('sleep sheet fits narrow high contrast large text', await ev('(()=>{const e=document.querySelector("#sleepSheet"),r=e.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth+1 && e.scrollWidth<=e.clientWidth+1})()'));
+      const accessibleShot = path.join(shots, 'sleep-sheet-narrow-large-high-contrast.png');
+      fs.writeFileSync(accessibleShot, (await wc.capturePage()).toPNG()); console.log('SCREENSHOT ' + accessibleShot);
+      await ev('document.documentElement.classList.remove("ts-l","hc");document.documentElement.classList.add("ts-m")');
+      nativeTheme.themeSource = 'system'; win.setSize(1100, 860); await sleep(300);
+      await ev('(()=>{const b=document.querySelector("#sleepDur button.on");b.focus();b.dispatchEvent(new KeyboardEvent("keydown",{key:"End",bubbles:true,cancelable:true}));})()');
+      check('duration keyboard selection and wake copy', await ev('document.querySelector("#sleepDur button:last-child").getAttribute("aria-checked")==="true" && /Wake whenever you choose/.test(document.querySelector("#sleepDurNote").textContent)'));
+      await ev('document.querySelector("#sleepGo").click()');
+      check('fake sleep starts', await untilSleep(() => sl.asleep && sleeper.status().sleeping));
+      const realWake = sleeper.wake.bind(sleeper);
+      sleeper.wake = async () => ({ ok: false, error: 'test wake failure' });
+      await input('keep my draft'); await ev('document.querySelector("#wakeAskYes").click()');
+      check('wake failure reports error and preserves draft', await untilSleep(() => ev('/test wake failure/.test(document.querySelector("#msgs").innerText) && document.querySelector("#input").value === "keep my draft"')) && sl.asleep);
+      let releaseWake;
+      sleeper.wake = () => new Promise((resolve) => { releaseWake = () => realWake().then(resolve); });
+      await input('keep my draft'); await ev('document.querySelector("#wakeAskYes").click()');
+      check('wake request waits for backend', await untilSleep(() => !!releaseWake));
+      await ev('(()=>{const i=document.querySelector("#input");i.value="edited while waking";i.dispatchEvent(new Event("input"));})()');
+      releaseWake(); sleeper.wake = realWake;
+      check('edited draft is preserved and not sent', await untilSleep(() => ev('/draft changed while waking/.test(document.querySelector("#msgs").innerText)'), 20000) && await ev('document.querySelector("#input").value === "edited while waking" && ![...document.querySelectorAll(".user")].some((u)=>/keep my draft|edited while waking/.test(u.innerText))'));
+      check('model reports ready before wake completes', warmer.state === 'ready' && !sl.asleep && !sl.waking);
+      await ev('document.querySelector("#btnSleep").click();document.querySelector("#sleepGo").click()');
+      check('second fake sleep starts', await untilSleep(() => sl.asleep && sleeper.status().sleeping));
+      const realMoved = warmer.gatewayMoved.bind(warmer);
+      warmer.gatewayMoved = () => { warmer.set('warming'); setTimeout(realMoved, 2000); };
+      await input('send after ready'); await ev('document.querySelector("#wakeAskYes").click()');
+      check('wake waits for model readiness before sending', await untilSleep(() => sl.waking && !sleeper.status().sleeping) && await ev('document.querySelector("#input").value === "send after ready" && ![...document.querySelectorAll(".user")].some((u)=>/send after ready/.test(u.innerText))'));
+      check('wake sends once model is ready', await untilSleep(() => ev('[...document.querySelectorAll(".user")].filter((u)=>/send after ready/.test(u.innerText)).length === 1'), 20000) && warmer.state === 'ready');
+      warmer.gatewayMoved = realMoved;
+      nativeTheme.themeSource = 'light';
+      pillState.onEvent('main', 'Glim', 'test', { type: 'error', message: 'test error' });
+      await sleep(400); await pev('window.__open()'); await sleep(500);
+      const pillAudit = await pev(AUDIT);
+      check('expanded light pill text contrast', pillAudit.bad.length === 0);
+      console.log('expanded pill contrast audit:', JSON.stringify(pillAudit));
+      console.log('E2E SLEEP PASS'); clearTimeout(timer); site.close(); gw.close(); app.exit(0); return;
+    }
     fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(DOCS, { recursive: true });
     win.setBounds({ x: 0, y: 0, width: 1100, height: 860 });
     const { nativeTheme } = require('electron');
@@ -244,7 +310,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['one activity group: "Did N things" collapsed after the run', await ev('document.querySelectorAll(".activity").length===1 && /Did [34] things/.test(document.querySelector(".act-head").textContent) && document.querySelector(".act-head").getAttribute("aria-expanded")==="false"')]);
     checks.push(['chevron sits next to the label (not far right)', await ev('(() => { const t = document.querySelector(".act-title").getBoundingClientRect(), c = document.querySelector(".act-head .chev").getBoundingClientRect(); return c.left - t.right < 160; })()')]);
     checks.push(['card kept, no longer "browsing" after the run', await ev('!!document.querySelector(".bcard") && !document.querySelector(".bcard").classList.contains("active") && /Click to open/.test(document.querySelector(".bcard").textContent)')]);
-    checks.push(['one assistant avatar per block', (await ev('document.querySelectorAll(".ablock > .avatar").length')) === 1]);
+    checks.push(['one assistant avatar per answer block', (await ev('document.querySelectorAll(".ablock:not(.typing-row) > .avatar").length')) === 1]);
     const vis = '(() => { const b = document.querySelector(".act-body"); return !!b && getComputedStyle(b).display !== "none"; })()';
     checks.push(['tool-use details are tucked away by default (one line per answer)', await ev('document.body.dataset.acts==="closed" && !(' + vis + ') && document.querySelector(".act-head").getAttribute("aria-expanded")==="false" && /Did [34] things/.test(document.querySelector(".act-head").textContent)')]);
     await ev('document.querySelector(".act-head").focus()');
@@ -257,7 +323,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await sleep(200);
     checks.push(['only one step dropdown open at a time', await ev('document.querySelectorAll(".step.open").length===1 && document.querySelectorAll(".step .detail:not([hidden])").length===1 && document.querySelectorAll(".activity.open .step")[1].classList.contains("open")')]);
     await ev('document.querySelector(".step.open > .pill").click()');
-    checks.push(['thinking block collapsed', await ev('!!document.querySelector("details.think:not([open])")')]);
+    checks.push(['reasoning stays hidden', await ev('!document.querySelector("details.think") && !document.body.innerText.includes("The user wants the Premonition item. I should open the shop and search.")')]);
     checks.push(['newest message shows Unread then Read', await ev('!!document.querySelector(".receipt")')]);
     await sleep(400);
     for (const [theme, file] of [['light', 'ui-v2-light.png'], ['dark', 'ui-v2-dark.png']]) {
@@ -290,7 +356,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await sleep(700);
     checks.push(['hand-off: banner says Sign in here yourself; Glim can\'t see what you type', await ev('!document.querySelector("#bBanner").hidden && /Sign in here yourself; Glim can.t see what you type\\. Click Done when finished\\./.test(document.querySelector("#bBanner").textContent)')]);
     checks.push(['hand-off: the password field is still empty (nothing typed)', (await pop2.view.webContents.executeJavaScript('document.querySelector("#p").value')) === '']);
-    checks.push(['hand-off: page view sits under the banner, inside the window', await ev('(() => { const r = document.querySelector("#bSlot").getBoundingClientRect(); const b = document.querySelector("#bBanner").getBoundingClientRect(); return r.top >= b.bottom - 1; })()') && inWin(pop2.view.getBounds()) && order().indexOf(pop2.view) > order().indexOf(ui)]);
+    checks.push(['hand-off: page view sits under the banner, inside the window', await until(async () => await ev('(() => { const r = document.querySelector("#bSlot").getBoundingClientRect(); const b = document.querySelector("#bBanner").getBoundingClientRect(); return r.top >= b.bottom - 1; })()') && inWin(pop2.view.getBounds()) && order().indexOf(pop2.view) > order().indexOf(ui), 4000)]);
     checks.push(['hand-off: chat card says sign-in needed', await until(() => ev('!!document.querySelector(".bcard.login") && /Sign-in needed/.test(document.querySelector(".bcard.login").textContent)'), 3000)]);
     checks.push(['hand-off: pill shows waiting for sign-in', await until(async () => /sign in/i.test(await pev('document.querySelector("#line").textContent')), 4000)]);
     checks.push(['after sending, the transcript is scrolled to the bottom', await until(() => ev('(() => { const s = document.querySelector("#scroll"); return s.scrollHeight - s.scrollTop - s.clientHeight < 4; })()'), 3000)]);
@@ -353,7 +419,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     const list = store.listThreads();
     const t = list.length ? store.loadThread(list[0].id) : null;
     checks.push(['thread saved with a browser card item and thumbnail', !!t && t.items.some((i) => i.t === 'browser' && i.thumb && i.thumb.startsWith('data:image/jpeg') && i.url)]);
-    checks.push(['thread titled from first message', !!t && /premonition item/.test(t.title)]);
+    checks.push(['main conversation is titled Glim', !!t && t.title === 'Glim']);
     checks.push(['thread logs time to first token per request', !!t && t.requests.length >= 10 && t.requests.every((r) => typeof r.ttftMs === 'number')]);
     checks.push(['model got date-prefixed user message', /^\[\w{3} \d{4}-/.test(gw.requests[0].messages.find((m) => m.role === 'user').content)]);
     // the warm request and the first real request share the identical system + tools prefix
@@ -391,6 +457,8 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['settings: Open Accessibility / Screen Recording buttons present', await ev('[...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Accessibility settings/.test(b.textContent)) && [...document.querySelectorAll("#settingsCol button")].some((b)=>/Open Screen Recording settings/.test(b.textContent))')]);
     checks.push(['settings: danger list shown', await ev('document.querySelectorAll(".danger-list li").length>=8')]);
     const clickSeg = (label) => ev('[...document.querySelectorAll("#settingsCol .seg button")].find((b)=>b.textContent==="' + label + '" && b.offsetParent).click()');
+    await ev('(() => { const b=[...document.querySelectorAll("#settingsCol .seg")].find((s)=>s.querySelector("button[data-v=qwen36-auto]")); b.querySelector("button[data-v=qwen36-auto]").click(); })()');
+    await until(() => store.getSettings().model === 'qwen36-auto', 5000);
     const warmsBefore = gw.warms.length;
     await ev('(() => { const b=[...document.querySelectorAll("#settingsCol .seg")].find((s)=>s.querySelector("button[data-v=qwen36-fast]")); b.querySelector("button[data-v=qwen36-fast]").click(); })()');
     await sleep(500);
@@ -428,32 +496,44 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     // ---- Settings > Memory: plain markdown editor for memory.md (type, Save, blur, Glim's additions appear, hand-written text survives)
     {
       const ta = (js) => ev('(() => { const t=document.querySelector("#memText"); ' + js + ' })()');
-      const typeText = (v) => ta('t.focus(); t.value=' + JSON.stringify(v) + '; t.dispatchEvent(new Event("input",{bubbles:true}));');
+      // Deliver editor events directly: native focus can change while this
+      // shared desktop is being used, and must not inject real typing here.
+      const typeText = (v) => ta('t.value=' + JSON.stringify(v) + '; t.dispatchEvent(new Event("input",{bubbles:true}));');
+      const blurText = () => ta('t.dispatchEvent(new FocusEvent("blur"));');
       const fileText = () => memory.read().text;
+      const memoryStages = [];
+      const memoryStage = async (stage) => memoryStages.push({ stage, file: fileText(), ui: await ev('({active:document.activeElement?.id,focus:document.hasFocus(),note:document.querySelector("#memNote").textContent,value:document.querySelector("#memText").value})') });
       checks.push(['memory: editor and help text shown', await ev('/markdown file Glim reads/.test(document.querySelector("#settingsCol").innerText) && document.querySelector("#memText").tagName==="TEXTAREA" && !document.querySelector("#memList") && !document.querySelector("#memNew")')]);
       await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n');
       await ev('document.querySelector("#memSave").click()');
       checks.push(['memory: Save button writes the text to memory.md', await until(() => fileText() === '# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n', 3000) && memory.list().length === 1 && memory.list()[0].text === 'AP Chem is 3rd period with Mr. Phipps']);
       checks.push(['memory: a Saved note is shown', await until(() => ev('/Saved/.test(document.querySelector("#memNote").textContent)'), 3000)]);
       await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 4th period with Mr. Phipps\n');
-      await ev('document.querySelector("#memText").blur()');
+      await blurText();
       checks.push(['memory: leaving the box (blur) saves it', await until(() => /4th period/.test(fileText()) && !/3rd period/.test(fileText()), 3000)]);
+      if (!checks[checks.length - 1][1]) console.log('DIAG memory blur', JSON.stringify(await ev('({active:document.activeElement?.id,focus:document.hasFocus(),note:document.querySelector("#memNote").textContent,value:document.querySelector("#memText").value})')), JSON.stringify(fileText()));
       await typeText('- Prefers short answers\n');
       await ev('document.querySelector("#memText").dispatchEvent(new KeyboardEvent("keydown",{key:"s",metaKey:true,bubbles:true,cancelable:true}))');
       checks.push(['memory: Cmd+S saves', await until(() => fileText() === '- Prefers short answers\n', 3000)]);
+      await until(() => ev('/Saved/.test(document.querySelector("#memNote").textContent)'), 3000);
+      await memoryStage('after Cmd+S acknowledged');
       checks.push(['memory: previous version kept as memory.md.bak', require('fs').existsSync(memory.file + '.bak')]);
       // an edit in progress is never clobbered by a change on disk
       await typeText('- unsaved typing');
       memory.save('Ben takes Spanish 2 in 5th period', 'classes');
       await sleep(3600);
       checks.push(['memory: unsaved typing survives a change on disk', await ev('document.querySelector("#memText").value==="- unsaved typing"')]);
-      await ev('document.querySelector("#memText").value="- Prefers short answers\\n"; document.querySelector("#memText").dispatchEvent(new Event("input",{bubbles:true})); document.activeElement && document.activeElement.blur()');
+      await memoryStage('dirty draft after external addition');
+      await typeText('- Prefers short answers\n'); await blurText();
       await sleep(200);
+      await memoryStage('reverted draft after blur');
       // with nothing unsaved, what Glim adds shows up on the next refresh
       await ev('window.__openSettings()'); await sleep(400);
       checks.push(['memory: text Glim added appears in the editor', await until(() => ev('/Spanish 2/.test(document.querySelector("#memText").value)'), 4000)]);
       checks.push(['memory: hand-written lines survive Glim\'s additions', /^- Prefers short answers$/m.test(fileText()) || /- Prefers short answers/.test(fileText())]);
-      await ev('document.querySelector("#memText").value=""'); await ev('document.querySelector("#memText").blur()');
+      if (!checks[checks.length - 1][1] || !checks[checks.length - 2][1]) console.log('DIAG memory stages', JSON.stringify(memoryStages));
+      await typeText(''); await blurText();
+      await until(() => fileText() === '', 3000);
       for (const f of memory.list()) memory.delete(f.id);
       await ev('window.__openSettings()'); await sleep(300);
       checks.push(['memory: editor refreshes when Settings opens (file changed behind its back)', await until(() => ev('document.querySelector("#memText").value.indexOf("Spanish")<0'), 4000)]);
@@ -474,7 +554,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     // ---- keep running: closing the window hides it, the app and its scheduler keep going
     getWin().close();
     await sleep(300);
-    checks.push(['closing the window hides it (keep running in background)', !win.isDestroyed() && !win.isVisible() && !!helpers.timer]);
+    checks.push(['closing the window conceals or hides it (keep running in background)', !win.isDestroyed() && (!win.isVisible() || win.getOpacity() === 0) && !!helpers.timer]);
     showWindow(true);
     await sleep(300);
     checks.push(['showing it again brings the same window back', win.isVisible()]);
@@ -506,16 +586,17 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['helper thread saved with its report', !!helperThread]);
     checks.push(['helper thread has its browser_go step and a browser card', !!helperThread && helperThread.items.some((i) => i.t === 'step' && i.tool === 'browser_go') && helperThread.items.some((i) => i.t === 'browser' && i.key === helperThread.id)]);
     checks.push(['primary browser untouched by the helper', brs().br.wc.getURL() === primaryUrl]);
-    checks.push(['helper browser is gone after its run', !browsers.has(helperThread.id)]);
+    checks.push(['helper browser is gone after its run', !!helperThread && !browsers.has(helperThread.id)]);
     checks.push(['helper report is not shown as a box in the chat', await ev('!document.querySelector(".notice")')]);
     const h0 = helpers.list()[0];
     checks.push(['helper listed idle with a summary', !!h0 && h0.status === 'idle' && /home page/.test(h0.lastSummary)]);
     await ev('document.querySelector("#btnThreads").click()');
     await sleep(300);
     checks.push(['Glims section lists the helper', await ev('!document.querySelector("#agentsSec").hidden && document.querySelectorAll("#agentList li").length===1 && /site-checker/.test(document.querySelector("#agentList").innerText)')]);
-    await ev('document.querySelector("#agentList li").click()');
+    await ev('document.querySelector("#agentList li")?.click()');
     await sleep(600);
     checks.push(['opening the helper thread shows its card and steps', await ev('!!document.querySelector(".bcard") && document.querySelectorAll(".step").length>=1 && /Report:/.test(document.body.innerText)')]);
+    if (!checks[checks.length - 1][1]) console.log('DIAG helper view', JSON.stringify(await ev('({title:document.querySelector("#title").textContent,cards:document.querySelectorAll(".bcard").length,steps:document.querySelectorAll(".step").length,text:document.querySelector("#msgs").innerText.slice(-1000)})')));
     gw2.close();
 
     // ---- memory_save in a run: the fact appears in Settings > Memory
@@ -533,6 +614,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['memory_save run: the fact is stored with its topic', memory.list().some((f) => /Spanish 2/.test(f.text) && f.topic === 'classes')]);
       await ev('window.__openSettings()'); await sleep(400);
       checks.push(['memory_save run: the fact shows in Settings > Memory', await until(() => ev('/Spanish 2/.test(document.querySelector("#memText").value) && /topic: classes/.test(document.querySelector("#memText").value)'), 4000)]);
+      if (!checks[checks.length - 1][1]) console.log('DIAG memory view', JSON.stringify(await ev('({value:document.querySelector("#memText").value,note:document.querySelector("#memNote").textContent})')), JSON.stringify(memory.read().text));
       await ev('document.querySelector("#settingsClose").click()');
       for (const f of memory.list()) memory.delete(f.id);
 
@@ -544,7 +626,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('document.querySelector("#settingsClose").click()');
       checks.push(['sleep: the top bar has a Sleep button', await vis('#btnSleep')]);
       await ev('document.querySelector("#btnSleep").click()'); await sleep(300);
-      checks.push(['sleep: confirm sheet says what happens and offers the check-in option and the six lengths (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /Hourly check-in/.test(document.querySelector("#sleepSheet").innerText) && document.querySelectorAll("#sleepDur button").length === 6 && document.querySelectorAll("#sleepDur button.on").length === 1 && /learns more/.test(document.querySelector("#sleepDurNote").innerText)')]);
+      checks.push(['sleep: confirm sheet says what happens and offers the check-in option and the six lengths (checked)', await vis('#sleepSheet') && await ev('/stop answering while it learns from your chats/.test(document.querySelector("#sleepSheet").innerText) && /Wake it any time/.test(document.querySelector("#sleepSheet").innerText) && document.querySelector("#sleepPause").checked && /Hourly check-in/.test(document.querySelector("#sleepSheet").innerText) && document.querySelectorAll("#sleepDur button").length === 6 && document.querySelectorAll("#sleepDur button.on").length === 1 && /Wake at/.test(document.querySelector("#sleepDurNote").innerText) && /chat model will restart/.test(document.querySelector("#sleepDurNote").innerText)')]);
       await ev('document.querySelector("#sleepGo").click()');
       checks.push(['sleep: confirming starts it and the sheet closes', await until(() => sl.asleep && sleeper.status().sleeping, 6000) && !(await vis('#sleepSheet'))]);
       await until(() => ev('!document.querySelector("#sleepBar").hidden'), 3000);
@@ -574,6 +656,21 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await ev('document.querySelector("#wakeAskYes").click()');
       checks.push(['sleep: Wake and send wakes Glim, then sends the message', await until(() => ev('[...document.querySelectorAll(".user")].some((u)=>/good morning, Glim/.test(u.innerText))'), 15000) && !sl.asleep]);
       await waitIdle('after wake and send');
+      // A failed wake and an edited draft must never silently send the old message.
+      await ev('document.querySelector("#btnSleep").click()'); await sleep(200); await ev('document.querySelector("#sleepGo").click()');
+      await until(() => sl.asleep && sleeper.status().sleeping, 6000);
+      const realWake = sleeper.wake.bind(sleeper);
+      sleeper.wake = async () => ({ ok: false, error: 'test wake failure' });
+      await ev('(()=>{const i=document.querySelector("#input");i.value="keep my draft";i.dispatchEvent(new Event("input"));i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));document.querySelector("#wakeAskYes").click();})()');
+      checks.push(['sleep: wake failure keeps the draft and reports the error', await until(() => ev('/test wake failure/.test(document.querySelector("#msgs").innerText) && document.querySelector("#input").value === "keep my draft"'), 5000) && sl.asleep]);
+      let releaseWake;
+      sleeper.wake = () => new Promise((resolve) => { releaseWake = () => realWake().then(resolve); });
+      await ev('document.querySelector("#input").dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));document.querySelector("#wakeAskYes").click()');
+      await until(() => !!releaseWake, 3000);
+      await ev('(()=>{const i=document.querySelector("#input");i.value="edited while waking";i.dispatchEvent(new Event("input"));})()');
+      releaseWake(); sleeper.wake = realWake;
+      checks.push(['sleep: editing while waking preserves the new draft and does not send either version', await until(() => ev('/draft changed while waking/.test(document.querySelector("#msgs").innerText)'), 15000) && await ev('document.querySelector("#input").value === "edited while waking" && ![...document.querySelectorAll(".user")].some((u)=>/keep my draft|edited while waking/.test(u.innerText))')]);
+      await ev('(()=>{const i=document.querySelector("#input");i.value="";i.dispatchEvent(new Event("input"));})()');
       // an unavailable app is said plainly and disables the button
       store.saveSettings({ sleepApp: '/no/such/folder' });
       await ev('window.__openSettings()'); await sleep(300);
@@ -591,7 +688,8 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await ev('document.querySelector("#newThread").click()');
     await sleep(300);
     await ev('(()=>{const i=document.querySelector("#input");i.value="hello?";i.dispatchEvent(new Event("input"));document.querySelector("#btnSend").click();})()');
-    checks.push(['error: an unreachable model reads "I\u2019m off right now" in Glim\u2019s words, not "fetch failed"', await until(() => ev('/off right now|still starting up/.test(document.querySelector("#msgs").innerText) && !document.querySelector(".errline")'), 8000)]);
+    checks.push(['error: an unreachable model reads "I\u2019m off right now" in Glim\u2019s words, not "fetch failed"', await until(() => ev('(()=>{const b=[...document.querySelectorAll("#msgs .ablock:not(.typing-row)")].at(-1);return !!b && /off right now|still starting up/.test(b.innerText) && !b.querySelector(".errline")})()'), 8000)]);
+    if (!checks[checks.length - 1][1]) console.log('DIAG offline view', JSON.stringify(await ev('document.querySelector("#msgs").innerText.slice(-1500)')));
     checks.push(['error: pill says Something went wrong with sad Glim', await until(async () => /Something went wrong/.test(await pev('document.querySelector("#line").textContent')) && (await pev('document.querySelector("#pill .mascot").dataset.mood')) === 'error', 4000)]);
     checks.push(['pill window: always on top, all workspaces, no focus', pillWin.win.isAlwaysOnTop() && pillWin.win.isFocusable() === false]);
     checks.push(['pill window sits at the top center of the screen', (() => { const b = pillWin.win.getBounds(); return b.y <= 10 && Math.abs((b.x + b.width / 2) - 720) < 200 || b.y <= 10; })()]);
@@ -617,9 +715,9 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await pev('window.__close()'); await sleep(400);
       await grabPill('ui-v2-pill-working-' + theme + '.png', bg);
     }
-    pillState.dismiss('main');
+    for (const key of [...pillState.agents.keys()]) pillState.dismiss(key);
     await sleep(300);
-    checks.push(['pill hides again when nothing is going on', await pev('document.querySelector("#pill").classList.contains("gone")')]);
+    checks.push(['pill returns to the platform idle state', await pev('document.querySelector("#pill").classList.contains(' + (process.platform === 'darwin' ? '"idle"' : '"gone"') + ')')]);
     nativeTheme.themeSource = 'system';
     store.saveSettings({ gatewayUrl: gw.url });
 
@@ -659,7 +757,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       await key('Return');
       checks.push(['setup: choosing Hands-off at onboarding saves mode', await until(() => store.getSettings().mode === 'hands-off', 3000)]);
       store.saveSettings({ mode: 'ask' });
-      checks.push(['setup: a step explains the thumbs up / down and how sleep uses them', await stepIs(5) && await ev('/Teach Glim what you like/.test(document.querySelector("#onboard h1").textContent) && document.querySelectorAll("#onboard .ob-rate").length===2 && /sleeps/.test(document.querySelector("#onboard").innerText)')]);
+      checks.push(['setup: a step explains the thumbs up / down and how sleep uses them', await stepIs(5) && await ev('/Teach Glim what you like/.test(document.querySelector("#onboard h1").textContent) && [...document.querySelectorAll("#onboard .ob-rate b")].some((b)=>b.textContent==="Thumbs up") && [...document.querySelectorAll("#onboard .ob-rate b")].some((b)=>b.textContent==="Thumbs down") && /sleeps/.test(document.querySelector("#onboard").innerText)')]);
       await key('Return');
       checks.push(['setup: Enter on step 2 saves the picks as uses + usesOther', await stepIs(2) && JSON.stringify(store.getSettings().uses) === '["email","briefing"]' && store.getSettings().usesOther === 'keep track of my game releases']);
       checks.push(['setup step 3: one row per recurring pick, each with a switch', await ev('document.querySelectorAll("#onboard .ob-row").length===2 && document.querySelectorAll("#onboard .ob-row .toggle[aria-checked=true]").length===2 && /Email watch/.test(document.body.innerText) && /every 30 min/.test(document.body.innerText) && /daily at 08:00/.test(document.body.innerText)')]);
@@ -683,10 +781,10 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       checks.push(['setup: resuming made no second Morning briefing', helpers.list().filter((h) => h.name === 'Morning briefing').length === 1]);
       await key('Return');
       checks.push(['setup: Enter on the last step finishes; onboarded saved', await until(() => ev('document.querySelector("#onboard").hidden'), 3000) && store.getSettings().onboarded === true && store.getSettings().onboardAt === '']);
-      checks.push(['welcome chips follow the picks', await ev('(() => { const c=[...document.querySelectorAll(".welcome .chips button")].map((b)=>b.textContent); return c.length===4 && c[0]==="Check my email" && c[1]==="Give me a morning briefing"; })()')]);
+      checks.push(['existing conversation remains visible after setup', await ev('!document.querySelector(".welcome") && document.querySelectorAll("#msgs .user").length > 0')]);
       await grab('ui-v2-onboard-e-welcome.png');
       await ev('document.querySelector("#btnThreads").click()'); await sleep(400);
-      checks.push(['sidebar section is called Glims and lists the new Glim', await ev('!document.querySelector("#agentsSec").hidden && /^Glims$/.test(document.querySelector("#agentsSec .drawer-label").textContent) && /Morning briefing/.test(document.querySelector("#agentList").innerText)')]);
+      checks.push(['sidebar section is called Motes and lists the new Mote', await ev('!document.querySelector("#agentsSec").hidden && /^Motes$/.test(document.querySelector("#agentsSec .drawer-label").textContent) && /Morning briefing/.test(document.querySelector("#agentList").innerText)')]);
       await grab('ui-v2-onboard-f-sidebar.png');
       await ev('document.querySelector("#drawerShade").click()');
       // Settings > Run setup again, then Esc skips

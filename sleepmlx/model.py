@@ -7,17 +7,40 @@ batched generation with mlx_lm.generate.batch_generate, SHY downscale in numpy, 
 from __future__ import annotations
 
 import importlib
+import hashlib
 import json
 import math
 import os
-import shutil
 import sys
 import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 from .backend import Backend, Example
-from .shy import shy_core
+
+
+def adapter_base_identity(prof, model_dir):
+    """Portable source identity plus the exact local quantization config."""
+    local = Path(os.path.expanduser(model_dir)).resolve()
+    config = local / "config.json"
+    return {"hf_id": prof.hf_id, "source_revision": prof.source_revision,
+            "config_sha256": hashlib.sha256(config.read_bytes()).hexdigest() if config.is_file() else None,
+            "model_dir": str(local)}
+
+
+def validate_adapter_base(path, prof, model_dir):
+    """Reusable by a chat launcher before mlx_lm.server --adapter-path."""
+    record = json.loads((Path(path) / "adapter_config.json").read_text()).get("sleepmlx_base")
+    if record is None:
+        if prof.quirks.get("require_adapter_identity", False):
+            raise ValueError("adapter has no recorded base model identity")
+        return
+    expected = adapter_base_identity(prof, model_dir)
+    keys = ["hf_id", "source_revision", "config_sha256"]
+    if not expected["hf_id"] or not expected["source_revision"]:
+        keys.append("model_dir")
+    if not isinstance(record, dict) or any(record.get(key) != expected[key] for key in keys):
+        raise ValueError("adapter base model identity does not match the active model")
 
 
 def load(model_dir: str, loader: Optional[str] = None, loader_path: Optional[str] = None, trust_remote_code: bool = True):
@@ -160,22 +183,28 @@ class MLXBackend(Backend):
             for s in list(stops) + [self.prof.stop_token]:
                 if s and s in t:
                     cut = min(cut, t.index(s))
-            outs.append(t[:cut].strip())
+            from .profile import generated_answer
+            outs.append(generated_answer(self.prof, prompts[i], t[:cut].strip()))
         clear_cache()
         return outs
 
     # ---- training
     def _head(self, h):
-        m = self.model
+        return self._project_head(self.model, h)
+
+    @staticmethod
+    def _project_head(model, h):
+        # Qwen3.5/3.6 wraps its untied output head in language_model. Its
+        # outer .model property exposes the decoder, not the output head.
+        m = getattr(model, "language_model", model)
         lm_head = getattr(m, "lm_head", None)
         return lm_head(h) if lm_head is not None else m.model.embed_tokens.as_linear(h)
 
     def _logits(self, model, ids, bi, ti):
         mx = _mx()
         h = model.model(ids[:, :-1])
-        lm_head = getattr(model, "lm_head", None)
         z = h[bi, ti]
-        out = lm_head(z) if lm_head is not None else model.model.embed_tokens.as_linear(z)
+        out = self._project_head(model, z)
         return out.astype(mx.float32)
 
     def _ce_fn(self, model, ids, bi, ti, tgt, denom):
@@ -220,7 +249,7 @@ class MLXBackend(Backend):
             mx.eval(acc, loss)
             ce += float(loss)
         kl = 0.0
-        rdenom = max(sum(max(len(e[0]) - 1, 0) for e in replay), 1)
+        rdenom = max(sum(max(len(e[0]) - max(e[1], 1), 0) for e in replay), 1)
         for mb in pack(replay, self.tok_budget):
             ids, bi, ti, tgt, _ = self._arrays(mb)
             self._set_scale(0.0)                      # LoRA scale 0 = the base model
@@ -242,22 +271,25 @@ class MLXBackend(Backend):
 
     # ---- adapter
     def save_adapter(self, path) -> None:
-        mx = _mx()
+        from .checkpoint import save_adapter_directory
         from mlx.utils import tree_flatten
-        path = Path(path)
-        tmp = path.with_name(path.name + ".tmp")
-        shutil.rmtree(str(tmp), ignore_errors=True)
-        tmp.mkdir(parents=True)
-        mx.save_safetensors(str(tmp / "adapters.safetensors"), dict(tree_flatten(self.model.trainable_parameters())))
-        (tmp / "adapter_config.json").write_text(json.dumps({
-            "model": self.model_dir, "fine_tune_type": "lora", "num_layers": self.n_layers,
-            "lora_parameters": {"rank": self.lora_cfg["rank"], "scale": self.lora_cfg["scale"], "dropout": self.lora_cfg.get("dropout", 0.0), "keys": self.lora_cfg["keys"]}}, indent=1))
-        shutil.rmtree(str(path), ignore_errors=True)
-        tmp.rename(path)
+        mx = _mx()
+
+        def write(tmp):
+            mx.save_safetensors(str(tmp / "adapters.safetensors"), dict(tree_flatten(self.model.trainable_parameters())))
+            (tmp / "adapter_config.json").write_text(json.dumps({
+                "model": self.model_dir, "fine_tune_type": "lora", "num_layers": self.n_layers,
+                "sleepmlx_base": adapter_base_identity(self.prof, self.model_dir),
+                "lora_parameters": {"rank": self.lora_cfg["rank"], "scale": self.lora_cfg["scale"], "dropout": self.lora_cfg.get("dropout", 0.0), "keys": self.lora_cfg["keys"]}}, indent=1))
+        save_adapter_directory(path, write)
 
     def load_adapter(self, path) -> None:
+        if path is not None:
+            from .checkpoint import validate_adapter
+            validate_adapter(path)
+            validate_adapter_base(path, self.prof, self.model_dir)
         mx = _mx()
-        if path is None or not Path(path).exists():
+        if path is None:
             for m in self._lora:                      # a fresh adapter: lora_b = 0, so the model equals the base
                 m.lora_b = mx.zeros_like(m.lora_b)
             mx.eval(self.model.parameters())
@@ -267,6 +299,7 @@ class MLXBackend(Backend):
 
     def downscale(self, factor, thresh, seed):
         import numpy as np
+        from .shy import shy_core
         mx = _mx()
         rng = np.random.default_rng(seed)
         nz = nsv = 0

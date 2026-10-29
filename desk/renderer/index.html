@@ -107,13 +107,14 @@
     <div class="sl-moon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg></div>
     <h2>Put Glim to sleep?</h2>
     <p class="p-sub">Glim will stop answering while it learns from your chats. Wake it any time.</p>
-    <p class="p-sub dim small">It checks your mail and calendar once an hour (read-only) and tells you if something needs you.</p>
+    <div class="sl-expect"><span class="sl-step">01</span><p>Practice and check <span>Candidate changes are tested before they are kept.</span></p><span class="sl-step">02</span><p>Come back ready <span>Wake any time. Glim restores the chat model before answering.</span></p></div>
+    <label class="sl-label" id="sleepDurLabel">When should Glim wake?</label>
     <div id="sleepDur" class="sl-dur" role="radiogroup" aria-label="How long to sleep">
       <button type="button" role="radio" data-d="30">30 min</button><button type="button" role="radio" data-d="60">1 h</button><button type="button" role="radio" data-d="120">2 h</button><button type="button" role="radio" data-d="240">4 h</button><button type="button" role="radio" data-d="morning">Until morning</button><button type="button" role="radio" data-d="open">Until I wake it</button>
     </div>
-    <p id="sleepDurNote" class="p-sub dim small">Longer sleep learns more.</p>
-    <label class="sl-check"><input type="checkbox" id="sleepPause" checked><span>Hourly check-in while asleep</span></label>
-    <div id="sleepErr" class="errline" hidden></div>
+    <p id="sleepDurNote" class="p-sub dim small" aria-live="polite"></p>
+    <label class="sl-check"><input type="checkbox" id="sleepPause" checked><span>Hourly check-in while asleep<small>Read-only mail and calendar checks, when connected.</small></span></label>
+    <div id="sleepErr" class="errline" role="alert" hidden></div>
     <div class="sl-btns"><button id="sleepCancel" class="ghost">Not now</button><button id="sleepGo" class="amber-btn">Go to sleep</button></div>
   </div>
 </div>
@@ -185,6 +186,7 @@
 <script src="dictate.js"></script>
 <script src="onboard.js"></script>
 <script src="side.js"></script>
+<script src="sleepwake.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

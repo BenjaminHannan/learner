@@ -32,7 +32,7 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 /* Notched Mac: the pill IS the notch, the way OpenBot's island does it. A black body hugs the camera with concave shoulders that
    melt into the bezel, Glim sits in the left ear and the state in the right ear; nothing is ever drawn behind the camera. Hover
    grows it a little, and a running task opens downward out of the notch (wider, rounder, shadowed) instead of a separate bubble. */
-#pill.notch { --surface:#000; --text:#f5f5f7; --text2:#a1a1a6; --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.16); --sh:6px; --ear:38px;
+#pill.notch { --surface:#000; --text:#f5f5f7; --text2:#a1a1a6; --danger:#ff9a8a; --danger-soft:rgba(255,154,138,.14); --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.16); --sh:6px; --ear:38px;
   top:0; width:calc(var(--nw) + var(--ear) * 2); margin-left:calc(var(--nw) / -2 - var(--ear)); min-height:var(--nh); background:#000; border:0; border-radius:0 0 14px 14px; box-shadow:none; opacity:1; overflow:visible;
   transition:width .45s cubic-bezier(.22,1,.36,1), margin-left .45s cubic-bezier(.22,1,.36,1), border-radius .45s cubic-bezier(.22,1,.36,1), filter .25s, opacity .3s, transform .3s; }
 #pill.notch::before, #pill.notch::after { content:''; position:absolute; top:0; width:var(--sh); height:var(--sh); transition:width .45s cubic-bezier(.22,1,.36,1), height .45s cubic-bezier(.22,1,.36,1); }

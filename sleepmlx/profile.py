@@ -31,6 +31,7 @@ class Profile:
     name: str = "k2"
     model_dir: str = ""                   # local dir (MLX: the 4-bit MLX model; torch: a HF snapshot dir, or leave "" and set hf_id)
     hf_id: Optional[str] = None           # HF repo id for the torch backend (used when model_dir is empty or missing)
+    source_revision: Optional[str] = None # pinned upstream revision used to provision a local quantized model
     backend: str = "auto"                 # "mlx" | "torch" | "auto" (mlx if importable, else torch)
     loader: Optional[str] = None          # "module:function"; None = mlx_lm.load
     loader_path: Optional[str] = None     # directory (or .py file's directory) put on sys.path before importing the loader
@@ -41,6 +42,7 @@ class Profile:
     think_open: str = ""
     think_close: str = ""
     stop_token: str = ""
+    training_answer_prefix: str = ""      # supervised transition from an open native reasoning prompt to its answer
     lora: Dict[str, Any] = field(default_factory=dict)
     quirks: Dict[str, Any] = field(default_factory=dict)
     recipe: Dict[str, Any] = field(default_factory=dict)    # overrides of recipe.Config fields (bsz, replay_bsz, kl_every, gate_n, ...)
@@ -140,6 +142,10 @@ class Renderer:
     def render(self, system: str, user: str) -> str:
         t = self._base(system, user)
         p = self.p
+        if p.quirks.get("native_generation_prompt", False):
+            if p.thinks and self._open_tail(t) is None:
+                raise ValueError("profile %s requires its native tokenizer generation prompt ending in %s" % (p.name, p.think_open))
+            return t
         if p.thinks:
             o = self._open_tail(t)          # the template normally ends with the think-open marker; thinking off = close it at once
             if o is not None:
@@ -156,3 +162,12 @@ class Renderer:
         t = self._base(system, user)
         o = self._open_tail(t)
         return o if o is not None else t + self.p.think_open
+
+
+def generated_answer(prof: Profile, prompt: str, text: str) -> str:
+    """Expose answers, never incomplete reasoning, for native reasoning profiles."""
+    if (prof.quirks.get("strip_generated_thinking", False) and prof.thinks
+            and prompt.rstrip().endswith(prof.think_open.rstrip())):
+        _, close, answer = text.partition(prof.think_close)
+        return answer.strip() if close else ""
+    return text

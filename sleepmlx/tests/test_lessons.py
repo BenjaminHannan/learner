@@ -423,6 +423,47 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(qa[0][1], "You have 3 new emails.")
         self.assertTrue(li[0]["key"].startswith("liked|"))
 
+    def feedback_week(self, rows):
+        ud = self.env.paths.userdata_dir
+        ud.mkdir(parents=True, exist_ok=True)
+        (ud / "feedback.jsonl").write_text("\n".join(json.dumps(row) for row in rows) + "\n")
+        return diary_mod.build_week(self.env.paths.diary_dir, "Ben", feedback=L.read_feedback(ud))
+
+    def test_late_clear_removes_the_original_mark_from_diary_and_card_sources(self):
+        write_recs(self.env.paths.diary_dir, "2026-10-20", chat([("Who ran the tour?", "Marta ran the Orbix tour.", {})]))
+        event = {"thread": "thread-a", "user": "Who ran the tour?", "answer": "Marta ran the Orbix tour."}
+        rows = [{**event, "ts": "2026-10-20T10:00:00Z", "fb": 1}]
+        self.assertEqual(len(L.liked(self.feedback_week(rows))), 1)
+        self.assertEqual(len(L.rated(self.feedback_week(rows))), 1)
+        rows.append({**event, "ts": "2026-10-29T10:00:00Z", "fb": 0})
+        week = self.feedback_week(rows)
+        self.assertFalse(any(row.get("fb") for row in week["diary"]))
+        self.assertEqual(L.liked(week), [])
+        self.assertEqual(L.rated(week), [])
+
+    def test_late_clear_uses_the_latest_prior_event_without_spreading_to_other_days(self):
+        for date, ts0 in (("2026-10-20", 1_700_000_000), ("2026-10-26", 1_700_600_000)):
+            write_recs(self.env.paths.diary_dir, date, chat([("Check my email", "Done.", {})], ts0=ts0))
+        event = {"thread": "thread-a", "user": "Check my email", "answer": "Done."}
+        rows = [{**event, "ts": "2026-10-20T10:00:00Z", "fb": 1},
+                {**event, "ts": "2026-10-26T10:00:00Z", "fb": 1},
+                {**event, "ts": "2026-10-29T10:00:00Z", "fb": 0}]
+        week = self.feedback_week(rows)
+        self.assertEqual([row.get("fb") for row in week["diary"] if row["role"] == "user"], [1, None])
+        self.assertEqual([row["day"] for row in L.liked(week)], [1])
+        # A clear from another thread cannot supersede this thread's event.
+        other = self.feedback_week([rows[0], {**rows[2], "thread": "thread-b"}])
+        self.assertEqual([row["day"] for row in L.liked(other)], [1])
+
+    def test_feedback_requires_the_full_answer_not_a_shared_300_character_prefix(self):
+        prefix = "This sentence repeats to make a long shared answer. " * 8
+        one, two = prefix + "The destination is Lima.", prefix + "The destination is Quito."
+        write_recs(self.env.paths.diary_dir, "2026-10-20", chat([("First question: Where should I go?", one, {}), ("Where should I go?", two, {})]))
+        week = self.feedback_week([{"ts": "2026-10-20T10:00:00Z", "fb": 1, "thread": "thread-a",
+                                   "user": "Where should I go?", "answer": one}])
+        self.assertEqual([row.get("fb") for row in week["diary"] if row["role"] == "user"], [1, None])
+        self.assertEqual([row["answer"] for row in L.liked(week)], [one])
+
 
 class DeskWrapperTests(unittest.TestCase):
     """The Desk's hidden per-turn text never reaches sleep as Ben's words; a helper Glim's run is kept apart."""

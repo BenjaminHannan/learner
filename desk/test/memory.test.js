@@ -234,6 +234,49 @@ test('memory.md: a file with headings, free text and notes round-trips unchanged
   assert.strictEqual(m.write(123).ok, false);
 });
 
+test('memory.md: an editor save preserves a concurrent model append', () => {
+  const m = mem();
+  const base = '# Notes\n\n- Prefers short answers\n';
+  m.write(base);
+  m.save('Ben takes Spanish 2 in 5th period', 'classes');
+  const result = m.write(base.replace('short answers', 'clear answers'), base);
+  assert.strictEqual(result.ok, true);
+  assert.match(m.read().text, /Prefers clear answers/);
+  assert.match(m.read().text, /Spanish 2/);
+  assert.strictEqual(result.merged, true);
+  assert.strictEqual(result.text, m.read().text);
+});
+
+test('memory.md: overlapping concurrent edits refuse the write and expose the current snapshot', () => {
+  const m = mem();
+  const base = '- AP Chem is 3rd period | topic: classes | id: m1 | updated: 2026-10-01\n';
+  m.write(base);
+  m.save('AP Chem is 4th period', 'classes');
+  const current = m.read().text;
+  const result = m.write(base.replace('3rd', '5th'), base);
+  assert.strictEqual(result.ok, false);
+  assert.strictEqual(result.conflict, true);
+  assert.strictEqual(result.text, current);
+  assert.strictEqual(m.read().text, current);
+  // A deliberate combined draft is checked against the displayed snapshot.
+  assert.strictEqual(m.write(current + '- Reviewed together\n', current).ok, true);
+});
+
+test('memory.md: append merge respects CRLF and rejects partial-line and empty-base conflicts', () => {
+  const m = mem();
+  const base = '# Notes\r\n- Handwritten\r\n';
+  m.write(base);
+  m.save('Ben likes chess', 'hobbies');
+  const result = m.write('# Revised notes\n- Handwritten\n', base.replace(/\r\n/g, '\n'));
+  assert.strictEqual(result.ok, true);
+  assert.match(m.read().text, /^# Revised notes\r\n- Handwritten\r\n/);
+  assert.match(m.read().text, /Ben likes chess/);
+  m.write('first line');
+  m.write('first line edited elsewhere\n');
+  assert.strictEqual(m.write('local draft', 'first line').conflict, true);
+  assert.strictEqual(m.write('new document', '').conflict, true);
+});
+
 test('memory.md: Glim adding, editing and forgetting a note leaves free text alone and changes only its own line', () => {
   const dir = tmp(), m = mem(dir);
   m.write(MD);

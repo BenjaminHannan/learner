@@ -607,7 +607,7 @@
   desk.onGlim((s) => { glim = s; refreshMood(); });
 
   // ---------- sleep ----------
-  let awakeWaiters = [];
+  let wakeSendPending = false;
   // "asleep 1 h 5 m" from when this sleep began (hours_slept counts training time only, so it read "0 h so far" all night)
   const asleepFor = (since) => { if (!since) return ''; const m = Math.max(0, Math.round((Date.now() - since) / 60000)); return 'asleep ' + (m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' m' : m + ' m'); };
   function paintSleep() {
@@ -615,8 +615,8 @@
     $('#composer').classList.toggle('asleep', asleep);
     $('#sleepBar').hidden = !asleep;
     $('#btnWake').textContent = slp.waking ? 'Waking up…' : 'Wake Glim'; $('#btnWake').disabled = !!slp.waking;
-    $('#sleepTitle').textContent = slp.waking ? 'Waking up…' : 'Glim is asleep';
-    $('#sleepSub').textContent = slp.waking ? 'Waiting for the model to come back.' : [slp.checkingIn ? 'Checking your mail' : (slp.live && slp.live.now) || 'Learning from your chats', slp.wakeLabel || '', asleepFor(slp.since), slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    $('#sleepTitle').textContent = slp.waking ? 'Restoring your chat model' : 'Glim is asleep';
+    $('#sleepSub').textContent = slp.error || (slp.waking ? 'Sleep is stopping. Your message stays here until the model is ready.' : [slp.checkingIn ? 'Checking your mail' : (slp.live && slp.live.now) || 'Learning from your chats', slp.wakeLabel || '', asleepFor(slp.since), slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · '));
     // Ben Oct 28: "tell you what it's doing right now in its sleep": the earlier steps of tonight, newest last
     const rec = !slp.waking && slp.live && slp.live.recent ? slp.live.recent.slice(0, -1) : [];
     const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line))); ul.hidden = !rec.length;
@@ -628,37 +628,57 @@
     paintGateway();
   }
   function onSleepState(v) {
-    const was = slp.asleep || slp.waking; slp = v || slp; paintSleep();
-    if (was && !slp.asleep && !slp.waking) { const w = awakeWaiters; awakeWaiters = []; w.forEach((f) => f()); }
+    slp = v || slp; paintSleep();
     if ($('#settings').hidden === false) paintSleepSettings();
   }
   desk.onSleep(onSleepState);
   desk.sleep.state().then(onSleepState);
   desk.onSleepNotice((n) => addNotice('Sleep', n.text));
   desk.onSleepWoke((w) => {
+    if (w.ready === false) addNotice('Sleep', 'Sleep has stopped, but the chat model is not ready. Use Turn on to try again. Your message is still here.');
     if (w.summary) {
       const c = el('div', 'wslept sel');
       const h = el('div', 'ws-head'); h.innerHTML = svg('<path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/>'); h.append(el('b', null, 'While you slept'));
       if (w.demo) h.append(el('span', 'ws-tag', 'demo run'));
       const body = el('div', 'ws-body atext'); body.innerHTML = md(w.summary.replace(/^#{1,3} +While you slept\s*\n+/i, ''));
       c.append(h, body); msgs.append(c); newBlock(); toBottom();
-    } else addNotice('Sleep', 'Glim is awake. There was no summary this time.');
+    } else if (w.ready !== false) addNotice('Sleep', 'Glim is awake. There was no summary this time.');
     input.focus();
   });
   $('#btnWake').onclick = () => desk.sleep.wake();
   $('#wakeAskNo').onclick = () => { $('#wakeAsk').hidden = true; input.focus(); };
   $('#wakeAskYes').onclick = async () => {
-    const text = input.value; $('#wakeAsk').hidden = true;
-    await desk.sleep.wake();
-    await new Promise((r) => { if (!slp.asleep && !slp.waking) r(); else awakeWaiters.push(r); });
-    input.value = text; autosize(); submit(false);
+    if (wakeSendPending) return;
+    const text = input.value, threadId = thread && thread.id;
+    wakeSendPending = true; $('#wakeAsk').hidden = true;
+    try {
+      await SleepWake.waitForReady({ wake: () => desk.sleep.wake(), state: () => desk.sleep.state() });
+      if (input.value !== text || (thread && thread.id) !== threadId) {
+        addNotice('Sleep', 'Glim is ready. Your draft changed while waking; send it when you are ready.');
+        return;
+      }
+      submit(false);
+    } catch (e) { addNotice('Sleep', String(e.message || e)); }
+    finally { wakeSendPending = false; input.focus(); }
   };
   let sleepPick = 'morning';
   const paintDur = () => {
-    for (const b of document.querySelectorAll('#sleepDur button')) { const on = b.dataset.d === sleepPick; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.classList.toggle('on', on); }
-    $('#sleepDurNote').textContent = sleepPick === 'morning' ? 'Until ' + (slp.nightTo || settings.sleepTo || '08:00') + '. Longer sleep learns more.' : sleepPick === 'open' ? 'It keeps going until you press Wake (it plans for about 8 hours). Longer sleep learns more.' : 'Longer sleep learns more.';
+    for (const b of document.querySelectorAll('#sleepDur button')) { const on = b.dataset.d === sleepPick; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; b.classList.toggle('on', on); }
+    const until = sleepPick === 'morning' ? 'Wake at ' + (slp.nightTo || settings.sleepTo || '08:00') : sleepPick === 'open' ? 'Wake whenever you choose' : 'Wake in ' + (Number(sleepPick) < 60 ? sleepPick + ' minutes' : Number(sleepPick) / 60 + (sleepPick === '60' ? ' hour' : ' hours'));
+    $('#sleepDurNote').textContent = until + '. Your chat model will restart before Glim can answer.';
   };
-  for (const b of document.querySelectorAll('#sleepDur button')) b.onclick = () => { sleepPick = b.dataset.d; paintDur(); };
+  const durationButtons = [...document.querySelectorAll('#sleepDur button')];
+  for (const b of durationButtons) {
+    b.onclick = () => { sleepPick = b.dataset.d; paintDur(); };
+    b.onkeydown = (e) => {
+      const keys = ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End'];
+      if (!keys.includes(e.key)) return;
+      e.preventDefault();
+      const i = durationButtons.indexOf(b), n = durationButtons.length;
+      const j = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (i + (/Left|Up/.test(e.key) ? -1 : 1) + n) % n;
+      sleepPick = durationButtons[j].dataset.d; paintDur(); durationButtons[j].focus();
+    };
+  }
   function openSleepSheet() {
     if (!slp.available || slp.asleep || slp.waking) return;
     sleepPick = ['30', '60', '120', '240', 'morning', 'open'].includes(String(settings.sleepDuration)) ? String(settings.sleepDuration) : 'morning'; paintDur();
@@ -670,8 +690,10 @@
   $('#sleepCancel').onclick = closeSleepSheet;
   const goSleep = async (stopAssistant) => {
     const go = $('#sleepGo'), label = go.textContent; go.disabled = true; go.textContent = 'Getting ready…';   // turning the chat model off can take a few seconds
-    const r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick), stopAssistant });
-    go.disabled = false; go.textContent = label;
+    let r;
+    try { r = await desk.sleep.start({ pauseGlims: $('#sleepPause').checked, minutes: sleepPick === 'morning' ? 'morning' : sleepPick === 'open' ? null : Number(sleepPick), stopAssistant }); }
+    catch (e) { r = { error: String(e.message || e) }; }
+    finally { go.disabled = false; go.textContent = label; }
     if (r && r.error) { $('#sleepErr').textContent = r.error + ' '; if (r.assistantOn) { const b = el('button', 'amber-btn sm', 'Turn it off for now'); b.onclick = () => { b.disabled = true; goSleep(true); }; $('#sleepErr').append(b); } $('#sleepErr').hidden = false; return; }
     settings = { ...settings, sleepPauseGlims: $('#sleepPause').checked, sleepDuration: sleepPick }; closeSleepSheet();
   };
@@ -779,7 +801,9 @@
     items.forEach((it, i) => {
       if (it.t === 'user') addUser(it.text, false, false, false, it.ts || 0);
       else if (it.t === 'assistant') {
-        const nextIsTool = items[i + 1] && items[i + 1].t === 'step';
+        // Self-verification is stored after a final answer. It must not turn
+        // that answer into narration hidden inside the activity group on reopen.
+        const nextIsTool = items[i + 1] && items[i + 1].t === 'step' && items[i + 1].tool !== 'verify';
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
@@ -1101,7 +1125,7 @@
     ] },
     { group: 'Updates', rows: [
       { type: 'update', label: 'Premonition updates', help: 'Premonition looks for a newer version now and then. It only installs when you press Update now; your chats, memory and settings are kept.' },
-      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every 5 minutes.' }
+      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every five minutes.' }
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
@@ -1117,32 +1141,63 @@
     note.id = 'memNote'; note.setAttribute('role', 'status');
     const say = (msg, bad) => { note.className = 's-note mem-note ' + (bad ? 'bad' : 'quiet'); note.textContent = msg || ''; };
     const ta = el('textarea', 'mem-md'); ta.id = 'memText'; ta.spellcheck = false; ta.setAttribute('aria-label', 'memory.md');
-    let saved = '', busy = false;
+    let saved = '', saving = null, revision = 0, refreshId = 0, conflict = null;
     const lf = (t) => String(t).replace(/\r\n?/g, '\n');   // a textarea always holds LF
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(Math.max(ta.scrollHeight + 2, 128), 480) + 'px'; };
     const dirty = () => ta.value !== saved;
-    const save = async () => {
-      if (!dirty() || busy) return;
-      const v = ta.value; busy = true;
-      const res = await desk.memory.write(v).catch((e) => ({ ok: false, error: String(e && e.message || e) })).finally(() => { busy = false; });
-      if (res && res.ok) { saved = v; say(dirty() ? '' : 'Saved'); if (dirty() && document.activeElement !== ta) return save(); } else say('Not saved: ' + ((res && res.error) || 'could not write the file.'), true);
+    const conflictBox = el('div', 'mem-conflict'); conflictBox.id = 'memConflict'; conflictBox.hidden = true;
+    const conflictHelp = el('p', 's-note', 'The file changed while you were editing. Your draft is above. Combine it with the saved version below, then save your combined draft.');
+    const theirs = el('textarea', 'mem-md'); theirs.id = 'memSavedText'; theirs.readOnly = true; theirs.rows = 6; theirs.setAttribute('aria-label', 'Saved version of memory.md');
+    const combined = el('button', 'ghost sm', 'Save combined draft'); combined.id = 'memCombine';
+    const keepSaved = el('button', 'ghost sm', 'Keep saved version'); keepSaved.id = 'memKeepSaved';
+    conflictBox.append(conflictHelp, theirs, combined, keepSaved);
+    const clearConflict = () => { conflict = null; conflictBox.hidden = true; };
+    const save = () => {
+      if (saving) return saving;
+      if (conflict) return Promise.resolve(false);
+      if (!dirty()) return Promise.resolve(true);
+      saving = (async () => {
+        while (dirty()) {
+          const v = ta.value; revision++;
+          const res = await desk.memory.write(v, saved).catch((e) => ({ ok: false, error: String(e && e.message || e) }));
+          if (!res || !res.ok) {
+            if (res && res.conflict && typeof res.text === 'string') { conflict = { text: res.text }; theirs.value = lf(res.text); conflictBox.hidden = false; }
+            say('Not saved: ' + ((res && res.error) || 'could not write the file.'), true); return false;
+          }
+          saved = typeof res.text === 'string' ? lf(res.text) : v;
+          if (ta.value === v) ta.value = saved;
+          else if (res.appended) {
+            // A later draft was typed while the write was in flight. Carry the
+            // newly merged model append into it before draining the next save.
+            const extra = lf(res.appended);
+            ta.value += (ta.value && !ta.value.endsWith('\n') && !extra.startsWith('\n') ? '\n' : '') + extra;
+            revision++;
+          }
+          fit();
+        }
+        say('Saved'); return true;
+      })().finally(() => { saving = null; });
+      return saving;
     };
     memRefresh = async () => {
+      const id = ++refreshId, atRevision = revision;
       const r = await desk.memory.read().catch(() => null);
-      if (!r || typeof r.text !== 'string' || dirty() || busy || lf(r.text) === saved) return; // never clobber an edit in progress; a focused but untouched box still picks up Glim's additions
+      if (id !== refreshId || atRevision !== revision || !r || typeof r.text !== 'string' || dirty() || saving || conflict || lf(r.text) === saved) return; // do not apply an obsolete read or clobber an edit
       const a = ta.selectionStart, b = ta.selectionEnd;
       ta.value = r.text; saved = ta.value; fit();
       try { if (document.activeElement === ta) ta.setSelectionRange(a, b); } catch (e) { /* ignore */ }
     };
-    ta.addEventListener('input', () => { fit(); say(''); });
+    ta.addEventListener('input', () => { revision++; fit(); say(''); });
     ta.addEventListener('blur', save);
     ta.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
     const bar = el('div', 'mem-add');
     const sv = el('button', 'ghost sm', 'Save'); sv.id = 'memSave'; sv.onclick = save;
     const op = el('button', 'ghost sm', 'Open in editor'); op.id = 'memShow'; op.title = 'Opens memory.md in the default app for text files.';
-    op.onclick = async () => { await save(); const r = await desk.memory.open(); if (r && !r.ok) say('Could not open it: ' + (r.error || 'no app found.'), true); };
+    op.onclick = async () => { if (!await save()) return; const r = await desk.memory.open(); if (r && !r.ok) say('Could not open it: ' + (r.error || 'no app found.'), true); };
+    combined.onclick = () => { if (!conflict) return; saved = lf(conflict.text); clearConflict(); revision++; return save(); };
+    keepSaved.onclick = () => { if (!conflict) return; ta.value = lf(conflict.text); saved = ta.value; clearConflict(); revision++; fit(); say('Loaded saved version'); return memRefresh(); };
     bar.append(sv, op, note);
-    box.append(ta, bar);
+    box.append(ta, bar, conflictBox);
     setInterval(() => { if (!$('#settings').hidden) memRefresh(); }, 3000);
     return box;
   }

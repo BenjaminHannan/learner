@@ -40,10 +40,12 @@ def cfg_from_env(env=os.environ, prof=None) -> Config:
     if prof is not None and prof.model_dir:
         c.gguf_base_dir = prof.expanded_model_dir
     for name, cast in (("SLEEPMLX_NIGHT_BUDGET_S", float), ("SLEEPMLX_SCALE", float), ("SLEEPMLX_MIN_CARDS", int), ("SLEEPMLX_MIN_ITEM_DAYS", int),
-                       ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float), ("SLEEPMLX_CARD_SHAPE", str)):
+                       ("SLEEPMLX_SEED", int), ("SLEEPMLX_HARM_MAX", float), ("SLEEPMLX_CARD_SHAPE", str),
+                       ("SLEEPMLX_REPLAY_MODE", str), ("SLEEPMLX_REPLAY_MAX_TOKENS", int)):
         if env.get(name):
             setattr(c, {"SLEEPMLX_NIGHT_BUDGET_S": "night_budget_s", "SLEEPMLX_SCALE": "scale", "SLEEPMLX_MIN_CARDS": "min_cards",
-                        "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max", "SLEEPMLX_CARD_SHAPE": "card_shape"}[name], cast(env[name]))
+                        "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max", "SLEEPMLX_CARD_SHAPE": "card_shape",
+                        "SLEEPMLX_REPLAY_MODE": "replay_mode", "SLEEPMLX_REPLAY_MAX_TOKENS": "replay_max_tokens"}[name], cast(env[name]))
     return c
 
 
@@ -117,6 +119,14 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
         r = guards.reason()
     if r:
         out.update(interrupted=True, stop_reason=r, message="not started: " + r)
+        return out
+    # A completed night can still owe a served check. Recover it before the
+    # no-new-day shortcut and before loading a trainer alongside llama-server.
+    from . import served as served_mod
+    if not dry_run and served_mod.pending_check(paths):
+        result = served_mod.finish_pending(paths, prof, cfg, log=log)
+        out.update(status="served_check", served=result, elapsed_s=time.time() - t0,
+                   message="served check pending" if result.get("pending") else "finished pending served check")
         return out
     week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore),
                                 feedback=L_mod.read_feedback(paths.userdata_dir))

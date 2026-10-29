@@ -219,13 +219,30 @@ function createMemory(dir, opts) {
     list: () => load(),
     // Settings: the whole file as text, and a write of the whole file (atomic, previous version kept as memory.md.bak)
     read: () => ({ text: readRaw().text, path: file }),
-    write(text) {
+    write(text, expectedText) {
       if (typeof text !== 'string') return { ok: false, error: 'Nothing to save.' };
       if (text.length > MAX_FILE) return { ok: false, error: 'That is too long (the limit is ' + MAX_FILE + ' characters).' };
+      const guarded = typeof expectedText === 'string';
+      const lf = value => value.replace(/\r\n?/g, '\n');
+      let appended = '';
       try {
-        let prev = ''; try { prev = fs.readFileSync(file, 'utf8'); } catch (e) { /* none yet */ }
+        const prev = readRaw().text;
+        if (guarded) {
+          const current = lf(prev), base = lf(expectedText);
+          text = lf(text);
+          if (current !== base && current !== text) {
+            // Only merge an intact base followed by whole appended lines. An
+            // upsert, deletion, or partial-line change needs a human comparison.
+            if (base && current.startsWith(base) && (base.endsWith('\n') || current[base.length] === '\n')) {
+              appended = current.slice(base.length);
+              text += (text && !text.endsWith('\n') && !appended.startsWith('\n') ? '\n' : '') + appended;
+            } else return { ok: false, conflict: true, text: prev, error: 'The file changed while you were editing. Your draft has not replaced it.' };
+          }
+        }
         if (prev.includes('\r\n') && !text.includes('\r')) text = text.replace(/\n/g, '\r\n');   // the textarea gives LF; keep a CRLF file CRLF
+        if (text.length > MAX_FILE) return { ok: false, error: 'The combined notes are too long (the limit is ' + MAX_FILE + ' characters).' };
         writeText(text);
+        if (guarded) return { ok: true, path: file, text, merged: !!appended, appended };
       } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
       return { ok: true, path: file };
     },

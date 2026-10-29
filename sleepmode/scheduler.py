@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import math
 import signal
 import subprocess
 import sys
@@ -19,6 +20,16 @@ from .state import State, now_iso
 from .workers import SleepWorker
 
 PracticeFn = Callable[[float], Optional[dict]]
+
+
+def wake_deadline_ms(value: str) -> Optional[int]:
+    """Parse an optional absolute Unix deadline, ignoring malformed values."""
+    try:
+        deadline = float(value)
+        # Keep the value exact when Desktop reads it as a JavaScript number.
+        return int(deadline) if math.isfinite(deadline) and 1 <= deadline <= 9007199254740991 else None
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 def memory_pressure() -> int:
@@ -100,6 +111,7 @@ class Scheduler:
         self.state = State(cfg)
         self.practice_fn = practice_fn or default_practice_fn(cfg, self.state)
         self.scanners, self.clock, self.sleep = scanners, clock, sleep
+        self.wake_at_ms = wake_deadline_ms(os.environ.get("SLEEPMODE_WAKE_AT_MS", ""))
         self.checkin_sender = checkin_sender
         self.plateau = Plateau(cfg.plateau_window, cfg.plateau_min_gain_per_hour, cfg.plateau_patience,
                                cfg.min_sleep_hours, cfg.plateau_noise, cfg.plateau_general_drop)
@@ -133,6 +145,8 @@ class Scheduler:
             self.stop_reason = "WAKE file"
         elif self.state.assistant_running():
             self.stop_reason = "assistant started"
+        elif self.wake_at_ms is not None and self.clock() >= self.wake_at_ms / 1000:
+            self.stop_reason = "wake deadline"
         return bool(self.stop_reason)
 
     def pause_reason(self) -> str:
@@ -196,7 +210,7 @@ class Scheduler:
         d = dict(mode=self.mode)
         d.update(kw)
         self.state.set_status(
-            state=state_name, pid=os.getpid(), since=self.state.status.get("since") or now_iso(),
+            state=state_name, pid=os.getpid(), wake_at_ms=self.wake_at_ms, since=self.state.status.get("since") or now_iso(),
             hours_slept=round(self.hours_slept, 4), last_quiz=self.quizzes[-1] if self.quizzes else None,
             chunks=self.chunks, practice_rounds=len(self.rounds),
             last_pass1=self.rounds[-1].get("pass1") if self.rounds else None,
@@ -253,6 +267,10 @@ class Scheduler:
                          interrupted=r.interrupted, info=r.info)
         if r.interrupted:
             return
+        # Failed trainers use the same bounded retry/idle path as raised exceptions.
+        # A deliberate stop or an expired chunk budget is not a worker failure.
+        if (r.info or {}).get("error") and not (r.info or {}).get("budget_exceeded"):
+            raise RuntimeError("sleep worker: %s" % r.info["error"])
         if r.quiz is not None:
             self.quizzes.append(r.quiz)
         self.plateau.add(r.quiz, r.elapsed_s / self.cfg.hour_s, (r.info or {}).get("general"))
