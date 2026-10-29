@@ -1,0 +1,247 @@
+{
+  "experiment": "sequential-retention-control-v1",
+  "scope": "Sequential-retention control only; not full paper/production-night reproduction",
+  "plan_sha256": "b11b491e9bb4cdce5ab94f564a0f4895e47e73a337a1da149a866f20046e1d31",
+  "HF_partial": false,
+  "HF_updates": 72,
+  "HF_source_report_sha256": "ae9750c521c0d7e75845bfa79941334905822f4c48e46d2e2b28b3c695b42884",
+  "HF_checkpoints": [
+    {
+      "phase": 0,
+      "held_hits_by_block": [
+        0,
+        0,
+        0
+      ],
+      "held_hits_total": 0,
+      "general_hits": 6,
+      "new_block_gain": null,
+      "previously_correct_old_fact_losses": [],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": []
+    },
+    {
+      "phase": 1,
+      "held_hits_by_block": [
+        1,
+        0,
+        0
+      ],
+      "held_hits_total": 1,
+      "general_hits": 8,
+      "new_block_gain": 1,
+      "previously_correct_old_fact_losses": [],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [],
+      "old_fact_previously_correct_n": 0
+    },
+    {
+      "phase": 2,
+      "held_hits_by_block": [
+        0,
+        2,
+        0
+      ],
+      "held_hits_total": 2,
+      "general_hits": 6,
+      "new_block_gain": 2,
+      "previously_correct_old_fact_losses": [
+        "Name the home bay assigned to the Brindle airship."
+      ],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [
+        "How many minutes are in an hour?",
+        "What is the square root of 64?"
+      ],
+      "old_fact_previously_correct_n": 1
+    },
+    {
+      "phase": 3,
+      "held_hits_by_block": [
+        0,
+        0,
+        0
+      ],
+      "held_hits_total": 0,
+      "general_hits": 6,
+      "new_block_gain": 0,
+      "previously_correct_old_fact_losses": [
+        "Name the access word assigned to the Dapple clocktower.",
+        "Name the call sign assigned to the Ember courier."
+      ],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [],
+      "old_fact_previously_correct_n": 2
+    }
+  ],
+  "native_partial": false,
+  "native_checkpoints": [
+    {
+      "phase": 1,
+      "partial": false,
+      "raw_report_sha256": "fd01db11ffccd1a10121cec63566d86073c9613b046f05d59daa03e235774772",
+      "held_hits_by_block": [
+        1,
+        0,
+        0
+      ],
+      "general_hits": 8,
+      "old_fact_previously_correct_n": 0,
+      "old_fact_losses": [],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [],
+      "new_block_gain": 1
+    },
+    {
+      "phase": 2,
+      "partial": false,
+      "raw_report_sha256": "36e050bd29536bb728750803f5cd7192f67ce48b76c55e652eab0f46e9b3e8a8",
+      "held_hits_by_block": [
+        0,
+        2,
+        0
+      ],
+      "general_hits": 6,
+      "old_fact_previously_correct_n": 1,
+      "old_fact_losses": [
+        "Name the home bay assigned to the Brindle airship."
+      ],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [
+        "How many minutes are in an hour?",
+        "What is the square root of 64?"
+      ],
+      "new_block_gain": 2
+    },
+    {
+      "phase": 3,
+      "partial": false,
+      "raw_report_sha256": "a13c837cae0955d895b46c68bccaa261482ccc954a653bbc6ca37e9a576cfe5c",
+      "held_hits_by_block": [
+        0,
+        0,
+        0
+      ],
+      "general_hits": 7,
+      "old_fact_previously_correct_n": 2,
+      "old_fact_losses": [
+        "Name the access word assigned to the Dapple clocktower.",
+        "Name the call sign assigned to the Ember courier."
+      ],
+      "general_losses_vs_baseline": [],
+      "general_losses_vs_previous_phase": [],
+      "new_block_gain": 0
+    }
+  ],
+  "no_quality_or_promotion_claim": true,
+  "limitations": [
+    "Sequential retention CONTROL only, not full Google Sleep reproduction",
+    "No context-privileged teacher/student-rollout reward, fresh memory blocks, RL/MoE implementation, or exact production-night reproduction",
+    "No promotion/default change or reinterpretation of old64primary",
+    "Small fictional sample; forgetting denominator is only previously measured correct facts, not all trained facts.",
+    "Native and HF are scored separately; identical weights/prompts do not guarantee identical greedy predictions.",
+    "No best-step/phase or hyperparameter selection."
+  ],
+  "native_baseline": {
+    "held_hits_by_block": [
+      0,
+      0,
+      0
+    ],
+    "general_hits": 6
+  },
+  "all_fixed_HF_phases_complete": true,
+  "HF_only_or_native_partial": false,
+  "parent_core_manifest_sha256": "5e9271d918ee681d07f388a532339e93e7a1d2046fe546130868646896b2ee72",
+  "cumulative_ever_correct_retention": {
+    "HF": [
+      {
+        "phase": 1,
+        "ever_correct_old_fact_n": 0,
+        "currently_lost_ever_correct_old_facts": [],
+        "retained_old_fact_n": 0
+      },
+      {
+        "phase": 2,
+        "ever_correct_old_fact_n": 1,
+        "currently_lost_ever_correct_old_facts": [
+          "Name the home bay assigned to the Brindle airship."
+        ],
+        "retained_old_fact_n": 0
+      },
+      {
+        "phase": 3,
+        "ever_correct_old_fact_n": 3,
+        "currently_lost_ever_correct_old_facts": [
+          "Name the home bay assigned to the Brindle airship.",
+          "Name the access word assigned to the Dapple clocktower.",
+          "Name the call sign assigned to the Ember courier."
+        ],
+        "retained_old_fact_n": 0
+      }
+    ],
+    "native": [
+      {
+        "phase": 1,
+        "ever_correct_old_fact_n": 0,
+        "currently_lost_ever_correct_old_facts": [],
+        "retained_old_fact_n": 0
+      },
+      {
+        "phase": 2,
+        "ever_correct_old_fact_n": 1,
+        "currently_lost_ever_correct_old_facts": [
+          "Name the home bay assigned to the Brindle airship."
+        ],
+        "retained_old_fact_n": 0
+      },
+      {
+        "phase": 3,
+        "ever_correct_old_fact_n": 3,
+        "currently_lost_ever_correct_old_facts": [
+          "Name the home bay assigned to the Brindle airship.",
+          "Name the access word assigned to the Dapple clocktower.",
+          "Name the call sign assigned to the Ember courier."
+        ],
+        "retained_old_fact_n": 0
+      }
+    ]
+  },
+  "resources": {
+    "HF-job": {
+      "peak_process_commit_bytes": 4822069248,
+      "minimum_sampled_system_free_bytes": 18600353792
+    },
+    "native-tokenizer": {
+      "peak_process_commit_bytes": 540520448,
+      "minimum_sampled_system_free_bytes": 22756184064
+    },
+    "native-phase-1": {
+      "peak_process_commit_bytes": 314568704,
+      "minimum_sampled_system_free_bytes": 19352829952
+    },
+    "native-phase-2": {
+      "peak_process_commit_bytes": 295051264,
+      "minimum_sampled_system_free_bytes": 19413983232
+    },
+    "native-phase-3": {
+      "peak_process_commit_bytes": 294805504,
+      "minimum_sampled_system_free_bytes": 19354255360
+    }
+  },
+  "final_cleanup": {
+    "ownedModelOrPythonChildren": [],
+    "ownedChildrenGone": true,
+    "checkedUTC": "2026-10-29T23:22:43.2330470Z",
+    "absoluteStop": "2026-10-29T23:29:30Z",
+    "allThreeNativePhasesCompleted": true
+  },
+  "HF_elapsed_s": 610.6560000001919,
+  "native_elapsed_s": [
+    51.57799999997951,
+    20.061999999918044,
+    19.578999999910593
+  ],
+  "interpretation": "Only3/9 distinct fact answers were ever demonstrably correct after their training phases; all3 were absent after phase3 in both HF and exact-HF BF16 native evaluation. This shows small-sample sequential interference under this no-old-fact-rehearsal control, plus weak new-block held generalization. It neither evaluates the full paper nor proves capacity saturation or production-night behavior.",
+  "parent_core_all150_files_still_unchanged": true
+}

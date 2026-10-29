@@ -1,0 +1,263 @@
+{
+  "experiment": "windows-cpu-bf16-controlled-replay-64-v1",
+  "quality_or_promotion_claim": false,
+  "overall_release_quality": "not established",
+  "scope": "synthetic CPU bf16 training and exploratory nonzero QAD transfer; separate from Mac fp16 runs",
+  "preregistration_sha256": "4dbd6852fe1223a55c1a9f0c55c1ae0e9d13743f2bccf79deaad51f25fa724a2",
+  "pre32_fallback_decision": {
+    "decision_utc": "2026-10-29T22:22:32.251592+00:00",
+    "authority": "Root explicit message before checkpoint32 results",
+    "original_primary_endpoint": 64,
+    "arm_budget_seconds": 600,
+    "outer_job_seconds": 630,
+    "changes": [
+      "If no64 primary result, native export/transfer uses preplanned fixed32 retained adapter only; never best-score or terminal-step selection",
+      "Continuation may run with prompt incomplete64, provided exact initial adapter bytes and full baseline equality; unchanged numeric config and 64 primary target",
+      "Compare completed fixed12/32 diagnostics only when available in both; no64 primary verdict unless complete",
+      "Record individual previously correct monitor loss sets; equal aggregate scores do not establish retention"
+    ],
+    "exploratory_native32_label": "exploratory fixed32 QAD transfer diagnostic; 64-step primary incomplete/unsettled; no promotion"
+  },
+  "arms": {
+    "prompt": {
+      "primary64_complete": false,
+      "completed_steps": 59,
+      "stop_or_error": "TimeoutError: 600 second arm budget exceeded",
+      "elapsed_s": 601.7819999998901,
+      "initial_adapter_files": {
+        "adapter_config.json": "bc11648985d537a475b4fcc3572c8aea061136abf05645368e0e8fe1f72ccb7a",
+        "adapter_model.safetensors": "e1026681b535353da1e93c3f80b31a01d169f61e20078043664ba65e74b16cde",
+        "README.md": "a7d593b4d65ea19a2fef308aed5e379a377199affc55a69edb8d2d2d51fc334a"
+      },
+      "config": {
+        "steps": 64,
+        "seed": 0,
+        "lr": 0.0002,
+        "replay_mode": "prompt",
+        "gen_batch": 1,
+        "tok_budget": 256,
+        "generation_tokens": 32,
+        "replay_max_tokens": 32,
+        "max_seq_len": 256,
+        "budget_seconds": 600,
+        "threads": 2,
+        "base_dtype": "bfloat16",
+        "adapter_dtype": "float32"
+      },
+      "grader": "strict-3",
+      "fixed_checkpoint_diagnostics": [
+        {
+          "step": 0,
+          "elapsed_s": 65.70299999997951,
+          "training_hits": 0,
+          "held_hits": 0,
+          "held_gain": 0,
+          "monitor_hits": 5,
+          "previously_correct_monitor_losses": 0,
+          "lost_monitor_questions": [],
+          "newly_correct_monitor_questions": [],
+          "training_mean_answer_NLL_relative_drop": 0.0,
+          "first_token_probability_increases": 0,
+          "training_diagnostic_pass": false,
+          "learning_retention_diagnostic_pass": false
+        },
+        {
+          "step": 12,
+          "elapsed_s": 185.81299999984913,
+          "training_hits": 2,
+          "held_hits": 2,
+          "held_gain": 2,
+          "monitor_hits": 5,
+          "previously_correct_monitor_losses": 1,
+          "lost_monitor_questions": [
+            "Which punctuation mark usually ends a direct question?"
+          ],
+          "newly_correct_monitor_questions": [
+            "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+          ],
+          "training_mean_answer_NLL_relative_drop": 0.8648063297291124,
+          "first_token_probability_increases": 4,
+          "training_diagnostic_pass": true,
+          "learning_retention_diagnostic_pass": false
+        },
+        {
+          "step": 32,
+          "elapsed_s": 383.875,
+          "training_hits": 4,
+          "held_hits": 4,
+          "held_gain": 4,
+          "monitor_hits": 3,
+          "previously_correct_monitor_losses": 2,
+          "lost_monitor_questions": [
+            "Which punctuation mark usually ends a direct question?",
+            "A book is placed above a cup. Is the cup above or below the book?"
+          ],
+          "newly_correct_monitor_questions": [],
+          "training_mean_answer_NLL_relative_drop": 0.9998024552974368,
+          "first_token_probability_increases": 4,
+          "training_diagnostic_pass": true,
+          "learning_retention_diagnostic_pass": false
+        }
+      ],
+      "job_resource_metrics": {
+        "peak_process_commit_bytes": 4816076800,
+        "minimum_sampled_system_free_bytes": 18345787392
+      },
+      "native32_resource_metrics": {
+        "peak_process_commit_bytes": 1132204032,
+        "minimum_sampled_system_free_bytes": 20717789184
+      },
+      "native": {
+        "checkpoint": 32,
+        "exploratory32": true,
+        "outcome": {
+          "held_off": 0,
+          "held_on": 3,
+          "native_learned_fact_gain": 3,
+          "general_off": 8,
+          "general_on": 8,
+          "previously_correct_general_losses": 0,
+          "native_learning_retention_diagnostic_pass": true,
+          "zero_zero_tie_is_learning_proof": false
+        },
+        "owned_server_stopped": true,
+        "elapsed_s": 18.969000000040978,
+        "raw_report": "prompt/native-exploratory32-strict3.json"
+      }
+    },
+    "continuation": {
+      "primary64_complete": false,
+      "completed_steps": 34,
+      "stop_or_error": "TimeoutError: 600 second arm budget exceeded",
+      "elapsed_s": 609.9529999999795,
+      "initial_adapter_files": {
+        "adapter_config.json": "bc11648985d537a475b4fcc3572c8aea061136abf05645368e0e8fe1f72ccb7a",
+        "adapter_model.safetensors": "e1026681b535353da1e93c3f80b31a01d169f61e20078043664ba65e74b16cde",
+        "README.md": "a7d593b4d65ea19a2fef308aed5e379a377199affc55a69edb8d2d2d51fc334a"
+      },
+      "config": {
+        "steps": 64,
+        "seed": 0,
+        "lr": 0.0002,
+        "replay_mode": "continuation",
+        "gen_batch": 1,
+        "tok_budget": 256,
+        "generation_tokens": 32,
+        "replay_max_tokens": 32,
+        "max_seq_len": 256,
+        "budget_seconds": 600,
+        "threads": 2,
+        "base_dtype": "bfloat16",
+        "adapter_dtype": "float32"
+      },
+      "grader": "strict-3",
+      "fixed_checkpoint_diagnostics": [
+        {
+          "step": 0,
+          "elapsed_s": 64.4210000000894,
+          "training_hits": 0,
+          "held_hits": 0,
+          "held_gain": 0,
+          "monitor_hits": 5,
+          "previously_correct_monitor_losses": 0,
+          "lost_monitor_questions": [],
+          "newly_correct_monitor_questions": [],
+          "training_mean_answer_NLL_relative_drop": 0.0,
+          "first_token_probability_increases": 0,
+          "training_diagnostic_pass": false,
+          "learning_retention_diagnostic_pass": false
+        },
+        {
+          "step": 12,
+          "elapsed_s": 316.63999999989755,
+          "training_hits": 2,
+          "held_hits": 2,
+          "held_gain": 2,
+          "monitor_hits": 6,
+          "previously_correct_monitor_losses": 0,
+          "lost_monitor_questions": [],
+          "newly_correct_monitor_questions": [
+            "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+          ],
+          "training_mean_answer_NLL_relative_drop": 0.8664150829399432,
+          "first_token_probability_increases": 4,
+          "training_diagnostic_pass": true,
+          "learning_retention_diagnostic_pass": true
+        },
+        {
+          "step": 32,
+          "elapsed_s": 586.0930000001099,
+          "training_hits": 4,
+          "held_hits": 4,
+          "held_gain": 4,
+          "monitor_hits": 3,
+          "previously_correct_monitor_losses": 2,
+          "lost_monitor_questions": [
+            "Which punctuation mark usually ends a direct question?",
+            "A book is placed above a cup. Is the cup above or below the book?"
+          ],
+          "newly_correct_monitor_questions": [],
+          "training_mean_answer_NLL_relative_drop": 0.9997580920352159,
+          "first_token_probability_increases": 4,
+          "training_diagnostic_pass": true,
+          "learning_retention_diagnostic_pass": false
+        }
+      ],
+      "job_resource_metrics": {
+        "peak_process_commit_bytes": 5099044864,
+        "minimum_sampled_system_free_bytes": 18264342528
+      },
+      "native32_resource_metrics": {
+        "peak_process_commit_bytes": 1136136192,
+        "minimum_sampled_system_free_bytes": 20806934528
+      },
+      "native": {
+        "checkpoint": 32,
+        "exploratory32": true,
+        "outcome": {
+          "held_off": 0,
+          "held_on": 3,
+          "native_learned_fact_gain": 3,
+          "general_off": 8,
+          "general_on": 7,
+          "previously_correct_general_losses": 1,
+          "native_learning_retention_diagnostic_pass": false,
+          "zero_zero_tie_is_learning_proof": false
+        },
+        "owned_server_stopped": true,
+        "elapsed_s": 22.20300000021234,
+        "raw_report": "continuation/native-exploratory32-strict3.json"
+      }
+    }
+  },
+  "files": {
+    "prompt/report.json": "60462d7b3f79d74ff05c7658694a875c76c7a330bc4689fc74574f90ec43903c",
+    "prompt/native-exploratory32-strict3.json": "f6b8e69fd99bbf2147b98c03400f74de6a4b214c7a3859d7b38bd8bdbd692719",
+    "continuation/report.json": "8bf7fa58f0682db39c285b151dcf3777ce415facaf7b033b0907af237f834fb4",
+    "continuation/native-exploratory32-strict3.json": "da5d0af0708065659c98a81f56a588bf9026fd2aa2231c28785a90b6f3af9681"
+  },
+  "pair_identity": {
+    "initial_adapter_all_file_hashes_equal": true,
+    "full_model_tokenizer_source_file_hashes_equal": true,
+    "reference_identity_equal": true,
+    "runtime_versions_and_threads_equal": true,
+    "numeric_config_equal_except_replay_mode": true,
+    "full_raw_baseline_bytes_equal": true,
+    "initial_adapter_tensor_sha256": "e1026681b535353da1e93c3f80b31a01d169f61e20078043664ba65e74b16cde",
+    "baseline_sha256": "ea92c8e07c938ec10330565d9f5c88b2b15540d4051d6c4fcff3b802e9e99b5c",
+    "model_safetensors_sha256": "135922caef64e81e52af88ede8b7c3ddaa9d6da220a9737fb3065275dbfb4330"
+  },
+  "both_primary64_complete": false,
+  "common_completed_fixed_checkpoints": [
+    0,
+    12,
+    32
+  ],
+  "interpretation": [
+    "Native positive synthetic learned-fact gain is actual transfer evidence for the measured checkpoint; no zero/zero tie is counted as learning.",
+    "Fixed-checkpoint retention uses preregistered conservative graders; inspect raw text before describing a grader loss as factual forgetting.",
+    "No64 primary quality verdict when either arm is incomplete.",
+    "No adapter promotion, default/model switch, production configuration change, public-gateway inference, or user-data use.",
+    "BENSPC with sampled free RAM above8GiB does not establish8GiB laptop feasibility."
+  ]
+}
