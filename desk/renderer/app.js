@@ -489,7 +489,7 @@
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
     paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
-    $('#runState span').textContent = 'Working…';
+    $('#runState span').textContent = 'Typing…';
     paintGateway();
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
     input.readOnly = !!(thread && thread.helper);
@@ -539,7 +539,7 @@
     // one source of truth with the composer: while a run is on, both say what the run says
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? $('#runState span').textContent : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? 'Typing…' : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     paintOffCard();
@@ -720,7 +720,7 @@
       }
       case 'notice': addNotice(ev.helper, ev.text); break;
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
-      case 'started': $('#runState span').textContent = 'Working…'; if (window.Side) Side.setPlan([]); paintGateway(); break;
+      case 'started': $('#runState span').textContent = 'Typing…'; if (window.Side) Side.setPlan([]); paintGateway(); break;
       case 'compacted': break;
       case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
       case 'done': {

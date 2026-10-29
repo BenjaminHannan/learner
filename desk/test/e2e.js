@@ -296,7 +296,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['after sending, the transcript is scrolled to the bottom', await until(() => ev('(() => { const s = document.querySelector("#scroll"); return s.scrollHeight - s.scrollTop - s.clientHeight < 4; })()'), 3000)]);
     checks.push(['the last message is not covered by the composer', await ev('(() => { const all = [...document.querySelectorAll("#msgs > *")]; const last = all[all.length - 1].getBoundingClientRect(); const c = document.querySelector("#composer").getBoundingClientRect(); return last.bottom <= c.top + 1; })()')]);
     checks.push(['narration lines are hidden inside the steps, or single-line with ellipsis', await ev('[...document.querySelectorAll(".nar")].every((n) => getComputedStyle(n).display === "none" || (getComputedStyle(n).whiteSpace === "nowrap" && n.clientHeight >= parseFloat(getComputedStyle(n).lineHeight) - 1))')]);
-    checks.push(['top status and composer agree while working', await ev('/Working|Waiting/.test(document.querySelector("#gw").textContent) && document.querySelector("#gw span").textContent === document.querySelector("#runState span").textContent')]);
+    checks.push(['top status and composer agree while working', await ev('/Typing|Waiting/.test(document.querySelector("#gw").textContent) && document.querySelector("#gw span").textContent === document.querySelector("#runState span").textContent')]);
     checks.push(['hand-off: agent still waiting (no further request)', gw.requests.length === 8]);
     await grab('ui-v2-signin.png', true);
     const origTheme = nativeTheme.themeSource;
