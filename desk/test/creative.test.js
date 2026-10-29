@@ -64,6 +64,13 @@ test('LFM3 private proposer uses only its configured native fast alias while mai
     assert.equal(gw.requests[0].model, 'lfm3-fast'); assert.equal(gw.requests[1].model, 'lfm3');
     assert.equal(gw.requests[0].chat_template_kwargs, undefined);
   } finally { gw.close(); }
+  for (const alias of ['fast', 'auto']) {
+    const gw = await startGateway([{ content: JSON.stringify(ideas) }, { content: 'A thoughtful answer.' }]);
+    try {
+      await makeAgent(gw, { modelMain: 'main', modelFast: alias }).run(thread(), task);
+      assert.equal(gw.requests[0].model, alias); assert.equal(gw.requests[1].model, 'main');
+    } finally { gw.close(); }
+  }
   for (const extra of [{ modelFast: 'unrelated-fast' }, { backendModelFamily: 'apex35b', modelMain: 'Apex-35B', modelFast: 'lfm3-fast' }]) {
     let requestedModel;
     await propose({ text: task, settings: settings({ url: 'unused' }, extra), request: async (o) => { requestedModel = o.model; return { content: JSON.stringify(ideas) }; } });

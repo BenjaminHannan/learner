@@ -69,7 +69,7 @@ async function propose({ text, settings, model, signal, hidden, request = stream
       // Measured LFM3's main alias uses this tiny budget on reasoning, while its
       // native fast aliases return useful JSON. Only these same-model aliases
       // may replace the private call; the main chat's selected model is untouched.
-      model: settings.backendModelFamily === 'lfm3' && /^lfm3-(?:fast|auto)$/i.test(settings.modelFast || '')
+      model: settings.backendModelFamily === 'lfm3' && /^(?:lfm3-)?(?:fast|auto)$/i.test(settings.modelFast || '')
         ? settings.modelFast : model || settings.modelMain || settings.model,
       apiKey: settings.apiKey, signal: ctl.signal, tools: [], maxTokens: MAX_TOKENS,
       temperature: 0.9, topP: 0.95, purpose: PURPOSE, test: true,
