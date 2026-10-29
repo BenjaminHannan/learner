@@ -93,6 +93,17 @@
 
   // ---------- blocks, activity groups ----------
   function newBlock() { blk = null; act = null; tn = null; }
+  // Ben Oct 29: a texting-style "Glim is typing" bubble, in the chat next to Glim's face, while it works and nothing new is being written yet
+  const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is typing');
+  typingRow.append(Mascot.el('idle', 28, { cls: 'avatar', still: true }));
+  { const col = el('div', 'acol'), b = el('div', 'typing'); b.append(el('i'), el('i'), el('i')); col.append(b); typingRow.append(col); }
+  function paintTyping() {
+    const on = !!running && !(tn && tn.text) && !(thread && thread.helper);
+    if (on && typingRow.parentNode !== msgs) msgs.append(typingRow);
+    if (typingRow.hidden === !on) return;
+    typingRow.hidden = !on;
+    if (on) toBottom();
+  }
   function ensureBlock() {
     if (blk) return blk;
     const root = el('div', 'ablock');
@@ -221,7 +232,7 @@
   let runTexts = []; // every text node of the reply being written: a steer aborts the reply, and all its half-written text goes (newBlock() can orphan the first node)
   function onText(d) {
     const t = tn || startTn();
-    if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); runTexts.push(t.text); }
+    if (!t.text) { t.text = el('div', 'atext'); ensureBlock().col.append(t.text); runTexts.push(t.text); paintTyping(); }
     t.raw += d; paintText();
   }
   // Ben Oct 28: like / dislike an answer. Kept on the thread and logged for sleep (src/feedback.js): liked answers become examples
@@ -245,6 +256,7 @@
     runTexts = [];
     const t = tn;
     tn = null;
+    paintTyping();
     const hasTools = (ev.toolCalls || 0) > 0;
     if (!t) return;
     t.raw = answerOf(t.raw);
@@ -488,7 +500,7 @@
   function setRunning(r) {
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
-    paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r;
+    paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r; paintTyping();
     $('#runState span').textContent = 'Typing…';
     paintGateway();
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
@@ -536,10 +548,10 @@
     g.classList.remove('ready', 'warming', 'down');
     const st = gw.state === 'ready' ? 'ready' : gw.state === 'warming' ? 'warming' : 'down';
     g.classList.add(st); g.classList.toggle('asleep', !!(slp.asleep || slp.waking));
-    // one source of truth with the composer: while a run is on, both say what the run says
+    // while a run is on, the typing bubble in the chat says so; the top pill keeps its own state (Ben Oct 29: "Typing…" twice looked bad)
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : busy ? 'Typing…' : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
+    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     paintOffCard();
@@ -700,7 +712,7 @@
       case 'text': markRead(); onText(ev.delta); break;
       case 'reasoning': markRead(); onReasoning(ev.delta); break;
       case 'assistant_end': onAssistantEnd(ev); break;
-      case 'discard': try { runTexts.forEach((n) => n.remove()); if (tn) { tn.text && tn.text.remove(); tn.think && tn.think.d.remove(); } } catch (e) { /* gone */ } runTexts = []; tn = null; break;
+      case 'discard': try { runTexts.forEach((n) => n.remove()); if (tn) { tn.text && tn.text.remove(); tn.think && tn.think.d.remove(); } } catch (e) { /* gone */ } runTexts = []; tn = null; paintTyping(); break;
       case 'step_start': markRead(); onStepStart(ev); Mascot.bounce(logo); break;
       case 'step_end': onStepEnd(ev); break;
       case 'bcard': upsertBCard(ev); break;

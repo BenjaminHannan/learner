@@ -177,12 +177,13 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .stop:hover { background:var(--danger); color:var(--on-danger); }
 .stop i { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
-#runState .typing { display:inline-flex; align-items:center; gap:.28rem; padding:.62rem .8rem; border-radius:1.1rem 1.1rem 1.1rem .3rem; background:var(--raised); }
-#runState .typing i { width:.46rem; height:.46rem; border-radius:50%; background:var(--text2); opacity:.45; animation:typing-dot 1.2s infinite ease-in-out; }
-#runState .typing i:nth-child(2) { animation-delay:.18s; } #runState .typing i:nth-child(3) { animation-delay:.36s; }
-#runState > span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } /* read by screen readers only: the dots are the visible state */
-@keyframes typing-dot { 0%, 60%, 100% { transform:translateY(0); opacity:.4; } 30% { transform:translateY(-.32rem); opacity:1; } }
-@media (prefers-reduced-motion: reduce) { #runState .typing i { animation:none; opacity:.7; } }
+#runState { display:none !important; } /* the typing bubble in the chat shows that Glim is working (Ben Oct 29: the line above the input "looks bad") */
+.typing-row { order:9999; } .typing-row[hidden] { display:none; } /* always the last row of the chat, whatever is appended after it */
+.typing { display:inline-flex; align-items:center; gap:.3rem; height:2.1rem; padding:0 .85rem; border-radius:1.05rem 1.05rem 1.05rem .3rem; background:var(--raised); width:max-content; }
+.typing i { width:.45rem; height:.45rem; border-radius:50%; background:var(--text2); opacity:.4; animation:typing-dot 1.3s infinite ease-in-out; }
+.typing i:nth-child(2) { animation-delay:.16s; } .typing i:nth-child(3) { animation-delay:.32s; }
+@keyframes typing-dot { 0%, 60%, 100% { opacity:.35; transform:scale(.85); } 30% { opacity:1; transform:scale(1); } }
+@media (prefers-reduced-motion: reduce) { .typing i { animation:none; opacity:.7; } }
 .callbtn { background:none; color:var(--text2); border:1.5px solid var(--hair2); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
 .callbtn svg { width:1.05rem; height:1.05rem; }
 .callbtn:hover:not(:disabled) { color:var(--accent-text); border-color:var(--accent-text); }
