@@ -391,7 +391,7 @@ class Browser {
       this.readCache = { url, pages: pages.length ? pages : ['(no readable text)'], readAt: Date.now(), readable: !!t.trim() };
     }
     const n = this.readCache.pages.length;
-    const k = Math.min(Math.max(1, Number(page) || 1), n);
+    const k = Math.min(Math.max(1, Math.floor(Number(page)) || 1), n);
     const header = 'Page ' + k + ' of ' + n + ' (' + url + ')\n';
     const body = this.readCache.pages[k - 1];
     const result = { text: header + body + (k < n ? '\n[more: browser_read page=' + (k + 1) + ']' : '') };

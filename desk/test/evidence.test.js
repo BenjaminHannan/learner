@@ -96,6 +96,9 @@ test('native browser read binds its own URL and body and rejects a navigation ra
   assert.equal(result[SOURCE_READ].url, url);
   assert.equal(result[SOURCE_READ].body, quote);
   assert.equal(JSON.stringify(result).includes('bodyStart'), false);
+  const fractional = await Browser.prototype.read.call(fake, 1.5);
+  assert.equal(fractional[SOURCE_READ].page, 1);
+  assert.equal(fractional[SOURCE_READ].body, quote);
   fake.readCache = { url: '', pages: [] };
   fake.wc.executeJavaScript = async () => { url = 'https://example.test/other'; return quote; };
   const raced = await Browser.prototype.read.call(fake, 1);
