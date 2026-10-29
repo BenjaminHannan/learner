@@ -83,5 +83,18 @@
     "No current defaults changed even after one positive result"
   ],
   "budget_interpretation": "The larger resource window is explicit before the next run. A quality pass at64 would not demonstrate equal latency/resource cost to the209-second control.",
-  "subsequent_algorithm_probe": "Deferred until this fixed comparison completes or root rejects it; no extra LR/replay sweeps proposed as substitutes for an incomplete endpoint."
+  "subsequent_algorithm_probe": "Deferred until this fixed comparison completes or root rejects it; no extra LR/replay sweeps proposed as substitutes for an incomplete endpoint.",
+  "required_source_freeze": {
+    "revision": "1a61565",
+    "grader": "strict-3",
+    "reason": "The original paired control and pass criteria are bound to the old grading/monitor semantics. A later strict4 working tree must not silently rescore or replace that comparison.",
+    "execution": "Create a separate isolated git archive/worktree snapshot of revision1a61565 containing sleepmlx and the committed research harness/fixtures; run its diagnostic from that snapshot with its own REPO/PYTHONPATH. Do not import working-tree gate, replay_monitor, backend, or profile.",
+    "checks": [
+      "Assert gate.GRADER is strict-3 before model load",
+      "Record source revision and source hashes in the new report",
+      "Assert original initialadapterSHA, teacher32record fixture, and full model/tokenizer/template identity",
+      "Preserve every old report and the fixed64 endpoint/strict3 pass marks"
+    ],
+    "alternative": "A strict4 study requires explicitly new matched prompt and continuation arms with new baseline reports and protocol; it cannot complete or pass the old study retroactively."
+  }
 }
