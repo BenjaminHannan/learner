@@ -649,3 +649,23 @@ test('asksForSecret: the sign-in hand-off is not an ask; asking for the password
   assert.strictEqual(claimsAction('I will open the Schoology sign-in page for you.'), true);
   assert.strictEqual(claimsAction("I'm now on the sign-in page."), true);
 });
+
+test('history: a reply that only claimed steps reaches the model as a note; a real answer after tool calls stays', () => {
+  const a = new Agent({ getSettings: () => ({}), toolDefs: [], tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+  const t = mkThread();
+  t.messages = [
+    { role: 'user', content: 'connect to schoology' },
+    { role: 'assistant', content: "I am now on the Schoology dashboard. Here are your assignments: Math 203." },
+    { role: 'user', content: 'open it' },
+    { role: 'assistant', content: '', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'browser_go', arguments: '{}' } }] },
+    { role: 'tool', tool_call_id: 'c1', content: 'ok' },
+    { role: 'assistant', content: "I've opened the page and it shows the sign-in." },
+    { role: 'user', content: "I'm on the fence about it" },
+    { role: 'assistant', content: 'Fair enough.' }
+  ];
+  const m = a.requestMessages(t);
+  assert.match(m[2].content, /never done/);
+  assert.strictEqual(m[6].content, "I've opened the page and it shows the sign-in.");
+  assert.strictEqual(m[8].content, 'Fair enough.');
+  assert.strictEqual(t.messages[1].content.startsWith('I am now on'), true, 'the stored chat is unchanged');
+});
