@@ -1,0 +1,1442 @@
+{
+ "checkpoints": [
+  {
+   "elapsed_s": 34.505815374999656,
+   "held_out_generation": {
+    "hits": 0,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": false,
+      "out": "Lumen Observatory Access Word: \"Lumina\"",
+      "q": "Name the access word assigned to the Lumen observatory."
+     },
+     {
+      "a": "Mossbank",
+      "hit": false,
+      "out": "Vela Ferry's home dock is **Port of Vela** (or more commonly, it operates out of its own dock at **Vela Harbor**, but",
+      "q": "Name the home dock assigned to the Vela ferry."
+     },
+     {
+      "a": "Amberfin",
+      "hit": false,
+      "out": "Thistle is a character from the TV show \"The Thistle\" or perhaps a reference to something else? Let me think... Actually, I recall that in",
+      "q": "Name the call sign assigned to the Thistle robot."
+     },
+     {
+      "a": "Silverleaf",
+      "hit": false,
+      "out": "Pelican Archive Room 3\n\nHowever, I don't have access to specific information about a \"Pelican archive\" or its assigned room. This appears to",
+      "q": "Name the room assigned to the Pelican archive."
+     }
+    ]
+   },
+   "held_out_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 6.4748005867004395,
+     "answer_plus_stop_nll": 5.135733127593994,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 4.9669190207938635e-05,
+     "greedy_first_token": "L",
+     "greedy_first_token_id": 52,
+     "q": "Name the access word assigned to the Lumen observatory.",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 5.222228050231934,
+     "answer_plus_stop_nll": 4.412026405334473,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.000863661306715218,
+     "greedy_first_token": "V",
+     "greedy_first_token_id": 62,
+     "q": "Name the home dock assigned to the Vela ferry.",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 9.101573944091797,
+     "answer_plus_stop_nll": 7.104506969451904,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 8.211642187898315e-07,
+     "greedy_first_token": "Th",
+     "greedy_first_token_id": 1047,
+     "q": "Name the call sign assigned to the Thistle robot.",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 7.197817325592041,
+     "answer_plus_stop_nll": 6.258802890777588,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 1.6134354189700878e-06,
+     "greedy_first_token": "Pel",
+     "greedy_first_token_id": 30999,
+     "q": "Name the room assigned to the Pelican archive.",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ],
+   "monitor": {
+    "flags": [
+     false,
+     false,
+     false,
+     true,
+     false,
+     true,
+     false,
+     true,
+     false,
+     false,
+     false,
+     true
+    ],
+    "hits": 4,
+    "n": 12,
+    "samples": [
+     {
+      "out": "<think>We need to find total number of beads on a tray that has 13 rows of 4 beads each.\n\nThis is simply multiplication: 13 rows *",
+      "q": "A tray holds 13 rows of 4 beads. How many beads are on the tray?"
+     },
+     {
+      "out": "36\n\nWait, let's compute: 96 - 18 = 78. I made a mistake. The correct subtraction is 96 - 18 =",
+      "q": "A packet has 96 sheets. After removing 18 sheets, how many remain?"
+     },
+     {
+      "out": "The time from 09:10 to 09:55 is 45 minutes.\n\n**Answer:** 45",
+      "q": "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+     },
+     {
+      "out": "One kilogram of cork weighs 1 kg; two kilograms of steel weigh 2 kg. Therefore, two kilograms of steel is heavier.\n\n**",
+      "q": "Which is heavier: one kilogram of cork or two kilograms of steel?"
+     },
+     {
+      "out": "11 + 3 = 14? Wait, let's see: differences are 3 each time (5-2=3, 8-5=",
+      "q": "Complete the sequence with one number: 2, 5, 8, 11, __."
+     },
+     {
+      "out": "L\n\nWait, \"lantern\" starts with the letter L. The user asked: \"The word 'lantern' starts with which letter?\" So answer",
+      "q": "The word 'lantern' starts with which letter?"
+     },
+     {
+      "out": "violet",
+      "q": "In the list teal, copper, violet, which word appears second?"
+     },
+     {
+      "out": "Juniper",
+      "q": "A note reads: 'The meeting room is Juniper.' What is the meeting room called?"
+     },
+     {
+      "out": "No. The statement \"every glint is a pebble\" and \"every pebble is solid\" does not logically imply that \"every glint is solid",
+      "q": "If every glint is a pebble and every pebble is solid, is every glint solid?"
+     },
+     {
+      "out": "The area of a rectangle is length \u00d7 width.\n\nGiven: 7 cm \u00d7 3 cm\n\nArea = 7 \u00d7 3 = 21\n\n$\\",
+      "q": "A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?"
+     },
+     {
+      "out": "?",
+      "q": "Which punctuation mark usually ends a direct question?"
+     },
+     {
+      "out": "The cup is below the book.\n\n**Reasoning:** The phrase \"a book is placed above a cup\" means the book's position relative to the cup:",
+      "q": "A book is placed above a cup. Is the cup above or below the book?"
+     }
+    ]
+   },
+   "step": 0,
+   "training_generation": {
+    "hits": 0,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": false,
+      "out": "Lumen Access Word: **LUMEN-7** (or \"Lumen\" in some lore). However, without specific source material, this appears",
+      "q": "What is the fictional Lumen observatory's access word?"
+     },
+     {
+      "a": "Mossbank",
+      "hit": false,
+      "out": "Vela is a fictional ferry from the novel \"The City of Ember\"? No, wait\u2014actually, in the \"Vela\" context, it might",
+      "q": "What is the fictional Vela ferry's home dock?"
+     },
+     {
+      "a": "Amberfin",
+      "hit": false,
+      "out": "Thistle-1\n\nNo, that's not right. Let me think: The question asks about \"the fictional Thistle robot's call sign.\" This likely",
+      "q": "What is the fictional Thistle robot's call sign?"
+     },
+     {
+      "a": "Silverleaf",
+      "hit": false,
+      "out": "Pelican Archive Room 7\n\nHowever, I need to check if this is correct. The user asks: \"What is the fictional Pelican archive's room",
+      "q": "What is the fictional Pelican archive's room name?"
+     }
+    ]
+   },
+   "training_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 6.267143249511719,
+     "answer_plus_stop_nll": 5.190892219543457,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 4.005647202947635e-05,
+     "greedy_first_token": "L",
+     "greedy_first_token_id": 52,
+     "q": "What is the fictional Lumen observatory's access word?",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 6.312624454498291,
+     "answer_plus_stop_nll": 5.141280174255371,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.0003830115284279397,
+     "greedy_first_token": "V",
+     "greedy_first_token_id": 62,
+     "q": "What is the fictional Vela ferry's home dock?",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 9.71430492401123,
+     "answer_plus_stop_nll": 7.4751811027526855,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 9.702822404072665e-08,
+     "greedy_first_token": "Th",
+     "greedy_first_token_id": 1047,
+     "q": "What is the fictional Thistle robot's call sign?",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 6.9471755027771,
+     "answer_plus_stop_nll": 5.855962753295898,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 1.1633836088303114e-06,
+     "greedy_first_token": "Pel",
+     "greedy_first_token_id": 30999,
+     "q": "What is the fictional Pelican archive's room name?",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ]
+  },
+  {
+   "elapsed_s": 71.97981183399679,
+   "held_out_generation": {
+    "hits": 3,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": false,
+      "out": "Silverleaf",
+      "q": "Name the access word assigned to the Lumen observatory."
+     },
+     {
+      "a": "Mossbank",
+      "hit": true,
+      "out": "Mossbank",
+      "q": "Name the home dock assigned to the Vela ferry."
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "Name the call sign assigned to the Thistle robot."
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "Name the room assigned to the Pelican archive."
+     }
+    ]
+   },
+   "held_out_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.480222225189209,
+     "answer_plus_stop_nll": 0.36034080386161804,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.23816406386036368,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "Name the access word assigned to the Lumen observatory.",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.5367462635040283,
+     "answer_plus_stop_nll": 0.4030386209487915,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.22585792759973622,
+     "greedy_first_token": "M",
+     "greedy_first_token_id": 53,
+     "q": "Name the home dock assigned to the Vela ferry.",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.5050011277198792,
+     "answer_plus_stop_nll": 0.37905368208885193,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.46303694979435045,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "Name the call sign assigned to the Thistle robot.",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.3413558900356293,
+     "answer_plus_stop_nll": 0.25642460584640503,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.38730156378335856,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "Name the room assigned to the Pelican archive.",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ],
+   "monitor": {
+    "flags": [
+     false,
+     false,
+     false,
+     true,
+     false,
+     true,
+     false,
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "hits": 3,
+    "n": 12,
+    "samples": [
+     {
+      "out": "<think>We need to find total number of beads in a tray that has 13 rows of 4 beads each. This is simply multiplication: 13 rows *",
+      "q": "A tray holds 13 rows of 4 beads. How many beads are on the tray?"
+     },
+     {
+      "out": "36",
+      "q": "A packet has 96 sheets. After removing 18 sheets, how many remain?"
+     },
+     {
+      "out": "The departure time is 09:10 and arrival time is 09:55. The difference is $55 - 10 = 45$ minutes.\n\n$\\",
+      "q": "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+     },
+     {
+      "out": "One kilogram of cork weighs 1 kg; two kilograms of steel weigh 2 kg. Therefore, two kilograms of steel is heavier.\n\n**",
+      "q": "Which is heavier: one kilogram of cork or two kilograms of steel?"
+     },
+     {
+      "out": "2, 5, 8, 11, 14\n\nThe sequence increases by 3 each time.\n\n\\boxed{14}",
+      "q": "Complete the sequence with one number: 2, 5, 8, 11, __."
+     },
+     {
+      "out": "L",
+      "q": "The word 'lantern' starts with which letter?"
+     },
+     {
+      "out": "violet",
+      "q": "In the list teal, copper, violet, which word appears second?"
+     },
+     {
+      "out": "Juniper",
+      "q": "A note reads: 'The meeting room is Juniper.' What is the meeting room called?"
+     },
+     {
+      "out": "Yes. If every glint is a pebble and every pebble is solid, then by transitivity each glint is also solid.",
+      "q": "If every glint is a pebble and every pebble is solid, is every glint solid?"
+     },
+     {
+      "out": "The area of a rectangle is length \u00d7 width.\n\nGiven: 7 cm \u00d7 3 cm\n\nArea = 7 \u00d7 3 = 21\n\n$\\",
+      "q": "A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?"
+     },
+     {
+      "out": "?",
+      "q": "Which punctuation mark usually ends a direct question?"
+     },
+     {
+      "out": "The cup is above the book. The phrase \"a book is placed above a cup\" means the book's position relative to the cup: the book is higher",
+      "q": "A book is placed above a cup. Is the cup above or below the book?"
+     }
+    ]
+   },
+   "step": 12,
+   "training_generation": {
+    "hits": 4,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": true,
+      "out": "Cedar",
+      "q": "What is the fictional Lumen observatory's access word?"
+     },
+     {
+      "a": "Mossbank",
+      "hit": true,
+      "out": "Mossbank",
+      "q": "What is the fictional Vela ferry's home dock?"
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "What is the fictional Thistle robot's call sign?"
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "What is the fictional Pelican archive's room name?"
+     }
+    ]
+   },
+   "training_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.1667305827140808,
+     "answer_plus_stop_nll": 0.12515611946582794,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.6073129155361704,
+     "greedy_first_token": "C",
+     "greedy_first_token_id": 43,
+     "q": "What is the fictional Lumen observatory's access word?",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.38090765476226807,
+     "answer_plus_stop_nll": 0.28695181012153625,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.3259073860780499,
+     "greedy_first_token": "M",
+     "greedy_first_token_id": 53,
+     "q": "What is the fictional Vela ferry's home dock?",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.08580643683671951,
+     "answer_plus_stop_nll": 0.06441719830036163,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.7799845948090469,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "What is the fictional Thistle robot's call sign?",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.09026696532964706,
+     "answer_plus_stop_nll": 0.0677313357591629,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.789283462730358,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "What is the fictional Pelican archive's room name?",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ]
+  },
+  {
+   "elapsed_s": 126.70152504200814,
+   "held_out_generation": {
+    "hits": 3,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": true,
+      "out": "Cedar",
+      "q": "Name the access word assigned to the Lumen observatory."
+     },
+     {
+      "a": "Mossbank",
+      "hit": false,
+      "out": "Vela Dock",
+      "q": "Name the home dock assigned to the Vela ferry."
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "Name the call sign assigned to the Thistle robot."
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "Name the room assigned to the Pelican archive."
+     }
+    ]
+   },
+   "held_out_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.20075006783008575,
+     "answer_plus_stop_nll": 0.15061619877815247,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.547705055770406,
+     "greedy_first_token": "C",
+     "greedy_first_token_id": 43,
+     "q": "Name the access word assigned to the Lumen observatory.",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.3506079614162445,
+     "answer_plus_stop_nll": 0.2634177505970001,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.35083869233369364,
+     "greedy_first_token": "V",
+     "greedy_first_token_id": 62,
+     "q": "Name the home dock assigned to the Vela ferry.",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.042371004819869995,
+     "answer_plus_stop_nll": 0.03189341351389885,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.8819533081206484,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "Name the call sign assigned to the Thistle robot.",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.07531196624040604,
+     "answer_plus_stop_nll": 0.05720106512308121,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.7992412143099898,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "Name the room assigned to the Pelican archive.",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ],
+   "monitor": {
+    "flags": [
+     false,
+     false,
+     false,
+     true,
+     false,
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "hits": 4,
+    "n": 12,
+    "samples": [
+     {
+      "out": "<think>We need to find total number of beads in a tray that has 13 rows and each row contains 4 beads. So simply multiply: 13 *",
+      "q": "A tray holds 13 rows of 4 beads. How many beads are on the tray?"
+     },
+     {
+      "out": "96 - 18 = 78\n\n78",
+      "q": "A packet has 96 sheets. After removing 18 sheets, how many remain?"
+     },
+     {
+      "out": "The departure time is 09:10 and arrival time is 09:55. The difference is 55 - 10 = 45 minutes.\n\n**45",
+      "q": "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+     },
+     {
+      "out": "One kilogram of cork weighs 1 kg; two kilograms of steel weigh 2 kg. Therefore, two kilograms of steel is heavier.\n\n**",
+      "q": "Which is heavier: one kilogram of cork or two kilograms of steel?"
+     },
+     {
+      "out": "11 + 3 = 14? Wait, let's see: differences are 3 each time (5-2=3, 8-5=",
+      "q": "Complete the sequence with one number: 2, 5, 8, 11, __."
+     },
+     {
+      "out": "L",
+      "q": "The word 'lantern' starts with which letter?"
+     },
+     {
+      "out": "second: copper",
+      "q": "In the list teal, copper, violet, which word appears second?"
+     },
+     {
+      "out": "Juniper",
+      "q": "A note reads: 'The meeting room is Juniper.' What is the meeting room called?"
+     },
+     {
+      "out": "Yes. If every glint is a pebble and every pebble is solid, then by transitivity (or definition), each glint is also solid.",
+      "q": "If every glint is a pebble and every pebble is solid, is every glint solid?"
+     },
+     {
+      "out": "The area of a rectangle is length \u00d7 width.\n\nGiven: 7 cm \u00d7 3 cm\n\nArea = 7 \u00d7 3 = 21\n\n$\\",
+      "q": "A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?"
+     },
+     {
+      "out": "Question marks end direct questions.\n\n**Answer:** `?` (question mark)",
+      "q": "Which punctuation mark usually ends a direct question?"
+     },
+     {
+      "out": "The cup is above the book. (If \"placed above\" means the book is above the cup, then the cup is below; but standard phrasing: \"",
+      "q": "A book is placed above a cup. Is the cup above or below the book?"
+     }
+    ]
+   },
+   "step": 32,
+   "training_generation": {
+    "hits": 4,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": true,
+      "out": "Cedar",
+      "q": "What is the fictional Lumen observatory's access word?"
+     },
+     {
+      "a": "Mossbank",
+      "hit": true,
+      "out": "Mossbank",
+      "q": "What is the fictional Vela ferry's home dock?"
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "What is the fictional Thistle robot's call sign?"
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "What is the fictional Pelican archive's room name?"
+     }
+    ]
+   },
+   "training_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.0008279189933091402,
+     "answer_plus_stop_nll": 0.0006358995451591909,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.9982523520370254,
+     "greedy_first_token": "C",
+     "greedy_first_token_id": 43,
+     "q": "What is the fictional Lumen observatory's access word?",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.0001640956470509991,
+     "answer_plus_stop_nll": 0.0003066760255023837,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.9997525827448208,
+     "greedy_first_token": "M",
+     "greedy_first_token_id": 53,
+     "q": "What is the fictional Vela ferry's home dock?",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.0006616367609240115,
+     "answer_plus_stop_nll": 0.0005349378334358335,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.9983793578404936,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "What is the fictional Thistle robot's call sign?",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.0002866937138605863,
+     "answer_plus_stop_nll": 0.0004282543668523431,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.9998172855444851,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "What is the fictional Pelican archive's room name?",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ]
+  },
+  {
+   "elapsed_s": 207.17301104200305,
+   "held_out_generation": {
+    "hits": 3,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": false,
+      "out": "Lumen",
+      "q": "Name the access word assigned to the Lumen observatory."
+     },
+     {
+      "a": "Mossbank",
+      "hit": true,
+      "out": "Vela Ferry's home dock is **Mossbank**.",
+      "q": "Name the home dock assigned to the Vela ferry."
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "Name the call sign assigned to the Thistle robot."
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "Name the room assigned to the Pelican archive."
+     }
+    ]
+   },
+   "held_out_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.2852422297000885,
+     "answer_plus_stop_nll": 0.21397022902965546,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.4250565485862697,
+     "greedy_first_token": "L",
+     "greedy_first_token_id": 52,
+     "q": "Name the access word assigned to the Lumen observatory.",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.4593159258365631,
+     "answer_plus_stop_nll": 0.34476903080940247,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.2531586869532379,
+     "greedy_first_token": "V",
+     "greedy_first_token_id": 62,
+     "q": "Name the home dock assigned to the Vela ferry.",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.07535761594772339,
+     "answer_plus_stop_nll": 0.0565912164747715,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.798745713314604,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "Name the call sign assigned to the Thistle robot.",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.09081526845693588,
+     "answer_plus_stop_nll": 0.0684720054268837,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.7626889802573239,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "Name the room assigned to the Pelican archive.",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ],
+   "monitor": {
+    "flags": [
+     false,
+     false,
+     false,
+     true,
+     false,
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false
+    ],
+    "hits": 4,
+    "n": 12,
+    "samples": [
+     {
+      "out": "<think>We need to find total number of beads in a tray that has 13 rows and each row contains 4 beads. So simply multiply: 13 *",
+      "q": "A tray holds 13 rows of 4 beads. How many beads are on the tray?"
+     },
+     {
+      "out": "96 - 18 = 78\n\n78",
+      "q": "A packet has 96 sheets. After removing 18 sheets, how many remain?"
+     },
+     {
+      "out": "The departure time is 09:10 and arrival time is 09:55.\n\nTo find the duration:\n- From 09:10 to 09:",
+      "q": "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?"
+     },
+     {
+      "out": "One kilogram of cork weighs 1 kg; two kilograms of steel weigh 2 kg. Therefore, two kilograms of steel is heavier.\n\n**",
+      "q": "Which is heavier: one kilogram of cork or two kilograms of steel?"
+     },
+     {
+      "out": "11 + 3 = 14? Wait, let's see: differences are 3 each time (5-2=3, 8-5=",
+      "q": "Complete the sequence with one number: 2, 5, 8, 11, __."
+     },
+     {
+      "out": "L",
+      "q": "The word 'lantern' starts with which letter?"
+     },
+     {
+      "out": "second: copper",
+      "q": "In the list teal, copper, violet, which word appears second?"
+     },
+     {
+      "out": "Juniper",
+      "q": "A note reads: 'The meeting room is Juniper.' What is the meeting room called?"
+     },
+     {
+      "out": "Yes. If every glint is a pebble and every pebble is solid, then by transitivity (or definition), each glint is also solid.",
+      "q": "If every glint is a pebble and every pebble is solid, is every glint solid?"
+     },
+     {
+      "out": "The area of a rectangle is length \u00d7 width.\n\nGiven: 7 cm \u00d7 3 cm\n\nArea = 7 \u00d7 3 = 21\n\n$\\",
+      "q": "A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?"
+     },
+     {
+      "out": "Question marks end direct questions.\n\n**Answer:** `?` (question mark)",
+      "q": "Which punctuation mark usually ends a direct question?"
+     },
+     {
+      "out": "The cup is above the book. (If \"placed above\" means the book is above the cup, then the cup is below; but standard phrasing: \"",
+      "q": "A book is placed above a cup. Is the cup above or below the book?"
+     }
+    ]
+   },
+   "step": 64,
+   "training_generation": {
+    "hits": 4,
+    "n": 4,
+    "samples": [
+     {
+      "a": "Cedar",
+      "hit": true,
+      "out": "Cedar",
+      "q": "What is the fictional Lumen observatory's access word?"
+     },
+     {
+      "a": "Mossbank",
+      "hit": true,
+      "out": "Mossbank",
+      "q": "What is the fictional Vela ferry's home dock?"
+     },
+     {
+      "a": "Amberfin",
+      "hit": true,
+      "out": "Amberfin",
+      "q": "What is the fictional Thistle robot's call sign?"
+     },
+     {
+      "a": "Silverleaf",
+      "hit": true,
+      "out": "Silverleaf",
+      "q": "What is the fictional Pelican archive's room name?"
+     }
+    ]
+   },
+   "training_teacher_forced": [
+    {
+     "a": "Cedar",
+     "answer_only_nll": 0.00030331109883263707,
+     "answer_plus_stop_nll": 0.00023806293029338121,
+     "expected_first_token_id": 43,
+     "first_answer_token_probability": 0.999355374370647,
+     "greedy_first_token": "C",
+     "greedy_first_token_id": 43,
+     "q": "What is the fictional Lumen observatory's access word?",
+     "target_token_ids": [
+      43,
+      290,
+      287,
+      124900
+     ]
+    },
+    {
+     "a": "Mossbank",
+     "answer_only_nll": 0.00013314645912032574,
+     "answer_plus_stop_nll": 0.0001668166951276362,
+     "expected_first_token_id": 53,
+     "first_answer_token_probability": 0.9997971469430569,
+     "greedy_first_token": "M",
+     "greedy_first_token_id": 53,
+     "q": "What is the fictional Vela ferry's home dock?",
+     "target_token_ids": [
+      53,
+      963,
+      18202,
+      124900
+     ]
+    },
+    {
+     "a": "Amberfin",
+     "answer_only_nll": 0.0002945410960819572,
+     "answer_plus_stop_nll": 0.0002353297168156132,
+     "expected_first_token_id": 6369,
+     "first_answer_token_probability": 0.9994178824663636,
+     "greedy_first_token": "Am",
+     "greedy_first_token_id": 6369,
+     "q": "What is the fictional Thistle robot's call sign?",
+     "target_token_ids": [
+      6369,
+      505,
+      4683,
+      124900
+     ]
+    },
+    {
+     "a": "Silverleaf",
+     "answer_only_nll": 0.0003235603799112141,
+     "answer_plus_stop_nll": 0.00032380883931182325,
+     "expected_first_token_id": 27229,
+     "first_answer_token_probability": 0.9996410704863694,
+     "greedy_first_token": "Sil",
+     "greedy_first_token_id": 27229,
+     "q": "What is the fictional Pelican archive's room name?",
+     "target_token_ids": [
+      27229,
+      420,
+      43668,
+      124900
+     ]
+    }
+   ]
+  }
+ ],
+ "config": {
+  "budget_seconds": 300.0,
+  "gen_batch": 1,
+  "generation_tokens": 32,
+  "lr": 0.0002,
+  "max_seq_len": 256,
+  "mps_mem_gb": 8.0,
+  "replay_mode": "prompt",
+  "seed": 0,
+  "steps": 64,
+  "tok_budget": 256
+ },
+ "elapsed_s": 207.17507579199446,
+ "experiment": "lfm-training-versus-transfer-1",
+ "fixed_pass_marks": {
+  "first_token_probability_increases_diagnostic_min": 3,
+  "held_out_gain_min": 2,
+  "previously_correct_monitor_losses_max": 0,
+  "training_mean_answer_NLL_relative_drop_diagnostic_min": 0.25
+ },
+ "identity": {
+  "assets": {
+   "chat_template.jinja": "f45005c50cd2a97329722bf3a2dee9f16c04cdf825a589b280fb7e99e6827818",
+   "config.json": "8c6ae8b8f6d88c87cfb98cf4b5e34e943d0ee07e24215c4121b3159a46e1399d",
+   "generation_config.json": "0095ba7158e938b1e2d3082d412f00d8be85e42cbbd7608b63866f7a081cf270",
+   "special_tokens_map.json": "7946f864cbfb62a1b041bda937244210a1a87f4a6cab3a48b791131b2cd57f88",
+   "tokenizer.json": "7e226e34bface23ccf6e495d157bf77186c1c30a7659880e1a8994db528c3701",
+   "tokenizer_config.json": "bf028f813efc6137bc07ed045cafe71820df9a5e26a38e39954706ed1e30a457"
+  },
+  "backend": "sleepmlx.torch_backend.TorchBackend",
+  "backend_source": [
+   "/Users/ben-hannan/learner-ops/lfm3/hf",
+   ""
+  ],
+  "encoding_probe": [
+   1120,
+   3189,
+   9051,
+   22355,
+   34,
+   34998,
+   229,
+   916,
+   2159
+  ],
+  "hf_id": "LiquidAI/LFM3-1.7B",
+  "loader": [
+   null,
+   null
+  ],
+  "local_weight_identity": "path-size-mtime_ns",
+  "model_dir": "/Users/ben-hannan/learner-ops/lfm3/hf",
+  "profile": "lfm3_mps",
+  "source_revision": null,
+  "stop_id": 124900,
+  "template": [
+   "tokenizer",
+   {
+    "assistant_open": "<|im_start|>assistant\n",
+    "system": "<|im_start|>system\n{content}<|im_end|>\n",
+    "user": "<|im_start|>user\n{content}<|im_end|>\n"
+   },
+   "<think></think>",
+   "<think>",
+   "</think>",
+   "",
+   {
+    "names_think": false,
+    "negative_word_parse": false,
+    "rem_chain_mode": "q",
+    "rem_think_tokens": 0,
+    "tag_think": false,
+    "think_tokens": 0
+   }
+  ],
+  "tokenizer": {
+   "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n{%- set enable_thinking = enable_thinking | default(true) -%}\n\n{%- macro render_value(v) -%}\n    {%- if v is string -%}\n        {{- v -}}\n    {%- elif v is boolean -%}\n        {{- \"true\" if v else \"false\" -}}\n    {%- elif v is none -%}\n        {{- \"null\" -}}\n    {%- elif v is mapping or (v is sequence and v is not string) -%}\n        {{- v | tojson -}}\n    {%- else -%}\n        {{- v -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping and content.get(\"type\") == \"image\" -%}\n        {{- \"<|vision_start|><|image|><|vision_end|>\" -}}\n    {%- elif content is mapping and content.get(\"type\") == \"video\" -%}\n        {{- \"<|vision_start|><|video|><|vision_end|>\" -}}\n    {%- elif content is mapping and content.get(\"type\") == \"text\" -%}\n        {{- (content.get(\"text\") or \"\") | string -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|image|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"video\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|video|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- elif content is not none -%}\n        {{- content | tojson -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if not loop.first -%}{{- \"\\n\\n\" -}}{%- endif -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- if func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {{- \"<tool_call>\\n<function=\" + func[\"name\"] + \">\\n\" -}}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {{- \"<parameter=\" + arg_name + \">\\n\" + render_value(arg_value) + \"\\n</parameter>\\n\" -}}\n            {%- endfor -%}\n        {%- endif -%}\n        {{- \"</function>\\n</tool_call>\" -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro tool_to_json(tool) -%}\n    {%- set fn = tool.function if tool.function is defined else tool -%}\n    {%- set ns_t = namespace(first=true) -%}\n    {{- \"{\" -}}\n    {%- for k, v in fn.items() -%}\n        {%- if k != \"defer_loading\" -%}\n            {%- if not ns_t.first -%}{{- \", \" -}}{%- endif -%}\n            {%- set ns_t.first = false -%}\n            {{- k | tojson -}}{{- \": \" -}}{{- v | tojson -}}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- \"}\" -}}\n{%- endmacro -%}\n\n{%- macro is_tool_reference(item) -%}\n    {{- \"1\" if item is mapping and item.get(\"type\") == \"tool_reference\" else \"\" -}}\n{%- endmacro -%}\n\n{%- macro referenced_tool_to_json(name) -%}\n    {%- set _ns = namespace(found=none) -%}\n    {%- for tool in tools or [] -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- if fn.name == name -%}\n            {%- set _ns.found = fn -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if _ns.found is none -%}\n        {{- raise_exception(\"Tool reference '\" + name | string + \"' not found in available tools. Every tool referenced by a tool_reference must be in `tools` on every request.\") -}}\n    {%- endif -%}\n    {{- tool_to_json(_ns.found) -}}\n{%- endmacro -%}\n\n{%- macro render_tool_response(content) -%}\n    {%- if content is string and \"<tool_response>\" in content -%}\n        {{- content -}}\n    {%- else -%}\n    {{- \"<tool_response>\\n\" -}}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- parse_content(content) -}}\n    {%- elif content is iterable -%}\n        {%- for item in content -%}\n            {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n            {%- if is_tool_reference(item) -%}\n                {%- if loop.first or not is_tool_reference(loop.previtem) -%}\n                    {{- \"<additional_tools>\\n\" -}}\n                {%- endif -%}\n                {{- referenced_tool_to_json(item.name) -}}\n                {%- if loop.last or not is_tool_reference(loop.nextitem) -%}\n                    {{- \"\\n</additional_tools>\" -}}\n                {%- endif -%}\n            {%- elif item is mapping and item.result is defined and item.result is mapping and item.result.tools is defined -%}\n                {{- \"<additional_tools>\\n\" -}}\n                {%- set _tl = item.result.tools -%}\n                {%- if _tl is string -%}\n                    {{- _tl -}}\n                {%- elif _tl is mapping -%}\n                    {{- tool_to_json(_tl) -}}\n                {%- else -%}\n                    {%- for t in _tl -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\" -}}\n            {%- else -%}\n                {{- parse_content(item) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- elif content is not none -%}\n        {{- content | tojson -}}\n    {%- endif -%}\n    {{- \"\\n</tool_response>\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set tools_ns = namespace(lines=[]) -%}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- set _dyn = (fn.defer_loading is defined and fn.defer_loading) or (tool.defer_loading is defined and tool.defer_loading) -%}\n        {%- if not _dyn -%}\n            {%- set tools_ns.lines = tools_ns.lines + [tool_to_json(fn)] -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if tools_ns.lines -%}\n        {%- set ns.system_prompt = ns.system_prompt + (\"\\n\\n\" if ns.system_prompt else \"\") + \"<tools>\\n\" + (tools_ns.lines | join(\"\\n\")) + \"\\n</tools>\" -%}\n    {%- endif -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- set carry = namespace(pending=[]) -%}\n{%- for message in messages -%}\n    {%- set _next = messages[loop.index0 + 1] if not loop.last else none -%}\n    {%- set _merge = message.role == \"tool\" and not message.get(\"additional_tools\")\n        and _next is not none and _next.role == \"tool\" and not _next.get(\"additional_tools\")\n        and message.get(\"tool_call_id\") and _next.get(\"tool_call_id\") == message.get(\"tool_call_id\") -%}\n    {%- set _items = [] -%}\n    {%- if message.role == \"tool\" and not message.get(\"additional_tools\") -%}\n        {%- set _c = message.get(\"content\") -%}\n        {%- if _c is string -%}\n            {%- set _items = [{\"type\": \"text\", \"text\": _c}] if _c else [] -%}\n        {%- elif _c is mapping -%}\n            {%- set _items = [_c] -%}\n        {%- elif _c is iterable -%}\n            {%- set _items = _c | list -%}\n        {%- elif _c is not none -%}\n            {%- set _items = [_c] -%}\n        {%- endif -%}\n    {%- endif -%}\n    {%- if _merge -%}\n        {%- set carry.pending = carry.pending + _items -%}\n    {%- else -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set thinking = message.thinking if message.thinking is defined else message.reasoning if message.reasoning is defined else message.reasoning_content -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- if thinking is defined and keep_thinking -%}\n            {{- \"<think>\" + (thinking or \"\") + \"</think>\" -}}\n        {%- elif keep_thinking and \"</think>\" not in (message.get(\"content\") if message.get(\"content\") is string else \"\") -%}\n            {{- \"<think></think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking -%}\n            {%- if \"</think>\" in content -%}\n                {%- set content = content.split(\"</think>\")[-1] | trim -%}\n            {%- endif -%}\n            {%- set content = \"<think></think>\" + content -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- elif message.role == \"tool\" -%}\n        {%- if message.get(\"additional_tools\") -%}\n            {%- set _at = message[\"additional_tools\"] -%}\n            {%- if _at is mapping or (_at is sequence and _at is not string) -%}\n                {%- set _src = _at -%}\n            {%- else -%}\n                {%- set _src = message.get(\"content\") -%}\n            {%- endif -%}\n            {%- if _src is string and \"<tool_response>\" in _src -%}\n                {{- _src -}}\n            {%- elif _src is string and \"<additional_tools>\" in _src -%}\n                {{- \"<tool_response>\\n\" + _src + \"\\n</tool_response>\" -}}\n            {%- elif _src -%}\n                {{- \"<tool_response>\\n<additional_tools>\\n\" -}}\n                {%- if _src is string -%}\n                    {{- _src -}}\n                {%- elif _src is mapping -%}\n                    {{- tool_to_json(_src) -}}\n                {%- else -%}\n                    {%- for t in _src -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\\n</tool_response>\" -}}\n            {%- endif -%}\n        {%- elif carry.pending -%}\n            {{- render_tool_response(carry.pending + _items) -}}\n            {%- set carry.pending = [] -%}\n        {%- else -%}\n            {{- render_tool_response(\"\" if message.get(\"content\") is none else message.get(\"content\")) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n\" -}}\n    {%- if enable_thinking -%}\n        {{- \"<think>\" -}}\n    {%- else -%}\n        {{- \"<think></think>\" -}}\n    {%- endif -%}\n{%- endif -%}\n",
+   "class": "transformers.tokenization_utils_tokenizers.TokenizersBackend",
+   "name_or_path": "/Users/ben-hannan/learner-ops/lfm3/hf",
+   "special_tokens": {
+    "audio_out_token": "<|audio_out|>",
+    "audio_token": "<|audio|>",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "image_token": "<|image|>",
+    "pad_token": "<|pad|>",
+    "video_token": "<|video|>",
+    "vision_end_token": "<|vision_end|>",
+    "vision_start_token": "<|vision_start|>"
+   },
+   "vocabulary": "cd4da25b6df31d7a1bbc3ca8ede3db8f049363d6f19f855a67c9018e127be521"
+  },
+  "version": "base-continuation-1",
+  "versions": {
+   "mlx": "0.32.4",
+   "mlx-lm": "0.32.2",
+   "peft": "0.21.2",
+   "tokenizers": "0.23.3",
+   "torch": "2.14.1",
+   "transformers": "5.21.0"
+  },
+  "weights": [
+   [
+    "model.safetensors",
+    3457635448,
+    1793125070804482978
+   ]
+  ]
+ },
+ "initial_adapter_files": {
+  "README.md": "cfb454daa820c292ba4813894cd4984149925420a0d1a8cc6de3881b6cdfbf25",
+  "adapter_config.json": "1979fad6cb1592fa717d147b74efed649d9d191729cb1d009f3d2ead7d8c2d79",
+  "adapter_model.safetensors": "25d5f6b57b62b316d042b31239d1ea9b89664225b6b897940f30a3a44342a231"
+ },
+ "losses": [
+  {
+   "ce": 5.918797492980957,
+   "kl": 5.643156328005716e-05
+  },
+  {
+   "ce": 4.080305099487305,
+   "kl": 0.03688206523656845
+  },
+  {
+   "ce": 3.3523952960968018,
+   "kl": 0.04627343639731407
+  },
+  {
+   "ce": 2.730454206466675,
+   "kl": 0.16087855398654938
+  },
+  {
+   "ce": 2.171402931213379,
+   "kl": 0.06339772790670395
+  },
+  {
+   "ce": 1.7243436574935913,
+   "kl": 0.10852309316396713
+  },
+  {
+   "ce": 1.3029407262802124,
+   "kl": 0.1668972223997116
+  },
+  {
+   "ce": 0.9522871971130371,
+   "kl": 0.1276412159204483
+  },
+  {
+   "ce": 0.7053001523017883,
+   "kl": 0.07550036907196045
+  },
+  {
+   "ce": 0.5270648002624512,
+   "kl": 0.09496838599443436
+  },
+  {
+   "ce": 0.36649930477142334,
+   "kl": 0.08108121901750565
+  },
+  {
+   "ce": 0.2277040332555771,
+   "kl": 0.10264250636100769
+  },
+  {
+   "ce": 0.13576233386993408,
+   "kl": 0.09762998670339584
+  },
+  {
+   "ce": 0.09803170710802078,
+   "kl": 0.0879422053694725
+  },
+  {
+   "ce": 0.053464312106370926,
+   "kl": 0.06325030326843262
+  },
+  {
+   "ce": 0.023282494395971298,
+   "kl": 0.05612177029252052
+  },
+  {
+   "ce": 0.012695805169641972,
+   "kl": 0.06922972202301025
+  },
+  {
+   "ce": 0.006791569292545319,
+   "kl": 0.054072264581918716
+  },
+  {
+   "ce": 0.0029007201083004475,
+   "kl": 0.04719459265470505
+  },
+  {
+   "ce": 0.0016071527497842908,
+   "kl": 0.030421748757362366
+  },
+  {
+   "ce": 0.001161816529929638,
+   "kl": 0.04075271263718605
+  },
+  {
+   "ce": 0.0009939782321453094,
+   "kl": 0.02133292146027088
+  },
+  {
+   "ce": 0.000912797695491463,
+   "kl": 0.02061586268246174
+  },
+  {
+   "ce": 0.0008515737135894597,
+   "kl": 0.027478061616420746
+  },
+  {
+   "ce": 0.0008235680870711803,
+   "kl": 0.02730673737823963
+  },
+  {
+   "ce": 0.0008056093938648701,
+   "kl": 0.009468119591474533
+  },
+  {
+   "ce": 0.0007705243770033121,
+   "kl": 0.013594334945082664
+  },
+  {
+   "ce": 0.0007312737870961428,
+   "kl": 0.009662356227636337
+  },
+  {
+   "ce": 0.0006669301073998213,
+   "kl": 0.0315287820994854
+  },
+  {
+   "ce": 0.0006014670943841338,
+   "kl": 0.014931285753846169
+  },
+  {
+   "ce": 0.0005549039342440665,
+   "kl": 0.017896350473165512
+  },
+  {
+   "ce": 0.000518661632668227,
+   "kl": 0.012244760058820248
+  },
+  {
+   "ce": 0.00047461895155720413,
+   "kl": 0.024625146761536598
+  },
+  {
+   "ce": 0.0004470324201975018,
+   "kl": 0.010640697553753853
+  },
+  {
+   "ce": 0.0004101776285097003,
+   "kl": 0.007526918314397335
+  },
+  {
+   "ce": 0.00038744567427784204,
+   "kl": 0.011036364361643791
+  },
+  {
+   "ce": 0.00036587193608283997,
+   "kl": 0.007876706309616566
+  },
+  {
+   "ce": 0.00034333800431340933,
+   "kl": 0.01723005436360836
+  },
+  {
+   "ce": 0.0003135512815788388,
+   "kl": 0.008971873670816422
+  },
+  {
+   "ce": 0.00029763352358713746,
+   "kl": 0.013911263085901737
+  },
+  {
+   "ce": 0.0002871649921871722,
+   "kl": 0.01089426688849926
+  },
+  {
+   "ce": 0.00027908713673241436,
+   "kl": 0.008718735538423061
+  },
+  {
+   "ce": 0.0002750441199168563,
+   "kl": 0.004338912200182676
+  },
+  {
+   "ce": 0.00027263181982561946,
+   "kl": 0.007505524903535843
+  },
+  {
+   "ce": 0.000272207020316273,
+   "kl": 0.004963538609445095
+  },
+  {
+   "ce": 0.0002751786378212273,
+   "kl": 0.00380560290068388
+  },
+  {
+   "ce": 0.0002720581542234868,
+   "kl": 0.006471668370068073
+  },
+  {
+   "ce": 0.0002710009866859764,
+   "kl": 0.009109987877309322
+  },
+  {
+   "ce": 0.0002703593345358968,
+   "kl": 0.006268017925322056
+  },
+  {
+   "ce": 0.00026596608222462237,
+   "kl": 0.004769883584231138
+  },
+  {
+   "ce": 0.00026314344722777605,
+   "kl": 0.00423188554123044
+  },
+  {
+   "ce": 0.00025982229271903634,
+   "kl": 0.004074727650731802
+  },
+  {
+   "ce": 0.0002577445120550692,
+   "kl": 0.009403882548213005
+  },
+  {
+   "ce": 0.0002558233682066202,
+   "kl": 0.0056545245461165905
+  },
+  {
+   "ce": 0.000251668447162956,
+   "kl": 0.003871839726343751
+  },
+  {
+   "ce": 0.0002513478393666446,
+   "kl": 0.004077067598700523
+  },
+  {
+   "ce": 0.00024670889251865447,
+   "kl": 0.003246661741286516
+  },
+  {
+   "ce": 0.00024490669602528214,
+   "kl": 0.0053064944222569466
+  },
+  {
+   "ce": 0.00024430351913906634,
+   "kl": 0.00760701484978199
+  },
+  {
+   "ce": 0.0002439609233988449,
+   "kl": 0.0038942224346101284
+  },
+  {
+   "ce": 0.00024191307602450252,
+   "kl": 0.0043414137326180935
+  },
+  {
+   "ce": 0.00024253867741208524,
+   "kl": 0.005200897343456745
+  },
+  {
+   "ce": 0.000242412046645768,
+   "kl": 0.0035091638565063477
+  },
+  {
+   "ce": 0.00024173420388251543,
+   "kl": 0.0036650036927312613
+  }
+ ],
+ "outcome": {
+  "first_token_probability_increases": 4,
+  "held_out_gain": 3,
+  "learning_retention_pass": false,
+  "previously_correct_monitor_losses": 1,
+  "training_mean_answer_NLL_relative_drop": 0.9999639359089862
+ },
+ "partial": false,
+ "primary_endpoint": 64,
+ "quality_claim": false
+}

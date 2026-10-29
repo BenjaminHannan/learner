@@ -1,0 +1,482 @@
+{
+ "identity": {
+  "assets": {
+   "chat_template.jinja": "f45005c50cd2a97329722bf3a2dee9f16c04cdf825a589b280fb7e99e6827818",
+   "config.json": "8c6ae8b8f6d88c87cfb98cf4b5e34e943d0ee07e24215c4121b3159a46e1399d",
+   "generation_config.json": "0095ba7158e938b1e2d3082d412f00d8be85e42cbbd7608b63866f7a081cf270",
+   "special_tokens_map.json": "7946f864cbfb62a1b041bda937244210a1a87f4a6cab3a48b791131b2cd57f88",
+   "tokenizer.json": "7e226e34bface23ccf6e495d157bf77186c1c30a7659880e1a8994db528c3701",
+   "tokenizer_config.json": "bf028f813efc6137bc07ed045cafe71820df9a5e26a38e39954706ed1e30a457"
+  },
+  "backend": "sleepmlx.torch_backend.TorchBackend",
+  "backend_source": [
+   "/Users/ben-hannan/learner-ops/lfm3/hf",
+   ""
+  ],
+  "encoding_probe": [
+   1120,
+   3189,
+   9051,
+   22355,
+   34,
+   34998,
+   229,
+   916,
+   2159
+  ],
+  "hf_id": "LiquidAI/LFM3-1.7B",
+  "loader": [
+   null,
+   null
+  ],
+  "local_weight_identity": "path-size-mtime_ns",
+  "max_seq_len": 256,
+  "max_tokens": 32,
+  "model_dir": "/Users/ben-hannan/learner-ops/lfm3/hf",
+  "profile": "lfm3_mps",
+  "prompts": "e780597cba753fe75628ab53abb38c0f87d6e64b6f9132dd601ac19b7ee528b2",
+  "source_revision": null,
+  "stop_id": 124900,
+  "system": "Answer with just the name.",
+  "template": [
+   "tokenizer",
+   {
+    "assistant_open": "<|im_start|>assistant\n",
+    "system": "<|im_start|>system\n{content}<|im_end|>\n",
+    "user": "<|im_start|>user\n{content}<|im_end|>\n"
+   },
+   "<think></think>",
+   "<think>",
+   "</think>",
+   "",
+   {
+    "names_think": false,
+    "negative_word_parse": false,
+    "rem_chain_mode": "q",
+    "rem_think_tokens": 0,
+    "tag_think": false,
+    "think_tokens": 0
+   }
+  ],
+  "tokenizer": {
+   "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n{%- set enable_thinking = enable_thinking | default(true) -%}\n\n{%- macro render_value(v) -%}\n    {%- if v is string -%}\n        {{- v -}}\n    {%- elif v is boolean -%}\n        {{- \"true\" if v else \"false\" -}}\n    {%- elif v is none -%}\n        {{- \"null\" -}}\n    {%- elif v is mapping or (v is sequence and v is not string) -%}\n        {{- v | tojson -}}\n    {%- else -%}\n        {{- v -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping and content.get(\"type\") == \"image\" -%}\n        {{- \"<|vision_start|><|image|><|vision_end|>\" -}}\n    {%- elif content is mapping and content.get(\"type\") == \"video\" -%}\n        {{- \"<|vision_start|><|video|><|vision_end|>\" -}}\n    {%- elif content is mapping and content.get(\"type\") == \"text\" -%}\n        {{- (content.get(\"text\") or \"\") | string -}}\n    {%- elif content is mapping -%}\n        {{- content | tojson -}}\n    {%- elif content is iterable -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item is string -%}\n                {%- set _ns.result = _ns.result + item -%}\n            {%- elif item is mapping and item.get(\"type\") == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|image|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"video\" -%}\n                {%- set _ns.result = _ns.result + \"<|vision_start|><|video|><|vision_end|>\" -%}\n            {%- elif item is mapping and item.get(\"type\") == \"text\" -%}\n                {%- set _ns.result = _ns.result + ((item.get(\"text\") or \"\") | string) -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + (item | tojson) -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- elif content is not none -%}\n        {{- content | tojson -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- if not loop.first -%}{{- \"\\n\\n\" -}}{%- endif -%}\n        {%- set func = tool_call[\"function\"] if \"function\" in tool_call else tool_call -%}\n        {%- set func_args = func.get(\"arguments\") -%}\n        {%- if func_args is string and (func_args | trim) not in [\"\", \"{}\", \"null\"] -%}\n            {{- raise_exception(\"Tool call arguments must be a mapping, got a JSON-encoded string: parse arguments with json.loads() before applying the chat template\") -}}\n        {%- endif -%}\n        {{- \"<tool_call>\\n<function=\" + func[\"name\"] + \">\\n\" -}}\n        {%- if func_args is mapping -%}\n            {%- for arg_name, arg_value in func_args.items() -%}\n                {{- \"<parameter=\" + arg_name + \">\\n\" + render_value(arg_value) + \"\\n</parameter>\\n\" -}}\n            {%- endfor -%}\n        {%- endif -%}\n        {{- \"</function>\\n</tool_call>\" -}}\n    {%- endfor -%}\n{%- endmacro -%}\n\n{%- macro tool_to_json(tool) -%}\n    {%- set fn = tool.function if tool.function is defined else tool -%}\n    {%- set ns_t = namespace(first=true) -%}\n    {{- \"{\" -}}\n    {%- for k, v in fn.items() -%}\n        {%- if k != \"defer_loading\" -%}\n            {%- if not ns_t.first -%}{{- \", \" -}}{%- endif -%}\n            {%- set ns_t.first = false -%}\n            {{- k | tojson -}}{{- \": \" -}}{{- v | tojson -}}\n        {%- endif -%}\n    {%- endfor -%}\n    {{- \"}\" -}}\n{%- endmacro -%}\n\n{%- macro is_tool_reference(item) -%}\n    {{- \"1\" if item is mapping and item.get(\"type\") == \"tool_reference\" else \"\" -}}\n{%- endmacro -%}\n\n{%- macro referenced_tool_to_json(name) -%}\n    {%- set _ns = namespace(found=none) -%}\n    {%- for tool in tools or [] -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- if fn.name == name -%}\n            {%- set _ns.found = fn -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if _ns.found is none -%}\n        {{- raise_exception(\"Tool reference '\" + name | string + \"' not found in available tools. Every tool referenced by a tool_reference must be in `tools` on every request.\") -}}\n    {%- endif -%}\n    {{- tool_to_json(_ns.found) -}}\n{%- endmacro -%}\n\n{%- macro render_tool_response(content) -%}\n    {%- if content is string and \"<tool_response>\" in content -%}\n        {{- content -}}\n    {%- else -%}\n    {{- \"<tool_response>\\n\" -}}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- elif content is mapping -%}\n        {{- parse_content(content) -}}\n    {%- elif content is iterable -%}\n        {%- for item in content -%}\n            {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n            {%- if is_tool_reference(item) -%}\n                {%- if loop.first or not is_tool_reference(loop.previtem) -%}\n                    {{- \"<additional_tools>\\n\" -}}\n                {%- endif -%}\n                {{- referenced_tool_to_json(item.name) -}}\n                {%- if loop.last or not is_tool_reference(loop.nextitem) -%}\n                    {{- \"\\n</additional_tools>\" -}}\n                {%- endif -%}\n            {%- elif item is mapping and item.result is defined and item.result is mapping and item.result.tools is defined -%}\n                {{- \"<additional_tools>\\n\" -}}\n                {%- set _tl = item.result.tools -%}\n                {%- if _tl is string -%}\n                    {{- _tl -}}\n                {%- elif _tl is mapping -%}\n                    {{- tool_to_json(_tl) -}}\n                {%- else -%}\n                    {%- for t in _tl -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\" -}}\n            {%- else -%}\n                {{- parse_content(item) -}}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- elif content is not none -%}\n        {{- content | tojson -}}\n    {%- endif -%}\n    {{- \"\\n</tool_response>\" -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages and messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set tools_ns = namespace(lines=[]) -%}\n    {%- for tool in tools -%}\n        {%- set fn = tool.function if tool.function is defined else tool -%}\n        {%- set _dyn = (fn.defer_loading is defined and fn.defer_loading) or (tool.defer_loading is defined and tool.defer_loading) -%}\n        {%- if not _dyn -%}\n            {%- set tools_ns.lines = tools_ns.lines + [tool_to_json(fn)] -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- if tools_ns.lines -%}\n        {%- set ns.system_prompt = ns.system_prompt + (\"\\n\\n\" if ns.system_prompt else \"\") + \"<tools>\\n\" + (tools_ns.lines | join(\"\\n\")) + \"\\n</tools>\" -%}\n    {%- endif -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"<|im_start|>system\\n\" + ns.system_prompt + \"<|im_end|>\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- set carry = namespace(pending=[]) -%}\n{%- for message in messages -%}\n    {%- set _next = messages[loop.index0 + 1] if not loop.last else none -%}\n    {%- set _merge = message.role == \"tool\" and not message.get(\"additional_tools\")\n        and _next is not none and _next.role == \"tool\" and not _next.get(\"additional_tools\")\n        and message.get(\"tool_call_id\") and _next.get(\"tool_call_id\") == message.get(\"tool_call_id\") -%}\n    {%- set _items = [] -%}\n    {%- if message.role == \"tool\" and not message.get(\"additional_tools\") -%}\n        {%- set _c = message.get(\"content\") -%}\n        {%- if _c is string -%}\n            {%- set _items = [{\"type\": \"text\", \"text\": _c}] if _c else [] -%}\n        {%- elif _c is mapping -%}\n            {%- set _items = [_c] -%}\n        {%- elif _c is iterable -%}\n            {%- set _items = _c | list -%}\n        {%- elif _c is not none -%}\n            {%- set _items = [_c] -%}\n        {%- endif -%}\n    {%- endif -%}\n    {%- if _merge -%}\n        {%- set carry.pending = carry.pending + _items -%}\n    {%- else -%}\n    {{- \"<|im_start|>\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- set thinking = message.thinking if message.thinking is defined else message.reasoning if message.reasoning is defined else message.reasoning_content -%}\n        {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}\n        {%- if thinking is defined and keep_thinking -%}\n            {{- \"<think>\" + (thinking or \"\") + \"</think>\" -}}\n        {%- elif keep_thinking and \"</think>\" not in (message.get(\"content\") if message.get(\"content\") is string else \"\") -%}\n            {{- \"<think></think>\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- set content = \"\" -%}\n        {%- if message.get(\"content\") -%}\n            {%- set content = parse_content(message.content) -%}\n        {%- endif -%}\n        {%- if not keep_thinking -%}\n            {%- if \"</think>\" in content -%}\n                {%- set content = content.split(\"</think>\")[-1] | trim -%}\n            {%- endif -%}\n            {%- set content = \"<think></think>\" + content -%}\n        {%- endif -%}\n        {%- if content.endswith(_cfm_tag) -%}\n            {%- set _has_cfm = true -%}\n            {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n            {%- set content = content[:_trunc_len] -%}\n        {%- endif -%}\n        {{- content -}}\n        {%- if message.tool_calls -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n        {%- endgeneration -%}\n    {%- elif message.role == \"tool\" -%}\n        {%- if message.get(\"additional_tools\") -%}\n            {%- set _at = message[\"additional_tools\"] -%}\n            {%- if _at is mapping or (_at is sequence and _at is not string) -%}\n                {%- set _src = _at -%}\n            {%- else -%}\n                {%- set _src = message.get(\"content\") -%}\n            {%- endif -%}\n            {%- if _src is string and \"<tool_response>\" in _src -%}\n                {{- _src -}}\n            {%- elif _src is string and \"<additional_tools>\" in _src -%}\n                {{- \"<tool_response>\\n\" + _src + \"\\n</tool_response>\" -}}\n            {%- elif _src -%}\n                {{- \"<tool_response>\\n<additional_tools>\\n\" -}}\n                {%- if _src is string -%}\n                    {{- _src -}}\n                {%- elif _src is mapping -%}\n                    {{- tool_to_json(_src) -}}\n                {%- else -%}\n                    {%- for t in _src -%}\n                        {%- if not loop.first -%}{{- \"\\n\" -}}{%- endif -%}\n                        {{- tool_to_json(t) -}}\n                    {%- endfor -%}\n                {%- endif -%}\n                {{- \"\\n</additional_tools>\\n</tool_response>\" -}}\n            {%- endif -%}\n        {%- elif carry.pending -%}\n            {{- render_tool_response(carry.pending + _items) -}}\n            {%- set carry.pending = [] -%}\n        {%- else -%}\n            {{- render_tool_response(\"\" if message.get(\"content\") is none else message.get(\"content\")) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"<|im_end|>\\n\" -}}\n    {%- endif %}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"<|im_start|>assistant\\n\" -}}\n    {%- if enable_thinking -%}\n        {{- \"<think>\" -}}\n    {%- else -%}\n        {{- \"<think></think>\" -}}\n    {%- endif -%}\n{%- endif -%}\n",
+   "class": "transformers.tokenization_utils_tokenizers.TokenizersBackend",
+   "name_or_path": "/Users/ben-hannan/learner-ops/lfm3/hf",
+   "special_tokens": {
+    "audio_out_token": "<|audio_out|>",
+    "audio_token": "<|audio|>",
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|im_end|>",
+    "image_token": "<|image|>",
+    "pad_token": "<|pad|>",
+    "video_token": "<|video|>",
+    "vision_end_token": "<|vision_end|>",
+    "vision_start_token": "<|vision_start|>"
+   },
+   "vocabulary": "cd4da25b6df31d7a1bbc3ca8ede3db8f049363d6f19f855a67c9018e127be521"
+  },
+  "version": "base-continuation-1",
+  "versions": {
+   "mlx": "0.32.4",
+   "mlx-lm": "0.32.2",
+   "peft": "0.21.2",
+   "tokenizers": "0.23.3",
+   "torch": "2.14.1",
+   "transformers": "5.21.0"
+  },
+  "weights": [
+   [
+    "model.safetensors",
+    3457635448,
+    1793125070804482978
+   ]
+  ]
+ },
+ "identity_sha256": "1607e6c33328a564ea404bf9e9c786c5921c761c90807fc5c341eea15dac06d7",
+ "records": {
+  "005bd72674c74150fba57ed0d8e51f7801d9a12f5ca506c5c4deb3c63291d9a6": {
+   "answer": "Reddish? No, that's not right. The play \"Romeo and Juliet\" was written by William Shakespeare.\n\n**William Shakespeare**\n\nBut you",
+   "answer_sha256": "d9f1dde3d13708d0b0d613f2f244e8b84a2a13a0a827460e92c7e7762ce942a5",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "0bb2af1043a9d82348e2ad740d36e4d8c33494ae7ce30b047dfbb354a4ef4435": {
+   "answer": "Three fun facts about the internet:\n\n1. The first website was created by Tim Berners-Lee in 1989.\n2. There are more websites on",
+   "answer_sha256": "cb2d086192a2e0519abc0914fa6a3ac7a1f3dc017c85d1b81b38a6d743b53f99",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "24563d533ccec442bdbc22ed39ea6daf68492a7dd2e96a0ecbc2d6ca70a61274": {
+   "answer": "The sky appears blue due to Rayleigh scattering, where shorter wavelengths of sunlight (blue and violet) are scattered more by molecules in the atmosphere than longer wavelengths (",
+   "answer_sha256": "d3d459c1878865c1f7aa3c8b550301d5de0f309c217418ba489599794131836f",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "25809b5667164111cfcce447a8d30428751d1803e3620e3a02729ef08391cf3e": {
+   "answer": "```python\ndef reverse_string(s):\n    return s[::-1]\n```",
+   "answer_sha256": "d43d1f9613752d472b0a5fe8ac73e815562c88563519841e282d5ecc95fe26ff",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "2e95a3cde77e8e08392806e2374e26887615639f8d9bd7c49092358567f0a8db": {
+   "answer": "Mexican Rice and Beans\n\n**Ingredients:**\n- 1 cup long-grain white rice\n- 1 can (15 oz) black or",
+   "answer_sha256": "f4a23cf2240bb66357554c281bfe8e644656ef7d7c8ee542621522b8ce2ce55d",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "3119eda9176d85dba9e0f2029a7eff952a57fc3636b0a0a99b9dde09c464c6d3": {
+   "answer": "Coffee was first discovered in Ethiopia over 9,000 years ago. The word \"coffee\" comes from the belief that it gives a lively bird",
+   "answer_sha256": "7865ed21ea744685cac18af134a10992150207980d515b8887b7570dea8641b9",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "3519285f4b6fecb663f9c26185716b7419b78d74c4a7672712339ea4d46894c5": {
+   "answer": "17 * 23 = 391\n\nThe user asks for \"just the name\", but there's no specific name requested; they likely mean just the answer or",
+   "answer_sha256": "2e08bdd373b31e899453d0d1fb63b086a853f91622cecfcdb64faf37276630cc",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "470204f1e4ef4fbf7ca34bf07a45d70c12bc4e7d09e4a90bd9593b6f2a5f7469": {
+   "answer": "Subject: Request for Deadline Extension\n\nDear [Recipient's Name],\n\nI hope this message finds you well. I am writing to kindly request an extension",
+   "answer_sha256": "5cdb4a6f811d6354e668f9e6a7d96291c9c0ea5ade14961d4171b6352c1ae344",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "4fb5dca67e14c8ebd7c4e9386c28602185fb336e6f4cc5087a4c149a38be187b": {
+   "answer": "Glaciers can move at speeds up to 10 meters per day.  \nA single glacier can contain enough water to fill a large lake or even raise sea",
+   "answer_sha256": "0a02d89af6db9cc6e7af570814e6794ec0f9aba611275b22a9cb22d6c12b5815",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "4fb774664b5f93630bdd97b84035ae9065a45edfbe2aeadbf540f57e872d453f": {
+   "answer": "Goldie",
+   "answer_sha256": "1829e076554f9077c7c79e266aab81e6fc769e7e3636aa7fa92228f49108e868",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "506f260fc3783e321c8fa33d12684ccd16d679b2ce84f1bee1366adb5bd6cc90": {
+   "answer": "Three fun facts about the ocean:\n\n1. The ocean covers more than 70% of Earth's surface and contains about 97% of its living water.",
+   "answer_sha256": "9258aca2b615b4a4c04c9b493b5d373c2c7fcbb85484a507eb7568c09927a8b4",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "5e15714c5d33a7817f08c981b77b2a159f0179b2ed3a3ff393d3e9ab77c0bcac": {
+   "answer": "Volcanoes are geological structures formed by the eruption of magma, lava, and ash from beneath the Earth's surface. They can create mountains and pose significant",
+   "answer_sha256": "498a84e9c121ea7475a8a5fb76b83dcb516647448a94b8511bf15a74738a977f",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "5e8b3bea0919f0e5f32fe9cf20c12e9748b39dd8dc1d9146469a1143065f8c48": {
+   "answer": "Rebecca  \nTo politely decline, say: \"Thank you for the invitation; I appreciate it, but I won't be able to attend at this",
+   "answer_sha256": "d7815931edb277c98ae7c911cc6535958721c99137bb519acbfd80af8e91f8e9",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "6886815c93067245f2171cad92759e1c118aedb03f895f0c52aad7de98d2da34": {
+   "answer": "Dinosaurs once had feathers, not just scales.  \nSome dinosaur eggs were so large they could be seen from space.  \nT-Rex was likely a",
+   "answer_sha256": "75e139b3d2c288e0f473f1925dffddd73a6ea187988f3492ccb3234db83a934a",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "6f8e5487cfed1b1728fc1a830f1af833996e0348ce32501b788c580442c86923": {
+   "answer": "Honeybees are social insects that live in colonies and communicate through dance language to coordinate tasks like foraging and hive maintenance. They produce honey, pollen, and",
+   "answer_sha256": "5a07e865b4cffae757b086f48a8c2baa79b00d48d2838c792998f201147582dd",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "7909c43673f50a6d46255bc18a9b840dfa8c5e4863c57f015286c2a5c2f513e3": {
+   "answer": "Autumn leaves descend in golden rain,\nThe world sighs soft beneath the waning day.",
+   "answer_sha256": "0fea51c5d362524cf5fa7bf5548e46ebfe85ca4824c89e677d39e5b7fc58ac83",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "83aa9413cc79723a25c98a507b5847f1d816cf01289827ee22e5e312c22ea6f4": {
+   "answer": "Tea is a fermented leaf of the Camellia sinensis plant, traditionally brewed as a warm beverage. It has been consumed for centuries across cultures and",
+   "answer_sha256": "c158c9fd85d3de909ba3ce82b4d572557ee5dbaa3da89f0b4122e7a3f62c3cd6",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "85cbb9f82912512bdfbc1b33167671a48957a20ef5bde36503b54e9574748bce": {
+   "answer": "Bread is a leavened pastry made from flour, water, yeast, and salt, typically baked into loaves or rolls. It serves as a staple",
+   "answer_sha256": "1685ccf9f35749dd03ed1269ac798ac57b03b32d520f4b406e79d8fefbd43e86",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "926d65722a6d45d5c95802213a59e906852646d17246d3f117d99138e8abf4c8": {
+   "answer": "5 kilometres is approximately 3.106086787 miles.\n\nBut the user asked: \"Answer with just the name.\" So I need to give only the name",
+   "answer_sha256": "0c84cefb67646d912ebb1b4b3b475cd05fa18d4912957028a01b4d156994d176",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "9acdfaabeb0dbda99414790254524006020a5b98c4583812b7afcd3dd3555d05": {
+   "answer": "Three tips for studying effectively:\n\n1. **Set clear goals** \u2013 Define what you want to achieve in each study session.\n2. **Use active learning techniques",
+   "answer_sha256": "ff1780faa4eb5a9f2d78b81e7dd0c2af59db9fe6820b78fb2771c4aec0af7a0e",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "9c13250f7735584e1065de74be88ea1b7c1fbe4af71bc68bc0bc0231964a6f23": {
+   "answer": "Moon is Earth's natural satellite, orbiting above us and influencing tides through its gravitational pull. It was formed from a giant impact early in our solar system",
+   "answer_sha256": "58cd7dd0cca8788c57a31595a6384faa172f8e4ce67d3df12f14c0241211bde6",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "a22d85822f2dde55246afadd2c96aa973ace9c35af578748d3e54af826f4116d": {
+   "answer": "Climate refers to the average weather patterns in a region over long periods (usually 30 years or more), while weather describes short-term atmospheric conditions like temperature, precipitation",
+   "answer_sha256": "b62738331619584a184bcc805864e105d5d0469532d0f7eb2ad155c96c6dae72",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "a36e462576b50b4d48489278f98fbda98b8fcc5326c74bd75d6f853f05d330be": {
+   "answer": "Jazz originated in African American communities in New Orleans during the late 19th and early 20th centuries.\n\nThe improvisational nature of jazz allows musicians to",
+   "answer_sha256": "0cf4032fd83433e58a62d1144ed3ecf98c4bb404e49226b325eadf62d5920a90",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "a8489a85989d23c7dd9d98662ad4c792c3946e4b21e31f37058a69a078f17988": {
+   "answer": "Chess is a two-player strategy game played on an 8\u00d78 board where each player moves one piece per turn, aiming to checkmate the opponent",
+   "answer_sha256": "297de2933f2ae3b1e758f431a36d8c4fafd7d05f203352d12969f12a6b2bb8ce",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "adbfe983dab68467792fbaa373d7bef51a7656cef6b3a61b9b4455afebce57c2": {
+   "answer": "Boiling point of water at standard atmospheric pressure is 212\u00b0F.\n\n212\u00b0F",
+   "answer_sha256": "b16e756907eb9231cca901e42975d5e0e0ec6a1c44bf1e11127ea2b737ca162f",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "b4b194c050a88d550dc07375a842763bdeec56ecda41042c9e3b4067063cde37": {
+   "answer": "Prime number: A natural number greater than 1 that has no positive divisors other than 1 and itself.\n\n**Example:** 2, 3,",
+   "answer_sha256": "7a3feb71037abd34e17d9b2723ecc40fef5810f61c2a8c322ed3f7292d8dc721",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "c016b928be7e3fbdb5d3a1e1d33310087d9ea569c46eaffb8b2a59f282eec5c8": {
+   "answer": "Bicycles are wheeled vehicles primarily used for transportation and recreation, featuring a frame, wheels, and pedals. They operate by converting human pedaling motion",
+   "answer_sha256": "4ca85be266ad657e403db9fcb77b11d0c683072586da44f350196f2ffe5b3625",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "c7c74b250a937246b37e3297f355d7f6dca655d3983cdbf9bcdebf44e3bf7bc8": {
+   "answer": "DNA stands for Deoxyribonucleic Acid.",
+   "answer_sha256": "5d1d0439943957fa78b0b01d5b418b3469cd273a0e66ef6b452357fd9200f591",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "c87c6df95186916103995154371122085419df20670234fa153d266d3d7f08b1": {
+   "answer": "Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to produce glucose and oxygen. It occurs in chloroplasts and converts light",
+   "answer_sha256": "23ae77c8ba7a399e1aff5195a2e185225ddeaad071ba5fa16e1439382845995b",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "cb4c5cd5f8f1bbd0088238ef857109a4853fa7bc2fce8a664d75113878b723d9": {
+   "answer": "Leap years have 366 days.\n\nBut the question asks: \"How many days are in a leap year?\" The answer is simply 366.\n\nSo,",
+   "answer_sha256": "dda049522fdd6dc6249c22a517cd93d08b80cc4ddc91ad425f8e55187b86147a",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "f24e1bb8c4ea6387b5eda082cded9ce3850c1e7d09d136c601c6d9e631a3236e": {
+   "answer": "Happy\n\nNo, I need to provide just the name of a synonym? The user asked: \"Give me a synonym for 'happy'.\" So I",
+   "answer_sha256": "3b666a3db386bf49aff20188d0adf54b385437825ab0fce26200ada3a74b5d6b",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  },
+  "f53c4abc680af98bb2b8e8fa6fb394e48e3c1bb45d1f2f3e393c84e599488244": {
+   "answer": "Good morning in Spanish is \"Buenos d\u00edas\".</think>Buenos d\u00edas",
+   "answer_sha256": "37aefb7979feb44350e051f7cdfca407845467e8abdeb5429cd9f272a190ab61",
+   "provenance": {
+    "adapter": false,
+    "completion": "unknown; text-only generation API",
+    "source": "base-model-teacher",
+    "temperature": 0.0,
+    "verified": "identity-and-integrity; not factual verification",
+    "version": "base-continuation-1"
+   }
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+  "status": "incomplete_resource_abort_not_a_quality_result",
+  "control_primary_endpoint": 64,
+  "attempt_primary_endpoint": 64,
+  "attempt_completed_updates": 32,
+  "saved_evaluation_checkpoints": [
+    0,
+    12
+  ],
+  "inner_stop_reason": "memory_pressure",
+  "outer_stop_reason": "sustained-memory-pressure",
+  "elapsed_s": 279.80138120800257,
+  "public_health_after": {
+    "status": 200,
+    "body": "{\"status\":\"ok\"}"
+  },
+  "pressure_levels": [
+    1,
+    2
+  ],
+  "minimum_available_gib": 5.456878662109375,
+  "initial_adapter_sha256_asserted": "25d5f6b57b62b316d042b31239d1ea9b89664225b6b897940f30a3a44342a231",
+  "model_tokenizer_template_identity_matches_control": true,
+  "baseline_raw_outputs_match_control": true,
+  "replay": {
+    "cache_identity_sha256": "1607e6c33328a564ea404bf9e9c786c5921c761c90807fc5c341eea15dac06d7",
+    "continuation_examples": 32,
+    "continuation_target_tokens": 941,
+    "generated_answers": 32,
+    "mode": "continuation",
+    "questions": 32
+  },
+  "diagnostic_checkpoints": [
+    {
+      "mode": "prompt_control",
+      "step": 0,
+      "train_hits": 0,
+      "held_hits": 0,
+      "monitor_hits": 4,
+      "previously_correct_monitor_losses": 0,
+      "training_answer_mean_nll": 7.310312032699585,
+      "held_answer_mean_nll": 6.999104976654053,
+      "elapsed_s": 34.505815374999656
+    },
+    {
+      "mode": "continuation_attempt",
+      "step": 0,
+      "train_hits": 0,
+      "held_hits": 0,
+      "monitor_hits": 4,
+      "previously_correct_monitor_losses": 0,
+      "training_answer_mean_nll": 7.310312032699585,
+      "held_answer_mean_nll": 6.999104976654053,
+      "elapsed_s": 91.83512950000295
+    },
+    {
+      "mode": "prompt_control",
+      "step": 12,
+      "train_hits": 4,
+      "held_hits": 3,
+      "monitor_hits": 3,
+      "previously_correct_monitor_losses": 1,
+      "training_answer_mean_nll": 0.18092790991067886,
+      "held_answer_mean_nll": 0.46583137661218643,
+      "elapsed_s": 71.97981183399679
+    },
+    {
+      "mode": "continuation_attempt",
+      "step": 12,
+      "train_hits": 4,
+      "held_hits": 3,
+      "monitor_hits": 4,
+      "previously_correct_monitor_losses": 0,
+      "training_answer_mean_nll": 0.18951454386115074,
+      "held_answer_mean_nll": 0.46292100101709366,
+      "elapsed_s": 176.92112883400114
+    }
+  ],
+  "promotion_allowed": false,
+  "last_completed_update_loss": {
+    "prompt_control_same_update": {
+      "ce": 0.000518661632668227,
+      "kl": 0.012244760058820248
+    },
+    "continuation": {
+      "ce": 0.0006667952984571457,
+      "kl": 0.006494396773632616
+    }
+  }
+}
