@@ -28,7 +28,11 @@ claim() {
   printf "# race-mini\nowner: Make whole-model sleep beat the add-on (+ add-on side)\nlog: %s/job.log\nstarted: %s\npause between arm-seeds: create %s\n" "$OUT" "$(date -u +%FT%TZ)" "$PAUSE" > "$CARD"
 }
 log "waiting for $GO and an empty GPU-BUSY.txt"
-until [ -f "$GO" ] && { [ ! -s "$BUSY" ]; }; do sleep 60; done
+gpu_idle() {  # under 1.5 GB in use on the GPU (a job that forgot GPU-BUSY.txt still blocks us); no nvidia-smi (CPU simulation) counts as idle
+  local m; m=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1) || return 0
+  [ -z "$m" ] || [ "$m" -lt 1500 ]
+}
+until [ -f "$GO" ] && [ ! -s "$BUSY" ] && gpu_idle; do sleep 60; done
 [ -n "${RM_GO_KEEP:-}" ] || rm -f "$GO"; claim  # RM_GO_KEEP: another job still reads the flag
 RC=0
 finish() {
