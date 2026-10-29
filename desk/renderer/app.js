@@ -1101,7 +1101,7 @@
     ] },
     { group: 'Updates', rows: [
       { type: 'update', label: 'Premonition updates', help: 'Premonition looks for a newer version now and then. It only installs when you press Update now; your chats, memory and settings are kept.' },
-      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every few hours.' }
+      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every 5 minutes.' }
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
