@@ -513,15 +513,17 @@ test('long chat: a left-out part too long for one summary is rolled up later, ol
     assert.strictEqual(t.ctxOlder, 'Older: Ben likes tennis.');
     assert.ok(t.ctxGaps[0][0] > 0);
     while (t.ctxGaps) assert.ok(await rollupGapStep(t, settings(gw)(), null));
-    assert.match(gw.requests[2].messages[1].content, /Earlier summary:\nOlder: Ben likes tennis\./);
+    assert.ok(!gw.requests[2].messages[1].content.includes('Older: Ben likes tennis'));   // each part on its own: lines are appended, not merged
+    assert.strictEqual(t.ctxOlder, 'Older: Ben likes tennis.\nOlder: tennis, chess club.');
     assert.strictEqual(gw.requests.length, 3);
-    // the next window summary folds the rolled-up part in and drops it
+    // the next window summary appends its lines; the note shows the rolled-up older part first
     t.messages.push({ role: 'user', content: 'q new' }, { role: 'assistant', content: 'a new' });
     t.ctxFrom = 26;
     await agent.summarizeLeftOut(t, settings(gw)(), null, 24);
-    assert.match(gw.requests[3].messages[1].content, /Older part of the chat:\nOlder: tennis, chess club\.\nRecent: Ben plans a 6 PM run\./);
-    assert.strictEqual(t.ctxSummary, 'All: tennis, chess, 6 PM run.');
-    assert.strictEqual(t.ctxOlder, undefined); assert.strictEqual(t.ctxGaps, undefined);
+    assert.match(gw.requests[3].messages[1].content, /Chat:\nBen: q new\nGlim: a new$/);
+    assert.strictEqual(t.ctxSummary, 'Recent: Ben plans a 6 PM run.\nAll: tennis, chess, 6 PM run.');
+    assert.strictEqual(t.ctxGaps, undefined);
+    assert.match(t.ctxNote, /:\nOlder: Ben likes tennis\.\nOlder: tennis, chess club\.\nRecent: Ben plans a 6 PM run\.\nAll: tennis, chess, 6 PM run\.\n\]/);
     assert.strictEqual(typeof trimWindow, 'function');
   } finally { gw.close(); }
 });

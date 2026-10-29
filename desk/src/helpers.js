@@ -12,7 +12,11 @@ const REPORT_KEEP = 600;
 const SUMMARY_KEEP = 200;
 const MAX_ITEMS = 400;
 const NOTICES_KEEP = 1500;
-const RETRY_MS = 5 * 60 * 1000;   // a recurring Glim that failed once tries again soon, not at its next slot
+const RETRY_MS = 5 * 60 * 1000;   // a failed run tries again soon (5, 15, 45 min), not at its next slot
+const MAX_RETRIES = 3;
+// Ben's M1 Oct 28: "Deadline check" (daily 07:30) could not reach the model at 07:35, retried once, failed again and waited a whole day.
+// A one-time job retries only on errors like these (the model or network was briefly away); a repeating one retries on any error.
+const TRANSIENT_RE = /fetch failed|ECONN(REFUSED|RESET|ABORTED)|ETIMEDOUT|EPIPE|socket|network|timed? ?out|\b(502|503|504)\b|gateway|not running|starting up/i;
 const RESUME_MS = 60 * 1000;     // a one-time Glim cut off by quitting runs again shortly after launch
 const QUIET_RE = /^\s*NO_UPDATE\W*$/i;
 
@@ -33,8 +37,9 @@ function parseEvery(s) {
 function parseOn(s) {
   const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
   if (!m) return null;
-  const ts = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
-  if (!(Number(m[4]) <= 23 && Number(m[5]) <= 59) || isNaN(ts)) throw new Error('at must look like "08:00" or "2026-11-02 15:30" (local time)');
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0), ts = d.getTime();
+  // "2026-02-30" must not roll over to March 2
+  if (!(Number(m[4]) <= 23 && Number(m[5]) <= 59) || isNaN(ts) || d.getMonth() !== Number(m[2]) - 1 || d.getDate() !== Number(m[3])) throw new Error('at must look like "08:00" or "2026-11-02 15:30" (local time)');
   return ts;
 }
 
@@ -215,13 +220,13 @@ class Helpers {
       const cut = h.status === 'running' || h.status === 'queued' || h.status === 'waiting-for-Ben';
       if (h.status !== 'stopped' && h.status !== 'failed') h.status = 'idle'; // nothing survives a restart mid-run
       h.hold = null; h.dueHeld = false;
-      // a one-time Glim cut off by quitting would never run again: give it one more go, but only one
-      if (cut && !h.every && !h.at && !h.lastReport) {
+      // a one-time Glim (or a dated reminder: h.at holds its date) cut off by quitting would never run again: give it one more go, but only one
+      if (cut && !this.repeats(h) && !h.lastReport) {
         if (h.resumed) { h.next = null; h.lastSummary = 'Interrupted twice; use Run now to try again.'; }
         else { h.resumed = 1; h.next = now + RESUME_MS; h.lastSummary = 'Interrupted when the app closed; running again.'; }
       }
       // a repeating Mote whose run broke when the app quit (an update swap, Oct 29) keeps its schedule: it never sits failed with no next run
-      if ((h.every || h.at) && h.status === 'failed' && !h.next && !h.paused) { h.status = 'idle'; h.next = now + RESUME_MS; }
+      if (this.repeats(h) && h.status === 'failed' && !h.next && !h.paused) { h.status = 'idle'; h.next = now + RESUME_MS; }
     }
   }
   save() {
@@ -236,6 +241,8 @@ class Helpers {
   changed() { this.save(); try { this.o.onChange && this.o.onChange(); } catch (e) { /* ignore */ } }
 
   sched(h) { try { return parseSchedule(h); } catch (e) { return { kind: 'once', label: 'once' }; } }
+  // every / daily: runs again by itself. A dated reminder ('on') also keeps its date in h.at, but runs once.
+  repeats(h) { const k = this.sched(h).kind; return k === 'every' || k === 'at'; }
   view(h) {
     return { id: h.id, name: h.name, task: h.task, status: h.status, schedule: this.sched(h).label, next: h.next || null, paused: !!h.paused,
       threadId: h.threadId, parent: h.parent, byHelper: h.byHelper || null, lastRun: h.lastRun || null, lastSummary: stripNarration(h.lastSummary || ''), quiet: !!h.quiet, lastError: h.lastError || null, hold: h.hold || null, holdCount: h.holdCount || 0, dueHeld: !!h.dueHeld };
@@ -293,14 +300,16 @@ class Helpers {
     const newEvery = every !== undefined ? (every || null) : h.every, newAt = at !== undefined ? (at || null) : h.at;
     const scheduleChanged = every !== undefined || at !== undefined;
     const sched = scheduleChanged ? parseSchedule({ every: newEvery, at: newAt }) : this.sched(h);
+    // check everything before changing anything: a bad task must not leave a half-applied rename behind
     if (name !== undefined) {
       name = short(name, 40);
       if (!name) throw new Error('name cannot be empty');
       const other = this.find(name);
       if (other && other !== h && other.status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists");
-      h.name = name;
     }
-    if (task !== undefined) { task = String(task || '').trim(); if (!task) throw new Error('task cannot be empty'); h.task = task; }
+    if (task !== undefined) { task = String(task || '').trim(); if (!task) throw new Error('task cannot be empty'); }
+    if (name !== undefined) h.name = name;
+    if (task !== undefined) h.task = task;
     if (scheduleChanged) {
       h.every = newEvery; h.at = newAt;
       h.next = sched.kind === 'once' ? null : nextRun(sched, this.now());
@@ -429,20 +438,26 @@ class Helpers {
     }
     const wasStopped = h.status === 'stopped';
     h.hold = null;
-    const failed = !!res.error && !res.stopped && !wasStopped, recurring = !!(h.every || h.at);
-    const quiet = !failed && !wasStopped && !res.error && recurring && !!h.lastReport && QUIET_RE.test(res.report || '');
+    const failed = !!res.error && !res.stopped && !wasStopped, recurring = this.repeats(h);
+    // NO_UPDATE is quiet on the first run too (standing Motes are told to answer it unless Ben must act); it is never kept as the last report
+    const quiet = !failed && !wasStopped && !res.error && recurring && QUIET_RE.test(res.report || '');
     if (!wasStopped) h.status = failed ? 'failed' : 'idle';
     let report = res.report || '';
     if (!report) report = res.error ? 'Failed: ' + res.error : res.stopped ? 'Stopped before finishing.' : 'Finished with no report.';
+    let retrying = false;   // a failed run that will try again soon is not reported yet
     if (failed) {
       h.lastError = short(res.error, 150); h.fails = (h.fails || 0) + 1;
       report = 'Failed: ' + h.lastError;
-      if (h.fails === 1 && recurring) h.next = h.next ? Math.min(h.next, this.now() + RETRY_MS) : this.now() + RETRY_MS;
+      if (h.fails <= MAX_RETRIES && (recurring || TRANSIENT_RE.test(res.error))) {
+        const at = this.now() + RETRY_MS * 3 ** (h.fails - 1);
+        h.next = h.next ? Math.min(h.next, at) : at;
+        retrying = true;
+      }
     } else if (!wasStopped && !res.stopped) { h.fails = 0; h.lastError = null; }
     if (quiet) { h.quiet = true; h.lastSummary = 'No change (checked ' + fmtWhen(this.now(), this.now()) + ')'; } // lastReport stays: the next run compares against real content
     else { if (!failed) h.lastReport = report; h.lastSummary = short(report, SUMMARY_KEEP); }
     this.changed();
-    if (!wasStopped) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent, (quiet || failed) ? { quiet, failed } : { quiet, failed, report }); } catch (e) { /* ignore */ } }
+    if (!wasStopped && !retrying) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent, (quiet || failed) ? { quiet, failed } : { quiet, failed, report }); } catch (e) { /* ignore */ } }
   }
 }
 

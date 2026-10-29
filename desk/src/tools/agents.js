@@ -44,12 +44,12 @@ function agentTools(mgr, opts) {
           }
           if (!me) return { text: NO, error: true };
           if (mgr.depth(me.id) + 1 > MAX_DEPTH) return { text: 'Error: this Mote was started by another Mote, so it cannot start more. Do the work yourself.', error: true };
-          const kids = mgr.items.filter((h) => h.byHelper === me.id && h.status !== 'stopped' && (mgr.isRunning(h.id) || h.every || h.at)).length; // a finished one-time child no longer counts
+          const kids = mgr.items.filter((h) => h.byHelper === me.id && h.status !== 'stopped' && (mgr.isRunning(h.id) || !!h.next)).length; // a finished one-time child (or a reminder whose date passed) no longer counts
           if (kids >= MAX_KIDS) return { text: 'Error: you already run ' + kids + ' Motes; stop one first (agent_update with stop) or do the work yourself.', error: true };
         }
         const both = a.every && a.at ? " (every '" + a.every + "' was ignored: at wins, so it runs once a day)" : '';
         const h = mgr.add({ name: a.name, task: a.task, every: a.every, at: a.at, parent: ctx && ctx.thread && ctx.thread.id, byHelper: isHelper ? selfId : undefined });
-        const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') ? h.schedule + ', next run ' + fmtWhen(h.next) + ' (NOT running now; tell Ben that time, and use agent_update run: true to run it now)' : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
+        const when = h.schedule === 'once' ? 'running now (one time)' : h.schedule.startsWith('daily') || h.schedule.startsWith('on ') ? h.schedule + ', next run ' + fmtWhen(h.next) + ' (NOT running now; tell Ben that time, and use agent_update run: true to run it now)' : 'running now, then ' + h.schedule + ', next run ' + fmtWhen(h.next);
         return { text: started(h, when + both), summary: 'Started Mote ' + h.name };
       } catch (e) { return err(e); }
     },

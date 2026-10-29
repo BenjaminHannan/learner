@@ -104,10 +104,12 @@ class Call {
     if (c.stderr) c.stderr.on('data', (d) => { this.err = (this.err + String(d)).slice(-400); });
     if (c.stdin && c.stdin.on) c.stdin.on('error', () => { /* helper died; 'exit' says so */ });
     c.on('error', (e) => this.fail(e && e.code === 'ENOENT' ? 'The Glim helper is not installed, so calling is not available.' : 'Glim could not start the call helper.'));
-    c.on('exit', (code) => {
+    const gone = () => {
       if (this.state === 'ended') return;
       this.fail(this.readied ? 'The call stopped unexpectedly.' : 'The call helper stopped before it was ready.' + (this.err ? ' ' + this.err.trim().split('\n').pop() : ''));
-    });
+    };
+    // 'exit' can come before the helper's last stdout line (e.g. {"error":"mic-denied"}): wait for its output to close first
+    c.on('exit', () => { if (c.stdout && c.stdout.readableEnded === false) c.once('close', gone); else gone(); });
   }
 
   _data(s) {

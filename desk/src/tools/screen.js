@@ -70,10 +70,13 @@ function createScreen(getSettings, resourcesPath, onLook) {
   async function screenshot(max) {
     const b = bin();
     if (!b) return null;
-    const p = path.join(os.tmpdir(), 'premonition-desk-shot-' + process.pid + '.jpg');
-    const j = await callHelper(b, ['screenshot', p, '--max', String(max || 1280)]);
-    if (j.error) return null;
-    try { return 'data:image/jpeg;base64,' + fs.readFileSync(p).toString('base64'); } catch (e) { return null; }
+    // one file per shot: Glim and a Mote looking at the same time must not read each other's (or a half-written) image; removed after reading
+    const p = path.join(os.tmpdir(), 'premonition-desk-shot-' + process.pid + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + '.jpg');
+    try {
+      const j = await callHelper(b, ['screenshot', p, '--max', String(max || 1280)]);
+      if (j.error) return null;
+      return 'data:image/jpeg;base64,' + fs.readFileSync(p).toString('base64');
+    } catch (e) { return null; } finally { fs.rm(p, { force: true }, () => {}); }
   }
 
   // After a state-changing action: look again (cheap, no screenshot) and say what changed since the last look.

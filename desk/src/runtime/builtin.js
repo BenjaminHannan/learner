@@ -59,6 +59,12 @@ class Builtin {
         this._set({ phase: 'downloading', label: 'The graphics build did not start; getting the CPU build', pct: 0 });
         r = await this._launch('cpu', opts && opts.lora);
       }
+      // turned off or put to sleep while it was starting: leave it off (sleep needs the RAM), and do not call that an error
+      if (!this.running || this.asleep) {
+        if (r.ok) await this.server.stop();
+        if (this.asleep) this._set({ phase: 'off', label: 'Asleep', pct: 0 });
+        return this.state();
+      }
       if (!r.ok) throw new Error(r.error || 'the model did not start');
       if (!this.gw) {
         this.gw = createGateway({ upstream: this.server.url(), diaryDir: this.diaryDir, upstreamModel: 'default', fetch: this.o.gwFetch, skipDiary: this.o.skipDiary });

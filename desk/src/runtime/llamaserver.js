@@ -96,6 +96,7 @@ class LlamaServer {
     this.wanted = true;
     this._kill();
     if (['win32', 'darwin'].includes(this.o.platform || process.platform) || this.o.reclaim) { try { await (this.o.reclaim || reclaimPort)(this.o.port || C.SERVER_PORT, this.o.exec, this.o.platform); } catch (e) { /* best effort */ } }
+    if (!this.wanted) return { ok: false, stopped: true, error: 'stopped' };   // turned off (or sleep began) while the port was being freed: launch nothing
     this.postHealthyCrashes = 0;
     this._set('starting');
     const r = await this._launch();
@@ -117,7 +118,9 @@ class LlamaServer {
     this.timer = setTimeout(async () => {
       if (!this.wanted) return;
       this._kill(); this.wanted = true; // exactly one server at a time
-      const r = await this._launch();
+      const launching = this._launch(), g = this.gen;   // _launch takes the next generation
+      const r = await launching;
+      if (g !== this.gen) return;   // start() took over while this restart was launching: its server is not a crash
       if (r.ok) this._set('ready'); else if (this.wanted) this._crashed(-1);
     }, delay);
     if (this.timer.unref) this.timer.unref();

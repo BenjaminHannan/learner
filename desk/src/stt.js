@@ -84,6 +84,7 @@ class Stt {
       const finish = (fn, v) => { if (done) return; done = true; clearTimeout(t); fn(v); };
       try { c = this.spawn(pick.python, ['-I', script], { env: pick.env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }); }
       catch (e) { return reject(new Error('Voice could not start the speech model.')); }
+      this.starting = c; this.stopped = false;
       const t = setTimeout(() => { try { c.kill(); } catch (e) { /* gone */ } finish(reject, new Error('The speech model did not start in time.')); }, this.o.startMs || START_MS);
       c.stdout.on('data', (d) => {
         buf += String(d);
@@ -91,7 +92,12 @@ class Stt {
         while ((i = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
           let j; try { j = JSON.parse(line); } catch (e) { continue; }
-          if (j && Number.isInteger(j.port) && j.port > 0) { this.child = c; this.url = 'http://127.0.0.1:' + j.port; finish(resolve, this.url); }
+          if (j && Number.isInteger(j.port) && j.port > 0) {
+            this.starting = null;
+            // stop() came while it was starting (e.g. quitting): do not keep a speech model loaded with nobody to stop it
+            if (this.stopped) { try { c.kill(); } catch (e) { /* gone */ } finish(reject, new Error('Voice was turned off.')); continue; }
+            this.child = c; this.url = 'http://127.0.0.1:' + j.port; finish(resolve, this.url);
+          }
         }
       });
       if (c.stderr) c.stderr.on('data', (d) => { err = (err + String(d)).slice(-400); });
@@ -112,6 +118,7 @@ class Stt {
 
   stop() {
     const c = this.child; this.child = null; this.url = null;
+    if (this.starting) { this.stopped = true; try { this.starting.kill(); } catch (e) { /* gone */ } this.starting = null; }
     if (!c) return;
     try { c.stdin && c.stdin.end && c.stdin.end(); } catch (e) { /* closed */ }
     try { c.kill(); } catch (e) { /* gone */ }

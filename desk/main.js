@@ -17,10 +17,12 @@ if (!E2E) {
   try {
     const dir = path.join(app.getPath('userData'), 'logs'); fs.mkdirSync(dir, { recursive: true });
     const f = path.join(dir, 'main.log');
-    try { if (fs.statSync(f).size > 1048576) fs.renameSync(f, f + '.old'); } catch (e) { /* none yet */ }
+    const trim = () => { try { if (fs.statSync(f).size > 1048576) fs.renameSync(f, f + '.old'); } catch (e) { /* none yet */ } };
+    trim();
+    let writes = 0;   // the app runs for weeks (login item, tray): check the size every 200 lines, not only at launch
     for (const lvl of ['log', 'warn', 'error']) {
       const orig = console[lvl].bind(console);
-      console[lvl] = (...a) => { orig(...a); try { fs.appendFileSync(f, new Date().toISOString() + ' ' + lvl + ' ' + a.map((x) => (x && x.stack) || (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n'); } catch (e) { /* ignore */ } };
+      console[lvl] = (...a) => { orig(...a); if (++writes % 200 === 0) trim(); try { fs.appendFileSync(f, new Date().toISOString() + ' ' + lvl + ' ' + a.map((x) => (x && x.stack) || (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n'); } catch (e) { /* ignore */ } };
     }
     process.on('uncaughtException', (e) => { console.error('uncaught', e); });
   } catch (e) { /* no log */ }
@@ -356,7 +358,14 @@ function autoSleepTick(now, over) {
   if (w.wake) { wakeNow(); return { action: 'wake' }; }
   if (shouldTimedWake({ asleep: sl.asleep, waking: sl.waking, wakeAt: sl.wakeAt, nowMs: now.getTime() })) { wakeNow(); return { action: 'wake', reason: 'the chosen sleep time is up' }; }
   const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
-  if (d.sleep) { sl.lastKey = d.key; const r = startSleep({ auto: true }); if (r.ok) notify('Glim went to sleep', 'It is past ' + effectiveWindow(s, common.learned).from + ' and you have been away. It wakes when you press Wake.'); return { action: 'sleep', result: r }; }
+  // Ben's Macs keep the big chat model on all day and it holds the memory sleep needs: without stopAssistant the nightly sleep was refused
+  // every night (and lastKey kept it from trying again). It is turned off for the night and back on when Glim wakes, like the Sleep sheet does.
+  if (d.sleep) {
+    sl.lastKey = d.key;
+    const r = startSleep({ auto: true, stopAssistant: true });
+    Promise.resolve(r).then((x) => { if (x && x.ok) notify('Glim went to sleep', 'It is past ' + effectiveWindow(s, common.learned).from + ' and you have been away. It wakes when you press Wake.'); }).catch(() => {});
+    return { action: 'sleep', result: r };
+  }
   return { action: 'none', reason: d.reason };
 }
 
@@ -425,7 +434,8 @@ async function awakeCheckinTick(now, over) {
 }
 function waitFor(id, signal, fallback, card) {
   return new Promise((resolve) => {
-    const fin = (v) => { pending.delete(id); cards.delete(id); pillState.onEvent && resumeRid(id); resolve(v); };
+    let done = false;   // answered once; the run's abort listener goes with it (a long run asks many times)
+    const fin = (v) => { if (done) return; done = true; if (signal) signal.removeEventListener('abort', onAbort); pending.delete(id); cards.delete(id); pillState.onEvent && resumeRid(id); resolve(v); };
     pending.set(id, fin);
     if (card) cards.set(id, card);
     const onAbort = () => fin(fallback);
@@ -649,7 +659,11 @@ function setHold(key, on) {
 function gate(key, signal) {
   const h = holds.get(key);
   if (!h) return null;
-  return Promise.race([h.p, new Promise((r) => { if (signal) { if (signal.aborted) r(); else signal.addEventListener('abort', () => r(), { once: true }); } })]);
+  if (!signal) return h.p;
+  if (signal.aborted) return Promise.resolve();
+  let onAbort;
+  const aborted = new Promise((r) => { onAbort = () => r(); signal.addEventListener('abort', onAbort, { once: true }); });
+  return Promise.race([h.p, aborted]).finally(() => signal.removeEventListener('abort', onAbort));   // one listener per browser call while Ben holds it: removed each time
 }
 
 // A sign-in hand-off: open the panel with the banner and wait (abortably) until Ben clicks Done or Not now.
@@ -685,7 +699,8 @@ function createAgent({ helper, rec, voice }) {
   const isVoice = !!voice; // the call's own agent: it runs beside the main agent, so a call works while a task is running
   // one browser per thread: a helper's is made up front (its thread id), a chat thread's on its first browser tool
   const bk = () => (isHelper ? helper.threadId : a.threadId);
-  const getBr = () => (isHelper ? rec : makeBrowser(bk(), isVoice ? 'Call' : activeThread && activeThread.title)).br;
+  // a helper's page that closed itself (window.close) dropped its browser: the next tool call makes a fresh one instead of using the dead one
+  const getBr = () => (isHelper ? (rec && browsers.get(bk()) === rec ? rec : (rec = makeBrowser(bk(), (rec && rec.label) || helper.name, { helper: true }))) : makeBrowser(bk(), isVoice ? 'Call' : activeThread && activeThread.title)).br;
   const pKey = isHelper ? helper.id : isVoice ? 'call' : 'main';
   const pName = isHelper ? helper.name : 'Glim';
   const holder = screenLock.holder();
@@ -707,7 +722,8 @@ function createAgent({ helper, rec, voice }) {
       it.url = s.url; it.title = s.title; it.favicon = s.favicon;
       const t = await cur.br.thumb(360);
       if (t) it.thumb = t;
-    } finally { live.busy = false; }
+    } catch (e) { return; }   // the page or its view went away between ticks (Oct 28: 160 unhandled "Object has been destroyed" in 4 min)
+    finally { live.busy = false; }
     cardEvent(true);
   };
   const touchCard = (thread) => {
@@ -848,11 +864,12 @@ function postNotice(threadId, name, summary) {
 // Ben Oct 28: "I don't want the subagents to report to me. everything should be filtered through the Glim." A finished helper's report
 // waits in the thread's pendingNotices; when Glim is free it reads the reports and tells Ben what matters in its own words (a hidden turn).
 const RELAY_ASK = '[A helper finished; its report is above. Tell Ben what matters in one or two short sentences, in your own words as Glim. Do not paste the report. Call the helpers Motes, never agents.]';
-let relayTimer = null;
+const relayTimers = new Map();   // per thread: a report for one chat must not cancel another chat's pending relay
 function relayReports(threadId, tries) {
   if (E2E) return; // the scripted test gateway does not expect an extra turn
-  clearTimeout(relayTimer);
-  relayTimer = setTimeout(async () => {
+  clearTimeout(relayTimers.get(threadId));
+  const relayTimer = setTimeout(async () => {
+    relayTimers.delete(threadId);
     try {
       const t = (activeThread && activeThread.id === threadId && agent.running) ? null : store.loadThread(threadId);
       if (!t || !t.pendingNotices || !t.pendingNotices.length) return;
@@ -863,6 +880,7 @@ function relayReports(threadId, tries) {
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has news', t.title, t.id);
     } catch (e) { /* the reports stay queued for Ben's next message */ }
   }, tries ? 20000 : 4000);
+  relayTimers.set(threadId, relayTimer);
   if (relayTimer.unref) relayTimer.unref();
 }
 
@@ -896,7 +914,7 @@ async function followUpTick(over) {
   if (followBusy || E2E || !agent) return;
   const s = store.getSettings(), now = new Date();
   if (!s.onboarded) return;
-  const latest = store.listThreads().find((x) => !x.helper && x.updated);
+  const latest = store.listThreads().find((x) => !x.helper && x.title !== 'Call' && x.updated);   // never the Call chat
   const t0 = latest && store.loadThread(latest.id);
   if (!t0 || !(t0.messages || []).length) return;
   if (!FU.shouldFollowUp({ now, lastDay: s.followupDay, hour: now.getHours(), front: chatInFront(), busy: agent.running, asleep: sl.asleep || sl.waking || !!sl.starting, lastActivity: t0.updated, enabled: s.followUp, ...over })) return;
@@ -1304,7 +1322,8 @@ function registerIpc() {
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
   h('dictate:start', () => startDictate());
   h('dictate:stop', () => { stopDictate(false); return true; });
-  h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else agent.stop(); return true; });
+  // Stop in the Call chat stops the call's own agent, not a task running in the main chat
+  h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else if (callAgent && threadId && callAgent.threadId === threadId) callAgent.stop(); else agent.stop(); return true; });
   // First-run setup: create the picked recurring Glims through the same Helpers.add that agent_start uses (no model call).
   h('onboard:create', (ids) => (Array.isArray(ids) ? ids : []).map((use) => {
     const t = Uses.templateFor(use);
@@ -1488,7 +1507,7 @@ function registerIpc() {
     switch (name) {
       case 'hover': if (pillWin) pillWin.setInteractive(!!arg); break;
       case 'open': { showWindow(); if (arg && arg.threadId) send('open-thread', arg.threadId); if (arg && arg.key) pillState.dismiss(arg.key); break; }
-      case 'stop': if (arg === 'main') agent.stop(); else helpers.abort(arg); break;
+      case 'stop': if (arg === 'main') agent.stop(); else if (arg === 'call') { if (callAgent) callAgent.stop(); } else helpers.abort(arg); break;
       case 'respond': { const r = pending.get(arg.rid); if (r) { pending.delete(arg.rid); r(arg.value); send('agent', { threadId: arg.threadId, type: 'resolved', rid: arg.rid, value: arg.value }); } break; }
       case 'openBrowser': { const pa = [...pillState.agents.values()].find((x) => x.key === arg); const key = pa && pa.threadId; if (key && browsers.has(key)) { showWindow(); send('browser-show', { key, threadId: key, login: loginWaits.has(key) }); } break; }
       case 'dismiss': pillState.dismiss(arg); break;

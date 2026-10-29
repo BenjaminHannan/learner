@@ -7,7 +7,10 @@ const path = require('path');
 const { Sleep, findPython, appDir, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine } = require('../src/sleep');
 
 const FAKE = path.join(__dirname, 'fake-sleepmode.js');
-const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'sleep-'));
+// each sleep home is ~5 MB; left behind, a few hundred test runs filled the disk (Oct 29)
+const made = [];
+const tmp = () => { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'sleep-')); made.push(d); return d; };
+process.on('exit', () => { for (const d of made) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (e) { /* in use */ } } });
 const mk = (extra, settings) => {
   const home = tmp(); fs.mkdirSync(path.join(home, 'app'));
   return { home, sl: new Sleep({ home, getSettings: () => ({ sleepPython: FAKE, ...settings }), env: { ...extra } }) };

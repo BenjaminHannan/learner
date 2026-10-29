@@ -122,9 +122,9 @@ class WinSleep extends Sleep {
 
   /** o: {budgetS (the whole sleep, seconds), wakeAt (ms or null)} */
   start(o) {
+    if (this.active) return { ok: false, error: 'Already sleeping.' };   // before the resets below: a second start must not wipe the running night
     this.nightBudgetS = (o && o.budgetS) || 0; this.wakeAtMs = (o && o.wakeAt) || null; this.lastCheckinAt = null; this.checkins = []; this.ckAbort = null;
     this.finishedNight = false; this.nothingNew = false; this.lessons = []; this.lessonsReverted = false; this.night = null; this.loaded = null; this.converted = false;
-    if (this.active) return { ok: false, error: 'Already sleeping.' };
     if (this.needsRuntime()) return { ok: false, needsRuntime: true, error: 'Sleep needs a one-time download first.', plan: this.installer.plan() };
     const m = mayStart(this.getSettings(), this.onBattery());
     if (!m.ok) return m;
@@ -135,6 +135,7 @@ class WinSleep extends Sleep {
   }
   wake() {
     this.wakeReq = true;
+    if (this.backoffDone) this.backoffDone();   // waiting a minute before the next chunk: wake now, not after the wait
     if (this.ckAbort) { try { this.ckAbort.abort(); } catch (e) { /* done */ } } // a check-in in progress stops now
     // the worker stops cleanly (checkpoint, exit 0) when this flag file appears; if it ignores it, it is killed after a while
     try { fs.mkdirSync(this.home, { recursive: true }); fs.writeFileSync(path.join(this.home, 'ASSISTANT_RUNNING'), new Date().toISOString()); } catch (e) { /* ignore */ }
@@ -179,7 +180,8 @@ class WinSleep extends Sleep {
         const m = mayStart(this.getSettings(), this.onBattery());
         if (!m.ok) { this._event({ kind: 'unplugged' }); break; }
         if (!this.wakeReq) await this._maybeCheckin();
-        if (out.interrupted && out.stop_reason) await new Promise((r) => { const t = setTimeout(r, this.o.retryMs === undefined ? 60000 : this.o.retryMs); if (t.unref) t.unref(); });
+        if (out.interrupted && out.stop_reason && !this.wakeReq) await new Promise((r) => { const t = setTimeout(r, this.o.retryMs === undefined ? 60000 : this.o.retryMs); if (t.unref) t.unref(); this.backoffDone = () => { clearTimeout(t); r(); }; });
+        this.backoffDone = null;
       }
     } catch (e) { this.exit = { error: String(e && e.message || e) }; }
     finally { await this._finish(); }

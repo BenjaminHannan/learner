@@ -27,6 +27,7 @@ function runShell(command, opts) {
     const timer = setTimeout(() => { kill(); finish(out + '\n[timed out after ' + timeoutMs / 1000 + ' s]'); }, timeoutMs);
     const onAbort = () => { kill(); finish(out + '\n[stopped]'); };
     if (opts.signal) { if (opts.signal.aborted) return onAbort(); opts.signal.addEventListener('abort', onAbort); }
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');   // a character split across two chunks must not turn into U+FFFD
     child.stdout.on('data', (d) => { out += d; if (out.length > 200000) out = out.slice(-100000); });
     child.stderr.on('data', (d) => { out += d; if (out.length > 200000) out = out.slice(-100000); });
     child.on('error', (e) => finish('Error: ' + e.message));

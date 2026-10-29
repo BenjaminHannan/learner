@@ -191,6 +191,16 @@ test('memory: if the retry saves an old fact (or nothing), Ben\'s own words are 
   } finally { gw.close(); }
 });
 
+test('memory: a question about a memory is not an ask to save one; a polite ask is; contractions survive', () => {
+  const { isRememberAsk, rememberFact } = require('../src/agent');
+  assert.strictEqual(isRememberAsk('Do you remember what time my flight is?'), false);
+  assert.strictEqual(isRememberAsk('what did I say, remember'), false);
+  assert.strictEqual(isRememberAsk('there should just be one chat remember'), false);   // nothing to remember after the word
+  assert.strictEqual(isRememberAsk('Can you remember that my flight is at 6'), true);
+  assert.strictEqual(isRememberAsk('Remember that I take AP Chem 4th period'), true);
+  assert.match(rememberFact("remember that I don't eat pork"), /doesn't eat pork/);
+});
+
 test('memory: rememberFact turns the ask into a third-person fact', () => {
   const { rememberFact } = require('../src/agent');
   assert.strictEqual(rememberFact('Remember that I like short answers.'), 'Ben likes short answers');

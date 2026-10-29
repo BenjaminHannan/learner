@@ -143,8 +143,10 @@ function createMemory(dir, opts) {
       const cards = all.filter((f) => isCard(f) && f.explicit), facts = all.filter((f) => !isCard(f));
       if (cards.length > MAX_CARDS) { d.lines.splice(cards.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1); continue; }
       if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) break;
-      const mine = facts.filter((f) => f.explicit);
+      const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
       if (!mine.length) break;
+      // Ben's own bullets alone are over the cap: evicting Glim's notes cannot fix that and would delete every one of them
+      if (hand.length > MAX_FACTS || size(hand) > MAX_CHARS) break;
       d.lines.splice(mine.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1);
     }
     writeText(d.lines.join(d.eol));
