@@ -591,7 +591,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     await ev('document.querySelector("#newThread").click()');
     await sleep(300);
     await ev('(()=>{const i=document.querySelector("#input");i.value="hello?";i.dispatchEvent(new Event("input"));document.querySelector("#btnSend").click();})()');
-    checks.push(['error: chat shows the error line', await until(() => ev('!!document.querySelector(".errline")'), 8000)]);
+    checks.push(['error: an unreachable model reads "I\u2019m off right now" in Glim\u2019s words, not "fetch failed"', await until(() => ev('/off right now|still starting up/.test(document.querySelector("#msgs").innerText) && !document.querySelector(".errline")'), 8000)]);
     checks.push(['error: pill says Something went wrong with sad Glim', await until(async () => /Something went wrong/.test(await pev('document.querySelector("#line").textContent')) && (await pev('document.querySelector("#pill .mascot").dataset.mood')) === 'error', 4000)]);
     checks.push(['pill window: always on top, all workspaces, no focus', pillWin.win.isAlwaysOnTop() && pillWin.win.isFocusable() === false]);
     checks.push(['pill window sits at the top center of the screen', (() => { const b = pillWin.win.getBounds(); return b.y <= 10 && Math.abs((b.x + b.width / 2) - 720) < 200 || b.y <= 10; })()]);

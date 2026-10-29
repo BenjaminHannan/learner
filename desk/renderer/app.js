@@ -514,6 +514,7 @@
 
   // ---------- Glim's mood: one status source (main) + local run state ----------
   let slp = { asleep: false, waking: false, available: true };
+  const OFF_ERROR = /fetch failed|failed to fetch|ECONNREFUSED|ECONNRESET|socket hang up|other side closed/i;   // the gateway could not be reached at all
   let gwWasUp = false; // the model answered earlier in this session and has since gone quiet: usually the memory guard stopped it
   let mood = 'idle', gw = { state: 'down' }, glim = 'idle', errorUntil = 0, doneUntil = 0, moodTimer = 0, lastActive = Date.now(), glanceTimer = 0;
   const logo = Mascot.el('idle', 28, { cls: 'follow' });
@@ -738,7 +739,15 @@
       case 'queued': $('#runState span').textContent = 'Waiting for a free slot…'; paintGateway(); break;
       case 'started': $('#runState span').textContent = 'Typing…'; if (window.Side) Side.setPlan([]); paintGateway(); break;
       case 'compacted': break;
-      case 'error': { ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break; }
+      case 'error': {
+        // Ben Oct 29: a message sent while the model was off showed "fetch failed". Glim says it in its own words; the Turn on card is right below.
+        if (OFF_ERROR.test(String(ev.message || ''))) {
+          if (gw.state !== 'down') { gw = { ...gw, state: 'down' }; paintGateway(); }
+          ensureBlock().col.append(el('div', 'atext sel', gwIsStarting() ? 'I\u2019m still starting up. Give me about a minute, then ask me again.' : 'I\u2019m off right now. Press Turn on below, then ask me again.'));
+          toBottom(); break;
+        }
+        ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break;
+      }
       case 'done': {
         setRunning(false); tn = null; finishAll(); markRead(); pendingAsk = null; // a stopped run's question is no longer open
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
