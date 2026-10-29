@@ -179,8 +179,13 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
 #runState { display:none !important; } /* the typing bubble in the chat shows that Glim is working (Ben Oct 29: the line above the input "looks bad") */
 .typing-row { order:9999; } .typing-row[hidden] { display:none; } /* always the last row of the chat, whatever is appended after it */
-.typing { display:inline-flex; align-items:center; gap:.3rem; height:2.1rem; padding:0 .85rem; border-radius:1.05rem 1.05rem 1.05rem .3rem; background:var(--raised); width:max-content; }
-.typing i { width:.45rem; height:.45rem; border-radius:50%; background:var(--text2); opacity:.4; animation:typing-dot 1.3s infinite ease-in-out; }
+/* a thought bubble: a cloud with two small circles trailing down to Glim's face (Ben Oct 29: "not a text bubble, a thought bubble") */
+.typing { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.3rem; width:4.6rem; height:2.6rem; margin-left:.85rem; }
+.typing .cloud { position:absolute; inset:0; width:100%; height:100%; fill:var(--raised); filter:drop-shadow(0 0 .5px var(--hair2)) drop-shadow(0 1px 1.5px var(--hair)); }
+.typing::before, .typing::after { content:''; position:absolute; border-radius:50%; background:var(--raised); box-shadow:0 0 0 .5px var(--hair2), 0 1px 1.5px var(--hair); }
+.typing::before { width:.55rem; height:.55rem; left:-.55rem; top:1.15rem; }
+.typing::after { width:.3rem; height:.3rem; left:-1rem; top:.95rem; }
+.typing i { position:relative; width:.45rem; height:.45rem; border-radius:50%; background:var(--text2); opacity:.4; animation:typing-dot 1.3s infinite ease-in-out; }
 .typing i:nth-child(2) { animation-delay:.16s; } .typing i:nth-child(3) { animation-delay:.32s; }
 @keyframes typing-dot { 0%, 60%, 100% { opacity:.35; transform:scale(.85); } 30% { opacity:1; transform:scale(1); } }
 @media (prefers-reduced-motion: reduce) { .typing i { animation:none; opacity:.7; } }

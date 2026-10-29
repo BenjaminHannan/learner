@@ -93,10 +93,12 @@
 
   // ---------- blocks, activity groups ----------
   function newBlock() { blk = null; act = null; tn = null; }
-  // Ben Oct 29: a texting-style "Glim is typing" bubble, in the chat next to Glim's face, while it works and nothing new is being written yet
-  const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is typing');
+  // Ben Oct 29: a thought bubble (cloud, small circles trailing to Glim's face), in the chat, while it works and nothing new is being written yet
+  const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is thinking');
   typingRow.append(Mascot.el('idle', 28, { cls: 'avatar', still: true }));
-  { const col = el('div', 'acol'), b = el('div', 'typing'); b.append(el('i'), el('i'), el('i')); col.append(b); typingRow.append(col); }
+  { const col = el('div', 'acol'), b = el('div', 'typing');
+    b.innerHTML = '<svg class="cloud" viewBox="0 0 92 52" aria-hidden="true"><circle cx="22" cy="31" r="15"/><circle cx="38" cy="20" r="15"/><circle cx="56" cy="17" r="15"/><circle cx="72" cy="27" r="15"/><circle cx="48" cy="34" r="16"/><circle cx="30" cy="37" r="12"/><circle cx="66" cy="37" r="12"/></svg>';
+    b.append(el('i'), el('i'), el('i')); col.append(b); typingRow.append(col); }
   function paintTyping() {
     const on = !!running && !(tn && tn.text) && !(thread && thread.helper);
     if (on && typingRow.parentNode !== msgs) msgs.append(typingRow);
