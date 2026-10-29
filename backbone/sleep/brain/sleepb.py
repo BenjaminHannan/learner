@@ -3585,7 +3585,7 @@ def gguf_load_base(lm, path):
             if ty == "Q4_0":
                 q, sc, bi = q40_quant(d, 32)
                 exact &= bool(torch.equal((q * sc + bi).reshape(d.shape), d))
-            w0 = p.detach().float()
+            w0 = p.detach().float().cpu()  # d is on the CPU; the model may already sit on the GPU
             rel[ty] = max(rel.get(ty, 0.0), ((d - w0).norm() / w0.norm().clamp_min(1e-12)).item())
             p.copy_(d.to(p.device, p.dtype))
             cast = max(cast, ((p.detach().float().cpu() - d).norm() / d.norm().clamp_min(1e-12)).item())
