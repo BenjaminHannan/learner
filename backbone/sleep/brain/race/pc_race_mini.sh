@@ -28,9 +28,14 @@ claim() {
   printf "# race-mini\nowner: Make whole-model sleep beat the add-on (+ add-on side)\nlog: %s/job.log\nstarted: %s\npause between arm-seeds: create %s\n" "$OUT" "$(date -u +%FT%TZ)" "$PAUSE" > "$CARD"
 }
 log "waiting for $GO and an empty GPU-BUSY.txt"
-gpu_idle() {  # under 1.5 GB in use on the GPU (a job that forgot GPU-BUSY.txt still blocks us); no nvidia-smi (CPU simulation) counts as idle
+gpu_idle() {  # under 8 GB in use (Ben's desktop apps alone can hold ~7 GB; a training job that forgot GPU-BUSY.txt holds more); no nvidia-smi (CPU simulation) = idle
   local m; m=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1) || return 0
-  [ -z "$m" ] || [ "$m" -lt 1500 ]
+  [ -z "$m" ] || [ "$m" -lt 8000 ]
+}
+set_cap() {  # cap each run at min(14 GiB, what is free now - 0.5 GiB), so desktop VRAM plus ours never spills past the card under WSL
+  local t u; read -r t u < <(nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ',') || return 0
+  [ -n "$u" ] || return 0
+  export SLEEPB_CUDA_CAP_GIB=$(python -c "print(round(min(14.0, ($t - $u) / 1024 - 0.5), 2))")
 }
 until [ -f "$GO" ] && [ ! -s "$BUSY" ] && gpu_idle; do sleep 60; done
 [ -n "${RM_GO_KEEP:-}" ] || rm -f "$GO"; claim  # RM_GO_KEEP: another job still reads the flag
@@ -50,7 +55,8 @@ run() {  # name, then race_mini args
     until [ ! -f "$PAUSE" ] && [ ! -s "$BUSY" ]; do sleep 60; done
     claim; log "resumed"
   fi
-  log "start $n: $*"
+  set_cap
+  log "start $n: $* (GPU cap ${SLEEPB_CUDA_CAP_GIB} GiB)"
   nvidia-smi --query-gpu=memory.used --format=csv,noheader >> "$OUT/job.log" 2>/dev/null
   python "$B/race/race_mini.py" --out "$OUT/$n" $MA "$@" ${RM_EXTRA:-} > "$OUT/$n.stdout" 2>&1
   local r=$?
