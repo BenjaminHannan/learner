@@ -1,0 +1,38 @@
+{
+  "label": "Posthoc format-confound analysis, no primary64 verdict",
+  "scope": "all four held prompts at LoRA scales0/1 for both preselected32 adapters; not a full-vocabulary equivalence test",
+  "arms": {
+    "prompt": {
+      "raw_report_sha256": "d699060cfb6f19473f34ade24d34157b645616b075baba554e2eb215cdb8df03",
+      "HF_system": "Answer with just the name.",
+      "native_system": "Answer with just the name.",
+      "HF_frame_token_IDs_equal_actual_native_chat": true,
+      "native_tokenization_and_roundtrip_parity": true,
+      "completion_engine_prompt_length_exact": true,
+      "chat_completion_outputs_equal_all8": true,
+      "chat_outputs_match_original_native_measurement_all8": true,
+      "held_off": 0,
+      "held_on": 3,
+      "owned_server_stopped": true
+    },
+    "continuation": {
+      "raw_report_sha256": "99b5b3380da87a3b1ca3f18da681d497655aa027b226723405cc7fbe2b08cc08",
+      "HF_system": "Answer with just the name.",
+      "native_system": "Answer with just the name.",
+      "HF_frame_token_IDs_equal_actual_native_chat": true,
+      "native_tokenization_and_roundtrip_parity": true,
+      "completion_engine_prompt_length_exact": true,
+      "chat_completion_outputs_equal_all8": true,
+      "chat_outputs_match_original_native_measurement_all8": true,
+      "held_off": 0,
+      "held_on": 3,
+      "owned_server_stopped": true
+    }
+  },
+  "limitations": [
+    "HF uses frozen standard HF checkpoint/Torch bf16 CPU; native uses QAD Q4_0 GGUF/llama.cpp CPU. Exact underlying base weight equivalence remains unproven.",
+    "All114 exported adapter tensors are independently bitwise equal F32 to PEFT, so no adapter conversion rounding was introduced.",
+    "Prompt frame parity is proven for these supplied prompts; backend numerical behavior and base differences remain possible causes, with no single-cause attribution.",
+    "No model/default/adapter/SHY setting changed."
+  ]
+}

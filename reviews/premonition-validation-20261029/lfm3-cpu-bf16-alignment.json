@@ -1,0 +1,150 @@
+{
+  "label": "Exact-HF-derived BF16 native comparison; posthoc, no primary64 verdict",
+  "conversion": {
+    "source_HF_files_sha256": {
+      "chat_template.jinja": "f45005c50cd2a97329722bf3a2dee9f16c04cdf825a589b280fb7e99e6827818",
+      "config.json": "8c6ae8b8f6d88c87cfb98cf4b5e34e943d0ee07e24215c4121b3159a46e1399d",
+      "configuration_lfm3.py": "176cced35657aedfea7d7002221360582d1c05fcaca882c21508bc3a73b282e5",
+      "generation_config.json": "0095ba7158e938b1e2d3082d412f00d8be85e42cbbd7608b63866f7a081cf270",
+      "lfm3_conv.py": "80d4a985382a22774212759248a6b4c737bfbf9c2a47b3dd7f797dda748e4bb4",
+      "model.safetensors": "135922caef64e81e52af88ede8b7c3ddaa9d6da220a9737fb3065275dbfb4330",
+      "modeling_lfm3.py": "e8cd5254ea99ce6bd731b57b10908c2e8b5010ce8315341f895a38484885eeab",
+      "special_tokens_map.json": "7946f864cbfb62a1b041bda937244210a1a87f4a6cab3a48b791131b2cd57f88",
+      "tokenizer.json": "7e226e34bface23ccf6e495d157bf77186c1c30a7659880e1a8994db528c3701",
+      "tokenizer_config.json": "bf028f813efc6137bc07ed045cafe71820df9a5e26a38e39954706ed1e30a457"
+    },
+    "converter_support_manifest_sha256": "5492f2f520db9c9ab6c67a283c7f1d28da7ec7971b94e1badee17591ff5bcbe8",
+    "converter_revision": "338fce6511c744893cc0d3d958b275f40552c7a4",
+    "outtype": "bf16",
+    "gguf_sha256": "7730ad230884bca8c515658029f6290cb354549196d1a78596cacb7ea1ec6541",
+    "gguf_bytes": 3466625568,
+    "elapsed_s": 17.75,
+    "torch": "2.15.0+cpu",
+    "torch_threads": 2,
+    "interop_threads": 2,
+    "cuda": null,
+    "base_dtype": "unquantized BF16 matrix weights; converter may preserve F32 scalar/norm/derived tensors"
+  },
+  "value_preservation_audit": {
+    "all_source_HF_tensors_value_preserved": true,
+    "source_tensor_count": 286,
+    "GGUF_tensor_count": 287,
+    "GGUF_derived_extra_tensors": [
+      "rope_freqs.weight"
+    ],
+    "BF16_tensors_bitwise_equal": true,
+    "F32_tensors_exact_source_value_upcast": true,
+    "elapsed_s": 2.6100000001024455
+  },
+  "frame_and_decoding_scope": {
+    "all12_BF16_prompts": "exact HF token IDs, same explicit systems, deterministic temperature0/max32, engine prompt lengths verified",
+    "all4_held_QAD_parity": "actual QAD chat IDs proven equal to HF/BF16, identical QAD chat versus exact-ID completion outputs",
+    "QAD8_general_actual_frame_ID_parity": "not directly verified; no base-only attribution of general score differences",
+    "n_probs": "optional top5 observability on BF16; missing expected token is unknown/bounded, never full NLL"
+  },
+  "arms": {
+    "prompt": {
+      "raw_report_sha256": "8c1f2d4bedc6350b14699657db7f8e287316b6f7e13afe8419997e741d92a2fc",
+      "outcome_strict3": {
+        "held_off": 0,
+        "held_on": 4,
+        "held_gain": 4,
+        "general_off": 7,
+        "general_on": 7,
+        "previously_correct_general_losses": 0,
+        "lost_general_questions": [],
+        "first_token_probability_records_available": true
+      },
+      "QAD_main_outcome_strict3": {
+        "held_off": 0,
+        "held_on": 3,
+        "native_learned_fact_gain": 3,
+        "general_off": 8,
+        "general_on": 8,
+        "previously_correct_general_losses": 0,
+        "native_learning_retention_diagnostic_pass": true,
+        "zero_zero_tie_is_learning_proof": false
+      },
+      "all12_native_token_ID_roundtrips_verified": true,
+      "all24_engine_prompt_lengths_verified": true,
+      "held_on_raw": [
+        {
+          "q": "Name the access word assigned to the Lumen observatory.",
+          "out": "Cedar",
+          "strict3_hit": true
+        },
+        {
+          "q": "Name the home dock assigned to the Vela ferry.",
+          "out": "Mossbank",
+          "strict3_hit": true
+        },
+        {
+          "q": "Name the call sign assigned to the Thistle robot.",
+          "out": "Amberfin",
+          "strict3_hit": true
+        },
+        {
+          "q": "Name the room assigned to the Pelican archive.",
+          "out": "Silverleaf",
+          "strict3_hit": true
+        }
+      ]
+    },
+    "continuation": {
+      "raw_report_sha256": "e41104293e12fa1be66663b8f5a488daca5aa52b8f1485a6dd6f83242422c093",
+      "outcome_strict3": {
+        "held_off": 0,
+        "held_on": 3,
+        "held_gain": 3,
+        "general_off": 7,
+        "general_on": 6,
+        "previously_correct_general_losses": 1,
+        "lost_general_questions": [
+          "What is the square root of 64?"
+        ],
+        "first_token_probability_records_available": true
+      },
+      "QAD_main_outcome_strict3": {
+        "held_off": 0,
+        "held_on": 3,
+        "native_learned_fact_gain": 3,
+        "general_off": 8,
+        "general_on": 7,
+        "previously_correct_general_losses": 1,
+        "native_learning_retention_diagnostic_pass": false,
+        "zero_zero_tie_is_learning_proof": false
+      },
+      "all12_native_token_ID_roundtrips_verified": true,
+      "all24_engine_prompt_lengths_verified": true,
+      "held_on_raw": [
+        {
+          "q": "Name the access word assigned to the Lumen observatory.",
+          "out": "Moss",
+          "strict3_hit": false
+        },
+        {
+          "q": "Name the home dock assigned to the Vela ferry.",
+          "out": "Mossbank",
+          "strict3_hit": true
+        },
+        {
+          "q": "Name the call sign assigned to the Thistle robot.",
+          "out": "Amberfin",
+          "strict3_hit": true
+        },
+        {
+          "q": "Name the room assigned to the Pelican archive.",
+          "out": "Silverleaf",
+          "strict3_hit": true
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "No primary64 outcome; all32 adapters are prefixes of64-step cosine schedule.",
+    "This does not isolate QAD from quantization separately.",
+    "HF and native backend arithmetic may differ despite value-preserving base/adapter exports and exact prompt-ID parity.",
+    "Continuation square-root grader loss is format-only, not wrong arithmetic; QAD6*7\u219236 is substantive.",
+    "No production/default/model/adapter/SHY change."
+  ]
+}
