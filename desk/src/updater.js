@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const { spawn, execFile } = require('child_process');
 
 const MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/main/desk/dist/latest.json';
-const CHECK_EVERY_MS = 6 * 3600 * 1000;
+const CHECK_EVERY_MS = 5 * 60 * 1000;   // Ben Oct 29: "make it so that it checks every five minutes"
 
 // "1.2.10" > "1.2.9"; anything that is not x.y.z counts as 0.0.0
 function parseVersion(v) { const m = /^(\d+)\.(\d+)\.(\d+)/.exec(String(v || '').trim()); return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0]; }
@@ -87,7 +87,8 @@ class Updater {
   }
   async check() {
     if (this.busy) return this.state;
-    this.busy = true; this.set({ phase: 'checking', error: '' });
+    const was = this.state.phase;   // every 5 minutes: an update already on offer stays on screen while it checks again
+    this.busy = true; if (was !== 'available') this.set({ phase: 'checking', error: '' });
     try {
       const r = await this.fetch(MANIFEST_URL, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
       if (!r.ok) throw new Error('The update list answered ' + r.status);
@@ -97,7 +98,8 @@ class Updater {
       if (asset && isNewer(m.version, this.o.version)) this.set({ phase: 'available', version: m.version, notes: String(m.notes || '').slice(0, 600), checkedAt: Date.now() });
       else this.set({ phase: 'idle', version: null, notes: '', checkedAt: Date.now() });
     } catch (e) {
-      // a failed background check is not worth showing; the Settings button shows it
+      // a failed background check is not worth showing; the Settings button shows it. An update already on offer stays.
+      if (was === 'available' && this.manifest) return this.state;
       this.set({ phase: 'idle', error: 'Could not check for updates (' + String(e && e.message || e).slice(0, 100) + ').', checkedAt: Date.now() });
     } finally { this.busy = false; }
     return this.state;

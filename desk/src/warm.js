@@ -8,6 +8,14 @@ const { buildChatBody, chatUrl } = require('./llm');
 const WARM_MODEL = 'qwen36-fast';
 const WARM_HEADER = 'X-Premonition-Warm';
 
+function completedChat(text) {
+  try {
+    const response = JSON.parse(text);
+    return !response.error && Array.isArray(response.choices) && response.choices.some((choice) =>
+      choice && choice.message && typeof choice.message === 'object' && !Array.isArray(choice.message));
+  } catch (e) { return false; }
+}
+
 // Same builder as real requests; only the user text, stream flag and max_tokens differ (all after the tools/system part).
 function buildWarmBody(tools, model) {
   return buildChatBody({ model: model || WARM_MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: '.' }], tools, stream: false, maxTokens: 1 });
@@ -73,9 +81,9 @@ class Warmer {
       const headers = { 'content-type': 'application/json', [WARM_HEADER]: '1' };
       if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
       const r = await f(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(buildWarmBody(this.o.getTools(), s.modelFast)), signal: ctl.signal });
-      await r.text(); // a disconnected response is not evidence the model is ready
+      const text = await r.text(); // a disconnected or error response is not evidence the model is ready
       // A server that does not know X-Premonition-Warm just ignores it. If it refuses the request anyway (non-2xx), nothing is warm: no count.
-      if (r.ok === false || gen !== this.gen) return false;
+      if (r.ok === false || gen !== this.gen || !completedChat(text)) return false;
       this.warmCount++;
       this.lastWarmMs = Date.now() - t0;
       return true;

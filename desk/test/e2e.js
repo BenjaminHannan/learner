@@ -496,35 +496,43 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     // ---- Settings > Memory: plain markdown editor for memory.md (type, Save, blur, Glim's additions appear, hand-written text survives)
     {
       const ta = (js) => ev('(() => { const t=document.querySelector("#memText"); ' + js + ' })()');
-      const typeText = (v) => ta('t.focus(); t.value=' + JSON.stringify(v) + '; t.dispatchEvent(new Event("input",{bubbles:true}));');
+      // Deliver editor events directly: native focus can change while this
+      // shared desktop is being used, and must not inject real typing here.
+      const typeText = (v) => ta('t.value=' + JSON.stringify(v) + '; t.dispatchEvent(new Event("input",{bubbles:true}));');
+      const blurText = () => ta('t.dispatchEvent(new FocusEvent("blur"));');
       const fileText = () => memory.read().text;
+      const memoryStages = [];
+      const memoryStage = async (stage) => memoryStages.push({ stage, file: fileText(), ui: await ev('({active:document.activeElement?.id,focus:document.hasFocus(),note:document.querySelector("#memNote").textContent,value:document.querySelector("#memText").value})') });
       checks.push(['memory: editor and help text shown', await ev('/markdown file Glim reads/.test(document.querySelector("#settingsCol").innerText) && document.querySelector("#memText").tagName==="TEXTAREA" && !document.querySelector("#memList") && !document.querySelector("#memNew")')]);
       await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n');
       await ev('document.querySelector("#memSave").click()');
       checks.push(['memory: Save button writes the text to memory.md', await until(() => fileText() === '# About Ben\n\nHe likes chess.\n\n- AP Chem is 3rd period with Mr. Phipps\n', 3000) && memory.list().length === 1 && memory.list()[0].text === 'AP Chem is 3rd period with Mr. Phipps']);
       checks.push(['memory: a Saved note is shown', await until(() => ev('/Saved/.test(document.querySelector("#memNote").textContent)'), 3000)]);
-      win.show(); win.focus(); wc.focus(); await sleep(200);
       await typeText('# About Ben\n\nHe likes chess.\n\n- AP Chem is 4th period with Mr. Phipps\n');
-      await ev('document.querySelector("#memText").focus(); document.querySelector("#memText").blur()');
+      await blurText();
       checks.push(['memory: leaving the box (blur) saves it', await until(() => /4th period/.test(fileText()) && !/3rd period/.test(fileText()), 3000)]);
       if (!checks[checks.length - 1][1]) console.log('DIAG memory blur', JSON.stringify(await ev('({active:document.activeElement?.id,focus:document.hasFocus(),note:document.querySelector("#memNote").textContent,value:document.querySelector("#memText").value})')), JSON.stringify(fileText()));
       await typeText('- Prefers short answers\n');
       await ev('document.querySelector("#memText").dispatchEvent(new KeyboardEvent("keydown",{key:"s",metaKey:true,bubbles:true,cancelable:true}))');
       checks.push(['memory: Cmd+S saves', await until(() => fileText() === '- Prefers short answers\n', 3000)]);
       await until(() => ev('/Saved/.test(document.querySelector("#memNote").textContent)'), 3000);
+      await memoryStage('after Cmd+S acknowledged');
       checks.push(['memory: previous version kept as memory.md.bak', require('fs').existsSync(memory.file + '.bak')]);
       // an edit in progress is never clobbered by a change on disk
       await typeText('- unsaved typing');
       memory.save('Ben takes Spanish 2 in 5th period', 'classes');
       await sleep(3600);
       checks.push(['memory: unsaved typing survives a change on disk', await ev('document.querySelector("#memText").value==="- unsaved typing"')]);
-      await ev('document.querySelector("#memText").value="- Prefers short answers\\n"; document.querySelector("#memText").dispatchEvent(new Event("input",{bubbles:true})); document.activeElement && document.activeElement.blur()');
+      await memoryStage('dirty draft after external addition');
+      await typeText('- Prefers short answers\n'); await blurText();
       await sleep(200);
+      await memoryStage('reverted draft after blur');
       // with nothing unsaved, what Glim adds shows up on the next refresh
       await ev('window.__openSettings()'); await sleep(400);
       checks.push(['memory: text Glim added appears in the editor', await until(() => ev('/Spanish 2/.test(document.querySelector("#memText").value)'), 4000)]);
       checks.push(['memory: hand-written lines survive Glim\'s additions', /^- Prefers short answers$/m.test(fileText()) || /- Prefers short answers/.test(fileText())]);
-      await typeText(''); await ev('document.querySelector("#memText").blur()');
+      if (!checks[checks.length - 1][1] || !checks[checks.length - 2][1]) console.log('DIAG memory stages', JSON.stringify(memoryStages));
+      await typeText(''); await blurText();
       await until(() => fileText() === '', 3000);
       for (const f of memory.list()) memory.delete(f.id);
       await ev('window.__openSettings()'); await sleep(300);

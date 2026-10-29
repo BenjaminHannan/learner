@@ -4,6 +4,7 @@ const { SYSTEM_PROMPT } = require('./prompt');
 const { takeNotices } = require('./helpers');
 const { NAME, P } = require('./user');
 const { usesLine } = require('../renderer/uses');
+const creative = require('./creative');
 
 const COMPACT_TOKENS = 24000;
 const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it is among the newest messages
@@ -546,6 +547,7 @@ class Agent {
     };
     repairHistory(thread.messages);
     pushUser(userText, opts && opts.display, opts && opts.hidden);
+    let creativeTurn = !(opts && (opts.hidden || opts.display));
     save();
     let stopped = false;
     let failure = null;
@@ -562,6 +564,7 @@ class Agent {
         while (this.steerQueue.length) {
           const t = this.steerQueue.shift();
           pushUser(t);
+          creativeTurn = false; // a changed request must never reuse proposals for the old wording
           this.emit({ type: 'user', text: t, steer: true });
         }
         const s = this.o.getSettings();
@@ -595,6 +598,7 @@ class Agent {
 
         const t0 = Date.now();
         let res;
+        let proposalMs = 0;
         const rc = new AbortController(), onRun = () => rc.abort();
         signal.addEventListener('abort', onRun, { once: true });
         this.reqCtl = rc; this.reqSteered = false; this.partial = '';
@@ -611,10 +615,14 @@ class Agent {
           this.emit({ type: 'reasoning', delta: '' }); // only that Glim is thinking; the text never leaves the main process
         };
         try {
+          const proposalStart = Date.now();
+          const approaches = step === 1 && creativeTurn ? await creative.propose({ text: userText, settings: s, model: this.stepModel(s), signal: rc.signal }) : null;
+          proposalMs = Date.now() - proposalStart;
+          if (rc.signal.aborted) throw new Error('request interrupted');
           res = await streamChat({
             gatewayUrl: s.gatewayUrl,
             model: this.stepModel(s),
-            messages: this.requestMessages(thread),
+            messages: creative.withApproaches(this.requestMessages(thread), approaches),
             tools: this.toolDefs(),
             signal: rc.signal,
             apiKey: s.apiKey,
@@ -664,7 +672,7 @@ class Agent {
           break;
         }
         const secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
-        const ttftMs = Math.round(res.firstTokenMs || 0);
+        const ttftMs = Math.round((res.firstTokenMs || 0) + proposalMs);
         (thread.requests = thread.requests || []).push({ at: Date.now(), model: this.stepModel(s), ttftMs, step });
         if (thread.requests.length > 200) thread.requests.splice(0, thread.requests.length - 200);
         if (res.toolCalls.length) { this.toolSteps++; this.acting = true; }

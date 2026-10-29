@@ -1,0 +1,54 @@
+{
+  "name": "apex35b_mlx",
+  "model_dir": "~/learner-ops/models/apex35b-3bit",
+  "hf_id": "Apexintelligence-AI/Apex-35B-V1.0",
+  "source_revision": "dde5ccd2c8da7ddbc99d804ac9dca656c6e927ef",
+  "backend": "mlx",
+  "loader": null,
+  "trust_remote_code": false,
+  "template_mode": "tokenizer",
+  "template": {},
+  "nothink_suffix": "",
+  "think_open": "<think>",
+  "think_close": "</think>",
+  "stop_token": "<|im_end|>",
+  "training_answer_prefix": "</think>\n\n",
+  "lora": {
+    "rank": 8,
+    "scale": 2.0,
+    "dropout": 0.0,
+    "keys": [
+      "self_attn.q_proj", "self_attn.k_proj", "self_attn.v_proj", "self_attn.o_proj",
+      "linear_attn.in_proj_qkv", "linear_attn.in_proj_z", "linear_attn.in_proj_a", "linear_attn.in_proj_b", "linear_attn.out_proj"
+    ]
+  },
+  "quirks": {
+    "native_generation_prompt": true,
+    "strip_generated_thinking": true,
+    "require_adapter_identity": true,
+    "tag_think": false,
+    "names_think": false,
+    "think_tokens": 0,
+    "negative_word_parse": false,
+    "rem_chain_mode": "q",
+    "rem_think_tokens": 0
+  },
+  "recipe": {
+    "bsz": 1,
+    "replay_bsz": 1,
+    "max_seq_len": 256,
+    "gate_n": 8,
+    "gate_max_tokens": 512,
+    "recall_max_tokens": 512,
+    "verify_tokens": 256
+  },
+  "runtime": {
+    "tok_budget": 256,
+    "grad_ckpt": true,
+    "gen_batch": 1,
+    "mem_limit": 20000000000,
+    "cache_limit": 250000000,
+    "min_free_ram_gb": 2.0
+  },
+  "note": "Provision the exact pinned Apex checkpoint in native MLX 3-bit format before enabling. Preserve Apex's own chat_template.jinja; its prompt ends in <think>, with dynamic reasoning. Experts remain frozen; LoRA targets attention and linear attention only. Chat must load the same MLX base and committed adapters.safetensors using --adapter-path. Full 35B memory and learning remain unverified."
+}

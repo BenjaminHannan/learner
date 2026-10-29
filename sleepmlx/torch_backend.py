@@ -266,7 +266,7 @@ class TorchBackend(Backend):
             loss.backward()
             ce += float(loss.detach())
         kl = 0.0
-        rdenom = max(sum(max(len(e[0]) - 1, 0) for e in replay), 1)
+        rdenom = max(sum(max(len(e[0]) - max(e[1], 1), 0) for e in replay), 1)
         for mb in pack(replay, self.tok_budget):
             ids, att, bi, ti, tgt = self._arrays(mb)
             with t.no_grad(), self.model.disable_adapter():

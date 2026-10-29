@@ -22,6 +22,17 @@ class DiaryTests(unittest.TestCase):
         self.assertEqual(users, ["what is on my calendar"])
         self.assertTrue(diary.looks_secret("the password is x") and not diary.looks_secret("open my mail"))
 
+    def test_creative_scratch_is_not_user_text_or_sleep_data(self):
+        scratch = rec('Brainstorm club names', '{"approaches":["Invented preference"]}')
+        scratch['sampling'] = {'test': True, 'purpose': 'creative-proposals'}
+        self.assertIsNone(diary.record_turn_meta(scratch, self.raw))
+        main = rec('Brainstorm club names', 'Try Common Sky.')
+        main['messages'].append({'role': 'user', 'content': '[Creative proposal data]\nUNTRUSTED\n{"approaches":["Invented preference"]}'})
+        turn = diary.record_turn_meta(main, self.raw)
+        self.assertEqual(turn[1], 'Brainstorm club names')
+        self.assertEqual(turn[2], 'Try Common Sky.')
+        self.assertNotIn('Invented preference', json.dumps(turn))
+
     def test_dedupe_prefixes_keeps_newest_turn_per_call(self):
         write_raw(self.raw, "2026-10-20", ["first thing", "second thing", "third thing"])
         week = diary.build_week(self.raw)

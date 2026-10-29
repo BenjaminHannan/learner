@@ -174,7 +174,11 @@ class NightExportTests(unittest.TestCase):
         try:
             seen = []
             sl = env.sleeper(env.backend())
-            sl.exporter = lambda llama, base, adapter, out: (seen.append((llama, base, str(adapter), str(out))) or (True, "ok.gguf"))
+            def exporter(llama, base, adapter, out):
+                seen.append((llama, base, str(adapter), str(out)))
+                Path(out).write_bytes(b"GGUF-synthetic-test-export")
+                return True, "ok.gguf"
+            sl.exporter = exporter
             r = sl.run(env.week())
             self.assertEqual(r["status"], "done")
             self.assertEqual(r["gguf"], {"ok": True, "message": "ok.gguf"})
@@ -193,6 +197,51 @@ class NightExportTests(unittest.TestCase):
             self.assertFalse(r2["gguf"]["ok"])
             self.assertIn("exploded", r2["gguf"]["message"])
             self.assertTrue(env.paths.adapter.exists())
+        finally:
+            env.close()
+
+    def test_missing_or_empty_success_output_records_failure_but_keeps_trained_night(self):
+        from sleepmlx.day_adapter import select_adapter
+        for empty_file in (False, True):
+            with self.subTest(empty_file=empty_file):
+                env = Env(llama_cpp_dir="/some/llama.cpp", gguf_base_dir="/some/hf")
+                try:
+                    sl = env.sleeper(env.backend())
+                    def missing_export(llama, base, adapter, out):
+                        if empty_file:
+                            Path(out).write_bytes(b"")
+                        return True, "claimed success"
+                    sl.exporter = missing_export
+                    result = sl.run(env.week())
+                    self.assertEqual(result["status"], "done")
+                    self.assertFalse(result["reverted"])
+                    self.assertFalse(result["gguf"]["ok"])
+                    self.assertIn("nonempty GGUF output", result["gguf"]["message"])
+                    self.assertTrue(env.paths.adapter.exists())
+                    self.assertFalse(env.paths.night_json.exists())
+                    self.assertIsNone(select_adapter(env.paths.home)["adapter"])
+                finally:
+                    env.close()
+
+    def test_export_metadata_failure_records_failure_but_keeps_trained_night(self):
+        from sleepmlx.day_adapter import select_adapter
+        env = Env(llama_cpp_dir="/some/llama.cpp", gguf_base_dir="/some/hf")
+        try:
+            sl = env.sleeper(env.backend())
+            def exporter(llama, base, adapter, out):
+                Path(out).write_bytes(b"GGUF-synthetic-test-export")
+                return True, "ok.gguf"
+            def metadata_failure(*args):
+                raise OSError("sidecar storage unavailable")
+            sl.exporter, sl._after_export = exporter, metadata_failure
+            result = sl.run(env.week())
+            self.assertEqual(result["status"], "done")
+            self.assertFalse(result["reverted"])
+            self.assertFalse(result["gguf"]["ok"])
+            self.assertIn("sidecar storage unavailable", result["gguf"]["message"])
+            self.assertTrue(env.paths.adapter.exists())
+            self.assertFalse(env.paths.night_json.exists())
+            self.assertIsNone(select_adapter(env.paths.home)["adapter"])
         finally:
             env.close()
 

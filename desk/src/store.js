@@ -12,6 +12,11 @@ const DEFAULT_SETTINGS = {
   modelAuto: Platform.defaultPreset(process.platform).modelAuto, // the ids behind the Auto / Think / Fast pills (all "default" on a llama.cpp server)
   modelMain: Platform.defaultPreset(process.platform).modelMain,
   modelFast: Platform.defaultPreset(process.platform).modelFast, // also used for the warm-up and the self-check
+  // Backend-private options: no UI controls. Deployment sets the family only after
+  // the configured endpoint serves a supported family; other models skip the scratchpad.
+  backendModelFamily: '',
+  creativeProposer: true,
+  creativeDeadlineMs: 12000,
   // Autonomy
   modelDefault: 'modelFast', // Oct 28: the Auto router's judge call alone took 9-60 s before the first token; Fast answers at once, Think is one tap away. Which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
   mode: 'ask',            // ask | hands-off (main agent)
@@ -40,7 +45,7 @@ const DEFAULT_SETTINGS = {
   textSize: 'm',          // s | m | l
   alwaysAllow: [],       // actions Ben chose "Always allow" for: 'shell:<program>' and 'screen' (never risky commands)
   goalsAsked: false,     // Glim has asked about long-term goals once, right after first-run setup
-  autoUpdateCheck: true, // look for a newer Premonition at launch and every 6 hours (an update still needs your click)
+  autoUpdateCheck: true, // look for a newer Premonition at launch and every 5 minutes (an update still needs your click)
   showSparks: false,     // list Motes (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
   highContrast: false,    // stronger text and borders
   onboarded: false,       // first-run setup (Meet your Glims) has been finished or skipped
@@ -74,11 +79,12 @@ const DEFAULT_SETTINGS = {
 
 const ENUMS = {
   model: null, // free text on purpose (a custom model name is allowed)
+  backendModelFamily: ['', 'apex35b', 'lfm3'],
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt'];
-const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720] };
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer'];
+const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720], creativeDeadlineMs: [1, 15000] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
 const cleanTime = (v, d) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(v == null ? '' : v).trim()); return m && +m[1] < 24 && +m[2] < 60 ? String(+m[1]).padStart(2, '0') + ':' + m[2] : d; };

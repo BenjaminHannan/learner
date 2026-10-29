@@ -46,11 +46,14 @@ const setTestProfile = (on) => { testProfile = !!on; };
 
 // The ONE place a chat request body is built, for real requests and for the warm-up request, so the
 // system prompt, tools, tool_choice and everything else that shapes the chat template are identical.
-function buildChatBody({ model, messages, tools, stream, maxTokens }) {
+function buildChatBody({ model, messages, tools, stream, maxTokens, temperature, topP, purpose, test }) {
   const body = { model, messages, stream: !!stream };
-  if (testProfile) body.test = true;
+  if (testProfile || test === true) body.test = true;
   if (tools && tools.length) { body.tools = tools; body.tool_choice = 'auto'; }
   if (maxTokens) body.max_tokens = maxTokens;
+  if (Number.isFinite(temperature) && temperature >= 0 && temperature <= 2) body.temperature = temperature;
+  if (Number.isFinite(topP) && topP > 0 && topP <= 1) body.top_p = topP;
+  if (purpose === 'creative-proposals') body.purpose = purpose;
   return body;
 }
 const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
@@ -58,10 +61,10 @@ const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/
 async function streamChat(opts) {
   const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, onToolDelta, apiKey, maxTokens } = opts;
   const url = chatUrl(gatewayUrl);
-  const body = buildChatBody({ model, messages, tools, stream: true, maxTokens });
+  const body = buildChatBody({ ...opts, stream: true });
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
   if (apiKey) headers.authorization = 'Bearer ' + apiKey;
-  if (testProfile) headers['x-test'] = '1';
+  if (testProfile || opts.test === true) headers['x-test'] = '1';
   const tStart = Date.now();
   let firstTokenMs = null;
   const firstToken = () => { if (firstTokenMs === null) firstTokenMs = Date.now() - tStart; };

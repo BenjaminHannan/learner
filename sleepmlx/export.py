@@ -36,6 +36,10 @@ def restore_prev(out) -> bool:
         ps = sidecar_path(prev)
         if ps.exists():
             os.replace(str(ps), str(sidecar_path(out)))
+        else:
+            # A legacy fallback has no metadata. Do not label its bytes with
+            # the rejected candidate's model identity or served verdict.
+            sidecar_path(out).unlink(missing_ok=True)
         return True
     for f in (out, sidecar_path(out)):
         try:

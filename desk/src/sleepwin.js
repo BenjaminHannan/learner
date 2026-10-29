@@ -40,7 +40,7 @@ function committedAdapter(home) {
 function loraFits(gguf, base) {
   if (!gguf || !fs.existsSync(gguf)) return false;
   const r = readSidecar(gguf);
-  if (r && r.served && r.served.ok === false) return false;   // it scored worse in the model server once: never again
+  if (r && r.served && (r.served.ok === false || r.served.pending === true)) return false;   // failed or still awaiting its persisted served check
   return !r || !r.base_hf_id || r.base_hf_id === (base || LORA_BASE);
 }
 function moveWithSidecar(from, to) {

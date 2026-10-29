@@ -223,7 +223,7 @@ def looks_secret(text: str) -> bool:
 
 # ---------------------------------------------------------------- raw logs -> turns
 # User messages the app writes itself, not Ben: its verifier's notes and the screenshot carrier. The turn is Ben's message before them.
-APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]", "[older screenshot omitted]", "[Chat summary request]")   # the Desk's own user messages, not Ben
+APP_USER_TAGS = ("[Self-check]", "[screenshot of the result above]", "[older screenshot omitted]", "[Chat summary request]", "[Creative proposal data]")   # the Desk's own user messages, not Ben
 # A tool result that means the step failed (the Desk agent's own wording: src/agent.js runTool / finish).
 FAILED_RESULT = re.compile(r"^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\.", re.I)
 STOP_RESULT = re.compile(r"\[stopped by user\]", re.I)

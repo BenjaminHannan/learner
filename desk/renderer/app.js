@@ -1125,7 +1125,7 @@
     ] },
     { group: 'Updates', rows: [
       { type: 'update', label: 'Premonition updates', help: 'Premonition looks for a newer version now and then. It only installs when you press Update now; your chats, memory and settings are kept.' },
-      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every few hours.' }
+      { key: 'autoUpdateCheck', type: 'toggle', label: 'Look for updates by itself', help: 'At launch and every five minutes.' }
     ] },
     { group: 'Startup', rows: [
       { key: 'openAtLogin', type: 'toggle', label: 'Open at login', help: 'Starts quietly in the background when you log in, so Glim is already warmed up.' },
@@ -1141,32 +1141,63 @@
     note.id = 'memNote'; note.setAttribute('role', 'status');
     const say = (msg, bad) => { note.className = 's-note mem-note ' + (bad ? 'bad' : 'quiet'); note.textContent = msg || ''; };
     const ta = el('textarea', 'mem-md'); ta.id = 'memText'; ta.spellcheck = false; ta.setAttribute('aria-label', 'memory.md');
-    let saved = '', busy = false;
+    let saved = '', saving = null, revision = 0, refreshId = 0, conflict = null;
     const lf = (t) => String(t).replace(/\r\n?/g, '\n');   // a textarea always holds LF
     const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(Math.max(ta.scrollHeight + 2, 128), 480) + 'px'; };
     const dirty = () => ta.value !== saved;
-    const save = async () => {
-      if (!dirty() || busy) return;
-      const v = ta.value; busy = true;
-      const res = await desk.memory.write(v).catch((e) => ({ ok: false, error: String(e && e.message || e) })).finally(() => { busy = false; });
-      if (res && res.ok) { saved = v; say(dirty() ? '' : 'Saved'); if (dirty() && document.activeElement !== ta) return save(); } else say('Not saved: ' + ((res && res.error) || 'could not write the file.'), true);
+    const conflictBox = el('div', 'mem-conflict'); conflictBox.id = 'memConflict'; conflictBox.hidden = true;
+    const conflictHelp = el('p', 's-note', 'The file changed while you were editing. Your draft is above. Combine it with the saved version below, then save your combined draft.');
+    const theirs = el('textarea', 'mem-md'); theirs.id = 'memSavedText'; theirs.readOnly = true; theirs.rows = 6; theirs.setAttribute('aria-label', 'Saved version of memory.md');
+    const combined = el('button', 'ghost sm', 'Save combined draft'); combined.id = 'memCombine';
+    const keepSaved = el('button', 'ghost sm', 'Keep saved version'); keepSaved.id = 'memKeepSaved';
+    conflictBox.append(conflictHelp, theirs, combined, keepSaved);
+    const clearConflict = () => { conflict = null; conflictBox.hidden = true; };
+    const save = () => {
+      if (saving) return saving;
+      if (conflict) return Promise.resolve(false);
+      if (!dirty()) return Promise.resolve(true);
+      saving = (async () => {
+        while (dirty()) {
+          const v = ta.value; revision++;
+          const res = await desk.memory.write(v, saved).catch((e) => ({ ok: false, error: String(e && e.message || e) }));
+          if (!res || !res.ok) {
+            if (res && res.conflict && typeof res.text === 'string') { conflict = { text: res.text }; theirs.value = lf(res.text); conflictBox.hidden = false; }
+            say('Not saved: ' + ((res && res.error) || 'could not write the file.'), true); return false;
+          }
+          saved = typeof res.text === 'string' ? lf(res.text) : v;
+          if (ta.value === v) ta.value = saved;
+          else if (res.appended) {
+            // A later draft was typed while the write was in flight. Carry the
+            // newly merged model append into it before draining the next save.
+            const extra = lf(res.appended);
+            ta.value += (ta.value && !ta.value.endsWith('\n') && !extra.startsWith('\n') ? '\n' : '') + extra;
+            revision++;
+          }
+          fit();
+        }
+        say('Saved'); return true;
+      })().finally(() => { saving = null; });
+      return saving;
     };
     memRefresh = async () => {
+      const id = ++refreshId, atRevision = revision;
       const r = await desk.memory.read().catch(() => null);
-      if (!r || typeof r.text !== 'string' || dirty() || busy || lf(r.text) === saved) return; // never clobber an edit in progress; a focused but untouched box still picks up Glim's additions
+      if (id !== refreshId || atRevision !== revision || !r || typeof r.text !== 'string' || dirty() || saving || conflict || lf(r.text) === saved) return; // do not apply an obsolete read or clobber an edit
       const a = ta.selectionStart, b = ta.selectionEnd;
       ta.value = r.text; saved = ta.value; fit();
       try { if (document.activeElement === ta) ta.setSelectionRange(a, b); } catch (e) { /* ignore */ }
     };
-    ta.addEventListener('input', () => { fit(); say(''); });
+    ta.addEventListener('input', () => { revision++; fit(); say(''); });
     ta.addEventListener('blur', save);
     ta.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
     const bar = el('div', 'mem-add');
     const sv = el('button', 'ghost sm', 'Save'); sv.id = 'memSave'; sv.onclick = save;
     const op = el('button', 'ghost sm', 'Open in editor'); op.id = 'memShow'; op.title = 'Opens memory.md in the default app for text files.';
-    op.onclick = async () => { await save(); const r = await desk.memory.open(); if (r && !r.ok) say('Could not open it: ' + (r.error || 'no app found.'), true); };
+    op.onclick = async () => { if (!await save()) return; const r = await desk.memory.open(); if (r && !r.ok) say('Could not open it: ' + (r.error || 'no app found.'), true); };
+    combined.onclick = () => { if (!conflict) return; saved = lf(conflict.text); clearConflict(); revision++; return save(); };
+    keepSaved.onclick = () => { if (!conflict) return; ta.value = lf(conflict.text); saved = ta.value; clearConflict(); revision++; fit(); say('Loaded saved version'); return memRefresh(); };
     bar.append(sv, op, note);
-    box.append(ta, bar);
+    box.append(ta, bar, conflictBox);
     setInterval(() => { if (!$('#settings').hidden) memRefresh(); }, 3000);
     return box;
   }

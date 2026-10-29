@@ -30,6 +30,7 @@ from . import diary as diary_mod
 from . import gate as gate_mod
 from . import lessons as L_mod
 from . import prompts as P
+from . import replay as replay_mod
 from .backend import Backend, Clock, Stop
 from .checkpoint import Checkpoints
 from .corpus import Diary, has_ans, norm, pat
@@ -99,8 +100,11 @@ class Config:
     gate_min_gain: int = gate_mod.MIN_GAIN   # held-out cards the night must add over the adapter it started from (gate.decide)
     verify_tokens: int = 20
     kl_every: int = 1             # KL replay every n-th step (CPU profile: 4)
+    replay_mode: str = "prompt"  # opt-in "continuation": base answer contexts; measure paired retention before enabling
+    replay_max_tokens: int = 128  # capped teacher generation, cached separately from private diary work
     gate_n: int = 40              # general questions in the gate
     gate_max_tokens: int = 24
+    recall_max_tokens: int = 16
     llama_cpp_dir: Optional[str] = None      # set: export a GGUF LoRA when a night commits (torch backend)
     gguf_base_dir: Optional[str] = None      # the HF base model dir the converter needs
     dreamcheck: bool = True                  # check the night's Q&A dreams against the diary before training (dreamhook.py)
@@ -1151,7 +1155,9 @@ class Sleeper:
         if not answer:
             self.target_stat(qa_skipped_empty_answer=1)
             return None
-        target = answer + [self.be.stop_id]
+        # Native reasoning models start generation inside <think>. The answer
+        # target must close that block, otherwise it teaches a hidden answer.
+        target = self.be.encode(self.prof.training_answer_prefix) + answer + [self.be.stop_id]
         ob = rng.random() < self.cfg.ob_share
         if ob:
             p = self.be.encode(P.diary_prompt(self.R, self.diary, q, d))
@@ -1179,13 +1185,29 @@ class Sleeper:
         return out
 
     def replay_set(self):
-        return [(self.be.encode(self.R.render(P.SYS, q)) + [self.be.stop_id], 0) for q in GENERIC_PROMPTS]
+        # Evaluation questions never become replay contexts, including in legacy
+        # prompt mode. Replay sources are the public list only, never diary facts.
+        from .replay_monitor import MONITOR_QA
+        excluded = [q for q, _ in gate_mod.GENERAL_QA] + [q for q, _ in MONITOR_QA]
+        questions = replay_mod.public_questions(GENERIC_PROMPTS, excluded)
+        if self.cfg.replay_mode == "prompt":
+            return replay_mod.prompt_examples(self.be, [self.R.render(P.SYS, q) for q in questions], self.cfg.max_seq_len)
+        if self.cfg.replay_mode != "continuation":
+            raise ValueError("unknown replay_mode %r" % self.cfg.replay_mode)
+        examples, stats = replay_mod.continuation_examples(
+            self.be, self.R, questions, self.paths.home / "replay_cache.json",
+            max_tokens=self.cfg.replay_max_tokens, max_seq_len=self.cfg.max_seq_len,
+            before_generate=lambda n: self.clock.check((self.sec_per_batch_tok or 0.25) * n * 1.2 + 2))
+        getattr(self, "N", {}).setdefault("stats", {})["replay"] = stats
+        self.log("[night] replay %s" % stats)
+        return examples
 
     def recall_identity(self, held):
         cards = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
         identity = {"cards": cards, "profile": self.prof.name, "model_dir": self.prof.model_dir,
-                    "hf_id": self.prof.hf_id, "backend": self.prof.backend, "loader": self.prof.loader,
-                    "prompts": [self.R.render("Answer with just the name.", h["q"]) for h in held], "max_tokens": 16}
+                    "hf_id": self.prof.hf_id, "source_revision": self.prof.source_revision,
+                    "backend": self.prof.backend, "loader": self.prof.loader,
+                    "prompts": [self.R.render("Answer with just the name.", h["q"]) for h in held], "max_tokens": self.cfg.recall_max_tokens}
         return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
     def recall_baseline_valid(self, pre, held):
@@ -1197,7 +1219,7 @@ class Sleeper:
         candidate = self.paths.work_adapter if self.paths.work_adapter.exists() else None
         self.be.load_adapter(self.paths.adapter if self.paths.adapter.exists() else None)
         try:
-            return dict(gate_mod.score_recall(self.be, self.R, held, adapter=True),
+            return dict(gate_mod.score_recall(self.be, self.R, held, adapter=True, max_tokens=self.cfg.recall_max_tokens),
                         grader=gate_mod.GRADER, cards=self.recall_identity(held))
         finally:
             if candidate is not None:
@@ -1205,7 +1227,8 @@ class Sleeper:
 
     def general_base_identity(self):
         return {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
-                "hf_id": self.prof.hf_id, "backend": self.prof.backend, "loader": self.prof.loader,
+                "hf_id": self.prof.hf_id, "source_revision": self.prof.source_revision,
+                "backend": self.prof.backend, "loader": self.prof.loader,
                 "max_tokens": self.cfg.gate_max_tokens, "grader": gate_mod.GRADER,
                 "questions": hashlib.sha256(json.dumps(gate_mod.gate_questions(self.cfg.gate_n)).encode()).hexdigest(),
                 "prompts": hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest(),
@@ -1493,7 +1516,7 @@ class Sleeper:
         self.be.load_adapter(P_.work_adapter)
         self.log("[night] quiz")
         held = [h for it in self.items.values() for h in it.held if h["night"] == d]
-        post = gate_mod.score_recall(self.be, self.R, held, adapter=True)
+        post = gate_mod.score_recall(self.be, self.R, held, adapter=True, max_tokens=cfg.recall_max_tokens)
         base = read_json(P_.gate_base, {}) or {}
         flags = gate_mod.score_general(self.be, self.R, adapter=True, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
         bflags = base.get("flags") if (all(base.get(k) == v for k, v in self.general_base_identity().items())
@@ -1550,16 +1573,30 @@ class Sleeper:
                     try:
                         from . import export as export_mod
                         ok, msg = (self.exporter or export_mod.export_gguf)(cfg.llama_cpp_dir, cfg.gguf_base_dir, P_.adapter, P_.home / "adapter.gguf")
+                        if ok:
+                            gguf = P_.home / "adapter.gguf"
+                            if not gguf.is_file() or gguf.stat().st_size == 0:
+                                raise ValueError("converter reported success without a nonempty GGUF output file")
+                            # Artifact hashing/metadata publication is part of
+                            # export. Its failure must not undo the trained night.
+                            self._after_export(gguf, res)
                     except Exception as e:
                         ok, msg = False, "%s: %s" % (type(e).__name__, e)
+                        self.served_pending = False
+                        res.pop("served", None)
                     res["gguf"] = {"ok": ok, "message": msg}
                     self.log("[night] gguf export: %s %s" % ("ok" if ok else "FAILED", msg))
-                    if ok:
-                        self._after_export(P_.home / "adapter.gguf", res)
                     final["result"] = dict(res)
                     self.save_night()
                 else:
                     res.setdefault("gguf", {"ok": False, "message": "previous export was interrupted; export-gguf can retry it"})
+                from . import export as export_mod, served as served_mod
+                side = read_json(export_mod.sidecar_path(P_.home / "adapter.gguf"), {}) or {}
+                if isinstance(side, dict) and side.get("night_id") == N["id"]:
+                    if served_mod.pending_check(P_):
+                        self.served_pending = True
+                    if side.get("served"):
+                        res["served"] = side["served"]
         self.state = final["state"]
         write_json(P_.state, self.state)
         self._checkpoints.hook("state_written")
@@ -1586,42 +1623,36 @@ class Sleeper:
         and a llama-server do not fit together."""
         from . import export as export_mod
         cfg = self.cfg
-        write_json(export_mod.sidecar_path(gguf), {"base_hf_id": self.prof.hf_id, "profile": self.prof.name, "base_dir": cfg.gguf_base_dir,
-                                                   "date": self.N.get("date"), "night": self.state.get("nights", 0) + 1, "created": time.time()})
+        from . import served as served_mod
+        artifact = {"version": 1, "sha256": served_mod.artifact_hash(gguf), "bytes": gguf.stat().st_size}
+        side = {"base_hf_id": self.prof.hf_id, "profile": self.prof.name, "base_dir": cfg.gguf_base_dir,
+                "base_gguf": cfg.base_gguf, "artifact": artifact,
+                "night_id": self.N["id"], "date": self.N.get("date"), "night": self.state.get("nights", 0) + 1, "created": time.time()}
         if not (cfg.llama_server and cfg.base_gguf):
             res["served"] = {"ok": None, "reasons": ["not checked: no llama-server configured (SLEEPMLX_LLAMA_SERVER, SLEEPMLX_BASE_GGUF)"]}
-            return
-        d = self.N["day"]
-        held = [{"q": h["q"], "a": h["a"]} for it in self.items.values() for h in it.held if h["night"] == d]
-        self.served_pending = (gguf, held)
-        res["served"] = {"ok": None, "pending": True, "reasons": ["checked after the trainer's model is unloaded"]}
+        else:
+            d = self.N["day"]
+            held = [{"q": h["q"], "a": h["a"]} for it in self.items.values() for h in it.held if h["night"] == d]
+            previous = export_mod.prev_path(gguf)
+            side["served_pending"] = {"version": 1, "night_id": self.N["id"], "profile": self.prof.name,
+                                      "base_hf_id": self.prof.hf_id, "base_gguf": cfg.base_gguf, "llama_server": cfg.llama_server,
+                                      "adapter": self.paths.adapter.relative_to(self.paths.home).as_posix(),
+                                      "sha256": artifact["sha256"],
+                                      "previous_hash": served_mod.artifact_hash(previous) if previous.is_file() else None,
+                                      "held": held}
+            self.served_pending = True
+            res["served"] = {"ok": None, "pending": True, "reasons": ["checked after the trainer's model is unloaded"]}
+        side["served"] = res["served"]
+        # One atomic sidecar publishes the identity and deferred work together.
+        write_json(export_mod.sidecar_path(gguf), side)
 
     def finish_served(self, res: dict) -> None:
-        """The served check of tonight's GGUF (served.check_gguf: our own llama-server, adapter on vs off). A GGUF that scores worse, or
-        that the server will not load while the plain model loads fine, is replaced by the previous one. A check that could not run
-        (no memory, port, timeout) changes nothing and says so."""
-        from . import export as export_mod
+        """Replay the durable served check after the trainer has unloaded."""
         from . import served as served_mod
-        pend, self.served_pending = getattr(self, "served_pending", None), None
-        if not pend:
-            return
-        gguf, held = pend
-        cfg = self.cfg
-        r = (self.served_checker or served_mod.check_gguf)(cfg.llama_server, cfg.base_gguf, str(gguf), held,
-                                                             log=str(self.paths.home / "served_check.log"))
-        res["served"] = r
-        self.log("[night] served check (llama-server, adapter on vs off): %s" % r)
-        if r.get("ok") is False:
-            restored = export_mod.restore_prev(gguf)
-            res["served"]["fallback"] = "previous adapter.gguf" if restored else "plain model (no adapter.gguf)"
-            res["served"]["note"] = "the trained adapter was kept for the next night; the daytime GGUF is the older one"
-        else:
-            try:
-                side = read_json(export_mod.sidecar_path(gguf), {}) or {}
-                side["served"] = r
-                write_json(export_mod.sidecar_path(gguf), side)
-            except OSError:
-                pass
+        self.served_pending = False
+        result = served_mod.finish_pending(self.paths, self.prof, self.cfg, checker=self.served_checker, log=self.log)
+        if result is not None:
+            res["served"] = result
 
     # ---- outputs
     def card_rows(self) -> List[dict]:

@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { waitForReady } = require('../renderer/sleepwake');
 const { Warmer } = require('../src/warm');
+const completion = JSON.stringify({ choices: [{ message: { role: 'assistant', content: '.' } }] });
 
 test('wake waits for a stopped trainer AND a ready model', async () => {
   const states = [{ asleep: true }, { waking: true }, { modelReady: false }, { modelReady: true }];
@@ -30,7 +31,7 @@ test('a reachable gateway with failed chat requests is never announced ready', a
   const states = [];
   const w = new Warmer({ getSettings: () => ({ gatewayUrl: 'http://test/v1' }), getTools: () => [],
     onState: (s) => states.push(s), downMs: 1000,
-    fetch: async (_, options) => ({ ok: !options || allowChat, text: async () => '' }) });
+    fetch: async (_, options) => ({ ok: !options || allowChat, text: async () => completion }) });
   w.stopped = false;
   await w._tick(); w.stop();
   assert.equal(w.state, 'down'); assert.equal(states.includes('ready'), false);
@@ -44,7 +45,7 @@ test('a warm response from an old gateway cannot make a new gateway ready', asyn
   const states = [];
   const w = new Warmer({ getSettings: () => ({ gatewayUrl: 'http://test/v1' }), getTools: () => [],
     onState: (s) => states.push(s), fetch: async (_, options) => !options ? { ok: true } :
-      new Promise((r) => { release = () => r({ ok: true, text: async () => '' }); }) });
+      new Promise((r) => { release = () => r({ ok: true, text: async () => completion }); }) });
   w.stopped = false;
   const ticking = w._tick();
   while (!release) await new Promise((r) => setImmediate(r));
@@ -58,7 +59,7 @@ test('a model setting change invalidates an in-flight warm before the old model 
     onState: (s) => states.push(s), fetch: async (_, options) => {
       if (!options || !options.method) return { ok: true };
       requests.push(JSON.parse(options.body).model);
-      return new Promise((resolve) => { release = () => resolve({ ok: true, text: async () => '' }); });
+      return new Promise((resolve) => { release = () => resolve({ ok: true, text: async () => completion }); });
     } });
   w.stopped = false;
   const ticking = w._tick();
@@ -71,4 +72,14 @@ test('a model setting change invalidates an in-flight warm before the old model 
   assert.equal(w.state, 'down');
   assert.equal(w.warmCount, 0);
   assert.equal(states.includes('ready'), false);
+});
+test('HTTP success with an error or malformed chat body does not count as model readiness', async () => {
+  for (const body of ['{"error":{"message":"model is loading"}}', '{"choices":[]}', 'not JSON', '']) {
+    const states = [];
+    const w = new Warmer({ getSettings: () => ({ gatewayUrl: 'http://test/v1' }), getTools: () => [],
+      onState: (s) => states.push(s), fetch: async () => ({ ok: true, text: async () => body }) });
+    w.stopped = false;
+    await w._tick(); w.stop();
+    assert.equal(w.state, 'down'); assert.equal(w.warmCount, 0); assert.equal(states.includes('ready'), false);
+  }
 });

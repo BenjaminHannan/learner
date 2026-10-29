@@ -7,6 +7,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { looksSecret } = require('./memory');
+const { DATA_TAG: CREATIVE_TAG, PURPOSE: CREATIVE_PURPOSE } = require('./creative');
 
 const MODEL_NAMES = ['fast', 'main', 'auto'];
 const dayOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -15,7 +16,7 @@ const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((
 
 // request messages -> diary messages (no system prompt, text only, no empty ones)
 function diaryMessages(messages) {
-  return (messages || []).filter((m) => m && m.role !== 'system').map((m) => ({ role: m.role, content: textOf(m.content) })).filter((m) => m.content !== '');
+  return (messages || []).filter((m) => m && m.role !== 'system').map((m) => ({ role: m.role, content: textOf(m.content) })).filter((m) => m.content !== '' && !m.content.startsWith(CREATIVE_TAG));
 }
 // Extra fields for sleep (added only when there is something to say, so a plain chat record keeps exactly the old four keys):
 //   tools:   the tool steps of the current turn (since Ben's newest message): [{name, args, ok, result}], args/result cut short;
@@ -30,7 +31,7 @@ const SHOT_TAG = '[screenshot of the result above]';
 const FAILED_RESULT = /^\s*(Error\b|Stuck:|Ben denied|Ben did not want|\[stopped by user\]|\[interrupted\]|Did not |Not saved|Not added|No matching|Nothing to )|\[That failed\./i;
 const cut = (s, n) => { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 const hideSecret = (s) => (looksSecret(s) ? '[hidden]' : s);
-const isBen = (m) => m && m.role === 'user' && !textOf(m.content).startsWith(CHECK_TAG) && !textOf(m.content).startsWith(SHOT_TAG);
+const isBen = (m) => m && m.role === 'user' && !textOf(m.content).startsWith(CHECK_TAG) && !textOf(m.content).startsWith(SHOT_TAG) && !textOf(m.content).startsWith(CREATIVE_TAG);
 function turnSteps(messages) {
   const ms = (messages || []).filter((m) => m && m.role !== 'system');
   let start = -1;
@@ -171,9 +172,10 @@ function createGateway(o) {
         const raw = await readBody(req);
         let body; try { body = JSON.parse(raw); } catch (e) { res.writeHead(400, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ error: { message: 'bad JSON' } })); }
         const warm = req.headers['x-premonition-warm'] !== undefined;
+        const skipDiary = warm || body.test === true || body.purpose === CREATIVE_PURPOSE;
         const ts = now();
         const ctl = new AbortController();
-        stoppedRun = { ctl, warm, ts, body, sse: null };
+        stoppedRun = { ctl, skipDiary, ts, body, sse: null };
         res.on('close', () => { if (!res.writableEnded) { try { ctl.abort(); } catch (e) { /* ignore */ } } }); // the app pressed Stop (or went away): stop the model too
         const r = await f(upstream + '/v1/chat/completions', { signal: ctl.signal, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(mapRequest(body, o.upstreamModel)) });
         const ct = r.headers.get('content-type') || 'application/json';
@@ -185,19 +187,19 @@ function createGateway(o) {
           for (;;) { const { value, done } = await reader.read(); if (done) break; const out = think.push(dec.decode(value, { stream: true })); if (out) { res.write(out); sse.push(out); } }
           const tail = think.push('\n') + think.flush(); if (tail) { res.write(tail); sse.push(tail); }
           res.end();
-          if (r.ok && !warm) logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: splitThink(sse.text).content }));
+          if (r.ok && !skipDiary) logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: splitThink(sse.text).content }));
         } else {
           let text = await r.text();
           try { const j = JSON.parse(text); const m = j.choices && j.choices[0] && j.choices[0].message; if (m && typeof m.content === 'string' && m.content.includes(THINK_END)) { const sp = splitThink(m.content); m.content = sp.content; m.reasoning_content = [m.reasoning_content, sp.reasoning].filter(Boolean).join('\n'); text = JSON.stringify(j); } } catch (e) { /* not json: pass through */ }
           res.end(text);
-          if (r.ok && !warm) { let c = ''; try { c = JSON.parse(text).choices[0].message.content || ''; } catch (e) { /* not json */ } logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: c })); }
+          if (r.ok && !skipDiary) { let c = ''; try { c = JSON.parse(text).choices[0].message.content || ''; } catch (e) { /* not json */ } logDiary(diaryRecord({ ts, model: body.model, requestBody: body, content: c })); }
         }
         return;
       }
       res.writeHead(404, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { message: 'not found' } }));
     } catch (e) {
       const sr = stoppedRun;
-      if (sr && sr.ctl.signal.aborted && !sr.warm) logDiary(diaryRecord({ ts: sr.ts, model: sr.body.model, requestBody: sr.body, content: sr.sse ? splitThink(sr.sse.text).content : '', stopped: true }));
+      if (sr && sr.ctl.signal.aborted && !sr.skipDiary) logDiary(diaryRecord({ ts: sr.ts, model: sr.body.model, requestBody: sr.body, content: sr.sse ? splitThink(sr.sse.text).content : '', stopped: true }));
       if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' });
       try { res.end(JSON.stringify({ error: { message: 'local model unavailable: ' + (e && e.message || e) } })); } catch (e2) { /* closed */ }
     }

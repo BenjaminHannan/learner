@@ -181,7 +181,7 @@ function resetModelToDefault() {
   const s = store.getSettings(); const want = s[s.modelDefault] || s.modelAuto;
   if (want && s.model !== want) { store.saveSettings({ model: want }); }
 }
-// Ben's Macs have the assistant (qwen through serve.sh); any other Mac runs the built-in model like Windows does.
+// Ben's Macs use the managed assistant service; other Macs run the built-in model.
 const SERVE_SH = path.join(os.homedir(), 'learner-ops', 'assistant', 'serve.sh');
 const hasLocalAssistant = process.platform === 'darwin' && fs.existsSync(SERVE_SH);
 const WATCHDOG_FILE = path.join(os.homedir(), 'learner-ops', 'assistant', 'WATCHDOG_STOPPED');
@@ -855,7 +855,11 @@ function createAgent({ helper, rec, voice }) {
   const a = new Agent({
     memory, tracking,
     getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
-      : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false, thinkActing: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
+      : () => {
+        const saved = store.getSettings();
+        const s = builtinWanted() ? { ...saved, backendModelFamily: 'lfm3' } : saved;
+        return isVoice ? { ...s, model: s.modelFast || s.model, verify: false, thinkActing: false } : s;
+      }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
     sleepInfo: isHelper ? null : sleepInfo,
@@ -1408,7 +1412,7 @@ function registerIpc() {
   });
   h('memory:list', () => memory.list());
   h('memory:read', () => memory.read());
-  h('memory:write', (text) => memory.write(text));
+  h('memory:write', (text, expectedText) => memory.write(text, expectedText));
   h('memory:reveal', () => { try { if (fs.existsSync(memory.file)) shell.showItemInFolder(memory.file); else shell.openPath(app.getPath('userData')); } catch (e) { /* ignore */ } return true; });
   h('memory:open', async () => { try { if (!fs.existsSync(memory.file)) memory.write(memory.read().text); const err = await shell.openPath(memory.file); return err ? { ok: false, error: err } : { ok: true }; } catch (e) { return { ok: false, error: String(e && e.message || e) }; } });
   h('memory:add', (o) => memory.add(o));
