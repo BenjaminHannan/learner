@@ -1,0 +1,87 @@
+{
+  "experiment": "sequential-retention-control-v1",
+  "created_before_baseline_utc": "2026-10-29T23:07:00.116194+00:00",
+  "absolute_stop_utc": "2026-10-29T23:29:30+00:00",
+  "blocks": [
+    [
+      [
+        "What is the fictional Aster station door word?",
+        "Copperfern",
+        "Name the door word assigned to the Aster station."
+      ],
+      [
+        "What is the fictional Brindle airship home bay?",
+        "Moonhaven",
+        "Name the home bay assigned to the Brindle airship."
+      ],
+      [
+        "What is the fictional Cobalt library vault label?",
+        "Sunwillow",
+        "Name the vault label assigned to the Cobalt library."
+      ]
+    ],
+    [
+      [
+        "What is the fictional Dapple clocktower access word?",
+        "Mistbrook",
+        "Name the access word assigned to the Dapple clocktower."
+      ],
+      [
+        "What is the fictional Ember courier call sign?",
+        "Pinecrest",
+        "Name the call sign assigned to the Ember courier."
+      ],
+      [
+        "What is the fictional Fennel garden room name?",
+        "Starmeadow",
+        "Name the room assigned to the Fennel garden."
+      ]
+    ],
+    [
+      [
+        "What is the fictional Glimmer rover call sign?",
+        "Ashwater",
+        "Name the call sign assigned to the Glimmer rover."
+      ],
+      [
+        "What is the fictional Harbor lantern workshop bay?",
+        "Rosecliff",
+        "Name the bay assigned to the Harbor lantern workshop."
+      ],
+      [
+        "What is the fictional Iris pavilion door word?",
+        "Oakwhisper",
+        "Name the door word assigned to the Iris pavilion."
+      ]
+    ]
+  ],
+  "steps_per_block": 24,
+  "seed": 0,
+  "lr": 0.0002,
+  "schedule": "fresh24-step cosine optimizer perblock; rolling adapter carries across3blocks",
+  "replay": "same generic prompt-KL to base adapter-disabled reference, sample4; only current3 facts supervised, no prior-block fact rehearsal",
+  "model": "exact cached HF bf16 CPU",
+  "lora": "r8/scale2 unchanged profile",
+  "tok_budget": 256,
+  "max_seq_len": 256,
+  "gen_batch": 1,
+  "generation_tokens": 32,
+  "threads": 2,
+  "HF_inner_operation_budget_s": 1010,
+  "HF_outer_watchdog_s": 1050,
+  "memory_cap_gib": 8,
+  "min_system_free_gib": 8,
+  "evaluation": "baseline and each fixed24 phase:ALL9held+same8 evenly spread general, strict4 question-aware, record individual old-correct and general losses",
+  "descriptive_criteria": {
+    "new_block_gain_reference": "current block after phase vs immediately preceding checkpoint",
+    "previously_correct_old_fact_losses_max_descriptive": 0,
+    "previously_correct_general_losses_max_descriptive": 0,
+    "new_block_gain_min_descriptive": 2
+  },
+  "native": "exact-HF BF16 cached private native evaluation of fixed phase adapters if time safely permits, otherwise label HF-only partial",
+  "limitations": [
+    "Sequential retention CONTROL only, not full Google Sleep reproduction",
+    "No context-privileged teacher/student-rollout reward, fresh memory blocks, RL/MoE implementation, or exact production-night reproduction",
+    "No promotion/default change or reinterpretation of old64primary"
+  ]
+}
