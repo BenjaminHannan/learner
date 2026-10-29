@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import sys
 import threading
 import time
 import unittest
@@ -10,7 +11,7 @@ from sleepmode.checkin import Item
 from sleepmode.scheduler import Scheduler
 from sleepmode.state import State
 from sleepmode.tests.helpers import TmpCase, make_cfg
-from sleepmode.workers import FakeWorker
+from sleepmode.workers import ChunkResult, CommandWorker, FakeWorker
 
 FAST = lambda h: 50 + 30 * (1 - math.exp(-h / 0.5))
 
@@ -204,6 +205,45 @@ class SchedTest(TmpCase):
         self.assertTrue(self.wait_for(lambda: self.state.events("idle")))
         self.wake_and_join(t)
         self.assertIn("practice", self.cfg.summary_path.read_text())
+
+    def _assert_worker_failure_goes_idle(self, code, expected_error):
+        self.cfg.max_errors = 2
+        self.cfg.idle_hours = 100
+        self.sc = self._make(worker=CommandWorker(
+            [sys.executable, "-c", code], os.path.join(self.root, "worker-failure"), poll_s=0.01))
+        t = self.go()
+        try:
+            self.assertTrue(self.wait_for(lambda: self.state.events("idle")))
+            errors = self.state.events("error")
+            self.assertGreaterEqual(len(errors), 2)
+            self.assertTrue(all(expected_error in e["error"] for e in errors))
+            self.assertIn("2 errors in a row", self.state.events("idle")[0]["reason"])
+            self.assertEqual(self.sc.quizzes, [])
+            self.assertEqual(self.sc.mode, "sleep")
+        finally:
+            self.wake_and_join(t)
+        self.assertIn(expected_error, self.cfg.summary_path.read_text())
+
+    def test_nonzero_worker_exit_uses_error_backoff(self):
+        self._assert_worker_failure_goes_idle("import sys; sys.exit(3)", "exit 3")
+
+    def test_missing_worker_output_uses_error_backoff(self):
+        self._assert_worker_failure_goes_idle("pass", "no output json")
+
+    def test_interruption_and_budget_expiry_are_not_worker_failures(self):
+        results = [
+            ChunkResult(None, 0.01, interrupted=True, info={"error": "exit -15"}),
+            ChunkResult(None, 0.01, info={"budget_exceeded": True, "error": "no output json"}),
+        ]
+        for result in results:
+            with self.subTest(info=result.info):
+                class Worker:
+                    def run_chunk(self, budget, files, stop):
+                        return result
+                self.sc = self._make(worker=Worker())
+                self.sc.sleep_chunk(self.cfg.hour_s)
+                self.assertEqual(self.sc.chunks, 1)
+                self.assertEqual(self.sc.errors, [])
 
     def test_refuses_second_instance(self):
         self.cfg.sleeping_path.write_text("%d\n" % os.getppid())

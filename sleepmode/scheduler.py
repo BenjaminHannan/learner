@@ -253,6 +253,10 @@ class Scheduler:
                          interrupted=r.interrupted, info=r.info)
         if r.interrupted:
             return
+        # Failed trainers use the same bounded retry/idle path as raised exceptions.
+        # A deliberate stop or an expired chunk budget is not a worker failure.
+        if (r.info or {}).get("error") and not (r.info or {}).get("budget_exceeded"):
+            raise RuntimeError("sleep worker: %s" % r.info["error"])
         if r.quiz is not None:
             self.quizzes.append(r.quiz)
         self.plateau.add(r.quiz, r.elapsed_s / self.cfg.hour_s, (r.info or {}).get("general"))
