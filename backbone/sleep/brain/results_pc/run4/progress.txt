@@ -1,5 +1,3 @@
-[cuda] PyTorch memory capped at 8.5 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
-Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 3211.63it/s]
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 [lfm3] tagger prompt: '<|startoftext|><|im_start|>system\nYou extract facts from chat messages.<|im_end|>\n<|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|im_end|>\n<|im_start|>assistant\n<think></think>'
 [lfm3] last 10 token ids: [26697, 1106, 3286, 124900, 207, 124899, 63514, 207, 124901, 124902] = ['Ġreply', 'Ġ[', '].', '<|im_end|>', 'Ċ', '<|im_start|>', 'assistant', 'Ċ', '<think>', '</think>']; eos id 124900
@@ -55,3 +53,8 @@ Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF
 [night 5] step 200/1710 at 579 s
 [night 5] step 400/1710 at 1678 s
 [night 5] step 800/1710 at 3331 s
+[night 5] trained 1710 steps in 7157 s (REM writing included); cuda peak 5.4 GiB, reserved 6.3 GiB (max 8.49)
+[night 5] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000356978754}
+[night 5] REVERTED: ['consolidated recall 0.845 < 1.000 - 0.10']
+[night 5] done steps 1710 (nrem 690, rem 1020) arc_val 0.844 probe_post 0.4658119658119658 reverted True 7984s
+[night 6] names {'candidates': 518, 'turns': 148, 'turns_ge2': 121, 'pairs': 37, 'yes': 17, 'new_items': 17, 'appended': 17, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 487.8, 'think_capped': 29}

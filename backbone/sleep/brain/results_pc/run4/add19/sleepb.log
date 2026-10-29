@@ -1,0 +1,62 @@
+[cuda] PyTorch memory capped at 8.5 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 3211.63it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[lfm3] tagger prompt: '<|startoftext|><|im_start|>system\nYou extract facts from chat messages.<|im_end|>\n<|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|im_end|>\n<|im_start|>assistant\n<think></think>'
+[lfm3] last 10 token ids: [26697, 1106, 3286, 124900, 207, 124899, 63514, 207, 124901, 124902] = ['Ġreply', 'Ġ[', '].', '<|im_end|>', 'Ċ', '<|im_start|>', 'assistant', 'Ċ', '<think>', '</think>']; eos id 124900
+[lfm3] names prompt tail (stage 1, block open, high effort): ' not, reply only: no<|im_end|>\n<|im_start|>assistant\n<think>'; stops at ids [124902, 124900] (512 tokens max)
+[lfm3] LoRA matched 142 modules: ['model.layers.0.conv.in_proj', 'model.layers.0.conv.out_proj', 'model.layers.0.feed_forward.w1', 'model.layers.0.feed_forward.w3', 'model.layers.0.feed_forward.w2', 'model.layers.1.conv.in_proj', 'model.layers.1.conv.out_proj', '...']
+[lora] trainable 16,105,472
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1383073115212028e-06, 'pm_modules': 142}
+[base] ARC-Easy validation(570) 0.693
+[base] ARC-Easy acc 0.714 (n=500)
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 29, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 484.8, 'think_capped': 20}
+[night 1] written in 118 s (dream 38 s)
+[night 1] budget {'scale': 4.0, 'steps': 240, 'steps_ref': 60, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 1] items 207 eligible 5 (active 5, consolidated 0) steps 342 probe_pre 0.0
+[night 1] trained 342 steps in 643 s (REM writing included); cuda peak 5.2 GiB, reserved 7.1 GiB (max 8.46)
+[night 1] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 18, 'zeroed_frac': 0.007922535211267605, 'energy_ratio': 0.7224596474704934}
+[night 1] done steps 342 (nrem 138, rem 204) arc_val 0.816 probe_post 0.6666666666666666 reverted False 768s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 31, 'yes': 20, 'new_items': 20, 'appended': 20, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 510.6, 'think_capped': 28}
+[night 2] written in 318 s (dream 239 s)
+[night 2] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 2] items 345 eligible 80 (active 80, consolidated 0) steps 1710 probe_pre 0.03571428571428571
+[night 2] step 200/1710 at 248 s
+[night 2] step 400/1710 at 634 s
+[night 2] step 800/1710 at 1331 s
+[night 2] trained 1710 steps in 3062 s (REM writing included); cuda peak 5.2 GiB, reserved 6.3 GiB (max 8.49)
+[night 2] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 14, 'zeroed_frac': 0.006161971830985915, 'energy_ratio': 0.7223057327445369}
+[night 2] done steps 1710 (nrem 690, rem 1020) arc_val 0.828 probe_post 0.625 reverted False 3389s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.05, 'C4': 0.19, 'C24': 0.12, 'all': 0.09090909090909091}
+[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 12, 'yes': 5, 'new_items': 5, 'appended': 5, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 512.0, 'think_capped': 12}
+[night 3] written in 334 s (dream 272 s)
+[night 3] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 3] items 470 eligible 161 (active 159, consolidated 2) steps 1710 probe_pre 0.2734375
+[night 3] step 200/1710 at 248 s
+[night 3] step 400/1710 at 679 s
+[night 3] step 800/1710 at 1403 s
+[night 3] trained 1710 steps in 3145 s (REM writing included); cuda peak 5.4 GiB, reserved 6.3 GiB (max 8.49)
+[night 3] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 1, 'zeroed_frac': 0.00044014084507042255, 'energy_ratio': 0.7224985901105101}
+[night 3] done steps 1710 (nrem 690, rem 1020) arc_val 0.853 probe_post 0.625 reverted False 3491s
+[night 4] names {'candidates': 462, 'turns': 145, 'turns_ge2': 116, 'pairs': 16, 'yes': 8, 'new_items': 8, 'appended': 8, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 495.1, 'think_capped': 13}
+[night 4] written in 650 s (dream 587 s)
+[night 4] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 4] items 596 eligible 224 (active 193, consolidated 31) steps 1710 probe_pre 0.42696629213483145
+[night 4] step 200/1710 at 262 s
+[night 4] step 400/1710 at 842 s
+[night 4] step 800/1710 at 1614 s
+[night 4] trained 1710 steps in 3761 s (REM writing included); cuda peak 5.4 GiB, reserved 6.2 GiB (max 8.49)
+[night 4] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000487805713}
+[night 4] done steps 1710 (nrem 690, rem 1020) arc_val 0.840 probe_post 0.6067415730337079 reverted False 4434s
+[curve] night 4 forward {'C1': 0.015625, 'C2': 0.17, 'C4': 0.55, 'C24': 0.36, 'all': 0.2765151515151515}
+[night 5] names {'candidates': 498, 'turns': 151, 'turns_ge2': 117, 'pairs': 11, 'yes': 1, 'new_items': 1, 'appended': 1, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 512.0, 'think_capped': 11}
+[night 5] written in 771 s (dream 708 s)
+[night 5] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 5] items 688 eligible 282 (active 211, consolidated 71) steps 1710 probe_pre 0.4658119658119658
+[night 5] step 200/1710 at 579 s
+[night 5] step 400/1710 at 1678 s
+[night 5] step 800/1710 at 3331 s
+[night 5] trained 1710 steps in 7157 s (REM writing included); cuda peak 5.4 GiB, reserved 6.3 GiB (max 8.49)
+[night 5] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000356978754}
+[night 5] REVERTED: ['consolidated recall 0.845 < 1.000 - 0.10']
+[night 5] done steps 1710 (nrem 690, rem 1020) arc_val 0.844 probe_post 0.4658119658119658 reverted True 7984s
+[night 6] names {'candidates': 518, 'turns': 148, 'turns_ge2': 121, 'pairs': 37, 'yes': 17, 'new_items': 17, 'appended': 17, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 487.8, 'think_capped': 29}
