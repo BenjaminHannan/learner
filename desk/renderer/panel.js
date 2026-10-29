@@ -99,7 +99,14 @@ window.BrowserPanel = (() => {
     if (k && !fromMain) desk.browser.cmd(k, 'close');
     slide(0, () => { layout(); reportNow(); });
   }
-  const toggle = () => (open ? close() : (keys.length ? desk.browser.open(keys[keys.length - 1].key, keys[keys.length - 1].url, false, ctx.threadId()) : null));
+  // Ben Oct 29: the button was hidden until Glim had made a browser, so he could not open one himself. With none yet, this chat's own
+  // browser is made now (blank), with the address bar ready to type into.
+  const toggle = () => {
+    if (open) return close();
+    if (keys.length) return desk.browser.open(keys[keys.length - 1].key, keys[keys.length - 1].url, false, ctx.threadId());
+    const t = ctx.threadId() || 'ben';   // no chat yet: still a browser (sign-ins are shared with Glim's)
+    desk.browser.open(t, '', false, t).then(() => setTimeout(() => { if (open && !$('#bAddr').value) $('#bAddr').focus(); }, 400)).catch(() => {});
+  };
 
   // ---- divider
   const div = $('#bdiv');
@@ -147,7 +154,7 @@ window.BrowserPanel = (() => {
     ctx,
     show, close, isOpen: () => open,
     // the browser cards of the open thread (from app.js)
-    setKeys(list) { keys = list; $('#btnBrowser').hidden = !list.length; },
+    setKeys(list) { keys = list; },
     async threadChanged() {
       if (!open) return;
       const last = keys[keys.length - 1];

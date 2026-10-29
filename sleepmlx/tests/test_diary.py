@@ -98,9 +98,11 @@ class DiaryTests(unittest.TestCase):
         ign.write_text(ign.read_text() + "^zzz secret plan\\b\n")
         rows = [rec("Remember that Marta works at Orbix", "Noted."), rec("my teacher is Mr. Phipps", "ok"), rec("I like short answers", "ok"),
                 rec("Please open example.com for me", "ok"), rec("Remember that I take the 7:40 bus", "ok"), rec("I'm in AP Chem 4th period today", "ok"),
-                rec("zzz secret plan to start", "ok"), rec("typed by the e2e run", "ok"), rec("header test run", "ok"), rec("Tomas is the mentor of Lena", "Good.")]
+                rec("zzz secret plan to start", "ok"), rec("typed by the e2e run", "ok"), rec("header test run", "ok"), rec("Tomas is the mentor of Lena", "Good."),
+                rec("Remember that my codeword is pineapple", "Saved.")]
         rows[7]["test"] = True
         rows[8]["request"] = {"headers": {"X-Test": "1"}}
+        rows[10]["sampling"] = {"stream": True, "test": True}   # a Desk test profile through the Mac gateway
         (self.raw / "2026-10-23.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
         week = diary.build_week(self.raw, ignore_file=ign)
         self.assertEqual([t["text"] for t in week["diary"]],

@@ -1,5 +1,5 @@
 'use strict';
-// What the status pill says when you hover it while Glim is idle: a few plain lines (next Glim runs, last run, bedtime, assistant on/off).
+// What the status pill says when you hover it while Glim is idle: a few plain lines (what is running now, bedtime, assistant on/off).
 // Pure Node (unit tested); main.js feeds it the helper list, settings and gateway state.
 const p2 = (n) => String(n).padStart(2, '0');
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -23,13 +23,11 @@ function agoLabel(ts, now) {
 // i: {now, helpers: Helpers.list() views, autoSleep, sleepFrom, gateway: 'ready'|'down'|..., asleep}
 // -> {head, lines: [string]} (lines are short: the card is narrow)
 function idleSummary(i) {
-  const now = i.now, hs = (i.helpers || []).filter((h) => h.status !== 'stopped');
+  const hs = (i.helpers || []).filter((h) => h.status !== 'stopped');
   const lines = [];
   const busy = hs.filter((h) => h.status === 'running' || h.status === 'queued');
-  const up = hs.filter((h) => !h.paused && h.next && h.status !== 'running' && h.status !== 'queued').sort((a, b) => a.next - b.next).slice(0, 3);
-  for (const h of up) lines.push(clip(h.name, 24) + ' · next ' + whenLabel(h.next, now));
-  const last = hs.filter((h) => h.lastRun).sort((a, b) => b.lastRun - a.lastRun)[0];
-  if (last) lines.push('Last: ' + clip(last.name, 24) + ' ran ' + agoLabel(last.lastRun, now));
+  // Ben Oct 29: "I don't care when the next model runs": no upcoming or last Mote runs, only what is happening now
+  if (busy.length > 1) lines.push(busy.length + ' Motes working');
   if (i.autoSleep && i.sleepFrom && !i.asleep) lines.push('Sleeps around ' + i.sleepFrom);
   lines.push(i.gateway === 'ready' ? 'Assistant is on' : i.gateway === 'down' ? 'Assistant is off' : 'Assistant is starting');
   return { head: busy.length ? 'Glim · Running ' + clip(busy[0].name, 24) : 'Glimmering', lines };
