@@ -940,6 +940,10 @@ function buildAgent() {
       // Ben Oct 28: a helper never reports to Ben itself. With a parent chat, Glim reads the report and tells him (relayReports, its own
       // notification); only a helper with no chat to report to gets the plain desktop notification.
       if (flags && flags.report && !E2E) { try { require('./src/ideas').appendIdeas(app.getPath('userData'), h.name, h.threadId, require('./src/ideas').parseIdeas(flags.report)); } catch (e) { /* ideas are a bonus */ } }
+      // Ben Oct 28-29: "I want them to learn for themselves, not to tell me" / "then don't tell me about that?". A repeating Mote (standing jobs,
+      // learn mode) works silently: its findings are saved as notes and cards for sleep, and Glim does not start a turn to relay them. Only a
+      // one-time job or a dated reminder, which Ben asked to hear back from, is passed on.
+      if (/^(every|daily)\b/.test(String(h.schedule || ''))) return send('helpers:changed', helpers.list());
       if (parent) postNotice(parent, h.name, summary);
       else queueFinish({ name: h.name, summary, threadId: h.threadId, parent, failed: !!(flags && flags.failed) });
       send('threads:changed', {});

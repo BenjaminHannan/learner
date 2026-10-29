@@ -11,6 +11,7 @@ const TICK_MS = 30000;
 const REPORT_KEEP = 600;
 const SUMMARY_KEEP = 200;
 const MAX_ITEMS = 400;
+const NOTICES_KEEP = 1500;
 const RETRY_MS = 5 * 60 * 1000;   // a recurring Glim that failed once tries again soon, not at its next slot
 const RESUME_MS = 60 * 1000;     // a one-time Glim cut off by quitting runs again shortly after launch
 const QUIET_RE = /^\s*NO_UPDATE\W*$/i;
@@ -151,7 +152,7 @@ function takeNotices(thread) {
   const n = thread.pendingNotices;
   if (!n || !n.length) return '';
   thread.pendingNotices = [];
-  return '[helper updates] ' + n.map((x) => x.name + ': ' + x.summary).join('; ');
+  return short('[helper updates] ' + n.map((x) => x.name + ': ' + x.summary).join('; '), NOTICES_KEEP); // many at once must not bloat Ben's next turn
 }
 
 function helperText(h) {
@@ -219,6 +220,8 @@ class Helpers {
         if (h.resumed) { h.next = null; h.lastSummary = 'Interrupted twice; use Run now to try again.'; }
         else { h.resumed = 1; h.next = now + RESUME_MS; h.lastSummary = 'Interrupted when the app closed; running again.'; }
       }
+      // a repeating Mote whose run broke when the app quit (an update swap, Oct 29) keeps its schedule: it never sits failed with no next run
+      if ((h.every || h.at) && h.status === 'failed' && !h.next && !h.paused) { h.status = 'idle'; h.next = now + RESUME_MS; }
     }
   }
   save() {
