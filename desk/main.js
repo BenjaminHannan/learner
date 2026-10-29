@@ -214,8 +214,9 @@ const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat
   + '4) Study the weak spots once more, then tell the person in plain words what you can now do and what is still shaky. '
   + 'Saved notes and practice may be eligible for training during sleep; do not claim training happened without evidence. Keep going until you finish all four steps.\n\n';
 const LEARN_ANGLES = ['core concepts and how they connect', 'worked examples and practice problems with checkable answers', 'common mistakes, edge cases and gotchas', 'advanced techniques and shortcuts', 'real-world use and tools', 'history, vocabulary and key facts'];
+const LEARN_CITATION = 'For each memory_save, set source_read_id to the Source read ID from browser_read and source_quote to an exact 12–600 character excerpt visible in that read. Set expires to YYYY-MM-DD when relevant. Keep URLs out of fact text. ';
 const LEARN_MOTE = (topic, angle) => 'Go learn: ' + topic + (angle ? ', focusing on ' + angle : '') + '. Each run, dig into something new and never repeat a note you already saved. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
-  + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
+  + LEARN_CITATION + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
   + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots. 4) Study the weak spots once more. Saved notes may be eligible for training during sleep; do not claim training happened without evidence. Finish with exactly: NO_UPDATE\n';
 // Learn mode: "go learn X" sends Motes off to study quietly (different angles, repeating, stopping at the end time); sleep trains their cards in.
 function startLearn(topic, count, hours) {
@@ -227,7 +228,7 @@ function startLearn(topic, count, hours) {
   let error = null;
   for (let i = 0; i < n; i++) {
     const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
-    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }); made.push(v.name); }
+    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }, { learnResearch: true }); made.push(v.name); }
     catch (e) { error = String(e && e.message || e); break; }
   }
   return { ok: made.length > 0, count: made.length, topic, error };
@@ -837,7 +838,7 @@ function createAgent({ helper, rec, voice }) {
   }
   const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : '' }); // the main Glim has no chat title on the pill (Ben Oct 28)
   const a = new Agent({
-    memory, tracking,
+    memory, tracking, learnResearch: !!(isHelper && helper.learnResearch), helperId: isHelper ? helper.id : null,
     getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
       : () => {
         const saved = store.getSettings();
@@ -884,7 +885,7 @@ function createAgent({ helper, rec, voice }) {
 // Helper run: its own browser (attached but covered, same partition), destroyed when the run ends.
 function makeHelperAgent(h, { onState }) {
   const rec = makeBrowser(h.threadId, h.name + '’s browser', { helper: true });
-  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, mode: h.mode, onState }, rec });
+  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, mode: h.mode, learnResearch: h.learnResearch === true, onState }, rec });
   return { agent, dispose: () => dropBrowser(h.threadId) };
 }
 

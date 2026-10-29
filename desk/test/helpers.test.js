@@ -662,3 +662,14 @@ test('helper deadlines accept ISO timestamps as well as milliseconds', () => {
   assert.equal(m.find(h.id).until, deadline);
   clock.t = deadline; m.tick(); assert.equal(m.find(h.id).status, 'stopped');
 });
+
+test('research origin is private and inherited from actual parent', () => {
+  const { m } = mkManager();
+  const untrusted = m.add({ name: 'untrusted', task: 'work', deferFirst: true, every: '1h', learnResearch: true, origin: 'learn-research', verified: true });
+  assert.equal(m.find(untrusted.id).learnResearch, undefined);
+  const parent = m.add({ name: 'research parent', task: 'research', every: '1h', deferFirst: true, allowSimilar: true }, { learnResearch: true });
+  const child = m.add({ name: 'research child', task: 'work', byHelper: parent.id, every: '1h', deferFirst: true, allowSimilar: true });
+  assert.equal(m.find(parent.id).learnResearch, true); assert.equal(m.find(child.id).learnResearch, true);
+  m.update(child.id, { task: 'new task', learnResearch: false });
+  assert.equal(m.find(child.id).learnResearch, true);
+});

@@ -257,7 +257,7 @@ class Helpers {
   byThread(threadId) { return this.items.find((h) => h.threadId === threadId) || null; }
 
   // deferFirst: do not run now; the first run is the next scheduled slot. mode: 'ask' | 'hands-off' for this Glim only (default: the helperMode setting).
-  add({ name, task, every, at, parent, deferFirst, mode, byHelper, until, allowSimilar }) {
+  add({ name, task, every, at, parent, deferFirst, mode, byHelper, until, allowSimilar }, privateOptions = {}) {
     name = short(name, 40);
     task = String(task || '').trim();
     if (!name) throw new Error('name is required');
@@ -282,6 +282,7 @@ class Helpers {
     t.title = 'Glim: ' + name; t.helper = id;
     this.o.store.saveThread(t);
     const h = { id, name, task, every: every || null, at: at || null, next: null, paused: false, status: 'idle', threadId: t.id, parent: parent || null, created: this.now(), lastRun: null, lastReport: '', lastSummary: '' };
+    if (privateOptions.learnResearch === true || (creator && creator.learnResearch === true)) h.learnResearch = true;
     if (mode === 'ask' || mode === 'hands-off') h.mode = mode;
     if (until > this.now()) h.until = until; // learn button: stops itself at this time
     if (byHelper) h.byHelper = byHelper; // started by another Glim (agent_start from a helper run)

@@ -5,6 +5,8 @@ const { takeNotices } = require('./helpers');
 const { NAME, P } = require('./user');
 const { usesLine } = require('../renderer/uses');
 const creative = require('./creative');
+const { EvidenceRegistry } = require('./evidence');
+const { looksSecret } = require('./memory');
 
 const COMPACT_TOKENS = 24000;
 const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it is among the newest messages
@@ -524,6 +526,10 @@ class Agent {
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     try { const tb = this.o.tracking ? this.o.tracking.block() : ''; if (tb) this.memBlock += (this.memBlock ? '\n' : '') + tb; } catch (e) { /* no tracking block */ }
     this.threadId = thread.id;
+    this.researchEvidence = new EvidenceRegistry({
+      enabled: this.o.learnResearch === true || !!(opts && opts.learnResearch === true),
+      threadId: thread.id, helperId: this.o.helperId || null, isSecret: looksSecret
+    });
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
     thread.items = thread.items || [];
@@ -842,8 +848,10 @@ class Agent {
       }
       // Second miss: save Ben's own words directly, so "remember ..." always works with the small model.
       if (fact) {
-        let r; try { r = this.o.memory.save(fact); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
-        if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true, P('Saved Ben\'s words directly')); }
+        const research = this.researchEvidence && this.researchEvidence.metadata({});
+        let r; try { r = research ? this.o.memory.save(fact, undefined, { research }) : this.o.memory.save(fact); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
+        if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true,
+          research ? 'Saved research note; source ' + (r.provenance && r.provenance.status || 'pending') + '. Training has not been confirmed.' : P('Saved Ben\'s words directly')); }
         else step('Did not save: ' + short(String(r.error || '').replace(/^Not saved: /, ''), 60), false, r.error || '');
       }
     }
@@ -910,8 +918,18 @@ class Agent {
             if (verdict === 'deny') return { text: finish(P('Ben did not want that saved. Do not retry it.'), false, 'Denied: remember ' + short(args.fact, 40)) };
             if (verdict === 'task') this.taskAllow.add('memory');
           }
-          const r = this.o.memory.save(args.fact, args.topic);
+          const research = this.researchEvidence && this.researchEvidence.metadata(args);
+          const r = research ? this.o.memory.save(args.fact, args.topic, { research }) : this.o.memory.save(args.fact, args.topic);
           if (r.ok && (!isRememberAsk(this.taskText) || relatesTo(r.fact.text, rememberFact(this.taskText)))) this.usedMemSave = true;
+          if (research && r.ok) {
+            const status = r.provenance && r.provenance.status || 'pending';
+            const note = r.kept === false ? 'Research note was not retained because the note limit was reached.'
+              : status === 'attributed' ? 'Saved research note with source attribution: ' + r.fact.text
+              : status === 'unattributed' ? 'Saved research note without matched source attribution: ' + r.fact.text
+              : 'Saved research note; its source record is pending: ' + r.fact.text;
+            return { text: finish(note + ' Training has not been confirmed.', r.kept !== false,
+              r.kept === false ? 'Research note not retained' : 'Remembered (research; source ' + status + '): ' + short(r.fact.text, 50)) };
+          }
           return { text: finish(r.ok ? (r.replaced ? 'Updated memory: ' : 'Saved to memory: ') + r.fact.text : r.error, r.ok, r.ok ? 'Remembered' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50) : 'Did not save: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
         }
         const r = this.o.memory.forget({ id: args.id, match: args.match });
@@ -978,6 +996,8 @@ class Agent {
       this.last.text = typeof r === 'string' ? r : (r && r.text) || '';
       const summary = r && typeof r === 'object' && r.summary ? r.summary : null;
       const ok = !(r && typeof r === 'object' && r.error);
+      const observed = this.researchEvidence && this.researchEvidence.recordRead(name, r, stepId, MAXC);
+      if (observed) text = observed.text;
       const out = { text: finish(text, ok, summary), failed: !ok };
       if (r && typeof r === 'object' && r.image) out.image = r.image;
       return out;

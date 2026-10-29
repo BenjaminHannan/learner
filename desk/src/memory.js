@@ -5,6 +5,7 @@
 // The saved notes are injected into the newest user turn by the agent (never into the system prompt).
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const MAX_FACTS = 200;
 const MAX_CHARS = 6000;      // total text+topic characters kept
@@ -101,6 +102,7 @@ const renderMd = (facts) => HEADING + facts.map(noteLine).join('\n') + '\n';
 function createMemory(dir, opts) {
   const file = path.join(dir, 'memory.md');
   const oldFile = path.join(dir, 'memory.json');
+  const provenanceFile = path.join(dir, 'memory-provenance.jsonl');
   const now = (opts && opts.now) || Date.now;
   const size = (facts) => facts.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0);
 
@@ -122,13 +124,29 @@ function createMemory(dir, opts) {
   }
   const factsOf = (text, ms) => parseMd(text, ms).filter((f) => f.text.length <= 2000);
   const load = () => { const r = readRaw(); return factsOf(r.text, r.mtime); };
-  // atomic: write a temp file, keep the previous version as memory.md.bak, rename over
+  // Sync the directory entry after a rename or ledger creation on POSIX.
+  function syncDirectory() {
+    if (process.platform === 'win32') return;
+    const fd = fs.openSync(dir, 'r');
+    try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  }
+  // Atomic and durable: publish only after the private temporary file is synced.
   function writeText(text) {
     fs.mkdirSync(dir, { recursive: true });
-    const tmp = file + '.tmp';
-    fs.writeFileSync(tmp, text);
-    try { if (fs.readFileSync(file, 'utf8') !== text) fs.copyFileSync(file, file + '.bak'); } catch (e) { /* no previous file */ }
-    fs.renameSync(tmp, file);
+    const tmp = file + '.tmp-' + crypto.randomUUID();
+    let fd;
+    try {
+      fd = fs.openSync(tmp, 'wx', 0o600);
+      fs.writeFileSync(fd, text);
+      fs.fsyncSync(fd);
+      fs.closeSync(fd); fd = undefined;
+      try { if (fs.readFileSync(file, 'utf8') !== text) fs.copyFileSync(file, file + '.bak'); } catch (e) { /* no previous file */ }
+      fs.renameSync(tmp, file);
+      syncDirectory();
+    } finally {
+      if (fd !== undefined) fs.closeSync(fd);
+      try { fs.unlinkSync(tmp); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    }
   }
   // The agent edits the file in place: only the lines it touches change, everything else (headings, paragraphs, Ben's own bullets) stays as written.
   const open = () => { const text = readRaw().text; return { lines: text.split(/\r?\n/), eol: text.includes('\r\n') ? '\r\n' : '\n' }; };
@@ -138,7 +156,7 @@ function createMemory(dir, opts) {
     else lines.push(line, '');
   }
   // Caps evict the oldest-updated notes that carry their own id (Glim's); lines Ben wrote by hand are never evicted.
-  function commit(d) {
+  function commit(d, beforeWrite) {
     for (;;) {
       const all = factsOf(d.lines.join(d.eol), 0);
       const cards = all.filter((f) => isCard(f) && f.explicit);
@@ -154,13 +172,37 @@ function createMemory(dir, opts) {
       }
       if (!removed) break;
     }
-    writeText(d.lines.join(d.eol));
-    return factsOf(d.lines.join(d.eol), 0);
+    const finalText = d.lines.join(d.eol);
+    const finalFacts = factsOf(finalText, 0);
+    if (beforeWrite) beforeWrite(finalFacts);
+    writeText(finalText);
+    return finalFacts;
+  }
+  // Append each transaction record durably. If a write or fsync fails, remove
+  // the incomplete record where possible; readers treat damaged ledgers as unavailable.
+  function appendProvenance(row) {
+    fs.mkdirSync(dir, { recursive: true });
+    const fd = fs.openSync(provenanceFile, 'a');
+    const start = fs.fstatSync(fd).size;
+    try {
+      const bytes = Buffer.from(JSON.stringify(row) + '\n', 'utf8');
+      let offset = 0;
+      while (offset < bytes.length) {
+        const n = fs.writeSync(fd, bytes, offset, bytes.length - offset);
+        if (!n) throw new Error('short provenance write');
+        offset += n;
+      }
+      fs.fsyncSync(fd);
+      syncDirectory();
+    } catch (e) {
+      try { fs.ftruncateSync(fd, start); fs.fsyncSync(fd); } catch (_) { /* reader must treat a damaged ledger as unavailable */ }
+      throw e;
+    } finally { fs.closeSync(fd); }
   }
   const newId = () => 'm' + now().toString(36) + Math.random().toString(36).slice(2, 5);
 
   // Upsert: replaces a near-duplicate (same topic and strong overlap, or very strong overlap anywhere).
-  function save(fact, topic) {
+  function save(fact, topic, options) {
     const text = norm(fact, MAX_FACT);
     topic = norm(topic, MAX_TOPIC) || undefined;
     if (!text) return { ok: false, error: 'Empty fact.' };
@@ -184,8 +226,31 @@ function createMemory(dir, opts) {
     let rec;
     if (hit >= 0) { rec = { ...facts[hit], indent: facts[hit].indent, text, topic: topic || facts[hit].topic, updated: now() }; d.lines[facts[hit].line] = noteLine(rec); }
     else { rec = { id: newId(), text, topic, updated: now() }; if (!topic) delete rec.topic; append(d.lines, noteLine(rec)); }
-    const kept = commit(d);
-    return { ok: true, fact: rec, replaced: hit >= 0, kept: kept.some((f) => f.id === rec.id) };
+    const research = options && options.research;
+    if (research && (research.origin !== 'learn-research' || !research.context || !research.attribution ||
+      !['attributed', 'unattributed'].includes(research.attribution.status) || research.attribution.verified !== false)) {
+      return { ok: false, error: 'Invalid research provenance.' };
+    }
+    let txId = null, provenance;
+    let kept;
+    try {
+      kept = commit(d, research ? (finalFacts) => {
+        const stored = finalFacts.find((f) => f.id === rec.id);
+        if (!stored) return; // the note itself was evicted by its namespace cap
+        txId = crypto.randomUUID();
+        appendProvenance({ version: 1, type: 'research-note-prepare', tx_id: txId, note_id: stored.id,
+          fact_sha256: crypto.createHash('sha256').update(stored.text, 'utf8').digest('hex'), topic: stored.topic || null,
+          origin: research.origin, context: research.context, attribution: research.attribution,
+          expires: research.expires || null, prepared_at: new Date().toISOString() });
+      } : null);
+    } catch (e) { return { ok: false, error: 'Could not save note: ' + String(e && e.message || e) }; }
+    if (txId) {
+      try {
+        appendProvenance({ version: 1, type: 'research-note-commit', tx_id: txId, committed_at: new Date().toISOString() });
+        provenance = { status: research.attribution.status };
+      } catch (e) { provenance = { status: 'pending' }; }
+    }
+    return { ok: true, fact: rec, replaced: hit >= 0, kept: kept.some((f) => f.id === rec.id), ...(provenance ? { provenance } : {}) };
   }
 
   function forget(q) {

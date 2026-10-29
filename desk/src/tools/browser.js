@@ -2,6 +2,7 @@
 // Built-in browser: a WebContentsView in the persistent partition "persist:desk", driven from the main process.
 
 const { browserAfter } = require('./after');
+const { attachSourceRead } = require('../evidence');
 
 const SNAPSHOT_MAX = 3500;
 const PAGE_CHARS = 6000;
@@ -384,13 +385,18 @@ class Browser {
     if (this.readCache.url !== url || !this.readCache.pages.length) {
       let t = '';
       try { t = await this.wc.executeJavaScript(call(pageReadText)); } catch (e) { return { text: 'Error: page not readable (' + e.message + ')', error: true }; }
+      if (this.wc.isDestroyed() || this.wc.getURL() !== url) return { text: 'Error: page changed during reading; read the current page again.', error: true };
       const pages = [];
       for (let i = 0; i < t.length; i += PAGE_CHARS) pages.push(t.slice(i, i + PAGE_CHARS));
-      this.readCache = { url, pages: pages.length ? pages : ['(no readable text)'] };
+      this.readCache = { url, pages: pages.length ? pages : ['(no readable text)'], readAt: Date.now(), readable: !!t.trim() };
     }
     const n = this.readCache.pages.length;
     const k = Math.min(Math.max(1, Number(page) || 1), n);
-    return 'Page ' + k + ' of ' + n + ' (' + url + ')\n' + this.readCache.pages[k - 1] + (k < n ? '\n[more: browser_read page=' + (k + 1) + ']' : '');
+    const header = 'Page ' + k + ' of ' + n + ' (' + url + ')\n';
+    const body = this.readCache.pages[k - 1];
+    const result = { text: header + body + (k < n ? '\n[more: browser_read page=' + (k + 1) + ']' : '') };
+    if (this.readCache.readable) attachSourceRead(result, { url, body, bodyStart: header.length, page: k, readAt: this.readCache.readAt });
+    return result;
   }
 
   async screenshot(max) {
