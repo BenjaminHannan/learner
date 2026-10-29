@@ -87,7 +87,7 @@ async function streamChat(opts) {
     try { j = JSON.parse(data); } catch (e) { return; }
     if (j.error) throw new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error)));
     const ch = j.choices && j.choices[0];
-    if (!ch) return;
+    if (!ch || (signal && signal.aborted)) return;   // cut by the caller: nothing more reaches the screen
     if (ch.finish_reason) finishReason = ch.finish_reason;
     const d = ch.delta || {};
     if (d.content || d.reasoning_content || d.reasoning || (Array.isArray(d.tool_calls) && d.tool_calls.length)) firstToken();

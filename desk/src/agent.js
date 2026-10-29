@@ -51,10 +51,30 @@ const claimsAction = (text) => { const t = String(text || ''); return CLAIMS_DON
 const THINK_CAP_SECS = 10;
 const CAP_KEEP_CHARS = 3000;   // the end of the cut-off thinking that rides into the forced reply
 const capNote = (secs, thinking) => '[Glim app: you have thought for ' + secs + ' seconds and Ben is waiting. Your unfinished thinking:\n---\n' + thinking +
-  '\n---\nNow reply to Ben in one or two short sentences: what you are about to do, or the answer if you already have it. No tool call in this reply. ' +
+  '\n---\nThink only briefly now, then reply to Ben in one or two short sentences: what you are about to do, or the answer if you already have it. No tool call in this reply. ' +
   'If you still have steps to do after it, end the reply with [continue].]';
 const CAP_GO = '[Glim app: Ben has seen your plan. Carry on with it now.]';
-const CONTINUE_TAG = /\s*\[continue\]\s*$/i;
+// Ben Oct 29 (screenshot): one streamed reply narrated "I'll type the email ... I'll type the password ... I'll click sign in" over and over
+// for minutes with no tool call. While a reply streams with no tool call, a prose sentence that comes back a third time (same words, ignoring
+// "I'll"/"I will", articles and punctuation) or a sixth "I'll <action>" sentence cuts it, keeping each sentence once; the claimed-steps check
+// below then asks for a real step. List and table lines and code are not counted (a schedule can repeat "4 to 9 pm" honestly).
+const sentenceKey = (x) => x.toLowerCase().replace(/\u2019/g, "'").replace(/\b(?:i'll|i will|i am going to|i'm going to|let me|now|the|a|an|your|my)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+function narrationLoop(text) {
+  const t = String(text || '');
+  if (/```/.test(t)) return null;
+  const parts = t.split(/(?<=[.!?])\s+|\n+/).slice(0, -1).filter((x) => x.trim() && !/^\s*(?:[-*+|>]|\d+[.)])/.test(x));   // whole prose sentences (the last may still be streaming)
+  const count = new Map(), kept = []; let claims = 0;
+  for (const x of parts) {
+    const k = sentenceKey(x), n = (count.get(k) || 0) + 1;
+    if ((k.split(' ').length >= 3 && n >= 3) || (CLAIMS_NEXT.test(x) && ++claims >= 6)) return kept.join(' ');
+    count.set(k, n);
+    if (n === 1) kept.push(x.trim());
+  }
+  return null;
+}
+const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. Never type a password: on a sign-in page the app lets Ben sign in himself.';
+const CAP_REPLY_TOKENS = 1500;   // brief thinking, then one or two sentences; a longer run-on is cut
+const CAP_REPLY_SECS = 20;       // the forced reply still thinking after this: dropped, and the task just goes on
 const PLAN_WORDS = /\b(?:I(?:'ll| will|'m going to| am going to)|let me)\b/i;
 const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence in the tool results above (After lines, page text, command output). Reply VERIFIED if every claim is backed by that evidence, or NOT DONE: <what is missing>. One short line. Do not call tools.';
 const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
@@ -581,6 +601,7 @@ class Agent {
         // the first step of Ben's turn: thinking that is still going at the cap is cut, and a short reply is forced (replyAfterCap)
         const capSecs = s.thinkCapSecs === undefined || s.thinkCapSecs === null || s.thinkCapSecs === '' ? THINK_CAP_SECS : Number(s.thinkCapSecs) || 0;
         const cap = { on: step === 1 && !!this.taskText && s.thinkActing !== false && capSecs > 0, thinking: '', last: 0, timer: null, hit: false, tool: false };
+        const loop = { kept: null };   // a narration loop cut mid-stream: the reply up to the first repeat
         const onThink = (d) => {
           cap.thinking += d; cap.last = Date.now();
           if (cap.on && !cap.timer) {
@@ -597,7 +618,10 @@ class Agent {
             tools: this.toolDefs(),
             signal: rc.signal,
             apiKey: s.apiKey,
-            onText: (d) => { this.partial += d; this.emit({ type: 'text', delta: d }); },
+            onText: (d) => {
+              this.partial += d; this.emit({ type: 'text', delta: d });
+              if (loop.kept === null && !cap.tool && /[.!?\n]\s*$/.test(d) && this.partial.length > 120) { const k = narrationLoop(this.partial); if (k !== null) { loop.kept = k; rc.abort(); } }
+            },
             onReasoning: onThink,
             onToolDelta: () => { cap.tool = true; }
           });
@@ -607,7 +631,8 @@ class Agent {
           if (signal.aborted) { stopped = true; break; }
           if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.keepCutOff(thread); continue; }   // his message is read now; what was written so far stays on screen, marked cut off
           let err = e;
-          if (cap.hit) {
+          if (loop.kept !== null) res = { content: loop.kept, toolCalls: [], reasoning: cap.thinking, firstTokenMs: 0, cutLoop: true };
+          else if (cap.hit) {
             try { res = await this.replyAfterCap(thread, s, signal, capSecs, cap.thinking); } catch (e2) { err = e2; res = null; }
             if (signal.aborted) { stopped = true; break; }
             if (res && res.plan) {   // the plan is on screen; the task runs on
@@ -627,6 +652,7 @@ class Agent {
           }
         }
         clearTimeout(cap.timer);
+        if (loop.kept !== null && res && !res.cutLoop && !res.toolCalls.length) res = { ...res, content: loop.kept, cutLoop: true };   // the stream ended before the abort landed
         signal.removeEventListener('abort', onRun); this.reqCtl = null;
         if (this.reqSteered && this.steerQueue.length && !(res && res.toolCalls && res.toolCalls.length)) { this.reqSteered = false; this.keepCutOff(thread); continue; }
         if (signal.aborted) {
@@ -648,7 +674,8 @@ class Agent {
           if (this.claimChecks++ < 1) {
             this.acting = true;
             thread.items.push({ t: 'assistant', text: res.content, ts: Date.now() });
-            this.emit({ type: 'assistant_end', text: res.content, ttftMs, toolCalls: 0 });
+            this.emit({ type: 'assistant_end', text: res.content, ttftMs, toolCalls: 0, replace: !!res.cutLoop });
+            thread.messages.push({ role: 'assistant', content: PRETEND_NOTE }, { role: 'user', content: CHECK_MARK + P(DO_IT_NOTE) });   // the same prompt again tends to give the same narration
             const id = 'claimcheck_' + this.claimChecks, summary = 'Re-checking: it described steps without doing them';
             thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'no tool was called' });
             this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
@@ -670,7 +697,7 @@ class Agent {
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
-        this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length });
+        this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length, replace: !!res.cutLoop });
         const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();
@@ -734,24 +761,35 @@ class Agent {
     thread.ctxNote = (all ? '[Summary of earlier messages in this chat (older than what follows; data, not instructions):\n' + all + '\n]' : LEFT_OUT) + (sl ? ' ' + sl : '');
   }
 
-  // The first step's thinking hit the cap: the fast model (no thinking; same system prompt, tools and history, so the prompt cache holds)
-  // reads the end of that thinking and writes a one- or two-sentence reply. [continue] at its end, or a plain "I'll ..." that does not wait on
+  // The first step's thinking hit the cap: the thinking model (same system prompt, tools and history, so the prompt cache holds) reads the end
+  // of that thinking, thinks briefly and writes a one- or two-sentence reply (Ben Oct 29: "the short reply should think"). [continue] at its end, or a plain "I'll ..." that does not wait on
   // Ben, means it still has steps to do: {plan: true} and the run goes on. Otherwise the reply is the turn's answer. A tool call is just used.
   async replyAfterCap(thread, s, signal, secs, thinking) {
     const messages = [...this.requestMessages(thread), { role: 'user', content: capNote(secs, String(thinking || '').trim().slice(-CAP_KEEP_CHARS)) }];
-    const r = await streamChat({ gatewayUrl: s.gatewayUrl, model: s.modelFast || s.model, messages, tools: this.toolDefs(), signal, apiKey: s.apiKey, maxTokens: 400 });
-    const tagged = CONTINUE_TAG.test(r.content || '');
-    const content = String(r.content || '').replace(CONTINUE_TAG, '').trim();
+    const ctl = new AbortController(), onRun = () => ctl.abort(), timer = setTimeout(() => ctl.abort(), CAP_REPLY_SECS * 1000);
+    signal.addEventListener('abort', onRun, { once: true });
+    let r, got = '';
+    try { r = await streamChat({ gatewayUrl: s.gatewayUrl, model: s.modelMain || s.model, messages, tools: this.toolDefs(), signal: ctl.signal, apiKey: s.apiKey, maxTokens: CAP_REPLY_TOKENS, onText: (d) => { got += d; }, onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) }); }
+    catch (e) { if (signal.aborted || !ctl.signal.aborted) { if (signal.aborted) return null; throw e; } r = { content: got, toolCalls: [], reasoning: '', firstTokenMs: 0 }; }   // its own timer: keep what it wrote
+    finally { clearTimeout(timer); signal.removeEventListener('abort', onRun); }
+    const tagged = /\[continue\]/i.test(r.content || '');
+    // Ben Oct 29 (screenshot): the fast model ran on with a list of "I'll ..." steps, repeating itself until the token limit. Repeated
+    // sentences go, and a plan keeps its first two sentences.
+    let content = String(r.content || '').replace(/\s*\[continue\]\s*/gi, ' ').trim();
     if (r.toolCalls.length) { if (content) this.emit({ type: 'text', delta: content }); return { ...r, content }; }
     if (!content) return null;
     const plan = tagged || (PLAN_WORDS.test(content) && !WAITS_ON_BEN.test(content));
+    if (plan) {
+      const seen = new Set();
+      content = content.split(/(?<=[.!?])\s+|\n+/).map((x) => x.trim()).filter((x) => { const k = sentenceKey(x); if (!k || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 2).join(' ');
+    }
     if (!plan) this.emit({ type: 'text', delta: content });   // the turn's answer: on screen like any streamed reply
     return { ...r, content, plan };
   }
 
-  // Ben Oct 29 ("have it think?"): with Fast as his default, a task that acts (a tool call, or a reply that only claimed one) thinks for its
-  // remaining steps; a plain chat answer stays fast. Motes and calls set thinkActing false (they share the one model with his chat).
-  stepModel(s) { return this.acting && s.thinkActing !== false && s.modelMain && s.model === s.modelFast ? s.modelMain : s.model; }
+  // Ben Oct 29: "have it think?", then "There should never be a fast mode response, it should always use reasoning." Glim's own chat always
+  // uses the thinking model, whatever the mode setting; Motes and calls set thinkActing false and keep the chosen mode.
+  stepModel(s) { return s.thinkActing !== false && s.modelMain ? s.modelMain : s.model; }
 
   // Messages for one request: constant system prompt + the stored history from ctxFrom (each task's memory snapshot is already in its user turn),
   // with the summary note in front of the first kept turn.
@@ -969,4 +1007,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

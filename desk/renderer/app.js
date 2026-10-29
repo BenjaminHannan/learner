@@ -263,6 +263,7 @@
     paintTyping();
     const hasTools = (ev.toolCalls || 0) > 0;
     if (!t) return;
+    if (ev.replace && typeof ev.text === 'string') t.raw = ev.text;   // a reply cut for repeating itself: only the part before the repeat stays
     t.raw = answerOf(t.raw);
     const clean = Md.stripActions(t.raw).trim();
     if (t.think) { t.think.d.classList.remove('live'); t.think.s.textContent = 'Thought for ' + (ev.thinkSecs || Math.max(1, Math.round((Date.now() - t.t0) / 1000))) + ' s'; }
@@ -1037,7 +1038,7 @@
       { key: 'gatewayUrl', type: 'text', label: 'Gateway URL', help: 'Where the Premonition gateway listens. /chat/completions is added for you.', wide: true },
       { key: 'modelStartCmd', type: 'text', label: 'Start command', help: 'Runs when you click Turn on (or Off in the top bar). Empty = the assistant\'s serve.sh on this Mac, or the built-in model on Windows and on Macs without the assistant.', wide: true },
       { type: 'preset', label: 'Model server', help: 'One tap fills in the address and model names below. Built-in (LFM3) is the model Premonition runs itself (Windows, and Macs without the local assistant). llama.cpp server is a plain llama-server on this PC (it ignores the model name).' },
-      { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Auto picks for you, Think reasons longer (its first reply still comes within about 10 seconds), Fast answers quickest. Same as the top-bar pills.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
+      { key: 'model', type: 'modelseg', label: 'Default mode', help: 'Glim\'s own chat always reasons (its first reply still comes within about 10 seconds). This picks the mode for Motes: Auto picks for you, Think reasons longer, Fast answers quickest.', options: [['modelAuto', 'Auto'], ['modelMain', 'Think'], ['modelFast', 'Fast']] },
       { key: 'modelAuto', type: 'text', label: 'Auto model name', help: 'The model id sent for Auto. "default" works for llama.cpp.', ph: 'qwen36-auto' },
       { key: 'modelMain', type: 'text', label: 'Think model name', help: 'The model id sent for Think.', ph: 'qwen36' },
       { key: 'modelFast', type: 'text', label: 'Fast model name', help: 'The model id sent for Fast. Also used for the warm-up and the double-check.', ph: 'qwen36-fast' },
