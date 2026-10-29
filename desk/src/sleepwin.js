@@ -5,14 +5,15 @@
 //   * runs `python -m sleepmlx.worker` in chunks (the env contract SLEEPMODE_BUDGET_S / SLEEPMODE_OUT / SLEEPMODE_PRACTICE),
 //   * stops llama-server while asleep (RAM), and on wake converts the new LoRA adapter to GGUF (llama.cpp's convert_lora_to_gguf.py)
 //     and restarts llama-server with --lora; the previous adapter stays as the fallback,
-//   * checks the adapter inside the running server (python -m sleepmlx served-check: adapter on vs off on general questions and the
-//     night's held-out cards); one that does not load, does not fit this base (adapter.gguf.json) or scores worse is set aside.
+//   * checks Windows candidates in a separate private model server against general questions and that night's held-out cards;
+//     only confirmed, verified candidates are published for daytime use. Built-in Mac retains its existing served-check path.
 // Everything outside the process (spawn, the model, the installer, the battery) is injected so the logic is unit-testable.
 const fs = require('fs');
 const path = require('path');
 const { spawn: realSpawn } = require('child_process');
 const { Sleep } = require('./sleep');
 const C = require('./runtime/constants');
+const Candidates = require('./sleep-candidates');
 
 const CK = require('./checkin');
 // 15 minutes: a check-in can be at most about this late (it happens at a chunk boundary)
@@ -104,15 +105,23 @@ class WinSleep extends Sleep {
     this.onBattery = o.onBattery || (() => false);
     this.parent = o.sleepmlxParent;
     this.diaryDir = path.join(o.root, 'diary', 'raw');
-    this.active = false; this.wakeReq = false; this.child = null; this.lastQuiz = null; this.since = null; this.phase = '';
+    this.active = false; this.wakeReq = false; this.wakeCounter = 0; this.privateAbort = null; this.privateBlocked = false; this.child = null; this.lastQuiz = null; this.since = null; this.phase = '';
     this.adapterGguf = path.join(this.home, 'adapter.gguf'); this.adapterPrev = path.join(this.home, 'adapter.prev.gguf');
     this.adapterRejected = path.join(this.home, 'adapter.rejected.gguf');
     this.platform = o.platform || process.platform;
   }
   python() { return this.installer.pythonExe(); }
+  privateChecker() { return this.o.privateChecker || require('./private-check').getPrivateCheck(this.root); }
   available() { return { ok: true, app: this.home, python: this.python(), reason: '' }; }
   // the adapter to load when the app starts the model (the newest converted one, if any)
-  currentLora() { return loraFits(this.adapterGguf) ? this.adapterGguf : (loraFits(this.adapterPrev) ? this.adapterPrev : ''); }
+  currentLora() {
+    if (this.platform === 'win32') {
+      const st = this.installer.state();
+      const base = Candidates.baseIdentity(this.root, st.hfDir);
+      return Candidates.accepted(this.home, base);
+    }
+    return loraFits(this.adapterGguf) ? this.adapterGguf : (loraFits(this.adapterPrev) ? this.adapterPrev : '');
+  }
   needsRuntime() { return !this.installer.installed(); }
 
   status() {
@@ -144,7 +153,13 @@ class WinSleep extends Sleep {
     return { ok: true, pid: 0 };
   }
   wake() {
+    this.wakeCounter++;
     this.wakeReq = true;
+    if (this.privateAbort) this.privateAbort.abort();
+    if (this.privateBlocked) {
+      this.privateBlocked = false;
+      Promise.resolve().then(() => this.privateChecker().ensureIdle()).then((r) => { if (r && r.ok && r.processStopped) return this._finishWindows(true); this.privateBlocked = true; }).catch(() => { this.privateBlocked = true; });
+    }
     if (this.backoffDone) this.backoffDone();   // waiting a minute before the next chunk: wake now, not after the wait
     if (this.ckAbort) { try { this.ckAbort.abort(); } catch (e) { /* done */ } } // a check-in in progress stops now
     // the worker stops cleanly (checkpoint, exit 0) when this flag file appears; if it ignores it, it is killed after a while
@@ -177,6 +192,8 @@ class WinSleep extends Sleep {
 
   async _run() {
     try {
+      const idle = await this.privateChecker().ensureIdle();
+      if (!idle || !idle.ok || !idle.processStopped) throw new Error(idle && idle.error || 'A private adapter check has not stopped.');
       if (this.hooks.pauseModel) {
         const paused = await this.hooks.pauseModel();
         if (paused && paused.ok === false) throw new Error(paused.error || 'The chat model did not stop.');
@@ -208,7 +225,7 @@ class WinSleep extends Sleep {
     const d = CK.checkinDue({ enabled: st.sleepPauseGlims !== false && !!this.hooks.checkin, now: Date.now(), sleepStart: this.since, lastAt: this.lastCheckinAt, periodMin: st.sleepCheckinMins, wakeReq: this.wakeReq, onBattery: this.onBattery(), onlyPlugged: st.sleepOnlyPlugged === true });
     if (!d.due) return;
     this.lastCheckinAt = Date.now();
-    const lora = CK.checkinAdapter(this.home, fs.existsSync, (f) => loraFits(f));
+    const lora = this.platform === 'win32' ? this.currentLora() : CK.checkinAdapter(this.home, fs.existsSync, (f) => loraFits(f));
     this.phase = 'checking in';
     this._event({ kind: 'checkin_start', adapter: lora ? path.basename(lora) : 'base' });
     const ac = new AbortController(); this.ckAbort = ac;
@@ -286,9 +303,115 @@ class WinSleep extends Sleep {
     try { moveWithSidecar(lora, to); } catch (e) { /* the event says what happened */ }
   }
 
+  // Windows keeps checked adapters separate from candidates. A conversion or an
+  // inconclusive served check never replaces the adapter used by chat.
+  async _stageWindowsCandidate() {
+    const st = this.installer.state(), n = this.night;
+    if (!n || n.status !== 'done' || n.reverted || !n.date || !Number.isInteger(n.day) || !Number.isSafeInteger(n.night) || n.night < 1 || !st.convert || !st.hfDir) return;
+    const state = Candidates.read(path.join(this.home, 'state.json'));
+    const last = state && state.last_night;
+    if (!last || !last.id || last.date !== n.date || last.reverted || state.nights !== n.night) return;
+    if (!Candidates.orderKey({ date: n.date, night_number: n.night, created: new Date().toISOString(), id: '0'.repeat(64) })) return;
+    const base = Candidates.baseIdentity(this.root, st.hfDir);
+    const held = Candidates.heldSnapshot(path.join(this.home, 'cards.jsonl'), n.day);
+    if (!base || !held.length) return;
+    const committed = committedAdapter(this.home), source = path.join(committed.dir, 'adapter_model.safetensors');
+    if (!fs.existsSync(source)) return;
+    const sourceHash = Candidates.fileHash(source);
+    const heldText = held.map((row) => JSON.stringify(row)).join('\n') + '\n';
+    const id = Candidates.hash(JSON.stringify({ generation: committed.generation, night_id: last.id, base, sourceHash, held: Candidates.hash(heldText) }));
+    const root = path.join(this.home, 'adapter-candidates'), dir = path.join(root, id);
+    fs.mkdirSync(root, { recursive: true });
+    if (fs.lstatSync(root).isSymbolicLink()) throw new Error('Invalid candidate folder');
+    if (fs.existsSync(dir)) return;
+    const temp = path.join(root, '.staging-' + require('crypto').randomUUID());
+    fs.mkdirSync(temp);
+    try {
+      const candidate = path.join(temp, 'adapter.gguf');
+      const cmd = convertCommand({ python: this.python(), convertScript: st.convert, adapterDir: committed.dir, hfDir: st.hfDir, outFile: candidate });
+      this.phase = 'converting';
+      await (this.o.run || require('./runtime/sleepinstall').defaultRun)(cmd.cmd, cmd.args, { env: { PYTHONUTF8: '1', HF_HUB_OFFLINE: '1' } });
+      if (!fs.statSync(candidate).isFile() || !fs.statSync(candidate).size || fs.lstatSync(candidate).isSymbolicLink()) throw new Error('The converter wrote no adapter');
+      const current = committedAdapter(this.home), latestNight = Candidates.read(path.join(this.home, 'state.json'));
+      if (current.dir !== committed.dir || current.generation !== committed.generation || !latestNight || !latestNight.last_night || latestNight.last_night.id !== last.id || latestNight.nights !== n.night || Candidates.fileHash(source) !== sourceHash || JSON.stringify(Candidates.baseIdentity(this.root, st.hfDir)) !== JSON.stringify(base)) throw new Error('Model or night identity changed during conversion');
+      fs.writeFileSync(path.join(temp, 'held.jsonl'), heldText, { flag: 'wx' });
+      Candidates.atomic(path.join(temp, 'record.json'), { version: 1, id, status: 'pending', base, generation: committed.generation, night_id: last.id, date: n.date, night_number: n.night, day: n.day, source_sha256: sourceHash, adapter_sha256: Candidates.fileHash(candidate), held_sha256: Candidates.hash(heldText), held_count: held.length, created: new Date().toISOString() });
+      fs.renameSync(temp, dir); this.converted = true; this._event({ kind: 'converted_candidate', id });
+    } finally { if (fs.existsSync(temp)) fs.rmSync(temp, { recursive: true, force: true }); }
+  }
+
+  async _finishWindows(skipCheck = false) {
+    const wakeAtFinish = this.wakeCounter;
+    let checker, idle;
+    try { checker = this.privateChecker(); idle = await checker.ensureIdle(); }
+    catch (e) { idle = { ok: false, error: String(e.message || e) }; }
+    if (!idle || !idle.ok || !idle.processStopped) {
+      this.privateBlocked = true; this.exit = { error: idle && idle.error || 'A private adapter check has not stopped.' };
+      this.phase = 'stopping private check'; return;
+    }
+    try { await this._stageWindowsCandidate(); } catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); }
+    this.phase = 'waking';
+    const tried = [];
+    try {
+      const st = this.installer.state();
+      const identity = Candidates.baseIdentity(this.root, st.hfDir);
+      const candidate = Candidates.pending(this.home, identity);
+      if (candidate && !skipCheck && this.wakeCounter === wakeAtFinish) {
+        const wakeAtCheck = this.wakeCounter;
+        let verdict = candidate.rec.served;
+        if (candidate.rec.status !== 'accepted') {
+          const runtime = Candidates.read(path.join(this.root, 'runtime', 'state.json')) || {};
+          const model = runtime.model && runtime.model.file;
+          const flavors = this.platform === 'darwin' ? ['metal'] : ['cpu', 'vulkan'];
+          let engine = flavors.map(f => runtime.llama && runtime.llama[f] && { ...runtime.llama[f], flavor: f }).find(e => e && e.exe && fs.existsSync(e.exe));
+          const bundled = process.resourcesPath && path.join(process.resourcesPath, 'llama', 'llama-server.exe');
+          if (!engine && this.platform === 'win32' && bundled && fs.existsSync(bundled)) engine = { exe: bundled, flavor: 'cpu' };
+          this.phase = 'checking the adapter';
+          this.privateAbort = new AbortController();
+          try {
+            verdict = engine && model ? await checker.check({ exe: engine.exe, model, adapter: candidate.adapter, cards: candidate.held,
+              python: this.python(), sleepmlxParent: this.parent, expectedAdapterSha256: candidate.rec.adapter_sha256,
+              expectedHeldSha256: candidate.rec.held_sha256, flavor: engine.flavor, signal: this.privateAbort.signal }) : { ok: null, processStopped: true, reasons: ['private model engine is unavailable'] };
+          } catch (e) { verdict = { ok: null, processStopped: false, error: String(e.message || e) }; }
+          this.privateAbort = null;
+          if (!verdict || verdict.processStopped !== true) {
+            this.privateBlocked = true; this.exit = { error: verdict && verdict.error || 'A private adapter check has not stopped.' };
+            this.phase = 'stopping private check'; return;
+          }
+          if (this.wakeCounter !== wakeAtCheck) verdict = { ok: null, reasons: ['checking was interrupted'] };
+          const fresh = Candidates.inspect(this.home, candidate.id, Candidates.baseIdentity(this.root, st.hfDir));
+          if (fresh) {
+            const accepted = Candidates.validVerdict(verdict, fresh.rec.held_count);
+            const rejected = verdict && verdict.ok === false && Candidates.validMetrics(verdict, fresh.rec.held_count);
+            fresh.rec.status = accepted ? 'accepted' : rejected ? 'rejected' : 'pending';
+            fresh.rec.served = verdict;
+            Candidates.atomic(path.join(fresh.dir, 'record.json'), fresh.rec);
+            const promoted = accepted && Candidates.promote(this.home, fresh);
+            tried.push({ lora: candidate.id.slice(0, 8), why: promoted ? 'passed its check' : accepted ? 'passed its check but its night ordering is unclear' : rejected ? 'did not pass its check' : 'check is pending' });
+          }
+        } else if (Candidates.validVerdict(verdict, candidate.rec.held_count)) {
+          Candidates.promote(this.home, candidate);
+        }
+      }
+      const chosen = this.currentLora();
+      const up = this.hooks.resumeModel ? await this.hooks.resumeModel(chosen) : { ok: false };
+      this.loaded = { lora: chosen ? path.basename(chosen) : '', tried, ok: !!(up && up.ok), error: up && up.error || '' };
+      if (up && up.loraFailed) {
+        const base = await this.hooks.resumeModel('');
+        this.loaded = { lora: '', tried, ok: !!(base && base.ok), error: base && base.error || '' };
+      }
+      this._event({ kind: 'loaded', lora: this.loaded.lora || 'plain model', tried });
+    } catch (e) {
+      this.exit = this.exit || { error: String(e.message || e) };
+      try { const chosen = this.currentLora(); const up = this.hooks.resumeModel ? await this.hooks.resumeModel(chosen) : null; this.loaded = { lora: chosen ? path.basename(chosen) : '', tried, ok: !!(up && up.ok) }; } catch (_) {}
+    }
+    this._writeSummary(); this.active = false; this.phase = '';
+  }
+
   async _finish() {
     try { fs.rmSync(path.join(this.home, 'ASSISTANT_RUNNING'), { force: true }); } catch (e) { /* none */ }
     this._writeStatus();
+    if (this.platform === 'win32') return this._finishWindows();
     try { await this._convert(); } catch (e) { /* the old adapter stays */ }
     this.phase = 'waking';
     try {

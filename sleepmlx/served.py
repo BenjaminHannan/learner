@@ -19,6 +19,7 @@ import socket
 import subprocess
 import time
 import urllib.request
+import urllib.parse
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence
 
@@ -174,11 +175,60 @@ def latest_held(cards_path) -> List[dict]:
     return [r for r in rows if int(r.get("night") or 0) == last][:MAX_HELD]
 
 
+def _private_context(url):
+    """Private Node-owned checks never fall back to anonymous/public requests."""
+    key = os.environ.get("SLEEPMLX_SERVED_PRIVATE_API_KEY", "")
+    alias = os.environ.get("SLEEPMLX_SERVED_PRIVATE_ALIAS", "")
+    if not key and not alias:
+        return None
+    parsed = urllib.parse.urlparse(url)
+    if (not key or not alias or "\r" in key or "\n" in key
+            or parsed.scheme != "http" or parsed.hostname != "127.0.0.1"
+            or parsed.username or parsed.password or parsed.path not in ("", "/")
+            or parsed.query or parsed.fragment or not parsed.port):
+        raise ValueError("invalid private served-check credentials or loopback endpoint")
+    return key, alias
+
+
+class _NoPrivateRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        raise ValueError("private served-check redirects are not allowed")
+
+
+def _http_request(url, route, data=None, timeout=60.0):
+    """One auth path for every private HTTP route, including adapter controls."""
+    private = _private_context(url)
+    headers = {"Content-Type": "application/json"}
+    if private:
+        headers["Authorization"] = "Bearer " + private[0]
+    request = urllib.request.Request(url.rstrip("/") + route, data=data, headers=headers)
+    if private:
+        # Ignore environment proxies for this loopback capability, and never
+        # forward its key through an HTTP redirect to another listener.
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoPrivateRedirect())
+        return opener.open(request, timeout=timeout)
+    return urllib.request.urlopen(request, timeout=timeout)
+
+
+def _verify_private_alias(url, timeout):
+    private = _private_context(url)
+    if private:
+        with _http_request(url, "/v1/models", timeout=min(timeout, 5.0)) as response:
+            models = json.load(response)
+        rows = models.get("data") if isinstance(models, dict) else None
+        if not isinstance(rows, list) or not any(isinstance(row, dict) and row.get("id") == private[1] for row in rows):
+            raise ValueError("private served-check model alias does not match its owned job")
+    return private
+
+
 def ask(url: str, system: str, question: str, scale: float, max_tokens: int = 24, timeout: float = 60.0) -> str:
+    private = _verify_private_alias(url, timeout)
     body = {"messages": [{"role": "system", "content": system}, {"role": "user", "content": question}], "max_tokens": max_tokens,
             "temperature": 0, "lora": [{"id": 0, "scale": scale}], "chat_template_kwargs": {"enable_thinking": False}}
-    req = urllib.request.Request(url.rstrip("/") + "/v1/chat/completions", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-    msg = json.loads(urllib.request.urlopen(req, timeout=timeout).read())["choices"][0]["message"]
+    if private:
+        body["model"] = private[1]
+    with _http_request(url, "/v1/chat/completions", data=json.dumps(body).encode(), timeout=timeout) as response:
+        msg = json.load(response)["choices"][0]["message"]
     return msg.get("content") or ""
 
 
@@ -215,7 +265,8 @@ def free_port() -> int:
 
 def _healthy(url: str) -> bool:
     try:
-        return urllib.request.urlopen(url + "/health", timeout=2).status == 200
+        with _http_request(url, "/health", timeout=2) as response:
+            return response.status == 200
     except Exception:
         return False
 
