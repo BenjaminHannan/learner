@@ -6,9 +6,10 @@ Update now downloads the zip named in latest.json, checks its sha256, unpacks it
 
 ## To publish an update
 
-1. Bump `version` in `desk/package.json` (x.y.z; the app updates only when the number goes up).
-2. Build the zips: the Mac zip on a Mac (`build-mac.sh`, so it has `deskhelper` and the speech files), the Windows zip with `build-win.sh`. Put them in `desk/dist/` (they are Git LFS files).
-3. `cd desk && node scripts/release-manifest.js "One plain sentence about what changed."` writes `dist/latest.json` with the sha256 of each zip.
-4. Commit the zips and `latest.json` and merge to main. Everyone sees the bar within 5 minutes, or at once after Check for updates.
+1. Bump `version` in `desk/package.json` and `desk/package-lock.json` (x.y.z; the app updates only when the number goes up).
+2. Build the zips: the Mac zip on a Mac (`build-mac.sh`, so it has `deskhelper` and the speech files), the Windows zip with `build-win.sh`. Put the real zips in `desk/dist/` (they are Git LFS files).
+3. Verify each ZIP’s package version and CRC with the build validation, then commit the package metadata before or with the zips. Keep their real contents in the working tree: the manifest command checks each present zip against the Git blob or LFS pointer at the current commit and requires the local package version to match that commit. It refuses uncommitted, mismatched or pointer-only files, and requires at least one zip.
+4. `cd desk && node scripts/release-manifest.js "One plain sentence about what changed."` writes `dist/latest.json` with each zip's SHA-256 and a URL pinned to that artifact commit.
+5. Commit `latest.json` separately and merge both commits to main, with the LFS objects available on GitHub. Current builds check within 5 minutes, or at once after Check for updates. Installing still requires clicking Update now.
 
 Copies installed before this feature existed (Emma's and Jacob's first build) have no button: they need one last manual install (`dist/install-mac.sh` on a Mac, the Windows zip on Windows). After that, updates come from the button.
