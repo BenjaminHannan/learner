@@ -34,7 +34,9 @@ class DreamCheckTests(unittest.TestCase):
             env.close()
 
     def test_missing_checker_is_reported_not_fatal(self):
-        r = dreamhook.check([{"q": "Q?", "a": "A"}], None, "/nowhere", 100, env={"SLEEPMLX_DREAMCHECK_PATH": "/nonexistent"})
+        from unittest import mock
+        with mock.patch.dict("sys.modules", {"sleepmode.dreamcheck": None, "sleepmode.tools": None}):   # sleepmode is on main now: hide it
+            r = dreamhook.check([{"q": "Q?", "a": "A"}], None, "/nowhere", 100, env={"SLEEPMLX_DREAMCHECK_PATH": "/nonexistent"})
         self.assertFalse(r["stats"]["available"])
         self.assertEqual(list(r["verdicts"].values()), ["UNCHECKED"])
 
