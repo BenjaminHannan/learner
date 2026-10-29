@@ -415,21 +415,29 @@ test('quiet run: NO_UPDATE keeps the last report, flags quiet, and the prompt on
   assert.ok(!/NO_UPDATE/.test(helperText({ name: 'o', task: 't', lastReport: 'r' })), 'one-time Glims never get it');
 });
 
-test('failure: status failed, one quick retry for a recurring Glim, reset on success, survives load()', async () => {
+test('failure: retried at 5, 15 and 45 min without a notice, then reported; reset on success; survives load()', async () => {
   const flags = [];
   const { m, runs, clock, store, dir } = mkManager({ onFinish: (h, s, p, f) => flags.push({ s, f }) });
   m.add({ name: 'f', task: 't', every: '2h' });
-  runs[0].done({ error: 'fetch failed' }); await until(() => flags.length === 1);
   const h = m.find('f');
-  assert.strictEqual(h.status, 'failed'); assert.strictEqual(h.fails, 1); assert.strictEqual(h.lastError, 'fetch failed');
-  assert.strictEqual(h.next, clock.t + 5 * 60000); assert.deepStrictEqual(flags[0], { s: 'Failed: fetch failed', f: { quiet: false, failed: true } });
-  clock.t += 5 * 60000; m.tick(); assert.strictEqual(runs.length, 2, 'failed does not block a due run');
-  runs[1].done({ error: 'again' }); await until(() => flags.length === 2);
-  assert.strictEqual(h.fails, 2); assert.ok(h.next > clock.t + 3600000, 'no second early retry');
+  let k = 0;
+  for (const wait of [5, 15, 45]) {
+    runs[k].done({ error: 'fetch failed' }); await until(() => h.status === 'failed' && h.fails === k + 1);
+    assert.strictEqual(h.next, clock.t + wait * 60000); assert.strictEqual(flags.length, 0, 'no notice while it will retry');
+    clock.t += wait * 60000; m.tick(); k++; assert.strictEqual(runs.length, k + 1, 'failed does not block a due run');
+  }
+  runs[k].done({ error: 'again' }); await until(() => flags.length === 1);
+  assert.strictEqual(h.fails, 4); assert.ok(h.next > clock.t + 3600000, 'gave up until its next slot');
+  assert.deepStrictEqual(flags[0], { s: 'Failed: again', f: { quiet: false, failed: true } });
   const m2 = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, runner: async () => ({}) });
   assert.strictEqual(m2.find('f').status, 'failed');
-  clock.t += 2 * 3600000; m.tick(); runs[2].done({ report: 'fine' }); await until(() => flags.length === 3);
+  clock.t += 2 * 3600000; m.tick(); runs[k + 1].done({ report: 'fine' }); await until(() => flags.length === 2);
   assert.strictEqual(h.status, 'idle'); assert.strictEqual(h.fails, 0); assert.strictEqual(h.lastError, null);
+  // a one-time job retries when the model was briefly away, not on other errors
+  m.add({ name: 'o1', task: 'a' }); runs[k + 2].done({ error: 'fetch failed' }); await until(() => m.find('o1').fails === 1);
+  assert.ok(m.find('o1').next > clock.t); assert.strictEqual(flags.length, 2);
+  m.add({ name: 'o2', task: 'b' }); runs[k + 3].done({ error: 'tool exploded' }); await until(() => flags.length === 3);
+  assert.strictEqual(m.find('o2').next, null);
 });
 
 test('batchNotice: one, several, and several with a failure', () => {
@@ -566,4 +574,32 @@ test('dated reminder: at "YYYY-MM-DD HH:MM" runs once at that time, a past time 
   assert.strictEqual(runs.length, 1);
   runs[0].done(); await until(() => m.find('Call dentist').status === 'idle');
   assert.strictEqual(m.find('Call dentist').next, null, 'does not repeat');
+});
+
+test('dated reminder: cut off by a quit it runs once more; failed it does not re-run at every launch; tool says it is not running now', async () => {
+  const { m, runs, clock, store, dir } = mkManager();
+  const p = (n) => String(n).padStart(2, '0'), d = new Date(clock.t + 3600000);
+  const at = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  const v = agentTools(m, { isHelper: false }).agent_start({ name: 'dentist', task: 'remind Ben about the dentist', at }, { thread: { id: 'tp' } });
+  assert.match(v.text, /NOT running now/);
+  clock.t += 3600000 + 1000; m.tick(); assert.strictEqual(runs.length, 1);
+  m.save();   // the app quits mid-run
+  const m2 = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, runner: async () => ({}) });
+  assert.ok(m2.find('dentist').next > clock.t, 'resumes once after launch');
+  runs[0].done({ error: 'tool exploded' }); await until(() => m.find('dentist').status === 'failed');
+  assert.strictEqual(m.find('dentist').next, null);
+  const m3 = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, runner: async () => ({}) });
+  assert.strictEqual(m3.find('dentist').next, null, 'a failed reminder is not re-run at every launch');
+  assert.throws(() => parseSchedule({ at: '2026-02-30 09:00' }), /at must look like/);
+});
+
+test('standing Mote: NO_UPDATE on the first run is quiet and never kept as the last report; a rejected update changes nothing', async () => {
+  const flags = [];
+  const { m, runs } = mkManager({ onFinish: (h, s, p, f) => flags.push(f) });
+  m.add({ name: 'planner', task: 'plan the week', every: '1h' });
+  runs[0].done({ report: 'NO_UPDATE' }); await until(() => flags.length === 1);
+  assert.strictEqual(flags[0].quiet, true);
+  assert.ok(!m.find('planner').lastReport);
+  assert.throws(() => m.update('planner', { name: 'renamed', task: '   ' }), /task cannot be empty/);
+  assert.strictEqual(m.find('planner').name, 'planner');
 });

@@ -147,6 +147,16 @@ test('call: the helper dying ends the call with an error', () => {
   assert.ok(err && err.fatal && /stopped/.test(err.message));
 });
 
+test('call: a last line printed just before the helper exits is still read (mic-denied guidance is not lost)', () => {
+  const { h, call, events } = mk(async () => {});
+  h.stdout.readableEnded = false;
+  h.emit('exit', 1);
+  assert.notStrictEqual(call.state, 'ended');
+  h.say({ error: 'mic-denied' }); h.emit('close', 1);
+  const err = events.find((e) => e.type === 'error');
+  assert.ok(err && !/before it was ready/.test(err.message), err && err.message);
+});
+
 test('call: permission errors explain where to switch it on', () => {
   const { h, call, events } = mk(async () => {});
   h.say({ error: 'mic-denied' });

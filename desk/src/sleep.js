@@ -126,7 +126,8 @@ class Sleep {
     if (!this.psCache) this.psCache = new Map();
     if (this.psCache.has(pid)) return this.psCache.get(pid);
     let ok;
-    try { ok = /sleepmode/i.test(String((this.o.psCommand || ((p) => execFileSync('ps', ['-p', String(p), '-o', 'command='], { encoding: 'utf8', timeout: 3000 })))(pid))); } catch (e) { ok = false; }
+    // a ps that failed or timed out (the trainer saturating the Mac) is not remembered: asked again on the next poll
+    try { ok = /sleepmode/i.test(String((this.o.psCommand || ((p) => execFileSync('ps', ['-p', String(p), '-o', 'command='], { encoding: 'utf8', timeout: 3000 })))(pid))); } catch (e) { return false; }
     if (this.psCache.size > 50) this.psCache.clear();
     this.psCache.set(pid, ok);
     return ok;
@@ -138,7 +139,9 @@ class Sleep {
     const marker = isFile(this.p.sleeping);
     const first = String(readText(this.p.sleeping)).trim().split(/\s+/)[0] || '';
     const pid = /^\d+$/.test(first) ? parseInt(first, 10) : 0;
-    const alive = pidAlive(pid) && this.isSleepmodePid(pid);
+    const live = pidAlive(pid);
+    if (!live && this.psCache) this.psCache.delete(pid);   // the pid is gone: a later process reusing it is asked again
+    const alive = live && this.isSleepmodePid(pid);
     const since = j.since ? Date.parse(j.since) : NaN;
     const sleeping = marker && alive;
     const hours = typeof j.hours_slept === 'number' ? j.hours_slept : (Number.isFinite(since) && sleeping ? (Date.now() - since) / 3600000 : 0);

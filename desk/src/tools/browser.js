@@ -156,8 +156,10 @@ function wireSession(ses) {
   if (wired.has(ses)) return;
   wired.add(ses);
   const hit = (d, fn) => { const b = registry.get(d.webContentsId); if (b) fn(b); };
-  ses.webRequest.onBeforeRequest((d, cb) => { hit(d, (b) => { b.inflight++; b.lastActivity = Date.now(); }); cb({}); });
-  const done = (d) => hit(d, (b) => { b.inflight = Math.max(0, b.inflight - 1); b.lastActivity = Date.now(); });
+  // Requests in flight, by id: a redirect fires onBeforeRequest again for the same request (a counter went up for good and every later
+  // step waited the full 8 s), and a WebSocket stays open as long as the page does, so it never counts.
+  ses.webRequest.onBeforeRequest((d, cb) => { hit(d, (b) => { if (d.resourceType !== 'webSocket') b.reqs.add(d.id); b.lastActivity = Date.now(); }); cb({}); });
+  const done = (d) => hit(d, (b) => { b.reqs.delete(d.id); b.lastActivity = Date.now(); });
   ses.webRequest.onCompleted(done);
   ses.webRequest.onErrorOccurred(done);
 }
@@ -176,7 +178,7 @@ function isAuthPopup(url) {
 class Browser {
   constructor({ view, session, onState }) {
     this.onState = onState || (() => {});
-    this.inflight = 0;
+    this.reqs = new Set();
     this.lastActivity = Date.now();
     this.readCache = { url: '', pages: [] };
     this.lastSnap = null; // structured copy of the latest snapshot: the baseline for the next "After" note
@@ -192,7 +194,8 @@ class Browser {
     // this browser (Ben Oct 28: "the browser isn't opening now"). Any other popup still opens in place.
     wc.setWindowOpenHandler(({ url }) => {
       if (isAuthPopup(url)) return { action: 'allow', overrideBrowserWindowOptions: { width: 520, height: 680, title: 'Sign in', autoHideMenuBar: true, backgroundColor: '#ffffff' } };
-      setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); });
+      // web pages only: a page's window.open('file:///…') must not turn a local file into the page the model reads
+      if (/^https?:/i.test(url)) setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); });
       return { action: 'deny' };
     });
     const push = () => { if (!wc.isDestroyed()) this.onState(this.state()); };
@@ -251,7 +254,7 @@ class Browser {
     // then network quiet for ~500 ms
     await sleep(150);
     while (Date.now() < end) {
-      if (this.inflight <= 0 && Date.now() - this.lastActivity > 500 && !this.wc.isLoading()) break;
+      if (this.reqs.size === 0 && Date.now() - this.lastActivity > 500 && !this.wc.isLoading()) break;
       await sleep(100);
     }
   }

@@ -54,7 +54,7 @@ function parseLine(line, isDone) {
 function parse(text) {
   const out = { active: [], done: [] };
   let inDone = false;
-  for (const line of String(text || '').split('\n')) {
+  for (const line of String(text || '').split(/\r?\n/)) {   // a file saved with Windows line endings must still parse (else the next write would drop every item)
     if (/^##\s+done\b/i.test(line)) { inDone = true; continue; }
     if (/^##\s+/.test(line)) { inDone = false; continue; }
     const it = parseLine(line, inDone);
@@ -135,7 +135,7 @@ function createTracking(dir, opts) {
     try { return parse(fs.readFileSync(file, 'utf8')); } catch (e) { return { active: [], done: [] }; }
   }
   function persist(st) {
-    st = expire({ active: st.active.slice(0, MAX_ACTIVE), done: st.done }, today());
+    st = expire({ active: st.active, done: st.done }, today());   // addItem caps new items; done/remove must not silently cut a longer hand-edited list
     fs.mkdirSync(dir, { recursive: true });
     const tmp = file + '.tmp';
     fs.writeFileSync(tmp, render(st));

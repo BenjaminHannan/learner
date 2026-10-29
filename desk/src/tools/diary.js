@@ -34,11 +34,13 @@ class Diary {
       if (!fs.existsSync(diary)) return reject(new Error('diary_mcp.py not found at ' + diary));
       let p;
       try { p = spawn(py, [diary], { stdio: ['pipe', 'pipe', 'ignore'] }); } catch (e) { return reject(e); }
-      this.proc = p;
+      this.proc = p; this.buf = '';   // a dead process's half line must not be glued onto this one's first reply
       p.stdin.on('error', () => { /* python missing or exited: the 'error'/'exit' handlers report it once */ });
-      p.on('error', (e) => { this._fail(e); reject(e); });
-      p.on('exit', () => { this._fail(new Error('diary process exited')); });
+      // an old process that was stopped can exit after a new one started: only the current process may fail the pending calls
+      p.on('error', (e) => { if (this.proc === p) this._fail(e); reject(e); });
+      p.on('exit', () => { if (this.proc === p) this._fail(new Error('diary process exited')); });
       p.stdout.on('data', (d) => {
+        if (this.proc !== p) return;
         this.buf += d;
         let i;
         while ((i = this.buf.indexOf('\n')) >= 0) {
@@ -92,7 +94,7 @@ class Diary {
     }
   }
 
-  stop() { try { this.proc && this.proc.kill(); } catch (e) { /* ignore */ } this.proc = null; }
+  stop() { const p = this.proc; if (p) this._fail(new Error('diary stopped')); try { p && p.kill(); } catch (e) { /* ignore */ } }   // its calls fail now, not after their timeout
 }
 
 module.exports = { Diary, resolvePaths };

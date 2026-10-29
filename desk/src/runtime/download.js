@@ -52,7 +52,7 @@ async function downloadFile(o) {
         const { value, done: fin } = await reader.read();
         if (fin) break;
         if (outErr) throw outErr;
-        await new Promise((res, rej) => { out.once('error', rej); out.write(value, (e) => (e ? rej(e) : res())); });
+        await new Promise((res, rej) => { out.write(value, (e) => (e ? rej(e) : res())); });   // the write callback carries the error: no 'error' listener per chunk (16k of them on a 1 GB file)
         done += value.length;
         if (o.onProgress) o.onProgress({ done, total });
       }

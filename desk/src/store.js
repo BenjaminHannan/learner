@@ -149,7 +149,7 @@ class Store {
     const next = { ...cur, ...sanitize(patch) };
     const tmp = this.settingsFile + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(next, null, 2));
-    try { if (this._readSettings()) fs.copyFileSync(this.settingsFile, this.settingsFile + '.bak'); } catch (e) { /* no good copy yet */ }
+    try { JSON.parse(fs.readFileSync(this.settingsFile, 'utf8')); fs.copyFileSync(this.settingsFile, this.settingsFile + '.bak'); } catch (e) { /* the main file is missing or broken: keep the good .bak */ }
     fs.renameSync(tmp, this.settingsFile);
     return next;
   }

@@ -89,6 +89,11 @@ class TriageTest(TmpCase):
         self.assertNotIsInstance(cm.exception, PermissionError)
         self.assertIn("timed out", str(cm.exception))
 
+    def test_scripts_skip_apps_that_are_not_open(self):
+        self.assertIn('if application "Mail" is not running then return ""', checkin.MAIL_SCRIPT)
+        self.assertIn('if application "Calendar" is not running then return ""', checkin.CAL_SCRIPT)
+        self.assertLess(checkin.MAIL_SCRIPT.index("is not running"), checkin.MAIL_SCRIPT.index('tell application "Mail"'))
+
     def test_imap_unconfigured_raises(self):
         with self.assertRaises(RuntimeError):
             checkin.ImapScanner().scan(self.cfg)

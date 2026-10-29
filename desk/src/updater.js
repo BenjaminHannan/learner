@@ -116,22 +116,31 @@ class Updater {
     const total = Number(r.headers.get('content-length')) || asset.size || 0;
     const hash = crypto.createHash('sha256');
     const out = fs.createWriteStream(dest);
+    // a write error (disk full) with no listener would crash the app; a dropped connection must not leave the file open
+    let outErr = null;
+    out.on('error', (e) => { outErr = e; });
     let got = 0, last = 0;
     const reader = r.body.getReader();
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      hash.update(value); got += value.length;
-      if (!out.write(value)) await new Promise((res) => out.once('drain', res));
-      if (total && Date.now() - last > 300) { last = Date.now(); this.set({ phase: 'downloading', pct: Math.min(99, Math.round(100 * got / total)) }); }
-    }
-    await new Promise((res, rej) => out.end((e) => (e ? rej(e) : res())));
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (outErr) throw outErr;
+        hash.update(value); got += value.length;
+        if (!out.write(value)) await new Promise((res) => { const go = () => { out.off('drain', go); out.off('error', go); res(); }; out.on('drain', go); out.on('error', go); });
+        if (total && Date.now() - last > 300) { last = Date.now(); this.set({ phase: 'downloading', pct: Math.min(99, Math.round(100 * got / total)) }); }
+      }
+      if (outErr) throw outErr;
+      await new Promise((res, rej) => out.end((e) => (e ? rej(e) : res())));
+      if (outErr) throw outErr;
+    } catch (e) { out.destroy(); throw e; }
     if (hash.digest('hex').toLowerCase() !== String(asset.sha256).toLowerCase()) throw new Error('The download was damaged (its checksum does not match). Try again.');
   }
   unzip(zip, dir) {
     return new Promise((resolve, reject) => {
       const run = this.o.execFile || execFile;
-      const [cmd, args] = this.o.platform === 'darwin' ? ['/usr/bin/ditto', ['-x', '-k', zip, dir]] : ['tar', ['-xf', zip, '-C', dir]];
+      // Windows: the system tar by full path (a Git/MSYS tar first on PATH cannot read zips, and a planted tar.exe must not run)
+      const [cmd, args] = this.o.platform === 'darwin' ? ['/usr/bin/ditto', ['-x', '-k', zip, dir]] : [require('./runtime/install').tarExe('win32'), ['-xf', zip, '-C', dir]];
       run(cmd, args, { timeout: 300000 }, (e) => (e ? reject(new Error('The download could not be unpacked.')) : resolve()));
     });
   }
@@ -150,13 +159,14 @@ class Updater {
     const loc = this.location();
     this.busy = true; this.set({ phase: 'downloading', pct: 0, error: '' });
     const work = fs.mkdtempSync(path.join(this.o.tmp || os.tmpdir(), 'premonition-update-'));
+    let stage = null;
     try {
       const zip = path.join(work, 'update.zip');
       await this.download(asset, zip);
       this.set({ phase: 'installing', pct: 100 });
       const mac = this.o.platform === 'darwin';
       // unpack inside the install folder on a Mac so the final move is a plain rename; anywhere in the temp folder on Windows
-      const stage = mac ? fs.mkdtempSync(path.join(loc.dir, '.premonition-update-')) : path.join(work, 'new');
+      stage = mac ? fs.mkdtempSync(path.join(loc.dir, '.premonition-update-')) : path.join(work, 'new');
       fs.mkdirSync(stage, { recursive: true });
       await this.unzip(zip, stage);
       let script, file;
@@ -178,6 +188,7 @@ class Updater {
       setTimeout(() => { try { this.o.quit && this.o.quit(); } catch (e) { /* ignore */ } }, 400);
     } catch (e) {
       try { fs.rmSync(work, { recursive: true, force: true }); } catch (e2) { /* ignore */ }
+      if (stage && !stage.startsWith(work)) { try { fs.rmSync(stage, { recursive: true, force: true }); } catch (e2) { /* ignore */ } }   // the Mac stage sits in /Applications: no half-unpacked copy left there
       this.set({ phase: 'available', pct: 0, error: String(e && e.message || e).slice(0, 200) });
     } finally { this.busy = false; }
     return this.state;

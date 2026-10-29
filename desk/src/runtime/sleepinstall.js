@@ -53,6 +53,8 @@ class SleepInstaller {
       try { fs.rmSync(arc, { force: true }); } catch (e) { /* keep */ }
       if (!fs.existsSync(this.pythonExe())) throw new Error(path.basename(this.pythonExe()) + ' was not inside ' + a.name);
       if (this.platform === 'darwin') { try { fs.chmodSync(this.pythonExe(), 0o755); } catch (e) { /* tar kept the mode */ } }
+      // a fresh Python has no packages: the saved "installed" flags were for the old one (deleted by a cleanup or antivirus)
+      this._save({ libs: false, convert: null }); st.libs = false;
     }
     const py = this.pythonExe();
     // 2. libraries (pip prints its own progress; we show a busy bar)

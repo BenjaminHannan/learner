@@ -71,6 +71,8 @@ set REC to "%(rec)s"
 set cutoff to (current date) - (%(hours)d * hours)
 set out to ""
 set found to 0
+-- Ben's M1 Oct 28: every 2 am check-in hit -1712 (the app was not open; launching it in the night timed out). Read only if it is open.
+if application "Mail" is not running then return ""
 with timeout of 90 seconds
   tell application "Mail"
     set msgs to {}
@@ -103,6 +105,8 @@ set REC to "%(rec)s"
 set t0 to current date
 set t1 to t0 + (%(hours)d * hours)
 set out to ""
+-- Ben's M1 Oct 28: every 2 am check-in hit -1712 (the app was not open; launching it in the night timed out). Read only if it is open.
+if application "Calendar" is not running then return ""
 with timeout of 90 seconds
   tell application "Calendar"
     repeat with cal in calendars
