@@ -583,6 +583,12 @@ function placeView(rec) {
     if (top) { try { rec.view.setVisible(true); rec.view.webContents.invalidate(); } catch (e) { /* ignore */ } } // Ben Oct 28: a page that loaded while the view was hidden (e.g. right after a restart) stayed blank until repainted
     if (top) diagView(rec, r);
   }
+  if (rec.popup) {   // the sign-in popup sits on the page, in the same place
+    try {
+      rec.popup.setBounds(r);
+      if (top !== rec.popupTop) { rec.popupTop = top; if (top) { win.contentView.addChildView(rec.popup); rec.popup.webContents.invalidate(); } else win.contentView.addChildView(rec.popup, 0); }
+    } catch (e) { /* closed */ }
+  }
 }
 // Ben Oct 28: the panel showed a dark empty page on his Mac (top=true, right rect) for every URL. One log line per panel open,
 // and one 2 s later, says whether the page loaded and painted: url, loading, crashed, renderer pid, bounds, and whether a
@@ -635,6 +641,23 @@ function makeBrowser(key, label, opts) {
   br.wc.once('destroyed', () => setImmediate(() => { if (browsers.get(key) === made) dropBrowser(key); }));
   try { rec.br.wc.setBackgroundThrottling(false); } catch (e) { /* ignore */ }
   if (win && !win.isDestroyed()) { win.contentView.addChildView(view, 0); placeView(rec); }
+  // a sign-in popup (Google "Continue with ...") shows over this page inside the browser panel, not as its own window; it goes
+  // when the provider closes it after signing in
+  if (!rec.helper) br.onPopup = (pv) => {   // (a Mote's popup keeps its own small window: showing it would switch Ben's chat)
+    if (!win || win.isDestroyed()) return;
+    if (made.popup) { try { win.contentView.removeChildView(made.popup); } catch (e) { /* gone */ } }
+    made.popup = pv; made.popupTop = undefined;
+    try { pv.setBackgroundColor('#ffffff'); } catch (e) { /* ignore */ }
+    win.contentView.addChildView(pv, 0); placeView(made);
+    pv.webContents.once('destroyed', () => setImmediate(() => {
+      if (made.popup !== pv) return;
+      made.popup = null;
+      try { if (win && !win.isDestroyed()) win.contentView.removeChildView(pv); } catch (e) { /* gone */ }
+      pushBState(key);
+    }));
+    send('browser-show', { key, threadId: key });
+    try { pv.webContents.focus(); } catch (e) { /* ignore */ }
+  };
   // keep a handful of idle thread browsers; the oldest idle one goes first
   const idle = [...browsers.values()].filter((r) => r.key !== key && !r.helper && !r.active && !loginWaits.has(r.key) && !(panel.open && panel.key === r.key) && !holds.has(r.key));
   if (idle.length > 4) { idle.sort((a, b) => a.used - b.used); dropBrowser(idle[0].key); }
@@ -647,6 +670,7 @@ function dropBrowser(key) {
   const f = loginWaits.get(key); if (f) f('stopped');
   setHold(key, false);
   try { if (win && !win.isDestroyed()) win.contentView.removeChildView(rec.view); } catch (e) { /* ignore */ }
+  if (rec.popup) { try { win.contentView.removeChildView(rec.popup); } catch (e) { /* ignore */ } rec.popup = null; }
   rec.br.destroy();
   if (panel.key === key) send('browser-gone', { key });
 }
