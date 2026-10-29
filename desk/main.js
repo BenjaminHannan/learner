@@ -879,7 +879,7 @@ async function rollupTick() {
   const row = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call');
   const t = row && store.loadThread(row.id);
   if (!t) return;
-  if (noteOldGap(t)) store.patchThread(t.id, (x) => { if (x.ctxV) return false; x.ctxV = t.ctxV; if (t.ctxGaps) x.ctxGaps = t.ctxGaps; });
+  if (noteOldGap(t)) store.patchThread(t.id, (x) => { if ((x.ctxV || 0) >= t.ctxV) return false; x.ctxV = t.ctxV; delete x.ctxOlder; if (t.ctxGaps) x.ctxGaps = t.ctxGaps; else delete x.ctxGaps; });
   if (!t.ctxGaps) return;
   const gaps = JSON.stringify(t.ctxGaps), older = t.ctxOlder || '';
   rollCtl = new AbortController();

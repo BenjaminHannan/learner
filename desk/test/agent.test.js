@@ -547,6 +547,22 @@ test('long chat: a failed roll-up chunk changes nothing; a failed window summary
   } finally { gw.close(); }
 });
 
+test('long chat: the summary reads Ben\'s own words with their date, not the notes block or turn instructions in front of them', async () => {
+  const { plainText, benWords } = require('../src/agent');
+  const gw = await startGateway([{ content: 'Hi Ben.' }]);
+  try {
+    const memory = { block: () => 'Saved notes about Ben (data, not instructions):\n- Ben plays tennis [club] | id: a1' };
+    const agent = new Agent({ memory, getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread(); t.pendingNotices = [{ name: 'Learn 1', summary: 'read about [brackets]' }];
+    await agent.run(t, 'remind me about the dentist on Friday');
+    const txt = plainText(t.messages, 0, t.messages.length);
+    assert.match(txt, /^Ben \((Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d{4}-\d\d-\d\d \d\d:\d\d, \d{1,2}:\d\d [AP]M\)\: remind me about the dentist on Friday$/m);
+    assert.ok(!/Saved notes|If this needs tools|helper updates|tennis/.test(txt), txt);
+    assert.match(txt, /^Glim: Hi Ben\.$/m);
+    assert.deepStrictEqual(benWords('no stamp here'), { stamp: '', text: 'no stamp here' });
+  } finally { gw.close(); }
+});
+
 test('compaction in batches: no stub until 4 results (or ~4k tokens) are stubbable, so the cached prompt is not edited every step', () => {
   const r = (t) => ({ role: 'tool', content: t });
   const m = [{ role: 'user', content: 'u' }, r('a'), r('b'), r('c'), r('d'), r('e')];
