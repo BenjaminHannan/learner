@@ -183,7 +183,7 @@ test('gateway: maps fast/main/auto to the one model, streams through, writes the
   });
   const upPort = await listen(up);
   const diaryDir = path.join(tmp('gw-'), 'diary', 'raw');
-  const gw = createGateway({ upstream: 'http://127.0.0.1:' + upPort, diaryDir, now: () => Date.UTC(2026, 9, 28, 3, 0, 0) });
+  const gw = createGateway({ upstream: 'http://127.0.0.1:' + upPort, diaryDir, now: () => new Date(2026, 9, 28, 12).getTime() });
   const port = await gw.listen(0);
   const base = 'http://127.0.0.1:' + port + '/v1';
   try {
@@ -367,9 +367,9 @@ test('orphaned llama-server on :18090 is found and killed, but only if the image
   assert.strictEqual(parseTasklistImage('"llama-server.exe","4321","Console","1","900,000 K"\r\n'), 'llama-server.exe');
   const calls = [];
   const ex = (image) => async (cmd, args) => { calls.push(cmd); return cmd === 'netstat' ? net : cmd === 'tasklist' ? '"' + image + '","4321"' : ''; };
-  assert.strictEqual(await reclaimPort(18090, ex('llama-server.exe')), 4321); assert.ok(calls.includes('taskkill'));
+  assert.strictEqual(await reclaimPort(18090, ex('llama-server.exe'), 'win32'), 4321); assert.ok(calls.includes('taskkill'));
   calls.length = 0;
-  assert.strictEqual(await reclaimPort(18090, ex('chrome.exe')), 0); assert.ok(!calls.includes('taskkill'));
+  assert.strictEqual(await reclaimPort(18090, ex('chrome.exe'), 'win32'), 0); assert.ok(!calls.includes('taskkill'));
 });
 
 test('Builtin pause/resume: no-ops when the preset is not in use, report ok from the real phase, never start while asleep', async () => {
@@ -453,4 +453,33 @@ test('gateway: LFM3 reasoning before "</think>" leaves the reply (non-stream and
   const long = 'x'.repeat(1300);
   const c = run([ev(long), ev(' more'), ev(null, { finish_reason: 'stop' })]);
   assert.strictEqual(c.content, long + ' more');
+});
+
+test('WinSleep converts the published immutable adapter generation and does not rotate it twice', async () => {
+  const root = tmp('wg-'); const home = path.join(root, 'sleep');
+  const current = path.join(home, 'adapters', 'night-one'); fs.mkdirSync(current, { recursive: true });
+  fs.writeFileSync(path.join(current, 'adapter_model.safetensors'), 'weights');
+  fs.mkdirSync(path.join(home, 'adapter')); fs.writeFileSync(path.join(home, 'adapter', 'adapter_model.safetensors'), 'legacy');
+  fs.writeFileSync(path.join(home, 'adapters.json'), JSON.stringify({ version: 1, current: 'adapters/night-one', previous: 'adapter' }));
+  const calls = [];
+  const ws = new WinSleep({ getSettings: () => ({}), root,
+    installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) },
+    run: async (c, a) => { calls.push(a); fs.writeFileSync(a[a.indexOf('--outfile') + 1], 'new'); return ''; }, hooks: {} });
+  await ws._convert(); await ws._convert();
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(calls[0][1], current);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(home, 'adapter.gguf.json'), 'utf8')).source_generation, 'adapters/night-one');
+});
+
+test('WinSleep refuses a missing published generation instead of converting a legacy adapter', async () => {
+  const root = tmp('wb-'); const home = path.join(root, 'sleep'); fs.mkdirSync(path.join(home, 'adapter'), { recursive: true });
+  fs.writeFileSync(path.join(home, 'adapter', 'adapter_model.safetensors'), 'legacy');
+  fs.writeFileSync(path.join(home, 'adapters.json'), JSON.stringify({ version: 1, current: 'adapters/missing', previous: 'adapter' }));
+  let calls = 0;
+  const ws = new WinSleep({ getSettings: () => ({}), root,
+    installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) },
+    run: async () => { calls++; }, hooks: {} });
+  await ws._convert();
+  assert.strictEqual(calls, 0);
+  assert.ok(fs.readFileSync(ws.p.events, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).some((e) => e.kind === 'convert_failed'));
 });

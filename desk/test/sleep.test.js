@@ -14,7 +14,6 @@ process.on('exit', () => { for (const d of made) { try { fs.rmSync(d, { recursiv
 const mk = (extra, settings) => {
   const home = tmp(); fs.mkdirSync(path.join(home, 'app'));
   return { home, sl: new Sleep({ home, getSettings: () => ({ sleepPython: FAKE, ...settings }), env: { ...extra } }) };
-const withPs = (sl, fn) => { sl.o.psCommand = fn; return sl; };
 };
 const withPs = (sl, fn) => { sl.o.psCommand = fn; return sl; };
 const until = async (f, ms = 5000) => { const t = Date.now(); while (Date.now() - t < ms) { if (await f()) return true; await new Promise((r) => setTimeout(r, 50)); } return false; };
@@ -34,7 +33,7 @@ test('app dir and python lookup: settings win, then the usual places, then pytho
 
 test('available(): says plainly when the app folder is missing', () => {
   const home = tmp();
-  const sl = new Sleep({ home, getSettings: () => ({}) });
+  const sl = new Sleep({ home, getSettings: () => ({ sleepPython: FAKE }) });
   const a = sl.available();
   assert.strictEqual(a.ok, false); assert.match(a.reason, /not found/);
   fs.mkdirSync(path.join(home, 'app'));

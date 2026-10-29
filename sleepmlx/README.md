@@ -45,7 +45,7 @@ One night = one new diary day (days already slept are tracked in `state.json`; a
    a. 40 fixed general questions (facts, arithmetic; `gate.py`). The base model's correctness is recorded the first time (`gate_base.json`); the adapter may not lose more than 3 percentage points (with 40 questions: at most 1 more wrong).
    b. Recall quiz on the held-out cards, closed book, adapter on. `quiz` = recall %.
    If (a) fails the night is undone: the committed adapter stays, the model in memory goes back to it.
-9. **Commit** on pass: `adapter/` becomes the new adapter, the old one moves to `adapter.prev/`.
+9. **Commit** on pass: publish the immutable adapter under `adapters/<night-id>/` and atomically update `adapters.json` with the current and previous paths. The prior adapter and the night's checkpoint stay available throughout promotion.
 
 Flags that equal `ab_ob_b4_nb` (sleepb defaults): work scale s (see below), bsz 16, replay 8, KL weight 1, lr 2e-4, LoRA rank 16 / alpha 32,
 SHY 0.85 / 0.05, 160 items, 30 REM chains, 30 gist dreams (all x s), NREM share 0.80/0.65/0.50/0.35 per cycle, 50% open-book,
@@ -60,14 +60,15 @@ chunk. Steps, cards per fact, item cap, REM chains and gist dreams all scale wit
 Sleep Mode calls the worker once per "hour". The worker stops cleanly, checkpoints, writes `SLEEPMODE_OUT` and exits 0 when:
 the chunk budget (minus a reserve of max(20 s, 5%)) would be exceeded by the next generation batch or training step; SIGTERM/SIGINT; `ASSISTANT_RUNNING` appears; `PAUSE_OTHERS`
 exists; memory pressure is above 1 (Mac `sysctl`; elsewhere psutil available RAM below `min_free_ram_gb`, skipped if psutil is missing).
-State: `night/night.json` (phase, step), `night/gen_cache.jsonl` (every finished generation batch, so a resumed chunk redoes none), `night/adapter/` (checkpoint every 10 steps and on stop).
+State: `night/night.json` is the publication manifest for an immutable `night/checkpoints/<generation>/` containing matching phase, step count, items/REM bookkeeping, and adapter weights. New weights checkpoint every 10 steps, before REM generation, on stop, and at the SHY boundary. Metadata-only generations share immutable weight files where the filesystem supports hard links. Prior generations remain until the night completes; incomplete generations are ignored. An unexpected failure resumes the last published generation, replaying any unsaved updates. A required missing checkpoint fails explicitly instead of restarting from the base.
 The next chunk resumes mid-night. Optimizer state is not saved: AdamW restarts on resume (the learning-rate schedule continues from the saved step).
+The gate decision and final state are journaled before promotion. Restarting finalization preserves the candidate, promotes once, and writes one state increment and one history row. Legacy `night/adapter/` checkpoints and committed `adapter/` folders are readable. GGUF export and the later served-model check remain separate: an interrupted Python export is reported as incomplete and needs an explicit `export-gguf` retry; these tests do not establish recovery through a power loss or a model-server restart.
 `quiz` is `null` in every chunk except the one where the night finishes. When no unslept day is waiting the worker answers in a moment without loading the model.
 
 ## Files
 
 Sleep root: Mac `~/learner-ops/sleepmlx/` (env `SLEEPMLX_HOME`); Windows `%APPDATA%/Premonition/sleep`.
-`adapter/` (`adapters.safetensors` + `adapter_config.json`, mlx_lm format; PEFT format on the torch backend), `adapter.prev/`, `cards.jsonl` (every card with status
+`adapters.json` (current and previous immutable adapter paths), `adapters/<night-id>/` (`adapters.safetensors` + `adapter_config.json`, mlx_lm format; PEFT format on the torch backend), legacy `adapter/` and `adapter.prev/`, `cards.jsonl` (every card with status
 `trained` / `pending` / `held_out`), `nights.jsonl` (one row per night: scale, quiz, harm, steps, stats), `items.json`, `state.json`, `gate_base.json`, `ignore.txt`, `sleepmlx.log`.
 Diary input: Mac `~/learner-ops/diary/raw/YYYY-MM-DD.jsonl` (+ `blobs/<sha1>`; `{"$blob": sha}` content refs are resolved; `k2-helper` records skipped);
 Windows app `%APPDATA%/Premonition/diary/*.jsonl` of `{ts, model, messages:[{role, content}], response:{content}}` (any file name; days are taken from `ts`). Override with `SLEEPMLX_DIARY_DIR`.

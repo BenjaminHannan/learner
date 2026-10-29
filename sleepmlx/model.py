@@ -10,7 +10,6 @@ import importlib
 import json
 import math
 import os
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -242,22 +241,23 @@ class MLXBackend(Backend):
 
     # ---- adapter
     def save_adapter(self, path) -> None:
-        mx = _mx()
+        from .checkpoint import save_adapter_directory
         from mlx.utils import tree_flatten
-        path = Path(path)
-        tmp = path.with_name(path.name + ".tmp")
-        shutil.rmtree(str(tmp), ignore_errors=True)
-        tmp.mkdir(parents=True)
-        mx.save_safetensors(str(tmp / "adapters.safetensors"), dict(tree_flatten(self.model.trainable_parameters())))
-        (tmp / "adapter_config.json").write_text(json.dumps({
-            "model": self.model_dir, "fine_tune_type": "lora", "num_layers": self.n_layers,
-            "lora_parameters": {"rank": self.lora_cfg["rank"], "scale": self.lora_cfg["scale"], "dropout": self.lora_cfg.get("dropout", 0.0), "keys": self.lora_cfg["keys"]}}, indent=1))
-        shutil.rmtree(str(path), ignore_errors=True)
-        tmp.rename(path)
+        mx = _mx()
+
+        def write(tmp):
+            mx.save_safetensors(str(tmp / "adapters.safetensors"), dict(tree_flatten(self.model.trainable_parameters())))
+            (tmp / "adapter_config.json").write_text(json.dumps({
+                "model": self.model_dir, "fine_tune_type": "lora", "num_layers": self.n_layers,
+                "lora_parameters": {"rank": self.lora_cfg["rank"], "scale": self.lora_cfg["scale"], "dropout": self.lora_cfg.get("dropout", 0.0), "keys": self.lora_cfg["keys"]}}, indent=1))
+        save_adapter_directory(path, write)
 
     def load_adapter(self, path) -> None:
+        if path is not None:
+            from .checkpoint import validate_adapter
+            validate_adapter(path)
         mx = _mx()
-        if path is None or not Path(path).exists():
+        if path is None:
             for m in self._lora:                      # a fresh adapter: lora_b = 0, so the model equals the base
                 m.lora_b = mx.zeros_like(m.lora_b)
             mx.eval(self.model.parameters())

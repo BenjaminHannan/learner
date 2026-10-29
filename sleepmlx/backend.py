@@ -5,7 +5,7 @@ Backend (implemented by model.MLXBackend; tests use a fake):
     stop_id -> int                                   id appended to training targets (end of turn)
     generate(prompts, max_tokens, temp=0.0, adapter=True, stops=()) -> list[str]   one batch; adapter=False = base model; stops: strings that end a reply early (best effort)
     train_begin(total_steps, lr) / train_step(batch, replay, step) -> dict(ce, kl)   batch/replay: [(ids, loss_start)]
-    save_adapter(dir) / load_adapter(dir_or_None)    mlx_lm format; None = a fresh (zero) adapter
+    save_adapter(new_dir) / load_adapter(dir_or_None)    immutable destination; None = a fresh (zero) adapter; missing non-None is an error
     downscale(factor, thresh, seed) -> dict          SHY step on the LoRA
     bench() -> (t_step_s, t_gen_s)                   seconds for a reference train step and one generation batch
     gen_batch -> int                                 prompts per generate() call

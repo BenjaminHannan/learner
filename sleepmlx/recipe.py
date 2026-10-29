@@ -10,6 +10,7 @@ next chunk resumes. See README.md for what is ported faithfully and what is simp
 from __future__ import annotations
 
 import hashlib
+import copy
 import itertools
 import json
 import os
@@ -18,6 +19,7 @@ import random
 import re
 import shutil
 import time
+import uuid
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import date as _date
@@ -29,8 +31,9 @@ from . import gate as gate_mod
 from . import lessons as L_mod
 from . import prompts as P
 from .backend import Backend, Clock, Stop
+from .checkpoint import Checkpoints
 from .corpus import Diary, has_ans, norm, pat
-from .paths import Paths, read_json, write_json
+from .paths import Paths, read_json, write_json, write_text
 
 GENERIC = {"ben", "i", "me", "my", "we", "you", "he", "she", "they", "it", "user", "the user", "someone", "somebody"}
 SELF = {"i", "me", "my", "myself", "mine", "user", "the user"}   # Ben speaking of himself: these become `who`
@@ -40,7 +43,7 @@ COR_RE = re.compile(r"\bactually\b|correction|no, it'?s", re.I)
 NREM_SHARE = [0.80, 0.65, 0.50, 0.35]
 NAMES_CAP = 6
 RESLEEP_TURNS = 5
-PHASES = ["tag", "dream", "train", "downscale", "gate", "done"]
+PHASES = ["tag", "dream", "train", "downscale", "gate", "finalize", "done"]
 
 GENERIC_PROMPTS = (
     ["What is the capital of France?", "How many days are in a leap year?", "Translate 'good morning' into Spanish.", "What is 17 times 23?",
@@ -301,8 +304,8 @@ class Sleeper:
         self.today = lambda: _date.today().isoformat()   # expiry of tracked items is checked against the real date (tests pin it)
 
     # ---- persistence
-    def load_items(self):
-        d = read_json(self.paths.items, {}) or {}
+    def load_items(self, data=None):
+        d = (read_json(self.paths.items, {}) or {}) if data is None else data
         self.items: Dict[str, Item] = {k: Item.from_dict(v) for k, v in d.get("items", {}).items()}
         self.rem_pool: List[dict] = d.get("rem_pool", [])
         self.rem_done = Counter(d.get("rem_done", {}))
@@ -310,10 +313,13 @@ class Sleeper:
         self.dropped = set(d.get("dropped", []))
         self.wrong: Dict[str, set] = {k: set(v) for k, v in (d.get("wrong") or {}).items()}   # name -> values a correction said are wrong
 
-    def save_items(self):
-        write_json(self.paths.items, {"items": {k: asdict(v) for k, v in self.items.items()}, "rem_pool": self.rem_pool,
+    def _items_data(self):
+        return {"items": {k: asdict(v) for k, v in self.items.items()}, "rem_pool": self.rem_pool,
                                       "rem_done": dict(self.rem_done), "gist_done": dict(self.gist_done), "dropped": sorted(self.dropped),
-                                      "wrong": {k: sorted(v) for k, v in self.wrong.items()}})
+                                      "wrong": {k: sorted(v) for k, v in self.wrong.items()}}
+
+    def save_items(self):
+        write_json(self.paths.items, self._items_data())
 
     def load_state(self):
         st = read_json(self.paths.state, {}) or {}
@@ -321,8 +327,14 @@ class Sleeper:
         st.setdefault("nights", 0)
         return st
 
-    def save_night(self):
-        write_json(self.paths.night_json, self.N)
+    def save_night(self, adapter=False):
+        """Publish state and its matching immutable weights as one generation."""
+        if getattr(self, "_trained_since_ckpt", 0) and not adapter:
+            return  # never publish progress ahead of the weights
+        checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(self.paths)
+        checkpoints.publish(self.N, self._items_data(), self.be.save_adapter if adapter else None)
+        if adapter:
+            self._trained_since_ckpt = 0
 
     # ---- generation (batched, cached, deadline-aware)
     def gen(self, prompts: List[str], max_tokens: int, sample: bool = False, base: bool = True, salt: str = "", stops=()) -> List[str]:
@@ -1116,17 +1128,43 @@ class Sleeper:
         return dict(st)
 
     # ---- training examples
+    def target_stat(self, **counts):
+        stats = getattr(self, "N", {}).setdefault("stats", {}).setdefault("training_targets", {})
+        for key, count in counts.items():
+            stats[key] = stats.get(key, 0) + count
+
     def ex_text(self, text: str):
-        return (self.be.encode(text) + [self.be.stop_id], 0)
+        # Raw language modelling intentionally supervises text tokens. Unlike QA,
+        # a raw-text prefix remains a valid LM example when clipped.
+        ids = self.be.encode(text) + [self.be.stop_id]
+        self.target_stat(raw_lm_seen=1, raw_lm_truncated=int(len(ids) > self.cfg.max_seq_len))
+        ids = ids[:self.cfg.max_seq_len]
+        if len(ids) < 2:
+            self.target_stat(raw_lm_skipped=1)
+            return None
+        self.target_stat(raw_lm_examples=1, raw_lm_target_tokens=len(ids) - 1)
+        return (ids, 0)
 
     def ex_qa(self, q: str, a: str, rng: random.Random, d: int):
+        self.target_stat(qa_seen=1)
+        answer = self.be.encode(a)
+        if not answer:
+            self.target_stat(qa_skipped_empty_answer=1)
+            return None
+        target = answer + [self.be.stop_id]
         ob = rng.random() < self.cfg.ob_share
         if ob:
             p = self.be.encode(P.diary_prompt(self.R, self.diary, q, d))
-            if len(p) + 24 <= self.cfg.max_seq_len:
-                return (p + self.be.encode(a) + [self.be.stop_id], len(p))
+            if p and len(p) + len(target) <= self.cfg.max_seq_len:
+                self.target_stat(qa_examples=1, qa_open_book=1, qa_target_tokens=len(target))
+                return (p + target, len(p))
+            self.target_stat(qa_open_book_fallback=1)
         p = self.be.encode(P.plain_prompt(self.R, q))
-        return (p + self.be.encode(a) + [self.be.stop_id], len(p))
+        if not p or len(p) + len(target) > self.cfg.max_seq_len:
+            self.target_stat(qa_skipped_too_long=1)
+            return None
+        self.target_stat(qa_examples=1, qa_closed_book=1, qa_target_tokens=len(target))
+        return (p + target, len(p))
 
     def nrem(self, act: List[Item], cum: List[float], n: int, rng: random.Random, d: int):
         out = []
@@ -1135,11 +1173,43 @@ class Sleeper:
                 break
             it = rng.choices(act, cum_weights=cum)[0]
             o = rng.choice(it.para + it.qa)
-            out.append(self.ex_text(o) if isinstance(o, str) else self.ex_qa(o[0], o[1], rng, d))
+            ex = self.ex_text(o) if isinstance(o, str) else self.ex_qa(o[0], o[1], rng, d)
+            if ex is not None:
+                out.append(ex)
         return out
 
     def replay_set(self):
         return [(self.be.encode(self.R.render(P.SYS, q)) + [self.be.stop_id], 0) for q in GENERIC_PROMPTS]
+
+    def recall_identity(self, held):
+        cards = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
+        identity = {"cards": cards, "profile": self.prof.name, "model_dir": self.prof.model_dir,
+                    "hf_id": self.prof.hf_id, "backend": self.prof.backend, "loader": self.prof.loader,
+                    "prompts": [self.R.render("Answer with just the name.", h["q"]) for h in held], "max_tokens": 16}
+        return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+
+    def recall_baseline_valid(self, pre, held):
+        return (gate_mod.measured_recall(pre, len(held)) and pre.get("grader") == gate_mod.GRADER
+                and pre.get("cards") == self.recall_identity(held))
+
+    def measure_incumbent_recall(self, held):
+        """Regrade the unchanged incumbent, even when a candidate checkpoint exists."""
+        candidate = self.paths.work_adapter if self.paths.work_adapter.exists() else None
+        self.be.load_adapter(self.paths.adapter if self.paths.adapter.exists() else None)
+        try:
+            return dict(gate_mod.score_recall(self.be, self.R, held, adapter=True),
+                        grader=gate_mod.GRADER, cards=self.recall_identity(held))
+        finally:
+            if candidate is not None:
+                self.be.load_adapter(candidate)
+
+    def general_base_identity(self):
+        return {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
+                "hf_id": self.prof.hf_id, "backend": self.prof.backend, "loader": self.prof.loader,
+                "max_tokens": self.cfg.gate_max_tokens, "grader": gate_mod.GRADER,
+                "questions": hashlib.sha256(json.dumps(gate_mod.gate_questions(self.cfg.gate_n)).encode()).hexdigest(),
+                "prompts": hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest(),
+                "system": gate_mod.GATE_SYS}
 
     # ---- the night
     def day_turns(self, week: dict, d: int) -> int:
@@ -1153,15 +1223,17 @@ class Sleeper:
         self.paths.mk()
         cfg = self.cfg
         self.state = self.load_state()
-        self.load_items()
+        self._checkpoints = Checkpoints(self.paths, getattr(self, "checkpoint_hook", None))
+        self._trained_since_ckpt = 0
         resumed = False
-        self.N = read_json(self.paths.night_json, None) if not dry_run else None
+        self.N, checkpoint_items = self._checkpoints.load() if not dry_run else (None, None)
+        self.load_items(checkpoint_items)
         if self.N and self.N.get("dry_run"):
             self.N = None
         if self.N:
             resumed = True
             d, date = self.N["day"], self.N["date"]
-            if date not in week.get("dates", {}).values():
+            if date not in week.get("dates", {}).values() and not self.N.get("finalization"):
                 self.N = None
                 resumed = False
         if not self.N:
@@ -1174,10 +1246,12 @@ class Sleeper:
                 return {"status": "no_new_day", "message": "no new diary day to sleep on"}
             d, date = pick
             shutil.rmtree(str(self.paths.work), ignore_errors=True)
-            self.N = {"day": d, "date": date, "phase": "tag", "scale": None, "done_steps": 0, "rem_done": [], "chunks": 0, "stats": {}, "elapsed_s": 0.0,
+            self.N = {"id": uuid.uuid4().hex, "day": d, "date": date, "phase": "tag", "scale": None, "done_steps": 0, "rem_done": [], "chunks": 0, "stats": {}, "elapsed_s": 0.0,
                       "dry_run": bool(dry_run), "started": time.time()}
         N = self.N
+        N.setdefault("id", uuid.uuid4().hex)  # upgrade an older, resumable night
         N["chunks"] += 1
+        N["steps_this_chunk"] = 0
         self.diary = Diary(week, self.who)
         dry_cache = self.paths.home / "dry_gen_cache.jsonl"    # a dry run's generations are kept, so the real night after it does not redo them
         self.cache = GenCache(dry_cache if dry_run else self.paths.gen_cache)
@@ -1192,8 +1266,8 @@ class Sleeper:
             self._on_stop(res)
         finally:
             N["elapsed_s"] = N.get("elapsed_s", 0.0) + time.time() - t_chunk0
-            if N.get("phase") != "done" and not dry_run:
-                self.save_night()
+            # An unexpected failure retains the last complete generation. In
+            # particular, never publish a phase change after its weight save failed.
         res["phase"] = N.get("phase")
         res["steps"] = N.get("steps_this_chunk", 0)
         res["scale"] = N.get("scale")
@@ -1202,9 +1276,8 @@ class Sleeper:
     def _on_stop(self, res: dict) -> None:
         """Checkpoint what is in memory when a chunk ends mid-night."""
         N = self.N
-        if N["phase"] == "train" and getattr(self, "_trained_since_ckpt", 0) > 0:
-            self.be.save_adapter(self.paths.work_adapter)
-            self._trained_since_ckpt = 0
+        if not N.get("dry_run"):
+            self.save_night(adapter=N["phase"] == "train" and getattr(self, "_trained_since_ckpt", 0) > 0)
         res["message"] = "stopped (%s) in phase %s at step %s/%s; will resume" % (res.get("stop_reason"), N["phase"], N["done_steps"], N.get("total_steps"))
 
     def _set_scale(self, dry_run: bool) -> None:
@@ -1235,6 +1308,9 @@ class Sleeper:
 
     def _night(self, week: dict, d: int, dry_run: bool, res: dict) -> None:
         N, cfg, st_all = self.N, self.cfg, self.N["stats"]
+        if N["phase"] in ("finalize", "done") and N.get("finalization"):
+            self._finalize(res)
+            return
         self._set_scale(dry_run)
         res["scale"] = N["scale"]
         self.log("[night %d] day %s scale %.2f" % (self.state["nights"] + 1, N["date"], N["scale"]))
@@ -1318,9 +1394,8 @@ class Sleeper:
             self.clock.check(30)
             self.be.load_adapter(self.paths.work_adapter)
             st_all["shy"] = self.be.downscale(cfg.shy_factor, cfg.shy_thresh, cfg.seed * 100 + d)
-            self.be.save_adapter(self.paths.work_adapter)
             N["phase"] = "gate"
-            self.save_night()
+            self.save_night(adapter=True)
         if N["phase"] == "gate":
             self._gate(week, d, E, res)
 
@@ -1331,16 +1406,14 @@ class Sleeper:
             self.be.load_adapter(self.paths.work_adapter)
         else:
             self.be.load_adapter(self.paths.adapter if self.paths.adapter.exists() else None)
-        if "pre" in N and (N["pre"] or {}).get("grader") != gate_mod.GRADER and "total_steps" not in N:
-            del N["pre"]   # measured by an older grader before training started: measure again
-        if "pre" not in N:
+        held = [h for it in self.items.values() for h in it.held if h["night"] == d]
+        if not self.recall_baseline_valid(N.get("pre"), held):
             self.clock.check(60)
-            held = [h for it in self.items.values() for h in it.held if h["night"] == d]
             N["held_n"] = len(held)
-            N["pre"] = dict(gate_mod.score_recall(self.be, self.R, held, adapter=True), grader=gate_mod.GRADER)
+            N["pre"] = self.measure_incumbent_recall(held)
             if not self.paths.gate_base.exists():
                 flags = gate_mod.score_general(self.be, self.R, adapter=False, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-                write_json(self.paths.gate_base, {"flags": flags, "score": gate_mod.pct(flags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n, "grader": gate_mod.GRADER})
+                write_json(self.paths.gate_base, dict(self.general_base_identity(), flags=flags, score=gate_mod.pct(flags)))
             self.save_night()
         if "total_steps" not in N:
             n_act = sum(1 for it in E if (it.para or it.qa) and it.kind == "fact")   # night length planned from facts only, as before; extra cards share the steps
@@ -1365,25 +1438,38 @@ class Sleeper:
             kind, ci = sched[i]
             self.clock.check((self.t_step or 40.0) * 1.3 + 15)
             if kind == "r" and ci not in N["rem_done"]:
+                if self._trained_since_ckpt:
+                    self.save_night(adapter=True)
+                before_rem = copy.deepcopy(self._items_data())
                 st = Counter()
-                self.rem(E, d, ci, st)
-                new = [x for x in self.rem_pool if x.get("night") == d and x.get("cycle") == ci]
-                st["dreamcheck"] = self.check_dreams([(x, x["q"], x["a"]) for x in new], "rem")
+                try:
+                    self.rem(E, d, ci, st)
+                    new = [x for x in self.rem_pool if x.get("night") == d and x.get("cycle") == ci]
+                    st["dreamcheck"] = self.check_dreams([(x, x["q"], x["a"]) for x in new], "rem")
+                except BaseException:
+                    # Completed generation batches stay cached, but a partial
+                    # REM cycle must not increment its counters again on resume.
+                    self.load_items(before_rem)
+                    raise
                 N["rem_done"].append(ci)
                 N["stats"].setdefault("rem", []).append(dict(st))
-                self.save_items()
                 self.save_night()
             live = [x for x in self.rem_pool if all(k in self.items and not self.items[k].dead for k in x["keys"])]
             rng = random.Random("step:%s:%s:%s" % (cfg.seed, d, i))
             nr0 = round(0.7 * cfg.bsz) if (kind == "r" and live) else 0
             batch = []
             for x in rng.choices(live, k=nr0) if nr0 else []:
-                batch.append(self.ex_qa(x["q"], x["a"], rng, d))
+                ex = self.ex_qa(x["q"], x["a"], rng, d)
+                if ex is not None:
+                    batch.append(ex)
             batch += self.nrem(act, cum, cfg.bsz - len(batch), rng, d)
-            batch = [(ids[:cfg.max_seq_len], min(ls, cfg.max_seq_len - 1)) for ids, ls in batch]
             rb = rng.sample(replay, min(cfg.replay_bsz, len(replay))) if i % max(cfg.kl_every, 1) == 0 else []
             t0 = self.clock.now()
-            r = self.be.train_step(batch, rb, i)
+            if batch:
+                r = self.be.train_step(batch, rb, i)
+            else:
+                self.target_stat(empty_batches_skipped=1)
+                r = {}
             dt = self.clock.now() - t0
             self.t_step = dt if self.t_step is None else 0.7 * self.t_step + 0.3 * dt
             last_ce = r.get("ce")
@@ -1393,16 +1479,13 @@ class Sleeper:
             self._trained_since_ckpt += 1
             ck = self._trained_since_ckpt >= cfg.ckpt_every
             if ck:
-                self.be.save_adapter(self.paths.work_adapter)
-                self._trained_since_ckpt = 0
-                self.save_night()
+                self.save_night(adapter=True)
             if ck or i == total:   # the sleep bar reads "step N/N": the last step is always logged
                 self.log("[night] step %d/%d ce %s %.1fs" % (i, total, last_ce, dt))
-        self.be.save_adapter(self.paths.work_adapter)
-        self._trained_since_ckpt = 0
+                self.log("[night] training targets %s" % N["stats"].get("training_targets", {}))
         N["last_ce"] = last_ce
         N["phase"] = "downscale"
-        self.save_night()
+        self.save_night(adapter=True)
 
     def _gate(self, week: dict, d: int, E: List[Item], res: dict) -> None:
         N, cfg, P_ = self.N, self.cfg, self.paths
@@ -1413,51 +1496,84 @@ class Sleeper:
         post = gate_mod.score_recall(self.be, self.R, held, adapter=True)
         base = read_json(P_.gate_base, {}) or {}
         flags = gate_mod.score_general(self.be, self.R, adapter=True, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-        bflags = base.get("flags") if (base.get("n", 40) == cfg.gate_n and len(base.get("flags", [])) == len(flags)
-                                       and base.get("grader") == gate_mod.GRADER) else None
+        bflags = base.get("flags") if (all(base.get(k) == v for k, v in self.general_base_identity().items())
+                                       and len(base.get("flags", [])) == len(flags)) else None
         if bflags is None:   # recorded for another question set or by another grader: record the base again now (adapter off)
             bflags = gate_mod.score_general(self.be, self.R, adapter=False, max_tokens=cfg.gate_max_tokens, n=cfg.gate_n)
-            write_json(P_.gate_base, {"flags": bflags, "score": gate_mod.pct(bflags), "profile": self.prof.name, "model_dir": self.prof.model_dir, "n": cfg.gate_n, "grader": gate_mod.GRADER})
+            write_json(P_.gate_base, dict(self.general_base_identity(), flags=bflags, score=gate_mod.pct(bflags)))
         j = gate_mod.judge(bflags, flags, cfg.harm_max)
-        pre = N.get("pre") if (N.get("pre") or {}).get("grader") == gate_mod.GRADER else None   # an older grader's score is not comparable
+        if not self.recall_baseline_valid(N.get("pre"), held):
+            N["pre"] = self.measure_incumbent_recall(held)
+            self.save_night()
+        pre = N.get("pre")
         reasons = gate_mod.decide(j, pre, post, cfg.gate_min_gain)
         quiz = post["recall"]
         reverted = bool(reasons)
-        if reverted:   # undo the night: the committed adapter stays; memory goes back to it
-            self.be.load_adapter(P_.adapter if P_.adapter.exists() else None)
-        else:
-            if P_.adapter.exists():
-                shutil.rmtree(str(P_.adapter_prev), ignore_errors=True)
-                shutil.move(str(P_.adapter), str(P_.adapter_prev))
-            shutil.move(str(P_.work_adapter), str(P_.adapter))
+        if not reverted:
             for it in E:
                 if it.para or it.qa:
                     it.trained = True
-            if cfg.llama_cpp_dir:   # a failure here never fails the night
-                try:
-                    from . import export as export_mod
-                    ok, msg = (self.exporter or export_mod.export_gguf)(cfg.llama_cpp_dir, cfg.gguf_base_dir, P_.adapter, P_.home / "adapter.gguf")
-                except Exception as e:
-                    ok, msg = False, "%s: %s" % (type(e).__name__, e)
-                res["gguf"] = {"ok": ok, "message": msg}
-                self.log("[night] gguf export: %s %s" % ("ok" if ok else "FAILED", msg))
-                if ok:
-                    self._after_export(P_.home / "adapter.gguf", res)
-        self.state["nights"] += 1
-        if N["date"] not in self.state["slept_days"]:
-            self.state["slept_days"].append(N["date"])
-        self.state.setdefault("slept_turns", {})[N["date"]] = self.day_turns(week, d)
-        self.state["last_night"] = {"date": N["date"], "reverted": reverted, "quiz": quiz, "harm": j["harm"]}
+        result = dict(res, status="done", quiz=quiz, harm=j["harm"], general=j["general"], general_base=j["general_base"], reverted=reverted,
+                      revert_reason=reasons, recall_pre=(N.get("pre") or {}).get("recall"), held_out=post["n"], recall_by_dir=post["by_dir"],
+                      steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""),
+                      lessons=list(N.get("lessons", [])), dreamcheck=dc_total(N["stats"]))
+        state = copy.deepcopy(self.state)
+        state["nights"] += 1
+        if N["date"] not in state["slept_days"]:
+            state["slept_days"].append(N["date"])
+        state.setdefault("slept_turns", {})[N["date"]] = self.day_turns(week, d)
+        state["last_night"] = {"id": N["id"], "date": N["date"], "reverted": reverted, "quiz": quiz, "harm": j["harm"]}
+        N["finalization"] = {"result": result, "state": state, "extra": {
+            "stats": copy.deepcopy(N["stats"]), "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
+            "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")}}
+        N["phase"] = "finalize"
+        self.save_night()
+        self._finalize(res)
+
+    def _finalize(self, res: dict) -> None:
+        """Replay a published decision without rotating twice or rescoring it."""
+        N, cfg, P_ = self.N, self.cfg, self.paths
+        final = N["finalization"]
+        resumed = res.get("resumed", False)
+        res.update(final["result"])
+        res["resumed"] = resumed
+        if res["reverted"]:
+            self.be.load_adapter(P_.adapter if P_.adapter.exists() else None)
+        else:
+            self._checkpoints.promote(N)
+            if cfg.llama_cpp_dir:
+                # Export rotates GGUF files separately. A crash during export is
+                # recorded as incomplete rather than silently rotating again.
+                if not final.get("export_started"):
+                    final["export_started"] = True
+                    self.save_night()
+                    try:
+                        from . import export as export_mod
+                        ok, msg = (self.exporter or export_mod.export_gguf)(cfg.llama_cpp_dir, cfg.gguf_base_dir, P_.adapter, P_.home / "adapter.gguf")
+                    except Exception as e:
+                        ok, msg = False, "%s: %s" % (type(e).__name__, e)
+                    res["gguf"] = {"ok": ok, "message": msg}
+                    self.log("[night] gguf export: %s %s" % ("ok" if ok else "FAILED", msg))
+                    if ok:
+                        self._after_export(P_.home / "adapter.gguf", res)
+                    final["result"] = dict(res)
+                    self.save_night()
+                else:
+                    res.setdefault("gguf", {"ok": False, "message": "previous export was interrupted; export-gguf can retry it"})
+        self.state = final["state"]
         write_json(P_.state, self.state)
+        self._checkpoints.hook("state_written")
         self.save_items()
         self.write_cards()
-        res.update(status="done", quiz=quiz, harm=j["harm"], general=j["general"], general_base=j["general_base"], reverted=reverted,
-                   revert_reason=reasons, recall_pre=(N.get("pre") or {}).get("recall"), held_out=post["n"], recall_by_dir=post["by_dir"],
-                   steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""),
-                   lessons=list(N.get("lessons", [])), dreamcheck=dc_total(N["stats"]))
-        self.append_night(res, extra={"stats": N["stats"], "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"], "lessons": res["lessons"],
-                                      "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")})
+        self._checkpoints.hook("items_written")
+        self.append_night(res, extra=dict(final["extra"], night_id=N["id"]))
+        self._checkpoints.hook("history_written")
         N["phase"] = "done"
+        # Once done is published, state/history are durable. Remove the manifest
+        # before deleting generations, so partial cleanup cannot expose a dangling one.
+        self.save_night()
+        self._checkpoints.hook("finalized")
+        P_.night_json.unlink()
         shutil.rmtree(str(P_.work), ignore_errors=True)
         try:
             (P_.home / "dry_gen_cache.jsonl").unlink()
@@ -1533,15 +1649,20 @@ class Sleeper:
         return rows
 
     def write_cards(self) -> None:
-        self.paths.cards.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.paths.cards.with_name("cards.jsonl.tmp")
-        tmp.write_text("".join(json.dumps(r) + "\n" for r in self.card_rows()))
-        tmp.replace(self.paths.cards)
+        write_text(self.paths.cards, "".join(json.dumps(r) + "\n" for r in self.card_rows()))
 
     def append_night(self, res: dict, extra: Optional[dict] = None) -> None:
         row = {"ts": time.time(), "date": res.get("date"), "night": res.get("night"), "status": res.get("status"), "dry_run": res.get("dry_run"),
+               "night_id": getattr(self, "N", {}).get("id"),
                "scale": res.get("scale"), "quiz": res.get("quiz"), "recall_pre": res.get("recall_pre"), "harm": res.get("harm"), "general": res.get("general"),
                "reverted": res.get("reverted"), "steps": res.get("steps_total"), "held_out": res.get("held_out"), "profile": self.prof.name}
         row.update(extra or {})
-        with open(str(self.paths.nights), "a") as f:
-            f.write(json.dumps(row) + "\n")
+        previous = self.paths.nights.read_text() if self.paths.nights.exists() else ""
+        if row.get("night_id"):
+            for line in previous.splitlines():
+                try:
+                    if json.loads(line).get("night_id") == row["night_id"]:
+                        return
+                except ValueError:
+                    continue
+        write_text(self.paths.nights, previous + ("\n" if previous and not previous.endswith("\n") else "") + json.dumps(row) + "\n")

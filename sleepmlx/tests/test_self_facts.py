@@ -104,7 +104,7 @@ class NoteQuizTests(unittest.TestCase):
             sl.top_up_holdout(d, st)
             self.assertEqual(held_n(sl, d), 2)
             self.assertTrue(sl.items["lesson|x"].held and sl.items["lesson|x"].para)    # the lesson keeps its paraphrase
-            self.assertEqual(gate_mod.decide({"harm_ok": True}, {"hits": 0}, {"n": held_n(sl, d), "hits": 1}), [])
+            self.assertEqual(gate_mod.decide({"harm_ok": True}, {"n": held_n(sl, d), "hits": 0}, {"n": held_n(sl, d), "hits": 1}), [])
             self.assertEqual(sl.items["note|m1"].qa + sl.items["note|m2"].qa, [x for x in sl.items["note|m1"].qa + sl.items["note|m2"].qa if x[1] in ("Emma", "Tomas")])
         finally:
             env.close()

@@ -141,9 +141,20 @@ setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.
 // The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
 // While asleep: runs are blocked, scheduled Glim runs wait (the missed-run catch-up fires them once after wake), the pill rests.
 const sl = { asleep: false, starting: 0, waking: false, wakingAt: 0, startedAuto: false, wakeAt: null, checkingIn: false, sleepKey: null, lastKey: null, lastActive: Date.now(), bad: '' };
+const SleepSession = require('./src/sleepsession');
+const sleepSessionFile = () => path.join(app.getPath('userData'), 'sleep-session.json');
+function persistSleepSession(phase) {
+  try {
+    SleepSession.save(sleepSessionFile(), { startedAt: sl.startedAt || Date.now(), wakeAt: sl.wakeAt,
+      startedAuto: sl.startedAuto, sleepKey: sl.sleepKey, assistantOff: !!sl.assistantOff, phase });
+    return true;
+  } catch (e) { console.error('[sleep] could not save session:', e.message || e); return false; }
+}
+function clearSleepSession() { try { SleepSession.clear(sleepSessionFile()); } catch (e) { console.error('[sleep] could not clear session:', e.message || e); } }
+function abandonSleepAttempt() { if (sl.assistantOff) persistSleepSession('attention'); else clearSleepSession(); }
 function sleepView() {
   const st = sleeper.status(); const av = sleeper.available();
-  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, line: sl.asleep ? pillLine(st) : '', live: sl.asleep ? sleeper.liveNow(st) : null, hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, nightTo: effectiveWindow(store.getSettings(), learnedNow(new Date())).to, learned: learnedNow(new Date()), error: sl.bad };
+  return { asleep: sl.asleep, starting: !!sl.starting, waking: sl.waking, modelReady: !!warmer && warmer.state === 'ready', line: sl.asleep ? pillLine(st) : '', live: sl.asleep ? sleeper.liveNow(st) : null, hours: st.hours, lastQuiz: st.lastQuiz, demo: st.demo, since: st.since, available: av.ok, reason: av.reason, statusLine: sleeper.statusLine(), startedAuto: sl.startedAuto, wakeAt: sl.wakeAt, wakeLabel: sl.asleep ? wakeLabel(sl.wakeAt, Date.now()) : '', checkingIn: sl.checkingIn, nightTo: effectiveWindow(store.getSettings(), learnedNow(new Date())).to, learned: learnedNow(new Date()), error: sl.bad };
 }
 function pushSleep() {
   const v = sleepView();
@@ -163,7 +174,7 @@ const BEN_FIRST_MS = 120000;
 const HELPER_COMPACT = 10000;
 let benLastTurn = 0;
 const benBusy = () => store.getSettings().benFirst !== false && (!!(agent && agent.running) || !!(call && callAgent && callAgent.running) || Date.now() - benLastTurn < BEN_FIRST_MS);
-const sleepHold = () => (sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false;
+const sleepHold = () => ((sl.asleep || sl.waking) && store.getSettings().sleepPauseGlims !== false) || !!sl.restoreFailed;
 function sleepNotice(text) { send('sleep:notice', { text }); }
 // each launch and each new thread starts on the default pill (Auto unless Settings says otherwise); the top-bar pills change only the current one
 function resetModelToDefault() {
@@ -251,7 +262,12 @@ function startSleep(o) {
   const dur = o.auto ? 'morning' : ('minutes' in o ? o.minutes : durationFromSetting(cfg.sleepDuration));
   if (!o.auto && 'minutes' in o) store.saveSettings({ sleepDuration: o.minutes === null ? 'open' : String(o.minutes) });
   const until = computeWakeAt(now0, dur, cfg, learnedNow(now0));
-  const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: until });
+  const deadline = o.auto && !cfg.wakeAt ? null : until;
+  // Persist before detaching: a desktop restart must retain both the deadline and
+  // the obligation to restore a chat model stopped for this night.
+  sl.startedAt = now0.getTime(); sl.wakeAt = deadline; sl.startedAuto = !!o.auto;
+  if (!persistSleepSession('preparing')) return { error: 'Could not save this sleep session. Check available disk space and try again.' };
+  const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: deadline });
   // the big chat model is on and holds the memory sleep needs: the sheet offers "Turn it off for now" (stopAssistant), which
   // stops it, sleeps, and turns it back on at wake
   if (r.assistantOn && hasLocalAssistant) {
@@ -263,31 +279,40 @@ function startSleep(o) {
         return r2;
       }).finally(() => { sl.stopping = false; });
     }
+    abandonSleepAttempt();
     return { error: "Glim's chat model is on and using the memory sleep needs.", assistantOn: true };
   }
-  if (r.needsRuntime) { send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
-  if (!r.ok) return { error: r.error };
+  if (r.needsRuntime) { abandonSleepAttempt(); send('sleep:needs-runtime', r.plan); return { needsRuntime: true, plan: r.plan, error: r.error }; }
+  if (!r.ok) { abandonSleepAttempt(); return { error: r.error }; }
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sl.asleep = true; if (helpers && helpers.active.size) helpers.pauseForSleep();   // Motes mid-run stop and run again once after wake; they no longer block sleep (asleep first so their due runs are held)
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
+  persistSleepSession('sleeping');
   pushSleep(); updatePill();
   return { ok: true };
 }
 // stop.sh stops the model servers and gateway and clears ASSISTANT_RUNNING; resolves '' or a plain error
 function stopAssistantForSleep() {
   return new Promise((resolve) => {
+    // Record the obligation before stop.sh can change the model processes. A
+    // crash between its exit and this callback must still restore the model.
+    sl.assistantOff = true;
+    if (!persistSleepSession('preparing')) { sl.assistantOff = false; return resolve('Could not save the model restart plan, so sleep did not stop your chat model.'); }
     require('child_process').execFile('/bin/bash', [path.join(path.dirname(SERVE_SH), 'stop.sh')], { timeout: 60000 }, (err) => {
       if (sleeper.assistantState() === 'on') return resolve("Could not turn off Glim's big chat model, so sleep could not start" + (err ? ' (' + String(err.message || err).slice(0, 120) + ')' : '') + '.');
-      sl.assistantOff = true; resolve('');
+      sl.assistantOff = true; persistSleepSession('preparing'); resolve('');
     });
   });
 }
 // the chat model was turned off for this sleep: start it again (when Glim wakes, or when the sleep never started)
 function restoreAssistant() {
-  if (!sl.assistantOff) return;
-  sl.assistantOff = false;
+  if (!sl.assistantOff || sl.restoreRequested) return;
   const cmd = modelStartCommand(store.getSettings());
-  if (cmd) try { require('child_process').spawn('/bin/zsh', ['-lc', cmd], { cwd: os.homedir(), detached: true, stdio: 'ignore' }).unref(); } catch (e) { /* the Offline button still works */ }
+  if (cmd) try {
+    if (warmer) warmer.gatewayMoved();
+    require('child_process').spawn('/bin/zsh', ['-lc', cmd], { cwd: os.homedir(), detached: true, stdio: 'ignore' }).unref();
+    sl.restoreRequested = true;
+  } catch (e) { /* retain the restart obligation; Turn on is still available */ }
 }
 // plain words for the last line the sleep app printed before it stopped
 function sleepWhy(line) {
@@ -300,26 +325,33 @@ function sleepWhy(line) {
 }
 async function wakeNow() {
   if (!sl.asleep || sl.waking) return { ok: true };
-  sl.waking = true; sl.wakingAt = Date.now();
+  sl.waking = true; sl.wakingAt = Date.now(); sl.bad = ''; persistSleepSession('waking');
   const now = new Date(), s = store.getSettings();
   const wk = wakeKey({ sleepKey: sl.sleepKey, now, settings: s, learned: learnedNow(now) }); // never a key from outside the window: waking at 08:00 must not block tonight
   if (wk) sl.lastKey = wk;
   pushSleep(); updatePill();
-  const r = await sleeper.wake();
-  if (!r.ok) { sl.waking = false; pushSleep(); sleepNotice('Could not wake Glim: ' + (r.error || 'unknown error')); return { error: r.error }; }
+  let r;
+  try { r = await sleeper.wake(); }
+  catch (e) { r = { ok: false, error: String(e.message || e) }; }
+  if (!r.ok) { sl.waking = false; sl.bad = 'Could not wake Glim: ' + (r.error || 'unknown error'); pushSleep(); sleepNotice(sl.bad); return { error: sl.bad }; }
   return { ok: true };
 }
 // the sleep app has stopped: wait for the gateway to answer again, then show the morning summary
 async function onWoke() {
-  sl.waking = true; sl.starting = 0; pushSleep(); updatePill();
+  sl.waking = true; sl.starting = 0; persistSleepSession('restoring'); pushSleep(); updatePill();
   restoreAssistant();
   if (warmer) { warmer.gatewayMoved(); for (let i = 0; i < 240 && warmer.state !== 'ready'; i++) await new Promise((r) => setTimeout(r, E2E ? 100 : 500)); }
+  const ready = !!warmer && warmer.state === 'ready';
   sl.asleep = false; sl.waking = false; sl.wakeAt = null; sl.lastActive = Date.now();
+  sl.restoreFailed = !ready;
+  if (ready) { sl.assistantOff = false; sl.restoreRequested = false; }
+  sl.bad = ready ? '' : 'Sleep has stopped, but the chat model is not ready. Use Turn on to try again. Your draft is still here.';
+  if (ready) clearSleepSession(); else persistSleepSession('attention');
   const summary = sleeper.readSummary();
   pushSleep(); updatePill();
-  send('sleep:woke', { summary, demo: sleeper.status().demo });
-  notify('Glim is awake', summary ? short(summary.replace(/^#.*\n+/, ''), 140) : 'Welcome back.');
-  if (helpers) helpers.tick(); // scheduled runs that came due while asleep fire once now
+  send('sleep:woke', { summary, demo: sleeper.status().demo, ready });
+  notify(ready ? 'Glim is awake' : 'Sleep stopped · model needs attention', ready ? (summary ? short(summary.replace(/^#.*\n+/, ''), 140) : 'Welcome back.') : sl.bad);
+  if (helpers && ready) helpers.tick(); // wait for the restored model before releasing due runs
 }
 function onSleepPoll(st, events) {
   let alerts = 0; const lines = [];
@@ -348,7 +380,7 @@ function onSleepPoll(st, events) {
   }
   if (!was && now && !sl.waking) { sl.asleep = true; sl.startedAuto = false; pushSleep(); updatePill(); return; } // started from outside (Mac launcher)
   if ((was || sl.waking) && !now && !sl.wokeRunning) { sl.wokeRunning = true; onWoke().finally(() => { sl.wokeRunning = false; }); return; }
-  if (sl.waking && st.sleeping && Date.now() - sl.wakingAt > 90000) { sl.waking = false; pushSleep(); sleepNotice('Glim is taking a long time to wake up. Look at ' + sleeper.p.log + '.'); return; }
+  if (sl.waking && st.sleeping && Date.now() - sl.wakingAt > 90000) { sl.waking = false; sl.bad = 'Glim is taking a long time to wake up. Your draft is still here. Try Wake again or look at ' + sleeper.p.log + '.'; pushSleep(); sleepNotice(sl.bad); return; }
   if (sl.asleep) pushSleep();
 }
 function autoSleepTick(now, over) {
@@ -1222,14 +1254,21 @@ async function afterFirstPaint() {
   await refreshDiary();
   warmer = new Warmer({
     getSettings: () => store.getSettings(), getTools: () => toolDefs, busy: () => !!(agent && agent.running),
-    onState: (state, info) => { if (state === 'ready') gwReadyAt = Date.now(); gwState = { state, ...info }; send('gateway', gwState); }
+    onState: (state, info) => { if (state === 'ready') { gwReadyAt = Date.now(); if (!sl.asleep && !sl.waking && !sl.stopping && (sl.bad || (sl.assistantOff && sl.restoreRequested) || sl.restoreFailed)) { sl.bad = ''; sl.restoreFailed = false; sl.assistantOff = false; sl.restoreRequested = false; clearSleepSession(); pushSleep(); } } gwState = { state, ...info }; send('gateway', gwState); }
   });
   warmer.start();
   if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
   if (FEATURES.sleep) {
     sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
     if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
-    { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
+    {
+      const st = sleeper.status();
+      const saved = SleepSession.reconcile(SleepSession.read(sleepSessionFile()), st);
+      if (saved) { sl.startedAt = saved.startedAt; sl.wakeAt = saved.wakeAt; sl.startedAuto = !!saved.startedAuto; sl.sleepKey = saved.sleepKey; sl.assistantOff = !!saved.assistantOff; }
+      if (st.sleeping) { sl.asleep = true; if (!saved) sl.wakeAt = st.wakeAt || null; pushSleep(); autoSleepTick(); }
+      else if (saved && saved.phase !== 'attention') { sl.wokeRunning = true; onWoke().finally(() => { sl.wokeRunning = false; }); }
+      else if (saved) { restoreAssistant(); sl.restoreFailed = true; sl.bad = 'Sleep has stopped. The chat model may need Turn on before it can answer.'; pushSleep(); }
+    }
   }
   if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); rollupTick().catch(() => {}); }, 60000).unref();
   if (!E2E && fs.existsSync(SERVE_SH)) { try { require('./src/standing').seedStanding(helpers, app.getPath('userData')); } catch (e) { /* optional */ } }

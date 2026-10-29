@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 from sleepmode import scheduler as sched
 from sleepmode.checkin import Item
@@ -141,6 +142,41 @@ class SchedTest(TmpCase):
         t = self.go()
         self.assertTrue(self.wait_for(lambda: self.state.read_status().get("state") == "sleeping"))
         self.assertLess(self.wake_and_join(t), 1.0)
+
+    def test_timed_wake_interrupts_chunk_and_records_deadline(self):
+        now = [100.0]
+
+        class Worker:
+            def run_chunk(self, budget_s, files, should_stop):
+                self.assert_before = should_stop()
+                now[0] = 101.0
+                self.assert_after = should_stop()
+                return ChunkResult(None, 0, 0, True)
+
+        worker = Worker()
+        with patch.dict(os.environ, {"SLEEPMODE_WAKE_AT_MS": "101000"}):
+            sc = Scheduler(self.cfg, worker, scanners=[], clock=lambda: now[0])
+        sc.run()
+        self.assertFalse(worker.assert_before)
+        self.assertTrue(worker.assert_after)
+        self.assertEqual(sc.stop_reason, "wake deadline")
+        self.assertEqual(self.state.read_status()["wake_at_ms"], 101000)
+        self.assertEqual(self.state.read_status()["state"], "awake")
+        self.assertFalse(self.cfg.sleeping_path.exists())
+
+    def test_invalid_or_absent_wake_deadline_is_open(self):
+        for value in ("", "bad", "NaN", "Infinity", "1e308", "-1", "0", "0.5"):
+            with self.subTest(value=value), patch.dict(os.environ, {"SLEEPMODE_WAKE_AT_MS": value}):
+                sc = self._make()
+                self.assertIsNone(sc.wake_at_ms)
+                self.assertFalse(sc.should_stop())
+
+    def test_past_wake_deadline_stops_before_work(self):
+        with patch.dict(os.environ, {"SLEEPMODE_WAKE_AT_MS": "1000"}):
+            sc = Scheduler(self.cfg, self.worker, scanners=[], clock=lambda: 2.0)
+        sc.run()
+        self.assertEqual(sc.stop_reason, "wake deadline")
+        self.assertEqual(self.worker.calls, [])
 
     def test_assistant_running_wakes(self):
         t = self.go()

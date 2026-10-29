@@ -121,12 +121,13 @@ class NightTests(unittest.TestCase):
         write_raw(e.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="c2")
         e.cfg.gate_min_gain = 0      # this test is about adapter rotation and replay; the gain rule has its own tests
         be2 = e.backend()
+        incumbent = e.paths.adapter
         res = e.sleeper(be2).run(e.week())
         self.assertEqual(res["status"], "done", res)
         self.assertTrue((e.paths.adapter_prev / "adapters.safetensors").exists())
         self.assertEqual(read_json(e.paths.state)["slept_days"], ["2026-10-20", "2026-10-21"])
         # the night started from last night's adapter and trained on earlier nights' cards too
-        self.assertTrue(be2.loaded and be2.loaded[0] == str(e.paths.adapter))
+        self.assertTrue(be2.loaded and be2.loaded[0] == str(incumbent))
         self.assertTrue(any("Marta" in p or "Orbix" in p for p in be2.prompts_trained))
         self.assertTrue(any("Pavel" in p or "Quillon" in p for p in be2.prompts_trained))
 
@@ -189,11 +190,12 @@ class BudgetTests(unittest.TestCase):
             self.assertIsNone(r1.get("quiz"))
             # next chunk resumes at the saved step
             be2 = env.backend()
+            checkpoint = env.paths.work_adapter
             r2 = env.sleeper(be2, budget=100000).run(env.week())
             self.assertEqual(r2["status"], "done", r2)
             self.assertTrue(r2["resumed"])
             self.assertEqual(be1.steps_seen + be2.steps_seen, list(range(night["total_steps"])))
-            self.assertEqual(be2.loaded[0], str(env.paths.work_adapter))
+            self.assertEqual(be2.loaded[0], str(checkpoint))
             self.assertTrue(env.paths.adapter.exists())
             self.assertIsNotNone(r2["quiz"])
         finally:
@@ -313,12 +315,12 @@ class GateTests(unittest.TestCase):
 
     def test_decide(self):
         ok = {"harm_ok": True, "harm": 0.0}
-        self.assertEqual(gate_mod.decide(ok, {"hits": 0}, {"n": 3, "hits": 2}), [])
-        self.assertIn("did not improve", gate_mod.decide(ok, {"hits": 1}, {"n": 3, "hits": 1})[0])
-        self.assertIn("got worse", gate_mod.decide(ok, {"hits": 2}, {"n": 3, "hits": 1})[0])
+        self.assertEqual(gate_mod.decide(ok, {"n": 3, "hits": 0}, {"n": 3, "hits": 2}), [])
+        self.assertIn("did not improve", gate_mod.decide(ok, {"n": 3, "hits": 1}, {"n": 3, "hits": 1})[0])
+        self.assertIn("got worse", gate_mod.decide(ok, {"n": 3, "hits": 2}, {"n": 3, "hits": 1})[0])
         self.assertIn("no held-out", gate_mod.decide(ok, None, {"n": 0})[0])
-        self.assertIn("general questions dropped", gate_mod.decide({"harm_ok": False, "harm": 5.0}, {"hits": 0}, {"n": 2, "hits": 2})[0])
-        self.assertEqual(gate_mod.decide(ok, {"hits": 1}, {"n": 3, "hits": 1}, min_gain=0), [])
+        self.assertIn("general questions dropped", gate_mod.decide({"harm_ok": False, "harm": 5.0}, {"n": 2, "hits": 0}, {"n": 2, "hits": 2})[0])
+        self.assertEqual(gate_mod.decide(ok, {"n": 3, "hits": 1}, {"n": 3, "hits": 1}, min_gain=0), [])
 
     def test_a_night_that_teaches_nothing_is_undone(self):
         env = Env()

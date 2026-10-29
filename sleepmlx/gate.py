@@ -16,6 +16,7 @@ Anything else undoes the night: the committed adapter stays.
 """
 from __future__ import annotations
 
+import math
 import re
 from typing import Dict, List, Optional, Sequence
 
@@ -72,7 +73,7 @@ HEAD_WORDS = 12          # only this many words of the reply's first line are gr
 MIN_GAIN = 1             # held-out cards the night must add over the adapter it started from
 
 
-GRADER = "strict-2"   # stored with recorded scores: a score from another grader is not compared with this one
+GRADER = "strict-3"   # stored with recorded scores: a score from another grader is not compared with this one
 _SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹", "01234567890123456789")
 
 
@@ -101,6 +102,27 @@ def has_phrase(text: str, phrase: str) -> bool:
 
 
 _NUM = re.compile(r"(?<![a-z0-9.])\d+(?![a-z0-9])")
+_AMBIGUOUS = re.compile(
+    r"\b(?:no|not|never|neither|nor|cannot|can t|isn t|isnt|aren t|arent|wasn t|wasnt|"
+    r"don t|dont|doesn t|doesnt|didn t|didnt|won t|wont|wouldn t|wouldnt|"
+    r"weren t|werent|couldn t|couldnt|shouldn t|shouldnt|hasn t|hasnt|haven t|havent|"
+    r"or|and|but|either|maybe|perhaps|possibly|probably|instead|rather|actually|"
+    r"wrong|incorrect|false|unsure|uncertain|unknown)\b")
+
+
+def unambiguous(reply: str, accepted: Sequence[str]) -> bool:
+    """Brief-answer gates fail conservatively on denial, hedges, or competing answers.
+
+    Check the complete graded line so a denial after HEAD_WORDS cannot turn an
+    incorrect answer into a hit. This deliberately rejects even 'X, not Y'.
+    """
+    line = head(reply, words=10 ** 9)
+    # Negation words inside a literal name ('No Name', 'Never Say Never') are
+    # part of the answer. Only surrounding language can contradict that name.
+    for answer in sorted((normalize(a) for a in accepted), key=len, reverse=True):
+        if answer:
+            line = re.sub(r"(?<![a-z0-9])" + re.escape(answer) + r"(?![a-z0-9])", " ", line)
+    return not _AMBIGUOUS.search(line)
 
 
 def correct(reply: str, accepted: Sequence[str], question: str = "") -> bool:
@@ -108,6 +130,8 @@ def correct(reply: str, accepted: Sequence[str], question: str = "") -> bool:
     first number of the head that is not in the question must be an accepted one (a hedge such as "7 or 8" for 8 is wrong, while
     "7 + 8 = 15" or "100 C (212 F)" are right)."""
     r = head(reply)
+    if not unambiguous(reply, accepted):
+        return False
     nums_ok = {normalize(a) for a in accepted if normalize(a).isdigit()}
     if nums_ok:
         asked = set(_NUM.findall(normalize(question)))
@@ -121,7 +145,7 @@ def correct(reply: str, accepted: Sequence[str], question: str = "") -> bool:
 
 def recall_hit(answer: str, reply: str) -> bool:
     """A held-out card is answered when its answer (a name) appears as a whole phrase in the head of the reply."""
-    return has_phrase(head(reply), answer)
+    return unambiguous(reply, [answer]) and has_phrase(head(reply), answer)
 
 
 def gate_questions(n: int = 40) -> List[tuple]:
@@ -141,6 +165,8 @@ def score_general(backend, R, adapter: bool, max_tokens: int = 24, n: int = 40) 
     out: List[str] = []
     for i in range(0, len(ps), backend.gen_batch):
         out += backend.generate(ps[i:i + backend.gen_batch], max_tokens, 0.0, adapter)
+    if len(out) != len(ps):
+        raise ValueError("incomplete general gate measurement")
     return [correct(o, a, q) for o, (q, a) in zip(out, gate_questions(n))]
 
 
@@ -152,7 +178,8 @@ def judge(base_flags: Sequence[bool], adapter_flags: Sequence[bool], harm_max: f
     """harm = base points - adapter points (positive = the adapter got worse). Fails when harm > harm_max."""
     b, a = pct(base_flags), pct(adapter_flags)
     harm = (b - a) if b is not None and a is not None else 0.0
-    return {"general_base": b, "general": a, "harm": harm, "harm_ok": harm <= harm_max + 1e-9, "harm_max": harm_max}
+    complete = bool(base_flags) and len(base_flags) == len(adapter_flags)
+    return {"general_base": b, "general": a, "harm": harm, "harm_ok": complete and harm <= harm_max + 1e-9, "harm_max": harm_max}
 
 
 def score_recall(backend, R, cards: Sequence[dict], adapter: bool = True, sys_prompt: str = "Answer with just the name.",
@@ -164,6 +191,8 @@ def score_recall(backend, R, cards: Sequence[dict], adapter: bool = True, sys_pr
     out: List[str] = []
     for i in range(0, len(ps), backend.gen_batch):
         out += backend.generate(ps[i:i + backend.gen_batch], max_tokens, 0.0, adapter)
+    if len(out) != len(ps):
+        raise ValueError("incomplete recall gate measurement")
     flags = [recall_hit(c["a"], o) for c, o in zip(cards, out)]
     by: Dict[str, List[bool]] = {}
     for c, f in zip(cards, flags):
@@ -179,6 +208,17 @@ def _hits(r: Optional[Dict], n: int) -> int:
     return int(round((r.get("recall") or 0.0) * n / 100.0))
 
 
+def measured_recall(r: Optional[Dict], n: int) -> bool:
+    """A missing, partial, or invalid measurement is not a zero-score baseline."""
+    if not isinstance(r, dict) or r.get("n") != n or n <= 0:
+        return False
+    hits = r.get("hits")
+    if hits is not None:
+        return isinstance(hits, int) and not isinstance(hits, bool) and 0 <= hits <= n
+    recall = r.get("recall")
+    return isinstance(recall, (int, float)) and math.isfinite(recall) and 0 <= recall <= 100
+
+
 def decide(general: Dict, pre: Optional[Dict], post: Dict, min_gain: int = MIN_GAIN) -> List[str]:
     """The morning decision. general: judge() result; pre / post: score_recall() of the same held-out cards with the adapter the night
     started from and with tonight's adapter. Returns the reasons to undo the night ([] = keep it)."""
@@ -188,6 +228,9 @@ def decide(general: Dict, pre: Optional[Dict], post: Dict, min_gain: int = MIN_G
     n = int(post.get("n") or 0)
     if n == 0:
         reasons.append("no held-out cards to check what was learned")
+        return reasons
+    if not measured_recall(pre, n) or not measured_recall(post, n):
+        reasons.append("held-out recall baseline missing or incomparable; improvement is inconclusive")
         return reasons
     hp, ha = _hits(pre, n), _hits(post, n)
     if ha < hp:
