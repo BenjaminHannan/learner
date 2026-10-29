@@ -189,10 +189,14 @@ class Browser {
     this.id = this.wc.id; // kept: a destroyed webContents can no longer be asked
     registry.set(this.id, this);
     const wc = this.wc;
-    // Sign-in popups (Google / Apple "Continue with ...") get a real small window that keeps its opener: the page signs in by
-    // messaging the opener and then closes itself. Loaded in place (below) it had no opener, and its window.close() destroyed
-    // this browser (Ben Oct 28: "the browser isn't opening now"). Any other popup still opens in place.
+    // Sign-in popups (Google / Apple "Continue with ...") must keep their opener: the page signs in by messaging the opener and
+    // then closes itself. Loaded in place (below) it had no opener, and its window.close() destroyed this browser (Ben Oct 28:
+    // "the browser isn't opening now"). Ben Oct 29: as its own window it "should be a side browser", so when main.js takes it
+    // (onPopup) the popup's page is shown in a view over this one, in the browser panel. Any other popup still opens in place.
     wc.setWindowOpenHandler(({ url }) => {
+      if (isAuthPopup(url) && this.onPopup) {
+        return { action: 'allow', createWindow: (options) => { const pv = new view.constructor({ webContents: options.webContents }); this.onPopup(pv); return pv.webContents; } };
+      }
       if (isAuthPopup(url)) return { action: 'allow', overrideBrowserWindowOptions: { width: 520, height: 680, title: 'Sign in', autoHideMenuBar: true, backgroundColor: '#ffffff' } };
       // web pages only: a page's window.open('file:///…') must not turn a local file into the page the model reads
       if (/^https?:/i.test(url)) setImmediate(() => { if (!wc.isDestroyed()) wc.loadURL(url).catch(() => {}); });
