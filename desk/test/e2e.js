@@ -104,6 +104,40 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
   const pev = (code) => pillWin.win.webContents.executeJavaScript(code);
   const { site, gw, checks } = env;
   try {
+    if (process.env.PREMONITION_E2E_COMPOSER_ONLY) {
+      const focusedGw = await startGateway([{ hang: true }]);
+      const untilComposer = async (fn, ms = 5000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(50); } return false; };
+      const measure = () => ev('(() => { const i=document.querySelector("#input"); return {width:i.clientWidth, height:i.clientHeight, scroll:i.scrollHeight, value:i.value, placeholder:i.placeholder, max:parseFloat(getComputedStyle(i).maxHeight)}; })()');
+      try {
+        store.saveSettings({ gatewayUrl: focusedGw.url, verify: false });
+        await untilComposer(() => ev('!!window.__ready'));
+        win.setSize(1100, 860); await sleep(200);
+        await ev('(()=>{const i=document.querySelector("#input");i.value="Synthetic composer check";i.dispatchEvent(new Event("input"));document.querySelector("#btnSend").click();})()');
+        if (!await untilComposer(() => ev('!document.querySelector("#btnStop").hidden'))) throw Error('synthetic agent did not start');
+        const threadId = store.listThreads().find((t) => !t.helper).id;
+        const draft = 'A synthetic draft that should remain readable when the browser panel narrows and widens the chat composer.';
+        await ev('(()=>{const i=document.querySelector("#input");i.value=' + JSON.stringify(draft) + ';i.dispatchEvent(new Event("input"));})()');
+        const wide = await measure();
+        await ev('window.desk.browser.open(' + JSON.stringify(threadId) + ',' + JSON.stringify(site.base + '/') + ',true,' + JSON.stringify(threadId) + ')');
+        if (!await untilComposer(() => ev('document.querySelector("#bpanel").classList.contains("shown")'))) throw Error('synthetic browser panel did not open');
+        await sleep(1000);
+        const narrow = await measure();
+        if (process.env.PREMONITION_E2E_OUTPUT) { fs.mkdirSync(process.env.PREMONITION_E2E_OUTPUT, { recursive: true }); fs.writeFileSync(path.join(process.env.PREMONITION_E2E_OUTPUT, 'composer-narrow.png'), (await wc.capturePage()).toPNG()); }
+        await ev('(()=>{const i=document.querySelector("#input");i.value="";i.dispatchEvent(new Event("input"));})()');
+        const placeholder = await measure();
+        await ev('(()=>{const i=document.querySelector("#input");i.value=' + JSON.stringify(draft) + ';i.dispatchEvent(new Event("input"));})()');
+        const fittedNarrow = await measure();
+        await ev('document.querySelector("#bClose").click()'); await sleep(1000);
+        const restored = await measure();
+        console.log('COMPOSER METRICS ' + JSON.stringify({ wide, narrow, placeholder, fittedNarrow, restored }));
+        checks.push(['composer draft remains visible after browser panel narrows it', narrow.value === draft && narrow.width < wide.width && (narrow.scroll <= narrow.height + 1 || narrow.height >= narrow.max - 1)]);
+        checks.push(['composer running placeholder remains visible in the narrow chat', /steer/.test(placeholder.placeholder) && placeholder.scroll <= placeholder.height + 1]);
+        checks.push(['composer shrinks again when the browser panel closes', restored.value === draft && restored.width > fittedNarrow.width && restored.height <= wide.height + 2]);
+        for (const [name, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + name);
+        const bad = checks.some(([, ok]) => !ok);
+        focusedGw.close(); gw.close(); site.close(); clearTimeout(timer); app.exit(bad ? 1 : 0); return;
+      } catch (e) { focusedGw.close(); throw e; }
+    }
     if (process.env.PREMONITION_E2E_SLEEP_ONLY) {
       const assert = require('assert');
       const untilSleep = async (fn, ms = 10000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(50); } return false; };
