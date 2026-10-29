@@ -156,18 +156,23 @@ function createMemory(dir, opts) {
     else lines.push(line, '');
   }
   // Caps evict the oldest-updated notes that carry their own id (Glim's); lines Ben wrote by hand are never evicted.
-  function commit(d, beforeWrite) {
+  function commit(d, beforeWrite, protectedId) {
+    const oldest = (facts) => {
+      const others = facts.filter((f) => f.id !== protectedId);
+      if (!others.length && protectedId) throw new Error('Could not keep note within the memory limit.');
+      return (others.length ? others : facts).reduce((o, f) => (f.updated < o.updated ? f : o));
+    };
     for (;;) {
       const all = factsOf(d.lines.join(d.eol), 0);
       const cards = all.filter((f) => isCard(f) && f.explicit);
-      if (cards.length > MAX_CARDS) { d.lines.splice(cards.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1); continue; }
+      if (cards.length > MAX_CARDS) { d.lines.splice(oldest(cards).line, 1); continue; }
       let removed = false;
       for (const facts of [all.filter((f) => !isCard(f) && !isSkill(f)), all.filter((f) => isSkill(f) && !isCard(f))]) {
         if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) continue;
         const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
         // Hand-written bullets are never evicted, even when they alone exceed the cap.
         if (!mine.length || hand.length > MAX_FACTS || size(hand) > MAX_CHARS) continue;
-        d.lines.splice(mine.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1);
+        d.lines.splice(oldest(mine).line, 1);
         removed = true; break;
       }
       if (!removed) break;
@@ -242,7 +247,7 @@ function createMemory(dir, opts) {
           fact_sha256: crypto.createHash('sha256').update(stored.text, 'utf8').digest('hex'), topic: stored.topic || null,
           origin: research.origin, context: research.context, attribution: research.attribution,
           expires: research.expires || null, prepared_at: new Date().toISOString() });
-      } : null);
+      } : null, rec.id);
     } catch (e) { return { ok: false, error: 'Could not save note: ' + String(e && e.message || e) }; }
     if (txId) {
       try {
@@ -250,7 +255,9 @@ function createMemory(dir, opts) {
         provenance = { status: research.attribution.status };
       } catch (e) { provenance = { status: 'pending' }; }
     }
-    return { ok: true, fact: rec, replaced: hit >= 0, kept: kept.some((f) => f.id === rec.id), ...(provenance ? { provenance } : {}) };
+    const retained = kept.some((f) => f.id === rec.id);
+    if (!retained) return { ok: false, error: 'Could not keep note within the memory limit.', kept: false };
+    return { ok: true, fact: rec, replaced: hit >= 0, kept: true, ...(provenance ? { provenance } : {}) };
   }
 
   function forget(q) {
@@ -343,7 +350,8 @@ function createMemory(dir, opts) {
       if (why) return { ok: false, error: why, refused: true };
       const rec = { ...f, indent: f.indent, text, updated: now() }; if (topic) rec.topic = topic; else delete rec.topic;
       d.lines[f.line] = noteLine(rec);
-      commit(d);
+      try { commit(d, null, rec.id); }
+      catch (e) { return { ok: false, error: 'Could not save note: ' + String(e && e.message || e) }; }
       return { ok: true, fact: rec };
     },
     delete: (id) => forget({ id }),

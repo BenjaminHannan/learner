@@ -53,6 +53,38 @@ test('memory: caps by count and by total characters, oldest evicted first', () =
   assert.ok(m2.list().some((f) => /word39/.test(f.text)));
 });
 
+test('memory: saving an older note on the same day keeps it and evicts another eligible note', () => {
+  const m = createMemory(tmp(), { now: () => Date.UTC(2026, 9, 29, 15) });
+  const first = m.save(Array.from({ length: 9 }, (_, j) => 'initial' + j).join(' '), 'preference').fact;
+  const others = [];
+  for (let i = 0; i < 19; i++) others.push(m.save(Array.from({ length: 30 }, (_, j) => 'choice' + i + 'word' + j).join(' '), 'preference').fact);
+  const skill = m.save('Research on independent topic', 'skill: research').fact;
+  const card = m.save('Orion => means => constellation', 'card').fact;
+  m.write(m.read().text + '- handwritten personal note\n');
+  const result = m.save(first.text + ' ' + Array.from({ length: 40 }, (_, j) => 'extra' + j).join(' '), 'preference');
+  assert.equal(result.ok, true); assert.equal(result.replaced, true); assert.equal(result.kept, true);
+  const facts = m.list();
+  assert.ok(facts.some(f => f.id === first.id && f.text === result.fact.text));
+  assert.ok(!facts.some(f => f.id === others[0].id));
+  assert.ok(facts.some(f => f.id === skill.id)); assert.ok(facts.some(f => f.id === card.id));
+  assert.ok(facts.some(f => f.text === 'handwritten personal note'));
+});
+
+test('memory: an edit or upsert that cannot fit preserves the existing file and note', () => {
+  const m = createMemory(tmp(), { now: () => Date.UTC(2026, 9, 29, 15) });
+  const saved = m.save('original note about favorite tea', 'preference').fact;
+  const manual = ['a', 'b', 'c'].map(c => '- ' + c.repeat(1980)).join('\n') + '\n';
+  assert.ok(m.write(manual + m.read().text).ok);
+  const before = m.read().text;
+  const expanded = saved.text + ' ' + Array.from({ length: 30 }, (_, i) => 'extra' + i).join(' ');
+  const upsert = m.save(expanded, 'preference');
+  assert.equal(upsert.ok, false); assert.match(upsert.error, /memory limit/);
+  assert.equal(m.read().text, before); assert.ok(m.list().some(f => f.id === saved.id && f.text === saved.text));
+  const edit = m.edit(saved.id, { text: expanded });
+  assert.equal(edit.ok, false); assert.match(edit.error, /memory limit/);
+  assert.equal(m.read().text, before); assert.ok(m.list().some(f => f.id === saved.id && f.text === saved.text));
+});
+
 test('memory: secrets are refused', () => {
   const m = mem();
   for (const t of ['Ben\'s password is hunter2', 'my pin: 4821', 'card 4111 1111 1111 1111', 'the verification code is 123456', 'api key sk-abcdefghijklmnopqrstuvwx'])
