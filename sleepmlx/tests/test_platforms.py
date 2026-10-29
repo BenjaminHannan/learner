@@ -70,7 +70,7 @@ class ProfileChoiceTests(unittest.TestCase):
         p = profile.load_profile("lfm3_mps")
         self.assertEqual(p.backend, "torch")
         self.assertEqual(p.lora["rank"], 16)
-        self.assertEqual(p.runtime["tok_budget"], 512)
+        self.assertEqual(p.runtime["tok_budget"], 256)
         self.assertTrue(p.runtime["grad_ckpt"])
         self.assertEqual(p.runtime["mps_mem_gb"], 10)
         self.assertEqual(p.model_dir, "~/learner-ops/models/lfm3-1.7b-hf")

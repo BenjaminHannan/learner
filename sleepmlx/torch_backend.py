@@ -7,6 +7,7 @@ and the app then runs  llama-server -m base.gguf --lora adapter.gguf   (see `pyt
 """
 from __future__ import annotations
 
+import gc
 import json
 import math
 import os
@@ -107,6 +108,11 @@ def load(model_id_or_dir: str, trust_remote_code: bool = False, dtype=None, devi
     return model, tok
 
 
+def is_oom(e: BaseException) -> bool:
+    m = str(e).lower()
+    return "out of memory" in m or "mps backend out of memory" in m
+
+
 class TorchBackend(Backend):
     def __init__(self, model, tok, prof, model_id: str = "", tok_budget: int = 1024, grad_ckpt: bool = True, gen_batch: int = 8):
         import torch
@@ -147,8 +153,35 @@ class TorchBackend(Backend):
         t = self.torch
         return t.autocast(device_type="cuda", dtype=self.dtype) if self.device == "cuda" else t.autocast(device_type="cpu", enabled=False)
 
+    def free(self) -> None:
+        """Give cached blocks back to the device (Oct 29: Ben's 16 GB M1 ran out of MPS memory in chunk 2, 3 GB of it cached "other")."""
+        gc.collect()
+        if self.device == "cuda":
+            self.torch.cuda.empty_cache()
+        elif self.device == "mps":
+            self.torch.mps.empty_cache()
+
     # ---- generation
     def generate(self, prompts, max_tokens, temp=0.0, adapter=True, stops=()):
+        """Out of memory: free the cache, halve the batch for the rest of the night and redo this batch in halves (down to one prompt)."""
+        prompts = list(prompts)
+        try:
+            return self._generate(prompts, max_tokens, temp, adapter, stops)
+        except RuntimeError as e:
+            if not is_oom(e):
+                raise
+            self.free()
+            if len(prompts) == 1:
+                raise
+            self.gen_batch = max(1, min(self.gen_batch, len(prompts)) // 2)
+            self.oom_events = getattr(self, "oom_events", 0) + 1
+            h = len(prompts) // 2
+            return self.generate(prompts[:h], max_tokens, temp, adapter, stops) + self.generate(prompts[h:], max_tokens, temp, adapter, stops)
+        finally:
+            if self.device == "mps":
+                self.torch.mps.empty_cache()
+
+    def _generate(self, prompts, max_tokens, temp=0.0, adapter=True, stops=()):
         t = self.torch
         self.model.eval()
         eos = [self.stop_id]
@@ -200,6 +233,25 @@ class TorchBackend(Backend):
         self.total, self.lr0 = max(total_steps, 1), lr
 
     def train_step(self, batch, replay, step, update: bool = True):
+        """Out of memory: free the cache, halve tok_budget (smaller microbatches, same gradient) and redo the step, down to 64 tokens."""
+        while True:
+            try:
+                return self._train_step(batch, replay, step, update)
+            except RuntimeError as e:
+                if not is_oom(e) or self.tok_budget <= 64:
+                    raise
+                if self.opt is not None:
+                    self.opt.zero_grad(set_to_none=True)
+                else:
+                    self.model.zero_grad(set_to_none=True)
+                self.free()
+                self.tok_budget = max(64, self.tok_budget // 2)
+                self.oom_events = getattr(self, "oom_events", 0) + 1
+            finally:
+                if self.device == "mps":
+                    self.torch.mps.empty_cache()
+
+    def _train_step(self, batch, replay, step, update: bool = True):
         import torch.nn.functional as F
         t = self.torch
         self.model.train()
@@ -288,10 +340,7 @@ class TorchBackend(Backend):
         return t_step, time.time() - t0
 
     def close(self) -> None:
-        if self.device == "cuda":
-            self.torch.cuda.empty_cache()
-        elif self.device == "mps":
-            self.torch.mps.empty_cache()
+        self.free()
 
 
 class _null:
