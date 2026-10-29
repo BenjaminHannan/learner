@@ -19,7 +19,8 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Sequence
 
-HARM_MAX = 3.0
+HARM_MAX = 10.0   # Oct 29: was 3.0 (2 net lost answers of 40 undid a night). LFM3 nightly general scores vary SD ~1.4 pts on 570 Qs ~ 5.3 pts on 40,
+                  # so 3.0 reverted harmless nights about 1 in 6; 10.0 (~2 SD) undoes a night only at 5+ net lost answers of 40
 GATE_SYS = "Answer with just the answer, as briefly as possible."
 
 # (question, [accepted answers: lowercase substrings of a correct reply])
