@@ -599,7 +599,7 @@ test('dropOldImages: a picture far back in a long chat is dropped even if it is 
 });
 
 // ---- Ben Oct 29: "I am now on the sign-in page" with no tool call; "have it think?" ----------------------------------------------------
-test('claimed actions without a tool call: dropped from history, run again thinking; a task that acts keeps thinking; plain chat stays fast', async () => {
+test('claimed actions without a tool call: dropped from history, run again with a nudge; Glim\u2019s chat always uses the thinking model', async () => {
   const fast = { model: 'fast', modelFast: 'fast', modelMain: 'think', verify: false };
   const tools = { browser_go: async () => 'ok' };
   const gw = await startGateway([
@@ -612,18 +612,19 @@ test('claimed actions without a tool call: dropped from history, run again think
     const a = new Agent({ getSettings: settings(gw, fast), toolDefs: buildTools({}), tools, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
     const t = mkThread();
     await a.run(t, 'connect to schoology');
-    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['fast', 'think', 'think']);
+    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['think', 'think', 'think'], 'Glim\u2019s chat always reasons, even with Fast picked');
     assert.ok(!t.messages.some((m) => /now on the sign-in page/.test(m.content || '')), 'the pretend reply is not in the model history');
-    assert.deepStrictEqual(t.messages.map((m) => m.role), ['user', 'assistant', 'tool', 'assistant']);
+    assert.deepStrictEqual(t.messages.map((m) => m.role), ['user', 'assistant', 'user', 'assistant', 'tool', 'assistant']);
+    assert.match(t.messages[1].content, /never done/); assert.match(t.messages[2].content, /only described steps/, 'the re-run is asked for a real step, not the same prompt again');
     assert.ok(t.items.some((i) => i.t === 'assistant' && /now on the sign-in page/.test(i.text)), 'it stays on screen');
     assert.ok(t.items.some((i) => i.t === 'step' && i.tool === 'verify' && /without doing them/.test(i.summary)));
     await a.run(t, 'thanks');
-    assert.strictEqual(gw.requests[3].model, 'fast');
+    assert.strictEqual(gw.requests[3].model, 'think');
   } finally { gw.close(); }
 });
 
 // ---- Ben Oct 29: "cap thinking to 10 second then force it to respond. Then it can do whatever it was planning to do" -------------------
-test('first-reply thinking cap: cut at the cap, a short plan is forced (fast model, sees the thinking), then the task runs on, thinking', async () => {
+test('first-reply thinking cap: cut at the cap, a short plan is forced (thinking model, sees the thinking), then the task runs on', async () => {
   const think = { model: 'think', modelFast: 'fast', modelMain: 'think', verify: false, thinkCapSecs: 0.2 };
   const tools = { browser_go: async () => 'ok' };
   const gw = await startGateway([
@@ -637,7 +638,7 @@ test('first-reply thinking cap: cut at the cap, a short plan is forced (fast mod
     const a = new Agent({ getSettings: settings(gw, think), toolDefs: buildTools({}), tools, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
     const t = mkThread();
     await a.run(t, "what's my work schedule?");
-    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['think', 'fast', 'think', 'think']);
+    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['think', 'think', 'think', 'think'], 'the forced reply thinks too (no fast model)');
     const note = gw.requests[1].messages.at(-1).content;
     assert.match(note, /Your unfinished thinking/); assert.match(note, /Ben wants his work schedule/);
     assert.ok(t.items.some((i) => i.t === 'assistant' && i.text === "I'll check your saved notes for your work hours."), 'the plan is on screen, tag stripped');
@@ -655,6 +656,8 @@ test('first-reply thinking cap: a forced reply that answers or asks ends the tur
   const slow = { reasoning: 'thinking about it at length '.repeat(4), reasoningDelayMs: 30 };
   const tools = { browser_go: async () => 'ok' };
   const gw = await startGateway([
+    slow, { content: "I'll open the Schoology site and log in for you. I'll open the browser to dresden.schoology.com.\nI'll click the sign-in button.\nI'll click the sign-in button.\nI'll open the Schoology site and log in for you." },
+    { tool_calls: [{ name: 'browser_go', arguments: { url: 'https://school.example' } }] }, { content: 'Signed-in page is open.' },
     slow, { content: 'Sure, what are your hours?' },
     slow, { content: '' }, { content: 'Thought it through: 4 to 9.' },
     { reasoning: 'quick', content: 'Hi!' },
@@ -664,6 +667,10 @@ test('first-reply thinking cap: a forced reply that answers or asks ends the tur
   try {
     const a = new Agent({ getSettings: settings(gw, think), toolDefs: buildTools({}), tools, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
     const t = mkThread();
+    await a.run(t, 'check my homework');   // a run-on list of steps: repeats dropped, the plan keeps two sentences
+    assert.ok(t.items.some((i) => i.t === 'assistant' && i.text === "I'll open the Schoology site and log in for you. I'll open the browser to dresden.schoology.com."));
+    assert.strictEqual(gw.requests[1].model, 'think');
+    gw.requests.splice(0); t.messages = []; t.items = [];
     await a.run(t, 'yes, remember my work schedule?');
     assert.strictEqual(gw.requests.length, 2);
     assert.strictEqual(t.messages.at(-1).content, 'Sure, what are your hours?');
@@ -678,6 +685,34 @@ test('first-reply thinking cap: a forced reply that answers or asks ends the tur
     await m.run(mt, 'check the news');
     assert.strictEqual(gw.requests.length, 9); assert.strictEqual(mt.messages.at(-1).content, 'Mote report.');
   } finally { gw.close(); }
+});
+
+test('a reply that narrates the same steps over and over is cut mid-stream, trimmed, and re-run asking for a real step', async () => {
+  const think = { model: 'think', modelFast: 'fast', modelMain: 'think', verify: false, thinkCapSecs: 0 };
+  const loopText = "I'll open the Schoology site and log in for you. I'll enter your email into the sign-in field. I'll click the sign-in button. " +
+    "I'll type the email into the username field. I will click the sign-in button. I'll list the homework items for you. ".repeat(20);
+  const tools = { browser_go: async () => 'ok' };
+  const gw = await startGateway([{ content: loopText, delayMs: 1 }, { tool_calls: [{ name: 'browser_go', arguments: { url: 'https://dresden.schoology.com' } }] }, { content: 'The sign-in page is open: sign in there.' }]);
+  try {
+    const evs = [];
+    const a = new Agent({ getSettings: settings(gw, think), toolDefs: buildTools({}), tools, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await a.run(t, 'check my homework on schoology');
+    const end = evs.find((e) => e.type === 'assistant_end');
+    assert.strictEqual(end.replace, true);
+    assert.strictEqual(end.text, "I'll open the Schoology site and log in for you. I'll enter your email into the sign-in field. I'll click the sign-in button. I'll type the email into the username field. I'll list the homework items for you.");
+    assert.strictEqual(gw.requests.length, 3);
+    assert.match(gw.requests[1].messages.at(-1).content, /only described steps/);
+    assert.strictEqual(t.messages.at(-1).content, 'The sign-in page is open: sign in there.');
+  } finally { gw.close(); }
+});
+
+test('narration loop guard: honest repeats (schedule lines, a short "Yes.", code) are not cut', () => {
+  const { narrationLoop } = require('../src/agent');
+  assert.strictEqual(narrationLoop('Your shifts:\n- Monday: 4 to 9 pm\n- Tuesday: 4 to 9 pm\n- Friday: 4 to 9 pm\nThat is all.\n'), null);
+  assert.strictEqual(narrationLoop('Yes. Yes. Yes. Yes. Done. '), null);
+  assert.strictEqual(narrationLoop('```\nx = 1\nx = 1\nx = 1\n```\nok. '), null);
+  assert.strictEqual(narrationLoop("I'll click the sign-in button. I’ll click the sign-in button. I will click the sign-in button. "), "I'll click the sign-in button.");
 });
 
 test('claimed actions twice: said plainly instead of pretending; Motes (thinkActing false) are not re-run', async () => {

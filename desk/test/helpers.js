@@ -34,7 +34,7 @@ function startGateway(script, opts) {
       const send = (delta, finish) => res.write('data: ' + JSON.stringify({ choices: [{ index: 0, delta, finish_reason: finish || null }] }) + '\n\n');
       let gone = false; res.on('close', () => { gone = true; });
       if (r.reasoning) for (const c of chunk(r.reasoning, 7)) { if (gone) return; send({ reasoning_content: c }); if (r.reasoningDelayMs) await new Promise((x) => setTimeout(x, r.reasoningDelayMs)); }   // slow thinking (the first-reply cap)
-      if (r.content) for (const c of chunk(r.content, 5)) { send({ content: c }); if (r.delayMs) await new Promise((x) => setTimeout(x, r.delayMs)); }
+      if (r.content) for (const c of chunk(r.content, 5)) { if (gone) return; send({ content: c }); if (r.delayMs) await new Promise((x) => setTimeout(x, r.delayMs)); }
       if (r.hang) { await new Promise((x) => { const t = setTimeout(x, 30000); t.unref(); res.on("close", () => { clearTimeout(t); x(); }); }); if (res.destroyed) return; }
       if (r.tool_calls) {
         r.tool_calls.forEach((tc, idx) => {
