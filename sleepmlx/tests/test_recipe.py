@@ -411,7 +411,7 @@ class CardShapeTests(unittest.TestCase):
     """Config.card_shape: "model" (default, unchanged) | "templated12" (raw note + 5 rewrites + 6 Q&A per fact, no model)."""
 
     def cards(self, **cfg):
-        env = Env(**cfg)
+        env = Env(**dict({"dreamcheck_share": 0.0}, **cfg))   # the dream checker (sleepmode, now on sys.path) calls the model per card: keep it out of the call count
         self.addCleanup(env.close)
         be = env.backend()
         s = env.sleeper(be)
