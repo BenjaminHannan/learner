@@ -10,7 +10,9 @@ import unittest
 from unittest.mock import patch
 
 from sleepmlx import gate
+from sleepmlx import grading
 from sleepmlx import worker
+from sleepmlx.profile import Renderer
 from sleepmlx.checkpoint import Checkpoints
 from sleepmlx.paths import Paths, read_json, write_json
 from .helpers import Env
@@ -75,9 +77,12 @@ class FinalizationBindingTests(unittest.TestCase):
         env = self.pending()
         night, _ = Checkpoints(env.paths).load()
         final = night['finalization']
-        self.assertEqual(final['version'], 1)
+        self.assertEqual(final['version'], 2)
         self.assertEqual(final['grader'], gate.GRADER)
         self.assertEqual(final['night_id'], night['id'])
+        self.assertEqual(final['grading_contract_sha256'], grading.CONTRACT_SHA256)
+        self.assertEqual(final['context']['profile']['name'], env.prof.name)
+        self.assertGreater(final['evaluation']['held_count'], 0)
         # promotion_ready created a destination but did not publish adapters.json.
         self.assertFalse(Checkpoints(env.paths).is_committed(night))
 
@@ -85,7 +90,7 @@ class FinalizationBindingTests(unittest.TestCase):
         env = self.pending()
         checkpoints = Checkpoints(env.paths)
         original, items = checkpoints.load()
-        variants = ('missing_version', 'wrong_version', 'boolean_version', 'wrong_grader', 'missing_identity', 'wrong_identity')
+        variants = ('missing_version', 'wrong_version', 'legacy_version', 'boolean_version', 'wrong_grader', 'wrong_contract', 'missing_identity', 'wrong_identity')
         for phase in ('finalize', 'done', 'export_marked'):
             for variant in variants:
                 with self.subTest(phase=phase, variant=variant):
@@ -96,9 +101,11 @@ class FinalizationBindingTests(unittest.TestCase):
                         final['export_started'] = True
                         final['result']['gguf'] = {'ok': True, 'message': 'uncommitted old export'}
                     if variant == 'missing_version': final.pop('version')
-                    elif variant == 'wrong_version': final['version'] = 2
+                    elif variant == 'wrong_version': final['version'] = 3
+                    elif variant == 'legacy_version': final['version'] = 1
                     elif variant == 'boolean_version': final['version'] = True
                     elif variant == 'wrong_grader': final['grader'] = 'obsolete-grader'
+                    elif variant == 'wrong_contract': final['grading_contract_sha256'] = '0' * 64
                     elif variant == 'missing_identity': final.pop('night_id')
                     else: final['night_id'] = '0' * 32
                     checkpoints.publish(night, items)
@@ -211,10 +218,101 @@ class FinalizationBindingTests(unittest.TestCase):
                 settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
                             'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
                 def boundary(_): raise BackendBoundary()
-                with patch.object(worker.diary_mod, 'build_week', return_value=env.week()):
+                with patch.object(worker.diary_mod, 'build_week', return_value=env.week()), \
+                     patch.object(worker, 'load_profile', return_value=env.prof), \
+                     patch.object(worker, 'cfg_from_env', return_value=env.cfg):
                     with self.assertRaises(BackendBoundary):
                         worker.run_chunk(settings, backend_factory=boundary, log=lambda _: None)
                 self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_model_policy_and_render_changes_cannot_replay_an_uncommitted_pass(self):
+        env = self.pending()
+        for section, field in [('profile', key) for key in
+                ('name', 'hf_id', 'model_dir', 'source_revision', 'backend', 'loader', 'loader_path', 'stop_token')] + \
+                [('policy', key) for key in ('who', 'harm_max', 'gate_min_gain', 'gate_n', 'gate_max_tokens', 'recall_max_tokens')] + \
+                [('export', key) for key in ('llama_cpp_dir', 'gguf_base_dir', 'llama_server', 'base_gguf')] + [('render', '')]:
+            with self.subTest(section=section, field=field):
+                sleeper = env.sleeper(DurableBackend(env.time))
+                sleeper.prof, sleeper.cfg = copy.deepcopy(env.prof), copy.deepcopy(env.cfg)
+                sleeper.R = Renderer(sleeper.prof, None)
+                if section == 'profile': setattr(sleeper.prof, field, 'changed-' + field)
+                elif section in ('policy', 'export'):
+                    old = getattr(sleeper.cfg, field)
+                    setattr(sleeper.cfg, field, old + 1 if isinstance(old, (int, float)) else 'changed-' + field)
+                else:
+                    render = sleeper.R.render
+                    sleeper.R.render = lambda *args: render(*args) + '\nchanged tokenizer template'
+                before = snapshot(env.paths.home)
+                sleeper.exporter = lambda *args, **kw: self.fail('changed context exported')
+                with patch.object(Checkpoints, 'promote', side_effect=AssertionError('changed context promoted')):
+                    result = sleeper.run(env.week())
+                self.assertTrue(result['blocked'])
+                self.assertEqual(result['stop_reason'], 'gate_recheck_required')
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_changed_held_snapshot_cannot_replay_saved_pass(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        night, items = checkpoints.load()
+        next(it for it in items['items'].values() if it['held'])['held'][0]['a'] += ' changed'
+        checkpoints.publish(night, items)
+        self.blocked(env)
+
+    def test_worker_rejects_malformed_evaluation_before_backend(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        original, items = checkpoints.load()
+        for variant in ('missing', 'null', 'empty', 'boolean_count', 'bad_recall', 'changed_held', 'changed_questions'):
+            with self.subTest(variant=variant):
+                night = copy.deepcopy(original)
+                final = night['finalization']
+                if variant == 'missing': final.pop('evaluation')
+                elif variant == 'null': final['evaluation'] = None
+                elif variant == 'empty': final['evaluation'] = {}
+                elif variant == 'boolean_count': final['evaluation']['held_count'] = True
+                elif variant == 'bad_recall': final['evaluation']['recall'] = 'not a digest'
+                elif variant == 'changed_held': final['evaluation']['held_sha256'] = '0' * 64
+                else: final['evaluation']['general']['questions'] = '0' * 64
+                checkpoints.publish(night, items)
+                before = snapshot(env.paths.home)
+                settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                            'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+                with patch.object(worker, 'load_profile', return_value=env.prof), \
+                     patch.object(worker, 'cfg_from_env', return_value=env.cfg), \
+                     patch.object(worker.diary_mod, 'build_week', side_effect=AssertionError('malformed evaluation read diary')), \
+                     patch.object(worker, 'make_backend', side_effect=AssertionError('malformed evaluation loaded backend')):
+                    result = worker.run_chunk(settings, log=lambda _: None)
+                self.assertTrue(result['blocked'])
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_malformed_held_rows_block_without_raising_or_writing(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        night, original_items = checkpoints.load()
+        for key, value in (('q', {}), ('a', None), ('dir', []), ('night', True)):
+            with self.subTest(key=key):
+                items = copy.deepcopy(original_items)
+                next(it for it in items['items'].values() if it['held'])['held'][0][key] = value
+                checkpoints.publish(night, items)
+                self.blocked(env)
+
+    def test_committed_metadata_recovery_cannot_export_under_changed_context(self):
+        env = self.pending('promotion_published')
+        before_adapter = snapshot(env.paths.adapter)
+        sleeper = env.sleeper(DurableBackend(env.time))
+        sleeper.prof = copy.deepcopy(env.prof)
+        sleeper.prof.hf_id = 'synthetic/changed-base'
+        sleeper.cfg = copy.deepcopy(env.cfg)
+        sleeper.cfg.llama_cpp_dir = '/synthetic/converter'
+        sleeper.cfg.gguf_base_dir = '/synthetic/changed-hf'
+        sleeper.exporter = lambda *args, **kw: self.fail('historical completion exported under changed context')
+        result = sleeper.run(env.week())
+        self.assertEqual(result['status'], 'done')
+        self.assertIsNone(result['gguf']['ok'])
+        self.assertTrue(result['gguf']['pending'])
+        self.assertIn('export deferred', result['gguf']['message'])
+        self.assertEqual(before_adapter, snapshot(env.paths.adapter))
+        self.assertFalse((env.paths.home / 'adapter.gguf.json').exists())
 
     def test_committed_recovery_after_grader_change_is_idempotent_at_each_boundary(self):
         for stage in ('promotion_published', 'state_written', 'items_written', 'history_written', 'finalized'):

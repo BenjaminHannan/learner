@@ -252,7 +252,7 @@ test('schedule and plugged-in logic: night window 01:00-06:00, idle, and never o
   assert.deepStrictEqual(Platform.defaultSleepWindow('win32'), ['23:00', '08:00']); assert.deepStrictEqual(Platform.defaultSleepWindow('darwin'), ['23:00', '08:00']);
 });
 
-test('WinSleep: asks for the runtime first; then runs chunks, stops the model, converts the adapter, restarts with --lora, keeps the old one as fallback', async () => {
+test('WinSleep: checks runtime and power, runs chunks and preserves unbound old adapters', async () => {
   const root = tmp('ws-'); const events = [];
   const installer = { dir: path.join(root, 'sleep-runtime'), installed: () => inst.ok, pythonExe: () => 'PY', plan: () => ({ text: 'plan' }), state: () => ({ convert: 'conv.py', hfDir: 'HF' }) };
   const inst = { ok: false };
@@ -264,7 +264,7 @@ test('WinSleep: asks for the runtime first; then runs chunks, stops the model, c
     return c;
   };
   const run = async (cmd, args) => { ran.push([cmd, args]); fs.writeFileSync(args[args.indexOf('--outfile') + 1], 'gguf'); return ''; };
-  const ws = new WinSleep({ getSettings: () => ({ sleepOnlyPlugged: true }), root, installer, onBattery: () => false, sleepmlxParent: 'RES', spawn, run, retryMs: 1, hooks: { pauseModel: () => events.push('pause'), resumeModel: async (lora) => { resumed.push(lora); events.push('resume'); return { ok: true }; } } });
+  const ws = new WinSleep({ getSettings: () => ({ sleepOnlyPlugged: true }), root, installer, onBattery: () => false, sleepmlxParent: 'RES', spawn, run, retryMs: 1, privateChecker: { ensureIdle: async () => ({ ok: true, processStopped: true }) }, hooks: { pauseModel: () => events.push('pause'), resumeModel: async (lora) => { resumed.push(lora); events.push('resume'); return { ok: true }; } } });
   const first = ws.start();
   assert.strictEqual(first.ok, false); assert.strictEqual(first.needsRuntime, true); assert.strictEqual(first.plan.text, 'plan');
   inst.ok = true;
@@ -277,24 +277,25 @@ test('WinSleep: asks for the runtime first; then runs chunks, stops the model, c
   for (let i = 0; i < 200 && ws.status().sleeping; i++) await new Promise((x) => setTimeout(x, 10));
   assert.strictEqual(ws.status().sleeping, false);
   assert.strictEqual(spawned.length, 2); assert.deepStrictEqual(spawned[0].args.slice(0, 2), ['-m', 'sleepmlx.worker']);
-  assert.strictEqual(events[0], 'pause'); assert.strictEqual(ran.length, 1); assert.deepStrictEqual(ran[0][1].slice(0, 1), ['conv.py']);
-  assert.ok(fs.existsSync(path.join(root, 'sleep', 'adapter.prev.gguf')), 'the previous adapter is kept as the fallback');
-  assert.strictEqual(fs.readFileSync(path.join(root, 'sleep', 'adapter.gguf'), 'utf8'), 'gguf');
-  assert.deepStrictEqual(resumed, [path.join(root, 'sleep', 'adapter.gguf')]);
+  assert.strictEqual(events[0], 'pause'); assert.strictEqual(ran.length, 0);
+  assert.strictEqual(fs.readFileSync(path.join(root, 'sleep', 'adapter.gguf'), 'utf8'), 'old');
+  assert.deepStrictEqual(resumed, ['']);
   assert.strictEqual(ws.status().lastQuiz, 71);
   assert.match(ws.readSummary(), /recall quiz 71%/);
 });
 
-test('WinSleep: if the new adapter will not load, the previous one is tried, then the plain model', async () => {
+test('WinSleep: unbound old adapters remain untouched and the plain model starts', async () => {
   const root = tmp('ws3-'); fs.mkdirSync(path.join(root, 'sleep'), { recursive: true });
   fs.writeFileSync(path.join(root, 'sleep', 'adapter.gguf'), 'new'); fs.writeFileSync(path.join(root, 'sleep', 'adapter.prev.gguf'), 'prev');
   const tried = [];
   const installer = { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({}) };
   const spawn = (cmd, args, opts) => { const c = new EventEmitter(); c.stdout = new EventEmitter(); c.stderr = new EventEmitter(); setImmediate(() => { fs.writeFileSync(opts.env.SLEEPMODE_OUT, JSON.stringify({ quiz: null, steps: 0, message: 'no new diary day to sleep on' })); c.emit('exit', 0); }); return c; };
-  const ws = new WinSleep({ getSettings: () => ({}), root, installer, spawn, hooks: { resumeModel: async (l) => { tried.push(path.basename(l)); return l ? { ok: true, loraFailed: true, error: 'bad lora' } : { ok: true }; } } });
+  const ws = new WinSleep({ getSettings: () => ({}), root, installer, spawn, privateChecker: { ensureIdle: async () => ({ ok: true, processStopped: true }) }, hooks: { resumeModel: async (l) => { tried.push(path.basename(l)); return l ? { ok: true, loraFailed: true, error: 'bad lora' } : { ok: true }; } } });
   ws.start();
   for (let i = 0; i < 200 && ws.status().sleeping; i++) await new Promise((x) => setTimeout(x, 10));
-  assert.deepStrictEqual(tried, ['adapter.gguf', 'adapter.prev.gguf', '']);
+  assert.deepStrictEqual(tried, ['']);
+  assert.equal(fs.readFileSync(path.join(root, 'sleep', 'adapter.gguf'), 'utf8'), 'new');
+  assert.equal(fs.readFileSync(path.join(root, 'sleep', 'adapter.prev.gguf'), 'utf8'), 'prev');
   assert.match(ws.readSummary(), /Nothing new to learn/);
 });
 
@@ -387,17 +388,6 @@ test('Builtin pause/resume: no-ops when the preset is not in use, report ok from
   assert.deepStrictEqual(await b.resume(''), { ok: false, error: 'boom' });
 });
 
-test('WinSleep converts only when adapter_model.safetensors is newer than the GGUF (not the folder mtime)', async () => {
-  const root = tmp('wf-'); const home = path.join(root, 'sleep'); const ad = path.join(home, 'adapter'); fs.mkdirSync(ad, { recursive: true });
-  const st = path.join(ad, 'adapter_model.safetensors'); fs.writeFileSync(st, 'w'); const g = path.join(home, 'adapter.gguf'); fs.writeFileSync(g, 'g');
-  const t0 = Date.now() / 1000;
-  fs.utimesSync(st, t0 - 100, t0 - 100); fs.utimesSync(g, t0 - 50, t0 - 50); fs.utimesSync(ad, t0, t0); // the folder is "new" but the weights are old
-  let ran = 0;
-  const ws = new WinSleep({ getSettings: () => ({}), root, installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) }, run: async (c, a) => { ran++; fs.writeFileSync(a[a.indexOf('--outfile') + 1], 'n'); return ''; }, hooks: {} });
-  await ws._convert(); assert.strictEqual(ran, 0);
-  fs.utimesSync(st, t0, t0); await ws._convert(); assert.strictEqual(ran, 1);
-});
-
 test('gateway: fast and auto turn LFM3 thinking off, main keeps it, an explicit setting wins', () => {
   assert.deepStrictEqual(mapRequest({ model: 'fast', messages: [] }, 'default').chat_template_kwargs, { enable_thinking: false });
   assert.deepStrictEqual(mapRequest({ model: 'auto' }).chat_template_kwargs, { enable_thinking: false });
@@ -453,35 +443,6 @@ test('gateway: LFM3 reasoning before "</think>" leaves the reply (non-stream and
   const long = 'x'.repeat(1300);
   const c = run([ev(long), ev(' more'), ev(null, { finish_reason: 'stop' })]);
   assert.strictEqual(c.content, long + ' more');
-});
-
-test('WinSleep converts the published immutable adapter generation and does not rotate it twice', async () => {
-  const root = tmp('wg-'); const home = path.join(root, 'sleep');
-  const current = path.join(home, 'adapters', 'night-one'); fs.mkdirSync(current, { recursive: true });
-  fs.writeFileSync(path.join(current, 'adapter_model.safetensors'), 'weights');
-  fs.mkdirSync(path.join(home, 'adapter')); fs.writeFileSync(path.join(home, 'adapter', 'adapter_model.safetensors'), 'legacy');
-  fs.writeFileSync(path.join(home, 'adapters.json'), JSON.stringify({ version: 1, current: 'adapters/night-one', previous: 'adapter' }));
-  const calls = [];
-  const ws = new WinSleep({ getSettings: () => ({}), root,
-    installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) },
-    run: async (c, a) => { calls.push(a); fs.writeFileSync(a[a.indexOf('--outfile') + 1], 'new'); return ''; }, hooks: {} });
-  await ws._convert(); await ws._convert();
-  assert.strictEqual(calls.length, 1);
-  assert.strictEqual(calls[0][1], current);
-  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(home, 'adapter.gguf.json'), 'utf8')).source_generation, 'adapters/night-one');
-});
-
-test('WinSleep refuses a missing published generation instead of converting a legacy adapter', async () => {
-  const root = tmp('wb-'); const home = path.join(root, 'sleep'); fs.mkdirSync(path.join(home, 'adapter'), { recursive: true });
-  fs.writeFileSync(path.join(home, 'adapter', 'adapter_model.safetensors'), 'legacy');
-  fs.writeFileSync(path.join(home, 'adapters.json'), JSON.stringify({ version: 1, current: 'adapters/missing', previous: 'adapter' }));
-  let calls = 0;
-  const ws = new WinSleep({ getSettings: () => ({}), root,
-    installer: { dir: root, installed: () => true, pythonExe: () => 'PY', state: () => ({ convert: 'c.py', hfDir: 'HF' }) },
-    run: async () => { calls++; }, hooks: {} });
-  await ws._convert();
-  assert.strictEqual(calls, 0);
-  assert.ok(fs.readFileSync(ws.p.events, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).some((e) => e.kind === 'convert_failed'));
 });
 
 test('llama-server refuses to start another process when its managed child ignores stop', async () => {

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const C = require('./runtime/constants');
+const Grading = require('./grading');
 const read = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return null; } };
 const hash = (data) => crypto.createHash('sha256').update(data).digest('hex');
 function fileHash(p) {
@@ -50,16 +51,12 @@ function baseIdentity(root, hfDir) {
   } catch (_) { return null; }
 }
 function sameBase(a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); }
-function validMetrics(v, heldCount) {
-  if (!v || !Number.isInteger(heldCount) || heldCount < 1) return false;
-  if (!Number.isInteger(v.general_n) || v.general_n !== 8 || !Number.isInteger(v.held_n) || v.held_n !== heldCount) return false;
-  for (const [k, n] of [['general_on',v.general_n],['general_off',v.general_n],['held_on',v.held_n],['held_off',v.held_n]])
-    if (!Number.isInteger(v[k]) || v[k] < 0 || v[k] > n) return false;
-  return true;
-}
-function validVerdict(v, heldCount) {
-  if (!validMetrics(v, heldCount) || v.ok !== true || v.pending || v.processStopped !== true || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.checkId || '')) return false;
-  return v.general_on >= v.general_off - 1 && !(v.general_on * 2 < v.general_off) && v.held_on >= v.held_off;
+function validMetrics(v, heldCount) { return Grading.validMetrics(v, heldCount); }
+function processProof(v) { return !!v && v.processStopped === true && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.checkId || ''); }
+function validDecision(v, heldCount) { return Grading.validDecision(v, heldCount) && processProof(v); }
+function validVerdict(v, heldCount, { historical = false } = {}) {
+  if (historical) return validMetrics(v, heldCount) && v.ok === true && !v.pending && processProof(v) && Grading.passes(v);
+  return validDecision(v, heldCount) && v.ok === true;
 }
 
 // Night number is persisted in the trainer state; diary day indices can shift.
@@ -99,7 +96,7 @@ function inspect(home, id, identity) {
     const adapter = path.join(dir, 'adapter.gguf'), held = path.join(dir, 'held.jsonl');
     if (!fs.statSync(adapter).size || fileHash(adapter) !== rec.adapter_sha256 || fileHash(held) !== rec.held_sha256) return null;
     const cards = fs.readFileSync(held, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
-    if (!cards.length || cards.length !== rec.held_count || cards.some(c => c.status !== 'held_out' || !c.q || !c.a || c.night !== rec.day)) return null;
+    if (!cards.length || cards.length !== rec.held_count || cards.some(c => c.status !== 'held_out' || typeof c.q !== 'string' || !c.q.trim() || typeof c.a !== 'string' || !c.a.trim() || c.night !== rec.day)) return null;
     return { id, dir, rec, adapter, held };
   } catch (_) { return null; }
 }
@@ -108,20 +105,20 @@ function accepted(home, identity) {
   const m = manifest(home);
   for (const id of [m.current, m.previous]) {
     const c = inspect(home, id, identity);
-    if (c && c.rec.status === 'accepted' && validVerdict(c.rec.served, c.rec.held_count)) return c.adapter;
+    if (c && c.rec.status === 'accepted' && validVerdict(c.rec.served, c.rec.held_count, { historical: true })) return c.adapter;
   }
   return '';
 }
 
 function heldSnapshot(file, day) {
   if (!Number.isInteger(day) || day < 1) return [];
-  try { return fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse).filter(r => r.status === 'held_out' && r.night === day && typeof r.q === 'string' && r.q && typeof r.a === 'string' && r.a).slice(0, 12); } catch (_) { return []; }
+  try { return fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse).filter(r => r.status === 'held_out' && r.night === day && typeof r.q === 'string' && r.q.trim() && typeof r.a === 'string' && r.a.trim()).slice(0, 12); } catch (_) { return []; }
 }
 function watermark(home, identity, m) {
   if (m.watermark && sameBase(m.watermark.base, identity) && orderKey(m.watermark)) return m.watermark;
   for (const id of [m.current, m.previous]) {
     const c = inspect(home, id, identity);
-    if (c && c.rec.status === 'accepted' && validVerdict(c.rec.served, c.rec.held_count)) return c.rec;
+    if (c && c.rec.status === 'accepted' && validVerdict(c.rec.served, c.rec.held_count, { historical: true })) return c.rec;
   }
   return null;
 }
@@ -138,15 +135,16 @@ function pending(home, identity) {
 }
 function promote(home, c) {
   const previous = manifest(home);
-  if (previous.current === c.id) return true;
   const verified = inspect(home, c.id, c.rec.base);
-  if (!verified || verified.rec.status !== 'accepted' || !validVerdict(verified.rec.served, verified.rec.held_count)) return false;
+  if (!verified || verified.rec.status !== 'accepted') return false;
+  if (previous.current === c.id) return validVerdict(verified.rec.served, verified.rec.held_count, { historical: true });
+  if (!validVerdict(verified.rec.served, verified.rec.held_count)) return false;
   const mark = watermark(home, verified.rec.base, previous);
   if (mark && !newer(verified.rec, mark)) return false;
-  const fallback = [previous.current, previous.previous].find(id => { const p = inspect(home, id, verified.rec.base); return p && p.rec.status === 'accepted' && validVerdict(p.rec.served, p.rec.held_count); }) || null;
+  const fallback = [previous.current, previous.previous].find(id => { const p = inspect(home, id, verified.rec.base); return p && p.rec.status === 'accepted' && validVerdict(p.rec.served, p.rec.held_count, { historical: true }); }) || null;
   const published = [...new Set([...(Array.isArray(previous.published) ? previous.published : []), previous.current, previous.previous, verified.id].filter(id => typeof id === 'string' && /^[a-f0-9]{64}$/.test(id)))];
   atomic(path.join(home, 'accepted-adapters.json'), { version: 1, current: verified.id, previous: fallback, published, watermark: { ...orderKey(verified.rec), base: verified.rec.base } });
   return true;
 }
 
-module.exports = { read, hash, fileHash, atomic, baseIdentity, sameBase, validMetrics, validVerdict, orderKey, newer, safeDir, inspect, manifest, accepted, heldSnapshot, pending, promote };
+module.exports = { read, hash, fileHash, atomic, baseIdentity, sameBase, validMetrics, validDecision, validVerdict, orderKey, newer, safeDir, inspect, manifest, accepted, heldSnapshot, pending, promote };

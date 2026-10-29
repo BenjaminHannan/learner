@@ -1,12 +1,8 @@
 'use strict';
-// Sleep with the built-in model (Windows, and any Mac without Ben's assistant): the same Sleep interface the Desk UI already uses,
-// driven by this runner instead of the Mac sleepmode app. The trainer's base (LiquidAI/LFM3-1.7B) is the base of the built-in
-// model (LFM3-1.7B GGUF), so the adapter really is used by the daytime Glim here.
-//   * runs `python -m sleepmlx.worker` in chunks (the env contract SLEEPMODE_BUDGET_S / SLEEPMODE_OUT / SLEEPMODE_PRACTICE),
-//   * stops llama-server while asleep (RAM), and on wake converts the new LoRA adapter to GGUF (llama.cpp's convert_lora_to_gguf.py)
-//     and restarts llama-server with --lora; the previous adapter stays as the fallback,
-//   * checks Windows candidates in a separate private model server against general questions and that night's held-out cards;
-//     only confirmed, verified candidates are published for daytime use. Built-in Mac retains its existing served-check path.
+// Sleep with the built-in model (Windows and Macs without the external assistant).
+// HF training and the QAD chat GGUF are distinct variants; transfer is not assumed.
+// Each new candidate is checked privately against the actual chat base before
+// it can be published. Unbound legacy GGUFs remain on disk and are never loaded.
 // Everything outside the process (spawn, the model, the installer, the battery) is injected so the logic is unit-testable.
 const fs = require('fs');
 const path = require('path');
@@ -19,13 +15,8 @@ const CK = require('./checkin');
 // 15 minutes: a check-in can be at most about this late (it happens at a chunk boundary)
 const CHUNK_BUDGET_S = 900;
 const NO_WORK = /no new diary day/i;
-// the base every adapter here is trained on and the built-in model is quantized from; adapter.gguf.json records it
-const LORA_BASE = C.SLEEP_HF_REPO;
 const sleepProfile = (platform) => (platform === 'darwin' ? 'lfm3_mps' : C.SLEEP_PROFILE);
 
-// ---- adapter records (adapter.gguf.json next to each GGUF) ------------------------------------------------------------
-const sidecar = (gguf) => gguf + '.json';
-function readSidecar(gguf) { try { return JSON.parse(fs.readFileSync(sidecar(gguf), 'utf8')); } catch (e) { return null; } }
 function committedAdapter(home) {
   const manifest = path.join(home, 'adapters.json');
   if (!fs.existsSync(manifest)) return { dir: path.join(home, 'adapter'), generation: null };
@@ -36,19 +27,6 @@ function committedAdapter(home) {
   if (!fs.statSync(dir).isDirectory()) throw new Error('Committed adapter generation is missing');
   return { dir, generation: r.current };
 }
-// May this GGUF be loaded on the built-in model? Only when it was trained on the same base. A GGUF with no record predates the
-// records and was made by this runner, which only ever trains LORA_BASE, so it fits.
-function loraFits(gguf, base) {
-  if (!gguf || !fs.existsSync(gguf)) return false;
-  const r = readSidecar(gguf);
-  if (r && r.served && (r.served.ok === false || r.served.pending === true)) return false;   // failed or still awaiting its persisted served check
-  return !r || !r.base_hf_id || r.base_hf_id === (base || LORA_BASE);
-}
-function moveWithSidecar(from, to) {
-  fs.renameSync(from, to);
-  try { if (fs.existsSync(sidecar(from))) fs.renameSync(sidecar(from), sidecar(to)); else fs.rmSync(sidecar(to), { force: true }); } catch (e) { /* record only */ }
-}
-
 // ---- pure builders (tested) -----------------------------------------------------------------------------------------
 // The night's lesson cards (what went wrong in a chat and what to do instead), as the worker's chunk output lists them.
 const LESSONS_SHOWN = 8;
@@ -71,19 +49,6 @@ function workerEnv(o) {
   return env;
 }
 function workerCommand(o) { return { cmd: o.python, args: ['-m', 'sleepmlx.worker', '--profile', o.profile || sleepProfile(o.platform || process.platform)], env: workerEnv(o), cwd: o.sleepmlxParent }; }
-function servedCheckCommand(o) { return { cmd: o.python, args: ['-m', 'sleepmlx', 'served-check', '--server', o.url, '--cards', o.cards], env: { PYTHONPATH: o.sleepmlxParent, PYTHONUTF8: '1', HF_HUB_OFFLINE: '1' }, cwd: o.sleepmlxParent }; }
-// run the served check; exit 0 pass, 1 worse, 2 no answer. -> {ok, reasons, ...}
-function defaultServedCheck(cmd) {
-  return new Promise((resolve) => {
-    require('child_process').execFile(cmd.cmd, cmd.args, { windowsHide: true, timeout: 10 * 60000, maxBuffer: 4 * 1024 * 1024, cwd: cmd.cwd, env: { ...process.env, ...cmd.env } }, (err, so) => {
-      const last = String(so || '').trim().split('\n').pop();
-      let r = null; try { r = JSON.parse(last); } catch (e) { /* none */ }
-      if (r && (typeof r.ok === 'boolean' || r.ok === null)) return resolve(r);
-      // it could not run (python missing, timeout, crash): that is not a verdict on the adapter
-      resolve({ ok: null, reasons: ['not checked: ' + String((err && err.message) || last || 'no output').slice(0, 200)] });
-    });
-  });
-}
 function convertCommand(o) { return { cmd: o.python, args: [o.convertScript, o.adapterDir, '--base', o.hfDir, '--outfile', o.outFile] }; }
 // where the sleepmlx package lives: next to the app resources when packaged, the repo root in development
 function sleepmlxParent(resourcesPath, devRoot, exists) {
@@ -106,8 +71,6 @@ class WinSleep extends Sleep {
     this.parent = o.sleepmlxParent;
     this.diaryDir = path.join(o.root, 'diary', 'raw');
     this.active = false; this.wakeReq = false; this.wakeCounter = 0; this.privateAbort = null; this.privateBlocked = false; this.child = null; this.lastQuiz = null; this.since = null; this.phase = '';
-    this.adapterGguf = path.join(this.home, 'adapter.gguf'); this.adapterPrev = path.join(this.home, 'adapter.prev.gguf');
-    this.adapterRejected = path.join(this.home, 'adapter.rejected.gguf');
     this.platform = o.platform || process.platform;
   }
   python() { return this.installer.pythonExe(); }
@@ -115,12 +78,9 @@ class WinSleep extends Sleep {
   available() { return { ok: true, app: this.home, python: this.python(), reason: '' }; }
   // the adapter to load when the app starts the model (the newest converted one, if any)
   currentLora() {
-    if (this.platform === 'win32') {
-      const st = this.installer.state();
-      const base = Candidates.baseIdentity(this.root, st.hfDir);
-      return Candidates.accepted(this.home, base);
-    }
-    return loraFits(this.adapterGguf) ? this.adapterGguf : (loraFits(this.adapterPrev) ? this.adapterPrev : '');
+    const st = this.installer.state();
+    const base = Candidates.baseIdentity(this.root, st.hfDir);
+    return Candidates.accepted(this.home, base);
   }
   needsRuntime() { return !this.installer.installed(); }
 
@@ -158,7 +118,7 @@ class WinSleep extends Sleep {
     if (this.privateAbort) this.privateAbort.abort();
     if (this.privateBlocked) {
       this.privateBlocked = false;
-      Promise.resolve().then(() => this.privateChecker().ensureIdle()).then((r) => { if (r && r.ok && r.processStopped) return this._finishWindows(true); this.privateBlocked = true; }).catch(() => { this.privateBlocked = true; });
+      Promise.resolve().then(() => this.privateChecker().ensureIdle()).then((r) => { if (r && r.ok && r.processStopped) return this._finishCandidate(true); this.privateBlocked = true; }).catch(() => { this.privateBlocked = true; });
     }
     if (this.backoffDone) this.backoffDone();   // waiting a minute before the next chunk: wake now, not after the wait
     if (this.ckAbort) { try { this.ckAbort.abort(); } catch (e) { /* done */ } } // a check-in in progress stops now
@@ -201,6 +161,7 @@ class WinSleep extends Sleep {
       for (let i = 0; i < 200 && !this.wakeReq; i++) {
         const out = await this._chunk();
         this._event({ kind: 'chunk', quiz: out.quiz == null ? null : out.quiz, steps: out.steps || 0, interrupted: !!out.interrupted, message: out.message || '', error: out.error || '' });
+        if (out.blocked === true) { this.exit = { error: out.message || out.error || 'Sleep is blocked and needs a manual re-check.' }; break; }
         if (out.error) { this.exit = { error: out.error }; break; }
         if (out.quiz != null) { this.lastQuiz = out.quiz; this.night = out; }
         if (Array.isArray(out.lessons) && out.lessons.length) { this.lessons = out.lessons.map((l) => String(l)).slice(0, LESSONS_SHOWN); this.lessonsReverted = !!out.reverted; }
@@ -225,7 +186,7 @@ class WinSleep extends Sleep {
     const d = CK.checkinDue({ enabled: st.sleepPauseGlims !== false && !!this.hooks.checkin, now: Date.now(), sleepStart: this.since, lastAt: this.lastCheckinAt, periodMin: st.sleepCheckinMins, wakeReq: this.wakeReq, onBattery: this.onBattery(), onlyPlugged: st.sleepOnlyPlugged === true });
     if (!d.due) return;
     this.lastCheckinAt = Date.now();
-    const lora = this.platform === 'win32' ? this.currentLora() : CK.checkinAdapter(this.home, fs.existsSync, (f) => loraFits(f));
+    const lora = this.currentLora();
     this.phase = 'checking in';
     this._event({ kind: 'checkin_start', adapter: lora ? path.basename(lora) : 'base' });
     const ac = new AbortController(); this.ckAbort = ac;
@@ -249,63 +210,9 @@ class WinSleep extends Sleep {
     this.phase = 'sleeping';
   }
 
-  async _convert() {
-    const st = this.installer.state();
-    let committed;
-    try { committed = committedAdapter(this.home); }
-    catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); return; }
-    const adapterDir = committed.dir;
-    if (!fs.existsSync(adapterDir) || !st.convert || !st.hfDir) return;
-    const src = path.join(adapterDir, 'adapter_model.safetensors');
-    let srcMtime = null; try { srcMtime = fs.statSync(src).mtimeMs; } catch (e) { /* no weights file to compare: convert */ }
-    // only when the adapter is newer than the GGUF we already have, and is not one already set aside as worse
-    if (committed.generation) {
-      if (fs.existsSync(this.adapterGguf) && (readSidecar(this.adapterGguf) || {}).source_generation === committed.generation) return;
-      if ((readSidecar(this.adapterRejected) || {}).source_generation === committed.generation) return;
-    }
-    if (!committed.generation && srcMtime != null) {
-      try { if (fs.existsSync(this.adapterGguf) && fs.statSync(this.adapterGguf).mtimeMs >= srcMtime) return; } catch (e) { /* convert */ }
-      const rej = readSidecar(this.adapterRejected);
-      if (rej && rej.source_mtime === srcMtime) return;
-    }
-    this.phase = 'converting';
-    const next = path.join(this.home, 'adapter.next.gguf');
-    const cmd = convertCommand({ python: this.python(), convertScript: st.convert, adapterDir, hfDir: st.hfDir, outFile: next });
-    try {
-      await (this.o.run || require('./runtime/sleepinstall').defaultRun)(cmd.cmd, cmd.args, { env: { PYTHONUTF8: '1', HF_HUB_OFFLINE: '1' } });
-      if (!fs.existsSync(next)) throw new Error('the converter wrote no file');
-      if (fs.existsSync(this.adapterGguf)) moveWithSidecar(this.adapterGguf, this.adapterPrev);
-      fs.renameSync(next, this.adapterGguf);
-      fs.writeFileSync(sidecar(this.adapterGguf), JSON.stringify({ base_hf_id: LORA_BASE, profile: sleepProfile(this.platform), source_mtime: srcMtime, source_generation: committed.generation, date: this.night && this.night.date || null, created: new Date().toISOString() }, null, 2));
-      this.converted = true;
-      this._event({ kind: 'converted' });
-    } catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); try { fs.rmSync(next, { force: true }); } catch (x) { /* none */ } }
-  }
-
-  // The served check of an adapter now loaded in the model server: once per adapter file (the result is kept in its record).
-  async _servedCheck(lora) {
-    const rec = readSidecar(lora) || {};
-    if (rec.served && rec.served.ok === true) return rec.served;
-    const url = this.hooks.servedUrl && this.hooks.servedUrl();
-    if (!url) return { ok: null, reasons: ['not checked: the model server address is unknown'] };
-    const cmd = servedCheckCommand({ python: this.python(), url, cards: path.join(this.home, 'cards.jsonl'), sleepmlxParent: this.parent });
-    this.phase = 'checking the adapter';
-    const r = await (this.o.servedCheck || defaultServedCheck)(cmd);
-    try { if (fs.existsSync(lora)) fs.writeFileSync(sidecar(lora), JSON.stringify({ ...rec, served: { ...r, at: new Date().toISOString() } }, null, 2)); } catch (e) { /* record only */ }
-    return r;
-  }
-  // the newest GGUF did not load or scored worse: set aside (not deleted) so it is never loaded or converted again; currentLora() then
-  // falls back to adapter.prev.gguf, and the next good night's GGUF becomes adapter.gguf as usual
-  // a bad adapter.prev.gguf goes to adapter.prev.rejected.gguf, so currentLora() never hands it to the next app start either
-  _setAside(lora) {
-    const to = lora === this.adapterGguf ? this.adapterRejected : (lora === this.adapterPrev ? path.join(this.home, 'adapter.prev.rejected.gguf') : '');
-    if (!to) return;
-    try { moveWithSidecar(lora, to); } catch (e) { /* the event says what happened */ }
-  }
-
-  // Windows keeps checked adapters separate from candidates. A conversion or an
+  // Checked adapters stay separate from candidates. A conversion or an
   // inconclusive served check never replaces the adapter used by chat.
-  async _stageWindowsCandidate() {
+  async _stageCandidate() {
     const st = this.installer.state(), n = this.night;
     if (!n || n.status !== 'done' || n.reverted || !n.date || !Number.isInteger(n.day) || !Number.isSafeInteger(n.night) || n.night < 1 || !st.convert || !st.hfDir) return;
     const state = Candidates.read(path.join(this.home, 'state.json'));
@@ -340,7 +247,7 @@ class WinSleep extends Sleep {
     } finally { if (fs.existsSync(temp)) fs.rmSync(temp, { recursive: true, force: true }); }
   }
 
-  async _finishWindows(skipCheck = false) {
+  async _finishCandidate(skipCheck = false) {
     const wakeAtFinish = this.wakeCounter;
     let checker, idle;
     try { checker = this.privateChecker(); idle = await checker.ensureIdle(); }
@@ -349,7 +256,7 @@ class WinSleep extends Sleep {
       this.privateBlocked = true; this.exit = { error: idle && idle.error || 'A private adapter check has not stopped.' };
       this.phase = 'stopping private check'; return;
     }
-    try { await this._stageWindowsCandidate(); } catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); }
+    try { await this._stageCandidate(); } catch (e) { this._event({ kind: 'convert_failed', error: String(e.message || e) }); }
     this.phase = 'waking';
     const tried = [];
     try {
@@ -359,7 +266,7 @@ class WinSleep extends Sleep {
       if (candidate && !skipCheck && this.wakeCounter === wakeAtFinish) {
         const wakeAtCheck = this.wakeCounter;
         let verdict = candidate.rec.served;
-        if (candidate.rec.status !== 'accepted') {
+        if (candidate.rec.status !== 'accepted' || !Candidates.validVerdict(verdict, candidate.rec.held_count)) {
           const runtime = Candidates.read(path.join(this.root, 'runtime', 'state.json')) || {};
           const model = runtime.model && runtime.model.file;
           const flavors = this.platform === 'darwin' ? ['metal'] : ['cpu', 'vulkan'];
@@ -382,7 +289,7 @@ class WinSleep extends Sleep {
           const fresh = Candidates.inspect(this.home, candidate.id, Candidates.baseIdentity(this.root, st.hfDir));
           if (fresh) {
             const accepted = Candidates.validVerdict(verdict, fresh.rec.held_count);
-            const rejected = verdict && verdict.ok === false && Candidates.validMetrics(verdict, fresh.rec.held_count);
+            const rejected = verdict && verdict.ok === false && Candidates.validDecision(verdict, fresh.rec.held_count);
             fresh.rec.status = accepted ? 'accepted' : rejected ? 'rejected' : 'pending';
             fresh.rec.served = verdict;
             Candidates.atomic(path.join(fresh.dir, 'record.json'), fresh.rec);
@@ -395,7 +302,7 @@ class WinSleep extends Sleep {
       }
       const chosen = this.currentLora();
       const up = this.hooks.resumeModel ? await this.hooks.resumeModel(chosen) : { ok: false };
-      this.loaded = { lora: chosen ? path.basename(chosen) : '', tried, ok: !!(up && up.ok), error: up && up.error || '' };
+      this.loaded = { lora: chosen ? path.basename(chosen) : '', candidate: !!chosen, newKept: !!(this.converted && candidate && chosen === candidate.adapter), tried, ok: !!(up && up.ok), error: up && up.error || '' };
       if (up && up.loraFailed) {
         const base = await this.hooks.resumeModel('');
         this.loaded = { lora: '', tried, ok: !!(base && base.ok), error: base && base.error || '' };
@@ -403,7 +310,7 @@ class WinSleep extends Sleep {
       this._event({ kind: 'loaded', lora: this.loaded.lora || 'plain model', tried });
     } catch (e) {
       this.exit = this.exit || { error: String(e.message || e) };
-      try { const chosen = this.currentLora(); const up = this.hooks.resumeModel ? await this.hooks.resumeModel(chosen) : null; this.loaded = { lora: chosen ? path.basename(chosen) : '', tried, ok: !!(up && up.ok) }; } catch (_) {}
+      try { const chosen = this.currentLora(); const up = this.hooks.resumeModel ? await this.hooks.resumeModel(chosen) : null; this.loaded = { lora: chosen ? path.basename(chosen) : '', candidate: !!chosen, newKept: false, tried, ok: !!(up && up.ok) }; } catch (_) {}
     }
     this._writeSummary(); this.active = false; this.phase = '';
   }
@@ -411,46 +318,7 @@ class WinSleep extends Sleep {
   async _finish() {
     try { fs.rmSync(path.join(this.home, 'ASSISTANT_RUNNING'), { force: true }); } catch (e) { /* none */ }
     this._writeStatus();
-    if (this.platform === 'win32') return this._finishWindows();
-    try { await this._convert(); } catch (e) { /* the old adapter stays */ }
-    this.phase = 'waking';
-    try {
-      // newest adapter, then the previous one, then the plain model; an adapter must fit this base, load, and pass the served check
-      const cands = [this.adapterGguf, this.adapterPrev].filter((f) => fs.existsSync(f));
-      const tried = [];
-      for (const f of cands) {
-        if (!loraFits(f)) { tried.push({ lora: path.basename(f), why: 'trained on another base (' + ((readSidecar(f) || {}).base_hf_id || '?') + ')' }); continue; }
-        const r = this.hooks.resumeModel ? await this.hooks.resumeModel(f) : { ok: true };
-        if (r && r.loraFailed) {   // the server started without it: the adapter itself is bad
-          tried.push({ lora: path.basename(f), why: 'did not load' + (r.error ? ': ' + r.error : '') });
-          this._event({ kind: 'lora_failed', lora: path.basename(f), error: r.error || '' });
-          this._setAside(f);
-          continue;
-        }
-        if (!(r && r.ok)) {   // the model did not start at all (memory, port): not the adapter's fault, keep it for next time
-          tried.push({ lora: path.basename(f), why: 'not tried: the model did not start (' + (r && r.error || '?') + ')' });
-          this._event({ kind: 'model_start_failed', lora: path.basename(f), error: r && r.error || '' });
-          break;
-        }
-        if (r.skipped) { this.loaded = { lora: path.basename(f), tried, served: { ok: null, reasons: ['the built-in model is not the one in use'] } }; break; }
-        const sc = await this._servedCheck(f);
-        if (sc.ok === false) {
-          tried.push({ lora: path.basename(f), why: 'scored worse in the model server: ' + (sc.reasons || []).join('; ') });
-          this._event({ kind: 'lora_worse', lora: path.basename(f), reasons: sc.reasons || [] });
-          this._setAside(f);
-          continue;
-        }
-        this.loaded = { lora: path.basename(f), tried, served: sc };
-        break;
-      }
-      if (!this.loaded) {
-        const r = this.hooks.resumeModel ? await this.hooks.resumeModel('') : { ok: true };
-        this.loaded = { lora: '', tried, ok: !!(r && r.ok), error: r && r.error || '' };
-      }
-      this._event({ kind: 'loaded', lora: this.loaded.lora || 'plain model', served: this.loaded.served || null, tried });
-    } catch (e) { this.exit = this.exit || { error: String(e.message || e) }; }
-    this._writeSummary();
-    this.active = false; this.phase = '';
+    return this._finishCandidate();
   }
   _writeSummary() {
     const hrs = this.since ? (Date.now() - this.since) / 3600000 : 0;
@@ -462,7 +330,7 @@ class WinSleep extends Sleep {
     const early = (this.finishedNight || this.nothingNew) && this.wakeAtMs && Date.now() < this.wakeAtMs - 120000;
     const lines = [early ? 'Finished early: it practiced everything new.' : '', line];
     if (this.finishedNight) lines.push(nightLines(n));
-    if (this.loaded) lines.push(loadedLine(this.loaded, !!this.converted && this.finishedNight && !n.reverted));
+    if (this.loaded) lines.push(loadedLine(this.loaded, !!this.loaded.newKept && this.finishedNight && !n.reverted));
     if (this.lessons && this.lessons.length) lines.push(lessonsSection(this.lessons, this.lessonsReverted));
     if (this.checkins && this.checkins.length) lines.push('Check-ins that needed you:\n' + this.checkins.map((c) => '- ' + c).join('\n'));
     try { fs.mkdirSync(this.home, { recursive: true }); fs.writeFileSync(this.p.summary, '# Sleep summary\n\n' + lines.filter(Boolean).join('\n\n') + '\n\nSlept ' + (Math.round(hrs * 10) / 10) + ' h.\n'); } catch (e) { /* ignore */ }
@@ -490,8 +358,8 @@ function loadedLine(l, newKept) {
   const s = l.served || {};
   const check = s.ok === true ? ' Checked in the model server: general ' + s.general_on + '/' + s.general_n + ' with it vs ' + s.general_off + '/' + s.general_n + ' without; held-out ' + s.held_on + '/' + s.held_n + ' vs ' + s.held_off + '/' + s.held_n + '.'
     : s.ok === null ? ' Not checked in the model server (' + ((s.reasons || [])[0] || '') + ').' : '';
-  const which = l.lora === 'adapter.gguf' ? (newKept ? "tonight's adapter" : 'its newest adapter') : 'the previous adapter';
+  const which = l.candidate ? (newKept ? "tonight's checked adapter" : 'a previously checked adapter') : l.lora === 'adapter.gguf' ? (newKept ? "tonight's adapter" : 'its newest adapter') : 'the previous adapter';
   return 'Glim now runs with ' + which + ' (' + l.lora + ').' + check + (tried ? ' Set aside: ' + tried + '.' : '');
 }
 
-module.exports = { WinSleep, lessonsSection, nightLines, loadedLine, loraFits, readSidecar, sleepProfile, servedCheckCommand, workerCommand, workerEnv, convertCommand, sleepmlxParent, mayStart, CHUNK_BUDGET_S, LORA_BASE };
+module.exports = { WinSleep, lessonsSection, nightLines, loadedLine, sleepProfile, workerCommand, workerEnv, convertCommand, sleepmlxParent, mayStart, CHUNK_BUDGET_S };

@@ -13,7 +13,8 @@ const sha = value => crypto.createHash('sha256').update(value).digest('hex');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const pending = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const quote = value => /\s/.test(value) ? '"' + value + '"' : value;
-const good = { ok: true, general_n: 8, general_on: 8, general_off: 8, held_n: 1, held_on: 1, held_off: 0 };
+const Grading = require('../src/grading');
+const good = { ...Grading.binding, ok: true, general_n: 8, general_on: 8, general_off: 8, held_n: 1, held_on: 1, held_off: 0 };
 
 function fixture(options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'private-check-')); roots.push(root);
@@ -348,4 +349,14 @@ test('private credentials never escape in the returned verdict', async () => {
   const key = grader.options.env.SLEEPMLX_SERVED_PRIVATE_API_KEY;
   grader.stdout.emit('data', JSON.stringify({ ...good, reasons: ['a diagnostic accidentally included ' + key] })); grader.exit(0);
   const result = await checking; assert.equal(JSON.stringify(result).includes(key), false); assert.equal(result.ok, true);
+});
+
+test('private grader revision or contract mismatch is inconclusive after confirmed cleanup', async () => {
+  for (const verdict of [{ ...good, grader: undefined }, { ...good, grader: 'strict-3' }, { ...good, grading_contract_sha256: '0'.repeat(64) }]) {
+    const t = fixture({ verdict }), result = await t.controller.check(t.input);
+    assert.equal(result.ok, null); assert.equal(result.processStopped, true);
+    assert.match(result.reasons.join(' '), /grader revision/);
+    assert.equal(fs.existsSync(t.controller.ledger), false);
+    assert.equal(t.identities.size, 0);
+  }
 });

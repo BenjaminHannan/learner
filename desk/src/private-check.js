@@ -9,6 +9,7 @@ const path = require('path');
 const net = require('net');
 const http = require('http');
 const crypto = require('crypto');
+const Grading = require('./grading');
 const { spawn: realSpawn, execFile } = require('child_process');
 
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
@@ -210,12 +211,16 @@ class PrivateCheck {
     try { verdict = JSON.parse(state.stdout.trim().split(/\r?\n/).pop()); } catch (_) { throw new Error('Private grader returned no complete verdict.'); }
     if (!verdict || typeof verdict !== 'object' || ![true, false, null].includes(verdict.ok)
         || (verdict.ok === true && state.code !== 0) || (verdict.ok === false && state.code !== 1) || (verdict.ok === null && state.code !== 2)) throw new Error('Private grader exit did not match its verdict.');
+    if (verdict.ok !== null && !Grading.validDecision(verdict, input.heldCount)) throw new Error('Private grader revision or complete decision does not match this runtime.');
     return verdict;
   }
   async _prepare(run, input) {
     if (!/^[0-9a-f]{64}$/.test(input.expectedAdapterSha256 || '') || !/^[0-9a-f]{64}$/.test(input.expectedHeldSha256 || '')) throw new Error('Private check requires immutable candidate and held snapshot hashes.');
     const model = fileInfo(input.model), sourceAdapter = fileInfo(input.adapter), sourceCards = fileInfo(input.cards);
     const exe = fs.realpathSync(input.exe), python = fs.realpathSync(input.python), parent = fs.realpathSync(input.sleepmlxParent);
+    if (sourceCards.bytes > 1024 * 1024) throw new Error('Held snapshot exceeds its limit.');
+    const heldRows = fs.readFileSync(sourceCards.path, 'utf8').split(/\r?\n/).filter(Boolean).map(JSON.parse);
+    if (!heldRows.length || heldRows.length > Grading.servedPolicy.held_max || heldRows.some(row => !row || row.status !== 'held_out' || typeof row.q !== 'string' || !row.q.trim() || typeof row.a !== 'string' || !row.a.trim() || !Number.isInteger(row.night) || row.night < 1 || row.night !== heldRows[0].night)) throw new Error('Private check requires one complete held snapshot.');
     if (sourceCards.bytes > 1024 * 1024 || fileHash(sourceAdapter.path) !== input.expectedAdapterSha256 || fileHash(sourceCards.path) !== input.expectedHeldSha256) throw new Error('Candidate or held snapshot changed before its private check.');
     fs.mkdirSync(this.home, { recursive: true, mode: 0o700 }); fs.mkdirSync(this.jobsDir, { recursive: true, mode: 0o700 });
     if (fs.lstatSync(this.jobsDir).isSymbolicLink()) throw new Error('Private process folder cannot be a symlink.');
@@ -233,7 +238,7 @@ class PrivateCheck {
       sources: { adapter: sourceAdapter, cards: sourceCards }, roles: {}, created: new Date().toISOString() };
     if (exists(this.ledger)) throw new Error('A private process job still needs recovery.');
     run.record = record; this._save(record);
-    return { ...input, exe, python, sleepmlxParent: parent };
+    return { ...input, exe, python, sleepmlxParent: parent, heldCount: heldRows.length };
   }
   _intact(record) {
     return unchanged(record.model) && unchanged(record.sources.adapter) && unchanged(record.sources.cards)
@@ -331,6 +336,7 @@ class PrivateCheck {
     try {
       const recovered = await this._recover();
       if (!recovered.ok) { clean = recovered; throw new Error(recovered.error); }
+      if (!Grading.available) throw new Error(Grading.error);
       this._checkAbort(run); input = await this._prepare(run, input); this._checkAbort(run);
       const record = run.record;
       const args = ['-m', record.model.path, '--host', '127.0.0.1', '--port', String(record.port), '-c', String(input.ctx || 2048), '-np', '1', '--jinja', '--no-webui', '-ngl', input.flavor === 'cpu' ? '0' : '99', '--lora', record.adapter.path, '--alias', record.alias, '--api-key', record.apiKey];

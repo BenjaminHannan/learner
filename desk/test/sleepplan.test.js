@@ -94,12 +94,13 @@ function fakeSleep(over) {
   });
   return { w, calls, root, set: (s) => { settings = { ...settings, ...s }; } };
 }
-test('WinSleep check-in: up with the old adapter, task, down; alert only when not NOTHING; never twice for one line', async () => {
+test('WinSleep check-in: unbound old adapter stays on disk; task uses base; alert only when not NOTHING; never twice for one line', async () => {
   const { w, calls, root } = fakeSleep();
   fs.mkdirSync(w.home, { recursive: true }); fs.writeFileSync(path.join(w.home, 'adapter.gguf'), 'x');
   w.since = Date.now() - 3700e3; w.wakeReq = false;
   await w._maybeCheckin();
-  assert.deepStrictEqual(calls, ['resume:adapter.gguf', 'checkin', 'pause']);
+  assert.deepStrictEqual(calls, ['resume:', 'checkin', 'pause']);
+  assert.ok(fs.existsSync(path.join(w.home, 'adapter.gguf')));
   const ev = fs.readFileSync(w.p.events, 'utf8'); assert.ok(/checkin_start/.test(ev) && /"kind":"checkin"/.test(ev));
   calls.length = 0; await w._maybeCheckin(); assert.deepStrictEqual(calls, [], 'not due again right away');
   w.hooks.checkin = async () => ({ reply: 'Your exam deadline is today.' });

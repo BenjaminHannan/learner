@@ -6,6 +6,7 @@ from pathlib import Path
 
 from sleepmlx import dreamhook, export, served
 from .helpers import Env
+from .protocol_fixtures import served_decision
 
 
 class DreamCheckTests(unittest.TestCase):
@@ -120,7 +121,7 @@ class ServedTests(unittest.TestCase):
                 Path(out).write_text("night%d" % (1 + export.prev_path(out).exists()))
                 return True, str(out)
             sl = env.sleeper(env.backend())
-            sl.exporter, sl.served_checker = exporter, (lambda *a, **k: {"ok": True, "reasons": []})
+            sl.exporter, sl.served_checker = exporter, (lambda *a, **k: served_decision(True, a[3], []))
             r1 = sl.run(env.week())
             self.assertTrue(r1["served"]["pending"])
             sl.finish_served(r1)
@@ -131,7 +132,7 @@ class ServedTests(unittest.TestCase):
             write_raw(env.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="c2")
             env.cfg.gate_min_gain = 0
             sl2 = env.sleeper(env.backend())
-            sl2.exporter, sl2.served_checker = exporter, (lambda *a, **k: {"ok": False, "reasons": ["general 2/8"]})
+            sl2.exporter, sl2.served_checker = exporter, (lambda *a, **k: served_decision(False, a[3], ["general 2/8"]))
             r2 = sl2.run(env.week())
             sl2.finish_served(r2)
             self.assertIs(r2["served"]["ok"], False)

@@ -28,6 +28,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from . import diary as diary_mod
 from . import gate as gate_mod
+from . import grading as grading_mod
 from . import lessons as L_mod
 from . import prompts as P
 from . import replay as replay_mod
@@ -1278,14 +1279,80 @@ class Sleeper:
             if candidate is not None:
                 self.be.load_adapter(candidate)
 
-    def general_base_identity(self):
-        return {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
+    def general_base_identity(self, rendered=True):
+        identity = {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
                 "hf_id": self.prof.hf_id, "source_revision": self.prof.source_revision,
                 "backend": self.prof.backend, "loader": self.prof.loader,
                 "max_tokens": self.cfg.gate_max_tokens, "grader": gate_mod.GRADER,
                 "questions": hashlib.sha256(json.dumps(gate_mod.gate_questions(self.cfg.gate_n)).encode()).hexdigest(),
-                "prompts": hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest(),
                 "system": gate_mod.GATE_SYS}
+        if rendered:
+            identity["prompts"] = hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest()
+        return identity
+
+    def finalization_context(self):
+        """Declared model, acceptance policy and export target; no model load."""
+        profile = asdict(self.prof)
+        # Runtime sizing and training schedules do not authorize a gate result.
+        profile.pop("runtime", None)
+        profile.pop("recipe", None)
+        return {"profile": profile, "policy": {key: getattr(self.cfg, key) for key in
+                    ("who", "harm_max", "gate_min_gain", "gate_n", "gate_max_tokens", "recall_max_tokens")},
+                "export": {key: getattr(self.cfg, key) for key in
+                    ("llama_cpp_dir", "gguf_base_dir", "llama_server", "base_gguf")}}
+
+    def _finalization_held(self):
+        # Checkpoint JSON sorts item keys; the same held set must retain its
+        # identity when restored with a different dictionary insertion order.
+        held = []
+        for it in self.items.values():
+            for h in it.held:
+                if not isinstance(h, dict): raise ValueError('invalid held snapshot row')
+                if h.get("night") != self.N["day"]: continue
+                if (type(h.get("night")) is not int or any(not isinstance(h.get(k), str) or not h[k].strip() for k in ("q", "a"))
+                        or not isinstance(h.get("dir", "forward"), str)):
+                    raise ValueError('invalid held snapshot row')
+                held.append(h)
+        held.sort(key=lambda h: (h["q"], h["a"], h.get("dir", "forward")))
+        return held
+
+    def finalization_evaluation(self):
+        held = self._finalization_held()
+        rows = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
+        return {"general": self.general_base_identity(), "recall": self.recall_identity(held), "held_count": len(held),
+                "held_sha256": hashlib.sha256(json.dumps(rows).encode()).hexdigest()}
+
+    def _finalization_bound(self, *, rendered=True):
+        final = self.N.get("finalization")
+        if (not isinstance(final, dict) or type(final.get("version")) is not int or final["version"] != 2
+                or final.get("night_id") != self.N.get("id") or final.get("grader") != gate_mod.GRADER
+                or final.get("grading_contract_sha256") != grading_mod.CONTRACT_SHA256):
+            return False
+        def same(left, right):
+            try:
+                return json.dumps(left, sort_keys=True, allow_nan=False) == json.dumps(right, sort_keys=True, allow_nan=False)
+            except (TypeError, ValueError):
+                return False
+        try:
+            evaluation = final.get("evaluation")
+            if (not isinstance(evaluation, dict) or set(evaluation) != {"general", "recall", "held_count", "held_sha256"}
+                    or type(evaluation["held_count"]) is not int or evaluation["held_count"] < 1
+                    or any(not isinstance(evaluation[key], str) or not re.fullmatch(r'[0-9a-f]{64}', evaluation[key])
+                           for key in ("recall", "held_sha256"))):
+                return False
+            held = self._finalization_held()
+            rows = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
+            general = evaluation["general"]
+            static = self.general_base_identity(rendered=False)
+            return (isinstance(general, dict) and set(general) == set(static) | {"prompts"}
+                    and isinstance(general["prompts"], str) and re.fullmatch(r'[0-9a-f]{64}', general["prompts"]) is not None
+                    and same({key: general[key] for key in static}, static)
+                    and evaluation["held_count"] == len(held)
+                    and evaluation["held_sha256"] == hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+                    and same(final.get("context"), self.finalization_context())
+                    and (not rendered or same(evaluation, self.finalization_evaluation())))
+        except (AttributeError, KeyError, TypeError, ValueError):
+            return False
 
     # ---- the night
     def day_turns(self, week: dict, d: int) -> int:
@@ -1611,7 +1678,9 @@ class Sleeper:
             state["slept_days"].append(N["date"])
         state.setdefault("slept_turns", {})[N["date"]] = self.day_turns(week, d)
         state["last_night"] = {"id": N["id"], "date": N["date"], "reverted": reverted, "quiz": quiz, "harm": j["harm"]}
-        N["finalization"] = {"version": 1, "grader": gate_mod.GRADER, "night_id": N["id"],
+        N["finalization"] = {"version": 2, "grader": gate_mod.GRADER, "night_id": N["id"],
+                             "grading_contract_sha256": grading_mod.CONTRACT_SHA256,
+                             "context": self.finalization_context(), "evaluation": self.finalization_evaluation(),
                              "result": result, "state": state, "extra": {
             "stats": copy.deepcopy(N["stats"]), "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
             "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")}}
@@ -1649,14 +1718,12 @@ class Sleeper:
         if not self._finalization_payload_valid(final):
             return "saved gate decision has an invalid payload or night identity"
         self._checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(self.paths)
-        bound = (isinstance(final, dict) and type(final.get("version")) is int and final["version"] == 1
-                 and final.get("grader") == gate_mod.GRADER and isinstance(N.get("id"), str)
-                 and final.get("night_id") == N["id"])
+        bound = self._finalization_bound(rendered=self.R is not None)
         if not bound:
             # A saved rejection cannot promote or export. Its original gate did
             # not mark new items trained, so it may complete after an upgrade.
             committed = final["result"]["reverted"] is True
-            reason = "saved gate decision has a missing or obsolete grader binding"
+            reason = "saved gate decision has a missing or changed model, evaluation or grader binding"
             if not committed:
                 try:
                     committed = self._checkpoints.is_committed(N)
@@ -1678,6 +1745,7 @@ class Sleeper:
             self._block_finalization(res, reason)
             return
         final = N["finalization"]
+        export_authorized = self._finalization_bound()
         resumed = res.get("resumed", False)
         res.update(final["result"])
         res["resumed"] = resumed
@@ -1685,7 +1753,13 @@ class Sleeper:
             self.be.load_adapter(P_.adapter if P_.adapter.exists() else None)
         else:
             self._checkpoints.promote(N)
-            if cfg.llama_cpp_dir:
+            if cfg.llama_cpp_dir and not export_authorized:
+                # Historical committed outcomes may finish bookkeeping, but a
+                # changed model/configuration cannot relabel or export weights.
+                res["gguf"] = {"ok": None, "pending": True, "message": "export deferred: saved gate context is not current; explicit matching re-gate required"}
+                res.pop("served", None)
+                final["result"] = dict(res)
+            elif cfg.llama_cpp_dir:
                 # Export rotates GGUF files separately. A crash during export is
                 # recorded as incomplete rather than silently rotating again.
                 if not final.get("export_started"):

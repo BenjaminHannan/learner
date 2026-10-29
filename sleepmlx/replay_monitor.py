@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 
 from . import gate
+from . import grading
 from . import replay
 
 MONITOR_QA = [
@@ -33,7 +34,7 @@ MONITOR_QA = [
     ("A note reads: 'The meeting room is Juniper.' What is the meeting room called?", ["juniper"]),
     ("If every glint is a pebble and every pebble is solid, is every glint solid?", ["yes"]),
     ("A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?", ["21", "twenty one", "twenty-one"]),
-    ("Which punctuation mark usually ends a direct question?", ["question mark"]),
+    ("Which punctuation mark usually ends a direct question?", ["question mark", "question marks"]),
     ("A book is placed above a cup. Is the cup above or below the book?", ["below"]),
 ]
 
@@ -47,6 +48,11 @@ LEARNING = [
 ]
 
 
+MONITOR_REVISION = "retention-monitor-2"
+SYMBOL_ALIASES = {"Which punctuation mark usually ends a direct question?": ("?",)}
+MONITOR_ID = hashlib.sha256(json.dumps({"revision": MONITOR_REVISION, "questions": MONITOR_QA, "symbols": SYMBOL_ALIASES}, sort_keys=True).encode()).hexdigest()
+
+
 def measure(backend, renderer, max_tokens=32):
     prompts = [renderer.render(gate.GATE_SYS, q) for q, _ in MONITOR_QA]
     answers = []
@@ -54,8 +60,8 @@ def measure(backend, renderer, max_tokens=32):
         answers.extend(backend.generate(prompts[start:start + max(1, backend.gen_batch)], max_tokens, temp=0.0, adapter=True))
     if len(answers) != len(prompts):
         raise ValueError("incomplete independent replay monitor")
-    flags = [gate.correct(answer, accepted) for answer, (_, accepted) in zip(answers, MONITOR_QA)]
-    return {"n": len(flags), "hits": sum(flags), "flags": flags,
+    flags = [gate.correct(answer, accepted, q, literal_symbols=SYMBOL_ALIASES.get(q, ())) for answer, (q, accepted) in zip(answers, MONITOR_QA)]
+    return {**grading.binding(), "monitor_revision": MONITOR_REVISION, "monitor_identity": MONITOR_ID, "n": len(flags), "hits": sum(flags), "flags": flags,
             "samples": [{"q": q, "out": a} for (q, _), a in zip(MONITOR_QA, answers)]}
 
 

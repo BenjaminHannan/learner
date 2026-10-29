@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "purpose": "Targeted quantity guards and baseline monitor examples selected from the frozen81-case offline audit.",
+  "source_report": "lfm3-learning-diagnostic-64.json",
+  "source_sha256": "bba6306e4538eee30e19004845745e730a0474c1da0f03e3e9b9779987dec3a8",
+  "grader": "strict-3",
+  "gate_source_sha256": "61ee8e93d913c126d62f952a7948d01d9c2acd1c5bf394bee522bbbefba8fa0e",
+  "cases": [
+    {
+      "id": "control-step0-q1",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 0
+      },
+      "question": "A tray holds 13 rows of 4 beads. How many beads are on the tray?",
+      "accepted": [
+        "52",
+        "fifty two",
+        "fifty-two"
+      ],
+      "reply": "<think>We need to find total number of beads on a tray that has 13 rows of 4 beads each.\n\nThis is simply multiplication: 13 rows *",
+      "semantic_expected": false,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "Unclosed truncated thinking; no bead answer."
+    },
+    {
+      "id": "control-step0-q2",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 1
+      },
+      "question": "A packet has 96 sheets. After removing 18 sheets, how many remain?",
+      "accepted": [
+        "78",
+        "seventy eight",
+        "seventy-eight"
+      ],
+      "reply": "36\n\nWait, let's compute: 96 - 18 = 78. I made a mistake. The correct subtraction is 96 - 18 =",
+      "semantic_expected": false,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "Baseline wrong first answer/conflicting correction; later complete equation is correct."
+    },
+    {
+      "id": "control-step0-q3",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 2
+      },
+      "question": "A train leaves at 09:10 and arrives at 09:55. How many minutes is the journey?",
+      "accepted": [
+        "45",
+        "forty five",
+        "forty-five"
+      ],
+      "reply": "The time from 09:10 to 09:55 is 45 minutes.\n\n**Answer:** 45",
+      "semantic_expected": true,
+      "current_expected": false,
+      "question_only_expected": true,
+      "rationale": "Baseline explicit45 is correct; final64 is truncated before any duration answer."
+    },
+    {
+      "id": "control-step0-q4",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 3
+      },
+      "question": "Which is heavier: one kilogram of cork or two kilograms of steel?",
+      "accepted": [
+        "steel"
+      ],
+      "reply": "One kilogram of cork weighs 1 kg; two kilograms of steel weigh 2 kg. Therefore, two kilograms of steel is heavier.\n\n**",
+      "semantic_expected": true,
+      "current_expected": true,
+      "question_only_expected": true,
+      "rationale": "Steel is correctly heavier."
+    },
+    {
+      "id": "control-step0-q5",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 4
+      },
+      "question": "Complete the sequence with one number: 2, 5, 8, 11, __.",
+      "accepted": [
+        "14",
+        "fourteen"
+      ],
+      "reply": "11 + 3 = 14? Wait, let's see: differences are 3 each time (5-2=3, 8-5=",
+      "semantic_expected": false,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "A clear sequence ending14 is correct; unfinished speculative14 reasoning remains inconclusive."
+    },
+    {
+      "id": "control-step0-q6",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 5
+      },
+      "question": "The word 'lantern' starts with which letter?",
+      "accepted": [
+        "l"
+      ],
+      "reply": "L\n\nWait, \"lantern\" starts with the letter L. The user asked: \"The word 'lantern' starts with which letter?\" So answer",
+      "semantic_expected": true,
+      "current_expected": true,
+      "question_only_expected": true,
+      "rationale": "The first answer L is correct."
+    },
+    {
+      "id": "control-step0-q7",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 6
+      },
+      "question": "In the list teal, copper, violet, which word appears second?",
+      "accepted": [
+        "copper"
+      ],
+      "reply": "violet",
+      "semantic_expected": false,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "Violet is wrong; copper is correct."
+    },
+    {
+      "id": "control-step0-q8",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 7
+      },
+      "question": "A note reads: 'The meeting room is Juniper.' What is the meeting room called?",
+      "accepted": [
+        "juniper"
+      ],
+      "reply": "Juniper",
+      "semantic_expected": true,
+      "current_expected": true,
+      "question_only_expected": true,
+      "rationale": "Juniper is correct."
+    },
+    {
+      "id": "control-step0-q9",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 8
+      },
+      "question": "If every glint is a pebble and every pebble is solid, is every glint solid?",
+      "accepted": [
+        "yes"
+      ],
+      "reply": "No. The statement \"every glint is a pebble\" and \"every pebble is solid\" does not logically imply that \"every glint is solid",
+      "semantic_expected": false,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "No is logically wrong; Yes reasoning is correct but blanket and/or guard rejects it."
+    },
+    {
+      "id": "control-step0-q10",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 9
+      },
+      "question": "A rectangle measures 7 cm by 3 cm. What is its area in square centimetres?",
+      "accepted": [
+        "21",
+        "twenty one",
+        "twenty-one"
+      ],
+      "reply": "The area of a rectangle is length \u00d7 width.\n\nGiven: 7 cm \u00d7 3 cm\n\nArea = 7 \u00d7 3 = 21\n\n$\\",
+      "semantic_expected": true,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "Area21 appears on a later line; current first-line format contract deliberately excludes it."
+    },
+    {
+      "id": "control-step0-q11",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 10
+      },
+      "question": "Which punctuation mark usually ends a direct question?",
+      "accepted": [
+        "question mark"
+      ],
+      "reply": "?",
+      "semantic_expected": true,
+      "current_expected": false,
+      "question_only_expected": false,
+      "rationale": "Bare question-mark symbol and plural question marks are semantically correct."
+    },
+    {
+      "id": "control-step0-q12",
+      "api": "correct",
+      "source": {
+        "report": "lfm3-learning-diagnostic-64.json",
+        "step": 0,
+        "question_index": 11
+      },
+      "question": "A book is placed above a cup. Is the cup above or below the book?",
+      "accepted": [
+        "below"
+      ],
+      "reply": "The cup is below the book.\n\n**Reasoning:** The phrase \"a book is placed above a cup\" means the book's position relative to the cup:",
+      "semantic_expected": true,
+      "current_expected": true,
+      "question_only_expected": true,
+      "rationale": "Below is correct; above or internally conflicting responses are wrong."
+    },
+    {
+      "id": "numeric-negative",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "-42",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Sign must not disappear at token boundaries."
+    },
+    {
+      "id": "numeric-unicode-negative",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "\u221242",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Unicode minus must remain semantic."
+    },
+    {
+      "id": "numeric-decimal",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "42.5",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Decimal must not become two integers."
+    },
+    {
+      "id": "numeric-fraction",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "42/7",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Numerator is not the requested value."
+    },
+    {
+      "id": "numeric-percent",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "42%",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Percent must not silently become a unitless integer."
+    },
+    {
+      "id": "numeric-range",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "42\u201343",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Unicode range is not an exact answer."
+    },
+    {
+      "id": "numeric-adjacent",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "What is 6 * 7?",
+      "accepted": [
+        "42"
+      ],
+      "reply": "42 43",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Multiple unconnected values must be rejected."
+    },
+    {
+      "id": "numeric-wrong-unit",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "How many minutes is the journey?",
+      "accepted": [
+        "45"
+      ],
+      "reply": "45 hours",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Wrong physical unit currently passes."
+    },
+    {
+      "id": "numeric-wrong-temperature-unit",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "At what Celsius temperature does water boil at sea level?",
+      "accepted": [
+        "100"
+      ],
+      "reply": "100 Fahrenheit",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "Correct numeral with wrong temperature unit."
+    },
+    {
+      "id": "numeric-wrong-temperature-pair",
+      "api": "correct",
+      "source": {
+        "kind": "synthetic-adversarial-control"
+      },
+      "question": "At what Celsius temperature does water boil?",
+      "accepted": [
+        "100"
+      ],
+      "reply": "100\u00b0C (999\u00b0F)",
+      "semantic_expected": false,
+      "current_expected": true,
+      "rationale": "An inconsistent conversion is a conflicting quantity."
+    }
+  ]
+}

@@ -138,10 +138,11 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     if not dry_run and paths.night_json.exists():
         from .checkpoint import Checkpoints
         checkpoints = Checkpoints(paths)
-        night, _ = checkpoints.load()
+        night, checkpoint_items = checkpoints.load()
         if night and not night.get("dry_run") and night.get("phase") in ("finalize", "done"):
             probe = Sleeper(None, None, prof, cfg, paths, None, log)
             probe.N, probe._checkpoints = night, checkpoints
+            probe.load_items(checkpoint_items)
             reason = probe._finalization_block_reason()
             if reason:
                 probe._block_finalization(out, reason)

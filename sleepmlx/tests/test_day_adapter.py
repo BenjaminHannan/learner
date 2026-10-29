@@ -10,6 +10,8 @@ from sleepmlx import day_adapter
 from sleepmlx.export import sidecar_path
 from sleepmlx.profile import load_profile
 from .helpers import Env
+from .protocol_fixtures import served_decision
+from types import SimpleNamespace
 
 
 class DayAdapterTests(unittest.TestCase):
@@ -106,8 +108,8 @@ class DayAdapterTests(unittest.TestCase):
         adapter.write_bytes(b"GGUF-synthetic-completed-export")
         sleeper = env.sleeper(env.backend())
         sleeper.N = {"id": "synthetic-night", "day": 1, "date": "2026-10-29"}
-        sleeper.state, sleeper.items = {}, {}
-        sleeper.served_checker = lambda *args, **kwargs: {"ok": True, "reasons": []}
+        sleeper.state, sleeper.items = {}, {"synthetic": SimpleNamespace(held=[{"night": 1, "q": "Synthetic?", "a": "Synthetic"}])}
+        sleeper.served_checker = lambda *args, **kwargs: served_decision(True, args[3], [])
         result = {}
         sleeper._after_export(adapter, result)
         selected = lambda: day_adapter.select_adapter(env.paths.home, self.profile, base_dir=self.base, base_gguf=self.gguf)

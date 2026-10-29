@@ -10,6 +10,7 @@ from sleepmlx import export, served, worker
 from sleepmlx.backend import Guards
 from sleepmlx.paths import read_json, write_json
 from .helpers import Env, FACTS_DAY2, write_raw
+from .protocol_fixtures import served_decision
 
 
 def finish_until_exit(root, boundary):
@@ -30,7 +31,7 @@ def finish_until_exit(root, boundary):
             os.replace(export.prev_path(out), out)
             os._exit(73)
         export.restore_prev = stop_after_weights
-    served.finish_pending(paths, load_profile("k2"), cfg, checker=lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+    served.finish_pending(paths, load_profile("k2"), cfg, checker=lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
     raise AssertionError("fault boundary not reached")
 
 
@@ -91,18 +92,18 @@ class ServedRecoveryTests(unittest.TestCase):
         write_raw(self.env.paths.diary_dir, "2026-10-21", FACTS_DAY2, conv="new-day")
         seen = []
         env = self.env
-        checker = lambda *args, **kwargs: seen.append(args) or {"ok": True, "reasons": []}
+        checker = lambda *args, **kwargs: seen.append(args) or served_decision(True, args[3], [])
         recovered = self.worker(checker)
         self.assertEqual(recovered["status"], "served_check")
         self.assertIs(recovered["served"]["ok"], True)
         self.assertEqual(seen[0][3], descriptor["held"])
         self.assertFalse(served.pending_check(env.paths))
         self.assertEqual(read_json(env.paths.state)["nights"], 1)
-        self.assertEqual(read_json(export.sidecar_path(self.gguf))["served"], {"ok": True, "reasons": []})
+        self.assertEqual(read_json(export.sidecar_path(self.gguf))["served"], served_decision(True, descriptor["held"], []))
 
     def test_worker_recovers_even_when_there_is_no_new_diary_day(self):
         self.prepare()
-        result = self.worker(lambda *args, **kwargs: {"ok": True, "reasons": []})
+        result = self.worker(lambda *args, **kwargs: served_decision(True, args[3], []))
         self.assertEqual(result["status"], "served_check")
         self.assertTrue(result["served"]["ok"])
 
@@ -132,11 +133,11 @@ class ServedRecoveryTests(unittest.TestCase):
         self.prepare(previous=True)
         with patch.object(served, "write_json", side_effect=OSError("disk full")):
             with self.assertRaisesRegex(OSError, "disk full"):
-                self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+                self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         self.assertEqual(self.gguf.read_text(), "candidate")
         self.assertTrue(served.pending_check(self.env.paths))
         self.assertNotIn("verdict", read_json(export.sidecar_path(self.gguf))["served_pending"])
-        result = self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+        result = self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         self.assertFalse(result["ok"])
         self.assertEqual(self.gguf.read_text(), "previous")
         self.assertFalse(served.pending_check(self.env.paths))
@@ -151,7 +152,7 @@ class ServedRecoveryTests(unittest.TestCase):
             write_json(path, data)
         with patch.object(served, "write_json", fail_second_write):
             with self.assertRaisesRegex(OSError, "interrupted"):
-                self.finish(lambda *args, **kwargs: {"ok": True, "reasons": []})
+                self.finish(lambda *args, **kwargs: served_decision(True, args[3], []))
         side = read_json(export.sidecar_path(self.gguf))
         self.assertTrue(side["served"]["pending"])
         self.assertTrue(side["served_pending"]["verdict"]["ok"])
@@ -166,7 +167,7 @@ class ServedRecoveryTests(unittest.TestCase):
             raise OSError("interrupted metadata rollback")
         with patch.object(export, "restore_prev", interrupted_rollback):
             with self.assertRaisesRegex(OSError, "interrupted"):
-                self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+                self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         self.assertEqual(self.gguf.read_text(), "previous")
         self.assertTrue(served.pending_check(self.env.paths))
         result = self.finish(lambda *args, **kwargs: self.fail("saved verdict must be replayed"))
@@ -177,7 +178,7 @@ class ServedRecoveryTests(unittest.TestCase):
 
     def test_rejected_legacy_rollback_removes_candidate_sidecar(self):
         self.prepare(previous=True, legacy=True)
-        result = self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+        result = self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         self.assertFalse(result["ok"])
         self.assertEqual(self.gguf.read_text(), "previous")
         self.assertFalse(export.sidecar_path(self.gguf).exists())
@@ -194,7 +195,7 @@ class ServedRecoveryTests(unittest.TestCase):
         self.prepare(previous=True)
         def checker(*args, **kwargs):
             self.gguf.write_text("newer")
-            return {"ok": False, "reasons": ["worse"]}
+            return served_decision(False, args[3], ["worse"])
         result = self.finish(checker)
         self.assertTrue(result["pending"])
         self.assertEqual(self.gguf.read_text(), "newer")
@@ -216,7 +217,7 @@ class ServedRecoveryTests(unittest.TestCase):
         result = self.finish(lambda *args, **kwargs: {"ok": None, "reasons": ["out of memory"]})
         self.assertTrue(result["pending"])
         self.assertTrue(served.pending_check(self.env.paths))
-        self.assertTrue(self.finish(lambda *args, **kwargs: {"ok": True, "reasons": []})["ok"])
+        self.assertTrue(self.finish(lambda *args, **kwargs: served_decision(True, args[3], []))["ok"])
 
     def test_preflight_rejection_updates_unfinished_finalization_result(self):
         def stop_after_state(stage):
@@ -225,7 +226,7 @@ class ServedRecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "interrupted finalization"):
             self.prepare(previous=True, hook=stop_after_state)
         self.assertTrue(self.env.paths.night_json.exists())
-        self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+        self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         recorded = read_json(self.env.paths.night_json)["finalization"]["result"]["served"]
         self.assertFalse(recorded["ok"])
         self.assertNotIn("pending", recorded)
@@ -240,7 +241,7 @@ class ServedRecoveryTests(unittest.TestCase):
         self.prepare(previous=True)
         with patch.object(served, "_record_finalization", side_effect=OSError("journal unavailable")):
             with self.assertRaisesRegex(OSError, "journal unavailable"):
-                self.finish(lambda *args, **kwargs: {"ok": False, "reasons": ["worse"]})
+                self.finish(lambda *args, **kwargs: served_decision(False, args[3], ["worse"]))
         self.assertEqual(self.gguf.read_text(), "candidate")
         self.assertFalse(read_json(export.sidecar_path(self.gguf))["served_pending"]["verdict"]["ok"])
         result = self.finish(lambda *args, **kwargs: self.fail("saved verdict must be replayed"))

@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence
 
 from . import gate as gate_mod
+from . import grading
 from .paths import read_json, write_json
 
 
@@ -73,7 +74,7 @@ def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
     def deferred(reason):
         return {"ok": None, "pending": True, "reasons": [reason]}
 
-    if (pending.get("version") != 1 or pending.get("profile") != prof.name
+    if (type(pending.get("version")) is not int or pending["version"] != 1 or pending.get("profile") != prof.name
             or pending.get("base_hf_id") != prof.hf_id
             or pending.get("base_gguf") != cfg.base_gguf
             or pending.get("llama_server") != cfg.llama_server):
@@ -89,14 +90,58 @@ def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
     if (generation != pending.get("adapter") or side.get("night_id") != pending["night_id"]
             or side.get("profile") != prof.name or side.get("base_hf_id") != prof.hf_id):
         return deferred("not checked: pending adapter identity no longer matches the current artifact")
-    verdict = pending.get("verdict")
+    held_count = len(pending["held"])
+    if (not 1 <= held_count <= grading.CONTRACT["served"]["held_max"]
+            or any(not isinstance(card, dict) or not isinstance(card.get("q"), str) or not card["q"].strip()
+                   or not isinstance(card.get("a"), str) or not card["a"].strip() for card in pending["held"])):
+        return deferred("not checked: a complete held snapshot of 1..12 cards is required")
+    def descriptor_identity(value):
+        return json.dumps({key: item for key, item in value.items() if key != "verdict"}, sort_keys=True)
+    descriptor_before = descriptor_identity(pending)
+    def descriptor_unchanged():
+        latest = read_json(side_path, {}) or {}
+        descriptor = latest.get("served_pending") if isinstance(latest, dict) else None
+        try:
+            return (isinstance(descriptor, dict) and descriptor_identity(descriptor) == descriptor_before
+                    and descriptor_identity(pending) == descriptor_before and latest.get("night_id") == pending["night_id"]
+                    and latest.get("profile") == prof.name and latest.get("base_hf_id") == prof.hf_id)
+        except (TypeError, ValueError):
+            return False
+    def valid_decision(value):
+        return grading.valid_decision(value, held_count) or grading.mechanical_rejection(value, pending["sha256"])
+    raw_verdict = pending.get("verdict")
+    verdict = raw_verdict
+    if verdict is not None and not valid_decision(verdict):
+        verdict = None  # An old or malformed decision is not a new authorization.
     previous = export_mod.prev_path(gguf)
     current_hash = artifact_hash(gguf) if gguf.is_file() else None
+    # A historical rejection cannot authorize a fresh rollback. It can only
+    # complete metadata repair when the previous accepted artifact is ALREADY
+    # restored and its complete sidecar proves the same bytes/profile/base.
+    if (isinstance(raw_verdict, dict) and raw_verdict.get("ok") is False and not grading.current(raw_verdict)
+            and isinstance(pending.get("previous_hash"), str) and current_hash == pending["previous_hash"]
+            and not previous.exists() and descriptor_unchanged()):
+        old_side = export_mod.sidecar_path(previous)
+        old_record = read_json(old_side, None)
+        from .day_adapter import metadata_reason
+        base_dir = getattr(cfg, "gguf_base_dir", None)
+        try:
+            generation = paths.adapter.relative_to(paths.home).as_posix()
+            accepted = (base_dir and generation == pending["adapter"] and isinstance(old_record, dict)
+                        and old_record.get("night_id") != pending["night_id"]
+                        and metadata_reason(gguf, old_record, prof, base_dir, cfg.base_gguf) is None)
+            if accepted:
+                old_hash = artifact_hash(old_side)
+                if descriptor_unchanged() and artifact_hash(gguf) == pending["previous_hash"] and artifact_hash(old_side) == old_hash:
+                    os.replace(old_side, side_path)
+                    return dict(raw_verdict, recovered=True, recovery="completed_rollback_metadata", quality_claim=False)
+        except (OSError, RuntimeError, ValueError):
+            pass
     # The weights may already be restored while the sidecar still has pending.
     restored = (verdict and verdict.get("ok") is False and
                 ((pending.get("previous_hash") is None and current_hash is None and not previous.exists()) or
                  (pending.get("previous_hash") == current_hash and not previous.exists())))
-    if restored:
+    if restored and descriptor_unchanged():
         old_side = export_mod.sidecar_path(previous)
         if old_side.exists():
             os.replace(old_side, side_path)
@@ -111,7 +156,7 @@ def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
         except (RuntimeError, ValueError):
             generation = None
         descriptor = latest.get("served_pending") if isinstance(latest, dict) else None
-        return (isinstance(descriptor, dict) and latest.get("night_id") == pending.get("night_id")
+        return (descriptor_unchanged() and isinstance(descriptor, dict) and latest.get("night_id") == pending.get("night_id")
                 and latest.get("profile") == prof.name and latest.get("base_hf_id") == prof.hf_id
                 and descriptor.get("sha256") == pending.get("sha256")
                 and generation == pending.get("adapter") and gguf.is_file()
@@ -127,6 +172,8 @@ def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
             return deferred("not checked: %s: %s" % (type(error).__name__, error))
         if not matches():
             return deferred("not applied: adapter changed during its served check")
+        if not isinstance(verdict, dict) or (verdict.get("ok") is not None and not valid_decision(verdict)):
+            return deferred("not checked: served grader revision or complete decision does not match this snapshot")
         if verdict.get("ok") is None:
             return dict(verdict, pending=True)
         if verdict.get("ok") is False:
@@ -152,8 +199,8 @@ def finish_pending(paths, prof, cfg, checker=None, log=lambda message: None):
     log("[night] served check (llama-server, adapter on vs off): %s" % verdict)
     return verdict
 
-N_GENERAL = 8
-MAX_HELD = 12
+N_GENERAL = grading.CONTRACT["served"]["general_n"]
+MAX_HELD = grading.CONTRACT["served"]["held_max"]
 
 
 def latest_held(cards_path) -> List[dict]:
@@ -232,7 +279,7 @@ def ask(url: str, system: str, question: str, scale: float, max_tokens: int = 24
     return msg.get("content") or ""
 
 
-def judge(gen_on: Sequence[bool], gen_off: Sequence[bool], held_on: Sequence[bool], held_off: Sequence[bool], max_general_loss: int = 1) -> Dict:
+def judge(gen_on: Sequence[bool], gen_off: Sequence[bool], held_on: Sequence[bool], held_off: Sequence[bool], max_general_loss: int = grading.CONTRACT["served"]["max_general_loss"]) -> Dict:
     reasons = []
     g1, g0, h1, h0 = sum(gen_on), sum(gen_off), sum(held_on), sum(held_off)
     if g1 < g0 - max_general_loss:
@@ -249,8 +296,9 @@ def served_check(url: str, held: Sequence[dict], n_general: int = N_GENERAL, ask
     t0 = time.time()
     qs = gate_mod.gate_questions(n_general)
     gen = {s: [gate_mod.correct(asker(url, gate_mod.GATE_SYS, q, s), acc, q) for q, acc in qs] for s in (1.0, 0.0)}
-    hs = {s: [gate_mod.recall_hit(c["a"], asker(url, "Answer with just the name.", c["q"], s, 16)) for c in held] for s in (1.0, 0.0)}
+    hs = {s: [gate_mod.recall_hit(c["a"], asker(url, "Answer with just the name.", c["q"], s, 16), c["q"]) for c in held] for s in (1.0, 0.0)}
     r = judge(gen[1.0], gen[0.0], hs[1.0], hs[0.0])
+    r.update(grading.binding())
     r["elapsed_s"] = round(time.time() - t0, 1)
     return r
 
@@ -300,6 +348,7 @@ def check_gguf(server_bin: str, base_gguf: str, lora: str, held: Sequence[dict],
     out = open(log, "ab") if log else subprocess.DEVNULL
     p = None
     try:
+        checked_adapter_sha256 = artifact_hash(lora)
         p = subprocess.Popen(cmd, stdout=out, stderr=subprocess.STDOUT)
         end = time.time() + wait_s
         while time.time() < end and p.poll() is None and not _healthy(url):
@@ -308,7 +357,10 @@ def check_gguf(server_bin: str, base_gguf: str, lora: str, held: Sequence[dict],
             # the adapter's fault only if the plain model starts fine on its own (else: memory, binary, model file)
             code = p.returncode
             if _starts(cmd[:cmd.index("--lora")] + cmd[cmd.index("--lora") + 2:], url, wait_s, out):
-                return {"ok": False, "reasons": ["llama-server would not load the adapter (exit %s); the plain model loads" % code]}
+                return ({"ok": False, **grading.binding(), "failure_kind": "adapter_load", "adapter_exit_code": code,
+                         "plain_load_verified": True, "checked_adapter_sha256": checked_adapter_sha256,
+                         "reasons": ["adapter engine exited before readiness (exit %s); the owned plain-model probe loaded" % code]}
+                        if artifact_hash(lora) == checked_adapter_sha256 else {"ok": None, "reasons": ["adapter changed during its load check"]})
             return {"ok": None, "reasons": ["not checked: llama-server did not start even without the adapter (exit %s)" % code]}
         if not _healthy(url):
             return {"ok": None, "reasons": ["not checked: llama-server did not become ready in %ds" % wait_s]}
