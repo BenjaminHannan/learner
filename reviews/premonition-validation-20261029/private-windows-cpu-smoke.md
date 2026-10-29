@@ -1,0 +1,11 @@
+# Private Windows CPU smoke — 2026-10-29
+
+A real isolated LFM3 QAD Q4 private server and the actual HTTP-only Python grader passed on **BENSPC**. This is a wiring, ownership, and cleanup test using a synthetic held-out card and an all-zero LoRA; it does not establish learning quality, validate Jacob's 8 GB laptop, or promote an adapter. BENSPC is not Jacob's computer.
+
+- Check: 8/8 general answers with and without the adapter, 1/1 synthetic held-out with and without; `ok: true`, 13 seconds in the grader, ~15.1 seconds overall.
+- Engine used CPU only (`-ngl 0`, `-t 2`), context 2048, one slot; private authentication and ephemeral port from the actual controller. The pre-existing GPU workload was not touched.
+- Native engine PID 41132 and Python 3.10 grader PID 27512 both exited. The controller returned `processStopped: true`; idle recovery passed, no owned-process journal or job directory entries remained, and an independent Windows process query found neither PID.
+- Samples every five seconds saw engine peak working set 1,998,999,552 bytes (~1.86 GiB), grader peak 20,688,896 bytes, and minimum available physical memory 21,247,074,304 bytes (~19.8 GiB). These are sampled values, not a comprehensive peak claim. The grader loaded no Torch, Transformers, MLX, TensorFlow or Safetensors modules.
+- Python 3.10.9 imported the staged CLI and grader before launch. The packaged CPU executable is static; its PE imports are Windows system DLLs only. `--version` printed commit d05706b before test. Seven transferred inputs and all 31 extracted source files were checked against local SHA-256 before launch. The synthetic adapter and held cards stayed unchanged.
+
+The source GGUF SHA-256 is `43a7d09a0e9cba91b63eb7052488b9564569bddfd65754d2e426465e572a7452`; controller `163e9e8368cdb9bc8d3ff6a14ddd1e1bd2b5bf265c2a277a56c5af469d133a7c`; grader `e425f62c9dd13d2e0325bf98af637fe1e1ce2c451b9e4ef39f0a6d23e4d96d01`. Full sanitized events, hashes and memory samples are in `private-windows-cpu-smoke.json`. The isolated files remain under `C:/Users/benja/learner-ops/premonition-private-cpu-b1ce3d6e-4948-4c09-b596-76057e8db241`; no installed app, model runtime, user data, services or unrelated processes were changed.
