@@ -1,7 +1,7 @@
 'use strict';
 // Streaming client for an OpenAI-compatible /chat/completions endpoint.
 
-function extractFallbackCalls(content) {
+function extractFallbackCalls(content, tools) {
   const calls = [];
   let rest = content || '';
   let n = 0;
@@ -23,12 +23,22 @@ function extractFallbackCalls(content) {
   // <function=name><parameter=k>v</parameter>...</function>
   rest = rest.replace(/<function=([\w.\-]+)>([\s\S]*?)(?:<\/function>|$)/g, (all, name, body) => {
     const args = {};
+    const tool = Array.isArray(tools) && tools.find((t) => t && t.type === 'function' && t.function && t.function.name === name);
+    const props = tool && tool.function.parameters && tool.function.parameters.properties;
     const re = /<parameter=([\w.\-]+)>([\s\S]*?)(?:<\/parameter>|(?=<parameter=)|$)/g;
     let m;
     while ((m = re.exec(body))) {
       let v = m[2].replace(/^\n/, '').replace(/\n$/, '');
-      if (/^(true|false)$/.test(v)) v = v === 'true';
-      else if (/^-?\d+(\.\d+)?$/.test(v)) v = Number(v);
+      const type = props && props[m[1]] && props[m[1]].type;
+      if (type === 'array' || type === 'object') {
+        try {
+          const parsed = JSON.parse(v);
+          if (type === 'array' ? Array.isArray(parsed) : parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) v = parsed;
+        } catch (e) { /* preserve malformed input for the tool */ }
+      } else if (type !== 'string') {
+        if (/^(true|false)$/.test(v)) v = v === 'true';
+        else if (/^-?\d+(\.\d+)?$/.test(v)) v = Number(v);
+      }
       args[m[1]] = v;
     }
     mk(name, args);
@@ -151,7 +161,7 @@ async function streamChat(opts) {
   if (te >= 0) { reasoning = [reasoning, content.slice(0, te).replace(/^\s*<think>/, '').trim()].filter(Boolean).join('\n'); content = content.slice(te + 8).replace(/^\s+/, ''); }
   let toolCalls = tc.filter(Boolean).filter((t) => t.name).map((t, i) => ({ id: t.id || 'call_' + Date.now().toString(36) + '_' + i, name: t.name, arguments: t.arguments || '{}' }));
   if (!toolCalls.length && content && /<tool_call>|<function=/.test(content)) {
-    const fb = extractFallbackCalls(content);
+    const fb = extractFallbackCalls(content, tools);
     if (fb.calls.length) { toolCalls = fb.calls; content = fb.content; }
   }
   return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
