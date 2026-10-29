@@ -256,7 +256,9 @@
         if (!clean) t.text.remove();
         else {
           const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
-          const rate = thread && !thread.helper ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
+          const cut = !!ev.cut;
+          const rate = thread && !thread.helper && !cut ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
+          if (cut) { t.text.classList.add('cut'); t.text.append(el('div', 'cutnote', 'cut off: reading your new message')); }
           const st = stamp(ev.ts); t.text.after(st);
           if (rate) st.after(rate);
           if (pc.choices.length && !(thread && thread.helper)) (rate || st).after(choicesRow(pc.choices)); // (a stored thread's row is locked again when a later message follows)
@@ -755,7 +757,7 @@
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0 });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);
