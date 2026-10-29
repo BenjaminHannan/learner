@@ -56,7 +56,7 @@ function buildChatBody({ model, messages, tools, stream, maxTokens }) {
 const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
 
 async function streamChat(opts) {
-  const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, apiKey, maxTokens } = opts;
+  const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, onToolDelta, apiKey, maxTokens } = opts;
   const url = chatUrl(gatewayUrl);
   const body = buildChatBody({ model, messages, tools, stream: true, maxTokens });
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
@@ -95,6 +95,7 @@ async function streamChat(opts) {
     const r = d.reasoning_content || d.reasoning;
     if (r) { reasoning += r; if (onReasoning) onReasoning(r); }
     if (Array.isArray(d.tool_calls)) {
+      if (d.tool_calls.length && onToolDelta) onToolDelta();
       for (const t of d.tool_calls) {
         // Some servers omit `index`: a chunk with a new id (or the very first chunk) starts a new call, otherwise it continues the last one.
         let i = t.index;

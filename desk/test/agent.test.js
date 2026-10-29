@@ -622,6 +622,64 @@ test('claimed actions without a tool call: dropped from history, run again think
   } finally { gw.close(); }
 });
 
+// ---- Ben Oct 29: "cap thinking to 10 second then force it to respond. Then it can do whatever it was planning to do" -------------------
+test('first-reply thinking cap: cut at the cap, a short plan is forced (fast model, sees the thinking), then the task runs on, thinking', async () => {
+  const think = { model: 'think', modelFast: 'fast', modelMain: 'think', verify: false, thinkCapSecs: 0.2 };
+  const tools = { browser_go: async () => 'ok' };
+  const gw = await startGateway([
+    { reasoning: 'Ben wants his work schedule. I should check his notes first, then '.repeat(4), reasoningDelayMs: 30 },
+    { content: "I'll check your saved notes for your work hours. [continue]" },
+    { tool_calls: [{ name: 'browser_go', arguments: { url: 'https://school.example' } }] },
+    { content: 'You work 4 to 9 on Mondays.' }
+  ]);
+  try {
+    const evs = [];
+    const a = new Agent({ getSettings: settings(gw, think), toolDefs: buildTools({}), tools, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await a.run(t, "what's my work schedule?");
+    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['think', 'fast', 'think', 'think']);
+    const note = gw.requests[1].messages.at(-1).content;
+    assert.match(note, /Your unfinished thinking/); assert.match(note, /Ben wants his work schedule/);
+    assert.ok(t.items.some((i) => i.t === 'assistant' && i.text === "I'll check your saved notes for your work hours."), 'the plan is on screen, tag stripped');
+    const m2 = gw.requests[2].messages;
+    assert.ok(m2.some((m) => m.role === 'assistant' && /saved notes for your work hours/.test(m.content)), 'the plan reaches the model as written, not as a pretend note');
+    assert.match(m2.at(-1).content, /Carry on with it now/);
+    assert.ok(!m2.some((m) => /Your unfinished thinking/.test(m.content || '')), 'the cut thinking is not kept in the chat');
+    assert.strictEqual(t.messages.at(-1).content, 'You work 4 to 9 on Mondays.');
+    assert.ok(!t.items.some((i) => i.t === 'step' && i.tool === 'verify'), 'a forced plan is not a pretend');
+  } finally { gw.close(); }
+});
+
+test('first-reply thinking cap: a forced reply that answers or asks ends the turn; quick thinking, later steps and Motes are never cut', async () => {
+  const think = { model: 'think', modelFast: 'fast', modelMain: 'think', verify: false, thinkCapSecs: 0.2 };
+  const slow = { reasoning: 'thinking about it at length '.repeat(4), reasoningDelayMs: 30 };
+  const tools = { browser_go: async () => 'ok' };
+  const gw = await startGateway([
+    slow, { content: 'Sure, what are your hours?' },
+    slow, { content: '' }, { content: 'Thought it through: 4 to 9.' },
+    { reasoning: 'quick', content: 'Hi!' },
+    { tool_calls: [{ name: 'browser_go', arguments: { url: 'https://school.example' } }] }, { ...slow, content: 'Opened it.' },
+    { ...slow, content: 'Mote report.' }
+  ]);
+  try {
+    const a = new Agent({ getSettings: settings(gw, think), toolDefs: buildTools({}), tools, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await a.run(t, 'yes, remember my work schedule?');
+    assert.strictEqual(gw.requests.length, 2);
+    assert.strictEqual(t.messages.at(-1).content, 'Sure, what are your hours?');
+    const r = await a.run(t, 'when do I work?');   // the forced reply came back empty: the step runs again, uncapped, instead of an error
+    assert.strictEqual(r.error, null); assert.strictEqual(gw.requests.length, 5); assert.strictEqual(t.messages.at(-1).content, 'Thought it through: 4 to 9.');
+    await a.run(t, 'hello');
+    assert.strictEqual(gw.requests.length, 6);
+    await a.run(t, 'open schoology');
+    assert.strictEqual(gw.requests.length, 8); assert.strictEqual(t.messages.at(-1).content, 'Opened it.');
+    const m = new Agent({ getSettings: settings(gw, { ...think, thinkActing: false }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const mt = mkThread();
+    await m.run(mt, 'check the news');
+    assert.strictEqual(gw.requests.length, 9); assert.strictEqual(mt.messages.at(-1).content, 'Mote report.');
+  } finally { gw.close(); }
+});
+
 test('claimed actions twice: said plainly instead of pretending; Motes (thinkActing false) are not re-run', async () => {
   const fast = { model: 'fast', modelFast: 'fast', modelMain: 'think', verify: false };
   const gw = await startGateway([{ content: "I've opened the page for you." }, { content: "I've opened the page for you." }, { content: "I've opened it." }]);
