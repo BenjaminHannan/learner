@@ -58,6 +58,8 @@ class LlamaServer {
     this.timer = null;
     this.postHealthyCrashes = 0;
     this.gen = 0;
+    this.action = 0;
+    this.cancelLaunch = null;
     this.state = 'stopped';
   }
   _set(state, info) { this.state = state; if (this.o.onState) { try { this.o.onState(state, info || {}); } catch (e) { /* ignore */ } } }
@@ -72,13 +74,19 @@ class LlamaServer {
     const gen = ++this.gen;
     return new Promise((resolve) => {
       let child;
-      let settled = false;
-      const fin = (r) => { if (settled) return; settled = true; clearInterval(poll); clearTimeout(limit); resolve(r); };
+      let settled = false, poll, limit;
+      const fin = (r) => { if (settled) return; settled = true; clearInterval(poll); clearTimeout(limit); if (this.cancelLaunch === cancel) this.cancelLaunch = null; resolve(r); };
+      const cancel = () => fin({ ok: false, stopped: true, error: 'stopped' });
+      this.cancelLaunch = cancel;
       try { child = this.spawn(this.o.exe, this.args(), { cwd: this.o.cwd, windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] }); } catch (e) { return resolve({ ok: false, error: String(e.message || e), exitedEarly: true }); }
       this.child = child; this.healthy = false;
       let err = '';
       if (child.stderr) child.stderr.on('data', (d) => { err = (err + d).slice(-2000); if (this.o.log) this.o.log(String(d)); });
-      child.on('error', (e) => fin({ ok: false, error: String(e.message || e), exitedEarly: true }));
+      child.on('error', (e) => {
+        // A spawn failure has no PID and emits close without exit. Do not retain a phantom child.
+        if (!child.pid && this.child === child) this.child = null;
+        fin({ ok: false, error: String(e.message || e), exitedEarly: true });
+      });
       child.on('exit', (code) => {
         const was = this.healthy;
         this.healthy = false;
@@ -86,28 +94,37 @@ class LlamaServer {
         if (!settled) fin({ ok: false, error: 'llama-server exited (' + code + '): ' + err.split('\n').filter(Boolean).slice(-2).join(' | '), exitedEarly: true });
         else if (this.wanted && gen === this.gen) this._crashed(code, was);
       });
-      const poll = setInterval(async () => { if (await this._health()) { this.healthy = true; fin({ ok: true }); } }, this.o.pollMs || 500);
-      const limit = setTimeout(() => { if (!settled) { this._kill(); fin({ ok: false, error: 'llama-server did not become ready in time' }); } }, this.o.startTimeoutMs || 180000); // never leave a half-started server behind
+      poll = setInterval(async () => { const healthy = await this._health(); if (healthy && !settled && this.wanted && gen === this.gen && this.child === child) { this.healthy = true; fin({ ok: true }); } }, this.o.pollMs || 500);
+      limit = setTimeout(() => { if (!settled) { this._kill(); fin({ ok: false, error: 'llama-server did not become ready in time' }); } }, this.o.startTimeoutMs || 180000); // never leave a half-started server behind
     });
   }
   // Start (or restart with new options). Resolves {ok, error?}.
   async start(opts) {
     if (opts && 'lora' in opts) this.lora = opts.lora;
+    const action = ++this.action;
+    this.wanted = false;
+    const c = this._kill();
+    const stopped = await this._waitStopped(c);
+    if (action !== this.action) return { ok: false, stopped: true, error: 'stopped' };
+    if (!stopped.ok) { this._set('error', { error: stopped.error }); return stopped; }
     this.wanted = true;
-    this._kill();
     if (['win32', 'darwin'].includes(this.o.platform || process.platform) || this.o.reclaim) { try { await (this.o.reclaim || reclaimPort)(this.o.port || C.SERVER_PORT, this.o.exec, this.o.platform); } catch (e) { /* best effort */ } }
-    if (!this.wanted) return { ok: false, stopped: true, error: 'stopped' };   // turned off (or sleep began) while the port was being freed: launch nothing
+    if (action !== this.action || !this.wanted) return { ok: false, stopped: true, error: 'stopped' };   // turned off (or sleep began) while the port was being freed: launch nothing
     this.postHealthyCrashes = 0;
     this._set('starting');
     const r = await this._launch();
+    if (action !== this.action || !this.wanted) return { ok: false, stopped: true, error: 'stopped' };
     if (r.ok) this._set('ready'); else { this._kill(); this._set('error', { error: r.error, exitedEarly: r.exitedEarly }); }
     return r;
   }
   async _crashed(code, wasHealthy) {
+    const action = this.action, gen = this.gen;
+    if (!this.wanted) return;
     if (wasHealthy) this.postHealthyCrashes++;
     // the graphics build keeps dying after it was running: switch to the CPU build
     if (this.postHealthyCrashes >= 2 && this.o.flavor !== 'cpu' && this.o.cpuFallback) {
-      try { const r = await this.o.cpuFallback(); if (r && r.exe) { this.o.exe = r.exe; this.o.cwd = r.cwd || this.o.cwd; this.o.flavor = 'cpu'; this.postHealthyCrashes = 0; this._set('restarting', { code, flavor: 'cpu' }); } } catch (e) { /* keep trying vulkan */ }
+      try { const r = await this.o.cpuFallback(); if (action !== this.action || gen !== this.gen || !this.wanted) return; if (r && r.exe) { this.o.exe = r.exe; this.o.cwd = r.cwd || this.o.cwd; this.o.flavor = 'cpu'; this.postHealthyCrashes = 0; this._set('restarting', { code, flavor: 'cpu' }); } } catch (e) { /* keep trying vulkan */ }
+      if (action !== this.action || gen !== this.gen || !this.wanted) return;
     }
     const now = Date.now();
     this.crashes = this.crashes.filter((t) => now - t < 300000); this.crashes.push(now);
@@ -125,15 +142,33 @@ class LlamaServer {
     }, delay);
     if (this.timer.unref) this.timer.unref();
   }
-  _kill() { clearTimeout(this.timer); const c = this.child; this.child = null; this.healthy = false; this.gen++; if (c) { try { c.kill(); } catch (e) { /* gone */ } } return c; }
-  // resolves once the process has really exited (the RAM is free), or after a few seconds
-  stop() {
-    this.wanted = false;
-    const c = this._kill();
-    this._set('stopped');
-    if (!c || c.exitCode !== undefined && c.exitCode !== null) return Promise.resolve();
-    return new Promise((resolve) => { const t = setTimeout(resolve, this.o.stopWaitMs || 8000); if (t.unref) t.unref(); c.once('exit', () => { clearTimeout(t); resolve(); }); });
+  _kill() {
+    clearTimeout(this.timer); this.healthy = false; this.gen++;
+    if (this.cancelLaunch) this.cancelLaunch();
+    const c = this.child;
+    if (c) { try { c.kill(); } catch (e) { /* wait for exit or report failure */ } }
+    return c;
   }
+  _waitStopped(c) {
+    if (!c || c.exitCode != null || c.signalCode != null || this.child !== c) return Promise.resolve({ ok: true });
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (r) => { if (done) return; done = true; clearTimeout(t); c.removeListener('exit', exited); resolve(r); };
+      const exited = () => finish({ ok: true });
+      const t = setTimeout(() => finish({ ok: false, error: 'The model did not stop; sleep cannot start safely.' }), this.o.stopWaitMs || 8000);
+      c.once('exit', exited);
+      if (c.exitCode != null || c.signalCode != null || this.child !== c) exited();
+    });
+  }
+  // Do not claim the model stopped while its process still owns memory.
+  async stop() {
+    const action = ++this.action; this.wanted = false;
+    const c = this._kill();
+    const result = await this._waitStopped(c);
+    if (action === this.action) { if (result.ok) this._set('stopped'); else this._set('error', { error: result.error }); }
+    return result;
+  }
+
 }
 
 module.exports = { LlamaServer, buildArgs, parseNetstat, parseTasklistImage, reclaimPort, parseLsofPid, lsofArgs, isLlamaServerComm };

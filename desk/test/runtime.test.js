@@ -483,3 +483,66 @@ test('WinSleep refuses a missing published generation instead of converting a le
   assert.strictEqual(calls, 0);
   assert.ok(fs.readFileSync(ws.p.events, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).some((e) => e.kind === 'convert_failed'));
 });
+
+test('llama-server refuses to start another process when its managed child ignores stop', async () => {
+  const child = fakeChild(); child.kill = () => {}; let launches = 0;
+  const srv = new LlamaServer({ exe: 'x', model: 'm', spawn: () => { launches++; return child; }, fetch: async () => ({ ok: true }), pollMs: 2, stopWaitMs: 15, reclaim: async () => 0 });
+  assert.equal((await srv.start()).ok, true);
+  const stopped = await srv.stop();
+  assert.equal(stopped.ok, false); assert.equal(srv.child, child); assert.notEqual(srv.state, 'stopped');
+  assert.equal((await srv.start()).ok, false); assert.equal(launches, 1);
+  child.emit('exit', 0);
+  assert.equal((await srv.stop()).ok, true);
+});
+
+test('llama-server ignores a health response that arrives after stop', async () => {
+  let respond, requested; const observed = new Promise(r => { requested = r; });
+  const response = new Promise(r => { respond = r; }); const states = [];
+  const srv = new LlamaServer({ exe: 'x', model: 'm', spawn: fakeChild, fetch: () => { requested(); return response; }, pollMs: 2, stopWaitMs: 100, reclaim: async () => 0, onState: s => states.push(s) });
+  const starting = srv.start(); await observed;
+  const stopped = srv.stop(); respond({ ok: true });
+  assert.equal((await starting).ok, false); assert.equal((await stopped).ok, true);
+  await new Promise(r => setImmediate(r));
+  assert.equal(srv.state, 'stopped'); assert.equal(srv.healthy, false); assert.equal(states.includes('ready'), false);
+});
+
+test('Windows sleep does not launch a trainer if stopping the chat model fails', async () => {
+  const root = tmp('pause-failure-'); let chunks = 0;
+  const ws = new WinSleep({ root, getSettings: () => ({}), installer: { installed: () => true }, hooks: { pauseModel: async () => ({ ok: false, error: 'still running' }), resumeModel: async () => ({ ok: true }) } });
+  ws._chunk = async () => { chunks++; return { status: 'no_new_day' }; };
+  assert.equal(ws.start().ok, true);
+  for (let i = 0; i < 100 && ws.active; i++) await new Promise(r => setTimeout(r, 5));
+  assert.equal(ws.active, false); assert.equal(chunks, 0); assert.match(ws.exit.error, /still running/);
+});
+
+test('putting the built-in model to sleep during download prevents a late launch', async () => {
+  let resolveModel, entered; const waiting = new Promise(r => { entered = r; });
+  const model = new Promise(r => { resolveModel = r; }); let starts = 0;
+  const b = new Builtin({ root: tmp('pause-download-'), platform: 'win32', makeServer: () => { starts++; return {}; } });
+  b.installer.llamaExe = () => ({ exe: 'llama-server.exe' });
+  b.installer.ensureModel = () => { entered(); return model; };
+  const starting = b.start(); await waiting;
+  assert.equal((await b.pauseForSleep()).ok, true);
+  resolveModel({ file: 'model.gguf' }); await starting;
+  assert.equal(starts, 0); assert.equal(b.asleep, true); assert.equal(b.st.phase, 'off');
+});
+
+test('a CPU fallback that finishes after stop cannot restart or change the stopped service', async () => {
+  let resolveFallback, entered; const pending = new Promise(r => { resolveFallback = r; });
+  const called = new Promise(r => { entered = r; });
+  const kids = [], states = [];
+  const srv = new LlamaServer({ exe: 'vk.exe', model: 'm', flavor: 'vulkan', spawn: () => { const c = fakeChild(); kids.push(c); return c; }, fetch: async () => ({ ok: true }), pollMs: 2, fastRetry: true, reclaim: async () => 0, onState: s => states.push(s), cpuFallback: () => { entered(); return pending; } });
+  assert.equal((await srv.start()).ok, true);
+  srv.postHealthyCrashes = 1; kids[0].emit('exit', 1); await called;
+  assert.equal((await srv.stop()).ok, true);
+  resolveFallback({ exe: 'cpu.exe' }); await new Promise(r => setTimeout(r, 30));
+  assert.equal(srv.state, 'stopped'); assert.equal(srv.o.exe, 'vk.exe'); assert.equal(srv.o.flavor, 'vulkan');
+  assert.equal(kids.length, 1); assert.equal(states.at(-1), 'stopped');
+});
+
+test('a failed spawn without an exit event leaves no phantom managed process', async () => {
+  const srv = new LlamaServer({ exe: 'missing', model: 'm', spawn: () => { const child = fakeChild(); setImmediate(() => child.emit('error', new Error('ENOENT'))); return child; }, fetch: async () => ({ ok: false }), pollMs: 2, stopWaitMs: 15, reclaim: async () => 0 });
+  const result = await srv.start();
+  assert.equal(result.ok, false); assert.match(result.error, /ENOENT/);
+  assert.equal(srv.child, null); assert.equal((await srv.stop()).ok, true);
+});

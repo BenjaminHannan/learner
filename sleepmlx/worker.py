@@ -21,7 +21,7 @@ from typing import Callable, Optional
 
 from . import diary as diary_mod
 from . import lessons as L_mod
-from .backend import Clock, Guards
+from .backend import Clock, Guards, available_ram_bytes
 from .paths import Paths, appdata_root, is_windows, ops_dir, read_json, write_json
 from .profile import Renderer, load_profile
 from .recipe import Config, Sleeper, next_day
@@ -100,8 +100,11 @@ def torch_source(prof) -> str:
     return prof.hf_id or prof.expanded_model_dir
 
 
+
+
 def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: bool = False, log: Callable[[str], None] = print,
-              guards: Optional[Guards] = None, only_date: Optional[str] = None, profile: Optional[str] = None) -> dict:
+              guards: Optional[Guards] = None, only_date: Optional[str] = None, profile: Optional[str] = None,
+              memory_available: Optional[Callable[[], Optional[float]]] = None) -> dict:
     """One chunk. Returns the dict that goes to SLEEPMODE_OUT. backend_factory(prof) -> (backend, tokenizer) (tests pass a fake)."""
     env = dict(os.environ if env is None else env)
     t0 = time.time()
@@ -110,7 +113,8 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     budget = float(env.get("SLEEPMODE_BUDGET_S", "1200"))
     prof = load_profile(profile, env)
     cfg = cfg_from_env(env, prof)
-    guards = guards or Guards(paths, min_free_gb=float(prof.runtime.get("min_free_ram_gb", 1.0)))
+    guards = guards or Guards(paths)
+    guards.min_free_gb = float(prof.runtime.get("min_free_ram_gb", 1.0))
     out = {"quiz": None, "steps": 0, "interrupted": False, "profile": prof.name}
     r = guards.reason()
     if not r and getattr(guards, "_hot", 0):   # one high memory reading: look again before loading the model, not after
@@ -137,6 +141,17 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     if not resuming and not next_day(week, state) and not only_date:
         out.update(status="no_new_day", message="no new diary day to sleep on", days_in_diary=len(week["dates"]), slept=len(state.get("slept_days", [])))
         return out
+    # Reserve enough available RAM for the CPU base and its training overhead
+    # before loading; the smaller runtime guard applies once weights are resident.
+    required = float(prof.runtime.get("preload_free_ram_gb", 0))
+    if required and (backend_factory is None and not env.get("SLEEPMLX_BACKEND") or memory_available is not None):
+        available = (memory_available or available_ram_bytes)()
+        if available is None:
+            out.update(error="Cannot check available memory; install or repair psutil before sleeping.")
+            return out
+        if available < required * 1e9:
+            out.update(interrupted=True, stop_reason="memory_pressure", message="not started: sleep needs about %.1f GB of available memory before loading" % required)
+            return out
     if backend_factory is None and env.get("SLEEPMLX_BACKEND"):   # 'module:function' returning (backend, tokenizer); tests and other runtimes
         import importlib
         mod, _, fn = env["SLEEPMLX_BACKEND"].partition(":")

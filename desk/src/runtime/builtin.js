@@ -29,6 +29,7 @@ class Builtin {
   async _launch(flavor, lora) {
     const exe = this.installer.llamaExe(flavor) || await this.installer.ensureLlama(flavor, this.abort && this.abort.signal);
     const model = await this.installer.ensureModel(this.abort && this.abort.signal);
+    if (!this.running || this.asleep) return { ok: false, stopped: true, error: 'stopped' };
     this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor });
     if (!this.server) {
       this.server = (this.o.makeServer || ((x) => new LlamaServer(x)))({
@@ -55,7 +56,7 @@ class Builtin {
       const mac = this.platform === 'darwin';
       const first = mac ? 'metal' : (process.env.PREMONITION_LLAMA_FLAVOR === 'cpu' ? 'cpu' : 'vulkan');
       try { r = await this._launch(first, opts && opts.lora); } catch (e) { r = { ok: false, error: e.message, download: true }; }
-      if (!r.ok && !mac && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
+      if (!r.ok && !r.stopped && this.running && !this.asleep && !mac && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
         this._set({ phase: 'downloading', label: 'The graphics build did not start; getting the CPU build', pct: 0 });
         r = await this._launch('cpu', opts && opts.lora);
       }
@@ -84,7 +85,9 @@ class Builtin {
   async pauseForSleep() {
     if (this.o.isWanted && !this.o.isWanted()) return { ok: true, skipped: true };
     this.asleep = true;
-    if (this.server) await this.server.stop();
+    if (this.abort) this.abort.abort();
+    const stopped = this.server && await this.server.stop();
+    if (stopped && stopped.ok === false) { this.asleep = false; return stopped; }
     this._set({ phase: 'off', label: 'Asleep', pct: 0 });
     return { ok: true };
   }

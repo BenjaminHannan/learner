@@ -177,7 +177,10 @@ class WinSleep extends Sleep {
 
   async _run() {
     try {
-      if (this.hooks.pauseModel) await this.hooks.pauseModel();
+      if (this.hooks.pauseModel) {
+        const paused = await this.hooks.pauseModel();
+        if (paused && paused.ok === false) throw new Error(paused.error || 'The chat model did not stop.');
+      }
       for (let i = 0; i < 200 && !this.wakeReq; i++) {
         const out = await this._chunk();
         this._event({ kind: 'chunk', quiz: out.quiz == null ? null : out.quiz, steps: out.steps || 0, interrupted: !!out.interrupted, message: out.message || '', error: out.error || '' });
@@ -217,7 +220,10 @@ class WinSleep extends Sleep {
       else res = (await this.hooks.checkin({ signal: ac.signal, task: CK.checkinTask(st, this.o.rules, this.o.tracked && this.o.tracked()), capMs: this.o.checkinCapMs || CK.CHECKIN_CAP_MS })) || {};
     } catch (e) { res = { error: String(e && e.message || e) }; }
     clearTimeout(cap); this.ckAbort = null;
-    try { if (this.hooks.pauseModel) await this.hooks.pauseModel(); } catch (e) { /* the next chunk needs the RAM; the exit was awaited by the hook */ }
+    if (this.hooks.pauseModel) {
+      const paused = await this.hooks.pauseModel();
+      if (paused && paused.ok === false) throw new Error(paused.error || 'The chat model did not stop.');
+    }
     const p = CK.parseReply(res.reply);
     this.checkins = this.checkins || [];
     this.seenLines = this.seenLines || new Set();

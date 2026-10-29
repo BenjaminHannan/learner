@@ -48,6 +48,35 @@ class Stop(Exception):
         return self.reason != "budget"
 
 
+def _windows_available_ram(kernel=None) -> Optional[float]:
+    """Available physical bytes via Win32, including on older installs without psutil."""
+    import ctypes
+    from ctypes import wintypes
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [("dwLength", wintypes.DWORD), ("dwMemoryLoad", wintypes.DWORD),
+                    ("ullTotalPhys", ctypes.c_uint64), ("ullAvailPhys", ctypes.c_uint64),
+                    ("ullTotalPageFile", ctypes.c_uint64), ("ullAvailPageFile", ctypes.c_uint64),
+                    ("ullTotalVirtual", ctypes.c_uint64), ("ullAvailVirtual", ctypes.c_uint64),
+                    ("ullAvailExtendedVirtual", ctypes.c_uint64)]
+    try:
+        info = MemoryStatus()
+        info.dwLength = ctypes.sizeof(info)
+        api = kernel or ctypes.windll.kernel32
+        if not api.GlobalMemoryStatusEx(ctypes.byref(info)):
+            return None
+        return float(info.ullAvailPhys)
+    except (AttributeError, OSError, ValueError):
+        return None
+
+
+def available_ram_bytes() -> Optional[float]:
+    try:
+        import psutil
+        return float(psutil.virtual_memory().available)
+    except Exception:
+        return _windows_available_ram() if sys.platform == "win32" else None
+
+
 def memory_pressure_level(min_free_gb: float = 1.0) -> int:
     """Returns 1 (fine), 2 (warn) or 4 (critical). macOS: kern.memorystatus_vm_pressure_level. Elsewhere: psutil available memory below
     min_free_gb is critical (4); without psutil the check is skipped (1)."""
@@ -57,11 +86,8 @@ def memory_pressure_level(min_free_gb: float = 1.0) -> int:
             return int(out.stdout.strip() or 1)
         except Exception:
             return 1
-    try:
-        import psutil
-        return 4 if psutil.virtual_memory().available < min_free_gb * 1e9 else 1
-    except Exception:
-        return 1
+    available = available_ram_bytes()
+    return 4 if available is not None and available < min_free_gb * 1e9 else 1
 
 
 class Guards:
@@ -71,7 +97,8 @@ class Guards:
     def __init__(self, paths=None, poll_s: float = 10.0, pressure: Optional[Callable[[], int]] = None, min_free_gb: float = 1.0,
                  now: Callable[[], float] = time.time, hot_polls: int = 2):
         self.paths, self.poll_s, self.now, self.hot_polls, self._hot = paths, poll_s, now, max(1, hot_polls), 0
-        self.pressure = pressure or (lambda: memory_pressure_level(min_free_gb))
+        self.min_free_gb = min_free_gb
+        self.pressure = pressure or (lambda: memory_pressure_level(self.min_free_gb))
         self.signalled: Optional[str] = None
         self._last, self._reason = -1e18, None
 

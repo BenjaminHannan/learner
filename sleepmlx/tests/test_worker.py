@@ -9,6 +9,7 @@ from pathlib import Path
 from sleepmlx import __main__ as cli
 from sleepmlx import worker
 from sleepmlx.backend import Guards, memory_pressure_level
+from sleepmlx import backend
 from sleepmlx.paths import Paths
 from sleepmlx.profile import Renderer, load_profile
 
@@ -109,6 +110,50 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual((cfg.bsz, cfg.kl_every, cfg.gate_n, cfg.gate_max_tokens), (4, 4, 20, 16))
         self.assertEqual(worker.choose_backend(load_profile("k2")), "mlx")
         self.assertEqual(worker.choose_backend(load_profile("lfm3_cpu")), "torch")
+
+    def test_cpu_preload_reserves_ram_before_starting_backend(self):
+        env = dict(self.env, SLEEPMLX_PROFILE="lfm3_cpu")
+        def never(_): self.fail("trainer must not load under the threshold")
+        low = worker.run_chunk(env, backend_factory=never, memory_available=lambda: 3.9e9)
+        self.assertTrue(low["interrupted"])
+        self.assertEqual(low["stop_reason"], "memory_pressure")
+        self.assertIn("4.5 GB", low["message"])
+        unknown = worker.run_chunk(env, backend_factory=never, memory_available=lambda: None)
+        self.assertIn("psutil", unknown["error"])
+        called = []
+        class Loaded(Exception): pass
+        def load(_): called.append(True); raise Loaded()
+        with self.assertRaises(Loaded):
+            worker.run_chunk(env, backend_factory=load, memory_available=lambda: 5e9)
+        self.assertEqual(called, [True])
+
+    def test_windows_memory_fallback_supports_legacy_installs_without_psutil(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        import builtins
+        import ctypes
+        def success(ptr):
+            ptr._obj.ullAvailPhys = 5_200_000_000
+            return 1
+        kernel = SimpleNamespace(GlobalMemoryStatusEx=success)
+        self.assertEqual(backend._windows_available_ram(kernel), 5_200_000_000)
+        self.assertIsNone(backend._windows_available_ram(SimpleNamespace(GlobalMemoryStatusEx=lambda _: 0)))
+        original_import = builtins.__import__
+        def import_without_psutil(name, *args, **kwargs):
+            if name == "psutil": raise ImportError("not installed")
+            return original_import(name, *args, **kwargs)
+        with patch("builtins.__import__", side_effect=import_without_psutil), patch.object(worker.sys, "platform", "win32"), patch.object(ctypes, "windll", SimpleNamespace(kernel32=kernel), create=True):
+            self.assertEqual(backend.available_ram_bytes(), 5_200_000_000)
+
+    def test_supplied_guards_use_profile_runtime_threshold(self):
+        env = dict(self.env, SLEEPMLX_PROFILE="lfm3_cpu")
+        guards = Guards(pressure=lambda: 1)
+        worker.run_chunk(env, backend_factory=lambda _: self.fail("must not load"), guards=guards, memory_available=lambda: 2e9)
+        self.assertEqual(guards.min_free_gb, load_profile("lfm3_cpu").runtime["min_free_ram_gb"])
+        from unittest.mock import patch
+        with patch("sleepmlx.backend.memory_pressure_level", return_value=1) as pressure:
+            live = Guards(min_free_gb=1.0); live.min_free_gb = 2.5; live.reason()
+            pressure.assert_called_once_with(2.5)
 
     def test_memory_check_never_raises_without_psutil_or_sysctl(self):
         self.assertIn(memory_pressure_level(1.0), (1, 2, 4))

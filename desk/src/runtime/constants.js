@@ -36,7 +36,7 @@ module.exports = {
   TORCH_CPU_INDEX: 'https://download.pytorch.org/whl/cpu',
   SLEEP_HF_REPO: 'LiquidAI/LFM3-1.7B',
   SLEEP_PROFILE: 'lfm3_cpu',             // sleepmlx/profiles/*.json: the CPU-sized LoRA recipe
-  SLEEP_PIP: ['transformers', 'peft', 'accelerate', 'huggingface_hub', 'safetensors', 'numpy', 'sentencepiece'],
+  SLEEP_PIP: ['transformers', 'peft', 'accelerate', 'huggingface_hub', 'safetensors', 'numpy', 'sentencepiece', 'psutil'],
   SLEEP_SIZES: { python: '0.1 GB', libs: '1 GB', weights: '3.4 GB' },
   GATEWAY_URL: 'http://127.0.0.1:18091/v1'
 };
