@@ -132,6 +132,22 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
         out.update(status="served_check", served=result, elapsed_s=time.time() - t0,
                    message="served check pending" if result.get("pending") else "finished pending served check")
         return out
+    # A durable decision that cannot authorize publication needs an explicit
+    # re-gate, not another multi-GB model load. Use the exact finalization guard
+    # before reading the diary or allocating a backend; do not repair the night.
+    if not dry_run and paths.night_json.exists():
+        from .checkpoint import Checkpoints
+        checkpoints = Checkpoints(paths)
+        night, _ = checkpoints.load()
+        if night and not night.get("dry_run") and night.get("phase") in ("finalize", "done"):
+            probe = Sleeper(None, None, prof, cfg, paths, None, log)
+            probe.N, probe._checkpoints = night, checkpoints
+            reason = probe._finalization_block_reason()
+            if reason:
+                probe._block_finalization(out, reason)
+                out.update(resumed=True, phase=night["phase"], date=night.get("date"),
+                           day=night.get("day"), elapsed_s=time.time() - t0)
+                return out
     week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore),
                                 feedback=L_mod.read_feedback(paths.userdata_dir))
     week["helper_state"] = L_mod.read_helpers(paths.userdata_dir)

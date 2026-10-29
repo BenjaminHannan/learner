@@ -110,7 +110,7 @@ class Config:
     dreamcheck: bool = True                  # check the night's Q&A dreams against the diary before training (dreamhook.py)
     dreamcheck_share: float = 0.10           # at most this share of the night's budget goes to it (the rest stay unchecked, kept)
     llama_server: Optional[str] = None       # set with base_gguf: check the exported adapter inside llama-server (served.py)
-    base_gguf: Optional[str] = None          # the GGUF the daytime model serves (must be the same base as the profile)
+    base_gguf: Optional[str] = None          # explicitly bound served GGUF; learned-fact transfer needs separate evaluation
     # Extra sources (lessons.py). Not part of ab_ob_b4_nb: they only add cards to the same pool; every setting above is unchanged.
     use_lessons: bool = True      # post-mortems of the day's failures -> lesson cards (and corrections retire the fact they replace)
     max_lessons: int = 8          # lessons written per night (x work scale)
@@ -1642,14 +1642,13 @@ class Sleeper:
                 and isinstance(last, dict) and last.get("id") == N["id"] and last.get("date") == N["date"]
                 and type(last.get("reverted")) is bool and last["reverted"] == result["reverted"])
 
-    def _finalize(self, res: dict) -> None:
-        """Replay a published decision without rotating twice or rescoring it."""
-        N, cfg, P_ = self.N, self.cfg, self.paths
+    def _finalization_block_reason(self) -> Optional[str]:
+        """Read-only admission shared by worker preflight and finalization."""
+        N = self.N
         final = N.get("finalization")
         if not self._finalization_payload_valid(final):
-            self._block_finalization(res, "saved gate decision has an invalid payload or night identity")
-            return
-        self._checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(P_)
+            return "saved gate decision has an invalid payload or night identity"
+        self._checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(self.paths)
         bound = (isinstance(final, dict) and type(final.get("version")) is int and final["version"] == 1
                  and final.get("grader") == gate_mod.GRADER and isinstance(N.get("id"), str)
                  and final.get("night_id") == N["id"])
@@ -1668,8 +1667,17 @@ class Sleeper:
                 # checkpoint. There is no reliable pre-decision item snapshot
                 # with which to undo that metadata after a different regrade.
                 # Keep the entire checkpoint untouched for an explicit re-gate.
-                self._block_finalization(res, reason)
-                return
+                return reason
+        return None
+
+    def _finalize(self, res: dict) -> None:
+        """Replay a published decision without rotating twice or rescoring it."""
+        N, cfg, P_ = self.N, self.cfg, self.paths
+        reason = self._finalization_block_reason()
+        if reason:
+            self._block_finalization(res, reason)
+            return
+        final = N["finalization"]
         resumed = res.get("resumed", False)
         res.update(final["result"])
         res["resumed"] = resumed

@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from sleepmlx import gate
+from sleepmlx import worker
 from sleepmlx.checkpoint import Checkpoints
 from sleepmlx.paths import Paths, read_json, write_json
 from .helpers import Env
@@ -162,6 +163,58 @@ class FinalizationBindingTests(unittest.TestCase):
         with patch.object(gate, 'GRADER', 'strict-next-test'):
             self.blocked(env)
         self.assertFalse((env.paths.home / 'adapters.json').exists())
+
+    def test_worker_blocks_obsolete_finalization_before_model_memory_or_diary(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        original, items = checkpoints.load()
+        settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                    'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+        for variant in ('obsolete', 'malformed', 'done_without_payload'):
+            with self.subTest(variant=variant):
+                night = copy.deepcopy(original)
+                if variant == 'obsolete': night['finalization']['grader'] = 'obsolete-grader'
+                elif variant == 'malformed': night['finalization']['result'] = []
+                else:
+                    night['phase'] = 'done'
+                    night.pop('finalization')
+                checkpoints.publish(night, items)
+                before = snapshot(env.paths.home)
+                with patch.object(worker.diary_mod, 'build_week', side_effect=AssertionError('blocked diary read')), \
+                     patch.object(worker, 'available_ram_bytes', side_effect=AssertionError('blocked memory allocation')), \
+                     patch.object(worker, 'make_backend', side_effect=AssertionError('blocked backend load')):
+                    result = worker.run_chunk(settings, log=lambda _: None)
+                self.assertTrue(result['blocked'])
+                self.assertEqual(result['stop_reason'], 'gate_recheck_required')
+                self.assertEqual(result['steps'], 0)
+                self.assertIsNone(result['quiz'])
+                self.assertTrue(result['resumed'])
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_worker_preflight_keeps_current_committed_and_rejected_completion_paths(self):
+        class BackendBoundary(Exception): pass
+        for stage, variant in (('promotion_ready', 'current'), ('promotion_published', 'committed'),
+                               ('promotion_ready', 'rejected')):
+            with self.subTest(variant=variant):
+                env = self.pending(stage)
+                checkpoints = Checkpoints(env.paths)
+                night, items = checkpoints.load()
+                if variant != 'current': night['finalization']['grader'] = 'obsolete-grader'
+                if variant == 'rejected':
+                    night['finalization']['result']['reverted'] = True
+                    night['finalization']['state']['last_night']['reverted'] = True
+                checkpoints.publish(night, items)
+                # These paths continue into ordinary diary setup, which may
+                # create its ignore file before reaching the backend boundary.
+                worker.diary_mod.ensure_ignore(env.paths.ignore)
+                before = snapshot(env.paths.home)
+                settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                            'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+                def boundary(_): raise BackendBoundary()
+                with patch.object(worker.diary_mod, 'build_week', return_value=env.week()):
+                    with self.assertRaises(BackendBoundary):
+                        worker.run_chunk(settings, backend_factory=boundary, log=lambda _: None)
+                self.assertEqual(before, snapshot(env.paths.home))
 
     def test_committed_recovery_after_grader_change_is_idempotent_at_each_boundary(self):
         for stage in ('promotion_published', 'state_written', 'items_written', 'history_written', 'finalized'):
