@@ -1,33 +1,36 @@
-[cuda] PyTorch memory capped at 14.0 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
-[ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
-[ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /home/benja/.cache/huggingface/modules/transformers_modules/IFM/K2_hyphen_Horizon_hyphen_3_dot_7B/9d280ff742235796925c9fe3cf243dc1beea5c08/modeling_k2_horizon.py.
-Loading weights:   0%|          | 0/327 [00:00<?, ?it/s]Loading weights:  55%|█████▌    | 181/327 [00:00<00:00, 1801.07it/s]Loading weights: 100%|██████████| 327/327 [00:00<00:00, 2626.23it/s]
+[cuda] PyTorch memory capped at 8.5 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 3211.63it/s]
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[k2] tagger prompt: '<|ifm|begin_of_text|><|ifm|im_start|>system\nYou extract facts from chat messages.<|ifm|im_end|><|ifm|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n</ifm|think>'
-[k2] last 10 token ids: [17868, 578, 2699, 250019, 250018, 142036, 200, 250029, 200, 250030] = ['Ġreply', 'Ġ[', '].', '<|ifm|im_end|>', '<|ifm|im_start|>', 'assistant', 'Ċ', '<ifm|think>', 'Ċ', '</ifm|think>']; eos id 250019
-[k2] names prompt tail (stage 1, block open, high effort): 'only: no<|ifm|im_end|><|ifm|im_start|>assistant\n<ifm|think>\n'; stops at ids [250030, 250019] (512 tokens max)
-[k2] LoRA matched 252 modules: ['model.layers.0.self_attn.q_proj', 'model.layers.0.self_attn.k_proj', 'model.layers.0.self_attn.v_proj', 'model.layers.0.self_attn.o_proj', 'model.layers.0.mlp.gate_proj', 'model.layers.0.mlp.up_proj', 'model.layers.0.mlp.down_proj', '...']
-[lora] trainable 33,914,880
-[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1815301377282594e-06, 'pm_modules': 252}
-[transformers] The remote code model you are currently using seems to expect `cache_position`. This arg has been removed from the Transformers library, and will stop being created in `generate` even for remote code models in a future release. Please open a PR on the remote code hub repo to remove any usage of `cache_position`.
-[base] ARC-Easy validation(570) 0.882
-[base] ARC-Easy acc 0.894 (n=500)
-[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 50, 'yes': 40, 'new_items': 40, 'appended': 40, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 335.3, 'think_capped': 10}
-[night 1] written in 176 s (dream 32 s)
-[night 1] budget {'scale': 4.0, 'steps': 208, 'steps_ref': 52, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
-[night 1] items 159 eligible 3 (active 3, consolidated 0) steps 296 probe_pre 0.0
-[night 1] trained 296 steps in 636 s (REM writing included); cuda peak 12.9 GiB, reserved 13.6 GiB (max 14.00)
-[night 1] SHY {'modules': 252, 'sv_total': 4032, 'sv_zeroed': 405, 'zeroed_frac': 0.10044642857142858, 'energy_ratio': 0.7210266081015466}
-[night 1] done steps 296 (nrem 120, rem 176) arc_val 0.875 probe_post 0.6666666666666666 reverted False 826s
-[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 40, 'yes': 34, 'new_items': 34, 'appended': 34, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 302.0, 'think_capped': 7}
-[night 2] written in 368 s (dream 250 s)
+[lfm3] tagger prompt: '<|startoftext|><|im_start|>system\nYou extract facts from chat messages.<|im_end|>\n<|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|im_end|>\n<|im_start|>assistant\n<think></think>'
+[lfm3] last 10 token ids: [26697, 1106, 3286, 124900, 207, 124899, 63514, 207, 124901, 124902] = ['Ġreply', 'Ġ[', '].', '<|im_end|>', 'Ċ', '<|im_start|>', 'assistant', 'Ċ', '<think>', '</think>']; eos id 124900
+[lfm3] names prompt tail (stage 1, block open, high effort): ' not, reply only: no<|im_end|>\n<|im_start|>assistant\n<think>'; stops at ids [124902, 124900] (512 tokens max)
+[lfm3] LoRA matched 142 modules: ['model.layers.0.conv.in_proj', 'model.layers.0.conv.out_proj', 'model.layers.0.feed_forward.w1', 'model.layers.0.feed_forward.w3', 'model.layers.0.feed_forward.w2', 'model.layers.1.conv.in_proj', 'model.layers.1.conv.out_proj', '...']
+[lora] trainable 16,105,472
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1383073115212028e-06, 'pm_modules': 142}
+[base] ARC-Easy validation(570) 0.693
+[base] ARC-Easy acc 0.714 (n=500)
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 29, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 484.8, 'think_capped': 20}
+[night 1] written in 118 s (dream 38 s)
+[night 1] budget {'scale': 4.0, 'steps': 240, 'steps_ref': 60, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 1] items 207 eligible 5 (active 5, consolidated 0) steps 342 probe_pre 0.0
+[night 1] trained 342 steps in 643 s (REM writing included); cuda peak 5.2 GiB, reserved 7.1 GiB (max 8.46)
+[night 1] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 18, 'zeroed_frac': 0.007922535211267605, 'energy_ratio': 0.7224596474704934}
+[night 1] done steps 342 (nrem 138, rem 204) arc_val 0.816 probe_post 0.6666666666666666 reverted False 768s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 31, 'yes': 20, 'new_items': 20, 'appended': 20, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 510.6, 'think_capped': 28}
+[night 2] written in 318 s (dream 239 s)
 [night 2] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
-[night 2] items 273 eligible 71 (active 71, consolidated 0) steps 1710 probe_pre 0.02857142857142857
-[night 2] step 200/1710 at 430 s
-[night 2] step 400/1710 at 1063 s
-[night 2] step 800/1710 at 2183 s
-[night 2] trained 1710 steps in 4880 s (REM writing included); cuda peak 13.2 GiB, reserved 13.9 GiB (max 14.00)
-[night 2] SHY {'modules': 252, 'sv_total': 4032, 'sv_zeroed': 607, 'zeroed_frac': 0.1505456349206349, 'energy_ratio': 0.718351343856571}
-[night 2] done steps 1710 (nrem 690, rem 1020) arc_val 0.868 probe_post 0.9142857142857143 reverted False 5265s
-[curve] night 2 forward {'C1': 0.0, 'C2': 0.11, 'C4': 0.28, 'C24': 0.195, 'all': 0.14772727272727273}
-[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 18, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 308.2, 'think_capped': 1}
+[night 2] items 345 eligible 80 (active 80, consolidated 0) steps 1710 probe_pre 0.03571428571428571
+[night 2] step 200/1710 at 248 s
+[night 2] step 400/1710 at 634 s
+[night 2] step 800/1710 at 1331 s
+[night 2] trained 1710 steps in 3062 s (REM writing included); cuda peak 5.2 GiB, reserved 6.3 GiB (max 8.49)
+[night 2] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 14, 'zeroed_frac': 0.006161971830985915, 'energy_ratio': 0.7223057327445369}
+[night 2] done steps 1710 (nrem 690, rem 1020) arc_val 0.828 probe_post 0.625 reverted False 3389s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.05, 'C4': 0.19, 'C24': 0.12, 'all': 0.09090909090909091}
+[night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 12, 'yes': 5, 'new_items': 5, 'appended': 5, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 512.0, 'think_capped': 12}
+[night 3] written in 334 s (dream 272 s)
+[night 3] budget {'scale': 4.0, 'steps': 1200, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': None}
+[night 3] items 470 eligible 161 (active 159, consolidated 2) steps 1710 probe_pre 0.2734375
+[night 3] step 200/1710 at 248 s
+[night 3] step 400/1710 at 679 s
+[night 3] step 800/1710 at 1403 s
