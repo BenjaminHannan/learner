@@ -289,10 +289,11 @@ class BudgetTests(unittest.TestCase):
 class GateTests(unittest.TestCase):
     def test_judge(self):
         base = [True] * 38 + [False] * 2
-        self.assertTrue(gate_mod.judge(base, [True] * 37 + [False] * 3)["harm_ok"])      # -2.5 points
-        j = gate_mod.judge(base, [True] * 36 + [False] * 4)                              # -5 points
+        self.assertTrue(gate_mod.judge(base, [True] * 34 + [False] * 6)["harm_ok"])      # -10 points: within noise
+        j = gate_mod.judge(base, [True] * 33 + [False] * 7)                              # -12.5 points
         self.assertFalse(j["harm_ok"])
-        self.assertAlmostEqual(j["harm"], 5.0)
+        self.assertAlmostEqual(j["harm"], 12.5)
+        self.assertFalse(gate_mod.judge(base, [True] * 36 + [False] * 4, harm_max=3.0)["harm_ok"])
         self.assertEqual(len(gate_mod.GENERAL_QA), 40)
         self.assertEqual(len(gate_mod.gate_questions(20)), 20)
         self.assertTrue(gate_mod.correct("It is 42.", ["42"]) and not gate_mod.correct("142", ["42"]))
@@ -364,7 +365,7 @@ class GateTests(unittest.TestCase):
             r2 = env.sleeper(be).run(env.week())
             self.assertEqual(r2["status"], "done")
             self.assertTrue(r2["reverted"])
-            self.assertGreater(r2["harm"], 3.0)
+            self.assertGreater(r2["harm"], gate_mod.HARM_MAX)
             self.assertIn("general questions dropped", r2["message"])
             # the previous adapter is what stays committed, and the model in memory is back on it
             self.assertEqual((env.paths.adapter / "adapters.safetensors").read_text(), before)
