@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "purpose": "Structural native private-engine and actual HTTP-only grader smoke; zero LoRA, no learning claim or promotion.",
+  "started": "2026-10-29T20:50:39.860Z",
+  "project": "/Users/ben-hannan/Desktop/projects/premonition-reliability",
+  "root": "/private/tmp/premonition-private-native-mlpmv6y7",
+  "fixture": {
+    "adapter": "/private/tmp/premonition-private-zero-3ockbp0v/zero.gguf",
+    "bytes": 33184,
+    "sha256": "9ca2b1a50743a3847b23497ea2899986b39d8f6ddbb917ed7e19e63b603876af"
+  },
+  "moduleSha256": {
+    "controller": "1c9ea2c1f9b2533abf47e10fa44835b71314cd96527fa5a90fbd0c630da694c7",
+    "grader": "e425f62c9dd13d2e0325bf98af637fe1e1ce2c451b9e4ef39f0a6d23e4d96d01"
+  },
+  "resources": [
+    {
+      "at": "2026-10-29T20:50:39.868Z",
+      "rss": "34104  50824",
+      "pressure": "1",
+      "swap": "total = 3072.00M  used = 1337.12M  free = 1734.88M  (encrypted)"
+    },
+    {
+      "at": "2026-10-29T20:50:41.870Z",
+      "rss": "34104  59676\n34113 1221840\n34121  35552",
+      "pressure": "1",
+      "swap": "total = 3072.00M  used = 1337.12M  free = 1734.88M  (encrypted)"
+    },
+    {
+      "at": "2026-10-29T20:50:43.694Z",
+      "rss": "34104  60904",
+      "pressure": "1",
+      "swap": "total = 3072.00M  used = 1337.12M  free = 1734.88M  (encrypted)"
+    }
+  ],
+  "held": {
+    "path": "/private/tmp/premonition-private-native-mlpmv6y7/held.jsonl",
+    "sha256": "70a1171e86ea0f4af464bef36855029fedb719fe0ea279ac59e3a83cd4e1b965",
+    "cards": 1
+  },
+  "idleBefore": {
+    "ok": true,
+    "processStopped": true
+  },
+  "verdict": {
+    "ok": true,
+    "reasons": [],
+    "general_on": 8,
+    "general_off": 8,
+    "general_n": 8,
+    "held_on": 1,
+    "held_off": 1,
+    "held_n": 1,
+    "elapsed_s": 2.6,
+    "processStopped": true,
+    "checkId": "5165c60a-074f-4e0c-804b-c2763d0431af"
+  },
+  "idleAfter": {
+    "ok": true,
+    "processStopped": true
+  },
+  "remainingJournal": false,
+  "remainingJobEntries": [],
+  "sourceAdapterUnchanged": true,
+  "heldUnchanged": true,
+  "complete": true,
+  "finished": "2026-10-29T20:50:43.694Z",
+  "events": [
+    {
+      "role": "server",
+      "pid": 34113,
+      "exe": "/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server",
+      "spawned": "2026-10-29T20:50:40.147Z",
+      "code": 0,
+      "signal": null,
+      "exited": "2026-10-29T20:50:43.669Z"
+    },
+    {
+      "role": "grader",
+      "pid": 34121,
+      "exe": "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+      "spawned": "2026-10-29T20:50:40.869Z",
+      "code": 0,
+      "signal": null,
+      "exited": "2026-10-29T20:50:43.617Z",
+      "imports": {
+        "count": 160,
+        "heavyBackendImports": []
+      }
+    }
+  ],
+  "zeroFixtureVerification": {
+    "sourceSafetensorsSha256": "8a7f840231ccb52e13dcc86f7bbd3d8757bca6c8bde6846d252f2aef8dc5f5e5",
+    "tensorCount": 2,
+    "tensorDataBytes": 32768,
+    "tensorDataAllZero": true
+  },
+  "publicRestore": {
+    "version": 1,
+    "started": "2026-10-29T20:50:39.492873+00:00",
+    "root": "/private/tmp/premonition-private-native-mlpmv6y7",
+    "publicDayPidBefore": 9553,
+    "publicBefore": {
+      "18080": {
+        "ok": true,
+        "aliases": [
+          "lfm3"
+        ]
+      },
+      "8090": {
+        "ok": true,
+        "aliases": [
+          "lfm3",
+          "lfm3-fast",
+          "lfm3-auto"
+        ]
+      }
+    },
+    "restoreRequired": false,
+    "restartCommand": [
+      "/Users/ben-hannan/learner-ops/assistant/serve.sh",
+      "--autostart"
+    ],
+    "publicPaused": "2026-10-29T20:50:39.722685+00:00",
+    "controllerPid": 34104,
+    "controllerExit": 0,
+    "restoreAttempted": "2026-10-29T20:50:43.830848+00:00",
+    "restorePid": 34141,
+    "publicAfter": {
+      "18080": {
+        "ok": true,
+        "aliases": [
+          "lfm3"
+        ]
+      },
+      "8090": {
+        "ok": true,
+        "aliases": [
+          "lfm3",
+          "lfm3-fast",
+          "lfm3-auto"
+        ]
+      }
+    },
+    "publicDayPidAfter": 34175,
+    "diaryUnchanged": true,
+    "finished": "2026-10-29T20:50:45.944647+00:00",
+    "diaryBefore": {
+      "files": 58,
+      "bytes": 52885758,
+      "lines": 41971
+    },
+    "diaryAfter": {
+      "files": 58,
+      "bytes": 52885758,
+      "lines": 41971
+    }
+  },
+  "tests": {
+    "pythonPrivateAndSleepcheckTests": 22,
+    "failed": 0,
+    "nodeControllerTestsAfterCpuCap": 28,
+    "nodeControllerTestsAtSmoke": 27
+  },
+  "runnerNote": "Saved reproduction helpers were subsequently made home-relative and added a fail-closed public-restoration guard; syntax checked after the successful actual run. Production controller and grader were unchanged."
+}

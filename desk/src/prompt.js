@@ -48,7 +48,7 @@ const TOOL_DEFS = {
   agent_start: fn('agent_start', 'Start a Mote. Recurring: at ("08:00") alone, or every ("30m","2h") alone. One-off: at "2026-11-02 15:30".', obj({ name: { type: 'string' }, task: { type: 'string' }, every: { type: 'string' }, at: { type: 'string' } }, ['name', 'task'])),
   agent_list: fn('agent_list', 'List Motes and their status.', obj({})),
   agent_update: fn('agent_update', 'Edit, stop or run now a Mote in place; never re-create it ("" clears at/every).', obj({ name_or_id: { type: 'string' }, at: { type: 'string' }, every: { type: 'string' }, task: { type: 'string' }, new_name: { type: 'string' }, paused: { type: 'boolean' }, stop: { type: 'boolean' }, run: { type: 'boolean' } }, ['name_or_id'])),
-  memory_save: fn('memory_save', 'Remember a stable fact about Ben.', obj({ fact: { type: 'string' }, topic: { type: 'string' } }, ['fact'])),
+  memory_save: fn('memory_save', 'Save a fact.', obj({ fact: { type: 'string' }, topic: { type: 'string' }, source_read_id: { type: 'string' }, source_quote: { type: 'string' }, expires: { type: 'string' } }, ['fact'])),
   memory_forget: fn('memory_forget', 'Forget saved facts by matching text.', obj({ match: S('text in the fact') })),
   track_add: fn('track_add', 'Track an order or deadline.', obj({ what: { type: 'string' }, source: { type: 'string' }, until: S('YYYY-MM-DD') }, ['what'])),
   track_done: fn('track_done', 'Mark a tracked item done.', obj({ what: S('text in the item') }, ['what'])),

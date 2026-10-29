@@ -603,3 +603,73 @@ test('standing Mote: NO_UPDATE on the first run is quiet and never kept as the l
   assert.throws(() => m.update('planner', { name: 'renamed', task: '   ' }), /task cannot be empty/);
   assert.strictEqual(m.find('planner').name, 'planner');
 });
+
+test('bounded helpers expire despite active, paused, held or busy states and cannot restart', async () => {
+  for (const state of ['active', 'paused', 'held', 'busy', 'force']) {
+    const opts = { hold: () => state === 'held', yieldTo: () => state === 'busy' };
+    const { m, runs, clock, finished, dir, store } = mkManager(opts);
+    const h = m.add({ name: state, task: 'study', every: '45m', until: clock.t + 1000 });
+    if (state === 'paused') m.pause(h.id, true);
+    clock.t += 1000; m.tick(state === 'force');
+    assert.equal(m.find(h.id).status, 'stopped', state);
+    assert.equal(runs[0].hooks.signal.aborted, true, state);
+    runs[0].done({ stopped: true }); await until(() => !m.active.size);
+    assert.equal(finished.length, 0);
+    assert.equal(m.runNow(h.id), false);
+    assert.throws(() => m.reschedule(h.id, { every: '1h' }), /deadline/);
+    assert.throws(() => m.update(h.id, { every: '1h' }), /deadline/);
+    const reloaded = new Helpers({ file: path.join(dir, 'helpers.json'), store, now: () => clock.t, runner: () => { throw Error('must not run'); } });
+    reloaded.tick(true); assert.equal(reloaded.runNow(h.id), false);
+  }
+});
+
+test('children inherit the parent deadline and expired parents cannot start children', () => {
+  const { m, clock } = mkManager();
+  const parent = m.add({ name: 'parent', task: 'study', every: '45m', until: clock.t + 1000 });
+  const tool = agentTools(m, { isHelper: true, selfId: parent.id });
+  const result = tool.agent_start({ name: 'child', task: 'different work', every: '1h' }, {});
+  assert.ok(!result.error); assert.equal(m.find('child').until, clock.t + 1000);
+  clock.t += 1000;
+  assert.equal(tool.agent_start({ name: 'late', task: 'work' }, {}).error, true);
+  m.tick(); assert.equal(m.find('child').status, 'stopped');
+});
+
+test('an active bounded run is aborted at its real deadline without a scheduler tick', async () => {
+  const dir = tmp(), store = new Store(dir), finished = [];
+  let signal;
+  const m = new Helpers({ file: path.join(dir, 'helpers.json'), store,
+    runner: (h, text, hooks) => new Promise((resolve) => { signal = hooks.signal; signal.addEventListener('abort', () => resolve({ stopped: true }), { once: true }); }),
+    onFinish: (...args) => finished.push(args) });
+  const h = m.add({ name: 'deadline', task: 'study', every: '45m', until: Date.now() + 50 });
+  assert.ok(await until(() => signal.aborted));
+  assert.ok(await until(() => !m.active.size));
+  assert.equal(m.find(h.id).status, 'stopped'); assert.equal(finished.length, 0); assert.equal(m.runNow(h.id), false);
+});
+
+test('deadline advancing during timer setup cannot start a run', () => {
+  const { m, clock, runs } = mkManager();
+  const h = m.add({ name: 'race', task: 'study', every: '45m', deferFirst: true, until: clock.t + 1000 });
+  let reads = 0;
+  m.now = () => ++reads === 1 ? clock.t : clock.t + 1000;
+  m._run(m.find(h.id));
+  assert.equal(runs.length, 0); assert.equal(m.find(h.id).status, 'stopped'); assert.equal(m.active.size, 0);
+});
+
+test('helper deadlines accept ISO timestamps as well as milliseconds', () => {
+  const { m, clock } = mkManager();
+  const deadline = clock.t + 60000;
+  const h = m.add({ name: 'iso deadline', task: 'study', every: '45m', until: new Date(deadline).toISOString() });
+  assert.equal(m.find(h.id).until, deadline);
+  clock.t = deadline; m.tick(); assert.equal(m.find(h.id).status, 'stopped');
+});
+
+test('research origin is private and inherited from actual parent', () => {
+  const { m } = mkManager();
+  const untrusted = m.add({ name: 'untrusted', task: 'work', deferFirst: true, every: '1h', learnResearch: true, origin: 'learn-research', verified: true });
+  assert.equal(m.find(untrusted.id).learnResearch, undefined);
+  const parent = m.add({ name: 'research parent', task: 'research', every: '1h', deferFirst: true, allowSimilar: true }, { learnResearch: true });
+  const child = m.add({ name: 'research child', task: 'work', byHelper: parent.id, every: '1h', deferFirst: true, allowSimilar: true });
+  assert.equal(m.find(parent.id).learnResearch, true); assert.equal(m.find(child.id).learnResearch, true);
+  m.update(child.id, { task: 'new task', learnResearch: false });
+  assert.equal(m.find(child.id).learnResearch, true);
+});

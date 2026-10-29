@@ -1,0 +1,122 @@
+{
+  "purpose": "Synthetic actual LFM3 Agent to memory/source-ledger integration; attribution only, no learning or truth claim",
+  "source_revision": "acfe05a2",
+  "model": "lfm3-fast",
+  "gateway": "local existing8090",
+  "script_sha256_at_run": "b279aaed1e261f96cf711e64ea6360f0dcaa7072e405e867da7f20eadc4a54a4",
+  "test_flag": true,
+  "production_memory_used": false,
+  "passed": 3,
+  "n": 3,
+  "rows": [
+    {
+      "fixture": "ferry",
+      "elapsedMs": 5131,
+      "result": {
+        "stopped": false,
+        "error": null
+      },
+      "errors": [],
+      "browserReads": 1,
+      "saved": [
+        {
+          "text": "Luma Ferry => home dock => Mossbank",
+          "id": "mmvu11ix1j82",
+          "topic": "card",
+          "updated": 1793246400000
+        }
+      ],
+      "provenance": [
+        {
+          "status": "attributed",
+          "reason": null,
+          "verified": false,
+          "quoteMatches": true
+        }
+      ],
+      "committed": 1,
+      "toolNames": [
+        "browser_read",
+        "memory_save"
+      ],
+      "final": "Done. Saved the fact \"Luma Ferry => home dock => Mossbank\" under topic \"card\" using source read ID `read_d3ce765023d38b82` and the exact sentence from the page.",
+      "structural_pass": true
+    },
+    {
+      "fixture": "observatory",
+      "elapsedMs": 3390,
+      "result": {
+        "stopped": false,
+        "error": null
+      },
+      "errors": [],
+      "browserReads": 1,
+      "saved": [
+        {
+          "text": "Cloudmint Observatory => studies => pale winter comets",
+          "id": "mmvu11lg0i58",
+          "topic": "card",
+          "updated": 1793246400000
+        }
+      ],
+      "provenance": [
+        {
+          "status": "attributed",
+          "reason": null,
+          "verified": false,
+          "quoteMatches": true
+        }
+      ],
+      "committed": 1,
+      "toolNames": [
+        "browser_read",
+        "memory_save"
+      ],
+      "final": "Done. I read the page, then saved the fact \"Cloudmint Observatory => studies => pale winter comets\" under topic \"card\" using source_read_id `read_f0bd0b37e5512066` and the exact sentence as quote. Ben can now see it in his notes.",
+      "structural_pass": true
+    },
+    {
+      "fixture": "library",
+      "elapsedMs": 3520,
+      "result": {
+        "stopped": false,
+        "error": null
+      },
+      "errors": [],
+      "browserReads": 1,
+      "saved": [
+        {
+          "text": "Willow Library => west reading room opens => Tuesdays",
+          "id": "mmvu11o7rni9",
+          "topic": "card",
+          "updated": 1793246400000
+        }
+      ],
+      "provenance": [
+        {
+          "status": "attributed",
+          "reason": null,
+          "verified": false,
+          "quoteMatches": true
+        }
+      ],
+      "committed": 1,
+      "toolNames": [
+        "browser_read",
+        "memory_save"
+      ],
+      "final": "Done. Saved the fact \"Willow Library => west reading room opens => Tuesdays\" under topic \"card\" with source read ID `read_f62d6a9024d8152a` and the exact quote from the page.",
+      "structural_pass": true
+    }
+  ],
+  "diary_audit": {
+    "unchanged_since_native_smoke": false,
+    "files": 58,
+    "bytes": 54183994,
+    "lines": 42312,
+    "baseline": "Private native smoke20:50UTC; comparison includes all bytes/hashes, no raw diary content saved here",
+    "appended_raw_records": 66,
+    "synthetic_fixture_matches_in_appended_raw": 0,
+    "note": "The production diary changed during the interval; none of the three synthetic fixture strings occurred in the appended raw records. Source of other traffic was not established. No unchanged-diary claim for this run."
+  }
+}

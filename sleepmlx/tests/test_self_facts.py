@@ -161,7 +161,7 @@ class CardNoteTests(unittest.TestCase):
             st = Counter()
             sl.card_notes(d, st)
             sl.refresh(d)
-            it = sl.items["ben|duke"]
+            it = next(it for it in sl.items.values() if it.card_note_id == self.CARD["id"])
             self.assertEqual((it.kind, it.subj, it.obj, it.rel, it.source), ("fact", "Ben", "Duke", "is applying to", "saved card note"))
             sl.extras(week, d, st)
             self.assertFalse([k for k in sl.items if k.startswith("note|")])         # no note paraphrase or quiz for it
@@ -175,11 +175,11 @@ class CardNoteTests(unittest.TestCase):
             sl.save_items()
             sl2, _, _ = stage_sleeper(env)
             sl2.card_notes(d + 1, Counter())                                         # next night: still there, not re-made
-            self.assertEqual((sl2.items["ben|duke"].born, sl2.items["ben|duke"].dead), (d, False))
+            self.assertEqual((sl2.items[it.key].born, sl2.items[it.key].dead), (d, False))
             write_memory(env, [])
             st3 = Counter()
             sl2.card_notes(d + 1, st3)
-            self.assertTrue(sl2.items["ben|duke"].dead)
+            self.assertTrue(sl2.items[it.key].dead)
             self.assertEqual(st3["card_retired"], 1)
         finally:
             env.close()

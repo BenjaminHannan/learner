@@ -1,0 +1,100 @@
+{
+  "status": "Preregistered proposal only; no new model load or public pause until root dispatch",
+  "reason": "Two continuation attempts were resource-limited; the latest completed32 updates but no64 endpoint. This is not evidence for or against quality.",
+  "frozen_control": "lfm3-learning-diagnostic-64.json",
+  "frozen_partial": "lfm3-learning-continuation-64-retry-20261029-2055.json",
+  "expected_initial_adapter_sha256": "25d5f6b57b62b316d042b31239d1ea9b89664225b6b897940f30a3a44342a231",
+  "teacher_cache_fixture": {
+    "file": "lfm3-learning-continuation-64-retry-20261029-2055-replay-cache.json",
+    "file_sha256": "c57a18b6e9418d0d05dfb6fcf6daf22c54343be6d4ec3df0b6e4285c445d7fbb",
+    "identity_sha256": "1607e6c33328a564ea404bf9e9c786c5921c761c90807fc5c341eea15dac06d7",
+    "records": 32,
+    "purpose": "Public synthetic reproducibility fixture, never private user data"
+  },
+  "primary_proposal": {
+    "name": "Complete the unchanged64-step continuation comparison with a temporary coordinated public-model pause and a preregistered500-second budget",
+    "algorithm_changes": [],
+    "unchanged": {
+      "steps": 64,
+      "seed": 0,
+      "lr": 0.0002,
+      "cosine_schedule_total_steps": 64,
+      "batch": 1,
+      "tok_budget": 256,
+      "max_seq_len": 256,
+      "replay_max_tokens": 32,
+      "generation_tokens": 32,
+      "mps_mem_gb": 8,
+      "evaluation_checkpoints": [
+        0,
+        12,
+        32,
+        64
+      ],
+      "training_data": "Existing four frozen fictional facts and exact training questions",
+      "evaluation": "Existing frozen held and independent monitor, unchanged grader"
+    },
+    "explicit_runtime_changes": {
+      "public_GGUF": "Only owned publicLFM temporarily paused after root coordination",
+      "inner_budget_seconds": 500,
+      "outer_watchdog_seconds": 520,
+      "rationale": "Teacher generation added57.3s to setup;32 updates plus a checkpoint consumedabout181s after baseline. The original300s budget is insufficient for a reliable64-step completion."
+    },
+    "cache_policy": "Regenerate the same teacher contexts as before; assert identity and all answer records match the preserved fixture before training. Do not shorten targets or select examples using evaluation results.",
+    "pre_load": "Pressure1, at least8GiB available after the coordinated pause, no other heavy model jobs; abort rather than override guard if not met.",
+    "guard": "Poll2s; terminate only the owned diagnostic process group on sustainedpressure2, remaining availableRAM<1GiB, or watchdog. The inner Clock retains its own memory guard.",
+    "restoration_obligation": "lfm3-continuation-completion-restart-obligation.json",
+    "restart_contract": [
+      "Before pause: refresh PID+create_time+exactargv+cwd identity; write and fsync a durable obligation; launch detached restoration guard before signaling public process.",
+      "Terminate only that exact owned public PID after identity check. Keep gateway, Electron, and unrelated jobs alive.",
+      "If public auto-restarts during load, abort diagnostic and preserve public service; never kill an unrecognized replacement PID.",
+      "finally: terminate owned diagnostic if still live, free backend resources, then launch the captured publicargv detached in its originalcwd with DEVNULLstdin and captured log.",
+      "A separate restoration guard must also recover on wrapper death/timeout. If expected service is already healthy, do not duplicate it.",
+      "Pollhealth200 and verify expected alias/model metadata; record replacementPID and recovery outcome, then mark obligation satisfied. Retain failure logs and report any recovery failure immediately."
+    ]
+  },
+  "fallback_requires_separate_root_choice": {
+    "name": "Two matched arms with128-token packing budget",
+    "change_to_both_arms": "tok_budget256->128; rerun BOTH prompt and continuation controls from identical initial adapter tensorSHA and fresh optimizers.",
+    "why_new_control_required": "Microbatch accumulation order may change floating point updates; do not claim an exact paired comparison against the old256-budget control.",
+    "resource_policy": "Keep8GiBMPS cap, batch1 and pressure/watchdog guards. Run sequentially. Bound each run in advance; never force through pressure.",
+    "all_other_algorithm_settings": "Same64 updates, LR2e-4, seed0, cosine schedule, data, replay lengths, endpoint and graders.",
+    "tradeoff": "Less peak activation memory may help pressure, but more microbatches can be slower; this is not an assumed speed improvement."
+  },
+  "unchanged_primary_pass_marks": {
+    "held_out_gain_min": 2,
+    "previously_correct_monitor_losses_max": 0,
+    "primary_endpoint": 64
+  },
+  "diagnostic_only": {
+    "training_mean_answer_NLL_relative_drop_min": 0.25,
+    "first_token_probability_increases_min": 3
+  },
+  "comparison_validity": [
+    "Exact initialadapterSHA assertion before training",
+    "Same full model/tokenizer/template identity",
+    "Baseline raw train/held/monitor outputs match control",
+    "Primary64 endpoint actually reached and evaluated"
+  ],
+  "forbidden": [
+    "No selecting12 or32 as a passing substitute for64",
+    "No changing grader, held questions, corpus, LR, schedule or target length from observed held scores",
+    "No candidatepromotion, productionadapter writes, diary or userdata reads",
+    "No current defaults changed even after one positive result"
+  ],
+  "budget_interpretation": "The larger resource window is explicit before the next run. A quality pass at64 would not demonstrate equal latency/resource cost to the209-second control.",
+  "subsequent_algorithm_probe": "Deferred until this fixed comparison completes or root rejects it; no extra LR/replay sweeps proposed as substitutes for an incomplete endpoint.",
+  "required_source_freeze": {
+    "revision": "1a61565",
+    "grader": "strict-3",
+    "reason": "The original paired control and pass criteria are bound to the old grading/monitor semantics. A later strict4 working tree must not silently rescore or replace that comparison.",
+    "execution": "Create a separate isolated git archive/worktree snapshot of revision1a61565 containing sleepmlx and the committed research harness/fixtures; run its diagnostic from that snapshot with its own REPO/PYTHONPATH. Do not import working-tree gate, replay_monitor, backend, or profile.",
+    "checks": [
+      "Assert gate.GRADER is strict-3 before model load",
+      "Record source revision and source hashes in the new report",
+      "Assert original initialadapterSHA, teacher32record fixture, and full model/tokenizer/template identity",
+      "Preserve every old report and the fixed64 endpoint/strict3 pass marks"
+    ],
+    "alternative": "A strict4 study requires explicitly new matched prompt and continuation arms with new baseline reports and protocol; it cannot complete or pass the old study retroactively."
+  }
+}

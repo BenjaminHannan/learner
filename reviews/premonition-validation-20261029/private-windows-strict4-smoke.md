@@ -1,0 +1,7 @@
+# Windows private strict-4 smoke — 2026-10-29
+
+The real private checker, bundled native CPU llama-server and Python HTTP grader passed on BENSPC with frozen commit 74816ef06a99341f688aad2281aa2fd44651b9f4. This was a synthetic all-zero adapter and one held-out card; it verifies protocol wiring, not learning quality or Jacob’s laptop.
+
+The grader returned strict-4 with contract SHA-256 b800645154358fb2783e9a76e3278fcb60a51654107b96182bc785baa6dcfa6b and complete counts: general 7/8 both adapter on and off, held 1/1 both on and off. The authenticated controller returned an owned check ID, `processStopped: true`, and idle recovery succeeded. The engine used two CPU threads and zero GPU layers. Its PID 48956, grader PID 7588, and guard PID 484 were independently confirmed absent after completion; no private job or journal entries remained. Peak per-process commit was 1,104,867,328 bytes; minimum sampled system free memory was 20,681,179,136 bytes.
+
+The fresh task’s resources layout mirrored the packaged app, including app/src/grading.js and resources/sleepmlx/grading-contract.json. Every one of 37 frozen source files was checked against its Git blob identity and all 42 transferred source, model, executable, adapter, held and harness hashes were verified on Windows before the run. No production app, settings, user data, GPU job, or accepted adapter was touched. The task folder remains `C:/Users/benja/learner-ops/premonition-private-cpu-strict4-20261029`.

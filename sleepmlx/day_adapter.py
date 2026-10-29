@@ -38,6 +38,12 @@ def adapter_reason(path, profile, base_dir, base_gguf=None):
         record = json.loads(sidecar_path(path).read_text())
     except (OSError, ValueError):
         return "missing or invalid export metadata; legacy adapters are not auto-loaded"
+    return metadata_reason(path, record, profile, base_dir, base_gguf)
+
+
+def metadata_reason(path, record, profile, base_dir, base_gguf=None):
+    """Validate accepted metadata against supplied artifact bytes without moving them."""
+    path = Path(path)
     if not isinstance(record, dict):
         return "invalid export metadata"
     if record.get("profile") != profile.name or record.get("base_hf_id") != profile.hf_id:

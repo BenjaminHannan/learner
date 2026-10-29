@@ -1,0 +1,102 @@
+{
+  "status": "Approved record-only contract implemented; no training admission change",
+  "origin": {
+    "flag": "helpers.add(input, {learnResearch: true}) private second argument; inherited from actual Learn parent; private Agent constructor/run options only",
+    "trusted_assigner": "main.startLearn; app-side descendant inheritance",
+    "legacy_inference": false,
+    "model_origin_fields": "ignored",
+    "cannot_be_cleared_by_child_model": true
+  },
+  "model_memory_args": {
+    "fact": "unchanged; existing link/secret/instruction refusals stay active",
+    "topic": "unchanged; origin recorded regardless of topic",
+    "source_read_id": "optional opaque Source read ID from successful browser_read tool output",
+    "source_quote": "optional exact substring of body actually exposed, 12 to 600 UTF-16 code units; quote entailment is NOT evaluated",
+    "expires": "optional real calendar YYYY-MM-DD; model supplied, not source verified"
+  },
+  "private_memory_hook": "memory.save(fact, topic, {research: applicationBuiltMetadata})",
+  "prepare_row": {
+    "version": 1,
+    "type": "research-note-prepare",
+    "tx_id": "app-generated UUID",
+    "note_id": "actual saved Markdown ID",
+    "fact_sha256": "SHA256 UTF-8 exact canonical stored fact text",
+    "topic": "actual stored topic",
+    "origin": "learn-research",
+    "context": {
+      "run_id": "app-generated UUID",
+      "thread_id": "app thread ID",
+      "helper_id": "app helper ID or null"
+    },
+    "attribution": {
+      "status": "attributed | unattributed",
+      "verified": false,
+      "reason": "for unmatched or missing evidence",
+      "source": {
+        "read_id": "app registry ID",
+        "tool_call_id": "bounded trace ID, not authority",
+        "url": "observed HTTP(S) URL, not model citation",
+        "page": "observed page number",
+        "read_at": "capture timestamp",
+        "quote": "exact matched quote, <=600 characters",
+        "quote_sha256": "SHA256 quote bytes",
+        "visible_body_sha256": "SHA256 page body actually exposed to model"
+      }
+    },
+    "expires": "calendar-valid claimed expiry or null",
+    "prepared_at": "UTC ISO timestamp"
+  },
+  "commit_row": {
+    "version": 1,
+    "type": "research-note-commit",
+    "tx_id": "same transaction UUID",
+    "committed_at": "UTC ISO timestamp"
+  },
+  "write_order": [
+    "prepare and fsync ledger",
+    "atomic publish of memory.md through existing backend",
+    "append and fsync committed marker"
+  ],
+  "failures": {
+    "prepare_failure": "No body publication",
+    "body_failure": "Prepared orphan remains; no success result",
+    "commit_marker_failure": "Body saved, matching provenance pending; explicitly report pending"
+  },
+  "reader": {
+    "identity": [
+      "note_id",
+      "fact_sha256",
+      "stored topic match"
+    ],
+    "matching_committed": "latest complete committed matching version",
+    "prepared_only_matching_body": "pending, never legacy",
+    "known_id_edited_text": "stale; no inherited attribution",
+    "unknown_id": "legacy/unknown without invented origin",
+    "malformed_or_unreadable_ledger": "unavailable, not silently legacy",
+    "eligibility_enforced": false
+  },
+  "evidence_rejections": [
+    "search snippet only",
+    "raw text pretending to be source metadata",
+    "unknown or cross-run read ID",
+    "failed read",
+    "URL navigation race",
+    "quote outside exposed/truncated body",
+    "quote not exact substring",
+    "secret-containing metadata",
+    "non-HTTP(S) URL or URL credentials"
+  ],
+  "private_browser_transport": "Nonenumerable Symbol; registry is per Agent run; private metadata is not serialized to UI/diary",
+  "model_guidance": "Field details live in trusted Learn context rather than enlarging the constant schema descriptions; existing 8192 context-budget test retained",
+  "audit_command": "python -m sleepmlx.provenance /path/to/synthetic-or-user-data (read only)",
+  "audit_states": [
+    "attributed",
+    "unattributed",
+    "pending",
+    "stale",
+    "legacy",
+    "unavailable"
+  ],
+  "audit_legacy_origin": "unknown, not user or manual by inference",
+  "audit_support_status": "not_evaluated; attributed never implies verified or trained"
+}

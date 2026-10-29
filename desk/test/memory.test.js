@@ -53,6 +53,38 @@ test('memory: caps by count and by total characters, oldest evicted first', () =
   assert.ok(m2.list().some((f) => /word39/.test(f.text)));
 });
 
+test('memory: saving an older note on the same day keeps it and evicts another eligible note', () => {
+  const m = createMemory(tmp(), { now: () => Date.UTC(2026, 9, 29, 15) });
+  const first = m.save(Array.from({ length: 9 }, (_, j) => 'initial' + j).join(' '), 'preference').fact;
+  const others = [];
+  for (let i = 0; i < 19; i++) others.push(m.save(Array.from({ length: 30 }, (_, j) => 'choice' + i + 'word' + j).join(' '), 'preference').fact);
+  const skill = m.save('Research on independent topic', 'skill: research').fact;
+  const card = m.save('Orion => means => constellation', 'card').fact;
+  m.write(m.read().text + '- handwritten personal note\n');
+  const result = m.save(first.text + ' ' + Array.from({ length: 40 }, (_, j) => 'extra' + j).join(' '), 'preference');
+  assert.equal(result.ok, true); assert.equal(result.replaced, true); assert.equal(result.kept, true);
+  const facts = m.list();
+  assert.ok(facts.some(f => f.id === first.id && f.text === result.fact.text));
+  assert.ok(!facts.some(f => f.id === others[0].id));
+  assert.ok(facts.some(f => f.id === skill.id)); assert.ok(facts.some(f => f.id === card.id));
+  assert.ok(facts.some(f => f.text === 'handwritten personal note'));
+});
+
+test('memory: an edit or upsert that cannot fit preserves the existing file and note', () => {
+  const m = createMemory(tmp(), { now: () => Date.UTC(2026, 9, 29, 15) });
+  const saved = m.save('original note about favorite tea', 'preference').fact;
+  const manual = ['a', 'b', 'c'].map(c => '- ' + c.repeat(1980)).join('\n') + '\n';
+  assert.ok(m.write(manual + m.read().text).ok);
+  const before = m.read().text;
+  const expanded = saved.text + ' ' + Array.from({ length: 30 }, (_, i) => 'extra' + i).join(' ');
+  const upsert = m.save(expanded, 'preference');
+  assert.equal(upsert.ok, false); assert.match(upsert.error, /memory limit/);
+  assert.equal(m.read().text, before); assert.ok(m.list().some(f => f.id === saved.id && f.text === saved.text));
+  const edit = m.edit(saved.id, { text: expanded });
+  assert.equal(edit.ok, false); assert.match(edit.error, /memory limit/);
+  assert.equal(m.read().text, before); assert.ok(m.list().some(f => f.id === saved.id && f.text === saved.text));
+});
+
 test('memory: secrets are refused', () => {
   const m = mem();
   for (const t of ['Ben\'s password is hunter2', 'my pin: 4821', 'card 4111 1111 1111 1111', 'the verification code is 123456', 'api key sk-abcdefghijklmnopqrstuvwx'])
@@ -316,10 +348,10 @@ test('memory.md: write is atomic (no .tmp left) and keeps one .bak of the previo
   assert.strictEqual(fs.readFileSync(f + '.bak', 'utf8'), 'second\n');
   assert.strictEqual(fs.readFileSync(f, 'utf8'), 'third\n');
   assert.ok(!fs.existsSync(f + '.tmp'));
-  fs.mkdirSync(f + '.tmp');                                            // a blocked temp path: write fails, the file is untouched
+  fs.mkdirSync(f + '.tmp'); // a stale old temp path does not block a unique temp file
   const r = m.write('fourth\n');
-  assert.strictEqual(r.ok, false);
-  assert.strictEqual(fs.readFileSync(f, 'utf8'), 'third\n');
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(fs.readFileSync(f, 'utf8'), 'fourth\n');
 });
 
 test('memory.md: the agent sees a Settings edit at once, including free text, within the size budget', () => {
@@ -367,4 +399,157 @@ test('fact cards: own cap, never evict Ben\'s notes, kept out of the chat digest
 test('the prompt tells Glim and its Motes to save fact cards as they work', () => {
   assert.match(SYSTEM_PROMPT, /topic \\"card\\"|topic "card"/);
   assert.match(SYSTEM_PROMPT, /A => relation => B/);
+});
+
+test('research notes have a separate cap and cannot crowd personal context out of the digest', () => {
+  const dir = tmp(), m = mem(dir);
+  const personal = m.save('Ben prefers chamomile tea', 'preference').fact;
+  const goal = m.save('Ben aims to become a pilot', 'goal').fact;
+  const manual = '# Personal notes\nA hand-written paragraph stays here.\n- handwritten personal fact\n';
+  m.write(manual + m.read().text);
+  for (let i = 0; i < 40; i++) {
+    const text = Array.from({ length: 30 }, (_, j) => 'concept' + i + 'part' + j).join(' ');
+    assert.ok(m.save(text, i % 2 ? 'SkIlL : practice' : 'skill: research').ok);
+  }
+  const all = m.list(), research = all.filter((f) => /^skill\s*:/i.test(f.topic || ''));
+  assert.ok(all.some((f) => f.id === personal.id)); assert.ok(all.some((f) => f.id === goal.id));
+  assert.ok(research.length <= MAX_FACTS);
+  assert.ok(research.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0) <= MAX_CHARS);
+  assert.ok(!research.some((f) => /concept0part0/.test(f.text))); assert.ok(research.some((f) => /concept39part0/.test(f.text)));
+  const body = m.block().split('\n').slice(1).join('\n');
+  assert.ok(body.length <= MAX_CHARS); assert.match(body, /chamomile tea/); assert.match(body, /become a pilot/);
+  assert.match(body, /hand-written paragraph/); assert.match(body, /handwritten personal fact/); assert.match(body, /concept39part0/);
+  assert.ok(m.read().text.startsWith(manual));
+  const before = m.read().text; m.save('Newest skill note', 'skill: last');
+  assert.equal(fs.readFileSync(path.join(dir, 'memory.md.bak'), 'utf8'), before);
+});
+
+test('skill upserts cannot replace similar personal notes and core eviction still works', () => {
+  const m = mem();
+  const personal = m.save('Ben enjoys chess strategy lessons', 'preference').fact;
+  const skill = m.save('Ben enjoys chess strategy lessons', 'skill: chess');
+  assert.equal(skill.replaced, false); assert.ok(m.list().some((f) => f.id === personal.id));
+  for (let i = 0; i < 40; i++) m.save(('core' + i + ' ').repeat(40), 'personal');
+  const all = m.list();
+  const core = all.filter((f) => !/^skill\s*:/i.test(f.topic || ''));
+  assert.ok(core.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0) <= MAX_CHARS);
+  assert.ok(!core.some((f) => f.id === personal.id)); assert.ok(core.some((f) => /core39/.test(f.text)));
+  assert.ok(all.some((f) => f.id === skill.fact.id));
+});
+
+test('research note count cap retires oldest research without touching core notes', () => {
+  const m = mem();
+  const core = m.save('Ben wants to study physics', 'goal').fact;
+  for (let i = 0; i < MAX_FACTS + 5; i++) assert.ok(m.save('research' + i + ' term' + i, 'skill: x').ok);
+  const all = m.list(), skills = all.filter((f) => f.topic === 'skill: x');
+  assert.equal(skills.length, MAX_FACTS);
+  assert.ok(!skills.some((f) => f.text === 'research0 term0'));
+  assert.ok(skills.some((f) => f.text === 'research204 term204'));
+  assert.ok(all.some((f) => f.id === core.id));
+});
+
+const researchMeta = () => ({ origin: 'learn-research', context: { run_id: 'run-1', thread_id: 'thread-1', helper_id: 'helper-1' }, attribution: { status: 'unattributed', verified: false, reason: 'no read', source: null }, expires: null });
+test('research provenance prepares the canonical stored note before publishing and commits durably', () => {
+  const crypto = require('crypto'), dir = tmp(), m = mem(dir), ledger = path.join(dir, 'memory-provenance.jsonl');
+  m.save('Ben likes tea', 'preference');
+  const rename = fs.renameSync; let observed;
+  try {
+    fs.renameSync = (...args) => {
+      if (args[1] === m.file) observed = fs.readFileSync(ledger, 'utf8').trim().split('\n').map(JSON.parse);
+      return rename(...args);
+    };
+    const r = m.save('Research result | with pipe', 'skill: study', { research: researchMeta() });
+    assert.ok(r.ok && r.kept); assert.equal(r.provenance.status, 'unattributed');
+    const rows = fs.readFileSync(ledger, 'utf8').trim().split('\n').map(JSON.parse), stored = m.list().find((f) => f.id === r.fact.id);
+    assert.equal(observed.length, 1); assert.equal(observed[0].type, 'research-note-prepare');
+    assert.equal(rows.length, 2); assert.equal(rows[1].type, 'research-note-commit'); assert.equal(rows[0].tx_id, rows[1].tx_id);
+    assert.equal(rows[0].note_id, stored.id); assert.equal(rows[0].topic, stored.topic);
+    assert.equal(rows[0].fact_sha256, crypto.createHash('sha256').update(stored.text).digest('hex'));
+    assert.equal(stored.text, 'Research result / with pipe');
+  } finally { fs.renameSync = rename; }
+  assert.equal(m.save('secret password hunter2', 'skill: study', { research: researchMeta() }).ok, false);
+  assert.equal(fs.readFileSync(ledger, 'utf8').trim().split('\n').length, 2);
+});
+
+test('research ledger failures preserve publication ordering and previous provenance', () => {
+  const dir = tmp(), m = mem(dir), ledger = path.join(dir, 'memory-provenance.jsonl');
+  assert.ok(m.save('Initial observation', 'skill: demo', { research: researchMeta() }).ok);
+  const oldBody = m.read().text, oldLedger = fs.readFileSync(ledger, 'utf8');
+  const fsync = fs.fsyncSync, rename = fs.renameSync;
+  try {
+    fs.fsyncSync = () => { throw Error('synthetic prepare failure'); };
+    const r = m.save('Prepare failure note', 'skill: demo', { research: researchMeta() });
+    assert.equal(r.ok, false); assert.equal(m.read().text, oldBody); assert.equal(fs.readFileSync(ledger, 'utf8'), oldLedger);
+  } finally { fs.fsyncSync = fsync; }
+  try {
+    fs.renameSync = (...args) => { if (args[1] === m.file) throw Error('synthetic body failure'); return rename(...args); };
+    const r = m.save('Body failure note', 'skill: demo', { research: researchMeta() });
+    assert.equal(r.ok, false); assert.equal(m.read().text, oldBody);
+    const rows = fs.readFileSync(ledger, 'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(rows.at(-1).type, 'research-note-prepare');
+  } finally { fs.renameSync = rename; }
+  let ledgerFd, syncs = 0;
+  const openSync = fs.openSync, closeSync = fs.closeSync;
+  try {
+    fs.openSync = (...args) => { const fd = openSync(...args); if (args[0] === ledger) ledgerFd = fd; return fd; };
+    fs.closeSync = (fd) => { if (fd === ledgerFd) ledgerFd = undefined; return closeSync(fd); };
+    fs.fsyncSync = (fd) => { if (fd === ledgerFd && ++syncs === 2) throw Error('synthetic marker failure'); return fsync(fd); };
+    const r = m.save('Marker failure note', 'skill: demo', { research: researchMeta() });
+    assert.equal(r.ok, true); assert.equal(r.provenance.status, 'pending'); assert.ok(m.list().some((f) => f.id === r.fact.id));
+    const rows = fs.readFileSync(ledger, 'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(rows.at(-1).type, 'research-note-prepare'); assert.ok(fs.readFileSync(ledger, 'utf8').startsWith(oldLedger));
+  } finally { fs.fsyncSync = fsync; fs.openSync = openSync; fs.closeSync = closeSync; }
+});
+
+test('process termination at each research transaction boundary leaves distinguishable durable state', () => {
+  const { spawnSync } = require('child_process');
+  const memoryModule = path.join(__dirname, '..', 'src', 'memory.js');
+  const script = `
+    const fs = require('fs');
+    const { createMemory } = require(process.argv[1]);
+    const dir = process.argv[2], phase = process.argv[3], m = createMemory(dir);
+    const realSync = fs.fsyncSync, realRename = fs.renameSync, realOpen = fs.openSync, realClose = fs.closeSync; let syncs = 0, ledgerFd;
+    fs.openSync = (...args) => { const fd = realOpen(...args); if (args[0] === require('path').join(dir, 'memory-provenance.jsonl')) ledgerFd = fd; return fd; };
+    fs.closeSync = fd => { if (fd === ledgerFd) ledgerFd = undefined; return realClose(fd); };
+    fs.fsyncSync = fd => { realSync(fd); if (fd !== ledgerFd) return; syncs++; if ((phase === 'prepare' && syncs === 1) || (phase === 'commit' && syncs === 2)) process.exit(77); };
+    fs.renameSync = (a, b) => { realRename(a, b); if (phase === 'body' && b === m.file) process.exit(77); };
+    m.save('Synthetic research observation', 'skill: experiment', { research: { origin: 'learn-research', context: { run_id: 'run', thread_id: 'thread', helper_id: 'helper' }, attribution: { status: 'unattributed', verified: false, reason: 'no_source_read', source: null }, expires: null } });
+    process.exit(2);
+  `;
+  for (const phase of ['prepare', 'body', 'commit']) {
+    const dir = tmp();
+    const child = spawnSync(process.execPath, ['-e', script, memoryModule, dir, phase], { encoding: 'utf8' });
+    assert.equal(child.status, 77, child.stderr);
+    const rows = fs.readFileSync(path.join(dir, 'memory-provenance.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(rows[0].type, 'research-note-prepare');
+    const saved = createMemory(dir).list().some((f) => f.text === 'Synthetic research observation');
+    assert.equal(saved, phase !== 'prepare', phase);
+    assert.equal(rows.length, phase === 'commit' ? 2 : 1, phase);
+    if (phase === 'commit') assert.equal(rows[1].type, 'research-note-commit');
+  }
+});
+
+test('temporary note fsync failure leaves existing memory untouched', () => {
+  const dir = tmp(), m = mem(dir); m.write('Original memory\n');
+  const open = fs.openSync, close = fs.closeSync, sync = fs.fsyncSync; let tempFd;
+  try {
+    fs.openSync = (...args) => { const fd = open(...args); if (String(args[0]).startsWith(m.file + '.tmp-')) tempFd = fd; return fd; };
+    fs.closeSync = (fd) => { if (fd === tempFd) tempFd = undefined; return close(fd); };
+    fs.fsyncSync = (fd) => { if (fd === tempFd) throw Error('synthetic temp fsync failure'); return sync(fd); };
+    const result = m.write('Replacement\n');
+    assert.equal(result.ok, false); assert.equal(m.read().text, 'Original memory\n');
+    assert.ok(!fs.readdirSync(dir).some((name) => name.startsWith('memory.md.tmp-')));
+  } finally { fs.openSync = open; fs.closeSync = close; fs.fsyncSync = sync; }
+});
+
+test('ledger directory fsync failure prevents publishing a research note', { skip: process.platform === 'win32' }, () => {
+  const dir = tmp(), m = mem(dir); m.write('Original memory\n');
+  const open = fs.openSync, close = fs.closeSync, sync = fs.fsyncSync; let directoryFd;
+  try {
+    fs.openSync = (...args) => { const fd = open(...args); if (args[0] === dir) directoryFd = fd; return fd; };
+    fs.closeSync = (fd) => { if (fd === directoryFd) directoryFd = undefined; return close(fd); };
+    fs.fsyncSync = (fd) => { if (fd === directoryFd) throw Error('synthetic directory fsync failure'); return sync(fd); };
+    const result = m.save('Synthetic fact', 'skill: test', { research: researchMeta() });
+    assert.equal(result.ok, false); assert.equal(m.read().text, 'Original memory\n');
+  } finally { fs.openSync = open; fs.closeSync = close; fs.fsyncSync = sync; }
 });

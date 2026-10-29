@@ -1,0 +1,51 @@
+{
+  "before_fix": {
+    "scope": "synthetic Windows CPU backend plumbing; not quality or 8GB laptop feasibility",
+    "phase": "failed",
+    "torch_version": "2.15.0+cpu",
+    "torch_cuda": null,
+    "threads": 2,
+    "snapshot": "model",
+    "elapsed_s": 9.953,
+    "device": "cpu",
+    "dtype": "torch.bfloat16",
+    "steps": 2,
+    "losses": [
+      {
+        "ce": 9.0055513381958,
+        "kl": 0.0
+      },
+      {
+        "ce": 8.338957786560059,
+        "kl": 0.0017788594122976065
+      }
+    ],
+    "error": "[Errno 9] Bad file descriptor",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\benja\\learner-ops\\premonition-wincpu-learning-20261029\\smoke.py\", line 40, in <module>\n    b.save_adapter(root/'adapter'); b.load_adapter(None); b.load_adapter(root/'adapter')\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\benja\\learner-ops\\premonition-wincpu-learning-20261029\\src\\sleepmlx\\torch_backend.py\", line 287, in save_adapter\n    save_adapter_directory(path, lambda tmp: self.model.save_pretrained(str(tmp)))\n  File \"C:\\Users\\benja\\learner-ops\\premonition-wincpu-learning-20261029\\src\\sleepmlx\\checkpoint.py\", line 86, in save_adapter_directory\n    sync_tree(staging)\n  File \"C:\\Users\\benja\\learner-ops\\premonition-wincpu-learning-20261029\\src\\sleepmlx\\checkpoint.py\", line 55, in sync_tree\n    os.fsync(f.fileno())\nOSError: [Errno 9] Bad file descriptor\n"
+  },
+  "after_fix": {
+    "scope": "synthetic Windows CPU backend plumbing; not quality or 8GB laptop feasibility",
+    "phase": "passed",
+    "torch_version": "2.15.0+cpu",
+    "torch_cuda": null,
+    "threads": 2,
+    "snapshot": "model",
+    "elapsed_s": 9.578,
+    "device": "cpu",
+    "dtype": "torch.bfloat16",
+    "steps": 2,
+    "losses": [
+      {
+        "ce": 9.0055513381958,
+        "kl": 0.0
+      },
+      {
+        "ce": 8.346480369567871,
+        "kl": 0.0025984435342252254
+      }
+    ],
+    "lora_b_nonzero_before": 0,
+    "lora_b_nonzero_after": 663552,
+    "exact_reload_logits": true
+  }
+}

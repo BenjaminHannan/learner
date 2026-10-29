@@ -19,6 +19,8 @@ from __future__ import annotations
 import math
 import re
 from typing import Dict, List, Optional, Sequence
+from .grading import CONTRACT, GRADER
+from .quantity import numeric_answer, unwrap
 
 HARM_MAX = 10.0   # Oct 29: was 3.0 (2 net lost answers of 40 undid a night). LFM3 nightly general scores vary SD ~1.4 pts on 570 Qs ~ 5.3 pts on 40,
                   # so 3.0 reverted harmless nights about 1 in 6; 10.0 (~2 SD) undoes a night only at 5+ net lost answers of 40
@@ -69,11 +71,10 @@ GENERAL_QA: List[tuple] = [
 ]
 
 
-HEAD_WORDS = 12          # only this many words of the reply's first line are graded
+HEAD_WORDS = CONTRACT["head_words"]          # only this many words of the reply's first line are graded
 MIN_GAIN = 1             # held-out cards the night must add over the adapter it started from
 
 
-GRADER = "strict-3"   # stored with recorded scores: a score from another grader is not compared with this one
 _SUB = str.maketrans("₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹", "01234567890123456789")
 
 
@@ -125,27 +126,34 @@ def unambiguous(reply: str, accepted: Sequence[str]) -> bool:
     return not _AMBIGUOUS.search(line)
 
 
-def correct(reply: str, accepted: Sequence[str], question: str = "") -> bool:
-    """Strict: an accepted answer appears as a whole word/phrase in the head of the reply. When the accepted answers are numbers, the
-    first number of the head that is not in the question must be an accepted one (a hedge such as "7 or 8" for 8 is wrong, while
-    "7 + 8 = 15" or "100 C (212 F)" are right)."""
-    r = head(reply)
-    if not unambiguous(reply, accepted):
+def raw_answer_line(reply):
+    text = _THINK.sub(" ", str(reply or "")).split("</think>")[-1]
+    if "<think>" in text.lower():
+        return ""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    while len(lines) > 1 and lines[0].strip("*_# ").endswith(":") and len(normalize(lines[0]).split()) <= 3:
+        lines.pop(0)
+    return lines[0] if lines else ""
+
+
+def correct(reply: str, accepted: Sequence[str], question: str = "", *, literal_symbols=()) -> bool:
+    if not isinstance(reply, str) or not accepted or any(not isinstance(answer, str) or not answer.strip() for answer in accepted):
         return False
-    nums_ok = {normalize(a) for a in accepted if normalize(a).isdigit()}
-    if nums_ok:
-        asked = set(_NUM.findall(normalize(question)))
-        found = [x for x in _NUM.findall(r) if x not in asked]
-        if found and found[0] not in nums_ok:
-            return False
-        if len(set(found)) > 1 and re.search(r"\d+ (?:or|to) \d+", r):   # "7 or 8", "7 to 8": a hedge
-            return False
-    return any(has_phrase(r, a) for a in accepted)
+    line = raw_answer_line(reply)
+    if not line or not unambiguous(reply, accepted):
+        return False
+    if literal_symbols and unwrap(line) in literal_symbols:
+        return True
+    r = head(reply)
+    numeric = numeric_answer(line, question, accepted, lambda text: has_phrase(r, text))
+    if numeric is not None:
+        return bool(numeric)
+    return any(has_phrase(r, answer) for answer in accepted)
 
 
-def recall_hit(answer: str, reply: str) -> bool:
+def recall_hit(answer: str, reply: str, question: str = "") -> bool:
     """A held-out card is answered when its answer (a name) appears as a whole phrase in the head of the reply."""
-    return unambiguous(reply, [answer]) and has_phrase(head(reply), answer)
+    return correct(reply, [answer], question)
 
 
 def gate_questions(n: int = 40) -> List[tuple]:
@@ -193,7 +201,7 @@ def score_recall(backend, R, cards: Sequence[dict], adapter: bool = True, sys_pr
         out += backend.generate(ps[i:i + backend.gen_batch], max_tokens, 0.0, adapter)
     if len(out) != len(ps):
         raise ValueError("incomplete recall gate measurement")
-    flags = [recall_hit(c["a"], o) for c, o in zip(cards, out)]
+    flags = [recall_hit(c["a"], o, c["q"]) for c, o in zip(cards, out)]
     by: Dict[str, List[bool]] = {}
     for c, f in zip(cards, flags):
         by.setdefault(c.get("dir", "forward"), []).append(f)

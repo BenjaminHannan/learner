@@ -1,0 +1,35 @@
+{
+  "result": "learning signal shown; fixed retention pass failed",
+  "quality_improvement_claim": false,
+  "source_report": "lfm3-learning-diagnostic-64.json",
+  "runtime_seconds": 209.02,
+  "public_daytime_service_health_before_and_after": 200,
+  "sampled_memory_pressure": "1 throughout the owned run",
+  "fixed_primary_endpoint_step": 64,
+  "training_hits": {"before": 0, "after": 4, "n": 4},
+  "held_out_hits": {"before": 0, "after": 3, "n": 4},
+  "independent_monitor_hits": {"before": 4, "after": 4, "n": 12},
+  "previously_correct_monitor_answers_lost": 1,
+  "fixed_pass": false,
+  "shown": [
+    "Supervised answer targets are learnable: training answer NLL fell 99.996%, and all four first-token probabilities increased.",
+    "Three differently worded held-out questions gained correct answers, so the model transfers more than exact training wording.",
+    "The remaining Lumen/Cedar miss is not a grader false negative: free generation answers Lumen. Its desired first-token probability nevertheless rose from about 0.00005 to 0.425, showing learned evidence with a competing greedy continuation.",
+    "The zero previously-correct-loss retention criterion failed: a cup correctly below a book at baseline became incorrectly above it. A new correct list-order answer offset that loss in the net score.",
+    "The 12-total-step cosine schedule and the first 12 updates of a 64-total-step schedule have different learning-rate trajectories. This run cannot attribute the difference solely to later update count."
+  ],
+  "suggested": [
+    "The original zero-gain result was limited by the short learning-rate schedule rather than malformed answer supervision.",
+    "Further exact-question repetition is unlikely to solve the remaining transfer problem efficiently once training NLL is near zero."
+  ],
+  "untested": [
+    "Whether continuation replay avoids the spatial retention regression at the same learning strength.",
+    "Whether this tiny synthetic effect generalizes to real multi-fact nights, longer dialogs, native thinking responses, or other random initializations."
+  ],
+  "next_one_change_probe": {
+    "intervention": "Replace prompt replay with continuation replay at the same 64-step schedule.",
+    "requirement": "Match initial adapter tensor hash, seed, learning facts, LR, monitor, held-out questions, generation limits, and resource limits.",
+    "fixed_pass_marks": {"held_out_gain_minimum": 2, "previously_correct_monitor_losses_maximum": 0},
+    "deployment": "No automatic promotion or default change; a pass only justifies larger independent validation."
+  }
+}

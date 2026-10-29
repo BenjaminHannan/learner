@@ -28,11 +28,12 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from . import diary as diary_mod
 from . import gate as gate_mod
+from . import grading as grading_mod
 from . import lessons as L_mod
 from . import prompts as P
 from . import replay as replay_mod
 from .backend import Backend, Clock, Stop
-from .checkpoint import Checkpoints
+from .checkpoint import CheckpointError, Checkpoints
 from .corpus import Diary, has_ans, norm, pat
 from .paths import Paths, read_json, write_json, write_text
 
@@ -110,7 +111,7 @@ class Config:
     dreamcheck: bool = True                  # check the night's Q&A dreams against the diary before training (dreamhook.py)
     dreamcheck_share: float = 0.10           # at most this share of the night's budget goes to it (the rest stay unchecked, kept)
     llama_server: Optional[str] = None       # set with base_gguf: check the exported adapter inside llama-server (served.py)
-    base_gguf: Optional[str] = None          # the GGUF the daytime model serves (must be the same base as the profile)
+    base_gguf: Optional[str] = None          # explicitly bound served GGUF; learned-fact transfer needs separate evaluation
     # Extra sources (lessons.py). Not part of ab_ob_b4_nb: they only add cards to the same pool; every setting above is unchanged.
     use_lessons: bool = True      # post-mortems of the day's failures -> lesson cards (and corrections retire the fact they replace)
     max_lessons: int = 8          # lessons written per night (x work scale)
@@ -165,6 +166,14 @@ def note_sig(n: dict) -> str:
     return hashlib.sha1(("%s|%s|%s" % (n["id"], n["topic"], n["text"])).encode()).hexdigest()[:16]
 
 
+def card_claim_sig(subj: str, rel: str, obj: str) -> str:
+    return hashlib.sha256(json.dumps([norm(subj), norm(rel), norm(obj)]).encode()).hexdigest()
+
+
+def card_claim_key(note_id: str, signature: str) -> str:
+    return "card|" + hashlib.sha256(json.dumps([note_id, signature]).encode()).hexdigest()
+
+
 @dataclass
 class Item:
     key: str
@@ -191,6 +200,7 @@ class Item:
     until: str = ""               # YYYY-MM-DD: after this day the item is not trained (tracked items)
     line: str = ""                # fact from a saved card note: the card line "Subject => relation => Object" (its dream context when no chat turn names both sides)
     sig: str = ""                 # note items: hash of the note's id and text the quiz card was made for (unchanged note = same card, no regeneration)
+    card_note_id: str = ""        # saved-card source identity; sig is its normalized triple signature
 
     @property
     def fact(self) -> str:
@@ -448,16 +458,52 @@ class Sleeper:
 
     def ctx_of(self, it: Item, d: int, newest_first: bool = False) -> str:
         """Chat turns naming both sides (newest first for dreams), plus the saved card line for a card-note fact."""
+        if it.card_note_id:
+            return "[Saved card note] " + it.line
         idx = self.diary.containing(it.subj, it.obj, d)
         txt = self.diary.label(idx[::-1][:4] if newest_first else idx[-4:])
         return (txt + "\n" if txt else "") + ("[Saved card note] " + it.line if it.line else "")
 
+    def _retire_card_claim(self, it: Item, st: Counter) -> None:
+        """Remove source-owned rehearsal data without changing adapter bytes."""
+        if not it.dead:
+            st["card_retired"] += 1
+        it.dead, it.trained, it.dirty = True, False, False
+        it.para, it.qa, it.held = [], [], []
+        obsolete = [row for row in self.rem_pool if it.key in row.get("keys", [])]
+        self.rem_pool = [row for row in self.rem_pool if it.key not in row.get("keys", [])]
+        st["card_rem_retired"] += len(obsolete)
+        self.gist_done.pop(it.key, None)
+        for row in obsolete:
+            if row.get("kind") == "chain":
+                self.rem_done.pop("|".join(sorted(row.get("keys", []))), None)
+        night = getattr(self, "N", {})
+        night.pop("pre", None)
+        if "card_holdout_pending" in night:
+            night["card_holdout_pending"] = [key for key in night["card_holdout_pending"] if key != it.key]
+
     def card_notes(self, d: int, st: Counter) -> None:
-        """Saved notes with the topic "card" and lines "Subject => relation => Object" become fact Items (no chat turn needed; I/me/my -> Ben).
-        A card note that is gone (forgotten, ignored, lines removed) retires its facts."""
+        """Bind each saved triple to its note ID and content, independently of diary facts.
+
+        Reconciliation occurs at tag/dream boundaries. A train-phase resume keeps
+        its immutable published source snapshot; it does not hot-reload edits.
+        """
         if not self.cfg.use_userdata:
             return
+        # Older versions keyed source-owned cards by their entity pair. Their
+        # note IDs cannot be recovered safely from a collision, so retire their
+        # rehearsal artifacts and re-dream current claims under explicit IDs.
+        for key, it in list(self.items.items()):
+            if it.kind == "fact" and it.line and it.source == "saved card note" and not it.card_note_id:
+                self._retire_card_claim(it, st)
+                del self.items[key]
+                it.key = "retired_card|" + hashlib.sha256(json.dumps([key, it.line]).encode()).hexdigest()
+                it.source = "retired legacy saved card note"
+                self.items[it.key] = it
+                st["card_migrated"] += 1
         have, ud = set(), self.paths.userdata_dir
+        night = getattr(self, "N", {})
+        pending = set(night.get("card_holdout_pending", []))
         for n in L_mod.read_notes(ud, diary_mod.load_ignore(self.paths.ignore)):
             if not is_card_note(n):
                 continue
@@ -466,19 +512,27 @@ class Sleeper:
                 if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob):
                     st["card_invalid"] += 1
                     continue
-                key = key_of(sj, ob)
+                signature = card_claim_sig(sj, rl, ob)
+                key = card_claim_key(n["id"], signature)
                 have.add(key)
                 it = self.items.get(key)
-                if it is None:
-                    self.items[key] = Item(key, sj, ob, rl, d, first=d, days=1, nment=1, imp=True, line="%s %s %s." % (sj, rl, ob), source="saved card note")
-                    st["card_new"] += 1
-                elif it.dead and it.line:   # the card note is back
-                    it.dead, it.line = False, "%s %s %s." % (sj, rl, ob)
+                if it is not None and (it.card_note_id != n["id"] or it.sig != signature):
+                    raise ValueError("saved-card identity does not match its item key")
+                if key in self.dropped:
+                    continue
+                if it is None or it.dead:
+                    self.items[key] = Item(key, sj, ob, rl, d, first=d, days=1, nment=1, imp=True, dirty=True,
+                                           line="%s %s %s." % (sj, rl, ob), source="saved card note",
+                                           card_note_id=n["id"], sig=signature)
+                    pending.add(key)
+                    night.pop("pre", None)
                     st["card_new"] += 1
         for it in self.items.values():
-            if it.line and not it.dead and it.key not in have:
-                it.dead = True
-                st["card_retired"] += 1
+            if it.card_note_id and not it.dead and it.key not in have:
+                self._retire_card_claim(it, st)
+                pending.discard(it.key)
+        if pending or "card_holdout_pending" in night:
+            night["card_holdout_pending"] = sorted(pending)
 
     def refresh(self, d: int) -> None:
         for it in self.items.values():
@@ -581,7 +635,7 @@ class Sleeper:
         done = []
         for it in need:
             idx = self.diary.containing(it.subj, it.obj, d)
-            note = self.diary.turns[idx[-1]]["text"][:300] if idx else (it.line or it.fact)
+            note = it.line if it.card_note_id else (self.diary.turns[idx[-1]]["text"][:300] if idx else (it.line or it.fact))
             paras, qas = P.templated_cards(it.subj, it.rel, it.obj, note)
             seen, g = {norm(h["q"]) for h in it.held}, {"p": [], "q": []}
             for kind, x in [("p", p) for p in paras] + [("q", qa) for qa in qas]:
@@ -1071,7 +1125,7 @@ class Sleeper:
             elif len(es) != 1 or es[0].lower() in qq.lower() or other_e.lower() not in qq.lower() or x in qq.lower():
                 st["rem_dropped_bad"] += 1
             else:
-                idx = sorted(set(self.diary.containing(p.subj, p.obj, d)[-2:]) | set(self.diary.containing(q.subj, q.obj, d)[-2:]))
+                idx = sorted({i for it in (p, q) if not it.card_note_id for i in self.diary.containing(it.subj, it.obj, d)[-2:]})
                 cand.append(("chain", (p, q), qq, es[0], "\n".join(x for x in (self.diary.label(idx), p.line, q.line) if x)))
         for it, txt in zip(gist, graw):
             st["gist_gen"] += 1
@@ -1121,7 +1175,7 @@ class Sleeper:
                 st["dropped_failed"] += 1
         groups = defaultdict(list)
         for it in self.items.values():
-            if not it.dead and it.kind == "fact":
+            if not it.dead and it.kind == "fact" and not it.card_note_id:
                 groups[frozenset(it.key.split("|"))].append(it)
         for g in groups.values():
             if len(g) > 1:
@@ -1225,14 +1279,80 @@ class Sleeper:
             if candidate is not None:
                 self.be.load_adapter(candidate)
 
-    def general_base_identity(self):
-        return {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
+    def general_base_identity(self, rendered=True):
+        identity = {"profile": self.prof.name, "model_dir": self.prof.model_dir, "n": self.cfg.gate_n,
                 "hf_id": self.prof.hf_id, "source_revision": self.prof.source_revision,
                 "backend": self.prof.backend, "loader": self.prof.loader,
                 "max_tokens": self.cfg.gate_max_tokens, "grader": gate_mod.GRADER,
                 "questions": hashlib.sha256(json.dumps(gate_mod.gate_questions(self.cfg.gate_n)).encode()).hexdigest(),
-                "prompts": hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest(),
                 "system": gate_mod.GATE_SYS}
+        if rendered:
+            identity["prompts"] = hashlib.sha256(json.dumps(gate_mod.general_prompts(self.R, self.cfg.gate_n)).encode()).hexdigest()
+        return identity
+
+    def finalization_context(self):
+        """Declared model, acceptance policy and export target; no model load."""
+        profile = asdict(self.prof)
+        # Runtime sizing and training schedules do not authorize a gate result.
+        profile.pop("runtime", None)
+        profile.pop("recipe", None)
+        return {"profile": profile, "policy": {key: getattr(self.cfg, key) for key in
+                    ("who", "harm_max", "gate_min_gain", "gate_n", "gate_max_tokens", "recall_max_tokens")},
+                "export": {key: getattr(self.cfg, key) for key in
+                    ("llama_cpp_dir", "gguf_base_dir", "llama_server", "base_gguf")}}
+
+    def _finalization_held(self):
+        # Checkpoint JSON sorts item keys; the same held set must retain its
+        # identity when restored with a different dictionary insertion order.
+        held = []
+        for it in self.items.values():
+            for h in it.held:
+                if not isinstance(h, dict): raise ValueError('invalid held snapshot row')
+                if h.get("night") != self.N["day"]: continue
+                if (type(h.get("night")) is not int or any(not isinstance(h.get(k), str) or not h[k].strip() for k in ("q", "a"))
+                        or not isinstance(h.get("dir", "forward"), str)):
+                    raise ValueError('invalid held snapshot row')
+                held.append(h)
+        held.sort(key=lambda h: (h["q"], h["a"], h.get("dir", "forward")))
+        return held
+
+    def finalization_evaluation(self):
+        held = self._finalization_held()
+        rows = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
+        return {"general": self.general_base_identity(), "recall": self.recall_identity(held), "held_count": len(held),
+                "held_sha256": hashlib.sha256(json.dumps(rows).encode()).hexdigest()}
+
+    def _finalization_bound(self, *, rendered=True):
+        final = self.N.get("finalization")
+        if (not isinstance(final, dict) or type(final.get("version")) is not int or final["version"] != 2
+                or final.get("night_id") != self.N.get("id") or final.get("grader") != gate_mod.GRADER
+                or final.get("grading_contract_sha256") != grading_mod.CONTRACT_SHA256):
+            return False
+        def same(left, right):
+            try:
+                return json.dumps(left, sort_keys=True, allow_nan=False) == json.dumps(right, sort_keys=True, allow_nan=False)
+            except (TypeError, ValueError):
+                return False
+        try:
+            evaluation = final.get("evaluation")
+            if (not isinstance(evaluation, dict) or set(evaluation) != {"general", "recall", "held_count", "held_sha256"}
+                    or type(evaluation["held_count"]) is not int or evaluation["held_count"] < 1
+                    or any(not isinstance(evaluation[key], str) or not re.fullmatch(r'[0-9a-f]{64}', evaluation[key])
+                           for key in ("recall", "held_sha256"))):
+                return False
+            held = self._finalization_held()
+            rows = [(h["q"], h["a"], h.get("dir", "forward")) for h in held]
+            general = evaluation["general"]
+            static = self.general_base_identity(rendered=False)
+            return (isinstance(general, dict) and set(general) == set(static) | {"prompts"}
+                    and isinstance(general["prompts"], str) and re.fullmatch(r'[0-9a-f]{64}', general["prompts"]) is not None
+                    and same({key: general[key] for key in static}, static)
+                    and evaluation["held_count"] == len(held)
+                    and evaluation["held_sha256"] == hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+                    and same(final.get("context"), self.finalization_context())
+                    and (not rendered or same(evaluation, self.finalization_evaluation())))
+        except (AttributeError, KeyError, TypeError, ValueError):
+            return False
 
     # ---- the night
     def day_turns(self, week: dict, d: int) -> int:
@@ -1331,7 +1451,7 @@ class Sleeper:
 
     def _night(self, week: dict, d: int, dry_run: bool, res: dict) -> None:
         N, cfg, st_all = self.N, self.cfg, self.N["stats"]
-        if N["phase"] in ("finalize", "done") and N.get("finalization"):
+        if N["phase"] in ("finalize", "done"):
             self._finalize(res)
             return
         self._set_scale(dry_run)
@@ -1347,9 +1467,9 @@ class Sleeper:
                 shutil.rmtree(str(self.paths.work), ignore_errors=True)
                 return
             st = Counter()
+            self.card_notes(d, st)
             self.tag(d, st)
             self.names_pass(d, st)
-            self.card_notes(d, st)
             self.refresh(d)
             if cfg.use_lessons:
                 self.corrections(week, d, st)
@@ -1362,6 +1482,18 @@ class Sleeper:
             if "holdout_done" not in N:
                 self.split_holdout(fresh, d, st)
                 N["holdout_done"] = True
+            else:
+                # A dream-phase resume may already have split its old claims.
+                # Hold new/changed source claims separately without moving any
+                # unchanged held-out cards back into the training pool.
+                pending = set(N.get("card_holdout_pending", []))
+                changed = [it for it in fresh if it.key in pending]
+                if changed:
+                    previous = st.get("held_out", 0)
+                    self.split_holdout(changed, d, st)
+                    st["held_out"] += previous
+            ready = {it.key for it in fresh}
+            N["card_holdout_pending"] = [key for key in N.get("card_holdout_pending", []) if key not in ready]
             st_all["dream"] = dict(st)
             st = Counter()
             self.lessons_stage(week, d, st)
@@ -1546,17 +1678,74 @@ class Sleeper:
             state["slept_days"].append(N["date"])
         state.setdefault("slept_turns", {})[N["date"]] = self.day_turns(week, d)
         state["last_night"] = {"id": N["id"], "date": N["date"], "reverted": reverted, "quiz": quiz, "harm": j["harm"]}
-        N["finalization"] = {"result": result, "state": state, "extra": {
+        N["finalization"] = {"version": 2, "grader": gate_mod.GRADER, "night_id": N["id"],
+                             "grading_contract_sha256": grading_mod.CONTRACT_SHA256,
+                             "context": self.finalization_context(), "evaluation": self.finalization_evaluation(),
+                             "result": result, "state": state, "extra": {
             "stats": copy.deepcopy(N["stats"]), "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
             "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")}}
         N["phase"] = "finalize"
         self.save_night()
         self._finalize(res)
 
+    def _block_finalization(self, res: dict, reason: str) -> None:
+        res.update(status="stopped", quiz=None, interrupted=True, blocked=True,
+                   stop_reason="gate_recheck_required", gate_recheck_required=True,
+                   message="stopped: %s; explicit re-gate with comparable baselines is required before promotion; checkpoint and candidate retained" % reason)
+        self.log("[night] " + res["message"])
+
+    def _finalization_payload_valid(self, final) -> bool:
+        N = self.N
+        if (not isinstance(final, dict) or not all(isinstance(final.get(k), dict) for k in ("result", "state", "extra"))
+                or not isinstance(N.get("id"), str) or not re.fullmatch(r"[0-9a-f]{32}", N["id"])
+                or not isinstance(N.get("date"), str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", N["date"])
+                or type(N.get("day")) is not int or N["day"] <= 0):
+            return False
+        result, state = final["result"], final["state"]
+        last = state.get("last_night")
+        return (result.get("status") == "done" and type(result.get("reverted")) is bool
+                and result.get("date") == N["date"] and type(result.get("day")) is int and result["day"] == N["day"]
+                and type(state.get("nights")) is int and state["nights"] > 0
+                and type(result.get("night")) is int and result["night"] == state["nights"]
+                and isinstance(state.get("slept_days"), list) and N["date"] in state["slept_days"]
+                and isinstance(last, dict) and last.get("id") == N["id"] and last.get("date") == N["date"]
+                and type(last.get("reverted")) is bool and last["reverted"] == result["reverted"])
+
+    def _finalization_block_reason(self) -> Optional[str]:
+        """Read-only admission shared by worker preflight and finalization."""
+        N = self.N
+        final = N.get("finalization")
+        if not self._finalization_payload_valid(final):
+            return "saved gate decision has an invalid payload or night identity"
+        self._checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(self.paths)
+        bound = self._finalization_bound(rendered=self.R is not None)
+        if not bound:
+            # A saved rejection cannot promote or export. Its original gate did
+            # not mark new items trained, so it may complete after an upgrade.
+            committed = final["result"]["reverted"] is True
+            reason = "saved gate decision has a missing or changed model, evaluation or grader binding"
+            if not committed:
+                try:
+                    committed = self._checkpoints.is_committed(N)
+                except CheckpointError as error:
+                    reason = "saved gate decision cannot prove committed adapter identity: %s" % error
+            if not committed:
+                # Old decisions already changed item.trained in their immutable
+                # checkpoint. There is no reliable pre-decision item snapshot
+                # with which to undo that metadata after a different regrade.
+                # Keep the entire checkpoint untouched for an explicit re-gate.
+                return reason
+        return None
+
     def _finalize(self, res: dict) -> None:
         """Replay a published decision without rotating twice or rescoring it."""
         N, cfg, P_ = self.N, self.cfg, self.paths
+        reason = self._finalization_block_reason()
+        if reason:
+            self._block_finalization(res, reason)
+            return
         final = N["finalization"]
+        export_authorized = self._finalization_bound()
         resumed = res.get("resumed", False)
         res.update(final["result"])
         res["resumed"] = resumed
@@ -1564,7 +1753,13 @@ class Sleeper:
             self.be.load_adapter(P_.adapter if P_.adapter.exists() else None)
         else:
             self._checkpoints.promote(N)
-            if cfg.llama_cpp_dir:
+            if cfg.llama_cpp_dir and not export_authorized:
+                # Historical committed outcomes may finish bookkeeping, but a
+                # changed model/configuration cannot relabel or export weights.
+                res["gguf"] = {"ok": None, "pending": True, "message": "export deferred: saved gate context is not current; explicit matching re-gate required"}
+                res.pop("served", None)
+                final["result"] = dict(res)
+            elif cfg.llama_cpp_dir:
                 # Export rotates GGUF files separately. A crash during export is
                 # recorded as incomplete rather than silently rotating again.
                 if not final.get("export_started"):

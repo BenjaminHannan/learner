@@ -1,0 +1,413 @@
+"""Offline finalization binding regressions; every adapter/backend is synthetic."""
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import unittest
+from unittest.mock import patch
+
+from sleepmlx import gate
+from sleepmlx import grading
+from sleepmlx import worker
+from sleepmlx.profile import Renderer
+from sleepmlx.checkpoint import Checkpoints
+from sleepmlx.paths import Paths, read_json, write_json
+from .helpers import Env
+from . import test_checkpoint as checkpoint_tests
+from .test_checkpoint import DurableBackend
+
+
+def snapshot(root):
+    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in root.rglob('*') if path.is_file()}
+
+
+def run_rejected_until_exit(root, boundary):
+    root = Path(root)
+    env = Env(ckpt_every=10, dreamcheck_share=0.0, gate_min_gain=100)
+    env.paths = Paths(root / 'home', root / 'raw', root, root / 'userdata')
+    sleeper = env.sleeper(DurableBackend(env.time))
+    original_gate = sleeper._gate
+    def gate_with_previous_training(*args):
+        # Represent one item trained on an earlier night; rejection must keep
+        # that flag and must not mark the remaining pending items trained.
+        sleeper.items[sorted(sleeper.items)[0]].trained = True
+        original_gate(*args)
+    sleeper._gate = gate_with_previous_training
+    def fault(stage):
+        if boundary == 'rejection_ready':
+            if stage == 'manifest_published' and sleeper.N['phase'] == 'finalize': os._exit(73)
+        elif stage == boundary:
+            os._exit(73)
+    sleeper.checkpoint_hook = fault
+    sleeper.run(env.week())
+    raise AssertionError('rejection fault boundary was not reached: ' + boundary)
+
+
+class FinalizationBindingTests(unittest.TestCase):
+    def pending(self, stage='promotion_ready'):
+        env = Env(ckpt_every=10, dreamcheck_share=0.0, gate_min_gain=0)
+        self.addCleanup(env.close)
+        checkpoint_tests.CrashRecoveryTests().crash(env, stage)
+        return env
+
+    def blocked(self, env):
+        before = snapshot(env.paths.home)
+        sleeper = env.sleeper(DurableBackend(env.time))
+        sleeper.exporter = lambda *args, **kwargs: self.fail('blocked finalization exported')
+        with patch.object(Checkpoints, 'promote', side_effect=AssertionError('blocked finalization promoted')):
+            result = sleeper.run(env.week())
+        self.assertEqual(result['status'], 'stopped')
+        self.assertTrue(result['blocked'])
+        self.assertTrue(result['interrupted'])
+        self.assertTrue(result['gate_recheck_required'])
+        self.assertEqual(result['stop_reason'], 'gate_recheck_required')
+        self.assertIsNone(result['quiz'])
+        self.assertEqual(result['steps'], 0)
+        self.assertIn('explicit re-gate', result['message'])
+        self.assertEqual(before, snapshot(env.paths.home))
+        self.assertTrue(env.paths.work_adapter.exists())
+        self.assertTrue(env.paths.night_json.exists())
+        return result
+
+    def test_new_decision_binds_version_grader_and_night(self):
+        env = self.pending()
+        night, _ = Checkpoints(env.paths).load()
+        final = night['finalization']
+        self.assertEqual(final['version'], 2)
+        self.assertEqual(final['grader'], gate.GRADER)
+        self.assertEqual(final['night_id'], night['id'])
+        self.assertEqual(final['grading_contract_sha256'], grading.CONTRACT_SHA256)
+        self.assertEqual(final['context']['profile']['name'], env.prof.name)
+        self.assertGreater(final['evaluation']['held_count'], 0)
+        # promotion_ready created a destination but did not publish adapters.json.
+        self.assertFalse(Checkpoints(env.paths).is_committed(night))
+
+    def test_stale_or_missing_uncommitted_decisions_block_in_every_final_phase(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        original, items = checkpoints.load()
+        variants = ('missing_version', 'wrong_version', 'legacy_version', 'boolean_version', 'wrong_grader', 'wrong_contract', 'missing_identity', 'wrong_identity')
+        for phase in ('finalize', 'done', 'export_marked'):
+            for variant in variants:
+                with self.subTest(phase=phase, variant=variant):
+                    night = copy.deepcopy(original)
+                    night['phase'] = 'done' if phase == 'done' else 'finalize'
+                    final = night['finalization']
+                    if phase == 'export_marked':
+                        final['export_started'] = True
+                        final['result']['gguf'] = {'ok': True, 'message': 'uncommitted old export'}
+                    if variant == 'missing_version': final.pop('version')
+                    elif variant == 'wrong_version': final['version'] = 3
+                    elif variant == 'legacy_version': final['version'] = 1
+                    elif variant == 'boolean_version': final['version'] = True
+                    elif variant == 'wrong_grader': final['grader'] = 'obsolete-grader'
+                    elif variant == 'wrong_contract': final['grading_contract_sha256'] = '0' * 64
+                    elif variant == 'missing_identity': final.pop('night_id')
+                    else: final['night_id'] = '0' * 32
+                    checkpoints.publish(night, items)
+                    self.blocked(env)
+
+    def test_direct_finalize_has_the_same_guard(self):
+        env = self.pending()
+        original, _ = Checkpoints(env.paths).load()
+        for variant in ('missing_version', 'wrong_grader', 'missing_identity', 'missing_night_identity'):
+            with self.subTest(variant=variant):
+                sleeper = env.sleeper(DurableBackend(env.time))
+                sleeper.N = copy.deepcopy(original)
+                if variant == 'missing_version': sleeper.N['finalization'].pop('version')
+                elif variant == 'wrong_grader': sleeper.N['finalization']['grader'] = 'obsolete-grader'
+                elif variant == 'missing_identity': sleeper.N['finalization'].pop('night_id')
+                else: sleeper.N.pop('id')
+                before = snapshot(env.paths.home)
+                result = {'status': 'done', 'quiz': 100}
+                with patch.object(Checkpoints, 'promote', side_effect=AssertionError('direct blocked promotion')):
+                    sleeper._finalize(result)
+                self.assertEqual(result['status'], 'stopped')
+                self.assertTrue(result['gate_recheck_required'])
+                self.assertIsNone(result['quiz'])
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_missing_or_invalid_payload_blocks_even_with_committed_adapter(self):
+        env = self.pending('promotion_published')
+        original, items = Checkpoints(env.paths).load()
+        variants = ('missing_final', 'non_dict', 'missing_result', 'invalid_state', 'wrong_state_night',
+                    'wrong_result_date', 'wrong_result_day', 'wrong_night_count', 'non_boolean_reverted', 'invalid_extra')
+        for variant in variants:
+            with self.subTest(variant=variant):
+                sleeper = env.sleeper(DurableBackend(env.time))
+                sleeper.N = copy.deepcopy(original)
+                final = sleeper.N['finalization']
+                if variant == 'missing_final': sleeper.N.pop('finalization')
+                elif variant == 'non_dict': sleeper.N['finalization'] = 'invalid'
+                elif variant == 'missing_result': final.pop('result')
+                elif variant == 'invalid_state': final['state'] = []
+                elif variant == 'wrong_state_night': final['state']['last_night']['id'] = '0' * 32
+                elif variant == 'wrong_result_date': final['result']['date'] = '2020-01-01'
+                elif variant == 'wrong_result_day': final['result']['day'] += 1
+                elif variant == 'wrong_night_count': final['result']['night'] += 1
+                elif variant == 'non_boolean_reverted': final['result']['reverted'] = 1
+                else: final['extra'] = []
+                before = snapshot(env.paths.home)
+                result = {}
+                with patch.object(Checkpoints, 'promote', side_effect=AssertionError('invalid payload promoted')):
+                    sleeper._finalize(result)
+                self.assertEqual(result['status'], 'stopped')
+                self.assertTrue(result['blocked'])
+                self.assertIsNone(result['quiz'])
+                self.assertEqual(before, snapshot(env.paths.home))
+        # Also exercise the public run path for a done manifest with no payload.
+        original.pop('finalization')
+        original['phase'] = 'done'
+        Checkpoints(env.paths).publish(original, items)
+        self.blocked(env)
+
+    def test_grader_change_before_publication_blocks_without_rotating(self):
+        env = self.pending('promotion_ready')
+        with patch.object(gate, 'GRADER', 'strict-next-test'):
+            self.blocked(env)
+        self.assertFalse((env.paths.home / 'adapters.json').exists())
+
+    def test_worker_blocks_obsolete_finalization_before_model_memory_or_diary(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        original, items = checkpoints.load()
+        settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                    'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+        for variant in ('obsolete', 'malformed', 'done_without_payload'):
+            with self.subTest(variant=variant):
+                night = copy.deepcopy(original)
+                if variant == 'obsolete': night['finalization']['grader'] = 'obsolete-grader'
+                elif variant == 'malformed': night['finalization']['result'] = []
+                else:
+                    night['phase'] = 'done'
+                    night.pop('finalization')
+                checkpoints.publish(night, items)
+                before = snapshot(env.paths.home)
+                with patch.object(worker.diary_mod, 'build_week', side_effect=AssertionError('blocked diary read')), \
+                     patch.object(worker, 'available_ram_bytes', side_effect=AssertionError('blocked memory allocation')), \
+                     patch.object(worker, 'make_backend', side_effect=AssertionError('blocked backend load')):
+                    result = worker.run_chunk(settings, log=lambda _: None)
+                self.assertTrue(result['blocked'])
+                self.assertEqual(result['stop_reason'], 'gate_recheck_required')
+                self.assertEqual(result['steps'], 0)
+                self.assertIsNone(result['quiz'])
+                self.assertTrue(result['resumed'])
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_worker_preflight_keeps_current_committed_and_rejected_completion_paths(self):
+        class BackendBoundary(Exception): pass
+        for stage, variant in (('promotion_ready', 'current'), ('promotion_published', 'committed'),
+                               ('promotion_ready', 'rejected')):
+            with self.subTest(variant=variant):
+                env = self.pending(stage)
+                checkpoints = Checkpoints(env.paths)
+                night, items = checkpoints.load()
+                if variant != 'current': night['finalization']['grader'] = 'obsolete-grader'
+                if variant == 'rejected':
+                    night['finalization']['result']['reverted'] = True
+                    night['finalization']['state']['last_night']['reverted'] = True
+                checkpoints.publish(night, items)
+                # These paths continue into ordinary diary setup, which may
+                # create its ignore file before reaching the backend boundary.
+                worker.diary_mod.ensure_ignore(env.paths.ignore)
+                before = snapshot(env.paths.home)
+                settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                            'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+                def boundary(_): raise BackendBoundary()
+                with patch.object(worker.diary_mod, 'build_week', return_value=env.week()), \
+                     patch.object(worker, 'load_profile', return_value=env.prof), \
+                     patch.object(worker, 'cfg_from_env', return_value=env.cfg):
+                    with self.assertRaises(BackendBoundary):
+                        worker.run_chunk(settings, backend_factory=boundary, log=lambda _: None)
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_model_policy_and_render_changes_cannot_replay_an_uncommitted_pass(self):
+        env = self.pending()
+        for section, field in [('profile', key) for key in
+                ('name', 'hf_id', 'model_dir', 'source_revision', 'backend', 'loader', 'loader_path', 'stop_token')] + \
+                [('policy', key) for key in ('who', 'harm_max', 'gate_min_gain', 'gate_n', 'gate_max_tokens', 'recall_max_tokens')] + \
+                [('export', key) for key in ('llama_cpp_dir', 'gguf_base_dir', 'llama_server', 'base_gguf')] + [('render', '')]:
+            with self.subTest(section=section, field=field):
+                sleeper = env.sleeper(DurableBackend(env.time))
+                sleeper.prof, sleeper.cfg = copy.deepcopy(env.prof), copy.deepcopy(env.cfg)
+                sleeper.R = Renderer(sleeper.prof, None)
+                if section == 'profile': setattr(sleeper.prof, field, 'changed-' + field)
+                elif section in ('policy', 'export'):
+                    old = getattr(sleeper.cfg, field)
+                    setattr(sleeper.cfg, field, old + 1 if isinstance(old, (int, float)) else 'changed-' + field)
+                else:
+                    render = sleeper.R.render
+                    sleeper.R.render = lambda *args: render(*args) + '\nchanged tokenizer template'
+                before = snapshot(env.paths.home)
+                sleeper.exporter = lambda *args, **kw: self.fail('changed context exported')
+                with patch.object(Checkpoints, 'promote', side_effect=AssertionError('changed context promoted')):
+                    result = sleeper.run(env.week())
+                self.assertTrue(result['blocked'])
+                self.assertEqual(result['stop_reason'], 'gate_recheck_required')
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_changed_held_snapshot_cannot_replay_saved_pass(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        night, items = checkpoints.load()
+        next(it for it in items['items'].values() if it['held'])['held'][0]['a'] += ' changed'
+        checkpoints.publish(night, items)
+        self.blocked(env)
+
+    def test_worker_rejects_malformed_evaluation_before_backend(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        original, items = checkpoints.load()
+        for variant in ('missing', 'null', 'empty', 'boolean_count', 'bad_recall', 'changed_held', 'changed_questions'):
+            with self.subTest(variant=variant):
+                night = copy.deepcopy(original)
+                final = night['finalization']
+                if variant == 'missing': final.pop('evaluation')
+                elif variant == 'null': final['evaluation'] = None
+                elif variant == 'empty': final['evaluation'] = {}
+                elif variant == 'boolean_count': final['evaluation']['held_count'] = True
+                elif variant == 'bad_recall': final['evaluation']['recall'] = 'not a digest'
+                elif variant == 'changed_held': final['evaluation']['held_sha256'] = '0' * 64
+                else: final['evaluation']['general']['questions'] = '0' * 64
+                checkpoints.publish(night, items)
+                before = snapshot(env.paths.home)
+                settings = {'SLEEPMLX_HOME': str(env.paths.home), 'SLEEPMLX_DIARY_DIR': str(env.paths.diary_dir),
+                            'LEARNER_OPS': str(env.paths.ops), 'SLEEPMLX_PROFILE': env.prof.name}
+                with patch.object(worker, 'load_profile', return_value=env.prof), \
+                     patch.object(worker, 'cfg_from_env', return_value=env.cfg), \
+                     patch.object(worker.diary_mod, 'build_week', side_effect=AssertionError('malformed evaluation read diary')), \
+                     patch.object(worker, 'make_backend', side_effect=AssertionError('malformed evaluation loaded backend')):
+                    result = worker.run_chunk(settings, log=lambda _: None)
+                self.assertTrue(result['blocked'])
+                self.assertEqual(before, snapshot(env.paths.home))
+
+    def test_malformed_held_rows_block_without_raising_or_writing(self):
+        env = self.pending()
+        checkpoints = Checkpoints(env.paths)
+        night, original_items = checkpoints.load()
+        for key, value in (('q', {}), ('a', None), ('dir', []), ('night', True)):
+            with self.subTest(key=key):
+                items = copy.deepcopy(original_items)
+                next(it for it in items['items'].values() if it['held'])['held'][0][key] = value
+                checkpoints.publish(night, items)
+                self.blocked(env)
+
+    def test_committed_metadata_recovery_cannot_export_under_changed_context(self):
+        env = self.pending('promotion_published')
+        before_adapter = snapshot(env.paths.adapter)
+        sleeper = env.sleeper(DurableBackend(env.time))
+        sleeper.prof = copy.deepcopy(env.prof)
+        sleeper.prof.hf_id = 'synthetic/changed-base'
+        sleeper.cfg = copy.deepcopy(env.cfg)
+        sleeper.cfg.llama_cpp_dir = '/synthetic/converter'
+        sleeper.cfg.gguf_base_dir = '/synthetic/changed-hf'
+        sleeper.exporter = lambda *args, **kw: self.fail('historical completion exported under changed context')
+        result = sleeper.run(env.week())
+        self.assertEqual(result['status'], 'done')
+        self.assertIsNone(result['gguf']['ok'])
+        self.assertTrue(result['gguf']['pending'])
+        self.assertIn('export deferred', result['gguf']['message'])
+        self.assertEqual(before_adapter, snapshot(env.paths.adapter))
+        self.assertFalse((env.paths.home / 'adapter.gguf.json').exists())
+
+    def test_committed_recovery_after_grader_change_is_idempotent_at_each_boundary(self):
+        for stage in ('promotion_published', 'state_written', 'items_written', 'history_written', 'finalized'):
+            with self.subTest(stage=stage):
+                env = self.pending(stage)
+                night, _ = Checkpoints(env.paths).load()
+                self.assertTrue(Checkpoints(env.paths).is_committed(night))
+                manifest = (env.paths.home / 'adapters.json').read_bytes()
+                committed = snapshot(env.paths.adapter)
+                sleeper = env.sleeper(DurableBackend(env.time))
+                sleeper._gate = lambda *args: self.fail('committed decision was regraded')
+                with patch.object(gate, 'GRADER', 'strict-next-test'):
+                    result = sleeper.run(env.week())
+                self.assertEqual(result['status'], 'done')
+                self.assertEqual(result['steps'], 0)
+                self.assertEqual(manifest, (env.paths.home / 'adapters.json').read_bytes())
+                self.assertEqual(committed, snapshot(env.paths.adapter))
+                self.assertEqual(read_json(env.paths.state)['nights'], 1)
+                history = [json.loads(line) for line in env.paths.nights.read_text().splitlines()]
+                self.assertEqual(len(history), 1)
+                self.assertEqual(history[0]['night_id'], night['id'])
+                self.assertFalse(env.paths.work.exists())
+
+    def test_legacy_binding_bypasses_only_exact_validated_committed_identity(self):
+        env = self.pending('promotion_published')
+        checkpoints = Checkpoints(env.paths)
+        night, items = checkpoints.load()
+        night['finalization'].pop('version')
+        checkpoints.publish(night, items)
+        manifest_path = env.paths.home / 'adapters.json'
+        original = read_json(manifest_path)
+        for changes in ({'version': 9}, {'version': True}, {'night_id': '0' * 32}, {'current': 'adapter'}):
+            with self.subTest(changes=changes):
+                write_json(manifest_path, dict(original, **changes))
+                self.blocked(env)
+        write_json(manifest_path, original)
+        weight = env.paths.adapter / 'adapters.safetensors'
+        saved = weight.read_bytes()
+        weight.unlink()
+        self.blocked(env)
+        weight.write_bytes(saved)
+        result = env.sleeper(DurableBackend(env.time)).run(env.week())
+        self.assertEqual(result['status'], 'done')
+        self.assertEqual(read_json(env.paths.state)['nights'], 1)
+
+    def test_revision_still_invalidates_general_and_incumbent_recall_baselines(self):
+        env = Env()
+        self.addCleanup(env.close)
+        sleeper = env.sleeper(env.backend())
+        held = [{'q': 'Who employs Marta?', 'a': 'Orbix', 'dir': 'forward'}]
+        before_general = sleeper.general_base_identity()
+        before_recall = sleeper.measure_incumbent_recall(held)
+        self.assertTrue(sleeper.recall_baseline_valid(before_recall, held))
+        with patch.object(gate, 'GRADER', 'strict-next-test'):
+            self.assertNotEqual(before_general, sleeper.general_base_identity())
+            self.assertFalse(sleeper.recall_baseline_valid(before_recall, held))
+
+    def test_saved_rejection_completes_without_promotion_or_new_trained_flags(self):
+        for stage in ('rejection_ready', 'state_written', 'items_written', 'history_written', 'finalized'):
+            for upgrade in (False, True):
+                with self.subTest(stage=stage, upgrade=upgrade):
+                    env = Env(ckpt_every=10, dreamcheck_share=0.0, gate_min_gain=100)
+                    self.addCleanup(env.close)
+                    child_env = dict(os.environ, SLEEPMLX_HOME=str(env.paths.home), SLEEPMLX_DIARY_DIR=str(env.paths.diary_dir),
+                                     SLEEPMLX_USERDATA=str(env.paths.userdata_dir), LEARNER_OPS=str(env.paths.home.parent))
+                    child = subprocess.run([sys.executable, '-c',
+                                            'from sleepmlx.tests.test_finalization_binding import run_rejected_until_exit; import sys; run_rejected_until_exit(*sys.argv[1:])',
+                                            str(env.paths.home.parent), stage], env=child_env, capture_output=True, text=True, timeout=30)
+                    self.assertEqual(child.returncode, 73, child.stdout + child.stderr)
+                    checkpoints = Checkpoints(env.paths)
+                    night, items = checkpoints.load()
+                    self.assertTrue(night['finalization']['result']['reverted'])
+                    self.assertFalse(checkpoints.is_committed(night))
+                    expected = {key: item['trained'] for key, item in items['items'].items()}
+                    self.assertIn(True, expected.values())
+                    self.assertIn(False, expected.values())
+                    night['finalization'].pop('version')  # actual old-record shape
+                    checkpoints.publish(night, items)
+                    sleeper = env.sleeper(DurableBackend(env.time))
+                    sleeper._gate = lambda *args: self.fail('saved rejection was regraded')
+                    sleeper.exporter = lambda *args, **kwargs: self.fail('rejection exported')
+                    with patch.object(gate, 'GRADER', 'strict-next-test' if upgrade else gate.GRADER), \
+                            patch.object(Checkpoints, 'promote', side_effect=AssertionError('rejection promoted')):
+                        result = sleeper.run(env.week())
+                    self.assertEqual(result['status'], 'done')
+                    self.assertTrue(result['reverted'])
+                    self.assertEqual(result['steps'], 0)
+                    self.assertFalse((env.paths.home / 'adapters.json').exists())
+                    self.assertEqual(expected, {key: item['trained'] for key, item in read_json(env.paths.items)['items'].items()})
+                    self.assertEqual(read_json(env.paths.state)['nights'], 1)
+                    history = [json.loads(line) for line in env.paths.nights.read_text().splitlines()]
+                    self.assertEqual(len(history), 1)
+                    self.assertTrue(history[0]['reverted'])
+                    self.assertFalse(env.paths.work.exists())
+
+
+if __name__ == '__main__':
+    unittest.main()

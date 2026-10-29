@@ -1,0 +1,44 @@
+{
+  "started": "2026-10-29T20:39:42.045Z",
+  "platform": "win32",
+  "node": "v24.15.0",
+  "moduleSha256": "c558c81f8494eaa90649c80b0c3840dd6b2df02ebc335a0d64b74cde1b0eee75",
+  "cases": [
+    {
+      "case": "user-only-private-directory-ACL",
+      "onlyCurrentUser": true,
+      "count": 1,
+      "protected": true,
+      "pass": true
+    },
+    {
+      "case": "inspect-owned-sleeping-child",
+      "pid": 42244,
+      "executable": "python.exe",
+      "birthRecorded": true,
+      "pass": true
+    },
+    {
+      "case": "birth-mismatch-does-not-kill-current-PID-owner",
+      "pass": true
+    },
+    {
+      "case": "marker-mismatch-does-not-kill",
+      "pass": true
+    },
+    {
+      "case": "journal-inherits-current-user-only-ACL",
+      "onlyCurrentUser": true,
+      "count": 1,
+      "protected": false,
+      "pass": true
+    },
+    {
+      "case": "restart-discovers-unpublished-PID-and-confirms-exit",
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "finished": "2026-10-29T20:39:46.744Z",
+  "ownedChildrenExited": true
+}

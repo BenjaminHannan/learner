@@ -7,9 +7,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from sleepmlx.backend import Stop
-from sleepmlx.checkpoint import CheckpointError, Checkpoints, save_adapter_directory
+from sleepmlx.checkpoint import CheckpointError, Checkpoints, save_adapter_directory, sync_tree, _sync_file
 from sleepmlx.paths import Paths, read_json, write_json
 from .fakes import FakeBackend
 from .helpers import Env, FACTS_DAY2, write_raw
@@ -70,6 +71,35 @@ def run_until_exit(root, boundary):
 
 
 class CrashRecoveryTests(unittest.TestCase):
+    def test_windows_file_sync_uses_writable_handle_without_changing_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'weights.bin'
+            original = b'\x00\x01\xff'
+            path.write_bytes(original)
+            real_fsync = os.fsync
+            def commit_requiring_writable(fd):
+                # A zero-byte write tests descriptor access without changing the file.
+                os.write(fd, b'')
+                real_fsync(fd)
+            with mock.patch('sleepmlx.checkpoint.os.fsync', side_effect=commit_requiring_writable):
+                _sync_file(path, windows=True)
+                with self.assertRaises(OSError):
+                    _sync_file(path, windows=False)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_sync_tree_preserves_nested_file_bytes(self):
+        # On Windows this exercises the writable descriptor required by _commit.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            nested = root / 'nested'
+            nested.mkdir()
+            files = {root / 'config.json': b'{"x":1}', nested / 'weights.bin': b'\x00\x01\xff'}
+            for path, data in files.items():
+                path.write_bytes(data)
+            sync_tree(root)
+            for path, data in files.items():
+                self.assertEqual(path.read_bytes(), data)
+
     def crash(self, env, stage):
         root = env.paths.home.parent
         child_env = dict(os.environ, SLEEPMLX_HOME=str(env.paths.home), SLEEPMLX_DIARY_DIR=str(env.paths.diary_dir),

@@ -509,6 +509,7 @@
     $('#runState span').textContent = 'Typing…';
     paintGateway();
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
+    autosize(); // the running-state placeholder can wrap at the current width
     input.readOnly = !!(thread && thread.helper);
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
   }
@@ -982,6 +983,15 @@
   // ---------- composer ----------
   function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 9.2 * parseFloat(getComputedStyle(document.documentElement).fontSize)) + 'px'; }
   input.addEventListener('input', autosize);
+  // A browser or side panel can change the composer width without an input event.
+  // Track width only, so autosizing the height does not trigger an observer loop.
+  if (window.ResizeObserver) {
+    let inputWidth = -1;
+    new ResizeObserver((entries) => {
+      const width = entries[0].contentRect.width;
+      if (width !== inputWidth) { inputWidth = width; autosize(); }
+    }).observe(input);
+  }
   let submitting = false;
   async function submit(force) {
     if (thread && thread.helper) return; // a Mote's log is view only

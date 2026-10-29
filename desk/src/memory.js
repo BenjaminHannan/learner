@@ -5,6 +5,7 @@
 // The saved notes are injected into the newest user turn by the agent (never into the system prompt).
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const MAX_FACTS = 200;
 const MAX_CHARS = 6000;      // total text+topic characters kept
@@ -14,6 +15,7 @@ const MAX_FORGET = 3;
 // Fact cards (topic "card", "Subject => relation => Object"): what Glim and its Motes learn on tasks, for sleep to train on.
 // They have their own cap, never push Ben's notes out, and are not put in front of the model in every chat.
 const MAX_CARDS = 400;
+const isSkill = (f) => /^skill\s*:/i.test(String(f.topic || '').trim());
 const isCard = (f) => /^card$/i.test(String(f.topic || '').trim());
 const cardHead = (t) => { const p = String(t).split('=>').map((x) => x.trim().toLowerCase()); return p.length === 3 && p.every(Boolean) ? p[0] + '=>' + p[1] : null; };
 const { P } = require('./user');
@@ -100,6 +102,7 @@ const renderMd = (facts) => HEADING + facts.map(noteLine).join('\n') + '\n';
 function createMemory(dir, opts) {
   const file = path.join(dir, 'memory.md');
   const oldFile = path.join(dir, 'memory.json');
+  const provenanceFile = path.join(dir, 'memory-provenance.jsonl');
   const now = (opts && opts.now) || Date.now;
   const size = (facts) => facts.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0);
 
@@ -121,13 +124,29 @@ function createMemory(dir, opts) {
   }
   const factsOf = (text, ms) => parseMd(text, ms).filter((f) => f.text.length <= 2000);
   const load = () => { const r = readRaw(); return factsOf(r.text, r.mtime); };
-  // atomic: write a temp file, keep the previous version as memory.md.bak, rename over
+  // Sync the directory entry after a rename or ledger creation on POSIX.
+  function syncDirectory() {
+    if (process.platform === 'win32') return;
+    const fd = fs.openSync(dir, 'r');
+    try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  }
+  // Atomic and durable: publish only after the private temporary file is synced.
   function writeText(text) {
     fs.mkdirSync(dir, { recursive: true });
-    const tmp = file + '.tmp';
-    fs.writeFileSync(tmp, text);
-    try { if (fs.readFileSync(file, 'utf8') !== text) fs.copyFileSync(file, file + '.bak'); } catch (e) { /* no previous file */ }
-    fs.renameSync(tmp, file);
+    const tmp = file + '.tmp-' + crypto.randomUUID();
+    let fd;
+    try {
+      fd = fs.openSync(tmp, 'wx', 0o600);
+      fs.writeFileSync(fd, text);
+      fs.fsyncSync(fd);
+      fs.closeSync(fd); fd = undefined;
+      try { if (fs.readFileSync(file, 'utf8') !== text) fs.copyFileSync(file, file + '.bak'); } catch (e) { /* no previous file */ }
+      fs.renameSync(tmp, file);
+      syncDirectory();
+    } finally {
+      if (fd !== undefined) fs.closeSync(fd);
+      try { fs.unlinkSync(tmp); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    }
   }
   // The agent edits the file in place: only the lines it touches change, everything else (headings, paragraphs, Ben's own bullets) stays as written.
   const open = () => { const text = readRaw().text; return { lines: text.split(/\r?\n/), eol: text.includes('\r\n') ? '\r\n' : '\n' }; };
@@ -137,25 +156,58 @@ function createMemory(dir, opts) {
     else lines.push(line, '');
   }
   // Caps evict the oldest-updated notes that carry their own id (Glim's); lines Ben wrote by hand are never evicted.
-  function commit(d) {
+  function commit(d, beforeWrite, protectedId) {
+    const oldest = (facts) => {
+      const others = facts.filter((f) => f.id !== protectedId);
+      if (!others.length && protectedId) throw new Error('Could not keep note within the memory limit.');
+      return (others.length ? others : facts).reduce((o, f) => (f.updated < o.updated ? f : o));
+    };
     for (;;) {
       const all = factsOf(d.lines.join(d.eol), 0);
-      const cards = all.filter((f) => isCard(f) && f.explicit), facts = all.filter((f) => !isCard(f));
-      if (cards.length > MAX_CARDS) { d.lines.splice(cards.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1); continue; }
-      if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) break;
-      const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
-      if (!mine.length) break;
-      // Ben's own bullets alone are over the cap: evicting Glim's notes cannot fix that and would delete every one of them
-      if (hand.length > MAX_FACTS || size(hand) > MAX_CHARS) break;
-      d.lines.splice(mine.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1);
+      const cards = all.filter((f) => isCard(f) && f.explicit);
+      if (cards.length > MAX_CARDS) { d.lines.splice(oldest(cards).line, 1); continue; }
+      let removed = false;
+      for (const facts of [all.filter((f) => !isCard(f) && !isSkill(f)), all.filter((f) => isSkill(f) && !isCard(f))]) {
+        if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) continue;
+        const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
+        // Hand-written bullets are never evicted, even when they alone exceed the cap.
+        if (!mine.length || hand.length > MAX_FACTS || size(hand) > MAX_CHARS) continue;
+        d.lines.splice(oldest(mine).line, 1);
+        removed = true; break;
+      }
+      if (!removed) break;
     }
-    writeText(d.lines.join(d.eol));
-    return factsOf(d.lines.join(d.eol), 0);
+    const finalText = d.lines.join(d.eol);
+    const finalFacts = factsOf(finalText, 0);
+    if (beforeWrite) beforeWrite(finalFacts);
+    writeText(finalText);
+    return finalFacts;
+  }
+  // Append each transaction record durably. If a write or fsync fails, remove
+  // the incomplete record where possible; readers treat damaged ledgers as unavailable.
+  function appendProvenance(row) {
+    fs.mkdirSync(dir, { recursive: true });
+    const fd = fs.openSync(provenanceFile, 'a');
+    const start = fs.fstatSync(fd).size;
+    try {
+      const bytes = Buffer.from(JSON.stringify(row) + '\n', 'utf8');
+      let offset = 0;
+      while (offset < bytes.length) {
+        const n = fs.writeSync(fd, bytes, offset, bytes.length - offset);
+        if (!n) throw new Error('short provenance write');
+        offset += n;
+      }
+      fs.fsyncSync(fd);
+      syncDirectory();
+    } catch (e) {
+      try { fs.ftruncateSync(fd, start); fs.fsyncSync(fd); } catch (_) { /* reader must treat a damaged ledger as unavailable */ }
+      throw e;
+    } finally { fs.closeSync(fd); }
   }
   const newId = () => 'm' + now().toString(36) + Math.random().toString(36).slice(2, 5);
 
   // Upsert: replaces a near-duplicate (same topic and strong overlap, or very strong overlap anywhere).
-  function save(fact, topic) {
+  function save(fact, topic, options) {
     const text = norm(fact, MAX_FACT);
     topic = norm(topic, MAX_TOPIC) || undefined;
     if (!text) return { ok: false, error: 'Empty fact.' };
@@ -170,6 +222,8 @@ function createMemory(dir, opts) {
         if (isCard({ topic }) && isCard(f) && (f.text.toLowerCase() === text.toLowerCase() || (head && cardHead(f.text) === head))) { hit = i; best = 1; }
         return;
       }
+      // Research notes cannot replace a personal note through fuzzy matching (or vice versa).
+      if (isSkill({ topic }) !== isSkill(f)) return;
       const o = overlap(f.text, text);
       const sameTopic = topic && f.topic && f.topic.toLowerCase() === topic.toLowerCase();
       if (f.text.toLowerCase() === text.toLowerCase() || (o >= (sameTopic ? 0.6 : 0.8) && o > best)) { hit = i; best = Math.max(o, 0.01); }
@@ -177,8 +231,33 @@ function createMemory(dir, opts) {
     let rec;
     if (hit >= 0) { rec = { ...facts[hit], indent: facts[hit].indent, text, topic: topic || facts[hit].topic, updated: now() }; d.lines[facts[hit].line] = noteLine(rec); }
     else { rec = { id: newId(), text, topic, updated: now() }; if (!topic) delete rec.topic; append(d.lines, noteLine(rec)); }
-    const kept = commit(d);
-    return { ok: true, fact: rec, replaced: hit >= 0, kept: kept.some((f) => f.id === rec.id) };
+    const research = options && options.research;
+    if (research && (research.origin !== 'learn-research' || !research.context || !research.attribution ||
+      !['attributed', 'unattributed'].includes(research.attribution.status) || research.attribution.verified !== false)) {
+      return { ok: false, error: 'Invalid research provenance.' };
+    }
+    let txId = null, provenance;
+    let kept;
+    try {
+      kept = commit(d, research ? (finalFacts) => {
+        const stored = finalFacts.find((f) => f.id === rec.id);
+        if (!stored) return; // the note itself was evicted by its namespace cap
+        txId = crypto.randomUUID();
+        appendProvenance({ version: 1, type: 'research-note-prepare', tx_id: txId, note_id: stored.id,
+          fact_sha256: crypto.createHash('sha256').update(stored.text, 'utf8').digest('hex'), topic: stored.topic || null,
+          origin: research.origin, context: research.context, attribution: research.attribution,
+          expires: research.expires || null, prepared_at: new Date().toISOString() });
+      } : null, rec.id);
+    } catch (e) { return { ok: false, error: 'Could not save note: ' + String(e && e.message || e) }; }
+    if (txId) {
+      try {
+        appendProvenance({ version: 1, type: 'research-note-commit', tx_id: txId, committed_at: new Date().toISOString() });
+        provenance = { status: research.attribution.status };
+      } catch (e) { provenance = { status: 'pending' }; }
+    }
+    const retained = kept.some((f) => f.id === rec.id);
+    if (!retained) return { ok: false, error: 'Could not keep note within the memory limit.', kept: false };
+    return { ok: true, fact: rec, replaced: hit >= 0, kept: true, ...(provenance ? { provenance } : {}) };
   }
 
   function forget(q) {
@@ -203,15 +282,28 @@ function createMemory(dir, opts) {
     const out = [];
     for (const line of text.split(/\r?\n/)) {
       const f = factsOf(line, 0)[0];
-      if (f && isCard(f)) continue;   // fact cards are for sleep, not for every chat
+      if (f && isCard(f)) continue;
       const s = f ? '- ' + (f.topic ? f.topic + ': ' : '') + f.text : line.replace(/\s+$/, '');
-      if (!s && (!out.length || !out[out.length - 1])) continue;   // no leading or doubled blank lines
-      out.push(s);
+      if (!s && (!out.length || !out[out.length - 1].text)) continue;
+      out.push({ text: s, skill: !!(f && f.explicit && isSkill(f)) });
     }
-    while (out.length && !out[out.length - 1]) out.pop();
-    let n = 0, from = out.length;
-    while (from > 0 && n + out[from - 1].length + 1 <= MAX_CHARS) n += out[--from].length + 1;
-    return out.slice(from).join('\n');
+    while (out.length && !out[out.length - 1].text) out.pop();
+    // Keep the newest core/manual lines first, then fit the newest research lines into
+    // the remaining budget. Output stays in file order, as before.
+    let n = 0;
+    const keep = new Set();
+    for (const skill of [false, true]) {
+      for (let i = out.length - 1; i >= 0; i--) {
+        if (out[i].skill !== skill) continue;
+        const len = out[i].text.length + 1;
+        if (n + len > MAX_CHARS) break;
+        n += len; keep.add(i);
+      }
+    }
+    const selected = out.filter((_, i) => keep.has(i)).map((line) => line.text);
+    while (selected.length && !selected[0]) selected.shift();
+    while (selected.length && !selected[selected.length - 1]) selected.pop();
+    return selected.join('\n');
   }
 
   return {
@@ -258,7 +350,8 @@ function createMemory(dir, opts) {
       if (why) return { ok: false, error: why, refused: true };
       const rec = { ...f, indent: f.indent, text, updated: now() }; if (topic) rec.topic = topic; else delete rec.topic;
       d.lines[f.line] = noteLine(rec);
-      commit(d);
+      try { commit(d, null, rec.id); }
+      catch (e) { return { ok: false, error: 'Could not save note: ' + String(e && e.message || e) }; }
       return { ok: true, fact: rec };
     },
     delete: (id) => forget({ id }),
@@ -271,4 +364,4 @@ function createMemory(dir, opts) {
   };
 }
 
-module.exports = { MAX_CARDS, isCard, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };
+module.exports = { MAX_CARDS, isCard, isSkill, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };
