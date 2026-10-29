@@ -48,11 +48,20 @@ def sync_dir(path):
             os.close(fd)
 
 
+def _sync_file(path, windows=None):
+    # Windows' CRT _commit (used by os.fsync) rejects a read-only
+    # descriptor. These are our newly written staging files; open
+    # them for update without modifying their contents.
+    if windows is None:
+        windows = os.name == "nt"
+    with path.open("r+b" if windows else "rb") as f:
+        os.fsync(f.fileno())
+
+
 def sync_tree(path):
     for p in Path(path).rglob("*"):
         if p.is_file():
-            with p.open("rb") as f:
-                os.fsync(f.fileno())
+            _sync_file(p)
     for p in sorted((p for p in Path(path).rglob("*") if p.is_dir()), reverse=True):
         sync_dir(p)
     sync_dir(path)
