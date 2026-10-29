@@ -215,3 +215,15 @@ test('pill says Thinking or Writing while the model works with no tool step, nev
   p.onEvent('main', 'Glim', 't1', { type: 'text', delta: 'Hi' });
   assert.strictEqual(p.view().line, 'Writing');
 });
+
+test('patchThread changes a stored thread without marking it active', () => {
+  const s = new Store(tmp());
+  const t = s.newThread(); s.saveThread(t);
+  const at = s.loadThread(t.id).updated;
+  s.patchThread(t.id, (x) => { x.ctxGap = [0, 3]; });
+  const got = s.loadThread(t.id);
+  assert.deepStrictEqual(got.ctxGap, [0, 3]); assert.strictEqual(got.updated, at);
+  s.patchThread(t.id, (x) => { x.ctxGap = [9, 9]; return false; });
+  assert.deepStrictEqual(s.loadThread(t.id).ctxGap, [0, 3]);
+  assert.strictEqual(s.patchThread('nope', () => {}), null);
+});
