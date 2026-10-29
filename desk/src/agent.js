@@ -41,9 +41,10 @@ const STRONG_ASK = /\b(provide|send|share|give|tell me|what is|what's)\b/i;
 function asksForSecret(text) { return String(text || '').split(/(?<=[.?!\n])\s+/).some((s) => SECRET_WORD.test(s) && (STRONG_ASK.test(s) || (ASK_WORD.test(s) && !HAND_OFF.test(s)) || /\?\s*$/.test(s))); }
 // A reply that says it is doing (or did) something on screen. Ben Oct 29: in a chat of text-only turns the fast model wrote "I am now on the
 // sign-in page" and "I've opened the sign-in window" without one tool call, so nothing happened and the turn just ended.
-const CLAIMS_DONE = /\bI(?:'m| am)\s+(?:now\s+)?on the\b|\bI(?:'ve| have)\s+(?:now\s+)?(?:opened|typed|entered|clicked|navigated|gone to|signed|logged|filled|loaded)\b/i;
+const CLAIMS_DONE = /\bI(?:'m| am)\s+(?:now\s+)?on the\b[^.\n]{0,40}\b(?:page|site|screen|dashboard|portal|tab)\b|\bI(?:'ve| have)\s+(?:now\s+)?(?:opened|typed|entered|clicked|navigated|gone to|signed|logged|filled|loaded)\b/i;
 const CLAIMS_NEXT = /\bI(?:'ll| will| am going to)\s+(?:now\s+)?(?:open|type|enter|click|tap|press|go to|navigate|visit|sign (?:you )?in|log (?:you )?in|fill|search|scroll|load)\b/i;
 const WAITS_ON_BEN = /\?|\b(?:once|when|after|if) you\b|\blet me know\b/i;   // "Which site? I'll open it once you tell me" is an offer, not a claim
+const PRETEND_NOTE = '[An earlier reply here described steps that were never done (no tool was called), so nothing happened.]';
 const claimsAction = (text) => { const t = String(text || ''); return CLAIMS_DONE.test(t) || (CLAIMS_NEXT.test(t) && !WAITS_ON_BEN.test(t)); };
 const CHECK_MESSAGE = CHECK_MARK + ' Compare your last answer with the evidence in the tool results above (After lines, page text, command output). Reply VERIFIED if every claim is backed by that evidence, or NOT DONE: <what is missing>. One short line. Do not call tools.';
 const RECHECK_HINT = '\n[That failed. Before retrying, re-read the page or screen (browser_read / screen_look) to see its real state, then try a different approach.]';
@@ -701,7 +702,10 @@ class Agent {
   // with the summary note in front of the first kept turn.
   requestMessages(thread) {
     const from = Math.min(thread.ctxFrom || 0, thread.messages.length);
-    const msgs = thread.messages.slice(from).map(cleanMsg);
+    // Ben Oct 29: an older chat held many replies that claimed steps no tool ever did, and the model kept copying them (it even listed
+    // made-up assignments). Such a reply (straight after a user turn, claims actions) reaches the model as a plain note instead.
+    const msgs = thread.messages.slice(from).map((m, i, a) => (m.role === 'assistant' && !m.tool_calls && i > 0 && a[i - 1].role === 'user' && claimsAction(m.content)
+      ? { role: 'assistant', content: PRETEND_NOTE } : cleanMsg(m)));
     if (from > 0 && msgs[0] && msgs[0].role === 'user' && typeof msgs[0].content === 'string' && thread.ctxNote) msgs[0] = { ...msgs[0], content: thread.ctxNote + '\n' + msgs[0].content };
     return [{ role: 'system', content: SYSTEM_PROMPT }, ...msgs];
   }

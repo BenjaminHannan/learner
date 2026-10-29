@@ -366,6 +366,8 @@ function autoSleepTick(now, over) {
     Promise.resolve(r).then((x) => { if (x && x.ok) notify('Glim went to sleep', 'It is past ' + effectiveWindow(s, common.learned).from + ' and you have been away. It wakes when you press Wake.'); }).catch(() => {});
     return { action: 'sleep', result: r };
   }
+  if (d.reason !== sl.sleepWhyNot && !/^(off|outside the night window|already)/.test(d.reason)) console.log('[sleep] auto-sleep waits: ' + d.reason);   // once per change: why a night had no sleep
+  sl.sleepWhyNot = d.reason;
   return { action: 'none', reason: d.reason };
 }
 
@@ -828,7 +830,7 @@ function createAgent({ helper, rec, voice }) {
     slot: isHelper ? helperLimiter : limiter,
     onState: helper && helper.onState,
     benBusy: isHelper ? benBusy : null,
-    onEnd: () => { holder.release(); endCard(); sl.lastActive = Date.now(); if (!isHelper) benLastTurn = Date.now(); },
+    onEnd: () => { holder.release(); endCard(); if (!isHelper) { sl.lastActive = Date.now(); benLastTurn = Date.now(); } },   // Oct 29: the half-hourly check-in (a helper run) reset Desk's idle clock, so auto-sleep never found 2 idle hours
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
     approve: (req, signal) => {
