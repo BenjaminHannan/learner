@@ -157,6 +157,29 @@ class Checkpoints:
         night["checkpoint"] = published["checkpoint"]
         self.hook("manifest_published")
 
+    def is_committed(self, night):
+        """Prove this exact night's generation was already published.
+
+        An orphaned destination directory is not publication. This read-only
+        check is used before replaying a decision from an obsolete grader.
+        """
+        manifest = self.paths.home / "adapters.json"
+        if not manifest.exists():
+            return False
+        old = _read(manifest)
+        if not isinstance(old, dict) or type(old.get("version")) is not int or old["version"] != 1:
+            raise CheckpointError("invalid committed adapter manifest")
+        night_id = night.get("id")
+        if not isinstance(night_id, str) or len(night_id) != 32 or any(c not in "0123456789abcdef" for c in night_id):
+            raise CheckpointError("invalid night identity for committed adapter")
+        if old.get("night_id") != night_id:
+            return False
+        expected = (Path("adapters") / night_id).as_posix()
+        if old.get("current") != expected:
+            raise CheckpointError("committed adapter does not match its night id")
+        validate_adapter(self.paths.home / expected)
+        return True
+
     def promote(self, night):
         """Publish current and previous together, retaining the night candidate."""
         manifest = self.paths.home / "adapters.json"

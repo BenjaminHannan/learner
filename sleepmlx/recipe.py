@@ -32,7 +32,7 @@ from . import lessons as L_mod
 from . import prompts as P
 from . import replay as replay_mod
 from .backend import Backend, Clock, Stop
-from .checkpoint import Checkpoints
+from .checkpoint import CheckpointError, Checkpoints
 from .corpus import Diary, has_ans, norm, pat
 from .paths import Paths, read_json, write_json, write_text
 
@@ -1384,7 +1384,7 @@ class Sleeper:
 
     def _night(self, week: dict, d: int, dry_run: bool, res: dict) -> None:
         N, cfg, st_all = self.N, self.cfg, self.N["stats"]
-        if N["phase"] in ("finalize", "done") and N.get("finalization"):
+        if N["phase"] in ("finalize", "done"):
             self._finalize(res)
             return
         self._set_scale(dry_run)
@@ -1611,17 +1611,65 @@ class Sleeper:
             state["slept_days"].append(N["date"])
         state.setdefault("slept_turns", {})[N["date"]] = self.day_turns(week, d)
         state["last_night"] = {"id": N["id"], "date": N["date"], "reverted": reverted, "quiz": quiz, "harm": j["harm"]}
-        N["finalization"] = {"result": result, "state": state, "extra": {
+        N["finalization"] = {"version": 1, "grader": gate_mod.GRADER, "night_id": N["id"],
+                             "result": result, "state": state, "extra": {
             "stats": copy.deepcopy(N["stats"]), "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
             "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")}}
         N["phase"] = "finalize"
         self.save_night()
         self._finalize(res)
 
+    def _block_finalization(self, res: dict, reason: str) -> None:
+        res.update(status="stopped", quiz=None, interrupted=True, blocked=True,
+                   stop_reason="gate_recheck_required", gate_recheck_required=True,
+                   message="stopped: %s; explicit re-gate with comparable baselines is required before promotion; checkpoint and candidate retained" % reason)
+        self.log("[night] " + res["message"])
+
+    def _finalization_payload_valid(self, final) -> bool:
+        N = self.N
+        if (not isinstance(final, dict) or not all(isinstance(final.get(k), dict) for k in ("result", "state", "extra"))
+                or not isinstance(N.get("id"), str) or not re.fullmatch(r"[0-9a-f]{32}", N["id"])
+                or not isinstance(N.get("date"), str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", N["date"])
+                or type(N.get("day")) is not int or N["day"] <= 0):
+            return False
+        result, state = final["result"], final["state"]
+        last = state.get("last_night")
+        return (result.get("status") == "done" and type(result.get("reverted")) is bool
+                and result.get("date") == N["date"] and type(result.get("day")) is int and result["day"] == N["day"]
+                and type(state.get("nights")) is int and state["nights"] > 0
+                and type(result.get("night")) is int and result["night"] == state["nights"]
+                and isinstance(state.get("slept_days"), list) and N["date"] in state["slept_days"]
+                and isinstance(last, dict) and last.get("id") == N["id"] and last.get("date") == N["date"]
+                and type(last.get("reverted")) is bool and last["reverted"] == result["reverted"])
+
     def _finalize(self, res: dict) -> None:
         """Replay a published decision without rotating twice or rescoring it."""
         N, cfg, P_ = self.N, self.cfg, self.paths
-        final = N["finalization"]
+        final = N.get("finalization")
+        if not self._finalization_payload_valid(final):
+            self._block_finalization(res, "saved gate decision has an invalid payload or night identity")
+            return
+        self._checkpoints = getattr(self, "_checkpoints", None) or Checkpoints(P_)
+        bound = (isinstance(final, dict) and type(final.get("version")) is int and final["version"] == 1
+                 and final.get("grader") == gate_mod.GRADER and isinstance(N.get("id"), str)
+                 and final.get("night_id") == N["id"])
+        if not bound:
+            # A saved rejection cannot promote or export. Its original gate did
+            # not mark new items trained, so it may complete after an upgrade.
+            committed = final["result"]["reverted"] is True
+            reason = "saved gate decision has a missing or obsolete grader binding"
+            if not committed:
+                try:
+                    committed = self._checkpoints.is_committed(N)
+                except CheckpointError as error:
+                    reason = "saved gate decision cannot prove committed adapter identity: %s" % error
+            if not committed:
+                # Old decisions already changed item.trained in their immutable
+                # checkpoint. There is no reliable pre-decision item snapshot
+                # with which to undo that metadata after a different regrade.
+                # Keep the entire checkpoint untouched for an explicit re-gate.
+                self._block_finalization(res, reason)
+                return
         resumed = res.get("resumed", False)
         res.update(final["result"])
         res["resumed"] = resumed
