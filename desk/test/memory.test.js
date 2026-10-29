@@ -368,3 +368,50 @@ test('the prompt tells Glim and its Motes to save fact cards as they work', () =
   assert.match(SYSTEM_PROMPT, /topic \\"card\\"|topic "card"/);
   assert.match(SYSTEM_PROMPT, /A => relation => B/);
 });
+
+test('research notes have a separate cap and cannot crowd personal context out of the digest', () => {
+  const dir = tmp(), m = mem(dir);
+  const personal = m.save('Ben prefers chamomile tea', 'preference').fact;
+  const goal = m.save('Ben aims to become a pilot', 'goal').fact;
+  const manual = '# Personal notes\nA hand-written paragraph stays here.\n- handwritten personal fact\n';
+  m.write(manual + m.read().text);
+  for (let i = 0; i < 40; i++) {
+    const text = Array.from({ length: 30 }, (_, j) => 'concept' + i + 'part' + j).join(' ');
+    assert.ok(m.save(text, i % 2 ? 'SkIlL : practice' : 'skill: research').ok);
+  }
+  const all = m.list(), research = all.filter((f) => /^skill\s*:/i.test(f.topic || ''));
+  assert.ok(all.some((f) => f.id === personal.id)); assert.ok(all.some((f) => f.id === goal.id));
+  assert.ok(research.length <= MAX_FACTS);
+  assert.ok(research.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0) <= MAX_CHARS);
+  assert.ok(!research.some((f) => /concept0part0/.test(f.text))); assert.ok(research.some((f) => /concept39part0/.test(f.text)));
+  const body = m.block().split('\n').slice(1).join('\n');
+  assert.ok(body.length <= MAX_CHARS); assert.match(body, /chamomile tea/); assert.match(body, /become a pilot/);
+  assert.match(body, /hand-written paragraph/); assert.match(body, /handwritten personal fact/); assert.match(body, /concept39part0/);
+  assert.ok(m.read().text.startsWith(manual));
+  const before = m.read().text; m.save('Newest skill note', 'skill: last');
+  assert.equal(fs.readFileSync(path.join(dir, 'memory.md.bak'), 'utf8'), before);
+});
+
+test('skill upserts cannot replace similar personal notes and core eviction still works', () => {
+  const m = mem();
+  const personal = m.save('Ben enjoys chess strategy lessons', 'preference').fact;
+  const skill = m.save('Ben enjoys chess strategy lessons', 'skill: chess');
+  assert.equal(skill.replaced, false); assert.ok(m.list().some((f) => f.id === personal.id));
+  for (let i = 0; i < 40; i++) m.save(('core' + i + ' ').repeat(40), 'personal');
+  const all = m.list();
+  const core = all.filter((f) => !/^skill\s*:/i.test(f.topic || ''));
+  assert.ok(core.reduce((n, f) => n + f.text.length + (f.topic || '').length, 0) <= MAX_CHARS);
+  assert.ok(!core.some((f) => f.id === personal.id)); assert.ok(core.some((f) => /core39/.test(f.text)));
+  assert.ok(all.some((f) => f.id === skill.fact.id));
+});
+
+test('research note count cap retires oldest research without touching core notes', () => {
+  const m = mem();
+  const core = m.save('Ben wants to study physics', 'goal').fact;
+  for (let i = 0; i < MAX_FACTS + 5; i++) assert.ok(m.save('research' + i + ' term' + i, 'skill: x').ok);
+  const all = m.list(), skills = all.filter((f) => f.topic === 'skill: x');
+  assert.equal(skills.length, MAX_FACTS);
+  assert.ok(!skills.some((f) => f.text === 'research0 term0'));
+  assert.ok(skills.some((f) => f.text === 'research204 term204'));
+  assert.ok(all.some((f) => f.id === core.id));
+});

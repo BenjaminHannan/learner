@@ -262,6 +262,15 @@ class Helpers {
     task = String(task || '').trim();
     if (!name) throw new Error('name is required');
     if (!task) throw new Error('task is required');
+    if (until && typeof until !== 'number') {
+      const parsed = Number(until);
+      until = Number.isFinite(parsed) ? parsed : Date.parse(until);
+      if (!Number.isFinite(until)) throw new Error('invalid Mote deadline');
+    }
+    const creator = byHelper && this.items.find((h) => h.id === byHelper);
+    if (byHelper && (!creator || creator.status === 'stopped' || (creator.until && creator.until <= this.now()))) throw new Error('the parent Mote has stopped or expired');
+    if (creator && creator.until) until = until ? Math.min(until, creator.until) : creator.until;
+    if (until && (!Number.isFinite(until) || until <= this.now())) throw new Error('the Mote deadline has passed');
     const sched = parseSchedule({ every, at });
     if (sched.kind === 'on' && sched.ts <= this.now()) throw new Error('that date and time has already passed');
     if (this.find(name) && this.find(name).status !== 'stopped') throw new Error("a Glim named '" + name + "' already exists; stop it first or pick another name");
@@ -297,6 +306,7 @@ class Helpers {
   update(ref, { name, task, every, at }) {
     const h = this.find(ref);
     if (!h) return null;
+    if (h.until && h.until <= this.now()) { this.stop(h.id); throw new Error('the Mote deadline has passed'); }
     const newEvery = every !== undefined ? (every || null) : h.every, newAt = at !== undefined ? (at || null) : h.at;
     const scheduleChanged = every !== undefined || at !== undefined;
     const sched = scheduleChanged ? parseSchedule({ every: newEvery, at: newAt }) : this.sched(h);
@@ -323,6 +333,7 @@ class Helpers {
   reschedule(ref, { every, at }) {
     const h = this.find(ref);
     if (!h) return null;
+    if (h.until && h.until <= this.now()) { this.stop(h.id); throw new Error('the Mote deadline has passed'); }
     const sched = parseSchedule({ every, at });
     h.every = every || null; h.at = at || null;
     if (h.status === 'stopped') h.status = 'idle';
@@ -364,7 +375,9 @@ class Helpers {
   }
   runNow(ref) {
     const h = this.find(ref);
-    if (!h || this.active.has(h.id)) return false;
+    if (!h) return false;
+    if (h.until && h.until <= this.now()) { this.stop(h.id); return false; }
+    if (this.active.has(h.id)) return false;
     if (h.status === 'stopped') h.status = 'idle';
     this._run(h);
     return true;
@@ -381,6 +394,7 @@ class Helpers {
   // (its next time is a single value, recomputed from "now" when the run starts), not once per missed slot.
   tick(force) {
     const now = this.now();
+    for (const h of this.items) if (h.status !== 'stopped' && h.until && h.until <= now) this.stop(h.id);
     if (!force && this.o.hold && this.o.hold()) { // force: the sleep check-in runs what is due // e.g. sleeping: due runs wait and fire once after wake
       let n = 0;
       for (const h of this.items) if (!h.dueHeld && !h.paused && h.status !== 'stopped' && !this.active.has(h.id) && h.next && h.next <= now) { h.dueHeld = true; n++; }
@@ -404,11 +418,22 @@ class Helpers {
   close() { this.closing = true; if (this.timer) clearInterval(this.timer); this.timer = null; for (const id of [...this.active.keys()]) this.abort(id); }
 
   async _run(h) {
+    if (h.until && h.until <= this.now()) { this.stop(h.id); return; }
     if (this.active.has(h.id)) return;
     const rec = { ctl: new AbortController(), agent: null };
     this.active.set(h.id, rec);
+    if (h.until) {
+      const expire = () => {
+        const remaining = h.until - this.now();
+        if (remaining <= 0) this.stop(h.id);
+        else { rec.deadlineTimer = setTimeout(expire, Math.min(remaining, 2147483647)); if (rec.deadlineTimer.unref) rec.deadlineTimer.unref(); }
+      };
+      expire();
+      if (rec.ctl.signal.aborted || h.status === 'stopped') { this.active.delete(h.id); return; }
+    }
     const sched = this.sched(h);
     const start = this.now();
+    if (h.until && h.until <= start) { if (rec.deadlineTimer) clearTimeout(rec.deadlineTimer); this.stop(h.id); this.active.delete(h.id); return; }
     h.status = 'queued'; h.lastRun = start; h.dueHeld = false; h.hold = null; h.quiet = false;
     h.next = sched.kind === 'once' ? null : nextRun(sched, start);
     this.changed();
@@ -426,6 +451,8 @@ class Helpers {
       res = await this.o.runner(h, helperText(h), { signal: rec.ctl.signal, onState, attach: (a, t) => { rec.agent = a; rec.thread = t || null; } });
     } catch (e) { res = { error: String(e && e.message || e) }; }
     rec.done = true;
+    if (rec.deadlineTimer) clearTimeout(rec.deadlineTimer);
+    if (h.until && h.until <= this.now() && h.status !== 'stopped') this.stop(h.id);
     this.active.delete(h.id);
     if (rec.deleteThread) { try { this.o.store.deleteThread(h.threadId); } catch (e) { /* ignore */ } }
     if (this.closing) return;

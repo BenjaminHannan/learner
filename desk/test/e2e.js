@@ -800,6 +800,46 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
       nativeTheme.themeSource = 'system';
     }
 
+    // Exercise Learn setup through the real renderer IPC and agent, while preventing background Motes.
+    {
+      const learnGw = await startGateway([() => ({ content: 'Okay.' })], { autoVerify: true });
+      const oldAdd = helpers.add, oldGateway = store.getSettings().gatewayUrl;
+      const added = []; let failStart = false;
+      try {
+        helpers.add = (args) => { if (failStart) throw new Error('synthetic duplicate'); added.push(args); return { name: args.name }; };
+        store.saveSettings({ gatewayUrl: learnGw.url });
+        await ev('window.__learnDone = []; window.__learnOff = window.desk.onAgent(e => { if (e.type === "done") window.__learnDone.push(e.threadId); }); true;');
+        const thread = store.newThread(); store.saveThread(thread);
+        const turn = async (text) => {
+          const doneCount = 'window.__learnDone.filter(id => id === ' + JSON.stringify(thread.id) + ').length';
+          const count = await ev(doneCount);
+          const index = learnGw.requests.length;
+          const result = await ev('window.desk.agent.send(' + JSON.stringify(thread.id) + ',' + JSON.stringify(text) + ')');
+          if (!result.started) throw new Error('Learn IPC did not start: ' + JSON.stringify(result));
+          if (!await until(() => ev(doneCount + ' > ' + count), 8000)) throw new Error('Learn IPC turn did not finish: ' + text);
+          if (learnGw.requests.length <= index) throw new Error('Learn IPC turn did not reach fake gateway: ' + text);
+          const messages = learnGw.requests[index].messages.filter((m) => m.role === 'user');
+          return messages[messages.length - 1].content;
+        };
+        await turn('go learn chess');
+        const invalid = await turn('until 5pm');
+        checks.push(['Learn IPC: unsupported until asks for a duration without starting Motes', /setup is still pending/i.test(invalid) && added.length === 0]);
+        const cancelled = await turn('stop');
+        checks.push(['Learn IPC: stop cancels pending setup without starting Motes', /setup was cancelled/i.test(cancelled) && added.length === 0]);
+        await turn('go learn chess');
+        await turn('one');
+        const before = Date.now(), started = await turn('two hours, then stop them'), after = Date.now();
+        checks.push(['Learn IPC: bare count then finite duration starts one bounded Mote', added.length === 1 && added[0].until >= before + 2 * 3600000 && added[0].until <= after + 2 * 3600000 && /started 1 Motes/i.test(started)]);
+        failStart = true;
+        const failed = await turn('go learn astronomy with 1 mote for 1 hour');
+        checks.push(['Learn IPC: startup failure is surfaced without research fallback', /could not start any Motes: synthetic duplicate/i.test(failed) && /Do not research it yourself/i.test(failed) && added.length === 1]);
+      } finally {
+        helpers.add = oldAdd; store.saveSettings({ gatewayUrl: oldGateway });
+        await ev('if (window.__learnOff) window.__learnOff(); delete window.__learnOff; delete window.__learnDone;');
+        learnGw.close();
+      }
+    }
+
     let bad = 0;
     for (const [name, ok] of checks) { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) bad++; }
     clearTimeout(timer);

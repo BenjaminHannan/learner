@@ -14,6 +14,7 @@ const MAX_FORGET = 3;
 // Fact cards (topic "card", "Subject => relation => Object"): what Glim and its Motes learn on tasks, for sleep to train on.
 // They have their own cap, never push Ben's notes out, and are not put in front of the model in every chat.
 const MAX_CARDS = 400;
+const isSkill = (f) => /^skill\s*:/i.test(String(f.topic || '').trim());
 const isCard = (f) => /^card$/i.test(String(f.topic || '').trim());
 const cardHead = (t) => { const p = String(t).split('=>').map((x) => x.trim().toLowerCase()); return p.length === 3 && p.every(Boolean) ? p[0] + '=>' + p[1] : null; };
 const { P } = require('./user');
@@ -140,14 +141,18 @@ function createMemory(dir, opts) {
   function commit(d) {
     for (;;) {
       const all = factsOf(d.lines.join(d.eol), 0);
-      const cards = all.filter((f) => isCard(f) && f.explicit), facts = all.filter((f) => !isCard(f));
+      const cards = all.filter((f) => isCard(f) && f.explicit);
       if (cards.length > MAX_CARDS) { d.lines.splice(cards.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1); continue; }
-      if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) break;
-      const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
-      if (!mine.length) break;
-      // Ben's own bullets alone are over the cap: evicting Glim's notes cannot fix that and would delete every one of them
-      if (hand.length > MAX_FACTS || size(hand) > MAX_CHARS) break;
-      d.lines.splice(mine.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1);
+      let removed = false;
+      for (const facts of [all.filter((f) => !isCard(f) && !isSkill(f)), all.filter((f) => isSkill(f) && !isCard(f))]) {
+        if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) continue;
+        const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
+        // Hand-written bullets are never evicted, even when they alone exceed the cap.
+        if (!mine.length || hand.length > MAX_FACTS || size(hand) > MAX_CHARS) continue;
+        d.lines.splice(mine.reduce((o, f) => (f.updated < o.updated ? f : o)).line, 1);
+        removed = true; break;
+      }
+      if (!removed) break;
     }
     writeText(d.lines.join(d.eol));
     return factsOf(d.lines.join(d.eol), 0);
@@ -170,6 +175,8 @@ function createMemory(dir, opts) {
         if (isCard({ topic }) && isCard(f) && (f.text.toLowerCase() === text.toLowerCase() || (head && cardHead(f.text) === head))) { hit = i; best = 1; }
         return;
       }
+      // Research notes cannot replace a personal note through fuzzy matching (or vice versa).
+      if (isSkill({ topic }) !== isSkill(f)) return;
       const o = overlap(f.text, text);
       const sameTopic = topic && f.topic && f.topic.toLowerCase() === topic.toLowerCase();
       if (f.text.toLowerCase() === text.toLowerCase() || (o >= (sameTopic ? 0.6 : 0.8) && o > best)) { hit = i; best = Math.max(o, 0.01); }
@@ -203,15 +210,28 @@ function createMemory(dir, opts) {
     const out = [];
     for (const line of text.split(/\r?\n/)) {
       const f = factsOf(line, 0)[0];
-      if (f && isCard(f)) continue;   // fact cards are for sleep, not for every chat
+      if (f && isCard(f)) continue;
       const s = f ? '- ' + (f.topic ? f.topic + ': ' : '') + f.text : line.replace(/\s+$/, '');
-      if (!s && (!out.length || !out[out.length - 1])) continue;   // no leading or doubled blank lines
-      out.push(s);
+      if (!s && (!out.length || !out[out.length - 1].text)) continue;
+      out.push({ text: s, skill: !!(f && f.explicit && isSkill(f)) });
     }
-    while (out.length && !out[out.length - 1]) out.pop();
-    let n = 0, from = out.length;
-    while (from > 0 && n + out[from - 1].length + 1 <= MAX_CHARS) n += out[--from].length + 1;
-    return out.slice(from).join('\n');
+    while (out.length && !out[out.length - 1].text) out.pop();
+    // Keep the newest core/manual lines first, then fit the newest research lines into
+    // the remaining budget. Output stays in file order, as before.
+    let n = 0;
+    const keep = new Set();
+    for (const skill of [false, true]) {
+      for (let i = out.length - 1; i >= 0; i--) {
+        if (out[i].skill !== skill) continue;
+        const len = out[i].text.length + 1;
+        if (n + len > MAX_CHARS) break;
+        n += len; keep.add(i);
+      }
+    }
+    const selected = out.filter((_, i) => keep.has(i)).map((line) => line.text);
+    while (selected.length && !selected[0]) selected.shift();
+    while (selected.length && !selected[selected.length - 1]) selected.pop();
+    return selected.join('\n');
   }
 
   return {
@@ -271,4 +291,4 @@ function createMemory(dir, opts) {
   };
 }
 
-module.exports = { MAX_CARDS, isCard, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };
+module.exports = { MAX_CARDS, isCard, isSkill, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };
