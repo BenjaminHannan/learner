@@ -166,6 +166,16 @@ class Store {
     fs.writeFileSync(tmp, JSON.stringify(t));
     fs.renameSync(tmp, f);
   }
+  // Change a stored thread in the background without marking it active (keeps `updated`: follow-ups and the chat list read it).
+  // fn changes the loaded copy, or returns false to skip the write.
+  patchThread(id, fn) {
+    const t = this.loadThread(id);
+    if (!t || fn(t) === false) return t;
+    const f = this._file(t.id), tmp = f + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(t));
+    fs.renameSync(tmp, f);
+    return t;
+  }
   loadThread(id) {
     try { return JSON.parse(fs.readFileSync(this._file(id), 'utf8')); } catch (e) { return null; }
   }

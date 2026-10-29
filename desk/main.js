@@ -36,7 +36,7 @@ if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 const { Store, applyPresetDefaults } = require('./src/store');
-const { Agent, DANGER_LABELS } = require('./src/agent');
+const { Agent, DANGER_LABELS, noteOldGap, rollupGapStep } = require('./src/agent');
 const { buildTools } = require('./src/prompt');
 const { Browser } = require('./src/tools/browser');
 const { webSearch } = require('./src/tools/web');
@@ -870,6 +870,28 @@ function relayReports(threadId, tries) {
 // his latest main thread). The day is recorded first, so a failure never repeats it. NO_UPDATE means nothing needed him: the turn leaves no trace.
 const FU = require('./src/followup');
 let followBusy = false;
+// Ben Oct 29: the first summary of his long chat read only its newest part. agent.js keeps the unread part as ctxGap; this rolls it
+// up one chunk a minute (fast model) while his chat is idle and Glim is awake, and writes only those fields onto a fresh copy of the
+// thread. A message from Ben aborts it; if a window summary changed the gap meanwhile, the chunk is dropped and redone.
+let rollCtl = null;
+async function rollupTick() {
+  if (rollCtl || benBusy() || sl.asleep || sl.waking || sl.starting || (agent && agent.running)) return;
+  const row = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call');
+  const t = row && store.loadThread(row.id);
+  if (!t) return;
+  if (noteOldGap(t)) store.patchThread(t.id, (x) => { if (x.ctxV) return false; x.ctxV = t.ctxV; if (t.ctxGap) x.ctxGap = t.ctxGap; });
+  if (!t.ctxGap) return;
+  const gap = JSON.stringify(t.ctxGap), older = t.ctxOlder || '';
+  rollCtl = new AbortController();
+  try {
+    if (!(await rollupGapStep(t, store.getSettings(), rollCtl.signal)) || rollCtl.signal.aborted || (agent && agent.running)) return;
+    store.patchThread(t.id, (x) => {
+      if (JSON.stringify(x.ctxGap) !== gap || (x.ctxOlder || '') !== older) return false;
+      if (t.ctxGap) x.ctxGap = t.ctxGap; else delete x.ctxGap;
+      if (t.ctxOlder) x.ctxOlder = t.ctxOlder;
+    });
+  } finally { rollCtl = null; }
+}
 async function followUpTick(over) {
   if (followBusy || E2E || !agent) return;
   const s = store.getSettings(), now = new Date();
@@ -1165,7 +1187,7 @@ async function afterFirstPaint() {
     if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
     { const st = sleeper.status(); if (st.sleeping) { sl.asleep = true; pushSleep(); } }
   }
-  if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); }, 60000).unref();
+  if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); rollupTick().catch(() => {}); }, 60000).unref();
   if (!E2E && fs.existsSync(SERVE_SH)) { try { require('./src/standing').seedStanding(helpers, app.getPath('userData')); } catch (e) { /* optional */ } }
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
@@ -1237,6 +1259,7 @@ function registerIpc() {
   });
   h('agent:send', async (threadId, text) => {
     sl.lastActive = Date.now();
+    if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
     if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };
     const hp = helpers.byThread(threadId);
     if (hp) return helpers.steer(hp.id, text) ? { steered: true } : { error: "This is a Glim's thread. Use Run now in the Glims list, or ask your main Glim." };
