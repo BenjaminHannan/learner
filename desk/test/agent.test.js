@@ -166,7 +166,7 @@ test('steer: queued message is injected before the next model call', async () =>
   } finally { gw.close(); }
 });
 
-test('steer while the model is writing: the half-written reply is dropped and his message is read at once', async () => {
+test('steer while the model is writing: the half-written reply stays (cut off) and his message is read at once', async () => {
   const gw = await startGateway([{ content: 'a long reply that is still being written', hang: true }, { content: 'got it, blue' }]);
   try {
     let agent; const t = mkThread(); const evs = [];
@@ -177,10 +177,11 @@ test('steer while the model is writing: the half-written reply is dropped and hi
     assert.strictEqual(agent.steer('actually use blue'), true);
     await done;
     assert.ok(Date.now() - t0 < 3000, 'read in under 3 seconds, not after the whole reply');
-    assert.ok(evs.some((e) => e.type === 'discard'));
+    assert.ok(evs.some((e) => e.type === 'assistant_end' && e.cut), 'the written part is kept, marked cut off');
     assert.strictEqual(gw.requests.length, 2);
     assert.match(gw.requests[1].messages.at(-1).content, /actually use blue$/);
-    assert.ok(!t.messages.some((m) => m.role === 'assistant' && /still being written/.test(m.content || '')), 'the dropped reply is not kept');
+    assert.ok(t.items.some((i) => i.t === 'assistant' && i.cut && /still being written|a long reply/.test(i.text)), 'kept on screen');
+    assert.ok(t.messages.some((m) => m.role === 'assistant' && /\[cut off/.test(m.content || '')), 'the model knows it was cut off');
     assert.ok(t.messages.some((m) => m.role === 'assistant' && /got it, blue/.test(m.content || '')));
   } finally { gw.close(); }
 });
@@ -497,4 +498,26 @@ test('compaction in batches: no stub until 4 results (or ~4k tokens) are stubbab
   assert.deepStrictEqual(m.filter((x) => x.role === 'tool').map((x) => x.content.slice(0, 1)), ['[', '[', '[', '[', 'e', 'f']);
   const big = [r('x'.repeat(20000)), r('y'), r('z')];
   assert.strictEqual(compactMessages(big, 2, 4), 1);   // one big result is worth it
+});
+
+test('the saved-notes block rides on a turn only when the notes changed (not on every turn)', async () => {
+  const gw = await startGateway([{ content: 'one' }, { content: 'two' }, { content: 'three' }]);
+  try {
+    const t = mkThread(); let notes = 'Saved notes about Ben:\n- likes tea';
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '', memory: { block: () => notes } });
+    await agent.run(t, 'hi'); await agent.run(t, 'again');
+    notes = 'Saved notes about Ben:\n- likes tea\n- has a sister';
+    await agent.run(t, 'third');
+    const users = t.messages.filter((m) => m.role === 'user').map((m) => m.content);
+    assert.match(users[0], /likes tea/);
+    assert.ok(!/Saved notes/.test(users[1]), 'unchanged notes are not repeated');
+    assert.match(users[2], /has a sister/, 'changed notes are written again');
+  } finally { gw.close(); }
+});
+
+test('dropOldImages: a picture far back in a long chat is dropped even if it is the newest one', () => {
+  const m = [{ role: 'user', content: [{ type: 'text', text: 'look' }, { type: 'image_url', image_url: { url: 'data:x' } }] }];
+  for (let i = 0; i < 20; i++) m.push({ role: i % 2 ? 'user' : 'assistant', content: 'x' + i });
+  dropOldImages(m);
+  assert.strictEqual(m[0].content, '[older screenshot omitted]');
 });

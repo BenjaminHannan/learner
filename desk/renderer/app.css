@@ -177,7 +177,12 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 .stop:hover { background:var(--danger); color:var(--on-danger); }
 .stop i { width:.7rem; height:.7rem; background:currentColor; border-radius:2px; }
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
-#runState i { width:.5rem; height:.5rem; border-radius:50%; background:var(--accent); animation:pulse 1s infinite; }
+#runState .typing { display:inline-flex; align-items:center; gap:.28rem; padding:.62rem .8rem; border-radius:1.1rem 1.1rem 1.1rem .3rem; background:var(--raised); }
+#runState .typing i { width:.46rem; height:.46rem; border-radius:50%; background:var(--text2); opacity:.45; animation:typing-dot 1.2s infinite ease-in-out; }
+#runState .typing i:nth-child(2) { animation-delay:.18s; } #runState .typing i:nth-child(3) { animation-delay:.36s; }
+#runState > span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } /* read by screen readers only: the dots are the visible state */
+@keyframes typing-dot { 0%, 60%, 100% { transform:translateY(0); opacity:.4; } 30% { transform:translateY(-.32rem); opacity:1; } }
+@media (prefers-reduced-motion: reduce) { #runState .typing i { animation:none; opacity:.7; } }
 .callbtn { background:none; color:var(--text2); border:1.5px solid var(--hair2); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
 .callbtn svg { width:1.05rem; height:1.05rem; }
 .callbtn:hover:not(:disabled) { color:var(--accent-text); border-color:var(--accent-text); }
@@ -543,3 +548,5 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 .choice:disabled { opacity:.5; cursor:default; } .choice.picked { opacity:1; border-style:solid; color:var(--accent-text); }
 #askDock .btns.opts { flex-direction:column; align-items:stretch; } #askDock .btns.opts .ghost, #askDock .btns.opts .amber-btn { width:100%; text-align:left; }
 
+
+.atext.cut { opacity:.62; } .atext .cutnote { margin-top:.35rem; font-size:.78rem; color:var(--text2); font-style:italic; }

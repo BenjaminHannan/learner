@@ -6,11 +6,12 @@ const { NAME, P } = require('./user');
 const { usesLine } = require('../renderer/uses');
 
 const COMPACT_TOKENS = 24000;
+const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it is among the newest messages
 // Ben Oct 28 "what happens when it hits its context limit?": nothing did; a long chat was re-read whole every turn (one was ~56k
-// tokens, ~100 s before the first word). Past settings.contextTokens (preset: 50000 on the Mac assistant, 24000 llama.cpp, 4500 built-in)
+// tokens, ~100 s before the first word). Past settings.contextTokens (preset: 12000 on the Mac assistant, was 50000 until Oct 29, 24000 llama.cpp, 4500 built-in)
 // the model reads a short summary of the older part plus the recent part, cut at one of Ben's turns down to ~60% so the cut moves
 // rarely (the kept part stays byte-stable for the prompt cache). thread.messages and the chat on screen keep everything.
-const CONTEXT_TOKENS = 50000;
+const CONTEXT_TOKENS = 12000;
 const CONTEXT_KEEP = 0.6;
 const SUMMARY_IN_CHARS = 12000;   // the newest part of the left-out text the summary call reads
 const SUMMARY_MAX_TOKENS = 400;
@@ -209,7 +210,7 @@ function dropOldImages(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
     if (m.role === 'user' && Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url')) {
-      if (seen) m.content = '[older screenshot omitted]';
+      if (seen || i < messages.length - IMAGE_KEEP_MSGS) m.content = '[older screenshot omitted]'; // a picture far back rode along on every turn (~280 KB, a 346-message chat)
       seen = true;
     }
   }
@@ -333,6 +334,18 @@ class Agent {
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
 
+  // A steer aborted the reply being written (Ben Oct 29: "the one it was typing disappeared"): what was written stays, marked cut off.
+  // The model sees it too, with a note, so it does not start the whole reply again. Nothing written yet: nothing to keep.
+  keepCutOff(thread) {
+    let text = String(this.partial || ''); this.partial = '';
+    const i = text.lastIndexOf('</think>'); if (i >= 0) text = text.slice(i + 8);
+    text = text.replace(/^\s*<think>[\s\S]*$/, '').trim();
+    if (!text) { this.emit({ type: 'discard' }); return; }
+    thread.messages.push({ role: 'assistant', content: text + '\n[cut off: Ben sent a new message]' });
+    thread.items.push({ t: 'assistant', text, cut: true });
+    this.emit({ type: 'assistant_end', text, cut: true });
+  }
+
   steer(text) {
     if (!(this.running && text && text.trim())) return false;
     this.steerQueue.push(text.trim());
@@ -395,7 +408,12 @@ class Agent {
       // Ben Oct 28: Glim should know it can sleep. Its sleep line rides in the same first turn, never in the system prompt.
       if (!thread.messages.some((m) => m.role === 'user') && this.o.sleepInfo) { try { const sl = this.o.sleepInfo(); if (sl) ctx += (ctx ? ' ' : '') + sl; } catch (e) { /* no sleep line */ } }
       // The memory block is a snapshot written into this stored turn when the task starts: older turns keep theirs, so the history stays byte-stable (cache).
-      thread.messages.push({ role: 'user', content: (this.memBlock ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
+      // Ben Oct 29: every stored turn carried the whole ~5k-char notes block (a 346-message chat was ~39k tokens, 3 minutes to re-read after a cache reset). It is written
+      // again only when the notes changed or the copy in the chat fell out of the model's window; otherwise the earlier copy is still in front of the model.
+      const from = thread.ctxFrom || 0;
+      const have = this.memBlock && thread.memSig === this.memBlock && Number.isInteger(thread.memAt) && thread.memAt >= from && thread.memAt < thread.messages.length;
+      if (this.memBlock && !have) { thread.memSig = this.memBlock; thread.memAt = thread.messages.length; }
+      thread.messages.push({ role: 'user', content: (this.memBlock && !have ? this.memBlock + '\n' : '') + nowStamp(thread.messages) + ' ' + NARRATE + (ctx ? ' ' + ctx : '') + ' ' + (notes ? notes + '\n' : '') + text });
       if (!hidden) thread.items.push({ t: 'user', text: shown || text, ts: Date.now() }); // a hidden turn (Glim relaying a helper's report) shows no bubble from Ben
     };
     repairHistory(thread.messages);
@@ -442,7 +460,7 @@ class Agent {
         let res;
         const rc = new AbortController(), onRun = () => rc.abort();
         signal.addEventListener('abort', onRun, { once: true });
-        this.reqCtl = rc; this.reqSteered = false;
+        this.reqCtl = rc; this.reqSteered = false; this.partial = '';
         try {
           res = await streamChat({
             gatewayUrl: s.gatewayUrl,
@@ -451,19 +469,19 @@ class Agent {
             tools: this.toolDefs(),
             signal: rc.signal,
             apiKey: s.apiKey,
-            onText: (d) => this.emit({ type: 'text', delta: d }),
+            onText: (d) => { this.partial += d; this.emit({ type: 'text', delta: d }); },
             onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) // only that Glim is thinking; the text never leaves the main process
           });
         } catch (e) {
           signal.removeEventListener('abort', onRun); this.reqCtl = null;
           if (signal.aborted) { stopped = true; break; }
-          if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.emit({ type: 'discard' }); continue; }   // his message is read now; the half-written reply is dropped
+          if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.keepCutOff(thread); continue; }   // his message is read now; what was written so far stays on screen, marked cut off
           failure = String(e && e.message || e);
           this.emit({ type: 'error', message: failure });
           break;
         }
         signal.removeEventListener('abort', onRun); this.reqCtl = null;
-        if (this.reqSteered && this.steerQueue.length && !(res && res.toolCalls && res.toolCalls.length)) { this.reqSteered = false; this.emit({ type: 'discard' }); continue; }
+        if (this.reqSteered && this.steerQueue.length && !(res && res.toolCalls && res.toolCalls.length)) { this.reqSteered = false; this.keepCutOff(thread); continue; }
         if (signal.aborted) {
           stopped = true;
           if (res && res.content) {
