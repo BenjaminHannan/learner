@@ -870,24 +870,24 @@ function relayReports(threadId, tries) {
 // his latest main thread). The day is recorded first, so a failure never repeats it. NO_UPDATE means nothing needed him: the turn leaves no trace.
 const FU = require('./src/followup');
 let followBusy = false;
-// Ben Oct 29: the first summary of his long chat read only its newest part. agent.js keeps the unread part as ctxGap; this rolls it
+// Ben Oct 29: the first summary of his long chat read only its newest part. agent.js keeps unread parts as ctxGaps; this rolls them
 // up one chunk a minute (fast model) while his chat is idle and Glim is awake, and writes only those fields onto a fresh copy of the
-// thread. A message from Ben aborts it; if a window summary changed the gap meanwhile, the chunk is dropped and redone.
+// thread. A message from Ben aborts it; if a window summary changed the gaps meanwhile, the chunk is dropped and redone.
 let rollCtl = null;
 async function rollupTick() {
   if (rollCtl || benBusy() || sl.asleep || sl.waking || sl.starting || (agent && agent.running)) return;
   const row = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call');
   const t = row && store.loadThread(row.id);
   if (!t) return;
-  if (noteOldGap(t)) store.patchThread(t.id, (x) => { if (x.ctxV) return false; x.ctxV = t.ctxV; if (t.ctxGap) x.ctxGap = t.ctxGap; });
-  if (!t.ctxGap) return;
-  const gap = JSON.stringify(t.ctxGap), older = t.ctxOlder || '';
+  if (noteOldGap(t)) store.patchThread(t.id, (x) => { if (x.ctxV) return false; x.ctxV = t.ctxV; if (t.ctxGaps) x.ctxGaps = t.ctxGaps; });
+  if (!t.ctxGaps) return;
+  const gaps = JSON.stringify(t.ctxGaps), older = t.ctxOlder || '';
   rollCtl = new AbortController();
   try {
     if (!(await rollupGapStep(t, store.getSettings(), rollCtl.signal)) || rollCtl.signal.aborted || (agent && agent.running)) return;
     store.patchThread(t.id, (x) => {
-      if (JSON.stringify(x.ctxGap) !== gap || (x.ctxOlder || '') !== older) return false;
-      if (t.ctxGap) x.ctxGap = t.ctxGap; else delete x.ctxGap;
+      if (JSON.stringify(x.ctxGaps) !== gaps || (x.ctxOlder || '') !== older) return false;
+      if (t.ctxGaps) x.ctxGaps = t.ctxGaps; else delete x.ctxGaps;
       if (t.ctxOlder) x.ctxOlder = t.ctxOlder;
     });
   } finally { rollCtl = null; }

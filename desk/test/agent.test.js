@@ -500,19 +500,19 @@ test('long chat: a left-out part too long for one summary is rolled up later, ol
   assert.strictEqual(plainTail(m, 18, 24).start, 18);   // fits: nothing left over
   // an old thread summarized before gaps were kept gets its gap once
   const old = { messages: m, ctxFrom: 24, ctxSummary: 's' };
-  assert.ok(noteOldGap(old)); assert.deepStrictEqual(old.ctxGap, [0, tail.start]); assert.ok(!noteOldGap(old));
+  assert.ok(noteOldGap(old)); assert.deepStrictEqual(old.ctxGaps, [[0, tail.start]]); assert.ok(!noteOldGap(old));
   const gw = await startGateway([{ content: 'Recent: Ben plans a 6 PM run.' }, { content: '<think>x</think>Older: Ben likes tennis.' }, { content: 'Older: tennis, chess club.' }, { content: 'All: tennis, chess, 6 PM run.' }]);
   try {
     const agent = new Agent({ getSettings: settings(gw, { modelFast: 'fast' }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
     const t = { messages: m.slice(), ctxFrom: 24 };
     await agent.summarizeLeftOut(t, settings(gw, { modelFast: 'fast' })(), null, 0);
     assert.strictEqual(t.ctxSummary, 'Recent: Ben plans a 6 PM run.');
-    assert.deepStrictEqual(t.ctxGap, [0, tail.start]);
+    assert.deepStrictEqual(t.ctxGaps, [[0, tail.start]]);
     assert.ok(await rollupGapStep(t, settings(gw)(), null));
     assert.match(gw.requests[1].messages[1].content, /Chat:\nBen: q turn 0 /);   // oldest first
     assert.strictEqual(t.ctxOlder, 'Older: Ben likes tennis.');
-    assert.ok(t.ctxGap[0] > 0);
-    while (t.ctxGap) assert.ok(await rollupGapStep(t, settings(gw)(), null));
+    assert.ok(t.ctxGaps[0][0] > 0);
+    while (t.ctxGaps) assert.ok(await rollupGapStep(t, settings(gw)(), null));
     assert.match(gw.requests[2].messages[1].content, /Earlier summary:\nOlder: Ben likes tennis\./);
     assert.strictEqual(gw.requests.length, 3);
     // the next window summary folds the rolled-up part in and drops it
@@ -521,7 +521,7 @@ test('long chat: a left-out part too long for one summary is rolled up later, ol
     await agent.summarizeLeftOut(t, settings(gw)(), null, 24);
     assert.match(gw.requests[3].messages[1].content, /Older part of the chat:\nOlder: tennis, chess club\.\nRecent: Ben plans a 6 PM run\./);
     assert.strictEqual(t.ctxSummary, 'All: tennis, chess, 6 PM run.');
-    assert.strictEqual(t.ctxOlder, undefined); assert.strictEqual(t.ctxGap, undefined);
+    assert.strictEqual(t.ctxOlder, undefined); assert.strictEqual(t.ctxGaps, undefined);
     assert.strictEqual(typeof trimWindow, 'function');
   } finally { gw.close(); }
 });
@@ -531,12 +531,19 @@ test('long chat: a failed roll-up chunk changes nothing; a failed window summary
   const gw = await startGateway([{ content: '' }, { content: '' }]);
   try {
     const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
-    const t = { messages: [{ role: 'user', content: 'q1' }, { role: 'assistant', content: 'a1' }, { role: 'user', content: 'q2' }], ctxGap: [0, 2] };
+    const t = { messages: [{ role: 'user', content: 'q1' }, { role: 'assistant', content: 'a1' }, { role: 'user', content: 'q2' }], ctxGaps: [[0, 2]] };
     assert.strictEqual(await rollupGapStep(t, settings(gw)(), null), false);
-    assert.deepStrictEqual(t.ctxGap, [0, 2]); assert.strictEqual(t.ctxOlder, undefined);
+    assert.deepStrictEqual(t.ctxGaps, [[0, 2]]); assert.strictEqual(t.ctxOlder, undefined);
     const u = { messages: t.messages, ctxFrom: 2 };
     await agent.summarizeLeftOut(u, settings(gw)(), null, 0);
-    assert.deepStrictEqual(u.ctxGap, [0, 2]);
+    assert.deepStrictEqual(u.ctxGaps, [[0, 2]]);
+    // a thread summarized by an older build gets its unread part noted at the next window summary (window started at `from`)
+    const line = 'w'.repeat(1400), m = [];
+    for (let k = 0; k < 12; k++) m.push({ role: 'user', content: 'q' + k + ' ' + line }, { role: 'assistant', content: 'a' + k + ' ' + line });
+    const v = { messages: m, ctxFrom: 24, ctxSummary: 'old' };
+    await agent.summarizeLeftOut(v, settings(gw)(), null, 20);
+    assert.strictEqual(v.ctxGaps[0][0], 0); assert.ok(v.ctxGaps[0][1] > 0 && v.ctxGaps[0][1] <= 20);
+    assert.deepStrictEqual(v.ctxGaps[1], [20, 24]);   // separate ranges: what earlier summaries read is not read again
   } finally { gw.close(); }
 });
 
