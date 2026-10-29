@@ -165,6 +165,14 @@ def note_sig(n: dict) -> str:
     return hashlib.sha1(("%s|%s|%s" % (n["id"], n["topic"], n["text"])).encode()).hexdigest()[:16]
 
 
+def card_claim_sig(subj: str, rel: str, obj: str) -> str:
+    return hashlib.sha256(json.dumps([norm(subj), norm(rel), norm(obj)]).encode()).hexdigest()
+
+
+def card_claim_key(note_id: str, signature: str) -> str:
+    return "card|" + hashlib.sha256(json.dumps([note_id, signature]).encode()).hexdigest()
+
+
 @dataclass
 class Item:
     key: str
@@ -191,6 +199,7 @@ class Item:
     until: str = ""               # YYYY-MM-DD: after this day the item is not trained (tracked items)
     line: str = ""                # fact from a saved card note: the card line "Subject => relation => Object" (its dream context when no chat turn names both sides)
     sig: str = ""                 # note items: hash of the note's id and text the quiz card was made for (unchanged note = same card, no regeneration)
+    card_note_id: str = ""        # saved-card source identity; sig is its normalized triple signature
 
     @property
     def fact(self) -> str:
@@ -448,16 +457,52 @@ class Sleeper:
 
     def ctx_of(self, it: Item, d: int, newest_first: bool = False) -> str:
         """Chat turns naming both sides (newest first for dreams), plus the saved card line for a card-note fact."""
+        if it.card_note_id:
+            return "[Saved card note] " + it.line
         idx = self.diary.containing(it.subj, it.obj, d)
         txt = self.diary.label(idx[::-1][:4] if newest_first else idx[-4:])
         return (txt + "\n" if txt else "") + ("[Saved card note] " + it.line if it.line else "")
 
+    def _retire_card_claim(self, it: Item, st: Counter) -> None:
+        """Remove source-owned rehearsal data without changing adapter bytes."""
+        if not it.dead:
+            st["card_retired"] += 1
+        it.dead, it.trained, it.dirty = True, False, False
+        it.para, it.qa, it.held = [], [], []
+        obsolete = [row for row in self.rem_pool if it.key in row.get("keys", [])]
+        self.rem_pool = [row for row in self.rem_pool if it.key not in row.get("keys", [])]
+        st["card_rem_retired"] += len(obsolete)
+        self.gist_done.pop(it.key, None)
+        for row in obsolete:
+            if row.get("kind") == "chain":
+                self.rem_done.pop("|".join(sorted(row.get("keys", []))), None)
+        night = getattr(self, "N", {})
+        night.pop("pre", None)
+        if "card_holdout_pending" in night:
+            night["card_holdout_pending"] = [key for key in night["card_holdout_pending"] if key != it.key]
+
     def card_notes(self, d: int, st: Counter) -> None:
-        """Saved notes with the topic "card" and lines "Subject => relation => Object" become fact Items (no chat turn needed; I/me/my -> Ben).
-        A card note that is gone (forgotten, ignored, lines removed) retires its facts."""
+        """Bind each saved triple to its note ID and content, independently of diary facts.
+
+        Reconciliation occurs at tag/dream boundaries. A train-phase resume keeps
+        its immutable published source snapshot; it does not hot-reload edits.
+        """
         if not self.cfg.use_userdata:
             return
+        # Older versions keyed source-owned cards by their entity pair. Their
+        # note IDs cannot be recovered safely from a collision, so retire their
+        # rehearsal artifacts and re-dream current claims under explicit IDs.
+        for key, it in list(self.items.items()):
+            if it.kind == "fact" and it.line and it.source == "saved card note" and not it.card_note_id:
+                self._retire_card_claim(it, st)
+                del self.items[key]
+                it.key = "retired_card|" + hashlib.sha256(json.dumps([key, it.line]).encode()).hexdigest()
+                it.source = "retired legacy saved card note"
+                self.items[it.key] = it
+                st["card_migrated"] += 1
         have, ud = set(), self.paths.userdata_dir
+        night = getattr(self, "N", {})
+        pending = set(night.get("card_holdout_pending", []))
         for n in L_mod.read_notes(ud, diary_mod.load_ignore(self.paths.ignore)):
             if not is_card_note(n):
                 continue
@@ -466,19 +511,27 @@ class Sleeper:
                 if min(len(sj), len(ob)) < 2 or max(len(sj), len(ob)) > 60 or norm(sj) == norm(ob):
                     st["card_invalid"] += 1
                     continue
-                key = key_of(sj, ob)
+                signature = card_claim_sig(sj, rl, ob)
+                key = card_claim_key(n["id"], signature)
                 have.add(key)
                 it = self.items.get(key)
-                if it is None:
-                    self.items[key] = Item(key, sj, ob, rl, d, first=d, days=1, nment=1, imp=True, line="%s %s %s." % (sj, rl, ob), source="saved card note")
-                    st["card_new"] += 1
-                elif it.dead and it.line:   # the card note is back
-                    it.dead, it.line = False, "%s %s %s." % (sj, rl, ob)
+                if it is not None and (it.card_note_id != n["id"] or it.sig != signature):
+                    raise ValueError("saved-card identity does not match its item key")
+                if key in self.dropped:
+                    continue
+                if it is None or it.dead:
+                    self.items[key] = Item(key, sj, ob, rl, d, first=d, days=1, nment=1, imp=True, dirty=True,
+                                           line="%s %s %s." % (sj, rl, ob), source="saved card note",
+                                           card_note_id=n["id"], sig=signature)
+                    pending.add(key)
+                    night.pop("pre", None)
                     st["card_new"] += 1
         for it in self.items.values():
-            if it.line and not it.dead and it.key not in have:
-                it.dead = True
-                st["card_retired"] += 1
+            if it.card_note_id and not it.dead and it.key not in have:
+                self._retire_card_claim(it, st)
+                pending.discard(it.key)
+        if pending or "card_holdout_pending" in night:
+            night["card_holdout_pending"] = sorted(pending)
 
     def refresh(self, d: int) -> None:
         for it in self.items.values():
@@ -581,7 +634,7 @@ class Sleeper:
         done = []
         for it in need:
             idx = self.diary.containing(it.subj, it.obj, d)
-            note = self.diary.turns[idx[-1]]["text"][:300] if idx else (it.line or it.fact)
+            note = it.line if it.card_note_id else (self.diary.turns[idx[-1]]["text"][:300] if idx else (it.line or it.fact))
             paras, qas = P.templated_cards(it.subj, it.rel, it.obj, note)
             seen, g = {norm(h["q"]) for h in it.held}, {"p": [], "q": []}
             for kind, x in [("p", p) for p in paras] + [("q", qa) for qa in qas]:
@@ -1071,7 +1124,7 @@ class Sleeper:
             elif len(es) != 1 or es[0].lower() in qq.lower() or other_e.lower() not in qq.lower() or x in qq.lower():
                 st["rem_dropped_bad"] += 1
             else:
-                idx = sorted(set(self.diary.containing(p.subj, p.obj, d)[-2:]) | set(self.diary.containing(q.subj, q.obj, d)[-2:]))
+                idx = sorted({i for it in (p, q) if not it.card_note_id for i in self.diary.containing(it.subj, it.obj, d)[-2:]})
                 cand.append(("chain", (p, q), qq, es[0], "\n".join(x for x in (self.diary.label(idx), p.line, q.line) if x)))
         for it, txt in zip(gist, graw):
             st["gist_gen"] += 1
@@ -1121,7 +1174,7 @@ class Sleeper:
                 st["dropped_failed"] += 1
         groups = defaultdict(list)
         for it in self.items.values():
-            if not it.dead and it.kind == "fact":
+            if not it.dead and it.kind == "fact" and not it.card_note_id:
                 groups[frozenset(it.key.split("|"))].append(it)
         for g in groups.values():
             if len(g) > 1:
@@ -1347,9 +1400,9 @@ class Sleeper:
                 shutil.rmtree(str(self.paths.work), ignore_errors=True)
                 return
             st = Counter()
+            self.card_notes(d, st)
             self.tag(d, st)
             self.names_pass(d, st)
-            self.card_notes(d, st)
             self.refresh(d)
             if cfg.use_lessons:
                 self.corrections(week, d, st)
@@ -1362,6 +1415,18 @@ class Sleeper:
             if "holdout_done" not in N:
                 self.split_holdout(fresh, d, st)
                 N["holdout_done"] = True
+            else:
+                # A dream-phase resume may already have split its old claims.
+                # Hold new/changed source claims separately without moving any
+                # unchanged held-out cards back into the training pool.
+                pending = set(N.get("card_holdout_pending", []))
+                changed = [it for it in fresh if it.key in pending]
+                if changed:
+                    previous = st.get("held_out", 0)
+                    self.split_holdout(changed, d, st)
+                    st["held_out"] += previous
+            ready = {it.key for it in fresh}
+            N["card_holdout_pending"] = [key for key in N.get("card_holdout_pending", []) if key not in ready]
             st_all["dream"] = dict(st)
             st = Counter()
             self.lessons_stage(week, d, st)
