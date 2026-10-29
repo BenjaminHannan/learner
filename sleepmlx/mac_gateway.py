@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 from pathlib import Path
+import signal
 import sys
 
 CREATIVE_TAG = "[Creative proposal data]"
@@ -106,7 +107,24 @@ def main(argv=None):
     args, rest = parser.parse_known_args(argv)
     module = load(args.gateway_file)
     sys.argv = [str(args.gateway_file), *rest]
-    module.main()
+    # Background launchers can inherit SIG_IGN. Translate both shutdown
+    # signals into the external gateway's existing KeyboardInterrupt flush.
+    stopping = False
+
+    def interrupt(_signum, _frame):
+        nonlocal stopping
+        if not stopping:
+            stopping = True
+            raise KeyboardInterrupt
+
+    previous = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+    try:
+        for sig in previous:
+            signal.signal(sig, interrupt)
+        module.main()
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 if __name__ == "__main__":
