@@ -97,6 +97,8 @@ def main():
     ap.add_argument("--model", default=K2)
     ap.add_argument("--revision", default=K2_REV)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--weights-from-gguf-only", action="store_true", help="--base q4_0 with a GGUF: build the model from its config and take every weight from the GGUF (no safetensors download; for a device smoke on a small disk)")
+    ap.add_argument("--device", default="auto", help="auto (cuda if present, cpu for --smoke), or e.g. mps / cpu: a non-CPU device catches cpu-vs-gpu tensor mix-ups before a GPU slot")
     ap.add_argument("--mem-cap-gb", type=float, default=float(os.environ.get("SLEEPB_CUDA_CAP_GIB") or 0) or None,
                     help="cuda: cap GPU memory (sleepb.mem_cap; default $SLEEPB_CUDA_CAP_GIB). Under WSL an uncapped run spills into system memory and crawls instead of failing")
     ap.add_argument("--smoke", action="store_true")
@@ -123,8 +125,8 @@ def main():
     t0 = time.time()
     random.seed(a.seed)
     torch.manual_seed(a.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() and not a.smoke else "cpu")
-    dtype = {"auto": torch.bfloat16, "bf16": torch.bfloat16, "fp16": torch.float16}[a.dtype] if device.type == "cuda" else torch.float32
+    device = torch.device(a.device if a.device != "auto" else "cuda" if torch.cuda.is_available() and not a.smoke else "cpu")
+    dtype = {"auto": torch.bfloat16, "bf16": torch.bfloat16, "fp16": torch.float16}[a.dtype] if device.type in ("cuda", "mps") else torch.float32
     sb.mem_cap(a, device, log)
     if a.dtype == "fp16" and device.type == "cuda":
         sb.LOSS_SCALE[0] = 128.0
@@ -137,7 +139,9 @@ def main():
             rev, fn = rest.split(":", 1)
             gguf = hf_hub_download(repo, fn, revision=rev)
         log(f"[base] served GGUF {gguf}")
-    la = Namespace(q4_gguf=gguf, model=a.model, revision=a.revision, smoke=a.smoke, q4_base=a.base != "bf16", q4_packed=a.base == "q4" and not a.smoke, q4_group=32 if a.base == "q4_0" else 64,
+    if a.weights_from_gguf_only and not gguf:
+        ap.error("--weights-from-gguf-only needs --base q4_0 with a GGUF")
+    la = Namespace(q4_gguf=gguf, weights_from_config=a.weights_from_gguf_only, model=a.model, revision=a.revision, smoke=a.smoke, q4_base=a.base != "bf16", q4_packed=a.base == "q4" and not a.smoke, q4_group=32 if a.base == "q4_0" else 64,
                    q4_format="q4_0" if a.base == "q4_0" else "affine", q4_bits=4,
                    q4_mlx_moe=False, q4_packed_compile="auto", arm="race_mini", seed=a.seed)
     lm, tok, q4 = sb.load_base(la, device, dtype, log)

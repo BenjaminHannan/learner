@@ -154,7 +154,13 @@ def load_model(args, device, dtype):
         tok = AutoTokenizer.from_pretrained(args.model, **kw)
         if moe and device.type == "cuda":  # ~70 GB of bf16 weights: straight onto the GPU, not staged in host RAM first
             kw["device_map"] = {"": device.index or 0}
-        lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, **kw)
+        if getattr(args, "weights_from_config", False):  # every weight is overwritten next (sleepb --q4-gguf): build from the config, skip the safetensors download
+            from transformers import AutoConfig
+            cfg = AutoConfig.from_pretrained(args.model, **kw)
+            torch.manual_seed(getattr(args, "seed", 0))
+            lm = AutoModelForCausalLM.from_config(cfg, trust_remote_code=True, dtype=dtype, **({"code_revision": rev} if rev else {}))
+        else:
+            lm = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, **kw)
         if "ForCausalLM" not in type(lm).__name__ or not hasattr(lm.model, "layers"):
             raise SystemExit(f"unexpected model class {type(lm).__name__}; expected a text-only Qwen3_5ForCausalLM, Qwen3_5MoeForCausalLM (or K2HorizonForCausalLM, Lfm3ForCausalLM)")
     lm.to(device).eval()

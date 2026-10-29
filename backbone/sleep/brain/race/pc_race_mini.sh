@@ -63,6 +63,17 @@ PY
 }
 R2="--tape $T/tape_week2.json --week $W2"
 
+# 0. GPU preflight (not a race arm): every code path once on the real model and GPU, a few steps, a tiny score. Any failure stops the job at once
+#    (two earlier starts died on cpu-vs-GPU bugs that CPU smokes cannot show), freeing the GPU within minutes.
+PF="--steps 2 --nights 2 --mid 99 --arc-n 5 --replay-n 4 --bsz 4"
+if [ -z "${RM_SKIP_PREFLIGHT:-}" ]; then
+  for pf in "pf_lora --storage lora" "pf_lp16 --storage lora --lora-plus 16" "pf_qs --storage qs --lr 3e-3" "pf_bf16 --storage lora --base bf16"; do
+    set -- $pf; n=$1; shift
+    run $n $R2 "$@" $PF
+    if [ ! -f "$OUT/$n/DONE" ]; then log "PREFLIGHT $n FAILED: stopping (see $OUT/$n.stdout)"; [ $RC -eq 0 ] && RC=4; exit; fi
+  done
+  log "preflight ok"
+fi
 # Addendum 1 (PROTOCOL-mini): the race runs at 75 steps a night (the 300-step K2 add-on control scored 0.98 final, at the ceiling).
 # 1. validity check, seed 1: the 300-step control (lora_s1) must beat the 75-step control by >= 2 points
 S="--steps 75"
