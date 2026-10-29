@@ -14,7 +14,7 @@ const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it 
 const CONTEXT_TOKENS = 12000;
 const CONTEXT_KEEP = 0.6;
 const SUMMARY_IN_CHARS = 12000;   // the newest part of the left-out text the summary call reads
-const SUMMARY_MAX_TOKENS = 400;
+const SUMMARY_MAX_TOKENS = 600;
 const SUMMARY_TAG = '[Chat summary request]';   // sleep's diary skips user messages starting with this (sleepmlx/diary.py APP_USER_TAGS)
 const LEFT_OUT = '[Earlier messages in this chat are left out to keep you fast; if you need something from them, ask Ben.]';
 const BEN_FIRST_MAX_MS = 10 * 60000;   // a Glim never waits longer than this for Ben's chat per model call
@@ -162,13 +162,29 @@ function estimateTokens(messages) {
   return Math.ceil(chars / 3.5);
 }
 
+// Ben's own words from a stored user turn, after its date stamp: the saved-notes block in front of the stamp and the turn instructions,
+// setup lines and Mote updates after it are dropped. Ben Oct 29: the summary got the first 1500 chars of each turn, which were the notes
+// block, so it never saw what he said. Returns { stamp, text }; a turn with no stamp is returned whole.
+function benWords(c) {
+  const m = c.match(new RegExp(STAMP_RE.source));
+  if (!m) return { stamp: '', text: c };
+  let t = c.slice(m.index + m[0].length).replace(/^\s*\(New day:[^)]*\)/, '');
+  for (let k = 0; k < 6; k++) {
+    const u = t.replace(/^\s*\[helper updates\][^\n]*(\n|$)/, '').replace(/^\s*\[[^\]]*\]/, '');
+    if (u === t) break;
+    t = u;
+  }
+  return { stamp: m[0].slice(1, -1), text: t };
+}
 // The plain words of messages [a, b) for the summary call: Ben's and Glim's text, no tool output, one line per message.
 function plainLines(msgs, a, b) {
   const out = [];
   for (let i = a; i < Math.min(b, msgs.length); i++) {
     const m = msgs[i];
     if (!m || (m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string' || !m.content.trim() || m.content.startsWith(CHECK_MARK)) continue;
-    out.push({ i, line: (m.role === 'user' ? 'Ben: ' : 'Glim: ') + m.content.replace(/\s+/g, ' ').trim().slice(0, 1500) });
+    const w = m.role === 'user' ? benWords(m.content) : { stamp: '', text: m.content };
+    const text = w.text.replace(/\s+/g, ' ').trim().slice(0, 1500);
+    if (text) out.push({ i, line: (m.role === 'user' ? 'Ben' + (w.stamp ? ' (' + w.stamp + ')' : '') + ': ' : 'Glim: ') + text });
   }
   return out;
 }
@@ -187,7 +203,7 @@ async function summaryCall(s, signal, prev, text) {
     const r = await streamChat({
       gatewayUrl: s.gatewayUrl, model: s.modelFast || s.model, maxTokens: SUMMARY_MAX_TOKENS, signal, apiKey: s.apiKey, tools: [],
       messages: [
-        { role: 'system', content: 'You summarize a chat between Ben and his assistant Glim. Write at most 8 short plain lines: what Ben wants, decisions made, plans with their times, open questions, anything Glim promised. No preamble.' },
+        { role: 'system', content: 'You summarize a chat between Ben and his assistant Glim. Write at most 12 short plain lines: what Ben wants, facts about him and the people he mentions, decisions made, plans with their dates and times, open questions, anything Glim promised. Keep what still matters from the earlier summary; drop what is done. No preamble.' },
         { role: 'user', content: SUMMARY_TAG + '\n' + (prev ? 'Earlier summary:\n' + prev + '\n\n' : '') + 'Chat:\n' + text }
       ]
     });
@@ -198,14 +214,16 @@ async function summaryCall(s, signal, prev, text) {
 // Ben Oct 29: the first summary of his 346-message chat read only the newest 12k chars, so most of the chat never reached it.
 // The parts a summary could not read are kept as thread.ctxGaps, a list of [from, to), oldest first. While Ben is away, main.js
 // calls this to roll them up oldest first, one SUMMARY_IN_CHARS chunk per call, into thread.ctxOlder; the next window summary
-// folds that in. A thread summarized before gaps were kept (no ctxV; its window started at `end`) gets its gap worked out once.
-// Each returns true when it changed the thread.
+// folds that in. A thread summarized by an older build (ctxV under CTX_V; its window started at `end`) gets its unread part worked out
+// once; a roll-up made from the notes block instead of Ben's words (ctxV 2) is thrown away and redone. Each returns true when it changed the thread.
+const CTX_V = 3;
 function noteOldGap(thread, end) {
   end = end === undefined ? thread.ctxFrom : end;
-  if (thread.ctxV || !end || !thread.ctxSummary) return false;
-  thread.ctxV = 2;
+  if ((thread.ctxV || 0) >= CTX_V || !end || !thread.ctxSummary) return false;
+  thread.ctxV = CTX_V;
+  delete thread.ctxOlder; delete thread.ctxGaps;
   const { start } = plainTail(thread.messages || [], 0, end);
-  if (start > 0) thread.ctxGaps = [[0, start], ...(thread.ctxGaps || [])];
+  if (start > 0) thread.ctxGaps = [[0, start]];
   return true;
 }
 async function rollupGapStep(thread, s, signal) {
@@ -611,7 +629,7 @@ class Agent {
     const { text, start } = plainTail(thread.messages, from, thread.ctxFrom);
     const sum = text ? await summaryCall(s, signal, prev, text) : '';
     if (signal && signal.aborted) { thread.ctxFrom = from || undefined; return; }   // stopped mid-summary: keep the old window, summarize next time
-    thread.ctxV = 2;
+    thread.ctxV = CTX_V;
     const end = text && !sum ? thread.ctxFrom : start;   // too long to read at once (or the call failed): roll the rest up later
     if (end > from) thread.ctxGaps = [...(thread.ctxGaps || []), [from, end]];
     if (sum && older) delete thread.ctxOlder;
@@ -832,4 +850,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, relatesTo, parseCheckLoose, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
