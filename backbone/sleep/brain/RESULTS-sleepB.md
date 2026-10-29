@@ -921,3 +921,21 @@ Arm B, results_a14/result_k2c_r2.json. Labels: shown / suggested.
   passes no harm and P1 (else the defaults).
   - Addendum 19's K2 fallback is dropped.
   - Chain script `pc/sleepb_pc11.sh` replaces pc10 while pc10 waits.
+
+## Addendum 19 on LFM3: pre-check RUN, the week stopped at its budget after night 5; addendum 21 reruns it (recorded 2026-10-29 ~15:15Z)
+- **Why it started 29 h late (shown):** pc11 waited forever. Its turn test asked for the GPU under 4000 MiB, but Ben's desktop apps
+  (Discord, Chrome, Lunar Client) hold ~6.7 GB of the idle card. `pc/sleepb_pc12.sh` (cbf3c79f10) tests GPU-BUSY, under 9000 MiB and
+  under 30% utilization, and caps PyTorch at the card's free memory (8.5 GiB). It started at 05:11Z Oct 29.
+- **Pre-check (shown, `results_pc/run4/probe19`): RUN.** The fixed writer carded 22 of 27 reachable tests forward (today's writer 19) and
+  kept 105 chains (72). No `</think>` in any reply.
+- **The week (shown, `results_pc/run4/add19/sleepb.log`): stopped by its projector after night 5, no result.**
+  - Nights took 768, 3389, 3491, 4434 and 7984 s. Night 5 was ~2x slower in every part at the same memory use (suggested: something
+    else used the PC).
+  - The 570-question gate: base 0.693, then 0.816, 0.828, 0.853, 0.840 and 0.844. Night 5 was undone by the consolidated-recall check
+    (0.845 < 0.90).
+  - Forward recall after night 4: C2 17%, C4 55%.
+  - Addendum 20's base fell to the defaults (no addendum 19 result).
+- **Addendum 21 (sealed):** the same arm runs again with a 16 h budget in the slot R8 had (`pc/sleepb_pc13.sh`). R8 moves to V8's slot,
+  and V8 gets a new slot (`handoff/GO-SLEEP-V8B`). Addendum 20's base is decided again from the rerun.
+- **For the app thread's gate:** on 570 questions, LFM3's nightly gate score moved with an SD of about 1.4 points (81.6-85.3) while
+  rising overall. Scaled to 40 questions, that is about 5.3 points (suggested), which matches the app thread's 5-10 point swings.
