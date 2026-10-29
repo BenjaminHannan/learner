@@ -597,3 +597,55 @@ test('dropOldImages: a picture far back in a long chat is dropped even if it is 
   dropOldImages(m);
   assert.strictEqual(m[0].content, '[older screenshot omitted]');
 });
+
+// ---- Ben Oct 29: "I am now on the sign-in page" with no tool call; "have it think?" ----------------------------------------------------
+test('claimed actions without a tool call: dropped from history, run again thinking; a task that acts keeps thinking; plain chat stays fast', async () => {
+  const fast = { model: 'fast', modelFast: 'fast', modelMain: 'think', verify: false };
+  const tools = { browser_go: async () => 'ok' };
+  const gw = await startGateway([
+    { content: 'I am now on the sign-in page; I will type your password into the field.' },
+    { tool_calls: [{ name: 'browser_go', arguments: { url: 'https://school.example' } }] },
+    { content: 'Opened it: sign in there.' },
+    { content: 'Hi there!' }
+  ]);
+  try {
+    const a = new Agent({ getSettings: settings(gw, fast), toolDefs: buildTools({}), tools, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await a.run(t, 'connect to schoology');
+    assert.deepStrictEqual(gw.requests.map((r) => r.model), ['fast', 'think', 'think']);
+    assert.ok(!t.messages.some((m) => /now on the sign-in page/.test(m.content || '')), 'the pretend reply is not in the model history');
+    assert.deepStrictEqual(t.messages.map((m) => m.role), ['user', 'assistant', 'tool', 'assistant']);
+    assert.ok(t.items.some((i) => i.t === 'assistant' && /now on the sign-in page/.test(i.text)), 'it stays on screen');
+    assert.ok(t.items.some((i) => i.t === 'step' && i.tool === 'verify' && /without doing them/.test(i.summary)));
+    await a.run(t, 'thanks');
+    assert.strictEqual(gw.requests[3].model, 'fast');
+  } finally { gw.close(); }
+});
+
+test('claimed actions twice: said plainly instead of pretending; Motes (thinkActing false) are not re-run', async () => {
+  const fast = { model: 'fast', modelFast: 'fast', modelMain: 'think', verify: false };
+  const gw = await startGateway([{ content: "I've opened the page for you." }, { content: "I've opened the page for you." }, { content: "I've opened it." }]);
+  try {
+    const a = new Agent({ getSettings: settings(gw, fast), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    const t = mkThread();
+    await a.run(t, 'open it');
+    assert.strictEqual(gw.requests.length, 2);
+    assert.match(t.messages.at(-1).content, /didn't actually manage to do those steps/);
+    const m = new Agent({ getSettings: settings(gw, { ...fast, thinkActing: false }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => '' });
+    await m.run(mkThread(), 'open it');
+    assert.strictEqual(gw.requests.length, 3);
+    assert.strictEqual(gw.requests[2].model, 'fast');
+  } finally { gw.close(); }
+});
+
+test('asksForSecret: the sign-in hand-off is not an ask; asking for the password in chat is', () => {
+  const { asksForSecret } = require('../src/agent');
+  assert.strictEqual(asksForSecret("I can't type your password for you. Please enter your password in the sign-in window yourself, and then click Done."), false);
+  assert.strictEqual(asksForSecret('What is your password?'), true);
+  assert.strictEqual(asksForSecret('Please send me your login details.'), true);
+  assert.strictEqual(asksForSecret("I can't log in without it, please enter your password below."), true);
+  const { claimsAction } = require('../src/agent');
+  assert.strictEqual(claimsAction("Which school site? I'll open it once you tell me."), false);
+  assert.strictEqual(claimsAction('I will open the Schoology sign-in page for you.'), true);
+  assert.strictEqual(claimsAction("I'm now on the sign-in page."), true);
+});

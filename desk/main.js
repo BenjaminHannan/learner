@@ -11,7 +11,7 @@ app.setName(APP_NAME);
 if (!E2E && !app.commandLine.hasSwitch('user-data-dir')) { // a test profile must start empty, never a copy of the real data
   // renamed from "Premonition Desk": bring the old settings/threads/memory/helpers along, once (the old folder stays as a backup)
   try { const r = require('./src/migrate').migrateUserData(app.getPath('appData'), app.getPath('userData')); if (r.migrated) console.log('userData copied from', r.from); } catch (e) { /* start fresh */ }
-}
+} else if (!E2E) require('./src/llm').setTestProfile(true);   // its chats must not reach the diary the sleep learns from
 // main-process log: userData/logs/main.log (kept to the last ~1 MB), so "what went wrong" is not lost when the app closes
 if (!E2E) {
   try {
@@ -796,8 +796,8 @@ function createAgent({ helper, rec, voice }) {
   const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : '' }); // the main Glim has no chat title on the pill (Ben Oct 28)
   const a = new Agent({
     memory, tracking,
-    getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT) }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
-      : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
+    getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
+      : () => { const s = store.getSettings(); return isVoice ? { ...s, model: s.modelFast || s.model, verify: false, thinkActing: false } : s; }, // a voice turn uses the fast model and skips the extra self-check
     tools,
     toolDefs: () => toolDefs,
     sleepInfo: isHelper ? null : sleepInfo,

@@ -55,6 +55,15 @@ test('warm body: same builder, system+tools+tool_choice identical to a real requ
   assert.ok(!/\d{4}-\d{2}-\d{2}/.test(JSON.stringify(warm.messages[0]))); // no date in the system part
 });
 
+test('test profile: every chat body carries test: true (the sleep skips those diary records); off again leaves the body as it was', () => {
+  const { setTestProfile } = require('../src/llm');
+  const plain = buildChatBody({ model: 'qwen36-fast', messages: [{ role: 'user', content: 'hi' }] });
+  assert.strictEqual('test' in plain, false);
+  setTestProfile(true);
+  try { assert.strictEqual(buildChatBody({ model: 'qwen36-fast', messages: [{ role: 'user', content: 'hi' }] }).test, true); } finally { setTestProfile(false); }
+  assert.deepStrictEqual(buildChatBody({ model: 'qwen36-fast', messages: [{ role: 'user', content: 'hi' }] }), plain);
+});
+
 test('Warmer: warms when the gateway comes up (poll while down), once; rewarm on demand; sends the warm header; never needs the script', async () => {
   const gw = await startGateway([{ content: 'x' }]);
   const url = gw.url;

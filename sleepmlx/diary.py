@@ -192,9 +192,11 @@ def load_ignore(path: Optional[Path]) -> List["re.Pattern"]:
 
 
 def is_test_record(rec: dict) -> bool:
-    """A record the app's e2e / test mode produced: a truthy `test` field (top level or in request), or a test header."""
+    """A record the app's e2e / test mode produced: a truthy `test` field (top level, in request, or in sampling, where the Mac gateway
+    keeps the extra request body fields; the Desk's test profiles send it), or a test header."""
     req = rec.get("request") if isinstance(rec.get("request"), dict) else {}
-    for d in (rec, req):
+    samp = rec.get("sampling") if isinstance(rec.get("sampling"), dict) else {}
+    for d in (rec, req, samp):
         if d.get("test") in (True, 1, "1", "true", "True"):
             return True
         h = d.get("headers")

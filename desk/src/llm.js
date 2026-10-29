@@ -39,10 +39,16 @@ function extractFallbackCalls(content) {
   return { calls, content: calls.length ? rest.trim() : content };
 }
 
+// A test profile (--user-data-dir) still talks to Ben's real gateway, which writes every chat to the diary the nightly sleep trains on.
+// Its requests carry test: true (the gateway keeps extra body fields in the record's "sampling") and X-Test, so the sleep skips them.
+let testProfile = false;
+const setTestProfile = (on) => { testProfile = !!on; };
+
 // The ONE place a chat request body is built, for real requests and for the warm-up request, so the
 // system prompt, tools, tool_choice and everything else that shapes the chat template are identical.
 function buildChatBody({ model, messages, tools, stream, maxTokens }) {
   const body = { model, messages, stream: !!stream };
+  if (testProfile) body.test = true;
   if (tools && tools.length) { body.tools = tools; body.tool_choice = 'auto'; }
   if (maxTokens) body.max_tokens = maxTokens;
   return body;
@@ -55,6 +61,7 @@ async function streamChat(opts) {
   const body = buildChatBody({ model, messages, tools, stream: true, maxTokens });
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
   if (apiKey) headers.authorization = 'Bearer ' + apiKey;
+  if (testProfile) headers['x-test'] = '1';
   const tStart = Date.now();
   let firstTokenMs = null;
   const firstToken = () => { if (firstTokenMs === null) firstTokenMs = Date.now() - tStart; };
@@ -143,4 +150,4 @@ async function streamChat(opts) {
   return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
 }
 
-module.exports = { streamChat, extractFallbackCalls, buildChatBody, chatUrl };
+module.exports = { streamChat, extractFallbackCalls, buildChatBody, chatUrl, setTestProfile };
