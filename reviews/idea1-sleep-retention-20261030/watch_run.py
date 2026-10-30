@@ -11,12 +11,13 @@ first=measure(); readings=[first];print('initial memory',first,flush=True)
 assert first['available_bytes']>=7*1024**3 and first['pressure_level']<4 and time.time()<deadline-900
 cmd=[str(Path.home()/'learner-ops/speedbench/venv312/bin/python'),str(Path(__file__).resolve().parent/'run_hf.py'),'--root',str(root),'--model-dir',str(Path.home()/'learner-ops/lfm3/hf'),'--allow-model-load']
 with (root/'HF-stdout.log').open('w') as out,(root/'HF-stderr.log').open('w') as err:
-    child=subprocess.Popen(cmd,stdout=out,stderr=err,start_new_session=True); reason=None
+    child=subprocess.Popen(cmd,stdout=out,stderr=err,start_new_session=True); reason=None; started=time.monotonic()
     try:
         while child.poll() is None:
             m=measure();readings.append(m)
             if m['available_bytes']<5.5*1024**3:reason='available memory below 5.5 GiB'
             elif m['pressure_level']>=4:reason='critical pressure'
+            elif time.monotonic()-started>=1050:reason='HF outer watchdog 1050 seconds'
             elif time.time()>=deadline:reason='absolute deadline'
             rss=int(subprocess.check_output(['ps','-o','rss=','-p',str(child.pid)],text=True).strip() or 0)*1024
             m['process_rss_bytes']=rss
