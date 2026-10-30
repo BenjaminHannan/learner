@@ -112,6 +112,7 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
     return isWin(p) ? { openAtLogin: !!on, args: ['--hidden'] } : { openAtLogin: !!on, openAsHidden: true };
   }
   function startedHidden(p, argv, loginSettings) {
+    if ((argv || []).includes('--night')) return true;   // opened by the night-start agent at the start of the sleep window (src/nightstart.js)
     if (isWin(p)) return (argv || []).includes('--hidden');
     return !!(loginSettings && loginSettings.wasOpenedAsHidden);
   }
