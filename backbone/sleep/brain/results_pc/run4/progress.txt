@@ -1,60 +1,48 @@
-[curve] night 2 forward {'C1': 0.0, 'C2': 0.07, 'C4': 0.19, 'C24': 0.13, 'all': 0.09848484848484848}
+[cuda] PyTorch memory capped at 14.0 of 15.9 GiB (SLEEPB_CUDA_CAP_GIB)
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 3190.98it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[lfm3] tagger prompt: '<|startoftext|><|im_start|>system\nYou extract facts from chat messages.<|im_end|>\n<|im_start|>user\nMessage from Sam:\n"hey, can you help me write a quick toast for my coworker\'s retirement lunch? something short and warm, not cheesy"\n\nList the facts this message states about specific named people, places, organisations or things, as short subject-relation-object triples. Use the names exactly as written in the message. At most 5. Reply with only JSON: [{"subject": "...", "relation": "...", "object": "..."}]. If there are none, reply [].<|im_end|>\n<|im_start|>assistant\n<think></think>'
+[lfm3] last 10 token ids: [26697, 1106, 3286, 124900, 207, 124899, 63514, 207, 124901, 124902] = ['Ġreply', 'Ġ[', '].', '<|im_end|>', 'Ċ', '<|im_start|>', 'assistant', 'Ċ', '<think>', '</think>']; eos id 124900
+[lfm3] names prompt tail (stage 1, block open, high effort): ' not, reply only: no<|im_end|>\n<|im_start|>assistant\n<think>'; stops at ids [124902, 124900] (512 tokens max)
+[lfm3] LoRA matched 142 modules: ['model.layers.0.conv.in_proj', 'model.layers.0.conv.out_proj', 'model.layers.0.feed_forward.w1', 'model.layers.0.feed_forward.w3', 'model.layers.0.feed_forward.w2', 'model.layers.1.conv.in_proj', 'model.layers.1.conv.out_proj', '...']
+[lora] trainable 16,105,472
+[selftest] SHY refactor reproduces 0.85 x dW: {'tensor_worst_rel_err': 1.023413574330334e-06, 'pm_worst_rel_err': 1.1383073115212028e-06, 'pm_modules': 142}
+[base] ARC-Easy validation(100) 0.720
+[base] ARC-Easy acc 0.714 (n=500)
+[night 1] names {'candidates': 223, 'turns': 149, 'turns_ge2': 107, 'pairs': 29, 'yes': 15, 'new_items': 15, 'appended': 15, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 484.8, 'think_capped': 20}
+[night 1] written in 238 s (dream 152 s)
+[night 1] vary {'mode': 'mix', 'styles': ['story', 'note', 'weird'], 'k': 32, 'kp': 8, 'n_per_style': 8, 'stats': {'vary_skipped_no_check': 0, 'vary_story_gen': 40, 'vary_story_kept': 14, 'vary_story_parse_fail': 0, 'vary_story_dropped_test_leak': 0, 'vary_story_dropped_missing_entities': 13, 'vary_story_dropped_stale': 0, 'vary_story_dropped_unverified': 13, 'vary_story_dropped_dup': 0, 'vary_note_gen': 40, 'vary_note_kept': 19, 'vary_note_parse_fail': 0, 'vary_note_dropped_test_leak': 0, 'vary_note_dropped_missing_entities': 11, 'vary_note_dropped_stale': 0, 'vary_note_dropped_unverified': 10, 'vary_note_dropped_dup': 0, 'vary_weird_gen': 40, 'vary_weird_kept': 9, 'vary_weird_parse_fail': 0, 'vary_weird_dropped_test_leak': 0, 'vary_weird_dropped_missing_entities': 21, 'vary_weird_dropped_stale': 0, 'vary_weird_dropped_unverified': 10, 'vary_weird_dropped_dup': 0}}
+[night 1] budget {'scale': 8.0, 'steps': 480, 'steps_ref': 60, 'k': 32, 'max_dream_items': 1280, 'rem_chains': 240, 'rem_gist': 240, 'bench': None, 'text_scale': None}
+[night 1] items 207 eligible 5 (active 5, consolidated 0) steps 480 probe_pre 0.0
+[night 1] step 400/480 at 550 s
+[night 1] trained 480 steps in 707 s (REM writing included); cuda peak 5.1 GiB, reserved 6.4 GiB (max 8.77)
+[night 1] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 12, 'zeroed_frac': 0.00528169014084507, 'energy_ratio': 0.7224633232353123}
+[night 1] done steps 480 (nrem 276, rem 204) arc_val 0.780 probe_post 0.4 reverted False 948s
+[night 2] names {'candidates': 336, 'turns': 153, 'turns_ge2': 109, 'pairs': 31, 'yes': 20, 'new_items': 20, 'appended': 20, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 510.6, 'think_capped': 28}
+[night 2] written in 653 s (dream 572 s)
+[night 2] vary {'mode': 'mix', 'styles': ['story', 'note', 'weird'], 'k': 32, 'kp': 8, 'n_per_style': 8, 'stats': {'vary_skipped_no_check': 23, 'vary_story_gen': 416, 'vary_story_kept': 226, 'vary_story_parse_fail': 0, 'vary_story_dropped_test_leak': 0, 'vary_story_dropped_missing_entities': 51, 'vary_story_dropped_stale': 0, 'vary_story_dropped_unverified': 139, 'vary_story_dropped_dup': 0, 'vary_note_gen': 416, 'vary_note_kept': 226, 'vary_note_parse_fail': 0, 'vary_note_dropped_test_leak': 0, 'vary_note_dropped_missing_entities': 96, 'vary_note_dropped_stale': 0, 'vary_note_dropped_unverified': 94, 'vary_note_dropped_dup': 0, 'vary_weird_gen': 416, 'vary_weird_kept': 142, 'vary_weird_parse_fail': 0, 'vary_weird_dropped_test_leak': 0, 'vary_weird_dropped_missing_entities': 91, 'vary_weird_dropped_stale': 0, 'vary_weird_dropped_unverified': 183, 'vary_weird_dropped_dup': 0}}
+[night 2] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 32, 'max_dream_items': 1280, 'rem_chains': 240, 'rem_gist': 240, 'bench': None, 'text_scale': None}
+[night 2] items 345 eligible 80 (active 80, consolidated 0) steps 2400 probe_pre 0.03508771929824561
+[night 2] step 200/2400 at 262 s
+[night 2] step 400/2400 at 526 s
+[night 2] step 800/2400 at 1151 s
+[night 2] step 1400/2400 at 2102 s
+[night 2] step 2000/2400 at 3116 s
+[night 2] trained 2400 steps in 3908 s (REM writing included); cuda peak 5.3 GiB, reserved 6.1 GiB (max 13.85)
+[night 2] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 32, 'zeroed_frac': 0.014084507042253521, 'energy_ratio': 0.72204597598171}
+[night 2] done steps 2400 (nrem 1380, rem 1020) arc_val 0.840 probe_post 0.6491228070175439 reverted False 4565s
+[curve] night 2 forward {'C1': 0.0, 'C2': 0.08, 'C4': 0.2, 'C24': 0.14, 'all': 0.10606060606060606}
 [night 3] names {'candidates': 398, 'turns': 149, 'turns_ge2': 117, 'pairs': 12, 'yes': 5, 'new_items': 5, 'appended': 5, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 512.0, 'think_capped': 12}
-[night 3] written in 386 s (dream 320 s)
-[night 3] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': 4.0}
-[night 3] items 470 eligible 161 (active 160, consolidated 1) steps 2400 probe_pre 0.26666666666666666
-[night 3] step 200/2400 at 259 s
-[night 3] step 400/2400 at 522 s
-[night 3] step 800/2400 at 1130 s
-[night 3] step 1400/2400 at 2066 s
-[night 3] step 2000/2400 at 3078 s
-[night 3] trained 2400 steps in 3871 s (REM writing included); cuda peak 5.3 GiB, reserved 6.0 GiB (max 13.53)
-[night 3] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000448103418}
-[night 3] done steps 2400 (nrem 1380, rem 1020) arc_val 0.810 probe_post 0.6416666666666667 reverted False 4265s
+[night 3] written in 929 s (dream 866 s)
+[night 3] vary {'mode': 'mix', 'styles': ['story', 'note', 'weird'], 'k': 32, 'kp': 8, 'n_per_style': 8, 'stats': {'vary_skipped_no_check': 39, 'vary_story_gen': 640, 'vary_story_kept': 366, 'vary_story_parse_fail': 0, 'vary_story_dropped_test_leak': 0, 'vary_story_dropped_missing_entities': 49, 'vary_story_dropped_stale': 0, 'vary_story_dropped_unverified': 225, 'vary_story_dropped_dup': 0, 'vary_note_gen': 640, 'vary_note_kept': 376, 'vary_note_parse_fail': 0, 'vary_note_dropped_test_leak': 0, 'vary_note_dropped_missing_entities': 119, 'vary_note_dropped_stale': 0, 'vary_note_dropped_unverified': 145, 'vary_note_dropped_dup': 0, 'vary_weird_gen': 640, 'vary_weird_kept': 212, 'vary_weird_parse_fail': 0, 'vary_weird_dropped_test_leak': 0, 'vary_weird_dropped_missing_entities': 90, 'vary_weird_dropped_stale': 0, 'vary_weird_dropped_unverified': 338, 'vary_weird_dropped_dup': 0}}
+[night 3] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 32, 'max_dream_items': 1280, 'rem_chains': 240, 'rem_gist': 240, 'bench': None, 'text_scale': None}
+[night 3] items 471 eligible 162 (active 160, consolidated 2) steps 2400 probe_pre 0.3445378151260504
+[night 3] step 200/2400 at 260 s
+[night 3] step 400/2400 at 515 s
+[night 3] step 800/2400 at 1129 s
+[night 3] step 1400/2400 at 2064 s
+[night 3] step 2000/2400 at 3075 s
+[night 3] trained 2400 steps in 3840 s (REM writing included); cuda peak 5.3 GiB, reserved 6.3 GiB (max 13.97)
+[night 3] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000384879916}
+[night 3] done steps 2400 (nrem 1380, rem 1020) arc_val 0.820 probe_post 0.6638655462184874 reverted False 4773s
 [night 4] names {'candidates': 462, 'turns': 145, 'turns_ge2': 116, 'pairs': 16, 'yes': 8, 'new_items': 8, 'appended': 8, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 495.1, 'think_capped': 13}
-[night 4] written in 386 s (dream 318 s)
-[night 4] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': 4.0}
-[night 4] items 598 eligible 226 (active 198, consolidated 28) steps 2400 probe_pre 0.4418604651162791
-[night 4] step 200/2400 at 252 s
-[night 4] step 400/2400 at 509 s
-[night 4] step 800/2400 at 1122 s
-[night 4] step 1400/2400 at 2044 s
-[night 4] step 2000/2400 at 3106 s
-[night 4] trained 2400 steps in 3915 s (REM writing included); cuda peak 5.4 GiB, reserved 6.3 GiB (max 13.53)
-[night 4] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.722500042338128}
-[night 4] REVERTED: ['consolidated recall 0.893 < 1.000 - 0.10']
-[night 4] done steps 2400 (nrem 1380, rem 1020) arc_val 0.860 probe_post 0.4418604651162791 reverted True 4312s
-[curve] night 4 forward {'C1': 0.0, 'C2': 0.12, 'C4': 0.42, 'C24': 0.27, 'all': 0.20454545454545456}
-[night 5] names {'candidates': 498, 'turns': 151, 'turns_ge2': 117, 'pairs': 11, 'yes': 1, 'new_items': 1, 'appended': 1, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 512.0, 'think_capped': 11}
-[night 5] written in 485 s (dream 421 s)
-[night 5] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': 4.0}
-[night 5] items 691 eligible 285 (active 213, consolidated 72) steps 2400 probe_pre 0.3411214953271028
-[night 5] step 200/2400 at 254 s
-[night 5] step 400/2400 at 515 s
-[night 5] step 800/2400 at 1153 s
-[night 5] step 1400/2400 at 2110 s
-[night 5] step 2000/2400 at 3114 s
-[night 5] trained 2400 steps in 3923 s (REM writing included); cuda peak 5.4 GiB, reserved 6.3 GiB (max 13.91)
-[night 5] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000438297567}
-[night 5] done steps 2400 (nrem 1380, rem 1020) arc_val 0.840 probe_post 0.6448598130841121 reverted False 4418s
-[night 6] names {'candidates': 518, 'turns': 148, 'turns_ge2': 121, 'pairs': 37, 'yes': 17, 'new_items': 17, 'appended': 17, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 487.8, 'think_capped': 29}
-[night 6] written in 525 s (dream 441 s)
-[night 6] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': 4.0}
-[night 6] items 780 eligible 348 (active 281, consolidated 67) steps 2400 probe_pre 0.5088967971530249
-[night 6] step 200/2400 at 263 s
-[night 6] step 400/2400 at 519 s
-[night 6] step 800/2400 at 1139 s
-[night 6] step 1400/2400 at 2069 s
-[night 6] step 2000/2400 at 3067 s
-[night 6] trained 2400 steps in 3898 s (REM writing included); cuda peak 5.4 GiB, reserved 6.2 GiB (max 13.91)
-[night 6] SHY {'modules': 142, 'sv_total': 2272, 'sv_zeroed': 0, 'zeroed_frac': 0.0, 'energy_ratio': 0.7225000366642181}
-[night 6] done steps 2400 (nrem 1380, rem 1020) arc_val 0.860 probe_post 0.6583629893238434 reverted False 4431s
-[night 7] names {'candidates': 532, 'turns': 148, 'turns_ge2': 120, 'pairs': 22, 'yes': 6, 'new_items': 6, 'appended': 6, 'dropped_invalid': 0, 'dropped_not_in_turn': 0, 'think_tokens_mean': 464.2, 'think_capped': 13}
-[night 7] written in 602 s (dream 537 s)
-[night 7] budget {'scale': 8.0, 'steps': 2400, 'steps_ref': 300, 'k': 16, 'max_dream_items': 640, 'rem_chains': 120, 'rem_gist': 120, 'bench': None, 'text_scale': 4.0}
-[night 7] items 873 eligible 420 (active 289, consolidated 131) steps 2400 probe_pre 0.5568513119533528
-[night 7] step 200/2400 at 254 s
-[night 7] step 400/2400 at 509 s
-[night 7] step 800/2400 at 1140 s
-[night 7] step 1400/2400 at 2069 s
-[night 7] step 2000/2400 at 3081 s
