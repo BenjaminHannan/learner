@@ -100,6 +100,7 @@ test('open at login: Windows starts us with --hidden, Mac uses openAsHidden', ()
   assert.strictEqual(P.startedHidden('win32', ['x.exe', '--hidden']), true);
   assert.strictEqual(P.startedHidden('win32', ['x.exe']), false);
   assert.strictEqual(P.startedHidden('darwin', ['x'], { wasOpenedAsHidden: true }), true);
+  assert.strictEqual(P.startedHidden('darwin', ['x', '--hidden'], { wasOpenedAsHidden: false }), true, 'a background start after an update keeps the window off screen');
   const wo = P.windowOptions('win32', '/i.png'); assert.strictEqual(wo.autoHideMenuBar, true); assert.strictEqual(wo.titleBarStyle, 'default');
   const mo = P.windowOptions('darwin', '/i.png'); assert.strictEqual(mo.titleBarStyle, 'hiddenInset'); assert.strictEqual(mo.icon, undefined);
 });
