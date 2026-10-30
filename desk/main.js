@@ -50,6 +50,7 @@ const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
+const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
 const { Updater } = require('./src/updater');
@@ -368,6 +369,20 @@ function onSleepPoll(st, events) {
   if (sl.waking && st.sleeping && Date.now() - sl.wakingAt > 90000) { sl.waking = false; sl.bad = 'Glim is taking a long time to wake up. Your draft is still here. Try Wake again or look at ' + sleeper.p.log + '.'; pushSleep(); sleepNotice(sl.bad); return; }
   if (sl.asleep) pushSleep();
 }
+// Oct 30: Premonition was quit at 10:10 PM and the 11 PM sleep never started. On Ben's kind of Mac (packaged app, his real profile) a
+// LaunchAgent opens it hidden at the start of the night window while auto-sleep is on (src/nightstart.js).
+let nightStart = null;
+function syncNightStart() {
+  if (process.platform !== 'darwin' || !app.isPackaged || E2E || app.commandLine.hasSwitch('user-data-dir')) return;
+  try {
+    nightStart = nightStart || new NightStart({ home: app.getPath('home'), execPath: process.execPath });
+    const s = store.getSettings();
+    const r = nightStart.sync({ on: s.autoSleep !== false && sleeper.available().ok, from: effectiveWindow(s, learnedNow(new Date())).from });
+    if (r === 'installed' || r === 'removed' || (r === 'failed' && syncNightStart.last !== 'failed')) console.log('[sleep] night start ' + r + ' (' + effectiveWindow(s, learnedNow(new Date())).from + ')');
+    syncNightStart.last = r;
+  } catch (e) { /* never in the way of the app */ }
+}
+
 function autoSleepTick(now, over) {
   const s = store.getSettings(); now = now || new Date();
   const common = { settings: s, now, asleep: sl.asleep || sl.waking, startedAuto: sl.startedAuto, learned: learnedNow(now) };
@@ -1231,6 +1246,7 @@ async function applySettings(patch) {
   if (ch('gatewayUrl') && warmer) warmer.gatewayMoved();
   else if ((ch('model') || ch('modelAuto') || ch('modelMain') || ch('modelFast')) && warmer) warmer.rewarm();
   if (ch('diaryEnabled') || ch('diaryPath') || ch('pythonPath')) { await refreshDiary(); if (warmer) warmer.rewarm(); }
+  if (FEATURES.sleep && (ch('autoSleep') || ch('sleepFrom') || ch('sleepTo') || ch('sleepAdapt'))) syncNightStart();   // before Ben can quit within the minute
   return out;
 }
 
@@ -1249,7 +1265,7 @@ async function afterFirstPaint() {
   if (builtinWanted()) builtin.start({ lora: sleeper.currentLora && sleeper.currentLora() });
   if (FEATURES.sleep) {
     sleeper.watch(E2E ? 200 : 5000, onSleepPoll);
-    if (!E2E) { sampleRhythm(); setInterval(() => { sampleRhythm(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
+    if (!E2E) { sampleRhythm(); syncNightStart(); setInterval(() => { sampleRhythm(); syncNightStart(); autoSleepTick(); awakeCheckinTick().catch(() => {}); }, 60000).unref(); }
     {
       const st = sleeper.status();
       const saved = SleepSession.reconcile(SleepSession.read(sleepSessionFile()), st);
@@ -1566,7 +1582,7 @@ const gotLock = E2E || app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 app.on('second-instance', () => showWindow(true));
 app.on('activate', () => { if (store) showWindow(); });
-app.on('before-quit', () => { quitting = true; try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { sttSrv && sttSrv.stop(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
+app.on('before-quit', () => { console.log('[app] quitting'); quitting = true; if (FEATURES.sleep && store) syncNightStart(); try { call && call.hangup(); } catch (e) { /* ignore */ } try { stopDictate(true); } catch (e) { /* ignore */ } try { sttSrv && sttSrv.stop(); } catch (e) { /* ignore */ } try { builtin && builtin.stop(); } catch (e) { /* ignore */ } });
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 
 app.whenReady().then(async () => {
@@ -1576,6 +1592,14 @@ app.whenReady().then(async () => {
   memory = createMemory(app.getPath('userData'));
   tracking = createTracking(app.getPath('userData'));
   rhythm = new Rhythm(path.join(app.getPath('userData'), 'rhythm.json'));
+  // opened by the night-start agent: Ben was not just here, so the away-time is the Mac's idle time, not "since launch"
+  if (process.argv.includes(NIGHT_ARG)) {
+    // launchd runs a missed start when the Mac wakes, which can be the next morning: outside the night window it closes again
+    const s = store.getSettings(), w = effectiveWindow(s, learnedNow(new Date()));
+    if (s.autoSleep === false || !inWindow(new Date(), w.from, w.to)) { console.log('[app] opened for the night (' + NIGHT_ARG + ') outside ' + w.from + '-' + w.to + ', closing'); app.quit(); return; }
+    try { sl.lastActive = Date.now() - powerMonitor.getSystemIdleTime() * 1000; } catch (e) { /* keep launch time */ }
+    console.log('[app] opened for the night (' + NIGHT_ARG + ')');
+  }
   if (FEATURES.builtin || process.env.PREMONITION_BUILTIN) setupBuiltin(); else sleeper = new Sleep({ getSettings: () => store.getSettings(), home: E2E ? path.join(app.getPath('userData'), 'sleepmode') : undefined });
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   resetModelToDefault();
