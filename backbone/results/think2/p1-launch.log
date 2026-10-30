@@ -338,3 +338,289 @@ VERDICT: INCOMPLETE
 2026-10-27T16:53:25Z seg1 segment done
 2026-10-27T19:26:54Z seg5 armed (ws/wsham after V8) pid 14926, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-AFTER-V8 newer than 2026-10-27T00:00:00Z
 2026-10-27T23:51:56Z seg3 re-armed (g variant) pid 20874, waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-LOOP-P2A newer than 2026-10-27T00:00:00Z
+2026-10-30T02:07:35Z seg3 trigger seen: 143 2026-10-29T11:16:52Z
+2026-10-30T02:07:35Z seg3 go: P2a tj --alpha-init 0.3
+[W1029 22:07:38.341959761 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+== think run_box 2026-10-30T02:07:39Z jobs=tj:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- tj seed 0 02:07:39
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 88/320 [00:00<00:00, 869.36it/s]Loading weights:  56%|█████▌    | 178/320 [00:00<00:00, 883.09it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 1555.76it/s]
+[joint] arm tj K=16 lmax 4 board params 2,644,016 lora params 10,822,656 rho 0.01945
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[gate] step 10 loss 0.3668 |tanh a| 0.2908 cos_across 0.996 cos_within 0.082 cos_upd_across 0.874 cos_upd_within 0.537 clamp 0.77 clamp5 0.00 step_rms 0.046 gn 0.061 gn_lora 5.162
+[gate] step 20 loss 0.3401 |tanh a| 0.2901 cos_across 0.997 cos_within 0.087 cos_upd_across 0.913 cos_upd_within 0.646 clamp 0.79 clamp5 0.00 step_rms 0.046 gn 0.126 gn_lora 7.052
+[gate] step 30 loss 0.3262 |tanh a| 0.2888 cos_across 0.998 cos_within 0.088 cos_upd_across 0.953 cos_upd_within 0.763 clamp 0.78 clamp5 0.00 step_rms 0.048 gn 0.033 gn_lora 3.683
+[gate] step 40 loss 0.3621 |tanh a| 0.2868 cos_across 0.999 cos_within 0.093 cos_upd_across 0.968 cos_upd_within 0.828 clamp 0.79 clamp5 0.00 step_rms 0.050 gn 0.012 gn_lora 2.817
+[gate] step 50 loss 0.2591 |tanh a| 0.2841 cos_across 0.999 cos_within 0.095 cos_upd_across 0.980 cos_upd_within 0.859 clamp 0.77 clamp5 0.00 step_rms 0.051 gn 0.012 gn_lora 1.858
+[train] step 50/1254 loss 0.2591 1021s
+[gate] step 60 loss 0.5215 |tanh a| 0.2820 cos_across 0.999 cos_within 0.095 cos_upd_across 0.989 cos_upd_within 0.881 clamp 0.75 clamp5 0.00 step_rms 0.053 gn 0.020 gn_lora 4.717
+[gate] step 70 loss 0.4661 |tanh a| 0.2809 cos_across 1.000 cos_within 0.100 cos_upd_across 0.993 cos_upd_within 0.914 clamp 0.80 clamp5 0.00 step_rms 0.055 gn 0.016 gn_lora 3.510
+[gate] step 80 loss 0.4458 |tanh a| 0.2786 cos_across 1.000 cos_within 0.110 cos_upd_across 0.995 cos_upd_within 0.931 clamp 0.82 clamp5 0.00 step_rms 0.058 gn 0.011 gn_lora 2.583
+[gate] step 90 loss 0.4351 |tanh a| 0.2767 cos_across 1.000 cos_within 0.112 cos_upd_across 0.995 cos_upd_within 0.939 clamp 0.84 clamp5 0.00 step_rms 0.060 gn 0.017 gn_lora 4.677
+[gate] step 100 loss 0.4274 |tanh a| 0.2747 cos_across 1.000 cos_within 0.116 cos_upd_across 0.997 cos_upd_within 0.939 clamp 0.88 clamp5 0.00 step_rms 0.062 gn 0.005 gn_lora 3.396
+[train] step 100/1254 loss 0.4274 2012s
+[gate] step 110 loss 0.4201 |tanh a| 0.2721 cos_across 1.000 cos_within 0.123 cos_upd_across 0.998 cos_upd_within 0.941 clamp 0.94 clamp5 0.00 step_rms 0.064 gn 0.027 gn_lora 9.313
+[gate] step 120 loss 0.5172 |tanh a| 0.2704 cos_across 1.000 cos_within 0.128 cos_upd_across 0.998 cos_upd_within 0.946 clamp 0.94 clamp5 0.00 step_rms 0.065 gn 0.007 gn_lora 3.146
+[gate] step 130 loss 0.4743 |tanh a| 0.2687 cos_across 1.000 cos_within 0.133 cos_upd_across 0.998 cos_upd_within 0.950 clamp 0.94 clamp5 0.00 step_rms 0.066 gn 0.016 gn_lora 10.281
+[gate] step 140 loss 0.3321 |tanh a| 0.2677 cos_across 1.000 cos_within 0.135 cos_upd_across 0.998 cos_upd_within 0.951 clamp 0.94 clamp5 0.00 step_rms 0.066 gn 0.004 gn_lora 3.674
+[gate] step 150 loss 0.4979 |tanh a| 0.2671 cos_across 1.000 cos_within 0.138 cos_upd_across 0.998 cos_upd_within 0.953 clamp 0.94 clamp5 0.00 step_rms 0.067 gn 0.010 gn_lora 6.257
+[train] step 150/1254 loss 0.4979 3017s
+[gate] step 160 loss 0.5513 |tanh a| 0.2663 cos_across 1.000 cos_within 0.141 cos_upd_across 0.999 cos_upd_within 0.955 clamp 0.94 clamp5 0.00 step_rms 0.068 gn 0.019 gn_lora 10.640
+[gate] step 170 loss 0.4189 |tanh a| 0.2651 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.955 clamp 0.94 clamp5 0.00 step_rms 0.068 gn 0.018 gn_lora 5.545
+[gate] step 180 loss 0.3966 |tanh a| 0.2642 cos_across 1.000 cos_within 0.145 cos_upd_across 0.999 cos_upd_within 0.956 clamp 0.94 clamp5 0.00 step_rms 0.068 gn 0.008 gn_lora 5.061
+[gate] step 190 loss 0.4384 |tanh a| 0.2633 cos_across 1.000 cos_within 0.146 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.068 gn 0.023 gn_lora 17.711
+[gate] step 200 loss 0.4824 |tanh a| 0.2611 cos_across 1.000 cos_within 0.145 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.068 gn 0.006 gn_lora 3.084
+[train] step 200/1254 loss 0.4824 4027s
+[gate] step 210 loss 0.3454 |tanh a| 0.2599 cos_across 1.000 cos_within 0.145 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.069 gn 0.008 gn_lora 14.560
+[gate] step 220 loss 0.4806 |tanh a| 0.2589 cos_across 1.000 cos_within 0.144 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.069 gn 0.010 gn_lora 8.675
+[gate] step 230 loss 0.3832 |tanh a| 0.2571 cos_across 1.000 cos_within 0.144 cos_upd_across 0.999 cos_upd_within 0.955 clamp 0.94 clamp5 0.00 step_rms 0.069 gn 0.006 gn_lora 4.883
+[gate] step 240 loss 0.3954 |tanh a| 0.2561 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.953 clamp 0.94 clamp5 0.00 step_rms 0.069 gn 0.004 gn_lora 3.927
+[gate] step 250 loss 0.3701 |tanh a| 0.2542 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.953 clamp 0.94 clamp5 0.00 step_rms 0.069 gn 0.008 gn_lora 4.096
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[dev] step 250 {'L1': 79.3, 'L4': 78.91, 'swap4': 78.12} ce {'L1': 0.2086, 'L4': 0.2062}
+[train] step 250/1254 loss 0.3701 5163s
+[gate] step 260 loss 0.4638 |tanh a| 0.2529 cos_across 1.000 cos_within 0.141 cos_upd_across 0.999 cos_upd_within 0.954 clamp 0.94 clamp5 0.00 step_rms 0.070 gn 0.006 gn_lora 5.538
+[gate] step 270 loss 0.3064 |tanh a| 0.2521 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.956 clamp 0.94 clamp5 0.00 step_rms 0.070 gn 0.005 gn_lora 3.843
+[gate] step 280 loss 0.3474 |tanh a| 0.2513 cos_across 1.000 cos_within 0.143 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.071 gn 0.006 gn_lora 4.862
+[gate] step 290 loss 0.2928 |tanh a| 0.2506 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.071 gn 0.006 gn_lora 3.978
+[gate] step 300 loss 0.3727 |tanh a| 0.2497 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.071 gn 0.008 gn_lora 4.466
+[train] step 300/1254 loss 0.3727 6179s
+[gate] step 310 loss 0.3173 |tanh a| 0.2491 cos_across 1.000 cos_within 0.142 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.071 gn 0.004 gn_lora 3.663
+[gate] step 320 loss 0.5231 |tanh a| 0.2490 cos_across 1.000 cos_within 0.143 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.072 gn 0.006 gn_lora 4.723
+[gate] step 330 loss 0.4772 |tanh a| 0.2482 cos_across 1.000 cos_within 0.146 cos_upd_across 0.999 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.072 gn 0.018 gn_lora 7.849
+[gate] step 340 loss 0.4850 |tanh a| 0.2466 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.005 gn_lora 3.135
+[gate] step 350 loss 0.4281 |tanh a| 0.2452 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.003 gn_lora 2.978
+[train] step 350/1254 loss 0.4281 7205s
+[gate] step 360 loss 0.3618 |tanh a| 0.2445 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.003 gn_lora 6.090
+[gate] step 370 loss 0.4855 |tanh a| 0.2437 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.003 gn_lora 2.423
+[gate] step 380 loss 0.4386 |tanh a| 0.2430 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.008 gn_lora 6.850
+[gate] step 390 loss 0.4515 |tanh a| 0.2422 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.073 gn 0.008 gn_lora 9.665
+[gate] step 400 loss 0.5373 |tanh a| 0.2420 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.964 clamp 0.94 clamp5 0.00 step_rms 0.074 gn 0.004 gn_lora 4.072
+[train] step 400/1254 loss 0.5373 8214s
+[gate] step 410 loss 0.3510 |tanh a| 0.2413 cos_across 1.000 cos_within 0.149 cos_upd_across 0.999 cos_upd_within 0.965 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.004 gn_lora 3.524
+[gate] step 420 loss 0.3089 |tanh a| 0.2412 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.965 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.004 gn_lora 5.823
+[gate] step 430 loss 0.3463 |tanh a| 0.2407 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.964 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 3.514
+[gate] step 440 loss 0.5557 |tanh a| 0.2406 cos_across 1.000 cos_within 0.150 cos_upd_across 0.999 cos_upd_within 0.965 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.009 gn_lora 8.393
+[gate] step 450 loss 0.4065 |tanh a| 0.2403 cos_across 1.000 cos_within 0.150 cos_upd_across 0.999 cos_upd_within 0.964 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 2.959
+[train] step 450/1254 loss 0.4065 9233s
+[gate] step 460 loss 0.1860 |tanh a| 0.2396 cos_across 1.000 cos_within 0.149 cos_upd_across 0.999 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 2.508
+[gate] step 470 loss 0.3031 |tanh a| 0.2394 cos_across 1.000 cos_within 0.149 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.006 gn_lora 3.186
+[gate] step 480 loss 0.4152 |tanh a| 0.2382 cos_across 1.000 cos_within 0.150 cos_upd_across 1.000 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 3.027
+[gate] step 490 loss 0.3368 |tanh a| 0.2371 cos_across 1.000 cos_within 0.150 cos_upd_across 1.000 cos_upd_within 0.964 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.004 gn_lora 15.593
+[gate] step 500 loss 0.3903 |tanh a| 0.2357 cos_across 1.000 cos_within 0.150 cos_upd_across 0.999 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.006 gn_lora 5.960
+[dev] step 500 {'L1': 80.47, 'L4': 80.08, 'swap4': 79.69} ce {'L1': 0.2009, 'L4': 0.2002}
+[train] step 500/1254 loss 0.3903 10380s
+[gate] step 510 loss 0.4607 |tanh a| 0.2343 cos_across 1.000 cos_within 0.151 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 4.082
+[gate] step 520 loss 0.4202 |tanh a| 0.2331 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.005 gn_lora 3.554
+[gate] step 530 loss 0.2801 |tanh a| 0.2322 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 2.437
+[gate] step 540 loss 0.3442 |tanh a| 0.2319 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.004 gn_lora 4.045
+[gate] step 550 loss 0.3449 |tanh a| 0.2315 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.001 gn_lora 2.554
+[train] step 550/1254 loss 0.3449 11390s
+[gate] step 560 loss 0.4110 |tanh a| 0.2307 cos_across 1.000 cos_within 0.155 cos_upd_across 1.000 cos_upd_within 0.968 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.004 gn_lora 3.657
+[gate] step 570 loss 0.2616 |tanh a| 0.2306 cos_across 1.000 cos_within 0.156 cos_upd_across 1.000 cos_upd_within 0.968 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.001 gn_lora 1.197
+[gate] step 580 loss 0.3551 |tanh a| 0.2304 cos_across 1.000 cos_within 0.155 cos_upd_across 1.000 cos_upd_within 0.968 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 2.297
+[gate] step 590 loss 0.3421 |tanh a| 0.2297 cos_across 1.000 cos_within 0.155 cos_upd_across 1.000 cos_upd_within 0.968 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 3.477
+[gate] step 600 loss 0.3795 |tanh a| 0.2294 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.003 gn_lora 3.497
+[train] step 600/1254 loss 0.3795 12426s
+[gate] step 610 loss 0.2820 |tanh a| 0.2296 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.003 gn_lora 4.197
+[gate] step 620 loss 0.3014 |tanh a| 0.2297 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.005 gn_lora 3.557
+[gate] step 630 loss 0.2921 |tanh a| 0.2296 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 2.273
+[gate] step 640 loss 0.3951 |tanh a| 0.2292 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 2.093
+[gate] step 650 loss 0.3160 |tanh a| 0.2289 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.004 gn_lora 2.553
+[train] step 650/1254 loss 0.3160 13446s
+[gate] step 660 loss 0.2638 |tanh a| 0.2285 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.003 gn_lora 2.203
+[gate] step 670 loss 0.2865 |tanh a| 0.2282 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.006 gn_lora 6.560
+[gate] step 680 loss 0.2218 |tanh a| 0.2279 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.005 gn_lora 5.155
+[gate] step 690 loss 0.3376 |tanh a| 0.2278 cos_across 1.000 cos_within 0.154 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.003 gn_lora 8.455
+[gate] step 700 loss 0.4018 |tanh a| 0.2281 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 3.259
+[train] step 700/1254 loss 0.4018 14470s
+[gate] step 710 loss 0.2592 |tanh a| 0.2280 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.004 gn_lora 5.113
+[gate] step 720 loss 0.2357 |tanh a| 0.2277 cos_across 1.000 cos_within 0.153 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.005 gn_lora 3.135
+[gate] step 730 loss 0.2683 |tanh a| 0.2276 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.967 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.004 gn_lora 6.180
+[gate] step 740 loss 0.3176 |tanh a| 0.2267 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.003 gn_lora 3.804
+[gate] step 750 loss 0.2708 |tanh a| 0.2261 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 1.392
+[dev] step 750 {'L1': 82.81, 'L4': 83.2, 'swap4': 83.2} ce {'L1': 0.1503, 'L4': 0.1497}
+[train] step 750/1254 loss 0.2708 15611s
+[gate] step 760 loss 0.2373 |tanh a| 0.2256 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.077 gn 0.002 gn_lora 2.906
+[gate] step 770 loss 0.1593 |tanh a| 0.2256 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 3.525
+[gate] step 780 loss 0.2677 |tanh a| 0.2256 cos_across 1.000 cos_within 0.152 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 1.902
+[gate] step 790 loss 0.3095 |tanh a| 0.2254 cos_across 1.000 cos_within 0.151 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 4.064
+[gate] step 800 loss 0.3329 |tanh a| 0.2252 cos_across 1.000 cos_within 0.151 cos_upd_across 1.000 cos_upd_within 0.966 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 6.924
+[train] step 800/1254 loss 0.3329 16626s
+[gate] step 810 loss 0.1764 |tanh a| 0.2249 cos_across 1.000 cos_within 0.151 cos_upd_across 1.000 cos_upd_within 0.965 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 3.392
+[gate] step 820 loss 0.3192 |tanh a| 0.2247 cos_across 1.000 cos_within 0.151 cos_upd_across 1.000 cos_upd_within 0.965 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 0.825
+[gate] step 830 loss 0.2166 |tanh a| 0.2251 cos_across 1.000 cos_within 0.149 cos_upd_across 1.000 cos_upd_within 0.963 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 0.894
+[gate] step 840 loss 0.2245 |tanh a| 0.2252 cos_across 1.000 cos_within 0.149 cos_upd_across 1.000 cos_upd_within 0.963 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 3.848
+[gate] step 850 loss 0.1985 |tanh a| 0.2251 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 0.733
+[train] step 850/1254 loss 0.1985 17672s
+[gate] step 860 loss 0.2527 |tanh a| 0.2250 cos_across 1.000 cos_within 0.149 cos_upd_across 1.000 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.007 gn_lora 9.841
+[gate] step 870 loss 0.3366 |tanh a| 0.2248 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 5.593
+[gate] step 880 loss 0.3036 |tanh a| 0.2249 cos_across 1.000 cos_within 0.149 cos_upd_across 1.000 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 4.679
+[gate] step 890 loss 0.2824 |tanh a| 0.2249 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.962 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 2.564
+[gate] step 900 loss 0.2454 |tanh a| 0.2249 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 1.594
+[train] step 900/1254 loss 0.2454 18704s
+[gate] step 910 loss 0.2773 |tanh a| 0.2249 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 1.553
+[gate] step 920 loss 0.3000 |tanh a| 0.2248 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 1.718
+[gate] step 930 loss 0.2249 |tanh a| 0.2246 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.005 gn_lora 6.598
+[gate] step 940 loss 0.2658 |tanh a| 0.2245 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.961 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 5.648
+[gate] step 950 loss 0.2001 |tanh a| 0.2244 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 1.502
+[train] step 950/1254 loss 0.2001 19723s
+[gate] step 960 loss 0.2105 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 2.178
+[gate] step 970 loss 0.2651 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 1.000 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 4.792
+[gate] step 980 loss 0.2434 |tanh a| 0.2241 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.960 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.005 gn_lora 9.209
+[gate] step 990 loss 0.2631 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 1.758
+[gate] step 1000 loss 0.2062 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 0.804
+[dev] step 1000 {'L1': 85.16, 'L4': 85.16, 'swap4': 85.16} ce {'L1': 0.1174, 'L4': 0.1173}
+[train] step 1000/1254 loss 0.2062 20872s
+[gate] step 1010 loss 0.2077 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 3.119
+[gate] step 1020 loss 0.2557 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 3.973
+[gate] step 1030 loss 0.1962 |tanh a| 0.2242 cos_across 1.000 cos_within 0.148 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 1.923
+[gate] step 1040 loss 0.3335 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 5.173
+[gate] step 1050 loss 0.1801 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 0.883
+[train] step 1050/1254 loss 0.1801 21883s
+[gate] step 1060 loss 0.2254 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.959 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 2.687
+[gate] step 1070 loss 0.2296 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 2.468
+[gate] step 1080 loss 0.1916 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.012 gn_lora 7.447
+[gate] step 1090 loss 0.1984 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 4.058
+[gate] step 1100 loss 0.2143 |tanh a| 0.2242 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.005 gn_lora 5.295
+[train] step 1100/1254 loss 0.2143 22904s
+[gate] step 1110 loss 0.3342 |tanh a| 0.2241 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.004 gn_lora 5.168
+[gate] step 1120 loss 0.1829 |tanh a| 0.2241 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.005 gn_lora 5.173
+[gate] step 1130 loss 0.1659 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.001 gn_lora 1.049
+[gate] step 1140 loss 0.2547 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.002 gn_lora 1.785
+[gate] step 1150 loss 0.2695 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.005 gn_lora 5.684
+[train] step 1150/1254 loss 0.2695 23918s
+[gate] step 1160 loss 0.2382 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 5.949
+[gate] step 1170 loss 0.1984 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.001 gn_lora 1.009
+[gate] step 1180 loss 0.2196 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.007 gn_lora 4.110
+[gate] step 1190 loss 0.1553 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.001 gn_lora 0.814
+[gate] step 1200 loss 0.1580 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.004 gn_lora 3.102
+[train] step 1200/1254 loss 0.1580 24932s
+[gate] step 1210 loss 0.1560 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.004 gn_lora 2.826
+[gate] step 1220 loss 0.1864 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.008 gn_lora 6.988
+[gate] step 1230 loss 0.2191 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 1.000 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.008 gn_lora 5.975
+[gate] step 1240 loss 0.1632 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.076 gn 0.003 gn_lora 2.150
+[gate] step 1250 loss 0.1767 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.958 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.000 gn_lora 0.487
+[dev] step 1250 {'L1': 86.33, 'L4': 86.33, 'swap4': 87.11} ce {'L1': 0.1044, 'L4': 0.1038}
+[train] step 1250/1254 loss 0.1767 26085s
+[gate] step 1254 loss 0.2034 |tanh a| 0.2240 cos_across 1.000 cos_within 0.147 cos_upd_across 0.999 cos_upd_within 0.957 clamp 0.94 clamp5 0.00 step_rms 0.075 gn 0.003 gn_lora 2.299
+[train] step 1254/1254 loss 0.2034 26167s
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[eval dev] 390/2000 batches 20 59s
+[eval dev] 881/2000 batches 40 122s
+[eval dev] 1509/2000 batches 60 186s
+[eval dev] 143/2000 batches 80 248s
+[eval dev] 568/2000 batches 100 311s
+[eval dev] 1109/2000 batches 120 374s
+[eval dev] 1823/2000 batches 140 436s
+[eval validation] 369/2000 batches 20 844s
+[eval validation] 832/2000 batches 40 1033s
+[eval validation] 1417/2000 batches 60 1235s
+[eval validation] 80/6675 batches 80 1448s
+[eval validation] 431/6675 batches 100 1656s
+[eval validation] 808/6675 batches 120 1841s
+[eval validation] 1209/6675 batches 140 2034s
+[eval validation] 1637/6675 batches 160 2234s
+[eval validation] 2097/6675 batches 180 2438s
+[eval validation] 2594/6675 batches 200 2627s
+[eval validation] 3126/6675 batches 220 2833s
+[eval validation] 3695/6675 batches 240 3051s
+[eval validation] 4310/6675 batches 260 3267s
+[eval validation] 4982/6675 batches 280 3477s
+[eval validation] 5745/6675 batches 300 3684s
+[eval validation] 6675/6675 batches 320 3899s
+[result] tj s0 validation L0 acc 71.14 (n=8675)
+[result] tj s0 validation L1 acc 71.11 (n=8675)
+[result] tj s0 validation L4 acc 71.00 (n=8675)
+[result] tj s0 validation swap4 acc 70.99 (n=8675)
+[result] tj s0 validation gatesoff4 acc 71.14 (n=8675)
+[result] tj s0 validation ref0 acc 71.14 (n=8675)
+[result] tj s0 dev L4 acc 86.50 (n=4000)
+[done] wrote /home/benja/think2/out_p2a/think/tj_s0/result_tj_s0.json
+[W1030 06:36:44.201605175 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+THINK-1 SUMMARY  (accuracy in percent, validation unless said)
+data: /home/benja/think2/out_p2a/data (8675 validation rows)
+
+== 1. What each run scored ==
+arm    seed   dev    val   notes
+a      0     81.53  67.29   10,822,656 trainable, 0.48 h
+aplus  0     86.92  70.26   10,822,656 trainable, 1.46 h
+tc     0     87.30  71.99   10,822,656 trainable, 2.74 h
+tj     0     86.50  71.00   13,466,672 trainable, 7.27 h
+
+Means over seeds, and the floors the marks use:
+  a 67.29  aplus 70.26  b --  bplus --
+  A_ref = 70.26  = max(66.72, a, aplus)
+  B_ref = 67.12  = max(67.12, b, bplus)
+  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0
+  a seed 0 scored twice: 67.29 vs 67.29  (noise 0.00, R2 tol 0.30)
+
+== 2. Arm t: score by laps (L=0 is pause slots) ==
+lap     n      s0     s1     s2    mean   vs prev
+L0       --    --    --    --       --         
+L1       --    --    --    --       --         
+L2       --    --    --    --       --         
+L4       --    --    --    --       --         
+L8       --    --    --    --       --         
+L12      --    --    --    --       --         
+L16      --    --    --    --       --         
+L24      --    --    --    --       --         
+t1 (one refinement): L0 --  L1 --  L8 --
+tw (144 slots, L1, seed 0): --  vs t1 seed 0: --  vs t L8 seed 0: --
+dev, arm t: L0 --  L1 --  L8 --
+
+== 3. Lesions (arm t, L=8) ==
+swap board         --   costs --
+mean board         --   costs --
+repeat delta1      --   costs --
+gates off          --   rows unlike the same batches without a board: -- (must be 0)
+arm b: 3 loops --, 1 pass --
+
+== 4. PASS marks ==
+seeds in: a 0  b -  aplus 0  bplus -  t -  t1 -  tw -   (marks need 012)
+G gain: not-enough-data
+not-enough-data  G    S(8) -- needs >= 73.26  (best floor 70.26 + 3.0)
+R1 slope: not-enough-data
+not-enough-data  R1a  S(8)-S(1) -- needs >= 1.5
+not-enough-data  R1b  per seed -- each >= 0.5
+R2 monotone: not-enough-data
+not-enough-data  R2a  S(2) -- vs S(1) -- - tol 0.30
+not-enough-data  R2b  S(4) -- vs S(2) -- - tol 0.30
+not-enough-data  R2c  S(8) -- vs S(4) -- - tol 0.30
+R3 no collapse: not-enough-data
+not-enough-data  R3a  S(12)-S(8) -- needs >= -1.0
+not-enough-data  R3b  per seed -- each >= -2.0
+R4 laps, not parameters: not-enough-data
+not-enough-data  R4a  S(8)-T1 -- needs >= 2.0
+not-enough-data  R4b  S(8)-repeat -- needs >= 1.0
+PASS needs G and R:  G not-enough-data, R not-enough-data
+
+== 5. Wrong-if rules (triggered = the idea is refuted) ==
+not-enough-data  W1   S(8) - T1 < 1.0 (laps add nothing)   now --
+not-enough-data  W2   S(8) - S(2) < 0.5 (done by lap 2)   now --
+not-enough-data  W3   swap lesion < 1.0 (board unused)   now --
+not-enough-data  W4   S(8) < A_ref + 1.0   now --
+
+== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==
+not-enough-data  F1   S_0(8) < 68.0   now --
+not-enough-data  F2   S_0(8) - T1_0 < 1.0   now --
+not-enough-data  F3   S_0(8) - S_0(2) < 0.5   now --
+not-enough-data  F4   swap lesion_0 < 1.0   now --
+
+== 7. Secondary (no weight in PASS) ==
+not-enough-data  M1   chain banks (n=--): S(8)-T1 -- needs >= 3.0
+not-enough-data  M2   depth >= 4 (n=--): S(8)-T1 -- needs >= 2.0
+
+== 8. Think-2 (PREREG-think2.md; seed 0, L_max 4; tj and tf judged separately) ==
+arm tj: S(4) 71.00  aplus 70.26  tc 71.99  S(1) 71.11  swap4 70.99  gatesoff4 71.14
+FAIL             tj P1 S(4) - max(aplus, tc) = -0.99  95% [-1.63, -0.35]   needs >= +2.0 and 95% interval excluding 0 (l.30)   [harder control: tc]
+                 S(4) - aplus +0.74  95% [+0.08, +1.38]
+                 S(4) - tc -0.99  95% [-1.63, -0.35]
+FAIL             tj P2 S(4) - swap4 = +0.01  95% [-0.20, +0.23]   needs >= +1.0 (l.31)
+FAIL             tj P3 S(4) - S(1) = -0.12  95% [-0.25, +0.03]   needs >= +0.5 (l.32, reported only)
+triggered        tj wrong-if: S(4) - A+ < +1.0 or swap lesion < 0.5 (l.40-42)
+                 decision (l.36-38): stop
+
+VERDICT: INCOMPLETE
+  missing seeds: t [0, 1, 2]; t1 [0, 1, 2]; a [1, 2]; aplus [1, 2]; b [0, 1, 2]
+== think done 2026-10-30T10:36:46Z
+2026-10-30T10:36:46Z seg3 segment done
