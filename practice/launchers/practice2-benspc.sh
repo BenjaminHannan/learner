@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Practice-2 full run, knights_knaves (PREREG-2 + addenda 1-4), on BensPC (RTX 5070 Ti 16 GB, WSL Ubuntu, ~/bbvenv), through the OpenCode harness (addendum 1).
+# Practice-2 full run, knights_knaves then zebra_puzzles (PREREG-2 + addenda 1-4), on BensPC (RTX 5070 Ti 16 GB, WSL Ubuntu, ~/bbvenv), through the OpenCode harness (addendum 1).
 # Tries: vLLM (own venv ~/.cache/practice2_vllm_env) + practice/k2_proxy. Nights: HF QLoRA with an NF4 base (--nf4, same as the Mac pilots' q4 nights), capped at 14 GiB
 # so WSL raises a real OOM instead of spilling into system memory and crawling. Every phase is resumable: re-running on the same OUT continues.
 #
@@ -18,8 +18,8 @@ GO_OUT="$HAND/GO-AFTER-PRACTICE2"
 BUSY="$WIN/GPU-BUSY.txt"
 CARD="$WIN/pc-jobs/practice2.md"
 SRC="${SRC:-$HOME/practice2/src}"
-SKILLS="${SKILLS:-knights_knaves}"
-OUT="${OUT:-$HOME/practice2/out-$SKILLS}"
+SKILLS="${SKILLS:-knights_knaves,zebra_puzzles}"   # run one after the other in the same OUT (PREREG-2 addendum 3; zebra moved here from Kaggle, Oct 30)
+OUT="${OUT:-$HOME/practice2/out}"
 PORT="${PORT:-18081}"
 CONC="${CONC:-16}"
 TRAIN_TOKENS="${TRAIN_TOKENS:-6144}"
