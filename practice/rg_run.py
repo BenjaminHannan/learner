@@ -8,6 +8,9 @@ same base model) and P3. Night size: P = shortest win per solved puzzle (cap RG_
 count; C gets exactly the same item counts and steps."""
 import argparse
 import json
+import os
+import threading
+import time
 from pathlib import Path
 
 from . import rg_pool as R
@@ -36,12 +39,31 @@ def write_sets(sdir, skill, a, days):
         ps = R.make_puzzles(skill, a.rg_day_n, R.DAY_SEED0 + d)
         questions |= {p["prompt"] for p in ps}
         if not (rd / f"day{d}.jsonl").exists():
-            (rd).mkdir(parents=True, exist_ok=True)
-            (rd / f"day{d}.jsonl").write_text("".join(json.dumps(p) + "\n" for p in ps))
+            write_atomic(rd / f"day{d}.jsonl", "".join(json.dumps(p) + "\n" for p in ps))
     if not (rd / "test.jsonl").exists():
         ts = R.test_set(skill, a.rg_test_n, R.TEST_SEED, questions)
-        (rd / "test.jsonl").write_text("".join(json.dumps(p) + "\n" for p in ts))
+        write_atomic(rd / "test.jsonl", "".join(json.dumps(p) + "\n" for p in ts))
     return rd
+
+
+def write_atomic(path, text):
+    """Two lanes (--rg-arm P and C) may write the same, deterministic set at once: write a private temp file, then rename over."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
+def wait_for(path, log, poll_s=60):
+    """Arm C's night n needs arm P's night-n counts (same items and steps); with --rg-arm C on its own GPU, wait for P's lane to write them."""
+    path = Path(path)
+    if not path.exists():
+        log(f"waiting for {path}")
+    while not path.exists():
+        time.sleep(poll_s)
+    time.sleep(2)  # jdump writes in one call; give it a moment to land
+    return jload(path)
 
 
 def stage0(a):
@@ -76,7 +98,8 @@ def run_skill(a, skill, k):
     sdir = root / skill
     write_sets(sdir, skill, a, a.nights)
     seed = a.seed or 1
-    P, C = (Lane(lane_args(a, sdir, arm, skill)) for arm in ("P", "C"))
+    arms = [x for x in ("P", "C") if getattr(a, "rg_arm", None) in (None, x)]  # --rg-arm P / C: one arm per GPU (Kaggle T4 x2), C waits for P's night counts
+    P, C = (Lane(lane_args(a, sdir, arm, skill)) if arm in arms else None for arm in ("P", "C"))
     ev_nights = {int(x) for x in str(a.eval_nights).split(",") if x}
     last = a.nights
     TT = a.test_tries
@@ -92,23 +115,27 @@ def run_skill(a, skill, k):
         tm = {"test": TT, **({"sibling": TT} if sib else {})}
         return once(lane, tag, lambda: lane.phase("eval", f"eval_{tag}", tag=tag, seed=seed_, tries_map=tm))
 
-    ev(P, "A0", seed, sib=(k == 0))
+    lanes = [x for x in (P, C) if x is not None]
+    if P:
+        ev(P, "A0", seed, sib=(k == 0))
     for n in range(1, a.nights + 1):
         pz = str(sdir / "rgdata" / f"day{n}.jsonl")
-        for lane in (P, C):
+        for lane in lanes:
             once(lane, f"day{n}", lambda lane=lane: lane.day(n, seed * 100 + n, None, puzzles=pz))
-        st = once(P, f"night{n}", lambda: P.night(n, seed, auto_steps=True, dedup=True, n_sft=RG_N_SFT, n_pairs=RG_N_PAIRS))
+        p_night = sdir / "P" / "results" / f"night{n}.json"
+        st = once(P, f"night{n}", lambda: P.night(n, seed, auto_steps=True, dedup=True, n_sft=RG_N_SFT, n_pairs=RG_N_PAIRS)) if P else wait_for(p_night, C.log)
         kw = dict(steps=st["steps"], n_sft=max(1, st.get("sft_unique", 0)), n_pairs=st.get("pairs", 0), dedup=True)
-        stc = once(C, f"night{n}", lambda: C.night(n, seed, **kw))
+        stc = once(C, f"night{n}", lambda: C.night(n, seed, **kw)) if C else None
         for lane, s_ in ((P, st), (C, stc)):
+            if lane is None:
+                continue
             ad = lane.out / "adapters" / f"night{n}"
             lane.adapter = str(ad) if ad.exists() else s_.get("adapter")
         if n in ev_nights or n == last:
-            if n == last:
-                ev(P, f"P{n}", seed * 100 + n, sib=True)
+            if P:
+                ev(P, f"P{n}", seed * 100 + n, sib=(n == last))
+            if C and n == last:
                 ev(C, f"C{n}", seed * 100 + n, sib=False)
-            else:
-                ev(P, f"P{n}", seed * 100 + n, sib=False)
 
 
 def main(a):
@@ -116,7 +143,7 @@ def main(a):
     a.seed = a.seed or 1
     root = Path(a.out)
     root.mkdir(parents=True, exist_ok=True)
-    jsave(root / "rg_config.json", {k: v for k, v in vars(a).items() if isinstance(v, (int, float, str, bool, type(None)))})
+    jsave(root / (f"rg_config_{a.rg_arm}.json" if getattr(a, "rg_arm", None) else "rg_config.json"), {k: v for k, v in vars(a).items() if isinstance(v, (int, float, str, bool, type(None)))})
     if a.stage0:
         stage0(a)
         if not a.rg_skills:

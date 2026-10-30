@@ -224,3 +224,62 @@ def test_bare_answer_turns_are_not_trained():
         assert [tr for _, tr in L.segments(L.target_of(r))] == [False, True, False, True]
     finally:
         L.TRAIN_BARE_ANSWERS = False
+
+
+def test_rg_arm_split_c_waits_for_p_night_counts(tmp_path, monkeypatch):
+    """--rg-arm P and --rg-arm C on two GPUs in one --out: same work as both arms in one lane, C's nights copy P's counts."""
+    import threading
+    from pathlib import Path
+
+    from practice import job, rg_run
+
+    calls = []
+
+    class FakeLane:
+        def __init__(self, a):
+            self.a, self.out = a, Path(a.out) / a.arm
+            (self.out / "results").mkdir(parents=True, exist_ok=True)
+            self.adapter = None
+
+        def log(self, *m):
+            pass
+
+        def _save(self, key, res):
+            (self.out / "results" / f"{key}.json").write_text(json.dumps(res))
+            calls.append((self.a.arm, key))
+            return res
+
+        def phase(self, kind, name, tag, **kw):
+            return self._save(tag, {"tag": tag, "sib": "sibling" in kw["tries_map"]})
+
+        def day(self, n, seed, deadline, puzzles):
+            return self._save(f"day{n}", {"n": n})
+
+        def night(self, n, seed, **kw):
+            if self.a.arm == "P":
+                return self._save(f"night{n}", {"steps": 10 + n, "sft_unique": 3, "pairs": 2})
+            return self._save(f"night{n}", dict(kw, n=n))
+
+    monkeypatch.setattr(job, "Lane", FakeLane)
+    monkeypatch.setattr(rg_run, "time", type("T", (), {"sleep": staticmethod(lambda s: __import__("time").sleep(0.01))}))
+    args = lambda arm: job.build_parser().parse_args(["--rg-skills", "knights_knaves", "--out", str(tmp_path), "--rg-arm", arm,  # noqa: E731
+                                                      "--rg-day-n", "3", "--rg-test-n", "3", "--nights", "2", "--eval-nights", "1,2"])
+    ts = [threading.Thread(target=rg_run.main, args=(args(arm),)) for arm in ("C", "P")]
+    [t.start() for t in ts]
+    [t.join(60) for t in ts]
+    sd = tmp_path / "knights_knaves"
+    p = {k for a_, k in calls if a_ == "P"}
+    c = {k for a_, k in calls if a_ == "C"}
+    assert p == {"A0", "day1", "night1", "P1", "day2", "night2", "P2"}
+    assert c == {"day1", "night1", "day2", "night2", "C2"}
+    c2 = json.loads((sd / "C" / "results" / "night2.json").read_text())
+    assert c2["steps"] == 12 and c2["n_sft"] == 3 and c2["n_pairs"] == 2
+    assert json.loads((sd / "P" / "results" / "P2.json").read_text())["sib"] is True
+    assert not list((sd / "rgdata").glob("*.tmp"))
+
+
+def test_jl_skips_a_cut_line(tmp_path):
+    from practice import job
+    f = tmp_path / "d.jsonl"
+    f.write_text('{"id": 1}\n{"id": 2}\n{"id": 3, "x": "cut sho')
+    assert [r["id"] for r in job.jl(f)] == [1, 2]

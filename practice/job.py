@@ -48,7 +48,17 @@ VLLM_UTIL = 0.85
 
 
 def jl(path):
-    return [json.loads(l) for l in open(path) if l.strip()] if Path(path).exists() else []
+    """JSON lines; a line cut short by a killed run (Kaggle deadline) is skipped, so that try is redone on resume."""
+    if not Path(path).exists():
+        return []
+    out = []
+    for l in open(path):
+        if l.strip():
+            try:
+                out.append(json.loads(l))
+            except json.JSONDecodeError:
+                pass
+    return out
 
 
 def jl_append(path, rec):
@@ -562,6 +572,7 @@ def build_parser():
     ap.add_argument("--test-tries", type=int, default=2)
     ap.add_argument("--stage0-n", type=int, default=40)
     ap.add_argument("--arm", choices=["P", "C"])
+    ap.add_argument("--rg-arm", choices=["P", "C"], help="Practice-2: run only this arm (one arm per GPU); C waits for P's night counts in the same --out")
     ap.add_argument("--lane", type=int, default=0)
     ap.add_argument("--out", default=os.environ.get("OUT", "out"))
     ap.add_argument("--model", default=MODEL_ID)

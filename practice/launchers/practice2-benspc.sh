@@ -8,7 +8,7 @@
 #
 #   detached launch (pc-launch-route): pc-ps 'Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{CommandLine="wsl.exe -d Ubuntu -e bash /mnt/c/Users/benja/pc-jobs/practice2/practice2-benspc.sh"}'
 #
-# Env: SRC (unpacked `git archive <sha> practice sleep2`, default ~/practice2/src), OUT, SKILLS, PORT, CONC, TRAIN_TOKENS, CAP_GIB.
+# Env: SRC (unpacked `git archive <sha> practice sleep2 tests/__init__.py tests/k2_fake_upstream.py`, default ~/practice2/src; the warm try needs the fake server), OUT, SKILLS, PORT, CONC, TRAIN_TOKENS, CAP_GIB.
 # Downloads on first run if missing: vLLM venv (~4 GB; skipped when VLLM_PY or ~/vllmvenv already has vllm), Node 22 (~30 MB), opencode-ai (~100 MB), reasoning-gym, bitsandbytes. Not on the phone hotspot.
 set -uo pipefail
 WIN=/mnt/c/Users/benja
@@ -55,7 +55,7 @@ finish() {
 trap finish EXIT
 set -e
 
-test -f "$SRC/practice/job.py" && test -f "$SRC/practice/oc_cuda.py"
+test -f "$SRC/practice/job.py" && test -f "$SRC/practice/oc_cuda.py" && test -f "$SRC/tests/k2_fake_upstream.py"
 cd "$SRC"
 # shellcheck disable=SC1090
 source "$HOME/bbvenv/bin/activate"
