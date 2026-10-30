@@ -113,8 +113,9 @@ const pillPosition = (workArea, width, minTop) => ({ x: Math.round(workArea.x + 
   }
   function startedHidden(p, argv, loginSettings) {
     if ((argv || []).includes('--night')) return true;   // opened by the night-start agent at the start of the sleep window (src/nightstart.js)
-    if (isWin(p)) return (argv || []).includes('--hidden');
-    return !!(loginSettings && loginSettings.wasOpenedAsHidden);
+    // --hidden on a Mac too (Oct 30: `open -g` after an update still put the window in front while Ben typed in Messages, and a keystroke quit it)
+    if ((argv || []).includes('--hidden')) return true;
+    return !isWin(p) && !!(loginSettings && loginSettings.wasOpenedAsHidden);
   }
   // BrowserWindow options that differ by platform
   function windowOptions(p, icon) {
