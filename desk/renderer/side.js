@@ -65,7 +65,7 @@
     const v = el('div', 'sd-view');
     for (const [t, text] of IDEAS) {
       const b = el('button', 'sd-idea'); b.append(el('b', null, t), el('span', 'sd-dim', text.length > 70 ? text.slice(0, 68) + '…' : text));
-      b.onclick = () => st.onPick && st.onPick(text); v.append(b);
+      b.onclick = () => { st.desk.usage.count('idea'); if (st.onPick) st.onPick(text); }; v.append(b);
     }
     return v;
   }

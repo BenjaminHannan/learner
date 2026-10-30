@@ -182,12 +182,12 @@
   function markRead() { msgs.querySelectorAll('.receipt.unread').forEach((r) => { r.classList.remove('unread'); r.textContent = 'Read'; }); }
   // Ben Oct 28: choices under a final answer are chips; a click sends the text like typing it. Only the newest answer's row is live.
   function lockChoices() { msgs.querySelectorAll('.choices:not(.used)').forEach((r) => { r.classList.add('used'); r.querySelectorAll('button').forEach((b) => { b.disabled = true; }); }); }
-  function choicesRow(list) {
+  function choicesRow(list, followup) {
     lockChoices();
     const row = el('div', 'choices');
     for (const q of list) {
       const b = el('button', 'choice', q); b.type = 'button';
-      b.onclick = async () => { if (row.classList.contains('used') || (thread && thread.helper)) return; const draft = input.value; input.value = q; await submit(false); if (input.value === q) { input.value = draft; autosize(); return; } /* not sent (asleep or busy): the chips stay live */ row.classList.add('used'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); b.classList.add('picked'); if (draft && !input.value) { input.value = draft; autosize(); } };
+      b.onclick = async () => { if (row.classList.contains('used') || (thread && thread.helper)) return; const draft = input.value; input.value = q; await submit(false); if (input.value === q) { input.value = draft; autosize(); return; } if (followup) desk.usage.count('followup'); row.classList.add('used'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); b.classList.add('picked'); if (draft && !input.value) { input.value = draft; autosize(); } };
       row.append(b);
     }
     return row;
@@ -278,7 +278,7 @@
           if (cut) { t.text.classList.add('cut'); t.text.append(el('div', 'cutnote', 'cut off: reading your new message')); }
           const st = stamp(ev.ts); t.text.after(st);
           if (rate) st.after(rate);
-          if (pc.choices.length && !(thread && thread.helper)) (rate || st).after(choicesRow(pc.choices)); // (a stored thread's row is locked again when a later message follows)
+          if (pc.choices.length && !(thread && thread.helper)) (rate || st).after(choicesRow(pc.choices, ev.followup)); // (a stored thread's row is locked again when a later message follows)
         }
       }
       const wasStuck = stick;
@@ -790,7 +790,7 @@
     const w = el('div', 'welcome');
     w.append(Mascot.el(mood, 96, { cls: 'follow' }), el('h2', null, GREETINGS[Math.floor(Math.random() * GREETINGS.length)]), el('p', null, 'I can browse, search, run commands and drive ' + Platform.osWords(info.platform).apps + ' apps. I ask before anything risky.'));
     const chips = el('div', 'chips');
-    for (const t of Uses.chipsFor(settings.uses)) { const b = el('button', null, t); b.onclick = () => { input.value = t; input.focus(); autosize(); }; chips.append(b); }
+    for (const t of Uses.chipsFor(settings.uses)) { const b = el('button', null, t); b.onclick = () => { desk.usage.count('idea'); input.value = t; input.focus(); autosize(); }; chips.append(b); }
     w.append(chips); msgs.append(w);
     w.prepend(makeOffCard('in-welcome')); paintOffCard();
   }
@@ -808,7 +808,7 @@
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut, followup: !!it.followup });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);

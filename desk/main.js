@@ -990,7 +990,7 @@ async function followUpTick(over) {
     const r = await agent.run(t, FU.FOLLOWUP_ASK, { hidden: true });
     const last = (t.items || []).filter((i) => i.t === 'assistant').pop();
     if (!r.stopped && !r.error && last && String(last.text || '').trim() === 'NO_UPDATE' && !t.items.slice(ni).some((i) => i.t === 'user') && t.messages.length > nm) { t.items.splice(ni); t.messages.splice(nm); store.saveThread(t); } // nothing to say: drop the hidden turn
-    else if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has a question', t.title, t.id);
+    else if (!r.stopped && !r.error && last && (t.items || []).indexOf(last) >= ni) { last.followup = true; store.saveThread(t); if (!chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has a question', t.title, t.id); }
     send('threads:changed', {}); if (!openThreadId || openThreadId === t.id) send('open-thread', t.id); // repaint his view; never pull him off another chat
   } catch (e) { /* tomorrow is another day */ } finally { followBusy = false; }
 }
@@ -1318,6 +1318,7 @@ function registerIpc() {
     return updater.install();
   });
   h('settings:get', () => store.getSettings());
+  h('usage:count', (kind) => { try { return require('./src/feature-usage').count(path.join(app.getPath('userData'), 'feature-usage.json'), kind); } catch (e) { return false; } });
   h('settings:set', (patch) => applySettings(patch));
   h('threads:list', () => store.listThreads());
   // One Glim chat (Ben Oct 28): "new thread" hands back the existing main chat; only the very first run creates one.
