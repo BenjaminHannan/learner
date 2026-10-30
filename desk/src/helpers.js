@@ -485,7 +485,7 @@ class Helpers {
     if (quiet) { h.quiet = true; h.lastSummary = 'No change (checked ' + fmtWhen(this.now(), this.now()) + ')'; } // lastReport stays: the next run compares against real content
     else { if (!failed) h.lastReport = report; h.lastSummary = short(report, SUMMARY_KEEP); }
     this.changed();
-    if (!wasStopped && !retrying) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent, (quiet || failed) ? { quiet, failed } : { quiet, failed, report }); } catch (e) { /* ignore */ } }
+    if (!wasStopped && !retrying) { try { this.o.onFinish && this.o.onFinish(this.view(h), h.lastSummary, h.parent, (quiet || failed) ? { quiet, failed, ...(res.stopped ? { stopped: true } : {}) } : { quiet, failed, report, ...(res.stopped ? { stopped: true } : {}) }); } catch (e) { /* ignore */ } }
   }
 }
 

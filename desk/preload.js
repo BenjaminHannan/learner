@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('desk', {
   info: inv('info'),
   settings: { get: inv('settings:get'), set: inv('settings:set') },
   usage: { count: inv('usage:count') },
+  morningPrep: { get: inv('morning-prep:get'), onChange: on('morning-prep:changed') },
   threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename'), feedback: inv('threads:feedback') },
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   call: { start: inv('call:start'), stop: inv('call:stop'), mute: inv('call:mute') },

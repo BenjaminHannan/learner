@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { dayKey } = require('./followup');
-const KINDS = new Set(['followup', 'idea']);
+const KINDS = new Set(['followup', 'idea', 'morningPrep']);
 function count(file, kind, now = new Date()) {
   if (!KINDS.has(kind)) return false;
   let data = {};

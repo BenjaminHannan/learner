@@ -1056,7 +1056,7 @@
   }
   async function save(patch) {
     const r = await desk.settings.set(patch);
-    const { _hotkey, ...s } = r; settings = s; paintSegs(); applyAppearance();
+    const { _hotkey, ...s } = r; settings = s; paintSegs(); applyAppearance(); paintMorningPrep().catch(() => {});
     return r;
   }
   document.querySelectorAll('#modelSeg button').forEach((b) => b.onclick = () => { save({ model: b.dataset.model }); if ($('#settings').hidden === false) paintSettings(); });
@@ -1084,6 +1084,7 @@
       { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
+      { key: 'morningPrep', type: 'toggle', label: 'Morning preparation card', help: 'After the Organizer runs, prepare one item due today or tomorrow.' },
       { key: 'followUp', type: 'toggle', label: 'Follow up on its own', help: 'Once a day, when you open Glim, it checks on things you left open and offers quick choices. Off: it only answers you.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
@@ -1387,12 +1388,25 @@
     input.focus();
   });
 
+  async function paintMorningPrep() {
+    const root = $('#morning-prep');
+    const card = await desk.morningPrep.get();
+    root.textContent = ''; root.hidden = !card;
+    if (!card) return;
+    const details = el('details', 'morning-prep-card');
+    details.append(el('summary', null, 'I got this ready for you.'), el('strong', null, card.item), el('p', null, 'Due ' + card.due), el('div', 'morning-prep-text', card.text));
+    details.addEventListener('toggle', () => { if (details.open) desk.usage.count('morningPrep'); });
+    root.append(details);
+  }
+  desk.morningPrep.onChange(() => paintMorningPrep().catch(() => {}));
+
   // ---------- boot ----------
   (async () => {
     info = await desk.info();
     document.body.classList.add(info.platform);
     if (!gate().showSleepButton) $('#btnSleep').hidden = true; // every platform sleeps now; kept for a future gate
     settings = await desk.settings.get(); paintSegs(); applyAppearance();
+    paintMorningPrep().catch(() => {});
     CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     DictateUI.init({ platform: plat(), popts: popts(), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     gw = (await desk.gateway.state()) || gw; if (gw.state === 'down') await loadWhy(); paintGateway();
