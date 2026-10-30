@@ -35,6 +35,7 @@ const MAX_VERIFY = 2;                 // check turns per task (so it can never l
 const VERIFY_MODEL = 'qwen36-fast';
 const VERIFY_MAX_TOKENS = 200;
 const CHECK_MARK = '[Self-check]';
+const { detectGap } = require('./curiosity-gaps');
 // a reply that asks Ben for a password / login details (the prompt forbids it; a small model still does it)
 const SECRET_WORD = /\b(password|passcode|passphrase|credentials|login details|log-?in info|verification code|2fa code|one-time code)\b/i;
 const ASK_WORD = /\b(need|provide|send|share|give|tell me|what is|what's|enter|type|could you|can you|please)\b/i;
@@ -769,6 +770,13 @@ class Agent {
       failure = String(e && e.message || e);
       this.emit({ type: 'error', message: failure });
     } finally {
+      if (!(opts && opts.hidden) && !thread.helper) {
+        const turn = thread.messages.slice(taskStart + 1);
+        const answers = turn.filter(m => m.role === 'assistant' && typeof m.content === 'string' && m.content.trim());
+        const checks = turn.filter(m => m.role === 'user' && typeof m.content === 'string' && m.content.startsWith(CHECK_MARK)).map(m => m.content);
+        const gap = detectGap(userText, answers.length ? answers[answers.length - 1].content : '', checks);
+        if (gap) (thread.curiosityGaps = thread.curiosityGaps || []).push({ ...gap, at: Date.now() });
+      }
       repairHistory(thread.messages);
       this.free();
       try { this.o.onEnd && this.o.onEnd(); } catch (e) { /* ignore */ }
