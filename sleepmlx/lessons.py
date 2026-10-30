@@ -281,7 +281,10 @@ def job_of(step: dict) -> Optional[tuple]:
     a = _args(step.get("args") or "")
     if name == "browser_go":
         raw = a.get("url") or (re.search(r"https?://\S+", step.get("args") or "") or [None])[0]
-        host = (urlparse(str(raw)).hostname or "") if raw else ""
+        try:
+            host = (urlparse(str(raw)).hostname or "") if raw else ""
+        except ValueError:
+            return None
         host = host[4:] if host.startswith("www.") else host
         return ("website", host) if host else None
     if name == "open_app":
@@ -316,6 +319,39 @@ def habits(week: dict, upto: int, min_n: int = 3) -> List[dict]:
     for h in best.values():
         h["top"] = True
     return sorted(out, key=lambda h: h["key"])
+
+
+def offer_habits(week: dict, upto: int, min_n: int = 3) -> List[dict]:
+    """Concrete non-secret jobs on at least three distinct days, suitable for an offer."""
+    safe = []
+    for h in habits(week, upto, min_n):
+        if h["cat"] not in ("website", "app") or h["days"] < 3:
+            continue
+        if diary_mod.looks_secret(h["target"]) or diary_mod.talks_secrets(h["target"]):
+            continue
+        # Reject the whole job if any matching step contains sensitive arguments.
+        steps = [st for r in week.get("diary", []) if r.get("role") == "user" and r.get("day", 0) <= upto
+                 for st in (r.get("tools") or []) if job_of(st) == (h["cat"], h["target"])]
+        if any("[REDACTED]" in str(st.get("args") or "") or diary_mod.looks_secret(str(st.get("args") or "")) or diary_mod.talks_secrets(str(st.get("args") or "")) for st in steps):
+            continue
+        safe.append({k: h[k] for k in ("key", "cat", "target", "days")})
+    return safe
+
+
+def write_offer_habits(user_data: Path, week: dict, upto: int, min_n: int = 3) -> None:
+    """Atomically replace the small local candidate file; never touch offer decisions."""
+    import os
+    import tempfile
+    user_data = Path(user_data)
+    user_data.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".habit-candidates-", dir=str(user_data))
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump({"habits": offer_habits(week, upto, min_n)}, f)
+        os.replace(tmp, user_data / "habit-candidates.json")
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
 
 
 def habit_cards(h: dict, who: str = "Ben"):
