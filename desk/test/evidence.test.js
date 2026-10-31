@@ -158,6 +158,26 @@ test('Agent binds actual observed tool output, saves a canonical ledger and rese
   } finally { gw.close(); fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('ordinary web-assisted saves retain observed provenance', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'premonition-ordinary-web-'));
+  const gw = await startGateway([
+    { tool_calls: [{ name: 'browser_read', arguments: {} }] },
+    req => {
+      const id = req.messages.filter(m => m.role === 'tool').at(-1).content.match(/\[Source read: (read_[a-f0-9]{16})\]/)[1];
+      return { tool_calls: [{ name: 'memory_save', arguments: { fact: 'Luma Ferry => home dock => Mossbank', topic: 'card', source_read_id: id, source_quote: quote } }] };
+    },
+    { content: 'Saved.' }
+  ]);
+  try {
+    const agent = new Agent({ memory: createMemory(dir), tools: { browser_read: async () => read() }, toolDefs: buildTools({}),
+      getSettings: () => ({ gatewayUrl: gw.url, model: 'm', mode: 'hands-off', verify: false, maxSteps: 8 }) });
+    await agent.run({ id: 'ordinary-web', items: [], messages: [] }, 'Find the ferry dock.');
+    const prepared = JSON.parse(fs.readFileSync(path.join(dir, 'memory-provenance.jsonl'), 'utf8').split('\n')[0]);
+    assert.equal(prepared.attribution.verified, false);
+    assert.equal(prepared.attribution.source.url, 'https://example.test/reference');
+  } finally { gw.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('a model cannot opt ordinary memory into trusted origin and invalid research expiry does not save', async () => {
   for (const trusted of [false, true]) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'premonition-evidence-origin-'));

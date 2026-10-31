@@ -9,7 +9,7 @@ from sleepmlx.corpus import Diary
 from sleepmlx.recipe import GenCache, Item, selfify, triple_status
 
 from .fakes import FakeBackend
-from .helpers import Env
+from .helpers import Env, write_verified_ledger
 
 TURN = "I'm applying to Duke and my essay is about robotics"
 
@@ -39,6 +39,7 @@ def write_memory(env, facts):
     ud = env.paths.userdata_dir
     ud.mkdir(parents=True, exist_ok=True)
     (ud / "memory.json").write_text(json.dumps({"facts": facts}))
+    write_verified_ledger(ud, [(f["id"], f["text"]) for f in facts if str(f.get("topic", "")).lower() == "card"])   # option B: verified web cards only
 
 
 def held_n(sl, d):

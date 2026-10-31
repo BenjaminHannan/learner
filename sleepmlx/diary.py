@@ -408,9 +408,10 @@ def list_dates(raw_dir: Path) -> List[str]:
 
 
 def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] = None, ignore_file: Optional[Path] = None,
-               feedback: Optional[List[dict]] = None) -> dict:
+               feedback: Optional[List[dict]] = None, guard=None) -> dict:
     """Week JSON for all days that have turns (day numbers follow the date order). feedback: Ben's like/dislike marks from the Desk
-    (lessons.read_feedback); a turn whose answer (or, failing that, request) matches one gets fb 1 or -1 on its user row."""
+    (lessons.read_feedback); a turn whose answer (or, failing that, request) matches one gets fb 1 or -1 on its user row.
+    guard (webtruth.DiaryGuard): option B. An assistant answer that states an unverified web fact is dropped before anything can be trained on it."""
     raw_dir = Path(raw_dir)
     alld = load_days(raw_dir)
     ignore = load_ignore(ignore_file)
@@ -422,6 +423,9 @@ def build_week(raw_dir: Path, who: str = "Ben", dates: Optional[Iterable[str]] =
         for user, answer, meta in turns_meta_of(alld[date], raw_dir / "blobs"):
             if any(rx.search(user) for rx in ignore) or talks_secrets(user):   # dropped with its answer
                 continue
+            if guard is not None and guard.drops(user, answer):   # option B: Glim repeated an unverified web fact; the answer never enters the diary
+                answer = ""
+                meta = {k: v for k, v in meta.items() if k != "tools"}   # tool steps carry the page text too
             if meta.get("helper"):   # a helper Glim's run: its task text is Glim's wording, never a fact Ben said; kept apart for delegation lessons
                 helper_runs.append(dict(_clean_meta(meta), date=date, name=meta["helper"], task=redact(HELPER_RE.sub("", user)).strip()[:600],
                                         answer=redact(answer).strip()[:600]))

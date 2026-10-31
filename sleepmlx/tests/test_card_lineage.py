@@ -10,7 +10,7 @@ from sleepmlx.checkpoint import Checkpoints
 from sleepmlx.backend import Stop
 from sleepmlx.corpus import Diary
 from sleepmlx.recipe import GenCache, Item, key_of
-from .helpers import Env
+from .helpers import Env, write_verified_ledger
 
 
 class CardLineageTests(unittest.TestCase):
@@ -28,6 +28,7 @@ class CardLineageTests(unittest.TestCase):
     def notes(self, rows):
         self.path.write_text("".join("- %s | topic: card | id: %s | updated: 2026-10-20\n" % (text, note_id)
                                      for note_id, text in rows))
+        write_verified_ledger(self.env.paths.userdata_dir, rows)   # option B: only verified web cards are trained on
 
     def reconcile(self, day=1):
         stats = Counter()

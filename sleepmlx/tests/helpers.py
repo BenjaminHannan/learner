@@ -58,3 +58,26 @@ class Env:
 
     def close(self):
         self.tmp.cleanup()
+
+
+def write_verified_ledger(userdata_dir: Path, notes):
+    """Give each (note_id, text) card note two agreeing sources on different domains, so option B lets it be trained on.
+    Writes the same committed rows the Desk writes (desk/src/memory.js save with research)."""
+    import hashlib
+    from sleepmlx.webtruth import card_claims, norm_claim
+    userdata_dir = Path(userdata_dir)
+    userdata_dir.mkdir(parents=True, exist_ok=True)
+    sha = lambda t: hashlib.sha256(t.encode("utf-8")).hexdigest()
+    rows = []
+    for note_id, text in notes:
+        for k, host in enumerate(("one.example.com", "two.example.org")):
+            quote = "Reference page: " + " and ".join(c["object"] for c in card_claims(text)) + " noted here."
+            tx = "tx-%s-%d" % (note_id, k)
+            rows.append({"version": 1, "type": "research-note-prepare", "tx_id": tx, "note_id": note_id, "fact_sha256": sha(text), "topic": "card",
+                         "claim_norm": norm_claim(text), "origin": "learn-research", "context": {"run_id": "r%d" % k, "thread_id": None, "helper_id": None},
+                         "attribution": {"status": "attributed", "verified": False, "reason": None,
+                                         "source": {"read_id": "read_0123456789abcdef", "tool_call_id": None, "url": "https://%s/p" % host, "page": 1,
+                                                    "read_at": "2026-10-29T00:00:00Z", "quote": quote, "quote_sha256": sha(quote), "visible_body_sha256": sha(quote)}},
+                         "expires": None, "prepared_at": "2026-10-29T00:00:00Z"})
+            rows.append({"version": 1, "type": "research-note-commit", "tx_id": tx, "committed_at": "2026-10-29T00:00:01Z"})
+    (userdata_dir / "memory-provenance.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
