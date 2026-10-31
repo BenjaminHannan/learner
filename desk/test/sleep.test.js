@@ -288,3 +288,13 @@ test('Sleep.liveNow reads the real files next to the sleep home', () => {
   assert.equal(r.now, "Learning from today's chats (step 4 of 19)");
   assert.equal(r.recent[0].line, 'Checked your mail (1 email)');
 });
+
+test('auto-sleep: Motes mid-run do not hold the night off (startSleep pauses them); only Ben\'s own chat run does', () => {
+  // Oct 30-31: the night start opened Premonition at 23:00, the Motes it had missed ran back to back, and "a run is active" held all night
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'main.js'), 'utf8');
+  const call = /const d = shouldAutoSleep\(\{[^\n]*\}\);/.exec(src);
+  assert.ok(call, 'autoSleepTick asks shouldAutoSleep');
+  assert.match(call[0], /runActive: !!\(agent && agent\.running\),/);
+  assert.doesNotMatch(call[0], /helpers/);
+  assert.match(src, /sl\.asleep = true; if \(helpers && helpers\.active\.size\) helpers\.pauseForSleep\(\);/);
+});
