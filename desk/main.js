@@ -389,7 +389,9 @@ function autoSleepTick(now, over) {
   const w = shouldAutoWake({ ...common, asleep: sl.asleep && !sl.waking });
   if (w.wake) { wakeNow(); return { action: 'wake' }; }
   if (shouldTimedWake({ asleep: sl.asleep, waking: sl.waking, wakeAt: sl.wakeAt, nowMs: now.getTime() })) { wakeNow(); return { action: 'wake', reason: 'the chosen sleep time is up' }; }
-  const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running) || !!(helpers && helpers.active.size), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
+  const d = shouldAutoSleep({ ...common, available: sleeper.available().ok && !(sleeper.needsRuntime && sleeper.needsRuntime()), idleMs: Date.now() - sl.lastActive, systemIdleMs: (() => { try { return powerMonitor.getSystemIdleTime() * 1000; } catch (e) { return null; } })(), runActive: !!(agent && agent.running), gatewayBusy: !!(warmer && warmer.warming), windowFocused: !!(win && !win.isDestroyed() && win.isFocused()), onBattery: onBattery(), lastKey: sl.lastKey, ...over });
+  // Only Ben's own chat run holds sleep off. Motes mid-run are paused by startSleep and run once after wake (#243); counting them here
+  // kept the first night-start night (Oct 30-31) awake: the Motes it had missed ran back to back from 23:00 to morning.
   // Ben's Macs keep the big chat model on all day and it holds the memory sleep needs: without stopAssistant the nightly sleep was refused
   // every night (and lastKey kept it from trying again). It is turned off for the night and back on when Glim wakes, like the Sleep sheet does.
   if (d.sleep) {
