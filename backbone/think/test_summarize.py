@@ -376,6 +376,246 @@ def test_s2():
     tmp.cleanup()
 
 
+def t2lab(root, ap=66.0, tj=None, tf=None, tc=None):
+    """Seed-0 Think-2 fixture: aplus main, and tj / tf / tc as {tag: pct} dicts (None = arm absent)."""
+    lab = Lab(root)
+    lab.put("a", 0, "validation", "main", 63.0)
+    lab.put("aplus", 0, "validation", "main", ap)
+    for arm, d in (("tj", tj), ("tf", tf), ("tc", tc)):
+        for tag, v in (d or {}).items():
+            lab.put(arm, 0, "validation", tag, v, n=2000 if tag == "blind4" else None)
+    return lab
+
+
+def test_s3():
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    TJ = {"L1": 67.0, "L4": 69.0, "swap4": 66.0, "gatesoff4": 66.2}
+
+    # tj with a clear pass (+3.0 over aplus, notes used +3.0, laps +2.0); no tf or tc
+    o = run(t2lab(R / "pass", tj=TJ))
+    t = o["think2"]
+    assert list(t) == ["tj"] and not t["tj"]["tc_present"], list(t)
+    j = t["tj"]
+    assert j["P1"]["status"] == j["P2"]["status"] == j["P3"]["status"] == "PASS" and j["wrong_if"] == "clear", j
+    assert abs(j["P1_diff"]["value"] - 3.0) < 0.01 and j["P1_diff"]["lo"] > 0 and j["P1_vs"] == "aplus", j["P1_diff"]
+    assert j["decision"] == "run seeds 1 and 2 for this arm" and j["S4_minus_blind4"] is None
+    txt = SM.report(o)
+    assert "PASS" in txt and "tc absent" in txt and "needs >= +2.0 and 95% interval excluding 0 (l.30)" in txt and "needs >= +1.0 (l.31)" in txt, txt
+
+    # edges: +1.9 over aplus fails P1 (wrong-if needs < +1.0); swap gap 0.4 fails P2 and trips the wrong-if (< 0.5)
+    o = run(t2lab(R / "edge", ap=67.1, tj={**TJ, "swap4": 68.6}))
+    j = o["think2"]["tj"]
+    assert j["P1"]["status"] == "FAIL" and j["P2"]["status"] == "FAIL" and j["wrong_if"] == "triggered" and j["decision"] == "stop", j
+
+    # tf with blind4 (first 2,000 rows only); tj absent
+    o = run(t2lab(R / "tf", tf={**TJ, "blind4": 55.0}))
+    t = o["think2"]
+    assert list(t) == ["tf"], list(t)
+    b = t["tf"]["S4_minus_blind4"]
+    assert b["n"] == 2000 and 10 < b["value"] < 20 and t["tf"]["P1"]["status"] == "PASS", b
+    assert "blind4" in SM.report(o)
+
+    # tc present and higher than aplus: P1 uses the harder diff (S4 - tc = +1.0), so a +3.0 pass over aplus turns FAIL
+    o = run(t2lab(R / "tc", tj=TJ, tc={"L0": 68.0}))
+    j = o["think2"]["tj"]
+    assert j["tc_present"] and j["P1_vs"] == "tc" and abs(j["P1_diff"]["value"] - 1.0) < 0.01, j["P1_diff"]
+    assert abs(j["S4_minus_aplus"]["value"] - 3.0) < 0.01 and j["P1"]["status"] == "FAIL" and j["decision"] == "stop", j
+    assert "max(aplus, tc)" in SM.report(o)
+    # tc lower than aplus: aplus stays the harder control
+    j = run(t2lab(R / "tc_low", tj=TJ, tc={"L0": 60.0}))["think2"]["tj"]
+    assert j["P1_vs"] == "aplus" and j["P1"]["status"] == "PASS", j["P1_vs"]
+    # tc stored under "main" is found too
+    assert run(t2lab(R / "tc_main", tj=TJ, tc={"main": 68.0}))["think2"]["tj"]["P1_vs"] == "tc"
+
+    # missing L1: P3 unavailable, nothing crashes, P1/P2 still judged; JSON round-trips
+    o = run(t2lab(R / "nol1", tj={k: v for k, v in TJ.items() if k != "L1"}))
+    j = o["think2"]["tj"]
+    assert j["P3"]["status"] == SM.ND and not j["P3"]["available"] and j["S4_minus_L1"] is None and j["P1"]["status"] == "PASS", j
+    assert "P3 unavailable" in SM.report(o)
+    out, data = o and (R / "nol1" / "out", R / "nol1" / "data")
+    p = subprocess.run([sys.executable, str(HERE / "summarize.py"), str(out), "--data", str(data), "--json"], capture_output=True, text=True)
+    assert p.returncode == 0 and json.loads(p.stdout)["think2"]["tj"]["P1"]["status"] == "PASS", p.stderr
+
+    # no Think-2 results: nothing added
+    assert run(scenario(R / "none"))["think2"] == {}
+    print("S3 ok: Think-2 tj pass, edges, tf blind4, tc makes P1 harder, missing L1, JSON")
+    tmp.cleanup()
+
+
+def p12lab(root, ws=None, wsham=None, tc=72.0, tsd=None, tsd1=None, gap=None, seeds=(0,)):
+    """Fixture for the codi-plan marks: ws = (T, C1), wsham = T, tc = L0, tsd = {tag: pct}, tsd1 = L1, gap = decoder true - swapped (points)."""
+    lab = Lab(root)
+    for sd in seeds:
+        lab.put("a", sd, "validation", "main", 63.0)
+        if tc is not None:
+            lab.put("tc", sd, "validation", "L0", tc)
+        if ws:
+            lab.put("ws", sd, "validation", "T", ws[0])
+            lab.put("ws", sd, "validation", "C1", ws[1])
+            lab.res[("ws", sd)]["eval"]["validation"]["T"].update(mean_gen_tokens=61.5, marker_rate=0.99)
+            lab.put("ws", sd, "validation", "fmt", 90.0, n=500)
+        if wsham is not None:
+            lab.put("wsham", sd, "validation", "T", wsham)
+            lab.res[("wsham", sd)]["eval"]["validation"]["T"].update(mean_gen_tokens=61.0, marker_rate=1.0)
+        for tag, v in (tsd or {}).items():
+            lab.put("tsd", sd, "validation", tag, v)
+        if tsd1 is not None:
+            lab.put("tsd1", sd, "validation", "L1", tsd1)
+        if gap is not None:
+            lab.res[("tsd", sd)]["decoder"] = dict(true=40.0 + gap, swap=40.0, gap=gap, tokens=5000, rows=2000)
+    return lab
+
+
+P2 = {"L4": 77.0, "swap4": 74.0, "random4": 73.5, "zero4": 72.0}
+
+
+def test_s4():
+    """codi-plan P1 and P2b marks (arms ws / wsham / tsd / tsd1)."""
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    p1 = lambda name, **kw: run(p12lab(R / name, **kw))["p1"]
+    p2 = lambda name, **kw: run(p12lab(R / name, **kw))["p2b"]
+    # ---- P1
+    x = p1("a", ws=(78.0, 73.0), wsham=74.0)
+    assert x["status"] == "computed" and x["opens_P4"] and x["outcome"].startswith("PASS") and x["ref_name"] == "C1", x
+    assert abs(x["T_minus_ref"] - 5.0) < 0.01 and abs(x["T_minus_sham"] - 4.0) < 0.01 and abs(x["T_vs_74_6"] - 3.4) < 0.01, x
+    assert x["seed_rule"] == "decided on 1 seed(s)" and x["ci_ref"]["lo"] is not None and x["mean_gen_tokens"] == {"ws": [61.5], "wsham": [61.0]} and x["format_check"]["ws"] == [90.0]
+    rep = SM.report(run(p12lab(R / "a")))
+    assert "== 9. P1" in rep and "OUTCOME: PASS: P4 opens" in rep and "mean generated tokens per row: ws 61.5, wsham 61.0" in rep and "T vs 74.6 (for the record) = +3.40" in rep
+    assert "== 10. P2b" not in rep and "depth 1-3" in rep
+    x = p1("tc_hi", ws=(78.0, 73.0), wsham=74.0, tc=75.0)  # the harder control is tc
+    assert x["ref_name"] == "tc" and abs(x["T_minus_ref"] - 3.0) < 0.01
+    x = p1("b", ws=(76.0, 73.0), wsham=75.5)  # beats the references by 3 but not the sham by 1
+    assert not x["opens_P4"] and not x["wrong"] and x["outcome"].startswith("extra positions help; content not shown"), x["outcome"]
+    x = p1("c", ws=(73.3, 73.0), wsham=70.0)  # T < max(tc, C1) + 0.5
+    assert x["wrong"] and x["outcome"].startswith("PROVED WRONG") and not x["opens_P4"], x
+    x = p1("d", ws=(74.5, 73.0), wsham=70.0)
+    assert x["outcome"] == "not shown (P4 stays closed)" and x["seed_rule"] == "needs seeds 2-3", x
+    # seed rule (6.0): only the accuracy pass conditions count; a margin already on the proved-wrong side settles it
+    x = p1("band_sham", ws=(78.0, 73.0), wsham=77.5)  # T - sham = +0.5: inside +-1 of its bar
+    assert x["seed_rule"] == "needs seeds 2-3" and x["opens_P4"] is False
+    x = p1("wrong_side", ws=(73.3, 73.0), wsham=72.8)  # T - sham is inside the band, but T - max(tc, C1) = +0.3 is proved wrong: nothing more to learn
+    assert x["wrong"] and x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]
+    x = p1("edge", ws=(75.0, 73.0), wsham=74.0)  # exactly +2.0 and +1.0: the bars are inclusive
+    assert x["opens_P4"], x
+    x = p1("nosham", ws=(78.0, 73.0))
+    assert x["status"] == SM.ND and "wsham" in x["why"]
+    assert run(p12lab(R / "noarms"))["p1"] is None and run(p12lab(R / "noarms2"))["p2b"] is None
+    # three seeds: the 3-seed means decide
+    x = p1("seeds", ws=(78.0, 73.0), wsham=74.0, seeds=(0, 1, 2))
+    assert x["seeds"] == [0, 1, 2] and x["seed_rule"] == "3-seed means"
+    # ---- P2b
+    x = p2("pass", tsd=P2, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))
+    assert x["status"] == "computed" and x["outcome"] == "PASS" and all(x["conditions"].values()), x
+    assert abs(x["S_minus_ref"] - 4.0) < 0.01 and abs(x["S_minus_tsd1"] - 2.5) < 0.05 and x["decoder"]["gap"] == 14.0 and abs(x["swapped_score_vs_C0"] - 2.0) < 0.01
+    assert x["lesions"]["swap"]["status"] == "used" and x["lesions"]["random"]["status"] == "used" and abs(x["lesions"]["zero"]["cost"] - 5.0) < 0.01 and x["seed_rule"] == "decided on 1 seed(s)", x["lesions"]
+    rep = SM.report(run(p12lab(R / "pass", tsd=P2, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))))
+    assert "== 10. P2b" in rep and "OUTCOME: PASS" in rep and "gap +14.00 points" in rep and "(reported, not in the pass marks)" in rep
+    x = p2("swap_unused", tsd={**P2, "swap4": 76.9}, tsd1=74.5, gap=14.0, ws=(70.0, 73.0))
+    assert x["lesions"]["swap"]["status"] == "unused" and x["outcome"].startswith("PROVED WRONG") and "swap unused" in x["outcome"] and x["P3_entry"]
+    x = p2("one_shot", tsd=P2, tsd1=76.5, gap=14.0, ws=(70.0, 73.0))  # looping adds only 0.5: a and d and the lesions pass, c does not, nothing proves it wrong
+    assert x["conditions"] == {"a": True, "b": True, "c": False, "d": True} and x["outcome"].startswith("one-shot side module with step targets helps, looping not shown"), x["outcome"]
+    x = p2("loop_wrong", tsd=P2, tsd1=76.8, gap=14.0, ws=(70.0, 73.0))
+    assert x["outcome"].startswith("PROVED WRONG") and "arm < one-lap arm + 0.3" in x["outcome"]
+    assert x["one_shot"] and "separate finding: one-shot side module with step targets helps" in x["outcome"], x["outcome"]  # (a), (b), (d) pass: the one-shot finding is reported next to the verdict
+    assert x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]  # (c) = +0.2 is on the proved-wrong side
+    x = p2("c_band", tsd=P2, tsd1=76.5, gap=14.0, ws=(70.0, 73.0))  # (c) = +0.5: neither met nor missed by 1, not proved wrong
+    assert x["seed_rule"] == "needs seeds 2-3" and x["one_shot"], x
+    x = p2("lesion_gap_do_not_count", tsd={**P2, "swap4": 75.9}, tsd1=74.5, gap=10.5, ws=(70.0, 73.0))  # swap cost 1.1 and gap 10.5 sit near their bars; only accuracy margins count
+    assert x["seed_rule"] == "decided on 1 seed(s)", x["seed_rule"]
+    x = p2("gap_wrong", tsd=P2, tsd1=74.5, gap=1.0, ws=(70.0, 73.0))
+    assert "decoder gap < 2" in x["outcome"] and x["conditions"]["d"] is False
+    x = p2("gap_mid", tsd=P2, tsd1=74.5, gap=6.0, ws=(70.0, 73.0))
+    assert x["outcome"] == "not shown" and not x["P3_entry"]
+    x = p2("p3", tsd={**P2, "swap4": 76.5, "random4": 76.4}, tsd1=74.5, gap=12.0, ws=(70.0, 73.0))  # the decoder holds the steps but the answer ignores the notes
+    assert x["lesions"]["swap"]["status"] == "not shown" and x["P3_entry"] and x["conditions"]["b"] is False
+    x = p2("weak", tsd={**P2, "L4": 73.2, "swap4": 70.0, "random4": 70.0}, tsd1=72.0, gap=14.0, ws=(70.0, 73.0))  # S < max(tc, C1) + 0.5
+    assert "a: arm < max(tc, C1) + 0.5" in x["outcome"]
+    x = p2("no_one", tsd=P2, gap=14.0, ws=(70.0, 73.0))
+    assert x["status"] == SM.ND and "tsd1" in x["why"]
+    x = p2("no_gap", tsd=P2, tsd1=74.5, ws=(70.0, 73.0))
+    assert x["conditions"]["d"] is None and x["outcome"] == "not shown"
+    # the old report and the JSON are unaffected / still round-trip
+    o = run(scenario(R / "old"))
+    assert o["p1"] is None and o["p2b"] is None and "== 9." not in SM.report(o)
+    out, data = R / "pass" / "out", R / "pass" / "data"
+    proc = subprocess.run([sys.executable, str(HERE / "summarize.py"), str(out), "--data", str(data), "--json"], capture_output=True, text=True)
+    assert proc.returncode == 0 and json.loads(proc.stdout)["p2b"]["outcome"] == "PASS", proc.stderr
+    print("S4 ok: P1 open / extra positions / wrong / not shown, P2b pass / one-shot / wrong rules / P3 entry, seed rule, JSON")
+    tmp.cleanup()
+
+
+def brlab(root, br=None, aplus=72.0, tc=73.0, aplong=73.5, halting=None, seeds=(0,), r8_is_r4=False):
+    """Fixture for Addendum F: br = {loops: pct} (validation r-tags), aplong = main, halting = the br result's halting readout.
+    r8_is_r4: r8 gets r4's exact hits (S(r8) - S(r4) = 0 on every row group, free of the fixture's per-draw noise)."""
+    lab = Lab(root)
+    for sd in seeds:
+        lab.put("a", sd, "validation", "main", 63.0)
+        lab.put("aplus", sd, "validation", "main", aplus)
+        lab.put("tc", sd, "validation", "L0", tc)
+        if aplong is not None:
+            lab.put("aplong", sd, "validation", "main", aplong)
+        for r, v in (br or {}).items():
+            lab.put("br", sd, "validation", f"r{r}", v)
+        if br and r8_is_r4:
+            lab.put_hits("br", sd, "validation", "r8", lab.res[("br", sd)]["eval"]["validation"]["r4"]["hits"])
+        if br:
+            lab.put_hits("br", sd, "validation", "main", lab.res[("br", sd)]["eval"]["validation"]["r4"]["hits"])
+            lab.res[("br", sd)]["loop_schedule"] = dict(seed=5000, mean=2.8, compute_ratio=1.30, block=[8, 12], eval_loops=[1, 2, 3, 4, 6, 8], main=4)
+            if halting:
+                lab.res[("br", sd)]["halting"] = halting
+    return lab
+
+
+BR = {1: 70.0, 2: 73.0, 3: 75.0, 4: 78.0, 6: 78.0, 8: 77.8}
+HALT = dict(acc=0.778, mean_loops=3.2, spearman_depth_loops=0.3, rule="first r ...",
+            by_depth={"1": dict(n=600, mean_loops=2.5, acc=0.9), "2": dict(n=500, mean_loops=2.8, acc=0.8), "4": dict(n=300, mean_loops=4.0, acc=0.5),
+                      "5": dict(n=60, mean_loops=4.5, acc=0.4), "6": dict(n=10, mean_loops=5.0, acc=0.3)})
+
+
+def test_s5():
+    """Addendum F marks (arm br vs max(aplus, tc, aplong); loop rise on depth 4-6; halting judged only after F1 and F2)."""
+    tmp = tempfile.TemporaryDirectory()
+    R = Path(tmp.name)
+    pb = lambda name, **kw: run(brlab(R / name, **kw))["br"]
+    x = pb("pass", br=BR, halting=HALT)
+    assert x["status"] == "computed" and x["F1"] and x["F2"] and x["outcome"].startswith("PASS") and x["ref_name"] == "aplong", x
+    assert abs(x["S_minus_ref"] - 4.5) < 0.05 and x["deep_rise"]["value"] > 2 and x["deep_r8_minus_r4"]["value"] >= -1.0
+    h = x["halting"]
+    assert h["judged"] and h["H1"] and h["H2"] and not h["wrong"] and abs(h["loops_depth_1_2"] - (600 * 2.5 + 500 * 2.8) / 1100) < 1e-9, h
+    assert abs(h["loops_depth_4_6"] - (300 * 4.0 + 60 * 4.5 + 10 * 5.0) / 370) < 1e-9 and x["loops_curve"]["r4"] == 78.0
+    rep = SM.report(run(brlab(R / "pass", br=BR, halting=HALT)))
+    assert "== 11. Addendum F" in rep and "OUTCOME: PASS" in rep and "max is aplong" in rep and "halting (answer-stable rule, judged)" in rep and "compute ratio 1.30" in rep
+    x = pb("small", br={**BR, 4: 73.8, 6: 73.8}, r8_is_r4=True)  # +0.3 over aplong: proved wrong; the deep-row loop gain is still reported
+    assert x["F1"] is False and x["outcome"].startswith("PROVED WRONG") and "F1" in x["outcome"], x["outcome"]
+    assert x["F2"] and x["outcome"].endswith("separately, loops help on deep questions, not beyond a matched control"), x["outcome"]
+    x = pb("deep_only", br={**BR, 4: 74.8, 6: 74.8}, r8_is_r4=True)  # +1.3 over aplong: neither met nor proved wrong; F2 passes
+    assert x["F1"] is False and x["F2"] and x["outcome"] == "loops help on deep questions, not beyond a matched control", x["outcome"]
+    x = pb("keep_band", br={**BR, 8: 77.0})  # S(r8) - S(r4) near its -1.0 bar: seeds 2-3 owed even though F1 and the rise are settled
+    assert -2.0 < x["deep_r8_minus_r4"]["value"] < 0.0 and x["seed_rule"] == "needs seeds 2-3", (x["deep_r8_minus_r4"], x["seed_rule"])
+    x = pb("seed_gap", br=BR, seeds=(0, 1))  # a missing loop count at one seed is left out of the curve, not counted as 0
+    x2 = run(brlab(R / "seed_gap2", br=BR, seeds=(0, 1)))
+    assert x["loops_curve"]["r3"] == 75.0
+    flat = brlab(R / "seed_gap3", br=BR, seeds=(0, 1))
+    del flat.res[("br", 1)]["eval"]["validation"]["r3"]
+    assert run(flat)["br"]["loops_curve"]["r3"] == 75.0 and x2["br"]["seeds"] == [0, 1]
+    x = pb("flat", br={**BR, 1: 78.0}, halting={**HALT, "spearman_depth_loops": 0.05})  # loops add nothing on depth 4-6
+    assert x["F2"] is False and "F2" in x["outcome"] and x["halting"]["wrong"] and not x["halting"]["judged"], x
+    x = pb("drop", br={**BR, 8: 75.0})  # r8 falls 3 points below r4
+    assert x["F1"] and x["F2"] is False and x["outcome"] == "not shown", x["outcome"]
+    x = pb("tc_hi", br=BR, tc=77.0)
+    assert x["ref_name"] == "tc" and x["F1"] is False and x["F2"] and x["outcome"] == "loops help on deep questions, not beyond a matched control", x["outcome"]
+    x = pb("noapl", br=BR, aplong=None)
+    assert x["status"] == SM.ND and "aplong" in x["why"]
+    assert run(brlab(R / "none"))["br"] is None
+    print("S5 ok: Addendum F pass / wrong / flat / r8 drop / harder control / missing control; halting judged only after F1 and F2")
+    tmp.cleanup()
+
+
 if __name__ == "__main__":
     test_s1()
     test_s2()
+    test_s3()
+    test_s4()
+    test_s5()

@@ -1,0 +1,20 @@
+2026-10-28T16:10:49Z pc_hops_chain.sh start (src /home/benja/hops/src-388881b, out /home/benja/hops/out, go flag /mnt/c/Users/benja/pc-jobs/handoff/HOPS-CHAIN-GO)
+2026-10-28T16:10:49Z run R pairA_s1: pc_hops.sh R with HOPS_NAME=pairA_s1 HOPS_ARMS=hplain hloop SEED=1
+2026-10-28T19:27:05Z end R pairA_s1 rc=0
+2026-10-28T19:27:12Z decision F pairB: yes (seed 0: yes, pair B key PASS at seed 0; seed 1: yes, pair B key PASS at seed 1)
+2026-10-28T19:27:12Z run F pairB: pc_hops.sh F with HOPS_NAME=pairB HOPS_ARMS=hplains hloops HOPS_SEEDS=0 1
+2026-10-28T20:31:58Z end F pairB rc=0
+2026-10-28T20:32:00Z decision F pairA: yes (pair A key REPLICATES at seed 1)
+2026-10-28T20:32:00Z run F pairA: pc_hops.sh F with HOPS_NAME=pairA HOPS_ARMS=hplain hloop HOPS_SEEDS=0 1
+2026-10-28T21:33:16Z end F pairA rc=0
+2026-10-28T21:33:21Z decision F hloopi: yes (hloopi works=True stops_itself=False at seed 0)
+2026-10-28T21:33:21Z run F hloopi: pc_hops.sh F with HOPS_NAME=hloopi HOPS_ARMS=hloopi hplain HOPS_SEEDS=0
+2026-10-28T22:05:12Z end F hloopi rc=0
+2026-10-28T22:05:12Z decision R round2_hloopd: yes (seed 0: yes, pair B key PASS at seed 0; seed 1: yes, pair B key PASS at seed 1)
+2026-10-28T22:05:12Z run R round2_hloopd: pc_hops.sh R with HOPS_NAME=round2_hloopd HOPS_ARMS=hloopd SEED=0
+2026-10-29T01:43:40Z end R round2_hloopd rc=0
+2026-10-29T01:43:48Z decision F hloopd: yes (hloopd works=True stops_itself=True at seed 0)
+2026-10-29T01:43:48Z run F hloopd: pc_hops.sh F with HOPS_NAME=hloopd HOPS_ARMS=hloopd hplains HOPS_SEEDS=0
+2026-10-29T02:14:03Z end F hloopd rc=0
+2026-10-29T02:14:03Z chain end: ran: R pairA_s1 rc=0; F pairB rc=0; F pairA rc=0; F hloopi rc=0; R round2_hloopd rc=0; F hloopd rc=0; skipped: nothing; exit 0
+2026-10-29T02:14:03Z wrote /mnt/c/Users/benja/pc-jobs/handoff/HOPS-CHAIN-DONE

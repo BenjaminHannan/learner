@@ -277,12 +277,14 @@ class _Visit:
         line = len(self.records)
         refs = sorted(answer.deriv.evidence)
         local = sorted({l for v, l in refs if v == self.no})
+        walked = list(dict.fromkeys(l for v, l in answer.deriv.path if v == self.no))  # derivation order; the same lines as `local` when complete
         prior = [[self.v.visit_ids[v], l] for v, l in refs if v != self.no]
         long_range = bool(prior) or any(l < line - self.visible_lines for l in local)
         base = QTYPES[step["bank"]]
         return {
             "kind": "question", "bank": step["bank"], "qtype": "Q10" if not answer.knowable else base, "base_qtype": base,
             "slots": step["slots"], "answer": answer.answer, "depth": answer.depth, "evidence": local,
+            "evidence_path": walked + [l for l in local if l not in walked], "path_complete": set(walked) == set(local) and not prior,
             "rule_applications": answer.rule_applications, "families": answer.families, "knowable": answer.knowable,
             "twin": None, "id": f"{self.id}:{step['key']}", "range": "long_range" if long_range else "visible",
             "long_range": long_range, "prior_evidence": prior, "surface": self._surfaces(step["slots"]),

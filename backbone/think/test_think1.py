@@ -3,7 +3,7 @@
 T1-T7, T9, T10 + TP/TC/TR/TB come from test_think1_board.py, X1-X4 from test_xent.py, S1 from test_summarize.py. Here: T8 (same seed,
 same stage-2 losses), TO (data order = train.py's), TH (hits are stored in file order; gates off = arm a), TG (mechanics gate, incl. the
 abort path), TR (run_box.sh job order and skips, stub python), TS (spec defaults), SM (`think1.py --smoke` end to end, then summarize prints a verdict line).
-Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, T8, TO, TH, TG, TR, TS, SM.
+Test names for --only: BOARD (T1-T7, T9, T10, TP, TC, TR-api, TB), XENT, S1, S4, T8, TO, TH, TG, TJ, TF, TCTRL, TR, TS, AI, SM.
 Needs the venv with torch CPU, transformers 5.20.2 and peft; `--real` adds the real-0.8B checks (HF_HOME=<cache> HF_HUB_OFFLINE=1).
 """
 from __future__ import annotations
@@ -193,6 +193,223 @@ def test_tg_mechanics_gate():
     print(f"TG only the gates-shut check aborts (a saturated one-lap board with cosine {cos:.3f} passes); divergence rule; abort path: exit 3, aborted={res['aborted']!r}, no eval; missing adapter -> clear error")
 
 
+# ---------------------------------------------------------------- TJ (arm tj, joint LoRA + board)
+
+def test_tj_joint():
+    """tj: at step 0 (zero gates) the board read equals arm a; gradients reach the LoRA through the checkpointed slot / answer passes (same as without
+    checkpointing); training moves LoRA weights and the gates; both artefacts, params, lmax and tags are recorded."""
+    fx = fixture()
+    from safetensors.torch import load_file
+    cpu, ad = torch.device("cpu"), Path(fx["root"]) / "base" / "a_s0" / "adapter"
+    a = arm_args("tj", 0, "tj", steps=6)
+    lm, tok = T.load_model(a, cpu, torch.float32)
+    torch.nn.init.normal_(lm.model.embed_tokens.weight, std=0.5)
+    pm = K.lora_model(lm, ad)
+    r = T.Runner(pm.base_model.model)
+    enc = T.Encoder(tok, 256)
+    rows = T.read_jsonl(Path(fx["data"]) / "train.jsonl")[:4]
+    mb = [enc.train_example(x) for x in rows]
+    lora = [p for p in pm.parameters() if p.requires_grad]
+    assert lora and all(p.requires_grad for n, p in pm.named_parameters() if "lora_" in n), "tj LoRA must be trainable"
+    torch.manual_seed(0)
+    board = B.ThinkBoard.from_model(r.lm, tok, K=4)
+    C, mask, p, lt, ans = K.micro_inputs(r, mb, cpu)
+    with torch.no_grad():  # step 0: zero gates -> the answer pass with the board read is arm a's, and so is the greedy decode
+        kv = B.think(board, r, C, mask, p, 2, keep={2}, stats=False)[0][2]
+        s_b, _ = B.answer_ce(r, board, C, mask, p, lt, ans, kv)
+        s_a, _ = K.answer_loss_fixed(r, mb, cpu)
+        d0 = B.decode(r, board, C, mask, p, lt, kv, eos=enc.eos)
+        d1 = B.decode(r, None, C, mask, p, lt, None, eos=enc.eos)
+    assert abs(float(s_a) - float(s_b)) < 1e-4 * max(1.0, abs(float(s_a))) and d0 == d1, (float(s_a), float(s_b))
+    # gradient to the LoRA through the closures: open gates, compare with and without checkpointing (the answer pass alone also reaches the LoRA, so compare, not just test > 0)
+    with torch.no_grad():
+        board.alpha.fill_(1.0)
+    g = {}
+    for ck in (True, False):
+        for q in lora:
+            q.grad = None
+        loss, _ = B.train_loss(board, r, C, mask, p, lt, ans, 2, lam=0.01, ckpt=ck)
+        loss.backward()
+        g[ck] = [q.grad.clone() for q in lora if q.grad is not None]
+    assert len(g[True]) == len(g[False]) > 0 and sum(float(x.abs().sum()) for x in g[True]) > 0
+    assert all(torch.allclose(x, y, rtol=1e-3, atol=1e-6) for x, y in zip(g[True], g[False])), "checkpointed passes give the LoRA different gradients"
+    # end to end
+    before = {k: v.clone() for k, v in load_file(str(ad / "adapter_model.safetensors")).items()}
+    assert K.run_arm(a) == 0
+    res = load(a)
+    out = Path(a.out)
+    after = load_file(str(out / "adapter" / "adapter_model.safetensors"))
+    moved = [k for k in before if not torch.equal(before[k], after[k])]
+    assert moved, "tj LoRA weights did not change"
+    blk = torch.load(out / "think_block.pt")
+    assert blk["arm"] == "tj" and float(blk["state_dict"]["alpha"].abs().max()) > 0, "board alpha did not move"
+    assert res["lmax"] == 4 and res["k_slots"] == 16 and res["adapter_sha"] and res["adapter_sha"] != res["stage1_adapter_sha"]
+    assert res["params_trainable"] == 1_643_656 + 146_176 and len(res["train"]["step_losses"]) == 6 and res["train"]["gate_log"] and all(x["L_max"] == 4 for x in res["train"]["gate_log"])
+    assert "lora" in res["train"]["gate_log"][0]["grad_norm"]
+    for split, want in EXPECT["tj"].items():
+        assert set(res["eval"][split]) == want, (split, set(res["eval"][split]))
+    assert K.tags_for("t", "dev") == K.tags_for("t", "dev", 4) and K.tags_for("tj", "validation", 3)["swap3"] == ("swap", 3, None)
+    print(f"TJ step 0 board read == arm a (CE {float(s_a):.4f}); checkpointed LoRA gradients == uncheckpointed ({len(g[True])} tensors); 6 joint steps moved {len(moved)} LoRA tensors and alpha; lmax/params/tags recorded")
+
+
+# ---------------------------------------------------------------- TF (arm tf, forced-then-released blind answer passes)
+
+def test_tf_forced():
+    """tf: p_blind schedule; blind answer passes hide the whole prompt (CE differs from the sighted one; logits and decode are unchanged when the prompt
+    tokens change, so no leak through attention or DeltaNet state) while the board read still acts; a short run trains, moves LoRA and alpha, logs
+    blind_steps (the Random(seed + 3000) draws) and scores blind4; with --blind-p 0 tf's losses equal tj's."""
+    fx = fixture()
+    from safetensors.torch import load_file
+    cpu, ad = torch.device("cpu"), Path(fx["root"]) / "base" / "a_s0" / "adapter"
+    a = K.parse(["--arm", "tf", "--out", "x"])
+    assert (a.blind_p, a.blind_until) == (0.5, 0.6)
+    st = 1000
+    got = [K.p_blind(s, st, a) for s in (0, int(0.3 * st), int(0.6 * st), st - 1)]
+    assert all(abs(x - y) < 1e-12 for x, y in zip(got, [0.5, 0.25, 0.0, 0.0])) and K.p_blind(900, st, a) == 0.0, got
+    assert K.tags_for("tf", "validation", 4)["blind4"] == ("blind", 4, 2000) and set(K.tags_for("tf", "dev")) == {"L4"} and "blind4" not in K.tags_for("tj", "validation")
+    # leak test on the random-embedding model (every layer type matters)
+    args = arm_args("tf", 0, "tf", steps=6)
+    lm, tok = T.load_model(args, cpu, torch.float32)
+    torch.nn.init.normal_(lm.model.embed_tokens.weight, std=0.5)
+    pm = K.lora_model(lm, ad)
+    r = T.Runner(pm.base_model.model)
+    enc = T.Encoder(tok, 256)
+    rows = T.read_jsonl(Path(fx["data"]) / "train.jsonl")[:4]
+    mb = [enc.train_example(x) for x in rows]
+    torch.manual_seed(0)
+    board = B.ThinkBoard.from_model(r.lm, tok, K=4)
+    with torch.no_grad():
+        board.alpha.fill_(1.0)
+    C, mask, p, lt, ans = K.micro_inputs(r, mb, cpu)
+    g = torch.Generator().manual_seed(5)
+    mb2 = [([int(x) for x in torch.randint(5, lm.model.embed_tokens.weight.shape[0], (len(pr) - 1,), generator=g)] + [pr[-1]], an) for pr, an in mb]
+    assert all(len(x[0]) == len(y[0]) and x[0][:-1] != y[0][:-1] for x, y in zip(mb, mb2))
+    C2, mask2, p2, lt2, _ = K.micro_inputs(r, mb2, cpu)
+    assert torch.equal(p, p2) and torch.equal(lt, lt2)
+    with torch.no_grad():
+        kv = B.think(board, r, C, mask, p, 2, keep={2}, stats=False)[0][2]
+        zero = torch.zeros_like(board.alpha)
+        for gates in (zero, None):  # gates shut, and open (same slot K/V in both prompts: only the answer-side prompt context may differ)
+            sighted = B.answer_logits(r, zero if gates is not None else board.gate(), C, mask, p, lt, ans, kv)[0]
+            b1 = B.answer_logits(r, zero if gates is not None else board.gate(), C, mask, p, lt, ans, kv, blind=True)[0]
+            b2 = B.answer_logits(r, zero if gates is not None else board.gate(), C2, mask2, p2, lt2, ans, kv, blind=True)[0]
+            s2 = B.answer_logits(r, zero if gates is not None else board.gate(), C2, mask2, p2, lt2, ans, kv)[0]
+            assert torch.equal(b1, b2), "blind logits depend on the prompt"
+            assert not torch.allclose(sighted, s2, atol=1e-4), "test prompts do not change the sighted pass"
+            assert not torch.allclose(sighted, b1, atol=1e-4), "blind equals sighted: context not hidden"
+        c_blind, _ = B.answer_ce(r, board, C, mask, p, lt, ans, kv, gates=zero, blind=True)
+        c_sight, _ = B.answer_ce(r, board, C, mask, p, lt, ans, kv, gates=zero)
+        assert abs(float(c_blind) - float(c_sight)) > 1e-3, (float(c_blind), float(c_sight))
+        ob = B.answer_logits(r, zero, C, mask, p, lt, ans, kv, blind=True)[0]
+        assert not torch.allclose(ob, b1, atol=1e-4), "the board read does not act in the blind pass"
+        d1 = B.decode(r, board, C, mask, p, lt, kv, eos=enc.eos, blind=True)
+        d2 = B.decode(r, board, C2, mask2, p2, lt2, kv, eos=enc.eos, blind=True)
+        assert d1 == d2, "blind decode depends on the prompt"
+    # blind decode agrees with the teacher-forced blind pass (greedy continuation of the first token)
+    with torch.no_grad():
+        lg, tgt, sb = B.answer_logits(r, board.gate(), C, mask, p, lt, ans, kv, blind=True)
+        first = [int(lg[(sb == b).nonzero()[0, 0]].argmax()) for b in range(len(ans))]
+        d = B.decode(r, board, C, mask, p, lt, kv, eos=enc.eos, blind=True, max_new=1)
+        assert all((x[0] if x else enc.eos) == f for x, f in zip(d, first)), (d, first)
+    # checkpointed blind gradients == uncheckpointed
+    lora = [q for q in pm.parameters() if q.requires_grad]
+    gr = {}
+    for ck in (True, False):
+        for q in lora:
+            q.grad = None
+        loss, _ = B.train_loss(board, r, C, mask, p, lt, ans, 2, lam=0.01, ckpt=ck, blind=True)
+        loss.backward()
+        gr[ck] = [q.grad.clone() for q in lora if q.grad is not None]
+    assert len(gr[True]) == len(gr[False]) > 0 and all(torch.allclose(x, y, rtol=1e-3, atol=1e-6) for x, y in zip(gr[True], gr[False]))
+    # end to end
+    extra = ("--blind-p", "1.0", "--blind-until", "1.0")
+    af = arm_args("tf", 0, "tf", steps=6, extra=extra)
+    before = {k: v.clone() for k, v in load_file(str(ad / "adapter_model.safetensors")).items()}
+    assert K.run_arm(af) == 0
+    res, out = load(af), Path(af.out)
+    after = load_file(str(out / "adapter" / "adapter_model.safetensors"))
+    assert [k for k in before if not torch.equal(before[k], after[k])], "tf LoRA weights did not change"
+    assert float(torch.load(out / "think_block.pt")["state_dict"]["alpha"].abs().max()) > 0
+    rng = random.Random(3000)
+    bs = K.batches(len(T.read_jsonl(Path(fx["data"]) / "train.jsonl")), 1000, 8)
+    want = [int(rng.random() < 1.0 * max(0.0, 1 - s / 6)) for s in range(6) for _ in range(-(-len(next(bs)) // 4))]  # micro-batches of 4 rows per step
+    assert res["train"]["blind_steps"] == want and 0 < sum(want), (res["train"]["blind_steps"], want)
+    for split, w in EXPECT["tf"].items():
+        assert set(res["eval"][split]) == w, (split, set(res["eval"][split]))
+    assert res["eval"]["validation"]["blind4"]["n"] == 4 and res["blind"] == dict(p=1.0, until=1.0, seed=3000) and res["lmax"] == 4
+    # blind-p 0: tf is tj
+    z = arm_args("tf", 0, "tf0", steps=3, extra=("--blind-p", "0"))
+    j = arm_args("tj", 0, "tj3", steps=3)
+    assert K.run_arm(z) == 0 and K.run_arm(j) == 0
+    lz, lj = load(z), load(j)
+    assert lz["train"]["step_losses"] == lj["train"]["step_losses"] and sum(lz["train"]["blind_steps"]) == 0
+    print(f"TF schedule {got}; blind logits/decode independent of the prompt, differ from sighted (CE {float(c_blind):.3f} vs {float(c_sight):.3f}), board read acts, ckpt grads equal; 6-step run blind_steps={sum(want)}/{len(want)} blind4 scored; blind-p 0 losses == tj")
+
+
+# ---------------------------------------------------------------- TC (control: tj with the thinking block off)
+
+def test_tc_control():
+    """tc: tj's loop with lmax 0, alpha frozen at 0 and no board parameter in the optimizer. A few steps move the LoRA, leave alpha exactly 0 and every
+    board parameter unchanged; the optimizer has only the "lora" group; the step-150 gate is skipped (reason recorded); with the same seed tc's first-step
+    LoRA gradient equals tj's run with --lmax 0 (gates are 0 in both at step 0); params_trainable is the LoRA alone; tags are L0 / ref0 (dev L0)."""
+    fx = fixture()
+    from safetensors.torch import load_file
+    ad = Path(fx["root"]) / "base" / "a_s0" / "adapter"
+    assert K.tags_for("tc", "validation", 4) == {"L0": ("plain", 0, None), "ref0": ("none", 0, None)} and K.tags_for("tc", "dev", 4) == {"L0": ("plain", 0, None)}
+    assert "tc" in K.ARMS and "tc" in K.STAGE2 and "tc" in K.BOARD and "tc" in K.JOINT
+    seen = {}
+    real_step = torch.optim.AdamW.step
+
+    def spy(self, *a, **k):  # the clipped gradients the first optimizer step uses, and the group names
+        if "names" not in seen:
+            seen["names"] = [g.get("name") for g in self.param_groups]
+            seen["grads"] = [q.grad.clone() for g in self.param_groups if g.get("name") == "lora" for q in g["params"] if q.grad is not None]
+        return real_step(self, *a, **k)
+
+    grads = {}
+    torch.optim.AdamW.step = spy
+    try:
+        for arm, extra in (("tc", ()), ("tj", ("--lmax", "0"))):
+            seen.clear()
+            a = arm_args(arm, 0, arm + "g", steps=1, extra=extra)
+            try:
+                assert K.run_arm(a) == 0
+            except RuntimeError:  # tj at lmax 0 has no refinement stats for its gate probe (after step 1, which is all we need here)
+                assert arm == "tj" and "grads" in seen
+            grads[arm] = seen["grads"]
+            if arm == "tc":
+                assert seen["names"] == ["lora"], seen["names"]
+    finally:
+        torch.optim.AdamW.step = real_step
+    assert len(grads["tc"]) == len(grads["tj"]) > 0 and sum(float(x.abs().sum()) for x in grads["tc"]) > 0
+    assert all(torch.allclose(x, y, rtol=1e-4, atol=1e-7) for x, y in zip(grads["tc"], grads["tj"])), "tc first-step LoRA gradient differs from tj --lmax 0"
+    # a few steps end to end
+    before = {k: v.clone() for k, v in load_file(str(ad / "adapter_model.safetensors")).items()}
+    a = arm_args("tc", 0, "tc", steps=6)
+    assert K.run_arm(a) == 0
+    res, out = load(a), Path(a.out)
+    after = load_file(str(out / "adapter" / "adapter_model.safetensors"))
+    moved = [k for k in before if not torch.equal(before[k], after[k])]
+    assert moved, "tc LoRA weights did not change"
+    blk = torch.load(out / "think_block.pt")["state_dict"]
+    assert float(blk["alpha"].abs().max()) == 0.0, "tc alpha moved"
+    cpu = torch.device("cpu")
+    torch.manual_seed(a.seed)
+    lm2, tok2 = T.load_model(a, cpu, torch.float32)
+    pm2 = K.lora_model(lm2, ad)
+    torch.manual_seed(a.seed)  # run_arm seeds again right before building the board
+    fresh = B.ThinkBoard.from_model(pm2.base_model.model, tok2, K=16).state_dict()
+    assert set(fresh) == set(blk) and all(torch.equal(fresh[k], blk[k]) for k in fresh), "a board parameter changed in tc"
+    n_lora = sum(p.numel() for p in pm2.parameters() if p.requires_grad)
+    assert res["params_trainable"] == n_lora == 146_176 and res["lmax"] == 0 and res["train"]["gate_check"]["reason"] == "skipped (tc)"
+    assert len(res["train"]["step_losses"]) == 6 and res["train"]["gate_log"] and all(x["L_max"] == 0 and x["alpha_mean"] == 0 for x in res["train"]["gate_log"])
+    assert set(res["train"]["gate_log"][0]["grad_norm"]) == {"lora"}
+    for split, want in EXPECT["tc"].items():
+        assert set(res["eval"][split]) == want, (split, set(res["eval"][split]))
+    assert res["eval"]["validation"]["L0"]["hits"] == res["eval"]["validation"]["ref0"]["hits"], "closed-board L0 differs from the no-read reference"
+    print(f"TC first-step LoRA gradient == tj --lmax 0 ({len(grads['tc'])} tensors); 6 steps moved {len(moved)} LoRA tensors, alpha stays 0, board unchanged, optimizer groups ['lora'], gate skipped, params {n_lora:,}")
+
+
 # ---------------------------------------------------------------- run_box.sh
 
 STUB = r"""#!/usr/bin/env bash
@@ -206,12 +423,13 @@ case "$script" in
     mkdir -p "$out"
     case ",${FAILONCE:-}," in *",$arm,"*) [ -f "$out/.failed" ] || { touch "$out/.failed"; exit 1; };; esac   # out of memory once, fine on the retry
     case ",${FAILLATE:-}," in *",$arm,"*) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json"; exit 1;; esac   # adapter saved, then the eval crashed
-    case "$arm" in aplus|t|t1|tw) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
+    case "$arm" in aplus|t|t1|tw|tj|tf|tc|ws|wsham|tsd|tsd1) [ -f "$out/../a_s$seed/adapter/adapter_config.json" ] || { echo "no a adapter" >&2; exit 4; };;
                    bplus) [ -f "$out/../b_s$seed/adapter/adapter_config.json" ] || exit 4;; esac
     if [ -n "${PARDIR:-}" ]; then touch "$PARDIR/run.$$"; ls "$PARDIR" | grep -c '^run\.' >> "$PARDIR/counts"; sleep 0.4; fi
     mkdir -p "$out"; echo '{}' > "$out/result_${arm}_s${seed}.json"
     case "$arm" in a|b) mkdir -p "$out/adapter"; echo '{}' > "$out/adapter/adapter_config.json";; esac
     [ -z "${PARDIR:-}" ] || { echo "end --arm $arm --seed $seed" >> "$LOG"; rm -f "$PARDIR/run.$$"; };;
+  *preflight.py) [ -z "${PFAIL:-}" ] || exit 1; mkdir -p "$OUT/preflight";;
   *summarize.py) echo "VERDICT: INCOMPLETE";;
 esac
 """
@@ -220,6 +438,7 @@ esac
 def test_box_script():
     """run_box.sh drives think1.py for every arm, in dependency order, skipping finished jobs (stub python; no torch)."""
     import os
+    import shutil
     import subprocess
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
@@ -245,12 +464,28 @@ def test_box_script():
         assert all("--steps" not in c for c in calls if c[0] == "think1.py"), "no global STEPS"
         calls, _ = box("t:0,bplus:0,aplus:1")
         assert runs(calls) == [], ("finished jobs must be skipped", runs(calls))
+        calls, _ = box("ws:3,wsham:3,tsd:3,tsd1:3")  # P1 / P2b arms: stage-1 a first, then the preflight (once), then each arm
+        assert runs(calls) == [("a", "3"), ("ws", "3"), ("wsham", "3"), ("tsd", "3"), ("tsd1", "3")], runs(calls)
+        names = [c[0] for c in calls]
+        assert names.count("preflight.py") == 1 and names.index("preflight.py") < names.index("think1.py", 1 + names.index("think1.py")), names
+        pf = calls[names.index("preflight.py")]
+        assert "--a-adapter" in pf and pf[pf.index("--a-adapter") + 1].endswith("think/a_s3/adapter") and pf[pf.index("--alpha-init") + 1] == "0", pf
+        shutil.rmtree(tmp / "out" / "preflight"), [shutil.rmtree(tmp / "out" / "think" / f"{x}_s3") for x in ("ws", "wsham", "tsd", "tsd1")]
+        calls, out = box("ws:3,tsd:3", flags="--alpha-init+0.3", PFAIL="1")  # a failed preflight stops every P1 / P2b job
+        assert runs(calls) == [] and "preflight failed" in out and [c[0] for c in calls].count("preflight.py") >= 1, (runs(calls), out)
+        assert calls[[c[0] for c in calls].index("preflight.py")][-1] == "0.3"
+        calls, out = box("ws:3,tsd:3", PARALLEL="1", PFAIL="1")
+        assert runs(calls) == [] and [c[0] for c in calls].count("preflight.py") == 1, (runs(calls), out)
+        calls, _ = box("ws:3,tsd:3,aplus:3")  # no failure: the preflight runs once even with two jobs
+        assert [c[0] for c in calls].count("preflight.py") == 1 and sorted(runs(calls)) == [("aplus", "3"), ("tsd", "3"), ("ws", "3")], runs(calls)
         import shutil
         shutil.rmtree(tmp / "out" / "think" / "a_s1" / "adapter")
         calls, _ = box("aplus:1")
         assert runs(calls) == [("a", "1")], "result without adapter: retrain the stage-1 arm, then the (finished) job is skipped"
         calls, out = box("t:5,a:6,zz:0", fail="a")
         assert runs(calls) == [("a", "5"), ("a", "6")] and "t seed 5 skipped" in out and "unknown arm zz" in out, (runs(calls), out)
+        calls, out = box("br:11,aplong:11")  # Addendum F arms: a first, no P1 preflight, never "unknown arm"
+        assert runs(calls) == [("a", "11"), ("br", "11"), ("aplong", "11")] and "unknown arm" not in out and "preflight.py" not in [c[0] for c in calls], (runs(calls), out)
         calls, _ = box("t1:7", flags="--limit-eval+10")
         assert [c for c in calls if c[0] == "think1.py" and "t1" in c][0][-2:] == ["--limit-eval", "10"]
         # no CUDA: stop with exit 2 before any job runs; ALLOW_CPU=1 runs anyway
@@ -310,12 +545,18 @@ EXPECT = {
     "aplus": {"validation": {"main"}, "dev": {"main"}}, "bplus": {"validation": {"main"}, "dev": {"main"}},
     "t": {"validation": {"L0", "L1", "L2", "L4", "L8", "L12", "L16", "L24", "swap8", "mean8", "rep1_8", "gatesoff8", "ref0"}, "dev": {"L0", "L1", "L8"}},
     "t1": {"validation": {"L0", "L1", "L8"}, "dev": {"L1"}}, "tw": {"validation": {"L1"}, "dev": set()},
+    "tj": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0"}, "dev": {"L4"}},
+    "tf": {"validation": {"L0", "L1", "L4", "swap4", "gatesoff4", "ref0", "blind4"}, "dev": {"L4"}},
+    "tc": {"validation": {"L0", "ref0"}, "dev": {"L0"}},
+    "ws": {"validation": {"T", "C1", "fmt"}, "dev": {"T", "C1"}}, "wsham": {"validation": {"T", "C1", "fmt"}, "dev": {"T", "C1"}},
+    "tsd": {"validation": {"L0", "L1", "L4", "swap4", "random4", "zero4", "gatesoff4", "ref0"}, "dev": {"L4"}},
+    "tsd1": {"validation": {"L0", "L1", "swap1", "random1", "zero1", "gatesoff1", "ref0"}, "dev": {"L1"}},
 }
 
 
 def test_ts_spec_defaults():
     """Per-arm step defaults, learning-rate groups, warm-ups, gate thresholds and eval tags, as in IMPL-SPEC section 3 / PREREG."""
-    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw"}
+    assert (K.STEPS1, K.STEPS2) == (418, 1254) and K.STAGE1 == ("a", "b") and set(K.STAGE2) == {"aplus", "bplus", "t", "t1", "tw", "tj", "tf", "tc", "ws", "wsham", "tsd", "tsd1", "br", "aplong"}
     a = K.parse(["--arm", "t", "--out", "x"])
     assert (a.bsz, a.micro_bsz, a.max_len, a.eval_bsz, a.eval_tokens, a.steps, a.k, a.gate_step, a.log_every) == (16, 4, 2048, 64, 32768, None, None, 150, 250)
     assert (K.LR, K.LR_ALPHA, K.LR_BOARD, K.LAMBDA) == (2e-4, 3e-3, 5e-4, 0.01)
@@ -364,14 +605,15 @@ def test_sm_smoke_all_arms():
             assert r["steps_stage1"] == 6 and r["steps_stage2"] == (0 if arm in ("a", "b") else 6)
         for arm in ("a", "b", "aplus", "bplus"):
             assert (root / f"{arm}_s0" / "adapter" / "adapter_config.json").exists()
-        for arm in ("t", "t1", "tw"):
+        for arm in ("t", "t1", "tw", "tj", "tf", "tsd", "tsd1"):
             assert (root / f"{arm}_s0" / "think_block.pt").exists()
+        assert (root / "tj_s0" / "adapter" / "adapter_config.json").exists() and res["tj"]["lmax"] == 4 and res["tj"]["adapter_sha"] != res["a"]["adapter_sha"]
         assert res["tw"]["k_slots"] == 144 and res["t"]["k_slots"] == 16 and res["t1"]["k_slots"] == 16
         assert res["aplus"]["stage1_adapter"].endswith("a_s0/adapter") and res["bplus"]["stage1_adapter"].endswith("b_s0/adapter")
         assert all(res[a]["stage1_adapter"].endswith("a_s0/adapter") for a in ("t", "t1", "tw"))
         assert res["b"]["loops"] == 3 and res["b"]["loop_block"] == [0, 4] and res["a"]["loops"] == 1
         assert res["a"]["adapter_sha"] and res["b"]["adapter_sha"] and res["aplus"]["adapter_sha"] and res["bplus"]["adapter_sha"]
-        assert all(res[x]["stage1_adapter_sha"] == res["a"]["adapter_sha"] for x in ("aplus", "t", "t1", "tw")) and res["bplus"]["stage1_adapter_sha"] == res["b"]["adapter_sha"]
+        assert all(res[x]["stage1_adapter_sha"] == res["a"]["adapter_sha"] for x in ("aplus", "t", "t1", "tw", "tj", "tf", "ws", "wsham", "tsd", "tsd1")) and res["bplus"]["stage1_adapter_sha"] == res["b"]["adapter_sha"]
         assert res["a"]["stage1_adapter_sha"] is None and res["t"]["adapter_sha"] is None
         gl = res["t"]["train"]["gate_log"][0]
         assert all(k in gl for k in ("cos_across", "cos_within", "cos_update_across", "cos_update_within", "clamp", "clamp5"))
@@ -382,7 +624,33 @@ def test_sm_smoke_all_arms():
             verdict = m.group(0)
         else:
             verdict = "summarize.py absent: skipped"
-        print(f"SM smoke ran 7 arms in {time.time() - t0:.0f}s, adapters handed on, result tags as in the spec; {verdict}")
+        print(f"SM smoke ran {len(EXPECT)} arms in {time.time() - t0:.0f}s, adapters handed on, result tags as in the spec; {verdict}")
+
+
+def test_ai_alpha_init():
+    """--alpha-init: default 0 keeps zero gates (nothing changes for existing arms); 0.3 starts every gate at tanh(0.3) = 0.291; the value is recorded in the
+    result JSON and think_block.pt, survives a short run, and tc (closed block) refuses a non-zero start."""
+    assert K.parse(["--arm", "tj", "--out", "x"]).alpha_init == 0.0 and K.parse(["--arm", "tj", "--out", "x", "--alpha-init", "0.3"]).alpha_init == 0.3
+    lm, tok = T.load_model(argparse.Namespace(smoke=True, seed=0, model=""), torch.device("cpu"), torch.float32)
+    b0, b3 = B.ThinkBoard.from_model(lm, tok, K=4), B.ThinkBoard.from_model(lm, tok, K=4, alpha_init=0.3)
+    assert torch.equal(b0.alpha, torch.zeros_like(b0.alpha)) and torch.equal(B.ThinkBoard(64, 0.02, torch.randn(4, 64)).alpha, torch.zeros(6, 8))
+    assert b3.alpha.shape == b0.alpha.shape and b3.alpha.requires_grad and torch.allclose(b3.alpha, torch.full_like(b3.alpha, 0.3))
+    assert abs(float(b3.gate().mean()) - 0.2913) < 1e-3 and torch.allclose(b3.gate(), torch.tanh(torch.tensor(0.3)).expand_as(b3.gate()))
+    fx = fixture()
+    a0 = arm_args("tj", 0, "ai0", steps=2)
+    assert K.run_arm(a0) == 0
+    a3 = arm_args("tj", 0, "ai3", steps=2, extra=("--alpha-init", "0.3"))
+    assert K.run_arm(a3) == 0
+    r0, r3 = load(a0), load(a3)
+    assert r0["alpha_init"] == 0.0 and r3["alpha_init"] == 0.3
+    assert torch.load(Path(a3.out) / "think_block.pt")["alpha_init"] == 0.3
+    assert r0["train"]["gate_log"][-1]["alpha_mean"] < 0.01 and abs(r3["train"]["gate_log"][-1]["alpha_mean"] - 0.2913) < 0.01, (r0["train"]["gate_log"][-1]["alpha_mean"], r3["train"]["gate_log"][-1]["alpha_mean"])
+    try:
+        K.run_arm(arm_args("tc", 0, "ai_tc", steps=2, extra=("--alpha-init", "0.3")))
+        raise AssertionError("tc accepted --alpha-init 0.3")
+    except SystemExit:
+        pass
+    print("AI --alpha-init: default 0 keeps zero gates, 0.3 gives tanh 0.2913, recorded in result JSON and think_block.pt, kept through a run; tc refuses it")
 
 
 # ---------------------------------------------------------------- runner
@@ -398,8 +666,8 @@ def run_all(real=False, only=None):
     import test_summarize as TS
     import test_from_label as TFL
     tests = [("BOARD", lambda: board_tests(TB, real)),
-             ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
-             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("SM", test_sm_smoke_all_arms)]
+             ("XENT", TX.run_all), ("S1", TS.test_s1), ("S2", TS.test_s2), ("S4", TS.test_s4), ("FL", TFL.test_fl), ("T8", test_t8_same_seed_same_losses), ("TO", test_to_data_order),
+             ("TH", test_th_hits_in_file_order_and_gates_off_is_arm_a), ("TG", test_tg_mechanics_gate), ("TJ", test_tj_joint), ("TF", test_tf_forced), ("TCTRL", test_tc_control), ("TR", test_box_script), ("TS", test_ts_spec_defaults), ("AI", test_ai_alpha_init), ("SM", test_sm_smoke_all_arms)]
     fails = []
     for name, fn in tests:
         if only and name.lower() not in [o.lower() for o in only]:

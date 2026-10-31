@@ -1,0 +1,105 @@
+SPLIT: fresh rows, scored once (Addendum I, item 4): the same marks, the same functions. A mark that passed on validation and fails here did not hold on fresh rows, and no claim rests on it. The decision lines of the validation read (its outcome and next step) are not printed here: each pair / arm gets a verdict per mark instead, and no step follows from it.
+ADDENDUM G, ROUND 1: THE HOPS BED (percent; trained = depth 1-4; near = depth 5-6, the marked unseen depths; far = depth 7-10, no mark;
+not comparable with any village number)
+seed 0, 4000 fresh rows; arms: hloop, hloopd, hloopi, hloops, hplain, hplains
+floor: naming a random place of the row scores 14.3 at every depth
+-- pair A: hloop (br's recipe) vs hplain, at 6 loops
+   PASS V1 hplain depth 1-2 = 100.00 (>= 80);  PASS V2 hplain near = 64.25 (<= 70)
+   PASS A1 near S(r6) - hplain = +33.38  95% [+30.00, +36.75] (>= +5, interval above 0; proved wrong below +1)
+   PASS A2 trained S(r6) - hplain = +0.00 (>= -2)
+   PASS A3 near S(r6) - S(r1) = +33.12  95% [+29.88, +36.50] (>= +5, interval above 0; proved wrong below +1)
+   no mark: far S(r6) - hplain = +39.38
+   trained accuracy by fixed loop count: r1 99.94  r2 100.00  r3 100.00  r4 100.00  r5 100.00  r6 100.00  r7 100.00  r8 100.00  r9 99.94  r10 99.94  r11 99.88  r12 99.69
+   near accuracy by fixed loop count: r1 64.50  r2 86.38  r3 91.38  r4 94.62  r5 96.12  r6 97.62  r7 98.00  r8 97.62  r9 97.75  r10 97.00  r11 96.75  r12 96.38
+   far accuracy by fixed loop count: r1 18.19  r2 28.06  r3 36.44  r4 45.06  r5 50.88  r6 55.81  r7 59.62  r8 61.19  r9 62.19  r10 62.25  r11 62.62  r12 62.50
+   halting (answer-stable): 70.65 all, 100.00 trained, 87.75 near, 32.75 far; loops by depth d1:2.00 d2:2.00 d3:2.00 d4:2.00 d5:2.16 d6:2.39 d7:2.56 d8:2.55 d9:2.61 d10:2.55
+   halting (max confidence, no mark): 82.97 all, 100.00 trained, 98.12 near, 58.38 far; loops by depth d1:1.41 d2:1.49 d3:2.00 d4:2.44 d5:3.05 d6:3.93 d7:4.89 d8:5.63 d9:6.01 d10:6.25
+-- pair B: hloops (positive control) vs hplains, at the answer-stable stop rule
+   PASS V1 hplains depth 1-2 = 100.00 (>= 80);  PASS V2 hplains near = 65.00 (<= 70)
+   PASS V3 hloops at r = depth, trained depths = 99.94 (>= 80: the loop is installed)
+   PASS B1 near halting - hplains = +34.38  95% [+31.12, +37.88] (>= +5, interval above 0; proved wrong below +1)
+   PASS B2 trained halting - hplains = +0.00 (>= -2)
+   PASS B3 (mechanism, no deploy claim) near r = depth - hplains = +34.62  95% [+31.38, +38.12] (>= +5, interval above 0)
+   PASS B4 Spearman(depth 1-6, halting loops) = 1.00 [0.99, 1.00] (>= 0.5, interval above 0.3; proved wrong <= 0.1); depth 1-10, no mark: 0.91
+   no mark: far halting - hplains = +15.69; far r = depth - hplains = +17.56
+   step accuracy (answer at loop r names hop r, rows deeper than r): r1 100.00  r2 100.00  r3 99.96  r4 99.17  r5 87.20  r6 15.81  r7 0.08  r8 0.00  r9 0.00
+   trained accuracy by fixed loop count: r1 25.00  r2 50.00  r3 75.00  r4 99.94  r5 100.00  r6 100.00  r7 100.00  r8 100.00  r9 99.94  r10 99.88  r11 99.88  r12 98.88
+   near accuracy by fixed loop count: r1 0.00  r2 0.00  r3 0.00  r4 0.38  r5 57.88  r6 99.62  r7 99.62  r8 99.50  r9 99.38  r10 99.25  r11 99.12  r12 96.12
+   far accuracy by fixed loop count: r1 0.00  r2 0.00  r3 0.00  r4 0.06  r5 1.75  r6 25.00  r7 35.06  r8 39.06  r9 42.88  r10 45.06  r11 46.81  r12 44.56
+   halting (answer-stable): 74.20 all, 100.00 trained, 99.38 near, 35.81 far; loops by depth d1:2.00 d2:3.00 d3:4.00 d4:5.00 d5:6.00 d6:6.84 d7:7.16 d8:7.43 d9:7.45 d10:7.51
+   halting (max confidence, no mark): 19.50 all, 44.81 trained, 7.50 near, 0.19 far; loops by depth d1:1.29 d2:1.41 d3:1.59 d4:1.71 d5:1.65 d6:1.29 d7:1.20 d8:1.18 d9:1.21 d10:1.16
+   OUTCOME B (fresh rows): every mark that passed on validation held on fresh rows (V1, V2, V3, B1, B2, B3, B4); this is a check on the validation read, not a new decision
+      V1: validation PASS, fresh PASS: held on fresh rows
+      V2: validation PASS, fresh PASS: held on fresh rows
+      V3: validation PASS, fresh PASS: held on fresh rows
+      B1: validation PASS, fresh PASS: held on fresh rows
+      B2: validation PASS, fresh PASS: held on fresh rows
+      B3: validation PASS, fresh PASS: held on fresh rows
+      B4: validation PASS, fresh PASS: held on fresh rows
+accuracy by depth (each arm's main tag): d1: hloop 100.00,hloopd 99.75,hloopi 100.00,hloops 100.00,hplain 100.00,hplains 100.00  d2: hloop 100.00,hloopd 100.00,hloopi 100.00,hloops 100.00,hplain 100.00,hplains 100.00  d3: hloop 100.00,hloopd 100.00,hloopi 100.00,hloops 100.00,hplain 100.00,hplains 100.00  d4: hloop 100.00,hloopd 100.00,hloopi 99.75,hloops 100.00,hplain 100.00,hplains 100.00  d5: hloop 99.50,hloopd 99.25,hloopi 93.25,hloops 100.00,hplain 82.25,hplains 82.25  d6: hloop 95.75,hloopd 98.25,hloopi 76.00,hloops 99.25,hplain 46.25,hplains 47.75  d7: hloop 81.50,hloopd 87.25,hloopi 46.75,hloops 62.00,hplain 22.25,hplains 29.25  d8: hloop 61.50,hloopd 77.25,hloopi 28.25,hloops 15.00,hplain 14.00,hplains 20.00  d9: hloop 48.50,hloopd 56.00,hloopi 16.75,hloops 11.50,hplain 14.25,hplains 14.75  d10: hloop 31.75,hloopd 38.25,hloopi 13.00,hloops 11.50,hplain 15.25,hplains 16.50
+-- pair A, Addendum I's stop-rule marks: hloop under the answer-stable stop rule vs hplain
+   A4 near halting - hplain = +23.50  95% [+20.00, +27.00]  (seed 0: read before Addendum I's marks, not a test)
+   A5 trained halting - hplain = +0.00  (seed 0: read before Addendum I's marks, not a test)
+   A6 Spearman(depth 1-6, halting loops) = 0.39 [0.37, 0.42]  (seed 0: read before Addendum I's marks, not a test); depth 1-10, no mark: 0.44
+   OUTCOME A (fresh rows): every mark that passed on validation held on fresh rows (V1, V2, A1, A2, A3); this is a check on the validation read, not a new decision
+      V1: validation PASS, fresh PASS: held on fresh rows
+      V2: validation PASS, fresh PASS: held on fresh rows
+      A1: validation PASS, fresh PASS: held on fresh rows
+      A2: validation PASS, fresh PASS: held on fresh rows
+      A3: validation PASS, fresh PASS: held on fresh rows
+-- round 2 (Addendum I): hloopi (hloop + re-injection) vs hplain; one seed: a pass is a lead until seed 1 agrees
+   PASS V1 hplain depth 1-2 = 100.00 (>= 80);  PASS V2 hplain near = 64.25 (<= 70)
+   PASS Installed: hloopi at r6, trained depths = 99.94 (>= 80)
+   PASS F1 near hloopi(r6) - hplain = +20.38  95% [+17.00, +23.75] (>= +5, interval above 0; proved wrong below +1)
+   PASS F2 trained hloopi(r6) - hplain = -0.06 (>= -2)
+   PASS S1 near hloopi halting - hplain = +16.25  95% [+13.00, +19.50] (>= +5, interval above 0; proved wrong below +1)
+   PASS S2 trained hloopi halting - hplain = -0.06 (>= -2)
+   FAIL S3 Spearman(depth 1-6, halting loops) = 0.43 [0.40, 0.45] (>= 0.5, interval above 0.3; proved wrong <= 0.1); depth 1-10, no mark: 0.51
+   WORKS (F1 and F2): PASS;  STOPS ITSELF (S1, S2 and S3): FAIL
+   no mark: far hloopi(r6) - hplain = +9.75; far halting - hplain = +9.75
+   trained accuracy by fixed loop count: r1 99.81  r2 99.94  r3 99.94  r4 99.94  r5 99.94  r6 99.94  r7 99.94  r8 99.94  r9 99.94  r10 100.00  r11 99.81  r12 99.81
+   near accuracy by fixed loop count: r1 63.00  r2 78.38  r3 81.88  r4 82.50  r5 83.50  r6 84.62  r7 84.88  r8 84.75  r9 84.88  r10 84.50  r11 84.12  r12 84.25
+   far accuracy by fixed loop count: r1 18.81  r2 26.75  r3 25.94  r4 25.19  r5 25.25  r6 26.19  r7 26.44  r8 26.38  r9 27.19  r10 27.00  r11 27.62  r12 27.12
+   halting (answer-stable): 66.55 all, 99.94 trained, 80.50 near, 26.19 far; loops by depth d1:2.00 d2:2.00 d3:2.00 d4:2.02 d5:2.20 d6:2.55 d7:2.72 d8:2.78 d9:2.90 d10:2.73
+   halting (max confidence, no mark): 69.95 all, 99.94 trained, 85.75 near, 32.06 far; loops by depth d1:1.63 d2:1.79 d3:1.86 d4:1.90 d5:2.29 d6:2.68 d7:3.04 d8:2.88 d9:2.25 d10:2.07
+   OUTCOME hloopi (fresh rows): every mark that passed on validation held on fresh rows (V1, V2, Installed, F1, F2, S1, S2); this is a check on the validation read, not a new decision
+      V1: validation PASS, fresh PASS: held on fresh rows
+      V2: validation PASS, fresh PASS: held on fresh rows
+      Installed: validation PASS, fresh PASS: held on fresh rows
+      F1: validation PASS, fresh PASS: held on fresh rows
+      F2: validation PASS, fresh PASS: held on fresh rows
+      S1: validation PASS, fresh PASS: held on fresh rows
+      S2: validation PASS, fresh PASS: held on fresh rows
+      S3: validation FAIL, fresh FAIL: did not pass on validation: no claim either way
+-- round 2 (Addendum I): hloopd (hloopi with laps tied to depth) vs hplains; one seed: a pass is a lead until seed 1 agrees
+   PASS V1 hplains depth 1-2 = 100.00 (>= 80);  PASS V2 hplains near = 65.00 (<= 70)
+   PASS Installed: hloopd at r = depth, trained depths = 99.94 (>= 80)
+   PASS F1 near hloopd(r6) - hplains = +33.75  95% [+30.38, +37.25] (>= +5, interval above 0; proved wrong below +1)
+   PASS F2 trained hloopd(r6) - hplains = -0.06 (>= -2)
+   PASS S1 near hloopd halting - hplains = +26.12  95% [+22.62, +29.62] (>= +5, interval above 0; proved wrong below +1)
+   PASS S2 trained hloopd halting - hplains = -0.12 (>= -2)
+   PASS S3 Spearman(depth 1-6, halting loops) = 0.81 [0.79, 0.82] (>= 0.5, interval above 0.3; proved wrong <= 0.1); depth 1-10, no mark: 0.69
+   WORKS (F1 and F2): PASS;  STOPS ITSELF (S1, S2 and S3): PASS
+   no mark: far hloopd(r6) - hplains = +44.56; far halting - hplains = +20.38
+   no mark: near r = depth - hplains = +33.62  95% [+30.25, +37.00]; far r = depth - hplains = +59.38
+   trained accuracy by fixed loop count: r1 49.38  r2 98.94  r3 99.94  r4 100.00  r5 100.00  r6 99.94  r7 99.81  r8 99.75  r9 99.12  r10 98.44  r11 97.88  r12 96.94
+   near accuracy by fixed loop count: r1 1.25  r2 56.38  r3 90.25  r4 96.25  r5 98.25  r6 98.75  r7 98.88  r8 99.12  r9 99.25  r10 99.38  r11 99.12  r12 98.75
+   far accuracy by fixed loop count: r1 1.12  r2 15.00  r3 29.62  r4 45.00  r5 56.75  r6 64.69  r7 71.62  r8 76.25  r9 79.62  r10 82.75  r11 85.56  r12 87.00
+   halting (answer-stable): 74.38 all, 99.88 trained, 91.12 near, 40.50 far; loops by depth d1:2.00 d2:2.17 d3:2.87 d4:3.02 d5:3.23 d6:3.53 d7:3.75 d8:3.73 d9:3.77 d10:3.75
+   halting (max confidence, no mark): 84.92 all, 99.56 trained, 94.38 near, 65.56 far; loops by depth d1:1.26 d2:1.91 d3:2.17 d4:2.56 d5:3.26 d6:4.09 d7:4.89 d8:5.71 d9:5.60 d10:5.31
+   OUTCOME hloopd (fresh rows): every mark that passed on validation held on fresh rows (V1, V2, Installed, F1, F2, S1, S2, S3); this is a check on the validation read, not a new decision
+      V1: validation PASS, fresh PASS: held on fresh rows
+      V2: validation PASS, fresh PASS: held on fresh rows
+      Installed: validation PASS, fresh PASS: held on fresh rows
+      F1: validation PASS, fresh PASS: held on fresh rows
+      F2: validation PASS, fresh PASS: held on fresh rows
+      S1: validation PASS, fresh PASS: held on fresh rows
+      S2: validation PASS, fresh PASS: held on fresh rows
+      S3: validation PASS, fresh PASS: held on fresh rows
+-- one-change readouts, Addendum I (no mark; paired 95% intervals on the same rows; the arms share a batch stream but are not compute-matched to each other)
+   hloopi - hloop (injection): at r6: near -13.00  95% [-15.62, -10.50], far -29.62  95% [-32.31, -26.88]; answer-stable: near -7.25  95% [-9.63, -4.75], far -6.56  95% [-9.38, -4.12]
+      Spearman(depth 1-6, answer-stable laps): hloopi 0.43 [0.40, 0.45], hloop 0.39 [0.37, 0.42]
+   hloopd - hloopi (laps tied to depth): at r6: near +14.12  95% [+11.75, +16.63], far +38.50  95% [+35.88, +41.50]; answer-stable: near +10.62  95% [+7.75, +13.50], far +14.31  95% [+11.44, +17.38]
+      Spearman(depth 1-6, answer-stable laps): hloopd 0.81 [0.79, 0.82], hloopi 0.43 [0.40, 0.45]
+   hloops - hloopd (graded laps): at r6: near +0.88  95% [+0.00, +1.88], far -39.69  95% [-42.69, -36.88]; answer-stable: near +8.25  95% [+6.25, +10.38], far -4.69  95% [-7.88, -1.69]
+      Spearman(depth 1-6, answer-stable laps): hloops 1.00 [0.99, 1.00], hloopd 0.81 [0.79, 0.82]

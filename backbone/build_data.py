@@ -11,6 +11,10 @@ they are checked against v1's design/v1/data/village-SHA256SUMS.txt when that fi
 Then QA rows are written to OUT/{train,dev,validation}.jsonl:
   {id, split, shard, visit_id, qtype, base_qtype, bank, template, style, rule_family, action, depth,
    long_range, visible, knowable, context, question, answer}
+steps    = the evidence lines the oracle used, as text, in derivation (chain) order: a list of strings (see steps_src); [] if none
+steps_src= "chain" (oracle path order) | "file_order" (path did not cover all its evidence: lines in file order) |
+           "none_told" (depth 0, answer "not told") | "none_prior_visit" (some evidence lies in an earlier visit, so not in the row's context) | "none_no_lines"
+           (long-range rows whose evidence is all in this visit keep their steps: build_data's context is the whole visit before the question)
 context  = every text line of the visit before the question line (stream tags kept, "\n"-joined)
 question = the question line up to (not including) " [answer] ", i.e. "[question] ..."
 answer   = canonical answer. Prompt for the LM = context + "\n" + question + " [answer]", target = " " + answer.
@@ -52,7 +56,7 @@ def make_shard(task):
     from learnlab.village import shards as S
     split, shard, directory = task
     Path(directory).mkdir(parents=True, exist_ok=True)
-    if not (Path(directory) / f"shard-{shard:05d}.txt").exists():
+    if not all((Path(directory) / f"shard-{shard:05d}{ext}").exists() for ext in (".txt", ".paths.ndjson")):  # a shard from before the paths file is regenerated (same txt/jsonl bytes)
         start = shard * PER_SHARD
         S._make_shard((split, shard, start, start + PER_SHARD, str(directory)))
     return split, shard
@@ -95,10 +99,24 @@ def check_digests(raw: Path, tasks):
     return ok, bad
 
 
+def steps_of(q, path, lines):
+    """(steps, steps_src) of one question: the evidence lines as text in chain order. path = its .paths.ndjson row."""
+    if not q["knowable"] or not q.get("depth"):
+        return [], "none_told"
+    if path["prior_lines"]:
+        return [], "none_prior_visit"
+    if not path["path_text_lines"] or any(t is None for t in q["evidence_text_lines"]):
+        return [], "none_no_lines"
+    if path["path_complete"]:
+        return [lines[t] for t in path["path_text_lines"]], "chain"
+    return [lines[t] for t in sorted(set(path["path_text_lines"]))], "file_order"
+
+
 def shard_rows(split, shard, directory):
     """QA rows of one shard, parsed from the shard files."""
     base = Path(directory) / f"shard-{shard:05d}"
     lines = base.with_suffix(".txt").read_text(encoding="utf-8").split("\n")
+    paths = {r["id"]: r for r in map(json.loads, base.with_suffix(".paths.ndjson").read_text(encoding="utf-8").splitlines())}
     visits, questions = {}, []
     for raw in base.with_suffix(".jsonl").read_text(encoding="utf-8").splitlines():
         row = json.loads(raw)
@@ -114,12 +132,14 @@ def shard_rows(split, shard, directory):
         assert sep and head.startswith("[question] ") or sep, line
         context = "\n".join(lines[v["first_line"]:q["text_line"]])
         assert head.endswith(q["question"]) or q["question"] in head, (head, q["question"])
+        steps, steps_src = steps_of(q, paths[q["id"]], lines)
         out.append({
             "id": q["id"], "split": split, "shard": shard, "visit_id": q["visit"], "qtype": q["qtype"],
             "base_qtype": q["base_qtype"], "bank": q["bank"], "template": q["template"], "style": q["style"] or "",
             "rule_family": "+".join(q["families"]) or "none", "action": q.get("action") or "", "depth": q.get("depth"),
             "long_range": bool(q["long_range"]), "visible": bool(q["visible"]), "knowable": bool(q["knowable"]),
             "context": context, "question": head, "answer": str(q["answer"]),
+            "steps": steps, "steps_src": steps_src,
         })
     return out
 
@@ -188,7 +208,11 @@ def main():
         qt = {}
         for r in rows:
             qt[r["qtype"]] = qt.get(r["qtype"], 0) + 1
-        report["counts"][name] = {"questions": len(rows), "visits": len({r["visit_id"] for r in rows}),
+        src = {}
+        for r in rows:
+            src[r["steps_src"]] = src.get(r["steps_src"], 0) + 1
+        report["counts"][name] = {"steps_src": dict(sorted(src.items())), "steps_with_long_range": sum(bool(r["steps"]) and r["long_range"] for r in rows),
+                                  "questions": len(rows), "visits": len({r["visit_id"] for r in rows}),
                                   "per_qtype": dict(sorted(qt.items())),
                                   "context_chars": pct([len(r["context"]) for r in rows])}
     if not args.skip_tokens:

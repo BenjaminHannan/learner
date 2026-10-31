@@ -58,9 +58,9 @@ class Encoder:
     def ids(self, text):
         return self.tok(text, add_special_tokens=False)["input_ids"]
 
-    def prompt(self, row, reserve=0):
+    def prompt(self, row, reserve=0, tail=PROMPT_TAIL):
         ctx = self.ids(row["context"] + "\n") if row["context"] else []
-        tail = self.ids(row["question"] + PROMPT_TAIL)
+        tail = self.ids(row["question"] + tail)
         room = self.max_len - len(self.prefix) - len(tail) - reserve
         truncated = len(ctx) > room
         if truncated:
@@ -122,6 +122,25 @@ def default_start(n_layers):
     return ((n_layers // 2 - 2) // 4) * 4  # n//2-2 rounded down to a whole linear/full group boundary
 
 
+class Inject(torch.nn.Module):
+    """Input injection for a repeated block (PREREG-think2 Addendum G, arm hloopi): every pass after the first starts from x + W . rms(e), where e is
+    the hidden state entering the block's first pass (the prelude output). W starts at zero, so a fresh Inject leaves the model unchanged; fp32."""
+
+    def __init__(self, d):
+        super().__init__()
+        self.proj = torch.nn.Linear(d, d, bias=False)
+        torch.nn.init.zeros_(self.proj.weight)
+
+    def forward(self, e):
+        e32 = e.float()
+        return self.proj(e32 * torch.rsqrt(e32.pow(2).mean(-1, keepdim=True) + 1e-6)).to(e.dtype)
+
+
+def pass_heads(n_layers, start, size, order_len):
+    """Positions in a block_order of length order_len where the block's 2nd, 3rd, ... pass begins."""
+    return {start + size * k for k in range(1, (order_len - n_layers) // size + 1)}
+
+
 class Runner:
     """Drives the decoder layers manually so a block can be repeated; mirrors Qwen3_5TextModel.forward."""
 
@@ -132,6 +151,7 @@ class Runner:
         self.start = default_start(self.n) if start is None else start
         self.size, self.loops = size, loops
         self.checkpoint = False
+        self.inject = None  # an Inject (arm hloopi): added at the start of every pass of the block after the first
         assert self.start % 1 == 0 and self.start + size <= self.n
 
     @property
@@ -175,7 +195,13 @@ class Runner:
                   position_ids=position_ids)
         masks = {"full_attention": create_causal_mask(**kw), "linear_attention": create_recurrent_attention_mask(**kw)}
         types = [self.cfg.layer_types[i] for i in order]
-        for layer, t in zip(layers, types):
+        heads = pass_heads(self.n, self.start, self.size, len(order)) if self.inject is not None else ()
+        e = None
+        for j, (layer, t) in enumerate(zip(layers, types)):
+            if self.inject is not None and j == self.start:
+                e = x
+            elif j in heads:
+                x = x + self.inject(e)
             if self.checkpoint and torch.is_grad_enabled():
                 x = torch.utils.checkpoint.checkpoint(
                     lambda h, layer=layer, t=t: layer(h, position_embeddings=pe, attention_mask=masks[t],
@@ -185,6 +211,41 @@ class Runner:
                 x = layer(x, position_embeddings=pe, attention_mask=masks[t], position_ids=position_ids,
                           past_key_values=cache, use_cache=cache is not None)
         return m.norm(x)
+
+    def hidden_multi(self, input_ids, attention_mask, position_ids, loops, read_at):
+        """Training only, no cache (arm hloops, Addendum G): {k: the final normed hidden state with the block run k times} for each k in read_at
+        (all <= loops). The prelude and the first k passes are shared; each read runs the layers after the block once more. With read_at = {loops}
+        this is hidden() at block_order(n, start, loops, size)."""
+        from transformers.masking_utils import create_causal_mask, create_recurrent_attention_mask
+        m = self.lm.model
+        x = m.embed_tokens(input_ids)
+        pos = position_ids[None].expand(3, *position_ids.shape)
+        pe = m.rotary_emb(x, pos)
+        kw = dict(config=self.cfg, inputs_embeds=x, attention_mask=attention_mask, past_key_values=None, position_ids=position_ids)
+        masks = {"full_attention": create_causal_mask(**kw), "linear_attention": create_recurrent_attention_mask(**kw)}
+
+        def run(i, h):
+            layer, mk = m.layers[i], masks[self.cfg.layer_types[i]]
+            if self.checkpoint and torch.is_grad_enabled():
+                return torch.utils.checkpoint.checkpoint(
+                    lambda z: layer(z, position_embeddings=pe, attention_mask=mk, position_ids=position_ids, past_key_values=None, use_cache=False),
+                    h, use_reentrant=False)
+            return layer(h, position_embeddings=pe, attention_mask=mk, position_ids=position_ids, past_key_values=None, use_cache=False)
+
+        for i in range(self.start):
+            x = run(i, x)
+        e, out = x, {}
+        for k in range(1, loops + 1):
+            if k > 1 and self.inject is not None:
+                x = x + self.inject(e)
+            for i in range(self.start, self.start + self.size):
+                x = run(i, x)
+            if k in read_at:
+                y = x
+                for i in range(self.start + self.size, self.n):
+                    y = run(i, y)
+                out[k] = m.norm(y)
+        return out
 
     def logits(self, h):
         return self.lm.lm_head(h)
@@ -229,8 +290,9 @@ def answer_loss_sum(runner, batch, device):
 
 
 @torch.no_grad()
-def greedy(runner, prompts, device, eos, stop_ids=frozenset(), cache=True, order=None):
-    """Greedy decode a batch of prompts (lists of ids). Returns generated id lists (without EOS)."""
+def greedy(runner, prompts, device, eos, stop_ids=frozenset(), cache=True, order=None, logp=None):
+    """Greedy decode a batch of prompts (lists of ids). Returns generated id lists (without EOS). logp: a list, filled with each row's summed
+    log-probability of its greedy tokens, the closing EOS / stop token included (the max-confidence halting readout, Addendum G)."""
     order = order or runner.order
     ids, mask = left_pad(prompts)
     ids, mask = ids.to(device), mask.to(device)
@@ -240,13 +302,18 @@ def greedy(runner, prompts, device, eos, stop_ids=frozenset(), cache=True, order
     out = [[] for _ in range(B)]
     done = torch.zeros(B, dtype=torch.bool, device=device)
     cur_ids, cur_mask, cur_pos = ids, mask, pos
+    lp = [0.0] * B
     for step in range(MAX_NEW):
         h = runner.hidden(cur_ids, cur_mask, cur_pos, cache=kv, order=order)
-        nxt = runner.logits(h[:, -1]).argmax(-1)
+        lg = runner.logits(h[:, -1])
+        nxt = lg.argmax(-1)
+        top = torch.log_softmax(lg.float(), -1).max(-1).values if logp is not None else None
         last_pos = cur_pos[:, -1]
         for b in range(B):
             if not done[b]:
                 t = int(nxt[b])
+                if top is not None:
+                    lp[b] += float(top[b])
                 if t == eos or t in stop_ids:
                     done[b] = True
                 else:
@@ -262,6 +329,8 @@ def greedy(runner, prompts, device, eos, stop_ids=frozenset(), cache=True, order
             mask = torch.cat([mask, torch.ones((B, 1), dtype=mask.dtype, device=device)], 1)
             cur_ids, cur_mask = ids, mask
             cur_pos = (mask.cumsum(1) - 1).clamp(min=0)
+    if logp is not None:
+        logp[:] = lp
     return out
 
 

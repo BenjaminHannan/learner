@@ -1,0 +1,23 @@
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:   9%|▉         | 28/320 [00:00<00:01, 248.99it/s]Loading weights:  19%|█▉        | 61/320 [00:00<00:00, 286.80it/s]Loading weights:  28%|██▊       | 90/320 [00:00<00:00, 265.54it/s]Loading weights:  37%|███▋      | 117/320 [00:00<00:00, 239.85it/s]Loading weights:  46%|████▌     | 147/320 [00:00<00:00, 257.25it/s]Loading weights:  56%|█████▌    | 179/320 [00:00<00:00, 271.47it/s]Loading weights:  65%|██████▍   | 207/320 [00:00<00:00, 269.64it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 404.40it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+/home/timot/rvenv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py:170: UserWarning: Mem Efficient attention on Current AMD GPU is still experimental. Enable it with TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1. (Triggered internally at /pytorch/aten/src/ATen/native/transformers/hip/sdp_utils.cpp:360.)
+  attn_output = torch.nn.functional.scaled_dot_product_attention(
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[eval main] 369/8675 219s
+[eval main] 832/8675 389s
+[eval main] 1417/8675 565s
+[eval main] 2080/8675 760s
+[eval main] 2431/8675 985s
+[eval main] 2808/8675 1206s
+[eval main] 3209/8675 1422s
+[eval main] 3637/8675 1640s
+[eval main] 4097/8675 1826s
+[eval main] 4594/8675 2001s
+[eval main] 5126/8675 2177s
+[eval main] 5695/8675 2354s
+[eval main] 6310/8675 2519s
+[eval main] 6982/8675 2700s
+[eval main] 7745/8675 2900s
+[eval main] 8675/8675 3118s
+[eval_adapter] main: 67.26% on 8675 rows, 3130s
+[eval_adapter] vs ref: -0.02 points, same hit on 99.42% of rows -> OK (needs within 0.3 points and >= 98% the same)

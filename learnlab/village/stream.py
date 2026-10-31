@@ -114,11 +114,13 @@ def render_visit(
         visible = all(t is not None and start <= t < index for t in evidence_text) and not question.get("long_range")
         long_range = any(t is not None and t < start for t in evidence_text) or bool(question.get("long_range"))
         shown = sorted({t for t in evidence_text if t is not None})
+        walked = list(dict.fromkeys(t for t in (text_of.get(line) for line in question.get("evidence_path") or evidence) if t is not None))
         questions.append({
             "id": question["id"], "visit": visit["id"], "split": split, "qtype": question["qtype"],
             "base_qtype": question.get("base_qtype", question["qtype"]), "bank": question["bank"],
             "depth": question.get("depth"), "visible": visible, "long_range": long_range,
             "evidence": evidence, "evidence_text_lines": evidence_text, "text_line": index, "context_start": start,
+            "path_text_lines": walked, "prior_lines": len(question.get("prior_evidence") or ()), "path_complete": bool(question.get("path_complete")) and set(walked) == set(shown),
             "question": out.question, "answer": question["answer"], "twin": question.get("twin"),
             "template": next(t for t in out.templates if source.bank[t] == question["bank"]), "templates": list(out.templates),
             "evidence_templates": list(dict.fromkeys(t for i in shown for t in line_templates[i])),

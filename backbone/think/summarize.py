@@ -29,9 +29,18 @@ CHAIN = ("q.where_before", "q.plan_get")
 LAPS = (0, 1, 2, 4, 8, 12, 16, 24)
 BOOT_N, BOOT_SEED, EPS = 2000, 20261024, 1e-9
 ARMS = ("a", "b", "aplus", "bplus", "t", "t1", "tw")
-HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1"}
+HEAD = {"a": "main", "b": "main", "aplus": "main", "bplus": "main", "t": "L8", "t1": "L1", "tw": "L1", "tj": "L4", "tf": "L4", "tc": "L0",
+        "ws": "T", "wsham": "T", "tsd": "L4", "tsd1": "L1", "br": "main", "aplong": "main"}
 ALIAS = {"rep18": ("repeatdelta18", "repeat8", "rep8"), "gatesoff8": ("gatesoff",), "swap8": ("swap",), "mean8": ("meanboard8",)}
 ND = "not-enough-data"
+T2_P1, T2_P2, T2_P3, T2_W1, T2_W2 = 2.0, 1.0, 0.5, 1.0, 0.5  # PREREG-think2.md lines 30-32 (P1-P3) and 40-42 (wrong-if); seed 0 only
+# codi-plan P1 (written steps, arms ws / wsham) and P2b (step-supervised notes, arms tsd / tsd1); all in points, fixed before any run
+P1_OPEN, P1_SHAM, P1_WRONG, P1_REF74 = 2.0, 1.0, 0.5, 74.6
+P2_A, P2_A_WRONG, P2_C, P2_C_WRONG, P2_D, P2_D_WRONG = 2.0, 0.5, 1.0, 0.3, 10.0, 2.0
+# Addendum F (arm br: the block's own layers looped, random loop counts in training; aplong: LoRA given br's extra layer passes as steps)
+F1_GAIN, F1_WRONG, F2_RISE, F2_WRONG, F2_KEEP = 2.0, 0.5, 2.0, 0.5, 1.0
+H1_KEEP, H1_FRAC, H2_RISE, H_WRONG_RHO = 0.5, 0.6, 1.0, 0.1
+USED, UNUSED, SEED_BAND = 1.0, 0.3, 1.0  # a lesion is "used" at a cost >= 1.0 with a 95% interval excluding 0, "unused" below 0.3; a margin inside +-1 point needs seeds 2-3
 
 
 # ---------------------------------------------------------------- loading
@@ -210,7 +219,7 @@ def group(parts):
 
 # ---------------------------------------------------------------- analysis
 
-PARENT = {"aplus": "a", "t": "a", "t1": "a", "tw": "a", "bplus": "b"}  # the stage-1 arm whose adapter each arm starts from
+PARENT = {"br": "a", "aplong": "a", "aplus": "a", "t": "a", "t1": "a", "tw": "a", "tj": "a", "tf": "a", "tc": "a", "bplus": "b", "ws": "a", "wsham": "a", "tsd": "a", "tsd1": "a"}  # the stage-1 arm whose adapter each arm starts from
 BPLUS_EXTEND = 1.0  # PREREG: bplus on all seeds only if bplus - b (seed 0) >= 1.0
 
 
@@ -227,6 +236,223 @@ def drop_unmatched(res):
         else:
             keep[(arm, seed)] = r
     return keep, out
+
+
+def think2(R, st, lab):
+    """PREREG-think2 marks for arms tj and tf (seed 0, L_max 4). P1 is judged against max(aplus, tc): the harder (smaller) diff."""
+    out = {}
+
+    def cmp(a, tag, v4, s4):
+        o = R.acc(a, 0, "validation", tag)
+        if o is None:
+            return None
+        ov = None if lab else R.rowvec(a, tag, seeds=(0,))
+        d = st.diff(v4, ov) if v4 and ov else None
+        return d or {"value": s4 - o, "lo": None, "hi": None, "n": None}
+
+    for arm in ("tj", "tf"):
+        s4 = R.acc(arm, 0, "validation", "L4")
+        if s4 is None:
+            continue
+        v4 = None if lab else R.rowvec(arm, "L4", seeds=(0,))
+        c = lambda a, tag: cmp(a, tag, v4, s4)
+        tag_c = next((t for t in ("L0", "main") if R.entry("tc", 0, "validation", t)), None)
+        d_ap, d_tc = c("aplus", "main"), tag_c and c("tc", tag_c)
+        d_sw, d_l1 = c(arm, "swap4"), c(arm, "L1")
+        p1src = [(n, d) for n, d in (("aplus", d_ap), ("tc", d_tc)) if d]
+        hard = min(p1src, key=lambda x: x[1]["value"]) if p1src else None
+        d1 = hard and hard[1]
+        p1 = ND if not d1 else ("FAIL" if d1["value"] < T2_P1 - EPS else ND if d1["lo"] is None else "PASS" if d1["lo"] > 0 else "FAIL")
+        p2 = decide(None if not d_sw else ge(d_sw["value"], T2_P2))
+        p3 = decide(None if not d_l1 else ge(d_l1["value"], T2_P3))
+        w = [None if not d1 else d1["value"] < T2_W1 - EPS, None if not d_sw else d_sw["value"] < T2_W2 - EPS]
+        wi = trig(True if True in w else (False if w == [False, False] else None))
+        dec = "stop" if "FAIL" in (p1, p2) else "run seeds 1 and 2 for this arm" if p1 == p2 == "PASS" else ND
+        out[arm] = {"S4": s4, "S1": R.acc(arm, 0, "validation", "L1"), "swap4": R.acc(arm, 0, "validation", "swap4"),
+                    "gatesoff4": R.acc(arm, 0, "validation", "gatesoff4"), "aplus": R.acc("aplus", 0, "validation", "main"),
+                    "tc": tag_c and R.acc("tc", 0, "validation", tag_c), "tc_present": tag_c is not None,
+                    "S4_minus_aplus": d_ap, "S4_minus_tc": d_tc, "P1_vs": hard and hard[0], "P1_diff": d1, "S4_minus_swap4": d_sw,
+                    "S4_minus_L1": d_l1, "S4_minus_blind4": c(arm, "blind4") if arm == "tf" else None,
+                    "P1": {"status": p1, "need": T2_P1, "ci_excludes_0": True}, "P2": {"status": p2, "need": T2_P2},
+                    "P3": {"status": p3, "need": T2_P3, "available": d_l1 is not None}, "wrong_if": wi, "decision": dec}
+    return out
+
+
+def seed_rule(items, n):
+    """codi-plan 6.0. items = (margin, wrong_margin) for each ACCURACY pass condition: margin = value - pass bar, wrong_margin = value - proved-wrong bar (None if
+    the condition has none). A condition is settled if it is met by >= 1 point or missed by >= 1 point, or already sits on the proved-wrong side. All settled ->
+    decide on the seeds in (seed 1); otherwise seeds 2-3 are owed, and with all three in the 3-seed means decide. Lesion costs and the decoder gap do not count."""
+    if any(m is None for m, _ in items):
+        return ND
+    if n >= 3:
+        return "3-seed means"
+    if any(w is not None and w < 0 for _, w in items):  # one condition already proved wrong closes the proposition: more seeds cannot change the outcome
+        return f"decided on {n} seed(s)"
+    settled = all(abs(m) >= SEED_BAND - EPS for m, w in items)
+    return f"decided on {n} seed(s)" if settled else "needs seeds 2-3"
+
+
+def common(R, arms_tags, split="validation"):
+    """Seeds at which every (arm, tag) has a result, and the mean accuracy of each over them: ({key: mean}, seeds)."""
+    seeds = [sd for sd in SEEDS if all(R.acc(a, sd, split, t) is not None for a, t in arms_tags.values())]
+    return {k: float(np.mean([R.acc(a, sd, split, t) for sd in seeds])) for k, (a, t) in arms_tags.items()} if seeds else {}, seeds
+
+
+def tc_tag(R):
+    return next((t for t in ("L0", "main") if any(R.entry("tc", sd, "validation", t) for sd in SEEDS)), "L0")
+
+
+def by_depth(st, rows, vecs, lab):
+    """{slice: {name: percent}} for named row vectors over depth 0, 1..6, 1-3 and 4-6 (no pass mark)."""
+    if lab or not rows or any(v is None for v in vecs.values()):
+        return None
+    depth = np.array([r.get("depth") if r.get("depth") is not None else -1 for r in rows])
+    out = {}
+    for name, sel in (("depth 0", depth == 0), *((f"depth {d}", depth == d) for d in range(1, 7)), ("depth 1-3", (depth >= 1) & (depth <= 3)), ("depth 4-6", depth >= 4)):
+        if not sel.any():
+            continue
+        vals = {k: st.stat({"x": v}, lambda m: m["x"], sel, ci=False) for k, v in vecs.items()}
+        out[name] = {"n": int(sel.sum()), **{k: v and v["value"] for k, v in vals.items()}}
+    return out
+
+
+def lesion(st, vs, vl, cost):
+    """'used' / 'unused' / 'not shown' for one lesion (cost = score - lesioned score, paired 95% interval of the same difference)."""
+    if cost is None:
+        return {"status": ND, "cost": None, "lo": None, "hi": None}
+    d = st.diff(vs, vl) if vs is not None and vl is not None else None
+    lo, hi = (d["lo"], d["hi"]) if d else (None, None)
+    status = "used" if cost >= USED - EPS and lo is not None and lo > 0 else "unused" if cost < UNUSED - EPS else "not shown"
+    return {"status": status, "cost": cost, "lo": lo, "hi": hi}
+
+
+def p1(R, st, rows, lab):
+    """codi-plan P1. T = ws writes its steps then the answer; C1 = the same weights answering directly; sham = wsham written (filler); C0' = tc."""
+    tg = tc_tag(R)
+    m, seeds = common(R, {"T": ("ws", "T"), "C1": ("ws", "C1"), "sham": ("wsham", "T"), "tc": ("tc", tg)})
+    if not seeds:
+        return {"status": ND, "why": "needs ws, wsham and tc at one seed"} if {"ws", "wsham"} & {a for a, _ in R.res} else None
+    ref = max(m["tc"], m["C1"])
+    vec = (lambda a, t: None) if lab else (lambda a, t: R.rowvec(a, t, seeds=tuple(seeds)))
+    vT, vC1, vsh, vtc = vec("ws", "T"), vec("ws", "C1"), vec("wsham", "T"), vec("tc", tg)
+    d_ref = st.stat({"T": vT, "C1": vC1, "tc": vtc}, lambda x: x["T"] - np.maximum(x["C1"], x["tc"])) if None not in (vT, vC1, vtc) else None
+    d_sh = st.diff(vT, vsh) if vT is not None and vsh is not None else None
+    a, b = m["T"] - ref, m["T"] - m["sham"]
+    opens = a >= P1_OPEN - EPS and b >= P1_SHAM - EPS
+    wrong = a < P1_WRONG - EPS
+    if opens:
+        outcome = "PASS: P4 opens"
+    elif wrong:
+        outcome = "PROVED WRONG: written steps teach this model nothing (P4 closes; the loop line does not)"
+    elif a >= P1_OPEN - EPS:
+        outcome = "extra positions help; content not shown (P4 stays closed)"
+    else:
+        outcome = "not shown (P4 stays closed)"
+    gen = {arm: [(R.entry(arm, sd, "validation", "T") or {}).get("mean_gen_tokens") for sd in seeds] for arm in ("ws", "wsham")}
+    fmt = {arm: [(R.entry(arm, sd, "validation", "fmt") or {}).get("acc") for sd in seeds] for arm in ("ws", "wsham")}
+    marker = [(R.entry("ws", sd, "validation", "T") or {}).get("marker_rate") for sd in seeds]
+    return {"status": "computed", "seeds": seeds, "T": m["T"], "C1": m["C1"], "sham": m["sham"], "C0": m["tc"], "ref": ref, "ref_name": "tc" if m["tc"] >= m["C1"] else "C1",
+            "T_minus_ref": a, "T_minus_sham": b, "T_vs_74_6": m["T"] - P1_REF74, "ci_ref": d_ref, "ci_sham": d_sh, "opens_P4": opens, "wrong": wrong, "outcome": outcome,
+            "seed_rule": seed_rule([(a - P1_OPEN, a - P1_WRONG), (b - P1_SHAM, None)], len(seeds)),
+            "mean_gen_tokens": {k: [None if x is None else float(x) for x in v] for k, v in gen.items()},
+            "marker_rate": [None if x is None else float(x) for x in marker],
+            "format_check": {k: [None if x is None else 100 * float(x) for x in v] for k, v in fmt.items()},
+            "by_depth": by_depth(st, rows, {"T": vT, "C1": vC1, "sham": vsh, "tc": vtc}, lab)}
+
+
+def p2b(R, st, rows, lab):
+    """codi-plan P2b. S = tsd at lap 4, against max(tc, C1) and the one-lap arm tsd1; lesions on S; decoder step-token gap from the result files."""
+    tg = tc_tag(R)
+    m, seeds = common(R, {"S": ("tsd", "L4"), "tc": ("tc", tg), "C1": ("ws", "C1"), "S1": ("tsd1", "L1"), "swap": ("tsd", "swap4"), "random": ("tsd", "random4")})
+    if not seeds:
+        return {"status": ND, "why": "needs tsd (with swap4 and random4), tsd1, tc and ws (for C1) at one seed"} if {"tsd", "tsd1"} & {a for a, _ in R.res} else None
+    ref = max(m["tc"], m["C1"])
+    zero = [R.acc("tsd", sd, "validation", "zero4") for sd in seeds]
+    gaps = [((R.res.get(("tsd", sd)) or {}).get("decoder") or {}).get("gap") for sd in seeds]
+    dec = [(R.res.get(("tsd", sd)) or {}).get("decoder") or {} for sd in seeds]
+    gap = None if any(g is None for g in gaps) else float(np.mean(gaps))
+    vec = (lambda a, t: None) if lab else (lambda a, t: R.rowvec(a, t, seeds=tuple(seeds)))
+    vS, vC1, vtc, vS1 = vec("tsd", "L4"), vec("ws", "C1"), vec("tc", tg), vec("tsd1", "L1")
+    les = {k: lesion(st, vS, vec("tsd", f"{k}4"), m["S"] - m[k]) for k in ("swap", "random")}
+    les["zero"] = lesion(st, vS, vec("tsd", "zero4"), None if None in zero else m["S"] - float(np.mean(zero)))
+    a, c = m["S"] - ref, m["S"] - m["S1"]
+    d_ref = st.stat({"S": vS, "C1": vC1, "tc": vtc}, lambda x: x["S"] - np.maximum(x["C1"], x["tc"])) if None not in (vS, vC1, vtc) else None
+    d_one = st.diff(vS, vS1) if vS is not None and vS1 is not None else None
+    pa, pb, pc = a >= P2_A - EPS, les["swap"]["status"] == "used" and les["random"]["status"] == "used", c >= P2_C - EPS
+    pd = None if gap is None else gap >= P2_D - EPS
+    wrong = [n for n, hit in (("a: arm < max(tc, C1) + 0.5", a < P2_A_WRONG - EPS), ("swap unused", les["swap"]["status"] == "unused"),
+                              ("decoder gap < 2", gap is not None and gap < P2_D_WRONG - EPS), ("arm < one-lap arm + 0.3", c < P2_C_WRONG - EPS)) if hit]
+    one_shot = bool(pa and pb and pd and not pc)
+    note = "one-shot side module with step targets helps, looping not shown (counts as a fail for the give-up rule)"
+    if pa and pb and pc and pd:
+        outcome = "PASS"
+    elif wrong:
+        outcome = "PROVED WRONG: " + "; ".join(wrong) + ("; separate finding: " + note if one_shot else "")
+    elif one_shot:
+        outcome = note
+    else:
+        outcome = "not shown"
+    margins = [(a - P2_A, a - P2_A_WRONG), (c - P2_C, c - P2_C_WRONG)]  # the accuracy pass conditions (a) and (c) only
+    return {"status": "computed", "seeds": seeds, "S": m["S"], "tc": m["tc"], "C1": m["C1"], "ref": ref, "tsd1": m["S1"], "swap": m["swap"], "random": m["random"],
+            "zero": None if None in zero else float(np.mean(zero)), "S_minus_ref": a, "S_minus_tsd1": c, "ci_ref": d_ref, "ci_one": d_one, "lesions": les,
+            "decoder": {"gap": gap, "true": [d.get("true") for d in dec], "swap": [d.get("swap") for d in dec], "tokens": [d.get("tokens") for d in dec]},
+            "conditions": {"a": pa, "b": pb, "c": pc, "d": pd}, "one_shot": one_shot, "wrong_by": wrong, "outcome": outcome,
+            "swapped_score_vs_C0": m["swap"] - m["tc"], "P3_entry": bool(pd) and les["swap"]["status"] != "used",
+            "seed_rule": seed_rule(margins, len(seeds)), "by_depth": by_depth(st, rows, {"S": vS, "tsd1": vS1, "C1": vC1, "tc": vtc}, lab)}
+
+
+def pbr(R, st, rows, lab):
+    """Addendum F. F1: br at 4 loops - max(aplus, tc, aplong) >= +2.0 (interval above 0); proved wrong below +0.5. F2 (depth 4-6, beyond train depth):
+    S(r4) - S(r1) >= +2.0 (interval above 0) and S(r8) >= S(r4) - 1.0; proved wrong if S(r4) - S(r1) < +0.5. Halting (Addendum E, judged only if F1 and F2
+    pass): H1 answer-stable halting keeps accuracy within 0.5 of S(r4) at mean loops <= 0.6 x 8; H2 depth 4-6 uses >= 1.0 more loops than depth 1-2;
+    wrong if Spearman(depth, loops) <= 0.1."""
+    if not any(a == "br" for a, _ in R.res):
+        return None
+    tg = tc_tag(R)
+    m, seeds = common(R, {"S": ("br", "r4"), "S1": ("br", "r1"), "S8": ("br", "r8"), "aplus": ("aplus", "main"), "tc": ("tc", tg), "aplong": ("aplong", "main")})
+    if not seeds:
+        return {"status": ND, "why": "needs br, aplus, tc and aplong at one seed"}
+    vec = (lambda a, t: None) if lab else (lambda a, t: R.rowvec(a, t, seeds=tuple(seeds)))
+    v = {k: vec(*at) for k, at in {"S": ("br", "r4"), "S1": ("br", "r1"), "S8": ("br", "r8"), "aplus": ("aplus", "main"), "tc": ("tc", tg), "aplong": ("aplong", "main")}.items()}
+    refs = {k: m[k] for k in ("aplus", "tc", "aplong")}
+    ref_name = max(refs, key=refs.get)
+    a = m["S"] - refs[ref_name]
+    d_ref = st.stat({"S": v["S"], "aplus": v["aplus"], "tc": v["tc"], "aplong": v["aplong"]},
+                    lambda x: x["S"] - np.maximum(np.maximum(x["aplus"], x["tc"]), x["aplong"])) if all(x is not None for x in v.values()) else None
+    deep = None if not rows else np.array([(r.get("depth") or 0) >= 4 for r in rows])
+    d_rise = st.diff(v["S"], v["S1"], deep) if deep is not None and v["S"] is not None else None
+    d_keep = st.diff(v["S8"], v["S"], deep, ci=False) if deep is not None and v["S"] is not None else None
+    f1 = None if d_ref is None or d_ref["lo"] is None else (a >= F1_GAIN - EPS and d_ref["lo"] > 0)
+    f2 = None if d_rise is None or d_rise["lo"] is None or d_keep is None else (d_rise["value"] >= F2_RISE - EPS and d_rise["lo"] > 0 and d_keep["value"] >= -F2_KEEP - EPS)
+    wrong = [w for w, c in (("F1: gain below +0.5", a < F1_WRONG - EPS), ("F2: loops add < +0.5 on depth 4-6", d_rise is not None and d_rise["value"] < F2_WRONG - EPS)) if c]
+    deep_only = "loops help on deep questions, not beyond a matched control"  # Addendum F: F2 alone
+    if f1 and f2:
+        outcome = "PASS: looping the block's own layers helps; halting marks apply"
+    elif wrong:
+        outcome = "PROVED WRONG (" + "; ".join(wrong) + ")" + (f"; separately, {deep_only}" if f2 else "")
+    else:
+        outcome = deep_only if f2 else "not shown"
+    halts = [(R.res.get(("br", sd)) or {}).get("halting") for sd in seeds]
+    h = halts[0] if halts and halts[0] else None
+    hal = None
+    if h:
+        bd = h["by_depth"]
+        mean_of = lambda ds: (lambda xs: sum(n * l for n, l in xs) / sum(n for n, _ in xs) if xs else None)([(bd[str(d)]["n"], bd[str(d)]["mean_loops"]) for d in ds if str(d) in bd])
+        lo_l, hi_l = mean_of((1, 2)), mean_of((4, 5, 6))
+        rise = None if lo_l is None or hi_l is None else hi_l - lo_l
+        rho = h.get("spearman_depth_loops")
+        h1 = 100 * h["acc"] >= (R.acc("br", seeds[0], "validation", "r4") or 0) - H1_KEEP - EPS and h["mean_loops"] <= H1_FRAC * 8 + EPS
+        h2 = rise is not None and rise >= H2_RISE - EPS
+        hal = {"acc": 100 * h["acc"], "mean_loops": h["mean_loops"], "loops_depth_1_2": lo_l, "loops_depth_4_6": hi_l, "rise": rise, "spearman": rho,
+               "H1": h1, "H2": h2, "wrong": rho is not None and rho <= H_WRONG_RHO + EPS, "judged": bool(f1 and f2), "rule": h.get("rule")}
+    curve = {r: [x for x in (R.acc("br", sd, "validation", f"r{r}") for sd in seeds) if x is not None] for r in (1, 2, 3, 4, 6, 8)}
+    loops_curve = {f"r{r}": float(np.mean(v)) if v else None for r, v in curve.items()}
+    sched = (R.res.get(("br", seeds[0])) or {}).get("loop_schedule") or {}
+    return {"status": "computed", "seeds": seeds, **m, "ref_name": ref_name, "S_minus_ref": a, "ci_ref": d_ref, "deep_rise": d_rise, "deep_r8_minus_r4": d_keep,
+            "F1": f1, "F2": f2, "wrong_by": wrong, "outcome": outcome, "halting": hal, "loops_curve": loops_curve, "schedule": sched,
+            "seed_rule": seed_rule([(a - F1_GAIN, a - F1_WRONG)] + ([(d_rise["value"] - F2_RISE, d_rise["value"] - F2_WRONG)] if d_rise else [(None, None)])
+                                   + ([(d_keep["value"] + F2_KEEP, None)] if d_keep else []), len(seeds)),
+            "by_depth": by_depth(st, rows, {f"r{r}": vec("br", f"r{r}") for r in (1, 2, 4, 8)} | {"aplus": v["aplus"], "tc": v["tc"], "aplong": v["aplong"]}, lab)}
 
 
 def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
@@ -286,6 +512,9 @@ def analyse(res, rows=None, dev_rows=None, cluster="row", notes=()):
     cis = {"S8_minus_best_ref": ci_ref, "S8_minus_S1": ci_81, "S8_minus_T1": ci_8t1, "S8_minus_S2": ci_82,
            "S8_minus_swap": ci_swap, "S8_minus_rep": ci_rep}
     out["intervals"] = cis
+    out["think2"] = think2(R, st, bool(labelled))
+    out["p1"], out["p2b"] = p1(R, st, rows, bool(labelled)), p2b(R, st, rows, bool(labelled))
+    out["br"] = pbr(R, st, rows, bool(labelled))
 
     # lesions (arm t, L=8, validation)
     sub = lambda x, y: None if x is None or y is None else x - y
@@ -618,11 +847,120 @@ def report(o, data_note=""):
             d = r["S8_minus_T1"]
             P(f"{name[:25]:<26}{r['n']:>5} {f2(r['a']):>6} {f2(r['T1']):>6} {f2(r['S8']):>6}  "
               f"{sg(d and d['value'])}{ci_txt_(d).replace('  95% ', ' ')}")
+    t2 = o.get("think2")
+    if t2:
+        P("")
+        P("== 8. Think-2 (PREREG-think2.md; seed 0, L_max 4; tj and tf judged separately) ==")
+        for arm, t in t2.items():
+            d = t["P1_diff"]
+            P(f"arm {arm}: S(4) {f2(t['S4'])}  aplus {f2(t['aplus'])}  tc {f2(t['tc']) if t['tc_present'] else 'absent'}  S(1) {f2(t['S1'])}"
+              f"  swap4 {f2(t['swap4'])}  gatesoff4 {f2(t['gatesoff4'])}")
+            vs = "max(aplus, tc)" if t["tc_present"] else "aplus"
+            P(f"{t['P1']['status']:<16} {arm} P1 S(4) - {vs} = {sg(d and d['value'])}{ci_txt_(d)}   needs >= +2.0 and 95% interval excluding 0 (l.30)"
+              + ("" if t["tc_present"] else "   [tc absent: judged against aplus only, may get harder]")
+              + (f"   [harder control: {t['P1_vs']}]" if t["tc_present"] and t["P1_vs"] else ""))
+            for k in ("S4_minus_aplus", "S4_minus_tc"):
+                if t[k]:
+                    P(f"{'':17}S(4) - {k[9:]} {sg(t[k]['value'])}{ci_txt_(t[k])}")
+            d = t["S4_minus_swap4"]
+            P(f"{t['P2']['status']:<16} {arm} P2 S(4) - swap4 = {sg(d and d['value'])}{ci_txt_(d)}   needs >= +1.0 (l.31)")
+            d = t["S4_minus_L1"]
+            P(f"{t['P3']['status']:<16} {arm} P3 " + (f"S(4) - S(1) = {sg(d['value'])}{ci_txt_(d)}   needs >= +0.5 (l.32, reported only)" if d
+                                                      else "unavailable: no L1 row for this arm   needs >= +0.5 (l.32, reported only)"))
+            if t["S4_minus_blind4"]:
+                P(f"{'':17}S(4) - blind4 = {sg(t['S4_minus_blind4']['value'])}{ci_txt_(t['S4_minus_blind4'])} (first 2,000 rows; no mark)")
+            P(f"{t['wrong_if']:<16} {arm} wrong-if: S(4) - A+ < +1.0 or swap lesion < 0.5 (l.40-42)")
+            P(f"{'':17}decision (l.36-38): {t['decision']}")
+    if o.get("p1"):
+        report_p1(o["p1"], P, ci_txt_)
+    if o.get("p2b"):
+        report_p2b(o["p2b"], P, ci_txt_)
+    if o.get("br"):
+        report_br(o["br"], P, ci_txt_)
     P("")
     P(f"VERDICT: {o['verdict']}")
     for w in o["why"]:
         P("  " + w)
     return "\n".join(L)
+
+
+def depth_table(P, bd, names):
+    P(f"{'slice':<12}{'n':>6} " + " ".join(f"{n:>7}" for n in names))
+    for k, v in bd.items():
+        P(f"{k:<12}{v['n']:>6} " + " ".join(f"{f2(v.get(n)):>7}" for n in names))
+
+
+def report_p1(x, P, ci):
+    P("")
+    P("== 9. P1 written steps (codi-plan; arms ws, wsham; judged against tc = C0' and C1 = ws answering directly) ==")
+    if x["status"] != "computed":
+        P(f"{ND:<16} {x['why']}")
+        return
+    sd = ",".join(map(str, x["seeds"]))
+    f1 = lambda v: "--" if not v or v[0] is None else "/".join(f"{y:.1f}" for y in v)
+    P(f"seeds {sd}  T {f2(x['T'])}  C1 {f2(x['C1'])}  tc {f2(x['C0'])}  sham T {f2(x['sham'])}  (reference = max(tc, C1) = {f2(x['ref'])}, {x['ref_name']})")
+    P(f"T - max(tc, C1) = {sg(x['T_minus_ref'])}{ci(x['ci_ref'])}   P4 needs >= +{P1_OPEN:.1f}; proved wrong below +{P1_WRONG:.1f}")
+    P(f"T - sham        = {sg(x['T_minus_sham'])}{ci(x['ci_sham'])}   P4 needs >= +{P1_SHAM:.1f}")
+    P(f"T vs 74.6 (for the record) = {sg(x['T_vs_74_6'])}")
+    P(f"mean generated tokens per row: ws {f1(x['mean_gen_tokens']['ws'])}, wsham {f1(x['mean_gen_tokens']['wsham'])}; ws wrote 'The answer is:' in {f1([None if v is None else 100 * v for v in x['marker_rate']])}% of rows")
+    P(f"format check (gold steps in, answer read; first 500 rows with steps; no pass mark): ws {f1(x['format_check']['ws'])}, wsham (filler in) {f1(x['format_check']['wsham'])}")
+    P(f"OUTCOME: {x['outcome']}")
+    P(f"seed rule: {x['seed_rule']}")
+    if x.get("by_depth"):
+        P("accuracy by depth (no pass mark):")
+        depth_table(P, x["by_depth"], ("T", "C1", "sham", "tc"))
+
+
+def report_p2b(x, P, ci):
+    P("")
+    P("== 10. P2b step-supervised notes (codi-plan; arms tsd, tsd1; judged against max(tc, C1) and the one-lap arm tsd1) ==")
+    if x["status"] != "computed":
+        P(f"{ND:<16} {x['why']}")
+        return
+    f1 = lambda v: "--" if not v or v[0] is None else "/".join(f"{y:.1f}" for y in v)
+    P(f"seeds {','.join(map(str, x['seeds']))}  tsd S(4) {f2(x['S'])}  tsd1 {f2(x['tsd1'])}  tc {f2(x['tc'])}  C1 {f2(x['C1'])}  (reference = {f2(x['ref'])})")
+    c = x["conditions"]
+    mk = lambda v: ND if v is None else "PASS" if v else "FAIL"
+    P(f"{mk(c['a']):<16} (a) S - max(tc, C1) = {sg(x['S_minus_ref'])}{ci(x['ci_ref'])}   needs >= +{P2_A:.1f}")
+    for k in ("swap", "random", "zero"):
+        l = x["lesions"][k]
+        P(f"{l['status']:<16} (b) {k} lesion {f2(x[k])}: costs {sg(l['cost'])}{ci_txt({'lo': l['lo'], 'hi': l['hi']}) if l['lo'] is not None else '  95% n/a'}"
+          + ("   (reported, not in the pass marks)" if k == "zero" else f"   used needs >= {USED:.1f} with the interval above 0; unused below {UNUSED:.1f}"))
+    P(f"{mk(c['c']):<16} (c) S - tsd1 = {sg(x['S_minus_tsd1'])}{ci(x['ci_one'])}   needs >= +{P2_C:.1f}; proved wrong below +{P2_C_WRONG:.1f}")
+    d = x["decoder"]
+    P(f"{mk(c['d']):<16} (d) decoder step-token accuracy, true notes {f1(d['true'])}% vs swapped {f1(d['swap'])}%: gap {sg(d['gap'])} points   needs >= {P2_D:.0f}; proved wrong below {P2_D_WRONG:.0f}")
+    P(f"swapped-notes score minus tc = {sg(x['swapped_score_vs_C0'])} (rough split: a gain that survives the swap sits in the backbone, not the notes)")
+    P(f"OUTCOME: {x['outcome']}")
+    P(f"P3 entry (gap >= 10 and swap not 'used'): {'yes' if x['P3_entry'] else 'no'};  seed rule: {x['seed_rule']}")
+    if x.get("by_depth"):
+        P("accuracy by depth (no pass mark):")
+        depth_table(P, x["by_depth"], ("S", "tsd1", "C1", "tc"))
+
+
+def report_br(x, P, ci):
+    P("")
+    P("== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==")
+    if x["status"] != "computed":
+        P(f"{ND:<16} {x['why']}")
+        return
+    mk = lambda v: ND if v is None else "PASS" if v else "FAIL"
+    sc = x["schedule"]
+    P(f"seeds {','.join(map(str, x['seeds']))}  br r4 {f2(x['S'])}  aplus {f2(x['aplus'])}  tc {f2(x['tc'])}  aplong {f2(x['aplong'])}  "
+      f"(train loops mean {f2(sc.get('mean'))}, compute ratio {f2(sc.get('compute_ratio'))}, block {sc.get('block')})")
+    P("validation by loop count: " + "  ".join(f"{k} {f2(v)}" for k, v in x["loops_curve"].items()))
+    P(f"{mk(x['F1']):<16} F1 S(r4) - max(aplus, tc, aplong) = {sg(x['S_minus_ref'])}{ci(x['ci_ref'])}   needs >= +{F1_GAIN:.1f}; proved wrong below +{F1_WRONG:.1f} (max is {x['ref_name']})")
+    dr, dk = x["deep_rise"], x["deep_r8_minus_r4"]
+    P(f"{mk(x['F2']):<16} F2 depth 4-6: S(r4) - S(r1) = {sg(dr and dr['value'])}{ci(dr) if dr else ''}   needs >= +{F2_RISE:.1f}; S(r8) - S(r4) = {sg(dk and dk['value'])}   needs >= -{F2_KEEP:.1f}")
+    P(f"OUTCOME: {x['outcome']};  seed rule: {x['seed_rule']}")
+    h = x.get("halting")
+    if h:
+        tag = "judged" if h["judged"] else "reported only (F1 and F2 must pass first)"
+        P(f"halting (answer-stable rule, {tag}): {f2(h['acc'])}% at mean {f2(h['mean_loops'])} loops; depth 1-2 {f2(h['loops_depth_1_2'])} vs depth 4-6 "
+          f"{f2(h['loops_depth_4_6'])} loops (rise {sg(h['rise'])}); Spearman(depth, loops) {f2(h['spearman'])}; H1 {mk(h['H1'])} H2 {mk(h['H2'])}"
+          + ("; WRONG: loops do not follow depth" if h["wrong"] else ""))
+    if x.get("by_depth"):
+        P("accuracy by depth (no pass mark):")
+        depth_table(P, x["by_depth"], ("r1", "r2", "r4", "r8", "aplus", "tc", "aplong"))
 
 
 def summarize(root, data="out/data", cluster="row"):

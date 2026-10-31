@@ -249,26 +249,26 @@ def init_token_ids(tok, K, vocab):
 
 
 class ThinkBoard(nn.Module):
-    def __init__(self, d, rho, e0_hat, n_attn=6, n_heads=8, hid=256):
+    def __init__(self, d, rho, e0_hat, n_attn=6, n_heads=8, hid=256, alpha_init=0.0):
         super().__init__()
         self.K = e0_hat.shape[0]
         self.register_buffer("rho", torch.tensor(float(rho), dtype=torch.float32))
         self.e0_hat = nn.Parameter(e0_hat.detach().clone().float())
         self.eta = nn.Parameter(torch.full((d,), 0.1))
-        self.alpha = nn.Parameter(torch.zeros(n_attn, n_heads))
+        self.alpha = nn.Parameter(torch.full((n_attn, n_heads), float(alpha_init)))  # gate pre-activation; 0 = shut (default), 0.3 = P2a
         self.w_in = nn.Linear(3 * d, hid)
         self.blocks = nn.ModuleList([RefineBlock(hid) for _ in range(2)])
         self.norm = nn.LayerNorm(hid, bias=False)
         self.w_out = nn.Linear(hid, d)
 
     @classmethod
-    def from_model(cls, lm, tok, K=16):
+    def from_model(cls, lm, tok, K=16, alpha_init=0.0):
         """rho = median row RMS of the embedding table; e0_hat = embeddings of K distinct tokens of THINK_TEXT / rho."""
         W = lm.model.embed_tokens.weight.detach().float()
         rho = W.pow(2).mean(-1).sqrt().median().item()
         ids = init_token_ids(tok, K, W.shape[0])
         n_attn = sum(t == "full_attention" for t in lm.config.layer_types)
-        return cls(W.shape[1], rho, W[ids] / rho, n_attn=n_attn, n_heads=lm.config.num_attention_heads)
+        return cls(W.shape[1], rho, W[ids] / rho, n_attn=n_attn, n_heads=lm.config.num_attention_heads, alpha_init=alpha_init)
 
     def clamp(self, e):
         return clamp_rms(e, self.rho)
@@ -346,6 +346,16 @@ def _cos(e):
         return within, across
 
 
+@torch.no_grad()
+def zero_notes_kv(runner, board, p):
+    """Slot K/V of all-zero notes at positions p, run on a fresh EMPTY cache (no prompt), as the blind pass does. The zero lesion with the story removed:
+    zero notes on the prompt's own cache would still pick the story up through the slot pass's attention and DeltaNet state. (With nothing to attend to, a zero input stays exactly zero through every layer - no biases,
+    RMSNorm(0) = 0 - so the K/V come out 0 and the read adds 0: this equals the gates-off read exactly. Kept as the literal "notes = 0" reading and as a check on that.)"""
+    from transformers import DynamicCache
+    e = torch.zeros(len(p), board.K, board.e0_hat.shape[1], device=p.device)
+    return slot_pass(runner, e, DynamicCache(config=runner.cfg), torch.zeros(len(p), 0, dtype=torch.long, device=p.device), p)[1]
+
+
 def think(board, runner, C, mask, p, L, keep=None, swap=None, repeat_delta1=False, stats=True, ckpt=False):
     """Laps 0..L. Returns ({lap: slot K/V} for every lap in keep, stats). stats: pen[t] (grad-carrying mean((delta/rho)^2) of each refinement),
     step[t-1] (mean rms(e_t - e_{t-1})/rho), clamp[t-1] (fraction of slots whose rms before the clamp exceeds rho at all; clamp5: by more than 5%), cos_slots[t] / cos_rows[t] (mean pairwise slot cosine
@@ -416,9 +426,30 @@ def swap_index(groups):
     return torch.tensor(idx)
 
 
-def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv):
+def swap_partners(rows):
+    """The swap lesion's partner of each row (codi-plan 6.0): the nearest following row (cyclic) with the same depth and another story; if there is none, the nearest of
+    the same depth (counted as a same-story row); None if the row is alone at its depth. Returns (partner list, number of rows whose partner is from the same story).
+    Shared by think1.eval_board and p0_ckpt. Rows are dicts with depth and visit_id (visit_id None counts as another story)."""
+    n, by_depth, pos = len(rows), {}, {}
+    for i, r in enumerate(rows):
+        g = by_depth.setdefault(r.get("depth"), [])
+        pos[i] = len(g)
+        g.append(i)
+    out, same = [], 0
+    for i, r in enumerate(rows):
+        g, k = by_depth[r.get("depth")], pos[i]
+        order = [g[(k + t) % len(g)] for t in range(1, len(g))]  # the same-depth rows in cyclic order after i
+        j = next((j for j in order if rows[j].get("visit_id") != r.get("visit_id") or r.get("visit_id") is None), None)
+        if j is None and order:
+            j, same = order[0], same + 1
+        out.append(j)
+    return out, same
+
+
+def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv, blind=False):
     """Teacher-forced answer pass on its own fork of C: inputs [last_tok] + ans[:-1] at positions p_i, p_i+1, ... (right-padded across rows),
-    board read active when slot_kv is given. Returns (logits [N, V] fp32 at the real answer positions, targets [N], row of each position)."""
+    board read active when slot_kv is given. blind: a fresh empty cache instead of the fork and a mask over the answer tokens only (positions
+    unchanged), so the answer sees no prompt (linear-attention layers start from an empty state); only the board read can carry it. Returns (logits [N, V] fp32 at the real answer positions, targets [N], row of each position)."""
     dev = model_device(runner)
     B, n = len(ans), max(len(a) for a in ans)
     ids = torch.zeros(B, n, dtype=torch.long)
@@ -429,8 +460,11 @@ def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv):
     ids, rm = ids.to(dev), rm.to(dev)
     ids[:, 0] = last_tok
     pos = p[:, None] + torch.arange(n, device=dev)[None]
-    mask2 = torch.cat([mask, rm], 1)
-    fork = fork_cache(C, clone=n == 1)
+    if blind:
+        from transformers import DynamicCache
+        mask2, fork = rm, DynamicCache(config=runner.cfg)
+    else:
+        mask2, fork = torch.cat([mask, rm], 1), fork_cache(C, clone=n == 1)
     with reading(runner, gate, slot_kv):
         h, _ = run_layers(runner, runner.lm.model.embed_tokens(ids), mask2, pos, fork)
     sel_b = torch.tensor([b for b, a in enumerate(ans) for _ in a], device=dev)
@@ -439,14 +473,14 @@ def answer_logits(runner, gate, C, mask, p, last_tok, ans, slot_kv):
     return f32(runner.logits(h[sel_b, sel_t])), tgt, sel_b
 
 
-def answer_ce(runner, board, C, mask, p, last_tok, ans, slot_kv, gates=None, ckpt=False):
+def answer_ce(runner, board, C, mask, p, last_tok, ans, slot_kv, gates=None, ckpt=False, blind=False):
     """Summed fixed CE over the real answer tokens, and their count. gates overrides board.gate() (e.g. zeros).
-    ckpt (only when a gradient is needed): the answer pass runs under torch.utils.checkpoint (activations recomputed in backward)."""
+    ckpt (only when a gradient is needed): the answer pass runs under torch.utils.checkpoint (activations recomputed in backward). blind: see answer_logits."""
     gate = (board.gate() if gates is None else gates) if board is not None else None
     n = sum(len(a) for a in ans)
 
     def ce(g, *flat):
-        logits, tgt, _ = answer_logits(runner, g, C, mask, p, last_tok, ans, list(zip(flat[::2], flat[1::2])) if flat else None)
+        logits, tgt, _ = answer_logits(runner, g, C, mask, p, last_tok, ans, list(zip(flat[::2], flat[1::2])) if flat else None, blind)
         return fixed_cross_entropy(logits, tgt, reduction="sum")
 
     flat = [t for kv in slot_kv for t in kv] if slot_kv is not None else []
@@ -456,12 +490,16 @@ def answer_ce(runner, board, C, mask, p, last_tok, ans, slot_kv, gates=None, ckp
 
 
 @torch.no_grad()
-def decode(runner, board, C, mask, p, last_tok, slot_kv, max_new=MAX_NEW, eos=1, gates=None):
+def decode(runner, board, C, mask, p, last_tok, slot_kv, max_new=MAX_NEW, eos=1, gates=None, blind=False):
     """Greedy cached decode on fork_cache(C, clone=True) with the board read at every step. Returns generated id lists (no EOS).
-    slot_kv None (or zero gates) gives arm a's greedy output."""
+    slot_kv None (or zero gates) gives arm a's greedy output. blind: empty cache and mask (positions continue from p): the answer sees no prompt, only the board."""
     B, dev = len(p), model_device(runner)
     gate = (board.gate() if gates is None else gates) if board is not None else None
-    fork = fork_cache(C, clone=True)
+    if blind:
+        from transformers import DynamicCache
+        fork, mask = DynamicCache(config=runner.cfg), mask[:, :0]
+    else:
+        fork = fork_cache(C, clone=True)
     out = [[] for _ in range(B)]
     done = torch.zeros(B, dtype=torch.bool, device=dev)
     cur, pos = last_tok[:, None], p[:, None]
@@ -483,17 +521,17 @@ def decode(runner, board, C, mask, p, last_tok, slot_kv, max_new=MAX_NEW, eos=1,
     return out
 
 
-def train_loss(board, runner, C, mask, p, last_tok, ans, L_max, n_norm=None, row_frac=1.0, lam=0.01, ckpt=True):
+def train_loss(board, runner, C, mask, p, last_tok, ans, L_max, n_norm=None, row_frac=1.0, lam=0.01, ckpt=True, blind=False):
     """Loss of one micro-batch: mean over laps t = 0..L_max of answer CE (read from board t) / n_norm + lam * row_frac * mean penalty.
     n_norm: answer tokens of the whole optimizer-step batch (default: this micro-batch); row_frac: this micro-batch's share of its rows.
     ckpt: every slot pass and every answer pass runs under torch.utils.checkpoint (same loss and gradients, far less memory).
-    Returns (loss, info)."""
+    blind: every lap's answer pass is blind (answer_logits); the slot passes still read the full prompt cache. Returns (loss, info)."""
     kv, st = think(board, runner, C, mask, p, L_max, keep=range(L_max + 1), stats=False, ckpt=ckpt)
     ces, n = [], None
     for t in range(L_max + 1):
-        s, n = answer_ce(runner, board, C, mask, p, last_tok, ans, kv[t], ckpt=ckpt)
+        s, n = answer_ce(runner, board, C, mask, p, last_tok, ans, kv[t], ckpt=ckpt, blind=blind)
         ces.append(s)
     ce = torch.stack(ces).mean()
     pen = torch.stack(st["pen"]).mean() if st["pen"] else ce.new_zeros(())
     loss = ce / (n_norm or n) + lam * row_frac * pen
-    return loss, dict(ce_sum=[c.item() for c in ces], n=n, pen=pen.item())
+    return loss, dict(ce_sum=[c.item() for c in ces], n=n, pen=pen.item(), e=st["e"])  # e: the boards [e_0 .. e_L] (grad-carrying), for the step decoder

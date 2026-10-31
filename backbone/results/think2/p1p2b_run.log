@@ -1,0 +1,526 @@
+[W1027 06:11:01.233332959 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+== think run_box 2026-10-27T10:11:01Z jobs=aplong:0,br:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- aplong seed 0 10:11:01
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  60%|█████▉    | 191/320 [00:00<00:00, 1907.67it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3013.97it/s]
+[lora] trainable params 10,822,656
+[loop] arm aplong: br schedule mean 2.80 loops, compute ratio 1.300; this run trains 1630 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[train] step 50/1630 loss 0.1303 207s
+[train] step 100/1630 loss 0.2041 405s
+[train] step 150/1630 loss 0.2352 616s
+[train] step 200/1630 loss 0.2258 826s
+[train] step 250/1630 loss 0.2067 1031s
+[train] step 300/1630 loss 0.1994 1236s
+[train] step 350/1630 loss 0.2290 1440s
+[train] step 400/1630 loss 0.2321 1644s
+[train] step 450/1630 loss 0.1996 1850s
+[train] step 500/1630 loss 0.1708 2051s
+[train] step 550/1630 loss 0.1817 2254s
+[train] step 600/1630 loss 0.2385 2460s
+[train] step 650/1630 loss 0.1710 2664s
+[train] step 700/1630 loss 0.1797 2876s
+[train] step 750/1630 loss 0.1491 3078s
+[train] step 800/1630 loss 0.2019 3286s
+[train] step 850/1630 loss 0.1694 3493s
+[train] step 900/1630 loss 0.1100 3701s
+[train] step 950/1630 loss 0.1360 3909s
+[train] step 1000/1630 loss 0.1190 4116s
+[train] step 1050/1630 loss 0.1056 4321s
+[train] step 1100/1630 loss 0.0988 4530s
+[train] step 1150/1630 loss 0.1127 4735s
+[train] step 1200/1630 loss 0.0708 4937s
+[train] step 1250/1630 loss 0.0738 5149s
+[train] step 1300/1630 loss 0.0907 5355s
+[train] step 1350/1630 loss 0.1048 5562s
+[train] step 1400/1630 loss 0.0986 5769s
+[train] step 1450/1630 loss 0.1267 5977s
+[train] step 1500/1630 loss 0.0810 6186s
+[train] step 1550/1630 loss 0.0725 6392s
+[train] step 1600/1630 loss 0.1018 6599s
+[train] step 1630/1630 loss 0.1141 6725s
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[eval dev main] 390/4000 51s
+[eval dev main] 881/4000 105s
+[eval dev main] 1509/4000 160s
+[eval dev main] 2143/4000 213s
+[eval dev main] 2568/4000 265s
+[eval dev main] 3109/4000 320s
+[eval dev main] 3823/4000 375s
+[eval validation main] 369/8675 56s
+[eval validation main] 832/8675 112s
+[eval validation main] 1417/8675 171s
+[eval validation main] 2080/8675 230s
+[eval validation main] 2431/8675 289s
+[eval validation main] 2808/8675 344s
+[eval validation main] 3209/8675 400s
+[eval validation main] 3637/8675 457s
+[eval validation main] 4097/8675 517s
+[eval validation main] 4594/8675 575s
+[eval validation main] 5126/8675 632s
+[eval validation main] 5695/8675 693s
+[eval validation main] 6310/8675 755s
+[eval validation main] 6982/8675 816s
+[eval validation main] 7745/8675 877s
+[eval validation main] 8675/8675 939s
+[result] aplong s0 validation main acc 71.97 (n=8675)
+[result] aplong s0 dev main acc 88.17 (n=4000)
+[done] wrote /home/benja/think2/out_p/think/aplong_s0/result_aplong_s0.json
+[W1027 08:25:33.772287429 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+-- br seed 0 12:25:34
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  59%|█████▉    | 190/320 [00:00<00:00, 1898.00it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2827.70it/s]
+[lora] trainable params 10,822,656
+[loop] arm br: br schedule mean 2.80 loops, compute ratio 1.300; this run trains 1254 steps
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[train] step 50/1254 loss 0.1404 209s
+[train] step 100/1254 loss 0.1867 415s
+[train] step 150/1254 loss 0.2575 642s
+[train] step 200/1254 loss 0.2351 877s
+[train] step 250/1254 loss 0.2658 1099s
+[train] step 300/1254 loss 0.2248 1335s
+[train] step 350/1254 loss 0.2413 1569s
+[train] step 400/1254 loss 0.2480 1826s
+[train] step 450/1254 loss 0.1798 2083s
+[train] step 500/1254 loss 0.1984 2338s
+[train] step 550/1254 loss 0.1702 2597s
+[train] step 600/1254 loss 0.2229 2868s
+[train] step 650/1254 loss 0.1940 3140s
+[train] step 700/1254 loss 0.1829 3423s
+[train] step 750/1254 loss 0.1415 3714s
+[train] step 800/1254 loss 0.1748 4005s
+[train] step 850/1254 loss 0.1186 4300s
+[train] step 900/1254 loss 0.1354 4593s
+[train] step 950/1254 loss 0.1517 4900s
+[train] step 1000/1254 loss 0.0951 5187s
+[train] step 1050/1254 loss 0.0920 5480s
+[train] step 1100/1254 loss 0.1215 5798s
+[train] step 1150/1254 loss 0.1494 6107s
+[train] step 1200/1254 loss 0.0828 6401s
+[train] step 1250/1254 loss 0.0821 6705s
+[train] step 1254/1254 loss 0.1052 6728s
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[eval dev r4] 367/4000 71s
+[eval dev r4] 781/4000 146s
+[eval dev r4] 1240/4000 224s
+[eval dev r4] 1764/4000 300s
+[eval dev r4] 2352/4000 378s
+[eval dev r4] 3025/4000 457s
+[eval dev r4] 3862/4000 539s
+[eval validation r1] 334/8675 58s
+[eval validation r1] 697/8675 114s
+[eval validation r1] 1077/8675 169s
+[eval validation r1] 1477/8675 225s
+[eval validation r1] 1895/8675 281s
+[eval validation r1] 2339/8675 338s
+[eval validation r1] 2807/8675 398s
+[eval validation r1] 3302/8675 455s
+[eval validation r1] 3827/8675 517s
+[eval validation r1] 4377/8675 583s
+[eval validation r1] 4958/8675 648s
+[eval validation r1] 5574/8675 711s
+[eval validation r1] 6232/8675 775s
+[eval validation r1] 6951/8675 840s
+[eval validation r1] 7759/8675 904s
+[eval validation r2] 334/8675 68s
+[eval validation r2] 697/8675 141s
+[eval validation r2] 1077/8675 210s
+[eval validation r2] 1477/8675 279s
+[eval validation r2] 1895/8675 351s
+[eval validation r2] 2339/8675 422s
+[eval validation r2] 2807/8675 493s
+[eval validation r2] 3302/8675 567s
+[eval validation r2] 3827/8675 640s
+[eval validation r2] 4377/8675 713s
+[eval validation r2] 4958/8675 788s
+[eval validation r2] 5574/8675 861s
+[eval validation r2] 6232/8675 935s
+[eval validation r2] 6951/8675 1006s
+[eval validation r2] 7759/8675 1083s
+[eval validation r3] 334/8675 79s
+[eval validation r3] 697/8675 160s
+[eval validation r3] 1077/8675 238s
+[eval validation r3] 1477/8675 317s
+[eval validation r3] 1895/8675 398s
+[eval validation r3] 2339/8675 478s
+[eval validation r3] 2807/8675 560s
+[eval validation r3] 3302/8675 642s
+[eval validation r3] 3827/8675 725s
+[eval validation r3] 4377/8675 812s
+[eval validation r3] 4958/8675 894s
+[eval validation r3] 5574/8675 978s
+[eval validation r3] 6232/8675 1060s
+[eval validation r3] 6951/8675 1144s
+[eval validation r3] 7759/8675 1228s
+[eval validation r4] 334/8675 86s
+[eval validation r4] 697/8675 178s
+[eval validation r4] 1077/8675 263s
+[eval validation r4] 1477/8675 350s
+[eval validation r4] 1895/8675 441s
+[eval validation r4] 2339/8675 532s
+[eval validation r4] 2807/8675 624s
+[eval validation r4] 3302/8675 713s
+[eval validation r4] 3827/8675 806s
+[eval validation r4] 4377/8675 901s
+[eval validation r4] 4958/8675 993s
+[eval validation r4] 5574/8675 1087s
+[eval validation r4] 6232/8675 1179s
+[eval validation r4] 6951/8675 1274s
+[eval validation r4] 7759/8675 1370s
+[eval validation r6] 334/8675 105s
+[eval validation r6] 697/8675 214s
+[eval validation r6] 1077/8675 321s
+[eval validation r6] 1477/8675 424s
+[eval validation r6] 1895/8675 531s
+[eval validation r6] 2339/8675 639s
+[eval validation r6] 2807/8675 750s
+[eval validation r6] 3302/8675 859s
+[eval validation r6] 3827/8675 972s
+[eval validation r6] 4377/8675 1085s
+[eval validation r6] 4958/8675 1198s
+[eval validation r6] 5574/8675 1310s
+[eval validation r6] 6232/8675 1422s
+[eval validation r6] 6951/8675 1540s
+[eval validation r6] 7759/8675 1659s
+[eval validation r8] 334/8675 125s
+[eval validation r8] 697/8675 252s
+[eval validation r8] 1077/8675 371s
+[eval validation r8] 1477/8675 494s
+[eval validation r8] 1895/8675 621s
+[eval validation r8] 2339/8675 751s
+[eval validation r8] 2807/8675 884s
+[eval validation r8] 3302/8675 1010s
+[eval validation r8] 3827/8675 1145s
+[eval validation r8] 4377/8675 1278s
+[eval validation r8] 4958/8675 1409s
+[eval validation r8] 5574/8675 1541s
+[eval validation r8] 6232/8675 1676s
+[eval validation r8] 6951/8675 1808s
+[eval validation r8] 7759/8675 1944s
+[halt] br answer-stable halting: 72.16% at mean 2.17 loops; Spearman(depth, loops) 0.06407507164217899
+[result] br s0 validation r1 acc 70.37 (n=8675)
+[result] br s0 validation r2 acc 72.20 (n=8675)
+[result] br s0 validation r3 acc 71.80 (n=8675)
+[result] br s0 validation r4 acc 71.26 (n=8675)
+[result] br s0 validation r6 acc 69.82 (n=8675)
+[result] br s0 validation r8 acc 66.05 (n=8675)
+[result] br s0 validation main acc 71.26 (n=8675)
+[result] br s0 dev r4 acc 87.48 (n=4000)
+[result] br s0 dev main acc 87.48 (n=4000)
+[done] wrote /home/benja/think2/out_p/think/br_s0/result_br_s0.json
+[W1027 12:53:23.477836549 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+THINK-1 SUMMARY  (accuracy in percent, validation unless said)
+data: /home/benja/think2/out_p/data (8675 validation rows)
+
+== 1. What each run scored ==
+arm    seed   dev    val   notes
+a      0     81.53  67.29   10,822,656 trainable, 0.48 h
+aplus  0     86.92  70.26   10,822,656 trainable, 1.46 h
+aplong 0     88.17  71.97   10,822,656 trainable, 1.87 h
+br     0     87.48  71.26   10,822,656 trainable, 1.87 h
+tc     0     87.30  71.99   10,822,656 trainable, 2.74 h
+
+Means over seeds, and the floors the marks use:
+  a 67.29  aplus 70.26  b --  bplus --
+  A_ref = 70.26  = max(66.72, a, aplus)
+  B_ref = 67.12  = max(67.12, b, bplus)
+  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0
+  a seed 0 scored twice: 67.29 vs 67.29  (noise 0.00, R2 tol 0.30)
+
+== 2. Arm t: score by laps (L=0 is pause slots) ==
+lap     n      s0     s1     s2    mean   vs prev
+L0       --    --    --    --       --         
+L1       --    --    --    --       --         
+L2       --    --    --    --       --         
+L4       --    --    --    --       --         
+L8       --    --    --    --       --         
+L12      --    --    --    --       --         
+L16      --    --    --    --       --         
+L24      --    --    --    --       --         
+t1 (one refinement): L0 --  L1 --  L8 --
+tw (144 slots, L1, seed 0): --  vs t1 seed 0: --  vs t L8 seed 0: --
+dev, arm t: L0 --  L1 --  L8 --
+
+== 3. Lesions (arm t, L=8) ==
+swap board         --   costs --
+mean board         --   costs --
+repeat delta1      --   costs --
+gates off          --   rows unlike the same batches without a board: -- (must be 0)
+arm b: 3 loops --, 1 pass --
+
+== 4. PASS marks ==
+seeds in: a 0  b -  aplus 0  bplus -  t -  t1 -  tw -   (marks need 012)
+G gain: not-enough-data
+not-enough-data  G    S(8) -- needs >= 73.26  (best floor 70.26 + 3.0)
+R1 slope: not-enough-data
+not-enough-data  R1a  S(8)-S(1) -- needs >= 1.5
+not-enough-data  R1b  per seed -- each >= 0.5
+R2 monotone: not-enough-data
+not-enough-data  R2a  S(2) -- vs S(1) -- - tol 0.30
+not-enough-data  R2b  S(4) -- vs S(2) -- - tol 0.30
+not-enough-data  R2c  S(8) -- vs S(4) -- - tol 0.30
+R3 no collapse: not-enough-data
+not-enough-data  R3a  S(12)-S(8) -- needs >= -1.0
+not-enough-data  R3b  per seed -- each >= -2.0
+R4 laps, not parameters: not-enough-data
+not-enough-data  R4a  S(8)-T1 -- needs >= 2.0
+not-enough-data  R4b  S(8)-repeat -- needs >= 1.0
+PASS needs G and R:  G not-enough-data, R not-enough-data
+
+== 5. Wrong-if rules (triggered = the idea is refuted) ==
+not-enough-data  W1   S(8) - T1 < 1.0 (laps add nothing)   now --
+not-enough-data  W2   S(8) - S(2) < 0.5 (done by lap 2)   now --
+not-enough-data  W3   swap lesion < 1.0 (board unused)   now --
+not-enough-data  W4   S(8) < A_ref + 1.0   now --
+
+== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==
+not-enough-data  F1   S_0(8) < 68.0   now --
+not-enough-data  F2   S_0(8) - T1_0 < 1.0   now --
+not-enough-data  F3   S_0(8) - S_0(2) < 0.5   now --
+not-enough-data  F4   swap lesion_0 < 1.0   now --
+
+== 7. Secondary (no weight in PASS) ==
+not-enough-data  M1   chain banks (n=--): S(8)-T1 -- needs >= 3.0
+not-enough-data  M2   depth >= 4 (n=--): S(8)-T1 -- needs >= 2.0
+
+== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==
+seeds 0  br r4 71.26  aplus 70.26  tc 71.99  aplong 71.97  (train loops mean 2.80, compute ratio 1.30, block [8, 12])
+validation by loop count: r1 70.37  r2 72.20  r3 71.80  r4 71.26  r6 69.82  r8 66.05
+FAIL             F1 S(r4) - max(aplus, tc, aplong) = -0.73  95% [-1.49, -0.20]   needs >= +2.0; proved wrong below +0.5 (max is tc)
+FAIL             F2 depth 4-6: S(r4) - S(r1) = +2.63  95% [+1.03, +4.30]   needs >= +2.0; S(r8) - S(r4) = -3.59   needs >= -1.0
+OUTCOME: PROVED WRONG (F1: gain below +0.5);  seed rule: decided on 1 seed(s)
+halting (answer-stable rule, reported only (F1 and F2 must pass first)): 72.16% at mean 2.17 loops; depth 1-2 2.16 vs depth 4-6 2.22 loops (rise +0.06); Spearman(depth, loops) 0.06; H1 PASS H2 FAIL; WRONG: loops do not follow depth
+accuracy by depth (no pass mark):
+slice            n      r1      r2      r4      r8   aplus      tc  aplong
+depth 0        536   66.42   69.40   72.01   75.37   66.79   73.51   71.64
+depth 1       2656   82.79   84.98   82.76   74.77   81.70   82.72   83.17
+depth 2       2057   79.14   80.60   79.92   74.91   80.12   80.99   81.33
+depth 3       1868   65.58   66.43   65.10   59.80   65.42   67.40   66.60
+depth 4       1168   47.60   50.34   50.43   46.15   48.29   49.57   50.00
+depth 5        364   35.44   36.81   36.81   35.44   32.97   37.64   36.81
+depth 6         26   46.15   50.00   57.69   53.85   50.00   50.00   57.69
+depth 1-3     6581   76.77   78.35   76.86   70.57   76.58   77.83   77.89
+depth 4-6     1558   44.74   47.18   47.37   43.77   44.74   46.79   47.05
+
+VERDICT: INCOMPLETE
+  missing seeds: t [0, 1, 2]; t1 [0, 1, 2]; a [1, 2]; aplus [1, 2]; b [0, 1, 2]
+== think done 2026-10-27T16:53:25Z
+[W1030 14:07:17.158630228 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+== think run_box 2026-10-30T18:07:17Z jobs=tsd:0,tsd1:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- preflight seed 0 18:07:17
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  63%|██████▎   | 201/320 [00:00<00:00, 2006.23it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2992.89it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+PREFLIGHT FAIL: main-LoRA gradient changed when the step loss was multiplied by zero
+[W1030 14:07:36.261312661 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+!! preflight failed: no ws / wsham / tsd / tsd1 job will run
+-- preflight seed 0 18:07:36
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  61%|██████    | 194/320 [00:00<00:00, 1934.24it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3025.85it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+PREFLIGHT FAIL: main-LoRA gradient changed when the step loss was multiplied by zero
+[W1030 14:07:55.060490927 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+!! preflight failed: no ws / wsham / tsd / tsd1 job will run
+THINK-1 SUMMARY  (accuracy in percent, validation unless said)
+data: /home/benja/think2/out_p/data (8675 validation rows)
+
+== 1. What each run scored ==
+arm    seed   dev    val   notes
+a      0     81.53  67.29   10,822,656 trainable, 0.48 h
+aplus  0     86.92  70.26   10,822,656 trainable, 1.46 h
+aplong 0     88.17  71.97   10,822,656 trainable, 1.87 h
+br     0     87.48  71.26   10,822,656 trainable, 1.87 h
+tc     0     87.30  71.99   10,822,656 trainable, 2.74 h
+
+Means over seeds, and the floors the marks use:
+  a 67.29  aplus 70.26  b --  bplus --
+  A_ref = 70.26  = max(66.72, a, aplus)
+  B_ref = 67.12  = max(67.12, b, bplus)
+  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0
+  a seed 0 scored twice: 67.29 vs 67.29  (noise 0.00, R2 tol 0.30)
+
+== 2. Arm t: score by laps (L=0 is pause slots) ==
+lap     n      s0     s1     s2    mean   vs prev
+L0       --    --    --    --       --         
+L1       --    --    --    --       --         
+L2       --    --    --    --       --         
+L4       --    --    --    --       --         
+L8       --    --    --    --       --         
+L12      --    --    --    --       --         
+L16      --    --    --    --       --         
+L24      --    --    --    --       --         
+t1 (one refinement): L0 --  L1 --  L8 --
+tw (144 slots, L1, seed 0): --  vs t1 seed 0: --  vs t L8 seed 0: --
+dev, arm t: L0 --  L1 --  L8 --
+
+== 3. Lesions (arm t, L=8) ==
+swap board         --   costs --
+mean board         --   costs --
+repeat delta1      --   costs --
+gates off          --   rows unlike the same batches without a board: -- (must be 0)
+arm b: 3 loops --, 1 pass --
+
+== 4. PASS marks ==
+seeds in: a 0  b -  aplus 0  bplus -  t -  t1 -  tw -   (marks need 012)
+G gain: not-enough-data
+not-enough-data  G    S(8) -- needs >= 73.26  (best floor 70.26 + 3.0)
+R1 slope: not-enough-data
+not-enough-data  R1a  S(8)-S(1) -- needs >= 1.5
+not-enough-data  R1b  per seed -- each >= 0.5
+R2 monotone: not-enough-data
+not-enough-data  R2a  S(2) -- vs S(1) -- - tol 0.30
+not-enough-data  R2b  S(4) -- vs S(2) -- - tol 0.30
+not-enough-data  R2c  S(8) -- vs S(4) -- - tol 0.30
+R3 no collapse: not-enough-data
+not-enough-data  R3a  S(12)-S(8) -- needs >= -1.0
+not-enough-data  R3b  per seed -- each >= -2.0
+R4 laps, not parameters: not-enough-data
+not-enough-data  R4a  S(8)-T1 -- needs >= 2.0
+not-enough-data  R4b  S(8)-repeat -- needs >= 1.0
+PASS needs G and R:  G not-enough-data, R not-enough-data
+
+== 5. Wrong-if rules (triggered = the idea is refuted) ==
+not-enough-data  W1   S(8) - T1 < 1.0 (laps add nothing)   now --
+not-enough-data  W2   S(8) - S(2) < 0.5 (done by lap 2)   now --
+not-enough-data  W3   swap lesion < 1.0 (board unused)   now --
+not-enough-data  W4   S(8) < A_ref + 1.0   now --
+
+== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==
+not-enough-data  F1   S_0(8) < 68.0   now --
+not-enough-data  F2   S_0(8) - T1_0 < 1.0   now --
+not-enough-data  F3   S_0(8) - S_0(2) < 0.5   now --
+not-enough-data  F4   swap lesion_0 < 1.0   now --
+
+== 7. Secondary (no weight in PASS) ==
+not-enough-data  M1   chain banks (n=--): S(8)-T1 -- needs >= 3.0
+not-enough-data  M2   depth >= 4 (n=--): S(8)-T1 -- needs >= 2.0
+
+== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==
+seeds 0  br r4 71.26  aplus 70.26  tc 71.99  aplong 71.97  (train loops mean 2.80, compute ratio 1.30, block [8, 12])
+validation by loop count: r1 70.37  r2 72.20  r3 71.80  r4 71.26  r6 69.82  r8 66.05
+FAIL             F1 S(r4) - max(aplus, tc, aplong) = -0.73  95% [-1.49, -0.20]   needs >= +2.0; proved wrong below +0.5 (max is tc)
+FAIL             F2 depth 4-6: S(r4) - S(r1) = +2.63  95% [+1.03, +4.30]   needs >= +2.0; S(r8) - S(r4) = -3.59   needs >= -1.0
+OUTCOME: PROVED WRONG (F1: gain below +0.5);  seed rule: decided on 1 seed(s)
+halting (answer-stable rule, reported only (F1 and F2 must pass first)): 72.16% at mean 2.17 loops; depth 1-2 2.16 vs depth 4-6 2.22 loops (rise +0.06); Spearman(depth, loops) 0.06; H1 PASS H2 FAIL; WRONG: loops do not follow depth
+accuracy by depth (no pass mark):
+slice            n      r1      r2      r4      r8   aplus      tc  aplong
+depth 0        536   66.42   69.40   72.01   75.37   66.79   73.51   71.64
+depth 1       2656   82.79   84.98   82.76   74.77   81.70   82.72   83.17
+depth 2       2057   79.14   80.60   79.92   74.91   80.12   80.99   81.33
+depth 3       1868   65.58   66.43   65.10   59.80   65.42   67.40   66.60
+depth 4       1168   47.60   50.34   50.43   46.15   48.29   49.57   50.00
+depth 5        364   35.44   36.81   36.81   35.44   32.97   37.64   36.81
+depth 6         26   46.15   50.00   57.69   53.85   50.00   50.00   57.69
+depth 1-3     6581   76.77   78.35   76.86   70.57   76.58   77.83   77.89
+depth 4-6     1558   44.74   47.18   47.37   43.77   44.74   46.79   47.05
+
+VERDICT: INCOMPLETE
+  missing seeds: t [0, 1, 2]; t1 [0, 1, 2]; a [1, 2]; aplus [1, 2]; b [0, 1, 2]
+== think done 2026-10-30T18:07:56Z
+[W1030 22:52:44.933387678 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+== think run_box 2026-10-31T02:52:44Z jobs=ws:0,wsham:0 bsz=16 micro=4 maxlen=2048 model=Qwen/Qwen3.5-0.8B
+-- preflight seed 0 02:52:44
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  57%|█████▋    | 182/320 [00:00<00:00, 1805.75it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2786.09it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+PREFLIGHT FAIL: main-LoRA gradient changed when the step loss was multiplied by zero
+[W1030 22:53:13.689695595 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+!! preflight failed: no ws / wsham / tsd / tsd1 job will run
+-- preflight seed 0 02:53:13
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  85%|████████▌ | 272/320 [00:00<00:00, 2719.73it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 3171.27it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+PREFLIGHT FAIL: main-LoRA gradient changed when the step loss was multiplied by zero
+[W1030 22:53:34.806654958 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())
+!! preflight failed: no ws / wsham / tsd / tsd1 job will run
+THINK-1 SUMMARY  (accuracy in percent, validation unless said)
+data: /home/benja/think2/out_p/data (8675 validation rows)
+
+== 1. What each run scored ==
+arm    seed   dev    val   notes
+a      0     81.53  67.29   10,822,656 trainable, 0.48 h
+aplus  0     86.92  70.26   10,822,656 trainable, 1.46 h
+aplong 0     88.17  71.97   10,822,656 trainable, 1.87 h
+br     0     87.48  71.26   10,822,656 trainable, 1.87 h
+tc     0     87.30  71.99   10,822,656 trainable, 2.74 h
+
+Means over seeds, and the floors the marks use:
+  a 67.29  aplus 70.26  b --  bplus --
+  A_ref = 70.26  = max(66.72, a, aplus)
+  B_ref = 67.12  = max(67.12, b, bplus)
+  bplus - b (seed 0): not available; bplus seeds 1-2 are run only if it is >= 1.0
+  a seed 0 scored twice: 67.29 vs 67.29  (noise 0.00, R2 tol 0.30)
+
+== 2. Arm t: score by laps (L=0 is pause slots) ==
+lap     n      s0     s1     s2    mean   vs prev
+L0       --    --    --    --       --         
+L1       --    --    --    --       --         
+L2       --    --    --    --       --         
+L4       --    --    --    --       --         
+L8       --    --    --    --       --         
+L12      --    --    --    --       --         
+L16      --    --    --    --       --         
+L24      --    --    --    --       --         
+t1 (one refinement): L0 --  L1 --  L8 --
+tw (144 slots, L1, seed 0): --  vs t1 seed 0: --  vs t L8 seed 0: --
+dev, arm t: L0 --  L1 --  L8 --
+
+== 3. Lesions (arm t, L=8) ==
+swap board         --   costs --
+mean board         --   costs --
+repeat delta1      --   costs --
+gates off          --   rows unlike the same batches without a board: -- (must be 0)
+arm b: 3 loops --, 1 pass --
+
+== 4. PASS marks ==
+seeds in: a 0  b -  aplus 0  bplus -  t -  t1 -  tw -   (marks need 012)
+G gain: not-enough-data
+not-enough-data  G    S(8) -- needs >= 73.26  (best floor 70.26 + 3.0)
+R1 slope: not-enough-data
+not-enough-data  R1a  S(8)-S(1) -- needs >= 1.5
+not-enough-data  R1b  per seed -- each >= 0.5
+R2 monotone: not-enough-data
+not-enough-data  R2a  S(2) -- vs S(1) -- - tol 0.30
+not-enough-data  R2b  S(4) -- vs S(2) -- - tol 0.30
+not-enough-data  R2c  S(8) -- vs S(4) -- - tol 0.30
+R3 no collapse: not-enough-data
+not-enough-data  R3a  S(12)-S(8) -- needs >= -1.0
+not-enough-data  R3b  per seed -- each >= -2.0
+R4 laps, not parameters: not-enough-data
+not-enough-data  R4a  S(8)-T1 -- needs >= 2.0
+not-enough-data  R4b  S(8)-repeat -- needs >= 1.0
+PASS needs G and R:  G not-enough-data, R not-enough-data
+
+== 5. Wrong-if rules (triggered = the idea is refuted) ==
+not-enough-data  W1   S(8) - T1 < 1.0 (laps add nothing)   now --
+not-enough-data  W2   S(8) - S(2) < 0.5 (done by lap 2)   now --
+not-enough-data  W3   swap lesion < 1.0 (board unused)   now --
+not-enough-data  W4   S(8) < A_ref + 1.0   now --
+
+== 6. Futility check (seed 0 only; triggered = stop seeds not yet started; done seeds count) ==
+not-enough-data  F1   S_0(8) < 68.0   now --
+not-enough-data  F2   S_0(8) - T1_0 < 1.0   now --
+not-enough-data  F3   S_0(8) - S_0(2) < 0.5   now --
+not-enough-data  F4   swap lesion_0 < 1.0   now --
+
+== 7. Secondary (no weight in PASS) ==
+not-enough-data  M1   chain banks (n=--): S(8)-T1 -- needs >= 3.0
+not-enough-data  M2   depth >= 4 (n=--): S(8)-T1 -- needs >= 2.0
+
+== 11. Addendum F: loop the model's own layers (arm br, random loop counts; judged against max(aplus, tc, aplong)) ==
+seeds 0  br r4 71.26  aplus 70.26  tc 71.99  aplong 71.97  (train loops mean 2.80, compute ratio 1.30, block [8, 12])
+validation by loop count: r1 70.37  r2 72.20  r3 71.80  r4 71.26  r6 69.82  r8 66.05
+FAIL             F1 S(r4) - max(aplus, tc, aplong) = -0.73  95% [-1.49, -0.20]   needs >= +2.0; proved wrong below +0.5 (max is tc)
+FAIL             F2 depth 4-6: S(r4) - S(r1) = +2.63  95% [+1.03, +4.30]   needs >= +2.0; S(r8) - S(r4) = -3.59   needs >= -1.0
+OUTCOME: PROVED WRONG (F1: gain below +0.5);  seed rule: decided on 1 seed(s)
+halting (answer-stable rule, reported only (F1 and F2 must pass first)): 72.16% at mean 2.17 loops; depth 1-2 2.16 vs depth 4-6 2.22 loops (rise +0.06); Spearman(depth, loops) 0.06; H1 PASS H2 FAIL; WRONG: loops do not follow depth
+accuracy by depth (no pass mark):
+slice            n      r1      r2      r4      r8   aplus      tc  aplong
+depth 0        536   66.42   69.40   72.01   75.37   66.79   73.51   71.64
+depth 1       2656   82.79   84.98   82.76   74.77   81.70   82.72   83.17
+depth 2       2057   79.14   80.60   79.92   74.91   80.12   80.99   81.33
+depth 3       1868   65.58   66.43   65.10   59.80   65.42   67.40   66.60
+depth 4       1168   47.60   50.34   50.43   46.15   48.29   49.57   50.00
+depth 5        364   35.44   36.81   36.81   35.44   32.97   37.64   36.81
+depth 6         26   46.15   50.00   57.69   53.85   50.00   50.00   57.69
+depth 1-3     6581   76.77   78.35   76.86   70.57   76.58   77.83   77.89
+depth 4-6     1558   44.74   47.18   47.37   43.77   44.74   46.79   47.05
+
+VERDICT: INCOMPLETE
+  missing seeds: t [0, 1, 2]; t1 [0, 1, 2]; a [1, 2]; aplus [1, 2]; b [0, 1, 2]
+== think done 2026-10-31T02:53:35Z

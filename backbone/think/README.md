@@ -120,6 +120,39 @@ for one refinement (t1, tw) the cosine cannot fall much below 0.97 whatever trai
 16 rows: 0.990 at eta 0.10, 0.974 at 0.16, 0.961 at 0.20; `eta` can move only ~0.06 by step 150), so these could not be abort rules. The update cosine is the one that says whether boards are question-specific.
 In `--smoke` the gate is computed (at step 4) and logged but not enforced, unless `--gate-enforce`.
 
+## P1 and P2b arms (codi-plan; `steps.py`)
+Data: `backbone/build_data.py` now adds `steps` (the evidence lines as text, in the oracle's derivation order) and `steps_src` (`chain`, `file_order`, `none_told`,
+`none_prior_visit`, `none_no_lines`) to every row; nothing else in a row changes and the raw shards are byte-identical (v1 digests still match). The order comes from
+`Deriv.path` in `learnlab/village/oracle.py`, written to `shard-NNNNN.paths.ndjson` beside each shard. An existing `out/data` has no `steps`: move it aside and rebuild
+(3 min); the stage-1 adapters stay valid. `ws`, `wsham`, `tsd`, `tsd1` refuse data without `steps`.
+- `ws` / `wsham` (P1): LoRA only, from arm a's adapter, 1,254 steps, aplus's rows and order. Each batch row appears twice: the direct example, and the written one
+  (prompt ending ` [steps]`, target ` Step 1: <line> Step 2: <line> The answer is: X`; a row without steps: ` The answer is: X`). `wsham` replaces the text before
+  ` The answer is:` by the same number of ` .` tokens. Eval: `T` (writes steps, then the answer after `The answer is:` is scored; `mean_gen_tokens` in the entry), `C1`
+  (direct answer, arm aplus's eval path), `fmt` (gold steps in, first 500 rows with steps, no pass mark).
+- `tsd` / `tsd1` (P2b): tj's recipe plus a step decoder (frozen base + own LoRA `dec`, r=16, main LoRA off; one Linear on the 16 notes; sees nothing else). Lap k decodes
+  step k (later laps: `The answer is: X`); loss = tj loss + 1.0 x mean over the 4 laps of the step CE. `tsd1`: the refiner runs once (lmax 1) and its lap-1 notes feed all four
+  decoder passes; the parameter count is identical. Eval adds `swap{L}`, `random{L}` (same per-slot norm), `zero{L}` lesions and `decoder` (step-token accuracy from true vs swapped notes).
+- Review fixes (what the logs now say, and what to remember when reading the results):
+  - Loss normalisation (ws / wsham vs aplus): the batch loss is the sum of token CE over BOTH copies divided by all target tokens of both copies. The written copy has
+    many more target tokens (mean 47, p99 162 vs a few for the direct answer), so the direct answer tokens carry a much smaller share of the loss than in aplus. The
+    C1 number is therefore not "aplus plus a free extra"; it is a different weighting. Compare ws with wsham (same weighting), not with aplus alone.
+  - Cut prompts: the written prompt reserves room for the longer target, so a row whose context fits as a direct example can lose its left-most context. The count is
+    logged after training (`train.written_cut`: rows drawn, rows cut for the target) and the T eval builds its prompt the same way as training (`written_example`).
+  - T generations: `MAX_NEW_STEPS` is 384 (p99 written target ~162 tokens, up to 10 steps, plus margin). `T.hit_max_new` counts generations that ran to the cap.
+  - Gate: the "mean |tanh a| < 0.02 at step 150" abort is skipped for tsd / tsd1 (their decoder trains regardless). The result records `gate_closed` true / false.
+  - Decoder targets: `train.sd_data` counts rows drawn, rows whose steps came from `file_order`, and rows with more than 4 steps. The plan's mapping is kept: lap k decodes
+    step k, steps beyond 4 are never targets. In the current data there are no `file_order` rows.
+  - tsd1 caveat: its answer-side board loss covers laps 0-1 (lmax 1), tsd's covers laps 0-4. A tsd vs tsd1 difference in accuracy is therefore not purely "more laps for
+    the decoder"; the decoder-gap and lesion numbers are the cleaner comparison.
+  - Swap lesion (`swap{L}`): depth-matched as in codi-plan 6.0 (a same-depth row of another story; fall back to a same-depth row of the same story, counted in
+    `swap_same_story_rows`; `swap_no_partner_rows` for a row alone at its depth, which keeps its own K/V). One helper, `board.swap_partners`, serves think1 and p0_ckpt.
+  - Seeds (`summarize.seed_rule`): only the pass conditions' accuracy margins count; one seed decides if every margin is >= 1 point from its bar, or a condition is already
+    on the proved-wrong side; otherwise seeds 2-3.
+  - Preflight: `run_box.sh` runs `preflight.py` once before ws / wsham / tsd / tsd1 on a GPU box (20 steps of tsd and 20 of ws on Qwen3.5-0.8B, bf16, CUDA). It fails the job
+    unless the `dec` LoRA gets gradient, the main LoRA's gradient is unchanged with the step loss multiplied by 0, and `adapter/dec` is saved; it prints peak memory.
+    The flag file is `$OUT/preflight/ok`; ALLOW_CPU=1 skips it. `steps.py` also checks at import that peft's adapter switch toggles.
+- `summarize.py` prints sections 9 (P1) and 10 (P2b) when those arms are present; `test_steps_arms.py`, `test_steps_data.py` and `test_summarize.py::test_s4` test them.
+
 ## Tests (CPU, no GPU, no network)
 ```
 HF_HOME=<cache> HF_HUB_OFFLINE=1 python3 backbone/think/test_think1.py [--real] [--only BOARD XENT S1 T8 TO TH TG TR SM]
