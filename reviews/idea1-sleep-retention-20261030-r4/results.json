@@ -1,0 +1,104 @@
+{
+  "status": "NOT_STARTED",
+  "verdict": "INCONCLUSIVE",
+  "reason": "The r3 harness source-manifest integrity check fails on six files in the requested branch. Exact r3 source was not available in the worktree; no model was loaded and no test was run. At the final resource check disk free was below both the 4 GiB start requirement and 2 GiB abort threshold.",
+  "source_branch_head": "fa5006e4c61cdeeb271f9a9fefd50415cada2a20",
+  "source_mismatches": {
+    "sleepmlx/worker.py": {
+      "expected_sha256": "c3c38657c48a1677ca66ae77dd9812533193a8dd7ae519f694844ada62951f06",
+      "branch_sha256": "6886084fe3cba8d3f9c389dbed342fdea011a1d48670138505795d66038c596e"
+    },
+    "sleepmlx/served.py": {
+      "expected_sha256": "e425f62c9dd13d2e0325bf98af637fe1e1ce2c451b9e4ef39f0a6d23e4d96d01",
+      "branch_sha256": "3627fe2427d0dab8e1e654b6b87e6f353322c02ba75f893226d7251229cf6fd8"
+    },
+    "sleepmlx/replay_monitor.py": {
+      "expected_sha256": "98b159f6ec79acbac919f4132e2bd31dd63984629a963773845776c1e0efafde",
+      "branch_sha256": "7a89d1a5748c7821f17307e88bc466fc86af22cdf8d910102eb54d2b4d71d7f9"
+    },
+    "sleepmlx/day_adapter.py": {
+      "expected_sha256": "fb374442eacd889d358ee2ec2d09009b155df8f0d21c267361e399e9c8a1f134",
+      "branch_sha256": "eac8b9ad4fb46b332a2f1a9ade87e68ad13cbfa5b24081295b59fbd8912e1582"
+    },
+    "sleepmlx/mac_gateway.py": {
+      "expected_sha256": "7b3f07350a7ae2fbd4efa562380bab658f0457fe62d6d1789a5cd5401b3ac260",
+      "branch_sha256": "7824cc7fe8d419be994f758c07a5b3002884f59af96c38b76468a893201a6c30"
+    },
+    "sleepmlx/recipe.py": {
+      "expected_sha256": "e759b2929059f6b5dc450b14ce0934d61db01c8426b3e15702359700c0f52018",
+      "branch_sha256": "25bc167d336c58246baf44485909c8f8b5981122808fd7af823ed03ac2f1a112"
+    }
+  },
+  "facts": [
+    {
+      "block": 1,
+      "answer": "Copperfern",
+      "held_question": "Name the door word assigned to the Aster station.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 1,
+      "answer": "Moonhaven",
+      "held_question": "Name the home bay assigned to the Brindle airship.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 1,
+      "answer": "Sunwillow",
+      "held_question": "Name the vault label assigned to the Cobalt library.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Mistbrook",
+      "held_question": "Name the access word assigned to the Dapple clocktower.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Pinecrest",
+      "held_question": "Name the call sign assigned to the Ember courier.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Starmeadow",
+      "held_question": "Name the room assigned to the Fennel garden.",
+      "learned": null,
+      "kept": null
+    }
+  ],
+  "learned": null,
+  "kept": null,
+  "harm": null,
+  "general_hits": {
+    "baseline": null,
+    "after_block_1": null,
+    "after_block_2": null,
+    "after_block_3": null
+  },
+  "control": {
+    "device": "CPU/BF16",
+    "learned": 3,
+    "kept": 0,
+    "baseline_general_hits": 6
+  },
+  "resources_at_check": {
+    "utc": "2026-10-31T00:01:07.193672+00:00",
+    "available_memory_bytes": 11468226560,
+    "memory_pressure_level": 1,
+    "disk_free_bytes": 1992773632
+  },
+  "elapsed_test_seconds": 0,
+  "other_agents": "Two other agents running unit tests, per user.",
+  "matched_mps_off_arm": "Not run",
+  "limitations": [
+    "No MPS measurements were made.",
+    "The historical control used CPU/BF16; the planned run uses MPS/FP16."
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "experiment": "sequential-retention-rehearsal-wave1-v1",
+  "status": "INCOMPLETE",
+  "verdict": "INCONCLUSIVE",
+  "reason": "macOS reported no space left on device while saving during phase 1; no post-training checkpoint exists. No retention or harm verdict is measurable.",
+  "pre_registration_commit": "f5000d817b",
+  "plan_sha256": "d8e8cbc4ec7192dbac188089ca5b740b70492b126fd7a775f33ff3a2120dc7cf",
+  "runtime": {
+    "torch": "2.14.1",
+    "transformers": "5.21.0",
+    "peft": "0.21.2",
+    "threads": 2,
+    "interop_threads": 2,
+    "cuda": null,
+    "device": "mps",
+    "dtype": "torch.float16",
+    "profile": "lfm3_mps",
+    "lora_rank": 8
+  },
+  "facts": [
+    {
+      "block": 1,
+      "answer": "Copperfern",
+      "held_question": "Name the door word assigned to the Aster station.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 1,
+      "answer": "Moonhaven",
+      "held_question": "Name the home bay assigned to the Brindle airship.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 1,
+      "answer": "Sunwillow",
+      "held_question": "Name the vault label assigned to the Cobalt library.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Mistbrook",
+      "held_question": "Name the access word assigned to the Dapple clocktower.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Pinecrest",
+      "held_question": "Name the call sign assigned to the Ember courier.",
+      "learned": null,
+      "kept": null
+    },
+    {
+      "block": 2,
+      "answer": "Starmeadow",
+      "held_question": "Name the room assigned to the Fennel garden.",
+      "learned": null,
+      "kept": null
+    }
+  ],
+  "learned": null,
+  "kept": null,
+  "harm": null,
+  "general_hits": {
+    "baseline": 6,
+    "after_block_1": null,
+    "after_block_2": null,
+    "after_block_3": null
+  },
+  "baseline": {
+    "phase": 0,
+    "held": [
+      {
+        "block": 0,
+        "q": "Name the door word assigned to the Aster station.",
+        "a": "Copperfern",
+        "out": "Aster Station's door word is \"Astra\" or something else? I need to recall from Star Trek: The Next Generation or similar. In TNG",
+        "hit": false
+      },
+      {
+        "block": 0,
+        "q": "Name the home bay assigned to the Brindle airship.",
+        "a": "Moonhaven",
+        "out": "Brindle Airship Home Bay: 7\n\nNo, that's not correct. I need to recall or know from a specific source? The user asks",
+        "hit": false
+      },
+      {
+        "block": 0,
+        "q": "Name the vault label assigned to the Cobalt library.",
+        "a": "Sunwillow",
+        "out": "Cobalt-01\n\nThe vault label for the Cobalt library is typically \"Cobalt\" or a specific code like \"COBALT-V1",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the access word assigned to the Dapple clocktower.",
+        "a": "Mistbrook",
+        "out": "Dapple Clock Tower's access word is \"Dapple\". However, this seems like a specific trivia question. I need to recall if there's a",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the call sign assigned to the Ember courier.",
+        "a": "Pinecrest",
+        "out": "Ember Courier is a fictional entity from the TV show \"The Good Place\" or similar? Actually, I need to recall: In some contexts, \"",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the room assigned to the Fennel garden.",
+        "a": "Starmeadow",
+        "out": "Fennel Garden Room\n\nWait, that doesn't sound right. Let me think again.\n\nThe question: \"Name the room assigned to the Fennel",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the call sign assigned to the Glimmer rover.",
+        "a": "Ashwater",
+        "out": "Glimmer Rover is a fictional or specific mission? I need to recall: In some contexts, \"Glimmer\" might refer to a satellite or probe",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the bay assigned to the Harbor lantern workshop.",
+        "a": "Rosecliff",
+        "out": "Harbor Lantern Workshop is located in **Bay of Foggy Point**. (This is a fictional or specific reference; no real-world data confirms it,",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the door word assigned to the Iris pavilion.",
+        "a": "Oakwhisper",
+        "out": "Iris Pavilion is a location in the novel \"The Time Machine\" by H.G. Wells? Actually, I need to recall: In some contexts,",
+        "hit": false
+      }
+    ],
+    "general": [
+      {
+        "q": "What is the capital of France?",
+        "a": [
+          "paris"
+        ],
+        "out": "Paris.",
+        "hit": true
+      },
+      {
+        "q": "Which planet is closest to the Sun?",
+        "a": [
+          "mercury"
+        ],
+        "out": "Mercury.",
+        "hit": true
+      },
+      {
+        "q": "What is the chemical symbol for gold?",
+        "a": [
+          "au"
+        ],
+        "out": "E Au",
+        "hit": true
+      },
+      {
+        "q": "How many minutes are in an hour?",
+        "a": [
+          "60",
+          "sixty"
+        ],
+        "out": "1 hour = 60 minutes.\n\n**Answer:** 60",
+        "hit": false
+      },
+      {
+        "q": "What is 6 * 7?",
+        "a": [
+          "42",
+          "forty-two",
+          "forty two"
+        ],
+        "out": "6 * 7 = 42",
+        "hit": true
+      },
+      {
+        "q": "What is the square root of 64?",
+        "a": [
+          "8",
+          "eight"
+        ],
+        "out": "The square root of 64 is 8.\n\n\\boxed{8}",
+        "hit": false
+      },
+      {
+        "q": "What is the largest ocean on Earth?",
+        "a": [
+          "pacific"
+        ],
+        "out": "The Pacific Ocean is the largest ocean on Earth.\n\n**Answer:** Pacific Ocean",
+        "hit": true
+      },
+      {
+        "q": "Which continent is Egypt in?",
+        "a": [
+          "africa"
+        ],
+        "out": "Egypt is in Africa.",
+        "hit": true
+      }
+    ],
+    "held_hits": 0,
+    "general_hits": 6,
+    "elapsed_s": 24.95897808301379
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "pool_blocks": 1,
+      "selection": "3 distinct cards from cumulative pool",
+      "selected": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "optimizer_reset": true,
+      "losses": [
+        {
+          "ce": 8.124153137207031,
+          "kl": 5.643156328005716e-05
+        },
+        {
+          "ce": 6.381175994873047,
+          "kl": 0.017247125506401062
+        },
+        {
+          "ce": 5.174785614013672,
+          "kl": 0.026201607659459114
+        },
+        {
+          "ce": 4.54465913772583,
+          "kl": 0.13732613623142242
+        },
+        {
+          "ce": 4.045907020568848,
+          "kl": 0.05179044231772423
+        }
+      ],
+      "phase_started_elapsed_s": 25.02831675001653,
+      "first_step_s": 2.340103208000073,
+      "watchdog_s": 176.16247699200176,
+      "step_seconds": [
+        2.340103208000073,
+        1.6803730000101496,
+        1.92473945801612,
+        2.2910994999983814,
+        2.488010832981672
+      ],
+      "completed_updates": 5
+    }
+  ],
+  "completed_updates": 5,
+  "wall_seconds": {
+    "total": 37.56077166600153,
+    "baseline_since_model_process_start": 24.95897808301379,
+    "phase_1_first_step": 2.340103208000073,
+    "phase_1_training_incomplete": true
+  },
+  "memory": {
+    "initial_available_bytes": 11826446336,
+    "minimum_sampled_available_bytes": 6435045376,
+    "maximum_sampled_pressure_level": 1,
+    "peak_sampled_process_rss_bytes": 625885184,
+    "gpu_peak": "not measured; process RSS does not capture all MPS allocations"
+  },
+  "watchdog": {
+    "phase_1_seconds": 176.16247699200176,
+    "total_seconds": 1800,
+    "stop_reason": null,
+    "process_exit_code": 1,
+    "child_reaped": true
+  },
+  "control": {
+    "device": "CPU BF16, 2 threads",
+    "wall_seconds": 610.656,
+    "learned": 3,
+    "kept": 0,
+    "general_hits": [
+      6,
+      8,
+      6,
+      6
+    ]
+  },
+  "limitations": [
+    "Incomplete phase: no learned/kept or final general score can be inferred.",
+    "Mac profile uses MPS FP16; the control used CPU BF16, so device and numerical behavior differ.",
+    "A small fictional test does not establish production-night behavior.",
+    "No adapter exported or promoted."
+  ],
+  "error": "OSError: [Errno 28] No space left on device: '/private/tmp/idea1-r3.nXLAgo/HF-report.json.tmp'"
+}
