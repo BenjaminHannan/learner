@@ -50,6 +50,7 @@ const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
+const { HabitOffers } = require('./src/habit-offers');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
@@ -87,6 +88,7 @@ let toolDefs = buildTools({ diary: false }); // replaced once the diary probe is
 let toolsReady = Promise.resolve();
 let activeThread = null; // thread object being run by the primary agent
 let helpers = null;
+let habitOffers = null;
 let limiter = null, helperLimiter = null;
 let warmer = null;
 let pillWin = null;
@@ -1277,6 +1279,8 @@ async function afterFirstPaint() {
   }
   if (!E2E) setInterval(() => { followUpTick().catch(() => {}); ideaJudgeTick().catch(() => {}); rollupTick().catch(() => {}); }, 60000).unref();
   if (!E2E && fs.existsSync(SERVE_SH)) { try { require('./src/standing').seedStanding(helpers, app.getPath('userData')); } catch (e) { /* optional */ } }
+  habitOffers = new HabitOffers(app.getPath('userData'), helpers);
+  send('helpers:changed', helpers.list());
   helpers.start(); // runs anything that came due while the app was closed (once), then ticks every 30 s
   pillWin = new PillWindow({ dark: dark() });
   pillWin.enabled = s.pill !== false;
@@ -1318,7 +1322,9 @@ function registerIpc() {
     return updater.install();
   });
   h('settings:get', () => store.getSettings());
-  h('settings:set', (patch) => applySettings(patch));
+  h('settings:set', (patch) => { if (patch && patch.habitOffers === true && store.getSettings().habitOffers === false && habitOffers) habitOffers.reenable(); return applySettings(patch); });
+  h('habit:offer', () => habitOffers && habitOffers.offer(new Date(), store.getSettings().habitOffers !== false));
+  h('habit:respond', (key, answer) => { const result = habitOffers ? habitOffers.respond(key, answer) : { ok: false }; if (result.stopped) store.saveSettings({ habitOffers: false }); return result; });
   h('threads:list', () => store.listThreads());
   // One Glim chat (Ben Oct 28): "new thread" hands back the existing main chat; only the very first run creates one.
   h('threads:new', () => { resetModelToDefault(); const old = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); if (old) { const t = store.loadThread(old.id); if (t) { openThreadId = t.id; return t; } } const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
