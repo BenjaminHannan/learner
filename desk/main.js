@@ -891,6 +891,7 @@ function createAgent({ helper, rec, voice }) {
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
     approve: (req, signal) => {
+      if (isHelper) return Promise.resolve('deny'); // Ben Oct 31: he only ever talks to the main Glim; a Mote never puts a question or approval in front of him
       const rid = a.threadId + ':' + req.id;
       const ev = { threadId: a.threadId, type: 'approval', rid, ...req };
       send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
