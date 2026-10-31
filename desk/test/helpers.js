@@ -38,7 +38,7 @@ function startGateway(script, opts) {
       if (r.hang) { await new Promise((x) => { const t = setTimeout(x, 30000); t.unref(); res.on("close", () => { clearTimeout(t); x(); }); }); if (res.destroyed) return; }
       if (r.tool_calls) {
         r.tool_calls.forEach((tc, idx) => {
-          const args = JSON.stringify(tc.arguments || {});
+          const args = typeof tc.rawArguments === 'string' ? tc.rawArguments : JSON.stringify(tc.arguments || {});   // rawArguments: a call cut off mid-arguments
           send({ tool_calls: [{ index: idx, id: 'call_' + i + '_' + idx, type: 'function', function: { name: tc.name, arguments: '' } }] });
           for (const c of chunk(args, 9)) send({ tool_calls: [{ index: idx, function: { arguments: c } }] });
         });

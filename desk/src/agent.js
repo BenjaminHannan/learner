@@ -743,7 +743,9 @@ class Agent {
         }
         const msg = { role: 'assistant', content: res.content || '' };
         if (res.toolCalls.length) {
-          msg.tool_calls = res.toolCalls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: c.arguments } }));
+          // a call cut off mid-arguments is kept as "{}": the gateway parses every stored call's arguments for the chat template, and one
+          // broken string failed every request after it (Oct 31 test: the Mote's run ended right there, with no report)
+          msg.tool_calls = res.toolCalls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: parseArgs(c.arguments) === null ? '{}' : c.arguments } }));
         }
         thread.messages.push(msg);
         if (res.content || res.reasoning) {
@@ -979,7 +981,7 @@ class Agent {
       this.emit({ type: 'step_end', id: stepId, tool: name, ok, summary: item.summary, preview: item.preview, result: text.slice(0, 2000) });
       return text;
     };
-    if (args === null) return { text: finish('Error: arguments were not valid JSON.', false) };
+    if (args === null) return { text: finish('Error: arguments were not valid JSON (the call looks cut off). Call the tool again with shorter arguments.', false) };
     const entry = this.o.tools[name];
     const ctx = { signal, settings: this.o.getSettings(), thread, waitForBen: (fn) => this.waitingForBen(fn, signal), stepId };
     if (name === 'ask_user') {

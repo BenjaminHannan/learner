@@ -10,6 +10,7 @@
 //    always fine (they become a search).
 
 const FAIL_LIMIT = 2;
+const GUESS_LIMIT = 5;   // pages on an allowed site whose address no result or page showed (Oct 31 test: 25 made-up ?year= variants)
 const FAIL_TTL_MS = 30 * 60000;
 const COMMON = ['google.com', 'gmail.com', 'youtube.com', 'wikipedia.org', 'duckduckgo.com', 'bing.com', 'apple.com', 'icloud.com', 'microsoft.com', 'live.com', 'outlook.com', 'office.com', 'github.com'];
 // errors that leave Chrome's error page instead of the site
@@ -60,17 +61,34 @@ function textOf(content) {
 }
 // a tool result that only echoes an address that did not work (a refused or failed open, Chrome's error page, an empty read of it)
 const FAILED_ECHO = /^\s*Error: (could not open|not opened)|DNS_PROBE|This site can.t be reached|chrome-error:|\(no readable text\)/;
-// the hosts the thread has actually seen: everything but the model's own words (its text and tool-call arguments could be guesses)
-// and the results that only repeat a guess back
-function seenHosts(thread) {
-  const out = new Set();
+// the texts that count as real: everything but the model's own words (its text and tool-call arguments could be guesses) and the
+// results that only repeat a guess back
+function realTexts(thread) {
+  const out = [];
   for (const m of (thread && thread.messages) || []) {
     if (!m || m.role === 'assistant') continue;
     const t = textOf(m.content);
     if (m.role === 'tool' && FAILED_ECHO.test(t)) continue;
-    for (const h of hostsIn(t, m.role === 'tool')) out.add(h);
+    out.push({ t, tool: m.role === 'tool' });
   }
   return out;
+}
+function seenHosts(thread) {
+  const out = new Set();
+  for (const { t, tool } of realTexts(thread)) for (const h of hostsIn(t, tool)) out.add(h);
+  return out;
+}
+// was this exact page (or the site's front page) shown somewhere real?
+function pageSeen(url, thread) {
+  let u; try { u = new URL(normalizeUrl(url)); } catch (e) { return false; }
+  if (/^\/?$/.test(u.pathname) && !u.search) return true;
+  const want = urlKey(url).replace(/^www\./, '');
+  for (const { t } of realTexts(thread)) {
+    const re = /https?:\/\/[^\s"'`<>)\]]+/gi;
+    let m;
+    while ((m = re.exec(t))) if (urlKey(m[0].replace(/[.,;:!?]+$/, '')).replace(/^www\./, '') === want) return true;
+  }
+  return false;
 }
 // is `host` the same site as `known`? the same host or one above/below it; or the same base domain, unless that base is shared by
 // unrelated sites (SHARED_BASE)
@@ -86,8 +104,8 @@ function urlKey(url) {
 }
 
 class UrlGuard {
-  constructor(o) { this.o = { now: () => Date.now(), ...(o || {}) }; this.fails = new Map(); }
-  clear() { this.fails.clear(); }   // the Mac woke up or came back online: what failed before may work now
+  constructor(o) { this.o = { now: () => Date.now(), ...(o || {}) }; this.fails = new Map(); this.guesses = new Map(); }
+  clear() { this.fails.clear(); this.guesses.clear(); }   // the Mac woke up or came back online: what failed before may work now
   _count(key) {
     const f = this.fails.get(key);
     if (!f) return null;
@@ -103,10 +121,22 @@ class UrlGuard {
       if (f && f.n >= FAIL_LIMIT) return 'Error: not opened. ' + (f.host ? host : u) + ' already failed ' + f.n + ' times in the last half hour (' + f.why + '). Do not try it again: use a different source, or report that it is down.';
     }
     const base = baseDomain(host);
-    if (base === 'duckduckgo.com' || COMMON.includes(base)) return null;
-    for (const h of seenHosts(thread)) if (sameSite(host, h)) return null;
-    for (const h of extraHosts || []) if (sameSite(host, h)) return null;
+    if (base === 'duckduckgo.com') return null;
+    let ok = COMMON.includes(base);
+    if (!ok) for (const h of seenHosts(thread)) if (sameSite(host, h)) { ok = true; break; }
+    if (!ok) for (const h of extraHosts || []) if (sameSite(host, h)) { ok = true; break; }
+    if (ok) return this._guess(url, host, thread);
     return 'Error: not opened. ' + host + ' did not come from a search result, a page you opened, Ben\'s messages or saved notes, or a site he is signed in to. Never guess web addresses: use web_search to find the real site (or browser_go with plain search words). If you cannot find it, say so in your report.';
+  }
+  // a real site, but a page address nothing showed: fine a few times per task (a known path, a search URL), then it is guessing
+  _guess(url, host, thread) {
+    if (pageSeen(url, thread)) return null;
+    const key = ((thread && thread.id) || '') + ' ' + host, now = this.o.now();
+    const g = this.guesses.get(key);
+    const n = g && now - g.at < FAIL_TTL_MS ? g.n + 1 : 1;
+    this.guesses.set(key, { n, at: now });
+    if (n <= GUESS_LIMIT) return null;
+    return 'Error: not opened. You have already made up ' + GUESS_LIMIT + ' page addresses on ' + host + ' that no result or page showed. Stop guessing: use the links on the page (browser_click), or web_search for the page you need. If it is not there, say so in your report.';
   }
   // after browser_go: a failed load counts against the page (and against the host when its name did not resolve)
   record(url, result) {
@@ -120,4 +150,4 @@ class UrlGuard {
   }
 }
 
-module.exports = { UrlGuard, normalizeUrl, hostOf, baseDomain, hostsIn, seenHosts, sameSite, reserved, NET_FAIL, FAIL_LIMIT, COMMON };
+module.exports = { UrlGuard, normalizeUrl, hostOf, baseDomain, hostsIn, seenHosts, pageSeen, sameSite, reserved, NET_FAIL, FAIL_LIMIT, GUESS_LIMIT, COMMON };
