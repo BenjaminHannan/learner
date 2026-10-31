@@ -76,6 +76,12 @@ function narrationLoop(text) {
   }
   return null;
 }
+// A Mote's run has a budget (Oct 30-31: the Morning briefing's thread reached 209 messages and the Week planner kept reopening a dead site
+// for 40 minutes, all night). At the limit it gets one last step with no tools to write its report from what it has.
+const HELPER_RUN = { steps: 40, mins: 20 }, LEARN_RUN = { steps: 80, mins: 45 };
+const WRAP_NOTE = ' Time is up for this run: no more tools. Write your report now from what you found, and say in one line what is still not done.';
+const WRAP_EMPTY = 'This run reached its time or step limit before writing a report.';
+const WRAP_TOKENS = 1500;
 const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. Never type a password: on a sign-in page the app lets Ben sign in himself.';
 const CAP_REPLY_TOKENS = 1500;   // brief thinking, then one or two sentences; a longer run-on is cut
 const CAP_REPLY_SECS = 20;       // the forced reply still thinking after this: dropped, and the task just goes on
@@ -580,6 +586,8 @@ class Agent {
         if (!signal.aborted) { this.state('running'); this.emit({ type: 'started' }); }
       }
       let step = 0;
+      const runStart = Date.now(), runCap = this.o.helperId ? (this.o.learnResearch ? LEARN_RUN : HELPER_RUN) : null;
+      let wrapUp = false, wrapTries = 0;
       for (;;) {
         if (signal.aborted) { stopped = true; break; }
         // inject steering messages
@@ -590,8 +598,13 @@ class Agent {
           this.emit({ type: 'user', text: t, steer: true });
         }
         const s = this.o.getSettings();
+        if (runCap && !wrapUp && step > 0 && (step >= Math.min(runCap.steps, Number(s.maxSteps) || Infinity) || Date.now() - runStart >= runCap.mins * 60000)) {
+          wrapUp = true;
+          thread.messages.push({ role: 'user', content: CHECK_MARK + P(WRAP_NOTE) });
+        }
+        if (wrapUp && wrapTries++ >= 2) break;   // the last step had its chance (a steer or a cut reply may repeat it once)
         const maxSteps = Number(s.maxSteps) || 0; // 0 = no limit
-        if (maxSteps && step >= maxSteps) {
+        if (maxSteps && step >= maxSteps && !wrapUp) {
           const note = 'I reached the step limit (' + maxSteps + ') and stopped. Tell me to continue if you want me to keep going.';
           thread.messages.push({ role: 'assistant', content: note });
           thread.items.push({ t: 'assistant', text: note });
@@ -650,7 +663,8 @@ class Agent {
             gatewayUrl: s.gatewayUrl,
             model: this.stepModel(s),
             messages: creative.withApproaches(this.requestMessages(thread, !!budget.contextLimit(s, this.stepModel(s))), approaches),
-            tools: this.toolDefs(),
+            tools: wrapUp ? [] : this.toolDefs(),
+            maxTokens: wrapUp ? WRAP_TOKENS : undefined,
             signal: rc.signal,
             apiKey: s.apiKey,
             onText: (d) => {
@@ -699,6 +713,10 @@ class Agent {
           }
           break;
         }
+        if (wrapUp) {   // the last step of a Mote's run: a tool call now is not run, and one written out as text is not a report
+          const c = String(res.content || '').replace(/<tool_call>[\s\S]*?(<\/tool_call>|$)/g, '').trim();
+          res = { ...res, toolCalls: [], content: c || P(WRAP_EMPTY) };
+        }
         const secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
         const ttftMs = Math.round((res.firstTokenMs || 0) + proposalMs);
         (thread.requests = thread.requests || []).push({ at: Date.now(), model: this.stepModel(s), ttftMs, step });
@@ -706,7 +724,7 @@ class Agent {
         if (res.toolCalls.length) { this.toolSteps++; this.acting = true; }
         // Claimed actions with no tool call yet in this task: the reply stays on screen but out of the model's history (copying such turns
         // kept the chat text-only), and the step runs once more, thinking. Still none: say so plainly instead of pretending.
-        if (!res.toolCalls.length && !this.steerQueue.length && !this.toolSteps && this.taskText && s.thinkActing !== false && claimsAction(res.content)) {   // not a relayed Mote report
+        if (!res.toolCalls.length && !wrapUp && !this.steerQueue.length && !this.toolSteps && this.taskText && s.thinkActing !== false && claimsAction(res.content)) {   // not a relayed Mote report
           if (this.claimChecks++ < 1) {
             this.acting = true;
             thread.items.push({ t: 'assistant', text: res.content, ts: Date.now() });
@@ -732,13 +750,14 @@ class Agent {
           thread.items.push({ t: 'assistant', text: res.content, thinking: !!res.reasoning, thinkSecs: res.reasoning ? secs : 0, ttftMs, ts: Date.now() }); // Ben Oct 28: the reasoning is not kept for reading, only that Glim thought
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
-        const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
+        const verdict = (!res.toolCalls.length && !this.steerQueue.length && !wrapUp) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
         this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length, replace: !!res.cutLoop });
         const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();
 
         if (!res.toolCalls.length) {
+          if (wrapUp) break;
           if (this.steerQueue.length) continue; // Ben added something while we were answering
           if (verdict === 'continue') continue;
           if (verdict === 'stop') stopped = true;

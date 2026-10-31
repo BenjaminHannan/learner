@@ -3,6 +3,7 @@
 
 const { browserAfter } = require('./after');
 const { attachSourceRead } = require('../evidence');
+const { normalizeUrl, NET_FAIL } = require('../urlguard');
 
 const SNAPSHOT_MAX = 3500;
 const PAGE_CHARS = 6000;
@@ -244,12 +245,9 @@ class Browser {
   }
 
   normalize(url) {
-    url = String(url || '').trim();
-    if (!url) throw new Error('empty URL');
-    if (/^(https?|file|about):/i.test(url)) return url;
-    if (/^(localhost|127\.|\d+\.\d+\.\d+\.\d+)/.test(url)) return 'http://' + url;
-    if (/^[\w-]+(\.[\w-]+)+(\/|$|:)/.test(url) && !/\s/.test(url)) return 'https://' + url;
-    return 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
+    const u = normalizeUrl(url);
+    if (!u) throw new Error('empty URL');
+    return u;
   }
 
   async waitSettled(maxMs) {
@@ -266,10 +264,19 @@ class Browser {
 
   async go(url) {
     const u = this.normalize(url);
+    let before = ''; try { before = this.wc.getURL(); } catch (e) { /* destroyed */ }
     this.readCache = { url: '', pages: [] };
     try { await Promise.race([this.wc.loadURL(u), sleep(30000).then(() => { throw new Error('load timed out after 30 s'); })]); } catch (e) {
-      if (!/ERR_ABORTED/.test(String(e.message))) {
-        if (!this.wc.getURL() || this.wc.getURL() === 'about:blank') return { text: 'Error: could not open ' + u + ' (' + String(e.message).split('\n')[0] + ')', error: true };
+      const why = String(e.message).split('\n')[0];
+      // a site that cannot be reached leaves Chrome's error page under its own URL: that is a failure, not a page with no text (Oct 30-31:
+      // the Motes read those error pages and kept trying the same dead addresses)
+      if (!/ERR_ABORTED/.test(why) && (!this.wc.getURL() || this.wc.getURL() === 'about:blank' || (NET_FAIL.test(why) && !/load timed out/.test(why)))) return { text: 'Error: could not open ' + u + ' (' + why + ')', error: true };
+      // no answer within 30 s (a dead server can take minutes to time out): a failure unless the page itself is there with some text
+      if (/load timed out/.test(why)) {
+        try { this.wc.stop(); } catch (err) { /* destroyed */ }
+        const never = this.wc.getURL() === before && before !== u;   // still the page from before: the new one never arrived
+        const text = never ? false : await this.wc.executeJavaScript('!!(document.body && document.body.innerText.trim())').catch(() => false);
+        if (!text) return { text: 'Error: could not open ' + u + ' (' + why + ')', error: true };
       }
     }
     await this.waitSettled();

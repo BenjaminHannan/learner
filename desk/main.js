@@ -1,5 +1,5 @@
 'use strict';
-const { powerMonitor, app, Tray, BrowserWindow, WebContentsView, ipcMain, session, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
+const { powerMonitor, app, Tray, BrowserWindow, WebContentsView, ipcMain, session, net, shell, nativeTheme, Notification, Menu, globalShortcut, nativeImage, systemPreferences } = require('electron');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -42,6 +42,7 @@ const { Agent, DANGER_LABELS, noteOldGap, rollupGapStep } = require('./src/agent
 const { buildTools } = require('./src/prompt');
 const { Browser } = require('./src/tools/browser');
 const { webSearch } = require('./src/tools/web');
+const { UrlGuard, hostOf } = require('./src/urlguard');
 const { runShell } = require('./src/tools/shell');
 const { Diary } = require('./src/tools/diary');
 const Feedback = require('./src/feedback');
@@ -754,6 +755,17 @@ const afterSignIn = async (br, v) => v === 'done'
 
 // ---- agents ------------------------------------------------------------------------------------
 // One Agent per run owner: the primary, and a fresh one for each helper run. Same prompt, same tool list.
+// Sites Ben is signed in to in the built-in browser (its cookies), for the Motes' "no guessed addresses" check (src/urlguard.js).
+// One guard for every agent: a page that failed for one Mote is not retried by the next (each run is a new agent).
+const urlGuard = new UrlGuard();
+const signedIn = { at: 0, hosts: [] };
+async function signedInHosts() {
+  if (Date.now() - signedIn.at < 5 * 60000) return signedIn.hosts;
+  try { signedIn.hosts = [...new Set((await session.fromPartition('persist:desk').cookies.get({})).map((c) => String(c.domain || '').replace(/^\./, '')).filter(Boolean))]; } catch (e) { /* keep the last list */ }
+  signedIn.at = Date.now();
+  return signedIn.hosts;
+}
+
 function createAgent({ helper, rec, voice }) {
   const isHelper = !!helper;
   const isVoice = !!voice; // the call's own agent: it runs beside the main agent, so a call works while a task is running
@@ -806,7 +818,14 @@ function createAgent({ helper, rec, voice }) {
 
   const tools = {
     web_search: (x, ctx) => webSearch(x.query, { signal: ctx.signal }),
-    browser_go: (x) => getBr().go(x.url),
+    browser_go: async (x, ctx) => {
+      // a Mote may only open sites that came from somewhere real, and not a page that keeps failing (src/urlguard.js)
+      const no = urlGuard.check(x.url, { strict: isHelper, thread: ctx.thread, extraHosts: isHelper ? await signedInHosts() : [] });
+      if (no) return { text: no, error: true, summary: 'Did not open ' + (hostOf(x.url) || 'that address') };
+      const r = await getBr().go(x.url);
+      if (net.isOnline()) urlGuard.record(x.url, r);   // offline, every site fails: that is not the site's fault
+      return r;
+    },
     browser_click: (x) => getBr().click(x.id),
     browser_type: async (x, ctx) => {
       const b = getBr();
@@ -1594,6 +1613,7 @@ app.whenReady().then(async () => {
   memory = createMemory(app.getPath('userData'));
   tracking = createTracking(app.getPath('userData'));
   rhythm = new Rhythm(path.join(app.getPath('userData'), 'rhythm.json'));
+  try { powerMonitor.on('resume', () => urlGuard.clear()); } catch (e) { /* not on this platform */ }   // a dead site before the Mac slept may be back
   // opened by the night-start agent: Ben was not just here, so the away-time is the Mac's idle time, not "since launch"
   if (process.argv.includes(NIGHT_ARG)) {
     // launchd runs a missed start when the Mac wakes, which can be the next morning: outside the night window it closes again
