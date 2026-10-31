@@ -47,3 +47,20 @@ Two-seed W2 means:
 - **Mark 1 (example acceptable):** passes on seed 0 and fails on seed 1, where it is 5.47 points worse on first-try. The norm swap is therefore not adopted; the code keeps `none`, and G1 should be described as a variant of NK30 rather than as NK30 itself.
 - **Mark 2 (G1 buys retention):** 1.5 points on seed 0 and 2.0 on seed 1, mean 1.75, which sits right at the 2-point bar. G1 costs about 4.3-5.5 points of first-try on both seeds.
 - **Next single change:** a lighter lock, for example a lower KL weight or a lower energy threshold, with at least 3 seeds.
+
+## G1 lighter lock (KL weight 30 -> 10), 3 seeds, Kaggle T4, 2026-10-31
+
+Pre-registered in `design/v1/g1-ablate/PREREG-light.md` (commit 8b69bde5). Pass = g1_light mean W2 first-try >= g1_empirical + 2 AND mean W2 harm <= g1_off - 1.
+
+W2 per seed (harm points / first-try %):
+| seed | empirical | light | off |
+|---|---|---|---|
+| 0 | 0.0 / 35.9 | 0.0 / 35.5 | 1.5 / 44.5 |
+| 1 | 0.5 / 33.2 | 0.5 / 30.5 | 3.5 / 41.4 |
+| 2 | 0.0 / 32.8 | 0.0 / 32.4 | 3.5 / 34.8 |
+| **mean** | **0.17 / 34.0** | **0.17 / 32.8** | **2.83 / 40.2** |
+
+- **Verdict: FAILS (shown, 3 seeds).** The first-try gain is -1.2 against a +2 mark, and it is negative on every seed. The harm mark passes (-2.7). Cutting the KL weight to a third changed nothing measurable: the light lock behaves just like the current lock.
+- No lock: +6.3 first-try for +2.7 harm points (3 seeds, consistent with the earlier two seeds).
+- Side note (suggested, not pre-registered): W1 first-try was higher for light (28.6 vs 23.8 mean), but W2 is the pre-registered mark.
+- **Decision:** keep G1 as coded. The trade-off looks all-or-nothing in the KL weight. If anything, the cost comes from the hard K-FAC mask, not from the KL term (untested). The next single change would be "mask off, KL kept", but it is not queued (usage cut until Sat Nov 1).
