@@ -480,7 +480,12 @@
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); reply(ta.value.trim()); } });
     if (opts.length) { // tap an answer; "Something else…" opens the box
       const chips = el('div', 'ask-opts');
-      for (const q of opts) { const b = el('button', 'ask-opt', q); b.onclick = () => reply(q); chips.append(b); }
+      if (ev.multi) { // several can apply: tick any, then Send (Ben Oct 31)
+        const picked = new Set(), go = el('button', 'amber-btn', 'Send'); go.disabled = true;
+        for (const q of opts) { const b = el('button', 'ask-opt multi', q); b.setAttribute('aria-pressed', 'false'); b.onclick = () => { const on = !picked.has(q); on ? picked.add(q) : picked.delete(q); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); go.disabled = !picked.size; }; chips.append(b); }
+        go.onclick = () => reply(opts.filter((q) => picked.has(q)).join(', '));
+        btns.append(go);
+      } else for (const q of opts) { const b = el('button', 'ask-opt', q); b.onclick = () => reply(q); chips.append(b); }
       const other = el('button', 'ask-opt other', 'Something else…'); other.onclick = () => { ta.hidden = false; send.hidden = false; other.remove(); ta.focus(); };
       chips.append(other); send.hidden = true; btns.append(send); c.append(chips);
     } else { btns.append(send); for (const q of ['Yes, go ahead', 'No']) { const b = el('button', 'ghost', q); b.onclick = () => reply(q); btns.append(b); } }

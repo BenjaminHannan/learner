@@ -134,7 +134,7 @@ test('typing into a password field is never an approval card: the tool itself ha
 });
 
 test('ask_user passes Ben\'s reply back as the tool result', async () => {
-  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Send it?' } }] }, { content: 'sent' }]);
+  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Send it?', options: ['Yes', 'No'] } }] }, { content: 'sent' }]);
   try {
     const t = mkThread();
     const a = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async (q) => 'yes: ' + q });
@@ -403,6 +403,41 @@ test('ask_user passes up to 4 short tap-to-answer options to the UI', async () =
     const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async (q, s, o) => { got = { q, o }; return 'Red'; } });
     await agent.run(mkThread(), 'pick one');
     assert.deepStrictEqual(got, { q: 'Which?', o: ['Red', 'Blue'] });
+  } finally { gw.close(); }
+});
+
+test('ask_user without options is sent back once, then gets default choices', async () => {
+  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Which?' } }] }, { tool_calls: [{ name: 'ask_user', arguments: { question: 'Which?' } }] }, { content: 'Done.' }]);
+  try {
+    const seen = [];
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async (q, s, o) => { seen.push(o); return 'Yes, go ahead'; } });
+    const t = mkThread();
+    await agent.run(t, 'pick one');
+    assert.strictEqual(seen.length, 1);
+    assert.ok(seen[0].length >= 2);
+    assert.match(t.messages.filter((m) => m.role === 'tool')[0].content, /needs 2-4/);
+  } finally { gw.close(); }
+});
+
+test('ask_user passes the multi flag so Ben can tick several options', async () => {
+  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Which topics?', options: ['A', 'B', 'C'], multi: true } }] }, { content: 'Done.' }]);
+  try {
+    let got = null;
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async (q, s, o, m) => { got = m; return 'A, C'; } });
+    await agent.run(mkThread(), 'pick');
+    assert.strictEqual(got, true);
+  } finally { gw.close(); }
+});
+
+test('a Mote cannot ask Ben: ask_user is refused and nothing reaches the UI', async () => {
+  const gw = await startGateway([{ tool_calls: [{ name: 'ask_user', arguments: { question: 'Which?', options: ['A', 'B'] } }] }, { content: 'Done.' }]);
+  try {
+    let asked = 0;
+    const agent = new Agent({ helperId: 'h1', getSettings: settings(gw, { verify: false }), toolDefs: buildTools({}), tools: {}, emit: () => {}, approve: async () => 'once', askUser: async () => { asked++; return 'x'; } });
+    const t = mkThread();
+    await agent.run(t, 'watch things');
+    assert.strictEqual(asked, 0);
+    assert.match(t.messages.find((m) => m.role === 'tool').content, /Do not ask Ben/);
   } finally { gw.close(); }
 });
 

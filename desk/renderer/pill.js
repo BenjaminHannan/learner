@@ -39,6 +39,7 @@
       if (!ap.danger && ap.always) b.append(btn('Always allow', '', () => P.act('respond', { rid: ap.rid, value: 'always', threadId: t.threadId })));
       b.append(btn('Deny', 'no', () => P.act('respond', { rid: ap.rid, value: 'deny', threadId: t.threadId })));
     }
+    if (ap && ap.kind === 'ask' && ap.options && !ap.multi) for (const o of ap.options.slice(0, 4)) b.append(btn(o, '', () => P.act('respond', { rid: ap.rid, value: o, threadId: t.threadId })));
     if (ap && ap.kind === 'login') b.append(btn('Open browser', '', () => P.act('openBrowser', t.key)));
     if (v.status === 'call') { b.textContent = ''; b.append(btn('Open', 'go', () => P.act('open', {})), btn('Hang up', 'no', () => P.act('hangup'))); return; }
     if (v.status === 'sleeping') { b.textContent = ''; b.append(btn('Wake Glim', 'go', () => P.act('wake'))); return; }

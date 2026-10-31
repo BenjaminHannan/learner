@@ -561,6 +561,9 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 .ask-opt { text-align:left; padding:.55rem .8rem; border-radius:.75rem; border:1px dashed var(--hair); background:var(--surface); color:var(--text); font-size:.95rem; cursor:pointer; }
 .ask-opt:hover, .ask-opt:focus-visible { background:var(--raised); border-style:solid; border-color:var(--accent); }
 .ask-opt.other { color:var(--text2); }
+.ask-opt.multi::before { content:''; display:inline-block; width:.9em; height:.9em; margin-right:.55em; vertical-align:-.1em; border:1.5px solid var(--text2); border-radius:.25em; }
+.ask-opt.multi.on { border-style:solid; border-color:var(--accent); }
+.ask-opt.multi.on::before { background:var(--accent); border-color:var(--accent); }
 
 /* Ben Oct 28: clickable choices under a final answer */
 .choices { display:flex; flex-wrap:wrap; gap:.5rem; margin:.15rem 0 .4rem; }

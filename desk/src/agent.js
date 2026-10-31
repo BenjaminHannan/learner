@@ -477,6 +477,7 @@ class Agent {
     this.usedState = false;
     this.usedWeb = false;
     this.verifyCount = 0;
+    this.askNudged = false;
     this.memBlock = '';
   }
 
@@ -985,8 +986,17 @@ class Agent {
     const entry = this.o.tools[name];
     const ctx = { signal, settings: this.o.getSettings(), thread, waitForBen: (fn) => this.waitingForBen(fn, signal), stepId };
     if (name === 'ask_user') {
+      // a Mote runs without Ben: its question would sit in the pill with nowhere to answer it
+      if (this.o.helperId) return { text: finish('Do not ask Ben: this is a background run. Pick the most sensible option yourself, or finish with a short report saying what you need.', false) };
+      // Ben Oct 31: a question always comes with tap options; ask once more with choices, then fall back to Yes / No
+      let opts = cleanOptions(args.options);
+      if (opts.length < 2) {
+        if (!this.askNudged) { this.askNudged = true; return { text: finish('Error: ask_user needs 2-4 short answer options. Call it again with the same question and options.', false) }; }
+        opts = ['Yes, go ahead', 'No', 'Let me explain'];
+      }
+      this.askNudged = false;
       try {
-        const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal, cleanOptions(args.options)), signal);
+        const answer = await this.waitingForBen(() => this.o.askUser(String(args.question || ''), signal, opts, args.multi === true || args.multi === 'true'), signal);
         return { text: finish(answer, !signal.aborted, P('Asked Ben: ') + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }

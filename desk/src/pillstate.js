@@ -77,7 +77,7 @@ class PillState {
       return;
     }
     else if (t === 'approval') { a.status = 'waiting'; a.approval = { rid: ev.rid, kind: ev.kind, text: ev.text, danger: !!ev.danger, always: ev.alwaysLabel || '' }; a.line = 'Waiting for you'; }
-    else if (t === 'ask') { a.status = 'waiting'; a.approval = { rid: ev.id, kind: 'ask', text: ev.question }; a.line = 'Waiting for you'; }
+    else if (t === 'ask') { a.status = 'waiting'; a.approval = { rid: ev.id, kind: 'ask', text: ev.question, options: ev.options || [], multi: !!ev.multi }; a.line = 'Waiting for you'; }
     else if (t === 'login') { a.status = 'waiting'; a.approval = { rid: null, kind: 'login', text: 'Sign in in the browser window, then click Done.' }; a.line = 'Waiting for you: sign in'; }
     else if (t === 'resumed') { a.status = 'working'; a.approval = null; a.line = short(a.step, 40) || IDLE_WORD; }
     else if (t === 'error') { a.status = 'error'; a.error = String(ev.message || 'Unknown error'); a.line = 'Something went wrong'; a.endedAt = this.now(); }
