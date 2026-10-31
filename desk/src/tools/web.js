@@ -1,4 +1,5 @@
 'use strict';
+const SEARCH_TIMEOUT_MS = 15000;
 
 function decode(s) {
   return s.replace(/<[^>]+>/g, '')
@@ -33,15 +34,26 @@ async function webSearch(query, opts) {
   opts = opts || {};
   const base = opts.baseUrl || 'https://html.duckduckgo.com/html/?q=';
   const f = opts.fetch || fetch;
-  const res = await f(base + encodeURIComponent(query), {
-    headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15', accept: 'text/html' },
-    signal: opts.signal
-  });
-  if (!res.ok) return 'Search failed: HTTP ' + res.status;
-  const html = await res.text();
+  // a search that hangs must not hold a run: it gives up after SEARCH_TIMEOUT_MS (or when the run is stopped)
+  const ctl = new AbortController(), stop = () => ctl.abort();
+  const t = setTimeout(stop, opts.timeoutMs || SEARCH_TIMEOUT_MS);
+  if (opts.signal) { if (opts.signal.aborted) ctl.abort(); else opts.signal.addEventListener('abort', stop, { once: true }); }
+  let html;
+  try {
+    const res = await f(base + encodeURIComponent(query), {
+      headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15', accept: 'text/html' },
+      signal: ctl.signal
+    });
+    if (!res.ok) return 'Search failed: HTTP ' + res.status;
+    html = await res.text();
+  } catch (e) {
+    if (opts.signal && opts.signal.aborted) throw e;
+    if (ctl.signal.aborted) return 'Search failed: no answer within ' + Math.round((opts.timeoutMs || SEARCH_TIMEOUT_MS) / 1000) + ' s. Try again once, or use another source.';
+    throw e;
+  } finally { clearTimeout(t); if (opts.signal) opts.signal.removeEventListener('abort', stop); }
   const rs = parseDDG(html, 8);
   if (!rs.length) return 'No results found.';
   return rs.map((r, i) => (i + 1) + '. ' + r.title + '\n   ' + r.url + (r.snippet ? '\n   ' + r.snippet : '')).join('\n');
 }
 
-module.exports = { webSearch, parseDDG };
+module.exports = { webSearch, parseDDG, SEARCH_TIMEOUT_MS };

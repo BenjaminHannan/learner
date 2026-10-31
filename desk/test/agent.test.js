@@ -762,3 +762,36 @@ test('history: a reply that only claimed steps reaches the model as a note; a re
   assert.strictEqual(m[8].content, 'Fair enough.');
   assert.strictEqual(t.messages[1].content.startsWith('I am now on'), true, 'the stored chat is unchanged');
 });
+
+test('a Mote run has a budget: at the step limit it gets one last step with no tools and writes its report', async () => {
+  // Oct 30-31: the Morning briefing's thread reached 209 messages in a night of back-to-back runs
+  const gw = await startGateway([(body, i) => (body.tools ? { content: 'Next.', tool_calls: [{ name: 'web_search', arguments: { query: 'q' + i } }] } : { content: 'Report: found the weather; the calendar is still not done.' })]);
+  try {
+    let searches = 0;
+    const agent = new Agent({ helperId: 'h1', getSettings: settings(gw, { maxSteps: 0, verify: false }), toolDefs: buildTools({}), tools: { web_search: async () => { searches++; return '1. r\n   https://r.org'; } }, emit: () => {}, approve: async () => 'once', askUser: async () => 'x' });
+    const t = mkThread();
+    const r = await agent.run(t, 'make the morning briefing');
+    assert.strictEqual(r.error, null);
+    assert.strictEqual(searches, 40, 'forty steps of tools');
+    assert.strictEqual(gw.requests.length, 41);
+    const last = gw.requests[40];
+    assert.ok(!last.tools, 'the last step has no tools');
+    assert.match(JSON.stringify(last.messages.at(-1)), /Time is up for this run: no more tools/);
+    assert.strictEqual(t.messages.at(-1).content, 'Report: found the weather; the calendar is still not done.');
+  } finally { gw.close(); }
+});
+
+test('a Mote run budget: Ben\'s lower step setting is the budget, a tool call written as text is not the report, and Ben\'s chat has none', async () => {
+  const gw = await startGateway([(body, i) => (body.tools ? { content: 'Next.', tool_calls: [{ name: 'web_search', arguments: { query: 'q' + i } }] } : { content: '<tool_call>{"name":"web_search","arguments":{"query":"more"}}</tool_call>' })]);
+  try {
+    const mk = (extra) => new Agent({ getSettings: settings(gw, { verify: false, ...extra }), toolDefs: buildTools({}), tools: { web_search: async () => '1. r\n   https://r.org' }, emit: () => {}, approve: async () => 'once', askUser: async () => 'x', ...extra.o });
+    const t = mkThread();
+    await mk({ maxSteps: 5, o: { helperId: 'h1' } }).run(t, 'brief me');
+    assert.strictEqual(gw.requests.length, 6);
+    assert.strictEqual(t.messages.at(-1).content, 'This run reached its time or step limit before writing a report.');
+    const t2 = mkThread(), before = gw.requests.length;
+    await mk({ maxSteps: 45, o: {} }).run(t2, 'look into it');
+    assert.ok(gw.requests.slice(before).every((b) => b.tools), 'Ben\'s chat never loses its tools');
+    assert.doesNotMatch(JSON.stringify(t2.messages), /Time is up for this run/);
+  } finally { gw.close(); }
+});
