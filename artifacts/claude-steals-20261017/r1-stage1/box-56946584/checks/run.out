@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 667, in <module>
+    main()
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 663, in main
+    args.fn(args)
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 574, in cmd_run
+    log(f"R1 stage 1 start {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {provenance()} settings {settings}")
+                                                                                 ^^^^^^^^^^^^
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 95, in provenance
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/opt/conda/lib/python3.11/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'git'

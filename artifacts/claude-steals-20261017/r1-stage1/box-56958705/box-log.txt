@@ -1,0 +1,90 @@
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 12.8.1
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+=== R1S1 WALL 11437 s, ends 2026-10-21T01:25:46Z (box start 1792534379)
+=== R1S1 START stage 1ab 2026-10-20T22:15:09Z
+NVIDIA GeForce RTX 5090, 32607 MiB, 580.126.09
+cpus 128
+MemTotal:       263728424 kB
+MemFree:        80527592 kB
+MemAvailable:   221475612 kB
+overlay          60G   76K   60G   1% /
+pack.tar.xz: OK
+pack files ok: 83
+torch 2.8.0+cu128 cuda 12.8 True NVIDIA GeForce RTX 5090
+torch 2.11.0+cu128 cuda 12.8 True NVIDIA GeForce RTX 5090
+pinned build 2.11.0+cu128 12.8
+=== BUILD 2026-10-20T22:16:14Z
+=== TICK 22:17:09 |  | kb=28776 cache=992660
+=== TICK 22:19:09 |  | kb=70008 cache=992660
+=== TICK 22:21:09 |  | kb=111180 cache=992660
+=== TICK 22:23:09 |  | kb=152268 cache=992660
+=== TICK 22:25:09 |  | kb=193308 cache=992660
+=== TICK 22:27:09 |  | kb=237144 cache=992660
+=== TICK 22:29:09 |  | kb=277788 cache=992660
+=== TICK 22:31:09 |  | kb=318744 cache=992660
+=== TICK 22:33:09 |  | kb=362648 cache=992660
+=== TICK 22:35:09 |  | kb=403752 cache=992660
+=== TICK 22:37:09 |  | kb=444608 cache=992660
+=== TICK 22:39:09 |  | kb=488524 cache=992660
+=== TICK 22:41:09 |  | kb=532676 cache=992660
+=== TICK 22:43:09 |  | kb=576744 cache=992660
+=== TICK 22:45:09 |  | kb=617560 cache=992660
+=== TICK 22:47:09 |  | kb=658424 cache=992660
+=== TICK 22:49:09 |  | kb=702204 cache=992660
+=== TICK 22:51:10 |  | kb=743280 cache=992660
+=== TICK 22:53:10 |  | kb=784392 cache=992660
+=== TICK 22:55:10 |  | kb=825612 cache=992660
+=== TICK 22:57:10 |  | kb=866752 cache=992660
+=== TICK 22:59:10 |  | kb=910740 cache=992660
+=== TICK 23:01:10 |  | kb=951708 cache=992660
+=== TICK 23:03:10 |  | kb=992756 cache=992660
+=== TICK 23:05:10 |  | kb=1033852 cache=992660
+=== TICK 23:07:10 |  | kb=1078016 cache=992660
+=== TICK 23:09:10 |  | kb=1119012 cache=992660
+=== TICK 23:11:10 |  | kb=1155916 cache=992660
+=== TICK 23:13:10 |  | kb=1182196 cache=992660
+=== TICK 23:15:10 |  | kb=1202444 cache=992660
+=== TICK 23:17:10 |  | kb=1209532 cache=992660
+=== TICK 23:19:10 |  | kb=1212652 cache=992660
+data_rel data/village/stream/cache/large-seed0-53292765806d, build 3869 s
+=== RUN 1a timing, at most 2400 s 2026-10-20T23:20:43Z
+R1 stage 1 start 2026-10-20T23:20:44Z {'commit': None, 'torch': '2.11.0+cu128', 'python': '3.11.13', 'machine': 'x86_64', 'gpu': 'NVIDIA GeForce RTX 5090'} settings {'variant': 'D', 'size': 'full', 'device': 'cuda', 'lr': 0.001, 'flop_budget': 340000000000000.0, 'warmup_steps': 100, 'max_tokens': 55000, 'max_visits': 48, 'log_every': 50, 'eval_every': 500, 'eval_visits': 256, 'calibration_batches': 4}
+A0 s0: adamw start 2026-10-20T23:20:44Z
+A0 s0 | premonition names: 685 lowercase and 649 template words (ef6b1d4dc52d) in 20.2s; pool names the rule misses: 0
+=== TICK 23:21:10 | A0 s0 | premonition names: 685 lowercase and 649 template words (ef6b1d4dc52d) in 20.2s; pool names the rule misses: 0 | kb=1450716 cache=992660
+=== TICK 23:23:10 | A0 s0 | premonition names: 685 lowercase and 649 template words (ef6b1d4dc52d) in 20.2s; pool names the rule misses: 0 | kb=1450716 cache=992660
+=== TICK 23:25:10 | A0 s0 | premonition names: 685 lowercase and 649 template words (ef6b1d4dc52d) in 20.2s; pool names the rule misses: 0 | kb=1450716 cache=992660
+A0 s0 | premonition cache train [label-free]: 100,000 visits, 855,962 questions, 106,622,956 tokens in 256.3s; stats {"line_ents_over_max": 0, "names_max": 12, "label_only_names": 0, "visits_with_label_only_names": 0, "knowable_without_gold": 0, "gold_over_max": 0, "gold_max": 16, "answer_max": 64, "question_max": 32, "answers_over_max": 4, "target_names_unbound": 0, "visit_tokens_max": 1820}
+A0 s0 | premonition cache train: WARNING 0 questions have more than 16 gold lines (a batch keeps the newest) and 4 answers exceed 32 tokens (a batch cuts them)
+A0 s0 | premonition cache validation [label-free]: 1,000 visits, 8,675 questions, 1,138,099 tokens in 2.4s; stats {"line_ents_over_max": 0, "names_max": 12, "label_only_names": 0, "visits_with_label_only_names": 0, "knowable_without_gold": 0, "gold_over_max": 0, "gold_max": 15, "answer_max": 30, "question_max": 26, "answers_over_max": 0, "target_names_unbound": 0, "visit_tokens_max": 1782}
+A0 s0 | premonition train D: 2,130,516 params, F = 3.400e+14; FLOP fit a = 8.733e+06/token, b = 2.691e+08/(question x loop), worst residual 2.1%
+A0 s0 | eval step 1 (0.2% of F): acc 0.0%, gold-cards 0.0%, recall@4 5.2% (random 5.1%), loops 1.00 halt 100%
+A0 s0: aborted, None steps, train 0s (wall 289s), held-out loss 22.6059, acc 0.0, recall@4 0.051927905041497316
+A1 s0: muon start 2026-10-20T23:25:34Z
+A1 s0 | premonition train D: 2,130,516 params, F = 3.400e+14; FLOP fit a = 8.733e+06/token, b = 2.691e+08/(question x loop), worst residual 2.1%
+A1 s0 | eval step 1 (0.2% of F): acc 0.0%, gold-cards 0.0%, recall@4 5.2% (random 5.1%), loops 1.00 halt 100%
+A1 s0: aborted, None steps, train 0s (wall 14s), held-out loss 22.6453, acc 0.0, recall@4 0.052267957008405766
+verdict: NOT SCORED: unsealed run directory; seeds (0,), the card registers (0, 1, 2); no PRICE.json binds F; incomplete runs ['A0-s0', 'A1-s0']; unpaired steps or FLOPs at seeds [0]
+/job/tree/out/1a/MANIFEST.sha256
+price needs one completed, finite stage-1a run of each arm
+=== R1S1-FAIL price rc=1 2026-10-20T23:25:50Z
+=== EXPORT start 2026-10-20T23:25:50Z
+=== EXPORT tarred 2026-10-20T23:25:53Z
+=== MANIFEST 2026-10-20T23:25:53Z
+efb27aac37a8767fa2566b883ec665bdf7d1cdd676770b10f1cd6f76d2744794  out.tar.gz
+d673b9e9b044c46e3c1179c7fa3c89b51db1d465050e82895bceee75fab3ad68  ckpt.tar.gz
+=== PARTS 7 big, 43 small 2026-10-20T23:25:53Z
+=== R1S1 FAIL 2026-10-20T23:25:53Z

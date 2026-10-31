@@ -60,12 +60,14 @@ from learnlab.train import MemoryGuardError, TrainConfig, Trainer
 from premonition import data as pdata
 from premonition import identity, preprocess
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
-from premonition.config import MiniConfig
+from premonition.config import STEAL_FIELDS, MiniConfig
 from premonition.flops import FlopFit, fit_flops, measure_mini
 from premonition.model import Answers, PremonitionMini
+from premonition.muon import MuonAdamW, muon_param_groups
 from premonition.pointer import answer_text
 
 Log = Callable[[str], None]
+OPTIMIZERS = ("adamw", "muon")
 FORMAT = "premonition-mini-checkpoint"
 FORMAT_VERSION = 1
 
@@ -103,8 +105,9 @@ class Curriculum:
         return Plan("own", "own", self.p_own_max * ramp)
 
 
-def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Tensor:
-    """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU."""
+def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig, depth_cap: Optional[int] = None) -> torch.Tensor:
+    """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU;
+    `depth_cap` (random_depth) clamps them."""
     count = batch.q_visit.shape[0]
     if mode == "gold":
         loops = torch.full((count,), 2, dtype=torch.long)
@@ -115,7 +118,8 @@ def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Ten
         loops = torch.full((count,), config.max_loops, dtype=torch.long)
     else:
         raise ValueError(f"unknown mode {mode!r}")
-    return loops.clamp(1, config.max_loops)
+    loops = loops.clamp(1, config.max_loops)
+    return loops if depth_cap is None else loops.clamp_max(depth_cap)
 
 
 def mini_train_config(**overrides: Any) -> TrainConfig:
@@ -228,10 +232,17 @@ class MiniTrainer(Trainer):
 
     def __init__(self, model: PremonitionMini, config: TrainConfig, device: Union[str, torch.device] = "cpu", *,
                  flop_budget: float, curriculum: Curriculum = Curriculum(), tolerance: float = BUDGET_TOLERANCE,
-                 seed: int = 0, fit: Optional[FlopFit] = None) -> None:
+                 seed: int = 0, fit: Optional[FlopFit] = None, optimizer: str = "adamw") -> None:
         if not flop_budget > 0:
             raise ValueError("flop_budget must be positive")
+        if optimizer not in OPTIMIZERS:
+            raise ValueError(f"unknown optimizer {optimizer!r}; choose from {OPTIMIZERS}")
         super().__init__(model, config, device)
+        self.optimizer_name = optimizer
+        if optimizer == "muon":           # Muon on the hidden matrices, AdamW elsewhere (SPEC section 8)
+            self.optimizer = MuonAdamW(muon_param_groups(self.model, config.weight_decay), lr=config.lr,
+                                       betas=(config.beta1, config.beta2), eps=config.eps,
+                                       fused=True if self.device.type == "cuda" else None)
         self.flop_budget = float(flop_budget)
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
@@ -243,6 +254,7 @@ class MiniTrainer(Trainer):
         self.question_loops = 0
         self.questions = 0
         self.generator = torch.Generator(device=self.device).manual_seed(seed)
+        self.depth_cap: Optional[int] = None    # random_depth: this step's loop cap, sampled before batch_cost
 
     # ------------------------------------------------------------------ FLOPs
     def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
@@ -263,7 +275,7 @@ class MiniTrainer(Trainer):
     def batch_cost(self, batch: VisitBatch, plan: Plan) -> tuple[float, torch.Tensor]:
         if self.fit is None:
             raise RuntimeError("call calibrate() or pass fit= before training")
-        loops = planned_loops(batch, plan.mode, self.model.config)
+        loops = planned_loops(batch, plan.mode, self.model.config, self.depth_cap)
         return self.fit(batch.tokens.numel(), int(loops.sum())), loops
 
     def plan(self) -> Plan:
@@ -303,7 +315,8 @@ class MiniTrainer(Trainer):
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
-                out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator)
+                extra = {} if self.depth_cap is None else {"depth_cap": self.depth_cap}
+                out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator, **extra)
         finally:
             for hook in hooks:
                 hook.remove()
@@ -312,6 +325,7 @@ class MiniTrainer(Trainer):
         loss.backward()
         grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.grad_clip or math.inf)
         self.optimizer.step()
+        getattr(model, "after_optimizer_step", lambda: None)()    # steal 6: QK-Clip
         self.step += 1
         result: dict[str, Any] = {name: out[name].detach().float() for name in ("loss", "lm", "ask", "ans", "halt")}
         result["grad_norm"] = grad_norm
@@ -400,6 +414,10 @@ class MiniTrainer(Trainer):
             if batch is None:
                 break
             plan = self.plan()
+            if self.model.config.random_depth:      # before batch_cost, so the charge matches the loops run
+                low, high = self.model.config.random_depth_min, self.model.config.max_loops
+                self.depth_cap = int(torch.randint(low, high + 1, (1,), generator=self.generator,
+                                                   device=self.generator.device).item())
             cost, loops = self.batch_cost(batch, plan)
             if self.flops + cost > ceiling:
                 stop = "flop budget (the next batch would pass the tolerance)"
@@ -462,10 +480,13 @@ def budget_for_steps(trainer: MiniTrainer, batches: Sequence[VisitBatch], steps:
     """A FLOP budget of about `steps` batches like `batches` under the curriculum (for toys and smoke runs)."""
     curriculum = curriculum or trainer.curriculum
     config = trainer.model.config
+    # random_depth: a batch's cost is the mean over the equally likely loop caps, so `steps` stays the step count.
+    caps = range(config.random_depth_min, config.max_loops + 1) if config.random_depth else (None,)
     mean = 0.0
     for share in (0.02, 0.2, 0.7):
         plan = curriculum.plan(share)
-        costs = [trainer.fit(b.tokens.numel(), int(planned_loops(b, plan.mode, config).sum())) for b in batches]
+        costs = [sum(trainer.fit(b.tokens.numel(), int(planned_loops(b, plan.mode, config, cap).sum())) for cap in caps)
+                 / len(caps) for b in batches]
         weight = {0.02: curriculum.gold_until, 0.2: curriculum.teacher_until - curriculum.gold_until,
                   0.7: 1.0 - curriculum.teacher_until}[share]
         mean += weight * sum(costs) / len(costs)
@@ -510,7 +531,7 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
             top = store.top(scores, config.top_k)
             if step == 0:
                 first_top = torch.where(top == store.null, torch.full_like(top, -1), top)
-            model._insert(episode, store, index, top.masked_fill(((ask <= 0) | done).unsqueeze(1), -1))
+            model._insert(episode, store, index, model._choose(episode, index, store, scores, ask, done))
         running[index[done]] = False
     tokens, lengths = model._greedy(batch, episode, mentions, stop)
     return Answers(tokens, lengths, used, first_top, episode.fetched, halt_prob)
@@ -697,7 +718,13 @@ def validation_hook(batches: Sequence[VisitBatch], **options: Any) -> Callable[[
 
 # ----------------------------------------------------------------------------- checkpoints
 def mini_config_dict(config: MiniConfig) -> dict[str, Any]:
-    return asdict(config)
+    """`asdict(config)`. With every steal off the steal fields are left out, so a flags-off checkpoint's config.json
+    is byte-identical to 73b8e0224's and older code still reads it; with any steal on, every field is written, so a
+    checkpoint never depends on later defaults."""
+    values = asdict(config)
+    if config.steals:
+        return values
+    return {name: value for name, value in values.items() if name not in STEAL_FIELDS}
 
 
 def mini_config_from(values: Mapping[str, Any]) -> MiniConfig:
@@ -726,6 +753,7 @@ def checkpoint_config(trainer: MiniTrainer, *, contender: str, tokenizer: Option
                   "fit": None if trainer.fit is None else {"a": trainer.fit.a, "b": trainer.fit.b,
                                                            "worst_residual": trainer.fit.worst}},
         "tokenizer": dict(tokenizer or {}), "detector": {"sha256": detector}, "data": dict(data or {}),
+        **({"optimizer": trainer.optimizer_name} if trainer.optimizer_name != "adamw" else {}),   # steal 8
         **dict(extra or {}),
     }
 
@@ -757,7 +785,8 @@ def resume_trainer(path: Union[str, Path], device: Union[str, torch.device] = "c
     trainer = MiniTrainer(model, trainer_config, device, flop_budget=config["flops"]["budget"],
                           curriculum=Curriculum(**config["curriculum"]), tolerance=config["flops"]["tolerance"],
                           seed=config["seed"], fit=None if fit is None else FlopFit(fit["a"], fit["b"],
-                                                                                    fit["worst_residual"]))
+                                                                                    fit["worst_residual"]),
+                          optimizer=config.get("optimizer", "adamw"))
     loaded = load_checkpoint(path, trainer.model, optimizer=trainer.optimizer, map_location=device,
                              restore_rng=True)
     trainer.load_state_dict(loaded["trainer"])
@@ -994,15 +1023,12 @@ def format_record(record: Mapping[str, Any]) -> str:
             f"{record['tokens_per_s']:,.0f} tok/s")
 
 
-def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
+def toy_setup(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
               eval_batches: int = 4, lr: float = 3e-3, warmup_steps: int = 20, log_every: int = 25,
-              eval_every: int = 0, max_seconds: Optional[float] = None, config_overrides: Optional[dict] = None,
-              on_log: Optional[Callable[[dict[str, Any]], None]] = None) -> dict[str, Any]:
-    """Build step 4: train D (or a control) at the tiny preset on the far-fact toy under the curriculum.
-
-    The FLOP budget is `steps` batches' worth (`budget_for_steps`); the report holds the training report,
-    the validation of a fixed held-out toy set and chance.
-    """
+              eval_every: int = 0, config_overrides: Optional[dict] = None, optimizer: str = "adamw"
+              ) -> tuple[MiniTrainer, list[VisitBatch], Iterator[VisitBatch], list[VisitBatch], Any]:
+    """`train_toy`'s setup, untrained: (trainer calibrated and budgeted, the two calibration batches, the rest of
+    the stream, the held-out set, spec). Run cards that train the toy in steps (R1) start here."""
     from premonition.toy import ToySpec, toy_set, toy_stream
     spec = spec or ToySpec()
     torch.manual_seed(seed)
@@ -1010,12 +1036,30 @@ def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits:
     settings.update(config_overrides or {})
     model = PremonitionMini(MiniConfig.preset(variant, "tiny", vocab_size=spec.vocab_size, **settings))
     trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
-                                                   eval_every=eval_every), "cpu", flop_budget=1.0, seed=seed)
+                                                   eval_every=eval_every), "cpu", flop_budget=1.0, seed=seed,
+                          optimizer=optimizer)
     stream = (label_free(b) for b in toy_stream(spec, visits, seed))
     head = [next(stream) for _ in range(2)]
     trainer.calibrate(head)
     trainer.flop_budget = budget_for_steps(trainer, head, steps)
     held_out = [label_free(b) for b in toy_set(spec, eval_batches, visits, seed + 1000)]
+    return trainer, head, stream, held_out, spec
+
+
+def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
+              eval_batches: int = 4, lr: float = 3e-3, warmup_steps: int = 20, log_every: int = 25,
+              eval_every: int = 0, max_seconds: Optional[float] = None, config_overrides: Optional[dict] = None,
+              on_log: Optional[Callable[[dict[str, Any]], None]] = None, optimizer: str = "adamw") -> dict[str, Any]:
+    """Build step 4: train D (or a control) at the tiny preset on the far-fact toy under the curriculum.
+
+    The FLOP budget is `steps` batches' worth (`budget_for_steps`); the report holds the training report,
+    the validation of a fixed held-out toy set and chance.
+    """
+    trainer, head, stream, held_out, spec = toy_setup(
+        variant, spec=spec, steps=steps, visits=visits, seed=seed, eval_batches=eval_batches, lr=lr,
+        warmup_steps=warmup_steps, log_every=log_every, eval_every=eval_every, config_overrides=config_overrides,
+        optimizer=optimizer)
+    model = trainer.model
     report = trainer.train(itertools.chain(head, stream), max_seconds=max_seconds, on_log=on_log,
                            evaluate=validation_hook(held_out) if eval_every else None)
     result = trainer.evaluate(validation_hook(held_out))
@@ -1043,8 +1087,11 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
             max_visits: Optional[int] = 48, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
             eval_every: int = 1000, eval_visits: int = 256, calibration_batches: int = 4,
             max_seconds: Optional[float] = None, checkpoint: Optional[str] = None, workers: int = 1,
-            log: Log = print) -> dict[str, Any]:
+            log: Log = print, optimizer: str = "adamw",
+            eval_extra: Optional[Callable[[nn.Module, Sequence[VisitBatch]], dict[str, Any]]] = None) -> dict[str, Any]:
     """Train D (or D-noask / D-noptr) on a step-1 village build for `flop_budget` FLOPs (design/06 §3-4).
+    `optimizer` "muon" trains with `muon.MuonAdamW` (steal 8); the default "adamw" run is unchanged.
+    `eval_extra(model, eval_batches)` adds its keys to every validation record (R1 stage 1's held-out loss).
 
     `data_rel` is the data build (e.g. data/village/large-seed0-...), `tokenizer_path` the v2 tokenizer
     (relative to the budget root). Caches and the name detector are built once through the budget. The
@@ -1053,6 +1100,8 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     """
     from learnlab.tokenizer import Tokenizer
     from premonition import exp1
+    if optimizer not in OPTIMIZERS:                  # before the (slow) detector and cache builds
+        raise ValueError(f"unknown optimizer {optimizer!r}; choose from {OPTIMIZERS}")
     root = Path(budget.root)
     tokenizer = Tokenizer.load(root / tokenizer_path)
     detector = None if variant == "D-noptr" else pdata.name_detector(budget, data_rel, workers=workers, log=log)
@@ -1065,7 +1114,7 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     model = PremonitionMini(config)
     trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
                                                    eval_every=eval_every), device, flop_budget=flop_budget,
-                          seed=seed)
+                          seed=seed, optimizer=optimizer)
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
     fit = trainer.calibrate(head)
@@ -1082,11 +1131,18 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     eval_batches = [pdata.collate(valid_cache, [chosen[i] for i in g], slices=tags) for g in groups]
     stops = sorted(step1.stop_ids(tokenizer)[0])
     hook = validation_hook(eval_batches, tokenizer=tokenizer, stop=stops)
+    if eval_extra is not None:
+        validation = hook
+
+        def hook(model: nn.Module) -> dict[str, Any]:
+            return {**validation(model), **eval_extra(model, eval_batches)}
     report: dict[str, Any] = {"command": "premonition train", "contender": variant, "parameters": model.num_parameters(),
                               "device": device, "seed": seed, "data": {"dir": data_rel, "tag": Path(data_rel).name},
                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
                               "detector": None if detector is None else detector.digest,
                               "preprocess": preprocess.identity(preprocess.LABEL_FREE)}
+    if trainer.optimizer_name != "adamw":            # steal 8; the default report keeps its base-commit keys
+        report["optimizer"] = trainer.optimizer_name
     try:
         report.update(status="completed", **trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))
@@ -1201,5 +1257,5 @@ __all__ = [
     "label_free",
     "load_mini",
     "mini_config_from", "mini_train_config", "planned_loops", "resume_trainer", "save_mini_checkpoint", "smoke",
-    "summarize_cards", "train_d", "train_toy", "validate", "validation_hook",
+    "summarize_cards", "toy_setup", "train_d", "train_toy", "validate", "validation_hook",
 ]

@@ -1,0 +1,404 @@
+{
+ "batch": {
+  "visits": 4,
+  "lines": 40,
+  "tokens": 1380,
+  "questions": 55
+ },
+ "threads": 1,
+ "torch": "2.14.1+cpu",
+ "results": {
+  "D (all off)": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.600533999000163
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9378444079998189
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.7330453280001166
+    }
+   }
+  },
+  "delta_bind": {
+   "parameters": 1952237,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 405545,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36132626816.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5296323390002726
+    },
+    "teacher": {
+     "flops": 61643199360.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9467150440000296
+    },
+    "own": {
+     "flops": 112673965696.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.6639590119998502
+    }
+   }
+  },
+  "fetch_gate": {
+   "parameters": 2014684,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 467476,
+    "heads": 8515,
+    "decoder": 199556
+   },
+   "modes": {
+    "gold": {
+     "flops": 36152668800.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5840859390000332
+    },
+    "teacher": {
+     "flops": 61686799488.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9413443660000667
+    },
+    "own": {
+     "flops": 112730962816.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.848069564999605
+    }
+   }
+  },
+  "fetch_sink": {
+   "parameters": 2013145,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8516,
+    "decoder": 199044
+   },
+   "modes": {
+    "gold": {
+     "flops": 36148027520.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.588679353000316
+    },
+    "teacher": {
+     "flops": 61673437568.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9751235039998392
+    },
+    "own": {
+     "flops": 112679824256.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.8104072850001103
+    }
+   }
+  },
+  "loop_attnres": {
+   "parameters": 2014164,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 467472,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.6297169879999274
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 1.0225231629997324
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.8693869579997227
+    }
+   }
+  },
+  "engram": {
+   "parameters": 2177236,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 189185,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36177367680.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5637605029996848
+    },
+    "teacher": {
+     "flops": 61713525888.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9048453820000759
+    },
+    "own": {
+     "flops": 112742820736.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.7123363329997119
+    }
+   }
+  },
+  "row_halt": {
+   "parameters": 2013269,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8644,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36146079360.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5650088480001614
+    },
+    "teacher": {
+     "flops": 61682575488.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9209121889998642
+    },
+    "own": {
+     "flops": 112712546176.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.7449518550001812
+    }
+   }
+  },
+  "random_depth": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 34551753168.0,
+     "question_loops": 103.125,
+     "seconds_median": 0.5551679162499568
+    },
+    "teacher": {
+     "flops": 52110555232.0,
+     "question_loops": 178.75,
+     "seconds_median": 0.7767847731250299
+    },
+    "own": {
+     "flops": 68053033920.0,
+     "question_loops": 247.5,
+     "seconds_median": 1.0618349765000517
+    }
+   }
+  },
+  "qk_norm": {
+   "parameters": 2013268,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8643,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5798135879999791
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9069336480001766
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.6032281349998811
+    }
+   }
+  },
+  "qk_norm_all": {
+   "parameters": 2013460,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496448,
+    "card_writer": 25089,
+    "think": 466576,
+    "heads": 8515,
+    "decoder": 199168
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.6342583559999184
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 1.0653795610000998
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 2.0765431109998644
+    }
+   }
+  },
+  "key_split": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5968285300000389
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9411679799995909
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.748910385000272
+    }
+   }
+  },
+  "ask_reuse": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5516578319998189
+    },
+    "teacher": {
+     "flops": 61681779968.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9571990969998296
+    },
+    "own": {
+     "flops": 112703358976.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.82709295199993
+    }
+   }
+  },
+  "qk_clip": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5745909209999809
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9298713420002969
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.8002876680002373
+    }
+   }
+  },
+  "D again (noise)": {
+   "parameters": 2013140,
+   "breakdown": {
+    "embedding": 817664,
+    "reader": 496384,
+    "card_writer": 25089,
+    "think": 466448,
+    "heads": 8515,
+    "decoder": 199040
+   },
+   "modes": {
+    "gold": {
+     "flops": 36145910400.0,
+     "question_loops": 110.0,
+     "seconds_median": 0.5983840379999492
+    },
+    "teacher": {
+     "flops": 61682068608.0,
+     "question_loops": 220.0,
+     "seconds_median": 0.9395979070000067
+    },
+    "own": {
+     "flops": 112711363456.0,
+     "question_loops": 440.0,
+     "seconds_median": 1.6684725649997745
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,461 @@
+{
+ "settings": {
+  "steps": 1500,
+  "eval_every": 50,
+  "visits": 16,
+  "torch": "2.14.1+cpu"
+ },
+ "score": {
+  "A1": {
+   "rows": [
+    {
+     "seed": 0,
+     "t_star": 787.0730286709977,
+     "loss_A0": 4.135830521583557,
+     "loss_A1": 3.752654922208678,
+     "d": 0.3831755993748791,
+     "final_loss_A0": 4.135830521583557,
+     "final_loss_A1": 3.76690810918808,
+     "accuracy_A0": 0.0546875,
+     "accuracy_A1": 0.16015625,
+     "accuracy_gap_points": 10.546875
+    },
+    {
+     "seed": 1,
+     "t_star": 816.2919644530011,
+     "loss_A0": 4.3549628257751465,
+     "loss_A1": 3.7696248357627664,
+     "d": 0.5853379900123801,
+     "final_loss_A0": 4.3549628257751465,
+     "final_loss_A1": 3.768298327922821,
+     "accuracy_A0": 0.04296875,
+     "accuracy_A1": 0.24609375,
+     "accuracy_gap_points": 20.3125
+    },
+    {
+     "seed": 2,
+     "t_star": 808.9772396579992,
+     "loss_A0": 4.683537244796753,
+     "loss_A1": 3.766844060999851,
+     "d": 0.9166931837969021,
+     "final_loss_A0": 4.683537244796753,
+     "final_loss_A1": 3.7651172876358032,
+     "accuracy_A0": 0.05078125,
+     "accuracy_A1": 0.21484375,
+     "accuracy_gap_points": 16.40625
+    }
+   ],
+   "mean_d": 0.6284022577280538,
+   "sd_d": 0.26935320972153465,
+   "lower": 0.3173799614484183,
+   "upper": 0.9394245540076893,
+   "seeds_positive": 3,
+   "relative_effect": 0.1430969687603476,
+   "bar": true,
+   "guard_seeds_below": 0,
+   "verdict": "PASS"
+  },
+  "A2": {
+   "rows": [
+    {
+     "seed": 0,
+     "t_star": 787.0730286709977,
+     "loss_A0": 4.135830521583557,
+     "loss_A2": 4.685810384389827,
+     "d": -0.5499798628062695,
+     "final_loss_A0": 4.135830521583557,
+     "final_loss_A2": 4.695340156555176,
+     "accuracy_A0": 0.0546875,
+     "accuracy_A2": 0.0546875,
+     "accuracy_gap_points": 0.0
+    },
+    {
+     "seed": 1,
+     "t_star": 816.2919644530011,
+     "loss_A0": 4.3549628257751465,
+     "loss_A2": 4.700559122532093,
+     "d": -0.3455962967569466,
+     "final_loss_A0": 4.3549628257751465,
+     "final_loss_A2": 4.692284345626831,
+     "accuracy_A0": 0.04296875,
+     "accuracy_A2": 0.04296875,
+     "accuracy_gap_points": 0.0
+    },
+    {
+     "seed": 2,
+     "t_star": 808.9772396579992,
+     "loss_A0": 4.683537244796753,
+     "loss_A2": 4.6902034174672655,
+     "d": -0.006666172670512616,
+     "final_loss_A0": 4.683537244796753,
+     "final_loss_A2": 4.704979300498962,
+     "accuracy_A0": 0.05078125,
+     "accuracy_A2": 0.06640625,
+     "accuracy_gap_points": 1.5625
+    }
+   ],
+   "mean_d": -0.3007474440779096,
+   "sd_d": 0.2744193982979388,
+   "lower": -0.6176196710342499,
+   "upper": 0.01612478287843061,
+   "seeds_positive": 0,
+   "relative_effect": -0.0684848710849082,
+   "bar": false,
+   "guard_seeds_below": 0,
+   "verdict": "NOT SHOWN"
+  }
+ },
+ "runs": [
+  {
+   "arm": "A0",
+   "seed": 0,
+   "optimizer": "adamw",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 787.0730286709977,
+   "optimizer_ms_per_step": 3.540534028711558,
+   "train_s_per_step": 0.47073745733911343,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.183105945587158,
+    "lm": 2.2903497219085693,
+    "ask": 1.2931628227233887,
+    "ans": 1.221017837524414,
+    "halt": 0.25157254934310913
+   },
+   "validation": {
+    "accuracy": 0.0546875,
+    "accuracy_gold_cards": 0.0546875,
+    "gold_recall_at_4": 0.9453125,
+    "random_recall_at_4": 0.11919655464589596,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A0",
+    "A1",
+    "A2"
+   ]
+  },
+  {
+   "arm": "A1",
+   "seed": 0,
+   "optimizer": "muon",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 797.1884059559993,
+   "optimizer_ms_per_step": 7.457089190189233,
+   "train_s_per_step": 0.4767873241363632,
+   "finite": true,
+   "final_losses": {
+    "loss": 3.993321418762207,
+    "lm": 2.285130739212036,
+    "ask": 2.411957263946533,
+    "ans": 0.46279287338256836,
+    "halt": 0.3941957652568817
+   },
+   "validation": {
+    "accuracy": 0.16015625,
+    "accuracy_gold_cards": 0.27734375,
+    "gold_recall_at_4": 0.359375,
+    "random_recall_at_4": 0.11919655464589596,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A0",
+    "A1",
+    "A2"
+   ]
+  },
+  {
+   "arm": "A2",
+   "seed": 0,
+   "optimizer": "muon",
+   "lr": 0.02,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 807.3639159679992,
+   "optimizer_ms_per_step": 7.55981027631226,
+   "train_s_per_step": 0.4828731554832531,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.612377166748047,
+    "lm": 2.2958004474639893,
+    "ask": 2.3754324913024902,
+    "ans": 1.1059731245040894,
+    "halt": 0.22886024415493011
+   },
+   "validation": {
+    "accuracy": 0.0546875,
+    "accuracy_gold_cards": 0.0546875,
+    "gold_recall_at_4": 0.35546875,
+    "random_recall_at_4": 0.11919655464589596,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A0",
+    "A1",
+    "A2"
+   ]
+  },
+  {
+   "arm": "A1",
+   "seed": 1,
+   "optimizer": "muon",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 822.8950207709996,
+   "optimizer_ms_per_step": 7.657703249400701,
+   "train_s_per_step": 0.4921620937625596,
+   "finite": true,
+   "final_losses": {
+    "loss": 3.984199285507202,
+    "lm": 2.2851085662841797,
+    "ask": 2.327265739440918,
+    "ans": 0.49396342039108276,
+    "halt": 0.4149476885795593
+   },
+   "validation": {
+    "accuracy": 0.24609375,
+    "accuracy_gold_cards": 0.3515625,
+    "gold_recall_at_4": 0.328125,
+    "random_recall_at_4": 0.11933758109807968,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A1",
+    "A2",
+    "A0"
+   ]
+  },
+  {
+   "arm": "A2",
+   "seed": 1,
+   "optimizer": "muon",
+   "lr": 0.02,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 821.308307975001,
+   "optimizer_ms_per_step": 7.645255074160067,
+   "train_s_per_step": 0.49121310285586184,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.589376926422119,
+    "lm": 2.292571544647217,
+    "ask": 2.3454973697662354,
+    "ans": 1.0996216535568237,
+    "halt": 0.2443513721227646
+   },
+   "validation": {
+    "accuracy": 0.04296875,
+    "accuracy_gold_cards": 0.04296875,
+    "gold_recall_at_4": 0.3203125,
+    "random_recall_at_4": 0.11933758109807968,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A1",
+    "A2",
+    "A0"
+   ]
+  },
+  {
+   "arm": "A0",
+   "seed": 1,
+   "optimizer": "adamw",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1672,
+   "train_seconds": 816.2919644530011,
+   "optimizer_ms_per_step": 3.631874016149774,
+   "train_s_per_step": 0.4882128974001203,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.390906810760498,
+    "lm": 2.2905282974243164,
+    "ask": 1.8289299011230469,
+    "ans": 1.1636656522750854,
+    "halt": 0.22247618436813354
+   },
+   "validation": {
+    "accuracy": 0.04296875,
+    "accuracy_gold_cards": 0.04296875,
+    "gold_recall_at_4": 0.6328125,
+    "random_recall_at_4": 0.11933758109807968,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A1",
+    "A2",
+    "A0"
+   ]
+  },
+  {
+   "arm": "A2",
+   "seed": 2,
+   "optimizer": "muon",
+   "lr": 0.02,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1671,
+   "train_seconds": 820.6552531949987,
+   "optimizer_ms_per_step": 7.680538211245775,
+   "train_s_per_step": 0.4911162496678628,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.573447227478027,
+    "lm": 2.290846109390259,
+    "ask": 2.3463237285614014,
+    "ans": 1.0885847806930542,
+    "halt": 0.20854270458221436
+   },
+   "validation": {
+    "accuracy": 0.06640625,
+    "accuracy_gold_cards": 0.06640625,
+    "gold_recall_at_4": 0.34375,
+    "random_recall_at_4": 0.12018736824393272,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A2",
+    "A0",
+    "A1"
+   ]
+  },
+  {
+   "arm": "A0",
+   "seed": 2,
+   "optimizer": "adamw",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1671,
+   "train_seconds": 808.9772396579992,
+   "optimizer_ms_per_step": 3.661145658880202,
+   "train_s_per_step": 0.4841276120035902,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.581214427947998,
+    "lm": 2.287229537963867,
+    "ask": 2.3528873920440674,
+    "ans": 1.0935815572738647,
+    "halt": 0.23959672451019287
+   },
+   "validation": {
+    "accuracy": 0.05078125,
+    "accuracy_gold_cards": 0.05078125,
+    "gold_recall_at_4": 0.32421875,
+    "random_recall_at_4": 0.12018736824393272,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A2",
+    "A0",
+    "A1"
+   ]
+  },
+  {
+   "arm": "A1",
+   "seed": 2,
+   "optimizer": "muon",
+   "lr": 0.003,
+   "settings": {
+    "steps": 1500,
+    "eval_every": 50,
+    "visits": 16,
+    "torch": "2.14.1+cpu"
+   },
+   "steps": 1671,
+   "train_seconds": 817.1822789580046,
+   "optimizer_ms_per_step": 7.669003283072565,
+   "train_s_per_step": 0.4890378689156222,
+   "finite": true,
+   "final_losses": {
+    "loss": 4.00881290435791,
+    "lm": 2.2919046878814697,
+    "ask": 2.3623151779174805,
+    "ans": 0.4962519109249115,
+    "halt": 0.3949812054634094
+   },
+   "validation": {
+    "accuracy": 0.21484375,
+    "accuracy_gold_cards": 0.15625,
+    "gold_recall_at_4": 0.32421875,
+    "random_recall_at_4": 0.12018736824393272,
+    "asked_rate": 1.0,
+    "loops_mean": 8.0,
+    "halt_rate": 0.0,
+    "questions": 256
+   },
+   "order": [
+    "A2",
+    "A0",
+    "A1"
+   ]
+  }
+ ]
+}
