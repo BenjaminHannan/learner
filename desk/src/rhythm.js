@@ -12,7 +12,7 @@ const MIN_DAYS = 5;               // fewer finished days than this: no opinion
 const FLOOR = 18 * 60;            // the window starts between 18:00 ...
 const CEIL = 24 * 60 + 4 * 60;    // ... and 04:00 (so there is still a night left)
 const MORNING_MIN = 24 * 60 + 5 * 60; // and ends between 05:00 ...
-const MORNING_MAX = 24 * 60 + 14 * 60; // ... and 14:00 (he may sleep in)
+const MORNING_MAX = 24 * 60 + 5 * 60 + 45; // latest safe end, before the 06:00 Organizer
 const MIN_LEN = 3 * 60;           // a window shorter than 3 h is not worth it
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -39,8 +39,8 @@ function learnedWindow(days, now) {
   if (done.length < MIN_DAYS) return null;
   // last active that evening, rounded up to the next half hour, kept between 18:00 and 04:00
   const from = Math.min(CEIL, Math.max(FLOOR, Math.ceil(median(done.map((r) => r.last)) / 30) * 30));
-  // first active the next morning (same clock, one day on), kept between 05:00 and 14:00 and at least 3 h into the night
-  const to = Math.max(from + MIN_LEN, Math.min(MORNING_MAX, Math.max(MORNING_MIN, 1440 + Math.round(median(done.map((r) => r.first))))));
+  // first active the next morning (same clock, one day on), kept between 05:00 and 05:45 and at least 3 h into the night
+  const to = Math.min(MORNING_MAX, Math.max(from + MIN_LEN, MORNING_MIN, 1440 + Math.round(median(done.map((r) => r.first)))));
   if (to - from < MIN_LEN) return null;
   return { from: hhmm(from), to: hhmm(to), days: done.length };
 }

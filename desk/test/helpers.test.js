@@ -673,3 +673,19 @@ test('research origin is private and inherited from actual parent', () => {
   m.update(child.id, { task: 'new task', learnResearch: false });
   assert.equal(m.find(child.id).learnResearch, true);
 });
+
+test('Organizer stays due while the trainer is active, even when other Motes may run', async () => {
+  let training = true;
+  const { m, runs, clock, dir } = mkManager({ hold: () => false, holdItem: h => h.name === 'Organizer' && training });
+  try {
+    m.items = [{ id: 'organizer', name: 'Organizer', status: 'idle', next: clock.t, at: '06:00' },
+      { id: 'other', name: 'Other', status: 'idle', next: clock.t, at: '06:00' }];
+    m.tick();
+    assert.deepStrictEqual(runs.map(r => r.h.name), ['Other']);
+    assert.strictEqual(m.items[0].dueHeld, true);
+    training = false; m.tick();
+    assert.deepStrictEqual(runs.map(r => r.h.name), ['Other', 'Organizer']);
+    runs.forEach(r => r.done());
+    await until(() => m.active.size === 0);
+  } finally { m.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+});

@@ -51,7 +51,7 @@ const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const { Rhythm } = require('./src/rhythm');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
-const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
+const { Sleep, sleepDeadline, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
 const { Updater } = require('./src/updater');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
@@ -250,12 +250,14 @@ function startSleep(o) {
   const dur = o.auto ? 'morning' : ('minutes' in o ? o.minutes : durationFromSetting(cfg.sleepDuration));
   if (!o.auto && 'minutes' in o) store.saveSettings({ sleepDuration: o.minutes === null ? 'open' : String(o.minutes) });
   const until = computeWakeAt(now0, dur, cfg, learnedNow(now0));
-  const deadline = o.auto && !cfg.wakeAt ? null : until;
+  const cutoff = sleepDeadline(now0);
+  if (cutoff - now0.getTime() <= 15 * 60000) return { error: "Sleep cannot start this close to the 5:45 morning cutoff." };
+  const deadline = Math.min(until || cutoff, cutoff);
   // Persist before detaching: a desktop restart must retain both the deadline and
   // the obligation to restore a chat model stopped for this night.
   sl.startedAt = now0.getTime(); sl.wakeAt = deadline; sl.startedAuto = !!o.auto;
   if (!persistSleepSession('preparing')) return { error: 'Could not save this sleep session. Check available disk space and try again.' };
-  const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), until), wakeAt: deadline });
+  const r = sleeper.start({ budgetS: nightBudgetS(now0.getTime(), deadline), wakeAt: deadline });
   // the big chat model is on and holds the memory sleep needs: the sheet offers "Turn it off for now" (stopAssistant), which
   // stops it, sleeps, and turns it back on at wake
   if (r.assistantOn && hasLocalAssistant) {
@@ -274,7 +276,7 @@ function startSleep(o) {
   if (!r.ok) { abandonSleepAttempt(); return { error: r.error }; }
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sl.asleep = true; if (helpers && helpers.active.size) helpers.pauseForSleep();   // Motes mid-run stop and run again once after wake; they no longer block sleep (asleep first so their due runs are held)
-  sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
+  sleeper.mark(); sl.wakeAt = deadline; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   persistSleepSession('sleeping');
   pushSleep(); updatePill();
   return { ok: true };
@@ -1055,6 +1057,7 @@ function buildAgent() {
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
     hold: sleepHold,
+    holdItem: (h) => h.name === 'Organizer' && (sl.asleep || sl.waking || !!sl.starting),
     yieldTo: benBusy,
     runner: createRunner({ store, makeAgent: makeHelperAgent }),
     onChange: () => send('helpers:changed', helpers.list()),

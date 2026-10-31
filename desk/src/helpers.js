@@ -405,6 +405,7 @@ class Helpers {
     if (!force && this.o.yieldTo && this.o.yieldTo()) return; // Ben's chat is busy: due runs stay due and start on the first quiet tick (once each)
     for (const h of this.items) {
       if (h.paused || h.status === 'stopped' || this.active.has(h.id)) continue;
+      if (!force && this.o.holdItem && this.o.holdItem(h)) { if (h.next && h.next <= now && !h.dueHeld) { h.dueHeld = true; this.changed(); } continue; }
       if (h.until && h.until <= now) { this.stop(h.id); continue; }
       if (h.next && h.next <= now) this._run(h);
     }
