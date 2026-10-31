@@ -1,0 +1,14 @@
+{
+  "canonical_source": "Ben-approved full text supplied by parent thread 01a0f0d8-d903-7668-b40d-8cd0d96410c3",
+  "library_file_id": "libfile_4e677af616d48191aebffae06caf22d2",
+  "path": "docs/premonition-recovery/RUNBOOK-v1.2.md",
+  "rules": {
+    "execution.preflight": "Check state. Confirm objective, success and stop criteria, active job state and last durable checkpoint. Avoid duplicate runs. Record code version, configuration, provenance and seeds.",
+    "failure.preserve": "A  Preserve and classify. Capture the exact error, failing operation, run ID, paths, timestamps, logs, checkpoint and resource totals. Separate observed facts from hypotheses. Do not overwrite the only evidence.",
+    "limits.authority": "Safety and approval boundaries. Actual resource permissions, privacy and spending boundaries, and explicit denials still apply. A denied expansion stays pending until approved. Renaming a run, changing tools, or calling a cap an estimate cannot bypass a denial.",
+    "storage.atomic-renames": "WinError 2 during the storage scan. An atomic temporary file vanished while storage was being scanned. Recheck or tolerate only the expected transient disappearance of that owned temporary file. Do not suppress missing checkpoints, corrupt data or persistent directory errors. Keep storage accounting conservative.",
+    "windows.atomic-receipts": "WinError 5 replacing the receipt. Receipt replacement returned access denied. A transient file lock is a hypothesis, not a proven cause. Preserve the completed output and last valid receipt; retry only the replacement with bounded backoff. Persistent denial needs diagnosis, not permission changes or deletion of evidence."
+  },
+  "sha256": "3186e016f7a83f59a5095f719f272527a793689957c9fc639d05637def31bf5d",
+  "version": "1.2"
+}
