@@ -14,10 +14,13 @@ import os
 import time
 from typing import Any, Optional
 
-ARMS = ("g1_empirical", "g1_example", "g1_off", "g1_light")
-DEFAULT_ARMS = ("g1_empirical", "g1_example", "g1_off")   # g1_light is opt-in (PREREG-light.md)
-NORM = {"g1_empirical": "none", "g1_example": "example", "g1_light": "none"}
+ARMS = ("g1_empirical", "g1_example", "g1_off", "g1_light", "g1_nomask")
+DEFAULT_ARMS = ("g1_empirical", "g1_example", "g1_off")   # g1_light, g1_nomask are opt-in (PREREG-light.md, PREREG-nomask.md)
+NORM = {"g1_empirical": "none", "g1_example": "example", "g1_light": "none", "g1_nomask": "none"}
 KL_WEIGHT = {"g1_light": 10.0}       # every other guarded arm keeps g1.KL_WEIGHT (30)
+MASK = {"g1_nomask": False}          # every other guarded arm keeps the hard K-FAC mask
+NOMASK_FIRST_TRY_MIN = 2.0  # points over g1_empirical (W2)
+NOMASK_HARM_MARGIN = 1.0    # points below g1_off harm (W2)
 LIGHT_FIRST_TRY_MIN = 2.0   # points over g1_empirical (W2)
 LIGHT_HARM_MARGIN = 1.0     # points below g1_off harm (W2)
 SMOKE = dict(pool_limit=64, dev_limit=16, n1=4, n2=8, T=1.0, updates_cap=2, diary=64)
@@ -53,6 +56,18 @@ def verdict_light(arms: dict[str, dict]) -> dict[str, Any]:
                 harm_light_minus_off=l["harm_w2"] - o["harm_w2"], harm_ok=hm)
 
 
+def verdict_nomask(arms: dict[str, dict]) -> dict[str, Any]:
+    """PREREG-nomask pass marks on W2 (means over seeds): nomask first-try >= empirical + 2 AND nomask harm <= off harm - 1."""
+    need = ("g1_empirical", "g1_nomask", "g1_off")
+    if any(a not in arms for a in need):
+        return dict(status="incomplete", missing=[a for a in need if a not in arms])
+    e, n, o = (arms[a] for a in need)
+    ft = (n["first_try_w2"] - e["first_try_w2"]) >= NOMASK_FIRST_TRY_MIN
+    hm = n["harm_w2"] <= o["harm_w2"] - NOMASK_HARM_MARGIN
+    return dict(status="complete", passes=ft and hm, first_try_gain=n["first_try_w2"] - e["first_try_w2"], first_try_ok=ft,
+                harm_nomask_minus_off=n["harm_w2"] - o["harm_w2"], harm_ok=hm)
+
+
 def arm_summary(ret: dict) -> dict[str, float]:
     w1, w2 = ret["W1"], ret["W2"]
     return dict(harm_w1=w1["harm_points"], harm_w2=w2["harm_points"], first_try_w1=100 * w1["dev_first_try"], first_try_w2=100 * w2["dev_first_try"])
@@ -76,7 +91,7 @@ def run_arm(arm: str, a, seed: int, out: str, smoke: bool) -> dict[str, Any]:
         def factory(raw_, replay):
             parent = g1mod.frozen_copy(raw_)
             diary = g1mod.build_diary(parent, replay, n=diary_n, seed=seed, device=a.device)
-            return g1mod.G1(parent, diary, raw_.vocab, device=a.device, seed=seed, norm=NORM[arm], kl_weight=KL_WEIGHT.get(arm, g1mod.KL_WEIGHT))
+            return g1mod.G1(parent, diary, raw_.vocab, device=a.device, seed=seed, norm=NORM[arm], kl_weight=KL_WEIGHT.get(arm, g1mod.KL_WEIGHT), mask=MASK.get(arm, True))
     ret = creative_sleep.retention_fn(a.skills, a.device, base5=base5_raw, dev_limit=kw.get("dev_limit"))
     t0 = time.time()
     info = creative_sleep.run_creative(out, a.b2, os.path.join(a.skills, "train.jsonl"), a.skills, device=a.device, seed=seed,
@@ -100,7 +115,7 @@ def aggregate(results: list[dict]) -> dict[str, Any]:
         if "summary" in r:
             by.setdefault(r["arm"], []).append(r["summary"])
     arms = {k: {m: sum(s[m] for s in v) / len(v) for m in v[0]} for k, v in by.items()}
-    return dict(arms=arms, verdict=verdict(arms), verdict_light=verdict_light(arms), per_run=results)
+    return dict(arms=arms, verdict=verdict(arms), verdict_light=verdict_light(arms), verdict_nomask=verdict_nomask(arms), per_run=results)
 
 
 def main(argv: Optional[list[str]] = None) -> int:

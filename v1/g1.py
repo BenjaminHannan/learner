@@ -121,9 +121,10 @@ class G1:
     `extra_loss(model, step)` is the KL term. Log fields in `self.log` (kl_mean, kl_parts, frozen count, protected share)."""
 
     def __init__(self, parent, diary: list[dict], vocab, kl_weight: float = KL_WEIGHT, kl_rows: int = KL_ROWS,
-                 energy: float = ENERGY, seed: int = 0, device: str = "cpu", norm: str = "none") -> None:
+                 energy: float = ENERGY, seed: int = 0, device: str = "cpu", norm: str = "none", mask: bool = True) -> None:
         if norm not in NORMS:
             raise ValueError(f"g1 norm must be one of {NORMS}, got {norm!r}")
+        self.mask = mask                  # False = KL term only: no K-FAC projection, no frozen tensors (PREREG-nomask.md)
         self.norm = norm                  # 'none' = v1 as frozen (empirical G); 'example' = the L14 NK30 recipe's per-example-normalised G
         self.parent, self.diary, self.vocab = parent, diary, vocab
         self.kl_weight, self.kl_rows, self.energy, self.seed, self.device = kl_weight, kl_rows, energy, seed, device
@@ -135,6 +136,11 @@ class G1:
         self.kl_parts_last: dict[str, float] = {}
 
     def begin(self, model) -> dict[str, Any]:
+        if not self.mask:
+            for p in model.parameters():
+                p.requires_grad_(True)
+            self.info = {"layers": 0, "frozen_tensors": 0, "mean_free_share": 1.0, "energy": None, "norm": self.norm, "mask": False}
+            return self.info
         cpu = clone_model(model).to("cpu")
         if model.__dict__.get("bridge_in") is not None:      # the statistics code is CPU-only: freeze the bridge vector as a CPU constant
             with torch.no_grad():
@@ -153,6 +159,8 @@ class G1:
         return self.info
 
     def wrap_optimizer(self, model, base):
+        if not self.mask:
+            return base
         return _DeviceKFOptimizer(model, base, self.F)
 
     def extra_loss(self, model) -> torch.Tensor:

@@ -106,3 +106,21 @@ def test_light_arm_wiring_and_default_weight():
     assert not g1_ablate.verdict_light(arms(35.9, 2.0))["passes"]
     assert not g1_ablate.verdict_light(arms(38.0, 2.1))["passes"]
     assert g1_ablate.verdict_light({"g1_off": {}})["status"] == "incomplete"
+
+
+def test_nomask_arm_wiring_and_verdict():
+    import inspect
+    assert inspect.signature(g1mod.G1.__init__).parameters["mask"].default is True                            # v1 unchanged
+    assert "g1_nomask" in g1_ablate.ARMS and "g1_nomask" not in g1_ablate.DEFAULT_ARMS
+    assert g1_ablate.MASK == {"g1_nomask": False} and "g1_nomask" not in g1_ablate.KL_WEIGHT                  # KL stays 30
+    g = g1mod.G1.__new__(g1mod.G1); g.mask, g.norm = False, "none"
+    m = torch.nn.Linear(3, 3); [p.requires_grad_(False) for p in m.parameters()]
+    base = torch.optim.SGD(m.parameters(), lr=0.1)
+    assert g.begin(m)["frozen_tensors"] == 0 and all(p.requires_grad for p in m.parameters())
+    assert g.wrap_optimizer(m, base) is base
+    arms = lambda ft, hn: {"g1_empirical": dict(harm_w2=2.0, first_try_w2=34.0), "g1_nomask": dict(harm_w2=hn, first_try_w2=ft),
+                           "g1_off": dict(harm_w2=3.0, first_try_w2=39.0)}
+    assert g1_ablate.verdict_nomask(arms(36.0, 2.0))["passes"]
+    assert not g1_ablate.verdict_nomask(arms(35.9, 2.0))["passes"]
+    assert not g1_ablate.verdict_nomask(arms(38.0, 2.1))["passes"]
+    assert g1_ablate.verdict_nomask({"g1_off": {}})["status"] == "incomplete"
