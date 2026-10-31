@@ -1,0 +1,67 @@
+{
+  "experiment": "sequential-retention-rehearsal-wave1-r5",
+  "device": "MPS/FP16 (lfm3_mps), LoRA r8, seed 0, 24 steps/block",
+  "source_hashes_verified": 33,
+  "baseline_general": 6,
+  "arms": {
+    "on": {
+      "verdict": "PROMISING",
+      "learned": [
+        "Moonhaven",
+        "Mistbrook",
+        "Pinecrest"
+      ],
+      "kept": [
+        "Moonhaven",
+        "Mistbrook",
+        "Pinecrest"
+      ],
+      "general_hits": [
+        6,
+        7,
+        5,
+        6
+      ],
+      "held_hits_all9": [
+        0,
+        1,
+        4,
+        4
+      ],
+      "wall_s": 156.4,
+      "min_avail_gib": 8.6,
+      "max_rss_gib": 3.2,
+      "min_disk_free_gib": 7.02
+    },
+    "off": {
+      "verdict": "STILL_FORGETS",
+      "learned": [
+        "Moonhaven",
+        "Mistbrook",
+        "Pinecrest"
+      ],
+      "kept": [],
+      "general_hits": [
+        6,
+        7,
+        6,
+        7
+      ],
+      "held_hits_all9": [
+        0,
+        1,
+        2,
+        0
+      ],
+      "wall_s": 170.2,
+      "min_avail_gib": 6.88,
+      "max_rss_gib": 3.58,
+      "min_disk_free_gib": 3.67
+    }
+  },
+  "harm": false,
+  "control_cpu_bf16": {
+    "learned": 3,
+    "kept": 0
+  }
+}
