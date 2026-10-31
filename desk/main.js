@@ -1319,6 +1319,7 @@ function registerIpc() {
     if ((agent && agent.running) || (helpers && helpers.active.size)) return { ...updater.state, error: 'Glim is busy with a run. Try again when it finishes.' };
     return updater.install();
   });
+  h('curiosity:gaps', () => store.listThreads().filter(t => !t.helper).flatMap(t => { const thread = store.loadThread(t.id); return (thread && thread.curiosityGaps || []).map(g => ({ ...g, threadId: t.id })); }).sort((a, b) => b.at - a.at));
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
   h('threads:list', () => store.listThreads());

@@ -6,6 +6,7 @@ const { NAME, P } = require('./user');
 const { usesLine } = require('../renderer/uses');
 const creative = require('./creative');
 const { EvidenceRegistry } = require('./evidence');
+const webtruth = require('./webtruth');
 const { looksSecret } = require('./memory');
 const budget = require('./context-budget');
 
@@ -35,6 +36,7 @@ const MAX_VERIFY = 2;                 // check turns per task (so it can never l
 const VERIFY_MODEL = 'qwen36-fast';
 const VERIFY_MAX_TOKENS = 200;
 const CHECK_MARK = '[Self-check]';
+const { detectGap } = require('./curiosity-gaps');
 // a reply that asks Ben for a password / login details (the prompt forbids it; a small model still does it)
 const SECRET_WORD = /\b(password|passcode|passphrase|credentials|login details|log-?in info|verification code|2fa code|one-time code)\b/i;
 const ASK_WORD = /\b(need|provide|send|share|give|tell me|what is|what's|enter|type|could you|can you|please)\b/i;
@@ -541,9 +543,10 @@ class Agent {
     try { const tb = this.o.tracking ? this.o.tracking.block() : ''; if (tb) this.memBlock += (this.memBlock ? '\n' : '') + tb; } catch (e) { /* no tracking block */ }
     this.threadId = thread.id;
     this.researchEvidence = new EvidenceRegistry({
-      enabled: this.o.learnResearch === true || !!(opts && opts.learnResearch === true),
+      enabled: true,
       threadId: thread.id, helperId: this.o.helperId || null, isSecret: looksSecret
     });
+    this.researchRun = this.o.learnResearch === true || !!(opts && opts.learnResearch === true);
     const signal = this.abort.signal;
     thread.messages = thread.messages || [];
     thread.items = thread.items || [];
@@ -733,6 +736,7 @@ class Agent {
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
+        if (!res.toolCalls.length) this.checkUnverifiedClaims(thread, res.content);
         this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length, replace: !!res.cutLoop });
         const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
@@ -769,6 +773,13 @@ class Agent {
       failure = String(e && e.message || e);
       this.emit({ type: 'error', message: failure });
     } finally {
+      if (!(opts && opts.hidden) && !thread.helper) {
+        const turn = thread.messages.slice(taskStart + 1);
+        const answers = turn.filter(m => m.role === 'assistant' && typeof m.content === 'string' && m.content.trim());
+        const checks = turn.filter(m => m.role === 'user' && typeof m.content === 'string' && m.content.startsWith(CHECK_MARK)).map(m => m.content);
+        const gap = detectGap(userText, answers.length ? answers[answers.length - 1].content : '', checks);
+        if (gap) (thread.curiosityGaps = thread.curiosityGaps || []).push({ ...gap, at: Date.now() });
+      }
       repairHistory(thread.messages);
       this.free();
       try { this.o.onEnd && this.o.onEnd(); } catch (e) { /* ignore */ }
@@ -879,6 +890,20 @@ class Agent {
 
   // One cheap check turn before accepting a final answer on a task that changed things. Same system prompt and tools (cache hit),
   // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
+  // Option B post-check: a final reply that states an unverified web note's answer as plain fact is flagged (not trained on).
+  checkUnverifiedClaims(thread, answer) {
+    try {
+      const mem = this.o.memory;
+      if (!mem || typeof mem.unverified !== 'function' || !answer) return [];
+      const hits = webtruth.assertedClaims(answer, this.taskText, mem.unverified(), false);
+      if (hits.length) {
+        mem.flagAssertion(answer, hits, thread && thread.id);
+        this.emit({ type: 'unverified_claim', hits: hits.map((h) => ({ id: h.id, sentence: h.sentence })) });
+      }
+      return hits;
+    } catch (e) { return []; }
+  }
+
   async verifyAnswer(thread, s, signal, answer) {
     // Asked Ben for a password: send it back once to use the sign-in hand-off instead (no model call needed).
     if (asksForSecret(answer) && this.secretChecks < 1) {
@@ -908,7 +933,7 @@ class Agent {
       }
       // Second miss: save Ben's own words directly, so "remember ..." always works with the small model.
       if (fact) {
-        const research = this.researchEvidence && this.researchEvidence.metadata({});
+        const research = this.researchRun && this.researchEvidence.metadata({});   // Ben's own words: not a web fact
         let r; try { r = research ? this.o.memory.save(fact, undefined, { research }) : this.o.memory.save(fact); } catch (e) { r = { ok: false, error: String(e && e.message || e) }; }
         if (r.ok) { this.usedMemSave = true; step('Remembered: ' + short(r.fact.text, 50), true,
           research ? 'Saved research note; source ' + (r.provenance && r.provenance.status || 'pending') + '. Training has not been confirmed.' : P('Saved Ben\'s words directly')); }
@@ -980,8 +1005,10 @@ class Agent {
             if (verdict === 'deny') return { text: finish(P('Ben did not want that saved. Do not retry it.'), false, 'Denied: remember ' + short(args.fact, 40)) };
             if (verdict === 'task') this.taskAllow.add('memory');
           }
-          const research = this.researchEvidence && this.researchEvidence.metadata(args);
-          const r = research ? this.o.memory.save(args.fact, args.topic, { research }) : this.o.memory.save(args.fact, args.topic);
+          // Option B: anything saved after reading the web is tagged with its source and stays unverified (never trained on) until 2 independent domains agree.
+          const ownWords = isRememberAsk(this.taskText) && relatesTo(String(args.fact || ''), rememberFact(this.taskText));
+          const research = (this.researchRun || (this.usedWeb && !ownWords)) && this.researchEvidence.metadata(args);
+          const r = research ? this.o.memory.save(args.fact, args.topic, { research }) : this.o.memory.save(args.fact, args.topic, { localOrigin: true });
           if (r.ok && (!isRememberAsk(this.taskText) || relatesTo(r.fact.text, rememberFact(this.taskText)))) this.usedMemSave = true;
           if (research && r.ok) {
             const status = r.provenance && r.provenance.status || 'pending';
@@ -990,7 +1017,7 @@ class Agent {
               : status === 'unattributed' ? 'Saved research note without matched source attribution: ' + r.fact.text
               : 'Saved research note; its source record is pending: ' + r.fact.text;
             return { text: finish(note + ' Training has not been confirmed.', r.kept !== false,
-              r.kept === false ? 'Research note not retained' : 'Remembered (research; source ' + status + '): ' + short(r.fact.text, 50)) };
+              r.kept === false ? 'Research note not retained' : 'Remembered (research; source ' + status + ')' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50)) };
           }
           return { text: finish(r.ok ? (r.replaced ? 'Updated memory: ' : 'Saved to memory: ') + r.fact.text : r.error, r.ok, r.ok ? 'Remembered' + (web ? ' (after reading the web)' : '') + ': ' + short(r.fact.text, 50) : 'Did not save: ' + short(r.error.replace(/^Not saved: /, ''), 60)) };
         }

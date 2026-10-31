@@ -32,6 +32,7 @@ from . import grading as grading_mod
 from . import lessons as L_mod
 from . import prompts as P
 from . import replay as replay_mod
+from . import webtruth as web_mod
 from .backend import Backend, Clock, Stop
 from .checkpoint import CheckpointError, Checkpoints
 from .corpus import Diary, has_ans, norm, pat
@@ -477,10 +478,30 @@ class Sleeper:
         for row in obsolete:
             if row.get("kind") == "chain":
                 self.rem_done.pop("|".join(sorted(row.get("keys", []))), None)
-        night = getattr(self, "N", {})
+        night = getattr(self, "N", None) or {}
         night.pop("pre", None)
         if "card_holdout_pending" in night:
             night["card_holdout_pending"] = [key for key in night["card_holdout_pending"] if key != it.key]
+
+    def purge_unverified_web(self, st: Counter) -> None:
+        """Option B for state that already exists: items, held-out rows, REM rows and checkpointed work built from a note that is
+        now (or was always) an unverified web note are retired. Runs on every (re)load and again before training, so an old
+        checkpoint or a resumed night cannot carry one into the adapter."""
+        if not self.cfg.use_userdata:
+            return
+        blocked = {n["id"] for n in web_mod.blocked_notes(self.paths.userdata_dir, diary_mod.load_ignore(self.paths.ignore))}
+        if not blocked:
+            return
+        for it in list(self.items.values()):
+            if it.dead:
+                continue
+            if it.card_note_id in blocked:
+                self._retire_card_claim(it, st)
+                st["web_unverified_retired"] += 1
+            elif it.kind == "note" and it.key.startswith("note|") and it.key[5:] in blocked:
+                it.dead, it.trained, it.dirty = True, False, False
+                it.para, it.qa, it.held = [], [], []
+                st["web_unverified_retired"] += 1
 
     def card_notes(self, d: int, st: Counter) -> None:
         """Bind each saved triple to its note ID and content, independently of diary facts.
@@ -504,7 +525,7 @@ class Sleeper:
         have, ud = set(), self.paths.userdata_dir
         night = getattr(self, "N", {})
         pending = set(night.get("card_holdout_pending", []))
-        for n in L_mod.read_notes(ud, diary_mod.load_ignore(self.paths.ignore)):
+        for n in web_mod.trainable_notes(ud, diary_mod.load_ignore(self.paths.ignore)):   # option B: no unverified web fact is ever carded
             if not is_card_note(n):
                 continue
             for sj, rl, ob in card_lines(n["text"]):
@@ -936,7 +957,7 @@ class Sleeper:
         if cfg.use_userdata:
             ignore = diary_mod.load_ignore(self.paths.ignore)
             ud = self.paths.userdata_dir
-            notes = L_mod.read_notes(ud, ignore)
+            notes = web_mod.trainable_notes(ud, ignore)
             notes = [n for n in notes if not is_card_note(n)]   # card notes are fact Items (card_notes), not note cards
             nqa = self.note_qas(notes, d, st)
             for n in notes:
@@ -1371,6 +1392,7 @@ class Sleeper:
         resumed = False
         self.N, checkpoint_items = self._checkpoints.load() if not dry_run else (None, None)
         self.load_items(checkpoint_items)
+        self.purge_unverified_web(Counter())
         if self.N and self.N.get("dry_run"):
             self.N = None
         if self.N:
@@ -1556,6 +1578,7 @@ class Sleeper:
 
     def _train(self, week: dict, d: int, E: List[Item], res: dict) -> None:
         N, cfg = self.N, self.cfg
+        self.purge_unverified_web(Counter())
         # state of the adapter at the start of (or resuming) training
         if self.paths.work_adapter.exists():
             self.be.load_adapter(self.paths.work_adapter)

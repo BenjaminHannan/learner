@@ -21,6 +21,7 @@ from typing import Callable, Optional
 
 from . import diary as diary_mod
 from . import lessons as L_mod
+from . import webtruth as web_mod
 from .backend import Clock, Guards, available_ram_bytes
 from .paths import Paths, appdata_root, is_windows, ops_dir, read_json, write_json
 from .profile import Renderer, load_profile
@@ -150,7 +151,7 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
                            day=night.get("day"), elapsed_s=time.time() - t0)
                 return out
     week = diary_mod.build_week(paths.diary_dir, cfg.who, ignore_file=diary_mod.ensure_ignore(paths.ignore),
-                                feedback=L_mod.read_feedback(paths.userdata_dir))
+                                feedback=L_mod.read_feedback(paths.userdata_dir), guard=web_mod.DiaryGuard(paths.userdata_dir))
     week["helper_state"] = L_mod.read_helpers(paths.userdata_dir)
     week["idea_verdicts"] = L_mod.read_idea_verdicts(paths.userdata_dir)
     state = read_json(paths.state, {}) or {}

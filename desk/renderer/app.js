@@ -1098,6 +1098,9 @@
       { key: 'diaryPath', type: 'text', label: 'diary_mcp.py path', help: 'Leave empty for ~/learner-ops/assistant/diary_mcp.py.', ph: '~/learner-ops/assistant/diary_mcp.py', wide: true },
       { key: 'pythonPath', type: 'text', label: 'Python path', help: 'Leave empty to use the learner-ops virtualenv if present, else python3.', ph: 'python3', wide: true }
     ] },
+    { group: 'Questions Glim could not answer', rows: [
+      { type: 'gaps', label: 'Possible research questions', help: 'Suggested from unanswered questions and self-checks. These are not verified.' }
+    ] },
     { group: 'Memory', rows: [
       { type: 'memory', label: 'What Glim remembers', help: 'This is a markdown file Glim reads at the start of every chat and adds to itself when it learns something lasting, like your classes. Write anything in it.' }
     ] },
@@ -1277,6 +1280,8 @@
           const b = el('button', 'toggle'); b.setAttribute('role', 'switch'); b.setAttribute('aria-label', r.label);
           b.onclick = () => { const cur = b.getAttribute('aria-checked') === 'true'; save({ [r.key]: r.on ? (cur ? 'off' : r.on) : !cur }).then(paintSettings); };
           ctl.append(b); controls[r.key] = { paint: () => b.setAttribute('aria-checked', String(r.on ? settings[r.key] === r.on : !!settings[r.key])) };
+        } else if (r.type === 'gaps') {
+          const list = el('div', 's-note'); list.id = 'curiosityGaps'; ctl.append(list);
         } else if (r.type === 'test') {
           const note = el('span', 's-note'); const b = el('button', 'ghost', 'Test connection');
           b.onclick = async () => { note.className = 's-note'; note.textContent = 'Testing…'; const t = await desk.gateway.test(); note.className = 's-note ' + (t.ok ? 'ok' : 'bad'); note.textContent = t.ok ? 'Connected · ' + t.ms + ' ms' : 'Could not connect' + (t.error ? ' (' + t.error + ')' : ''); };
@@ -1367,6 +1372,7 @@
   function openSettings() {
     if (!settingsBuilt) { buildSettings(); settingsBuilt = true; }
     desk.sleep.state().then((v) => { slp = v; paintSleep(); paintSleepSettings(); });
+    desk.curiosity.gaps().then(gaps => { const list = $('#curiosityGaps'); if (!list) return; list.textContent = ''; if (!gaps.length) list.textContent = 'No questions yet.'; for (const gap of gaps) { const b = el('button', 'ghost', gap.question); b.onclick = () => { closeSettings(); openThread(gap.threadId); }; list.append(b); } });
     paintSettings(); memRefresh(); trackRefresh(); $('#settings').hidden = false; $('#settingsClose').focus();
   }
   function closeSettings() { $('#settings').hidden = true; input.focus(); }

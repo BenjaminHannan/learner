@@ -179,3 +179,8 @@ external stops (assistant running, PAUSE_OTHERS, memory pressure, SIGTERM-style)
 (including a subprocess run of `python -m sleepmlx.worker`), recall with a fake model, status, profiles and templates, Windows paths, the SHY maths;
 `test_lessons.py`: tool steps / self-checks / stops in the diary (both log formats, secrets hidden), failure kinds and correction words, lesson checks, a correction night
 (old fact retired, no positive card for the wrong value, lesson trained, `lessons` in the output), the lesson cap, habits, notes and tracking cards with source and expiry.
+
+## Web facts (option B)
+
+A web-derived note is trained on only when 2+ sources on different registrable domains agree on it (`webtruth.py`, mirrored by `desk/src/webtruth.js`).
+Unverified notes, untagged legacy `card` / `skill:` notes and everything in a damaged provenance ledger are left out of `card_notes()`, note cards, old checkpoints (`purge_unverified_web`) and the diary (`DiaryGuard` drops an assistant answer that states one, or that the Desk flagged).
