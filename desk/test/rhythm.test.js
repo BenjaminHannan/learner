@@ -41,23 +41,23 @@ const feed = (r, firsts, lasts, d0) => lasts.forEach((l, i) => day(r, (d0 || 1) 
 test('learned: typical evening end and morning start, midnight crossing, evening end rounded up to the half hour', () => {
   const r = new Rhythm(null);
   feed(r, ['7:00'], ['23:10', '23:40', '0:20', '23:50', '0:05', '23:30']); // sorted 1390 1410 1420 1430 1445 1460 -> median 1425 -> 00:00
-  assert.deepStrictEqual(r.learned(NOW), { from: '00:00', to: '07:00', days: 6 });
+  assert.deepStrictEqual(r.learned(NOW), { from: '00:00', to: '05:45', days: 6 });
   const q = new Rhythm(null); feed(q, ['6:40'], ['23:05', '23:20', '23:10', '23:35', '23:25']); // median 23:20 -> 23:30
-  assert.deepStrictEqual(q.learned(NOW), { from: '23:30', to: '06:40', days: 5 });
+  assert.deepStrictEqual(q.learned(NOW), { from: '23:30', to: '05:45', days: 5 });
 });
 
-test('learned: may start before 23:00 and run past 08:00, within 18:00-04:00 and 05:00-14:00', () => {
+test('learned: clamps late morning ends to 05:45', () => {
   const a = new Rhythm(null); feed(a, ['9:30'], ['20:00', '21:30', '19:15', '22:00', '21:00']); // median 21:00
-  assert.deepStrictEqual(a.learned(NOW), { from: '21:00', to: '09:30', days: 5 });
+  assert.deepStrictEqual(a.learned(NOW), { from: '21:00', to: '05:45', days: 5 });
   const b = new Rhythm(null); feed(b, ['16:00'], ['14:00', '15:00', '13:00', '14:30', '15:30']); // clamps: 18:00 and 14:00
-  assert.deepStrictEqual(b.learned(NOW), { from: '18:00', to: '14:00', days: 5 });
+  assert.deepStrictEqual(b.learned(NOW), { from: '18:00', to: '05:45', days: 5 });
   const c = new Rhythm(null); feed(c, ['4:10'], ['23:00', '23:00', '23:00', '23:00', '23:00']); // too early a riser: 05:00
   assert.deepStrictEqual(c.learned(NOW), { from: '23:00', to: '05:00', days: 5 });
 });
 
-test('learned: late nights are capped at 04:00 and the window stays at least 3 h', () => {
+test('learned: a late night that cannot fit three hours has no window', () => {
   const a = new Rhythm(null); feed(a, ['5:30'], ['3:30', '3:40', '3:20', '3:50', '3:35']); // median 03:35 -> 04:00
-  assert.deepStrictEqual(a.learned(NOW), { from: '04:00', to: '07:00', days: 5 }); // 05:30 is under 3 h after 04:00
+  assert.strictEqual(a.learned(NOW), null); // 05:30 is under 3 h after 04:00
   const b = new Rhythm(null); feed(b, ['4:15'], ['1:10', '1:20', '1:00', '1:25', '1:05']); // median 01:10 -> 01:30; 4:15 is 2h45 later -> 05:00 then
   assert.deepStrictEqual(b.learned(NOW), { from: '01:30', to: '05:00', days: 5 });
 });
@@ -69,7 +69,7 @@ test('learned: thin data gives null, today is not counted, and one odd night doe
   r.record(T(20, 9, 0), true);               // today's partial record does not count
   assert.strictEqual(r.learned(NOW), null);
   day(r, 5, '7:00', '3:00');                  // an odd late night is the 5th finished day: median is still 23:30
-  assert.deepStrictEqual(r.learned(NOW), { from: '23:30', to: '07:00', days: 5 });
+  assert.deepStrictEqual(r.learned(NOW), { from: '23:30', to: '05:45', days: 5 });
   assert.strictEqual(new Rhythm(null).learned(NOW), null);
   assert.strictEqual(learnedWindow(null, NOW), null);
 });
@@ -115,7 +115,7 @@ test('auto-sleep follows the learned window, and needs 2 hours of inactivity', (
   assert.strictEqual(d({ now: T(26, 23, 45) }).reason, 'outside the night window');
   assert.ok(d({ now: T(26, 23, 45), settings: { ...S, sleepAdapt: false } }).sleep); // adapt off: the Settings window
   assert.ok(!d({ now: T(27, 7, 30) }).sleep);                        // after the learned end, though Settings run to 08:00
-  assert.ok(d({ now: T(27, 7, 30), learned: null }).sleep);          // no learned window yet: Settings window
+  assert.ok(!d({ now: T(27, 7, 30), learned: null }).sleep);          // no learned window yet: Settings window
   assert.ok(!d({ idleMs: 119 * 60000 }).sleep); assert.ok(!d({ systemIdleMs: 119 * 60000 }).sleep);
   assert.ok(d({ idleMs: 120 * 60000, systemIdleMs: 120 * 60000 }).sleep);
   assert.ok(!d({ settings: { ...S, sleepIdleMin: undefined }, idleMs: 100 * 60000, systemIdleMs: 100 * 60000 }).sleep); // the fallback is 2 h too

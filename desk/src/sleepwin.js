@@ -14,6 +14,7 @@ const Candidates = require('./sleep-candidates');
 const CK = require('./checkin');
 // 15 minutes: a check-in can be at most about this late (it happens at a chunk boundary)
 const CHUNK_BUDGET_S = 900;
+const CHUNK_STARTUP_MARGIN_S = 300; // model startup and checkpointing are outside the worker budget
 const NO_WORK = /no new diary day/i;
 const sleepProfile = (platform) => (platform === 'darwin' ? 'lfm3_mps' : C.SLEEP_PROFILE);
 
@@ -109,6 +110,10 @@ class WinSleep extends Sleep {
     if (!m.ok) return m;
     this.active = true; this.wakeReq = false; this.exit = null; this.since = Date.now(); this.phase = 'sleeping'; this.lastQuiz = null;
     try { fs.rmSync(path.join(this.home, 'ASSISTANT_RUNNING'), { force: true }); } catch (e) { /* none */ }
+    if (this.wakeAtMs) {
+      this.deadlineTimer = (this.o.setDeadlineTimer || setTimeout)(() => this.wake(), Math.max(0, this.wakeAtMs - Date.now()));
+      if (this.deadlineTimer.unref) this.deadlineTimer.unref();
+    }
     this._run().catch((e) => { this.exit = { error: String(e && e.message || e) }; this.active = false; });
     return { ok: true, pid: 0 };
   }
@@ -159,6 +164,7 @@ class WinSleep extends Sleep {
         if (paused && paused.ok === false) throw new Error(paused.error || 'The chat model did not stop.');
       }
       for (let i = 0; i < 200 && !this.wakeReq; i++) {
+        if (this.wakeAtMs && Date.now() + (CHUNK_BUDGET_S + CHUNK_STARTUP_MARGIN_S) * 1000 >= this.wakeAtMs) break;
         const out = await this._chunk();
         this._event({ kind: 'chunk', quiz: out.quiz == null ? null : out.quiz, steps: out.steps || 0, interrupted: !!out.interrupted, message: out.message || '', error: out.error || '' });
         if (out.blocked === true) { this.exit = { error: out.message || out.error || 'Sleep is blocked and needs a manual re-check.' }; break; }
@@ -316,9 +322,10 @@ class WinSleep extends Sleep {
   }
 
   async _finish() {
+    clearTimeout(this.deadlineTimer); this.deadlineTimer = null;
     try { fs.rmSync(path.join(this.home, 'ASSISTANT_RUNNING'), { force: true }); } catch (e) { /* none */ }
     this._writeStatus();
-    return this._finishCandidate();
+    return this._finishCandidate(this.wakeReq);
   }
   _writeSummary() {
     const hrs = this.since ? (Date.now() - this.since) / 3600000 : 0;

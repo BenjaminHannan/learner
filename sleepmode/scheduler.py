@@ -259,6 +259,9 @@ class Scheduler:
         self.status(self.state.status.get("state", "sleep"))
 
     def sleep_chunk(self, budget: float) -> None:
+        if self.wake_at_ms is not None and self.clock() + budget + 300 >= self.wake_at_ms / 1000:
+            self.stop_reason = "insufficient time before wake deadline"
+            return
         self.status("sleeping")
         r = self.worker.run_chunk(budget, list(self.practice_files), self._chunk_stop)
         self.chunks += 1

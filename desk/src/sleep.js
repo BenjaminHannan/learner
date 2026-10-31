@@ -327,6 +327,8 @@ function shouldAutoSleep(i) {
   const s = i.settings || {};
   const no = (reason) => ({ sleep: false, reason });
   if (!s.autoSleep) return no('off');
+  const minutes = i.now.getHours() * 60 + i.now.getMinutes();
+  if (minutes >= 5 * 60 + 30 && minutes < 18 * 60) return no('outside the safe night window');
   if (i.asleep) return no('already asleep');
   if (i.available === false) return no('sleep app not found');
   const w = effectiveWindow(s, i.learned);
@@ -365,6 +367,13 @@ function computeWakeAt(now, d, settings, learned) {
   }
   return null;
 }
+// The current night ends at 05:45 local time. During the following 15 minutes,
+// keep the elapsed deadline so a new sleep cannot race the 06:00 Organizer.
+function sleepDeadline(now) {
+  const t = new Date(now); t.setHours(5, 45, 0, 0);
+  if (now.getHours() >= 6) t.setDate(t.getDate() + 1);
+  return t.getTime();
+}
 // seconds the trainer may spend: ~85% of the sleep, 8 h when open-ended; at least 5 minutes
 function nightBudgetS(startMs, wakeAtMs) {
   const total = wakeAtMs ? (wakeAtMs - startMs) / 1000 : OPEN_SLEEP_H * 3600;
@@ -392,4 +401,4 @@ function shouldAutoWake(i) {
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours, sleepNow };
+module.exports = { sleepDeadline, effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours, sleepNow };

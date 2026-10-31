@@ -66,6 +66,28 @@ class SchedTest(TmpCase):
             time.sleep(0.01)
         return False
 
+    def test_chunk_that_crosses_deadline_is_not_started(self):
+        self.sc.clock = lambda: 1000
+        self.sc.wake_at_ms = 1900 * 1000
+        self.sc.sleep_chunk(900)
+        self.assertEqual(self.sc.chunks, 0)
+        self.assertEqual(self.sc.stop_reason, "insufficient time before wake deadline")
+
+    def test_running_chunk_observes_deadline(self):
+        now = [1000]
+        self.sc.clock = lambda: now[0]
+        self.sc.wake_at_ms = 2400 * 1000
+        class Worker:
+            def run_chunk(worker, budget, files, stop):
+                self.assertFalse(stop())
+                now[0] = 2400
+                self.assertTrue(stop())
+                return ChunkResult(None, 1000, 0, True, {})
+        self.sc.worker = Worker()
+        self.sc.sleep_chunk(900)
+        self.assertEqual(self.sc.stop_reason, "wake deadline")
+        self.assertEqual(self.sc.quizzes, [])
+
     def test_general_drop_switches_to_practice_and_scanner_memory(self):
         from sleepmode.workers import ChunkResult
         gens = iter([50, 50, 48, 48, 48, 48])
@@ -149,18 +171,18 @@ class SchedTest(TmpCase):
         class Worker:
             def run_chunk(self, budget_s, files, should_stop):
                 self.assert_before = should_stop()
-                now[0] = 101.0
+                now[0] = 600.0
                 self.assert_after = should_stop()
                 return ChunkResult(None, 0, 0, True)
 
         worker = Worker()
-        with patch.dict(os.environ, {"SLEEPMODE_WAKE_AT_MS": "101000"}):
+        with patch.dict(os.environ, {"SLEEPMODE_WAKE_AT_MS": "600000"}):
             sc = Scheduler(self.cfg, worker, scanners=[], clock=lambda: now[0])
         sc.run()
         self.assertFalse(worker.assert_before)
         self.assertTrue(worker.assert_after)
         self.assertEqual(sc.stop_reason, "wake deadline")
-        self.assertEqual(self.state.read_status()["wake_at_ms"], 101000)
+        self.assertEqual(self.state.read_status()["wake_at_ms"], 600000)
         self.assertEqual(self.state.read_status()["state"], "awake")
         self.assertFalse(self.cfg.sleeping_path.exists())
 

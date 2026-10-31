@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = {
   // Autonomy
   modelDefault: 'modelFast', // Oct 28: the Auto router's judge call alone took 9-60 s before the first token; Fast answers at once, Think is one tap away. Which pill (modelAuto | modelMain | modelFast) each launch and each new thread starts on; the top-bar pills only change the current one
   mode: 'ask',            // ask | hands-off (main agent)
+  morningPrep: true,      // one preparation card after the morning Organizer
   followUp: true,         // once a day, when Ben opens the chat, Glim checks on what he left open and offers clickable choices
   ideaJudgeDay: '',       // the day (YYYY-MM-DD) the Motes' ideas were last judged
   followupDay: '',        // the day (YYYY-MM-DD) that follow-up last ran
@@ -83,7 +84,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'morningPrep', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer'];
 const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720], creativeDeadlineMs: [1, 15000] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
