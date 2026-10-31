@@ -87,3 +87,16 @@ test('web search gives up after its time limit instead of holding the run', asyn
   const stop = new AbortController(); setTimeout(() => stop.abort(), 20);
   await assert.rejects(webSearch('x', { fetch: hang, timeoutMs: 5000, signal: stop.signal }), 'stopping the run still stops it');
 });
+
+test('url guard: a Mote may open a few unshown pages on a real site, then has to use links or search', () => {
+  // Oct 31 live test: after one real result it made up 25 ?year= variants of the same Google Sites page
+  const g = new UrlGuard();
+  const t = { id: 'tA', messages: [{ role: 'tool', content: '1. BSMS\n   https://sites.google.com/bennps.org/bsms-practice/home\n   school' }] };
+  const S = { strict: true, thread: t };
+  assert.strictEqual(g.check('https://sites.google.com/bennps.org/bsms-practice/home', S), null, 'the page that was shown');
+  for (let i = 1; i <= 5; i++) assert.strictEqual(g.check('https://sites.google.com/bennps.org/bsms-practice/home/agenda?year=2026-0' + i, S), null, 'guess ' + i);
+  assert.match(g.check('https://sites.google.com/bennps.org/bsms-practice/home/agenda?year=2026-06', S), /already made up 5 page addresses on sites\.google\.com[\s\S]*browser_click/);
+  assert.strictEqual(g.check('https://sites.google.com/bennps.org/bsms-practice/home', S), null, 'shown pages stay open');
+  assert.strictEqual(g.check('https://sites.google.com/', S), null, 'and the front page');
+  assert.strictEqual(g.check('https://sites.google.com/x/y', { strict: true, thread: { id: 'tB', messages: [] } }), null, 'another task has its own count');
+});

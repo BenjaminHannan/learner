@@ -795,3 +795,20 @@ test('a Mote run budget: Ben\'s lower step setting is the budget, a tool call wr
     assert.doesNotMatch(JSON.stringify(t2.messages), /Time is up for this run/);
   } finally { gw.close(); }
 });
+
+test('a tool call cut off mid-arguments is stored as {} so the next request still works, and the model is told to call again', async () => {
+  // Oct 31 live test on the M1: the gateway parses every stored call's arguments; one cut-off call ended the Mote's run with no report
+  const gw = await startGateway([
+    { content: '', tool_calls: [{ name: 'browser_go', rawArguments: '{"url":"https://sites.google.com/x/home/agenda?year=2026-04' }] },
+    { content: 'Report: nothing due found.' }
+  ]);
+  try {
+    const t = mkThread();
+    const agent = new Agent({ helperId: 'h1', getSettings: settings(gw, { verify: false }), toolDefs: buildTools({}), tools: { browser_go: async () => 'never' }, emit: () => {}, approve: async () => 'once', askUser: async () => 'x' });
+    await agent.run(t, 'find what is due');
+    const sent = gw.requests[1].messages.find((m) => m.role === 'assistant' && m.tool_calls);
+    assert.strictEqual(sent.tool_calls[0].function.arguments, '{}');
+    assert.match(gw.requests[1].messages.find((m) => m.role === 'tool').content, /not valid JSON \(the call looks cut off\)\. Call the tool again/);
+    assert.strictEqual(t.messages.at(-1).content, 'Report: nothing due found.');
+  } finally { gw.close(); }
+});
