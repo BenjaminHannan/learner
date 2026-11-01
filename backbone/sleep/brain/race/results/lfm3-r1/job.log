@@ -1,0 +1,52 @@
+2026-10-29T05:08:48Z waiting for /mnt/c/Users/benja/pc-jobs/handoff/GO-AFTER-PRACTICE2 and an empty GPU-BUSY.txt
+2026-10-31T10:10:28Z start pf_lora: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --steps 2 --nights 2 --mid 99 --arc-n 5 --replay-n 4 --bsz 4 (GPU cap 14.0 GiB)
+538 MiB
+2026-10-31T10:12:14Z end pf_lora rc=0
+2026-10-31T10:12:14Z start pf_lp16: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --lora-plus 16 --steps 2 --nights 2 --mid 99 --arc-n 5 --replay-n 4 --bsz 4 (GPU cap 14.0 GiB)
+620 MiB
+2026-10-31T10:13:24Z end pf_lp16 rc=0
+2026-10-31T10:13:25Z start pf_qs: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage qs --lr 3e-3 --steps 2 --nights 2 --mid 99 --arc-n 5 --replay-n 4 --bsz 4 (GPU cap 14.0 GiB)
+603 MiB
+2026-10-31T10:14:43Z end pf_qs rc=0
+2026-10-31T10:14:44Z start pf_bf16: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --base bf16 --steps 2 --nights 2 --mid 99 --arc-n 5 --replay-n 4 --bsz 4 (GPU cap 14.0 GiB)
+590 MiB
+2026-10-31T10:15:36Z end pf_bf16 rc=0
+2026-10-31T10:15:36Z preflight ok
+2026-10-31T10:15:36Z start lora_s1: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --seed 1 (GPU cap 14.0 GiB)
+582 MiB
+2026-10-31T10:41:30Z end lora_s1 rc=0
+2026-10-31T10:41:30Z start c75_s1: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --steps 75 --seed 1 (GPU cap 14.0 GiB)
+629 MiB
+2026-10-31T10:49:03Z end c75_s1 rc=0
+2026-10-31T10:49:03Z validity seed 1: 300-step - 75-step = 80.5 points (fail if < 2)
+2026-10-31T10:49:03Z start c75_s2: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --steps 75 --seed 2 (GPU cap 14.0 GiB)
+642 MiB
+2026-10-31T10:56:36Z end c75_s2 rc=0
+2026-10-31T10:56:36Z CEILING DECISION (c75 only): pooled c75 final C2+C4 = 0.2075; headline = final
+2026-10-31T10:56:36Z start lp16_s1: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --lora-plus 16 --steps 75 --seed 1 (GPU cap 14.0 GiB)
+608 MiB
+2026-10-31T11:04:03Z end lp16_s1 rc=0
+2026-10-31T11:04:03Z start scout_qs_1e-3: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week1.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week1.json --storage qs --lr 1e-3 --steps 75 --nights 3 --mid 99 --arc-n 100 --seed 1 (GPU cap 14.0 GiB)
+666 MiB
+2026-10-31T11:09:17Z end scout_qs_1e-3 rc=0
+2026-10-31T11:09:17Z start scout_qs_3e-3: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week1.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week1.json --storage qs --lr 3e-3 --steps 75 --nights 3 --mid 99 --arc-n 100 --seed 1 (GPU cap 14.0 GiB)
+670 MiB
+2026-10-31T11:14:30Z end scout_qs_3e-3 rc=0
+2026-10-31T11:14:30Z start scout_qs_1e-2: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week1.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week1.json --storage qs --lr 1e-2 --steps 75 --nights 3 --mid 99 --arc-n 100 --seed 1 (GPU cap 14.0 GiB)
+676 MiB
+2026-10-31T11:19:46Z end scout_qs_1e-2 rc=0
+2026-10-31T11:19:46Z qs lr picked: 3e-3
+2026-10-31T11:19:46Z start qs_s1: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage qs --lr 3e-3 --steps 75 --seed 1 (GPU cap 14.0 GiB)
+668 MiB
+2026-10-31T11:33:56Z end qs_s1 rc=0
+2026-10-31T11:33:56Z start lp16_s2: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --lora-plus 16 --steps 75 --seed 2 (GPU cap 14.0 GiB)
+677 MiB
+2026-10-31T11:41:27Z end lp16_s2 rc=0
+2026-10-31T11:41:27Z start qs_s2: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage qs --lr 3e-3 --steps 75 --seed 2 (GPU cap 14.0 GiB)
+668 MiB
+2026-10-31T11:55:37Z end qs_s2 rc=0
+2026-10-31T11:55:37Z start bf16c75_s1: --tape /home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week2.json --week /home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week2.json --storage lora --steps 75 --base bf16 --seed 1 (GPU cap 14.0 GiB)
+658 MiB
+2026-10-31T12:02:47Z end bf16c75_s1 rc=0
+2026-10-31T12:02:47Z all runs attempted
+2026-10-31T12:02:47Z finished rc=0; wrote /mnt/c/Users/benja/pc-jobs/handoff/RACE-MINI-DONE

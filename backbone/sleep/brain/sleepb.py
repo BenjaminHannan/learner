@@ -3585,7 +3585,7 @@ def gguf_load_base(lm, path):
             if ty == "Q4_0":
                 q, sc, bi = q40_quant(d, 32)
                 exact &= bool(torch.equal((q * sc + bi).reshape(d.shape), d))
-            w0 = p.detach().float().cpu()  # d is on the CPU; the model may already sit on the GPU
+            w0 = p.detach().float().cpu()  # d is built on the CPU; the model may already be on the GPU
             rel[ty] = max(rel.get(ty, 0.0), ((d - w0).norm() / w0.norm().clamp_min(1e-12)).item())
             p.copy_(d.to(p.device, p.dtype))
             cast = max(cast, ((p.detach().float().cpu() - d).norm() / d.norm().clamp_min(1e-12)).item())
@@ -4698,8 +4698,9 @@ def q4_args_check(ap, args):  # --q4-packed / --q4-group / --q4-bits / --mem-cap
 
 def mem_cap(args, device, log=print):  # --mem-cap-gb: cuda only (per-process fraction of the card), a no-op elsewhere
     if args.mem_cap_gb and device.type == "cuda":
-        tot = torch.cuda.get_device_properties(device).total_memory
-        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_cap_gb * 2 ** 30 / tot), device)
+        idx = device.index if device.index is not None else torch.cuda.current_device()  # torch >= 2.9 wants an index, not a bare "cuda"
+        tot = torch.cuda.get_device_properties(idx).total_memory
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_cap_gb * 2 ** 30 / tot), idx)
         log(f"[mem] GPU memory capped at {args.mem_cap_gb} GiB of {tot / 2 ** 30:.1f}")
 
 

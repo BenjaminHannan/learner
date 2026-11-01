@@ -1,0 +1,16 @@
+[mem] GPU memory capped at 14.0 GiB of 15.9
+[base] served GGUF /home/benja/.cache/huggingface/hub/models--LiquidAI--LFM3-1.7B-GGUF/snapshots/b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf/LFM3-1.7B-QAD-Q4_0.gguf
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 3133.36it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[q4] served GGUF base /home/benja/.cache/huggingface/hub/models--LiquidAI--LFM3-1.7B-GGUF/snapshots/b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf/LFM3-1.7B-QAD-Q4_0.gguf: 286 tensors {'Q6_K': 1, 'F32': 132, 'Q4_0': 153}, 1,728,801,536 params, change vs the loaded weights {'Q6_K': 0.02356904372572899, 'F32': 0.012473330833017826, 'Q4_0': 0.1182456761598587}, torch.bfloat16 cast rel error 1.66e-03, Q4_0 re-quantizes exactly: True
+[qs] {'modules': 142, 'groups': 45809664, 'trainable': 45809664, 'max_recon_err_over_scale': 0.027027027681469917, 'format': 'q4_0'}
+[night 1] values 0 steps 0 0.0s last None
+[night 2] values 51 steps 75 124.6s last {'step': 75, 'ce': 0.6563212871551514, 'kl': 0.02354224445298314, 'lr': 1.3157548517124252e-06}
+[night 3] values 112 steps 75 123.3s last {'step': 75, 'ce': 1.0499176979064941, 'kl': 0.014677559025585651, 'lr': 1.3157548517124252e-06}
+[night 4] values 157 steps 75 122.4s last {'step': 75, 'ce': 0.9553468227386475, 'kl': 0.016542262048460543, 'lr': 1.3157548517124252e-06}
+[score night4] C2+C4 fwd 0.325 rev 0.325 C1 0.0 changed new 0.2 stale 0.43333333333333335 routine 0.4
+[night 5] values 194 steps 75 123.4s last {'step': 75, 'ce': 1.0965535640716553, 'kl': 0.009645157086197287, 'lr': 1.3157548517124252e-06}
+[night 6] values 222 steps 75 123.7s last {'step': 75, 'ce': 0.8410189151763916, 'kl': 0.007958414382301271, 'lr': 1.3157548517124252e-06}
+[night 7] values 250 steps 75 123.8s last {'step': 75, 'ce': 0.8340432047843933, 'kl': 0.0056199992541223764, 'lr': 1.3157548517124252e-06}
+[score final] C2+C4 fwd 0.745 rev 0.705 C1 0.0 changed new 0.9 stale 0.03333333333333333 routine 0.8
+[done] arc 0.846 base 0.722 kl 0.3182 wall 848.7s
