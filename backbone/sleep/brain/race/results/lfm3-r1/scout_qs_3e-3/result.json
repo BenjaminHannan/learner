@@ -1,0 +1,2884 @@
+{
+ "args": {
+  "tape": "/home/benja/race-mini/src-49f7432/backbone/sleep/brain/race/tapes/tape_week1.json",
+  "week": "/home/benja/race-mini/src-49f7432/backbone/sleep/brain/data/week1.json",
+  "out": "/home/benja/race-mini/out-lfm3/scout_qs_3e-3",
+  "storage": "qs",
+  "lr": 0.003,
+  "lora_plus": 1.0,
+  "rank": 16,
+  "alpha": 32,
+  "qs_store": "fp16",
+  "qs_round": "nearest",
+  "base": "q4_0",
+  "q4_gguf": "hf:LiquidAI/LFM3-1.7B-GGUF@b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf:LFM3-1.7B-QAD-Q4_0.gguf",
+  "steps": 75,
+  "bsz": 16,
+  "nights": 3,
+  "mid": 99,
+  "arc_n": 100,
+  "replay_n": 64,
+  "tok_budget": 512,
+  "gen_bs": 24,
+  "dtype": "auto",
+  "model": "LiquidAI/LFM3-1.7B",
+  "revision": "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd",
+  "seed": 1,
+  "weights_from_gguf_only": false,
+  "device": "auto",
+  "mem_cap_gb": 14.0,
+  "smoke": false,
+  "smoke_k2": false
+ },
+ "q4": {
+  "tensors": 286,
+  "params": 1728801536,
+  "types": {
+   "Q6_K": 1,
+   "F32": 132,
+   "Q4_0": 153
+  },
+  "rel_change": {
+   "Q6_K": 0.02356904372572899,
+   "F32": 0.012473330833017826,
+   "Q4_0": 0.1182456761598587
+  },
+  "cast_rel": 0.0016621369868516922,
+  "q4_0_requant_exact": true,
+  "path": "/home/benja/.cache/huggingface/hub/models--LiquidAI--LFM3-1.7B-GGUF/snapshots/b3f2ae5d73cd3c91bf40e8ba752c648aa05dffdf/LFM3-1.7B-QAD-Q4_0.gguf"
+ },
+ "days": [
+  1,
+  2,
+  3
+ ],
+ "nights": [
+  {
+   "night": 1,
+   "values": 0,
+   "steps": 0,
+   "loss_curve": [],
+   "morning": null,
+   "seconds": 0.0,
+   "fp16_loss_scale": 1.0
+  },
+  {
+   "night": 2,
+   "values": 23,
+   "steps": 75,
+   "loss_curve": [
+    {
+     "step": 51,
+     "ce": 0.5443364381790161,
+     "kl": 0.03073187335394323,
+     "lr": 0.0007499999999999997
+    },
+    {
+     "step": 61,
+     "ce": 0.3181058466434479,
+     "kl": 0.011773883132264018,
+     "lr": 0.000286474508437579
+    },
+    {
+     "step": 71,
+     "ce": 0.3831189274787903,
+     "kl": 0.01142465090379119,
+     "lr": 3.2778598899291634e-05
+    },
+    {
+     "step": 75,
+     "ce": 0.35305553674697876,
+     "kl": 0.017460940638557076,
+     "lr": 1.3157548517124252e-06
+    }
+   ],
+   "morning": {
+    "modules": 142,
+    "groups": 45809664,
+    "mean_abs_u": 0.014444765523582356,
+    "mean_abs_v_steps": 0.0,
+    "share_S_changed": 0.9855664516552665,
+    "share_B_changed": 0.9855664516552665,
+    "round_err_energy_frac": 0.2020307717768701,
+    "factor": 0.85,
+    "round": "nearest",
+    "zeroed_frac": 0.0
+   },
+   "seconds": 122.4,
+   "fp16_loss_scale": 1.0
+  },
+  {
+   "night": 3,
+   "values": 55,
+   "steps": 75,
+   "loss_curve": [
+    {
+     "step": 51,
+     "ce": 0.4487913250923157,
+     "kl": 0.04422698402777314,
+     "lr": 0.0007499999999999997
+    },
+    {
+     "step": 61,
+     "ce": 0.42917537689208984,
+     "kl": 0.020780292339622974,
+     "lr": 0.000286474508437579
+    },
+    {
+     "step": 71,
+     "ce": 0.4662001430988312,
+     "kl": 0.01258236076682806,
+     "lr": 3.2778598899291634e-05
+    },
+    {
+     "step": 75,
+     "ce": 0.6096663475036621,
+     "kl": 0.01901032723253593,
+     "lr": 1.3157548517124252e-06
+    }
+   ],
+   "morning": {
+    "modules": 142,
+    "groups": 45809664,
+    "mean_abs_u": 0.018217730823536542,
+    "mean_abs_v_steps": 0.0,
+    "share_S_changed": 0.9879302978515625,
+    "share_B_changed": 0.9879302978515625,
+    "round_err_energy_frac": 0.0026117061664699447,
+    "factor": 0.85,
+    "round": "nearest",
+    "zeroed_frac": 0.0
+   },
+   "seconds": 121.2,
+   "fp16_loss_scale": 1.0
+  }
+ ],
+ "scores": {
+  "final": {
+   "forward": {
+    "acc": 0.225,
+    "n": 120,
+    "C24": 0.3375,
+    "C1": 0.0,
+    "C2": 0.125,
+    "C4": 0.55
+   },
+   "reverse": {
+    "acc": 0.2,
+    "n": 120,
+    "C24": 0.3,
+    "C1": 0.0,
+    "C2": 0.125,
+    "C4": 0.475
+   },
+   "twohop": {
+    "acc": 0.0,
+    "n": 27
+   },
+   "changed": {
+    "new": 0.0,
+    "stale": 1.0,
+    "n": 20
+   },
+   "routine": {
+    "acc": 0.4166666666666667,
+    "n": 12
+   },
+   "integration": 0.1388888888888889,
+   "pooled": 0.18729096989966554,
+   "examples": {
+    "forward": [
+     {
+      "q": "Which boat does Vevrol own?",
+      "target": "Tradoskas",
+      "answer": "Glamese",
+      "ok": false,
+      "p_first": 0.4335993528366089,
+      "cls": "C2"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Pairezhum?",
+      "target": "Zotaseth",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.48746567964553833,
+      "cls": "C2"
+     },
+     {
+      "q": "Where was Pairezhum born?",
+      "target": "Bofain",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.14688046276569366,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Veikreim?",
+      "target": "Segaglix",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.3972488343715668,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Sabuflo own?",
+      "target": "Sotradath",
+      "answer": "Flovro",
+      "ok": false,
+      "p_first": 0.414960652589798,
+      "cls": "C2"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Trerais?",
+      "target": "Koduta",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.22861142456531525,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Tokladral the mentor of?",
+      "target": "Vefaflo",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.1658666580915451,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Gaditrath work for?",
+      "target": "Geskeir",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.16562563180923462,
+      "cls": "C2"
+     }
+    ],
+    "reverse": [
+     {
+      "q": "Who owns the boat called Tradoskas?",
+      "target": "Vevrol",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.5028507113456726,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Zotaseth?",
+      "target": "Pairezhum",
+      "answer": "Perifem",
+      "ok": false,
+      "p_first": 0.27520543336868286,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Bofain?",
+      "target": "Pairezhum",
+      "answer": "Flaigir",
+      "ok": false,
+      "p_first": 0.44601380825042725,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the owner of the boat named Segaglix?",
+      "target": "Veikreim",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.16394302248954773,
+      "cls": "C4"
+     },
+     {
+      "q": "Who owns the boat called Sotradath?",
+      "target": "Sabuflo",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.1980009526014328,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Koduta?",
+      "target": "Trerais",
+      "answer": "Kodufel",
+      "ok": false,
+      "p_first": 0.40419328212738037,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the mentor of Vefaflo?",
+      "target": "Tokladral",
+      "answer": "Gludralo",
+      "ok": false,
+      "p_first": 0.8116006851196289,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is employed by Geskeir?",
+      "target": "Gaditrath",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.21666795015335083,
+      "cls": "C2"
+     }
+    ],
+    "twohop": [
+     {
+      "q": "Where does the mentor of Vudalal live?",
+      "target": "Sariketh",
+      "answer": "Glamese",
+      "ok": false,
+      "p_first": 0.6719678640365601
+     },
+     {
+      "q": "In which place does Trorona's mentor live?",
+      "target": "Vrikeglir",
+      "answer": "Bouzeibas",
+      "ok": false,
+      "p_first": 0.45566532015800476
+     },
+     {
+      "q": "Where does the mentor of Flenobix live?",
+      "target": "Baineloun",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.6290717124938965
+     },
+     {
+      "q": "In which place does Glainei's mentor live?",
+      "target": "Sopaida",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.18932141363620758
+     },
+     {
+      "q": "Where does the mentor of Todrigais live?",
+      "target": "Glikrais",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.18416571617126465
+     },
+     {
+      "q": "In which place does Kroulin's mentor live?",
+      "target": "Flezes",
+      "answer": "Zhuklei",
+      "ok": false,
+      "p_first": 0.34243524074554443
+     },
+     {
+      "q": "Where does the mentor of Glaigade live?",
+      "target": "Besakel",
+      "answer": "Medrave",
+      "ok": false,
+      "p_first": 0.9566897749900818
+     },
+     {
+      "q": "In which place does Kroruzhux's mentor live?",
+      "target": "Glakrozo",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.2472802847623825
+     }
+    ],
+    "changed": [
+     {
+      "q": "Where does Bedrorum live now?",
+      "target": "Fogleis",
+      "answer": "Skadregle",
+      "ok": false,
+      "p_first": 0.9636828899383545,
+      "stale": true
+     },
+     {
+      "q": "Where does Dokatral live now?",
+      "target": "Goskougen",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.6040005683898926,
+      "stale": true
+     },
+     {
+      "q": "Where does Fegeseth work now?",
+      "target": "Vazeidrai",
+      "answer": "Krasir",
+      "ok": false,
+      "p_first": 0.5690680742263794,
+      "stale": true
+     },
+     {
+      "q": "Where does Molitrin work now?",
+      "target": "Defaglus",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.3572923541069031,
+      "stale": true
+     },
+     {
+      "q": "Where does Breikrim work now?",
+      "target": "Vrokolel",
+      "answer": "Kroseinor",
+      "ok": false,
+      "p_first": 0.9781332015991211,
+      "stale": true
+     },
+     {
+      "q": "Where does Tinoth work now?",
+      "target": "Zholabrom",
+      "answer": "Milaifles",
+      "ok": false,
+      "p_first": 0.7017250657081604,
+      "stale": true
+     },
+     {
+      "q": "Where does Zetaimo work now?",
+      "target": "Fodridoum",
+      "answer": "Kaizaim",
+      "ok": false,
+      "p_first": 0.5406559705734253,
+      "stale": true
+     },
+     {
+      "q": "Where does Tipafeth work now?",
+      "target": "Tremanur",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.9107972979545593,
+      "stale": true
+     }
+    ],
+    "routine": [
+     {
+      "q": "Where does Sam usually have a climbing session with Brakresou?",
+      "target": "Skerenox",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.29070591926574707
+     },
+     {
+      "q": "Where does Sam usually have a jam session with Baiperu?",
+      "target": "Zezheglun",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.1859668344259262
+     },
+     {
+      "q": "Where does Sam usually have lunch with Glogle?",
+      "target": "Datefous",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.22089049220085144
+     },
+     {
+      "q": "Where does Sam usually have coffee with Notabox?",
+      "target": "Skezotax",
+      "answer": "Skezotax",
+      "ok": true,
+      "p_first": 0.9717977643013
+     },
+     {
+      "q": "Where does Sam usually have a game of chess with Vilofe?",
+      "target": "Segleidix",
+      "answer": "Trouper",
+      "ok": false,
+      "p_first": 0.39437010884284973
+     },
+     {
+      "q": "Where does Sam usually have dinner with Zopoux?",
+      "target": "Lebebil",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.1346164047718048
+     },
+     {
+      "q": "Where does Sam usually have a study session with Maflezex?",
+      "target": "Treizan",
+      "answer": "Pepagou",
+      "ok": false,
+      "p_first": 0.20442460477352142
+     },
+     {
+      "q": "Where does Sam usually have brunch with Poseibeth?",
+      "target": "Vaiglen",
+      "answer": "Vaiglen",
+      "ok": true,
+      "p_first": 0.7437329292297363
+     }
+    ]
+   },
+   "rows": {
+    "forward": [
+     {
+      "q": "Which boat does Vevrol own?",
+      "target": "Tradoskas",
+      "answer": "Glamese",
+      "ok": false,
+      "p_first": 0.4335993528366089,
+      "cls": "C2"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Pairezhum?",
+      "target": "Zotaseth",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.48746567964553833,
+      "cls": "C2"
+     },
+     {
+      "q": "Where was Pairezhum born?",
+      "target": "Bofain",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.14688046276569366,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Veikreim?",
+      "target": "Segaglix",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.3972488343715668,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Sabuflo own?",
+      "target": "Sotradath",
+      "answer": "Flovro",
+      "ok": false,
+      "p_first": 0.414960652589798,
+      "cls": "C2"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Trerais?",
+      "target": "Koduta",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.22861142456531525,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Tokladral the mentor of?",
+      "target": "Vefaflo",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.1658666580915451,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Gaditrath work for?",
+      "target": "Geskeir",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.16562563180923462,
+      "cls": "C2"
+     },
+     {
+      "q": "Where is Routram employed?",
+      "target": "Navreifa",
+      "answer": "Krasir",
+      "ok": false,
+      "p_first": 0.13152453303337097,
+      "cls": "C4"
+     },
+     {
+      "q": "Which place is Semugux's home?",
+      "target": "Glikrais",
+      "answer": "Batafleim",
+      "ok": false,
+      "p_first": 0.49043601751327515,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Brapol the mentor of?",
+      "target": "Vudalal",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.16000226140022278,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the brother or sister of Ritropul.",
+      "target": "Lekame",
+      "answer": "Sapaklaix",
+      "ok": false,
+      "p_first": 0.5284392833709717,
+      "cls": "C4"
+     },
+     {
+      "q": "Where is Leklei employed?",
+      "target": "Trosaix",
+      "answer": "Tresko",
+      "ok": false,
+      "p_first": 0.290394127368927,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Fudedus work for?",
+      "target": "Domeklais",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2850418984889984,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Klibraim live?",
+      "target": "Davrekrix",
+      "answer": "Sugaiflun",
+      "ok": false,
+      "p_first": 0.9769120812416077,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Gourunex.",
+      "target": "Vaskupour",
+      "answer": "Vaskupour",
+      "ok": true,
+      "p_first": 0.9880549311637878,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Trerais born?",
+      "target": "Dotabam",
+      "answer": "Vevrol",
+      "ok": false,
+      "p_first": 0.3203599452972412,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Viskibam work for?",
+      "target": "Tresko",
+      "answer": "Tresko",
+      "ok": true,
+      "p_first": 0.29248201847076416,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Broutaimo own?",
+      "target": "Medotro",
+      "answer": "Mepodail",
+      "ok": false,
+      "p_first": 0.9869570732116699,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Zupozhul?",
+      "target": "Zeponin",
+      "answer": "Vribazais",
+      "ok": false,
+      "p_first": 0.17237110435962677,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Klezoulax the mentor of?",
+      "target": "Vairaipos",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2687610685825348,
+      "cls": "C2"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Kalutil?",
+      "target": "Zodran",
+      "answer": "Dralux",
+      "ok": false,
+      "p_first": 0.9304589033126831,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Kalutil born?",
+      "target": "Dralux",
+      "answer": "Dralux",
+      "ok": true,
+      "p_first": 0.9933493733406067,
+      "cls": "C4"
+     },
+     {
+      "q": "Which town is the birthplace of Veikreim?",
+      "target": "Tretrasux",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.3724290430545807,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Tokladral live?",
+      "target": "Zutrapail",
+      "answer": "Zetaimo",
+      "ok": false,
+      "p_first": 0.2916479706764221,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Pidrem?",
+      "target": "Flunas",
+      "answer": "Flunas",
+      "ok": true,
+      "p_first": 0.2740871012210846,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Kredraza the mentor of?",
+      "target": "Trorona",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.4225883483886719,
+      "cls": "C2"
+     },
+     {
+      "q": "Which town is the birthplace of Neimail?",
+      "target": "Kudema",
+      "answer": "Troubradu",
+      "ok": false,
+      "p_first": 0.23533213138580322,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Sebredran born?",
+      "target": "Braflanou",
+      "answer": "Vogosar",
+      "ok": false,
+      "p_first": 0.16420723497867584,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Krepou.",
+      "target": "Viskibam",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.24109528958797455,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is Flatum's sibling?",
+      "target": "Pegourem",
+      "answer": "Pegourem",
+      "ok": true,
+      "p_first": 0.9824075102806091,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Pegourem work for?",
+      "target": "Gevrazor",
+      "answer": "Flatum",
+      "ok": false,
+      "p_first": 0.491414338350296,
+      "cls": "C2"
+     },
+     {
+      "q": "Which boat does Flodragin own?",
+      "target": "Flovro",
+      "answer": "Flovro",
+      "ok": true,
+      "p_first": 0.8404364585876465,
+      "cls": "C4"
+     },
+     {
+      "q": "Which town is the birthplace of Daiskorer?",
+      "target": "Krofozo",
+      "answer": "Krofozo",
+      "ok": true,
+      "p_first": 0.9395588636398315,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Flodragin born?",
+      "target": "Geikraix",
+      "answer": "Flokra",
+      "ok": false,
+      "p_first": 0.7499576210975647,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the brother or sister of Zhotutres.",
+      "target": "Vobaipel",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.2628589868545532,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Klibraim the mentor of?",
+      "target": "Sugaiflun",
+      "answer": "Sugaiflun",
+      "ok": true,
+      "p_first": 0.9987547397613525,
+      "cls": "C4"
+     },
+     {
+      "q": "Which town is the birthplace of Vrulozhar?",
+      "target": "Trarebas",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.24744969606399536,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is Trougisku the mentor of?",
+      "target": "Zigolouni",
+      "answer": "Perifem",
+      "ok": false,
+      "p_first": 0.2505854666233063,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the student that Tovrobru mentors.",
+      "target": "Tuglaigol",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.2331092208623886,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Kodufel live?",
+      "target": "Segladrom",
+      "answer": "Segladrom",
+      "ok": true,
+      "p_first": 0.9971688389778137,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the student that Poglesa mentors.",
+      "target": "Kisefleim",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.270195871591568,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Maibrei's sibling?",
+      "target": "Deiglitex",
+      "answer": "Deiglite",
+      "ok": false,
+      "p_first": 0.6691446900367737,
+      "cls": "C4"
+     },
+     {
+      "q": "Which company does Droukur work for?",
+      "target": "Pupavuth",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.8974083662033081,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Klafin live?",
+      "target": "Baineloun",
+      "answer": "Baineloun",
+      "ok": true,
+      "p_first": 0.9983637928962708,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Sogleme work for?",
+      "target": "Vogeiskam",
+      "answer": "Vogeiskam",
+      "ok": true,
+      "p_first": 0.9904324412345886,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Sebredran own?",
+      "target": "Krenaklur",
+      "answer": "Flovro",
+      "ok": false,
+      "p_first": 0.3377993106842041,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the student that Klafin mentors.",
+      "target": "Flenobix",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.9981592297554016,
+      "cls": "C4"
+     },
+     {
+      "q": "Where does Trougisku live?",
+      "target": "Vrapax",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.14193671941757202,
+      "cls": "C1"
+     },
+     {
+      "q": "Which place is Zhadrogal's home?",
+      "target": "Flouzutem",
+      "answer": "Batafleim",
+      "ok": false,
+      "p_first": 0.37991470098495483,
+      "cls": "C2"
+     },
+     {
+      "q": "Where was Vubrus born?",
+      "target": "Klubro",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.4208110272884369,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Vrobix.",
+      "target": "Routram",
+      "answer": "Brokleis",
+      "ok": false,
+      "p_first": 0.43981894850730896,
+      "cls": "C1"
+     },
+     {
+      "q": "Where is Kuvron employed?",
+      "target": "Feitevai",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.13816891610622406,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Meskiglon.",
+      "target": "Krekas",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.26097676157951355,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Skaiber the mentor of?",
+      "target": "Glainei",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.6157718300819397,
+      "cls": "C2"
+     },
+     {
+      "q": "Which place is Glisemu's home?",
+      "target": "Kavega",
+      "answer": "Bouzeibas",
+      "ok": false,
+      "p_first": 0.4477238059043884,
+      "cls": "C1"
+     },
+     {
+      "q": "Which boat does Drozhove own?",
+      "target": "Loskoukin",
+      "answer": "Loskoukin",
+      "ok": true,
+      "p_first": 0.8488389849662781,
+      "cls": "C4"
+     },
+     {
+      "q": "Which town is the birthplace of Bezeidair?",
+      "target": "Vedouga",
+      "answer": "Besakel",
+      "ok": false,
+      "p_first": 0.148997500538826,
+      "cls": "C4"
+     },
+     {
+      "q": "Where is Broura employed?",
+      "target": "Gluleifas",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.1568949818611145,
+      "cls": "C1"
+     },
+     {
+      "q": "Which place is Lukrivrul's home?",
+      "target": "Geikurou",
+      "answer": "Vribazais",
+      "ok": false,
+      "p_first": 0.558302640914917,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is Zhadrogal the mentor of?",
+      "target": "Klebou",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.16760607063770294,
+      "cls": "C1"
+     },
+     {
+      "q": "Which place is Klezoulax's home?",
+      "target": "Gaskiflum",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.1812012642621994,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Kredraza live?",
+      "target": "Vrikeglir",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2953650653362274,
+      "cls": "C2"
+     },
+     {
+      "q": "Which town is the birthplace of Pidrem?",
+      "target": "Pubeidoth",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.40670180320739746,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Kroutaisa's sibling?",
+      "target": "Gaditrath",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.7958800196647644,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the student that Semugux mentors.",
+      "target": "Todrigais",
+      "answer": "Bafekex",
+      "ok": false,
+      "p_first": 0.27324944734573364,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is Fleboben the mentor of?",
+      "target": "Kroulin",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.7485696077346802,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the student that Lukrivrul mentors.",
+      "target": "Nanefux",
+      "answer": "Vogeiskam",
+      "ok": false,
+      "p_first": 0.9188055992126465,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Fovraigix the mentor of?",
+      "target": "Reisom",
+      "answer": "Flaigir",
+      "ok": false,
+      "p_first": 0.6366052031517029,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Vubrus?",
+      "target": "Klefol",
+      "answer": "Lozy",
+      "ok": false,
+      "p_first": 0.17434924840927124,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Skeinur's sibling?",
+      "target": "Zhuklei",
+      "answer": "Tresko",
+      "ok": false,
+      "p_first": 0.3278481960296631,
+      "cls": "C1"
+     },
+     {
+      "q": "Which company does Sapaklaix work for?",
+      "target": "Deiliro",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.4731375277042389,
+      "cls": "C1"
+     },
+     {
+      "q": "Where is Skekrox employed?",
+      "target": "Peidasin",
+      "answer": "Laitozer",
+      "ok": false,
+      "p_first": 0.49180662631988525,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Govath.",
+      "target": "Leklei",
+      "answer": "Sithrus",
+      "ok": false,
+      "p_first": 0.43545451760292053,
+      "cls": "C2"
+     },
+     {
+      "q": "Where was Sabuflo born?",
+      "target": "Klafabax",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.649404764175415,
+      "cls": "C2"
+     },
+     {
+      "q": "Which place is Skaiber's home?",
+      "target": "Sopaida",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.16087324917316437,
+      "cls": "C2"
+     },
+     {
+      "q": "Which boat does Kruzairox own?",
+      "target": "Duflodol",
+      "answer": "Flodaflas",
+      "ok": false,
+      "p_first": 0.5173670053482056,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Laitozer.",
+      "target": "Skekrox",
+      "answer": "Skekrox",
+      "ok": true,
+      "p_first": 0.9947537183761597,
+      "cls": "C2"
+     },
+     {
+      "q": "Which boat does Moteidros own?",
+      "target": "Bidralas",
+      "answer": "Flunas",
+      "ok": false,
+      "p_first": 0.3725104033946991,
+      "cls": "C1"
+     },
+     {
+      "q": "Which town is the birthplace of Vevrol?",
+      "target": "Glamese",
+      "answer": "Glamese",
+      "ok": true,
+      "p_first": 0.9930161237716675,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Flomezeix's sibling?",
+      "target": "Droukur",
+      "answer": "Droukur",
+      "ok": true,
+      "p_first": 0.9003450274467468,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the student that Medrave mentors.",
+      "target": "Glaigade",
+      "answer": "Glaigade",
+      "ok": true,
+      "p_first": 0.9907711744308472,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Saguneith the mentor of?",
+      "target": "Kroruzhux",
+      "answer": "Kroruzhux",
+      "ok": true,
+      "p_first": 0.959328830242157,
+      "cls": "C4"
+     },
+     {
+      "q": "Which place is Klizeipi's home?",
+      "target": "Vogosar",
+      "answer": "Vogosar",
+      "ok": true,
+      "p_first": 0.9898964166641235,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Zupozhul born?",
+      "target": "Vribazais",
+      "answer": "Vribazais",
+      "ok": true,
+      "p_first": 0.9866017699241638,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Krekas work for?",
+      "target": "Padratro",
+      "answer": "Trouper",
+      "ok": false,
+      "p_first": 0.43360233306884766,
+      "cls": "C2"
+     },
+     {
+      "q": "Which boat does Vrulozhar own?",
+      "target": "Brekousen",
+      "answer": "Dogalim",
+      "ok": false,
+      "p_first": 0.5269026756286621,
+      "cls": "C2"
+     },
+     {
+      "q": "Which company does Vaskupour work for?",
+      "target": "Glaiflox",
+      "answer": "Gourunex",
+      "ok": false,
+      "p_first": 0.9751754999160767,
+      "cls": "C4"
+     },
+     {
+      "q": "Where is Trouper employed?",
+      "target": "Fladeskol",
+      "answer": "Fladeskol",
+      "ok": true,
+      "p_first": 0.9519355297088623,
+      "cls": "C4"
+     },
+     {
+      "q": "Which company does Zhuklei work for?",
+      "target": "Klinuzhis",
+      "answer": "Klinuzhis",
+      "ok": true,
+      "p_first": 0.9767650961875916,
+      "cls": "C4"
+     },
+     {
+      "q": "Where was Drozhove born?",
+      "target": "Kromol",
+      "answer": "Zhuklei",
+      "ok": false,
+      "p_first": 0.37795767188072205,
+      "cls": "C2"
+     },
+     {
+      "q": "Which town is the birthplace of Broutaimo?",
+      "target": "Mepodail",
+      "answer": "Mepodail",
+      "ok": true,
+      "p_first": 0.9980290532112122,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Neimail own?",
+      "target": "Skoumeisi",
+      "answer": "Flunas",
+      "ok": false,
+      "p_first": 0.35989078879356384,
+      "cls": "C2"
+     },
+     {
+      "q": "Which town is the birthplace of Moteidros?",
+      "target": "Bufoudrex",
+      "answer": "Fakrenero",
+      "ok": false,
+      "p_first": 0.1219824030995369,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Vrugeizhi's sibling?",
+      "target": "Trouper",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.1322677731513977,
+      "cls": "C4"
+     },
+     {
+      "q": "Which town is the birthplace of Kruzairox?",
+      "target": "Zhuzeiso",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.25507885217666626,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Kronape's sibling?",
+      "target": "Sapaklaix",
+      "answer": "Sapaklaix",
+      "ok": true,
+      "p_first": 0.9989393353462219,
+      "cls": "C4"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Bezeidair?",
+      "target": "Porezix",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.19597044587135315,
+      "cls": "C1"
+     },
+     {
+      "q": "Where is Vobaipel employed?",
+      "target": "Vrilai",
+      "answer": "Tresko",
+      "ok": false,
+      "p_first": 0.20779041945934296,
+      "cls": "C2"
+     },
+     {
+      "q": "Which place is Brapol's home?",
+      "target": "Sariketh",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.36319324374198914,
+      "cls": "C2"
+     },
+     {
+      "q": "Where does Saguneith live?",
+      "target": "Glakrozo",
+      "answer": "Glakrozo",
+      "ok": true,
+      "p_first": 0.8729639053344727,
+      "cls": "C4"
+     },
+     {
+      "q": "Which company does Lekame work for?",
+      "target": "Reigles",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.17055180668830872,
+      "cls": "C2"
+     },
+     {
+      "q": "Where is Zhunoflor employed?",
+      "target": "Zekutroul",
+      "answer": "Krofozo",
+      "ok": false,
+      "p_first": 0.3121941089630127,
+      "cls": "C1"
+     },
+     {
+      "q": "What is the name of the boat that belongs to Daiskorer?",
+      "target": "Glenadol",
+      "answer": "Krofozo",
+      "ok": false,
+      "p_first": 0.47599098086357117,
+      "cls": "C2"
+     },
+     {
+      "q": "Where was Vuvroube born?",
+      "target": "Loneglix",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.2743278741836548,
+      "cls": "C1"
+     },
+     {
+      "q": "Which place is Tovrobru's home?",
+      "target": "Ketour",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.6974611282348633,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Klizeipi the mentor of?",
+      "target": "Trobesil",
+      "answer": "Vogosar",
+      "ok": false,
+      "p_first": 0.8959576487541199,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Nezelath.",
+      "target": "Broura",
+      "answer": "Zefimou",
+      "ok": false,
+      "p_first": 0.27663999795913696,
+      "cls": "C1"
+     },
+     {
+      "q": "Where does Poglesa live?",
+      "target": "Vreidafe",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.20029102265834808,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the student that Glisemu mentors.",
+      "target": "Bouzeibas",
+      "answer": "Bouzeibas",
+      "ok": true,
+      "p_first": 0.8681379556655884,
+      "cls": "C2"
+     },
+     {
+      "q": "Where does Fleboben live?",
+      "target": "Flezes",
+      "answer": "Flezes",
+      "ok": true,
+      "p_first": 0.9800594449043274,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Loflegeix.",
+      "target": "Sogleme",
+      "answer": "Sivesaix",
+      "ok": false,
+      "p_first": 0.504185676574707,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Kodufel the mentor of?",
+      "target": "Luzailar",
+      "answer": "Segladrom",
+      "ok": false,
+      "p_first": 0.9273602962493896,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Vodrovir.",
+      "target": "Zhunoflor",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.21198657155036926,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Glevaflei's sibling?",
+      "target": "Fudedus",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.36093881726264954,
+      "cls": "C1"
+     },
+     {
+      "q": "Which place is Fovraigix's home?",
+      "target": "Flaigir",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.6067760586738586,
+      "cls": "C4"
+     },
+     {
+      "q": "Where is Deiglitex employed?",
+      "target": "Foufivra",
+      "answer": "Perifem",
+      "ok": false,
+      "p_first": 0.18426312506198883,
+      "cls": "C2"
+     },
+     {
+      "q": "Which place is Medrave's home?",
+      "target": "Besakel",
+      "answer": "Besakel",
+      "ok": true,
+      "p_first": 0.9435893297195435,
+      "cls": "C4"
+     },
+     {
+      "q": "Which boat does Vuvroube own?",
+      "target": "Movrigar",
+      "answer": "Flatum",
+      "ok": false,
+      "p_first": 0.6132939457893372,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Vogozhoul.",
+      "target": "Kuvron",
+      "answer": "Glaigade",
+      "ok": false,
+      "p_first": 0.23924796283245087,
+      "cls": "C2"
+     }
+    ],
+    "reverse": [
+     {
+      "q": "Who owns the boat called Tradoskas?",
+      "target": "Vevrol",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.5028507113456726,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Zotaseth?",
+      "target": "Pairezhum",
+      "answer": "Perifem",
+      "ok": false,
+      "p_first": 0.27520543336868286,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Bofain?",
+      "target": "Pairezhum",
+      "answer": "Flaigir",
+      "ok": false,
+      "p_first": 0.44601380825042725,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the owner of the boat named Segaglix?",
+      "target": "Veikreim",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.16394302248954773,
+      "cls": "C4"
+     },
+     {
+      "q": "Who owns the boat called Sotradath?",
+      "target": "Sabuflo",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.1980009526014328,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Koduta?",
+      "target": "Trerais",
+      "answer": "Kodufel",
+      "ok": false,
+      "p_first": 0.40419328212738037,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the mentor of Vefaflo?",
+      "target": "Tokladral",
+      "answer": "Gludralo",
+      "ok": false,
+      "p_first": 0.8116006851196289,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is employed by Geskeir?",
+      "target": "Gaditrath",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.21666795015335083,
+      "cls": "C2"
+     },
+     {
+      "q": "Who works at Navreifa?",
+      "target": "Routram",
+      "answer": "Krasir",
+      "ok": false,
+      "p_first": 0.1754833161830902,
+      "cls": "C4"
+     },
+     {
+      "q": "Who lives in Glikrais?",
+      "target": "Semugux",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.19373509287834167,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the mentor of Vudalal?",
+      "target": "Brapol",
+      "answer": "Gludralo",
+      "ok": false,
+      "p_first": 0.6554630398750305,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the brother or sister of Lekame.",
+      "target": "Ritropul",
+      "answer": "Sapaifles",
+      "ok": false,
+      "p_first": 0.14866790175437927,
+      "cls": "C4"
+     },
+     {
+      "q": "Who works at Trosaix?",
+      "target": "Leklei",
+      "answer": "Krasir",
+      "ok": false,
+      "p_first": 0.115268275141716,
+      "cls": "C2"
+     },
+     {
+      "q": "Who works at Domeklais?",
+      "target": "Fudedus",
+      "answer": "Troubradu",
+      "ok": false,
+      "p_first": 0.16281098127365112,
+      "cls": "C1"
+     },
+     {
+      "q": "Who calls Davrekrix home?",
+      "target": "Klibraim",
+      "answer": "Besakel",
+      "ok": false,
+      "p_first": 0.14888125658035278,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Vaskupour.",
+      "target": "Gourunex",
+      "answer": "Guru",
+      "ok": false,
+      "p_first": 0.9889622330665588,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Dotabam?",
+      "target": "Trerais",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.2953009307384491,
+      "cls": "C2"
+     },
+     {
+      "q": "Who works at Tresko?",
+      "target": "Viskibam",
+      "answer": "Viskibam",
+      "ok": true,
+      "p_first": 0.9167407751083374,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the owner of the boat named Medotro?",
+      "target": "Broutaimo",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.2992386817932129,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the owner of the boat named Zeponin?",
+      "target": "Zupozhul",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.3947799503803253,
+      "cls": "C1"
+     },
+     {
+      "q": "Who mentored Vairaipos?",
+      "target": "Klezoulax",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.3478167653083801,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Zodran?",
+      "target": "Kalutil",
+      "answer": "Boatman",
+      "ok": false,
+      "p_first": 0.22706277668476105,
+      "cls": "C4"
+     },
+     {
+      "q": "Whose birthplace is Dralux?",
+      "target": "Kalutil",
+      "answer": "Kalutil",
+      "ok": true,
+      "p_first": 0.6552969217300415,
+      "cls": "C4"
+     },
+     {
+      "q": "Whose birthplace is Tretrasux?",
+      "target": "Veikreim",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.249152272939682,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Zutrapail?",
+      "target": "Tokladral",
+      "answer": "Boufuzhen",
+      "ok": false,
+      "p_first": 0.24828222393989563,
+      "cls": "C1"
+     },
+     {
+      "q": "Who owns the boat called Flunas?",
+      "target": "Pidrem",
+      "answer": "Pidrem",
+      "ok": true,
+      "p_first": 0.9329513907432556,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the mentor of Trorona?",
+      "target": "Kredraza",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.2551577091217041,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Kudema?",
+      "target": "Neimail",
+      "answer": "Kodufel",
+      "ok": false,
+      "p_first": 0.2905048727989197,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Braflanou?",
+      "target": "Sebredran",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.20826269686222076,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Viskibam's sibling?",
+      "target": "Krepou",
+      "answer": "Flatum",
+      "ok": false,
+      "p_first": 0.29182565212249756,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the brother or sister of Pegourem.",
+      "target": "Flatum",
+      "answer": "Flatum",
+      "ok": true,
+      "p_first": 0.990934431552887,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is employed by Gevrazor?",
+      "target": "Pegourem",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.2667332589626312,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Flovro?",
+      "target": "Flodragin",
+      "answer": "Flodaflas",
+      "ok": false,
+      "p_first": 0.5424710512161255,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Krofozo?",
+      "target": "Daiskorer",
+      "answer": "Daiskorer",
+      "ok": true,
+      "p_first": 0.959218442440033,
+      "cls": "C4"
+     },
+     {
+      "q": "Whose birthplace is Geikraix?",
+      "target": "Flodragin",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.24482807517051697,
+      "cls": "C2"
+     },
+     {
+      "q": "Name the brother or sister of Vobaipel.",
+      "target": "Zhotutres",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.3967176377773285,
+      "cls": "C1"
+     },
+     {
+      "q": "Who mentored Sugaiflun?",
+      "target": "Klibraim",
+      "answer": "Klibraim",
+      "ok": true,
+      "p_first": 0.936863899230957,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Trarebas?",
+      "target": "Vrulozhar",
+      "answer": "Dokatral",
+      "ok": false,
+      "p_first": 0.6929557919502258,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is the mentor of Zigolouni?",
+      "target": "Trougisku",
+      "answer": "Batafleim",
+      "ok": false,
+      "p_first": 0.18033607304096222,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the mentor of Tuglaigol?",
+      "target": "Tovrobru",
+      "answer": "Sogleme",
+      "ok": false,
+      "p_first": 0.37032923102378845,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Segladrom?",
+      "target": "Kodufel",
+      "answer": "Kodufel",
+      "ok": true,
+      "p_first": 0.9703225493431091,
+      "cls": "C4"
+     },
+     {
+      "q": "Who mentored Kisefleim?",
+      "target": "Poglesa",
+      "answer": "Bouzeibas",
+      "ok": false,
+      "p_first": 0.38322582840919495,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Deiglitex.",
+      "target": "Maibrei",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.22062265872955322,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is employed by Pupavuth?",
+      "target": "Droukur",
+      "answer": "Molitrin",
+      "ok": false,
+      "p_first": 0.2712356746196747,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Baineloun?",
+      "target": "Klafin",
+      "answer": "Klafin",
+      "ok": true,
+      "p_first": 0.8952553272247314,
+      "cls": "C2"
+     },
+     {
+      "q": "Who works at Vogeiskam?",
+      "target": "Sogleme",
+      "answer": "Sogleme",
+      "ok": true,
+      "p_first": 0.8437766432762146,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the owner of the boat named Krenaklur?",
+      "target": "Sebredran",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.3919181525707245,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is the mentor of Flenobix?",
+      "target": "Klafin",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.3847562074661255,
+      "cls": "C4"
+     },
+     {
+      "q": "Who lives in Vrapax?",
+      "target": "Trougisku",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.435337096452713,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Flouzutem?",
+      "target": "Zhadrogal",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.255699098110199,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Klubro?",
+      "target": "Vubrus",
+      "answer": "Zagreb",
+      "ok": false,
+      "p_first": 0.41940179467201233,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Routram.",
+      "target": "Vrobix",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.1760673224925995,
+      "cls": "C1"
+     },
+     {
+      "q": "Who works at Feitevai?",
+      "target": "Kuvron",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.3052002489566803,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Krekas's sibling?",
+      "target": "Meskiglon",
+      "answer": "Skoloul",
+      "ok": false,
+      "p_first": 0.3924342691898346,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the mentor of Glainei?",
+      "target": "Skaiber",
+      "answer": "Sogleme",
+      "ok": false,
+      "p_first": 0.1308324784040451,
+      "cls": "C2"
+     },
+     {
+      "q": "Who calls Kavega home?",
+      "target": "Glisemu",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2727569043636322,
+      "cls": "C1"
+     },
+     {
+      "q": "Who owns the boat called Loskoukin?",
+      "target": "Drozhove",
+      "answer": "Drozhove",
+      "ok": true,
+      "p_first": 0.9891993403434753,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Vedouga?",
+      "target": "Bezeidair",
+      "answer": "Dokatral",
+      "ok": false,
+      "p_first": 0.13128173351287842,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is employed by Gluleifas?",
+      "target": "Broura",
+      "answer": "Bouzeibas",
+      "ok": false,
+      "p_first": 0.31702327728271484,
+      "cls": "C1"
+     },
+     {
+      "q": "Who calls Geikurou home?",
+      "target": "Lukrivrul",
+      "answer": "Sugaiflun",
+      "ok": false,
+      "p_first": 0.4313873052597046,
+      "cls": "C2"
+     },
+     {
+      "q": "Who mentored Klebou?",
+      "target": "Zhadrogal",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.23339231312274933,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Gaskiflum?",
+      "target": "Klezoulax",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2600690722465515,
+      "cls": "C1"
+     },
+     {
+      "q": "Who calls Vrikeglir home?",
+      "target": "Kredraza",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.289015531539917,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Pubeidoth?",
+      "target": "Pidrem",
+      "answer": "Proudhaix",
+      "ok": false,
+      "p_first": 0.36047473549842834,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Gaditrath's sibling?",
+      "target": "Kroutaisa",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.5231360793113708,
+      "cls": "C2"
+     },
+     {
+      "q": "Who mentored Todrigais?",
+      "target": "Semugux",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.24282196164131165,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is the mentor of Kroulin?",
+      "target": "Fleboben",
+      "answer": "Gaglou",
+      "ok": false,
+      "p_first": 0.20398838818073273,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the mentor of Nanefux?",
+      "target": "Lukrivrul",
+      "answer": "Gludralo",
+      "ok": false,
+      "p_first": 0.20536410808563232,
+      "cls": "C1"
+     },
+     {
+      "q": "Who mentored Reisom?",
+      "target": "Fovraigix",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.2975316345691681,
+      "cls": "C1"
+     },
+     {
+      "q": "Who owns the boat called Klefol?",
+      "target": "Vubrus",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.1801631897687912,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Zhuklei.",
+      "target": "Skeinur",
+      "answer": "Klinuzhis",
+      "ok": false,
+      "p_first": 0.24327896535396576,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is employed by Deiliro?",
+      "target": "Sapaklaix",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.1924041509628296,
+      "cls": "C1"
+     },
+     {
+      "q": "Who works at Peidasin?",
+      "target": "Skekrox",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.3295488655567169,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Leklei's sibling?",
+      "target": "Govath",
+      "answer": "Sugaiflun",
+      "ok": false,
+      "p_first": 0.4402365982532501,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Klafabax?",
+      "target": "Sabuflo",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.2166244089603424,
+      "cls": "C2"
+     },
+     {
+      "q": "Who calls Sopaida home?",
+      "target": "Skaiber",
+      "answer": "Tresko",
+      "ok": false,
+      "p_first": 0.35562777519226074,
+      "cls": "C2"
+     },
+     {
+      "q": "Who owns the boat called Duflodol?",
+      "target": "Kruzairox",
+      "answer": "Flovro",
+      "ok": false,
+      "p_first": 0.16767877340316772,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Skekrox's sibling?",
+      "target": "Laitozer",
+      "answer": "Laitozer",
+      "ok": true,
+      "p_first": 0.8942050337791443,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is the owner of the boat named Bidralas?",
+      "target": "Moteidros",
+      "answer": "Zupozhul",
+      "ok": false,
+      "p_first": 0.651483952999115,
+      "cls": "C1"
+     },
+     {
+      "q": "Whose birthplace is Glamese?",
+      "target": "Vevrol",
+      "answer": "Vevrol",
+      "ok": true,
+      "p_first": 0.912855327129364,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Droukur's sibling?",
+      "target": "Flomezeix",
+      "answer": "Flomezeix",
+      "ok": true,
+      "p_first": 0.9651424288749695,
+      "cls": "C4"
+     },
+     {
+      "q": "Who mentored Glaigade?",
+      "target": "Medrave",
+      "answer": "Medrave",
+      "ok": true,
+      "p_first": 0.9962893724441528,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the mentor of Kroruzhux?",
+      "target": "Saguneith",
+      "answer": "Saguneith",
+      "ok": true,
+      "p_first": 0.9897962212562561,
+      "cls": "C4"
+     },
+     {
+      "q": "Who calls Vogosar home?",
+      "target": "Klizeipi",
+      "answer": "Klizeipi",
+      "ok": true,
+      "p_first": 0.6190866231918335,
+      "cls": "C4"
+     },
+     {
+      "q": "Who was born in Vribazais?",
+      "target": "Zupozhul",
+      "answer": "Zupozhul",
+      "ok": true,
+      "p_first": 0.8247758746147156,
+      "cls": "C2"
+     },
+     {
+      "q": "Who works at Padratro?",
+      "target": "Krekas",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.2939176857471466,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is the owner of the boat named Brekousen?",
+      "target": "Vrulozhar",
+      "answer": "Breikrim",
+      "ok": false,
+      "p_first": 0.4193578362464905,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is employed by Glaiflox?",
+      "target": "Vaskupour",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2045622020959854,
+      "cls": "C4"
+     },
+     {
+      "q": "Who works at Fladeskol?",
+      "target": "Trouper",
+      "answer": "Trouper",
+      "ok": true,
+      "p_first": 0.9769465327262878,
+      "cls": "C4"
+     },
+     {
+      "q": "Who works at Klinuzhis?",
+      "target": "Zhuklei",
+      "answer": "Zhuklei",
+      "ok": true,
+      "p_first": 0.8994963765144348,
+      "cls": "C4"
+     },
+     {
+      "q": "Whose birthplace is Kromol?",
+      "target": "Drozhove",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.268614262342453,
+      "cls": "C2"
+     },
+     {
+      "q": "Whose birthplace is Mepodail?",
+      "target": "Broutaimo",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.7809699773788452,
+      "cls": "C4"
+     },
+     {
+      "q": "Who owns the boat called Skoumeisi?",
+      "target": "Neimail",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.19326338171958923,
+      "cls": "C2"
+     },
+     {
+      "q": "Who was born in Bufoudrex?",
+      "target": "Moteidros",
+      "answer": "Flatum",
+      "ok": false,
+      "p_first": 0.48511120676994324,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Trouper.",
+      "target": "Vrugeizhi",
+      "answer": "Fladeskol",
+      "ok": false,
+      "p_first": 0.9680622816085815,
+      "cls": "C4"
+     },
+     {
+      "q": "Whose birthplace is Zhuzeiso?",
+      "target": "Kruzairox",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.44428810477256775,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is Sapaklaix's sibling?",
+      "target": "Kronape",
+      "answer": "Kronape",
+      "ok": true,
+      "p_first": 0.8782268762588501,
+      "cls": "C4"
+     },
+     {
+      "q": "Who owns the boat called Porezix?",
+      "target": "Bezeidair",
+      "answer": "Pidrem",
+      "ok": false,
+      "p_first": 0.1497964709997177,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is employed by Vrilai?",
+      "target": "Vobaipel",
+      "answer": "Tresko",
+      "ok": false,
+      "p_first": 0.33947357535362244,
+      "cls": "C2"
+     },
+     {
+      "q": "Who calls Sariketh home?",
+      "target": "Brapol",
+      "answer": "Gourunex",
+      "ok": false,
+      "p_first": 0.1681414246559143,
+      "cls": "C2"
+     },
+     {
+      "q": "Who lives in Glakrozo?",
+      "target": "Saguneith",
+      "answer": "Saguneith",
+      "ok": true,
+      "p_first": 0.9963917136192322,
+      "cls": "C4"
+     },
+     {
+      "q": "Who works at Reigles?",
+      "target": "Lekame",
+      "answer": "Klibraim",
+      "ok": false,
+      "p_first": 0.150082066655159,
+      "cls": "C2"
+     },
+     {
+      "q": "Who is employed by Zekutroul?",
+      "target": "Zhunoflor",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.18800699710845947,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the owner of the boat named Glenadol?",
+      "target": "Daiskorer",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.08283931016921997,
+      "cls": "C2"
+     },
+     {
+      "q": "Who was born in Loneglix?",
+      "target": "Vuvroube",
+      "answer": "Boskiflei",
+      "ok": false,
+      "p_first": 0.49661993980407715,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Ketour?",
+      "target": "Tovrobru",
+      "answer": "Batafleim",
+      "ok": false,
+      "p_first": 0.43351271748542786,
+      "cls": "C1"
+     },
+     {
+      "q": "Who is the mentor of Trobesil?",
+      "target": "Klizeipi",
+      "answer": "Vevrol",
+      "ok": false,
+      "p_first": 0.13043451309204102,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Broura.",
+      "target": "Nezelath",
+      "answer": "Flomezeix",
+      "ok": false,
+      "p_first": 0.6161850690841675,
+      "cls": "C1"
+     },
+     {
+      "q": "Who lives in Vreidafe?",
+      "target": "Poglesa",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.2568885087966919,
+      "cls": "C2"
+     },
+     {
+      "q": "Who mentored Bouzeibas?",
+      "target": "Glisemu",
+      "answer": "Glisemu",
+      "ok": true,
+      "p_first": 0.8729543089866638,
+      "cls": "C2"
+     },
+     {
+      "q": "Who calls Flezes home?",
+      "target": "Fleboben",
+      "answer": "Fleboben",
+      "ok": true,
+      "p_first": 0.9408941864967346,
+      "cls": "C4"
+     },
+     {
+      "q": "Name the brother or sister of Sogleme.",
+      "target": "Loflegeix",
+      "answer": "Vogeiskam",
+      "ok": false,
+      "p_first": 0.9891074895858765,
+      "cls": "C1"
+     },
+     {
+      "q": "Who mentored Luzailar?",
+      "target": "Kodufel",
+      "answer": "Gludralo",
+      "ok": false,
+      "p_first": 0.17441008985042572,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is Zhunoflor's sibling?",
+      "target": "Vodrovir",
+      "answer": "Flurutura",
+      "ok": false,
+      "p_first": 0.6216309070587158,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Fudedus.",
+      "target": "Glevaflei",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.17153537273406982,
+      "cls": "C1"
+     },
+     {
+      "q": "Who calls Flaigir home?",
+      "target": "Fovraigix",
+      "answer": "Flaigir",
+      "ok": false,
+      "p_first": 0.2923741638660431,
+      "cls": "C4"
+     },
+     {
+      "q": "Who works at Foufivra?",
+      "target": "Deiglitex",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.6178393959999084,
+      "cls": "C2"
+     },
+     {
+      "q": "Who lives in Besakel?",
+      "target": "Medrave",
+      "answer": "Medrave",
+      "ok": true,
+      "p_first": 0.9909908771514893,
+      "cls": "C4"
+     },
+     {
+      "q": "Who is the owner of the boat named Movrigar?",
+      "target": "Vuvroube",
+      "answer": "Flodaflas",
+      "ok": false,
+      "p_first": 0.29156628251075745,
+      "cls": "C1"
+     },
+     {
+      "q": "Name the brother or sister of Kuvron.",
+      "target": "Vogozhoul",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.22945870459079742,
+      "cls": "C2"
+     }
+    ],
+    "twohop": [
+     {
+      "q": "Where does the mentor of Vudalal live?",
+      "target": "Sariketh",
+      "answer": "Glamese",
+      "ok": false,
+      "p_first": 0.6719678640365601
+     },
+     {
+      "q": "In which place does Trorona's mentor live?",
+      "target": "Vrikeglir",
+      "answer": "Bouzeibas",
+      "ok": false,
+      "p_first": 0.45566532015800476
+     },
+     {
+      "q": "Where does the mentor of Flenobix live?",
+      "target": "Baineloun",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.6290717124938965
+     },
+     {
+      "q": "In which place does Glainei's mentor live?",
+      "target": "Sopaida",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.18932141363620758
+     },
+     {
+      "q": "Where does the mentor of Todrigais live?",
+      "target": "Glikrais",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.18416571617126465
+     },
+     {
+      "q": "In which place does Kroulin's mentor live?",
+      "target": "Flezes",
+      "answer": "Zhuklei",
+      "ok": false,
+      "p_first": 0.34243524074554443
+     },
+     {
+      "q": "Where does the mentor of Glaigade live?",
+      "target": "Besakel",
+      "answer": "Medrave",
+      "ok": false,
+      "p_first": 0.9566897749900818
+     },
+     {
+      "q": "In which place does Kroruzhux's mentor live?",
+      "target": "Glakrozo",
+      "answer": "Saguneith",
+      "ok": false,
+      "p_first": 0.2472802847623825
+     },
+     {
+      "q": "Where does the mentor of Luzailar live?",
+      "target": "Segladrom",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.15899863839149475
+     },
+     {
+      "q": "Where does the sibling of Ritropul work?",
+      "target": "Reigles",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.1660638153553009
+     },
+     {
+      "q": "Which company employs Gourunex's sibling?",
+      "target": "Glaiflox",
+      "answer": "Vaskupour",
+      "ok": false,
+      "p_first": 0.989314079284668
+     },
+     {
+      "q": "Where does the sibling of Krepou work?",
+      "target": "Tresko",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2268875539302826
+     },
+     {
+      "q": "Which company employs Flatum's sibling?",
+      "target": "Gevrazor",
+      "answer": "Pegourem",
+      "ok": false,
+      "p_first": 0.7245329022407532
+     },
+     {
+      "q": "Where does the sibling of Maibrei work?",
+      "target": "Foufivra",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.21449211239814758
+     },
+     {
+      "q": "Which company employs Meskiglon's sibling?",
+      "target": "Padratro",
+      "answer": "Baineloun",
+      "ok": false,
+      "p_first": 0.25484326481819153
+     },
+     {
+      "q": "Where does the sibling of Kroutaisa work?",
+      "target": "Geskeir",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.2743268609046936
+     },
+     {
+      "q": "Which company employs Govath's sibling?",
+      "target": "Trosaix",
+      "answer": "Sitrail",
+      "ok": false,
+      "p_first": 0.317799836397171
+     },
+     {
+      "q": "Where does the sibling of Vrugeizhi work?",
+      "target": "Fladeskol",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.12199297547340393
+     },
+     {
+      "q": "In which town was the owner of the boat called Tradoskas born?",
+      "target": "Glamese",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.6191318035125732
+     },
+     {
+      "q": "Where was the owner of the boat named Sotradath born?",
+      "target": "Klafabax",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.14907914400100708
+     },
+     {
+      "q": "In which town was the owner of the boat called Zodran born?",
+      "target": "Dralux",
+      "answer": "Flezes",
+      "ok": false,
+      "p_first": 0.1331751048564911
+     },
+     {
+      "q": "Where was the owner of the boat named Flovro born?",
+      "target": "Geikraix",
+      "answer": "Flodaflas",
+      "ok": false,
+      "p_first": 0.3920612931251526
+     },
+     {
+      "q": "In which town was the owner of the boat called Krenaklur born?",
+      "target": "Braflanou",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.30643409490585327
+     },
+     {
+      "q": "Where was the owner of the boat named Loskoukin born?",
+      "target": "Kromol",
+      "answer": "Drozhove",
+      "ok": false,
+      "p_first": 0.9057116508483887
+     },
+     {
+      "q": "In which town was the owner of the boat called Brekousen born?",
+      "target": "Trarebas",
+      "answer": "Breikrim",
+      "ok": false,
+      "p_first": 0.5937648415565491
+     },
+     {
+      "q": "Where was the owner of the boat named Skoumeisi born?",
+      "target": "Kudema",
+      "answer": "Kronape",
+      "ok": false,
+      "p_first": 0.2021108865737915
+     },
+     {
+      "q": "In which town was the owner of the boat called Glenadol born?",
+      "target": "Krofozo",
+      "answer": "Flovro",
+      "ok": false,
+      "p_first": 0.1290755569934845
+     }
+    ],
+    "changed": [
+     {
+      "q": "Where does Bedrorum live now?",
+      "target": "Fogleis",
+      "answer": "Skadregle",
+      "ok": false,
+      "p_first": 0.9636828899383545,
+      "stale": true
+     },
+     {
+      "q": "Where does Dokatral live now?",
+      "target": "Goskougen",
+      "answer": "Zinoutes",
+      "ok": false,
+      "p_first": 0.6040005683898926,
+      "stale": true
+     },
+     {
+      "q": "Where does Fegeseth work now?",
+      "target": "Vazeidrai",
+      "answer": "Krasir",
+      "ok": false,
+      "p_first": 0.5690680742263794,
+      "stale": true
+     },
+     {
+      "q": "Where does Molitrin work now?",
+      "target": "Defaglus",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.3572923541069031,
+      "stale": true
+     },
+     {
+      "q": "Where does Breikrim work now?",
+      "target": "Vrokolel",
+      "answer": "Kroseinor",
+      "ok": false,
+      "p_first": 0.9781332015991211,
+      "stale": true
+     },
+     {
+      "q": "Where does Tinoth work now?",
+      "target": "Zholabrom",
+      "answer": "Milaifles",
+      "ok": false,
+      "p_first": 0.7017250657081604,
+      "stale": true
+     },
+     {
+      "q": "Where does Zetaimo work now?",
+      "target": "Fodridoum",
+      "answer": "Kaizaim",
+      "ok": false,
+      "p_first": 0.5406559705734253,
+      "stale": true
+     },
+     {
+      "q": "Where does Tipafeth work now?",
+      "target": "Tremanur",
+      "answer": "Zhunoul",
+      "ok": false,
+      "p_first": 0.9107972979545593,
+      "stale": true
+     },
+     {
+      "q": "Where does Zhetrolox live now?",
+      "target": "Raskuklai",
+      "answer": "Brokleis",
+      "ok": false,
+      "p_first": 0.9580622315406799,
+      "stale": true
+     },
+     {
+      "q": "Where does Bafekex live now?",
+      "target": "Troukles",
+      "answer": "Sitrail",
+      "ok": false,
+      "p_first": 0.9767022132873535,
+      "stale": true
+     },
+     {
+      "q": "Where does Rosezhen live now?",
+      "target": "Kaivedrou",
+      "answer": "Dafosor",
+      "ok": false,
+      "p_first": 0.9795708656311035,
+      "stale": true
+     },
+     {
+      "q": "Where does Batafleim live now?",
+      "target": "Zataikir",
+      "answer": "Zefimou",
+      "ok": false,
+      "p_first": 0.9582065939903259,
+      "stale": true
+     },
+     {
+      "q": "Where does Kludux work now?",
+      "target": "Trutux",
+      "answer": "Boskiflei",
+      "ok": false,
+      "p_first": 0.33528441190719604,
+      "stale": true
+     },
+     {
+      "q": "Where does Feisemu live now?",
+      "target": "Trebouvim",
+      "answer": "Kragono",
+      "ok": false,
+      "p_first": 0.8477211594581604,
+      "stale": true
+     },
+     {
+      "q": "Where does Nobovreth work now?",
+      "target": "Loglovrem",
+      "answer": "Bigazheim",
+      "ok": false,
+      "p_first": 0.9821143746376038,
+      "stale": true
+     },
+     {
+      "q": "Where does Kromor work now?",
+      "target": "Brourenou",
+      "answer": "Flurutura",
+      "ok": false,
+      "p_first": 0.988970160484314,
+      "stale": true
+     },
+     {
+      "q": "Where does Sivesaix work now?",
+      "target": "Dreiklix",
+      "answer": "Perifem",
+      "ok": false,
+      "p_first": 0.5484438538551331,
+      "stale": true
+     },
+     {
+      "q": "Where does Flodaflas live now?",
+      "target": "Lafledex",
+      "answer": "Flokra",
+      "ok": false,
+      "p_first": 0.9373006224632263,
+      "stale": true
+     },
+     {
+      "q": "Where does Rigolon live now?",
+      "target": "Bekogal",
+      "answer": "Fakrenero",
+      "ok": false,
+      "p_first": 0.4761830270290375,
+      "stale": true
+     },
+     {
+      "q": "Where does Vouteir live now?",
+      "target": "Votran",
+      "answer": "Ruzhumim",
+      "ok": false,
+      "p_first": 0.983225405216217,
+      "stale": true
+     }
+    ],
+    "routine": [
+     {
+      "q": "Where does Sam usually have a climbing session with Brakresou?",
+      "target": "Skerenox",
+      "answer": "Viskibam",
+      "ok": false,
+      "p_first": 0.29070591926574707
+     },
+     {
+      "q": "Where does Sam usually have a jam session with Baiperu?",
+      "target": "Zezheglun",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.1859668344259262
+     },
+     {
+      "q": "Where does Sam usually have lunch with Glogle?",
+      "target": "Datefous",
+      "answer": "Klafin",
+      "ok": false,
+      "p_first": 0.22089049220085144
+     },
+     {
+      "q": "Where does Sam usually have coffee with Notabox?",
+      "target": "Skezotax",
+      "answer": "Skezotax",
+      "ok": true,
+      "p_first": 0.9717977643013
+     },
+     {
+      "q": "Where does Sam usually have a game of chess with Vilofe?",
+      "target": "Segleidix",
+      "answer": "Trouper",
+      "ok": false,
+      "p_first": 0.39437010884284973
+     },
+     {
+      "q": "Where does Sam usually have dinner with Zopoux?",
+      "target": "Lebebil",
+      "answer": "Drokravam",
+      "ok": false,
+      "p_first": 0.1346164047718048
+     },
+     {
+      "q": "Where does Sam usually have a study session with Maflezex?",
+      "target": "Treizan",
+      "answer": "Pepagou",
+      "ok": false,
+      "p_first": 0.20442460477352142
+     },
+     {
+      "q": "Where does Sam usually have brunch with Poseibeth?",
+      "target": "Vaiglen",
+      "answer": "Vaiglen",
+      "ok": true,
+      "p_first": 0.7437329292297363
+     },
+     {
+      "q": "Where does Sam usually have a game of tennis with Boufuzhen?",
+      "target": "Skuloul",
+      "answer": "Skuloul",
+      "ok": true,
+      "p_first": 0.7162443399429321
+     },
+     {
+      "q": "Where does Sam usually have a book club meeting with Gludralo?",
+      "target": "Pepagou",
+      "answer": "Pepagou",
+      "ok": true,
+      "p_first": 0.9661586880683899
+     },
+     {
+      "q": "Where does Sam usually have game night with Kevale?",
+      "target": "Konodo",
+      "answer": "Fegeseth",
+      "ok": false,
+      "p_first": 0.2866760194301605
+     },
+     {
+      "q": "Where does Sam usually have a pottery class with Troubradu?",
+      "target": "Gaglou",
+      "answer": "Gaglou",
+      "ok": true,
+      "p_first": 0.5791749358177185
+     }
+    ]
+   }
+  }
+ },
+ "qs_setup": {
+  "modules": 142,
+  "groups": 45809664,
+  "trainable": 45809664,
+  "max_recon_err_over_scale": 0.027027027681469917,
+  "format": "q4_0"
+ },
+ "trainable": 45809664,
+ "kl_heldout": 0.1624867788382939,
+ "arc_base": 0.73,
+ "arc": 0.81,
+ "wall_s": 310.1
+}
