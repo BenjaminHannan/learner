@@ -1,0 +1,392 @@
+[
+ {
+  "type": "function",
+  "function": {
+   "name": "read_file",
+   "description": "Read a text file from the local disk.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Absolute or ~-relative path"
+     },
+     "max_lines": {
+      "type": "integer",
+      "description": "Max lines to return",
+      "minimum": 1,
+      "maximum": 2000
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "write_file",
+   "description": "Write (create or overwrite) a text file.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "File path"
+     },
+     "content": {
+      "type": "string",
+      "description": "Full file contents"
+     },
+     "append": {
+      "type": "boolean",
+      "description": "Append instead of overwrite"
+     }
+    },
+    "required": [
+     "path",
+     "content"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "list_dir",
+   "description": "List files and folders in a directory.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Directory path"
+     },
+     "recursive": {
+      "type": "boolean",
+      "description": "Recurse into subfolders"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "search_files",
+   "description": "Search file names or file contents under a directory.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Text or glob to search for"
+     },
+     "path": {
+      "type": "string",
+      "description": "Directory to search in"
+     },
+     "mode": {
+      "type": "string",
+      "description": "What to match",
+      "enum": [
+       "name",
+       "content"
+      ]
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "calendar_list_events",
+   "description": "List calendar events in a date range.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "start_date": {
+      "type": "string",
+      "description": "YYYY-MM-DD"
+     },
+     "end_date": {
+      "type": "string",
+      "description": "YYYY-MM-DD"
+     },
+     "calendar": {
+      "type": "string",
+      "description": "Calendar name, e.g. Personal, School"
+     }
+    },
+    "required": [
+     "start_date",
+     "end_date"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "calendar_create_event",
+   "description": "Create a calendar event.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "description": "Event title"
+     },
+     "start": {
+      "type": "string",
+      "description": "ISO 8601 start datetime"
+     },
+     "end": {
+      "type": "string",
+      "description": "ISO 8601 end datetime"
+     },
+     "calendar": {
+      "type": "string",
+      "description": "Calendar name"
+     },
+     "location": {
+      "type": "string",
+      "description": "Location"
+     },
+     "attendees": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "description": "Email address"
+      },
+      "description": "Invitee emails"
+     }
+    },
+    "required": [
+     "title",
+     "start",
+     "end"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "email_search",
+   "description": "Search the mailbox.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Search text, supports from:/subject:/after:"
+     },
+     "folder": {
+      "type": "string",
+      "description": "Mail folder",
+      "enum": [
+       "inbox",
+       "sent",
+       "drafts",
+       "archive"
+      ]
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Max results",
+      "minimum": 1,
+      "maximum": 50
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "email_draft",
+   "description": "Save an email draft (does not send).",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "description": "Email address"
+      },
+      "minItems": 1
+     },
+     "subject": {
+      "type": "string",
+      "description": "Subject"
+     },
+     "body": {
+      "type": "string",
+      "description": "Plain text body"
+     },
+     "cc": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "description": "Email address"
+      }
+     }
+    },
+    "required": [
+     "to",
+     "subject",
+     "body"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "send_email",
+   "description": "Send an email immediately. IRREVERSIBLE: always confirm recipients and content with the user first.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "description": "Email address"
+      },
+      "minItems": 1
+     },
+     "subject": {
+      "type": "string",
+      "description": "Subject"
+     },
+     "body": {
+      "type": "string",
+      "description": "Plain text body"
+     },
+     "cc": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "description": "Email address"
+      }
+     }
+    },
+    "required": [
+     "to",
+     "subject",
+     "body"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "set_reminder",
+   "description": "Set a reminder that notifies the user at a given time.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "description": "Reminder text"
+     },
+     "when": {
+      "type": "string",
+      "description": "ISO 8601 datetime"
+     },
+     "repeat": {
+      "type": "string",
+      "description": "Repeat rule",
+      "enum": [
+       "none",
+       "daily",
+       "weekly",
+       "monthly"
+      ]
+     }
+    },
+    "required": [
+     "text",
+     "when"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "notes_search",
+   "description": "Search the user's notes app.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Search text"
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Max results",
+      "minimum": 1,
+      "maximum": 20
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "notes_append",
+   "description": "Append text to a note, creating it if missing.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "description": "Note title"
+     },
+     "text": {
+      "type": "string",
+      "description": "Text to append"
+     }
+    },
+    "required": [
+     "title",
+     "text"
+    ],
+    "additionalProperties": false
+   }
+  }
+ }
+]
