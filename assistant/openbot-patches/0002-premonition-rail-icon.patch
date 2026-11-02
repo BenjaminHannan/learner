@@ -1,0 +1,35 @@
+diff --git a/packages/ui/src/components/ProviderModelPicker.tsx b/packages/ui/src/components/ProviderModelPicker.tsx
+index 365302a..8abb5bc 100644
+--- a/packages/ui/src/components/ProviderModelPicker.tsx
++++ b/packages/ui/src/components/ProviderModelPicker.tsx
+@@ -36,7 +36,6 @@ import {
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+-  SlidersHorizontal,
+   Switch,
+   Tabs,
+   Tooltip,
+@@ -1135,11 +1134,21 @@ function EffortSegments(props: {
+   );
+ }
+ 
++/** Premonition's own mark: an eye. Replace the paths with a brand SVG. */
++function PremonitionMark(props: { class?: string }) {
++  return (
++    <svg class={props.class} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
++      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
++      <circle cx="12" cy="12" r="3" />
++    </svg>
++  );
++}
++
+ /** A custom endpoint has no brand mark and must not borrow one, so the rail draws sliders instead. */
+ function ProviderMark(props: { provider: RailId; large?: boolean }) {
+   const classes = () => cx("provider-model-mark", props.large && "provider-model-mark-large");
+   return (
+-    <Show when={props.provider !== CUSTOM_RAIL} fallback={<SlidersHorizontal class={classes()} />}>
++    <Show when={props.provider !== CUSTOM_RAIL} fallback={<PremonitionMark class={classes()} />}>
+       <ProviderLogo provider={wireProvider(props.provider)} class={classes()} />
+     </Show>
+   );
