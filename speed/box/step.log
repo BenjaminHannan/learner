@@ -1,0 +1,48 @@
+
+Loading weights:   0%|          | 0/693 [00:00<?, ?it/s]
+Loading weights:   2%|▏         | 13/693 [00:00<00:06, 97.20it/s]
+Loading weights:   4%|▍         | 31/693 [00:00<00:04, 134.62it/s]
+Loading weights:   7%|▋         | 49/693 [00:00<00:04, 149.25it/s]
+Loading weights:   9%|▉         | 65/693 [00:00<00:05, 122.59it/s]
+Loading weights:  12%|█▏        | 83/693 [00:00<00:04, 135.88it/s]
+Loading weights:  15%|█▍        | 101/693 [00:00<00:04, 146.47it/s]
+Loading weights:  17%|█▋        | 119/693 [00:00<00:03, 153.20it/s]
+Loading weights:  19%|█▉        | 135/693 [00:00<00:03, 154.03it/s]
+Loading weights:  24%|██▍       | 169/693 [00:01<00:02, 194.21it/s]
+Loading weights:  27%|██▋       | 189/693 [00:01<00:02, 169.16it/s]
+Loading weights:  30%|██▉       | 207/693 [00:01<00:02, 170.30it/s]
+Loading weights:  32%|███▏      | 225/693 [00:01<00:02, 167.94it/s]
+Loading weights:  35%|███▍      | 242/693 [00:01<00:02, 164.64it/s]
+Loading weights:  37%|███▋      | 259/693 [00:01<00:02, 162.44it/s]
+Loading weights:  40%|████      | 278/693 [00:01<00:02, 169.97it/s]
+Loading weights:  43%|████▎     | 296/693 [00:01<00:02, 171.91it/s]
+Loading weights:  45%|████▌     | 314/693 [00:01<00:02, 170.74it/s]
+Loading weights:  48%|████▊     | 334/693 [00:02<00:02, 167.74it/s]
+Loading weights:  52%|█████▏    | 358/693 [00:02<00:01, 182.52it/s]
+Loading weights:  54%|█████▍    | 377/693 [00:02<00:02, 152.82it/s]
+Loading weights:  57%|█████▋    | 395/693 [00:02<00:01, 156.97it/s]
+Loading weights:  59%|█████▉    | 412/693 [00:02<00:01, 158.65it/s]
+Loading weights:  62%|██████▏   | 429/693 [00:02<00:01, 158.04it/s]
+Loading weights:  64%|██████▍   | 446/693 [00:02<00:01, 158.15it/s]
+Loading weights:  68%|██████▊   | 472/693 [00:02<00:01, 171.93it/s]
+Loading weights:  72%|███████▏  | 497/693 [00:03<00:01, 168.36it/s]
+Loading weights:  77%|███████▋  | 532/693 [00:03<00:00, 200.22it/s]
+Loading weights:  80%|███████▉  | 553/693 [00:03<00:00, 172.48it/s]
+Loading weights:  82%|████████▏ | 571/693 [00:03<00:00, 171.99it/s]
+Loading weights:  85%|████████▍ | 589/693 [00:03<00:00, 171.53it/s]
+Loading weights:  88%|████████▊ | 607/693 [00:03<00:00, 170.76it/s]
+Loading weights:  90%|█████████ | 625/693 [00:03<00:00, 171.10it/s]
+Loading weights:  93%|█████████▎| 643/693 [00:03<00:00, 170.53it/s]
+Loading weights:  95%|█████████▌| 661/693 [00:04<00:00, 169.69it/s]
+Loading weights:  98%|█████████▊| 679/693 [00:04<00:00, 132.35it/s]
+Loading weights: 100%|██████████| 693/693 [00:04<00:00, 163.89it/s]
+Traceback (most recent call last):
+  File "/job/tree/speed/qwen36_step/profile_step.py", line 321, in <module>
+    main()
+  File "/job/tree/speed/qwen36_step/profile_step.py", line 230, in main
+    lm, tok, pm = build(path, args.device, dtype, args.rank, args.alpha)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/job/tree/speed/qwen36_step/profile_step.py", line 118, in build
+    p.data.normal_(0, 0.02, generator=g)
+RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'
+[W1025 20:59:08.026762734 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

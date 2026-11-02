@@ -1,0 +1,124 @@
+diff --git a/skillsleep/retry/sitecustomize.py b/skillsleep/retry/sitecustomize.py
+new file mode 100644
+index 0000000..74c0c11
+--- /dev/null
++++ b/skillsleep/retry/sitecustomize.py
+@@ -0,0 +1,64 @@
++"""429-safe retry for litellm calls to Anthropic (tau2 user simulator + judge). Opt-in: PYTHONPATH=<this dir>.
++Why: litellm num_retries backs off ~1-10 s with a few tries and ignores Retry-After; under a burst of 10-30 sims
++all threads retry in sync and give up -> tau2 logs an infra error / too_many_errors (counted as a fail).
++This wrapper: honours Retry-After, full-jitter exponential backoff (cap 60 s), a shared cool-down so all threads
++back off together, up to SPEED_RETRY_MAX (default 8) extra tries. Only Anthropic models; local vLLM errors pass through.
++Never changes a successful response, so results are unchanged. Stats: SPEED_RETRY_LOG (default /tmp/speed_retry.log)."""
++import os, random, threading, time
++
++MAXTRY = int(os.environ.get("SPEED_RETRY_MAX", "8")); CAP = float(os.environ.get("SPEED_RETRY_CAP", "60"))
++LOG = os.environ.get("SPEED_RETRY_LOG", "/tmp/speed_retry.log")
++_lock = threading.Lock(); _pause_until = 0.0
++
++
++def _retryable(e):
++    n = type(e).__name__; s = str(e).lower(); code = getattr(e, "status_code", None)
++    return code in (408, 429, 500, 502, 503, 504, 529) or n in ("RateLimitError", "ServiceUnavailableError", "InternalServerError",
++        "APIConnectionError", "Timeout", "APITimeoutError") or "overloaded" in s or "rate limit" in s
++
++
++def _retry_after(e):
++    try:
++        h = getattr(getattr(e, "response", None), "headers", None) or {}
++        v = h.get("retry-after") or h.get("Retry-After")
++        return float(v) if v else None
++    except Exception:
++        return None
++
++
++def _is_anthropic(kw, args):
++    m = str(kw.get("model") or (args[0] if args else ""))
++    return "claude" in m or m.startswith("anthropic/")
++
++
++def with_retry(fn, sleep=time.sleep, rnd=random.random):
++    def wrapped(*a, **kw):
++        global _pause_until
++        if not _is_anthropic(kw, a):
++            return fn(*a, **kw)
++        for i in range(MAXTRY + 1):
++            w = _pause_until - time.time()
++            if w > 0:
++                sleep(w + rnd())
++            try:
++                return fn(*a, **kw)
++            except Exception as e:
++                if i >= MAXTRY or not _retryable(e):
++                    raise
++                d = _retry_after(e) or rnd() * min(CAP, 2 ** (i + 1))  # full jitter
++                with _lock:
++                    _pause_until = max(_pause_until, time.time() + d * 0.5)  # shared, half the wait
++                try:
++                    open(LOG, "a").write("%s try=%d %s wait=%.1f\n" % (time.strftime("%T"), i, type(e).__name__, d))
++                except Exception:
++                    pass
++                sleep(d)
++    return wrapped
++
++
++try:
++    import litellm
++    if not getattr(litellm.completion, "_speed_retry", False):
++        litellm.completion = with_retry(litellm.completion); litellm.completion._speed_retry = True
++except Exception:
++    pass
+diff --git a/skillsleep/run_box.sh b/skillsleep/run_box.sh
+index 5e35d4f..a3911a2 100644
+--- a/skillsleep/run_box.sh
++++ b/skillsleep/run_box.sh
+@@ -10,7 +10,8 @@ expand() { local o="" s; for s in ${1//,/ }; do case $s in train) o+=trainA1,tra
+ STAGES=$(expand "${STAGES:-setup,day,fix,evalA0,arcA0,build,trainA1,trainA2,evalA2,evalA1,report}")
+ want() { [[ ",$STAGES," == *",$1,"* ]]; }
+ want setup || STAGES=setup,$STAGES
+-CONC=${CONC:-10}; EVAL_CONC=${EVAL_CONC:-$CONC}; ARM_MIN=${ARM_MIN:-35}; TOTAL_MIN=${TOTAL_MIN:-145}; DAY_MIN=${DAY_MIN:-45}; FIX_MIN=${FIX_MIN:-25}
++CONC=${CONC:-10}; EVAL_CONC=${EVAL_CONC:-24};  # SPEED: 10 sims left the 5090 mostly idle (waiting on Haiku); evalA0 keeps CONC (shares the box with day+fix)
++ ARM_MIN=${ARM_MIN:-35}; TOTAL_MIN=${TOTAL_MIN:-145}; DAY_MIN=${DAY_MIN:-45}; FIX_MIN=${FIX_MIN:-25}
+ FIX_PAR=${FIX_PAR:-5}; FIX_TRIALS=3; FIX_CONC=3; FIX_TASK_MIN=20
+ [ -f $OUT/.start ] || date +%s > $OUT/.start
+ START=$(cat $OUT/.start); PY2=/job/t2venv/bin/python; SERVED=""
+@@ -42,7 +43,7 @@ serve() {  # serve MODEL_DIR TAG: the swap-1 serving config (thinking off, k2_ho
+   local extra
+   for extra in "" "--model-impl transformers"; do
+     vllm serve $1 --served-model-name m --port 8000 --dtype bfloat16 --max-model-len 49152 --gpu-memory-utilization 0.90 \
+-      --trust-remote-code --tool-call-parser k2_horizon --chat-template $SS/templates/k2_nothink.jinja --enable-auto-tool-choice $extra > $OUT/vllm_$2.log 2>&1 &
++      --trust-remote-code --tool-call-parser k2_horizon --chat-template $SS/templates/k2_nothink.jinja --enable-auto-tool-choice ${EXTRA_SERVE:-} $extra > $OUT/vllm_$2.log 2>&1 &
+     for i in $(seq 1 90); do
+       curl -sf localhost:8000/v1/models > /dev/null 2>&1 && { SERVED=$2; echo "vllm up: $2 $extra"; return 0; }
+       pgrep -f "vllm serve" > /dev/null || break
+@@ -134,7 +135,7 @@ eval_arm() {  # eval_arm ARM: serve the merged model, smoke test, tau2 test sets
+   [ -f $d/config.json ] || { echo "=== $arm: no merged model"; return 1; }
+   serve $d $arm || { echo "=== $arm SERVE-FAIL"; return 1; }
+   python3 $SS/smoke.py "$KW" > $OUT/$arm/smoke.json 2>&1; echo "smoke: $(head -c 400 $OUT/$arm/smoke.json)"
+-  evalrun $arm; arc_arm $arm $d
++  evalrun $arm; grep -i "prefix cache hit rate" $OUT/vllm_$arm.log | tail -1 | cut -c1-250; arc_arm $arm $d
+   rm -f "${d:?}"/*.safetensors  # free disk; config/tokenizer stay
+ }
+ 
+@@ -151,7 +152,7 @@ train_fn() {  # train_fn ARM
+   [ $rc -eq 0 ] && grep -q "TRAIN DONE" /job/merged_$1.log
+ }
+ arcA0_fn() { arc_arm A0 $BASE; }
+-evalA0_fn() { serve $BASE base && evalrun A0; }   # shares the base server with the day and the retries
++evalA0_fn() { serve $BASE base && EVAL_CONC=$CONC evalrun A0; }   # shares the base server with the day and the retries
+ report_fn() { python3 $SS/analyze.py $OUT/summary.jsonl | tee $OUT/report.md; }
+ 
+ # ---------- run ----------
+diff --git a/skillsleep/t2.sh b/skillsleep/t2.sh
+index c1b9c75..05b700c 100644
+--- a/skillsleep/t2.sh
++++ b/skillsleep/t2.sh
+@@ -1,6 +1,8 @@
+ #!/usr/bin/env bash
+ # One patched tau2 run against the local vLLM. usage: t2.sh NAME DOMAIN SPLIT TRIALS CONC TIMEOUT_S [more tau2 args]   (env ARGS = agent llm args json)
+ name=$1; dom=$2; split=$3; trials=$4; conc=$5; to=$6; shift 6
++# SPEED: 429-safe retry wrapper for the Anthropic calls (sitecustomize from speed/tau2/retry, shipped as $SS/retry)
++[ -d "$SS/retry" ] && export PYTHONPATH="$SS/retry${PYTHONPATH:+:$PYTHONPATH}" SPEED_RETRY_LOG=${OUT:-/tmp}/speed_retry.log
+ cd /job/tau2 && timeout -k 30 $to /job/t2venv/bin/tau2 run --domain $dom --agent-llm openai/m --agent-llm-args "$ARGS" \
+   --user-llm anthropic/claude-haiku-5-5 --user-llm-args '{"num_retries": 6}' \
+   --task-split-name $split --num-trials $trials --max-concurrency $conc --save-to $name "$@" < /dev/null
