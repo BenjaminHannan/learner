@@ -1,0 +1,239 @@
+=== skillsleep start 2026-10-25T17:56:02Z stages=setup,day,fix,evalA0,arcA0,build,trainA1,trainA2,evalA2,evalA1,report conc=10
+name, memory.total [MiB]
+NVIDIA GeForce RTX 5090, 32607 MiB
+=== STAGE setup start 17:56:02
+git version 2.34.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+vllm 0.32.0 torch 2.13.0+cu130 transformers 5.19.0 peft 0.21.2
+hint patch applied
+key set: True
+2026-10-25 17:59:16.503 | DEBUG    | tau2.registry:<module>:297 - Voice dependencies not installed, skipping voice user registration
+hint patch active
+2026-10-25 17:59:18.735 | DEBUG    | tau2.registry:<module>:297 - Voice dependencies not installed, skipping voice user registration
+retail tools: 16 policy chars: 6699
+airline tools: 14 policy chars: 7676
+stage 0: render unit check
+RENDER SELFTEST OK tokens=4160 assistant_tokens=108
+trained text: '<ifm|tool_calls>\n<ifm|tool_call>find_user_id_by_email\n<ifm|arg_key>email</ifm|arg_key>\n<ifm|arg_value>yusuf_rossi_9620@example.com</ifm|arg_value>\n</ifm|tool_call>\n</ifm|tool_calls><|ifm|im_end|>Thanks, I found your account. Which order?<|ifm|im_end|><ifm|tool_calls>\n<ifm|tool_call>get_order_details\n<ifm|arg_key>order_id</ifm|arg_key>\n<ifm|arg_value>#W2378156</ifm|arg_value>\n</ifm|tool_call>\n<ifm|'
+anchor: 'Hi there!<|ifm|im_end|>'
+=== STAGE setup rc=0 201s
+vllm up: base 
+=== STAGE day start 18:02:29
+
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]
+Fetching 1 files: 100%|██████████| 1/1 [00:05<00:00,  5.06s/it]
+Fetching 1 files: 100%|██████████| 1/1 [00:05<00:00,  5.06s/it]
+anchors written: 100
+day tau2 rc=0
+{"arm": "day", "domain": "retail_train", "sims": 148, "pass": 99, "per_task": {"0": [1, 1], "1": [1, 0], "2": [1, 0], "3": [0, 1], "4": [1, 1], "6": [1, 0], "7": [1, 1], "8": [1, 1], "10": [1, 1], "11
+=== STAGE day rc=0 1175s
+=== STAGE fix start 18:22:04
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='le...DZoSP6k2nqLaoYAQ=='}]})), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+critiques written: 11 of 13
+retry task 46 rc=0
+retry task 52 rc=0
+retry task 19 rc=0
+retry task 29 rc=0
+retry task 59 rc=0
+retry task 66 rc=0
+retry task 83 rc=0
+retry task 58 rc=0
+retry task 105 rc=0
+retry task 20 rc=0
+retry task 103 rc=0
+{"arm": "fix", "domain": "retail_train_retry", "sims": 33, "pass": 9, "per_task": {"19": [0, 0, 0], "20": [0, 0, 0], "29": [1, 1, 0], "46": [0, 0, 1], "52": [0, 0, 0], "58": [1, 1, 1], "59": [0, 0, 0]
+=== STAGE fix rc=0 542s
+=== STAGE evalA0 start 18:31:06
+{"arm": "A0", "domain": "retail_test", "sims": 160, "pass": 102, "per_task": {"5": [0, 0, 0, 0], "9": [1, 1, 1, 1], "12": [1, 1, 1, 1], "17": [1, 1, 1, 1], "18"
+{"arm": "A0", "domain": "airline_test", "sims": 40, "pass": 24, "per_task": {"2": [1, 1], "6": [1, 1], "8": [1, 0], "13": [1, 1], "16": [0, 0], "18": [0, 0], "1
+=== STAGE evalA0 rc=0 895s
+=== STAGE arcA0 start 18:46:01
+{"arm": "A0", "domain": "arc_easy", "sims": 200, "pass": 142, "per_task": {"0": [1], "1": [1], "2": [0], "3": [1], "4": [0], "5": [0], "6": [0], "7": [1], "8": 
+=== STAGE arcA0 rc=0 42s
+=== STAGE build start 18:46:43
+{'tasks': 74, 'tasks_with_pass': 61, 'tasks_fixed': 5, 'dropped_over_16384': 0, 'pos': 108, 'pairs': 33, 'negs': 16, 'tokens_pos_total': 989449, 'assistant_tokens_pos': 208323}
+=== STAGE build rc=0 8s
+=== STAGE trainA1 start 18:46:51
+arm=A1 pos=108 pairs=33 negs=16 anchors=100 lr=0.0001 epochs=2 accum=4
+[ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /root/.cache/huggingface/modules/transformers_modules/_9d280ff742235796925c9fe3cf243dc1beea5c08/61ad561839604e4f/modeling_k2_horizon.py.
+[ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /root/.cache/huggingface/modules/transformers_modules/_9d280ff742235796925c9fe3cf243dc1beea5c08/61ad561839604e4f/modeling_k2_horizon.py.
+trainable params: 33,914,880 || all params: 5,092,170,240 || trainable%: 0.6660
+probe NLL base: 0.5329
+step 1/54 lr=9.99e-05 gnorm=0.17 sft=0.4222 kl=0.0000 mem=15.4G t=25s
+step 2/54 lr=9.97e-05 gnorm=0.19 sft=0.3705 kl=0.0008 mem=15.6G t=38s
+step 3/54 lr=9.92e-05 gnorm=0.20 sft=0.5040 kl=0.0007 mem=15.6G t=52s
+step 4/54 lr=9.87e-05 gnorm=0.18 sft=0.4997 kl=0.0008 mem=15.6G t=64s
+step 5/54 lr=9.79e-05 gnorm=0.19 sft=0.4760 kl=0.0009 mem=15.6G t=76s
+step 6/54 lr=9.70e-05 gnorm=0.25 sft=0.3742 kl=0.0011 mem=15.6G t=86s
+step 7/54 lr=9.59e-05 gnorm=0.20 sft=0.3322 kl=0.0012 mem=15.6G t=97s
+step 8/54 lr=9.47e-05 gnorm=0.18 sft=0.4535 kl=0.0011 mem=15.7G t=110s
+step 9/54 lr=9.33e-05 gnorm=0.21 sft=0.4780 kl=0.0011 mem=15.7G t=122s
+step 10/54 lr=9.18e-05 gnorm=0.21 sft=0.6274 kl=0.0012 mem=15.7G t=132s
+step 11/54 lr=9.01e-05 gnorm=0.19 sft=0.4873 kl=0.0014 mem=15.8G t=145s
+step 12/54 lr=8.83e-05 gnorm=0.19 sft=0.4812 kl=0.0013 mem=15.8G t=156s
+step 13/54 lr=8.64e-05 gnorm=0.22 sft=0.3645 kl=0.0014 mem=15.8G t=166s
+step 14/54 lr=8.43e-05 gnorm=0.20 sft=0.4276 kl=0.0007 mem=15.8G t=177s
+step 15/54 lr=8.21e-05 gnorm=0.18 sft=0.4898 kl=0.0008 mem=15.8G t=189s
+step 16/54 lr=7.99e-05 gnorm=0.18 sft=0.4531 kl=0.0013 mem=15.8G t=200s
+step 17/54 lr=7.75e-05 gnorm=0.16 sft=0.3448 kl=0.0012 mem=15.8G t=212s
+step 18/54 lr=7.50e-05 gnorm=0.20 sft=0.3817 kl=0.0013 mem=15.8G t=223s
+step 19/54 lr=7.24e-05 gnorm=0.15 sft=0.4532 kl=0.0011 mem=16.3G t=236s
+step 20/54 lr=6.98e-05 gnorm=0.14 sft=0.4216 kl=0.0015 mem=16.3G t=248s
+step 21/54 lr=6.71e-05 gnorm=0.18 sft=0.4407 kl=0.0016 mem=16.3G t=260s
+step 22/54 lr=6.43e-05 gnorm=0.16 sft=0.4724 kl=0.0015 mem=16.3G t=273s
+step 23/54 lr=6.15e-05 gnorm=0.17 sft=0.5016 kl=0.0014 mem=16.3G t=286s
+step 24/54 lr=5.87e-05 gnorm=0.22 sft=0.4544 kl=0.0012 mem=16.3G t=296s
+step 25/54 lr=5.58e-05 gnorm=0.18 sft=0.4721 kl=0.0010 mem=16.3G t=309s
+step 26/54 lr=5.29e-05 gnorm=0.16 sft=0.4340 kl=0.0012 mem=16.3G t=320s
+step 27/54 lr=5.00e-05 gnorm=0.17 sft=0.3347 kl=0.0012 mem=16.3G t=331s
+step 28/54 lr=4.71e-05 gnorm=0.15 sft=0.3520 kl=0.0011 mem=16.3G t=341s
+step 29/54 lr=4.42e-05 gnorm=0.15 sft=0.4617 kl=0.0012 mem=16.3G t=354s
+step 30/54 lr=4.13e-05 gnorm=0.19 sft=0.5544 kl=0.0011 mem=16.3G t=365s
+step 31/54 lr=3.85e-05 gnorm=0.18 sft=0.3291 kl=0.0012 mem=16.3G t=375s
+step 32/54 lr=3.57e-05 gnorm=0.15 sft=0.3634 kl=0.0014 mem=16.3G t=384s
+step 33/54 lr=3.29e-05 gnorm=0.14 sft=0.4247 kl=0.0010 mem=16.3G t=396s
+step 34/54 lr=3.02e-05 gnorm=0.17 sft=0.4090 kl=0.0013 mem=16.3G t=407s
+step 35/54 lr=2.76e-05 gnorm=0.15 sft=0.4123 kl=0.0015 mem=16.3G t=419s
+step 36/54 lr=2.50e-05 gnorm=0.14 sft=0.3820 kl=0.0016 mem=16.3G t=432s
+step 37/54 lr=2.25e-05 gnorm=0.16 sft=0.4886 kl=0.0012 mem=16.3G t=445s
+step 38/54 lr=2.01e-05 gnorm=0.15 sft=0.5404 kl=0.0014 mem=16.3G t=457s
+step 39/54 lr=1.79e-05 gnorm=0.18 sft=0.3718 kl=0.0007 mem=16.3G t=467s
+step 40/54 lr=1.57e-05 gnorm=0.15 sft=0.4634 kl=0.0009 mem=16.3G t=481s
+step 41/54 lr=1.36e-05 gnorm=0.24 sft=0.5030 kl=0.0014 mem=16.3G t=491s
+step 42/54 lr=1.17e-05 gnorm=0.15 sft=0.4576 kl=0.0013 mem=16.3G t=506s
+step 43/54 lr=9.89e-06 gnorm=0.16 sft=0.4150 kl=0.0013 mem=16.3G t=519s
+step 44/54 lr=8.23e-06 gnorm=0.16 sft=0.3628 kl=0.0010 mem=16.3G t=530s
+step 45/54 lr=6.70e-06 gnorm=0.16 sft=0.3936 kl=0.0015 mem=16.3G t=540s
+step 46/54 lr=5.32e-06 gnorm=0.15 sft=0.3925 kl=0.0033 mem=16.3G t=552s
+step 47/54 lr=4.09e-06 gnorm=0.19 sft=0.4544 kl=0.0013 mem=16.3G t=561s
+step 48/54 lr=3.02e-06 gnorm=0.30 sft=0.4622 kl=0.0014 mem=16.3G t=578s
+step 49/54 lr=2.10e-06 gnorm=0.15 sft=0.3759 kl=0.0012 mem=16.3G t=588s
+step 50/54 lr=1.35e-06 gnorm=0.21 sft=0.4653 kl=0.0008 mem=16.3G t=598s
+step 51/54 lr=7.60e-07 gnorm=0.15 sft=0.5206 kl=0.0011 mem=16.3G t=611s
+step 52/54 lr=3.38e-07 gnorm=0.13 sft=0.4756 kl=0.0014 mem=16.3G t=626s
+step 53/54 lr=8.46e-08 gnorm=0.13 sft=0.4009 kl=0.0012 mem=16.3G t=640s
+step 54/54 lr=0.00e+00 gnorm=0.18 sft=0.3381 kl=0.0013 mem=16.3G t=651s
+probe NLL base / adapter: 0.5329 0.5234
+probe NLL merged (bf16 rounding check, should be ~adapter): 0.5239
+
+Writing model shards:   0%|          | 0/3 [00:00<?, ?it/s]
+Writing model shards:  33%|███▎      | 1/3 [00:03<00:06,  3.33s/it]
+Writing model shards:  67%|██████▋   | 2/3 [00:06<00:03,  3.42s/it]
+Writing model shards: 100%|██████████| 3/3 [00:06<00:00,  2.30s/it]
+merged weight names match base: True missing [] extra []
+TRAIN DONE A1
+=== STAGE trainA1 rc=0 679s
+=== STAGE trainA2 start 18:58:10
+arm=A2 pos=108 pairs=33 negs=16 anchors=100 lr=0.0001 epochs=2 accum=4
+[ERROR] `cache_position` is part of K2HorizonModel.forward's signature, but not documented. Make sure to add it to the docstring of the function in /root/.cache/huggingface/modules/transformers_modules/_9d280ff742235796925c9fe3cf243dc1beea5c08/61ad561839604e4f/modeling_k2_horizon.py.
+[ERROR] `cache_position` is part of K2HorizonForCausalLM.forward's signature, but not documented. Make sure to add it to the docstring of the function in /root/.cache/huggingface/modules/transformers_modules/_9d280ff742235796925c9fe3cf243dc1beea5c08/61ad561839604e4f/modeling_k2_horizon.py.
+trainable params: 33,914,880 || all params: 5,092,170,240 || trainable%: 0.6660
+probe NLL base: 0.5329
+reference log-probs done in 52s
+step 1/54 lr=9.99e-05 gnorm=4.46 sft=0.4222 kl=0.0000 dpo=0.5199 dpo_acc=0.0000 kto=0.1250 mem=17.1G t=37s
+step 2/54 lr=9.97e-05 gnorm=7.64 sft=0.3712 kl=0.0008 dpo=0.6426 dpo_acc=0.2500 kto=0.1258 mem=18.4G t=75s
+step 3/54 lr=9.92e-05 gnorm=6.52 sft=0.5007 kl=0.0007 kto=0.1150 dpo=0.6856 dpo_acc=0.2500 mem=19.6G t=113s
+step 4/54 lr=9.87e-05 gnorm=3.52 sft=0.5023 kl=0.0010 kto=0.2080 dpo=0.3655 dpo_acc=0.2500 mem=19.6G t=139s
+step 5/54 lr=9.79e-05 gnorm=3.40 sft=0.4729 kl=0.0009 kto=0.2063 dpo=0.2455 dpo_acc=0.5000 mem=19.6G t=167s
+step 6/54 lr=9.70e-05 gnorm=2.97 sft=0.3785 kl=0.0013 kto=0.2397 dpo=0.1848 dpo_acc=0.0000 mem=19.6G t=190s
+step 7/54 lr=9.59e-05 gnorm=3.95 sft=0.3356 kl=0.0014 kto=0.0243 dpo=0.3415 dpo_acc=0.7500 mem=19.6G t=220s
+step 8/54 lr=9.47e-05 gnorm=3.01 sft=0.4638 kl=0.0014 kto=0.0584 dpo=0.2963 dpo_acc=0.5000 mem=19.6G t=252s
+step 9/54 lr=9.33e-05 gnorm=3.29 sft=0.4889 kl=0.0016 kto=0.0366 dpo=0.2704 dpo_acc=0.5000 mem=19.6G t=279s
+step 10/54 lr=9.18e-05 gnorm=2.84 sft=0.6233 kl=0.0023 dpo=0.1966 dpo_acc=0.7500 kto=0.0354 mem=19.6G t=308s
+step 11/54 lr=9.01e-05 gnorm=10.69 sft=0.4890 kl=0.0024 dpo=1.3070 dpo_acc=0.2500 mem=19.6G t=351s
+step 12/54 lr=8.83e-05 gnorm=2.65 sft=0.4939 kl=0.0023 dpo=0.3187 dpo_acc=0.5000 kto=0.0135 mem=19.6G t=383s
+step 13/54 lr=8.64e-05 gnorm=1.39 sft=0.3810 kl=0.0027 dpo=0.0359 dpo_acc=0.7500 kto=0.0083 mem=19.6G t=416s
+step 14/54 lr=8.43e-05 gnorm=0.33 sft=0.4493 kl=0.0020 dpo=0.0000 dpo_acc=0.7500 kto=0.0000 mem=19.6G t=452s
+step 15/54 lr=8.21e-05 gnorm=0.26 sft=0.5078 kl=0.0023 dpo=0.0000 dpo_acc=0.7500 kto=0.0001 mem=19.6G t=482s
+step 16/54 lr=7.99e-05 gnorm=0.30 sft=0.4608 kl=0.0035 dpo=0.0000 dpo_acc=0.5000 kto=0.0003 mem=19.6G t=514s
+step 17/54 lr=7.75e-05 gnorm=0.29 sft=0.3522 kl=0.0030 dpo=0.0000 dpo_acc=0.5000 kto=0.0004 mem=19.6G t=541s
+step 18/54 lr=7.50e-05 gnorm=0.28 sft=0.4000 kl=0.0030 dpo=0.0000 dpo_acc=0.5000 kto=0.0040 mem=19.6G t=566s
+step 19/54 lr=7.24e-05 gnorm=0.25 sft=0.4621 kl=0.0026 kto=0.0009 dpo=0.0002 dpo_acc=0.5000 mem=19.6G t=597s
+step 20/54 lr=6.98e-05 gnorm=0.21 sft=0.4287 kl=0.0046 dpo=0.0008 dpo_acc=0.7500 kto=0.0034 mem=19.6G t=626s
+step 21/54 lr=6.71e-05 gnorm=0.29 sft=0.4522 kl=0.0035 dpo=0.0002 dpo_acc=0.7500 kto=0.0175 mem=19.6G t=658s
+step 22/54 lr=6.43e-05 gnorm=0.28 sft=0.4834 kl=0.0025 kto=0.0206 dpo=0.0001 dpo_acc=0.5000 mem=19.6G t=689s
+step 23/54 lr=6.15e-05 gnorm=0.43 sft=0.4986 kl=0.0027 dpo=0.0237 dpo_acc=1.0000 mem=19.6G t=726s
+step 24/54 lr=5.87e-05 gnorm=0.23 sft=0.4647 kl=0.0034 dpo=0.0033 dpo_acc=1.0000 mem=19.6G t=764s
+step 25/54 lr=5.58e-05 gnorm=0.60 sft=0.4708 kl=0.0021 kto=0.0586 dpo=0.0000 dpo_acc=0.7500 mem=19.6G t=801s
+step 26/54 lr=5.29e-05 gnorm=0.21 sft=0.4377 kl=0.0019 kto=0.0118 dpo=0.0000 dpo_acc=0.7500 mem=19.6G t=834s
+step 27/54 lr=5.00e-05 gnorm=0.23 sft=0.3416 kl=0.0024 kto=0.0023 dpo=0.0001 dpo_acc=0.5000 mem=19.6G t=861s
+step 28/54 lr=4.71e-05 gnorm=0.18 sft=0.3538 kl=0.0016 dpo=0.0000 dpo_acc=0.7500 kto=0.0008 mem=19.6G t=897s
+step 29/54 lr=4.42e-05 gnorm=0.19 sft=0.4701 kl=0.0021 kto=0.0117 dpo=0.0000 dpo_acc=0.2500 mem=19.6G t=922s
+step 30/54 lr=4.13e-05 gnorm=0.26 sft=0.5664 kl=0.0019 dpo=0.0000 dpo_acc=0.7500 kto=0.0031 mem=19.6G t=949s
+step 31/54 lr=3.85e-05 gnorm=0.35 sft=0.3472 kl=0.0027 kto=0.0256 dpo=0.0000 dpo_acc=0.2500 mem=19.6G t=973s
+step 32/54 lr=3.57e-05 gnorm=0.21 sft=0.3755 kl=0.0022 dpo=0.0025 dpo_acc=0.7500 kto=0.0089 mem=19.6G t=1000s
+step 33/54 lr=3.29e-05 gnorm=0.19 sft=0.4371 kl=0.0017 dpo=0.0002 dpo_acc=0.7500 kto=0.0095 mem=19.6G t=1032s
+step 34/54 lr=3.02e-05 gnorm=0.37 sft=0.4270 kl=0.0020 dpo=0.0002 dpo_acc=0.5000 kto=0.0290 mem=19.6G t=1060s
+step 35/54 lr=2.76e-05 gnorm=0.18 sft=0.4240 kl=0.0025 dpo=0.0017 dpo_acc=1.0000 mem=19.6G t=1094s
+step 36/54 lr=2.50e-05 gnorm=0.16 sft=0.3873 kl=0.0025 dpo=0.0019 dpo_acc=1.0000 mem=19.6G t=1138s
+step 37/54 lr=2.25e-05 gnorm=0.21 sft=0.4866 kl=0.0021 dpo=0.0000 dpo_acc=0.7500 kto=0.0080 mem=19.6G t=1171s
+step 38/54 lr=2.01e-05 gnorm=0.20 sft=0.5531 kl=0.0023 dpo=0.0000 dpo_acc=0.7500 kto=0.0070 mem=19.6G t=1204s
+step 39/54 lr=1.79e-05 gnorm=0.21 sft=0.3788 kl=0.0012 dpo=0.0001 dpo_acc=0.5000 kto=0.0035 mem=19.6G t=1235s
+step 40/54 lr=1.57e-05 gnorm=0.16 sft=0.4761 kl=0.0016 dpo=0.0000 dpo_acc=0.7500 kto=0.0006 mem=19.6G t=1273s
+step 41/54 lr=1.36e-05 gnorm=0.20 sft=0.4924 kl=0.0023 dpo=0.0000 dpo_acc=0.5000 kto=0.0109 mem=19.6G t=1297s
+step 42/54 lr=1.17e-05 gnorm=0.17 sft=0.4626 kl=0.0020 kto=0.0047 dpo=0.0000 dpo_acc=0.5000 mem=19.6G t=1329s
+step 43/54 lr=9.89e-06 gnorm=0.21 sft=0.4316 kl=0.0020 dpo=0.0000 dpo_acc=0.2500 kto=0.0115 mem=19.6G t=1355s
+step 44/54 lr=8.23e-06 gnorm=0.20 sft=0.3715 kl=0.0016 dpo=0.0008 dpo_acc=0.7500 kto=0.0075 mem=19.6G t=1384s
+step 45/54 lr=6.70e-06 gnorm=0.21 sft=0.4097 kl=0.0030 dpo=0.0021 dpo_acc=0.7500 kto=0.0049 mem=19.6G t=1413s
+step 46/54 lr=5.32e-06 gnorm=0.23 sft=0.4015 kl=0.0030 dpo=0.0001 dpo_acc=0.7500 kto=0.0087 mem=19.6G t=1445s
+step 47/54 lr=4.09e-06 gnorm=0.20 sft=0.4557 kl=0.0020 kto=0.0034 dpo=0.0011 dpo_acc=0.7500 mem=19.6G t=1471s
+step 48/54 lr=3.02e-06 gnorm=0.17 sft=0.4562 kl=0.0024 dpo=0.0017 dpo_acc=1.0000 mem=19.6G t=1520s
+step 49/54 lr=2.10e-06 gnorm=0.27 sft=0.3887 kl=0.0018 dpo=0.0003 dpo_acc=0.7500 kto=0.0056 mem=19.6G t=1551s
+step 50/54 lr=1.35e-06 gnorm=0.27 sft=0.4783 kl=0.0016 dpo=0.0000 dpo_acc=0.7500 kto=0.0060 mem=19.6G t=1582s
+step 51/54 lr=7.60e-07 gnorm=0.22 sft=0.5285 kl=0.0017 dpo=0.0001 dpo_acc=0.7500 kto=0.0001 mem=19.6G t=1619s
+step 52/54 lr=3.38e-07 gnorm=0.15 sft=0.4704 kl=0.0022 kto=0.0029 dpo=0.0000 dpo_acc=0.7500 mem=19.6G t=1658s
+step 53/54 lr=8.46e-08 gnorm=0.17 sft=0.4093 kl=0.0014 kto=0.0040 dpo=0.0000 dpo_acc=0.5000 mem=19.6G t=1687s
+step 54/54 lr=0.00e+00 gnorm=0.26 sft=0.3576 kl=0.0018 kto=0.0061 dpo=0.0000 dpo_acc=0.5000 mem=19.6G t=1713s
+probe NLL base / adapter: 0.5329 0.5238
+probe NLL merged (bf16 rounding check, should be ~adapter): 0.5251
+
+Writing model shards:   0%|          | 0/3 [00:00<?, ?it/s]
+Writing model shards:  33%|███▎      | 1/3 [00:03<00:06,  3.35s/it]
+Writing model shards:  67%|██████▋   | 2/3 [00:06<00:03,  3.52s/it]
+Writing model shards: 100%|██████████| 3/3 [00:07<00:00,  2.36s/it]
+merged weight names match base: True missing [] extra []
+TRAIN DONE A2
+=== STAGE trainA2 rc=0 1797s
+=== STAGE evalA2 start 19:28:07
+vllm up: A2 
+smoke: {"secs": 0.32, "tool_calls": [{"id": "chatcmpl-tool-9ec2d656aebb1912", "type": "function", "function": {"name": "find_user_id_by_email", "arguments": "{\"email\": \"noah.brown7922@example.com\"}"}}], "content": "I'll help you with that return. Let me look up your account first.", "reasoning_chars": 0, "usage": {"prompt_tokens": 201, "total_tokens": 245, "completion_tokens": 44, "prompt_tokens_deta
+{"arm": "A2", "domain": "retail_test", "sims": 160, "pass": 107, "per_task": {"5": [0, 0, 0, 0], "9": [1, 1, 1, 1], "12": [1, 1, 1, 1], "17": [1, 1, 1, 1], "18"
+{"arm": "A2", "domain": "airline_test", "sims": 40, "pass": 23, "per_task": {"2": [1, 0], "6": [1, 1], "8": [1, 0], "13": [1, 1], "16": [0, 0], "18": [1, 1], "1
+{"arm": "A2", "domain": "arc_easy", "sims": 200, "pass": 142, "per_task": {"0": [1], "1": [1], "2": [0], "3": [1], "4": [0], "5": [0], "6": [0], "7": [1], "8": 
+=== STAGE evalA2 rc=0 893s
+=== STAGE evalA1 start 19:43:00
+vllm up: A1 
+smoke: {"secs": 0.32, "tool_calls": [{"id": "chatcmpl-tool-893a0a69e6faa5b1", "type": "function", "function": {"name": "find_user_id_by_email", "arguments": "{\"email\": \"noah.brown7922@example.com\"}"}}], "content": "I'll help you with that return. Let me look up your account first.", "reasoning_chars": 0, "usage": {"prompt_tokens": 201, "total_tokens": 245, "completion_tokens": 44, "prompt_tokens_deta
+{"arm": "A1", "domain": "retail_test", "sims": 160, "pass": 109, "per_task": {"5": [0, 0, 0, 0], "9": [1, 1, 1, 1], "12": [1, 1, 1, 1], "17": [1, 1, 1, 1], "18"
+{"arm": "A1", "domain": "airline_test", "sims": 40, "pass": 21, "per_task": {"2": [1, 1], "6": [1, 1], "8": [1, 0], "13": [1, 1], "16": [0, 0], "18": [0, 1], "1
+{"arm": "A1", "domain": "arc_easy", "sims": 200, "pass": 142, "per_task": {"0": [1], "1": [1], "2": [0], "3": [1], "4": [0], "5": [0], "6": [0], "7": [1], "8": 
+=== STAGE evalA1 rc=0 968s
+=== STAGE report start 19:59:08
+| arm | retail test | airline test | ARC-Easy |
+|---|---|---|---|
+| A0 | 63.7% (102/160) | 60.0% (24/40) | 71.0% (142/200) |
+| A1 | 68.1% (109/160) | 52.5% (21/40) | 71.0% (142/200) |
+| A2 | 66.9% (107/160) | 57.5% (23/40) | 71.0% (142/200) |
+
+day retail_train: 99/148 runs pass
+
+fix retail_train_retry: 9/33 runs pass
+
+| comparison | delta (points) | p | tasks |
+|---|---|---|---|
+| retail A2 - A0 | +3.1 | 0.5728 | 40 |
+| retail A2 - A1 | -1.2 | 0.8777 | 40 |
+| retail A1 - A0 | +4.4 | 0.3799 | 40 |
+| airline A2 - A0 | -2.5 | 1.0000 | 20 |
+| ARC-Easy A2 - A0 | +0.0 | 1.0000 | 200 |
+P1 sleep teaches skill: FAIL - A2 retail test >= A0 + 6 points and p < 0.05
+P2 bad examples add something: FAIL - A2 >= A1 + 4 points and p < 0.05
+P3 skills carry over (label only): FAIL - A2 airline test >= A0
+P4 no harm: PASS - A2 airline >= A0 - 7.5 points and ARC-Easy >= A0 - 2 points
+Wrong if A2 <= A0 on retail test: no
+Wrong if A2 < A1 - 4: no
+Day-1 sanity: A0 retail test 63.7% vs Swap-1 64% -> gap -0.3 points  (within 15)
+=== STAGE report rc=0 1s
+=== skillsleep done 2026-10-25T19:59:09Z elapsed 7387s
+=== packed 9699234 bytes
