@@ -1,0 +1,747 @@
+== 2026-10-27T23:59:37Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 19:59:42.113000 62353 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+== downloading LiquidAI/LFM3-1.7B @ 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd (weights + tokenizer, no code files) -> /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:01,  5.61it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:00<00:00,  9.39it/s]Fetching 7 files:  86%|████████▌ | 6/7 [00:01<00:00,  2.98it/s]Fetching 7 files: 100%|██████████| 7/7 [01:14<00:00, 16.73s/it]Fetching 7 files: 100%|██████████| 7/7 [01:14<00:00, 10.66s/it]
+/Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf
+weights: /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf (3457635448 bytes safetensors), /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf (0 bytes); disk free 2 GB
+== 2026-10-28T00:00:57Z replay gate on the Probe-3 source runs
+replayed 2304 tries; real checks reproduce recorded success for 2304 (100.00%); 0 mismatches
+GATE PASS
+== 2026-10-28T00:00:57Z build_data (Probe-3 449/49 sets)
+{
+ "rows": 1488,
+ "tasks_in_file": 372,
+ "kept": 868,
+ "reference": 569,
+ "invalid": 51,
+ "tasks_with_kept": 265,
+ "train_tasks": 239,
+ "val_tasks": 26,
+ "train_sets": 449,
+ "val_sets": 49
+}
+train 449 sets, val 49 sets -> /Users/ben-hannan/probe5-out/data
+== 2026-10-28T00:00:57Z train_lora_lfm3 (torch + peft, MPS)
+W1027 20:00:59.689000 62709 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+MPS memory cap: fraction 0.332 (~10.0 GB)
+[transformers] You are using a model of type `lfm3` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+train: 449 examples (0 dropped > 8192 tokens), 649508 tokens, 35317 answer tokens, longest 1844
+val: 49 examples (0 dropped > 8192 tokens), 69274 tokens, 4170 answer tokens, longest 1702
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights:  51%|█████     | 145/286 [00:00<00:00, 1431.89it/s]Loading weights: 100%|██████████| 286/286 [00:00<00:00, 1265.02it/s]
+model ready in 4s on mps (torch.float16); LoRA on 142 modules, trainable 16,105,472 of 1,744,907,008 (0.923%), dtypes ['torch.float16', 'torch.float32']
+{"event": "start", "steps": 58, "per_epoch": 29, "warmup_steps": 2, "resumed_from": 0, "device": "mps", "dtype": "torch.float16", "n_train": 449, "torch": "2.14.1"}
+{"event": "val", "epoch": 0, "val_loss": 0.9921250697806013, "n_val": 49, "sec": 63.4, "mem_gb": 3.28}
+{"event": "step", "step": 1, "epoch": 1, "loss": 0.9900041777512123, "grad_norm": 4.140462875366211, "lr": 0.0, "s_per_step": 80.1, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 76.1}
+{"event": "step", "step": 2, "epoch": 1, "loss": 0.9287886270662633, "grad_norm": 3.2066681385040283, "lr": 5e-05, "s_per_step": 82.7, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 77.2}
+{"event": "step", "step": 3, "epoch": 1, "loss": 0.9704942405770678, "grad_norm": 3.6958391666412354, "lr": 0.0001, "s_per_step": 76.6, "mem_gb": 3.4, "driver_gb": 4.34, "rss_peak_gb": 7.02, "eta_min": 70.3}
+{"event": "step", "step": 4, "epoch": 1, "loss": 0.4747055841882741, "grad_norm": 1.3482022285461426, "lr": 9.992134075089084e-05, "s_per_step": 80.6, "mem_gb": 3.4, "driver_gb": 4.36, "rss_peak_gb": 7.02, "eta_min": 72.5}
+{"event": "step", "step": 5, "epoch": 1, "loss": 0.49339572504126233, "grad_norm": 1.6891652345657349, "lr": 9.968561049466214e-05, "s_per_step": 79.6, "mem_gb": 3.4, "driver_gb": 4.33, "rss_peak_gb": 7.02, "eta_min": 70.3}
+{"event": "step", "step": 6, "epoch": 1, "loss": 0.4485366098746901, "grad_norm": 1.2780649662017822, "lr": 9.92935509259118e-05, "s_per_step": 83.6, "mem_gb": 3.4, "driver_gb": 4.34, "rss_peak_gb": 7.02, "eta_min": 72.5}
+{"event": "paused", "step": 6, "reason": "/Users/ben-hannan/learner-ops/probe5/flag/ASSISTANT_RUNNING exists"}
+PAUSED at step 6: assistant running. Checkpoint saved; rerun the same command to resume.
+PAUSED during 'train_lora_lfm3 (torch + peft, MPS)'. Rerun the same command to resume.
+== 2026-10-28T00:20:01Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 20:20:06.501000 65767 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+weights: /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf (3457635448 bytes safetensors), /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf (0 bytes); disk free 3 GB
+== 2026-10-28T00:20:07Z replay gate on the Probe-3 source runs
+replayed 2304 tries; real checks reproduce recorded success for 2304 (100.00%); 0 mismatches
+GATE PASS
+== 2026-10-28T00:20:07Z build_data (Probe-3 449/49 sets)
+{
+ "rows": 1488,
+ "tasks_in_file": 372,
+ "kept": 868,
+ "reference": 569,
+ "invalid": 51,
+ "tasks_with_kept": 265,
+ "train_tasks": 239,
+ "val_tasks": 26,
+ "train_sets": 449,
+ "val_sets": 49
+}
+train 449 sets, val 49 sets -> /Users/ben-hannan/probe5-out/data
+== 2026-10-28T00:20:07Z train_lora_lfm3 (torch + peft, MPS)
+W1027 20:20:08.939000 65827 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+MPS memory cap: fraction 0.332 (~10.0 GB)
+[transformers] You are using a model of type `lfm3` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+train: 449 examples (0 dropped > 8192 tokens), 649508 tokens, 35317 answer tokens, longest 1844
+val: 49 examples (0 dropped > 8192 tokens), 69274 tokens, 4170 answer tokens, longest 1702
+Loading weights:   0%|          | 0/286 [00:00<?, ?it/s]Loading weights:   0%|          | 1/286 [00:00<03:40,  1.29it/s]Loading weights:  58%|█████▊    | 167/286 [00:00<00:00, 256.89it/s]Loading weights:  91%|█████████ | 260/286 [00:01<00:00, 275.02it/s]Loading weights: 100%|██████████| 286/286 [00:01<00:00, 227.74it/s]
+model ready in 2s on mps (torch.float16); LoRA on 142 modules, trainable 16,105,472 of 1,744,907,008 (0.923%), dtypes ['torch.float16', 'torch.float32']
+resuming from step 6
+{"event": "start", "steps": 58, "per_epoch": 29, "warmup_steps": 2, "resumed_from": 6, "device": "mps", "dtype": "torch.float16", "n_train": 449, "torch": "2.14.1"}
+{"event": "step", "step": 7, "epoch": 1, "loss": 0.4054710538873903, "grad_norm": 0.9375227093696594, "lr": 9.874639560909117e-05, "s_per_step": 83.8, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 71.2}
+{"event": "step", "step": 8, "epoch": 1, "loss": 0.4086078599441883, "grad_norm": 0.9947328567504883, "lr": 9.804586609725499e-05, "s_per_step": 75.4, "mem_gb": 3.4, "driver_gb": 4.31, "rss_peak_gb": 7.02, "eta_min": 62.8}
+{"event": "step", "step": 9, "epoch": 1, "loss": 0.388759352944114, "grad_norm": 0.9419532418251038, "lr": 9.719416651541839e-05, "s_per_step": 77.6, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 63.3}
+{"event": "step", "step": 10, "epoch": 1, "loss": 0.31148428407905615, "grad_norm": 0.8671470284461975, "lr": 9.619397662556435e-05, "s_per_step": 79.2, "mem_gb": 3.4, "driver_gb": 4.31, "rss_peak_gb": 7.02, "eta_min": 63.3}
+{"event": "step", "step": 11, "epoch": 1, "loss": 0.3667173899893341, "grad_norm": 0.6968777179718018, "lr": 9.504844339512095e-05, "s_per_step": 78.4, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 61.4}
+{"event": "step", "step": 12, "epoch": 1, "loss": 0.3384981387999, "grad_norm": 0.7943965196609497, "lr": 9.376117109543769e-05, "s_per_step": 76.7, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 58.8}
+{"event": "step", "step": 13, "epoch": 1, "loss": 0.3891514914376395, "grad_norm": 0.7338597774505615, "lr": 9.233620996141421e-05, "s_per_step": 81.2, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 60.9}
+{"event": "step", "step": 14, "epoch": 1, "loss": 0.33137009272704254, "grad_norm": 0.7574126124382019, "lr": 9.077804344796302e-05, "s_per_step": 76.7, "mem_gb": 3.4, "driver_gb": 4.32, "rss_peak_gb": 7.02, "eta_min": 56.3}
+{"event": "step", "step": 15, "epoch": 1, "loss": 0.31080905596415204, "grad_norm": 0.5926676392555237, "lr": 8.90915741234015e-05, "s_per_step": 80.1, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 57.4}
+{"event": "step", "step": 16, "epoch": 1, "loss": 0.41485675769608193, "grad_norm": 0.6347606182098389, "lr": 8.728210824415827e-05, "s_per_step": 80.1, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 56.1}
+{"event": "step", "step": 17, "epoch": 1, "loss": 0.3456474307375486, "grad_norm": 0.7813817262649536, "lr": 8.535533905932738e-05, "s_per_step": 79.4, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 54.3}
+{"event": "step", "step": 18, "epoch": 1, "loss": 0.28008483617733687, "grad_norm": 0.7411531805992126, "lr": 8.33173288976002e-05, "s_per_step": 80.5, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 53.7}
+{"event": "step", "step": 19, "epoch": 1, "loss": 0.24343984897427104, "grad_norm": 0.5306368470191956, "lr": 8.117449009293668e-05, "s_per_step": 76.3, "mem_gb": 3.4, "driver_gb": 4.32, "rss_peak_gb": 7.02, "eta_min": 49.6}
+{"event": "step", "step": 20, "epoch": 1, "loss": 0.29958158437991184, "grad_norm": 0.5615467429161072, "lr": 7.893356480899028e-05, "s_per_step": 78.2, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 49.5}
+{"event": "step", "step": 21, "epoch": 1, "loss": 0.33978254418624076, "grad_norm": 0.702104926109314, "lr": 7.660160382576683e-05, "s_per_step": 82.0, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 50.6}
+{"event": "step", "step": 22, "epoch": 1, "loss": 0.3801753961190009, "grad_norm": 0.8153274059295654, "lr": 7.4185944355262e-05, "s_per_step": 76.8, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 46.1}
+{"event": "step", "step": 23, "epoch": 1, "loss": 0.3052197637426894, "grad_norm": 0.7816182374954224, "lr": 7.169418695587791e-05, "s_per_step": 75.3, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 43.9}
+{"event": "step", "step": 24, "epoch": 1, "loss": 0.39077610403528384, "grad_norm": 0.7738997340202332, "lr": 6.91341716182545e-05, "s_per_step": 77.4, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 43.9}
+{"event": "step", "step": 25, "epoch": 1, "loss": 0.23867468929673774, "grad_norm": 0.6598137617111206, "lr": 6.651395309775837e-05, "s_per_step": 78.6, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 43.2}
+{"event": "step", "step": 26, "epoch": 1, "loss": 0.2642199238857069, "grad_norm": 0.5491423606872559, "lr": 6.384177557124247e-05, "s_per_step": 79.9, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 42.6}
+{"event": "step", "step": 27, "epoch": 1, "loss": 0.31774158216054404, "grad_norm": 0.6831428408622742, "lr": 6.112604669781572e-05, "s_per_step": 78.7, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 40.7}
+{"event": "step", "step": 28, "epoch": 1, "loss": 0.22653887194850672, "grad_norm": 0.5308669209480286, "lr": 5.837531116523682e-05, "s_per_step": 78.2, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 39.1}
+{"event": "step", "step": 29, "epoch": 1, "loss": 0.5701315667894151, "grad_norm": 3.4034693241119385, "lr": 5.5598223805165385e-05, "s_per_step": 5.0, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 2.4}
+{"event": "val", "epoch": 1, "val_loss": 0.3191741854166813, "n_val": 49, "sec": 60.2, "mem_gb": 3.4}
+{"event": "step", "step": 30, "epoch": 2, "loss": 0.21098289038195756, "grad_norm": 0.6268956065177917, "lr": 5.2803522361859594e-05, "s_per_step": 75.7, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 35.3}
+{"event": "step", "step": 31, "epoch": 2, "loss": 0.18652202893817235, "grad_norm": 0.6628287434577942, "lr": 5e-05, "s_per_step": 78.5, "mem_gb": 3.4, "driver_gb": 4.31, "rss_peak_gb": 7.02, "eta_min": 35.3}
+{"event": "step", "step": 32, "epoch": 2, "loss": 0.26652215463646883, "grad_norm": 0.5316973924636841, "lr": 4.719647763814042e-05, "s_per_step": 79.9, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 34.6}
+{"event": "step", "step": 33, "epoch": 2, "loss": 0.17658046421460763, "grad_norm": 0.4957638680934906, "lr": 4.440177619483462e-05, "s_per_step": 76.7, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 32.0}
+{"event": "step", "step": 34, "epoch": 2, "loss": 0.24229864406440538, "grad_norm": 0.52935391664505, "lr": 4.162468883476319e-05, "s_per_step": 81.4, "mem_gb": 3.4, "driver_gb": 4.32, "rss_peak_gb": 7.02, "eta_min": 32.6}
+{"event": "step", "step": 35, "epoch": 2, "loss": 0.23418955124012558, "grad_norm": 0.5921190977096558, "lr": 3.887395330218429e-05, "s_per_step": 78.9, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 30.3}
+{"event": "step", "step": 36, "epoch": 2, "loss": 0.21641635748506324, "grad_norm": 0.5216893553733826, "lr": 3.6158224428757535e-05, "s_per_step": 79.2, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 29.0}
+{"event": "step", "step": 37, "epoch": 2, "loss": 0.2427946761414245, "grad_norm": 0.6034128665924072, "lr": 3.3486046902241643e-05, "s_per_step": 79.2, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 27.7}
+{"event": "step", "step": 38, "epoch": 2, "loss": 0.20911570681568278, "grad_norm": 0.590803861618042, "lr": 3.086582838174551e-05, "s_per_step": 82.2, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 27.4}
+{"event": "step", "step": 39, "epoch": 2, "loss": 0.1532778685412756, "grad_norm": 0.45260149240493774, "lr": 2.8305813044122097e-05, "s_per_step": 79.2, "mem_gb": 3.4, "driver_gb": 4.32, "rss_peak_gb": 7.02, "eta_min": 25.1}
+{"event": "step", "step": 40, "epoch": 2, "loss": 0.29696884080180974, "grad_norm": 0.6014634370803833, "lr": 2.581405564473801e-05, "s_per_step": 78.6, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 23.6}
+{"event": "step", "step": 41, "epoch": 2, "loss": 0.2162487719559325, "grad_norm": 0.5460858941078186, "lr": 2.3398396174233178e-05, "s_per_step": 79.3, "mem_gb": 3.4, "driver_gb": 4.31, "rss_peak_gb": 7.02, "eta_min": 22.5}
+{"event": "step", "step": 42, "epoch": 2, "loss": 0.21714076430047516, "grad_norm": 0.4990540146827698, "lr": 2.1066435191009715e-05, "s_per_step": 77.7, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 20.7}
+{"event": "step", "step": 43, "epoch": 2, "loss": 0.24782902813935176, "grad_norm": 0.5037471652030945, "lr": 1.8825509907063327e-05, "s_per_step": 82.7, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 20.7}
+{"event": "step", "step": 44, "epoch": 2, "loss": 0.222783345085571, "grad_norm": 0.5455861687660217, "lr": 1.6682671102399805e-05, "s_per_step": 76.0, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 17.7}
+{"event": "step", "step": 45, "epoch": 2, "loss": 0.21147871467656362, "grad_norm": 0.5621939301490784, "lr": 1.4644660940672627e-05, "s_per_step": 77.5, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 16.8}
+{"event": "step", "step": 46, "epoch": 2, "loss": 0.24141840288130467, "grad_norm": 0.5571724772453308, "lr": 1.2717891755841722e-05, "s_per_step": 78.1, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 15.6}
+{"event": "step", "step": 47, "epoch": 2, "loss": 0.2215873290488191, "grad_norm": 0.5105262398719788, "lr": 1.0908425876598528e-05, "s_per_step": 77.9, "mem_gb": 3.4, "driver_gb": 4.29, "rss_peak_gb": 7.02, "eta_min": 14.3}
+{"event": "step", "step": 48, "epoch": 2, "loss": 0.19401293101389547, "grad_norm": 0.5360615253448486, "lr": 9.221956552036992e-06, "s_per_step": 75.0, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 12.5}
+{"event": "step", "step": 49, "epoch": 2, "loss": 0.21539786077362727, "grad_norm": 0.5843097567558289, "lr": 7.663790038585793e-06, "s_per_step": 81.0, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 12.2}
+{"event": "step", "step": 50, "epoch": 2, "loss": 0.18789810692612746, "grad_norm": 0.562220573425293, "lr": 6.238828904562316e-06, "s_per_step": 81.8, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 10.9}
+{"event": "step", "step": 51, "epoch": 2, "loss": 0.24186415334576097, "grad_norm": 0.6086114048957825, "lr": 4.951556604879048e-06, "s_per_step": 75.3, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 8.8}
+{"event": "step", "step": 52, "epoch": 2, "loss": 0.23201631260669137, "grad_norm": 0.6673880219459534, "lr": 3.8060233744356633e-06, "s_per_step": 80.2, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 8.0}
+{"event": "step", "step": 53, "epoch": 2, "loss": 0.27191726750340955, "grad_norm": 0.5691730380058289, "lr": 2.8058334845816213e-06, "s_per_step": 78.4, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 6.5}
+{"event": "step", "step": 54, "epoch": 2, "loss": 0.20915166229127424, "grad_norm": 0.6145857572555542, "lr": 1.9541339027450256e-06, "s_per_step": 81.3, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 5.4}
+{"event": "step", "step": 55, "epoch": 2, "loss": 0.23198903795955292, "grad_norm": 0.5761013031005859, "lr": 1.2536043909088136e-06, "s_per_step": 80.8, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 4.0}
+{"event": "step", "step": 56, "epoch": 2, "loss": 0.23322695881775107, "grad_norm": 0.5883001089096069, "lr": 7.064490740882057e-07, "s_per_step": 77.5, "mem_gb": 3.4, "driver_gb": 4.3, "rss_peak_gb": 7.02, "eta_min": 2.6}
+{"event": "step", "step": 57, "epoch": 2, "loss": 0.20333207913054296, "grad_norm": 0.570180356502533, "lr": 3.143895053378698e-07, "s_per_step": 77.1, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 1.3}
+{"event": "step", "step": 58, "epoch": 2, "loss": 0.06697551562235905, "grad_norm": 1.1059529781341553, "lr": 7.865924910916977e-08, "s_per_step": 5.2, "mem_gb": 3.4, "driver_gb": 4.25, "rss_peak_gb": 7.02, "eta_min": 0.0}
+{"event": "val", "epoch": 2, "val_loss": 0.2978281238382097, "n_val": 49, "sec": 60.0, "mem_gb": 3.4}
+val loss before 0.9921 -> after 0.2978; saved adapter -> /Users/ben-hannan/probe5-out/train/adapter
+== 2026-10-28T01:28:14Z convert_lora_to_gguf
+INFO:lora-to-gguf:Loading base model: lfm3-1.7b-hf
+WARNING:hf-to-gguf:Failed to load model config from /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf: The repository /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf contains custom code which must be executed to correctly load the model. You can inspect the repository content at /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf .
+ You can inspect the repository content at https://hf.co//Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf.
+Please pass the argument `trust_remote_code=True` to allow custom code to be run.
+WARNING:hf-to-gguf:Trying to load config.json instead
+INFO:lora-to-gguf:Using model architecture: Lfm3ForCausalLM
+INFO:hf-to-gguf:gguf: indexing model part 'model.safetensors'
+INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
+INFO:lora-to-gguf:Exporting model...
+INFO:hf-to-gguf:blk.0.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.0.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.0.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.0.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.0.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.0.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.0.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.0.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.0.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.0.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.1.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.1.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.1.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.1.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.1.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.1.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.1.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.1.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.1.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.1.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.10.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.10.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.10.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.10.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.10.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.10.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.10.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.10.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.10.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.11.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.11.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.11.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.11.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.11.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.11.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.11.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.11.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.11.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.11.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.12.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.12.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.12.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.12.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.12.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.12.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.12.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.12.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.12.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.13.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.13.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.13.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.13.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.13.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.13.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.13.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.13.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.13.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.13.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.14.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.14.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.14.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.14.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.14.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.14.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.14.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.14.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.14.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.15.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.15.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.15.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.15.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.15.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.15.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.15.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.15.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.15.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.15.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.16.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.16.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.16.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.16.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.16.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.16.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.16.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.16.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.16.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.17.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.17.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.17.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.17.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.17.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.17.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.17.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.17.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.17.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.17.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.18.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.18.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.18.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.18.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.18.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.18.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.18.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.18.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.18.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.19.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.19.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.19.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.19.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.19.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.19.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.19.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.19.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.19.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.19.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.2.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.2.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.2.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.2.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.2.attn_k.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.attn_k.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.2.attn_output.weight.lora_a,   torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.attn_output.weight.lora_b,   torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.2.attn_q.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.attn_q.weight.lora_b,        torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.2.attn_v.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.2.attn_v.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.20.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.20.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.20.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.20.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.20.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.20.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.20.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.20.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.20.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.21.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.21.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.21.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.21.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.21.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.21.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.21.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.21.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.21.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.21.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.22.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.22.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.22.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.22.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.22.attn_k.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.attn_k.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.22.attn_output.weight.lora_a,  torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.attn_output.weight.lora_b,  torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.22.attn_q.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.attn_q.weight.lora_b,       torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.22.attn_v.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.22.attn_v.weight.lora_b,       torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.23.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.23.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.23.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.23.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.23.ffn_gate.weight.lora_a,     torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.23.ffn_gate.weight.lora_b,     torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.23.ffn_down.weight.lora_a,     torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.23.ffn_down.weight.lora_b,     torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.23.ffn_up.weight.lora_a,       torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.23.ffn_up.weight.lora_b,       torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.3.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.3.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.3.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.3.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.3.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.3.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.3.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.3.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.3.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.3.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.4.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.4.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.4.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.4.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.4.attn_k.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.attn_k.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.4.attn_output.weight.lora_a,   torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.attn_output.weight.lora_b,   torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.4.attn_q.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.attn_q.weight.lora_b,        torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.4.attn_v.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.4.attn_v.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.5.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.5.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.5.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.5.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.5.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.5.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.5.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.5.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.5.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.5.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.6.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.6.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.6.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.6.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.6.attn_k.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.attn_k.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.6.attn_output.weight.lora_a,   torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.attn_output.weight.lora_b,   torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.6.attn_q.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.attn_q.weight.lora_b,        torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.6.attn_v.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.6.attn_v.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.7.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.7.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.7.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.7.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.7.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.7.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.7.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.7.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.7.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.7.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.8.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.8.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.8.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.8.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.8.attn_k.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.attn_k.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.8.attn_output.weight.lora_a,   torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.attn_output.weight.lora_b,   torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.8.attn_q.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.attn_q.weight.lora_b,        torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.8.attn_v.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.8.attn_v.weight.lora_b,        torch.float32 --> F32, shape = {16, 512}
+INFO:hf-to-gguf:blk.9.shortconv.in_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.9.shortconv.in_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 6144}
+INFO:hf-to-gguf:blk.9.shortconv.out_proj.weight.lora_a, torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.9.shortconv.out_proj.weight.lora_b, torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.9.ffn_gate.weight.lora_a,      torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.9.ffn_gate.weight.lora_b,      torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:blk.9.ffn_down.weight.lora_a,      torch.float32 --> F32, shape = {7680, 16}
+INFO:hf-to-gguf:blk.9.ffn_down.weight.lora_b,      torch.float32 --> F32, shape = {16, 2048}
+INFO:hf-to-gguf:blk.9.ffn_up.weight.lora_a,        torch.float32 --> F32, shape = {2048, 16}
+INFO:hf-to-gguf:blk.9.ffn_up.weight.lora_b,        torch.float32 --> F32, shape = {16, 7680}
+INFO:hf-to-gguf:Set meta model
+INFO:hf-to-gguf:Set model parameters
+INFO:hf-to-gguf:Set model quantization version
+INFO:hf-to-gguf:Set model tokenizer
+INFO:gguf.gguf_writer:Writing the following files:
+INFO:gguf.gguf_writer:/Users/ben-hannan/probe5-out/adapter.gguf.tmp: n_tensors = 284, total_size = 64.4M
+Writing:   0%|          | 0.00/64.4M [00:00<?, ?byte/s]Writing:  43%|████▎     | 27.4M/64.4M [00:00<00:00, 271Mbyte/s]Writing:  85%|████████▌ | 54.8M/64.4M [00:00<00:00, 246Mbyte/s]Writing: 100%|██████████| 64.4M/64.4M [00:00<00:00, 246Mbyte/s]
+INFO:lora-to-gguf:Model successfully exported to /Users/ben-hannan/probe5-out/adapter.gguf.tmp
+adapter.gguf: 64442400 bytes
+2026-10-28T01:28:17Z STOP_AFTER_ADAPTER: adapter ready; rerun without it (DROP_HF=1 to free the HF weights first) for the server stages
+== 2026-10-28T01:31:47Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 21:31:52.581000 72060 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+only 2 GB free where the models go; need 5 GB (set MIN_FREE_GB or free disk)
+== 2026-10-28T01:32:47Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 21:32:52.120000 72465 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+weights: /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf (0 bytes safetensors), /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf (3466626336 bytes); disk free 2 GB
+== 2026-10-28T01:32:52Z replay gate on the Probe-3 source runs
+replayed 2304 tries; real checks reproduce recorded success for 2304 (100.00%); 0 mismatches
+GATE PASS
+== 2026-10-28T01:32:52Z build_data (Probe-3 449/49 sets)
+{
+ "rows": 1488,
+ "tasks_in_file": 372,
+ "kept": 868,
+ "reference": 569,
+ "invalid": 51,
+ "tasks_with_kept": 265,
+ "train_tasks": 239,
+ "val_tasks": 26,
+ "train_sets": 449,
+ "val_sets": 49
+}
+train 449 sets, val 49 sets -> /Users/ben-hannan/probe5-out/data
+== 2026-10-28T01:32:52Z train_lora_lfm3 (torch + peft, MPS)
+W1027 21:32:54.673000 72530 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+final adapter already exists: /Users/ben-hannan/probe5-out/train/adapter (delete OUT/adapter to retrain)
+adapter.gguf: 64442400 bytes
+== 2026-10-28T01:32:55Z starting llama-server: -m /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf --lora /Users/ben-hannan/probe5-out/adapter.gguf -np 4 -c 65536 --jinja (port 8085)
+== 2026-10-28T01:32:59Z check: adapter scale changes the logits, logprobs present
+max |logprob(scale 1) - logprob(scale 0)| = 2.199665 (repeat of scale 0 differs by 0.000000); candidates 20
+ok
+== 2026-10-28T01:32:59Z tries: 12 per task, adapter scale 0 (agent_lfm3)
+96 tasks x 12 tries: 0 done, 1152 to run -> /Users/ben-hannan/probe5-out/tries/results.jsonl
+12 finished, 45s
+24 finished, 72s
+36 finished, 122s
+48 finished, 153s
+60 finished, 196s
+72 finished, 210s
+84 finished, 242s
+96 finished, 300s
+108 finished, 310s
+120 finished, 365s
+132 finished, 393s
+144 finished, 423s
+156 finished, 456s
+168 finished, 475s
+180 finished, 506s
+192 finished, 548s
+204 finished, 577s
+216 finished, 623s
+228 finished, 668s
+240 finished, 729s
+252 finished, 766s
+264 finished, 797s
+276 finished, 833s
+288 finished, 886s
+300 finished, 927s
+312 finished, 959s
+324 finished, 984s
+336 finished, 1017s
+348 finished, 1054s
+360 finished, 1079s
+372 finished, 1123s
+384 finished, 1152s
+396 finished, 1234s
+408 finished, 1271s
+420 finished, 1316s
+432 finished, 1343s
+444 finished, 1360s
+456 finished, 1407s
+468 finished, 1458s
+480 finished, 1482s
+492 finished, 1539s
+504 finished, 1573s
+516 finished, 1637s
+528 finished, 1689s
+540 finished, 1729s
+552 finished, 1784s
+564 finished, 1825s
+576 finished, 1860s
+588 finished, 1906s
+600 finished, 1940s
+612 finished, 1980s
+624 finished, 2016s
+636 finished, 2055s
+648 finished, 2096s
+660 finished, 2133s
+672 finished, 2167s
+684 finished, 2206s
+696 finished, 2231s
+708 finished, 2268s
+720 finished, 2282s
+732 finished, 2325s
+744 finished, 2371s
+756 finished, 2394s
+768 finished, 2447s
+780 finished, 2475s
+792 finished, 2524s
+804 finished, 2550s
+816 finished, 2568s
+828 finished, 2580s
+840 finished, 2621s
+852 finished, 2642s
+864 finished, 2665s
+876 finished, 2694s
+888 finished, 2733s
+900 finished, 2763s
+912 finished, 2808s
+924 finished, 2839s
+936 finished, 2854s
+finished 944 episodes in 2885s
+PAUSED after 944 episodes: /Users/ben-hannan/learner-ops/probe5/flag/ASSISTANT_RUNNING exists. Rerun the same command to resume.
+PAUSED during 'tries: 12 per task, adapter scale 0 (agent_lfm3)'. Rerun the same command to resume.
+== stopping llama-server (pid 72543)
+== 2026-10-28T02:26:06Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 22:26:10.967000 79788 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+weights: /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf (0 bytes safetensors), /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf (3466626336 bytes); disk free 2 GB
+== 2026-10-28T02:26:11Z replay gate on the Probe-3 source runs
+replayed 2304 tries; real checks reproduce recorded success for 2304 (100.00%); 0 mismatches
+GATE PASS
+== 2026-10-28T02:26:11Z build_data (Probe-3 449/49 sets)
+{
+ "rows": 1488,
+ "tasks_in_file": 372,
+ "kept": 868,
+ "reference": 569,
+ "invalid": 51,
+ "tasks_with_kept": 265,
+ "train_tasks": 239,
+ "val_tasks": 26,
+ "train_sets": 449,
+ "val_sets": 49
+}
+train 449 sets, val 49 sets -> /Users/ben-hannan/probe5-out/data
+== 2026-10-28T02:26:11Z train_lora_lfm3 (torch + peft, MPS)
+W1027 22:26:13.406000 79855 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+final adapter already exists: /Users/ben-hannan/probe5-out/train/adapter (delete OUT/adapter to retrain)
+adapter.gguf: 64442400 bytes
+== 2026-10-28T02:26:13Z starting llama-server: -m /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf --lora /Users/ben-hannan/probe5-out/adapter.gguf -np 4 -c 65536 --jinja (port 8085)
+== 2026-10-28T02:26:17Z check: adapter scale changes the logits, logprobs present
+max |logprob(scale 1) - logprob(scale 0)| = 2.199665 (repeat of scale 0 differs by 0.000000); candidates 20
+ok
+== 2026-10-28T02:26:18Z tries: 12 per task, adapter scale 0 (agent_lfm3)
+96 tasks x 12 tries: 944 done, 208 to run -> /Users/ben-hannan/probe5-out/tries/results.jsonl
+finished 10 episodes in 42s
+PAUSED after 10 episodes: /Users/ben-hannan/learner-ops/probe5/flag/ASSISTANT_RUNNING exists. Rerun the same command to resume.
+PAUSED during 'tries: 12 per task, adapter scale 0 (agent_lfm3)'. Rerun the same command to resume.
+== stopping llama-server (pid 79873)
+== 2026-10-28T02:29:01Z probe5 run_m3.sh OUT=/Users/ben-hannan/probe5-out smoke=0 tasks=/Users/ben-hannan/learner-ops/probe5/repo/creative/probe4/tasks_new.jsonl (96 tasks, sha256 b6c23113e9698bf185f5c456fe327b5ec2b9874b4e2d23f1192685a2dbdf27ab)
+W1027 22:29:06.612000 80318 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+python 3.12.14 torch 2.14.1 transformers 5.20.2 peft 0.21.2 mps True
+vendored LFM3 code intact (revision 40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd)
+llama.cpp: not a git checkout (/Users/ben-hannan/learner-ops/lfm3/llama.cpp/build/bin/llama-server)
+weights: /Users/ben-hannan/learner-ops/models/lfm3-1.7b-hf (0 bytes safetensors), /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf (3466626336 bytes); disk free 1 GB
+== 2026-10-28T02:29:07Z replay gate on the Probe-3 source runs
+replayed 2304 tries; real checks reproduce recorded success for 2304 (100.00%); 0 mismatches
+GATE PASS
+== 2026-10-28T02:29:07Z build_data (Probe-3 449/49 sets)
+{
+ "rows": 1488,
+ "tasks_in_file": 372,
+ "kept": 868,
+ "reference": 569,
+ "invalid": 51,
+ "tasks_with_kept": 265,
+ "train_tasks": 239,
+ "val_tasks": 26,
+ "train_sets": 449,
+ "val_sets": 49
+}
+train 449 sets, val 49 sets -> /Users/ben-hannan/probe5-out/data
+== 2026-10-28T02:29:08Z train_lora_lfm3 (torch + peft, MPS)
+W1027 22:29:09.771000 80389 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+final adapter already exists: /Users/ben-hannan/probe5-out/train/adapter (delete OUT/adapter to retrain)
+adapter.gguf: 64442400 bytes
+== 2026-10-28T02:29:10Z starting llama-server: -m /Users/ben-hannan/learner-ops/models/gguf/LFM3-1.7B-BF16.gguf --lora /Users/ben-hannan/probe5-out/adapter.gguf -np 4 -c 65536 --jinja (port 8085)
+== 2026-10-28T02:29:14Z check: adapter scale changes the logits, logprobs present
+max |logprob(scale 1) - logprob(scale 0)| = 2.199665 (repeat of scale 0 differs by 0.000000); candidates 20
+ok
+== 2026-10-28T02:29:14Z tries: 12 per task, adapter scale 0 (agent_lfm3)
+96 tasks x 12 tries: 954 done, 198 to run -> /Users/ben-hannan/probe5-out/tries/results.jsonl
+12 finished, 52s
+24 finished, 75s
+36 finished, 90s
+48 finished, 104s
+60 finished, 126s
+72 finished, 161s
+84 finished, 216s
+96 finished, 267s
+108 finished, 296s
+120 finished, 322s
+132 finished, 363s
+144 finished, 405s
+156 finished, 454s
+168 finished, 499s
+180 finished, 529s
+192 finished, 557s
+finished 198 episodes in 567s
+== 2026-10-28T02:38:41Z SELF judge (self_lfm3)
+built 1152 pool members -> /Users/ben-hannan/probe5-out/pools.jsonl
+1152 tries, 0 judged, 1152 to judge -> /Users/ben-hannan/probe5-out/self_scores.jsonl
+50/1152 11s
+100/1152 20s
+150/1152 29s
+200/1152 40s
+250/1152 51s
+300/1152 61s
+350/1152 69s
+400/1152 81s
+450/1152 90s
+500/1152 101s
+550/1152 113s
+600/1152 123s
+650/1152 138s
+700/1152 148s
+750/1152 158s
+800/1152 167s
+850/1152 175s
+900/1152 184s
+950/1152 194s
+1000/1152 202s
+1050/1152 213s
+1100/1152 222s
+1150/1152 236s
+judged 1152 in 236s; no yes/no among the candidates: 0; replies with < 3 candidates: 0
+== 2026-10-28T02:42:37Z TEST-B: untuned LFM3 writes tests (scale 0)
+arm base (adapter scale 0.0): 384 samples, 0 done, 384 to write -> /Users/ben-hannan/probe5-out/tests_b/probes_lfm3base.jsonl
+[24/384] 169s
+[48/384] 287s
+[72/384] 435s
+[96/384] 568s
+[120/384] 728s
+[144/384] 878s
+[168/384] 1000s
+[192/384] 1146s
+[216/384] 1306s
+[240/384] 1449s
+[264/384] 1592s
+[288/384] 1737s
+[312/384] 1880s
+[336/384] 2024s
+[360/384] 2170s
+[384/384] 2316s
+wrote 384 samples in 2316s -> /Users/ben-hannan/probe5-out/tests_b/probes_lfm3base.jsonl
+== 2026-10-28T03:21:13Z TEST-T: LFM3 + LoRA writes tests (scale 1)
+arm tuned (adapter scale 1.0): 384 samples, 0 done, 384 to write -> /Users/ben-hannan/probe5-out/tests_t/probes_lfm3.jsonl
+[24/384] 46s
+[48/384] 84s
+[72/384] 123s
+[96/384] 164s
+[120/384] 204s
+[144/384] 243s
+[168/384] 283s
+[192/384] 322s
+[216/384] 362s
+[240/384] 401s
+[264/384] 444s
+[288/384] 481s
+[312/384] 523s
+[336/384] 563s
+[360/384] 602s
+[384/384] 637s
+wrote 384 samples in 637s -> /Users/ben-hannan/probe5-out/tests_t/probes_lfm3.jsonl
+== stopping llama-server (pid 80404)
+== 2026-10-28T03:31:52Z validity gates
+gate replay: ok  value=1.0, need=>= 0.99, n_tries=1152
+gate parse: ok  value=1.0, need=>= 0.9, tool_call_sources={'native': 3120, 'text': 0, 'none': 996}
+gate val: ok  before=0.9921, after=0.2978, need=after < before
+gate empty: ok  n=384, expected=384, empty=0, raw_empty=0, share=0.0, value=0.0, need=<= 0.1
+GATES: VALID
+== 2026-10-28T03:31:52Z analyze_p5 (probe4 analyze_e2e on the LFM3 outputs)
+# Probe-5 report (LFM3-1.7B, llama.cpp)
+
+96 tasks with all 12 tries (38 traps, 58 non-traps); of 96 in the task file. Replay gate: 100.00% of tries reproduce recorded success.
+
+| picker | all tasks (%) | traps (%) | non-traps (%) | generated tokens / task | prompt tokens / task |
+|---|---|---|---|---|---|
+| FIRST | 38.5 | 18.4 | 51.7 | 238 | 5717 |
+| RAND | 40.7 | 22.6 | 52.6 | 2642 | 70840 |
+| VOTE | 43.8 | 23.7 | 56.9 | 2642 | 70840 |
+| SELF | 52.1 | 13.2 | 77.6 | 2654 | 74492 |
+| TEST-B | 50.0 | 13.2 | 74.1 | 5272 | 80003 |
+| TEST-T | 57.3 | 21.1 | 81.0 | 2915 | 80003 |
+| ORACLE | 72.9 | 57.9 | 82.8 | 2642 | 70840 |
+
+Verdict: **PASS**
+Pass marks (PREREG): E1 TEST-T >= FIRST + 10 points (>= 48.5%); E2 >= SELF + 5 (>= 57.1%); E3 >= TEST-B + 5 (>= 55.0%). Proved wrong: TEST-T <= FIRST + 3 (<= 41.5%). E1=ok, E2=ok, E3=ok
+
+Paired bootstrap 95% intervals (points, over tasks; reported only, the verdict uses the point values):
+- TEST-T - FIRST: [9.4, 28.1]
+- TEST-T - SELF: [0.0, 10.4]
+- TEST-T - TEST-B: [2.1, 13.5]
+
+RAND is the expected success of a random try (mean over the 12). Ties for TEST-B / TEST-T break by SELF, then the lowest try. Tokens: FIRST = one try; RAND / VOTE / ORACLE = the 12 tries; SELF = 12 tries + 12 judge passes; TEST-x = 12 tries + 4 test samples + the 12 judge passes used for tie-breaks.
+- TEST-B tests: unparsable replies 311/384, validity 85.4%, samples with no valid check 312, agree with the reference plan 46.2%, tasks where all 12 tries tie on the score 91.7%
+- TEST-T tests: unparsable replies 0/384, validity 99.6%, samples with no valid check 0, agree with the reference plan 78.3%, tasks where all 12 tries tie on the score 15.6%
+
+{"stage_seconds": {"replay gate on the Probe-3 source runs": 0, "build_data (Probe-3 449/49 sets)": 1, "train_lora_lfm3 (torch + peft, MPS)": 2, "check: adapter scale changes the logits, logprobs present": 0, "tries: 12 per task, adapter scale 0 (agent_lfm3)": 567, "SELF judge (self_lfm3)": 236, "TEST-B: untuned LFM3 writes tests (scale 0)": 2316, "TEST-T: LFM3 + LoRA writes tests (scale 1)": 638, "analyze_p5 (probe4 analyze_e2e on the LFM3 outputs)": 0}, "wall_seconds": 3771, "server_rss_peak_gb": 14.79, "train": {"train_wall_s": 4081, "peak_driver_gb": 4.32, "peak_rss_gb": 7.02, "val_loss_before": 0.9921250697806013, "val_loss_after": 0.2978281238382097, "device": "mps", "dtype": "torch.float16"}}
+2026-10-28T03:31:52Z DONE -> /Users/ben-hannan/probe5-out/report.md, /Users/ben-hannan/probe5-out/gates.json, /Users/ben-hannan/probe5-out/run_stats.json (wall 3771 s)
