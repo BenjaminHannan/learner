@@ -1,3 +1,4 @@
+import re
 """End-state assertions: a small JSON DSL. run_checks(task, world, final_reply) -> list[bool]."""
 CHECK_KEYS = {  # type -> allowed keys
     "file_exists": {"path"}, "file_absent": {"path"}, "file_contains": {"path", "text"},
@@ -11,6 +12,11 @@ CHECK_KEYS = {  # type -> allowed keys
 
 def _has(hay, needle):
     return str(needle).lower() in str(hay).lower()
+
+
+def _word(hay, needle):
+    """Whole-word, case-insensitive match (substring matching let 'which' match 'whichever')."""
+    return re.search(r"(?<!\w)" + re.escape(str(needle).lower()) + r"(?!\w)", str(hay).lower()) is not None
 
 
 def _mail_ok(m, c):
@@ -52,7 +58,7 @@ def run_check(c, w, reply):
                    for r in w.reminders)
     if t == "note_contains":
         return any((not c.get("title") or _has(k, c["title"])) and _has(v, c["text"]) for k, v in w.notes.items())
-    if t == "reply_contains": return any(_has(reply or "", x) for x in c["any_of"])
+    if t == "reply_contains": return any(_word(reply or "", x) for x in c["any_of"])
     return False
 
 
