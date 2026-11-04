@@ -930,7 +930,7 @@ function createAgent({ helper, rec, voice }) {
     slot: isHelper ? helperLimiter : limiter,
     onState: helper && helper.onState,
     benBusy: isHelper ? benBusy : null,
-    onEnd: () => { holder.release(); endCard(); if (!isHelper) { sl.lastActive = Date.now(); benLastTurn = Date.now(); } },   // Oct 29: the half-hourly check-in (a helper run) reset Desk's idle clock, so auto-sleep never found 2 idle hours
+    onEnd: () => { holder.release(); endCard(); if (!isHelper) { sl.lastActive = Date.now(); benLastTurn = Date.now(); setTimeout(() => { try { aoHold.flush(); } catch (e) { /* ignore */ } }, 0); } },   // UI2: held proactive words go in once the run is over   // Oct 29: the half-hourly check-in (a helper run) reset Desk's idle clock, so auto-sleep never found 2 idle hours
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
     // track I5: safety levels + Glim's hands (enforced in src/agent.js runTool; levels change only from Ben's own words or Settings)
@@ -1730,15 +1730,21 @@ let aoSurprise = { at: 0, what: '' };
 const aoTypingNow = () => { if (Date.now() - lastTyping < 15000) return true; try { return powerMonitor.getSystemIdleTime() < 2; } catch (e) { return false; } };
 const aoNotched = () => !!(pillWin && pillWin.geo && pillWin.geo.notchH > 0);
 const aoWhere = () => { const s = store.getSettings(); return GlimVoice.route({ useNotch: s.useNotch !== false, notched: aoNotched(), pillOn: s.pill !== false && !!pillWin }); };
+// UI2 (Ben Nov 4, M3): a proactive chat message while a task runs waits for the task to end (it used to be dropped); it never cuts the task
+const { HoldWhileBusy } = require('./src/aohold');
+const aoHold = new HoldWhileBusy({
+  busy: () => !!(agent && agent.running),
+  post: (m) => {
+    const id = mainChatId(); m.threadId = id;
+    if (!id) return;
+    const t = store.loadThread(id);
+    if (t) { t.items.push({ t: 'assistant', text: m.text, ts: Date.now(), alwaysOn: true, sayId: m.id }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
+  }
+});
 const aoVoice = new GlimVoice.Voice({
   where: aoWhere, typing: aoTypingNow,
   outlets: {
-    chat: (m) => {
-      const id = mainChatId(); m.threadId = id;
-      if (!id || (agent && agent.running)) return;
-      const t = store.loadThread(id);
-      if (t) { t.items.push({ t: 'assistant', text: m.text, ts: Date.now(), alwaysOn: true, sayId: m.id }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
-    },
+    chat: (m) => aoHold.offer(m),   // UI2: while a task runs it waits (never cuts or lands inside the task); posted when the task ends
     notch: (m) => pillState.say(m), pill: (m) => pillState.say(m),
     notification: (m) => notify('Glim', m.text, m.threadId)
   },
