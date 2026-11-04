@@ -471,6 +471,12 @@
     if (ev.kind === 'shell') { c.append(el('code', 'cmd sel', ev.text)); } else c.append(el('div', null, ev.text));
     const btns = el('div', 'btns');
     const done = (v, label, remote) => { if (c.classList.contains('done')) return; if (!remote) desk.agent.respond(ev.rid || ev.id, v); c.classList.add('done'); btns.remove(); c.append(el('div', 'dim small', label)); settleDock(c, label + (ev.kind === 'shell' ? ': ' + String(ev.text).slice(0, 80) : '')); refreshMood(); };
+    if (ev.safety) {   // I5 safety level "ask": one-tap Yes / No / Always allow (Always allow = that kind becomes free, notice + Undo)
+      const y = el('button', 'amber-btn', 'Yes'); y.onclick = () => done('once', 'Yes');
+      const no = el('button', 'deny', 'No'); no.onclick = () => done('deny', 'No');
+      const al = el('button', 'ghost', 'Always allow'); al.onclick = () => done('always', 'Always allowed: ' + (ev.alwaysLabel || 'this'));
+      btns.append(y, no, al); c.append(btns); rids.set(ev.rid || ev.id, { done }); host.append(c); toBottom(); refreshMood(); return;
+    }
     const once = el('button', 'amber-btn', 'Allow once'); once.onclick = () => done('once', 'Allowed once');
     btns.append(once);
     if (!ev.danger) { const task = el('button', 'ghost', 'Allow for this task'); task.onclick = () => done('task', 'Allowed for this task'); btns.append(task); }
@@ -508,6 +514,14 @@
     pendingAsk = { c, reply };
     refreshMood();
   }
+  // I5: one-line safety notice with Undo ("Glim can now delete files (to the Trash) without asking. Undo")
+  function safetyNotice(n) {
+    if (!n || !n.text) return;
+    const box = el('div', 'notice sel'); box.append(el('b', null, 'Glim'), el('span', null, ' ' + n.text + ' '));
+    if (n.undo) { const u = el('button', 'ghost', 'Undo'); u.onclick = async () => { const r = await desk.safety.undo(n.undo); u.replaceWith(el('span', 'dim small', r && r.ok ? 'Undone.' : 'Could not undo.')); }; box.append(u); }
+    msgs.append(box); newBlock(); toBottom();
+  }
+  if (desk.onSafetyNotice) desk.onSafetyNotice(safetyNotice);
   function addNotice(who, text) {
     const n = el('div', 'notice sel');
     const body = el('div', 'nbody atext'); body.innerHTML = md(text || ''); // a helper's report is markdown: no stray ** marks
@@ -829,6 +843,8 @@
       case 'resumed': { const c = lastBCard(); if (c) upsertBCard({ id: c.id, login: false }); break; }
       case 'approval': onApproval(ev); break;
       case 'ask': onAsk(ev); break;
+      case 'ask_closed': { const r = rids.get(ev.id); if (r) { r.done('(no answer in time)'); rids.delete(ev.id); } break; }   // I5: the hands went ahead
+      case 'safety_notice': safetyNotice(ev); break;
       case 'resolved': { const r = rids.get(ev.rid); if (r) r.done(ev.value, ev.value === 'deny' ? 'Denied' : 'Allowed from the status pill', true); break; }
       case 'plan': setPlan(ev.items); break;
       case 'user': {
@@ -1159,6 +1175,7 @@
     ] },
     { group: 'Autonomy', rows: [
       { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and screen clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
+      { type: 'safety', label: 'Safety levels', help: 'Free: Glim just does it. Ask: one tap to say yes. Never: Glim will not do it. You can also just tell Glim, e.g. "let Glim delete files without asking". Mouse and keyboard: only after you have been away 2 minutes, after asking; touching them stops Glim at once.' },
       { key: 'alwaysAllow', type: 'always', label: 'Always allowed', help: 'Kinds of action you chose "Always allow" for. Risky commands always ask, whatever is listed here.' },
       { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
@@ -1376,6 +1393,18 @@
           const so = el('button', 'ghost', 'Restart and start over'); so.id = 'startOver'; so.title = 'Restarts Premonition and goes through first-time setup again. Your chats and memory are kept.';
           so.onclick = () => { if (confirm('Restart Premonition and go through first-time setup again? Your chats and memory are kept.')) desk.startOver(); };
           ctl.append(b, so);
+        } else if (r.type === 'safety') {   // I5: one row per category, three taps
+          const bx = el('div'); bx.style.cssText = 'display:flex;flex-direction:column;gap:.3rem;align-items:stretch;min-width:18rem';
+          const paint = async () => {
+            const st = await desk.safety.get(); bx.textContent = '';
+            for (const c of st.levels) {
+              const row = el('div'); row.style.cssText = 'display:flex;justify-content:space-between;gap:.6rem;align-items:center';
+              const seg = el('div', 'seg');
+              for (const [v, t] of [['free', 'Free'], ['ask', 'Ask'], ['never', 'Never']]) { const b = el('button', c.level === v ? 'on' : '', t); b.setAttribute('aria-pressed', String(c.level === v)); b.onclick = async () => { const r2 = await desk.safety.set(c.id, v); if (r2 && r2.ok) safetyNotice({ text: r2.notice, undo: r2.undo }); paint(); }; seg.append(b); }
+              row.append(el('span', 'small', c.label), seg); bx.append(row);
+            }
+          };
+          controls.safetyLevels = { paint }; ctl.append(bx);
         } else if (r.type === 'always') {
           const note = el('div', 's-note'); const b = el('button', 'ghost', 'Forget all'); b.onclick = () => save({ alwaysAllow: [] }).then(paintSettings);
           controls[r.key] = { paint: () => { const l = settings.alwaysAllow || []; note.textContent = l.length ? l.map((k) => k.replace(/^shell:/, '').replace('screen', 'app clicks and typing')).join(', ') : 'Nothing yet.'; b.hidden = !l.length; } };

@@ -929,6 +929,11 @@ function createAgent({ helper, rec, voice }) {
     onEnd: () => { holder.release(); endCard(); if (!isHelper) { sl.lastActive = Date.now(); benLastTurn = Date.now(); } },   // Oct 29: the half-hourly check-in (a helper run) reset Desk's idle clock, so auto-sleep never found 2 idle hours
     emit: (ev) => { send('agent', { threadId: a.threadId, ...ev }); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev); },
     rememberAlways: (key) => { const cur = store.getSettings().alwaysAllow || []; if (!cur.includes(key)) store.saveSettings({ alwaysAllow: [...cur, key] }); },
+    // track I5: safety levels + Glim's hands (enforced in src/agent.js runTool; levels change only from Ben's own words or Settings)
+    safety: glimSafety(), hands: E2E ? null : glimHands(),   // the e2e drives screen tools with no real user: no idle wait there
+    safetyCtx: () => ({ selfPaths: GLIM_SELF_PATHS(), frontApp: (() => { try { return aoStuck.front().app; } catch (e) { return ''; } })(),
+      pageUrl: (() => { try { const b = browsers.get(bk()); return b ? b.br.state().url : ''; } catch (e) { return ''; } })(),
+      labelOf: (n, id) => { try { if (n.startsWith('screen_')) return screen.labelOf(id); const b = browsers.get(bk()); const ls = (b && b.br.lastSnap && b.br.lastSnap.lines) || []; return ls.find((l) => l.startsWith('[' + id + ']')) || ''; } catch (e) { return ''; } } }),
     approve: (req, signal) => {
       if (isHelper) return Promise.resolve('deny'); // Ben Oct 31: he only ever talks to the main Glim; a Mote never puts a question or approval in front of him
       const rid = a.threadId + ':' + req.id;
@@ -940,6 +945,7 @@ function createAgent({ helper, rec, voice }) {
       const id = 'ask_' + Date.now() + '_' + a.threadId;
       const ev = { threadId: a.threadId, type: 'ask', id, question, options: options && options.length ? options : undefined, multi: multi ? true : undefined };
       send('agent', ev); pillState.onEvent(pKey, pName, a.threadId, ev, meta()); if (callTurn && !isHelper && a.threadId === callTurn.threadId) callTurn.onEvent(ev);
+      if (signal) signal.addEventListener('abort', () => send('agent', { threadId: a.threadId, type: 'ask_closed', id }), { once: true });   // I5: hands went ahead / run stopped
       return waitFor(id, signal, '[stopped by user]', { threadId: a.threadId, ev });
     },
     // the model keeps repeating itself: a sign-in / passkey page goes to Ben, anything else is a question to Ben
@@ -1149,6 +1155,7 @@ async function callAsk(text, { onDelta, signal }) {
   const stop = () => callAgent.stop();
   signal.addEventListener('abort', stop);
   send('agent', { threadId: t.id, type: 'user', text });
+  glimSafetyFromBen(text, 'ben-voice');   // I5
   try { await callAgent.run(t, VOICE_PREFIX + nowWords(new Date()) + text, { display: text }); } finally { callTurn = null; signal.removeEventListener('abort', stop); send('threads:changed', {}); }
 }
 // Local speech to text (src/stt.js): one LFM3-Audio server for the whole app, started on the first call / dictation.
@@ -1258,7 +1265,8 @@ async function watchRedo(id) {
   const card = skillStore().list().find((x) => x.id === id) || skillStore().find(id);
   if (!card) return { error: 'No such skill.' };
   if (!screen || !screen.findHelper()) return { error: 'Redo needs the Glim helper, which is not installed in this build.' };
-  const t = screen.tools;
+  const t0 = screen.tools, fz = (n) => (a) => glimHands().freezeOnly((signal) => t0[n](a, { signal }));   // I5: freeze on Ben's input
+  const t = { open_app: fz('open_app'), screen_click: fz('screen_click'), screen_type: fz('screen_type'), screen_key: fz('screen_key') };
   const res = (r) => (r && typeof r === 'object' && r.error ? { error: String(r.text || 'failed') } : typeof r === 'string' && /^Error:/.test(r) ? { error: r } : {});
   const tools = { look: () => screen.run(['look', '--max', '80']), open_app: (a) => t.open_app(a).then(res), press: (a) => t.screen_click({ id: a.id }).then(res),
     click: (a) => t.screen_click({ x: a.x, y: a.y }).then(res), type: (a) => t.screen_type(a).then(res), key: (a) => t.screen_key(a).then(res) };
@@ -1479,6 +1487,40 @@ function aoNightly(force) {
   const d = new Date().toDateString();
   if (!force && aoNightlyDay === d) return; aoNightlyDay = d;
   for (const j of aoNightlyJobs) { try { j(); } catch (e) { console.log('[alwayson] nightly retune', e); } }
+}
+// ---- Glim's hands + safety levels (track I5: src/safety-levels.js, src/hands.js, src/goodtime.js) -----------------------------------
+// Levels: free / ask / never per category (userData/safety-levels.json). Hands: freeze on the user's own input (deskhelper watch-input,
+// Glim's events are tagged), quiet hands first, real mouse only after 2 min idle + one ask that goes ahead after 1 min unanswered.
+// Interruption rows -> the 'goodtime' day log (features only). The judge is NOT PROVEN in its toy test (premonition-handslab-i5): it is not
+// trained at night yet and judge() returns null, so it never vetoes.
+const SafetyMod = require('./src/safety-levels'), HandsMod = require('./src/hands');
+let glimSafetyObj = null, glimHandsObj = null, glimHandsWatch = null;
+const GLIM_SELF_PATHS = () => [__dirname, app.getPath('userData'), path.join(os.homedir(), 'learner-ops', 'sleepmlx'), path.join(os.homedir(), 'learner-ops', 'sleepmlx-src')];
+const glimSafety = () => glimSafetyObj || (glimSafetyObj = new SafetyMod.SafetyLevels({ dir: app.getPath('userData'), onChange: (l) => send('safety:levels', l) }));
+function glimHands() {
+  if (glimHandsObj) return glimHandsObj;
+  const input = new HandsMod.InputWatch();
+  glimHandsObj = new HandsMod.Hands({ input, levels: glimSafety(),
+    askUser: () => Promise.resolve('No'),   // only used without a run's own card
+    notify: (t) => { if (!chatInFront()) notify('Glim', t); },
+    notice: (n) => send('safety:notice', n),
+    status: (t) => { try { pillState.flash(t); updatePill(); } catch (e) { /* ui only */ } },
+    record: (row) => aoJudges().record('goodtime', row),
+    judge: () => null,
+    frontApp: () => { try { const f = aoStuck.front(); return SpeakMod.categorize(f.app, f.title); } catch (e) { return 'other'; } } });
+  if (process.platform === 'darwin' && !E2E) {
+    glimHandsWatch = new HandsMod.HelperWatch({ input, log: (m) => console.log('[hands]', m),
+      spawn: () => { const b = screen && screen.findHelper(); return b ? require('child_process').spawn(b, ['watch-input'], { stdio: ['pipe', 'pipe', 'ignore'] }) : null; } });
+    glimHandsWatch.start();
+  }
+  let n = 0;
+  setInterval(() => { try { if (input.source !== 'helper') input.fromIdleSample(powerMonitor.getSystemIdleTime()); if (++n % 8 === 0) glimHandsObj.tick(); } catch (e) { /* next */ } }, 2000).unref();
+  return glimHandsObj;
+}
+// Ben's own words (main chat box or a call): a level change is applied at once with a one-line notice + Undo; "stop"/"not now" is logged
+function glimSafetyFromBen(text, source) {
+  try { const ch = SafetyMod.fromBenText(text); if (ch.length) { const r = glimSafety().set(ch, { source }); if (r.ok) send('safety:notice', { text: r.notice, undo: r.undo }); } } catch (e) { /* never blocks the chat */ }
+  try { glimHands().onBenText(text); } catch (e) { /* log only */ }
 }
 // ---- sleep for the small judges (sleep track T1: src/sleepjudges.js + src/breaks.js; toy lab premonition-sleeplab-t1) -------------
 // Only the parts that passed the toy test (3/3 seeds): the guesser's fade rates are LEARNED per stream (app / when / idle) instead of
@@ -2141,6 +2183,11 @@ function registerIpc() {
   });
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
+  { const own = (e) => !!(ui && e && e.sender === ui.webContents);   // I5: only the app's own window may change a safety level
+    ipcMain.handle('safety:get', () => ({ levels: glimSafety().levels(), hands: glimSafety().hands() }));
+    ipcMain.handle('safety:set', (e, cat, level) => (own(e) ? glimSafety().set([{ cat, level }], { source: 'settings' }) : { ok: false }));
+    ipcMain.handle('safety:undo', (e, token) => (own(e) ? glimSafety().undo(token, { source: 'settings' }) : { ok: false }));
+    ipcMain.handle('safety:hands', (e, patch) => (own(e) ? glimSafety().setHands(patch, { source: 'settings' }) : { ok: false })); }
   h('threads:list', () => store.listThreads());
   // One Glim chat (Ben Oct 28): "new thread" hands back the existing main chat; only the very first run creates one.
   h('threads:new', () => { resetModelToDefault(); const old = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); if (old) { const t = store.loadThread(old.id); if (t) { openThreadId = t.id; return t; } } const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
@@ -2171,6 +2218,7 @@ function registerIpc() {
     sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz(); aoSciEnd('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
+    if (!hp0(threadId)) glimSafetyFromBen(text, 'ben-chat');   // I5: only Ben's own typed words can change a safety level
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
     if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };
     const hp = helpers.byThread(threadId);
