@@ -290,7 +290,7 @@ function startSleep(o) {
   if (!r.ok) { abandonSleepAttempt(); return { error: r.error }; }
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sl.asleep = true; if (helpers && helpers.active.size) helpers.pauseForSleep();   // Motes mid-run stop and run again once after wake; they no longer block sleep (asleep first so their due runs are held)
-  try { aoNightly(); } catch (e) { /* always-on v2: the speak-o-meter and guesser retune as sleep starts (best effort) */ }
+  try { aoNightly(); aoSleepHandoff(); } catch (e) { /* always-on v2: the speak-o-meter and guesser retune and the handoff is written as sleep starts (best effort) */ }
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   persistSleepSession('sleeping');
   pushSleep(); updatePill();
@@ -1409,7 +1409,7 @@ function aoContext(extra) {
 }
 // nightly retune (sleep window or sleep start): the speak-o-meter refits on its whole feedback log; later phases add theirs
 let aoNightlyDay = '';
-const aoNightlyJobs = [() => aoMeter && aoMeter.refit(), () => { if (aoGuesser) { aoGuesser.decay(0.8); saveGuesser(); } }];
+const aoNightlyJobs = [() => aoMeter && aoMeter.refit(), () => { if (aoGuesser) { aoGuesser.decay(0.8); saveGuesser(); } }, () => aoSleepHandoff()];
 function aoNightly(force) {
   const d = new Date().toDateString();
   if (!force && aoNightlyDay === d) return; aoNightlyDay = d;
@@ -1703,6 +1703,14 @@ function aoQuizTick() {
   aoQuizWork(z, ctl.signal).catch((e) => { if (!e || !e.paused) console.log('[alwayson] quiz', e); }).finally(() => { if (aoQuizCtl === ctl) aoQuizCtl = null; });
 }
 function aoStopQuiz() { if (aoQuizCtl) { try { aoQuizCtl.abort(); } catch (e) { /* gone */ } aoQuizCtl = null; } }
+// ---- always-on v2, phase 7: the diary on ask + the sleep handoff (src/diary-ao.js) --------------------------------------------
+const DiaryAO = require('./src/diary-ao');
+function aoDiaryNote() {
+  const text = DiaryAO.recap({ activity: aoState.activity, truth: aoTruth ? aoTruth.counts() : null, since: Date.now() - 24 * 3600000 });
+  return '[Glim\'s diary for the last 24 hours. Ben asked what you did: tell him briefly, in plain words, from this log only; do not add anything it does not say.\n' + text + '\n] ';
+}
+// what the nightly sleep may learn from: confirmed notes, corrections, surprises (never a maybe). Written as sleep starts.
+function aoSleepHandoff() { if (!aoState) return null; return DiaryAO.writeHandoff(aoDir(), DiaryAO.sleepHandoff({ truth: aoTruth, surprises: aoState.surprises })); }
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
@@ -1798,7 +1806,9 @@ function registerIpc() {
       if (flow.pending) pendingLearn.set(t.id, flow.pending); else pendingLearn.delete(t.id);
       if (flow.handled) { learn = true; learnNote = flow.note; }
     }
-    agent.run(t, goals ? GOALS_NOTE + text : learn ? learnNote + text : text, goals || learn ? { display: text } : undefined).then((r) => {
+    // always-on v2: the diary is shown ONLY when Ben asks ("Glim, what did you do?"): a hidden note with the activity recap
+    const diary = !goals && !learn && aoState && DiaryAO.isDiaryAsk(text) ? aoDiaryNote() : '';
+    agent.run(t, goals ? GOALS_NOTE + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));

@@ -97,3 +97,19 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   A harder level is written once the newest level scores ≥ 80 % officially. Runs only when the Mote gate is open; chat aborts it.
 - **Drift guard**: applies to bored-Mote claims for Learn topics (shares a word with the topic, or 2+ words with the topic's
   confirmed notes); off-topic claims are skipped and counted. The v1 Learn helper Motes are not step-gated (same gap as phase 5).
+
+## Phase 7 (diary on ask + settings + sleep)
+- **Diary**: "Glim, what did you do?" and variants (what have you been up to / what did you learn while I was away / show me
+  your diary …) add a hidden note with a recap of the last 24 h from the activity log (time per topic, quiz changes, quiz
+  written, notes confirmed/wrong, surprises, times it spoke up, drift skips). The chat shows only Ben's words; the model phrases
+  the answer from the log. The recap is built in exactly one place and never sent unprompted.
+- **Consent**: the first-run card now has "Remember my choice" ticked by default (Ben can untick it). Settings > Senses unchanged.
+- **Sleep handoff**: confirmed notes and corrections reach the real sleep through memory.md (the sleep worker's existing input).
+  Surprises + confirmed + corrections are also written to `userData/alwayson-sleep.json` when sleep starts and in the night
+  window. **Gap**: the Python sleep worker (`sleepmlx/lessons.py`) does not read that file yet. It was not changed tonight:
+  sleepmlx has its own gates and tests, and the brief keeps this work to the desk app. A follow-up is one reader function
+  next to `read_notes`.
+- **Retune at night**: speak-o-meter refit + guesser decay run when sleep starts and once per night window (phases 2–3).
+- **Smoke check**: main.js loaded under a stubbed Electron with a temp userData, then the always-on functions were driven
+  directly (consent, ear, context, gate, note→maybe, say→voice→feedback, surprise, urges, quiz record/tick, truth tick, share,
+  diary, handoff, nightly, stop). No exceptions. The gate was closed by the night window, so no model call was made.

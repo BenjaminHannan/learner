@@ -46,7 +46,7 @@ window.SensesUI = (() => {
     const head = el('div', 'p-head'); head.append(el('h2', null, 'What may Glim notice?'));
     card.append(head, el('p', 'p-sub', 'Glim can stay switched on and speak up by itself when it notices something useful. Pick what it may pay attention to. Everything is off until you switch it on, stays on this Mac, and you can change it in Settings > Senses.'));
     card.append(rows(v.senses, draft));
-    const rem = el('label', 'sl-check'); const cb = el('input'); cb.type = 'checkbox'; cb.id = 'sensesRemember'; cb.checked = !!v.consent.remember;
+    const rem = el('label', 'sl-check'); const cb = el('input'); cb.type = 'checkbox'; cb.id = 'sensesRemember'; cb.checked = v.consent.decidedAt ? !!v.consent.remember : true;   // v2: remembering is the default (Ben can untick it)
     rem.append(cb, el('span', null, 'Remember my choice')); card.append(rem);
     const perm = el('div'); card.append(perm);
     const btns = el('div', 'sl-btns');

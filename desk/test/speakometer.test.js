@@ -92,5 +92,5 @@ test('main wires the meter into the loop, outcomes into learn(), and the refit i
   assert.match(m, /speakGate: \(d\) => aoMeter \? aoMeter\.decide\(aoContext\(/);
   assert.match(m, /aoMeter\.learn\(m\.features, kind/);
   assert.match(m, /aoNightlyJobs = \[\(\) => aoMeter && aoMeter\.refit\(\),/);
-  assert.match(m, /helpers\.pauseForSleep\(\);[^\n]*\n  try \{ aoNightly\(\); \}/);
+  assert.match(m, /helpers\.pauseForSleep\(\);[^\n]*\n  try \{ aoNightly\(\); aoSleepHandoff\(\); \}/);
 });
