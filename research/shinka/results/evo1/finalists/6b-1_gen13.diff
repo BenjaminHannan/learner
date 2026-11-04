@@ -1,0 +1,76 @@
+--- task/initial.py
++++ 6b-1_gen13.py
+@@ -11,22 +11,59 @@
+ 
+ # EVOLVE-BLOCK-START
+ class CardWriter(nn.Module):
+-    """Turn one line's reader states into one card (key, value).
+-
+-    states: [B, C, L, d] reader states of C lines of L tokens.
+-    mask:   [B, C, L] bool, True where a token is real.
+-    returns keys [B, C, dk], values [B, C, d].
+-    """
+-
+     def __init__(self, d: int, dk: int):
+         super().__init__()
+-        self.pool = nn.Linear(d, 1)
+-        self.key = nn.Linear(d, dk)
++        budget = 18500
++        rounds = 1
++        r = 12
++        extra = r * d + d * dk + d + 2 + d + 1
++        for t in (4, 3, 2, 1):
++            n = t * (d + 1) + t * d * dk + dk + d * d + d + t + t * d + extra
++            if n <= budget:
++                rounds = t
++                break
++        self.rounds = rounds
++        self.d = d
++        self.scorers = nn.ModuleList([nn.Linear(d, 1) for i in range(rounds)])
++        self.key = nn.Linear((rounds + 1) * d, dk)
++        self.basis = nn.Parameter(torch.randn(r, d) / (d ** 0.5))
++        self.alpha = nn.Parameter(torch.tensor(2.0))
++        self.cue = nn.Linear(d, 1)
++        nn.init.zeros_(self.cue.weight)
++        nn.init.zeros_(self.cue.bias)
++        self.rgain = nn.Parameter(torch.ones(d))
+         self.value = nn.Linear(d, d)
++        self.mix = nn.Parameter(torch.ones(rounds) / rounds)
++        self.gain = nn.Parameter(torch.ones(rounds, d))
+ 
+     def forward(self, states: torch.Tensor, mask: torch.Tensor):
+-        score = self.pool(states).squeeze(-1).masked_fill(~mask, float("-inf"))
+-        weight = torch.softmax(score, dim=-1)
+-        pooled = torch.einsum("bcl,bcld->bcd", weight, states)
+-        return self.key(pooled), self.value(pooled)
+-# EVOLVE-BLOCK-END
++        resid = states
++        maskf = mask.unsqueeze(-1).to(states.dtype)
++        atoms = []
++        vsum = 0.0
++        for t in range(self.rounds):
++            score = self.scorers[t](resid).squeeze(-1)
++            score = score.masked_fill(~mask, float("-inf"))
++            w = torch.softmax(score, dim=-1)
++            w = torch.nan_to_num(w, nan=0.0)
++            atom = torch.einsum("bcl,bcld->bcd", w, resid)
++            orig = torch.einsum("bcl,bcld->bcd", w, states)
++            vsum = vsum + self.mix[t] * orig
++            atoms.append(atom * self.gain[t])
++            u = atom / (atom.norm(dim=-1, keepdim=True) + 1e-6)
++            proj = torch.einsum("bcld,bcd->bcl", resid, u)
++            resid = (resid - proj.unsqueeze(-1) * u.unsqueeze(-2)) * maskf
++        # novelty atom on deflated states: what the familiar subspace can't explain
++        q = torch.linalg.qr(self.basis.t()).Q  # [d, r]
++        coef = torch.einsum("bcld,dr->bclr", resid, q)
++        res = resid - torch.einsum("bclr,dr->bcld", coef, q)
++        energy = (res * res).sum(-1)
++        sc = self.alpha * torch.log(energy + 1e-6) + self.cue(states).squeeze(-1)
++        sc = sc.masked_fill(~mask, float("-inf"))
++        wr = torch.nan_to_num(torch.softmax(sc, dim=-1), nan=0.0)
++        ratom = torch.einsum("bcl,bcld->bcd", wr, res) * self.rgain
++        atoms.append(ratom)
++        keys = self.key(torch.cat(atoms, dim=-1))
++        values = self.value(vsum)
++        return keys, values
++# EVOLVE-BLOCK-END

@@ -1,0 +1,122 @@
+"""Seed program: PremonitionMini's card writer (premonition/model.py CardWriter).
+
+One softmax attention pool over the line's reader states gives p;
+key = W_k p, value = W_v p. Key and value come from the same pooled vector.
+(The harness normalises keys before scoring, as CardStore.write does.)
+"""
+
+import torch
+import torch.nn as nn
+
+
+# EVOLVE-BLOCK-START
+class CardWriter(nn.Module):
+    """Deflation pursuit + ridge-leverage atom + novelty atom, with isometric echoes."""
+
+    def __init__(self, d: int, dk: int):
+        super().__init__()
+        K = 2
+        r = max(2, min(8, d // 4))
+
+        def count(K, r, mix):
+            n = (K + 2) * d * dk + dk
+            n += (K + 2) * (d + 1)
+            n += d * r + 1
+            n += 4
+            n += 2 * d * dk
+            n += d * d + d
+            if mix:
+                n += d * d
+            return n
+
+        while K > 1 and count(K, r, False) > 19000:
+            K -= 1
+        while r > 1 and count(K, r, False) > 19000:
+            r -= 1
+        self.K = K
+        self.use_mix = count(K, r, True) <= 19000
+        self.scorers = nn.ModuleList([nn.Linear(d, 1) for k in range(K)])
+        self.nov_scorer = nn.Linear(d, 1)
+        self.lev_scorer = nn.Linear(d, 1)
+        self.basis = nn.Parameter(torch.randn(d, r) / (d ** 0.5))
+        self.gain = nn.Parameter(torch.tensor(4.0))
+        self.lgain = nn.Parameter(torch.tensor(6.0))
+        self.echo = nn.Parameter(torch.tensor(1.0))
+        self.echo2 = nn.Parameter(torch.tensor(0.5))
+        self.key = nn.Linear((K + 2) * d, dk)
+        self.value = nn.Linear(d, d)
+        if self.use_mix:
+            self.value2 = nn.Linear(d, d, bias=False)
+
+        def iso_of(a, b, c):
+            i = torch.arange(d, dtype=torch.float32).unsqueeze(1)
+            j = torch.arange(dk, dtype=torch.float32).unsqueeze(0)
+            M = torch.sin(i * a + j * b + i * j * c) + 0.5 * torch.cos(i * 2.413 - j * 1.127 + c)
+            if d >= dk:
+                Q, R = torch.linalg.qr(M)
+                return Q.contiguous()
+            Q, R = torch.linalg.qr(M.t())
+            return Q.t().contiguous()
+
+        self.register_buffer("iso", iso_of(1.618, 0.737, 0.311))
+        self.register_buffer("iso2", iso_of(2.718, 1.414, 0.577))
+
+    def forward(self, states: torch.Tensor, mask: torch.Tensor):
+        dt = states.dtype
+        m = mask.unsqueeze(-1).to(dt)
+        x = states * m
+        neg = torch.finfo(dt).min
+        maskf = mask.to(dt)
+
+        def pool(score, src):
+            score = score.masked_fill(~mask, neg)
+            w = torch.softmax(score, dim=-1) * maskf
+            w = w / w.sum(-1, keepdim=True).clamp_min(1e-6)
+            return torch.einsum("bcl,bcld->bcd", w, src)
+
+        # deflation pursuit
+        resid = x
+        atoms = []
+        for k in range(self.K):
+            atom = pool(self.scorers[k](resid).squeeze(-1), resid)
+            atoms.append(atom)
+            u = atom / atom.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+            proj = (resid * u.unsqueeze(-2)).sum(-1, keepdim=True)
+            resid = (resid - proj * u.unsqueeze(-2)) * m
+
+        # global-subspace novelty atom
+        Q, Rm = torch.linalg.qr(self.basis)
+        out = x - (x @ Q) @ Q.t()
+        frac = (out * out).sum(-1) / ((x * x).sum(-1) + 1e-6)
+        nov = pool(self.nov_scorer(x).squeeze(-1) + self.gain * frac, out)
+
+        # ridge-leverage atom (per line)
+        cnt = maskf.sum(-1, keepdim=True).clamp_min(1.0)
+        mean = x.sum(-2) / cnt
+        xc = (x - mean.unsqueeze(-2)) * m
+        G = xc @ xc.transpose(-1, -2)  # [B,C,L,L]
+        L = x.shape[-2]
+        eye = torch.eye(L, dtype=dt, device=x.device)
+        tr = torch.diagonal(G, dim1=-2, dim2=-1).sum(-1)  # [B,C]
+        lam = (0.3 * tr / cnt.squeeze(-1) + 1e-4).unsqueeze(-1).unsqueeze(-1)
+        A = G + lam * eye
+        H = torch.linalg.solve(A, G)
+        lev = torch.diagonal(H, dim1=-2, dim2=-1) * maskf  # [B,C,L]
+        lscore = self.lev_scorer(x).squeeze(-1) + self.lgain * lev
+        levatom = pool(lscore, xc)
+
+        feats = atoms + [nov, levatom]
+        keys = self.key(torch.cat(feats, dim=-1))
+        kn = keys.norm(dim=-1, keepdim=True).detach().clamp_min(1e-3)
+        ln = levatom / levatom.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+        nn_ = nov / nov.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+        keys = keys + kn * (self.echo * (ln @ self.iso) + self.echo2 * (nn_ @ self.iso2))
+
+        total = atoms[0]
+        for a in atoms[1:]:
+            total = total + a
+        values = self.value(total)
+        if self.use_mix:
+            values = values + self.value2(atoms[0])
+        return keys, values
+# EVOLVE-BLOCK-END

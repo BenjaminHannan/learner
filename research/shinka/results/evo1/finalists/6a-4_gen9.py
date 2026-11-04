@@ -1,0 +1,125 @@
+"""Seed program: PremonitionMini's card writer (premonition/model.py CardWriter).
+
+One softmax attention pool over the line's reader states gives p;
+key = W_k p, value = W_v p. Key and value come from the same pooled vector.
+(The harness normalises keys before scoring, as CardStore.write does.)
+"""
+
+import torch
+import torch.nn as nn
+
+
+# EVOLVE-BLOCK-START
+class CardWriter(nn.Module):
+    def __init__(self, d: int, dk: int):
+        super().__init__()
+        K = 2
+        r = max(2, min(8, d // 4))
+
+        def count(K, r, mix):
+            n = (K + 2) * d * dk + dk          # learned key over K atoms + nov + distinct
+            n += (K + 2) * (d + 1)             # scorers
+            n += d * r + 1                     # subspace + gain
+            n += 3                             # distinct gains + echo gain
+            n += d * dk                        # frozen isometry buffer
+            n += d * d + d                     # value
+            if mix:
+                n += d * d
+            return n
+
+        while K > 1 and count(K, r, False) > 19000:
+            K -= 1
+        while r > 1 and count(K, r, False) > 19000:
+            r -= 1
+        self.K = K
+        self.use_mix = count(K, r, True) <= 19000
+        self.scorers = nn.ModuleList([nn.Linear(d, 1) for k in range(K)])
+        self.nov_scorer = nn.Linear(d, 1)
+        self.dis_scorer = nn.Linear(d, 1)
+        self.basis = nn.Parameter(torch.randn(d, r) / (d ** 0.5))
+        self.gain = nn.Parameter(torch.tensor(4.0))
+        self.dgain = nn.Parameter(torch.tensor(4.0))
+        self.dgain2 = nn.Parameter(torch.tensor(2.0))
+        self.echo = nn.Parameter(torch.tensor(1.0))
+        self.key = nn.Linear((K + 2) * d, dk)
+        self.value = nn.Linear(d, d)
+        if self.use_mix:
+            self.value2 = nn.Linear(d, d, bias=False)
+        # frozen deterministic isometry d -> dk
+        i = torch.arange(d, dtype=torch.float32).unsqueeze(1)
+        j = torch.arange(dk, dtype=torch.float32).unsqueeze(0)
+        M = torch.sin(i * 1.618 + j * 0.737 + i * j * 0.311) + 0.5 * torch.cos(i * 2.413 - j * 1.127)
+        if d >= dk:
+            Q, Rr = torch.linalg.qr(M)
+            iso = Q
+        else:
+            Q, Rr = torch.linalg.qr(M.t())
+            iso = Q.t()
+        self.register_buffer("iso", iso.contiguous())
+
+    def forward(self, states: torch.Tensor, mask: torch.Tensor):
+        dt = states.dtype
+        m = mask.unsqueeze(-1).to(dt)
+        x = states * m
+        neg = torch.finfo(dt).min
+        maskf = mask.to(dt)
+
+        def pool(score, src):
+            score = score.masked_fill(~mask, neg)
+            w = torch.softmax(score, dim=-1) * maskf
+            w = w / w.sum(-1, keepdim=True).clamp_min(1e-6)
+            return torch.einsum("bcl,bcld->bcd", w, src)
+
+        # deflation pursuit
+        resid = x
+        atoms = []
+        for k in range(self.K):
+            atom = pool(self.scorers[k](resid).squeeze(-1), resid)
+            atoms.append(atom)
+            u = atom / atom.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+            proj = (resid * u.unsqueeze(-2)).sum(-1, keepdim=True)
+            resid = (resid - proj * u.unsqueeze(-2)) * m
+
+        # global-subspace novelty atom
+        Q, Rm = torch.linalg.qr(self.basis)
+        coef = x @ Q
+        out = x - coef @ Q.t()
+        e_tot = (x * x).sum(-1)
+        e_out = (out * out).sum(-1)
+        frac = e_out / (e_tot + 1e-6)
+        nscore = self.nov_scorer(x).squeeze(-1) + self.gain * frac
+        nov = pool(nscore, out)
+
+        # intra-line distinctiveness atom
+        cnt = maskf.sum(-1, keepdim=True).clamp_min(1.0)          # [B,C,1]
+        mean = x.sum(-2) / cnt                                    # [B,C,d]
+        xc = (x - mean.unsqueeze(-2)) * m
+        xn = x / x.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+        G = xn @ xn.transpose(-1, -2)                             # [B,C,L,L]
+        L = x.shape[-2]
+        eye = torch.eye(L, dtype=dt, device=x.device)
+        pair = maskf.unsqueeze(-1) * maskf.unsqueeze(-2) * (1.0 - eye)
+        others = pair.sum(-1).clamp_min(1.0)
+        meancos = (G * pair).sum(-1) / others
+        Gm = G.masked_fill(pair <= 0, -4.0)
+        softmax_cos = torch.logsumexp(Gm * 6.0, dim=-1) / 6.0
+        softmax_cos = torch.clamp(softmax_cos, max=1.0)
+        dscore = (self.dis_scorer(x).squeeze(-1)
+                  + self.dgain * (1.0 - meancos)
+                  + self.dgain2 * (1.0 - softmax_cos))
+        dis = pool(dscore, xc)
+
+        feats = atoms + [nov, dis]
+        keys = self.key(torch.cat(feats, dim=-1))
+        dn = dis / dis.norm(dim=-1, keepdim=True).clamp_min(1e-5)
+        kn = keys.norm(dim=-1, keepdim=True).detach().clamp_min(1e-3)
+        keys = keys + self.echo * kn * (dn @ self.iso)
+
+        total = atoms[0]
+        for a in atoms[1:]:
+            total = total + a
+        values = self.value(total)
+        if self.use_mix:
+            values = values + self.value2(atoms[0])
+        return keys, values
+# EVOLVE-BLOCK-END
