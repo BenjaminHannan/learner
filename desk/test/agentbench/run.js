@@ -15,6 +15,7 @@ const OUT = arg('out', path.join(os.tmpdir(), 'agentbench-out'));
 const LABEL = arg('label', 'run');
 const CAP_S = Number(arg('cap', 240));
 const MAX_STEPS = Number(arg('maxSteps', 25));
+const KIT = arg('kit', '');   // AGENT1 harness changes on for this run (src/agentkit.js), e.g. 'sso' or 'sso,diet'
 const PROFILE = arg('profile', path.join(os.tmpdir(), 'agentbench-profile'));
 fs.mkdirSync(OUT, { recursive: true });
 app.setPath('userData', PROFILE);
@@ -38,6 +39,7 @@ const { buildTools } = require('../../src/prompt');
 const { Browser } = require('../../src/tools/browser');
 const { createMemory } = require('../../src/memory');
 const L = require('../../src/logins');
+const SafetyMod = require('../../src/safety-levels');
 const Sites = require('./sites');
 const { TASKS } = require('./tasks');
 
@@ -46,7 +48,7 @@ const UNAVAILABLE = 'Error: not available in this session. Use the built-in brow
 
 let state = Sites.newState();
 const settings = () => ({ gatewayUrl: 'http://127.0.0.1:8090/v1', model: 'qwen36-fast', modelMain: 'qwen36', modelFast: 'qwen36-fast', modelAuto: 'qwen36-auto',
-  verify: true, mode: 'hands-off', vision: 'off', contextTokens: 12000, compactTokens: 24000, maxToolChars: 8000, maxSteps: MAX_STEPS, uses: [], alwaysAllow: [] });
+  verify: true, mode: 'hands-off', vision: 'off', contextTokens: 12000, compactTokens: 24000, maxToolChars: 8000, maxSteps: MAX_STEPS, uses: [], alwaysAllow: [], agentKit: KIT ? KIT.split(',') : [] });
 for (const k of Object.keys(Sites.SAVED_LOGINS)) L.addSecret(Sites.SAVED_LOGINS[k].password);
 
 function wireSites(ses) {
@@ -86,7 +88,8 @@ async function runTask(win, task, n) {
       return br.type(x.id, x.text, x.enter);
     },
     browser_sign_in: async (x, ctx) => {
-      const r = await br.signIn(async (u) => { const o = L.originOf(u); const s = o && Sites.SAVED_LOGINS[o]; return s ? { origin: o, user: s.user, password: s.password } : null; });
+      let Kit = null; try { Kit = require('../../src/agentkit'); } catch (e) { /* older tree */ }
+      const r = await br.signIn(async (u) => { const o = L.originOf(u); const s = o && Sites.SAVED_LOGINS[o]; return s ? { origin: o, user: s.user, password: s.password } : null; }, { sso: !!(Kit && Kit.on(settings(), 'sso')) });
       if (r.kind === 'none' || r.kind === 'code') {
         const v = await ctx.waitForBen(() => signInWait());
         const lead = r.kind === 'none' ? 'No saved login for ' + r.host + ', so the app asked Ben to sign in once himself (it then offers to save it). ' : 'A code was needed on ' + r.host + '. ';
@@ -119,7 +122,11 @@ async function runTask(win, task, n) {
       tr.events++;
       if (task.steer && !tr.steered && ev.type === 'step_end' && ev.tool !== 'verify') { tr.steered = true; setTimeout(() => agent.steer(task.steer), 0); }
     },
-    approve: async () => 'deny',
+    // the app's safety levels (track I5, defaults) gate buying, sending and submitting with an approval card; Ben's tap is scripted
+    safety: new SafetyMod.SafetyLevels({ dir: memDir }),
+    safetyCtx: () => ({ selfPaths: [], frontApp: '', pageUrl: (() => { try { return br.state().url; } catch (e) { return ''; } })(),
+      labelOf: (nm, id) => { const ls = (br.lastSnap && br.lastSnap.lines) || []; return ls.find((l) => l.startsWith('[' + id + ']')) || ''; } }),
+    approve: async (req) => { tr.asks++; tr.approvals = (tr.approvals || 0) + 1; const v = task.approve ? task.approve(req) : (req.danger ? 'deny' : 'once'); tr.askLog.push({ q: 'APPROVE ' + (req.text || req.tool), ans: v }); return v; },
     askUser: async (q, signal, options) => { tr.asks++; const ans = task.ask ? task.ask(q, options) : (options || []).find((o) => /^(yes|ok|go|sure|continue)/i.test(o)) || 'Yes, go ahead.'; tr.askLog.push({ q, options, ans }); return ans; },
     onStuck: async (stuck) => { tr.stuckAsks++; tr.asks++; return 'You were stuck repeating ' + stuck.summary + '. Ben says: try a different way.'; },
     onThreadChange: () => {}
