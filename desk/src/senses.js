@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { SENSITIVE } = require('./agent');
 const { looksSecret } = require('./memory');
+const { timeOf } = require('./timesense');
 
 const SENSES = [
   { id: 'screen', label: 'Screen', help: 'Reads the words on your screen every so often. Only the words are kept, never a picture.', perm: 'screenRecording' },
@@ -61,16 +62,18 @@ class AlwaysOnState {
     this.file = path.join(dir, STATE_FILE); this.dir = dir; this.o = o || {};
     this.now = this.o.now || Date.now; this.max = this.o.max || MAX_OBS;
     const j = readJson(this.file) || {};
-    this.inbox = Array.isArray(j.inbox) ? j.inbox.filter((x) => x && IDS.includes(x.sense) && typeof x.text === 'string').slice(-this.max) : [];
+    // feeling time: every record carries t (ms). Older files may lack it: such rows load with t = null ("time unknown"), never a crash
+    const stamp = (x) => ({ ...x, t: timeOf(x) });
+    this.inbox = Array.isArray(j.inbox) ? j.inbox.filter((x) => x && IDS.includes(x.sense) && typeof x.text === 'string').slice(-this.max).map(stamp) : [];
     this.focus = j.focus && typeof j.focus.topic === 'string' ? j.focus : null;
     this.lastSpokeAt = Number(j.lastSpokeAt) || 0;
     this.lastTickAt = Number(j.lastTickAt) || 0;
     this.cursor = Number(j.cursor) || 0;
     // always-on v2: surprising moments (the guesser's big surprises, quiz misses), urges, wonder list, and an activity log
-    this.surprises = Array.isArray(j.surprises) ? j.surprises.slice(-100) : [];
+    this.surprises = Array.isArray(j.surprises) ? j.surprises.filter((x) => x && typeof x === 'object').slice(-100).map(stamp) : [];
     this.urges = j.urges && typeof j.urges === 'object' ? j.urges : null;
-    this.wonder = Array.isArray(j.wonder) ? j.wonder.slice(-50) : [];
-    this.activity = Array.isArray(j.activity) ? j.activity.slice(-400) : [];   // inbox entries with t > cursor have not been shown to the model yet
+    this.wonder = Array.isArray(j.wonder) ? j.wonder.filter((x) => x && typeof x.text === 'string').slice(-50).map(stamp) : [];
+    this.activity = Array.isArray(j.activity) ? j.activity.filter((x) => x && typeof x === 'object').slice(-400).map(stamp) : [];   // inbox entries with t > cursor have not been shown to the model yet
     this.dropped = 0;
   }
   save() { try { fs.mkdirSync(this.dir, { recursive: true }); atomicWrite(this.file, { inbox: this.inbox, focus: this.focus, lastSpokeAt: this.lastSpokeAt, lastTickAt: this.lastTickAt, cursor: this.cursor, surprises: this.surprises, urges: this.urges, wonder: this.wonder, activity: this.activity }); return true; } catch (e) { return false; } }
@@ -83,7 +86,7 @@ class AlwaysOnState {
     if (t.length > MAX_TEXT) t = t.slice(0, MAX_TEXT - 1) + '…';
     const last = [...this.inbox].reverse().find((x) => x.sense === sense);
     if (last && last.text === t) return null;
-    let at = this.now(); if (this.inbox.length && at <= this.inbox[this.inbox.length - 1].t) at = this.inbox[this.inbox.length - 1].t + 1;
+    let at = this.now(); const lastT = this.inbox.length ? this.inbox[this.inbox.length - 1].t : null; if (lastT && at <= lastT) at = lastT + 1;
     const e = { t: at, sense, text: t };
     this.inbox.push(e);
     if (this.inbox.length > this.max) this.inbox.splice(0, this.inbox.length - this.max);

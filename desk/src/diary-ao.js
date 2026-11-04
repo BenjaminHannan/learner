@@ -48,11 +48,13 @@ function recap({ activity, truth, since, now }) {
 // (Confirmed notes and corrections are ALSO saved to memory.md, which the sleep worker already reads.)
 function sleepHandoff({ truth, surprises, now }) {
   const cands = truth && truth.sleepCandidates ? truth.sleepCandidates() : [];
+  const whenOf = (c) => { const n = truth && Array.isArray(truth.notes) ? truth.notes.find((x) => x.id === c.id) : null; return (n && (Number(n.settledAt) || Number(n.t))) || null; };
   return {
     at: now || Date.now(),
-    confirmed: cands.filter((c) => c.kind === 'confirmed').map((c) => ({ text: c.text, sources: (c.sources || []).map((s) => s.url).filter(Boolean) })),
-    corrections: cands.filter((c) => c.kind === 'correction').map((c) => ({ text: c.text, sources: (c.sources || []).map((s) => s.url).filter(Boolean) })),
-    surprises: (surprises || []).slice(-50).map((s) => ({ t: s.t, stream: s.stream, text: s.what, kl: s.kl }))
+    // feeling time: every sleep candidate carries t (ms, or null = unknown for old records)
+    confirmed: cands.filter((c) => c.kind === 'confirmed').map((c) => ({ t: whenOf(c), text: c.text, sources: (c.sources || []).map((s) => s.url).filter(Boolean) })),
+    corrections: cands.filter((c) => c.kind === 'correction').map((c) => ({ t: whenOf(c), text: c.text, sources: (c.sources || []).map((s) => s.url).filter(Boolean) })),
+    surprises: (surprises || []).slice(-50).map((s) => ({ t: s.t || null, stream: s.stream, text: s.what, kl: s.kl }))
   };
 }
 function writeHandoff(dir, h) {

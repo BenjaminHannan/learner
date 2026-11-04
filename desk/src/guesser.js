@@ -117,6 +117,10 @@ class Guesser {
     o = o || {}; this.o = o; this.now = o.now || Date.now; this.big = o.big || BIG; this.cooldownMs = o.cooldownMs == null ? COOLDOWN_MS : o.cooldownMs;
     const s = o.saved || {};
     this.streams = { app: new Stream('app', APP_CATS, s.app), screen: new Stream('screen', SCREEN_CATS, s.screen), sound: new Stream('sound', SOUND_CATS, s.sound) };
+    // feeling time (src/timesense.js): with o.when, app observations also feed a per hour-of-week model of the app category.
+    // Its Bayesian surprise is ADDED to the app stream's (two independent belief sets: the information gains add), so an app at an
+    // unusual hour is a bigger surprise than the same app at its usual hour. Off by default (older callers and tests unchanged).
+    this.when = o.when ? new (require('./timesense').WhenModel)(APP_CATS, s.when) : null;
     this.lastBig = {}; this.last = { kl: 0, at: 0, stream: null };
     this.recent = [];   // last ~120 surprises (for the speak-o-meter's 0..1 feature)
   }
@@ -125,10 +129,15 @@ class Guesser {
     t = t || this.now();
     const s = this.streams[stream]; if (!s) return null;
     const r = s.observe(cat, t);
+    if (this.when && stream === 'app') {
+      const w = this.when.observe(r.cat, t);
+      r.seqKl = r.kl; r.whenKl = w ? w.kl : 0; r.kl += r.whenKl;
+      r.unusualTime = !!w && r.whenKl >= 0.5 && r.whenKl >= 0.4 * r.kl;   // a real part of the surprise is about WHEN
+    }
     r.big = r.kl >= this.big && (!this.lastBig[stream] || t - this.lastBig[stream] >= this.cooldownMs);
     this.last = { kl: r.kl, at: t, stream, cat: r.cat };
     this.recent.push(r.kl); if (this.recent.length > 120) this.recent.shift();
-    if (r.big) { this.lastBig[stream] = t; try { this.o.onBig && this.o.onBig({ stream, cat: r.cat, kl: r.kl, p: r.p, t }); } catch (e) { /* listener */ } }
+    if (r.big) { this.lastBig[stream] = t; try { this.o.onBig && this.o.onBig({ stream, cat: r.cat, kl: r.kl, p: r.p, t, ...(r.unusualTime ? { unusualTime: true, whenKl: r.whenKl } : {}) }); } catch (e) { /* listener */ } }
     return r;
   }
   // an always-on observation {sense, text} -> the right streams
@@ -140,8 +149,10 @@ class Guesser {
   predict(stream, t) { const s = this.streams[stream]; return s ? s.predict(t || this.now()) : null; }
   // the newest surprise squashed to 0..1 (a speak-o-meter feature): 1 - exp(-kl), fading over 2 minutes
   level() { const age = this.now() - this.last.at; if (!this.last.at || age > 120000) return 0; return (1 - Math.exp(-this.last.kl)) * (1 - age / 120000); }
-  decay(keep) { for (const s of Object.values(this.streams)) s.decay(keep == null ? 0.8 : keep); }
-  toJSON() { return { app: this.streams.app.toJSON(), screen: this.streams.screen.toJSON(), sound: this.streams.sound.toJSON() }; }
+  // what is likely at this hour of the week (feeling time); null without the when model
+  likelyNow(t) { return this.when ? this.when.likely(t || this.now(), 2) : null; }
+  decay(keep) { for (const s of Object.values(this.streams)) s.decay(keep == null ? 0.8 : keep); if (this.when) this.when.decay(keep == null ? 0.8 : keep); }
+  toJSON() { const j = { app: this.streams.app.toJSON(), screen: this.streams.screen.toJSON(), sound: this.streams.sound.toJSON() }; if (this.when) j.when = this.when.toJSON(); else if (this.o.saved && this.o.saved.when) j.when = this.o.saved.when; return j; }
 }
 
 // (c) a fact guess made before checking: Bayesian-style surprise of the truth under the guess, in nats.

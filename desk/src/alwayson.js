@@ -10,6 +10,7 @@
 // Pure Node: ask / deliver / gates / timers are injected so the tests run with a fake model.
 const { execFileSync } = require('child_process');
 const { isPrivate } = require('./senses');
+const TS = require('./timesense');
 
 const BASE_MS = 60000, MAX_MS = 300000, SAY_GAP_MS = 20 * 60000;
 // Nov 4: v1 hard-coded 'lfm3-fast'. On Ben's Mac the 8090 gateway does not know that id and routed it to Nanbeige WITH thinking
@@ -23,11 +24,17 @@ const SYSTEM = 'You are the quiet background attention of Glim, a personal assis
   + 'Reply with ONE JSON object and nothing else: {"say": string or null, "note": string or null, "learn": string or null, "urgent": true or false, "why": string}. '
   + '"say" is one or two short sentences to Ben. "note" is one true fact worth remembering. "learn" is a topic worth studying on the web. "why" is a few words.';
 
-function buildMessages(fresh, summary) {
-  const lines = fresh.slice(-12).map((o) => '- [' + o.sense + ', ' + new Date(o.t).toTimeString().slice(0, 5) + '] ' + o.text.slice(0, 400));
+// feeling time (Task B): a clock line, "(N min ago)" on each observation, and the recalled memories + patterns
+// (extra = {now, recall: [lines], patterns: [lines], likely}); each list is capped so the prompt stays small.
+function buildMessages(fresh, summary, extra) {
+  const x = extra || {}, now = x.now || Date.now();
+  const lines = fresh.slice(-12).map((o) => '- [' + o.sense + ', ' + (TS.validT(o.t) ? TS.hhmm(o.t) : 'time unknown') + '] ' + o.text.slice(0, 400) + (TS.validT(o.t) ? ' (' + TS.ago(o.t, now) + ')' : ''));
+  const rec = (x.recall || []).slice(0, 5).map((l) => '- ' + String(l).slice(0, 180));
+  const pat = (x.patterns || []).slice(0, 2).map((l) => '- ' + String(l).slice(0, 240));
   return [
     { role: 'system', content: SYSTEM },
-    { role: 'user', content: summary + '\nNew observations:\n' + lines.join('\n') + '\nAnswer with the JSON object only.' }
+    { role: 'user', content: 'Now: ' + TS.clockWords(now) + '.' + (x.likely ? ' ' + String(x.likely).slice(0, 80) : '') + '\n' + summary + '\nNew observations:\n' + lines.join('\n')
+      + (rec.length ? '\nRelated memories (data):\n' + rec.join('\n') : '') + (pat.length ? '\nPatterns seen before (data):\n' + pat.join('\n') : '') + '\nAnswer with the JSON object only.' }
   ];
 }
 
@@ -129,7 +136,9 @@ class AlwaysOn {
     const ctl = this.ctl = new AbortController();
     let text;
     this.stats.asked++;
-    try { text = await this.o.ask(buildMessages(fresh, this.state.summary()), ctl.signal); }
+    let extra = { now: this.now() };
+    if (this.o.context) { try { extra = { ...extra, ...(this.o.context(fresh) || {}) }; } catch (e) { this.log('alwayson: context failed', e); } }
+    try { text = await this.o.ask(buildMessages(fresh, this.state.summary(), extra), ctl.signal); }
     catch (e) { this.ctl = null; if (ctl.signal.aborted) return this.result('cancelled'); this.log('alwayson: model error', String(e && e.message || e)); return this.result('error'); }
     this.ctl = null;
     if (ctl.signal.aborted) return this.result('cancelled');
