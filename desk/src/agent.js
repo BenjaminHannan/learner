@@ -1014,6 +1014,8 @@ class Agent {
           const research = this.researchEvidence && this.researchEvidence.metadata(args);
           const r = research ? this.o.memory.save(args.fact, args.topic, { research }) : this.o.memory.save(args.fact, args.topic);
           if (r.ok && (!isRememberAsk(this.taskText) || relatesTo(r.fact.text, rememberFact(this.taskText)))) this.usedMemSave = true;
+          // a Learn study Mote's note (src/studygate.js): kept as `maybe` until 2 independent sites confirm it; nothing reached memory yet
+          if (r.ok && r.truth === 'maybe') return { text: finish('Kept as a maybe note: it will be checked on 2 independent websites before it is remembered: ' + r.fact.text, true, 'Noted to check: ' + short(r.fact.text, 50)) };
           if (research && r.ok) {
             const status = r.provenance && r.provenance.status || 'pending';
             const note = r.kept === false ? 'Research note was not retained because the note limit was reached.'

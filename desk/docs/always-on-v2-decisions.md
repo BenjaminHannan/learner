@@ -140,3 +140,18 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   fresh held-out probes about the new events written before the run. Pass mark: arm A's held-out recall beats arm B's by ≥ 10
   points in 3/3 seeds, with no loss > 2 points on an old-skill probe set. Proven wrong if: arm B ties or wins in ≥ 1 seed, or A
   wins only by losing old skills. One change at a time: selection rule only; budget, model, seeds and probes identical.
+
+### Item 2: Learn study Motes go through the truth check and the drift guard
+- **Which Motes**: every Learn-mode study Mote (`learnResearch` helpers made by `startLearn`: the Learn button, "go learn X" in chat
+  and bored-mode Learn), not only the button's. They now carry `learnTopic` (older ones: parsed from the LEARN_MOTE task text;
+  child Motes inherit it). `src/studygate.js` gives their agent a memory whose `save()` is routed; reads pass through.
+- **Notes**: a study note → drift guard → `maybe` in truth-notes.json (with its exact words, its memory topic, e.g. `card`, and the
+  quoted page's provenance) → 2 independent sites → `confirmed` is saved to memory.md with the same words, topic and quote
+  provenance; `wrong` is saved as a correction (no quote: our own words). Card notes are searched as plain words ("A emits B").
+  The Mote is told "Kept as a maybe note: it will be checked on 2 independent websites before it is remembered".
+- **Steps**: every `web_search` of a study Mote passes the same `onTopic` guard (shares a word with the topic, or 2+ words with
+  what is confirmed about it); an off-topic search is refused without running and counted as drift (`thought` activity, so the
+  diary's "skipped N thoughts that drifted" includes it). Browser page opens are not guarded (URLs are a poor topic signal).
+  Trade-off: early in a study, a sub-topic search must name the topic ("black hole Hawking radiation"); models do this readily.
+- **Checks while studying**: the truth check now also runs when a Learn study is on with every sense off (same Ben-first gate,
+  `learnOnly`), so study notes do not sit as `maybe` for ever.

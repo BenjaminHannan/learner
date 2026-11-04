@@ -62,6 +62,10 @@ class TruthNotes {
     if (this.notes.some((n) => n.text.toLowerCase() === t.toLowerCase())) return null;
     meta = meta || {};
     const n = { id: 'n' + this.now().toString(36) + Math.random().toString(36).slice(2, 5), text: t, status: 'maybe', topic: String(meta.topic || '').slice(0, 120), from: String(meta.from || 'thinking'), t: this.now(), tries: 0, sources: [] };
+    // a Learn study note (src/studygate.js): the exact words and memory topic it asked for (e.g. a "card"), and the page it quoted
+    if (meta.saveText && String(meta.saveText).trim() !== t) n.saveText = String(meta.saveText).replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (meta.saveTopic) n.saveTopic = String(meta.saveTopic).slice(0, 80);
+    if (meta.research) n.research = meta.research;
     this.notes.push(n); if (this.notes.length > MAX_NOTES) this.notes.splice(0, this.notes.length - MAX_NOTES);
     this.save();
     return n;
@@ -103,8 +107,10 @@ class TruthNotes {
     n.status = status; n.sources = (sources || []).map((s) => ({ url: s.url, site: s.site })); n.settledAt = this.now();
     if (status === 'wrong') n.correction = correction ? 'I thought ' + n.text.replace(/[.\s]+$/, '') + '; actually ' + correction.replace(/^actually,?\s*/i, '') : 'I thought ' + n.text.replace(/[.\s]+$/, '') + ', but sources say otherwise.';
     this.save();
-    const text = status === 'confirmed' ? n.text : n.correction;
-    try { const r = this.o.save && this.o.save(text, status === 'confirmed' ? (n.topic ? 'skill: ' + n.topic.slice(0, 40) : 'checked') : 'correction'); n.saved = !!(r && r.ok); } catch (e) { n.saved = false; }
+    const text = status === 'confirmed' ? (n.saveText || n.text) : n.correction;
+    const topic = status === 'confirmed' ? (n.saveTopic || (n.topic ? 'skill: ' + n.topic.slice(0, 40) : 'checked')) : 'correction';
+    // a confirmed study note keeps the quote it was read with (memory's research provenance); a correction is our own words
+    try { const r = this.o.save && (status === 'confirmed' && n.research ? this.o.save(text, topic, { research: n.research }) : this.o.save(text, topic)); n.saved = !!(r && r.ok); } catch (e) { n.saved = false; }
     this.save();
     try { this.o.onSettled && this.o.onSettled(n); } catch (e) { /* listener */ }
   }

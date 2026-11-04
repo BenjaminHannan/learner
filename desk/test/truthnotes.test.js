@@ -82,7 +82,11 @@ test('main: Mote claims and loop notes go to the truth check as maybe (never str
   assert.doesNotMatch(m, /memory\.save\(text, 'noticed'\)/);
   assert.match(m, /for \(const c of kept\) getTruth\(\)\.add\(c,/);
   assert.match(m, /aoPool\.stopAll\('chat'\); aoStopChecks\(\);/);
-  // the only memory.save in the always-on block is the truth check's (confirmed notes and corrections)
+  // the only memory.save in the always-on block is the truth check's (confirmed notes and corrections; a study note keeps its quote)
   const block = m.slice(m.indexOf('// ---- Always-on Premonition'), m.indexOf('function registerIpc() {'));
-  assert.deepStrictEqual(block.match(/memory\.save\([^)]*\)/g), ['memory.save(text, topic)']);
+  assert.deepStrictEqual(block.match(/memory\.save\([^)]*\)/g), ['memory.save(text, topic, opts)']);
+  // Learn study Motes get the routed memory (src/studygate.js), never the real one
+  assert.match(m, /memory: agentMemory, tracking/);
+  assert.match(m, /const agentMemory = study \? StudyGate\.studyMemory\(\{ \.\.\.study, memory, truth: getTruth\(\) \}\) : memory;/);
+  assert.match(m, /if \(study\) tools\.web_search = StudyGate\.guardSearch\(tools\.web_search, study\);/);
 });

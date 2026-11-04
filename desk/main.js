@@ -38,6 +38,7 @@ if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 const { Store, applyPresetDefaults } = require('./src/store');
+const StudyGate = require('./src/studygate');   // Learn study Motes: drift guard + truth check (Nov 4)
 const { Agent, DANGER_LABELS, noteOldGap, rollupGapStep } = require('./src/agent');
 const { buildTools } = require('./src/prompt');
 const { Browser } = require('./src/tools/browser');
@@ -145,7 +146,7 @@ setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
-  try { if (aoTruthCtl && aoMoteGate().budget <= 0) aoStopChecks(); else if (aoSenses && aoSenses.anyEnabled()) aoTruthTick(); } catch (e) { /* next second */ }
+  try { if (aoTruthCtl && aoTruthGate().budget <= 0) aoStopChecks(); else if ((aoSenses && aoSenses.anyEnabled()) || learningNow()) aoTruthTick(); } catch (e) { /* next second */ }
   try { if (aoQuizCtl && !aoQuizGate()) aoStopQuiz(); else if (learnBtn && learnBtn.cur) aoQuizTick(); } catch (e) { /* next second */ }
   // the memory gauge is read every 10 s while always-on or a Learn study is on (the Mote gate skips it while Ben is busy)
   if (((aoSenses && aoSenses.anyEnabled()) || (learnBtn && learnBtn.cur)) && Date.now() % 10000 < 1000) { try { aoGaugeNow = aoGauge.read(); } catch (e) { /* next time */ } }
@@ -245,7 +246,7 @@ function startLearn(topic, count, hours) {
   let error = null;
   for (let i = 0; i < n; i++) {
     const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
-    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }, { learnResearch: true }); made.push(v.name); ids.push(v.id); }
+    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }, { learnResearch: true, learnTopic: topic }); made.push(v.name); ids.push(v.id); }
     catch (e) { error = String(e && e.message || e); break; }
   }
   return { ok: made.length > 0, count: made.length, topic, error, ids };
@@ -877,6 +878,12 @@ function createAgent({ helper, rec, voice }) {
     ...screen.tools,
     ...agentTools(helpers, { isHelper, selfId: isHelper ? helper.id : null })
   };
+  // a Learn study Mote (src/studygate.js): every search step and every note passes the drift guard, and notes go to the truth check
+  // as `maybe` (2 independent sites) instead of straight to memory
+  const studyTopic = isHelper && helper.learnResearch && helper.learnTopic ? helper.learnTopic : '';
+  const study = studyTopic ? { topic: studyTopic, vocab: () => aoTopicNotes(studyTopic), from: 'learn', onDrift: (kind, text) => aoStudyDrift(studyTopic, kind, text) } : null;
+  if (study) tools.web_search = StudyGate.guardSearch(tools.web_search, study);
+  const agentMemory = study ? StudyGate.studyMemory({ ...study, memory, truth: getTruth() }) : memory;
   for (const n of BROWSER_TOOLS) {
     const run = tools[n];
     tools[n] = async (x, ctx) => {
@@ -905,7 +912,7 @@ function createAgent({ helper, rec, voice }) {
   }
   const meta = () => ({ title: isHelper ? helper.name : isVoice ? 'Call' : '' }); // the main Glim has no chat title on the pill (Ben Oct 28)
   const a = new Agent({
-    memory, tracking, learnResearch: !!(isHelper && helper.learnResearch), helperId: isHelper ? helper.id : null,
+    memory: agentMemory, tracking, learnResearch: !!(isHelper && helper.learnResearch), helperId: isHelper ? helper.id : null,
     getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
       : () => {
         const saved = store.getSettings();
@@ -953,7 +960,7 @@ function createAgent({ helper, rec, voice }) {
 // Helper run: its own browser (attached but covered, same partition), destroyed when the run ends.
 function makeHelperAgent(h, { onState }) {
   const rec = makeBrowser(h.threadId, h.name + '’s browser', { helper: true });
-  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, mode: h.mode, learnResearch: h.learnResearch === true, onState }, rec });
+  const agent = createAgent({ helper: { id: h.id, name: h.name, threadId: h.threadId, mode: h.mode, learnResearch: h.learnResearch === true, learnTopic: h.learnResearch === true ? StudyGate.topicOf(h) : '', onState }, rec });
   return { agent, dispose: () => dropBrowser(h.threadId) };
 }
 
@@ -1516,6 +1523,10 @@ function aoEar() {
 }
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
 // v2 (phase 5): a note from the loop is a `maybe` until 2 independent websites confirm it (src/truthnotes.js); only then does it reach memory
+function aoStudyDrift(topic, kind, text) {
+  console.log('[alwayson] study drift (' + kind + ') off "' + topic + '": ' + String(text).slice(0, 100));
+  if (aoState) aoState.logActivity('thought', { topic, claims: 0, drift: 1, step: kind });
+}
 function aoNote(text) { try { if (aoTruth) aoTruth.add(text, { from: 'noticed' }); } catch (e) { /* skipped */ } }
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
@@ -1606,7 +1617,7 @@ async function aoJudge(claim, src, signal) {
 }
 function getTruth() {
   return aoTruth || (aoTruth = new TruthMod.TruthNotes({ dir: aoDir(), search: (q, signal) => webSearch(q, { signal }), judge: aoJudge,
-    save: (text, topic) => memory.save(text, topic),
+    save: (text, topic, opts) => memory.save(text, topic, opts),
     onSettled: (n) => {
       if (aoState) aoState.logActivity('note', { status: n.status, topic: n.topic, text: (n.status === 'wrong' ? n.correction : n.text).slice(0, 140) });
       if (n.status === 'wrong' && aoUrges) aoUrges.worthTelling(0.15);
@@ -1616,10 +1627,12 @@ function getTruth() {
 function aoTruthTick() {
   if (!aoTruth || aoTruth.checking || Date.now() - aoTruthAt < 20000) return;
   const n = aoTruth.next(); if (!n) return;
-  if (aoMoteGate().budget <= 0) return;
+  if (aoTruthGate().budget <= 0) return;
   aoTruthAt = Date.now(); const ctl = aoTruthCtl = new AbortController();
   aoTruth.check(n, ctl.signal).finally(() => { if (aoTruthCtl === ctl) aoTruthCtl = null; });
 }
+// the truth check runs while always-on is on OR a Learn study is on (its notes wait as `maybe` until checked); same Ben-first gate
+function aoTruthGate() { return aoMoteGate({ learnOnly: learningNow() }); }
 function aoStopChecks() { if (aoTruthCtl) { try { aoTruthCtl.abort(); } catch (e) { /* gone */ } aoTruthCtl = null; } }
 // ---- always-on v2, phase 6: the Learn quiz score (src/quiz.js) ------------------------------------------------------------
 // Starting a Learn topic queues a separate WRITER pass that builds a locked quiz (~20 questions, answers found on the pages, source

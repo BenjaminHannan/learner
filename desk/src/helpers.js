@@ -283,6 +283,7 @@ class Helpers {
     this.o.store.saveThread(t);
     const h = { id, name, task, every: every || null, at: at || null, next: null, paused: false, status: 'idle', threadId: t.id, parent: parent || null, created: this.now(), lastRun: null, lastReport: '', lastSummary: '' };
     if (privateOptions.learnResearch === true || (creator && creator.learnResearch === true)) h.learnResearch = true;
+    if (h.learnResearch) { const lt = typeof privateOptions.learnTopic === 'string' ? privateOptions.learnTopic : creator && creator.learnTopic; if (lt) h.learnTopic = String(lt).slice(0, 200); }   // the study's topic (drift guard)
     if (mode === 'ask' || mode === 'hands-off') h.mode = mode;
     if (until > this.now()) h.until = until; // learn button: stops itself at this time
     if (byHelper) h.byHelper = byHelper; // started by another Glim (agent_start from a helper run)
