@@ -7,6 +7,12 @@
 const SB = 2, SMAX = 60;            // 2-minute buckets, up to 2 hours of activity
 const PRIOR_W = 2;                  // pseudo-counts borrowed from the coarser level
 const IDLE_S = 120, SOON_MS = 5 * 60000;
+const PRIVATE_WINDOW = /\b(?:private\s+browsing|incognito|inprivate|private\s+window)\b|\b(?:1password|bitwarden|lastpass|keychain\s+access|passwords)\b/i;
+function privateRaw(raw) {   // lazy require: senses pulls in agent.js; if it cannot load, treat the window as private (keep nothing)
+  const text = String(raw.app || '') + ' ' + String(raw.title || '');
+  if (PRIVATE_WINDOW.test(text)) return true;
+  try { return !!require('./senses').isPrivate(text); } catch (e) { return true; }
+}
 const sbucket = (sessMin) => Math.min(SMAX, Math.max(0, Math.floor((Number(sessMin) || 0) / SB)));
 class BreakModel {
   constructor(saved) {
@@ -55,7 +61,8 @@ class BreakTracker {
     }
     // resolve rows whose 5 minutes have passed (or all of them once a break started)
     while (this.q.length && (t - this.q[0].t >= SOON_MS || this.since == null)) this.emit(this.q.shift());
-    const rw = raw && (raw.app || raw.title) ? { raw: { app: String(raw.app || '').slice(0, 60), title: String(raw.title || '').slice(0, 80) } } : {};
+    // lead 2026-11-04: a private, incognito or password-type window keeps NO raw (the row is then just "unchecked" for the truth check)
+    const rw = raw && (raw.app || raw.title) && !privateRaw(raw) ? { raw: { app: String(raw.app || '').slice(0, 60), title: String(raw.title || '').slice(0, 80) } } : {};
     if (active) this.q.push({ t, cat: cat || 'other', work: true, sess: Math.round((t - this.since) / 60000), hour, soon: 0, ...rw });
     else this.emit({ t, cat: cat || 'other', work: false, sess: -1, hour, soon: 0, ...rw });
   }
