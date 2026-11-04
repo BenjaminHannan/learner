@@ -28,7 +28,7 @@
     if (st.plan.length) {
       const s = el('div', 'sd-sec'); s.append(el('div', 'sd-label', 'Plan'));
       const ol = el('ol', 'sd-plan');
-      for (const p of st.plan) ol.append(el('li', null, String(p).replace(/\*\*|__|`/g, '')));
+      for (const p of st.plan) ol.append(el('li', null, window.ToolWords ? ToolWords.friendly(p) : String(p).replace(/\*\*|__|`/g, '')));
       s.append(ol); v.append(s);
     }
     if (!st.showMotes) return v; // one Glim: its helpers stay invisible unless Show Motes is on

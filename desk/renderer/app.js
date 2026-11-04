@@ -320,15 +320,17 @@
   // "Login access - You mentioned ... I need ..." reads as a wall of text: show the short head in bold and the rest as a
   // muted two-line note (full text on hover). Old saved threads still carry ** marks, so strip them here too.
   function planItem(text) {
-    const t = String(text).replace(/\*\*|__|`/g, '').trim();
+    const t = window.ToolWords ? ToolWords.friendly(text) : String(text).replace(/\*\*|__|`/g, '').trim();   // no tool ids on screen
     const li = el('li'); const box = el('span', 'pt'); box.title = t;
     const m = /^(.{2,40}?)(?:\s+[-–—]\s+|:\s+)(.+)$/.exec(t);
     if (m) box.append(el('b', 'ph', m[1]), el('span', 'pd', m[2])); else box.append(el('span', 'pd solo', t));
     li.append(box); return li;
   }
 
+  const PLAN_SHOW = 5;
   function setPlan(items) {
     if (!items || !items.length) return;
+    items = items.slice(0, PLAN_SHOW);   // the card stays short
     if (window.Side) Side.setPlan(items);
     const a = ensureActTracked();
     if (a.plan) a.plan.remove();
