@@ -52,3 +52,12 @@ Decided with Ben in the "Brainstorm: always-on Premonition" thread. v1 (phases 1
 - Seatbelt: after each sleep, rerun the fixed projector tests (V1 / A1 / VID1). If any score drops by more than 2 points, that night's projector update is undone. This guards against shared mistakes and echo loops where the senses teach each other the same error.
 - Models: train during sleep against a bf16 copy of Nanbeige; run day-to-day with the q8 copy. It needs ~8 GB more disk. Check projectors and adapters on q8 after training.
 - First test, pass marks fixed: one sleep trained on caption-tagged sound pairs from videos → A1 +5 points or more; V1 drops by at most 2 points. Proven wrong if A1 falls.
+
+## 10. Desk + filing cabinet memory (Ben, 2026-11-04; Experiment M1, being tested)
+- **Filing cabinet (archive):** unlimited store of thought vectors. Nothing is deleted, only filed.
+- **Desk:** at every step Nanbeige sees exactly 64 memory slots as soft input tokens: 32 working slots (carried from step to step) + 32 recalled slots (the archive entries most similar to "now").
+- **Write:** after each step a learned write module updates the working slots from Nanbeige's hidden states (slots attend to the step's hidden states, gated update) and makes new content.
+- **Filing:** each working slot has a learned keep score. New content takes the lowest-scoring slot; that slot's old content is filed into the archive with a key. One self-attention layer mixes the 64 desk slots.
+- **Learning by sleep:** Nanbeige stays frozen (2 native loops). Only the memory parts train (read projector, write module, keep scores, recall query), and only in sleep between simulated days. An untrained memory is a no-op (zero-init projector, closed gate).
+- Test: synthetic days (~300 observation lines, fresh names every day), questions beyond a 20-line window (recall, latest state, counting, two-hop), against no memory (B0) and today's notes file (B1, top-8 retrieved notes). PASS = M1 ≥ B1 + 20 and ≥ B0 + 20 points on held-out test days.
+- Code, results and report: `~/learner-ops/premonition-memory` (REPORT.md).
