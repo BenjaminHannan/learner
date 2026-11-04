@@ -1,0 +1,60 @@
+# Task B real-path check, 2026-11-04 10:00 (RP_DRIVE=drive-time.js node test/realpath/harness.js). Fake clock, fake senses, fake model on localhost; temp HOME/userData.
+[14:00:00 +14543.3s] fake model on :63366; userData <tmp userData> fake clock Wed Nov 04 2026 14:00:00 GMT-0500 (Eastern Standard Time)
+[14:00:00 +14543.3s] BLOCKED child_process.execFileSync id
+[14:00:00 +14543.4s] loaded main.js
+[14:00:01 +14544.8s] MODEL other model=undefined max_tokens=undefined <-  | sys:  | url /
+[14:00:02 +14545.9s] BLOCKED child_process.execFile deskhelper ["check"]
+[14:48:02 +190225.9s] TIMELINE rows=23 with time=23
+[14:48:02 +190225.9s]   ROW t=Fri Nov 06 2026 14:24:02 | Calendar: practice moved to 6pm at Lune Hall | shape: Calendar: practice moved to <TIME> at <PLACE>
+[14:48:02 +190225.9s]   ROW t=Fri Nov 06 2026 14:24:02 | Front app: Calendar. Open: Calendar — Week. | shape: Front app: Calendar. Open: Calendar — <NAME>.
+[14:48:02 +190225.9s]   ROW t=Fri Nov 06 2026 14:36:02 | chem lab — reading. | shape: chem lab — reading.
+[14:48:02 +190225.9s]   ROW t=Fri Nov 06 2026 14:36:02 | Front app: Notes. Open: Notes — chem lab. | shape: Front app: Notes. Open: Notes — chem lab.
+[14:48:27 +190250.9s] MODEL loop [test] model=fake-fast max_tokens=220 <- Now: Fri 6 Nov, 14:48. No current focus. Last spoke to Ben unprompted: never. New observat
+[alwayson] alwayson: say held by the speak-o-meter (p=0.31): That looks like an interesting page.
+[14:48:27 +190251.0s] tick -> {"reason":"done"}
+[14:48:27 +190251.0s] PROMPT (loop, as sent):
+    | Now: Fri 6 Nov, 14:48.
+    | No current focus. Last spoke to Ben unprompted: never.
+    | New observations:
+    | - [windows, 14:24] Front app: Calendar. Open: Calendar — Week. (1 day ago)
+    | - [screen, 14:36] Wikipedia - Octopus — reading. (1 day ago)
+    | - [windows, 14:36] Front app: Safari. Open: Safari — Wikipedia - Octopus. (1 day ago)
+    | - [screen, 14:00] Wikipedia - Octopus — some article text about the day. (48 min ago)
+    | - [screen, 14:12] Priya texted: practice at Lune Hall moved to 6pm (36 min ago)
+    | - [windows, 14:12] Front app: Messages. Open: Messages — Priya. (36 min ago)
+    | - [screen, 14:24] Calendar: practice moved to 6pm at Lune Hall (24 min ago)
+    | - [windows, 14:24] Front app: Calendar. Open: Calendar — Week. (24 min ago)
+    | - [screen, 14:36] chem lab — reading. (12 min ago)
+    | - [windows, 14:36] Front app: Notes. Open: Notes — chem lab. (12 min ago)
+    | - [screen, 14:48] Zed texted: practice at Ombra Center moved to 7pm (just now)
+    | - [windows, 14:48] Front app: Messages. Open: Messages — Zed. (just now)
+    | Answer with the JSON object only.
+[alwayson] patterns: 6 kept, 6 new, 0 filed, 0 revived (26 records, 5 ms)
+[14:48:27 +190251.0s] MODEL CALLS during the nightly jobs (patterns made): 0
+[14:48:27 +190251.0s] PATTERNS: 6 -> Pattern (seen 3×): <NAME> - <NAME> — some article text about the day. → usually then: <NAME> texted: practice at <PLACE> moved to <TIME> (within ~12 min, 3 of 3) || Pattern (seen 3×): Front app: Safari. Open: Safari — <NAME> - <NAME>. → usually then: <NAME> texted: practice at <PLACE> moved to <TIME> (within ~12 min, 2 of 3) || Pattern (seen 4×): <NAME> texted: practice at <PLACE> moved to <TIME> → usually then: Calendar: practice moved to <TIME> at <PLACE> (within ~12 min, 3 of 4) || Pattern (seen 4×): Front app: Messages. Open: Messages — <NAME>. → usually then: Calendar: practice moved to <TIME> at <PLACE> (within ~12 min, 3 of 4) || Pattern (seen 3×): Calendar: practice moved to <TIME> at <PLACE> || Pattern (seen 3×): Front app: Calendar. Open: Calendar — <NAME>.
+[14:48:27 +190251.0s] LAST SLEEP: {"at":1793994507655,"made":6,"kept":6,"filed":0,"revived":0,"clusters":12,"items":26,"ms":5}
+[14:48:52 +190276.0s] MODEL loop [test] model=fake-fast max_tokens=220 <- Now: Fri 6 Nov, 14:48. No current focus. Last spoke to Ben unprompted: never. New observat
+[alwayson] alwayson: say held by the speak-o-meter (p=0.31): That looks like an interesting page.
+[14:48:52 +190276.0s] tick 2 -> {"reason":"done"}
+[14:48:52 +190276.0s] PROMPT 2 (loop, as sent):
+    | Now: Fri 6 Nov, 14:48.
+    | No current focus. Last spoke to Ben unprompted: never.
+    | New observations:
+    | - [screen, 14:48] Ari texted: practice at Doma Plaza moved to 5pm (just now)
+    | - [windows, 14:48] Front app: Messages. Open: Messages — Ari. (just now)
+    | Related memories (data):
+    | - (seen 1 day ago) Front app: Messages. Open: Messages — Jonah.
+    | - (seen 2 days ago) Front app: Messages. Open: Messages — Maya.
+    | - (seen 37 min ago) Front app: Messages. Open: Messages — Priya.
+    | - (seen 2 days ago, same shape) Maya texted: practice at Kiro Park moved to 6pm
+    | - (seen 1 day ago, same shape) Jonah texted: practice at Vale Field moved to 6pm
+    | Patterns seen before (data):
+    | - Pattern (seen 4×): <NAME> texted: practice at <PLACE> moved to <TIME> → usually then: Calendar: practice moved to <TIME> at <PLACE> (within ~12 min, 3 of 4)
+    | - Pattern (seen 4×): Front app: Messages. Open: Messages — <NAME>. → usually then: Calendar: practice moved to <TIME> at <PLACE> (within ~12 min, 3 of 4)
+    | Answer with the JSON object only.
+[14:48:52 +190276.0s] CONTEXT after sleep: {"recall":["(seen just now) Ari texted: practice at Doma Plaza moved to 5pm","(seen 1 day ago) Jonah texted: practice at Vale Field moved to 6pm","(seen 37 min ago) Priya texted: practice at Lune Hall moved to 6pm","(seen 2 days ago, same shape) Maya texted: practice at Kiro Park moved to 6pm","(seen just now, same shape) Zed texted: practice at Ombra Center moved to 7pm"],"patterns":["Pattern (seen 4×): <NAME> texted: practice at <PLACE> moved to <TIME> → usually then: Calendar: practice moved to <TIME> at <PLACE> (within ~12 min, 3 of 4)"],"likely":""}
+[14:48:52 +190276.0s] TIME NOTE: [Glim's timestamped records. Ben asked a time question: answer briefly from this only. Now: Fri 6 Nov, 14:48. | Right before "Calendar: practice moved to 6pm at Lune Hall" (Fri 6 Nov, 14:24), 12 min earlier: "Front app: Messages. Open: Messages — Priya." (Fri 6 Nov, 14:12). | ] 
+[14:48:52 +190276.0s] TIME NOTE 2: [Glim's timestamped records. Ben asked a time question: answer briefly from this only. Now: Fri 6 Nov, 14:48. | That was 2 days ago (Wed 4 Nov, 14:12): "Maya texted: practice at Kiro Park moved to 6pm". | ] 
+[14:48:52 +190276.0s] PATTERN NOTE: [Glim's patterns (made by counting, not guessing). Ben asked what usually happens after something: answer briefly from this only. | From 4 times I saw "<NAME> texted: practice at <PLACE> moved to <TIME>": next, 3 of 4 times, "Calendar: practice moved to <TIME> at <PLACE>" (about 12 min later). | ] 
+[14:48:52 +190276.0s] HANDOFF file keys: at,confirmed,corrections,surprises
+[14:48:52 +190276.0s] model calls total: 3 {"other":1,"loop":2} all test-marked=true

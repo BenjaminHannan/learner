@@ -83,5 +83,5 @@ srv.listen(0, '127.0.0.1', () => {
   log('fake model on :' + port + '; userData ' + ud + '; fake clock ' + new Date().toString());
   require(RP);
   log('loaded main.js');
-  setTimeout(() => require(path.join(__dirname, 'drive.js')), 2500);
+  setTimeout(() => require(path.join(__dirname, process.env.RP_DRIVE || 'drive.js')), 2500);   // RP_DRIVE=drive-time.js: Task B's check
 });

@@ -1394,12 +1394,13 @@ let aoGuesser = null;
 function getGuesser() {
   if (aoGuesser) return aoGuesser;
   let saved = null; try { saved = JSON.parse(fs.readFileSync(aoGuessFile(), 'utf8')); } catch (e) { /* fresh */ }
-  return (aoGuesser = new GuesserMod.Guesser({ saved, onBig: (s) => aoOnSurprise(s) }));
+  return (aoGuesser = new GuesserMod.Guesser({ saved, when: true, onBig: (s) => aoOnSurprise(s) }));   // when: feeling time (src/timesense.js)
 }
 function saveGuesser() { if (!aoGuesser) return; try { fs.writeFileSync(aoGuessFile(), JSON.stringify(aoGuesser.toJSON())); } catch (e) { /* next minute */ } }
 function aoOnSurprise(s) {
   const f = aoStuck.front();
-  const what = s.stream === 'app' ? 'Ben switched to ' + (f.app || s.cat) + (f.title ? ' (' + f.title.slice(0, 80) + ')' : '') + ', which I did not expect here (' + s.cat + ').'
+  const what = s.unusualTime ? 'Ben opened ' + (f.app || s.cat) + ' at an unusual time for him (' + TimeSense.clockWords(s.t || Date.now()) + ', ' + s.cat + ').'
+    : s.stream === 'app' ? 'Ben switched to ' + (f.app || s.cat) + (f.title ? ' (' + f.title.slice(0, 80) + ')' : '') + ', which I did not expect here (' + s.cat + ').'
     : 'Unexpected ' + s.stream + ': ' + s.cat + '.';
   aoSurprise = { at: Date.now(), what: s.cat };
   if (aoState) { aoState.addSurprise({ stream: s.stream, what, kl: s.kl }); aoState.logActivity('surprise', { what, kl: Math.round(s.kl * 100) / 100 }); }
@@ -1424,6 +1425,54 @@ function aoNightly(force) {
   if (!force && aoNightlyDay === d) return; aoNightlyDay = d;
   for (const j of aoNightlyJobs) { try { j(); } catch (e) { console.log('[alwayson] nightly retune', e); } }
 }
+// ---- feeling time + patterns (Task B, src/timesense.js + src/patterns.js) ------------------------------------------------
+// A timeline of timestamped words (observations, surprises, truth notes) with a name-masked shape key each. The loop's prompt
+// gets the clock, "N min ago", up to 5 recalled memories (2 of them may come by shape = analogy) and up to 2 patterns.
+// Patterns are made at sleep start by formula only (clustering + counting); no model is called there.
+const TimeSense = require('./src/timesense');
+const PatternsMod = require('./src/patterns');
+let aoTimeline = null;
+const getTimeline = () => aoTimeline || (aoTimeline = new PatternsMod.Timeline({ dir: aoDir() }));
+aoObservers.push((e) => { if (aoSenses && aoSenses.anyEnabled()) getTimeline().add({ t: e.t, kind: 'obs', sense: e.sense, text: e.text }); });
+function aoTimelineSync() {
+  const tl = getTimeline();
+  if (aoTruth) tl.syncNotes(aoTruth.notes);
+  if (aoState) for (const x of aoState.surprises) if (x && x.what && x.t && !tl.byRef.has('sur:' + x.t)) tl.add({ t: x.t, kind: 'surprise', text: x.what, ref: 'sur:' + x.t });
+  return tl;
+}
+function aoLoopContext(fresh) {
+  const tl = aoTimelineSync(), now = Date.now();
+  const query = fresh.slice(-3).map((o) => o.text).join(' ').slice(0, 1200);
+  const oldest = Math.min(...fresh.map((o) => (TimeSense.validT(o.t) ? o.t : now)));
+  const recall = tl.recall(query, { k: 5, before: oldest - 1 }).map((r) => '(' + (r.item.kind === 'obs' ? 'seen' : r.item.kind) + ' ' + TimeSense.ago(r.item.t, now) + (r.via === 'shape' ? ', same shape' : '') + (r.item.status === 'maybe' || r.item.status === 'unsure' ? ', maybe' : '') + ') ' + r.item.text.slice(0, 140));
+  const patterns = tl.patternsFor(query).map((x) => PatternsMod.patternLine(x.p));
+  return { recall, patterns, likely: aoGuesser && aoGuesser.when ? TimeSense.likelyWords(aoGuesser.when, now) : '' };
+}
+// Ben asks a time question in chat ("how long ago did I…", "what happened right before…", "what usually happens after…"):
+// a hidden note with the answer from the timestamped records (like the diary); '' for anything else
+const PATTERN_ASK = /\bwhat\s+(?:usually|normally|typically)\s+happens\s+(?:after|when)\s+(.+)$/i;
+function aoTimeNote(text) {
+  const t = String(text || '');
+  if (!aoState || !(TimeSense.isTimeAsk(t) || PATTERN_ASK.test(t))) return '';
+  const tl = aoTimelineSync(), now = Date.now();
+  const pm = PATTERN_ASK.exec(t);
+  if (pm) {
+    const w = tl.whatFollows(pm[1]);
+    const ans = w && w.follow ? 'From ' + w.pattern.size + ' times I saw "' + w.pattern.template + '"' + (w.pattern.maybe ? ' (some from unchecked notes, so maybe)' : '') + ': next, ' + w.follow.count + ' of ' + w.follow.of + ' times, "' + w.follow.template + '" (about ' + Math.round(w.follow.medianMin) + ' min later).' : 'I have not seen that often enough to know what usually follows it.';
+    return '[Glim\'s patterns (made by counting, not guessing). Ben asked what usually happens after something: answer briefly from this only.\n' + ans + '\n] ';
+  }
+  const recs = tl.items.filter((x) => TimeSense.validT(x.t)).map((x) => ({ t: x.t, text: x.text })).concat(aoState.inbox.filter((x) => TimeSense.validT(x.t)).map((x) => ({ t: x.t, text: x.text })));
+  const a = TimeSense.answerTimeQuestion(t, recs, now);
+  return '[Glim\'s timestamped records. Ben asked a time question: answer briefly from this only' + (a ? '' : '; nothing matches, so say you do not know') + '. Now: ' + TimeSense.clockWords(now) + '.\n' + (a ? a.answer : 'No record matches.') + '\n] ';
+}
+// at sleep start: patterns by formula (src/patterns.js Timeline.sleep: clustering + counts; never a model call)
+function aoPatternSleep() {
+  const r = aoTimelineSync().sleep();
+  console.log('[alwayson] patterns: ' + r.kept + ' kept, ' + r.made + ' new, ' + r.filed + ' filed, ' + r.revived + ' revived (' + r.items + ' records, ' + r.ms + ' ms)');
+  if (aoState) aoState.logActivity('patterns', { made: r.made, kept: r.kept, filed: r.filed });
+  return r;
+}
+aoNightlyJobs.push(() => aoPatternSleep());
 const aoDir = () => app.getPath('userData');
 function aoSetup() {
   if (aoSenses) return;
@@ -1735,6 +1784,7 @@ function aoApply() {
     deliver: { say: aoSay, note: aoNote, learn: aoLearn },
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
     speakGate: (d) => aoMeter ? aoMeter.decide(aoContext({ urgent: !!d.urgent })) : { speak: true },
+    context: (fresh) => aoLoopContext(fresh),   // feeling time + recall + patterns (Task B)
     log: (...a) => console.log('[alwayson]', ...a) });
   if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
   aoHearingApply();
@@ -1824,7 +1874,8 @@ function registerIpc() {
     }
     // always-on v2: the diary is shown ONLY when Ben asks ("Glim, what did you do?"): a hidden note with the activity recap
     const diary = !goals && !learn && aoState && DiaryAO.isDiaryAsk(text) ? aoDiaryNote() : '';
-    agent.run(t, goals ? GOALS_NOTE + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : undefined).then((r) => {
+    const timeNote = !goals && !learn && !diary ? aoTimeNote(text) : '';   // feeling time: a time question gets a hidden note from the timestamped records
+    agent.run(t, timeNote ? timeNote + text : goals ? GOALS_NOTE + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : timeNote ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
