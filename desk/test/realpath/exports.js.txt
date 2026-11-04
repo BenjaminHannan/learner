@@ -1,0 +1,8 @@
+
+app.on('window-all-closed', () => { try { if (hearing) hearing.disable(); if (aoLoop) aoLoop.stop(); } catch (e) { /* ignore */ } try { helpers && helpers.close(); } catch (e) { /* ignore */ } try { diary && diary.stop(); } catch (e) { /* ignore */ } app.quit(); });
+
+// ---- harness exports (item 4 real-path check; this file is a temporary copy and is deleted after the run)
+globalThis.__ao = {
+  get aoLoop() { return aoLoop; }, get aoSenses() { return aoSenses; }, get aoState() { return aoState; }, get aoUrges() { return aoUrges; },
+  get aoMeter() { return aoMeter; }, get learnBtn() { return learnBtn; }, aoPool, aoVoice, aoStuck, aoEar, aoUrgeTick, setSenses, aoMoteGate, aoNight, getGuesser
+};

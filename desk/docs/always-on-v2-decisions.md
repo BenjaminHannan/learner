@@ -155,3 +155,21 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   Trade-off: early in a study, a sub-topic search must name the topic ("black hole Hawking radiation"); models do this readily.
 - **Checks while studying**: the truth check now also runs when a Learn study is on with every sense off (same Ben-first gate,
   `learnOnly`), so study notes do not sit as `maybe` for ever.
+
+### Item 3: the suite no longer runs the real helper
+- `createScreen(getSettings, resourcesPath, onLook, { findHelper, callHelper })`: optional fakes. The `open_app` test (and the misc
+  "missing helper" test) pass fakes, so they never execute `desk/build/deskhelper` (it opened Notes for real and could hang).
+  `build/deskhelper` is untouched. "open_app refuses browsers" now passes as a side effect (it was failing for the same reason).
+
+### Item 4: real-path check (`node test/realpath/harness.js`, log in always-on-v2-realpath-log.txt)
+- Real `main.js` (temp copy + an export block, deleted on exit) under the Electron stand-in, with: a fake clock at 14:00 (outside the
+  night window), HOME and userData in a temp dir, a fake model server (nothing listened on :8090, so Ben's model was not touched),
+  every child process except read-only `sysctl`-style probes blocked, and every non-localhost `fetch` blocked (no real web).
+- Fake senses feed the real `Senses.sample()`; ticks are the loop's own `tick()` / `wake()`; the bored urge is ticked with the real
+  `aoUrgeTick()` (the app calls it once a real minute; the harness calls it after each 90 s jump of the fake clock).
+- **Found and fixed**: plain browsing spoke on the first tick (p 0.55): bias −1.2 + never-spoken 0.8 + a cold-start surprise 0.6.
+  Prior now bias −1.6, surprise 0.5 (worst ordinary moment p 0.48 → quiet; stuck error p 0.92 → speaks). Test added.
+- **Seen, not changed (one change at a time)**: a fresh guesser is surprised (KL 1.5–2.3) by nearly every switch for the first
+  ~20 minutes, so it files ~10 "surprise" moments (several just "Unexpected screen: other."). These now reach sleep as low-weight
+  cards. Candidate fix for a later night: no `big` surprise until a stream's context has ≥ N observations (pass mark: ≤ 2 big
+  surprises in the first hour of the scripted day, the Steam switch still surprising).
