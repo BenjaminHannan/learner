@@ -84,7 +84,10 @@ function features(ctx) {
 }
 const clamp01 = (v) => Math.max(0, Math.min(1, Number(v) || 0));
 // The starting weights: quiet by default (bias), permissive when stuck, quieter while typing / gaming / watching.
-const PRIOR = Object.freeze({ bias: -1.2, act_typing: -4.0, act_game: -2.0, act_video: -1.2, act_idle: -0.6, act_active: 0, since_say: 0.8, urge_share: 0.8, urge_curious: 0, urge_bored: 0, surprise: 0.6, stuck_error: 3.0, stuck_page: 1.8, urgent: 2.5, cat_code: 0.2, cat_school: 0.2 });
+// Nov 4 (real-path check): with bias -1.2 + since_say 0.8 + surprise 0.6, plain browsing right after start-up (never spoken, a fresh
+// guesser surprised by everything) scored p 0.55 and spoke. Now the worst ordinary moment (never spoken, full surprise, code page)
+// stays below 0.5: -1.6 + 0.8 + 0.5 + 0.2 = -0.1. Stuck moments and a full share urge still get through.
+const PRIOR = Object.freeze({ bias: -1.6, act_typing: -4.0, act_game: -2.0, act_video: -1.2, act_idle: -0.6, act_active: 0, since_say: 0.8, urge_share: 0.8, urge_curious: 0, urge_bored: 0, surprise: 0.5, stuck_error: 3.0, stuck_page: 1.8, urgent: 2.5, cat_code: 0.2, cat_school: 0.2 });
 const prior = () => { const w = {}; for (const n of NAMES) w[n] = PRIOR[n] || 0; return w; };
 // feedback kind -> label (1 = speak was right) and weight
 const FEEDBACK = { notnow: { y: 0, w: 3 }, down: { y: 0, w: 2 }, ignored: { y: 0, w: 0.5 }, up: { y: 1, w: 2 }, reply: { y: 1, w: 1 }, used: { y: 1, w: 1.5 } };

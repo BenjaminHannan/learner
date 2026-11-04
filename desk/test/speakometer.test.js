@@ -19,6 +19,16 @@ test('starts quiet in ordinary moments, permissive when Ben is stuck, quiet whil
   assert.ok(m.decide({ ...ctxA, stuckPage: true }).p > m.decide(ctxA).p);
 });
 
+test('an ordinary moment stays quiet even at its loudest (never spoken, full surprise, code page); stuck or a full share urge speaks', () => {
+  const m = new S.SpeakOMeter();
+  const loud = { cat: 'code', act: 'active', minsSinceSay: null, urges: { bored: 1, curious: 1, share: 0 }, surprise: 1, stuckError: false, stuckPage: false };
+  for (const cat of S.CATS) assert.strictEqual(m.decide({ ...loud, cat }).speak, false, cat);
+  assert.strictEqual(m.decide({ ...loud, cat: 'browser', surprise: 0.9 }).speak, false, 'random browsing after start-up (the real-path case)');
+  assert.strictEqual(m.decide({ ...loud, stuckError: true }).speak, true);
+  assert.strictEqual(m.decide({ ...loud, surprise: 0, minsSinceSay: 30, stuckPage: true }).speak, true);
+  assert.strictEqual(m.decide({ ...loud, surprise: 0, urges: { share: 1 } }).speak, true, 'something worth telling, after a long silence');
+});
+
 test('the score DROPS after 👎 / "not now" in a context and RISES after 👍', () => {
   const m = new S.SpeakOMeter();
   const ctx = { ...ctxA, stuckError: true };
