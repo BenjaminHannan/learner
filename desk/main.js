@@ -22,7 +22,7 @@ if (!E2E) {
     let writes = 0;   // the app runs for weeks (login item, tray): check the size every 200 lines, not only at launch
     for (const lvl of ['log', 'warn', 'error']) {
       const orig = console[lvl].bind(console);
-      console[lvl] = (...a) => { orig(...a); if (++writes % 200 === 0) trim(); try { fs.appendFileSync(f, new Date().toISOString() + ' ' + lvl + ' ' + a.map((x) => (x && x.stack) || (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n'); } catch (e) { /* ignore */ } };
+      console[lvl] = (...a) => { if (++writes % 200 === 0) trim(); let line = a.map((x) => (x && x.stack) || (typeof x === 'string' ? x : JSON.stringify(x))).join(' '); if (require('./src/logins').holdsSecret(line)) { line = '[log line dropped: it held a saved password]'; a = [line]; } orig(...a); try { fs.appendFileSync(f, new Date().toISOString() + ' ' + lvl + ' ' + line + '\n'); } catch (e) { /* ignore */ } };   // LOGIN1: no saved password in the log
     }
     process.on('uncaughtException', (e) => { console.error('uncaught', e); });
   } catch (e) { /* no log */ }
@@ -109,7 +109,7 @@ const panel = { key: null, open: false, top: false, rect: null }; // what the re
 const loginWaits = new Map(); // browser key -> finish(value): a sign-in hand-off is waiting for Ben
 let openThreadId = null;  // thread the UI has open
 const SCREEN_TOOLS = new Set(['screen_look', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
-const BROWSER_TOOLS = ['browser_go', 'browser_click', 'browser_type', 'browser_scroll', 'browser_back', 'browser_read'];
+const BROWSER_TOOLS = ['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_scroll', 'browser_back', 'browser_read'];
 const pending = new Map(); // approval/ask id -> resolve
 const cards = new Map();   // approval/ask id -> {threadId, ev}: replayed when Ben opens that thread later
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -700,7 +700,7 @@ function makeBrowser(key, label, opts) {
   let rec = browsers.get(key);
   if (rec && rec.br.wc.isDestroyed()) { dropBrowser(key); rec = null; } // the page closed itself: start a fresh one
   if (rec) { rec.used = Date.now(); return rec; }
-  const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
+  const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false, preload: path.join(__dirname, 'preload-browser.js') } });   // LOGIN1: the preload only notices Ben submitting a sign-in form (Save card)
   try { view.setBackgroundColor('#ffffff'); } catch (e) { /* ignore */ } // an empty page shows white, so it is not mistaken for a broken panel
   const br = new Browser({ view, session, onState: () => pushBState(key) });
   br.shouldFocus = () => !(ui && !ui.webContents.isDestroyed() && ui.webContents.isFocused()) || (panel.open && panel.key === key);
@@ -873,6 +873,18 @@ function createAgent({ helper, rec, voice }) {
         return { text: await afterSignIn(b, v), summary: 'Waited while Ben signed in', error: v === 'stopped' };
       }
       return b.type(x.id, x.text, x.enter);
+    },
+    // LOGIN1: the app fills Ben's saved login for exactly this https site; the model reads only "Signed in as <user> on <host>"
+    browser_sign_in: async (x, ctx) => {
+      const b = getBr();
+      const r = await b.signIn((u) => glimLogins().forPage(u));
+      // no saved login on a sign-in form, or a code: Ben does it once in the panel (the app then offers to save the login); a Mote never asks Ben
+      if (!isHelper && (r.kind === 'none' || r.kind === 'code')) {
+        const v = await ctx.waitForBen(() => signInWait(bk(), a.threadId, ctx.signal));
+        const lead = r.kind === 'none' ? 'No saved login for ' + r.host + ', so the app asked Ben to sign in once himself (it then offers to save it). ' : 'A code was needed on ' + r.host + '. ';
+        return { text: lead + (await afterSignIn(b, v)), summary: r.kind === 'none' ? 'Ben signed in once on ' + r.host : 'Ben entered the code', error: v === 'stopped' };
+      }
+      return r;
     },
     browser_scroll: (x) => getBr().scroll(x.direction),
     browser_back: () => getBr().back(),
@@ -1526,6 +1538,44 @@ function glimSafetyFromBen(text, source) {
   try { const ch = SafetyMod.fromBenText(text); if (ch.length) { const r = glimSafety().set(ch, { source }); if (r.ok) send('safety:notice', { text: r.notice, undo: r.undo }); } } catch (e) { /* never blocks the chat */ }
   try { glimHands().onBenText(text); } catch (e) { /* log only */ }
 }
+// ---- saved logins (track LOGIN1: src/logins.js) --------------------------------------------------------------------------------------
+// Glim signs in with logins Ben saved; the password never passes through the model. Mac: Keychain items labelled "Premonition";
+// Windows: safeStorage. The Save card comes from Ben submitting a sign-in form in Glim's browser (preload-browser.js), or from the
+// masked dialog ("save my Schoology login"). Settings > Safety lists them (hosts + usernames only) with Remove.
+const Logins = require('./src/logins');
+let glimLoginsObj = null, loginCapture = null;
+function glimLogins() {
+  if (glimLoginsObj) return glimLoginsObj;
+  const dir = app.getPath('userData');
+  const box = process.platform === 'darwin' ? new Logins.MacKeychain() : new Logins.SafeStorageBox({ dir, safeStorage: require('electron').safeStorage });
+  glimLoginsObj = new Logins.LoginStore({ dir, box });
+  glimLoginsObj.warm().catch(() => {});   // every saved password into memory once, so the redaction pass can catch it anywhere
+  loginCapture = new Logins.LoginCapture({ store: glimLoginsObj,
+    allowHost: (host) => !SafetyMod.isBanking(host) || glimSafety().level('banking') !== 'never',
+    offer: (ev) => send('logins:offer', ev) });
+  return glimLoginsObj;
+}
+// a browser view of Glim's (or its sign-in popup) reports a submitted form; the sender's real URL decides the site, never the message
+ipcMain.on('pm-login:submit', (e, d) => {
+  try {
+    const wc = e.sender; if (!wc || wc.isDestroyed() || (ui && wc === ui.webContents)) return;
+    const rec = [...browsers.values()].find((r) => r.br.wc === wc || (r.popup && r.popup.webContents === wc));
+    if (!rec || rec.helper) return;   // only Ben's own browsing offers a Save card
+    const url = (e.senderFrame && e.senderFrame.url) || wc.getURL();
+    glimLogins();
+    loginCapture.submitted({ key: wc.id, url, user: d && d.user, password: d && d.password, filling: rec.br.wc === wc && rec.br.filling > Date.now(),
+      probe: () => wc.isDestroyed() ? Promise.resolve(null) : wc.executeJavaScript('(' + Logins.pageLoginProbe.toString() + ')()') }).catch(() => {});
+  } catch (err) { /* never breaks browsing */ }
+});
+// "save my Schoology login" in Ben's own chat box -> the masked dialog (prefilled with the likely site), and a note for the model
+async function loginDialogFor(text, threadId) {
+  const ask = Logins.saveLoginAsk(text); if (!ask) return '';
+  let page = ''; try { const b = browsers.get(threadId); page = b ? b.br.state().url : ''; } catch (e) { /* none */ }
+  let hosts = []; try { hosts = await signedInHosts(); } catch (e) { /* none */ }
+  send('logins:dialog', { site: Logins.guessOrigin(ask.word, page, hosts), word: ask.word });
+  return Logins.DIALOG_NOTE(ask.word);
+}
+
 // ---- sleep for the small judges (sleep track T1: src/sleepjudges.js + src/breaks.js; toy lab premonition-sleeplab-t1) -------------
 // Only the parts that passed the toy test (3/3 seeds): the guesser's fade rates are LEARNED per stream (app / when / idle) instead of
 // a fixed 0.8; the scientist's think-longer threshold (extra tries only when the first try is unsure); where to look (the early-wake
@@ -2199,7 +2249,12 @@ function registerIpc() {
     ipcMain.handle('safety:get', () => ({ levels: glimSafety().levels(), hands: glimSafety().hands() }));
     ipcMain.handle('safety:set', (e, cat, level) => (own(e) ? glimSafety().set([{ cat, level }], { source: 'settings' }) : { ok: false }));
     ipcMain.handle('safety:undo', (e, token) => (own(e) ? glimSafety().undo(token, { source: 'settings' }) : { ok: false }));
-    ipcMain.handle('safety:hands', (e, patch) => (own(e) ? glimSafety().setHands(patch, { source: 'settings' }) : { ok: false })); }
+    ipcMain.handle('safety:hands', (e, patch) => (own(e) ? glimSafety().setHands(patch, { source: 'settings' }) : { ok: false }));
+    // LOGIN1 saved logins: only the app's own window; the list never holds a password
+    ipcMain.handle('logins:list', (e) => (own(e) ? glimLogins().list() : []));
+    ipcMain.handle('logins:remove', (e, origin) => (own(e) ? glimLogins().remove(origin) : { ok: false }));
+    ipcMain.handle('logins:answer', (e, token, choice) => { if (!own(e)) return { ok: false }; glimLogins(); return loginCapture.answer(String(token || ''), String(choice || '')); });
+    ipcMain.handle('logins:add', (e, site, user, password) => { if (!own(e)) return { ok: false }; const o = Logins.originFromInput(site); if (!o) return { ok: false, error: 'Type the site as https://… or just its name, like dresden.schoology.com.' }; return glimLogins().save(o, user, password); }); }
   h('threads:list', () => store.listThreads());
   // One Glim chat (Ben Oct 28): "new thread" hands back the existing main chat; only the very first run creates one.
   h('threads:new', () => { resetModelToDefault(); const old = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); if (old) { const t = store.loadThread(old.id); if (t) { openThreadId = t.id; return t; } } const t = store.newThread(); store.saveThread(t); openThreadId = t.id; return t; });
@@ -2227,6 +2282,7 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
+    text = Logins.scrub(String(text == null ? '' : text));   // LOGIN1: a saved password pasted here never reaches the model, the day log or sleep
     sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz(); aoSciEnd('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
@@ -2257,6 +2313,8 @@ function registerIpc() {
     // always-on v2: the diary is shown ONLY when Ben asks ("Glim, what did you do?"): a hidden note with the activity recap
     const diary = !goals && !learn && aoState && DiaryAO.isDiaryAsk(text) ? aoDiaryNote() : '';
     const timeNote = !goals && !learn && !diary ? aoTimeNote(text) : '';   // feeling time: a time question gets a hidden note from the timestamped records
+    const loginNote = !goals && !learn && !diary && !timeNote ? await loginDialogFor(text, t.id).catch(() => '') : '';   // LOGIN1: "save my Schoology login" -> the masked dialog
+    if (loginNote) { agent.run(t, loginNote + text, { display: text }).then(() => send('threads:changed', {})).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) })); return { started: true, title: t.title, loginDialog: true }; }
     agent.run(t, timeNote ? timeNote + text : goals ? goalsNote + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : timeNote ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
@@ -2518,6 +2576,7 @@ app.whenReady().then(async () => {
   if (FEATURES.tray && Platform.startedHidden(process.platform, process.argv)) ensureTray();
   buildAgent();
   registerIpc();
+  try { glimLogins(); } catch (e) { /* LOGIN1: no saved logins this run */ }
   updater = new Updater({ version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
     onState: (st) => send('update:state', st), quit: () => { quitting = true; app.quit(); } });
   if (app.isPackaged && !E2E && store.getSettings().autoUpdateCheck !== false) updater.startTimer(30000);

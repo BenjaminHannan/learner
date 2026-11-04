@@ -368,6 +368,104 @@ class Browser {
     return this.result('Typed into [' + id + ']' + (p.label ? ' “' + p.label + '”' : '') + (enter ? ' + Enter' : ''), 'type');
   }
 
+  // track LOGIN1: sign in with Ben's saved login. lookup(pageUrl) -> {user, password} for EXACTLY that https origin, or null.
+  // The app fills the fields and submits; the result names only the user and host (never the password).
+  // -> {text, summary, kind: 'signed'|'none'|'code'|'failed'|'noform'|'http', host}
+  async signIn(lookup) {
+    const np = this.noPage(); if (np) return np;
+    const L = require('../logins');
+    this.filling = Date.now() + 60000;   // the preload sees this fill as a form submit: main ignores it while this is set
+    try {
+      let used = null;
+      for (let step = 0; step < 3; step++) {
+        const url = this.wc.getURL();
+        const origin = L.originOf(url);
+        const host = (() => { try { return new URL(url).host; } catch (e) { return url; } })();
+        if (!origin) return { text: L.say.notHttps(), kind: 'http', host, error: true, summary: 'Did not sign in (not https)' };
+        let f; try { f = await this.wc.executeJavaScript(call(L.pageLoginForm)); } catch (e) { return { text: 'Error: page not readable (' + e.message + ')', error: true }; }
+        if (!f.pw && !f.user) {
+          if (f.code) return { text: L.say.code(host), kind: 'code', host, summary: 'A code is needed on ' + host };
+          if (used) break;   // the form went away after submitting: done
+          return { text: L.say.noForm(host), kind: 'noform', host, error: true, summary: 'No sign-in form on ' + host };
+        }
+        const login = await lookup(url);
+        if (!login || L.originOf(url) !== L.originOf(this.wc.getURL())) return { text: L.say.noLogin(host), kind: 'none', host, summary: 'No saved login for ' + host };
+        used = { user: login.user, host, url };
+        if (f.user && f.userValue !== login.user) await this._fillLogin('user', login.user);
+        if (f.pw) {
+          if (L.originOf(this.wc.getURL()) !== login.origin) return { text: L.say.noLogin(host), kind: 'none', host, summary: 'No saved login for ' + host };   // moved mid-way
+          await this._fillLogin('pw', login.password);
+          const before = this.wc.getURL();
+          await this._submitLogin(f.submit, 'pw');
+          await sleep(300); await this.waitSettled();
+          // nothing happened (a click that did not land): press the button from the page once
+          let p0 = null; try { p0 = await this.wc.executeJavaScript(call(L.pageLoginProbe)); } catch (e) { p0 = null; }
+          if (p0 && p0.pw && !p0.failed && this.wc.getURL() === before && f.submit) { await this._submitLogin(f.submit, 'pw', true); await sleep(300); await this.waitSettled(); }
+          break;
+        }
+        // a username-only step: Next, then wait for the password field (or a new page)
+        let moved = false;
+        for (let attempt = 0; attempt < 2 && !moved; attempt++) {   // the second attempt presses the button from the page (a click that did not land)
+          await this._submitLogin(f.submit, 'user', attempt > 0);
+          await sleep(300); await this.waitSettled();
+          for (let i = 0; i < 8; i++) {
+            let g = null; try { g = await this.wc.executeJavaScript(call(L.pageLoginForm)); } catch (e) { g = null; }
+            if (!g || g.pw || g.code || !g.user || L.originOf(this.wc.getURL()) !== origin) { moved = true; break; }
+            await sleep(400);
+          }
+        }
+        if (!moved) return { text: L.say.failed(login.user, host, 'the Next step did not open') , kind: 'failed', host, error: true, summary: 'Sign-in stuck on ' + host };
+      }
+      if (!used) return { text: L.say.noForm(this.state().url), kind: 'noform', error: true };
+      await sleep(500);
+      let g = null; try { g = await this.wc.executeJavaScript(call(L.pageLoginForm)); } catch (e) { g = null; }
+      let p = null; try { p = await this.wc.executeJavaScript(call(L.pageLoginProbe)); } catch (e) { p = null; }
+      this.readCache = { url: '', pages: [] };
+      const snap = await this.snapshot('click');
+      const tail = '\n' + (typeof snap === 'string' ? snap : (snap && snap.text) || '');
+      if (g && g.code) return { text: L.say.code(used.host) + tail, kind: 'code', host: used.host, summary: 'A code is needed on ' + used.host };
+      if ((p && (p.failed || p.pw)) || (g && g.pw && g.alerts && g.alerts.length) || (g && g.user && !g.pw && g.userValue === used.user && L.originOf(this.wc.getURL()) === L.originOf(used.url))) return {   // still the form: not signed in
+        text: L.say.failed(used.user, used.host, g && g.alerts && g.alerts[0]) + tail, kind: 'failed', host: used.host, error: true, summary: 'Sign-in did not go through on ' + used.host };
+      return { text: L.say.signedIn(used.user, used.host) + tail, kind: 'signed', host: used.host, summary: 'Signed in on ' + used.host };
+    } finally { this.filling = Date.now() + 4000; }
+  }
+
+  async _fillLogin(which, value) {
+    const sel = '[data-desk-login="' + which + '"]';
+    const ok = await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'' + sel + '\');if(!e)return false;e.scrollIntoView({block:"center"});e.focus();try{e.select()}catch(x){}return true})()').catch(() => false);
+    if (!ok) return false;
+    this.focusPage();
+    this.wc.insertText(String(value));
+    await sleep(80);
+    // a page that missed the typed text (it was not focused) gets the value set directly, as browser_type does
+    const len = await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'' + sel + '\');return e?e.value.length:-1})()').catch(() => -1);
+    if (len !== String(value).length) {
+      await this.wc.executeJavaScript('(function(v){var e=document.querySelector(\'' + sel + '\');if(!e)return;var p=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");p.set.call(e,v);e.dispatchEvent(new Event("input",{bubbles:true}));e.dispatchEvent(new Event("change",{bubbles:true}))})(' + JSON.stringify(String(value)) + ')').catch(() => {});
+    }
+    return true;
+  }
+
+  async _submitLogin(hasButton, field, fromPage) {
+    if (hasButton && fromPage) { await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'[data-desk-login="submit"]\');if(e)e.click()})()').catch(() => {}); return; }
+    if (hasButton) {
+      const p = await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'[data-desk-login="submit"]\');if(!e)return null;var r=e.getBoundingClientRect();var x=Math.round(r.left+r.width/2),y=Math.round(r.top+r.height/2);var h=document.elementFromPoint(x,y);return{x:x,y:y,hit:!!h&&(h===e||e.contains(h)||h.contains(e))}})()').catch(() => null);
+      if (p && p.hit) {
+        this.focusPage();
+        this.wc.sendInputEvent({ type: 'mouseMove', x: p.x, y: p.y });
+        this.wc.sendInputEvent({ type: 'mouseDown', x: p.x, y: p.y, button: 'left', clickCount: 1 });
+        this.wc.sendInputEvent({ type: 'mouseUp', x: p.x, y: p.y, button: 'left', clickCount: 1 });
+        return;
+      }
+      if (p) { await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'[data-desk-login="submit"]\');if(e)e.click()})()').catch(() => {}); return; }
+    }
+    // no button: Enter in the field (implicit form submission)
+    await this.wc.executeJavaScript('(function(){var e=document.querySelector(\'[data-desk-login="' + field + '"]\');if(e)e.focus()})()').catch(() => {});
+    this.focusPage();
+    this.wc.sendInputEvent({ type: 'keyDown', keyCode: 'Enter' });
+    this.wc.sendInputEvent({ type: 'char', keyCode: '\r' });
+    this.wc.sendInputEvent({ type: 'keyUp', keyCode: 'Enter' });
+  }
+
   async scroll(direction) {
     const np = this.noPage(); if (np) return np;
     const dy = direction === 'up' ? -0.85 : 0.85;

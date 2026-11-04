@@ -153,7 +153,8 @@ function createGateway(o) {
   const logDiary = (rec) => {
     if (!o.diaryDir || (!rec.response.content && !rec.stopped) || !rec.messages.length) return;
     if (o.skipDiary && o.skipDiary()) return; // the sleep check-in's own turns are not something to learn from
-    try { fs.mkdirSync(o.diaryDir, { recursive: true }); fs.appendFileSync(path.join(o.diaryDir, dayOf(new Date(rec.ts)) + '.jsonl'), JSON.stringify(rec) + '\n'); } catch (e) { /* the diary never breaks chat */ }
+    const line = require('./logins').scrubRecord(JSON.stringify(rec)); if (line == null) return;   // LOGIN1: a record holding a saved password is never learned from
+    try { fs.mkdirSync(o.diaryDir, { recursive: true }); fs.appendFileSync(path.join(o.diaryDir, dayOf(new Date(rec.ts)) + '.jsonl'), line + '\n'); } catch (e) { /* the diary never breaks chat */ }
   };
   const readBody = (req) => new Promise((resolve, reject) => { const b = []; req.on('data', (d) => b.push(d)); req.on('end', () => resolve(Buffer.concat(b).toString('utf8'))); req.on('error', reject); });
 

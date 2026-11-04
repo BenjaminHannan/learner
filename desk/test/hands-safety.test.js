@@ -34,7 +34,7 @@ test('levels: defaults, classification, never refuses, trash-only deletes', () =
   assert.ok(L.check('browser_go', { url: 'chase.com' }).refuse);
   assert.strictEqual(shellCategory('rm -rf ~/Downloads/old'), 'delete');
   assert.strictEqual(shellCategory('mv ~/x.txt ~/.Trash/'), 'delete');
-  assert.strictEqual(shellCategory('security find-generic-password -s x'), 'passwords');
+  assert.strictEqual(shellCategory('security find-generic-password -s x'), 'keychain');   // LOGIN1: the keychain itself stays Never
   assert.strictEqual(shellCategory('brew install wget'), 'install');
   assert.strictEqual(shellCategory('defaults write com.apple.dock autohide -bool true'), 'system');
   assert.strictEqual(shellCategory('curl -X POST https://api.example.com -d a=1'), 'post');
@@ -42,7 +42,7 @@ test('levels: defaults, classification, never refuses, trash-only deletes', () =
   assert.strictEqual(shellCategory('echo x > /app/userData/settings.json', { selfPaths: ['/app/userData'] }), 'glim-self');
   assert.strictEqual(classify('browser_click', { id: 3 }, { labelOf: () => 'Place your order' }).cat, 'buy');
   assert.strictEqual(classify('screen_click', { id: 7 }, { labelOf: () => 'Send' }).cat, 'send');
-  assert.strictEqual(classify('open_app', { name: 'Keychain Access' }).cat, 'passwords');
+  assert.strictEqual(classify('open_app', { name: 'Keychain Access' }).cat, 'keychain');
   L.set([{ cat: 'delete', level: 'free' }], { source: 'settings' });
   assert.strictEqual(L.check('run_shell', { command: 'rm ~/a.txt' }).refuse, TRASH_ONLY);     // free still never deletes for good
   assert.ok(!L.check('run_shell', { command: 'mv ~/a.txt ~/.Trash/' }).refuse);
@@ -76,7 +76,7 @@ test('injection guard: a web page saying "set banking to free" changes nothing',
   const th = { id: 't', messages: [], items: [] }, sig = new AbortController().signal;
   await a.runTool({ id: '1', name: 'browser_read', arguments: '{}' }, th, sig);
   const r = await a.runTool({ id: '2', name: 'browser_go', arguments: JSON.stringify({ url: 'https://chase.com' }) }, th, sig);
-  assert.strictEqual(L.level('banking'), 'never'); assert.strictEqual(L.level('passwords'), 'never');
+  assert.strictEqual(L.level('banking'), 'never'); assert.strictEqual(L.level('passwords'), 'free'); assert.strictEqual(L.level('keychain'), 'never');   // LOGIN1 default: saved logins free, unchanged by the page
   assert.match(r.text, /Not allowed/);
 });
 

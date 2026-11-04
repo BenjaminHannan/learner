@@ -25,7 +25,10 @@ const CATEGORIES = [
   { id: 'buy', label: 'Buy or pay', def: 'ask' },
   { id: 'install', label: 'Install apps', def: 'ask' },
   { id: 'system', label: 'Change system settings', def: 'ask' },
-  { id: 'passwords', label: 'Passwords and keychain', def: 'never' },
+  // LOGIN1 (Ben 2026-11-04): Glim may sign in with logins Ben saved (Ben saving one is the consent). The app fills them; the model never
+  // sees a password. Keychain / password-manager apps and dumping or exporting the keychain stay Never, fixed (the 'keychain' row).
+  { id: 'passwords', label: 'Sign in with your saved logins', def: 'free' },
+  { id: 'keychain', label: 'Keychain and password-manager apps', def: 'never', locked: true },
   { id: 'banking', label: 'Banking sites', def: 'never' },
   { id: 'glim-self', label: 'Edit Glim\'s own code, settings, logs or sleep checks', def: 'never' }
 ];
@@ -51,7 +54,7 @@ function labelCategory(label) {
   return null;
 }
 const APP_CATS = [
-  ['passwords', /^(keychain access|passwords|1password|bitwarden|lastpass|dashlane)(\.app)?$/i],
+  ['keychain', /^(keychain access|passwords|1password|bitwarden|lastpass|dashlane)(\.app)?$/i],
   ['system', /^(system settings|system preferences|disk utility|terminal|activity monitor)(\.app)?$/i],
   ['install', /^(app store)(\.app)?$/i]
 ];
@@ -62,7 +65,7 @@ function shellCategory(cmd, o) {
   const c = String(cmd || '');
   const self = (o && o.selfPaths || []).filter(Boolean);
   const touchesSelf = self.some((p) => c.includes(p) || c.includes(p.replace(process.env.HOME || '\0', '~')));
-  if (/\bsecurity\s+(find|dump|add|delete|unlock|export|set)-|\bkeychain\b|\.keychain(-db)?\b/i.test(c)) return 'passwords';
+  if (/\bsecurity\s+(find|dump|add|delete|unlock|export|set)-|\bkeychain\b|\.keychain(-db)?\b/i.test(c)) return 'keychain';
   if (touchesSelf && /(\brm\b|\bmv\b|\bcp\b|>|\bsed\s+-i|\btee\b|\bchmod\b|\btruncate\b|\btouch\b|\bln\b|\bperl\s+-[a-z]*i|\bpython\d?\b|\bnode\b|\bgit\b|\bdd\b)/.test(c)) return 'glim-self';
   if (/\b(curl|wget)\b[^|;]*\bhttps?:\/\/[^\s'"]*(\.|\/)?(chase|wellsfargo|bankofamerica|capitalone|usbank)\b/i.test(c)) return 'banking';
   if (/\bsudo\b|\bdefaults\s+write\b|\b(systemsetup|networksetup|pmset|scutil|launchctl|csrutil|spctl|tmutil|dscl|nvram|kextload|kmutil|profiles)\b/.test(c)) return 'system';
@@ -84,6 +87,7 @@ function classify(name, args, ctx) {
     case 'browser_read': case 'diary_search': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'read' };
     case 'memory_save': case 'memory_forget': case 'track_add': case 'track_done': return { cat: 'notes' };
     case 'browser_go': return { cat: isBanking(args.url) ? 'banking' : 'browse' };
+    case 'browser_sign_in': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'passwords' };   // LOGIN1: a bank keeps its own level
     case 'browser_back': case 'browser_scroll': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'browse' };
     case 'browser_click': case 'browser_type': {
       if (isBanking(ctx.pageUrl)) return { cat: 'banking' };
@@ -92,7 +96,7 @@ function classify(name, args, ctx) {
     case 'open_app': return { cat: appCategory(args.name) || 'open-apps' };
     case 'screen_click': case 'screen_type': case 'screen_key': {
       const front = appCategory(ctx.frontApp);
-      if (front === 'passwords') return { cat: 'passwords' };
+      if (front === 'keychain') return { cat: 'keychain' };
       let c = 'hands';
       const l = name === 'screen_click' && args.id != null ? lab(args.id) : '';
       const lc = labelCategory(l);
@@ -117,14 +121,14 @@ class SafetyLevels {
     this.undos = new Map();
   }
   save() { if (!this.file) return; try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); const t = this.file + '.tmp'; fs.writeFileSync(t, JSON.stringify(this.st, null, 1)); fs.renameSync(t, this.file); } catch (e) { /* in memory */ } }
-  level(cat) { const v = this.st.levels[cat]; return LEVELS.includes(v) ? v : (BY_ID[cat] ? BY_ID[cat].def : 'ask'); }
-  levels() { return CATEGORIES.map((c) => ({ id: c.id, label: c.label, level: this.level(c.id), def: c.def })); }
+  level(cat) { if (BY_ID[cat] && BY_ID[cat].locked) return BY_ID[cat].def; const v = this.st.levels[cat]; return LEVELS.includes(v) ? v : (BY_ID[cat] ? BY_ID[cat].def : 'ask'); }
+  levels() { return CATEGORIES.map((c) => ({ id: c.id, label: c.label, level: this.level(c.id), def: c.def, locked: !!c.locked })); }
   hands() { return { ...this.st.hands, idleMin: Math.max(HANDS_DEFAULTS.idleMin, Number(this.st.hands.idleMin) || HANDS_DEFAULTS.idleMin), askWaitS: Math.max(10, Number(this.st.hands.askWaitS) || HANDS_DEFAULTS.askWaitS) }; }
   // changes = [{cat, level}]; o.source must be one of BEN_SOURCES. -> {ok, notice, undo} (undo = a token for undo())
   set(changes, o) {
     const source = o && o.source;
     if (!BEN_SOURCES.has(source)) return { ok: false, error: 'Only you can change a safety level (from the chat, your voice, or Settings).' };
-    changes = (Array.isArray(changes) ? changes : [changes]).filter((c) => c && BY_ID[c.cat] && LEVELS.includes(c.level));
+    changes = (Array.isArray(changes) ? changes : [changes]).filter((c) => c && BY_ID[c.cat] && !BY_ID[c.cat].locked && LEVELS.includes(c.level));
     if (!changes.length) return { ok: false, error: 'Nothing to change.' };
     const before = {}; for (const c of changes) before[c.cat] = this.st.levels[c.cat];
     for (const c of changes) this.st.levels[c.cat] = c.level;
@@ -169,7 +173,7 @@ function noticeOf(changes) {
   const say = { free: 'without asking', ask: 'only after asking you', never: 'never' };
   return changes.map((c) => c.level === 'never' ? 'Glim will never ' + verbOf(c.cat) + '.' : 'Glim can now ' + verbOf(c.cat) + ' ' + say[c.level] + '.').join(' ');
 }
-const VERBS = { look: 'look at the screen', read: 'read files and pages', search: 'search the web', notes: 'keep notes', 'own-folder': 'use its own folder', 'open-apps': 'open apps', browse: 'use its own browser', hands: 'use your mouse and keyboard', send: 'send messages or email', post: 'post online', delete: 'delete files (to the Trash)', buy: 'buy or pay', install: 'install apps', system: 'change system settings', passwords: 'touch passwords or the keychain', banking: 'open banking sites', 'glim-self': 'edit its own code, settings or logs' };
+const VERBS = { look: 'look at the screen', read: 'read files and pages', search: 'search the web', notes: 'keep notes', 'own-folder': 'use its own folder', 'open-apps': 'open apps', browse: 'use its own browser', hands: 'use your mouse and keyboard', send: 'send messages or email', post: 'post online', delete: 'delete files (to the Trash)', buy: 'buy or pay', install: 'install apps', system: 'change system settings', passwords: 'sign in with your saved logins', keychain: 'open the keychain or password apps', banking: 'open banking sites', 'glim-self': 'edit its own code, settings or logs' };
 const verbOf = (cat) => VERBS[cat] || cat;
 
 // ---- Ben's words -> level changes (deterministic; only ever called with Ben's own chat / voice text) ------------------------------------
@@ -180,7 +184,7 @@ const CAT_WORDS = [
   ['buy', /\b(buy\w*|purchas\w*|pay\w*|order\w* (things|stuff)|spend\w* money|check\w* out)\b/],
   ['install', /\b(install\w*)\b/],
   ['system', /\b(system settings?|system preferences|mac settings|change (my )?settings)\b/],
-  ['passwords', /\b(password\w*|keychain)\b/],
+  ['passwords', /\b(password\w*|saved logins?|logins?|sign(?:ing)? (?:me )?in|log(?:ging)? (?:me )?in)\b/],
   ['banking', /\b(bank\w*)\b/],
   ['hands', /\b(mouse|keyboard|click\w*|typ(e|ing) for me|control (my|the) (computer|mac)|use (my|the) (computer|mac))\b/],
   ['open-apps', /\b(open\w* apps?)\b/],

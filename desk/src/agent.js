@@ -29,8 +29,9 @@ const MAX_TOOL_CHARS = 8000;
 
 // ---- verification layer ----------------------------------------------------------------------
 // Tools that change something; a final answer after any of them gets one cheap check turn first.
-const STATE_CHANGING = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_back', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
-const RECHECK_TOOLS = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_back', 'browser_scroll', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
+const { scrub: scrubSecret } = require('./logins');   // LOGIN1: drops any line holding a saved password
+const STATE_CHANGING = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_back', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
+const RECHECK_TOOLS = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_back', 'browser_scroll', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
 const MAX_VERIFY = 2;                 // check turns per task (so it can never loop)
 // The gateway maps qwen36-fast to the same upstream model with thinking off, so the check shares the prompt cache with real turns.
 const VERIFY_MODEL = 'qwen36-fast';
@@ -83,7 +84,7 @@ const HELPER_RUN = { steps: 40, mins: 20 }, LEARN_RUN = { steps: 80, mins: 45 };
 const WRAP_NOTE = ' Time is up for this run: no more tools. Write your report now from what you found, and say in one line what is still not done.';
 const WRAP_EMPTY = 'This run reached its time or step limit before writing a report.';
 const WRAP_TOKENS = 1500;
-const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. Never type a password: on a sign-in page the app lets Ben sign in himself.';
+const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. Never type a password: on a sign-in page call browser_sign_in (the app fills Ben\'s saved login), or the app lets Ben sign in himself.';
 const CAP_REPLY_TOKENS = 1500;   // brief thinking, then one or two sentences; a longer run-on is cut
 const CAP_REPLY_SECS = 20;       // the forced reply still thinking after this: dropped, and the task just goes on
 const PLAN_WORDS = /\b(?:I(?:'ll| will|'m going to| am going to)|let me)\b/i;
@@ -424,6 +425,7 @@ function defaultSummary(name, a) {
     case 'browser_type': return 'Typed into [' + a.id + ']' + (a.enter ? ' and pressed Enter' : '');
     case 'browser_scroll': return 'Scrolled ' + (a.direction || 'down');
     case 'browser_back': return 'Went back';
+    case 'browser_sign_in': return 'Signing in';
     case 'browser_read': return 'Read page' + (a.page > 1 ? ' ' + a.page : '');
     case 'screen_look': return 'Looked at ' + (a.app || 'the front app');
     case 'screen_click': return a.id !== undefined ? 'Pressed screen element [' + a.id + ']' : 'Clicked screen at ' + a.x + ',' + a.y;
@@ -935,7 +937,7 @@ class Agent {
       thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'the reply asked for login details' });
       this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
       this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary, preview: 'the reply asked for login details', result: '' });
-      thread.messages.push({ role: 'user', content: CHECK_MARK + P(' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.') });
+      thread.messages.push({ role: 'user', content: CHECK_MARK + P(' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page call browser_sign_in (the app fills his saved login), or click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.') });
       return 'continue';
     }
     // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).
@@ -1001,7 +1003,7 @@ class Agent {
     this.emit({ type: 'step_start', id: stepId, tool: name, args: args || call.arguments, summary: summaryStart });
     const MAXC = (() => { try { return Number((this.o.getSettings() || {}).maxToolChars) || MAX_TOOL_CHARS; } catch (e) { return MAX_TOOL_CHARS; } })();
     const finish = (text, ok, summary) => {
-      text = String(text == null ? '' : text);
+      text = scrubSecret(String(text == null ? '' : text)); if (summary) summary = scrubSecret(String(summary));   // LOGIN1: no saved password ever reaches the model
       if (text.length > MAXC) text = text.slice(0, MAXC) + '\n[truncated]';
       item.ok = ok; item.preview = short(text, 400); if (summary) item.summary = summary;
       this.emit({ type: 'step_end', id: stepId, tool: name, ok, summary: item.summary, preview: item.preview, result: text.slice(0, 2000) });

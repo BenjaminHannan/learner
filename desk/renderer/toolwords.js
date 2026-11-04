@@ -6,7 +6,7 @@
   const WORDS = {
     agent_list: 'the Motes list', agent_start: 'a new Mote', agent_update: 'the Mote', ask_user: 'a quick question',
     browser_back: 'going back', browser_click: 'a click', browser_go: 'the browser', browser_read: 'reading the page',
-    browser_scroll: 'scrolling', browser_type: 'typing', diary_search: 'the diary', memory_forget: 'forgetting a note',
+    browser_scroll: 'scrolling', browser_sign_in: 'signing in', browser_type: 'typing', diary_search: 'the diary', memory_forget: 'forgetting a note',
     memory_save: 'memory', open_app: 'opening the app', run_shell: 'the Terminal', screen_click: 'a click', screen_key: 'a key press',
     screen_look: 'a look at the screen', screen_type: 'typing', track_add: 'the tracking list', track_done: 'the tracking list',
     web_search: 'a web search'

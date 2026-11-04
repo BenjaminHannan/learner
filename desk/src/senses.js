@@ -90,6 +90,7 @@ class AlwaysOnState {
     let t = String(text || '').replace(/\s+/g, ' ').trim();
     if (!t) return null;
     if (isPrivate(t)) { this.dropped++; return null; }   // checked on the full text, before clipping
+    if (require('./logins').holdsSecret(t)) { this.dropped++; return null; }   // LOGIN1: a saved password never enters the day log
     if (t.length > MAX_TEXT) t = t.slice(0, MAX_TEXT - 1) + '…';
     const last = [...this.inbox].reverse().find((x) => x.sense === sense);
     if (last && last.text === t) return null;
