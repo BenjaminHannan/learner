@@ -178,10 +178,14 @@ test('steer while the model is writing: the half-written reply stays (cut off) a
     await done;
     assert.ok(Date.now() - t0 < 3000, 'read in under 3 seconds, not after the whole reply');
     assert.ok(evs.some((e) => e.type === 'assistant_end' && e.cut), 'the written part is kept, marked cut off');
-    assert.strictEqual(gw.requests.length, 2);
-    assert.match(gw.requests[1].messages.at(-1).content, /actually use blue$/);
+    const reqs = gw.requests.filter((r) => r.messages);   // (some other program on this Mac sometimes probes local ports: a GET with no body)
+    assert.strictEqual(reqs.length, 2);
+    assert.match(reqs[1].messages.at(-1).content, /actually use blue$/);
     assert.ok(t.items.some((i) => i.t === 'assistant' && i.cut && /still being written|a long reply/.test(i.text)), 'kept on screen');
-    assert.ok(t.messages.some((m) => m.role === 'assistant' && /\[cut off/.test(m.content || '')), 'the model knows it was cut off');
+    // UI2: no "[cut off: ...]" line in the reply (the model copied it as text); the note rides with his message, model context only
+    assert.ok(!t.messages.some((m) => m.role === 'assistant' && /\[cut off/.test(m.content || '')), 'no marker in the stored reply');
+    assert.match(reqs[1].messages.at(-1).content, /still writing your reply above, so it stopped there\. What you already did still stands/);
+    assert.ok(!t.items.some((i) => /\[cut off|still writing your reply/.test(i.text || '')), 'the note never reaches the screen');
     assert.ok(t.messages.some((m) => m.role === 'assistant' && /got it, blue/.test(m.content || '')));
   } finally { gw.close(); }
 });
@@ -845,5 +849,70 @@ test('a tool call cut off mid-arguments is stored as {} so the next request stil
     assert.strictEqual(sent.tool_calls[0].function.arguments, '{}');
     assert.match(gw.requests[1].messages.find((m) => m.role === 'tool').content, /not valid JSON \(the call looks cut off\)\. Call the tool again/);
     assert.strictEqual(t.messages.at(-1).content, 'Report: nothing due found.');
+  } finally { gw.close(); }
+});
+
+
+// ---- UI2 (Ben Nov 4, M3): a steer must not throw away the step in progress ----
+const waitFor = async (cond, ms) => { const end = Date.now() + (ms || 5000); while (!cond()) { if (Date.now() > end) throw new Error('timed out'); await new Promise((r) => setTimeout(r, 5)); } };
+
+test('UI2 steer while a tool call is streaming: the call finishes and runs, the next model call sees the tool result AND his words', async () => {
+  const gw = await startGateway([
+    { content: 'Opening the school page.', tool_calls: [{ name: 'browser_go', arguments: { url: 'https://dresden.schoology.com/some/long/path/so/the/args/stream/slowly' } }], toolDelayMs: 40 },
+    { content: 'Signed in page is open; using the Google sign-in as you said.' }
+  ]);
+  try {
+    let agent; const t = mkThread(); const evs = []; const ran = [];
+    agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { browser_go: async (a) => { ran.push(a.url); return 'URL: ' + a.url + ' | Title: Sign in'; } }, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const done = agent.run(t, 'get my assignments');
+    await waitFor(() => agent.reqTool === true);   // the tool call has started streaming
+    assert.strictEqual(agent.steer('use the google sso'), true);
+    await done;
+    assert.deepStrictEqual(ran, ['https://dresden.schoology.com/some/long/path/so/the/args/stream/slowly'], 'the step was not thrown away');
+    assert.ok(!evs.some((e) => e.cut), 'nothing was cut');
+    assert.ok(gw.requests.filter((r) => r.messages).length >= 2);   // (a third is the usual self-check after a page change)
+    const m = gw.requests.filter((r) => r.messages)[1].messages;
+    const ti = m.findIndex((x) => x.role === 'tool');
+    assert.ok(ti > 0 && /Title: Sign in/.test(m[ti].content), 'tool result kept');
+    assert.strictEqual(m[ti - 1].role, 'assistant'); assert.ok(m[ti - 1].tool_calls && m[ti - 1].tool_calls.length === 1);
+    const last = m.at(-1);
+    assert.strictEqual(last.role, 'user'); assert.ok(m.indexOf(last) > ti, 'his words come after the result');
+    assert.match(last.content, /while you were working\. What you already did above still stands.*carry on.*use the google sso$/s);
+    assert.ok(!JSON.stringify(m).includes('[cut off'));
+    assert.strictEqual(t.items.filter((i) => i.t === 'user' && i.text === 'use the google sso').length, 1, 'his bubble: only his words');
+  } finally { gw.close(); }
+});
+
+test('UI2 steer while narration streams: a tool call that starts within the grace still runs (no cut)', async () => {
+  const gw = await startGateway([
+    { content: 'Clicking Log in now.', delayMs: 60, tool_calls: [{ name: 'browser_click', arguments: { id: 4 } }] },
+    { content: 'ok' }
+  ]);
+  try {
+    let agent; const t = mkThread(); const evs = []; const ran = [];
+    agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: { browser_click: async (a) => { ran.push(a.id); return 'clicked'; } }, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '', steerGraceMs: 1500 });
+    const done = agent.run(t, 'log in');
+    await waitFor(() => evs.some((e) => e.type === 'text'));
+    agent.steer('I told you dresden.schoology.com');
+    await done;
+    assert.deepStrictEqual(ran, [4]);
+    assert.ok(!evs.some((e) => e.cut));
+    assert.match(gw.requests.filter((r) => r.messages)[1].messages.at(-1).content, /What you already did above still stands.*I told you dresden\.schoology\.com$/s);
+  } finally { gw.close(); }
+});
+
+test('UI2 steer while only thinking (nothing on screen): cut at once, no empty bubble, no cut note', async () => {
+  const gw = await startGateway([{ reasoning: 'hmm '.repeat(40), reasoningDelayMs: 30, content: 'never shown', hang: true }, { content: 'ok blue' }]);
+  try {
+    let agent; const t = mkThread(); const evs = [];
+    agent = new Agent({ getSettings: settings(gw, { thinkCapSecs: 0 }), toolDefs: buildTools({}), tools: {}, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    const done = agent.run(t, 'paint it');
+    await waitFor(() => evs.some((e) => e.type === 'reasoning'));
+    const t0 = Date.now();
+    agent.steer('blue please');
+    await done;
+    assert.ok(Date.now() - t0 < 1000, 'read at once');
+    assert.ok(evs.some((e) => e.type === 'discard'));
+    assert.match(gw.requests.filter((r) => r.messages)[1].messages.at(-1).content, /while you were working\..*blue please$/s);
   } finally { gw.close(); }
 });

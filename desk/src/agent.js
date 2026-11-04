@@ -397,6 +397,11 @@ function nowStamp(messages, d) {
 // Ben Oct 28: "tell me what you plan to do and what you are doing, not straight into the task". Per-turn (user message), so the cached system prompt stays small.
 const NARRATE = '[If this needs tools: first say your plan in 2 to 4 short lines, then before each step say in one short line what you do next (plain words, no thinking out loud, no "Next:"). No tools needed: just answer. If he asks a question or asks why you did something, answer that in your first line, then carry on. Read the time in the date stamp: never present a time that has already passed as still ahead (say it is done or past).]';
 const PLAN_STEP_MAX = 120;
+// UI2 (Ben Nov 4, M3: "it just keeps repeating"): a steer never throws away the step in progress. His words reach the model with this note in
+// front (model context only, never on screen), so it carries on from what it already did instead of planning again from zero.
+const STEER_NOTE = '(Ben sent this while you were working. What you already did above still stands: take his words into account and carry on from where you are; do not start over or repeat a plan.)';
+const CUT_NOTE = '(Ben sent this while you were still writing your reply above, so it stopped there. What you already did still stands: take his words into account and carry on from where you are; do not start over or repeat a plan.)';
+const STEER_GRACE_MS = 2000;   // reply text on screen: a tool call that starts within this still runs; otherwise the text is cut
 function extractPlan(text) {
   const lines = String(text || '').split('\n').map((l) => l.trim());
   const items = lines.filter((l) => /^\d+[.)]\s+\S/.test(l)).map((l) => l.replace(/^\d+[.)]\s+/, '').replace(/\*\*|__|`/g, ''));
@@ -492,7 +497,8 @@ class Agent {
     const i = text.lastIndexOf('</think>'); if (i >= 0) text = text.slice(i + 8);
     text = text.replace(/^\s*<think>[\s\S]*$/, '').trim();
     if (!text) { this.emit({ type: 'discard' }); return; }
-    thread.messages.push({ role: 'assistant', content: text + '\n[cut off: Ben sent a new message]' });
+    this.cutNote = true;   // UI2: the steer that follows carries CUT_NOTE (a "[cut off: ...]" line in the reply itself was copied by the model as text)
+    thread.messages.push({ role: 'assistant', content: text });
     thread.items.push({ t: 'assistant', text, cut: true });
     this.emit({ type: 'assistant_end', text, cut: true });
   }
@@ -500,10 +506,23 @@ class Agent {
   steer(text) {
     if (!(this.running && text && text.trim())) return false;
     this.steerQueue.push(text.trim());
-    // Ben Oct 28: "make it so that the message is read in < 3 seconds". A reply being written is dropped so the loop reads his message at once, instead of after the whole reply.
-    if (this.reqCtl) { this.reqSteered = true; try { this.reqCtl.abort(); } catch (e) { /* already over */ } }
+    this.cutForSteer();
     return true;
   }
+
+  // Ben Oct 28: "make it so that the message is read in < 3 seconds". UI2 (Nov 4): only reply text with no tool call in it yet is cut. A tool call
+  // that has started streaming finishes and runs, and his words go to the model with its result. Only thinking so far (nothing on screen): cut at
+  // once. Text on screen: a short grace in which a tool call may still start (it then runs), else the text is cut.
+  cutForSteer() {
+    const rc = this.reqCtl;
+    if (!rc || this.reqTool || !this.steerQueue.length) return;
+    const cut = () => { if (this.reqCtl === rc && !this.reqTool && this.steerQueue.length) { this.reqSteered = true; try { rc.abort(); } catch (e) { /* already over */ } } };
+    if (!String(this.partial || '').trim()) return cut();
+    if (this.steerTimer) return;
+    this.steerTimer = setTimeout(() => { this.steerTimer = null; cut(); }, this.o.steerGraceMs === undefined ? STEER_GRACE_MS : this.o.steerGraceMs);
+    if (this.steerTimer.unref) this.steerTimer.unref();
+  }
+  endRequest() { this.reqCtl = null; clearTimeout(this.steerTimer); this.steerTimer = null; }
 
   stop() { if (this.abort) this.abort.abort(); }
 
@@ -536,7 +555,7 @@ class Agent {
     this.running = true;
     this.abort = new AbortController();
     this.taskAllow = new Set();
-    this.steerQueue = [];
+    this.steerQueue = []; this.cutNote = false;
     this.last = { key: '', count: 0, text: '' };
     this.strikes = 0;
     this.usedState = false; this.usedWeb = false;
@@ -592,9 +611,11 @@ class Agent {
       for (;;) {
         if (signal.aborted) { stopped = true; break; }
         // inject steering messages
+        let firstSteer = true;
         while (this.steerQueue.length) {
           const t = this.steerQueue.shift();
-          pushUser(t);
+          pushUser(firstSteer ? (this.cutNote ? CUT_NOTE : STEER_NOTE) + ' ' + t : t, t);   // the note is for the model; his bubble shows only his words
+          firstSteer = false; this.cutNote = false;
           creativeTurn = false; // a changed request must never reuse proposals for the old wording
           this.emit({ type: 'user', text: t, steer: true });
         }
@@ -642,7 +663,8 @@ class Agent {
         let proposalMs = 0;
         const rc = new AbortController(), onRun = () => rc.abort();
         signal.addEventListener('abort', onRun, { once: true });
-        this.reqCtl = rc; this.reqSteered = false; this.partial = '';
+        this.reqCtl = rc; this.reqSteered = false; this.reqTool = false; this.partial = '';
+        if (this.steerQueue.length) this.cutForSteer();   // he wrote while this step was being set up: read it first (nothing written yet)
         // the first step of Ben's turn: thinking that is still going at the cap is cut, and a short reply is forced (replyAfterCap)
         const capSecs = s.thinkCapSecs === undefined || s.thinkCapSecs === null || s.thinkCapSecs === '' ? THINK_CAP_SECS : Number(s.thinkCapSecs) || 0;
         const cap = { on: step === 1 && !!this.taskText && s.thinkActing !== false && capSecs > 0, thinking: '', last: 0, timer: null, hit: false, tool: false };
@@ -673,12 +695,12 @@ class Agent {
               if (loop.kept === null && !cap.tool && /[.!?\n]\s*$/.test(d) && this.partial.length > 120) { const k = narrationLoop(this.partial); if (k !== null) { loop.kept = k; rc.abort(); } }
             },
             onReasoning: onThink,
-            onToolDelta: () => { cap.tool = true; }
+            onToolDelta: () => { cap.tool = true; this.reqTool = true; clearTimeout(this.steerTimer); this.steerTimer = null; }   // a tool call has started: it runs, a steer waits for its result
           };
           res = await this.requestWithBudget(thread, s, request);
         } catch (e) {
           clearTimeout(cap.timer);
-          signal.removeEventListener('abort', onRun); this.reqCtl = null;
+          signal.removeEventListener('abort', onRun); this.endRequest();
           if (signal.aborted) { stopped = true; break; }
           if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.keepCutOff(thread); continue; }   // his message is read now; what was written so far stays on screen, marked cut off
           let err = e;
@@ -704,7 +726,7 @@ class Agent {
         }
         clearTimeout(cap.timer);
         if (loop.kept !== null && res && !res.cutLoop && !res.toolCalls.length) res = { ...res, content: loop.kept, cutLoop: true };   // the stream ended before the abort landed
-        signal.removeEventListener('abort', onRun); this.reqCtl = null;
+        signal.removeEventListener('abort', onRun); this.endRequest();
         if (this.reqSteered && this.steerQueue.length && !(res && res.toolCalls && res.toolCalls.length)) { this.reqSteered = false; this.keepCutOff(thread); continue; }
         if (signal.aborted) {
           stopped = true;

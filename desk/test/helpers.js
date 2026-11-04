@@ -2,7 +2,7 @@
 const http = require('http');
 
 // Scripted OpenAI-compatible streaming gateway. script: array of responses or functions(req)->response.
-// response: {content?, reasoning?, reasoningDelayMs?, tool_calls?: [{name, arguments(object)}], delayMs?, hang?: true}
+// response: {content?, reasoning?, reasoningDelayMs?, tool_calls?: [{name, arguments(object)}], delayMs?, hang?: true, toolDelayMs?}
 function startGateway(script, opts) {
   const autoVerify = !!(opts && opts.autoVerify); // answer the agent's self-check turn with VERIFIED without consuming the script (e2e)
   const checks = [];
@@ -37,11 +37,12 @@ function startGateway(script, opts) {
       if (r.content) for (const c of chunk(r.content, 5)) { if (gone) return; send({ content: c }); if (r.delayMs) await new Promise((x) => setTimeout(x, r.delayMs)); }
       if (r.hang) { await new Promise((x) => { const t = setTimeout(x, 30000); t.unref(); res.on("close", () => { clearTimeout(t); x(); }); }); if (res.destroyed) return; }
       if (r.tool_calls) {
-        r.tool_calls.forEach((tc, idx) => {
+        for (let idx = 0; idx < r.tool_calls.length; idx++) {
+          const tc = r.tool_calls[idx];
           const args = typeof tc.rawArguments === 'string' ? tc.rawArguments : JSON.stringify(tc.arguments || {});   // rawArguments: a call cut off mid-arguments
           send({ tool_calls: [{ index: idx, id: 'call_' + i + '_' + idx, type: 'function', function: { name: tc.name, arguments: '' } }] });
-          for (const c of chunk(args, 9)) send({ tool_calls: [{ index: idx, function: { arguments: c } }] });
-        });
+          for (const c of chunk(args, 9)) { if (gone) return; send({ tool_calls: [{ index: idx, function: { arguments: c } }] }); if (r.toolDelayMs) await new Promise((x) => setTimeout(x, r.toolDelayMs)); }   // toolDelayMs: a call still streaming (UI2)
+        }
       }
       send({}, r.tool_calls ? 'tool_calls' : 'stop');
       res.end('data: [DONE]\n\n');
