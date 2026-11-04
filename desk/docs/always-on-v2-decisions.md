@@ -64,3 +64,19 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   size (decays over ~6 h). Share +0.4 per thing worth telling, fades over ~2 h; it speaks only if the speak-o-meter and the v1
   limits allow, then resets.
 - **Second flaky test**: `memory: the block is a snapshot…` failed once under `--test-concurrency=2`, passed 4/4 alone.
+
+## Phase 5 (truth-seeking notes)
+- **Where sleep reads notes**: the sleep worker reads userData `memory.json` (SLEEPMLX_USERDATA). `maybe` notes live in a
+  separate `truth-notes.json`; only `confirmed` notes and corrections are written to memory (`memory.save`). v1's loop "note"
+  now goes through the truth check too (it used to write memory directly).
+- **Check**: DuckDuckGo search (the existing `webSearch` tool), sites de-duplicated by registrable domain
+  (`en.wikipedia.org` = `wikipedia.org`), each result judged by chat's model (JSON supports/contradicts/unclear + correction),
+  with a word-overlap fallback that can only "support" or shrug. 2 sites agree → confirmed; 2 contradict → wrong + correction
+  "I thought X; actually Y"; unsettled after 3 tries → `unsure` (never reaches sleep). One check at most every 20 s, only when
+  the Mote gate is open; chat/typing aborts it.
+- **Not changed**: the Learn button's web-studying helper Motes still save their notes with `memory_save`, which already
+  demands an exact quote from a page they actually read (evidence check). They are not re-routed through the 2-site check
+  tonight: that would mean changing the agent's memory tool for helpers (a bigger, riskier change). Recorded as a gap.
+- **Test environment note**: `desk/build/deskhelper` exists in this worktree (v1's build, git-ignored). desk.test.js's `open_app`
+  test runs that real helper, so it fails and sometimes hangs the suite (≈2 in 8 solo runs). A fresh worktree without the
+  binary passes 8/8. Not caused by this work; left in place (not mine to delete). Suite runs here use a 240 s kill + retry.

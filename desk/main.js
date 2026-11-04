@@ -145,6 +145,7 @@ setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
+  try { if (aoTruthCtl && aoMoteGate().budget <= 0) aoStopChecks(); else if (aoSenses && aoSenses.anyEnabled()) aoTruthTick(); } catch (e) { /* next second */ }
   if (aoSenses && aoSenses.anyEnabled() && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
   if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
@@ -1418,6 +1419,7 @@ function aoSetup() {
   if (aoSenses) return;
   aoState = new SensesMod.AlwaysOnState(aoDir(), { onAdd: (e) => aoObserved(e) });
   aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
+  getTruth();
   aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
   aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
@@ -1510,7 +1512,8 @@ function aoEar() {
     learning: lb ? { topic: lb.topic, levels: [] } : null, motes: (lb ? lb.ids.length : 0) + aoPool.count(), ...aoEarExtra() });
 }
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
-function aoNote(text) { try { const r = memory.save(text, 'noticed'); if (!r.ok) console.log('[alwayson] note not saved:', r.error); } catch (e) { /* skipped */ } }
+// v2 (phase 5): a note from the loop is a `maybe` until 2 independent websites confirm it (src/truthnotes.js); only then does it reach memory
+function aoNote(text) { try { if (aoTruth) aoTruth.add(text, { from: 'noticed' }); } catch (e) { /* skipped */ } }
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
 // ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
@@ -1536,7 +1539,8 @@ const MOTE_SYSTEM = 'You are one of Glim\'s Motes, thinking quietly about one to
   + 'Only claims a website could confirm. No opinions, no advice.';
 const MOTE_WHY = { learn: 'Ben asked you to learn this.', day: 'This came up on Ben\'s screen today.', wonder: 'It is on your wonder list (something you did not understand).' };
 let aoMotePrompt = (job) => [{ role: 'system', content: MOTE_SYSTEM }, { role: 'user', content: 'Topic: ' + job.topic + '\n' + (MOTE_WHY[job.kind] || '') + '\nAnswer with the JSON object only.' }];
-let aoMoteClaims = (job, claims) => { if (aoState) aoState.logActivity('thought', { topic: job.topic, claims: claims.length }); };   // phase 5 sends claims to the truth check
+// every claim a Mote makes becomes a `maybe` note for the truth check (phase 5)
+let aoMoteClaims = (job, claims) => { for (const c of claims) getTruth().add(c, { topic: job.topic, from: 'mote:' + job.kind }); if (aoState) aoState.logActivity('thought', { topic: job.topic, claims: claims.length }); };
 function aoMoteResult(job, r) {
   aoRecent[job.topic.toLowerCase()] = Date.now();
   if (!r) { if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: false }); return; }
@@ -1577,6 +1581,36 @@ function aoMaybeShare() {
   return true;
 }
 function aoWorthTelling(text, w) { if (!aoUrges) return; aoShare = { text: String(text).slice(0, 300), at: Date.now() }; aoUrges.worthTelling(w); }
+// ---- always-on v2, phase 5: truth-seeking notes (src/truthnotes.js) ------------------------------------------------------
+// Thoughts are `maybe` notes; one at a time (when the Mote gate is open) the checker searches the web and asks chat's model whether
+// each result supports or contradicts the note. 2 independent sites -> confirmed / wrong (a correction). Only those reach memory.
+const TruthMod = require('./src/truthnotes');
+let aoTruth = null, aoTruthCtl = null, aoTruthAt = 0;
+const JUDGE_SYSTEM = 'You check ONE claim against ONE search result. Reply with ONE JSON object and nothing else: {"verdict": "supports" | "contradicts" | "unclear", "correction": "the correct fact in one short sentence if the result contradicts the claim, else null"}. '
+  + 'Say "supports" only if the result clearly states the same fact. Say "contradicts" only if it clearly states a different fact.';
+async function aoJudge(claim, src, signal) {
+  const text = await aoAsk([{ role: 'system', content: JUDGE_SYSTEM }, { role: 'user', content: 'Claim: ' + claim + '\nResult title: ' + src.title + '\nResult text: ' + (src.snippet || '').slice(0, 500) + '\nAnswer with the JSON object only.' }], signal, { maxTokens: 120 });
+  const a = String(text || '').indexOf('{'), b = String(text || '').lastIndexOf('}');
+  try { const j = JSON.parse(String(text).slice(a, b + 1)); if (['supports', 'contradicts', 'unclear'].includes(j.verdict)) return { verdict: j.verdict, correction: typeof j.correction === 'string' ? j.correction : '' }; } catch (e) { /* fall back */ }
+  return TruthMod.lexicalJudge(claim, src);
+}
+function getTruth() {
+  return aoTruth || (aoTruth = new TruthMod.TruthNotes({ dir: aoDir(), search: (q, signal) => webSearch(q, { signal }), judge: aoJudge,
+    save: (text, topic) => memory.save(text, topic),
+    onSettled: (n) => {
+      if (aoState) aoState.logActivity('note', { status: n.status, topic: n.topic, text: (n.status === 'wrong' ? n.correction : n.text).slice(0, 140) });
+      if (n.status === 'wrong' && aoUrges) aoUrges.worthTelling(0.15);
+    }, log: (...a) => console.log('[alwayson]', ...a) }));
+}
+// the 1 s clock: at most one check every 20 s, only while bored-mode Motes would be allowed (Ben first, sleep, night, memory)
+function aoTruthTick() {
+  if (!aoTruth || aoTruth.checking || Date.now() - aoTruthAt < 20000) return;
+  const n = aoTruth.next(); if (!n) return;
+  if (aoMoteGate().budget <= 0) return;
+  aoTruthAt = Date.now(); const ctl = aoTruthCtl = new AbortController();
+  aoTruth.check(n, ctl.signal).finally(() => { if (aoTruthCtl === ctl) aoTruthCtl = null; });
+}
+function aoStopChecks() { if (aoTruthCtl) { try { aoTruthCtl.abort(); } catch (e) { /* gone */ } aoTruthCtl = null; } }
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
@@ -1646,7 +1680,7 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
-    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat');
+    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks();
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
@@ -1685,7 +1719,7 @@ function registerIpc() {
   h('senses:set', (patch) => setSenses(patch || {}));
   h('senses:askPerms', () => askSensesPerms());
   h('alwayson:feedback', (id, kind) => { const m = aoVoice.feedback(id, ['up', 'down', 'used'].includes(kind) ? kind : 'down'); return { ok: !!m }; });
-  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); aoPool.stopAll('typing'); });
+  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); aoPool.stopAll('typing'); aoStopChecks(); });
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
