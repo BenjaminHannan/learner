@@ -113,3 +113,27 @@ test('threads and concurrent Glims have no limit by default; the old 40 default 
   fs.writeFileSync(path.join(picked, 'settings.json'), JSON.stringify({ maxSteps: 12 }));
   assert.strictEqual(new Store(picked).getSettings().maxSteps, 12);
 });
+
+test('md renders *italic* and _italic_ without touching math, snake_case or URLs', () => {
+  const { inline } = require('../renderer/md.js');
+  assert.strictEqual(inline("How's *your* day?"), "How's <em>your</em> day?");
+  assert.strictEqual(inline('_this_ one'), '<em>this</em> one');
+  assert.strictEqual(inline('**bold** and *it*'), '<strong>bold</strong> and <em>it</em>');
+  assert.strictEqual(inline('2 * 3 * 4'), '2 * 3 * 4');
+  assert.strictEqual(inline('my_var_name'), 'my_var_name');
+  assert.ok(!inline('see https://x.com/a_b_c/*d* ok').includes('<em>'));
+  assert.ok(!inline('[a](https://x.com/_y_)').includes('<em>'));
+  assert.strictEqual(inline('`*code*`'), '<code>*code*</code>');
+});
+
+test('md renders tables, and holds them back while the reply is still streaming', () => {
+  const { md } = require('../renderer/md.js');
+  const t = '| A | B |\n|---|---|\n| 1 | **x** |\n\n---\n\nend';
+  const h = md(t);
+  assert.match(h, /<table><thead><tr><th>A<\/th><th>B<\/th><\/tr><\/thead><tbody><tr><td>1<\/td><td><strong>x<\/strong><\/td><\/tr>/);
+  assert.match(h, /<hr>/);
+  assert.ok(!h.includes('|'));
+  const s = md('| A | B |\n|---|', { streaming: true });
+  assert.ok(!s.includes('|') && s.includes('tablewait'));
+  assert.equal(md('| not a table |'), '<p>| not a table |</p>');
+});
