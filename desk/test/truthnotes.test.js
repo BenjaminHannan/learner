@@ -80,7 +80,7 @@ test('main: Mote claims and loop notes go to the truth check as maybe (never str
   const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
   assert.match(m, /function aoNote\(text\) \{ try \{ if \(aoTruth\) aoTruth\.add\(text, \{ from: 'noticed' \}\); \}/);
   assert.doesNotMatch(m, /memory\.save\(text, 'noticed'\)/);
-  assert.match(m, /for \(const c of claims\) getTruth\(\)\.add\(c,/);
+  assert.match(m, /for \(const c of kept\) getTruth\(\)\.add\(c,/);
   assert.match(m, /aoPool\.stopAll\('chat'\); aoStopChecks\(\);/);
   // the only memory.save in the always-on block is the truth check's (confirmed notes and corrections)
   const block = m.slice(m.indexOf('// ---- Always-on Premonition'), m.indexOf('function registerIpc() {'));

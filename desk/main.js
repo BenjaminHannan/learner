@@ -146,6 +146,7 @@ setInterval(() => {
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
   try { if (aoTruthCtl && aoMoteGate().budget <= 0) aoStopChecks(); else if (aoSenses && aoSenses.anyEnabled()) aoTruthTick(); } catch (e) { /* next second */ }
+  try { if (aoQuizCtl && aoMoteGate().budget <= 0) aoStopQuiz(); else if (aoSenses && aoSenses.anyEnabled()) aoQuizTick(); } catch (e) { /* next second */ }
   if (aoSenses && aoSenses.anyEnabled() && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
   if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
@@ -250,7 +251,7 @@ function startLearn(topic, count, hours) {
 const pendingLearn = new Map();
 // the toolbar's Learn button (src/learnbutton.js): Start = Learn-mode Motes with lifetime forever, Stop = stop them
 let learnBtn = null;
-const getLearnBtn = () => learnBtn || (learnBtn = new (require('./src/learnbutton').LearnButton)({ dir: app.getPath('userData'), startLearn, stopMote: (id) => helpers.stop(id), onChange: (v) => { send('learn:state', v); if (aoState) aoState.setFocus(v.learning ? v.topic : null, 'learn'); } }));
+const getLearnBtn = () => learnBtn || (learnBtn = new (require('./src/learnbutton').LearnButton)({ dir: app.getPath('userData'), startLearn, stopMote: (id) => helpers.stop(id), onChange: (v) => { if (v.learning) { try { aoQuizFor(v.topic); } catch (e) { /* the quiz tick retries */ } } send('learn:state', v.learning ? { ...v, ...aoQuizView(v.topic) } : v); if (aoState) aoState.setFocus(v.learning ? v.topic : null, 'learn'); } }));
 const learningNow = () => !!(learnBtn && learnBtn.cur);
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
@@ -1509,7 +1510,7 @@ function aoEar() {
   if (!aoSenses || !aoSenses.anyEnabled()) return null;
   const lb = learnBtn && learnBtn.cur;
   return GlimVoice.statusIcon({ now: Date.now(), asleep: sl.asleep, thinking: !!(aoLoop && aoLoop.inTick) || !!aoPool.thinking(), thinkingAbout: aoPool.thinking(), gauge: aoGaugeNow.level, surprisedAt: aoSurprise.at, surpriseWhat: aoSurprise.what,
-    learning: lb ? { topic: lb.topic, levels: [] } : null, motes: (lb ? lb.ids.length : 0) + aoPool.count(), ...aoEarExtra() });
+    learning: lb ? { topic: lb.topic, levels: aoQuizView(lb.topic).levels } : null, motes: (lb ? lb.ids.length : 0) + aoPool.count(), ...aoEarExtra() });
 }
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
 // v2 (phase 5): a note from the loop is a `maybe` until 2 independent websites confirm it (src/truthnotes.js); only then does it reach memory
@@ -1540,7 +1541,13 @@ const MOTE_SYSTEM = 'You are one of Glim\'s Motes, thinking quietly about one to
 const MOTE_WHY = { learn: 'Ben asked you to learn this.', day: 'This came up on Ben\'s screen today.', wonder: 'It is on your wonder list (something you did not understand).' };
 let aoMotePrompt = (job) => [{ role: 'system', content: MOTE_SYSTEM }, { role: 'user', content: 'Topic: ' + job.topic + '\n' + (MOTE_WHY[job.kind] || '') + '\nAnswer with the JSON object only.' }];
 // every claim a Mote makes becomes a `maybe` note for the truth check (phase 5)
-let aoMoteClaims = (job, claims) => { for (const c of claims) getTruth().add(c, { topic: job.topic, from: 'mote:' + job.kind }); if (aoState) aoState.logActivity('thought', { topic: job.topic, claims: claims.length }); };
+// drift guard (phase 6): a Learn-topic claim must still be about the topic, else it is skipped
+let aoMoteClaims = (job, claims) => {
+  let kept = claims, skipped = 0;
+  if (job.kind === 'learn') { const vocab = aoTopicNotes(job.topic); kept = claims.filter((c) => QuizMod.onTopic(c, job.topic, vocab)); skipped = claims.length - kept.length; }
+  for (const c of kept) getTruth().add(c, { topic: job.topic, from: 'mote:' + job.kind });
+  if (aoState) aoState.logActivity('thought', { topic: job.topic, claims: kept.length, drift: skipped });
+};
 function aoMoteResult(job, r) {
   aoRecent[job.topic.toLowerCase()] = Date.now();
   if (!r) { if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: false }); return; }
@@ -1548,7 +1555,7 @@ function aoMoteResult(job, r) {
   if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: true, minutes: Math.max(0.1, (Date.now() - job.at) / 60000) });
   aoMoteClaims(job, r.claims || []);
 }
-const aoPool = new PoolMod.MotePool({ ask: (m, sig) => aoAsk(m, sig, { maxTokens: 350 }), gate: aoMoteGate, prompt: (job) => aoMotePrompt(job),
+const aoPool = new PoolMod.MotePool({ ask: (m, sig) => aoAsk(m, sig, { maxTokens: 350 }), gate: aoMoteGate, prompt: (job) => QuizMod.safeStudier(aoMotePrompt, job, aoQuizS()),
   onResult: (job, r) => aoMoteResult(job, r), onChange: () => schedulePill(), log: (...a) => console.log('[alwayson]', ...a) });
 let aoLearnTopics = () => (learnBtn && learnBtn.cur ? [learnBtn.cur.topic] : []);
 function aoDayTopics() {
@@ -1565,7 +1572,7 @@ function aoUrgeTick() {
   if (aoUrges.isBored() && !aoPool.count()) {
     const g = aoMoteGate();
     if (g.budget > 0) {
-      const topics = UrgesMod.chooseTopics({ learn: aoLearnTopics(), day: aoDayTopics(), wonder: aoState.wonder.slice().reverse().map((w) => w.text), recent: aoRecent }, g.budget);
+      const topics = UrgesMod.chooseTopics({ learn: aoLearnTopics(), day: aoDayTopics(), wonder: aoState.wonder.slice().reverse().map((w) => w.text.replace(/^weak spot in (.+?) \(quiz [^)]*\)$/, 'the weak spots of $1')), recent: aoRecent }, g.budget);
       if (topics.length && aoPool.startBatch(topics)) { aoUrges.studied(topics.length); aoState.logActivity('bored', { motes: topics.length, gauge: g.gauge, topics: topics.map((t) => t.topic.slice(0, 60)) }); }
     }
   }
@@ -1611,6 +1618,91 @@ function aoTruthTick() {
   aoTruth.check(n, ctl.signal).finally(() => { if (aoTruthCtl === ctl) aoTruthCtl = null; });
 }
 function aoStopChecks() { if (aoTruthCtl) { try { aoTruthCtl.abort(); } catch (e) { /* gone */ } aoTruthCtl = null; } }
+// ---- always-on v2, phase 6: the Learn quiz score (src/quiz.js) ------------------------------------------------------------
+// Starting a Learn topic queues a separate WRITER pass that builds a locked quiz (~20 questions, answers found on the pages, source
+// URLs) in userData/learn-quiz/. Studier prompts never see it (checked on every prompt). The EXAMINER answers it with chat's model
+// (guess + confidence first), graded against the stored answers. Official score = the first one after the nightly sleep.
+const QuizMod = require('./src/quiz');
+let aoQuizStore = null, aoQuizCache = { at: 0, topic: '', v: null };
+const aoQuizS = () => aoQuizStore || (aoQuizStore = new QuizMod.QuizStore(aoDir()));
+let aoQuizCtl = null, aoQuizAt = 0, aoQuizOfficialDue = false, aoQuizLastSleep = false;
+function privateHost(u) { try { const h = new URL(u).hostname; return !/^https?:$/.test(new URL(u).protocol) || /^(?:localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|0\.|\[?::1\]?$)/i.test(h) || h.endsWith('.local'); } catch (e) { return true; } }
+async function aoFetchPage(url, signal) {
+  if (privateHost(url)) throw new Error('not a public web page');
+  const ctl = new AbortController(), kill = setTimeout(() => ctl.abort(), 15000), stop = () => ctl.abort();
+  if (signal) signal.addEventListener('abort', stop, { once: true });
+  try {
+    const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15', accept: 'text/html' }, signal: ctl.signal, redirect: 'follow' });
+    if (!r.ok || !/text\/html|text\/plain/i.test(r.headers.get('content-type') || '')) return '';
+    return (await r.text()).slice(0, 1500000);
+  } finally { clearTimeout(kill); if (signal) signal.removeEventListener('abort', stop); }
+}
+function aoTopicNotes(topic) {
+  const out = [];
+  if (aoTruth) for (const n of aoTruth.notes) if (n.status === 'confirmed' && (n.topic === topic || QuizMod.onTopic(n.text, topic))) out.push(n.text);
+  try { for (const f of memory.list()) if (f && f.text && QuizMod.onTopic(f.text, topic)) out.push(f.text); } catch (e) { /* memory unreadable */ }
+  return out.slice(-30);
+}
+function aoQuizView(topic) {
+  if (aoQuizCache.topic === topic && Date.now() - aoQuizCache.at < 5000) return aoQuizCache.v;   // the ear asks every second
+  const z = topic ? aoQuizS().load(topic) : null;
+  const v = z ? { score: QuizMod.scoreLine(z), levels: QuizMod.scoreLevels(z), writing: z.status === 'writing' } : { score: '', levels: [] };
+  aoQuizCache = { at: Date.now(), topic, v };
+  return v;
+}
+function learnView() { const v = getLearnBtn().view(); return v.learning ? { ...v, ...aoQuizView(v.topic) } : v; }
+const aoQuizGate = () => aoMoteGate().budget > 0;
+// a new Learn topic: make the (empty) quiz record now; the writer fills it when the gate opens
+function aoQuizFor(topic) { if (!topic || aoQuizS().load(topic)) return; aoQuizS().save({ topic, createdAt: Date.now(), status: 'writing', levels: [], scores: [], guesses: [] }); }
+async function aoQuizWork(z, signal) {
+  const ask = (m, sig) => aoAsk(m, sig, { maxTokens: 400 });
+  const newest = z.levels.length ? Math.max(...z.levels.map((l) => l.level)) : 0;
+  if (z.status === 'writing' || z.levelUpDue) {
+    const level = z.status === 'writing' && !newest ? 1 : newest + 1;
+    const r = await QuizMod.writeLevel(z.topic, level, { search: (q, sig) => webSearch(q, { signal: sig }), fetchPage: aoFetchPage, ask, parseResults: TruthMod.parseResults, siteOf: TruthMod.siteOf, signal, gate: aoQuizGate, avoid: z.levels.flatMap((l) => l.questions.map((q) => q.q.toLowerCase())) });
+    if (signal.aborted) return;
+    const cur = aoQuizS().load(z.topic) || z;
+    if (r.questions.length >= 5) { cur.levels.push({ level, questions: r.questions, sources: r.sources, writtenAt: Date.now() }); cur.status = 'ready'; cur.levelUpDue = false; cur.examDue = true; }
+    else { cur.writeTries = (cur.writeTries || 0) + 1; if (cur.writeTries >= 3) { cur.status = cur.levels.length ? 'ready' : 'failed'; cur.levelUpDue = false; } }
+    aoQuizS().save(cur); aoQuizCache.at = 0;
+    if (aoState) aoState.logActivity('quiz-written', { topic: z.topic, level, questions: r.questions.length, sites: r.sources.length });
+    send('learn:state', learnView());
+    return;
+  }
+  const official = aoQuizOfficialDue;
+  const before = QuizMod.scoreLevels(z);
+  for (const L of z.levels) {
+    const res = await QuizMod.takeLevel(z, L.level, { ask, notes: aoTopicNotes(z.topic), signal, gate: aoQuizGate });
+    if (!res) return;   // stopped (Ben came back, memory, sleep): it runs again later
+    const cur = aoQuizS().load(z.topic) || z;
+    cur.guesses = (cur.guesses || []).concat(res.guesses.map((g) => ({ ...g, level: L.level, at: Date.now() }))).slice(-400);
+    const { levelUp } = QuizMod.recordScore(cur, res, official);
+    if (levelUp) cur.levelUpDue = true;
+    cur.examDue = false; cur.lastExamAt = Date.now();
+    aoQuizS().save(cur); aoQuizCache.at = 0;
+    // a confident miss is a surprise; it goes on the wonder list WITHOUT the question (the quiz stays locked from the studiers)
+    for (const g of res.guesses) {
+      const fs2 = GuesserMod.factSurprise(g.confidence, g.correct);
+      if (fs2.wonder && aoState) { aoState.addWonder('weak spot in ' + z.topic + ' (quiz ' + g.id + ')', 'confident quiz miss'); aoState.addSurprise({ stream: 'fact', what: 'I was sure about a ' + z.topic + ' quiz answer and got it wrong.', kl: fs2.surprise }); if (aoUrges) aoUrges.wonder(); }
+    }
+    const was = (before.find((b) => b.level === L.level) || {}).pct;
+    if (aoState) aoState.logActivity('quiz', { topic: z.topic, level: L.level, pct: res.pct, was: was == null ? null : was, official });
+    if (official && levelUp) aoWorthTelling('I reached ' + res.pct + '% on my ' + z.topic + ' quiz (level ' + L.level + '), so I am starting a harder level.', 0.5);
+  }
+  if (official) aoQuizOfficialDue = false;
+  send('learn:state', learnView());
+}
+// the 1 s clock: one quiz job at a time, at most every 30 s, only when the Mote gate is open; chat aborts it
+function aoQuizTick() {
+  if (sl.asleep !== aoQuizLastSleep) { if (aoQuizLastSleep && !sl.asleep) aoQuizOfficialDue = true; aoQuizLastSleep = sl.asleep; }
+  if (aoQuizCtl || Date.now() - aoQuizAt < 30000 || !learnBtn || !learnBtn.cur) return;
+  const z = aoQuizS().load(learnBtn.cur.topic); if (!z) { aoQuizFor(learnBtn.cur.topic); return; }
+  const due = z.status === 'writing' || z.levelUpDue || (z.status === 'ready' && (z.examDue || aoQuizOfficialDue || Date.now() - (z.lastExamAt || 0) > 6 * 3600000));
+  if (!due || !aoQuizGate()) return;
+  aoQuizAt = Date.now(); const ctl = aoQuizCtl = new AbortController();
+  aoQuizWork(z, ctl.signal).catch((e) => { if (!e || !e.paused) console.log('[alwayson] quiz', e); }).finally(() => { if (aoQuizCtl === ctl) aoQuizCtl = null; });
+}
+function aoStopQuiz() { if (aoQuizCtl) { try { aoQuizCtl.abort(); } catch (e) { /* gone */ } aoQuizCtl = null; } }
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
@@ -1680,7 +1772,7 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
-    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks();
+    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz();
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
@@ -1712,14 +1804,16 @@ function registerIpc() {
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
     return { started: true, title: t.title };
   });
-  h('learn:state', () => getLearnBtn().view());
+  h('learn:state', () => learnView());
+  // Ben can peek at the locked quiz (questions, source answers, sources, scores)
+  h('learn:quiz', (topic) => { const t = topic || (learnBtn && learnBtn.cur && learnBtn.cur.topic); const z = t ? aoQuizS().load(t) : null; return z ? { topic: z.topic, status: z.status, line: QuizMod.scoreLine(z), levels: z.levels.map((l) => ({ level: l.level, questions: l.questions.map((q) => ({ q: q.q, answer: q.answer, source: q.source_url })) })), scores: (z.scores || []).slice(-20) } : null; });
   h('learn:start', (topic) => getLearnBtn().start(topic));
   h('learn:stop', () => getLearnBtn().stop());
   h('senses:get', () => sensesView());
   h('senses:set', (patch) => setSenses(patch || {}));
   h('senses:askPerms', () => askSensesPerms());
   h('alwayson:feedback', (id, kind) => { const m = aoVoice.feedback(id, ['up', 'down', 'used'].includes(kind) ? kind : 'down'); return { ok: !!m }; });
-  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); aoPool.stopAll('typing'); aoStopChecks(); });
+  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); aoPool.stopAll('typing'); aoStopChecks(); aoStopQuiz(); });
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });

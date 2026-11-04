@@ -80,3 +80,20 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
 - **Test environment note**: `desk/build/deskhelper` exists in this worktree (v1's build, git-ignored). desk.test.js's `open_app`
   test runs that real helper, so it fails and sometimes hangs the suite (≈2 in 8 solo runs). A fresh worktree without the
   binary passes 8/8. Not caused by this work; left in place (not mine to delete). Suite runs here use a 240 s kill + retry.
+
+## Phase 6 (Learn quiz score)
+- **Writer**: 4 searches per level (topic / facts / explained / what is; harder wording for Lv2+), ≤ 5 results each, one page per
+  site, the page fetched with plain `fetch` (public http(s) only; localhost/private ranges refused), tags stripped, ≤ 6000 chars
+  to chat's model, ≤ 4 questions per page. A question is kept only if its answer text is on that page. Stops at 20. A level
+  needs ≥ 5 questions; 3 failed tries → status `failed` (shown in "View quiz").
+- **Locked**: stored in `userData/learn-quiz/<topic>.json`, separate from notes/truth notes. Every bored-Mote prompt goes through
+  `safeStudier`, which rebuilds it from the bare topic if it contains any locked question. The Learn helper prompt (`LEARN_MOTE`)
+  is built from topic + angle only. A confident quiz miss goes on the wonder list as "weak spot in <topic> (quiz L1q3)" and
+  becomes "the weak spots of <topic>" as a Mote topic, never the question.
+- **Examiner**: chat's model answers with the topic's confirmed notes + memory notes as context (what Glim has learned), JSON
+  answer + confidence, recorded before grading. Grading = text match against the source answer (whole answer for ≤ 24 chars,
+  ≥ 75 % content words otherwise; whole numbers exact, decimals ±2 %). No model judges the grade.
+- **When**: right after writing (unofficial, marked `*`), every 6 h (unofficial), and the first run after each sleep (official).
+  A harder level is written once the newest level scores ≥ 80 % officially. Runs only when the Mote gate is open; chat aborts it.
+- **Drift guard**: applies to bored-Mote claims for Learn topics (shares a word with the topic, or 2+ words with the topic's
+  confirmed notes); off-topic claims are skipped and counted. The v1 Learn helper Motes are not step-gated (same gap as phase 5).

@@ -11,7 +11,10 @@ window.LearnButton = (() => {
   function paint(v) {
     if (v) st = v;
     const on = !!st.learning;
-    $('#learnLabel').textContent = on ? 'Learning: ' + st.topic : 'Learn';
+    // always-on v2: the honest quiz score, e.g. "Lv1 81% · Lv2 30%" (* = not yet measured after a sleep)
+    const lv = on && Array.isArray(st.levels) ? st.levels.filter((x) => x.pct != null).map((x) => 'Lv' + x.level + ' ' + x.pct + '%' + (x.official ? '' : '*')).join(' · ') : '';
+    $('#learnLabel').textContent = on ? 'Learning: ' + st.topic + (lv ? ' · ' + lv : '') : 'Learn';
+    const sc = $('#learnScore'); if (sc) { sc.hidden = !on; sc.textContent = !on ? '' : st.writing ? 'Writing a locked quiz from several websites…' : st.score ? 'Quiz: ' + st.score + (lv.includes('*') ? '  (* not yet measured after a sleep)' : '') : 'The quiz is written once the Mac is free.'; }
     btn.classList.toggle('on', on);
     btn.title = on ? 'Glim is learning about ' + st.topic + '. Click to stop or change it.' : 'Learn: send Glim off to study a topic until you stop it';
     $('#learnIdle').hidden = on; $('#learnBusy').hidden = !on;
@@ -36,6 +39,19 @@ window.LearnButton = (() => {
   btn.onclick = (e) => { e.stopPropagation(); if (pop.hidden) openPop(); else closePop(); };
   $('#learnStart').onclick = start;
   $('#learnStop').onclick = stop;
+  // Ben can peek at the locked quiz: questions, the answers from the sources, and the source pages
+  if ($('#learnViewQuiz')) $('#learnViewQuiz').onclick = async () => {
+    const box = $('#learnQuiz'); if (!box.hidden) { box.hidden = true; return; }
+    const z = desk.learn.quiz ? await desk.learn.quiz() : null; box.textContent = '';
+    if (!z || !z.levels.length) box.append(Object.assign(document.createElement('p'), { className: 'lb-sub', textContent: z && z.status === 'failed' ? 'Glim could not write a quiz from the web for this topic.' : 'No quiz yet: it is written when the Mac is free.' }));
+    else for (const L of z.levels) {
+      box.append(Object.assign(document.createElement('b'), { textContent: 'Level ' + L.level }));
+      const ol = document.createElement('ol');
+      for (const q of L.questions) { const li = document.createElement('li'); li.append(document.createTextNode(q.q + ' — ' + q.answer + ' ')); const a = document.createElement('a'); a.href = q.source; a.textContent = 'source'; a.target = '_blank'; a.rel = 'noreferrer'; li.append(a); ol.append(li); }
+      box.append(ol);
+    }
+    box.hidden = false;
+  };
   topic.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); start(); } if (e.key === 'Escape') closePop(); });
   $('#learnShowBrowser').onclick = () => { closePop(); if (window.BrowserPanel) window.BrowserPanel.toggle(); };
   pop.addEventListener('click', (e) => e.stopPropagation());

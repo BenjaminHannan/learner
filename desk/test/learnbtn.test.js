@@ -49,7 +49,7 @@ test('main.js serves learn:start through startLearn and stops Motes with helpers
   // hours 0 means no end time in startLearn
   assert.match(m, /const until = hrs \? Date\.now\(\) \+ hrs \* 3600000 : 0/);
   const p = read('preload.js');
-  assert.match(p, /learn: \{ state: inv\('learn:state'\), start: inv\('learn:start'\), stop: inv\('learn:stop'\) \}/);
+  assert.match(p, /learn: \{ state: inv\('learn:state'\), start: inv\('learn:start'\), stop: inv\('learn:stop'\), quiz: inv\('learn:quiz'\) \}/);
 });
 
 test('the browser panel can still open: by itself when Glim browses, and from Show browser', () => {
