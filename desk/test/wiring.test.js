@@ -45,14 +45,17 @@ test('summaries for memory and verify steps; icons exist in the renderer', () =>
   assert.match(a, /verify: 'check'/); assert.match(a, /memory_save: 'bookmark'/); assert.match(a, /memory_forget: 'bookmark'/); assert.match(a, /\n\s+bookmark: '</);
 });
 
-test('the typing row glimmers: no cartoon cloud, at least five see-through sparkles, same a11y label', () => {
+test('the typing row glimmers: at least seven see-through sparkles ring Glim inside .glim-aura, no cartoon cloud, same a11y label', () => {
   const a = read('renderer/app.js');
   const start = a.indexOf('const typingRow');
   const end = a.indexOf('function paintTyping', start);
   assert.ok(start > 0 && end > start, 'typing row block found');
   const row = a.slice(start, end);
   assert.doesNotMatch(row, /cloud/i);
-  assert.ok((row.match(/'g[1-7]'/g) || []).length >= 5, 'at least five sparkles');
+  assert.ok((row.match(/'g[1-7]'/g) || []).length >= 7, 'at least seven sparkles');
+  assert.match(row, /const aura = el\('span', 'glim-aura'\)/, 'sparkles get a .glim-aura wrapper');
+  assert.match(row, /aura\.innerHTML = '<svg[\s\S]*?\+ dust/, 'the sparkle svg is built inside the aura');
+  assert.match(row, /typingRow\.append\(aura\)/, 'the aura is what the row shows');
   assert.match(row, /setAttribute\('role', 'status'\)/);
   assert.match(row, /setAttribute\('aria-label', 'Glim is thinking'\)/);
   assert.doesNotMatch(read('renderer/app.css'), /\.typing\s+\.(cloud|tb)\b/);

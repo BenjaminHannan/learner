@@ -93,16 +93,16 @@
 
   // ---------- blocks, activity groups ----------
   function newBlock() { blk = null; act = null; tn = null; }
-  // Ben Nov 3: Glim glimmers while it thinks: a warm breathing halo around the avatar (CSS) and see-through four-point sparkles scattered beside it, calm like magic dust
+  // Ben Nov 3: Glim glimmers while it thinks: a warm breathing halo around the avatar (CSS) and see-through four-point sparkles ringing it, calm like magic dust
   const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is thinking');
-  typingRow.append(Mascot.el('idle', 28, { cls: 'avatar' })); // no still: the idle breathe, wisp flicker and blink are subtle and make Glim look alive
-  { const col = el('div', 'acol'), b = el('div', 'typing');
+  { const aura = el('span', 'glim-aura'); // a 64px sparkle overlay centred on the 28px avatar, so the row is just glimmering Glim
     const spark = (x, y, k, cls) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><path class="spark ' + cls + '" fill="url(#glimDust)" d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z"/></g>';
-    const dust = [[12, 10, .34, 'g1'], [28, 7, .62, 'g2'], [44, 20, .42, 'g3'], [60, 9, .67, 'g4'], [76, 25, .46, 'g5'], [86, 12, .28, 'g6']]
+    const dust = [[16, 16, .32, 'g1'], [32, 4, .42, 'g2'], [48, 16, .24, 'g3'], [60, 33, .34, 'g4'], [50, 50, .46, 'g5'], [12, 52, .27, 'g6'], [7, 32, .38, 'g7']]
       .map(([x, y, k, cls]) => spark(x, y, k, cls)).join('');
-    b.innerHTML = '<svg viewBox="0 0 92 40" aria-hidden="true"><defs><radialGradient id="glimDust" cx="50%" cy="50%" r="50%">' +
+    aura.innerHTML = '<svg class="glim-sparks" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="glimDust" cx="50%" cy="50%" r="50%">' +
       '<stop offset="0" stop-color="#fffdf2"/><stop offset=".55" stop-color="#fff3c9"/><stop offset="1" stop-color="#ffd98a"/></radialGradient></defs>' + dust + '</svg>';
-    col.append(b); typingRow.append(col); }
+    aura.prepend(Mascot.el('idle', 28, { cls: 'avatar' })); // no still: the idle breathe, wisp flicker and blink are subtle and make Glim look alive
+    typingRow.append(aura); }
   function paintTyping() {
     const on = !!running && !(tn && tn.text) && !(thread && thread.helper);
     if (on && typingRow.parentNode !== msgs) msgs.append(typingRow);
