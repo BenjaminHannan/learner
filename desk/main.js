@@ -1146,10 +1146,11 @@ async function startCall() {
   const bin = screen.findHelper();
   if (!bin) return { error: 'Calling needs the Glim helper, which is not installed in this build.' };
   calling = true;
+  const micOwner = 'call:' + Date.now() + Math.random(); if (!E2E) getHearing().pause(micOwner);
   const stt = await sttUrl();
   calling = false;
-  if (stt.error) return { error: stt.error, needsVoice: stt.needsVoice };
-  if (call || dictation) return { error: 'You are already on a call.' };
+  if (stt.error) { if (hearing) hearing.resume(micOwner); return { error: stt.error, needsVoice: stt.needsVoice }; }
+  if (call || dictation) { if (hearing) hearing.resume(micOwner); return { error: 'You are already on a call.' }; }
   callThread = store.newThread(); callThread.title = 'Call'; store.saveThread(callThread);
   const c = new Call({
     helper: bin,
@@ -1157,7 +1158,7 @@ async function startCall() {
     ask: callAsk,
     onEvent: (ev) => {
       send('call', ev);
-      if (ev.type === 'state' && ev.state === 'ended') { call = null; pillState.setCall(null); if (!((callThread.items || []).length)) store.deleteThread(callThread.id); send('threads:changed', {}); } // a call nobody spoke in leaves no empty chat
+      if (ev.type === 'state' && ev.state === 'ended') { call = null; pillState.setCall(null); if (hearing) hearing.resume(micOwner); if (!((callThread.items || []).length)) store.deleteThread(callThread.id); send('threads:changed', {}); } // a call nobody spoke in leaves no empty chat
     }
   });
   call = c; pillState.setCall(Date.now()); send('threads:changed', {});
@@ -1175,14 +1176,15 @@ async function startDictate() {
   const bin = screen.findHelper();
   if (!bin) return { error: 'Dictation needs the Glim helper, which is not installed in this build.' };
   dictStarting = true;
+  const micOwner = 'dictate:' + Date.now() + Math.random(); if (!E2E) getHearing().pause(micOwner);
   const stt = await sttUrl();
   dictStarting = false;
-  if (stt.error) return { error: stt.error, needsVoice: stt.needsVoice };
-  if (call || dictation) return { error: 'Dictation is already on.' };
+  if (stt.error) { if (hearing) hearing.resume(micOwner); return { error: stt.error, needsVoice: stt.needsVoice }; }
+  if (call || dictation) { if (hearing) hearing.resume(micOwner); return { error: 'Dictation is already on.' }; }
   const d = new Dictation({
     helper: bin,
     spawn: (cmd, args) => require('child_process').spawn(cmd, [...args, '--stt', stt.url], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
-    onEvent: (ev) => { send('dictate', ev); if (ev.type === 'state' && ev.state === 'ended' && dictation === d) dictation = null; }
+    onEvent: (ev) => { send('dictate', ev); if (ev.type === 'state' && ev.state === 'ended' && dictation === d) { dictation = null; if (hearing) hearing.resume(micOwner); } }
   });
   dictation = d;
   d.start();
@@ -1442,7 +1444,23 @@ function aoApply() {
   if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
   aoHearingApply();
 }
-function aoHearingApply() { /* phase 4 */ }
+// hearing: one always-on `deskhelper dictate` whose finished utterances become observations (src/hearing.js). Switching it on also
+// pre-warms the local speech server in the background (its first load takes about 2 minutes). Calls and dictation own the mic:
+// hearing pauses while they run and resumes after.
+function getHearing() {
+  return hearing || (hearing = new (require('./src/hearing').Hearing)({
+    helper: () => (FEATURES.dictate && screen ? screen.findHelper() : null),
+    sttUrl: () => sttUrl(),
+    spawn: (cmd, args, url) => require('child_process').spawn(cmd, [...args, '--stt', url], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+    onText: (text) => { if (aoSenses) aoSenses.push('hearing', 'Heard: ' + text); },
+    onState: (st, why) => { if (st === 'error') console.log('[alwayson] hearing:', why); }
+  }));
+}
+function aoHearingApply() {
+  if (E2E) return;
+  const want = !!(aoSenses && aoSenses.enabled('hearing'));
+  if (want) getHearing().enable(); else if (hearing) hearing.disable();
+}
 
 const hp0 = (id) => !!(helpers && helpers.byThread(id));
 function registerIpc() {
@@ -1767,4 +1785,4 @@ app.whenReady().then(async () => {
   createWindow(); // shown on ready-to-show; diary, helpers, warm-up, pill, hotkey start after that (afterFirstPaint)
 });
 
-app.on('window-all-closed', () => { try { helpers && helpers.close(); } catch (e) { /* ignore */ } try { diary && diary.stop(); } catch (e) { /* ignore */ } app.quit(); });
+app.on('window-all-closed', () => { try { if (hearing) hearing.disable(); if (aoLoop) aoLoop.stop(); } catch (e) { /* ignore */ } try { helpers && helpers.close(); } catch (e) { /* ignore */ } try { diary && diary.stop(); } catch (e) { /* ignore */ } app.quit(); });
