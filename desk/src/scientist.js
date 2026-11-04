@@ -279,6 +279,8 @@ class Scientist {
       this.event({ id, event: 'surprise', what: surprise.what, kl: surprise.kl });
     }
     try { this.o.onActivity && this.o.onActivity('experiment', { kind, right: !!preRight, tries: tries.length, anyRight: right.some(Boolean) }); } catch (e) { /* diary only */ }
+    // T5 stuck list: every try wrong -> o.onStuck (src/stuck.js keeps only a hash of the truth, for the night's insight check)
+    if (!own && tries.length && !right.some(Boolean)) { try { this.o.onStuck && this.o.onStuck({ kind, question, truth, tries: tries.length, guesses }); } catch (e) { /* list only */ } }
     return { ran: true, id, kind, guess: pre.answer, truth, right: !!preRight, anyRight: right.some(Boolean), pick: final.index, surprise, guessAt, resultAt };
   }
   // the diary line

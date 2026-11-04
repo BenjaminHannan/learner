@@ -1712,19 +1712,21 @@ function aoAfterPick(job, r, x) {
     const top = p.claims.slice().sort((a, b) => b.p_correct - a.p_correct)[0];
     if (aoState.addWonder(top.text, "I'm not sure (" + p.method + ' ' + p.p_correct.toFixed(2) + (p.method === 'agreement' ? ', untested' : '') + ')') && aoUrges) aoUrges.wonder();
     aoState.logActivity('notsure', { topic: job.topic, text: aoChecker().hedge(top.text, p.p_correct).slice(0, 140), p: Math.round(p.p_correct * 100) / 100 });
+    aoStuckAdd(StuckMod.fromNotSure(top.text, p.p_correct));   // T5 stuck list (no truth at night: stays until a day check settles it)
   }
 }
 // the little scientist: experiments in the sandbox / puzzle generator / games, run as Motes (same gate, same stop), guesses first
 const aoScientist = () => aoScientistObj || (aoScientistObj = new ScientistMod.Scientist({ dir: aoDir(), checker: aoChecker(), k: aoTries(), gameLog: aoGameLog(),
   thinkMore: (c) => JudgesMod.thinkMore(aoJudges().state('think-longer').start, c), onTries: (r) => aoJudges().record('think-longer', r),   // think longer only when unsure (threshold learned at night)
   onSurprise: (x) => { if (aoState) { aoState.addSurprise({ stream: x.stream, what: x.what, kl: x.kl }); aoState.logActivity('surprise', { what: x.what.slice(0, 140), kl: Math.round(x.kl * 100) / 100, source: 'sandbox' }); } },
-  onActivity: (kind, o) => { if (aoState) aoState.logActivity(kind, o); }, log: (...a) => console.log('[alwayson]', ...a) }));
+  onActivity: (kind, o) => { if (aoState) aoState.logActivity(kind, o); }, onStuck: (x) => aoStuckAdd(StuckMod.fromExperiment(x)), log: (...a) => console.log('[alwayson]', ...a) }));
 // how many of a bored batch are experiments: half (rounded up); with a budget of 1 they take turns with thinking. Setting scientist: false = none.
 function aoSciShare(budget) { if (store.getSettings().scientist === false || budget <= 0) return 0; if (budget === 1) return (aoSciTurn++ % 2) ? 1 : 0; return Math.ceil(budget / 2); }
 function aoSciEnd(why) { if (aoScientistObj) aoScientistObj.endSession(why); }
 let aoLearnTopics = () => (learnBtn && learnBtn.cur ? [learnBtn.cur.topic] : []);
 function aoDayTopics() {
   const out = []; const e = aoStuck.error(); if (e) out.push('what causes this error and how to fix it: ' + e.text);
+  if (e) aoStuckAdd(StuckMod.fromBenError(e));   // T5 stuck list: Ben stuck on the same error 3+ times
   if (aoState) for (const x of aoState.surprises.slice(-3).reverse()) if (x.stream !== 'app') out.push(x.what);
   if (aoState && aoState.focus && aoState.focus.topic) out.push(aoState.focus.topic);
   return out;
@@ -1857,6 +1859,7 @@ async function aoQuizWork(z, signal) {
       const fs2 = GuesserMod.factSurprise(g.confidence, g.correct);
       if (fs2.wonder && aoState) { aoState.addWonder('weak spot in ' + z.topic + ' (quiz ' + g.id + ')', 'confident quiz miss'); aoState.addSurprise({ stream: 'fact', what: 'I was sure about a ' + z.topic + ' quiz answer and got it wrong.', kl: fs2.surprise }); if (aoUrges) aoUrges.wonder(); }
     }
+    for (const g of res.guesses) if (!g.correct) aoStuckAdd(StuckMod.fromQuizMiss(z.topic, g.id));   // T5 stuck list: locked (topic + item id only)
     const was = (before.find((b) => b.level === L.level) || {}).pct;
     if (aoState) aoState.logActivity('quiz', { topic: z.topic, level: L.level, pct: res.pct, was: was == null ? null : was, official });
     if (official && levelUp) aoWorthTelling('I reached ' + res.pct + '% on my ' + z.topic + ' quiz (level ' + L.level + '), so I am starting a harder level.', 0.5);
@@ -1909,6 +1912,19 @@ function aoDeferredTick() {
 }
 // what the nightly sleep may learn from: confirmed notes, corrections, surprises (never a maybe). Written as sleep starts.
 function aoSleepHandoff() { if (!aoState) return null; return DiaryAO.writeHandoff(aoDir(), DiaryAO.sleepHandoff({ truth: aoTruth, surprises: aoState.surprises })); }
+// ---- sleep insight (track T5: src/stuck.js + sleepmlx insight.py; toy lab premonition-sleeplab-t5) ----------------------------------
+// Day: failed problems go on the stuck list (userData/alwayson-stuck.json). Night (the sleep app): related memories are mixed into K
+// candidates and only those the executor / puzzle-generator truth confirms become sleep cards. Morning: solved entries leave, the rest
+// fade; Glim tells Ben only if something clicked, through the speak-o-meter (aoWorthTelling -> aoMaybeShare). Setting stuckList: false = off.
+const StuckMod = require('./src/stuck');
+let aoStuckListObj = null;
+const aoStuckList = () => aoStuckListObj || (aoStuckListObj = new StuckMod.StuckList({ dir: aoDir() }));
+function aoStuckAdd(e) { if (!e || store.getSettings().stuckList === false) return; try { aoStuckList().add(e); } catch (err) { console.log('[alwayson] stuck list', err); } }
+function aoStuckMorning() {
+  if (sl.asleep || sl.waking) return;
+  try { const line = aoStuckList().morning(StuckMod.readResults(aoDir())); if (line) { aoWorthTelling(line, 0.6); if (aoState) aoState.logActivity('sleep-part', { part: 'insight', line }); } } catch (e) { console.log('[alwayson] stuck morning', e); }
+}
+setInterval(aoStuckMorning, 60000).unref();
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
