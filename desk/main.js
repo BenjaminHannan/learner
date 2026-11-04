@@ -1508,7 +1508,7 @@ const aoWakeDay = () => { const d = JudgesMod.dayIndex(Date.now()); if (aoWakes.
 function aoJudgeMinute() {
   if (!aoSenses || !aoSenses.enabled('windows') || sl.asleep) return;
   const now = Date.now(), f = aoStuck.front(); let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
-  aoBreaksGet().tick(now, idleS, SpeakMod.categorize(f.app, f.title));
+  aoBreaksGet().tick(now, idleS, SpeakMod.categorize(f.app, f.title), { app: f.app, title: f.title });   // raw kept for the truth check (I2)
   const r = aoRegion(), y = aoMinSurprise ? 1 : 0, w = aoLookGet(); aoMinSurprise = false;
   const k = y ? 'a' : 'b'; w[k][r] = (w[k][r] || 0) + 1; aoWakeDay().seen[r] = 1;
   aoJudges().record('where-to-look', { t: now, r, y });
@@ -1523,10 +1523,12 @@ function aoWakeAllowed() {
 }
 function aoJudgesNight() {
   const J = aoJudges(), outs = [];
+  // truth check before sleep (I2, src/truthcheck.js; settings.truthCheck, default ON): only labels with a real truth are checked
+  const tc = require('./src/truthcheck').forSettings(store.getSettings(), aoDir());
   if (aoGuesser) {
     const g = aoGuesser, br = aoBreaksGet(), st = J.state('guesser'), prevK = (st.start && st.start.k) || { app: 0.8, when: 0.8, idle: 0.8 };
     let out = null;
-    if (g.when) { try { out = J.run(JudgesMod.guesserPart(), { app: g.streams.app.toJSON(), when: g.when.toJSON(), idle: br.model.toJSON(), k: prevK }); } catch (e) { console.log('[alwayson] judges guesser', e); } }
+    if (g.when) { try { out = J.run(JudgesMod.guesserPart(), { app: g.streams.app.toJSON(), when: g.when.toJSON(), idle: br.model.toJSON(), k: prevK }, { truthcheck: tc }); } catch (e) { console.log('[alwayson] judges guesser', e); } }
     const k = out && out.rec.action === 'kept' ? out.model.k : prevK;   // rolled back / held / no log today: yesterday's rates (0.8 at first)
     g.streams.app.decay(k.app); if (g.when) g.when.decay(k.when); br.model.decay(k.idle);
     g.streams.screen.decay(0.8); g.streams.sound.decay(0.8);           // not part of the toy test: today's fixed fade
@@ -1536,6 +1538,13 @@ function aoJudgesNight() {
   try { const out = J.run(JudgesMod.thinkPart(), J.state('think-longer').start || JudgesMod.thinkPart().init()); if (out) outs.push(out); } catch (e) { console.log('[alwayson] judges think', e); }
   try { const out = J.run(JudgesMod.wherePart(), aoLookGet()); if (out) { if (out.rec.action === 'kept') { aoLook = out.model; try { aoJudgeSave('where.json', aoLook); } catch (e) { /* */ } } outs.push(out); } } catch (e) { console.log('[alwayson] judges where', e); }
   for (const o of outs) { console.log('[alwayson] sleep judge ' + o.line); if (aoState) aoState.logActivity('sleep-part', { part: o.rec.part, line: o.line }); }
+  try {   // learners without a separate truth: logged so the morning shows they were not checked
+    tc.note('think-longer', 'right/wrong was set by the executor when the row was logged; the answers are not kept to re-run');
+    tc.note('where-to-look', 'its label is the day\'s own surprise signal, not a truth');
+    tc.note('watcher', 'labels are recomputed each night from the tick and outcome log');
+    tc.note('patterns', 'made by formula from notes; wrong notes never join, maybe notes make a pattern maybe');
+    for (const l of tc.lines) console.log('[alwayson] ' + l);
+  } catch (e) { /* log only */ }
   return outs;
 }
 // ---- feeling time + patterns (Task B, src/timesense.js + src/patterns.js) ------------------------------------------------
@@ -1598,7 +1607,7 @@ let aoGameLogObj = null, aoWorldObj;
 const aoGameLog = () => aoGameLogObj || (aoGameLogObj = new WorldModelMod.GameLog({ dir: aoDir() }));
 const aoWorld = () => (aoWorldObj === undefined ? (aoWorldObj = WorldModelMod.load(aoDir())) : aoWorldObj);
 aoNightlyJobs.push(() => {
-  const r = WorldModelMod.nightly({ dir: aoDir(), log: aoGameLog() }); aoWorldObj = undefined;
+  const r = WorldModelMod.nightly({ dir: aoDir(), log: aoGameLog(), truthCheck: store.getSettings().truthCheck !== false }); aoWorldObj = undefined;   // I2 truth check: the rulebook replays every logged step
   console.log('[alwayson] ' + r.line);
   if (aoState) aoState.logActivity('sleep-part', { part: 'worldmodel', line: r.line });
 });

@@ -12,6 +12,7 @@
 // Parts here = the ones that PASSED the toy test (premonition-sleeplab-t1 v1, 3/3 seeds): the guesser's fade rates (app stream,
 // when-model, idle/break stream), the think-longer threshold, where to look. Toy claims only; real-Glim effect untested.
 // Toy limits: a flipped day is caught; a PARTIALLY wrong day (30%, 60% wrong labels) is not reliably caught by this held-out test.
+// Partial poison: run(part, live, {truthcheck}) drops labels that fail a real truth first (src/truthcheck.js; guesser rows only).
 const fs = require('fs');
 const path = require('path');
 
@@ -99,7 +100,9 @@ function guesserPart() {
       return [{ model: { app: pa.j.app, when: pw.j.when, idle: pi.j.idle, k: { app: pa.k, when: pw.k, idle: pi.k } }, tag: 'keep app ' + pa.k + ', when ' + pw.k + ', idle ' + pi.k }];
     },
     // the replay only CHOSE the rates: the live model fades by them (main applies c.k to the live guesser + break tracker)
-    deploy: (c, live) => ({ ...J(live), k: { ...c.model.k } })
+    deploy: (c, live) => ({ ...J(live), k: { ...c.model.k } }),
+    // truth: recompute the app category from the raw app name + title kept on the row (no raw: no truth)
+    verify: require('./truthcheck').verifiers.category(require('./speakometer').categorize)
   };
 }
 
@@ -191,6 +194,15 @@ class SleepJudges {
     if (!logs[D] || !logs[D].length) return null;                      // nothing logged today: nothing to judge
     const st = this.state(part.name);
     if (st.lastNight === D && !o.force) return null;
+    // truth check (track I2): o.truthcheck = a src/truthcheck TruthCheck; parts with a real truth carry part.verify. Source = day:hour.
+    if (o.truthcheck && part.verify) {
+      try {
+        const all = [].concat(...Object.values(logs));
+        const tc = o.truthcheck.run(part.name, all, { verify: part.verify, sourceOf: (r) => r.d + ':' + new Date(r.t).getHours() });
+        const keep = new Set(tc.kept); for (const d of Object.keys(logs)) logs[d] = logs[d].filter((r) => keep.has(r));
+        if (!logs[D].length) return { rec: { part: part.name, action: 'no checked labels' }, model: live, line: part.name + ': no labels passed the truth check today, nothing changed' };
+      } catch (e) { /* the check never ends the night: unchecked */ }
+    }
     let out;
     try { out = night(part, st, logs, D, J(live)); } catch (e) { return { rec: { part: part.name, action: 'error', why: String(e && e.message || e) }, model: live, line: part.name + ': error, nothing changed' }; }
     st.lastNight = D; out.line = lineOf(out.rec);

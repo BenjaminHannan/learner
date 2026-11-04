@@ -44,7 +44,8 @@ class BreakTracker {
     this.since = (o.saved && o.saved.since) || null;    // start of the current active stretch (ms) or null while on a break
     this.q = [];                                          // active minutes waiting for their label
   }
-  tick(t, idleS, cat) {
+  // raw: optional {app, title} the category was computed from (kept on the row so the night's truth check can recompute it)
+  tick(t, idleS, cat, raw) {
     const active = Number(idleS) < IDLE_S, hour = new Date(t).getHours();
     if (active && this.since == null) this.since = t;
     if (!active && this.since != null) {                  // a break started (input stopped ~idleS ago)
@@ -54,8 +55,9 @@ class BreakTracker {
     }
     // resolve rows whose 5 minutes have passed (or all of them once a break started)
     while (this.q.length && (t - this.q[0].t >= SOON_MS || this.since == null)) this.emit(this.q.shift());
-    if (active) this.q.push({ t, cat: cat || 'other', work: true, sess: Math.round((t - this.since) / 60000), hour, soon: 0 });
-    else this.emit({ t, cat: cat || 'other', work: false, sess: -1, hour, soon: 0 });
+    const rw = raw && (raw.app || raw.title) ? { raw: { app: String(raw.app || '').slice(0, 60), title: String(raw.title || '').slice(0, 80) } } : {};
+    if (active) this.q.push({ t, cat: cat || 'other', work: true, sess: Math.round((t - this.since) / 60000), hour, soon: 0, ...rw });
+    else this.emit({ t, cat: cat || 'other', work: false, sess: -1, hour, soon: 0, ...rw });
   }
   emit(r) { if (r.work) this.model.observe(r.hour, r.sess, r.soon); try { this.o.onRow && this.o.onRow(r); } catch (e) { /* log only */ } }
   // the chance of a break in the next 5 min right now; null while unknown (on a break, or no data yet)

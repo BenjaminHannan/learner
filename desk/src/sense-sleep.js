@@ -209,6 +209,15 @@ function buildPractice(records, opts = {}) {
       }
     }
   }
+  // truth check (I2, src/truthcheck.js): opts.truthcheck = a TruthCheck. Each text-anchored label must still match the text stored
+  // with its record; 2-of-3 labels have no truth of their own (unchecked unless their source failed). Source = sense:day.
+  if (opts.truthcheck) {
+    try {
+      const TC = require('./truthcheck'), byId = new Map(records.map((r) => [r.id, r]));
+      const verify = TC.verifiers.anchorText(byId, (rec) => { const tx = rec.text || {}; return [tx.subtitle, soundTagText(tx.soundTag), tx.screen, tx.caption]; });
+      for (const s of ['eye', 'ear']) out[s] = opts.truthcheck.run('sense-' + s, out[s], { verify, sourceOf: (x) => s + ':' + String(x.id).split('#')[0] }).kept;
+    } catch (e) { /* the check never ends the night: unchecked */ }
+  }
   return out;
 }
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();

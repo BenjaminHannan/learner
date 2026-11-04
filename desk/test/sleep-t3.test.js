@@ -49,7 +49,13 @@ test('world model nightly: kept on clean nights, rolled back when the candidate 
   for (const x of rows) if (x.t >= T0 + 7 * DAY && x.who === 'me') { const g = GAMES[x.game]; const alt = g.moves(x.s).find((m) => JSON.stringify(m) !== JSON.stringify(x.m)); if (alt != null) x.s2 = g.apply ? g.apply(x.s, alt) : g.step(x.s, alt); }
   fs.writeFileSync(file, rows.map((x) => JSON.stringify(x)).join('\n') + '\n');
   now = T0 + 7 * DAY + 23 * 3600000;
-  const q = WM.nightly({ dir, log, now: () => now, guard: true });
+  // I2: with the truth check on (default) the rulebook drops every poisoned row before training: nothing of day 7 is learned
+  const dirTC = tmp(); fs.copyFileSync(path.join(dir, 'worldmodel.json'), path.join(dirTC, 'worldmodel.json'));
+  const tcr = WM.nightly({ dir: dirTC, log, now: () => now, guard: true });
+  const tcl = fs.readFileSync(path.join(dirTC, 'truthcheck-log.jsonl'), 'utf8').trim().split('\n').map(JSON.parse).pop();
+  assert.ok(tcl.bad > 0 && tcr.rows === tcl.kept, JSON.stringify(tcl));
+  // the guard and the rollback below are the fallbacks for when no truth check runs (truthCheck: false)
+  const q = WM.nightly({ dir, log, now: () => now, guard: true, truthCheck: false });
   assert.ok(q.quarantined, q.why); assert.strictEqual(q.kept, false);
   assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(dir, 'worldmodel.json'), 'utf8')).model, JSON.parse(before).model);
   // a candidate learned from bad OLDER days is worse on a clean latest day -> rolled back
@@ -58,7 +64,7 @@ test('world model nightly: kept on clean nights, rolled back when the candidate 
   for (const x of rows.filter((y) => y.t >= T0 + 7 * DAY)) { n2 = x.t - 3 * DAY; log2.add(x); }   // the poisoned rows, as old days
   for (const g of Object.values(GAMES)) playLogged(log2, g, 100008, (t) => { n2 = t; }, 8);
   n2 = T0 + 8 * DAY + 23 * 3600000;
-  const rb = WM.nightly({ dir: dir2, log: log2, now: () => n2 });
+  const rb = WM.nightly({ dir: dir2, log: log2, now: () => n2, truthCheck: false });
   assert.strictEqual(rb.kept, false); assert.match(rb.why, /worse/);
 });
 

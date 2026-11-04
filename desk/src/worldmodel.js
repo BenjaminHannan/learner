@@ -168,7 +168,14 @@ function nightly(o) {
   const log = o.log || new GameLog({ dir, now: o.now }); if (log.trim) log.trim();
   const prevJ = dir ? readJson(path.join(dir, 'worldmodel.json')) : null;
   const quarantine = new Set((prevJ && prevJ.quarantine) || []);
-  const rows = log.rows().filter((r) => r && r.t && ADAPT[r.game] && !quarantine.has(dayOf(r.t)));
+  let rows = log.rows().filter((r) => r && r.t && ADAPT[r.game] && !quarantine.has(dayOf(r.t)));
+  // truth check (track I2): every logged step is replayed through the game's own rulebook; failing rows never train.
+  // o.truthcheck: a src/truthcheck TruthCheck (default: one on o.dir, ON unless o.truthCheck === false). Source = day:game.
+  try {
+    const TC = require('./truthcheck'), tc = o.truthcheck || new TC.TruthCheck({ dir, enabled: o.truthCheck !== false, now: o.now });
+    const r = tc.run('worldmodel', rows, { verify: TC.verifiers.game(o.games || require('./games').GAMES), sourceOf: (x) => dayOf(x.t) + ':' + x.game });
+    rows = r.kept;
+  } catch (e) { /* the check never ends the night: unchecked */ }
   const cur = load(dir);
   const res = { at: now, rows: rows.length, kept: false, why: '' };
   if (!rows.length) { res.why = 'no game logs'; res.line = 'World model: no games played, nothing to learn.'; return finish(dir, res); }
