@@ -6,6 +6,8 @@
 // Batching, honestly: Ben's local server (stock mlx_lm on :8090 behind the Premonition gateway) serves ONE request at a time, so
 // the batch is sent back-to-back, one request after the other, re-checking the gate between them. If an `askBatch` is supplied (a
 // server that takes many prompts at once) the whole batch goes in one call instead.
+// E1 correction (2026-11-04): stock mlx_lm 0.32's server DOES batch requests that arrive together (continuous batching), so
+// src/motebatch.js sends the K tries of a Mote at once (streamed, one shared abort). Off unless the setting moteBatch is on.
 //
 // A Mote's answer is strict JSON {"claims": [string], "question": string|null}: claims become `maybe` notes for the truth check
 // (src/truthnotes.js), the question goes on the wonder list. Pure Node: ask / gate / prompt / onResult are injected.
@@ -76,9 +78,13 @@ class MotePool {
     if (!this.current) this.pump();
     return { running: this.count() };
   }
+  // E1: the batching function, or null. o.canBatch() (a setting) may switch a supplied askBatch off without rebuilding the pool.
+  batchFn() { return this.o.askBatch && (!this.o.canBatch || this.o.canBatch()) ? this.o.askBatch : null; }
+  triesFor(job) { return Math.max(1, Math.min(8, (typeof this.o.tries === 'function' ? this.o.tries(job) : this.o.tries) | 0 || 1)); }
   async pump() {
     if (this.current || !this.queue.length) return;
-    if (this.o.askBatch && this.queue.length > 1 && !this.queue.some((j) => j.run)) return this.runBatch();
+    // many different one-try jobs -> one batch; jobs with K tries are batched per job below (K tries at once), so the checker still picks
+    if (this.batchFn() && this.queue.length > 1 && !this.queue.some((j) => j.run || this.triesFor(j) > 1)) return this.runBatch();
     const job = this.current = this.queue.shift();
     const ctl = this.ctl = new AbortController();
     this.stats.started++; this.changed();
@@ -94,9 +100,9 @@ class MotePool {
     try {
       if (typeof job.run === 'function') { out = await job.run({ ask, signal: ctl.signal, gateOk }); ran = true; }
       else {
-        const k = Math.max(1, Math.min(8, (typeof this.o.tries === 'function' ? this.o.tries(job) : this.o.tries) | 0 || 1));
+        const k = this.triesFor(job), batch = this.batchFn();
         if (k === 1) text = await ask(this.o.prompt(job));
-        else if (this.o.askBatch) { if (!gateOk()) throw gateErr(); const m = this.o.prompt(job); texts = await this.o.askBatch(Array.from({ length: k }, () => m), ctl.signal, { tries: true }); }
+        else if (batch) { if (!gateOk()) throw gateErr(); const m = this.o.prompt(job); texts = await batch(Array.from({ length: k }, () => m), ctl.signal, { tries: true }); this.stats.batchedTries = (this.stats.batchedTries || 0) + k; }
         else { texts = []; for (let i = 0; i < k; i++) texts.push(await ask(this.o.prompt(job), { temperature: i === 0 ? 0.2 : 0.8, tryIndex: i })); }
       }
     } catch (e) {
@@ -124,7 +130,7 @@ class MotePool {
     const jobs = this.queue.splice(0); const ctl = this.ctl = new AbortController();
     this.current = jobs[0]; this.stats.started += jobs.length; this.changed();
     let texts = null;
-    try { texts = await this.o.askBatch(jobs.map((j) => this.o.prompt(j)), ctl.signal); } catch (e) { if (!ctl.signal.aborted) this.stats.failed += jobs.length; }
+    try { if (!this.o.gate() || this.o.gate().budget <= 0) throw Object.assign(new Error('gate'), { gate: true }); texts = await this.batchFn()(jobs.map((j) => this.o.prompt(j)), ctl.signal); } catch (e) { if (!ctl.signal.aborted && !e.gate) this.stats.failed += jobs.length; }
     const stopped = ctl.signal.aborted; if (this.current === jobs[0]) this.current = null; if (this.ctl === ctl) this.ctl = null;
     if (!stopped && Array.isArray(texts)) jobs.forEach((j, i) => { this.stats.done++; try { this.o.onResult(j, parseThought(texts[i]), texts[i]); } catch (e) { /* next */ } });
     this.changed();

@@ -130,12 +130,19 @@ class Senses {
     this.o = o; this.consent = o.consent || defaults(); this.state = o.state;
     this.now = o.now || Date.now; this.minGap = o.minGapMs || 20000;
     this.lastAt = {}; this.calls = { screen: 0, windows: 0 }; this.busy = {};
+    // E1 change-only intake (o.changeOnly: bool or () => bool, off by default): see sampleChangeOnly()
+    this.probeGap = o.probeGapMs || 5000; this.staleMs = o.staleMs || 60000;
+    this.co = { lastWin: null, winAtOcr: null, lastOcr: null, rich: false, skipped: 0 };
   }
   setConsent(c) { this.consent = normalize(c); }
   enabled(id) { return !!(this.consent.on && this.consent.senses[id]); }
   anyEnabled() { return this.consent.on && IDS.some((id) => this.consent.senses[id]); }
+  changeOnly() { const c = this.o.changeOnly; return !!(typeof c === 'function' ? c() : c); }
+  // how often the always-on loop should call sample()
+  sampleEveryMs() { return this.changeOnly() ? this.probeGap : this.minGap; }
   // poll the two sampled senses that are on and due; returns the new (stored) entries
   async sample() {
+    if (this.changeOnly()) return this.sampleChangeOnly();
     const out = [];
     for (const id of ['screen', 'windows']) {
       if (!this.enabled(id) || this.busy[id]) continue;   // off = never sampled
@@ -152,6 +159,58 @@ class Senses {
     return out;
   }
   push(id, text) { if (!this.enabled(id)) return null; return this.state.add(id, text); }
+  async run(id) {
+    const fn = this.o.samplers && this.o.samplers[id];
+    if (!fn) return null;
+    this.lastAt[id] = this.now(); this.calls[id]++; this.busy[id] = true;
+    let text = '';
+    try { text = await fn(); } catch (e) { text = ''; } finally { this.busy[id] = false; }
+    return typeof text === 'string' ? text : '';   // words only
+  }
+  // E1 change-only intake. The cheap look (the windows sense: app + window titles + the front window's accessibility text, already
+  // a sense of its own) runs every probeGap (5 s). The costly look (screen OCR) runs only when
+  //   - the cheap look changed since the last OCR (a window/app switch, new text in the front window), or
+  //   - it has not run for staleMs (60 s) while the front window has rich accessibility text (>= RICH_CHARS: most text changes show
+  //     up there first), or for minGap (20 s, the old pace) when it does not (games, video, canvases: only OCR sees them).
+  // With the windows sense off there is no cheap look (a sense that is off is never read): screen OCR keeps the old 20 s pace.
+  // What OCR stores is the change: the lines that were not on screen at the last OCR (the full text when most of it is new).
+  async sampleChangeOnly() {
+    const out = []; const now = this.now();
+    let win = null;
+    if (this.enabled('windows') && !this.busy.windows && (!this.lastAt.windows || now - this.lastAt.windows >= this.probeGap)) {
+      win = await this.run('windows');
+      if (win != null) { this.co.lastWin = win; this.co.rich = axChars(win) >= RICH_CHARS; const e = this.state.add('windows', win); if (e) out.push(e); }
+    }
+    if (this.enabled('screen') && !this.busy.screen) {
+      const cheap = this.enabled('windows') && this.co.lastWin != null;
+      const since = this.lastAt.screen ? now - this.lastAt.screen : Infinity;
+      const changed = cheap && this.co.lastWin !== this.co.winAtOcr;
+      const due = since === Infinity || changed || since >= (cheap && this.co.rich ? this.staleMs : this.minGap);
+      if (due) {
+        const text = await this.run('screen');
+        if (text != null) {
+          this.co.winAtOcr = this.co.lastWin;
+          const d = screenDiff(this.co.lastOcr, text); this.co.lastOcr = text;
+          const e = d ? this.state.add('screen', d) : null; if (e) out.push(e);
+        }
+      } else this.co.skipped++;
+    }
+    return out;
+  }
+}
+const RICH_CHARS = 80;
+// characters of front-window accessibility text in a windowsText() line (the part after "In <app>: ")
+function axChars(w) { const t = String(w || ''); const j = t.startsWith('In ') ? 0 : t.indexOf(' In '); if (j < 0) return 0; const i = t.indexOf(': ', j); return i < 0 ? 0 : t.length - i - 2; }
+// OCR text -> what changed since the previous OCR: '' when nothing did; the new lines (in screen order) when under half are new;
+// else the whole text (a different screen)
+function screenDiff(prev, cur) {
+  const lines = (t) => String(t || '').split(/\n+/).map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const c = lines(cur); if (!c.length) return '';
+  if (prev == null) return c.join('\n');
+  const p = new Set(lines(prev)); const added = c.filter((l) => !p.has(l));
+  if (!added.length) return '';
+  if (added.length * 2 >= c.length) return c.join('\n');
+  return 'Changed on screen: ' + added.join(' / ');
 }
 
 // `deskhelper windows` + `deskhelper look` JSON -> one short line of words (no ids, no coordinates)
@@ -169,4 +228,4 @@ function windowsText(w, look) {
   return parts.join(' ');
 }
 
-module.exports = { windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, missingPerms, AlwaysOnState, Senses };
+module.exports = { screenDiff, axChars, RICH_CHARS, windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, missingPerms, AlwaysOnState, Senses };

@@ -64,7 +64,7 @@ test('the loop prompt shows the clock and time-ago, and stays well inside the co
   const extra = { now, likely: 'Usually at this time: code 62%, browser 21%.', recall: Array.from({ length: 9 }, (_, i) => '(seen 3 h ago, same shape) ' + 'x'.repeat(300) + i), patterns: Array.from({ length: 4 }, () => 'Pattern (seen 6×): ' + 'y'.repeat(400)) };
   const full = AO.buildMessages(fresh, 'No current focus.', extra);
   const u = full[1].content;
-  assert.match(u, /^Now: Wed 4 Nov, 14:05\. Usually at this time: code 62%/);
+  assert.match(u, /\nNow: Wed 4 Nov, 14:05\. Usually at this time: code 62%/);   // E1: the clock moved to the end (prefix reuse)
   assert.match(u, /\[screen, 13:53\] Screen words 0 .* \(12 min ago\)/);
   assert.strictEqual((u.match(/^- \(seen 3 h ago/gm) || []).length, 5, 'at most 5 recalled memories');
   assert.strictEqual((u.match(/^- Pattern/gm) || []).length, 2, 'at most 2 patterns');

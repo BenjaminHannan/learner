@@ -26,15 +26,38 @@ const SYSTEM = 'You are the quiet background attention of Glim, a personal assis
 
 // feeling time (Task B): a clock line, "(N min ago)" on each observation, and the recalled memories + patterns
 // (extra = {now, recall: [lines], patterns: [lines], likely}); each list is capped so the prompt stays small.
-function buildMessages(fresh, summary, extra) {
+// Track E1 (prefix reuse): the same lines as before, ordered stable -> changing, so consecutive ticks share the longest prompt
+// prefix and the model server's prompt cache skips re-reading it: system, the focus sentence, patterns, memories, the new
+// observations, and last the parts that change every minute (when Glim last spoke, the clock, the usual-activity guess).
+// buildMessagesV1 is the old order (kept for the equivalence test and as a fallback).
+function splitSummary(summary) {
+  const s = String(summary || ''); const i = s.indexOf(' Last spoke to Ben');
+  return i < 0 ? { stable: s, moving: '' } : { stable: s.slice(0, i), moving: s.slice(i + 1) };
+}
+function promptParts(fresh, extra) {
   const x = extra || {}, now = x.now || Date.now();
-  const lines = fresh.slice(-12).map((o) => '- [' + o.sense + ', ' + (TS.validT(o.t) ? TS.hhmm(o.t) : 'time unknown') + '] ' + o.text.slice(0, 400) + (TS.validT(o.t) ? ' (' + TS.ago(o.t, now) + ')' : ''));
-  const rec = (x.recall || []).slice(0, 5).map((l) => '- ' + String(l).slice(0, 180));
-  const pat = (x.patterns || []).slice(0, 2).map((l) => '- ' + String(l).slice(0, 240));
+  return {
+    now: 'Now: ' + TS.clockWords(now) + '.' + (x.likely ? ' ' + String(x.likely).slice(0, 80) : ''),
+    lines: fresh.slice(-12).map((o) => '- [' + o.sense + ', ' + (TS.validT(o.t) ? TS.hhmm(o.t) : 'time unknown') + '] ' + o.text.slice(0, 400) + (TS.validT(o.t) ? ' (' + TS.ago(o.t, now) + ')' : '')),
+    rec: (x.recall || []).slice(0, 5).map((l) => '- ' + String(l).slice(0, 180)),
+    pat: (x.patterns || []).slice(0, 2).map((l) => '- ' + String(l).slice(0, 240))
+  };
+}
+function buildMessagesV1(fresh, summary, extra) {
+  const { now, lines, rec, pat } = promptParts(fresh, extra);
   return [
     { role: 'system', content: SYSTEM },
-    { role: 'user', content: 'Now: ' + TS.clockWords(now) + '.' + (x.likely ? ' ' + String(x.likely).slice(0, 80) : '') + '\n' + summary + '\nNew observations:\n' + lines.join('\n')
+    { role: 'user', content: now + '\n' + summary + '\nNew observations:\n' + lines.join('\n')
       + (rec.length ? '\nRelated memories (data):\n' + rec.join('\n') : '') + (pat.length ? '\nPatterns seen before (data):\n' + pat.join('\n') : '') + '\nAnswer with the JSON object only.' }
+  ];
+}
+function buildMessages(fresh, summary, extra) {
+  const { now, lines, rec, pat } = promptParts(fresh, extra);
+  const sm = splitSummary(summary);
+  return [
+    { role: 'system', content: SYSTEM },
+    { role: 'user', content: sm.stable + (pat.length ? '\nPatterns seen before (data):\n' + pat.join('\n') : '') + (rec.length ? '\nRelated memories (data):\n' + rec.join('\n') : '')
+      + '\nNew observations:\n' + lines.join('\n') + (sm.moving ? '\n' + sm.moving : '') + '\n' + now + '\nAnswer with the JSON object only.' }
   ];
 }
 
@@ -84,8 +107,9 @@ class AlwaysOn {
   start() {
     if (this.running) return; this.running = true; this.schedule(Math.min(this.baseMs, 15000));
     // the senses are read on their own gentle clock (every 20 s, stored only when the words changed); the model only on ticks
-    const every = this.o.sampleMs || 20000;
-    const loop = () => { this.sampleTimer = this.setTimer(() => { this.sampleNow().finally(() => { if (this.running) loop(); }); }, every); };
+    // E1: with change-only intake on, the senses set a shorter pace (src/senses.js sampleEveryMs: 5 s cheap look, OCR on change)
+    const every = () => this.o.sampleMs || (this.senses && this.senses.sampleEveryMs ? this.senses.sampleEveryMs() : 20000);
+    const loop = () => { this.sampleTimer = this.setTimer(() => { this.sampleNow().finally(() => { if (this.running) loop(); }); }, every()); };
     loop();
   }
   async sampleNow() {
@@ -169,4 +193,4 @@ class AlwaysOn {
   }
 }
 
-module.exports = { AlwaysOn, parseDecision, buildMessages, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };
+module.exports = { AlwaysOn, parseDecision, buildMessages, buildMessagesV1, splitSummary, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };

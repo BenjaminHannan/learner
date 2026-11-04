@@ -1200,7 +1200,10 @@
     ] },
     { group: 'Senses', rows: [
       { type: 'senses', label: 'What Glim may notice', help: 'Always-on Glim: the inputs it may use, all on this Mac. A sense that is off is never read.' },
-      { key: 'useNotch', type: 'toggle', label: 'Use the notch', help: 'When Glim speaks up by itself, the island at the top of the screen drops down with the message (a Mac without a notch uses the floating pill). Off: a macOS notification instead.' }
+      { key: 'useNotch', type: 'toggle', label: 'Use the notch', help: 'When Glim speaks up by itself, the island at the top of the screen drops down with the message (a Mac without a notch uses the floating pill). Off: a macOS notification instead.' },
+      { key: 'senseChangeOnly', type: 'toggle', label: 'Look more often, read only changes', help: 'Glim glances at the open windows every 5 seconds and reads the screen words only when something changed. Needs Open windows on.' },
+      { key: 'moteBatch', type: 'toggle', label: 'Think in parallel', help: 'A thinking Mote sends its tries to the model together instead of one after another. Your chat still comes first.' },
+      { key: 'keepBrainInMemory', type: 'toggle', label: "Keep Glim's brain in memory", help: 'The model stays locked in RAM with a fixed working space, so it answers fast after a quiet spell. Other apps get about 6.6 GB less room. Takes effect when the model server restarts.' }
     ] },
     { group: 'Screen control', rows: [
       { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your computer. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },

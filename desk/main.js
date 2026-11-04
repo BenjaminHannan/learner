@@ -1555,7 +1555,7 @@ function aoSetup() {
   aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
   getTruth();
   aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
-  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, samplers: {
+  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
     windows: async () => {
@@ -1693,7 +1693,21 @@ function aoMoteResult(job, r) {
   if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: true, minutes: Math.max(0.1, (Date.now() - job.at) / 60000) });
   aoMoteClaims(job, r.claims || []);
 }
+// E1: setting moteBatch -> a Mote's K tries go to the server together, streamed (src/motebatch.js); stopAll aborts all of them
+async function aoAskStream(messages, signal, opts) {
+  const { buildChatBody, chatUrl } = require('./src/llm');
+  const s = store.getSettings();
+  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: true, maxTokens: (opts && opts.maxTokens) || 350, temperature: opts && opts.temperature != null ? opts.temperature : 0.2, test: true });
+  const headers = { 'content-type': 'application/json', 'x-test': '1' };
+  if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
+  const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
+  const stop = () => ctl.abort(); signal.addEventListener('abort', stop);
+  try { return await require('./src/motebatch').streamText({ url: chatUrl(s.gatewayUrl), headers, body, signal: ctl.signal }); }
+  finally { clearTimeout(kill); signal.removeEventListener('abort', stop); }
+}
+const aoAskBatch = require('./src/motebatch').makeAskBatch({ askOne: (m, sig, o) => aoAskStream(m, sig, o) });
 const aoPool = new PoolMod.MotePool({ ask: (m, sig, o) => aoAsk(m, sig, { maxTokens: 350, ...(o || {}) }), gate: aoMoteGate, prompt: (job) => QuizMod.safeStudier(aoMotePrompt, job, aoQuizS()),
+  askBatch: aoAskBatch, canBatch: () => store.getSettings().moteBatch === true,
   tries: () => aoTries(), pick: (job, parsed) => aoPickThought(job, parsed),
   onResult: (job, r, t, x) => { aoMoteResult(job, r); aoAfterPick(job, r, x); }, onChange: () => schedulePill(), log: (...a) => console.log('[alwayson]', ...a) });
 // ---- ingredients (2026-11-04): the checker + "I'm not sure" (src/checker.js), the little scientist (src/scientist.js) ------------

@@ -1,0 +1,194 @@
+r"""Glim's model server with an optional "keep the brain in memory" mode (track E1, 2026-11-04).
+
+A drop-in for ~/learner-ops/assistant/dory/plain_mlx_lm_big.py (which stays untouched): stock mlx_lm.server, and every request is
+answered by the --model given here, whatever name it asks for.
+
+    python glim_mlx_server.py --model DIR [--settings-file ~/Library/Application\ Support/Premonition/settings.json]
+                              [--keep-in-memory on|off] [--kv-buffer 2GB] [mlx_lm.server args ...]
+
+Setting OFF (the default; settings.json "keepBrainInMemory" missing or false): byte-for-byte the stock behaviour, which is what the
+live server does today. Stock mlx_lm 0.32 already sets MLX's wired limit to max_recommended_working_set_size (30 GB on the M1 Pro)
+at start and puts it back after every generation, and frees MLX's buffer pool (mx.clear_cache) during and after generation.
+
+Setting ON:
+  - wired limit = model weights (safetensors bytes on disk) + KV buffer + 512 MB margin, capped at max_recommended_working_set_size,
+    set at start and kept: mlx_lm's own "set recommended limit" calls (server start, every generate, every BatchGenerator) set this
+    same number instead, so it never moves between requests.
+  - the KV buffer: MLX's buffer pool is held at exactly --kv-buffer bytes (mx.set_cache_limit), pre-touched once at start, and
+    mx.clear_cache() becomes a no-op, so the KV memory is not handed back to macOS after each request and grabbed again on the
+    next one. The prompt cache is capped at the same size (--prompt-cache-bytes, unless given).
+  - never runs sudo. If the computed limit is above what macOS allows MLX to wire, the limit is capped and the log line says that
+    raising it would need `sudo sysctl iogpu.wired_limit_mb=...` (reported, never done).
+
+Cost to the rest of the Mac (ON): up to weights + buffer (+ margin) stays wired: macOS cannot compress or swap it, so other apps have
+that much less RAM to move around in. For Nanbeige 8-bit: 4.1 GB + 2 GB = about 6.6 GB. Stock wires the weights plus whatever MLX has
+allocated at the moment (up to 30 GB during a long prompt) and lets the pool shrink between requests.
+"""
+import json
+import os
+import sys
+
+GB = 1 << 30
+MARGIN = 512 << 20
+
+
+def parse_size(x):
+    s = str(x).strip().upper().replace("IB", "B")
+    mult = {"K": 1 << 10, "KB": 1 << 10, "M": 1 << 20, "MB": 1 << 20, "G": GB, "GB": GB, "": 1, "B": 1}
+    i = len(s)
+    while i and not (s[i - 1].isdigit() or s[i - 1] == "."):
+        i -= 1
+    return int(float(s[:i]) * mult[s[i:].strip()])
+
+
+def pop_flag(argv, name, default=None):
+    """Remove `name value` from argv (our own flags; mlx_lm.server would reject them) and return value."""
+    if name in argv:
+        i = argv.index(name)
+        v = argv[i + 1] if i + 1 < len(argv) else default
+        del argv[i:i + 2]
+        return v
+    return default
+
+
+def setting_on(settings_file, override):
+    """The 'Keep Glim's brain in memory' setting. Explicit --keep-in-memory wins; else settings.json; else OFF."""
+    if override is not None:
+        return str(override).lower() in ("1", "on", "true", "yes")
+    if not settings_file:
+        return False
+    try:
+        with open(os.path.expanduser(settings_file), encoding="utf-8") as f:
+            return json.load(f).get("keepBrainInMemory") is True
+    except (OSError, ValueError, AttributeError):
+        return False  # unreadable settings: the safe default
+
+
+def weight_bytes(model_dir):
+    d = os.path.expanduser(model_dir)
+    if os.path.isfile(d):
+        return os.path.getsize(d)
+    try:
+        return sum(os.path.getsize(os.path.join(d, f)) for f in os.listdir(d) if f.endswith(".safetensors"))
+    except OSError:
+        return 0
+
+
+def plan(weights, kv_buffer, max_rec):
+    """-> (limit, capped). Pure, for the tests."""
+    want = weights + kv_buffer + MARGIN
+    if max_rec and want > max_rec:
+        return int(max_rec), True
+    return int(want), False
+
+
+def install_keep(mx, mlx_modules, weights, kv_buffer, log=print):
+    """Make the wired limit + KV pool fixed. Returns a dict describing what was set."""
+    info = mx.device_info() if hasattr(mx, "device_info") else mx.metal.device_info()
+    max_rec = int(info.get("max_recommended_working_set_size") or 0)
+    limit, capped = plan(weights, kv_buffer, max_rec)
+    set_wired = mx.set_wired_limit if hasattr(mx, "set_wired_limit") else mx.metal.set_wired_limit
+    set_cache = mx.set_cache_limit if hasattr(mx, "set_cache_limit") else mx.metal.set_cache_limit
+    prev = set_wired(limit)
+
+    def fixed_limit():  # replaces mlx_lm's maybe_set_recommended_wired_limit: same contract (returns the previous limit)
+        return set_wired(limit)
+
+    for m in mlx_modules:
+        if hasattr(m, "maybe_set_recommended_wired_limit"):
+            m.maybe_set_recommended_wired_limit = fixed_limit
+    set_cache(kv_buffer)
+    # pre-touch the buffer once so the pool holds it from the start (freed arrays go to the pool, which clear_cache no longer empties)
+    try:
+        a = mx.zeros((max(1, kv_buffer // 4),), dtype=mx.float32)
+        mx.eval(a)
+        del a
+    except Exception as e:  # noqa: BLE001 - a failed pre-touch only means the pool fills on first use
+        log("[glim-brain] pre-touch skipped: %s" % e)
+    real_clear = mx.clear_cache
+    mx.clear_cache = lambda: None
+    out = {"on": True, "wired_limit": limit, "previous_limit": int(prev or 0), "weights": weights, "kv_buffer": kv_buffer,
+           "max_recommended": max_rec, "capped": capped, "real_clear_cache": real_clear}
+    msg = "[glim-brain] keep in memory ON: wired limit %.2f GB (weights %.2f GB + buffer %.2f GB + margin), pool %.2f GB" % (
+        limit / GB, weights / GB, kv_buffer / GB, kv_buffer / GB)
+    if capped:
+        msg += "; CAPPED at macOS's recommended %.2f GB (raising it needs `sudo sysctl iogpu.wired_limit_mb=...`, not done)" % (max_rec / GB)
+    log(msg)
+    return out
+
+
+def page_views(mx, arrays, page_bytes=4096):
+    """One element per 4 KB of every array (a strided view): reading these touches every memory page of the weights."""
+    out = []
+    for w in arrays:
+        step = max(1, page_bytes // max(1, w.itemsize))
+        out.append(w.reshape(-1)[::step])
+    return out
+
+
+def install_touch(S, mx, every_s, clock=None, log=print):
+    """v2 (E1): macOS compresses idle GPU buffers even under a wired limit (measured: 302 of 633 MB within 45 s idle).
+    While the server is idle, read one value per page of every weight every `every_s` seconds, so the pages stay recently used and
+    are never compressed. Runs INSIDE mlx_lm's generation thread (its idle wait), so it never races a request. Cost: a few ms."""
+    import time as _t
+    from mlx.utils import tree_flatten
+    clock = clock or _t.monotonic
+    RG = S.ResponseGenerator
+    orig = RG._next_request
+    state = {"last": clock(), "views": None, "count": 0}
+
+    def next_request(self, timeout=None):
+        req = orig(self, timeout)
+        if req is None and timeout is not None and clock() - state["last"] >= every_s:   # idle (no batch decoding)
+            state["last"] = clock()
+            try:
+                model = self.model_provider.model
+                if model is not None:
+                    if state["views"] is None or state.get("model") is not model:
+                        state["model"] = model
+                        state["views"] = page_views(mx, [v for _, v in tree_flatten(model.parameters())])
+                    mx.eval([v.sum() for v in state["views"]])
+                    state["count"] += 1
+            except Exception as e:  # noqa: BLE001 - a failed touch never breaks serving
+                log("[glim-brain] touch skipped: %s" % e)
+        return req
+
+    RG._next_request = next_request
+    log("[glim-brain] idle touch every %ss" % every_s)
+    return state
+
+
+def main(argv=None):
+    argv = list(sys.argv if argv is None else argv)
+    settings_file = pop_flag(argv, "--settings-file")
+    override = pop_flag(argv, "--keep-in-memory")
+    kv_raw = pop_flag(argv, "--kv-buffer")
+    touch_s = float(pop_flag(argv, "--keep-touch-s", "0") or 0)   # E1 v2: idle page touch (0 = off)
+    model = argv[argv.index("--model") + 1]
+    on = setting_on(settings_file, override)
+    if on:
+        kv = parse_size(kv_raw) if kv_raw else (parse_size(argv[argv.index("--prompt-cache-bytes") + 1]) if "--prompt-cache-bytes" in argv else 2 * GB)
+        if "--prompt-cache-bytes" not in argv:
+            argv += ["--prompt-cache-bytes", str(kv)]
+    sys.argv = argv
+    import mlx.core as mx
+    import mlx_lm.server as S
+    import mlx_lm.generate as G
+    import mlx_lm.utils as U
+    orig_load = S.load
+
+    def load_fixed(path, *a, **kw):
+        return orig_load(model, *a, **kw)  # ignore the requested name (the gateway sends "lfm3")
+
+    S.load = load_fixed
+    if on:
+        install_keep(mx, [S, G, U], weight_bytes(model), kv, log=lambda s: print(s, file=sys.stderr, flush=True))
+        if touch_s > 0:
+            install_touch(S, mx, touch_s, log=lambda s: print(s, file=sys.stderr, flush=True))
+    else:
+        print("[glim-brain] keep in memory OFF: stock mlx_lm behaviour", file=sys.stderr, flush=True)
+    S.main()
+
+
+if __name__ == "__main__":
+    main()
