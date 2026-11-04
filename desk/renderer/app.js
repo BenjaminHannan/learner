@@ -655,7 +655,7 @@
     onChange: (st, info) => {
       const m = st.model;
       $('#dashDot').hidden = !(m && m.hero.needs > 0);
-      $('#btnDash').title = m ? 'Important updates: ' + m.hero.title : 'Important updates';
+      $('#btnDash').title = m ? 'Dashboard: ' + m.hero.title : 'Dashboard';
       if (info.changed) for (const c of [...morningCards]) { if (c.isConnected) c.repaint(); else morningCards.delete(c); }
       if (dashSheet.hidden) return;
       if (info.changed || info.kind === 'ui' || Dashboard.feedStatus(st) !== paintedStatus) paintDash();
