@@ -89,3 +89,14 @@ test('wiring: pill buttons, chat 👍/👎 row, Settings toggle, main routes thr
   assert.match(m, /v\.ear = aoEar\(\)/);
   assert.strictEqual(require('../src/store').DEFAULT_SETTINGS.useNotch, true);
 });
+
+test('UI2: a proactive message in the chat rates with the same outline thumb icons as a normal reply (no emoji)', () => {
+  const app = require('fs').readFileSync(require('path').join(__dirname, '../renderer/app.js'), 'utf8');
+  const ao = app.slice(app.indexOf('function aoRow('), app.indexOf('function onAssistantEnd('));
+  assert.ok(!/👍|👎/.test(ao), 'no emoji');
+  assert.match(ao, /b\.innerHTML = svg\(THUMB\)/);
+  assert.match(ao, /'rate-b ao-b' \+ \(kind === 'down' \? ' down' : ''\)/);
+  assert.match(ao, /mk\('up', 'Good time to tell me'\), mk\('down', 'Not now'\)/);
+  const rate = app.slice(app.indexOf('function rateRow('), app.indexOf('function aoRow('));
+  assert.match(rate, /b\.innerHTML = svg\(THUMB\)/);
+});

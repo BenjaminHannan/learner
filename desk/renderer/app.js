@@ -261,13 +261,14 @@
     sync(); row.append(up, down);
     return row;
   }
-  // always-on v2: a message Glim sent by itself gets 👍 and 👎 "not now" (they teach its speak-o-meter when to talk)
+  // always-on v2: a message Glim sent by itself gets thumbs up and thumbs down "not now" (they teach its speak-o-meter when to talk).
+  // UI2 (Ben Nov 4): the same outline thumb icons as a normal reply's rating, not emoji; the words stay in the tooltip.
   function aoRow(sayId) {
     const row = el('div', 'rate ao-rate');
-    const mk = (kind, label, txt) => { const b = el('button', 'rate-b ao-b', txt); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
+    const mk = (kind, label) => { const b = el('button', 'rate-b ao-b' + (kind === 'down' ? ' down' : '')); b.innerHTML = svg(THUMB); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
       b.onclick = async () => { const r = desk.alwaysOn ? await desk.alwaysOn.feedback(sayId, kind) : null; row.classList.add('set'); b.setAttribute('aria-pressed', 'true'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); if (!r || !r.ok) b.title = 'Already counted'; };
       return b; };
-    row.append(mk('up', 'Good time to tell me', '👍'), mk('down', 'Not now', '👎 Not now'));
+    row.append(mk('up', 'Good time to tell me'), mk('down', 'Not now'));
     return row;
   }
   function onAssistantEnd(ev) {
