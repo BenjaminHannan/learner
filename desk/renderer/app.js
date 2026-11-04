@@ -540,7 +540,7 @@
   function setRunning(r) {
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
-    $('#btnStop').hidden = !r; $('#runState').hidden = !r; paintTyping();
+    $('#runState').hidden = !r; paintTyping();
     $('#runState span').textContent = 'Typing…';
     paintGateway();
     paintBox(r);
@@ -548,11 +548,22 @@
   // the chat box's words for the current state; Learn mode (learnbtn.js) dresses the box on top and calls this back when it ends
   function paintBox(r) {
     paintSend(r);
-    input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
+    input.placeholder = r ? 'Steer Glim…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
     autosize(); // the running-state placeholder can wrap at the current width
     input.readOnly = !!(thread && thread.helper);
-    $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
+    $('#hint').textContent = r ? 'Enter to steer · Esc to stop' : 'Enter to send · Shift+Enter for a new line';
+    paintPrimary();
     if (window.LearnButton) LearnButton.dress();
+  }
+  // Ben Nov 4 "clean this up": ONE round button on the right that morphs. Running + empty box = Stop; running + typed text =
+  // the steer arrow; idle = the send arrow; Learn mode = the green arrow; asleep = none (the Wake button says it all).
+  // #btnSend and #btnStop share the slot, so the box never changes size. Call hides while a task runs.
+  function paintPrimary() {
+    const asleep = slp.asleep || slp.waking, learning = !!(window.LearnButton && LearnButton.composing());
+    const stopNow = running && !asleep && !learning && !input.value.trim();
+    $('#btnStop').hidden = !stopNow;
+    $('#btnSend').hidden = asleep || stopNow;
+    $('#composer .box').classList.toggle('running', running && !asleep);
   }
   if (window.LearnButton) LearnButton.restore = () => { if (slp.asleep || slp.waking) paintSleep(); else paintBox(running); autosize(); };
 
@@ -663,7 +674,7 @@
     // Ben Oct 28: "tell you what it's doing right now in its sleep": the earlier steps of tonight, newest last
     const rec = !slp.waking && slp.live && slp.live.recent ? slp.live.recent.slice(0, -1) : [];
     const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line))); ul.hidden = !rec.length;
-    $('#btnSend').hidden = asleep; $('#hint').hidden = asleep;
+    paintPrimary(); $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
     else { if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
     const b = $('#btnSleep'); b.disabled = !slp.available || asleep;
@@ -1085,7 +1096,7 @@
   });
 
   // ---------- composer ----------
-  function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 9.2 * parseFloat(getComputedStyle(document.documentElement).fontSize)) + 'px'; }
+  function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 9.2 * parseFloat(getComputedStyle(document.documentElement).fontSize)) + 'px'; try { paintPrimary(); } catch (e) { /* before start-up has run */ } }   // text in or out: the one button morphs
   input.addEventListener('input', autosize);
   // A browser or side panel can change the composer width without an input event.
   // Track width only, so autosizing the height does not trigger an observer loop.

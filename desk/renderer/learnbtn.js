@@ -41,6 +41,7 @@ window.LearnButton = (() => {
     if (hint.textContent !== NUDGE) hint.textContent = HINT;
     send.innerHTML = ARROW + '<span class="sr">Start learning</span>'; send.title = 'Start learning (Enter)';
     btn.classList.add('composing'); btn.setAttribute('aria-pressed', 'true');
+    const stopB = $('#btnStop'); if (stopB) stopB.hidden = true; send.hidden = false;   // the one button is the green arrow, even while a chat runs
   }
   function enter() {
     if (composing) return;
