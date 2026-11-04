@@ -285,7 +285,7 @@ async function run({ app, win, ui, panel, holds, store, memory, sleeper, sl, aut
     checks.push(['browser panel is closed until the card is clicked', !(await panelOpen()) && !panel.open]);
     checks.push(['closed browser view stays attached below the UI (UI is above it)', order().indexOf(b0.view) >= 0 && order().indexOf(b0.view) < order().indexOf(ui)]);
     checks.push(['closed browser view has real panel size (not 0, not parked off-screen)', inWin(b0.view.getBounds())]);
-    checks.push(['top bar shows the Browser button', await ev('!document.querySelector("#btnBrowser").hidden')]);
+    checks.push(['top bar shows the Learn button', await ev('!!document.querySelector("#btnLearn") && !document.querySelector("#btnBrowser")')]);
     // wait for the held step (the click request): the run is mid-flight
     await until(async () => gw.requests.length >= 3, 12000);
     await ev('document.querySelector(".bcard").click()');

@@ -23,9 +23,24 @@
   <div class="seg mode" id="modeSeg" hidden role="group" aria-label="Autonomy (change in Settings)" title="Change this in Settings">
     <button data-mode="ask">Ask first</button><button data-mode="hands-off">Hands-off</button>
   </div>
-  <button id="btnBrowser" class="tb-btn" title="Show or hide Glim's browser" aria-pressed="false">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span>Browser</span>
-  </button>
+  <div class="lb-wrap">
+    <button id="btnLearn" class="tb-btn" title="Learn: send Glim off to study a topic until you stop it" aria-haspopup="dialog" aria-expanded="false">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3.5c2-.8 3.8-.6 5.5.6v9c-1.7-1.2-3.5-1.4-5.5-.6zM13.5 3.5c-2-.8-3.8-.6-5.5.6v9c1.7-1.2 3.5-1.4 5.5-.6z"/><path d="M12.6 1.2v1.6M11.8 2h1.6"/></svg><span id="learnLabel">Learn</span>
+    </button>
+    <div id="learnPop" class="lb-pop" hidden role="dialog" aria-label="Learn">
+      <div id="learnIdle">
+        <label for="learnTopic" class="lb-q">What should I learn about?</label>
+        <div class="lb-row"><input id="learnTopic" type="text" placeholder="e.g. enzyme kinetics" spellcheck="true" maxlength="200"><button id="learnStart" class="amber-btn sm">Start</button></div>
+        <p class="lb-sub">Glim studies quietly until you press Stop. What it learns is saved for sleep.</p>
+      </div>
+      <div id="learnBusy" hidden>
+        <p class="lb-q">Learning: <b id="learnTopicNow"></b></p>
+        <div class="lb-row"><button id="learnStop" class="ghost sm">Stop</button></div>
+      </div>
+      <div id="learnErr" class="errline" role="alert" hidden></div>
+      <button id="learnShowBrowser" class="ghost sm lb-browser">Show browser</button>
+    </div>
+  </div>
   <div id="gw" class="chip" title="Gateway"><i></i><span>Offline</span></div>
   <button id="btnSide" class="icon-btn" title="Show or hide the side panel (Now, Goals, Ideas)" aria-label="Side panel" aria-pressed="true">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M10 3v10"/></svg>
@@ -192,6 +207,7 @@
 <script src="guard.js"></script>
 <script src="acts.js"></script>
 <script src="panel.js"></script>
+<script src="learnbtn.js"></script>
 <script src="perms.js"></script>
 <script src="senses.js"></script>
 <script src="voice.js"></script>

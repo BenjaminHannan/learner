@@ -228,17 +228,20 @@ function startLearn(topic, count, hours) {
   if (!topic) return { error: 'no topic' };
   if (sl.asleep || sl.waking) return { error: 'Glim is asleep.' };
   const n = Math.max(1, Math.min(12, parseInt(count, 10) || 3)), hrs = Math.max(0, Number(hours) || 0);
-  const until = hrs ? Date.now() + hrs * 3600000 : 0, made = [];
+  const until = hrs ? Date.now() + hrs * 3600000 : 0, made = [], ids = [];
   let error = null;
   for (let i = 0; i < n; i++) {
     const angle = LEARN_ANGLES[i % LEARN_ANGLES.length] + (i >= LEARN_ANGLES.length ? ' (part ' + (Math.floor(i / LEARN_ANGLES.length) + 1) + ')' : '');
-    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }, { learnResearch: true }); made.push(v.name); }
+    try { const v = helpers.add({ name: ('Learn ' + (i + 1) + ': ' + topic).slice(0, 40), task: LEARN_MOTE(topic, n > 1 ? angle : ''), every: hrs === 0 || hrs > 1 ? '45m' : '20m', until, allowSimilar: true }, { learnResearch: true }); made.push(v.name); ids.push(v.id); }
     catch (e) { error = String(e && e.message || e); break; }
   }
-  return { ok: made.length > 0, count: made.length, topic, error };
+  return { ok: made.length > 0, count: made.length, topic, error, ids };
 }
 const pendingLearn = new Map();
-let learning = null;   // the Learn button's study: {topic, ids, since} (src/learnbtn wiring below)
+// the toolbar's Learn button (src/learnbutton.js): Start = Learn-mode Motes with lifetime forever, Stop = stop them
+let learnBtn = null;
+const getLearnBtn = () => learnBtn || (learnBtn = new (require('./src/learnbutton').LearnButton)({ dir: app.getPath('userData'), startLearn, stopMote: (id) => helpers.stop(id), onChange: (v) => { send('learn:state', v); if (aoState) aoState.setFocus(v.learning ? v.topic : null, 'learn'); } }));
+const learningNow = () => !!(learnBtn && learnBtn.cur);
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
@@ -1074,6 +1077,8 @@ function buildAgent() {
     runner: createRunner({ store, makeAgent: makeHelperAgent }),
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent, flags) => {
+      // always-on: a Learn Mote's findings join the inbox (web sense; its notes are already saved for sleep by memory_save)
+      { const f = String((flags && flags.report) || summary || '').replace(/\bNO_UPDATE\b/g, '').trim(); if (aoSenses && /^Learn \d+: /.test(h.name) && f) aoSenses.push('web', h.name.replace(/^Learn \d+: /, 'Learned about ') + ': ' + f.slice(0, 400)); }
       if (flags && flags.quiet) return send('helpers:changed', helpers.list()); // nothing new: no notice, no notification
       // Ben Oct 28: a helper never reports to Ben itself. With a parent chat, Glim reads the report and tells him (relayReports, its own
       // notification); only a helper with no chat to report to gets the plain desktop notification.
@@ -1425,7 +1430,7 @@ function aoSay(text) {
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
 function aoNote(text) { try { const r = memory.save(text, 'noticed'); if (!r.ok) console.log('[alwayson] note not saved:', r.error); } catch (e) { /* skipped */ } }
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
-function aoLearn(topic) { if (learning) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
+function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
@@ -1509,6 +1514,9 @@ function registerIpc() {
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
     return { started: true, title: t.title };
   });
+  h('learn:state', () => getLearnBtn().view());
+  h('learn:start', (topic) => getLearnBtn().start(topic));
+  h('learn:stop', () => getLearnBtn().stop());
   h('senses:get', () => sensesView());
   h('senses:set', (patch) => setSenses(patch || {}));
   h('senses:askPerms', () => askSensesPerms());

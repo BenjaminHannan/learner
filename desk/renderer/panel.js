@@ -30,8 +30,8 @@ window.BrowserPanel = (() => {
     document.body.classList.toggle('bp-open', open);
     document.body.classList.toggle('bp-narrow', narrow());
     document.documentElement.style.setProperty('--bp', (narrow() ? 0 : vis) + 'px');
-    $('#btnBrowser').setAttribute('aria-pressed', open ? 'true' : 'false');
-    $('#btnBrowser').classList.toggle('on', open);
+    // the toolbar's Browser button became Learn (Ben Nov 3); "Show browser" in the Learn popover mirrors the open state
+    const sb = $('#learnShowBrowser'); if (sb) { sb.setAttribute('aria-pressed', open ? 'true' : 'false'); sb.textContent = open ? 'Hide browser' : 'Show browser'; }
   }
   let pend = false;
   function report() {
@@ -142,7 +142,6 @@ window.BrowserPanel = (() => {
   $('#bDone').onclick = () => desk.browser.cmd(key, 'done'); $('#bSkip').onclick = () => desk.browser.cmd(key, 'skip');
   $('#bAddr').addEventListener('keydown', (e) => { if (e.key === 'Enter') { desk.browser.cmd(key, 'go', $('#bAddr').value); $('#bAddr').blur(); } });
   $('#bAddr').addEventListener('focus', () => $('#bAddr').select());
-  $('#btnBrowser').onclick = toggle;
 
   desk.onBrowserState((s) => paint(s));
   desk.onBrowserShow(async (ev) => { await ctx.switchThread(ev.threadId); show(ev.key); });
@@ -152,7 +151,7 @@ window.BrowserPanel = (() => {
 
   return {
     ctx,
-    show, close, isOpen: () => open,
+    show, close, toggle, isOpen: () => open,
     // the browser cards of the open thread (from app.js)
     setKeys(list) { keys = list; },
     async threadChanged() {

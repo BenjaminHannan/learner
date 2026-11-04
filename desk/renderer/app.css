@@ -330,7 +330,7 @@ body.bp-narrow #bChat { display:inline-flex; }
 #bBanner .lock { width:1.2rem; height:1.2rem; flex:none; color:var(--accent-text); } #bBanner span { flex:1; }
 #bSlot { flex:1; min-height:0; background:var(--surface); margin:0 .5rem .5rem; }
 body.bp-narrow #bpanel { z-index:30; }
-@media (max-width:760px) { #btnBrowser span { display:none; } .btitle { display:none; } .bhead { justify-content:flex-start; } .bwho { margin-left:auto; } }
+@media (max-width:760px) { #btnLearn span { display:none; } .btitle { display:none; } .bhead { justify-content:flex-start; } .bwho { margin-left:auto; } }
 
 body.bp-narrow #bSlot { margin:0; }
 
@@ -698,3 +698,12 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 .se-perm[hidden] { display:none; } .se-perm span { flex:1; }
 .se-settings { display:flex; flex-direction:column; gap:.5rem; width:100%; }
 .se-settings > .ghost { align-self:flex-end; }
+
+/* Learn button (replaced the Browser button) and its popover */
+.lb-wrap { position:relative; -webkit-app-region:no-drag; }
+#btnLearn span { max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lb-pop { position:absolute; top:calc(100% + .45rem); right:0; z-index:130; width:20rem; background:var(--surface); border:1px solid var(--hair2); border-radius:1rem; box-shadow:var(--shadow); padding:.9rem; display:flex; flex-direction:column; gap:.55rem; }
+.lb-pop[hidden], .lb-pop [hidden] { display:none; }
+.lb-q { margin:0; font-weight:650; display:block; } .lb-sub { margin:0; color:var(--text2); font-size:.84rem; line-height:1.35; }
+.lb-row { display:flex; gap:.45rem; align-items:center; } .lb-row input { flex:1; min-width:0; }
+.lb-browser { align-self:flex-start; }
