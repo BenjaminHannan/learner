@@ -126,7 +126,19 @@ def page_views(mx, arrays, page_bytes=4096):
     return out
 
 
-def install_touch(S, mx, every_s, clock=None, log=print):
+def cpu_page_views(arrays, page_bytes=16384):
+    """v3 (E1): byte views, one byte per 16 KB page of every weight, read from the CPU (memoryview, no copy). A CPU read marks the
+    page as recently used for the macOS compressor; v2's GPU read did not stop it (it only pulled pages back after a sweep)."""
+    out = []
+    for w in arrays:
+        try:
+            out.append(memoryview(w).cast("B")[::page_bytes])
+        except (TypeError, ValueError, BufferError):
+            pass  # a non-contiguous array: skipped
+    return out
+
+
+def install_touch(S, mx, every_s, clock=None, log=print, mode="gpu"):
     """v2 (E1): macOS compresses idle GPU buffers even under a wired limit (measured: 302 of 633 MB within 45 s idle).
     While the server is idle, read one value per page of every weight every `every_s` seconds, so the pages stay recently used and
     are never compressed. Runs INSIDE mlx_lm's generation thread (its idle wait), so it never races a request. Cost: a few ms."""
@@ -146,15 +158,19 @@ def install_touch(S, mx, every_s, clock=None, log=print):
                 if model is not None:
                     if state["views"] is None or state.get("model") is not model:
                         state["model"] = model
-                        state["views"] = page_views(mx, [v for _, v in tree_flatten(model.parameters())])
-                    mx.eval([v.sum() for v in state["views"]])
+                        leaves = [v for _, v in tree_flatten(model.parameters())]
+                        state["views"] = cpu_page_views(leaves) if mode == "cpu" else page_views(mx, leaves)
+                    if mode == "cpu":
+                        state["bytes"] = sum(len(bytes(v)) for v in state["views"])
+                    else:
+                        mx.eval([v.sum() for v in state["views"]])
                     state["count"] += 1
             except Exception as e:  # noqa: BLE001 - a failed touch never breaks serving
                 log("[glim-brain] touch skipped: %s" % e)
         return req
 
     RG._next_request = next_request
-    log("[glim-brain] idle touch every %ss" % every_s)
+    log("[glim-brain] idle touch every %ss (%s)" % (every_s, mode))
     return state
 
 
@@ -164,6 +180,7 @@ def main(argv=None):
     override = pop_flag(argv, "--keep-in-memory")
     kv_raw = pop_flag(argv, "--kv-buffer")
     touch_s = float(pop_flag(argv, "--keep-touch-s", "0") or 0)   # E1 v2: idle page touch (0 = off)
+    touch_mode = pop_flag(argv, "--keep-touch-mode", "gpu")        # E1 v3: cpu = read one byte per page from the CPU
     model = argv[argv.index("--model") + 1]
     on = setting_on(settings_file, override)
     if on:
@@ -184,7 +201,7 @@ def main(argv=None):
     if on:
         install_keep(mx, [S, G, U], weight_bytes(model), kv, log=lambda s: print(s, file=sys.stderr, flush=True))
         if touch_s > 0:
-            install_touch(S, mx, touch_s, log=lambda s: print(s, file=sys.stderr, flush=True))
+            install_touch(S, mx, touch_s, log=lambda s: print(s, file=sys.stderr, flush=True), mode=touch_mode)
     else:
         print("[glim-brain] keep in memory OFF: stock mlx_lm behaviour", file=sys.stderr, flush=True)
     S.main()

@@ -19,12 +19,21 @@ The measurements and marks are in ~/learner-ops/premonition-e1 (MARKS-E1.md, res
 - `src/motebatch.js` + `MotePool.canBatch`: with `moteBatch` on, a Mote's K tries go out together, streamed, with one shared abort. If Ben types, `stopAll` aborts all of them.
 - `src/senses.js` `sampleChangeOnly`: with `senseChangeOnly` on, the cheap windows/accessibility look runs every 5 s. Screen OCR runs only when that look changed, or when 60 s have passed (rich accessibility text) or 20 s (poor text). OCR stores only the lines that changed. With the windows sense off, the screen stays on 20 s.
 
+## Brain in memory: what the tiny-model tests found (premonition-e1/results/M1-result.md)
+- MLX's wired limit does not keep an idle server in RAM on this Mac. ON, OFF (the live behaviour) and no-limit were all
+  compressed or swapped within about a minute of idle. That is the "slow first reply after a quiet spell".
+- `--keep-touch-s 10` (GPU read of one value per page while idle) kept the model resident in 29/35 samples, against 0/140 without
+  it. Post-idle first-token time was about half. This is NOT a pass: it was still swept now and then, and first-token time stayed
+  above 2× warm.
+- The CPU touch (`--keep-touch-mode cpu`) did worse. Don't use it.
+- Suggested launch if the lead tries it: `--keep-in-memory on --keep-touch-s 10`, or the settings toggle plus `--keep-touch-s 10`.
+
 ## What the lead must check on the real app
 1. **Brain in memory.**
    - In `serve.sh`, change the nanbeige `launch big` line from `$DIR/dory/plain_mlx_lm_big.py` to `~/learner-ops/desk-always-on/desk/tools/glim_mlx_server.py --settings-file "$HOME/Library/Application Support/Premonition/settings.json"`. Keep all other args.
    - With the setting off, check the log line `[glim-brain] keep in memory OFF` and that chat works as before.
-   - Turn on "Keep Glim's brain in memory" and restart the server. The log should say a wired limit of about 6.6 GB, not capped.
-   - Check the GPU region: `vmmap -summary <pid> | grep "IOAccelerator (graphics)"` RESIDENT should be about 4.1 GB plus the buffer.
+   - Turn on "Keep Glim's brain in memory", add `--keep-touch-s 10`, and restart the server. The log should say a wired limit of about 6.6 GB, not capped, plus `idle touch every 10.0s (gpu)`.
+   - Check the GPU region: `vmmap -summary <pid> | grep "IOAccelerator (graphics)"` SWAPPED should stay near 0 after 10 min idle, and DIRTY should stay near full. Without the touch, expect it to be swapped.
    - After 30 min idle with Ben's normal apps open, time the first reply against a warm one.
    - Watch memory pressure for an hour (`sysctl kern.memorystatus_vm_pressure_level` should stay at 1).
 2. **Batching.**
