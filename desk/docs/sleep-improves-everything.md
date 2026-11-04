@@ -39,3 +39,14 @@ This is automatic and mathematical (Ben's rule, 2026-09-21): the model never dec
 - Senses wait for the picture projector to be plugged into the app.
 
 Briefs: /tmp/aon/task-sleep-common.md + task-sleep-T1..T4.md.
+
+## Added 2026-11-04 ~12:00 (Ben's paper notes + general rule)
+- **General rule (Ben):** anything in Glim that involves a neural net is trained in sleep, with the seatbelt. That includes the frozen encoders (SigLIP eyes, Whisper ears): the ears look encoder-limited.
+- **Ben's focus:** intake, i.e. taking in information well (what to look at, how often, how cheaply).
+
+| New track | What | Toy? |
+|---|---|---|
+| E1 intake + speed engineering | lock the brain in RAM (wired memory, reserved cache); prompt-prefix ordering for cache reuse; real batching of Motes; change-only intake (process only what changed, so it can look more often) | engineering; tiny MLX model for measurements |
+| T5 stuck list + sleep insight | stuck problems are kept; sleep mixes them with related memories, the checker/executor verifies, and only verified solutions become cards ("Sleep inspires insight", Wagner et al. 2004) | yes |
+| T6 small fast nets distilled in sleep | (a) watcher: a tiny net that samples inputs often and learns what's worth waking the big brain for (intake); (b) reflex for real-time games (muscle memory); (c) draft model for speculative decoding (speed) | yes |
+| T4b encoders in sleep | LoRA on the eye/ear encoders inside cross-sense sleep, in an encoder-limited toy world | yes |
