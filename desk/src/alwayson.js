@@ -12,7 +12,10 @@ const { execFileSync } = require('child_process');
 const { isPrivate } = require('./senses');
 
 const BASE_MS = 60000, MAX_MS = 300000, SAY_GAP_MS = 20 * 60000;
-const MODEL = 'lfm3-fast';
+// Nov 4: v1 hard-coded 'lfm3-fast'. On Ben's Mac the 8090 gateway does not know that id and routed it to Nanbeige WITH thinking
+// on, unlike chat. The loop now asks exactly what chat's default (Fast) pill asks: the same gateway URL and the same model id, so
+// it reaches the same Nanbeige4.2-3B with its native two loops (no extra loops), thinking off.
+const chatModel = (s) => String((s && (s.modelFast || s.model)) || 'default');
 const REMINDER = /\b(?:remind(?:er)?|deadline|due|overdue|appointment|meeting|exam|quiz|test|class|starts?|begins?|leave|late|tonight|tomorrow|today|in \d+ ?(?:min|minutes|hours?))\b/i;
 
 const SYSTEM = 'You are the quiet background attention of Glim, a personal assistant on Ben\'s Mac. You see short notes about what is on his screen, what he said, and what you read. '
@@ -152,4 +155,4 @@ class AlwaysOn {
   }
 }
 
-module.exports = { AlwaysOn, parseDecision, buildMessages, macPressure, REMINDER, SYSTEM, MODEL, BASE_MS, MAX_MS, SAY_GAP_MS };
+module.exports = { AlwaysOn, parseDecision, buildMessages, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };

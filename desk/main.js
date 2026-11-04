@@ -1402,12 +1402,12 @@ async function askSensesPerms() {
 // Ben first: typing in the last 15 s, a chat reply, a call or dictation all hold the always-on loop (and cancel a tick in flight)
 const aoBusy = () => benBusy() || !!(agent && agent.running) || Date.now() - lastTyping < 15000 || !!call || calling || !!dictation || dictStarting;
 const aoNight = () => { if (sl.asleep || sl.waking) return true; const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); return inWindow(n, w.from, w.to); };
-// one short non-streamed request to the same gateway as chat (model lfm3-fast). Marked test so the gateway keeps these background
+// one short non-streamed request to the same gateway and model as chat's Fast pill (AlwaysOnMod.chatModel: Nanbeige on Ben's Mac). Marked test so the gateway keeps these background
 // prompts out of the diary the nightly sleep trains on: only the notes Glim chooses to save reach sleep (through memory).
 async function aoAsk(messages, signal) {
   const { buildChatBody, chatUrl } = require('./src/llm');
   const s = store.getSettings();
-  const body = buildChatBody({ model: s.alwaysOnModel || AlwaysOnMod.MODEL, messages, stream: false, maxTokens: 220, temperature: 0.2, test: true });
+  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: 220, temperature: 0.2, test: true });
   const headers = { 'content-type': 'application/json', 'x-test': '1' };
   if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
   const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);

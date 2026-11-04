@@ -150,11 +150,12 @@ test('the same learn topic as the current focus is not restarted', async () => {
   assert.strictEqual(r.out.learn.length, 0);
 });
 
-test('main.js wires the loop to Ben-first, pressure, the night window and the lfm3-fast gateway call', () => {
+test('main.js wires the loop to Ben-first, pressure, the night window and the model chat uses', () => {
   const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
   assert.match(m, /const aoBusy = \(\) => benBusy\(\) \|\| !!\(agent && agent\.running\) \|\| Date\.now\(\) - lastTyping < 15000/);
   assert.match(m, /pressure: \(\) => AlwaysOnMod\.macPressure\(\)/);
   assert.match(m, /night: aoNight/);
   assert.match(m, /if \(aoLoop\) aoLoop\.cancel\('chat'\)/);
-  assert.strictEqual(A.MODEL, 'lfm3-fast');
+  assert.match(m, /model: AlwaysOnMod\.chatModel\(s\)/);
+  assert.strictEqual(A.chatModel({ model: 'qwen36', modelFast: 'qwen36-fast' }), 'qwen36-fast');
 });
