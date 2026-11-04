@@ -395,8 +395,9 @@ function nowStamp(messages, d) {
   return stamp + ' (New day: today is ' + long + '. The earlier messages here were on ' + prev + ', so their "today" and "tomorrow" are out of date.)';
 }
 
-// Ben Oct 28: "tell me what you plan to do and what you are doing, not straight into the task". Per-turn (user message), so the cached system prompt stays small.
-const NARRATE = '[If this needs tools: first say your plan in 2 to 4 short lines, then before each step say in one short line what you do next (plain words, no thinking out loud, no "Next:"). No tools needed: just answer. If he asks a question or asks why you did something, answer that in your first line, then carry on. Read the time in the date stamp: never present a time that has already passed as still ahead (say it is done or past).]';
+// Ben Oct 28: "tell me what you plan to do and what you are doing, not straight into the task". UI2 (Nov 4, "it just keeps repeating"): one line, then act;
+// no plan list in the chat (a steer made it write the same plan again and again). Per-turn (user message), so the cached system prompt stays small.
+const NARRATE = '[If this needs tools: before each step say in one short line what you do next, then act at once (plain words, no thinking out loud, no "Next:"; never write "Plan:" or a numbered plan: the plan card shows it). No tools needed: just answer. If he asks a question or asks why you did something, answer that in your first line, then carry on. Read the time in the date stamp: never present a time that has already passed as still ahead (say it is done or past).]';
 const PLAN_STEP_MAX = 120;
 // UI2 (Ben Nov 4, M3: "it just keeps repeating"): a steer never throws away the step in progress. His words reach the model with this note in
 // front (model context only, never on screen), so it carries on from what it already did instead of planning again from zero.

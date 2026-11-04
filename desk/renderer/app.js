@@ -284,7 +284,8 @@
     if (!hasTools) {
       // the answer: stays prominent below the (collapsed) activity group
       if (t.text) {
-        if (!clean) t.text.remove();
+        t.raw = Doing.stripPlan(t.raw, lastPlan);   // UI2: a plan block the plan card already shows is collapsed out of the reply
+        if (!Md.stripActions(t.raw).trim()) t.text.remove();
         else {
           const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
           const cut = !!ev.cut;
@@ -328,8 +329,10 @@
   }
 
   const PLAN_SHOW = 5;
+  let lastPlan = [];   // UI2: a later reply that repeats this plan in its text loses that block (Doing.stripPlan)
   function setPlan(items) {
     if (!items || !items.length) return;
+    lastPlan = items.slice();
     items = items.slice(0, PLAN_SHOW);   // the card stays short
     if (window.Side) Side.setPlan(items);
     const a = ensureActTracked();

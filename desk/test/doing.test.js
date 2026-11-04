@@ -23,3 +23,18 @@ test('UI2 cleanReply: the "[cut off: ...]" model note never shows (closed, unclo
   assert.strictEqual(cleanReply('the rope was [cut] off'), 'the rope was [cut] off');
   assert.strictEqual(cleanReply(null), '');
 });
+
+test('UI2 stripPlan: a reply opening with a plan the plan card already shows loses that block (Ben M3 replies); others untouched', () => {
+  const { stripPlan } = require('../renderer/doing');
+  const card = ['Read the current page state.', 'Click SSO Login to trigger the Google sign-in flow.', 'Follow the redirect and complete steps as the browser allows.'];
+  const m3 = '\n\nLet me re-read the page and then actually click SSO Login.\n\n**Plan:**\n1. Read the current page state.\n2. Click SSO Login to trigger the Google sign-in flow.\n3. Follow the redirect and complete steps as the browser allows.\n\nReading the page now.';
+  assert.strictEqual(stripPlan(m3, card), 'Let me re-read the page and then actually click SSO Login.\n\nReading the page now.');
+  assert.strictEqual(stripPlan('1. Read the current page\n2. Click SSO Login\n\nOn it.', card), 'On it.');
+  assert.strictEqual(stripPlan('**Plan:**\n1. Re-read the page.\n2. Click SSO Login.', card), '');
+  // not the card's plan, no card, or a normal numbered answer: left alone
+  const other = 'Plan:\n1. Buy milk at the store\n2. Bake bread tonight';
+  assert.strictEqual(stripPlan(other, card), other);
+  assert.strictEqual(stripPlan(m3, []), m3);
+  const ans = 'Your assignments:\n1. Read chapter 4\n2. Lab report due Friday';
+  assert.strictEqual(stripPlan(ans, card), ans);
+});

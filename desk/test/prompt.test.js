@@ -12,7 +12,7 @@ test('system prompt + tool schemas stay under 9000 chars', () => {
 
 test('tool list is constant; diary tool only when diary is available', () => {
   const a = buildTools({ diary: true }), b = buildTools({ diary: false });
-  assert.strictEqual(a.length, 22); assert.strictEqual(b.length, 21);
+  assert.strictEqual(a.length, 23); assert.strictEqual(b.length, 22);   // LOGIN1: + browser_sign_in
   assert.ok(!b.some((t) => t.function.name === 'diary_search'));
   assert.strictEqual(JSON.stringify(buildTools({ diary: true })), JSON.stringify(a));
 });
@@ -46,4 +46,16 @@ test('tool descriptions are unambiguous: browser_go is the way to browse, open_a
   assert.match(d('browser_go'), /only way to browse the web/);
   assert.match(d('open_app'), /non-browser/i);
   assert.match(d('open_app'), /browser_go/);
+});
+
+test('UI2 no plan lists in the chat: system prompt and per-turn note say one line then act, never "Plan:" or a numbered plan', () => {
+  const { SYSTEM_PROMPT } = require('../src/prompt');
+  assert.match(SYSTEM_PROMPT, /one short line on what you do next, then act\. Never write \\?"Plan:\\?" or a numbered plan \(the plan card shows it\)/);
+  assert.ok(!/2-4 short numbered steps/.test(SYSTEM_PROMPT));
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../src/agent.js'), 'utf8');
+  const narrate = /const NARRATE = '([^\n]*)';/.exec(src)[1];
+  assert.match(narrate, /then act at once/); assert.match(narrate, /never write "Plan:" or a numbered plan/);
+  assert.ok(!/say your plan in 2 to 4/.test(narrate));
+  const app = require('fs').readFileSync(require('path').join(__dirname, '../renderer/app.js'), 'utf8');
+  assert.match(app, /t\.raw = Doing\.stripPlan\(t\.raw, lastPlan\)/); assert.match(app, /lastPlan = items\.slice\(\)/);   // the renderer net is wired, the card is kept
 });
