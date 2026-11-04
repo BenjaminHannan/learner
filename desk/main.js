@@ -144,7 +144,7 @@ const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view
 let lastEar = '';
 setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
-  if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
+  if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { aoWatchSecond(getGuesser().observe('app', SpeakMod.categorize(f.app, f.title))); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
   try { aoDeferredTick(); } catch (e) { /* next second */ }   // imagining ahead: a say that chose to wait is re-checked when due
   try { if (aoTruthCtl && aoTruthGate().budget <= 0) aoStopChecks(); else if ((aoSenses && aoSenses.anyEnabled()) || learningNow()) aoTruthTick(); } catch (e) { /* next second */ }
@@ -1501,6 +1501,7 @@ function aoTimelineSync() {
   return tl;
 }
 function aoLoopContext(fresh) {
+  try { aoWatchTickStart(fresh); } catch (e) { /* T6 watcher labels only */ }
   const tl = aoTimelineSync(), now = Date.now();
   const query = fresh.slice(-3).map((o) => o.text).join(' ').slice(0, 1200);
   const oldest = Math.min(...fresh.map((o) => (TimeSense.validT(o.t) ? o.t : now)));
@@ -1651,7 +1652,42 @@ function aoStudyDrift(topic, kind, text) {
   console.log('[alwayson] study drift (' + kind + ') off "' + topic + '": ' + String(text).slice(0, 100));
   if (aoState) aoState.logActivity('thought', { topic, claims: 0, drift: 1, step: kind });
 }
-function aoNote(text) { try { if (aoTruth) aoTruth.add(text, { from: 'noticed' }); } catch (e) { /* skipped */ } }
+function aoNote(text) { try { if (aoTruth) aoTruth.add(text, { from: 'noticed' }); } catch (e) { /* skipped */ } aoWatchRef('note:' + String(text).slice(0, 200)); }
+// ---- T6 (2026-11-04): the watcher (src/watcher.js), a tiny net beside the guesser, trained only in sleep ---------------------
+// Every second it scores cheap features (app, screen/sound category, how much the words changed, keyword flags, the guesser's
+// surprise). Its labels are what happened: a tick that read those seconds and whose say got 👍 / was used / got a reply, or whose
+// note became confirmed = useful; a finished tick with nothing to say = not useful. Nightly: replay + train + seatbelt + keep/roll back.
+// Until a night has kept a model (it must first beat the guesser's own surprise on held-out), it only logs. Setting `watcher: false` = off.
+const WatcherMod = require('./src/watcher');
+let aoWatcherObj = null, aoWatchPending = null;
+const aoWatcher = () => aoWatcherObj || (aoWatcherObj = new WatcherMod.Watcher({ dir: aoDir(), log: (...a) => console.log('[alwayson]', ...a) }));
+function aoLatestText(sense) { const ib = aoState ? aoState.inbox : []; for (let i = ib.length - 1; i >= 0; i--) if (ib[i].sense === sense) return ib[i].text; return ''; }
+function aoWatchSecond(gr) {
+  if (!gr || store.getSettings().watcher === false) return;
+  const cat = gr.cat;
+  const g = aoGuesser, other = g && g.last && g.last.stream !== 'app' && Date.now() - g.last.at < 1500 ? g.last.kl : 0;
+  const r = aoWatcher().observe({ app: cat, screenText: aoLatestText('screen'), soundText: aoLatestText('hearing'), kl: (gr ? gr.kl : 0) + other });
+  if (r.wake && aoLoop && aoLoop.wake() && aoState) aoState.logActivity('watcher', { score: Math.round(r.score * 100) / 100 });
+}
+// a tick starts (it read the fresh observations): remember its window; a say / note it makes links its outcome
+function aoWatchTickStart(fresh) {
+  const ts = fresh.map((o) => o.t).filter((t) => TimeSense.validT(t));
+  aoWatchPending = { t0: ts.length ? Math.min(...ts) - 1000 : Date.now() - 60000, t1: Date.now(), ref: null };
+}
+function aoWatchRef(ref) { if (!aoWatchPending || !ref) return; try { aoWatcher().tickRead(aoWatchPending.t0, aoWatchPending.t1, ref, null); aoWatchPending.ref = ref; } catch (e) { /* log only */ } }
+// a tick ended: finished with nothing to say = not useful; cancelled / unreadable / error = unknown (no label)
+function aoWatchTickEnd(reason) {
+  const p = aoWatchPending; if (!p) return; aoWatchPending = null;
+  if (reason === 'done' && !p.ref) { try { aoWatcher().tickRead(p.t0, p.t1, null, false); } catch (e) { /* log only */ } }
+}
+function aoWatchHook(loop) {
+  if (!loop || loop.watchHooked) return; loop.watchHooked = true;
+  const r0 = loop.result.bind(loop); loop.result = (reason, extra) => { try { aoWatchTickEnd(reason); } catch (e) { /* log only */ } return r0(reason, extra); };
+}
+// a say offered while a tick is in flight links that tick (deferred says outside a tick link nothing)
+{ const offer0 = aoVoice.offer.bind(aoVoice); aoVoice.offer = (text, extra) => { const m = offer0(text, extra); if (m) aoWatchRef('say:' + m.id); return m; }; }
+{ const prevOutcome = aoOnOutcome; aoOnOutcome = (m, kind) => { prevOutcome(m, kind); try { aoWatcher().outcome('say:' + m.id, ['up', 'used', 'reply'].includes(kind)); } catch (e) { /* log only */ } }; }
+aoNightlyJobs.push(() => { if (store.getSettings().watcher === false) return; const w = aoWatcher(); w.nightly(); w.prune(); });
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
 // ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
@@ -1791,6 +1827,7 @@ function getTruth() {
       if (aoState) aoState.logActivity('note', { status: n.status, topic: n.topic, text: (n.status === 'wrong' ? n.correction : n.text).slice(0, 140) });
       if (n.status === 'wrong' && aoUrges) aoUrges.worthTelling(0.15);
       try { aoChecker().settled(n.text, n.status === 'confirmed'); } catch (e) { /* calibration only */ }
+      try { aoWatcher().outcome('note:' + String(n.text).slice(0, 200), n.status === 'confirmed'); } catch (e) { /* watcher labels only */ }
     }, log: (...a) => console.log('[alwayson]', ...a) }));
 }
 // the 1 s clock: at most one check every 20 s, only while bored-mode Motes would be allowed (Ben first, sleep, night, memory)
@@ -1949,6 +1986,7 @@ function aoApply() {
     speakGate: (d) => aoSpeakAhead(d),
     context: (fresh) => aoLoopContext(fresh),   // feeling time + recall + patterns (Task B)
     log: (...a) => console.log('[alwayson]', ...a) });
+  aoWatchHook(aoLoop);   // T6: a finished tick labels the watcher's seconds
   if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
   aoHearingApply();
 }
