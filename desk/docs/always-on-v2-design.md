@@ -54,7 +54,7 @@ Decided with Ben in the "Brainstorm: always-on Premonition" thread. v1 (phases 1
 - Models: train during sleep against a bf16 copy of Nanbeige; run day-to-day with the q8 copy. It needs ~8 GB more disk. Check projectors and adapters on q8 after training.
 - First test, pass marks fixed: one sleep trained on caption-tagged sound pairs from videos → A1 +5 points or more; V1 drops by at most 2 points. Proven wrong if A1 falls.
 
-## 10. Desk + filing cabinet memory (Ben, 2026-11-04; Experiment M1, being tested)
+## 10. Desk + filing cabinet memory (Ben, 2026-11-04; Experiment M1: FAIL as built)
 - **Filing cabinet (archive):** unlimited store of thought vectors. Nothing is deleted, only filed.
 - **Desk:** at every step Nanbeige sees exactly 64 memory slots as soft input tokens: 32 working slots (carried from step to step) + 32 recalled slots (the archive entries most similar to "now").
 - **Write:** after each step a learned write module updates the working slots from Nanbeige's hidden states (slots attend to the step's hidden states, gated update) and makes new content.
@@ -62,3 +62,4 @@ Decided with Ben in the "Brainstorm: always-on Premonition" thread. v1 (phases 1
 - **Learning by sleep:** Nanbeige stays frozen (2 native loops). Only the memory parts train (read projector, write module, keep scores, recall query), and only in sleep between simulated days. An untrained memory is a no-op (zero-init projector, closed gate).
 - Test: synthetic days (~300 observation lines, fresh names every day), questions beyond a 20-line window (recall, latest state, counting, two-hop), against no memory (B0) and today's notes file (B1, top-8 retrieved notes). PASS = M1 ≥ B1 + 20 and ≥ B0 + 20 points on held-out test days.
 - Code, results and report: `~/learner-ops/premonition-memory` (REPORT.md).
+- Result 2026-11-04: on 40 held-out test days M1 scored 7.3% vs notes file 68.5% and no memory 1.8%. Shuffled recall = real recall, so the cabinet was not used; it learned answer formats only. Keep the notes file.
