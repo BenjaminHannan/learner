@@ -25,8 +25,11 @@ practice game at most every 10 minutes (Sparks quest / Orchard in turn) with the
 reflex. Logs: `twospeed/<game>/nightly.jsonl`, activity log entries `game`.
 
 ## Evidence
-Toy: `~/learner-ops/premonition-sleeplab-i3` (MARKS-twospeed-v1.md, results/). Real model: `real/` there (Nanbeige 8-bit
-emitting tactical calls in this format; validity and seconds per call). Kept apart; see the report.
+Toy: `~/learner-ops/premonition-sleeplab-i3` (MARKS-twospeed-v1/v2.md, results/). v2 PASS on fresh seeds 4-6, both games:
+long horizon 0.90-1.00 (no-replan / no-memory controls 0), timing median 13-24 ms (once / react controls fail), sleep: time-to-go
+error 0.25-0.56 x plain tau, poisoned nights rejected 6/6, no harm in play.
+Real (kept apart, `real/REAL-RESULTS.md`): Nanbeige 8-bit on the M1 writes valid calls 24/24, but picks the right one only 6/12
+(whole plans 1/12; never fetched the key after a lock), at ~2.7 s per call. So the core is ready, the slow brain is the weak part.
 
 ## Not done / next
 - The live loop with the real model as the slow brain (async, real time) is not wired; `brain.js` is ready for it.
