@@ -152,7 +152,7 @@ setInterval(() => {
   // the memory gauge is read every 10 s while always-on or a Learn study is on (the Mote gate skips it while Ben is busy)
   if (((aoSenses && aoSenses.anyEnabled()) || (learnBtn && learnBtn.cur)) && Date.now() % 10000 < 1000) { try { aoGaugeNow = aoGauge.read(); } catch (e) { /* next time */ } }
   if (((aoSenses && aoSenses.anyEnabled()) || (learnBtn && learnBtn.cur)) && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
-  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
+  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { aoJudgeMinute(); } catch (e) { /* next minute */ } try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
   if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
 }, 1000).unref();
@@ -1405,7 +1405,8 @@ function aoOnSurprise(s) {
     : 'Unexpected ' + s.stream + ': ' + s.cat + '.';
   aoSurprise = { at: Date.now(), what: s.cat };
   if (aoState) { aoState.addSurprise({ stream: s.stream, what, kl: s.kl }); aoState.logActivity('surprise', { what, kl: Math.round(s.kl * 100) / 100 }); }
-  if (aoLoop) aoLoop.wake();
+  aoMinSurprise = true;
+  if (aoLoop && aoWakeAllowed()) aoLoop.wake();   // where to look: the early-wake budget is spent in proportion to each region's learned surprise rate
   schedulePill();
 }
 aoObservers.push((e) => { if (aoSenses && aoSenses.anyEnabled()) getGuesser().observeEntry(e); });
@@ -1420,11 +1421,69 @@ function aoContext(extra) {
 }
 // nightly retune (sleep window or sleep start): the speak-o-meter refits on its whole feedback log; later phases add theirs
 let aoNightlyDay = '';
-const aoNightlyJobs = [() => aoMeter && aoMeter.refit(), () => { if (aoGuesser) { aoGuesser.decay(0.8); saveGuesser(); } }, () => aoSleepHandoff()];
+const aoNightlyJobs = [() => aoMeter && aoMeter.refit(), () => aoJudgesNight(), () => aoSleepHandoff()];   // aoJudgesNight: the guesser's fade is LEARNED now (was a fixed 0.8)
 function aoNightly(force) {
   const d = new Date().toDateString();
   if (!force && aoNightlyDay === d) return; aoNightlyDay = d;
   for (const j of aoNightlyJobs) { try { j(); } catch (e) { console.log('[alwayson] nightly retune', e); } }
+}
+// ---- sleep for the small judges (sleep track T1: src/sleepjudges.js + src/breaks.js; toy lab premonition-sleeplab-t1) -------------
+// Only the parts that passed the toy test (3/3 seeds): the guesser's fade rates are LEARNED per stream (app / when / idle) instead of
+// a fixed 0.8; the scientist's think-longer threshold (extra tries only when the first try is unsure); where to look (the early-wake
+// budget follows each region's learned surprise rate). Every night: replay -> update -> seatbelt (held-out day, keep or roll back; a
+// day that contradicts everything is held, and quarantined unless the next day agrees) -> one diary line per part. Logs in userData.
+// The idle/break stream is learned and logged but NOT fed to imagine's breakSoon (its toy test failed by one share): aoBreakSoon stays null.
+const JudgesMod = require('./src/sleepjudges'), BreaksMod = require('./src/breaks');
+let aoJudgesObj = null, aoBreaks = null, aoLook = null, aoMinSurprise = false, aoWakes = { day: -1, by: {}, seen: {} };
+const aoJudges = () => aoJudgesObj || (aoJudgesObj = new JudgesMod.SleepJudges({ dir: aoDir() }));
+const aoJudgeFile = (n) => path.join(aoDir(), n);
+const aoJudgeSave = (n, obj) => { const tmp = aoJudgeFile(n) + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(obj)); fs.renameSync(tmp, aoJudgeFile(n)); };   // JSON state only, atomic
+function aoBreaksGet() {
+  if (aoBreaks) return aoBreaks;
+  let saved = null; try { saved = JSON.parse(fs.readFileSync(aoJudgeFile('breaks.json'), 'utf8')); } catch (e) { /* fresh */ }
+  return (aoBreaks = new BreaksMod.BreakTracker({ saved, onRow: (r) => aoJudges().record('guesser', r) }));
+}
+function aoLookGet() {
+  if (aoLook) return aoLook;
+  try { aoLook = JSON.parse(fs.readFileSync(aoJudgeFile('where.json'), 'utf8')); } catch (e) { aoLook = null; }
+  if (!aoLook || !aoLook.a || !aoLook.b) aoLook = { a: {}, b: {} };
+  return aoLook;
+}
+const aoRegion = () => { const f = aoStuck.front(); return SpeakMod.categorize(f.app, f.title) + ':' + String(f.app || '?').toLowerCase().slice(0, 40); };
+const aoWakeDay = () => { const d = JudgesMod.dayIndex(Date.now()); if (aoWakes.day !== d) aoWakes = { day: d, by: {}, seen: {} }; return aoWakes; };
+// once a minute with the windows sense on: the break tracker (its rows -> the guesser log) and one "look" at the front region
+function aoJudgeMinute() {
+  if (!aoSenses || !aoSenses.enabled('windows') || sl.asleep) return;
+  const now = Date.now(), f = aoStuck.front(); let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
+  aoBreaksGet().tick(now, idleS, SpeakMod.categorize(f.app, f.title));
+  const r = aoRegion(), y = aoMinSurprise ? 1 : 0, w = aoLookGet(); aoMinSurprise = false;
+  const k = y ? 'a' : 'b'; w[k][r] = (w[k][r] || 0) + 1; aoWakeDay().seen[r] = 1;
+  aoJudges().record('where-to-look', { t: now, r, y });
+  try { aoJudgeSave('breaks.json', aoBreaks.toJSON()); aoJudgeSave('where.json', w); } catch (e) { /* next minute */ }
+}
+// an early wake on a surprise, within the front region's share of today's budget
+function aoWakeAllowed() {
+  const W = aoWakeDay(), r = aoRegion(); W.seen[r] = 1;
+  const allow = JudgesMod.wakeAllowance(aoLookGet(), Object.keys(W.seen));
+  if ((W.by[r] || 0) >= allow[r]) return false;
+  W.by[r] = (W.by[r] || 0) + 1; return true;
+}
+function aoJudgesNight() {
+  const J = aoJudges(), outs = [];
+  if (aoGuesser) {
+    const g = aoGuesser, br = aoBreaksGet(), st = J.state('guesser'), prevK = (st.start && st.start.k) || { app: 0.8, when: 0.8, idle: 0.8 };
+    let out = null;
+    if (g.when) { try { out = J.run(JudgesMod.guesserPart(), { app: g.streams.app.toJSON(), when: g.when.toJSON(), idle: br.model.toJSON(), k: prevK }); } catch (e) { console.log('[alwayson] judges guesser', e); } }
+    const k = out && out.rec.action === 'kept' ? out.model.k : prevK;   // rolled back / held / no log today: yesterday's rates (0.8 at first)
+    g.streams.app.decay(k.app); if (g.when) g.when.decay(k.when); br.model.decay(k.idle);
+    g.streams.screen.decay(0.8); g.streams.sound.decay(0.8);           // not part of the toy test: today's fixed fade
+    saveGuesser(); try { aoJudgeSave('breaks.json', br.toJSON()); } catch (e) { /* next minute */ }
+    if (out) outs.push(out);
+  }
+  try { const out = J.run(JudgesMod.thinkPart(), J.state('think-longer').start || JudgesMod.thinkPart().init()); if (out) outs.push(out); } catch (e) { console.log('[alwayson] judges think', e); }
+  try { const out = J.run(JudgesMod.wherePart(), aoLookGet()); if (out) { if (out.rec.action === 'kept') { aoLook = out.model; try { aoJudgeSave('where.json', aoLook); } catch (e) { /* */ } } outs.push(out); } } catch (e) { console.log('[alwayson] judges where', e); }
+  for (const o of outs) { console.log('[alwayson] sleep judge ' + o.line); if (aoState) aoState.logActivity('sleep-part', { part: o.rec.part, line: o.line }); }
+  return outs;
 }
 // ---- feeling time + patterns (Task B, src/timesense.js + src/patterns.js) ------------------------------------------------
 // A timeline of timestamped words (observations, surprises, truth notes) with a name-masked shape key each. The loop's prompt
@@ -1657,6 +1716,7 @@ function aoAfterPick(job, r, x) {
 }
 // the little scientist: experiments in the sandbox / puzzle generator / games, run as Motes (same gate, same stop), guesses first
 const aoScientist = () => aoScientistObj || (aoScientistObj = new ScientistMod.Scientist({ dir: aoDir(), checker: aoChecker(), k: aoTries(), gameLog: aoGameLog(),
+  thinkMore: (c) => JudgesMod.thinkMore(aoJudges().state('think-longer').start, c), onTries: (r) => aoJudges().record('think-longer', r),   // think longer only when unsure (threshold learned at night)
   onSurprise: (x) => { if (aoState) { aoState.addSurprise({ stream: x.stream, what: x.what, kl: x.kl }); aoState.logActivity('surprise', { what: x.what.slice(0, 140), kl: Math.round(x.kl * 100) / 100, source: 'sandbox' }); } },
   onActivity: (kind, o) => { if (aoState) aoState.logActivity(kind, o); }, log: (...a) => console.log('[alwayson]', ...a) }));
 // how many of a bored batch are experiments: half (rounded up); with a budget of 1 they take turns with thinking. Setting scientist: false = none.

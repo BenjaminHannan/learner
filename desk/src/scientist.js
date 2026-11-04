@@ -223,6 +223,7 @@ class Scientist {
     // 1. guesses BEFORE the test (each one logged as soon as it exists)
     const tries = [];
     const k = own ? 1 : this.k;
+    let thinkInfo = null;
     for (let i = 0; i < k; i++) {
       if (signal && signal.aborted) break;
       this.session.modelCalls++;
@@ -233,6 +234,8 @@ class Scientist {
       if (!g) { this.event({ id, event: 'guess-unreadable', i, at }); continue; }
       tries.push({ i, guess: g.guess, confidence: g.confidence, code: g.code, at });
       this.event({ id, event: 'guess', i, guess: g.guess.slice(0, 400), confidence: g.confidence, guessAt: at });
+      // think longer only when unsure (sleep track T1): o.thinkMore(confidence) -> {extra, pi}; the threshold is learned at night
+      if (tries.length === 1 && k > 1 && typeof this.o.thinkMore === 'function') { let tm = null; try { tm = this.o.thinkMore(g.confidence); } catch (e) { tm = null; } if (tm) { thinkInfo = { c: g.confidence, ...tm }; if (!tm.extra) break; } }
     }
     if (signal && signal.aborted) { this.event({ id, event: 'stopped', before: 'test' }); return { ran: false, why: 'stopped', id }; }
     if (!tries.length) { this.event({ id, event: 'void', why: 'no readable guess' }); return { ran: false, why: 'no guess', id }; }
@@ -258,6 +261,7 @@ class Scientist {
     const right = tries.map((t) => !!T.compare(t.guess, truth));
     const final = this.checker ? this.checker.pick(question, guesses, { check: (a) => !!T.compare(a, truth) }) : { index: right.indexOf(true) >= 0 ? right.indexOf(true) : 0 };
     const preRight = right[pre.index];
+    if (thinkInfo && tries[0] && tries[0].i === 0) { try { this.o.onTries && this.o.onTries({ c: thinkInfo.c, r1: right[0] ? 1 : 0, extra: thinkInfo.extra ? 1 : 0, rK: thinkInfo.extra ? (right.some(Boolean) ? 1 : 0) : null, pi: thinkInfo.pi, kind }); } catch (e) { /* log only */ } }
     if (this.checker) {
       tries.forEach((t, i) => this.checker.label({ question: own ? 'What does this program print?\n' + T.code : question, answer: t.guess, correct: right[i], p: t.confidence, pMethod: 'self', method: 'executor', source: 'sandbox', truth: 'executor', kind, guessAt: t.at, resultAt, expId: id }));
       if (guesses.length > 1) this.checker.calibrate(pre.p_correct, preRight, { method: 'agreement', kind });
