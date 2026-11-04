@@ -173,3 +173,19 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   ~20 minutes, so it files ~10 "surprise" moments (several just "Unexpected screen: other."). These now reach sleep as low-weight
   cards. Candidate fix for a later night: no `big` surprise until a stream's context has ≥ N observations (pass mark: ≤ 2 big
   surprises in the first hour of the scripted day, the Steam switch still surprising).
+
+### Item 3, second cause: the Warmer test
+- The 5-run check still hung once (run 4). The hung `desk.test.js` process (and an older one left by the v2 build, same fingerprint)
+  held a listening local test gateway with an open connection. Only the Warmer test opens one, and it closed it only after its last
+  assertion: a timing miss under `--test-concurrency=2` left it listening for ever. It now closes in `finally`, and its waits are 10 s
+  (were 2 s). After that: 10 full runs in a row, no hang (29–33 s each).
+- Two hung test processes were left orphaned by the runs (one mine, one from the v2 build, both in this worktree); both killed by
+  exact PID. A third old one in /tmp/dsbase (not this worktree) was left alone.
+
+### Item 5: review notes (no code change)
+- Empty userData: main.js loads and runs 6 s of timers under the stand-in with no settings file; it creates settings.json/threads/logs only.
+- Chat stops every always-on model call: `agent:send` and the typing ping cancel the loop tick, the Motes, the truth check and the
+  quiz; the voice waits for 15 s after typing; the study Motes are helpers (they already yield to Ben).
+- Words only: surprises, notes and the handoff are text; the screen sense is OCR text and hearing is transcribed text.
+- By design but worth Ben knowing: a Mote's claim (which can come from his screen, e.g. an error message) is searched on
+  DuckDuckGo by the truth check. Private-looking text is dropped first.
