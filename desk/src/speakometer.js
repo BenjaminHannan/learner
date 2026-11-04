@@ -106,6 +106,25 @@ class SpeakOMeter {
   }
   score(x) { let z = 0; for (const n of NAMES) z += (this.w[n] || 0) * (x[n] || 0); return sig(z); }
   decide(ctx) { const x = features(ctx); const p = this.score(x); return { p, speak: p >= this.threshold, x }; }
+  // Imagining ahead, level 1 (src/imagine.js): "speak now" vs "wait ~5 min". futures = [{w, ctx}] (the guesser's predicted next
+  // state, e.g. the chance Ben takes a break soon). Defer when waiting is clearly better: the expected p later is >= p now + margin
+  // AND a later moment would itself pass the threshold with >= 50% chance (else the wait would only end in a hold).
+  // Never for urgent says; o.noLookahead (the re-check after the wait) decides plainly, so a say is deferred at most once.
+  decideAhead(ctx, futures, o) {
+    o = o || {};
+    const now = this.decide(ctx);
+    if ((ctx && ctx.urgent) || o.noLookahead || !Array.isArray(futures) || !futures.length) return { ...now, defer: false, pWait: null };
+    let pWait = 0, pPass = 0, tot = 0;
+    for (const f of futures) {
+      const w = Math.max(0, Number(f.w) || 0); if (!w) continue;
+      const pf = this.score(features({ ...ctx, ...f.ctx, urgent: false }));
+      pWait += w * pf; if (pf >= this.threshold) pPass += w; tot += w;
+    }
+    pWait = tot ? pWait / tot : now.p; pPass = tot ? pPass / tot : 0;
+    const margin = o.margin == null ? 0.15 : o.margin;
+    const defer = pWait >= now.p + margin && pPass >= 0.5;
+    return { ...now, speak: defer ? false : now.speak, defer, pWait, pPass, waitMs: o.waitMs || 5 * 60000 };
+  }
   // one weighted gradient step on the log loss, with a pull back toward the prior (so one 👎 cannot silence it for ever)
   step(x, y, wt, lr) {
     const p = this.score(x), g = (p - y) * wt, P = prior();
