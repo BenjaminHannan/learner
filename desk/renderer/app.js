@@ -192,7 +192,7 @@
     const row = el('div', 'choices');
     for (const q of list) {
       const b = el('button', 'choice', q); b.type = 'button';
-      b.onclick = async () => { if (row.classList.contains('used') || (thread && thread.helper)) return; const draft = input.value; input.value = q; await submit(false); if (input.value === q) { input.value = draft; autosize(); return; } /* not sent (asleep or busy): the chips stay live */ row.classList.add('used'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); b.classList.add('picked'); if (draft && !input.value) { input.value = draft; autosize(); } };
+      b.onclick = async () => { if (row.classList.contains('used') || (thread && thread.helper)) return; if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); const draft = input.value; input.value = q; await submit(false); if (input.value === q) { input.value = draft; autosize(); return; } /* not sent (asleep or busy): the chips stay live */ row.classList.add('used'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); b.classList.add('picked'); if (draft && !input.value) { input.value = draft; autosize(); } };
       row.append(b);
     }
     return row;
@@ -538,14 +538,21 @@
   function setRunning(r) {
     running = r;
     if (window.Side) { Side.setRunning(r); if (!r) Side.refresh(); }
-    paintSend(r); $('#btnStop').hidden = !r; $('#runState').hidden = !r; paintTyping();
+    $('#btnStop').hidden = !r; $('#runState').hidden = !r; paintTyping();
     $('#runState span').textContent = 'Typing…';
     paintGateway();
+    paintBox(r);
+  }
+  // the chat box's words for the current state; Learn mode (learnbtn.js) dresses the box on top and calls this back when it ends
+  function paintBox(r) {
+    paintSend(r);
     input.placeholder = r ? 'Add a note to steer the current task…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
     autosize(); // the running-state placeholder can wrap at the current width
     input.readOnly = !!(thread && thread.helper);
     $('#hint').textContent = r ? 'Enter sends a steer note · Esc stops' : 'Enter to send · Shift+Enter for a new line';
+    if (window.LearnButton) LearnButton.dress();
   }
+  if (window.LearnButton) LearnButton.restore = () => { if (slp.asleep || slp.waking) paintSleep(); else paintBox(running); autosize(); };
 
   // ---------- Glim's mood: one status source (main) + local run state ----------
   let slp = { asleep: false, waking: false, available: true };
@@ -656,7 +663,7 @@
     const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line))); ul.hidden = !rec.length;
     $('#btnSend').hidden = asleep; $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
-    else { input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
+    else { if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
     const b = $('#btnSleep'); b.disabled = !slp.available || asleep;
     b.title = !slp.available ? (slp.reason || 'The sleep app was not found.') : 'Sleep: let Glim learn from your chats while you are away';
     paintGateway();
@@ -1089,6 +1096,7 @@
   }
   let submitting = false;
   async function submit(force) {
+    if (window.LearnButton && LearnButton.composing()) return LearnButton.submitTopic(); // Learn mode: Enter starts a study, never a chat message or a steer
     if (thread && thread.helper) return; // a Mote's log is view only
     const text = input.value.trim();
     if (!text || submitting) return;
@@ -1125,6 +1133,7 @@
       if (!$('#screenModal').hidden) $('#screenModal').hidden = true;
       else if (!$('#settings').hidden) closeSettings();
       else if (document.body.classList.contains('drawer-open')) closeDrawer();
+      else if (window.LearnButton && LearnButton.composing()) LearnButton.cancel();
       else if (running) desk.agent.stop(thread && thread.id);
     }
     if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); if (!Onboard.isOpen()) openSettings(); }

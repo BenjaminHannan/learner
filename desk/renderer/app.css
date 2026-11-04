@@ -703,11 +703,21 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 /* Learn button (replaced the Browser button) and its popover */
 .lb-wrap { position:relative; -webkit-app-region:no-drag; }
 #btnLearn span { max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.lb-pop { position:absolute; top:calc(100% + .45rem); right:0; z-index:130; width:20rem; background:var(--surface); border:1px solid var(--hair2); border-radius:1rem; box-shadow:var(--shadow); padding:.9rem; display:flex; flex-direction:column; gap:.55rem; }
+.lb-pop { position:absolute; top:calc(100% + .45rem); right:0; z-index:130; width:19rem; background:var(--surface); border:1px solid var(--hair2); border-radius:1.1rem; box-shadow:var(--shadow); padding:.85rem .95rem; display:flex; flex-direction:column; gap:.5rem; }
 .lb-pop[hidden], .lb-pop [hidden] { display:none; }
-.lb-q { margin:0; font-weight:650; display:block; } .lb-sub { margin:0; color:var(--text2); font-size:.84rem; line-height:1.35; }
-.lb-row { display:flex; gap:.45rem; align-items:center; } .lb-row input { flex:1; min-width:0; }
-.lb-browser { align-self:flex-start; }
+.lb-q { margin:0; font-weight:600; display:flex; align-items:center; gap:.5rem; line-height:1.3; } .lb-q b { font-weight:650; overflow:hidden; text-overflow:ellipsis; }
+.lb-sub { margin:0; color:var(--text2); font-size:.84rem; line-height:1.35; }
+.lb-dot { width:.55rem; height:.55rem; border-radius:50%; background:var(--ok); flex:none; box-shadow:0 0 0 .2rem var(--ok-soft); }
+.lb-row { display:flex; gap:.4rem; align-items:center; flex-wrap:wrap; }
+#btnLearn.on { background:var(--ok-soft); color:var(--text); border-color:var(--ok); }
+#btnLearn.composing { color:var(--text); border-color:var(--ok); background:var(--ok-soft); }
+/* Learn mode lives in the chat box (Ben Nov 4): a calm green glow, a green send button */
+#composer .box.learning, #composer .box.learning:focus-within { border-color:var(--ok); box-shadow:0 0 0 .2rem var(--ok-soft), 0 0 1.1rem var(--ok-soft); animation:lb-glow 2.8s ease-in-out infinite; }
+#composer .box.learning #input::placeholder { color:var(--ok); opacity:.85; }
+.send.learn { background:var(--ok); color:var(--surface); }
+@keyframes lb-glow { 0%,100% { box-shadow:0 0 0 .2rem var(--ok-soft), 0 0 .7rem var(--ok-soft); } 50% { box-shadow:0 0 0 .25rem var(--ok-soft), 0 0 1.5rem var(--ok-soft); } }
+@media (prefers-reduced-motion: reduce) { #composer .box.learning { animation:none; } }
+.lb-err { margin-bottom:.5rem; } .lb-err[hidden] { display:none; }
 
 /* always-on v2: the locked quiz Ben can peek at from the Learn popover */
 .lb-quiz { max-height:260px; overflow:auto; margin-top:.5rem; font-size:.8rem; } .lb-quiz ol { margin:.25rem 0 .6rem 1.1rem; padding:0; } .lb-quiz li { margin:.15rem 0; }

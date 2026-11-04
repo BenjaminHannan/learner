@@ -27,20 +27,13 @@
     <button id="btnLearn" class="tb-btn" title="Learn: send Glim off to study a topic until you stop it" aria-haspopup="dialog" aria-expanded="false">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3.5c2-.8 3.8-.6 5.5.6v9c-1.7-1.2-3.5-1.4-5.5-.6zM13.5 3.5c-2-.8-3.8-.6-5.5.6v9c1.7-1.2 3.5-1.4 5.5-.6z"/><path d="M12.6 1.2v1.6M11.8 2h1.6"/></svg><span id="learnLabel">Learn</span>
     </button>
-    <div id="learnPop" class="lb-pop" hidden role="dialog" aria-label="Learn">
-      <div id="learnIdle">
-        <label for="learnTopic" class="lb-q">What should I learn about?</label>
-        <div class="lb-row"><input id="learnTopic" type="text" placeholder="e.g. enzyme kinetics" spellcheck="true" maxlength="200"><button id="learnStart" class="amber-btn sm">Start</button></div>
-        <p class="lb-sub">Glim studies quietly until you press Stop. What it learns is saved for sleep.</p>
-      </div>
-      <div id="learnBusy" hidden>
-        <p class="lb-q">Learning: <b id="learnTopicNow"></b></p>
+    <div id="learnPop" class="lb-pop" hidden role="dialog" aria-label="Learning">
+      <div id="learnBusy">
+        <p class="lb-q"><span class="lb-dot" aria-hidden="true"></span>Learning <b id="learnTopicNow"></b></p>
         <p id="learnScore" class="lb-sub" hidden></p>
-        <div class="lb-row"><button id="learnStop" class="ghost sm">Stop</button><button id="learnViewQuiz" class="ghost sm">View quiz</button></div>
         <div id="learnQuiz" class="lb-quiz" hidden></div>
+        <div class="lb-row"><button id="learnStop" class="ghost sm">Stop</button><button id="learnViewQuiz" class="ghost sm">View quiz</button><button id="learnShowBrowser" class="ghost sm">Show browser</button></div>
       </div>
-      <div id="learnErr" class="errline" role="alert" hidden></div>
-      <button id="learnShowBrowser" class="ghost sm lb-browser">Show browser</button>
     </div>
   </div>
   <div id="gw" class="chip" title="Gateway"><i></i><span>Offline</span></div>
@@ -83,6 +76,7 @@
       </div>
       <div id="dictNote" hidden role="alert"><span id="dictNoteText"></span><button id="dictSettings" class="amber-btn sm" hidden>Open Settings</button><button id="dictGetVoice" class="amber-btn sm" hidden>Get voice (1.6 GB)</button><button id="dictNoteClose" class="ghost sm" aria-label="Dismiss">Dismiss</button></div>
       <div id="askDock" aria-live="polite"></div>
+      <div id="learnErr" class="errline lb-err" role="alert" hidden></div>
       <div id="runState" hidden role="status"><b class="typing" aria-hidden="true"><i></i><i></i><i></i></b><span>Typing…</span></div>
       <div class="box">
         <textarea id="input" rows="1" placeholder="Ask Glim to do something…" spellcheck="true" aria-label="Message"></textarea>
