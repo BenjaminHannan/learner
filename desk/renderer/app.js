@@ -1202,6 +1202,8 @@
       { type: 'senses', label: 'What Glim may notice', help: 'Always-on Glim: the inputs it may use, all on this Mac. A sense that is off is never read.' },
       { key: 'useNotch', type: 'toggle', label: 'Use the notch', help: 'When Glim speaks up by itself, the island at the top of the screen drops down with the message (a Mac without a notch uses the floating pill). Off: a macOS notification instead.' },
       { key: 'senseChangeOnly', type: 'toggle', label: 'Look more often, read only changes', help: 'Glim glances at the open windows every 5 seconds and reads the screen words only when something changed. Needs Open windows on.' },
+      { key: 'glimCanSee', type: 'toggle', label: 'Glim can see', help: 'When Glim reads your screen it also looks at a small picture of it (made into numbers on this Mac, never sent anywhere). Needs Screen on. Private-looking windows are skipped. Restart the model server after switching it.' },
+      { key: 'keepSenseEvidence', type: 'toggle', label: 'Keep screenshots for 3 days', help: 'Keeps the pictures Glim looked at, on this Mac only, for 3 days and at most 2 GB, so sleep can check what it learned. Private windows are never kept.' },
       { key: 'moteBatch', type: 'toggle', label: 'Think in parallel', help: 'A thinking Mote sends its tries to the model together instead of one after another. Your chat still comes first.' },
       { key: 'keepBrainInMemory', type: 'toggle', label: "Keep Glim's brain in memory", help: 'Tries to keep the model in RAM with a fixed working space, so it answers faster after a quiet spell (tested on a small model only; macOS can still squeeze it). Other apps get about 6.6 GB less room. Takes effect when the model server restarts.' }
     ] },

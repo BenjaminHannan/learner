@@ -174,9 +174,188 @@ def install_touch(S, mx, every_s, clock=None, log=print, mode="gpu"):
     return state
 
 
+# ---- "Glim can see" (track I1, 2026-11-04; OFF by default) ---------------------------------------------------------
+# A chat message may carry pooled SigLIP2 features (computed by the Desk's eyes worker, desk/tools/glim_eyes.py) as a content part:
+#     {"type": "image_features", "image_features": {"f16": "<base64 float16 LE>", "shape": [64, 768], "eye": "<EYE_ID>"}}
+# With the setting ON the server runs the vision projector on them and puts the 64 projected rows into the prompt, where the part was,
+# exactly like training (premonition-projectors: the text before and after the media is tokenized separately). Requests without
+# such a part take the stock path unchanged (same tokens, batching and prompt cache). Requests with one are served one at a time
+# (stock mlx_lm does that for every image request). Ordinary image_url parts are left to stock mlx_lm (it drops them for Nanbeige).
+FEATURES_TYPE = "image_features"
+MEDIA_MARK = "glim-media"   # private-use characters: never typed, never in a chat template
+
+
+PUBLISHED_PROJECTOR = os.path.expanduser("~/learner-ops/premonition-projectors/weights/vision_projector.safetensors")
+
+
+def default_projector(settings_file):
+    """The projector sense sleep trains (userData/sense-sleep/vision_projector.safetensors, next to settings.json) when it exists,
+    else the published v1 file. Sense sleep never writes the published file."""
+    if settings_file:
+        p = os.path.join(os.path.dirname(os.path.expanduser(settings_file)), "sense-sleep", "vision_projector.safetensors")
+        if os.path.isfile(p):
+            return p
+    return PUBLISHED_PROJECTOR
+
+
+def eyes_on(settings_file, override):
+    """The 'Glim can see' setting. Explicit --eyes wins; else settings.json "glimCanSee" is True; else OFF."""
+    if override is not None:
+        return str(override).lower() in ("1", "on", "true", "yes")
+    if not settings_file:
+        return False
+    try:
+        with open(os.path.expanduser(settings_file), encoding="utf-8") as f:
+            return json.load(f).get("glimCanSee") is True
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def features_parts(messages):
+    for m in messages or []:
+        c = m.get("content") if isinstance(m, dict) else None
+        if isinstance(c, list):
+            for p in c:
+                if isinstance(p, dict) and p.get("type") == FEATURES_TYPE:
+                    yield p
+
+
+def make_seeing(model):
+    """Give a loaded mlx_lm Nanbeige model an `input_embeddings` argument (stock Nanbeige has none), by swapping in subclasses
+    whose __call__ accepts it. Without input_embeddings both calls are the stock ones. The loop body is the stock one
+    (mlx_lm 0.32 models/nanbeige.py); test_glim_eyes.py checks ids vs embed(ids) give the same logits on a tiny real Nanbeige."""
+    from mlx_lm.models.base import create_attention_mask
+    inner = model.model
+    if getattr(type(model), "_glim_seeing", False):
+        return model
+    icls, ocls = type(inner), type(model)
+
+    def inner_call(self, inputs, cache=None, input_embeddings=None):
+        if input_embeddings is None:
+            return icls.__call__(self, inputs, cache)
+        h = input_embeddings
+        n_layers = len(self.layers)
+        if cache is None:
+            cache = [None] * (self.num_loops * n_layers)
+        mask = create_attention_mask(h, cache[0])
+        for loop_idx in range(self.num_loops):
+            loop_cache = cache[loop_idx * n_layers:(loop_idx + 1) * n_layers]
+            for layer, c in zip(self.layers, loop_cache):
+                h = layer(h, mask, c)
+            if not self.skip_loop_final_norm:
+                h = self.norm(h)
+        if self.skip_loop_final_norm:
+            h = self.norm(h)
+        return h
+
+    def outer_call(self, inputs, cache=None, input_embeddings=None):
+        if input_embeddings is None:
+            return ocls.__call__(self, inputs, cache)
+        out = self.model(inputs, cache, input_embeddings=input_embeddings)
+        return self.model.embed_tokens.as_linear(out) if self.args.tie_word_embeddings else self.lm_head(out)
+
+    inner.__class__ = type(icls.__name__ + "Seeing", (icls,), {"__call__": inner_call})
+    model.__class__ = type(ocls.__name__ + "Seeing", (ocls,), {"__call__": outer_call, "_glim_seeing": True})
+    return model
+
+
+def install_eyes(S, mx, projector_path, log=print, placeholder=None):
+    """Wire the eyes into mlx_lm.server (module S). Returns the shared state dict (tests read it)."""
+    import hashlib
+    import numpy as np
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import glim_eyes as E
+    proj = E.load_projector(projector_path)
+    state = {"media": [], "placeholder": placeholder, "requests": 0, "projector": projector_path}
+    orig_url = S._image_url
+
+    def image_url(part):   # makes stock mlx_lm serve feature requests one at a time (its rule for image requests)
+        if isinstance(part, dict) and part.get("type") == FEATURES_TYPE:
+            f = (part.get(FEATURES_TYPE) or {}).get("f16", "")
+            return "glimfeat:" + hashlib.sha256(f.encode()).hexdigest()
+        return orig_url(part)
+
+    S._image_url = image_url
+    RG = S.ResponseGenerator
+    orig_tok = RG._tokenize
+
+    def ph_id(tokenizer):
+        if state["placeholder"] is None:
+            u = getattr(tokenizer, "unk_token_id", None)
+            state["placeholder"] = int(u if u is not None else 0)
+        return state["placeholder"]
+
+    def tokenize(self, tokenizer, request, args):
+        if request.request_type != "chat" or not any(features_parts(request.messages)):
+            return orig_tok(self, tokenizer, request, args)
+        feats, urls = [], []
+        for m in request.messages:
+            c = m.get("content")
+            if not isinstance(c, list):
+                if c is None:
+                    m["content"] = ""
+                continue
+            pieces = []
+            for p in c:
+                if p.get("type") == "text":
+                    pieces.append(p.get("text") or "")
+                elif p.get("type") == FEATURES_TYPE:
+                    x = p.get(FEATURES_TYPE) or {}
+                    shape = [int(v) for v in (x.get("shape") or [E.N_TOKENS, E.ENC_DIM])]
+                    if len(shape) != 2 or shape[1] != E.ENC_DIM or not 1 <= shape[0] <= 4 * E.N_TOKENS:
+                        raise ValueError("image_features: bad shape %s" % shape)
+                    feats.append(E.f16_from_b64(x.get("f16", ""), shape))
+                    urls.append(image_url(p))
+                    pieces.append(MEDIA_MARK)
+            m["content"] = "".join(pieces)
+        targs = dict(self.model_provider.cli_args.chat_template_args or {})
+        if args.chat_template_kwargs:
+            targs.update(args.chat_template_kwargs)
+        text = tokenizer.apply_chat_template(request.messages, add_generation_prompt=True, tokenize=False, tools=request.tools, **targs)
+        parts = text.split(MEDIA_MARK)
+        if len(parts) - 1 != len(feats):
+            raise ValueError("image_features: the chat template lost a media slot")
+        ph = ph_id(tokenizer)
+        prompt = []
+        for i, piece in enumerate(parts):
+            prompt += tokenizer.encode(piece, add_special_tokens=False) if piece else []
+            if i < len(feats):
+                prompt += [ph] * feats[i].shape[0]
+        media = [proj(mx.array(f).astype(mx.float16)) for f in feats]
+        mx.eval(media)
+        state["media"] = media
+        state["requests"] += 1
+        vision = S._make_vision(prompt, urls=urls, pixel_values=media, token_id=ph)
+        initial = "normal"
+        if tokenizer.has_thinking:
+            if tokenizer.rfind_think_start(prompt) > tokenizer.rfind_think_end(prompt):
+                initial = "reasoning"
+        initial = tokenizer.response_initial_state or initial
+        return prompt, [prompt], ["assistant"], initial, vision
+
+    RG._tokenize = tokenize
+
+    def attach(model):
+        make_seeing(model)
+
+        def embed_inputs(inputs, pixel_values=None):
+            h = model.model.embed_tokens(inputs)
+            ids = np.array(inputs).reshape(-1).tolist()
+            return E.splice_rows(mx, h, ids, state["placeholder"], state["media"])
+
+        model.embed_inputs = embed_inputs   # stock server: model.embed_inputs(mx.array(rest), pixel_values=...)
+        return model
+
+    state["attach"] = attach
+    log("[glim-eyes] Glim can see ON: projector %s, %d image rows per frame" % (projector_path, E.N_TOKENS))
+    return state
+
+
 def main(argv=None):
     argv = list(sys.argv if argv is None else argv)
     settings_file = pop_flag(argv, "--settings-file")
+    eyes_override = pop_flag(argv, "--eyes")                       # I1: on|off (default: settings.json "glimCanSee", else off)
+    projector = pop_flag(argv, "--eyes-projector") or default_projector(settings_file)
     override = pop_flag(argv, "--keep-in-memory")
     kv_raw = pop_flag(argv, "--kv-buffer")
     touch_s = float(pop_flag(argv, "--keep-touch-s", "0") or 0)   # E1 v2: idle page touch (0 = off)
@@ -194,8 +373,18 @@ def main(argv=None):
     import mlx_lm.utils as U
     orig_load = S.load
 
+    eyes = None
+    if eyes_on(settings_file, eyes_override):
+        try:
+            eyes = install_eyes(S, mx, projector, log=lambda s: print(s, file=sys.stderr, flush=True))
+        except Exception as e:  # noqa: BLE001 - no eyes is never a reason not to serve text
+            print("[glim-eyes] could not start the eyes, serving text only: %s" % e, file=sys.stderr, flush=True)
+
     def load_fixed(path, *a, **kw):
-        return orig_load(model, *a, **kw)  # ignore the requested name (the gateway sends "lfm3")
+        out = orig_load(model, *a, **kw)  # ignore the requested name (the gateway sends "lfm3")
+        if eyes is not None:
+            eyes["attach"](out[0])
+        return out
 
     S.load = load_fixed
     if on:

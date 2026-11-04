@@ -1618,7 +1618,7 @@ function aoSetup() {
   aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
   getTruth();
   aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
-  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, samplers: {
+  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, onScreen: (text, win) => aoEyesLook(text, win), samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
     windows: async () => {
@@ -1723,6 +1723,29 @@ function aoNote(text) { try { if (aoTruth) aoTruth.add(text, { from: 'noticed' }
 const WatcherMod = require('./src/watcher');
 let aoWatcherObj = null, aoWatchPending = null;
 const aoWatcher = () => aoWatcherObj || (aoWatcherObj = new WatcherMod.Watcher({ dir: aoDir(), log: (...a) => console.log('[alwayson]', ...a) }));
+// ---- Glim can see (track I1: src/eyes.js + tools/glim_eyes.py + the model server's image_features path; setting glimCanSee, off) ----
+// Each screen read (senses onScreen) -> one small screenshot -> SigLIP2 features on this Mac -> sense sleep's FeatureStore (screen words
+// as the anchor) + the latest frame for the always-on loop's next ask. Private-looking screens/windows: no picture is taken.
+const EyesMod = require('./src/eyes');
+let aoEyesObj = null;
+function aoEyes() {
+  if (aoEyesObj) return aoEyesObj;
+  const s0 = store.getSettings();
+  const py = s0.eyesPython || path.join(os.homedir(), 'learner-ops', 'nb2-venv', 'bin', 'python');
+  const script = path.join(__dirname, 'tools', 'glim_eyes.py');
+  const worker = new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
+    spawn: () => require('child_process').spawn(py, ['-I', script, 'serve'], { stdio: ['pipe', 'pipe', 'pipe'], cwd: os.tmpdir() }) });
+  aoEyesObj = new EyesMod.Eyes({ userData: aoDir(), worker, isPrivate: SensesMod.isPrivate, log: (m) => console.log('[eyes]', m),
+    on: () => store.getSettings().glimCanSee === true && process.platform === 'darwin' && !E2E,
+    keepEvidence: () => store.getSettings().keepSenseEvidence === true,
+    shot: async () => (screen ? EyesMod.fromDataUrl(await screen.screenshot(512)) : null) });
+  return aoEyesObj;
+}
+function aoEyesLook(text, win) { if (store.getSettings().glimCanSee !== true) return null; return aoEyes().look(text, win || aoLatestText('windows')); }
+// the always-on loop's asks carry the latest frame (once, < 2 min old) when the eyes are on; every other ask is unchanged
+function aoAskSeeing(messages, signal, opts) { const part = aoEyesObj && aoEyesObj.framePart(); return aoAsk(part ? EyesMod.withFrame(messages, part) : messages, signal, opts); }
+setInterval(() => { if (aoEyesObj && store.getSettings().glimCanSee !== true) aoEyesObj.o.worker.stop(); }, 60000).unref();
+aoNightlyJobs.push(() => { if (store.getSettings().glimCanSee !== true && !aoEyesObj) return; const r = aoEyes().nightly(); console.log('[eyes] night', JSON.stringify(r)); if (aoState) aoState.logActivity('sleep-part', { part: 'eyes', line: r.manifests.length ? 'eye practice ready for ' + r.manifests.map((m) => m.night + ' (' + m.eye + ')').join(', ') : 'no eye practice' }); });
 function aoLatestText(sense) { const ib = aoState ? aoState.inbox : []; for (let i = ib.length - 1; i >= 0; i--) if (ib[i].sense === sense) return ib[i].text; return ''; }
 function aoWatchSecond(gr) {
   if (!gr || store.getSettings().watcher === false) return;
@@ -2058,7 +2081,7 @@ const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
   aoSetup();
-  if (!aoLoop) aoLoop = new AlwaysOnMod.AlwaysOn({ senses: aoSenses, state: aoState, ask: aoAsk,
+  if (!aoLoop) aoLoop = new AlwaysOnMod.AlwaysOn({ senses: aoSenses, state: aoState, ask: aoAskSeeing,
     deliver: { say: aoSay, note: aoNote, learn: aoLearn },
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
     speakGate: (d) => aoSpeakAhead(d),

@@ -155,10 +155,14 @@ class Senses {
       try { text = await fn(); } catch (e) { text = ''; } finally { this.busy[id] = false; }
       if (typeof text !== 'string') text = '';   // a sampler must hand back words only; anything else is ignored
       const e = this.state.add(id, text); if (e) out.push(e);
+      if (id === 'screen' && text) this.screenSeen(text);
     }
     return out;
   }
   push(id, text) { if (!this.enabled(id)) return null; return this.state.add(id, text); }
+  // I1 (Glim can see): after each screen read, o.onScreen(screenText, latestWindowsText) may take a look with the eyes (fire and forget;
+  // the eyes decide whether they are on and whether the screen is private). A failing listener never breaks sampling.
+  screenSeen(text) { const f = this.o.onScreen; if (!f) return; try { const r = f(text, this.co.lastWin); if (r && r.catch) r.catch(() => {}); } catch (e) { /* never breaks sampling */ } }
   async run(id) {
     const fn = this.o.samplers && this.o.samplers[id];
     if (!fn) return null;
@@ -191,6 +195,7 @@ class Senses {
         if (text != null) {
           this.co.winAtOcr = this.co.lastWin;
           const d = screenDiff(this.co.lastOcr, text); this.co.lastOcr = text;
+          if (text) this.screenSeen(text);
           const e = d ? this.state.add('screen', d) : null; if (e) out.push(e);
         }
       } else this.co.skipped++;
