@@ -34,11 +34,19 @@ test('every setting has a default; saveSettings clamps, validates and ignores un
 test('open_app refuses Safari, Chrome, Firefox, Arc, Edge (use browser_go) and never calls the helper', async () => {
   for (const n of ['Safari', 'safari', 'Safari.app', 'Google Chrome', 'Chrome', 'Firefox', 'Arc', 'Microsoft Edge', 'Brave Browser']) assert.ok(isBrowserApp(n), n);
   for (const n of ['Notes', 'Finder', 'System Settings', 'Spotify', 'Archive Utility']) assert.ok(!isBrowserApp(n), n);
-  const s = createScreen(() => ({ helperPath: '/definitely/not/here' }), null, null);
+  // hermetic: a fake helper (never the real build/deskhelper, which would open Notes for real and could hang the suite)
+  const calls = [];
+  const s = createScreen(() => ({ helperPath: '/definitely/not/here' }), null, null, { findHelper: () => null, callHelper: async (b, args) => { calls.push(args); return { error: 'fake' }; } });
   const r = await s.tools.open_app({ name: 'Safari' }, {});
   assert.strictEqual(r.error, true); assert.strictEqual(r.text, BROWSER_REFUSAL); assert.match(r.text, /browser_go/);
   const ok = await s.tools.open_app({ name: 'Notes' }, {});
   assert.match(ok.text, /not installed/); // went on to the helper path (which is missing here)
+  assert.deepStrictEqual(calls, []);
+  // with a (fake) helper present: Notes reaches it, Safari never does
+  const f = createScreen(() => ({}), null, null, { findHelper: () => '/fake/deskhelper', callHelper: async (b, args) => { calls.push([b].concat(args)); return args[0] === 'look' ? { app: 'Notes' } : { ok: true }; } });
+  assert.strictEqual((await f.tools.open_app({ name: 'Safari' }, {})).text, BROWSER_REFUSAL);
+  assert.match(String(await f.tools.open_app({ name: 'Notes' }, {})), /^Opened Notes\./);
+  assert.deepStrictEqual(calls.map((c) => c.slice(0, 2)), [['/fake/deskhelper', 'open-app'], ['/fake/deskhelper', 'look']]);
 });
 
 // ---- warm-up -------------------------------------------------------------------------------------------

@@ -43,8 +43,8 @@ test('web: webSearch formats results via injected fetch', async () => {
 });
 
 test('screen: missing helper gives a clear error string', async () => {
-  const sc = createScreen(() => ({ helperPath: '/nonexistent/deskhelper' }), '/nonexistent');
-  if (sc.findHelper()) return; // a real helper exists in this checkout; skip
+  // hermetic: no helper, whatever this checkout's build/ folder holds (the real one is never run by tests)
+  const sc = createScreen(() => ({ helperPath: '/nonexistent/deskhelper' }), '/nonexistent', null, { findHelper: () => null, callHelper: async () => { throw new Error('the real helper must not run'); } });
   const r = await sc.tools.screen_look({});
   assert.strictEqual(r.text, 'Error: screen control helper not installed');
 });

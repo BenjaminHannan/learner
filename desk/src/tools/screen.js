@@ -31,7 +31,7 @@ function helperInvocation(bin, args, platform) {
   return { cmd: h.cmd, args: h.prefix.concat(args) };
 }
 
-function callHelper(bin, args, signal) {
+function callHelperReal(bin, args, signal) {
   return new Promise((resolve) => {
     const inv = helperInvocation(bin, args);
     execFile(inv.cmd, inv.args, { windowsHide: true, timeout: 30000, maxBuffer: 8 * 1024 * 1024, signal }, (err, stdout) => {
@@ -58,8 +58,12 @@ function formatLook(j) {
 }
 
 // factory: returns tool functions + helpers used by main.js for the Screen tab
-function createScreen(getSettings, resourcesPath, onLook) {
-  const bin = () => findHelper(getSettings(), resourcesPath);
+// seams (tests): o.findHelper(settings, resourcesPath) -> path | null, o.callHelper(bin, args, signal) -> json. A test passes fakes so it
+// never runs the real build/deskhelper (it would open real apps and could hang the suite).
+function createScreen(getSettings, resourcesPath, onLook, o) {
+  o = o || {};
+  const find = o.findHelper || findHelper, callHelper = o.callHelper || callHelperReal;
+  const bin = () => find(getSettings(), resourcesPath);
   const run = async (args, signal) => {
     const b = bin();
     if (!b) return { error: NOT_INSTALLED };
