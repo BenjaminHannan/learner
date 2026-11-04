@@ -102,7 +102,7 @@ function actionsFrom(rec, o) {
     if (acts.some((a) => Math.abs(a.t - s.t0) < 4000 && ((a.tool === 'click' && a.args.label && said.includes(' ' + norm(a.args.label) + ' ')) ||
         (a.tool === 'key' && narratedKey(s.text) === a.args.keys) || (a.tool === 'open_app' && said.includes(' ' + norm(a.args.name) + ' '))))) used.add(i);
   });
-  const explained = (t0, t1, kinds) => acts.some((a) => a.t > t0 - 600 && a.t <= t1 + 200 && (!kinds || kinds.includes(a.tool)));
+  const explained = (t0, t1, kinds) => acts.some((a) => a.t > t0 - (a.how === 'event' ? 600 : 0) && a.t <= t1 + 200 && (!kinds || kinds.includes(a.tool)));
   for (let i = 1; i < frames.length; i++) {
     const p = frames[i - 1], c = frames[i];
     if (p.app !== c.app && c.app) {
@@ -192,8 +192,13 @@ function skillCard(rec, name, o) {
   const acts = actionsFrom(rec, o);
   const narr = (rec.narration || []).filter((s) => s && s.text && !isPrivate(s.text)).slice().sort((a, b) => a.t0 - b.t0);
   const say = acts.map(() => []);
-  for (const s of narr) {   // narration belongs to the first step at or after it (people say it just before or while they act)
-    let i = acts.findIndex((a) => a.t >= s.t0 - 1000);
+  const names = (a, said) => (a.tool === 'open_app' && said.includes(' ' + norm(a.args.name) + ' ')) || (a.tool === 'click' && a.args.label && said.includes(' ' + norm(a.args.label) + ' ')) ||
+    (a.tool === 'key' && narratedKey(said) === a.args.keys) || (a.tool === 'type' && norm(a.args.text).length >= 3 && said.includes(' ' + norm(a.args.text) + ' '));
+  for (const s of narr) {
+    // narration belongs to the step it names (within 4 s), else to the first step at or after it (people say it just before or while they act)
+    const said = ' ' + norm(s.text) + ' ';
+    const named = acts.map((a, k) => k).filter((k) => Math.abs(acts[k].t - s.t0) <= 4000 && names(acts[k], said)).sort((x, y) => Math.abs(acts[x].t - s.t0) - Math.abs(acts[y].t - s.t0));
+    let i = named.length ? named[0] : acts.findIndex((a) => a.t >= s.t0 - 300);
     if (i < 0) i = acts.length - 1;
     if (i >= 0) say[i].push(clip(s.text, 200));
   }
@@ -283,6 +288,7 @@ class Clips {
     fs.mkdirSync(d, { recursive: true });
     const f = path.join(d, String(i).padStart(5, '0') + '.jpg');
     fs.writeFileSync(f, jpeg);
+    try { const t = this.now() / 1000; fs.utimesSync(f, t, t); } catch (e) { /* keep the real time */ }
     this.prune();
     return fs.existsSync(f) ? f : null;
   }
