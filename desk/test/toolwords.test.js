@@ -29,5 +29,15 @@ test('the plan card and the Now tab use it; the card shows at most 5 steps; the 
   assert.match(read('renderer/side.js'), /ToolWords\.friendly\(p\)/);
   const html = read('renderer/index.html');
   assert.ok(html.indexOf('<script src="toolwords.js">') > 0 && html.indexOf('<script src="toolwords.js">') < html.indexOf('<script src="app.js">'));
-  assert.match(SYSTEM_PROMPT, /never name a tool in it/);
+  assert.match(SYSTEM_PROMPT, /never name a tool in that line/);   // UI2: one line then act, no plan list
+});
+
+test('UI2 inText: tool ids in visible reply text become plain words; markdown, spacing and code blocks kept; wired into the renderer', () => {
+  const { inText } = require('../renderer/toolwords');
+  assert.strictEqual(inText('1. Use screen_look to see your Chrome windows and active tab.'), '1. Use a look at the screen to see your Chrome windows and active tab.');
+  assert.strictEqual(inText('I ran `web_search` and **found** it.\n\nDone.'), 'I ran a web search and **found** it.\n\nDone.');
+  assert.strictEqual(inText('```\nrun_shell ls\n```\nthen browser_go'), '```\nrun_shell ls\n```\nthen the browser');
+  assert.strictEqual(inText('a screen_looker and my_web_search_x'), 'a screen_looker and my_web_search_x');
+  const app = require('fs').readFileSync(require('path').join(__dirname, '../renderer/app.js'), 'utf8');
+  assert.match(app, /const answerOf = [^\n]*ToolWords\.inText\(Doing\.cleanReply\(/);
 });

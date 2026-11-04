@@ -229,7 +229,7 @@
   }
   let raf = 0;
   // Ben Oct 28: "it can think, but it should just give the answer normally". Some replies carry their reasoning in the text up to a "</think>"; only what follows is the answer.
-  const answerOf = (raw) => { const i = raw.lastIndexOf('</think>'); return Doing.cleanReply((i >= 0 ? raw.slice(i + 8) : raw).replace(/^\s*<think>[\s\S]*$/, '').replace(/^\s+/, '')); };   // UI2: no "[cut off: ...]" on screen (old saved replies too)
+  const answerOf = (raw) => { const i = raw.lastIndexOf('</think>'); return ToolWords.inText(Doing.cleanReply((i >= 0 ? raw.slice(i + 8) : raw).replace(/^\s*<think>[\s\S]*$/, '').replace(/^\s+/, ''))); };   // UI2: no tool ids in reply text either   // UI2: no "[cut off: ...]" on screen (old saved replies too)
   function paintText() {
     if (raf) return;
     raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(answerOf(tn.raw)).text); toBottom(); } });

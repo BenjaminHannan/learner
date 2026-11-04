@@ -13,7 +13,10 @@
   };
   const RE = new RegExp('`?\\b(' + Object.keys(WORDS).join('|') + ')\\b(?:\\(\\))?`?', 'g');
   const friendly = (s) => String(s == null ? '' : s).replace(RE, (_, id) => WORDS[id]).replace(/\*\*|__|`/g, '').replace(/\s{2,}/g, ' ').trim();
-  const api = { WORDS, friendly };
+  // UI2 (Ben Nov 4, M3: "Use screen_look to see your Chrome windows" in the chat): reply text too. Only the tool ids change; markdown,
+  // spacing and fenced code blocks stay as written.
+  const inText = (s) => String(s == null ? '' : s).split(/(```[\s\S]*?(?:```|$))/).map((part, i) => (i % 2 ? part : part.replace(RE, (_, id) => WORDS[id]))).join('');
+  const api = { WORDS, friendly, inText };
   root.ToolWords = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
