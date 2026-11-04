@@ -139,12 +139,13 @@ test('safety levels: using a saved login is FREE by default; keychain apps and d
   assert.ok(lv.check('browser_sign_in', {}, { pageUrl: 'https://dresden.schoology.com/' }).refuse);
 });
 
-test('prompt: no passwords from chat or memory, sign in with browser_sign_in, no saved login -> Ben signs in once, codes stay Ben\'s', () => {
-  assert.match(SYSTEM_PROMPT, /NEVER ask Ben for a password, passcode, PIN or verification code in chat, and never type a password from chat or memory/);
-  assert.match(SYSTEM_PROMPT, /To sign in, call browser_sign_in: the app fills his saved login itself/);
-  assert.match(SYSTEM_PROMPT, /No saved login: ask Ben to sign in once in your browser \(the app offers to save it\)/);
-  assert.match(SYSTEM_PROMPT, /for codes, 2-step or passkey pages/);
-  assert.ok(!/never type one yourself/.test(SYSTEM_PROMPT));
+test('prompt: passwords in chat are fine (Ben 2026-11-04), saved logins first, codes ask Ben or he does it', () => {
+  assert.match(SYSTEM_PROMPT, /passwords in chat are fine/);
+  assert.match(SYSTEM_PROMPT, /If Ben gives you a password, use it: type it into the password field with browser_type/);
+  assert.match(SYSTEM_PROMPT, /first try browser_sign_in \(the app fills his saved login\)/);
+  assert.match(SYSTEM_PROMPT, /ask him for it in one short line, or he can sign in himself in your browser \(the app offers to save it\)/);
+  assert.match(SYSTEM_PROMPT, /For codes, 2-step or passkey pages/);
+  assert.ok(!/NEVER ask Ben for a password/.test(SYSTEM_PROMPT));
   assert.ok(TOOL_DEFS.browser_sign_in); assert.match(TOOL_DEFS.browser_sign_in.function.description, /never see the password/);
   assert.strictEqual(WORDS.browser_sign_in, 'signing in');
 });

@@ -44,6 +44,7 @@ const ASK_WORD = /\b(need|provide|send|share|give|tell me|what is|what's|enter|t
 // false alarm sent Glim round again); "share", "send", "what is" still are
 const HAND_OFF = /\b(yourself|sign-?in window|I (?:can(?:'|no)t|won'?t|will not) type)\b/i;
 const STRONG_ASK = /\b(provide|send|share|give|tell me|what is|what's)\b/i;
+const SECRET_RECHECK = false;   // Ben 2026-11-04: asking him for a password in chat is fine (Glim is local), so no send-back
 function asksForSecret(text) { return String(text || '').split(/(?<=[.?!\n])\s+/).some((s) => SECRET_WORD.test(s) && (STRONG_ASK.test(s) || (ASK_WORD.test(s) && !HAND_OFF.test(s)) || /\?\s*$/.test(s))); }
 // A reply that says it is doing (or did) something on screen. Ben Oct 29: in a chat of text-only turns the fast model wrote "I am now on the
 // sign-in page" and "I've opened the sign-in window" without one tool call, so nothing happened and the turn just ended.
@@ -84,7 +85,7 @@ const HELPER_RUN = { steps: 40, mins: 20 }, LEARN_RUN = { steps: 80, mins: 45 };
 const WRAP_NOTE = ' Time is up for this run: no more tools. Write your report now from what you found, and say in one line what is still not done.';
 const WRAP_EMPTY = 'This run reached its time or step limit before writing a report.';
 const WRAP_TOKENS = 1500;
-const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. Never type a password: on a sign-in page call browser_sign_in (the app fills Ben\'s saved login), or the app lets Ben sign in himself.';
+const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. On a sign-in page call browser_sign_in (the app fills Ben\'s saved login), or type the password Ben gave you, or ask him for it.';
 const CAP_REPLY_TOKENS = 1500;   // brief thinking, then one or two sentences; a longer run-on is cut
 const CAP_REPLY_SECS = 20;       // the forced reply still thinking after this: dropped, and the task just goes on
 const PLAN_WORDS = /\b(?:I(?:'ll| will|'m going to| am going to)|let me)\b/i;
@@ -930,7 +931,7 @@ class Agent {
   // fast model, short reply. Returns 'continue' (NOT DONE: steer injected), 'stop' or 'accept'.
   async verifyAnswer(thread, s, signal, answer) {
     // Asked Ben for a password: send it back once to use the sign-in hand-off instead (no model call needed).
-    if (asksForSecret(answer) && this.secretChecks < 1) {
+    if (SECRET_RECHECK && asksForSecret(answer) && this.secretChecks < 1) {
       this.secretChecks++;
       const id = 'secretcheck_' + this.secretChecks;
       const summary = 'Re-checking: never ask for a password';

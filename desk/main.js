@@ -866,9 +866,10 @@ function createAgent({ helper, rec, voice }) {
     browser_click: (x) => getBr().click(x.id),
     browser_type: async (x, ctx) => {
       const b = getBr();
-      // Never type into a password / payment field: Ben signs in himself in the browser panel while we wait.
+      // Ben 2026-11-04: passwords in chat are fine (Glim is local). A password field is typed when the model has the text (Ben gave it);
+      // empty text, or a payment field, still means Ben fills it himself in the browser panel while we wait.
       const why = await b.sensitiveReason(x.id);
-      if (why) {
+      if (why && !(why === 'password field' && String(x.text || ''))) {
         const v = await ctx.waitForBen(() => signInWait(bk(), a.threadId, ctx.signal));
         return { text: await afterSignIn(b, v), summary: 'Waited while Ben signed in', error: v === 'stopped' };
       }
