@@ -9,6 +9,14 @@
 //
 // A Mote's answer is strict JSON {"claims": [string], "question": string|null}: claims become `maybe` notes for the truth check
 // (src/truthnotes.js), the question goes on the wonder list. Pure Node: ask / gate / prompt / onResult are injected.
+//
+// Ingredients (2026-11-04):
+//   - many tries: with `tries` = K > 1 (a number or job -> number) a thinking Mote asks K times back-to-back (gate re-checked before
+//     each one; one askBatch call when a batching server exists), then `pick(job, parsedList, texts)` -> index chooses one (the
+//     checker). onResult gets the chosen one plus {tries, pick}. Bored mode only: Ben's live chat never goes through this pool.
+//   - run jobs: a job with its own `run(ctl)` (the little scientist's experiments) is driven by the pool like any Mote, so it obeys
+//     the same budget, Ben-first stop and memory gauge. ctl = { ask(messages, opts) (gate-checked, aborted by stopAll), signal,
+//     gateOk() }. Its return value goes to job.onDone / o.onRun.
 
 function parseThought(text) {
   let s = String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -40,7 +48,7 @@ class MotePool {
     const g = this.o.gate();
     if (!g || g.budget <= 0) { this.lastStop = g ? g.why : 'off'; return 0; }
     const room = Math.max(0, g.budget - this.count());
-    const add = topics.slice(0, room).map((t) => ({ id: 'mote-' + (++seq), kind: t.kind, topic: t.topic, at: this.now() }));
+    const add = topics.slice(0, room).map((t) => ({ ...t, id: 'mote-' + (++seq), kind: t.kind, topic: t.topic, at: this.now() }));
     if (!add.length) return 0;
     this.queue.push(...add); this.stats.batches++; this.batchSize = this.count();
     this.changed();
@@ -70,21 +78,42 @@ class MotePool {
   }
   async pump() {
     if (this.current || !this.queue.length) return;
-    if (this.o.askBatch && this.queue.length > 1) return this.runBatch();
+    if (this.o.askBatch && this.queue.length > 1 && !this.queue.some((j) => j.run)) return this.runBatch();
     const job = this.current = this.queue.shift();
     const ctl = this.ctl = new AbortController();
     this.stats.started++; this.changed();
-    let text = null;
+    let text = null, out, texts = null, ran = false;
+    const gateErr = () => Object.assign(new Error('gate'), { gate: true });
+    // every model call of a Mote passes the gate first and is aborted by stopAll()
+    const ask = (messages, opts) => {
+      if (ctl.signal.aborted) return Promise.reject(gateErr());
+      const g = this.o.gate(); if (!g || g.budget <= 0) return Promise.reject(gateErr());
+      return this.o.ask(messages, ctl.signal, opts);
+    };
+    const gateOk = () => { if (ctl.signal.aborted) return false; const g = this.o.gate(); return !!(g && g.budget > 0); };
     try {
-      const g = this.o.gate();
-      if (!g || g.budget <= 0) throw Object.assign(new Error('gate'), { gate: true });
-      text = await this.o.ask(this.o.prompt(job), ctl.signal);
+      if (typeof job.run === 'function') { out = await job.run({ ask, signal: ctl.signal, gateOk }); ran = true; }
+      else {
+        const k = Math.max(1, Math.min(8, (typeof this.o.tries === 'function' ? this.o.tries(job) : this.o.tries) | 0 || 1));
+        if (k === 1) text = await ask(this.o.prompt(job));
+        else if (this.o.askBatch) { if (!gateOk()) throw gateErr(); const m = this.o.prompt(job); texts = await this.o.askBatch(Array.from({ length: k }, () => m), ctl.signal, { tries: true }); }
+        else { texts = []; for (let i = 0; i < k; i++) texts.push(await ask(this.o.prompt(job), { temperature: i === 0 ? 0.2 : 0.8, tryIndex: i })); }
+      }
     } catch (e) {
       if (!ctl.signal.aborted && !e.gate) { this.stats.failed++; this.log('motes: ask failed', String(e && e.message || e)); }
     }
     const stopped = ctl.signal.aborted;
     if (this.current === job) this.current = null; if (this.ctl === ctl) this.ctl = null;
-    if (!stopped && text != null) {
+    if (!stopped && ran) {
+      this.stats.done++;
+      try { if (job.onDone) job.onDone(out); if (this.o.onRun) this.o.onRun(job, out); } catch (e) { this.log('motes: run result failed', e); }
+    } else if (!stopped && Array.isArray(texts) && texts.length) {
+      this.stats.done++;
+      const parsed = texts.map((t) => parseThought(t));
+      let i = 0; try { i = this.o.pick ? this.o.pick(job, parsed, texts) : 0; } catch (e) { i = 0; }
+      if (!(i >= 0 && i < texts.length)) i = 0;
+      try { this.o.onResult && this.o.onResult(job, parsed[i], texts[i], { tries: parsed, pick: i }); } catch (e) { this.log('motes: result failed', e); }
+    } else if (!stopped && text != null) {
       this.stats.done++;
       try { this.o.onResult && this.o.onResult(job, parseThought(text), text); } catch (e) { this.log('motes: result failed', e); }
     }
