@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "note": "Per step: the known errors, what to try in order, and when to ask Ben. glimtool.ps1 turns an error id into the `next` list (verbs and hints; a hint starting with ask-ben: means stop and ask). Ask Ben ONLY for: no signed-in session, a login we do not have, a purchase, a Windows UAC prompt.",
+  "steps": [
+    {
+      "step": "connect",
+      "errors": [
+        {
+          "id": "ssh-down",
+          "text": "ssh: connect to host 10.0.0.188 port 22: Connection timed out / refused",
+          "fixes": [
+            { "do": "retry over Tailscale: ssh benspc (the LAN address 10.0.0.188 may be wrong)" },
+            { "do": "wait 60 s and retry both routes, up to 3 times" },
+            { "do": "BensPC may be off or restarting: do something else now and try again later (do not ask Ben)" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "no-session",
+          "text": "no signed-in session",
+          "fixes": [
+            { "verb": "ping", "do": "check signed_in again in a minute (auto sign-in can still be finishing after a restart)" },
+            { "do": "wait up to 3 minutes, then ping again" }
+          ],
+          "askBen": true,
+          "askBenWhy": "sign in to BensPC (Minecraft needs a signed-in Windows session to use the NVIDIA GPU)"
+        },
+        {
+          "id": "screen-locked",
+          "text": "the screen is locked, so clicks and screenshots cannot work",
+          "fixes": [
+            { "do": "client-launch and server verbs still work while locked; only desk input needs an unlocked screen" },
+            { "verb": "ping", "do": "check locked again in a minute" }
+          ],
+          "askBen": true,
+          "askBenWhy": "BensPC screen is locked; desk clicks cannot work until it is unlocked or auto-unlock is set up"
+        },
+        {
+          "id": "not-set-up",
+          "text": "C:\\Users\\benja\\glim-bedwars does not exist yet (setup.ps1 has not run)",
+          "fixes": [
+            { "do": "run setup.ps1 on BensPC (one-time; it is idempotent and has -DryRun)" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "bad-arg",
+          "text": "bad argument",
+          "fixes": [
+            { "do": "re-read the verb table in TOOLS.md and call again with valid arguments" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    },
+    {
+      "step": "disk",
+      "errors": [
+        {
+          "id": "low-disk",
+          "text": "only N GB free on C: (floor is 15 GB)",
+          "fixes": [
+            { "verb": "disk", "do": "check free_gb again" },
+            { "do": "fetch then remove old screenshots in glim-bedwars\\shots (the tool keeps only the newest 60 anyway)" },
+            { "do": "stop writing: do not start a match until free space is back above 15 GB; try again later" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    },
+    {
+      "step": "gpu",
+      "errors": [
+        {
+          "id": "gpu-held",
+          "text": "GPU is held by <who>",
+          "fixes": [
+            { "verb": "gpu-status", "do": "read the holder and last_line" },
+            { "do": "wait 10 minutes and gpu-acquire again; meanwhile do something else (never take the GPU from another job)" },
+            { "do": "a match without the GPU is not possible: skip playing for now" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "gpu-not-held",
+          "text": "sign up for the GPU first",
+          "fixes": [
+            { "verb": "gpu-acquire", "do": "gpu-acquire --who glim-bedwars --why TEXT, then client-launch again" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "gpu-sheet-missing",
+          "text": "GPU_LOAN.txt not found",
+          "fixes": [
+            { "do": "do not play without the sheet; tell the coordinator thread (the sheet moved)" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    },
+    {
+      "step": "server",
+      "errors": [
+        {
+          "id": "server-wont-start",
+          "text": "the server exited while starting / did not open its port within 120 s / no Java 21 found",
+          "fixes": [
+            { "verb": "server-status", "do": "check whether it is actually running" },
+            { "do": "read the tail in the error text (it comes from logs\\server.out); a Java error means check C:\\Program Files\\Eclipse Adoptium" },
+            { "verb": "server-stop", "do": "stop, wait 10 s, then server-start once more" },
+            { "do": "if it still fails twice, stop and report it to the coordinator thread" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "port-in-use",
+          "text": "port 25567 is already used by a process that is not ours",
+          "fixes": [
+            { "verb": "server-status", "do": "check it is not our own server (running:true)" },
+            { "do": "never kill the other process; wait 2 minutes and try again; report to the coordinator thread if it stays" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "server-down",
+          "text": "our server is not running / nothing is listening",
+          "fixes": [
+            { "verb": "server-start", "do": "start it" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    },
+    {
+      "step": "map",
+      "errors": [
+        {
+          "id": "map-missing",
+          "text": "map 'X' is not in map-list",
+          "fixes": [
+            { "verb": "map-list", "do": "list the maps and pick one from the list (known: duel, squad)" },
+            { "do": "if the list is empty, setup.ps1 has not copied the server: report to the coordinator thread" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "opponent-unavailable",
+          "text": "opponent 'scripted:L2' is not built yet (only 'none')",
+          "fixes": [
+            { "do": "call match-start again with --opponent none" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    },
+    {
+      "step": "client",
+      "errors": [
+        {
+          "id": "client-crash",
+          "text": "the client did not start / the game process did not appear within 90 s",
+          "fixes": [
+            { "verb": "client-stop", "do": "clear any half-started client" },
+            { "verb": "disk", "do": "check free space" },
+            { "verb": "client-launch", "do": "launch once more; read logs\\client.err via fetch --path logs\\client.err" },
+            { "do": "if it crashes twice, stop and report it to the coordinator thread" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "client-not-joined",
+          "text": "GlimBot is not on the server yet",
+          "fixes": [
+            { "verb": "server-status", "do": "look at names; wait 20 s for the join" },
+            { "verb": "client-launch", "do": "launch the client if it is not running" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "bridge-missing",
+          "text": "the GlimBridge scheduled task is not registered",
+          "fixes": [
+            { "do": "run setup.ps1 on BensPC (it registers the task)" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "bridge-timeout",
+          "text": "the bridge did not answer within N s",
+          "fixes": [
+            { "verb": "ping", "do": "check signed_in" },
+            { "do": "try the same verb once more; a first start of the bridge can take 10 s" },
+            { "do": "if signed_in is false, follow no-session" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "desk-failed",
+          "text": "deskhelper reported an error",
+          "fixes": [
+            { "verb": "desk look", "do": "look at the screen again" },
+            { "do": "try another way (key instead of click, or open-app Minecraft first)" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "login-required",
+          "text": "a login screen or Microsoft sign-in is on the screen",
+          "fixes": [
+            { "do": "our own client never needs a login; if one appears, close the window with client-stop and relaunch with client-launch" }
+          ],
+          "askBen": true,
+          "askBenWhy": "a login is needed that Glim does not have (Glim never types Ben's password)"
+        },
+        {
+          "id": "purchase",
+          "text": "a screen asks to buy something",
+          "fixes": [
+            { "do": "do not click anything; close with client-stop" }
+          ],
+          "askBen": true,
+          "askBenWhy": "something asks for a purchase (Glim never buys anything)"
+        },
+        {
+          "id": "uac",
+          "text": "a Windows UAC (administrator permission) prompt appeared",
+          "fixes": [
+            { "do": "do not touch it; wait 30 s in case it was a one-off" }
+          ],
+          "askBen": true,
+          "askBenWhy": "a Windows UAC prompt needs a person"
+        }
+      ]
+    },
+    {
+      "step": "files",
+      "errors": [
+        {
+          "id": "no-such-file",
+          "text": "no file at <path>",
+          "fixes": [
+            { "do": "take the screenshot again (desk screenshot), then fetch the new path" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "too-big",
+          "text": "file is N bytes (cap is 8 MB)",
+          "fixes": [
+            { "do": "take a smaller screenshot: desk screenshot name.png --max 1280" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        }
+      ]
+    }
+  ]
+}
