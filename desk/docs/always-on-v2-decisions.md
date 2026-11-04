@@ -113,3 +113,9 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
 - **Smoke check**: main.js loaded under a stubbed Electron with a temp userData, then the always-on functions were driven
   directly (consent, ear, context, gate, note→maybe, say→voice→feedback, surprise, urges, quiz record/tick, truth tick, share,
   diary, handoff, nightly, stop). No exceptions. The gate was closed by the night window, so no model call was made.
+
+## After phase 7 (review fixes)
+- The Learn quiz (writer + examiner) now runs whenever a Learn study is on, even with every always-on sense off (the Learn
+  button never needed senses). It still obeys Ben first, sleep, the night window and the memory gauge.
+- The memory gauge is re-read every 10 s while always-on or a Learn study is on, so 🔴 pauses the Learn helper Motes even
+  when the Mote gate is already shut for another reason (it skipped the reading then).

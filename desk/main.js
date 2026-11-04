@@ -146,8 +146,10 @@ setInterval(() => {
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
   try { if (aoTruthCtl && aoMoteGate().budget <= 0) aoStopChecks(); else if (aoSenses && aoSenses.anyEnabled()) aoTruthTick(); } catch (e) { /* next second */ }
-  try { if (aoQuizCtl && aoMoteGate().budget <= 0) aoStopQuiz(); else if (aoSenses && aoSenses.anyEnabled()) aoQuizTick(); } catch (e) { /* next second */ }
-  if (aoSenses && aoSenses.anyEnabled() && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
+  try { if (aoQuizCtl && !aoQuizGate()) aoStopQuiz(); else if (learnBtn && learnBtn.cur) aoQuizTick(); } catch (e) { /* next second */ }
+  // the memory gauge is read every 10 s while always-on or a Learn study is on (the Mote gate skips it while Ben is busy)
+  if (((aoSenses && aoSenses.anyEnabled()) || (learnBtn && learnBtn.cur)) && Date.now() % 10000 < 1000) { try { aoGaugeNow = aoGauge.read(); } catch (e) { /* next time */ } }
+  if (((aoSenses && aoSenses.anyEnabled()) || (learnBtn && learnBtn.cur)) && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
   if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
   if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
@@ -1525,8 +1527,9 @@ let aoUrges = null, aoShare = null;
 const aoRecent = {};   // topic (lower case) -> when a Mote last thought about it
 const aoGauge = new GaugeMod.MemGauge({ pressure: () => AlwaysOnMod.macPressure() });
 let aoGaugeNow = { level: 'green', pressure: 1, swapGrowMB: 0 };
-function aoMoteGate() {
-  if (!aoSenses || !aoSenses.anyEnabled()) return { budget: 0, why: 'off' };
+// o.learnOnly: the Learn quiz needs no sense switched on (the Learn button works without always-on); everything else does
+function aoMoteGate(o) {
+  if (!(o && o.learnOnly) && (!aoSenses || !aoSenses.anyEnabled())) return { budget: 0, why: 'off' };
   if (sl.asleep || sl.waking) return { budget: 0, why: 'asleep' };
   if (aoBusy()) return { budget: 0, why: 'chat' };
   try { if (aoNight()) return { budget: 0, why: 'night' }; } catch (e) { /* not known: carry on */ }
@@ -1651,7 +1654,7 @@ function aoQuizView(topic) {
   return v;
 }
 function learnView() { const v = getLearnBtn().view(); return v.learning ? { ...v, ...aoQuizView(v.topic) } : v; }
-const aoQuizGate = () => aoMoteGate().budget > 0;
+const aoQuizGate = () => aoMoteGate({ learnOnly: true }).budget > 0;
 // a new Learn topic: make the (empty) quiz record now; the writer fills it when the gate opens
 function aoQuizFor(topic) { if (!topic || aoQuizS().load(topic)) return; aoQuizS().save({ topic, createdAt: Date.now(), status: 'writing', levels: [], scores: [], guesses: [] }); }
 async function aoQuizWork(z, signal) {

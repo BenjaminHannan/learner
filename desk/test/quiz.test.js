@@ -105,7 +105,9 @@ test('drift guard: a study step that is no longer about the topic is skipped', (
 });
 
 test('main: the quiz runs only when the Mote gate is open, chat aborts it, official = after sleep, Ben can view it', () => {
-  assert.match(main, /const aoQuizGate = \(\) => aoMoteGate\(\)\.budget > 0;/);
+  assert.match(main, /const aoQuizGate = \(\) => aoMoteGate\(\{ learnOnly: true \}\)\.budget > 0;/);
+  const gate = main.slice(main.indexOf('function aoMoteGate(o)'), main.indexOf('const MOTE_SYSTEM'));
+  assert.match(gate, /if \(aoBusy\(\)\) return \{ budget: 0, why: 'chat' \}/, 'Ben first holds for the quiz too');
   assert.match(main, /aoStopChecks\(\); aoStopQuiz\(\);/);
   assert.match(main, /if \(aoQuizLastSleep && !sl\.asleep\) aoQuizOfficialDue = true/);
   assert.match(main, /h\('learn:quiz', /);

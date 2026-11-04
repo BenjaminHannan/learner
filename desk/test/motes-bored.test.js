@@ -113,7 +113,7 @@ test('main: chat and typing stop every Mote at once; the gate uses Ben first, sl
   const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
   assert.match(m, /if \(aoLoop\) aoLoop\.cancel\('chat'\); aoPool\.stopAll\('chat'\);/);
   assert.match(m, /aoPool\.stopAll\('typing'\)/);
-  const gate = m.slice(m.indexOf('function aoMoteGate()'), m.indexOf('const MOTE_SYSTEM'));
+  const gate = m.slice(m.indexOf('function aoMoteGate(o)'), m.indexOf('const MOTE_SYSTEM'));
   assert.match(gate, /if \(aoBusy\(\)\) return \{ budget: 0, why: 'chat' \}/);
   assert.match(gate, /sl\.asleep \|\| sl\.waking/);
   assert.match(gate, /GaugeMod\.budget\(/);
