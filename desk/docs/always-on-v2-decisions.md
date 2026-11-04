@@ -119,3 +119,24 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   button never needed senses). It still obeys Ben first, sleep, the night window and the memory gauge.
 - The memory gauge is re-read every 10 s while always-on or a Learn study is on, so 🔴 pauses the Learn helper Motes even
   when the Mote gate is already shut for another reason (it skipped the reading then).
+
+## Gap fixes (2026-11-04, 00:40–04:30, Ben asleep)
+
+### Item 1: surprises and corrections reach sleep
+- **Reader**: `sleepmlx/lessons.py read_alwayson()` reads `userData/alwayson-sleep.json` next to `read_notes()`; `recipe.py extras()`
+  turns each surprise into a `surprise` card and each correction into an `aocorrection` card in the same `want` dict that saved
+  notes and tracking items use (same Item, same retire-when-gone rule, same `cards.jsonl` rows, same eligibility).
+- **Never a `maybe`**: only the `surprises` and `corrections` lists are read; any entry carrying a status other than confirmed/wrong
+  is dropped and counted (`ao_dropped_maybe`); secret-looking text and ignore.txt matches are dropped like notes.
+- **Confirmed notes are not read from the handoff**: the Desk already saves them to memory.md, which sleep already cards, and
+  that is where Ben's "forget" works. A correction that is also in memory.md is skipped too (no double card).
+- **Weights**: surprise = 0.25 × (1 + min(KL, 3)) (0.25–1.0, so a big surprise weighs up to 4× a note but at most a night fact's
+  minimum); correction = 0.5. Like notes, neither can start a night on its own (`trainable_cards` ignores them).
+- **Known limit**: a correction Ben deletes from memory.md but that is still in truth-notes.json would still be carded from the
+  handoff. Fix later: have the Desk drop corrections from the handoff when their memory note is forgotten.
+- **TODO: surprise-picked sleep vs replay-everything (not run; plan fixed now).** Toy first, never the village model.
+  Setup: one simulated day stream of ≥ 400 moments with known "new" events (≈10 %) among steady noise; two sleeps with the SAME
+  budget of N = 40 replayed cards: arm A picks the 40 highest-KL moments, arm B samples 40 uniformly from all moments; 3 seeds,
+  fresh held-out probes about the new events written before the run. Pass mark: arm A's held-out recall beats arm B's by ≥ 10
+  points in 3/3 seeds, with no loss > 2 points on an old-skill probe set. Proven wrong if: arm B ties or wins in ≥ 1 seed, or A
+  wins only by losing old skills. One change at a time: selection rule only; budget, model, seeds and probes identical.

@@ -552,6 +552,10 @@ class Sleeper:
         return not it.dead and (it.days >= self.cfg.min_item_days) and (it.days >= 2 or self.cfg.min_item_days <= 1 or it.imp or it.cor)
 
     def prio(self, it: Item) -> float:
+        if it.kind == "surprise":   # always-on: a bigger Bayesian surprise weighs more, but never more than a night fact
+            return 0.25 * (1 + min(getattr(self, "ao_kl", {}).get(it.key, 0.0), 3.0))
+        if it.kind == "aocorrection":
+            return 0.5
         if it.kind in ("note", "track"):
             return 0.25  # the Desk already shows these in every turn: a weight copy is mostly redundant, and a long notes file must not crowd out the night's facts
         return max(it.days, 1) * (1 + it.imp + it.cor) * 2   # surprise = 1 always (no morning probes)
@@ -914,6 +918,7 @@ class Sleeper:
         the logs and files word for word (no model writes them). Each carries its source; a tracked item past its until date, finished or
         removed, and a forgotten note, leave the training pool."""
         cfg, today, want, sigs = self.cfg, self.today(), {}, {}
+        self.ao_kl = {}
         if cfg.use_habits:
             for h in L_mod.habits(week, d, cfg.habit_min):
                 para, qa = L_mod.habit_cards(h, self.who)
@@ -948,6 +953,21 @@ class Sleeper:
             for t in L_mod.read_tracking(ud, today, ignore):
                 para, qa = L_mod.track_cards(t, self.who)
                 want["track|" + norm(t["what"])] = ("track", t["what"][:60], para, qa, t["source"] or "Keeping track of list", t["until"], 1)
+            # always-on handoff (Desk alwayson-sleep.json): surprising moments and checked corrections, never a `maybe`.
+            # A correction the Desk also saved to memory.md is already a note card above: no second copy.
+            ao = L_mod.read_alwayson(ud, ignore)
+            st["ao_dropped_maybe"] += ao["dropped_maybe"]
+            in_memory = {norm(n["text"]) for n in notes}
+            for s_ in ao["surprises"]:
+                para, qa = L_mod.surprise_cards(s_, self.who)
+                want["surprise|" + s_["key"]] = ("surprise", s_["text"][:60], para, qa, "always-on surprise, KL %.2f nats%s" % (s_["kl"], ", " + s_["date"] if s_["date"] else ""), "", 1)
+                self.ao_kl["surprise|" + s_["key"]] = s_["kl"]
+            for c in ao["corrections"]:
+                if norm(c["text"]) in in_memory:
+                    st["ao_correction_in_memory"] += 1
+                    continue
+                para, qa = L_mod.correction_cards(c, self.who)
+                want["aocorrection|" + c["key"]] = ("aocorrection", c["text"][:60], para, qa, "always-on truth check: " + (", ".join(c["sources"]) or "2 sites"), "", 1)
         for key, (kind, obj, para, qa, src, until, days) in want.items():
             it = self.items.get(key)
             if it and not it.dead and it.para == para and it.qa == qa and it.sig == sigs.get(key, it.sig):
@@ -957,7 +977,7 @@ class Sleeper:
                                    kind=kind, source=src, until=until, sig=sigs.get(key, ""))
             st[kind + "_new" if not it else kind + "_changed"] += 1
         for it in self.items.values():
-            if it.kind in ("habit", "note", "track", "liked", "delegate", "idea") and not it.dead and it.key not in want:
+            if it.kind in ("habit", "note", "track", "liked", "delegate", "idea", "surprise", "aocorrection") and not it.dead and it.key not in want:
                 it.dead = True
                 st[it.kind + "_retired"] += 1
         st["habit"] = sum(1 for k in want if k.startswith("habit|"))
@@ -966,6 +986,8 @@ class Sleeper:
         st["liked"] = sum(1 for k in want if k.startswith("liked|"))
         st["delegate"] = sum(1 for k in want if k.startswith("delegate|"))
         st["idea"] = sum(1 for k in want if k.startswith("idea|"))
+        st["surprise"] = sum(1 for k in want if k.startswith("surprise|"))
+        st["aocorrection"] = sum(1 for k in want if k.startswith("aocorrection|"))
 
     def note_qas(self, notes: List[dict], d: int, st: Counter) -> Dict[str, List[List[str]]]:
         """One quiz card per new or changed saved note (at most max_lessons x s a night): the base model writes q and a (a = 1 to 4 words of the
@@ -1514,7 +1536,7 @@ class Sleeper:
             self.log("[night] dream %s" % st_all["dream"])
             E = [it for it in self.items.values() if self.elig(it)]
             # notes and tracking cards do not start a night: a low-fact day should skip, not train mostly on notes
-            ncards = sum(len(it.para) + len(it.qa) for it in E if it.kind not in ("note", "track"))
+            ncards = sum(len(it.para) + len(it.qa) for it in E if it.kind not in ("note", "track", "surprise", "aocorrection"))
             st_all["trainable_cards"] = ncards
             self.save_items()
             self.write_cards()

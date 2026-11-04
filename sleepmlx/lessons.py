@@ -615,6 +615,78 @@ def read_tracking(user_data: Optional[Path], today: str, ignore=()) -> List[dict
     return [it for it in st["active"] if (not it["until"] or it["until"] >= today) and _safe(it["what"] + " " + it["source"], ignore)]
 
 
+# ---------------------------------------------------------------- always-on handoff (Desk src/diary-ao.js -> alwayson-sleep.json)
+AO_KEEP_STATUS = ("confirmed", "wrong", "correction")   # a `maybe` / `unsure` note never trains
+
+
+def read_alwayson(user_data: Optional[Path], ignore=()) -> dict:
+    """userData/alwayson-sleep.json -> {"surprises": [{key, text, stream, kl, date}], "corrections": [{key, text, sources}]}.
+    Only the "surprises" and "corrections" lists are read. Confirmed notes are NOT taken from here: the Desk also saves them to memory.md,
+    which read_notes already cards (and where Ben's "forget" works). Any entry that carries a status other than confirmed/wrong (e.g. a
+    `maybe` that slipped in) is dropped, and so is any top-level list other than these two. Secret-looking or ignored text is left out."""
+    out = {"surprises": [], "corrections": [], "dropped_maybe": 0}
+    if not user_data:
+        return out
+    try:
+        j = json.loads((Path(user_data) / "alwayson-sleep.json").read_text())
+    except (OSError, ValueError, TypeError):
+        return out
+    if not isinstance(j, dict):
+        return out
+
+    def ok_status(x: dict) -> bool:
+        st = x.get("status")
+        if st is None or str(st).lower() in AO_KEEP_STATUS:
+            return True
+        out["dropped_maybe"] += 1
+        return False
+
+    seen = set()
+    for x in j.get("surprises") or []:
+        if not isinstance(x, dict) or not ok_status(x):
+            continue
+        text = " ".join(str(x.get("text") or x.get("what") or "").split())[:300]
+        if not text or not _safe(text, ignore):
+            continue
+        try:
+            kl = max(0.0, float(x.get("kl") or 0.0))
+        except (TypeError, ValueError):
+            kl = 0.0
+        date = ""
+        if isinstance(x.get("t"), (int, float)):
+            try:
+                date = datetime.fromtimestamp(x["t"] / 1000.0).strftime("%Y-%m-%d")
+            except (ValueError, OSError, OverflowError):
+                date = ""
+        key = hashlib.sha1((str(x.get("t") or "") + "|" + text).encode()).hexdigest()[:12]
+        if key in seen:
+            continue
+        seen.add(key)
+        out["surprises"].append({"key": key, "text": text, "stream": " ".join(str(x.get("stream") or "").split())[:20], "kl": kl, "date": date})
+    for x in j.get("corrections") or []:
+        if not isinstance(x, dict) or not ok_status(x):
+            continue
+        text = " ".join(str(x.get("text") or "").split())[:400]
+        if not text or not _safe(text, ignore):
+            continue
+        key = hashlib.sha1(norm(text).encode()).hexdigest()[:12]
+        if key in seen:
+            continue
+        seen.add(key)
+        srcs = [str(u)[:200] for u in (x.get("sources") or []) if isinstance(u, str) and u][:4]
+        out["corrections"].append({"key": key, "text": text, "sources": srcs})
+    return out
+
+
+def surprise_cards(s: dict, who: str = "Ben"):
+    when = " on %s" % s["date"] if s["date"] else ""
+    return ["Something that surprised Glim%s%s: %s" % (when, " (%s)" % s["stream"] if s["stream"] else "", s["text"])], []
+
+
+def correction_cards(c: dict, who: str = "Ben"):
+    return ["A belief Glim corrected after checking two websites: %s" % c["text"]], []
+
+
 def note_cards(n: dict, who: str = "Ben"):
     return ["Saved note about %s%s: %s" % (who, " (%s)" % n["topic"] if n["topic"] else "", n["text"])], []
 

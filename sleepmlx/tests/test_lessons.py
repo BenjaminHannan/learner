@@ -330,6 +330,68 @@ class NightTests(unittest.TestCase):
         self.assertTrue(sl.items["track|calculator order"].dead and sl.items["note|m1"].dead)
         self.assertEqual((st["track_retired"], st["note_retired"]), (1, 1))
 
+    def test_alwayson_surprises_and_corrections_become_cards_and_maybe_never_does(self):
+        """Desk always-on v2: userData/alwayson-sleep.json (diary-ao.js) feeds the same extras() path as saved notes."""
+        e = self.env
+        ud = e.paths.user_data
+        ud.mkdir(parents=True)
+        (ud / "memory.md").write_text("- I thought Pluto is a planet; actually it is a dwarf planet | id: c1 | updated: 2026-11-03\n")
+        (ud / "alwayson-sleep.json").write_text(json.dumps({
+            "at": 1762200000000,
+            "confirmed": [{"text": "Water boils at 100 C at sea level", "sources": ["https://a.org", "https://b.org"]}],
+            "corrections": [{"text": "I thought the Moon has no water; actually it has water ice", "sources": ["https://nasa.gov/x", "https://esa.int/y"]},
+                            {"text": "I thought Pluto is a planet; actually it is a dwarf planet", "sources": []},
+                            {"text": "MAYBE-CORR the sky is green", "status": "maybe"}],
+            "surprises": [{"t": 1762190000000, "stream": "app", "text": "Ben switched to Xcode, which I did not expect here (code).", "kl": 1.7},
+                          {"t": 1762190100000, "stream": "fact", "text": "MAYBE-SURPRISE should not train", "kl": 2, "status": "maybe"}],
+            "maybe": [{"text": "MAYBE-NOTE cats have nine lives", "status": "maybe"}]}))
+        sl, week = NightTests.sleeper_on(self, None)
+        sl.today = lambda: "2026-11-04"
+        st = Counter()
+        sl.extras(week, 2, st)
+        live = {k: it for k, it in sl.items.items() if not it.dead}
+        sur = [it for it in live.values() if it.kind == "surprise"]
+        cor = [it for it in live.values() if it.kind == "aocorrection"]
+        self.assertEqual(len(sur), 1)
+        self.assertIn("Xcode", sur[0].para[0])
+        self.assertTrue(sl.elig(sur[0]))
+        self.assertGreater(sl.prio(sur[0]), 0.25)                 # KL 1.7 weighs more than a plain note
+        self.assertLessEqual(sl.prio(sur[0]), 1.0)
+        self.assertEqual(len(cor), 1)                              # Pluto is already a memory.md note card: no second copy
+        self.assertIn("water ice", cor[0].para[0])
+        self.assertIn("nasa.gov", cor[0].source)
+        self.assertEqual(st["ao_correction_in_memory"], 1)
+        self.assertEqual(st["ao_dropped_maybe"], 2)
+        self.assertFalse(any("Water boils" in p for it in live.values() for p in it.para))   # confirmed come via memory.md only
+        sl.write_cards()
+        text = e.paths.cards.read_text()
+        self.assertNotIn("MAYBE", text)
+        rows = [json.loads(l) for l in text.splitlines()]
+        self.assertTrue(any(r["kind"] == "surprise" and "Xcode" in r["text"] for r in rows))
+        self.assertTrue(any(r["kind"] == "aocorrection" for r in rows))
+        # they do not start a night on their own (like notes)
+        E = [it for it in sl.items.values() if sl.elig(it)]
+        self.assertEqual(sum(len(it.para) + len(it.qa) for it in E if it.kind not in ("note", "track", "surprise", "aocorrection")), 0)
+        # the file goes away: the cards leave the pool
+        (ud / "alwayson-sleep.json").unlink()
+        st = Counter()
+        sl.extras(week, 2, st)
+        self.assertTrue(all(it.dead for it in sl.items.values() if it.kind in ("surprise", "aocorrection")))
+        self.assertEqual((st["surprise_retired"], st["aocorrection_retired"]), (1, 1))
+
+    def test_read_alwayson_survives_bad_files(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            ud = Path(d)
+            self.assertEqual(L.read_alwayson(ud)["surprises"], [])
+            (ud / "alwayson-sleep.json").write_text("{not json")
+            self.assertEqual(L.read_alwayson(ud)["corrections"], [])
+            (ud / "alwayson-sleep.json").write_text(json.dumps({"surprises": "x", "corrections": [None, 3, {"text": ""}]}))
+            r = L.read_alwayson(ud)
+            self.assertEqual((r["surprises"], r["corrections"]), ([], []))
+            (ud / "alwayson-sleep.json").write_text(json.dumps({"surprises": [{"text": "my password is hunter2", "kl": 1}]}))
+            self.assertEqual(L.read_alwayson(ud)["surprises"], [])     # secret-looking text never trains
+
     def test_worker_reads_the_userdata_folder_from_env(self):
         from sleepmlx import worker
         e = self.env
