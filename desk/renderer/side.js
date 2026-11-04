@@ -57,7 +57,7 @@
       }
       v.append(s);
     };
-    group('Goals', /^goal/i, true, 'Tell Glim your short-term and long-term goals and it will plan them here.');
+    group('Goals', /^goal/i, true, 'Tell Glim what you are working on, and your goals show up here.');
     group('Skills I am learning', /^skill/i, false, 'Say "go learn about ..." and what Glim learns shows up here.');
     return v;
   }

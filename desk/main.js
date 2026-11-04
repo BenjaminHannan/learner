@@ -219,11 +219,10 @@ function sampleRhythm(now) {
   let idleS = Infinity; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* not available: Desk's own use below */ }
   rhythm.record(now || new Date(), idleS < 120 || Date.now() - sl.lastActive < 120000);
 }
-const GOALS_ASK = 'Setup is done. One more thing, so I can help over the long run: what are your short-term and long-term goals? Anything counts, big or small: school, a skill, a project, a habit, money, health. If you are not sure yet, tell me what matters to you and I can help you brainstorm some. Then I will turn them into a plan with clear steps, and offer to check in on them for you.';
-// rides (hidden) in front of the first answer to GOALS_ASK; the scroll shows only the person's words
-const GOALS_NOTE = '[You just asked about their goals; this is the answer.] Save each goal with memory_save (topic "goal"), and each milestone or first step as its own note with topic "goal", so they show in the Goals tab. Then make a short plan for each goal: '
-  + '2 to 4 milestones and the first small step for this week. Ask at most one question if something important is unclear. If they have no goals yet, '
-  + 'help them brainstorm a few first. Finally offer helpers (agent_start) that would help, for example a weekly check-in or a reminder for the first step, and ask before creating any.\n\n';
+// After setup Glim opens with a short hello + one small question, then at most 2 more, one per message (src/opener.js).
+// A hidden note rides only on a reply that plausibly answers the question just asked; the scroll shows only the person's words.
+const Opener = require('./src/opener');
+const GOALS_ASK = Opener.OPENER;
 // "go learn about X": learning mode. Hidden note in front of the message; the scroll shows only the person's words.
 const LEARN_ASK = /^\s*(?:(?:please|ok|okay|hey)[ ,]+)?(?:go\s+|can you\s+|could you\s+)?(?:learn|study)\s+(?:about\s+|how to\s+|to\s+)?\S/i;
 const LEARN_NOTE = '[Learning mode: the person asked you to go learn this. Treat it as building a skill that you keep.] '
@@ -258,7 +257,12 @@ let learnBtn = null;
 const getLearnBtn = () => learnBtn || (learnBtn = new (require('./src/learnbutton').LearnButton)({ dir: app.getPath('userData'), startLearn, stopMote: (id) => helpers.stop(id), onChange: (v) => { if (v.learning) { try { aoQuizFor(v.topic); } catch (e) { /* the quiz tick retries */ } } send('learn:state', v.learning ? { ...v, ...aoQuizView(v.topic) } : v); if (aoState) aoState.setFocus(v.learning ? v.topic : null, 'learn'); } }));
 const learningNow = () => !!(learnBtn && learnBtn.cur);
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
-const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
+// the opener flow: the note for this reply, or '' (an unrelated message or a skip ends the flow; a step never fires twice)
+function goalsNoteFor(t, text) {
+  const r = Opener.decide(t, text, store.getSettings().goalsSteps);
+  if (r.step) store.saveSettings({ goalsSteps: r.done });
+  return r.note;
+}
 function startSleep(o) {
   o = o || {};
   if (sl.asleep || sl.waking) return { error: 'Glim is already asleep.' };
@@ -2234,7 +2238,7 @@ function registerIpc() {
     activeThread = t;
     // Ben Oct 28: "the chat should just never get slow". The local model serves one request at a time, so a Mote mid-reply would make his message wait: stop them now, they run again once he is done.
     if (store.getSettings().benFirst !== false && helpers && helpers.active.size) helpers.pauseForSleep('Paused so your chat stays fast; runs again when you are done');
-    const goals = isGoalsAnswer(t);
+    const goalsNote = goalsNoteFor(t, text), goals = !!goalsNote;
     // Learn mode: "go learn X" -> Glim asks how many Motes and for how long -> Ben's answer starts them.
     let learn = false, learnNote = LEARN_NOTE;
     if (!goals) {
@@ -2245,7 +2249,7 @@ function registerIpc() {
     // always-on v2: the diary is shown ONLY when Ben asks ("Glim, what did you do?"): a hidden note with the activity recap
     const diary = !goals && !learn && aoState && DiaryAO.isDiaryAsk(text) ? aoDiaryNote() : '';
     const timeNote = !goals && !learn && !diary ? aoTimeNote(text) : '';   // feeling time: a time question gets a hidden note from the timestamped records
-    agent.run(t, timeNote ? timeNote + text : goals ? GOALS_NOTE + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : timeNote ? { display: text } : undefined).then((r) => {
+    agent.run(t, timeNote ? timeNote + text : goals ? goalsNote + text : learn ? learnNote + text : diary ? diary + text : text, goals || learn || diary ? { display: text } : timeNote ? { display: text } : undefined).then((r) => {
       send('threads:changed', {});
       if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim finished', t.title, t.id);
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));

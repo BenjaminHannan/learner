@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS = {
   textSize: 'm',          // s | m | l
   alwaysAllow: [],       // actions Ben chose "Always allow" for: 'shell:<program>' and 'screen' (never risky commands)
   goalsAsked: false,     // Glim has asked about long-term goals once, right after first-run setup
+  goalsSteps: [],        // the opener's small questions (1..3) already answered or ended (src/opener.js): a hidden note never rides twice
   autoUpdateCheck: true, // look for a newer Premonition at launch and every 5 minutes (an update still needs your click)
   showSparks: false,     // list Motes (helpers) in a side panel and let you read their logs (view only; you cannot talk to them)
   highContrast: false,    // stronger text and borders
@@ -113,6 +114,7 @@ function sanitize(patch) {
     else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
     else if (k === 'alwaysAllow') out[k] = (Array.isArray(v) ? v : []).map((x) => String(x)).filter((x) => /^[\w:.\/+-]{1,60}$/.test(x)).slice(0, 60);
     else if (k === 'uses') out[k] = cleanUses(v);
+    else if (k === 'goalsSteps') out[k] = [...new Set((Array.isArray(v) ? v : []).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 3))].sort();
     else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
     else if (k === 'sleepDuration') out[k] = DURATION_PICKS.includes(String(v)) ? String(v) : DEFAULT_SETTINGS[k];
     else if (TIMES.includes(k)) out[k] = cleanTime(v, DEFAULT_SETTINGS[k]);
