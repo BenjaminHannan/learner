@@ -126,7 +126,7 @@ function updatePill() {
   const st = pillState.status();
   send('glim-state', st);
   try { if (process.platform === 'darwin' && app.dock) app.dock.setBadge(st === 'error' || st === 'waiting' ? '!' : ''); } catch (e) { /* ignore */ }
-  if (pillWin) { const v = pillState.view(); if (!v.visible && process.platform === 'darwin') v.idle = idleInfo(); pillWin.update(v, chatInFront()); }
+  if (pillWin) { const v = pillState.view(); if (!v.visible && process.platform === 'darwin') v.idle = idleInfo(); try { v.ear = aoEar(); } catch (e) { v.ear = null; } pillWin.update(v, chatInFront()); }
 }
 // hover card of the resting pill (Mac): rebuilt at most every 5 s, not on every 1 s tick
 let idleCache = null;
@@ -140,7 +140,12 @@ function idleInfo() {
 }
 // the resting pill's card also refreshes when its 5 s cache runs out, so "in 12 min" and the assistant state stay current
 const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view && !pillWin.view.visible && !(idleCache && Date.now() - idleCache.at < 5000);
-setInterval(() => { if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale()) updatePill(); }, 1000).unref();
+let lastEar = '';
+setInterval(() => {
+  try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
+  let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
+  if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
+}, 1000).unref();
 
 // ---- sleep mode ---------------------------------------------------------------------------------------
 // The sleepmode app stops the model servers and trains while Ben is away. Desk only starts/wakes it and mirrors its files.
@@ -1420,14 +1425,37 @@ async function aoAsk(messages, signal) {
   } finally { clearTimeout(kill); signal.removeEventListener('abort', stop); }
 }
 function mainChatId() { const t = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); return t ? t.id : null; }
-function aoSay(text) {
-  const id = mainChatId();
-  if (id && !(agent && agent.running)) {
-    const t = store.loadThread(id);
-    if (t) { t.items.push({ t: 'assistant', text, ts: Date.now(), alwaysOn: true }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
-  }
-  notify('Glim', text, id);
-  pillState.flash && pillState.flash(text);
+// always-on v2 (src/glimvoice.js): Glim's unprompted words go to the notch island (notched Mac), the floating pill (no notch), or a
+// macOS notification ("Use the notch" off). Never while Ben is typing: they wait for a pause and are dropped after 2 minutes.
+const GlimVoice = require('./src/glimvoice');
+let aoSurprise = { at: 0, what: '' };
+const aoTypingNow = () => { if (Date.now() - lastTyping < 15000) return true; try { return powerMonitor.getSystemIdleTime() < 2; } catch (e) { return false; } };
+const aoNotched = () => !!(pillWin && pillWin.geo && pillWin.geo.notchH > 0);
+const aoWhere = () => { const s = store.getSettings(); return GlimVoice.route({ useNotch: s.useNotch !== false, notched: aoNotched(), pillOn: s.pill !== false && !!pillWin }); };
+const aoVoice = new GlimVoice.Voice({
+  where: aoWhere, typing: aoTypingNow,
+  outlets: {
+    chat: (m) => {
+      const id = mainChatId(); m.threadId = id;
+      if (!id || (agent && agent.running)) return;
+      const t = store.loadThread(id);
+      if (t) { t.items.push({ t: 'assistant', text: m.text, ts: Date.now(), alwaysOn: true, sayId: m.id }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
+    },
+    notch: (m) => pillState.say(m), pill: (m) => pillState.say(m),
+    notification: (m) => notify('Glim', m.text, m.threadId)
+  },
+  onOutcome: (m, kind) => { try { aoOnOutcome(m, kind); } catch (e) { console.log('[alwayson] outcome', e); } },
+  log: (...a) => console.log('[alwayson]', ...a)
+});
+let aoOnOutcome = () => {};   // set by the speak-o-meter wiring below
+function aoSay(text, d) { aoVoice.offer(text, { why: d && d.why, features: d && d.features }); }
+// the ear: 😴 resting · 📚 learning (+ Motes) · 💭 thinking · 😲 surprised, while always-on is on
+let aoEarExtra = () => ({});
+function aoEar() {
+  if (!aoSenses || !aoSenses.anyEnabled()) return null;
+  const lb = learnBtn && learnBtn.cur;
+  return GlimVoice.statusIcon({ now: Date.now(), asleep: sl.asleep, thinking: !!(aoLoop && aoLoop.inTick), surprisedAt: aoSurprise.at, surpriseWhat: aoSurprise.what,
+    learning: lb ? { topic: lb.topic, levels: [] } : null, motes: lb ? lb.ids.length : 0, ...aoEarExtra() });
 }
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
 function aoNote(text) { try { const r = memory.save(text, 'noticed'); if (!r.ok) console.log('[alwayson] note not saved:', r.error); } catch (e) { /* skipped */ } }
@@ -1503,6 +1531,7 @@ function registerIpc() {
   h('agent:send', async (threadId, text) => {
     sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
+    if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
     if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };
     const hp = helpers.byThread(threadId);
@@ -1538,6 +1567,7 @@ function registerIpc() {
   h('senses:get', () => sensesView());
   h('senses:set', (patch) => setSenses(patch || {}));
   h('senses:askPerms', () => askSensesPerms());
+  h('alwayson:feedback', (id, kind) => { const m = aoVoice.feedback(id, ['up', 'down', 'used'].includes(kind) ? kind : 'down'); return { ok: !!m }; });
   ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); });
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
@@ -1738,6 +1768,7 @@ function registerIpc() {
       case 'respond': { const r = pending.get(arg.rid); if (r) { pending.delete(arg.rid); r(arg.value); send('agent', { threadId: arg.threadId, type: 'resolved', rid: arg.rid, value: arg.value }); } break; }
       case 'openBrowser': { const pa = [...pillState.agents.values()].find((x) => x.key === arg); const key = pa && pa.threadId; if (key && browsers.has(key)) { showWindow(); send('browser-show', { key, threadId: key, login: loginWaits.has(key) }); } break; }
       case 'dismiss': pillState.dismiss(arg); break;
+      case 'aoSay': { if (!arg) break; aoVoice.feedback(arg.id, arg.kind); if (arg.key) pillState.dismiss(arg.key); if (arg.kind === 'used') { showWindow(); const id = mainChatId(); if (id) send('open-thread', id); } break; }
       case 'wake': wakeNow(); break;
       case 'hangup': if (call) call.hangup(); break;
       default: break;

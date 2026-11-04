@@ -55,3 +55,14 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #pill.notch.open .row1 { height:auto; }
 #pill.notch.open #line { display:block; }
 #pill.notch.long { --ear:58px; } #pill.notch.long.hover { --ear:72px; }
+
+/* always-on v2: the status icon in the ear (😴 📚 💭 😲) and Glim's unprompted message with 👍 / 👎 not now */
+#ear { flex:none; font-size:13px; line-height:1; white-space:nowrap; font-variant-numeric:tabular-nums; }
+#pill.notch #ear { order:2; height:var(--nh); display:flex; align-items:center; font-size:12px; color:var(--text2); }
+#pill.idle #ear { display:none; } #pill.notch.idle #ear:not([hidden]) { display:flex; }
+#pill.idle.has-ear { width:64px; margin-left:-32px; }
+#pill.idle.has-ear #ear:not([hidden]) { display:inline; }
+.ear-line { color:var(--text2); font-size:12px; padding:2px 0 6px; }
+.btns .fb { padding:5px 9px; }
+#pill.say #dStep { white-space:normal; }
+#pill.say .kv span { display:none; }

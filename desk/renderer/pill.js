@@ -5,7 +5,7 @@
   const P = window.deskPill;
   const pill = $('#pill');
   const g = Mascot.el('idle', 24, {}); $('#g').append(g);
-  let view = null, openT = 0, closeT = 0;
+  let view = null, openT = 0, closeT = 0, lastSay = '', sayT = 0;
   const mmss = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? s + ' s' : s < 3600 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
   function btn(label, cls, fn) { const b = el('button', cls, label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; }
@@ -18,7 +18,12 @@
     pill.classList.toggle('gone', !v.visible);
     if (!v.visible) { close(); return; }
     $('#dIdle').hidden = true;
-    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'call', 'idle'); pill.classList.add(v.status);
+    // always-on v2: the status icon always sits in the ear; hover shows its detail line
+    const ear = v.ear || null;
+    $('#ear').hidden = !ear; $('#ear').textContent = ear ? ear.text : ''; pill.title = ear ? ear.detail : '';
+    $('#dEar').hidden = !ear; $('#dEar').textContent = ear ? ear.detail : '';
+    pill.classList.toggle('has-ear', !!ear);
+    pill.classList.remove('working', 'waiting', 'error', 'done', 'sleeping', 'call', 'idle', 'say'); pill.classList.add(v.status);
     Mascot.set(g, v.mood);
     if (v.status === 'idle') { idle(v); return; } // just the icon; hover opens the summary card
     const t = v.top;
@@ -33,6 +38,15 @@
     $('#dAsk').hidden = !ap; $('#dAsk').textContent = ap ? (ap.kind === 'ask' ? 'Glim asks: ' + ap.text : ap.text) : '';
     $('#dOthers').textContent = v.others.length ? 'Also: ' + v.others.map((o) => o.name + ' (' + o.status + ')').join(', ') : '';
     const b = $('#btns'); b.textContent = '';
+    if (t.say) { // Glim spoke up by itself: the island drops down with the words; a click opens chat; 👍 / 👎 "not now"
+      pill.classList.add('say');
+      $('#dStep').textContent = t.say.text;
+      b.append(btn('Open chat', 'go', () => P.act('aoSay', { id: t.say.id, kind: 'used', key: t.key })));
+      b.append(btn('👍', 'fb', () => P.act('aoSay', { id: t.say.id, kind: 'up', key: t.key })));
+      b.append(btn('👎 Not now', 'fb no', () => P.act('aoSay', { id: t.say.id, kind: 'down', key: t.key })));
+      if (t.say.id !== lastSay) { lastSay = t.say.id; open(); clearTimeout(sayT); sayT = setTimeout(() => { if (!pill.classList.contains('hover')) close(); }, 15000); }
+      return;
+    }
     b.append(btn('Open', 'go', () => P.act('open', { threadId: t.threadId, key: v.status === 'done' || v.status === 'error' ? t.key : null })));
     if (ap && (ap.kind === 'shell' || ap.kind === 'screen')) {
       b.append(btn('Allow once', '', () => P.act('respond', { rid: ap.rid, value: 'once', threadId: t.threadId })));
@@ -66,7 +80,7 @@
     P.act('hover', true); open();
   });
   pill.addEventListener('mouseleave', () => { clearTimeout(openT); pill.classList.remove('hover'); close(); });
-  $('.row1').addEventListener('click', () => { if (view && view.status === 'idle') P.act('open', { threadId: null, key: null }); else if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
+  $('.row1').addEventListener('click', () => { if (view && view.top && view.top.say) P.act('aoSay', { id: view.top.say.id, kind: 'used', key: view.top.key }); else if (view && view.status === 'idle') P.act('open', { threadId: null, key: null }); else if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
   // Ben Nov 3: the helper keeps the cursor off the top edge over the island so a full-screen app's menu bar doesn't slide down there
   let lastFence = '';
   function fence() {

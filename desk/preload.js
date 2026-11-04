@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('desk', {
   perms: { status: inv('perms:status'), open: inv('perms:open'), reveal: inv('perms:reveal'), drag: (which) => ipcRenderer.send('perms:drag', which) },
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },
   senses: { get: inv('senses:get'), set: inv('senses:set'), askPerms: inv('senses:askPerms'), typing: () => ipcRenderer.send('alwayson:typing') },
+  alwaysOn: { feedback: inv('alwayson:feedback') },
   learn: { state: inv('learn:state'), start: inv('learn:start'), stop: inv('learn:stop') },
   onLearn: on('learn:state'),
   onSensesShow: on('senses-show'),

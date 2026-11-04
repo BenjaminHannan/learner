@@ -54,6 +54,7 @@ const DEFAULT_SETTINGS = {
   permsSeen: false,       // the Permissions card has been shown once on first launch
   onboardAt: '',          // 'perms' = setup reached its Permissions page (macOS makes you quit and reopen after a switch; setup resumes there)
   pill: true,             // the always-on-top status pill at the top of the screen
+  useNotch: true,         // always-on v2: Glim's unprompted words drop down from the notch (or the pill on a Mac without one); off = a macOS notification
   // Sleep (the separate sleepmode app trains on the diary while Glim is idle)
   sleepApp: '',           // '' = ~/learner-ops/sleepmode/app
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
@@ -83,7 +84,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'useNotch', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer'];
 const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720], creativeDeadlineMs: [1, 15000] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];

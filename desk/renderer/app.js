@@ -261,6 +261,15 @@
     sync(); row.append(up, down);
     return row;
   }
+  // always-on v2: a message Glim sent by itself gets 👍 and 👎 "not now" (they teach its speak-o-meter when to talk)
+  function aoRow(sayId) {
+    const row = el('div', 'rate ao-rate');
+    const mk = (kind, label, txt) => { const b = el('button', 'rate-b ao-b', txt); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
+      b.onclick = async () => { const r = desk.alwaysOn ? await desk.alwaysOn.feedback(sayId, kind) : null; row.classList.add('set'); b.setAttribute('aria-pressed', 'true'); row.querySelectorAll('button').forEach((x) => { x.disabled = true; }); if (!r || !r.ok) b.title = 'Already counted'; };
+      return b; };
+    row.append(mk('up', 'Good time to tell me', '👍'), mk('down', 'Not now', '👎 Not now'));
+    return row;
+  }
   function onAssistantEnd(ev) {
     runTexts = [];
     const t = tn;
@@ -279,7 +288,7 @@
         else {
           const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
           const cut = !!ev.cut;
-          const rate = thread && !thread.helper && !cut ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
+          const rate = ev.sayId ? aoRow(ev.sayId) : thread && !thread.helper && !cut ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
           if (cut) { t.text.classList.add('cut'); t.text.append(el('div', 'cutnote', 'cut off: reading your new message')); }
           const st = stamp(ev.ts); t.text.after(st);
           if (rate) st.after(rate);
@@ -878,7 +887,7 @@
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
         if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
-        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut });
+        onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut, sayId: it.alwaysOn ? it.sayId || null : null });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
         const w = stepEl(it.id, it.tool, it.args, it.summary, it.ok ? 'ok' : 'bad', it.preview);
@@ -1190,7 +1199,8 @@
       { key: 'wakeAt', type: 'toggle', label: 'Wake at the end of the window', help: 'Only for a sleep that Glim started by itself.' }
     ] },
     { group: 'Senses', rows: [
-      { type: 'senses', label: 'What Glim may notice', help: 'Always-on Glim: the inputs it may use, all on this Mac. A sense that is off is never read.' }
+      { type: 'senses', label: 'What Glim may notice', help: 'Always-on Glim: the inputs it may use, all on this Mac. A sense that is off is never read.' },
+      { key: 'useNotch', type: 'toggle', label: 'Use the notch', help: 'When Glim speaks up by itself, the island at the top of the screen drops down with the message (a Mac without a notch uses the floating pill). Off: a macOS notification instead.' }
     ] },
     { group: 'Screen control', rows: [
       { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your computer. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },

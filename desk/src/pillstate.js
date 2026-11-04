@@ -23,16 +23,20 @@ class PillState {
   setSleep(info) { this.sleep = info ? { ...info, since: (this.sleep && this.sleep.since) || this.now() } : null; this.onChange(); }
   // a short heads-up (e.g. a check-in alert) that fades like a finished run
   flash(line, name) { const a = this._get('sleep-alert', name || 'Glim', null); a.status = 'done'; a.line = short(line, 60); a.step = short(line, 120); a.endedAt = this.now(); a.startedAt = this.now(); a.error = ''; a.approval = null; this._touch(a); }
+  // always-on v2: Glim speaks up unprompted. The island drops down with the words (pill.js opens it) and stays for holdMs
+  // so Ben can read it, click it (opens chat), or answer 👍 / 👎 "not now".
+  say(msg, holdMs) { const a = this._get('glim-say', 'Glim', msg.threadId || null); a.status = 'done'; a.line = short(msg.text, 60); a.step = short(msg.text, 400); a.endedAt = this.now(); a.startedAt = this.now(); a.error = ''; a.approval = null; a.say = { id: msg.id, text: msg.text }; a.holdMs = holdMs || 45000; this._touch(a); }
   _get(key, name, threadId) {
     let a = this.agents.get(key);
     if (!a) { a = { key, name: name || 'Glim', threadId: threadId || null, status: 'working', line: '', step: '', error: '', approval: null, startedAt: this.now(), endedAt: 0, at: this.now(), lastText: '', title: '' }; this.agents.set(key, a); }
     if (name) a.name = name;
     if (threadId) a.threadId = threadId;
+    if (key !== 'glim-say') a.say = null;
     return a;
   }
   // helpers working quietly (not waiting on Ben) stay off the pill and badge while Show Motes is off
   _hidden(a) { return this._helper(a) && a.status !== 'waiting' && !this.showHelpers(); }
-  _helper(a) { return !['main', 'call', 'sleep-alert'].includes(a.key); }
+  _helper(a) { return !['main', 'call', 'sleep-alert', 'glim-say'].includes(a.key); }
   _name(a) { return this._helper(a) && !this.showHelpers() ? 'Glim' : a.name; }
   _touch(a) { a.at = this.now(); this.onChange(); }
 
@@ -95,7 +99,7 @@ class PillState {
   // drop finished entries after doneMs; returns true if anything went away
   tick() {
     let ch = false;
-    for (const [k, a] of this.agents) if (a.status === 'done' && this.now() - a.endedAt > this.doneMs) { this.agents.delete(k); ch = true; }
+    for (const [k, a] of this.agents) if (a.status === 'done' && this.now() - a.endedAt > (a.holdMs || this.doneMs)) { this.agents.delete(k); ch = true; }
     if (ch) this.onChange();
     return ch;
   }
@@ -119,7 +123,7 @@ class PillState {
       return { visible: true, status: 'call', mood: 'idle', line, top: { key: 'call', name: 'Glim', threadId: null, status: 'call', step: 'Talking hands-free', line, error: '', approval: null, title: '', elapsedMs: secs * 1000 }, others: [], now };
     }
     if (!top) return { visible: false, status: 'idle', mood: 'idle', line: '', top: null, others: [] };
-    const pack = (a) => ({ key: a.key, name: this._name(a), threadId: a.threadId, status: a.status, step: a.step, line: a.line, error: a.error, approval: a.approval, title: a.title, elapsedMs: Math.max(0, (a.endedAt || now) - a.startedAt) });
+    const pack = (a) => ({ key: a.key, name: this._name(a), threadId: a.threadId, status: a.status, step: a.step, line: a.line, error: a.error, approval: a.approval, title: a.title, say: a.say || null, elapsedMs: Math.max(0, (a.endedAt || now) - a.startedAt) });
     return { visible: true, oneGlim: !this.showHelpers(), status: top.status, mood: MOOD[top.status], line: top.line, top: pack(top), others: [...this.agents.values()].filter((a) => a !== top && !this._hidden(a) && (this._helper(a) ? this.showHelpers() : this.showHelpers() || !this._helper(top))).sort((x, y) => PRIORITY[y.status] - PRIORITY[x.status]).slice(0, 3).map((a) => ({ key: a.key, name: this._name(a), status: a.status, line: a.line })), now };
   }
 }

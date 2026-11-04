@@ -12,3 +12,14 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
   upstream is Nanbeige4.2-3B (`~/learner-ops/assistant/config.sh`: `ASSISTANT_ENGINE="nanbeige"`, stock mlx_lm, no Dory loops).
   v1's `lfm3-fast` is unknown to that gateway and was routed to Nanbeige *with thinking on*. The loop now uses
   `chatModel(settings)` = chat's Fast id + chat's gateway URL. Motes already used chat's settings (only mode/compaction change).
+
+## Phase 1 (notch voice + status)
+- **Typing guard**: "typing" = Desk's composer typed in the last 15 s OR any Mac input in the last 2 s (system idle time).
+  A message waits for a 4 s pause; if Ben keeps going for 2 minutes it is dropped, never delivered late. Games with constant
+  input therefore never get interrupted (on purpose).
+- **Notch drop-down**: reuses the pill island. A say is a pill entry `glim-say` that opens itself for 15 s and stays 45 s.
+  Buttons: Open chat (counts as "used the help" = yes), 👍, 👎 Not now. The words are also put in the main chat (with the same
+  👍/👎 row) so nothing is lost if Ben was away.
+- **Notch off** → `Notification` (Electron). It has no 👍/👎 buttons (macOS action buttons need a signed app); the chat copy has them.
+- **Ear icon** shows only while always-on is on (any sense on). Priority: 😴 asleep > 😲 (20 s after a big surprise) > 💭 a tick or
+  thinking Mote in flight > 📚 learning > 😴 resting.
