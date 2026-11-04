@@ -40,6 +40,11 @@ One night = one new diary day (days already slept are tracked in `state.json`; a
    messages are no longer taken as Ben's turns.
 5. **Hold-out**: about 10% of the night's new cards (Q&A only) are held out and never trained on. Each fact keeps at least 2 other cards, so the held-out question tests a *new wording* of a taught fact, and (alternating) the *reverse* direction.
 6. **Train** a LoRA in 4 cycles. Each step is 16 cards (text paraphrases, closed-book Q&A, and 50% open-book Q&A where the prompt carries BM25 notes from the diary) plus 8 generic replay sequences with a KL penalty against the base (LoRA scale 0 = base). Cards of earlier nights stay in the pool, so they are replayed. After each cycle's NREM steps comes **REM**: the current adapter writes two-step "chain" questions that combine two facts through a shared name (K2: `q_think` variant), and "gist" habit questions for facts seen on 3+ days; the base model verifies them from the chat text; kept dreams join the practice pool. Cosine learning rate, fresh AdamW per night, gradient clip 1.0.
+   **Surprise-picked practice** (`picker.py`, `replay_picker = "surprise_mix"`, default since 2026-11-04; `"prio"` = the old draw): at the start of each
+   cycle the current adapter's log-loss on each item's Q&A (closed book, <= 2 cards, `Backend.nll`) is measured; half of each step's fact cards are then
+   drawn by that surprise (+5 % floor), half by the usual priority. Questions whose live answers disagree are noise and never trained. A backend without
+   `nll`, or too little time left, falls back to the priority draw (counted in `stats.picker`). Toy evidence only (premonition-sleeplab-t2, 3/3 seeds).
+   `python -m sleepmlx.morning` prints the morning check (kept/rolled back, general harm, held-out recall, how cards were picked).
 7. **Downscale (SHY)**: every LoRA's weight change is SVD'd, its singular values x 0.85, those under 5% of the largest zeroed (sleepb defaults).
 8. **Gate** (replaces sleepb's ARC slice):
    a. 40 fixed general questions (facts, arithmetic; `gate.py`). The base model's correctness is recorded the first time (`gate_base.json`); the adapter may not lose more than 3 percentage points (with 40 questions: at most 1 more wrong).

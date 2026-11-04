@@ -229,6 +229,24 @@ class MLXBackend(Backend):
                 tgt.append(ids[t])
         return mx.array(rows), mx.array(bi), mx.array(ti), mx.array(tgt), len(tgt)
 
+    def nll(self, examples):
+        """Mean target-token log-loss per example, adapter on, no gradient (surprise picker)."""
+        import mlx.nn as nn
+        mx = _mx()
+        self.model.eval()
+        self._set_scale(self._scale)
+        out = []
+        for e in examples:
+            ids, bi, ti, tgt, n = self._arrays([e])
+            if n == 0:
+                out.append(0.0)
+                continue
+            loss = nn.losses.cross_entropy(self._logits(self.model, ids, bi, ti), tgt, reduction="sum") / n
+            mx.eval(loss)
+            out.append(float(loss))
+        clear_cache()
+        return out
+
     def train_begin(self, total_steps, lr):
         import mlx.optimizers as optim
         self.opt = optim.AdamW(learning_rate=lr, weight_decay=0.0)

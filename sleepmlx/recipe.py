@@ -30,6 +30,7 @@ from . import diary as diary_mod
 from . import gate as gate_mod
 from . import grading as grading_mod
 from . import lessons as L_mod
+from . import picker as picker_mod
 from . import prompts as P
 from . import replay as replay_mod
 from .backend import Backend, Clock, Stop
@@ -101,6 +102,10 @@ class Config:
     gate_min_gain: int = gate_mod.MIN_GAIN   # held-out cards the night must add over the adapter it started from (gate.decide)
     verify_tokens: int = 20
     kl_every: int = 1             # KL replay every n-th step (CPU profile: 4)
+    # Surprise-picked replay (picker.py; T2 toy PASS 3/3, 2026-11-04). "prio" = the draw used before (priority only).
+    replay_picker: str = "surprise_mix"
+    surprise_share: float = 0.5   # share of each step's fact cards picked by surprise; the rest is today's priority draw
+    surprise_max_items: int = 200 # items scored per REM cycle (highest priority first); the rest count as not surprising
     replay_mode: str = "prompt"  # opt-in "continuation": base answer contexts; measure paired retention before enabling
     replay_max_tokens: int = 128  # capped teacher generation, cached separately from private diary work
     gate_n: int = 40              # general questions in the gate
@@ -1248,13 +1253,71 @@ class Sleeper:
         self.target_stat(qa_examples=1, qa_closed_book=1, qa_target_tokens=len(target))
         return (p + target, len(p))
 
-    def nrem(self, act: List[Item], cum: List[float], n: int, rng: random.Random, d: int):
+    def ex_closed(self, q: str, a: str):
+        """Closed-book Q&A example for scoring only (no training-target stats)."""
+        answer = self.be.encode(a)
+        if not answer:
+            return None
+        target = self.be.encode(self.prof.training_answer_prefix) + answer + [self.be.stop_id]
+        p = self.be.encode(P.plain_prompt(self.R, q))
+        if not p or len(p) + len(target) > self.cfg.max_seq_len:
+            return None
+        return (p + target, len(p))
+
+    def picker_scores(self, act: List[Item], conflicted: set, ci: int) -> Optional[Dict[str, float]]:
+        """Mean answer log-loss of each item's consistent Q&A under the CURRENT adapter (<= 2 cards per item).
+        None = the backend cannot score or there is no time: this cycle falls back to the priority draw."""
+        cfg, N = self.cfg, self.N
+        st = N["stats"].setdefault("picker", {})
+        ranked = sorted(act, key=lambda it: -self.prio(it))[:max(0, cfg.surprise_max_items)]
+        examples, owner = [], []
+        for it in ranked:
+            for q, a in picker_mod.clean_qa(it, conflicted)[:2]:
+                ex = self.ex_closed(q, a)
+                if ex is not None:
+                    examples.append(ex)
+                    owner.append(it.key)
+        if not examples:
+            st["no_scorable_cards"] = st.get("no_scorable_cards", 0) + 1
+            return {}
+        est = len(examples) * (self.t_step or 40.0) / max(cfg.bsz, 1) * 0.5 + 5
+        if self.clock.left() < est + 2 * (self.t_step or 40.0) + 15:
+            st["skipped_no_time"] = st.get("skipped_no_time", 0) + 1
+            return None
+        try:
+            losses = self.be.nll(examples)
+        except NotImplementedError:
+            st["fallback_no_nll"] = st.get("fallback_no_nll", 0) + 1
+            return None
+        except Exception as e:   # lead 2026-11-04: nll() has never run on the real model; any failure falls back to the priority draw, never ends the night
+            st["fallback_error"] = st.get("fallback_error", 0) + 1
+            st["fallback_error_msg"] = repr(e)[:200]
+            return None
+        if len(losses) != len(examples):
+            st["fallback_error"] = st.get("fallback_error", 0) + 1
+            st["fallback_error_msg"] = "nll returned %d scores for %d examples" % (len(losses), len(examples))
+            return None
+        per = defaultdict(list)
+        for k, l in zip(owner, losses):
+            per[k].append(float(l))
+        scores = {k: picker_mod.mean_or_none(v) for k, v in per.items()}
+        st["scored_items"] = len(scores)
+        st["rescored"] = st.get("rescored", 0) + 1
+        st["mean_surprise"] = round(sum(scores.values()) / max(len(scores), 1), 4)
+        st["top"] = [[k, round(v, 3)] for k, v in sorted(scores.items(), key=lambda kv: -kv[1])[:5]]
+        self.log("[night] picker cycle %d: scored %d items, mean surprise %.3f" % (ci, len(scores), st["mean_surprise"]))
+        return scores
+
+    def nrem(self, act: List[Item], cum: List[float], n: int, rng: random.Random, d: int, conflicted=None):
         out = []
         for _ in range(n):
-            if not act:
+            if not act or not cum or cum[-1] <= 0:
                 break
             it = rng.choices(act, cum_weights=cum)[0]
-            o = rng.choice(it.para + it.qa)
+            cards = (it.para + it.qa) if conflicted is None else picker_mod.item_cards(it, conflicted)
+            if not cards:
+                continue
+            o = rng.choice(cards)
             ex = self.ex_text(o) if isinstance(o, str) else self.ex_qa(o[0], o[1], rng, d)
             if ex is not None:
                 out.append(ex)
@@ -1605,6 +1668,14 @@ class Sleeper:
             sched += [("n", ci)] * nn + [("r", ci)] * nr
         act = [it for it in E if it.para or it.qa]
         cum = list(itertools.accumulate(self.prio(it) for it in act))
+        use_picker = cfg.replay_picker == "surprise_mix"
+        conflicted = picker_mod.conflicted_questions(self.items.values()) if use_picker else None
+        if use_picker:
+            pst = N["stats"].setdefault("picker", {})
+            pst["mode"], pst["share"] = cfg.replay_picker, cfg.surprise_share
+            pst["conflicted_questions"] = len(conflicted)
+            r_act = [it for it in act if picker_mod.item_cards(it, conflicted)]
+            r_cum = list(itertools.accumulate(self.prio(it) for it in r_act))
         replay = self.replay_set()
         self.be.train_begin(total, cfg.lr)
         self._trained_since_ckpt = 0
@@ -1639,7 +1710,29 @@ class Sleeper:
                 ex = self.ex_qa(x["q"], x["a"], rng, d)
                 if ex is not None:
                     batch.append(ex)
-            batch += self.nrem(act, cum, cfg.bsz - len(batch), rng, d)
+            if use_picker:
+                pk = N.setdefault("picker", {})
+                if pk.get("cycle") != ci:
+                    sc = self.picker_scores(act, conflicted, ci)
+                    pk.clear()
+                    pk.update(cycle=ci, scores=sc)
+                    self.save_night()
+                sc = pk.get("scores")
+                if sc:
+                    s_act = [it for it in act if it.key in sc and sc[it.key] is not None]
+                    s_cum = list(itertools.accumulate(picker_mod.surprise_weights([sc[it.key] for it in s_act])))
+                    ns, nrh = picker_mod.split(cfg.bsz - len(batch), cfg.surprise_share)
+                    got_s = self.nrem(s_act, s_cum, ns, rng, d, conflicted)
+                    got_r = self.nrem(r_act, r_cum, nrh, rng, d, conflicted)
+                    pst["surprise_draws"] = pst.get("surprise_draws", 0) + len(got_s)
+                    pst["rehearsal_draws"] = pst.get("rehearsal_draws", 0) + len(got_r)
+                    batch += got_s + got_r
+                else:   # no scores this cycle: priority draw, still without inconsistent cards
+                    got = self.nrem(r_act, r_cum, cfg.bsz - len(batch), rng, d, conflicted)
+                    pst["fallback_draws"] = pst.get("fallback_draws", 0) + len(got)
+                    batch += got
+            else:
+                batch += self.nrem(act, cum, cfg.bsz - len(batch), rng, d)
             rb = rng.sample(replay, min(cfg.replay_bsz, len(replay))) if i % max(cfg.kl_every, 1) == 0 else []
             t0 = self.clock.now()
             if batch:

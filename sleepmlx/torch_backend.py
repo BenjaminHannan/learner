@@ -227,6 +227,22 @@ class TorchBackend(Backend):
             lg = self.lm.get_output_embeddings()(h[bi, ti])
         return lg.float()
 
+    def nll(self, examples):
+        """Mean target-token log-loss per example, adapter on, no gradient (surprise picker)."""
+        import torch.nn.functional as F
+        self.model.eval()
+        out = []
+        with self.torch.no_grad():
+            for e in examples:
+                ids, att, bi, ti, tgt = self._arrays([e])
+                if tgt.numel() == 0:
+                    out.append(0.0)
+                    continue
+                out.append(float(F.cross_entropy(self._logits(ids, att, bi, ti), tgt, reduction="mean")))
+        if self.device == "mps":
+            self.torch.mps.empty_cache()
+        return out
+
     def train_begin(self, total_steps, lr):
         self.opt = self.torch.optim.AdamW(self.params, lr=lr, weight_decay=0.0)
         self.total, self.lr0 = max(total_steps, 1), lr

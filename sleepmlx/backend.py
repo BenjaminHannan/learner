@@ -29,6 +29,10 @@ class Backend:
     def generate(self, prompts: Sequence[str], max_tokens: int, temp: float = 0.0, adapter: bool = True, stops: Sequence[str] = ()) -> List[str]: raise NotImplementedError
     def train_begin(self, total_steps: int, lr: float) -> None: raise NotImplementedError
     def train_step(self, batch: Sequence[Example], replay: Sequence[Example], step: int) -> dict: raise NotImplementedError
+    def nll(self, examples: Sequence[Example]) -> List[float]:
+        """Per example: mean log-loss (nats/token) of its target tokens (ids[prompt_len:]) under the CURRENT adapter.
+        Used by the surprise picker (picker.py). Backends without it: the picker falls back to the priority draw."""
+        raise NotImplementedError
     def save_adapter(self, path) -> None: raise NotImplementedError
     def load_adapter(self, path) -> None: raise NotImplementedError
     def downscale(self, factor: float, thresh: float, seed: int) -> dict: raise NotImplementedError
