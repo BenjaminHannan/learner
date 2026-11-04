@@ -97,7 +97,7 @@
   const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is thinking');
   { const aura = el('span', 'glim-aura'); // a 64px sparkle overlay centred on the 28px avatar, so the row is just glimmering Glim
     const spark = (x, y, k, cls) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><path class="spark ' + cls + '" fill="url(#glimDust)" d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z"/></g>';
-    const dust = [[16, 16, .32, 'g1'], [32, 4, .42, 'g2'], [48, 16, .24, 'g3'], [60, 33, .34, 'g4'], [50, 50, .46, 'g5'], [12, 52, .27, 'g6'], [7, 32, .38, 'g7']]
+    const dust = [[16, 16, .42, 'g1'], [32, 5, .52, 'g2'], [48, 16, .34, 'g3'], [59, 33, .44, 'g4'], [50, 50, .56, 'g5'], [13, 51, .36, 'g6'], [7, 32, .48, 'g7']]
       .map(([x, y, k, cls]) => spark(x, y, k, cls)).join('');
     aura.innerHTML = '<svg class="glim-sparks" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="glimDust" cx="50%" cy="50%" r="50%">' +
       '<stop offset="0" stop-color="#fffdf2"/><stop offset=".55" stop-color="#fff3c9"/><stop offset="1" stop-color="#ffd98a"/></radialGradient></defs>' + dust + '</svg>';
