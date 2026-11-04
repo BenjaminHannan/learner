@@ -183,10 +183,12 @@ class Scientist {
     if (kind.startsWith('game:')) {
       const g = GAMES[kind.slice(5)]; const r = rng(seed * 977 + 13);
       let s = g.init(seed);
-      for (let i = 0, n = ri(r, 0, 3); i < n && !g.done(s); i++) s = g.step(s, pk(r, g.moves(s)));
+      const gl = this.o.gameLog;   // sleep track T3: every rulebook step seen here is logged for the learned world model
+      for (let i = 0, n = ri(r, 0, 3); i < n && !g.done(s); i++) { const mv = pk(r, g.moves(s)), s2 = g.step(s, mv); if (gl) { try { gl.addStep(g, s, mv, s2); } catch (e) { /* log only */ } } s = s2; }
       if (g.done(s)) s = g.init(seed + 1);
       const m = pk(r, g.moves(s));
       const after = g.apply ? g.apply(s, m) : g.step(s, m);   // two-player games: only our move (the reply is not predictable)
+      if (gl) { try { gl.add({ game: g.name, who: 'me', s, m, s2: after }); } catch (e) { /* log only */ } }
       const truth = g.stateText(after);
       const fmt = g.name === 'maze' ? 'Answer like "row R, column C" (bumping into a wall # means you stay put).' : g.name === 'nim' ? 'Answer like "piles 1 2 3" (or "I win" if you took the last stone).' : g.name === 'ttt' ? 'Answer like "board X../.O./..." (rows top to bottom, . is empty), or "X wins" / "draw".' : 'Answer like "123/45_/786" (rows top to bottom, _ is the blank).';
       return { kind, seed, question: g.render(s) + '\nIf you play: ' + g.moveText(m) + ', what is the state right after your move? ' + fmt,

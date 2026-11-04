@@ -21,6 +21,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { isPrivate } = require('./senses');
 const TS = require('./timesense');
+const { ShapeProjector } = require('./shapekeys');
 
 const DIM = 256;                 // embedder size: 256 signed hash buckets (no learned weights, ~0 bytes of model)
 const MAX_ITEMS = 2000;          // timeline cap (oldest dropped first; patterns keep member ids that may then be gone)
@@ -32,6 +33,15 @@ const FOLLOW_MIN_MS = 60000;     // ... starting one minute later
 const KEEP_DAYS = 14;            // no new member and no recall for 14 days -> filed
 const USELESS_SHOWN = 10;        // shown 10+ times and never came true -> filed
 const SAME_PATTERN = 0.85;       // a rebuilt cluster with centroid cosine >= this is the same pattern as last night's
+// Sleep track T3 (2026-11-04), toy-proven in ~/learner-ops/premonition-sleeplab-t3:
+//  - learned shape keys (shapekeys.js): trained each night on the patterns' members, seatbelt = held-out latest-day members;
+//    recall's shape channel then uses them (threshold LEARNED_MIN_SHAPE, as in the toy MARKS-shapekeys-v1).
+//  - pruning by next-day surprise, PER LINK (MARKS-prune-v2): each "what follows" link is scored on the records since the last
+//    sleep (log-loss with the link vs the base rate); score = LINK_DECAY * score + delta; a link with score > 0 is DROPPED (kept
+//    on the pattern, still scored, comes back when its score is <= 0 again). A pattern whose links are all dropped is `quiet`.
+const LEARNED_MIN_SHAPE = 0.6, LINK_DECAY = 0.7, LINK_MATCH = 0.85, MATCH_PATTERN = 0.6;
+const ll = (p, y) => { const q = Math.min(1 - 1e-4, Math.max(1e-4, p)); return y ? -Math.log(q) : -Math.log(1 - q); };
+const liveFollows = (p) => ((p && p.follows) || []).filter((f) => !f.dropped);
 
 // ---- masking (rules, cheap) ---------------------------------------------------------------------------------------------
 const COMMON = new Set(('a an the this that these those there here i it its we you he she they my your our his her their me us them ' +
@@ -189,6 +199,8 @@ class Timeline {
     this.patterns = Array.isArray(p.patterns) ? p.patterns.filter((x) => x && typeof x.template === 'string' && x.key) : [];
     this.filed = Array.isArray(p.filed) ? p.filed.filter((x) => x && typeof x.template === 'string') : [];
     this.lastSleep = p.lastSleep || null;
+    this.sfile = this.o.dir ? path.join(this.o.dir, 'shapekeys.json') : null;
+    this.proj = (this.sfile && ShapeProjector.from(readJson(this.sfile))) || null;
     this.cache = new Map(); this.dirty = false; this.timer = null;
     this.byRef = new Map(); for (const x of this.items) if (x.ref) this.byRef.set(x.ref, x);
     this.shown = new Map();   // pattern id -> time it was last shown (for "did it come true")
@@ -198,6 +210,8 @@ class Timeline {
     if (!c) { c = { plain: embed(x.text), shape: (x.k && unpack(x.k)) || embed(x.m || mask(x.text)) }; this.cache.set(x.id, c); }
     return c;
   }
+  // the learned shape key of a record (null without a trained projector)
+  lvec(x) { if (!this.proj) return null; const c = this.vecs(x); if (!c.learned) c.learned = this.proj.project(c.shape); return c.learned; }
   // add one record: {t, kind: obs|surprise|note, sense, text, status, ref}. -> the item, or null (empty, private, same as the last)
   add(r) {
     let text = String((r && r.text) || '').replace(/\s+/g, ' ').trim();
@@ -247,14 +261,15 @@ class Timeline {
     o = o || {};
     const k = o.k || 5, slots = Math.min(k, o.shapeSlots == null ? (this.o.shapeSlots == null ? 2 : this.o.shapeSlots) : o.shapeSlots);
     const q = String(query || ''); if (!q.trim()) return [];
-    const qp = embed(q), qs = embed(mask(q));
+    const L = !!this.proj && o.learned !== false;
+    const qp = embed(q), qs = L ? this.proj.project(embed(mask(q))) : embed(mask(q));
     const pool = this.items.filter((x) => (!o.before || !TS.validT(x.t) || x.t < o.before) && !(o.exclude && o.exclude.has(x.id)) && x.status !== 'wrong');
     const plain = pool.map((x) => ({ item: x, via: 'plain', score: cos(qp, this.vecs(x).plain) })).filter((r) => r.score > (o.minPlain || 0.05)).sort((a, b) => b.score - a.score);
     const out = [], used = new Set();
     const take = (r) => { if (out.length < k && !used.has(r.item.id)) { used.add(r.item.id); out.push(r); return true; } return false; };
     for (const r of plain) { if (out.length >= k - slots) break; take(r); }
     if (slots > 0) {
-      const shape = pool.map((x) => ({ item: x, via: 'shape', score: cos(qs, this.vecs(x).shape) })).filter((r) => r.score >= (o.minShape || 0.5)).sort((a, b) => b.score - a.score);
+      const shape = pool.map((x) => ({ item: x, via: 'shape', score: cos(qs, L ? this.lvec(x) : this.vecs(x).shape) })).filter((r) => r.score >= (o.minShape || (L ? LEARNED_MIN_SHAPE : 0.5))).sort((a, b) => b.score - a.score);
       let n = 0; for (const r of shape) { if (n >= slots) break; if (take(r)) n++; }
     }
     for (const r of plain) { if (out.length >= k) break; take(r); }
@@ -265,7 +280,7 @@ class Timeline {
     o = o || {};
     const q = String(query || ''); if (!q.trim() || !this.patterns.length) return [];
     const qs = embed(mask(q));
-    const r = this.patterns.map((p) => ({ p, score: cos(qs, unpack(p.key) || new Float32Array(DIM)) })).filter((x) => x.score >= (o.min || 0.6)).sort((a, b) => b.score - a.score).slice(0, o.k || 2);
+    const r = this.patterns.filter((p) => !p.quiet).map((p) => ({ p, score: cos(qs, unpack(p.key) || new Float32Array(DIM)) })).filter((x) => x.score >= (o.min || 0.6)).sort((a, b) => b.score - a.score).slice(0, o.k || 2);
     if (o.mark !== false) for (const x of r) this.markShown(x.p);
     return r;
   }
@@ -275,11 +290,12 @@ class Timeline {
   whatFollows(query) {
     let best = this.patternsFor(query, { k: 1, mark: false })[0];
     if (!best) {
-      const r = this.patterns.map((p) => ({ p, score: TS.matchScore(query, p.template.replace(/<[A-Z]+>/g, ' ')) })).filter((x) => x.score >= 0.5).sort((a, b) => b.score - a.score || b.p.size - a.p.size);
+      const r = this.patterns.filter((p) => !p.quiet).map((p) => ({ p, score: TS.matchScore(query, p.template.replace(/<[A-Z]+>/g, ' ')) })).filter((x) => x.score >= 0.5).sort((a, b) => b.score - a.score || b.p.size - a.p.size);
       best = r[0];
     }
-    if (!best || !best.p.follows || !best.p.follows.length) return best ? { pattern: best.p, follow: null } : null;
-    return { pattern: best.p, follow: best.p.follows[0] };
+    const live = best ? liveFollows(best.p) : [];
+    if (!best || !live.length) return best ? { pattern: best.p, follow: null } : null;
+    return { pattern: best.p, follow: live[0] };
   }
   // a new record: does it make a recently shown pattern's prediction come true? (that is "recall through it was used")
   onEvent(x) {
@@ -287,13 +303,14 @@ class Timeline {
     const v = this.vecs(x).shape;
     for (const p of this.patterns) {
       const at = this.shown.get(p.id); if (at == null || x.t - at > FOLLOW_MS || x.t < at) continue;
-      if ((p.follows || []).some((f) => { const fv = unpack(f.key); return fv && cos(v, fv) >= TAU; })) { p.confirmed = (p.confirmed || 0) + 1; p.lastConfirmedAt = x.t; this.shown.delete(p.id); }
+      if (liveFollows(p).some((f) => { const fv = unpack(f.key); return fv && cos(v, fv) >= TAU; })) { p.confirmed = (p.confirmed || 0) + 1; p.lastConfirmedAt = x.t; this.shown.delete(p.id); }
     }
   }
   // ---- sleep: rebuild patterns by formula, keep their history, file away the ones that stopped earning their place ----
   // -> {patterns, made, kept, filed, revived, clusters, ms}. Never calls a model (there is none to call in this file).
   sleep(o) {
     o = o || {}; const t0 = Date.now(), now = this.now();
+    const links = o.prune === false ? { scored: 0 } : this.scoreLinks(now);
     const built = buildPatterns(this.items, o);
     const old = this.patterns.concat(this.filed.map((p) => ({ ...p, wasFiled: true })));
     const oldV = old.map((p) => unpack(p.key));
@@ -306,6 +323,13 @@ class Timeline {
       const prev = match >= 0 ? old[match] : null; if (match >= 0) taken.add(match);
       const q = { ...p, id: prev ? prev.id : 'p' + crypto.createHash('sha1').update(p.key).digest('hex').slice(0, 10), createdAt: prev ? prev.createdAt : now, hits: prev ? prev.hits || 0 : 0, lastHitAt: prev ? prev.lastHitAt || null : null, confirmed: prev ? prev.confirmed || 0 : 0, lastConfirmedAt: prev ? prev.lastConfirmedAt || null : null, shownAtFiling: prev ? prev.shownAtFiling || 0 : 0 };
       if (!prev) made++;
+      // the links' next-day scores carry over to tonight's links with the same follower
+      q.follows = (q.follows || []).map((f) => {
+        const fv = unpack(f.key); let bf = null, b2 = LINK_MATCH;
+        for (const g of (prev && prev.follows) || []) { const gv = unpack(g.key); const c = fv && gv ? cos(fv, gv) : 0; if (c >= b2) { b2 = c; bf = g; } }
+        return bf && bf.score != null ? { ...f, score: bf.score, dropped: bf.score > 0 } : f;
+      });
+      q.quiet = q.follows.length > 0 && q.follows.every((f) => f.dropped);
       // still earning its place? new members or recall hits within KEEP_DAYS, and not "shown a lot, never came true"
       const recent = now - KEEP_DAYS * 86400000;
       const fresh = q.lastMemberAt >= recent || (q.lastHitAt && q.lastHitAt >= recent);
@@ -322,18 +346,100 @@ class Timeline {
     // an active pattern whose cluster vanished (its members aged out of the timeline) is filed too
     this.patterns.forEach((p, i) => { if (!taken.has(i)) { filed.push({ ...p, filedAt: now, why: 'its members are no longer on the timeline' }); filedN++; } });
     this.patterns = next; this.filed = filed.slice(-300);
-    this.lastSleep = { at: now, made, kept: next.length, filed: filedN, revived, clusters: built.clusters, items: this.items.length, ms: Date.now() - t0 };
+    // learned shape keys are OFF unless asked (o.shapeKeys === true): their seatbelt did not pass its adoption rule (sleeplab
+    // RESULTS-shapekeys-seatbelt-v3: catches 9/9 poisoned nights but keeps only 3/6 clean ones). A saved projector is still used.
+    const sk = o.shapeKeys === true ? this.trainShapeKeys(built, o) : null;
+    const dropped = next.reduce((a, p) => a + (p.follows || []).filter((f) => f.dropped).length, 0);
+    this.lastSleep = { at: now, scoredTo: links.to || (this.lastSleep && this.lastSleep.scoredTo) || null, made, kept: next.length, filed: filedN, revived, clusters: built.clusters, items: this.items.length,
+      links: { scored: links.scored || 0, dropped, back: links.back || 0, quiet: next.filter((p) => p.quiet).length }, shapeKeys: sk, ms: Date.now() - t0 };
     this.dirty = true; this.flush();
     return { ...this.lastSleep, patterns: next };
+  }
+  // next-day surprise per link (toy MARKS-prune-v2). Scores last night's links on the records since the last scoring whose hour
+  // ahead is complete; base rates from the records before. -> {scored, back, to}
+  scoreLinks(now) {
+    const to = now - FOLLOW_MS, from = this.lastSleep ? (this.lastSleep.scoredTo || this.lastSleep.at) : null;
+    const pats = this.patterns.filter((p) => (p.follows || []).length);
+    if (!from || !pats.length || to <= from) return { scored: 0, to: from && to > from ? to : null };
+    const its = this.items.filter((x) => TS.validT(x.t) && x.status !== 'wrong').slice().sort((a, b) => a.t - b.t);
+    const V = its.map((x) => this.vecs(x).shape), pk = pats.map((p) => unpack(p.key));
+    // which records match each follower (once per follower), then "does it appear 1-60 min after record i?" is a lookup
+    const fl = []; for (const p of pats) for (const f of p.follows) { const fv = unpack(f.key); fl.push({ f, hit: fv ? V.map((v) => cos(v, fv) >= TAU) : V.map(() => false) }); }
+    const after = (i, hit) => { for (let j = i + 1; j < its.length && its[j].t - its[i].t <= FOLLOW_MS; j++) if (its[j].t - its[i].t >= FOLLOW_MIN_MS && hit[j]) return true; return false; };
+    const trainIdx = []; for (let i = 0; i < its.length; i++) if (its[i].t <= from) trainIdx.push(i);
+    const base = new Map(); const q0 = (e) => { if (!base.has(e)) { let h = 0; for (const i of trainIdx) if (after(i, e.hit)) h++; base.set(e, (h + 1) / (trainIdx.length + 2)); } return base.get(e); };
+    const byF = new Map(fl.map((e) => [e.f, e])); const delta = new Map(); let n = 0;
+    for (let i = 0; i < its.length; i++) {
+      if (its[i].t <= from || its[i].t > to) continue;
+      let bi = -1, bs = MATCH_PATTERN; for (let k = 0; k < pats.length; k++) { if (!pk[k]) continue; const c = cos(V[i], pk[k]); if (c >= bs) { bs = c; bi = k; } }
+      if (bi < 0) continue;
+      for (const f of pats[bi].follows) { const e = byF.get(f), y = after(i, e.hit); delta.set(f, (delta.get(f) || 0) + ll((f.count + 1) / (f.of + 2), y) - ll(q0(e), y)); n++; }
+    }
+    let back = 0;
+    for (const p of pats) for (const f of p.follows) { const was = !!f.dropped; f.score = LINK_DECAY * (f.score || 0) + (delta.get(f) || 0); f.dropped = f.score > 0; if (was && !f.dropped) back++; }
+    return { scored: n, back, to };
+  }
+  // learned shape keys with the seatbelt: the candidate trains on the patterns' members from every day but the latest; it is kept
+  // only if, for the latest day's members, a member of the same pattern is in the top 5 by shape at least as often as with the
+  // current key (the previous projector, or the rule-masked key). -> {kept, why, old, new, groups, heldout}
+  trainShapeKeys(built, o) {
+    o = o || {};
+    const byId = new Map(this.items.map((x) => [x.id, x]));
+    const ts = this.items.filter((x) => TS.validT(x.t)).map((x) => x.t); if (!ts.length) return { kept: false, why: 'no records' };
+    const latest = TS.dayKey(Math.max(...ts));
+    const groups = [], held = [], memberOf = new Map();
+    built.patterns.forEach((p, gi) => {
+      const tr = [];
+      for (const id of p.members) { const x = byId.get(id); if (!x || !TS.validT(x.t)) continue; memberOf.set(x.id, gi); if (TS.dayKey(x.t) === latest) held.push({ x, gi }); else tr.push(x); }
+      if (tr.length >= 2) groups.push(tr);
+    });
+    const res = { kept: false, groups: groups.length, heldout: held.length };
+    if (groups.length < 4 || held.length < 5) { res.why = 'not enough patterns to learn from yet'; return res; }
+    const cand = new ShapeProjector({ rank: 32, seed: 1 });
+    if (o.mutateGroups) o.mutateGroups(groups, this.items);   // tests only: the poison control corrupts the training clusters
+    const tr = cand.train(groups.map((g) => g.map((x) => this.vecs(x).shape)), { steps: o.shapeSteps || 400, batch: 32, lr: 0.01, temp: 0.1, nearCos: 0.3, seed: 7 });
+    const pool = this.items.filter((x) => TS.validT(x.t) && TS.dayKey(x.t) !== latest);
+    // the held-out score (seatbelt v2, sleeplab MARKS-shapekeys-seatbelt-v2): mean margin = best cosine to a member of its own
+    // pattern minus best cosine to a record outside it (records of near patterns, centroid cos >= 0.3, count as neither).
+    // (v1 used "a same-pattern member in the top 5", which the rule key already scores ~100 % on: saturated, so poison passed.)
+    const cen = built.patterns.map((p) => unpack(p.key));
+    const near = (a, b) => a === b || (cen[a] && cen[b] && cos(cen[a], cen[b]) >= 0.3);
+    const cur = this.proj, mode = o.shapeCheck || 'same3';
+    const rate = (f, m) => {
+      m = m || mode;
+      const pv = pool.map((x) => f(this.vecs(x).shape)); let sum = 0;
+      for (const h of held) {
+        const qv = f(this.vecs(h.x).shape); let same = -1, other = -1, outside = -1;
+        for (let i = 0; i < pool.length; i++) {
+          const g = memberOf.get(pool[i].id), c = cos(qv, pv[i]);
+          if (g === h.gi) { if (c > same) same = c; } else if (g == null || !near(g, h.gi)) { if (c > other) other = c; }
+          if (g == null && c > outside) outside = c;
+        }
+        sum += m === 'outside' ? same - outside : m === 'same' ? same : same - other;
+      }
+      return sum / held.length;
+    };
+    if (o.shapeDiag) { res.diag = {}; for (const m of ['margin', 'outside', 'same']) res.diag[m] = [rate(cur ? (v) => cur.project(v) : (v) => v, m), rate((v) => cand.project(v), m)]; }
+    res.old = rate(cur ? (v) => cur.project(v) : (v) => v, mode === 'same3' ? 'same' : mode); res.new = rate((v) => cand.project(v), mode === 'same3' ? 'same' : mode); res.loss = tr.loss;
+    // seatbelt v3 (sleeplab MARKS-shapekeys-seatbelt-v3): own-pattern cohesion must beat the rule key by SAME_GAIN and not fall
+    // more than SAME_SLACK below the current key
+    if (mode === 'same3') {
+      res.rule = cur ? rate((v) => v, 'same') : res.old;
+      if (res.new < res.rule + 0.05 || res.new < res.old - 0.02) { res.why = 'not clearly better than the plain shape key (' + res.rule.toFixed(2) + ' -> ' + res.new.toFixed(2) + ')'; return res; }
+    } else if (res.new + 1e-9 < res.old) { res.why = 'worse on the latest day (margin ' + res.old.toFixed(2) + ' -> ' + res.new.toFixed(2) + ')'; return res; }
+    cand.trained = { at: this.now(), groups: groups.length, heldout: held.length, old: res.old, new: res.new };
+    if (this.sfile) { try { fs.mkdirSync(path.dirname(this.sfile), { recursive: true }); atomicWrite(this.sfile, cand.toJSON()); } catch (e) { res.why = 'could not save'; return res; } }
+    this.proj = cand; for (const c of this.cache.values()) delete c.learned;
+    res.kept = true; return res;
   }
 }
 
 // "Pattern (seen 6×): <NAME> texted: plans moved → usually then <NAME> changed plans (within ~40 min, 5 of 6)."
 function patternLine(p) {
   if (!p) return '';
-  const f = p.follows && p.follows[0];
+  const f = liveFollows(p)[0];
   const mins = f ? (f.medianMin < 1 ? 'within a minute' : f.medianMin < 90 ? 'within ~' + Math.max(1, Math.round(f.medianMin)) + ' min' : 'within ~' + Math.round(f.medianMin / 60) + ' h') : '';
   return ('Pattern (seen ' + p.size + '×' + (p.maybe ? ', maybe' : '') + '): ' + p.template.slice(0, 90) + (f ? ' → usually then: ' + f.template.slice(0, 80) + ' (' + mins + ', ' + f.count + ' of ' + f.of + ')' : '')).slice(0, 240);
 }
 
-module.exports = { mask, embed, cos, pack, unpack, shapeKey, buildPatterns, Timeline, patternLine, DIM, TAU, MIN_MEMBERS, MIN_DAYS, FOLLOW_MS, KEEP_DAYS, USELESS_SHOWN };
+module.exports = { mask, embed, cos, pack, unpack, shapeKey, buildPatterns, Timeline, patternLine, liveFollows, DIM, TAU, MIN_MEMBERS, MIN_DAYS, FOLLOW_MS, KEEP_DAYS, USELESS_SHOWN, LEARNED_MIN_SHAPE, LINK_DECAY };

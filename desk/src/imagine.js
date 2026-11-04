@@ -11,6 +11,7 @@
 //   games the rulebook gives only OUR move; the opponent is unknown, so every possible reply is imagined and the worst one counts
 //   (we do not peek at the opponent's real policy). A hook (o.predictAfter) lets a learned guesser predict "the state after move a"
 //   later; when it returns a state it is used instead of the rulebook and the plan is marked `learned`.
+//   Sleep track T3 (2026-11-04): o.world = a learned WorldModel (src/worldmodel.js) plugs in here, rulebook as the fallback.
 // Pure JS.
 
 // ---- level 1 ----------------------------------------------------------------------------------------------------------------
@@ -41,6 +42,17 @@ function futures(ctx, o) {
 // imagine one move: -> { state, source: 'rulebook' | 'learned', branches (two-player: the imagined replies) }
 function imagineMove(game, state, move, o) {
   o = o || {};
+  // the learned world model (src/worldmodel.js, trained in sleep from game logs): our move's effect and, in two-player games, the
+  // replies it has seen. No prediction -> the rulebook below. Opponent replies it has never seen -> the rulebook's replies.
+  if (o.world && o.world.predict) {
+    let s = null; try { s = o.world.predict(game.name, state, move); } catch (e) { s = null; }
+    if (s) {
+      if (!(game.apply && game.replies) || game.done(s)) return { state: s, source: 'learned', branches: [s] };
+      let br = null; try { br = o.world.replies(game.name, s); } catch (e) { br = null; }
+      if (!br || !br.length) br = game.replies(s);
+      return { state: s, source: 'learned', branches: br.length ? br : [s] };
+    }
+  }
   if (o.predictAfter) { try { const s = o.predictAfter(state, move); if (s) return { state: s, source: 'learned', branches: [s] }; } catch (e) { /* fall back to the rulebook */ } }
   if (game.apply && game.replies) {
     const mine = game.apply(state, move); if (!mine) return { state: null, source: 'rulebook', branches: [] };
@@ -119,7 +131,8 @@ function playGame(game, seed, proposer, mode, o) {
     const props = proposer(s, game); if (!props || !props.length) break;
     const m = mode === 'plan' ? plan(game, s, props, { ...o, seen }).move : props[0];
     if (m == null) break;
-    s = game.step(s, m); n++;
+    const s0 = s; s = game.step(s, m); n++;
+    if (o.log) { try { o.log.addStep(game, s0, m, s); } catch (e) { /* logging only */ } }   // a GameLog: what sleep learns from
     if (game.key) seen.add(game.key(s));
   }
   const r = game.result(s);

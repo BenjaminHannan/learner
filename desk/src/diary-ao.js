@@ -40,6 +40,9 @@ function recap({ activity, truth, since, now }) {
   if (said) lines.push('Spoke up by myself ' + said + ' time' + (said === 1 ? '' : 's') + '.');
   const drift = a.filter((x) => x.kind === 'thought').reduce((s, x) => s + (x.drift || 0), 0);
   if (drift) lines.push('Skipped ' + drift + ' thought' + (drift === 1 ? '' : 's') + ' that drifted off topic.');
+  // sleep tune-ups (each part's seatbelt result, one line each, the latest per part)
+  const parts = {}; for (const x of a.filter((y) => y.kind === 'sleep-part' && y.line)) parts[x.part || '?'] = x.line;
+  for (const l of Object.values(parts)) lines.push(String(l).slice(0, 240));
   if (!lines.length) return 'Nothing yet since ' + new Date(since).toLocaleString() + ': I have not studied, checked notes, or been surprised.';
   return lines.join('\n');
 }

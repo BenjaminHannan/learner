@@ -1468,12 +1468,27 @@ function aoTimeNote(text) {
 }
 // at sleep start: patterns by formula (src/patterns.js Timeline.sleep: clustering + counts; never a model call)
 function aoPatternSleep() {
-  const r = aoTimelineSync().sleep();
+  const r = aoTimelineSync().sleep({ shapeKeys: store.getSettings().learnedShapeKeys === true });   // T3: off by default (seatbelt unproven)
   console.log('[alwayson] patterns: ' + r.kept + ' kept, ' + r.made + ' new, ' + r.filed + ' filed, ' + r.revived + ' revived (' + r.items + ' records, ' + r.ms + ' ms)');
   if (aoState) aoState.logActivity('patterns', { made: r.made, kept: r.kept, filed: r.filed });
+  // sleep track T3: per-link pruning by next-day surprise + learned shape keys (seatbelt inside Timeline.sleep)
+  if (aoState && r.links) aoState.logActivity('sleep-part', { part: 'patterns', line: 'Patterns: ' + r.links.dropped + ' "what follows" links switched off (they made the next day worse), ' + r.links.back + ' back on, ' + r.links.quiet + ' patterns quiet.' });
+  if (aoState && r.shapeKeys) aoState.logActivity('sleep-part', { part: 'shapekeys', line: 'Shape keys (analogy): ' + (r.shapeKeys.kept ? 'kept' : 'not updated') + (r.shapeKeys.old != null ? ', latest-day margin ' + r.shapeKeys.old.toFixed(2) + ' -> ' + r.shapeKeys.new.toFixed(2) : '') + (r.shapeKeys.kept ? '' : ' (' + r.shapeKeys.why + ')') + '.' });
   return r;
 }
 aoNightlyJobs.push(() => aoPatternSleep());
+// sleep track T3: the learned world model for the sandbox games (src/worldmodel.js). The scientist logs every rulebook step it
+// sees; each night the counts are re-learned with the seatbelt (latest day held out + fixed checks; rolled back if worse).
+// aoWorld() is what L2 planning passes as imagine's o.world (the rulebook stays the fallback).
+const WorldModelMod = require('./src/worldmodel');
+let aoGameLogObj = null, aoWorldObj;
+const aoGameLog = () => aoGameLogObj || (aoGameLogObj = new WorldModelMod.GameLog({ dir: aoDir() }));
+const aoWorld = () => (aoWorldObj === undefined ? (aoWorldObj = WorldModelMod.load(aoDir())) : aoWorldObj);
+aoNightlyJobs.push(() => {
+  const r = WorldModelMod.nightly({ dir: aoDir(), log: aoGameLog() }); aoWorldObj = undefined;
+  console.log('[alwayson] ' + r.line);
+  if (aoState) aoState.logActivity('sleep-part', { part: 'worldmodel', line: r.line });
+});
 const aoDir = () => app.getPath('userData');
 function aoSetup() {
   if (aoSenses) return;
@@ -1641,7 +1656,7 @@ function aoAfterPick(job, r, x) {
   }
 }
 // the little scientist: experiments in the sandbox / puzzle generator / games, run as Motes (same gate, same stop), guesses first
-const aoScientist = () => aoScientistObj || (aoScientistObj = new ScientistMod.Scientist({ dir: aoDir(), checker: aoChecker(), k: aoTries(),
+const aoScientist = () => aoScientistObj || (aoScientistObj = new ScientistMod.Scientist({ dir: aoDir(), checker: aoChecker(), k: aoTries(), gameLog: aoGameLog(),
   onSurprise: (x) => { if (aoState) { aoState.addSurprise({ stream: x.stream, what: x.what, kl: x.kl }); aoState.logActivity('surprise', { what: x.what.slice(0, 140), kl: Math.round(x.kl * 100) / 100, source: 'sandbox' }); } },
   onActivity: (kind, o) => { if (aoState) aoState.logActivity(kind, o); }, log: (...a) => console.log('[alwayson]', ...a) }));
 // how many of a bored batch are experiments: half (rounded up); with a budget of 1 they take turns with thinking. Setting scientist: false = none.

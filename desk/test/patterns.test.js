@@ -62,8 +62,12 @@ test('patterns in sleep, offline (fixed pass marks; seeds 2+3): >= 80% planted f
 test('patterns.js cannot reach a model: it requires no model, network or process module', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'patterns.js'), 'utf8');
   const reqs = [...src.matchAll(/require\(['"]([^'"]+)['"]\)/g)].map((m) => m[1]).sort();
-  assert.deepStrictEqual(reqs, ['./senses', './timesense', 'crypto', 'fs', 'path']);
+  assert.deepStrictEqual(reqs, ['./senses', './shapekeys', './timesense', 'crypto', 'fs', 'path']);
   assert.doesNotMatch(src, /\bfetch\(|\bask\(|XMLHttpRequest/);
+  // the learned shape keys (sleep track T3) are plain math: no requires at all
+  const sk = fs.readFileSync(path.join(__dirname, '..', 'src', 'shapekeys.js'), 'utf8');
+  assert.deepStrictEqual([...sk.matchAll(/require\(['"]([^'"]+)['"]\)/g)].map((m) => m[1]), []);
+  assert.doesNotMatch(sk, /\bfetch\(|\bask\(|XMLHttpRequest/);
 });
 
 function plantedTimeline(o) {
