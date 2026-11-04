@@ -122,6 +122,33 @@ class LM:
         return mx.take_along_axis(lp, mx.array(list(cap_ids))[:, None], axis=-1).sum()
 
 
+    def score_candidates(self, media, cap_id_lists):
+        """log p(caption | media prompt) for several captions: the media prompt runs once and its KV cache is reused (trimmed back
+        after each caption). Equal to caption_logprob per caption (test_sense_night checks it)."""
+        mx = self.mx
+        from mlx_lm.models.cache import make_prompt_cache
+        emb = self.model.model.embed_tokens
+        ids = self.pre + [0] * media.shape[0] + self.post
+        h = mx.concatenate([emb(mx.array(self.pre)), media.astype(self.dtype), emb(mx.array(self.post))])[None]
+        cache = make_prompt_cache(self.model)
+        last = self.model(mx.array([ids]), cache=cache, input_embeddings=h)[0, -1].astype(mx.float32)
+        out = []
+        for cid in cap_id_lists:
+            cid = list(cid)
+            if len(cid) > 1:
+                lg = mx.concatenate([last[None], self.model(mx.array([cid[:-1]]), cache=cache)[0].astype(mx.float32)])
+            else:
+                lg = last[None]
+            lp = lg - mx.logsumexp(lg, axis=-1, keepdims=True)
+            v = mx.take_along_axis(lp, mx.array(cid)[:, None], axis=-1).sum()
+            mx.eval(v)
+            out.append(float(v))
+            if len(cid) > 1:
+                for c in cache:
+                    c.trim(len(cid) - 1)
+        return out
+
+
 def load_lm(model_dir=DEFAULT_MODEL):
     from mlx_lm import load
     import importlib.util
@@ -165,11 +192,7 @@ def make_eval_fn(lm: LM, seat_features, seat_captions, cands):
         hit = 0
         for i, cl in enumerate(cands):
             media = p(mx.array(seat_features[i]).astype(mx.float32))
-            scores = []
-            for j in cl:
-                v = lm.caption_logprob(media, cap_ids[j])
-                mx.eval(v)
-                scores.append(float(v))
+            scores = lm.score_candidates(media, [cap_ids[j] for j in cl])
             hit += int(max(range(len(cl)), key=lambda k: scores[k]) == 0)
         return {"V1": round(100.0 * hit / max(1, len(cands)), 3)}
     return eval_fn

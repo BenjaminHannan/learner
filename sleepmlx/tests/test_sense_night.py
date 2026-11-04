@@ -166,6 +166,15 @@ class SenseNightMLX(unittest.TestCase):
         self.assertLess(float(loss(p2)), l0)
         self.assertEqual(str(dt["fc1.weight"]), str(mx.bfloat16), "written back in bf16")
 
+    def test_cached_candidate_scores_equal_full_forwards(self):
+        lm = tiny_q8_lm()
+        media = mx.random.normal((4, D)) * 0.1
+        caps = [lm.caption_ids(c) for c in ("a b c", "hello there", "x")]
+        cached = lm.score_candidates(media, caps)
+        full = [float(lm.caption_logprob(media, c)) for c in caps]
+        for a, b in zip(cached, full):
+            self.assertAlmostEqual(a, b, delta=1e-2 * max(1.0, abs(b)))
+
     def test_full_night_kept_then_poisoned_night_rolled_back_exactly(self):
         ud = setup_userdata(n_nights=2)
         pub = published_file(ud)
