@@ -640,14 +640,55 @@
   desk.onSleep(onSleepState);
   desk.sleep.state().then(onSleepState);
   desk.onSleepNotice((n) => addNotice('Sleep', n.text));
+  // ---------- Important updates dashboard (the data is built in the main process; the look is renderer/dashboard.js) ----------
+  const morningCards = new Set();
+  const dashSheet = $('#dashSheet'), dashBody = $('#dashBody');
+  const dash = Dashboard.createDashboard({
+    fetch: () => desk.dashboard.get(),
+    onChange: (st, info) => {
+      const m = st.model;
+      $('#dashDot').hidden = !(m && m.hero.needs > 0);
+      $('#btnDash').title = m ? 'Important updates: ' + m.hero.title : 'Important updates';
+      if (info.changed) for (const c of [...morningCards]) { if (c.isConnected) c.repaint(); else morningCards.delete(c); }
+      if (dashSheet.hidden || !m) return;
+      if (info.changed || info.kind === 'toggle') paintDash();
+      else { const a = dashBody.querySelector('[data-role=ago]'); if (a) a.textContent = Dashboard.agoText(st.updatedAt, st.now); }   // nothing new: only the "updated … ago" line moves
+    }
+  });
+  function paintDash() {
+    const st = dash.state, scrollTop = dashBody.scrollTop;
+    dashBody.replaceChildren(st.model ? Dashboard.mount(Dashboard.dashboardView(st.model, st, { toggle: dash.toggle, refresh: dash.refresh }), document) : el('p', 'p-sub', st.error ? 'Could not load updates. Trying again.' : 'Loading…'));
+    dashBody.scrollTop = scrollTop;
+  }
+  function openDash() { dashSheet.hidden = false; paintDash(); dash.refresh(); $('#dashClose').focus(); }
+  function closeDash() { dashSheet.hidden = true; input.focus(); }
+  $('#btnDash').onclick = openDash;
+  $('#dashClose').onclick = closeDash;
+  dashSheet.addEventListener('mousedown', (e) => { if (e.target === dashSheet) closeDash(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dashSheet.hidden) { e.stopPropagation(); closeDash(); } }, true);
+  window.addEventListener('focus', () => dash.onFocus());
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) dash.onFocus(); });
+  desk.onDashboardChanged(() => dash.onSourceChanged());
+  dash.start();
   desk.onSleepWoke((w) => {
     if (w.ready === false) addNotice('Sleep', 'Sleep has stopped, but the chat model is not ready. Use Turn on to try again. Your message is still here.');
     if (w.summary) {
-      const c = el('div', 'wslept sel');
-      const h = el('div', 'ws-head'); h.innerHTML = svg('<path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/>'); h.append(el('b', null, 'While you slept'));
-      if (w.demo) h.append(el('span', 'ws-tag', 'demo run'));
-      const body = el('div', 'ws-body atext'); body.innerHTML = md(w.summary.replace(/^#{1,3} +While you slept\s*\n+/i, ''));
-      c.append(h, body); msgs.append(c); newBlock(); toBottom();
+      // the morning card is now the dashboard's top line (the long text with raw errors and junk mail is gone); if the dashboard
+      // cannot be built, the old summary text is shown instead so nothing is lost
+      Promise.resolve(dash.refresh()).then(() => {
+        if (dash.state.model) {
+          const c = el('div', 'sel');
+          const paint = () => { const n = Dashboard.mount(Dashboard.morningCardView(dash.state.model, { open: openDash }), document); if (w.demo) n.querySelector('.ws-head').append(el('span', 'ws-tag', 'demo run')); c.replaceChildren(n); };
+          paint(); c.repaint = paint; morningCards.add(c);
+          msgs.append(c); newBlock(); toBottom();
+          return;
+        }
+        const c = el('div', 'wslept sel');
+        const h = el('div', 'ws-head'); h.innerHTML = svg('<path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/>'); h.append(el('b', null, 'While you slept'));
+        if (w.demo) h.append(el('span', 'ws-tag', 'demo run'));
+        const body = el('div', 'ws-body atext'); body.innerHTML = md(w.summary.replace(/^#{1,3} +While you slept\s*\n+/i, ''));
+        c.append(h, body); msgs.append(c); newBlock(); toBottom();
+      });
     } else if (w.ready !== false) addNotice('Sleep', 'Glim is awake. There was no summary this time.');
     input.focus();
   });

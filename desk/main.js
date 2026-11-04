@@ -50,6 +50,7 @@ const { createScreen } = require('./src/tools/screen');
 const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
+const DashSrc = require('./src/dashboard-sources');
 const { Rhythm } = require('./src/rhythm');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
@@ -322,6 +323,17 @@ async function wakeNow() {
   catch (e) { r = { ok: false, error: String(e.message || e) }; }
   if (!r.ok) { sl.waking = false; sl.bad = 'Could not wake Glim: ' + (r.error || 'unknown error'); pushSleep(); sleepNotice(sl.bad); return { error: sl.bad }; }
   return { ok: true };
+}
+// "Important updates" dashboard: model for the window, and a push when a source file changes so an open dashboard updates itself.
+function dashOpts() { return { home: sleeper.home, tracked: () => (tracking ? tracking.list() : []) }; }
+function dashboardModel() {
+  try { return DashSrc.getDashboard(dashOpts()); }
+  catch (e) { console.log('[dashboard] ' + (e && e.message || e)); return null; }
+}
+let stopDashWatch = null;
+function startDashboardWatch() {
+  if (stopDashWatch || !sleeper) return;
+  try { stopDashWatch = DashSrc.watchSources(dashOpts(), () => send('dashboard:changed', null)); } catch (e) { /* the 60 s refresh still runs */ }
 }
 // the sleep app has stopped: wait for the gateway to answer again, then show the morning summary
 async function onWoke() {
@@ -1449,6 +1461,8 @@ function registerIpc() {
   });
   h('sleep:wake', () => wakeNow());
   h('sleep:summary', () => sleeper.readSummary());
+  // the "Important updates" dashboard: built fresh from the files each time it is asked (read-only; src/dashboard.js)
+  h('dashboard:get', () => dashboardModel());
   // "Learn" button: a Mote goes off to study a topic quietly; sleep trains its notes and fact cards in overnight.
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
@@ -1635,6 +1649,7 @@ app.whenReady().then(async () => {
   updater = new Updater({ version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
     onState: (st) => send('update:state', st), quit: () => { quitting = true; app.quit(); } });
   if (app.isPackaged && !E2E && store.getSettings().autoUpdateCheck !== false) updater.startTimer(30000);
+  startDashboardWatch();
   createWindow(); // shown on ready-to-show; diary, helpers, warm-up, pill, hotkey start after that (afterFirstPaint)
 });
 
