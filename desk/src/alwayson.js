@@ -139,7 +139,10 @@ class AlwaysOn {
     const done = { decision: d, said: false, noted: false, learned: false };
     const dl = this.o.deliver || {};
     if (d.say && !isPrivate(d.say)) {
-      if (this.sayAllowed(d)) { this.state.spoke(); this.stats.said++; done.said = true; try { dl.say && dl.say(d.say, d); } catch (e) { this.log('alwayson: say failed', e); } }
+      // v2: the speak-o-meter (src/speakometer.js) sits on top of the code limits above: it can hold a say, never force one
+      const meter = this.sayAllowed(d) ? (this.o.speakGate ? this.o.speakGate(d) : { speak: true }) : null;
+      if (meter && meter.speak) { d.features = meter.x || null; d.p = meter.p; this.state.spoke(); this.stats.said++; done.said = true; try { dl.say && dl.say(d.say, d); } catch (e) { this.log('alwayson: say failed', e); } }
+      else if (meter) { this.stats.meterHeld = (this.stats.meterHeld || 0) + 1; done.meterHeld = true; this.log('alwayson: say held by the speak-o-meter (p=' + (meter.p != null ? meter.p.toFixed(2) : '?') + '):', d.say.slice(0, 80)); }
       else { this.stats.held++; this.log('alwayson: say held by the 20-minute limit:', d.say.slice(0, 80)); }
     }
     if (d.note && !isPrivate(d.note)) { this.stats.notes++; done.noted = true; try { dl.note && dl.note(d.note, d); } catch (e) { this.log('alwayson: note failed', e); } }

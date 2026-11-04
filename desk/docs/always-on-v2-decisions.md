@@ -23,3 +23,15 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
 - **Notch off** → `Notification` (Electron). It has no 👍/👎 buttons (macOS action buttons need a signed app); the chat copy has them.
 - **Ear icon** shows only while always-on is on (any sense on). Priority: 😴 asleep > 😲 (20 s after a big surprise) > 💭 a tick or
   thinking Mote in flight > 📚 learning > 😴 resting.
+
+## Phase 2 (speak-o-meter)
+- **Model**: logistic regression, 25 hand-made features (8 app categories, 5 activities, minutes since the last say (log scale),
+  3 urges, surprise, stuck-error, stuck-page, urgent). Threshold 0.5. Prior weights: quiet (bias −1.2), stuck error +3,
+  same page 10+ min +1.8, typing −4, game −2, video −1.2. Ben's feedback moves it from there.
+- **Feedback weights**: "not now/stop/later/shh/quiet/busy" in his next chat 3 (no); 👎 2 (no); ignored 10 min 0.5 (no);
+  👍 2 (yes); clicking through ("Open chat") 1.5 (yes); any other reply 1 (yes). Online step lr 0.35 with a small pull back to the
+  prior (one 👎 cannot silence it for ever). Nightly refit = 30 passes over the whole log from the prior, lr 0.1.
+- **Where it sits**: after the code limits (Ben first, pressure, night, 20-min rate limit). It can only hold a say.
+- **Stuck page** = the front app + window title unchanged for 10+ minutes (from the windows sense). **Stuck error** = the same
+  error line (numbers and quoted bits ignored) in 3+ observations within 30 minutes.
+- **Refit time**: when sleep starts, and once per day at the first minute inside the night window.

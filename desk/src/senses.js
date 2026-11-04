@@ -83,6 +83,7 @@ class AlwaysOnState {
     this.inbox.push(e);
     if (this.inbox.length > this.max) this.inbox.splice(0, this.inbox.length - this.max);
     this.save();
+    if (this.o.onAdd) { try { this.o.onAdd(e); } catch (err) { /* listeners (guesser, stuck detector) never break storage */ } }
     return e;
   }
   fresh() { return this.inbox.filter((x) => x.t > this.cursor); }

@@ -143,6 +143,7 @@ const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view
 let lastEar = '';
 setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
+  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
   if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
 }, 1000).unref();
@@ -284,6 +285,7 @@ function startSleep(o) {
   if (!r.ok) { abandonSleepAttempt(); return { error: r.error }; }
   { const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); sl.sleepKey = inWindow(n, w.from, w.to) ? windowKey(n, w.from, w.to) : null; } // the night this sleep belongs to (if any)
   sl.asleep = true; if (helpers && helpers.active.size) helpers.pauseForSleep();   // Motes mid-run stop and run again once after wake; they no longer block sleep (asleep first so their due runs are held)
+  try { aoNightly(); } catch (e) { /* always-on v2: the speak-o-meter and guesser retune as sleep starts (best effort) */ }
   sleeper.mark(); sl.wakeAt = o.auto && !cfg.wakeAt ? null : until; sl.asleep = true; sl.starting = Date.now(); sl.startedAuto = !!o.auto; sl.bad = '';
   persistSleepSession('sleeping');
   pushSleep(); updatePill();
@@ -1364,10 +1366,34 @@ function buildMenu() {
 // only words are kept (userData/alwayson-state.json), never a picture or a sound, and private-looking text is dropped first.
 const SensesMod = require('./src/senses');
 let aoState = null, aoSenses = null, aoLoop = null, hearing = null, lastTyping = 0;
+// always-on v2, phase 2: the speak-o-meter (src/speakometer.js) and the stuck detector it reads
+const SpeakMod = require('./src/speakometer');
+let aoMeter = null;
+const aoStuck = new SpeakMod.Stuck();
+let aoObservers = [];   // more listeners (the guesser) are added below
+function aoObserved(e) { aoStuck.observe(e.sense, e.text); for (const f of aoObservers) { try { f(e); } catch (err) { /* a listener never breaks storage */ } } }
+let aoCtxExtra = () => ({});   // urges and surprise join in later phases
+function aoContext(extra) {
+  const f = aoStuck.front(), cat = SpeakMod.categorize(f.app, f.title);
+  let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
+  const typing = Date.now() - lastTyping < 15000 || idleS < 2;
+  const last = aoState && aoState.lastSpokeAt;
+  return { cat, act: SpeakMod.activity({ idleS, typing, cat }), minsSinceSay: last ? (Date.now() - last) / 60000 : null,
+    stuckError: !!aoStuck.error(), stuckPage: aoStuck.pageMinutes() >= 10, ...aoCtxExtra(), ...(extra || {}) };
+}
+// nightly retune (sleep window or sleep start): the speak-o-meter refits on its whole feedback log; later phases add theirs
+let aoNightlyDay = '';
+const aoNightlyJobs = [() => aoMeter && aoMeter.refit()];
+function aoNightly(force) {
+  const d = new Date().toDateString();
+  if (!force && aoNightlyDay === d) return; aoNightlyDay = d;
+  for (const j of aoNightlyJobs) { try { j(); } catch (e) { console.log('[alwayson] nightly retune', e); } }
+}
 const aoDir = () => app.getPath('userData');
 function aoSetup() {
   if (aoSenses) return;
-  aoState = new SensesMod.AlwaysOnState(aoDir());
+  aoState = new SensesMod.AlwaysOnState(aoDir(), { onAdd: (e) => aoObserved(e) });
+  aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
   aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
@@ -1447,7 +1473,8 @@ const aoVoice = new GlimVoice.Voice({
   onOutcome: (m, kind) => { try { aoOnOutcome(m, kind); } catch (e) { console.log('[alwayson] outcome', e); } },
   log: (...a) => console.log('[alwayson]', ...a)
 });
-let aoOnOutcome = () => {};   // set by the speak-o-meter wiring below
+// feedback -> the speak-o-meter: logged with the features the message went out with, one online step now, refit at night
+let aoOnOutcome = (m, kind) => { if (aoMeter && m.features) aoMeter.learn(m.features, kind, { sayId: m.id }); };
 function aoSay(text, d) { aoVoice.offer(text, { why: d && d.why, features: d && d.features }); }
 // the ear: 😴 resting · 📚 learning (+ Motes) · 💭 thinking · 😲 surprised, while always-on is on
 let aoEarExtra = () => ({});
@@ -1468,6 +1495,7 @@ function aoApply() {
   if (!aoLoop) aoLoop = new AlwaysOnMod.AlwaysOn({ senses: aoSenses, state: aoState, ask: aoAsk,
     deliver: { say: aoSay, note: aoNote, learn: aoLearn },
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
+    speakGate: (d) => aoMeter ? aoMeter.decide(aoContext({ urgent: !!d.urgent })) : { speak: true },
     log: (...a) => console.log('[alwayson]', ...a) });
   if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
   aoHearingApply();
