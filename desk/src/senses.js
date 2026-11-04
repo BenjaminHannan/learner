@@ -48,6 +48,13 @@ function loadConsent(dir) { return normalize(readJson(path.join(dir, FILE))); }
 function saveConsent(dir, c) { const n = normalize(c); fs.mkdirSync(dir, { recursive: true }); atomicWrite(path.join(dir, FILE), n); return n; }
 // The card shows at every start until Ben ticks "Remember my choice".
 const needsConsent = (c) => !c || !c.remember || !c.decidedAt;
+// Ben Nov 4 ("dont have it ask for now, just give it"): no start-up card. An undecided consent starts with EVERY sense on, as if
+// Ben pressed Save with all switches on and "Remember my choice" ticked. Settings > Senses still switches each one off; macOS
+// still asks for its own permissions. Set ASK_AT_START = true to bring the card back (one line).
+const ASK_AT_START = false;
+function given(now) { const s = {}; for (const id of IDS) s[id] = true; return normalize({ senses: s, remember: true, decidedAt: now || Date.now(), on: true }); }
+// the consent to start with: { consent, granted } (granted = it was undecided and is now the all-on default; main saves it)
+function startConsent(c, now, ask) { const a = ask === undefined ? ASK_AT_START : !!ask; return !a && needsConsent(c) ? { consent: given(now), granted: true } : { consent: normalize(c), granted: false }; }
 // Which macOS permissions the chosen senses need and are missing (perm: {accessibility, screenRecording, microphone} booleans).
 function missingPerms(c, perm) {
   const out = [];
@@ -233,4 +240,4 @@ function windowsText(w, look) {
   return parts.join(' ');
 }
 
-module.exports = { screenDiff, axChars, RICH_CHARS, windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, missingPerms, AlwaysOnState, Senses };
+module.exports = { screenDiff, axChars, RICH_CHARS, windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, ASK_AT_START, given, startConsent, missingPerms, AlwaysOnState, Senses };

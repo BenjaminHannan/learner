@@ -1,5 +1,6 @@
 'use strict';
-// Always-on senses: the consent card shown at start (every sense OFF until Ben switches it on) and the Senses section in Settings.
+// Always-on senses: the consent card (Ben Nov 4: not shown at start for now; every sense starts on, src/senses.js ASK_AT_START)
+// and the Senses section in Settings, where each sense can be switched off.
 // Main owns the truth (userData/senses.json, src/senses.js); this file only shows it and sends Ben's choices back.
 window.SensesUI = (() => {
   const desk = window.desk;

@@ -1534,7 +1534,7 @@
     else await newThread();
     desk.helpers.list().then(paintAgents);
     if (!settings.onboarded) Onboard.show();
-    // always-on: the senses card asks at every start until "Remember my choice" (main decides; it also sends senses-show after setup)
+    // always-on: the senses card shows only while main says it is needed (Ben Nov 4: off, every sense starts on; src/senses.js ASK_AT_START)
     else if (!info.e2e && window.SensesUI) window.SensesUI.showCard().catch(() => {});
     window.__ready = true;
   })();

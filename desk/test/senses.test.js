@@ -126,3 +126,23 @@ test('windowsText turns helper JSON into words without ids or coordinates', () =
   assert.match(t, /In Notes: Body: Step 1: weigh/);
   assert.ok(!/AXTextArea|\[3\]/.test(t));
 });
+
+test('Ben Nov 4 "just give it": no start-up card; an undecided consent starts with every sense on and remembered; a remembered choice is kept', () => {
+  assert.strictEqual(S.ASK_AT_START, false, 'one switch brings the card back');
+  const r = S.startConsent(S.loadConsent(tmp()), 42);
+  assert.strictEqual(r.granted, true);
+  for (const id of ['screen', 'windows', 'hearing', 'chats', 'web']) assert.strictEqual(r.consent.senses[id], true, id);
+  assert.deepStrictEqual(S.IDS.slice().sort(), ['chats', 'hearing', 'screen', 'web', 'windows']);
+  assert.strictEqual(r.consent.remember, true); assert.strictEqual(r.consent.on, true); assert.strictEqual(r.consent.decidedAt, 42);
+  assert.strictEqual(S.needsConsent(r.consent), false, 'so the card is not shown');
+  // a choice Ben already remembered (e.g. hearing off) is never overwritten
+  const mine = S.defaults(); mine.senses.screen = true; mine.remember = true; mine.decidedAt = 5;
+  assert.deepStrictEqual(S.startConsent(mine, 99), { consent: S.normalize(mine), granted: false });
+  // the old behaviour is one flag away
+  assert.strictEqual(S.startConsent(S.defaults(), 1, true).granted, false);
+  // main.js uses it before the Senses are made and saves the given consent; Settings > Senses still has every switch
+  const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
+  assert.match(m, /const sc = SensesMod\.startConsent\(SensesMod\.loadConsent\(aoDir\(\)\)\);[^\n]*\n  if \(sc\.granted\) \{ try \{ SensesMod\.saveConsent\(aoDir\(\), sc\.consent\); \}/);
+  assert.match(m, /aoSenses = new SensesMod\.Senses\(\{ consent: sc\.consent,/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'renderer/senses.js'), 'utf8'), /function settingsUi\(\)/);
+});

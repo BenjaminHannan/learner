@@ -1442,7 +1442,7 @@ function buildMenu() {
 
 // ---- Always-on Premonition (src/senses.js, src/alwayson.js, src/hearing.js) ------------------------------------
 // Ben Nov 3: Glim as a persistent state that notices what it is allowed to (screen words, open windows, what it hears, chats,
-// its own web reading) and decides by itself when to speak. Every sense is off until Ben switches it on (userData/senses.json);
+// its own web reading) and decides by itself when to speak. Every sense starts on (Ben Nov 4: no start-up card; src/senses.js ASK_AT_START) and each can be switched off in Settings (userData/senses.json);
 // only words are kept (userData/alwayson-state.json), never a picture or a sound, and private-looking text is dropped first.
 const SensesMod = require('./src/senses');
 let aoState = null, aoSenses = null, aoLoop = null, hearing = null, lastTyping = 0;
@@ -1664,7 +1664,9 @@ function aoSetup() {
   aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
   getTruth();
   aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
-  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, onScreen: (text, win) => aoEyesLook(text, win), samplers: {
+  const sc = SensesMod.startConsent(SensesMod.loadConsent(aoDir()));   // no start-up card: undecided = every sense on (Ben Nov 4)
+  if (sc.granted) { try { SensesMod.saveConsent(aoDir(), sc.consent); } catch (e) { /* used in memory; saved on the next change */ } }
+  aoSenses = new SensesMod.Senses({ consent: sc.consent, state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, onScreen: (text, win) => aoEyesLook(text, win), samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
     windows: async () => {
