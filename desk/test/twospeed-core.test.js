@@ -24,6 +24,7 @@ test('intent: fixed vocabulary, text parsing, rejects unknown, keeps the last ca
   assert.equal(ch.send({ code: 'JUMPCRIT', args: { at: 9 } }, 300).ok, false, 'out of range');
   const late = ch.current(2500); assert.equal(late.call.code, 'STRAFE'); assert.equal(late.stale, true, 'older than 2 s: kept, marked stale');
   assert.equal(parse(V, 'Sure! JUMPCRIT(at=3)').call.args.at, 3);
+  assert.equal(parse(V, 'JUMPCRIT at=3   # he is at x=2.5').ok, true, 'a trailing comment is ignored (real Nanbeige adds them)');
   assert.equal(parse(V, '{"code":"STRAFE","args":{"dir":"right"}}').call.args.wtap, 0, 'default filled');
   ch.send('JUMPCRIT at=3', 1000); const st = ch.stats(); assert.equal(st.fromBrain, 2); assert.equal(st.rejected, 2); assert.ok(st.ratePerS > 0);
 });

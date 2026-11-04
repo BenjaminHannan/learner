@@ -39,7 +39,7 @@ function parse(vocab, text) {
   const codes = Object.keys(vocab);
   for (const line of t.split(/\n/)) {
     const m = new RegExp('\\b(' + codes.join('|') + ')\\b', 'i').exec(line); if (!m) continue;
-    const rest = line.slice(m.index + m[1].length).replace(/[()`*]/g, ' ');
+    const rest = line.slice(m.index + m[1].length).replace(/\s(#|\/\/).*$/, '').replace(/[()`*]/g, ' ');   // a trailing # comment is not arguments
     const args = {}; const re = /([A-Za-z_]+)\s*[=:]\s*([A-Za-z0-9_.\-]+)/g; let a;
     while ((a = re.exec(rest))) args[a[1]] = a[2];
     return validate(vocab, { code: m[1], args });
