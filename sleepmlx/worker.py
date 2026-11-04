@@ -46,6 +46,9 @@ def cfg_from_env(env=os.environ, prof=None) -> Config:
             setattr(c, {"SLEEPMLX_NIGHT_BUDGET_S": "night_budget_s", "SLEEPMLX_SCALE": "scale", "SLEEPMLX_MIN_CARDS": "min_cards",
                         "SLEEPMLX_MIN_ITEM_DAYS": "min_item_days", "SLEEPMLX_SEED": "seed", "SLEEPMLX_HARM_MAX": "harm_max", "SLEEPMLX_CARD_SHAPE": "card_shape",
                         "SLEEPMLX_REPLAY_MODE": "replay_mode", "SLEEPMLX_REPLAY_MAX_TOKENS": "replay_max_tokens"}[name], cast(env[name]))
+    for name, attr in (("SLEEPMLX_BEN_MODEL", "use_ben_model"), ("SLEEPMLX_SKILL_CARDS", "use_skill_cards")):   # I4: off unless "1"
+        if env.get(name) in ("0", "1"):
+            setattr(c, attr, env[name] == "1")
     return c
 
 
@@ -157,6 +160,7 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     resuming = paths.night_json.exists()
     if not resuming and not next_day(week, state) and not only_date:
         out.update(status="no_new_day", message="no new diary day to sleep on", days_in_diary=len(week["dates"]), slept=len(state.get("slept_days", [])))
+        _sense_step(env, paths, out, guards, log, dry_run)
         return out
     # Reserve enough available RAM for the CPU base and its training overhead
     # before loading; the smaller runtime guard applies once weights are resident.
@@ -198,8 +202,29 @@ def run_chunk(env=None, backend_factory: Optional[Callable] = None, dry_run: boo
     out["steps"] = int(res.get("steps") or 0)
     out["quiz"] = res.get("quiz")
     out["interrupted"] = bool(res.get("interrupted"))
+    if out.get("status") == "done":
+        be = sl = None   # the brain's model is closed; drop it before the sense night loads the q8 model  # noqa: F841
+        import gc
+        gc.collect()
+        _sense_step(env, paths, out, guards, log, dry_run)
     out["elapsed_s"] = time.time() - t0
     return out
+
+
+def _sense_step(env, paths, out, guards, log, dry_run) -> None:
+    """I1: the eye projector's night (sense_night.py), after the brain's night or on a night with no new diary day.
+    Off unless SLEEPMLX_SENSE_SLEEP=1. Crash-safe: any error is logged in out["sense_sleep"] and never ends the night."""
+    try:
+        from . import sense_night
+        if dry_run or not sense_night.enabled(env):
+            return
+        ud = paths.userdata_dir
+        if not ud:
+            out["sense_sleep"] = {"skipped": "no userData folder"}
+            return
+        out["sense_sleep"] = sense_night.run_safely(str(ud), should_stop=lambda: bool(guards.reason()), log=log)
+    except Exception as e:  # noqa: BLE001 - a sense-night problem never ends the brain's night
+        out["sense_sleep"] = {"skipped": "error: %s" % e}
 
 
 def _paths_from(env) -> Paths:

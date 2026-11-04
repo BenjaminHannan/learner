@@ -85,6 +85,16 @@ def morning_check(row: Optional[dict], harm_max: Optional[float] = None) -> dict
                 "backend cannot score" if pk.get("fallback_no_nll") else ("scoring failed: %s" % pk.get("fallback_error_msg", "?") if pk.get("fallback_error") else "not enough time"), fd))
         if pk.get("conflicted_questions"):
             L.append("Skipped %d questions whose saved answers disagree (noise, can't be learned)." % pk["conflicted_questions"])
+    bq = row.get("ben_quiz")
+    if isinstance(bq, dict):
+        out["ben_quiz"] = {k: bq.get(k) for k in ("n", "before", "after", "tonight_n", "tonight_before", "tonight_after", "earlier_n", "earlier_before", "earlier_after", "skipped", "error")}
+        f = lambda x: "?" if _num(x) is None else "%.0f%%" % x   # noqa: E731
+        if bq.get("error") or bq.get("skipped"):
+            L.append("Ben quiz: not run (%s)." % (bq.get("error") or bq.get("skipped")))
+        else:
+            L.append("Ben quiz (what Glim knows about Ben, notes hidden, %s questions never trained on): %s -> %s%s." % (
+                bq.get("n"), f(bq.get("before")), f(bq.get("after")),
+                "; older questions %s -> %s (%s)" % (f(bq.get("earlier_before")), f(bq.get("earlier_after")), bq.get("earlier_n")) if bq.get("earlier_n") else ""))
     L.append("Note: this check cannot spot wrong facts about new things; only the truth checks before sleep do.")
     out["lines"] = L
     return out

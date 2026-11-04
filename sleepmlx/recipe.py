@@ -124,6 +124,7 @@ class Config:
     max_rated: int = 12           # thumbs-rated turns carded per night (x work scale), oldest first
     rated_tokens: int = 300
     use_habits: bool = True       # the same tool job on habit_min+ turns -> habit cards
+    use_truthcheck: bool = True   # I2 truth check (truthcheck.py): lesson / rated / insight cards vs Ben's facts and the insight truth hash before training
     use_insight: bool = True      # T5 sleep insight (insight.py): the Desk's stuck problems + related memories -> K mixes, truth-checked; verified -> insight cards
     insight_k: int = 4            # candidates per stuck problem (each mixes a different pair of recalled memories)
     insight_m: int = 6            # related memories recalled per stuck problem
@@ -131,6 +132,12 @@ class Config:
     insight_tokens: int = 240
     habit_min: int = 3
     use_userdata: bool = True     # the Desk's saved notes (memory.json) and Keeping track of list (tracking.md)
+    # Round 2 (I4, 2026-11-04), both OFF until the lead's real-app check (env SLEEPMLX_BEN_MODEL=1 / SLEEPMLX_SKILL_CARDS=1, or the profile):
+    use_ben_model: bool = False   # benmodel.py: what Ben likes / works on / knows, from his own chat lines + notes naming him -> cards + the Ben quiz
+    max_ben_qa: int = 12          # Ben statements given a model-written quiz question per night (x work scale)
+    ben_holdout_every: int = 2    # 1 in this many new Ben questions is held out (never trained): the Ben quiz
+    ben_quiz_max: int = 40        # held-out Ben questions asked in the morning (newest first), adapter on, no notes
+    use_skill_cards: bool = False # Watch-me skill cards (userData/watchme-skills.json) -> text cards + step questions
 
 
 def clip_scale(budget_s: float, t_step: float, t_gen: float, ref_steps: int, ref_gen_batches: float) -> float:
@@ -882,6 +889,135 @@ class Sleeper:
         st["insight_checks"] = res["checks"]
         st["insight_unverified_dropped"] = res["unverified_dropped"]
         I_mod.write_results(ud, res)
+
+    def ben_stage(self, week: dict, d: int, st: Counter) -> None:
+        """A model of Ben (benmodel.py): statements from Ben's own chat lines (days <= d) and memory.md notes that name him, picked by fixed
+        patterns (never a model, never `maybe`, never web-checked notes). Newest wins per slot; a changed slot replaces its item (its old
+        cards and held questions go with it) and is trained as a correction. New statements without a templated question get one written
+        by the base model and checked like a note card."""
+        if not self.cfg.use_ben_model:
+            return
+        from . import benmodel as B
+        ignore = diary_mod.load_ignore(self.paths.ignore)
+        turns = [t for t in self.diary.turns if t["day"] <= d and L_mod._safe(t["text"], ignore)]
+        notes = L_mod.read_notes(self.paths.userdata_dir, ignore) if self.cfg.use_userdata else []
+        found = B.extract(turns, notes, self.who, lambda day: diary_mod.date_of_day(week, day), self.today())
+        want, todo = set(), []
+        for slot, v in sorted(found.items()):
+            key = "ben|" + slot
+            para, qa = B.ben_cards(v, self.who)
+            sig = hashlib.sha1(json.dumps([B.statement(v["rel"], v["x"], self.who, v["cat"]), v.get("replaces")]).encode()).hexdigest()[:12]
+            src = "%s's own words: %s; seen on %d day(s)" % (self.who, ", ".join(v["sources"])[:120], len(v["dates"]))
+            want.add(key)
+            old = self.items.get(key)
+            if old and not old.dead and old.sig == sig:
+                old.until, old.days, old.source = v["until"], len(v["dates"]), src
+                if old.para[:2] != para[:2]:
+                    old.para = para   # the newest quote and date; the question stays
+                continue
+            st["ben_changed" if old and not old.dead else "ben_new"] += 1
+            it = Item(key, self.who, v["x"][:60], v["rel"], d, first=d, days=len(v["dates"]), nment=1, para=para, qa=qa, seen_ment=1,
+                      dreamed_night=d, kind="ben", source=src, until=v["until"], sig=sig, cor=bool(v.get("replaces")))
+            self.items[key] = it
+            if not qa:
+                todo.append((it, para[0]))
+        for it in self.items.values():
+            if it.kind == "ben" and not it.dead and it.key not in want:
+                it.dead = True
+                st["ben_retired"] += 1
+        todo = todo[:self.sc(self.cfg.max_ben_qa)]
+        if todo:
+            raw = self.gen([P.note_qa_prompt(self.R, text, self.who) for _, text in todo], self.cfg.lesson_tokens, salt="ben_qa")
+            cand = []
+            for (it, text), txt in zip(todo, raw):
+                c = P.parse_lesson(txt)
+                q, a = (str(c.get("q") or "").strip(), str(c.get("a") or "").strip().rstrip(".")) if c else ("", "")
+                if not (q and a):
+                    why = "parse_fail"
+                elif not 1 <= len(a.split()) <= 4 or not pat(norm(a)).search(norm(text)) or norm(a) == norm(self.who):
+                    why = "answer_not_in_statement"
+                elif norm(a) in norm(q):
+                    why = "answer_in_question"
+                elif self.leaky(q):
+                    why = "test_leak"
+                else:
+                    why = None
+                if why:
+                    st["ben_qa_dropped_" + why] += 1
+                else:
+                    cand.append((it, text, q, a))
+            ver = self.gen([P.ctx_prompt(self.R, text, q, self.who) for _, text, q, a in cand], self.cfg.verify_tokens, salt="ben_qa_verify")
+            for (it, text, q, a), v in zip(cand, ver):
+                if has_ans(a, v):
+                    it.qa = [[q, a]]
+                    st["ben_qa_kept"] += 1
+                else:
+                    st["ben_qa_dropped_unverified"] += 1
+        st["ben"] = len(want)
+
+    def skill_stage(self, week: dict, d: int, st: Counter) -> None:
+        """Watch-me skill cards (desk/src/watchme.js -> userData/watchme-skills.json): the card text word for word plus up to 3 step
+        questions. Sleep only reads what Ben showed; it never runs or practises the skill. A removed skill leaves the pool."""
+        if not (self.cfg.use_skill_cards and self.cfg.use_userdata):
+            return
+        from . import benmodel as B
+        want = set()
+        for s_ in B.read_skills(self.paths.userdata_dir, diary_mod.load_ignore(self.paths.ignore)):
+            key = "skill|" + s_["id"]
+            para, qa = B.skill_cards(s_, self.who)
+            sig = hashlib.sha1(json.dumps([para, qa]).encode()).hexdigest()[:12]
+            want.add(key)
+            old = self.items.get(key)
+            if old and not old.dead and old.sig == sig:
+                continue
+            st["skill_changed" if old and not old.dead else "skill_new"] += 1
+            self.items[key] = Item(key, self.who, s_["name"][:60], "skill", d, first=d, days=1, nment=1, para=para, qa=qa, seen_ment=1,
+                                   dreamed_night=d, kind="skill", source="Watch me: %s showed it on %s" % (self.who, s_["created"] or "?"), sig=sig)
+        for it in self.items.values():
+            if it.kind == "skill" and not it.dead and it.key not in want:
+                it.dead = True
+                st["skill_retired"] += 1
+        st["skill"] = len(want)
+
+    def hold_ben(self, d: int, st: Counter) -> None:
+        """The Ben quiz: hold out the question of 1 in ben_holdout_every new Ben items (at least one when any has a question); the item keeps
+        its statement cards, so the quiz asks in a new wording what was trained as a statement. New skills with 2+ questions hold out one."""
+        key = lambda it: hashlib.sha1((str(self.cfg.seed) + "ben" + it.key).encode()).hexdigest()   # noqa: E731
+        new = sorted((it for it in self.items.values() if it.kind == "ben" and it.first == d and not it.dead and not it.held and it.qa), key=key)
+        every = max(1, int(self.cfg.ben_holdout_every))
+        n = 0
+        for i, it in enumerate(new):
+            if i % every == 0:
+                q, a = it.qa.pop(0)
+                it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
+                n += 1
+        st["ben_held_out"] = n
+        k = 0
+        for it in sorted((it for it in self.items.values() if it.kind == "skill" and it.first == d and not it.dead and not it.held and len(it.qa) >= 2), key=key):
+            q, a = it.qa.pop()
+            it.held.append({"q": q, "a": a, "dir": "forward", "night": d})
+            k += 1
+        st["skill_held_out"] = k
+
+    def ben_quiz(self, d: int) -> Optional[dict]:
+        """Morning Ben quiz: every held-out Ben question of a live statement (newest ben_quiz_max), closed book (no notes in the prompt),
+        tonight's adapter vs the adapter the night started from. Reported only: the keep / roll back decision stays with the general
+        questions and the night's own recall (gate.decide)."""
+        cards = sorted(({"q": h["q"], "a": h["a"], "dir": "forward", "night": h["night"]} for it in self.items.values()
+                        if it.kind == "ben" and not it.dead for h in it.held), key=lambda h: (-h["night"], h["q"]))[:max(0, int(self.cfg.ben_quiz_max))]
+        if not cards:
+            return None
+        if self.clock.left() < 60 + 2 * len(cards) * (self.sec_per_batch_tok or 0.25) * self.cfg.recall_max_tokens / max(1, self.be.gen_batch):
+            return {"n": len(cards), "skipped": "not enough time"}
+        after = gate_mod.score_recall(self.be, self.R, cards, adapter=True, max_tokens=self.cfg.recall_max_tokens)
+        before = self.measure_incumbent_recall(cards)
+        tn = [i for i, c in enumerate(cards) if c["night"] == d]
+        sub = lambda r: gate_mod.pct([r["flags"][i] for i in tn]) if tn else None   # noqa: E731
+        return {"n": len(cards), "before": before["recall"], "after": after["recall"], "tonight_n": len(tn), "tonight_before": sub(before),
+                "tonight_after": sub(after), "earlier_n": len(cards) - len(tn),
+                "earlier_before": gate_mod.pct([before["flags"][i] for i in range(len(cards)) if i not in tn]) if len(cards) > len(tn) else None,
+                "earlier_after": gate_mod.pct([after["flags"][i] for i in range(len(cards)) if i not in tn]) if len(cards) > len(tn) else None,
+                "samples": after.get("samples")}
 
     def rated_stage(self, week: dict, d: int, st: Counter) -> None:
         """Flashcards from every turn Ben rated (thumbs up or down), oldest first, at most max_rated x s a night. The base model reads the chat
@@ -1655,6 +1791,28 @@ class Sleeper:
                 self.log("[night] insight skipped: %r" % (e,))
             self.rated_stage(week, d, st)
             self.extras(week, d, st)
+            if self.cfg.use_truthcheck:
+                try:   # I2: a failure skips the truth check, never ends the night
+                    from . import truthcheck as TC_mod
+                    from . import insight as I_mod
+                    ud = self.paths.userdata_dir if self.cfg.use_userdata else None
+                    tc = TC_mod.night_step(self.items, self.wrong, I_mod.read_stuck(ud) if ud else [], ud, log=self.log)
+                    st["truthcheck_retired"] = tc["retired"]
+                    st["truthcheck_wrong"] = tc["stats"]["bad"]
+                except Exception as e:
+                    st["truthcheck_error"] += 1
+                    self.log("[night] truth check skipped: %r" % (e,))
+            for name, fn in (("ben", self.ben_stage), ("skill", self.skill_stage)):
+                try:   # I4 2026-11-04: new steps never run on the real model yet; a failure skips the step, never ends the night
+                    fn(week, d, st)
+                except Stop:
+                    raise
+                except Exception as e:
+                    st[name + "_error"] += 1
+                    self.log("[night] %s step skipped: %r" % (name, e))
+            if "ben_holdout_done" not in N:
+                self.hold_ben(d, st)
+                N["ben_holdout_done"] = True
             if "lesson_holdout_done" not in N:
                 self.hold_lessons(d, st)
                 N["lesson_holdout_done"] = True
@@ -1848,6 +2006,17 @@ class Sleeper:
             self.save_night()
         pre = N.get("pre")
         reasons = gate_mod.decide(j, pre, post, cfg.gate_min_gain)
+        ben = None
+        if cfg.use_ben_model:
+            try:   # reported only; a failure never ends the night
+                ben = self.ben_quiz(d)
+                if ben:
+                    self.be.load_adapter(P_.work_adapter)   # the candidate stays loaded for what follows
+            except Stop:
+                raise
+            except Exception as e:
+                ben = {"error": repr(e)[:200]}
+                self.log("[night] Ben quiz skipped: %r" % (e,))
         quiz = post["recall"]
         reverted = bool(reasons)
         if not reverted:
@@ -1857,7 +2026,7 @@ class Sleeper:
         result = dict(res, status="done", quiz=quiz, harm=j["harm"], general=j["general"], general_base=j["general_base"], reverted=reverted,
                       revert_reason=reasons, recall_pre=(N.get("pre") or {}).get("recall"), held_out=post["n"], recall_by_dir=post["by_dir"],
                       steps_total=N.get("total_steps"), message="night done" + (" (REVERTED: %s)" % "; ".join(reasons) if reverted else ""),
-                      lessons=list(N.get("lessons", [])), dreamcheck=dc_total(N["stats"]))
+                      lessons=list(N.get("lessons", [])), dreamcheck=dc_total(N["stats"]), **({"ben_quiz": ben} if ben is not None else {}))
         state = copy.deepcopy(self.state)
         state["nights"] += 1
         if N["date"] not in state["slept_days"]:
@@ -1869,7 +2038,7 @@ class Sleeper:
                              "context": self.finalization_context(), "evaluation": self.finalization_evaluation(),
                              "result": result, "state": state, "extra": {
             "stats": copy.deepcopy(N["stats"]), "bench": N.get("bench"), "chunks": N["chunks"], "elapsed_s": N["elapsed_s"],
-            "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples")}}
+            "lessons": result["lessons"], "last_ce": N.get("last_ce"), "recall_samples": post.get("samples"), **({"ben_quiz": ben} if ben is not None else {})}}
         N["phase"] = "finalize"
         self.save_night()
         self._finalize(res)
@@ -2048,6 +2217,9 @@ class Sleeper:
                     rows.append(dict({"item": it.fact, "kind": it.kind, "text": p, "night": it.dreamed_night, "status": status}, **extra))
                 for q, a in it.qa:
                     rows.append(dict({"item": it.fact, "kind": it.kind + "_qa", "q": q, "a": a, "night": it.dreamed_night, "status": status}, **extra))
+                if it.kind in ("ben", "skill"):
+                    for h in it.held:
+                        rows.append(dict({"item": it.fact, "kind": it.kind + "_qa", "q": h["q"], "a": h["a"], "night": h["night"], "status": "held_out"}, **extra))
                 continue
             for p in it.para:
                 rows.append({"item": it.fact, "kind": "paraphrase", "text": p, "night": it.dreamed_night, "status": status})
