@@ -42,3 +42,12 @@ Decided with Ben in the "Brainstorm: always-on Premonition" thread. v1 (phases 1
 - Privacy: ask once at startup, remember the choice, change it in Settings. No blind spots (Ben: it's all local). Keep notes, never recordings: raw screenshots and audio are not stored.
 - Sleep does everything: replay surprises + confirmed notes + dream practice questions (dreamer + checker); it also retunes the speak-o-meter and the guesser.
 - Senses: v1 readers now (OCR + Qwen3-VL-2B reader for pictures, Whisper for speech). Vision and sound projectors into Nanbeige are being trained on BensPC (separate track). They switch in only if they pass their pre-set tests. The projector is meant mainly for videos and pictures; OCR stays for text.
+
+## 9. Sleep also trains the eyes and ears: cross-sense agreement (Ben, 2026-11-04 morning; not built yet)
+- While watching or listening, Glim pairs its senses: eye features (SigLIP), ear features (Whisper), and text it reads (captions/subtitles, on-screen text).
+- Routing: subtitles of speech → training for the ears' speech; sound tags like `[dog barks]` → training for the ears' sounds; on-screen text → training for the eyes' reading. Eyes ↔ ears agreement needs no captions at all.
+- 2-of-3 rule: when two senses agree and one disagrees, the odd one out gets a practice example. When none agree, Nanbeige reasons about it and saves a `maybe`; it's never trained on.
+- What's stored is encoder features, not raw images or audio. Ben's reason is efficiency: smaller files, and no re-encoding at night. Saved features have to be rebuilt if an encoder changes.
+- Seatbelt: after each sleep, rerun the fixed projector tests (V1 / A1 / VID1). If any score drops by more than 2 points, that night's projector update is undone. This guards against shared mistakes and echo loops where the senses teach each other the same error.
+- Models: train during sleep against a bf16 copy of Nanbeige; run day-to-day with the q8 copy. It needs ~8 GB more disk. Check projectors and adapters on q8 after training.
+- First test, pass marks fixed: one sleep trained on caption-tagged sound pairs from videos → A1 +5 points or more; V1 drops by at most 2 points. Proven wrong if A1 falls.
