@@ -1000,6 +1000,12 @@ class Agent {
         return { text: finish(answer, !signal.aborted, P('Asked Ben: ') + short(args.question, 60)) };
       } catch (e) { return { text: finish('Error: ' + (e && e.message || e), false) }; }
     }
+    // safety levels (track I5, src/safety-levels.js): free / ask / never per category, enforced here in the tool runner
+    let sv = null;
+    if (this.o.safety) {
+      try { sv = this.o.safety.check(name, args, this.o.safetyCtx ? this.o.safetyCtx(name, args) : {}); } catch (e) { sv = null; }
+      if (sv && sv.refuse) return { text: finish(P(sv.refuse), false, 'Not allowed: ' + short(sv.label, 50)) };
+    }
     if ((name === 'memory_save' || name === 'memory_forget') && this.o.memory) {
       try {
         if (name === 'memory_save') {
@@ -1069,9 +1075,11 @@ class Agent {
         const prog = shellProgram(args.command);
         if (danger) need = { kind: 'shell', danger: true, text: String(args.command) };
         else if (!hands && !SAFE_ECHO.test(String(args.command)) && !isReadOnly(args.command)) need = { kind: 'shell', danger: false, text: String(args.command), always: prog ? 'shell:' + prog : '', alwaysLabel: prog ? '"' + prog + '" commands' : '' };
-      } else if (SCREEN_GATED.has(name) && !hands) {
+      } else if (SCREEN_GATED.has(name) && !hands && !this.o.hands) {   // with src/hands.js the hands ask once themselves (idle + ask-first)
         need = { kind: 'screen', danger: false, text: summaryStart, always: 'screen', alwaysLabel: 'clicks and typing in apps' };
       }
+      // a category set to "ask" (not the hands: they ask themselves): ONE card, Yes / No / Always allow; a risky command keeps its own card
+      if (sv && sv.level === 'ask' && sv.cat !== 'hands' && !(need && need.danger)) need = { kind: 'level:' + sv.cat, danger: false, text: sv.label + ': ' + summaryStart, always: 'level:' + sv.cat, alwaysLabel: sv.label, safety: sv.cat };
       let allowed = [];
       try { const a = ctx.settings.alwaysAllow; if (Array.isArray(a)) allowed = a; } catch (e) { /* none */ }
       if (need && !need.danger && need.always && allowed.includes(need.always)) need = null; // Ben chose "Always allow" for this kind of action
@@ -1080,9 +1088,12 @@ class Agent {
         if (signal.aborted) return { text: finish('[stopped by user]', false) };
         if (verdict === 'deny') return { text: finish(P('Ben denied this action. Do not retry it; ask him what to do instead.'), false, 'Denied: ' + summaryStart) };
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);
-        if (verdict === 'always' && !need.danger) { this.taskAllow.add(need.kind); if (need.always && this.o.rememberAlways) { try { this.o.rememberAlways(need.always); } catch (e) { /* ignore */ } } }
+        if (verdict === 'always' && need.safety && this.o.safety) {   // "Always allow" = that category becomes free, one-line notice with Undo
+          this.taskAllow.add(need.kind);
+          try { const ch = this.o.safety.set([{ cat: need.safety, level: 'free' }], { source: 'tap-card' }); if (ch.ok) this.emit({ type: 'safety_notice', text: ch.notice, undo: ch.undo }); } catch (e) { /* ignore */ }
+        } else if (verdict === 'always' && !need.danger) { this.taskAllow.add(need.kind); if (need.always && this.o.rememberAlways) { try { this.o.rememberAlways(need.always); } catch (e) { /* ignore */ } } }
       }
-      const r = await run(args, ctx);
+      const r = this.o.hands && this.o.hands.isHands(name) ? await this.withoutSlot(() => this.o.hands.act(name, args, { ...ctx, summary: summaryStart, helper: !!this.o.helperId, askUser: this.o.askUser ? (q, sg, op) => this.o.askUser(q, sg, op) : null }, run, sv), signal) : await run(args, ctx);
       let text = typeof r === 'string' ? r : (r && r.text) || '';
       if (this.last.key === key) {
         this.last.count++;

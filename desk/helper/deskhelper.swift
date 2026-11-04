@@ -280,10 +280,17 @@ func cmdLook(app appName: String?, max: Int) -> Never {
 
 // MARK: - Mouse / keyboard
 
+// Every event Glim posts carries this tag, so `watch-input` (and the app's freeze) can tell Glim's input from the user's (track I5).
+let GLIM_TAG: Int64 = 0x474C494D   // "GLIM"
+func glimPost(_ ev: CGEvent) {
+    ev.setIntegerValueField(.eventSourceUserData, value: GLIM_TAG)
+    ev.post(tap: .cghidEventTap)
+}
+
 func postMouse(_ type: CGEventType, _ p: CGPoint, button: CGMouseButton, clickState: Int64 = 1) {
     guard let ev = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: p, mouseButton: button) else { return }
     ev.setIntegerValueField(.mouseEventClickState, value: clickState)
-    ev.post(tap: .cghidEventTap)
+    glimPost(ev)
 }
 
 func doClick(_ p: CGPoint, right: Bool, double: Bool) {
@@ -305,7 +312,7 @@ func postKey(_ code: CGKeyCode, flags: CGEventFlags = []) {
     for isDown in [true, false] {
         guard let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: isDown) else { continue }
         ev.flags = flags
-        ev.post(tap: .cghidEventTap)
+        glimPost(ev)
     }
 }
 
@@ -314,7 +321,7 @@ func typeChunk(_ units: [UniChar]) {
         guard let ev = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: isDown) else { continue }
         var u = units
         ev.keyboardSetUnicodeString(stringLength: u.count, unicodeString: &u)
-        ev.post(tap: .cghidEventTap)
+        glimPost(ev)
     }
 }
 
@@ -376,7 +383,7 @@ func parseCombo(_ combo: String) -> (CGKeyCode, CGEventFlags)? {
 
 // MARK: - press
 
-func cmdPress(id: Int) -> Never {
+func cmdPress(id: Int, quiet: Bool = false) -> Never {
     guard AXIsProcessTrusted() else { fail("accessibility permission not granted") }
     guard let data = FileManager.default.contents(atPath: cacheFile),
           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -389,6 +396,7 @@ func cmdPress(id: Int) -> Never {
     let center = CGPoint(x: Double(fr[0]) + Double(fr[2]) / 2, y: Double(fr[1]) + Double(fr[3]) / 2)
 
     func clickFallback(_ why: String) -> Never {
+        if quiet { fail("quiet press not possible (\(why)); the real mouse would be needed") }
         doClick(center, right: false, double: false)
         emit(["ok": true, "id": id, "method": "click", "note": why] as [String: Any])
     }
@@ -433,13 +441,13 @@ func findAppURL(_ name: String) -> URL? {
     return nil
 }
 
-func cmdOpenApp(_ name: String) -> Never {
+func cmdOpenApp(_ name: String, background: Bool = false) -> Never {
     let q = name.lowercased()
     let running = NSWorkspace.shared.runningApplications.first {
         $0.bundleIdentifier?.lowercased() == q || $0.localizedName?.lowercased() == q
     }
     if let r = running {
-        r.activate(options: [.activateIgnoringOtherApps])
+        if !background { r.activate(options: [.activateIgnoringOtherApps]) }
         emit(["opened": r.localizedName ?? name, "pid": Int(r.processIdentifier)] as [String: Any])
     }
     guard let url = findAppURL(name) else { fail("app not found: \(name)") }
@@ -447,7 +455,7 @@ func cmdOpenApp(_ name: String) -> Never {
     var launched: NSRunningApplication?
     var launchError: Error?
     let cfg = NSWorkspace.OpenConfiguration()
-    cfg.activates = true
+    cfg.activates = !background
     NSWorkspace.shared.openApplication(at: url, configuration: cfg) { app, err in
         launched = app
         launchError = err
@@ -908,6 +916,51 @@ func runFence() -> Never {
     exit(0)
 }
 
+// MARK: - watch-input (track I5): the USER's own input only, one JSON line per event; Glim's tagged events are dropped.
+// Lines: {"k":"ready"} once the tap is live; then {"k":"in","t":ms} (at most 4 per second), {"k":"undo"} for cmd+z, {"k":"close"} for
+// cmd+w. No key codes or text are ever reported. Listen-only tap (never changes or blocks an event). Exits when stdin closes.
+var watchTap: CFMachPort?
+var watchLastIn: Double = 0
+func runWatchInput() -> Never {
+    let types: [CGEventType] = [.keyDown, .flagsChanged, .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .otherMouseDown,
+                                .mouseMoved, .leftMouseDragged, .rightMouseDragged, .scrollWheel]
+    var mask: CGEventMask = 0
+    for t in types { mask |= CGEventMask(1) << CGEventMask(t.rawValue) }
+    let cb: CGEventTapCallBack = { _, type, event, _ in
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let t = watchTap { CGEvent.tapEnable(tap: t, enable: true) }
+            return Unmanaged.passUnretained(event)
+        }
+        if event.getIntegerValueField(.eventSourceUserData) == GLIM_TAG { return Unmanaged.passUnretained(event) }
+        let now = Date().timeIntervalSince1970 * 1000
+        var kind = "in"
+        if type == .keyDown && event.flags.contains(.maskCommand) {
+            let code = event.getIntegerValueField(.keyboardEventKeycode)
+            if code == 6 { kind = "undo" } else if code == 13 { kind = "close" }
+        }
+        if kind == "in" && now - watchLastIn < 250 { return Unmanaged.passUnretained(event) }
+        if kind == "in" { watchLastIn = now }
+        print("{\"k\":\"\(kind)\",\"t\":\(Int64(now))}")
+        fflush(stdout)
+        return Unmanaged.passUnretained(event)
+    }
+    guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .tailAppendEventTap, options: .listenOnly,
+                                      eventsOfInterest: mask, callback: cb, userInfo: nil) else {
+        fail("could not watch input (Accessibility / Input Monitoring permission)")
+    }
+    watchTap = tap
+    let src = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), src, .commonModes)
+    CGEvent.tapEnable(tap: tap, enable: true)
+    print("{\"k\":\"ready\"}"); fflush(stdout)
+    DispatchQueue.global().async {
+        while readLine(strippingNewline: true) != nil { }
+        exit(0)
+    }
+    CFRunLoopRun()
+    exit(0)
+}
+
 var args = Array(CommandLine.arguments.dropFirst())
 guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|ocr|windows|notch|call|dictate|fence") }
 let command = args.removeFirst()
@@ -945,8 +998,9 @@ case "look":
     cmdLook(app: app, max: max)
 
 case "press":
-    guard let s = args.first, let id = Int(s) else { fail("usage: press ID") }
-    cmdPress(id: id)
+    let quiet = boolFlag(&args, "--quiet")
+    guard let s = args.first, let id = Int(s) else { fail("usage: press ID [--quiet]") }
+    cmdPress(id: id, quiet: quiet)
 
 case "click":
     let right = boolFlag(&args, "--right")
@@ -976,12 +1030,30 @@ case "scroll":
     guard AXIsProcessTrusted() else { fail("accessibility permission not granted") }
     guard let ev = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1,
                            wheel1: Int32(dy.rounded()), wheel2: 0, wheel3: 0) else { fail("could not create scroll event") }
-    ev.post(tap: .cghidEventTap)
+    glimPost(ev)
     emit(["ok": true])
 
 case "open-app":
-    guard !args.isEmpty else { fail("usage: open-app NAME") }
-    cmdOpenApp(args.joined(separator: " "))
+    let background = boolFlag(&args, "--background")
+    guard !args.isEmpty else { fail("usage: open-app NAME [--background]") }
+    cmdOpenApp(args.joined(separator: " "), background: background)
+
+case "watch-input":
+    runWatchInput()
+
+case "idle":
+    // seconds since the last input as macOS counts it (Glim's own posted events count here too: the reason watch-input exists)
+    let any = CGEventType(rawValue: ~0)!
+    emit(["hid": CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: any),
+          "session": CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: any)] as [String: Any])
+
+case "post-test":
+    // real-Mac check only: post one harmless event (mouse moved to where the cursor already is), tagged as Glim or untagged
+    let untagged = boolFlag(&args, "--untagged")
+    let here = CGEvent(source: nil)?.location ?? .zero
+    guard let ev = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: here, mouseButton: .left) else { fail("no event") }
+    if untagged { ev.post(tap: .cghidEventTap) } else { glimPost(ev) }
+    emit(["ok": true, "tagged": !untagged] as [String: Any])
 
 case "ocr":
     cmdOcr(max: intFlag(&args, "--max", default: 4000))

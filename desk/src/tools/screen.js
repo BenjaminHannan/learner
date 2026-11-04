@@ -96,6 +96,9 @@ function createScreen(getSettings, resourcesPath, onLook, o) {
       return '\n' + note;
     } catch (e) { return ''; }
   }
+  // the label of element [id] in the last look (src/safety-levels.js reads "Send", "Buy", "Delete" buttons)
+  let lastElements = [];
+  const labelOf = (id) => { const e = lastElements.find((x) => x.id === Number(id)); return e ? String(e.title || e.value || '') : ''; };
   const withAfter = async (r, kind, signal, extra) => (typeof r === 'string' ? r + await after(kind, signal, extra) : r);
 
   const vis = () => { const v = getSettings().vision; return v === 'on' || v === true; };
@@ -106,6 +109,7 @@ function createScreen(getSettings, resourcesPath, onLook, o) {
     askPermissions: async () => run(['ask-permissions']),
     run: (args, signal) => run(args, signal),   // always-on senses: text-only subcommands (ocr, windows, look)
     screenshot,
+    labelOf,
     tools: {
       screen_look: async (a, ctx) => {
         const args = ['look'];
@@ -113,14 +117,15 @@ function createScreen(getSettings, resourcesPath, onLook, o) {
         const j = await run(args, ctx && ctx.signal);
         if (j.error) return { text: 'Error: ' + j.error, error: true };
         const text = formatLook(j);
-        lastLook = lookSummary(j);
+        lastLook = lookSummary(j); lastElements = Array.isArray(j.elements) ? j.elements.map((e) => ({ id: e.id, title: e.title, value: e.value })) : [];
         const shot = await screenshot(1280);
         if (onLook) onLook({ text, image: shot, data: j }, ctx);
         return vis() && shot ? { text, image: shot } : text;
       },
       screen_click: async (a, ctx) => {
         let j;
-        if (a.id !== undefined && a.id !== null) j = await run(['press', String(a.id)], ctx && ctx.signal);
+        // quiet (src/hands.js): accessibility press only, never the click fallback (no cursor move, no focus change)
+        if (a.id !== undefined && a.id !== null) j = await run(['press', String(a.id)].concat(a.quiet ? ['--quiet'] : []), ctx && ctx.signal);
         else if (a.x !== undefined && a.y !== undefined) j = await run(['click', String(a.x), String(a.y)].concat(a.double ? ['--double'] : []), ctx && ctx.signal);
         else return { text: 'Error: give id, or x and y', error: true };
         return withAfter(res(j, 'Clicked.'), 'click', ctx && ctx.signal);
@@ -129,7 +134,8 @@ function createScreen(getSettings, resourcesPath, onLook, o) {
       screen_key: async (a, ctx) => withAfter(res(await run(['key', Platform.mapKeys(process.platform, String(a.keys || ''))], ctx && ctx.signal), 'Pressed ' + a.keys + '.'), 'key', ctx && ctx.signal),
       open_app: async (a, ctx) => {
         if (isBrowserApp(a.name)) return { text: BROWSER_REFUSAL, error: true };
-        const r = res(await run(['open-app', String(a.name || '')], ctx && ctx.signal), 'Opened ' + a.name + '.');
+        // quiet (src/hands.js): open it in the background, without taking focus from Ben
+        const r = res(await run(['open-app', String(a.name || '')].concat(a.quiet ? ['--background'] : []), ctx && ctx.signal), 'Opened ' + a.name + (a.quiet ? ' in the background' : '') + '.');
         const want = String(a.name || '').toLowerCase().replace(/\.app$/, '');
         return withAfter(r, 'open', ctx && ctx.signal, (j) => (want && j.app && !String(j.app).toLowerCase().includes(want) ? 'WARNING: front app is "' + j.app + '", not "' + a.name + '"; it may not have opened' : ''));
       }

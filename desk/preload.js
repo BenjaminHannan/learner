@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('desk', {
   settings: { get: inv('settings:get'), set: inv('settings:set') },
   threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename'), feedback: inv('threads:feedback') },
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
+  safety: { get: inv('safety:get'), set: inv('safety:set'), undo: inv('safety:undo'), hands: inv('safety:hands') },   // I5 safety levels
+  onSafetyNotice: on('safety:notice'),
   call: { start: inv('call:start'), stop: inv('call:stop'), mute: inv('call:mute') },
   voice: { install: inv('voice:install'), onProgress: on('voice:install-progress') },
   onCall: on('call'),
