@@ -1,0 +1,8 @@
+[fake] tool call is streaming; Ben steers: "you have to use the google sso"
+[fake] tool ran: ["https://dresden.schoology.com/home/a/long/path/so/args/stream"] | cut events: 0
+[fake] the NEXT model call sees (system prompt omitted, long text shortened):
+  user      "get my assignments from dresden.schoology.com"
+  assistant "[tool_call browser_go] Opening your Schoology page."
+  tool      "URL: https://accounts.google.com/... | Title: Sign in - Google Accounts"
+  user      "(Ben sent this while you were working. What you already did above still stands: take his words into account and carry on from where you are; do not start over or repeat a plan.) you have to use the google sso"
+[fake] screen items: user:"get my assignments from dresden.schoology.com" | assistant:"Opening your Schoology page." | step:Opened dresden.schoology.com | user:"you have to use the google sso" | assistant:"Using the Google sign-in, as you said." | step:Check unavailable
