@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('desk', {
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   safety: { get: inv('safety:get'), set: inv('safety:set'), undo: inv('safety:undo'), hands: inv('safety:hands') },   // I5 safety levels
   onSafetyNotice: on('safety:notice'),
+  logins: { list: inv('logins:list'), remove: inv('logins:remove'), answer: inv('logins:answer'), add: inv('logins:add') },   // LOGIN1 saved logins (no passwords ever come back)
+  onLoginsOffer: on('logins:offer'),
+  onLoginsDialog: on('logins:dialog'),
   call: { start: inv('call:start'), stop: inv('call:stop'), mute: inv('call:mute') },
   voice: { install: inv('voice:install'), onProgress: on('voice:install-progress') },
   onCall: on('call'),

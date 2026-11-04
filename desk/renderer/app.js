@@ -528,6 +528,48 @@
     msgs.append(box); newBlock(); toBottom();
   }
   if (desk.onSafetyNotice) desk.onSafetyNotice(safetyNotice);
+  // LOGIN1: "Save this login so Glim can sign in for you next time?" after Ben signs in in Glim's browser (one tap). No password here.
+  function loginOffer(ev) {
+    if (!ev || !ev.token) return;
+    const box = el('div', 'notice sel login-offer'); box.dataset.token = ev.token;
+    box.append(el('b', null, 'Glim'), el('span', null, ' ' + (ev.update ? 'Update the saved login' : 'Save this login') + ' (' + ev.user + ') so Glim can sign in to ' + ev.host + ' for you next time? '));
+    const btns = el('div', 'btns');
+    const pick = async (choice) => {
+      const r = await desk.logins.answer(ev.token, choice);
+      btns.replaceWith(el('span', 'dim small', choice === 'save' ? (r && r.ok ? 'Saved in your keychain. Glim signs in to ' + ev.host + ' by itself now.' : 'Could not save it' + (r && r.error ? ': ' + r.error : '.')) : choice === 'never' ? 'Glim will not offer this for ' + ev.host + ' again.' : 'Not saved.'));
+      if (controls.savedLogins) controls.savedLogins.paint();
+    };
+    for (const [c, t, cls] of [['save', ev.update ? 'Update' : 'Save', ''], ['later', 'Not now', 'ghost'], ['never', 'Never for this site', 'ghost']]) { const b = el('button', cls, t); b.onclick = () => pick(c); btns.append(b); }
+    box.append(btns); msgs.append(box); newBlock(); toBottom();
+  }
+  if (desk.onLoginsOffer) desk.onLoginsOffer(loginOffer);
+  // LOGIN1: "save my Schoology login" -> a private box (the text never goes in the chat)
+  function loginDialog(d) {
+    d = d || {};
+    const old = document.getElementById('loginDialog'); if (old) old.remove();
+    const wrap = el('div'); wrap.id = 'loginDialog';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)';
+    const card = el('form'); card.style.cssText = 'background:var(--surface,#fff);color:var(--text,#111);padding:1.1rem 1.2rem;border-radius:.8rem;min-width:20rem;display:flex;flex-direction:column;gap:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.25)';
+    card.append(el('b', null, 'Save a login for Glim'), el('span', 'dim small', 'It goes to your keychain, never into the chat. Glim fills it in for you on this site only.'));
+    const mk = (ph, type, val, ac) => { const i = el('input'); i.placeholder = ph; i.type = type; i.value = val || ''; i.autocomplete = ac; i.spellcheck = false; return i; };
+    const site = mk('Site, e.g. dresden.schoology.com', 'text', d.site || '', 'off');
+    const user = mk('Username or email', 'text', '', 'off');
+    const pw = mk('Password', 'password', '', 'new-password');
+    const note = el('span', 'dim small');
+    const btns = el('div', 'btns'); const save = el('button', '', 'Save'); save.type = 'submit'; const cancel = el('button', 'ghost', 'Cancel'); cancel.type = 'button';
+    const close = () => { pw.value = ''; wrap.remove(); };
+    cancel.onclick = close;
+    card.onsubmit = async (e) => {
+      e.preventDefault();
+      const r = await desk.logins.add(site.value, user.value, pw.value);
+      if (r && r.ok) { close(); safetyNotice({ text: 'Saved. Glim can sign in to ' + r.host + ' as ' + r.user + ' by itself now.' }); if (controls.savedLogins) controls.savedLogins.paint(); }
+      else note.textContent = (r && r.error) || 'Could not save it.';
+    };
+    btns.append(save, cancel); card.append(site, user, pw, note, btns); wrap.append(card); document.body.append(wrap);
+    wrap.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    setTimeout(() => (site.value ? user : site).focus(), 30);
+  }
+  if (desk.onLoginsDialog) desk.onLoginsDialog(loginDialog);
   function addNotice(who, text) {
     const n = el('div', 'notice sel');
     const body = el('div', 'nbody atext'); body.innerHTML = md(text || ''); // a helper's report is markdown: no stray ** marks
@@ -1202,6 +1244,7 @@
     { group: 'Autonomy', rows: [
       { key: 'mode', type: 'seg', label: 'Main Glim', help: 'Ask first: shell commands and screen clicks/typing need your OK. Hands-off: only the danger list needs it.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { type: 'safety', label: 'Safety levels', help: 'Free: Glim just does it. Ask: one tap to say yes. Never: Glim will not do it. You can also just tell Glim, e.g. "let Glim delete files without asking". Mouse and keyboard: only after you have been away 2 minutes, after asking; touching them stops Glim at once.' },
+      { type: 'logins', label: 'Saved logins', help: 'Sites Glim can sign in to for you. The passwords stay in your keychain; Glim fills them in itself and never sees them. Sign in once in Glim\'s browser and it offers to save, or say "save my Schoology login".' },
       { key: 'alwaysAllow', type: 'always', label: 'Always allowed', help: 'Kinds of action you chose "Always allow" for. Risky commands always ask, whatever is listed here.' },
       { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
@@ -1426,11 +1469,24 @@
             for (const c of st.levels) {
               const row = el('div'); row.style.cssText = 'display:flex;justify-content:space-between;gap:.6rem;align-items:center';
               const seg = el('div', 'seg');
+              if (c.locked) { seg.append(el('span', 'dim small', 'Never (fixed)')); row.append(el('span', 'small', c.label), seg); bx.append(row); continue; }   // LOGIN1: keychain apps stay Never
               for (const [v, t] of [['free', 'Free'], ['ask', 'Ask'], ['never', 'Never']]) { const b = el('button', c.level === v ? 'on' : '', t); b.setAttribute('aria-pressed', String(c.level === v)); b.onclick = async () => { const r2 = await desk.safety.set(c.id, v); if (r2 && r2.ok) safetyNotice({ text: r2.notice, undo: r2.undo }); paint(); }; seg.append(b); }
               row.append(el('span', 'small', c.label), seg); bx.append(row);
             }
           };
           controls.safetyLevels = { paint }; ctl.append(bx);
+        } else if (r.type === 'logins') {   // LOGIN1: host + username, Remove. Never a password.
+          const bx = el('div'); bx.style.cssText = 'display:flex;flex-direction:column;gap:.3rem;align-items:stretch;min-width:18rem';
+          const paint = async () => {
+            const l = (await desk.logins.list()) || []; bx.textContent = '';
+            if (!l.length) bx.append(el('span', 's-note', 'None yet.'));
+            for (const it of l) {
+              const row = el('div'); row.style.cssText = 'display:flex;justify-content:space-between;gap:.6rem;align-items:center';
+              const rm = el('button', 'ghost', 'Remove'); rm.onclick = async () => { await desk.logins.remove(it.origin); paint(); };
+              row.append(el('span', 'small', it.host + ' · ' + it.user), rm); bx.append(row);
+            }
+          };
+          controls.savedLogins = { paint }; paint(); ctl.append(bx);
         } else if (r.type === 'always') {
           const note = el('div', 's-note'); const b = el('button', 'ghost', 'Forget all'); b.onclick = () => save({ alwaysAllow: [] }).then(paintSettings);
           controls[r.key] = { paint: () => { const l = settings.alwaysAllow || []; note.textContent = l.length ? l.map((k) => k.replace(/^shell:/, '').replace('screen', 'app clicks and typing')).join(', ') : 'Nothing yet.'; b.hidden = !l.length; } };
