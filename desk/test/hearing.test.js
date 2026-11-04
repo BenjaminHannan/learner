@@ -91,7 +91,7 @@ test('no always-on module writes images or audio to disk', () => {
   const root = path.join(__dirname, '..');
   const files = ['src/senses.js', 'src/alwayson.js', 'src/hearing.js', 'src/learnbutton.js', 'renderer/senses.js', 'renderer/learnbtn.js',
     // always-on v2 (pass mark 4 extended): the new modules
-    'src/glimvoice.js', 'src/speakometer.js', 'src/guesser.js'];
+    'src/glimvoice.js', 'src/speakometer.js', 'src/guesser.js', 'src/urges.js', 'src/memgauge.js', 'src/motepool.js'];
   const main = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
   const block = main.slice(main.indexOf('// ---- Always-on Premonition'), main.indexOf('function registerIpc() {'));
   assert.ok(block.length > 1000, 'found the always-on block of main.js');

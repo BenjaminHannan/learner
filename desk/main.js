@@ -144,7 +144,9 @@ let lastEar = '';
 setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
-  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } }
+  try { aoPool.tick(); } catch (e) { /* next second */ }
+  if (aoSenses && aoSenses.anyEnabled() && aoGaugeNow.level === 'red' && helpers && helpers.active.size) { aoGaugeNow = aoGauge.read(); if (aoGaugeNow.level === 'red') helpers.pauseForSleep('Paused: the Mac is short on memory'); }
+  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } try { aoUrgeTick(); } catch (e) { console.log('[alwayson] urges', e); } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
   if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
 }, 1000).unref();
@@ -1394,7 +1396,7 @@ function aoOnSurprise(s) {
   schedulePill();
 }
 aoObservers.push((e) => { if (aoSenses && aoSenses.anyEnabled()) getGuesser().observeEntry(e); });
-let aoCtxExtra = () => ({ surprise: aoGuesser ? aoGuesser.level() : 0 });   // urges join in phase 4
+let aoCtxExtra = () => ({ surprise: aoGuesser ? aoGuesser.level() : 0, urges: aoUrges ? aoUrges.view() : {} });
 function aoContext(extra) {
   const f = aoStuck.front(), cat = SpeakMod.categorize(f.app, f.title);
   let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
@@ -1416,6 +1418,7 @@ function aoSetup() {
   if (aoSenses) return;
   aoState = new SensesMod.AlwaysOnState(aoDir(), { onAdd: (e) => aoObserved(e) });
   aoMeter = new SpeakMod.SpeakOMeter({ dir: aoDir() });
+  aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
   aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
@@ -1457,10 +1460,10 @@ const aoBusy = () => benBusy() || !!(agent && agent.running) || Date.now() - las
 const aoNight = () => { if (sl.asleep || sl.waking) return true; const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); return inWindow(n, w.from, w.to); };
 // one short non-streamed request to the same gateway and model as chat's Fast pill (AlwaysOnMod.chatModel: Nanbeige on Ben's Mac). Marked test so the gateway keeps these background
 // prompts out of the diary the nightly sleep trains on: only the notes Glim chooses to save reach sleep (through memory).
-async function aoAsk(messages, signal) {
+async function aoAsk(messages, signal, opts) {
   const { buildChatBody, chatUrl } = require('./src/llm');
   const s = store.getSettings();
-  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: 220, temperature: 0.2, test: true });
+  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: (opts && opts.maxTokens) || 220, temperature: 0.2, test: true });
   const headers = { 'content-type': 'application/json', 'x-test': '1' };
   if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
   const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
@@ -1497,19 +1500,83 @@ const aoVoice = new GlimVoice.Voice({
 });
 // feedback -> the speak-o-meter: logged with the features the message went out with, one online step now, refit at night
 let aoOnOutcome = (m, kind) => { if (aoMeter && m.features) aoMeter.learn(m.features, kind, { sayId: m.id }); };
-function aoSay(text, d) { aoVoice.offer(text, { why: d && d.why, features: d && d.features }); }
+function aoSay(text, d) { aoVoice.offer(text, { why: d && d.why, features: d && d.features }); if (aoUrges) aoUrges.spoke(); if (aoState) aoState.logActivity('said', { text: String(text).slice(0, 120) }); }
 // the ear: 😴 resting · 📚 learning (+ Motes) · 💭 thinking · 😲 surprised, while always-on is on
 let aoEarExtra = () => ({});
 function aoEar() {
   if (!aoSenses || !aoSenses.anyEnabled()) return null;
   const lb = learnBtn && learnBtn.cur;
-  return GlimVoice.statusIcon({ now: Date.now(), asleep: sl.asleep, thinking: !!(aoLoop && aoLoop.inTick), surprisedAt: aoSurprise.at, surpriseWhat: aoSurprise.what,
-    learning: lb ? { topic: lb.topic, levels: [] } : null, motes: lb ? lb.ids.length : 0, ...aoEarExtra() });
+  return GlimVoice.statusIcon({ now: Date.now(), asleep: sl.asleep, thinking: !!(aoLoop && aoLoop.inTick) || !!aoPool.thinking(), thinkingAbout: aoPool.thinking(), gauge: aoGaugeNow.level, surprisedAt: aoSurprise.at, surpriseWhat: aoSurprise.what,
+    learning: lb ? { topic: lb.topic, levels: [] } : null, motes: (lb ? lb.ids.length : 0) + aoPool.count(), ...aoEarExtra() });
 }
 // "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
 function aoNote(text) { try { const r = memory.save(text, 'noticed'); if (!r.ok) console.log('[alwayson] note not saved:', r.error); } catch (e) { /* skipped */ } }
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
+// ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
+// Bored -> a batch of thinking Motes through chat's own model. The gauge decides how many: 🟢 + away + AC = full batch, 🟢 + busy = 2,
+// 🟡 = 1 (away) or 0, 🔴 / swap growing = 0. Ben chatting, typing, sleep or the night window stop every one at once.
+const UrgesMod = require('./src/urges'), GaugeMod = require('./src/memgauge'), PoolMod = require('./src/motepool');
+let aoUrges = null, aoShare = null;
+const aoRecent = {};   // topic (lower case) -> when a Mote last thought about it
+const aoGauge = new GaugeMod.MemGauge({ pressure: () => AlwaysOnMod.macPressure() });
+let aoGaugeNow = { level: 'green', pressure: 1, swapGrowMB: 0 };
+function aoMoteGate() {
+  if (!aoSenses || !aoSenses.anyEnabled()) return { budget: 0, why: 'off' };
+  if (sl.asleep || sl.waking) return { budget: 0, why: 'asleep' };
+  if (aoBusy()) return { budget: 0, why: 'chat' };
+  try { if (aoNight()) return { budget: 0, why: 'night' }; } catch (e) { /* not known: carry on */ }
+  aoGaugeNow = aoGauge.read();
+  let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
+  const budget = GaugeMod.budget({ gauge: aoGaugeNow.level, away: idleS >= 120, onAC: !onBattery(), chatting: false });
+  return { budget, why: budget ? null : aoGaugeNow.level === 'red' ? 'memory' : 'busy', gauge: aoGaugeNow.level };
+}
+const MOTE_SYSTEM = 'You are one of Glim\'s Motes, thinking quietly about one topic while Ben is busy. Nobody sees this but Glim. '
+  + 'Reply with ONE JSON object and nothing else: {"claims": [up to 3 short, specific statements you believe are true about the topic], "question": "one thing about it you are not sure of" or null}. '
+  + 'Only claims a website could confirm. No opinions, no advice.';
+const MOTE_WHY = { learn: 'Ben asked you to learn this.', day: 'This came up on Ben\'s screen today.', wonder: 'It is on your wonder list (something you did not understand).' };
+let aoMotePrompt = (job) => [{ role: 'system', content: MOTE_SYSTEM }, { role: 'user', content: 'Topic: ' + job.topic + '\n' + (MOTE_WHY[job.kind] || '') + '\nAnswer with the JSON object only.' }];
+let aoMoteClaims = (job, claims) => { if (aoState) aoState.logActivity('thought', { topic: job.topic, claims: claims.length }); };   // phase 5 sends claims to the truth check
+function aoMoteResult(job, r) {
+  aoRecent[job.topic.toLowerCase()] = Date.now();
+  if (!r) { if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: false }); return; }
+  if (r.question && aoState && aoState.addWonder(r.question, 'a Mote was unsure while thinking about ' + job.topic) && aoUrges) aoUrges.wonder();
+  if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: true, minutes: Math.max(0.1, (Date.now() - job.at) / 60000) });
+  aoMoteClaims(job, r.claims || []);
+}
+const aoPool = new PoolMod.MotePool({ ask: (m, sig) => aoAsk(m, sig, { maxTokens: 350 }), gate: aoMoteGate, prompt: (job) => aoMotePrompt(job),
+  onResult: (job, r) => aoMoteResult(job, r), onChange: () => schedulePill(), log: (...a) => console.log('[alwayson]', ...a) });
+let aoLearnTopics = () => (learnBtn && learnBtn.cur ? [learnBtn.cur.topic] : []);
+function aoDayTopics() {
+  const out = []; const e = aoStuck.error(); if (e) out.push('what causes this error and how to fix it: ' + e.text);
+  if (aoState) for (const x of aoState.surprises.slice(-3).reverse()) if (x.stream !== 'app') out.push(x.what);
+  if (aoState && aoState.focus && aoState.focus.topic) out.push(aoState.focus.topic);
+  return out;
+}
+// every minute: urges fill or drain; a bored Glim starts a batch; something worth telling may go to the speak-o-meter
+function aoUrgeTick() {
+  if (!aoUrges || !aoSenses || !aoSenses.anyEnabled()) return;
+  aoUrges.tick({ fresh: aoState.fresh().length > 0, chatting: !!(agent && agent.running) || Date.now() - benLastTurn < 10 * 60000, wonder: aoState.wonder.length });
+  aoState.urges = aoUrges.view(); aoState.save();
+  if (aoUrges.isBored() && !aoPool.count()) {
+    const g = aoMoteGate();
+    if (g.budget > 0) {
+      const topics = UrgesMod.chooseTopics({ learn: aoLearnTopics(), day: aoDayTopics(), wonder: aoState.wonder.slice().reverse().map((w) => w.text), recent: aoRecent }, g.budget);
+      if (topics.length && aoPool.startBatch(topics)) { aoUrges.studied(topics.length); aoState.logActivity('bored', { motes: topics.length, gauge: g.gauge, topics: topics.map((t) => t.topic.slice(0, 60)) }); }
+    }
+  }
+  aoMaybeShare();
+}
+// 📣 share: something worth telling waits until the speak-o-meter AND the v1 limits (Ben first, pressure, night, 20 min) allow it
+function aoMaybeShare() {
+  if (!aoShare || !aoUrges || aoUrges.share < 0.5 || !aoLoop || !aoMeter) return false;
+  if (aoLoop.gate() || !aoLoop.sayAllowed({ say: aoShare.text })) return false;
+  const d = aoMeter.decide(aoContext());
+  if (!d.speak) return false;
+  aoState.spoke(); aoSay(aoShare.text, { why: 'share', features: d.x }); aoUrges.spoke(); aoShare = null;
+  return true;
+}
+function aoWorthTelling(text, w) { if (!aoUrges) return; aoShare = { text: String(text).slice(0, 300), at: Date.now() }; aoUrges.worthTelling(w); }
 const AlwaysOnMod = require('./src/alwayson');
 // start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
 function aoApply() {
@@ -1579,7 +1646,7 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
-    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat');
+    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
@@ -1618,7 +1685,7 @@ function registerIpc() {
   h('senses:set', (patch) => setSenses(patch || {}));
   h('senses:askPerms', () => askSensesPerms());
   h('alwayson:feedback', (id, kind) => { const m = aoVoice.feedback(id, ['up', 'down', 'used'].includes(kind) ? kind : 'down'); return { ok: !!m }; });
-  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); });
+  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); aoPool.stopAll('typing'); });
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });

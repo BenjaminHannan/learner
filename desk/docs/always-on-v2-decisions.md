@@ -48,3 +48,19 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
 - **Nightly retune** of the guesser = counts × 0.8 (old habits fade so it can follow a new routine).
 - **Known flaky test**: `first-reply thinking cap` (agent.test.js) fails about 1 run in 3 on its own; agent.js is untouched by
   this work. The v1 brief listed it as a known failure.
+
+## Phase 4 (urges + bored-mode Motes + memory gauge)
+- **Batching: not available.** Ben's server (stock mlx_lm `plain_mlx_lm_big.py` behind the 8090 gateway) serves one request at a
+  time, so a "batch" of Motes is sent **back-to-back**, one request after another, with the gate re-checked between them.
+  `MotePool` takes an optional `askBatch` for a server that can batch; nothing supplies one today.
+- **Bored-mode Motes are light "thinking" requests** (no tools, no web): JSON `{claims, question}`. Claims go to the truth check
+  (phase 5), the question to the wonder list. The Learn button's web-studying Motes (v1 helpers) are separate and unchanged.
+- **Budget**: 🟢 + away (2+ min idle) + AC = 4; 🟢 otherwise = 2; 🟡 = 1 if away, else 0; 🔴 (pressure critical) or swap grew
+  ≥ 256 MB in ~30 s = 0. Also 0 while Ben chats/types/is in a call, during sleep, and in the night window (quiet hours, and
+  sleep needs the memory).
+- **Stopping**: `agent:send` and every composer keystroke ping call `stopAll()` at once (aborts the request in flight); the 1 s
+  clock calls `tick()`, which stops all when the gate says 0. Under 🔴 the Learn button's helper Motes are paused too.
+- **Urges**: bored fills 0→1 in a quiet 30 min, drains while Ben chats; starts a batch at ≥ 0.6. Curious = 0.15 × wonder-list
+  size (decays over ~6 h). Share +0.4 per thing worth telling, fades over ~2 h; it speaks only if the speak-o-meter and the v1
+  limits allow, then resets.
+- **Second flaky test**: `memory: the block is a snapshot…` failed once under `--test-concurrency=2`, passed 4/4 alone.
