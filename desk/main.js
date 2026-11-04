@@ -238,6 +238,7 @@ function startLearn(topic, count, hours) {
   return { ok: made.length > 0, count: made.length, topic, error };
 }
 const pendingLearn = new Map();
+let learning = null;   // the Learn button's study: {topic, ids, since} (src/learnbtn wiring below)
 const isLearnAsk = (t, text) => !!t && !t.helper && LEARN_ASK.test(String(text || ''));
 const isGoalsAnswer = (t) => !!t && !t.helper && (t.messages || []).length === 1 && t.messages[0].role === 'assistant' && t.messages[0].content === GOALS_ASK;
 function startSleep(o) {
@@ -1287,6 +1288,7 @@ async function applySettings(patch) {
 
 async function afterFirstPaint() {
   if (afterFirstPaint.done) return;
+  try { if (!E2E) aoApply(); } catch (e) { console.error('[alwayson] start', e); }
   afterFirstPaint.done = true;
   timing.deferred = Date.now(); timing.browsersAtPaint = browsers.size; timing.helpersTimerAtPaint = !!(helpers && helpers.timer);
   const s = store.getSettings();
@@ -1390,9 +1392,54 @@ async function askSensesPerms() {
   try { if (process.platform === 'darwin' && aoSenses && aoSenses.consent.senses.hearing) r.microphone = await systemPreferences.askForMediaAccess('microphone'); } catch (e) { /* shown as missing */ }
   return r;
 }
-// start / stop what the consent asks for (phase 2 adds the loop, phase 4 hearing)
-function aoApply() { /* filled in below */ }
+// Ben first: typing in the last 15 s, a chat reply, a call or dictation all hold the always-on loop (and cancel a tick in flight)
+const aoBusy = () => benBusy() || !!(agent && agent.running) || Date.now() - lastTyping < 15000 || !!call || calling || !!dictation || dictStarting;
+const aoNight = () => { if (sl.asleep || sl.waking) return true; const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); return inWindow(n, w.from, w.to); };
+// one short non-streamed request to the same gateway as chat (model lfm3-fast). Marked test so the gateway keeps these background
+// prompts out of the diary the nightly sleep trains on: only the notes Glim chooses to save reach sleep (through memory).
+async function aoAsk(messages, signal) {
+  const { buildChatBody, chatUrl } = require('./src/llm');
+  const s = store.getSettings();
+  const body = buildChatBody({ model: s.alwaysOnModel || AlwaysOnMod.MODEL, messages, stream: false, maxTokens: 220, temperature: 0.2, test: true });
+  const headers = { 'content-type': 'application/json', 'x-test': '1' };
+  if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
+  const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
+  const stop = () => ctl.abort(); signal.addEventListener('abort', stop);
+  try {
+    const r = await fetch(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal });
+    if (!r.ok) throw new Error('gateway ' + r.status);
+    const j = await r.json();
+    return (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
+  } finally { clearTimeout(kill); signal.removeEventListener('abort', stop); }
+}
+function mainChatId() { const t = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); return t ? t.id : null; }
+function aoSay(text) {
+  const id = mainChatId();
+  if (id && !(agent && agent.running)) {
+    const t = store.loadThread(id);
+    if (t) { t.items.push({ t: 'assistant', text, ts: Date.now(), alwaysOn: true }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
+  }
+  notify('Glim', text, id);
+  pillState.flash && pillState.flash(text);
+}
+// "note": the existing notes path (memory.md), which the nightly sleep reads with the day's chats
+function aoNote(text) { try { const r = memory.save(text, 'noticed'); if (!r.ok) console.log('[alwayson] note not saved:', r.error); } catch (e) { /* skipped */ } }
+// "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
+function aoLearn(topic) { if (learning) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
+const AlwaysOnMod = require('./src/alwayson');
+// start / stop what the consent asks for: the loop runs while always-on is on and any sense is on
+function aoApply() {
+  aoSetup();
+  if (!aoLoop) aoLoop = new AlwaysOnMod.AlwaysOn({ senses: aoSenses, state: aoState, ask: aoAsk,
+    deliver: { say: aoSay, note: aoNote, learn: aoLearn },
+    gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
+    log: (...a) => console.log('[alwayson]', ...a) });
+  if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
+  aoHearingApply();
+}
+function aoHearingApply() { /* phase 4 */ }
 
+const hp0 = (id) => !!(helpers && helpers.byThread(id));
 function registerIpc() {
   const h = (name, fn) => ipcMain.handle(name, async (e, ...a) => fn(...a));
   h('update:status', () => updater ? updater.state : null);
@@ -1431,7 +1478,8 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
-    sl.lastActive = Date.now();
+    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat');
+    if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model
     if (sl.asleep || sl.waking) return { sleeping: true, error: sl.waking ? 'Glim is waking up. Try again in a moment.' : 'Glim is asleep. Wake it first, then I can take this.' };
     const hp = helpers.byThread(threadId);
