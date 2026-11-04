@@ -124,6 +124,11 @@ class Config:
     max_rated: int = 12           # thumbs-rated turns carded per night (x work scale), oldest first
     rated_tokens: int = 300
     use_habits: bool = True       # the same tool job on habit_min+ turns -> habit cards
+    use_insight: bool = True      # T5 sleep insight (insight.py): the Desk's stuck problems + related memories -> K mixes, truth-checked; verified -> insight cards
+    insight_k: int = 4            # candidates per stuck problem (each mixes a different pair of recalled memories)
+    insight_m: int = 6            # related memories recalled per stuck problem
+    max_insight: int = 6          # stuck problems tried per night (x work scale)
+    insight_tokens: int = 240
     habit_min: int = 3
     use_userdata: bool = True     # the Desk's saved notes (memory.json) and Keeping track of list (tracking.md)
 
@@ -816,6 +821,67 @@ class Sleeper:
             if text not in self.N.setdefault("lessons", []):
                 self.N["lessons"].append(text)
             st["lessons_kept"] += 1
+
+    def insight_stage(self, d: int, st: Counter) -> None:
+        """T5 sleep insight (insight.py): for each checkable stuck problem from the Desk, recall related memories, ask the base model for
+        insight_k candidates (each mixes a different pair), and keep the first one whose answer matches the executor / puzzle-generator truth
+        hash. Only verified candidates become cards; unverified ones are counted and dropped. Results -> userData/alwayson-insight.json."""
+        if not self.cfg.use_insight or not self.cfg.use_userdata:
+            return
+        from . import insight as I_mod
+        ud = self.paths.userdata_dir
+        entries = I_mod.read_stuck(ud)
+        st["insight_stuck"] = len(entries)
+        res = {"written_at": round(time.time(), 3), "date": self.N.get("date"), "night": d, "tried": [], "clicked": [], "no_truth": 0, "checks": 0, "unverified_dropped": 0}
+        todo = []
+        for e in entries:
+            if not I_mod.checkable(e):
+                res["no_truth"] += 1
+                continue
+            it = self.items.get("insight|" + str(e["id"]))
+            if it and not it.dead:
+                res["clicked"].append({"id": e["id"], "problem": str(e["problem"])[:300], "night": it.born, "earlier": True})
+                continue
+            todo.append(e)
+        todo = todo[:self.sc(self.cfg.max_insight)]
+        st["insight_no_truth"] = res["no_truth"]
+        if todo:
+            mems = [it.para[0] if it.para else it.fact for it in self.items.values() if not it.dead and it.kind != "insight" and (it.para or it.kind == "fact")]
+            k = max(1, int(self.cfg.insight_k))
+            prompts, owners = [], []
+            for e in todo:
+                rec = [t for _, t in I_mod.recall(str(e["problem"]) + " " + str(e.get("context") or ""), mems, max(1, int(self.cfg.insight_m)))]
+                for j, mix in enumerate(I_mod.pairs(rec, k)):
+                    prompts.append(I_mod.insight_prompt(self.R, e, mix))
+                    owners.append((e, j, len(rec)))
+            raw = self.gen(prompts, self.cfg.insight_tokens, sample=True, salt="insight")
+            done = set()
+            for (e, j, nrec), txt in zip(owners, raw):
+                if e["id"] in done:
+                    continue
+                c = I_mod.parse_candidate(txt)
+                if c is None:
+                    st["insight_parse_fail"] += 1
+                    continue
+                res["checks"] += 1
+                if not I_mod.verified(e, c["answer"]):   # the truth decides; the model never does
+                    res["unverified_dropped"] += 1
+                    continue
+                if self.leaky(c["answer"]) or self.leaky(str(e["problem"])):
+                    st["insight_dropped_test_leak"] += 1
+                    continue
+                para, qa = I_mod.insight_cards(e, c, self.N.get("date") or "", self.who)
+                key = "insight|" + str(e["id"])
+                self.items[key] = Item(key, "Glim", c["answer"][:60], "insight", d, first=d, days=1, nment=1, para=para, qa=qa, seen_ment=1,
+                                       dreamed_night=d, kind="insight", source="stuck list %s (%s), mix %d of %d, %d memories recalled" % (e.get("source"), e.get("kind"), j + 1, k, nrec))
+                done.add(e["id"])
+                res["clicked"].append({"id": e["id"], "problem": str(e["problem"])[:300], "night": d, "mix": j + 1})
+            res["tried"] = [e["id"] for e in todo]
+        st["insight_tried"] = len(res["tried"])
+        st["insight_clicked"] = sum(1 for c in res["clicked"] if not c.get("earlier"))
+        st["insight_checks"] = res["checks"]
+        st["insight_unverified_dropped"] = res["unverified_dropped"]
+        I_mod.write_results(ud, res)
 
     def rated_stage(self, week: dict, d: int, st: Counter) -> None:
         """Flashcards from every turn Ben rated (thumbs up or down), oldest first, at most max_rated x s a night. The base model reads the chat
@@ -1582,6 +1648,11 @@ class Sleeper:
             st_all["dream"] = dict(st)
             st = Counter()
             self.lessons_stage(week, d, st)
+            try:   # lead 2026-11-04: insight is new and has never run on the real model; a failure skips it, never ends the night
+                self.insight_stage(d, st)
+            except Exception as e:
+                st["insight_error"] += 1
+                self.log("[night] insight skipped: %r" % (e,))
             self.rated_stage(week, d, st)
             self.extras(week, d, st)
             if "lesson_holdout_done" not in N:
