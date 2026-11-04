@@ -27,7 +27,7 @@ function bedwarsFyi(ops) {
       const t = mtime(f);
       if (!Number.isFinite(t)) continue;
       const when = new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      return [{ id: 'bedwars', icon: '🎮', title: 'Bedwars bot project', line: 'Its notes were last updated ' + when + '. Nothing for you to do.' }];
+      return [{ id: 'bedwars', icon: 'game', title: 'Bedwars bot project', line: 'Its notes were last updated ' + when + '. Nothing for you to do.' }];
     }
   } catch (e) { /* none */ }
   return [];
@@ -41,11 +41,12 @@ function paths(home, env) {
   return { home, ops, mlx, files: [path.join(home, 'summary.md'), path.join(home, 'inbox.md'), path.join(home, 'events.jsonl'), path.join(home, 'status.json'), path.join(mlx, 'nights.jsonl')] };
 }
 
-// o: { home, tracked: () => [...], contacts?: () => [...], env?, now? } -> the input for buildDashboard
+// o: { home, tracked: () => [...], contacts?: () => [...], overrides?: () => ({notJunk:[..]}), env?, now? } -> the input for buildDashboard
 function readInput(o) {
   const p = paths(o.home, o.env);
   let tracked = []; try { tracked = (o.tracked && o.tracked()) || []; } catch (e) { /* no list */ }
   let contacts = []; try { contacts = (o.contacts && o.contacts()) || []; } catch (e) { /* none */ }
+  let overrides = { notJunk: [] }; try { overrides = (o.overrides && o.overrides()) || overrides; } catch (e) { /* none */ }
   return {
     now: o.now || Date.now(),
     summary: readText(path.join(p.home, 'summary.md'), 200000),
@@ -53,7 +54,7 @@ function readInput(o) {
     events: jsonLines(readText(path.join(p.home, 'events.jsonl'), 400000), 2000),
     status: readJson(path.join(p.home, 'status.json')) || {},
     nights: jsonLines(readText(path.join(p.mlx, 'nights.jsonl'), 400000), 30),
-    tracked, contacts,
+    tracked, contacts, overrides, user: o.user || '',
     fyi: bedwarsFyi(p.ops)
   };
 }

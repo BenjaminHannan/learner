@@ -51,6 +51,7 @@ const Uses = require('./renderer/uses');
 const { createMemory } = require('./src/memory');
 const { createTracking } = require('./src/tracking');
 const DashSrc = require('./src/dashboard-sources');
+const DashOver = require('./src/dashboard-overrides');
 const { Rhythm } = require('./src/rhythm');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
@@ -325,7 +326,7 @@ async function wakeNow() {
   return { ok: true };
 }
 // "Important updates" dashboard: model for the window, and a push when a source file changes so an open dashboard updates itself.
-function dashOpts() { return { home: sleeper.home, tracked: () => (tracking ? tracking.list() : []) }; }
+function dashOpts() { return { home: sleeper.home, tracked: () => (tracking ? tracking.list() : []), overrides: () => DashOver.load(app.getPath('userData')), user: (() => { try { const n = require('./src/user').NAME; return n === 'the user' ? '' : n; } catch (e) { return ''; } })() }; }
 function dashboardModel() {
   try { return DashSrc.getDashboard(dashOpts()); }
   catch (e) { console.log('[dashboard] ' + (e && e.message || e)); return null; }
@@ -1463,6 +1464,8 @@ function registerIpc() {
   h('sleep:summary', () => sleeper.readSummary());
   // the "Important updates" dashboard: built fresh from the files each time it is asked (read-only; src/dashboard.js)
   h('dashboard:get', () => dashboardModel());
+  // "Put all back" on the hidden-junk row (and its undo): a correction saved in userData/dashboard-overrides.json; mail itself is never touched
+  h('dashboard:override', (op, keys) => DashOver.apply(app.getPath('userData'), op, keys));
   // "Learn" button: a Mote goes off to study a topic quietly; sleep trains its notes and fact cards in overnight.
   h('helpers:pause', (id) => { helpers.pause(id); return true; });
   h('helpers:delete', (id) => helpers.remove(id));
@@ -1535,7 +1538,7 @@ function registerIpc() {
     return screen.askPermissions();
   });
   h('system:open', (pane) => {
-    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone' };
+    const urls = { accessibility: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone', automation: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Automation' };
     if (urls[pane]) { try { shell.openExternal(urls[pane]); } catch (e) { /* not on a Mac */ } }
     return true;
   });

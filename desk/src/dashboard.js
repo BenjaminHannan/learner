@@ -1,15 +1,17 @@
 'use strict';
 // "Important updates" dashboard: the DATA side. Pure functions only (no Electron, no files, no clock unless passed in), so a
 // new look can be dropped in later without touching any of this. buildDashboard(input) returns a plain model:
-//   { hero: {needs, title, sub}, needs: [item], done: [item], worth: [item], counts: {junk, handled, needs}, signature, generatedAt }
-//   item = { id, icon, title, tag: {text, tone}, lines: [short strings], list?: [strings], details?: [raw strings], dim?: true }
-//   tone is one of green | blue | amber | grey | red.
-// Real data only: a card with nothing real behind it is simply not there. src/dashboard-sources.js reads the files; the
-// view (renderer/dashboard.js) draws the model.
+//   { hero: {needs, title, sub, next}, items: [item], needs, worth, done, quiet, counts: {junk, handled, needs}, checkedAt, signature, generatedAt }
+//   item = { id, kind, level, icon, title, meta, metaTone ('soon' | ''), sub, facts: [short strings], why, createdAt (ms | null),
+//            actions: [action], quick: [action] (needs-you rows only, always visible), list?: [strings], details?: [raw strings] }
+//   action = { label, primary?, kind: 'override' | 'system', op/keys (override) or pane (system), toast?, undo?: action }
+//   level is needs | worth | done | quiet: the four sections, in urgency order. icon is a name the view draws as a line icon.
+// Real data only: a row with nothing real behind it is simply not there, and an action is only listed when the app can really do it.
+// src/dashboard-sources.js reads the files; the view (renderer/dashboard.js) draws the model.
 //
 // input: { now (ms), summary (summary.md text), inbox (inbox.md text), mail ([{sender,address,subject,reason,ts,headers}]),
-//          events ([events.jsonl objects]), status (status.json), nights ([nights.jsonl objects]),
-//          tracked ([{what,until,source}]), contacts ([names / addresses Ben writes to]), fyi ([{icon,title,line}]), progress ([{id,title,line}]) }
+//          events ([events.jsonl objects]), status (status.json), nights ([nights.jsonl objects]), overrides ({notJunk: [mail keys]}),
+//          tracked ([{what,until,source,added}]), contacts ([names / addresses Ben writes to]), fyi ([{icon,title,line}]), progress ([{id,title,line}]) }
 
 // ---------------------------------------------------------------- small helpers
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -203,59 +205,104 @@ function groupErrors(input, sum) {
   return out.sort((a, b) => order[a.key] - order[b.key]);
 }
 
-function errorItem(grp) {
-  const base = { id: 'fix:' + grp.key, icon: '🔧', details: grp.raw.slice(0, 6), tag: { text: 'retrying', tone: 'blue' } };
+// ---------------------------------------------------------------- one row per event
+const mkItem = (level, o) => ({ level, kind: o.kind || level, icon: o.icon, id: o.id, title: o.title, meta: o.meta || '', metaTone: o.metaTone || '', sub: o.sub || '',
+  facts: o.facts || [], why: o.why || '', createdAt: Number.isFinite(o.createdAt) ? o.createdAt : null, actions: o.actions || [], quick: o.quick || [],
+  ...(o.list ? { list: o.list } : {}), ...(o.details && o.details.length ? { details: o.details } : {}) });
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const clock = (ms) => { const d = new Date(ms); let h = d.getHours(); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + pad(d.getMinutes()) + ' ' + ap; };
+// "4:52 pm" for today, "Nov 2" for an earlier day ('' when the time is not known)
+const whenShort = (ms, now) => (Number.isFinite(ms) ? (ymd(ms) === ymd(now) ? clock(ms) : niceDate(ymd(ms))) : '');
+const weekday = (ymdStr) => WEEKDAYS[new Date(ymdStr + 'T12:00:00').getDay()];
+
+function errorItem(grp, now) {
+  const base = { id: 'fix:' + grp.key, kind: 'autofix', icon: 'wrench', details: grp.raw.slice(0, 6), meta: whenShort(grp.lastTs, now), createdAt: grp.lastTs,
+    why: 'Premonition retries problems on its own. The exact error text is under Details.' };
   if (grp.key === 'sleep') {
-    if (grp.resolved) return { ...base, title: 'Sleep had a hiccup, then worked again', lines: ['It fixed itself.'], tag: { text: 'auto-fixed', tone: 'blue' } };
+    if (grp.resolved) return mkItem('done', { ...base, title: 'Sleep had a hiccup, then worked again', sub: 'It fixed itself.' });
     const n = grp.nights || 1;
-    return { ...base, title: n > 1 ? "Sleep couldn't train for " + n + ' nights; retrying automatically' : "Sleep couldn't train this time; retrying automatically",
-      lines: ['Nothing is lost. It saves its place and tries again on its own.'] };
+    return mkItem('done', { ...base, title: n > 1 ? "Sleep couldn't train for " + n + ' nights; retrying automatically' : "Sleep couldn't train this time; retrying automatically",
+      sub: 'Nothing is lost. It saves its place and tries again on its own.', facts: ["I'll try again at the next sleep."] });
   }
-  if (grp.key === 'mail') return { ...base, title: 'Checking your mail was slow ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; tried again on its own', lines: ['No mail was touched.'] };
-  if (grp.key === 'disk') return { ...base, title: 'The Mac ran short of disk space ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; tried again on its own', lines: ['If it keeps happening, free up some space.'] };
-  if (grp.key === 'calendar') return { ...base, title: "Couldn't look at your calendar " + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; retrying automatically', lines: ['Nothing was changed.'] };
-  return { ...base, title: 'Something hiccuped ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; retrying automatically', lines: ['It is trying again on its own.'] };
+  if (grp.key === 'mail') return mkItem('done', { ...base, title: 'Checking your mail was slow ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; tried again on its own', sub: 'No mail was touched.' });
+  if (grp.key === 'disk') return mkItem('done', { ...base, title: 'The Mac ran short of disk space ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; tried again on its own', sub: 'If it keeps happening, free up some space.' });
+  if (grp.key === 'calendar') return mkItem('done', { ...base, title: "Couldn't look at your calendar " + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; retrying automatically', sub: 'Nothing was changed.' });
+  return mkItem('done', { ...base, title: 'Something hiccuped ' + (grp.count > 1 ? plural(grp.count, 'time') : 'once') + '; retrying automatically', sub: 'It is trying again on its own.' });
 }
 
 // ---------------------------------------------------------------- the model
-function whenTag(days) {
-  if (days <= 0) return 'today';
+function deadlineMeta(days, until) {
+  if (days < 0) return 'late';
+  if (days === 0) return 'today';
   if (days === 1) return 'tomorrow';
-  return 'in ' + days + ' days';
+  return weekday(until) + ' · ' + days + ' days';
 }
+const nextWord = (days, until) => (days <= 0 ? 'today' : days === 1 ? 'tomorrow' : weekday(until));
 
+const permPane = (perm) => (/screen/i.test(perm) ? 'screen' : /access/i.test(perm) ? 'accessibility' : /mic/i.test(perm) ? 'microphone' : 'automation');
+const topReasons = (rows, k) => {
+  const c = new Map();
+  for (const r of rows) for (const s of r.c.signals) c.set(s, (c.get(s) || 0) + 1);
+  return [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, k).map(([s, n]) => s + ' (' + n + ')');
+};
+const mailList = (rows) => {
+  const list = rows.slice(0, 8).map((r) => (r.m.sender ? displayName(r.m) + ': ' : '') + clip(r.m.subject, 70));
+  if (rows.length > 8) list.push('…and ' + (rows.length - 8) + ' more');
+  return list;
+};
+
+// input.overrides: { notJunk: [mail keys] } from src/dashboard-overrides.js. Mail Ben put back is never hidden again until he undoes it.
 function buildDashboard(input) {
   input = input || {};
   const now = Number.isFinite(input.now) ? input.now : Date.now();
   const today = ymd(now);
   const sum = parseSummary(input.summary);
-  const needs = [], done = [], worth = [];
+  const needs = [], done = [], worth = [], quiet = [];
   let handled = 0;
+  const notJunk = new Set((input.overrides && input.overrides.notJunk) || []);
 
   // ---- email: junk is hidden and counted; real people go to "worth knowing"; "needs you" only for a person + something urgent
   const contacts = input.contacts || [];
   const mail = collectMail(input, sum);
-  const junk = [], people = [], unsure = [];
+  const junk = [], people = [], unsure = [], putBack = [];
   for (const m of mail) {
     const c = classifyMail(m, contacts);
-    const row = { m, c };
-    if (c.junk) junk.push(row); else if (c.personal) people.push(row); else unsure.push(row);
+    const row = { m, c, key: m.subject + '|' + (m.sender || '') };
+    if (c.junk && notJunk.has(row.key)) putBack.push(row);
+    else if (c.junk) junk.push(row); else if (c.personal) people.push(row); else unsure.push(row);
   }
   if (junk.length) {
     handled += junk.length;
-    const list = junk.slice(0, 8).map((r) => (r.m.sender ? displayName(r.m) + ': ' : '') + clip(r.m.subject, 70));
-    if (junk.length > 8) list.push('…and ' + (junk.length - 8) + ' more');
-    done.push({ id: 'junk', icon: '🧹', title: 'Hid ' + plural(junk.length, 'junk email'), tag: { text: 'hidden', tone: 'grey' }, lines: ['Ads and automatic mail. You do not need to read these.'], list });
+    const keys = junk.map((r) => r.key);
+    const reasons = topReasons(junk, 3);
+    const newest = Math.max(...junk.map((r) => (Number.isFinite(r.m.ts) ? r.m.ts : -Infinity)));
+    done.push(mkItem('done', { id: 'junk', kind: 'junk_batch', icon: 'filter', title: 'Hid ' + plural(junk.length, 'junk email'), meta: whenShort(newest, now),
+      sub: 'Ads and automatic mail. You do not need to read these.',
+      facts: ['I only hide them here. Nothing in your mailbox was changed or deleted.'],
+      why: 'Fixed rules, not a guess about you' + (reasons.length ? ': ' + reasons.join(', ') : '') + '. School addresses, replies and people you write to count against hiding.',
+      createdAt: newest, list: mailList(junk),
+      actions: [{ label: 'Put all back', kind: 'override', op: 'unhide', keys,
+        toast: junk.length === 1 ? 'Put 1 email back in Worth knowing.' : 'Put ' + junk.length + ' emails back in Worth knowing.', undo: { kind: 'override', op: 'rehide', keys } }] }));
   }
   for (const { m, c } of people) {
     const urgent = RX.urgent.test(m.subject) && !RX.emoji.test(m.subject);
-    const it = { id: 'mail:' + m.subject, icon: '✉️', title: displayName(m) + ': ' + clip(m.subject, 90), tag: { text: urgent ? 'needs you' : 'read', tone: urgent ? 'red' : 'amber' },
-      lines: [urgent ? 'Looks like it wants an answer soon.' : 'From a real person. You can read it later.'] };
+    const it = mkItem(urgent ? 'needs' : 'worth', { id: 'mail:' + m.subject, kind: 'email', icon: urgent ? 'reply' : 'mail', title: m.sender ? displayName(m) : clip(m.subject, 90),
+      meta: whenShort(m.ts, now), sub: m.sender ? clip(m.subject, 90) : '', createdAt: m.ts,
+      facts: [urgent ? 'Looks like it wants an answer soon.' : 'From a real person. You can read it later.'],
+      why: 'It looks like it came from a real person' + (c.signals.length ? ' (' + c.signals.join(', ') + ')' : '') + (urgent ? ', and the subject has an urgent word.' : '.') });
     (urgent ? needs : worth).push(it);
   }
   if (unsure.length) {
-    worth.push({ id: 'mail:maybe', icon: '✉️', title: plural(unsure.length, 'email') + ' I was not sure about', tag: { text: 'maybe', tone: 'grey' },
-      lines: ['Not clearly junk, not clearly from a person.'], list: unsure.slice(0, 8).map((r) => (r.m.sender ? displayName(r.m) + ': ' : '') + clip(r.m.subject, 70)) });
+    worth.push(mkItem('worth', { id: 'mail:maybe', kind: 'email', icon: 'mail', title: plural(unsure.length, 'email') + ' I was not sure about',
+      sub: 'Not clearly junk, not clearly from a person.', list: mailList(unsure), createdAt: Math.max(...unsure.map((r) => (Number.isFinite(r.m.ts) ? r.m.ts : -Infinity))),
+      why: 'They did not look like ads, and they did not look like a person or your school, so I left them for you.' }));
+  }
+  if (putBack.length) {
+    const keys = putBack.map((r) => r.key);
+    worth.push(mkItem('worth', { id: 'mail:restored', kind: 'email', icon: 'mail', title: plural(putBack.length, 'email') + ' you put back', sub: 'You said these are not junk.',
+      list: mailList(putBack), why: 'You pressed "Put all back" on them.',
+      actions: [{ label: 'Hide them again', kind: 'override', op: 'rehide', keys, toast: 'Hidden again.', undo: { kind: 'override', op: 'unhide', keys } }] }));
   }
 
   // ---- deadlines: due today or late needs you; the next two weeks are worth knowing
@@ -265,11 +312,15 @@ function buildDashboard(input) {
     dl.push({ t, days: daysBetween(today, t.until) });
   }
   dl.sort((a, b) => a.days - b.days);
+  let next = null;
   for (const { t, days } of dl) {
     if (days > 14) continue;
     const src = t.source ? ' (' + clip(t.source, 40) + ')' : '';
-    if (days <= 0) needs.push({ id: 'deadline:' + t.what, icon: '📅', title: clip(t.what, 90), tag: { text: days < 0 ? 'late' : 'today', tone: 'red' }, lines: [(days < 0 ? 'Was due ' : 'Due ') + niceDate(t.until) + src + '.'] });
-    else worth.push({ id: 'deadline:' + t.what, icon: '📅', title: clip(t.what, 90), tag: { text: whenTag(days), tone: 'amber' }, lines: ['Due ' + niceDate(t.until) + src + '.'] });
+    const added = /^\d{4}-\d{2}-\d{2}$/.test(t.added || '') ? Date.parse(t.added + 'T00:00:00') : NaN;
+    const it = mkItem(days <= 0 ? 'needs' : 'worth', { id: 'deadline:' + t.what, kind: 'deadline', icon: 'calendar', title: clip(t.what, 90), meta: deadlineMeta(days, t.until),
+      metaTone: days <= 1 ? 'soon' : '', sub: (days < 0 ? 'Was due ' : 'Due ') + niceDate(t.until) + src + '.', createdAt: added,
+      why: 'It is on your "keeping track of" list' + (days <= 0 ? ', and its date has come.' : ', and it is due within two weeks.') });
+    if (days <= 0) needs.push(it); else { worth.push(it); if (!next) next = { title: it.title, when: nextWord(days, t.until) }; }
   }
 
   // ---- sleep: what it learned (a finished night) and the quiz score vs the night before
@@ -283,51 +334,68 @@ function buildDashboard(input) {
   if (sum.quizSeries.length) { const q = sum.quizSeries; quizNow = q[q.length - 1]; if (q.length > 1) quizPrev = q[0]; }
   const quizLine = quizNow == null ? 'Morning quiz: no score yet.' :
     'Morning quiz: ' + fmtPct(quizNow) + (quizPrev != null ? (quizNow > quizPrev ? ', up from ' : quizNow < quizPrev ? ', down from ' : ', same as ') + fmtPct(quizPrev) + (sum.quizSeries.length > 1 ? ' earlier' : ' last time') : '') + '.';
+  let sleepShown = false;
   if (sNight || lastDone) {
     const kept = sNight ? sNight.kept : !lastDone.reverted;
     const date = niceDate(sNight ? sNight.date : lastDone.date);
-    const lines = [];
-    if (kept) lines.push('It practised and kept what it learned' + (date ? ' (night of ' + date + ')' : '') + '.');
-    else lines.push('It practised' + (date ? ' on the night of ' + date : '') + ', checked itself, and undid the change' + (lastDone && lastDone.harm > 0 ? ' because it got a little worse at general questions' : '') + '.');
-    lines.push(quizLine);
-    done.unshift({ id: 'sleep', icon: '🌙', title: kept ? 'Sleep: learned something new' : 'Sleep: nothing new kept', tag: kept ? { text: 'learned', tone: 'green' } : { text: 'undone', tone: 'grey' }, lines });
+    const facts = [];
+    if (kept) facts.push('It practised and kept what it learned' + (date ? ' (night of ' + date + ')' : '') + '.');
+    else facts.push('It practised' + (date ? ' on the night of ' + date : '') + ', checked itself, and undid the change' + (lastDone && lastDone.harm > 0 ? ' because it got a little worse at general questions' : '') + '.');
+    facts.push(quizLine);
+    const delta = quizNow != null && quizPrev != null ? Math.round((quizNow - quizPrev) * 10) / 10 : null;
+    const meta = quizNow == null ? '' : 'Quiz ' + fmtPct(quizNow) + (delta ? ' (' + (delta > 0 ? '+' : '') + delta + ')' : '');
+    done.unshift(mkItem('done', { id: 'sleep', kind: 'sleep', icon: 'moon', title: kept ? 'Learned something new overnight' : 'Slept, but kept nothing new', meta,
+      facts, why: 'After practising, it takes a closed-book quiz on things it did not practise. If it got worse, it undoes the change.',
+      createdAt: Number.isFinite(sum.wokeAt) ? sum.wokeAt : NaN }));
+    sleepShown = true;
     if (kept) handled += 1;
   }
 
   // ---- problems: grouped into one plain line each; raw text only inside "details"
-  for (const grp of groupErrors(input, sum)) { done.push(errorItem(grp)); handled += 1; }
+  for (const grp of groupErrors(input, sum)) { done.push(errorItem(grp, now)); handled += 1; }
 
-  // ---- progress (only real numbers)
-  if (sum.quizSeries.length > 1 && sum.quizSeries[sum.quizSeries.length - 1] > sum.quizSeries[0]) {
+  // ---- progress (only real numbers). The quiz score already sits on the sleep row when there is one.
+  if (!sleepShown && sum.quizSeries.length > 1 && sum.quizSeries[sum.quizSeries.length - 1] > sum.quizSeries[0]) {
     const q = sum.quizSeries;
-    worth.push({ id: 'progress:quiz', icon: '⚡', title: 'Quiz score is going up', tag: { text: 'progress', tone: 'green' }, lines: ['From ' + fmtPct(q[0]) + ' to ' + fmtPct(q[q.length - 1]) + ' during the last sleep.'] });
+    quiet.push(mkItem('quiet', { id: 'progress:quiz', kind: 'health', icon: 'bolt', title: 'Quiz score is going up', meta: fmtPct(q[0]) + ' to ' + fmtPct(q[q.length - 1]), facts: ['During the last sleep.'] }));
   }
-  if (sum.passRate && sum.passRate.to > sum.passRate.from) worth.push({ id: 'progress:pass', icon: '⚡', title: 'Getting more answers right on the first try', tag: { text: 'progress', tone: 'green' }, lines: ['From ' + sum.passRate.from + '% to ' + sum.passRate.to + '%.'] });
-  for (const p of input.progress || []) if (p && p.title) worth.push({ id: 'progress:' + (p.id || p.title), icon: '⚡', title: clip(p.title, 90), tag: { text: 'progress', tone: 'green' }, lines: p.line ? [clip(p.line, 120)] : [] });
-  for (const f of input.fyi || []) if (f && f.title) worth.push({ id: 'fyi:' + (f.id || f.title), icon: f.icon || '🎮', title: clip(f.title, 90), tag: { text: 'FYI', tone: 'grey' }, lines: f.line ? [clip(f.line, 140)] : [], dim: true });
+  if (sum.passRate && sum.passRate.to > sum.passRate.from) quiet.push(mkItem('quiet', { id: 'progress:pass', kind: 'health', icon: 'bolt', title: 'Getting more answers right on the first try', meta: sum.passRate.from + '% to ' + sum.passRate.to + '%' }));
+  for (const p of input.progress || []) if (p && p.title) quiet.push(mkItem('quiet', { id: 'progress:' + (p.id || p.title), kind: 'health', icon: 'bolt', title: clip(p.title, 90), facts: p.line ? [clip(p.line, 120)] : [] }));
+  for (const f of input.fyi || []) if (f && f.title) quiet.push(mkItem('quiet', { id: 'fyi:' + (f.id || f.title), kind: 'project', icon: 'game', title: clip(f.title, 90), facts: f.line ? [clip(f.line, 140)] : [] }));
 
   // the sleep app itself asking for a permission is something only Ben can do
   const perm = input.status && input.status.needs_permission;
-  if (perm) needs.unshift({ id: 'permission', icon: '🔑', title: 'Allow ' + clip(typeof perm === 'string' ? perm : 'access', 60), tag: { text: 'needs you', tone: 'red' }, lines: ['Premonition cannot go on until you say yes.'] });
+  if (perm) {
+    const what = clip(typeof perm === 'string' ? perm : 'access', 60);
+    needs.unshift(mkItem('needs', { id: 'permission', kind: 'autofix', icon: 'key', title: 'Allow ' + what, sub: 'Premonition cannot go on until you say yes.',
+      createdAt: tsMs(input.status && input.status.updated), facts: ['The sleep app asked for it and is waiting.'], why: 'Only you can allow this, in System Settings. I cannot do it for you.',
+      quick: [{ label: 'Open settings', primary: true, kind: 'system', pane: permPane(String(perm)) }] }));
+  }
 
-  // worth-knowing order: deadlines, people, progress, FYI last
-  const rank = (it) => (it.id.startsWith('deadline') ? 0 : it.id.startsWith('mail:') && it.id !== 'mail:maybe' ? 1 : it.id === 'mail:maybe' ? 2 : it.id.startsWith('progress') ? 3 : 4);
+  // worth-knowing order: deadlines, people, restored mail, unsure mail
+  const rank = (it) => (it.id.startsWith('deadline') ? 0 : it.id === 'mail:restored' ? 3 : it.id === 'mail:maybe' ? 2 : 1);
   worth.sort((a, b) => rank(a) - rank(b));
 
   const n = needs.length;
+  const nextText = next ? ' Next: ' + next.title + ', ' + next.when + '.' : '';
   const hero = {
     needs: n,
-    title: n === 0 ? 'Nothing needs you today' : n === 1 ? '1 thing needs you' : n + ' things need you',
-    sub: handled > 0 ? 'Premonition handled ' + plural(handled, 'thing') + ' on its own.' : 'All quiet. Nothing to handle.'
+    title: n === 0 ? 'Nothing needs you' : n === 1 ? '1 thing needs you' : n + ' things need you',
+    sub: n === 0 ? (handled > 0 ? 'I handled ' + plural(handled, 'thing') + '.' + nextText : next ? nextText.trim() : 'All quiet. Nothing to handle.')
+      : handled > 0 ? 'I handled the other ' + handled + '.' + nextText : 'Nothing else to report.' + nextText,
+    next
   };
-  const model = { generatedAt: now, hero, needs, done, worth, counts: { junk: junk.length, handled, needs: n } };
+  const checkedAt = tsMs(input.status && input.status.last_checkin);
+  const model = { generatedAt: now, user: typeof input.user === 'string' ? input.user : '', hero, needs, worth, done, quiet, items: [].concat(needs, worth, done, quiet),
+    counts: { junk: junk.length, handled, needs: n }, checkedAt: Number.isFinite(checkedAt) ? checkedAt : null };
   model.signature = signatureOf(model);
   return model;
 }
 
 // A short fingerprint of what the dashboard says (not when it was built): a refresh with the same signature changes nothing on screen.
+// (createdAt is left out: it only decides which rows get a "new" dot, and that is worked out against when Ben last looked.)
 function signatureOf(m) {
-  return JSON.stringify([m.hero.title, m.hero.sub, [].concat(m.needs, m.done, m.worth).map((i) => [i.id, i.title, i.tag.text, i.lines, i.list || null, i.details || null])]);
+  return JSON.stringify([m.hero.title, m.hero.sub, m.checkedAt, m.items.map((i) => [i.id, i.level, i.title, i.meta, i.sub, i.facts, i.why, i.list || null, i.details || null, i.actions, i.quick])]);
 }
 
-module.exports = { buildDashboard, parseSummary, parseInbox, classifyMail, collectMail, groupErrors, errorItem, signatureOf, JUNK_AT, ymd, daysBetween, niceDate };
+module.exports = { buildDashboard, parseSummary, parseInbox, classifyMail, collectMail, groupErrors, errorItem, signatureOf, JUNK_AT, ymd, daysBetween, niceDate, clock };

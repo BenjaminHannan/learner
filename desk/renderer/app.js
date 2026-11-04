@@ -643,29 +643,48 @@
   // ---------- Important updates dashboard (the data is built in the main process; the look is renderer/dashboard.js) ----------
   const morningCards = new Set();
   const dashSheet = $('#dashSheet'), dashBody = $('#dashBody');
+  // when Ben last had the dashboard open: rows made after that get a blue "new" dot (first time ever: nothing is "new")
+  const LAST_SEEN_KEY = 'dash.lastSeenAt';
+  const readLastSeen = () => { try { const v = Number(localStorage.getItem(LAST_SEEN_KEY)); return Number.isFinite(v) && v > 0 ? v : NaN; } catch (e) { return NaN; } };
+  let paintedStatus = '';
   const dash = Dashboard.createDashboard({
     fetch: () => desk.dashboard.get(),
+    // the buttons: only things the app can really do ("Put all back" and its undo are saved; "Open settings" opens System Settings)
+    act: (a) => (a.kind === 'override' ? desk.dashboard.override(a.op, a.keys) : a.kind === 'system' ? desk.openSystem(a.pane) : Promise.resolve({ error: 'unknown button' })),
+    lastSeenAt: readLastSeen(),
     onChange: (st, info) => {
       const m = st.model;
       $('#dashDot').hidden = !(m && m.hero.needs > 0);
       $('#btnDash').title = m ? 'Important updates: ' + m.hero.title : 'Important updates';
       if (info.changed) for (const c of [...morningCards]) { if (c.isConnected) c.repaint(); else morningCards.delete(c); }
-      if (dashSheet.hidden || !m) return;
-      if (info.changed || info.kind === 'toggle') paintDash();
-      else { const a = dashBody.querySelector('[data-role=ago]'); if (a) a.textContent = Dashboard.agoText(st.updatedAt, st.now); }   // nothing new: only the "updated … ago" line moves
+      if (dashSheet.hidden) return;
+      if (info.changed || info.kind === 'ui' || Dashboard.feedStatus(st) !== paintedStatus) paintDash();
+      else { const a = dashBody.querySelector('[data-role=ago]'); if (a) a.textContent = Dashboard.agoLabel(paintedStatus, st.updatedAt, st.now); }   // nothing new: only the "updated … ago" line moves
     }
   });
   function paintDash() {
     const st = dash.state, scrollTop = dashBody.scrollTop;
-    dashBody.replaceChildren(st.model ? Dashboard.mount(Dashboard.dashboardView(st.model, st, { toggle: dash.toggle, refresh: dash.refresh }), document) : el('p', 'p-sub', st.error ? 'Could not load updates. Trying again.' : 'Loading…'));
+    const a = document.activeElement, fid = a && dashBody.contains(a) && a.classList.contains('db-row') ? a.getAttribute('data-id') : null;
+    st.now = Date.now(); paintedStatus = Dashboard.feedStatus(st);
+    dashBody.replaceChildren(Dashboard.mount(Dashboard.dashboardView(st.model, st, { toggle: dash.toggle, refresh: dash.refresh, act: dash.act, undo: dash.undo }), document));
     dashBody.scrollTop = scrollTop;
+    if (fid != null) { const r = [...dashBody.querySelectorAll('.db-row')].find((x) => x.getAttribute('data-id') === fid); if (r) r.focus({ preventScroll: true }); }   // a repaint must not lose the keyboard's place
   }
-  function openDash() { dashSheet.hidden = false; paintDash(); dash.refresh(); $('#dashClose').focus(); }
-  function closeDash() { dashSheet.hidden = true; input.focus(); }
+  function openDash() { dash.setLastSeen(readLastSeen()); dashSheet.hidden = false; paintDash(); dash.refresh(); $('#dashClose').focus(); }
+  function closeDash() { try { localStorage.setItem(LAST_SEEN_KEY, String(Date.now())); } catch (e) { /* not saved: nothing is marked new next time */ } dash.state.keys = false; dashSheet.hidden = true; input.focus(); }
   $('#btnDash').onclick = openDash;
   $('#dashClose').onclick = closeDash;
   dashSheet.addEventListener('mousedown', (e) => { if (e.target === dashSheet) closeDash(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dashSheet.hidden) { e.stopPropagation(); closeDash(); } }, true);
+  // J/K move, Esc closes what is open (then the dashboard), Z undoes, ? lists the shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (dashSheet.hidden) return;
+    const k = Dashboard.keyAction(e);
+    if (k === 'escape') { e.stopPropagation(); if (!dash.closeAll()) closeDash(); return; }
+    if (!k || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    e.preventDefault(); e.stopPropagation();
+    if (k === 'next') Dashboard.moveFocus(dashBody, 1); else if (k === 'prev') Dashboard.moveFocus(dashBody, -1);
+    else if (k === 'undo') dash.undo(); else if (k === 'keys') dash.toggleKeys();
+  }, true);
   window.addEventListener('focus', () => dash.onFocus());
   document.addEventListener('visibilitychange', () => { if (!document.hidden) dash.onFocus(); });
   desk.onDashboardChanged(() => dash.onSourceChanged());
