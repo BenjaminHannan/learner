@@ -17,3 +17,11 @@ test('main: the watcher sees each second, wakes the loop, gets labels from ticks
   assert.match(main, /aoWatcher\(\)\.outcome\('note:' \+ String\(n\.text\)\.slice\(0, 200\), n\.status === 'confirmed'\)/);
   assert.match(main, /aoNightlyJobs\.push\(\(\) => \{ if \(store\.getSettings\(\)\.watcher === false\) return; const w = aoWatcher\(\); w\.nightly\(\); w\.prune\(\); \}\);/);
 });
+
+test('main: the Sparks reflex practises while Ben is away and is distilled at night', () => {
+  const main = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
+  assert.match(main, /const RealtimeMod = require\('\.\/src\/games\/realtime'\);/);
+  assert.match(main, /if \(idleS < 120 \|\| !aoMoteGate\(\)\.budget\) return;/);
+  assert.match(main, /aoNightlyJobs\.push\(\(\) => \{ if \(store\.getSettings\(\)\.reflexGames !== false\) aoReflex\(\)\.nightly\(\); \}\);/);
+  assert.doesNotMatch(require('fs').readFileSync(path.join(__dirname, '..', 'src', 'games', 'index.js'), 'utf8'), /realtime/, 'Sparks stays out of the turn-based GAMES registry');
+});

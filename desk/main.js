@@ -1688,6 +1688,22 @@ function aoWatchHook(loop) {
 { const offer0 = aoVoice.offer.bind(aoVoice); aoVoice.offer = (text, extra) => { const m = offer0(text, extra); if (m) aoWatchRef('say:' + m.id); return m; }; }
 { const prevOutcome = aoOnOutcome; aoOnOutcome = (m, kind) => { prevOutcome(m, kind); try { aoWatcher().outcome('say:' + m.id, ['up', 'used', 'reply'].includes(kind)); } catch (e) { /* log only */ } }; }
 aoNightlyJobs.push(() => { if (store.getSettings().watcher === false) return; const w = aoWatcher(); w.nightly(); w.prune(); });
+// ---- T6: the real-time sandbox game "Sparks" (src/games/realtime.js) with a reflex fast path (muscle memory) --------------------
+// While Ben is away and Glim may think, one practice game at most every 10 minutes with the fast path (the late planner until a
+// reflex has been kept). At night the slow planner labels the logged frames at its own pace and the reflex is distilled (seatbelt +
+// rollback). Glim's own game; nothing from the Bedwars bots. Setting `reflexGames: false` = off.
+const RealtimeMod = require('./src/games/realtime');
+let aoReflexObj = null, aoReflexLast = 0;
+const aoReflex = () => aoReflexObj || (aoReflexObj = new RealtimeMod.Reflex({ dir: aoDir(), cfg: { maxFrames: 8000 }, log: (...a) => console.log('[alwayson]', ...a) }));
+function aoReflexPlay() {
+  if (store.getSettings().reflexGames === false || Date.now() - aoReflexLast < 600000) return;
+  let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { return; }
+  if (idleS < 120 || !aoMoteGate().budget) return;
+  aoReflexLast = Date.now();
+  try { const sc = aoReflex().playDay(Date.now() % 1e9); if (aoState) aoState.logActivity('game', { game: 'sparks', score: Math.round(sc), fast: aoReflex().ready() ? 'reflex' : 'late planner' }); } catch (e) { console.log('[alwayson] sparks', e); }
+}
+setInterval(() => { try { aoReflexPlay(); } catch (e) { /* next minute */ } }, 60000).unref();
+aoNightlyJobs.push(() => { if (store.getSettings().reflexGames !== false) aoReflex().nightly(); });
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
 // ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
