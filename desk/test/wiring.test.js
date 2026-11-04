@@ -14,7 +14,9 @@ const read = (f) => fs.readFileSync(path.join(root, f), 'utf8');
 test('main.js creates the memory after the Store, passes it to the Agent and handles the memory channels', () => {
   const m = read('main.js');
   assert.ok(m.indexOf('store = new Store(') < m.indexOf('memory = createMemory(app.getPath(\'userData\'))'));
-  assert.match(m, /new Agent\(\{\s*memory,/);
+  // every agent gets the memory; a Learn study Mote gets it through the truth-check router (src/studygate.js), all others directly
+  assert.match(m, /new Agent\(\{\s*memory: agentMemory,/);
+  assert.match(m, /const agentMemory = study \? StudyGate\.studyMemory\(\{ \.\.\.study, memory, truth: getTruth\(\) \}\) : memory;/);
   assert.strictEqual((m.match(/new Agent\(/g) || []).length, 1); // helpers use the same createAgent, so they get memory too
   for (const ch of ['memory:list', 'memory:add', 'memory:edit', 'memory:delete', 'memory:read', 'memory:write', 'memory:open']) assert.ok(m.includes("h('" + ch + "'"), ch);
 });
