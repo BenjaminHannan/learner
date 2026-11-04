@@ -223,3 +223,26 @@ class SwitchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShortCardTests(unittest.TestCase):
+    """REAL-run bug (2026-11-04): a micro-batch of only short cards (e.g. "Ben is learning Portuguese." ~ 6 tokens) crashed MLX training:
+    attention over 8 or fewer tokens has no backward pass. Rows are now padded to at least MIN_ROW tokens, never as targets."""
+
+    def test_rows_are_padded_and_targets_unchanged(self):
+        try:
+            import mlx.core as mx
+        except ImportError:
+            self.skipTest("no mlx here")
+        from types import SimpleNamespace
+        from sleepmlx import model as M
+        ids, bi, ti, tgt, n = M.MLXBackend._arrays(SimpleNamespace(stop_id=0), [([5, 6, 7, 8, 9, 0], 0), ([5, 6, 0], 2)])
+        self.assertEqual(ids.shape, (2, M.MIN_ROW))
+        self.assertEqual(tgt.tolist(), [6, 7, 8, 9, 0, 0])
+        self.assertEqual(n, 6)
+        # the padded length (input = row minus its last token) takes the attention path that has a backward pass
+        def f(q, k, v):
+            return mx.fast.scaled_dot_product_attention(q, k, v, scale=0.1, mask="causal").sum()
+        L = M.MIN_ROW - 1
+        q = mx.random.normal((1, 2, L, 32))
+        mx.eval(mx.grad(f)(q, q, q))

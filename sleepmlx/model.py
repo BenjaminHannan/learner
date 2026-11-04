@@ -19,6 +19,8 @@ from typing import List, Optional, Sequence, Tuple
 from .backend import Backend, Example
 
 
+MIN_ROW = 16   # see MLXBackend._arrays
+
 def adapter_base_identity(prof, model_dir):
     """Portable source identity plus the exact local quantization config."""
     local = Path(os.path.expanduser(model_dir)).resolve()
@@ -219,7 +221,10 @@ class MLXBackend(Backend):
 
     def _arrays(self, mb: Sequence[Example]):
         mx = _mx()
-        L = max(len(e[0]) for e in mb)
+        # >= MIN_ROW tokens: MLX's attention uses its "vector" kernel for 8 or fewer query tokens, and that kernel has no backward pass
+        # ("the vector kernels do not produce a logsumexp"), so a micro-batch of only short cards crashed the night (I4 real run, 2026-11-04).
+        # The extra stop tokens come after the text and are never targets: causal attention leaves the loss unchanged.
+        L = max(max(len(e[0]) for e in mb), MIN_ROW)
         rows = [list(e[0]) + [self.stop_id] * (L - len(e[0])) for e in mb]
         bi, ti, tgt = [], [], []
         for r, (ids, ls) in enumerate(mb):
