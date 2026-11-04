@@ -93,13 +93,15 @@
 
   // ---------- blocks, activity groups ----------
   function newBlock() { blk = null; act = null; tn = null; }
-  // Ben Oct 29: a cartoon thought bubble (outlined puffy cloud, circles rising from Glim's head, a twinkling spark inside), in the chat, while it works and nothing new is being written yet
+  // Ben Nov 3: Glim glimmers while it thinks: a warm breathing halo around the avatar (CSS) and see-through four-point sparkles scattered beside it, calm like magic dust
   const typingRow = el('div', 'ablock typing-row'); typingRow.hidden = true; typingRow.setAttribute('role', 'status'); typingRow.setAttribute('aria-label', 'Glim is thinking');
-  typingRow.append(Mascot.el('idle', 28, { cls: 'avatar', still: true }));
+  typingRow.append(Mascot.el('idle', 28, { cls: 'avatar' })); // no still: the idle breathe, wisp flicker and blink are subtle and make Glim look alive
   { const col = el('div', 'acol'), b = el('div', 'typing');
-    const spark = (x, y, k, cls) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><path class="spark' + cls + '" d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z"/></g>';
-    b.innerHTML = '<svg viewBox="0 0 116 54" aria-hidden="true"><circle class="tb t1" cx="6" cy="47" r="2.2"/><circle class="tb t2" cx="15.5" cy="41.5" r="3.3"/><circle class="tb t3" cx="28.5" cy="35" r="4.6"/>' +
-      '<g class="cloud"><path class="tb" d="M59 33.2A11.4 11.4 0 0 1 40.6 28.3A7 7 0 0 1 35 18A11.8 11.8 0 0 1 52.9 9.8A8.2 8.2 0 0 1 66.4 8.1A11.8 11.8 0 0 1 86.1 8.9A8.3 8.3 0 0 1 99.6 12.1A9.5 9.5 0 0 1 107.1 25.9A8.8 8.8 0 0 1 93.6 31.7A11.7 11.7 0 0 1 74.3 34A9.2 9.2 0 0 1 59 33.2Z"/>' + spark(71, 21, .85, '') + spark(84, 15, .4, ' s2') + '</g></svg>';
+    const spark = (x, y, k, cls) => '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><path class="spark ' + cls + '" fill="url(#glimDust)" d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z"/></g>';
+    const dust = [[12, 10, .34, 'g1'], [28, 7, .62, 'g2'], [44, 20, .42, 'g3'], [60, 9, .67, 'g4'], [76, 25, .46, 'g5'], [86, 12, .28, 'g6']]
+      .map(([x, y, k, cls]) => spark(x, y, k, cls)).join('');
+    b.innerHTML = '<svg viewBox="0 0 92 40" aria-hidden="true"><defs><radialGradient id="glimDust" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0" stop-color="#fffdf2"/><stop offset=".55" stop-color="#fff3c9"/><stop offset="1" stop-color="#ffd98a"/></radialGradient></defs>' + dust + '</svg>';
     col.append(b); typingRow.append(col); }
   function paintTyping() {
     const on = !!running && !(tn && tn.text) && !(thread && thread.helper);

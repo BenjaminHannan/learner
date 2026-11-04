@@ -179,20 +179,29 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 #runState { display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--text2); padding:0 .3rem .4rem; }
 #runState { display:none !important; } /* the typing bubble in the chat shows that Glim is working (Ben Oct 29: the line above the input "looks bad") */
 .typing-row { order:9999; } .typing-row[hidden] { display:none; } /* always the last row of the chat, whatever is appended after it */
-/* a cartoon thought bubble in Glim's colours: outlined puffy cloud up and to the right of Glim, three circles rising from its head (Ben Oct 29: "like a thought bubble, not just the text dots") */
+/* Glim glimmers: a warm halo that breathes around the avatar, and see-through four-point
+   sparkles twinkling beside it like calm magic dust (Ben Nov 3: "twinkling stuff, not an ugly cloud") */
 .typing-row { align-items:end; }
-.typing { width:7.4rem; height:3.4rem; margin-left:-.8rem; }
+.typing-row > .avatar { position:relative; isolation:isolate; filter:drop-shadow(0 0 4px rgba(255,205,110,.5)); }
+.typing-row > .avatar::after { content:""; position:absolute; inset:-45%; border-radius:50%; z-index:-1; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,242,196,.65) 0%, rgba(255,197,82,.3) 45%, rgba(255,185,58,0) 72%);
+  animation:glim-halo 2.4s ease-in-out infinite; }
+.typing { width:5.75rem; height:2.5rem; margin-left:-.35rem; }
 .typing svg { display:block; width:100%; height:100%; overflow:visible; }
-.typing .tb { fill:#fff4d6; stroke:#e8920c; stroke-width:1.6; stroke-linejoin:round; }
-.typing .spark { fill:#f5a524; stroke:#b86a05; stroke-width:.9; stroke-linejoin:round; transform-box:fill-box; transform-origin:center; animation:tb-twinkle 2.4s infinite ease-in-out; }
-.typing .spark.s2 { animation-delay:-1.2s; }
-.typing .cloud { animation:tb-bob 3.2s infinite ease-in-out; }
-.typing .t1, .typing .t2, .typing .t3 { animation:tb-rise 1.8s infinite ease-in-out; }
-.typing .t2 { animation-delay:.25s; } .typing .t3 { animation-delay:.5s; }
-@keyframes tb-rise { 0%, 70%, 100% { opacity:.4; } 25% { opacity:1; } }
-@keyframes tb-bob { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-1.5px); } }
-@keyframes tb-twinkle { 0%, 100% { transform:scale(.8) rotate(0deg); opacity:.7; } 50% { transform:scale(1.08) rotate(20deg); opacity:1; } }
-@media (prefers-reduced-motion: reduce) { .typing .spark, .typing .cloud, .typing .tb { animation:none; opacity:1; } }
+.typing .spark { stroke:none; transform-box:fill-box; transform-origin:center;
+  filter:drop-shadow(0 0 3px rgba(255,220,150,.6)); animation:glim-twinkle 2.4s ease-in-out infinite; }
+.typing .spark.g1 { animation-duration:2.4s; animation-delay:-.3s; --peak:.55; }
+.typing .spark.g2 { animation-duration:1.8s; animation-delay:-1.1s; --peak:.7; }
+.typing .spark.g3 { animation-duration:2.8s; animation-delay:-1.9s; --peak:.45; }
+.typing .spark.g4 { animation-duration:2.1s; animation-delay:-.7s; --peak:.62; }
+.typing .spark.g5 { animation-duration:1.6s; animation-delay:-1.3s; --peak:.38; }
+.typing .spark.g6 { animation-duration:2.6s; animation-delay:-2.2s; --peak:.5; }
+@keyframes glim-halo { 0%, 100% { opacity:.4; transform:scale(.88); } 50% { opacity:.85; transform:scale(1.1); } }
+@keyframes glim-twinkle { 0%, 100% { transform:scale(.4) rotate(-6deg); opacity:0; } 50% { transform:scale(1) rotate(6deg); opacity:var(--peak,.55); } }
+@media (prefers-reduced-motion: reduce) {
+  .typing-row > .avatar::after { animation:none; opacity:.5; transform:none; }
+  .typing .spark { animation:none; transform:none; opacity:.4; }
+}
 .callbtn { background:none; color:var(--text2); border:1.5px solid var(--hair2); border-radius:50%; width:2.4rem; height:2.4rem; padding:0; display:grid; place-items:center; flex:none; }
 .callbtn svg { width:1.05rem; height:1.05rem; }
 .callbtn:hover:not(:disabled) { color:var(--accent-text); border-color:var(--accent-text); }
