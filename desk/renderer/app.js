@@ -1164,6 +1164,7 @@
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
       { key: 'followUp', type: 'toggle', label: 'Follow up on its own', help: 'Once a day, when you open Glim, it checks on things you left open and offers quick choices. Off: it only answers you.' },
+      { key: 'twoSpeedPlay', type: 'toggle', label: 'Two-speed play', help: 'While you are away, Glim practises two small real-time games with a long plan (it remembers what is done and re-plans when something changes), quick reflexes and well-timed jumps and catches. At night its reflexes learn from that day\'s games only. Off by default.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },
     { group: 'Running', rows: [

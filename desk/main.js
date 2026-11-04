@@ -1789,6 +1789,26 @@ function aoReflexPlay() {
 }
 setInterval(() => { try { aoReflexPlay(); } catch (e) { /* next minute */ } }, 60000).unref();
 aoNightlyJobs.push(() => { if (store.getSettings().reflexGames !== false) aoReflex().nightly(); });
+// ---- I3: the two-speed core (src/games/core/): plan memory + intent channel + timed actions + reflex-in-sleep ---------------------
+// Setting "Two-speed play" (`twoSpeedPlay`, default OFF). When on, while Ben is away (the same gates as Sparks above), one practice
+// game at most every 10 minutes, Sparks quest and Orchard in turn, played by the two-speed loop with the STAND-IN slow brain (the
+// adapter's planner, in simulated time; the real model is not called). Frames are logged per day; at night the reflex is distilled
+// from that day's frames only (head-by-head seatbelt on held-out days, rollback). Toy evidence: premonition-sleeplab-i3 MARKS v1.
+const TwoSpeed = { loop: require('./src/games/core/loop'), sleep: require('./src/games/core/reflex'), games: { sparksquest: require('./src/games/adapters/sparksquest'), orchard: require('./src/games/adapters/orchard') } };
+let aoTwoLast = 0, aoTwoTurn = 0; const aoTwoSleeps = {};
+const aoTwoSleep = (name) => aoTwoSleeps[name] || (aoTwoSleeps[name] = new TwoSpeed.sleep.ReflexSleep({ dir: path.join(aoDir(), 'twospeed', name), log: (...a) => console.log('[alwayson]', ...a) }));
+function aoTwoSpeedPlay() {
+  if (store.getSettings().twoSpeedPlay !== true || Date.now() - aoTwoLast < 600000) return;
+  let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { return; }
+  if (idleS < 120 || !aoMoteGate().budget) return;
+  aoTwoLast = Date.now(); const name = Object.keys(TwoSpeed.games)[aoTwoTurn++ % 2], ad = TwoSpeed.games[name], sl = aoTwoSleep(name);
+  try {
+    const r = TwoSpeed.loop.runEpisode(ad, { seed: Date.now() % 1e9, reflex: sl.net }); sl.logDay(r.acts, r.times);
+    if (aoState) aoState.logActivity('game', { game: ad.name, goal: !!r.outcome.goalDone, replans: r.replans, timingMs: r.timing.medianAbsMs === Infinity ? null : Math.round(r.timing.medianAbsMs || 0), fast: sl.ready() ? 'reflex' : 'hand rule' });
+  } catch (e) { console.log('[alwayson] two-speed', e); }
+}
+setInterval(() => { try { aoTwoSpeedPlay(); } catch (e) { /* next minute */ } }, 60000).unref();
+aoNightlyJobs.push(() => { if (store.getSettings().twoSpeedPlay !== true) return; for (const [name, ad] of Object.entries(TwoSpeed.games)) { try { aoTwoSleep(name).nightly({ features: ad.features, label: ad.nightLabel, fallback: ad.fallbackRaw, nIn: ad.nIn, nA: ad.nA }); } catch (e) { console.log('[alwayson] two-speed night', e); } } });
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
 function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
 // ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
