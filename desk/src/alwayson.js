@@ -162,7 +162,10 @@ class AlwaysOn {
     this.stats.asked++;
     let extra = { now: this.now() };
     if (this.o.context) { try { extra = { ...extra, ...(this.o.context(fresh) || {}) }; } catch (e) { this.log('alwayson: context failed', e); } }
-    try { text = await this.o.ask(buildMessages(fresh, this.state.summary(), extra), ctl.signal); }
+    // lead 2026-11-04: E1's stable-first order missed its registered mark (prefix share 0.47 < 0.80), so the live loop keeps the old
+    // order unless o.stableFirst is set (untested on the real model: the clock line moves to the end)
+    const build = this.o.stableFirst ? buildMessages : buildMessagesV1;
+    try { text = await this.o.ask(build(fresh, this.state.summary(), extra), ctl.signal); }
     catch (e) { this.ctl = null; if (ctl.signal.aborted) return this.result('cancelled'); this.log('alwayson: model error', String(e && e.message || e)); return this.result('error'); }
     this.ctl = null;
     if (ctl.signal.aborted) return this.result('cancelled');
