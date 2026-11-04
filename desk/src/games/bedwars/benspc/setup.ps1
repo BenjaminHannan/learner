@@ -1,8 +1,9 @@
 # setup.ps1 - one-time, idempotent setup of Glim's Bedwars folder on BensPC.   usage: setup.ps1 [-DryRun]
 # Creates C:\Users\benja\glim-bedwars\{server,bridge,shots,logs}; copies the Paper 1.8.8 + BedWars1058 server from
 # bedwars-189 (read-only source; world_the_end, logs and player data are left out; sizes are reported); gives our copy
-# its own ports; copies these scripts and deskhelper.exe into place; registers the GlimBridge task; PRINTS the
-# authorized_keys forced-command line for Glim's key (never installs it). Never starts anything, never reboots.
+# its own ports; copies these scripts and deskhelper.exe into place; builds GlimTruthKit (our truth-log plugin) and puts it in OUR
+# server copy only; (re-)registers the GlimBridge task (hidden, via bridge-launch.vbs); PRINTS the authorized_keys forced-command
+# line for Glim's key (never installs it). Never starts anything, never reboots.
 param([switch]$DryRun)
 $ErrorActionPreference = 'Stop'
 $Root = 'C:\Users\benja\glim-bedwars'
@@ -45,7 +46,7 @@ Do-It 'set our own ports in OUR server.properties: server-port=25567, rcon.port=
 Do-It 'start with an empty pids.json' { if (-not (Test-Path -LiteralPath (Join-Path $Root 'pids.json'))) { Set-Content -LiteralPath (Join-Path $Root 'pids.json') -Value '{}' -Encoding ASCII } }
 
 Say '3. our scripts and deskhelper.exe'
-$files = 'glimtool.ps1', 'bridge.ps1', 'launch-client.ps1', 'bridge-task.xml', 'runbook.json', 'RUNBOOK.md', 'setup.ps1'
+$files = 'glimtool.ps1', 'bridge.ps1', 'bridge-launch.vbs', 'launch-client.ps1', 'bridge-task.xml', 'runbook.json', 'RUNBOOK.md', 'setup.ps1'
 $same = ([IO.Path]::GetFullPath($Here)).TrimEnd('\') -ieq $Root
 if ($same) { Say '  scripts already run from the glim-bedwars folder' }
 else {
@@ -56,15 +57,26 @@ else {
 }
 if (-not (Test-Path -LiteralPath (Join-Path $Root 'bridge\deskhelper.exe')) -and $same) { Say '  note: bridge\deskhelper.exe is missing (run deploy.sh)' }
 
-Say '4. bridge task (GlimBridge, InteractiveToken, only when logged on)'
-cmd.exe /c "schtasks /query /tn GlimBridge >nul 2>&1"
-if ($LASTEXITCODE -eq 0) { Say '  GlimBridge is already registered' }
+Say '4. GlimTruthKit (truth log, auto-join, match start/stop) -> OUR server copy only'
+$tkb = Join-Path $Root 'truthkit\build.ps1'
+if (-not (Test-Path -LiteralPath $tkb)) { Say '  note: truthkit\build.ps1 is missing (run deploy.sh); the truth log will not exist' }
 else {
-  $xml = Join-Path $Root 'bridge-task.xml'; if (-not (Test-Path -LiteralPath $xml)) { $xml = Join-Path $Here 'bridge-task.xml' }
-  Do-It "register task GlimBridge from $xml" { & schtasks.exe /create /tn GlimBridge /xml $xml /f | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'schtasks /create failed' } }
+  Do-It 'build GlimTruthKit.jar and install it into server\plugins' {
+    $o = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $tkb -Install 2>&1
+    $o | ForEach-Object { Say ('    ' + $_) }
+    if (-not ($o -match '^BUILD OK')) { throw 'GlimTruthKit build failed' }
+  }
 }
 
-Say '5. SSH key line for Glim (NOT installed by this script)'
+Say '5. bridge task (GlimBridge, InteractiveToken, only when logged on, no window)'
+if (-not (Test-Path -LiteralPath (Join-Path $env:WINDIR 'System32\wscript.exe'))) { Say '  WARNING: wscript.exe not found; the bridge task cannot start hidden' }
+$xml = Join-Path $Root 'bridge-task.xml'; if (-not (Test-Path -LiteralPath $xml)) { $xml = Join-Path $Here 'bridge-task.xml' }
+cmd.exe /c "schtasks /query /tn GlimBridge >nul 2>&1"
+$had = ($LASTEXITCODE -eq 0)
+# registered from the XML text (not schtasks /xml: the file is ASCII but says UTF-16); -Force replaces our own older definition
+Do-It ($(if ($had) { 're-register' } else { 'register' }) + " task GlimBridge from $xml") { Register-ScheduledTask -TaskName 'GlimBridge' -Xml (Get-Content -Raw -LiteralPath $xml) -Force | Out-Null }
+
+Say '6. SSH key line for Glim (NOT installed by this script)'
 $isAdmin = $false; try { $isAdmin = [bool]((& net.exe localgroup Administrators 2>$null) -match '\\benja$|^benja$') } catch { }
 $cmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\glim-bedwars\glimtool.ps1'
 Say '  add this ONE line (replace <GLIM_PUBKEY> with Glim''s public key, e.g. "ssh-ed25519 AAAA... glim"):'

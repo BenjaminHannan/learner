@@ -1,7 +1,13 @@
 'use strict';
 // Glim team, Bedwars side (plan v4.1 §3b, HARD REQUIREMENT): the self-sufficient play session. Glim decides to play (motivation ->
 // wantToPlay()), then does every step itself through the BensPC tool (./benspc.js, contract ./TOOLS.md):
-//   gpu-acquire -> server-start -> map-list / match-start -> client-launch -> play loop -> match-stop -> client-stop -> server-stop -> gpu-release
+//   hands check -> gpu-acquire -> server-start -> map-list -> hands re-check -> client-launch -> match-start -> play loop (hands watch
+//   every ~2 s) -> client-stop -> match-stop -> server-stop -> gpu-release
+// Hands rule (Ben, 11-04): never take BensPC over from someone using it. From `ping` (locked, idle_s, last_input_ms):
+//   locked -> go (nobody is using it; the screen is never unlocked by us); unlocked and last input < 2 min ago -> don't start
+//   ('deferred'); unlocked and idle >= 2 min -> ask first (o.askUser), no answer within 1 min -> go; unlocked with no idle reading
+//   -> don't start. Any input during play -> freeze at once: play is aborted (stop sending input), then the usual clean quit and GPU
+//   release. Ask rarely, never twice: one question per idle stretch (a "no" holds until the user touches BensPC again).
 // Each step retries with backoff, reads the error text, and tries the tool's `next` alternatives (the runbook). It asks Ben ONLY when
 // truly blocked: BensPC signed out (no signed-in session), a login it does not have, a purchase, or a UAC prompt.
 // It ALWAYS stops what it started and releases the GPU, also on failure, abort or an exception. It never stops what it did not start
@@ -26,18 +32,29 @@ const ALT_STOP = { 'server-start': 'server-stop', 'match-start': 'match-stop', '
 const LOCAL_SERVER = /^(127\.0\.0\.1|localhost):\d{2,5}$/;
 const WHO = 'glim-bedwars';
 
-const DEFAULTS = { retries: 3, backoffMs: 2000, name: 'GlimBot', mode: '1v1', opponent: 'scripted:L2', maxPlayMs: 10 * 60000, pollMs: 2000,
+const DEFAULTS = { retries: 3, backoffMs: 2000, name: 'GlimBot', mode: '1v1', opponent: 'none', maxPlayMs: 10 * 60000, pollMs: 2000,
   why: 'Glim wants to play Bedwars (its own choice, plan 3b)' };
+// the hands rule. busyIdleS and askTimeoutMs are Ben's (2 min, 1 min); the rest are ours: watch period, input slack (clock rounding),
+// and how many unreadable checks in a row during play count as "cannot see the hands" (then we freeze too).
+const HANDS = { busyIdleS: 120, askTimeoutMs: 60000, watchMs: 2000, slackMs: 1500, unknownLimit: 3,
+  question: 'BensPC has been idle for a while. May I use it to play Bedwars (local server, about 10 minutes)? If you say nothing, I will start in a minute.' };
+// one idle stretch = one last-input moment (BensPC clock). We remember the stretch we asked about and the one the user said no in.
+const HANDS_MEM = { askedFor: null, noFor: null };   // shared by the sessions of this process (o.handsMemory replaces it)
+const STRETCH_MS = 5000;   // ours: two last-input readings this close are the same idle stretch
+const isYes = (a) => a === true || /^(y|yes|ok|sure|go)/i.test(String(a == null ? '' : (a && a.answer != null ? a.answer : a)).trim()) || !!(a && a.ok === true);
+const isNo = (a) => a === false || /^(n|no|stop|don)/i.test(String(a == null ? '' : (a && a.answer != null ? a.answer : a)).trim()) || !!(a && a.ok === false);
 
 class PlaySession {
-  // o: {benspc, askBen(reason, detail), sleep(ms), now(), log, map, opponent, play(ctx) -> {ok, why, events}, retries, backoffMs, ...}
+  // o: {benspc, askBen(reason, detail), askUser(question, {timeoutMs}) -> Promise<yes|no|null>, handsMemory, sleep(ms), now(), log, map,
+  //     opponent, play(ctx) -> {ok, why, events}, retries, backoffMs, hands: {...HANDS overrides}}
   constructor(o) {
     o = o || {}; if (!o.benspc) throw new Error('PlaySession needs a benspc client');
     this.o = { ...DEFAULTS, ...o }; this.pc = o.benspc; this.now = o.now || Date.now; this.log = o.log || (() => {});
     this.sleep = o.sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
     this.askBenFn = o.askBen || (() => {});
+    this.hands = { ...HANDS, ...(o.hands || {}) }; this.handsMem = o.handsMemory || HANDS_MEM;
     this.res = { outcome: null, ok: false, askedBen: null, steps: [], cleanup: [], calls: [], matchId: null, map: null, events: [],
-      reached: { decide: true, launch: false, match: false, play: false, quit: false } };
+      hands: null, frozen: null, reached: { decide: true, launch: false, match: false, play: false, quit: false } };
     this.own = { gpu: false, gpuUnsure: false, server: false, match: false, client: false };
   }
   async call(verb, args) { const r = await this.pc.call(verb, args); this.res.calls.push({ verb, ok: !!(r && r.ok), error: r && r.error ? String(r.error).slice(0, 200) : null }); return r || { ok: false, error: 'no reply', next: [] }; }
@@ -46,7 +63,52 @@ class PlaySession {
     if (!this.res.askedBen) { this.res.askedBen = { reason, detail: String(detail || '').slice(0, 200) }; try { this.askBenFn(reason, detail); } catch (e) { /* the message is best effort */ } }
     return true;
   }
-  aborted(ctl) { return !!((ctl.signal && ctl.signal.aborted) || (ctl.gateOk && !ctl.gateOk())); }
+  aborted(ctl) { return !!(this.res.frozen || (ctl.signal && ctl.signal.aborted) || (ctl.gateOk && !ctl.gateOk())); }
+
+  // ---- the hands rule -------------------------------------------------------------------------------------------------------
+  // before starting: -> {go, why}. Sets this.base (the last input we know about) for the watch during play.
+  async handsBefore() {
+    const H = this.hands, p = await this.call('ping', {}), rec = { at: this.now(), locked: null, idle_s: null, asked: false, answer: null };
+    this.res.hands = rec;
+    const done = (go, why) => { rec.go = go; rec.why = why; return { go, why }; };
+    if (!p.ok) return done(false, 'ping failed: ' + String(p.error || '').slice(0, 120));
+    rec.locked = p.locked === true; rec.idle_s = typeof p.idle_s === 'number' && p.idle_s >= 0 ? p.idle_s : null;
+    this.base = this.handsPoint(p);
+    if (p.signed_in === false) return done(true, 'nobody is signed in');   // the client step will ask Ben to sign in (blocked case)
+    if (p.locked === true) return done(true, 'locked: nobody is using BensPC');
+    if (rec.idle_s == null) return done(false, 'unlocked and the idle time is unknown' + (p.idle_error ? ' (' + String(p.idle_error).slice(0, 80) + ')' : ''));
+    if (rec.idle_s < H.busyIdleS) return done(false, 'in use: last input ' + Math.round(rec.idle_s) + ' s ago');
+    const lastInput = this.base.lastMs, mem = this.handsMem, same = (x) => x != null && lastInput != null && Math.abs(x - lastInput) <= STRETCH_MS;
+    if (same(mem.noFor)) return done(false, 'the user said no and has not touched BensPC since');
+    if (same(mem.askedFor)) return done(true, 'already asked in this idle stretch: going ahead');
+    if (!this.o.askUser) return done(true, 'idle ' + Math.round(rec.idle_s) + ' s and no way to ask: going ahead');
+    rec.asked = true; mem.askedFor = lastInput;
+    let a = null;
+    try { a = await Promise.race([Promise.resolve(this.o.askUser(H.question, { timeoutMs: H.askTimeoutMs, kind: 'bedwars-hands' })), this.sleep(H.askTimeoutMs).then(() => null)]); }
+    catch (e) { a = null; }
+    if (a != null && isNo(a) && !isYes(a)) { rec.answer = 'no'; mem.noFor = lastInput; return done(false, 'the user said no'); }
+    if (a != null && isYes(a)) { rec.answer = 'yes'; return done(true, 'the user said yes'); }
+    rec.answer = 'none'; return done(true, 'no answer within ' + Math.round(H.askTimeoutMs / 1000) + ' s: going ahead');
+  }
+  // a ping -> {locked, lastMs (BensPC clock, from last_input_ms or idle_s), idle, at}
+  handsPoint(p) {
+    const idle = typeof p.idle_s === 'number' && p.idle_s >= 0 ? p.idle_s : null;
+    const lastMs = Number.isFinite(p.last_input_ms) ? p.last_input_ms : idle != null ? this.now() - idle * 1000 : null;
+    return { locked: p.locked === true, lastMs, idle, at: this.now(), exact: Number.isFinite(p.last_input_ms) };
+  }
+  // during play: -> null (hands off) or the reason to freeze. Any new input after the base, or an unlock, or no reading N times in a row.
+  async handsTouched() {
+    const H = this.hands, p = await this.call('ping', {});
+    if (p.ok && this.base && this.base.locked && p.locked === false) return 'the screen was unlocked';   // needs no idle reading
+    const unreadable = !p.ok || (p.locked !== true && !(typeof p.idle_s === 'number' && p.idle_s >= 0));
+    if (unreadable) { this.handsMiss = (this.handsMiss || 0) + 1; return this.handsMiss >= H.unknownLimit ? 'cannot see whether someone is at BensPC (' + this.handsMiss + ' checks)' : null; }
+    this.handsMiss = 0;
+    const b = this.base || this.handsPoint(p), q = this.handsPoint(p);
+    if (q.lastMs != null && b.lastMs != null && q.lastMs - b.lastMs > H.slackMs) return 'input ' + (q.idle != null ? Math.round(q.idle) + ' s ago' : 'just now') + ' (someone is at BensPC)';
+    if (!this.base) this.base = q;
+    return null;
+  }
+  freeze(why) { if (!this.res.frozen) { this.res.frozen = { why, at: this.now() }; this.log('bedwars: freeze: ' + why); if (this.playAbort) try { this.playAbort.abort(); } catch (e) { /* ignore */ } } }
 
   // one step: retries + backoff + error reading + runbook alternatives. o: {check() -> ok-ish result when an uncertain call ran}
   async attempt(step, verb, args, ctl, o) {
@@ -89,6 +151,11 @@ class PlaySession {
 
   async steps(ctl) {
     const res = this.res, o = this.o;
+    // 0. the hands rule: someone using BensPC -> deferred, before anything is taken
+    const h = await this.handsBefore();
+    res.steps.push({ step: 'hands', verb: 'ping', ok: h.go, tries: 1, errors: h.go ? [] : [h.why] });
+    if (!h.go) { res.outcome = 'deferred'; return; }
+    if (this.aborted(ctl)) { res.outcome = 'yielded'; return; }
     // 1. the GPU (GPU_LOAN.txt): busy = deferred, never ask Ben
     const g = await this.attempt('gpu-acquire', 'gpu-acquire', { who: WHO, why: o.why }, ctl, {
       noRetry: (r) => GPU_BUSY.test(String(r.error || '')),
@@ -106,38 +173,55 @@ class PlaySession {
       this.own.server = true; port = s.r.port;
     }
     if (this.aborted(ctl)) { res.outcome = 'yielded'; return; }
-    // 3. a map and a match
+    // 3. a map
     const ml = await this.attempt('map-list', 'map-list', {}, ctl);
     if (!ml.ok) { res.outcome = ml.blocked ? 'blocked' : 'failed'; return; }
     const maps = (ml.r.maps || []).map(String);
     if (!maps.length) { res.steps.push({ step: 'map-list', ok: false, errors: ['no maps'] }); res.outcome = 'failed'; return; }
     res.map = o.map && maps.includes(o.map) ? o.map : maps[0];
-    const m = await this.attempt('match-start', 'match-start', { map: res.map, mode: o.mode, opponent: o.opponent }, ctl, {
-      check: async () => { const x = await this.call('match-status', {}); return x.ok && x.state && x.state !== 'none' && x.state !== 'ended' ? { ok: true, match_id: x.match_id || null } : null; } });
-    if (!m.ok) { res.outcome = m.blocked ? 'blocked' : 'failed'; return; }
-    this.own.match = true; res.matchId = m.r.match_id || null;
-    // 4. the client: our offline launcher, local server only
+    // 4. the hands again, right before a game window appears (launching takes a minute or two)
+    const t = await this.handsTouched();
+    if (t) { this.freeze(t); res.steps.push({ step: 'hands', verb: 'ping', ok: false, tries: 1, errors: [t] }); res.outcome = 'yielded'; return; }
+    // 5. the client: our offline launcher, local server only. GlimTruthKit sends it into the arena on login (no typing).
     const server = '127.0.0.1:' + (port || 25565);
     if (!LOCAL_SERVER.test(server)) { res.outcome = 'failed'; res.error = 'refusing a non-local server'; return; }
     const c = await this.attempt('client-launch', 'client-launch', { name: o.name, server }, ctl, {
-      check: async () => { const x = await this.call('match-status', {}); return x.ok && (x.teams || []).length ? { ok: true } : null; } });
+      check: async () => { const x = await this.call('server-status', {}); return x.ok && (x.names || []).includes(o.name) ? { ok: true } : null; } });
     if (!c.ok) { res.outcome = c.blocked ? 'blocked' : 'failed'; return; }
-    this.own.client = true; res.reached.launch = true; res.reached.match = true;   // the client is in the match we started
-    // 5. play
+    this.own.client = true; res.reached.launch = true;
+    if (this.aborted(ctl)) { res.outcome = 'yielded'; return; }
+    // 6. the match: GlimBot in the arena, started with BedWars1058's own command run as GlimBot (glimtool match-start)
+    const m = await this.attempt('match-start', 'match-start', { map: res.map, mode: o.mode, opponent: o.opponent }, ctl, {
+      check: async () => { const x = await this.call('match-status', {}); return x.ok && (x.state === 'starting' || x.state === 'running') ? { ok: true, match_id: x.match_id || null } : null; } });
+    if (!m.ok) { res.outcome = m.blocked ? 'blocked' : 'failed'; return; }
+    this.own.match = true; res.matchId = m.r.match_id || null; res.reached.match = true;
+    // 7. play (the hands are watched every ~2 s; a touch freezes at once)
     const p = await this.play(ctl);
     res.events = p.events || []; res.play = { ok: !!p.ok, why: p.why || null };
     res.steps.push({ step: 'play', ok: !!p.ok, tries: 1, errors: p.ok ? [] : [p.why || 'play failed'] });
     res.reached.play = !!p.ok;
-    res.outcome = p.yielded ? 'yielded' : p.ok ? 'played' : 'failed';
+    res.outcome = res.frozen || p.yielded ? 'yielded' : p.ok ? 'played' : 'failed';
   }
 
   // the play loop. The real reflex runs next to the game on BensPC; from here we watch the match and read the truth log.
-  // o.play(ctx) replaces it (ctx: {benspc, matchId, signal, gateOk, call}). Ends at match end, maxPlayMs, abort or Ben-first yield.
+  // o.play(ctx) replaces it (ctx: {benspc, matchId, signal, gateOk, call}); its signal aborts at once when the hands are touched.
+  // Ends at match end, maxPlayMs, abort, Ben-first yield or a freeze.
   async play(ctl) {
-    if (this.o.play) return this.o.play({ benspc: this.pc, matchId: this.res.matchId, signal: ctl.signal, gateOk: ctl.gateOk, call: (v, a) => this.call(v, a) });
+    if (this.o.play) {
+      const ac = typeof AbortController === 'function' ? new AbortController() : null; this.playAbort = ac;
+      if (ctl.signal && ac) { if (ctl.signal.aborted) ac.abort(); else ctl.signal.addEventListener('abort', () => ac.abort(), { once: true }); }
+      let done = false;
+      const watch = (async () => { while (!done) { await this.sleep(this.hands.watchMs); if (done || this.res.frozen) break; const w = await this.handsTouched(); if (w) { this.freeze(w); break; } } })();
+      try {
+        const r = await this.o.play({ benspc: this.pc, matchId: this.res.matchId, signal: ac ? ac.signal : ctl.signal, gateOk: () => !this.res.frozen && (!ctl.gateOk || ctl.gateOk()), call: (v, a) => this.call(v, a) });
+        return this.res.frozen ? { ...(r || {}), yielded: true, why: 'frozen: ' + this.res.frozen.why } : r;
+      } finally { done = true; this.playAbort = null; await watch.catch(() => {}); }
+    }
     const t0 = this.now(), events = []; let since = new Date(t0 - 5000).toISOString(), running = false, fails = 0;
     while (true) {
-      if (this.aborted(ctl)) return { ok: running, yielded: true, why: 'Ben first: yielded', events };
+      if (this.aborted(ctl)) return { ok: running, yielded: true, why: this.res.frozen ? 'frozen: ' + this.res.frozen.why : 'Ben first: yielded', events };
+      const w = await this.handsTouched();
+      if (w) { this.freeze(w); return { ok: running, yielded: true, why: 'frozen: ' + w, events }; }
       const s = await this.call('match-status', {});
       if (s.ok) { fails = 0; if (s.state === 'running') running = true; } else if (++fails >= 5) return { ok: false, why: 'match-status failed 5 times: ' + s.error, events };
       const lr = await this.call('log-read', { since, max: 500 });
@@ -176,4 +260,4 @@ function wantToPlay(o) {
     run: (ctl) => new PlaySession(o).run(ctl || {}) };
 }
 
-module.exports = { PlaySession, wantToPlay, blockedReason, ASK_BEN_REASONS, DEFAULTS, WHO, LOCAL_SERVER };
+module.exports = { PlaySession, wantToPlay, blockedReason, ASK_BEN_REASONS, DEFAULTS, HANDS, HANDS_MEM, WHO, LOCAL_SERVER };

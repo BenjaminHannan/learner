@@ -1,85 +1,142 @@
 'use strict';
-// Glim team, Bedwars side: the adapter (allowed inputs, intent, timed actions, plan + replan, sleep data hooks) and harness latency.
+// Glim team, Bedwars side: the adapter for I3's two-speed core (same shape as src/games/adapters/sparksquest.js and orchard.js):
+// interface, human-equivalent inputs, the hand rule (the reflex until sleep keeps a net), judge, timed targets, practice model.
 const test = require('node:test');
 const assert = require('node:assert');
 const A = require('../src/games/bedwars/adapter');
-const H = require('../src/games/bedwars/harness');
-const core = require('../src/games/bedwars/core-iface');
 const T = require('../src/games/bedwars/tactics');
+const Timing = require('../src/games/bedwars/timing');
+const Truth = require('../src/games/bedwars/truthlog');
+const intent = require('../src/games/core/intent');
 
-test('human-equivalent inputs only: the HUD whitelist refuses minimap / reach / distance / coords / truth; FOV <= 110; one view', () => {
-  assert.ok(A.validateObs({ frame: { ref: 'f1', fov: 110, view: 'f5' }, hud: { hp: 20, hotbar: [], tnt_timer: 3 }, sound: [], est: { dist: 4 } }).ok);
-  for (const k of ['minimap', 'reach', 'distance', 'coords', 'f3', 'opp_pos', 'speed']) assert.strictEqual(A.validateObs({ hud: { [k]: 1 } }).ok, false, k);
-  assert.strictEqual(A.validateObs({ truth: [] }).ok, false, 'the truth log is never an input');
-  assert.strictEqual(A.validateObs({ frame: { fov: 120 } }).ok, false);
-  assert.strictEqual(A.validateObs({ frame: { view: 'freelook' } }).ok, false);
-  assert.ok(!A.HUD_FIELDS.some((k) => A.FORBIDDEN.includes(k)));
-  assert.throws(() => new A.BedwarsAdapter().tick(0, { hud: { minimap: [] } }), /forbidden/);
+const call = (s) => intent.parse(A.vocab, s).call;
+const obsAt = (o) => ({ t: 0, me: { x: 2, alive: true, hp: 20 }, inv: { iron: 0, gold: 0, wool: 0, shears: 0 }, atBase: true, bridgeLeft: 18, onEnemyIsland: false,
+  edgeAhead: null, edgeRun: 0, enemy: null, enemyBed: { alive: true, covered: false }, myBedThreat: false, hits: 0, events: [], ...o });
+const enemy = (dist, o) => ({ dist, ahead: true, alive: true, approach: 1, approachFrom: 8, ...o });
+
+test('interface: everything I3\'s loop (core/loop.js) and the live loop (core-iface.js) use', () => {
+  for (const k of ['name', 'tickMs', 'maxTicks', 'vocab', 'nIn', 'nA', 'goal']) assert.ok(A[k] != null, k);
+  for (const f of ['init', 'observe', 'planner', 'judge', 'fallback', 'fallbackRaw', 'rawFrame', 'features', 'nightLabel', 'timedTargets', 'step', 'done', 'outcome', 'describe',
+    'repair', 'urgent', 'interrupted', 'stepsFromCalls']) assert.strictEqual(typeof A[f], 'function', f);
+  assert.strictEqual(A.vocab, T.vocab); assert.strictEqual(A.nA, A.MOVES.length); assert.strictEqual(A.tickMs, 50);
+  assert.ok(A.frameToKeyMs <= 38, 'no handicap: ~38 ms frame-to-keys is the bar');
+  assert.strictEqual(A.CRIT_MID_MS, Timing.CRIT_MID_MS); assert.deepStrictEqual(A.CRIT_WINDOW, Timing.CRIT_WINDOW_MS);
+  // the stand-in brain plans with real calls from the vocabulary
+  const s = A.init(1), plan = A.planner(A.observe(s, 0), []);
+  assert.ok(plan.length >= 3); for (const st of plan) assert.ok(intent.validate(A.vocab, st.call).ok, st.id);
 });
 
-test('realtime adapter: budget, the last call is kept when none arrives for > 2 s, a bad line keeps the last good call', () => {
-  const a = new A.BedwarsAdapter();
-  assert.strictEqual(a.realtime, true); assert.strictEqual(A.realtime, true);
-  assert.deepStrictEqual(a.budget, { frameToKeyMs: 30, tickMs: 50, staleMs: 2000 });
-  assert.ok(a.onCall('st l w', 0).ok);
-  let r = a.tick(1000); assert.strictEqual(r.stale, false); assert.strictEqual(T.lineText(r.calls), 'st l w');
-  assert.strictEqual(a.onCall('do a flip', 1500).ok, false);
-  r = a.tick(2500); assert.strictEqual(r.stale, true); assert.strictEqual(T.lineText(r.calls), 'st l w', 'kept after 2 s');
-  assert.strictEqual(r.cond.length, A.COND_WIDTH); assert.strictEqual(r.cond[A.COND_WIDTH - 1], 1);
-  assert.strictEqual(r.cond[T.CODES.indexOf('st')], 1);
-  assert.strictEqual(a.callLog.length, 2); assert.strictEqual(a.callLog[1].ok, false);
-  // the vector tells codes and params apart
-  const c1 = A.conditioning([{ code: 'st', params: { dir: 'l', wtap: true } }]), c2 = A.conditioning([{ code: 'st', params: { dir: 'r', wtap: true } }]);
-  assert.notDeepStrictEqual(Array.from(c1), Array.from(c2));
+test('inputs: human-equivalent only (no minimap, reach display, freelook, coords or truth; FOV <= 110; one view)', () => {
+  assert.ok(A.validateObs({ frame: { fov: 100, view: 'first' }, hud: { hp: 20, hotbar: [], scoreboard: [], tnt_timer: 3 }, sound: [], t: 1 }).ok);
+  assert.ok(A.validateObs({ frame: { view: 'f5' } }).ok);
+  for (const bad of [{ hud: { minimap: 1 } }, { hud: { reach: 3.1 } }, { hud: { freelook: true } }, { hud: { coords: [1, 2, 3] } }, { hud: { radar: [] } },
+    { frame: { fov: 120 } }, { frame: { view: 'both' } }, { truth: {} }, { entities: [] }, null]) assert.ok(!A.validateObs(bad).ok, JSON.stringify(bad));
+  // what the practice model shows Glim: no positions of the enemy, only my estimate of his distance; never the truth
+  const s = A.init(2); s.me.x = 20; const o = A.observe(s, 0);
+  assert.ok(!JSON.stringify(o).includes('truth'));
+  assert.deepStrictEqual(Object.keys(o.enemy || {}).sort(), o.enemy ? ['ahead', 'alive', 'approach', 'approachFrom', 'dist'] : []);
 });
 
-test('a timed call ("jc 3") goes on the action schedule and fires on the right tick; a new call replaces the old timing', () => {
-  const a = new A.BedwarsAdapter(); const est = (t) => ({ hud: { hp: 20 }, est: { dist: 6 - 4 * t / 1000, closing: 4 } });
-  a.tick(0, est(0)); a.onCall('jc 3; st l', 0);
-  assert.deepStrictEqual(a.schedule.list().map((x) => [x.skill, x.ttgMs]), [['crit_on_fall', 300]]);
-  const fired = []; for (let t = 50; t <= 600; t += 50) fired.push(...a.tick(t, est(t)).fired);
-  assert.deepStrictEqual(fired.map((f) => [f.skill, f.t]), [['crit_on_fall', 300]], 'he is in reach at 750 ms; jump 450 ms before');
-  a.onCall('bh', 600); a.onCall('bh', 650);
-  assert.strictEqual(a.schedule.list().filter((x) => x.skill === 'block_at_hit').length, 1);
-  assert.deepStrictEqual(A.TIMED_BY_CODE, { jc: 'crit_on_fall', bh: 'block_at_hit', jg: 'jump_at_edge' });
+test('rawFrame / features: fixed length, finite, and features never read the truth', () => {
+  const s = A.init(3); s.me.x = 20;
+  const o = A.observe(s, 0), c = call('BRIDGE'), withTruth = A.rawFrame(o, c, s), plain = A.rawFrame(o, c);
+  assert.ok(withTruth.truth && !plain.truth);
+  const f1 = A.features(withTruth), f2 = A.features(plain);
+  assert.strictEqual(f1.length, A.nIn); assert.ok(f1.every(Number.isFinite)); assert.deepStrictEqual(Array.from(f1), Array.from(f2));
+  assert.notDeepStrictEqual(Array.from(A.features(A.rawFrame(o, call('HOME')))), Array.from(f2), 'the call is an input');
 });
 
-test('long horizon in the adapter: plan -> step calls -> replan on a knock-off; the scorer reads the replan from the plan log', () => {
-  const a = new A.BedwarsAdapter({ me: 'G' });
-  a.startPlan(null, 0);
-  assert.strictEqual(a.plan.step(), 'get_resources'); assert.strictEqual(a.stepCall('get_resources'), 'get iron 16');
-  a.stepDone(2000); a.stepDone(3000);
-  assert.strictEqual(a.plan.step(), 'bridge'); assert.strictEqual(a.checkPlan(4000), null);
-  const rp = a.checkPlan(5100, { knockedOff: true });
-  assert.deepStrictEqual(rp.reasons, ['knocked_off']); assert.strictEqual(a.plan.step(), 'get_resources');
-  a.tick(6000, { hud: { hp: 4 } }); assert.deepStrictEqual(a.checkPlan(6000).reasons, ['low_hp']);
-  const ev = [{ t: 1000, type: 'pickup', player: 'G', item: 'iron', count: 16 }, { t: 3000, type: 'purchase', player: 'G', item: 'wool' },
-    { t: 5000, type: 'void_death', victim: 'G' }, ...Array.from({ length: 8 }, (_, i) => ({ t: 7000 + i * 100, type: 'block_place', player: 'G' })),
-    { t: 9000, type: 'bed_broken', text: 'BED DESTRUCTION > Red Bed was destroyed by G!' }];
-  const lh = H.longHorizon(ev, 'G', ['get_resources', 'buy_blocks', { step: 'bridge', n: 8 }, 'break_bed'], a.planLog);
-  assert.deepStrictEqual([lh.finished, lh.replans, lh.replanAfterInterruption, lh.milestone], [true, 2, true, true]);
+test('hand rule (the reflex): hits whoever is in reach whatever the call; otherwise does the call; same on logged frames', () => {
+  const M = (m) => A.MOVES.indexOf(m);
+  const near = obsAt({ me: { x: 15, alive: true, hp: 20 }, atBase: false, inv: { wool: 10 }, enemy: enemy(2.6) });
+  for (const c of ['BRIDGE', 'BREAK_BED', 'GET', 'BUY item=wool', 'HOLD', 'DEFEND', 'FIGHT']) assert.strictEqual(A.fallback(near, call(c)), M('attack'), c);
+  assert.strictEqual(A.fallback(near, call('RETREAT')), M('back')); assert.strictEqual(A.fallback(near, call('HOME')), M('back'));
+  assert.strictEqual(A.fallback(near, null), M('attack'), 'no call yet: still fights back');
+  assert.strictEqual(A.fallback(obsAt({ inv: { iron: 8 } }), call('BUY item=wool')), M('buy:wool'));
+  assert.strictEqual(A.fallback(obsAt({ me: { x: 10, alive: true, hp: 20 }, atBase: false }), call('GET')), M('back'));
+  assert.strictEqual(A.fallback(obsAt({ inv: { wool: 5 } }), call('BRIDGE')), M('bridge'));
+  assert.strictEqual(A.fallback(obsAt({ bridgeLeft: 0 }), call('BRIDGE')), M('forward'));
+  // FIGHT across an unfinished bridge: keep bridging toward him (walking would stop at the bridge's end)
+  assert.strictEqual(A.fallback(obsAt({ me: { x: 21, alive: true, hp: 20 }, atBase: false, bridgeLeft: 3, inv: { wool: 9 }, enemy: enemy(4.5) }), call('FIGHT')), M('bridge'));
+  assert.strictEqual(A.fallback(obsAt({ me: { x: 0, alive: false, hp: 0 } }), call('FIGHT')), M('stay'));
+  for (const o of [near, obsAt({ inv: { iron: 8 } }), obsAt({ bridgeLeft: 0 })]) for (const c of ['BRIDGE', 'BUY item=wool', 'RETREAT']) assert.strictEqual(A.fallbackRaw(A.rawFrame(o, call(c))), A.fallback(o, call(c)));
 });
 
-test('sleep hooks give day data only: no games at night; a hook that plays is refused', () => {
-  assert.strictEqual(A.sleepHooks.nightPlay, false);
-  assert.strictEqual(core.sleepHooks.get('bedwars'), A.sleepHooks);
-  assert.throws(() => core.registerSleepHook({ game: 'x', play: () => {} }), /never plays/);
-  const day = { me: 'G', frames: [{ t: 0 }, { t: 600 }], calls: [{ t: 0, text: 'jc 3' }],
-    events: [{ t: 0, type: 'match_start' }, { t: 1000, type: 'hit', attacker: 'G', victim: 'B', crit: true, damage: 6 }, { t: 1500, type: 'purchase', player: 'G', item: 'wool', cost: 4, currency: 'iron' }, { t: 2000, type: 'match_end' }] };
-  assert.deepStrictEqual(A.sleepHooks.replayDay(day), { frames: 2, keys: 0, calls: 1, events: 4 });
-  assert.deepStrictEqual(A.sleepHooks.labels(day).map((x) => x.ttHitMs), [1000, 400]);
-  assert.strictEqual(A.sleepHooks.cards(day)[0].worked, true);
-  assert.strictEqual(A.sleepHooks.rewards(day).parts.hits, 1);
-  assert.deepStrictEqual(A.sleepHooks.mechanics(day).map((m) => m.kind), ['hit', 'price']);
-  assert.strictEqual(A.sleepHooks.mechanics(day)[1].cost, 4);
+test('night labeller uses the truth log (hindsight): my estimate said out of reach, the truth said hit', () => {
+  const o = obsAt({ me: { x: 15, alive: true, hp: 20 }, atBase: false, inv: { wool: 10 }, enemy: enemy(3.4) });
+  const raw = A.rawFrame(o, call('BRIDGE'));
+  assert.strictEqual(A.fallbackRaw(raw), A.MOVES.indexOf('bridge'));
+  assert.strictEqual(A.nightLabel({ ...raw, truth: { eDist: 2.8 } }), A.MOVES.indexOf('attack'));
+  assert.strictEqual(A.nightLabel({ ...raw, truth: { eDist: 3.6 } }), A.MOVES.indexOf('bridge'));
+  assert.strictEqual(A.nightLabel({ ...raw, call: null }), null, 'no call: no label');
 });
 
-test('harness latency: p95 frame->key against the 30 ms budget', () => {
-  const recs = Array.from({ length: 100 }, (_, i) => ({ frameT: i * 50, keyT: i * 50 + (i < 95 ? 20 : 45) }));
-  const l = H.latency(recs);
-  assert.deepStrictEqual([l.n, l.p50, l.p95, l.max, l.pass], [100, 20, 20, 45, true]);
-  assert.strictEqual(l.overBudget, 0.05);
-  recs[94].keyT = recs[94].frameT + 31;
-  assert.strictEqual(H.latency(recs).pass, false, 'the 95th value is now over 30 ms');
-  assert.strictEqual(H.latency([]).pass, null);
+test('timed targets: jump-crit 450 ms ahead of his entering reach; a jump at the end of the finished bridge', () => {
+  const far = obsAt({ me: { x: 14, alive: true, hp: 20 }, atBase: false, enemy: enemy(7) });
+  const t1 = A.timedTargets(far, call('BRIDGE'));
+  assert.deepStrictEqual(t1, [{ id: 'crit:1', action: 'jump_crit', lagMs: Timing.CRIT_MID_MS, gap: 4 }]);
+  assert.deepStrictEqual(A.timedTargets(far, call('RETREAT')), [], 'no crit jump while backing off');
+  assert.deepStrictEqual(A.timedTargets(obsAt({ enemy: enemy(4, { approachFrom: 1 }) }), call('FIGHT')), [], 'too short an approach to time a jump');
+  assert.deepStrictEqual(A.timedTargets(obsAt({ enemy: enemy(2.5) }), call('FIGHT')), [], 'already in reach');
+  const edge = obsAt({ me: { x: 21, alive: true, hp: 20 }, atBase: false, bridgeLeft: 0, edgeAhead: 3, edgeRun: 5 });
+  for (const c of ['BRIDGE', 'BREAK_BED', 'FIGHT']) assert.deepStrictEqual(A.timedTargets(edge, call(c)), [{ id: 'edge:5', action: 'jump_gap', lagMs: 50, gap: 3 }], c);
+  for (const c of ['GET', 'HOME', 'HOLD']) assert.deepStrictEqual(A.timedTargets(edge, call(c)), [], c);
+  assert.deepStrictEqual(A.timedTargets({ ...edge, me: { alive: false } }, call('BRIDGE')), []);
+});
+
+test('judge: done / going / blocked per step kind, so plan memory advances by itself', () => {
+  const st = (k, o) => T.makeStep(k, o);
+  assert.strictEqual(A.judge(st('get_resources', { res: 'iron', n: 8 }), obsAt({ inv: { iron: 8 } })).status, 'done');
+  assert.strictEqual(A.judge(st('get_resources', { res: 'iron', n: 8 }), obsAt({ inv: { iron: 3 } })).status, 'going');
+  assert.strictEqual(A.judge(st('buy_blocks'), obsAt({ events: ['bought:wool'] })).status, 'done');
+  assert.strictEqual(A.judge(st('buy', { item: 'shears' }), obsAt({ inv: { iron: 3 } })).status, 'blocked');
+  assert.strictEqual(A.judge(st('buy', { item: 'shears' }), obsAt({ inv: { shears: 1 } })).status, 'done', 'a permanent item owned');
+  assert.strictEqual(A.judge(st('bridge'), obsAt({ onEnemyIsland: true, bridgeLeft: 0 })).status, 'done');
+  assert.strictEqual(A.judge(st('bridge'), obsAt({ me: { x: 12, alive: true, hp: 20 }, atBase: false, bridgeLeft: 8, inv: { wool: 0 } })).status, 'blocked');
+  const cov = obsAt({ me: { x: 29, alive: true, hp: 20 }, atBase: false, onEnemyIsland: true, bridgeLeft: 0, enemyBed: { alive: true, covered: true } });
+  assert.match(A.judge(st('break_bed'), cov).why, /shears/);
+  assert.strictEqual(A.judge(st('break_bed'), { ...cov, enemyBed: { alive: false } }).status, 'done');
+  assert.strictEqual(A.judge(st('fight'), obsAt({ enemy: enemy(T.DONE_RANGE + 1) })).status, 'done');
+  assert.strictEqual(A.judge(st('fight'), obsAt({ enemy: enemy(2) })).status, 'going');
+  assert.deepStrictEqual(A.judge(st('bridge'), obsAt({ me: { x: 2, alive: false, hp: 0 } })), { status: 'going' }, 'dead: no progress number, so no false "stalled"');
+  assert.strictEqual(A.interrupted(obsAt({ events: ['hurt', 'died'] })), 'died'); assert.strictEqual(A.interrupted(obsAt()), null);
+  const steps = A.stepsFromCalls([call('BUY item=wool'), call('BUY item=wool'), call('BRIDGE')]);
+  assert.deepStrictEqual(steps.map((s) => s.id), ['buy_blocks', 'buy_blocks#2', 'bridge']);
+});
+
+test('practice model: deterministic; an untimed walk off the bridge falls, a timed jump crosses; death keeps only permanent items', () => {
+  const M = (m) => A.MOVES.indexOf(m);
+  const run = (seed, moves) => { let s = A.init(seed); for (let i = 0; i < moves.length; i++) s = A.step(s, moves[i], [], i * 50).state; return s; };
+  const mv = Array.from({ length: 60 }, (_, i) => (i < 20 ? M('stay') : M('back')));
+  assert.deepStrictEqual(run(5, mv), run(5, mv));
+  // stand at the end of a finished bridge
+  const base = () => { const s = A.init(1, { covered: false }); s.front = A.P.FRONT_DONE; s.me.x = A.P.FRONT_DONE - 1; s.inv = { iron: 5, gold: 0, wool: 9, shears: 1 }; s.enemy.alive = false; s.enemy.respawnAt = 1e9; return s; };
+  let s = base(), t = 0, out;
+  for (let i = 0; i < 6 && s.me.alive; i++, t += 50) { out = A.step(s, M('forward'), [], t); s = out.state; }
+  assert.strictEqual(s.me.alive, false); assert.strictEqual(s.stats.edgeFalls, 1); assert.deepStrictEqual([s.inv.iron, s.inv.wool, s.inv.shears], [0, 0, 1]);
+  // the same walk with the jump fired on time crosses
+  s = base(); t = 0; let crossed = false;
+  for (let i = 0; i < 6; i++, t += 50) {
+    const fired = i === 3 ? [{ id: 'edge:0', action: 'jump_gap', atMs: t }] : [];
+    out = A.step(s, M('forward'), fired, t); s = out.state; if (out.contacts.length) assert.strictEqual(out.contacts[0].id, 'edge:0');
+    if (s.stats.crossings) { crossed = true; break; }
+  }
+  assert.ok(crossed && s.me.alive && s.me.x >= A.P.ENEMY_EDGE, 'timed jump crossed the gap');
+  assert.ok(A.done({ ...s, bedAlive: false }, 0)); assert.strictEqual(A.outcome({ ...s, bedAlive: false }).goalDone, true);
+});
+
+test('describe: the picture in words for the slow brain (OWN vs ENEMY spelled out)', () => {
+  const d = A.describe(obsAt({ inv: { iron: 4, wool: 16, shears: 1 }, enemy: enemy(6), enemyBed: { alive: true, covered: true } }));
+  assert.match(d, /YOUR OWN island/); assert.match(d, /4 iron, 16 wool, shears/); assert.match(d, /Enemy player about 6 blocks ahead/); assert.match(d, /covered in wool/);
+  assert.match(A.describe(obsAt({ me: { alive: false, hp: 0, x: 0 } })), /dead/);
+});
+
+test('sleep data comes from the truth log only (rewards, hindsight labels, goal score, cards); no night play', () => {
+  const ev = [{ t: 1000, type: 'hit', attacker: 'GlimBot', victim: 'B' }, { t: 2000, type: 'hit', attacker: 'B', victim: 'GlimBot' }];
+  const day = { events: ev, calls: ['FIGHT'], frames: [{ t: 900 }, { t: 1000 }] };
+  assert.strictEqual(A.sleepData.nightPlay, false);
+  assert.deepStrictEqual(A.sleepData.rewards(day), Truth.rewards(ev, 'GlimBot'));
+  assert.deepStrictEqual(A.sleepData.labels(day), Truth.hindsight([900, 1000], ev, 'GlimBot'));
+  assert.deepStrictEqual(A.sleepData.goal(day), Truth.goalScore(ev, 'GlimBot', T.RUSH_PLAN, undefined));
+  assert.deepStrictEqual(A.sleepData.cards(day), Truth.cards(['FIGHT'], ev, 'GlimBot'));
 });

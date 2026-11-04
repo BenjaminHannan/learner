@@ -71,13 +71,14 @@ const actorOf = (e) => e.attacker || e.by || e.player || null;
 // events: truth-log events; me: my player name -> {skill: [ideal ms]}
 //   block_at_hit  my landed hit + 1 tick
 //   crit_on_fall  my landed hit - CRIT_MID_MS (the jump that would put that hit mid-fall)
-//   jump_at_edge  `edge` events for me (the plugin's moment the feet leave the last block); see README: not in TOOLS.md v1 yet
+//   jump_at_edge  `edge` events for me (GlimTruthKit, TOOLS.md v2): t = the first tick the feet are past the last block,
+//                 last_supported_ms = the tick before; the crossing lies between them, so the ideal moment is their midpoint
 function idealMoments(events, me) {
   const out = { block_at_hit: [], crit_on_fall: [], jump_at_edge: [] };
   for (const e of events || []) {
     const t = toMs(e.t); if (!Number.isFinite(t)) continue;
     if (e.type === 'hit' && actorOf(e) === me) { out.block_at_hit.push(t + BLOCK_DELAY_MS); out.crit_on_fall.push(t - CRIT_MID_MS); }
-    if (e.type === 'edge' && (e.player === me)) out.jump_at_edge.push(t);
+    if (e.type === 'edge' && (e.player === me)) { const ls = Number(e.last_supported_ms); out.jump_at_edge.push(Number.isFinite(ls) && ls > 0 && t - ls > 0 && t - ls <= 2 * TICK_MS ? (t + ls) / 2 : t); }
   }
   for (const k of Object.keys(out)) out[k].sort((a, b) => a - b);
   return out;

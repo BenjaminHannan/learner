@@ -36,25 +36,32 @@ test('fire rule: the tick nearest the moment fires; late by > 2 ticks cancels', 
   assert.deepStrictEqual([M.bestTick(120), M.bestTick(74), M.bestTick(76), M.bestTick(10)], [2, 1, 2, 0]);
 });
 
-test('schedule: "in 120 ms I will jump" is re-estimated every tick, moves later / earlier, cancels when the moment goes away', () => {
-  const s = new core.ActionSchedule();
+test('schedule (the real I3 core via core-iface): the jump is re-estimated every tick, moves later when he slows, fires once within a tick; a vanished target is cancelled', () => {
+  // timing.timedTargets() feeds core ActionSchedule.tick(nowMs, [{id, action, lagMs, gap}]) -> [{id, action, atMs}]
+  const s = new core.ActionSchedule({ tickMs: M.TICK_MS });
   let speed = 5.6; const edge0 = 0.672;   // 120 ms at 5.6 blocks/s
-  const id = s.add({ skill: 'jump_at_edge', ttgMs: 120, t: 0 });
-  // tick 50: he slowed down -> the moment moves later; tick 100: re-estimate; fires on the tick nearest the true moment
   const pos = (t) => edge0 - 5.6 * Math.min(t, 50) / 1000 - (t > 50 ? speed * (t - 50) / 1000 : 0);
-  const est = M.estimateHook((t) => ({ edgeDist: pos(t), speed }));
-  assert.deepStrictEqual(s.tick(50, est), []);
-  speed = 2.8;
-  const f100 = s.tick(100, est); assert.deepStrictEqual(f100, []);
-  const fired = [].concat(s.tick(150, est), s.tick(200, est));
-  assert.strictEqual(fired.length, 1); assert.strictEqual(fired[0].id, id);
-  // true moment: 50 ms at 5.6 (0.28 blocks) leaves 0.392 at 2.8 b/s = 140 ms -> 190 ms; the 200 ms tick is nearest
-  assert.strictEqual(fired[0].t, 200);
-  assert.ok(fired[0].moves >= 1, 'it moved');
-  // cancel: the target turns away
-  const s2 = new core.ActionSchedule(); s2.add({ skill: 'crit_on_fall', ttgMs: 300, t: 0 });
-  assert.deepStrictEqual(s2.tick(50, M.estimateHook(() => ({ dist: 6, closing: -2 }))), []);
-  assert.strictEqual(s2.list().length, 0); assert.strictEqual(s2.log[0].kind, 'cancel');
+  const at = (t) => s.tick(t, M.timedTargets({ edgeDist: pos(t) }, ['jump_at_edge']));
+  assert.deepStrictEqual(at(0), []);
+  assert.deepStrictEqual(at(50), []);
+  speed = 2.8;   // he slows down after 50 ms
+  assert.deepStrictEqual(at(100), []);
+  const fired = [].concat(at(150), at(200));
+  assert.strictEqual(fired.length, 1, 'an id fires once');
+  assert.strictEqual(fired[0].id, 'jump_at_edge');
+  // true moment: 50 ms at 5.6 (0.28 blocks) leaves 0.392 at 2.8 b/s = 140 ms -> 190 ms
+  const err = s.contact('jump_at_edge', 190);
+  assert.ok(Math.abs(err) <= M.TICK_MS, 'within one tick of the true moment, got ' + err + ' ms');
+  const ttg = s.items.get('jump_at_edge').ttgLog.slice(1);   // the planned moment (tick + time-to-go) moved later as he slowed
+  assert.ok(50 + ttg[0] < 100 + ttg[1], 'it moved later: ' + JSON.stringify(ttg));
+  assert.deepStrictEqual([s.report().fired, s.report().misses], [1, 0]);
+  // cancel: the target is missing from a tick (the edge went away) -> cancelled, not a timing miss
+  const s2 = new core.ActionSchedule({ tickMs: M.TICK_MS });
+  assert.deepStrictEqual(s2.tick(0, M.timedTargets({ edgeDist: 1.4 }, ['jump_at_edge'])), []);
+  assert.deepStrictEqual(s2.tick(50, M.timedTargets({}, ['jump_at_edge'])), []);
+  assert.strictEqual(s2.cancelled, 1);
+  assert.strictEqual(s2.contact('jump_at_edge', 300), null);
+  assert.deepStrictEqual([s2.report().misses, s2.report().dropped], [0, 1]);
 });
 
 test('timing error in ms vs the ideal moment from the truth log (one-to-one pairing; + = late)', () => {
@@ -72,6 +79,9 @@ test('timing error in ms vs the ideal moment from the truth log (one-to-one pair
   assert.strictEqual(rep.block_at_hit.withinTick, 1);
   assert.deepStrictEqual([rep.crit_on_fall.matched, rep.crit_on_fall.missed, rep.crit_on_fall.errs[0].errMs], [1, 1, -50]);
   assert.deepStrictEqual([rep.jump_at_edge.errs[0].errMs, rep.jump_at_edge.withinTick], [75, 0]);
+  // GlimTruthKit edges carry last_supported_ms: the ideal jump is midway between the last supported tick and the first unsupported one
+  assert.deepStrictEqual(M.idealMoments([{ t: 5000, type: 'edge', player: 'G', last_supported_ms: 4950 }], 'G').jump_at_edge, [4975]);
+  assert.deepStrictEqual(M.idealMoments([{ t: 5000, type: 'edge', player: 'G', last_supported_ms: 3000 }], 'G').jump_at_edge, [5000], 'a stale last_supported_ms is ignored');
   // pairing is one-to-one and closest-first
   const p = M.pairErrors([100, 110], [105], 300);
   assert.deepStrictEqual([p.errs.length, p.extra, p.missed, Math.abs(p.errs[0].errMs)], [1, 1, 0, 5]);

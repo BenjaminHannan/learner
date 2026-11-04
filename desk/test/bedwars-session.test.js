@@ -8,20 +8,22 @@ const H = require('../src/games/bedwars/harness');
 // a small stateful stand-in for glimtool.ps1. o.script: verb -> replies served first (an object, or fn(st) -> object|null to fall through)
 function fakePC(o) {
   o = o || {};
-  const st = { gpu: o.gpuHolder || null, server: o.serverRunning ? { pid: 999, ours: false } : null, match: null, client: null, polls: 0, violations: [] };
+  const st = { gpu: o.gpuHolder || null, server: o.serverRunning ? { pid: 999, ours: false } : null, match: null, client: null, polls: 0, violations: [],
+    hands: o.hands || { ok: true, signed_in: true, locked: true, idle_s: 900, last_input_ms: 1000 } };
   const script = o.script || {}, calls = [];
   const call = async (verb, args) => {
     calls.push({ verb, args: args || {} });
     const q = script[verb]; if (q && q.length) { const r = q.shift(); const x = typeof r === 'function' ? r(st) : r; if (x) return x; }
     switch (verb) {
+      case 'ping': return typeof st.hands === 'function' ? st.hands(st) : { ...st.hands };
       case 'gpu-acquire': if (st.gpu) return { ok: false, error: 'GPU busy: in use by ' + st.gpu, next: ['gpu-status'] }; st.gpu = 'glim-bedwars'; return { ok: true, holder: 'glim-bedwars' };
       case 'gpu-status': return { ok: true, holder: st.gpu, free: !st.gpu };
       case 'gpu-release': if (st.gpu === 'glim-bedwars') st.gpu = null; return { ok: true };
-      case 'server-status': return st.server ? { ok: true, running: true, pid: st.server.pid, port: 25565 } : { ok: true, running: false };
+      case 'server-status': return st.server ? { ok: true, running: true, pid: st.server.pid, port: 25565, names: st.client ? ['GlimBot'] : [] } : { ok: true, running: false };
       case 'server-start': st.server = { pid: 4242, ours: true }; return { ok: true, pid: 4242, port: 25570 };
       case 'server-stop': if (st.server && !st.server.ours) st.violations.push('stopped a server we did not start'); st.server = null; return { ok: true };
       case 'map-list': return { ok: true, maps: ['Lighthouse', 'Pernicious'] };
-      case 'match-start': st.match = { state: 'running' }; return { ok: true, match_id: 'm1' };
+      case 'match-start': if (!st.client) st.violations.push('match-start before the client joined'); st.match = { state: 'running' }; return { ok: true, match_id: 'm1', state: 'running' };
       case 'match-status': st.polls++; if (!st.match) return { ok: true, state: 'none' }; if (st.polls >= (o.pollsToEnd || 2)) st.match.state = 'ended'; return { ok: true, state: st.match.state, teams: ['red', 'blue'] };
       case 'match-stop': st.match = null; return { ok: true };
       case 'log-read': return { ok: true, events: st.polls === 1 ? [{ t: '2026-11-04T15:00:00.000Z', type: 'match_start' }] : [], next_since: '2026-11-04T15:00:01.000Z' };
@@ -45,10 +47,12 @@ test('success: decide -> launch -> match -> play -> quit, in order; everything w
   const r = await s.run({});
   assert.strictEqual(r.outcome, 'played'); assert.strictEqual(r.ok, true);
   assert.deepStrictEqual(r.reached, { decide: true, launch: true, match: true, play: true, quit: true });
-  assert.deepStrictEqual(verbs(pc), ['gpu-acquire', 'server-status', 'server-start', 'map-list', 'match-start', 'client-launch',
-    'match-status', 'log-read', 'match-status', 'log-read', 'client-stop', 'match-stop', 'server-stop', 'gpu-release']);
+  assert.deepStrictEqual(verbs(pc), ['ping', 'gpu-acquire', 'server-status', 'server-start', 'map-list', 'ping', 'client-launch', 'match-start',
+    'ping', 'match-status', 'log-read', 'ping', 'match-status', 'log-read', 'client-stop', 'match-stop', 'server-stop', 'gpu-release']);
   assert.strictEqual(r.map, 'Pernicious');
-  assert.deepStrictEqual(pc.calls.find((c) => c.verb === 'match-start').args, { map: 'Pernicious', mode: '1v1', opponent: 'scripted:L2' });
+  assert.deepStrictEqual(pc.calls.find((c) => c.verb === 'match-start').args, { map: 'Pernicious', mode: '1v1', opponent: 'none' }, 'the only opponent glimtool has');
+  assert.deepStrictEqual(pc.st.violations, []);
+  assert.strictEqual(r.hands.go, true); assert.match(r.hands.why, /locked/);
   assert.deepStrictEqual(pc.calls.find((c) => c.verb === 'client-launch').args, { name: 'GlimBot', server: '127.0.0.1:25570' }, 'our local server only');
   assert.strictEqual(pc.calls.find((c) => c.verb === 'gpu-acquire').args.who, 'glim-bedwars');
   assert.strictEqual(r.events.length, 1);
@@ -78,9 +82,9 @@ test('a failing step: retries with backoff, reads the error, runs allowed runboo
   assert.strictEqual(verbs(pc).filter((v) => v === 'match-status').length, 1, 'a read-only alternative runs once per step');
   assert.ok(step.alternatives.some((a) => a.hint === 'server-stop' && !a.ran), 'stopping the server is not a match-start alternative');
   assert.ok(step.alternatives.some((a) => /reinstall/.test(a.hint) && !a.ran), 'free-text hints are logged, not run');
-  assert.deepStrictEqual(r.reached, { decide: true, launch: false, match: false, play: false, quit: true });
-  assert.ok(!verbs(pc).includes('client-stop') && !verbs(pc).includes('match-stop'), 'nothing we did not start is stopped');
-  assert.deepStrictEqual(verbs(pc).slice(-2), ['server-stop', 'gpu-release']);
+  assert.deepStrictEqual(r.reached, { decide: true, launch: true, match: false, play: false, quit: true });
+  assert.ok(!verbs(pc).includes('match-stop'), 'a match we did not start is not stopped');
+  assert.deepStrictEqual(verbs(pc).slice(-3), ['client-stop', 'server-stop', 'gpu-release'], 'the client we launched is stopped');
   assert.strictEqual(pc.st.gpu, null); assert.deepStrictEqual(asked, []);
 });
 
@@ -106,7 +110,7 @@ test('the GPU is always released: an exception in play, an abort (Ben first), a 
 test('GPU busy (Ben\'s duels first): deferred, no other step, no question to Ben, the loan is untouched', async () => {
   const pc = fakePC({ gpuHolder: 'ben-duel' }); const { s, asked } = session(pc);
   const r = await s.run({});
-  assert.strictEqual(r.outcome, 'deferred'); assert.deepStrictEqual(verbs(pc), ['gpu-acquire', 'gpu-status'], 'one read-only look: is the holder us?');
+  assert.strictEqual(r.outcome, 'deferred'); assert.deepStrictEqual(verbs(pc), ['ping', 'gpu-acquire', 'gpu-status'], 'one read-only look: is the holder us?');
   assert.strictEqual(pc.st.gpu, 'ben-duel'); assert.deepStrictEqual(asked, []);
 });
 
@@ -176,4 +180,90 @@ test('wantToPlay(): a Mote-pool job the motivation path can run; harness accepta
   assert.strictEqual(H.acceptance(results.slice(0, 9)).pass, null, 'fewer than 10 tries: no verdict');
   results[0] = { ...results[0], outcome: 'failed' };
   assert.strictEqual(H.acceptance(results).pass, false, '8/10 fails the mark');
+});
+
+// ---- the hands rule (Ben, 11-04): never take BensPC over from someone using it -------------------------------------------------
+const unlocked = (idle, last) => ({ ok: true, signed_in: true, locked: false, idle_s: idle, last_input_ms: last == null ? 5000 : last });
+
+test('hands: locked -> go without asking; unlocked and used < 2 min ago -> deferred before the GPU is touched; no reading -> deferred', async () => {
+  const asks = [];
+  const pc = fakePC(); const r = await session(pc, { askUser: async (q) => { asks.push(q); return 'yes'; }, handsMemory: {} }).s.run({});
+  assert.strictEqual(r.outcome, 'played'); assert.deepStrictEqual(asks, [], 'locked: nobody is using it, no question');
+  for (const idle of [0, 30, 119.9]) {
+    const pc2 = fakePC({ hands: unlocked(idle) }); const r2 = await session(pc2, { askUser: async (q) => { asks.push(q); return 'yes'; }, handsMemory: {} }).s.run({});
+    assert.strictEqual(r2.outcome, 'deferred', 'idle ' + idle); assert.deepStrictEqual(verbs(pc2), ['ping'], 'nothing else is touched');
+    assert.match(r2.hands.why, /in use/); assert.strictEqual(r2.reached.quit, true);
+  }
+  const pc3 = fakePC({ hands: { ok: true, signed_in: true, locked: false, idle_s: null, idle_error: 'bridge not set up' } });
+  const r3 = await session(pc3, { askUser: async (q) => { asks.push(q); return 'yes'; }, handsMemory: {} }).s.run({});
+  assert.strictEqual(r3.outcome, 'deferred'); assert.match(r3.hands.why, /unknown.*bridge not set up/);
+  const pc4 = fakePC({ hands: { ok: false, error: 'transport: lan: timed out', transport: true } });
+  assert.strictEqual((await session(pc4, { handsMemory: {} }).s.run({})).outcome, 'deferred');
+  assert.deepStrictEqual(asks, [], 'none of these asks');
+});
+
+test('hands: idle >= 2 min -> ask once; yes -> play, no -> deferred (and not asked again in that idle stretch), silence for 1 min -> go', async () => {
+  const mem = {}; const asks = [];
+  const ask = (ans) => async (q, o) => { asks.push({ q, o }); return ans; };
+  const pc = fakePC({ hands: unlocked(120) }); const r = await session(pc, { askUser: ask('yes'), handsMemory: mem }).s.run({});
+  assert.strictEqual(r.outcome, 'played'); assert.strictEqual(asks.length, 1); assert.strictEqual(asks[0].o.timeoutMs, 60000);
+  assert.match(asks[0].q, /BensPC/); assert.strictEqual(r.hands.answer, 'yes');
+  // a new idle stretch (new last input): asked again, says no -> deferred, nothing started
+  const pc2 = fakePC({ hands: unlocked(400, 90000) }); const r2 = await session(pc2, { askUser: ask('no'), handsMemory: mem }).s.run({});
+  assert.strictEqual(r2.outcome, 'deferred'); assert.deepStrictEqual(verbs(pc2), ['ping']); assert.strictEqual(asks.length, 2);
+  // same stretch later: never ask twice; the no still holds
+  const pc3 = fakePC({ hands: unlocked(700, 90000) }); const r3 = await session(pc3, { askUser: ask('yes'), handsMemory: mem }).s.run({});
+  assert.strictEqual(r3.outcome, 'deferred'); assert.strictEqual(asks.length, 2, 'not asked twice'); assert.match(r3.hands.why, /said no/);
+  // silence: the question times out after 1 min (the injected sleep stands in for the minute) -> go ahead
+  const slept = [];
+  const pc4 = fakePC({ hands: unlocked(300, 200000) });
+  const r4 = await new S.PlaySession({ benspc: pc4, askUser: (q) => { asks.push({ q }); return new Promise(() => {}); }, handsMemory: mem,
+    sleep: async (ms) => { slept.push(ms); } }).run({});
+  assert.strictEqual(r4.outcome, 'played'); assert.strictEqual(r4.hands.answer, 'none'); assert.strictEqual(slept[0], 60000);
+  // ...and in that same stretch the next session goes ahead without a second question
+  const n = asks.length;
+  const r5 = await session(fakePC({ hands: unlocked(330, 200000) }), { askUser: ask('no'), handsMemory: mem }).s.run({});
+  assert.strictEqual(r5.outcome, 'played'); assert.strictEqual(asks.length, n);
+});
+
+test('hands: any input during play freezes at once: no more match polling, then a clean quit and the GPU released', async () => {
+  let pings = 0;
+  const hands = () => { pings++; return pings <= 3 ? { ok: true, signed_in: true, locked: true, idle_s: 900, last_input_ms: 1000 } : { ok: true, signed_in: true, locked: true, idle_s: 0.4, last_input_ms: 61000 }; };
+  const pc = fakePC({ hands, pollsToEnd: 99 }); const r = await session(pc, { handsMemory: {} }).s.run({});
+  assert.strictEqual(r.outcome, 'yielded'); assert.ok(r.frozen); assert.match(r.frozen.why, /input/);
+  const v = verbs(pc); const i = v.lastIndexOf('ping');
+  assert.deepStrictEqual(v.slice(i), ['ping', 'client-stop', 'match-stop', 'server-stop', 'gpu-release'], 'freeze -> stop input, quit, release');
+  assert.deepStrictEqual([pc.st.gpu, pc.st.server, pc.st.match, pc.st.client], [null, null, null, null]);
+  assert.strictEqual(r.reached.quit, true);
+  // an unlock during play is a touch too (lock state alone, no idle reading needed)
+  let k = 0;
+  const pc2 = fakePC({ pollsToEnd: 99, hands: () => (++k <= 2 ? { ok: true, signed_in: true, locked: true, idle_s: null } : { ok: true, signed_in: true, locked: false, idle_s: null }) });
+  const r2 = await session(pc2, { handsMemory: {} }).s.run({});
+  assert.strictEqual(r2.outcome, 'yielded'); assert.match(r2.frozen.why, /unlocked/); assert.strictEqual(pc2.st.gpu, null);
+  // three unreadable checks in a row: we cannot see the hands -> freeze as well
+  let j = 0;
+  const pc3 = fakePC({ pollsToEnd: 99, hands: () => (++j <= 1 ? unlocked(900, 1000) : { ok: false, error: 'transport: timed out', transport: true }) });
+  const r3 = await session(pc3, { handsMemory: {} }).s.run({});
+  assert.strictEqual(r3.outcome, 'yielded'); assert.match(r3.frozen.why, /cannot see/); assert.strictEqual(pc3.st.gpu, null);
+  // a touch while the server was starting: caught right before the client window would appear; nothing is launched
+  let m = 0;
+  const pc4 = fakePC({ hands: () => (++m <= 1 ? unlocked(900, 1000) : unlocked(1, 300000)) });
+  const r4 = await session(pc4, { handsMemory: {} }).s.run({});
+  assert.strictEqual(r4.outcome, 'yielded'); assert.ok(!verbs(pc4).includes('client-launch'));
+  assert.deepStrictEqual(verbs(pc4).slice(-2), ['server-stop', 'gpu-release']);
+});
+
+test('hands: a custom reflex (o.play) gets its signal aborted when the hands are touched, and the session still cleans up', async () => {
+  let n = 0;
+  const pc = fakePC({ hands: () => (++n <= 2 ? { ok: true, signed_in: true, locked: true, idle_s: 900, last_input_ms: 1000 } : { ok: true, signed_in: true, locked: true, idle_s: 0, last_input_ms: 99000 }) });
+  let sawAbort = false, sentAfter = 0;
+  const play = (ctx) => new Promise((resolve) => {
+    const tick = () => { if (ctx.signal.aborted) { sawAbort = true; return resolve({ ok: true, events: [] }); } if (!ctx.gateOk()) sentAfter++; setImmediate(tick); };
+    tick();
+  });
+  const r = await session(pc, { play, handsMemory: {} }).s.run({});
+  assert.strictEqual(sawAbort, true); assert.strictEqual(sentAfter, 0, 'no input after the freeze');
+  assert.strictEqual(r.outcome, 'yielded'); assert.match(r.frozen.why, /input/);
+  assert.deepStrictEqual(verbs(pc).slice(-4), ['client-stop', 'match-stop', 'server-stop', 'gpu-release']);
+  assert.strictEqual(pc.st.gpu, null);
 });

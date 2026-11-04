@@ -13,7 +13,8 @@ const HOSTS = [
 ];
 const SSH_OPTS = ['-o', 'ConnectTimeout=8', '-o', 'BatchMode=yes'];
 const TIMEOUT_MS = 60000;
-const SLOW = { 'server-start': 150000, 'client-launch': 150000, 'match-start': 90000 };   // ours: these wait on BensPC
+const SLOW = { 'server-start': 240000, 'client-launch': 150000, 'match-start': 120000 };   // ours: these wait on BensPC
+// (server-start: up to 120 s for the port + 60 s for RCON + TruthKit; match-start: up to 45 s for the join + 30 s for the start)
 // verbs that change state: after a TIMEOUT they may already have run, so we do not resend them on the other route (the caller
 // checks status instead). A refused connection (exit 255) never reached BensPC, so it is always safe to try the other route.
 const MUTATING = new Set(['gpu-acquire', 'server-start', 'match-start', 'client-launch', 'desk']);

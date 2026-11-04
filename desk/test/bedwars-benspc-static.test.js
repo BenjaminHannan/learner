@@ -64,10 +64,12 @@ test('runbook.json is valid; every error has >= 1 fix and an askBen flag', () =>
   }
 });
 
-test('Ben is asked only for: no session, login, purchase, UAC (and the locked screen)', () => {
+test('Ben is asked only for: no session, login, purchase, UAC (never to unlock the screen: it is locked on purpose)', () => {
   const rb = JSON.parse(read('runbook.json'));
   const asks = rb.steps.flatMap((s) => s.errors).filter((e) => e.askBen).map((e) => e.id).sort();
-  assert.deepStrictEqual(asks, ['login-required', 'no-session', 'purchase', 'screen-locked', 'uac']);
+  assert.deepStrictEqual(asks, ['login-required', 'no-session', 'purchase', 'uac']);
+  const locked = rb.steps.flatMap((s) => s.errors).find((e) => e.id === 'screen-locked');
+  assert.match(JSON.stringify(locked.fixes), /never unlocks it/);
 });
 
 test('every Fail id used in glimtool.ps1 exists in the runbook', () => {
@@ -141,11 +143,18 @@ test('guardrails are present: 15 GB floor, GPU rules, pids.json, our folder', ()
   assert.match(g, /Assert-Disk/);
 });
 
-test('bridge: interactive-token task, on demand, request/result files', () => {
+test('bridge: interactive-token task, on demand, no window, request/result files, idle + lock check', () => {
   const x = read('bridge-task.xml');
   assert.match(x, /<LogonType>InteractiveToken<\/LogonType>/);
   assert.match(x, /<Triggers\s*\/>/);
-  assert.match(x, /bridge\.ps1/);
+  assert.match(x, /<Command>wscript\.exe<\/Command>/);
+  assert.match(x, /bridge-launch\.vbs/);
+  const vbs = fs.readFileSync(path.join(DIR, 'bridge-launch.vbs'), 'utf8');
+  assert.match(vbs, /bridge\.ps1"+, 0, True/, 'window style 0 (hidden), wait for the bridge');
+  assert.match(read('bridge.ps1'), /'idle' \{/);
+  assert.match(read('bridge.ps1'), /GetLastInputInfo/);
+  assert.match(read('bridge.ps1'), /WTSQuerySessionInformationW/);
+  assert.doesNotMatch(read('bridge.ps1'), /LockWorkStation|SendInput|keybd_event|LogonUser/, 'the bridge never locks/unlocks or types');
   const b = read('bridge.ps1');
   assert.match(b, /req/);
   assert.match(b, /res/);
@@ -157,4 +166,44 @@ test('RUNBOOK.md lists every runbook error id', () => {
   const rb = JSON.parse(read('runbook.json'));
   const md = read('RUNBOOK.md');
   for (const s of rb.steps) for (const e of s.errors) assert.ok(md.includes('`' + e.id + '`'), e.id);
+});
+
+test('Minecraft is never driven by desktop input: match verbs use GlimTruthKit over RCON; desk input is refused while our client runs', () => {
+  const g = read('glimtool.ps1');
+  const body = (verb) => { const i = g.indexOf("  '" + verb + "' {"); const rest = g.slice(i + 5); const j = rest.search(/\n  '[a-z-]+' \{/); return rest.slice(0, j < 0 ? undefined : j); };
+  for (const v of ['match-start', 'match-status', 'match-stop']) {
+    assert.doesNotMatch(body(v), /Invoke-Bridge|'desk'/, v + ' must not use the bridge or desk input');
+    assert.match(body(v), /Invoke-Tk/, v + ' uses GlimTruthKit');
+  }
+  assert.match(body('match-start'), /Invoke-Tk "start \$map"/);
+  assert.match(body('match-start'), /bw forceStart debug/);
+  assert.match(body('desk'), /Fail 'desk-refused'/);
+  assert.match(body('ping'), /Invoke-Bridge 'idle' @\(\) \d+ -Soft/);
+  assert.match(body('ping'), /idle_s/); assert.match(body('ping'), /last_input_ms/);
+});
+
+test('deploy.sh ships the hidden bridge launcher and GlimTruthKit; setup builds it into OUR server copy and re-registers the task', () => {
+  const sh = read('deploy.sh');
+  for (const f of ['bridge-launch.vbs', 'truthkit/build.ps1', 'truthkit/res/plugin.yml', 'truthkit/res/config.yml', 'truthkit/src/glim/tk/TruthKit.java']) assert.ok(sh.includes('|' + f + '"'), f);
+  const st = read('setup.ps1');
+  assert.match(st, /truthkit\\build\.ps1/); assert.match(st, /-Install/);
+  assert.match(st, /Register-ScheduledTask -TaskName 'GlimBridge' -Xml/);
+  assert.match(st, /'bridge-launch\.vbs'/);
+  const b = fs.readFileSync(path.join(DIR, 'truthkit', 'build.ps1'), 'utf8');
+  assert.match(b, /glim-bedwars\\server\\plugins/); assert.match(b, /StartsWith\(\$Root/);
+  assert.doesNotMatch(b, /Remove-Item|\bdel\b/);
+});
+
+test('GlimTruthKit writes every truth-log event type with ms times to our logs\\truth.jsonl (and never human chat)', () => {
+  const j = fs.readFileSync(path.join(DIR, 'truthkit', 'src', 'glim', 'tk', 'TruthKit.java'), 'utf8');
+  for (const t of ['join', 'leave', 'match_start', 'match_end', 'hit', 'death', 'kill', 'void_death', 'bed_broken', 'purchase', 'pickup', 'block_place', 'block_break', 'tick', 'edge'])
+    assert.ok(j.includes('"' + t + '"'), 'event type ' + t);
+  assert.ok(j.includes('"{\\"ms\\":" + ms + ",\\"t\\":\\""'), 'every line starts with ms then t');
+  assert.match(j, /yyyy-MM-dd'T'HH:mm:ss\.SSSXXX/);
+  assert.match(j, /"bw forceStart debug"/);
+  assert.match(j, /"bw join "/);
+  assert.doesNotMatch(j, /AsyncPlayerChatEvent/, 'chat is never read, so it is never stored');
+  const cfg = fs.readFileSync(path.join(DIR, 'truthkit', 'res', 'config.yml'), 'utf8');
+  assert.match(cfg, /truth-file: 'C:\/Users\/benja\/glim-bedwars\/logs\/truth\.jsonl'/);
+  assert.match(fs.readFileSync(path.join(DIR, 'truthkit', 'res', 'plugin.yml'), 'utf8'), /^name: GlimTruthKit$/m);
 });

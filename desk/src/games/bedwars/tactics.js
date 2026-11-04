@@ -1,155 +1,176 @@
 'use strict';
-// Glim team, Bedwars side (plan v4.1 §1): the fixed TACTICAL vocabulary the slow brain (Nanbeige) uses to steer the reflex.
-// Codes come from bedwars/PVP-HABITS.md (research repo) plus the Bedwars economy / bed steps. Each call is a few tokens:
-//   "st l w"  strafe left + W-tap        "jc 3"   jump-crit when he is 3 blocks away      "bh"  block-hit
-//   "br 2; jg" bridge 2 blocks, then jump the gap                                         "buy wool"  "get iron 16"
-// A line may hold up to MAX_CALLS calls joined by ';' (done in order). Long names are accepted too ("strafe left wtap").
-// No fishing rods (Ben, 11-03). Pure; no I/O.
+// Glim team, Bedwars side: the slow brain's VOCABULARY (v2) and the PLAN RULES.
+// Real Nanbeige (8-bit, M1, I3's measurements): ~2.7 s per call (0.3-0.4 calls/s); calls always well-formed (24/24) but the right
+// call only 6/12 and whole plans 1/12; it often ignored its "already done" list and never sent a required follow-up (0/6). So:
+//   - 9 calls, each a plain word with a one-line description written so no two can be mixed up (I3 intent format: "BRIDGE n=20");
+//   - the brain only chooses WHAT to aim for (bridge, break the bed, fight, defend, an upgrade to buy). The rules below make the
+//     plan correct without asking it again: steps already done are dropped, resources and required purchases are worked out from
+//     the inventory ("no wool -> get iron, buy wool"; "bed covered in wool -> buy shears first"), the goal step is never lost;
+//   - moment-to-moment play (hitting, W-taps, crits, the jump at the bridge edge) is the reflex's and the schedule's (adapter.js),
+//     never a brain call. Urgent rules (an enemy close -> FIGHT) are applied at once, not after a 3-11 s brain answer.
+// Pure; no I/O. The old short codes ("jc 3", "br 4") survive only in parse() below, for truthlog.cards() (another builder's file).
+const { intent } = require('./core-iface');
 
-const MAX_CALLS = 3;
-const ITEMS = ['wool', 'wood', 'endstone', 'stone_sword', 'iron_sword', 'chain_armor', 'iron_armor', 'pickaxe', 'axe', 'shears', 'gapple', 'fireball', 'tnt', 'pearl'];
-const RESOURCES = ['iron', 'gold', 'diamond', 'emerald'];
-const DIRS = { l: 'l', left: 'l', r: 'r', right: 'r' };
+const RES = ['iron', 'gold', 'diamond', 'emerald'];
+const ITEMS = ['wool', 'stone_sword', 'iron_sword', 'chain_armor', 'shears', 'pickaxe', 'gapple'];
+// Hypixel-like prices (ours, approximate): what one BUY costs; wool comes 16 at a time
+const PRICE = { wool: ['iron', 4], stone_sword: ['iron', 10], iron_sword: ['gold', 7], chain_armor: ['iron', 40], shears: ['iron', 20], pickaxe: ['iron', 10], gapple: ['gold', 3] };
+const WOOL_PER_BUY = 16;
+const PERMANENT = new Set(['stone_sword', 'iron_sword', 'chain_armor', 'shears', 'pickaxe']);   // kept after a death
 
-// p: [{name, type: 'enum'|'int'|'num'|'flag', values?, min?, max?, def?, flag? (the token for a flag)}]
-const VOCAB = {
-  st:   { name: 'strafe', group: 'pvp', p: [{ name: 'dir', type: 'enum', values: ['l', 'r'] }, { name: 'wtap', type: 'flag', flag: 'w', def: false }], says: 'strafe left/right (w = W-tap each hit)' },
-  wt:   { name: 'sprint_reset', group: 'pvp', p: [], says: 'W-tap: release and re-press W after the hit' },
-  stap: { name: 's_tap', group: 'pvp', p: [], says: 'S-tap after the hit' },
-  jc:   { name: 'jump_crit', group: 'pvp', timed: 'crit_on_fall', p: [{ name: 'at', type: 'num', min: 0.5, max: 6, def: 3 }], says: 'jump so the hit lands falling, when he is AT blocks away' },
-  jr:   { name: 'jump_reset', group: 'pvp', p: [], says: 'jump on the tick you get hit' },
-  bh:   { name: 'block_hit', group: 'pvp', timed: 'block_at_hit', p: [], says: 'sword-block right after each landed hit' },
-  hs:   { name: 'hit_select', group: 'pvp', p: [], says: 'land the sprint hit just after his hit' },
-  cb:   { name: 'combo', group: 'pvp', p: [], says: 'keep him in knockback: chase and hit' },
-  bo:   { name: 'back_off', group: 'pvp', p: [{ name: 'd', type: 'num', min: 1, max: 12, def: 3 }], says: 'back off D blocks' },
-  br:   { name: 'bridge', group: 'move', p: [{ name: 'n', type: 'int', min: 1, max: 64 }], says: 'bridge N blocks' },
-  jg:   { name: 'jump_gap', group: 'move', timed: 'jump_at_edge', p: [], says: 'jump the gap at the edge' },
-  rb:   { name: 'return_base', group: 'move', p: [], says: 'go back to base' },
-  buy:  { name: 'buy', group: 'econ', p: [{ name: 'item', type: 'enum', values: ITEMS }], says: 'buy ITEM at the shop' },
-  get:  { name: 'get', group: 'econ', p: [{ name: 'res', type: 'enum', values: RESOURCES }, { name: 'n', type: 'int', min: 1, max: 64, def: 16 }], says: 'collect N of RES at a generator' },
-  bb:   { name: 'break_bed', group: 'bed', p: [], says: 'break the enemy bed' },
-  db:   { name: 'defend_bed', group: 'bed', p: [], says: 'defend my bed' }
+const vocab = {
+  GET: { args: { res: { enum: RES, default: 'iron' }, n: { min: 1, max: 64, int: true, default: 16 } }, help: 'stand on YOUR OWN generator until you carry n of res' },
+  BUY: { args: { item: { enum: ITEMS } }, help: 'buy one item at YOUR OWN shop (only works on your own island)' },
+  BRIDGE: { args: { n: { min: 1, max: 64, int: true, default: 20 } }, help: 'place up to n blocks in a straight line toward the ENEMY island, then jump the last small gap' },
+  BREAK_BED: { args: {}, help: 'walk to the ENEMY bed and break it' },
+  FIGHT: { args: {}, help: 'attack the nearest ENEMY player until he dies or runs away' },
+  RETREAT: { args: {}, help: 'walk backwards away from the nearest ENEMY, still facing him' },
+  DEFEND: { args: {}, help: 'stand next to YOUR OWN bed and attack any ENEMY who comes near it' },
+  HOME: { args: {}, help: 'walk back to YOUR OWN island over blocks that are already placed' },
+  HOLD: { args: {}, help: 'stay where you are; only hit back if someone hits you' }
 };
-const CODES = Object.keys(VOCAB);
-const BY_NAME = {}; for (const c of CODES) { BY_NAME[c] = c; BY_NAME[VOCAB[c].name] = c; BY_NAME[VOCAB[c].name.replace(/_/g, '')] = c; BY_NAME[VOCAB[c].name.replace(/_/g, '-')] = c; }
-BY_NAME.wtap = 'wt'; BY_NAME.stap = 'stap'; BY_NAME.blockhit = 'bh'; BY_NAME.jumpcrit = 'jc';
+const CODES = Object.keys(vocab);
+const parseCall = (text) => intent.parse(vocab, text);   // -> {ok, call: {code, args}} | {ok:false, why}
+const fmt = intent.fmt;
+const promptCard = () => intent.describe(vocab);
 
-const fail = (error) => ({ ok: false, error });
-
-function checkParam(spec, v) {
-  if (spec.type === 'enum') { const x = spec.name === 'dir' ? DIRS[String(v).toLowerCase()] : String(v).toLowerCase(); return spec.values.includes(x) ? { ok: true, v: x } : fail(spec.name + ' must be one of ' + spec.values.join('/')); }
-  if (spec.type === 'flag') return v === true || v === false ? { ok: true, v } : fail(spec.name + ' is on or off');
-  const n = Number(v);
-  if (!Number.isFinite(n)) return fail(spec.name + ' must be a number');
-  if (spec.type === 'int' && !Number.isInteger(n)) return fail(spec.name + ' must be a whole number');
-  if (n < spec.min || n > spec.max) return fail(spec.name + ' must be ' + spec.min + '..' + spec.max);
-  return { ok: true, v: n };
-}
-
-// a call object -> validated canonical call {code, params} (defaults filled) or {ok:false, error}
-function validate(call) {
-  if (!call || typeof call !== 'object') return fail('not a call');
-  const code = BY_NAME[String(call.code || '').toLowerCase()];
-  if (!code) return fail('unknown code "' + call.code + '"');
-  const spec = VOCAB[code], given = call.params || {}, params = {};
-  for (const k of Object.keys(given)) if (!spec.p.some((p) => p.name === k)) return fail(code + ': unknown param ' + k);
-  for (const p of spec.p) {
-    if (given[p.name] == null) { if (p.def === undefined) return fail(code + ': missing ' + p.name); params[p.name] = p.def; continue; }
-    const r = checkParam(p, given[p.name]); if (!r.ok) return fail(code + ': ' + r.error); params[p.name] = r.v;
-  }
-  return { ok: true, call: { code, params } };
-}
-
-// canonical short text (what Nanbeige writes and reads back): code, then params in order; flags only when on; defaults kept explicit
-function toText(call) {
-  const v = validate(call); if (!v.ok) throw new Error(v.error);
-  const { code, params } = v.call, out = [code];
-  for (const p of VOCAB[code].p) { if (p.type === 'flag') { if (params[p.name]) out.push(p.flag); } else out.push(String(params[p.name])); }
-  return out.join(' ');
-}
-
-// one call's text -> {ok, call} | {ok:false, error}
-function parseOne(text) {
-  const toks = String(text || '').trim().toLowerCase().split(/[\s,()]+/).filter(Boolean);
-  if (!toks.length) return fail('empty call');
-  const code = BY_NAME[toks[0]]; if (!code) return fail('unknown code "' + toks[0] + '"');
-  const spec = VOCAB[code], params = {}, rest = toks.slice(1);
-  const flags = spec.p.filter((p) => p.type === 'flag'), plain = spec.p.filter((p) => p.type !== 'flag');
-  const pos = [];
-  for (const t of rest) {
-    const f = flags.find((p) => t === p.flag || t === p.name || (p.name === 'wtap' && t === 'w-tap'));
-    if (f) { params[f.name] = true; continue; }
-    if (t === '+' || t === 'and') continue;
-    const v = t.replace(/blocks?$/, ''); if (v) pos.push(v);
-  }
-  if (pos.length > plain.length) return fail(code + ': too many params (' + rest.join(' ') + ')');
-  plain.forEach((p, i) => { if (pos[i] != null && pos[i] !== '') params[p.name] = pos[i]; });
-  return validate({ code, params });
-}
-
-// a whole line ("br 2; jg") -> {ok, calls} | {ok:false, error}. "then" also splits ("bridge 2 then jump_gap").
-function parse(line) {
-  const parts = String(line || '').split(/;|\bthen\b|\n/i).map((s) => s.trim()).filter(Boolean);
-  if (!parts.length) return fail('empty line');
-  if (parts.length > MAX_CALLS) return fail('at most ' + MAX_CALLS + ' calls per line');
-  const calls = [];
-  for (const p of parts) { const r = parseOne(p); if (!r.ok) return r; calls.push(r.call); }
-  return { ok: true, calls };
-}
-const lineText = (calls) => calls.map(toText).join('; ');
-
-// the vocabulary card for Nanbeige's prompt (stable text, so it caches)
-function promptCard() {
-  return CODES.map((c) => {
-    const s = VOCAB[c], ps = s.p.map((p) => p.type === 'flag' ? '[' + p.flag + ']' : p.type === 'enum' ? (p.values.length <= 4 ? p.values.join('|') : p.name.toUpperCase()) : (p.def !== undefined ? '[' + p.name.toUpperCase() + ']' : p.name.toUpperCase()));
-    return [c].concat(ps).join(' ') + ' = ' + s.says;
-  }).join('\n') + '\nItems: ' + ITEMS.join(' ') + '\nUp to ' + MAX_CALLS + ' calls per line, joined by ";".';
-}
-
-// ---- long horizon: plan-level steps (plan §1: get iron -> buy blocks -> bridge -> break bed), replanned when disrupted -------------
-const PLAN_STEPS = {
-  get_resources: { call: (o) => ({ code: 'get', params: { res: (o && o.res) || 'iron', n: (o && o.n) || 16 } }), timeoutMs: 60000 },
-  buy_blocks:    { call: (o) => ({ code: 'buy', params: { item: (o && o.item) || 'wool' } }), timeoutMs: 30000 },
-  bridge:        { call: (o) => ({ code: 'br', params: { n: (o && o.n) || 16 } }), timeoutMs: 60000 },
-  break_bed:     { call: () => ({ code: 'bb', params: {} }), timeoutMs: 45000 },
-  return_base:   { call: () => ({ code: 'rb', params: {} }), timeoutMs: 30000 },
-  defend_bed:    { call: () => ({ code: 'db', params: {} }), timeoutMs: 30000 }
+// ---- plan steps: {id, kind, call, item?} ------------------------------------------------------------------------------------
+const STEP_CALL = {
+  get_resources: (o) => ({ code: 'GET', args: { res: o.res || 'iron', n: o.n || 16 } }),
+  buy_blocks: () => ({ code: 'BUY', args: { item: 'wool' } }),
+  buy: (o) => ({ code: 'BUY', args: { item: o.item } }),
+  bridge: (o) => ({ code: 'BRIDGE', args: { n: o.n || 20 } }),
+  break_bed: () => ({ code: 'BREAK_BED', args: {} }),
+  fight: () => ({ code: 'FIGHT', args: {} }),
+  retreat: () => ({ code: 'RETREAT', args: {} }),
+  defend: () => ({ code: 'DEFEND', args: {} }),
+  home: () => ({ code: 'HOME', args: {} }),
+  hold: () => ({ code: 'HOLD', args: {} })
 };
-const RUSH_PLAN = ['get_resources', 'buy_blocks', 'bridge', 'break_bed'];
-const LOW_HP = 6;   // ours: 3 hearts
-
-// observation -> replan reasons (empty = keep going). obs: {knockedOff, died, hp, bedUnderAttack, stepStartedAt, now, step}
-function replanTriggers(obs) {
-  const why = [], o = obs || {};
-  if (o.knockedOff || o.died) why.push('knocked_off');
-  if (Number.isFinite(o.hp) && o.hp <= LOW_HP) why.push('low_hp');
-  if (o.bedUnderAttack) why.push('bed_under_attack');
-  const spec = o.step && PLAN_STEPS[o.step];
-  if (spec && Number.isFinite(o.stepStartedAt) && Number.isFinite(o.now) && o.now - o.stepStartedAt > spec.timeoutMs) why.push('step_timeout');
-  return why;
+const RUSH_PLAN = ['get_resources', 'buy_blocks', 'bridge', 'break_bed'];   // step names the truth-log goal scorer knows
+function makeStep(kind, o) { o = o || {}; const call = STEP_CALL[kind](o); return { id: kind, kind, call, ...(o.item ? { item: o.item } : {}), ...(o.res ? { res: o.res, n: o.n } : {}) }; }
+// a brain call -> a plan step
+function stepOf(call) {
+  const a = call.args || {};
+  switch (call.code) {
+    case 'GET': return makeStep('get_resources', { res: a.res, n: a.n });
+    case 'BUY': return a.item === 'wool' ? makeStep('buy_blocks') : makeStep('buy', { item: a.item });
+    case 'BRIDGE': return makeStep('bridge', { n: a.n });
+    default: return makeStep(call.code.toLowerCase());
+  }
 }
-// a simple default replan the slow brain may override: bed in danger -> defend first; knocked off / low hp -> start the rush again
-function replan(reasons, current) {
-  if (reasons.includes('bed_under_attack')) return ['return_base', 'defend_bed'].concat(RUSH_PLAN);
-  if (reasons.includes('knocked_off') || reasons.includes('low_hp')) return RUSH_PLAN.slice();
-  if (reasons.includes('step_timeout') && current) { const i = RUSH_PLAN.indexOf(current); return i > 0 ? RUSH_PLAN.slice(i - 1) : RUSH_PLAN.slice(); }
+// ids unique across the plan's history: the second "get_resources" is get_resources#2
+function withIds(steps, done) {
+  const used = new Set(done || []);
+  return steps.map((s) => { const base = s.kind === 'buy' ? 'buy:' + s.item : s.kind; let id = base, k = 1; while (used.has(id)) id = base + '#' + (++k); used.add(id); return { ...s, id }; });
+}
+
+// ---- the rules -------------------------------------------------------------------------------------------------------------
+// obs fields the rules read (adapter.js makes them from what Glim sees; HUD counts, scoreboard, own estimates):
+//   inv {iron, gold, wool, shears, ...}, atBase, bridgeLeft (blocks still to place before the jump), onEnemyIsland,
+//   enemy {dist, alive} | null, enemyBed {alive, covered}, myBedThreat, me {alive}
+const own = (inv, item) => !!(inv && inv[item]);
+// what one step needs first, given a virtual state v (inventory + where I am) -> steps to put in front of it
+function needs(step, v) {
+  const out = [];
+  const buy = (item, k) => {
+    const [cur, cost] = PRICE[item], want = cost * (k || 1);
+    if (!v.atBase) { out.push(makeStep('home')); v.atBase = true; }
+    if ((v.inv[cur] || 0) < want) { out.push(makeStep('get_resources', { res: cur, n: Math.min(64, want) })); v.inv[cur] = want; }
+  };
+  if (step.kind === 'get_resources' && !v.atBase) { out.push(makeStep('home')); v.atBase = true; }
+  if (step.kind === 'buy' || step.kind === 'buy_blocks') buy(step.kind === 'buy' ? step.item : 'wool');
+  if (step.kind === 'bridge' || step.kind === 'break_bed') {
+    if (v.bridgeLeft > 0 && (v.inv.wool || 0) < v.bridgeLeft) {
+      const k = Math.ceil((v.bridgeLeft - (v.inv.wool || 0)) / WOOL_PER_BUY);
+      buy('wool', k); for (let i = 0; i < k; i++) { out.push(makeStep('buy_blocks')); v.inv.iron -= PRICE.wool[1]; v.inv.wool = (v.inv.wool || 0) + WOOL_PER_BUY; }
+    }
+    if (step.kind === 'break_bed' && v.bridgeLeft > 0) { out.push(makeStep('bridge', { n: Math.min(64, v.bridgeLeft) })); apply(out[out.length - 1], v); }
+    if (step.kind === 'break_bed' && v.covered && !own(v.inv, 'shears')) {
+      const pre = needs(makeStep('buy', { item: 'shears' }), v); out.push(...pre, makeStep('buy', { item: 'shears' })); apply(out[out.length - 1], v);
+    }
+  }
+  return out;
+}
+// a step's effect on the virtual state
+function apply(step, v) {
+  if (step.kind === 'get_resources') { v.inv[step.res || 'iron'] = Math.max(v.inv[step.res || 'iron'] || 0, step.n || 16); v.atBase = true; }
+  else if (step.kind === 'buy_blocks') { v.inv.iron -= PRICE.wool[1]; v.inv.wool = (v.inv.wool || 0) + WOOL_PER_BUY; }
+  else if (step.kind === 'buy') { const [cur, cost] = PRICE[step.item]; v.inv[cur] -= cost; v.inv[step.item] = 1; }
+  else if (step.kind === 'bridge') { v.inv.wool = Math.max(0, (v.inv.wool || 0) - v.bridgeLeft); v.bridgeLeft = 0; v.atBase = false; }
+  else if (step.kind === 'break_bed') v.atBase = false;
+  else if (step.kind === 'home') v.atBase = true;
+}
+// make any plan (a brain's, possibly wrong) correct for what is seen now. done = the plan memory's done ids.
+//   1. resources and wool purchases are always worked out here: the brain's GET / BUY wool steps are dropped;
+//   2. steps the world already shows as done are dropped (bridge complete, bed broken, a permanent item owned, home when at base);
+//   3. the goal step (break the enemy bed) is kept at the end while that bed stands;
+//   4. every step gets its required steps in front (home before shopping, iron before buying, wool before bridging, shears before a
+//      covered bed), tracked through a virtual inventory so nothing is bought twice.
+const DONE_RANGE = 8;   // a fight is over once he is further than this (adapter.judge uses the same number)
+function repair(steps, obs, done) {
+  const near = !!(obs.enemy && obs.enemy.alive && obs.enemy.dist <= DONE_RANGE && !(obs.me && obs.me.alive === false));
+  const inv = { ...(obs.inv || {}) }, v = { inv, atBase: !!obs.atBase, bridgeLeft: obs.bridgeLeft || 0, covered: !!(obs.enemyBed && obs.enemyBed.covered) };
+  let want = (steps || []).filter((s) => {
+    if (s.kind === 'get_resources' || s.kind === 'buy_blocks') return false;
+    if (s.kind === 'bridge' && v.bridgeLeft <= 0) return false;
+    if (s.kind === 'break_bed' && obs.enemyBed && !obs.enemyBed.alive) return false;
+    if (s.kind === 'buy' && PERMANENT.has(s.item) && own(inv, s.item)) return false;
+    if ((s.kind === 'fight' || s.kind === 'retreat') && !near) return false;   // nobody to fight or run from (e.g. after I died)
+    return true;
+  });
+  want = want.filter((s, i) => !(i && want[i - 1].kind === s.kind && s.kind !== 'buy'));
+  if (obs.enemyBed && obs.enemyBed.alive && !want.some((s) => s.kind === 'break_bed')) want.push(makeStep('break_bed'));
+  // a covered enemy bed needs shears: buy them before leaving the island (not after crossing)
+  if (v.covered && !own(inv, 'shears') && obs.enemyBed && obs.enemyBed.alive && !want.some((s) => s.kind === 'buy' && s.item === 'shears')) {
+    const i = want.findIndex((s) => s.kind === 'bridge' || s.kind === 'break_bed'); want.splice(i < 0 ? want.length : i, 0, makeStep('buy', { item: 'shears' }));
+  }
+  const out = [];
+  for (const s of want) { out.push(...needs(s, v), s); apply(s, v); }
+  // a lone "home" at the front while at base is already done
+  while (out.length && out[0].kind === 'home' && obs.atBase) out.shift();
+  return withIds(out, done);
+}
+// urgent steps that cannot wait for the brain (applied by the plan at once): an enemy in fighting range -> FIGHT; my bed attacked -> go defend
+const FIGHT_RANGE = 5;
+function urgent(obs, current) {
+  const k = current && current.kind;
+  if (obs.me && obs.me.alive === false) return null;
+  if (obs.myBedThreat && k !== 'defend' && k !== 'home') return [makeStep('home'), makeStep('defend')];
+  if (obs.enemy && obs.enemy.alive && obs.enemy.dist <= FIGHT_RANGE && !['fight', 'retreat', 'defend'].includes(k)) return [makeStep('fight')];
   return null;
 }
 
-// the same vocabulary in the I3 core's format (src/games/core/intent.js: { CODE: { args: { name: spec }, help } }), for the wiring
-function coreVocab() {
-  const v = {};
-  for (const c of CODES) {
-    const s = VOCAB[c], args = {};
-    for (const p of s.p) {
-      if (p.type === 'enum') args[p.name] = { enum: p.values.slice() };
-      else if (p.type === 'flag') args[p.name] = { enum: [0, 1], default: 0 };
-      else args[p.name] = { min: p.min, max: p.max, int: p.type === 'int', ...(p.def !== undefined ? { default: p.def } : {}) };
-    }
-    v[c] = { args, help: s.says };
-  }
-  return v;
+// ---- legacy text, ONLY for truthlog.cards() (another builder's file reads VOCAB[code].group and the old codes) ---------------------
+// New calls map onto the old card codes; old short lines ("jc 3", "br 4", "st l w") still parse. The brain never sees these.
+const VOCAB = {
+  st: { group: 'pvp', p: ['dir'] }, wt: { group: 'pvp', p: [] }, stap: { group: 'pvp', p: [] }, jc: { group: 'pvp', p: ['at'] }, jr: { group: 'pvp', p: [] },
+  bh: { group: 'pvp', p: [] }, hs: { group: 'pvp', p: [] }, cb: { group: 'pvp', p: [] }, bo: { group: 'pvp', p: ['d'] }, br: { group: 'move', p: ['n'] },
+  jg: { group: 'move', p: [] }, rb: { group: 'move', p: [] }, hold: { group: 'move', p: [] }, buy: { group: 'econ', p: ['item'] }, get: { group: 'econ', p: ['res', 'n'] },
+  bb: { group: 'bed', p: [] }, db: { group: 'bed', p: [] }
+};
+const TO_LEGACY = { GET: (a) => ({ code: 'get', params: { res: a.res, n: a.n } }), BUY: (a) => ({ code: 'buy', params: { item: a.item } }), BRIDGE: (a) => ({ code: 'br', params: { n: a.n } }),
+  BREAK_BED: () => ({ code: 'bb', params: {} }), FIGHT: () => ({ code: 'cb', params: {} }), RETREAT: () => ({ code: 'bo', params: { d: 3 } }), DEFEND: () => ({ code: 'db', params: {} }),
+  HOME: () => ({ code: 'rb', params: {} }), HOLD: () => ({ code: 'hold', params: {} }) };
+const LEGACY_DEF = { get: { res: 'iron', n: 16 }, jc: { at: 3 }, bo: { d: 3 } };
+function parseLegacyOne(text) {
+  const toks = String(text || '').trim().toLowerCase().split(/[\s,()]+/).filter(Boolean);
+  const spec = toks.length && VOCAB[toks[0]]; if (!spec) return null;
+  const params = { ...(LEGACY_DEF[toks[0]] || {}) };
+  spec.p.forEach((name, i) => { const v = toks[i + 1]; if (v != null) params[name] = /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v; });
+  return { code: toks[0], params };
 }
-const toCoreCall = (call) => ({ code: call.code, args: Object.fromEntries(Object.entries(call.params).map(([k, x]) => [k, typeof x === 'boolean' ? (x ? 1 : 0) : x])) });
+function parse(line) {
+  const parts = String(line || '').split(';').map((s) => s.trim()).filter(Boolean), calls = [];
+  for (const p of parts) {
+    const n = parseCall(p);
+    if (n.ok && /[=]/.test(p) || (n.ok && Object.keys(vocab[n.call.code].args).length === 0)) { calls.push(TO_LEGACY[n.call.code](n.call.args)); continue; }
+    const o = parseLegacyOne(p); if (o) { calls.push(o); continue; }
+    if (n.ok) { calls.push(TO_LEGACY[n.call.code](n.call.args)); continue; }
+    return { ok: false, error: 'not a call: ' + p.slice(0, 40) };
+  }
+  return calls.length ? { ok: true, calls } : { ok: false, error: 'empty line' };
+}
 
-module.exports = { coreVocab, toCoreCall, VOCAB, CODES, ITEMS, RESOURCES, MAX_CALLS, validate, toText, parseOne, parse, lineText, promptCard, PLAN_STEPS, RUSH_PLAN, LOW_HP, replanTriggers, replan };
+module.exports = { vocab, CODES, RES, ITEMS, PRICE, WOOL_PER_BUY, PERMANENT, parseCall, fmt, promptCard, STEP_CALL, RUSH_PLAN, makeStep, stepOf, withIds,
+  needs, repair, urgent, FIGHT_RANGE, DONE_RANGE, VOCAB, parse };

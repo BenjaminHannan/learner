@@ -2,9 +2,9 @@
 
 Generated from `runbook.json` (that file is the source of truth; `glimtool.ps1` reads it to fill `next`).
 
-Rules: try the fixes in order. Ask Ben ONLY for: no signed-in session, a login we do not have, a purchase, a Windows UAC prompt (and the locked screen, which needs a person to unlock it). Everything else, retry or do something else.
+Rules: try the fixes in order. Ask Ben ONLY for: no signed-in session, a login we do not have, a purchase, a Windows UAC prompt. The locked screen is normal (Ben locks BensPC on purpose): never unlock it, never ask to, and never drive Minecraft with desktop clicks or typing. Everything else, retry or do something else.
 
-Happy path: `ping` -> `disk` -> `gpu-acquire` -> `server-start` -> `map-list` -> `client-launch` -> `match-start` -> play (`desk`, `log-read`) -> `match-stop` -> `client-stop` -> `server-stop` -> `gpu-release`.
+Happy path: `ping` (hands rule) -> `disk` -> `gpu-acquire` -> `server-start --map M` -> `map-list` -> `client-launch` (GlimTruthKit auto-joins GlimBot) -> `match-start` -> play (`ping` every ~2 s, `match-status`, `log-read`) -> `match-stop` -> `client-stop` -> `server-stop` -> `gpu-release`.
 
 ## connect
 
@@ -26,12 +26,13 @@ Error text: no signed-in session
 Ask Ben: **yes** - sign in to BensPC (Minecraft needs a signed-in Windows session to use the NVIDIA GPU)
 
 ### `screen-locked`
-Error text: the screen is locked, so clicks and screenshots cannot work
+Error text: the screen is locked, so desk clicks and screenshots cannot work
 
-1. client-launch and server verbs still work while locked; only desk input needs an unlocked screen
-2. check locked again in a minute (`ping`)
+1. normal: Ben locks BensPC on purpose; Glim never unlocks it and never asks to
+2. Minecraft is driven from the inside: server-start, client-launch, match-start and match-stop all work while locked; do not use desk input
+3. a locked screen means nobody is using BensPC, so the hands rule allows play (`ping`)
 
-Ask Ben: **yes** - BensPC screen is locked; desk clicks cannot work until it is unlocked or auto-unlock is set up
+Ask Ben: no
 
 ### `not-set-up`
 Error text: C:\Users\benja\glim-bedwars does not exist yet (setup.ps1 has not run)
@@ -127,6 +128,33 @@ Error text: opponent 'scripted:L2' is not built yet (only 'none')
 
 Ask Ben: no
 
+### `truthkit-missing`
+Error text: the GlimTruthKit plugin did not answer on RCON (tk status)
+
+1. check that our server is up (`server-status`)
+2. run setup.ps1 (it builds GlimTruthKit and puts it in server\plugins), then server-stop and server-start
+3. if it is still missing, report it to the coordinator thread
+
+Ask Ben: no
+
+### `arena-join-failed`
+Error text: GlimBot is on the server but not in arena X
+
+1. look at the arena state and players (`match-status`)
+2. call match-start again: it sends GlimBot with /bw join run as the player (no typing)
+3. if the arena is restarting, wait 30 s and try again
+
+Ask Ben: no
+
+### `match-wont-start`
+Error text: tk start did not start the arena / the arena did not reach playing within 30 s
+
+1. read the arena state (`match-status`)
+2. reset the arena (`match-stop`)
+3. match-start once more; if it fails twice, report it to the coordinator thread
+
+Ask Ben: no
+
 ## client
 
 ### `client-crash`
@@ -143,7 +171,7 @@ Ask Ben: no
 Error text: GlimBot is not on the server yet
 
 1. look at names; wait 20 s for the join (`server-status`)
-2. launch the client if it is not running (`client-launch`)
+2. launch the client if it is not running (GlimTruthKit sends it into the arena on login) (`client-launch`)
 
 Ask Ben: no
 
@@ -191,6 +219,13 @@ Error text: a Windows UAC (administrator permission) prompt appeared
 1. do not touch it; wait 30 s in case it was a one-off
 
 Ask Ben: **yes** - a Windows UAC prompt needs a person
+
+### `desk-refused`
+Error text: Minecraft is driven from the inside (server commands, client control path), never with desktop clicks or typing
+
+1. use match-start / match-stop (server-side commands) instead; while our client runs, desk is for look and screenshot only
+
+Ask Ben: no
 
 ## files
 

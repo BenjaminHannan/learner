@@ -9,15 +9,18 @@
 //   (b) hindsight()   labels for reflex distillation: true time-to-hit, time-to-taken-hit, time-to-edge, crit windows
 //   (c) goalScore()   long horizon: which plan steps were completed, in order, with replans counted
 //   (d) cards()       "worked / failed" text cards (call -> outcome) for Nanbeige's sleep. Text from the truth log only.
-// Event fields we read (aliases accepted, see who()): hit {attacker, victim, crit?}, kill {killer, victim}, death {victim, killer?,
-// cause?, final?}, void_death {victim}, bed_broken {team?, by}, purchase {player, item}, pickup {player, item, count}, block_place
-// {player}, edge {player} (NOT in TOOLS.md v1: see README), match_start, match_end. t = ISO text or ms. Pure; no I/O.
+// Event fields (TOOLS.md v2: GlimTruthKit's logs\truth.jsonl; aliases accepted, see who()): hit {attacker, victim, damage, crit, via},
+// kill {killer, victim, cause, final, void}, death {victim, killer, cause, final, void}, void_death {victim, killer, final},
+// bed_broken {by, by_team, team}, purchase {player, item, cost?, currency?}, pickup {player, item, count}, block_place / block_break
+// {player, block, x, y, z}, edge {player, x, y, z, og, last_supported_ms}, tick {arena, tick, p: [{n, x, y, z, vx, vy, vz, og, alive,
+// hp, ...}]}, match_start {arena, match_id, teams}, match_end {winner_team, winners, why}. t = ISO text or ms (lines also carry ms).
+// One death gives a death line, plus kill (if a killer) and void_death (if void), all with the same ms: deaths() merges them. Pure.
 const { toMs, CRIT_WINDOW_MS, CRIT_MID_MS } = require('./timing');
 const { VOCAB, parse } = require('./tactics');
 
 const VOID_WINDOW_MS = 10000, IDLE_PER_S = 0.02, RESPAWN_MS = 5000, MERGE_MS = 1000;
 const R = { hit: 1, taken: -1, kill: 5, death: -5 };
-const VOID_CAUSES = new Set(['void', 'outofworld', 'out_of_world']);
+const VOID_CAUSE = /^(void|outofworld|out_of_world)/i;   // Paper's VOID / outOfWorld, BedWars1058's VOID and VOID_FINAL_KILL
 
 const who = (e, keys) => { for (const k of keys) if (e[k] != null && e[k] !== '') return String(e[k]); return null; };
 const attacker = (e) => who(e, ['attacker', 'by', 'damager', 'killer']);
@@ -29,7 +32,7 @@ const bedBreaker = (e) => who(e, ['by', 'breaker', 'player']) || ((String(e.text
 const bedTeam = (e) => e.team != null ? String(e.team) : ((String(e.text || '').match(/(\w+)\s+bed\b/i) || [])[1] || null);
 
 function normalize(events) {
-  return (events || []).map((e, i) => ({ ...e, t: toMs(e.t), _i: i })).filter((e) => Number.isFinite(e.t) && e.type).sort((a, b) => a.t - b.t || a._i - b._i);
+  return (events || []).map((e, i) => ({ ...e, t: typeof e.ms === 'number' && Number.isFinite(e.ms) ? e.ms : toMs(e.t), _i: i }))   // GlimTruthKit lines carry ms.filter((e) => Number.isFinite(e.t) && e.type).sort((a, b) => a.t - b.t || a._i - b._i);
 }
 function span(ev, o) {
   const ms = ev.find((e) => e.type === 'match_start'), me = ev.slice().reverse().find((e) => e.type === 'match_end');
@@ -43,7 +46,7 @@ function deaths(ev) {
   for (const e of ev) {
     if (e.type !== 'death' && e.type !== 'void_death' && e.type !== 'kill') continue;
     const v = victim(e); if (!v) continue;
-    const isVoid = e.type === 'void_death' || (e.cause != null && VOID_CAUSES.has(String(e.cause).toLowerCase())) || e.void === true;
+    const isVoid = e.type === 'void_death' || (e.cause != null && VOID_CAUSE.test(String(e.cause))) || e.void === true;
     const k = e.type === 'kill' || e.type === 'death' ? killerOf(e) : null;
     const d = out.find((x) => x.victim === v && Math.abs(x.t - e.t) <= MERGE_MS);
     if (d) { d.void = d.void || isVoid; d.killer = d.killer || k; d.final = d.final || !!e.final; d.t = Math.min(d.t, e.t); }
@@ -105,7 +108,8 @@ function hindsight(frameTimes, events, me, o) {
 }
 
 // (c) the long-horizon goal scorer. plan: [{step, ...params}] or step names; planLog: our own [{t, type: 'replan', reason}]
-const BLOCK_ITEMS = new Set(['wool', 'wood', 'endstone', 'clay', 'hardened_clay', 'planks', 'obsidian']);
+// BedWars1058 shop ids (our shop.yml: wool, clay, glass, stone = end stone, ladder, wood, obsidian) plus older spellings
+const BLOCK_ITEMS = new Set(['wool', 'wood', 'endstone', 'end_stone', 'stone', 'clay', 'hardened_clay', 'glass', 'planks', 'obsidian']);
 const STEP_CHECK = {
   get_resources: (p) => ({ need: p.n || 16, count: (e, me) => e.type === 'pickup' && actor(e) === me && String(e.item || '').toLowerCase().includes(p.res || 'iron') ? Number(e.count || e.amount || 1) : 0 }),
   buy_blocks: () => ({ need: 1, count: (e, me) => e.type === 'purchase' && actor(e) === me && BLOCK_ITEMS.has(String(e.item || '').toLowerCase()) ? 1 : 0 }),
@@ -165,4 +169,15 @@ function cards(calls, events, me) {
   return out;
 }
 
-module.exports = { bedBreaker, bedTeam, VOID_WINDOW_MS, IDLE_PER_S, RESPAWN_MS, R, normalize, deaths, credit, rewards, hindsight, goalScore, cards, STEP_CHECK };
+// per-tick rows of one player from `tick` events -> [{t, x, y, z, vx, vy, vz, og, alive, hp, yaw, pitch}] (for hindsight / eyes labels)
+function track(events, name) {
+  const out = [];
+  for (const e of normalize(events)) {
+    if (e.type !== 'tick' || !Array.isArray(e.p)) continue;
+    const r = e.p.find((x) => x && x.n === name); if (!r) continue;
+    out.push({ t: e.t, x: r.x, y: r.y, z: r.z, vx: r.vx, vy: r.vy, vz: r.vz, og: r.og === 1 || r.og === true, alive: r.alive === 1 || r.alive === true, hp: r.hp, yaw: r.yaw, pitch: r.pitch });
+  }
+  return out;
+}
+
+module.exports = { track, bedBreaker, bedTeam, VOID_WINDOW_MS, IDLE_PER_S, RESPAWN_MS, R, normalize, deaths, credit, rewards, hindsight, goalScore, cards, STEP_CHECK };

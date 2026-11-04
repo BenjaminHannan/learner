@@ -1,0 +1,6 @@
+# GlimTruthKit (our own server copy only: C:\Users\benja\glim-bedwars\server)
+truth-file: 'C:/Users/benja/glim-bedwars/logs/truth.jsonl'   # one JSON line per event, ms times (see TOOLS.md)
+truth-max-mb: 64            # ours: then truth.jsonl becomes truth.prev.jsonl (the older .prev is replaced)
+ticks: true                 # per-tick positions while a match plays (20 Hz); edges are logged either way
+autojoin: ''                # fallback only; plugins/GlimTruthKit/autojoin.txt (written by glimtool / "tk autojoin") wins
+autojoin-regex: '^Glim[A-Za-z0-9_]*$'   # players Glim controls: auto-joined, may be force-started. Everyone else is a human.

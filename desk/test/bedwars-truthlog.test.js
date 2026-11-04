@@ -99,3 +99,29 @@ test('cards: call -> outcome text from the truth log only (no grader fields)', (
   assert.match(cs[3].text, /I got hit first: 1 landed, 2 taken/);
   for (const c of cs) assert.deepStrictEqual(Object.keys(c).sort(), ['call', 't', 'text', 'worked']);
 });
+
+test('GlimTruthKit shapes: VOID_FINAL_KILL is a void death, shop ids stone/glass are blocks, track() reads tick rows', () => {
+  // one final void death: death + kill + void_death lines with the same ms (as GlimTruthKit writes them) count once
+  const ev = [{ ms: 1000, t: '2026-11-04T10:00:01.000-05:00', type: 'hit', attacker: 'G', victim: 'B', damage: 1, crit: false, via: 'melee' },
+    { ms: 2000, t: 2000, type: 'death', victim: 'B', killer: 'G', cause: 'VOID_FINAL_KILL', final: true, void: true },
+    { ms: 2000, t: 2000, type: 'kill', victim: 'B', killer: 'G', cause: 'VOID_FINAL_KILL', final: true, void: true },
+    { ms: 2000, t: 2000, type: 'void_death', victim: 'B', killer: 'G', final: true }];
+  const d = L.deaths(ev);
+  assert.strictEqual(d.length, 1);
+  assert.strictEqual(d[0].void, true);
+  assert.strictEqual(L.rewards(ev, 'G').parts.kills, 5);
+  assert.strictEqual(L.rewards(ev, 'B').parts.deaths, -5);
+  // a cause-only void (no void flag) is still void
+  assert.strictEqual(L.deaths([{ t: 0, type: 'death', victim: 'B', cause: 'VOID_FINAL_KILL' }])[0].void, true);
+  // the shop's end stone id is "stone"; glass counts too
+  const plan = ['buy_blocks'];
+  for (const item of ['stone', 'glass', 'wool']) assert.strictEqual(L.goalScore([{ t: 0, type: 'purchase', player: 'G', item }], 'G', plan, []).completed, 1, item);
+  assert.strictEqual(L.goalScore([{ t: 0, type: 'purchase', player: 'G', item: 'stone_sword' }], 'G', plan, []).completed, 0);
+  // per-tick rows
+  const ticks = [{ t: 100, type: 'tick', arena: 'duel', tick: 1, p: [{ n: 'G', x: 1, y: 64, z: 2, vx: 4.3, vy: 0, vz: 0, og: 1, alive: 1, hp: 20 }, { n: 'B', x: 9, y: 64, z: 2, og: 0, alive: 1 }] },
+    { t: 150, type: 'tick', arena: 'duel', tick: 2, p: [{ n: 'B', x: 9, y: 64, z: 2, og: 1, alive: 1 }] }];
+  const tr = L.track(ticks, 'G');
+  assert.strictEqual(tr.length, 1);
+  assert.deepStrictEqual([tr[0].t, tr[0].x, tr[0].vx, tr[0].og, tr[0].alive, tr[0].hp], [100, 1, 4.3, true, true, 20]);
+  assert.deepStrictEqual(L.track(ticks, 'B').map((r) => r.og), [false, true]);
+});

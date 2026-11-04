@@ -66,7 +66,7 @@ test('a timeout: read verbs try the other route; state-changing verbs stop (may 
   const r = await new BensPC({ run: g.run }).call('server-start', { map: 'Lighthouse' });
   assert.strictEqual(r.ok, false); assert.strictEqual(r.uncertain, true);
   assert.strictEqual(g.calls.length, 1, 'not resent on the other route');
-  assert.strictEqual(g.calls[0].timeoutMs, 150000, 'server-start gets a longer wait');
+  assert.strictEqual(g.calls[0].timeoutMs, 240000, 'server-start gets a longer wait (port + RCON + TruthKit)');
   // refused connection (exit 255, no timeout) never reached BensPC: a state-changing verb may use the other route
   const h = fakeRunner({ lan: [down], tailscale: [ok({ pid: 9 })] });
   assert.strictEqual((await new BensPC({ run: h.run }).call('client-launch', { name: 'GlimBot', server: '127.0.0.1:25565' })).pid, 9);

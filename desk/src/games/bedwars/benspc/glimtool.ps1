@@ -1,8 +1,9 @@
-# glimtool.ps1 - the single entrypoint for Glim's BensPC tools (contract: ../TOOLS.md, v1).
+# glimtool.ps1 - the single entrypoint for Glim's BensPC tools (contract: ../TOOLS.md, v2).
 # Run as the SSH forced command: the verb line comes from $env:SSH_ORIGINAL_COMMAND (else from $args, for local tests).
 # Every verb prints ONE JSON line. Errors: {"ok":false,"error":"...","next":[...]}; "next" comes from runbook.json.
 # Guardrails: writes only under $Root; stops only pids in pids.json after a command-line check; 15 GB disk floor;
-# GPU_LOAN.txt rules; local server only; never types a password; never buys anything.
+# GPU_LOAN.txt rules; local server only; never types a password; never buys anything. Minecraft is driven from the inside
+# (GlimTruthKit commands over RCON, run as the player), never with desktop clicks or typing; the locked screen is never unlocked.
 $ErrorActionPreference = 'Stop'
 $Root     = 'C:\Users\benja\glim-bedwars'
 $Src189   = 'C:\Users\benja\bedwars-189'          # READ-ONLY source of the older track
@@ -138,13 +139,23 @@ function Get-Players {   # returns @{ok; players=[names]} using the RCON "list" 
     return @{ ok = $true; players = $names }
   } catch { return @{ ok = $false; players = @() } }
 }
+function Invoke-Tk([string]$cmd) {   # GlimTruthKit console command over RCON -> its one-line JSON reply, or $null
+  try {
+    $b = [string](Invoke-Rcon @("tk $cmd"))[0]; $i = $b.IndexOf('{')
+    if ($i -lt 0) { return $null }
+    return ($b.Substring($i).Trim() | ConvertFrom-Json)
+  } catch { return $null }
+}
+function Get-Arena($tk, [string]$map) { if (-not $tk) { return $null }; return (@($tk.arenas) | Where-Object { $_.name -eq $map } | Select-Object -First 1) }
+function Get-State([string]$s) { switch ($s) { 'waiting' { 'waiting' } 'starting' { 'starting' } 'playing' { 'running' } 'restarting' { 'ended' } default { 'unknown' } } }
 
 # ---------- bridge (desktop steps in benja's signed-in session) ----------
-function Invoke-Bridge([string]$action, $args2, [int]$timeoutSec = 30) {
+# -Soft: return @{ok=$false; error} instead of failing the verb (ping uses it: a missing bridge must not break ping)
+function Invoke-Bridge([string]$action, $args2, [int]$timeoutSec = 30, [switch]$Soft) {
   $s = Get-Session
-  if (-not $s.signed_in) { Fail 'no-session' 'no signed-in session' }
-  if (-not (Test-Path -LiteralPath $BridgeDir)) { Fail 'not-set-up' "$BridgeDir does not exist yet (setup.ps1 has not run)" }
-  Assert-Disk
+  if (-not $s.signed_in) { if ($Soft) { return @{ ok = $false; error = 'no signed-in session' } }; Fail 'no-session' 'no signed-in session' }
+  if (-not (Test-Path -LiteralPath $BridgeDir)) { if ($Soft) { return @{ ok = $false; error = 'bridge not set up' } }; Fail 'not-set-up' "$BridgeDir does not exist yet (setup.ps1 has not run)" }
+  if (-not $Soft) { Assert-Disk }
   $id = [guid]::NewGuid().ToString('N')
   $reqDir = Join-Path $BridgeDir 'req'; $resDir = Join-Path $BridgeDir 'res'
   New-Item -ItemType Directory -Force -Path $reqDir, $resDir | Out-Null
@@ -153,19 +164,21 @@ function Invoke-Bridge([string]$action, $args2, [int]$timeoutSec = 30) {
   ($req | ConvertTo-Json -Compress -Depth 5) | Set-Content -LiteralPath $tmp -Encoding UTF8
   Move-Item -LiteralPath $tmp -Destination $final
   cmd.exe /c "schtasks /run /tn GlimBridge >nul 2>&1"
-  if ($LASTEXITCODE -ne 0) { Remove-Ours $final; Fail 'bridge-missing' 'the GlimBridge scheduled task is not registered' }
+  if ($LASTEXITCODE -ne 0) { Remove-Ours $final; if ($Soft) { return @{ ok = $false; error = 'the GlimBridge task is not registered' } }; Fail 'bridge-missing' 'the GlimBridge scheduled task is not registered' }
   $resFile = Join-Path $resDir ($id + '.json')
-  $end = (Get-Date).AddSeconds($timeoutSec)
+  $t0 = Get-Date; $end = $t0.AddSeconds($timeoutSec); $kicks = @(3, 8)   # re-run the task once or twice: it may have been exiting (25 s idle) as we wrote
   while ((Get-Date) -lt $end) {
     if (Test-Path -LiteralPath $resFile) {
-      Start-Sleep -Milliseconds 150
+      Start-Sleep -Milliseconds 100
       $r = Get-Content -Raw -LiteralPath $resFile | ConvertFrom-Json
       Remove-Ours $resFile
       return $r
     }
-    Start-Sleep -Milliseconds 200
+    if ($kicks.Count -gt 0 -and ((Get-Date) - $t0).TotalSeconds -ge $kicks[0]) { cmd.exe /c "schtasks /run /tn GlimBridge >nul 2>&1"; $kicks = @($kicks | Select-Object -Skip 1) }
+    Start-Sleep -Milliseconds 100
   }
   Remove-Ours $final
+  if ($Soft) { return @{ ok = $false; error = "the bridge did not answer within $timeoutSec s" } }
   Fail 'bridge-timeout' "the bridge did not answer within $timeoutSec s"
 }
 
@@ -195,8 +208,18 @@ $MatchFile = Join-Path $Root 'match.json'
 # ---------- verbs ----------
 switch ($verb) {
   'ping' {
+    # hands rule input: locked (WTS session flag, read inside the session by the bridge; LogonUI as fallback) and idle_s
+    # (GetLastInputInfo in benja's signed-in session, through the bridge). last_input_ms is on BensPC's clock (epoch ms).
     $s = Get-Session
-    Ok ([ordered]@{ host = $env:COMPUTERNAME; time = (Get-Date).ToString('o'); session_user = $s.user; signed_in = $s.signed_in; locked = $s.locked; free_gb = (Get-FreeGB) })
+    $o = [ordered]@{ host = $env:COMPUTERNAME; time = (Get-Date).ToString('o'); session_user = $s.user; signed_in = $s.signed_in; locked = $s.locked; lock_src = 'logonui'; idle_s = $null; last_input_ms = $null; free_gb = (Get-FreeGB) }
+    if ($s.signed_in) {
+      $r = Invoke-Bridge 'idle' @() 12 -Soft
+      if ($r.ok -and $r.data -and $null -ne $r.data.idle_s -and [double]$r.data.idle_s -ge 0) {
+        $o['idle_s'] = [math]::Round([double]$r.data.idle_s, 1); $o['last_input_ms'] = [long]$r.data.last_input_ms
+        if ($null -ne $r.data.locked -and [int]$r.data.locked -ge 0) { $o['locked'] = ([int]$r.data.locked -eq 1); $o['lock_src'] = 'wts' }
+      } else { $o['idle_error'] = [string]$r.error }
+    }
+    Ok $o
   }
   'disk' { Ok ([ordered]@{ free_gb = (Get-FreeGB); floor_gb = $FloorGB }) }
   'gpu-status' {
@@ -260,6 +283,10 @@ switch ($verb) {
       if ($alt) { $java = $alt.FullName } else { Fail 'server-wont-start' 'no Java 21 found' }
     }
     $logs = Join-Path $Root 'logs'; New-Item -ItemType Directory -Force -Path $logs | Out-Null
+    if ($map) {   # GlimTruthKit sends GlimBot into this arena on login (performCommand as the player: no chat typing)
+      $tkd = Join-Path $srv 'plugins\GlimTruthKit'; New-Item -ItemType Directory -Force -Path $tkd | Out-Null
+      Set-Content -LiteralPath (Join-Path $tkd 'autojoin.txt') -Value $map -Encoding ASCII -NoNewline
+    }
     $out = Join-Path $logs 'server.out'
     $cl = 'cmd.exe /c ""' + $java + '" -Xms1G -Xmx3G -XX:+UseG1GC -XX:MaxGCPauseMillis=50 ' + $TagArg + ' -jar paper-1.8.8-445.jar nogui > "' + $out + '" 2>&1"'
     $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $cl; CurrentDirectory = $srv }
@@ -278,8 +305,13 @@ switch ($verb) {
         Fail 'server-wont-start' ("the server exited while starting: " + $tail)
       }
       if (Test-PortListen $Port) {
+        # RCON opens last (after every plugin is enabled): wait for it so match-start can talk to GlimTruthKit right away
+        $rcon = $false; $end2 = (Get-Date).AddSeconds(60)
+        while ((Get-Date) -lt $end2 -and -not $rcon) { try { Invoke-Rcon @('list') | Out-Null; $rcon = $true } catch { Start-Sleep 1 } }
+        $tk = $null; if ($rcon) { $tk = Invoke-Tk 'status' }
         if ($map) { @{ map = $map } | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $Root 'wanted-map.json') -Encoding ASCII }
-        Ok ([ordered]@{ pid = [int]$jp.ProcessId; port = $Port })
+        $aj = $null; if ($tk) { $aj = [string]$tk.autojoin }
+        Ok ([ordered]@{ pid = [int]$jp.ProcessId; port = $Port; rcon = $rcon; truthkit = [bool]$tk; autojoin = $aj })
       }
       Start-Sleep 1
     }
@@ -297,6 +329,9 @@ switch ($verb) {
     Ok ([ordered]@{ stopped = [bool]$p })
   }
   'match-start' {
+    # No desktop input: GlimTruthKit sends GlimBot into the arena (auto-join on login, or "tk join" = "/bw join MAP" run as the player)
+    # and starts it with BedWars1058's own "/bw forceStart debug" run as GlimBot (CmdStart needs a player in the arena; "debug" with
+    # op starts it with one player; GlimTruthKit gives op for that one command only).
     Assert-Disk
     $map = [string]$opt['map']; if (-not $map) { Fail 'bad-arg' '--map is required' }
     Test-Name $map 'map'
@@ -304,83 +339,141 @@ switch ($verb) {
     if ($mode -ne '1v1') { Fail 'bad-arg' "mode '$mode' is not supported yet (only 1v1)" }
     $opp = [string]$opt['opponent']; if (-not $opp) { $opp = 'none' }
     if ($opp -ne 'none') { Fail 'opponent-unavailable' "opponent '$opp' is not built yet (only 'none')" }
+    $name = [string]$opt['name']; if (-not $name) { $name = 'GlimBot' }
+    if ($name -notmatch '^[A-Za-z0-9_]{3,16}$') { Fail 'bad-arg' 'bad player name' }
     if ((Get-Maps).maps -notcontains $map) { Fail 'map-missing' "map '$map' is not in map-list" }
     if (-not (Get-OursProc 'server') -or -not (Test-PortListen $Port)) { Fail 'server-down' 'our server is not running' }
-    $pl = Get-Players
-    if (-not $pl.ok) { Fail 'server-down' 'could not talk to the server console (RCON)' }
-    if ($pl.players -notcontains 'GlimBot') { Fail 'client-not-joined' 'GlimBot is not on the server yet' }
-    # GlimBot joins the arena and force-starts it with in-game chat commands (needs the signed-in session); op is given through the console.
-    Invoke-Rcon @('op GlimBot') | Out-Null
-    $send = {
-      param($txt)
-      $a = Invoke-Bridge 'desk' @('key', 't') 20; Start-Sleep -Milliseconds 400
-      $b = Invoke-Bridge 'desk' @('type', $txt) 20; Start-Sleep -Milliseconds 200
-      $c = Invoke-Bridge 'desk' @('key', 'enter') 20
+    $tk = Invoke-Tk 'status'
+    if (-not $tk) { Fail 'truthkit-missing' 'the GlimTruthKit plugin did not answer on RCON (tk status)' }
+    Invoke-Tk "autojoin $map" | Out-Null
+    $joinedBy = 'autojoin'; $triedJoin = $false; $arena = $null; $in = $false
+    $end = (Get-Date).AddSeconds(45)   # the client may still be connecting
+    while ((Get-Date) -lt $end) {
+      $tk = Invoke-Tk 'status'
+      if ($tk) {
+        $arena = Get-Arena $tk $map; $in = [bool]($arena -and (@($arena.players) -contains $name))
+        if ($in) { break }
+        $elsewhere = @($tk.arenas | Where-Object { @($_.players) -contains $name -or @($_.spectators) -contains $name }).Count -gt 0
+        if ((@($tk.online) -contains $name) -and -not $elsewhere -and -not $triedJoin -and ((Get-Date) -gt $end.AddSeconds(-41))) {
+          Invoke-Tk "join $name $map" | Out-Null; $triedJoin = $true; $joinedBy = 'tk join (bw join as the player)'
+        }
+      }
+      Start-Sleep -Milliseconds 700
     }
-    & $send "/bw join $map"; Start-Sleep 2
-    & $send '/bw forceStart'
-    $id = 'm' + (Get-Date).ToString('yyyyMMddHHmmss')
-    @{ id = $id; map = $map; mode = $mode; opponent = $opp; started = (Get-Date).ToString('o') } | ConvertTo-Json -Compress | Set-Content -LiteralPath $MatchFile -Encoding ASCII
-    Ok ([ordered]@{ match_id = $id })
+    if (-not $in) {
+      if (-not $tk -or -not (@($tk.online) -contains $name)) { Fail 'client-not-joined' "$name is not on the server" }
+      Fail 'arena-join-failed' "$name is on the server but not in arena $map"
+    }
+    $cmdUsed = 'none (already playing)'
+    if ($arena.state -ne 'playing') {
+      $r = Invoke-Tk "start $map"; $cmdUsed = 'bw forceStart debug (run as ' + $name + ' by GlimTruthKit)'
+      if (-not $r -or -not $r.ok) { $why = 'no reply'; if ($r) { $why = [string]$r.error; if (-not $why) { $why = 'state ' + [string]$r.state } }; Fail 'match-wont-start' ('tk start did not start the arena: ' + $why) }
+      $end = (Get-Date).AddSeconds(30)
+      while ((Get-Date) -lt $end) { $tk = Invoke-Tk 'status'; $arena = Get-Arena $tk $map; if ($arena -and $arena.state -eq 'playing') { break }; Start-Sleep -Milliseconds 700 }
+      if (-not $arena -or $arena.state -ne 'playing') { $st = 'unknown'; if ($arena) { $st = [string]$arena.state }; Fail 'match-wont-start' "the arena did not reach playing within 30 s (state $st)" }
+    }
+    $id = [string]$arena.match_id; if (-not $id) { $id = 'm' + (Get-Date).ToString('yyyyMMddHHmmss') }
+    [ordered]@{ id = $id; map = $map; mode = $mode; opponent = $opp; name = $name; started = (Get-Date).ToString('o'); seen_playing = $true; command = $cmdUsed } | ConvertTo-Json -Compress | Set-Content -LiteralPath $MatchFile -Encoding ASCII
+    Ok ([ordered]@{ match_id = $id; arena = $map; state = (Get-State ([string]$arena.state)); joined_by = $joinedBy; command = $cmdUsed })
   }
   'match-status' {
     $m = $null; if (Test-Path -LiteralPath $MatchFile) { try { $m = Get-Content -Raw -LiteralPath $MatchFile | ConvertFrom-Json } catch { } }
     $up = [bool]((Get-OursProc 'server') -and (Test-PortListen $Port))
-    $state = 'no-server'; $t = 0
-    if ($up) { $state = 'idle'; if ($m) { $state = 'running' } }
-    if ($m) { $t = [int]((Get-Date) - [datetime]$m.started).TotalSeconds }
-    $beds = @{}; $teams = @()
-    $lf = Join-Path $Root 'server\logs\latest.log'
-    if ($m -and (Test-Path -LiteralPath $lf)) {
-      foreach ($l in (Get-Content -LiteralPath $lf -Tail 400)) {
-        if ($l -match 'Bed Destruction|bed was destroyed|Bed Destroyed') { $beds['any_destroyed'] = $true }
-        if ($l -match 'won the game|Game over|has won') { $state = 'ended' }
-      }
-    }
-    $mid = $null; $mp = $null; if ($m) { $mid = $m.id; $mp = $m.map }
-    Ok ([ordered]@{ state = $state; t = $t; match_id = $mid; map = $mp; teams = @($teams); beds = $beds; note = 'best-effort from the server log; richer state needs the truth-log plugin' })
+    $mid = $null; $mp = $null; $t = 0
+    if ($m) { $mid = $m.id; $mp = $m.map; $t = [int]((Get-Date) - [datetime]$m.started).TotalSeconds }
+    if (-not $up) { Ok ([ordered]@{ state = 'no-server'; t = $t; match_id = $mid; map = $mp; teams = @(); beds = @{}; players = @() }) }
+    $tk = Invoke-Tk 'status'
+    if (-not $tk) { $st = 'idle'; if ($m) { $st = 'unknown' }; Ok ([ordered]@{ state = $st; t = $t; match_id = $mid; map = $mp; teams = @(); beds = @{}; players = @(); note = 'GlimTruthKit did not answer' }) }
+    if (-not $mp) { $mp = @($tk.arenas | Where-Object { @($_.players).Count -gt 0 } | Select-Object -First 1 | ForEach-Object { $_.name })[0] }
+    $arena = $null; if ($mp) { $arena = Get-Arena $tk $mp }
+    $state = 'idle'; $teams = @(); $beds = [ordered]@{}; $players = @()
+    if ($arena) {
+      $state = Get-State ([string]$arena.state)
+      if ($m) {   # our match is over once its arena resets or a different match id runs there
+        if ($state -eq 'waiting' -or $state -eq 'starting' -or ($arena.match_id -and $m.id -and [string]$arena.match_id -ne [string]$m.id -and -not ([string]$m.id).StartsWith('m'))) { $state = 'ended' }
+      } elseif ($state -eq 'waiting') { $state = 'idle' }
+      $teams = @($arena.teams | ForEach-Object { [ordered]@{ team = $_.team; bed = [bool]$_.bed; members = @($_.members) } })
+      foreach ($x in @($arena.teams)) { $beds[[string]$x.team] = [bool]$x.bed }
+      $players = @($arena.players)
+    } elseif ($m) { $state = 'unknown' }
+    Ok ([ordered]@{ state = $state; t = $t; match_id = $mid; map = $mp; teams = @($teams); beds = $beds; players = @($players) })
   }
   'match-stop' {
     $had = Test-Path -LiteralPath $MatchFile
-    if ((Get-OursProc 'server') -and (Test-PortListen $Port)) { try { Invoke-Rcon @('kick GlimBot match-stop') | Out-Null } catch { } }
+    $m = $null; if ($had) { try { $m = Get-Content -Raw -LiteralPath $MatchFile | ConvertFrom-Json } catch { } }
+    $n = $null
+    if ((Get-OursProc 'server') -and (Test-PortListen $Port)) {
+      $target = 'all'; if ($m -and $m.map) { $target = [string]$m.map }
+      $r = Invoke-Tk "stop $target"; if ($r) { $n = $r.stopped }
+      Invoke-Tk 'autojoin off' | Out-Null
+    }
     Remove-Ours $MatchFile
-    Ok ([ordered]@{ stopped = $had })
+    Ok ([ordered]@{ stopped = $had; arena_stopped = $n })
   }
   'log-read' {
-    $since = [datetime]::MinValue
-    if ($opt['since'] -and $opt['since'] -ne $true) { try { $since = [datetime]::Parse([string]$opt['since']).ToLocalTime() } catch { Fail 'bad-arg' '--since must be an ISO time' } }
+    # events after --since (ISO) in time order, at most --max (default 200, cap 2000); --types a,b,c keeps only those types.
+    # Source 1 (preferred): our truth log logs\truth.jsonl, written by GlimTruthKit, ms times; lines are passed through as written.
+    # Source 2 (only when truth.jsonl is missing or empty): the plain server log, whole-second times, fewer event types.
+    $sinceMs = [long]0
+    if ($opt['since'] -and $opt['since'] -ne $true) { try { $sinceMs = [DateTimeOffset]::Parse([string]$opt['since'], [Globalization.CultureInfo]::InvariantCulture).ToUnixTimeMilliseconds() } catch { Fail 'bad-arg' '--since must be an ISO time' } }
     $max = 200; if ($opt['max'] -and $opt['max'] -ne $true) { $max = [math]::Min(2000, [math]::Max(1, [int]$opt['max'])) }
-    $events = New-Object System.Collections.ArrayList
-    $lf = Join-Path $Root 'server\logs\latest.log'
-    if (Test-Path -LiteralPath $lf) {
-      $day = (Get-Item -LiteralPath $lf).LastWriteTime.Date
-      foreach ($l in (Get-Content -LiteralPath $lf -Tail 3000)) {
-        if ($l -notmatch '^\[(\d\d):(\d\d):(\d\d)\] \[[^\]]*\]: (.*)$') { continue }
-        $t = $day.AddHours([int]$Matches[1]).AddMinutes([int]$Matches[2]).AddSeconds([int]$Matches[3]); $msg = $Matches[4]
-        if ($t -gt (Get-Date).AddMinutes(5)) { $t = $t.AddDays(-1) }
-        if ($t -le $since) { continue }
-        $ev = $null
-        if ($msg -match '^(\w+)\[/[\d\.:]+\] logged in') { $ev = @{ type = 'join'; player = $Matches[1] } }
-        elseif ($msg -match '^(\w+) (lost connection|left the game)') { $ev = @{ type = 'leave'; player = $Matches[1] } }
-        elseif ($msg -match '(\w+) (was knocked into the void by|was thrown into the void by|was killed by .*into the void) (\w+)') { $ev = @{ type = 'void_death'; victim = $Matches[1]; killer = $Matches[3] } }
-        elseif ($msg -match '(\w+) fell into the void') { $ev = @{ type = 'void_death'; victim = $Matches[1] } }
-        elseif ($msg -match '(\w+) was (slain|shot|killed|blown up|burnt|fireballed).* by (\w+)') { $ev = @{ type = 'kill'; victim = $Matches[1]; killer = $Matches[3] } }
-        elseif ($msg -match '(\w+) (died|fell from a high place|drowned|burned to death)') { $ev = @{ type = 'death'; victim = $Matches[1] } }
-        elseif ($msg -match '[Bb]ed (was )?[Dd]estroy') { $ev = @{ type = 'bed_broken'; text = $msg } }
-        elseif ($msg -match 'game (has )?started|Game starts|The game has begun') { $ev = @{ type = 'match_start' } }
-        elseif ($msg -match 'won the game|Game over|has won|WINNER') { $ev = @{ type = 'match_end'; text = $msg } }
-        if ($ev) { $ev['t'] = $t.ToString('yyyy-MM-ddTHH:mm:ss.fffzzz'); [void]$events.Add($ev) }
+    $types = $null; if ($opt['types'] -and $opt['types'] -ne $true) { $types = @(([string]$opt['types']).Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
+    $items = New-Object System.Collections.ArrayList
+    $tf = Join-Path $Root 'logs\truth.jsonl'
+    $src = 'server-log'
+    if ((Test-Path -LiteralPath $tf) -and (Get-Item -LiteralPath $tf).Length -gt 0) {
+      $src = 'truth'
+      $lines = @(Get-Content -LiteralPath $tf -Tail 6000 -Encoding UTF8)
+      for ($k = 0; $k -lt $lines.Count; $k++) {
+        $l = $lines[$k]
+        if ($l -notmatch '^\{"ms":(\d+),"t":"[^"]*","type":"([a-z_]+)"') { continue }
+        $ms = [long]$Matches[1]; $ty = $Matches[2]
+        if ($ms -le $sinceMs) { continue }
+        if ($types -and $types -notcontains $ty) { continue }
+        if ($k -eq $lines.Count - 1) { try { $null = $l | ConvertFrom-Json } catch { continue } }   # the newest line may be half written
+        [void]$items.Add([pscustomobject]@{ ms = $ms; i = $k; json = $l })
+      }
+    } else {
+      $lf = Join-Path $Root 'server\logs\latest.log'
+      if (Test-Path -LiteralPath $lf) {
+        $day = (Get-Item -LiteralPath $lf).LastWriteTime.Date; $k = 0
+        foreach ($l in (Get-Content -LiteralPath $lf -Tail 3000)) {
+          $k++
+          if ($l -notmatch '^\[(\d\d):(\d\d):(\d\d)\] \[[^\]]*\]: (.*)$') { continue }
+          $t = $day.AddHours([int]$Matches[1]).AddMinutes([int]$Matches[2]).AddSeconds([int]$Matches[3]); $msg = $Matches[4]
+          if ($t -gt (Get-Date).AddMinutes(5)) { $t = $t.AddDays(-1) }
+          $ms = ([DateTimeOffset]$t).ToUnixTimeMilliseconds()
+          if ($ms -le $sinceMs) { continue }
+          $ev = $null
+          if ($msg -match '^(\w+)\[/[\d\.:]+\] logged in') { $ev = [ordered]@{ type = 'join'; player = $Matches[1] } }
+          elseif ($msg -match '^(\w+) (lost connection|left the game)') { $ev = [ordered]@{ type = 'leave'; player = $Matches[1] } }
+          elseif ($msg -match '(\w+) (was knocked into the void by|was thrown into the void by|was killed by .*into the void) (\w+)') { $ev = [ordered]@{ type = 'void_death'; victim = $Matches[1]; killer = $Matches[3] } }
+          elseif ($msg -match '(\w+) fell into the void') { $ev = [ordered]@{ type = 'void_death'; victim = $Matches[1] } }
+          elseif ($msg -match '(\w+) was (slain|shot|killed|blown up|burnt|fireballed).* by (\w+)') { $ev = [ordered]@{ type = 'kill'; victim = $Matches[1]; killer = $Matches[3] } }
+          elseif ($msg -match '(\w+) (died|fell from a high place|drowned|burned to death)') { $ev = [ordered]@{ type = 'death'; victim = $Matches[1] } }
+          elseif ($msg -match '[Bb]ed (was )?[Dd]estroy') { $ev = [ordered]@{ type = 'bed_broken'; text = $msg } }
+          elseif ($msg -match 'game (has )?started|Game starts|The game has begun') { $ev = [ordered]@{ type = 'match_start' } }
+          elseif ($msg -match 'won the game|Game over|has won|WINNER') { $ev = [ordered]@{ type = 'match_end'; text = $msg } }
+          if (-not $ev) { continue }
+          if ($types -and $types -notcontains $ev['type']) { continue }
+          $o = [ordered]@{ ms = $ms; t = $t.ToString('yyyy-MM-ddTHH:mm:ss.fffzzz') }; foreach ($kk in $ev.Keys) { $o[$kk] = $ev[$kk] }; $o['src'] = 'server-log'
+          [void]$items.Add([pscustomobject]@{ ms = $ms; i = $k; json = ($o | ConvertTo-Json -Compress) })
+        }
       }
     }
-    $tf = Join-Path $Root 'logs\truth.jsonl'   # our own truth log (written by the plugin/mod when it exists): hit, purchase, pickup, block_place, ...
-    if (Test-Path -LiteralPath $tf) {
-      foreach ($l in (Get-Content -LiteralPath $tf -Tail 5000)) {
-        try { $o = $l | ConvertFrom-Json; $t = [datetime]::Parse([string]$o.t).ToLocalTime(); if ($t -gt $since) { $h = @{}; foreach ($p in $o.PSObject.Properties) { $h[$p.Name] = $p.Value }; [void]$events.Add($h) } } catch { }
-      }
+    $sorted = @($items | Sort-Object -Property @{ Expression = 'ms' }, @{ Expression = 'i' })
+    $n = [math]::Min($max, $sorted.Count); $more = $sorted.Count -gt $n
+    if ($more -and $n -gt 0) {   # never split one millisecond across two pages (the next page starts after next_since)
+      $cut = $sorted[$n].ms; $m2 = $n; while ($m2 -gt 0 -and $sorted[$m2 - 1].ms -eq $cut) { $m2-- }
+      if ($m2 -gt 0) { $n = $m2 }
     }
-    $sorted = @($events | Sort-Object { [string]$_['t'] } | Select-Object -First $max)
-    $nx = $since.ToString('yyyy-MM-ddTHH:mm:ss.fffzzz'); if ($sorted.Count -gt 0) { $nx = [string]$sorted[$sorted.Count - 1]['t'] }
-    Ok ([ordered]@{ events = $sorted; next_since = $nx })
+    $nxMs = $sinceMs; if ($n -gt 0) { $nxMs = $sorted[$n - 1].ms }
+    $nx = [DateTimeOffset]::FromUnixTimeMilliseconds($nxMs).ToLocalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffzzz')
+    $sb = New-Object System.Text.StringBuilder
+    [void]$sb.Append('{"ok":true,"source":"' + $src + '","count":' + $n + ',"more":' + ([string]$more).ToLower() + ',"next_since":"' + $nx + '","events":[')
+    for ($k = 0; $k -lt $n; $k++) { if ($k -gt 0) { [void]$sb.Append(',') }; [void]$sb.Append($sorted[$k].json) }
+    [void]$sb.Append(']}')
+    [Console]::Out.WriteLine($sb.ToString()); exit 0
   }
   'client-launch' {
     Assert-Disk
@@ -397,7 +490,13 @@ switch ($verb) {
     $r = Invoke-Bridge 'client-launch' @($name, $sh, [string]$sp) 120
     if (-not $r.ok) { Fail 'client-crash' ('the client did not start: ' + $r.error) }
     $h = Get-Pids; $h['client'] = [int]$r.data.pid; if ($r.data.launcher_pid) { $h['client_launcher'] = [int]$r.data.launcher_pid }; Save-Pids $h
-    Ok ([ordered]@{ pid = [int]$r.data.pid; window = [string]$r.data.window })
+    # is the game on the NVIDIA GPU? nvidia-smi lists the processes with a context on it (graphics ones too, on Windows)
+    $gpuSeen = $null; $end = (Get-Date).AddSeconds(15)
+    while ((Get-Date) -lt $end -and -not $gpuSeen) {
+      try { $ids = @(& nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>$null | ForEach-Object { [string]$_.Trim() }); $gpuSeen = $ids -contains ([string][int]$r.data.pid) } catch { $gpuSeen = $null; break }
+      if (-not $gpuSeen) { Start-Sleep 1 }
+    }
+    Ok ([ordered]@{ pid = [int]$r.data.pid; window = [string]$r.data.window; nvidia = $gpuSeen })
   }
   'client-stop' {
     $a = Stop-Ours 'client'; $b = Stop-Ours 'client_launcher'
@@ -406,6 +505,7 @@ switch ($verb) {
   'desk' {
     if ($rest.Count -lt 1 -or $DeskVerbs -notcontains $rest[0]) { Out-Json ([ordered]@{ ok = $false; error = 'not allowed' }) 1 }
     $sub = $rest[0]; $dargs = @($rest[0]); if ($rest.Count -gt 1) { $dargs += @($rest[1..($rest.Count - 1)]) }
+    if (@('press', 'click', 'type', 'key', 'scroll', 'open-app') -contains $sub -and (Get-OursProc 'client')) { Fail 'desk-refused' 'Minecraft is driven from the inside (server commands, client control path), never with desktop clicks or typing' }
     $s = Get-Session
     if (-not $s.signed_in) { Fail 'no-session' 'no signed-in session' }
     if ($s.locked) { Fail 'screen-locked' 'the screen is locked, so clicks and screenshots cannot work' }

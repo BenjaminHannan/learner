@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# deploy.sh - Mac side. Copies benspc/ + deskhelper.exe to BensPC and verifies the sha256 of EVERY file after copying
+# deploy.sh - Mac side. Copies benspc/ (with truthkit/) + deskhelper.exe to BensPC and verifies the sha256 of EVERY file after copying
 # (remote copies have failed silently before). Does NOT run setup.ps1 and does NOT install any SSH key.
 # usage: deploy.sh [--dry-run] [--dest 'C:/Users/benja/glim-bedwars']      (default dest is the real folder)
 set -euo pipefail
@@ -24,12 +24,17 @@ DESKEXE="$HERE/../../../../vendor/helper/deskhelper.exe"
 FILES=(
   "$HERE/glimtool.ps1|glimtool.ps1"
   "$HERE/bridge.ps1|bridge.ps1"
+  "$HERE/bridge-launch.vbs|bridge-launch.vbs"
   "$HERE/bridge-task.xml|bridge-task.xml"
   "$HERE/launch-client.ps1|launch-client.ps1"
   "$HERE/setup.ps1|setup.ps1"
   "$HERE/runbook.json|runbook.json"
   "$HERE/RUNBOOK.md|RUNBOOK.md"
   "$DESKEXE|bridge/deskhelper.exe"
+  "$HERE/truthkit/build.ps1|truthkit/build.ps1"
+  "$HERE/truthkit/res/plugin.yml|truthkit/res/plugin.yml"
+  "$HERE/truthkit/res/config.yml|truthkit/res/config.yml"
+  "$HERE/truthkit/src/glim/tk/TruthKit.java|truthkit/src/glim/tk/TruthKit.java"
 )
 sha_local() { shasum -a 256 "$1" | awk '{print tolower($1)}'; }
 # certutil works in cmd and in PowerShell, so the quoting of the remote default shell does not matter
@@ -42,7 +47,9 @@ if [ "$DRY" = 1 ]; then
   exit 0
 fi
 if ssh "${SSH_OPTS[@]}" -o HostName=10.0.0.188 benspc "echo ok" >/dev/null 2>&1; then SSH_OPTS+=(-o HostName=10.0.0.188); else echo "LAN route failed, using Tailscale (ssh benspc)"; fi
-ssh "${SSH_OPTS[@]}" "$HOST" "cmd /c if not exist \"$WIN_DEST\\bridge\" mkdir \"$WIN_DEST\\bridge\"" >/dev/null
+for d in bridge truthkit\\res truthkit\\src\\glim\\tk; do
+  ssh "${SSH_OPTS[@]}" "$HOST" "cmd /c if not exist \"$WIN_DEST\\$d\" mkdir \"$WIN_DEST\\$d\"" >/dev/null
+done
 bad=0
 for f in "${FILES[@]}"; do
   src="${f%%|*}"; rel="${f##*|}"

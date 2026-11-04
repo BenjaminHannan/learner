@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "note": "Per step: the known errors, what to try in order, and when to ask Ben. glimtool.ps1 turns an error id into the `next` list (verbs and hints; a hint starting with ask-ben: means stop and ask). Ask Ben ONLY for: no signed-in session, a login we do not have, a purchase, a Windows UAC prompt.",
+  "version": 2,
+  "note": "Per step: the known errors, what to try in order, and when to ask Ben. glimtool.ps1 turns an error id into the `next` list (verbs and hints; a hint starting with ask-ben: means stop and ask). Ask Ben ONLY for: no signed-in session, a login we do not have, a purchase, a Windows UAC prompt. The locked screen is normal (Ben locks BensPC on purpose): never unlock it, never ask to.",
   "steps": [
     {
       "step": "connect",
@@ -28,13 +28,14 @@
         },
         {
           "id": "screen-locked",
-          "text": "the screen is locked, so clicks and screenshots cannot work",
+          "text": "the screen is locked, so desk clicks and screenshots cannot work",
           "fixes": [
-            { "do": "client-launch and server verbs still work while locked; only desk input needs an unlocked screen" },
-            { "verb": "ping", "do": "check locked again in a minute" }
+            { "do": "normal: Ben locks BensPC on purpose; Glim never unlocks it and never asks to" },
+            { "do": "Minecraft is driven from the inside: server-start, client-launch, match-start and match-stop all work while locked; do not use desk input" },
+            { "verb": "ping", "do": "a locked screen means nobody is using BensPC, so the hands rule allows play" }
           ],
-          "askBen": true,
-          "askBenWhy": "BensPC screen is locked; desk clicks cannot work until it is unlocked or auto-unlock is set up"
+          "askBen": false,
+          "askBenWhy": ""
         },
         {
           "id": "not-set-up",
@@ -163,6 +164,39 @@
           ],
           "askBen": false,
           "askBenWhy": ""
+        },
+        {
+          "id": "truthkit-missing",
+          "text": "the GlimTruthKit plugin did not answer on RCON (tk status)",
+          "fixes": [
+            { "verb": "server-status", "do": "check that our server is up" },
+            { "do": "run setup.ps1 (it builds GlimTruthKit and puts it in server\\plugins), then server-stop and server-start" },
+            { "do": "if it is still missing, report it to the coordinator thread" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "arena-join-failed",
+          "text": "GlimBot is on the server but not in arena X",
+          "fixes": [
+            { "verb": "match-status", "do": "look at the arena state and players" },
+            { "do": "call match-start again: it sends GlimBot with /bw join run as the player (no typing)" },
+            { "do": "if the arena is restarting, wait 30 s and try again" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
+        },
+        {
+          "id": "match-wont-start",
+          "text": "tk start did not start the arena / the arena did not reach playing within 30 s",
+          "fixes": [
+            { "verb": "match-status", "do": "read the arena state" },
+            { "verb": "match-stop", "do": "reset the arena" },
+            { "do": "match-start once more; if it fails twice, report it to the coordinator thread" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
         }
       ]
     },
@@ -186,7 +220,7 @@
           "text": "GlimBot is not on the server yet",
           "fixes": [
             { "verb": "server-status", "do": "look at names; wait 20 s for the join" },
-            { "verb": "client-launch", "do": "launch the client if it is not running" }
+            { "verb": "client-launch", "do": "launch the client if it is not running (GlimTruthKit sends it into the arena on login)" }
           ],
           "askBen": false,
           "askBenWhy": ""
@@ -247,6 +281,15 @@
           ],
           "askBen": true,
           "askBenWhy": "a Windows UAC prompt needs a person"
+        },
+        {
+          "id": "desk-refused",
+          "text": "Minecraft is driven from the inside (server commands, client control path), never with desktop clicks or typing",
+          "fixes": [
+            { "do": "use match-start / match-stop (server-side commands) instead; while our client runs, desk is for look and screenshot only" }
+          ],
+          "askBen": false,
+          "askBenWhy": ""
         }
       ]
     },
