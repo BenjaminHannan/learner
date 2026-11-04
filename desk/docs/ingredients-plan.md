@@ -88,3 +88,14 @@ The GPU is shared with Bedwars: one job at a time, ≤ 30 min per test where pos
 
 ## Related reading (background, not checked against our setup)
 Titans (2025, surprise memory), Sleep-time Compute (2025, thinking while idle), Absolute Zero (2025, self-made tasks + code judge), generative verifiers (2024), DreamerV3 (2025, imagining inside a learned world model).
+
+## Round 2 ideas (Ben, 2026-11-04 ~10:10): approved, queued after Tasks A and B finish
+- **Watch me once:** Ben narrates out loud while doing a task on screen. Glim watches: eyes on the screen at 1–2 fps, ears turning speech into text, and the app/window steps. The narration is the text anchor. Result: a saved skill (steps + what each step looks like + Ben's words) that Glim can guide him through or redo with permission. Sleep trains on narrated demos.
+- **Think longer when unsure, automatically:** no button. The checker's confidence decides: high → answer at once; low → more tries / more thinking (bored mode always; chat only within benFirst speed limits).
+- **Model of Ben, trained into the weights by sleep:** what Ben knows, likes and is working on goes into the adapter, not only the notes. Sources: Ben's own words (text anchor) and feedback; `maybe` never trains. There must be a correction path (corrections are trained too). The LFM3 Idea 1 test found 3 of 6 facts never learned, so learning reliability is the risk.
+- **Choose where to look:** spend attention (eye/OCR budget, wake-ups) on the most surprising window or region.
+- **Grow new brain parts when full:** freeze what's there and add new capacity, trained only in sleep.
+  - Option 1 (first): a new small expert adapter + router. The toy Exp 43G–I router over frozen skills was perfect 6/6, in the toy only.
+  - Option 2: a new identity-initialised layer (block expansion, as in LLaMA Pro, 2024). It starts as a no-op; ~110M params each; each one makes the model ~4–5% slower.
+  - "Full" = sleep can't learn new things without failing the seatbelt test on old ones.
+  - Test idea: a sequence of sleeps on new topics. PASS: growing keeps old quiz scores (drop ≤ 2) AND is ≥ 15 points better on old topics than a fixed-size adapter, with new-topic learning within 5 points.
