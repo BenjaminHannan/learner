@@ -100,6 +100,7 @@ function createScreen(getSettings, resourcesPath, onLook) {
     findHelper: () => bin(),
     check: async () => run(['check']),
     askPermissions: async () => run(['ask-permissions']),
+    run: (args, signal) => run(args, signal),   // always-on senses: text-only subcommands (ocr, windows, look)
     screenshot,
     tools: {
       screen_look: async (a, ctx) => {

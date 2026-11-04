@@ -50,6 +50,9 @@
   const msgs = $('#msgs');
   const scroller = $('#scroll');
   const input = $('#input');
+  // always-on Glim stays quiet while Ben types (benFirst): a cheap ping, at most every 2 s
+  { let lastPing = 0; input.addEventListener('input', () => { const n = Date.now(); if (n - lastPing > 2000 && desk.senses) { lastPing = n; desk.senses.typing(); } }); }
+  if (desk.onSensesShow) desk.onSensesShow(() => { if (window.SensesUI) window.SensesUI.showCard().catch(() => {}); });
   // Scroll follow: pinned to the bottom while Ben is at/near it; if he scrolled up we leave him alone and offer a jump button.
   let stick = true, forceUntil = 0;
   const jumpBtn = $('#jump');
@@ -1186,6 +1189,9 @@
       { key: 'sleepIdleMin', type: 'number', label: 'Idle minutes before auto-sleep', help: 'How long you have to be away first, 120 minutes (2 hours) unless you change it (1 to 720).', min: 1, max: 720 },
       { key: 'wakeAt', type: 'toggle', label: 'Wake at the end of the window', help: 'Only for a sleep that Glim started by itself.' }
     ] },
+    { group: 'Senses', rows: [
+      { type: 'senses', label: 'What Glim may notice', help: 'Always-on Glim: the inputs it may use, all on this Mac. A sense that is off is never read.' }
+    ] },
     { group: 'Screen control', rows: [
       { key: 'helperPath', type: 'text', label: 'deskhelper path', help: 'The small program that clicks and types on your computer. Empty uses the one bundled with the app.', ph: '(bundled with the app)', wide: true },
       { type: 'perm', label: 'Mac permissions', help: 'Screen control needs Accessibility and Screen Recording for this app.' }
@@ -1316,7 +1322,7 @@
       const sec = el('section', 's-group'); sec.append(el('h2', null, g.group));
       const card = el('div', 's-card');
       for (const r of g.rows) {
-        const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' || r.type === 'tracking' ? ' stack' : ''));
+        const row = el('div', 's-row' + (r.type === 'danger' || r.type === 'memory' || r.type === 'tracking' || r.type === 'senses' ? ' stack' : ''));
         const lab = el('div', 's-lab'); lab.append(el('b', null, r.label), el('span', null, typeof r.help === 'function' ? r.help() : r.help));
         const ctl = el('div', 's-ctl');
         row.append(lab, ctl);
@@ -1379,6 +1385,8 @@
           row.removeChild(ctl); row.append(memUi());
         } else if (r.type === 'tracking') {
           row.removeChild(ctl); row.append(trackUi());
+        } else if (r.type === 'senses') {
+          row.removeChild(ctl); row.append(window.SensesUI.settingsUi());
         } else if (r.type === 'danger') {
           const ul = el('ul', 'danger-list'); for (const d of info.danger || []) ul.append(el('li', null, d)); lab.append(ul);
         } else if (r.type === 'perm') {
@@ -1472,6 +1480,8 @@
     else await newThread();
     desk.helpers.list().then(paintAgents);
     if (!settings.onboarded) Onboard.show();
+    // always-on: the senses card asks at every start until "Remember my choice" (main decides; it also sends senses-show after setup)
+    else if (!info.e2e && window.SensesUI) window.SensesUI.showCard().catch(() => {});
     window.__ready = true;
   })();
 })();

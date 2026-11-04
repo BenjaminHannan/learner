@@ -688,3 +688,13 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 @container (max-width: 640px) { .db-hero { padding:.9rem; gap:.7rem; align-items:flex-start; } .db-badge { width:2.3rem; height:2.3rem; } .db-badge svg.db-i { width:1.2rem; height:1.2rem; } .db-hero-title { font-size:21px; } .db-newlegend .long { display:none; } }
 @media (max-width:480px) { #dashSheet { padding:.5rem; } .db-quick, .db-detail { padding-left:.9rem; } }
 @media (prefers-reduced-motion: reduce) { .db-chev svg.db-i { transition:none; } }
+
+/* always-on senses: start-up consent card and Settings > Senses (same tokens as the permissions card) */
+#sensesCard { position:fixed; inset:0; z-index:121; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+#sensesCard[hidden] { display:none; }
+.se-rows { display:flex; flex-direction:column; gap:.5rem; }
+.se-row .toggle { flex:none; }
+.se-perm { display:flex; align-items:center; gap:.7rem; padding:.6rem .8rem; border:1px solid var(--danger); border-radius:.8rem; color:var(--text); font-size:.9rem; }
+.se-perm[hidden] { display:none; } .se-perm span { flex:1; }
+.se-settings { display:flex; flex-direction:column; gap:.5rem; width:100%; }
+.se-settings > .ghost { align-self:flex-end; }

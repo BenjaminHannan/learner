@@ -6,6 +6,7 @@ import ApplicationServices
 import AVFoundation
 import CoreGraphics
 import Foundation
+import Vision
 
 // MARK: - Output
 
@@ -512,6 +513,40 @@ func cmdScreenshot(path rawPath: String, max: Int) -> Never {
     emit(["path": path, "width": w, "height": h, "scale": (scale * 10000).rounded() / 10000] as [String: Any])
 }
 
+// MARK: - Always-on senses (text only)
+// `ocr`: grab the main display and read its words with the Vision framework, all in memory. No image is written anywhere;
+// only the recognised text is printed. `windows`: the on-screen app windows (owner + title), front to back.
+func cmdOcr(max: Int) -> Never {
+    guard CGPreflightScreenCaptureAccess() else { fail("screen recording permission not granted") }
+    guard let img = grabDisplay() else { fail("could not capture the screen") }
+    let req = VNRecognizeTextRequest()
+    req.recognitionLevel = .fast
+    req.usesLanguageCorrection = false
+    do { try VNImageRequestHandler(cgImage: img, options: [:]).perform([req]) } catch { fail("text recognition failed: \(error.localizedDescription)") }
+    var lines: [String] = [], total = 0
+    for o in req.results ?? [] {
+        guard let t = o.topCandidates(1).first?.string.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { continue }
+        lines.append(t); total += t.count + 1
+        if total >= max { break }
+    }
+    emit(["text": lines.joined(separator: "\n"), "lines": lines.count] as [String: Any])
+}
+
+func cmdWindows(max: Int) -> Never {
+    let opts: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+    let list = (CGWindowListCopyWindowInfo(opts, kCGNullWindowID) as? [[String: Any]]) ?? []
+    var out: [[String: Any]] = []
+    for w in list {
+        guard (w[kCGWindowLayer as String] as? Int ?? 1) == 0 else { continue }
+        let owner = w[kCGWindowOwnerName as String] as? String ?? ""
+        if owner.isEmpty { continue }
+        out.append(["app": owner, "title": w[kCGWindowName as String] as? String ?? ""])   // titles need Screen Recording; empty without it
+        if out.count >= max { break }
+    }
+    let front = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
+    emit(["front": front, "windows": out] as [String: Any])
+}
+
 // MARK: - main
 
 func intFlag(_ args: inout [String], _ name: String, default d: Int) -> Int {
@@ -874,7 +909,7 @@ func runFence() -> Never {
 }
 
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call|dictate|fence") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|ocr|windows|notch|call|dictate|fence") }
 let command = args.removeFirst()
 
 switch command {
@@ -947,6 +982,12 @@ case "scroll":
 case "open-app":
     guard !args.isEmpty else { fail("usage: open-app NAME") }
     cmdOpenApp(args.joined(separator: " "))
+
+case "ocr":
+    cmdOcr(max: intFlag(&args, "--max", default: 4000))
+
+case "windows":
+    cmdWindows(max: intFlag(&args, "--max", default: 40))
 
 case "screenshot":
     let max = intFlag(&args, "--max", default: 1280)

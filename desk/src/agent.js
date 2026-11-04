@@ -1128,4 +1128,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { SENSITIVE, narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

@@ -1343,6 +1343,56 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(tpl));
 }
 
+
+// ---- Always-on Premonition (src/senses.js, src/alwayson.js, src/hearing.js) ------------------------------------
+// Ben Nov 3: Glim as a persistent state that notices what it is allowed to (screen words, open windows, what it hears, chats,
+// its own web reading) and decides by itself when to speak. Every sense is off until Ben switches it on (userData/senses.json);
+// only words are kept (userData/alwayson-state.json), never a picture or a sound, and private-looking text is dropped first.
+const SensesMod = require('./src/senses');
+let aoState = null, aoSenses = null, aoLoop = null, hearing = null, lastTyping = 0;
+const aoDir = () => app.getPath('userData');
+function aoSetup() {
+  if (aoSenses) return;
+  aoState = new SensesMod.AlwaysOnState(aoDir());
+  aoSenses = new SensesMod.Senses({ consent: SensesMod.loadConsent(aoDir()), state: aoState, samplers: {
+    // words on screen through Vision OCR inside the helper (nothing written to disk)
+    screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
+    windows: async () => {
+      if (!screen || !screen.findHelper()) return '';
+      const w = await screen.run(['windows']); const l = await screen.run(['look', '--max', '60']);
+      return SensesMod.windowsText(w, l);
+    }
+  } });
+}
+async function aoPerms() {
+  const out = { accessibility: null, screenRecording: null, microphone: null };
+  if (process.platform !== 'darwin' || E2E) return out;
+  try { if (screen && screen.findHelper()) { const c = await screen.check(); if (c && !c.error) { out.accessibility = !!c.accessibility; out.screenRecording = !!c.screenRecording; } } } catch (e) { /* unknown */ }
+  try { out.microphone = systemPreferences.getMediaAccessStatus('microphone') === 'granted'; } catch (e) { /* unknown */ }
+  return out;
+}
+async function sensesView() {
+  aoSetup();
+  const c = aoSenses.consent, p = await aoPerms();
+  return { consent: c, senses: SensesMod.SENSES, needs: SensesMod.needsConsent(c), missing: SensesMod.missingPerms(c, p), perms: p, status: aoLoop ? aoLoop.statusLine() : '' };
+}
+async function setSenses(patch) {
+  aoSetup();
+  const prev = aoSenses.consent;
+  const c = SensesMod.saveConsent(aoDir(), { ...prev, ...patch, senses: { ...prev.senses, ...((patch && patch.senses) || {}) }, decidedAt: Date.now() });
+  aoSenses.setConsent(c);
+  aoApply();
+  return sensesView();
+}
+async function askSensesPerms() {
+  const r = {};
+  try { if (screen && screen.findHelper()) Object.assign(r, await screen.askPermissions()); } catch (e) { /* shown as missing */ }
+  try { if (process.platform === 'darwin' && aoSenses && aoSenses.consent.senses.hearing) r.microphone = await systemPreferences.askForMediaAccess('microphone'); } catch (e) { /* shown as missing */ }
+  return r;
+}
+// start / stop what the consent asks for (phase 2 adds the loop, phase 4 hearing)
+function aoApply() { /* filled in below */ }
+
 function registerIpc() {
   const h = (name, fn) => ipcMain.handle(name, async (e, ...a) => fn(...a));
   h('update:status', () => updater ? updater.state : null);
@@ -1411,6 +1461,10 @@ function registerIpc() {
     }).catch((e) => send('agent', { threadId: t.id, type: 'error', message: String(e && e.message || e) }));
     return { started: true, title: t.title };
   });
+  h('senses:get', () => sensesView());
+  h('senses:set', (patch) => setSenses(patch || {}));
+  h('senses:askPerms', () => askSensesPerms());
+  ipcMain.on('alwayson:typing', () => { lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('typing'); });
   h('call:start', () => startCall());
   h('call:stop', () => { if (call) call.hangup(); return true; });
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
