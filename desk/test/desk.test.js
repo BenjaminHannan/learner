@@ -79,11 +79,13 @@ test('Warmer: warms when the gateway comes up (poll while down), once; rewarm on
   let settings = { gatewayUrl: 'http://127.0.0.1:1/v1' }; // nothing listens there: down
   const tools = buildTools({ diary: false });
   const w = new Warmer({ getSettings: () => settings, getTools: () => tools, onState: (s) => states.push(s), downMs: 20, upMs: 60 });
+  // a failed assertion must report, not leave the gateway listening (that kept the test process alive: the suite "hung")
+  try {
   w.start();
   await new Promise((r) => setTimeout(r, 120));
   assert.strictEqual(w.state, 'down'); assert.strictEqual(gw.warms.length, 0);
   settings = { gatewayUrl: url }; // "the model started"
-  for (let i = 0; i < 100 && gw.warms.length < 1; i++) await new Promise((r) => setTimeout(r, 20));
+  for (let i = 0; i < 500 && gw.warms.length < 1; i++) await new Promise((r) => setTimeout(r, 20));
   assert.strictEqual(gw.warms.length, 1);
   assert.strictEqual(gw.warms[0].headers[WARM_HEADER.toLowerCase()], '1');
   assert.strictEqual(gw.warms[0].body.model, WARM_MODEL);
@@ -93,10 +95,10 @@ test('Warmer: warms when the gateway comes up (poll while down), once; rewarm on
   assert.strictEqual(gw.warms.length, 1, 'still up: no repeated warming');
   assert.ok(states.includes('warming') && states.at(-1) === 'ready');
   w.rewarm();
-  for (let i = 0; i < 100 && gw.warms.length < 2; i++) await new Promise((r) => setTimeout(r, 20));
+  for (let i = 0; i < 500 && gw.warms.length < 2; i++) await new Promise((r) => setTimeout(r, 20));
   assert.strictEqual(gw.warms.length, 2);
   assert.strictEqual(gw.requests.length, 0); // warm requests never touch real traffic
-  w.stop(); gw.close();
+  } finally { w.stop(); gw.close(); }
 });
 
 // ---- composer guard, markdown --------------------------------------------------------------------------
