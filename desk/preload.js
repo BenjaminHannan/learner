@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('desk', {
   onCall: on('call'),
   dictate: { start: inv('dictate:start'), stop: inv('dictate:stop') },
   onDictate: on('dictate'),
+  watchme: { start: inv('watchme:start'), stop: inv('watchme:stop'), list: inv('watchme:list'), redo: inv('watchme:redo'), remove: inv('watchme:remove') },
   browser: { open: inv('browser:open'), exists: inv('browser:exists'), layout: inv('browser:layout'), cmd: inv('browser:cmd') },
   perms: { status: inv('perms:status'), open: inv('perms:open'), reveal: inv('perms:reveal'), drag: (which) => ipcRenderer.send('perms:drag', which) },
   screen: { check: inv('screen:check'), ask: inv('screen:ask') },

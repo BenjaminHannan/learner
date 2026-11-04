@@ -138,3 +138,17 @@ test('watchme: the skill store keeps cards (with their text) for sleep, replaces
   assert.strictEqual(st.save({ ...card, id: 'k8', steps: [] }).ok, false);
   assert.ok(st.remove('k6')); assert.deepStrictEqual(st.list(), []);
 });
+
+test('watchme wiring: both round-2 settings default OFF, map to the sleep switches, and main.js refuses Watch me while it is off', () => {
+  const { DEFAULT_SETTINGS } = require('../src/store');
+  assert.strictEqual(DEFAULT_SETTINGS.watchMe, false); assert.strictEqual(DEFAULT_SETTINGS.benModelSleep, false);
+  const { roundTwoEnv } = require('../src/sleep');
+  assert.deepStrictEqual(roundTwoEnv(DEFAULT_SETTINGS), { SLEEPMLX_SKILL_CARDS: '0', SLEEPMLX_BEN_MODEL: '0' });
+  assert.deepStrictEqual(roundTwoEnv({ watchMe: true, benModelSleep: true }), { SLEEPMLX_SKILL_CARDS: '1', SLEEPMLX_BEN_MODEL: '1' });
+  const main = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
+  const block = main.slice(main.indexOf('// ---- Watch me once'), main.indexOf('// ---- Watch me once') + 6000);
+  assert.strictEqual((block.match(/watchMe !== true\) return \{ error: 'Watch me is off/g) || []).length, 2, 'start and redo check the setting');
+  assert.match(block, /replaySkill\(card, tools, \{ confirm \}\)/);
+  assert.match(block, /process\.platform === 'darwin' \? new W\.Clips/);
+  for (const ch of ['watchme:start', 'watchme:stop', 'watchme:list', 'watchme:redo', 'watchme:remove']) assert.ok(main.includes("h('" + ch + "'"), ch);
+});

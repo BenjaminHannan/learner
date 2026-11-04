@@ -40,6 +40,9 @@ function inboxHead(l) {
   return l.replace(/^##\s+\S+\s+/, '').replace(/\s*<[^>:]*>?(?=:\s)/, '').trim();
 }
 
+// I4 (2026-11-04): Watch-me skill cards and the Ben model in sleep, both off by default (Settings watchMe / benModelSleep).
+const roundTwoEnv = (st) => ({ SLEEPMLX_SKILL_CARDS: st && st.watchMe === true ? '1' : '0', SLEEPMLX_BEN_MODEL: st && st.benModelSleep === true ? '1' : '0' });
+
 class Sleep {
   /**
    * getSettings() -> settings; home: sleepmode state dir; onEvent(ev) for each new events.jsonl line ({kind, ...}) and
@@ -79,7 +82,7 @@ class Sleep {
   // SLEEPMLX_NIGHT_BUDGET_S: how long this sleep may last (about 85% of the chosen time); the trainer scales its work to it.
   // The sleepmode app's CommandWorker starts the trainer with dict(os.environ) + its own vars, so it inherits this
   // (checked in sleepmode/workers.py on origin/claude/project-thread-sl2x88).
-  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home, SLEEPMODE_WAKE_AT_MS: this.wakeAtMs ? String(this.wakeAtMs) : '', ...(this.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(this.nightBudgetS)) } : {}) }; }
+  _env() { return { ...process.env, ...(this.o.env || {}), PYTHONPATH: this.app() + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : ''), SLEEPMODE_HOME: this.home, SLEEPMODE_WAKE_AT_MS: this.wakeAtMs ? String(this.wakeAtMs) : '', ...(this.nightBudgetS > 0 ? { SLEEPMLX_NIGHT_BUDGET_S: String(Math.round(this.nightBudgetS)) } : {}), ...roundTwoEnv(this.getSettings()) }; }
 
   // Start sleeping: a detached process with its output in a log file. It outlives Desk.
   start(o) {
@@ -392,4 +395,4 @@ function shouldAutoWake(i) {
   return { wake: true, reason: 'the night window ended' };
 }
 
-module.exports = { effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours, sleepNow };
+module.exports = { roundTwoEnv, effectiveWindow, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake, DURATIONS, OPEN_SLEEP_H, BUDGET_SHARE, PY_MISSING, wakeKey, Sleep, homeDir, findPython, appDir, pidAlive, inWindow, windowKey, shouldAutoSleep, shouldAutoWake, pillLine, fmtHours, sleepNow };

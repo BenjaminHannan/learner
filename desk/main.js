@@ -1214,6 +1214,59 @@ async function startDictate() {
 }
 function stopDictate(hard) { const d = dictation; if (!d) return; if (hard) { dictation = null; d.close(); } else d.stop('stopped'); }
 
+// ---- Watch me once (src/watchme.js; I4 2026-11-04; setting watchMe, OFF by default) --------------------------------------
+// Ben narrates while he does a task; the screen is read at 1 fps (helper look + OCR words), his words come from the local speech
+// to text, and stopping saves a skill card (userData/watchme-skills.json) that sleep trains on (SLEEPMLX_SKILL_CARDS). Raw pictures
+// are kept as evidence only on a Mac, 3 days at most, 300 MB at most; a private-looking screen is never kept. Redo asks Ben first.
+let watchSess = null, watchDict = null;
+const watchmeMod = () => require('./src/watchme');
+const skillStore = () => new (watchmeMod().SkillStore)(app.getPath('userData'));
+async function watchStart() {
+  if (store.getSettings().watchMe !== true) return { error: 'Watch me is off (Settings).' };
+  if (watchSess) return { error: 'Already watching.' };
+  if (call || calling || dictation || dictStarting) return { error: 'End the call or dictation first.' };
+  const bin = screen && screen.findHelper();
+  if (!bin) return { error: 'Watch me needs the Glim helper, which is not installed in this build.' };
+  const W = watchmeMod();
+  const clips = process.platform === 'darwin' ? new W.Clips(app.getPath('userData')) : null;
+  if (clips) clips.prune();
+  const sess = new W.WatchSession({ fps: 1, clips, look: () => screen.run(['look', '--max', '80']),
+    ocr: async () => { const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
+    shot: clips ? async () => { const u = await screen.screenshot(1280); return u ? Buffer.from(u.split(',')[1], 'base64') : null; } : null });
+  watchSess = sess;
+  sess.start();
+  const micOwner = 'watchme:' + Date.now();
+  if (!E2E) getHearing().pause(micOwner);
+  const stt = await sttUrl();
+  if (!stt.error && watchSess === sess) {
+    const d = new Dictation({ helper: bin, spawn: (cmd, args) => require('child_process').spawn(cmd, [...args, '--stt', stt.url], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }),
+      onEvent: (ev) => { if (ev.type === 'final') sess.heard(ev.text); if (ev.type === 'state' && ev.state === 'ended' && watchDict === d) { watchDict = null; if (hearing) hearing.resume(micOwner); } } });
+    watchDict = d; d.start();
+  } else if (hearing) hearing.resume(micOwner);
+  return { ok: true, id: sess.id, narration: !stt.error, why: stt.error || '' };
+}
+function watchStop(name) {
+  if (!watchSess) return { error: 'Not watching.' };
+  const s = watchSess; watchSess = null;
+  if (watchDict) watchDict.stop('stopped');
+  const card = s.stop(String(name || '').slice(0, 80));
+  const r = card.steps.length ? skillStore().save(card) : { ok: false, error: 'No steps seen.' };
+  return { ...r, card: { id: card.id, name: card.name, how: card.how, steps: card.steps.map((x) => ({ n: x.n, what: x.what, say: x.say, how: x.how })) }, privateFramesDropped: s.dropped, clips: s.shots };
+}
+async function watchRedo(id) {
+  if (store.getSettings().watchMe !== true) return { error: 'Watch me is off (Settings).' };
+  const card = skillStore().list().find((x) => x.id === id) || skillStore().find(id);
+  if (!card) return { error: 'No such skill.' };
+  if (!screen || !screen.findHelper()) return { error: 'Redo needs the Glim helper, which is not installed in this build.' };
+  const t = screen.tools;
+  const res = (r) => (r && typeof r === 'object' && r.error ? { error: String(r.text || 'failed') } : typeof r === 'string' && /^Error:/.test(r) ? { error: r } : {});
+  const tools = { look: () => screen.run(['look', '--max', '80']), open_app: (a) => t.open_app(a).then(res), press: (a) => t.screen_click({ id: a.id }).then(res),
+    click: (a) => t.screen_click({ x: a.x, y: a.y }).then(res), type: (a) => t.screen_type(a).then(res), key: (a) => t.screen_key(a).then(res) };
+  const confirm = async (c) => (await require('electron').dialog.showMessageBox(win, { type: 'question', buttons: ['Redo it', 'Cancel'], defaultId: 1, cancelId: 1,
+    message: 'Let Glim redo "' + c.name + '" on your screen (' + c.steps.length + ' steps)?', detail: c.steps.map((x) => x.n + '. ' + x.what).join('\n').slice(0, 1500) })).response === 0;
+  return watchmeMod().replaySkill(card, tools, { confirm });
+}
+
 // ---- permissions card (drag the app into System Settings) ------------------------------------------------------
 const FEATURES = Platform.features(process.platform, PLATFORM_OPTS);
 const permsSupported = () => FEATURES.perms || E2E;
@@ -2113,6 +2166,11 @@ function registerIpc() {
   h('call:mute', (m) => { if (call) call.setMuted(m); return true; });
   h('dictate:start', () => startDictate());
   h('dictate:stop', () => { stopDictate(false); return true; });
+  h('watchme:start', () => watchStart());
+  h('watchme:stop', (name) => watchStop(name));
+  h('watchme:list', () => skillStore().list().map((s) => ({ id: s.id, name: s.name, created: s.created, steps: s.steps.length, text: s.text })));
+  h('watchme:redo', (id) => watchRedo(id));
+  h('watchme:remove', (id) => skillStore().remove(id));
   // Stop in the Call chat stops the call's own agent, not a task running in the main chat
   h('agent:stop', (threadId) => { const hp = threadId && helpers.byThread(threadId); if (hp) helpers.abort(hp.id); else if (callAgent && threadId && callAgent.threadId === threadId) callAgent.stop(); else agent.stop(); return true; });
   // First-run setup: create the picked recurring Glims through the same Helpers.add that agent_start uses (no model call).

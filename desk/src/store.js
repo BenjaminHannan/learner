@@ -59,6 +59,8 @@ const DEFAULT_SETTINGS = {
   keepBrainInMemory: false, // tools/glim_mlx_server.py reads this at start: wired limit = weights + KV buffer, fixed pool (restart the model server to apply)
   moteBatch: false,       // a Mote's K tries go to the model server at the same time (stock mlx_lm batches them), streamed, one shared stop
   senseChangeOnly: false, // senses look every 5 s with the cheap window read; screen OCR only when that changed (or 60 s / 20 s passed)
+  watchMe: false,         // Watch me once (src/watchme.js): Ben narrates a task, Glim makes a skill card; sleep trains on the cards (SLEEPMLX_SKILL_CARDS)
+  benModelSleep: false,   // sleep trains what Ben likes / works on / knows into the weights + a Ben quiz in the morning (SLEEPMLX_BEN_MODEL)
   // Sleep (the separate sleepmode app trains on the diary while Glim is idle)
   sleepApp: '',           // '' = ~/learner-ops/sleepmode/app
   sleepPython: '',        // '' = first of sleepmode/venv312, learner-ops/.venv, homebrew python3, python3
@@ -88,7 +90,7 @@ const ENUMS = {
   mode: ['ask', 'hands-off'], helperMode: ['ask', 'hands-off'], vision: ['off', 'on'],
   theme: ['system', 'light', 'dark'], textSize: ['s', 'm', 'l'], onboardAt: ['', 'perms']
 };
-const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'useNotch', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer', 'keepBrainInMemory', 'moteBatch', 'senseChangeOnly'];
+const BOOLS = ['onboarded', 'permsSeen', 'diaryEnabled', 'openAtLogin', 'keepRunning', 'pill', 'useNotch', 'highContrast', 'showSparks', 'autoUpdateCheck', 'goalsAsked', 'verify', 'followUp', 'benFirst', 'sleepPauseGlims', 'sleepOnlyPlugged', 'autoSleep', 'sleepAdapt', 'wakeAt', 'creativeProposer', 'keepBrainInMemory', 'moteBatch', 'senseChangeOnly', 'watchMe', 'benModelSleep'];
 const NUMS = { compactTokens: [1500, 200000], contextTokens: [1500, 400000], maxToolChars: [500, 20000], maxSteps: [0, 1000], maxParallel: [0, 64], sleepIdleMin: [1, 720], sleepCheckinMins: [10, 720], awakeCheckinMins: [0, 720], creativeDeadlineMs: [1, 15000] };
 const TIMES = ['sleepFrom', 'sleepTo'];
 const DURATION_PICKS = ['30', '60', '120', '240', 'morning', 'open'];
