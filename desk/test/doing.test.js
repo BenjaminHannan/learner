@@ -13,3 +13,13 @@ test('doing line: the Next line, else the last sentence, never the reasoning bef
   assert.ok(doingLine('Next: ' + 'x'.repeat(200)).length <= 90);
   assert.strictEqual(doingLine('Plan:\n1. Search prices\n2. Compare'), 'Search prices');
 });
+
+test('UI2 cleanReply: the "[cut off: ...]" model note never shows (closed, unclosed while streaming, mid-text); other text untouched', () => {
+  const { cleanReply } = require('../renderer/doing');
+  assert.strictEqual(cleanReply('Let me look at your screen first.\n[cut off: Ben sent a new message]'), 'Let me look at your screen first.');
+  assert.strictEqual(cleanReply('Reading the page now.\n[cut off: Ben se'), 'Reading the page now.');
+  assert.strictEqual(cleanReply('A [cut off: Ben sent a new message] B'), 'A B');
+  assert.strictEqual(cleanReply('plain answer  '), 'plain answer  ');
+  assert.strictEqual(cleanReply('the rope was [cut] off'), 'the rope was [cut] off');
+  assert.strictEqual(cleanReply(null), '');
+});

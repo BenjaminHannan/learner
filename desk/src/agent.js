@@ -1,5 +1,6 @@
 'use strict';
 const { streamChat } = require('./llm');
+const { cleanReply } = require('../renderer/doing');   // UI2: drops a "[cut off: ...]" line the model copied into a reply
 const { SYSTEM_PROMPT } = require('./prompt');
 const { takeNotices } = require('./helpers');
 const { NAME, P } = require('./user');
@@ -736,6 +737,7 @@ class Agent {
           }
           break;
         }
+        if (typeof res.content === 'string') { const c = cleanReply(res.content); if (c !== res.content) res = { ...res, content: c, cleaned: true }; }   // UI2: never on screen or saved
         if (wrapUp) {   // the last step of a Mote's run: a tool call now is not run, and one written out as text is not a report
           const c = String(res.content || '').replace(/<tool_call>[\s\S]*?(<\/tool_call>|$)/g, '').trim();
           res = { ...res, toolCalls: [], content: c || P(WRAP_EMPTY) };
@@ -751,7 +753,7 @@ class Agent {
           if (this.claimChecks++ < 1) {
             this.acting = true;
             thread.items.push({ t: 'assistant', text: res.content, ts: Date.now() });
-            this.emit({ type: 'assistant_end', text: res.content, ttftMs, toolCalls: 0, replace: !!res.cutLoop });
+            this.emit({ type: 'assistant_end', text: res.content, ttftMs, toolCalls: 0, replace: !!(res.cutLoop || res.cleaned) });
             thread.messages.push({ role: 'assistant', content: PRETEND_NOTE }, { role: 'user', content: CHECK_MARK + P(DO_IT_NOTE) });   // the same prompt again tends to give the same narration
             const id = 'claimcheck_' + this.claimChecks, summary = 'Re-checking: it described steps without doing them';
             thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'no tool was called' });
@@ -776,7 +778,7 @@ class Agent {
         }
         // The check turn runs BEFORE assistant_end so its step lands inside the task's activity group, not after it.
         const verdict = (!res.toolCalls.length && !this.steerQueue.length && !wrapUp) ? await this.verifyAnswer(thread, s, signal, res.content) : 'accept';
-        this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length, replace: !!res.cutLoop });
+        this.emit({ type: 'assistant_end', text: res.content, thinkSecs: res.reasoning ? secs : 0, ttftMs, toolCalls: res.toolCalls.length, replace: !!(res.cutLoop || res.cleaned) });
         const plan = res.toolCalls.length ? extractPlan(res.content) : null; // a numbered list in a final answer is just the answer
         if (plan) { thread.items.push({ t: 'plan', items: plan }); this.emit({ type: 'plan', items: plan }); }
         save();
@@ -878,7 +880,7 @@ class Agent {
     // Ben Oct 29: an older chat held many replies that claimed steps no tool ever did, and the model kept copying them (it even listed
     // made-up assignments). Such a reply (straight after a user turn, claims actions) reaches the model as a plain note instead.
     const msgs = thread.messages.slice(from).map((m, i, a) => (m.role === 'assistant' && !m.tool_calls && !m.plan && i > 0 && a[i - 1].role === 'user' && claimsAction(m.content)
-      ? { role: 'assistant', content: PRETEND_NOTE } : cleanMsg(m)));
+      ? { role: 'assistant', content: PRETEND_NOTE } : m.role === 'assistant' && typeof m.content === 'string' ? { ...cleanMsg(m), content: cleanReply(m.content) } : cleanMsg(m)));   // UI2: old chats hold "[cut off: ...]" lines the model then copied
     if (from > 0 && msgs[0] && msgs[0].role === 'user' && typeof msgs[0].content === 'string') {
       if (preserveMemory && this.memBlock && !(thread.memAt >= from) && !msgs[0].content.includes(this.memBlock)) msgs[0] = { ...msgs[0], content: this.memBlock + '\n' + msgs[0].content };
       if (thread.ctxNote) msgs[0] = { ...msgs[0], content: thread.ctxNote + '\n' + msgs[0].content };

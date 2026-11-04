@@ -19,7 +19,11 @@
     const sents = last.split(/(?<=[.!?])\s+(?=[A-Z])/);
     return sents[sents.length - 1];
   }
-  const api = { doingLine };
+  // UI2 (Ben Nov 4, M3): "[cut off: Ben sent a new message]" was a note for the model, and the model copied it into its own replies (then
+  // stopped without acting). It never shows on screen and never goes back to the model. An unclosed one (still streaming) goes too.
+  const CUT_MARK = /[ \t]*\n?[ \t]*\[cut off:[^\]\n]{0,120}(?:\]|$)/gi;
+  function cleanReply(text) { const s = String(text == null ? '' : text); const c = s.replace(CUT_MARK, ''); return c === s ? s : c.trimEnd(); }
+  const api = { doingLine, cleanReply };
   root.Doing = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

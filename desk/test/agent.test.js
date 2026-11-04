@@ -916,3 +916,20 @@ test('UI2 steer while only thinking (nothing on screen): cut at once, no empty b
     assert.match(gw.requests.filter((r) => r.messages)[1].messages.at(-1).content, /while you were working\..*blue please$/s);
   } finally { gw.close(); }
 });
+
+test('UI2 a "[cut off: ...]" line the model copies into its reply is dropped (stored, shown, and in later requests); old saved ones too', async () => {
+  const gw = await startGateway([{ content: 'Let me look at your screen first.\n[cut off: Ben sent a new message]' }, { content: 'ok' }]);
+  try {
+    const t = mkThread(); const evs = [];
+    t.messages.push({ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Reading the page now.\n[cut off: Ben sent a new message]' });   // an old chat (Ben's M3, Nov 4)
+    const agent = new Agent({ getSettings: settings(gw), toolDefs: buildTools({}), tools: {}, emit: (e) => evs.push(e), approve: async () => 'once', askUser: async () => '' });
+    await agent.run(t, 'can you just do it on my google chrome browser?');
+    const reqs = gw.requests.filter((r) => r.messages);
+    assert.ok(!JSON.stringify(reqs[0].messages).includes('[cut off'), 'old marker not sent back to the model');
+    assert.ok(!t.items.some((i) => /\[cut off/.test(i.text || '')), 'not saved for the screen');
+    const end = evs.find((e) => e.type === 'assistant_end');
+    assert.ok(end.replace && !/\[cut off/.test(end.text), 'the screen swaps in the clean text');
+    await agent.run(t, 'next');
+    assert.ok(!JSON.stringify(gw.requests.filter((r) => r.messages).at(-1).messages).includes('[cut off'));
+  } finally { gw.close(); }
+});
