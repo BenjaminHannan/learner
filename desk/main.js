@@ -146,6 +146,7 @@ setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
   if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
   try { aoPool.tick(); } catch (e) { /* next second */ }
+  try { aoDeferredTick(); } catch (e) { /* next second */ }   // imagining ahead: a say that chose to wait is re-checked when due
   try { if (aoTruthCtl && aoTruthGate().budget <= 0) aoStopChecks(); else if ((aoSenses && aoSenses.anyEnabled()) || learningNow()) aoTruthTick(); } catch (e) { /* next second */ }
   try { if (aoQuizCtl && !aoQuizGate()) aoStopQuiz(); else if (learnBtn && learnBtn.cur) aoQuizTick(); } catch (e) { /* next second */ }
   // the memory gauge is read every 10 s while always-on or a Learn study is on (the Mote gate skips it while Ben is busy)
@@ -1524,7 +1525,7 @@ const aoNight = () => { if (sl.asleep || sl.waking) return true; const n = new D
 async function aoAsk(messages, signal, opts) {
   const { buildChatBody, chatUrl } = require('./src/llm');
   const s = store.getSettings();
-  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: (opts && opts.maxTokens) || 220, temperature: 0.2, test: true });
+  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: (opts && opts.maxTokens) || 220, temperature: opts && opts.temperature != null ? opts.temperature : 0.2, test: true });
   const headers = { 'content-type': 'application/json', 'x-test': '1' };
   if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
   const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
@@ -1618,8 +1619,34 @@ function aoMoteResult(job, r) {
   if (aoState) aoState.logActivity('mote', { topic: job.topic, kind: job.kind, ok: true, minutes: Math.max(0.1, (Date.now() - job.at) / 60000) });
   aoMoteClaims(job, r.claims || []);
 }
-const aoPool = new PoolMod.MotePool({ ask: (m, sig) => aoAsk(m, sig, { maxTokens: 350 }), gate: aoMoteGate, prompt: (job) => QuizMod.safeStudier(aoMotePrompt, job, aoQuizS()),
-  onResult: (job, r) => aoMoteResult(job, r), onChange: () => schedulePill(), log: (...a) => console.log('[alwayson]', ...a) });
+const aoPool = new PoolMod.MotePool({ ask: (m, sig, o) => aoAsk(m, sig, { maxTokens: 350, ...(o || {}) }), gate: aoMoteGate, prompt: (job) => QuizMod.safeStudier(aoMotePrompt, job, aoQuizS()),
+  tries: () => aoTries(), pick: (job, parsed) => aoPickThought(job, parsed),
+  onResult: (job, r, t, x) => { aoMoteResult(job, r); aoAfterPick(job, r, x); }, onChange: () => schedulePill(), log: (...a) => console.log('[alwayson]', ...a) });
+// ---- ingredients (2026-11-04): the checker + "I'm not sure" (src/checker.js), the little scientist (src/scientist.js) ------------
+// Bored-mode thinking Motes make K tries (setting moteTries, default 4; back-to-back, Ben's server is serial) and the checker picks
+// one: a settled truth note wins, else the agreement share (UNTESTED as a picker; the Oct 17 toy test found vote pickers fail).
+// A low top score = "I'm not sure" -> the wonder list. Ben's live chat never uses multi-try (it does not go through this pool).
+const CheckerMod = require('./src/checker'), ScientistMod = require('./src/scientist');
+let aoCheckerObj = null, aoScientistObj = null, aoSciTurn = 0;
+const aoChecker = () => aoCheckerObj || (aoCheckerObj = new CheckerMod.Checker({ dir: aoDir(), learned: { enabled: store.getSettings().checkerLearned === true } }));
+const aoTries = () => { const k = Number(store.getSettings().moteTries); return Number.isFinite(k) && k >= 1 ? Math.min(8, k | 0) : ScientistMod.K_TRIES; };
+function aoPickThought(job, parsed) { const p = aoChecker().pickThoughts(job.topic, parsed, { truth: aoTruth }); job.pickInfo = p; return p.index; }
+function aoAfterPick(job, r, x) {
+  const p = job.pickInfo; if (!p || !r) return;
+  for (const c of p.claims || []) if (!c.verified) aoChecker().expect(c.text, c.p_correct, { method: c.method, kind: 'claim' });   // calibration when the 2-site check settles it
+  if (p.notSure && p.claims && p.claims.length && aoState) {
+    const top = p.claims.slice().sort((a, b) => b.p_correct - a.p_correct)[0];
+    if (aoState.addWonder(top.text, "I'm not sure (" + p.method + ' ' + p.p_correct.toFixed(2) + (p.method === 'agreement' ? ', untested' : '') + ')') && aoUrges) aoUrges.wonder();
+    aoState.logActivity('notsure', { topic: job.topic, text: aoChecker().hedge(top.text, p.p_correct).slice(0, 140), p: Math.round(p.p_correct * 100) / 100 });
+  }
+}
+// the little scientist: experiments in the sandbox / puzzle generator / games, run as Motes (same gate, same stop), guesses first
+const aoScientist = () => aoScientistObj || (aoScientistObj = new ScientistMod.Scientist({ dir: aoDir(), checker: aoChecker(), k: aoTries(),
+  onSurprise: (x) => { if (aoState) { aoState.addSurprise({ stream: x.stream, what: x.what, kl: x.kl }); aoState.logActivity('surprise', { what: x.what.slice(0, 140), kl: Math.round(x.kl * 100) / 100, source: 'sandbox' }); } },
+  onActivity: (kind, o) => { if (aoState) aoState.logActivity(kind, o); }, log: (...a) => console.log('[alwayson]', ...a) }));
+// how many of a bored batch are experiments: half (rounded up); with a budget of 1 they take turns with thinking. Setting scientist: false = none.
+function aoSciShare(budget) { if (store.getSettings().scientist === false || budget <= 0) return 0; if (budget === 1) return (aoSciTurn++ % 2) ? 1 : 0; return Math.ceil(budget / 2); }
+function aoSciEnd(why) { if (aoScientistObj) aoScientistObj.endSession(why); }
 let aoLearnTopics = () => (learnBtn && learnBtn.cur ? [learnBtn.cur.topic] : []);
 function aoDayTopics() {
   const out = []; const e = aoStuck.error(); if (e) out.push('what causes this error and how to fix it: ' + e.text);
@@ -1635,8 +1662,10 @@ function aoUrgeTick() {
   if (aoUrges.isBored() && !aoPool.count()) {
     const g = aoMoteGate();
     if (g.budget > 0) {
-      const topics = UrgesMod.chooseTopics({ learn: aoLearnTopics(), day: aoDayTopics(), wonder: aoState.wonder.slice().reverse().map((w) => w.text.replace(/^weak spot in (.+?) \(quiz [^)]*\)$/, 'the weak spots of $1')), recent: aoRecent }, g.budget);
-      if (topics.length && aoPool.startBatch(topics)) { aoUrges.studied(topics.length); aoState.logActivity('bored', { motes: topics.length, gauge: g.gauge, topics: topics.map((t) => t.topic.slice(0, 60)) }); }
+      const nSci = aoSciShare(g.budget);
+      const topics = UrgesMod.chooseTopics({ learn: aoLearnTopics(), day: aoDayTopics(), wonder: aoState.wonder.slice().reverse().map((w) => w.text.replace(/^weak spot in (.+?) \(quiz [^)]*\)$/, 'the weak spots of $1')), recent: aoRecent }, g.budget - nSci);
+      const sci = nSci ? aoScientist().jobs(nSci, { learnTopic: aoLearnTopics()[0] || null }) : [];
+      if ((topics.length || sci.length) && aoPool.startBatch(topics.concat(sci))) { aoUrges.studied(topics.length + sci.length); aoState.logActivity('bored', { motes: topics.length, experiments: sci.length, gauge: g.gauge, topics: topics.map((t) => t.topic.slice(0, 60)) }); }
     }
   }
   aoMaybeShare();
@@ -1670,6 +1699,7 @@ function getTruth() {
     onSettled: (n) => {
       if (aoState) aoState.logActivity('note', { status: n.status, topic: n.topic, text: (n.status === 'wrong' ? n.correction : n.text).slice(0, 140) });
       if (n.status === 'wrong' && aoUrges) aoUrges.worthTelling(0.15);
+      try { aoChecker().settled(n.text, n.status === 'confirmed'); } catch (e) { /* calibration only */ }
     }, log: (...a) => console.log('[alwayson]', ...a) }));
 }
 // the 1 s clock: at most one check every 20 s, only while bored-mode Motes would be allowed (Ben first, sleep, night, memory)
@@ -1745,6 +1775,8 @@ async function aoQuizWork(z, signal) {
     if (levelUp) cur.levelUpDue = true;
     cur.examDue = false; cur.lastExamAt = Date.now();
     aoQuizS().save(cur); aoQuizCache.at = 0;
+    // free checker labels (graded by quiz.js; the labels file is never shown to studiers and never read by sleep)
+    for (const g of res.guesses) { try { const q = (L.questions || []).find((x) => x.id === g.id); aoChecker().label({ question: q ? q.q : g.id, answer: g.guess, correct: !!g.correct, p: g.confidence, pMethod: 'self', method: 'quiz', source: 'quiz', truth: 'sources', kind: 'quiz:' + z.topic.slice(0, 40) }); } catch (e) { /* labels only */ } }
     // a confident miss is a surprise; it goes on the wonder list WITHOUT the question (the quiz stays locked from the studiers)
     for (const g of res.guesses) {
       const fs2 = GuesserMod.factSurprise(g.confidence, g.correct);
@@ -1771,8 +1803,34 @@ function aoStopQuiz() { if (aoQuizCtl) { try { aoQuizCtl.abort(); } catch (e) { 
 // ---- always-on v2, phase 7: the diary on ask + the sleep handoff (src/diary-ao.js) --------------------------------------------
 const DiaryAO = require('./src/diary-ao');
 function aoDiaryNote() {
-  const text = DiaryAO.recap({ activity: aoState.activity, truth: aoTruth ? aoTruth.counts() : null, since: Date.now() - 24 * 3600000 });
+  let text = DiaryAO.recap({ activity: aoState.activity, truth: aoTruth ? aoTruth.counts() : null, since: Date.now() - 24 * 3600000 });
+  try { const sc = aoScientistObj ? aoScientistObj.recap(Date.now() - 24 * 3600000) : ''; const ns = aoState.activity.filter((x) => x.kind === 'notsure' && x.t >= Date.now() - 24 * 3600000);
+    text += (sc ? '\n' + sc : '') + (ns.length ? '\nNot sure about ' + ns.length + ' thing' + (ns.length === 1 ? '' : 's') + ', e.g. "' + ns[ns.length - 1].text + '" (on my wonder list).' : '') + (aoCheckerObj ? '\n' + aoCheckerObj.reportLine() : ''); } catch (e) { /* diary still works */ }
   return '[Glim\'s diary for the last 24 hours. Ben asked what you did: tell him briefly, in plain words, from this log only; do not add anything it does not say.\n' + text + '\n] ';
+}
+// ---- imagining ahead, level 1 (src/imagine.js + SpeakOMeter.decideAhead): speak now, or wait ~5 min? ---------------------------------
+// The guesser's predicted next app (and, when a time sense supplies it, the chance of a break soon) gives a few imagined futures; a
+// say waits when waiting is clearly better, then is re-checked plainly ONCE (no lookahead), still under every code limit. Never urgent.
+const ImagineMod = require('./src/imagine');
+let aoDeferred = null;
+let aoBreakSoon = () => null;   // a hook for a time sense: the chance Ben takes a break in the next ~5 min (null = unknown)
+function aoSpeakAhead(d) {
+  if (!aoMeter) return { speak: true };
+  const ctx = aoContext({ urgent: !!d.urgent });
+  if (d.urgent || store.getSettings().imagineAhead === false || aoDeferred) return aoMeter.decide(ctx);
+  const r = aoMeter.decideAhead(ctx, ImagineMod.futures(ctx, { guesser: aoGuesser, breakSoon: () => aoBreakSoon(ctx) }));
+  if (r.defer) { aoDeferred = { d, at: Date.now(), due: Date.now() + r.waitMs }; if (aoState) aoState.logActivity('waited', { p: Math.round(r.p * 100) / 100, pWait: Math.round(r.pWait * 100) / 100, text: String(d.say).slice(0, 80) }); }
+  return r;
+}
+function aoDeferredTick() {
+  const w = aoDeferred; if (!w || Date.now() < w.due) return;
+  if (!aoLoop || !aoMeter || Date.now() - w.at > 20 * 60000) { aoDeferred = null; return; }   // too old now: dropped, never late
+  if (aoLoop.gate()) return;                                                               // Ben busy / night / pressure: keep waiting (max 20 min)
+  aoDeferred = null;
+  if (!aoLoop.sayAllowed(w.d)) return;
+  const r = aoMeter.decideAhead(aoContext({ urgent: !!w.d.urgent }), null, { noLookahead: true });
+  if (!r.speak) { if (aoState) aoState.logActivity('waited', { dropped: true, p: Math.round(r.p * 100) / 100 }); return; }
+  aoState.spoke(); aoSay(w.d.say, { ...w.d, why: (w.d.why || '') + ' (waited for a better moment)', features: r.x });
 }
 // what the nightly sleep may learn from: confirmed notes, corrections, surprises (never a maybe). Written as sleep starts.
 function aoSleepHandoff() { if (!aoState) return null; return DiaryAO.writeHandoff(aoDir(), DiaryAO.sleepHandoff({ truth: aoTruth, surprises: aoState.surprises })); }
@@ -1783,7 +1841,7 @@ function aoApply() {
   if (!aoLoop) aoLoop = new AlwaysOnMod.AlwaysOn({ senses: aoSenses, state: aoState, ask: aoAsk,
     deliver: { say: aoSay, note: aoNote, learn: aoLearn },
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
-    speakGate: (d) => aoMeter ? aoMeter.decide(aoContext({ urgent: !!d.urgent })) : { speak: true },
+    speakGate: (d) => aoSpeakAhead(d),
     context: (fresh) => aoLoopContext(fresh),   // feeling time + recall + patterns (Task B)
     log: (...a) => console.log('[alwayson]', ...a) });
   if (!E2E && aoSenses.anyEnabled()) aoLoop.start(); else aoLoop.stop();
@@ -1846,7 +1904,7 @@ function registerIpc() {
     return { ok: true };
   });
   h('agent:send', async (threadId, text) => {
-    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz();
+    sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz(); aoSciEnd('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }
     if (rollCtl) rollCtl.abort();   // Ben's turn gets the model

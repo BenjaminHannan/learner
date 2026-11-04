@@ -99,7 +99,9 @@ test('the loop: the meter can hold a say, but never lets one through the code li
 
 test('main wires the meter into the loop, outcomes into learn(), and the refit into sleep', () => {
   const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
-  assert.match(m, /speakGate: \(d\) => aoMeter \? aoMeter\.decide\(aoContext\(/);
+  // the gate goes through the look-ahead wrapper (imagining ahead L1), which still scores with aoMeter on aoContext(...)
+  assert.match(m, /speakGate: \(d\) => (?:aoMeter \? aoMeter\.decide\(aoContext\(|aoSpeakAhead\(d\))/);
+  if (/speakGate: \(d\) => aoSpeakAhead/.test(m)) assert.match(m, /function aoSpeakAhead\(d\) \{\n  if \(!aoMeter\) return \{ speak: true \};\n  const ctx = aoContext\(/);
   assert.match(m, /aoMeter\.learn\(m\.features, kind/);
   assert.match(m, /aoNightlyJobs = \[\(\) => aoMeter && aoMeter\.refit\(\),/);
   assert.match(m, /helpers\.pauseForSleep\(\);[^\n]*\n  try \{ aoNightly\(\); aoSleepHandoff\(\); \}/);

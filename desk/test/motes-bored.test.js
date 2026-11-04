@@ -119,5 +119,5 @@ test('main: chat and typing stop every Mote at once; the gate uses Ben first, sl
   assert.match(gate, /GaugeMod\.budget\(/);
   assert.match(m, /try \{ aoPool\.tick\(\); \}/);
   assert.match(m, /helpers\.pauseForSleep\('Paused: the Mac is short on memory'\)/);
-  assert.match(m, /ask: \(m, sig\) => aoAsk\(m, sig, \{ maxTokens: 350 \}\)/, 'Motes ask chat\'s model through aoAsk');
+  assert.match(m, /ask: \(m, sig(?:, o)?\) => aoAsk\(m, sig, \{ maxTokens: 350/, 'Motes ask chat\'s model through aoAsk');
 });
