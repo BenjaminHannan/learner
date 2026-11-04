@@ -67,7 +67,17 @@
   });
   pill.addEventListener('mouseleave', () => { clearTimeout(openT); pill.classList.remove('hover'); close(); });
   $('.row1').addEventListener('click', () => { if (view && view.status === 'idle') P.act('open', { threadId: null, key: null }); else if (view && view.top) P.act('open', { threadId: view.top.threadId, key: null }); });
-  P.onView(paint);
+  // Ben Nov 3: the helper keeps the cursor off the top edge over the island so a full-screen app's menu bar doesn't slide down there
+  let lastFence = '';
+  function fence() {
+    const r = pill.getBoundingClientRect();
+    const on = pill.classList.contains('notch') && !pill.classList.contains('gone') && r.width > 0;
+    const k = on ? Math.round(r.left) + ' ' + Math.round(r.right) : 'off';
+    if (k !== lastFence) { lastFence = k; P.act('fence', on ? { left: Math.round(r.left), right: Math.round(r.right) } : null); }
+  }
+  new ResizeObserver(fence).observe(pill);
+  pill.addEventListener('transitionend', fence);
+  P.onView((v) => { paint(v); fence(); });
   window.__open = () => { clearTimeout(closeT); pill.classList.add('open'); };       // for screenshots
   window.__close = () => { pill.classList.remove('open'); };
 })();

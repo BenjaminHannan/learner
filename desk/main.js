@@ -1601,9 +1601,10 @@ function registerIpc() {
 
   // status pill actions
   ipcMain.handle('pill:act', async (e, name, arg) => {
-    if (name !== 'hover') sl.lastActive = Date.now();
+    if (name !== 'hover' && name !== 'fence') sl.lastActive = Date.now();
     switch (name) {
       case 'hover': if (pillWin) pillWin.setInteractive(!!arg); break;
+      case 'fence': if (pillWin) pillWin.setFence(arg); break;
       case 'open': { showWindow(); if (arg && arg.threadId) send('open-thread', arg.threadId); if (arg && arg.key) pillState.dismiss(arg.key); break; }
       case 'stop': if (arg === 'main') agent.stop(); else if (arg === 'call') { if (callAgent) callAgent.stop(); } else helpers.abort(arg); break;
       case 'respond': { const r = pending.get(arg.rid); if (r) { pending.delete(arg.rid); r(arg.value); send('agent', { threadId: arg.threadId, type: 'resolved', rid: arg.rid, value: arg.value }); } break; }

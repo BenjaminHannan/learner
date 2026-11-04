@@ -824,8 +824,57 @@ func runCall(dictate: Bool = false, stt: String?) -> Never {
     dispatchMain()
 }
 
+// MARK: - Fence
+// Ben Nov 3: in a full-screen app (or with the menu bar on auto-hide) macOS slides the menu bar down whenever the cursor
+// touches the top edge, including over Glim's notch island. `fence` keeps the cursor a few points below the top edge while it
+// is over the island, so the menu bar stays hidden there and still appears when the cursor goes to either side.
+// stdin lines: "X0 X1" (global points, the island's left/right edges on the primary screen) or "off". Exits when stdin closes.
+// Needs Accessibility (the event tap). A warp normally freezes the mouse for 0.25 s (Ben: "my cursor gets stuck"), so that is off.
+var fenceX0 = 0.0, fenceX1 = 0.0, fenceOn = false
+let fenceMinY = 3.0
+var fenceTap: CFMachPort?
+func runFence() -> Never {
+    let mask = (1 << CGEventType.mouseMoved.rawValue) | (1 << CGEventType.leftMouseDragged.rawValue)
+        | (1 << CGEventType.rightMouseDragged.rawValue) | (1 << CGEventType.otherMouseDragged.rawValue)
+    let cb: CGEventTapCallBack = { _, type, event, _ in
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let t = fenceTap { CGEvent.tapEnable(tap: t, enable: true) }
+            return Unmanaged.passUnretained(event)
+        }
+        let p = event.location
+        if fenceOn && p.y < fenceMinY && p.x >= fenceX0 && p.x <= fenceX1 {
+            let q = CGPoint(x: p.x, y: fenceMinY)
+            event.location = q
+            CGWarpMouseCursorPosition(q)
+            CGAssociateMouseAndMouseCursorPosition(1)
+        }
+        return Unmanaged.passUnretained(event)
+    }
+    guard let tap = CGEvent.tapCreate(tap: .cghidEventTap, place: .headInsertEventTap, options: .defaultTap,
+                                      eventsOfInterest: CGEventMask(mask), callback: cb, userInfo: nil) else {
+        fail("fence needs Accessibility permission")
+    }
+    fenceTap = tap
+    CGEventSource(stateID: .combinedSessionState)?.localEventsSuppressionInterval = 0
+    CGEventSource(stateID: .hidSystemState)?.localEventsSuppressionInterval = 0
+    CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, tap, 0), .commonModes)
+    CGEvent.tapEnable(tap: tap, enable: true)
+    out(["fence": "ready"])
+    DispatchQueue.global().async {
+        while let line = readLine() {
+            let f = line.split(separator: " ").compactMap { Double($0) }
+            DispatchQueue.main.async {
+                if f.count == 2 && f[1] > f[0] { fenceX0 = f[0]; fenceX1 = f[1]; fenceOn = true } else { fenceOn = false }
+            }
+        }
+        exit(0)
+    }
+    CFRunLoopRun()
+    exit(0)
+}
+
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call|dictate") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|notch|call|dictate|fence") }
 let command = args.removeFirst()
 
 switch command {
@@ -834,6 +883,9 @@ case "call":
 
 case "dictate":
     runCall(dictate: true, stt: stringFlag(&args, "--stt"))
+
+case "fence":
+    runFence()
 
 case "notch":
     // the camera notch of the menu-bar screen: the gap between the two menu-bar areas beside it (macOS 12+); 0 when there is none.

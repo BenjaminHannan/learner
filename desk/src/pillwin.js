@@ -52,9 +52,57 @@ class PillWindow {
     // menu-bar band around the camera (black, fused to the notch). Electron has no notch size, so the screen helper measures it.
     this.geo = { pt: pos.y - d.bounds.y, notchH: notch ? notch.height : 0, notchW: notch ? notch.width : 0 };
     this.win.setBounds({ x: pos.x, y: d.bounds.y, width: W, height: H + this.geo.pt });
+    if (this.fence) this.setFence(this.fenceRect); // the window moved: move the fence with it
     if (this.view && this.lastSent) this.win.webContents.send('pill-view', { ...this.lastSent, geo: this.geo });
   }
-  setInteractive(on) { if (!this.win.isDestroyed()) this.win.setIgnoreMouseEvents(!on, { forward: true }); }
+  // Ben Nov 3: `deskhelper fence` keeps the cursor off the top edge over the island (so a full-screen app's menu bar stays hidden there).
+  // r: the island's {left, right} in window px, or null. Started lazily; restarted if it dies (at most every 30 s).
+  setFence(r) {
+    if (process.platform !== 'darwin' || this.win.isDestroyed()) return;
+    this.fenceRect = r;
+    const x = this.win.getBounds().x, line = r ? (x + r.left) + ' ' + (x + r.right) : 'off';
+    if (!this.fence && r && Date.now() - (this.fenceStarted || 0) > 30000) {
+      try {
+        const { findHelper } = require('./tools/screen');
+        const bin = findHelper({}, process.resourcesPath, process.platform);
+        if (bin) {
+          this.fenceStarted = Date.now();
+          const c = require('child_process').spawn(bin, ['fence'], { stdio: ['pipe', 'ignore', 'pipe'] });
+          c.on('exit', () => { if (this.fence === c) this.fence = null; });
+          c.on('error', () => { if (this.fence === c) this.fence = null; });
+          c.stdin.on('error', () => {});
+          c.stderr.on('data', (d) => console.log('[fence]', String(d).trim()));
+          this.fence = c;
+        }
+      } catch (e) { this.fence = null; }
+    }
+    if (this.fence) { try { this.fence.stdin.write(line + '\n'); } catch (e) { /* ignore */ } }
+  }
+  setInteractive(on) { if (!this.win.isDestroyed()) this.win.setIgnoreMouseEvents(!on, { forward: true }); this.setVeil(on); }
+  // Ben Nov 3: while the cursor is on Glim, the menu bar (app menus, icons, clock) hides: a black strip the height of the notch band
+  // covers the whole top of the screen, under the island, and goes away when the cursor leaves. Notched Macs only.
+  setVeil(on) {
+    if (process.platform !== 'darwin' || !this.geo || !this.geo.notchH) return;
+    if (on && !this.veil) {
+      try {
+        this.veil = new BrowserWindow({ show: false, frame: false, transparent: false, hasShadow: false, resizable: false, movable: false, focusable: false,
+          skipTaskbar: true, fullscreenable: false, enableLargerThanScreen: true, type: 'panel', backgroundColor: '#000000', webPreferences: { sandbox: true } });
+        this.veil.setIgnoreMouseEvents(true);
+        this.veil.setAlwaysOnTop(true, 'screen-saver');
+        try { this.veil.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true }); } catch (e) { /* ignore */ }
+        try { this.veil.setHiddenInMissionControl(true); } catch (e) { /* ignore */ }
+        this.veil.loadURL('data:text/html,<body style="margin:0;background:%23000"></body>');
+        this.win.setAlwaysOnTop(true, 'screen-saver', 1); // the island stays above the strip
+      } catch (e) { this.veil = null; return; }
+    }
+    if (!this.veil || this.veil.isDestroyed()) return;
+    if (on) {
+      const d = screen.getPrimaryDisplay();
+      this.veil.setBounds({ x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: this.topInset || this.geo.notchH });
+      if (!this.veil.isVisible()) this.veil.showInactive();
+      this.win.moveTop();
+    } else if (this.veil.isVisible()) this.veil.hide();
+  }
   // v: PillState.view(); hidden: true when the chat window is in front (the pill would be redundant)
   update(v, hidden) {
     this.view = v;
@@ -68,7 +116,8 @@ class PillWindow {
     if (show) { if (!this.win.isVisible()) this.win.showInactive(); }
     else if (this.win.isVisible()) { this.setInteractive(false); this.hideTimer = setTimeout(() => { if (!this.win.isDestroyed()) this.win.hide(); }, 450); }
   }
-  destroy() { for (const ev of ['display-metrics-changed', 'display-added', 'display-removed']) screen.removeListener(ev, this.onDisplay); clearTimeout(this.hideTimer); try { if (!this.win.isDestroyed()) this.win.destroy(); } catch (e) { /* ignore */ } }
+  destroy() { try { if (this.fence) this.fence.kill(); } catch (e) { /* ignore */ } try { if (this.veil && !this.veil.isDestroyed()) this.veil.destroy(); } catch (e) { /* ignore */ }
+    for (const ev of ['display-metrics-changed', 'display-added', 'display-removed']) screen.removeListener(ev, this.onDisplay); clearTimeout(this.hideTimer); try { if (!this.win.isDestroyed()) this.win.destroy(); } catch (e) { /* ignore */ } }
 }
 
 module.exports = { PillWindow, W, H };
