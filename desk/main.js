@@ -143,7 +143,8 @@ const idleStale = () => process.platform === 'darwin' && pillWin && pillWin.view
 let lastEar = '';
 setInterval(() => {
   try { aoVoice.pump(); aoVoice.sweep(); } catch (e) { /* the next second tries again */ }
-  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } }
+  if (aoSenses && aoSenses.anyEnabled() && aoSenses.enabled('windows') && !sl.asleep) { const f = aoStuck.front(); if (f.app) { try { getGuesser().observe('app', SpeakMod.categorize(f.app, f.title)); } catch (e) { /* next second */ } } }
+  if (aoSenses && aoSenses.anyEnabled() && Date.now() % 60000 < 1000) { saveGuesser(); try { if (aoNight()) aoNightly(); } catch (e) { /* next minute */ } }
   let earCh = false; try { const e = JSON.stringify(aoEar()); earCh = e !== lastEar; lastEar = e; } catch (e) { /* ignore */ }
   if (pillState.tick() || (pillWin && pillWin.view && pillWin.view.visible) || idleStale() || earCh) updatePill();
 }, 1000).unref();
@@ -1372,7 +1373,28 @@ let aoMeter = null;
 const aoStuck = new SpeakMod.Stuck();
 let aoObservers = [];   // more listeners (the guesser) are added below
 function aoObserved(e) { aoStuck.observe(e.sense, e.text); for (const f of aoObservers) { try { f(e); } catch (err) { /* a listener never breaks storage */ } } }
-let aoCtxExtra = () => ({});   // urges and surprise join in later phases
+// always-on v2, phase 3: the tiny guesser (src/guesser.js). ~1 s ticks on the latest front app; screen and sound categories on each
+// observation. A big Bayesian surprise wakes an always-on tick early and is filed (words only); anything else is not saved.
+const GuesserMod = require('./src/guesser');
+const aoGuessFile = () => path.join(aoDir(), 'guesser.json');
+let aoGuesser = null;
+function getGuesser() {
+  if (aoGuesser) return aoGuesser;
+  let saved = null; try { saved = JSON.parse(fs.readFileSync(aoGuessFile(), 'utf8')); } catch (e) { /* fresh */ }
+  return (aoGuesser = new GuesserMod.Guesser({ saved, onBig: (s) => aoOnSurprise(s) }));
+}
+function saveGuesser() { if (!aoGuesser) return; try { fs.writeFileSync(aoGuessFile(), JSON.stringify(aoGuesser.toJSON())); } catch (e) { /* next minute */ } }
+function aoOnSurprise(s) {
+  const f = aoStuck.front();
+  const what = s.stream === 'app' ? 'Ben switched to ' + (f.app || s.cat) + (f.title ? ' (' + f.title.slice(0, 80) + ')' : '') + ', which I did not expect here (' + s.cat + ').'
+    : 'Unexpected ' + s.stream + ': ' + s.cat + '.';
+  aoSurprise = { at: Date.now(), what: s.cat };
+  if (aoState) { aoState.addSurprise({ stream: s.stream, what, kl: s.kl }); aoState.logActivity('surprise', { what, kl: Math.round(s.kl * 100) / 100 }); }
+  if (aoLoop) aoLoop.wake();
+  schedulePill();
+}
+aoObservers.push((e) => { if (aoSenses && aoSenses.anyEnabled()) getGuesser().observeEntry(e); });
+let aoCtxExtra = () => ({ surprise: aoGuesser ? aoGuesser.level() : 0 });   // urges join in phase 4
 function aoContext(extra) {
   const f = aoStuck.front(), cat = SpeakMod.categorize(f.app, f.title);
   let idleS = 0; try { idleS = powerMonitor.getSystemIdleTime(); } catch (e) { /* unknown */ }
@@ -1383,7 +1405,7 @@ function aoContext(extra) {
 }
 // nightly retune (sleep window or sleep start): the speak-o-meter refits on its whole feedback log; later phases add theirs
 let aoNightlyDay = '';
-const aoNightlyJobs = [() => aoMeter && aoMeter.refit()];
+const aoNightlyJobs = [() => aoMeter && aoMeter.refit(), () => { if (aoGuesser) { aoGuesser.decay(0.8); saveGuesser(); } }];
 function aoNightly(force) {
   const d = new Date().toDateString();
   if (!force && aoNightlyDay === d) return; aoNightlyDay = d;

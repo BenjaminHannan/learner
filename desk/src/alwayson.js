@@ -88,6 +88,8 @@ class AlwaysOn {
   }
   stop() { this.running = false; if (this.timer) this.clearTimer(this.timer); if (this.sampleTimer) this.clearTimer(this.sampleTimer); this.timer = this.sampleTimer = null; this.cancel('stopped'); }
   schedule(ms) { if (!this.running) return; if (this.timer) this.clearTimer(this.timer); this.timer = this.setTimer(() => { this.timer = null; this.tick().catch((e) => this.log('alwayson tick error', e)).finally(() => this.schedule(this.delay)); }, ms); }
+  // v2: a big surprise wakes a tick early (it still passes every gate; a tick in flight is left alone)
+  wake() { if (!this.running || this.inTick) return false; this.delay = this.baseMs; this.schedule(0); return true; }
   cancel(why) { if (this.ctl) { try { this.ctl.abort(); } catch (e) { /* gone */ } this.ctl = null; this.log('alwayson: cancelled (' + why + ')'); } }
   gate() {
     const g = this.o.gates || {};

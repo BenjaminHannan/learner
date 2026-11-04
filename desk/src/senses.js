@@ -65,10 +65,15 @@ class AlwaysOnState {
     this.focus = j.focus && typeof j.focus.topic === 'string' ? j.focus : null;
     this.lastSpokeAt = Number(j.lastSpokeAt) || 0;
     this.lastTickAt = Number(j.lastTickAt) || 0;
-    this.cursor = Number(j.cursor) || 0;   // inbox entries with t > cursor have not been shown to the model yet
+    this.cursor = Number(j.cursor) || 0;
+    // always-on v2: surprising moments (the guesser's big surprises, quiz misses), urges, wonder list, and an activity log
+    this.surprises = Array.isArray(j.surprises) ? j.surprises.slice(-100) : [];
+    this.urges = j.urges && typeof j.urges === 'object' ? j.urges : null;
+    this.wonder = Array.isArray(j.wonder) ? j.wonder.slice(-50) : [];
+    this.activity = Array.isArray(j.activity) ? j.activity.slice(-400) : [];   // inbox entries with t > cursor have not been shown to the model yet
     this.dropped = 0;
   }
-  save() { try { fs.mkdirSync(this.dir, { recursive: true }); atomicWrite(this.file, { inbox: this.inbox, focus: this.focus, lastSpokeAt: this.lastSpokeAt, lastTickAt: this.lastTickAt, cursor: this.cursor }); return true; } catch (e) { return false; } }
+  save() { try { fs.mkdirSync(this.dir, { recursive: true }); atomicWrite(this.file, { inbox: this.inbox, focus: this.focus, lastSpokeAt: this.lastSpokeAt, lastTickAt: this.lastTickAt, cursor: this.cursor, surprises: this.surprises, urges: this.urges, wonder: this.wonder, activity: this.activity }); return true; } catch (e) { return false; } }
   // -> the stored entry, or null when it was empty, private, or the same as the last one from that sense
   add(sense, text) {
     if (!IDS.includes(sense)) return null;
@@ -86,6 +91,23 @@ class AlwaysOnState {
     if (this.o.onAdd) { try { this.o.onAdd(e); } catch (err) { /* listeners (guesser, stuck detector) never break storage */ } }
     return e;
   }
+  // a surprising moment, filed as words only: {t, stream, what, kl}. Private-looking text is dropped like any observation.
+  addSurprise(o) {
+    const what = String((o && o.what) || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (!what || isPrivate(what)) return null;
+    const e = { t: this.now(), stream: String(o.stream || ''), what, kl: Math.round((Number(o.kl) || 0) * 1000) / 1000 };
+    this.surprises.push(e); if (this.surprises.length > 100) this.surprises.shift();
+    this.save(); return e;
+  }
+  addWonder(text, why) {
+    const t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!t || isPrivate(t) || this.wonder.some((w) => w.text.toLowerCase() === t.toLowerCase())) return null;
+    const e = { t: this.now(), text: t, why: String(why || '').slice(0, 120) };
+    this.wonder.push(e); if (this.wonder.length > 50) this.wonder.shift();
+    this.save(); return e;
+  }
+  // the diary's raw material: {t, kind, ...} (kept 400)
+  logActivity(kind, o) { this.activity.push({ t: this.now(), kind, ...(o || {}) }); if (this.activity.length > 400) this.activity.splice(0, this.activity.length - 400); this.save(); }
   fresh() { return this.inbox.filter((x) => x.t > this.cursor); }
   markRead() { if (this.inbox.length) this.cursor = this.inbox[this.inbox.length - 1].t; this.save(); }
   setFocus(topic, kind) { this.focus = topic ? { kind: kind || 'learn', topic: String(topic).slice(0, 200), since: this.now() } : null; this.save(); }

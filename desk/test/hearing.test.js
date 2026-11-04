@@ -89,7 +89,9 @@ test('missing speech model: says so and does not retry forever', async () => {
 // ---- pass mark 4: nothing in the always-on path writes an image or audio file
 test('no always-on module writes images or audio to disk', () => {
   const root = path.join(__dirname, '..');
-  const files = ['src/senses.js', 'src/alwayson.js', 'src/hearing.js', 'src/learnbutton.js', 'renderer/senses.js', 'renderer/learnbtn.js'];
+  const files = ['src/senses.js', 'src/alwayson.js', 'src/hearing.js', 'src/learnbutton.js', 'renderer/senses.js', 'renderer/learnbtn.js',
+    // always-on v2 (pass mark 4 extended): the new modules
+    'src/glimvoice.js', 'src/speakometer.js', 'src/guesser.js'];
   const main = fs.readFileSync(path.join(root, 'main.js'), 'utf8');
   const block = main.slice(main.indexOf('// ---- Always-on Premonition'), main.indexOf('function registerIpc() {'));
   assert.ok(block.length > 1000, 'found the always-on block of main.js');
@@ -103,7 +105,7 @@ test('no always-on module writes images or audio to disk', () => {
   // the only file writers are the two JSON files and the learn-button JSON
   for (const [f, src] of sources) {
     const writes = src.match(/fs\.(?:writeFileSync|appendFileSync|createWriteStream|writeFile)\([^)]*\)/g) || [];
-    for (const w of writes) assert.ok(/tmp|this\.file/.test(w), f + ': unexpected write ' + w);
+    for (const w of writes) assert.ok(/tmp|this\.file|this\.logFile|aoGuessFile\(\)/.test(w), f + ': unexpected write ' + w);
   }
   // the helper's new sense commands: text in memory only
   const swift = fs.readFileSync(path.join(root, 'helper', 'deskhelper.swift'), 'utf8');

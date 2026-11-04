@@ -35,3 +35,16 @@ Spec: always-on-v2-design.md. Each line: what was decided and why.
 - **Stuck page** = the front app + window title unchanged for 10+ minutes (from the windows sense). **Stuck error** = the same
   error line (numbers and quoted bits ignored) in 3+ observations within 30 minutes.
 - **Refit time**: when sleep starts, and once per day at the first minute inside the night window.
+
+## Phase 3 (tiny guesser + Bayesian surprise)
+- **Streams**: app category (8), screen category (8: error/code/video/reading/chat/game/quiet/other), sound category
+  (speech/music/video/quiet/other). Each is a Dirichlet-count model on (previous category, part of the day: four 6-hour parts).
+  A context seen for the first time borrows up to 50 counts from the previous-category model, so 06:00 does not reset its beliefs.
+- **The ~1 s tick** re-observes the latest front app from the windows sense, which is still only *sampled* every 20 s (v1 rate;
+  the helper is not spawned every second). Staying in the same app counts as "the next app = the same app".
+- **Surprise** = KL(Dir(after) ‖ Dir(before)) in nats, closed form (lgamma/digamma in plain JS). Big = ≥ 1 nat, at most one
+  filed per stream per minute. Big → `aoLoop.wake()` (an early tick that still passes every gate) + a `surprise` entry
+  (words only) in alwayson-state.json + the 😲 face for 20 s. Speak-o-meter feature = 1 − e^(−KL), fading over 2 minutes.
+- **Nightly retune** of the guesser = counts × 0.8 (old habits fade so it can follow a new routine).
+- **Known flaky test**: `first-reply thinking cap` (agent.test.js) fails about 1 run in 3 on its own; agent.js is untouched by
+  this work. The v1 brief listed it as a known failure.
