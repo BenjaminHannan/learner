@@ -86,7 +86,7 @@ test('the loop: the meter can hold a say, but never lets one through the code li
   const senses = new Senses({ consent: { on: true, senses: { chats: true } }, state });
   let speak = false, busy = false; const said = [];
   const loop = new AlwaysOn({ senses, state, ask: async () => JSON.stringify({ important: 'asked', say: 'Hi Ben', note: null, learn: null, why: 'x' }),
-    deliver: { say: (t, d) => said.push(d) }, gates: { busy: () => busy }, speakGate: () => ({ speak, p: speak ? 0.9 : 0.1, x: { bias: 1 } }) });
+    deliver: { say: (t, d) => said.push(d) }, gates: { busy: () => busy }, evidence: false, speakGate: () => ({ speak, p: speak ? 0.9 : 0.1, x: { bias: 1 } }) });
   senses.push('chats', 'one'); await loop.tick();
   assert.strictEqual(said.length, 0); assert.strictEqual(loop.stats.meterHeld, 1);
   speak = true; senses.push('chats', 'two'); await loop.tick();

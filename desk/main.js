@@ -1730,7 +1730,7 @@ function aoSetup() {
   aoUrges = new UrgesMod.Urges({ saved: aoState.urges });
   const sc = SensesMod.startConsent(SensesMod.loadConsent(aoDir()));   // no start-up card: undecided = every sense on (Ben Nov 4)
   if (sc.granted) { try { SensesMod.saveConsent(aoDir(), sc.consent); } catch (e) { /* used in memory; saved on the next change */ } }
-  aoSenses = new SensesMod.Senses({ consent: sc.consent, state: aoState, changeOnly: () => store.getSettings().senseChangeOnly === true, onScreen: (text, win) => aoEyesLook(text, win), samplers: {
+  aoSenses = new SensesMod.Senses({ consent: sc.consent, state: aoState, log: (m) => console.log('[alwayson]', m), changeOnly: () => store.getSettings().senseChangeOnly === true, onScreen: (text, win) => aoEyesLook(text, win), samplers: {
     // words on screen through Vision OCR inside the helper (nothing written to disk)
     screen: async () => { if (!screen || !screen.findHelper()) return ''; const j = await screen.run(['ocr', '--max', '3000']); return j && !j.error && typeof j.text === 'string' ? j.text : ''; },
     windows: async () => {
@@ -2308,7 +2308,8 @@ function aoApply() {
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
     speakGate: (d) => aoSpeakAhead(d),
     onIdle: () => aoKeeperKick('nothing to say'),   // Ben: nothing to contribute -> go learn something relevant
-    onDecision: (x) => aoLogDecision(x),             // every speak decision + outcome, for sleep (logging only)
+    onDecision: (x) => aoLogDecision(x),
+    signals: () => ({ stuck: !!aoStuck.error() }),   // speak filter v2: main's stuck detector is evidence for "stuck"             // every speak decision + outcome, for sleep (logging only)
     context: (fresh) => aoLoopContext(fresh),   // feeling time + recall + patterns (Task B)
     log: (...a) => console.log('[alwayson]', ...a) });
   aoWatchHook(aoLoop);   // T6: a finished tick labels the watcher's seconds

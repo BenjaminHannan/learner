@@ -183,9 +183,13 @@ class Senses {
     const due = since >= (this.o.periMs || 180000) || (key && key !== this.co.periKey && since >= (this.o.periMinMs || 30000));
     if (!due) return null;
     this.lastAt.periphery = now; this.co.periKey = key; this.busy.periphery = true; this.calls.periphery = (this.calls.periphery || 0) + 1;
-    let r = null; try { r = await fn(); } catch (e) { r = null; } finally { this.busy.periphery = false; }
-    const text = peripheryText(r); this.co.periSkipped = (this.co.periSkipped || 0) + ((r && r.items) || []).filter((x) => isPrivate([x.app, x.title, x.text].join(' '))).length;
-    return text ? this.state.add('periphery', text) : null;
+    let r = null, err = ''; const t0 = Date.now(); try { r = await fn(); } catch (e) { r = null; err = String(e && e.message || e); } finally { this.busy.periphery = false; }
+    const items = (r && !r.error && r.items) || [], priv = items.filter((x) => isPrivate([x.app, x.title, x.text].join(' '))).length;
+    this.co.periSkipped = (this.co.periSkipped || 0) + priv;
+    const text = peripheryText(r), e = text ? this.state.add('periphery', text) : null;
+    this.co.periLast = { at: now, windows: items.length, private: priv, withText: items.filter((x) => x.text).length, how: [...new Set(items.map((x) => x.how))].join(','), chars: text.length, stored: !!e, ms: Date.now() - t0, error: err || (r && r.error) || '' };
+    try { this.o.log && this.o.log('periphery: ' + JSON.stringify(this.co.periLast)); } catch (e2) { /* log only */ }
+    return e;
   }
   push(id, text) { if (!this.enabled(id)) return null; return this.state.add(id, text); }
   // I1 (Glim can see): after each screen read, o.onScreen(screenText, latestWindowsText) may take a look with the eyes (fire and forget;

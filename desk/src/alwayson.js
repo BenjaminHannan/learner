@@ -67,6 +67,28 @@ function buildMessages(fresh, summary, extra) {
   ];
 }
 
+// Speak filter v2 (SWITCH-ON 2026-11-05, MARKS A-v2): Glim's "important" counts only when the tick's observations back it with a signal
+// the code can check; otherwise the moment is "none" (quiet). v1 let the brain call a chat ABOUT deadlines a deadline (5/20 replayed ticks).
+const EVIDENCE = {
+  deadline: /\b(?:due|starts?|starting|begins?|expires?|closes?|ends?|leaves?|departs?|meeting|exam|quiz|test|class|appointment)\b[^.!?\n]{0,50}?\b(?:(?:at|by) \d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{1,2}:\d{2}\s?(?:am|pm)?|\d{1,2}\s?(?:am|pm)|in \d+\s?(?:min(?:ute)?s?|hours?|h)\b|today|tonight|tomorrow|now)\b|\bin \d+\s?min(?:ute)?s?\b/i,
+  urgent: /\bbattery\b[^.!?\n]{0,30}\b\d{1,2}\s?%|\blow (?:battery|power)\b|\bwill (?:sleep|shut ?down|restart)\b|\bsession (?:expires|expired|is expiring|ending)\b|\bunsaved (?:work|changes)\b|\b(?:lose|lost) (?:your )?(?:work|changes)\b|\bdisk (?:is )?(?:almost )?full\b|\bout of (?:disk )?(?:space|storage)\b|\brestart(?:ing)? in \d+/i,
+  asked: /\b(?:tell|let) me (?:know )?(?:when|if|once|as soon as)\b|\bremind me\b|\b(?:ping|notify|alert) me\b/i
+};
+const benLine = (o) => o.sense === 'hearing' || (o.sense === 'chats' && /^Ben (?:wrote|said)\b/.test(o.text)) || /\bBen said\b/.test(o.text);
+// fresh: the tick's observations; sig: {stuck: bool} from main's stuck detector. -> true when the moment really is what Glim says
+function evidenceFor(important, fresh, sig) {
+  const obs = fresh || [];
+  if (important === 'stuck') {
+    if (sig && sig.stuck) return true;
+    const { Stuck } = require('./speakometer'); let t = 0; const st = new Stuck({ now: () => t });
+    for (const o of obs) { t += 1000; st.observe(o.sense, o.text); }
+    return !!st.error();
+  }
+  if (important === 'asked') return obs.some((o) => benLine(o) && EVIDENCE.asked.test(o.text));
+  const re = EVIDENCE[important]; if (!re) return false;
+  return obs.some((o) => o.sense !== 'periphery' && re.test(o.text));
+}
+
 // -> {say, note, learn, urgent, why} or null (anything else: skip the tick)
 function parseDecision(text) {
   let s = String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -75,11 +97,12 @@ function parseDecision(text) {
   if (a < 0 || b <= a) return null;
   let j; try { j = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
   if (!j || typeof j !== 'object' || Array.isArray(j)) return null;
+  const NOSAY = /^(?:null|none|nothing\b.*|n\/a|no|-+)\.?$/i;   // v2: "say": "null" / "None — ..." / "Nothing urgent ..." = no say
   const str = (v) => (v === null || v === undefined ? null : typeof v === 'string' ? (v.trim() || null) : undefined);
   const imp = typeof j.important === 'string' ? j.important.trim().toLowerCase() : 'none';
   const out = { say: str(j.say), note: str(j.note), learn: str(j.learn), urgent: j.urgent === true, important: IMPORTANT.includes(imp) ? imp : 'none', why: typeof j.why === 'string' ? j.why.slice(0, 200) : '' };
   if (out.say === undefined || out.note === undefined || out.learn === undefined) return null;
-  if (!('why' in j)) return null;
+  if (out.say && (NOSAY.test(out.say) || /^none\s*[—-]/i.test(out.say))) out.say = null;
   if (out.say) out.say = out.say.slice(0, 400); if (out.note) out.note = out.note.slice(0, 400); if (out.learn) out.learn = out.learn.slice(0, 120);
   return out;
 }
@@ -151,7 +174,7 @@ class AlwaysOn {
   }
 
   // every brain decision, with what happened to it (sleep trains Glim's own speak decision from this log; logging only)
-  decided(d, outcome, fresh) { if (this.o.onDecision) { try { this.o.onDecision({ important: d.important, say: d.say, urgent: d.urgent, why: d.why, outcome, senses: [...new Set((fresh || []).map((o) => o.sense))] }); } catch (e) { /* logging only */ } } }
+  decided(d, outcome, fresh) { if (this.o.onDecision) { try { this.o.onDecision({ important: d.important, claimed: d.claimed || null, say: d.say, urgent: d.urgent, why: d.why, outcome, senses: [...new Set((fresh || []).map((o) => o.sense))] }); } catch (e) { /* logging only */ } } }
   async tick() {
     if (this.inTick) return this.result('busy');
     this.inTick = true;
@@ -188,6 +211,7 @@ class AlwaysOn {
     if (d.say && !isPrivate(d.say)) {
       // the speak filter: Glim's own decision first (quiet unless important), then the code limits, then the speak-o-meter (it can hold, never force)
       let outcome;
+      if (d.important !== 'none' && !this.o.legacySpeak && this.o.evidence !== false && !evidenceFor(d.important, fresh, this.o.signals ? this.o.signals() : null)) { d.claimed = d.important; d.important = 'none'; }
       if (d.important === 'none' && !this.o.legacySpeak) { this.stats.quiet = (this.stats.quiet || 0) + 1; done.quiet = true; outcome = 'quiet'; }
       else {
         const meter = this.sayAllowed(d) ? (this.o.speakGate ? this.o.speakGate({ ...d, urgent: d.urgent || d.important !== 'none' }) : { speak: true }) : null;
@@ -211,4 +235,4 @@ class AlwaysOn {
   }
 }
 
-module.exports = { AlwaysOn, IMPORTANT, parseDecision, buildMessages, buildMessagesV1, splitSummary, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };
+module.exports = { AlwaysOn, IMPORTANT, EVIDENCE, evidenceFor, parseDecision, buildMessages, buildMessagesV1, splitSummary, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };

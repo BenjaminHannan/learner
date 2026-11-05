@@ -24,6 +24,7 @@ function rig(o) {
     ask: async (messages, signal) => { out.asks++; out.lastMessages = messages; return typeof answer === 'function' ? answer(signal) : answer; },
     deliver: { say: (t) => out.say.push(t), note: (t) => out.note.push(t), learn: (t) => { out.learn.push(t); return true; } },
     gates: { busy: () => gates.busy, pressure: () => gates.pressure, night: () => gates.night },
+    evidence: o.evidence === true ? undefined : false,   // the plumbing tests skip the v2 evidence check; its own tests below turn it on
     onDecision: (x) => { (out.decisions = out.decisions || []).push(x); }, onIdle: (x) => { (out.idle = out.idle || []).push(x); },
     setTimer: () => 0, clearTimer: () => {} });
   return { dir, clock, state, senses, gates, out, loop, setAnswer: (a) => { answer = a; } };
@@ -102,7 +103,7 @@ test('urgent passes the limit only when it reads like a reminder or deadline', a
 });
 
 test('malformed JSON => tick skipped, nothing delivered, no crash', async () => {
-  for (const bad of ['sure! here you go', '{"say": "hi"', '[1,2]', '{"say": 5, "note": null, "learn": null, "why": "x"}', '{"say": "hi", "note": null, "learn": null}', '', null]) {
+  for (const bad of ['sure! here you go', '{"say": "hi"', '[1,2]', '{"say": 5, "note": null, "learn": null, "why": "x"}', '', null]) {
     const r = rig({ answer: bad });
     const res = await r.loop.tick();
     assert.strictEqual(res.reason, 'parse', String(bad));
@@ -187,4 +188,26 @@ test('speak filter: an important say still obeys the 20-minute limit and the met
 test('a quiet tick (nothing new) also fires the idle hook', async () => {
   const r = rig(); await r.loop.tick(); const n = r.out.idle.length; await r.loop.tick();
   assert.ok(r.out.idle.length >= n);
+});
+
+// speak filter v2 (MARKS A-v2): "important" counts only with evidence in the tick's observations
+test('v2 evidence: a chat ABOUT deadlines is not a deadline; a concrete due time is', async () => {
+  const E = A.evidenceFor, o = (sense, text) => ({ sense, text });
+  assert.ok(!E('deadline', [o('screen', 'Ben asked Glim to start a school audit and list all assignments, exams and deadlines')]));
+  assert.ok(E('deadline', [o('screen', 'Lab Report 4 - Due today at 3:45 PM. Not submitted.')]));
+  assert.ok(E('deadline', [o('screen', 'Meeting with Mr. Phipps starts in 5 minutes')]));
+  assert.ok(E('urgent', [o('screen', 'Battery 4% - your Mac will sleep soon')]));
+  assert.ok(!E('urgent', [o('screen', 'Activity Monitor: python3.12 12.8 GB')]));
+  assert.ok(E('asked', [o('chats', 'Ben wrote: Glim, tell me when the build finishes')]));
+  assert.ok(!E('asked', [o('screen', 'You asked why I knew about AP')]), 'only Ben\'s own words count');
+  const err = o('screen', "TypeError: Cannot read properties of undefined (reading 'map') at App.jsx:42");
+  assert.ok(!E('stuck', [err])); assert.ok(E('stuck', [err, err, err])); assert.ok(E('stuck', [], { stuck: true }));
+  assert.ok(!E('deadline', [o('periphery', 'Periphery (...): Calendar: exam starts in 5 minutes')]), 'the periphery alone is not evidence');
+});
+test('v2: an unbacked "important" is quiet, logged with what the brain claimed; parse fixes', async () => {
+  const r = rig({ evidence: true, answer: JSON.stringify({ important: 'deadline', say: 'Ben, that sounds deadline-relevant.', note: null, learn: null, why: 'x' }) });
+  await r.loop.tick(); assert.deepStrictEqual(r.out.say, []);
+  assert.strictEqual(r.out.decisions[0].outcome, 'quiet'); assert.strictEqual(r.out.decisions[0].claimed, 'deadline');
+  for (const say of ['null', 'None — nothing to add.', 'Nothing urgent to interrupt right now.']) assert.strictEqual(A.parseDecision(JSON.stringify({ important: 'none', say, note: null, learn: null, why: 'x' })).say, null, say);
+  assert.ok(A.parseDecision('{"say": "hi", "note": null, "learn": null}'), 'a missing why is allowed');
 });
