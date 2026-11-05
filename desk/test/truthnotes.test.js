@@ -90,3 +90,19 @@ test('main: Mote claims and loop notes go to the truth check as maybe (never str
   assert.match(m, /const agentMemory = study \? StudyGate\.studyMemory\(\{ \.\.\.study, memory, truth: getTruth\(\) \}\) : memory;/);
   assert.match(m, /if \(study\) tools\.web_search = StudyGate\.guardSearch\(tools\.web_search, study\);/);
 });
+
+test('a noticed note about Ben or his screen skips the web check and is saved saying where it came from (Ben Nov 4)', () => {
+  const { TruthNotes } = require('../src/truthnotes');
+  const saved = [];
+  const tn = new TruthNotes({ dir: null, search: async () => { throw new Error('no web check for seen notes'); }, judge: async () => 'support', save: (text, topic) => { saved.push({ text, topic }); return { ok: true }; } });
+  const n = tn.add('You have an active ChatGPT conversation open on screen.', { from: 'noticed' });
+  assert.strictEqual(n.status, 'seen');
+  assert.strictEqual(saved.length, 1); assert.strictEqual(saved[0].topic, 'seen');
+  assert.match(saved[0].text, /^Noticed on Ben's screen or mic \((Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d{1,2}:\d\d (AM|PM)\): You have an active ChatGPT/);
+  assert.strictEqual(tn.next(), null);   // nothing left to web-check
+  const g = tn.add('Octopuses have three hearts.', { from: 'noticed' });
+  assert.strictEqual(g.status, 'maybe'); assert.strictEqual(saved.length, 1);   // a general claim still waits for 2 websites
+  const { SYSTEM_PROMPT } = require('../src/prompt');
+  assert.match(SYSTEM_PROMPT, /Noticed on Ben's screen or mic" notes are what you saw or heard yourself/);
+  assert.match(SYSTEM_PROMPT, /he did not write it/);
+});

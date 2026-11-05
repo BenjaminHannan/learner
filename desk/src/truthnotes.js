@@ -12,6 +12,16 @@ const path = require('path');
 const { isPrivate } = require('./senses');
 
 const MAX_NOTES = 500, MAX_TRIES = 3, NEED = 2;
+// Ben Nov 4: Glim told him its screen-sourced notes came "from your message", and the web check had "confirmed" notes like "you have a
+// ChatGPT chat open". A note the loop noticed about Ben or his screen cannot be checked on the web: it is saved at once, saying where it
+// came from, so Glim can tell him how it knows.
+const ABOUT_BEN = /\b(?:you|your|you're|you've|yours|ben|ben's)\b|\bon (?:the |his |your )?screen\b/i;
+const SEEN_PREFIX = "Noticed on Ben's screen or mic";
+function seenWhen(ms) {
+  const d = new Date(ms), days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const h = d.getHours() % 12 || 12, m = String(d.getMinutes()).padStart(2, '0');
+  return days[d.getDay()] + ' ' + h + ':' + m + ' ' + (d.getHours() < 12 ? 'AM' : 'PM');
+}
 
 // "https://www.en.wikipedia.org/wiki/x" -> "wikipedia.org"; "news.bbc.co.uk" -> "bbc.co.uk" (independence = different site)
 function siteOf(url) {
@@ -67,6 +77,11 @@ class TruthNotes {
     if (meta.saveTopic) n.saveTopic = String(meta.saveTopic).slice(0, 80);
     if (meta.research) n.research = meta.research;
     this.notes.push(n); if (this.notes.length > MAX_NOTES) this.notes.splice(0, this.notes.length - MAX_NOTES);
+    if (n.from === 'noticed' && ABOUT_BEN.test(t)) {   // about Ben / his screen: no web check, saved with where it came from
+      n.status = 'seen'; n.settledAt = this.now();
+      const text = SEEN_PREFIX + ' (' + seenWhen(n.t) + '): ' + t;
+      try { const r = this.o.save && this.o.save(text, 'seen'); n.saved = !!(r && r.ok); } catch (e) { n.saved = false; }
+    }
     this.save();
     return n;
   }
@@ -125,4 +140,4 @@ class TruthNotes {
   counts() { const c = { maybe: 0, confirmed: 0, wrong: 0, unsure: 0 }; for (const n of this.notes) c[n.status] = (c[n.status] || 0) + 1; return c; }
 }
 
-module.exports = { TruthNotes, siteOf, parseResults, lexicalJudge, NEED, MAX_TRIES };
+module.exports = { ABOUT_BEN, SEEN_PREFIX, TruthNotes, siteOf, parseResults, lexicalJudge, NEED, MAX_TRIES };
