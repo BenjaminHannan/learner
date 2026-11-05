@@ -13,7 +13,7 @@ class Builtin {
     this.o = o;
     this.dir = path.join(o.root, 'runtime');
     this.diaryDir = path.join(o.root, 'diary', 'raw');
-    this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', flavor: (o.platform || process.platform) === 'darwin' ? 'metal' : 'vulkan', lora: '' };
+    this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', model: '', eyes: false, flavor: (o.platform || process.platform) === 'darwin' ? 'metal' : 'vulkan', lora: '' };
     this.platform = o.platform || process.platform;
     this.installer = new ChatInstaller({ dir: this.dir, platform: o.platform, unquarantine: o.unquarantine, bundledExe: o.bundledExe, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
     this.server = null; this.gw = null; this.running = false; this.asleep = false; this.abort = null; this.cache = {}; this.action = 0;
@@ -28,23 +28,26 @@ class Builtin {
     const pct = p.total ? Math.min(100, Math.round((p.done / p.total) * 100)) : 0;
     this._set({ phase: 'downloading', stage: p.stage, label: p.label, pct, done: p.done, total: p.total });
   }
+  // the eyes file rides along only for Nanbeige (its projector was trained for Nanbeige's 3072-wide embeddings)
+  _mmproj(model) { const f = this.o.mmproj; try { return model && model.family === 'nanbeige' && f && require('fs').statSync(f).isFile() ? f : ''; } catch (e) { return ''; } }
   needsDownload() { return !C.llamaFlavors(this.platform).some((f) => this.installer.installed(f)); }
 
   async _launch(flavor, lora) {
     const exe = this.installer.llamaExe(flavor) || await this.installer.ensureLlama(flavor, this.abort && this.abort.signal);
     const model = await this.installer.ensureModel(this.abort && this.abort.signal);
     if (!this.running || this.asleep) return { ok: false, stopped: true, error: 'stopped' };
-    this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor });
+    this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor, model: model.quant ? 'Nanbeige4.2-3B ' + model.quant.toUpperCase() : (model.name || '') });
     if (!this.server) {
       this.server = (this.o.makeServer || ((x) => new LlamaServer(x)))({
-        exe: exe.exe, model: model.file, flavor, lora, cwd: path.dirname(exe.exe), platform: this.o.platform, spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
+        exe: exe.exe, model: model.file, chatTemplate: model.template || '', mmproj: this._mmproj(model), flavor, lora, cwd: path.dirname(exe.exe), platform: this.o.platform, spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
         port: C.SERVER_PORT, ctx: C.CTX,
         // the graphics build died twice after running: fetch (if needed) and switch to the CPU build
         cpuFallback: async () => { const e = this.installer.llamaExe('cpu') || await this.installer.ensureLlama('cpu', this.abort && this.abort.signal); return { exe: e.exe, cwd: path.dirname(e.exe) }; },
         onState: (s, info) => { if (s === 'ready') this._set({ phase: 'ready', label: 'Ready', pct: 100, error: '' }); else if (s === 'restarting') this._set({ phase: 'starting', label: 'Restarting the model' }); else if (s === 'error' && this.running) this._set({ phase: 'error', error: info.error || 'the model stopped' }); }
       });
     }
-    this.server.o.exe = exe.exe; this.server.o.model = model.file; this.server.o.flavor = flavor; this.server.o.cwd = path.dirname(exe.exe);
+    this.server.o.exe = exe.exe; this.server.o.model = model.file; this.server.o.chatTemplate = model.template || ''; this.server.o.mmproj = this._mmproj(model);
+    this._set({ eyes: !!this.server.o.mmproj }); this.server.o.flavor = flavor; this.server.o.cwd = path.dirname(exe.exe);
     return this.server.start({ lora: lora || '' });
   }
 

@@ -50,6 +50,26 @@ else
   echo "WARNING: vendor/llama/llama-server.exe not found; the app will need an official llama.cpp release with LFM3." >&2
 fi
 
+# Glim's eyes for llama-server (Windows): SigLIP2 + the vision projector as one mmproj file (~210 MB), resources/eyes/.
+# Made by tools/make_win_mmproj.py (needs: pip install gguf numpy); a prebuilt copy in vendor/eyes/ is used as is.
+MMPROJ=glim-eyes-mmproj-f16.gguf
+if [[ ! -f vendor/eyes/$MMPROJ ]]; then
+  SIGLIP_DIR="${SIGLIP_DIR:-$HOME/learner-ops/models/siglip2-base-patch16-256-vision}"
+  PROJECTOR="${PROJECTOR:-$HOME/learner-ops/premonition-projectors/weights/vision_projector.safetensors}"
+  MMPROJ_PY="${MMPROJ_PY:-python3}"
+  if [[ -f "$SIGLIP_DIR/model.safetensors" && -f "$PROJECTOR" ]] && "$MMPROJ_PY" -c 'import gguf, numpy' 2>/dev/null; then
+    echo "==> building Glim's eyes ($MMPROJ)"
+    mkdir -p vendor/eyes && "$MMPROJ_PY" -I tools/make_win_mmproj.py "$SIGLIP_DIR" "$PROJECTOR" "vendor/eyes/$MMPROJ"
+  fi
+fi
+if [[ -f vendor/eyes/$MMPROJ ]]; then
+  echo "==> staging Glim's eyes"
+  mkdir -p "$STAGE/eyes" && cp "vendor/eyes/$MMPROJ" "$STAGE/eyes/"
+  EXTRA+=(--extra-resource="$STAGE/eyes")
+else
+  echo "WARNING: vendor/eyes/$MMPROJ is missing and could not be built (set MMPROJ_PY to a python with gguf + numpy); the Windows build will have no eyes." >&2
+fi
+
 IGNORE=(--ignore='^/(build|test|docs|reviews|scripts|vendor|dist|README\.md|DESIGN\.md|build-mac\.sh|build-mac-cloud\.sh|build-win\.sh|build-win\.ps1)($|/)' --ignore='^/helper($|/)')
 OUT=build/win
 NAME="Premonition"

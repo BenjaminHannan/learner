@@ -126,6 +126,22 @@ class EyesWorker {
   stop() { const p = this.proc; this.proc = null; this.ready = false; if (p) { try { p.stdin.end(JSON.stringify({ quit: true }) + '\n'); } catch (_) {} setTimeout(() => { try { p.kill(); } catch (_) {} }, 2000).unref?.(); } }
 }
 
+// Windows (Nov 4): the built-in llama-server sees through the same eyes itself (SigLIP2 + the vision projector folded into one mmproj
+// file, tools/make_win_mmproj.py), so the app sends a picture, not features. This worker only shrinks the screenshot to 256 x 256
+// (the size the projector was trained on: 16 x 16 patches -> 64 tokens). resize(jpeg) -> JPEG Buffer (main.js: Electron nativeImage).
+class PictureWorker {
+  constructor(o) { this.o = o; this.now = o.now || Date.now; }
+  async encode(file) {
+    const t0 = this.now();
+    const small = await this.o.resize(fs.readFileSync(file));
+    if (!Buffer.isBuffer(small) || small.length < 4 || small[0] !== 0xff || small[1] !== 0xd8) throw new Error('eyes: could not shrink the picture');
+    return { ok: true, eye: EYE_ID, shape: SHAPE, picture: 'data:image/jpeg;base64,' + small.toString('base64'), ms: this.now() - t0 };
+  }
+  stop() {}
+}
+// Electron's resize to the 256 x 256 the projector was trained on (training used PIL bicubic; Electron 'best' is close, not identical)
+const shrinkTo256 = async (jpeg) => require('electron').nativeImage.createFromBuffer(jpeg).resize({ width: 256, height: 256, quality: 'best' }).toJPEG(90);
+
 // the screen tool's screenshot (a data URL) -> JPEG bytes, or null
 function fromDataUrl(u) { if (typeof u !== 'string' || !u.startsWith('data:image/jpeg;base64,')) return null; const b = Buffer.from(u.slice(u.indexOf(',') + 1), 'base64'); return b.length ? b : null; }
 function f16ToFloats(b64) { return SenseSleep.decodeF16(Buffer.from(b64, 'base64')); }
@@ -159,6 +175,8 @@ class Eyes {
       if (r.eye !== EYE_ID || !Array.isArray(r.shape) || r.shape[0] !== SHAPE[0] || r.shape[1] !== SHAPE[1]) throw new Error('eyes: unexpected encoder ' + r.eye + ' ' + r.shape);
       this.stats.frames++; this.stats.ms.push(r.ms); if (this.stats.ms.length > 50) this.stats.ms.shift();
       const t = this.now();
+      // a picture for the model server (Windows): no features to keep for sense sleep, and never any evidence (Mac only)
+      if (r.picture) { this.latest = { t, picture: r.picture, text: String(screenText || '').slice(0, 300) }; return { stored: false, picture: true, ms: r.ms }; }
       this.latest = { t, f16: r.f16, shape: r.shape, text: String(screenText || '').slice(0, 300) };
       this.pushRing({ t, f16: r.f16 });
       const title = /Front app: ([^.]{1,80})\./.exec(windowsText || '');
@@ -234,6 +252,7 @@ class Eyes {
     const f = this.latest;
     if (!this.on() || !f || this.now() - f.t > FRAME_FRESH_MS) return null;
     if (once) this.latest = null;
+    if (f.picture) return { type: 'image_url', image_url: { url: f.picture } };
     return { type: 'image_features', image_features: { f16: f.f16, shape: f.shape, eye: EYE_ID } };
   }
   // Night: the day's practice manifest + pruning. -> summary. Never throws.
@@ -294,4 +313,4 @@ function withFrame(messages, part, label) {
   return messages;
 }
 
-module.exports = { fromDataUrl, Eyes, EyesWorker, EvidenceStore, withFrame, labelFor, wantsSight, cosine, CLIP_FRAMES, CLIP_MIN, CLIP_EVERY_MS, CLIP_STILL_MS, CLIP_WINDOW_MS, STILL_COS, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };
+module.exports = { fromDataUrl, Eyes, EyesWorker, PictureWorker, shrinkTo256, EvidenceStore, withFrame, labelFor, wantsSight, cosine, CLIP_FRAMES, CLIP_MIN, CLIP_EVERY_MS, CLIP_STILL_MS, CLIP_WINDOW_MS, STILL_COS, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };

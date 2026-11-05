@@ -445,12 +445,12 @@ function autoSleepTick(now, over) {
 }
 
 // ---- built-in local model + its sleep --------------------------------------------------------------------
-// Windows and a Mac without Ben's assistant: the app runs LFM3 itself (src/runtime) and sleeps with the sleepmlx trainer
+// Windows (Nanbeige4.2-3B) and a Mac without Ben's assistant (LFM3): the app runs the model itself (src/runtime) and sleeps with the sleepmlx trainer
 // (src/sleepwin.js; MPS on a Mac). Ben's Macs use the sleepmode app instead.
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
-  builtin = new Builtin({ root, platform: process.platform, skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  builtin = new Builtin({ root, platform: process.platform, mmproj: path.join(process.resourcesPath || '', 'eyes', require('./src/runtime/constants').WIN_MMPROJ), skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, platform: process.platform, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
     getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
@@ -936,7 +936,7 @@ function createAgent({ helper, rec, voice }) {
     getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
       : () => {
         const saved = store.getSettings();
-        const s = builtinWanted() ? { ...saved, backendModelFamily: 'lfm3' } : saved;
+        const s = builtinWanted() ? { ...saved, backendModelFamily: process.platform === 'win32' ? '' : 'lfm3' } : saved;   // Windows' built-in brain is Nanbeige (Nov 4), the built-in Mac keeps LFM3
         return isVoice ? { ...s, model: s.modelFast || s.model, verify: false, thinkActing: false } : s;
       }, // a voice turn uses the fast model and skips the extra self-check
     tools,
@@ -1855,10 +1855,13 @@ function aoEyes() {
   const s0 = store.getSettings();
   const py = s0.eyesPython || path.join(os.homedir(), 'learner-ops', 'nb2-venv', 'bin', 'python');
   const script = path.join(__dirname, 'tools', 'glim_eyes.py');
-  const worker = new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
-    spawn: () => require('child_process').spawn(py, ['-I', script, 'serve'], { stdio: ['pipe', 'pipe', 'pipe'], cwd: os.tmpdir() }) });
+  // Windows: the built-in llama-server sees through its mmproj file; the app only shrinks the screenshot to 256 x 256
+  const worker = process.platform === 'win32'
+    ? new EyesMod.PictureWorker({ resize: EyesMod.shrinkTo256 })
+    : new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
+      spawn: () => require('child_process').spawn(py, ['-I', script, 'serve'], { stdio: ['pipe', 'pipe', 'pipe'], cwd: os.tmpdir() }) });
   aoEyesObj = new EyesMod.Eyes({ userData: aoDir(), worker, isPrivate: SensesMod.isPrivate, log: (m) => console.log('[eyes]', m),
-    on: () => store.getSettings().glimCanSee === true && process.platform === 'darwin' && !E2E,
+    on: () => store.getSettings().glimCanSee === true && !E2E && (process.platform === 'darwin' || (process.platform === 'win32' && builtinWanted() && !!(builtin && builtin.st.eyes))),
     keepEvidence: () => store.getSettings().keepSenseEvidence === true,
     shot: async () => (screen ? EyesMod.fromDataUrl(await screen.screenshot(512)) : null) });
   return aoEyesObj;

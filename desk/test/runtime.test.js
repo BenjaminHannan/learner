@@ -301,7 +301,7 @@ test('WinSleep: unbound old adapters remain untouched and the plain model starts
 
 test('platform: Windows defaults to the built-in model and gets the preset; Mac keeps the gateway', () => {
   assert.strictEqual(Platform.defaultPreset('win32').id, 'builtin'); assert.strictEqual(Platform.defaultPreset('darwin').id, 'premonition');
-  assert.deepStrictEqual(Platform.presetsFor('win32').map((x) => x.label), ['Premonition gateway', 'llama.cpp server', 'Built-in (LFM3)']);
+  assert.deepStrictEqual(Platform.presetsFor('win32').map((x) => x.label), ['Premonition gateway', 'llama.cpp server', 'Built-in']);
   assert.deepStrictEqual(Platform.presetsFor('darwin').map((x) => x.id), ['premonition', 'llamacpp']);
   assert.strictEqual(Platform.features('win32').builtin, true); assert.strictEqual(Platform.features('linux').builtin, false);
 });

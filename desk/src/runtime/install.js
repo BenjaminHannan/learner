@@ -108,6 +108,7 @@ class ChatInstaller {
     return this._modelJob;
   }
   async _ensureModel(signal) {
+    if (this.platform === 'win32') return this._ensureWinModel(signal);
     const s = this.state();
     if (s.model && s.model.file && fs.existsSync(s.model.file)) return s.model;
     const files = await getJson(R.hfTreeUrl(C.MODEL_REPO), this.f);
@@ -118,6 +119,38 @@ class ChatInstaller {
     const m = { file: dest, name: pick.path, sha256: pick.sha256 };
     this._save({ model: m });
     return m;
+  }
+  // Windows: Nanbeige4.2-3B, Q8_0 on a graphics card with >= 12 GB, else Q4_K_M (detected once, then kept in state.json so a
+  // later driver hiccup cannot swap the brain). An older install of another model (LFM3) is replaced, and its file removed.
+  async _ensureWinModel(signal) {
+    const s = this.state(); const models = this.o.winModels || C.WIN_MODELS;
+    let quant = s.model && s.model.family === 'nanbeige' && models[s.model.quant] ? s.model.quant : '';
+    let vram = s.vram || null;
+    if (!quant) {
+      vram = await (this.o.detectVram || require('./gpu').detectVram)({ platform: this.platform });
+      quant = require('./gpu').quantFor(vram.bytes);
+    }
+    const want = models[quant];
+    const dir = path.join(this.o.dir, 'models');
+    const dest = path.join(dir, want.file);
+    const template = this._writeTemplate();
+    if (s.model && s.model.file === dest && s.model.quant === quant && fs.existsSync(dest)) return { ...s.model, template };
+    await downloadFile({ url: R.hfResolveUrl(C.WIN_MODEL_REPO, want.file), dest, sha256: want.sha256, fetch: this.f, signal, onProgress: this._prog('model', 'Downloading Glim\'s brain') });
+    if (s.model && s.model.file && s.model.file !== dest && path.dirname(s.model.file) === dir) { try { fs.rmSync(s.model.file, { force: true }); } catch (e) { /* keep */ } }
+    const m = { file: dest, name: want.file, sha256: want.sha256, family: 'nanbeige', quant };
+    this._save({ model: m, vram: vram && { bytes: vram.bytes, source: vram.source } });
+    return { ...m, template };
+  }
+  // llama-server cannot read inside app.asar: copy Glim's chat template next to the models (same text = no rewrite)
+  _writeTemplate() {
+    try {
+      const src = this.o.templateSrc || path.join(__dirname, '..', '..', 'assets', C.WIN_CHAT_TEMPLATE);
+      const text = fs.readFileSync(src, 'utf8');
+      const out = path.join(this.o.dir, C.WIN_CHAT_TEMPLATE);
+      let cur = null; try { cur = fs.readFileSync(out, 'utf8'); } catch (e) { /* new */ }
+      if (cur !== text) { fs.mkdirSync(this.o.dir, { recursive: true }); fs.writeFileSync(out, text); }
+      return out;
+    } catch (e) { return ''; }   // no template file: llama-server uses the GGUF's own (one rstrip different)
   }
   installed(flavor) { const s = this.state(); return !!(this.llamaExe(flavor || C.llamaFlavors(this.platform)[0]) && s.model && fs.existsSync(s.model.file)); }
 }

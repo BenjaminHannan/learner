@@ -25,6 +25,19 @@ module.exports = {
   MODEL_REPO: 'LiquidAI/LFM3-1.7B-GGUF',
   MODEL_FILE: 'LFM3-1.7B-QAD-Q4_0.gguf', // preferred exact name; if absent the repo listing is searched for a q4_0 .gguf
   MODEL_SIZE_BYTES: 1050000000,          // only for the up-front "about 1 GB" text
+  // Windows (Nov 4): Glim's own brain, Nanbeige4.2-3B (Apache-2.0), as bartowski's public llama.cpp GGUFs (they carry
+  // nanbeige.num_loops = 2, so llama.cpp runs the 22 layers twice like the original). Q8_0 when the graphics card has at least
+  // WIN_Q8_MIN_VRAM_GB, else Q4_K_M. Exact names, sizes and sha256 are pinned (from the Hugging Face LFS listing, Nov 4).
+  WIN_MODEL_REPO: 'bartowski/Nanbeige_Nanbeige4.2-3B-GGUF',
+  WIN_Q8_MIN_VRAM_GB: 12,
+  WIN_MODELS: {
+    q8_0: { file: 'Nanbeige_Nanbeige4.2-3B-Q8_0.gguf', size: 4434787488, sha256: '837ba713ef3a3b5c9aee82e5dcba07600ea7db36ae392419f982b3bfaec04ef2' },
+    q4_k_m: { file: 'Nanbeige_Nanbeige4.2-3B-Q4_K_M.gguf', size: 2684023968, sha256: 'b92d2e35c9876b0c4bc671996360204f4149d0546c23d5954d5eb3b106c81f24' }
+  },
+  // Glim's exact chat template (the GGUF's own copy differs by one rstrip); shipped as resources/nanbeige-chat-template.jinja
+  WIN_CHAT_TEMPLATE: 'nanbeige-chat-template.jinja',
+  // Glim's eyes for llama-server (SigLIP2 + the vision projector as one mmproj, tools/make_win_mmproj.py), shipped as resources/eyes/
+  WIN_MMPROJ: 'glim-eyes-mmproj-f16.gguf',
   // llama-server
   SERVER_HOST: '127.0.0.1',
   SERVER_PORT: 18090,

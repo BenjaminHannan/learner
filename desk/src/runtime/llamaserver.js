@@ -8,6 +8,8 @@ const C = require('./constants');
 function buildArgs(o) {
   const a = ['-m', o.model, '--host', o.host || C.SERVER_HOST, '--port', String(o.port || C.SERVER_PORT), '-c', String(o.ctx || C.CTX), '-np', '1', '--jinja', '--no-webui'];
   a.push('-ngl', o.flavor === 'cpu' ? '0' : '99');
+  if (o.chatTemplate) a.push('--chat-template-file', o.chatTemplate);
+  if (o.mmproj) a.push('--mmproj', o.mmproj);   // Glim's eyes (Windows): pictures in chat become 64 image tokens
   if (o.lora) a.push('--lora', o.lora);
   if (o.threads) a.push('-t', String(o.threads));
   return a;
