@@ -62,7 +62,22 @@ function wireSites(ses) {
   }
 }
 
+// before each task: memory pressure normal (1) and the gateway answering (its watchdog restarts the model under memory pressure; a task
+// that ran into that would be scored on the Mac, not on Glim)
+async function ready() {
+  const { execFileSync } = require('child_process');
+  for (let i = 0; i < 90; i++) {
+    let p = '4', up = false;
+    try { p = execFileSync('sysctl', ['-n', 'kern.memorystatus_vm_pressure_level']).toString().trim(); } catch (e) { /* retry */ }
+    try { up = (await fetch(settings().gatewayUrl + '/models', { signal: AbortSignal.timeout(5000) })).ok; } catch (e) { up = false; }
+    if (p === '1' && up) return true;
+    await new Promise((r) => setTimeout(r, 20000));
+  }
+  return false;
+}
+
 async function runTask(win, task, n) {
+  await ready();
   state = Sites.newState(new Date());
   // offscreen: an on-screen window on a Mac whose display sleeps drops every sendInputEvent click (seen on the M1: no mousedown at all)
   const ow = new BrowserWindow({ show: false, width: 1280, height: 860, webPreferences: { offscreen: true, partition: 'persist:desk', backgroundThrottling: false, sandbox: true, contextIsolation: true } });
@@ -134,7 +149,11 @@ async function runTask(win, task, n) {
   const t0 = Date.now();
   const timer = setTimeout(() => { tr.timedOut = true; agent.stop(); }, CAP_S * 1000);
   let res;
-  try { res = await agent.run(thread, task.text); } catch (e) { res = { error: String(e && e.message || e) }; }
+  // hard watchdog: a run still going 60 s after the cap (seen once: a step hung with the model idle) is scored as it stands
+  let hard = null;
+  const hardStop = new Promise((resolve) => { hard = setTimeout(() => { tr.timedOut = true; tr.hung = true; resolve({ error: 'hung past the cap' }); }, (CAP_S + 60) * 1000); });
+  try { res = await Promise.race([agent.run(thread, task.text), hardStop]); } catch (e) { res = { error: String(e && e.message || e) }; }
+  clearTimeout(hard);
   clearTimeout(timer);
   const secs = (Date.now() - t0) / 1000;
   const items = thread.items.slice(itemStart);
@@ -149,7 +168,7 @@ async function runTask(win, task, n) {
   const reqs = REQS.slice(reqStart);
   let ok = false; try { ok = !!task.score(state, answer, tr); } catch (e) { ok = false; }
   const out = { label: LABEL, task: task.id, kind: task.kind, run: n, ok, secs: Math.round(secs), modelCalls: reqs.length, toolCalls: calls.length, replans, leaks, repeats,
-    asks: tr.asks, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, error: res && res.error || null,
+    asks: tr.asks, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, hung: !!tr.hung, error: res && res.error || null,
     maxReqTokens: Math.max(0, ...reqs.map((r) => r.estTokens)), over8192: reqs.filter((r) => r.estTokens > 8192).length,
     maxToolResult: Math.max(0, ...reqs.map((r) => r.maxToolResult)), toolChars: reqs.length ? reqs[0].toolChars : 0, sysChars: reqs.length ? reqs[0].sysChars : 0,
     calls: calls.map((c) => c.name + ' ' + c.args), said,
