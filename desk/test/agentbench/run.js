@@ -177,7 +177,7 @@ async function runTask(win, task, n) {
     maxToolResult: Math.max(0, ...reqs.map((r) => r.maxToolResult)), toolChars: reqs.length ? reqs[0].toolChars : 0, sysChars: reqs.length ? reqs[0].sysChars : 0,
     calls: calls.map((c) => c.name + ' ' + c.args), said,
     msgs: thread.messages.slice(msgStart).map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content.slice(0, 4000) : '[parts]', calls: m.tool_calls ? m.tool_calls.map((c) => c.function.name + ' ' + c.function.arguments) : undefined })), asksLog: tr.askLog, visits: state.visits.slice(-40), reqs };
-  fs.writeFileSync(path.join(OUT, task.id + '.json'), JSON.stringify(out, null, 1));
+  fs.writeFileSync(path.join(OUT, task.id + (/^aux_/.test(task.id) ? '-r' + n : '') + '.json'), JSON.stringify(out, null, 1));
   fs.appendFileSync(path.join(OUT, 'summary.jsonl'), JSON.stringify({ ...out, said: undefined, reqs: undefined, calls: calls.length, visits: undefined, asksLog: undefined, msgs: undefined }) + '\n');
   br.destroy();
   try { ow.destroy(); } catch (e) { /* gone */ }

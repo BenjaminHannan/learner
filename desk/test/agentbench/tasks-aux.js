@@ -18,4 +18,25 @@ const T = [
       agent_update: (x) => { (tr.updates = tr.updates || []).push(x); return GYM.test(String(x.name_or_id)) ? (x.stop ? 'Stopped "Gym clothes reminder".' : 'Updated "Gym clothes reminder".') : 'No Mote called ' + x.name_or_id + '.'; } }),
     score: (s, a, tr) => (tr.updates || []).some((x) => GYM.test(String(x.name_or_id)) && (x.stop === true || x.paused === true)) && !(tr.updates || []).some((x) => /k2m9c4xz|chem/i.test(String(x.name_or_id))) }
 ];
+
+// aux v2 (MARKS-agent-aux-v2.md): the same two asks at the end of a long chat (~25k chars of earlier turns, like Ben's main thread
+// in the live test) because a short fresh chat did not reproduce the stop (aux v1 control 9/10).
+const TOPICS = [
+  ['what should I make for dinner with chicken, rice and broccoli?', 'A quick stir-fry works: slice the chicken thin, brown it in a hot pan with a little oil, add broccoli florets and a splash of water, cover for 3 minutes, then stir in soy sauce, garlic and a spoon of honey. Serve over rice. '],
+  ['explain how a titration curve works', 'A titration curve plots pH against the volume of titrant added. For a strong acid with a strong base, the pH stays low and flat at first, then jumps sharply near the equivalence point, where moles of base equal moles of acid, and levels off high after. The middle of the steep part is the equivalence point; an indicator that changes colour there shows it. '],
+  ['what is the weather tomorrow in Dresden Ohio', 'Tomorrow in Dresden, Ohio: partly cloudy, high near 54°F, low around 38°F, light wind from the west, about a 20% chance of a shower in the afternoon. A light jacket should be enough. '],
+  ['give me tips for my college essay intro', 'Open with a specific moment rather than a summary: a scene, a line of dialogue or a concrete detail. Keep the first paragraph short, make the reader curious, and tie the moment to what it shows about you by the end of the essay. Avoid quotes from famous people and lists of achievements. '],
+  ['how long should I run to train for a 5K', 'For a first 5K, three runs a week for about 6–8 weeks works for most people: two easy runs of 20–30 minutes and one slightly longer run, adding a few minutes each week. Keep the easy runs at a pace where you can talk. '],
+  ['what is a good playlist for studying', 'Instrumental music tends to work best: lo-fi beats, film scores, or calm piano. Songs with lyrics in a language you understand compete with reading. Keep the volume low and use the same playlist each time so it becomes a cue to focus. ']
+];
+function longChat() {
+  const out = [];
+  for (let i = 0; i < 12; i++) { const [u, a] = TOPICS[i % TOPICS.length]; out.push([u + (i >= TOPICS.length ? ' (again, quick version)' : ''), (a + ' ').repeat(i >= TOPICS.length ? 5 : 10).trim()]); }
+  return out;
+}
+const LONG = longChat();
+T.push(
+  { ...T[0], id: 'aux_screen_long', preseed: LONG },
+  { ...T[1], id: 'aux_cancel_long', preseed: [...LONG, ...T[1].preseed] }
+);
 module.exports = { TASKS: T };
