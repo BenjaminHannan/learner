@@ -366,7 +366,10 @@ def install_eyes(S, mx, projector_path, log=print, placeholder=None, video_proje
                     urls.append(image_url(p))
                     pieces.append(MEDIA_MARK)
             m["content"] = "".join(pieces)
-        targs = dict(self.model_provider.cli_args.chat_template_args or {})
+        # every content is a string now; the stock helper then only does its other job, which the chat template needs:
+        # tool-call arguments from JSON strings to mappings (without it, a seeing ask in a thread with tool calls fails)
+        S.process_message_content(request.messages)
+        targs =dict(self.model_provider.cli_args.chat_template_args or {})
         if args.chat_template_kwargs:
             targs.update(args.chat_template_kwargs)
         text = tokenizer.apply_chat_template(request.messages, add_generation_prompt=True, tokenize=False, tools=request.tools, **targs)

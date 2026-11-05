@@ -107,3 +107,25 @@ def test_default_video_projector_prefers_sense_sleep_copy():
     os.makedirs(os.path.join(d, "sense-sleep"))
     open(os.path.join(d, "sense-sleep", "video_projector.safetensors"), "wb").write(b"x")
     assert W.default_video_projector(sf) == os.path.join(d, "sense-sleep", "video_projector.safetensors")
+
+
+def test_seeing_ask_after_tool_calls_parses_arguments(restore):
+    """Regression (M3 in-app test, 2026-11-05): a clip ask in a thread with earlier tool calls failed with
+    'Can only get item pairs from a mapping' because tool-call arguments reached the chat template as JSON strings."""
+    S, st, p, v = setup()
+
+    class MapTok(FakeTok):
+        def apply_chat_template(self, messages, add_generation_prompt=True, tokenize=False, tools=None, **kw):
+            for m in messages:
+                for tc in m.get("tool_calls") or []:
+                    assert isinstance(tc["function"]["arguments"], dict), "arguments must be a mapping"
+            return FakeTok.apply_chat_template(self, messages, add_generation_prompt, tokenize, tools, **kw)
+
+    feats = np.random.default_rng(7).standard_normal((3 * 64, 768)).astype(np.float32)
+    req = types.SimpleNamespace(request_type="chat", tools=None, messages=[
+        {"role": "user", "content": "look something up"},
+        {"role": "assistant", "content": None, "tool_calls": [{"id": "c1", "type": "function", "function": {"name": "search", "arguments": "{\"q\": \"x\"}"}}]},
+        {"role": "tool", "tool_call_id": "c1", "content": "result"},
+        {"role": "user", "content": [clip_part(feats, [0, 2.5, 5]), {"type": "text", "text": "\nWhat happened?"}]}])
+    prompt, _, _, _, vision = S.ResponseGenerator._tokenize(gen_self(), MapTok(), req, types.SimpleNamespace(chat_template_kwargs=None))
+    assert len(vision.pixel_values) == 3 and req.messages[1]["tool_calls"][0]["function"]["arguments"] == {"q": "x"}
