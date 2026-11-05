@@ -31,7 +31,7 @@ llm.streamChat = async (o) => {   // patched before agent.js / creative.js take 
     sysChars: o.messages && o.messages[0] && o.messages[0].role === 'system' ? String(o.messages[0].content).length : 0, estTokens: budget.requestTokens(o.messages || [], o.tools || []),
     maxToolResult: Math.max(0, ...(o.messages || []).filter((m) => m.role === 'tool').map((m) => String(m.content || '').length)) };
   REQS.push(rec);
-  try { const r = await realStream(o); rec.ms = Date.now() - rec.at; rec.ttft = r.firstTokenMs; rec.out = { content: String(r.content || '').slice(0, 600), calls: (r.toolCalls || []).map((c) => c.name + ' ' + String(c.arguments).slice(0, 200)), reasoningChars: String(r.reasoning || '').length }; return r; }
+  try { const r = await realStream(o); rec.ms = Date.now() - rec.at; rec.ttft = r.firstTokenMs; rec.blankRun = /\s{40,}$/.test(String(r.content || '')); rec.out = { content: String(r.content || '').slice(0, 600), calls: (r.toolCalls || []).map((c) => c.name + ' ' + String(c.arguments).slice(0, 200)), reasoningChars: String(r.reasoning || '').length }; return r; }
   catch (e) { rec.ms = Date.now() - rec.at; rec.error = String(e && e.message || e).slice(0, 200); throw e; }
 };
 const { Agent, extractPlan } = require('../../src/agent');
@@ -41,7 +41,8 @@ const { createMemory } = require('../../src/memory');
 const L = require('../../src/logins');
 const SafetyMod = require('../../src/safety-levels');
 const Sites = require('./sites');
-const { TASKS } = require('./tasks');
+// --set aux: the separate tasks of tasks-aux.js (MARKS-agent-aux-v1.md); the registered 20 stay in tasks.js
+const TASKS = (process.argv.includes('aux') && process.argv[process.argv.indexOf('aux') - 1] === '--set') ? require('./tasks-aux').TASKS : require('./tasks').TASKS;
 
 const TOOL_RE = /\b(browser_(?:go|click|type|scroll|back|sign_in|read)|web_search|ask_user|memory_(?:save|forget)|run_shell|screen_(?:look|click|type|key)|open_app|agent_(?:start|list|update|stop)|diary_search|track_(?:add|done))\b/;
 const UNAVAILABLE = 'Error: not available in this session. Use the built-in browser tools for websites.';
@@ -69,7 +70,8 @@ async function ready() {
   for (let i = 0; i < 90; i++) {
     let p = '4', up = false;
     try { p = execFileSync('sysctl', ['-n', 'kern.memorystatus_vm_pressure_level']).toString().trim(); } catch (e) { /* retry */ }
-    try { up = (await fetch(settings().gatewayUrl + '/models', { signal: AbortSignal.timeout(5000) })).ok; } catch (e) { up = false; }
+    // /models answers even with the model server stopped: a 1-token test chat is the real check
+    try { up = (await fetch(settings().gatewayUrl + '/chat/completions', { method: 'POST', headers: { 'content-type': 'application/json', 'x-test': '1' }, body: JSON.stringify({ model: 'qwen36-fast', test: true, max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }), signal: AbortSignal.timeout(60000) })).ok; } catch (e) { up = false; }
     if (p === '1' && up) return true;
     await new Promise((r) => setTimeout(r, 20000));
   }
@@ -120,6 +122,7 @@ async function runTask(win, task, n) {
     agent_start: una('agent_start'), agent_list: () => 'No Motes.', agent_update: una('agent_update'),
     track_add: (x) => 'Now tracking: ' + (x.what || ''), track_done: () => 'Nothing to mark done', ask_user: () => ''
   };
+  for (const [k, f] of Object.entries(task.tools ? task.tools(state, tr) : {})) tools[k] = f;   // aux tasks: a fake screen / Motes
   const thread = { id: 'bench-' + task.id + '-' + n, messages: [], items: [] };
   const base = new Date(Date.now() - 3600000);
   (task.preseed || []).forEach(([u, a], i) => {
@@ -166,9 +169,10 @@ async function runTask(win, task, n) {
   const replans = said.filter((t) => extractPlan(t) || /(^|\n)\s*(\*\*)?plan\b\s*(\*\*)?\s*:/i.test(t)).length + items.filter((i) => i.t === 'plan').length;
   const leaks = said.filter((t) => TOOL_RE.test(t)).length + tr.askLog.filter((x) => TOOL_RE.test(x.q)).length;
   const reqs = REQS.slice(reqStart);
+  tr.calls = calls; tr.blank = thread.messages.slice(msgStart).some((m) => m.role === 'assistant' && typeof m.content === 'string' && /\s{40,}$/.test(m.content)) || REQS.slice(reqStart).some((r) => r.blankRun);
   let ok = false; try { ok = !!task.score(state, answer, tr); } catch (e) { ok = false; }
   const out = { label: LABEL, task: task.id, kind: task.kind, run: n, ok, secs: Math.round(secs), modelCalls: reqs.length, toolCalls: calls.length, replans, leaks, repeats,
-    asks: tr.asks, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, hung: !!tr.hung, error: res && res.error || null,
+    asks: tr.asks, blank: !!tr.blank, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, hung: !!tr.hung, error: res && res.error || null,
     maxReqTokens: Math.max(0, ...reqs.map((r) => r.estTokens)), over8192: reqs.filter((r) => r.estTokens > 8192).length,
     maxToolResult: Math.max(0, ...reqs.map((r) => r.maxToolResult)), toolChars: reqs.length ? reqs[0].toolChars : 0, sysChars: reqs.length ? reqs[0].sysChars : 0,
     calls: calls.map((c) => c.name + ' ' + c.args), said,
