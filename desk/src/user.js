@@ -12,7 +12,7 @@ function accountName() {
   if (!full) { try { full = os.userInfo().username; } catch (e) { full = ''; } }
   return full;
 }
-// "ben-hannan" -> Ben, "Emma Parent" -> Emma, "admin" / "user" / "" -> the user
+// "first-last" -> First, "Emma Parent" -> Emma, "admin" / "user" / "" -> the user
 function firstName(full) {
   const w = String(full || '').split(/[\s._-]+/).find((x) => /^[A-Za-z][A-Za-z']{1,}$/.test(x));
   if (!w || /^(admin|administrator|user|owner|guest|mac|macbook|pc|home|student)$/i.test(w)) return 'the user';

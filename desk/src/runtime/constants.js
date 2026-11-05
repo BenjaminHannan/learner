@@ -38,6 +38,19 @@ module.exports = {
   WIN_CHAT_TEMPLATE: 'nanbeige-chat-template.jinja',
   // Glim's eyes for llama-server (SigLIP2 + the vision projector as one mmproj, tools/make_win_mmproj.py), shipped as resources/eyes/
   WIN_MMPROJ: 'glim-eyes-mmproj-f16.gguf',
+  // Mac without Ben's assistant (Nov 5, the "uncle" build): the same Nanbeige4.2-3B GGUFs on llama.cpp's Metal build, sized by the
+  // Mac's memory (Apple silicon shares it between the CPU and the GPU): Q8_0 on >= 24 GB, Q4_K_M on 16 GB. Below 16 GB the app
+  // says plainly that the Mac is too small and offers MAC_SMALL (IQ3_M, 2.16 GB) only if the person asks for it.
+  MAC_Q8_MIN_RAM_GB: 24,
+  MAC_Q4_MIN_RAM_GB: 16,
+  MAC_SMALL: 'iq3_m',
+  NB_MODELS: {
+    q8_0: { file: 'Nanbeige_Nanbeige4.2-3B-Q8_0.gguf', size: 4434787488, sha256: '837ba713ef3a3b5c9aee82e5dcba07600ea7db36ae392419f982b3bfaec04ef2' },
+    q4_k_m: { file: 'Nanbeige_Nanbeige4.2-3B-Q4_K_M.gguf', size: 2684023968, sha256: 'b92d2e35c9876b0c4bc671996360204f4149d0546c23d5954d5eb3b106c81f24' },
+    iq3_m: { file: 'Nanbeige_Nanbeige4.2-3B-IQ3_M.gguf', size: 2164198560, sha256: 'f08cf9897f1d592192b82cbedba52852e6965641b95bd5030bb78068028941b7' }
+  },
+  // the Mac engine rides inside the app (resources/llama/<this file>, sha256 = LLAMA_FALLBACK_SHA256's), so first run needs no GitHub
+  MAC_LLAMA_TAG: 'b11946',
   // llama-server
   SERVER_HOST: '127.0.0.1',
   SERVER_PORT: 18090,

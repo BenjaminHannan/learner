@@ -7,17 +7,21 @@
 // asked, it never says "answer"/"you mentioned", and an unrelated message or a skip ends the flow: a normal chat, no nagging.
 
 // The hello: only what the app does today with its defaults (mode 'ask' = Glim asks before acting; autoSleep on; memory on).
-const HELLO = "Hi, I'm Glim 👋\n"
+const HELLO = "Hi! My name is Glim 👋\n"
   + 'I can do things on your Mac for you (I ask first).\n'
   + 'I can study any topic you give me: press Learn.\n'
-  + 'I remember what you tell me, and at night I go over what I learned.';
+  + 'I remember what you tell me.';
+// Nov 5 (Mac "uncle" build): Glim first asks the person's name (a new Mac: it does not know them yet), then the three small questions.
 const QUESTIONS = [
-  { q: "To start: what's one thing you're working on right now?", chips: ['School', 'A project', 'A skill', 'Not sure yet'] },
+  { q: "What's your name?", chips: [], name: true },
+  { q: "What's one thing you're working on right now?", chips: ['School', 'A project', 'A skill', 'Not sure yet'] },
   { q: "Is there something bigger you'd like to reach later, like this year?", chips: ['Better grades', 'Build something', 'Get healthier', 'Not sure yet'] },
   { q: 'Should I check in on these now and then?', chips: ['Yes, once a week', 'Yes, every day', 'No thanks'] }
 ];
 const chipLines = (k) => QUESTIONS[k].chips.map((c) => '→ ' + c).join('\n');
-const OPENER = HELLO + '\n\n' + QUESTIONS[0].q + '\n' + chipLines(0);
+const withChips = (k) => QUESTIONS[k].q + (QUESTIONS[k].chips.length ? '\n' + chipLines(k) : '');
+const OPENER = HELLO + '\n\n' + withChips(0);
+const LAST = QUESTIONS.length;   // the check-in question (yes / no)
 
 const norm = (s) => String(s == null ? '' : s).toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
 const contentOf = (m) => (typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map((p) => (p && p.text) || '').join('') : '');
@@ -49,22 +53,30 @@ function classify(step, text) {
   if (!s) return 'other';
   const chip = QUESTIONS[step - 1] && QUESTIONS[step - 1].chips.find((c) => norm(c) === norm(s));
   if (chip) return 'answer';
-  if (step === 3 && (YES.test(s) || NO.test(s)) && s.length <= 80 && !/\?\s*$/.test(s)) return 'answer';
+  if (step === LAST && (YES.test(s) || NO.test(s)) && s.length <= 80 && !/\?\s*$/.test(s)) return 'answer';
   if (SKIP.test(s)) return 'skip';
   if (QUESTIONY.test(s) || COMMAND.test(s) || GREETING.test(s)) return 'other';
-  if (step === 3) return 'other';   // the check-in question wants a yes or a no; anything else is a normal chat
+  if (QUESTIONS[step - 1] && QUESTIONS[step - 1].name) return s.split(/\s+/).length <= 8 ? 'answer' : 'other';   // a name is short
+  if (step === LAST) return 'other';   // the check-in question wants a yes or a no; anything else is a normal chat
   if (s.split(/\s+/).length > 40) return 'other';   // a long message is about something else
   return 'answer';
 }
 
 const PRIVATE = '[Private context for you only. Never mention, quote or refer to this note, and never say "you mentioned" about it. ';
 function noteFor(step) {
+  if (QUESTIONS[step - 1] && QUESTIONS[step - 1].name) {
+    const next = QUESTIONS[step];
+    return PRIVATE + 'In your first chat with this person you asked: "' + QUESTIONS[step - 1].q + '" Their reply is below.] '
+      + 'If it gives their name, save it at once with memory_save (topic "me"), as one short note like "The user\'s name is Sam." '
+      + 'Then reply in at most 2 short lines, with no list: greet them by that name, '
+      + 'then ask this question word for word, and end with these choice lines exactly as written:\n' + withChips(step) + '\n\n';
+  }
   if (step < QUESTIONS.length) {
     const next = QUESTIONS[step];
     return PRIVATE + 'In your first chat with this person you asked: "' + QUESTIONS[step - 1].q + '" Their reply is below.] '
       + 'If it names something they are working on or want to reach, save it with memory_save (topic "goal"), one short note. '
       + 'Then reply in at most 2 short lines, with no list: a few warm words about it (if they are not sure yet, say that is fine), '
-      + 'then ask this question word for word, and end with these choice lines exactly as written:\n' + next.q + '\n' + chipLines(step) + '\n\n';
+      + 'then ask this question word for word, and end with these choice lines exactly as written:\n' + withChips(step) + '\n\n';
   }
   return PRIVATE + 'In your first chat with this person you asked: "' + QUESTIONS[step - 1].q + '" Their reply is below.] '
     + 'Look at the goals they gave earlier in this chat. If one is not saved yet, save it with memory_save (topic "goal"). '
@@ -80,7 +92,7 @@ function decide(t, text, done) {
   const step = stepOf(t);
   if (!step || used.includes(step)) return { step: 0, kind: 'none', note: '', done: used };
   const kind = classify(step, text);
-  if (kind !== 'answer') return { step, kind, note: '', done: [1, 2, 3] };   // a skip or something unrelated ends the flow: no nagging
+  if (kind !== 'answer') return { step, kind, note: '', done: QUESTIONS.map((q, i) => i + 1) };   // a skip or something unrelated ends the flow: no nagging
   return { step, kind, note: noteFor(step), done: [...new Set(used.concat(step))].sort() };
 }
 

@@ -58,7 +58,7 @@ const { Rhythm } = require('./src/rhythm');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
-const { Updater, WINAMD_MANIFEST_URL } = require('./src/updater');
+const { Updater, WINAMD_MANIFEST_URL, MACNB_MANIFEST_URL } = require('./src/updater');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { learnFlow } = require('./src/learn');
@@ -449,13 +449,15 @@ function autoSleepTick(now, over) {
 // (src/sleepwin.js; MPS on a Mac). Ben's Macs use the sleepmode app instead.
 // Windows' brain is Nanbeige4.2-3B (Nov 4); the sleep trainer (sleepmlx lfm3_cpu) still learns LFM3, whose adapters do not fit it.
 const WIN_SLEEP_OFF = 'Glim cannot learn overnight on this PC yet. Chatting and seeing work; overnight learning comes in a later update.';
+// The built-in Mac moved to Nanbeige too (Nov 5, the "uncle" build). Its trainer (sleepmlx lfm3_mps) also learns LFM3 only, so sleep is off there as well.
+const MAC_SLEEP_OFF = 'Glim cannot learn overnight on this Mac yet. Chatting, seeing and remembering work; overnight learning comes in a later update.';
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
-  builtin = new Builtin({ root, platform: process.platform, mmproj: path.join(process.resourcesPath || '', 'eyes', require('./src/runtime/constants').WIN_MMPROJ), skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
+  builtin = new Builtin({ root, platform: process.platform, mmproj: path.join(process.resourcesPath || '', 'eyes', require('./src/runtime/constants').WIN_MMPROJ), skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), bundledArchive: process.platform === 'darwin' ? path.join(process.resourcesPath || '', 'llama', require('./src/runtime/constants').llamaAssetName(require('./src/runtime/constants').MAC_LLAMA_TAG, 'metal', 'darwin')) : '', isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, platform: process.platform, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
-    getSettings: () => store.getSettings(), root, unsupported: () => (process.platform === 'win32' ? WIN_SLEEP_OFF : ''), installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
+    getSettings: () => store.getSettings(), root, unsupported: () => (process.platform === 'win32' ? WIN_SLEEP_OFF : process.platform === 'darwin' ? MAC_SLEEP_OFF : ''), installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
     hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), servedUrl: () => (builtin.server && builtin.server.url ? builtin.server.url() : ''), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
   });
@@ -938,7 +940,7 @@ function createAgent({ helper, rec, voice }) {
     getSettings: isHelper ? () => { const s = store.getSettings(); return { ...s, mode: helper.mode || s.helperMode || 'hands-off', compactTokens: Math.min(Number(s.compactTokens) || 24000, HELPER_COMPACT), thinkActing: false }; } // a Glim's prompt stays small so its cache entry does not push Ben's chat out of the model's prompt cache
       : () => {
         const saved = store.getSettings();
-        const s = builtinWanted() ? { ...saved, backendModelFamily: process.platform === 'win32' ? '' : 'lfm3' } : saved;   // Windows' built-in brain is Nanbeige (Nov 4), the built-in Mac keeps LFM3
+        const s = builtinWanted() ? { ...saved, backendModelFamily: '' } : saved;   // the built-in brain is Nanbeige on Windows (Nov 4) and on the built-in Mac (Nov 5)
         return isVoice ? { ...s, model: s.modelFast || s.model, verify: false, thinkActing: false } : s;
       }, // a voice turn uses the fast model and skips the extra self-check
     tools,
@@ -1858,12 +1860,12 @@ function aoEyes() {
   const py = s0.eyesPython || path.join(os.homedir(), 'learner-ops', 'nb2-venv', 'bin', 'python');
   const script = path.join(__dirname, 'tools', 'glim_eyes.py');
   // Windows: the built-in llama-server sees through its mmproj file; the app only shrinks the screenshot to 256 x 256
-  const worker = process.platform === 'win32'
+  const worker = (process.platform === 'win32' || builtinWanted())
     ? new EyesMod.PictureWorker({ resize: EyesMod.shrinkTo256 })
     : new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
       spawn: () => require('child_process').spawn(py, ['-I', script, 'serve'], { stdio: ['pipe', 'pipe', 'pipe'], cwd: os.tmpdir() }) });
   aoEyesObj = new EyesMod.Eyes({ userData: aoDir(), worker, isPrivate: SensesMod.isPrivate, log: (m) => console.log('[eyes]', m),
-    on: () => store.getSettings().glimCanSee === true && !E2E && (process.platform === 'darwin' || (process.platform === 'win32' && builtinWanted() && !!(builtin && builtin.st.eyes))),
+    on: () => store.getSettings().glimCanSee === true && !E2E && (builtinWanted() ? !!(builtin && builtin.st.eyes) : process.platform === 'darwin'),
     keepEvidence: () => store.getSettings().keepSenseEvidence === true,
     shot: async () => (screen ? EyesMod.fromDataUrl(await screen.screenshot(512)) : null) });
   return aoEyesObj;
@@ -2414,6 +2416,7 @@ function registerIpc() {
   h('sleep:start', (o) => startSleep(o));
   h('runtime:state', () => (builtin ? builtin.state() : null));
   h('runtime:retry', () => (builtin ? builtin.retry() : null));
+  h('runtime:trySmall', () => (builtin ? builtin.trySmall() : null));
   h('sleep:install', async () => {
     try { await sleepInstaller.install(); } catch (e) { send('sleep:install-progress', { stage: 'error', label: String(e.message || e), pct: 0 }); return { error: String(e.message || e) }; }
     return startSleep({ auto: false });
@@ -2618,8 +2621,9 @@ app.whenReady().then(async () => {
   // Windows (Radeon/Nanbeige build): its own update list (latest-winamd.json, key "winamd"), never the LFM3 "win" entry.
   // PREMONITION_UPDATE_MANIFEST (tests only) points at a local list; PREMONITION_UPDATE_AUTOINSTALL=1 installs without the click.
   const upTest = process.env.PREMONITION_UPDATE_MANIFEST || '';
-  const upWin = process.platform === 'win32' ? { manifestUrl: upTest || WINAMD_MANIFEST_URL, assetKey: 'winamd', allowLoopback: !!upTest, args: process.argv.slice(1),
-    autoInstall: !!upTest && process.env.PREMONITION_UPDATE_AUTOINSTALL === '1' } : {};
+  const upAuto = !!upTest && process.env.PREMONITION_UPDATE_AUTOINSTALL === '1';
+  const upWin = process.platform === 'win32' ? { manifestUrl: upTest || WINAMD_MANIFEST_URL, assetKey: 'winamd', allowLoopback: !!upTest, args: process.argv.slice(1), autoInstall: upAuto }
+    : (process.platform === 'darwin' && !hasLocalAssistant) ? { manifestUrl: upTest || MACNB_MANIFEST_URL, assetKey: 'macnb', allowLoopback: !!upTest, autoInstall: upAuto } : {};   // built-in Mac (Nanbeige): its own list
   updater = new Updater({ ...upWin, version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
     onState: (st) => send('update:state', st), quit: () => { quitting = true; app.quit(); } });
   if (app.isPackaged && !E2E && store.getSettings().autoUpdateCheck !== false) updater.startTimer(30000);

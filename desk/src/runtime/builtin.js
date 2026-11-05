@@ -15,7 +15,7 @@ class Builtin {
     this.diaryDir = path.join(o.root, 'diary', 'raw');
     this.st = { phase: 'off', label: '', pct: 0, done: 0, total: 0, error: '', model: '', eyes: false, flavor: (o.platform || process.platform) === 'darwin' ? 'metal' : 'vulkan', lora: '' };
     this.platform = o.platform || process.platform;
-    this.installer = new ChatInstaller({ dir: this.dir, platform: o.platform, unquarantine: o.unquarantine, bundledExe: o.bundledExe, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
+    this.installer = new ChatInstaller({ dir: this.dir, platform: o.platform, unquarantine: o.unquarantine, bundledExe: o.bundledExe, bundledArchive: o.bundledArchive, macMemory: o.macMemory, fetch: o.fetch, extract: o.extract, onProgress: (p) => this._progress(p) });
     this.server = null; this.gw = null; this.running = false; this.asleep = false; this.abort = null; this.cache = {}; this.action = 0;
   }
   state() { return { ...this.st }; }
@@ -36,7 +36,7 @@ class Builtin {
     const exe = this.installer.llamaExe(flavor) || await this.installer.ensureLlama(flavor, this.abort && this.abort.signal);
     const model = await this.installer.ensureModel(this.abort && this.abort.signal);
     if (!this.running || this.asleep) return { ok: false, stopped: true, error: 'stopped' };
-    this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor, model: model.quant ? 'Nanbeige4.2-3B ' + model.quant.toUpperCase() : (model.name || '') });
+    this._set({ phase: 'starting', label: 'Starting the model', pct: 0, flavor, model: model.quant ? 'Nanbeige4.2-3B ' + model.quant.toUpperCase() : (model.name || ''), ram: (this.installer.state().vram || {}).bytes || 0 });
     if (!this.server) {
       this.server = (this.o.makeServer || ((x) => new LlamaServer(x)))({
         exe: exe.exe, model: model.file, chatTemplate: model.template || '', mmproj: this._mmproj(model), flavor, lora, cwd: path.dirname(exe.exe), platform: this.o.platform, spawn: this.o.spawn, fetch: this.o.fetch, fastRetry: this.o.fastRetry,
@@ -84,10 +84,13 @@ class Builtin {
       this._set({ phase: 'ready', label: 'Ready', pct: 100, error: '' });
     } catch (e) {
       this.running = false;
-      this._set({ phase: 'error', error: String(e && e.message || e) });
+      // an 8 GB Mac: not an error to retry, a plain "too small" with one way forward (the small brain, only if asked)
+      if (e && e.code === 'too_small') this._set({ phase: 'blocked', error: String(e.message), canTrySmall: true });
+      else this._set({ phase: 'error', error: String(e && e.message || e) });
     }
     return this.state();
   }
+  async trySmall() { this.installer.allowSmall(); this._set({ canTrySmall: false }); return this.retry(); }
   async retry() { if (this.asleep) return this.state(); this.running = false; this._set({ phase: 'off', error: '' }); return this.start(); }
 
   // Sleep needs the RAM: stop the model while asleep (resolves when the process has really exited), bring it back (optionally

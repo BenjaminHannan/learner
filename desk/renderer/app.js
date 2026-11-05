@@ -869,14 +869,18 @@
     const box = $('#runtime');
     if (!st) { box.hidden = true; return; }
     const busy = st.phase === 'downloading' || (st.phase === 'starting' && st.label !== 'Restarting the model');
-    const show = (busy || st.phase === 'error') && !rtHidden;
+    const blocked = st.phase === 'blocked';   // a Mac with too little memory (8 GB): a plain reason, and the small brain only if asked
+    const show = (busy || st.phase === 'error' || blocked) && !rtHidden;
     box.hidden = !show;
     if (!show) { if (st.phase === 'ready') rtHidden = false; return; }
     $('#rtBar').style.width = (st.phase === 'starting' ? 100 : st.pct || 0) + '%';
-    $('#rtTitle').textContent = st.phase === 'error' ? 'The local model did not start' : 'Setting up Premonition';
-    $('#rtStatus').textContent = st.phase === 'error' ? st.error : (st.label || '') + (st.total ? ' · ' + mb(st.done) + ' of ' + mb(st.total) + ' (' + (st.pct || 0) + '%)' : '');
+    $('#rtTitle').textContent = blocked ? 'This Mac is too small for Glim\'s brain' : st.phase === 'error' ? 'The local model did not start' : 'Setting up Glim';
+    $('#rtText').textContent = blocked ? '' : 'The first time, Glim downloads its own brain (2 to 4.5 GB, picked for this computer). It stays on this computer and you only do this once.';
+    $('#rtStatus').textContent = (st.phase === 'error' || blocked) ? st.error : (st.label || '') + (st.total ? ' · ' + mb(st.done) + ' of ' + mb(st.total) + ' (' + (st.pct || 0) + '%)' : '');
     $('#rtRetry').hidden = st.phase !== 'error';
+    $('#rtSmall').hidden = !(blocked && st.canTrySmall);
   }
+  $('#rtSmall').onclick = () => { rtHidden = false; $('#rtSmall').hidden = true; desk.runtime.trySmall(); };
   $('#rtRetry').onclick = () => { rtHidden = false; desk.runtime.retry(); };
   $('#rtHide').onclick = () => { rtHidden = true; $('#runtime').hidden = true; };
   desk.runtime.onState(paintRuntime);

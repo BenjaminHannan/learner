@@ -14,6 +14,8 @@ const MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/m
 // The Radeon/Nanbeige Windows build (Nov 4) has its OWN list and key, so it can never be "updated" back to the LFM3 Windows zip
 // that latest.json's "win" entry points at (1.2.4 and older). Ben publishes it next to latest.json (docs/win-amd/REPORT.md).
 const WINAMD_MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/main/desk/dist/latest-winamd.json';
+// The built-in Mac (Nanbeige, Nov 5 "uncle" build) likewise: latest-macnb.json, key "macnb", never the LFM3/Ben "mac" entry.
+const MACNB_MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/main/desk/dist/latest-macnb.json';
 const CHECK_EVERY_MS = 5 * 60 * 1000;   // Ben Oct 29: "make it so that it checks every five minutes"
 
 // "1.2.10" > "1.2.9"; anything that is not x.y.z counts as 0.0.0
@@ -28,7 +30,7 @@ function isNewer(remote, local) {
 function pickAsset(manifest, platform, arch, o) {
   o = o || {};
   if (!manifest || typeof manifest !== 'object') return null;
-  const key = platform === 'darwin' && arch === 'arm64' ? 'mac' : platform === 'win32' && arch === 'x64' ? (o.key || 'win') : null;
+  const key = platform === 'darwin' && arch === 'arm64' ? (o.key || 'mac') : platform === 'win32' && arch === 'x64' ? (o.key || 'win') : null;
   const a = key && manifest[key];
   const okUrl = /^https:\/\//.test(a && a.url || '') || (o.allowLoopback && /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(a && a.url || ''));
   return a && okUrl && /^[0-9a-f]{64}$/i.test(a.sha256 || '') ? a : null;
@@ -228,4 +230,4 @@ class Updater {
   }
 }
 
-module.exports = { Updater, parseVersion, isNewer, pickAsset, macScript, winScript, MANIFEST_URL, WINAMD_MANIFEST_URL, CHECK_EVERY_MS };
+module.exports = { Updater, parseVersion, isNewer, pickAsset, macScript, winScript, MANIFEST_URL, WINAMD_MANIFEST_URL, MACNB_MANIFEST_URL, CHECK_EVERY_MS };

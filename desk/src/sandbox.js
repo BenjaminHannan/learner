@@ -28,11 +28,20 @@ const ancestors = (p) => { const out = []; let d = path.dirname(p); while (d && 
 
 // the system python: its executable, the real file, and the folders it needs to start (resolved once, without any user code)
 let pyCache = null;
+function devToolsPresent() {
+  try {
+    const dir = String(execFileSync('/usr/bin/xcode-select', ['-p'], { timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] })).trim();
+    return !!dir && fs.existsSync(path.join(dir, 'usr', 'bin', 'python3'));
+  } catch (e) { return false; }
+}
 function systemPython(o) {
   if (pyCache && !(o && o.fresh)) return pyCache;
   pyCache = { ok: false, why: 'not macOS' };
   if (process.platform !== 'darwin') return pyCache;
   if (!fs.existsSync(SANDBOX_EXEC)) return (pyCache = { ok: false, why: 'no sandbox-exec' });
+  // a Mac without Apple's developer tools: /usr/bin/python3 is only a stub, and running it pops up the "install the command line
+  // developer tools" box (a new Mac, Nov 5 uncle build). Look before running it: no developer folder = no sandbox python.
+  if (!devToolsPresent()) return (pyCache = { ok: false, why: 'no command line developer tools' });
   try {
     const out = String(execFileSync('/usr/bin/python3', ['-I', '-S', '-c', 'import sys,os;print(sys.executable);print(os.path.realpath(sys.executable));print(sys.prefix);print(sys.base_prefix)'],
       { timeout: 20000, env: { PATH: '/usr/bin:/bin' }, stdio: ['ignore', 'pipe', 'ignore'] })).trim().split('\n');

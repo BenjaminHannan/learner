@@ -46,4 +46,27 @@ async function detectVram(o) {
 // 0x3faf00000 bytes reads as 15.92 GiB, so compare against 12 GiB minus a little slack for cards reported a hair under.
 function quantFor(bytes) { return bytes >= (C.WIN_Q8_MIN_VRAM_GB - 0.25) * GIB ? 'q8_0' : 'q4_k_m'; }
 
-module.exports = { detectVram, parseNvidiaSmi, parseRegQuery, quantFor, REG_KEY, GIB };
+// ---- Mac (Apple silicon): the brain lives in the shared memory, so its size follows the Mac's RAM ----------------------------
+// PREMONITION_RAM_GB (testing) wins; else os.totalmem(). A "16 GB" Mac reports exactly 16 GiB, so a little slack is enough.
+function macMemory(o) {
+  o = o || {};
+  const env = o.env || process.env;
+  const forced = Number(env.PREMONITION_RAM_GB);
+  if (env.PREMONITION_RAM_GB != null && env.PREMONITION_RAM_GB !== '' && Number.isFinite(forced) && forced > 0) return { bytes: forced * GIB, source: 'env' };
+  return { bytes: (o.totalmem || require('os').totalmem)(), source: 'os' };
+}
+// -> 'q8_0' (>= 24 GB) | 'q4_k_m' (>= 16 GB) | '' (too small: the caller explains, and offers C.MAC_SMALL only when asked)
+function macQuantFor(bytes) {
+  if (bytes >= (C.MAC_Q8_MIN_RAM_GB - 0.5) * GIB) return 'q8_0';
+  if (bytes >= (C.MAC_Q4_MIN_RAM_GB - 0.5) * GIB) return 'q4_k_m';
+  return '';
+}
+// Apple silicon? (an Intel Mac never gets here: the app is arm64-only and its launcher stops first; this also catches Rosetta)
+function appleSilicon(o) {
+  o = o || {};
+  if ((o.platform || process.platform) !== 'darwin') return false;
+  if ((o.arch || process.arch) !== 'arm64') return false;
+  return true;
+}
+
+module.exports = { detectVram, parseNvidiaSmi, parseRegQuery, quantFor, macMemory, macQuantFor, appleSilicon, REG_KEY, GIB };

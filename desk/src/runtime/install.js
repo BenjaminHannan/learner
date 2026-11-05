@@ -37,6 +37,11 @@ const defaultUnquarantine = (dir, exe) => new Promise((resolve) => {
   execFile('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', dir], () => resolve());
 });
 
+const GB = (b) => Math.round(b / 1024 ** 3);
+const QUANT_WORDS = { q8_0: '8-bit', q4_k_m: '4-bit', iq3_m: 'small 3-bit' };
+const tooSmallText = (bytes) => 'This Mac has ' + GB(bytes) + ' GB of memory. Glim\'s brain needs a Mac with at least ' + C.MAC_Q4_MIN_RAM_GB + ' GB to run well, so it is too small. '
+  + 'You can still try a smaller, less clever brain (' + (C.NB_MODELS[C.MAC_SMALL].size / 1e9).toFixed(1) + ' GB download); it will be slow and other apps may stall while Glim thinks.';
+
 class ChatInstaller {
   /** o: {dir (…/runtime), fetch, extract, onProgress({stage,label,done,total}), apiBase} */
   constructor(o) { this.o = o; this.f = o.fetch || fetch; this.extract = o.extract || defaultExtract; this.platform = o.platform || process.platform; this.unquarantine = o.unquarantine || defaultUnquarantine; this.stateFile = path.join(o.dir, 'state.json'); }
@@ -56,6 +61,7 @@ class ChatInstaller {
     flavor = flavor || (mac ? 'metal' : 'vulkan');
     const have = this.llamaExe(flavor);
     if (have) return have;
+    if (mac && this.o.bundledArchive && fs.existsSync(this.o.bundledArchive)) return this._unpackBundled(flavor);
     // The release list picks the newest build. If GitHub will not give it (rate limit, network, nothing usable), download the pinned one.
     const url = 'https://api.github.com/repos/' + C.LLAMA_REPO + '/releases?per_page=30';
     let rel = null; let why = '';
@@ -102,13 +108,33 @@ class ChatInstaller {
     this._save({ llama: { ...(cur.llama || {}), [flavor]: { tag: a.tag, flavor, exe } } });
     return { tag: a.tag, flavor, exe };
   }
+  // Mac: the engine shipped inside the app (resources/llama/llama-<tag>-bin-macos-arm64.tar.gz): check it, unpack it next to the
+  // models (llama-server cannot run from inside a read-only, possibly quarantined app bundle) and clear quarantine. No network.
+  async _unpackBundled(flavor) {
+    const arc = this.o.bundledArchive; const tag = C.MAC_LLAMA_TAG;
+    const want = (this.o.fallbackSha256 || C.LLAMA_FALLBACK_SHA256)[path.basename(arc)];
+    if (want) {
+      const got = await require('./download').sha256File(arc);
+      if (got !== want) throw new Error('The model engine inside the app is damaged (checksum ' + got.slice(0, 12) + '). Download Glim again.');
+    }
+    const dest = path.join(this.o.dir, 'llama-' + tag + '-' + flavor);
+    fs.rmSync(dest, { recursive: true, force: true });
+    if (this.o.onProgress) this.o.onProgress({ stage: 'llama', label: 'Unpacking the model engine', done: 0, total: 0 });
+    await this.extract(arc, dest);
+    const exe = findFile(dest, C.llamaExeName(this.platform));
+    if (!exe) throw new Error('llama-server was not inside ' + path.basename(arc));
+    await this.unquarantine(dest, exe);
+    const cur = this.state();
+    this._save({ llama: { ...(cur.llama || {}), [flavor]: { tag, flavor, exe, bundled: true } } });
+    return { tag, flavor, exe };
+  }
   // Turn on pressed twice while the download runs must share one download: two writers appended to the same .part and corrupted it.
   ensureModel(signal) {
     if (!this._modelJob) this._modelJob = this._ensureModel(signal).finally(() => { this._modelJob = null; });
     return this._modelJob;
   }
   async _ensureModel(signal) {
-    if (this.platform === 'win32') return this._ensureWinModel(signal);
+    if (this.platform === 'win32' || this.platform === 'darwin') return this._ensureWinModel(signal);
     const s = this.state();
     if (s.model && s.model.file && fs.existsSync(s.model.file)) return s.model;
     const files = await getJson(R.hfTreeUrl(C.MODEL_REPO), this.f);
@@ -123,10 +149,18 @@ class ChatInstaller {
   // Windows: Nanbeige4.2-3B, Q8_0 on a graphics card with >= 12 GB, else Q4_K_M (detected once, then kept in state.json so a
   // later driver hiccup cannot swap the brain). An older install of another model (LFM3) is replaced, and its file removed.
   async _ensureWinModel(signal) {
-    const s = this.state(); const models = this.o.winModels || C.WIN_MODELS;
+    const s = this.state(); const mac = this.platform === 'darwin';
+    const models = this.o.winModels || (mac ? C.NB_MODELS : C.WIN_MODELS);
     let quant = s.model && s.model.family === 'nanbeige' && models[s.model.quant] ? s.model.quant : '';
     let vram = s.vram || null;
-    if (!quant) {
+    if (!quant && mac) {
+      // Mac: by memory. Too small (8 GB): stop with a plain reason, unless the person pressed "Try the small brain anyway".
+      const ram = (this.o.macMemory || require('./gpu').macMemory)();
+      quant = require('./gpu').macQuantFor(ram.bytes);
+      vram = { bytes: ram.bytes, source: 'ram:' + ram.source };
+      if (!quant && s.allowSmall) quant = C.MAC_SMALL;
+      if (!quant) { const e = new Error(tooSmallText(ram.bytes)); e.code = 'too_small'; throw e; }
+    } else if (!quant) {
       vram = await (this.o.detectVram || require('./gpu').detectVram)({ platform: this.platform });
       quant = require('./gpu').quantFor(vram.bytes);
     }
@@ -135,7 +169,7 @@ class ChatInstaller {
     const dest = path.join(dir, want.file);
     const template = this._writeTemplate();
     if (s.model && s.model.file === dest && s.model.quant === quant && fs.existsSync(dest)) return { ...s.model, template };
-    await downloadFile({ url: R.hfResolveUrl(C.WIN_MODEL_REPO, want.file), dest, sha256: want.sha256, fetch: this.f, signal, onProgress: this._prog('model', 'Downloading Glim\'s brain') });
+    await downloadFile({ url: R.hfResolveUrl(C.WIN_MODEL_REPO, want.file), dest, sha256: want.sha256, fetch: this.f, signal, onProgress: this._prog('model', 'Downloading Glim\'s brain' + (mac && vram && vram.bytes ? ' (' + QUANT_WORDS[quant] + ', picked for this Mac\'s ' + GB(vram.bytes) + ' GB of memory)' : '')) });
     if (s.model && s.model.file && s.model.file !== dest && path.dirname(s.model.file) === dir) { try { fs.rmSync(s.model.file, { force: true }); } catch (e) { /* keep */ } }
     const m = { file: dest, name: want.file, sha256: want.sha256, family: 'nanbeige', quant };
     this._save({ model: m, vram: vram && { bytes: vram.bytes, source: vram.source } });
@@ -152,7 +186,8 @@ class ChatInstaller {
       return out;
     } catch (e) { return ''; }   // no template file: llama-server uses the GGUF's own (one rstrip different)
   }
+  allowSmall() { this._save({ allowSmall: true }); }
   installed(flavor) { const s = this.state(); return !!(this.llamaExe(flavor || C.llamaFlavors(this.platform)[0]) && s.model && fs.existsSync(s.model.file)); }
 }
 
-module.exports = { ChatInstaller, findFile, defaultExtract, tarExe, tarArgs };
+module.exports = { ChatInstaller, findFile, defaultExtract, tarExe, tarArgs, tooSmallText };

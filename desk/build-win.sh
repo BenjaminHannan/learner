@@ -64,7 +64,7 @@ if [[ ! -f vendor/eyes/$MMPROJ ]]; then
 fi
 if [[ -f vendor/eyes/$MMPROJ ]]; then
   echo "==> staging Glim's eyes"
-  mkdir -p "$STAGE/eyes" && cp "vendor/eyes/$MMPROJ" "$STAGE/eyes/"
+  mkdir -p "$STAGE/eyes" && cp "vendor/eyes/$MMPROJ" "$STAGE/eyes/" && cp assets/eyes-NOTICE.txt "$STAGE/eyes/NOTICE.txt"
   EXTRA+=(--extra-resource="$STAGE/eyes")
 else
   echo "WARNING: vendor/eyes/$MMPROJ is missing and could not be built (set MMPROJ_PY to a python with gguf + numpy); the Windows build will have no eyes." >&2
