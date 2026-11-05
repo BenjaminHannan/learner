@@ -124,7 +124,9 @@ class AlwaysOnState {
   setFocus(topic, kind) { this.focus = topic ? { kind: kind || 'learn', topic: String(topic).slice(0, 200), since: this.now() } : null; this.save(); }
   spoke() { this.lastSpokeAt = this.now(); this.save(); }
   summary() {
-    const f = this.focus ? 'Current focus: ' + this.focus.kind + ' "' + this.focus.topic + '".' : 'No current focus.';
+    // Nov 5: was 'Current focus: learn "X"', which the brain read as BEN's focus ("Ben, your current focus is learning X").
+    // The topic is Glim's own study pick, so say whose it is.
+    const f = this.focus ? "Glim's own " + (this.focus.kind === 'learn' ? 'learning topic' : this.focus.kind + ' topic') + ' (Glim picked it for its own study; Ben is not working on it and did not ask): "' + this.focus.topic + '".' : 'No current focus.';
     const ago = this.lastSpokeAt ? Math.round((this.now() - this.lastSpokeAt) / 60000) + ' min ago' : 'never';
     return f + ' Last spoke to Ben unprompted: ' + ago + '.';
   }

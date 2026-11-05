@@ -1076,7 +1076,17 @@ async function followUpTick(over) {
     const r = await agent.run(t, FU.FOLLOWUP_ASK, { hidden: true });
     const last = (t.items || []).filter((i) => i.t === 'assistant').pop();
     if (!r.stopped && !r.error && last && String(last.text || '').trim() === 'NO_UPDATE' && !t.items.slice(ni).some((i) => i.t === 'user') && t.messages.length > nm) { t.items.splice(ni); t.messages.splice(nm); store.saveThread(t); } // nothing to say: drop the hidden turn
-    else if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has a question', t.title, t.id);
+    else {
+      // Nov 5: the 3B brain sometimes offers "NO_UPDATE — nothing to do" as one of Ben's choices: drop such lines from what he sees
+      if (last && /\bNO_UPDATE\b/.test(String(last.text || ''))) {
+        const clean = (x) => String(x || '').split('\n').filter((l) => !/\bNO_UPDATE\b/.test(l)).join('\n').trim();
+        last.text = clean(last.text);
+        const lm = t.messages.slice(nm).filter((m) => m.role === 'assistant' && typeof m.content === 'string' && /\bNO_UPDATE\b/.test(m.content)).pop();
+        if (lm) lm.content = clean(lm.content);
+        store.saveThread(t);
+      }
+      if (!r.stopped && !chatInFront() && !(pillWin && pillWin.enabled)) notify('Glim has a question', t.title, t.id);
+    }
     send('threads:changed', {}); if (!openThreadId || openThreadId === t.id) send('open-thread', t.id); // repaint his view; never pull him off another chat
   } catch (e) { /* tomorrow is another day */ } finally { followBusy = false; }
 }
