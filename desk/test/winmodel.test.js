@@ -109,3 +109,14 @@ test('llama-server gets --mmproj only when the eyes file exists and the brain is
   const a = buildArgs({ model: 'm', flavor: 'vulkan', mmproj: f });
   assert.deepStrictEqual(a.slice(a.indexOf('--mmproj'), a.indexOf('--mmproj') + 2), ['--mmproj', f]);
 });
+
+test('sleep with an unsupported brain: not available, start refuses before any download or model pause', () => {
+  const { WinSleep } = require('../src/sleepwin');
+  const events = [];
+  const ws = new WinSleep({ getSettings: () => ({}), root: tmp('winsleep-'), platform: 'win32', unsupported: () => 'not on this PC yet',
+    installer: { state: () => ({}), installed: () => false, plan: () => events.push('plan'), pythonExe: () => 'py' }, hooks: { pauseModel: () => events.push('pause') } });
+  assert.deepStrictEqual({ ok: ws.available().ok, reason: ws.available().reason }, { ok: false, reason: 'not on this PC yet' });
+  assert.deepStrictEqual(ws.start({}), { ok: false, error: 'not on this PC yet' });
+  assert.deepStrictEqual(events, []);
+  assert.strictEqual(new WinSleep({ getSettings: () => ({}), root: tmp('winsleep-'), installer: { pythonExe: () => 'py' } }).available().ok, true);
+});

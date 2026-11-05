@@ -75,7 +75,8 @@ class WinSleep extends Sleep {
   }
   python() { return this.installer.pythonExe(); }
   privateChecker() { return this.o.privateChecker || require('./private-check').getPrivateCheck(this.root); }
-  available() { return { ok: true, app: this.home, python: this.python(), reason: '' }; }
+  // o.unsupported() -> '' or why sleep cannot run with this brain (Windows + Nanbeige, Nov 4: the trainer still learns LFM3)
+  available() { const why = this.o.unsupported ? this.o.unsupported() : ''; return { ok: !why, app: this.home, python: this.python(), reason: why || '' }; }
   // the adapter to load when the app starts the model (the newest converted one, if any)
   currentLora() {
     const st = this.installer.state();
@@ -104,6 +105,7 @@ class WinSleep extends Sleep {
     if (this.active) return { ok: false, error: 'Already sleeping.' };   // before the resets below: a second start must not wipe the running night
     this.nightBudgetS = (o && o.budgetS) || 0; this.wakeAtMs = (o && o.wakeAt) || null; this.lastCheckinAt = null; this.checkins = []; this.ckAbort = null;
     this.finishedNight = false; this.nothingNew = false; this.lessons = []; this.lessonsReverted = false; this.night = null; this.loaded = null; this.converted = false;
+    const why = this.o.unsupported ? this.o.unsupported() : ''; if (why) return { ok: false, error: why };
     if (this.needsRuntime()) return { ok: false, needsRuntime: true, error: 'Sleep needs a one-time download first.', plan: this.installer.plan() };
     const m = mayStart(this.getSettings(), this.onBattery());
     if (!m.ok) return m;

@@ -447,13 +447,15 @@ function autoSleepTick(now, over) {
 // ---- built-in local model + its sleep --------------------------------------------------------------------
 // Windows (Nanbeige4.2-3B) and a Mac without Ben's assistant (LFM3): the app runs the model itself (src/runtime) and sleeps with the sleepmlx trainer
 // (src/sleepwin.js; MPS on a Mac). Ben's Macs use the sleepmode app instead.
+// Windows' brain is Nanbeige4.2-3B (Nov 4); the sleep trainer (sleepmlx lfm3_cpu) still learns LFM3, whose adapters do not fit it.
+const WIN_SLEEP_OFF = 'Glim cannot learn overnight on this PC yet. Chatting and seeing work; overnight learning comes in a later update.';
 const builtinWanted = () => !!builtin && (Platform.presetFor(store.getSettings().gatewayUrl) || {}).id === 'builtin';
 function setupBuiltin() {
   const root = runtimeRoot(app.getPath('userData')); // follows --user-data-dir; default is %APPDATA%\\Premonition
   builtin = new Builtin({ root, platform: process.platform, mmproj: path.join(process.resourcesPath || '', 'eyes', require('./src/runtime/constants').WIN_MMPROJ), skipDiary: () => sl.checkingIn, bundledExe: path.join(process.resourcesPath || '', 'llama', 'llama-server.exe'), isWanted: builtinWanted, onState: (st) => { send('runtime:state', st); if (warmer && st.phase === 'ready') warmer.gatewayMoved(); } });
   sleepInstaller = new SleepInstaller({ root, platform: process.platform, llamaTag: () => { const s = builtin.installer.state(); const l = s.llama && (s.llama.vulkan || s.llama.cpu || s.llama.metal); return l && l.tag; }, onProgress: (p) => send('sleep:install-progress', p) });
   sleeper = new WinSleep({
-    getSettings: () => store.getSettings(), root, installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
+    getSettings: () => store.getSettings(), root, unsupported: () => (process.platform === 'win32' ? WIN_SLEEP_OFF : ''), installer: sleepInstaller, onBattery, tracked: () => tracking.list(),
     sleepmlxParent: sleepmlxParent(process.resourcesPath, path.join(__dirname, '..')),
     hooks: { pauseModel: () => builtin.pauseForSleep(), resumeModel: (lora) => builtin.resume(lora), servedUrl: () => (builtin.server && builtin.server.url ? builtin.server.url() : ''), checkin: runCheckin, onCheckin: (line) => { notify('Glim checked in while you sleep', line); pillState.flash(line); sleepNotice('Check-in: ' + line); } }
   });
