@@ -60,7 +60,7 @@ html,body { background:transparent !important; height:100%; overflow:hidden; dis
 #ear { flex:none; font-size:13px; line-height:1; white-space:nowrap; font-variant-numeric:tabular-nums; }
 #pill.notch #ear { order:2; height:var(--nh); display:flex; align-items:center; font-size:12px; color:var(--text2); }
 #pill.idle #ear { display:none; } #pill.notch.idle #ear:not([hidden]) { display:flex; }
-#pill.idle.has-ear { width:64px; margin-left:-32px; }
+#pill.idle.has-ear:not(.notch):not(.open) { width:64px; margin-left:-32px; }   /* closed floating pill only: it overrode the open card (squeezed to 64px, Ben Nov 4) and the notch island width */
 #pill.idle.has-ear #ear:not([hidden]) { display:inline; }
 .ear-line { color:var(--text2); font-size:12px; padding:2px 0 6px; }
 .btns .fb { padding:5px 9px; }
