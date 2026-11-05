@@ -31,7 +31,7 @@ test('Start = Learn mode with lifetime forever (hours 0, like "until I stop them
   const mk = () => new LearnButton({ dir, startLearn: (t, n, h) => { calls.start.push([t, n, h]); return { ok: true, ids: ['h1', 'h2', 'h3'], topic: t }; }, stopMote: (id) => calls.stop.push(id), onChange: (v) => views.push(v) });
   const b = mk();
   assert.strictEqual(FOREVER, 0);
-  assert.deepStrictEqual(b.start('  enzyme   kinetics '), { ok: true, learning: true, topic: 'enzyme kinetics', since: b.cur.since, count: 3, partial: null });
+  assert.deepStrictEqual(b.start('  enzyme   kinetics '), { ok: true, learning: true, topic: 'enzyme kinetics', since: b.cur.since, count: 3, by: 'ben', partial: null });
   assert.deepStrictEqual(calls.start, [['enzyme kinetics', COUNT, 0]]);
   assert.strictEqual(views.pop().topic, 'enzyme kinetics');
   // survives a restart, then Stop

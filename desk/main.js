@@ -1134,6 +1134,7 @@ function buildAgent() {
     runner: createRunner({ store, makeAgent: makeHelperAgent, outcomesFile: path.join(app.getPath('userData'), 'mote-outcomes.jsonl') }),
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent, flags) => {
+      try { if (aoKeeperObj) aoKeeperObj.ran(h.id); } catch (e) { /* counting only */ }
       // always-on: a Learn Mote's findings join the inbox (web sense; its notes are already saved for sleep by memory_save)
       { const f = String((flags && flags.report) || summary || '').replace(/\bNO_UPDATE\b/g, '').trim(); if (aoSenses && /^Learn \d+: /.test(h.name) && f) aoSenses.push('web', h.name.replace(/^Learn \d+: /, 'Learned about ') + ': ' + f.slice(0, 400)); }
       if (flags && flags.quiet) return send('helpers:changed', helpers.list()); // nothing new: no notice, no notification
@@ -1736,7 +1737,9 @@ function aoSetup() {
       if (!screen || !screen.findHelper()) return '';
       const w = await screen.run(['windows']); const l = await screen.run(['look', '--max', '60']);
       return SensesMod.windowsText(w, l);
-    }
+    },
+    // the periphery: a low-detail look at the windows behind the front one and other displays (helper `glance`; senses.js periphery())
+    periphery: store.getSettings().periphery === false ? null : async () => { if (!screen || !screen.findHelper()) return null; return screen.run(['glance', '--per', '150', '--max', '5']); }
   } });
 }
 async function aoPerms() {
@@ -1821,6 +1824,10 @@ const aoVoice = new GlimVoice.Voice({
 });
 // feedback -> the speak-o-meter: logged with the features the message went out with, one online step now, refit at night
 let aoOnOutcome = (m, kind) => { if (aoMeter && m.features) aoMeter.learn(m.features, kind, { sayId: m.id }); };
+// SWITCH-ON 2026-11-05: Glim's own speak decisions, with what happened to each, for sleep (userData/speak-decisions.jsonl; logging only)
+const aoDecisionFile = () => path.join(aoDir(), 'speak-decisions.jsonl');
+function aoLogDecision(x) { try { fs.appendFileSync(aoDecisionFile(), JSON.stringify({ t: Date.now(), ...x, say: x.say ? String(x.say).slice(0, 300) : null }) + '\n'); } catch (e) { /* logging only */ } }
+{ const prevOutcome = aoOnOutcome; aoOnOutcome = (m, kind) => { prevOutcome(m, kind); aoLogDecision({ feedback: kind, sayId: m.id, say: m.text || null }); }; }
 function aoSay(text, d) { aoVoice.offer(text, { why: d && d.why, features: d && d.features }); if (aoUrges) aoUrges.spoke(); if (aoState) aoState.logActivity('said', { text: String(text).slice(0, 120) }); }
 // the ear: 😴 resting · 📚 learning (+ Motes) · 💭 thinking · 😲 surprised, while always-on is on
 let aoEarExtra = () => ({});
@@ -1873,7 +1880,19 @@ setInterval(() => {
   if (store.getSettings().glimCanSee !== true || !aoSenses || !aoSenses.enabled('screen') || sl.asleep || E2E) return;
   const r = aoEyes().clipTick(aoLatestText('screen'), aoLatestText('windows')); if (r && r.catch) r.catch(() => {});
 }, EyesMod.CLIP_EVERY_MS).unref();
-require('./src/llm').setRequestHook((msgs, o) => {
+// the periphery in chat: "what's in my other window?" carries the latest periphery line as data (SWITCH-ON 2026-11-05)
+const OTHER_WINDOW_ASK = /\b(?:other|another|second|background|behind|side|left|right)\s+(?:window|screen|display|monitor|tab|app)s?\b|\bwhat(?:'s| is)\s+(?:open|on)\s+(?:in|on)\s+(?:my\s+)?(?:other|another)\b/i;
+function withPeriphery(msgs) {
+  if (!Array.isArray(msgs) || !msgs.length) return msgs;
+  const last = msgs[msgs.length - 1];
+  if (!last || last.role !== 'user' || typeof last.content !== 'string' || !OTHER_WINDOW_ASK.test(last.content) || !aoState) return msgs;
+  const ib = aoState.inbox; let p = null; for (let i = ib.length - 1; i >= 0; i--) if (ib[i].sense === 'periphery') { p = ib[i]; break; }
+  if (!p) return msgs;
+  const d = new Date(p.t), hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  return msgs.slice(0, -1).concat([{ ...last, content: last.content + '\n\n[What Glim last saw in Ben\'s other windows at ' + hh + ' (low detail, data): ' + p.text + ']' }]);
+}
+require('./src/llm').setRequestHook((msgs0, o) => {
+  const msgs = withPeriphery(msgs0);
   if (!aoEyesObj || store.getSettings().glimCanSee !== true || !Array.isArray(msgs) || !msgs.length || !(o && Array.isArray(o.tools) && o.tools.length)) return msgs;
   const last = msgs[msgs.length - 1];
   if (!last || last.role !== 'user' || typeof last.content !== 'string' || !EyesMod.wantsSight(last.content)) return msgs;
@@ -1946,7 +1965,54 @@ function aoTwoSpeedPlay() {
 setInterval(() => { try { aoTwoSpeedPlay(); } catch (e) { /* next minute */ } }, 60000).unref();
 aoNightlyJobs.push(() => { if (store.getSettings().twoSpeedPlay !== true) return; for (const [name, ad] of Object.entries(TwoSpeed.games)) { try { aoTwoSleep(name).nightly({ features: ad.features, label: ad.nightLabel, fallback: ad.fallbackRaw, nIn: ad.nIn, nA: ad.nA }); } catch (e) { console.log('[alwayson] two-speed night', e); } } });
 // "learn": one quiet Mote for 2 hours, only when no Learn study is running (Ben's Learn button always wins)
-function aoLearn(topic) { if (learningNow()) return false; const r = startLearn(topic, 1, 2); return !!r.ok; }
+// SWITCH-ON 2026-11-05: the brain's "learn" no longer starts a new 2-hour Mote each tick (9 near-identical topics on Nov 4-5); it is a
+// candidate for the study keeper's next topic. The tick's own focus line is set by the keeper when a study really starts.
+function aoLearn(topic, d) { aoKeeper().propose(topic, d && d.why); return false; }
+// ---- the study keeper (src/studykeeper.js): Ben's rule "it should always be doing something" -----------------------------------
+// Nothing to say + the brain free (the Mote gate: senses on, awake, not the night window, Ben not chatting/typing, memory gauge) +
+// no model lock (/tmp/aon/realmodel.lock, a test owns the model) -> the current study's next Mote runs now, back to back.
+const KeeperMod = require('./src/studykeeper');
+const REALMODEL_LOCK = '/tmp/aon/realmodel.lock';
+let aoKeeperObj = null;
+function aoKeeperFree() {
+  if (store.getSettings().alwaysStudy === false) return { ok: false, why: 'off' };
+  const g = aoMoteGate(); if (!g.budget) return { ok: false, why: g.why || 'busy' };
+  try { if (fs.existsSync(REALMODEL_LOCK)) return { ok: false, why: 'model lock' }; } catch (e) { /* none */ }
+  if (AlwaysOnMod.macPressure() >= 2) return { ok: false, why: 'pressure' };
+  return { ok: true };
+}
+function aoBenWords() {
+  const s = store.getSettings(), txt = [s.usesOther || '', ...(s.uses || []), ...((s.goalsSteps || []).map((x) => typeof x === 'string' ? x : JSON.stringify(x)))];
+  if (aoState) for (const o of aoState.inbox) if (o.sense === 'screen' || o.sense === 'chats' || o.sense === 'hearing' || o.sense === 'periphery') txt.push(o.text);
+  try { for (const f of memory.list().slice(-80)) if (f && f.text && /\bben\b/i.test(f.text)) txt.push(f.text); } catch (e) { /* no notes */ }
+  return [...new Set(KeeperMod.words(txt.join(' ')))];
+}
+function aoKeeperCandidates() {
+  const s = store.getSettings(), out = [];
+  if (s.usesOther) out.push({ topic: s.usesOther, kind: 'goal', interest: 0.2, why: 'what Ben said he uses Glim for' });
+  for (const g of s.goalsSteps || []) { const t = typeof g === 'string' ? g : (g && (g.text || g.goal)) || ''; if (t) out.push({ topic: t, kind: 'goal', interest: 0.3, why: 'one of Ben\'s goals' }); }
+  if (aoState) {
+    for (const w of aoState.wonder.slice(-10)) out.push({ topic: String(w.text || '').replace(/^weak spot in (.+?) \(quiz [^)]*\)$/, '$1'), kind: 'wonder', interest: 0.6, why: 'on the wonder list' });
+    for (const x of aoState.surprises.slice(-5)) if (x.stream !== 'app') out.push({ topic: x.what, kind: 'surprise', interest: Math.min(1, (Number(x.kl) || 0) / 3), why: 'it surprised Glim' });
+  }
+  const e = aoStuck.error(); if (e) out.push({ topic: 'what causes this error and how to fix it: ' + e.text, kind: 'stuck', interest: 0.8, why: 'Ben keeps hitting it' });
+  try { for (const x of (aoStuckList().items || []).filter((y) => y.source === 'ben-error').slice(-5)) out.push({ topic: String(x.problem).slice(0, 160), kind: 'stuck', interest: 0.5, why: 'an open problem Ben hit' }); } catch (e2) { /* none */ }
+  return out;
+}
+function aoKeeper() {
+  return aoKeeperObj || (aoKeeperObj = new KeeperMod.StudyKeeper({ dir: aoDir(), free: aoKeeperFree,
+    study: { cur: () => (getLearnBtn().cur), start: (topic) => getLearnBtn().start(topic, 'glim'), stop: () => getLearnBtn().stop() },
+    isRunning: (ids) => ids.some((id) => helpers && helpers.isRunning(id)),
+    runNext: (ids, turn) => { for (let i = 0; i < ids.length; i++) { const id = ids[(turn + i) % ids.length]; if (helpers && helpers.runNow(id)) return true; } return false; },
+    quiz: (topic) => aoQuizS().load(topic), examDue: (topic) => { const z = aoQuizS().load(topic); if (z && z.status === 'ready') { z.examDue = true; aoQuizS().save(z); } },
+    candidates: aoKeeperCandidates, benWords: aoBenWords, log: (...a) => console.log('[alwayson]', ...a) }));
+}
+function aoKeeperKick(why) {
+  if (E2E || !aoSenses || !aoSenses.anyEnabled() || sl.asleep || sl.waking) return null;
+  try { const r = aoKeeper().kick(why); if (r.action === 'start' || r.action === 'continue') { if (aoState) aoState.logActivity('study', { action: r.action, topic: String(r.topic).slice(0, 80), why }); } return r; } catch (e) { console.log('[alwayson] study keeper', e); return null; }
+}
+setInterval(() => { aoKeeperKick('minute'); }, 60000).unref();
+setInterval(() => { if (!E2E && aoSenses && aoSenses.anyEnabled()) { try { aoKeeper().sample(); } catch (e) { /* measure only */ } } }, 30000).unref();
 // ---- always-on v2, phase 4: urges, the memory gauge, bored-mode Motes (src/urges.js, src/memgauge.js, src/motepool.js) ----------
 // Bored -> a batch of thinking Motes through chat's own model. The gauge decides how many: 🟢 + away + AC = full batch, 🟢 + busy = 2,
 // 🟡 = 1 (away) or 0, 🔴 / swap growing = 0. Ben chatting, typing, sleep or the night window stop every one at once.
@@ -2241,6 +2307,8 @@ function aoApply() {
     deliver: { say: aoSay, note: aoNote, learn: aoLearn },
     gates: { busy: aoBusy, pressure: () => AlwaysOnMod.macPressure(), night: aoNight },
     speakGate: (d) => aoSpeakAhead(d),
+    onIdle: () => aoKeeperKick('nothing to say'),   // Ben: nothing to contribute -> go learn something relevant
+    onDecision: (x) => aoLogDecision(x),             // every speak decision + outcome, for sleep (logging only)
     context: (fresh) => aoLoopContext(fresh),   // feeling time + recall + patterns (Task B)
     log: (...a) => console.log('[alwayson]', ...a) });
   aoWatchHook(aoLoop);   // T6: a finished tick labels the watcher's seconds
@@ -2259,6 +2327,7 @@ function getHearing() {
     onState: (st, why) => { if (st === 'error') console.log('[alwayson] hearing:', why); }
   }));
 }
+setInterval(() => { if (hearing && hearing.want) { const h = hearing.stats(); console.log('[alwayson] hearing: ' + h.state + ', loudest ' + h.loudest + ' over ' + h.levels + ' level reports, ' + h.heard + ' heard (last 5 min)'); } }, 300000).unref();
 function aoHearingApply() {
   if (E2E) return;
   const want = !!(aoSenses && aoSenses.enabled('hearing'));
@@ -2542,7 +2611,9 @@ function registerIpc() {
       // a marker from before the assistant last ran (or older than 12 h when unknown) is stale: it was stopped by hand since
       const m = fs.statSync(WATCHDOG_FILE).mtimeMs;
       if (gwReadyAt ? m < gwReadyAt : Date.now() - m > 12 * 3600e3) return { kind: 'off' };
-      const w = StartLog.parseWatchdog(fs.readFileSync(WATCHDOG_FILE, 'utf8')); return { kind: 'memory', at: w.at, text: w.text }; } catch (e) { return { kind: 'off' }; }
+      const w = StartLog.parseWatchdog(fs.readFileSync(WATCHDOG_FILE, 'utf8'));
+      let restarting = false; try { const f = path.join(path.dirname(WATCHDOG_FILE), 'run', 'watchdog.log'), st = fs.statSync(f), fd = fs.openSync(f, 'r'), n = Math.min(st.size, 8192), b = Buffer.alloc(n); fs.readSync(fd, b, 0, n, st.size - n); fs.closeSync(fd); restarting = StartLog.watchdogRecovering(b.toString('utf8')); } catch (e) { /* unknown: not restarting */ }
+      return { kind: 'memory', at: w.at, text: w.text, restarting }; } catch (e) { return { kind: 'off' }; }
   });
   h('gateway:test', async () => {
     const s = store.getSettings();

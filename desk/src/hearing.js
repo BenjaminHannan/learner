@@ -26,6 +26,9 @@ class Hearing {
   pause(owner) { this.paused.add(owner || 'other'); this._halt(); if (this.want) this.set('paused', 'Another voice feature is using the microphone.'); }
   resume(owner) { this.paused.delete(owner || 'other'); this._go(); }
   listening() { return !!(this.d && this.d.state !== 'ended'); }
+  // diagnostics (SWITCH-ON 2026-11-05: two days of "listening" and nothing heard): the loudest mic level and the words heard since the
+  // last call. A loudest of 0 while Ben talks = the mic hands back silence (macOS permission); levels but no words = speech server side.
+  stats() { const r = { state: this.state, loudest: Math.round((this.loudest || 0) * 1000) / 1000, levels: this.levels || 0, heard: this.heard - (this.heardAt || 0) }; this.loudest = 0; this.levels = 0; this.heardAt = this.heard; return r; }
 
   _halt() {
     if (this.retryT) { this.clearTimer(this.retryT); this.retryT = null; }
@@ -53,6 +56,7 @@ class Hearing {
   }
   _event(d, ev) {
     if (d !== this.d && !(ev && ev.type === 'state')) return;
+    if (ev.type === 'level') { this.loudest = Math.max(this.loudest || 0, Number(ev.level) || 0); this.levels = (this.levels || 0) + 1; return; }
     if (ev.type === 'final' && ev.text) { this.heard++; this.retryMs = RETRY_MS; try { this.o.onText(ev.text); } catch (e) { /* the inbox owns it */ } return; }
     if (ev.type === 'state' && ev.state === 'listening' && d === this.d) { this.set('listening'); return; }
     if (ev.type === 'error' && d === this.d) {

@@ -555,6 +555,63 @@ func cmdWindows(max: Int) -> Never {
     emit(["front": front, "windows": out] as [String: Any])
 }
 
+
+// MARK: - periphery (SWITCH-ON 2026-11-05, Ben: "focus on one screen but still know what's going on with the other screens")
+// `glance`: a LOW-DETAIL look at every on-screen app window except the front one, and at displays other than the main one (whose
+// full OCR is the screen sense). Each window is captured alone (CGWindowListCreateImage, looked up at runtime: it sees the window
+// even when another one covers it), scaled to <= 640 px, read with fast Vision OCR, and only the first --per characters are kept.
+// Nothing is written to disk. Bounded: at most --max windows, tiny windows and system UI skipped.
+typealias WinImageFn = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+func smallOcr(_ src: CGImage, per: Int) -> String {
+    let longest = Swift.max(src.width, src.height), ratio = longest > 640 ? 640.0 / Double(longest) : 1.0
+    var img = src
+    if ratio < 1, let ctx = CGContext(data: nil, width: Swift.max(1, Int(Double(src.width) * ratio)), height: Swift.max(1, Int(Double(src.height) * ratio)), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) {
+        ctx.interpolationQuality = .medium; ctx.draw(src, in: CGRect(x: 0, y: 0, width: ctx.width, height: ctx.height)); if let s = ctx.makeImage() { img = s }
+    }
+    let req = VNRecognizeTextRequest(); req.recognitionLevel = .fast; req.usesLanguageCorrection = false
+    do { try VNImageRequestHandler(cgImage: img, options: [:]).perform([req]) } catch { return "" }
+    var out = ""
+    for o in req.results ?? [] {
+        guard let t = o.topCandidates(1).first?.string.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { continue }
+        out += (out.isEmpty ? "" : " ") + t
+        if out.count >= per { break }
+    }
+    return String(out.prefix(per))
+}
+func cmdGlance(per: Int, max: Int) -> Never {
+    guard CGPreflightScreenCaptureAccess() else { fail("screen recording permission not granted") }
+    let skip: Set<String> = ["Window Server", "Dock", "Control Center", "Notification Center", "SystemUIServer", "Spotlight", "Premonition", "Premonition Helper", "loginwindow", "TextInputMenuAgent", "Wallpaper"]
+    let list = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? []
+    let frontPid = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1
+    let winFn: WinImageFn? = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGWindowListCreateImage").map { unsafeBitCast($0, to: WinImageFn.self) }
+    let mainBounds = CGDisplayBounds(CGMainDisplayID())
+    var out: [[String: Any]] = [], frontSkipped = false, n = 0
+    for w in list {
+        guard (w[kCGWindowLayer as String] as? Int ?? 1) == 0 else { continue }
+        let owner = w[kCGWindowOwnerName as String] as? String ?? "", pid = w[kCGWindowOwnerPID as String] as? Int32 ?? -2
+        if owner.isEmpty || skip.contains(owner) { continue }
+        if pid == frontPid && !frontSkipped { frontSkipped = true; continue }   // the focus: the screen sense reads it in full
+        var r = CGRect.zero
+        if let b = w[kCGWindowBounds as String] as? NSDictionary { _ = CGRectMakeWithDictionaryRepresentation(b as CFDictionary, &r) }
+        if r.width < 160 || r.height < 100 { continue }
+        let id = w[kCGWindowNumber as String] as? UInt32 ?? 0
+        var text = "", how = "none"
+        if let f = winFn, let img = f(CGRect.null, 8 /* optionIncludingWindow */, id, 1 | 16 /* boundsIgnoreFraming | nominalResolution */)?.takeRetainedValue() { text = smallOcr(img, per: per); how = "window" }
+        out.append(["app": owner, "title": w[kCGWindowName as String] as? String ?? "", "text": text, "how": how, "display": mainBounds.intersects(r) ? "main" : "other"])
+        n += 1; if n >= max { break }
+    }
+    // displays other than the main one: one small look each (the main display is the screen sense's full OCR)
+    var ids = [CGDirectDisplayID](repeating: 0, count: 8), cnt: UInt32 = 0
+    if CGGetActiveDisplayList(8, &ids, &cnt) == .success {
+        for d in ids.prefix(Int(cnt)) where d != CGMainDisplayID() {
+            if let sym = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGDisplayCreateImage"), let img = unsafeBitCast(sym, to: DisplayImageFn.self)(d)?.takeRetainedValue() {
+                out.append(["app": "", "title": "display \(d)", "text": smallOcr(img, per: per * 2), "how": "display", "display": "other"])
+            }
+        }
+    }
+    emit(["items": out, "displays": Int(cnt)] as [String: Any])
+}
+
 // MARK: - main
 
 func intFlag(_ args: inout [String], _ name: String, default d: Int) -> Int {
@@ -962,7 +1019,7 @@ func runWatchInput() -> Never {
 }
 
 var args = Array(CommandLine.arguments.dropFirst())
-guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|ocr|windows|notch|call|dictate|fence") }
+guard !args.isEmpty else { fail("usage: deskhelper check|ask-permissions|look|press|click|type|key|scroll|open-app|screenshot|ocr|windows|glance|notch|call|dictate|fence") }
 let command = args.removeFirst()
 
 switch command {
@@ -1060,6 +1117,10 @@ case "ocr":
 
 case "windows":
     cmdWindows(max: intFlag(&args, "--max", default: 40))
+
+case "glance":
+    let per = intFlag(&args, "--per", default: 150)
+    cmdGlance(per: per, max: intFlag(&args, "--max", default: 6))
 
 case "screenshot":
     let max = intFlag(&args, "--max", default: 1280)

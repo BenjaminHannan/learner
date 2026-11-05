@@ -105,7 +105,7 @@ test('no always-on module writes images or audio to disk', () => {
   // the only file writers are the two JSON files and the learn-button JSON
   for (const [f, src] of sources) {
     const writes = src.match(/fs\.(?:writeFileSync|appendFileSync|createWriteStream|writeFile)\([^)]*\)/g) || [];
-    for (const w of writes) assert.ok(/tmp|this\.file|this\.logFile|aoGuessFile\(\)/.test(w), f + ': unexpected write ' + w);
+    for (const w of writes) assert.ok(/tmp|this\.file|this\.logFile|aoGuessFile\(\)|aoDecisionFile\(\)/.test(w), f + ': unexpected write ' + w);
   }
   // the helper's new sense commands: text in memory only
   const swift = fs.readFileSync(path.join(root, 'helper', 'deskhelper.swift'), 'utf8');

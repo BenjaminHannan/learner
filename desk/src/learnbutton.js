@@ -15,15 +15,16 @@ class LearnButton {
     try { const j = JSON.parse(fs.readFileSync(this.file, 'utf8')); if (j && typeof j.topic === 'string' && Array.isArray(j.ids)) this.cur = j; } catch (e) { /* none */ }
   }
   save() { try { if (this.cur) fs.writeFileSync(this.file, JSON.stringify(this.cur)); else fs.rmSync(this.file, { force: true }); } catch (e) { /* the Motes still run */ } }
-  view() { return this.cur ? { learning: true, topic: this.cur.topic, since: this.cur.since, count: this.cur.ids.length } : { learning: false }; }
+  view() { return this.cur ? { learning: true, topic: this.cur.topic, since: this.cur.since, count: this.cur.ids.length, by: this.cur.by || 'ben' } : { learning: false }; }
   changed() { try { this.o.onChange && this.o.onChange(this.view()); } catch (e) { /* UI only */ } }
-  start(topic) {
+  // by: 'ben' (the button / chat) or 'glim' (the study keeper, src/studykeeper.js: Glim's own study while it has nothing to say)
+  start(topic, by) {
     topic = String(topic || '').replace(/\s+/g, ' ').trim().slice(0, 200);
     if (!topic) return { error: 'Type what Glim should learn about.' };
     if (this.cur) this.stop();   // one study at a time: a new topic replaces the old one
     const r = this.o.startLearn(topic, COUNT, FOREVER) || {};
     if (!r.ok) return { error: r.error || 'Learn mode could not start.' };
-    this.cur = { topic, ids: (r.ids || []).slice(), since: this.now() };
+    this.cur = { topic, ids: (r.ids || []).slice(), since: this.now(), by: by === 'glim' ? 'glim' : 'ben' };
     this.save(); this.changed();
     return { ok: true, ...this.view(), partial: r.error || null };
   }

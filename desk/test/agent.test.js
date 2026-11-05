@@ -933,3 +933,18 @@ test('UI2 a "[cut off: ...]" line the model copies into its reply is dropped (st
     assert.ok(!JSON.stringify(gw.requests.filter((r) => r.messages).at(-1).messages).includes('[cut off'));
   } finally { gw.close(); }
 });
+
+// SWITCH-ON 2026-11-05: the brain was off (nothing listening): Ben's turn is taken back out of the history so the Desk can hold it and
+// send it once the brain is ready, without a duplicate turn. A turn the brain already answered part of is kept.
+test('brain off: the unsent turn is taken back (held), so the resend is not a duplicate', async () => {
+  const net = require('net'); const srv = net.createServer(); await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const port = srv.address().port; await new Promise((r) => srv.close(r));   // a port nobody listens on = ECONNREFUSED / fetch failed
+  const events = [];
+  const a = new Agent({ getSettings: settings({ url: 'http://127.0.0.1:' + port + '/v1' }), toolDefs: buildTools({}), tools: {}, emit: (e) => events.push(e), approve: async () => 'once', askUser: async () => '' });
+  const t = mkThread(); t.messages.push({ role: 'user', content: 'earlier' }, { role: 'assistant', content: 'earlier answer' }); t.items.push({ t: 'user', text: 'earlier' });
+  const r = await a.run(t, 'what is on my calendar?');
+  assert.ok(events.some((e) => e.type === 'error'), 'the Desk is told (it holds the message)');
+  assert.strictEqual(r.held, true);
+  assert.deepStrictEqual(t.messages.map((m) => m.content), ['earlier', 'earlier answer']);
+  assert.deepStrictEqual(t.items.map((x) => x.text), ['earlier']);
+});

@@ -282,6 +282,8 @@ function plainTail(msgs, a, b, fits) {
 function plainText(msgs, a, b) { return plainTail(msgs, a, b).text; }
 
 const SUMMARY_SYSTEM = 'Summarize this part of a chat between Ben and his assistant Glim in at most 8 short plain lines. Keep facts about Ben and the people he mentions, what he wants, decisions, plans and deadlines with their dates and times, open questions, and anything Glim promised. Skip Glim\'s routine actions (started or updated an agent, ran a tool). Start each line with its date when known. No preamble.';
+// the gateway could not be reached at all (same words as the Desk's OFF_ERROR in renderer/app.js)
+const OFF_RE = /fetch failed|failed to fetch|ECONNREFUSED|ECONNRESET|socket hang up|other side closed/i;
 const summaryMessages = (text) => [{ role: 'system', content: SUMMARY_SYSTEM }, { role: 'user', content: SUMMARY_TAG + '\nChat:\n' + text }];
 function summaryFits(s, text) {
   const limit = budget.contextLimit(s, s.modelFast || s.model);
@@ -624,6 +626,7 @@ class Agent {
     const taskStart = thread.messages.length;
     this.taskStart = taskStart;
     pushUser(userText, opts && opts.display, opts && opts.hidden);
+    const heldAt = { msgs: thread.messages.length, items: thread.items.length };   // the brain was off: this turn is taken back, the Desk holds and resends it
     let creativeTurn = !(opts && (opts.hidden || opts.display));
     save();
     let stopped = false;
@@ -858,6 +861,13 @@ class Agent {
       failure = String(e && e.message || e);
       this.emit({ type: 'error', message: failure });
     } finally {
+      // the brain could not be reached before it said anything: take Ben's turn back out of the history so the Desk can hold it and send
+      // it again once the brain is ready (no duplicate turn, no dangling question)
+      if (failure && OFF_RE.test(failure) && thread.messages.length === heldAt.msgs && !stopped) {
+        thread.messages.splice(taskStart); if (thread.items.length === heldAt.items) thread.items.pop();
+        if (Number.isInteger(thread.memAt) && thread.memAt >= thread.messages.length) { delete thread.memSig; delete thread.memAt; }
+        this.lastHeld = true;
+      } else this.lastHeld = false;
       repairHistory(thread.messages);
       this.free();
       try { this.o.onEnd && this.o.onEnd(); } catch (e) { /* ignore */ }
@@ -867,7 +877,7 @@ class Agent {
       save();
       this.emit({ type: 'done', stopped });
     }
-    return { stopped, error: failure };
+    return { stopped, error: failure, held: this.lastHeld };
   }
 
   // One cheap call (fast model) that turns the newly left-out part, plus the previous summary, into a short summary the model reads
@@ -1211,4 +1221,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { benTurns, SENSITIVE, narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { OFF_RE, benTurns, SENSITIVE, narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

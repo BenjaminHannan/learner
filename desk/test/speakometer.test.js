@@ -29,21 +29,21 @@ test('an ordinary moment stays quiet even at its loudest (never spoken, full sur
   assert.strictEqual(m.decide({ ...loud, surprise: 0, urges: { share: 1 } }).speak, true, 'something worth telling, after a long silence');
 });
 
-test('the score DROPS after 👎 / "not now" in a context and RISES after 👍', () => {
-  const m = new S.SpeakOMeter();
+test('the score DROPS after 👎 / "not now" in a context and RISES after 👍 (online steps, test-only option)', () => {
+  const m = new S.SpeakOMeter({ online: true });
   const ctx = { ...ctxA, stuckError: true };
   const p0 = m.decide(ctx).p;
   m.learn(m.decide(ctx).x, 'down'); const p1 = m.decide(ctx).p;
   assert.ok(p1 < p0, '👎 lowers it: ' + p0 + ' -> ' + p1);
   m.learn(m.decide(ctx).x, 'notnow'); const p2 = m.decide(ctx).p;
   assert.ok(p2 < p1, '"not now" lowers it more: ' + p1 + ' -> ' + p2);
-  { const a = new S.SpeakOMeter(), b = new S.SpeakOMeter(); a.learn(a.decide(ctx).x, 'down'); b.learn(b.decide(ctx).x, 'notnow');
+  { const a = new S.SpeakOMeter({ online: true }), b = new S.SpeakOMeter({ online: true }); a.learn(a.decide(ctx).x, 'down'); b.learn(b.decide(ctx).x, 'notnow');
     assert.ok(b.decide(ctx).p < a.decide(ctx).p, '"not now" (weight 3) is a stronger no than 👎 (weight 2)'); }
   const q0 = m.decide(ctxA).p;
   m.learn(m.decide(ctxA).x, 'up'); m.learn(m.decide(ctxA).x, 'up');
   assert.ok(m.decide(ctxA).p > q0, '👍 raises it');
   // ignored is a weak no: smaller than a 👎
-  const a = new S.SpeakOMeter(), b = new S.SpeakOMeter();
+  const a = new S.SpeakOMeter({ online: true }), b = new S.SpeakOMeter({ online: true });
   const pa = a.decide(ctx).p; a.learn(a.decide(ctx).x, 'ignored'); b.learn(b.decide(ctx).x, 'down');
   assert.ok(pa - a.decide(ctx).p < pa - b.decide(ctx).p);
 });
@@ -85,7 +85,7 @@ test('the loop: the meter can hold a say, but never lets one through the code li
   const state = new AlwaysOnState(dir);
   const senses = new Senses({ consent: { on: true, senses: { chats: true } }, state });
   let speak = false, busy = false; const said = [];
-  const loop = new AlwaysOn({ senses, state, ask: async () => JSON.stringify({ say: 'Hi Ben', note: null, learn: null, why: 'x' }),
+  const loop = new AlwaysOn({ senses, state, ask: async () => JSON.stringify({ important: 'asked', say: 'Hi Ben', note: null, learn: null, why: 'x' }),
     deliver: { say: (t, d) => said.push(d) }, gates: { busy: () => busy }, speakGate: () => ({ speak, p: speak ? 0.9 : 0.1, x: { bias: 1 } }) });
   senses.push('chats', 'one'); await loop.tick();
   assert.strictEqual(said.length, 0); assert.strictEqual(loop.stats.meterHeld, 1);
@@ -105,4 +105,14 @@ test('main wires the meter into the loop, outcomes into learn(), and the refit i
   assert.match(m, /aoMeter\.learn\(m\.features, kind/);
   assert.match(m, /aoNightlyJobs = \[\(\) => aoMeter && aoMeter\.refit\(\),/);
   assert.match(m, /helpers\.pauseForSleep\(\);[^\n]*\n  try \{ aoNightly\(\); aoSleepHandoff\(\); \}/);
+});
+
+// SWITCH-ON 2026-11-05: weights change only in sleep. learn() logs; only the nightly refit() moves the score.
+test('no online learning: feedback is logged, the score moves only at the nightly refit', () => {
+  const m = new S.SpeakOMeter(); const ctx = { ...ctxA, stuckError: true };
+  const p0 = m.decide(ctx).p;
+  m.learn(m.decide(ctx).x, 'notnow'); m.learn(m.decide(ctx).x, 'notnow');
+  assert.strictEqual(m.decide(ctx).p, p0, 'unchanged during the day');
+  assert.strictEqual(m.events().length, 2);
+  m.refit(); assert.ok(m.decide(ctx).p < p0, 'the night refit learns the two "not now"s');
 });

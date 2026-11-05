@@ -652,21 +652,42 @@
   function paintGateway() {
     const g = $('#gw');
     g.classList.remove('ready', 'warming', 'down');
-    const st = gw.state === 'ready' ? 'ready' : gw.state === 'warming' ? 'warming' : 'down';
+    const ph = brainPhase(), st = ph === 'ready' ? 'ready' : ph === 'starting' ? 'warming' : 'down';
     g.classList.add(st); g.classList.toggle('asleep', !!(slp.asleep || slp.waking));
     // while a run is on, the typing bubble in the chat says so; the top pill keeps its own state (Ben Oct 29: "Typing…" twice looked bad)
     const busy = running && st !== 'down';
     g.classList.toggle('busy', busy);
-    g.querySelector('span').textContent = slp.waking ? 'Waking up…' : slp.asleep ? 'Asleep' : st === 'ready' ? 'Glimmering' : st === 'warming' ? 'Warming up…' : (gwStarting && Date.now() - gwStarting < 120000) ? 'Starting…' : 'Off';
+    g.querySelector('span').textContent = BrainState.label(brainPhase());   // the one source of truth (renderer/brainstate.js), also used by the chat
     g.title = st === 'ready' ? 'Gateway reachable and warmed up' : st === 'warming' ? 'Warming up the model (typing still works)' : (gwWasUp ? 'The model stopped (often to save memory on a busy Mac). Click to start it again' : 'Model is off. Click to start it');
     g.classList.toggle('startable', st === 'down' && !slp.asleep && !slp.waking);
     paintOffCard();
     refreshMood();
   }
-  desk.onGateway((s) => { const was = gw.state; gw = s || gw; if (gw.state !== 'down') { gwStarting = 0; gwWasUp = true; gwErr = ''; } else if (was !== 'down') loadWhy(); paintGateway(); });
+  desk.onGateway((s) => { const was = gw.state; gw = s || gw; if (gw.state !== 'down') { gwStarting = 0; gwWasUp = true; gwErr = ''; } else if (was !== 'down') loadWhy(); paintGateway(); if (gw.state === 'ready') flushHeld(); });
   // Offline chip and the "Turn on" card share one start path (Settings > Model > Start command; the built-in model on Windows and on Macs without the assistant)
   let gwStarting = 0, gwWhy = { kind: 'unknown' }, gwErr = '';
   const gwIsStarting = () => !!(gwStarting && Date.now() - gwStarting < 120000);
+  const brainPhase = () => BrainState.phase({ gw, startedAt: gwStarting, asleep: slp.asleep, waking: slp.waking, why: gwWhy });
+  // messages that reached a brain that was starting or off: held here and sent by themselves once it is ready (Ben never retypes)
+  const held = new BrainState.Held(); let lastSent = null;
+  function holdMessage(threadId, text, shown) {
+    const p = brainPhase();
+    if (!held.hold(threadId, text)) return;
+    ensureBlock().col.append(el('div', 'atext sel held-line', BrainState.heldLine(p === 'ready' ? 'starting' : p))); toBottom();
+    if (p === 'off' || p === 'ready') loadWhy();
+  }
+  async function flushHeld() {
+    if (running) return;
+    const due = held.take(brainPhase()); if (!due.length) return;
+    for (const m of due) {
+      if (!thread || thread.id !== m.threadId) { try { await desk.agent.send(m.threadId, m.text); } catch (e) { /* the thread list shows it */ } continue; }
+      lastSent = { threadId: m.threadId, text: m.text };
+      setRunning(true);
+      const r = await desk.agent.send(m.threadId, m.text);
+      if (r && r.error) { setRunning(false); msgs.append(el('div', 'errline', r.error)); }
+      break;   // one at a time: the next waits for this run's done
+    }
+  }
   async function startGateway() {
     if (gw.state !== 'down' || slp.asleep || slp.waking || gwIsStarting()) return;
     gwStarting = Date.now(); gwErr = ''; paintGateway(); setTimeout(paintGateway, 120500); loadWhy();
@@ -683,7 +704,7 @@
   }
   const composerOff = makeOffCard('in-composer'); $('#composer .cwrap').prepend(composerOff);
   function paintOffCard() {
-    const down = gw.state === 'down' && !slp.asleep && !slp.waking, starting = gwIsStarting();
+    const down = gw.state === 'down' && !slp.asleep && !slp.waking, starting = brainPhase() === 'starting';
     const mem = gwWhy.kind === 'memory';
     for (const c of offCards.slice()) {
       if (!c.isConnected && !c.classList.contains('in-composer')) { offCards.splice(offCards.indexOf(c), 1); continue; }
@@ -697,6 +718,7 @@
       const b = c.querySelector('button'); b.disabled = starting; b.textContent = starting ? 'Starting…' : 'Turn on';
     }
   }
+  setInterval(() => { if (gw.state === 'down' && gwWhy && gwWhy.restarting) loadWhy().then(paintGateway); }, 10000);
   async function loadWhy() { if (slp.asleep || slp.waking) return; try { gwWhy = (await desk.gateway.why()) || { kind: 'unknown' }; } catch (e) { gwWhy = { kind: 'unknown' }; } paintOffCard(); }
   desk.onFullscreen((on) => document.body.classList.toggle('fullscreen', !!on));
   // backup in case the main-process event is missed (window opened already full screen)
@@ -927,14 +949,16 @@
       case 'error': {
         // Ben Oct 29: a message sent while the model was off showed "fetch failed". Glim says it in its own words; the Turn on card is right below.
         if (OFF_ERROR.test(String(ev.message || ''))) {
-          if (gw.state !== 'down') { gw = { ...gw, state: 'down' }; paintGateway(); }
-          ensureBlock().col.append(el('div', 'atext sel', gwIsStarting() ? 'I\u2019m still starting up. Give me about a minute, then ask me again.' : 'I\u2019m off right now. Press Turn on below, then ask me again.'));
-          toBottom(); break;
+          // a "ready" brain that cannot be reached has stopped; "warming" stays warming (the header and this line read the same phase)
+          if (gw.state === 'ready') { gw = { ...gw, state: 'down' }; paintGateway(); }
+          if (lastSent) holdMessage(lastSent.threadId, lastSent.text); else { ensureBlock().col.append(el('div', 'atext sel', BrainState.heldLine(brainPhase()))); toBottom(); }
+          lastSent = null; break;
         }
         ensureBlock().col.append(el('div', 'errline sel', ev.message)); toBottom(); errorUntil = Date.now() + 6000; break;
       }
       case 'done': {
         setRunning(false); tn = null; finishAll(); markRead(); pendingAsk = null; // a stopped run's question is no longer open
+        if (held.count()) setTimeout(flushHeld, 0);
         pendingSteers.forEach((p) => p.el.classList.remove('queued')); pendingSteers = [];
         if (ev.stopped) msgs.append(el('div', 'status', 'Stopped.'));
         if (!ev.stopped && errorUntil < Date.now()) doneUntil = Date.now() + 4000;
@@ -1178,6 +1202,8 @@
       }
       addUser(text, false, false, true);
       jumpBottom();
+      if (gw.state === 'down' && !(info && info.e2e)) { holdMessage(thread.id, text); return; }   // unreachable (starting or off): held, sent when ready; 'warming' is reachable and sends
+      lastSent = { threadId: thread.id, text };
       setRunning(true); // before the call: a fast run can finish before send() resolves
       const r = await desk.agent.send(thread.id, text);
       if (r && r.error) { setRunning(false); msgs.append(el('div', 'errline', r.error)); return; }

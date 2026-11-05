@@ -5,7 +5,7 @@
 //
 // Feedback (strongest first): Ben says "not now / stop / later / shh" (strong no) > 👎 not now (no) > ignored for 10 min (weak no);
 // a reply, 👍, or clicking through to the help = yes. Every event is logged with its features (userData/speakometer-events.jsonl),
-// learned from at once (one small gradient step), and the whole log is refit each night in the sleep window.
+// and the whole log is refit each night in the sleep window (no online step since Nov 5: weights change only in sleep).
 // It starts permissive for "stuck" moments (the same error seen 3+ times, the same page for 10+ min) and quiet otherwise.
 const fs = require('fs');
 const path = require('path');
@@ -135,7 +135,9 @@ class SpeakOMeter {
     const f = FEEDBACK[kind]; if (!f || !x) return null;
     const ev = { t: this.now(), kind, y: f.y, w: f.w, x, ...(extra || {}) };
     this.log(ev);
-    this.step(x, f.y, f.w); this.n++; this.save();
+    // weights change only in sleep (Ben's rule; SWITCH-ON 2026-11-05): the event is logged and the nightly refit() learns from it
+    if (this.o.online) this.step(x, f.y, f.w);
+    this.n++; this.save();
     return ev;
   }
   log(ev) {

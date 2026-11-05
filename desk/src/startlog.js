@@ -20,4 +20,16 @@ function parseWatchdog(content) {
   return { at: m ? m[1].padStart(5, '0') : '', text };
 }
 
-module.exports = { parseRefusal, parseWatchdog };
+// Is the memory watchdog bringing the brain back by itself right now? (its run/watchdog.log; SWITCH-ON 2026-11-05)
+// true when the newest "recovery:" line is "waiting for Ns of normal memory pressure" or "memory calm; running serve.sh" and is
+// < maxAgeMs old. "N restarts in 6 h already; waiting", "restarted", "stopped or started by hand" = not restarting by itself now.
+function watchdogRecovering(logText, now, maxAgeMs) {
+  const lines = String(logText || '').trim().split('\n').filter((l) => /\brecovery:/.test(l));
+  const last = lines[lines.length - 1]; if (!last) return false;
+  if (!/recovery: (?:waiting for \d+s of normal memory pressure|memory calm; running)/.test(last)) return false;
+  const m = last.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/); if (!m) return false;
+  const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime();
+  return (now || Date.now()) - t < (maxAgeMs || 15 * 60000);
+}
+
+module.exports = { parseRefusal, parseWatchdog, watchdogRecovering };

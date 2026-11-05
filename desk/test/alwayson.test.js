@@ -24,13 +24,14 @@ function rig(o) {
     ask: async (messages, signal) => { out.asks++; out.lastMessages = messages; return typeof answer === 'function' ? answer(signal) : answer; },
     deliver: { say: (t) => out.say.push(t), note: (t) => out.note.push(t), learn: (t) => { out.learn.push(t); return true; } },
     gates: { busy: () => gates.busy, pressure: () => gates.pressure, night: () => gates.night },
+    onDecision: (x) => { (out.decisions = out.decisions || []).push(x); }, onIdle: (x) => { (out.idle = out.idle || []).push(x); },
     setTimer: () => 0, clearTimer: () => {} });
   return { dir, clock, state, senses, gates, out, loop, setAnswer: (a) => { answer = a; } };
 }
-const SAY = (txt, urgent) => JSON.stringify({ say: txt, note: null, learn: null, urgent: !!urgent, why: 'test' });
+const SAY = (txt, urgent, important) => JSON.stringify({ important: important || 'deadline', say: txt, note: null, learn: null, urgent: !!urgent, why: 'test' });
 
 test('a normal tick asks the model with the new observations and delivers say / note / learn', async () => {
-  const r = rig({ answer: JSON.stringify({ say: 'Your lab report is due at 3.', note: 'Lab report due Friday 3 pm', learn: 'enzyme kinetics', why: 'deadline' }) });
+  const r = rig({ answer: JSON.stringify({ say: 'Your lab report is due at 3.', note: 'Lab report due Friday 3 pm', learn: 'enzyme kinetics', important: 'deadline', why: 'deadline' }) });
   const res = await r.loop.tick();
   assert.strictEqual(res.reason, 'done');
   assert.strictEqual(r.out.asks, 1);
@@ -113,7 +114,7 @@ test('malformed JSON => tick skipped, nothing delivered, no crash', async () => 
 
 test('parseDecision accepts fenced JSON and think blocks', () => {
   const d = A.parseDecision('<think>hmm</think>```json\n{"say": null, "note": "x", "learn": null, "why": "y"}\n```');
-  assert.deepStrictEqual(d, { say: null, note: 'x', learn: null, urgent: false, why: 'y' });
+  assert.deepStrictEqual(d, { say: null, note: 'x', learn: null, urgent: false, important: 'none', why: 'y' });
 });
 
 test('nothing new => no model call, and the wait backs off from 60 s to 5 min', async () => {
@@ -158,4 +159,32 @@ test('main.js wires the loop to Ben-first, pressure, the night window and the mo
   assert.match(m, /if \(aoLoop\) aoLoop\.cancel\('chat'\)/);
   assert.match(m, /model: AlwaysOnMod\.chatModel\(s\)/);
   assert.strictEqual(A.chatModel({ model: 'qwen36', modelFast: 'qwen36-fast' }), 'qwen36-fast');
+});
+
+// SWITCH-ON 2026-11-05: quiet unless Glim's own decision marks the moment important
+test('speak filter: important "none" or missing = quiet (logged, idle hook fires); important = delivered', async () => {
+  const r = rig({ answer: JSON.stringify({ important: 'none', say: 'You are coding in T3 Code.', note: null, learn: null, why: 'focus' }) });
+  let x = await r.loop.tick();
+  assert.strictEqual(x.quiet, true); assert.deepStrictEqual(r.out.say, []);
+  assert.strictEqual(r.out.decisions[0].outcome, 'quiet'); assert.strictEqual(r.out.decisions[0].important, 'none');
+  assert.strictEqual(r.out.idle.length, 1);
+  r.setAnswer(JSON.stringify({ say: 'Hi Ben.', note: null, learn: null, why: 'no field' }));
+  r.clock.t += 60000; x = await r.loop.tick();
+  assert.deepStrictEqual(r.out.say, []); assert.strictEqual(r.out.decisions[1].outcome, 'quiet');
+  r.setAnswer(JSON.stringify({ important: 'bogus', say: 'Hi Ben.', note: null, learn: null, why: 'x' }));
+  r.clock.t += 60000; await r.loop.tick(); assert.deepStrictEqual(r.out.say, []);
+  r.setAnswer(SAY('Your battery is at 4%; plug in now.', true, 'urgent'));
+  r.clock.t += 60000; x = await r.loop.tick();
+  assert.deepStrictEqual(r.out.say, ['Your battery is at 4%; plug in now.']); assert.strictEqual(r.out.decisions[3].outcome, 'said');
+  assert.strictEqual(r.out.idle.length, 3, 'a tick that spoke does not start a study');
+});
+test('speak filter: an important say still obeys the 20-minute limit and the meter (it can hold, never force)', async () => {
+  const r = rig({ answer: SAY('Quiz at 3.', false, 'deadline') });
+  await r.loop.tick(); r.clock.t += 60000; r.setAnswer(SAY('Quiz at 3, again.', false, 'stuck'));
+  await r.loop.tick();
+  assert.strictEqual(r.out.say.length, 1); assert.strictEqual(r.out.decisions[1].outcome, 'held-limit');
+});
+test('a quiet tick (nothing new) also fires the idle hook', async () => {
+  const r = rig(); await r.loop.tick(); const n = r.out.idle.length; await r.loop.tick();
+  assert.ok(r.out.idle.length >= n);
 });

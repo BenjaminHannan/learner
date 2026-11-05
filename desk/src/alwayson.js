@@ -19,10 +19,16 @@ const BASE_MS = 60000, MAX_MS = 300000, SAY_GAP_MS = 20 * 60000;
 const chatModel = (s) => String((s && (s.modelFast || s.model)) || 'default');
 const REMINDER = /\b(?:remind(?:er)?|deadline|due|overdue|appointment|meeting|exam|quiz|test|class|starts?|begins?|leave|late|tonight|tomorrow|today|in \d+ ?(?:min|minutes|hours?))\b/i;
 
+// Speak filter (SWITCH-ON 2026-11-05, Ben: "Glim should decide, but trained to not speak up unless something is important"): the brain
+// marks each moment with "important"; a say goes out only when that is not "none" (missing or unknown = "none" = quiet). Every limit
+// below still sits on top of it. Each decision is logged (o.onDecision) so sleep can train Glim's own decision; nothing learns online.
+const IMPORTANT = ['none', 'urgent', 'stuck', 'deadline', 'asked'];
 const SYSTEM = 'You are the quiet background attention of Glim, a personal assistant on Ben\'s Mac. You see short notes about what is on his screen, what he said, and what you read. '
-  + 'Most of the time you do nothing. Speak only when it clearly helps him right now (a reminder, a deadline, a real mistake, an answer he is looking for). '
-  + 'Reply with ONE JSON object and nothing else: {"say": string or null, "note": string or null, "learn": string or null, "urgent": true or false, "why": string}. '
-  + '"say" is one or two short sentences to Ben. "note" is one true fact worth remembering. "learn" is a topic worth studying on the web. "why" is a few words.';
+  + 'Most of the time you do nothing. Speak only when the moment is important for Ben right now. Important means one of: "urgent" (something will go wrong very soon unless he acts, e.g. battery about to die, unsaved work about to be lost), '
+  + '"stuck" (he keeps hitting the same error or problem), "deadline" (something is due or starts soon), "asked" (he asked to be told about exactly this). '
+  + 'Everything else is "none": ordinary work, browsing, videos, chats, what he is focused on, your own learning, patterns you noticed. With "none", say must be null. '
+  + 'Reply with ONE JSON object and nothing else: {"important": "none" | "urgent" | "stuck" | "deadline" | "asked", "say": string or null, "note": string or null, "learn": string or null, "urgent": true or false, "why": string}. '
+  + '"say" is one or two short sentences to Ben. "note" is one true fact worth remembering. "learn" is a topic worth studying on the web that would help Ben. "why" is a few words.';
 
 // feeling time (Task B): a clock line, "(N min ago)" on each observation, and the recalled memories + patterns
 // (extra = {now, recall: [lines], patterns: [lines], likely}); each list is capped so the prompt stays small.
@@ -70,7 +76,8 @@ function parseDecision(text) {
   let j; try { j = JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
   if (!j || typeof j !== 'object' || Array.isArray(j)) return null;
   const str = (v) => (v === null || v === undefined ? null : typeof v === 'string' ? (v.trim() || null) : undefined);
-  const out = { say: str(j.say), note: str(j.note), learn: str(j.learn), urgent: j.urgent === true, why: typeof j.why === 'string' ? j.why.slice(0, 200) : '' };
+  const imp = typeof j.important === 'string' ? j.important.trim().toLowerCase() : 'none';
+  const out = { say: str(j.say), note: str(j.note), learn: str(j.learn), urgent: j.urgent === true, important: IMPORTANT.includes(imp) ? imp : 'none', why: typeof j.why === 'string' ? j.why.slice(0, 200) : '' };
   if (out.say === undefined || out.note === undefined || out.learn === undefined) return null;
   if (!('why' in j)) return null;
   if (out.say) out.say = out.say.slice(0, 400); if (out.note) out.note = out.note.slice(0, 400); if (out.learn) out.learn = out.learn.slice(0, 120);
@@ -143,6 +150,8 @@ class AlwaysOn {
     return !!(d.urgent && REMINDER.test(d.say));
   }
 
+  // every brain decision, with what happened to it (sleep trains Glim's own speak decision from this log; logging only)
+  decided(d, outcome, fresh) { if (this.o.onDecision) { try { this.o.onDecision({ important: d.important, say: d.say, urgent: d.urgent, why: d.why, outcome, senses: [...new Set((fresh || []).map((o) => o.sense))] }); } catch (e) { /* logging only */ } } }
   async tick() {
     if (this.inTick) return this.result('busy');
     this.inTick = true;
@@ -154,7 +163,7 @@ class AlwaysOn {
     if (why) { if (why !== 'off') this.delay = this.baseMs; return this.result(why); }
     await this.sampleNow();
     const fresh = this.state.fresh();
-    if (!fresh.length) { this.delay = Math.min(this.maxMs, this.delay * 2); return this.result('quiet'); }
+    if (!fresh.length) { this.delay = Math.min(this.maxMs, this.delay * 2); if (this.o.onIdle) { try { this.o.onIdle({ quiet: true }); } catch (e) { this.log('alwayson: idle hook failed', e); } } return this.result('quiet'); }
     this.delay = this.baseMs;
     why = this.gate(); if (why) return this.result(why);   // sampling took a moment: check again before using the model
     const ctl = this.ctl = new AbortController();
@@ -177,12 +186,17 @@ class AlwaysOn {
     const done = { decision: d, said: false, noted: false, learned: false };
     const dl = this.o.deliver || {};
     if (d.say && !isPrivate(d.say)) {
-      // v2: the speak-o-meter (src/speakometer.js) sits on top of the code limits above: it can hold a say, never force one
-      const meter = this.sayAllowed(d) ? (this.o.speakGate ? this.o.speakGate(d) : { speak: true }) : null;
-      if (meter && meter.speak) { d.features = meter.x || null; d.p = meter.p; this.state.spoke(); this.stats.said++; done.said = true; try { dl.say && dl.say(d.say, d); } catch (e) { this.log('alwayson: say failed', e); } }
-      else if (meter) { this.stats.meterHeld = (this.stats.meterHeld || 0) + 1; done.meterHeld = true; this.log('alwayson: say held by the speak-o-meter (p=' + (meter.p != null ? meter.p.toFixed(2) : '?') + '):', d.say.slice(0, 80)); }
-      else { this.stats.held++; this.log('alwayson: say held by the 20-minute limit:', d.say.slice(0, 80)); }
-    }
+      // the speak filter: Glim's own decision first (quiet unless important), then the code limits, then the speak-o-meter (it can hold, never force)
+      let outcome;
+      if (d.important === 'none' && !this.o.legacySpeak) { this.stats.quiet = (this.stats.quiet || 0) + 1; done.quiet = true; outcome = 'quiet'; }
+      else {
+        const meter = this.sayAllowed(d) ? (this.o.speakGate ? this.o.speakGate({ ...d, urgent: d.urgent || d.important !== 'none' }) : { speak: true }) : null;
+        if (meter && meter.speak) { d.features = meter.x || null; d.p = meter.p; this.state.spoke(); this.stats.said++; done.said = true; outcome = 'said'; try { dl.say && dl.say(d.say, d); } catch (e) { this.log('alwayson: say failed', e); } }
+        else if (meter) { this.stats.meterHeld = (this.stats.meterHeld || 0) + 1; done.meterHeld = true; outcome = meter.defer ? 'waited' : 'held-meter'; this.log('alwayson: say held by the speak-o-meter (p=' + (meter.p != null ? meter.p.toFixed(2) : '?') + '):', d.say.slice(0, 80)); }
+        else { this.stats.held++; outcome = 'held-limit'; this.log('alwayson: say held by the 20-minute limit:', d.say.slice(0, 80)); }
+      }
+      this.decided(d, outcome, fresh);
+    } else this.decided(d, d.say ? 'private' : 'nothing', fresh);
     if (d.note && !isPrivate(d.note)) { this.stats.notes++; done.noted = true; try { dl.note && dl.note(d.note, d); } catch (e) { this.log('alwayson: note failed', e); } }
     if (d.learn && !isPrivate(d.learn)) {
       const cur = this.state.focus && this.state.focus.topic;
@@ -192,8 +206,9 @@ class AlwaysOn {
         if (ok) { this.state.setFocus(d.learn, 'learn'); this.stats.learns++; done.learned = true; }
       }
     }
+    if (!done.said && this.o.onIdle) { try { this.o.onIdle(done); } catch (e) { this.log('alwayson: idle hook failed', e); } }   // Ben's rule: nothing to say -> go study
     return this.result('done', done);
   }
 }
 
-module.exports = { AlwaysOn, parseDecision, buildMessages, buildMessagesV1, splitSummary, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };
+module.exports = { AlwaysOn, IMPORTANT, parseDecision, buildMessages, buildMessagesV1, splitSummary, macPressure, REMINDER, SYSTEM, chatModel, BASE_MS, MAX_MS, SAY_GAP_MS };

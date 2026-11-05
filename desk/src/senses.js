@@ -22,7 +22,7 @@ const SENSES = [
 const IDS = SENSES.map((s) => s.id);
 const FILE = 'senses.json';
 const STATE_FILE = 'alwayson-state.json';
-const MAX_OBS = 40, MAX_TEXT = 600;
+const MAX_OBS = 40, MAX_TEXT = 600, MAX_TEXT_PERIPHERY = 1000;   // the periphery line holds up to 5 windows x ~150 characters
 
 // passwords and banking: the agent's SENSITIVE list, memory's secret detector, and the screens below
 const PRIVATE = /\bpass(?:word|code|phrase)s?\b|\bkeychain\b|\b1password\b|\bbitwarden\b|\blastpass\b|\b(?:online|mobile)\s+banking\b|\bbank(?:ing)?\s+(?:log\s?in|sign[\s-]?in|account)\b|\b(?:chase|wells\s+fargo|bank\s+of\s+america|citi(?:bank)?|capital\s+one|paypal|venmo)\b[\s\S]{0,80}\b(?:log\s?in|sign[\s-]?in|account|balance)\b|\b(?:routing|account)\s+number\b|\bcard\s+number\b|\bcvv\b|\bsocial\s+security\b|\bssn\b/i;
@@ -86,12 +86,13 @@ class AlwaysOnState {
   save() { try { fs.mkdirSync(this.dir, { recursive: true }); atomicWrite(this.file, { inbox: this.inbox, focus: this.focus, lastSpokeAt: this.lastSpokeAt, lastTickAt: this.lastTickAt, cursor: this.cursor, surprises: this.surprises, urges: this.urges, wonder: this.wonder, activity: this.activity }); return true; } catch (e) { return false; } }
   // -> the stored entry, or null when it was empty, private, or the same as the last one from that sense
   add(sense, text) {
-    if (!IDS.includes(sense)) return null;
+    if (!IDS.includes(sense) && sense !== 'periphery') return null;   // the periphery is stored like a sense; the screen switch covers it
     let t = String(text || '').replace(/\s+/g, ' ').trim();
     if (!t) return null;
     if (isPrivate(t)) { this.dropped++; return null; }   // checked on the full text, before clipping
     if (require('./logins').holdsSecret(t)) { this.dropped++; return null; }   // LOGIN1: a saved password never enters the day log
-    if (t.length > MAX_TEXT) t = t.slice(0, MAX_TEXT - 1) + '…';
+    const cap = sense === 'periphery' ? MAX_TEXT_PERIPHERY : MAX_TEXT;
+    if (t.length > cap) t = t.slice(0, cap - 1) + '…';
     const last = [...this.inbox].reverse().find((x) => x.sense === sense);
     if (last && last.text === t) return null;
     let at = this.now(); const lastT = this.inbox.length ? this.inbox[this.inbox.length - 1].t : null; if (lastT && at <= lastT) at = lastT + 1;
@@ -166,8 +167,25 @@ class Senses {
       if (typeof text !== 'string') text = '';   // a sampler must hand back words only; anything else is ignored
       const e = this.state.add(id, text); if (e) out.push(e);
       if (id === 'screen' && text) this.screenSeen(text);
+      if (id === 'windows') this.co.lastWin = text;
     }
+    const p = await this.periphery(); if (p) out.push(p);
     return out;
+  }
+  // The periphery (SWITCH-ON 2026-11-05, Ben: "focus on one screen but still know what's going on with the other screens"): a low-detail
+  // look at the windows behind the front one and at other displays (o.samplers.periphery -> {items: [{app, title, text, how, display}]},
+  // the helper's `glance`: ~110 characters of fast OCR per window, at most 5). It runs every periMs (3 min), or 30 s after the set of
+  // open windows changed. Covered by the screen switch; each private-looking window is dropped on its own, the rest is kept.
+  async periphery() {
+    const fn = this.o.samplers && this.o.samplers.periphery;
+    if (!fn || !this.enabled('screen') || this.busy.periphery) return null;
+    const now = this.now(), key = openPart(this.co.lastWin), since = this.lastAt.periphery ? now - this.lastAt.periphery : Infinity;
+    const due = since >= (this.o.periMs || 180000) || (key && key !== this.co.periKey && since >= (this.o.periMinMs || 30000));
+    if (!due) return null;
+    this.lastAt.periphery = now; this.co.periKey = key; this.busy.periphery = true; this.calls.periphery = (this.calls.periphery || 0) + 1;
+    let r = null; try { r = await fn(); } catch (e) { r = null; } finally { this.busy.periphery = false; }
+    const text = peripheryText(r); this.co.periSkipped = (this.co.periSkipped || 0) + ((r && r.items) || []).filter((x) => isPrivate([x.app, x.title, x.text].join(' '))).length;
+    return text ? this.state.add('periphery', text) : null;
   }
   push(id, text) { if (!this.enabled(id)) return null; return this.state.add(id, text); }
   // I1 (Glim can see): after each screen read, o.onScreen(screenText, latestWindowsText) may take a look with the eyes (fire and forget;
@@ -210,6 +228,7 @@ class Senses {
         }
       } else this.co.skipped++;
     }
+    const p = await this.periphery(); if (p) out.push(p);
     return out;
   }
 }
@@ -228,6 +247,14 @@ function screenDiff(prev, cur) {
   return 'Changed on screen: ' + added.join(' / ');
 }
 
+// the "Open: ..." part of a windows line (which windows are open, front to back): its change wakes the periphery early
+function openPart(w) { const m = /Open: ([^]*?)\.(?: In |$)/.exec(String(w || '')); return m ? m[1] : ''; }
+// `deskhelper glance` JSON -> one inbox line, labelled as the periphery; private-looking windows are left out one by one
+function peripheryText(r) {
+  const items = ((r && !r.error && r.items) || []).filter((x) => x && !isPrivate([x.app, x.title, x.text].join(' ')));
+  const parts = items.map((x) => (x.app || 'Other display') + (x.title ? ' \u2014 ' + String(x.title).slice(0, 60) : '') + (x.display === 'other' ? ' (other display)' : '') + (x.text ? ': "' + String(x.text).replace(/\s+/g, ' ').slice(0, 150) + '"' : ''));
+  return parts.length ? 'Periphery (background windows, low detail; not what Ben is focused on): ' + parts.join(' | ') : '';
+}
 // `deskhelper windows` + `deskhelper look` JSON -> one short line of words (no ids, no coordinates)
 function windowsText(w, look) {
   const parts = [];
@@ -243,4 +270,4 @@ function windowsText(w, look) {
   return parts.join(' ');
 }
 
-module.exports = { screenDiff, axChars, RICH_CHARS, windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, ASK_AT_START, given, startConsent, missingPerms, AlwaysOnState, Senses };
+module.exports = { openPart, peripheryText, screenDiff, axChars, RICH_CHARS, windowsText, SENSES, IDS, FILE, STATE_FILE, MAX_OBS, MAX_TEXT, PRIVATE, isPrivate, defaults, normalize, loadConsent, saveConsent, needsConsent, ASK_AT_START, given, startConsent, missingPerms, AlwaysOnState, Senses };
