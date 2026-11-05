@@ -25,7 +25,7 @@ for (const d of dirs) for (const f of fs.readdirSync(d).filter((x) => x.endsWith
   steps.forEach((s, i) => {
     let label = null;
     if (s.repeat) label = 'bad:repeat';
-    else if (r.ok) label = 'good';
+    else if (r.ok && !r.timedOut) label = 'good';   // a capped task fails (MARKS)
     else if (i === steps.length - 1) label = r.timedOut ? 'bad:timeout' : 'bad:final';
     if (label) lines.push(JSON.stringify({ task: r.task, kind: r.kind, version: r.label, run: r.run, step: i + 1, label, ...s }));
   });
