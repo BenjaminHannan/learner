@@ -4,6 +4,9 @@ const fs = require('fs'), path = require('path');
 const dirs = process.argv.slice(2);
 const rows = [];
 for (const d of dirs) { const f = path.join(d, 'summary.jsonl'); if (fs.existsSync(f)) for (const l of fs.readFileSync(f, 'utf8').split('\n')) if (l.trim()) rows.push({ ...JSON.parse(l), dir: d }); }
+// MARKS-agent-v1: "A task that hits the cap fails" (run.js's ok is the scorer only). A re-run (addendum 2) replaces the earlier row.
+for (const r of rows) r.ok = !!r.ok && !r.timedOut;
+for (let i = rows.length - 1; i >= 0; i--) if (rows.findIndex((x) => x.dir === rows[i].dir && x.task === rows[i].task) !== i) { const k = rows.findIndex((x) => x.dir === rows[i].dir && x.task === rows[i].task); rows.splice(k, 1); }
 const tasks = [...new Set(rows.map((r) => r.task))];
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
 const f1 = (x) => (Math.round(x * 10) / 10).toString();
