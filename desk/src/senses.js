@@ -179,6 +179,7 @@ class Senses {
   async periphery() {
     const fn = this.o.samplers && this.o.samplers.periphery;
     if (!fn || !this.enabled('screen') || this.busy.periphery) return null;
+    if (/^Front app: (?:loginwindow|ScreenSaverEngine)\b/.test(String(this.co.lastWin || ''))) return null;   // locked screen: nothing to see
     const now = this.now(), key = openPart(this.co.lastWin), since = this.lastAt.periphery ? now - this.lastAt.periphery : Infinity;
     const due = since >= (this.o.periMs || 180000) || (key && key !== this.co.periKey && since >= (this.o.periMinMs || 30000));
     if (!due) return null;

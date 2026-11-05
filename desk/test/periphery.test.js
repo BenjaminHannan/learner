@@ -47,3 +47,8 @@ test('the chat hook: "what\'s in my other window?" carries the periphery line', 
   assert.match(m, /const msgs = withPeriphery\(msgs0\);/);
   assert.match(m, /periphery: store\.getSettings\(\)\.periphery === false \? null : async \(\) => \{[^\n]*\['glance', '--per', '150', '--max', '5'\]/);
 });
+
+test('no glance while the Mac is locked (front app loginwindow)', async () => {
+  const r = rig(); r.w.open = 'x'; const orig = r.senses.o.samplers.windows; r.senses.o.samplers.windows = async () => 'Front app: loginwindow. Open: TextEdit — note.';
+  await r.senses.sample(); assert.strictEqual(r.w.glances, 0); r.senses.o.samplers.windows = orig;
+});

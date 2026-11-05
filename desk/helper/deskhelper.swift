@@ -586,7 +586,9 @@ func cmdGlance(per: Int, max: Int) -> Never {
     let winFn: WinImageFn? = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGWindowListCreateImage").map { unsafeBitCast($0, to: WinImageFn.self) }
     let mainBounds = CGDisplayBounds(CGMainDisplayID())
     var out: [[String: Any]] = [], frontSkipped = false, n = 0
+    let t0 = Date(), budget = 2.5   // seconds for the whole glance: a slow capture (locked screen, busy GPU) ends it early with what it has
     for w in list {
+        if Date().timeIntervalSince(t0) > budget { break }
         guard (w[kCGWindowLayer as String] as? Int ?? 1) == 0 else { continue }
         let owner = w[kCGWindowOwnerName as String] as? String ?? "", pid = w[kCGWindowOwnerPID as String] as? Int32 ?? -2
         if owner.isEmpty || skip.contains(owner) { continue }
@@ -604,12 +606,13 @@ func cmdGlance(per: Int, max: Int) -> Never {
     var ids = [CGDirectDisplayID](repeating: 0, count: 8), cnt: UInt32 = 0
     if CGGetActiveDisplayList(8, &ids, &cnt) == .success {
         for d in ids.prefix(Int(cnt)) where d != CGMainDisplayID() {
+            if Date().timeIntervalSince(t0) > budget { break }
             if let sym = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGDisplayCreateImage"), let img = unsafeBitCast(sym, to: DisplayImageFn.self)(d)?.takeRetainedValue() {
                 out.append(["app": "", "title": "display \(d)", "text": smallOcr(img, per: per * 2), "how": "display", "display": "other"])
             }
         }
     }
-    emit(["items": out, "displays": Int(cnt)] as [String: Any])
+    emit(["items": out, "displays": Int(cnt), "ms": Int(Date().timeIntervalSince(t0) * 1000)] as [String: Any])
 }
 
 // MARK: - main
