@@ -102,7 +102,7 @@ async function quiet() {
 
 async function runTask(win, task, n) {
   const q = QUIET_S > 0 ? await quiet() : { waitS: 0, quiet: null };
-  await ready();
+  if (!(await ready())) { console.log('brain down for 30 min (sleep or a stop): bench stops here, no row written'); app.exit(3); await new Promise(() => {}); }
   const foreign0 = foreignCount();
   state = Sites.newState(new Date());
   // offscreen: an on-screen window on a Mac whose display sleeps drops every sendInputEvent click (seen on the M1: no mousedown at all)
