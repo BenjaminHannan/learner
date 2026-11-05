@@ -1789,7 +1789,12 @@ const aoHold = new HoldWhileBusy({
     const id = mainChatId(); m.threadId = id;
     if (!id) return;
     const t = store.loadThread(id);
-    if (t) { t.items.push({ t: 'assistant', text: m.text, ts: Date.now(), alwaysOn: true, sayId: m.id }); store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
+    // Ben Nov 4 (M1 test): these went to the chat view only, so asked "how do you know that?" Glim said it had no record of saying it.
+    // Now the model's history holds it too, tagged as said unprompted from what the loop noticed.
+    const at = new Date(), hh = at.getHours() % 12 || 12, mm = String(at.getMinutes()).padStart(2, '0'), ap = at.getHours() < 12 ? 'AM' : 'PM';
+    if (t) { t.items.push({ t: 'assistant', text: m.text, ts: Date.now(), alwaysOn: true, sayId: m.id });
+      if (Array.isArray(t.messages)) t.messages.push({ role: 'assistant', content: "(Said on my own at " + hh + ':' + mm + ' ' + ap + ", from what I noticed on Ben's screen or mic; he did not ask.) " + m.text });
+      store.saveThread(t); send('threads:changed', {}); if (openThreadId === id) send('open-thread', id); }
   }
 });
 const aoVoice = new GlimVoice.Voice({
