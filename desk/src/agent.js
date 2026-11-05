@@ -591,7 +591,8 @@ class Agent {
       this.taskToolDefs = this.diet ? Kit.dietTools(this.toolDefs()) : null; this.sysPrompt = this.diet ? Kit.dietSystem(SYSTEM_PROMPT) : SYSTEM_PROMPT;
       this.pins = Kit.on(s0, 'pins') && !this.o.helperId && !(opts && opts.hidden);
       this.stuckOn = Kit.on(s0, 'stuck'); this.stuckTries = 0; }
-    try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
+    // notes by relevance (connect-20261105 #3): the saved notes closest to this message when they do not all fit
+    try { this.memBlock = this.o.memory ? this.o.memory.block(String(userText || '')) : ''; } catch (e) { this.memBlock = ''; }
     try { const tb = this.o.tracking ? this.o.tracking.block() : ''; if (tb) this.memBlock += (this.memBlock ? '\n' : '') + tb; } catch (e) { /* no tracking block */ }
     this.threadId = thread.id;
     this.researchEvidence = new EvidenceRegistry({

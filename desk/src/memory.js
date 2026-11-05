@@ -66,6 +66,54 @@ function overlap(a, b) {
 }
 const norm = (s, n) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n);
 
+// ---- notes by relevance (connect-20261105 #3; settings.notesByRelevance, default on) ------------------------------------------
+// Off = exactly the old behaviour: notes are DELETED (oldest Glim note first) once the personal notes pass MAX_CHARS, and the prompt
+// gets the newest MAX_CHARS. On = notes are kept up to STORE_FACTS / STORE_CHARS, and the prompt still gets at most MAX_CHARS:
+// Ben's own lines first, then the notes closest to his message, then the newest, plus one line saying how many were left out.
+// While everything fits, the prompt text is byte-identical to the old one (same cache, same behaviour). Pure, cheap, no model.
+// Measured offline: ~/learner-ops/connect-lab-20261105/notes (MARKS-N1-v1.md, RESULTS-N1-v1.md).
+const STORE_FACTS = 1000, STORE_CHARS = 60000;
+const PIN_SHARE = 0.5;       // Ben's own lines may use at most half of the prompt budget (newest kept)
+const REL_MAX = 12;          // at most this many notes chosen for closeness; the rest of the budget goes to the newest
+const QSTOP = new Set(['what', 'when', 'where', 'who', 'whom', 'why', 'how', 'which', 'my', 'me', 'mine', 'you', 'your', 'is', 'am', 'be', 'do', 'does', 'did', 'can', 'could',
+  'should', 'would', 'will', 'shall', 'a', 'an', 'to', 'of', 'in', 'on', 'at', 'by', 'it', 'its', 'again', 'remind', 'tell', 'any', 'get', 'got', 'go', 'going', 'need', 'want',
+  'know', 'please', 'there', 'some', 'up', 'out', 'just', 'now', 'today', 'tomorrow', 'week', 'next', 'last', 'thing', 'things', 'one', 'what\'s', 'when\'s', 'who\'s', 'where\'s',
+  'i\'m', 'im', 'help', 'make', 'give', 'find', 'look', 'see', 'let', 'like', 'also', 'or', 'but', 'if', 'so', 'not', 'no', 'yes', 'ok', 'hey', 'hi', 'glim']);
+const stem = (w) => w.replace(/'s$/, '').replace(/(?:ing|ed|es|s)$/, (m, i, all) => (all.length - m.length >= 4 ? '' : m));
+function relTokens(s, extraStop) {
+  const out = new Set();
+  for (const w of String(s || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/)) {
+    const t = w.replace(/^'+|'+$/g, '');
+    if (t.length < 2 || STOP.has(t) || (extraStop && QSTOP.has(t))) continue;
+    out.add(stem(t));
+  }
+  return out;
+}
+// prefix match covers chem/chemistry, bio/biology, calc/calculus (the shorter word >= 4 letters, or an exact match)
+const tokMatch = (a, b) => a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a)));
+// closeness of each note to the query: IDF-weighted share of the query's words found in the note (topic + text)
+function relScores(query, docs) {
+  const q = [...relTokens(query, true)];
+  if (!q.length) return docs.map(() => 0);
+  const toks = docs.map((d) => [...relTokens(d, false)]);
+  const df = q.map((w) => toks.reduce((n, ts) => n + (ts.some((t) => tokMatch(w, t)) ? 1 : 0), 0));
+  const idf = df.map((n) => Math.log(1 + docs.length / (1 + n)));
+  return toks.map((ts) => q.reduce((sum, w, i) => sum + (ts.some((t) => tokMatch(w, t)) ? idf[i] : 0), 0));
+}
+// lines: [{text, skill, pinned, doc (topic + text) | null}] in file order -> the chosen lines in file order + the count left out
+function selectLines(lines, query, budget) {
+  const keep = new Set(); let n = 0;
+  const take = (i) => { const len = lines[i].text.length + 1; if (keep.has(i) || n + len > budget) return false; keep.add(i); n += len; return true; };
+  for (let i = lines.length - 1; i >= 0; i--) if (lines[i].pinned && lines[i].text && n + lines[i].text.length + 1 <= budget * PIN_SHARE) take(i);
+  const idx = lines.map((l, i) => i).filter((i) => lines[i].doc && !lines[i].pinned);
+  const sc = relScores(query, idx.map((i) => lines[i].doc));
+  const ranked = idx.map((i, j) => ({ i, s: sc[j] })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s || b.i - a.i).slice(0, REL_MAX);
+  for (const r of ranked) take(r.i);
+  for (const skill of [false, true]) for (let i = lines.length - 1; i >= 0; i--) if (lines[i].doc && !!lines[i].skill === skill) take(i);
+  const left = lines.filter((l, i) => l.doc && !keep.has(i)).length;
+  return { keep, left };
+}
+
 const HEADING = '# What Glim remembers\n\nA markdown file Glim reads at the start of every chat and adds to itself. Write anything here. Notes Glim adds look like "- note | topic: x | id: y | updated: date".\n\n';
 const OLD_HEADING = '# What Glim remembers\n\nOne note per line. You can edit this file; keep the "- note | topic: x | id: y | updated: date" shape, or just write "- a note".\n\n';
 const MAX_FILE = 200000;     // the whole file, as Ben can edit it freely
@@ -100,6 +148,8 @@ const noteLine = (f) => (f.indent || '') + '- ' + f.text.replace(/\s*\|\s*/g, ' 
 const renderMd = (facts) => HEADING + facts.map(noteLine).join('\n') + '\n';
 
 function createMemory(dir, opts) {
+  // settings.notesByRelevance (main.js passes a getter; a missing getter = off, the old behaviour)
+  const byRel = () => { try { return !!(opts && typeof opts.notesByRelevance === 'function' && opts.notesByRelevance()); } catch (e) { return false; } };
   const file = path.join(dir, 'memory.md');
   const oldFile = path.join(dir, 'memory.json');
   const provenanceFile = path.join(dir, 'memory-provenance.jsonl');
@@ -167,11 +217,12 @@ function createMemory(dir, opts) {
       const cards = all.filter((f) => isCard(f) && f.explicit);
       if (cards.length > MAX_CARDS) { d.lines.splice(oldest(cards).line, 1); continue; }
       let removed = false;
+      const capF = byRel() ? STORE_FACTS : MAX_FACTS, capC = byRel() ? STORE_CHARS : MAX_CHARS;
       for (const facts of [all.filter((f) => !isCard(f) && !isSkill(f)), all.filter((f) => isSkill(f) && !isCard(f))]) {
-        if (facts.length <= MAX_FACTS && (size(facts) <= MAX_CHARS || facts.length <= 1)) continue;
+        if (facts.length <= capF && (size(facts) <= capC || facts.length <= 1)) continue;
         const mine = facts.filter((f) => f.explicit), hand = facts.filter((f) => !f.explicit);
         // Hand-written bullets are never evicted, even when they alone exceed the cap.
-        if (!mine.length || hand.length > MAX_FACTS || size(hand) > MAX_CHARS) continue;
+        if (!mine.length || hand.length > capF || size(hand) > capC) continue;
         d.lines.splice(oldest(mine).line, 1);
         removed = true; break;
       }
@@ -276,7 +327,7 @@ function createMemory(dir, opts) {
   }
 
   // The whole file for the model: Ben's headings and paragraphs as written, notes as "- topic: text", capped at MAX_CHARS (newest lines kept).
-  function digest() {
+  function digest(query) {
     let text = readRaw().text;
     for (const h of [HEADING, OLD_HEADING]) if (text.startsWith(h)) { text = text.slice(h.length); break; }
     const out = [];
@@ -285,9 +336,18 @@ function createMemory(dir, opts) {
       if (f && isCard(f)) continue;
       const s = f ? '- ' + (f.topic ? f.topic + ': ' : '') + f.text : line.replace(/\s+$/, '');
       if (!s && (!out.length || !out[out.length - 1].text)) continue;
-      out.push({ text: s, skill: !!(f && f.explicit && isSkill(f)) });
+      out.push({ text: s, skill: !!(f && f.explicit && isSkill(f)), pinned: !f || !f.explicit, doc: f ? (f.topic ? f.topic + ' ' : '') + f.text : null });
     }
     while (out.length && !out[out.length - 1].text) out.pop();
+    // notes by relevance: only when the notes do not all fit (while they fit, the text below is unchanged)
+    if (byRel() && out.reduce((t, l) => t + l.text.length + 1, 0) > MAX_CHARS) {
+      const note = (k) => '(' + k + ' more saved note' + (k === 1 ? ' is' : 's are') + ' not shown here because they look unrelated to this message; they come back when a message is about them.)';
+      const { keep, left } = selectLines(out, query, MAX_CHARS - note(999).length - 1);
+      const chosen = out.filter((_, i) => keep.has(i)).map((l) => l.text);
+      const tidy = []; for (const t of chosen) if (t || (tidy.length && tidy[tidy.length - 1])) tidy.push(t);
+      while (tidy.length && !tidy[tidy.length - 1]) tidy.pop();
+      return tidy.join('\n') + (left ? '\n' + note(left) : '');
+    }
     // Keep the newest core/manual lines first, then fit the newest research lines into
     // the remaining budget. Output stays in file order, as before.
     let n = 0;
@@ -357,11 +417,12 @@ function createMemory(dir, opts) {
     delete: (id) => forget({ id }),
     save, forget,
     // The saved notes for the newest user turn ('' when empty).
-    block() {
-      const body = digest();
+    // query = Ben's message (notes by relevance); ignored while everything fits or the setting is off
+    block(query) {
+      const body = digest(query);
       return body ? HEADER + '\n' + body : '';
     }
   };
 }
 
-module.exports = { MAX_CARDS, isCard, isSkill, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };
+module.exports = { selectLines, relScores, STORE_FACTS, STORE_CHARS, MAX_CARDS, isCard, isSkill, createMemory, looksSecret, refusal, highEntropyToken, MAX_FORGET, overlap, MAX_FACTS, MAX_CHARS, HEADER, SECRET_MSG };

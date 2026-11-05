@@ -2577,7 +2577,8 @@ app.whenReady().then(async () => {
   if (!gotLock) return;
   applyPresetDefaults(Platform.defaultPreset(process.platform, PLATFORM_OPTS));
   store = new Store(app.getPath('userData'));
-  memory = createMemory(app.getPath('userData'));
+  // connect-20261105 #3: notes kept past 6,000 chars and chosen by closeness to Ben's message (settings.notesByRelevance, default on)
+  memory = createMemory(app.getPath('userData'), { notesByRelevance: () => store.getSettings().notesByRelevance !== false });
   tracking = createTracking(app.getPath('userData'));
   rhythm = new Rhythm(path.join(app.getPath('userData'), 'rhythm.json'));
   try { powerMonitor.on('resume', () => urlGuard.clear()); } catch (e) { /* not on this platform */ }   // a dead site before the Mac slept may be back
