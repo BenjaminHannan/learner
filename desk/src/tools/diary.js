@@ -1,5 +1,7 @@
 'use strict';
 // Minimal stdio MCP client (newline-delimited JSON-RPC) for diary_mcp.py.
+// ONE-GLIM (2026-11-05): with the default diary path and opts.glimProbe given, when the one "Glim" process answers with
+// parts.diary, the same JSON-RPC messages go to Glim's POST /diary (opts.glimRpc) instead of a Python child of Desk.
 const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
@@ -18,8 +20,10 @@ function resolvePaths(settings) {
 }
 
 class Diary {
-  constructor(getSettings) {
+  constructor(getSettings, opts) {
     this.getSettings = getSettings;
+    this.opts = opts || {};
+    this.glim = false;
     this.proc = null;
     this.nextId = 1;
     this.pending = new Map();
@@ -29,6 +33,24 @@ class Diary {
 
   _start() {
     if (this.ready) return this.ready;
+    const s = this.getSettings();
+    if (this.opts.glimProbe && this.opts.glimRpc && !s.diaryPath) {
+      // Glim's diary is stateless (no initialize needed). A Glim that is expected (its pid file exists) but restarting still counts:
+      // calls fail until it is back instead of a second diary process starting for the rest of the app's life.
+      this.ready = Promise.resolve(this.opts.glimProbe()).catch(() => null).then((parts) => {
+        const expected = !!(this.opts.glimExpected && this.opts.glimExpected());
+        if (!(parts && parts.diary) && !(parts === null && expected)) { this.ready = null; return this._spawnStart(); }
+        this.glim = true;
+        return true;
+      });
+      return this.ready;
+    }
+    return this._spawnStart();
+  }
+
+  _spawnStart() {
+    if (this.ready) return this.ready;
+    this.glim = false;
     const { diary, py } = resolvePaths(this.getSettings());
     this.ready = new Promise((resolve, reject) => {
       if (!fs.existsSync(diary)) return reject(new Error('diary_mcp.py not found at ' + diary));
@@ -67,9 +89,20 @@ class Diary {
     this.ready = null;
   }
 
-  _send(o) { this.proc.stdin.write(JSON.stringify(o) + '\n'); }
+  _send(o) {
+    if (this.glim) { this.opts.glimRpc(o, 5000).catch(() => { /* a lost notification is harmless */ }); return; }
+    this.proc.stdin.write(JSON.stringify(o) + '\n');
+  }
 
   _rpc(method, params, timeoutMs) {
+    if (this.glim) {
+      const id = this.nextId++;
+      return this.opts.glimRpc({ jsonrpc: '2.0', id, method, params }, timeoutMs || 30000).then((m) => {
+        if (!m) throw new Error('empty diary reply');
+        if (m.error) throw new Error(m.error.message || 'MCP error');
+        return m.result;
+      });
+    }
     return new Promise((resolve, reject) => {
       const id = this.nextId++;
       const t = setTimeout(() => { this.pending.delete(id); reject(new Error('diary timed out')); }, timeoutMs || 30000);
@@ -94,7 +127,7 @@ class Diary {
     }
   }
 
-  stop() { const p = this.proc; if (p) this._fail(new Error('diary stopped')); try { p && p.kill(); } catch (e) { /* ignore */ } }   // its calls fail now, not after their timeout
+  stop() { this.glim = false; const p = this.proc; if (p) this._fail(new Error('diary stopped')); try { p && p.kill(); } catch (e) { /* ignore */ } }   // its calls fail now, not after their timeout
 }
 
 module.exports = { Diary, resolvePaths };

@@ -8,6 +8,9 @@
 //   2. ~/learner-ops/stt/.venv/bin/python with HF_HOME=~/learner-ops/stt/hf
 //   3. <userData>/voice/.venv/bin/python with HF_HOME=<userData>/voice/hf (made by the "Get voice" installer, runtime/voiceinstall.js)
 //   4. the managed runtime python (sleep installer)
+// ONE-GLIM (2026-11-05): when the caller passes glimProbe and the one "Glim" process answers with parts.stt, Desk uses Glim's
+// built-in server (same API, fixed URL o.glimUrl) and starts no Python of its own. Once Glim has been seen, a Glim that does not
+// answer (the watchdog is restarting it) is an error to retry, not a reason to start a second speech model.
 // TODO (Windows): same server, with an ONNX / llama.cpp build of the model; the protocol is unchanged.
 const fs = require('fs');
 const path = require('path');
@@ -49,6 +52,7 @@ class Stt {
     this.spawn = this.o.spawn || ((cmd, args, opts) => nodeSpawn(cmd, args, opts));
     this.hasMlx = this.o.hasMlx || hasMlxReal;
     this.child = null; this.pending = null; this.url = null;
+    this.glimProbe = this.o.glimProbe || null; this.glimSeen = !!(this.o.glimExpected && this.o.glimExpected()); this.attached = false;
   }
   script() { return scriptPath(this.o.resourcesPath, this.o.devRoot || path.join(__dirname, '..'), this.exists); }
 
@@ -70,8 +74,17 @@ class Stt {
   // Resolves to the server URL, starting it if needed; rejects with an Error whose message is shown to the user as is.
   ensure() {
     if (this.url && this.child) return Promise.resolve(this.url);
-    if (!this.pending) this.pending = this._start().finally(() => { this.pending = null; });
+    if (!this.pending) this.pending = (this.glimProbe ? this._glim() : this._start()).finally(() => { this.pending = null; });
     return this.pending;
+  }
+
+  async _glim() {
+    let parts = null;
+    try { parts = await this.glimProbe(); } catch (e) { parts = null; }
+    if (parts && parts.stt) { this.glimSeen = true; this.attached = true; this.url = this.o.glimUrl || 'http://127.0.0.1:18083'; return this.url; }
+    this.attached = false; this.url = null;
+    if (this.glimSeen) throw new Error('Glim is restarting. Try again in a minute.');
+    return this._start();
   }
 
   async _start() {
@@ -117,7 +130,7 @@ class Stt {
   }
 
   stop() {
-    const c = this.child; this.child = null; this.url = null;
+    const c = this.child; this.child = null; this.url = null; this.attached = false;   // Glim's own server is never stopped from here
     if (this.starting) { this.stopped = true; try { this.starting.kill(); } catch (e) { /* gone */ } this.starting = null; }
     if (!c) return;
     try { c.stdin && c.stdin.end && c.stdin.end(); } catch (e) { /* closed */ }

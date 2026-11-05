@@ -1190,7 +1190,7 @@ async function callAsk(text, { onDelta, signal }) {
 }
 // Local speech to text (src/stt.js): one LFM3-Audio server for the whole app, started on the first call / dictation.
 let sttSrv = null;
-const getStt = () => sttSrv || (sttSrv = new (require('./src/stt').Stt)({ resourcesPath: process.resourcesPath, devRoot: __dirname, voiceDir: voiceDir(), managedPython: () => { try { return sleepInstaller && sleepInstaller.pythonExe(); } catch (e) { return null; } } }));
+const getStt = () => sttSrv || (sttSrv = new (require('./src/stt').Stt)({ glimProbe: () => require('./src/glimside').probe(), glimExpected: () => require('./src/glimside').expected(), glimUrl: require('./src/glimside').sideUrl(), resourcesPath: process.resourcesPath, devRoot: __dirname, voiceDir: voiceDir(), managedPython: () => { try { return sleepInstaller && sleepInstaller.pythonExe(); } catch (e) { return null; } } }));
 const voiceDir = () => require('path').join(app.getPath('userData'), 'voice');
 let voiceInstaller = null;
 const getVoiceInstaller = () => voiceInstaller || (voiceInstaller = new (require('./src/runtime/voiceinstall').VoiceInstaller)({ dir: voiceDir(), onProgress: (p) => send('voice:install-progress', p) }));
@@ -1862,8 +1862,11 @@ function aoEyes() {
   const s0 = store.getSettings();
   const py = s0.eyesPython || path.join(os.homedir(), 'learner-ops', 'nb2-venv', 'bin', 'python');
   const script = path.join(__dirname, 'tools', 'glim_eyes.py');
-  const worker = new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
+  const own = new EyesMod.EyesWorker({ log: (m) => console.log('[eyes]', m),
     spawn: () => require('child_process').spawn(py, ['-I', script, 'serve'], { stdio: ['pipe', 'pipe', 'pipe'], cwd: os.tmpdir() }) });
+  // ONE-GLIM: the one Glim process hosts the eyes too (POST /eyes on :18083); the spawned worker is only for a Mac without Glim
+  const GS = require('./src/glimside');
+  const worker = s0.eyesPython ? own : new GS.GlimEyesWorker({ inner: own, probe: () => GS.probe(), expected: () => GS.expected(), post: (m, t) => GS.post('/eyes', m, t) });
   aoEyesObj = new EyesMod.Eyes({ userData: aoDir(), worker, isPrivate: SensesMod.isPrivate, log: (m) => console.log('[eyes]', m),
     on: () => store.getSettings().glimCanSee === true && process.platform === 'darwin' && !E2E,
     keepEvidence: () => store.getSettings().keepSenseEvidence === true,
@@ -2676,7 +2679,7 @@ app.whenReady().then(async () => {
   if (E2E) e2eEnv = await require('./test/e2e.js').prepare(store);
   resetModelToDefault();
   applyTheme(store.getSettings());
-  diary = new Diary(() => store.getSettings());
+  diary = new Diary(() => store.getSettings(), { glimProbe: () => require('./src/glimside').probe(), glimRpc: (m, t) => require('./src/glimside').diaryRpc(m, t), glimExpected: () => require('./src/glimside').expected() });
   buildMenu();
   if (FEATURES.tray && Platform.startedHidden(process.platform, process.argv)) ensureTray();
   buildAgent();
