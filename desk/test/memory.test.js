@@ -123,7 +123,9 @@ test('memory: the block is a snapshot written into the stored user turn when the
     assert.strictEqual(r2[1].content, users[0].content);                         // the old turn is byte-identical (no cello in it)
     assert.ok(!r2[1].content.includes('cello'));
     const second = r2.filter((x) => x.role === 'user').at(-1).content;
-    assert.match(second, /^Saved notes about Ben[\s\S]*cello[\s\S]*second$/);   // the new turn snapshots the new list
+    // PROMPT-DIET D1: the first turn's full copy is still in the window, so the new turn holds only the new note
+    assert.match(second, /^More saved notes about Ben[^\n]*\n- music: Ben plays cello\n[\s\S]*second$/);
+    assert.ok(!second.includes('AP Chem'));
   } finally { gw.close(); }
 });
 

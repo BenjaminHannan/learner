@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS = {
   agentKit: [],           // AGENT1 (src/agentkit.js): measured harness changes that are on ('all' or names like 'sso'); empty = DEFAULTS there
   helperMode: 'hands-off', // autonomy for helper agents
   maxSteps: 0,            // model calls per task before Glim stops and asks; 0 = no limit (Ben Oct 28: threads are unlimited)
+  ctxPlan: 1,             // settings migration marker: 1 = the Mac assistant's old 12000 chat window moved to 6000 (PROMPT-DIET)
   stepsPlan: 2,           // settings migration marker: 1 = the old 40-step default moved to no limit; 2 = runs at once moved to no limit
   contextTokens: Platform.defaultPreset(process.platform).contextTokens, // past this the model reads a summary of the older part of a chat plus the recent part (agent.js trimWindow)
   compactTokens: Platform.defaultPreset(process.platform).compactTokens, // history size that triggers compaction (small local models have small context)
@@ -162,6 +163,9 @@ class Store {
       // a number Ben picks in Settings afterwards sticks.
       if ((raw.stepsPlan || 0) < 1 && raw.maxSteps === 40) raw.maxSteps = 0;
       if ((raw.stepsPlan || 0) < 2) { raw.maxParallel = 0; raw.stepsPlan = 2; }
+      // PROMPT-DIET (Nov 5): the Mac assistant's chat window moved from 12000 to 6000 estimated tokens (a 10.8k-token request took 113 s to the
+      // first word). A file still holding the old preset value moves once; a number Ben picks in Settings afterwards sticks.
+      if ((raw.ctxPlan || 0) < 1) { if (raw.contextTokens === 12000 && DEFAULT_SETTINGS.contextTokens === 6000) raw.contextTokens = 6000; raw.ctxPlan = 1; }
       return { ...DEFAULT_SETTINGS, ...raw, uses: cleanUses(raw.uses) };
     } catch (e) { return { ...DEFAULT_SETTINGS, uses: [] }; }
   }
