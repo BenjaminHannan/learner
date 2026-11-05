@@ -236,7 +236,7 @@ const LEARN_ANGLES = ['core concepts and how they connect', 'worked examples and
 const LEARN_CITATION = 'For each memory_save, set source_read_id to the Source read ID from browser_read and source_quote to an exact 12–600 character excerpt visible in that read. Set expires to YYYY-MM-DD when relevant. Keep URLs out of fact text. ';
 const LEARN_MOTE = (topic, angle) => 'Go learn: ' + topic + (angle ? ', focusing on ' + angle : '') + '. Each run, dig into something new and never repeat a note you already saved. Work quietly and do not report to Ben. 1) Research it: search the web and read 3 to 5 good sources. '
   + LEARN_CITATION + '2) Save what you learn with memory_save, topic "skill: <short name>": 5 to 8 short, true notes, each with its source and an expiry if it can go stale. Also save each concrete fact as its own card (topic "card", "Subject => relation => Object"). Never save a guess. '
-  + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots. 4) Study the weak spots once more. Saved notes may be eligible for training during sleep; do not claim training happened without evidence. Finish with exactly: NO_UPDATE\n';
+  + '3) Test yourself: write 5 practice questions, answer them from your notes, check against a source, and save one note with the score and weak spots that starts with "SELF-TEST: <right>/<asked>". 4) Study the weak spots once more. Saved notes may be eligible for training during sleep; do not claim training happened without evidence. Finish with exactly: NO_UPDATE\n';
 // Learn mode: "go learn X" sends Motes off to study quietly (different angles, repeating, stopping at the end time); sleep trains their cards in.
 function startLearn(topic, count, hours) {
   topic = String(topic || '').trim().slice(0, 200);
@@ -1121,7 +1121,7 @@ function buildAgent() {
     store,
     hold: sleepHold,
     yieldTo: benBusy,
-    runner: createRunner({ store, makeAgent: makeHelperAgent }),
+    runner: createRunner({ store, makeAgent: makeHelperAgent, outcomesFile: path.join(app.getPath('userData'), 'mote-outcomes.jsonl') }),
     onChange: () => send('helpers:changed', helpers.list()),
     onFinish: (h, summary, parent, flags) => {
       // always-on: a Learn Mote's findings join the inbox (web sense; its notes are already saved for sleep by memory_save)

@@ -492,7 +492,31 @@ class Helpers {
 
 // Runner used by the app (and the tests): a helper run is one Agent run in the helper's own thread.
 // makeAgent(h, {onState}) -> {agent, dispose}
-function createRunner({ store, makeAgent }) {
+// Lessons v3 (2026-11-05, aon-notes/lessons-20261105 MARKS addendum v3): one outcome record per Mote run, so sleep can score a
+// run by what it left behind (end marker, checked saves, self-test) instead of guessing from its trace. Logging only.
+const SELFTEST_RE = /SELF-TEST:\s*(\d+)\s*\/\s*(\d+)/i;
+function runOutcome(h, items, res, t0, t1) {
+  const saves = { ok: 0, attributed: 0, unattributed: 0, maybe: 0, failed: 0, notes: [] };
+  let selftest = null;
+  for (const it of items) {
+    if (!it || it.t !== 'step' || it.tool !== 'memory_save') continue;
+    const sum = String(it.summary || '');
+    let fact = ''; try { const a = typeof it.args === 'string' ? JSON.parse(it.args) : it.args; fact = String(a && a.fact || ''); } catch (e) { fact = String(it.args || ''); }
+    const m = SELFTEST_RE.exec(fact) || SELFTEST_RE.exec(sum);
+    if (m && +m[2] > 0) selftest = { right: Math.min(+m[1], +m[2]), asked: +m[2] };
+    if (it.ok === false) { saves.failed++; continue; }
+    if (/source attributed/i.test(sum)) saves.attributed++;
+    else if (/source unattributed/i.test(sum)) saves.unattributed++;
+    else if (/^Noted to check/i.test(sum)) saves.maybe++;
+    else saves.ok++;
+    saves.notes.push(fact.slice(0, 200));
+  }
+  const report = String(res && res.report || '');
+  const ended = res && res.error ? 'error' : res && res.stopped ? 'stopped' : /\bNO_UPDATE\b/.test(report) ? 'marker' : report.trim() ? 'report' : 'none';
+  return { helperId: h.id, name: h.name, threadId: h.threadId, runStartTs: t0, runEndTs: t1, learn: h.learnResearch === true, ended, saves, selftest };
+}
+
+function createRunner({ store, makeAgent, outcomesFile }) {
   return async (h, text, { signal, onState, attach }) => {
     const thread = store.loadThread(h.threadId) || { ...store.newThread(), id: h.threadId, title: 'Glim: ' + h.name, helper: h.id };
     thread.messages = []; delete thread.ctxFrom; delete thread.ctxSummary; delete thread.ctxNote; // fresh context per run; the last report rides in the message
@@ -501,12 +525,17 @@ function createRunner({ store, makeAgent }) {
     if (signal.aborted) return { stopped: true };
     const made = await makeAgent(h, { onState });
     attach(made.agent, thread);
+    const n0 = (thread.items || []).length, t0 = Date.now();
     const onAbort = () => made.agent.stop();
     if (signal.aborted) onAbort(); else signal.addEventListener('abort', onAbort, { once: true });
     let r;
     try { r = await made.agent.run(thread, text, { display: 'Run at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ' (' + short(h.task, 90) + ')' }); } finally { try { made.dispose && made.dispose(); } catch (e) { /* ignore */ } }
-    return { report: lastAssistantText(thread.messages), stopped: !!(r && r.stopped), error: r && r.error };
+    const res = { report: lastAssistantText(thread.messages), stopped: !!(r && r.stopped), error: r && r.error };
+    if (outcomesFile) {   // never breaks a run
+      try { require('fs').appendFileSync(outcomesFile, JSON.stringify(runOutcome(h, (thread.items || []).slice(n0), res, t0, Date.now())) + '\n'); } catch (e) { /* ignore */ }
+    }
+    return res;
   };
 }
 
-module.exports = { Helpers, Limiter, ScreenLock, createRunner, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, fmtWhenRel, addNotice, takeNotices, helperText, batchNotice, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };
+module.exports = { Helpers, Limiter, ScreenLock, createRunner, runOutcome, parseSchedule, parseEvery, parseAt, nextRun, fmtWhen, fmtWhenRel, addNotice, takeNotices, helperText, batchNotice, lastAssistantText, short, MIN_EVERY_MS, MAX_HELPERS };
