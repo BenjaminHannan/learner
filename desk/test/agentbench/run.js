@@ -84,9 +84,14 @@ async function ready() {
 // the count of other requests is recorded as `foreign` (> 0 = contaminated, re-run once).
 const GWLOG = path.join(os.homedir(), 'learner-ops/assistant/run/gateway.log');
 const BENCH_SYS = (() => { const P = require('../../src/prompt'); const out = new Set([String(P.SYSTEM_PROMPT).length]); try { out.add(require('../../src/agentkit').dietSystem(P.SYSTEM_PROMPT).length); } catch (e) { /* older tree */ } return out; })();
-function foreignCount() {
+// Addendum 4: only BIG foreign requests (> FOREIGN_BIG chars before prepare: Ben's chat steps) gate and contaminate; the app's steady
+// small background calls (system 373 / 1110, ~1-2k chars, several a minute) never stop, so they are part of every condition and
+// are only counted (smallForeign).
+const FOREIGN_BIG = 8000;
+function foreignCount(small) {
   let n = 0;
-  try { for (const l of fs.readFileSync(GWLOG, 'utf8').split('\n')) { if (!l.startsWith('size:')) continue; const m = l.match(/system=(\d+)/); if (/^size: user=2 tools=2 msgs=1\b/.test(l)) continue; if (m && BENCH_SYS.has(+m[1])) continue; n++; } } catch (e) { /* no log */ }
+  try { for (const l of fs.readFileSync(GWLOG, 'utf8').split('\n')) { if (!l.startsWith('size:')) continue; const m = l.match(/system=(\d+)/); if (/^size: user=2 tools=2 msgs=1\b/.test(l)) continue; if (m && BENCH_SYS.has(+m[1])) continue;
+    const c = +((l.match(/before prepare: (\d+) chars/) || [])[1] || 0); if (small ? c <= FOREIGN_BIG : c > FOREIGN_BIG) n++; } } catch (e) { /* no log */ }
   return n;
 }
 const QUIET_S = Number(arg('quiet', 180)), QUIET_MAX_S = Number(arg('quietMax', 1800));
@@ -103,7 +108,7 @@ async function quiet() {
 async function runTask(win, task, n) {
   const q = QUIET_S > 0 ? await quiet() : { waitS: 0, quiet: null };
   if (!(await ready())) { console.log('brain down for 30 min (sleep or a stop): bench stops here, no row written'); app.exit(3); await new Promise(() => {}); }
-  const foreign0 = foreignCount();
+  const foreign0 = foreignCount(), small0 = foreignCount(true);
   state = Sites.newState(new Date());
   // offscreen: an on-screen window on a Mac whose display sleeps drops every sendInputEvent click (seen on the M1: no mousedown at all)
   const ow = new BrowserWindow({ show: false, width: 1280, height: 860, webPreferences: { offscreen: true, partition: 'persist:desk', backgroundThrottling: false, sandbox: true, contextIsolation: true } });
@@ -193,11 +198,11 @@ async function runTask(win, task, n) {
   const replans = said.filter((t) => extractPlan(t) || /(^|\n)\s*(\*\*)?plan\b\s*(\*\*)?\s*:/i.test(t)).length + items.filter((i) => i.t === 'plan').length;
   const leaks = said.filter((t) => TOOL_RE.test(t)).length + tr.askLog.filter((x) => TOOL_RE.test(x.q)).length;
   const reqs = REQS.slice(reqStart);
-  tr.foreign = Math.max(0, foreignCount() - foreign0);
+  tr.foreign = Math.max(0, foreignCount() - foreign0); tr.smallForeign = Math.max(0, foreignCount(true) - small0);
   tr.calls = calls; tr.blank = thread.messages.slice(msgStart).some((m) => m.role === 'assistant' && typeof m.content === 'string' && /\s{40,}$/.test(m.content)) || REQS.slice(reqStart).some((r) => r.blankRun);
   let ok = false; try { ok = !!task.score(state, answer, tr); } catch (e) { ok = false; }
   const out = { label: LABEL, task: task.id, kind: task.kind, run: n, ok, secs: Math.round(secs), modelCalls: reqs.length, toolCalls: calls.length, replans, leaks, repeats,
-    asks: tr.asks, blank: !!tr.blank, foreign: tr.foreign, quietWaitS: q.waitS, quietOk: q.quiet, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, hung: !!tr.hung, error: res && res.error || null,
+    asks: tr.asks, blank: !!tr.blank, foreign: tr.foreign, smallForeign: tr.smallForeign, quietWaitS: q.waitS, quietOk: q.quiet, unavailable: tr.unavailable.length, timedOut: !!tr.timedOut, hung: !!tr.hung, error: res && res.error || null,
     maxReqTokens: Math.max(0, ...reqs.map((r) => r.estTokens)), over8192: reqs.filter((r) => r.estTokens > 8192).length,
     maxToolResult: Math.max(0, ...reqs.map((r) => r.maxToolResult)), toolChars: reqs.length ? reqs[0].toolChars : 0, sysChars: reqs.length ? reqs[0].sysChars : 0,
     calls: calls.map((c) => c.name + ' ' + c.args), said,
