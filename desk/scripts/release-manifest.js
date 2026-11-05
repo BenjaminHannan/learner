@@ -50,7 +50,13 @@ function entry(name) {
   } else if (bytes !== st.size || blobOid !== oid) throw new Error(name + ' does not match its committed Git blob');
   return { url: RAW + name, sha256: digest, size: st.size };
 }
-const m = { version, notes: process.argv.slice(2).join(' ').slice(0, 300), mac: entry('Premonition-mac-arm64.zip'), win: entry('Premonition-win32-x64.zip') };
-if (!m.mac && !m.win) throw new Error('no zips in dist/');
-fs.writeFileSync(path.join(dist, 'latest.json'), JSON.stringify(m, null, 2) + '\n');
-console.log('wrote dist/latest.json for version ' + version + ' using artifact commit ' + commit);
+// --winamd: the Radeon/Nanbeige Windows build has its own feed (latest-winamd.json, key "winamd"; src/updater.js), so the
+// friend's PC never takes the LFM3 "win" zip from latest.json, and Mac/LFM3 users never take this one.
+const winamd = process.argv[2] === '--winamd';
+const notes = process.argv.slice(winamd ? 3 : 2).join(' ').slice(0, 300);
+const m = winamd ? { version, notes, winamd: entry('Premonition-winamd-x64.zip') }
+  : { version, notes, mac: entry('Premonition-mac-arm64.zip'), win: entry('Premonition-win32-x64.zip') };
+if (winamd ? !m.winamd : (!m.mac && !m.win)) throw new Error(winamd ? 'no dist/Premonition-winamd-x64.zip' : 'no zips in dist/');
+const feed = winamd ? 'latest-winamd.json' : 'latest.json';
+fs.writeFileSync(path.join(dist, feed), JSON.stringify(m, null, 2) + '\n');
+console.log('wrote dist/' + feed + ' for version ' + version + ' using artifact commit ' + commit);

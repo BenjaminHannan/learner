@@ -101,4 +101,20 @@ else
   python3 -c "import shutil,sys; shutil.make_archive(sys.argv[1], 'zip', sys.argv[2], sys.argv[3])" "${ZIP%.zip}" "$OUT" "$NAME-win32-x64"
 fi
 ls -l "$ZIP"
-echo "Done: $ZIP  (unzip anywhere on the PC, run $NAME-win32-x64\\$NAME.exe)"
+
+# One file for the friend: Premonition-Setup.exe carries the zip inside it, unpacks it to %LOCALAPPDATA%\Programs\Premonition,
+# adds "Glim" to the Desktop and Start menu and starts the app (helper/win/setup/GlimSetup.cs). Same compiler as deskhelper.exe.
+SETUP="$PWD/build/$NAME-Setup.exe"
+FW="$PWD/build/refs/build/.NETFramework/v4.8"
+if command -v mcs >/dev/null 2>&1 && [[ -f "$FW/System.IO.Compression.dll" ]]; then
+  echo "==> setup exe"
+  rm -f "$SETUP"
+  mcs -target:winexe -platform:x64 -optimize+ -nostdlib -out:"$SETUP" -lib:"$FW" \
+    -r:mscorlib.dll -r:System.dll -r:System.Core.dll -r:System.Drawing.dll -r:System.Windows.Forms.dll -r:System.IO.Compression.dll \
+    -resource:"$ZIP",app.zip $( [[ -f build/icon.ico ]] && echo -win32icon:build/icon.ico ) helper/win/setup/GlimSetup.cs
+  ls -l "$SETUP"
+  echo "Done: $SETUP  (send this one file; double-click it on the PC)"
+else
+  echo "WARNING: no mcs or .NET 4.8 reference assemblies; only the zip was made." >&2
+  echo "Done: $ZIP  (unzip anywhere on the PC, run $NAME-win32-x64\\$NAME.exe)"
+fi

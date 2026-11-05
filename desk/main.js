@@ -58,7 +58,7 @@ const { Rhythm } = require('./src/rhythm');
 const { NightStart, NIGHT_ARG } = require('./src/nightstart');
 const { Sleep, effectiveWindow, shouldAutoSleep, shouldAutoWake, windowKey, inWindow, wakeKey, pillLine, computeWakeAt, nightBudgetS, durationFromSetting, wakeLabel, shouldTimedWake } = require('./src/sleep');
 const { idleSummary } = require('./src/pillidle');
-const { Updater } = require('./src/updater');
+const { Updater, WINAMD_MANIFEST_URL } = require('./src/updater');
 const { Helpers, Limiter, ScreenLock, createRunner, addNotice, batchNotice, short } = require('./src/helpers');
 const { agentTools } = require('./src/tools/agents');
 const { learnFlow } = require('./src/learn');
@@ -2615,7 +2615,12 @@ app.whenReady().then(async () => {
   buildAgent();
   registerIpc();
   try { glimLogins(); } catch (e) { /* LOGIN1: no saved logins this run */ }
-  updater = new Updater({ version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
+  // Windows (Radeon/Nanbeige build): its own update list (latest-winamd.json, key "winamd"), never the LFM3 "win" entry.
+  // PREMONITION_UPDATE_MANIFEST (tests only) points at a local list; PREMONITION_UPDATE_AUTOINSTALL=1 installs without the click.
+  const upTest = process.env.PREMONITION_UPDATE_MANIFEST || '';
+  const upWin = process.platform === 'win32' ? { manifestUrl: upTest || WINAMD_MANIFEST_URL, assetKey: 'winamd', allowLoopback: !!upTest, args: process.argv.slice(1),
+    autoInstall: !!upTest && process.env.PREMONITION_UPDATE_AUTOINSTALL === '1' } : {};
+  updater = new Updater({ ...upWin, version: app.getVersion(), platform: process.platform, arch: process.arch, execPath: process.execPath, pid: process.pid, packaged: app.isPackaged && !E2E,
     onState: (st) => send('update:state', st), quit: () => { quitting = true; app.quit(); } });
   if (app.isPackaged && !E2E && store.getSettings().autoUpdateCheck !== false) updater.startTimer(30000);
   startDashboardWatch();

@@ -11,6 +11,9 @@ const crypto = require('crypto');
 const { spawn, execFile } = require('child_process');
 
 const MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/main/desk/dist/latest.json';
+// The Radeon/Nanbeige Windows build (Nov 4) has its OWN list and key, so it can never be "updated" back to the LFM3 Windows zip
+// that latest.json's "win" entry points at (1.2.4 and older). Ben publishes it next to latest.json (docs/win-amd/REPORT.md).
+const WINAMD_MANIFEST_URL = 'https://raw.githubusercontent.com/BenjaminHannan/learner/main/desk/dist/latest-winamd.json';
 const CHECK_EVERY_MS = 5 * 60 * 1000;   // Ben Oct 29: "make it so that it checks every five minutes"
 
 // "1.2.10" > "1.2.9"; anything that is not x.y.z counts as 0.0.0
@@ -21,11 +24,14 @@ function isNewer(remote, local) {
   return false;
 }
 // the zip for this computer, or null (Intel Macs and other platforms get no update)
-function pickAsset(manifest, platform, arch) {
+// o.key overrides the entry name ('winamd'); o.allowLoopback lets a local test list (PREMONITION_UPDATE_MANIFEST) serve http://127.0.0.1
+function pickAsset(manifest, platform, arch, o) {
+  o = o || {};
   if (!manifest || typeof manifest !== 'object') return null;
-  const key = platform === 'darwin' && arch === 'arm64' ? 'mac' : platform === 'win32' && arch === 'x64' ? 'win' : null;
+  const key = platform === 'darwin' && arch === 'arm64' ? 'mac' : platform === 'win32' && arch === 'x64' ? (o.key || 'win') : null;
   const a = key && manifest[key];
-  return a && /^https:\/\//.test(a.url || '') && /^[0-9a-f]{64}$/i.test(a.sha256 || '') ? a : null;
+  const okUrl = /^https:\/\//.test(a && a.url || '') || (o.allowLoopback && /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(a && a.url || ''));
+  return a && okUrl && /^[0-9a-f]{64}$/i.test(a.sha256 || '') ? a : null;
 }
 
 const shq = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'";
@@ -49,15 +55,23 @@ function macScript({ pid, app, staged, backup }) {
   ].join('\n');
 }
 // The Windows swap: wait for the app, copy the new files over the install folder, start it again.
-function winScript({ pid, dir, staged, exe }) {
+// args: only --user-data-dir=... is passed on to the new copy (so a test install keeps its own data folder)
+function winScript({ pid, dir, staged, exe, args }) {
+  const keep = (args || []).filter((a) => /^--user-data-dir=[^"%&|<>^]+$/.test(String(a))).map((a) => ' "' + a + '"').join('');
   return [
     '@echo off',
     'set PID=' + Number(pid),
+    // no pipes and no `timeout`: started hidden with no console, `tasklist | find` never ended and `timeout` fails at once (BensPC, Nov 4)
+    'set N=0',
     ':wait',
-    'tasklist /FI "PID eq %PID%" 2>NUL | find "%PID%" >NUL',
-    'if not errorlevel 1 (timeout /t 1 /nobreak >NUL & goto wait)',
+    'set /a N+=1',
+    'if %N% GTR 120 goto go',
+    'tasklist /FI "PID eq %PID%" /NH /FO CSV > "%~dp0alive.txt" 2>NUL',
+    'findstr /C:"\"%PID%\"" "%~dp0alive.txt" >NUL 2>NUL',
+    'if not errorlevel 1 (ping -n 2 127.0.0.1 >NUL & goto wait)',
+    ':go',
     'robocopy "' + staged + '" "' + dir + '" /E /R:3 /W:2 /NFL /NDL /NJH /NJS >NUL',
-    'start "" "' + path.join(dir, exe) + '"',
+    'start "" "' + path.join(dir, exe) + '"' + keep,
     ''
   ].join('\r\n');
 }
@@ -69,6 +83,8 @@ class Updater {
     this.fetch = o.fetch || ((...a) => fetch(...a));
     this.state = { phase: 'idle', current: o.version, version: null, notes: '', pct: 0, error: '', checkedAt: 0 };
     this.manifest = null; this.timer = null; this.busy = false;
+    this.url = o.manifestUrl || MANIFEST_URL;
+    this.pick = { key: o.assetKey, allowLoopback: !!o.allowLoopback };
   }
   set(patch) { this.state = { ...this.state, ...patch }; try { this.o.onState && this.o.onState(this.state); } catch (e) { /* ignore */ } }
   // where the running app lives: Mac /Applications/Premonition.app, Windows the folder holding Premonition.exe
@@ -90,11 +106,12 @@ class Updater {
     const was = this.state.phase;   // every 5 minutes: an update already on offer stays on screen while it checks again
     this.busy = true; if (was !== 'available') this.set({ phase: 'checking', error: '' });
     try {
-      const r = await this.fetch(MANIFEST_URL, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
+      const r = await this.fetch(this.url, { headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
       if (!r.ok) throw new Error('The update list answered ' + r.status);
       const m = await r.json();
       this.manifest = m;
-      const asset = pickAsset(m, this.o.platform, this.o.arch);
+      const asset = pickAsset(m, this.o.platform, this.o.arch, this.pick);
+      if (asset && isNewer(m.version, this.o.version) && this.o.autoInstall) { this.set({ phase: 'available', version: m.version, notes: '', checkedAt: Date.now() }); this.busy = false; return await this.install(); }
       if (asset && isNewer(m.version, this.o.version)) this.set({ phase: 'available', version: m.version, notes: String(m.notes || '').slice(0, 600), checkedAt: Date.now() });
       else this.set({ phase: 'idle', version: null, notes: '', checkedAt: Date.now() });
     } catch (e) {
@@ -104,8 +121,22 @@ class Updater {
     } finally { this.busy = false; }
     return this.state;
   }
+  // a finished update leaves its download (~275 MB) in the temp folder: remove ones older than 10 minutes
+  cleanOld(now) {
+    const tmp = this.o.tmp || os.tmpdir(); now = now || Date.now();
+    let n = 0;
+    try {
+      for (const d of fs.readdirSync(tmp)) {
+        if (!d.startsWith('premonition-update-')) continue;
+        const p = path.join(tmp, d);
+        try { if (now - fs.statSync(p).mtimeMs > 10 * 60 * 1000) { fs.rmSync(p, { recursive: true, force: true }); n++; } } catch (e) { /* in use */ }
+      }
+    } catch (e) { /* no temp folder */ }
+    return n;
+  }
   startTimer(firstMs) {
     this.stopTimer();
+    try { this.cleanOld(); } catch (e) { /* ignore */ }
     const tick = () => { this.check().catch(() => {}); this.timer = setTimeout(tick, CHECK_EVERY_MS); };
     this.timer = setTimeout(tick, firstMs == null ? 20000 : firstMs);
     if (this.timer.unref) this.timer.unref();
@@ -157,7 +188,7 @@ class Updater {
     const why = this.canInstall();
     if (why) { this.set({ phase: 'error', error: why }); return this.state; }
     if (this.state.phase !== 'available' || !this.manifest) { this.set({ phase: 'error', error: 'There is no update to install.' }); return this.state; }
-    const asset = pickAsset(this.manifest, this.o.platform, this.o.arch);
+    const asset = pickAsset(this.manifest, this.o.platform, this.o.arch, this.pick);
     const loc = this.location();
     this.busy = true; this.set({ phase: 'downloading', pct: 0, error: '' });
     const work = fs.mkdtempSync(path.join(this.o.tmp || os.tmpdir(), 'premonition-update-'));
@@ -180,7 +211,7 @@ class Updater {
       } else {
         const root = this.findRoot(stage, loc.exe);
         if (!root) throw new Error('The download does not contain the app.');
-        file = path.join(work, 'swap.cmd'); script = winScript({ pid: this.o.pid, dir: loc.dir, staged: root, exe: loc.exe });
+        file = path.join(work, 'swap.cmd'); script = winScript({ pid: this.o.pid, dir: loc.dir, staged: root, exe: loc.exe, args: this.o.args });
       }
       fs.writeFileSync(file, script, { mode: 0o755 });
       this.set({ phase: 'restarting' });
@@ -197,4 +228,4 @@ class Updater {
   }
 }
 
-module.exports = { Updater, parseVersion, isNewer, pickAsset, macScript, winScript, MANIFEST_URL, CHECK_EVERY_MS };
+module.exports = { Updater, parseVersion, isNewer, pickAsset, macScript, winScript, MANIFEST_URL, WINAMD_MANIFEST_URL, CHECK_EVERY_MS };

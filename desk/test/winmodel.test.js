@@ -120,3 +120,33 @@ test('sleep with an unsupported brain: not available, start refuses before any d
   assert.deepStrictEqual(events, []);
   assert.strictEqual(new WinSleep({ getSettings: () => ({}), root: tmp('winsleep-'), installer: { pythonExe: () => 'py' } }).available().ok, true);
 });
+
+// Radeon/Nanbeige build: its own update list and key, so the LFM3 Windows zip ("win", 1.2.4) can never replace it
+test('Windows updates read only the "winamd" entry; a local http list is allowed only for tests', () => {
+  const { pickAsset, winScript, WINAMD_MANIFEST_URL, MANIFEST_URL } = require('../src/updater');
+  const sha = 'a'.repeat(64);
+  const m = { version: '9.9.9', win: { url: 'https://x/old-lfm3.zip', sha256: sha }, winamd: { url: 'https://x/new.zip', sha256: sha } };
+  assert.notStrictEqual(WINAMD_MANIFEST_URL, MANIFEST_URL);
+  assert.strictEqual(pickAsset(m, 'win32', 'x64', { key: 'winamd' }).url, 'https://x/new.zip');
+  assert.strictEqual(pickAsset({ version: '9.9.9', win: m.win }, 'win32', 'x64', { key: 'winamd' }), null);
+  const local = { winamd: { url: 'http://127.0.0.1:18555/u.zip', sha256: sha } };
+  assert.strictEqual(pickAsset(local, 'win32', 'x64', { key: 'winamd' }), null);
+  assert.ok(pickAsset(local, 'win32', 'x64', { key: 'winamd', allowLoopback: true }));
+  assert.strictEqual(pickAsset({ winamd: { url: 'http://evil.example/u.zip', sha256: sha } }, 'win32', 'x64', { key: 'winamd', allowLoopback: true }), null);
+  const w = winScript({ pid: 9, dir: 'C:\\P', staged: 'C:\\t', exe: 'Premonition.exe', args: ['--user-data-dir=C:\\ud', '--evil="x" & calc'] });
+  assert.match(w, /start "" "C:\\P[\\/]Premonition\.exe" "--user-data-dir=C:\\ud"\r\n/);
+  assert.doesNotMatch(w, /calc/);
+  assert.strictEqual(require('../package.json').version.split('.')[0] >= '2', true);
+});
+
+test('old update downloads are cleaned from the temp folder', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const { Updater } = require('../src/updater');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'upclean-'));
+  const old = path.join(tmp, 'premonition-update-old'), fresh = path.join(tmp, 'premonition-update-new'), other = path.join(tmp, 'keep-me');
+  for (const d of [old, fresh, other]) fs.mkdirSync(d);
+  const t = (Date.now() - 3600e3) / 1000; fs.utimesSync(old, t, t); fs.utimesSync(other, t, t);
+  assert.strictEqual(new Updater({ version: '2.0.0', tmp }).cleanOld(), 1);
+  assert.ok(!fs.existsSync(old) && fs.existsSync(fresh) && fs.existsSync(other));
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
