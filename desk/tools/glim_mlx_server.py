@@ -187,6 +187,42 @@ MEDIA_MARK = "glim-media"   # private-use characters: never typed, never i
 
 PUBLISHED_PROJECTOR = os.path.expanduser("~/learner-ops/premonition-projectors/weights/vision_projector.safetensors")
 
+# ---- clips (vid-in, 2026-11-05): an image_features part may carry a short screen clip instead of one picture:
+#     {"type": "image_features", "image_features": {"f16": ..., "shape": [n * 64, 768], "eye": ..., "clip": {"frames": n, "times": [0, 3, ...]}}}
+# (2 <= n <= MAX_CLIP_FRAMES). It goes through the VIDEO projector (video_projector_v4, trained on BensPC on real MSR-VTT clips) in the
+# training layout "Frame 1 (t=0s):\n<64 rows>\nFrame 2 (t=3s):\n<64 rows>..." where the part was. Single pictures keep the image
+# projector. The gateway and the brain guard already pass / count image_features parts by their rows, so they need no change.
+MAX_CLIP_FRAMES = 8
+SHIPPED_VIDEO_PROJECTOR = os.path.expanduser("~/learner-ops/models/glim-video/video_projector_v4.safetensors")
+
+
+def default_video_projector(settings_file):
+    """Sense sleep's copy (userData/sense-sleep/video_projector.safetensors) when it exists, else the shipped v4 file."""
+    if settings_file:
+        p = os.path.join(os.path.dirname(os.path.expanduser(settings_file)), "sense-sleep", "video_projector.safetensors")
+        if os.path.isfile(p):
+            return p
+    return SHIPPED_VIDEO_PROJECTOR
+
+
+def clip_of(x):
+    """-> (frames, times) for a clip part, None for a single picture. Raises ValueError on a malformed clip."""
+    c = x.get("clip") if isinstance(x, dict) else None
+    if not c:
+        return None
+    n = int(c.get("frames") or 0)
+    if not 2 <= n <= MAX_CLIP_FRAMES:
+        raise ValueError("image_features: a clip has 2..%d frames, not %s" % (MAX_CLIP_FRAMES, n))
+    times = c.get("times") or [2 * k for k in range(n)]
+    if len(times) != n:
+        raise ValueError("image_features: clip times do not match its frames")
+    return n, [int(round(float(t))) for t in times]
+
+
+def clip_label(k, t):
+    """The training's frame label (premonition-projectors video.py frame_label), with its leading newline after frame 1."""
+    return ("" if k == 0 else "\n") + "Frame %d (t=%ds):\n" % (k + 1, t)
+
 
 def default_projector(settings_file):
     """The projector sense sleep trains (userData/sense-sleep/vision_projector.safetensors, next to settings.json) when it exists,
@@ -259,14 +295,21 @@ def make_seeing(model):
     return model
 
 
-def install_eyes(S, mx, projector_path, log=print, placeholder=None):
+def install_eyes(S, mx, projector_path, log=print, placeholder=None, video_projector_path=None):
     """Wire the eyes into mlx_lm.server (module S). Returns the shared state dict (tests read it)."""
     import hashlib
     import numpy as np
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import glim_eyes as E
     proj = E.load_projector(projector_path)
-    state = {"media": [], "placeholder": placeholder, "requests": 0, "projector": projector_path}
+    vproj = None
+    if video_projector_path:
+        try:
+            vproj = E.load_projector(video_projector_path)
+        except Exception as e:  # noqa: BLE001 - no video projector: a clip is seen as its last frame
+            log("[glim-eyes] no video projector (%s): clips are seen as their last frame" % e)
+    state = {"media": [], "placeholder": placeholder, "requests": 0, "projector": projector_path,
+             "video_projector": video_projector_path if vproj is not None else None, "clips": 0}
     orig_url = S._image_url
 
     def image_url(part):   # makes stock mlx_lm serve feature requests one at a time (its rule for image requests)
@@ -288,7 +331,7 @@ def install_eyes(S, mx, projector_path, log=print, placeholder=None):
     def tokenize(self, tokenizer, request, args):
         if request.request_type != "chat" or not any(features_parts(request.messages)):
             return orig_tok(self, tokenizer, request, args)
-        feats, urls = [], []
+        feats, urls, kinds = [], [], []
         for m in request.messages:
             c = m.get("content")
             if not isinstance(c, list):
@@ -302,9 +345,24 @@ def install_eyes(S, mx, projector_path, log=print, placeholder=None):
                 elif p.get("type") == FEATURES_TYPE:
                     x = p.get(FEATURES_TYPE) or {}
                     shape = [int(v) for v in (x.get("shape") or [E.N_TOKENS, E.ENC_DIM])]
+                    clip = clip_of(x)
+                    if clip is not None:
+                        n, times = clip
+                        if shape != [n * E.N_TOKENS, E.ENC_DIM]:
+                            raise ValueError("image_features: clip shape %s is not %d frames x %d rows" % (shape, n, E.N_TOKENS))
+                        f = E.f16_from_b64(x.get("f16", ""), shape)
+                        url = image_url(p)
+                        if vproj is None:              # fallback: the clip's last frame as one picture
+                            feats.append(f[-E.N_TOKENS:]); kinds.append("image"); urls.append(url); pieces.append(MEDIA_MARK)
+                            continue
+                        for k in range(n):
+                            feats.append(f[k * E.N_TOKENS:(k + 1) * E.N_TOKENS]); kinds.append("video")
+                            urls.append(url + ":%d" % k)
+                            pieces.append(clip_label(k, times[k]) + MEDIA_MARK)
+                        continue
                     if len(shape) != 2 or shape[1] != E.ENC_DIM or not 1 <= shape[0] <= 4 * E.N_TOKENS:
                         raise ValueError("image_features: bad shape %s" % shape)
-                    feats.append(E.f16_from_b64(x.get("f16", ""), shape))
+                    feats.append(E.f16_from_b64(x.get("f16", ""), shape)); kinds.append("image")
                     urls.append(image_url(p))
                     pieces.append(MEDIA_MARK)
             m["content"] = "".join(pieces)
@@ -321,10 +379,11 @@ def install_eyes(S, mx, projector_path, log=print, placeholder=None):
             prompt += tokenizer.encode(piece, add_special_tokens=False) if piece else []
             if i < len(feats):
                 prompt += [ph] * feats[i].shape[0]
-        media = [proj(mx.array(f).astype(mx.float16)) for f in feats]
+        media = [(vproj if kind == "video" else proj)(mx.array(f).astype(mx.float16)) for f, kind in zip(feats, kinds)]
         mx.eval(media)
         state["media"] = media
         state["requests"] += 1
+        state["clips"] += int("video" in kinds)
         vision = S._make_vision(prompt, urls=urls, pixel_values=media, token_id=ph)
         initial = "normal"
         if tokenizer.has_thinking:
@@ -347,7 +406,8 @@ def install_eyes(S, mx, projector_path, log=print, placeholder=None):
         return model
 
     state["attach"] = attach
-    log("[glim-eyes] Glim can see ON: projector %s, %d image rows per frame" % (projector_path, E.N_TOKENS))
+    log("[glim-eyes] Glim can see ON: projector %s, %d image rows per frame; clips: %s" % (projector_path, E.N_TOKENS,
+        state["video_projector"] or "off (last frame only)"))
     return state
 
 
@@ -356,6 +416,7 @@ def main(argv=None):
     settings_file = pop_flag(argv, "--settings-file")
     eyes_override = pop_flag(argv, "--eyes")                       # I1: on|off (default: settings.json "glimCanSee", else off)
     projector = pop_flag(argv, "--eyes-projector") or default_projector(settings_file)
+    video_projector = pop_flag(argv, "--eyes-video-projector") or default_video_projector(settings_file)
     override = pop_flag(argv, "--keep-in-memory")
     kv_raw = pop_flag(argv, "--kv-buffer")
     touch_s = float(pop_flag(argv, "--keep-touch-s", "0") or 0)   # E1 v2: idle page touch (0 = off)
@@ -376,7 +437,7 @@ def main(argv=None):
     eyes = None
     if eyes_on(settings_file, eyes_override):
         try:
-            eyes = install_eyes(S, mx, projector, log=lambda s: print(s, file=sys.stderr, flush=True))
+            eyes = install_eyes(S, mx, projector, log=lambda s: print(s, file=sys.stderr, flush=True), video_projector_path=video_projector)
         except Exception as e:  # noqa: BLE001 - no eyes is never a reason not to serve text
             print("[glim-eyes] could not start the eyes, serving text only: %s" % e, file=sys.stderr, flush=True)
 

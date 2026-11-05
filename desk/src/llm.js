@@ -68,7 +68,13 @@ function buildChatBody({ model, messages, tools, stream, maxTokens, temperature,
 }
 const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/completions';
 
+// vid-in (2026-11-05): main.js may set a hook that adds what Glim sees (the eyes' clip or picture) to a chat request about the screen.
+// It returns the messages to send (a copy; the saved transcript is never changed). A failing hook never breaks a chat.
+let requestHook = null;
+function setRequestHook(fn) { requestHook = typeof fn === 'function' ? fn : null; }
+
 async function streamChat(opts) {
+  if (requestHook) { try { const m = requestHook(opts.messages, opts); if (Array.isArray(m) && m !== opts.messages) opts = { ...opts, messages: m }; } catch (e) { /* never breaks a chat */ } }
   const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, onToolDelta, apiKey, maxTokens } = opts;
   const url = chatUrl(gatewayUrl);
   const body = buildChatBody({ ...opts, stream: true });
@@ -167,4 +173,4 @@ async function streamChat(opts) {
   return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
 }
 
-module.exports = { streamChat, extractFallbackCalls, buildChatBody, chatUrl, setTestProfile };
+module.exports = { streamChat, extractFallbackCalls, buildChatBody, chatUrl, setTestProfile, setRequestHook };

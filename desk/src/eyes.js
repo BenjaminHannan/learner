@@ -23,6 +23,11 @@ const EVIDENCE_DIR = 'sense-evidence';
 const EVIDENCE_DAYS = 3, EVIDENCE_BYTES = 2 * 1024 ** 3;
 const FEATURE_DAYS = 3;
 const FRAME_FRESH_MS = 120000;
+// vid-in (2026-11-05): short clips. While the eyes are on, a light ticker (clipTick, every CLIP_EVERY_MS) adds frames to an in-memory
+// ring (never stored, never evidence). When the last CLIP_WINDOW_MS hold >= CLIP_MIN frames and the screen MOVED (some neighbour pair
+// of frames has feature cosine < STILL_COS), seePart() sends them as ONE clip part through the video projector (model server
+// "clip" field); a still screen keeps the single-picture part (image projector). On a still screen the ticker slows to CLIP_STILL_MS.
+const CLIP_FRAMES = 8, CLIP_MIN = 3, CLIP_EVERY_MS = 2500, CLIP_STILL_MS = 10000, CLIP_WINDOW_MS = 20000, STILL_COS = 0.995;
 const PRIVATE_WINDOW = /\b(?:private\s+browsing|incognito|inprivate|private\s+window)\b|\b(?:1password|bitwarden|lastpass|keychain\s+access|passwords)\b\s*(?:—|-|:|\.|$)/i;
 
 const dayOf = (t) => new Date(t).toISOString().slice(0, 10);
@@ -130,7 +135,7 @@ function f16ToFloats(b64) { return SenseSleep.decodeF16(Buffer.from(b64, 'base64
 //      isPrivate(text) -> bool, now, log }
 class Eyes {
   constructor(o) {
-    this.o = o; this.now = o.now || Date.now; this.busy = false; this.latest = null;
+    this.o = o; this.now = o.now || Date.now; this.busy = false; this.latest = null; this.ring = []; this.clipSentAt = 0; this.lastTickAt = 0;
     this.store = new SenseSleep.FeatureStore(o.userData, { isPrivate: o.isPrivate || (() => false) });
     this.evidence = new EvidenceStore(o.userData, { platform: o.platform, now: this.now });
     this.stats = { frames: 0, private: 0, errors: 0, stored: 0, evidence: 0, ms: [] };
@@ -143,7 +148,7 @@ class Eyes {
   // Called after each screen read (senses onScreen). Never throws; one frame at a time (a busy frame is skipped).
   async look(screenText, windowsText) {
     if (!this.on() || this.busy) return null;
-    if (this.privateNow(screenText, windowsText)) { this.stats.private++; this.latest = null; return { skipped: 'private' }; }
+    if (this.privateNow(screenText, windowsText)) { this.stats.private++; this.latest = null; this.ring = []; return { skipped: 'private' }; }
     this.busy = true;
     const tmp = path.join(os.tmpdir(), 'premonition-eyes-' + process.pid + '-' + crypto.randomBytes(4).toString('hex') + '.jpg');
     try {
@@ -155,6 +160,7 @@ class Eyes {
       this.stats.frames++; this.stats.ms.push(r.ms); if (this.stats.ms.length > 50) this.stats.ms.shift();
       const t = this.now();
       this.latest = { t, f16: r.f16, shape: r.shape, text: String(screenText || '').slice(0, 300) };
+      this.pushRing({ t, f16: r.f16 });
       const title = /Front app: ([^.]{1,80})\./.exec(windowsText || '');
       const s = this.store.add({ t, source: 'screen', eye: { encoder: EYE_ID, vec: f16ToFloats(r.f16), shape: r.shape },
         text: { screen: screenText ? String(screenText).slice(0, 300) : null, title: title ? title[1] : null } });
@@ -165,6 +171,64 @@ class Eyes {
       this.stats.errors++; if (this.o.log) this.o.log('eyes: ' + e.message); return { error: e.message };
     } finally { this.busy = false; fs.rm(tmp, { force: true }, () => {}); }
   }
+  // ---- clips (vid-in) ----
+  pushRing(f) {
+    f.vec = f16ToFloats(f.f16);
+    this.ring.push(f);
+    const cut = this.now() - CLIP_WINDOW_MS;
+    while (this.ring.length > CLIP_FRAMES || (this.ring.length && this.ring[0].t < cut)) this.ring.shift();
+  }
+  // the ring's frames inside the clip window, and whether the screen moved between neighbours
+  recentClip() {
+    const cut = this.now() - CLIP_WINDOW_MS;
+    const fr = this.ring.filter((f) => f.t >= cut);
+    let moved = false;
+    for (let i = 1; i < fr.length && !moved; i++) if (cosine(fr[i - 1].vec, fr[i].vec) < STILL_COS) moved = true;
+    return { frames: fr, moved };
+  }
+  // Called by main.js every CLIP_EVERY_MS while the eyes and the screen sense are on: one more frame for the ring (memory only).
+  // Slows to CLIP_STILL_MS while the screen stays still. Never throws.
+  async clipTick(screenText, windowsText) {
+    if (!this.on() || this.clipBusy) return null;
+    const now = this.now();
+    if (this.lastTickAt && now - this.lastTickAt < CLIP_EVERY_MS - 50) return null;
+    const { frames, moved } = this.recentClip();
+    if (frames.length >= 2 && !moved && now - frames[frames.length - 1].t < CLIP_STILL_MS) return null;
+    if (this.privateNow(screenText, windowsText)) { this.ring = []; this.latest = null; return { skipped: 'private' }; }
+    this.clipBusy = true; this.lastTickAt = now;
+    const tmp = path.join(os.tmpdir(), 'premonition-eyes-' + process.pid + '-' + crypto.randomBytes(4).toString('hex') + '.jpg');
+    try {
+      const jpeg = await this.o.shot();
+      if (!jpeg) return null;
+      fs.writeFileSync(tmp, jpeg, { mode: 0o600 });
+      const r = await this.o.worker.encode(tmp);
+      if (r.eye !== EYE_ID || !Array.isArray(r.shape) || r.shape[0] !== SHAPE[0] || r.shape[1] !== SHAPE[1]) throw new Error('eyes: unexpected encoder ' + r.eye + ' ' + r.shape);
+      this.stats.clipFrames = (this.stats.clipFrames || 0) + 1;
+      const t = this.now();
+      this.pushRing({ t, f16: r.f16 });
+      this.latest = { t, f16: r.f16, shape: r.shape, text: this.latest ? this.latest.text : '' };
+      return { ok: true, ms: r.ms };
+    } catch (e) {
+      this.stats.errors++; if (this.o.log) this.o.log('eyes clip: ' + e.message); return { error: e.message };
+    } finally { this.clipBusy = false; fs.rm(tmp, { force: true }, () => {}); }
+  }
+  // The recent frames as ONE clip part (2..8 frames, times in seconds from the first), or null (off, too few, or a still screen).
+  // once=true: the same newest frame is never sent twice.
+  clipPart(once = true) {
+    if (!this.on()) return null;
+    const { frames, moved } = this.recentClip();
+    if (frames.length < CLIP_MIN || !moved) return null;
+    const fr = frames.slice(-CLIP_FRAMES);
+    const newest = fr[fr.length - 1].t;
+    if (once && newest <= this.clipSentAt) return null;
+    if (once) { this.clipSentAt = newest; this.latest = null; }
+    const t0 = fr[0].t;
+    const f16 = Buffer.concat(fr.map((f) => Buffer.from(f.f16, 'base64'))).toString('base64');
+    return { type: 'image_features', image_features: { f16, shape: [fr.length * SHAPE[0], SHAPE[1]], eye: EYE_ID,
+      clip: { frames: fr.length, times: fr.map((f) => Math.round((f.t - t0) / 1000)), seconds: Math.round((newest - t0) / 1000) } } };
+  }
+  // what the loop / a chat ask carries: a clip when the screen moved, else the single latest picture
+  seePart(once = true) { return this.clipPart(once) || this.framePart(once); }
   // The latest frame as an image_features content part, or null (off, none, too old, or used already when once=true).
   framePart(once = true) {
     const f = this.latest;
@@ -198,9 +262,23 @@ class Eyes {
   status() {
     const ms = [...this.stats.ms].sort((a, b) => a - b);
     return { on: this.on(), frames: this.stats.frames, stored: this.stats.stored, private: this.stats.private, errors: this.stats.errors,
-      evidence: this.stats.evidence, medianMs: ms.length ? ms[ms.length >> 1] : null };
+      evidence: this.stats.evidence, clipFrames: this.stats.clipFrames || 0, ring: this.ring.length, medianMs: ms.length ? ms[ms.length >> 1] : null };
   }
 }
+
+function cosine(a, b) {
+  let d = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { d += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  return na && nb ? d / Math.sqrt(na * nb) : 1;
+}
+// the words in front of a part: a clip says how long it covers
+function labelFor(part) {
+  const c = part && part.image_features && part.image_features.clip;
+  return c ? 'What the screen showed over the last ' + Math.max(1, c.seconds || 0) + ' seconds (a short clip, oldest frame first):' : 'What the screen looks like now:';
+}
+// A chat question about the screen or a video (vid-in): the chat's first request of that turn carries the eyes' part.
+const SEE_ASK = /\b(?:video|clip|movie|screen|display|watch(?:ing|ed)?|playing|happen(?:ed|ing)?|see|seeing|look(?:ing)? at|showing|shown)\b/i;
+function wantsSight(text) { return typeof text === 'string' && SEE_ASK.test(text); }
 
 // Put the latest frame in front of the last user message's text (the layout the projector was trained with: media, then words).
 function withFrame(messages, part, label) {
@@ -216,4 +294,4 @@ function withFrame(messages, part, label) {
   return messages;
 }
 
-module.exports = { fromDataUrl, Eyes, EyesWorker, EvidenceStore, withFrame, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };
+module.exports = { fromDataUrl, Eyes, EyesWorker, EvidenceStore, withFrame, labelFor, wantsSight, cosine, CLIP_FRAMES, CLIP_MIN, CLIP_EVERY_MS, CLIP_STILL_MS, CLIP_WINDOW_MS, STILL_COS, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };

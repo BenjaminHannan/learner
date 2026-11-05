@@ -1855,7 +1855,21 @@ function aoEyes() {
 }
 function aoEyesLook(text, win) { if (store.getSettings().glimCanSee !== true) return null; return aoEyes().look(text, win || aoLatestText('windows')); }
 // the always-on loop's asks carry the latest frame (once, < 2 min old) when the eyes are on; every other ask is unchanged
-function aoAskSeeing(messages, signal, opts) { const part = aoEyesObj && aoEyesObj.framePart(); return aoAsk(part ? EyesMod.withFrame(messages, part) : messages, signal, opts); }
+function aoAskSeeing(messages, signal, opts) { const part = aoEyesObj && aoEyesObj.seePart(); return aoAsk(part ? EyesMod.withFrame(messages, part, EyesMod.labelFor(part)) : messages, signal, opts); }
+// vid-in (2026-11-05): while the eyes and the screen sense are on, a frame every few seconds goes into the eyes' in-memory ring (slower
+// on a still screen); a moving screen is then seen as one short clip (video projector), a still one as one picture (image projector).
+// A chat question about the screen or a video (EyesMod.wantsSight) carries the same clip / picture in its first request of the turn.
+setInterval(() => {
+  if (store.getSettings().glimCanSee !== true || !aoSenses || !aoSenses.enabled('screen') || sl.asleep || E2E) return;
+  const r = aoEyes().clipTick(aoLatestText('screen'), aoLatestText('windows')); if (r && r.catch) r.catch(() => {});
+}, EyesMod.CLIP_EVERY_MS).unref();
+require('./src/llm').setRequestHook((msgs, o) => {
+  if (!aoEyesObj || store.getSettings().glimCanSee !== true || !Array.isArray(msgs) || !msgs.length || !(o && Array.isArray(o.tools) && o.tools.length)) return msgs;
+  const last = msgs[msgs.length - 1];
+  if (!last || last.role !== 'user' || typeof last.content !== 'string' || !EyesMod.wantsSight(last.content)) return msgs;
+  const part = aoEyesObj.seePart(false);
+  return part ? EyesMod.withFrame(msgs, part, EyesMod.labelFor(part)) : msgs;
+});
 setInterval(() => { if (aoEyesObj && store.getSettings().glimCanSee !== true) aoEyesObj.o.worker.stop(); }, 60000).unref();
 aoNightlyJobs.push(() => { if (store.getSettings().glimCanSee !== true && !aoEyesObj) return; const r = aoEyes().nightly(); console.log('[eyes] night', JSON.stringify(r)); if (aoState) aoState.logActivity('sleep-part', { part: 'eyes', line: r.manifests.length ? 'eye practice ready for ' + r.manifests.map((m) => m.night + ' (' + m.eye + ')').join(', ') : 'no eye practice' }); });
 function aoLatestText(sense) { const ib = aoState ? aoState.inbox : []; for (let i = ib.length - 1; i >= 0; i--) if (ib[i].sense === sense) return ib[i].text; return ''; }
