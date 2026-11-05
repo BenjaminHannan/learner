@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   ideaJudgeDay: '',       // the day (YYYY-MM-DD) the Motes' ideas were last judged
   followupDay: '',        // the day (YYYY-MM-DD) that follow-up last ran
   verify: true,           // double-check state-changing work before saying done (one extra, quick model call)
+  agentKit: [],           // AGENT1 (src/agentkit.js): measured harness changes that are on ('all' or names like 'sso'); empty = DEFAULTS there
   helperMode: 'hands-off', // autonomy for helper agents
   maxSteps: 0,            // model calls per task before Glim stops and asks; 0 = no limit (Ben Oct 28: threads are unlimited)
   stepsPlan: 2,           // settings migration marker: 1 = the old 40-step default moved to no limit; 2 = runs at once moved to no limit
@@ -114,6 +115,7 @@ function sanitize(patch) {
     else if (ENUMS[k]) out[k] = ENUMS[k].includes(v === true ? 'on' : v) ? (v === true ? 'on' : v) : DEFAULT_SETTINGS[k];
     else if (k === 'alwaysAllow') out[k] = (Array.isArray(v) ? v : []).map((x) => String(x)).filter((x) => /^[\w:.\/+-]{1,60}$/.test(x)).slice(0, 60);
     else if (k === 'uses') out[k] = cleanUses(v);
+    else if (k === 'agentKit') out[k] = require('./agentkit').clean(v);
     else if (k === 'goalsSteps') out[k] = [...new Set((Array.isArray(v) ? v : []).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 3))].sort();
     else if (k === 'usesOther') out[k] = String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, USES_OTHER_MAX);
     else if (k === 'sleepDuration') out[k] = DURATION_PICKS.includes(String(v)) ? String(v) : DEFAULT_SETTINGS[k];

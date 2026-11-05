@@ -371,8 +371,10 @@ class Browser {
   // track LOGIN1: sign in with Ben's saved login. lookup(pageUrl) -> {user, password} for EXACTLY that https origin, or null.
   // The app fills the fields and submits; the result names only the user and host (never the password).
   // -> {text, summary, kind: 'signed'|'none'|'code'|'failed'|'noform'|'http', host}
-  async signIn(lookup) {
+  // opts.sso (AGENT1, src/agentkit.js): with no saved login, a page offering "Sign in with Google" etc. gets {kind:'sso'} naming that button
+  async signIn(lookup, opts) {
     const np = this.noPage(); if (np) return np;
+    const sso = async (host) => { if (!((opts && opts.sso) || (this.ssoHint && this.ssoHint())) || this.wc.isDestroyed()) return null; await this.snapshot(); const t = require('../agentkit').ssoNote(host, this.lastSnap && this.lastSnap.lines); return t ? { text: t, kind: 'sso', host, summary: 'Sign-in uses another account on ' + host } : null; };
     const L = require('../logins');
     this.filling = Date.now() + 60000;   // the preload sees this fill as a form submit: main ignores it while this is set
     try {
@@ -386,9 +388,11 @@ class Browser {
         if (!f.pw && !f.user) {
           if (f.code) return { text: L.say.code(host), kind: 'code', host, summary: 'A code is needed on ' + host };
           if (used) break;   // the form went away after submitting: done
+          const so = await sso(host); if (so) return so;
           return { text: L.say.noForm(host), kind: 'noform', host, error: true, summary: 'No sign-in form on ' + host };
         }
         const login = await lookup(url);
+        if (!login && !used) { const so = await sso(host); if (so) return so; }
         if (!login || L.originOf(url) !== L.originOf(this.wc.getURL())) return { text: L.say.noLogin(host), kind: 'none', host, summary: 'No saved login for ' + host };
         used = { user: login.user, host, url };
         if (f.user && f.userValue !== login.user) await this._fillLogin('user', login.user);

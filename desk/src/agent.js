@@ -9,6 +9,7 @@ const creative = require('./creative');
 const { EvidenceRegistry } = require('./evidence');
 const { looksSecret } = require('./memory');
 const budget = require('./context-budget');
+const Kit = require('./agentkit');   // AGENT1: measured harness changes, settings.agentKit
 
 const COMPACT_TOKENS = 24000;
 const IMAGE_KEEP_MSGS = 12;   // a screenshot stays in the prompt only while it is among the newest messages
@@ -238,6 +239,21 @@ function benWords(c) {
     t = u;
   }
   return { stamp: m[0].slice(1, -1), text: t };
+}
+// AGENT1 pins: Ben's own words in the model's window, oldest first: turns before this task ('earlier'), the task itself, and what he
+// sent while it worked ('correction'). App notes (self-checks, steer/cut notes, screenshots) are not his words.
+function benTurns(msgs, from, taskStart) {
+  const out = [];
+  for (let i = Math.max(0, from || 0); i < (msgs || []).length; i++) {
+    const m = msgs[i];
+    if (!m || m.role !== 'user' || typeof m.content !== 'string' || m.content.startsWith(CHECK_MARK) || m.content.startsWith('[screenshot') || m.content.startsWith('[older screenshot') || m.content === CAP_GO) continue;
+    let t = benWords(m.content).text;
+    const steer = t.includes(STEER_NOTE) || t.includes(CUT_NOTE);
+    t = t.replace(STEER_NOTE, '').replace(CUT_NOTE, '').trim();
+    if (!t) continue;
+    out.push({ text: t, when: i < (taskStart || 0) ? 'earlier' : steer ? 'correction' : 'task' });
+  }
+  return out;
 }
 // The plain words of messages [a, b) for the summary call: Ben's and Glim's text, no tool output, one line per message.
 function plainLines(msgs, a, b) {
@@ -492,6 +508,7 @@ class Agent {
   }
 
   toolDefs() { return typeof this.o.toolDefs === 'function' ? this.o.toolDefs() : this.o.toolDefs; }
+  taskTools() { return this.taskToolDefs || this.toolDefs(); }   // the tools this task's requests send (AGENT1 diet: a web task's subset)
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
 
@@ -568,6 +585,12 @@ class Agent {
     this.toolSteps = 0; this.acting = false; this.claimChecks = 0;
     this.memBlock = '';
     this.taskText = opts && opts.hidden ? '' : String(userText || ''); this.usedMemSave = false; this.memChecks = 0; this.secretChecks = 0;   // a hidden turn (a Mote's report relayed) is not Ben asking to remember anything
+    // AGENT1 diet: a web task gets the web tools only, short descriptions, a shorter system prompt and older page views cut (request only)
+    { let s0 = {}; try { s0 = this.o.getSettings() || {}; } catch (e) { s0 = {}; }
+      this.diet = Kit.on(s0, 'diet') && !(opts && opts.hidden) && Kit.isWebTask(userText);
+      this.taskToolDefs = this.diet ? Kit.dietTools(this.toolDefs()) : null; this.sysPrompt = this.diet ? Kit.dietSystem(SYSTEM_PROMPT) : SYSTEM_PROMPT;
+      this.pins = Kit.on(s0, 'pins') && !this.o.helperId && !(opts && opts.hidden);
+      this.stuckOn = Kit.on(s0, 'stuck'); this.stuckTries = 0; }
     try { this.memBlock = this.o.memory ? this.o.memory.block() : ''; } catch (e) { this.memBlock = ''; }
     try { const tb = this.o.tracking ? this.o.tracking.block() : ''; if (tb) this.memBlock += (this.memBlock ? '\n' : '') + tb; } catch (e) { /* no tracking block */ }
     this.threadId = thread.id;
@@ -649,7 +672,7 @@ class Agent {
         const smallCap = budget.contextLimit(s, this.stepModel(s));
         // The history estimator uses chars/3.5; the full-request estimator uses
         // a more conservative chars/2.5 and includes the system/tools template.
-        const overhead = smallCap ? budget.requestTokens([{ role: 'system', content: SYSTEM_PROMPT }], this.toolDefs()) : 0;
+        const overhead = smallCap ? budget.requestTokens([{ role: 'system', content: this.sysPrompt || SYSTEM_PROMPT }], this.taskTools()) : 0;
         const historyBudget = smallCap ? Math.max(1, Math.floor((smallCap - budget.REPLY_RESERVE - 512 - overhead) * 2.5 / 3.5)) : Number(s.contextTokens) || CONTEXT_TOKENS;
         const was = trimWindow(thread, historyBudget, smallCap ? taskStart : undefined);
         if (was >= 0) {
@@ -691,13 +714,14 @@ class Agent {
             gatewayUrl: s.gatewayUrl,
             model: this.stepModel(s),
             messages: creative.withApproaches(this.requestMessages(thread, !!budget.contextLimit(s, this.stepModel(s))), approaches),
-            tools: wrapUp ? [] : this.toolDefs(),
+            tools: wrapUp ? [] : this.taskTools(),
             maxTokens: wrapUp ? WRAP_TOKENS : undefined,
             signal: rc.signal,
             apiKey: s.apiKey,
             onText: (d) => {
               this.partial += d; this.emit({ type: 'text', delta: d });
               if (loop.kept === null && !cap.tool && /[.!?\n]\s*$/.test(d) && this.partial.length > 120) { const k = narrationLoop(this.partial); if (k !== null) { loop.kept = k; rc.abort(); } }
+              if (loop.kept === null && !cap.tool && this.stuckOn && /\s$/.test(d) && Kit.blankRun(this.partial)) { loop.kept = this.partial.trim(); loop.blank = true; rc.abort(); }   // AGENT1 stuck: intent line, then only blank lines
             },
             onReasoning: onThink,
             onToolDelta: () => { cap.tool = true; this.reqTool = true; clearTimeout(this.steerTimer); this.steerTimer = null; }   // a tool call has started: it runs, a steer waits for its result
@@ -709,7 +733,7 @@ class Agent {
           if (signal.aborted) { stopped = true; break; }
           if (this.reqSteered && this.steerQueue.length) { this.reqSteered = false; this.keepCutOff(thread); continue; }   // his message is read now; what was written so far stays on screen, marked cut off
           let err = e;
-          if (loop.kept !== null) res = { content: loop.kept, toolCalls: [], reasoning: cap.thinking, firstTokenMs: 0, cutLoop: true };
+          if (loop.kept !== null) res = { content: loop.kept, toolCalls: [], reasoning: cap.thinking, firstTokenMs: 0, cutLoop: true, blank: !!loop.blank };
           else if (cap.hit) {
             try { res = await this.replyAfterCap(thread, s, signal, capSecs, cap.thinking); } catch (e2) { err = e2; res = null; }
             if (signal.aborted) { stopped = true; break; }
@@ -769,6 +793,20 @@ class Agent {
           const note = '\n\n' + P("(I didn't actually manage to do those steps. Ask me again, or open the browser yourself with the Browser button.)");
           res.content = (res.content || '') + note;
           this.emit({ type: 'text', delta: note });
+        }
+        // AGENT1 stuck: a reply cut in a blank run, or a short one that only says what it will do, at any step: the words stay on screen, the
+        // model gets a plain note and the step runs again (at most Kit.STUCK_TRIES a task)
+        if (this.stuckOn && !res.toolCalls.length && !wrapUp && !this.steerQueue.length && this.taskText && this.stuckTries < Kit.STUCK_TRIES && (res.blank || Kit.onlyIntent(res.content))) {
+          this.stuckTries++;
+          const text = String(res.content || '').trim();
+          if (text) { thread.items.push({ t: 'assistant', text, ts: Date.now() }); this.emit({ type: 'assistant_end', text, ttftMs, toolCalls: 0, replace: true }); }
+          thread.messages.push({ role: 'assistant', content: text || '(nothing)' }, { role: 'user', content: Kit.STUCK_NOTE });
+          const id = 'stuckcheck_' + this.stuckTries, summary = 'Re-checking: it said what it would do, but did nothing';
+          thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'no tool was called' });
+          this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
+          this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary, preview: 'no tool was called', result: '' });
+          save();
+          continue;
         }
         const msg = { role: 'assistant', content: res.content || '' };
         if (res.toolCalls.length) {
@@ -855,7 +893,7 @@ class Agent {
     const ctl = new AbortController(), onRun = () => ctl.abort(), timer = setTimeout(() => ctl.abort(), CAP_REPLY_SECS * 1000);
     signal.addEventListener('abort', onRun, { once: true });
     let r, got = '';
-    try { r = await this.requestWithBudget(thread, s, { gatewayUrl: s.gatewayUrl, model: s.modelMain || s.model, messages, tools: this.toolDefs(), signal: ctl.signal, apiKey: s.apiKey, maxTokens: CAP_REPLY_TOKENS, onText: (d) => { got += d; }, onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) }); }
+    try { r = await this.requestWithBudget(thread, s, { gatewayUrl: s.gatewayUrl, model: s.modelMain || s.model, messages, tools: this.taskTools(), signal: ctl.signal, apiKey: s.apiKey, maxTokens: CAP_REPLY_TOKENS, onText: (d) => { got += d; }, onReasoning: () => this.emit({ type: 'reasoning', delta: '' }) }); }
     catch (e) { if (signal.aborted || !ctl.signal.aborted) { if (signal.aborted) return null; throw e; } r = { content: got, toolCalls: [], reasoning: '', firstTokenMs: 0 }; }   // its own timer: keep what it wrote
     finally { clearTimeout(timer); signal.removeEventListener('abort', onRun); }
     const tagged = /\[continue\]/i.test(r.content || '');
@@ -889,7 +927,10 @@ class Agent {
       if (preserveMemory && this.memBlock && !(thread.memAt >= from) && !msgs[0].content.includes(this.memBlock)) msgs[0] = { ...msgs[0], content: this.memBlock + '\n' + msgs[0].content };
       if (thread.ctxNote) msgs[0] = { ...msgs[0], content: thread.ctxNote + '\n' + msgs[0].content };
     }
-    return [{ role: 'system', content: SYSTEM_PROMPT }, ...msgs];
+    const out = [{ role: 'system', content: this.sysPrompt || SYSTEM_PROMPT }, ...(this.diet ? Kit.dietHistory(msgs, Math.max(0, (this.taskStart || 0) - from)) : msgs)];
+    const pin = this.pins ? Kit.pinBlock(benTurns(thread.messages, from, this.taskStart)) : '';   // AGENT1 pins: Ben's own words, right before the model's turn
+    if (pin) { const last = out[out.length - 1]; if (last.role === 'user' && typeof last.content === 'string') out[out.length - 1] = { ...last, content: last.content + '\n' + pin }; else out.push({ role: 'user', content: pin }); }
+    return out;
   }
 
   // Fit each individual model request without changing the saved transcript.
@@ -982,7 +1023,7 @@ class Agent {
       const r = await this.requestWithBudget(thread, s, {
         gatewayUrl: s.gatewayUrl, model: verifyModel,
         messages: [...this.requestMessages(thread, !!budget.contextLimit(s, verifyModel)), { role: 'user', content: CHECK_MESSAGE }],
-        tools: this.toolDefs(), maxTokens: VERIFY_MAX_TOKENS, signal, apiKey: s.apiKey
+        tools: this.taskTools(), maxTokens: VERIFY_MAX_TOKENS, signal, apiKey: s.apiKey
       });
       if (!r.toolCalls.length) verdict = parseCheck(r.content) || (!String(r.content || '').trim() && r.reasoning ? parseCheckLoose(r.reasoning) : null);
     } catch (e) { if (signal.aborted) { end('Check stopped', false); return 'stop'; } end('Check unavailable', false); return 'accept'; }
@@ -1169,4 +1210,4 @@ function cleanMsg(m) {
   return o;
 }
 
-module.exports = { SENSITIVE, narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };
+module.exports = { benTurns, SENSITIVE, narrationLoop, cleanOptions, isReadOnly, SAFE_ECHO, shellProgram, nowStamp, asksForSecret, rememberFact, isRememberAsk, relatesTo, parseCheckLoose, claimsAction, STATE_CHANGING, CHECK_MARK, CHECK_MESSAGE, MAX_VERIFY, parseCheck, DANGER_LABELS, STUCK_REPEATS, Agent, repairHistory, isDangerous, estimateTokens, compactMessages, waitWhile, trimWindow, plainText, plainTail, benWords, noteOldGap, rollupGapStep, CONTEXT_TOKENS, SUMMARY_TAG, dropOldImages, datePrefix, extractPlan, defaultSummary, DANGER_PATTERNS, COMPACT_TOKENS };

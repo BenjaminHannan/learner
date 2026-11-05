@@ -41,6 +41,7 @@ const { Store, applyPresetDefaults } = require('./src/store');
 const StudyGate = require('./src/studygate');   // Learn study Motes: drift guard + truth check (Nov 4)
 const { Agent, DANGER_LABELS, noteOldGap, rollupGapStep } = require('./src/agent');
 const { buildTools } = require('./src/prompt');
+const AgentKit = require('./src/agentkit');   // AGENT1: measured harness changes (settings.agentKit)
 const { Browser } = require('./src/tools/browser');
 const { webSearch } = require('./src/tools/web');
 const { UrlGuard, hostOf } = require('./src/urlguard');
@@ -703,6 +704,7 @@ function makeBrowser(key, label, opts) {
   const view = new WebContentsView({ webPreferences: { partition: 'persist:desk', contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false, preload: path.join(__dirname, 'preload-browser.js') } });   // LOGIN1: the preload only notices Ben submitting a sign-in form (Save card)
   try { view.setBackgroundColor('#ffffff'); } catch (e) { /* ignore */ } // an empty page shows white, so it is not mistaken for a broken panel
   const br = new Browser({ view, session, onState: () => pushBState(key) });
+  br.ssoHint = () => AgentKit.on(store.getSettings(), 'sso');   // AGENT1: no saved login, but "Sign in with Google" etc. on the page: click that first
   br.shouldFocus = () => !(ui && !ui.webContents.isDestroyed() && ui.webContents.isFocused()) || (panel.open && panel.key === key);
   rec = { key, label, view, br, helper: !!(opts && opts.helper), onTop: false, active: false, used: Date.now() };
   browsers.set(key, rec);
