@@ -18,8 +18,24 @@ const size = (f) => { try { return fs.statSync(f).size; } catch (e) { return 0; 
  * Writes dest + '.part' and renames when complete. A .part from an earlier run is continued with a Range request; if the server
  * answers 200 (no range support) or 416 with a bad file, it starts over. A wrong checksum deletes the file and throws.
  */
+// A connection can go silent without closing (seen Nov 5: a 4.4 GB brain download stopped at 2.28 GB and the app waited for hours).
+// No bytes for o.stallMs (default 60 s) = stalled: the attempt is dropped and the next one resumes from the .part file, up to
+// o.retries times (default 8, 3 s apart). A cancel by the caller and a checksum mismatch are never retried.
 async function downloadFile(o) {
+  const tries = o.retries == null ? 8 : o.retries;
+  for (let i = 0; ; i++) {
+    try { return await downloadOnce(o); } catch (e) {
+      if ((o.signal && o.signal.aborted) || /checksum mismatch/.test(e.message) || /^download failed: HTTP 4/.test(e.message) || i >= tries) throw e;
+      if (o.onRetry) { try { o.onRetry(e, i + 1); } catch (x) { /* ignore */ } }
+      await new Promise((r) => setTimeout(r, o.retryDelayMs == null ? 3000 : o.retryDelayMs));
+    }
+  }
+}
+async function downloadOnce(o) {
   const f = o.fetch || fetch;
+  const stallMs = o.stallMs || 60000;
+  const local = new AbortController();
+  const signal = o.signal ? AbortSignal.any([o.signal, local.signal]) : local.signal;
   const part = o.dest + '.part';
   fs.mkdirSync(path.dirname(o.dest), { recursive: true });
   if (fs.existsSync(o.dest) && o.sha256) {
@@ -31,7 +47,9 @@ async function downloadFile(o) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const headers = { ...(o.headers || {}) };
     if (have > 0) headers.range = 'bytes=' + have + '-';
-    const r = await f(o.url, { headers, signal: o.signal, redirect: 'follow' });
+    const stalled = () => { const e = new Error('download stalled (no data for ' + Math.round(stallMs / 1000) + ' s)'); e.code = 'stalled'; return e; };
+    let tm; const timed = (p) => { p.catch(() => {}); return Promise.race([p, new Promise((res, rej) => { tm = setTimeout(() => { local.abort(); rej(stalled()); }, stallMs); })]).finally(() => clearTimeout(tm)); };
+    const r = await timed(f(o.url, { headers, signal, redirect: 'follow' }));
     if (r.status === 416) { // our .part is already the whole file (or garbage): check below, else start over
       if (o.sha256 && (await sha256File(part)) !== o.sha256.toLowerCase()) { fs.rmSync(part, { force: true }); have = 0; continue; }
       fs.renameSync(part, o.dest); return { dest: o.dest, bytes: size(o.dest), resumed: true, verified: !!o.sha256 };
@@ -49,7 +67,7 @@ async function downloadFile(o) {
     try {
       const reader = r.body.getReader();
       for (;;) {
-        const { value, done: fin } = await reader.read();
+        const { value, done: fin } = await timed(reader.read());
         if (fin) break;
         if (outErr) throw outErr;
         await new Promise((res, rej) => { out.write(value, (e) => (e ? rej(e) : res())); });   // the write callback carries the error: no 'error' listener per chunk (16k of them on a 1 GB file)

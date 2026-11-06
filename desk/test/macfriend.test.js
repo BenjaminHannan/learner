@@ -95,3 +95,23 @@ test('Builtin: a too-small Mac ends in phase "blocked" (not a retryable error), 
   const st2 = await b.trySmall();
   assert.strictEqual(asked, true); assert.strictEqual(st2.phase, 'error');
 });
+
+test('a download that goes silent is dropped after stallMs and resumes from the .part file', async () => {
+  const { downloadFile } = require('../src/runtime/download');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-'));
+  const body = Buffer.from('0123456789abcdefghij');
+  const sha = crypto.createHash('sha256').update(body).digest('hex');
+  let n = 0; const ranges = [];
+  const f = async (url, opts) => {
+    n++; const range = opts.headers.range; ranges.push(range || '');
+    const start = range ? Number(/bytes=(\d+)-/.exec(range)[1]) : 0;
+    const first = n === 1;   // attempt 1 sends 8 bytes, then hangs forever
+    const chunk = first ? body.subarray(0, 8) : body.subarray(start);
+    return { ok: true, status: range ? 206 : 200, headers: new Map([['content-length', String(body.length - start)]]),
+      body: { getReader: () => { let k = 0; return { read: () => (k++ === 0 ? Promise.resolve({ value: chunk, done: false }) : first ? new Promise(() => {}) : Promise.resolve({ done: true })) }; } } };
+  };
+  const retries = [];
+  const r = await downloadFile({ url: 'https://x/f', dest: path.join(dir, 'f.bin'), sha256: sha, fetch: f, stallMs: 50, retryDelayMs: 1, onRetry: (e) => retries.push(e.code) });
+  assert.strictEqual(fs.readFileSync(r.dest).toString(), body.toString());
+  assert.deepStrictEqual(retries, ['stalled']); assert.deepStrictEqual(ranges, ['', 'bytes=8-']);
+});

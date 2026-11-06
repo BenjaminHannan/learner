@@ -111,7 +111,7 @@ test('download: a server without Range support restarts from zero; a cut connect
     const r = await downloadFile({ url: 'http://127.0.0.1:' + pa + '/x', dest: path.join(d, 'x'), sha256: crypto.createHash('sha256').update(body).digest('hex') });
     assert.strictEqual(r.bytes, 120000);
     const dest2 = path.join(d, 'y');
-    await assert.rejects(downloadFile({ url: 'http://127.0.0.1:' + pb + '/y', dest: dest2 }));
+    await assert.rejects(downloadFile({ url: 'http://127.0.0.1:' + pb + '/y', dest: dest2, retries: 0 }));   // retries: 0 = one attempt (Nov 5: the default now resumes by itself)
     assert.ok(fs.existsSync(dest2 + '.part') && fs.statSync(dest2 + '.part').size > 0 && fs.statSync(dest2 + '.part').size < 120000);
     const r2 = await downloadFile({ url: 'http://127.0.0.1:' + pb + '/y', dest: dest2 });
     assert.strictEqual(r2.bytes, 120000); assert.strictEqual(r2.resumed, true);
