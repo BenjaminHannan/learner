@@ -88,7 +88,7 @@ test('the model-visible result never holds the password: browser_sign_in texts +
   L.addSecret(PW);
   for (const t of [L.say.signedIn('ben', 'x.com'), L.say.noLogin('x.com'), L.say.code('x.com'), L.say.failed('ben', 'x.com', 'Wrong password'), L.say.notHttps(), L.say.noForm('x.com')]) assert.ok(!t.includes(PW));
   assert.match(L.say.signedIn('ben@x.org', 'dresden.schoology.com'), /^Signed in as ben@x\.org on dresden\.schoology\.com/);
-  assert.match(L.say.noLogin('dresden.schoology.com'), /No saved login for dresden\.schoology\.com: ask Ben to sign in once in Glim's browser/);
+  assert.match(L.say.noLogin('dresden.schoology.com'), /No saved login for dresden\.schoology\.com: call ask_login \(the app's private form for Ben\)\. Never ask for the password in chat\./);
   const evs = [];
   const a = new Agent({ getSettings: () => ({ mode: 'hands-off' }), tools: { browser_sign_in: async () => ({ text: 'Signed in as ben on x.com.\n[1] input(password) "Password" value="' + PW + '"', summary: 'Signed in on x.com ' + PW }) }, emit: (e) => evs.push(e), approve: async () => 'yes', askUser: async () => '', safety: new SafetyLevels() });
   const th = { id: 't', messages: [], items: [] };
@@ -139,12 +139,13 @@ test('safety levels: using a saved login is FREE by default; keychain apps and d
   assert.ok(lv.check('browser_sign_in', {}, { pageUrl: 'https://dresden.schoology.com/' }).refuse);
 });
 
-test('prompt: passwords in chat are fine (Ben 2026-11-04), saved logins first, codes ask Ben or he does it', () => {
-  assert.match(SYSTEM_PROMPT, /passwords in chat are fine/);
-  assert.match(SYSTEM_PROMPT, /If Ben gives you a password, use it: type it into the password field with browser_type/);
+test('prompt: never a password in chat (SECURE-LOGIN, Ben 2026-11-05 replaces 11-04), saved logins first, else ask_login, codes Ben does', () => {
+  assert.ok(!/passwords in chat are fine/.test(SYSTEM_PROMPT));
+  assert.ok(!/ask him for it/.test(SYSTEM_PROMPT));
+  assert.match(SYSTEM_PROMPT, /never ask Ben for a password in chat/);
   assert.match(SYSTEM_PROMPT, /first try browser_sign_in \(the app fills his saved login\)/);
-  assert.match(SYSTEM_PROMPT, /ask him for it in one short line, or he can sign in himself in your browser \(the app offers to save it\)/);
-  assert.match(SYSTEM_PROMPT, /For codes, 2-step or passkey pages/);
+  assert.match(SYSTEM_PROMPT, /None saved: ask_login \(the app's private form\), then browser_sign_in/);
+  assert.match(SYSTEM_PROMPT, /Codes, 2-step, passkeys: Ben does them in your browser/);
   assert.ok(!/NEVER ask Ben for a password/.test(SYSTEM_PROMPT));
   assert.ok(TOOL_DEFS.browser_sign_in); assert.match(TOOL_DEFS.browser_sign_in.function.description, /never see the password/);
   assert.strictEqual(WORDS.browser_sign_in, 'signing in');
@@ -165,7 +166,8 @@ test('wiring: the browser view has the capture preload; main fills from the stor
   const main = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
   assert.match(main, /preload: path\.join\(__dirname, 'preload-browser\.js'\)/);
   assert.match(main, /browser_sign_in: async \(x, ctx\) => \{/);
-  assert.match(main, /b\.signIn\(\(u\) => glimLogins\(\)\.forPage\(u\)\)/);
+  assert.match(main, /LoginFormMod\.signInWithAsk\(\{ br: b, store: glimLogins\(\)/);   // SECURE-LOGIN: fills from the store via src/loginform.js
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'loginform.js'), 'utf8'), /o\.br\.signIn\(\(u\) => o\.store\.forPage\(u\)\)/);
   assert.match(main, /holdsSecret\(line\)/);
   assert.match(main, /text = Logins\.scrub\(/);
   assert.match(main, /'browser_sign_in'/);

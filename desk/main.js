@@ -880,14 +880,20 @@ function createAgent({ helper, rec, voice }) {
     // LOGIN1: the app fills Ben's saved login for exactly this https site; the model reads only "Signed in as <user> on <host>"
     browser_sign_in: async (x, ctx) => {
       const b = getBr();
-      const r = await b.signIn((u) => glimLogins().forPage(u));
-      // no saved login on a sign-in form, or a code: Ben does it once in the panel (the app then offers to save the login); a Mote never asks Ben
-      if (!isHelper && (r.kind === 'none' || r.kind === 'code')) {
+      // SECURE-LOGIN (Ben 2026-11-05): no saved login -> the app's private form (src/loginform.js), no "may I?"; once Ben saves it the
+      // app fills it at once. A Mote (or Ben away) only queues the form + one notification, and is told to end politely.
+      const r = await LoginFormMod.signInWithAsk({ br: b, store: glimLogins(), askFor: (url, site, why) => loginAskFor(isHelper, url, site, why, ctx) });
+      // a code: Ben enters it himself in the panel; a Mote never asks Ben
+      if (!isHelper && r.kind === 'code') {
         const v = await ctx.waitForBen(() => signInWait(bk(), a.threadId, ctx.signal));
-        const lead = r.kind === 'none' ? 'No saved login for ' + r.host + ', so the app asked Ben to sign in once himself (it then offers to save it). ' : 'A code was needed on ' + r.host + '. ';
-        return { text: lead + (await afterSignIn(b, v)), summary: r.kind === 'none' ? 'Ben signed in once on ' + r.host : 'Ben entered the code', error: v === 'stopped' };
+        return { text: 'A code was needed on ' + r.host + '. ' + (await afterSignIn(b, v)), summary: 'Ben entered the code', error: v === 'stopped' };
       }
       return r;
+    },
+    // SECURE-LOGIN: open the app's private sign-in form; the model reads only {saved, site} (+ a fixed next-step hint)
+    ask_login: async (x, ctx) => {
+      let page = ''; try { const cur = browsers.get(bk()); page = cur ? cur.br.state().url : ''; } catch (e) { /* no browser yet */ }
+      return LoginFormMod.modelResult(await loginAskFor(isHelper, page, x.site, x.reason, ctx));
     },
     browser_scroll: (x) => getBr().scroll(x.direction),
     browser_back: () => getBr().back(),
@@ -1581,6 +1587,32 @@ ipcMain.on('pm-login:submit', (e, d) => {
       probe: () => wc.isDestroyed() ? Promise.resolve(null) : wc.executeJavaScript('(' + Logins.pageLoginProbe.toString() + ')()') }).catch(() => {});
   } catch (err) { /* never breaks browsing */ }
 });
+// ---- SECURE-LOGIN (Ben 2026-11-05): the app's own private sign-in form (src/loginform.js, src/loginwin.js, renderer/loginform.html) --
+// ask_login / browser_sign_in with no saved login open it with no "may I?"; what Ben types goes from that window to the keychain only.
+// Ben away (idle >= 5 min or locked) or a Mote asking: the form is queued, one notification, and it opens when he clicks it or is back.
+const LoginFormMod = require('./src/loginform');
+const loginFormWins = new Map();   // token -> the form's BrowserWindow (IPC senders are checked against it)
+let glimLoginAskObj = null;
+const benAway = () => { try { return powerMonitor.getSystemIdleState(300) !== 'active'; } catch (e) { return false; } };
+function glimLoginAsk() {
+  if (glimLoginAskObj) return glimLoginAskObj;
+  glimLoginAskObj = new LoginFormMod.LoginAsk({ store: glimLogins(), isAway: benAway,
+    open: require('./src/loginwin').formOpener({ BrowserWindow, wins: loginFormWins, onClosed: (t) => glimLoginAskObj.closed(t) }),
+    notify: (title, body, onClick) => { try { if (!Notification.isSupported()) return; const n = new Notification({ title, body, icon: process.platform === 'darwin' ? ICON : undefined }); n.on('click', onClick); n.show(); } catch (e) { /* nicety */ } } });
+  // a form queued while Ben was away opens (without taking focus) once he is back
+  setInterval(() => { try { if (glimLoginAskObj.pending().some((p) => p.queued) && !benAway() && powerMonitor.getSystemIdleTime() < 30) glimLoginAskObj.openQueued(null, false); } catch (e) { /* next */ } }, 10000).unref();
+  return glimLoginAskObj;
+}
+// helper = a Mote: never waits on Ben. The main chat waits (abortably, outside its run slot) for Save / Cancel.
+function loginAskFor(isHelper, pageUrl, site, reason, ctx) {
+  const go = () => glimLoginAsk().ask({ site, reason, pageUrl, helper: isHelper, signal: ctx && ctx.signal });
+  return isHelper || !ctx || !ctx.waitForBen ? go() : ctx.waitForBen(go);
+}
+const formSender = (e, token) => { const w = loginFormWins.get(String(token || '')); return !!w && !w.isDestroyed() && e.sender === w.webContents; };
+ipcMain.handle('loginform:info', (e, token) => (formSender(e, token) ? glimLoginAsk().info(token) : null));
+ipcMain.handle('loginform:save', (e, token, user, password) => (formSender(e, token) ? glimLoginAsk().submit(token, user, password) : { ok: false, error: 'Not allowed.' }));
+ipcMain.handle('loginform:cancel', (e, token) => (formSender(e, token) ? glimLoginAsk().cancel(token) : { ok: false }));
+
 // "save my Schoology login" in Ben's own chat box -> the masked dialog (prefilled with the likely site), and a note for the model
 async function loginDialogFor(text, threadId) {
   const ask = Logins.saveLoginAsk(text); if (!ask) return '';

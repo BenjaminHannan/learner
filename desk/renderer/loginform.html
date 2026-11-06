@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'">
+<title>Sign in — Glim</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px -apple-system, "Segoe UI", sans-serif; margin: 0; padding: 18px 20px; background: Canvas; color: CanvasText; -webkit-user-select: none; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  .why { opacity: .75; margin: 0 0 12px; min-height: 1em; }
+  label { display: block; font-size: 12px; opacity: .8; margin: 8px 0 3px; }
+  input { width: 100%; box-sizing: border-box; font: inherit; padding: 7px 8px; border-radius: 6px; border: 1px solid #8886; -webkit-user-select: text; }
+  .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid #8886; background: transparent; color: inherit; }
+  button.go { background: #2f6fec; color: #fff; border-color: #2f6fec; }
+  .note { font-size: 11px; opacity: .65; margin-top: 10px; }
+  .err { color: #d33; font-size: 12px; min-height: 1em; margin-top: 6px; }
+</style>
+</head>
+<body>
+<form id="f" autocomplete="off">
+  <h1 id="title">Sign in</h1>
+  <p class="why" id="why"></p>
+  <label for="u">Username or email</label>
+  <input id="u" name="username" type="text" autocomplete="off" spellcheck="false" autocapitalize="off">
+  <label for="p">Password</label>
+  <input id="p" name="password" type="password" autocomplete="off">
+  <div class="err" id="err"></div>
+  <div class="row"><button type="button" id="cancel">Cancel</button><button type="submit" class="go" id="save">Save</button></div>
+  <div class="note">This is Glim's own private form, not the website. The password goes straight into your keychain. Glim never sees it and it never goes in the chat.</div>
+</form>
+<script src="loginform.js"></script>
+</body>
+</html>

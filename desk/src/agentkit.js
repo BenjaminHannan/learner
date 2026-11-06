@@ -32,11 +32,11 @@ function ssoNote(host, lines) {
 // diet: a web task gets only the tools a web task uses, with short descriptions, and a system prompt without the lines about the
 // others (Motes, shell, tracking). Chosen once per task from Ben's words, so the prompt prefix stays byte-stable for the cache while
 // the task runs. Ben's M3 log: system ~2.5k chars + tools ~5.9k chars + tool results 20-29k chars in one request.
-const WEB_TOOLS = ['web_search', 'browser_go', 'browser_click', 'browser_type', 'browser_scroll', 'browser_back', 'browser_sign_in', 'browser_read', 'memory_save', 'ask_user'];
+const WEB_TOOLS = ['web_search', 'browser_go', 'browser_click', 'browser_type', 'browser_scroll', 'browser_back', 'browser_sign_in', 'ask_login', 'browser_read', 'memory_save', 'ask_user'];
 const SHORT = {
   web_search: 'Search the web.', browser_go: 'Open a URL in your browser.', browser_click: 'Click element [id] of the newest page view.',
   browser_type: 'Type into field [id]; enter true presses Enter.', browser_scroll: 'Scroll the page.', browser_back: 'Go back a page.',
-  browser_sign_in: "Sign in on this page with Ben's saved login (you never see it).", browser_read: 'Read the page text (dates, prices, lists).',
+  browser_sign_in: "Sign in on this page with Ben's saved login (you never see it).", ask_login: "No saved login: open the app's private form for Ben (never ask in chat).", browser_read: 'Read the page text (dates, prices, lists).',
   memory_save: 'Save a lasting fact about Ben.', ask_user: 'Ask Ben one short question with 2-4 tap options.'
 };
 const WEBBY = /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|org|net|edu|gov|io|co|us|uk|app|dev|test|me|info|ai)\b|https?:\/\/|\b(?:website|web ?site|site|portal|online|browser|internet|web|google|look (?:it )?up|search|find|check|price|cost|buy|order|cart|shop|sign ?in|log ?in|my (?:email|mail|bank|account|grades|school)|due|hours|phone number|news|recipe|form)\b/i;

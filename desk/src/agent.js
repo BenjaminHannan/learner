@@ -45,7 +45,7 @@ const ASK_WORD = /\b(need|provide|send|share|give|tell me|what is|what's|enter|t
 // false alarm sent Glim round again); "share", "send", "what is" still are
 const HAND_OFF = /\b(yourself|sign-?in window|I (?:can(?:'|no)t|won'?t|will not) type)\b/i;
 const STRONG_ASK = /\b(provide|send|share|give|tell me|what is|what's)\b/i;
-const SECRET_RECHECK = false;   // Ben 2026-11-04: asking him for a password in chat is fine (Glim is local), so no send-back
+const SECRET_RECHECK = true;   // SECURE-LOGIN, Ben 2026-11-05: logins come only through the app's private form (ask_login), never chat (replaces 11-04)
 function asksForSecret(text) { return String(text || '').split(/(?<=[.?!\n])\s+/).some((s) => SECRET_WORD.test(s) && (STRONG_ASK.test(s) || (ASK_WORD.test(s) && !HAND_OFF.test(s)) || /\?\s*$/.test(s))); }
 // A reply that says it is doing (or did) something on screen. Ben Oct 29: in a chat of text-only turns the fast model wrote "I am now on the
 // sign-in page" and "I've opened the sign-in window" without one tool call, so nothing happened and the turn just ended.
@@ -86,7 +86,7 @@ const HELPER_RUN = { steps: 40, mins: 20 }, LEARN_RUN = { steps: 80, mins: 45 };
 const WRAP_NOTE = ' Time is up for this run: no more tools. Write your report now from what you found, and say in one line what is still not done.';
 const WRAP_EMPTY = 'This run reached its time or step limit before writing a report.';
 const WRAP_TOKENS = 1500;
-const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. On a sign-in page call browser_sign_in (the app fills Ben\'s saved login), or type the password Ben gave you, or ask him for it.';
+const DO_IT_NOTE = ' Not done: your last reply only described steps, and nothing happened (no tool was called). Do the first step now with a tool call (for a website: browser_go), or ask Ben one short question. On a sign-in page call browser_sign_in (the app fills Ben\'s saved login); with no saved login call ask_login (the app\'s private form). Never ask for a password in chat.';
 const CAP_REPLY_TOKENS = 1500;   // brief thinking, then one or two sentences; a longer run-on is cut
 const CAP_REPLY_SECS = 20;       // the forced reply still thinking after this: dropped, and the task just goes on
 const PLAN_WORDS = /\b(?:I(?:'ll| will|'m going to| am going to)|let me)\b/i;
@@ -445,6 +445,7 @@ function defaultSummary(name, a) {
     case 'browser_scroll': return 'Scrolled ' + (a.direction || 'down');
     case 'browser_back': return 'Went back';
     case 'browser_sign_in': return 'Signing in';
+    case 'ask_login': return 'Asking Ben to save a login (private form)';
     case 'browser_read': return 'Read page' + (a.page > 1 ? ' ' + a.page : '');
     case 'screen_look': return 'Looked at ' + (a.app || 'the front app');
     case 'screen_click': return a.id !== undefined ? 'Pressed screen element [' + a.id + ']' : 'Clicked screen at ' + a.x + ',' + a.y;
@@ -1029,7 +1030,7 @@ class Agent {
       thread.items.push({ t: 'step', id, tool: 'verify', args: {}, summary, ok: true, preview: 'the reply asked for login details' });
       this.emit({ type: 'step_start', id, tool: 'verify', args: {}, summary });
       this.emit({ type: 'step_end', id, tool: 'verify', ok: true, summary, preview: 'the reply asked for login details', result: '' });
-      thread.messages.push({ role: 'user', content: CHECK_MARK + P(' Not done: never ask Ben for a password or login details. Open the site with browser_go instead; on its sign-in page call browser_sign_in (the app fills his saved login), or click or type into the field as usual and the app lets Ben sign in himself. Then continue the task.') });
+      thread.messages.push({ role: 'user', content: CHECK_MARK + P(' Not done: never ask Ben for a password or login details in chat. On the sign-in page call browser_sign_in (the app fills his saved login); with no saved login call ask_login (the app opens its own private form for Ben). Then continue the task, or end in one line if the form is waiting for him.') });
       return 'continue';
     }
     // A "remember ..." ask answered without a memory_save call: no model call needed, just send it back to save (counts toward the cap).

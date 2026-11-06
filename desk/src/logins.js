@@ -8,6 +8,7 @@
 //    Never for this site. Or Ben says "save my Schoology login" and a masked app dialog opens (the text never goes in chat).
 //  - signing in: the browser_sign_in tool. The APP fills the saved login on the page and submits; the model only reads
 //    "Signed in as <user> on <host>" / "No saved login for <host> ..." / "A code is needed ...".
+//  - SECURE-LOGIN (Ben 2026-11-05): no saved login -> the app's own private form (src/loginform.js, ask_login tool), never chat.
 //  - filling happens only when the page's origin is https and EXACTLY the saved origin (a look-alike host gets nothing).
 //  - redaction: scrub() drops any line that holds a saved password (tool results, log lines, the day logs, the sleep diary).
 const fs = require('fs');
@@ -175,11 +176,11 @@ class LoginStore {
 // ---- what the model reads (never the password) ---------------------------------------------------------------------------------------
 const say = {
   signedIn: (user, host) => 'Signed in as ' + user + ' on ' + host + '.',
-  noLogin: (host) => 'No saved login for ' + host + ': ask Ben to sign in once in Glim\'s browser (the app then offers to save it).',
+  noLogin: (host) => 'No saved login for ' + host + ': call ask_login (the app\'s private form for Ben). Never ask for the password in chat.',
   code: (host) => 'A code is needed on ' + host + ': Ben enters verification codes himself.',
   notHttps: () => 'Not signed in: this page is not https, so the app will not fill a saved login here.',
   noForm: (host) => 'No sign-in form found on ' + host + '. Open the site\'s sign-in page first, then call browser_sign_in again.',
-  failed: (user, host, why) => 'The sign-in as ' + user + ' on ' + host + ' did not go through' + (why ? ': the page says "' + why + '"' : '') + '. Ask Ben to sign in once in Glim\'s browser (the app offers to save the new login).'
+  failed: (user, host, why) => 'The sign-in as ' + user + ' on ' + host + ' did not go through' + (why ? ': the page says "' + why + '"' : '') + '. Never ask for the password in chat; Ben can sign in once in Glim\'s browser (the app offers to save the new login).'
 };
 
 // ---- capture: Ben submitted a login form in Glim's browser -> offer one Save card ---------------------------------------------------------

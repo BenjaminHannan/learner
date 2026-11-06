@@ -87,7 +87,8 @@ function classify(name, args, ctx) {
     case 'browser_read': case 'diary_search': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'read' };
     case 'memory_save': case 'memory_forget': case 'track_add': case 'track_done': return { cat: 'notes' };
     case 'browser_go': return { cat: isBanking(args.url) ? 'banking' : 'browse' };
-    case 'browser_sign_in': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'passwords' };   // LOGIN1: a bank keeps its own level
+    case 'browser_sign_in': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'passwords' };
+    case 'ask_login': return { cat: null };   // SECURE-LOGIN (Ben 2026-11-05): the private form opens with no "may I?" at any level   // LOGIN1: a bank keeps its own level
     case 'browser_back': case 'browser_scroll': return { cat: isBanking(ctx.pageUrl) ? 'banking' : 'browse' };
     case 'browser_click': case 'browser_type': {
       if (isBanking(ctx.pageUrl)) return { cat: 'banking' };
