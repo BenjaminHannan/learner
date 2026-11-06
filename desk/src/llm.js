@@ -73,6 +73,10 @@ const chatUrl = (gatewayUrl) => String(gatewayUrl).replace(/\/+$/, '') + '/chat/
 let requestHook = null;
 function setRequestHook(fn) { requestHook = typeof fn === 'function' ? fn : null; }
 
+// HELPER-BG (2026-11-06): a helper's request (opts.background) carries CHAT-FIRST's header, so the brain stops it when Ben's chat arrives.
+// A request stopped or refused that way comes back as an error with .yielded (never as an empty answer) for the helper to retry.
+const BG_HEADER = 'x-glim-background';
+const YIELD_RE = /chat goes first/i;
 async function streamChat(opts) {
   if (requestHook) { try { const m = requestHook(opts.messages, opts); if (Array.isArray(m) && m !== opts.messages) opts = { ...opts, messages: m }; } catch (e) { /* never breaks a chat */ } }
   const { gatewayUrl, model, messages, tools, signal, onText, onReasoning, onToolDelta, apiKey, maxTokens } = opts;
@@ -81,6 +85,7 @@ async function streamChat(opts) {
   const headers = { 'content-type': 'application/json', accept: 'text/event-stream' };
   if (apiKey) headers.authorization = 'Bearer ' + apiKey;
   if (testProfile || opts.test === true) headers['x-test'] = '1';
+  if (opts.background === true) headers[BG_HEADER] = '1';
   const tStart = Date.now();
   let firstTokenMs = null;
   const firstToken = () => { if (firstTokenMs === null) firstTokenMs = Date.now() - tStart; };
@@ -91,6 +96,7 @@ async function streamChat(opts) {
     const error = new Error('Gateway error ' + res.status + (t ? ': ' + t.slice(0, 400) : ''));
     error.status = res.status;
     try { error.details = JSON.parse(t); } catch (e) { /* an unstructured error is not a typed overflow */ }
+    if (opts.background === true && (res.status === 503 || YIELD_RE.test(t))) error.yielded = true;
     throw error;
   }
   let content = '';
@@ -170,6 +176,7 @@ async function streamChat(opts) {
     const fb = extractFallbackCalls(content, tools);
     if (fb.calls.length) { toolCalls = fb.calls; content = fb.content; }
   }
+  if (opts.background === true && !finishReason && !content && !reasoning && !toolCalls.length && !(signal && signal.aborted)) throw Object.assign(new Error('Stopped so Ben\'s chat could go first'), { yielded: true });
   return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
 }
 
