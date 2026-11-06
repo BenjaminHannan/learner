@@ -97,6 +97,6 @@ handoff. The source for that live check is `hb_test.py`; the queue check uses
 
 ## Three short lines
 
-The helpers now know Ben goes first.
-They have a one-at-a-time line ready for the brain.
-We still need the safe live check before calling it a win.
+The helper fix is built.
+The one-at-a-time line is ready, but still off.
+The safe live check must pass before we call it a win.
