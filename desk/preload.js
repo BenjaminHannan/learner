@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('desk', {
   zoom: () => { try { return webFrame.getZoomFactor(); } catch (e) { return 1; } },
   info: inv('info'),
   settings: { get: inv('settings:get'), set: inv('settings:set') },
+  recorder: { status: inv('recorder:status'), choose: inv('recorder:choose') },
   threads: { list: inv('threads:list'), create: inv('threads:new'), load: inv('threads:load'), remove: inv('threads:delete'), rename: inv('threads:rename'), feedback: inv('threads:feedback') },
   agent: { send: inv('agent:send'), stop: inv('agent:stop'), respond: inv('respond') },
   safety: { get: inv('safety:get'), set: inv('safety:set'), undo: inv('safety:undo'), hands: inv('safety:hands') },   // I5 safety levels

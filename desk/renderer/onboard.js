@@ -27,11 +27,13 @@ window.Onboard = (() => {
   let made = new Map();             // use id -> name of the Glim that exists now (created here, or before)
   let createNote = '';
   let showPermsStep = true;
+  let recorderChoice = null;
+  let recorderInfo = null;
   let busy = false;
-  let body, nextBtn, backBtn, dots, skipBtn;
+  let body, nextBtn, backBtn, dots, skipBtn, hint;
 
   const needsPerms = () => !!(info && Platform.needsPermsStep(info.platform, info.e2e));
-  const stepList = () => (showPermsStep ? [0, 1, 4, 5, 2, 3] : [0, 1, 4, 5, 2]); // 4 = how much Glim asks, 5 = like / dislike
+  const stepList = () => [...(info && info.platform === 'darwin' && recorderChoice === null ? [6] : []), ...(showPermsStep ? [0, 1, 4, 5, 2, 3] : [0, 1, 4, 5, 2])];
   const lastStep = () => stepList()[stepList().length - 1];
 
   function build() {
@@ -44,7 +46,7 @@ window.Onboard = (() => {
     body = el('div', 'ob-body'); body.id = 'obBody';
     const foot = el('div', 'ob-foot');
     backBtn = el('button', 'ghost', 'Back'); backBtn.id = 'obBack'; backBtn.onclick = () => { if (!busy) go(-1); };
-    const hint = el('span', 'ob-hint', 'Enter for next · Esc to skip');
+    hint = el('span', 'ob-hint', 'Enter for next · Esc to skip');
     nextBtn = el('button', 'amber-btn', 'Next'); nextBtn.id = 'obNext'; nextBtn.onclick = () => next();
     foot.append(backBtn, hint, nextBtn);
     root.append(head, body, foot);
@@ -66,18 +68,49 @@ window.Onboard = (() => {
     const page = el('div', 'ob-page'); page.dataset.step = String(step);
     body.append(page);
     backBtn.style.visibility = idx > 0 ? 'visible' : 'hidden';
+    backBtn.hidden = step === 6;
+    nextBtn.hidden = step === 6;
+    skipBtn.hidden = step === 6;
+    hint.hidden = step === 6;
     nextBtn.textContent = 'Next';
     if (step === 0) paintMeet(page);
     else if (step === 1) paintUses(page);
     else if (step === 2) paintSchedules(page);
     else if (step === 4) paintMode(page);
     else if (step === 5) paintRate(page);
+    else if (step === 6) paintRecorder(page);
     else paintPerms(page);
     if (step === lastStep()) nextBtn.textContent = 'Finish';
     if (step === 0) nextBtn.textContent = 'Get started';
     if (step === 3) { skipBtn.textContent = 'Skip setup'; }
     root.dataset.step = String(step);
     setTimeout(() => { const f = step === 1 ? page.querySelector('.ob-tile') : nextBtn; if (f) f.focus({ preventScroll: true }); }, 30);
+  }
+
+  function paintRecorder(page) {
+    page.append(el('h1', null, 'May Glim watch and learn?'));
+    page.append(el('p', 'ob-lead', 'Glim can learn by watching how you use the computer. It stays on this Mac.'));
+    page.append(el('p', 'ob-fine', 'Recording starts off. Nothing is recorded unless you say Yes. You can stop it later.'));
+    for (const line of recorderInfo && recorderInfo.guidance || []) page.append(el('p', 'ob-fine', line));
+    const choices = el('div', 'ob-grid');
+    for (const [value, label] of [[true, 'Yes'], [false, 'No']]) {
+      const button = el('button', 'ob-tile', label); button.type = 'button'; button.id = value ? 'obRecorderYes' : 'obRecorderNo';
+      button.onclick = () => guarded(async () => {
+        try {
+          const result = await desk.recorder.choose(value);
+          if (!result || result.choice !== value || result.enabled !== false) throw Error('Your choice could not be saved.');
+          recorderChoice = value;
+          step = 0;
+          paint();
+        } catch (_) {
+          const error = el('p', 'ob-fine bad', 'Your choice could not be saved. Recording is still off. Please try again.');
+          page.append(error);
+        }
+      });
+      choices.append(button);
+    }
+    page.append(choices);
+    if (recorderInfo && !recorderInfo.available) page.append(el('p', 'ob-fine', 'The recorder is not ready yet. We can save your choice, but recording stays off.'));
   }
 
   function paintMeet(page) {
@@ -241,6 +274,7 @@ window.Onboard = (() => {
 
   async function nextWork() {
     if (!isOpen()) return;
+    if (step === 6) return;
     if (step === 1) await desk.settings.set({ uses: [...picks], usesOther: other });
     if (step === 4) await desk.settings.set({ mode });
     if (step === 2) { const ok = await createGlims(); if (ok === false) { paint(); return; } }
@@ -254,6 +288,7 @@ window.Onboard = (() => {
 
   async function finish(skipped) {
     if (!isOpen()) return;
+    if (step === 6) return;
     if (perms) perms.hide();
     root.hidden = true;
     const patch = { onboarded: true, onboardAt: '', uses: [...picks], usesOther: other };
@@ -265,6 +300,8 @@ window.Onboard = (() => {
   async function show() {
     info = await desk.info();
     const s = await desk.settings.get();
+    recorderInfo = info.platform === 'darwin' ? await desk.recorder.status() : null;
+    recorderChoice = recorderInfo && typeof recorderInfo.choice === 'boolean' ? recorderInfo.choice : null;
     picks = new Set(Uses.cleanUses(s.uses)); other = s.usesOther || '';
     wants = new Map(); made = new Map(); createNote = '';
     showPermsStep = needsPerms();
@@ -275,6 +312,7 @@ window.Onboard = (() => {
     } catch (e) { /* ignore */ }
     if (!root.firstChild) build();
     step = !s.onboarded && s.onboardAt === 'perms' && showPermsStep ? 3 : 0;   // a finished setup run again starts at the top
+    if (info.platform === 'darwin' && recorderChoice === null) step = 6;
     mode = 'ask'; root.hidden = false; paint();
   }
   const isOpen = () => !root.hidden;

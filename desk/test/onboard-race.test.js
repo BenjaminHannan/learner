@@ -89,3 +89,47 @@ test('setup serializes navigation while saving and unlocks after failure', async
   await find(root, 'obNext').onclick();
   assert.equal(window.Onboard._state().step, 5);
 });
+
+for (const choice of [true, false]) test('Mac recording needs an explicit ' + (choice ? 'Yes' : 'No'), async () => {
+  const root = new Element('div'); root.hidden = true;
+  const listeners = {}, choices = [];
+  let savedChoice = null, fail = true;
+  const desk = {
+    info: async () => ({ platform: 'darwin' }),
+    settings: { get: async () => ({ uses: [], onboardAt: 'perms' }), set: async () => {} },
+    helpers: { list: async () => [] },
+    recorder: {
+      status: async () => ({ choice: savedChoice, enabled: false, available: false, guidance: ['No sound is recorded.'] }),
+      choose: async value => {
+        choices.push(value);
+        if (fail) throw Error('disk unavailable');
+        savedChoice = value;
+        return { choice: value, enabled: false };
+      }
+    }
+  };
+  const window = { desk, dispatchEvent() {} };
+  const document = { getElementById: () => root, createElement: tag => new Element(tag), addEventListener: (name, fn) => { listeners[name] = fn; } };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../renderer/onboard.js'), 'utf8'), {
+    window, document, Platform: { needsPermsStep: () => false },
+    Uses: { USES: [], cleanUses: () => [] }, Mascot: { el: () => new Element('div') }, setTimeout: () => 0
+  });
+  await window.Onboard.show();
+  assert.equal(window.Onboard._state().step, 6);
+  assert.equal(find(root, 'obNext').hidden, true);
+  assert.equal(find(root, 'obSkip').hidden, true);
+  for (const key of ['Enter', 'Escape']) listeners.keydown({ key, preventDefault() {}, stopImmediatePropagation() {} });
+  await flush();
+  assert.deepEqual(choices, []);
+  assert.equal(window.Onboard._state().step, 6);
+  const button = find(root, choice ? 'obRecorderYes' : 'obRecorderNo');
+  await button.onclick();
+  assert.equal(window.Onboard._state().step, 6);
+  fail = false;
+  await button.onclick();
+  assert.equal(window.Onboard._state().step, 0);
+  assert.equal(find(root, 'obNext').hidden, false);
+  await window.Onboard.show();
+  assert.equal(window.Onboard._state().step, 0);
+  assert.deepEqual(choices, [choice, choice]);
+});

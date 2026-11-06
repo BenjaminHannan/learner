@@ -84,7 +84,7 @@ if [[ "$FRIEND_BUILD" == 1 ]]; then
   swiftc -O -target arm64-apple-macos12 helper/mac-launcher/launcher.swift -o build/launcher-arm64
   swiftc -O -target x86_64-apple-macos12 helper/mac-launcher/launcher.swift -o build/launcher-x64
   lipo -create build/launcher-arm64 build/launcher-x64 -output build/launcher
-  FRIEND_IGNORE=(--ignore='^/src/games/bedwars/(benspc|TOOLS\.md|README\.md)($|/)' --ignore='^/src/games/bedwars/benspc\.js$' --ignore='^/\.gitignore$')
+  FRIEND_IGNORE=(--ignore='^/src/games/bedwars/(benspc|TOOLS\.md|README\.md)($|/)' --ignore='^/src/games/bedwars/benspc\.js$' --ignore='^/\.gitignore$' --ignore='^/tools/uncle-mac($|/)')
 fi
 
 echo "==> packaging"

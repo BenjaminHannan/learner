@@ -38,6 +38,7 @@ if (process.platform === 'linux') app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 const { Store, applyPresetDefaults } = require('./src/store');
+const { RecorderSetup } = require('./src/recorder-setup');
 const StudyGate = require('./src/studygate');   // Learn study Motes: drift guard + truth check (Nov 4)
 const { Agent, DANGER_LABELS, noteOldGap, rollupGapStep } = require('./src/agent');
 const { buildTools } = require('./src/prompt');
@@ -79,6 +80,7 @@ let win = null;
 let ui = null;   // the app UI (chat, panel chrome) is a WebContentsView filling the window; browser views sit below it unless a panel is open
 let concealed = false;
 let store = null;
+let recorderSetup = null;
 let builtin = null;  // the built-in local model (Windows): download, llama-server, gateway (src/runtime)
 let sleepInstaller = null;
 let sleeper = null;  // bridge to the separate sleepmode app (src/sleep.js)
@@ -2285,6 +2287,11 @@ function registerIpc() {
   h('settings:get', () => store.getSettings());
   h('settings:set', (patch) => applySettings(patch));
   { const own = (e) => !!(ui && e && e.sender === ui.webContents);   // I5: only the app's own window may change a safety level
+    ipcMain.handle('recorder:status', (e) => own(e) && recorderSetup ? recorderSetup.status() : null);
+    ipcMain.handle('recorder:choose', (e, choice) => {
+      if (!own(e) || !recorderSetup || process.platform !== 'darwin') throw Error('Use the recording choice in Glim.');
+      return recorderSetup.choose(choice);
+    });
     ipcMain.handle('safety:get', () => ({ levels: glimSafety().levels(), hands: glimSafety().hands() }));
     ipcMain.handle('safety:set', (e, cat, level) => (own(e) ? glimSafety().set([{ cat, level }], { source: 'settings' }) : { ok: false }));
     ipcMain.handle('safety:undo', (e, token) => (own(e) ? glimSafety().undo(token, { source: 'settings' }) : { ok: false }));
@@ -2595,6 +2602,7 @@ app.whenReady().then(async () => {
   if (!gotLock) return;
   applyPresetDefaults(Platform.defaultPreset(process.platform, PLATFORM_OPTS));
   store = new Store(app.getPath('userData'));
+  recorderSetup = new RecorderSetup(app.getPath('userData'));
   // connect-20261105 #3: notes kept past 6,000 chars and chosen by closeness to Ben's message (settings.notesByRelevance, default on)
   memory = createMemory(app.getPath('userData'), { notesByRelevance: () => store.getSettings().notesByRelevance !== false });
   tracking = createTracking(app.getPath('userData'));
