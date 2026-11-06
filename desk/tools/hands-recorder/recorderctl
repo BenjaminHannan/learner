@@ -1,0 +1,35 @@
+#!/bin/zsh
+set -eu
+BASE=${0:A:h}
+NODE=/opt/homebrew/bin/node
+[[ -x "$NODE" ]] || NODE=$(command -v node)
+LABEL=local.glim.hands-recorder
+JOB="gui/$(id -u)/$LABEL"
+case "${1:-status}" in
+ permissions) open -n "$BASE/Hands Recorder.app" --args --request-permissions ;;
+ canary-permissions) open -n "$BASE/Hands Recorder Canary.app" --args --request-permissions ;;
+ canary)
+  mkdir -p "$BASE/canary-results"
+  if "$BASE/Hands Recorder Canary.app/Contents/MacOS/canary" "$BASE/canary-results/result.json"; then "$NODE" "$BASE/verify-canary.js" "$BASE/canary-results"; else cat "$BASE/canary-results/result.json"; exit 3; fi ;;
+ preflight) "$BASE/Hands Recorder.app/Contents/MacOS/hands-recorder" --preflight ;;
+ start)
+  if [[ "${2:-}" == --fake ]]; then
+   "$NODE" "$BASE/daemon.js" --fake >> "$BASE/daemon.log" 2>&1 &
+  else
+   # Ben/lead invokes this command after reviewing T9; never run during installation.
+   "$NODE" -e 'require("fs").writeFileSync(process.argv[1],JSON.stringify({enabled:true}))' "$BASE/state.json"
+   launchctl enable "$JOB"
+   launchctl bootstrap "gui/$(id -u)" "$BASE/local.glim.hands-recorder.plist" 2>/dev/null || launchctl kickstart "$JOB"
+  fi ;;
+ stop)
+  "$NODE" -e 'require("fs").writeFileSync(process.argv[1],JSON.stringify({enabled:false}))' "$BASE/state.json"
+  if [[ -f "$BASE/recorder.pid" ]]; then
+   PID=$(cat "$BASE/recorder.pid")
+   # Exact PID, and confirm it is OUR daemon before sending a signal.
+   if [[ "$PID" == <-> ]] && ps -p "$PID" -o command= | /usr/bin/grep -F -- "$BASE/daemon.js" >/dev/null; then kill -TERM "$PID"; fi
+  fi
+  launchctl bootout "$JOB" 2>/dev/null || true
+  echo 'OFF. No automatic restart until you run start.' ;;
+ status) [[ ! -f "$BASE/status.json" ]] || cat "$BASE/status.json" ;;
+ *) echo 'Use: recorderctl permissions | preflight | start [--fake] | stop | status'; exit 2 ;;
+esac

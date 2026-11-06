@@ -1,0 +1,38 @@
+'use strict';
+// Only our indexed local recordings. No globs, shell deletes, or model decisions.
+const fs=require('node:fs'),path=require('node:path'),{randomUUID}=require('node:crypto');
+const GiB=1024**3,DEFAULTS={total:12*GiB,daily:3*GiB,keep:2*GiB,minFree:10*GiB,ageMs:7*86400000};
+class Retention {
+ constructor(root,{caps={},clock=Date.now,freeBytes}={}){
+  fs.mkdirSync(root,{recursive:true,mode:0o700});if(fs.lstatSync(root).isSymbolicLink())throw Error('symlink root');this.root=fs.realpathSync(root);this.caps={...DEFAULTS,...caps};this.clock=clock;this.freeBytes=freeBytes||(()=>{const s=fs.statfsSync(this.root);return Number(s.bavail)*Number(s.bsize);});this.index=path.join(this.root,'clip-index.json');this.log=path.join(this.root,'retention.log');this.lock=path.join(this.root,'.retention-lock');
+  for(const p of [this.index,this.log,this.lock,this.index+'.tmp'])if(fs.existsSync(p)&&fs.lstatSync(p).isSymbolicLink())throw Error('unsafe metadata symlink');
+  this.transaction(()=>{this.load();for(const clip of Object.values(this.data.clips))if(clip.deleting)this.remove(clip,clip.deleting.reason,clip.deleting.trigger);this.save();});
+ }
+ transaction(fn){let fd;try{fd=fs.openSync(this.lock,'wx',0o600);}catch(e){if(e.code!=='EEXIST')throw e;if(fs.lstatSync(this.lock).isSymbolicLink())throw Error('unsafe lock');const pid=Number(fs.readFileSync(this.lock,'utf8'));if(!Number.isSafeInteger(pid)||pid<=0)throw Error('invalid lock');try{process.kill(pid,0);throw Error('recordings index busy');}catch(err){if(err.code!=='ESRCH')throw err;}fs.unlinkSync(this.lock);fd=fs.openSync(this.lock,'wx',0o600);}fs.writeSync(fd,String(process.pid));try{return fn();}finally{fs.closeSync(fd);fs.unlinkSync(this.lock);}}
+ load(){this.data=fs.existsSync(this.index)?JSON.parse(fs.readFileSync(this.index,'utf8')):{version:1,clips:{},daily:{}};}
+ save(){fs.writeFileSync(this.index+'.tmp',JSON.stringify(this.data),{mode:0o600});fs.renameSync(this.index+'.tmp',this.index);}
+ checked(rel){if(typeof rel!=='string'||!rel||path.isAbsolute(rel)||rel.split(/[\\/]/).some(p=>p==='..'||p==='.'||!p)||['clip-index.json','retention.log','.retention-lock'].includes(rel))throw Error('outside/invalid clip path');const full=path.resolve(this.root,rel);if(!full.startsWith(this.root+path.sep))throw Error('outside clip root');let p=this.root;for(const part of rel.split('/')){p=path.join(p,part);if(fs.existsSync(p)&&fs.lstatSync(p).isSymbolicLink())throw Error('symlink clip path');}return full;}
+ files(clip){if(!Array.isArray(clip.files)||!clip.files.length)throw Error('empty clip index');return clip.files.map(rel=>{const p=this.checked(rel);if(fs.existsSync(p)&&!fs.lstatSync(p).isFile())throw Error('non-file clip path');return p;});}
+ size(clip){return this.files(clip).reduce((n,p)=>n+(fs.existsSync(p)?fs.statSync(p).size:0),0);}
+ total(){return Object.values(this.data.clips).reduce((n,c)=>n+this.size(c),0);}
+ day(){return new Date(this.clock()).toLocaleDateString('en-CA');}
+ value(c){const all=Object.values(this.data.clips),apps=Math.max(1,all.filter(x=>x.app===c.app).length),actions=Math.max(1,all.filter(x=>x.action===c.action).length);const rarity=.5*(1/apps+1/actions),loss=Math.min(10,Math.max(0,c.loss||0))/10,fresh=Math.max(0,1-(this.clock()-c.createdMs)/(7*86400000));return 1000*Number(c.audit===true)+20*rarity+20*loss+5*fresh;}
+ order(a,b){return this.value(a)-this.value(b)||a.createdMs-b.createdMs||a.id.localeCompare(b.id);}
+ append(row){const fd=fs.openSync(this.log,'a',0o600);try{fs.writeSync(fd,JSON.stringify({...row,at:this.clock()})+'\n');fs.fsyncSync(fd);}finally{fs.closeSync(fd);}}
+ remove(c,reason,trigger){const files=this.files(c); // Validate EVERY path before touching ANY file.
+  if(!['spent','expired','over-cap','user-delete'].includes(reason))throw Error('unknown deletion reason');
+  if(!c.spent&&reason==='spent')throw Error('cannot delete untrained clip as spent');
+  if(reason==='expired'&&this.clock()-c.createdMs<this.caps.ageMs)throw Error('unexpired clip');
+  if(!c.deleting){c.deleting={reason,trigger,bytes:this.size(c),op:randomUUID()};this.save();this.append({clipId:c.id,...c.deleting,paths:c.files,state:'deleting'});}
+  for(const p of files){try{fs.unlinkSync(p);}catch(e){if(e.code!=='ENOENT')throw e;}}
+  const row={clipId:c.id,...c.deleting,paths:c.files,state:'deleted'};delete this.data.clips[c.id];this.save();this.append(row);return row;
+ }
+ register(c){return this.transaction(()=>{this.load();if(!/^[a-zA-Z0-9_-]+$/.test(c.id)||this.data.clips[c.id])throw Error('bad/duplicate clip ID');const clip={...c,createdMs:c.createdMs??this.clock(),spent:false,keepReason:c.audit?'audit':'untrained'};const bytes=this.size(clip),day=this.day();if((this.data.daily[day]||0)+bytes>this.caps.daily||this.freeBytes()<this.caps.minFree||this.total()+bytes>this.caps.total)throw Error('collection paused: disk backstop');if(c.audit&&Object.values(this.data.clips).filter(x=>x.audit).reduce((n,x)=>n+this.size(x),0)+bytes>this.caps.keep)throw Error('audit set cannot fit keep cap');this.data.clips[c.id]=clip;this.data.daily[day]=(this.data.daily[day]||0)+bytes;this.rebalance();this.save();return clip;});}
+ rebalance(){let remaining=this.caps.keep;const all=Object.values(this.data.clips),audits=all.filter(c=>c.audit).sort((a,b)=>a.id.localeCompare(b.id));for(const c of audits){remaining-=this.size(c);c.keepReason='audit';}if(remaining<0)throw Error('frozen audit exceeds keep cap');for(const c of all.filter(c=>!c.audit).sort((a,b)=>this.order(b,a))){const n=this.size(c);if(n<=remaining){c.keepReason=c.spent?(c.loss>=1?'high-loss':'rare'):'untrained';remaining-=n;}else c.keepReason=null;}}
+ sweep(){return this.transaction(()=>{this.load();for(const c of Object.values(this.data.clips))if(this.clock()-c.createdMs>=this.caps.ageMs)this.remove(c,'expired','seven-day max');this.rebalance();const eligible=()=>Object.values(this.data.clips).filter(c=>!c.audit).sort((a,b)=>Number(b.spent)-Number(a.spent)||(a.spent&&b.spent?a.createdMs-b.createdMs:this.order(a,b)));while(this.total()>this.caps.total||this.freeBytes()<this.caps.minFree){const c=eligible()[0];if(!c)break;this.remove(c,'over-cap','total/free-space backstop');}this.rebalance();this.save();return this.statusLoaded();});}
+ finishSleep({judged,trainedIds,losses={}}){if(judged!==true)throw Error('sleep not judged; no spent clips');return this.transaction(()=>{this.load();for(const id of trainedIds){const c=this.data.clips[id];if(!c)throw Error('unknown trained clip');if(c.audit)throw Error('audit must never train');}for(const id of trainedIds){const c=this.data.clips[id];c.spent=true;c.loss=Number.isFinite(losses[id])?losses[id]:0;}this.rebalance();for(const c of Object.values(this.data.clips))if(c.spent&&!c.keepReason)this.remove(c,'spent','judged sleep end');this.save();return this.statusLoaded();});}
+ deleteSession(session){return this.transaction(()=>{this.load();for(const c of Object.values(this.data.clips))if(c.session===session)this.remove(c,'user-delete','Ben Delete this session');this.rebalance();this.save();return this.statusLoaded();});}
+ statusLoaded(){const clips=Object.values(this.data.clips),total=this.total(),daily=this.data.daily[this.day()]||0,free=this.freeBytes();return {totalBytes:total,keepBytes:clips.filter(c=>c.keepReason).reduce((n,c)=>n+this.size(c),0),dailyBytes:daily,clips:clips.length,freeBytes:free,paused:free<this.caps.minFree||daily>=this.caps.daily||total>=this.caps.total};}
+ status(){return this.transaction(()=>{this.load();return this.statusLoaded();});}
+}
+module.exports={Retention,DEFAULTS,GiB};

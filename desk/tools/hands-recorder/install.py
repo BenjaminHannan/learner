@@ -1,0 +1,20 @@
+"""Install only our standalone recorder. Does NOT load launchd or start capture."""
+from pathlib import Path
+import shutil,subprocess,plistlib,os
+repo=Path(__file__).resolve().parents[2];base=Path.home()/'learner-ops/hands-recorder';base.mkdir(parents=True,exist_ok=True);(base/'lib').mkdir(exist_ok=True)
+for f in ['recorder.js','retention.js']:shutil.copyfile(repo/'src/hands-toy'/f,base/'lib'/f)
+for f in ['daemon.js','recorderctl','verify-canary.js','README.md']:shutil.copyfile(Path(__file__).parent/f,base/f)
+(base/'recorderctl').chmod(0o700)
+bundle=base/'Hands Recorder.app';binary=bundle/'Contents/MacOS/hands-recorder';binary.parent.mkdir(parents=True,exist_ok=True)
+with (bundle/'Contents/Info.plist').open('wb') as f:plistlib.dump({'CFBundleExecutable':'hands-recorder','CFBundleIdentifier':'local.glim.hands-recorder','CFBundleName':'Hands Recorder','CFBundlePackageType':'APPL','LSUIElement':True,'NSScreenCaptureUsageDescription':'Save local screen clips for sleep learning.','NSInputMonitoringUsageDescription':'Save local mouse and key demonstrations.'},f)
+subprocess.run(['swiftc','-O',str(repo/'helper/hands-toy/recorder.swift'),'-o',str(binary)],check=True)
+subprocess.run(['codesign','--force','--sign','-',str(bundle)],check=True,capture_output=True)
+canary=base/'Hands Recorder Canary.app';canarybin=canary/'Contents/MacOS/canary';canarybin.parent.mkdir(parents=True,exist_ok=True)
+with (canary/'Contents/Info.plist').open('wb') as f:plistlib.dump({'CFBundleExecutable':'canary','CFBundleIdentifier':'local.glim.hands-recorder-canary','CFBundleName':'Hands Recorder Canary','CFBundlePackageType':'APPL','LSUIElement':True},f)
+subprocess.run(['swiftc','-O',str(repo/'helper/hands-toy/secure-canary.swift'),'-o',str(canarybin)],check=True)
+subprocess.run(['codesign','--force','--sign','-',str(canary)],check=True,capture_output=True)
+node=shutil.which('node')
+with (base/'local.glim.hands-recorder.plist').open('wb') as f:plistlib.dump({'Label':'local.glim.hands-recorder','ProgramArguments':[node,str(base/'daemon.js')],'WorkingDirectory':str(base),'RunAtLoad':True,'KeepAlive':False,'ProcessType':'Background','LowPriorityIO':True,'Nice':10,'StandardOutPath':str(base/'daemon.log'),'StandardErrorPath':str(base/'daemon.log')},f)
+if not (base/'state.json').exists():(base/'state.json').write_text('{"enabled":false}\n')
+for p in [base/'state.json',base/'local.glim.hands-recorder.plist']:p.chmod(0o600)
+print('Installed',base,'— OFF; launchd not loaded. No app was changed.')
