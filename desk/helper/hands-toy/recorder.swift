@@ -6,18 +6,10 @@ import CoreGraphics
 import ScreenCaptureKit
 import CoreMedia
 import Carbon
+import Darwin
 let args=Set(CommandLine.arguments.dropFirst())
 func emit(_ row:[String:Any]) {if let d=try? JSONSerialization.data(withJSONObject:row){var out=d;out.append(10);FileHandle(fileDescriptor:3,closeOnDealloc:false).write(out)}}
-if args.contains("--request-permissions") {
- _ = CGRequestScreenCaptureAccess()
- _ = CGRequestListenEventAccess()
- print("Enable Hands Recorder in System Settings > Privacy & Security > Screen & System Audio Recording and Input Monitoring. Then quit/restart this helper.")
- exit(0)
-}
-if args.contains("--preflight") {print("{\"screen\":\(CGPreflightScreenCaptureAccess()),\"input\":\(CGPreflightListenEventAccess()),\"accessibility\":\(AXIsProcessTrusted())}");exit(0)}
-if !args.contains("--capture") {exit(2)}
-if !CGPreflightScreenCaptureAccess() || !CGPreflightListenEventAccess() {fputs("capture/input permission missing; no permission prompt, no recording\n",stderr);exit(3)}
-let app=NSApplication.shared;app.setActivationPolicy(.prohibited)
+let app=NSApplication.shared
 let sourceTag:Int64=0x474C494D
 var tap:CFMachPort?
 var wasSecure=IsSecureEventInputEnabled()
@@ -34,10 +26,7 @@ let callback:CGEventTapCallBack={_,kind,event,_ in
  return Unmanaged.passUnretained(event)
 }
 let types:[CGEventType]=[.keyDown,.keyUp,.flagsChanged,.mouseMoved,.leftMouseDown,.leftMouseUp,.rightMouseDown,.rightMouseUp,.leftMouseDragged,.rightMouseDragged,.scrollWheel]
-var mask:CGEventMask=0;for t in types{mask |= CGEventMask(1)<<CGEventMask(t.rawValue)}
-tap=CGEvent.tapCreate(tap:.cgSessionEventTap,place:.headInsertEventTap,options:.listenOnly,eventsOfInterest:mask,callback:callback,userInfo:nil)
-guard let tap=tap else{exit(3)}
-CFRunLoopAddSource(CFRunLoopGetMain(),CFMachPortCreateRunLoopSource(nil,tap,0),.commonModes);CGEvent.tapEnable(tap:tap,enable:true)
+let mask:CGEventMask=types.reduce(0) { $0 | (CGEventMask(1)<<CGEventMask($1.rawValue)) }
 final class Output:NSObject,SCStreamOutput,SCStreamDelegate {
  var count=0
  func stream(_ stream:SCStream,didStopWithError error:Error){emit(["type":"source_error","reason":"capture stopped"]);exit(5)}
@@ -63,8 +52,34 @@ func update() async {
   };lastWindow=window.windowID
  }catch{emit(["type":"source_error","reason":"capture unavailable"]);exit(5)}
 }
+
+@_cdecl("glim_capture_main") public func glimCaptureMain() {
+if args.contains("--request-permissions") {
+ _ = CGRequestScreenCaptureAccess()
+ _ = CGRequestListenEventAccess()
+ print("Enable Premonition in System Settings > Privacy & Security > Screen & System Audio Recording and Input Monitoring. Then quit/restart this helper.")
+ exit(0)
+}
+if args.contains("--preflight") {
+ var row:[String:Any] = ["screen":CGPreflightScreenCaptureAccess(),"input":CGPreflightListenEventAccess(),"accessibility":AXIsProcessTrusted(),"pid":getpid(),"parentPid":getppid()]
+ // Diagnostic only: the OS responsibility API is private; never use it to grant access.
+ if let symbol=dlsym(UnsafeMutableRawPointer(bitPattern:-2),"responsibility_get_pid_responsible_for_pid") {
+  let query=unsafeBitCast(symbol,to:(@convention(c)(Int32)->Int32).self)
+  let pid=query(getpid());row["responsiblePid"]=pid
+  if let owner=NSRunningApplication(processIdentifier:pid) {row["responsibleBundleId"]=owner.bundleIdentifier;row["responsibleName"]=owner.localizedName;row["responsibleBundlePath"]=owner.bundleURL?.path}
+ }
+ let data=try! JSONSerialization.data(withJSONObject:row,options:[.sortedKeys]);print(String(data:data,encoding:.utf8)!);exit(0)
+}
+if !args.contains("--capture") {exit(2)}
+if !CGPreflightScreenCaptureAccess() || !CGPreflightListenEventAccess() {fputs("capture/input permission missing; no permission prompt, no recording\n",stderr);exit(3)}
+app.setActivationPolicy(.prohibited)
+tap=CGEvent.tapCreate(tap:.cgSessionEventTap,place:.headInsertEventTap,options:.listenOnly,eventsOfInterest:mask,callback:callback,userInfo:nil)
+guard let tap=tap else{exit(3)}
+CFRunLoopAddSource(CFRunLoopGetMain(),CFMachPortCreateRunLoopSource(nil,tap,0),.commonModes);CGEvent.tapEnable(tap:tap,enable:true)
 var updating=false
-let timer=Timer.scheduledTimer(withTimeInterval:0.25,repeats:true){_ in let secure=IsSecureEventInputEnabled();if secure != wasSecure {emit(["type":secure ? "secure_input_on":"secure_input_off","t":Double(DispatchTime.now().uptimeNanoseconds)/1e6]);wasSecure=secure};if !updating {updating=true;Task{await update();updating=false}}}
+_ = Timer.scheduledTimer(withTimeInterval:0.25,repeats:true){_ in let secure=IsSecureEventInputEnabled();if secure != wasSecure {emit(["type":secure ? "secure_input_on":"secure_input_off","t":Double(DispatchTime.now().uptimeNanoseconds)/1e6]);wasSecure=secure};if !updating {updating=true;Task{await update();updating=false}}}
 // Closing the parent pipe stops all capture, including after parent crash.
 DispatchQueue.global().async {while readLine() != nil{};exit(0)}
 app.run()
+
+}

@@ -1,0 +1,129 @@
+'use strict';
+// An isolated role of Premonition.app. No chat, neural model, replay, or input API.
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const net = require('node:net');
+const { execFile } = require('node:child_process');
+const { Recorder } = require('./recorder');
+
+function run() {
+  const { app, systemPreferences } = require('electron');
+  app.commandLine.appendSwitch('disable-gpu');
+  const base = path.join(os.homedir(), 'learner-ops/hands-recorder');
+  const socket = path.join(base, 'premonition-recorder.sock');
+  const statePath = path.join(base, 'state.json');
+  const statusPath = path.join(base, 'status.json');
+  const nativeHelper = process.execPath;
+  const nativeArgs = ['--glim-recorder-native'];
+  let recorder = null, server = null, closing = false, busy = false, fakeTimer = null;
+  fs.mkdirSync(base, { recursive: true, mode: 0o700 });
+  fs.chmodSync(base, 0o700);
+  const writeState = () => fs.writeFileSync(statePath, JSON.stringify({ enabled: false }), { mode: 0o600 });
+  const status = () => ({ ...(recorder ? recorder.status() : { enabled: false }),
+    hostPid: process.pid, host: 'Premonition', fake: !!recorder?.fake,
+    stopped: closing, at: new Date().toISOString() });
+  const saveStatus = () => fs.writeFileSync(statusPath, JSON.stringify(status()), { mode: 0o600 });
+  const native = (file, args) => new Promise((resolve, reject) => {
+    const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+    execFile(nativeHelper, [...nativeArgs, ...(file === 'canary' ? ['--glim-canary'] : []), ...args], { env, timeout: 20000, maxBuffer: 65536 }, (error, stdout, stderr) => {
+      if (error) { error.message = stderr || error.message; reject(error); }
+      else resolve(stdout.trim());
+    });
+  });
+  async function stop() {
+    if (closing) return;
+    closing = true;
+    writeState();
+    clearInterval(fakeTimer);
+    if (recorder) await recorder.off();
+    saveStatus();
+    if (server) server.close();
+    setTimeout(() => app.quit(), 100);
+  }
+  async function command(request) {
+    switch (request.command) {
+      case 'status': return status();
+      case 'preflight': return { ...JSON.parse(await native(nativeHelper, ['--preflight'])), hostPid: process.pid, hostScreen: systemPreferences.getMediaAccessStatus('screen'), hostAccessibility: systemPreferences.isTrustedAccessibilityClient(false) };
+      case 'permissions': return { message: await native(nativeHelper, ['--request-permissions']) };
+      case 'canary-permissions': return { message: await native('canary', ['--request-permissions']) };
+      case 'canary': {
+        if (recorder?.enabled) throw Error('Stop recording before the fake-field test');
+        const dir = path.join(base, 'premonition-canary');
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+        const out = path.join(dir, 'result.json');
+        for (const name of ['result.json', 'canary-tap-stream.log', 'verified.json']) {
+          const file = path.join(dir, name);
+          if (fs.existsSync(file)) fs.unlinkSync(file);
+        }
+        try { await native('canary', [out]); } catch (error) {
+          if (!fs.existsSync(out)) throw error;
+        }
+        const result = JSON.parse(fs.readFileSync(out, 'utf8'));
+        if (result.status !== 'PASS') return result;
+        return require(path.join(base, 'verify-canary.js')).verifyCanary(dir, [path.join(base, 'premonition-fake-recordings')]);
+      }
+      case 'start': {
+        if (recorder?.enabled) return status();
+        const fake = request.fake === true;
+        // A separate lead release file is required for Ben's data. Installation never creates it.
+        const release = path.join(base, 'LEAD-RELEASE.json');
+        let approved = false;
+        try { approved = JSON.parse(fs.readFileSync(release)).approved === true; } catch (_) {}
+        if (!fake && !approved) throw Error('Recording Ben is OFF: lead release is still required');
+        recorder = new Recorder({ root: path.join(base, fake ? 'premonition-fake-recordings' : 'recordings'),
+          fake, releaseApproved: !fake && approved, nativeHelper, nativeArgs });
+        await recorder.on();
+        if (fake) fakeTimer = setInterval(() => recorder.event({ type: 'frame', frameId: recorder.frames + 1, t: Date.now() }), 50);
+        fs.writeFileSync(statePath, JSON.stringify({ enabled: true, fake }), { mode: 0o600 });
+        saveStatus();
+        return status();
+      }
+      case 'stop':
+        await stop();
+        return { enabled: false, stopped: true, hostPid: process.pid };
+      default: throw Error('Unknown recorder command');
+    }
+  }
+  app.whenReady().then(() => {
+    app.dock?.hide();
+    // A live socket is never unlinked: no duplicate recorder can bypass the OFF gate.
+    if (fs.existsSync(socket)) throw Error('Recorder socket already exists; run recorderctl stop');
+    writeState();
+    saveStatus();
+    server = net.createServer(connection => {
+      let data = '', handled = false;
+      connection.setTimeout(25000, () => connection.destroy());
+      connection.on('error', () => {});
+      connection.on('data', async bytes => {
+        if (handled) return;
+        data += bytes;
+        if (data.length > 2048) { connection.destroy(); return; }
+        if (!data.includes('\n')) return;
+        handled = true;
+        let request;
+        try { request = JSON.parse(data); } catch (_) { connection.destroy(); return; }
+        if (busy && request.command !== 'stop') { connection.end(JSON.stringify({ error: 'Recorder busy' }) + '\n'); return; }
+        const exclusive = request.command !== 'stop';
+        if (exclusive) busy = true;
+        try { connection.end(JSON.stringify({ result: await command(request) }) + '\n'); }
+        catch (error) { connection.end(JSON.stringify({ error: error.message }) + '\n'); }
+        finally { if (exclusive) busy = false; }
+      });
+    });
+    server.listen(socket, () => fs.chmodSync(socket, 0o600));
+    server.on('error', error => { console.error(error); stop(); });
+    const heartbeat = setInterval(saveStatus, 500);
+    app.once('will-quit', () => {
+      clearInterval(heartbeat);
+      if (fs.existsSync(socket)) fs.unlinkSync(socket);
+      writeState();
+    });
+  }).catch(error => { console.error(error); app.exit(1); });
+  app.on('window-all-closed', () => {});
+  process.on('SIGTERM', () => stop());
+  process.on('SIGINT', () => stop());
+  process.on('uncaughtException', error => { console.error(error); stop(); });
+  process.on('unhandledRejection', error => { console.error(error); stop(); });
+}
+module.exports = { run };

@@ -1,5 +1,65 @@
 # HANDS toy report
 
+## Current handoff: recorder under Premonition — 2026-11-06
+
+**Installed and OFF. No new Privacy toggle is needed. T9 is still INCOMPLETE because Ben is active, so the native password test deferred.** This section supersedes the standalone permission instructions below. No Ben footage or keys were collected. Do not release real recording yet.
+
+The recorder now runs as a recorder-only process of **Premonition.app**, and the canary uses that same executable. The native code loads inside that process through a small N-API bridge. Normal app launches still load the existing main.js. Recorder launches do not load chat or a neural model. No chat or brain restart was performed. The existing Python Glim was attributed to T3 Code during the initial inspection, so putting capture there would not have solved this permission problem.
+
+Actual native preflight from the new role reports **screen=true, input=true, accessibility=true**, responsible name Premonition, bundle `com.electron.premonition-desk`, bundle path `/Applications/Premonition.app`. Electron's own screen/accessibility checks agree. A first Swift-child prototype had the right responsible parent but could not use those grants; native calls inside the Premonition executable resolved that. The final path uses the real app identity, not a second app that merely copies its name or bundle ID.
+
+| Privacy & Security list | Entry | Measured state | Ben needs to do |
+|---|---|---|---|
+| Screen & System Audio Recording | Premonition | Allowed | Nothing |
+| Input Monitoring | Premonition | Allowed | Nothing |
+| Accessibility | Premonition | Allowed | Nothing |
+
+No permission request prompt was opened. The old **Hands Recorder.app** and **Hands Recorder Canary.app** were removed, along with their unused launchd plist and daemon. If old Hands Recorder entries remain in System Settings, Ben can turn them off/remove them. No TCC grants were reset. The outer app was already ad-hoc signed with an invalid resource seal before this work; its executable and outer signature were not replaced or re-signed. The observed existing grants still work.
+
+| Recorder check | Result | Evidence / limit |
+|---|---|---|
+| Actual Premonition Privacy identity and grants | PASS | Native preflight above; TCC log subject is the real bundle ID. |
+| Retention/caps/path scope/log consistency | PASS | Existing 12 tests across seeds 101/202/303; spent cleanup, keep cap, age/space backstops, untrained protection and outside-path rejection. Production caps remain 12 GiB total, 3 GiB/day, 2 GiB keep-set, seven days, pause below 10 GiB free. |
+| Entry isolation, release gate, canary byte-search guard | PASS | Four added unit tests; 16 targeted tests total, all pass. A deliberately leaking fake saved file fails verification even if a synthetic native result says PASS. This unit test does not substitute for the native canary. |
+| Stop and persistent OFF | PASS | Fake recording stops the exact recorder host and descendants. Fresh preflight does not resume it. Real start is refused without the separate lead release. Two smoke runs passed. |
+| Native NSSecureTextField canary | DEFERRED | Premonition has permission, but physical idle time was below 300 seconds. No normal/secure typing or complete saved-file canary search occurred. This is not a zero-hit pass. |
+| Native capture cost on Ben's desktop | NOT RUN | Real recording remains forbidden pending the separate go. |
+
+Fake recording measurement: **35.236 seconds**, generated 1280×720 video at 20 fps plus a 192×192 center crop, H.264 VideoToolbox. Saved **11,486,425 bytes**, or **19,558,945 bytes/minute** (~19.6 decimal MB/minute). RAM is peak summed process RSS; CPU uses deltas in process CPU time over a 30.001-second window after a five-second warm-up, as percent of one core. The fake source includes generation/encoding, not live ScreenCaptureKit/event-tap overhead.
+
+| Processes measured | Peak RAM | CPU, one core |
+|---|---:|---:|
+| Added recorder role + all its children/encoder | 277.9 MiB | 9.83% |
+| Existing Premonition chat + children | 904.0 MiB | 63.33% |
+| Existing Glim brain + children | 2042.5 MiB | 2.20% |
+| All together, simultaneous peak | 3219.8 MiB | 75.36% |
+
+The chat/brain workload was already running; its CPU is not recorder overhead. Their PIDs stayed unchanged during the measurement. The total peak is measured at one instant, not the sum of unrelated peak times. The recorder exited after measurement and after the repeated stop tests. Persistent state is `{"enabled":false}`. No launchd job is loaded.
+
+Commands:
+
+    ~/learner-ops/hands-recorder/recorderctl preflight
+    ~/learner-ops/hands-recorder/recorderctl canary
+    ~/learner-ops/hands-recorder/recorderctl stop
+    ~/learner-ops/hands-recorder/recorderctl status
+
+Run the canary only when Ben is away; its own 300-second check enforces this. It runs entirely under Premonition and verifies its fake saved files, including a normal-field positive control. Stop after checking. Real start remains blocked by the missing `LEAD-RELEASE.json`; installation never creates approval. The lead can create that separate approval only after the native canary passes and the lead gives the go. The Settings switch and sleep reader remain deferred, as requested; recorderctl is the current switch.
+
+Rollback: after `recorderctl stop`, `python3 ~/learner-ops/hands-recorder/rollback.py` changes only the package entry back to main.js. It does not restart chat or touch recordings. The first exact installed manifest backup is in `hands-recorder/rollback/20261106-125037/`. A future restart still needs the real-model lock and five idle minutes.
+
+Validation: full desk suite was run before installation and after the code changes. Baseline: 1115 tests, 1106 pass, eight known failures, one skip. Final: **1120 tests, 1111 pass, eight known failures, one skip**, 42.080 seconds. The eight failures are agentbench (2), fake-sleepmode, login1-electron, realpath (3), and the 8192-token prompt check. No new failure category appeared. Full logs remain local in the notes folder. No BensPC, new brain, app bundle duplication, training, or publishing was used.
+
+```text
+The recorder now lives inside Premonition.
+It uses the permission switches already on.
+The pretend-picture test and stop button work.
+The password test waits until you are away.
+It is OFF and has not watched you.
+```
+
+---
+
+
 ## Milestone (a), 2026-11-06
 
 Design frozen before toy outcomes: SHA-256 59087e05d7536d2ae5cf9bb44015e564ab1745a229c73adfcf01f655000b49ac. Approved disk amendment is in that hash. T1–T10 are not relaxed.
@@ -87,7 +147,7 @@ The launchd plist is ~/learner-ops/hands-recorder/local.glim.hands-recorder.plis
 | T6 sleep gain | INCOMPLETE | One actual day of own-attempt data only. No fabricated held-out/audit days; no training or promotion performed. |
 | T7 intent | NOT RUN | Checked versions/lease exist; no trained intent ablation yet. |
 | T8 takeover | PARTIAL | Milestone (a) synthetic evidence above; physical-device/native OS input proof still missing. Not a gate on observation-only recorder, per lead. |
-| T9 recorder | **INCOMPLETE** | Caps/retention/stop/fake-resource checks passed; native secret canary and real capture cost blocked by macOS permissions. |
+| T9 recorder | **INCOMPLETE** | Premonition grants verified; caps/retention/stop/fake-resource checks passed again. Native canary deferred because Ben is active; real capture cost not measured. |
 | T10 sleep/undo | PARTIAL | Pixel model, shared-file workers, training/idle gates and whole-bundle quarantine checkpointed. No training, export, promotion or neural rollback evidence yet. |
 
 Original frozen marks hash: 59087e05d7536d2ae5cf9bb44015e564ab1745a229c73adfcf01f655000b49ac. Dated retention/password/lean amendments are preserved separately. No marks were quietly relaxed to call this a pass. BensPC, its GPU, real Nanbeige, and Ben's recordings were not used.

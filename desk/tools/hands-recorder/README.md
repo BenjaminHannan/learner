@@ -1,17 +1,23 @@
-# Local hands recorder
+# Glim's recorder, inside Premonition
 
-Standalone install: `python3 install.py`. This copies only the recorder and builds a small native helper in `~/learner-ops/hands-recorder/`. It does not load launchd or start recording. No Electron app edit/build is needed.
+Recording is OFF. The lead must give a separate go after the password test.
+Everything stays on this Mac. No recording reader or controller runs here.
 
-- Permission buttons: `~/learner-ops/hands-recorder/recorderctl permissions`
-- Native fake-field test permission buttons: `~/learner-ops/hands-recorder/recorderctl canary-permissions`
-- Fake-field test, with Ben away five minutes: `~/learner-ops/hands-recorder/recorderctl canary`
-- Read-only check: `~/learner-ops/hands-recorder/recorderctl preflight`
-- **After lead go:** `~/learner-ops/hands-recorder/recorderctl start`
-- **Stop:** `~/learner-ops/hands-recorder/recorderctl stop`
-- Status: `~/learner-ops/hands-recorder/recorderctl status`
+`~/learner-ops/hands-recorder/recorderctl`:
 
-macOS needs Screen & System Audio Recording (screen capture only, no audio) and Input Monitoring for Hands Recorder/the responsible host shown in the prompt. The native fake-field test additionally needs Accessibility to inject its fake typing. Enable only the named test/recorder host; quit/restart after macOS requests it. No permission prompt was opened during installation.
+- `preflight`: check actual Screen Recording, Input Monitoring and Accessibility from a native role of Premonition. Shows its OS responsible bundle and process.
+- `start --fake`: record generated test pictures only.
+- `stop`: stop capture, close the host, persist OFF. No auto-resume or launchd job.
+- `status`: check without starting anything.
+- `canary`: fake normal/secure field test inside Premonition; requires Ben idle five minutes. It stops on physical input or focus loss.
+- `permissions`: explicitly request missing screen/input grants for Premonition.
+- `canary-permissions`: explicitly request missing input/accessibility grants for Premonition.
+- `start`: real capture only when `LEAD-RELEASE.json` says `{"approved":true}`. Installation never creates approval. The lead creates it only after reviewing T9 and giving the separate go.
 
-ScreenCaptureKit captures the foreground window at 20 fps into local H.264 hardware encoding, 1280×720 overview plus a center detail crop. No field detector or password screen blanking. A Quartz tap saves events macOS delivers, optionally noting Secure Event Input. The current detail crop is centered; cursor-following detail is deferred. Mouse motion is coalesced to 120 events/s; key and button transitions are retained. A bounded 256 KiB event-log cap pauses collection rather than buffering without limit. Encoded bytes pass through a byte-budgeted writer, so an encoder cannot write beyond its reserved clip budget.
+The app's entry chooses its role before loading `main.js`. Normal launches load chat unchanged. Recorder launches load neither chat nor a brain. Native capture and the canary are libraries inside a dedicated process of the existing Premonition executable; this reuses its real bundle identity. The controller uses LaunchServices with ELECTRON_RUN_AS_NODE removed. A direct shell launch can instead inherit the shell's Privacy identity, so do not use it.
 
-30-second clip chunks; at most 3 GiB newly written/day, 12 GiB total; stop/pause below 10 GiB free. Mathematical keep-set at most 2 GiB. Untrained clips expire after seven days. `Retention.finishSleep({judged:true,trainedIds,losses})` handles judged-sleep cleanup without reading video while awake. No sleep reader or app integration is installed yet. A crashed/unfinished sleep cannot mark clips spent. Actual native secret-canary testing is blocked until the required permissions are granted; do not call T9 passed before that test.
+1280×720 overview, 192×192 center detail, 20 fps, H.264 VideoToolbox. Mouse motion at most 120 events/s; key/button changes as received. No password detection, pixel blanking or field pause. Secure Event Input must pass the fake native-field canary before release. No audio capture.
+
+Caps: 12 GiB total, 3 GiB/day, 2 GiB keep-set, seven days, pause below 10 GiB free. Every write checks quota/free bytes. Judged sleep deletion keeps only the fixed mathematical keep-set. Deletes use exact indexed paths and append retention.log. The sleep reader is still a later step.
+
+Build/install: `python3 desk/tools/hands-recorder/install.py`, after the full desk suite. This adds a bootstrap and recorder modules to the installed app; it does not restart chat or re-sign the outer app. The original package.json is saved under `hands-recorder/rollback/`. Restore that original manifest after stopping the recorder to route all launches straight back to main.js. Any actual chat/brain restart still needs the model lock and five idle minutes.
