@@ -288,3 +288,17 @@ Touch the mouse or keys, and it lets go.
 ## Approved build amendment, 2026-11-06
 
 The lead approved sections 3–7, with T1–T10 frozen after these explicit changes: recordings 12 GiB total/3 GiB per day/seven days; model bundles at most 1 GiB; pause below 10 GiB free. Build (a) stop/lease and sandbox, (b) pixel/capture/input and sleep/export, then (c) fake-data recorder. Recording Ben remains OFF until T9 passes and a separate lead go. App wiring defaults OFF until the toy passes. Train only at night or after five minutes idle on the M1, using under about 2 GB RAM while Ben is active; yield to his input. Controller A uses the realmodel lock and Ben-away gate. No BensPC use without the loan line. Report at milestone (a) and at the end; commit and push.
+
+## Retention
+
+Lead amendment, 2026-11-06: Ben authorized automatic deletion of Glim's own recordings, with no per-delete prompt. This is additive to the frozen T9 checks. Ben recording remains OFF until T9 passes and the lead gives a separate go.
+
+After a sleep has trained on a clip and its candidate has been judged, accepted or rejected, mark the clip spent. At that sleep's end delete its raw frames, input events, and pseudo-labels unless it belongs to the small keep-set. An interrupted or unjudged sleep cannot mark clips spent. Keep a frozen, never-trained audit/held-out set plus useful replay clips, with reason tags audit / rare / high-loss / untrained. Keep at most 2 GiB total.
+
+The keep value is a fixed formula, never a model choice: 1000 × audit + 20 × rarity + 20 × min(max(loss,0),10)/10 + 5 × freshness. Rarity is half of (1/app-count + 1/action-count) over the indexed clips. Freshness is max(0,1-age-in-days/7). Loss is a measured post-sleep loss, not prose from a model. Order ties by creation time, then clip ID. Prefer rare or high-loss trained clips; retain recent untrained clips unless an age or space backstop applies. An untrained clip may leave the keep-set without being deleted. Reject an audit-set addition that cannot fit; do not silently change the frozen audit set.
+
+Backstops: at most seven days for anything untrained, at most 3 GiB new bytes/day, 12 GiB total, and pause below 10 GiB free. On space pressure remove oldest spent clips, then lowest-value eligible clips before pausing. The daily-ingestion counter is not reset by deleting files. Files outside our recording root are never candidates. Do not delete Ben's personal files.
+
+Delete only exact paths listed in a clip index beneath the real recording root. Reject symlink escapes, paths through symlink directories, traversal, and outside-root entries. Never delete by glob. Append clip ID, actual bytes, reason spent / over-cap / expired, and paths to retention.log; log progress for interrupted deletes. Ben's Delete this session cancels queued work and deletes its indexed files immediately.
+
+Additional T9 fake-data pass checks: spent non-keep clips are gone after fake sleep; keep-set <=2 GiB; no untrained clip deletion except expired or over-cap backstop (or Ben's explicit Delete this session); outside files untouched; index/log byte totals match disk. Any outside delete, unjustified untrained delete, or oversized keep-set fails T9. No test of this amendment has run before its hash is recorded.
