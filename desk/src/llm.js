@@ -113,7 +113,7 @@ async function streamChat(opts) {
     if (!data || data === '[DONE]') return;
     let j;
     try { j = JSON.parse(data); } catch (e) { return; }
-    if (j.error) throw new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error)));
+    if (j.error) throw Object.assign(new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error))), { yielded: opts.background === true && YIELD_RE.test(JSON.stringify(j.error)) });
     const ch = j.choices && j.choices[0];
     if (!ch || (signal && signal.aborted)) return;   // cut by the caller: nothing more reaches the screen
     if (ch.finish_reason) finishReason = ch.finish_reason;
@@ -145,7 +145,7 @@ async function streamChat(opts) {
     // Server ignored stream:true and sent one JSON body.
     let j = null;
     try { j = JSON.parse(await res.text()); } catch (e) { /* fall through to empty result */ }
-    if (j && j.error) throw new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error)));
+    if (j && j.error) throw Object.assign(new Error('Gateway error: ' + (j.error.message || JSON.stringify(j.error))), { yielded: opts.background === true && YIELD_RE.test(JSON.stringify(j.error)) });
     const m = j && j.choices && j.choices[0] && j.choices[0].message;
     if (m) {
       handle('data: ' + JSON.stringify({ choices: [{ finish_reason: j.choices[0].finish_reason, delta: {
@@ -176,7 +176,7 @@ async function streamChat(opts) {
     const fb = extractFallbackCalls(content, tools);
     if (fb.calls.length) { toolCalls = fb.calls; content = fb.content; }
   }
-  if (opts.background === true && !finishReason && !content && !reasoning && !toolCalls.length && !(signal && signal.aborted)) throw Object.assign(new Error('Stopped so Ben\'s chat could go first'), { yielded: true });
+  if (opts.background === true && !finishReason && !(signal && signal.aborted)) throw Object.assign(new Error('Stopped so Ben\'s chat could go first'), { yielded: true });
   return { content, reasoning, toolCalls, finishReason, firstTokenMs: firstTokenMs === null ? Date.now() - tStart : firstTokenMs };
 }
 

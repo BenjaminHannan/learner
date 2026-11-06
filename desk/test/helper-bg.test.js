@@ -50,8 +50,9 @@ test('H4: a chat (no helperId) goes out untagged; a helper goes out tagged', asy
   const sent = [];
   const fake = (o) => ({ o, requestFitted: async (t, s, opts) => { sent.push(opts.background === true); return { content: 'x' }; } });
   await Agent.prototype.requestWithBudget.call(fake({}), {}, {}, { messages: [] });
+  await Agent.prototype.requestWithBudget.call(fake({}), {}, {}, { messages: [], background: true });
   await Agent.prototype.requestWithBudget.call(fake({ helperId: 'h1' }), {}, {}, { messages: [] });
-  assert.deepStrictEqual(sent, [false, true]);
+  assert.deepStrictEqual(sent, [false, false, true]);
   const seen = [];
   await withFetch(fakeFetch(seen, { chunks: DONE }), async () => {
     await streamChat({ ...base });
@@ -92,4 +93,88 @@ test('a yielded helper waits for Ben, then retries (bounded); other errors are n
   const bad = { o: { helperId: 'h' }, requestFitted: async () => { n++; throw new Error('boom'); } };
   await assert.rejects(Agent.prototype.requestWithBudget.call(bad, {}, {}, { messages: [] }), /boom/);
   assert.strictEqual(n, 1);
+});
+
+test('a partial helper stream and a streamed chat-first error are retried, not saved as finished work', async () => {
+  const seen = [];
+  for (const chunks of [
+    ['data: {"choices":[{"delta":{"content":"unfinished"},"finish_reason":null}]}\n\n'],
+    ['data: {"error":{"message":"stopped: Ben\'s chat goes first"}}\n\n'],
+  ]) {
+    await withFetch(fakeFetch(seen, { chunks }), async () => {
+      await assert.rejects(streamChat({ ...base, background: true }), (error) => error.yielded === true);
+    });
+  }
+});
+
+test('step 2: helper requests take turns on the local brain (1 in flight, FIFO, nobody starves); waiting for Ben holds no slot', async () => {
+  const { Limiter } = require('../src/helpers');
+  const brain = new Limiter(() => 1);
+  let inFlight = 0, peak = 0; const order = [];
+  const mk = (id) => ({ o: { helperId: id, brainSlot: brain },
+    requestFitted: async () => { inFlight++; peak = Math.max(peak, inFlight); order.push(id); await new Promise((r) => setTimeout(r, 20)); inFlight--; return { content: id }; } });
+  const runs = ['a', 'b', 'c', 'd'].map((id) => Agent.prototype.requestWithBudget.call(mk(id), {}, {}, { messages: [] }));
+  assert.deepStrictEqual((await Promise.all(runs)).map((r) => r.content), ['a', 'b', 'c', 'd']);
+  assert.strictEqual(peak, 1);
+  assert.deepStrictEqual(order, ['a', 'b', 'c', 'd']);
+  let busy = true, n = 0;
+  const y = { o: { helperId: 'y', brainSlot: brain, benBusy: () => busy },
+    requestFitted: async () => { n++; if (n === 1) throw Object.assign(new Error('y'), { yielded: true }); return { content: 'y' }; } };
+  const py = Agent.prototype.requestWithBudget.call(y, {}, {}, { messages: [] });
+  await new Promise((r) => setTimeout(r, 50));
+  assert.strictEqual(brain.active, 0, 'no slot held while waiting for Ben');
+  const other = await Agent.prototype.requestWithBudget.call(mk('z'), {}, {}, { messages: [] });
+  assert.strictEqual(other.content, 'z');
+  busy = false;
+  assert.strictEqual((await py).content, 'y');
+  const chat = { o: { brainSlot: brain }, requestFitted: async () => ({ content: 'chat', active: brain.active }) };
+  const hold = await brain.acquire();
+  const r = await Agent.prototype.requestWithBudget.call(chat, {}, {}, { messages: [] });
+  hold(); assert.strictEqual(r.content, 'chat');
+});
+
+test('step 2 wiring: main.js gives helpers (only) the one-at-a-time brain slot on a local gateway', () => {
+  const m = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
+  assert.match(m, /brainSlot: isHelper \? helperBrain : null/);
+  assert.ok(m.includes('helperBrain = new Limiter(() => (hasLocalAssistant && /^https?:\\/\\/(127\\.0\\.0\\.1|localhost)[:/]/.test(String(store.getSettings().gatewayUrl || \'\')) ? 1 : 0))'));
+});
+
+test('helper summaries share the brain slot; chat summaries stay untagged', async () => {
+  const { Limiter } = require('../src/helpers');
+  const brain = new Limiter(1);
+  const release = await brain.acquire();
+  const settings = { gatewayUrl: base.gatewayUrl, model: 'm' };
+  const thread = () => ({ messages: [{ role: 'user', content: 'Remember that school starts at nine.' }], ctxFrom: 1 });
+  const helper = new Agent({ helperId: 'h', brainSlot: brain, getSettings: () => settings, toolDefs: [], tools: {} });
+  const chat = new Agent({ getSettings: () => settings, toolDefs: [], tools: {} });
+  const seen = [];
+  await withFetch(fakeFetch(seen, { chunks: DONE }), async () => {
+    const pending = helper.summarizeLeftOut(thread(), settings, null, 0);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.strictEqual(seen.length, 0);
+    await chat.summarizeLeftOut(thread(), settings, null, 0);
+    assert.strictEqual(seen[0]['x-glim-background'], undefined);
+    release();
+    await pending;
+    assert.strictEqual(seen[1]['x-glim-background'], '1');
+    assert.strictEqual(seen[1]['x-test'], undefined);
+  });
+  assert.strictEqual(brain.active, 0);
+});
+
+test('cancelled queued helpers never send; failed helpers release the brain', async () => {
+  const { Limiter } = require('../src/helpers');
+  const brain = new Limiter(1);
+  const release = await brain.acquire();
+  const controller = new AbortController();
+  let calls = 0;
+  const helper = { o: { helperId: 'h', brainSlot: brain }, requestFitted: async () => { calls++; throw new Error('broken'); } };
+  const pending = Agent.prototype.requestWithBudget.call(helper, {}, {}, { signal: controller.signal });
+  controller.abort();
+  await assert.rejects(pending, /aborted/);
+  assert.strictEqual(calls, 0);
+  release();
+  await assert.rejects(Agent.prototype.requestWithBudget.call(helper, {}, {}, {}), /broken/);
+  assert.strictEqual(brain.active, 0);
+  assert.strictEqual(brain.q.length, 0);
 });

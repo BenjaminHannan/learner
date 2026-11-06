@@ -293,12 +293,12 @@ function summaryFits(s, text) {
 }
 // The caller selects complete lines before invoking this; never silently drop
 // part of an excerpt after its message indices have been marked as covered.
-async function summaryCall(s, signal, text, background) {
+async function summaryCall(s, signal, text, background, request = streamChat) {
   if (!summaryFits(s, text)) return '';
   try {
     const model = s.modelFast || s.model;
     const messages = summaryMessages(text);
-    const r = await streamChat({ gatewayUrl: s.gatewayUrl, model, maxTokens: SUMMARY_MAX_TOKENS, signal, apiKey: s.apiKey, tools: [], messages, background: background === true });
+    const r = await request({ gatewayUrl: s.gatewayUrl, model, maxTokens: SUMMARY_MAX_TOKENS, signal, apiKey: s.apiKey, tools: [], messages, background: background === true });
     return String(r.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim().slice(0, 2000);
   } catch (e) { return ''; }
 }
@@ -928,7 +928,7 @@ class Agent {
     let sl = ''; try { sl = this.o.sleepInfo ? this.o.sleepInfo() || '' : ''; } catch (e) { sl = ''; }
     noteOldGap(thread, from);   // a thread summarized by an older build: its unread part first
     const { text, start } = plainTail(thread.messages, from, thread.ctxFrom, (candidate) => summaryFits(s, candidate));
-    const sum = text ? await summaryCall(s, signal, text, !!this.o.helperId) : '';
+    const sum = text ? await summaryCall(s, signal, text, !!this.o.helperId, this.o.helperId ? (options) => this.requestWithBudget({}, s, options) : undefined) : '';
     if (signal && signal.aborted) { thread.ctxFrom = from || undefined; return; }   // stopped mid-summary: keep the old window, summarize next time
     thread.ctxV = CTX_V;
     const end = text && !sum ? thread.ctxFrom : start;   // too long to read at once (or the call failed): roll the rest up later
@@ -990,10 +990,12 @@ class Agent {
   // Retry only an explicit native pre-generation overflow and only once.
   // HELPER-BG: a helper's request is background (llm.js header); when Ben's chat stops or refuses it, wait until Ben is done and send it again.
   async requestWithBudget(thread, settings, options) {
-    if (!this.o.helperId) return this.requestFitted(thread, settings, options);
+    if (!this.o.helperId) return this.requestFitted(thread, settings, { ...options, background: false });
     for (let tries = 0; ; tries++) {
-      try { return await this.requestFitted(thread, settings, { ...options, background: true }); }
-      catch (e) {
+      try {
+        const release = this.o.brainSlot ? await this.o.brainSlot.acquire(options.signal) : null;
+        try { return await this.requestFitted(thread, settings, { ...options, background: true }); } finally { if (release) release(); }
+      } catch (e) {
         if (!e || !e.yielded || tries >= YIELD_RETRIES || (options.signal && options.signal.aborted)) throw e;
         const sig = options.signal || new AbortController().signal;
         await waitWhile(() => !!(this.o.benBusy && this.o.benBusy()), sig, YIELD_POLL_MS, YIELD_WAIT_MS);

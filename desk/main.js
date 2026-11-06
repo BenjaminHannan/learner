@@ -92,7 +92,7 @@ let toolDefs = buildTools({ diary: false }); // replaced once the diary probe is
 let toolsReady = Promise.resolve();
 let activeThread = null; // thread object being run by the primary agent
 let helpers = null;
-let limiter = null, helperLimiter = null;
+let limiter = null, helperLimiter = null, helperBrain = null;
 let warmer = null;
 let pillWin = null;
 let quitting = false;
@@ -949,6 +949,7 @@ function createAgent({ helper, rec, voice }) {
     toolDefs: () => toolDefs,
     sleepInfo: isHelper ? null : sleepInfo,
     slot: isHelper ? helperLimiter : limiter,
+    brainSlot: isHelper ? helperBrain : null,
     onState: helper && helper.onState,
     benBusy: isHelper ? benBusy : null,
     onEnd: () => { holder.release(); endCard(); if (!isHelper) { sl.lastActive = Date.now(); benLastTurn = Date.now(); setTimeout(() => { try { aoHold.flush(); } catch (e) { /* ignore */ } }, 0); } },   // UI2: held proactive words go in once the run is over   // Oct 29: the half-hourly check-in (a helper run) reset Desk's idle clock, so auto-sleep never found 2 idle hours
@@ -1132,6 +1133,7 @@ function buildAgent() {
   limiter = new Limiter(() => store.getSettings().maxParallel); // 0 = unlimited
   // Motes share Glim's one local model: 12 at once while Ben chatted swapped the Mac and made his chat crawl (Oct 28). Ben wants many at once, so while he is away there is no cap; while he chats (or just did) only a couple run and the rest queue. Glim's own chat never waits behind them.
   helperLimiter = new Limiter(() => { const m = store.getSettings().maxParallel; return m > 0 ? m : hasLocalAssistant && benBusy() ? 2 : 0; });
+  helperBrain = new Limiter(() => (hasLocalAssistant && /^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(String(store.getSettings().gatewayUrl || '')) ? 1 : 0));
   helpers = new Helpers({
     file: path.join(app.getPath('userData'), 'helpers.json'),
     store,
