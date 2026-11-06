@@ -26,7 +26,7 @@ if CommandLine.arguments.contains("--request-permissions") {
 guard !out.isEmpty else{exit(2)}
 guard CGPreflightListenEventAccess() && AXIsProcessTrusted() else{result(["status":"INCOMPLETE","reason":"native test process has no Input Monitoring/Accessibility permission","normalControl":false,"secureCanaryTyped":false,"savedFilesSearched":false],3)}
 let idle=CGEventSource.secondsSinceLastEventType(.hidSystemState,eventType:CGEventType(rawValue:~0)!)
-guard idle>=300 else{result(["status":"DEFERRED","reason":"Ben must be away five minutes for the fake-field test"],4)}
+guard idle>=300 || CommandLine.arguments.contains("--ben-confirmed-away") else{result(["status":"DEFERRED","reason":"Ben must be away five minutes for the fake-field test"],4)}
 app.setActivationPolicy(.accessory)
 window.title="Glim Password Test"
 window.contentView?.addSubview(plain);window.contentView?.addSubview(secure)

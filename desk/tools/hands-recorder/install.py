@@ -25,7 +25,7 @@ for name, source in [('capture', 'recorder.swift'), ('canary', 'secure-canary.sw
     subprocess.run(['codesign', '--force', '--sign', '-', str(temporary)], check=True)
     os.replace(temporary, target)
 subprocess.run(['clang++', '-arch', 'arm64', '-std=c++17', '-bundle', '-undefined', 'dynamic_lookup', '-I/opt/homebrew/include/node', str(repo / 'helper/hands-toy/native-bridge.cc'), '-o', str(helper / 'native-bridge.node')], check=True)
-for rel in ['recorder-entry.js', 'src/hands-toy/premonition-host.js', 'src/hands-toy/recorder.js', 'src/hands-toy/retention.js']:
+for rel in ['recorder-entry.js', 'src/hands-toy/premonition-host.js', 'src/hands-toy/scratch-benchmark.js', 'src/hands-toy/recorder.js', 'src/hands-toy/retention.js']:
     destination = app / rel
     if destination.exists():
         old = rollback / rel

@@ -16,6 +16,7 @@ function run() {
   const statusPath = path.join(base, 'status.json');
   const nativeHelper = process.execPath;
   const nativeArgs = ['--glim-recorder-native'];
+  let benchmark = null;
   let recorder = null, server = null, closing = false, busy = false, fakeTimer = null;
   fs.mkdirSync(base, { recursive: true, mode: 0o700 });
   fs.chmodSync(base, 0o700);
@@ -37,18 +38,25 @@ function run() {
     writeState();
     clearInterval(fakeTimer);
     if (recorder) await recorder.off();
+    if (benchmark) { benchmark.stop(); await benchmark.done; }
     saveStatus();
     if (server) server.close();
     setTimeout(() => app.quit(), 100);
   }
   async function command(request) {
     switch (request.command) {
-      case 'status': return status();
+      case 'status': return {...status(), benchmark:benchmark?.result};
+      case 'scratch-benchmark': {
+        if (recorder?.enabled || benchmark?.result.enabled) throw Error('Stop existing capture first');
+        if (request.benConfirmedAway !== true) throw Error('Explicit away confirmation required');
+        benchmark = require('./scratch-benchmark').startScratchBenchmark(base, nativeHelper);
+        return {...status(), benchmark:benchmark.result};
+      }
       case 'preflight': return { ...JSON.parse(await native(nativeHelper, ['--preflight'])), hostPid: process.pid, hostScreen: systemPreferences.getMediaAccessStatus('screen'), hostAccessibility: systemPreferences.isTrustedAccessibilityClient(false) };
       case 'permissions': return { message: await native(nativeHelper, ['--request-permissions']) };
       case 'canary-permissions': return { message: await native('canary', ['--request-permissions']) };
       case 'canary': {
-        if (recorder?.enabled) throw Error('Stop recording before the fake-field test');
+        if (recorder?.enabled || benchmark?.result.enabled) throw Error('Stop recording before the fake-field test');
         const dir = path.join(base, 'premonition-canary');
         fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         const out = path.join(dir, 'result.json');
@@ -56,7 +64,7 @@ function run() {
           const file = path.join(dir, name);
           if (fs.existsSync(file)) fs.unlinkSync(file);
         }
-        try { await native('canary', [out]); } catch (error) {
+        try { await native('canary', [...(request.benConfirmedAway === true ? ['--ben-confirmed-away'] : []), out]); } catch (error) {
           if (!fs.existsSync(out)) throw error;
         }
         const result = JSON.parse(fs.readFileSync(out, 'utf8'));
@@ -64,6 +72,7 @@ function run() {
         return require(path.join(base, 'verify-canary.js')).verifyCanary(dir, [path.join(base, 'premonition-fake-recordings')]);
       }
       case 'start': {
+        if (benchmark?.result.enabled) throw Error('Scratch measurement is still running');
         if (recorder?.enabled) return status();
         const fake = request.fake === true;
         // A separate lead release file is required for Ben's data. Installation never creates it.

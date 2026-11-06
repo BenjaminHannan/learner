@@ -1,6 +1,34 @@
 # HANDS toy report
 
-## Current handoff: recorder under Premonition — 2026-11-06
+## T9 password canary PASS — 2026-11-06, Ben confirmed away
+
+The real Premonition canary typed into a normal NSTextField and a real NSSecureTextField. The normal control was seen by the tap, the secure field received the fake secret, and the fake secret had **zero hits in 26 saved files**. Ben explicitly waived the five-minute idle wait for this run; physical-input and focus-loss stops stayed on. No Glim/chat process was changed.
+
+Search scope: every regular file recursively under `~/learner-ops/hands-recorder/premonition-canary`, `premonition-fake-recordings`, `canary-results`, `fake-recordings`, and `recordings` (absent). This includes saved movies, input logs, indexes, state and canary verification output. Source and binaries are excluded because they contain the fake test constant. Evidence: `T9-premonition-canary.json`.
+
+T9 retention, caps, stop/OFF and reader checks retain their earlier PASS marks. **T9 now PASS for the requested recorder gate.** Recording remains OFF and no regular lead release exists. The separately authorized two-minute desktop-cost measurement is complete; both scratch videos and their directory were deleted.
+
+
+### Live desktop cost and final state
+
+| Item | Measured result |
+|---|---|
+| Capture | Main display, 1280×720, configured 20 fps; overview plus 192×192 center crop, H.264 VideoToolbox; no audio or key text |
+| Duration / frames | 120.013 seconds / 2,336 frames (19.46 frames/s delivered) |
+| Added recorder peak RAM | 373.95 MiB summed process RSS |
+| Added recorder mean CPU | 49.63% of one CPU core over a 120.078-second sample window |
+| Saved bytes | 20,918,214 bytes; 10,457,974 bytes/minute (10.46 decimal MB/min) |
+| Scratch cleanup | PASS: both exact generated video paths deleted, scratch directory absent |
+| Stop / regular setting | PASS: all recorder-role descendants stopped; regular setting OFF; LEAD-RELEASE.json absent |
+| Permissions | Premonition: screen/input/accessibility all granted; no new toggle needed |
+
+CPU is the sum of process CPU-time increments sampled once per second. RAM is the maximum summed resident memory of the isolated recorder host and its descendants, including native capture and ffmpeg. Existing chat/brain processes are excluded; system-wide WindowServer/GPU service costs are not included. This measures live desktop capture, not policy inference or frame→action latency. **About half of one core is a material cost: the live path is not yet proved lightweight for Ben's everyday use.** No optimization or release is implied by the T9 safety-test PASS.
+
+Only numerical evidence survives outside the scratch folder: `T9-live-desktop-resources.json` (local per-second process samples), compact mirrored evidence, and this report. No footage was uploaded, trained on, or retained. The existing foreground-window regular recorder was not enabled; the one-time benchmark explicitly selected the main display. RUN-NOW's Glim/chat processes were not stopped or restarted.
+
+Validation: full desk suite before native build: 1,120 tests, 1,111 passed, eight known failures (agentbench ×2, fake-sleepmode, login1-electron, realpath ×3, 8192-token prompt), one skipped, 39.690 seconds. Focused recorder tests: 16/16 pass. After the live run, the stop/no-auto-resume/release smoke check passed again using fake pictures only. All other T1–T10 statuses below are unchanged.
+
+## Earlier handoff, before the authorized canary — 2026-11-06
 
 **Installed and OFF. No new Privacy toggle is needed. T9 is still INCOMPLETE because Ben is active, so the native password test deferred.** This section supersedes the standalone permission instructions below. No Ben footage or keys were collected. Do not release real recording yet.
 
@@ -147,15 +175,15 @@ The launchd plist is ~/learner-ops/hands-recorder/local.glim.hands-recorder.plis
 | T6 sleep gain | INCOMPLETE | One actual day of own-attempt data only. No fabricated held-out/audit days; no training or promotion performed. |
 | T7 intent | NOT RUN | Checked versions/lease exist; no trained intent ablation yet. |
 | T8 takeover | PARTIAL | Milestone (a) synthetic evidence above; physical-device/native OS input proof still missing. Not a gate on observation-only recorder, per lead. |
-| T9 recorder | **INCOMPLETE** | Premonition grants verified; caps/retention/stop/fake-resource checks passed again. Native canary deferred because Ben is active; real capture cost not measured. |
+| T9 recorder | **PASS — recording OFF pending lead go** | Native secure-field canary and positive control passed; zero secret hits in 26 saved files. Caps/retention/stop/OFF and fake-data checks passed. Two-minute live screen cost measured and scratch capture deleted. |
 | T10 sleep/undo | PARTIAL | Pixel model, shared-file workers, training/idle gates and whole-bundle quarantine checkpointed. No training, export, promotion or neural rollback evidence yet. |
 
-Original frozen marks hash: 59087e05d7536d2ae5cf9bb44015e564ab1745a229c73adfcf01f655000b49ac. Dated retention/password/lean amendments are preserved separately. No marks were quietly relaxed to call this a pass. BensPC, its GPU, real Nanbeige, and Ben's recordings were not used.
+Original frozen marks hash: 59087e05d7536d2ae5cf9bb44015e564ab1745a229c73adfcf01f655000b49ac. Dated retention/password/lean amendments are preserved separately. No marks were quietly relaxed to call this a pass. BensPC, its GPU, and real Nanbeige were not used. Ben separately authorized the temporary real desktop measurement reported above; it was deleted.
 
 ### Five lines for Ben
 
-The recorder is built, but it is off.  
-Fake recordings used about 123 MB of memory.  
-Old clips have small limits and clear delete rules.  
-Mac permission buttons block the real password test.  
-Nothing is watching you yet.
+The password test passed.  
+Normal typing showed up; the fake password did not.  
+The short screen test used some memory and about half of one core.  
+Its videos are gone.  
+The recorder is off until you say go.

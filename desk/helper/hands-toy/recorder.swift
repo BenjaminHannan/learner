@@ -18,6 +18,7 @@ let callback:CGEventTapCallBack={_,kind,event,_ in
  if kind == .tapDisabledByTimeout || kind == .tapDisabledByUserInput {emit(["type":"source_error","reason":"event tap disabled"]);exit(4)}
  // Observe only physical input. Do not turn Glim's own attempts into Ben demos.
  if event.getIntegerValueField(.eventSourceUserData)==sourceTag{return Unmanaged.passUnretained(event)}
+ if args.contains("--scratch-benchmark") {emit(["type":"source_error","reason":"physical input; scratch capture stopped"]);exit(6)}
  let t=Double(DispatchTime.now().uptimeNanoseconds)/1e6
  if kind == .keyDown || kind == .keyUp {
   var count=0;var chars=[UniChar](repeating:0,count:64);event.keyboardGetUnicodeString(maxStringLength:64,actualStringLength:&count,unicodeString:&chars)
@@ -43,6 +44,13 @@ let output=Output();var stream:SCStream?;var lastWindow:CGWindowID=0
 func update() async {
  do {
   let content=try await SCShareableContent.excludingDesktopWindows(true,onScreenWindowsOnly:true)
+  if args.contains("--scratch-benchmark") {
+   if stream != nil{return}
+   guard let display=content.displays.first(where:{$0.displayID==CGMainDisplayID()}) else{throw NSError(domain:"screen",code:1)}
+   let filter=SCContentFilter(display:display,excludingWindows:[])
+   let cfg=SCStreamConfiguration();cfg.width=1280;cfg.height=720;cfg.pixelFormat=kCVPixelFormatType_32BGRA;cfg.minimumFrameInterval=CMTime(value:1,timescale:20);cfg.queueDepth=3;cfg.showsCursor=true;cfg.capturesAudio=false
+   let next=SCStream(filter:filter,configuration:cfg,delegate:output);try next.addStreamOutput(output,type:.screen,sampleHandlerQueue:DispatchQueue(label:"glim.scratch.frames"));stream=next;try await next.startCapture();return
+  }
   guard let front=NSWorkspace.shared.frontmostApplication,let window=content.windows.filter({$0.owningApplication?.processID==front.processIdentifier && $0.windowLayer==0 && $0.frame.width>10}).max(by:{$0.frame.width*$0.frame.height<$1.frame.width*$1.frame.height}) else{if let old=stream {try? await old.stopCapture();stream=nil};return}
   if window.windowID==lastWindow && stream != nil{return}
   let filter=SCContentFilter(desktopIndependentWindow:window)
@@ -70,7 +78,8 @@ if args.contains("--preflight") {
  }
  let data=try! JSONSerialization.data(withJSONObject:row,options:[.sortedKeys]);print(String(data:data,encoding:.utf8)!);exit(0)
 }
-if !args.contains("--capture") {exit(2)}
+if !args.contains("--capture") && !args.contains("--scratch-benchmark") {exit(2)}
+if args.contains("--scratch-benchmark") {_ = Timer.scheduledTimer(withTimeInterval:120,repeats:false){_ in exit(0)}}
 if !CGPreflightScreenCaptureAccess() || !CGPreflightListenEventAccess() {fputs("capture/input permission missing; no permission prompt, no recording\n",stderr);exit(3)}
 app.setActivationPolicy(.prohibited)
 tap=CGEvent.tapCreate(tap:.cgSessionEventTap,place:.headInsertEventTap,options:.listenOnly,eventsOfInterest:mask,callback:callback,userInfo:nil)

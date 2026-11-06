@@ -21,3 +21,8 @@ The app's entry chooses its role before loading `main.js`. Normal launches load 
 Caps: 12 GiB total, 3 GiB/day, 2 GiB keep-set, seven days, pause below 10 GiB free. Every write checks quota/free bytes. Judged sleep deletion keeps only the fixed mathematical keep-set. Deletes use exact indexed paths and append retention.log. The sleep reader is still a later step.
 
 Build/install: `python3 desk/tools/hands-recorder/install.py`, after the full desk suite. This adds a bootstrap and recorder modules to the installed app; it does not restart chat or re-sign the outer app. The original package.json is saved under `hands-recorder/rollback/`. Restore that original manifest after stopping the recorder to route all launches straight back to main.js. Any actual chat/brain restart still needs the model lock and five idle minutes.
+
+
+2026-11-06 test run: Ben confirmed he was away, so the lead authorized `recorderctl canary --ben-confirmed-away` without waiting five minutes. Default canary idle checks and physical-input/focus-loss stops remain. The native secure-field canary passed with a normal-field positive control.
+
+The separately authorized `recorderctl scratch-benchmark --ben-confirmed-away` captures only the main display for at most 120 seconds, stops on physical input, deletes its two exact scratch video files, and leaves regular recording OFF. It requires explicit away confirmation. `recorderctl stop` also stops this role. This test command does not create LEAD-RELEASE.json. See REPORT.md for actual CPU/RAM/storage cost.
