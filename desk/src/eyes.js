@@ -28,6 +28,10 @@ const FRAME_FRESH_MS = 120000;
 // of frames has feature cosine < STILL_COS), seePart() sends them as ONE clip part through the video projector (model server
 // "clip" field); a still screen keeps the single-picture part (image projector). On a still screen the ticker slows to CLIP_STILL_MS.
 const CLIP_FRAMES = 8, CLIP_MIN = 3, CLIP_EVERY_MS = 2500, CLIP_STILL_MS = 10000, CLIP_WINDOW_MS = 20000, STILL_COS = 0.995;
+// CHAT-FIRST C (2026-11-05): the always-on tick (tickPart) carries a picture only when the newest frame differs meaningfully from the
+// last frame Glim was SENT (feature cosine < SEND_COS), and a clip only then AND >= CLIP_GAP_MS after the last clip. Otherwise no
+// picture at all (the text senses still go). A chat that asks about the screen keeps seePart().
+const SEND_COS = 0.98, CLIP_GAP_MS = 180000;
 const PRIVATE_WINDOW = /\b(?:private\s+browsing|incognito|inprivate|private\s+window)\b|\b(?:1password|bitwarden|lastpass|keychain\s+access|passwords)\b\s*(?:—|-|:|\.|$)/i;
 
 const dayOf = (t) => new Date(t).toISOString().slice(0, 10);
@@ -227,6 +231,18 @@ class Eyes {
     return { type: 'image_features', image_features: { f16, shape: [fr.length * SHAPE[0], SHAPE[1]], eye: EYE_ID,
       clip: { frames: fr.length, times: fr.map((f) => Math.round((f.t - t0) / 1000)), seconds: Math.round((newest - t0) / 1000) } } };
   }
+  // what an always-on tick carries (CHAT-FIRST C): null unless the screen changed meaningfully since the last part sent
+  tickPart() {
+    const f = this.latest;
+    if (!this.on() || !f || this.now() - f.t > FRAME_FRESH_MS) return null;
+    const v = f16ToFloats(f.f16);
+    if (this.sentVec && cosine(this.sentVec, v) >= SEND_COS) { this.stats.tickSkips = (this.stats.tickSkips || 0) + 1; return null; }
+    const now = this.now();
+    let part = now - (this.clipSentTickAt || 0) >= CLIP_GAP_MS ? this.clipPart(true) : null;
+    if (part) this.clipSentTickAt = now; else part = this.framePart(true);
+    if (part) { this.sentVec = v; this.stats.tickSends = (this.stats.tickSends || 0) + 1; }
+    return part;
+  }
   // what the loop / a chat ask carries: a clip when the screen moved, else the single latest picture
   seePart(once = true) { return this.clipPart(once) || this.framePart(once); }
   // The latest frame as an image_features content part, or null (off, none, too old, or used already when once=true).
@@ -294,4 +310,4 @@ function withFrame(messages, part, label) {
   return messages;
 }
 
-module.exports = { fromDataUrl, Eyes, EyesWorker, EvidenceStore, withFrame, labelFor, wantsSight, cosine, CLIP_FRAMES, CLIP_MIN, CLIP_EVERY_MS, CLIP_STILL_MS, CLIP_WINDOW_MS, STILL_COS, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };
+module.exports = { SEND_COS, CLIP_GAP_MS, fromDataUrl, Eyes, EyesWorker, EvidenceStore, withFrame, labelFor, wantsSight, cosine, CLIP_FRAMES, CLIP_MIN, CLIP_EVERY_MS, CLIP_STILL_MS, CLIP_WINDOW_MS, STILL_COS, EYE_ID, SHAPE, PRIVATE_WINDOW, EVIDENCE_DAYS, EVIDENCE_BYTES, FEATURE_DAYS, FRAME_FRESH_MS, EVIDENCE_DIR };

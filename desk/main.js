@@ -1801,25 +1801,17 @@ async function askSensesPerms() {
   return r;
 }
 // Ben first: typing in the last 15 s, a chat reply, a call or dictation all hold the always-on loop (and cancel a tick in flight)
-const aoBusy = () => benBusy() || !!(agent && agent.running) || Date.now() - lastTyping < 15000 || !!call || calling || !!dictation || dictStarting;
+// CHAT-FIRST A1: Ben's chat in flight, or < 120 s since his last chat message, holds every always-on request (src/aoask.js; not tied to benFirst)
+let lastChatAt = 0;
+const AoAsk = require('./src/aoask');
+const aoChatHeld = () => AoAsk.chatHeld({ chatRunning: () => !!(agent && agent.running) || !!(call && callAgent && callAgent.running), lastChatAt: () => lastChatAt }, Date.now());
+const aoBusy = () => !!aoChatHeld() || benBusy() || !!(agent && agent.running) || Date.now() - lastTyping < 15000 || !!call || calling || !!dictation || dictStarting;
 const aoNight = () => { if (sl.asleep || sl.waking) return true; const n = new Date(), w = effectiveWindow(store.getSettings(), learnedNow(n)); return inWindow(n, w.from, w.to); };
 // one short non-streamed request to the same gateway and model as chat's Fast pill (AlwaysOnMod.chatModel: Nanbeige on Ben's Mac). Marked test so the gateway keeps these background
 // prompts out of the diary the nightly sleep trains on: only the notes Glim chooses to save reach sleep (through memory).
-async function aoAsk(messages, signal, opts) {
-  const { buildChatBody, chatUrl } = require('./src/llm');
-  const s = store.getSettings();
-  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: false, maxTokens: (opts && opts.maxTokens) || 220, temperature: opts && opts.temperature != null ? opts.temperature : 0.2, test: true });
-  const headers = { 'content-type': 'application/json', 'x-test': '1' };
-  if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
-  const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
-  const stop = () => ctl.abort(); signal.addEventListener('abort', stop);
-  try {
-    const r = await fetch(chatUrl(s.gatewayUrl), { method: 'POST', headers, body: JSON.stringify(body), signal: ctl.signal });
-    if (!r.ok) throw new Error('gateway ' + r.status);
-    const j = await r.json();
-    return (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
-  } finally { clearTimeout(kill); signal.removeEventListener('abort', stop); }
-}
+// CHAT-FIRST B1: streamed, so an abort really stops it on the server; refused while the chat hold is on
+const aoAskDoor = AoAsk.makeAsk({ settings: () => store.getSettings(), model: (s) => AlwaysOnMod.chatModel(s), url: (s) => require('./src/llm').chatUrl(s.gatewayUrl), held: aoChatHeld });
+async function aoAsk(messages, signal, opts) { return aoAskDoor(messages, signal, { maxTokens: 220, ...(opts || {}) }); }
 function mainChatId() { const t = (store.listThreads() || []).find((x) => !x.helper && x.title !== 'Call'); return t ? t.id : null; }
 // always-on v2 (src/glimvoice.js): Glim's unprompted words go to the notch island (notched Mac), the floating pill (no notch), or a
 // macOS notification ("Use the notch" off). Never while Ben is typing: they wait for a pause and are dropped after 2 minutes.
@@ -1906,8 +1898,9 @@ function aoEyes() {
   return aoEyesObj;
 }
 function aoEyesLook(text, win) { if (store.getSettings().glimCanSee !== true) return null; return aoEyes().look(text, win || aoLatestText('windows')); }
-// the always-on loop's asks carry the latest frame (once, < 2 min old) when the eyes are on; every other ask is unchanged
-function aoAskSeeing(messages, signal, opts) { const part = aoEyesObj && aoEyesObj.seePart(); return aoAsk(part ? EyesMod.withFrame(messages, part, EyesMod.labelFor(part)) : messages, signal, opts); }
+// the always-on loop's asks carry a picture / clip only when the screen changed meaningfully since the last one sent (eyes on); every other ask is unchanged
+function aoAskSeeing(messages, signal, opts) { const part = aoEyesObj && aoEyesObj.tickPart();   // CHAT-FIRST C: only on a meaningful change
+  return aoAsk(part ? EyesMod.withFrame(messages, part, EyesMod.labelFor(part)) : messages, signal, opts); }
 // vid-in (2026-11-05): while the eyes and the screen sense are on, a frame every few seconds goes into the eyes' in-memory ring (slower
 // on a still screen); a moving screen is then seen as one short clip (video projector), a still one as one picture (image projector).
 // A chat question about the screen or a video (EyesMod.wantsSight) carries the same clip / picture in its first request of the turn.
@@ -2088,17 +2081,7 @@ function aoMoteResult(job, r) {
   aoMoteClaims(job, r.claims || []);
 }
 // E1: setting moteBatch -> a Mote's K tries go to the server together, streamed (src/motebatch.js); stopAll aborts all of them
-async function aoAskStream(messages, signal, opts) {
-  const { buildChatBody, chatUrl } = require('./src/llm');
-  const s = store.getSettings();
-  const body = buildChatBody({ model: AlwaysOnMod.chatModel(s), messages, stream: true, maxTokens: (opts && opts.maxTokens) || 350, temperature: opts && opts.temperature != null ? opts.temperature : 0.2, test: true });
-  const headers = { 'content-type': 'application/json', 'x-test': '1' };
-  if (s.apiKey) headers.authorization = 'Bearer ' + s.apiKey;
-  const ctl = new AbortController(); const kill = setTimeout(() => ctl.abort(), 90000);
-  const stop = () => ctl.abort(); signal.addEventListener('abort', stop);
-  try { return await require('./src/motebatch').streamText({ url: chatUrl(s.gatewayUrl), headers, body, signal: ctl.signal }); }
-  finally { clearTimeout(kill); signal.removeEventListener('abort', stop); }
-}
+async function aoAskStream(messages, signal, opts) { return aoAskDoor(messages, signal, { maxTokens: 350, ...(opts || {}) }); }
 const aoAskBatch = require('./src/motebatch').makeAskBatch({ askOne: (m, sig, o) => aoAskStream(m, sig, o) });
 const aoPool = new PoolMod.MotePool({ ask: (m, sig, o) => aoAsk(m, sig, { maxTokens: 350, ...(o || {}) }), gate: aoMoteGate, prompt: (job) => QuizMod.safeStudier(aoMotePrompt, job, aoQuizS()),
   askBatch: aoAskBatch, canBatch: () => store.getSettings().moteBatch === true,
@@ -2420,6 +2403,7 @@ function registerIpc() {
   });
   h('agent:send', async (threadId, text) => {
     text = Logins.scrub(String(text == null ? '' : text));   // LOGIN1: a saved password pasted here never reaches the model, the day log or sleep
+    if (!hp0(threadId)) lastChatAt = Date.now();   // CHAT-FIRST A1
     sl.lastActive = Date.now(); lastTyping = Date.now(); if (aoLoop) aoLoop.cancel('chat'); aoPool.stopAll('chat'); aoStopChecks(); aoStopQuiz(); aoSciEnd('chat');
     if (aoSenses && !hp0(threadId)) aoSenses.push('chats', 'Ben wrote: ' + String(text || '').slice(0, 300));
     if (!hp0(threadId)) { try { aoVoice.onBenChat(text); } catch (e) { /* feedback only */ } }

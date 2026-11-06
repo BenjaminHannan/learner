@@ -9,9 +9,10 @@ const Platform = require('../renderer/platform');
 const m = fs.readFileSync(path.join(__dirname, '..', 'main.js'), 'utf8');
 
 test('the always-on ask uses chat\'s gateway URL and chat\'s Fast model id, never a hard-coded lfm3 id', () => {
-  const ask = m.slice(m.indexOf('async function aoAsk('), m.indexOf('function mainChatId('));
+  const ask = m.slice(m.indexOf('const aoAskDoor = AoAsk.makeAsk('), m.indexOf('function mainChatId('));   // CHAT-FIRST: the one streamed door
   assert.match(ask, /chatUrl\(s\.gatewayUrl\)/);
-  assert.match(ask, /model: AlwaysOnMod\.chatModel\(s\)/);
+  assert.match(ask, /model: \(s\) => AlwaysOnMod\.chatModel\(s\)/);
+  assert.match(ask, /async function aoAsk\(messages, signal, opts\) \{ return aoAskDoor\(/);
   assert.doesNotMatch(ask, /lfm3/);
   assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '..', 'src', 'alwayson.js'), 'utf8').replace(/\/\/.*$/gm, ''), /'lfm3-fast'/);
 });
