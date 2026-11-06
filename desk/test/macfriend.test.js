@@ -83,3 +83,15 @@ test('main.js: built-in Mac sleep is off with a plain reason; the Mac has its ow
   assert.strictEqual(U.pickAsset(man, 'darwin', 'arm64', { key: 'macnb' }).url, 'https://x/b.zip');
   assert.strictEqual(U.pickAsset({ version: '9.0.0', mac: man.mac }, 'darwin', 'arm64', { key: 'macnb' }), null, 'never the LFM3 "mac" entry');
 });
+
+test('Builtin: a too-small Mac ends in phase "blocked" (not a retryable error), and trySmall() goes on with the small brain', async () => {
+  const { Builtin } = require('../src/runtime/builtin');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mf-'));
+  const b = new Builtin({ root, platform: 'darwin', macMemory: () => ({ bytes: 8 * GIB, source: 'os' }), privateChecker: { ensureIdle: async () => ({ ok: true, processStopped: true }) } });
+  b.installer.llamaExe = () => ({ exe: '/x/llama-server', tag: 't' });
+  const st = await b.start();
+  assert.strictEqual(st.phase, 'blocked'); assert.ok(st.canTrySmall); assert.match(st.error, /too small/);
+  let asked = null; b.installer.ensureModel = async () => { asked = b.installer.state().allowSmall; throw new Error('stop here'); };
+  const st2 = await b.trySmall();
+  assert.strictEqual(asked, true); assert.strictEqual(st2.phase, 'error');
+});

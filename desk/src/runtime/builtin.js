@@ -65,8 +65,8 @@ class Builtin {
       // macOS has the one Metal build and no CPU fallback
       const mac = this.platform === 'darwin';
       const first = mac ? 'metal' : (process.env.PREMONITION_LLAMA_FLAVOR === 'cpu' ? 'cpu' : 'vulkan');
-      try { r = await this._launch(first, opts && opts.lora); } catch (e) { r = { ok: false, error: e.message, download: true }; }
-      if (!r.ok && !r.stopped && this.running && !this.asleep && !mac && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
+      try { r = await this._launch(first, opts && opts.lora); } catch (e) { r = { ok: false, error: e.message, download: true, code: e.code }; }
+      if (!r.ok && !r.stopped && r.code !== 'too_small' && this.running && !this.asleep && !mac && first !== 'cpu' && (!r.download || this.installer.llamaExe('cpu'))) { // (no Vulkan release yet + a bundled CPU engine also lands here) // Vulkan would not start on this GPU/driver: the CPU build
         this._set({ phase: 'downloading', label: 'The graphics build did not start; getting the CPU build', pct: 0 });
         r = await this._launch('cpu', opts && opts.lora);
       }
@@ -76,7 +76,7 @@ class Builtin {
         if (this.asleep) this._set({ phase: 'off', label: 'Asleep', pct: 0 });
         return this.state();
       }
-      if (!r.ok) throw new Error(r.error || 'the model did not start');
+      if (!r.ok) { const err = new Error(r.error || 'the model did not start'); err.code = r.code; throw err; }
       if (!this.gw) {
         this.gw = createGateway({ upstream: this.server.url(), diaryDir: this.diaryDir, upstreamModel: 'default', fetch: this.o.gwFetch, skipDiary: this.o.skipDiary });
         await this.gw.listen(this.o.gatewayPort === undefined ? C.GATEWAY_PORT : this.o.gatewayPort, '127.0.0.1');
