@@ -1,0 +1,6 @@
+'use strict';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),status=document.querySelector('#status');let last=[24,24],buttons=[],keys=[];
+window.toy.frames(f=>{if(!f.pixels)return;const raw=Uint8Array.from(atob(f.pixels),c=>c.charCodeAt(0)),rgba=new Uint8ClampedArray(320*180*4);for(let i=0,j=0;i<raw.length;i+=3,j+=4){rgba[j]=raw[i];rgba[j+1]=raw[i+1];rgba[j+2]=raw[i+2];rgba[j+3]=255;}ctx.putImageData(new ImageData(rgba,320,180),0,0);status.textContent=f.status;});
+function send(p={}){window.toy.input({...p,keys,buttons});}
+document.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>{last=[24,24];keys=[];buttons=[];window.toy.input({reset:b.dataset.task});});
+canvas.onpointermove=e=>{const r=canvas.getBoundingClientRect(),p=[(e.clientX-r.left)*320/r.width,(e.clientY-r.top)*180/r.height];send({dx:p[0]-last[0],dy:p[1]-last[1]});last=p;};canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);buttons=['left'];send();};canvas.onpointerup=()=>{buttons=[];send();};canvas.onwheel=e=>{e.preventDefault();send({wheel:Math.sign(e.deltaY)*30});};canvas.onkeydown=e=>{e.preventDefault();keys=[...new Set([...keys,e.code])];send({character:e.key.length===1?e.key:undefined});};canvas.onkeyup=e=>{keys=keys.filter(k=>k!==e.code);send();};window.onblur=()=>{keys=[];buttons=[];send({release:{keys:[],buttons:[]}});};
