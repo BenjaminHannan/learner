@@ -179,3 +179,15 @@ test('ordinary chat without a desktop request does not start control', async () 
     assert.equal(started, false);
   } finally { gw.close(); }
 });
+
+test('a look-only request cannot send desktop input', async () => {
+  const gw = await startGateway([{ tool_calls:[{ name:'computer_execute', arguments:{ preparedId:'p', confirmed:true, actor:'glim' } }] }, { content:'I could not finish.' }]);
+  try {
+    let sent = false;
+    const fake = { pending:{ intent:'click', action:action() }, async init() {}, async execute() { sent=true; return { text:'sent' }; }, async close() {} };
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:3, mode:'hands-off', vision:'off', verify:false }),
+      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), desktopFactory:() => fake, emit:() => {} });
+    await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'What is on my screen?');
+    assert.equal(sent, false);
+  } finally { gw.close(); }
+});

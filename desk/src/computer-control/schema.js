@@ -15,5 +15,10 @@ const defs = [
 const names = new Set(defs.map(d => d.function.name));
 const legacy = new Set(['screen_look','screen_click','screen_type','screen_key','open_app']);
 const desktopRequest = text => /\b(?:desktop|screen|mouse|keyboard|click|drag|scroll|type|press|finder|downloads|textedit|notes|safari|calculator|calendar|preview|photos|music|terminal|system settings|appearance|dark mode|light mode|open (?:the )?(?:app|application)|(?:app|application|folder|file))\b/i.test(String(text || '')) || /\b(?:open|launch)\s+(?:the\s+)?[A-Z][\w-]*/.test(String(text || ''));
+const actionRequested = text => {
+  const s = String(text || '').trim();
+  if (/^(?:what|why|when|where|how|which|who)\b/i.test(s)) return false;
+  return /\b(?:open|launch|start|click|tap|drag|scroll|type|press|write|create|make|select|change|set|switch|turn|move|close|save|fill|enter|navigate|go)\b/i.test(s);
+};
 const instruction = 'For this explicit desktop task, use only computer_look, computer_prepare, computer_execute, computer_verify and computer_finish for the Mac. Observe, prepare one action, confirm its new screenshot, execute, then verify the after screenshot. If the screen or watcher is unavailable, stop. Never claim success without visible evidence. Coordinates default to pixels in the picture. Never send messages, buy, delete, or post unless Ben explicitly requested it.';
-module.exports = { defs, names, legacy, desktopRequest, instruction };
+module.exports = { defs, names, legacy, desktopRequest, actionRequested, instruction };

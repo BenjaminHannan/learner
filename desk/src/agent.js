@@ -1151,6 +1151,7 @@ class Agent {
           if (!this.desktop) this.desktop = this.makeDesktop(signal);
           if (name === 'computer_look' && this.o.safety) { const look = this.o.safety.check('screen_look', {}, {}); if (look?.refuse) throw Error(look.refuse); }
           if (name === 'computer_execute') {
+            if (!cc.actionRequested(this.taskText)) throw Error('Ben asked to look, not to move or type');
             const p = this.desktop.pending;
             if (!p) throw Error('Prepare the action first');
             const { checkAction, explicitlyRequested } = require('./computer-control/safety');
