@@ -627,7 +627,8 @@ class Agent {
     this.toolSteps = 0; this.acting = false; this.claimChecks = 0;
     this.memBlock = '';
     this.taskText = opts && opts.hidden ? '' : String(userText || ''); this.usedMemSave = false; this.memChecks = 0; this.secretChecks = 0;   // a hidden turn (a Mote's report relayed) is not Ben asking to remember anything
-    this.desktopEnabled = !!(process.platform === 'darwin' && (process.versions.electron || this.o.desktopFactory) && !this.o.helperId && this.taskText && require('./computer-control/schema').desktopRequest(this.taskText));
+    this.desktopControlAvailable = !!(this.o.desktopFactory || (process.versions.electron && require('./computer-control/enable').enabled()));
+    this.desktopEnabled = !!(process.platform === 'darwin' && this.desktopControlAvailable && !this.o.helperId && this.taskText && require('./computer-control/schema').desktopRequest(this.taskText));
     this.desktop = null;
     // AGENT1 diet: a web task gets the web tools only, short descriptions, a shorter system prompt and older page views cut (request only)
     { let s0 = {}; try { s0 = this.o.getSettings() || {}; } catch (e) { s0 = {}; }
@@ -1140,7 +1141,7 @@ class Agent {
       return text;
     };
     if (args === null) return { text: finish('Error: arguments were not valid JSON (the call looks cut off). Call the tool again with shorter arguments.', false) };
-    if (!this.desktopEnabled && process.platform === 'darwin' && process.versions.electron && this.o.hands && (SCREEN_GATED.has(name) || name === 'open_app')) return { text:finish('Desktop control needs an explicit desktop task and a checked screen.', false), failed:true };
+    if (this.desktopControlAvailable && !this.desktopEnabled && process.platform === 'darwin' && process.versions.electron && this.o.hands && (SCREEN_GATED.has(name) || name === 'open_app')) return { text:finish('Desktop control needs an explicit desktop task and a checked screen.', false), failed:true };
     if (this.desktopEnabled) {
       const cc = require('./computer-control/schema');
       if (cc.legacy.has(name) || /^browser_/.test(name) || name === 'run_shell') return { text:finish('Use the checked desktop tools for this task.', false), failed:true };

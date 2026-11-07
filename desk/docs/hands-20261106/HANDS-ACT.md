@@ -4,7 +4,7 @@ This is **not a desktop-control pass**. The new control path has not been instal
 
 ## What changed
 
-The earlier chat permission fix remains. The new path sends input through a native guard in a separate Premonition process. It takes a picture, prepares one action, waits for Glim to confirm a new picture, sends the action, takes another picture, and requires a visual check. The new local attempt log follows the proposed `ATTEMPT-LOG.md` format and keeps unfinished or model-only results unknown. An approved, hash-checked toy policy can propose a point; if none exists, Glim chooses the point. This has only fake-test proof so far.
+The earlier chat permission fix remains. The new path sends input through a native guard in a separate Premonition process. It takes a picture, prepares one action, waits for Glim to confirm a new picture, sends the action, takes another picture, and requires a visual check. The new local attempt log follows the proposed `ATTEMPT-LOG.md` format and keeps unfinished or model-only results unknown. An approved, hash-checked toy policy can propose a point; if none exists, Glim chooses the point. This has only fake-test proof so far and is **off for ordinary chat**. A test process can opt in with `GLIM_HANDS_TEST=1`; the ordinary-chat release file is not created here.
 
 This path is inside the chat agent; it is not a repair of every caller. `src/hands.js` still has its old timeout and can show an incorrect notice saying Glim is using the mouse after no answer; `main.js` also has a separate `freezeOnly` path. These files are outside HANDS-ACT's write allowlist. Do not call this ready for real desktop control until the physical-input tests pass and the other callers are coordinated.
 
