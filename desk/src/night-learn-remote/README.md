@@ -55,7 +55,9 @@ object. `--bench-steps 0` is the default: tonight need not run a CPU benchmark.
   returned checkpoints **and result JSON** must match the worker's hashes.
   Only then may quarantine files be installed; PC deletion must be confirmed.
 - An unavailable/busy host falls back to the native **Mac CPU** trainer, retaining
-  its production gate and requested step count. Reasons append to
+  its production gate and requested step count. The real-data gate is checked
+  again after the remote wait: waking the Mac or leaving the night window does
+  not start a CPU fallback job. Reasons append to
   `~/learner-ops/night-learn-remote/fallback.log` (mode 0600). CUDA failures never
   fall back. After frames are uploaded, an unconfirmed cleanup is a hard error,
   not a claimed successful local fallback.

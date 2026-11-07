@@ -274,6 +274,18 @@ class FallbackTests(unittest.TestCase):
             remote.assert_not_called()
             local.assert_not_called()
 
+    def test_real_gate_is_rechecked_before_fallback_after_remote_wait(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(runner, 'real_gate', side_effect=[1300, RuntimeError('Mac became active')]) as gate, \
+             mock.patch.object(runner, 'FALLBACK_LOG', Path(tmp) / 'fallback.log'), \
+             mock.patch.object(runner, 'run_remote', side_effect=runner.RemoteUnavailable('GPU still busy')), \
+             mock.patch.object(runner, 'run_local') as local:
+            with self.assertRaisesRegex(RuntimeError, 'Mac became active'):
+                runner.run(self.dataset(tmp, synthetic=False), Path(tmp) / 'out', logger=lambda _: None)
+            self.assertEqual(gate.call_count, 2)
+            local.assert_not_called()
+            self.assertIn('GPU still busy', runner.FALLBACK_LOG.read_text())
+
     def test_cleanup_failure_is_not_silently_fallback_eligible(self):
         def remote(*args, **kwargs):
             raise RuntimeError('PC cleanup unconfirmed')
