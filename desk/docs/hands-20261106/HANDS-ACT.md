@@ -12,7 +12,7 @@ Mac chat now blocks its old mouse, keyboard and app-opening tools when the check
 
 ## Tests and checks
 
-* In `desk/`, `node --test test/computer-control-desktop.test.js test/computer-control-consent.test.js test/hands-toy/lease.test.js test/agent.test.js`: exit 0, 85 passed, 0 failed. These are fake and sandbox tests, not physical-device proof.
+* In `desk/`, `node --test test/computer-control-desktop.test.js test/computer-control-consent.test.js test/hands-toy/lease.test.js test/agent.test.js`: exit 0, 86 passed, 0 failed. These are fake and sandbox tests, not physical-device proof.
 * `git diff --check`: exit 0 at the time checked.
 * Real tasks: Notes 0/2, Safari 0/2, Finder 0/2, TextEdit 0/2, Settings 0/2 **run**, not failures or passes. Screenshot hashes: none. Physical takeover timings: none. No-actions-when-not-asked and the end-to-end attempt log remain unverified.
 * A takeover harness is prepared but not run. Its simulated physical input is a tagged CGEvent posted by a separate helper process. It checks release timing and up-events in a throwaway window, and stops if its independent monitor sees real input or the window loses focus.

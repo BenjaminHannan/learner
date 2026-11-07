@@ -23,6 +23,13 @@ function newestDownload() {
   const dir = path.join(os.homedir(), 'Downloads');
   try { return fs.readdirSync(dir).map(name => { try { const s=fs.statSync(path.join(dir,name)); return s.isFile() ? { name, mtime:s.mtimeMs } : null; } catch (_) { return null; } }).filter(Boolean).sort((a,b) => b.mtime-a.mtime || a.name.localeCompare(b.name))[0]?.name || null; } catch (_) { return null; }
 }
+function appearancePassed(states, initial) {
+  if (!['light','dark'].includes(initial) || states.includes('unknown') || states[0] !== initial) return false;
+  const expected = initial === 'dark' ? ['light','dark','light','dark'] : ['dark','light'];
+  let i = 0;
+  for (const state of states.slice(1)) if (state === expected[i]) i++;
+  return i === expected.length && states.at(-1) === initial;
+}
 async function check(lib, bridge, app, target) {
   if (!target) return { ok:false, error:'no target file' };
   const child = await Aux.start(lib, bridge, false);
@@ -67,7 +74,7 @@ async function main() {
       if (kind === 'textedit') { app='TextEdit'; target=unique; request=`Open TextEdit, create a new document, type exactly "${unique}", select all of that text, and make it bold.`; }
       if (kind === 'appearance') {
         initial=await appearance(); states.push(initial);
-        request=initial === 'dark' ? `Open System Settings, change the appearance to light, then to dark, and leave it dark. This is test run ${n}.` : `Open System Settings, change the appearance to dark, then return it to light. This is test run ${n}.`;
+        request=initial === 'dark' ? `Open System Settings, change the appearance to light, then dark, then light, then return it to dark. This is test run ${n}.` : `Open System Settings, change the appearance to dark, then return it to light. This is test run ${n}.`;
         appearanceTimer=setInterval(() => appearance().then(x => { if (states.at(-1) !== x) states.push(x); }).catch(() => states.push('unknown')),500);
       }
       const settings = () => ({ gatewayUrl:'http://127.0.0.1:8090/v1', model:'qwen36', modelMain:'qwen36', modelFast:'qwen36-fast', maxSteps:60, mode:'hands-off', vision:'on', verify:false, thinkCapSecs:0 });
@@ -89,7 +96,7 @@ async function main() {
       const provisional = pendingDesktop?.attempt.row, visual = pendingDesktop?.claimed === 'pass' && provisional?.steps?.at(-1)?.verification?.result === 'pass';
       let independent;
       if (kind === 'finder') target = newestDownload();
-      if (kind === 'appearance') independent = { ok:!states.includes('unknown') && states.includes('dark') && states.at(-1) === initial && (initial !== 'dark' || states.includes('light')), states, initial };
+      if (kind === 'appearance') independent = { ok:appearancePassed(states,initial), states, initial };
       else {
         independent = await check(checkLib,built.bridge,app,target);
         if (kind === 'safari') independent.pageTitle = await check(checkLib,built.bridge,app,'Example Domain');
@@ -114,3 +121,4 @@ async function main() {
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }
 if (require.main === module) main().catch(error => { report({ status:'error', error:error.message }); console.error(error.message); process.exitCode=1; });
+module.exports = { appearancePassed };

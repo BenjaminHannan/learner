@@ -12,6 +12,14 @@ const { Agent } = require('../src/agent');
 const { buildTools } = require('../src/prompt');
 const { startGateway } = require('./helpers');
 const Vision = require('../src/computer-control/vision');
+const { appearancePassed } = require('../src/computer-control/task-trials');
+
+test('appearance trial requires dark and back, preserving the initial setting', () => {
+  assert.equal(appearancePassed(['light','dark','light'],'light'),true);
+  assert.equal(appearancePassed(['dark','light','dark','light','dark'],'dark'),true);
+  assert.equal(appearancePassed(['dark','light','dark'],'dark'),false);
+  assert.equal(appearancePassed(['light','dark','unknown','light'],'light'),false);
+});
 
 function fixture() {
   const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-test-'));
