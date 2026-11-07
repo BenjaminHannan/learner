@@ -59,7 +59,7 @@ def completion_json(url, payload, retry_guard=None):
             if 'answer' in locals() and (answer.get('choices') or [{}])[0].get('finish_reason') == 'length':
                 budget = int(payload.get('max_tokens', 700))
                 payload['max_tokens'] = min(1800, max(1200, budget * 2))
-                adapted_request = payload['max_tokens'] > budget
+                adapted_request = adapted_request or payload['max_tokens'] > budget
         if attempt == 24 or (time.monotonic() >= deadline and not adapted_request):
             raise last
         if retry_guard is not None: retry_guard()
