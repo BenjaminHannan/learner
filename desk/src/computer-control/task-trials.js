@@ -7,6 +7,7 @@ const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { Agent } = require('../agent');
+const { setTestProfile } = require('../llm');
 const { buildTools } = require('../prompt');
 const { SafetyLevels } = require('../safety-levels');
 const { Desktop } = require('./desktop');
@@ -47,6 +48,9 @@ async function main() {
   try { owner = fs.readFileSync('/tmp/aon/realmodel.lock/owner','utf8').trim().match(/^HANDS-ACT\s+(\d+)\b/); } catch (_) { /* no lock */ }
   if (!owner) throw Error('HANDS-ACT real-model lock required');
   try { process.kill(Number(owner[1]),0); } catch (_) { throw Error('HANDS-ACT real-model lock owner is not alive'); }
+  // Keep synthetic trial chats out of the ordinary diary training stream; the
+  // dedicated attempt log still records each real action and its evidence.
+  setTestProfile(true);
   const root = path.join(os.homedir(),'learner-ops','hands-attempts'); fs.mkdirSync(root,{ recursive:true, mode:0o700 });
   const file = path.join(root,'tasks-' + Date.now() + '.json'), result = { status:'incomplete', tests:[] };
   const save = () => fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n',{ mode:0o600 });
