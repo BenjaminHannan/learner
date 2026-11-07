@@ -14,6 +14,7 @@ This path is inside the chat agent; it is not a repair of every caller. `src/han
 * In `desk/`, `node --test test/agent.test.js`: exit 0, 59 passed, 0 failed. This ran before the final narrowing of the approval check to computer-control calls; the focused test was rerun after that narrowing.
 * `git diff --check`: exit 0 at the time checked.
 * Real tasks: Notes 0/2, Safari 0/2, Finder 0/2, TextEdit 0/2, Settings 0/2 **run**, not failures or passes. Screenshot hashes: none. Physical takeover timings: none. No-actions-when-not-asked and the end-to-end attempt log remain unverified.
+* A takeover harness is prepared but not run. Its simulated physical input is a tagged CGEvent posted by a separate helper process. It checks release timing and up-events in a throwaway window, and stops if its independent monitor sees real input or the window loses focus.
 
 ## Log coordination
 

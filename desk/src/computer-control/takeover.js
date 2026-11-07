@@ -66,8 +66,10 @@ async function main() {
       if (rows.some(r => r.event === 'focus-lost')) throw Error('test window lost focus');
       session = await NativeSession.start(); const kind = i % 2 ? 'mouse' : 'key', first = rows.length;
       try {
+        if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
         await session.command('grant');
         await session.command('send', kind === 'key' ? {kind:'key',code:56,down:true} : {kind:'mouse',state:'down',button:'left',x:ready.x,y:ready.y});
+        if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
         const takeover = new Promise((resolve, reject) => { const timer=setTimeout(() => reject(Error('no takeover within 200 ms')),200); session.onRevoke = row => { if (row.reason === 'user input' && row.terminal) { clearTimeout(timer); resolve(row); } }; });
         const posted = injector.next(row => row.event === 'posted', 1000);
         injector.socket.write('fire\n');
