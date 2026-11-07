@@ -17,7 +17,7 @@
     ['Get ready for tomorrow', 'What do I have tomorrow, and what should I do tonight to be ready?']
   ];
 
-  const st = { tab: get(KEY_TAB, 'now'), open: get(KEY_OPEN, '1') !== '0', said: '', running: false, plan: [], sparks: [], showMotes: false, onPick: null, desk: null };
+  const st = { tab: get(KEY_TAB, 'now'), open: get(KEY_OPEN, '0') !== '0', mainOpen: get(KEY_OPEN, '0') !== '0', moteOpen: false, mote: false, said: '', running: false, plan: [], sparks: [], showMotes: false, onPick: null, desk: null };
   let root, body, tabs;
 
   function nowView() {
@@ -95,7 +95,8 @@
       const tb = $('#btnSide'); if (tb) tb.onclick = () => api.toggle();
       layout(); paint();
     },
-    toggle(on) { st.open = on == null ? !st.open : !!on; put(KEY_OPEN, st.open ? '1' : '0'); layout(); if (st.open) paint(); },
+    toggle(on) { st.open = on == null ? !st.open : !!on; if (st.mote) st.moteOpen = st.open; else { st.mainOpen = st.open; put(KEY_OPEN, st.open ? '1' : '0'); } layout(); if (st.open) paint(); },
+    setContext(mote) { const next = !!mote; if (st.mote === next) return; st.mote = next; st.open = next ? st.moteOpen : st.mainOpen; layout(); if (st.open) paint(); },
     setRunning(r) { st.running = !!r; if (!r) st.said = ''; if (st.tab === 'now') paint(); },
     setSaid(t) { st.said = String(t || '').slice(0, 160); if (st.tab === 'now') paint(); },
     setPlan(items) { st.plan = Array.isArray(items) ? items.slice(0, 8) : []; if (st.tab === 'now') paint(); },

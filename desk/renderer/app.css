@@ -725,3 +725,27 @@ body.darwin.fullscreen #topbar, body.darwin.fullscreen .s-head, body.darwin.full
 
 /* always-on v2: the locked quiz Ben can peek at from the Learn popover */
 .lb-quiz { max-height:260px; overflow:auto; margin-top:.5rem; font-size:.8rem; } .lb-quiz ol { margin:.25rem 0 .6rem 1.1rem; padding:0; } .lb-quiz li { margin:.15rem 0; }
+
+/* Keep the main controls easy to scan; less-used controls remain in More. */
+.top-actions { position:relative; flex:none; -webkit-app-region:no-drag; }
+.top-actions > summary { list-style:none; cursor:pointer; color:var(--text2); padding:.4rem .8rem; border:1px solid var(--hair2); border-radius:999px; font-size:.88rem; font-weight:600; }
+.top-actions > summary::-webkit-details-marker { display:none; }
+.top-actions[open] > summary, .top-actions > summary:hover { color:var(--text); background:var(--raised); }
+.top-actions-menu { position:absolute; right:0; top:calc(100% + .5rem); width:13rem; padding:.5rem; display:flex; flex-direction:column; align-items:stretch; gap:.2rem; background:var(--surface); border:1px solid var(--hair2); border-radius:.9rem; box-shadow:var(--shadow); z-index:30; }
+.top-actions-menu .tb-btn, .top-actions-menu .icon-btn, .top-actions-menu .chip { display:flex; justify-content:flex-start; width:100%; height:auto; min-height:2.3rem; padding:.45rem .65rem; border:0; border-radius:.55rem; background:none; text-align:left; }
+.top-actions-menu .tb-btn:hover, .top-actions-menu .icon-btn:hover { background:var(--raised); }
+.top-actions-menu #btnSide::after { content:'Side panel'; margin-left:.4rem; font-size:.88rem; font-weight:600; }
+.top-actions-menu #btnSettings::after { content:'Settings'; margin-left:.4rem; font-size:.88rem; font-weight:600; }
+@media (min-width:1100px) { .top-actions-menu #btnSide { display:flex; } }
+@media (max-width:760px) { .top-actions-menu #btnDash span, .top-actions-menu #btnSleep span { display:inline; } }
+#learnLabel { display:block; max-width:14rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mote-report { margin-top:.65rem; border:1px solid var(--hair2); border-radius:.9rem; background:var(--surface); }
+.mote-report > summary { padding:.7rem .9rem; cursor:pointer; color:var(--text); font-weight:600; }
+.mote-report-body { padding:.2rem .9rem .9rem; color:var(--text2); }
+#sleepDetails { margin-top:.3rem; color:var(--text2); font-size:.8rem; }
+#sleepDetails summary { cursor:pointer; width:max-content; }
+#sleepStatusDetail { margin-top:.3rem; overflow-wrap:anywhere; }
+#sleepRecent li { white-space:normal; overflow-wrap:anywhere; }
+.mote-empty { margin:auto; max-width:24rem; padding:2rem; text-align:center; color:var(--text); }
+.mote-empty b { font-size:1.08rem; }
+.mote-empty p { margin:.45rem 0 0; color:var(--text2); font-size:.9rem; }

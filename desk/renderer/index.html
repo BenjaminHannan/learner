@@ -34,6 +34,7 @@
       </div>
     </div>
   </div>
+  <details class="top-actions" id="topActions"><summary aria-label="More options" title="More options">More <span aria-hidden="true">⌄</span></summary><div class="top-actions-menu">
   <div id="gw" class="chip" title="Gateway"><i></i><span>Offline</span></div>
   <button id="btnSide" class="icon-btn" title="Show or hide the side panel (Now, Goals, Ideas)" aria-label="Side panel" aria-pressed="true">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M10 3v10"/></svg>
@@ -47,6 +48,7 @@
   <button id="btnSettings" class="icon-btn" title="Settings" aria-label="Settings">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 6.71L14.47 6.69 14.47 9.31 12.83 9.29 12.33 10.51 13.5 11.65 11.65 13.5 10.51 12.33 9.29 12.83 9.31 14.47 6.69 14.47 6.71 12.83 5.49 12.33 4.35 13.5 2.5 11.65 3.67 10.51 3.17 9.29 1.53 9.31 1.53 6.69 3.17 6.71 3.67 5.49 2.5 4.35 4.35 2.5 5.49 3.67 6.71 3.17 6.69 1.53 9.31 1.53 9.29 3.17 10.51 3.67 11.65 2.5 13.5 4.35 12.33 5.49Z"/><circle cx="8" cy="8" r="2.1"/></svg>
   </button>
+  </div></details>
 </header>
 <div id="updateBar" hidden><span id="updateText"></span><button id="updateGo" class="amber-btn sm">Update now</button><button id="updateLater" class="ghost sm">Later</button></div>
 
@@ -64,7 +66,7 @@
     <div class="cwrap">
       <div id="sleepBar" hidden role="status">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.6 5.6 0 106.8 6.8z"/></svg>
-        <div class="sb-text"><b id="sleepTitle">Glim is asleep</b><span id="sleepSub"></span><ul id="sleepRecent" hidden aria-label="Tonight so far"></ul></div>
+        <div class="sb-text"><b id="sleepTitle">Glim is asleep</b><span id="sleepSub"></span><details id="sleepDetails" hidden><summary>Tonight’s details</summary><div id="sleepStatusDetail"></div><ul id="sleepRecent" aria-label="Tonight so far"></ul></details></div>
         <button id="btnWake" class="amber-btn big">Wake Glim</button>
       </div>
       <div id="wakeAsk" hidden role="alert">

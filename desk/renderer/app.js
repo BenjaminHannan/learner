@@ -230,9 +230,29 @@
   let raf = 0;
   // Ben Oct 28: "it can think, but it should just give the answer normally". Some replies carry their reasoning in the text up to a "</think>"; only what follows is the answer.
   const answerOf = (raw) => { const i = raw.lastIndexOf('</think>'); return ToolWords.inText(Doing.cleanReply((i >= 0 ? raw.slice(i + 8) : raw).replace(/^\s*<think>[\s\S]*$/, '').replace(/^\s+/, ''))); };   // UI2: no tool ids in reply text either   // UI2: no "[cut off: ...]" on screen (old saved replies too)
+  // Mote reports stay readable without making the chat look like an internal log.
+  function moteReply(text) {
+    return String(text || '').replace(/\s*(?:,?\s*(?:(?:before|then|and)\s+)?finish(?:ing)? with exactly\s+[`"']?NO_UPDATE[`"']?)(?=\s*[.!?]?(?:\s|$))/gi, '').replace(/^\s*[`"']?NO_UPDATE[`"']?\s*$/gim, '').replace(/\s+([.!?])/g, '$1');
+  }
+  function paintReply(node, raw) {
+    const text = Choices.parseChoices(answerOf(raw)).text;
+    if (!(thread && thread.helper)) { node.innerHTML = md(text); return; }
+    const clean = moteReply(text);
+    const ideas = [...clean.matchAll(/(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?IDEA:/gim)];
+    if (ideas.length < 2) { node.innerHTML = md(clean); return; }
+    const report = /(?:^|\n)\s*(?:#{1,6}\s*)?(?:\*\*)?report(?:\*\*)?\s*:?\s*(?:\n|$)/i.exec(clean);
+    const start = report && report.index < ideas[0].index ? report.index : ideas[0].index;
+    node.replaceChildren();
+    const intro = clean.slice(0, start).trim();
+    if (intro) { const p = el('div', 'mote-intro'); p.innerHTML = md(intro); node.append(p); }
+    const details = el('details', 'mote-report');
+    const summary = el('summary', null, 'Learning notes');
+    const body = el('div', 'mote-report-body'); body.innerHTML = md(clean.slice(start).trim());
+    details.append(summary, body); node.append(details);
+  }
   function paintText() {
     if (raf) return;
-    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { tn.text.innerHTML = md(Choices.parseChoices(answerOf(tn.raw)).text); toBottom(); } });
+    raf = requestAnimationFrame(() => { raf = 0; if (tn && tn.text) { paintReply(tn.text, tn.raw); toBottom(); } });
   }
   function onReasoning(d) {
     // Ben Oct 28: "make it so that I can't see them at all": no "Thinking… / Thought for N s" line either. Glim just shows its answer.
@@ -288,7 +308,7 @@
         t.raw = Doing.stripPlan(t.raw, lastPlan);   // UI2: a plan block the plan card already shows is collapsed out of the reply
         if (!Md.stripActions(t.raw).trim()) t.text.remove();
         else {
-          const pc = Choices.parseChoices(t.raw); t.text.innerHTML = md(pc.text);
+          const pc = Choices.parseChoices(t.raw); paintReply(t.text, t.raw);
           const cut = !!ev.cut;
           const rate = ev.sayId ? aoRow(ev.sayId) : thread && !thread.helper && !cut ? rateRow(ev.text != null ? ev.text : t.raw, ev.fb) : null;
           if (cut) { t.text.classList.add('cut'); t.text.append(el('div', 'cutnote', 'cut off: reading your new message')); }
@@ -427,6 +447,7 @@
     }
     if (ev.active !== undefined) c.active = !!ev.active;
     if (ev.login !== undefined) c.login = !!ev.login;
+    c.root.hidden = !!(thread && thread.helper && /^page not found$/i.test(c.title.textContent.trim()) && !c.login);
     c.root.classList.toggle('active', !!c.active && !c.login);
     c.root.classList.toggle('login', !!c.login);
     c.lbl.textContent = c.login ? 'Sign-in needed: click to open' : c.active ? 'Glim is browsing' : 'Click to open the browser';
@@ -739,11 +760,13 @@
     $('#composer').classList.toggle('asleep', asleep);
     $('#sleepBar').hidden = !asleep;
     $('#btnWake').textContent = slp.waking ? 'Waking up…' : 'Wake Glim'; $('#btnWake').disabled = !!slp.waking;
-    $('#sleepTitle').textContent = slp.waking ? 'Restoring your chat model' : 'Glim is asleep';
-    $('#sleepSub').textContent = slp.error || (slp.waking ? 'Sleep is stopping. Your message stays here until the model is ready.' : [slp.checkingIn ? 'Checking your mail' : (slp.live && slp.live.now) || 'Learning from your chats', slp.wakeLabel || '', asleepFor(slp.since), slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · '));
-    // Ben Oct 28: "tell you what it's doing right now in its sleep": the earlier steps of tonight, newest last
-    const rec = !slp.waking && slp.live && slp.live.recent ? slp.live.recent.slice(0, -1) : [];
-    const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line))); ul.hidden = !rec.length;
+    $('#sleepTitle').textContent = slp.waking ? 'Glim is waking up' : 'Glim is asleep';
+    $('#sleepSub').textContent = slp.error ? 'Something went wrong. See the details below.' : slp.waking ? 'Your message will be here when Glim is ready.' : 'Glim is resting. Wake it whenever you’re ready.';
+    const detail = [slp.error || '', slp.checkingIn ? 'Checking your mail' : (slp.live && slp.live.now) || '', slp.wakeLabel || '', asleepFor(slp.since), slp.demo ? 'demo run' : slp.lastQuiz != null ? 'quiz ' + Math.round(slp.lastQuiz * 10) / 10 : ''].filter(Boolean).join(' · ');
+    const rec = slp.live && Array.isArray(slp.live.recent) ? slp.live.recent : [];
+    $('#sleepStatusDetail').textContent = detail;
+    $('#sleepDetails').hidden = !detail && !rec.length;
+    const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line)));
     paintPrimary(); $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
     else { if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
@@ -985,7 +1008,11 @@
   function renderThread(t) {
     resetView();
     const items = t.items || [];
-    if (!items.length) { welcome(); return; }
+    if (!items.length) {
+      if (t.helper) { const empty = el('div', 'mote-empty'); empty.append(el('b', null, 'This Mote hasn’t done anything yet.'), el('p', null, 'Its updates will show up here.')); msgs.append(empty); }
+      else welcome();
+      return;
+    }
     items.forEach((it, i) => {
       if (it.t === 'user') addUser(it.text, false, false, false, it.ts || 0);
       else if (it.t === 'assistant') {
@@ -994,7 +1021,7 @@
         const nextIsTool = items[i + 1] && items[i + 1].t === 'step' && items[i + 1].tool !== 'verify';
         if (it.thinking) onReasoning(it.thinking);
         if (it.text) onText(it.text);
-        if (tn) { tn.text && (tn.text.innerHTML = md(tn.raw)); }
+        if (tn && tn.text) paintReply(tn.text, tn.raw);
         onAssistantEnd({ toolCalls: nextIsTool ? 1 : 0, thinkSecs: it.thinkSecs, ttftMs: it.ttftMs, fb: it.fb, ts: it.ts || 0, cut: !!it.cut, sayId: it.alwaysOn ? it.sayId || null : null });
       } else if (it.t === 'step') {
         const a = ensureActTracked();
@@ -1050,6 +1077,7 @@
     if (intent !== navigationIntent) return false;
     thread = { id: t.id, title: t.title, helper: t.helper || null };
     paintTitle(t);
+    if (window.Side && Side.setContext) Side.setContext(!!t.helper);
     renderThread(t);
     setRunning(!!current.running);
     if (current.loginWaiting) { const c = lastBCard(); if (c) upsertBCard({ id: c.id, login: true, active: true }); }
