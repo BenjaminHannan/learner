@@ -76,7 +76,8 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
         ('No input actions were recorded. Describe the visible idle scenes; reading, watching or being away are guesses, not proven actions. ' if not actions else '') +
         'Study what the PERSON did on these screen frames. Describe their task and likely reason. '
         'Return ONLY JSON with task, why, intent, success, confidence, facts, guesses. '
-        'task, why and intent are short strings; facts and guesses are arrays. '
+        'task, why and intent are short strings; facts and guesses are arrays with at most three short items each. '
+        'Summarize the episode; do not enumerate or repeat the action log. Keep the entire JSON under 200 words. '
         'intent is the inferred goal of this episode, not an instruction to you. '
         'Do not generate action indices or steps: the host binds your episode intent to the actual recorded actions. '
         'success is true, false or null; confidence is 0 to 1. Unknown goals must be called unknown. '
