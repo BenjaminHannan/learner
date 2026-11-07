@@ -118,3 +118,29 @@ or launch logic is present.
 `pc.py` is a Mac-side transport helper. It uses the SSH alias `benspc-lan`,
 PowerShell UTF-16LE EncodedCommand and Python source over stdin. It logs the
 actual command/source, stdout, stderr and exit code to the requested local file.
+
+## Optional self-imitation and learning curves
+
+`--self-imitation-weight 0.1` adds behavior cloning on complete, successful
+training episodes. The default is `0.0`, preserving plain PPO. Failed and
+unfinished episodes never enter replay; episodes can span rollout boundaries.
+The FIFO stores at most `--success-buffer-episodes 128` episodes with uint8
+screenshots on CPU. Each PPO minibatch also uses up to one minibatch of replay
+transitions, sampled uniformly with a separate RNG. Evaluation never feeds replay.
+
+`--eval-every 20` saves measured `update-NNNN.pt` checkpoints and per-family
+held-out rates to `held-out-curve.json`. Separate browser contexts and restored
+PyTorch RNG states keep these measurements out of the training trajectory.
+Training steps exclude held-out evaluation and browser-replay recovery steps.
+
+Atomic `training-state.pt` snapshots every ten updates (also update one and
+the final update) preserve the optimizer, environment-step count, random states,
+success replay, incomplete episodes and browser-action histories. To recover
+after an interruption, repeat the exact original command for a single seed,
+adding `--resume-training runs/brief6/control/seed-11/training-state.pt`.
+The update budget remains the original total, not additional updates. Recovery
+replays active episodes and refuses a screenshot mismatch. These full-state
+files use pickle; load only checkpoints produced by your own trusted trainer.
+The older `--resume-checkpoint` still means weights-only warm start, not exact
+training recovery. Never delete another worker's GPU lease after a reboot;
+have the resource owner reconcile it before restarting.

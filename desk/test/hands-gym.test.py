@@ -88,6 +88,56 @@ class ProtocolTests(unittest.IsolatedAsyncioTestCase):
 
 @unittest.skipUnless(importlib.util.find_spec('torch'),'torch not installed')
 class ModelTests(unittest.TestCase):
+    def test_success_buffer_keeps_complete_wins_and_discards_failures(self):
+        import torch
+        from hands_gym.train import SuccessBuffer
+        buffer=SuccessBuffer(2,capacity=1,seed=19)
+        inputs=(torch.ones(2,3,4,4),torch.zeros(2,3,4,4),
+                torch.ones(2,64),torch.zeros(2,12))
+        actions=torch.tensor([[0,1,0,0],[2,0,0,3]])
+        pending=[(None,0,False,{'success':False})]*2
+        buffer.record(inputs,actions,pending)
+        self.assertIsNone(buffer.sample(32,'cpu'))
+        buffer.record(inputs,actions,[(None,1,True,{'success':True}),
+                                      (None,0,True,{'success':False})])
+        self.assertEqual(len(buffer.episodes),1)
+        self.assertEqual(len(buffer.episodes[0]),2)
+        self.assertEqual(buffer.pending,[[],[]])
+        self.assertEqual(buffer.episodes[0][0][0][0].dtype,torch.uint8)
+        sampled_inputs,sampled_actions=buffer.sample(32,'cpu')
+        torch.testing.assert_close(sampled_inputs[0],inputs[0])
+        torch.testing.assert_close(sampled_actions,actions[0].repeat(2,1))
+        buffer.record(inputs,actions,[(None,0,True,{'success':False}),
+                                      (None,1,True,{'success':True})])
+        self.assertEqual(len(buffer.episodes),1)
+        torch.testing.assert_close(buffer.episodes[0][0][1],actions[1])
+
+    def test_cloning_loss_improves_success_action_and_restores_buffer_rng(self):
+        import torch
+        from hands_gym.model import GymPolicy
+        from hands_gym.train import SuccessBuffer, cloning_loss
+        torch.set_num_threads(1);torch.manual_seed(17)
+        net=GymPolicy()
+        inputs=(torch.rand(1,3,32,32),torch.rand(1,3,32,32),
+                torch.ones(1,64),torch.zeros(1,12))
+        actions=torch.tensor([[0,25,0,0]])
+        buffer=SuccessBuffer(1,seed=9)
+        self.assertIsNone(cloning_loss(net,buffer,32,'cpu'))
+        buffer.record(inputs,actions,[(None,1,True,{'success':True})])
+        state=buffer.state_dict()
+        restored=SuccessBuffer(1,seed=100);restored.load_state_dict(state)
+        first=buffer.sample(32,'cpu');second=restored.sample(32,'cpu')
+        for actual,expected in zip(first[0],second[0]):torch.testing.assert_close(actual,expected)
+        torch.testing.assert_close(first[1],second[1])
+        global_rng=torch.get_rng_state().clone()
+        loss=cloning_loss(net,buffer,32,'cpu')
+        torch.testing.assert_close(torch.get_rng_state(),global_rng)
+        before=float(loss.detach())
+        optimizer=torch.optim.SGD(net.parameters(),lr=0.001)
+        optimizer.zero_grad();loss.backward();optimizer.step()
+        self.assertLess(float(cloning_loss(net,buffer,32,'cpu').detach()),before)
+        self.assertGreater(float(net.start_grid.weight.grad.abs().sum()),0)
+
     def test_policy_action_logprob_and_ppo_gradients(self):
         import torch
         from hands_gym.model import GymPolicy, native_actions, intent_vector
