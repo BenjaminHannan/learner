@@ -22,13 +22,26 @@ def completion_json(url, payload, retry_guard=None):
     """Keep one FIFO turn through short service/chat preemptions, never preempt chat."""
     deadline = time.monotonic() + 120
     last = None
+    visual_context = None
     payload = dict(payload)
     for attempt in range(25):
+        adapted_request = False
         try:
             answer = post(url, payload)
             choice = (answer.get('choices') or [{}])[0]
             raw = choice.get('message', {}).get('content')
             if not isinstance(raw, str) or not raw.strip():
+                # Recover from an early EOS on multiple desktop images using
+                # one of the same recorded frames, never invented observations.
+                messages = payload.get('messages', [])
+                parts = messages[-1].get('content') if messages else None
+                images = [p for p in parts if p.get('type') == 'image_features'] if isinstance(parts, list) else []
+                if len(images) > 1:
+                    payload = json.loads(json.dumps(payload))
+                    payload['messages'][-1]['content'] = [parts[0], {
+                        'type':'text', 'text':'Only the last sampled recorded frame is visible in this retry; do not claim earlier visual observations.'}, images[-1]]
+                    visual_context = 'last sampled recorded frame; multi-frame response was empty'
+                    adapted_request = True
                 raise ValueError('Glim returned no explanation text')
             raw = raw.strip()
             if raw.startswith('```'):
@@ -36,6 +49,7 @@ def completion_json(url, payload, retry_guard=None):
             data = json.loads(raw)
             if not isinstance(data, dict):
                 raise ValueError('Glim explanation must be a JSON object')
+            if visual_context is not None: data['visualContext'] = visual_context
             return data
         except urllib.error.HTTPError as error:
             if error.code not in (429, 503): raise
@@ -43,8 +57,10 @@ def completion_json(url, payload, retry_guard=None):
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError, IndexError) as error:
             last = error
             if 'answer' in locals() and (answer.get('choices') or [{}])[0].get('finish_reason') == 'length':
-                payload['max_tokens'] = min(1800, max(1200, int(payload.get('max_tokens', 700)) * 2))
-        if attempt == 24 or time.monotonic() >= deadline:
+                budget = int(payload.get('max_tokens', 700))
+                payload['max_tokens'] = min(1800, max(1200, budget * 2))
+                adapted_request = payload['max_tokens'] > budget
+        if attempt == 24 or (time.monotonic() >= deadline and not adapted_request):
             raise last
         if retry_guard is not None: retry_guard()
         print(f'[night-learn] background Glim retry {attempt + 1}: {last}', file=sys.stderr, flush=True)

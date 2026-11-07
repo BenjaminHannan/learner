@@ -8,6 +8,8 @@ scores later click/key actions, runs retention and writes a scored report.
 No code in this directory promotes weights. Sampled desktop frames use separate
 image features with timestamps; the client avoids the general-video projector,
 which was observed returning an immediate empty response on real screen clips.
+An empty multi-frame response retries with the last actual sampled frame and
+discloses that reduced visual context in the explanation; it invents no frame.
 
 Coordinate calibration is an optional stage inside the run. It uses only the
 signed `/Applications/Premonition.app/Contents/MacOS/Premonition` executable and

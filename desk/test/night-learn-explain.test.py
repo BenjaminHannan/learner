@@ -1,4 +1,5 @@
 import base64
+import json
 import importlib.util
 import unittest
 import urllib.error
@@ -75,6 +76,21 @@ class ExplainTests(unittest.TestCase):
         self.assertTrue(all(x['shape']==[64,768] and 'clip' not in x for x in images))
         self.assertTrue(any('1.5 seconds' in x.get('text','') for x in content))
         self.assertEqual(result['steps'][0]['actionIndex'],0)
+
+    def test_empty_multi_frame_response_retries_one_actual_frame_with_disclosed_limit(self):
+        content=[{'type':'text','text':'Recorded actions: key 0'}, {'type':'image_features','image_features':{'frame':'first'}}, {'type':'image_features','image_features':{'frame':'last'}}]
+        calls=[]
+        def fake(url,payload,timeout=300):
+            calls.append(json.loads(json.dumps(payload)))
+            return {'choices':[{'message':{'content':None if len(calls)==1 else '{"task":"edit"}'},'finish_reason':'stop'}]}
+        m.post=fake
+        with patch.object(m.time,'sleep'), patch.object(m.time,'monotonic',side_effect=[0,121]):
+            result=m.completion_json('brain',{'messages':[{'role':'user','content':content}]})
+        images=[x for x in calls[1]['messages'][0]['content'] if x['type']=='image_features']
+        self.assertEqual(images,[content[-1]])
+        self.assertEqual(len(content),3)
+        self.assertIn('last sampled recorded frame',result['visualContext'])
+        self.assertIn('do not claim earlier',calls[1]['messages'][0]['content'][1]['text'])
 
     def test_failure_explanation_requires_failure(self):
         m.post = lambda *a, **kw: {'choices':[{'message':{'content':'{"shouldHaveDone":"a","actuallyDid":"b","whatWentWrong":"unknown","facts":[],"guesses":[],"confidence":0.2}'}}]}
