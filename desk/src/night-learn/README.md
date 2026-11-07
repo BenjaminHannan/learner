@@ -23,7 +23,9 @@ Such data are useful for quarantined learning, not live policy authorization.
 The comparison is in video pixels (40-pixel click radius). A missing action class
 is unmeasured and cannot yield a passing promotion score. A single example
 trains without inventing a held example; no actions produce an untrained
-checkpoint and an explicitly unmeasured report. Optional corrections never
+checkpoint and an explicitly unmeasured report. With video but no input actions,
+Glim still describes sampled idle scenes; the report states that the hands
+checkpoint contains initial weights and zero supervised updates. Optional corrections never
 block a night. Mixed training/holdout clips are preserved by retention.
 
 `node run.js --dry-run [--fixture] [--output /absolute/path]` explicitly permits

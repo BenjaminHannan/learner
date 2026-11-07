@@ -35,6 +35,16 @@ class ExplainTests(unittest.TestCase):
         self.assertEqual(r['unboundSteps'][0]['actionIndex'],999)
         self.assertIsNone(r['success'])
 
+    def test_explicit_idle_scene_has_no_invented_actions(self):
+        def fake(url, payload, timeout=300):
+            if url == 'eyes':
+                return {'ok':True, 'shape':[64,768], 'f16':base64.b64encode(bytes(64*768*2)).decode(), 'eye':'eye'}
+            return {'choices':[{'message':{'content':'{"task":"idle screen","why":"unknown","intent":"observe","success":null,"confidence":0.2,"facts":[],"guesses":[]}'}}]}
+        m.post=fake
+        result=m.explain({'frames':[{'path':'/tmp/idle.png','timeMs':0}], 'actions':[], 'idle':True},'eyes','brain')
+        self.assertEqual(result['steps'],[]); self.assertTrue(result['idle'])
+        self.assertIsNone(result['success'])
+
     def test_failure_explanation_requires_failure(self):
         m.post = lambda *a, **kw: {'choices':[{'message':{'content':'{"shouldHaveDone":"a","actuallyDid":"b","whatWentWrong":"unknown","facts":[],"guesses":[],"confidence":0.2}'}}]}
         with self.assertRaises(ValueError): m.explain_failure({'judgedOutcome':'unknown','steps':[]})

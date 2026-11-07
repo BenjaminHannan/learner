@@ -19,7 +19,8 @@ def post(url, payload, timeout=300):
 def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://127.0.0.1:18080/v1/chat/completions'):
     frames = episode['frames']
     actions = episode['actions']
-    if not 1 <= len(frames) <= 8 or not isinstance(actions, list) or not 1 <= len(actions) <= 500:
+    idle = episode.get('idle') is True
+    if not 1 <= len(frames) <= 8 or not isinstance(actions, list) or len(actions) > 500 or (not actions and not idle):
         raise ValueError('episode exceeds input limits')
     features = []
     eye = None
@@ -36,6 +37,7 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
         features.append(block)
     indexed = [dict(action, actionIndex=i) for i, action in enumerate(actions)]
     content = [{'type':'text','text':(
+        ('No input actions were recorded. Describe the visible idle scenes; reading, watching or being away are guesses, not proven actions. ' if not actions else '') +
         'Study what the PERSON did on these screen frames. Describe their task and likely reason. '
         'Return ONLY JSON with task, why, intent, success, confidence, facts, guesses. '
         'task, why and intent are short strings; facts and guesses are arrays. '
@@ -76,6 +78,7 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
     intent = data.get('intent')
     if not isinstance(intent, str) or not intent.strip():
         intent = data['task'] + '; ' + data['why']
+    data['idle'] = not actions
     data['unboundSteps'] = unbound
     data['steps'] = [dict(actionIndex=i, intent=valid.get(i, intent),
                           binding='recorded-action' if i in valid else 'episode-context')

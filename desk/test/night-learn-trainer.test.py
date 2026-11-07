@@ -34,4 +34,11 @@ class TrainerTests(unittest.TestCase):
             self.assertFalse(r['hasPreviousModel']); self.assertTrue(r['baselineWarning'])
             self.assertEqual(r['held'],[]); self.assertTrue((d/'out/candidate.pt').exists())
 
+    def test_empty_night_does_not_claim_supervised_training(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=m.train(dict(startMs=0,endMs=1,examples=[],allowSparse=True),Path(d),gate=lambda:None,steps=10)
+            self.assertEqual(r['trainingStepsPerArm'],0)
+            self.assertEqual(r['train'],[]); self.assertEqual(r['held'],[])
+            self.assertTrue((Path(d)/'candidate.pt').exists())
+
 if __name__ == '__main__': unittest.main()

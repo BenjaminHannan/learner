@@ -23,9 +23,10 @@ function writeFrame(image,dest) {
  const r=spawnSync(ffmpeg,['-v','error','-f','rawvideo','-pix_fmt','rgba','-s',`${image.width}x${image.height}`,'-i','pipe:0','-frames:v','1','-y',dest],{input:image.pixels,timeout:15000,maxBuffer:65536});if(r.error||r.status!==0)throw Error('could not save exact frame');fs.chmodSync(dest,0o600);
 }
 function sourceClips(index,day,calibration,work,recordings) {
- const examples=[],trainedClipTimes={},rejections=[],wallBounds=[];
+ const examples=[],sceneFrames=[],trainedClipTimes={},rejections=[],wallBounds=[];
  const clips=Object.values(index.clips||{}).filter(c=>!c.spent&&!c.audit&&c.app==='whole-display'&&(!day||localDay(c.createdMs)===day)).sort((a,b)=>a.createdMs-b.createdMs);
- for(const clip of clips) {
+ const scenePicks=new Set([0,Math.floor((clips.length-1)/2),clips.length-1]);
+ for(const [clipIndex,clip] of clips.entries()) {
   try {
    const video=readClipFile(recordings,clip.id+'.mp4'),bytes=fs.readFileSync(video),decoder=createFileDecoder({file:video,expected:{bytes:bytes.length,sha256:sha(bytes)},ffmpeg,ffprobe});
    const rows=fs.readFileSync(readClipFile(recordings,clip.id+'.events.jsonl'),'utf8').split('\n').filter(Boolean).map(JSON.parse);
@@ -34,12 +35,17 @@ function sourceClips(index,day,calibration,work,recordings) {
    const out=compile({clip,rows,decoder:cachedDecoder,calibration});rejections.push(...out.rejects.map(r=>({clip:clip.id,...r})));
    const frames=rows.filter(r=>r.type==='frame'),anchor=rows.find(r=>r.type==='clock_anchor');
    if(!frames.length||!anchor)continue;
+   if(!out.examples.length&&scenePicks.has(clipIndex)) {
+    const ordinal=Math.floor((Math.min(frames.length,decoder.index.length)-1)/2)+1;
+    const image=cachedDecoder.readFrame(ordinal),file=saved.get(ordinal);
+    sceneFrames.push({frame:file,clipId:clip.id,frameOrdinal:ordinal,timeMs:Math.round(frames[ordinal-1].receiveMonotonicMs+anchor.wallTimeMs-anchor.t),frameSha256:sha(image.pixels),frameFileSha256:sha(fs.readFileSync(file)),clipVideoSha256:decoder.source.sha256});
+   }
    trainedClipTimes[clip.id]=frames.at(-1).receiveMonotonicMs-frames[0].receiveMonotonicMs+50;
    wallBounds.push(frames[0].receiveMonotonicMs+anchor.wallTimeMs-anchor.t,frames.at(-1).receiveMonotonicMs+anchor.wallTimeMs-anchor.t+50);
    for(const row of out.examples){const file=saved.get(row.frameOrdinal);examples.push({...row,frame:file,frameFileSha256:sha(fs.readFileSync(file)),clipId:clip.id,clipVideoSha256:decoder.source.sha256,sourceBounds:frames[0].transform?.sourceBounds});}
   }catch(error){rejections.push({clip:clip.id,reason:String(error.message)});}
  }
- return {examples:examples.sort((a,b)=>a.timeMs-b.timeMs),trainedClipTimes,rejections,clipsSeen:clips.length,startMs:wallBounds.length?Math.floor(Math.min(...wallBounds)):0,endMs:wallBounds.length?Math.ceil(Math.max(...wallBounds)):1};
+ return {examples:examples.sort((a,b)=>a.timeMs-b.timeMs),sceneFrames,trainedClipTimes,rejections,clipsSeen:clips.length,startMs:wallBounds.length?Math.floor(Math.min(...wallBounds)):0,endMs:wallBounds.length?Math.ceil(Math.max(...wallBounds)):1};
 }
 function groupEpisodes(rows) {
  const groups=[];
@@ -63,13 +69,15 @@ function retryBackground(request,pause=()=>run('/bin/sleep',['15'])) {
  }
 }
 function locked(args,dryRun) {return retryBackground(()=>run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,...(dryRun?['--dry-run']:[]),...args]));}
+function askGlim(input,work,dryRun) {
+ gate(dryRun);const file=path.join(work,'episode.json');write(file,input);
+ const raw=locked(['/usr/bin/python3',path.join(sourceDir,'explain.py'),file],dryRun);
+ return JSON.parse(raw.trim().split('\n').at(-1));
+}
 function teacher(episode,work,dryRun) {
- gate(dryRun);
  const picks=[0,Math.floor((episode.length-1)/2),episode.length-1].filter((n,i,a)=>a.indexOf(n)===i);
  const input={frames:picks.map(i=>({path:episode[i].frame,timeMs:episode[i].timeMs})),actions:episode.map(e=>e.action)};
- const file=path.join(work,'episode.json');write(file,input);
- const raw=locked(['/usr/bin/python3',path.join(sourceDir,'explain.py'),file],dryRun);
- const explanation=JSON.parse(raw.trim().split('\n').at(-1));
+ const explanation=askGlim(input,work,dryRun);
  return {explanation,labelled:episode.map((e,i)=>({...e,intent:explanation.steps[i].intent}))};
 }
 function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSteps=100}={}) {
@@ -87,6 +95,10 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   const explanations=[],rows=[],window=actionWindow(prepared.examples);
   // Missing Glim is an actual stage failure, not an optional-check failure.
   for(const episode of teachingEpisodes(prepared.examples)){const r=teacher(episode,work,dryRun);explanations.push(r.explanation);rows.push(...r.labelled);}
+  if(!prepared.examples.length&&prepared.sceneFrames.length) {
+   explanations.push(askGlim({frames:prepared.sceneFrames.map(f=>({path:f.frame,timeMs:f.timeMs})),actions:[],idle:true},work,dryRun));
+  }
+  write(path.join(output,'scenes.json'),prepared.sceneFrames.map(({frame,...f})=>f));
   write(path.join(output,'explanations.json'),explanations);stages.push('Glim');
   let failures=[];
   try{failures=readAttempts(path.join(ops,'hands-attempts/attempts.jsonl')).filter(a=>a.judgedOutcome==='fail'&&localDay(Date.parse(a.finishedAt))===day);}
@@ -122,10 +134,10 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   if(!dryRun)try{retention={status:'completed',...new Retention(recordings).finishSleep({judged:true,trainedIds:eligible}),trainedIds:eligible};}catch(e){retention={status:'deferred',reason:e.message};warnings.push('retention: '+e.message);}
   stages.push('retention');
   const summary={day,dryRun,source:synthetic?'synthetic recording fixture; not Ben':"Ben's local screen recordings",stages:[...stages,'report'],status:'completed',coordinates:calibration.passed?'verified':'coords-unverified',quarantined:true,promoted:false,
-   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:training.hasPreviousModel?dataset.preSleepWeights||null:null,requestedStartingCheckpoint:dataset.preSleepWeights||null,baseline:training.oldModel,baselineWarning:training.baselineWarning||null,backend:trained.backend,remoteCopiesDeleted:trained.remoteCopiesDeleted??null,trainingStepsPerArm:training.trainingStepsPerArm??training.remote?.steps,intentPolicy:training.intentPolicy,dataManifestSha256:sha(JSON.stringify(audit)),limitations:[...new Set(rows.flatMap(r=>r.verificationLimitations||[]))],retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
+   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,sceneFrames:prepared.sceneFrames.length,trainingStatus:rows.length?'trained':'no action labels; initial weights only',train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:training.hasPreviousModel?dataset.preSleepWeights||null:null,requestedStartingCheckpoint:dataset.preSleepWeights||null,baseline:training.oldModel,baselineWarning:training.baselineWarning||null,backend:trained.backend,remoteCopiesDeleted:trained.remoteCopiesDeleted??null,trainingStepsPerArm:training.trainingStepsPerArm??training.remote?.steps,intentPolicy:training.intentPolicy,dataManifestSha256:sha(JSON.stringify(audit)),limitations:[...new Set(rows.flatMap(r=>r.verificationLimitations||[]))],retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
   write(path.join(output,'quarantine/manifest.json'),{quarantined:true,promoted:false,coordinates:summary.coordinates,scorePassed:result.pass,modelSha256:training.modelSha256});
   write(path.join(output,'result.json'),summary);
-  fs.writeFileSync(path.join(output,'REPORT.md'),`# Night learning ${day}\n\nSource: ${summary.source}.\n\nCompleted: ${summary.stages.join(' → ')}.\n\n${rows.length} examples; ${summary.train} train; ${summary.held} held out.\n\nScore: ${JSON.stringify(result)}\n\nCheckpoint: quarantined, ${summary.coordinates}; never promoted.\n\nRetention: ${JSON.stringify(retention)}\n\nWarnings: ${JSON.stringify(summary.warnings)}\n`,{mode:0o600});
+  fs.writeFileSync(path.join(output,'REPORT.md'),`# Night learning ${day}\n\nSource: ${summary.source}.\n\nCompleted: ${summary.stages.join(' → ')}.\n\n${rows.length} examples; ${summary.train} train; ${summary.held} held out. ${summary.trainingStatus}.\n\nScore: ${JSON.stringify(result)}\n\nCheckpoint: quarantined, ${summary.coordinates}; never promoted.\n\nRetention: ${JSON.stringify(retention)}\n\nWarnings: ${JSON.stringify(summary.warnings)}\n`,{mode:0o600});
   return summary;
  }catch(error){write(path.join(output,'failure.json'),{status:'failed',stages,error:String(error.stack||error),quarantined:true});throw error;}
  finally {fs.rmSync(work,{recursive:true,force:true});}
