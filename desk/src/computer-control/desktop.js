@@ -6,9 +6,9 @@ const { actionPlan, execute } = require('./actions');
 
 async function capture(native, displayId) {
   const image = await native.command('look', { displayId });
-  if (typeof image.png !== 'string' || !image.png || !image.bounds || !image.size) throw Error('screen image unavailable');
+  if (typeof image.png !== 'string' || !image.png || typeof image.fingerprint !== 'string' || !image.bounds || !image.size || typeof image.frontApp !== 'string' || !image.frontApp.trim()) throw Error('screen image or front app unavailable');
   const bytes = Buffer.from(image.png, 'base64');
-  return { id:randomUUID(), at:new Date().toISOString(), hash:createHash('sha256').update(bytes).digest('hex'), image:'data:image/png;base64,' + image.png, displayId:image.displayId, bounds:image.bounds, size:image.size, cursor:image.cursor, displays:image.displays };
+  return { id:randomUUID(), at:new Date().toISOString(), hash:createHash('sha256').update(bytes).digest('hex'), image:'data:image/png;base64,' + image.png, fingerprint:image.fingerprint, displayId:image.displayId, bounds:image.bounds, size:image.size, cursor:image.cursor, displays:image.displays, frontApp:image.frontApp };
 }
 const ref = shot => ({ id:shot.id, at:shot.at, sha256:shot.hash, displayId:shot.displayId, bounds:shot.bounds, size:shot.size });
 const result = (shot, text) => ({ text, image:shot.image });
@@ -26,6 +26,22 @@ function desktopAction(input, shot) {
     }
   }
   return action;
+}
+function stableScreen(before, after, action) {
+  if (JSON.stringify(before.bounds) !== JSON.stringify(after.bounds) || before.frontApp !== after.frontApp) return false;
+  const a = Buffer.from(before.fingerprint || '', 'base64'), b = Buffer.from(after.fingerprint || '', 'base64');
+  if (a.length !== 64000 || b.length !== a.length) return false;
+  let changed = 0;
+  const points = [[action.x,action.y], ...(action.type === 'drag' ? [[action.toX,action.toY]] : [])].map(([x,y]) => ({
+    x:Math.floor((x-before.bounds.x)/before.bounds.width*160), y:Math.floor((y-before.bounds.y)/before.bounds.height*100), changed:0, total:0
+  })).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+  for (let i = 0; i < 16000; i++) {
+    const o = i*4, different = Math.abs(a[o]-b[o]) + Math.abs(a[o+1]-b[o+1]) + Math.abs(a[o+2]-b[o+2]) > 60;
+    if (different) changed++;
+    const x = i % 160, y = Math.floor(i / 160);
+    for (const p of points) if (Math.abs(x-p.x) <= 4 && Math.abs(y-p.y) <= 4) { p.total++; if (different) p.changed++; }
+  }
+  return changed / 16000 < 0.01 && points.every(p => !p.total || p.changed / p.total < 0.1);
 }
 
 class Desktop {
@@ -58,7 +74,7 @@ class Desktop {
       this.idleChecked = true;
     }
     const shot = this.captureScreen ? await this.captureScreen(args.displayId) : await capture(this.native, args.displayId); this.lastShot = shot;
-    return result(shot, `Observation ${shot.id}; display ${shot.displayId}; screenshot ${shot.size.width}×${shot.size.height} pixels maps to desktop rectangle ${JSON.stringify(shot.bounds)}. Displays: ${JSON.stringify(shot.displays || [{ id:shot.displayId, bounds:shot.bounds }])}. SHA-256 ${shot.hash}. Use pixel coordinates from this picture, then prepare the action.`);
+    return result(shot, `Observation ${shot.id}; front app ${shot.frontApp || 'unknown'}; display ${shot.displayId}; screenshot ${shot.size.width}×${shot.size.height} pixels maps to desktop rectangle ${JSON.stringify(shot.bounds)}. Displays: ${JSON.stringify(shot.displays || [{ id:shot.displayId, bounds:shot.bounds }])}. SHA-256 ${shot.hash}. Use pixel coordinates from this picture, then prepare the action.`);
   }
   async prepare(args) {
     await this.init();
@@ -95,6 +111,8 @@ class Desktop {
         if (!p.proposal?.action) throw Error('No hands proposal is available');
         p.action = p.proposal.action; p.actor = 'hands';
       } else if (args.actor && args.actor !== 'glim') throw Error('Unknown actor');
+      const current = this.captureScreen ? await this.captureScreen(p.shot.displayId) : await capture(this.native, p.shot.displayId);
+      if (!stableScreen(p.shot, current, p.action)) throw Error('The screen changed after the check; look again');
       p.step = this.attempt.step({ at:new Date().toISOString(), intent:p.intent, observation:ref(p.shot), action:p.action, actor:p.actor, status:'dispatching' });
       await execute(this.native, p.action, this.signal);
       if (this.native.cancelled || this.signal?.aborted) throw Error('Ben took control');
@@ -133,4 +151,4 @@ class Desktop {
     this.attempt.finish(failed ? 'fail' : 'unknown', evidence);
   }
 }
-module.exports = { Desktop, capture, ref, desktopAction };
+module.exports = { Desktop, capture, ref, desktopAction, stableScreen };

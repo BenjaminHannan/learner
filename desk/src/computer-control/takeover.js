@@ -27,7 +27,8 @@ class Aux {
       while ((i = buf.indexOf('\n')) >= 0) {
         const line = buf.slice(0, i); buf = buf.slice(i+1); let row;
         try { row = JSON.parse(line); } catch (_) { continue; }
-        a.rows.push(row); for (const w of [...a.waiters]) if (w.match(row)) { a.waiters.splice(a.waiters.indexOf(w), 1); clearTimeout(w.timer); w.resolve(row); }
+        a.rows.push(row); if (a.onEvent) { try { a.onEvent(row); } catch (_) {} }
+        for (const w of [...a.waiters]) if (w.match(row)) { a.waiters.splice(a.waiters.indexOf(w), 1); clearTimeout(w.timer); w.resolve(row); }
       }
     });
     a.ready = await a.next(row => row.ready || row.error, 10000);
@@ -66,6 +67,9 @@ async function main() {
       if (rows.some(r => r.event === 'focus-lost')) throw Error('test window lost focus');
       session = await NativeSession.start(); const kind = i % 2 ? 'mouse' : 'key', first = rows.length;
       try {
+        if (!/^\d+$/.test(session.status.tag || '')) throw Error('guard tag missing');
+        const tagged = monitor.next(r => r.event === 'tagged' && r.tag === session.status.tag, 1000);
+        monitor.socket.write('tag ' + session.status.tag + '\n'); await tagged;
         if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
         await session.command('grant');
         await session.command('send', kind === 'key' ? {kind:'key',code:56,down:true} : {kind:'mouse',state:'down',button:'left',x:ready.x,y:ready.y});
@@ -97,4 +101,5 @@ async function main() {
   const file = path.join(root, 'takeover-' + Date.now() + '.json'); fs.writeFileSync(file, JSON.stringify(result, null, 2) + '\n', { mode:0o600 });
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }
-main().catch(error => { console.error(error.message); process.exitCode = 1; });
+if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
+module.exports = { Aux };

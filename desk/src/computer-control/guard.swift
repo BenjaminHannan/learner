@@ -4,6 +4,7 @@ import ApplicationServices
 import Darwin
 import Carbon
 import ImageIO
+import AppKit
 
 // This helper owns both the watcher and all event posting. A physical event,
 // expiry, broken pipe, or a disabled tap revokes under the same lock used by
@@ -106,14 +107,19 @@ private func screenshot(_ displayID: String?) -> [String:Any]? {
     context.interpolationQuality = .high
     context.draw(original, in:CGRect(x:0,y:0,width:width,height:height))
     guard let image = context.makeImage() else { return nil }
+    guard let small = CGContext(data:nil,width:160,height:100,bitsPerComponent:8,bytesPerRow:640,
+                                space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+    small.interpolationQuality = .high; small.draw(image,in:CGRect(x:0,y:0,width:160,height:100))
+    guard let pixels = small.data else { return nil }
+    let fingerprint = Data(bytes:pixels,count:160*100*4).base64EncodedString()
     let data = NSMutableData()
     guard let encoder = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
     CGImageDestinationAddImage(encoder, image, nil)
     guard CGImageDestinationFinalize(encoder) else { return nil }
     let cursor = CGEvent(source:nil)?.location ?? .zero
-    return ["png":(data as Data).base64EncodedString(), "displayId":String(selected), "bounds":displayInfo(selected)["bounds"]!,
+    return ["png":(data as Data).base64EncodedString(), "fingerprint":fingerprint, "displayId":String(selected), "bounds":displayInfo(selected)["bounds"]!,
             "size":["width":width,"height":height], "displays":ids.map(displayInfo),
-            "cursor":[(cursor.x-b.origin.x)/b.width, (cursor.y-b.origin.y)/b.height]]
+            "cursor":[(cursor.x-b.origin.x)/b.width, (cursor.y-b.origin.y)/b.height], "frontApp":NSWorkspace.shared.frontmostApplication?.localizedName ?? ""]
 }
 private func send(_ j: [String:Any]) -> String? {
     lock.lock(); defer { lock.unlock() }
@@ -224,7 +230,7 @@ private func runGuard(_ fd: Int32, _ preflight: Bool) {
         }
         revoke("parent pipe closed", terminal:true); CFRunLoopStop(loop)
     }
-    emit(["ready":true,"pid":getpid()]); CFRunLoopRun()
+    emit(["ready":true,"pid":getpid(),"tag":String(tag)]); CFRunLoopRun()
 }
 
 @_cdecl("glim_hands_socket") public func glimHandsSocket(_ socketPath: UnsafePointer<CChar>?, _ preflight: Int32) {

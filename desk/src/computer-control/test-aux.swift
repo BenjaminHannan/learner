@@ -7,6 +7,8 @@ import Darwin
 private var output: Int32 = -1
 private let outputLock = NSLock()
 private let testTag: Int64 = 0x48414e4453544553
+private let tagLock = NSLock()
+private var allowedTags = Set<Int64>([testTag])
 private func emit(_ row: [String:Any]) {
     outputLock.lock(); defer { outputLock.unlock() }
     guard let data = try? JSONSerialization.data(withJSONObject:row), let s = String(data:data, encoding:.utf8) else { return }
@@ -27,13 +29,24 @@ private func monitor(_ fd: Int32) {
     var mask: CGEventMask = 0; for t in types { mask |= CGEventMask(1) << CGEventMask(t.rawValue) }
     let callback: CGEventTapCallBack = { _, kind, event, _ in
         if kind == .tapDisabledByTimeout || kind == .tapDisabledByUserInput { emit(["event":"monitor-disabled"]) }
-        else if event.getIntegerValueField(.eventSourceUserData) == 0 { emit(["event":"real-input", "atNs":DispatchTime.now().uptimeNanoseconds]) }
+        else {
+            let tag = event.getIntegerValueField(.eventSourceUserData)
+            tagLock.lock(); let ours = allowedTags.contains(tag); tagLock.unlock()
+            if !ours { emit(["event":"real-input", "atNs":DispatchTime.now().uptimeNanoseconds]) }
+        }
         return Unmanaged.passUnretained(event)
     }
     guard let tap = CGEvent.tapCreate(tap:.cgSessionEventTap,place:.headInsertEventTap,options:.listenOnly,eventsOfInterest:mask,callback:callback,userInfo:nil), let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault,tap,0) else { emit(["error":"test monitor unavailable"]); return }
     let loop = CFRunLoopGetCurrent()
     CFRunLoopAddSource(loop,source,.commonModes); CGEvent.tapEnable(tap:tap,enable:true)
-    DispatchQueue.global().async { while readCommand(fd) != nil {}; CFRunLoopStop(loop) }
+    DispatchQueue.global().async {
+        while let command = readCommand(fd) {
+            if command.hasPrefix("tag "), let tag = Int64(command.dropFirst(4)), tag > 0 {
+                tagLock.lock(); allowedTags.insert(tag); tagLock.unlock(); emit(["event":"tagged","tag":String(tag)])
+            } else { break }
+        }
+        CFRunLoopStop(loop)
+    }
     let any = CGEventType(rawValue:0xFFFFFFFF)!
     emit(["ready":true,"idleSeconds":CGEventSource.secondsSinceLastEventType(.combinedSessionState,eventType:any)])
     CFRunLoopRun(); CGEvent.tapEnable(tap:tap,enable:false); CFRunLoopRemoveSource(loop,source,.commonModes); CFMachPortInvalidate(tap)

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { Desktop, desktopAction } = require('../src/computer-control/desktop');
+const { Desktop, desktopAction, stableScreen } = require('../src/computer-control/desktop');
 const { actionPlan, execute } = require('../src/computer-control/actions');
 const { SafetyLevels } = require('../src/safety-levels');
 const { checkAction } = require('../src/computer-control/safety');
@@ -16,7 +16,7 @@ function fixture() {
   const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-test-'));
   const sent = [], ctrl = new AbortController(); let number = 0;
   const native = { cancelled:false, async command(op, event) { if (this.cancelled) throw Error('cancelled'); sent.push({ op, ...event }); }, async close() { this.closed = true; }, stop() { this.cancelled = true; } };
-  const desktop = new Desktop({ request:'Open Notes and write hello', signal:ctrl.signal, logRoot, minIdleSeconds:0, idleSeconds:() => 1000, startNative:async () => native, captureScreen:async () => ({ id:'shot-' + ++number, at:new Date().toISOString(), hash:String(number).repeat(64), image:'data:image/png;base64,AA==', displayId:'1', bounds:{x:0,y:0,width:100,height:100}, size:{width:100,height:100} }) });
+  const desktop = new Desktop({ request:'Open Notes and write hello', signal:ctrl.signal, logRoot, minIdleSeconds:0, idleSeconds:() => 1000, startNative:async () => native, captureScreen:async () => ({ id:'shot-' + ++number, at:new Date().toISOString(), hash:String(number).repeat(64), image:'data:image/png;base64,AA==', fingerprint:Buffer.alloc(64000).toString('base64'), displayId:'1', bounds:{x:0,y:0,width:100,height:100}, size:{width:100,height:100} }) });
   return { desktop, native, sent, ctrl, logRoot };
 }
 function action(x=10) { return { type:'click', x, y:20 }; }
@@ -32,12 +32,12 @@ test('look, prepare, confirm, send, verify and log the checked step', async () =
     await f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true });
     assert.deepEqual(f.sent.map(e => e.op), ['grant','send','send','send','end']);
     assert.throws(() => f.desktop.finish({ result:'pass', evidence:'looked' }), /Verify/);
-    f.desktop.verify({ observationId:'shot-3', result:'pass', evidence:'the note is selected' });
+    f.desktop.verify({ observationId:'shot-4', result:'pass', evidence:'the note is selected' });
     f.desktop.finish({ result:'pass', evidence:'the note is selected' });
     await f.desktop.close();
     const row = JSON.parse(fs.readFileSync(path.join(f.logRoot, 'attempts.jsonl'), 'utf8'));
     assert.equal(row.schema, 'hands-attempt/v1'); assert.equal(row.steps[0].intent, 'click the note');
-    assert.equal(row.steps[0].observation.sha256, '2'.repeat(64)); assert.equal(row.steps[0].after.sha256, '3'.repeat(64));
+    assert.equal(row.steps[0].observation.sha256, '2'.repeat(64)); assert.equal(row.steps[0].after.sha256, '4'.repeat(64));
     assert.equal(row.steps[0].verification.result, 'pass'); assert.equal(row.steps[0].actor, 'glim');
     assert.equal(row.outcome.result, 'unknown'); // a model's visual statement is not independent proof
   } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
@@ -52,6 +52,39 @@ test('takeover cancels the session and no queued event is sent afterwards', asyn
     assert.equal(f.sent.length, 0);
     await assert.rejects(() => f.desktop.look(), /control/i);
   } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('a changed screen prevents a previously confirmed click', async () => {
+  const f = fixture();
+  try {
+    await f.desktop.look(); await f.desktop.prepare({ observationId:'shot-1', intent:'click', action:action() });
+    const original = f.desktop.captureScreen;
+    f.desktop.captureScreen = async (...args) => ({ ...await original(...args), fingerprint:Buffer.alloc(64000, 255).toString('base64') });
+    await assert.rejects(() => f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true }), /screen changed/i);
+    assert.equal(f.sent.length, 0);
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('a small change at the target is caught even when most of the screen is unchanged', () => {
+  const base = Buffer.alloc(64000), changed = Buffer.from(base);
+  for (let y=48; y<=52; y++) for (let x=78; x<=82; x++) changed[(y*160+x)*4] = 255;
+  const before = { bounds:{x:0,y:0,width:100,height:100}, frontApp:'Notes', fingerprint:base.toString('base64') };
+  const after = { ...before, fingerprint:changed.toString('base64') };
+  assert.equal(stableScreen(before,before,{ type:'click', x:50, y:50 }),true);
+  assert.equal(stableScreen(before,after,{ type:'click', x:50, y:50 }),false);
+});
+
+test('a checked hands proposal is recorded as hands, not Glim', async () => {
+  const f = fixture();
+  try {
+    f.desktop.predictor = async ({ action }) => ({ action:{ ...action, x:12, y:21 }, note:'test proposal' });
+    await f.desktop.look(); await f.desktop.prepare({ observationId:'shot-1', intent:'click', action:action() });
+    await f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true, actor:'hands' });
+    f.desktop.verify({ observationId:'shot-4', result:'pass', evidence:'selected' });
+    f.desktop.finish({ result:'pass', evidence:'selected' }); await f.desktop.close();
+    const row = JSON.parse(fs.readFileSync(path.join(f.logRoot,'attempts.jsonl'),'utf8'));
+    assert.equal(row.steps[0].actor,'hands'); assert.equal(row.steps[0].action.x,12);
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot,{ recursive:true, force:true }); }
 });
 
 test('a failed mid-drag sends no more packets and ends the lease', async () => {

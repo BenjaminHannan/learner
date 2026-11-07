@@ -1154,7 +1154,8 @@ class Agent {
             const p = this.desktop.pending;
             if (!p) throw Error('Prepare the action first');
             const { checkAction, explicitlyRequested } = require('./computer-control/safety');
-            const decision = checkAction(this.o.safety, this.o.safetyCtx, p.action, p.intent, this.taskText);
+            const context = (tool, action) => ({ ...(this.o.safetyCtx ? this.o.safetyCtx(tool, action) : {}), ...(p.shot?.frontApp ? { frontApp:p.shot.frontApp } : {}) });
+            const decision = checkAction(this.o.safety, context, p.action, p.intent, this.taskText);
             if (decision.level === 'ask' && decision.cat !== 'hands' && decision.cat !== 'open-apps' && !explicitlyRequested(decision.cat, this.taskText)) {
               const kind = 'desktop:' + decision.cat;
               if (!this.taskAllow.has(kind)) {
