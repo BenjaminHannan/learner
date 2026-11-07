@@ -162,7 +162,9 @@ async def run_seed(args,seed,browser):
     if args.resume_training:
         resume=torch.load(args.resume_training,map_location='cpu',weights_only=False)
         settings={key:value for key,value in vars(args).items() if key!='resume_training'}
-        if resume['settings']!=settings or resume['seed']!=seed:
+        expected_settings={**resume['settings'],'design_typing':resume['settings'].get('design_typing',False)}
+        settings.setdefault('design_typing',False)
+        if expected_settings!=settings or resume['seed']!=seed:
             raise ValueError('resume requires identical seed, output, budget and training settings')
         net.load_state_dict(resume['net']);opt.load_state_dict(resume['optimizer'])
     initial_hash=resume['initial_sha256'] if resume else save(net,out/'initial.pt')
@@ -174,14 +176,15 @@ async def run_seed(args,seed,browser):
         host,port=endpoint.rsplit(':',1)
         e=RemoteEnv(host,int(port),max_steps=args.max_steps)
         await e.connect();envs.append(e)
-    locals_=[BrowserEnv(browser,max_steps=args.max_steps)
+    locals_=[BrowserEnv(browser,max_steps=args.max_steps,design_typing=getattr(args,'design_typing',False))
              for _ in range(args.envs-len(envs))]
     await asyncio.gather(*[e.start() for e in locals_])
     envs.extend(locals_)
     evaluation_envs=[]
     try:
         if args.eval_every:
-            evaluation_envs=[BrowserEnv(browser,max_steps=args.max_steps) for _ in range(args.envs)]
+            evaluation_envs=[BrowserEnv(browser,max_steps=args.max_steps,
+                            design_typing=getattr(args,'design_typing',False)) for _ in range(args.envs)]
             await asyncio.gather(*[environment.start() for environment in evaluation_envs])
         baseline=resume['baseline'] if resume else await evaluate(
             net,envs,device,args.eval_episodes,seed+700,args.max_steps,**family_options)
@@ -368,6 +371,8 @@ def main():
     p.add_argument('--eval-every',type=int,default=0)
     p.add_argument('--task-families',nargs='+',choices=tasks.TASK_TYPES)
     p.add_argument('--start-k',type=int,default=None)
+    p.add_argument('--design-typing',action='store_true',
+                   help='plain-code next character and toy-equivalent typing progress; default off')
     p.add_argument('--device',default='cuda')
     initialization=p.add_mutually_exclusive_group()
     initialization.add_argument('--native-checkpoint')
@@ -382,6 +387,7 @@ def main():
     if a.resume_training and len(a.seeds)!=1:p.error('--resume-training requires exactly one seed')
     if a.start_k is not None and a.start_k<1:p.error('--start-k must be positive')
     if a.start_k is not None and a.remote_endpoints:p.error('--start-k requires local browser environments')
+    if a.design_typing and a.remote_endpoints:p.error('--design-typing requires local browser environments')
     if a.task_families and len(set(a.task_families))!=len(a.task_families):p.error('duplicate task family')
     Path(a.output).mkdir(parents=True,exist_ok=True)
     if a.device=='cuda':

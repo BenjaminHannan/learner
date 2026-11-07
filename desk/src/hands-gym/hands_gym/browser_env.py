@@ -20,7 +20,8 @@ DETAIL_SIZE = 192
 
 
 class BrowserEnv:
-    def __init__(self, browser, width=tasks.VIEW_WIDTH, height=tasks.VIEW_HEIGHT, max_steps=tasks.MAX_STEPS):
+    def __init__(self, browser, width=tasks.VIEW_WIDTH, height=tasks.VIEW_HEIGHT, max_steps=tasks.MAX_STEPS,
+                 design_typing=False):
         self.max_steps = max_steps
         self.browser = browser
         self.width = width
@@ -33,6 +34,8 @@ class BrowserEnv:
         self.prev_state = None
         self.focus = (width / 2.0, height / 2.0)
         self.done = True
+        self.design_typing = design_typing
+        self.typing = None
 
     async def start(self):
         self.context = await self.browser.new_context(
@@ -98,7 +101,26 @@ class BrowserEnv:
         detail = image.crop((x0, y0, x0 + DETAIL_SIZE, y0 + DETAIL_SIZE))
         detail = np.asarray(detail.resize((DETAIL_SIZE, DETAIL_SIZE), Image.BILINEAR),
                             dtype=np.uint8)
-        return {'overview': overview, 'detail': detail}
+        observation = {'overview': overview, 'detail': detail}
+        self.typing = None
+        if self.design_typing and self.episode['kind'] in (tasks.KIND_TYPE_TEXT, tasks.KIND_FORM_FILL):
+            field = await self.page.evaluate('document.activeElement && document.activeElement.id')
+            if self.episode['kind'] == tasks.KIND_TYPE_TEXT:
+                targets = {'text': self.episode['spec']['target']}
+                values = {'text': self.state.get('value', '')}
+                field = 'text'
+            else:
+                targets = dict(tasks.form_targets(self.episode['spec']))
+                values = self.state
+            reference = targets.get(field, '')
+            index = len(values.get(field, '')) if field in targets else 0
+            self.typing = {'textIndex': index, 'textLength': len(reference),
+                           'character': reference[index:index + 1]}
+            own = np.zeros(12, dtype=np.float32)
+            own[2] = index / 20
+            own[3] = len(reference) / 20
+            observation['own'] = own
+        return observation
 
     async def _dispatch(self, action):
         kind = action['kind']
@@ -120,7 +142,10 @@ class BrowserEnv:
             await self.page.mouse.up()
             self.focus = (ex, ey)
         elif kind == 'key':
-            name = key_name(action.get('keyCode', 0))
+            code = action.get('keyCode', 0)
+            name = key_name(code)
+            if self.typing is not None and 32 <= int(code) <= 126:
+                name = self.typing['character'] or None
             if name is not None:
                 await self.page.keyboard.press(name)
         elif kind == 'scroll':

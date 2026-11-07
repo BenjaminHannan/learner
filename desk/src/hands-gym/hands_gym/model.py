@@ -1,7 +1,8 @@
 """Windows-safe copy of HANDS NativeActionPolicy, with categorical RL positions.
 
 Encoder/overview/detail/GRU and original action heads match pixel_model.py.
-No DOM, task kind, target coordinates, spec, or reward enter policy inputs.
+By default no DOM, task kind, target coordinates, spec, or reward enter inputs.
+Opt-in design typing supplies only the toy's textIndex/20 and textLength/20.
 Spatial categorical heads replace deterministic sigmoid coordinates for RL
 exploration; original heads remain checkpoint-compatible via load_native().
 """
@@ -77,7 +78,8 @@ def batch(observations,instructions,device):
         return torch.from_numpy(np.stack([o[key] for o in observations])).permute(0,3,1,2).to(device).float()/255
     return (images('overview'),images('detail'),
             torch.stack([intent_vector(t) for t in instructions]).to(device),
-            torch.zeros(len(observations),12,device=device))
+            torch.tensor(np.stack([o.get('own', np.zeros(12, dtype=np.float32))
+                                   for o in observations]), device=device))
 
 
 def native_actions(actions):
