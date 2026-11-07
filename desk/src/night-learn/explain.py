@@ -6,6 +6,8 @@ import base64
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -16,7 +18,41 @@ def post(url, payload, timeout=300):
         return json.load(response)
 
 
-def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://127.0.0.1:18080/v1/chat/completions'):
+def completion_json(url, payload, retry_guard=None):
+    """Keep one FIFO turn through short service/chat preemptions, never preempt chat."""
+    deadline = time.monotonic() + 120
+    last = None
+    payload = dict(payload)
+    for attempt in range(25):
+        try:
+            answer = post(url, payload)
+            choice = (answer.get('choices') or [{}])[0]
+            raw = choice.get('message', {}).get('content')
+            if not isinstance(raw, str) or not raw.strip():
+                raise ValueError('Glim returned no explanation text')
+            raw = raw.strip()
+            if raw.startswith('```'):
+                raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                raise ValueError('Glim explanation must be a JSON object')
+            return data
+        except urllib.error.HTTPError as error:
+            if error.code not in (429, 503): raise
+            last = error
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError, IndexError) as error:
+            last = error
+            if 'answer' in locals() and (answer.get('choices') or [{}])[0].get('finish_reason') == 'length':
+                payload['max_tokens'] = min(1800, max(1200, int(payload.get('max_tokens', 700)) * 2))
+        if attempt == 24 or time.monotonic() >= deadline:
+            raise last
+        if retry_guard is not None: retry_guard()
+        print(f'[night-learn] background Glim retry {attempt + 1}: {last}', file=sys.stderr, flush=True)
+        time.sleep(5)
+    raise last
+
+
+def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://127.0.0.1:18080/v1/chat/completions', retry_guard=None):
     frames = episode['frames']
     actions = episode['actions']
     idle = episode.get('idle') is True
@@ -50,14 +86,7 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
         times = [max(0, round((frame['timeMs'] - frames[0]['timeMs']) / 1000)) for frame in frames]
         feature['clip'] = {'frames':len(features), 'times':times}
     content.append({'type':'image_features', 'image_features':feature})
-    answer = post(model_url, {'model':'nanbeige', 'messages':[{'role':'user','content':content}], 'temperature':0, 'max_tokens':700, 'chat_template_kwargs':{'enable_thinking':False}})
-    raw = answer['choices'][0]['message'].get('content')
-    if not isinstance(raw, str) or not raw.strip():
-        raise ValueError('Glim returned no explanation text')
-    raw = raw.strip()
-    if raw.startswith('```'):
-        raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
-    data = json.loads(raw)
+    data = completion_json(model_url, {'model':'nanbeige', 'messages':[{'role':'user','content':content}], 'temperature':0, 'max_tokens':700, 'chat_template_kwargs':{'enable_thinking':False}}, retry_guard)
     required = {'task', 'why', 'success', 'confidence', 'facts', 'guesses'}
     if not isinstance(data, dict) or not required.issubset(data) or not isinstance(data['task'], str) or not isinstance(data['why'], str) or not isinstance(data['facts'], list) or not isinstance(data['guesses'], list) or not (data['success'] is True or data['success'] is False or data['success'] is None) or isinstance(data['confidence'], bool) or not isinstance(data['confidence'], (int,float)) or not 0 <= data['confidence'] <= 1:
         raise ValueError('invalid Glim explanation')
@@ -90,20 +119,14 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
 
 
 
-def explain_failure(attempt, model_url='http://127.0.0.1:18080/v1/chat/completions'):
+def explain_failure(attempt, model_url='http://127.0.0.1:18080/v1/chat/completions', retry_guard=None):
     if attempt.get('judgedOutcome') != 'fail' or not isinstance(attempt.get('steps'), list):
         raise ValueError('verified failed attempt required')
     prompt = ('Explain the failed attempt as JSON only. Use keys shouldHaveDone, actuallyDid, '
               'whatWentWrong, facts, guesses, confidence. Treat uncertain intent and causes as guesses. '
               'Do not claim a correction is verified. Attempt: ' + json.dumps({
                   'request':attempt.get('request'), 'steps':attempt['steps'], 'outcome':attempt.get('outcome')}, separators=(',',':')))
-    response = post(model_url, {'model':'nanbeige','messages':[{'role':'user','content':prompt}],
-                               'temperature':0,'max_tokens':700,'chat_template_kwargs':{'enable_thinking':False}})
-    raw = response['choices'][0]['message'].get('content')
-    if not isinstance(raw,str) or not raw.strip(): raise ValueError('Glim returned no failure explanation')
-    raw=raw.strip()
-    if raw.startswith('```'): raw=raw.split('\n',1)[1].rsplit('```',1)[0].strip()
-    data=json.loads(raw)
+    data = completion_json(model_url, {'model':'nanbeige','messages':[{'role':'user','content':prompt}], 'temperature':0,'max_tokens':700,'chat_template_kwargs':{'enable_thinking':False}}, retry_guard)
     for name in ('shouldHaveDone','actuallyDid','whatWentWrong'):
         if not isinstance(data.get(name),str): raise ValueError('invalid failure explanation')
     if not isinstance(data.get('facts'),list) or not isinstance(data.get('guesses'),list) or isinstance(data.get('confidence'),bool) or not isinstance(data.get('confidence'),(int,float)) or not 0 <= data['confidence'] <= 1:
@@ -116,10 +139,17 @@ def main():
     owner = Path('/tmp/aon/realmodel.lock/owner').read_text().split()
     if len(owner) < 2 or owner[0] != 'NIGHT-LEARN' or int(owner[1]) != os.getppid():
         raise RuntimeError('must be run directly under the NIGHT-LEARN model lock')
+    dry_run = os.environ.get('NIGHT_LEARN_DRY_RUN') == '1' or '--dry-run' in sys.argv
+    if '--dry-run' in sys.argv: sys.argv.remove('--dry-run')
+    retry_guard = None
+    if not dry_run:
+        import datetime
+        import night_gate
+        retry_guard = lambda: night_gate.check(datetime.datetime.now().astimezone(), night_gate.idle_seconds())
     mistake = len(sys.argv) == 3 and sys.argv[1] == '--mistake'
     with open(sys.argv[2] if mistake else sys.argv[1], encoding='utf8') as f:
         item = json.load(f)
-    data = explain_failure(item) if mistake else explain(item)
+    data = explain_failure(item, retry_guard=retry_guard) if mistake else explain(item, retry_guard=retry_guard)
     print(json.dumps(data, ensure_ascii=False))
 
 if __name__ == '__main__':

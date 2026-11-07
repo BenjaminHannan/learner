@@ -28,7 +28,9 @@ def main():
         raise RuntimeError('must run directly under the NIGHT-LEARN model lock')
     if len(sys.argv) > 1 and sys.argv[1] == '--dry-run':
         del sys.argv[1]
+        os.environ['NIGHT_LEARN_DRY_RUN'] = '1'
     else:
+        os.environ.pop('NIGHT_LEARN_DRY_RUN', None)
         check(datetime.datetime.now().astimezone(),idle_seconds())
     if len(sys.argv)<2 or not os.path.isabs(sys.argv[1]): raise RuntimeError('absolute command required')
     os.execv(sys.argv[1],sys.argv[1:])

@@ -1,6 +1,8 @@
 import base64
 import importlib.util
 import unittest
+import urllib.error
+from unittest.mock import patch
 from pathlib import Path
 
 p = Path(__file__).resolve().parents[1] / 'src' / 'night-learn' / 'explain.py'
@@ -44,6 +46,19 @@ class ExplainTests(unittest.TestCase):
         result=m.explain({'frames':[{'path':'/tmp/idle.png','timeMs':0}], 'actions':[], 'idle':True},'eyes','brain')
         self.assertEqual(result['steps'],[]); self.assertTrue(result['idle'])
         self.assertIsNone(result['success'])
+
+    def test_background_preemption_and_partial_json_retry_within_the_owned_turn(self):
+        replies=[urllib.error.HTTPError('brain',503,'busy',None,None),
+                 {'choices':[{'message':{'content':'{"task":'},'finish_reason':'stop'}]},
+                 {'choices':[{'message':{'content':'{"task":"saved"}'},'finish_reason':'stop'}]}]
+        def fake(*args, **kwargs):
+            reply=replies.pop(0)
+            if isinstance(reply,Exception): raise reply
+            return reply
+        m.post=fake; guards=[]
+        with patch.object(m.time,'sleep') as sleep:
+            result=m.completion_json('brain',{},lambda:guards.append(True))
+        self.assertEqual(result,{'task':'saved'}); self.assertEqual(len(guards),2); self.assertEqual(sleep.call_count,2)
 
     def test_failure_explanation_requires_failure(self):
         m.post = lambda *a, **kw: {'choices':[{'message':{'content':'{"shouldHaveDone":"a","actuallyDid":"b","whatWentWrong":"unknown","facts":[],"guesses":[],"confidence":0.2}'}}]}

@@ -40,22 +40,22 @@ test('CG global points map through Retina backing scale, display origin and vide
  assert.deepEqual(r.backingPixels,{x:480,y:300});
  assert.ok(Math.abs(r.videoPixels.x-256)<1e-8);assert.ok(Math.abs(r.videoPixels.y-120)<1e-8);
 });
-test('night adapter calls the actual HANDS-PC CLI without waiting on an owned GPU',()=>{
+test('night adapter calls the leased HANDS-PC wrapper with exactly the trainer arguments',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-cli-'));
- try{const runner=path.join(dir,'remote_runner.py');fs.writeFileSync(runner,'runner');
-  const config=handoff(dir,{runner,python:'/python'});
-  assert.deepEqual(config.train,['/python',runner,'{dataset}','{output}','--no-fallback','--gpu-wait','0','--bench-steps','0']);
+ try{const runner=path.join(dir,'tonight-remote.sh');fs.writeFileSync(runner,'runner');
+  const config=handoff(dir,{runner});
+  assert.deepEqual(config.train,[runner,'{dataset}','{output}']);
   assert.equal(config.managesCleanup,true);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('remote artifacts need matching hashes and confirmed recording-copy deletion',()=>{
  const {verifyRemoteTraining}=require('../src/night-learn/remote'),{createHash}=require('node:crypto');
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-output-'));
- try{const r={train:[],held:[],predictions:{},modelSha256:{},remote:{transport:{pcCleanup:{deleted:true}}}};
+ try{const r={train:[],held:[],predictions:{},modelSha256:{},trainingBackend:'benspc-gpu',remote:{transport:{pcCleanup:{deleted:true},sharedLeaseReleased:true}}};
   for(const name of ['old','candidate','no-intent']){fs.writeFileSync(path.join(dir,name+'.pt'),name);r.modelSha256[name+'.pt']=createHash('sha256').update(name).digest('hex');}
   assert.equal(verifyRemoteTraining(r,dir,{managesCleanup:true}).modelSha256.candidate,r.modelSha256.candidate);
   r.remote.transport.pcCleanup.deleted=false;assert.throws(()=>verifyRemoteTraining(r,dir,{managesCleanup:true}),/deletion/);
-  r.remote.transport.pcCleanup.deleted=true;fs.writeFileSync(path.join(dir,'candidate.pt'),'changed');assert.throws(()=>verifyRemoteTraining(r,dir),/hash mismatch/);
+  r.remote.transport.pcCleanup.deleted=true;r.remote.transport.sharedLeaseReleased=false;assert.throws(()=>verifyRemoteTraining(r,dir,{managesCleanup:true}),/lease release/);r.remote.transport.sharedLeaseReleased=true;fs.writeFileSync(path.join(dir,'candidate.pt'),'changed');assert.throws(()=>verifyRemoteTraining(r,dir),/hash mismatch/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('coordinate probe launches only Premonition through the HANDS-ACT identity path',()=>{
@@ -81,4 +81,26 @@ test('Glim teaching episodes cannot mix training frames with later held-out fram
 test('starting checkpoint selects the trained candidate over old and no-intent controls',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'night-starting-arms-'));
  try{for(const name of ['candidate','old','no-intent'])fs.writeFileSync(path.join(dir,name+'.pt'),name);assert.equal(handoff(dir).checkpoint,path.join(dir,'candidate.pt'));}finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('schedulerCommand handoff validates the declared starting checkpoint and preserves the shared lease route',()=>{
+ const {createHash}=require('node:crypto'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-handoff-v2-'));
+ try{const cp=path.join(dir,'candidate.pt');fs.writeFileSync(cp,'trained');const digest=createHash('sha256').update('trained').digest('hex');
+  const schedulerCommand=['/repo/tonight-remote.sh','{dataset}','{output}'];
+  fs.writeFileSync(path.join(dir,'remote-training.json'),JSON.stringify({checkpoint:cp,checkpointSha256:digest,schedulerCommand,managesCleanup:true,sharedLease:'C:/Users/benja/hands-gym/GPU-OWNER.json'}));
+  const config=handoff(dir);assert.deepEqual(config.train,schedulerCommand);assert.equal(config.checkpoint,cp);assert.equal(config.checkpointSha256,digest);assert.equal(config.managesCleanup,true);assert.match(config.sharedLease,/GPU-OWNER/);
+  fs.writeFileSync(cp,'changed');const bad=handoff(dir);assert.equal(bad.checkpoint,null);assert.match(bad.notes.join(' '),/hash mismatch/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('managed runner native fallback is accepted without training the local model twice',()=>{
+ const {verifyRemoteTraining}=require('../src/night-learn/remote'),{createHash}=require('node:crypto'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-native-fallback-'));
+ try{const r={train:[],held:[],predictions:{},modelSha256:{},trainingBackend:'mac-cpu-fallback',fallbackReason:'shared lease busy',remote:{fallback:true}};
+  for(const name of ['old','candidate','no-intent']){fs.writeFileSync(path.join(dir,name+'.pt'),name);r.modelSha256[name]=createHash('sha256').update(name).digest('hex');}
+  const config={train:['/wrapper'],managesCleanup:true,notes:[]};
+  const result=trainWithFallback(config,'/dataset',dir,()=>JSON.stringify(r),()=>assert.fail('wrapper already completed the native fallback'),x=>verifyRemoteTraining(x,dir,config));
+  assert.equal(result.backend,'local-fallback');assert.equal(result.remoteCopiesDeleted,true);assert.match(result.notes.join(' '),/lease busy/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('managed wrapper cleanup refusal is preserved',()=>{
+ assert.throws(()=>trainWithFallback({train:['/wrapper'],managesCleanup:true,notes:[]},'/dataset','/output',()=>{throw Error('Cleanup unconfirmed; No local fallback permitted');},()=>assert.fail('must preserve wrapper cleanup refusal')),/Cleanup unconfirmed/);
 });

@@ -34,8 +34,8 @@ synthetic MP4s with fabricated, clearly labelled metadata. Fixture runs never mo
 same optional coordinate check, which still requires twenty minutes idle.
 Dry runs never change or delete recordings through retention. Glim calls still acquire the FIFO lock.
 It does not start, stop or restart any model service. Glim requests carry the
-recognized background header and retry transient interruptions after releasing
-the FIFO ticket. A malformed optional attempt log becomes a report warning.
+recognized background header and retry short chat/service interruptions within the owned FIFO turn, with foreground
+chat retaining priority. Exhausted requests release their ticket before the outer backoff. A malformed optional attempt log becomes a report warning.
 
 `node synthetic-integration.js /absolute/output` separately exercises 400
 compiled actions, chronological holdout, a fixed nonzero intent and all three
@@ -56,13 +56,16 @@ Read-only lookup happens after the Glim stage at run time in
 }
 ```
 
-The owned adapter also recognizes HANDS-PC's actual
-`desk/src/night-learn-remote/remote_runner.py <dataset> <output>` CLI when it
-appears. Production calls it with `--no-fallback --gpu-wait 0 --bench-steps 0`,
-then verifies downloaded checkpoint hashes and its confirmed PC job deletion.
-A busy or unavailable PC immediately falls back to the local trainer. Today's
-dry runs use the local trainer so HANDS-PC keeps GPU ownership. Checkpoint paths
-can also be read from HANDS-PC's Markdown report; absence never blocks a night.
+The preferred handoff uses `schedulerCommand` and `managesCleanup: true`.
+It calls HANDS-PC's exact leased wrapper:
+`desk/src/night-learn-remote/tonight-remote.sh <dataset> <output>`.
+The adapter validates the declared starting-checkpoint hash, returned checkpoint
+hashes, PC copy deletion and shared GPU lease release. It preserves the runner's
+logged native fallback and its refusal to fall back while cleanup is unconfirmed.
+It never substitutes a direct GPU runner for this wrapper. Daytime dry runs
+load the starting checkpoint locally; real-recording remote jobs retain the
+runner's 01:00–07:00 / idle rule and shared lease. Checkpoint paths can also be
+read from HANDS-PC's Markdown report; absence never blocks a night.
 
 For other handoff commands, the runner owns upload, path rewriting and download; stdout must be the same
 JSON as local `trainer.py`. The cleanup argv must remove all PC recording
