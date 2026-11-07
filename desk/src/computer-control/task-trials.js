@@ -12,6 +12,7 @@ const { SafetyLevels } = require('../safety-levels');
 const { Desktop } = require('./desktop');
 const { compile, NativeSession } = require('./native');
 const { Aux } = require('./takeover');
+const { report } = require('./test-status');
 const run = promisify(execFile);
 
 async function appearance() {
@@ -97,6 +98,7 @@ async function main() {
     result.status = result.tests.length === 10 && result.tests.filter(t => t.pass).length >= 8 ? 'pass' : 'fail';
   } catch (error) { result.error=String(error.message || error); result.status='incomplete'; }
   finally { if (appearanceTimer) clearInterval(appearanceTimer); if (activeAgent) activeAgent.stop(); if (monitor) await monitor.close(); fs.rmSync(tmp,{ recursive:true, force:true }); save(); }
+  report({ file, ...result });
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }
-if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode=1; });
+if (require.main === module) main().catch(error => { report({ status:'error', error:error.message }); console.error(error.message); process.exitCode=1; });

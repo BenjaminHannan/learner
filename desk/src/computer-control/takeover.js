@@ -8,6 +8,7 @@ const net = require('node:net');
 const { spawn, execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { NativeSession, compile } = require('./native');
+const { report } = require('./test-status');
 const run = promisify(execFile);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -99,7 +100,8 @@ async function main() {
   }
   const root = path.join(os.homedir(), 'learner-ops', 'hands-attempts'); fs.mkdirSync(root, { recursive:true, mode:0o700 });
   const file = path.join(root, 'takeover-' + Date.now() + '.json'); fs.writeFileSync(file, JSON.stringify(result, null, 2) + '\n', { mode:0o600 });
+  report({ file, ...result });
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }
-if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
+if (require.main === module) main().catch(error => { report({ status:'error', error:error.message }); console.error(error.message); process.exitCode = 1; });
 module.exports = { Aux };
