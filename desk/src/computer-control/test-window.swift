@@ -10,8 +10,10 @@ final class TestView: NSView {
     override var acceptsFirstResponder: Bool { true }
     override func mouseDown(with event:NSEvent) { emit(["event":"mouseDown"]) }
     override func mouseUp(with event:NSEvent) { emit(["event":"mouseUp"]) }
+    override func mouseDragged(with event:NSEvent) { emit(["event":"mouseDragged"]) }
+    override func scrollWheel(with event:NSEvent) { emit(["event":"scroll"]) }
     override func flagsChanged(with event:NSEvent) { emit(["event":"flags", "shift":event.modifierFlags.contains(.shift)]) }
-    override func keyDown(with event:NSEvent) { emit(["event":"keyDown", "code":event.keyCode]) }
+    override func keyDown(with event:NSEvent) { let c = event.characters ?? ""; emit(["event":"keyDown", "code":event.keyCode, "characters":["O","K","a"].contains(c) ? c : ""]) }
     override func keyUp(with event:NSEvent) { emit(["event":"keyUp", "code":event.keyCode]) }
     override func draw(_ rect:NSRect) { NSColor.windowBackgroundColor.setFill(); rect.fill() }
 }

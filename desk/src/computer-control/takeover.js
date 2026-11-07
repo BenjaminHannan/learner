@@ -8,6 +8,7 @@ const net = require('node:net');
 const { spawn, execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { NativeSession, compile } = require('./native');
+const { execute } = require('./actions');
 const { report } = require('./test-status');
 const run = promisify(execFile);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -52,7 +53,7 @@ async function main() {
   await run('/usr/bin/xcrun', ['swiftc','-O','-target','arm64-apple-macos13.0','-emit-library','-module-name','HandsTestAux',path.join(__dirname,'test-aux.swift'),'-o',lib], { timeout:60000 });
   await run('/usr/bin/xcrun', ['swiftc','-O','-target','arm64-apple-macos13.0',path.join(__dirname,'test-window.swift'),'-o',windowBin], { timeout:60000 });
   await run('/usr/bin/codesign', ['--force','-s','-',lib], { timeout:15000 });
-  let monitor, injector, window, session; const result = { mode:'separate-process CGEvent simulation', trials:[], status:'incomplete' };
+  let monitor, injector, window, session; const result = { mode:'separate-process CGEvent simulation', trials:[], probes:[], status:'incomplete' };
   try {
     monitor = await Aux.start(lib, built.bridge, true);
     if (monitor.ready.idleSeconds < 300) throw Error('Ben has not been idle for five minutes');
@@ -91,6 +92,29 @@ async function main() {
       if (!result.trials.at(-1).pass) { result.status = 'fail'; break; }
     }
     result.status = result.trials.length === 10 && result.trials.every(t => t.pass) ? 'pass' : 'fail';
+    if (result.status === 'pass') {
+      result.takeoverPass = true;
+      session = await NativeSession.start();
+      if (!/^\d+$/.test(session.status.tag || '')) throw Error('guard tag missing');
+      const tagged = monitor.next(r => r.event === 'tagged' && r.tag === session.status.tag, 1000);
+      monitor.socket.write('tag ' + session.status.tag + '\n'); await tagged;
+      const probes = [
+        { name:'click', action:{type:'click',x:ready.x,y:ready.y}, pass:r => r.some(e => e.event === 'mouseDown') && r.some(e => e.event === 'mouseUp') },
+        { name:'drag', action:{type:'drag',x:ready.x,y:ready.y,toX:ready.x+40,toY:ready.y+20}, pass:r => r.some(e => e.event === 'mouseDown') && r.some(e => e.event === 'mouseDragged') && r.some(e => e.event === 'mouseUp') },
+        { name:'scroll', action:{type:'scroll',dy:-100}, pass:r => r.some(e => e.event === 'scroll') },
+        { name:'type', action:{type:'type',text:'OK'}, pass:r => r.filter(e => e.event === 'keyDown').map(e => e.characters).join('').includes('OK') },
+        { name:'press', action:{type:'press',combo:'a'}, pass:r => r.some(e => e.event === 'keyDown' && e.characters === 'a') }
+      ];
+      for (const probe of probes) {
+        if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
+        const first = rows.length;
+        try { await execute(session,probe.action,new AbortController().signal); await pause(100); result.probes.push({ name:probe.name, pass:probe.pass(rows.slice(first)) }); }
+        catch (e) { result.probes.push({ name:probe.name, pass:false, error:String(e.message || e) }); }
+        if (!result.probes.at(-1).pass) break;
+      }
+      await session.close(); session = null;
+      if (result.probes.length !== 5 || result.probes.some(p => !p.pass)) result.status = 'fail';
+    }
   } catch (error) { result.error = String(error.message || error); result.status = 'incomplete'; }
   finally {
     if (session) await session.close();
