@@ -2683,7 +2683,7 @@ app.whenReady().then(async () => {
     try {
       const state = JSON.parse(require('fs').readFileSync(path.join(require('os').homedir(), 'learner-ops/hands-recorder/state.json'), 'utf8'));
       if (state.enabled === true) {
-        const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+        const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE; delete env.ELECTRON_NO_ATTACH_CONSOLE;
         require('child_process').execFile('/usr/bin/open', ['-n', '-g', '/Applications/Premonition.app', '--args', '--glim-recorder-host'], { env }, (error) => { if (error) console.error('[recorder] could not resume:', error.message); });
       }
     } catch (_) { /* No saved switch means recording stays off. */ }

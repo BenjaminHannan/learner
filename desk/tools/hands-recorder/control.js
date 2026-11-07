@@ -26,6 +26,7 @@ async function main() {
     if (fs.existsSync(socket)) fs.unlinkSync(socket);
     const env = { ...process.env };
     delete env.ELECTRON_RUN_AS_NODE;
+    delete env.ELECTRON_NO_ATTACH_CONSOLE;
     execFileSync('/usr/bin/open', ['-n', '-g', '/Applications/Premonition.app', '--args', '--glim-recorder-host'], { env });
     for (let n = 0; n < 80; n++) {
       await wait(100);

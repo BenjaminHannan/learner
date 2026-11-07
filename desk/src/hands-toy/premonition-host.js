@@ -18,6 +18,7 @@ function run() {
   const nativeHelper = process.execPath;
   const nativeArgs = ['--glim-recorder-native'];
   let benchmark = null;
+  let openingMain = false;
   let recorder = null, server = null, closing = false, busy = false, fakeTimer = null;
   fs.mkdirSync(base, { recursive: true, mode: 0o700 });
   fs.chmodSync(base, 0o700);
@@ -28,7 +29,7 @@ function run() {
     stopped: closing, at: new Date().toISOString() });
   const saveStatus = () => fs.writeFileSync(statusPath, JSON.stringify(status()), { mode: 0o600 });
   const native = (file, args) => new Promise((resolve, reject) => {
-    const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+    const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE; delete env.ELECTRON_NO_ATTACH_CONSOLE;
     execFile(nativeHelper, [...nativeArgs, ...(file === 'canary' ? ['--glim-canary'] : []), ...args], { env, timeout: 20000, maxBuffer: 65536 }, (error, stdout, stderr) => {
       if (error) { error.message = stderr || error.message; reject(error); }
       else resolve(stdout.trim());
@@ -132,6 +133,16 @@ function run() {
   }
   app.whenReady().then(async () => {
     app.dock?.hide();
+    app.on('activate', () => {
+      if (closing || openingMain) return;
+      openingMain = true;
+      const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE; delete env.ELECTRON_NO_ATTACH_CONSOLE;
+      const bundle = path.resolve(process.execPath, '../../..');
+      execFile('/usr/bin/open', ['-n', bundle], { env }, error => {
+        openingMain = false;
+        if (error) console.error('Could not open Premonition chat:', error.message);
+      });
+    });
     await acquireLock();
     saveStatus();
     server = net.createServer(connection => {

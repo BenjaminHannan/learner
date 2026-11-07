@@ -7,7 +7,7 @@ function startScratchBenchmark(base, executable) {
   const files = ['screen.mp4', 'detail.mp4'].map(n => path.join(root,n));
   for (const file of files) fs.closeSync(fs.openSync(file,'wx',0o600));
   const result = { root, enabled:true, done:false, frames:0, bytes:0, screenOnly:true, seconds:120 };
-  const env = {...process.env}; delete env.ELECTRON_RUN_AS_NODE;
+  const env = {...process.env}; delete env.ELECTRON_RUN_AS_NODE; delete env.ELECTRON_NO_ATTACH_CONSOLE;
   const encoder = spawn('/opt/homebrew/bin/ffmpeg', ['-nostdin','-hide_banner','-loglevel','error','-y','-f','rawvideo','-pixel_format','bgra','-video_size','1280x720','-framerate','20','-i','pipe:0','-filter_complex','[0:v]split=2[a][b];[b]crop=192:192[c]','-map','[a]','-c:v','h264_videotoolbox','-b:v','2500k','-pix_fmt','yuv420p','-movflags','frag_keyframe+empty_moov','-f','mp4','pipe:3','-map','[c]','-c:v','h264_videotoolbox','-b:v','200k','-pix_fmt','yuv420p','-movflags','frag_keyframe+empty_moov','-f','mp4','pipe:4'], {stdio:['pipe','ignore','pipe','pipe','pipe']});
   const source = spawn(executable, ['--glim-recorder-native','--scratch-benchmark'], {env,stdio:['pipe','pipe','pipe','pipe']});
   result.sourcePid=source.pid; result.encoderPid=encoder.pid;

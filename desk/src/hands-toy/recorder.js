@@ -35,6 +35,7 @@ function normalizeLedgerEntry(e){
 class Recorder {
  constructor({root,fake=false,releaseApproved=false,ffmpeg='/opt/homebrew/bin/ffmpeg',ffprobe='/opt/homebrew/bin/ffprobe',nativeHelper,nativeArgs=[],proofMode=false,retentionOptions={},clock=Date.now,shutdownMs=1000}={}){
   this.root=root;this.fake=fake;this.releaseApproved=releaseApproved;this.ffmpeg=ffmpeg;this.ffprobe=ffprobe;this.nativeHelper=nativeHelper;this.nativeArgs=nativeArgs;this.nativeEnv={...process.env};delete this.nativeEnv.ELECTRON_RUN_AS_NODE;this.clock=clock;this.shutdownMs=shutdownMs;this.retention=new Retention(root,retentionOptions);this.enabled=false;this.paused=false;this.encoder=null;this.source=null;this.pending=null;this.frames=0;this.bytes=0;this.cpuStart=process.cpuUsage();this.started=this.clock();this.stateFile=path.join(root,'recorder-state.json');
+  delete this.nativeEnv.ELECTRON_NO_ATTACH_CONSOLE;
   this.proofMode=proofMode===true;
   if(fs.existsSync(this.stateFile)&&fs.lstatSync(this.stateFile).isSymbolicLink())throw Error('state symlink');
   // Never auto-resume a running process after restart. Preserve OFF, including after crashes.

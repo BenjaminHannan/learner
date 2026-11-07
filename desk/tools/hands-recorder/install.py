@@ -1,6 +1,6 @@
 """Install the recorder-only role in Premonition. Never restart chat or start capture."""
 from pathlib import Path
-import datetime, json, shutil, subprocess, os
+import datetime, json, shutil, subprocess, os, sys
 repo = Path(__file__).resolve().parents[2]
 base = Path.home() / 'learner-ops/hands-recorder'
 bundle = Path(os.environ.get('HANDS_RECORDER_BUNDLE', '/Applications/Premonition.app'))
@@ -19,13 +19,7 @@ if metadata['main'] not in ('main.js', 'recorder-entry.js'):
     raise RuntimeError('Unexpected app entry; stop rather than replace it')
 helper = resources / 'glim-recorder'
 helper.mkdir(exist_ok=True)
-for name, source in [('capture', 'recorder.swift'), ('canary', 'secure-canary.swift')]:
-    target = helper / (name + '.dylib')
-    temporary = helper / (name + '.new.dylib')
-    subprocess.run(['swiftc', '-O', '-target', 'arm64-apple-macos13.0', '-emit-library', '-module-name', 'Glim_' + name, str(repo / 'helper/hands-toy' / source), '-o', str(temporary)], check=True)
-    subprocess.run(['codesign', '--force', '--sign', '-', str(temporary)], check=True)
-    os.replace(temporary, target)
-subprocess.run(['clang++', '-arch', 'arm64', '-std=c++17', '-bundle', '-undefined', 'dynamic_lookup', '-I/opt/homebrew/include/node', str(repo / 'helper/hands-toy/native-bridge.cc'), '-o', str(helper / 'native-bridge.node')], check=True)
+subprocess.run([sys.executable, str(Path(__file__).with_name('build-native.py')), '--output', str(helper)], check=True)
 for rel in ['recorder-entry.js', 'src/hands-toy/premonition-host.js', 'src/hands-toy/scratch-benchmark.js', 'src/hands-toy/recorder.js', 'src/hands-toy/retention.js']:
     destination = app / rel
     if destination.exists():

@@ -31,6 +31,10 @@ else
   echo "WARNING: swiftc or helper/deskhelper.swift missing; building without screen control (install Xcode command line tools: xcode-select --install)." >&2
 fi
 
+echo "==> compiling recorder resources"
+python3 tools/hands-recorder/build-native.py --output build/glim-recorder
+EXTRA+=(--extra-resource=build/glim-recorder)
+
 # The sleep trainer (a Python package, no model, no Python) and the dream checker ride along as resources (resources/sleepmlx,
 # resources/sleepmode): the built-in Mac sleeps with them (src/sleepwin.js). SLEEPMODE_SRC: the folder holding sleepmode/.
 STAGE=build/stage; rm -rf "$STAGE"; mkdir -p "$STAGE"
