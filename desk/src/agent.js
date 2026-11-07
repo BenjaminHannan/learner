@@ -1225,13 +1225,20 @@ class Agent {
         const verdict = await this.waitingForBen(() => this.o.approve({ id: stepId, tool: name, args, ...need }, signal), signal);
         if (signal.aborted) return { text: finish('[stopped by user]', false) };
         if (verdict === 'deny') return { text: finish(P('Ben denied this action. Do not retry it; ask him what to do instead.'), false, 'Denied: ' + summaryStart) };
+        if ((SCREEN_GATED.has(name) || name === 'open_app') && !['once', 'task', 'always'].includes(verdict)) return { text: finish(P('This action was not allowed. Do not retry it without a clear yes.'), false, 'Not allowed: ' + summaryStart), failed: true };
         if (verdict === 'task' && !need.danger) this.taskAllow.add(need.kind);
         if (verdict === 'always' && need.safety && this.o.safety) {   // "Always allow" = that category becomes free, one-line notice with Undo
           this.taskAllow.add(need.kind);
           try { const ch = this.o.safety.set([{ cat: need.safety, level: 'free' }], { source: 'tap-card' }); if (ch.ok) this.emit({ type: 'safety_notice', text: ch.notice, undo: ch.undo }); } catch (e) { /* ignore */ }
         } else if (verdict === 'always' && !need.danger) { this.taskAllow.add(need.kind); if (need.always && this.o.rememberAlways) { try { this.o.rememberAlways(need.always); } catch (e) { /* ignore */ } } }
       }
-      const r = this.o.hands && this.o.hands.isHands(name) ? await this.withoutSlot(() => this.o.hands.act(name, args, { ...ctx, summary: summaryStart, helper: !!this.o.helperId, askUser: this.o.askUser ? (q, sg, op) => this.o.askUser(q, sg, op) : null }, run, sv), signal) : await run(args, ctx);
+      let r;
+      if (this.o.hands && this.o.hands.isHands(name)) {
+        const { guardHandsConsent } = require('./computer-control/consent');
+        const askUser = this.o.askUser ? (q, sg, op) => this.o.askUser(q, sg, op) : async () => null;
+        const guarded = guardHandsConsent({ hands: this.o.hands, signal, askUser, run });
+        r = await this.withoutSlot(() => this.o.hands.act(name, args, { ...ctx, summary: summaryStart, helper: !!this.o.helperId, askUser: guarded.ask }, guarded.guardedRun, sv), signal);
+      } else r = await run(args, ctx);
       let text = typeof r === 'string' ? r : (r && r.text) || '';
       if (this.last.key === key) {
         this.last.count++;
