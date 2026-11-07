@@ -62,9 +62,9 @@ It calls HANDS-PC's exact leased wrapper:
 The adapter validates the declared starting-checkpoint hash, returned checkpoint
 hashes, PC copy deletion and shared GPU lease release. It preserves the runner's
 logged native fallback and its refusal to fall back while cleanup is unconfirmed.
-It never substitutes a direct GPU runner for this wrapper. Daytime dry runs
-load the starting checkpoint locally; real-recording remote jobs retain the
-runner's 01:00–07:00 / idle rule and shared lease. Checkpoint paths can also be
+It never substitutes a direct GPU runner for this wrapper. Dry runs invoke the
+same command. Real-recording jobs retain the runner's 01:00–07:00 / idle rule
+and shared lease; a daytime deferral uses the explicit local dry-run fallback. Checkpoint paths can also be
 read from HANDS-PC's Markdown report; absence never blocks a night.
 
 For other handoff commands, the runner owns upload, path rewriting and download; stdout must be the same

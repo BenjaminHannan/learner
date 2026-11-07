@@ -115,7 +115,7 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   const config=handoff(path.join(ops,'aon-notes/hands-pc-20261107'),dryRun?{}:{runner:path.join(sourceDir,'../night-learn-remote/tonight-remote.sh')});
   const suppliedCommand=config.train;
   write(path.join(output,'handoff.json'),{checkpoint:config.checkpoint,checkpointSha256:config.checkpointSha256,schedulerCommand:suppliedCommand,managesCleanup:config.managesCleanup,sharedLease:config.sharedLease||null});
-  if(dryRun){config.train=null;config.notes.push('daytime dry run uses local training; the remote real-recording gate and shared lease remain enforced');}
+  if(dryRun)config.notes.push('dry run invokes the leased wrapper; a real-data time/idle deferral falls back to the explicit local dry-run trainer');
   const localStarting=path.join(root,'models/current.pt');
   if(config.checkpoint)dataset.preSleepWeights=config.checkpoint;
   else if(fs.existsSync(localStarting))dataset.preSleepWeights=localStarting;

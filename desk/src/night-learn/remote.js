@@ -74,7 +74,7 @@ function trainWithFallback(config,dataset,output,execute,local,verify=x=>x) {
  }
  const notes=[...config.notes,...(error?[error]:[]),...(cleanupError?[cleanupError]:[]),...(training?.fallbackReason?[training.fallbackReason]:[])];
  const localManaged=training?.trainingBackend==='mac-cpu-fallback'&&training.remote?.fallback===true;
- const remoteCopiesDeleted=config.managesCleanup?(localManaged||training?.remote?.transport?.pcCleanup?.deleted===true):!cleanupError;
+ const remoteCopiesDeleted=config.managesCleanup?(training?(localManaged||training.remote?.transport?.pcCleanup?.deleted===true):null):!cleanupError;
  return training?{training,backend:localManaged?'local-fallback':'BensPC',notes,remoteCopiesDeleted}:{training:local(),backend:'local-fallback',notes,remoteCopiesDeleted};
 }
 module.exports={handoff,trainWithFallback,verifyRemoteTraining};
