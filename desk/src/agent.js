@@ -31,7 +31,7 @@ const MAX_TOOL_CHARS = 8000;
 // ---- verification layer ----------------------------------------------------------------------
 // Tools that change something; a final answer after any of them gets one cheap check turn first.
 const { scrub: scrubSecret } = require('./logins');   // LOGIN1: drops any line holding a saved password
-const STATE_CHANGING = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_back', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
+const STATE_CHANGING = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_back', 'screen_click', 'screen_type', 'screen_key', 'open_app', 'computer_execute']);
 const RECHECK_TOOLS = new Set(['browser_go', 'browser_click', 'browser_type', 'browser_sign_in', 'browser_back', 'browser_scroll', 'screen_click', 'screen_type', 'screen_key', 'open_app']);
 const MAX_VERIFY = 2;                 // check turns per task (so it can never loop)
 // The gateway maps qwen36-fast to the same upstream model with thinking off, so the check shares the prompt cache with real turns.
@@ -538,7 +538,18 @@ class Agent {
     this.memBlock = '';
   }
 
-  toolDefs() { return typeof this.o.toolDefs === 'function' ? this.o.toolDefs() : this.o.toolDefs; }
+  toolDefs() {
+    const defs = typeof this.o.toolDefs === 'function' ? this.o.toolDefs() : this.o.toolDefs;
+    if (!this.desktopEnabled) return defs;
+    const cc = require('./computer-control/schema');
+    return (defs || []).filter(d => d?.function && !cc.legacy.has(d.function.name) && !/^browser_/.test(d.function.name) && d.function.name !== 'run_shell').concat(cc.defs);
+  }
+  makeDesktop(signal) {
+    const { Desktop } = require('./computer-control/desktop');
+    const mins = this.o.safety?.hands?.().idleMin || 2;
+    const options = { request:this.taskText, signal, minIdleSeconds:Math.max(120, mins * 60) };
+    return this.o.desktopFactory ? this.o.desktopFactory(options) : new Desktop(options);
+  }
   taskTools() { return this.taskToolDefs || this.toolDefs(); }   // the tools this task's requests send (AGENT1 diet: a web task's subset)
 
   emit(ev) { try { this.o.emit && this.o.emit(ev); } catch (e) { /* UI errors must not kill the loop */ } }
@@ -616,10 +627,13 @@ class Agent {
     this.toolSteps = 0; this.acting = false; this.claimChecks = 0;
     this.memBlock = '';
     this.taskText = opts && opts.hidden ? '' : String(userText || ''); this.usedMemSave = false; this.memChecks = 0; this.secretChecks = 0;   // a hidden turn (a Mote's report relayed) is not Ben asking to remember anything
+    this.desktopEnabled = !!(process.platform === 'darwin' && (process.versions.electron || this.o.desktopFactory) && !this.o.helperId && this.taskText && require('./computer-control/schema').desktopRequest(this.taskText));
+    this.desktop = null;
     // AGENT1 diet: a web task gets the web tools only, short descriptions, a shorter system prompt and older page views cut (request only)
     { let s0 = {}; try { s0 = this.o.getSettings() || {}; } catch (e) { s0 = {}; }
-      this.diet = Kit.on(s0, 'diet') && !(opts && opts.hidden) && Kit.isWebTask(userText);
+      this.diet = !this.desktopEnabled && Kit.on(s0, 'diet') && !(opts && opts.hidden) && Kit.isWebTask(userText);
       this.taskToolDefs = this.diet ? Kit.dietTools(this.toolDefs()) : null; this.sysPrompt = this.diet ? Kit.dietSystem(SYSTEM_PROMPT) : SYSTEM_PROMPT;
+      if (this.desktopEnabled) this.sysPrompt = this.sysPrompt.split('\n').filter(line => !line.includes('The web is ONLY')).join('\n') + '\n' + require('./computer-control/schema').instruction;
       this.pins = Kit.on(s0, 'pins') && !this.o.helperId && !(opts && opts.hidden);
       this.stuckOn = Kit.on(s0, 'stuck'); this.stuckTries = 0; }
     // notes by relevance (connect-20261105 #3): the saved notes closest to this message when they do not all fit
@@ -674,6 +688,7 @@ class Agent {
     let stopped = false;
     let failure = null;
     try {
+      if (this.desktopEnabled) this.desktop = this.makeDesktop(signal);
       if (this.o.slot) {
         if (this.o.slot.full()) { this.state('queued', { running: this.o.slot.active }); this.emit({ type: 'queued' }); }
         try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued: the loop below sees it */ }
@@ -854,6 +869,9 @@ class Agent {
           save();
           continue;
         }
+        if (this.desktopEnabled && !res.toolCalls.length && this.desktop && (!this.desktop.finished || this.desktop.claimed !== 'pass') && (claimsAction(res.content) || /^(done|finished|all set)[.!\s]*$/i.test(String(res.content || '').trim()))) {
+          res = { ...res, content:'I could not confirm that the desktop task was finished.', cleaned:true };
+        }
         const msg = { role: 'assistant', content: res.content || '' };
         if (res.toolCalls.length) {
           // a call cut off mid-arguments is kept as "{}": the gateway parses every stored call's arguments for the chat template, and one
@@ -893,7 +911,7 @@ class Agent {
           if (out.image) pendingImage = out.image;
           if (signal.aborted) stopped = true;
         }
-        if (pendingImage && (s.vision === 'on' || s.vision === true)) {
+        if (pendingImage && (s.vision === 'on' || s.vision === true || this.desktopEnabled)) {
           thread.messages.push({ role: 'user', content: [{ type: 'text', text: '[screenshot of the result above]' }, { type: 'image_url', image_url: { url: pendingImage } }] });
         }
         save();
@@ -903,6 +921,7 @@ class Agent {
       failure = String(e && e.message || e);
       this.emit({ type: 'error', message: failure });
     } finally {
+      if (this.desktop) { try { await this.desktop.close(); } catch (e) { failure = failure || String(e && e.message || e); this.emit({ type:'error', message:failure }); } this.desktop = null; }
       // the brain could not be reached before it said anything: take Ben's turn back out of the history so the Desk can hold it and send
       // it again once the brain is ready (no duplicate turn, no dangling question)
       if (failure && OFF_RE.test(failure) && thread.messages.length === heldAt.msgs && !stopped) {
@@ -1121,6 +1140,38 @@ class Agent {
       return text;
     };
     if (args === null) return { text: finish('Error: arguments were not valid JSON (the call looks cut off). Call the tool again with shorter arguments.', false) };
+    if (!this.desktopEnabled && process.platform === 'darwin' && process.versions.electron && this.o.hands && (SCREEN_GATED.has(name) || name === 'open_app')) return { text:finish('Desktop control needs an explicit desktop task and a checked screen.', false), failed:true };
+    if (this.desktopEnabled) {
+      const cc = require('./computer-control/schema');
+      if (cc.legacy.has(name) || /^browser_/.test(name) || name === 'run_shell') return { text:finish('Use the checked desktop tools for this task.', false), failed:true };
+      if (cc.names.has(name)) {
+        try {
+          if (!this.taskText || this.o.helperId || signal.aborted) throw Error('A live request from Ben is required');
+          if (!this.desktop) this.desktop = this.makeDesktop(signal);
+          if (name === 'computer_look' && this.o.safety) { const look = this.o.safety.check('screen_look', {}, {}); if (look?.refuse) throw Error(look.refuse); }
+          if (name === 'computer_execute') {
+            const p = this.desktop.pending;
+            if (!p) throw Error('Prepare the action first');
+            const { checkAction, explicitlyRequested } = require('./computer-control/safety');
+            const decision = checkAction(this.o.safety, this.o.safetyCtx, p.action, p.intent, this.taskText);
+            if (decision.level === 'ask' && decision.cat !== 'hands' && decision.cat !== 'open-apps' && !explicitlyRequested(decision.cat, this.taskText)) {
+              const kind = 'desktop:' + decision.cat;
+              if (!this.taskAllow.has(kind)) {
+                const verdict = await this.waitingForBen(() => this.o.approve({ id:stepId, tool:name, kind, text:'Allow ' + decision.cat + ' for this desktop step?', danger:false }, signal), signal);
+                if (!['once','task','always'].includes(verdict) || signal.aborted) throw Error('No clear permission was received');
+                if (verdict === 'task' || verdict === 'always') this.taskAllow.add(kind);
+              }
+            }
+          }
+          if (name === 'computer_execute') this.usedState = true;
+          const method = { computer_look:'look', computer_prepare:'prepare', computer_execute:'execute', computer_verify:'verify', computer_finish:'finish' }[name];
+          const value = await this.desktop[method](args);
+          const out = { text:finish(value.text, true), failed:false };
+          if (value.image) out.image = value.image;
+          return out;
+        } catch (e) { return { text:finish('Error: ' + String(e && e.message || e), false), failed:true }; }
+      }
+    }
     const entry = this.o.tools[name];
     const ctx = { signal, settings: this.o.getSettings(), thread, waitForBen: (fn) => this.waitingForBen(fn, signal), stepId };
     if (name === 'ask_user') {

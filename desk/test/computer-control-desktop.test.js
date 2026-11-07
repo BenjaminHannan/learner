@@ -1,0 +1,124 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { Desktop, desktopAction } = require('../src/computer-control/desktop');
+const { actionPlan, execute } = require('../src/computer-control/actions');
+const { SafetyLevels } = require('../src/safety-levels');
+const { checkAction } = require('../src/computer-control/safety');
+const { Agent } = require('../src/agent');
+const { buildTools } = require('../src/prompt');
+const { startGateway } = require('./helpers');
+
+function fixture() {
+  const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-test-'));
+  const sent = [], ctrl = new AbortController(); let number = 0;
+  const native = { cancelled:false, async command(op, event) { if (this.cancelled) throw Error('cancelled'); sent.push({ op, ...event }); }, async close() { this.closed = true; }, stop() { this.cancelled = true; } };
+  const desktop = new Desktop({ request:'Open Notes and write hello', signal:ctrl.signal, logRoot, minIdleSeconds:0, idleSeconds:() => 1000, startNative:async () => native, captureScreen:async () => ({ id:'shot-' + ++number, at:new Date().toISOString(), hash:String(number).repeat(64), image:'data:image/png;base64,AA==', displayId:'1', bounds:{x:0,y:0,width:100,height:100}, size:{width:100,height:100} }) });
+  return { desktop, native, sent, ctrl, logRoot };
+}
+function action(x=10) { return { type:'click', x, y:20 }; }
+
+test('look, prepare, confirm, send, verify and log the checked step', async () => {
+  const f = fixture();
+  try {
+    await f.desktop.look();
+    const result = await f.desktop.prepare({ observationId:'shot-1', intent:'click the note', action:action() });
+    assert.match(result.text, /fresh picture/i); assert.equal(f.sent.length, 0);
+    await assert.rejects(() => f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:false }), /confirmed/);
+    assert.equal(f.sent.length, 0);
+    await f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true });
+    assert.deepEqual(f.sent.map(e => e.op), ['grant','send','send','send','end']);
+    assert.throws(() => f.desktop.finish({ result:'pass', evidence:'looked' }), /Verify/);
+    f.desktop.verify({ observationId:'shot-3', result:'pass', evidence:'the note is selected' });
+    f.desktop.finish({ result:'pass', evidence:'the note is selected' });
+    await f.desktop.close();
+    const row = JSON.parse(fs.readFileSync(path.join(f.logRoot, 'attempts.jsonl'), 'utf8'));
+    assert.equal(row.schema, 'hands-attempt/v1'); assert.equal(row.steps[0].intent, 'click the note');
+    assert.equal(row.steps[0].observation.sha256, '2'.repeat(64)); assert.equal(row.steps[0].after.sha256, '3'.repeat(64));
+    assert.equal(row.steps[0].verification.result, 'pass'); assert.equal(row.steps[0].actor, 'glim');
+    assert.equal(row.outcome.result, 'unknown'); // a model's visual statement is not independent proof
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('takeover cancels the session and no queued event is sent afterwards', async () => {
+  const f = fixture();
+  try {
+    await f.desktop.look(); await f.desktop.prepare({ observationId:'shot-1', intent:'click', action:action() });
+    f.native.cancelled = true;
+    await assert.rejects(() => f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true }), /control/i);
+    assert.equal(f.sent.length, 0);
+    await assert.rejects(() => f.desktop.look(), /control/i);
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('a failed mid-drag sends no more packets and ends the lease', async () => {
+  let sends = 0; const ops = [];
+  const native = { cancelled:false, async command(op) { ops.push(op); if (op === 'send' && ++sends === 3) throw Error('expired'); } };
+  await assert.rejects(() => execute(native, { type:'drag', x:1, y:1, toX:20, toY:20 }, new AbortController().signal), /expired/);
+  assert.deepEqual(ops, ['grant','send','send','send','end']);
+});
+
+test('action validation rejects malformed input and makes balanced holds', () => {
+  assert.throws(() => actionPlan({ type:'click', x:Infinity, y:0 }), /invalid/);
+  assert.throws(() => actionPlan({ type:'click', x:1, y:0, count:0 }), /invalid/);
+  assert.throws(() => actionPlan({ type:'scroll', dy:0 }), /invalid/);
+  assert.throws(() => actionPlan({ type:'type', text:'' }), /invalid/);
+  assert.throws(() => actionPlan({ type:'press', combo:'cmd+madeup' }), /unsupported/);
+  const p = actionPlan({ type:'press', combo:'cmd+shift+b' });
+  assert.deepEqual(p.map(x => x.down), [true,true,true,false,false,false]);
+  assert.deepEqual(p.map(x => x.code), [55,56,11,11,56,55]);
+});
+
+test('image points map to display coordinates including a negative monitor origin', () => {
+  const shot = { bounds:{ x:-1200, y:100, width:1200, height:800 }, size:{ width:600, height:400 } };
+  assert.deepEqual(desktopAction({ type:'click', x:300, y:200 }, shot), { type:'click', x:-600, y:500 });
+  assert.throws(() => desktopAction({ type:'click', x:600, y:0 }, shot), /outside/);
+  assert.deepEqual(desktopAction({ type:'click', coordinateSpace:'desktop', x:-600, y:500 }, shot), { type:'click', x:-600, y:500 });
+});
+
+test('an abandoned proposal is logged as a proposal, not an action', async () => {
+  const f = fixture();
+  try {
+    await f.desktop.look(); await f.desktop.prepare({ observationId:'shot-1', intent:'click', action:action() });
+    await f.desktop.close();
+    const row = JSON.parse(fs.readFileSync(path.join(f.logRoot, 'attempts.jsonl'), 'utf8'));
+    assert.equal(f.sent.length, 0); assert.equal(row.steps.length, 0); assert.equal(row.preparations.length, 1); assert.deepEqual(row.corrections, []);
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('safety denies unrequested sending and respects Never', () => {
+  const safety = new SafetyLevels();
+  assert.throws(() => checkAction(safety, () => ({}), action(), 'click Send', 'open Notes'), /not explicitly requested/);
+  safety.set([{ cat:'hands', level:'never' }], { source:'settings' });
+  assert.throws(() => checkAction(safety, () => ({}), action(), 'click', 'click the button'), /Never/);
+});
+
+test('chat exposes only the checked desktop path and passes images back to the model', async () => {
+  const gw = await startGateway([
+    { tool_calls:[{ name:'computer_look', arguments:{} }] },
+    { tool_calls:[{ name:'computer_prepare', arguments:{ observationId:'one', intent:'click the note', action:action() } }] },
+    { tool_calls:[{ name:'computer_execute', arguments:{ preparedId:'p', confirmed:true, actor:'glim' } }] },
+    { tool_calls:[{ name:'computer_verify', arguments:{ observationId:'after', result:'pass', evidence:'note selected' } }] },
+    { tool_calls:[{ name:'computer_finish', arguments:{ result:'pass', evidence:'note selected' } }] },
+    { content:'Done.' }
+  ]);
+  try {
+    let closed = false, calls = [];
+    const desktop = { pending:{ action:action(), intent:'click the note' }, attempt:{ row:{ steps:[] } },
+      async look() { calls.push('look'); return { text:'one', image:'data:image/png;base64,AA==' }; },
+      async prepare() { calls.push('prepare'); return { text:'p', image:'data:image/png;base64,AA==' }; },
+      async execute() { calls.push('execute'); return { text:'after', image:'data:image/png;base64,AA==' }; },
+      verify() { calls.push('verify'); return { text:'checked' }; }, finish() { calls.push('finish'); return { text:'finished' }; },
+      async close() { closed = true; } };
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:10, mode:'hands-off', vision:'off', verify:false }),
+      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), safetyCtx:() => ({}), desktopFactory:() => desktop, emit:() => {}, approve:async () => 'deny' });
+    await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'Open Notes and select a note');
+    assert.deepEqual(calls, ['look','prepare','execute','verify','finish']); assert.equal(closed, true);
+    const names = gw.requests[0].tools.map(t => t.function.name);
+    assert.ok(names.includes('computer_execute')); assert.ok(!names.includes('screen_click')); assert.ok(!names.includes('run_shell'));
+    assert.ok(gw.requests[1].messages.some(m => Array.isArray(m.content) && m.content.some(part => part.type === 'image_url')));
+  } finally { gw.close(); }
+});
