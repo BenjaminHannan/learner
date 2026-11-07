@@ -58,4 +58,10 @@ async function calibrate(work) {
  finally {if(native)await native.close();}
 }
 module.exports={calibrate};
-if(require.main===module)calibrate(process.argv[2]).then(r=>console.log(JSON.stringify(r))).catch(e=>{console.error(e);process.exitCode=1;});
+if(require.main===module) {
+ const complete=result=>{
+  if(process.argv[3]){const file=process.argv[3];fs.writeFileSync(file+'.tmp',JSON.stringify(result)+'\n',{mode:0o600});fs.renameSync(file+'.tmp',file);}
+  console.log(JSON.stringify(result));
+ };
+ calibrate(process.argv[2]).then(complete).catch(error=>complete({passed:false,status:'coords-unverified',reason:error.message}));
+}

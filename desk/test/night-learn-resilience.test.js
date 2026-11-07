@@ -40,3 +40,45 @@ test('CG global points map through Retina backing scale, display origin and vide
  assert.deepEqual(r.backingPixels,{x:480,y:300});
  assert.ok(Math.abs(r.videoPixels.x-256)<1e-8);assert.ok(Math.abs(r.videoPixels.y-120)<1e-8);
 });
+test('night adapter calls the actual HANDS-PC CLI without waiting on an owned GPU',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-cli-'));
+ try{const runner=path.join(dir,'remote_runner.py');fs.writeFileSync(runner,'runner');
+  const config=handoff(dir,{runner,python:'/python'});
+  assert.deepEqual(config.train,['/python',runner,'{dataset}','{output}','--no-fallback','--gpu-wait','0','--bench-steps','0']);
+  assert.equal(config.managesCleanup,true);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('remote artifacts need matching hashes and confirmed recording-copy deletion',()=>{
+ const {verifyRemoteTraining}=require('../src/night-learn/remote'),{createHash}=require('node:crypto');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hands-pc-output-'));
+ try{const r={train:[],held:[],predictions:{},modelSha256:{},remote:{transport:{pcCleanup:{deleted:true}}}};
+  for(const name of ['old','candidate','no-intent']){fs.writeFileSync(path.join(dir,name+'.pt'),name);r.modelSha256[name+'.pt']=createHash('sha256').update(name).digest('hex');}
+  assert.equal(verifyRemoteTraining(r,dir,{managesCleanup:true}).modelSha256.candidate,r.modelSha256.candidate);
+  r.remote.transport.pcCleanup.deleted=false;assert.throws(()=>verifyRemoteTraining(r,dir,{managesCleanup:true}),/deletion/);
+  r.remote.transport.pcCleanup.deleted=true;fs.writeFileSync(path.join(dir,'candidate.pt'),'changed');assert.throws(()=>verifyRemoteTraining(r,dir),/hash mismatch/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('coordinate probe launches only Premonition through the HANDS-ACT identity path',()=>{
+ const {launchCalibration}=require('../src/night-learn/coordinate-run');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'night-coordinate-launch-'));
+ try{
+  const r=launchCalibration(dir,{execute:(binary,args)=>{assert.equal(binary,'/usr/bin/open');assert.equal(args[args.indexOf('-a')+1],'/Applications/Premonition.app');assert.ok(args.includes('ELECTRON_RUN_AS_NODE=1'));fs.writeFileSync(args.at(-1),JSON.stringify({passed:false,status:'coords-unverified',reason:'Ben is active'}));return {status:0};}});
+  assert.equal(r.passed,false);assert.match(r.reason,/Ben is active/);
+  const failed=launchCalibration(dir,{execute:()=>({status:1,stderr:'launch unavailable'})});assert.equal(failed.passed,false);assert.match(failed.reason,/launch unavailable/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('HANDS-PC Markdown report can supply its actual downloaded starting checkpoint',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'checkpoint-note-test-'));
+ try{const cp=path.join(dir,'candidate.pt');fs.writeFileSync(cp,'checkpoint');fs.writeFileSync(path.join(dir,'REPORT.md'),'Starting checkpoint: `'+cp+'`\n');assert.equal(handoff(dir).checkpoint,cp);}finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('Glim teaching episodes cannot mix training frames with later held-out frames',()=>{
+ const {teachingEpisodes,actionWindow}=require('../src/night-learn/run');
+ const rows=Array.from({length:101},(_,timeMs)=>({timeMs})),{cutoffMs}=actionWindow(rows);
+ assert.equal(cutoffMs,80);
+ const episodes=teachingEpisodes(rows);assert.deepEqual(episodes.map(e=>e.length),[80,21]);
+ assert.ok(episodes.every(e=>e.every(r=>r.timeMs<cutoffMs)||e.every(r=>r.timeMs>=cutoffMs)));
+});
+test('starting checkpoint selects the trained candidate over old and no-intent controls',()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'night-starting-arms-'));
+ try{for(const name of ['candidate','old','no-intent'])fs.writeFileSync(path.join(dir,name+'.pt'),name);assert.equal(handoff(dir).checkpoint,path.join(dir,'candidate.pt'));}finally{fs.rmSync(dir,{recursive:true,force:true});}
+});

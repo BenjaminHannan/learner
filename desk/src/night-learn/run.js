@@ -8,7 +8,8 @@ const {score}=require('./score');
 const {readAttempts}=require('./attempts');
 const {verifiedCorrection}=require('./corrections');
 const {Retention}=require('../hands-toy/retention');
-const {handoff,trainWithFallback}=require('./remote');
+const {launchCalibration}=require('./coordinate-run');
+const {handoff,trainWithFallback,verifyRemoteTraining}=require('./remote');
 const home=os.homedir(), ops=path.join(home,'learner-ops'), root=path.join(ops,'night-learn');
 const python=path.join(ops,'p2venv/bin/python'), lock=path.join(ops,'bin/realmodel-lock.sh'), ffmpeg='/opt/homebrew/bin/ffmpeg', ffprobe='/opt/homebrew/bin/ffprobe';
 const sourceDir=__dirname, nightGate=path.join(sourceDir,'night_gate.py'), sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
@@ -45,6 +46,15 @@ function groupEpisodes(rows) {
  for(const row of rows){const g=groups.at(-1),first=g?.[0],prev=g?.at(-1);if(!g||g.length>=80||row.timeMs-prev.timeMs>120000||row.timeMs-first.timeMs>300000)groups.push([]);groups.at(-1).push(row);}
  return groups;
 }
+function actionWindow(rows) {
+ const startMs=rows.length?rows[0].timeMs:0,endMs=rows.length>1?rows.at(-1).timeMs:startMs+1;
+ return {startMs,endMs,cutoffMs:startMs+(endMs-startMs)*.8};
+}
+function teachingEpisodes(rows) {
+ const {cutoffMs}=actionWindow(rows);
+ // A training explanation never gets a frame/action from the held slice.
+ return [rows.filter(r=>r.timeMs<cutoffMs),rows.filter(r=>r.timeMs>=cutoffMs)].flatMap(groupEpisodes);
+}
 function retryBackground(request,pause=()=>run('/bin/sleep',['15'])) {
  for(let attempt=0;;attempt++)try{return request();}catch(error){
   if(attempt>=3||!/HTTP Error (429|503)|timed out|no explanation text|Connection refused|invalid Glim explanation|Expecting .*delimiter|Expecting value/.test(error.message))throw error;
@@ -74,23 +84,24 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   let calibration={passed:false,status:'coords-unverified',reason:dryRun?'dry run does not post desktop events':'coordinate probe unavailable'};
   let index={clips:{}};try{index=JSON.parse(fs.readFileSync(path.join(recordings,'clip-index.json')));}catch(e){warnings.push('recording index: '+e.message);}
   const prepared=sourceClips(index,dryRun?null:day,calibration,work,recordings);stages.push('compile');
-  const explanations=[],rows=[];
+  const explanations=[],rows=[],window=actionWindow(prepared.examples);
   // Missing Glim is an actual stage failure, not an optional-check failure.
-  for(const episode of groupEpisodes(prepared.examples)){const r=teacher(episode,work,dryRun);explanations.push(r.explanation);rows.push(...r.labelled);}
+  for(const episode of teachingEpisodes(prepared.examples)){const r=teacher(episode,work,dryRun);explanations.push(r.explanation);rows.push(...r.labelled);}
   write(path.join(output,'explanations.json'),explanations);stages.push('Glim');
   let failures=[];
   try{failures=readAttempts(path.join(ops,'hands-attempts/attempts.jsonl')).filter(a=>a.judgedOutcome==='fail'&&localDay(Date.parse(a.finishedAt))===day);}
   catch(e){warnings.push('optional attempt log: '+e.message);}
   const mistakes=[];
   for(const failure of failures){try{const f=path.join(work,'attempt.json');write(f,failure);mistakes.push(JSON.parse(locked(['/usr/bin/python3',path.join(sourceDir,'explain.py'),'--mistake',f],dryRun).trim().split('\n').at(-1)));}catch(e){warnings.push('optional mistake explanation: '+e.message);}}
-  const cutoff=prepared.startMs+(prepared.endMs-prepared.startMs)*.8;let correctionsUsed=0;const seen=new Set(rows.map(r=>r.id));
-  for(const failure of failures)for(const candidate of failure.correctionCandidates||[])try{const c=verifiedCorrection(path.join(ops,'hands-attempts'),candidate);if(c.timeMs>=prepared.startMs&&c.timeMs<cutoff&&!seen.has(c.id)){rows.push(c);seen.add(c.id);correctionsUsed++;}}catch(e){warnings.push('optional correction: '+e.message);}
+  const cutoff=window.cutoffMs;let correctionsUsed=0;const seen=new Set(rows.map(r=>r.id));
+  for(const failure of failures)for(const candidate of failure.correctionCandidates||[])try{const c=verifiedCorrection(path.join(ops,'hands-attempts'),candidate);if(c.timeMs>=window.startMs&&c.timeMs<cutoff&&!seen.has(c.id)){rows.push(c);seen.add(c.id);correctionsUsed++;}}catch(e){warnings.push('optional correction: '+e.message);}
   // Tighten sparse bounds to observed actions so even a short, uneven first
   // night has a genuine later holdout. A single action is train-only.
   rows.sort((a,b)=>a.timeMs-b.timeMs);
-  const startMs=rows.length?rows[0].timeMs:0,endMs=rows.length>1?rows.at(-1).timeMs:startMs+1;
-  const dataset={startMs,endMs,examples:rows,allowSparse:true,trainingSteps};
-  const config=handoff(path.join(ops,'aon-notes/hands-pc-20261107'));
+  const {startMs,endMs}=window;
+  const dataset={startMs,endMs,examples:rows,allowSparse:true,trainingSteps,synthetic};
+  const config=handoff(path.join(ops,'aon-notes/hands-pc-20261107'),dryRun?{}:{runner:path.join(sourceDir,'../night-learn-remote/remote_runner.py'),python});
+  if(dryRun){config.train=null;config.notes.push('dry run uses local training; HANDS-PC keeps GPU ownership');}
   const localStarting=path.join(root,'models/current.pt');
   if(config.checkpoint)dataset.preSleepWeights=config.checkpoint;
   else if(fs.existsSync(localStarting))dataset.preSleepWeights=localStarting;
@@ -98,13 +109,10 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   write(path.join(output,'examples.json'),audit);
   const dataFile=path.join(work,'dataset.json');write(dataFile,dataset);
   const local=()=>JSON.parse(run(python,[path.join(sourceDir,'trainer.py'),...(dryRun?['--dry-run']:[]),dataFile,path.join(output,'quarantine')]));
-  gate(dryRun);const trained=trainWithFallback(config,dataFile,path.join(output,'quarantine'),run,local),training=trained.training;stages.push('train');
+  gate(dryRun);const trained=trainWithFallback(config,dataFile,path.join(output,'quarantine'),run,local,r=>verifyRemoteTraining(r,path.join(output,'quarantine'),config)),training=trained.training;stages.push('train');
   write(path.join(output,'training.json'),training);
   const result=training.train.length&&training.held.length?score(training,{allowPartial:true}):{pass:false,status:'unmeasured: insufficient held-out click/key actions',rates:null};stages.push('score');
-  if(!dryRun){
-   try {const exe='/Applications/Premonition.app/Contents/MacOS/Premonition';calibration=JSON.parse(run(exe,[path.join(sourceDir,'calibrate.js'),work],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},timeout:120000}).trim().split('\n').at(-1));}
-   catch(e){calibration.reason=e.message;}
-  }
+  if(!dryRun)calibration=launchCalibration(work);
   write(path.join(output,'coordinates.json'),calibration);stages.push('coordinates');
   const trainIds=[...new Set(training.train.map(r=>rows.find(e=>e.id===r.id)?.clipId).filter(Boolean))];
   let retention={status:'dry-run; no files deleted',trainedIds:trainIds,deleted:0};
@@ -114,7 +122,7 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   if(!dryRun)try{retention={status:'completed',...new Retention(recordings).finishSleep({judged:true,trainedIds:eligible}),trainedIds:eligible};}catch(e){retention={status:'deferred',reason:e.message};warnings.push('retention: '+e.message);}
   stages.push('retention');
   const summary={day,dryRun,source:synthetic?'synthetic recording fixture; not Ben':"Ben's local screen recordings",stages:[...stages,'report'],status:'completed',coordinates:calibration.passed?'verified':'coords-unverified',quarantined:true,promoted:false,
-   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:dataset.preSleepWeights||null,baselineWarning:training.baselineWarning||null,backend:trained.backend,remoteCopiesDeleted:trained.remoteCopiesDeleted??null,trainingStepsPerArm:training.trainingStepsPerArm,intentPolicy:training.intentPolicy,dataManifestSha256:sha(JSON.stringify(audit)),limitations:[...new Set(rows.flatMap(r=>r.verificationLimitations||[]))],retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
+   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:training.hasPreviousModel?dataset.preSleepWeights||null:null,requestedStartingCheckpoint:dataset.preSleepWeights||null,baseline:training.oldModel,baselineWarning:training.baselineWarning||null,backend:trained.backend,remoteCopiesDeleted:trained.remoteCopiesDeleted??null,trainingStepsPerArm:training.trainingStepsPerArm??training.remote?.steps,intentPolicy:training.intentPolicy,dataManifestSha256:sha(JSON.stringify(audit)),limitations:[...new Set(rows.flatMap(r=>r.verificationLimitations||[]))],retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
   write(path.join(output,'quarantine/manifest.json'),{quarantined:true,promoted:false,coordinates:summary.coordinates,scorePassed:result.pass,modelSha256:training.modelSha256});
   write(path.join(output,'result.json'),summary);
   fs.writeFileSync(path.join(output,'REPORT.md'),`# Night learning ${day}\n\nSource: ${summary.source}.\n\nCompleted: ${summary.stages.join(' → ')}.\n\n${rows.length} examples; ${summary.train} train; ${summary.held} held out.\n\nScore: ${JSON.stringify(result)}\n\nCheckpoint: quarantined, ${summary.coordinates}; never promoted.\n\nRetention: ${JSON.stringify(retention)}\n\nWarnings: ${JSON.stringify(summary.warnings)}\n`,{mode:0o600});
@@ -122,5 +130,5 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
  }catch(error){write(path.join(output,'failure.json'),{status:'failed',stages,error:String(error.stack||error),quarantined:true});throw error;}
  finally {fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={targetDay,localDay,groupEpisodes,sourceClips,retryBackground,runNight};
+module.exports={targetDay,localDay,groupEpisodes,sourceClips,retryBackground,actionWindow,teachingEpisodes,runNight};
 if(require.main===module){try{console.log(JSON.stringify(runNight({dryRun:process.argv.includes('--dry-run'),fixture:process.argv.includes('--fixture'),output:process.argv.includes('--output')?process.argv[process.argv.indexOf('--output')+1]:undefined})));}catch(error){console.error(String(error.stack||error));process.exitCode=1;}}

@@ -41,7 +41,7 @@ intent understanding or permission to promote a checkpoint.
 
 ## HANDS-PC handoff
 
-Read-only lookup happens at run time in
+Read-only lookup happens after the Glim stage at run time in
 `~/learner-ops/aon-notes/hands-pc-20261107/`. Optional `remote-training.json`,
 `report.json` or `integration-result.json` can specify:
 
@@ -53,7 +53,15 @@ Read-only lookup happens at run time in
 }
 ```
 
-The runner owns upload, path rewriting and download; stdout must be the same
+The owned adapter also recognizes HANDS-PC's actual
+`desk/src/night-learn-remote/remote_runner.py <dataset> <output>` CLI when it
+appears. Production calls it with `--no-fallback --gpu-wait 0 --bench-steps 0`,
+then verifies downloaded checkpoint hashes and its confirmed PC job deletion.
+A busy or unavailable PC immediately falls back to the local trainer. Today's
+dry runs use the local trainer so HANDS-PC keeps GPU ownership. Checkpoint paths
+can also be read from HANDS-PC's Markdown report; absence never blocks a night.
+
+For other handoff commands, the runner owns upload, path rewriting and download; stdout must be the same
 JSON as local `trainer.py`. The cleanup argv must remove all PC recording
 copies, and runs on success or failure before local fallback. Cleanup failures are
 reported explicitly; local learning still completes in quarantine. No handoff means
