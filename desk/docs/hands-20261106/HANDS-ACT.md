@@ -1,6 +1,6 @@
 # HANDS-ACT work in progress
 
-This is **not a desktop-control pass**. REC-LIVE-4 installed a signed app containing the new control path, but it has not yet been tested with real input.
+This is **not a desktop-control pass**. REC-LIVE-4 installed a signed app containing the new control path. The requested desktop tasks have not yet been run; one takeover trial failed before a revised 10/10 run.
 
 ## What changed
 
@@ -18,7 +18,8 @@ Mac chat now blocks its old mouse, keyboard and app-opening tools when the check
 * The newly installed app's `codesign --verify --deep --strict /Applications/Premonition.app`: exit 0. Its installed `src/agent.js` and `src/computer-control/vision.js` match the working source hashes `b884b9e0dd5166012a9c44fcd11d55016794b1c53526fcc5db7940b10807cf9d` and `90feecbce5f1d17da4ca93550664a3f716ef6b30de139dd6fcfc2a53310485c2`. `node src/computer-control/trial-launch.js preflight`: exit 0, accessibility/input/screen all `true` under Premonition's identity.
 * `git diff --check`: exit 0 at the time checked.
 * Real tasks: Notes 0/2, Safari 0/2, Finder 0/2, TextEdit 0/2, Settings 0/2 **run**, not failures or passes. Screenshot hashes: none. No-actions-when-not-asked and the end-to-end attempt log remain unverified.
-* The first takeover attempt stopped before trials because its window was not frontmost. A second attempt failed its first trial: a separate helper posted a tagged CGEvent, the guard's terminal revoke arrived 11.573459 ms later and rejected further input, but reported zero held inputs released. The test observed a key-down and key-up, so it could not prove the key was still held when takeover arrived. The raw result is `~/learner-ops/hands-attempts/takeover-1794064717318.json`. This is a failed trial, not a 10/10 pass. The harness is being changed to inject immediately when it observes the guard's down event and to record all revocations; the real test must be rerun and both results reported.
+* The first takeover attempt stopped before trials because its window was not frontmost. A second attempt failed its first trial: a separate helper posted a tagged CGEvent, the guard's terminal revoke arrived 11.573459 ms later and rejected further input, but reported zero held inputs released. The test observed a key-down and key-up, so it could not prove the key was still held when takeover arrived. The raw result is `~/learner-ops/hands-attempts/takeover-1794064717318.json`. This is a failed trial, not a 10/10 pass. The revised harness injects immediately when it observes the guard's down event and records all revocations.
+* The revised harness then completed 10/10 takeover trials, with a held input released and no further send accepted each time. Timings in milliseconds: 18.348416, 19.582292, 6.426083, 6.446625, 4.822708, 6.271917, 0.437625, 6.035417, 6.420083, 6.033916. The injected event was a CGEvent from a separate helper process, as authorized for this timing test. Click, drag, scroll, type and press probes all passed in the same throwaway window. Raw result: `~/learner-ops/hands-attempts/takeover-1794065097723.json`; SHA-256 `63592311f28c5e7505476f4b120a4cb53f4b54d4cef4301bbfdb31d01beb8a67`; launcher exit 0. The previous failed result's SHA-256 is `fea64592eb1e789258c876c7dbf1dcd057787f0aa8b0faa4d0c2161fe8bc30ab`. This later pass does not erase the prior failed trial.
 * The independent Notes check can find the test sentence but cannot yet prove the note was newly created. It therefore does not count either Notes trial as a pass without stronger evidence.
 
 ## Log coordination
