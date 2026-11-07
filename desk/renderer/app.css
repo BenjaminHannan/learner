@@ -222,29 +222,26 @@ details.think.live summary::after { content:""; width:.45rem; height:.45rem; bor
 #dictNoteText { flex:1 1 12rem; }
 .hint { color:var(--faint); font-size:.78rem; text-align:center; padding-top:.45rem; }
 
-/* drawer */
-#drawer { position:absolute; inset:0 auto 0 0; width:19rem; max-width:90%; background:var(--surface); border-right:1px solid var(--hair2); z-index:20; transform:translateX(-102%); visibility:hidden; transition:transform .22s var(--ease), visibility 0s .22s; display:flex; flex-direction:column; }
-body.drawer-open #drawer { transform:none; visibility:visible; box-shadow:var(--shadow); transition:transform .22s var(--ease); }
-#drawerShade { position:absolute; inset:0; z-index:19; display:none; background:rgba(0,0,0,.35); } body.drawer-open #drawerShade { display:block; }
-.drawer-head { display:flex; justify-content:space-between; align-items:center; padding:.9rem 1rem; border-bottom:1px solid var(--hair); font-weight:650; }
-#threadList, #mainList { list-style:none; margin:0; padding:.5rem; }
-#mainList { padding-bottom:0; } #mainList li { display:flex; align-items:center; gap:.3rem; padding:.55rem .7rem; border-radius:.7rem; cursor:pointer; min-height:2.6rem; } #mainList li:hover { background:var(--raised); } #mainList li.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
-#mainList .a-top { display:flex; align-items:center; gap:.5rem; flex:1; } #mainList .t { flex:1; font-weight:700; } #mainList .d { color:var(--text2); font-size:.78rem; }
-.hist { flex:1; overflow:auto; border-top:1px solid var(--hair); margin-top:.5rem; } .hist summary { cursor:pointer; list-style:none; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); padding:.8rem 1rem .3rem; } .hist summary::-webkit-details-marker { display:none; } .hist[open] #threadList { overflow:auto; }
-#threadList li { display:flex; align-items:center; gap:.3rem; padding:.55rem .7rem; border-radius:.7rem; cursor:pointer; min-height:2.6rem; }
-#threadList li:hover { background:var(--raised); } #threadList li.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
-#threadList .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } #threadList .d { color:var(--text2); font-size:.78rem; }
-#threadList button { opacity:0; border:0; background:none; color:var(--text2); width:1.8rem; height:1.8rem; border-radius:.5rem; } #threadList li:hover button { opacity:1; } #threadList button:hover { color:var(--danger); background:var(--danger-soft); }
-#agentsSec { border-bottom:1px solid var(--hair); max-height:46%; overflow:auto; }
+/* The list stays beside the chat, even in a small window. */
+#chat { padding-left:15rem; }
+#drawer { position:absolute; inset:0 auto 0 0; width:15rem; background:var(--surface); border-right:1px solid var(--hair2); z-index:2; display:flex; flex-direction:column; overflow-y:auto; }
+.drawer-head { padding:.9rem 1rem; border-bottom:1px solid var(--hair); font-weight:650; }
+.nav-help { margin:.7rem 1rem .2rem; color:var(--text2); font-size:.82rem; line-height:1.4; }
 .drawer-label { font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); padding:.7rem 1rem .2rem; }
-#agentList { list-style:none; margin:0; padding:.3rem .5rem .5rem; }
-#agentList li { padding:.55rem .7rem; border-radius:.7rem; cursor:pointer; display:flex; flex-direction:column; gap:.15rem; }
-#agentList li:hover { background:var(--raised); } #agentList li.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
-.a-top { display:flex; align-items:center; gap:.5rem; } .a-top .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; } .a-top .d { color:var(--text2); font-size:.78rem; }
-.a-last { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.a-btns { display:flex; gap:.3rem; margin-top:.25rem; }
+#mainList, #agentList { list-style:none; margin:0; padding:.3rem .5rem; }
+#mainList { max-height:12rem; overflow-y:auto; flex:none; }
+#agentsSec { border-top:1px solid var(--hair); }
+.nav-item { display:flex; flex-direction:column; align-items:stretch; gap:.15rem; width:100%; min-width:0; padding:.55rem .7rem; border:0; border-radius:.7rem; background:none; color:var(--text); text-align:left; font:inherit; cursor:pointer; }
+.nav-item:hover { background:var(--raised); }
+.nav-item.on { background:var(--accent-soft); box-shadow:inset 3px 0 var(--accent); }
+.nav-item:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.nav-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:650; }
+.nav-status, .nav-empty { color:var(--text2); font-size:.78rem; }
+.nav-empty { padding:.55rem .7rem; }
+.a-btns { display:flex; gap:.3rem; margin:.25rem .5rem .5rem; flex-wrap:wrap; }
 .ghost.sm.del:hover { color:var(--danger); border-color:var(--danger); }
 .dim { color:var(--text2); } .small { font-size:.85rem; }
+@media (max-width:760px) { #chat { padding-left:10rem; } #drawer { width:10rem; } }
 
 /* settings sheet */
 #settings { position:fixed; inset:0; z-index:100; background:var(--bg); display:flex; flex-direction:column; }
@@ -302,6 +299,9 @@ body.darwin .s-head { padding-left:max(5.6rem,var(--tl-pad,84px)); }
 .tb-btn { -webkit-app-region:no-drag; display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--hair2); background:var(--surface); color:var(--text2); border-radius:999px; padding:.3rem .8rem; min-height:2.2rem; font-size:.88rem; font-weight:600; }
 .tb-btn svg { width:1rem; height:1rem; flex:none; }
 .tb-btn:hover { color:var(--text); border-color:var(--text2); }
+#btnBackGlim { flex:none; white-space:nowrap; }
+@media (max-width:760px) { #btnDash span, #btnSleep span { display:none; } #btnDash, #btnSleep { padding:.3rem .55rem; } }
+@media (max-width:560px) { #topbar { gap:.2rem; padding-right:.3rem; } #btnBackGlim { font-size:.75rem; padding:.3rem .45rem; } #title { min-width:0; padding:.3rem .2rem; } }
 .tb-btn.on { background:var(--accent-soft); color:var(--text); border-color:var(--accent-text); }
 .icon-btn.sm { width:2.1rem; height:2.1rem; border-radius:.6rem; flex:none; -webkit-app-region:no-drag; } .icon-btn.sm svg { width:1rem; height:1rem; }
 .icon-btn:disabled { opacity:.4; cursor:default; }

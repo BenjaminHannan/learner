@@ -12,9 +12,7 @@
 <body>
 <header id="topbar">
   <span id="logo" class="logo" title="Glim"></span>
-  <button id="btnThreads" class="icon-btn" title="Motes" aria-label="Motes" hidden>
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>
-  </button>
+  <button id="btnBackGlim" class="tb-btn">Back to Glim</button>
   <div id="title" title="Who you are talking to">Glim</div>
   <div class="spacer"></div>
   <div class="seg" id="modelSeg" hidden role="group" aria-label="Model">
@@ -53,13 +51,12 @@
 <div id="updateBar" hidden><span id="updateText"></span><button id="updateGo" class="amber-btn sm">Update now</button><button id="updateLater" class="ghost sm">Later</button></div>
 
 <main id="chat">
-  <aside id="drawer" aria-hidden="true">
-    <div class="drawer-head"><span>Motes</span><button id="newThread" class="amber-btn sm" hidden>Fresh start</button></div>
-    <ul id="mainList" hidden></ul>
-    <div id="agentsSec" hidden><div class="drawer-label">Motes</div><ul id="agentList"></ul></div>
-    <details id="histSec" class="hist" hidden><summary>Earlier conversations</summary><ul id="threadList"></ul></details>
+  <aside id="drawer" aria-label="Chats and Motes">
+    <div class="drawer-head"><span>Chats &amp; Motes</span></div>
+    <p class="nav-help">Talk to Glim, or view a Mote's read-only log.</p>
+    <div class="drawer-label">Glim chats</div><ul id="mainList"></ul>
+    <div id="agentsSec"><div class="drawer-label">Motes</div><ul id="agentList"></ul></div>
   </aside>
-  <div id="drawerShade"></div>
   <aside id="side" aria-label="Now, goals and ideas"></aside>
   <div id="scroll"><div id="msgs"></div></div>
   <button id="jump" hidden>↓ New messages</button>

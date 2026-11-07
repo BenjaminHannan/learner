@@ -594,10 +594,11 @@
   // the chat box's words for the current state; Learn mode (learnbtn.js) dresses the box on top and calls this back when it ends
   function paintBox(r) {
     paintSend(r);
-    input.placeholder = r ? 'Steer Glim…' : thread && thread.helper ? (r ? 'You can read this Mote’s log, not talk to it.' : 'You can read this Mote’s log, not talk to it.') : 'Ask Glim to do something…';
+    input.placeholder = r ? 'Steer Glim…' : 'Ask Glim to do something…';
+    if (thread && thread.helper) input.placeholder = 'You can read this Mote’s log, not talk to it.';
     autosize(); // the running-state placeholder can wrap at the current width
     input.readOnly = !!(thread && thread.helper);
-    $('#hint').textContent = r ? 'Enter to steer · Esc to stop' : 'Enter to send · Shift+Enter for a new line';
+    $('#hint').textContent = thread && thread.helper ? 'Mote log · read-only' : r ? 'Enter to steer · Esc to stop' : 'Enter to send · Shift+Enter for a new line';
     paintPrimary();
     if (window.LearnButton) LearnButton.dress();
   }
@@ -609,6 +610,7 @@
     const stopNow = running && !asleep && !learning && !input.value.trim();
     $('#btnStop').hidden = !stopNow;
     $('#btnSend').hidden = asleep || stopNow;
+    if (thread && thread.helper) { $('#btnStop').hidden = true; $('#btnSend').hidden = true; }
     $('#composer .box').classList.toggle('running', running && !asleep);
   }
   if (window.LearnButton) LearnButton.restore = () => { if (slp.asleep || slp.waking) paintSleep(); else paintBox(running); autosize(); };
@@ -1032,31 +1034,39 @@
     items.push({ t: 'divider', text: 'Today' });
     return { ...t, items: items.concat(t.items || []) };
   }
-  async function openThread(id) {
-    const t0 = await desk.threads.load(id);
-    if (!t0) return;
-    // A Mote's log is never shown (Ben: if he can't talk to it he shouldn't see it), unless it is waiting on him for an answer or approval.
-    if (t0.helper && !settings.showSparks && !(t0.pendingCards || []).length && !t0.loginWaiting) { const mid = await mainThreadId(); if (mid && mid !== id) return openThread(mid); if (!mid) return newThread(); }
+  let navigationQueue = Promise.resolve(), navigationIntent = 0;
+  function openThread(id) { return selectThread(id); }
+  function selectThread(id, create = false) {
+    const intent = ++navigationIntent;
+    const work = async () => {
+    if (intent !== navigationIntent) return false;
+    const t0 = create ? await desk.threads.create() : await desk.threads.load(id);
+    if (!t0) { if (thread) await desk.threads.load(thread.id); return false; }
     const t = await withHistory(t0);
+    const current = await desk.threads.load(t0.id);
+    if (!current) { if (thread) await desk.threads.load(thread.id); return false; }
+    if (intent !== navigationIntent) return false;
+    if (create) { try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } }
+    if (intent !== navigationIntent) return false;
     thread = { id: t.id, title: t.title, helper: t.helper || null };
     paintTitle(t);
     renderThread(t);
-    setRunning(!!t.running);
-    if (t.loginWaiting) { const c = lastBCard(); if (c) upsertBCard({ id: c.id, login: true, active: true }); }
-    for (const ev of t.pendingCards || []) { if (ev.type === 'approval') onApproval(ev); else if (ev.type === 'ask') onAsk(ev); }
+    setRunning(!!current.running);
+    if (current.loginWaiting) { const c = lastBCard(); if (c) upsertBCard({ id: c.id, login: true, active: true }); }
+    for (const ev of current.pendingCards || []) { if (ev.type === 'approval') onApproval(ev); else if (ev.type === 'ask') onAsk(ev); }
     errorUntil = 0; doneUntil = 0; refreshMood();
-    closeDrawer(); loadThreads();
+    loadThreads();
     BrowserPanel.threadChanged();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
+    return true;
+    };
+    const result = navigationQueue.then(work, work);
+    navigationQueue = result.catch(() => {});
+    return result;
   }
   // New chat button / Cmd+N: a run in progress is stopped first, so the button always works (Ben Oct 28)
   async function freshChat() { if (running) { try { await desk.agent.stop(thread && thread.id); } catch (e) { /* already over */ } } return newThread(); }
-  async function newThread() {
-    const t = await desk.threads.create();
-    try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
-    thread = { id: t.id, title: t.title, helper: null };
-    paintTitle(t); renderThread(await withHistory(t)); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
-  }
+  async function newThread() { return selectThread(null, true); }
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
     if (m < 1) return 'now'; if (m < 60) return m + 'm'; if (m < 1440) return Math.round(m / 60) + 'h'; return Math.round(m / 1440) + 'd';
@@ -1068,25 +1078,57 @@
     const list = (await desk.threads.list()).filter((x) => !x.helper && !isCall(x));
     return list.length ? list[0].id : null;
   }
+  async function restoreNavigation(e2e) {
+    let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
+    const list = await desk.threads.list();
+    const lastT = last && list.find((entry) => entry.id === last);
+    const main = list.find((entry) => !entry.helper && !isCall(entry));
+    const restored = !e2e && lastT && !isCall(lastT) && await openThread(last);
+    if (!restored && !(!e2e && main && await openThread(main.id))) await newThread();
+  }
+  let navigationHelpers = [];
+  let listGeneration = 0;
   async function loadThreads() {
-    const list = (await desk.threads.list()).filter((x) => !x.helper);
-    const main = list.find((x) => !isCall(x)) || null;
-    const ml = $('#mainList'); ml.textContent = '';
-    const li = el('li', main && thread && thread.id === main.id ? 'on main' : 'main');
-    const dot = Mascot.el(running ? 'working' : 'idle', 28, { still: !running });
-    const top = el('div', 'a-top'); top.append(dot, el('span', 't', 'Glim'), el('span', 'd', running ? 'working' : 'main Glim'));
-    li.append(top); li.onclick = async () => { const id = await mainThreadId(); if (id) openThread(id); else newThread(); };
-    ml.append(li);
-    const ul = $('#threadList'); ul.textContent = '';
-    for (const t of list.filter((x) => !main || x.id !== main.id)) {
-      const row = el('li', t.id === (thread && thread.id) ? 'on' : '');
-      const title = el('span', 't', t.title === 'Call' ? t.title : 'Glim'); const d = el('span', 'd', ago(t.updated));
-      const x = el('button', null, '✕'); x.title = 'Delete'; x.setAttribute('aria-label', 'Delete conversation');
-      x.onclick = async (e) => { e.stopPropagation(); if (confirm('Delete "' + t.title + '"?')) { await desk.threads.remove(t.id); if (thread && thread.id === t.id) { const id = await mainThreadId(); if (id) await openThread(id); else await newThread(); } else loadThreads(); } };
-      row.append(title, d, x); row.onclick = () => openThread(t.id); ul.append(row);
+    const generation = ++listGeneration;
+    const list = await desk.threads.list();
+    if (generation !== listGeneration) return;
+    const active = document.activeElement;
+    const focusKey = active && active.dataset && active.dataset.navFocus;
+    const chats = $('#mainList'); chats.textContent = '';
+    const motes = $('#agentList'); motes.textContent = '';
+    for (const item of list.filter((entry) => !isCall(entry))) {
+      const helper = item.helper && navigationHelpers.find((entry) => entry.threadId === item.id);
+      const selected = !!thread && item.id === thread.id;
+      const row = el('li');
+      const button = el('button', 'nav-item' + (selected ? ' on' : ''));
+      const name = item.helper ? (helper && helper.name) || sparkName(item) : (item === list.find((entry) => !entry.helper && !isCall(entry)) ? 'Glim' : item.title || 'Glim');
+      button.setAttribute('aria-current', selected ? 'true' : 'false');
+      button.dataset.navFocus = 'thread:' + item.id;
+      button.title = name;
+      button.append(el('span', 'nav-title', name), el('span', 'nav-status', item.helper ? ((helper && statusText(helper)) || 'Mote') + ' · read-only' : 'Glim chat'));
+      button.onclick = () => openThread(item.id);
+      row.append(button);
+      if (helper) {
+        const controls = el('div', 'a-btns');
+        const addControl = (label, action) => {
+          const control = el('button', 'ghost sm', label);
+          control.dataset.navFocus = 'helper:' + helper.id + ':' + label;
+          control.onclick = async (event) => { event.stopPropagation(); await action(); };
+          controls.append(control);
+        };
+        addControl('Run now', () => desk.helpers.run(helper.id));
+        addControl(helper.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(helper.id));
+        addControl('Delete', async () => { if (confirm('Delete Mote "' + helper.name + '" and its log?')) { await desk.helpers.remove(helper.id); if (thread && thread.id === helper.threadId) await newThread(); } });
+        row.append(controls);
+      }
+      (item.helper ? motes : chats).append(row);
     }
-    $('#histSec').hidden = true; // history lives in the one scroll now
-    if (thread && !thread.helper) $('#title').textContent = 'Glim';
+    if (!motes.children.length) motes.append(el('li', 'nav-empty', 'No Motes yet'));
+    if (!chats.children.length) chats.append(el('li', 'nav-empty', 'No Glim chats yet'));
+    if (focusKey) {
+      const replacement = [...chats.querySelectorAll('[data-nav-focus]'), ...motes.querySelectorAll('[data-nav-focus]')].find((element) => element.dataset.navFocus === focusKey);
+      if (replacement) replacement.focus();
+    }
   }
 
   // ---------- agents (helpers) ----------
@@ -1102,27 +1144,8 @@
   }
   function paintAgents(list) {
     if (window.Side) Side.setSparks(list, !!settings.showSparks);
-    list = list.filter((h) => !(h.status === 'stopped' && h.schedule === 'once')); // finished or cancelled one-off Motes are clutter
-    const ul = $('#agentList'); ul.textContent = '';
-    $('#agentsSec').hidden = !list.length;
-    const showList = !!settings.showSparks && list.length > 0;
-    $('#btnThreads').hidden = !showList; if (!showList) closeDrawer(); // no Motes, no side panel: the Glim scroll is the whole window
-    for (const h of list) {
-      const li = el('li', thread && thread.id === h.threadId ? 'on' : '');
-      const top = el('div', 'a-top');
-      const dot = Mascot.el(HELPER_MOOD[h.status] || 'idle', 24, { still: h.status === 'idle' || h.status === 'stopped' });
-      dot.title = statusText(h);
-      top.append(dot, el('span', 't', h.name), el('span', 'd', statusText(h)));
-      const meta = el('div', 'a-meta dim small', h.schedule + (h.paused ? ' (paused)' : '') + (h.next ? ' · next ' + when(h.next) : ''));
-      const btns = el('div', 'a-btns');
-      const mk = (label, fn, cls) => { const b = el('button', cls || 'ghost sm', label); b.onclick = (e) => { e.stopPropagation(); fn(); }; return b; };
-      btns.append(
-        mk('Run now', () => desk.helpers.run(h.id)),
-        mk(h.paused ? 'Resume' : 'Pause', () => desk.helpers.pause(h.id)),
-        mk('Delete', async () => { if (confirm('Delete Mote "' + h.name + '" and its log?')) { await desk.helpers.remove(h.id); if (thread && thread.id === h.threadId) await newThread(); } }, 'ghost sm del'));
-      li.append(top, meta); if (h.lastSummary) li.append(el('div', 'a-last dim small', h.lastSummary)); li.append(btns); li.onclick = () => openThread(h.threadId); // only reachable when Show Motes is on li.onclick = () => openThread(h.threadId); // only reachable when Show Motes is on
-      ul.append(li);
-    }
+    navigationHelpers = list;
+    loadThreads();
   }
   // ---------- updates ----------
   let upd = null, updLater = '';
@@ -1151,11 +1174,13 @@
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => freshChat());
   desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); });
-  function openDrawer() { document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); loadThreads(); desk.helpers.list().then(paintAgents); }
-  function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
-  $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
-  $('#drawerShade').onclick = closeDrawer;
-  $('#newThread').onclick = newThread;
+  let returningToGlim = null;
+  async function backToGlim() {
+    if (returningToGlim) return returningToGlim;
+    returningToGlim = (async () => { const id = await mainThreadId(); if (id) await openThread(id); else await newThread(); })();
+    try { await returningToGlim; } finally { returningToGlim = null; }
+  }
+  $('#btnBackGlim').onclick = backToGlim;
 
   // links in answers open in the browser panel
   msgs.addEventListener('click', (e) => {
@@ -1217,7 +1242,6 @@
     if (e.key === 'Escape') {
       if (!$('#screenModal').hidden) $('#screenModal').hidden = true;
       else if (!$('#settings').hidden) closeSettings();
-      else if (document.body.classList.contains('drawer-open')) closeDrawer();
       else if (window.LearnButton && LearnButton.composing()) LearnButton.cancel();
       else if (running) desk.agent.stop(thread && thread.id);
     }
@@ -1330,7 +1354,7 @@
     { group: 'Appearance', rows: [
       { key: 'theme', type: 'seg', label: 'Theme', help: 'System follows your computer.', options: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'textSize', type: 'seg', label: 'Text size', help: 'Small, medium or large text everywhere.', options: [['s', 'S'], ['m', 'M'], ['l', 'L']] },
-      { key: 'showSparks', type: 'toggle', label: 'Show Motes', help: 'Shows a Motes list and lets you read what each Mote did. Motes are Glim’s helpers that run on their own, so you can look but not talk to them.' },
+      { key: 'showSparks', type: 'toggle', label: 'Show Motes in the side summary', help: 'Motes are Glim’s helpers. The chat list always lets you read their logs.' },
       { key: 'highContrast', type: 'toggle', label: 'High contrast', help: 'Stronger text and borders everywhere.' },
       { key: 'pill', type: 'toggle', label: 'Status pill at the top of the screen', help: 'A small floating pill that shows what Glim is doing across apps. Hover it for details.' }
     ] },
@@ -1624,13 +1648,7 @@
     CallUI.init({ platform: plat(), popts: popts(), openThread: (id) => openThread(id), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     DictateUI.init({ platform: plat(), popts: popts(), blocked: () => Onboard.isOpen() || !$('#settings').hidden });
     gw = (await desk.gateway.state()) || gw; if (gw.state === 'down') await loadWhy(); paintGateway();
-    let last = null; try { last = localStorage.getItem('lastThread'); } catch (e) { /* ignore */ }
-    const list = await desk.threads.list();
-    const lastT = last && list.find((t) => t.id === last);
-    const mainId = await mainThreadId();
-    if (!info.e2e && lastT && !isCall(lastT) && !lastT.helper) await openThread(last); // back to the Glim you were talking to (a Mote's log or a call is not the home screen)
-    else if (!info.e2e && mainId) await openThread(mainId);
-    else await newThread();
+    await restoreNavigation(info.e2e);
     desk.helpers.list().then(paintAgents);
     if (!settings.onboarded) Onboard.show();
     // always-on: the senses card shows only while main says it is needed (Ben Nov 4: off, every sense starts on; src/senses.js ASK_AT_START)
