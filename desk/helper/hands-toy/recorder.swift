@@ -46,24 +46,39 @@ let types:[CGEventType]=[.keyDown,.keyUp,.flagsChanged,.mouseMoved,.leftMouseDow
 let mask:CGEventMask=types.reduce(0) { $0 | (CGEventMask(1)<<CGEventMask($1.rawValue)) }
 final class Output:NSObject,SCStreamOutput,SCStreamDelegate {
  var count=0
+ let backgroundColor=CGColor(gray:0,alpha:1)
  let lock=NSLock();let frameLock=NSLock();var closed=false;var generation=0;var bounds:[String:Double]=[:]
- var displays:[ObjectIdentifier:(rect:CGRect,image:CGImage?)]=[:];var canvas=CGRect.zero;var ready=false
- func configure(_ rect:CGRect) -> Int {lock.lock();defer{lock.unlock()};generation += 1;ready=false;canvas=rect;bounds=["x":rect.origin.x,"y":rect.origin.y,"width":rect.width,"height":rect.height];displays.removeAll();return generation}
- func add(_ stream:SCStream,_ rect:CGRect) {lock.lock();defer{lock.unlock()};displays[ObjectIdentifier(stream)]=(rect,nil)}
+ var displays:[ObjectIdentifier:(rect:CGRect,image:CGImage?,buffer:CVPixelBuffer?)]=[:];var canvas=CGRect.zero;var ready=false;var directDisplay=false
+ var frame=Data(count:1280*720*4)
+ func configure(_ rect:CGRect,direct:Bool) -> Int {lock.lock();defer{lock.unlock()};generation += 1;ready=false;directDisplay=direct;canvas=rect;bounds=["x":rect.origin.x,"y":rect.origin.y,"width":rect.width,"height":rect.height];displays.removeAll();return generation}
+ func add(_ stream:SCStream,_ rect:CGRect) {lock.lock();defer{lock.unlock()};displays[ObjectIdentifier(stream)]=(rect,nil,nil)}
  func activate() {lock.lock();defer{lock.unlock()};ready=true}
  func stream(_ stream:SCStream,didStopWithError error:Error){emit(["type":"source_error","reason":"capture stopped"]);exit(5)}
  func stream(_ stream:SCStream,didOutputSampleBuffer sampleBuffer:CMSampleBuffer,of type:SCStreamOutputType){
   guard type == .screen,let buffer=CMSampleBufferGetImageBuffer(sampleBuffer) else{return}
   guard let attachments=CMSampleBufferGetSampleAttachmentsArray(sampleBuffer,createIfNecessary:false) as? [[SCStreamFrameInfo:Any]],let raw=attachments.first?[.status] as? Int,let status=SCFrameStatus(rawValue:raw),status == .complete else{return}
+  lock.lock();defer{lock.unlock()};let id=ObjectIdentifier(stream);guard let old=displays[id] else{return}
+  if directDisplay {displays[id]=(old.rect,nil,buffer);return}
   var image:CGImage?;guard VTCreateCGImageFromCVPixelBuffer(buffer,options:nil,imageOut:&image)==noErr,let image=image else{return}
-  lock.lock();defer{lock.unlock()};let id=ObjectIdentifier(stream);if let old=displays[id] {displays[id]=(old.rect,image)}
+  displays[id]=(old.rect,image,nil)
  }
  func writeFrame() {
   frameLock.lock();defer{frameLock.unlock()};if closed{return}
-  lock.lock();let entries=Array(displays.values),rect=canvas,frameGeneration=generation,frameBounds=bounds,isReady=ready;lock.unlock()
-  guard isReady,!entries.isEmpty,entries.allSatisfy({$0.image != nil}),rect.width>0,rect.height>0 else{return}
+  lock.lock();let entries=Array(displays.values),rect=canvas,frameGeneration=generation,frameBounds=bounds,isReady=ready,direct=directDisplay;lock.unlock()
+  guard isReady,!entries.isEmpty,rect.width>0,rect.height>0 else{return}
   let received=monotonicMs(),width=1280,height=720
-  var frame=Data(count:width*height*4)
+  if direct {
+   guard entries.count==1,let buffer=entries[0].buffer else{return}
+   guard CVPixelBufferGetWidth(buffer)==width,CVPixelBufferGetHeight(buffer)==height,CVPixelBufferGetPixelFormatType(buffer)==kCVPixelFormatType_32BGRA,CVPixelBufferLockBaseAddress(buffer,.readOnly)==kCVReturnSuccess else{emit(["type":"source_error","reason":"capture buffer format mismatch"]);exit(5)}
+   defer{CVPixelBufferUnlockBaseAddress(buffer,.readOnly)}
+   guard let address=CVPixelBufferGetBaseAddress(buffer) else{exit(5)}
+   let stride=CVPixelBufferGetBytesPerRow(buffer)
+   if stride==width*4 {publishFrame(UnsafeRawBufferPointer(start:address,count:width*height*4),received,frameGeneration,frameBounds);return}
+   guard stride>=width*4 else{exit(5)}
+   frame.withUnsafeMutableBytes { bytes in for row in 0..<height {bytes.baseAddress!.advanced(by:row*width*4).copyMemory(from:address.advanced(by:row*stride),byteCount:width*4)} }
+   frame.withUnsafeBytes {publishFrame($0,received,frameGeneration,frameBounds)};return
+  }
+  guard entries.allSatisfy({$0.image != nil}) else{return}
   let made=frame.withUnsafeMutableBytes { bytes -> Bool in
    guard let address=bytes.baseAddress,let context=CGContext(data:address,width:width,height:height,bitsPerComponent:8,bytesPerRow:width*4,space:CGColorSpaceCreateDeviceRGB(),bitmapInfo:CGImageAlphaInfo.premultipliedFirst.rawValue|CGBitmapInfo.byteOrder32Little.rawValue) else{return false}
    context.setFillColor(CGColor(gray:0,alpha:1));context.fill(CGRect(x:0,y:0,width:width,height:height))
@@ -72,14 +87,18 @@ final class Output:NSObject,SCStreamOutput,SCStreamDelegate {
    return true
   }
   if !made {emit(["type":"source_error","reason":"display composition failed"]);exit(5)}
-  let written=frame.withUnsafeBytes { bytes -> Bool in
+  frame.withUnsafeBytes {publishFrame($0,received,frameGeneration,frameBounds)}
+ }
+ func publishFrame(_ bytes:UnsafeRawBufferPointer,_ received:Double,_ frameGeneration:Int,_ frameBounds:[String:Double]) {
+  let width=1280,height=720
+  let written={ () -> Bool in
    guard let address=bytes.baseAddress else{return false};var offset=0
    while offset<bytes.count {let amount=Darwin.write(STDOUT_FILENO,address.advanced(by:offset),bytes.count-offset);if amount<0 && errno==EINTR {continue};if amount<=0 {return false};offset += amount};return true
-  }
+  }()
   if !written {exit(5)}
   let pts=CMClockGetTime(CMClockGetHostTimeClock());count += 1
   var row:[String:Any]=["type":"frame","frameId":count,"t":monotonicMs(),"receiveMonotonicMs":received,"writeCompleteMonotonicMs":monotonicMs(),"presentationValue":pts.value,"presentationTimescale":pts.timescale,"presentationFlags":pts.flags.rawValue,"presentationEpoch":pts.epoch,"generation":frameGeneration,"transitionAmbiguous":false,"width":width,"height":height,"pixelFormat":"BGRA","transform":["verified":false,"sourceBounds":frameBounds],"encodedMapping":"unavailable"]
-  if let session=proofSession {row["sourceContract"]="hands-toy-bgra-frame-v1";row["session"]=session;row["sourcePid"]=getpid();row["rawByteCount"]=frame.count;row["rawSha256"]=SHA256.hash(data:frame).map{String(format:"%02x",$0)}.joined()};emit(row)
+  if let session=proofSession {row["sourceContract"]="hands-toy-bgra-frame-v1";row["session"]=session;row["sourcePid"]=getpid();row["rawByteCount"]=bytes.count;row["rawSha256"]=SHA256.hash(data:Data(bytes)).map{String(format:"%02x",$0)}.joined()};emit(row)
  }
 }
 let output=Output();var streams:[SCStream]=[];var displaySignature=""
@@ -96,12 +115,13 @@ let output=Output();var streams:[SCStream]=[];var displaySignature=""
   if signature==displaySignature && !streams.isEmpty{return}
   for old in streams {try await old.stopCapture()};streams=[]
   let rect=selected.map{CGDisplayBounds($0.displayID)}.reduce(CGRect.null){$0.union($1)}
-  let generation=output.configure(rect)
+  let direct=selected.count==1,generation=output.configure(rect,direct:direct)
   emit(["type":"capture_boundary","t":monotonicMs(),"reason":"display_layout","generation":generation,"displayIds":selected.map{$0.displayID},"sourceBounds":["x":rect.minX,"y":rect.minY,"width":rect.width,"height":rect.height],"encodedMapping":"unavailable"])
   let scale=min(1280/rect.width,720/rect.height)
   for display in selected {
    let bounds=CGDisplayBounds(display.displayID),filter=SCContentFilter(display:display,excludingWindows:[])
    let cfg=SCStreamConfiguration();cfg.width=max(2,Int(bounds.width*scale));cfg.height=max(2,Int(bounds.height*scale));cfg.pixelFormat=kCVPixelFormatType_32BGRA;cfg.minimumFrameInterval=CMTime(value:1,timescale:20);cfg.queueDepth=3;cfg.showsCursor=true;cfg.capturesAudio=false
+   if direct {cfg.width=1280;cfg.height=720;cfg.destinationRect=CGRect(x:(1280-bounds.width*scale)/2,y:(720-bounds.height*scale)/2,width:bounds.width*scale,height:bounds.height*scale);cfg.backgroundColor=output.backgroundColor}
    let next=SCStream(filter:filter,configuration:cfg,delegate:output);output.add(next,bounds);try next.addStreamOutput(output,type:.screen,sampleHandlerQueue:DispatchQueue(label:"hands.recorder.frames"));streams.append(next);try await next.startCapture()
   }
   output.activate();displaySignature=signature
