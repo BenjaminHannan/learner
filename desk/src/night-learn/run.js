@@ -89,7 +89,7 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
  try {
   let live=false;try{live=JSON.parse(fs.readFileSync(path.join(ops,'hands-recorder/state.json'))).enabled===true&&Object.keys(JSON.parse(fs.readFileSync(path.join(recordings,'clip-index.json'))).clips||{}).length>0;}catch{}
   if(dryRun&&(fixture||!live)){recordings=path.join(output,'synthetic-recording');run(python,[path.join(sourceDir,'synthetic.py'),recordings]);synthetic=true;}
-  let calibration={passed:false,status:'coords-unverified',reason:dryRun?'dry run does not post desktop events':'coordinate probe unavailable'};
+  let calibration={passed:false,status:'coords-unverified',reason:synthetic?'synthetic fixture has no live coordinate probe':'coordinate probe unavailable'};
   let index={clips:{}};try{index=JSON.parse(fs.readFileSync(path.join(recordings,'clip-index.json')));}catch(e){warnings.push('recording index: '+e.message);}
   const prepared=sourceClips(index,dryRun?null:day,calibration,work,recordings);stages.push('compile');
   const explanations=[],rows=[],window=actionWindow(prepared.examples);
@@ -124,7 +124,7 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   gate(dryRun);const trained=trainWithFallback(config,dataFile,path.join(output,'quarantine'),run,local,r=>verifyRemoteTraining(r,path.join(output,'quarantine'),config)),training=trained.training;stages.push('train');
   write(path.join(output,'training.json'),training);
   const result=training.train.length&&training.held.length?score(training,{allowPartial:true}):{pass:false,status:'unmeasured: insufficient held-out click/key actions',rates:null};stages.push('score');
-  if(!dryRun)calibration=launchCalibration(work);
+  if(!synthetic)calibration=launchCalibration(work);
   write(path.join(output,'coordinates.json'),calibration);stages.push('coordinates');
   const trainIds=[...new Set(training.train.map(r=>rows.find(e=>e.id===r.id)?.clipId).filter(Boolean))];
   let retention={status:'dry-run; no files deleted',trainedIds:trainIds,deleted:0};

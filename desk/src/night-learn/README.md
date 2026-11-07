@@ -30,8 +30,9 @@ block a night. Mixed training/holdout clips are preserved by retention.
 
 `node run.js --dry-run [--fixture] [--output /absolute/path]` explicitly permits
 today's compute. It uses existing live segments when present, otherwise real
-synthetic MP4s with fabricated, clearly labelled metadata. It never moves the
-mouse or runs recording retention. Glim calls still acquire the FIFO lock.
+synthetic MP4s with fabricated, clearly labelled metadata. Fixture runs never move the mouse. Real-recording dry runs attempt the
+same optional coordinate check, which still requires twenty minutes idle.
+Dry runs never change or delete recordings through retention. Glim calls still acquire the FIFO lock.
 It does not start, stop or restart any model service. Glim requests carry the
 recognized background header and retry transient interruptions after releasing
 the FIFO ticket. A malformed optional attempt log becomes a report warning.
