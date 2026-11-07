@@ -60,6 +60,22 @@ class ExplainTests(unittest.TestCase):
             result=m.completion_json('brain',{},lambda:guards.append(True))
         self.assertEqual(result,{'task':'saved'}); self.assertEqual(len(guards),2); self.assertEqual(sleep.call_count,2)
 
+    def test_desktop_frames_keep_separate_image_features_and_timestamps(self):
+        calls=[]
+        def fake(url,payload,timeout=300):
+            calls.append((url,payload))
+            if url=='eyes':
+                return {'ok':True,'shape':[64,768],'f16':base64.b64encode(bytes(64*768*2)).decode(),'eye':'eye'}
+            return {'choices':[{'message':{'content':'{"task":"edit","why":"save changes","intent":"save","success":null,"confidence":0.5,"facts":[],"guesses":[]}'}}]}
+        m.post=fake
+        result=m.explain({'frames':[{'path':'/tmp/first.png','timeMs':1000},{'path':'/tmp/last.png','timeMs':2500}],'actions':[{'kind':'key'}]},'eyes','brain')
+        content=calls[-1][1]['messages'][0]['content']
+        images=[x['image_features'] for x in content if x['type']=='image_features']
+        self.assertEqual(len(images),2)
+        self.assertTrue(all(x['shape']==[64,768] and 'clip' not in x for x in images))
+        self.assertTrue(any('1.5 seconds' in x.get('text','') for x in content))
+        self.assertEqual(result['steps'][0]['actionIndex'],0)
+
     def test_failure_explanation_requires_failure(self):
         m.post = lambda *a, **kw: {'choices':[{'message':{'content':'{"shouldHaveDone":"a","actuallyDid":"b","whatWentWrong":"unknown","facts":[],"guesses":[],"confidence":0.2}'}}]}
         with self.assertRaises(ValueError): m.explain_failure({'judgedOutcome':'unknown','steps':[]})

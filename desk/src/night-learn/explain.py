@@ -81,11 +81,16 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
         'Do not generate action indices or steps: the host binds your episode intent to the actual recorded actions. '
         'success is true, false or null; confidence is 0 to 1. Unknown goals must be called unknown. '
         'Recorded actions (the only real actions): ' + json.dumps(indexed, separators=(',', ':')))}]
-    feature = {'f16':base64.b64encode(b''.join(features)).decode(), 'shape':[64*len(features),768], 'eye':eye}
-    if len(features) > 1:
-        times = [max(0, round((frame['timeMs'] - frames[0]['timeMs']) / 1000)) for frame in frames]
-        feature['clip'] = {'frames':len(features), 'times':times}
-    content.append({'type':'image_features', 'image_features':feature})
+    # Desktop episodes use the image projector for each exact sampled frame.
+    # The general-video projector can terminate immediately on real desktop
+    # clips (observed finish_reason=stop, one EOS token and null content).
+    # Preserve temporal context explicitly without fusing through that head.
+    for i, block in enumerate(features):
+        if len(features) > 1:
+            seconds = round((frames[i]['timeMs'] - frames[0]['timeMs']) / 1000, 3)
+            content.append({'type':'text', 'text':f'\nRecorded frame {i + 1} at {seconds} seconds:\n'})
+        content.append({'type':'image_features', 'image_features':{
+            'f16':base64.b64encode(block).decode(), 'shape':[64,768], 'eye':eye}})
     data = completion_json(model_url, {'model':'nanbeige', 'messages':[{'role':'user','content':content}], 'temperature':0, 'max_tokens':700, 'chat_template_kwargs':{'enable_thinking':False}}, retry_guard)
     required = {'task', 'why', 'success', 'confidence', 'facts', 'guesses'}
     if not isinstance(data, dict) or not required.issubset(data) or not isinstance(data['task'], str) or not isinstance(data['why'], str) or not isinstance(data['facts'], list) or not isinstance(data['guesses'], list) or not (data['success'] is True or data['success'] is False or data['success'] is None) or isinstance(data['confidence'], bool) or not isinstance(data['confidence'], (int,float)) or not 0 <= data['confidence'] <= 1:

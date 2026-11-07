@@ -5,7 +5,9 @@ The LaunchAgent runs `scheduler.js` every five minutes. Production starts only
 asks the real Glim under the FIFO brain lock for episode goals and reasons,
 binds those goals to real action indices, trains three arms on the earlier 80%,
 scores later click/key actions, runs retention and writes a scored report.
-No code in this directory promotes weights.
+No code in this directory promotes weights. Sampled desktop frames use separate
+image features with timestamps; the client avoids the general-video projector,
+which was observed returning an immediate empty response on real screen clips.
 
 Coordinate calibration is an optional stage inside the run. It uses only the
 signed `/Applications/Premonition.app/Contents/MacOS/Premonition` executable and
