@@ -30,21 +30,28 @@ private func bold(_ element:AXUIElement, text:String, needle:String) -> Bool {
     guard AXUIElementCopyParameterizedAttributeValue(element,"AXAttributedStringForRange" as CFString,encoded,&result) == .success,
           let value = result as? NSAttributedString, value.length > 0 else { return false }
     var ok = true
-    value.enumerateAttribute(.font,in:NSRange(location:0,length:value.length)) { item,_,_ in
-        guard let font = item as? NSFont, NSFontManager.shared.traits(of:font).contains(.boldFontMask) else { ok = false; return }
+    value.enumerateAttributes(in:NSRange(location:0,length:value.length)) { attributes,_,_ in
+        if let font = attributes[.font] as? NSFont, NSFontManager.shared.traits(of:font).contains(.boldFontMask) { return }
+        if let info = attributes[NSAttributedString.Key("AXFont")] as? [String:Any] {
+            let style = (info["AXFontStyle"] as? String ?? "").lowercased()
+            let name = (info["AXFontName"] as? String ?? "").lowercased()
+            if style.range(of:"\\b(bold|semibold|demibold|heavy|black)\\b",options:.regularExpression) != nil || name.range(of:"[- ](bold|semibold|demibold|heavy|black)(italic)?$",options:.regularExpression) != nil { return }
+        }
+        ok = false
     }
     return ok
 }
 private func check(_ request:[String:Any]) -> [String:Any] {
     guard AXIsProcessTrusted(), let name = request["app"] as? String, let target = request["target"] as? String, !target.isEmpty else { return ["ok":false,"error":"accessibility or target unavailable"] }
     guard let app = NSWorkspace.shared.runningApplications.first(where:{ $0.localizedName?.lowercased() == name.lowercased() }) else { return ["ok":false,"error":"app not running"] }
-    var stack:[(AXUIElement,Int)] = [(AXUIElementCreateApplication(app.processIdentifier),0)], seen = 0, found = false, selected = false, isBold = false
-    while let (el,depth) = stack.popLast(), seen < 2500 {
+    var stack:[(AXUIElement,Int,Bool)] = [(AXUIElementCreateApplication(app.processIdentifier),0,false)], seen = 0, found = false, selected = false, isBold = false
+    while let (el,depth,parentSelected) = stack.popLast(), seen < 2500 {
         seen += 1
+        let isSelected = parentSelected || (attr(el,"AXSelected") as? Bool) == true
         let value = str(attr(el,"AXValue")), title = str(attr(el,"AXTitle")), description = str(attr(el,"AXDescription"))
         if value.localizedCaseInsensitiveContains(target) || title.localizedCaseInsensitiveContains(target) || description.localizedCaseInsensitiveContains(target) {
             found = true
-            if (attr(el,"AXSelected") as? Bool) == true { selected = true }
+            if isSelected { selected = true }
             if value.contains(target) && bold(el,text:value,needle:target) { isBold = true }
         }
         if let selectedChildren = attr(el,"AXSelectedChildren") as? [AXUIElement] {
@@ -53,7 +60,10 @@ private func check(_ request:[String:Any]) -> [String:Any] {
                 if value == target || title == target || description == target { selected = true; found = true }
             }
         }
-        if depth < 18 { for child in children(el) { stack.append((child,depth+1)) } }
+        if depth < 18 {
+            for child in children(el) { stack.append((child,depth+1,isSelected)) }
+            if let selectedChildren = attr(el,"AXSelectedChildren") as? [AXUIElement] { for child in selectedChildren { stack.append((child,depth+1,true)) } }
+        }
     }
     return ["ok":true,"found":found,"selected":selected,"bold":isBold,"nodesChecked":seen]
 }
