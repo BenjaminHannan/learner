@@ -181,15 +181,15 @@ function run() {
       if (closing || busy || readState().enabled !== true) return;
       busy = true;
       try {
-        if (recorder?.enabled && recorder.paused && recorder.reason === 'disk backstop' && !recorder.retention.status().paused && !recorder.activeSegment) {
-          recorder.paused = false; recorder.reason = ''; await recorder.segment();
+        if (recorder?.enabled && recorder.paused) {
+          await recorder.retryDisk();
         } else if (!recorder?.enabled) {
           if (recorder) await recorder.off();
           const saved = readState(); await command({ command: 'start', fake: saved.fake === true });
         }
       } catch (error) { console.error('Recorder retry failed:', error.message); }
       finally { busy = false; }
-    }, 30000);
+    }, 60000);
     app.once('will-quit', () => {
       clearInterval(heartbeat); clearInterval(retry);
       if (fs.existsSync(socket)) fs.unlinkSync(socket);

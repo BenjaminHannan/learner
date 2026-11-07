@@ -12,7 +12,7 @@ const temporaryRoot = process.platform === 'darwin' ? '/tmp' : os.tmpdir();
 
 function harness(home, options = {}) {
   const app = new EventEmitter(), proc = new EventEmitter();
-  const launches = [];
+  const launches = [], intervals = [];
   app.whenReady = async () => {}; app.dock = { hide() {} }; app.commandLine = { appendSwitch() {} }; app.quit = () => app.emit('will-quit');
   app.exit = () => app.emit('will-quit'); app.setLoginItemSettings = () => {};
   proc.pid = process.pid; proc.env = options.env || process.env; proc.execPath = options.execPath || process.execPath; proc.kill = process.kill.bind(process);
@@ -30,10 +30,11 @@ function harness(home, options = {}) {
       callback(null, JSON.stringify({ screen: true, input: true, accessibility: true }), '');
     } }
     : name === 'node:os' ? { homedir: () => home }
-    : name === './recorder' ? { Recorder: FakeRecorder } : require(name);
-  vm.runInNewContext(source, { module, require: fakeRequire, process: proc, console, setTimeout, clearTimeout, setInterval, clearInterval });
+    : name === './recorder' ? { Recorder: options.Recorder || FakeRecorder } : require(name);
+  vm.runInNewContext(source, { module, require: fakeRequire, process: proc, console, setTimeout, clearTimeout,
+    setInterval(callback, milliseconds) { const timer = setInterval(callback, milliseconds); intervals.push({ callback, milliseconds }); return timer; }, clearInterval });
   module.exports.run();
-  return { app, proc, launches };
+  return { app, proc, launches, intervals };
 }
 async function query(socket, command) {
   return new Promise((resolve, reject) => {
@@ -87,6 +88,58 @@ test('activating a hidden host opens the main app with a clean Electron environm
     assert.equal(env.ELECTRON_RUN_AS_NODE, '1');
   } finally {
     host.proc.emit('SIGTERM');
+    await waitUntil(() => !fs.existsSync(socket));
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('saved ON survives low-disk restarts; 60-second retry respects margin and explicit OFF', async () => {
+  const { Recorder } = require('../../src/hands-toy/recorder');
+  const { GiB } = require('../../src/hands-toy/retention');
+  const home = fs.mkdtempSync(path.join(temporaryRoot, 'hands-disk-host-'));
+  const base = path.join(home, 'learner-ops/hands-recorder');
+  fs.mkdirSync(base, { recursive: true });
+  const state = path.join(base, 'state.json'), socket = path.join(base, 'premonition-recorder.sock');
+  const recorders = [];
+  let free = 5.9 * GiB, host;
+  class DiskRecorder extends Recorder {
+    constructor(options) {
+      super({ ...options, fake: true, retentionOptions: { freeBytes: () => free } });
+      recorders.push(this);
+    }
+    async segment() {
+      if (free < 11 * GiB) return super.segment();
+      this.starts = (this.starts || 0) + 1;
+    }
+  }
+  fs.writeFileSync(state, JSON.stringify({ enabled: true, fake: true }));
+  try {
+    host = harness(home, { Recorder: DiskRecorder });
+    await waitUntil(() => fs.existsSync(socket) && recorders[0]?.enabled);
+    assert.equal((await query(socket, 'status')).reason, 'low disk — paused, will resume');
+    host.proc.emit('SIGTERM'); await waitUntil(() => !fs.existsSync(socket));
+    assert.equal(JSON.parse(fs.readFileSync(state)).enabled, true);
+    host = harness(home, { Recorder: DiskRecorder });
+    await waitUntil(() => fs.existsSync(socket) && recorders[1]?.enabled);
+    const retry = host.intervals.find(timer => timer.milliseconds === 60000);
+    assert.ok(retry);
+    free = 11 * GiB - 1; await retry.callback();
+    assert.equal((await query(socket, 'status')).paused, true);
+    assert.equal(recorders[1].starts, undefined);
+    free = 11 * GiB; await retry.callback();
+    assert.equal(recorders[1].starts, 1);
+    assert.equal((await query(socket, 'status')).paused, false);
+    await query(socket, 'stop'); await waitUntil(() => !fs.existsSync(socket));
+    await retry.callback();
+    assert.equal(JSON.parse(fs.readFileSync(state)).enabled, false);
+    assert.equal(recorders[1].starts, 1);
+    host = harness(home, { Recorder: DiskRecorder });
+    await waitUntil(() => fs.existsSync(socket));
+    await host.intervals.find(timer => timer.milliseconds === 60000).callback();
+    assert.equal((await query(socket, 'status')).enabled, false);
+    assert.equal(recorders.length, 2);
+  } finally {
+    host?.proc.emit('SIGTERM');
     await waitUntil(() => !fs.existsSync(socket));
     fs.rmSync(home, { recursive: true, force: true });
   }
