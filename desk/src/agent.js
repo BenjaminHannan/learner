@@ -1144,7 +1144,7 @@ class Agent {
       return text;
     };
     if (args === null) return { text: finish('Error: arguments were not valid JSON (the call looks cut off). Call the tool again with shorter arguments.', false) };
-    if (this.desktopControlAvailable && !this.desktopEnabled && process.platform === 'darwin' && process.versions.electron && this.o.hands && (SCREEN_GATED.has(name) || name === 'open_app')) return { text:finish('Desktop control needs an explicit desktop task and a checked screen.', false), failed:true };
+    if (!this.desktopEnabled && process.platform === 'darwin' && process.versions.electron && (SCREEN_GATED.has(name) || name === 'open_app')) return { text:finish('Desktop control needs an explicit desktop task and a checked screen.', false), failed:true };
     if (this.desktopEnabled) {
       const cc = require('./computer-control/schema');
       if (cc.legacy.has(name) || /^browser_/.test(name) || name === 'run_shell') return { text:finish('Use the checked desktop tools for this task.', false), failed:true };

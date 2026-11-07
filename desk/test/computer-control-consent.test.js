@@ -77,3 +77,21 @@ test('an unanswered approval card does not run a screen action', async () => {
     assert.match(thread.messages.find(m => m.role === 'tool').content, /not allowed/i);
   } finally { gw.close(); }
 });
+
+test('Mac chat cannot fall back to an unguarded desktop send while the checked path is unavailable', async () => {
+  if (process.platform !== 'darwin') return;
+  const previous = Object.getOwnPropertyDescriptor(process.versions, 'electron');
+  Object.defineProperty(process.versions, 'electron', { value:'test', configurable:true });
+  const gw = await startGateway([{ tool_calls: [{ name:'screen_type', arguments:{ text:'hello' } }] }, { content:'stopped' }]);
+  try {
+    let calls = 0;
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:4, mode:'hands-off', vision:'off', verify:false }), toolDefs:buildTools({}), tools:{ screen_type:() => { calls++; } }, emit:() => {}, approve:async () => 'once' });
+    const thread = { id:'t', title:'x', messages:[], items:[] };
+    await agent.run(thread, 'type hello');
+    assert.equal(calls, 0);
+    assert.match(thread.messages.find(m => m.role === 'tool').content, /checked screen/i);
+  } finally {
+    gw.close();
+    if (previous) Object.defineProperty(process.versions, 'electron', previous); else delete process.versions.electron;
+  }
+});
