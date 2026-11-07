@@ -51,7 +51,7 @@ test('stt: no Glim on this Mac -> spawns lfm_stt.py exactly as before', async ()
   const p = stt.ensure();
   for (let i = 0; i < 5 && !spawned.length; i++) await new Promise((r) => setImmediate(r));
   assert.strictEqual(spawned.length, 1);
-  assert.deepStrictEqual(spawned[0].args, ['-I', '/repo/stt/lfm_stt.py']);
+  assert.deepStrictEqual(spawned[0].args, ['-I', '-B', '/repo/stt/lfm_stt.py']);
   spawned[0].c.stdout.emit('data', '{"port": 4242}\n');
   assert.strictEqual(await p, 'http://127.0.0.1:4242');
 });

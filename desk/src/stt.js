@@ -95,7 +95,7 @@ class Stt {
     return new Promise((resolve, reject) => {
       let c, buf = '', err = '', done = false;
       const finish = (fn, v) => { if (done) return; done = true; clearTimeout(t); fn(v); };
-      try { c = this.spawn(pick.python, ['-I', script], { env: pick.env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }); }
+      try { c = this.spawn(pick.python, ['-I', '-B', script], { env: pick.env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }); }
       catch (e) { return reject(new Error('Voice could not start the speech model.')); }
       this.starting = c; this.stopped = false;
       const t = setTimeout(() => { try { c.kill(); } catch (e) { /* gone */ } finish(reject, new Error('The speech model did not start in time.')); }, this.o.startMs || START_MS);

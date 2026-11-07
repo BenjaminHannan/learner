@@ -29,7 +29,7 @@ test('stt: spawn arguments, env, port parsing', async () => {
   const p = stt.ensure(); await tick(); await tick();
   assert.strictEqual(spawned.length, 1);
   assert.strictEqual(spawned[0].cmd, '/h/learner-ops/stt/.venv/bin/python');
-  assert.deepStrictEqual(spawned[0].args, ['-I', '/repo/stt/lfm_stt.py']);
+  assert.deepStrictEqual(spawned[0].args, ['-I', '-B', '/repo/stt/lfm_stt.py']);
   assert.strictEqual(spawned[0].opts.env.HF_HOME, '/h/learner-ops/stt/hf');
   assert.strictEqual(spawned[0].opts.env.HF_HUB_OFFLINE, '1');
   kids[0].stdout.emit('data', 'warming\n{"po'); kids[0].stdout.emit('data', 'rt": 4242}\n');
