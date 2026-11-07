@@ -13,6 +13,16 @@ const { buildTools } = require('../src/prompt');
 const { startGateway } = require('./helpers');
 const Vision = require('../src/computer-control/vision');
 const { appearancePassed } = require('../src/computer-control/task-trials');
+const { desktopRequest, actionRequested } = require('../src/computer-control/schema');
+
+test('asking for instructions does not start or authorize desktop control', () => {
+  for (const text of ['Explain how to open Notes', 'Can you tell me how to open Notes?', 'Give me steps to open Notes']) {
+    assert.equal(desktopRequest(text),false); assert.equal(actionRequested(text),false);
+  }
+  assert.equal(desktopRequest('Open Notes and write hello'),true);
+  assert.equal(actionRequested('Open Notes and write hello'),true);
+  assert.equal(actionRequested('Open Notes and write "how to cook"'),true);
+});
 
 test('appearance trial requires dark and back, preserving the initial setting', () => {
   assert.equal(appearancePassed(['light','dark','light'],'light'),true);
@@ -213,13 +223,14 @@ test('chat starts its watcher before asking the model to plan', async () => {
   } finally { gw.close(); }
 });
 
-test('ordinary chat without a desktop request does not start control', async () => {
-  const gw = await startGateway([{ content:'Hello!' }]);
+test('ordinary chat and instruction questions do not start control', async () => {
+  const gw = await startGateway([{ content:'Hello!' }, { content:'Open Notes from the Dock.' }]);
   try {
     let started = false;
     const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:2, mode:'hands-off', vision:'off', verify:false }),
       toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), desktopFactory:() => { started = true; throw Error('unexpected'); }, emit:() => {} });
     await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'Hello!');
+    await agent.run({ id:'u', title:'x', messages:[], items:[] }, 'Explain how to open Notes');
     assert.equal(started, false);
   } finally { gw.close(); }
 });
