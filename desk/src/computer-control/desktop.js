@@ -45,8 +45,9 @@ function stableScreen(before, after, action) {
 }
 
 class Desktop {
-  constructor({ request, signal, captureScreen, startNative = NativeSession.start, predictor, logRoot, minIdleSeconds = 120, idleSeconds } = {}) {
+  constructor({ request, signal, captureScreen, startNative = NativeSession.start, predictor, logRoot, minIdleSeconds = 120, idleSeconds, deferFinish = false } = {}) {
     this.signal = signal; this.captureScreen = captureScreen; this.startNative = startNative; this.predictor = predictor === undefined ? require('./predictor').propose : predictor;
+    this.deferFinish = deferFinish;
     this.minIdleSeconds = minIdleSeconds; this.idleSeconds = idleSeconds; this.idleChecked = false;
     this.attempt = new Attempt(request, logRoot); this.pending = null; this.awaiting = null; this.stopped = false;
   }
@@ -147,8 +148,10 @@ class Desktop {
     if (this.signal && this.onAbort) this.signal.removeEventListener('abort', this.onAbort);
     if (this.native) await this.native.close();
     const failed = this.claimed === 'fail' || (!this.finished && this.attempt.row.steps.some(s => s.status === 'failed' || s.verification?.result === 'fail'));
-    const evidence = this.finished ? { source:'glim', result:this.claimed || 'unknown', text:this.evidence || '', note:'Model observation awaits independent check.' } : 'interrupted or not independently checked';
-    this.attempt.finish(failed ? 'fail' : 'unknown', evidence);
+    const last = this.attempt.row.steps.at(-1);
+    const evidence = this.finished ? { source:'glim', result:this.claimed || 'unknown', text:this.evidence || '', observationId:last?.after?.id || null, screenshotSha256:last?.after?.sha256 || null, note:'Model observation awaits independent check.' } : 'interrupted or not independently checked';
+    if (this.deferFinish) { this.attempt.row.provisionalOutcome = { result:failed ? 'fail' : 'unknown', evidence }; this.attempt.save(); }
+    else this.attempt.finish(failed ? 'fail' : 'unknown', evidence);
   }
 }
 module.exports = { Desktop, capture, ref, desktopAction, stableScreen };

@@ -40,6 +40,7 @@ test('look, prepare, confirm, send, verify and log the checked step', async () =
     assert.equal(row.steps[0].observation.sha256, '2'.repeat(64)); assert.equal(row.steps[0].after.sha256, '4'.repeat(64));
     assert.equal(row.steps[0].verification.result, 'pass'); assert.equal(row.steps[0].actor, 'glim');
     assert.equal(row.outcome.result, 'unknown'); // a model's visual statement is not independent proof
+    assert.equal(row.outcome.evidence.observationId,'shot-4'); assert.equal(row.outcome.evidence.screenshotSha256,'4'.repeat(64));
   } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
 });
 
@@ -120,6 +121,21 @@ test('an abandoned proposal is logged as a proposal, not an action', async () =>
     const row = JSON.parse(fs.readFileSync(path.join(f.logRoot, 'attempts.jsonl'), 'utf8'));
     assert.equal(f.sent.length, 0); assert.equal(row.steps.length, 0); assert.equal(row.preparations.length, 1); assert.deepEqual(row.corrections, []);
   } finally { await f.desktop.close(); fs.rmSync(f.logRoot, { recursive:true, force:true }); }
+});
+
+test('a test attempt writes one final line after its independent check', async () => {
+  const f = fixture();
+  try {
+    f.desktop.deferFinish = true;
+    await f.desktop.look(); await f.desktop.prepare({ observationId:'shot-1', intent:'click', action:action() });
+    await f.desktop.execute({ preparedId:f.desktop.pending.id, confirmed:true });
+    f.desktop.verify({ observationId:'shot-4', result:'pass', evidence:'selected' });
+    f.desktop.finish({ result:'pass', evidence:'selected' }); await f.desktop.close();
+    assert.equal(fs.existsSync(path.join(f.logRoot,'attempts.jsonl')),false);
+    f.desktop.attempt.finish('pass',{ source:'independent-check', result:'pass' });
+    const lines = fs.readFileSync(path.join(f.logRoot,'attempts.jsonl'),'utf8').trim().split('\n');
+    assert.equal(lines.length,1); assert.equal(JSON.parse(lines[0]).outcome.result,'pass');
+  } finally { await f.desktop.close(); fs.rmSync(f.logRoot,{ recursive:true, force:true }); }
 });
 
 test('safety denies unrequested sending and respects Never', () => {

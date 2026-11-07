@@ -44,7 +44,7 @@ async function main() {
   const file = path.join(root,'tasks-' + Date.now() + '.json'), result = { status:'incomplete', tests:[] };
   const save = () => fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n',{ mode:0o600 });
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(),'hands-tasks-')); fs.chmodSync(tmp,0o700);
-  let monitor, activeAgent, appearanceTimer;
+  let monitor, activeAgent, appearanceTimer, pendingDesktop;
   try {
     const built = await compile(), monitorLib=path.join(tmp,'monitor.dylib'), checkLib=path.join(tmp,'check.dylib');
     for (const [source, output, moduleName] of [['test-aux.swift',monitorLib,'HandsMonitor'],['test-check.swift',checkLib,'HandsCheck']]) {
@@ -81,12 +81,12 @@ async function main() {
           return session;
         } catch (error) { await session.close(); throw error; }
       };
-      activeAgent = new Agent({ getSettings:settings, toolDefs:buildTools({}), tools:{}, safety, safetyCtx:() => ({}), emit:() => {}, approve:async () => 'deny', askUser:async () => 'No', desktopFactory:opts => new Desktop({ ...opts, minIdleSeconds:0, startNative }) });
+      activeAgent = new Agent({ getSettings:settings, toolDefs:buildTools({}), tools:{}, safety, safetyCtx:() => ({}), emit:() => {}, approve:async () => 'deny', askUser:async () => 'No', desktopFactory:opts => (pendingDesktop = new Desktop({ ...opts, minIdleSeconds:0, startNative, deferFinish:true })) });
       const thread = { id:'hands-test-'+kind+'-'+n, title:'Hands test', messages:[], items:[] };
       const execution = await activeAgent.run(thread,request); activeAgent = null;
       if (appearanceTimer) { clearInterval(appearanceTimer); appearanceTimer = null; states.push(await appearance()); }
       if (interrupted) throw Error('Ben returned; stopped without resuming');
-      const log = logRow(root,request), visual = log?.outcome?.evidence?.result === 'pass' && log?.steps?.at(-1)?.verification?.result === 'pass';
+      const provisional = pendingDesktop?.attempt.row, visual = pendingDesktop?.claimed === 'pass' && provisional?.steps?.at(-1)?.verification?.result === 'pass';
       let independent;
       if (kind === 'finder') target = newestDownload();
       if (kind === 'appearance') independent = { ok:!states.includes('unknown') && states.includes('dark') && states.at(-1) === initial && (initial !== 'dark' || states.includes('light')), states, initial };
@@ -97,12 +97,19 @@ async function main() {
         independent.passed = !!(independent.ok && (kind === 'finder' ? independent.selected : kind === 'textedit' ? independent.exact && independent.bold : kind === 'safari' ? independent.found && independent.pageTitle?.ok && independent.pageTitle?.found : independent.found && independent.newNoteVerified));
       }
       const checked = kind === 'appearance' ? independent.ok : independent.passed;
-      result.tests.push({ kind, run:n, attemptId:log?.attemptId || null, target, screenshotHashes:(log?.steps || []).map(s => ({ before:s.observation?.sha256 || null, after:s.after?.sha256 || null })), visual:!!visual, independent, error:execution.error || null, pass:!!(visual && checked && !execution.error && !execution.stopped) });
+      const verified = !!(visual && checked && !execution.error && !execution.stopped);
+      if (pendingDesktop) {
+        const last = provisional.steps.at(-1), evidence = { source:'independent-check', observationId:last?.after?.id || null, screenshotSha256:last?.after?.sha256 || null, glim:pendingDesktop.claimed || 'unknown', check:independent };
+        pendingDesktop.attempt.finish(verified ? 'pass' : provisional.provisionalOutcome?.result === 'fail' ? 'fail' : 'unknown', evidence);
+        pendingDesktop = null;
+      }
+      const log = logRow(root,request);
+      result.tests.push({ kind, run:n, attemptId:log?.attemptId || null, target, screenshotHashes:(log?.steps || []).map(s => ({ before:s.observation?.sha256 || null, after:s.after?.sha256 || null })), visual:!!visual, independent, error:execution.error || null, pass:verified });
       save();
     }
     result.status = result.tests.length === 10 && result.tests.filter(t => t.pass).length >= 8 ? 'pass' : 'fail';
   } catch (error) { result.error=String(error.message || error); result.status='incomplete'; }
-  finally { if (appearanceTimer) clearInterval(appearanceTimer); if (activeAgent) activeAgent.stop(); if (monitor) await monitor.close(); fs.rmSync(tmp,{ recursive:true, force:true }); save(); }
+  finally { if (appearanceTimer) clearInterval(appearanceTimer); if (activeAgent) activeAgent.stop(); if (pendingDesktop && !pendingDesktop.attempt.finished) pendingDesktop.attempt.finish('unknown','interrupted before independent check'); if (monitor) await monitor.close(); fs.rmSync(tmp,{ recursive:true, force:true }); save(); }
   report({ file, ...result });
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }
