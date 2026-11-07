@@ -4,7 +4,7 @@ Nine deterministic, randomized browser task families: named buttons, text entry
 and submit, dropdowns, popup dismissal, slider dragging, links, menu selection,
 checkboxes, and two-field forms. They run inside local HTML pages in real
 headless Chromium on Windows and macOS. No desktop inputs, recordings, external
-websites, Glim changes, or game processes are involved.
+websites, Glim changes, or game processes are involved in those browser tasks.
 
 The observation is a screenshot resized to 320×180, a 192×192 screenshot crop
 around the last mouse point, the instruction's signed 64-token hash, and twelve
@@ -100,7 +100,7 @@ never start a second GPU job. Browser-only workers use `--disable-gpu`.
 No stale lease is removed automatically, no PID is killed, and paused jobs are
 never resumed. The short proof saves `latest.pt` every ten PPO updates.
 
-## Extra workers and Bedwars later
+## Extra browser workers
 
 `python -m hands_gym.env_server --host 127.0.0.1 --port 8765` starts CPU browser
 workers. Use an SSH tunnel for another machine; the transport has no auth and
@@ -110,10 +110,13 @@ The reset protocol carries the episode horizon. JSON screenshots support up to
 2 MiB messages. The loopback integration test exercises the actual transport.
 No remote endpoint is configured for the proof, and Brick's PC is never used.
 
-`interfaces.PracticeEnvironment` is the extension boundary for a future Bedwars
-adapter: reset produces screenshot observations and an instruction, step accepts
-a native action and returns observation/reward/done/info. No Minecraft dependency
-or launch logic is present.
+`interfaces.PracticeEnvironment` is the extension boundary: reset produces
+screenshot observations and an instruction, step accepts a native action and
+returns observation/reward/done/info. The separate Bedwars adapter below uses
+this same boundary and does not change the browser environments or HANDS model.
+
+See [BEDWARS.md](BEDWARS.md) for the private Minecraft environment, ownership
+boundaries, lifecycle scripts, recorded-game audit, and three-seed practice.
 
 `pc.py` is a Mac-side transport helper. It uses the SSH alias `benspc-lan`,
 PowerShell UTF-16LE EncodedCommand and Python source over stdin. It logs the
