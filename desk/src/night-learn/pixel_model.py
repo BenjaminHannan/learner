@@ -72,4 +72,4 @@ def action_loss(prediction, labels, weights):
     loss = loss + (click + drag) * position[:, :2].mean(dim=1) + drag * position[:, 2:].mean(dim=1)
     loss = loss + key * F.cross_entropy(prediction['key'], labels['key'], reduction='none')
     loss = loss + scroll * F.smooth_l1_loss(prediction['scroll'], labels['scroll'], reduction='none').mean(dim=1)
-    return (loss * weights).sum() / weights.sum()
+    return (loss * weights).mean()
