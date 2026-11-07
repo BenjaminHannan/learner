@@ -39,7 +39,7 @@ class Aux {
   }
   next(match, timeout = 1000) {
     return new Promise((resolve, reject) => {
-      const w = { match, resolve, timer:setTimeout(() => { const i = this.waiters.indexOf(w); if (i >= 0) this.waiters.splice(i, 1); reject(Error('test helper timed out')); }, timeout) };
+      const w = { match, resolve, timer:setTimeout(() => { const i = this.waiters.indexOf(w); if (i >= 0) this.waiters.splice(i, 1); reject(Error(`test helper timed out after ${timeout}ms`)); }, timeout) };
       this.waiters.push(w);
     });
   }

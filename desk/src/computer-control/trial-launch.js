@@ -29,7 +29,10 @@ async function main() {
     watcher = fs.watch(dir,check); timer = setTimeout(() => { watcher.close(); reject(Error('test did not report a result')); }, mode === 'tasks' ? 7200000 : 120000); check();
   });
   try {
-    await run('/usr/bin/open',['-n','-j','-g','-a',app,'--env','ELECTRON_RUN_AS_NODE=1','--env','GLIM_HANDS_TEST=1','--env','GLIM_HANDS_STATUS='+status,'--stdout',stdout,'--stderr',stderr,'--args',entry,...(mode === 'preflight' ? [] : ['--run'])],{ timeout:15000 });
+    const deadline = process.env.GLIM_HANDS_DEADLINE;
+    if (deadline && (!Number.isFinite(Number(deadline)) || Number(deadline) <= Date.now())) throw Error('Authorized desktop run window ended');
+    console.log(JSON.stringify({ mode, outputDirectory:dir, startedAt:new Date().toISOString() }));
+    await run('/usr/bin/open',['-n','-j','-g','-a',app,'--env','ELECTRON_RUN_AS_NODE=1','--env','GLIM_HANDS_TEST=1','--env','GLIM_HANDS_STATUS='+status,...(deadline ? ['--env','GLIM_HANDS_DEADLINE='+deadline] : []),'--stdout',stdout,'--stderr',stderr,'--args',entry,...(mode === 'preflight' ? [] : ['--run'])],{ timeout:15000 });
     const result = await completed; console.log(JSON.stringify({ mode, outputDirectory:dir, ...result }));
     if (result.status !== 'pass' && !(mode === 'preflight' && result.status === 'complete')) process.exitCode = 1;
   } catch (error) { if (watcher) watcher.close(); if (timer) clearTimeout(timer); throw error; }

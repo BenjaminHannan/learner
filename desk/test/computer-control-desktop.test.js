@@ -40,6 +40,45 @@ function fixture() {
 }
 function action(x=10) { return { type:'click', x, y:20 }; }
 
+test('slow Glim confirmations work without an approved hands policy', async () => {
+  const fixtureState = fixture();
+  try {
+    fixtureState.desktop.predictor = async () => null;
+    await fixtureState.desktop.look();
+    const prepared = await fixtureState.desktop.prepare({ observationId:'shot-1', intent:'click the note', action:action() });
+    assert.match(prepared.text,/does not block your own action/);
+    fixtureState.desktop.pending.at -= 8 * 60000;
+    await fixtureState.desktop.execute({ preparedId:fixtureState.desktop.pending.id, confirmed:true, actor:'glim' });
+    assert.equal(fixtureState.desktop.attempt.row.steps[0].actor,'glim');
+    assert.equal(fixtureState.desktop.attempt.row.preparations[0].proposal.status,'unavailable');
+    assert.equal(fixtureState.desktop.attempt.row.steps[0].status,'awaiting-verification');
+  } finally { await fixtureState.desktop.close(); fs.rmSync(fixtureState.logRoot,{ recursive:true, force:true }); }
+});
+
+test('slow confirmations still reject changed screens and expired preparations', async () => {
+  const fixtureState = fixture();
+  try {
+    await fixtureState.desktop.look();
+    await fixtureState.desktop.prepare({ observationId:'shot-1', intent:'click the note', action:action() });
+    fixtureState.desktop.pending.at -= 11 * 60000;
+    await assert.rejects(() => fixtureState.desktop.execute({ preparedId:fixtureState.desktop.pending.id, confirmed:true, actor:'glim' }),/fresh/);
+    fixtureState.desktop.pending.at = Date.now() - 8 * 60000;
+    const preparedShot = fixtureState.desktop.pending.shot;
+    fixtureState.desktop.captureScreen = async () => ({ ...preparedShot, frontApp:'Changed app' });
+    await assert.rejects(() => fixtureState.desktop.execute({ preparedId:fixtureState.desktop.pending.id, confirmed:true, actor:'glim' }),/screen changed/);
+    assert.equal(fixtureState.sent.length,0);
+  } finally { await fixtureState.desktop.close(); fs.rmSync(fixtureState.logRoot,{ recursive:true, force:true }); }
+});
+
+test('desktop request keeps only the newest image without changing transcript', () => {
+  const feature = { type:'image_features', image_features:{ f16:'payload' } };
+  const messages = [{ role:'user', content:[{ type:'text', text:'old observation' },feature] },{ role:'user', content:[{ type:'text', text:'new observation' },feature] }];
+  const latest = Vision.latestImage(messages);
+  assert.deepEqual(latest[0].content,[{ type:'text', text:'old observation' }]);
+  assert.equal(latest[1],messages[1]);
+  assert.equal(messages[0].content.length,2);
+});
+
 test('look, prepare, confirm, send, verify and log the checked step', async () => {
   const f = fixture();
   try {

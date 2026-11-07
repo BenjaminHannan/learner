@@ -42,4 +42,8 @@ function fit(messages, tools, limit, protectedIndex, retainedContext) {
   return result;
 }
 function tokens(messages, tools) { return budget.requestTokens(shadow(messages).copy,tools); }
-module.exports = { encode, fit, tokens };
+function latestImage(messages) {
+  const latest = messages.findLastIndex(message => Array.isArray(message.content) && message.content.some(part => part?.type === 'image_features'));
+  return messages.map((message, index) => index === latest || !Array.isArray(message.content) ? message : { ...message, content:message.content.filter(part => part?.type !== 'image_features') });
+}
+module.exports = { encode, fit, tokens, latestImage };

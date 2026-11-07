@@ -777,7 +777,7 @@ class Agent {
             model: this.stepModel(s),
             messages: creative.withApproaches(this.requestMessages(thread, !!budget.contextLimit(s, this.stepModel(s))), approaches),
             tools: wrapUp ? [] : this.taskTools(),
-            maxTokens: wrapUp ? WRAP_TOKENS : undefined,
+            maxTokens: wrapUp ? WRAP_TOKENS : this.desktopEnabled ? 256 : undefined,
             signal: rc.signal,
             apiKey: s.apiKey,
             onText: (d) => {
@@ -1029,6 +1029,7 @@ class Agent {
   async requestFitted(thread, settings, options) {
     const request = { ...options }, model = request.model;
     const featureBudget = this.desktopEnabled ? require('./computer-control/vision') : null;
+    if (featureBudget) request.messages = featureBudget.latestImage(request.messages);
     const originalMessages = request.messages;
     const from = thread.ctxFrom || 0;
     const start = Number.isInteger(this.taskStart) ? this.taskStart : from;

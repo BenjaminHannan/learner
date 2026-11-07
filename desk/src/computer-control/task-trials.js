@@ -8,7 +8,6 @@ const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { Agent } = require('../agent');
 const { setTestProfile } = require('../llm');
-const { buildTools } = require('../prompt');
 const { SafetyLevels } = require('../safety-levels');
 const { Desktop } = require('./desktop');
 const { compile, NativeSession } = require('./native');
@@ -34,7 +33,8 @@ function appearancePassed(states, initial) {
 async function check(lib, bridge, app, target) {
   if (!target) return { ok:false, error:'no target file' };
   const child = await Aux.start(lib, bridge, false);
-  try { const result = child.next(row => typeof row.ok === 'boolean', 15000); child.socket.write(JSON.stringify({ app, target }) + '\n'); return await result; }
+  try { const result = child.next(row => typeof row.ok === 'boolean', 20000); child.socket.write(JSON.stringify({ app, target }) + '\n'); return await result; }
+  catch (error) { return { ok:false, error:`Independent ${app} check: ${error.message}` }; }
   finally { await child.close(); }
 }
 function logRow(root, request) {
@@ -55,7 +55,7 @@ async function main() {
   const file = path.join(root,'tasks-' + Date.now() + '.json'), result = { status:'incomplete', tests:[] };
   const save = () => fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n',{ mode:0o600 });
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(),'hands-tasks-')); fs.chmodSync(tmp,0o700);
-  let monitor, activeAgent, appearanceTimer, pendingDesktop;
+  let monitor, activeAgent, appearanceTimer, pendingDesktop, trialTimer;
   try {
     const built = await compile(), monitorLib=path.join(tmp,'monitor.dylib'), checkLib=path.join(tmp,'check.dylib');
     for (const [source, output, moduleName] of [['test-aux.swift',monitorLib,'HandsMonitor'],['test-check.swift',checkLib,'HandsCheck']]) {
@@ -68,20 +68,21 @@ async function main() {
     monitor.onEvent = row => { if (row.event === 'real-input' || row.event === 'monitor-disabled') { interrupted = true; if (activeAgent) activeAgent.stop(); } };
     if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned');
     const safety = new SafetyLevels({ dir:path.join(os.homedir(),'Library','Application Support','Premonition') });
-    for (const kind of ['notes','safari','finder','textedit','appearance']) for (let n=1; n<=2; n++) {
+    for (const kind of ['safari','finder','notes','textedit','appearance']) for (let n=1; n<=2; n++) {
       if (interrupted) throw Error('Ben returned; stopped without resuming');
+      if (process.env.GLIM_HANDS_DEADLINE && Date.now() >= Number(process.env.GLIM_HANDS_DEADLINE)) throw Error('Authorized desktop run window ended');
       const unique = 'Glim test ' + Date.now() + ' run ' + n;
       let target = null, app = '', request, initial = null, states = [];
-      if (kind === 'notes') { app='Notes'; target=unique; request=`Open Notes, create a new note and type exactly "${unique}".`; }
+      if (kind === 'notes') { app='Notes'; target=unique; request=`Open Notes, create a new note and type exactly "${unique}". Never edit any existing note; confirm that you created a new blank note before typing.`; }
       if (kind === 'safari') { app='Safari'; target='example.com'; request=`Open Safari and visit https://example.com. This is test run ${n}.`; }
       if (kind === 'finder') { app='Finder'; request=`Open Finder, open Downloads, and select its newest file. This is test run ${n}.`; }
-      if (kind === 'textedit') { app='TextEdit'; target=unique; request=`Open TextEdit, create a new document, type exactly "${unique}", select all of that text, and make it bold.`; }
+      if (kind === 'textedit') { app='TextEdit'; target=unique; request=`Open TextEdit, create a new document, type exactly "${unique}", select all of that text, and make it bold. Never edit an existing document; confirm a new blank document before typing.`; }
       if (kind === 'appearance') {
         initial=await appearance(); states.push(initial);
         request=initial === 'dark' ? `Open System Settings, change the appearance to light, then dark, then light, then return it to dark. This is test run ${n}.` : `Open System Settings, change the appearance to dark, then return it to light. This is test run ${n}.`;
         appearanceTimer=setInterval(() => appearance().then(x => { if (states.at(-1) !== x) states.push(x); }).catch(() => states.push('unknown')),500);
       }
-      const settings = () => ({ gatewayUrl:'http://127.0.0.1:8090/v1', model:'qwen36', modelMain:'qwen36', modelFast:'qwen36-fast', maxSteps:60, mode:'hands-off', vision:'on', verify:false, thinkCapSecs:0 });
+      const settings = () => ({ gatewayUrl:'http://127.0.0.1:8090/v1', model:'qwen36', modelMain:'qwen36', modelFast:'qwen36-fast', maxSteps:36, mode:'hands-off', vision:'on', verify:false, thinkCapSecs:0 });
       const startNative = async () => {
         const session = await NativeSession.start();
         try {
@@ -92,9 +93,14 @@ async function main() {
           return session;
         } catch (error) { await session.close(); throw error; }
       };
-      activeAgent = new Agent({ getSettings:settings, toolDefs:buildTools({}), tools:{}, safety, safetyCtx:() => ({}), emit:() => {}, approve:async () => 'deny', askUser:async () => 'No', desktopFactory:opts => (pendingDesktop = new Desktop({ ...opts, minIdleSeconds:0, startNative, deferFinish:true })) });
+      const trace = event => { if (event.type !== 'reasoning') console.log(JSON.stringify({ at:new Date().toISOString(), kind, run:n, event })); };
+      activeAgent = new Agent({ getSettings:settings, toolDefs:[], tools:{}, safety, safetyCtx:() => ({}), emit:trace, approve:async () => 'deny', askUser:async () => 'No', desktopFactory:opts => (pendingDesktop = new Desktop({ ...opts, minIdleSeconds:0, startNative, deferFinish:true })) });
       const thread = { id:'hands-test-'+kind+'-'+n, title:'Hands test', messages:[], items:[] };
-      const execution = await activeAgent.run(thread,request); activeAgent = null;
+      let timedOut = false;
+      const deadline = Math.min(Date.now() + 7 * 60000, Number(process.env.GLIM_HANDS_DEADLINE) || Infinity);
+      trialTimer = setTimeout(() => { timedOut = true; activeAgent?.stop(); }, Math.max(1,deadline-Date.now()));
+      const execution = await activeAgent.run(thread,request); clearTimeout(trialTimer); trialTimer = null; activeAgent = null;
+      if (timedOut) execution.error = 'Trial time budget exceeded';
       if (appearanceTimer) { clearInterval(appearanceTimer); appearanceTimer = null; states.push(await appearance()); }
       if (interrupted) throw Error('Ben returned; stopped without resuming');
       const provisional = pendingDesktop?.attempt.row, visual = pendingDesktop?.claimed === 'pass' && provisional?.steps?.at(-1)?.verification?.result === 'pass';
@@ -116,11 +122,12 @@ async function main() {
       }
       const log = logRow(root,request);
       result.tests.push({ kind, run:n, attemptId:log?.attemptId || null, target, screenshotHashes:(log?.steps || []).map(s => ({ before:s.observation?.sha256 || null, after:s.after?.sha256 || null })), visual:!!visual, independent, error:execution.error || null, pass:verified });
+      console.log(JSON.stringify({ at:new Date().toISOString(), trial:result.tests.at(-1) }));
       save();
     }
     result.status = result.tests.length === 10 && result.tests.filter(t => t.pass).length >= 8 ? 'pass' : 'fail';
   } catch (error) { result.error=String(error.message || error); result.status='incomplete'; }
-  finally { if (appearanceTimer) clearInterval(appearanceTimer); if (activeAgent) activeAgent.stop(); if (pendingDesktop && !pendingDesktop.attempt.finished) pendingDesktop.attempt.finish('unknown','interrupted before independent check'); if (monitor) await monitor.close(); fs.rmSync(tmp,{ recursive:true, force:true }); save(); }
+  finally { if (trialTimer) clearTimeout(trialTimer); if (appearanceTimer) clearInterval(appearanceTimer); if (activeAgent) activeAgent.stop(); if (pendingDesktop && !pendingDesktop.attempt.finished) pendingDesktop.attempt.finish('unknown','interrupted before independent check'); if (monitor) await monitor.close(); fs.rmSync(tmp,{ recursive:true, force:true }); save(); }
   report({ file, ...result });
   console.log(JSON.stringify({ file, ...result })); if (result.status !== 'pass') process.exitCode = 1;
 }

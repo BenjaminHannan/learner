@@ -44,8 +44,14 @@ private func bold(_ element:AXUIElement, text:String, needle:String) -> Bool {
 private func check(_ request:[String:Any]) -> [String:Any] {
     guard AXIsProcessTrusted(), let name = request["app"] as? String, let target = request["target"] as? String, !target.isEmpty else { return ["ok":false,"error":"accessibility or target unavailable"] }
     guard let app = NSWorkspace.shared.runningApplications.first(where:{ $0.localizedName?.lowercased() == name.lowercased() }) else { return ["ok":false,"error":"app not running"] }
-    var stack:[(AXUIElement,Int,Bool)] = [(AXUIElementCreateApplication(app.processIdentifier),0,false)], seen = 0, found = false, exact = false, selected = false, isBold = false
+    let root = AXUIElementCreateApplication(app.processIdentifier)
+    AXUIElementSetMessagingTimeout(root,0.15)
+    let deadline = Date().addingTimeInterval(10)
+    var visited = Set<CFHashCode>()
+    var stack:[(AXUIElement,Int,Bool)] = [(root,0,false)], seen = 0, found = false, exact = false, selected = false, isBold = false
     while let (el,depth,parentSelected) = stack.popLast(), seen < 2500 {
+        if Date() >= deadline { return ["ok":false,"error":"accessibility check deadline exceeded","nodesChecked":seen] }
+        guard visited.insert(CFHash(el)).inserted else { continue }
         seen += 1
         let isSelected = parentSelected || (attr(el,"AXSelected") as? Bool) == true
         let value = str(attr(el,"AXValue")), title = str(attr(el,"AXTitle")), description = str(attr(el,"AXDescription"))
@@ -66,7 +72,7 @@ private func check(_ request:[String:Any]) -> [String:Any] {
             if let selectedChildren = attr(el,"AXSelectedChildren") as? [AXUIElement] { for child in selectedChildren { stack.append((child,depth+1,true)) } }
         }
     }
-    return ["ok":true,"found":found,"exact":exact,"selected":selected,"bold":isBold,"nodesChecked":seen]
+    return ["ok":stack.isEmpty,"found":found,"exact":exact,"selected":selected,"bold":isBold,"nodesChecked":seen]
 }
 @_cdecl("glim_hands_socket") public func testCheck(_ socketPath:UnsafePointer<CChar>?,_ ignored:Int32) {
     guard let socketPath = socketPath else { return }

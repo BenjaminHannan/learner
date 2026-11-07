@@ -101,13 +101,13 @@ class Desktop {
     }
     this.attempt.prepare({ at:new Date().toISOString(), intent:args.intent, observation:ref(fresh), proposedAction:action, proposal:proposal || { status:'unavailable', reason:'no approved desktop pixel policy' } });
     this.pending = { id:randomUUID(), intent:args.intent, action, proposal, actor:'glim', shot:fresh, at:Date.now() };
-    const suggestion = proposal ? `The small network suggests ${JSON.stringify(proposal.action)}. ${proposal.note}` : 'No approved small-network proposal was available.';
-    return result(fresh, `Prepared ${this.pending.id}. Glim chose ${JSON.stringify(action)}. ${suggestion} Check this fresh picture. If correct, call computer_execute with this preparedId, confirmed=true, and actor=glim or hands. Otherwise look again.`);
+    const suggestion = proposal ? `The small network suggests ${JSON.stringify(proposal.action)}. ${proposal.note} You may choose actor=hands only for that proposal.` : 'The small network is unavailable; this does not block your own action. Use actor=glim.';
+    return result(fresh, `Prepared ${this.pending.id}. Glim chose ${JSON.stringify(action)}. ${suggestion} Check this fresh picture. If correct, call computer_execute with this preparedId, confirmed=true, and actor=glim. Otherwise look again.`);
   }
   async execute(args) {
     await this.init();
     const p = this.pending;
-    if (!p || args.preparedId !== p.id || args.confirmed !== true || Date.now() - p.at > 60000) throw Error('A fresh, explicitly confirmed prepared step is required');
+    if (!p || args.preparedId !== p.id || args.confirmed !== true || Date.now() - p.at > 10 * 60000) throw Error('A fresh, explicitly confirmed prepared step is required');
     this.pending = null;
     try {
       if (args.actor === 'hands') {
