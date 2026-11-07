@@ -67,7 +67,7 @@ function lifecycleFixture({fileSystem=fs,retentionClass=Retention,proofMode=fals
  const proof={...actualCore,submission:proofMode?actualCore.submission:()=>({state:{},sink}),finalize:options=>{calls.push(options);if(proofData)return proofData;throw Error('unverified');}};
  const container={exports:{}},load=new Function('require','module','exports',fs.readFileSync(require.resolve('../../src/hands-toy/recorder'),'utf8'));
  load(name=>name==='node:child_process'?{...require(name),spawn:()=>children.shift()}:name==='node:fs'?fileSystem:name==='./retention'?{Retention:retentionClass}:name==='./encoder-proof'?proof:name==='./recorder-process'?processProof:require(name),container,container.exports);
- const recorder=new container.exports.Recorder({root,releaseApproved:true,nativeHelper:'/test/direct-helper',ffmpeg:'/test/encoder',proofMode,directFrames:false,shutdownMs:50,retentionOptions:{freeBytes:()=>1e12}});recorder.enabled=true;
+ const recorder=new container.exports.Recorder({root,releaseApproved:true,nativeHelper:'/test/direct-helper',ffmpeg:'/test/encoder',proofMode,directFrames:false,shutdownMs:250,retentionOptions:{freeBytes:()=>1e12}});recorder.enabled=true;
  return {root,recorder,encoder,source,sink,calls,children,launches,records,makeChild:child};
 }
 
