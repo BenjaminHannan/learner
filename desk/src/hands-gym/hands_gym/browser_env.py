@@ -41,8 +41,8 @@ class BrowserEnv:
         )
         self.page = await self.context.new_page()
 
-    async def reset(self, kind, seed, start_k=None):
-        episode = tasks.build(kind, seed, start_k=start_k)
+    async def reset(self, kind, seed, start_k=None, variant=None):
+        episode = tasks.build(kind, seed, start_k=start_k, variant=variant)
         episode['max_steps'] = self.max_steps
         await self.page.set_content(episode['html'])
         self.episode = episode
@@ -61,7 +61,7 @@ class BrowserEnv:
         if kind == tasks.KIND_TYPE_TEXT:
             return len(state.get('value', ''))
         if kind == tasks.KIND_FORM_FILL:
-            return len(state.get('name', '')) + len(state.get('city', ''))
+            return sum(len(state.get(field, '')) for field, _ in tasks.form_targets(self.episode['spec']))
         return 0
 
     async def step(self, action):

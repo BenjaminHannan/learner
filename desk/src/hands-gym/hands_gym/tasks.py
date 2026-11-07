@@ -43,6 +43,12 @@ TASK_TYPES = (
 BUTTON_WORDS = ('apple', 'brick', 'cloud', 'daisy', 'ember', 'frost',
                 'grape', 'honey', 'ivory', 'jolly', 'kite', 'lemon')
 TYPE_WORDS = ('cat', 'dog', 'fox', 'owl', 'bee', 'ant', 'elk', 'ram')
+LENGTH_WORDS = {
+    'letters_6': ('rabbit', 'monkey', 'donkey', 'pigeon', 'parrot', 'salmon', 'beaver', 'badger'),
+    'letters_10': ('blackbirds', 'alligators', 'crocodiles', 'kingfisher',
+                   'woodpecker', 'cuttlefish', 'wildebeest', 'chinchilla'),
+}
+LENGTH_VARIANTS = {'type_text': ('letters_6', 'letters_10'), 'form_fill': ('fields_5',)}
 DROPDOWN_WORDS = ('red', 'blue', 'green', 'gold', 'pink', 'teal')
 LINK_WORDS = ('docs', 'news', 'shop', 'help', 'maps', 'blog')
 MENU_ITEMS = ('New', 'Open', 'Save', 'Export', 'Print', 'Share')
@@ -168,8 +174,8 @@ def _build_click_button(rng, hue):
     return instruction, _frame(hue, ''.join(parts), script), {'target': target}
 
 
-def _build_type_text(rng, hue):
-    target = rng.choice(TYPE_WORDS)
+def _build_type_text(rng, hue, words=TYPE_WORDS):
+    target = rng.choice(words)
     cx = rng.uniform(230, 410)
     cy = rng.uniform(120, 180)
     body = (
@@ -362,6 +368,35 @@ def _build_form_fill(rng, hue):
     return instruction, _frame(hue, body, script), {'name': name, 'city': city}
 
 
+def _build_form_fill_five(rng, hue):
+    fields = [('name', rng.choice(NAME_WORDS)), ('city', rng.choice(CITY_WORDS)),
+              ('friend', rng.choice(NAME_WORDS)), ('town', rng.choice(CITY_WORDS)),
+              ('guest', rng.choice(NAME_WORDS))]
+    cx = rng.uniform(300, 340)
+    cy = rng.uniform(145, 155)
+    inputs = ''.join(
+        "<div><label class='fieldlabel' for='%s'>%s</label>"
+        "<input class='field' id='%s' autocomplete='off'></div>"
+        % (field, field.title(), field) for field, _ in fields)
+    body = ("<div class='card' style='%sdisplay:grid;grid-template-columns:1fr 1fr;gap:10px'>%s</div>"
+            "<button class='btn' id='submit' data-label='Submit' style='%sbackground:#9ad0ff' "
+            "onclick=\"window.__gym.submitted=true\">Submit</button>"
+            % (_style(cx, cy, 560, 270), inputs, _style(cx, 322, 180, 50)))
+    values = ','.join("%s:document.getElementById('%s').value" % (field, field)
+                      for field, _ in fields)
+    script = ("window.__gym.submitted=false;window.__gym.state=function(){return {%s,"
+              "submitted:!!window.__gym.submitted};};" % values)
+    instruction = 'Fill in the form: ' + ', '.join(
+        "%s '%s'" % pair for pair in fields) + ', then submit.'
+    return instruction, _frame(hue, body, script), {'fields': dict(fields)}
+
+
+def form_targets(spec):
+    if 'fields' in spec:
+        return tuple(spec['fields'].items())
+    return (('name', spec['name']), ('city', spec['city']))
+
+
 _BUILDERS = {
     KIND_CLICK_BUTTON: _build_click_button,
     KIND_TYPE_TEXT: _build_type_text,
@@ -426,7 +461,7 @@ def _start_script(kind, spec, start_k):
     return ''
 
 
-def build(kind, seed, start_k=None):
+def build(kind, seed, start_k=None, variant=None):
     """Build one deterministic task instance."""
     if kind not in _BUILDERS:
         raise ValueError('unknown task kind: %r' % (kind,))
@@ -434,9 +469,19 @@ def build(kind, seed, start_k=None):
         raise ValueError('seed must be an int')
     if start_k is not None and (type(start_k) is not int or start_k < 1):
         raise ValueError('start_k must be a positive int or None')
+    if variant is not None:
+        if variant not in LENGTH_VARIANTS.get(kind, ()):
+            raise ValueError('unknown optional variant for %s: %r' % (kind, variant))
+        if start_k is not None:
+            raise ValueError('length variants require normal starts')
     rng = random.Random('hands-gym:%s:%d' % (kind, seed))
     hue = rng.randrange(360)
-    instruction, html, spec = _BUILDERS[kind](rng, hue)
+    if variant in LENGTH_WORDS:
+        instruction, html, spec = _build_type_text(rng, hue, LENGTH_WORDS[variant])
+    elif variant == 'fields_5':
+        instruction, html, spec = _build_form_fill_five(rng, hue)
+    else:
+        instruction, html, spec = _BUILDERS[kind](rng, hue)
     spec = dict(spec)
     spec['kind'] = kind
     spec['seed'] = seed
@@ -545,14 +590,14 @@ def check(kind, spec, state, prev, step, max_steps=MAX_STEPS):
             reward += 0.1
 
     elif kind == KIND_FORM_FILL:
-        target_name, target_city = spec['name'], spec['city']
-        for field, target in (('name', target_name), ('city', target_city)):
+        targets = form_targets(spec)
+        for field, target in targets:
             value = state.get(field, '')
             prev_value = prev.get(field, '')
             grow = max(0, _prefix(value, target) - _prefix(prev_value, target))
             reward += 0.12 * grow
-        success = (bool(state.get('submitted')) and state.get('name') == target_name
-                   and state.get('city') == target_city)
+        success = bool(state.get('submitted')) and all(
+            state.get(field) == target for field, target in targets)
         if success:
             reward += 1.0
 
