@@ -87,6 +87,24 @@ class SafetyTests(unittest.TestCase):
     def test_benchmark_zero_does_no_cpu_work(self):
         self.assertIsNone(runner.cpu_benchmark(None, None, None, 0))
 
+    def test_cleanup_uses_tailscale_if_lan_disappears_after_upload(self):
+        receipt = {'deleted': True, 'path': 'private-job'}
+        with mock.patch.object(runner, 'cancel_supervisor', side_effect=[
+                runner.RemoteUnavailable('LAN down'), receipt]) as cancel:
+            result = runner.cleanup_after_failure('benspc-lan', 'private-job', True,
+                                                  logger=lambda _: None)
+        self.assertEqual(result, receipt)
+        self.assertEqual(cancel.call_args_list,
+                         [mock.call('benspc-lan', 'private-job'), mock.call('benspc', 'private-job')])
+
+    def test_unconfirmed_cleanup_on_both_routes_is_a_hard_error(self):
+        with mock.patch.object(runner, 'cancel_supervisor',
+                               side_effect=runner.RemoteUnavailable('unreachable')) as cancel:
+            with self.assertRaisesRegex(RuntimeError, 'benspc-lan:.*benspc:'):
+                runner.cleanup_after_failure('benspc-lan', 'private-job', True,
+                                             logger=lambda _: None)
+        self.assertEqual(cancel.call_count, 2)
+
     def test_real_gate_is_checked_even_when_worker_is_silent(self):
         process = mock.Mock(stdout=[], returncode=0)
         process.poll.return_value = None
@@ -160,7 +178,7 @@ class FallbackTests(unittest.TestCase):
         calls = []
 
         def remote(dataset, output, **kwargs):
-            calls.append(('remote', kwargs['synthetic']))
+            calls.append(('remote', kwargs['synthetic'], kwargs['host']))
             raise runner.RemoteUnavailable('pc down for test')
 
         def local(dataset, output):
@@ -179,10 +197,61 @@ class FallbackTests(unittest.TestCase):
                 runner.FALLBACK_LOG = original
             self.assertEqual(result['trainingBackend'], 'mac-cpu-fallback')
             self.assertEqual(result['fallbackReason'], 'pc down for test')
-            self.assertEqual(calls, [('remote', True), ('local',)])
+            self.assertEqual(calls, [('remote', True, 'benspc-lan'),
+                                     ('remote', True, 'benspc'), ('local',)])
             entry = json.loads(log_path.read_text().splitlines()[0])
             self.assertIn('pc down for test', entry['reason'])
             self.assertEqual(entry['dataset'], str(dataset))
+            self.assertEqual(entry['hostsTried'], ['benspc-lan', 'benspc'])
+
+    def test_lan_failure_tries_tailscale_before_local_training(self):
+        hosts, messages = [], []
+
+        def remote(dataset, output, **kwargs):
+            hosts.append(kwargs['host'])
+            if kwargs['host'] == 'benspc-lan':
+                raise runner.RemoteUnavailable('LAN has no IPv4')
+            return {'status': 'quarantine; not promoted'}
+
+        local = mock.Mock(side_effect=AssertionError('must not train on Mac'))
+        with tempfile.TemporaryDirectory() as tmp:
+            result = runner.run(self.dataset(tmp), Path(tmp) / 'out', remote_fn=remote,
+                                local_fn=local, logger=messages.append)
+        self.assertEqual(hosts, ['benspc-lan', 'benspc'])
+        self.assertEqual(result['remote']['selectedHost'], 'benspc')
+        self.assertEqual(result['remote']['hostsTried'], hosts)
+        self.assertFalse(result['remote']['fallback'])
+        self.assertTrue(any('completed via benspc;' in message for message in messages))
+        local.assert_not_called()
+
+    def test_explicit_other_host_does_not_contact_default_pc(self):
+        remote = mock.Mock(side_effect=runner.RemoteUnavailable('test host down'))
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(runner.RemoteUnavailable):
+            runner.run(self.dataset(tmp), tmp, host='127.0.0.1', remote_fn=remote,
+                       no_fallback=True, logger=lambda _: None)
+        remote.assert_called_once()
+        self.assertEqual(remote.call_args.kwargs['host'], '127.0.0.1')
+
+    def test_real_gate_is_rechecked_before_tailscale_retry(self):
+        remote = mock.Mock(side_effect=runner.RemoteUnavailable('LAN unreachable'))
+        local = mock.Mock()
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(runner, 'real_gate', side_effect=[1300, 1300, RuntimeError('night ended')]):
+            with self.assertRaisesRegex(RuntimeError, 'night ended'):
+                runner.run(self.dataset(tmp, synthetic=False), tmp, remote_fn=remote,
+                           local_fn=local, logger=lambda _: None)
+        remote.assert_called_once()
+        local.assert_not_called()
+
+    def test_busy_pc_does_not_repeat_gpu_wait_on_same_pc_alias(self):
+        remote = mock.Mock(side_effect=runner.RemoteBusy('GPU busy'))
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(runner, 'FALLBACK_LOG', Path(tmp) / 'fallback.log'):
+            result = runner.run(self.dataset(tmp), tmp, remote_fn=remote,
+                                local_fn=lambda *args: {}, logger=lambda _: None)
+        remote.assert_called_once()
+        self.assertEqual(result['trainingBackend'], 'mac-cpu-fallback')
+        self.assertEqual(result['remote']['hostsTried'], ['benspc-lan'])
 
     def test_remote_success_does_not_fall_back(self):
         calls = []
@@ -249,7 +318,7 @@ class FallbackTests(unittest.TestCase):
             with self.assertRaises(runner.RemoteUnavailable):
                 runner.run(self.dataset(tmp), Path(tmp) / 'out', remote_fn=remote,
                            local_fn=local, no_fallback=True, logger=lambda _: None)
-            self.assertEqual(calls, ['remote'])
+            self.assertEqual(calls, ['remote', 'remote'])
 
     def test_busy_and_rebooting_reasons_reach_local_fallback(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runner, 'FALLBACK_LOG', Path(tmp) / 'log'):
@@ -276,13 +345,13 @@ class FallbackTests(unittest.TestCase):
 
     def test_real_gate_is_rechecked_before_fallback_after_remote_wait(self):
         with tempfile.TemporaryDirectory() as tmp, \
-             mock.patch.object(runner, 'real_gate', side_effect=[1300, RuntimeError('Mac became active')]) as gate, \
+             mock.patch.object(runner, 'real_gate', side_effect=[1300, 1300, RuntimeError('Mac became active')]) as gate, \
              mock.patch.object(runner, 'FALLBACK_LOG', Path(tmp) / 'fallback.log'), \
-             mock.patch.object(runner, 'run_remote', side_effect=runner.RemoteUnavailable('GPU still busy')), \
+             mock.patch.object(runner, 'run_remote', side_effect=runner.RemoteBusy('GPU still busy')), \
              mock.patch.object(runner, 'run_local') as local:
             with self.assertRaisesRegex(RuntimeError, 'Mac became active'):
                 runner.run(self.dataset(tmp, synthetic=False), Path(tmp) / 'out', logger=lambda _: None)
-            self.assertEqual(gate.call_count, 2)
+            self.assertEqual(gate.call_count, 3)
             local.assert_not_called()
             self.assertIn('GPU still busy', runner.FALLBACK_LOG.read_text())
 

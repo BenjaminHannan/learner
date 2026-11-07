@@ -28,6 +28,13 @@ The wrapper also accepts `--steps`, `--batch-size`, `--lr`, `--gpu-wait` (0–90
 seconds), `--no-fallback`, `--force-local`, `--timeout`, and `--bench-steps`.
 Diagnostics go to stderr; stdout contains exactly one trainer-compatible JSON
 object. `--bench-steps 0` is the default: tonight need not run a CPU benchmark.
+By default both this CLI and `tonight-remote.sh` try **`benspc-lan` first, then
+`benspc` over Tailscale**, before local Mac training. Logs name each attempted
+host and the successful host; result metadata includes `selectedHost` and
+`hostsTried`. An explicit `--host` other than `benspc-lan` selects only that
+host. Shared GPU contention is not retried through another alias of the same
+PC, and CUDA failures still stop immediately. Failure-path deletion can use
+either known alias if the active network route disappears after upload.
 
 ## Safety and ownership
 

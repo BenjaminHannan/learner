@@ -26,6 +26,7 @@ P2PY = HOME / 'learner-ops/p2venv/bin/python'
 STOP_FILE = HOME / 'learner-ops/aon-notes/hands-20261106/STOP-TRAINING'
 FALLBACK_LOG = HOME / 'learner-ops/night-learn-remote/fallback.log'
 HOST = 'benspc-lan'
+TAILSCALE_HOST = 'benspc'
 PC_ROOT = 'C:/Users/benja/hands-train'
 PC_LEASE_ROOT = 'C:/Users/benja/hands-gym'
 PC_PYTHON = r'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
@@ -37,6 +38,10 @@ MODEL_NAMES = ('old', 'candidate', 'no-intent')
 
 class RemoteUnavailable(RuntimeError):
     """A recoverable host, lease or transport failure."""
+
+
+class RemoteBusy(RemoteUnavailable):
+    """The same PC is busy on both network routes; do not repeat its lease wait."""
 
 
 class CudaFailure(RuntimeError):
@@ -121,6 +126,10 @@ def ssh_command(host, script):
     return ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
             '-o', 'ServerAliveInterval=10', '-o', 'ServerAliveCountMax=2', host,
             f'powershell.exe -NoProfile -NonInteractive -EncodedCommand {encoded}']
+
+
+def host_candidates(host):
+    return (HOST, TAILSCALE_HOST) if host == HOST else (host,)
 
 
 def ssh_python(host, code, timeout=30):
@@ -317,6 +326,25 @@ raise SystemExit(0 if not root.exists() else 1)
     return json.loads(ssh_python(host, source, timeout=45).stdout)
 
 
+def cleanup_after_failure(host, remote_dir, supervised, logger=log):
+    hosts = host_candidates(host)
+    if host == TAILSCALE_HOST:
+        hosts = (TAILSCALE_HOST, HOST)
+    errors = []
+    for cleanup_host in hosts:
+        try:
+            cleanup = (cancel_supervisor(cleanup_host, remote_dir) if supervised else
+                       pc_cleanup(cleanup_host, remote_dir))
+            if cleanup.get('deleted') is not True:
+                raise RuntimeError('PC deletion was not confirmed')
+            logger(f'PC failure-path cleanup confirmed via {cleanup_host}: {cleanup}')
+            return cleanup
+        except Exception as error:
+            errors.append(f'{cleanup_host}: {error}')
+            logger(f'PC cleanup unavailable via {cleanup_host}: {error}')
+    raise RuntimeError('; '.join(errors))
+
+
 def scp_download(host, remote_file, local_file):
     command_run(['scp', '-q', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
                  f'{host}:{remote_file}', str(local_file)], timeout=180)
@@ -384,7 +412,9 @@ while root.exists():
                 error = f"BensPC {event.get('kind')}: {event.get('error')}"
                 if event.get('kind') == 'cuda':
                     raise CudaFailure(error)
-                if event.get('kind') in ('busy', 'transport', 'timeout'):
+                if event.get('kind') == 'busy':
+                    raise RemoteBusy(error)
+                if event.get('kind') in ('transport', 'timeout'):
                     raise RemoteUnavailable(error)
                 raise RuntimeError(error)
             if kind != 'progress' or event.get('step', 0) % 25 == 0:
@@ -445,7 +475,7 @@ def run_remote(dataset_path, output, *, synthetic, steps, batch_size, lr, host=H
     gate = gate or gate_for(synthetic)
     gate()
     status = pc_preflight(host)
-    logger(f'PC reachable (no CUDA context created): {status}')
+    logger(f'PC reachable via {host} (no CUDA context created): {status}')
     if status.get('rebootRequired'):
         logger('Pending-reboot flag: not an active reboot; saving both arms every 10 steps')
     job_id = new_job_id()
@@ -507,8 +537,7 @@ def run_remote(dataset_path, output, *, synthetic, steps, batch_size, lr, host=H
         except BaseException as error:
             if uploaded:
                 try:
-                    cleanup = cancel_supervisor(host, remote_dir) if supervised else pc_cleanup(host, remote_dir)
-                    logger(f'PC failure-path cleanup confirmed: {cleanup}')
+                    cleanup_after_failure(host, remote_dir, supervised, logger)
                 except Exception as cleanup_error:
                     raise RuntimeError(f'Cleanup unconfirmed for {remote_dir}; watchdog will expire. '
                                        f'No local fallback permitted: {cleanup_error}; original: {error}') from error
@@ -535,10 +564,12 @@ def run_local(dataset_path, output, *, steps=None, logger=log):
     return json.loads(result.stdout)
 
 
-def append_fallback(reason, dataset_path, output):
+def append_fallback(reason, dataset_path, output, hosts_tried=None):
     FALLBACK_LOG.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     entry = {'at': datetime.datetime.now().astimezone().isoformat(), 'reason': str(reason),
              'dataset': str(dataset_path), 'output': str(output)}
+    if hosts_tried is not None:
+        entry['hostsTried'] = hosts_tried
     with open(FALLBACK_LOG, 'a', encoding='utf8') as handle:
         handle.write(json.dumps(entry) + '\n')
     os.chmod(FALLBACK_LOG, 0o600)
@@ -568,24 +599,37 @@ def run(dataset_path, output, *, synthetic=None, steps=None, batch_size=8, lr=0.
         result = local_fn(str(dataset_path), str(output))
         result['trainingBackend'] = 'mac-cpu-forced'
         return result
-    try:
-        result = remote_fn(str(dataset_path), str(output), synthetic=is_synthetic,
-                           steps=steps, batch_size=batch_size, lr=lr, host=host,
-                           gpu_wait=gpu_wait, timeout=timeout, bench_steps=bench_steps, logger=logger)
-        result['trainingBackend'] = 'benspc-gpu'
-        result.setdefault('remote', {})['fallback'] = False
-        return result
-    except RemoteUnavailable as error:
-        if no_fallback:
-            raise
-        logger(f'PC unavailable; local fallback: {error}')
-        entry = append_fallback(error, dataset_path, output)
+    hosts_tried = []
+    last_error = None
+    for remote_host in host_candidates(host):
         gate_for(is_synthetic)()
-        result = local_fn(str(dataset_path), str(output))
-        result.update(trainingBackend='mac-cpu-fallback', fallbackReason=str(error),
-                      fallbackLoggedAt=entry['at'])
-        result.setdefault('remote', {})['fallback'] = True
+        hosts_tried.append(remote_host)
+        logger(f'Trying PC host {remote_host}')
+        try:
+            result = remote_fn(str(dataset_path), str(output), synthetic=is_synthetic,
+                               steps=steps, batch_size=batch_size, lr=lr, host=remote_host,
+                               gpu_wait=gpu_wait, timeout=timeout, bench_steps=bench_steps, logger=logger)
+        except RemoteUnavailable as error:
+            last_error = error
+            logger(f'PC host {remote_host} unavailable: {error}')
+            if isinstance(error, RemoteBusy):
+                break
+            continue
+        result['trainingBackend'] = 'benspc-gpu'
+        result.setdefault('remote', {}).update(fallback=False, selectedHost=remote_host,
+                                              hostsTried=hosts_tried)
+        logger(f'PC training completed via {remote_host}; no local fallback')
         return result
+    if no_fallback:
+        raise last_error
+    logger(f'PC unavailable via {hosts_tried}; local fallback: {last_error}')
+    entry = append_fallback(last_error, dataset_path, output, hosts_tried)
+    gate_for(is_synthetic)()
+    result = local_fn(str(dataset_path), str(output))
+    result.update(trainingBackend='mac-cpu-fallback', fallbackReason=str(last_error),
+                  fallbackLoggedAt=entry['at'])
+    result.setdefault('remote', {}).update(fallback=True, hostsTried=hosts_tried)
+    return result
 
 
 def main():
