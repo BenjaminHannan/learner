@@ -45,9 +45,10 @@ function stableScreen(before, after, action) {
 }
 
 class Desktop {
-  constructor({ request, signal, captureScreen, startNative = NativeSession.start, predictor, logRoot, minIdleSeconds = 120, idleSeconds, deferFinish = false } = {}) {
+  constructor({ request, signal, captureScreen, startNative = NativeSession.start, predictor, logRoot, minIdleSeconds = 120, idleSeconds, deferFinish = false, onTakeover } = {}) {
     this.signal = signal; this.captureScreen = captureScreen; this.startNative = startNative; this.predictor = predictor === undefined ? require('./predictor').propose : predictor;
     this.deferFinish = deferFinish;
+    this.onTakeover = onTakeover;
     this.minIdleSeconds = minIdleSeconds; this.idleSeconds = idleSeconds; this.idleChecked = false;
     this.attempt = new Attempt(request, logRoot); this.pending = null; this.awaiting = null; this.stopped = false;
   }
@@ -55,6 +56,7 @@ class Desktop {
     if (this.stopped || this.signal?.aborted) throw Error('task stopped');
     if (!this.native) {
       this.native = await this.startNative();
+      this.native.onRevoke = row => { if (row.terminal && this.onTakeover) this.onTakeover(row); };
       this.onAbort = () => this.native.stop('task stopped');
       if (this.signal) { this.signal.addEventListener('abort', this.onAbort, { once:true }); if (this.signal.aborted) this.onAbort(); }
     }

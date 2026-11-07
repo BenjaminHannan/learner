@@ -11,6 +11,7 @@ const { checkAction } = require('../src/computer-control/safety');
 const { Agent } = require('../src/agent');
 const { buildTools } = require('../src/prompt');
 const { startGateway } = require('./helpers');
+const Vision = require('../src/computer-control/vision');
 
 function fixture() {
   const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-test-'));
@@ -163,12 +164,31 @@ test('chat exposes only the checked desktop path and passes images back to the m
       verify() { calls.push('verify'); return { text:'checked' }; }, finish() { calls.push('finish'); return { text:'finished' }; },
       async close() { closed = true; } };
     const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:10, mode:'hands-off', vision:'off', verify:false }),
-      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), safetyCtx:() => ({}), desktopFactory:() => desktop, emit:() => {}, approve:async () => 'deny' });
+      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), safetyCtx:() => ({}), desktopFactory:() => desktop, desktopEyes:async () => ({ type:'image_features', image_features:{ f16:'test',shape:[64,768],eye:'test' } }), emit:() => {}, approve:async () => 'deny' });
     await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'Open Notes and select a note');
     assert.deepEqual(calls, ['look','prepare','execute','verify','finish']); assert.equal(closed, true);
     const names = gw.requests[0].tools.map(t => t.function.name);
     assert.ok(names.includes('computer_execute')); assert.ok(!names.includes('screen_click')); assert.ok(!names.includes('run_shell'));
-    assert.ok(gw.requests[1].messages.some(m => Array.isArray(m.content) && m.content.some(part => part.type === 'image_url')));
+    assert.ok(gw.requests[1].messages.some(m => Array.isArray(m.content) && m.content.some(part => part.type === 'image_features')));
+  } finally { gw.close(); }
+});
+
+test('Glim feature budgeting restores the actual image payload', () => {
+  const features = { type:'image_features', image_features:{ f16:'a'.repeat(131072), shape:[64,768], eye:'test' } };
+  const messages = [{ role:'system', content:'system' },{ role:'user', content:'open Notes' },{ role:'user', content:[{type:'text',text:'screen'},features] }];
+  assert.ok(Vision.tokens(messages,[]) < 3000);
+  const result = Vision.fit(messages,[],5000,1,[]);
+  assert.equal(result.messages.at(-1).content[1].image_features.f16,features.image_features.f16);
+});
+
+test('if the eyes fail, chat stops before any action', async () => {
+  const gw = await startGateway([{ tool_calls:[{ name:'computer_look', arguments:{} }] }]);
+  try {
+    let sent = false;
+    const fake = { async init() {}, async look() { return { text:'screen', image:'data:image/png;base64,AA==' }; }, async execute() { sent = true; return { text:'sent' }; }, async close() {} };
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:3, mode:'hands-off', vision:'off', verify:false }), toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), desktopFactory:() => fake, desktopEyes:async () => { throw Error('eyes unavailable'); }, emit:() => {} });
+    const result = await agent.run({ id:'t', title:'x', messages:[], items:[] },'Open Notes');
+    assert.match(result.error,/eyes unavailable/); assert.equal(sent,false);
   } finally { gw.close(); }
 });
 

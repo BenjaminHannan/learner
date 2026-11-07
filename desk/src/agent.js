@@ -382,7 +382,7 @@ function dropOldImages(messages) {
   let seen = false;
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
-    if (m.role === 'user' && Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url')) {
+    if (m.role === 'user' && Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url' || p.type === 'image_features')) {
       if (seen || i < messages.length - IMAGE_KEEP_MSGS) m.content = '[older screenshot omitted]'; // a picture far back rode along on every turn (~280 KB, a 346-message chat)
       seen = true;
     }
@@ -547,7 +547,7 @@ class Agent {
   makeDesktop(signal) {
     const { Desktop } = require('./computer-control/desktop');
     const mins = this.o.safety?.hands?.().idleMin || 2;
-    const options = { request:this.taskText, signal, minIdleSeconds:Math.max(120, mins * 60) };
+    const options = { request:this.taskText, signal, minIdleSeconds:Math.max(120, mins * 60), onTakeover:() => this.stop() };
     return this.o.desktopFactory ? this.o.desktopFactory(options) : new Desktop(options);
   }
   taskTools() { return this.taskToolDefs || this.toolDefs(); }   // the tools this task's requests send (AGENT1 diet: a web task's subset)
@@ -898,7 +898,7 @@ class Agent {
           break;
         }
 
-        let pendingImage = null;
+        let pendingImage = null, pendingFeatures = null;
         for (let ci = 0; ci < res.toolCalls.length; ci++) {
           const call = res.toolCalls[ci];
           if (signal.aborted) {
@@ -909,10 +909,12 @@ class Agent {
           const out = await this.runTool(call, thread, signal);
           if (out.failed && RECHECK_TOOLS.has(call.name)) out.text += RECHECK_HINT;
           thread.messages.push({ role: 'tool', tool_call_id: call.id, content: out.text });
-          if (out.image) pendingImage = out.image;
+          if (out.image && this.desktopEnabled) pendingFeatures = await (this.o.desktopEyes || require('./computer-control/vision').encode)(out.image, signal);
+          else if (out.image) pendingImage = out.image;
           if (signal.aborted) stopped = true;
         }
-        if (pendingImage && (s.vision === 'on' || s.vision === true || this.desktopEnabled)) {
+        if (pendingFeatures) thread.messages.push({ role:'user', content:[{ type:'text', text:'[screenshot of the result above]' }, pendingFeatures] });
+        else if (pendingImage && (s.vision === 'on' || s.vision === true)) {
           thread.messages.push({ role: 'user', content: [{ type: 'text', text: '[screenshot of the result above]' }, { type: 'image_url', image_url: { url: pendingImage } }] });
         }
         save();
@@ -1026,6 +1028,7 @@ class Agent {
 
   async requestFitted(thread, settings, options) {
     const request = { ...options }, model = request.model;
+    const featureBudget = this.desktopEnabled ? require('./computer-control/vision') : null;
     const originalMessages = request.messages;
     const from = thread.ctxFrom || 0;
     const start = Number.isInteger(this.taskStart) ? this.taskStart : from;
@@ -1033,7 +1036,7 @@ class Agent {
     const retainedContext = [thread.ctxNote, this.memBlock].filter((note) => note && originalMessages.some((m) => typeof m.content === 'string' && m.content.includes(note)));
     const reserve = request.maxTokens || budget.REPLY_RESERVE;
     const limit = budget.contextLimit(settings, model);
-    if (limit) request.messages = budget.fitRequest(originalMessages, request.tools, limit - reserve - 512, protectedIndex, retainedContext).messages;
+    if (limit) request.messages = (featureBudget ? featureBudget.fit : budget.fitRequest)(originalMessages, request.tools, limit - reserve - 512, protectedIndex, retainedContext).messages;
     let emitted = false;
     for (const name of ['onText', 'onReasoning', 'onToolDelta']) {
       const cb = request[name];
@@ -1044,9 +1047,9 @@ class Agent {
       const overflow = budget.contextOverflow(e);
       if (!overflow || emitted || (request.signal && request.signal.aborted)) throw e;
       budget.learnLimit(settings, model, overflow.limit);
-      const currentEstimate = budget.requestTokens(request.messages, request.tools);
+      const currentEstimate = (featureBudget ? featureBudget.tokens : budget.requestTokens)(request.messages, request.tools);
       const target = Math.min(overflow.limit - reserve - 512, Math.floor(currentEstimate * Math.min(0.8, (overflow.limit / overflow.requested) * 0.85)));
-      const retry = budget.fitRequest(request.messages, request.tools, target, protectedIndex - (originalMessages.length - request.messages.length), retainedContext);
+      const retry = (featureBudget ? featureBudget.fit : budget.fitRequest)(request.messages, request.tools, target, protectedIndex - (originalMessages.length - request.messages.length), retainedContext);
       if (!retry.removed) throw new Error('The current task and required context are too large for this model. Shorten the task or start a new chat.');
       request.messages = retry.messages;
       try { return await streamChat(request); }
