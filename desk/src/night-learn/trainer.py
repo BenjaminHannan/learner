@@ -7,6 +7,7 @@ import ctypes
 import datetime
 import hashlib
 import json
+import math
 import os
 import random
 import sys
@@ -32,7 +33,8 @@ def idle_seconds():
 
 def production_gate():
     now = datetime.datetime.now().astimezone()
-    if not 1 <= now.hour < 7 or idle_seconds() < 1200:
+    idle = idle_seconds()
+    if not 1 <= now.hour < 7 or not math.isfinite(idle) or idle < 1200:
         raise RuntimeError('training deferred: requires 01:00–07:00 and 20 minutes of Mac idle')
     if (Path.home() / 'learner-ops/aon-notes/hands-20261106/STOP-TRAINING').exists():
         raise RuntimeError('training stopped')

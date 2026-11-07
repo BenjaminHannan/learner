@@ -10,9 +10,9 @@ const {verifiedCorrection}=require('./corrections');
 const {Retention}=require('../hands-toy/retention');
 const home=os.homedir(), ops=path.join(home,'learner-ops'), root=path.join(ops,'night-learn'), recordings=path.join(ops,'hands-recorder/recordings');
 const python=path.join(ops,'p2venv/bin/python'), lock=path.join(ops,'bin/realmodel-lock.sh'), ffmpeg='/opt/homebrew/bin/ffmpeg', ffprobe='/opt/homebrew/bin/ffprobe';
-const sourceDir=__dirname, sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+const sourceDir=__dirname, nightGate=path.join(sourceDir,'night_gate.py'), sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const write=(p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2)+'\n',{mode:0o600});
-function run(binary,args,options={}) {const r=spawnSync(binary,args,{encoding:'utf8',maxBuffer:8*1024*1024,timeout:1800000,...options});if(r.error||r.status!==0)throw Error(`${path.basename(binary)} failed: ${r.error?.message||String(r.stderr||'').slice(-1200)||r.status}`);return r.stdout;}
+function run(binary,args,options={}) {const r=spawnSync(binary,args,{encoding:'utf8',maxBuffer:8*1024*1024,timeout:binary===lock?undefined:1800000,...options});if(r.error||r.status!==0)throw Error(`${path.basename(binary)} failed: ${r.error?.message||String(r.stderr||'').slice(-1200)||r.status}`);return r.stdout;}
 function gate() { run(python,['-c',`import sys;sys.path.insert(0,${JSON.stringify(sourceDir)});import trainer;trainer.production_gate()`],{timeout:10000}); }
 function readClipFile(name) { if(typeof name!=='string'||path.basename(name)!==name)throw Error('unsafe clip path');const file=path.join(recordings,name),st=fs.lstatSync(file);if(!st.isFile()||st.isSymbolicLink())throw Error('unsafe clip file');return file; }
 function targetDay(date) { const d=new Date(date.getFullYear(),date.getMonth(),date.getDate()-1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -49,13 +49,13 @@ function teacher(episode,work) {
  const picks=[0,Math.floor((episode.length-1)/2),episode.length-1].filter((n,i,a)=>a.indexOf(n)===i);
  const input={frames:picks.map(i=>({path:episode[i].frame,timeMs:episode[i].timeMs})),actions:episode.map(e=>({kind:e.action.kind}))};
  const file=path.join(work,'episode.json');write(file,input);
- const raw=run(lock,['NIGHT-LEARN','/usr/bin/python3',path.join(sourceDir,'explain.py'),file]);
+ const raw=run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,'/usr/bin/python3',path.join(sourceDir,'explain.py'),file]);
  const explanation=JSON.parse(raw.trim().split('\n').at(-1));
  const intents=new Map();for(const step of explanation.steps)if(!intents.has(step.actionIndex))intents.set(step.actionIndex,step.intent);
  const labelled=episode.flatMap((e,i)=>intents.has(i)?[{...e,intent:intents.get(i)}]:[]);
  return {explanation,labelled};
 }
-function health() {const r=spawnSync(lock,['NIGHT-LEARN','/usr/bin/curl','-fsS','--max-time','3','http://127.0.0.1:18080/health'],{stdio:'ignore',timeout:1800000});if(r.error)throw r.error;return r.status===0;}
+function health() {const r=spawnSync(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,'/usr/bin/curl','-fsS','--max-time','3','http://127.0.0.1:18080/health'],{stdio:'ignore'});if(r.error)throw r.error;return r.status===0;}
 function runNight() {
  gate();
  const day=targetDay(new Date()), output=path.join(root,'runs',day);
@@ -67,12 +67,12 @@ function runNight() {
   const index=JSON.parse(fs.readFileSync(path.join(recordings,'clip-index.json'),'utf8'));
   const prepared=sourceClips(index,day,calibration,work);
   if(prepared.examples.length<2)throw Error('not enough proven native examples');
-  if(!health()){gate();run(lock,['NIGHT-LEARN',path.join(ops,'assistant/serve.sh'),'--yes']);started=true;}
+  if(!health()){gate();run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,path.join(ops,'assistant/serve.sh'),'--yes']);started=true;}
   const explanations=[], rows=[];
   for(const episode of groupEpisodes(prepared.examples)){const r=teacher(episode,work);explanations.push(r.explanation);rows.push(...r.labelled);}
   const failures=readAttempts(path.join(ops,'hands-attempts/attempts.jsonl')).filter(a=>a.judgedOutcome==='fail'&&localDay(Date.parse(a.finishedAt))===day);
   const mistakes=[];
-  for(const failure of failures){gate();const f=path.join(work,'attempt.json');write(f,failure);mistakes.push(JSON.parse(run(lock,['NIGHT-LEARN','/usr/bin/python3',path.join(sourceDir,'explain.py'),'--mistake',f]).trim().split('\n').at(-1)));}
+  for(const failure of failures){gate();const f=path.join(work,'attempt.json');write(f,failure);mistakes.push(JSON.parse(run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,'/usr/bin/python3',path.join(sourceDir,'explain.py'),'--mistake',f]).trim().split('\n').at(-1)));}
   if(rows.length<2)throw Error('Glim did not supply enough step intents');
   const startMs=prepared.startMs,endMs=prepared.endMs,cutoff=startMs+(endMs-startMs)*.8;
   let correctionsUsed=0;const seen=new Set(rows.map(r=>r.id));
@@ -100,7 +100,7 @@ function runNight() {
   return summary;
  } finally {
   fs.rmSync(work,{recursive:true,force:true});
-  if(started){try{gate();run(lock,['NIGHT-LEARN',path.join(ops,'assistant/stop.sh')]);}catch{/* Keep an active user or another model job safe. */}}
+  if(started){try{gate();run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,path.join(ops,'assistant/stop.sh')]);}catch{/* Keep an active user or another model job safe. */}}
  }
 }
 module.exports={targetDay,localDay,groupEpisodes,runNight};
