@@ -142,20 +142,31 @@ def train(dataset, output, gate=production_gate, steps=50, previous=None):
     # Caller supplies a provenance-checked manifest; never consume the held slice while fitting.
     gate()
     rows = dataset['examples']
-    train_rows, held_rows, cutoff = partition(rows,dataset['startMs'],dataset['endMs'])
+    if dataset.get('allowSparse') and (len(rows)<2 or len({r['timeMs'] for r in rows})<2):
+        train_rows, held_rows, cutoff = rows, [], dataset['endMs']
+    else:
+        train_rows, held_rows, cutoff = partition(rows,dataset['startMs'],dataset['endMs'])
     score_rows = [r for r in held_rows if r['action']['kind'] in ('click','key')]
-    if not any(r['action']['kind']=='click' for r in score_rows) or not any(r['action']['kind']=='key' for r in score_rows):
-        raise ValueError('held slice needs clicks and keys')
+    # Missing action classes are reported as unmeasured, not a first-night gate.
+    # Scroll/drag-only nights still produce quarantined weights.
     for r in rows: load_example(r)
     torch.manual_seed(101)
     initial = pixel_model.NativeActionPolicy().eval()
+    baseline_warning = None
     if previous is not None:
-        initial.load_state_dict(torch.load(previous,map_location='cpu',weights_only=True),strict=True)
+        try:
+            initial.load_state_dict(torch.load(previous,map_location='cpu',weights_only=True),strict=True)
+        except Exception as error:
+            baseline_warning = str(error)
+            previous = None
+            torch.manual_seed(101)
+            initial = pixel_model.NativeActionPolicy().eval()
     old = pixel_model.NativeActionPolicy().eval(); old.load_state_dict(initial.state_dict())
     candidate = pixel_model.NativeActionPolicy(); candidate.load_state_dict(initial.state_dict())
     no_intent = pixel_model.NativeActionPolicy(); no_intent.load_state_dict(initial.state_dict())
-    fit(candidate,train_rows,gate,steps=steps)
-    fit(no_intent,train_rows,gate,steps=steps,no_intent=True)
+    if train_rows:
+        fit(candidate,train_rows,gate,steps=steps)
+        fit(no_intent,train_rows,gate,steps=steps,no_intent=True)
     predictions = {name:{r['id']:model_prediction(net,r,zero) for r in score_rows} for name,net,zero in [('old',old,False),('candidate',candidate,False),('noIntent',no_intent,True)]}
     gate()
     output.mkdir(parents=True,exist_ok=True,mode=0o700)
@@ -165,17 +176,20 @@ def train(dataset, output, gate=production_gate, steps=50, previous=None):
     return {'cutoffMs':cutoff,'train':train_rows,'held':score_rows,'predictions':predictions,
             'modelSha256':{n:hash_file(output/(n+'.pt')) for n in ('old','candidate','no-intent')},
             'oldModel': 'previous native-action model' if previous is not None else 'initial untrained native-action head; no published compatible model loaded',
-            'hasPreviousModel': previous is not None,
+            'hasPreviousModel': previous is not None, 'baselineWarning':baseline_warning,
             'status':'quarantine; not promoted'}
 
 
 def main():
+    dry_run = '--dry-run' in sys.argv
+    if dry_run: sys.argv.remove('--dry-run')
     if len(sys.argv) != 3:
         raise SystemExit('usage: trainer.py <verified-dataset.json> <quarantine-dir>')
-    production_gate()
+    guard = (lambda: None) if dry_run else production_gate
+    guard()
     with open(sys.argv[1],encoding='utf8') as f: dataset=json.load(f)
     previous = dataset.get('preSleepWeights')
-    result=train(dataset,Path(sys.argv[2]),previous=Path(previous) if previous else None)
+    result=train(dataset,Path(sys.argv[2]),previous=Path(previous) if previous else None, gate=guard, steps=dataset.get('trainingSteps', 100))
     def score_row(r):
         a=r['action']; row={'id':r['id'],'timeMs':r['timeMs'],'kind':a['kind']}
         if a['kind']=='click': row.update(x=a.get('screenX',a['x']),y=a.get('screenY',a['y']))

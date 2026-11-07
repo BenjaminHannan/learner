@@ -1,0 +1,59 @@
+# Quarantined night learning
+
+The LaunchAgent runs `scheduler.js` every five minutes. Production starts only
+01:00–07:00 after twenty minutes of idle. It compiles yesterday's indexed clips,
+asks the real Glim under the FIFO brain lock for episode goals and reasons,
+binds those goals to real action indices, trains three arms on the earlier 80%,
+scores later click/key actions, runs retention and writes a scored report.
+No code in this directory promotes weights.
+
+Coordinate calibration is an optional stage inside the run. It uses only the
+signed `/Applications/Premonition.app/Contents/MacOS/Premonition` executable and
+HANDS-ACT's `NativeSession`; it never asks for permissions. After checking idle
+again, it posts one mouse move to an empty patch. It then finds the event and
+compares before/after video frames. Missing access, activity, missing cursor or
+error over ten video pixels yields `coords-unverified`; training continues.
+CG global points are offset by the display origin, then scaled to backing
+pixels and the recording compositor. Those scales compose to the recorded
+video's fit/letterbox mapping. The probe reports error in video pixels.
+
+Compilation hash-binds actual decoded MP4 pixels to the event index. Unmeasured
+coordinates or clock mapping are recorded limitations, never fabricated proof.
+Such data are useful for quarantined learning, not live policy authorization.
+The comparison is in video pixels (40-pixel click radius). A missing action class
+is unmeasured and cannot yield a passing promotion score. A single example
+trains without inventing a held example; no actions produce an untrained
+checkpoint and an explicitly unmeasured report. Optional corrections never
+block a night. Mixed training/holdout clips are preserved by retention.
+
+`node run.js --dry-run [--fixture] [--output /absolute/path]` explicitly permits
+today's compute. It uses existing live segments when present, otherwise real
+synthetic MP4s with fabricated, clearly labelled metadata. It never moves the
+mouse or runs recording retention. Glim calls still acquire the FIFO lock.
+It does not start, stop or restart any model service.
+
+`node synthetic-integration.js /absolute/output` separately exercises 400
+compiled actions, chronological holdout, a fixed nonzero intent and all three
+model arms. It is a bounded synthetic regression, not evidence of real-world
+intent understanding or permission to promote a checkpoint.
+
+## HANDS-PC handoff
+
+Read-only lookup happens at run time in
+`~/learner-ops/aon-notes/hands-pc-20261107/`. Optional `remote-training.json`,
+`report.json` or `integration-result.json` can specify:
+
+```json
+{
+  "checkpoint": "/absolute/local/downloaded/native-action.pt",
+  "remoteTrainingCommand": ["/absolute/runner", "{dataset}", "{output}"],
+  "cleanupCommand": ["/absolute/cleanup", "{dataset}", "{output}"]
+}
+```
+
+The runner owns upload, path rewriting and download; stdout must be the same
+JSON as local `trainer.py`. The cleanup argv must remove all PC recording
+copies, and runs on success or failure before local fallback. No handoff means
+local training. No compatible checkpoint means deterministic fresh init.
+This worker never edits the remote worker's folder. A bare command without a
+cleanup contract is reported and falls back locally without uploading data.

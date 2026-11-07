@@ -26,7 +26,10 @@ def main():
     owner=Path('/tmp/aon/realmodel.lock/owner').read_text().split()
     if len(owner)<2 or owner[0]!='NIGHT-LEARN' or int(owner[1])!=os.getppid():
         raise RuntimeError('must run directly under the NIGHT-LEARN model lock')
-    check(datetime.datetime.now().astimezone(),idle_seconds())
+    if len(sys.argv) > 1 and sys.argv[1] == '--dry-run':
+        del sys.argv[1]
+    else:
+        check(datetime.datetime.now().astimezone(),idle_seconds())
     if len(sys.argv)<2 or not os.path.isabs(sys.argv[1]): raise RuntimeError('absolute command required')
     os.execv(sys.argv[1],sys.argv[1:])
 

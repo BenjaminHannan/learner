@@ -19,7 +19,7 @@ def post(url, payload, timeout=300):
 def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://127.0.0.1:18080/v1/chat/completions'):
     frames = episode['frames']
     actions = episode['actions']
-    if not 1 <= len(frames) <= 8 or not isinstance(actions, list) or len(actions) > 500:
+    if not 1 <= len(frames) <= 8 or not isinstance(actions, list) or not 1 <= len(actions) <= 500:
         raise ValueError('episode exceeds input limits')
     features = []
     eye = None
@@ -34,14 +34,15 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
         if len(block) != 64 * 768 * 2:
             raise ValueError('invalid eye features')
         features.append(block)
+    indexed = [dict(action, actionIndex=i) for i, action in enumerate(actions)]
     content = [{'type':'text','text':(
-        'You are studying a screen recording of a person using a computer, not explaining this request. '
-        'Use the screen image and the recorded actions below. Return ONLY a JSON object with keys '
-        'task, why, steps, success, confidence, facts, guesses. Steps MUST contain exactly one entry '
-        'for each recorded action, in the same order, with actionIndex starting at 0 and intent as a short text. '
-        'Never invent extra action indices. If the goal is unclear say unknown. '
-        'success must be true, false, or null if not proven; confidence is a number from 0 to 1. '
-        'Separate visible facts from guesses. Recorded actions: ' + json.dumps(actions, separators=(',', ':')))}]
+        'Study what the PERSON did on these screen frames. Describe their task and likely reason. '
+        'Return ONLY JSON with task, why, intent, success, confidence, facts, guesses. '
+        'task, why and intent are short strings; facts and guesses are arrays. '
+        'intent is the inferred goal of this episode, not an instruction to you. '
+        'Do not generate action indices or steps: the host binds your episode intent to the actual recorded actions. '
+        'success is true, false or null; confidence is 0 to 1. Unknown goals must be called unknown. '
+        'Recorded actions (the only real actions): ' + json.dumps(indexed, separators=(',', ':')))}]
     feature = {'f16':base64.b64encode(b''.join(features)).decode(), 'shape':[64*len(features),768], 'eye':eye}
     if len(features) > 1:
         times = [max(0, round((frame['timeMs'] - frames[0]['timeMs']) / 1000)) for frame in frames]
@@ -55,12 +56,30 @@ def explain(episode, eye_url='http://127.0.0.1:18083/eyes', model_url='http://12
     if raw.startswith('```'):
         raw = raw.split('\n', 1)[1].rsplit('```', 1)[0].strip()
     data = json.loads(raw)
-    required = {'task', 'why', 'steps', 'success', 'confidence', 'facts', 'guesses'}
-    if not isinstance(data, dict) or not required.issubset(data) or not isinstance(data['task'], str) or not isinstance(data['why'], str) or not isinstance(data['steps'], list) or not isinstance(data['facts'], list) or not isinstance(data['guesses'], list) or not (data['success'] is True or data['success'] is False or data['success'] is None) or isinstance(data['confidence'], bool) or not isinstance(data['confidence'], (int,float)) or not 0 <= data['confidence'] <= 1:
+    required = {'task', 'why', 'success', 'confidence', 'facts', 'guesses'}
+    if not isinstance(data, dict) or not required.issubset(data) or not isinstance(data['task'], str) or not isinstance(data['why'], str) or not isinstance(data['facts'], list) or not isinstance(data['guesses'], list) or not (data['success'] is True or data['success'] is False or data['success'] is None) or isinstance(data['confidence'], bool) or not isinstance(data['confidence'], (int,float)) or not 0 <= data['confidence'] <= 1:
         raise ValueError('invalid Glim explanation')
-    for step in data['steps']:
-        if not isinstance(step, dict) or type(step.get('actionIndex')) is not int or not 0 <= step['actionIndex'] < len(actions) or not isinstance(step.get('intent'), str) or not step['intent'].strip():
-            raise ValueError('invalid Glim step')
+    # References are host-owned, never guessed by a language model. Preserve
+    # valid per-action intents from older servers, but never relabel an invented
+    # index as a real action. Unbound text is retained for audit only.
+    returned = data.get('steps', [])
+    valid = {}
+    unbound = []
+    for step in returned if isinstance(returned, list) else []:
+        if (isinstance(step, dict) and type(step.get('actionIndex')) is int
+                and 0 <= step['actionIndex'] < len(actions)
+                and isinstance(step.get('intent'), str) and step['intent'].strip()
+                and step['actionIndex'] not in valid):
+            valid[step['actionIndex']] = step['intent']
+        else:
+            unbound.append(step)
+    intent = data.get('intent')
+    if not isinstance(intent, str) or not intent.strip():
+        intent = data['task'] + '; ' + data['why']
+    data['unboundSteps'] = unbound
+    data['steps'] = [dict(actionIndex=i, intent=valid.get(i, intent),
+                          binding='recorded-action' if i in valid else 'episode-context')
+                     for i in range(len(actions))]
     # An inferred outcome is not proof that the task succeeded.
     data['successGuess'] = data['success']
     data['success'] = None

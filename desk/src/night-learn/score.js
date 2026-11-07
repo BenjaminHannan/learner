@@ -9,7 +9,7 @@ function canonical(value) {
   return JSON.stringify(value);
 }
 
-function score({ train, held, predictions }) {
+function score({ train, held, predictions }, {allowPartial=false}={}) {
   if (!Array.isArray(train) || !train.length || !Array.isArray(held) || !held.length) throw Error('train and held examples required');
   const ids = new Set();
   for (const e of [...train, ...held]) {
@@ -46,12 +46,13 @@ function score({ train, held, predictions }) {
       }
     } else throw Error('unsupported held action');
   }
-  if (!clicks || !keys) throw Error('held slice must include clicks and keys');
-  const rates = Object.fromEntries(arms.map(a => [a, { click: counts[a].clicks / clicks, key: counts[a].keys / keys }]));
+  if ((!clicks || !keys) && !allowPartial) throw Error('held slice must include clicks and keys');
+  const rates = Object.fromEntries(arms.map(a => [a, { click: clicks ? counts[a].clicks / clicks : null, key: keys ? counts[a].keys / keys : null }]));
   // Integer comparisons avoid floating point rounding at the exact 5-point boundary.
   const beats = a => 20 * (counts.candidate.clicks - counts[a].clicks) >= clicks && counts.candidate.keys >= counts[a].keys;
   return {
-    pass: beats('old') && beats('noIntent'),
+    pass: !!clicks && !!keys && beats('old') && beats('noIntent'),
+    coverage: {clicks:!!clicks,keys:!!keys},
     counts: { clickExamples: clicks, keyExamples: keys, arms: counts }, rates,
     heldSha256: createHash('sha256').update(canonical(held)).digest('hex'),
     heldFirstMs, trainLastMs,

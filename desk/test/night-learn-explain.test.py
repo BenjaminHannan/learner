@@ -23,6 +23,18 @@ class ExplainTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.explain({'frames':[{'path':'/tmp/example.png','timeMs':1}], 'actions':[]}, 'eyes','brain')
 
+    def test_host_owns_complete_references_even_when_glim_invents_steps(self):
+        def fake(url, payload, timeout=300):
+            if url == 'eyes':
+                return {'ok':True, 'shape':[64,768], 'f16':base64.b64encode(bytes(64*768*2)).decode(), 'eye':'eye'}
+            return {'choices':[{'message':{'content':'{"task":"save","why":"keep changes","steps":[{"actionIndex":999,"intent":"invented"}],"success":true,"confidence":0.5,"facts":[],"guesses":[]}'}}]}
+        m.post=fake
+        r=m.explain({'frames':[{'path':'/tmp/f.png','timeMs':0}], 'actions':[{'kind':'click'},{'kind':'key'}]},'eyes','brain')
+        self.assertEqual([s['actionIndex'] for s in r['steps']],[0,1])
+        self.assertTrue(all(s['binding']=='episode-context' for s in r['steps']))
+        self.assertEqual(r['unboundSteps'][0]['actionIndex'],999)
+        self.assertIsNone(r['success'])
+
     def test_failure_explanation_requires_failure(self):
         m.post = lambda *a, **kw: {'choices':[{'message':{'content':'{"shouldHaveDone":"a","actuallyDid":"b","whatWentWrong":"unknown","facts":[],"guesses":[],"confidence":0.2}'}}]}
         with self.assertRaises(ValueError): m.explain_failure({'judgedOutcome':'unknown','steps':[]})

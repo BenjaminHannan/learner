@@ -1,5 +1,7 @@
 import importlib.util
 import sys
+import tempfile
+from PIL import Image
 import unittest
 from pathlib import Path
 
@@ -22,5 +24,14 @@ class TrainerTests(unittest.TestCase):
         finally: m.idle_seconds=old
     def test_unverified_example_is_refused(self):
         with self.assertRaises(ValueError): m.load_example({'verified':False})
+
+    def test_sparse_first_night_and_incompatible_checkpoint(self):
+        with tempfile.TemporaryDirectory() as d:
+            d=Path(d); frame=d/'f.png'; Image.new('RGB',(80,80),'white').save(frame)
+            row=dict(id='one',timeMs=1,verified=True,frame=str(frame),intent='save',action=dict(kind='click',x=10,y=10))
+            bad=d/'bad.pt'; bad.write_bytes(b'not a checkpoint')
+            r=m.train(dict(startMs=0,endMs=2,examples=[row],allowSparse=True),d/'out',gate=lambda:None,steps=1,previous=bad)
+            self.assertFalse(r['hasPreviousModel']); self.assertTrue(r['baselineWarning'])
+            self.assertEqual(r['held'],[]); self.assertTrue((d/'out/candidate.pt').exists())
 
 if __name__ == '__main__': unittest.main()
