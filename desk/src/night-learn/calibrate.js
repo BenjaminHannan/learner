@@ -9,12 +9,17 @@ const {createHash}=require('node:crypto');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const ops=path.join(os.homedir(),'learner-ops'),recordings=path.join(ops,'hands-recorder/recordings');
 const python=path.join(ops,'p2venv/bin/python');
+function availableReservation() {
+ try{const owner=fs.readFileSync('/tmp/aon/realmodel.lock/owner','utf8').trim();if(owner&&!owner.startsWith('NIGHT-LEARN '))throw Error('Mac model reservation is active; coordinate probe deferred');}
+ catch(e){if(e.code!=='ENOENT')throw e;}
+}
 function analyze(args) {const r=spawnSync(python,[path.join(__dirname,'coordinate-image.py'),...args],{encoding:'utf8',timeout:10000});if(r.status!==0)throw Error(r.stderr||r.error);return JSON.parse(r.stdout);}
 async function calibrate(work) {
  let native;
  try {
   if(!process.execPath.startsWith('/Applications/Premonition.app/'))throw Error('Premonition executable required');
   if(JSON.parse(fs.readFileSync(path.join(ops,'hands-recorder/state.json'))).enabled!==true)throw Error('recording not live');
+  availableReservation();
   native=await NativeSession.start();
   if((await native.command('idle')).seconds<1200)throw Error('Ben is active; no probe posted');
   const shot=await native.command('look');
@@ -27,6 +32,7 @@ async function calibrate(work) {
   const point={x:shot.bounds.x+spot.x*shot.bounds.width/shot.size.width,y:shot.bounds.y+spot.y*shot.bounds.height/shot.size.height};
   if(Math.hypot(spot.x-shot.cursor[0]*shot.size.width,spot.y-shot.cursor[1]*shot.size.height)<50)throw Error('probe spot overlaps old cursor');
   if((await native.command('idle')).seconds<1200)throw Error('Ben returned; no probe posted');
+  availableReservation();
   const began=Date.now();await native.command('grant');
   await native.command('send',{kind:'mouse',state:'move',...point});await native.command('end');await native.close();native=null;
   // Wait for the recorder to finalize its current 30-second segment. No second move.
