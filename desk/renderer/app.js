@@ -769,7 +769,7 @@
     const ul = $('#sleepRecent'); ul.replaceChildren(...rec.map((r) => el('li', '', new Date(r.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '  ' + r.line)));
     paintPrimary(); $('#hint').hidden = asleep;
     if (!asleep) { $('#wakeAsk').hidden = true; setRunning(running); }
-    else { if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); input.placeholder = thread && thread.helper ? 'This Mote’s log is read-only.' : 'Glim is asleep. Type here and I will offer to wake it.'; $('#runState').hidden = true; }
+    else { if (window.LearnButton && LearnButton.composing()) LearnButton.cancel(); input.placeholder = 'Glim is asleep. Type here and I will offer to wake it.'; if (thread && thread.helper) input.placeholder = 'This Mote’s log is read-only.'; $('#runState').hidden = true; }
     const b = $('#btnSleep'); b.disabled = !slp.available || asleep;
     b.title = !slp.available ? (slp.reason || 'The sleep app was not found.') : 'Sleep: let Glim learn from your chats while you are away';
     paintGateway();
