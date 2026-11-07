@@ -15,6 +15,7 @@ This path is inside the chat agent; it is not a repair of every caller. `src/han
 * `git diff --check`: exit 0 at the time checked.
 * Real tasks: Notes 0/2, Safari 0/2, Finder 0/2, TextEdit 0/2, Settings 0/2 **run**, not failures or passes. Screenshot hashes: none. Physical takeover timings: none. No-actions-when-not-asked and the end-to-end attempt log remain unverified.
 * A takeover harness is prepared but not run. Its simulated physical input is a tagged CGEvent posted by a separate helper process. It checks release timing and up-events in a throwaway window, and stops if its independent monitor sees real input or the window loses focus.
+* The independent Notes check can find the test sentence but cannot yet prove the note was newly created. It therefore does not count either Notes trial as a pass without stronger evidence.
 
 ## Log coordination
 

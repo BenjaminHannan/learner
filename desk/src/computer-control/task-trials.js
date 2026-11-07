@@ -90,7 +90,12 @@ async function main() {
       let independent;
       if (kind === 'finder') target = newestDownload();
       if (kind === 'appearance') independent = { ok:!states.includes('unknown') && states.includes('dark') && states.at(-1) === initial && (initial !== 'dark' || states.includes('light')), states, initial };
-      else { independent = await check(checkLib,built.bridge,app,target); independent.passed = !!(independent.ok && (kind === 'finder' ? independent.selected : kind === 'textedit' ? independent.found && independent.bold : independent.found)); }
+      else {
+        independent = await check(checkLib,built.bridge,app,target);
+        if (kind === 'safari') independent.pageTitle = await check(checkLib,built.bridge,app,'Example Domain');
+        if (kind === 'notes') independent.newNoteVerified = false; // Text alone does not prove a new note was created.
+        independent.passed = !!(independent.ok && (kind === 'finder' ? independent.selected : kind === 'textedit' ? independent.exact && independent.bold : kind === 'safari' ? independent.found && independent.pageTitle?.ok && independent.pageTitle?.found : independent.found && independent.newNoteVerified));
+      }
       const checked = kind === 'appearance' ? independent.ok : independent.passed;
       result.tests.push({ kind, run:n, attemptId:log?.attemptId || null, target, screenshotHashes:(log?.steps || []).map(s => ({ before:s.observation?.sha256 || null, after:s.after?.sha256 || null })), visual:!!visual, independent, error:execution.error || null, pass:!!(visual && checked && !execution.error && !execution.stopped) });
       save();
