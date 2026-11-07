@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {spawnSync}=require('node:child_process');
 const {NativeSession}=require('../computer-control/native');
 const {createFileDecoder}=require('../screen-learning/video-decoder');
-const {displayPointToVideo}=require('../screen-learning/display-map');
+const {coordinateMap}=require('./coordinate-map');
 const {createHash}=require('node:crypto');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const ops=path.join(os.homedir(),'learner-ops'),recordings=path.join(ops,'hands-recorder/recordings');
@@ -18,6 +18,10 @@ async function calibrate(work) {
   native=await NativeSession.start();
   if((await native.command('idle')).seconds<1200)throw Error('Ben is active; no probe posted');
   const shot=await native.command('look');
+  const geometry=spawnSync('/usr/bin/swift',[path.join(__dirname,'../screen-learning/display-geometry.swift')],{encoding:'utf8',timeout:30000});
+  if(geometry.status!==0)throw Error('display backing scale unavailable');
+  const display=JSON.parse(geometry.stdout).find(d=>String(d.id)===String(shot.displayId));
+  if(!display)throw Error('captured display geometry unavailable');
   const before=path.join(work,'coordinate-screen.png');fs.writeFileSync(before,Buffer.from(shot.png,'base64'),{mode:0o600});
   const spot=analyze(['spot',before]);
   const point={x:shot.bounds.x+spot.x*shot.bounds.width/shot.size.width,y:shot.bounds.y+spot.y*shot.bounds.height/shot.size.height};
@@ -43,9 +47,9 @@ async function calibrate(work) {
      const f=decoder.readFrame(i+1),dest=path.join(work,'coordinate-'+label+'.png');
      const r=spawnSync('/opt/homebrew/bin/ffmpeg',['-v','error','-f','rawvideo','-pix_fmt','rgba','-s',`${f.width}x${f.height}`,'-i','pipe:0','-frames:v','1','-y',dest],{input:f.pixels,timeout:10000});if(r.status!==0)throw Error('coordinate frame decode failed');files.push(dest);
     }
-    const bounds=frames[a].transform.sourceBounds,expected=displayPointToVideo(point,bounds,decoder.index[a]);
+    const bounds=frames[a].transform.sourceBounds,mapping=coordinateMap(point,display,bounds,decoder.index[a]),expected=mapping.videoPixels;
     return {...analyze(['measure',...files,String(expected.x),String(expected.y)]),event:e,clipId:clip.id,sourceBounds:bounds,
-     mapping:'CG global points minus display origin; backing scale then compositor scale to video',videoSha256:sha(bytes),beforeFrame:a+1,afterFrame:b+1};
+     mapping,videoSha256:sha(bytes),beforeFrame:a+1,afterFrame:b+1};
    }
    await new Promise(r=>setTimeout(r,1000));
   }

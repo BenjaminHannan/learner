@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def post(url, payload, timeout=300):
-    req = urllib.request.Request(url, json.dumps(payload).encode(), {'Content-Type': 'application/json', 'X-Glim-Background': 'night-learn'})
+    req = urllib.request.Request(url, json.dumps(payload).encode(), {'Content-Type': 'application/json', 'X-Glim-Background': '1'})
     with urllib.request.urlopen(req, timeout=timeout) as response:
         return json.load(response)
 

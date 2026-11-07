@@ -23,12 +23,14 @@ function handoff(dir) {
 function trainWithFallback(config, dataset, output, execute, local) {
  if(!config.train)return {training:local(),backend:'local',notes:config.notes};
  const replace=args=>args.map(a=>a.replaceAll('{dataset}',dataset).replaceAll('{output}',output));
- let training,error;
+ let training,error,cleanupError;
  try {training=JSON.parse(execute(config.train[0],replace(config.train.slice(1))));}
  catch(e){error=e.message;}
  finally { // PC copies must be removed on success AND failure, before fallback.
-  execute(config.cleanup[0],replace(config.cleanup.slice(1)));
+  try{execute(config.cleanup[0],replace(config.cleanup.slice(1)));}
+  catch(e){cleanupError='PC copy cleanup needs retry: '+e.message;}
  }
- return training?{training,backend:'BensPC',notes:config.notes}:{training:local(),backend:'local-fallback',notes:[...config.notes,error]};
+ const notes=[...config.notes,...(error?[error]:[]),...(cleanupError?[cleanupError]:[])];
+ return training?{training,backend:'BensPC',notes,remoteCopiesDeleted:!cleanupError}:{training:local(),backend:'local-fallback',notes,remoteCopiesDeleted:!cleanupError};
 }
 module.exports={handoff,trainWithFallback};

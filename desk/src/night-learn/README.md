@@ -30,7 +30,9 @@ block a night. Mixed training/holdout clips are preserved by retention.
 today's compute. It uses existing live segments when present, otherwise real
 synthetic MP4s with fabricated, clearly labelled metadata. It never moves the
 mouse or runs recording retention. Glim calls still acquire the FIFO lock.
-It does not start, stop or restart any model service.
+It does not start, stop or restart any model service. Glim requests carry the
+recognized background header and retry transient interruptions after releasing
+the FIFO ticket. A malformed optional attempt log becomes a report warning.
 
 `node synthetic-integration.js /absolute/output` separately exercises 400
 compiled actions, chronological holdout, a fixed nonzero intent and all three
@@ -53,7 +55,8 @@ Read-only lookup happens at run time in
 
 The runner owns upload, path rewriting and download; stdout must be the same
 JSON as local `trainer.py`. The cleanup argv must remove all PC recording
-copies, and runs on success or failure before local fallback. No handoff means
+copies, and runs on success or failure before local fallback. Cleanup failures are
+reported explicitly; local learning still completes in quarantine. No handoff means
 local training. No compatible checkpoint means deterministic fresh init.
 This worker never edits the remote worker's folder. A bare command without a
 cleanup contract is reported and falls back locally without uploading data.

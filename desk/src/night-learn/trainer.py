@@ -177,6 +177,8 @@ def train(dataset, output, gate=production_gate, steps=50, previous=None):
             'modelSha256':{n:hash_file(output/(n+'.pt')) for n in ('old','candidate','no-intent')},
             'oldModel': 'previous native-action model' if previous is not None else 'initial untrained native-action head; no published compatible model loaded',
             'hasPreviousModel': previous is not None, 'baselineWarning':baseline_warning,
+            'trainingStepsPerArm':steps if train_rows else 0,
+            'intentPolicy':{'candidate':'fixed hash64 of supplied intent', 'noIntent':'all-zero vector', 'trainIntentCount':len({r['intent'] for r in train_rows})},
             'status':'quarantine; not promoted'}
 
 

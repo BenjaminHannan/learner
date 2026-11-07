@@ -35,7 +35,7 @@ function sourceClips(index,day,calibration,work,recordings) {
    if(!frames.length||!anchor)continue;
    trainedClipTimes[clip.id]=frames.at(-1).receiveMonotonicMs-frames[0].receiveMonotonicMs+50;
    wallBounds.push(frames[0].receiveMonotonicMs+anchor.wallTimeMs-anchor.t,frames.at(-1).receiveMonotonicMs+anchor.wallTimeMs-anchor.t+50);
-   for(const row of out.examples){const file=saved.get(row.frameOrdinal);examples.push({...row,frame:file,frameFileSha256:sha(fs.readFileSync(file)),clipId:clip.id});}
+   for(const row of out.examples){const file=saved.get(row.frameOrdinal);examples.push({...row,frame:file,frameFileSha256:sha(fs.readFileSync(file)),clipId:clip.id,clipVideoSha256:decoder.source.sha256,sourceBounds:frames[0].transform?.sourceBounds});}
   }catch(error){rejections.push({clip:clip.id,reason:String(error.message)});}
  }
  return {examples:examples.sort((a,b)=>a.timeMs-b.timeMs),trainedClipTimes,rejections,clipsSeen:clips.length,startMs:wallBounds.length?Math.floor(Math.min(...wallBounds)):0,endMs:wallBounds.length?Math.ceil(Math.max(...wallBounds)):1};
@@ -45,7 +45,14 @@ function groupEpisodes(rows) {
  for(const row of rows){const g=groups.at(-1),first=g?.[0],prev=g?.at(-1);if(!g||g.length>=80||row.timeMs-prev.timeMs>120000||row.timeMs-first.timeMs>300000)groups.push([]);groups.at(-1).push(row);}
  return groups;
 }
-function locked(args,dryRun) {return run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,...(dryRun?['--dry-run']:[]),...args]);}
+function retryBackground(request,pause=()=>run('/bin/sleep',['15'])) {
+ for(let attempt=0;;attempt++)try{return request();}catch(error){
+  if(attempt>=3||!/HTTP Error (429|503)|timed out|no explanation text|Connection refused|invalid Glim explanation|Expecting .*delimiter|Expecting value/.test(error.message))throw error;
+  // Release the FIFO ticket before backing off. Each retry takes a new turn.
+  pause();
+ }
+}
+function locked(args,dryRun) {return retryBackground(()=>run(lock,['NIGHT-LEARN','/usr/bin/python3',nightGate,...(dryRun?['--dry-run']:[]),...args]));}
 function teacher(episode,work,dryRun) {
  gate(dryRun);
  const picks=[0,Math.floor((episode.length-1)/2),episode.length-1].filter((n,i,a)=>a.indexOf(n)===i);
@@ -71,19 +78,24 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   // Missing Glim is an actual stage failure, not an optional-check failure.
   for(const episode of groupEpisodes(prepared.examples)){const r=teacher(episode,work,dryRun);explanations.push(r.explanation);rows.push(...r.labelled);}
   write(path.join(output,'explanations.json'),explanations);stages.push('Glim');
-  const failures=readAttempts(path.join(ops,'hands-attempts/attempts.jsonl')).filter(a=>a.judgedOutcome==='fail'&&localDay(Date.parse(a.finishedAt))===day);
+  let failures=[];
+  try{failures=readAttempts(path.join(ops,'hands-attempts/attempts.jsonl')).filter(a=>a.judgedOutcome==='fail'&&localDay(Date.parse(a.finishedAt))===day);}
+  catch(e){warnings.push('optional attempt log: '+e.message);}
   const mistakes=[];
   for(const failure of failures){try{const f=path.join(work,'attempt.json');write(f,failure);mistakes.push(JSON.parse(locked(['/usr/bin/python3',path.join(sourceDir,'explain.py'),'--mistake',f],dryRun).trim().split('\n').at(-1)));}catch(e){warnings.push('optional mistake explanation: '+e.message);}}
   const cutoff=prepared.startMs+(prepared.endMs-prepared.startMs)*.8;let correctionsUsed=0;const seen=new Set(rows.map(r=>r.id));
   for(const failure of failures)for(const candidate of failure.correctionCandidates||[])try{const c=verifiedCorrection(path.join(ops,'hands-attempts'),candidate);if(c.timeMs>=prepared.startMs&&c.timeMs<cutoff&&!seen.has(c.id)){rows.push(c);seen.add(c.id);correctionsUsed++;}}catch(e){warnings.push('optional correction: '+e.message);}
   // Tighten sparse bounds to observed actions so even a short, uneven first
   // night has a genuine later holdout. A single action is train-only.
-  const startMs=rows.length?rows[0].timeMs:0,endMs=rows.length>1?Math.max(...rows.map(r=>r.timeMs)):startMs+1;
+  rows.sort((a,b)=>a.timeMs-b.timeMs);
+  const startMs=rows.length?rows[0].timeMs:0,endMs=rows.length>1?rows.at(-1).timeMs:startMs+1;
   const dataset={startMs,endMs,examples:rows,allowSparse:true,trainingSteps};
   const config=handoff(path.join(ops,'aon-notes/hands-pc-20261107'));
   const localStarting=path.join(root,'models/current.pt');
   if(config.checkpoint)dataset.preSleepWeights=config.checkpoint;
   else if(fs.existsSync(localStarting))dataset.preSleepWeights=localStarting;
+  const audit=rows.map(({frame,...row})=>row);
+  write(path.join(output,'examples.json'),audit);
   const dataFile=path.join(work,'dataset.json');write(dataFile,dataset);
   const local=()=>JSON.parse(run(python,[path.join(sourceDir,'trainer.py'),...(dryRun?['--dry-run']:[]),dataFile,path.join(output,'quarantine')]));
   gate(dryRun);const trained=trainWithFallback(config,dataFile,path.join(output,'quarantine'),run,local),training=trained.training;stages.push('train');
@@ -102,7 +114,7 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
   if(!dryRun)try{retention={status:'completed',...new Retention(recordings).finishSleep({judged:true,trainedIds:eligible}),trainedIds:eligible};}catch(e){retention={status:'deferred',reason:e.message};warnings.push('retention: '+e.message);}
   stages.push('retention');
   const summary={day,dryRun,source:synthetic?'synthetic recording fixture; not Ben':"Ben's local screen recordings",stages:[...stages,'report'],status:'completed',coordinates:calibration.passed?'verified':'coords-unverified',quarantined:true,promoted:false,
-   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:dataset.preSleepWeights||null,baselineWarning:training.baselineWarning||null,backend:trained.backend,retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
+   clipsSeen:prepared.clipsSeen,recordedMs:Object.values(prepared.trainedClipTimes).reduce((a,b)=>a+b,0),examples:prepared.examples.length,train:training.train.length,held:training.held.length,explanations:explanations.length,score:result,models:training.modelSha256,startingCheckpoint:dataset.preSleepWeights||null,baselineWarning:training.baselineWarning||null,backend:trained.backend,remoteCopiesDeleted:trained.remoteCopiesDeleted??null,trainingStepsPerArm:training.trainingStepsPerArm,intentPolicy:training.intentPolicy,dataManifestSha256:sha(JSON.stringify(audit)),limitations:[...new Set(rows.flatMap(r=>r.verificationLimitations||[]))],retention,rejections:prepared.rejections,warnings:[...warnings,...trained.notes],mistakes,correctionsUsed};
   write(path.join(output,'quarantine/manifest.json'),{quarantined:true,promoted:false,coordinates:summary.coordinates,scorePassed:result.pass,modelSha256:training.modelSha256});
   write(path.join(output,'result.json'),summary);
   fs.writeFileSync(path.join(output,'REPORT.md'),`# Night learning ${day}\n\nSource: ${summary.source}.\n\nCompleted: ${summary.stages.join(' → ')}.\n\n${rows.length} examples; ${summary.train} train; ${summary.held} held out.\n\nScore: ${JSON.stringify(result)}\n\nCheckpoint: quarantined, ${summary.coordinates}; never promoted.\n\nRetention: ${JSON.stringify(retention)}\n\nWarnings: ${JSON.stringify(summary.warnings)}\n`,{mode:0o600});
@@ -110,5 +122,5 @@ function runNight({dryRun=false,fixture=false,output:requestedOutput,trainingSte
  }catch(error){write(path.join(output,'failure.json'),{status:'failed',stages,error:String(error.stack||error),quarantined:true});throw error;}
  finally {fs.rmSync(work,{recursive:true,force:true});}
 }
-module.exports={targetDay,localDay,groupEpisodes,sourceClips,runNight};
+module.exports={targetDay,localDay,groupEpisodes,sourceClips,retryBackground,runNight};
 if(require.main===module){try{console.log(JSON.stringify(runNight({dryRun:process.argv.includes('--dry-run'),fixture:process.argv.includes('--fixture'),output:process.argv.includes('--output')?process.argv[process.argv.indexOf('--output')+1]:undefined})));}catch(error){console.error(String(error.stack||error));process.exitCode=1;}}
